@@ -7650,19 +7650,10 @@ nsDocumentSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     NS_NAMED_LITERAL_STRING(doc_str, "document");
 
-    docVal = OBJECT_TO_JSVAL(obj);
-
-    nsGlobalWindow *internalWin = static_cast<nsGlobalWindow *>(sgo);
-    if (!internalWin->IsChromeWindow()) {
-      rv = sXPConnect->GetXOWForObject(cx, sgo->GetGlobalJSObject(), obj,
-                                       &docVal);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
     if (!::JS_DefineUCProperty(cx, JSVAL_TO_OBJECT(winVal),
                                reinterpret_cast<const jschar *>
                                                (doc_str.get()),
-                               doc_str.Length(), docVal, nsnull,
+                               doc_str.Length(), OBJECT_TO_JSVAL(obj), nsnull,
                                nsnull, JSPROP_READONLY | JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
