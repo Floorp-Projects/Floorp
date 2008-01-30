@@ -395,7 +395,6 @@ nsLineLayout::NewPerSpanData(PerSpanData** aResult)
   psd->mLastFrame = nsnull;
   psd->mContainsFloat = PR_FALSE;
   psd->mZeroEffectiveSpanBox = PR_FALSE;
-  psd->mHasNonemptyContent = PR_FALSE;
 
 #ifdef DEBUG
   mSpansAllocated++;
@@ -888,11 +887,11 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     else if (nsGkAtoms::textFrame == frameType) {
       // Note non-empty text-frames for inline frame compatibility hackery
       pfd->SetFlag(PFD_ISTEXTFRAME, PR_TRUE);
-      nsTextFrame* textFrame = static_cast<nsTextFrame*>(pfd->mFrame);
-      if (textFrame->HasNoncollapsedCharacters()) {
-        psd->mHasNonemptyContent = PR_TRUE;
+      // XXX An empty text frame at the end of the line seems not
+      // to have zero width.
+      if (metrics.width) {
         pfd->SetFlag(PFD_ISNONEMPTYTEXTFRAME, PR_TRUE);
-        nsIContent* content = textFrame->GetContent();
+        nsIContent* content = pfd->mFrame->GetContent();
 
         const nsTextFragment* frag = content->GetText();
         if (frag) {
@@ -922,13 +921,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     }
     else if (nsGkAtoms::brFrame == frameType) {
       pfd->SetFlag(PFD_SKIPWHENTRIMMINGWHITESPACE, PR_TRUE);
-      psd->mHasNonemptyContent = PR_TRUE;
-    } else if (pfd->mSpan) {
-      if (pfd->mSpan->mHasNonemptyContent || !pfd->mFrame->IsSelfEmpty()) {
-        psd->mHasNonemptyContent = PR_TRUE;
-      }
-    } else {
-      psd->mHasNonemptyContent = PR_TRUE;
     }
   }
 
@@ -1312,9 +1304,7 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
   // Count the number of non-empty frames on the line...
   if (!emptyFrame) {
     mTotalPlacedFrames++;
-    NS_ASSERTION(psd->mHasNonemptyContent, "We should have detected this nonempty content");
   }
-  // XXX roc why not just check !emptyFrame again here?
   if (psd->mX != psd->mLeftEdge || pfd->mBounds.x != psd->mLeftEdge) {
     // As soon as a frame placed on the line advances an X coordinate
     // of any span we can no longer place a float on the line.
@@ -2067,7 +2057,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       }
     }
     if (applyMinLH) {
-      if (psd->mHasNonemptyContent || preMode || foundLI) {
+      if ((psd->mX != psd->mLeftEdge) || preMode || foundLI) {
 #ifdef NOISY_VERTICAL_ALIGN
         printf("  [span]==> adjusting min/maxY: currentValues: %d,%d", minY, maxY);
 #endif
