@@ -1,3 +1,4 @@
+/* vim: set sw=2 sts=2 et cin: */
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -54,6 +55,12 @@
 #include "nsStringEnumerator.h"
 
 #include "nsOS2Uni.h"
+
+#include "nsILocalFile.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsIFileStreams.h"
+#include "gfxPDFSurface.h"
+#include "gfxOS2Surface.h"
 
 PRINTDLG nsDeviceContextSpecOS2::PrnDlg;
 
@@ -329,9 +336,98 @@ nsresult nsDeviceContextSpecOS2::GetPRTQUEUE( PRTQUEUE *&p)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecOS2::GetSurfaceForPrinter(gfxASurface **nativeSurface)
+NS_IMETHODIMP nsDeviceContextSpecOS2::GetSurfaceForPrinter(gfxASurface **surface)
 {
-   return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ASSERTION(mQueue, "Queue can't be NULL here");
+
+  nsRefPtr<gfxASurface> newSurface;
+
+  PRInt16 outputFormat;
+  mPrintSettings->GetOutputFormat(&outputFormat);
+
+  if (outputFormat == nsIPrintSettings::kOutputFormatPDF) {
+    nsXPIDLString filename;
+    mPrintSettings->GetToFileName(getter_Copies(filename));
+    nsresult rv;
+    if (filename.IsEmpty()) {
+      // print to a file that is visible, like one on the Desktop
+      nsCOMPtr<nsIFile> pdfLocation;
+      rv = NS_GetSpecialDirectory(NS_OS_DESKTOP_DIR, getter_AddRefs(pdfLocation));
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = pdfLocation->AppendNative(NS_LITERAL_CSTRING("moz_print.pdf"));
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = pdfLocation->GetPath(filename);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+#ifdef debug_thebes_print
+    printf("nsDeviceContextSpecOS2::GetSurfaceForPrinter(): print to filename=%s\n",
+           NS_LossyConvertUTF16toASCII(filename).get());
+#endif
+
+    double width, height;
+    mPrintSettings->GetEffectivePageSize(&width, &height);
+    // convert twips to points
+    width /= 20;
+    height /= 20;
+
+    nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
+    rv = file->InitWithPath(filename);
+    if (NS_FAILED(rv))
+      return rv;
+
+    nsCOMPtr<nsIFileOutputStream> stream = do_CreateInstance("@mozilla.org/network/file-output-stream;1");
+    rv = stream->Init(file, -1, -1, 0);
+    if (NS_FAILED(rv))
+      return rv;
+
+    newSurface = new(std::nothrow) gfxPDFSurface(stream, gfxSize(width, height));
+  } else {
+    int numCopies = 0;
+    int printerDest = 0;
+    char *filename = nsnull;
+
+    GetCopies(numCopies);
+    GetDestination(printerDest);
+    if (!printerDest) {
+      GetPath(&filename);
+    }
+    HDC printdc = PrnOpenDC(mQueue, "Mozilla", numCopies, printerDest, filename);
+
+    double width, height;
+    mPrintSettings->GetEffectivePageSize(&width, &height);
+#ifdef debug_thebes_print
+    printf("nsDeviceContextSpecOS2::GetSurfaceForPrinter(): %fx%ftwips, copies=%d\n",
+           width, height, numCopies);
+#endif
+
+    // we need pixels, so scale from twips to the printer resolution
+    // and take into account that CAPS_*_RESOLUTION are in px/m, default
+    // to approx. 100dpi
+    double hDPI = 3937., vDPI = 3937.;
+    LONG value;
+    if (DevQueryCaps(printdc, CAPS_HORIZONTAL_RESOLUTION, 1, &value))
+      hDPI = value * 0.0254;
+    if (DevQueryCaps(printdc, CAPS_VERTICAL_RESOLUTION, 1, &value))
+      vDPI = value * 0.0254;
+    width = width * hDPI / 1440;
+    height = height * vDPI / 1440;
+#ifdef debug_thebes_print
+    printf("nsDeviceContextSpecOS2::GetSurfaceForPrinter(): %fx%fpx (res=%fx%f)\n",
+           width, height, hDPI, vDPI);
+#endif
+
+    // Now pass the created DC into the thebes surface for printing.
+    // It gets destroyed there.
+    newSurface = new(std::nothrow)
+      gfxOS2Surface(printdc, gfxIntSize(int(ceil(width)), int(ceil(height))));
+  }
+  if (!newSurface) {
+    *surface = nsnull;
+    return NS_ERROR_FAILURE;
+  }
+  *surface = newSurface;
+  NS_ADDREF(*surface);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecOS2::BeginDocument(PRUnichar* aTitle,
@@ -339,22 +435,22 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::BeginDocument(PRUnichar* aTitle,
                                                     PRInt32 aStartPage,
                                                     PRInt32 aEndPage)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecOS2::EndDocument()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecOS2::BeginPage()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecOS2::EndPage()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //  Printer Enumerator
