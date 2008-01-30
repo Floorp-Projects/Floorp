@@ -54,7 +54,7 @@
   -moz-box-flex: 1; /* make menu items expand to fill toolbar height */
 }
 
-#PersonalToolbar {
+#personal-toolbar {
   min-height: 26px;
 }
 
@@ -78,7 +78,7 @@
 }
 
 #navigator-toolbox[inFullscreen="true"],
-#navigator-toolbox[inFullscreen="true"] > #nav-bar {
+#navigator-toolbox[inFullscreen="true"] > #navigation-toolbar {
   border-top: none;
 }
 
@@ -758,16 +758,23 @@ toolbar[iconsize="small"] #reload-button:not([disabled="true"]):hover:active {
 toolbar[iconsize="small"] #home-button .toolbarbutton-icon {
   padding-left: 1px;
 }
-toolbar[iconsize="small"] #home-button {
+#personal-toolbar > #home-button {
+  list-style-image: url("chrome://browser/skin/Toolbar-small.png");
+}
+toolbar[iconsize="small"] #home-button ,
+#personal-toolbar > #home-button {
   -moz-image-region: rect(0px 80px 16px 64px);
 }
-toolbar[iconsize="small"] #home-button:not([disabled="true"]):hover {
+toolbar[iconsize="small"] #home-button:not([disabled="true"]):hover ,
+#personal-toolbar > #home-button:not([disabled="true"]):hover {
   -moz-image-region: rect(16px 80px 32px 64px);
 }
-toolbar[iconsize="small"] #home-button[disabled="true"] {
+toolbar[iconsize="small"] #home-button[disabled="true"] ,
+#personal-toolbar > #home-button[disabled="true"] {
   -moz-image-region: rect(32px 80px 48px 64px);
 }
-toolbar[iconsize="small"] #home-button:not([disabled="true"]):hover:active {
+toolbar[iconsize="small"] #home-button:not([disabled="true"]):hover:active ,
+#personal-toolbar > #home-button:not([disabled="true"]):hover:active {
   -moz-image-region: rect(64px 80px 80px 64px);
 }
 

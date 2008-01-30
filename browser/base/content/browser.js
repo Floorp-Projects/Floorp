@@ -949,6 +949,7 @@ function delayedStartup()
 
   gPrefService.addObserver(gHomeButton.prefDomain, gHomeButton, false);
   gHomeButton.updateTooltip();
+  gHomeButton.setPersonalToolbarStyle();
 
 #ifdef HAVE_SHELL_SERVICE
   // Perform default browser checking (after window opens).
@@ -3073,6 +3074,8 @@ function BrowserCustomizeToolbar()
   if (splitter)
     splitter.parentNode.removeChild(splitter);
 
+  gHomeButton.unsetPersonalToolbarStyle();
+
 #ifdef TOOLBAR_CUSTOMIZATION_SHEET
   var sheetFrame = document.getElementById("customizeToolbarSheetIFrame");
   sheetFrame.hidden = false;
@@ -3118,6 +3121,8 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
   }
 
   UpdateUrlbarSearchSplitterState();
+
+  gHomeButton.setPersonalToolbarStyle();
 
   // Update the urlbar
   if (gURLBar) {
@@ -4199,6 +4204,20 @@ var gHomeButton = {
     }
 
     return url;
+  },
+
+  setPersonalToolbarStyle: function ()
+  {
+    var homeButton = document.getElementById("home-button");
+    if (homeButton && homeButton.parentNode.id == "personal-toolbar")
+      homeButton.className = homeButton.className.replace("toolbarbutton-1", "bookmark-item");
+  },
+
+  unsetPersonalToolbarStyle: function ()
+  {
+    var homeButton = document.getElementById("home-button");
+    if (homeButton)
+      homeButton.className = homeButton.className.replace("bookmark-item", "toolbarbutton-1");
   }
 };
 
