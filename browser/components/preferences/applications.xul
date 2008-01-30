@@ -69,33 +69,6 @@
       <preference id="browser.feeds.handlers.webservice"
                   name="browser.feeds.handlers.webservice"
                   type="string"/>
-
-      <preference id="browser.videoFeeds.handler"
-                  name="browser.videoFeeds.handler"
-                  type="string"/>
-      <preference id="browser.videoFeeds.handler.default"
-                  name="browser.videoFeeds.handler.default"
-                  type="string"/>
-      <preference id="browser.videoFeeds.handlers.application"
-                  name="browser.videoFeeds.handlers.application"
-                  type="file"/>
-      <preference id="browser.videoFeeds.handlers.webservice"
-                  name="browser.videoFeeds.handlers.webservice"
-                  type="string"/>
-
-      <preference id="browser.audioFeeds.handler"
-                  name="browser.audioFeeds.handler"
-                  type="string"/>
-      <preference id="browser.audioFeeds.handler.default"
-                  name="browser.audioFeeds.handler.default"
-                  type="string"/>
-      <preference id="browser.audioFeeds.handlers.application"
-                  name="browser.audioFeeds.handlers.application"
-                  type="file"/>
-      <preference id="browser.audioFeeds.handlers.webservice"
-                  name="browser.audioFeeds.handlers.webservice"
-                  type="string"/>
-
       <preference id="pref.downloads.disable_button.edit_actions"
                   name="pref.downloads.disable_button.edit_actions"
                   type="bool"/>
