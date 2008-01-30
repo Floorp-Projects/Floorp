@@ -105,7 +105,8 @@ use constant SERVER_STARTUP_TIMEOUT => 45;
  # servers onto localhost:8888.  We have to grant them the same privileges as
  # localhost:8888 here, since the browser only knows them as the URLs they're
  # pretending to be.
-my @servers = ("localhost:8888", # MUST be first -- see PAC pref-setting code
+my @servers = (
+               "localhost:8888", # MUST be first -- see PAC pref-setting code
                "example.org:80",
                "test1.example.org:80",
                "test2.example.org:80",
@@ -128,7 +129,10 @@ my @servers = ("localhost:8888", # MUST be first -- see PAC pref-setting code
                "sub2.test1.example.com:80",
                "sub2.test2.example.com:80",
                "sectest1.example.org:80",
-               "sub.sectest2.example.org:80");
+               "sub.sectest2.example.org:80",
+               "sub1.xn--lt-uia.example.org:8000", # U+00E4 U+006C U+0074
+               "sub2.xn--lt-uia.example.org:80",   # U+00E4 U+006C U+0074
+              );
 
 
 my $profile = "mochitesttestingprofile";

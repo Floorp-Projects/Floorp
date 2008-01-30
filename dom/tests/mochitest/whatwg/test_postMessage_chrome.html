@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage
+-->
+<head>
+  <title>postMessage chrome tests</title>
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<!--
+This test runs at the following URL:
+chrome://mochikit/content/chrome/dom/tests/mochitest/whatwg/test_postMessage_chrome.html
+-->
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage">Mozilla Bug 387706</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe src="http://example.org/tests/dom/tests/mochitest/whatwg/postMessage_chrome_helper.html"
+        name="contentDomain"></iframe>
+
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+/** Test for Bug 387706 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var pathHead = "chrome://mochikit/content/chrome";
+var path = "/dom/tests/mochitest/whatwg/test_postMessage_chrome.html";
+var otherPath = "/tests/dom/tests/mochitest/whatwg/postMessage_chrome_helper.html";
+
+var testsCompletedCount = 0;
+
+/** Receives MessageEvents to this window. */
+function messageReceiver(evt)
+{
+  ok(evt instanceof MessageEvent, "umm, how did we get this?");
+  is(evt.type, "message", "expected events of type 'message'");
+
+  switch (evt.data)
+  {
+    case "post-to-self":
+      checkSelf(evt);
+      break;
+      
+    case "post-to-content-response":
+      receiveContent(evt);
+      break;
+
+    default:
+      ok(false, "unexpected message: " + evt.data);
+      break;
+  }
+
+  // if all the tests have executed, we're done
+  if (++testsCompletedCount == allTests.length)
+    setTimeout(SimpleTest.finish, 0);
+}
+
+
+/******************
+ * SELF-RESPONDER *
+ ******************/
+
+function checkSelf(evt)
+{
+  is(evt.isTrusted, true, "should have sent a trusted event");
+  is(evt.domain, "mochikit", "chrome: protocol's domain is the package");
+  is(evt.uri, pathHead + path, "event has wrong URI");
+  is(evt.source, null, "chrome posters get a null source, for security");
+}
+
+
+/*************
+ * RECEIVERS *
+ *************/
+
+function receiveContent(evt)
+{
+  is(evt.isTrusted, true, "should have sent a trusted event");
+  is(evt.domain, "example.org", "wrong domain for content page");
+  is(evt.uri, "http://example.org" + otherPath,
+     "content response event has wrong URI");
+  is(evt.source, window.frames.contentDomain,
+     "wrong source for same-domain message!");
+}
+
+
+/**************
+ * TEST SETUP *
+ **************/
+
+document.addEventListener("message", messageReceiver, false);
+
+/**
+ * Returns a nullary function which posts the given message to the given
+ * destination.
+ */
+function createMessageDispatcher(message, destination)
+{
+  return function() { destination.postMessage(message); };
+}
+
+var allTests =
+  [
+    createMessageDispatcher("post-to-self", window),
+    createMessageDispatcher("post-to-content",
+                            window.frames.contentDomain),
+  ];
+  
+allTests.forEach(addLoadEvent);
+</script>
+</pre>
+</body>
+</html>

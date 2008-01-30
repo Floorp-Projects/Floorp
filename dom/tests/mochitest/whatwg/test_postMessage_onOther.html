@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage
+-->
+<head>
+  <title>postMessage called through a different same-origin page</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage">Mozilla Bug 387706</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe src="http://localhost:8888/tests/dom/tests/mochitest/whatwg/postMessage_onOther.html"
+        name="firstFrame"></iframe>
+<iframe src="http://example.org:8000/tests/dom/tests/mochitest/whatwg/postMessage_onOther.html"
+        name="secondFrame"></iframe>
+
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+/** Test for Bug 387706 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var finished = false;
+
+/** Receives MessageEvents to this window. */
+function messageReceiver(evt)
+{
+  var fromURI = "http://example.org:8000/tests/dom/tests/mochitest/whatwg/postMessage_onOther.html";
+  ok(evt instanceof MessageEvent, "wrong event type");
+  is(evt.uri, fromURI, "unexpected URI");
+  is(evt.domain, "example.org", "unexpected domain");
+  is(evt.data, "response-to-sibling-sent-message",
+     "unexpected data in message");
+
+  // Handle buggy browsers that might somehow have received a message twice
+  if (finished)
+    return;
+
+  finished = true;
+  SimpleTest.finish();
+}
+
+function postToSecondFrameThroughFirstFrame()
+{
+  try
+  {
+    window.frames.firstFrame.testSiblingPostMessage();
+  }
+  catch (e)
+  {
+    ok(false, "threw exception trying to post through firstFrame: " + e);
+  }
+}
+
+/** For buggy browsers that didn't send a response. */
+function sentinel()
+{
+  if (!finished)
+  {
+    ok(false, "should have been finished by now -- didn't receive response?");
+    SimpleTest.finish();
+  }
+}
+
+document.addEventListener("message", messageReceiver, false);
+
+addLoadEvent(postToSecondFrameThroughFirstFrame);
+addLoadEvent(sentinel);
+</script>
+</pre>
+</body>
+</html>

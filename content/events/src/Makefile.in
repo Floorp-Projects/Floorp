@@ -80,6 +80,7 @@ CPPSRCS		= \
 		nsDOMPageTransitionEvent.cpp \
 		nsDOMXULCommandEvent.cpp \
 		nsDOMCommandEvent.cpp \
+		nsDOMMessageEvent.cpp \
 		nsPrivateTextRange.cpp \
 		nsDOMEventGroup.cpp \
 		nsXMLEventsManager.cpp \

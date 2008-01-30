@@ -45,8 +45,8 @@
     var tableContent = srvScope.linksToTableRows(links);
     function populate() {
       $("list-holder").setAttribute("rowspan", 1 + count);
-      $("test-list").innerHTML += listContent.toLowerCase();
-      $("test-table").innerHTML += tableContent.toLowerCase();
+      $("test-list").innerHTML += listContent;
+      $("test-table").innerHTML += tableContent;
       $("wrapper").innerHTML += " "; // redraw the table
     }
     gTestList = eval(srvScope.jsonArrayOfTestFiles(links));

@@ -309,6 +309,7 @@ pref("capability.policy.default.Window.length.get", "allAccess");
 pref("capability.policy.default.Window.location", "allAccess");
 pref("capability.policy.default.Window.opener.get", "allAccess");
 pref("capability.policy.default.Window.parent.get", "allAccess");
+pref("capability.policy.default.Window.postMessage.get", "allAccess");
 pref("capability.policy.default.Window.self.get", "allAccess");
 pref("capability.policy.default.Window.top.get", "allAccess");
 pref("capability.policy.default.Window.window.get", "allAccess");

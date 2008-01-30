@@ -420,6 +420,10 @@ enum nsDOMClassInfoID {
   // Data Events
   eDOMClassInfo_DataContainerEvent_id,
 
+  // event used for cross-domain message-passing and for server-sent events in
+  // HTML5
+  eDOMClassInfo_MessageEvent_id,
+
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };

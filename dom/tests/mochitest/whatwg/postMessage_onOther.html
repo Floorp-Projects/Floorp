@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>postMessage called through another frame</title>
+  <script type="application/javascript">
+    function receiveMessage(evt)
+    {
+      var response = "response-to-sibling-sent-message";
+
+      // Our parent frame called testSiblingPostMessage (below) on a frame
+      // containing this page on localhost:8888.  testSiblingPostMessage then
+      // called postMessage on this page on example.org:8000.  We thus expect
+      // to see an event whose source is the window of our sibling frame on
+      // localhost:8888.  In other words, the event we receive should have:
+      //
+      // http://localhost:8888/tests/dom/tests/mochitest/whatwg/postMessage_onOther.html
+      //
+      // and not
+      //
+      // http://localhost:8888/tests/dom/tests/mochitest/whatwg/test_postMessage_onOther.html
+      //
+      // as its source.
+
+      if (evt.data !== "message-from-sibling")
+        response += " wrong-data(" + evt.data + ")";
+      if (evt.uri !== "http://localhost:8888/tests/dom/tests/mochitest/whatwg/postMessage_onOther.html")
+        response += " failed-wrong-uri(" + evt.uri + ")";
+      if (evt.domain !== "localhost")
+        response += " failed-wrong-domain(" + evt.domain + ")";
+      if (evt.source !== window.parent.firstFrame)
+        response += " failed-wrong-source";
+
+      window.parent.postMessage(response);
+    }
+
+    function testSiblingPostMessage()
+    {
+      window.parent.secondFrame.postMessage("message-from-sibling");
+    }
+
+    function setup()
+    {
+      var target = document.getElementById("location");
+      target.textContent = document.domain;
+    }
+
+    document.addEventListener("message", receiveMessage, false);
+    window.addEventListener("load", setup, false);
+  </script>
+</head>
+<body>
+<h1 id="location">No location!</h1>
+</body>
+</html>

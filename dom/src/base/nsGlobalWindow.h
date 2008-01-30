@@ -98,6 +98,11 @@
 #include "nsPIDOMEventTarget.h"
 #include "nsIArray.h"
 
+/* I hate you, Windows. */
+#ifdef PostMessage
+#undef PostMessage
+#endif
+
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
 
@@ -211,7 +216,7 @@ private:
 // jst@netscape.com
 
 // nsGlobalWindow inherits PRCList for maintaining a list of all inner
-// widows still in memory for any given outer window. This list is
+// windows still in memory for any given outer window. This list is
 // needed to ensure that mOuterWindow doesn't end up dangling. The
 // nature of PRCList means that the window itself is always in the
 // list, and an outer window's list will also contain all inner window
