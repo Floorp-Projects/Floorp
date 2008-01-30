@@ -112,10 +112,7 @@ FindPrincipals(JSContext *cx, JSObject *obj, nsIPrincipal **objectPrincipal,
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsCOMPtr<nsIXPCSecurityManager> sm = ccx.GetXPCContext()->
-    GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_CALL_METHOD);
-
-  nsCOMPtr<nsIScriptSecurityManager> ssm(do_QueryInterface(sm));
+  nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
 
   if (subjectPrincipal) {
     nsCOMPtr<nsIPrincipal> tmp = ssm->GetCxSubjectPrincipal(cx);
@@ -130,8 +127,7 @@ FindPrincipals(JSContext *cx, JSObject *obj, nsIPrincipal **objectPrincipal,
   ssm->GetObjectPrincipal(cx, obj, objectPrincipal);
 
   if (secMgr) {
-    *secMgr = nsnull;
-    ssm.swap(*secMgr);
+    NS_ADDREF(*secMgr = ssm);
   }
 
   return *objectPrincipal ? NS_OK : NS_ERROR_XPC_SECURITY_MANAGER_VETO;
