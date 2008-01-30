@@ -96,6 +96,7 @@
 #define PREF_BDM_QUITBEHAVIOR "browser.download.manager.quitBehavior"
 #define PREF_BDM_CLOSEWHENDONE "browser.download.manager.closeWhenDone"
 #define PREF_BDM_ADDTORECENTDOCS "browser.download.manager.addToRecentDocs"
+#define PREF_BDM_SCANWHENDONE "browser.download.manager.scanWhenDone"
 #define PREF_BH_DELETETEMPFILEONEXIT "browser.helperApps.deleteTempFileOnExit"
 
 static const PRInt64 gUpdateInterval = 400 * PR_USEC_PER_MSEC;
@@ -2130,7 +2131,15 @@ nsDownload::OnStateChange(nsIWebProgress *aWebProgress,
       mLastUpdate = PR_Now();
 
 #if defined(XP_WIN) && !defined(__MINGW32__)
-      (void)SetState(nsIDownloadManager::DOWNLOAD_SCANNING);
+      PRBool scan = PR_TRUE;
+      nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+      if (prefs)
+        (void)prefs->GetBoolPref(PREF_BDM_SCANWHENDONE, &scan);
+
+      if (scan)
+        (void)SetState(nsIDownloadManager::DOWNLOAD_SCANNING);
+      else
+        (void)SetState(nsIDownloadManager::DOWNLOAD_FINISHED);
 #else
       (void)SetState(nsIDownloadManager::DOWNLOAD_FINISHED);
 #endif
