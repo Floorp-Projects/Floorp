@@ -192,7 +192,7 @@ public:
    * Unwraps a XPCCrossOriginWrapper into its wrapped native.
    */
   static JSObject *Unwrap(JSContext *cx, JSObject *wrapper) {
-    if (JS_GET_CLASS(cx, wrapper) != &sXPC_XOW_JSClass.base) {
+    if (STOBJ_GET_CLASS(wrapper) != &sXPC_XOW_JSClass.base) {
       return nsnull;
     }
 
