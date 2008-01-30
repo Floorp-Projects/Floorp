@@ -81,6 +81,7 @@ nsCrossSiteListenerProxy::ForwardRequest(PRBool aFromStop)
   }
 
   if (mAcceptState != eAccept) {
+    mAcceptState = eDeny;
     mOuterRequest->Cancel(NS_ERROR_DOM_BAD_URI);
     mOuter->OnStartRequest(mOuterRequest, mOuterContext);
 
@@ -90,6 +91,9 @@ nsCrossSiteListenerProxy::ForwardRequest(PRBool aFromStop)
     if (aFromStop) {
       mOuter->OnStopRequest(mOuterRequest, mOuterContext, NS_ERROR_DOM_BAD_URI);
     }
+
+    // Clear this data just in case since it should never be forwarded.
+    mStoredData.Truncate();
 
     return NS_ERROR_DOM_BAD_URI;
   }
@@ -274,6 +278,9 @@ nsCrossSiteListenerProxy::OnDataAvailable(nsIRequest* aRequest,
                                           PRUint32 aCount)
 {
   if (mHasForwardedRequest) {
+    if (mAcceptState != eAccept) {
+      return NS_ERROR_DOM_BAD_URI;
+    }
     return mOuter->OnDataAvailable(aRequest, aContext, aInputStream, aOffset,
                                    aCount);
   }
@@ -300,7 +307,7 @@ nsCrossSiteListenerProxy::OnDataAvailable(nsIRequest* aRequest,
   // result in an error bubbling up to here. We want to ignore the error
   // in that case.
   if (mHasForwardedRequest) {
-    rv = NS_OK;
+    rv = mAcceptState == eAccept ? NS_OK : NS_ERROR_DOM_BAD_URI;
   }
   return rv;
 }
