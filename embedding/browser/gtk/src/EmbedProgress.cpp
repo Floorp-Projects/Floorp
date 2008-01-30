@@ -37,9 +37,9 @@
 
 #include "EmbedProgress.h"
 
-#include <nsIChannel.h>
-#include <nsIWebProgress.h>
-#include <nsIDOMWindow.h>
+#include "nsIChannel.h"
+#include "nsIWebProgress.h"
+#include "nsIDOMWindow.h"
 
 #include "nsIURI.h"
 

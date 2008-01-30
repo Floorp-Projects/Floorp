@@ -38,9 +38,9 @@
 #ifndef __EmbedEventListener_h
 #define __EmbedEventListener_h
 
-#include <nsIDOMKeyListener.h>
-#include <nsIDOMMouseListener.h>
-#include <nsIDOMUIListener.h>
+#include "nsIDOMKeyListener.h"
+#include "nsIDOMMouseListener.h"
+#include "nsIDOMUIListener.h"
 
 class EmbedPrivate;
 

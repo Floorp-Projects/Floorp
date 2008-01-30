@@ -39,12 +39,12 @@
 
 #include "GtkPromptService.h"
 #include "EmbedPrompter.h"
-#include <nsString.h>
-#include <nsIWindowWatcher.h>
-#include <nsIWebBrowserChrome.h>
-#include <nsIEmbeddingSiteWindow.h>
-#include <nsCOMPtr.h>
-#include <nsIServiceManager.h>
+#include "nsString.h"
+#include "nsIWindowWatcher.h"
+#include "nsIWebBrowserChrome.h"
+#include "nsIEmbeddingSiteWindow.h"
+#include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
 
 GtkPromptService::GtkPromptService()
 {
