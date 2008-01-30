@@ -234,19 +234,33 @@ js_TraceContext(JSTracer *trc, JSContext *acx);
  */
 typedef enum JSGCInvocationKind {
     /* Normal invocation. */
-    GC_NORMAL,
+    GC_NORMAL           = 0,
 
     /*
      * Called from js_DestroyContext for last JSContext in a JSRuntime, when
      * it is imperative that rt->gcPoke gets cleared early in js_GC.
      */
-    GC_LAST_CONTEXT,
+    GC_LAST_CONTEXT     = 1,
+
+    /*
+     * Flag bit telling js_GC that the caller has already acquired rt->gcLock.
+     * Currently, this flag is set for the invocation kinds that also preserve
+     * atoms and weak roots, so we don't need another bit for GC_KEEP_ATOMS.
+     */
+    GC_LOCK_HELD        = 2,
+    GC_KEEP_ATOMS       = GC_LOCK_HELD,
+
+    /*
+     * Called from js_SetProtoOrParent with a request to set an object's proto
+     * or parent slot inserted on rt->setSlotRequests.
+     */
+    GC_SET_SLOT_REQUEST = GC_LOCK_HELD | 0,
 
     /*
      * Called from js_NewGCThing as a last-ditch GC attempt. See comments
-     * before js_GC definition for details.
+     * in jsgc.c just before js_GC's definition for details.
      */
-    GC_LAST_DITCH
+    GC_LAST_DITCH       = GC_LOCK_HELD | 1
 } JSGCInvocationKind;
 
 extern void
