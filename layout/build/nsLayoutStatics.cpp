@@ -81,6 +81,7 @@
 #include "nsCCUncollectableMarker.h"
 #include "nsTextFragment.h"
 #include "nsCSSRuleProcessor.h"
+#include "nsXMLHttpRequest.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -303,6 +304,8 @@ nsLayoutStatics::Shutdown()
   nsHTMLEditor::Shutdown();
   nsTextServicesDocument::Shutdown();
 #endif
+
+  nsXMLHttpRequest::ShutdownACCache();
 }
 
 void

@@ -130,6 +130,8 @@
    XML_HTTP_REQUEST_SENT |                  \
    XML_HTTP_REQUEST_STOPPED)
 
+#define ACCESS_CONTROL_CACHE_SIZE 100
+
 // This helper function adds the given load flags to the request's existing
 // load flags.
 static void AddLoadFlags(nsIRequest *request, nsLoadFlags newFlags)
@@ -241,9 +243,11 @@ public:
   nsACProxyListener(nsIChannel* aOuterChannel,
                     nsIStreamListener* aOuterListener,
                     nsISupports* aOuterContext,
+                    nsIPrincipal* aReferrerPrincipal,
                     const nsACString& aRequestMethod)
    : mOuterChannel(aOuterChannel), mOuterListener(aOuterListener),
-     mOuterContext(aOuterContext), mRequestMethod(aRequestMethod)
+     mOuterContext(aOuterContext), mReferrerPrincipal(aReferrerPrincipal),
+     mRequestMethod(aRequestMethod)
   { }
 
   NS_DECL_ISUPPORTS
@@ -256,6 +260,7 @@ private:
   nsCOMPtr<nsIChannel> mOuterChannel;
   nsCOMPtr<nsIStreamListener> mOuterListener;
   nsCOMPtr<nsISupports> mOuterContext;
+  nsCOMPtr<nsIPrincipal> mReferrerPrincipal;
   nsCString mRequestMethod;
 };
 
@@ -286,6 +291,40 @@ nsACProxyListener::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
                                 nsCaseInsensitiveCStringComparator())) {
         rv = NS_OK;
         break;
+      }
+    }
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    // Everything worked, check to see if there is an expiration time set on
+    // this access control list. If so go ahead and cache it.
+
+    // The "Method-Check-Max-Age" header should return an age in seconds.
+    nsCAutoString ageString;
+    http->GetResponseHeader(NS_LITERAL_CSTRING("Method-Check-Max-Age"),
+                            ageString);
+
+    // Sanitize the string. We only allow 'delta-seconds' as specified by
+    // http://dev.w3.org/2006/waf/access-control (digits 0-9 with no leading or
+    // trailing non-whitespace characters). We don't allow a + or - character
+    // but PR_sscanf does so we ensure that the first character is actually a
+    // digit.
+    ageString.StripWhitespace();
+    if (ageString.CharAt(0) >= '0' || ageString.CharAt(0) <= '9') {
+      PRUint64 age;
+      PRInt32 convertedChars = PR_sscanf(ageString.get(), "%llu", &age);
+      if ((PRInt32)ageString.Length() == convertedChars &&
+          nsXMLHttpRequest::EnsureACCache()) {
+
+        // String seems fine, go ahead and cache.
+        nsCOMPtr<nsIURI> uri;
+        http->GetURI(getter_AddRefs(uri));
+
+        // PR_Now gives microseconds
+        PRTime expirationTime = PR_Now() + age * PR_USEC_PER_SEC;
+        nsXMLHttpRequest::sAccessControlCache->PutEntry(mRequestMethod, uri,
+                                                        mReferrerPrincipal,
+                                                        expirationTime);
       }
     }
   }
@@ -365,10 +404,158 @@ GetDocumentFromScriptContext(nsIScriptContext *aScriptContext)
   return doc;
 }
 
+void
+nsAccessControlLRUCache::GetEntry(const nsACString& aMethod,
+                                  nsIURI* aURI,
+                                  nsIPrincipal* aPrincipal,
+                                  PRTime* _retval)
+{
+  nsCAutoString key;
+  if (GetCacheKey(aMethod, aURI, aPrincipal, key)) {
+    CacheEntry* entry;
+    if (GetEntryInternal(key, &entry)) {
+      *_retval = entry->value;
+      return;
+    }
+  }
+  *_retval = 0;
+}
+
+void
+nsAccessControlLRUCache::PutEntry(const nsACString& aMethod,
+                                  nsIURI* aURI,
+                                  nsIPrincipal* aPrincipal,
+                                  PRTime aValue)
+{
+  nsCString key;
+  if (!GetCacheKey(aMethod, aURI, aPrincipal, key)) {
+    NS_WARNING("Invalid cache key!");
+    return;
+  }
+
+  CacheEntry* entry;
+  if (GetEntryInternal(key, &entry)) {
+    // Entry already existed, just update the expiration time and bail. The LRU
+    // list is updated as a result of the call to GetEntryInternal.
+    entry->value = aValue;
+    return;
+  }
+
+  // This is a new entry, allocate and insert into the table now so that any
+  // failures don't cause items to be removed from a full cache.
+  entry = new CacheEntry(key, aValue);
+  if (!entry) {
+    NS_WARNING("Failed to allocate new cache entry!");
+    return;
+  }
+
+  if (!mTable.Put(key, entry)) {
+    // Failed, clean up the new entry.
+    delete entry;
+
+    NS_WARNING("Failed to add entry to the access control cache!");
+    return;
+  }
+
+  PR_INSERT_LINK(entry, &mList);
+
+  NS_ASSERTION(mTable.Count() <= ACCESS_CONTROL_CACHE_SIZE + 1,
+               "Something is borked, too many entries in the cache!");
+
+  // Now enforce the max count.
+  if (mTable.Count() > ACCESS_CONTROL_CACHE_SIZE) {
+    // Try to kick out all the expired entries.
+    PRTime now = PR_Now();
+    mTable.Enumerate(RemoveExpiredEntries, &now);
+
+    // If that didn't remove anything then kick out the least recently used
+    // entry.
+    if (mTable.Count() > ACCESS_CONTROL_CACHE_SIZE) {
+      CacheEntry* lruEntry = static_cast<CacheEntry*>(PR_LIST_TAIL(&mList));
+      PR_REMOVE_LINK(lruEntry);
+
+      // This will delete 'lruEntry'.
+      mTable.Remove(lruEntry->key);
+
+      NS_ASSERTION(mTable.Count() >= ACCESS_CONTROL_CACHE_SIZE,
+                   "Somehow tried to remove an entry that was never added!");
+    }
+  }
+}
+
+void
+nsAccessControlLRUCache::Clear()
+{
+  PR_INIT_CLIST(&mList);
+  mTable.Clear();
+}
+
+PRBool
+nsAccessControlLRUCache::GetEntryInternal(const nsACString& aKey,
+                                          CacheEntry** _retval)
+{
+  if (!mTable.Get(aKey, _retval))
+    return PR_FALSE;
+
+  // Move to the head of the list.
+  PR_REMOVE_LINK(*_retval);
+  PR_INSERT_LINK(*_retval, &mList);
+
+  return PR_TRUE;
+}
+
+/* static */ PR_CALLBACK PLDHashOperator
+nsAccessControlLRUCache::RemoveExpiredEntries(const nsACString& aKey,
+                                              nsAutoPtr<CacheEntry>& aValue,
+                                              void* aUserData)
+{
+  PRTime* now = static_cast<PRTime*>(aUserData);
+  if (*now >= aValue->value) {
+    // Expired, remove from the list as well as the hash table.
+    PR_REMOVE_LINK(aValue);
+    return PL_DHASH_REMOVE;
+  }
+  // Keep going.
+  return PL_DHASH_NEXT;
+}
+
+/* static */ PRBool
+nsAccessControlLRUCache::GetCacheKey(const nsACString& aMethod,
+                                     nsIURI* aURI,
+                                     nsIPrincipal* aPrincipal,
+                                     nsACString& _retval)
+{
+  NS_ASSERTION(!aMethod.IsEmpty(), "Empty method string!");
+  NS_ASSERTION(aURI, "Null uri!");
+  NS_ASSERTION(aPrincipal, "Null principal!");
+  
+  NS_NAMED_LITERAL_CSTRING(space, " ");
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  
+  nsCAutoString host;
+  if (uri) {
+    uri->GetHost(host);
+  }
+
+  nsCAutoString spec;
+  rv = aURI->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  _retval.Assign(aMethod + space + host + space + spec);
+
+  return PR_TRUE;
+}
+
 /////////////////////////////////////////////
 //
 //
 /////////////////////////////////////////////
+
+// Will be initialized in nsXMLHttpRequest::EnsureACCache.
+nsAccessControlLRUCache* nsXMLHttpRequest::sAccessControlCache = nsnull;
 
 nsXMLHttpRequest::nsXMLHttpRequest()
   : mState(XML_HTTP_REQUEST_UNINITIALIZED)
@@ -1346,18 +1533,35 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
     }
   }
 
-  // Do we need to set up an initial GET request to make sure that it is safe
-  // to make the request?
+  // Do we need to set up an initial OPTIONS request to make sure that it is
+  // safe to make the request?
   if ((mState & XML_HTTP_REQUEST_USE_XSITE_AC) &&
       (mState & XML_HTTP_REQUEST_NON_GET)) {
-    rv = NS_NewChannel(getter_AddRefs(mACGetChannel), uri, nsnull, loadGroup, nsnull,
-                       loadFlags);
-    NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIHttpChannel> acHttp = do_QueryInterface(mACGetChannel);
-    rv = acHttp->SetRequestHeader(
-      NS_LITERAL_CSTRING("XMLHttpRequest-Security-Check"), method, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // Check to see if this initial OPTIONS request has already been cached in
+    // our special Access Control Cache.
+    PRTime expiration = 0;
+    if (sAccessControlCache) {
+      sAccessControlCache->GetEntry(method, uri, mPrincipal, &expiration);
+    }
+
+    if (expiration <= PR_Now()) {
+      // Either it wasn't cached or the cached result has expired. Build a
+      // channel for the OPTIONS request.
+      rv = NS_NewChannel(getter_AddRefs(mACGetChannel), uri, nsnull, loadGroup,
+                         nsnull, loadFlags);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIHttpChannel> acHttp = do_QueryInterface(mACGetChannel);
+      NS_ASSERTION(acHttp, "Failed to QI to nsIHttpChannel!");
+
+      rv = acHttp->SetRequestMethod(NS_LITERAL_CSTRING("OPTIONS"));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = acHttp->SetRequestHeader(NS_LITERAL_CSTRING("Method-Check"), method,
+                                    PR_FALSE);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   ChangeState(XML_HTTP_REQUEST_OPENED);
@@ -2085,7 +2289,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   // a GET request to the same URI. Set that up if needed
   if (mACGetChannel) {
     nsCOMPtr<nsIStreamListener> acListener =
-      new nsACProxyListener(mChannel, listener, nsnull, method);
+      new nsACProxyListener(mChannel, listener, nsnull, mPrincipal, method);
     NS_ENSURE_TRUE(acListener, NS_ERROR_OUT_OF_MEMORY);
 
     listener = new nsCrossSiteListenerProxy(acListener, mPrincipal);
