@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>postMessage message receiver</title>
+  <script type="application/javascript" src="browserFu.js"></script>
+  <script type="application/javascript">
+    function $(id) { return document.getElementById(id); }
+
+    function setup()
+    {
+      $("domain").textContent = location.hostname + ":" + (location.port || 80);
+    }
+
+    var otherPath = "/tests/dom/tests/mochitest/whatwg/test_postMessage.html";
+    
+    function receiveMessage(evt)
+    {
+      var response = evt.data + "-response";
+
+      if (evt.source !== window.parent)
+      {
+        response += " unexpected-source(" + evt.source + ")";
+        response += " window-parent-is(" + window.parent + ")";
+        response += " location(" + window.location.href + ")";
+      }
+
+      if (isMozilla && evt.isTrusted)
+        response += " unexpected-trusted";
+
+      if (evt.type != "message")
+        response += " wrong-type(" + evt.type + ")";
+
+      var data = evt.data;
+      if (data == "post-to-other-same-domain")
+      {
+        receiveSame(evt, response);
+      }
+      else if (data == "post-to-other-cross-domain")
+      {
+        receiveCross(evt, response);
+      }
+      else
+      {
+        response += " unexpected-message-to(" + window.location.href + ")";
+        window.parent.postMessage(response);
+        return;
+      }
+    }
+
+    function receiveSame(evt, response)
+    {
+      var source = evt.source;
+      try
+      {
+        if (evt.domain != "localhost")
+          response += " unexpected-domain(" + evt.domain + ")";
+        if (evt.uri != "http://localhost:8888" + otherPath)
+          response += " unexpected-uri(" + evt.uri + ")";
+          
+        try
+        {
+          var threw = false;
+          var privateVariable = source.privateVariable;
+        }
+        catch (e)
+        {
+          threw = true;
+        }
+        if (threw || privateVariable !== window.parent.privateVariable)
+          response += " accessed-source!!!";
+  
+      }
+      finally
+      {
+        source.postMessage(response);
+      }
+    }
+
+    function receiveCross(evt, response)
+    {
+      var source = evt.source;
+      if (evt.domain != "localhost")
+        response += " unexpected-domain(" + evt.domain + ")";
+      if (evt.uri != "http://localhost:8888" + otherPath)
+        response += " unexpected-uri(" + evt.uri + ")";
+        
+      try
+      {
+        var threw = false;
+        var privateVariable = source.privateVariable;
+      }
+      catch (e)
+      {
+        threw = true;
+      }
+      if (!threw || privateVariable !== undefined)
+        response += " accessed-source!!!";
+
+      source.postMessage(response);
+    }
+
+    window.addEventListener("load", setup, false);
+    document.addEventListener("message", receiveMessage, false);
+  </script>
+</head>
+<body>
+<h1 id="domain"></h1>
+</body>
+</html>
