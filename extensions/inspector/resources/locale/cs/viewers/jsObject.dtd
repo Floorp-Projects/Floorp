@@ -35,6 +35,16 @@
    -
 #endif
    - ***** END LICENSE BLOCK ***** -->
-<!ENTITY nodeName.label "Jméno uzlu">
-<!ENTITY namespaceURI.label "Jmenný prostor">
-<!ENTITY nodeType.label "Typ uzlu">
+
+<!ENTITY jsCopyValue.label "Kopírovat hodnotu">
+<!ENTITY jsEval.label "Vyhodnotit JavaScript">
+
+<!ENTITY jsProperty.label "Vlastnost">
+<!ENTITY jsValue.label "Hodnota">
+
+<!ENTITY evaluateDialog.title "Vyhodnocení výrazu">
+<!ENTITY jsEval.desc "Vložte výraz v jazyce JavaScript. Proměnná &quot;target&quot; obsahuje objekt, který je právě zvolen.">
+<!ENTITY jsExecute.label "Spustit">
+<!ENTITY inspectReturn.label "Výsledek vypsat v:">
+<!ENTITY inspectReturnNew.label "novém okně">
+<!ENTITY inspectReturnExisting.label "existujícím okně">
