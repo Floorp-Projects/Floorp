@@ -91,6 +91,8 @@ public:
     return mCompleters.Get(tableName, completer);
   }
 
+  nsresult CacheCompletions(nsTArray<nsUrlClassifierLookupResult> *results);
+
 private:
   // No subclassing
   ~nsUrlClassifierDBService();
