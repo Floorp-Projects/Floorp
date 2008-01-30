@@ -12,6 +12,10 @@
    <a class="url fn" href="http://tantek.com/">Tantek Çelik</a>
    <div id="vcard1_org" class="org">Technorati</div>
   </div>  
+  <div class="vcard" id="vcard2_node">
+   <a class="url" href="http://tantek.com/">Tantek Çelik</a>
+   <div id="vcard2_org" class="org">Technorati</div>
+  </div>  
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -28,6 +32,7 @@ function test_Microformats() {
   var hCards = Microformats.get("hCard", document, {showHidden: true});
   is(hCards.length, 1, "Check Microformats.get");
   is(Microformats.count("hCard", document,  {showHidden: true}), 1, "Check Microformats.count");
+  is(Microformats.count("hCard", document,  {showHidden: true, debug: true}), 2, "Check Microformats.count (debug)");
   ok(Microformats.isMicroformat(document.getElementById("vcard1_node")), "Check isMicroformat");
   is(Microformats.getParent(document.getElementById("vcard1_org")), document.getElementById("vcard1_node"), "Check getParent");
   is(Microformats.getNamesFromNode(document.getElementById("vcard1_node")), "hCard", "Check getNamesFromNode");
