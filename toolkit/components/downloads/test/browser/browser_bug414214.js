@@ -56,10 +56,23 @@ function test()
   Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch).
   setBoolPref(PREF_BDM_CLOSEWHENDONE, true);
 
-  // OK, let's pull up the UI
-  // Linux uses y, everything else is j
-  var key = navigator.platform.match("Linux") ? "y" : "j";
-  EventUtils.synthesizeKey(key, {metaKey: true}, window.opener);
+  var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+           getService(Ci.nsIWindowWatcher);
+
+  // register a callback to add a load listener to know when the download
+  // manager opens
+  var obs = {
+    observe: function(aSubject, aTopic, aData) {
+      // unregister ourself
+      ww.unregisterNotification(this);
+
+      var win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
+      win.addEventListener("DOMContentLoaded", finishUp, false);
+    }
+  };
+
+  // register our observer
+  ww.registerNotification(obs);
 
   // The window doesn't open once we call show, so we need to wait a little bit
   function finishUp() {
@@ -74,6 +87,10 @@ function test()
     finish();
   }
   
+  // OK, let's pull up the UI
+  // Linux uses y, everything else is j
+  var key = navigator.platform.match("Linux") ? "y" : "j";
+  EventUtils.synthesizeKey(key, {metaKey: true}, window.opener);
+
   waitForExplicitFinish();
-  window.setTimeout(finishUp, 1000);
 }
