@@ -129,6 +129,47 @@ gfxOS2Surface::gfxOS2Surface(HWND aWnd)
     Init(surf);
 }
 
+gfxOS2Surface::gfxOS2Surface(HDC aDC, const gfxIntSize& aSize)
+    : mHasWnd(PR_FALSE), mDC(aDC), mBitmap(nsnull), mSize(aSize)
+{
+#ifdef DEBUG_thebes_2
+    printf("gfxOS2Surface[%#x]::gfxOS2Surface(HDC=%#x, Size=%dx%d)\n", (unsigned int)this,
+           (unsigned int)aDC, aSize.width, aSize.height);
+#endif
+    SIZEL sizel = { 0, 0 }; // use same page size as device
+    mPS = GpiCreatePS(0, mDC, &sizel, PU_PELS | GPIT_MICRO | GPIA_ASSOC);
+    NS_ASSERTION(mPS != GPI_ERROR, "Could not create PS on print DC!");
+
+    // now create a bitmap of the right size
+    BITMAPINFOHEADER2 hdr = { 0 };
+    hdr.cbFix = sizeof(BITMAPINFOHEADER2);
+    hdr.cx = mSize.width;
+    hdr.cy = mSize.height;
+    hdr.cPlanes = 1;
+
+    // find bit depth
+    LONG lBitCount = 0;
+    DevQueryCaps(mDC, CAPS_COLOR_BITCOUNT, 1, &lBitCount);
+    hdr.cBitCount = (USHORT)lBitCount;
+
+    mBitmap = GpiCreateBitmap(mPS, &hdr, 0, 0, 0);
+    NS_ASSERTION(mBitmap != GPI_ERROR, "Could not create bitmap for printer!");
+    // set final stats & select bitmap into PS
+    GpiSetBitmap(mPS, mBitmap);
+
+    // now we can finally create the cairo surface on the in-memory PS
+    cairo_surface_t *surf = cairo_os2_surface_create(mPS, mSize.width, mSize.height);
+#ifdef DEBUG_thebes_2
+    printf("  type(%#x)=%d (ID=%#x, h/w=%d/%d)\n", (unsigned int)surf,
+           cairo_surface_get_type(surf), (unsigned int)mPS, mSize.width, mSize.height);
+#endif
+    // Normally, OS/2 cairo surfaces have to be forced to redraw completely
+    // by calling cairo_surface_mark_dirty(surf), but Mozilla paints them in
+    // full, so that is not necessary here.
+
+    Init(surf);
+}
+
 gfxOS2Surface::~gfxOS2Surface()
 {
 #ifdef DEBUG_thebes_2
@@ -136,8 +177,8 @@ gfxOS2Surface::~gfxOS2Surface()
 #endif
 
     // Surfaces connected to a window were created using WinGetPS so we should
-    // release it again with WinReleasePS. Memory surfaces on the other
-    // hand were created on memory device contexts with the GPI functions, so
+    // release it again with WinReleasePS. Memory or printer surfaces on the
+    // other hand were created on device contexts with the GPI functions, so
     // use those to clean up stuff.
     if (mHasWnd) {
         if (mPS) {

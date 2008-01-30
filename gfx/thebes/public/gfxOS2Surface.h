@@ -52,6 +52,8 @@ public:
                   gfxASurface::gfxImageFormat aImageFormat);
     // constructor for surface connected to an onscreen window
     gfxOS2Surface(HWND aWnd);
+    // constructor for surface connected to a printing device context
+    gfxOS2Surface(HDC aDC, const gfxIntSize& aSize);
     virtual ~gfxOS2Surface();
 
     // Special functions that only make sense for the OS/2 port of cairo:
