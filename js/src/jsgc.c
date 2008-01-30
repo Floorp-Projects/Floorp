@@ -902,6 +902,7 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
      * for default backward API compatibility.
      */
     rt->gcMaxBytes = rt->gcMaxMallocBytes = maxbytes;
+    rt->gcStackPoolLifespan = 30000;
 
     METER(memset(&rt->gcStats, 0, sizeof rt->gcStats));
     return JS_TRUE;
@@ -2199,9 +2200,23 @@ TraceWeakRoots(JSTracer *trc, JSWeakRoots *wr)
 JS_FRIEND_API(void)
 js_TraceContext(JSTracer *trc, JSContext *acx)
 {
+    JSArena *a;
+    int64 *timestamp;
     JSStackFrame *fp, *nextChain;
     JSStackHeader *sh;
     JSTempValueRooter *tvr;
+
+    /*
+     * Release stackPool here, if it has been in existence for longer
+     * than the limit specified by gcStackPoolLifespan.
+     */
+    a = acx->stackPool.current;
+    if (a == acx->stackPool.first.next &&
+        a->avail == a->base + sizeof(int64)) {
+        timestamp = (int64 *) a->base;
+        if (JS_Now() - *timestamp > acx->runtime->gcStackPoolLifespan * 1000)
+            JS_FinishArenaPool(&acx->stackPool);
+    }
 
     /*
      * Iterate frame chain and dormant chains.
