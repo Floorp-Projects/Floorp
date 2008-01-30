@@ -195,47 +195,51 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
   NS_ENSURE_TRUE(mDecoder, NS_ERROR_NOT_INITIALIZED);
 
   // set date format
-  switch (dateFormatSelector) {
-    case kDateFormatNone:
-      PL_strncpy(fmtD, "", NSDATETIME_FORMAT_BUFFER_LEN);
-      break; 
-    case kDateFormatLong:
-    case kDateFormatShort:
-      PL_strncpy(fmtD, "%x", NSDATETIME_FORMAT_BUFFER_LEN);
-      break; 
-    case kDateFormatYearMonth:
-      PL_strncpy(fmtD, "%y/%m", NSDATETIME_FORMAT_BUFFER_LEN);
-      break; 
-    case kDateFormatWeekday:
-      PL_strncpy(fmtD, "%a", NSDATETIME_FORMAT_BUFFER_LEN);
-      break;
-    default:
-      PL_strncpy(fmtD, "", NSDATETIME_FORMAT_BUFFER_LEN); 
-  }
+  if (dateFormatSelector == kDateFormatLong && timeFormatSelector == kTimeFormatSeconds) {
+    PL_strncpy(fmtD, "%c", NSDATETIME_FORMAT_BUFFER_LEN);
+    PL_strncpy(fmtT, "", NSDATETIME_FORMAT_BUFFER_LEN); 
+  } else {
 
-  // set time format
-  switch (timeFormatSelector) {
-    case kTimeFormatNone:
-      PL_strncpy(fmtT, "", NSDATETIME_FORMAT_BUFFER_LEN); 
-      break;
-    case kTimeFormatSeconds:
-      PL_strncpy(fmtT, 
-                 mLocalePreferred24hour ? "%H:%M:%S" : mLocaleAMPMfirst ? "%p %I:%M:%S" : "%I:%M:%S %p", 
-                 NSDATETIME_FORMAT_BUFFER_LEN);
-      break;
-    case kTimeFormatNoSeconds:
-      PL_strncpy(fmtT, 
-                 mLocalePreferred24hour ? "%H:%M" : mLocaleAMPMfirst ? "%p %I:%M" : "%I:%M %p", 
-                 NSDATETIME_FORMAT_BUFFER_LEN);
-      break;
-    case kTimeFormatSecondsForce24Hour:
-      PL_strncpy(fmtT, "%H:%M:%S", NSDATETIME_FORMAT_BUFFER_LEN);
-      break;
-    case kTimeFormatNoSecondsForce24Hour:
-      PL_strncpy(fmtT, "%H:%M", NSDATETIME_FORMAT_BUFFER_LEN);
-      break;
-    default:
-      PL_strncpy(fmtT, "", NSDATETIME_FORMAT_BUFFER_LEN); 
+    switch (dateFormatSelector) {
+      case kDateFormatNone:
+        PL_strncpy(fmtD, "", NSDATETIME_FORMAT_BUFFER_LEN);
+        break; 
+      case kDateFormatLong:
+      case kDateFormatShort:
+        PL_strncpy(fmtD, "%x", NSDATETIME_FORMAT_BUFFER_LEN);
+        break; 
+      case kDateFormatYearMonth:
+        PL_strncpy(fmtD, "%y/%m", NSDATETIME_FORMAT_BUFFER_LEN);
+        break; 
+      case kDateFormatWeekday:
+        PL_strncpy(fmtD, "%a", NSDATETIME_FORMAT_BUFFER_LEN);
+        break;
+      default:
+        PL_strncpy(fmtD, "", NSDATETIME_FORMAT_BUFFER_LEN); 
+    }
+
+    // set time format
+    switch (timeFormatSelector) {
+      case kTimeFormatNone:
+        PL_strncpy(fmtT, "", NSDATETIME_FORMAT_BUFFER_LEN); 
+        break;
+      case kTimeFormatSeconds:
+        PL_strncpy(fmtT, "%X", NSDATETIME_FORMAT_BUFFER_LEN);
+        break;
+      case kTimeFormatNoSeconds:
+        PL_strncpy(fmtT, 
+                   mLocalePreferred24hour ? "%H:%M" : mLocaleAMPMfirst ? "%p %I:%M" : "%I:%M %p", 
+                   NSDATETIME_FORMAT_BUFFER_LEN);
+        break;
+      case kTimeFormatSecondsForce24Hour:
+        PL_strncpy(fmtT, "%H:%M:%S", NSDATETIME_FORMAT_BUFFER_LEN);
+        break;
+      case kTimeFormatNoSecondsForce24Hour:
+        PL_strncpy(fmtT, "%H:%M", NSDATETIME_FORMAT_BUFFER_LEN);
+        break;
+      default:
+        PL_strncpy(fmtT, "", NSDATETIME_FORMAT_BUFFER_LEN); 
+    }
   }
 
   // generate data/time string
