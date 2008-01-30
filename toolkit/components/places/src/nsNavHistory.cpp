@@ -117,6 +117,8 @@
 #define PREF_AUTOCOMPLETE_SEARCH_TIMEOUT        "urlbar.search.timeout"
 #define PREF_DB_CACHE_PERCENTAGE                "history_cache_percentage"
 #define PREF_FRECENCY_NUM_VISITS                "places.frecency.numVisits"
+#define PREF_FRECENCY_CALC_ON_IDLE              "places.frecency.numCalcOnIdle"
+#define PREF_FRECENCY_CALC_ON_MIGRATE           "places.frecency.numCalcOnMigrate"
 #define PREF_FRECENCY_UPDATE_IDLE_TIME          "places.frecency.updateIdleTime"
 #define PREF_FRECENCY_FIRST_BUCKET_CUTOFF       "places.frecency.firstBucketCutoff"
 #define PREF_FRECENCY_SECOND_BUCKET_CUTOFF      "places.frecency.secondBucketCutoff"
@@ -190,11 +192,6 @@
 // Perform expiration after 5 minutes of idle time, repeating.
 // 5 minutes = 300 seconds = 300000 milliseconds
 #define EXPIRE_IDLE_TIME_IN_MSECS (300000)
-
-// Number of records to update frecency for when idle.
-// Amount is low, since we're doing work often (see mFrecencyUpdateIdleTime),
-// the idea being to constantly keep the first few chunks up to date.
-#define COUNT_TO_RECALCULATE_FRECENCY_ON_IDLE 10
 
 // Amount of items to expire at idle time.
 #define MAX_EXPIRE_RECORDS_ON_IDLE 200
@@ -480,7 +477,8 @@ nsNavHistory::Init()
   // calculate the first cutoff period's frecencies now.
   // Swallow errors here to not block initialization.
   if (migrationType != DB_MIGRATION_NONE)
-    (void)RecalculateFrecencies();
+    (void)RecalculateFrecencies(mNumCalculateFrecencyOnMigrate,
+                                PR_FALSE /* don't recalculate old */);
 
   // Don't add code that can fail here! Do it up above, before we add our
   // observers.
@@ -1030,8 +1028,7 @@ nsNavHistory::InitStatements()
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT id, visit_count, hidden, typed, frecency, url "
      "FROM moz_places WHERE frecency = -1 "
-     "ORDER BY visit_count DESC LIMIT ") +
-     nsPrintfCString("%d", COUNT_TO_RECALCULATE_FRECENCY_ON_IDLE),
+     "ORDER BY visit_count DESC LIMIT ?1"),
     getter_AddRefs(mDBInvalidFrecencies));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1041,8 +1038,7 @@ nsNavHistory::InitStatements()
     "SELECT h.id, h.visit_count, h.hidden, h.typed, h.frecency, h.url "
      "FROM moz_places h WHERE "
      SQL_STR_FRAGMENT_MAX_VISIT_DATE( "h.id" )
-     " < ?1 ORDER BY h.frecency DESC LIMIT ") +
-     nsPrintfCString("%d", COUNT_TO_RECALCULATE_FRECENCY_ON_IDLE),
+     " < ?1 ORDER BY h.frecency DESC LIMIT ?2"),
     getter_AddRefs(mDBOldFrecencies));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1690,6 +1686,10 @@ nsNavHistory::LoadPrefs(PRBool aInitializing)
   if (prefs) {
     prefs->GetIntPref(PREF_FRECENCY_NUM_VISITS, 
       &mNumVisitsForFrecency);
+    prefs->GetIntPref(PREF_FRECENCY_CALC_ON_IDLE, 
+      &mNumCalculateFrecencyOnIdle);
+    prefs->GetIntPref(PREF_FRECENCY_CALC_ON_MIGRATE, 
+      &mNumCalculateFrecencyOnMigrate);
     prefs->GetIntPref(PREF_FRECENCY_UPDATE_IDLE_TIME, 
       &mFrecencyUpdateIdleTime);
     prefs->GetIntPref(PREF_FRECENCY_FIRST_BUCKET_CUTOFF, 
@@ -3894,7 +3894,7 @@ nsNavHistory::OnIdle()
   // recalculate some frecency values. A value of zero indicates that
   // frecency recalculation on idle is disabled.
   if (mFrecencyUpdateIdleTime && idleTime > mFrecencyUpdateIdleTime)
-    (void)RecalculateFrecencies();
+    (void)RecalculateFrecencies(mNumCalculateFrecencyOnIdle, PR_TRUE);
 
   // If we've been idle for more than EXPIRE_IDLE_TIME_IN_MSECS
   // keep the expiration engine chugging along.
@@ -6267,34 +6267,41 @@ nsNavHistory::CalculateFrecency(PRInt64 aPlaceId, PRInt32 aTyped, PRInt32 aVisit
 }
 
 nsresult
-nsNavHistory::RecalculateFrecencies()
+nsNavHistory::RecalculateFrecencies(PRInt32 aCount, PRBool aRecalcOld)
 {
   mozStorageTransaction transaction(mDBConn, PR_TRUE);
 
-  nsresult rv = RecalculateFrecenciesInternal(mDBInvalidFrecencies, -1);
+  nsresult rv = RecalculateFrecenciesInternal(mDBInvalidFrecencies, -1, aCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // if the last visit date was "recent" (in the top bucket)
-  // don't bother recalculating as it was recalculated recently
-  // and we are looking for "older" places.
-  PRTime startOfFirstBucket = GetNow() -
-    (USECS_PER_DAY * (mFirstBucketCutoffInDays + 1));
+  if (aRecalcOld) {
+    // if the last visit date was "recent" (in the top bucket)
+    // don't bother recalculating as it was recalculated recently
+    // and we are looking for "older" places.
+    PRTime startOfFirstBucket = GetNow() -
+      (USECS_PER_DAY * (mFirstBucketCutoffInDays + 1));
 
-  rv = RecalculateFrecenciesInternal(mDBOldFrecencies, startOfFirstBucket);
-  NS_ENSURE_SUCCESS(rv, rv);
+    rv = RecalculateFrecenciesInternal(mDBOldFrecencies, startOfFirstBucket, aCount);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   return NS_OK;
 }
 
 nsresult 
-nsNavHistory::RecalculateFrecenciesInternal(mozIStorageStatement *aStatement, PRInt64 aBindParameter)
+nsNavHistory::RecalculateFrecenciesInternal(mozIStorageStatement *aStatement, PRInt64 aBindParameter, PRInt32 aCount)
 {
   nsresult rv;
 
   mozStorageStatementScoper scoper(aStatement);
+  PRInt32 countBindIndex = 0;
   if (aBindParameter != -1) {
     rv = aStatement->BindInt64Parameter(0, aBindParameter);
     NS_ENSURE_SUCCESS(rv, rv);
+    countBindIndex = 1;
   }
+
+  rv = aStatement->BindInt32Parameter(countBindIndex, aCount);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasMore = PR_FALSE;
   while (NS_SUCCEEDED(aStatement->ExecuteStep(&hasMore)) && hasMore) {
