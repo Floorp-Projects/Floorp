@@ -103,4 +103,5 @@
 #else
 #define ALIGN16_const_vector_short(name) const short name[8] __attribute__ ((aligned (16)))
 #define ALIGN16_const_vector_uchar(name) const unsigned char name[16] __attribute__ ((aligned (16)))
-#endif ! XP_WIN32 && _M_IX86 && !__GNUC
+#endif /* ! XP_WIN32 && _M_IX86 && !__GNUC */
+
