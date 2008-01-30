@@ -2983,14 +2983,20 @@ private:
 /***************************************************************************/
 // XPCJSContextStack is not actually an xpcom object, but xpcom calls are
 // delegated to it as an implementation detail.
-struct JSContextAndFrame {
-    JSContextAndFrame(JSContext* aCx) :
+struct XPCJSContextInfo {
+    XPCJSContextInfo(JSContext* aCx) :
         cx(aCx),
-        frame(nsnull)
+        frame(nsnull),
+        requestDepth(0)
     {}
     JSContext* cx;
-    JSStackFrame* frame;  // Frame to be restored when this JSContext becomes
-                          // the topmost one.
+
+    // Frame to be restored when this JSContext becomes the topmost
+    // one.
+    JSStackFrame* frame;
+
+    // Greater than 0 if a request was suspended
+    jsrefcount requestDepth;
 };
 
 class XPCJSContextStack
@@ -3006,14 +3012,14 @@ public:
     JSBool DEBUG_StackHasJSContext(JSContext*  aJSContext);
 #endif
 
-    const nsTArray<JSContextAndFrame>* GetStack()
+    const nsTArray<XPCJSContextInfo>* GetStack()
     { return &mStack; }
 
 private:
     void SyncJSContexts();
 
 private:
-    nsAutoTArray<JSContextAndFrame, 16> mStack;
+    nsAutoTArray<XPCJSContextInfo, 16> mStack;
     JSContext*  mSafeJSContext;
 
     // If non-null, we own it; same as mSafeJSContext if SetSafeJSContext
@@ -3034,7 +3040,7 @@ public:
     NS_DECL_NSIJSCONTEXTSTACKITERATOR
 
 private:
-    const nsTArray<JSContextAndFrame> *mStack;
+    const nsTArray<XPCJSContextInfo> *mStack;
     PRUint32 mPosition;
 };
 

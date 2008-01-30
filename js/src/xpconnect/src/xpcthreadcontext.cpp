@@ -106,13 +106,18 @@ XPCJSContextStack::Pop(JSContext * *_retval)
     if(idx > 0)
     {
         --idx; // Advance to new top of the stack
-        JSContextAndFrame & e = mStack[idx];
+        XPCJSContextInfo & e = mStack[idx];
         NS_ASSERTION(!e.frame || e.cx, "Shouldn't have frame without a cx!");
         if(e.cx && e.frame)
         {
             JS_RestoreFrameChain(e.cx, e.frame);
             e.frame = nsnull;
         }
+
+        if(e.requestDepth)
+            JS_ResumeRequest(e.cx, e.requestDepth);
+
+        e.requestDepth = 0;
     }
     return NS_OK;
 }
@@ -125,9 +130,14 @@ XPCJSContextStack::Push(JSContext * cx)
         return NS_ERROR_OUT_OF_MEMORY;
     if(mStack.Length() > 1)
     {
-        JSContextAndFrame & e = mStack[mStack.Length() - 2];
+        XPCJSContextInfo & e = mStack[mStack.Length() - 2];
         if(e.cx && e.cx != cx)
+        {
             e.frame = JS_SaveFrameChain(e.cx);
+
+            if(JS_GetContextThread(e.cx))
+                e.requestDepth = JS_SuspendRequest(e.cx);
+        }
     }
     return NS_OK;
 }
