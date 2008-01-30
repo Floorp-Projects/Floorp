@@ -11,7 +11,6 @@
 #include "nsHashtable.h"
 
 #include "nsIDOMInstallTriggerGlobal.h"
-#include "nsSoftwareUpdate.h"
 #include "nsXPITriggerInfo.h"
 
 #include "nsIContentHandler.h"
@@ -31,13 +30,17 @@
 #define XPI_WHITELIST       PR_TRUE
 #define XPI_GLOBAL          PR_FALSE
 
+#define XPINSTALL_ENABLE_PREF            "xpinstall.enabled"
+#define XPINSTALL_WHITELIST_ADD          "xpinstall.whitelist.add"
+#define XPINSTALL_WHITELIST_ADD_103      "xpinstall.whitelist.add.103"
+#define XPINSTALL_WHITELIST_REQUIRED     "xpinstall.whitelist.required"
+#define XPINSTALL_BLACKLIST_ADD          "xpinstall.blacklist.add"
+
 class nsInstallTrigger: public nsIScriptObjectOwner,
                         public nsIDOMInstallTriggerGlobal,
                         public nsIContentHandler
 {
     public:
-        static const nsIID& IID() { static nsIID iid = NS_SoftwareUpdateInstallTrigger_CID; return iid; }
-
         nsInstallTrigger();
         virtual ~nsInstallTrigger();
 
@@ -51,13 +54,6 @@ class nsInstallTrigger: public nsIScriptObjectOwner,
         NS_IMETHOD    UpdateEnabled(nsIScriptGlobalObject* aGlobalObject, PRBool aUseWhitelist, PRBool* aReturn);
         NS_IMETHOD    UpdateEnabled(nsIURI* aURI, PRBool aUseWhitelist, PRBool* aReturn);
         NS_IMETHOD    StartInstall(nsIXPIInstallInfo* aInstallInfo, PRBool* aReturn);
-        NS_IMETHOD    Install(nsIScriptGlobalObject* aGlobalObject, nsXPITriggerInfo *aInfo, PRBool* aReturn);
-        NS_IMETHOD    InstallChrome(nsIScriptGlobalObject* aGlobalObject, PRUint32 aType, nsXPITriggerItem* aItem, PRBool* aReturn);
-        NS_IMETHOD    StartSoftwareUpdate(nsIScriptGlobalObject* aGlobalObject, const nsString& aURL, PRInt32 aFlags, PRInt32* aReturn);
-        NS_IMETHOD    CompareVersion(const nsString& aRegName, PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PRInt32 aBuild, PRInt32* aReturn);
-        NS_IMETHOD    CompareVersion(const nsString& aRegName, const nsString& aVersion, PRInt32* aReturn);
-        NS_IMETHOD    CompareVersion(const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn);
-        NS_IMETHOD    GetVersion(const nsString& component, nsString& version);
 
 
     private:

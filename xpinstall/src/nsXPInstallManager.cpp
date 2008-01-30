@@ -38,9 +38,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nscore.h"
-#include "pratom.h"
-#include "prmem.h"
 #include "prprf.h"
+#include "plstr.h"
 #include "nsInt64.h"
 
 #include "nsISupports.h"
@@ -48,6 +47,7 @@
 
 #include "nsIURL.h"
 #include "nsIFileURL.h"
+#include "nsIJAR.h"
 
 #include "nsITransport.h"
 #include "nsIOutputStream.h"
@@ -57,14 +57,13 @@
 #include "nsIStreamListener.h"
 #include "nsICryptoHash.h"
 
-#include "nsISoftwareUpdate.h"
+#include "nsIExtensionManager.h"
 #include "nsSoftwareUpdateIIDs.h"
 
+#include "nsIStringEnumerator.h"
 #include "nsXPITriggerInfo.h"
 #include "nsXPInstallManager.h"
 #include "nsInstallTrigger.h"
-#include "nsInstallResources.h"
-#include "nsIProxyObjectManager.h"
 #include "nsIWindowWatcher.h"
 #include "nsIAuthPrompt.h"
 #include "nsIWindowMediator.h"
@@ -74,7 +73,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 
 #include "nsReadableUtils.h"
-#include "nsProxiedService.h"
 #include "nsIPromptService.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsXPCOM.h"
@@ -99,28 +97,17 @@
 #define PREF_XPINSTALL_STATUS_DLG_TYPE_SKIN   "xpinstall.dialog.progress.type.skin"
 #define PREF_XPINSTALL_STATUS_DLG_TYPE_CHROME "xpinstall.dialog.progress.type.chrome"
 
-#define UPDATE_DLG(x)  (((x) - mLastUpdate) > 250000)
-
-// Mac can't handle PRTime as integers, must go through this hell
-inline PRBool nsXPInstallManager::TimeToUpdate(PRTime now)
-{
-	// XXX lets revisit this when dveditz gets back
-
-	return PR_TRUE;
-}
+static NS_DEFINE_IID(kZipReaderCID,  NS_ZIPREADER_CID);
 
 
 nsXPInstallManager::nsXPInstallManager()
-  : mTriggers(0), mItem(0), mNextItem(0), mNumJars(0), mChromeType(NOT_CHROME),
+  : mTriggers(0), mItem(0), mNextItem(0), mChromeType(NOT_CHROME),
     mContentLength(0), mDialogOpen(PR_FALSE), mCancelled(PR_FALSE),
-    mSelectChrome(PR_FALSE), mNeedsShutdown(PR_FALSE), mFromChrome(PR_FALSE)
+    mNeedsShutdown(PR_FALSE), mFromChrome(PR_FALSE)
 {
     // we need to own ourself because we have a longer
     // lifetime than the scriptlet that created us.
     NS_ADDREF_THIS();
-
-    // initialize mLastUpdate to the current time
-    mLastUpdate = PR_Now();
 }
 
 
@@ -130,8 +117,7 @@ nsXPInstallManager::~nsXPInstallManager()
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS11(nsXPInstallManager,
-                               nsIXPIListener,
+NS_IMPL_THREADSAFE_ISUPPORTS10(nsXPInstallManager,
                                nsIXPIDialogService,
                                nsIXPInstallManager,
                                nsIObserver,
@@ -158,22 +144,22 @@ nsXPInstallManager::InitManagerWithHashes(const PRUnichar **aURLs,
                                           nsIXPIProgressDialog* aListener)
 {
     // If Software Installation is not enabled, we don't want to proceed with
-    // update. 
+    // update.
     PRBool xpinstallEnabled = PR_TRUE;
     nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (pref) 
+    if (pref)
         pref->GetBoolPref(PREF_XPINSTALL_ENABLED, &xpinstallEnabled);
 
     if (!xpinstallEnabled)
         return NS_OK;
-  
+
     mTriggers = new nsXPITriggerInfo();
     if (!mTriggers)
         return NS_ERROR_OUT_OF_MEMORY;
 
     mNeedsShutdown = PR_TRUE;
 
-    for (PRUint32 i = 0; i < aURLCount; ++i) 
+    for (PRUint32 i = 0; i < aURLCount; ++i)
     {
         nsXPITriggerItem* item = new nsXPITriggerItem(0, aURLs[i], nsnull,
                                                       aHashes ? aHashes[i] : nsnull);
@@ -187,19 +173,9 @@ nsXPInstallManager::InitManagerWithHashes(const PRUnichar **aURLs,
         mTriggers->Add(item);
     }
 
-    nsresult rv;
-    mInstallSvc = do_GetService(nsSoftwareUpdate::GetCID(), &rv);
-    if (NS_FAILED(rv)) 
-    {
-        delete mTriggers;
-        mTriggers = nsnull;
-        Shutdown();
-        return rv;
-    }
-
     mFromChrome = PR_TRUE;
-    
-    rv = Observe(aListener, XPI_PROGRESS_TOPIC, NS_LITERAL_STRING("open").get());
+
+    nsresult rv = Observe(aListener, XPI_PROGRESS_TOPIC, NS_LITERAL_STRING("open").get());
     if (NS_FAILED(rv))
         Shutdown();
     return rv;
@@ -269,7 +245,7 @@ nsXPInstallManager::InitManager(nsIDOMWindowInternal* aParentWindow, nsXPITrigge
 }
 
 
-nsresult 
+nsresult
 nsXPInstallManager::InitManagerInternal()
 {
     nsresult rv;
@@ -286,16 +262,13 @@ nsXPInstallManager::InitManagerInternal()
     if ( !dlgSvc )
         dlgSvc = this; // provide our own dialogs
 
-    // --- make sure we can get the install service
-    mInstallSvc = do_GetService(nsSoftwareUpdate::GetCID(), &rv);
-
     // --- prepare dialog params
     PRUint32 numTriggers = mTriggers->Size();
     PRUint32 numStrings = 4 * numTriggers;
     const PRUnichar** packageList =
         (const PRUnichar**)malloc( sizeof(PRUnichar*) * numStrings );
 
-    if ( packageList && NS_SUCCEEDED(rv) )
+    if ( packageList )
     {
         // populate the list. The list doesn't own the strings
         for ( PRUint32 i=0, j=0; i < numTriggers; i++ )
@@ -393,7 +366,7 @@ nsXPInstallManager::ConfirmInstall(nsIDOMWindow *aParent, const PRUnichar **aPac
         nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
         if (!pref)
           return rv;
-          
+
         rv = pref->GetCharPref(PREF_XPINSTALL_CONFIRM_DLG, &confirmDialogURL);
         NS_ASSERTION(NS_SUCCEEDED(rv), "Can't invoke XPInstall FE without a FE URL! Set xpinstall.dialog.confirm");
         if (NS_FAILED(rv))
@@ -434,7 +407,7 @@ PRBool nsXPInstallManager::ConfirmChromeInstall(nsIDOMWindowInternal* aParentWin
     if (!xpiBundle)
         return PR_FALSE;
 
-    const PRUnichar *formatStrings[2] = { aPackage[0], aPackage[1] }; 
+    const PRUnichar *formatStrings[2] = { aPackage[0], aPackage[1] };
     if ( mChromeType == CHROME_LOCALE )
     {
         xpiBundle->GetStringFromName(
@@ -442,8 +415,8 @@ PRBool nsXPInstallManager::ConfirmChromeInstall(nsIDOMWindowInternal* aParentWin
             getter_Copies(applyNowText));
         xpiBundle->FormatStringFromName(
             NS_LITERAL_STRING("ConfirmLocale").get(),
-            formatStrings, 
-            2, 
+            formatStrings,
+            2,
             getter_Copies(confirmText));
     }
     else
@@ -453,11 +426,11 @@ PRBool nsXPInstallManager::ConfirmChromeInstall(nsIDOMWindowInternal* aParentWin
             getter_Copies(applyNowText));
         xpiBundle->FormatStringFromName(
             NS_LITERAL_STRING("ConfirmSkin").get(),
-            formatStrings, 
-            2, 
+            formatStrings,
+            2,
             getter_Copies(confirmText));
     }
-    
+
     if (confirmText.IsEmpty())
         return PR_FALSE;
 
@@ -510,7 +483,7 @@ nsXPInstallManager::OpenProgressDialog(const PRUnichar **aPackageList, PRUint32 
     nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
     if (!wwatch)
         return rv;
-    
+
     char *statusDialogURL, *statusDialogType;
     nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
     if (!pref)
@@ -525,11 +498,11 @@ nsXPInstallManager::OpenProgressDialog(const PRUnichar **aPackageList, PRUint32 
     const char* statusType = mChromeType == CHROME_SKIN ? PREF_XPINSTALL_STATUS_DLG_TYPE_SKIN
                                                         : PREF_XPINSTALL_STATUS_DLG_TYPE_CHROME;
     rv = pref->GetCharPref(statusType, &statusDialogType);
-    nsAutoString type; 
+    nsAutoString type;
     type.AssignWithConversion(statusDialogType);
     if (NS_SUCCEEDED(rv) && !type.IsEmpty()) {
         nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
-      
+
         nsCOMPtr<nsIDOMWindowInternal> recentWindow;
         wm->GetMostRecentWindow(type.get(), getter_AddRefs(recentWindow));
         if (recentWindow) {
@@ -542,11 +515,11 @@ nsXPInstallManager::OpenProgressDialog(const PRUnichar **aPackageList, PRUint32 
     }
 
     nsCOMPtr<nsIDOMWindow> newWindow;
-    rv = wwatch->OpenWindow(0, 
+    rv = wwatch->OpenWindow(0,
                             statusDialogURL,
-                            "_blank", 
+                            "_blank",
                             "chrome,centerscreen,titlebar,dialog=no,resizable",
-                            params, 
+                            params,
                             getter_AddRefs(newWindow));
 
     return rv;
@@ -587,16 +560,7 @@ NS_IMETHODIMP nsXPInstallManager::Observe( nsISupports *aSubject,
                 os->AddObserver(this, "quit-application", PR_TRUE);
             }
 
-            nsCOMPtr<nsIXPIProgressDialog> dlg( do_QueryInterface(aSubject) );
-            if (dlg)
-            {
-                // --- create and save a proxy for the dialog
-                NS_GetProxyForObject( NS_PROXY_TO_MAIN_THREAD,
-                                      NS_GET_IID(nsIXPIProgressDialog),
-                                      dlg,
-                                      NS_PROXY_SYNC | NS_PROXY_ALWAYS,
-                                      getter_AddRefs(mDlg) );
-            }
+            mDlg = do_QueryInterface(aSubject);
 
             // -- get the ball rolling
             DownloadNext();
@@ -625,6 +589,195 @@ NS_IMETHODIMP nsXPInstallManager::Observe( nsISupports *aSubject,
     return rv;
 }
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Function name    : VerifySigning
+// Description      : Verify that the entire zip file is signed by the certificate displayed to
+//                    the user during download
+// Return type      : PRInt32
+// Argument         : nsIZipReader* hZip       - the zip reader
+// Argument         : nsIPrincipal* aPrincipal - a principal, if any, displayed to the user
+//                    during download. Would have been retrieved from the first file in the zip
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+static nsresult
+VerifySigning(nsIZipReader* hZip, nsIPrincipal* aPrincipal)
+{
+    // If we didn't detect a principal from the zip file during download then
+    // we didn't suggest it was signed to the user, so just carry on.
+    if (!aPrincipal)
+        return NS_OK;
+
+    PRBool hasCert;
+    aPrincipal->GetHasCertificate(&hasCert);
+    if (!hasCert)
+        return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIJAR> jar(do_QueryInterface(hZip));
+    if (!jar)
+        return NS_ERROR_FAILURE;
+
+    // See if the archive is signed at all first
+    nsCOMPtr<nsIPrincipal> principal;
+    nsresult rv = jar->GetCertificatePrincipal(nsnull, getter_AddRefs(principal));
+    if (NS_FAILED(rv) || !principal)
+        return NS_ERROR_FAILURE;
+
+    PRUint32 entryCount = 0;
+
+    // first verify all files in the jar are also in the manifest.
+    nsCOMPtr<nsIUTF8StringEnumerator> entries;
+    rv = hZip->FindEntries(nsnull, getter_AddRefs(entries));
+    if (NS_FAILED(rv))
+        return rv;
+
+    PRBool more;
+    nsCAutoString name;
+    while (NS_SUCCEEDED(entries->HasMore(&more)) && more)
+    {
+        rv = entries->GetNext(name);
+        if (NS_FAILED(rv)) return rv;
+
+        // Do not verify the directory entries or
+        // entries which are in the meta-inf directory
+        if ((name.Last() == '/') ||
+            (PL_strncasecmp("META-INF/", name.get(), 9) == 0))
+            continue;
+
+        // Count the entries to be verified
+        entryCount++;
+
+        // Each entry must be signed
+        rv = jar->GetCertificatePrincipal(name.get(), getter_AddRefs(principal));
+        if (NS_FAILED(rv) || !principal) return NS_ERROR_FAILURE;
+
+        PRBool equal;
+        rv = principal->Equals(aPrincipal, &equal);
+        if (NS_FAILED(rv) || !equal) return NS_ERROR_FAILURE;
+    }
+
+    // next verify all files in the manifest are in the archive.
+    PRUint32 manifestEntryCount;
+    rv = jar->GetManifestEntriesCount(&manifestEntryCount);
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (entryCount != manifestEntryCount)
+        return NS_ERROR_FAILURE;  // some files were deleted from archive
+
+    return NS_OK;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Function name    : OpenAndValidateArchive
+// Description      : Opens install archive and validates contents
+// Return type      : PRInt32
+// Argument         : nsIZipReader* hZip       - the zip reader
+// Argument         : nsIFile* jarFile         - the .xpi file
+// Argument         : nsIPrincipal* aPrincipal - a principal, if any, displayed to the user
+//                    regarding the cert used to sign this install
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+static PRInt32
+OpenAndValidateArchive(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincipal* aPrincipal)
+{
+    if (!jarFile)
+        return nsInstall::DOWNLOAD_ERROR;
+
+    nsCOMPtr<nsIFile> jFile;
+    nsresult rv =jarFile->Clone(getter_AddRefs(jFile));
+    if (NS_SUCCEEDED(rv))
+        rv = hZip->Open(jFile);
+
+    if (NS_FAILED(rv))
+        return nsInstall::CANT_READ_ARCHIVE;
+
+    // CRC check the integrity of all items in this archive
+    rv = hZip->Test(nsnull);
+    if (NS_FAILED(rv))
+    {
+        NS_WARNING("CRC check of archive failed!");
+        return nsInstall::CANT_READ_ARCHIVE;
+    }
+
+    rv = VerifySigning(hZip, aPrincipal);
+    if (NS_FAILED(rv))
+    {
+        NS_WARNING("Signing check of archive failed!");
+        return nsInstall::INVALID_SIGNATURE;
+    }
+
+    return nsInstall::SUCCESS;
+}
+
+
+nsresult nsXPInstallManager::InstallItems()
+{
+    nsresult rv;
+    nsCOMPtr<nsIZipReader> hZip = do_CreateInstance(kZipReaderCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIExtensionManager> em = do_GetService("@mozilla.org/extensions/manager;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // can't cancel from here on cause we can't undo installs in a multitrigger
+    for (PRUint32 i = 0; i < mTriggers->Size(); ++i)
+    {
+        mItem = (nsXPITriggerItem*)mTriggers->Get(i);
+        if ( !mItem || !mItem->mFile )
+        {
+            // notification for these errors already handled
+            continue;
+        }
+
+        // If there was hash info in the trigger, but
+        // there wasn't a hash object created, then the
+        // algorithm used isn't known.
+
+        if (mItem->mHashFound && !mItem->mHasher)
+        {
+            // report failure
+            mTriggers->SendStatus( mItem->mURL.get(), nsInstall::INVALID_HASH_TYPE );
+            if (mDlg)
+                mDlg->OnStateChange( i, nsIXPIProgressDialog::INSTALL_DONE,
+                                     nsInstall::INVALID_HASH_TYPE );
+            continue;
+        }
+
+        // Don't install if we can't verify the hash (if specified)
+        if (mItem->mHasher && !VerifyHash(mItem))
+        {
+            // report failure
+            mTriggers->SendStatus( mItem->mURL.get(), nsInstall::INVALID_HASH );
+            if (mDlg)
+                mDlg->OnStateChange( i, nsIXPIProgressDialog::INSTALL_DONE,
+                                     nsInstall::INVALID_HASH );
+            continue;
+        }
+
+        if (mDlg)
+            mDlg->OnStateChange( i, nsIXPIProgressDialog::INSTALL_START, 0 );
+
+        PRInt32 finalStatus = OpenAndValidateArchive( hZip,
+                                                      mItem->mFile,
+                                                      mItem->mPrincipal);
+        hZip->Close();
+
+        if (finalStatus == nsInstall::SUCCESS)
+        {
+            rv = em->InstallItemFromFile( mItem->mFile,
+                                          NS_INSTALL_LOCATION_APPPROFILE);
+            if (NS_FAILED(rv))
+                finalStatus = nsInstall::EXECUTION_ERROR;
+        }
+
+        mTriggers->SendStatus( mItem->mURL.get(), finalStatus );
+        if (mDlg)
+            mDlg->OnStateChange( i, nsIXPIProgressDialog::INSTALL_DONE,
+                                 finalStatus );
+    }
+    return NS_OK;
+}
 
 NS_IMETHODIMP nsXPInstallManager::DownloadNext()
 {
@@ -741,83 +894,10 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
     else
     {
         //------------------------------------------------------
-        // all downloaded, queue them for installation
+        // all downloaded, install them
         //------------------------------------------------------
-
-        // can't cancel from here on cause we can't undo installs in a multitrigger
-        for (PRUint32 i = 0; i < mTriggers->Size(); ++i)
-        {
-            mItem = (nsXPITriggerItem*)mTriggers->Get(i);
-            if ( !mItem || !mItem->mFile )
-            {
-                // notification for these errors already handled
-                continue;
-            }
-
-            // If there was hash info in the trigger, but
-            // there wasn't a hash object created, then the
-            // algorithm used isn't known.
-
-            if (mItem->mHashFound && !mItem->mHasher)
-            {
-                // report failure
-                mTriggers->SendStatus( mItem->mURL.get(), nsInstall::INVALID_HASH_TYPE );
-                if (mDlg)
-                    mDlg->OnStateChange( i, nsIXPIProgressDialog::INSTALL_DONE,
-                                         nsInstall::INVALID_HASH_TYPE );
-                continue;
-            }
-
-            // Don't install if we can't verify the hash (if specified)
-            if (mItem->mHasher && !VerifyHash(mItem))
-            {
-                // report failure
-                mTriggers->SendStatus( mItem->mURL.get(), nsInstall::INVALID_HASH );
-                if (mDlg)
-                    mDlg->OnStateChange( i, nsIXPIProgressDialog::INSTALL_DONE,
-                                         nsInstall::INVALID_HASH );
-                continue;
-            }
-
-            // We've got one to install; increment count first so we
-            // don't have to worry about thread timing.
-            PR_AtomicIncrement(&mNumJars);
-
-            if ( mChromeType == NOT_CHROME ) {
-                rv = mInstallSvc->InstallJar( mItem->mFile,
-                                              mItem->mURL.get(),
-                                              mItem->mArguments.get(),
-                                              mItem->mPrincipal,
-                                              mItem->mFlags,
-                                              this );
-            }
-            else {
-                rv = mInstallSvc->InstallChrome(mChromeType,
-                                                mItem->mFile,
-                                                mItem->mURL.get(),
-                                                mItem->mName.get(),
-                                                mSelectChrome,
-                                                this );
-            }
-
-            if (NS_FAILED(rv))
-            {
-                // it failed so remove it from the count
-                PR_AtomicDecrement(&mNumJars);
-                // send the error status to any trigger callback
-                mTriggers->SendStatus( mItem->mURL.get(),
-                                       nsInstall::UNEXPECTED_ERROR );
-                if (mDlg)
-                    mDlg->OnStateChange( i, nsIXPIProgressDialog::INSTALL_DONE,
-                                         nsInstall::UNEXPECTED_ERROR );
-            }
-        }
-
-        if ( mNumJars == 0 )
-        {
-            // We must clean ourself up now -- we won't be called back
-            Shutdown();
-        }
+        InstallItems();
+        Shutdown();
     }
 
     return rv;
@@ -838,7 +918,7 @@ PRBool nsXPInstallManager::VerifyHash(nsXPITriggerItem* aItem)
     nsresult rv;
     if (!aItem->mHasher)
       return PR_FALSE;
-    
+
     nsCOMPtr<nsIInputStream> stream;
     rv = NS_NewLocalFileInputStream(getter_AddRefs(stream), aItem->mFile);
     if (NS_FAILED(rv)) return PR_FALSE;
@@ -889,32 +969,18 @@ void nsXPInstallManager::Shutdown(PRInt32 status)
         }
 
         // Clean up downloaded files (regular install only, not chrome installs)
-        nsCOMPtr<nsIFile> tmpSpec;
-        if ( mChromeType == NOT_CHROME )
+        for (PRUint32 i = 0; i < mTriggers->Size(); i++ )
         {
-            for (PRUint32 i = 0; i < mTriggers->Size(); i++ )
-            {
-                item = static_cast<nsXPITriggerItem*>(mTriggers->Get(i));
-                if ( item && item->mFile && !item->IsFileURL() )
-                    item->mFile->Remove(PR_FALSE);
-            }
+            item = static_cast<nsXPITriggerItem*>(mTriggers->Get(i));
+            if ( item && item->mFile && !item->IsFileURL() )
+                item->mFile->Remove(PR_FALSE);
         }
 
         nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
         if (os)
         {
-            nsresult rv;
-            nsCOMPtr<nsIObserverService> pos;
-            rv = NS_GetProxyForObject( NS_PROXY_TO_MAIN_THREAD,
-                                       NS_GET_IID(nsIObserverService),
-                                       os,
-                                       NS_PROXY_SYNC | NS_PROXY_ALWAYS,
-                                       getter_AddRefs(pos) );
-            if (NS_SUCCEEDED(rv))
-            {
-                pos->RemoveObserver(this, NS_IOSERVICE_GOING_OFFLINE_TOPIC);
-                pos->RemoveObserver(this, "quit-application");
-            }
+            os->RemoveObserver(this, NS_IOSERVICE_GOING_OFFLINE_TOPIC);
+            os->RemoveObserver(this, "quit-application");
         }
 
         if (mTriggers)
@@ -953,69 +1019,24 @@ NS_IMETHODIMP
 nsXPInstallManager::GetDestinationFile(nsString& url, nsILocalFile* *file)
 {
     NS_ENSURE_ARG_POINTER(file);
-
     nsresult rv;
-    nsAutoString leaf;
-
-    PRInt32 pos = url.RFindChar('/');
-    url.Mid( leaf, pos+1, url.Length() );
 
     nsCOMPtr<nsIProperties> directoryService =
              do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (mChromeType == NOT_CHROME )
-    {
-        // a regular XPInstall, not chrome
-        if (NS_SUCCEEDED(rv))
-        {
-            nsCOMPtr<nsILocalFile> temp;
-            rv = directoryService->Get(NS_OS_TEMP_DIR,
-                                       NS_GET_IID(nsIFile),
-                                       getter_AddRefs(temp));
-            if (NS_SUCCEEDED(rv))
-            { 
-                temp->AppendNative(NS_LITERAL_CSTRING("tmp.xpi"));
-                temp->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
-                *file = temp;
-                NS_IF_ADDREF(*file);
-            }
-        }
-    }
-    else
-    {
-        // a chrome install, download straight to final destination
-        if (NS_SUCCEEDED(rv)) // Getting directoryService
-        {
-            nsCOMPtr<nsILocalFile>  userChrome;
+    nsCOMPtr<nsILocalFile> temp;
+    rv = directoryService->Get(NS_OS_TEMP_DIR,
+                               NS_GET_IID(nsIFile),
+                               getter_AddRefs(temp));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-            // Get the user's Chrome directory, create if necessary
+    temp->AppendNative(NS_LITERAL_CSTRING("tmp.xpi"));
+    temp->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+    *file = temp;
+    NS_IF_ADDREF(*file);
 
-            rv = directoryService->Get(NS_APP_USER_CHROME_DIR,
-                                       NS_GET_IID(nsIFile),
-                                       getter_AddRefs(userChrome));
-
-            NS_ASSERTION(NS_SUCCEEDED(rv) && userChrome,
-                         "App_UserChromeDirectory not defined!");
-            if (NS_SUCCEEDED(rv))
-            {
-                PRBool exists;
-                rv = userChrome->Exists(&exists);
-                if (NS_SUCCEEDED(rv) && !exists)
-                {
-                    rv = userChrome->Create(nsIFile::DIRECTORY_TYPE, 0775);
-                }
-
-                if (NS_SUCCEEDED(rv))
-                {
-                    userChrome->Append(leaf);
-                    userChrome->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0644);
-                    *file = userChrome;
-                    NS_IF_ADDREF(*file);
-                }
-            }
-        }
-    }
-    return rv;
+    return NS_OK;
 }
 
 nsresult
@@ -1029,13 +1050,13 @@ nsXPInstallManager::CheckCert(nsIChannel* aChannel)
     NS_ENSURE_SUCCESS(rv, rv);
     if (!scheme.Equals(NS_LITERAL_CSTRING("https")))
         return NS_OK;
-    
+
     nsCOMPtr<nsISupports> security;
     rv = aChannel->GetSecurityInfo(getter_AddRefs(security));
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsISSLStatusProvider> statusProvider(do_QueryInterface(security));
     NS_ENSURE_TRUE(statusProvider, NS_ERROR_FAILURE);
-    
+
     rv = statusProvider->GetSSLStatus(getter_AddRefs(security));
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsISSLStatus> status(do_QueryInterface(security));
@@ -1043,7 +1064,7 @@ nsXPInstallManager::CheckCert(nsIChannel* aChannel)
     nsCOMPtr<nsIX509Cert> cert;
     rv = status->GetServerCert(getter_AddRefs(cert));
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     nsCOMPtr<nsIX509Cert> issuer;
     rv = cert->GetIssuer(getter_AddRefs(issuer));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1053,7 +1074,7 @@ nsXPInstallManager::CheckCert(nsIChannel* aChannel)
         rv = cert->GetIssuer(getter_AddRefs(issuer));
         NS_ENSURE_SUCCESS(rv, rv);
     }
-    
+
     if (issuer) {
         nsAutoString tokenName;
         rv = issuer->GetTokenName(tokenName);
@@ -1149,7 +1170,7 @@ nsXPInstallManager::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
         }
 
         // -- then notify interested parties
-        PRInt32 errorcode = mCancelled ? nsInstall::USER_CANCELLED 
+        PRInt32 errorcode = mCancelled ? nsInstall::USER_CANCELLED
                                        : nsInstall::DOWNLOAD_ERROR;
         if (mDlg)
             mDlg->OnStateChange( mNextItem-1,
@@ -1214,8 +1235,7 @@ nsXPInstallManager::OnProgress(nsIRequest* request, nsISupports *ctxt, PRUint64 
 {
     nsresult rv = NS_OK;
 
-    PRTime now = PR_Now();
-    if (mDlg && !mCancelled && TimeToUpdate(now))
+    if (mDlg && !mCancelled)
     {
         if (mContentLength < 1) {
             nsCOMPtr<nsIChannel> channel = do_QueryInterface(request,&rv);
@@ -1224,7 +1244,6 @@ nsXPInstallManager::OnProgress(nsIRequest* request, nsISupports *ctxt, PRUint64 
             rv = channel->GetContentLength(&mContentLength);
             if (NS_FAILED(rv)) return rv;
         }
-        mLastUpdate = now;
         // XXX once channels support that, use 64-bit contentlength
         rv = mDlg->OnProgress( mNextItem-1, aProgress, nsUint64(mContentLength) );
     }
@@ -1244,17 +1263,17 @@ nsXPInstallManager::OnStatus(nsIRequest* request, nsISupports *ctxt,
 NS_IMETHODIMP
 nsXPInstallManager::GetInterface(const nsIID & eventSinkIID, void* *_retval)
 {
-    if (eventSinkIID.Equals(NS_GET_IID(nsIAuthPrompt))) {    
+    if (eventSinkIID.Equals(NS_GET_IID(nsIAuthPrompt))) {
         *_retval = nsnull;
- 
+
         nsresult rv;
         nsCOMPtr<nsIWindowWatcher> ww(do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
         NS_ENSURE_SUCCESS(rv, rv);
- 
+
         nsCOMPtr<nsIAuthPrompt> prompt;
         rv = ww->GetNewAuthPrompter(nsnull, getter_AddRefs(prompt));
         NS_ENSURE_SUCCESS(rv, rv);
- 
+
         nsIAuthPrompt *p = prompt.get();
         NS_ADDREF(p);
         *_retval = p;
@@ -1280,99 +1299,25 @@ nsXPInstallManager::OnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newCha
 
 // nsIBadCertListener2 methods
 NS_IMETHODIMP
-nsXPInstallManager::NotifyCertProblem(nsIInterfaceRequestor *socketInfo, 
-                                      nsISSLStatus *status, 
-                                      const nsACString &targetSite, 
+nsXPInstallManager::NotifyCertProblem(nsIInterfaceRequestor *socketInfo,
+                                      nsISSLStatus *status,
+                                      const nsACString &targetSite,
                                       PRBool *_retval)
 {
     *_retval = PR_TRUE;
     return NS_OK;
 }
 
-// IXPIListener methods
-
-PRInt32 
-nsXPInstallManager::GetIndexFromURL(const PRUnichar* aUrl)
-{
-    // --- figure out which index corresponds to this URL
-    PRUint32 i;
-    for (i=0; i < mTriggers->Size(); i++)
-    {
-        if ( (nsXPITriggerInfo*)mTriggers->Get(i)->mURL.Equals(aUrl) )
-            break;
-    }
-    NS_ASSERTION( i < mTriggers->Size(), "invalid result URL!" );
-
-    return i;
-}
 
 NS_IMETHODIMP
-nsXPInstallManager::OnInstallStart(const PRUnichar *URL)
-{
-    if (mDlg)
-        mDlg->OnStateChange( GetIndexFromURL( URL ),
-                             nsIXPIProgressDialog::INSTALL_START,
-                             0 );
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPInstallManager::OnPackageNameSet(const PRUnichar *URL, const PRUnichar *UIPackageName, const PRUnichar *aVersion)
-{
-    // Don't need to do anything
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPInstallManager::OnItemScheduled(const PRUnichar *message)
-{
-    // Don't need to do anything
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPInstallManager::OnFinalizeProgress(const PRUnichar *message, PRInt32 itemNum, PRInt32 totNum)
-{
-    // Don't need to do anything
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPInstallManager::OnInstallDone(const PRUnichar *URL, PRInt32 status)
-{
-    // --- send the final success/error status on to listeners
-    mTriggers->SendStatus( URL, status );
-
-    if (mDlg)
-        mDlg->OnStateChange( GetIndexFromURL( URL ),
-                             nsIXPIProgressDialog::INSTALL_DONE,
-                             status );
-
-    PR_AtomicDecrement( &mNumJars );
-    if ( mNumJars == 0 )
-        Shutdown();
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPInstallManager::OnLogComment(const PRUnichar* comment)
-{
-    // Don't need to do anything
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP 
-nsXPInstallManager::OnCertAvailable(nsIURI *aURI, 
-                                    nsISupports* context, 
-                                    nsresult aStatus, 
+nsXPInstallManager::OnCertAvailable(nsIURI *aURI,
+                                    nsISupports* context,
+                                    nsresult aStatus,
                                     nsIPrincipal *aPrincipal)
 {
     if (NS_FAILED(aStatus) && aStatus != NS_BINDING_ABORTED) {
-        // Check for a bad status.  The only acceptable failure status code we accept 
-        // is NS_BINDING_ABORTED.  For all others we want to ensure that the 
+        // Check for a bad status.  The only acceptable failure status code we accept
+        // is NS_BINDING_ABORTED.  For all others we want to ensure that the
         // nsIPrincipal is nsnull.
 
         NS_ASSERTION(aPrincipal == nsnull, "There has been an error, but we have a principal!");
@@ -1388,7 +1333,7 @@ nsXPInstallManager::OnCertAvailable(nsIURI *aURI,
         return NS_OK;
     }
 
-    // get the next one to load.  If there is any failure, we just go on to the 
+    // get the next one to load.  If there is any failure, we just go on to the
     // next trigger.  When all triggers items are handled, we call into InitManagerInternal
 
     item = mTriggers->Get(--mOutstandingCertLoads);
