@@ -167,7 +167,9 @@ _g_skip_file_basenames = [
     # license and readme files
     "license",
     "readme",
-
+    "copyright",
+    "LICENSE-MPL",
+    "MPL-1.1.txt",
 ]
 _g_skip_files = [
     # TODO: update with MPL block - or CVS remove (check history)
@@ -183,13 +185,6 @@ _g_skip_files = [
     "js2/COPYING",
     "security/svrcore/LICENSE",
     "extensions/xmlterm/doc/MPL",
-    "xpinstall/wizard/unix/src2/MPL-1.1.txt",
-    "nsprpub/pkg/solaris/common_files/copyright",
-    "security/nss/pkg/solaris/common_files/copyright",
-    "security/jss/pkg/solaris/common_files/copyright",
-    "security/nss/lib/freebl/mpi/utils/LICENSE-MPL",
-    "security/nss/lib/freebl/mpi/tests/LICENSE-MPL",
-    "security/nss/lib/freebl/mpi/doc/LICENSE-MPL",
     "gfx/cairo/cairo/COPYING-LGPL-2.1",
     "gfx/cairo/cairo/COPYING-MPL-1.1",
     
@@ -273,15 +268,11 @@ _g_skip_dirs = [
         
     # As per the "New Original Source Files" section of:
     #   http://www.mozilla.org/MPL/license-policy.html
+    #   with obsolete or now-relicensed directories removed
     "apache",             # Obsolete mod_gzip code
     "cck",                # mkaply's baby; not core code anyway.
     "dbm",
-#    "directory/java-sdk", # Java LDAP SDK
-    "directory/perldap",  # Perl LDAP SDK
-    "ef",                 # Multi-platform Java JIT
-    "grendel",            # Mail client in Java
     "js/rhino",           # Currently MPL/GPL - may end up BSD
-    "mstone",             # Mail server performance testing tool
     "webtools",           # Various MPLed webtools
     
     # These could be done, but no-one's clamouring for it, and it's a hassle
@@ -463,6 +454,7 @@ _g_ext_to_comment_info = {
     ".MAK":        (["#"], ),
     ".perl":       (["#"], ),
     ".pl":         (["#"], ),
+    ".PL":         (["#"], ),
     ".sh":         (["#"], ),
     ".dsw":        (["#"], ),
     ".cgi":        (["#"], ),
