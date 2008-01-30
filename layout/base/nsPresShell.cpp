@@ -5541,7 +5541,12 @@ PresShell::HandleEvent(nsIView         *aView,
 
     nsPoint eventPoint
         = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
-    nsIFrame* targetFrame = nsLayoutUtils::GetFrameForPoint(frame, eventPoint);
+    nsIFrame* targetFrame;
+    {
+      nsAutoDisableGetUsedXAssertions disableAssert;
+      targetFrame = nsLayoutUtils::GetFrameForPoint(frame, eventPoint);
+    }
+
     if (targetFrame) {
       PresShell* shell =
           static_cast<PresShell*>(targetFrame->PresContext()->PresShell());

@@ -80,6 +80,9 @@
  * A namespace class for static layout utilities.
  */
 
+#ifdef DEBUG
+PRBool nsLayoutUtils::sDisableGetUsedXAssertions = PR_FALSE;
+#endif
 
 nsIFrame*
 nsLayoutUtils::GetLastContinuationWithChild(nsIFrame* aFrame)
@@ -828,8 +831,12 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
 
   builder.EnterPresShell(aFrame, dirtyRect);
 
-  nsresult rv =
-    aFrame->BuildDisplayListForStackingContext(&builder, dirtyRect, &list);
+  nsresult rv;
+  {
+    nsAutoDisableGetUsedXAssertions disableAssert;
+    rv =
+      aFrame->BuildDisplayListForStackingContext(&builder, dirtyRect, &list);
+  }
 
   builder.LeavePresShell(aFrame, dirtyRect);
   NS_ENSURE_SUCCESS(rv, rv);
