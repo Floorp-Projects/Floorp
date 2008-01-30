@@ -4714,11 +4714,8 @@ nsHttpChannel::ResumeAt(PRUint64 aStartPos,
 NS_IMETHODIMP
 nsHttpChannel::GetEntityID(nsACString& aEntityID)
 {
-    // Don't return an entity ID for HTTP/1.0 servers
-    if (mResponseHead && (mResponseHead->Version() < NS_HTTP_VERSION_1_1)) {
-        return NS_ERROR_NOT_RESUMABLE;
-    }
-    // Neither return one for Non-GET requests which require additional data
+    // Don't return an entity ID for Non-GET requests which require
+    // additional data
     if (mRequestHead.Method() != nsHttp::Get) {
         return NS_ERROR_NOT_RESUMABLE;
     }
