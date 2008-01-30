@@ -88,10 +88,6 @@ IsNetscapeFormat(const nsACString& aBuffer);
 
 nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 {
-#ifdef MOZ_WIDGET_GTK2
-  nsGNOMERegistry::Startup();
-#endif
-
   mode_t mask = umask(0777);
   umask(mask);
   mPermissions = 0666 & ~mask;
@@ -1364,7 +1360,7 @@ nsOSHelperAppService::GetFromExtension(const nsCString& aFileExt) {
     
 #ifdef MOZ_WIDGET_GTK2
     LOG(("Looking in GNOME registry\n"));
-    nsMIMEInfoBase *gnomeInfo = nsGNOMERegistry::GetFromExtension(aFileExt.get()).get();
+    nsMIMEInfoBase *gnomeInfo = nsGNOMERegistry::GetFromExtension(aFileExt).get();
     if (gnomeInfo) {
       LOG(("Got MIMEInfo from GNOME registry\n"));
       return gnomeInfo;
@@ -1490,7 +1486,7 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
     // get back a MIMEInfo without any extensions set.  In that case we'll have
     // to look in our mime.types files for the extensions.    
     LOG(("Looking in GNOME registry\n"));
-    gnomeInfo = nsGNOMERegistry::GetFromType(aMIMEType.get()).get();
+    gnomeInfo = nsGNOMERegistry::GetFromType(aMIMEType).get();
     if (gnomeInfo && gnomeInfo->HasExtensions()) {
       LOG(("Got MIMEInfo from GNOME registry, and it has extensions set\n"));
       return gnomeInfo;
