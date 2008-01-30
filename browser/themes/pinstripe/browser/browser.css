@@ -367,50 +367,36 @@ toolbar[mode="icons"] #forward-button .toolbarbutton-text-box,
 
 /* ----- DEFAULT BACK BUTTON, PAIRED----- */	
 
-toolbar[mode="icons"]:not([currentset]) #back-button,
-toolbar[mode="icons"][currentset*="back-button,forward-button"] #back-button {
-  -moz-image-region: rect(0px, 617px, 23px, 584px);
-  -moz-margin-end: 0;
-  -moz-padding-end: 0;
-  border-left: none;
-  border-right: none;
+toolbar[mode="icons"] #back-button {
+  -moz-image-region: rect(0px, 617px, 23px, 584px) !important;
+  -moz-margin-end: 0 !important;
+  -moz-padding-end: 0 !important;
+  border-left: none !important;
+  border-right: none !important;
 }
 
-toolbar[mode="icons"]:not([currentset]) #back-button[disabled="true"],
-toolbar[mode="icons"][currentset*="back-button,forward-button"] #back-button[disabled="true"] {
+toolbar[mode="icons"] #back-button[disabled="true"] {
  -moz-image-region: rect(23px, 617px, 46px, 584px) !important;
 }
 
-toolbar[mode="icons"]:not([currentset]) #back-button:hover:active,
-toolbar[mode="icons"]:not([currentset]) #back-button[buttondown="true"],
-toolbar[mode="icons"]:not([currentset]) #back-button[open="true"],
-toolbar[mode="icons"][currentset*="back-button,forward-button"] #back-button:hover:active,
-toolbar[mode="icons"][currentset*="back-button,forward-button"] #back-button[buttondown="true"]
-toolbar[mode="icons"][currentset*="back-button,forward-button"] #back-button[open="true"] {
-  -moz-image-region: rect(46px, 617px, 69px, 584px);
+toolbar[mode="icons"] #back-button:hover:active:not([disabled]) {
+  -moz-image-region: rect(46px, 617px, 69px, 584px) !important;
 }
 
 /* ----- DEFAULT FORWARD BUTTON, PAIRED ----- */	
 
-toolbar[mode="icons"]:not([currentset]) #forward-button,
-toolbar[mode="icons"][currentset*='back-button,forward-button'] #forward-button {
-  -moz-image-region: rect(0px, 651px, 23px, 617px);
-  -moz-margin-start: 0;
-  -moz-padding-start: 0;
-  border-left: none;
-  border-right: none;
+toolbar[mode="icons"] #forward-button {
+  -moz-image-region: rect(0px, 651px, 23px, 617px) !important;
+  -moz-margin-start: 0 !important;
+  -moz-padding-start: 0 !important;
+  border-left: none !important;
+  border-right: none !important;
 }
-toolbar[mode="icons"]:not([currentset]) #forward-button[disabled="true"],
-toolbar[mode="icons"][currentset*="back-button,forward-button"] #forward-button[disabled="true"] {
+toolbar[mode="icons"] #forward-button[disabled="true"] {
  -moz-image-region: rect(23px, 651px, 46px, 617px) !important;
 }
-toolbar[mode="icons"]:not([currentset]) #forward-button:hover:active,
-toolbar[mode="icons"]:not([currentset]) #forward-button[buttondown="true"],
-toolbar[mode="icons"]:not([currentset]) #forward-button[open="true"],
-toolbar[mode="icons"][currentset*="back-button,forward-button"] #forward-button:hover:active,
-toolbar[mode="icons"][currentset*="back-button,forward-button"] #forward-button[buttondown="true"]
-toolbar[mode="icons"][currentset*="back-button,forward-button"] #forward-button[open="true"] {
-  -moz-image-region: rect(46px, 651px, 69px, 617px);
+toolbar[mode="icons"] #forward-button:hover:active:not([disabled]) {
+  -moz-image-region: rect(46px, 651px, 69px, 617px) !important;
 }
 
 /* ----- DEFAULT RELOAD BUTTON ----- */	
