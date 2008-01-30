@@ -107,6 +107,24 @@ function test()
   if (win)
     win.close();
 
+  var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+           getService(Ci.nsIWindowWatcher);
+
+  // register a callback to add a load listener to know when the download
+  // manager opens
+  var obs = {
+    observe: function(aSubject, aTopic, aData) {
+      // unregister ourself
+      ww.unregisterNotification(this);
+
+      var win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
+      win.addEventListener("DOMContentLoaded", finishUp, false);
+    }
+  };
+
+  // register our observer
+  ww.registerNotification(obs);
+
   // OK, now that all the data is in, let's pull up the UI
   Cc["@mozilla.org/download-manager-ui;1"].
   getService(Ci.nsIDownloadManagerUI).show();
@@ -123,5 +141,4 @@ function test()
   }
   
   waitForExplicitFinish();
-  window.setTimeout(finishUp, 1000);
 }
