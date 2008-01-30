@@ -169,7 +169,7 @@ nsXBLPrototypeHandler::Trace(TraceCallback aCallback, void *aClosure) const
 }
 
 void
-nsXBLPrototypeHandler::Unlink()
+nsXBLPrototypeHandler::UnlinkJSObjects()
 {
   ForgetCachedHandler();
 }

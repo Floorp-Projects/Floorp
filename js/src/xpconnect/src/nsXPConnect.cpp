@@ -679,7 +679,7 @@ nsXPConnect::ToParticipant(void *p)
 }
 
 NS_IMETHODIMP
-nsXPConnect::Root(void *p)
+nsXPConnect::RootAndUnlinkJSObjects(void *p)
 {
     return NS_OK;
 }
@@ -937,7 +937,7 @@ nsXPConnect::GetRequestDepth(JSContext* cx)
 class JSContextParticipant : public nsCycleCollectionParticipant
 {
 public:
-    NS_IMETHOD Root(void *n)
+    NS_IMETHOD RootAndUnlinkJSObjects(void *n)
     {
         return NS_OK;
     }

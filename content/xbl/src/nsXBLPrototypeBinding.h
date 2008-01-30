@@ -197,7 +197,7 @@ public:
                 nsIContent* aElement);
 
   void Traverse(nsCycleCollectionTraversalCallback &cb) const;
-  void Unlink();
+  void UnlinkJSObjects();
   void Trace(TraceCallback aCallback, void *aClosure) const;
 
 // Static members
