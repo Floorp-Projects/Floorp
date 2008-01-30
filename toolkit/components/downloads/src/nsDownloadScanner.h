@@ -10,6 +10,7 @@
 #include <Windows.h>
 #define AVVENDOR
 #include <msoav.h>
+#include <shlobj.h>
 
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
@@ -35,7 +36,9 @@ public:
 
 private:
   PRBool mHaveAVScanner;
+  PRBool mHaveAttachmentExecute;
   nsTArray<CLSID> mScanCLSID;
+  PRBool IsAESAvailable();
   PRInt32 ListCLSID();
 
   static unsigned int __stdcall ScannerThreadFunction(void *p);
@@ -60,6 +63,8 @@ private:
     NS_IMETHOD Run();
 
     void DoScan();
+    void DoScanAES();
+    void DoScanOAV();
 
     friend unsigned int __stdcall nsDownloadScanner::ScannerThreadFunction(void *);
   };
