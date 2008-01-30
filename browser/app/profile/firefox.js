@@ -525,8 +525,6 @@ pref("browser.contentHandlers.types.5.uri", "chrome://browser-region/locale/regi
 pref("browser.contentHandlers.types.5.type", "application/vnd.mozilla.maybe.feed");
 
 pref("browser.feeds.handler", "ask");
-pref("browser.videoFeeds.handler", "ask");
-pref("browser.audioFeeds.handler", "ask");
 
 // For now, this is living in content rather than in locales, as per Pike.
 // Eventually it will get merged into region.properties; see bug 395277.
