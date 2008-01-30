@@ -465,7 +465,7 @@ JS_HashString(const void *key)
 
     h = 0;
     for (s = (const unsigned char *)key; *s; s++)
-        h = (h >> (JS_HASH_BITS - 4)) ^ (h << 4) ^ *s;
+        h = JS_ROTATE_LEFT32(h, 4) ^ *s;
     return h;
 }
 

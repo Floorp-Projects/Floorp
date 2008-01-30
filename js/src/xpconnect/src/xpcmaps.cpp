@@ -41,6 +41,7 @@
 /* Private maps (hashtables). */
 
 #include "xpcprivate.h"
+#include "jsbit.h"
 
 /***************************************************************************/
 // static shared...
@@ -504,7 +505,7 @@ XPCNativeScriptableSharedMap::Entry::Hash(JSDHashTable *table, const void *key)
 
     h = (JSDHashNumber) obj->GetFlags();
     for (s = (const unsigned char*) obj->GetJSClass()->name; *s != '\0'; s++)
-        h = (h >> (JS_DHASH_BITS - 4)) ^ (h << 4) ^ *s;
+        h = JS_ROTATE_LEFT32(h, 4) ^ *s;
     return h;
 }
 

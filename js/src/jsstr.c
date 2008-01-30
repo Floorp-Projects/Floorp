@@ -69,6 +69,7 @@
 #include "jsopcode.h"
 #include "jsregexp.h"
 #include "jsstr.h"
+#include "jsbit.h"
 
 #define JSSTRDEP_RECURSION_LIMIT        100
 
@@ -2768,7 +2769,7 @@ js_HashString(JSString *str)
 
     JSSTRING_CHARS_AND_LENGTH(str, s, n);
     for (h = 0; n; s++, n--)
-        h = (h >> (JS_HASH_BITS - 4)) ^ (h << 4) ^ *s;
+        h = JS_ROTATE_LEFT32(h, 4) ^ *s;
     return h;
 }
 
