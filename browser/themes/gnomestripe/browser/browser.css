@@ -472,6 +472,15 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
   padding: 5px !important;
 }
 
+/* Put the unified dropdown button on a diet */
+#back-forward-dropmarker {
+  width: 24px;
+}
+
+#back-forward-dropmarker > .toolbarbutton-menu-dropmarker {
+  width: 12px;
+}
+
 /* 24px primary toolbar buttons */
 #back-button {
   list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar");
