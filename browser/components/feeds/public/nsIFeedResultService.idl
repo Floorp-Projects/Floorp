@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Ben Goodger <beng@google.com>
  *   Robert Sayre <sayrer@gmail.com>
+ *   Will Guaraldi <will.guaraldi@pculture.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,7 +46,7 @@ interface nsIFeedResult;
  * nsIFeedResultService provides a globally-accessible object for retrieving
  * the results of feed processing.
  */
-[scriptable, uuid(f3262589-48b2-4019-9947-90e5269bbfb9)]
+[scriptable, uuid(950a829e-c20e-4dc3-b447-f8b753ae54da)]
 interface nsIFeedResultService : nsISupports
 {
   /**
@@ -63,10 +64,13 @@ interface nsIFeedResultService : nsISupports
    *          The title of the feed to add.
    * @param   subtitle
    *          The subtitle of the feed to add.
+   * @param   feedType
+   *          The nsIFeed type of the feed.  See nsIFeed.idl
    */
   void addToClientReader(in AUTF8String uri, 
                          in AString title,
-                         in AString subtitle);
+                         in AString subtitle,
+                         in unsigned long feedType);
 
   /**
    * Registers a Feed Result object with a globally accessible service

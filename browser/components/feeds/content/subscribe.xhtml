@@ -31,20 +31,17 @@
   <body onload="SubscribeHandler.writeContent();" onunload="SubscribeHandler.uninit();">
     <div id="feedHeaderContainer">
       <div id="feedHeader" dir="&locale.dir;">
-        <div id="feedIntroText">
-          <p id="feedSubscriptionInfo1">
-            &feedSubscriptionInfo1a;<strong>&feedName;</strong>&feedSubscriptionInfo1b;
-          </p>
-          <p id="feedSubscriptionInfo2">&feedSubscriptionInfo2;</p>
-        </div>
+        <div id="feedIntroText"
+          ><xul:description id="feedSubscriptionInfo1" /><xul:description id="feedSubscriptionInfo2"
+        /></div>
 
 <!-- XXXmano this can't have any whitespace in it.  Otherwise you would see
      how much XUL-in-XHTML sucks, see bug 348830 -->
         <div id="feedSubscribeLine"
           ><xul:vbox
             ><xul:hbox align="center" 
-              ><xul:description id="subscribeUsingDescription">&subscribeUsing;</xul:description
-              ><xul:menulist id="handlersMenuList" aaa:labelledby="subscribeUsingDescription"
+              ><xul:description id="subscribeUsingDescription"
+              /><xul:menulist id="handlersMenuList" aaa:labelledby="subscribeUsingDescription"
                 ><xul:menupopup menugenerated="true" id="handlersMenuPopup"
                   ><xul:menuitem id="liveBookmarksMenuItem" label="&feedLiveBookmarks;" class="menuitem-iconic" image="chrome://browser/skin/page-livemarks.png" selected="true"
                   /><xul:menuseparator

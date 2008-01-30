@@ -25,11 +25,21 @@ html {
   -moz-padding-end: .3em;
   margin: -4em auto 0 auto;
   font-size: 110%;
-  background: url("chrome://browser/skin/feeds/feedIcon.png") 1.4em 5.9em no-repeat rgb(255,255,225);
   color: InfoText;
   padding: 5em 3em 0 3em;
 }
 
+.feedBackground {
+  background: url("chrome://browser/skin/feeds/feedIcon.png") 1.4em 5.9em no-repeat rgb(255,255,225);
+}
+
+.videoPodcastBackground {
+  background: url("chrome://browser/skin/feeds/videoFeedIcon.png") 1.4em 5.9em no-repeat rgb(255,255,225);
+}
+
+.audioPodcastBackground {
+  background: url("chrome://browser/skin/feeds/audioFeedIcon.png") 1.4em 5.9em no-repeat rgb(255,255,225);
+}
 
 #feedHeader[firstrun="true"] #feedIntroText {
   display: block;
