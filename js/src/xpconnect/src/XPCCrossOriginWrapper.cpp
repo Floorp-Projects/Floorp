@@ -182,15 +182,6 @@ GetWrappedObject(JSContext *cx, JSObject *wrapper)
   return JSVAL_TO_OBJECT(v);
 }
 
-static inline
-nsIScriptSecurityManager *
-GetSecurityManager()
-{
-  extern nsIScriptSecurityManager *gScriptSecurityManager;
-
-  return gScriptSecurityManager;
-}
-
 JSBool
 XPC_XOW_WrapperMoved(JSContext *cx, XPCWrappedNative *innerObj,
                      XPCWrappedNativeScope *newScope)
@@ -269,7 +260,7 @@ nsresult
 IsWrapperSameOrigin(JSContext *cx, JSObject *wrappedObj)
 {
   // Get the subject principal from the execution stack.
-  nsIScriptSecurityManager *ssm = GetSecurityManager();
+  nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
   if (!ssm) {
     ThrowException(NS_ERROR_NOT_INITIALIZED, cx);
     return NS_ERROR_NOT_INITIALIZED;
@@ -650,7 +641,7 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
       XPCWrappedNative::GetWrappedNativeOfJSObject(cx, wrappedObj);
     NS_ASSERTION(wn, "How did we wrap a non-WrappedNative?");
     if (!IsValFrame(wrappedObj, id, wn)) {
-      nsIScriptSecurityManager *ssm = GetSecurityManager();
+      nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
       if (!ssm) {
         return ThrowException(NS_ERROR_NOT_INITIALIZED, cx);
       }
@@ -790,7 +781,7 @@ XPC_XOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
       XPCWrappedNative::GetWrappedNativeOfJSObject(cx, wrappedObj);
     NS_ASSERTION(wn, "How did we wrap a non-WrappedNative?");
     if (!IsValFrame(wrappedObj, id, wn)) {
-      nsIScriptSecurityManager *ssm = GetSecurityManager();
+      nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
       if (!ssm) {
         return ThrowException(NS_ERROR_NOT_INITIALIZED, cx);
       }
@@ -1110,7 +1101,7 @@ XPC_XOW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   nsresult rv = IsWrapperSameOrigin(cx, wrappedObj);
   if (rv == NS_ERROR_DOM_PROP_ACCESS_DENIED) {
-    nsIScriptSecurityManager *ssm = GetSecurityManager();
+    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
     if (!ssm) {
       return ThrowException(NS_ERROR_NOT_INITIALIZED, cx);
     }
