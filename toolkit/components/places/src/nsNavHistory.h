@@ -396,8 +396,8 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBUrlToUrlResult; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBBookmarkToUrlResult; // kGetInfoIndex_* results
 
-  nsresult RecalculateFrecencies();
-  nsresult RecalculateFrecenciesInternal(mozIStorageStatement *aStatement, PRInt64 aBindParameter);
+  nsresult RecalculateFrecencies(PRInt32 aCount, PRBool aRecalcOld);
+  nsresult RecalculateFrecenciesInternal(mozIStorageStatement *aStatement, PRInt64 aBindParameter, PRInt32 aCount);
 
   nsresult CalculateFrecency(PRInt64 aPageID, PRInt32 aTyped, PRInt32 aVisitCount, nsCAutoString &aURL, PRInt32 *aFrecency);
   nsresult CalculateFrecencyInternal(PRInt64 aPageID, PRInt32 aTyped, PRInt32 aVisitCount, PRBool aIsBookmarked, PRInt32 *aFrecency);
@@ -648,6 +648,8 @@ protected:
 
   // frecency prefs
   PRInt32 mNumVisitsForFrecency;
+  PRInt32 mNumCalculateFrecencyOnIdle;
+  PRInt32 mNumCalculateFrecencyOnMigrate;
   PRInt32 mFrecencyUpdateIdleTime;
   PRInt32 mFirstBucketCutoffInDays;
   PRInt32 mSecondBucketCutoffInDays;
