@@ -125,6 +125,13 @@ function notifyParentComplete()
     gToolbox.customizeDone(gToolboxChanged);
 }
 
+function toolboxChanged()
+{
+  gToolboxChanged = true;
+  if ("customizeChange" in gToolbox)
+    gToolbox.customizeChange();
+}
+
 function getToolbarAt(i)
 {
   return gToolbox.childNodes[i];
@@ -550,7 +557,7 @@ function addNewToolbar()
     
   gToolbox.appendCustomToolbar(name.value, "");
   
-  gToolboxChanged = true;
+  toolboxChanged();
 }
 
 /**
@@ -606,7 +613,7 @@ function restoreDefaultSet()
   // Restore the disabled and command states
   restoreItemAttributes(["itemdisabled", "itemcommand"], savedAttributes);
 
-  gToolboxChanged = true;
+  toolboxChanged();
 }
 
 function saveItemAttributes(aAttributeList)
@@ -909,7 +916,7 @@ var toolbarDNDObserver =
     
     gCurrentDragOverItem = null;
 
-    gToolboxChanged = true;
+    toolboxChanged();
   },
   
   _flavourSet: null,
@@ -967,7 +974,7 @@ var paletteDNDObserver =
       }
     }
     
-    gToolboxChanged = true;
+    toolboxChanged();
   },
   
   _flavourSet: null,
