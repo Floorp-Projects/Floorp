@@ -3376,7 +3376,7 @@ nsUrlClassifierDBService::ResetDatabase()
   return mWorkerProxy->ResetDatabase();
 }
 
-NS_IMETHODIMP
+nsresult
 nsUrlClassifierDBService::CacheCompletions(nsTArray<nsUrlClassifierLookupResult> *results)
 {
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
