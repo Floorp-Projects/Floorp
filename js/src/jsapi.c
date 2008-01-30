@@ -2470,6 +2470,7 @@ JS_MaybeGC(JSContext *cx)
 JS_PUBLIC_API(JSGCCallback)
 JS_SetGCCallback(JSContext *cx, JSGCCallback cb)
 {
+    CHECK_REQUEST(cx);
     return JS_SetGCCallbackRT(cx->runtime, cb);
 }
 
