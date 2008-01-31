@@ -6,6 +6,11 @@
 
 # Equivalence mappings; having these is easier than updating hundreds of files
 # to make them all use the same variant of each name.
+#
+# Procedure:
+# relic -I -f * > names.txt
+# make-id-list < names.txt > final.txt
+
 my %equivalents = (
   "ActiveState Tool Corporation" => "ActiveState Tool Corp",
   "Activestate Tool Corp" => "ActiveState Tool Corp",
@@ -44,6 +49,7 @@ my %equivalents = (
   "Netscape Commmunications Corp" => "Netscape Communications Corporation",
   "Netscape Communications Corp, Inc" => "Netscape Communications Corporation",
   "Netscape Communication Corporation" => "Netscape Communications Corporation",
+  "Netscape Communications Corporation." => "Netscape Communications Corporation",  
 
   "Novell" => "Novell Inc",
   "Novell, Inc" => "Novell Inc",
@@ -72,10 +78,17 @@ my %equivalents = (
   "OEOne Corporation" => "OEone Corporation",
   "Paul Kocher of Cryptography Research" => "Paul Kocher",
   "QUALCOMM incorporated" => "Qualcomm Inc",
+  "QUALCOMM Incorporated" => "Qualcomm Inc",
   "Simdesk Technologies" => "Simdesk Technologies Inc",
   "Google" => "Google Inc",
   "Telephone Corporation)" => "NTT",
-
+  "Disruptive Innovations" => "Disruptive Innovations SARL",
+  "Florian QUEZE" => "Florian Queze",
+  "Nelson B Bolyard" => "Nelson B. Bolyard",
+  "Richard L Walsh" => "Richard L. Walsh",
+  "timeless" => "Josh Soref",
+  "Olivier Parniere BT Global Services / Etat francais Ministere de la Defense" => "Olivier Parniere",
+  
   "Frank Schoenheit" => "Frank Sch&ouml;nheit",
   "Frank Schönheit" => "Frank Sch&ouml;nheit",
   "HÃ¥kan Waara" => "H&aring;kan Waara",
@@ -83,7 +96,15 @@ my %equivalents = (
   "Karsten DÃ¼sterloh" => "Karsten D&uuml;sterloh",
   "Simon BÃ¼nzli" => "Simon B&uuml;nzli",
   "Vincent BÃ©ron" => "Vincent B&eacute;ron",
-  "Tomas Mšller" => "Tomas M&uuml;ller",  
+  "Tomas Mšller" => "Tomas M&uuml;ller",
+  "DÃ£o Gottwald" => "D&atilde;o Gottwald",
+  "László Németh" => "L&aacute;szl&oacute; N&eacutre;meth",
+  "Björn Jacke" => "Bj&ouml;rn Jacke",
+  
+  "example Inc" => "Mozilla Foundation",
+  "SeaMonkey team" => "Mozilla Foundation",
+  "person recorded in the version control logs" => "Mozilla Foundation",
+  "None" => "Mozilla Foundation"
 );
 
 # 'indevs' == "Initial Developers"
