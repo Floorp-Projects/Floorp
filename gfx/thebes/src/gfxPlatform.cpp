@@ -391,7 +391,7 @@ gfxPlatform::GetPrefLangName(eFontPrefLang aLang)
 
 const PRUint32 kFontPrefLangCJKMask = (1 << (PRUint32) eFontPrefLang_Japanese) | (1 << (PRUint32) eFontPrefLang_ChineseTW)
                                       | (1 << (PRUint32) eFontPrefLang_ChineseCN) | (1 << (PRUint32) eFontPrefLang_ChineseHK)
-                                      | (1 << (PRUint32) eFontPrefLang_Korean);
+                                      | (1 << (PRUint32) eFontPrefLang_Korean) | (1 << (PRUint32) eFontPrefLang_CJKSet);
 PRBool 
 gfxPlatform::IsLangCJK(eFontPrefLang aLang)
 {
