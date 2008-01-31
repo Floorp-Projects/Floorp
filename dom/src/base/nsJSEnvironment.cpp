@@ -102,7 +102,6 @@
 #include "prmem.h"
 
 #ifdef NS_DEBUG
-#include "jsgc.h"       // for WAY_TOO_MUCH_GC, if defined for GC debugging
 #include "nsGlobalWindow.h"
 #endif
 
@@ -3210,14 +3209,12 @@ nsJSContext::ScriptEvaluated(PRBool aTerminated)
 
   mNumEvaluations++;
 
-#ifdef WAY_TOO_MUCH_GC
-  ::JS_MaybeGC(mContext);
-#else
-  if (mNumEvaluations > 20) {
+  if (mContext->runtime->gcZeal >= 2) {
+    ::JS_MaybeGC(mContext);
+  } else if (mNumEvaluations > 20) {
     mNumEvaluations = 0;
     ::JS_MaybeGC(mContext);
   }
-#endif
 
   mOperationCallbackTime = LL_ZERO;
 }
@@ -3641,8 +3638,6 @@ nsJSRuntime::Init()
   NS_ASSERTION(!oldfop, " fighting over the findObjectPrincipals callback!");
 
   // Set these global xpconnect options...
-  nsIXPConnect *xpc = nsContentUtils::XPConnect();
-
   nsContentUtils::RegisterPrefCallback("dom.max_script_run_time",
                                        MaxScriptRunTimePrefChangedCallback,
                                        nsnull);
