@@ -123,7 +123,7 @@ body[dir="rtl"] #brand {
 }
 
 :root.blacklist #errorPageContainer {
-  background-image: url("moz-icon://stock/gtk-dialog-error?size=dialog");
+  background-image: url("chrome://global/skin/icons/blacklist_large.png");
   background-color: #722;
 }
 
