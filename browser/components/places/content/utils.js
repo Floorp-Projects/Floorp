@@ -1572,6 +1572,29 @@ var PlacesUtils = {
     return "";
   },
 
+
+  /**
+   * Get all bookmarks for a URL, excluding items under tag or livemark
+   * containers.
+   */
+  getBookmarksForURI:
+  function PU_getBookmarksForURI(aURI) {
+    var bmkIds = this.bookmarks.getBookmarkIdsForURI(aURI, {});
+
+    // filter the ids list
+    return bmkIds.filter(function(aID) {
+      var parent = this.bookmarks.getFolderIdForItem(aID);
+      // Livemark child
+      if (this.annotations.itemHasAnnotation(parent, LMANNO_FEEDURI))
+        return false;
+      var grandparent = this.bookmarks.getFolderIdForItem(parent);
+      // item under a tag container
+      if (grandparent == this.tagsFolderId)
+        return false;
+      return true;
+    }, this);
+  },
+
   /**
    * Get the most recently added/modified bookmark for a URL, excluding items
    * under tag or livemark containers. -1 is returned if no item is found.

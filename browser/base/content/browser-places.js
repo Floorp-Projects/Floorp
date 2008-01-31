@@ -302,15 +302,16 @@ var StarUI = {
       this.panel.focus();
     }
 
-    // remove the bookmark
     // cache its uri so we can get the new itemId in the case of undo
     this._uri = PlacesUtils.bookmarks.getBookmarkURI(this._itemId);
-    var txn = PlacesUtils.ptm.removeItem(this._itemId);
-    PlacesUtils.ptm.doTransaction(txn);
 
-    // remove all tags for the associated url
-    var untagTxn = PlacesUtils.ptm.untagURI(this._uri, null);
-    PlacesUtils.ptm.doTransaction(untagTxn);
+    // remove all bookmarks for the bookmark's url, this also removes
+    // the tags for the url
+    var itemIds = PlacesUtils.getBookmarksForURI(this._uri);
+    for (var i=0; i < itemIds.length; i++) {
+      var txn = PlacesUtils.ptm.removeItem(itemIds[i]);
+      PlacesUtils.ptm.doTransaction(txn);
+    }
 
     // hidePopup resets our itemId, thus we call it only after removing
     // the bookmark

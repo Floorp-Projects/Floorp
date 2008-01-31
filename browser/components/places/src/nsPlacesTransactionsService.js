@@ -485,6 +485,15 @@ placesRemoveItemTransaction.prototype = {
       if (this._itemType == Ci.nsINavBookmarksService.TYPE_BOOKMARK)
         this._uri = PlacesUtils.bookmarks.getBookmarkURI(this._id);
       PlacesUtils.bookmarks.removeItem(this._id);
+      if (this._uri) {
+        // if this was the last bookmark (excluding tag-items and livemark
+        // children, see getMostRecentBookmarkForURI) for the bookmark's url,
+        // remove the url from tag containers as well.
+        if (PlacesUtils.getMostRecentBookmarkForURI(this._uri) == -1) {
+          this._tags = PlacesUtils.tagging.getTagsForURI(this._uri, {});
+          PlacesUtils.tagging.untagURI(this._uri, this._tags);
+        }
+      }
     }
   },
 
@@ -494,6 +503,8 @@ placesRemoveItemTransaction.prototype = {
                                                       this._uri,
                                                       this._oldIndex,
                                                       this._title);
+      if (this._tags && this._tags.length > 0)
+        PlacesUtils.tagging.tagURI(this._uri, this._tags);
     }
     else if (this._itemType == Ci.nsINavBookmarksService.TYPE_FOLDER) {
       this._removeTxn.undoTransaction();
