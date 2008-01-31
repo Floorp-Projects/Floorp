@@ -66,8 +66,7 @@
         -A, --add           Add a license to files that do not appear to
                             have one.
         -I, --initial-developers
-                            Display initial developer for each file (-s is 
-                            suggested).
+                            Display initial developer for each file.
 
     General Options:
         -h, --help          dump this help and exit
@@ -384,6 +383,7 @@ _g_ext_to_comment_info = {
     ".cpp":    (["/*", " *", "*/"], ),
     ".H":      (["/*", " *", "*/"], ),
     ".h":      (["/*", " *", "*/"], ),
+    ".hxx":    (["/*", " *", "*/"], ),
     ".c":      (["/*", " *", "*/"], ),
     ".css":    (["/*", " *", "*/"], ['#']),
     ".js":     (["/*", " *", "*/"], ['#']),
