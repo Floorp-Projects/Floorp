@@ -73,7 +73,6 @@ CPPSRCS		= \
 		nsPipe3.cpp \
 		nsStreamUtils.cpp \
 		nsScriptableInputStream.cpp \
-		nsScriptableOutputStream.cpp \
 		nsSegmentedBuffer.cpp \
 		SpecialSystemDirectory.cpp \
 		nsStorageStream.cpp \
@@ -174,7 +173,6 @@ SDK_XPIDLSRCS   = \
 		nsIInputStream.idl \
 		nsIOutputStream.idl \
 		nsIScriptableInputStream.idl \
-		nsIScriptableStreams.idl \
 		$(NULL)
 
 SDK_HEADERS =  \

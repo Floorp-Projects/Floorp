@@ -126,7 +126,6 @@ XPIDLSRCS	= \
 		nsIChannelEventSink.idl \
 		nsINetUtil.idl \
 		nsIProxiedChannel.idl \
-		nsIScriptableIO.idl \
 		nsIRandomGenerator.idl \
 		$(NULL)
 
