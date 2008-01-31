@@ -416,6 +416,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     uint32 length, lineno, depth, magic;
     uint32 natoms, nsrcnotes, ntrynotes, nobjects, nregexps, i;
     uint32 prologLength, version;
+    JSTempValueRooter tvr;
     JSPrincipals *principals;
     uint32 encodeable;
     JSBool filenameWasSaved;
@@ -503,6 +504,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         /* If we know nsrcnotes, we allocated space for notes in script. */
         notes = SCRIPT_NOTES(script);
         *scriptp = script;
+        JS_PUSH_TEMP_ROOT_SCRIPT(cx, script, &tvr);
     }
 
     /*
@@ -611,10 +613,13 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     }
 
     xdr->script = oldscript;
+    if (xdr->mode == JSXDR_DECODE)
+        JS_POP_TEMP_ROOT(cx, &tvr);
     return JS_TRUE;
 
   error:
     if (xdr->mode == JSXDR_DECODE) {
+        JS_POP_TEMP_ROOT(cx, &tvr);
         if (script->filename && !filenameWasSaved) {
             JS_free(cx, (void *) script->filename);
             script->filename = NULL;
@@ -1531,8 +1536,10 @@ js_TraceScript(JSTracer *trc, JSScript *script)
         i = objarray->length;
         do {
             --i;
-            JS_SET_TRACING_INDEX(trc, "objects", i);
-            JS_CallTracer(trc, objarray->vector[i], JSTRACE_OBJECT);
+            if (objarray->vector[i]) {
+                JS_SET_TRACING_INDEX(trc, "objects", i);
+                JS_CallTracer(trc, objarray->vector[i], JSTRACE_OBJECT);
+            }
         } while (i != 0);
     }
 
@@ -1541,8 +1548,10 @@ js_TraceScript(JSTracer *trc, JSScript *script)
         i = objarray->length;
         do {
             --i;
-            JS_SET_TRACING_INDEX(trc, "regexps", i);
-            JS_CallTracer(trc, objarray->vector[i], JSTRACE_OBJECT);
+            if (objarray->vector[i]) {
+                JS_SET_TRACING_INDEX(trc, "regexps", i);
+                JS_CallTracer(trc, objarray->vector[i], JSTRACE_OBJECT);
+            }
         } while (i != 0);
     }
 
