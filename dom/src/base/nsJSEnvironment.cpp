@@ -3209,9 +3209,12 @@ nsJSContext::ScriptEvaluated(PRBool aTerminated)
 
   mNumEvaluations++;
 
+#ifdef JS_GC_ZEAL
   if (mContext->runtime->gcZeal >= 2) {
     ::JS_MaybeGC(mContext);
-  } else if (mNumEvaluations > 20) {
+  } else
+#endif
+  if (mNumEvaluations > 20) {
     mNumEvaluations = 0;
     ::JS_MaybeGC(mContext);
   }
