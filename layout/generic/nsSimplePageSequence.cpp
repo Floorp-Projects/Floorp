@@ -246,8 +246,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
   nscoord  deadSpaceGap = 0;
   if (isPrintPreview) {
-    nscoord deadSpaceGapTwips;
-    GetDeadSpaceValue(&deadSpaceGapTwips);
+    GetDeadSpaceValue(&gapInTwips);
     deadSpaceGap = aPresContext->TwipsToAppUnits(gapInTwips);
   }
 
