@@ -821,7 +821,7 @@
         },
         
         canDrop: function TBV_DO_canDrop(event, session) {
-          return PlacesControllerDragHelper.canDrop(this._self, -1);
+          return PlacesControllerDragHelper.canDrop(this._self._viewer, -1);
         },
         
         onDragOver: function TBV_DO_onDragOver(event, flavor, session) {

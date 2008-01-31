@@ -1357,7 +1357,7 @@ PlacesMenuDNDObserver.prototype = {
   },
 
   canDrop: function TBV_DO_canDrop(event, session) {
-    return PlacesControllerDragHelper.canDrop(this._view, -1);
+    return PlacesControllerDragHelper.canDrop(this._view._viewer, -1);
   },
 
   onDragOver: function TBV_DO_onDragOver(event, flavor, session) {
