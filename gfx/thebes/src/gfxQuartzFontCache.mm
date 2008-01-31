@@ -45,6 +45,9 @@
 #include "gfxQuartzFontCache.h"
 #include "gfxAtsuiFonts.h"
 
+#include "nsIPref.h"  // for pref changes callback notification
+#include "nsServiceManagerUtils.h"
+
 // _atsFontID is private; add it in our new category to NSFont
 @interface NSFont (MozillaCategory)
 - (ATSUFontID)_atsFontID;
@@ -98,6 +101,7 @@ gfxQuartzFontCache::GenerateFontListKey(const nsAString& aKeyName, nsAString& aR
 }
 
 /* MacOSFontEntry */
+#pragma mark-
 
 MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName, 
                                 PRInt32 aAppleWeight, PRUint32 aTraits, MacOSFamilyEntry *aFamily)
@@ -169,6 +173,7 @@ MacOSFontEntry::ReadCMAP()
 
 
 /* MacOSFamilyEntry */
+#pragma mark-
 
 static const PRUint32 kTraits_NonNormalWidthMask = NSNarrowFontMask | NSExpandedFontMask | 
                             NSCondensedFontMask | NSCompressedFontMask | NSFixedPitchFontMask;
@@ -396,6 +401,7 @@ MacOSFamilyEntry::FindFontWeight(MacOSFontEntry* aFontsForWeights[], const gfxFo
 }
 
 /* gfxQuartzFontCache */
+#pragma mark-
 
 gfxQuartzFontCache *gfxQuartzFontCache::sSharedFontCache = nsnull;
 
@@ -403,11 +409,19 @@ gfxQuartzFontCache::gfxQuartzFontCache()
 {
     mFontFamilies.Init(100);
     mLocalizedFamilies.Init(30);
+    mPrefFonts.Init(10);
 
     InitFontList();
     ::ATSFontNotificationSubscribe(ATSNotification,
                                    kATSFontNotifyOptionDefault,
                                    (void*)this, nsnull);
+
+    // pref changes notification setup
+    nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID);
+    pref->RegisterCallback("font.", PrefChangedCallback, this);
+    pref->RegisterCallback("font.name-list.", PrefChangedCallback, this);
+    pref->RegisterCallback("intl.accept_languages", PrefChangedCallback, this);  // hmmmm...
+    
 }
 
 static NSString* CreateNameFromBuffer(const UInt8 *aBuf, ByteCount aLength, 
@@ -517,6 +531,7 @@ gfxQuartzFontCache::InitFontList()
 {
     mFontFamilies.Clear();
     mLocalizedFamilies.Clear();
+    mPrefFonts.Clear();
     
     // iterate over available families
     NSFontManager *fontManager = [NSFontManager sharedFontManager];
@@ -629,6 +644,16 @@ gfxQuartzFontCache::ATSNotification(ATSFontNotificationInfoRef aInfo,
     qfc->UpdateFontList();
 }
 
+int PR_CALLBACK
+gfxQuartzFontCache::PrefChangedCallback(const char *aPrefName, void *closure)
+{
+    // XXX this could be made to only clear out the cache for the prefs that were changed
+    // but it probably isn't that big a deal.
+    gfxQuartzFontCache *qfc = static_cast<gfxQuartzFontCache *>(closure);
+    qfc->mPrefFonts.Clear();
+    return 0;
+}
+
 MacOSFontEntry*
 gfxQuartzFontCache::GetDefaultFont(const gfxFontStyle* aStyle)
 {
@@ -695,16 +720,27 @@ gfxQuartzFontCache::FindFontForCharProc(nsStringHashKey::KeyType aKey, nsRefPtr<
     return PL_DHASH_NEXT;
 }
 
-MacOSFontEntry*
-gfxQuartzFontCache::FindFontForFamily(const nsAString& aFamily, const gfxFontStyle* aStyle)
+MacOSFamilyEntry* 
+gfxQuartzFontCache::FindFamily(const nsAString& aFamily)
 {
     nsAutoString key;
     nsRefPtr<MacOSFamilyEntry> familyEntry;
     GenerateFontListKey(aFamily, key);
     
     if (mFontFamilies.Get(key, &familyEntry) || mLocalizedFamilies.Get(key, &familyEntry)) {
-        return familyEntry->FindFont(aStyle);
+        return familyEntry;
     }
+    return nsnull;
+}
+    
+MacOSFontEntry*
+gfxQuartzFontCache::FindFontForFamily(const nsAString& aFamily, const gfxFontStyle* aStyle)
+{
+    MacOSFamilyEntry *familyEntry = FindFamily(aFamily);
+    
+    if (familyEntry)
+        return familyEntry->FindFont(aStyle);
+
     return nsnull;
 }
 
@@ -716,5 +752,17 @@ gfxQuartzFontCache::AppleWeightToCSSWeight(PRInt32 aAppleWeight)
     else if (aAppleWeight > kAppleMaxWeight)
         aAppleWeight = kAppleMaxWeight;
     return gAppleWeightToCSSWeight[aAppleWeight];
+}
+
+PRBool
+gfxQuartzFontCache::GetPrefFontFamilyEntries(eFontPrefLang aLangGroup, nsTArray<nsRefPtr<MacOSFamilyEntry> > *array)
+{
+    return mPrefFonts.Get(PRUint32(aLangGroup), array);
+}
+
+void
+gfxQuartzFontCache::SetPrefFontFamilyEntries(eFontPrefLang aLangGroup, nsTArray<nsRefPtr<MacOSFamilyEntry> >& array)
+{
+    mPrefFonts.Put(PRUint32(aLangGroup), array);
 }
 

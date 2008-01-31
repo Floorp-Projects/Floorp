@@ -56,6 +56,48 @@ class gfxImageSurface;
 class gfxFontGroup;
 struct gfxFontStyle;
 
+// pref lang id's for font prefs
+// !!! needs to match the list of pref font.default.xx entries listed in all.js !!!
+
+enum eFontPrefLang {
+    eFontPrefLang_Western     =  0,
+    eFontPrefLang_CentEuro    =  1,
+    eFontPrefLang_Japanese    =  2,
+    eFontPrefLang_ChineseTW   =  3,
+    eFontPrefLang_ChineseCN   =  4,
+    eFontPrefLang_ChineseHK   =  5,
+    eFontPrefLang_Korean      =  6,
+    eFontPrefLang_Cyrillic    =  7,
+    eFontPrefLang_Baltic      =  8,
+    eFontPrefLang_Greek       =  9,
+    eFontPrefLang_Turkish     = 10,
+    eFontPrefLang_Thai        = 11,
+    eFontPrefLang_Hebrew      = 12,
+    eFontPrefLang_Arabic      = 13,
+    eFontPrefLang_Devanagari  = 14,
+    eFontPrefLang_Tamil       = 15,
+    eFontPrefLang_Armenian    = 16,
+    eFontPrefLang_Bengali     = 17,
+    eFontPrefLang_Canadian    = 18,
+    eFontPrefLang_Ethiopic    = 19,
+    eFontPrefLang_Georgian    = 20,
+    eFontPrefLang_Gujarati    = 21,
+    eFontPrefLang_Gurmukhi    = 22,
+    eFontPrefLang_Khmer       = 23,
+    eFontPrefLang_Malayalam   = 24,
+
+    eFontPrefLang_LangCount   = 25, // except Others and UserDefined.
+
+    eFontPrefLang_Others      = 25, // x-unicode
+    eFontPrefLang_UserDefined = 26,
+
+    eFontPrefLang_CJKSet      = 27, // special code for CJK set
+    eFontPrefLang_AllCount    = 28
+};
+
+// when searching through pref langs, max number of pref langs
+const PRUint32 kMaxLenPrefLangList = 30;
+
 class THEBES_API gfxPlatform {
 public:
     /**
@@ -135,6 +177,29 @@ public:
 
     void GetPrefFonts(const char *aLangGroup, nsString& array, PRBool aAppendUnicode = PR_TRUE);
 
+    /**
+     * Iterate over pref fonts given a list of lang groups.  For a single lang
+     * group, multiple pref fonts are possible.  If error occurs, returns PR_FALSE,
+     * PR_TRUE otherwise.  Callback returns PR_FALSE to abort process.
+     */
+    typedef PRBool (*PrefFontCallback) (eFontPrefLang aLang, const nsAString& aName,
+                                        void *aClosure);
+    static PRBool ForEachPrefFont(eFontPrefLang aLangArray[], PRUint32 aLangArrayLen,
+                                  PrefFontCallback aCallback,
+                                  void *aClosure);
+
+    // convert a lang group string to enum constant (i.e. "zh-TW" ==> eFontPrefLang_ChineseTW)
+    static eFontPrefLang GetFontPrefLangFor(const char* aLang);
+
+    // convert a enum constant to lang group string (i.e. eFontPrefLang_ChineseTW ==> "zh-TW")
+    static const char* GetPrefLangName(eFontPrefLang aLang);
+   
+    // returns true if a pref lang is CJK
+    static PRBool IsLangCJK(eFontPrefLang aLang);
+    
+    // helper method to add a pref lang to an array, if not already in array
+    static void AppendPrefLang(eFontPrefLang aPrefLangs[], PRUint32& aLen, eFontPrefLang aAddLang);
+    
     /**
      * Are we going to try color management?
      */

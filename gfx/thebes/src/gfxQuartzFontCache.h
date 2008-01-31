@@ -44,6 +44,7 @@
 
 #include "gfxFontUtils.h"
 #include "gfxAtsuiFonts.h"
+#include "gfxPlatform.h"
 
 #include <Carbon/Carbon.h>
 
@@ -173,12 +174,17 @@ public:
 
     MacOSFontEntry* FindFontForChar(const PRUint32 aCh, gfxAtsuiFont *aPrevFont);
 
+    MacOSFamilyEntry* FindFamily(const nsAString& aFamily);
+    
     MacOSFontEntry* FindFontForFamily(const nsAString& aFamily, const gfxFontStyle* aStyle);
     
     MacOSFontEntry* GetDefaultFont(const gfxFontStyle* aStyle);
 
     static PRInt32 AppleWeightToCSSWeight(PRInt32 aAppleWeight);
     
+    PRBool GetPrefFontFamilyEntries(eFontPrefLang aLangGroup, nsTArray<nsRefPtr<MacOSFamilyEntry> > *array);
+    void SetPrefFontFamilyEntries(eFontPrefLang aLangGroup, nsTArray<nsRefPtr<MacOSFamilyEntry> >& array);
+
 private:
     static PLDHashOperator PR_CALLBACK FindFontForCharProc(nsStringHashKey::KeyType aKey,
                                                              nsRefPtr<MacOSFamilyEntry>& aFamilyEntry,
@@ -191,6 +197,7 @@ private:
     
     void GenerateFontListKey(const nsAString& aKeyName, nsAString& aResult);
     static void ATSNotification(ATSFontNotificationInfoRef aInfo, void* aUserArg);
+    static int PR_CALLBACK PrefChangedCallback(const char *aPrefName, void *closure);
 
     static PLDHashOperator PR_CALLBACK
         HashEnumFuncForFamilies(nsStringHashKey::KeyType aKey,
@@ -203,6 +210,10 @@ private:
     // localized family name ==> family entry (not unique, can have multiple names per 
     // family entry, only names *other* than the canonical names are stored here)
     nsDataHashtable<nsStringHashKey, nsRefPtr<MacOSFamilyEntry> > mLocalizedFamilies;    
+
+    // cached pref font lists
+    // maps list of family names ==> array of family entries, one per lang group
+    nsDataHashtable<nsUint32HashKey, nsTArray<nsRefPtr<MacOSFamilyEntry> > > mPrefFonts;
 
 };
 
