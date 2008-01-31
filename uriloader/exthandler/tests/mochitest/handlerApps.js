@@ -89,7 +89,7 @@ function test() {
                getService(Components.interfaces.nsIDirectoryServiceProvider);
   if (osString == "WINNT") {
     var windowsDir = dirSvc.getFile("WinD", {});
-    var exe = windowsDir.clone();
+    var exe = windowsDir.clone().QueryInterface(Components.interfaces.nsILocalFile);
     exe.appendRelativePath("SYSTEM32\\HOSTNAME.EXE");
 
   } else if (osString == "Darwin") { 
