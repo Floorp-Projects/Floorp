@@ -714,8 +714,8 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, PRBool s
         // initialize the pref entry
         pref->flags = type;
         pref->key = ArenaStrDup(key, &gPrefNameArena);
-        pref->defaultPref.intVal = 0;
-        pref->userPref.intVal = 0;
+        memset(&pref->defaultPref, 0, sizeof(pref->defaultPref));
+        memset(&pref->userPref, 0, sizeof(pref->userPref));
 
         /* ugly hack -- define it to a default that no pref will ever
            default to this should really get fixed right by some out
