@@ -24,6 +24,8 @@ classic.jar:
 +  skin/classic/global/printPageSetup.css
 +  skin/classic/global/preferences.css
 +  skin/classic/global/Filepicker.png                          (filepicker/Filepicker.png)
++  skin/classic/global/icons/blacklist_favicon.png             (icons/blacklist_favicon.png)
++  skin/classic/global/icons/blacklist_large.png               (icons/blacklist_large.png)
 +  skin/classic/global/icons/find.png                          (icons/find.png)
 +  skin/classic/global/icons/notfound.png                      (icons/notfound.png)
 +  skin/classic/global/icons/wrap.png                          (icons/wrap.png)
