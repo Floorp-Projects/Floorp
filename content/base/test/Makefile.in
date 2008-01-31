@@ -109,6 +109,21 @@ _TEST_FILES = 	test_bug5141.html \
 		file_CrossSiteXHR_pass1.xml^headers^ \
 		file_CrossSiteXHR_pass2.xml \
 		file_CrossSiteXHR_pass3.xml \
+		test_CrossSiteXHR2.html \
+		file_CrossSiteXHR2_inner.html \
+		file_CrossSiteXHR2_fail1.xml \
+		file_CrossSiteXHR2_fail1.xml^headers^ \
+		file_CrossSiteXHR2_fail2.xml \
+		file_CrossSiteXHR2_pass1.xml \
+		file_CrossSiteXHR2_pass1.xml^headers^ \
+		file_CrossSiteXHR2_pass2.xml \
+		file_CrossSiteXHR2_pass3.xml \
+		file_CrossSiteXHR2_pass3.xml^headers^ \
+		file_CrossSiteXHR2_pass3_redirect.xml \
+		test_CrossSiteXHR3.html \
+		file_CrossSiteXHR3_inner.html \
+		file_CrossSiteXHR3_pass1.xml^headers^ \
+		file_CrossSiteXHR3_pass1.xml \
 		test_bug326337.html \
 		file_bug326337_inner.html \
 		file_bug326337_outer.html \

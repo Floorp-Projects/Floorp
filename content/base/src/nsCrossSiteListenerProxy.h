@@ -62,6 +62,9 @@ public:
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIEXPATSINK
 
+  static nsresult AddRequestHeaders(nsIChannel* aChannel,
+                                    nsIPrincipal* aRequestingPrincipal);
+
   // nsIContentSink
   NS_IMETHOD WillTokenize(void) { return NS_OK; }
   NS_IMETHOD WillBuildModel(void);
