@@ -50,7 +50,7 @@ function init(aEvent)
     if (distroId) {
       var distroVersion = prefs.getCharPref("distribution.version");
       var distroAbout = prefs.getComplexValue("distribution.about",
-        Component.interfaces.nsISupportsString);
+        Components.interfaces.nsISupportsString);
   
       var distroField = document.getElementById("distribution");
       distroField.value = distroAbout;
