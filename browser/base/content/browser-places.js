@@ -144,13 +144,10 @@ var StarUI = {
       _anchorElement: aAnchorElement,
       _position: aPosition,
       observe: function (aSubject, aTopic, aData) {
-        // scripts within the overlay are compiled after this is called :(
-        setTimeout(function(aSelf) {
-          aSelf._self._overlayLoading = false;
-          aSelf._self._overlayLoaded = true;
-          aSelf._self._doShowEditBookmarkPanel(aItemId, aSelf._anchorElement,
-                                               aSelf._position);
-        }, 0, this);
+        this._self._overlayLoading = false;
+        this._self._overlayLoaded = true;
+        this._self._doShowEditBookmarkPanel(this._itemId, this._anchorElement,
+                                            this._position);
       }
     };
     this._overlayLoading = true;
