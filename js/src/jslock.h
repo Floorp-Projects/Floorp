@@ -186,9 +186,6 @@ extern JSBool js_IsScopeLocked(JSContext *cx, JSScope *scope);
         JS_LOCK_RUNTIME_VOID(_rt, e);                                         \
     JS_END_MACRO
 
-/* FIXME: bug 353962 hackaround */
-#define JS_USE_ONLY_NSPR_LOCKS  1
-
 #if defined(JS_USE_ONLY_NSPR_LOCKS) ||                                        \
     !( (defined(_WIN32) && defined(_M_IX86)) ||                               \
        (defined(__GNUC__) && defined(__i386__)) ||                            \
