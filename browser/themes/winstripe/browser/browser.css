@@ -342,6 +342,7 @@ toolbar[iconsize="large"][mode="icons"] #unified-back-forward-button > #back-for
 toolbar[iconsize="large"][mode="icons"] #unified-back-forward-button > #back-forward-dropmarker > image {
   display: -moz-box;
   margin: 0;
+  padding-top: 1px;
 }
 
 toolbar[iconsize="large"][mode="icons"] #unified-back-forward-button > #back-forward-dropmarker > dropmarker {
