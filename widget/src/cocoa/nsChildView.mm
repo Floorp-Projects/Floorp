@@ -4065,9 +4065,13 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   if (modifierFlags & NSCommandKeyMask && [theEvent keyCode] == kTildeKeyCode)
     return NO;
 
-  // don't bother if we don't have a gecko widget or we're in composition
-  if (!mGeckoChild || nsTSMManager::IsComposing())
+  // don't bother if we don't have a gecko widget
+  if (!mGeckoChild)
     return YES;
+
+  // return 'NO' if we are in a transaction of IME.
+  if (nsTSMManager::IsComposing())
+    return NO;
 
   // see if the menu system will handle the event
   if ([[NSApp mainMenu] performKeyEquivalent:theEvent]) {
