@@ -1024,13 +1024,12 @@ js_Unlock(JSThinLock *tl, jsword me)
     JS_ASSERT(CURRENT_THREAD_IS_ME(me));
 
     /*
-     * Only me can hold the lock, no need to use compare and swap atomic
-     * operation for this common case.
+     * Since we can race with the CompareAndSwap in js_Enqueue, we need
+     * to use a C_A_S here as well -- Arjan van de Ven 30/1/08
      */
-    if (tl->owner == me) {
-        tl->owner = 0;
+    if (js_CompareAndSwap(&tl->owner, me, 0))
         return;
-    }
+
     JS_ASSERT(Thin_GetWait(tl->owner));
     if (Thin_RemoveWait(ReadWord(tl->owner)) == me)
         js_Dequeue(tl);
