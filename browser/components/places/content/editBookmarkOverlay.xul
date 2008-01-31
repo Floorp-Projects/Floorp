@@ -46,9 +46,6 @@
 <overlay id="editBookmarkOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/javascript"
-          src="chrome://browser/content/places/editBookmarkOverlay.js"/>
-
   <vbox id="editBookmarkPanelContent">
     <broadcaster id="paneElementsBroadcaster"/>
 

@@ -80,6 +80,8 @@
           src="chrome://browser/content/places/places.js"/>
   <script type="application/javascript"
           src="chrome://browser/content/utilityOverlay.js"/>
+  <script type="application/javascript"
+          src="chrome://browser/content/places/editBookmarkOverlay.js"/>
 
 #ifdef XP_MACOSX
 #include ../../../base/content/browserMountPoints.inc
