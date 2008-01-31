@@ -51,7 +51,7 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   display: none;
 }
 
-#navigator-toolbox ,
+#browser-toolbox ,
 #status-bar ,
 #mainPopupSet {
   min-width: 1px;

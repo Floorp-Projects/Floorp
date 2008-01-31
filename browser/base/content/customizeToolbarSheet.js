@@ -37,6 +37,6 @@
 
 var gCustomizeToolbarSheet = {
   init: function() {
-    InitWithToolbox(window.parent.document.getElementById("navigator-toolbox"));
+    InitWithToolbox(window.parent.document.getElementById("browser-toolbox"));
   }
 };

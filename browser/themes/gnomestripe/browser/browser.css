@@ -79,8 +79,8 @@
   visibility: hidden;
 }
 
-#navigator-toolbox[inFullscreen="true"],
-#navigator-toolbox[inFullscreen="true"] > #navigation-toolbar {
+#browser-toolbox[inFullscreen="true"],
+#browser-toolbox[inFullscreen="true"] > #navigation-toolbar {
   border-top: none;
 }
 
