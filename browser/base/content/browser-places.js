@@ -772,7 +772,7 @@ var BookmarksMenuDropHandler = {
    */
   canDrop: function BMDH_canDrop(event, session) {
     var view = document.getElementById("bookmarksMenuPopup");
-    return PlacesControllerDragHelper.canDrop(view, -1);
+    return PlacesControllerDragHelper.canDrop(view._viewer, -1);
   },
   
   /**
@@ -788,7 +788,7 @@ var BookmarksMenuDropHandler = {
     var view = document.getElementById("bookmarksMenuPopup");
     // Put the item at the end of bookmark menu
     var ip = new InsertionPoint(PlacesUtils.bookmarksMenuFolderId, -1);
-    PlacesControllerDragHelper.onDrop(view, ip);
+    PlacesControllerDragHelper.onDrop(ip);
     view._rebuild();
   }
 };
