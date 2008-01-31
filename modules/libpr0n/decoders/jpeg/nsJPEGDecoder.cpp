@@ -738,7 +738,7 @@ nsJPEGDecoder::OutputScanlines()
       PRUint32 idx = mInfo.output_width;
 
       // copy as bytes until source pointer is 32-bit-aligned
-      while ((NS_PTR_TO_UINT32(sampleRow) & 0x3) && idx--) {
+      for (; (NS_PTR_TO_UINT32(sampleRow) & 0x3) && idx; --idx) {
         *imageRow++ = GFX_PACKED_PIXEL(0xFF, sampleRow[0], sampleRow[1], sampleRow[2]);
         sampleRow += 3;
       }

@@ -736,7 +736,7 @@ row_callback(png_structp png_ptr, png_bytep new_row,
         PRUint32 idx = iwidth;
 
         // copy as bytes until source pointer is 32-bit-aligned
-        while ((NS_PTR_TO_UINT32(line) & 0x3) && idx--) {
+        for (; (NS_PTR_TO_UINT32(line) & 0x3) && idx; --idx) {
           *cptr32++ = GFX_PACKED_PIXEL(0xFF, line[0], line[1], line[2]);
           line += 3; 
         }
