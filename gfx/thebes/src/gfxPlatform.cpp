@@ -65,6 +65,7 @@
 #include "cairo.h"
 #include "lcms.h"
 
+#include "plstr.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
@@ -74,6 +75,39 @@ static cmsHPROFILE gCMSOutputProfile = nsnull;
 static cmsHTRANSFORM gCMSRGBTransform = nsnull;
 static cmsHTRANSFORM gCMSInverseRGBTransform = nsnull;
 static cmsHTRANSFORM gCMSRGBATransform = nsnull;
+
+// this needs to match the list of pref font.default.xx entries listed in all.js!
+// the order *must* match the order in eFontPrefLang
+static const char *gPrefLangNames[] = {
+    "x-western",
+    "x-central-euro",
+    "ja",
+    "zh-TW",
+    "zh-CN",
+    "zh-HK",
+    "ko",
+    "x-cyrillic",
+    "x-baltic",
+    "el",
+    "tr",
+    "th",
+    "he",
+    "ar",
+    "x-devanagari",
+    "x-tamil",
+    "x-armn",
+    "x-beng",
+    "x-cans",
+    "x-ethi",
+    "x-geor",
+    "x-gujr",
+    "x-guru",
+    "x-khmr",
+    "x-mlym",
+    "x-unicode",
+    "x-user-def"
+};
+
 
 gfxPlatform*
 gfxPlatform::GetPlatform()
@@ -283,6 +317,102 @@ gfxPlatform::GetPrefFonts(const char *aLangGroup, nsString& aFonts, PRBool aAppe
     AppendGenericFontFromPref(aFonts, aLangGroup, nsnull);
     if (aAppendUnicode)
         AppendGenericFontFromPref(aFonts, "x-unicode", nsnull);
+}
+
+PRBool gfxPlatform::ForEachPrefFont(eFontPrefLang aLangArray[], PRUint32 aLangArrayLen, PrefFontCallback aCallback,
+                                    void *aClosure)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+    if (!prefs)
+        return PR_FALSE;
+
+    PRUint32    i;
+    
+    for (i = 0; i < aLangArrayLen; i++) {
+        eFontPrefLang prefLang = aLangArray[i];
+        const char *langGroup = GetPrefLangName(prefLang);
+        
+        nsCAutoString prefName;
+        nsXPIDLString nameValue, nameListValue;
+    
+        nsXPIDLString genericName;
+        prefName.AssignLiteral("font.default.");
+        prefName.Append(langGroup);
+        prefs->CopyUnicharPref(prefName.get(), getter_Copies(genericName));
+    
+        nsCAutoString genericDotLang;
+        genericDotLang.Assign(NS_ConvertUTF16toUTF8(genericName));
+        genericDotLang.AppendLiteral(".");
+        genericDotLang.Append(langGroup);
+    
+        // fetch font.name.xxx value                   
+        prefName.AssignLiteral("font.name.");
+        prefName.Append(genericDotLang);
+        rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(nameValue));
+        if (NS_SUCCEEDED(rv)) {
+            if (!aCallback(prefLang, nameValue, aClosure))
+                return PR_FALSE;
+        }
+    
+        // fetch font.name-list.xxx value                   
+        prefName.AssignLiteral("font.name-list.");
+        prefName.Append(genericDotLang);
+        rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(nameListValue));
+        if (NS_SUCCEEDED(rv) && !nameListValue.Equals(nameValue)) {
+            if (!aCallback(prefLang, nameListValue, aClosure))
+                return PR_FALSE;
+        }
+    }
+
+    return PR_TRUE;
+}
+
+eFontPrefLang
+gfxPlatform::GetFontPrefLangFor(const char* aLang)
+{
+    if (!aLang || !aLang[0])
+        return eFontPrefLang_Others;
+    for (PRUint32 i = 0; i < PRUint32(eFontPrefLang_LangCount); ++i) {
+        if (!PL_strcasecmp(gPrefLangNames[i], aLang))
+            return eFontPrefLang(i);
+    }
+    return eFontPrefLang_Others;
+}
+
+const char*
+gfxPlatform::GetPrefLangName(eFontPrefLang aLang)
+{
+    if (PRUint32(aLang) < PRUint32(eFontPrefLang_AllCount))
+        return gPrefLangNames[PRUint32(aLang)];
+    return nsnull;
+}
+
+const PRUint32 kFontPrefLangCJKMask = (1 << (PRUint32) eFontPrefLang_Japanese) | (1 << (PRUint32) eFontPrefLang_ChineseTW)
+                                      | (1 << (PRUint32) eFontPrefLang_ChineseCN) | (1 << (PRUint32) eFontPrefLang_ChineseHK)
+                                      | (1 << (PRUint32) eFontPrefLang_Korean);
+PRBool 
+gfxPlatform::IsLangCJK(eFontPrefLang aLang)
+{
+    return kFontPrefLangCJKMask & (1 << (PRUint32) aLang);
+}
+
+void 
+gfxPlatform::AppendPrefLang(eFontPrefLang aPrefLangs[], PRUint32& aLen, eFontPrefLang aAddLang)
+{
+    if (aLen >= kMaxLenPrefLangList) return;
+    
+    // make sure
+    PRUint32  i = 0;
+    while (i < aLen && aPrefLangs[i] != aAddLang) {
+        i++;
+    }
+    
+    if (i == aLen) {
+        aPrefLangs[aLen] = aAddLang;
+        aLen++;
+    }
 }
 
 PRBool
