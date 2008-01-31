@@ -381,7 +381,8 @@ LoginManagerPrompter.prototype = {
         this.log("Adding new save-password notification bar");
         var newBar = aNotifyBox.appendNotification(
                                 notificationText, "password-save",
-                                null, priority, buttons);
+                                "chrome://mozapps/skin/passwordmgr/key.png",
+                                priority, buttons);
 
         // The page we're going to hasn't loaded yet, so we want to persist
         // across the first location change.
