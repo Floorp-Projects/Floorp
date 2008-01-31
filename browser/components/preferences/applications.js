@@ -52,13 +52,13 @@
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cr = Components.results;
-var TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
 /*
 #endif
 */
 
-var TYPE_MAYBE_AUDIO_FEED = "application/vnd.mozilla.maybe.audio.feed";
-var TYPE_MAYBE_VIDEO_FEED = "application/vnd.mozilla.maybe.video.feed";
+const TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
+const TYPE_MAYBE_VIDEO_FEED = "application/vnd.mozilla.maybe.video.feed";
+const TYPE_MAYBE_AUDIO_FEED = "application/vnd.mozilla.maybe.audio.feed";
 
 const PREF_DISABLED_PLUGIN_TYPES = "plugin.disable_full_page_plugin_for_types";
 

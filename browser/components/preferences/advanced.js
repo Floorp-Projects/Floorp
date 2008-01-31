@@ -199,7 +199,7 @@ var gAdvancedPane = {
       if (perm.type == "offline-app" &&
           perm.capability != Components.interfaces.nsIPermissionManager.DEFAULT_ACTION &&
           perm.capability != Components.interfaces.nsIPermissionManager.DENY_ACTION) {
-        var row = document.createElementNS(kXULNS, "listitem");
+        var row = document.createElement("listitem");
         row.id = "";
         row.className = "listitem";
         row.setAttribute("label", perm.host);
