@@ -211,7 +211,7 @@
     </vbox>
   </tooltip>
 
-  <toolbox id="navigator-toolbox" class="toolbox-top" mode="icons"
+  <toolbox id="browser-toolbox" class="toolbox-top" mode="icons"
            defaultmode="icons">
     <!-- Menu -->
     <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"

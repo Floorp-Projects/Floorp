@@ -4596,7 +4596,7 @@ function getBrowser()
 function getNavToolbox()
 {
   if (!gNavToolbox)
-    gNavToolbox = document.getElementById("navigator-toolbox");
+    gNavToolbox = document.getElementById("browser-toolbox");
   return gNavToolbox;
 }
 
