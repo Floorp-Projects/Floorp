@@ -1413,7 +1413,9 @@ nsXMLHttpRequest::CheckChannelForCrossSiteRequest()
 
   nsCString userpass;
   channelURI->GetUserPass(userpass);
-  return userpass.IsEmpty() ? NS_OK : NS_ERROR_DOM_BAD_URI;
+  NS_ENSURE_TRUE(userpass.IsEmpty(), NS_ERROR_DOM_BAD_URI);
+  
+  return nsCrossSiteListenerProxy::AddRequestHeaders(mChannel, mPrincipal);
 }
 
 /* noscript void openRequest (in AUTF8String method, in AUTF8String url, in boolean async, in AString user, in AString password); */
@@ -1562,6 +1564,8 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
       rv = NS_NewChannel(getter_AddRefs(mACGetChannel), uri, nsnull, loadGroup,
                          nsnull, loadFlags);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = nsCrossSiteListenerProxy::AddRequestHeaders(mACGetChannel, mPrincipal);
 
       nsCOMPtr<nsIHttpChannel> acHttp = do_QueryInterface(mACGetChannel);
       NS_ASSERTION(acHttp, "Failed to QI to nsIHttpChannel!");

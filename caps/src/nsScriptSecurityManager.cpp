@@ -358,17 +358,8 @@ nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
     {
         NS_ENSURE_TRUE(sIOService, PR_FALSE);
 
-        PRInt32 defaultPort;
-        nsCOMPtr<nsIProtocolHandler> protocolHandler;
-        rv = sIOService->GetProtocolHandler(targetScheme.get(),
-                                            getter_AddRefs(protocolHandler));
-        if (NS_FAILED(rv))
-        {
-            return PR_FALSE;
-        }
-
-        rv = protocolHandler->GetDefaultPort(&defaultPort);
-        if (NS_FAILED(rv) || defaultPort == -1)
+        PRInt32 defaultPort = NS_GetDefaultPort(targetScheme.get());
+        if (defaultPort == -1)
             return PR_FALSE; // No default port for this scheme
 
         if (sourcePort == -1)
