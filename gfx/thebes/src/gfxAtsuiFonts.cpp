@@ -48,6 +48,7 @@
 
 #include "gfxContext.h"
 #include "gfxPlatform.h"
+#include "gfxPlatformMac.h"
 #include "gfxAtsuiFonts.h"
 
 #include "gfxFontTest.h"
@@ -58,15 +59,14 @@
 #include "gfxQuartzSurface.h"
 #include "gfxQuartzFontCache.h"
 
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
-#include "nsIPrefLocalizedString.h"
-#include "nsServiceManagerUtils.h"
 #include "nsUnicodeRange.h"
-#include "nsCRT.h"
 
 // Uncomment this to dump all text runs created to stdout
 // #define DUMP_TEXT_RUNS
+
+#ifdef DUMP_TEXT_RUNS
+static PRLogModuleInfo *gAtsuiTextRunLog = PR_NewLogModule("atsuiTextRun");
+#endif
 
 #define ROUND(x) (floor((x) + 0.5))
 
@@ -88,80 +88,6 @@ OSStatus ATSInitializeGlyphVector(int size, void *glyphVectorPtr);
 OSStatus ATSClearGlyphVector(void *glyphVectorPtr);
 #endif
 
-// The lang names for eFontPrefLang
-// this needs to match the list of pref font.default.xx entries listed in all.js!
-static const char *gPrefLangNames[] = {
-    "x-western",
-    "x-central-euro",
-    "ja",
-    "zh-TW",
-    "zh-CN",
-    "zh-HK",
-    "ko",
-    "x-cyrillic",
-    "x-baltic",
-    "el",
-    "tr",
-    "th",
-    "he",
-    "ar",
-    "x-devanagari",
-    "x-tamil",
-    "x-armn",
-    "x-beng",
-    "x-cans",
-    "x-ethi",
-    "x-geor",
-    "x-gujr",
-    "x-guru",
-    "x-khmr",
-    "x-mlym",
-    "x-unicode",
-    "x-user-def"
-};
-
-// The lang IDs for font prefs
-// this needs to match the list of pref font.default.xx entries listed in all.js!
-enum eFontPrefLang {
-    eFontPrefLang_Western     =  0,
-    eFontPrefLang_CentEuro    =  1,
-    eFontPrefLang_Japanese    =  2,
-    eFontPrefLang_ChineseTW   =  3,
-    eFontPrefLang_ChineseCN   =  4,
-    eFontPrefLang_ChineseHK   =  5,
-    eFontPrefLang_Korean      =  6,
-    eFontPrefLang_Cyrillic    =  7,
-    eFontPrefLang_Baltic      =  8,
-    eFontPrefLang_Greek       =  9,
-    eFontPrefLang_Turkish     = 10,
-    eFontPrefLang_Thai        = 11,
-    eFontPrefLang_Hebrew      = 12,
-    eFontPrefLang_Arabic      = 13,
-    eFontPrefLang_Devanagari  = 14,
-    eFontPrefLang_Tamil       = 15,
-    eFontPrefLang_Armenian    = 16,
-    eFontPrefLang_Bengali     = 17,
-    eFontPrefLang_Canadian    = 18,
-    eFontPrefLang_Ethiopic    = 19,
-    eFontPrefLang_Georgian    = 20,
-    eFontPrefLang_Gujarati    = 21,
-    eFontPrefLang_Gurmukhi    = 22,
-    eFontPrefLang_Khmer       = 23,
-    eFontPrefLang_Malayalam   = 24,
-
-    eFontPrefLang_LangCount   = 25, // except Others and UserDefined.
-
-    eFontPrefLang_Others      = 25, // x-unicode
-    eFontPrefLang_UserDefined = 26,
-
-    eFontPrefLang_CJKSet      = 27, // special code for CJK set
-    eFontPrefLang_AllCount    = 28
-};
-
-static nsresult AppendAllPrefFonts(nsTArray<nsRefPtr<gfxFont> > *aFonts,
-                eFontPrefLang aLang, PRUint32& didAppendBits, const gfxFontStyle *aStyle);
-
-static eFontPrefLang GetFontPrefLangFor(const char* aLang);
 eFontPrefLang GetFontPrefLangFor(PRUint8 aUnicodeRange);
 
 gfxAtsuiFont::gfxAtsuiFont(MacOSFontEntry *aFontEntry,
@@ -735,6 +661,78 @@ gfxAtsuiFontGroup::HasFont(ATSUFontID fid)
     return PR_FALSE;
 }
 
+struct PrefFontCallbackData {
+    PrefFontCallbackData(nsTArray<nsRefPtr<MacOSFamilyEntry> >& aFamiliesArray) 
+        : mPrefFamilies(aFamiliesArray)
+    {}
+
+    nsTArray<nsRefPtr<MacOSFamilyEntry> >& mPrefFamilies;
+
+    static PRBool AddFontFamilyEntry(eFontPrefLang aLang, const nsAString& aName, void *aClosure)
+    {
+        PrefFontCallbackData *prefFontData = (PrefFontCallbackData*) aClosure;
+        
+        MacOSFamilyEntry *family = gfxQuartzFontCache::SharedFontCache()->FindFamily(aName);
+        if (family) {
+            prefFontData->mPrefFamilies.AppendElement(family);
+        }
+        return PR_TRUE;
+    }
+};
+
+
+already_AddRefed<gfxAtsuiFont>
+gfxAtsuiFontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
+{
+    // FindCharUnicodeRange only supports BMP character points and there are no non-BMP fonts in prefs
+    if (aCh > 0xFFFF)
+        return nsnull;
+
+    // get the pref font list if it hasn't been set up already
+    PRUint32 unicodeRange = FindCharUnicodeRange(aCh);
+    eFontPrefLang charLang = GetFontPrefLangFor(unicodeRange);
+    eFontPrefLang pageLang = gfxPlatform::GetFontPrefLangFor(mStyle.langGroup.get());    
+    
+    // based on char lang and page lang, set up list of pref lang fonts to check
+    eFontPrefLang prefLangs[kMaxLenPrefLangList];
+    PRUint32 i, numLangs = 0;
+    
+    gfxPlatformMac *macPlatform = gfxPlatformMac::GetPlatform();
+    macPlatform->GetLangPrefs(prefLangs, numLangs, charLang, pageLang);
+    
+    for (i = 0; i < numLangs; i++) {
+        nsAutoTArray<nsRefPtr<MacOSFamilyEntry>, 5> families;
+        
+        gfxQuartzFontCache *fc = gfxQuartzFontCache::SharedFontCache();
+
+        // get the pref families for a single pref lang
+        if (!fc->GetPrefFontFamilyEntries(charLang, &families)) {
+            eFontPrefLang prefLangs[1] = { charLang };
+            PrefFontCallbackData prefFontData(families);
+            gfxPlatform::ForEachPrefFont(prefLangs, 1, PrefFontCallbackData::AddFontFamilyEntry,
+                                           &prefFontData);
+            fc->SetPrefFontFamilyEntries(charLang, families);
+        }
+    
+        // find the first pref font that includes the character
+        PRUint32  i, numPrefs;
+        numPrefs = families.Length();
+        for (i = 0; i < numPrefs; i++) {
+            // look up the appropriate face
+            MacOSFamilyEntry *family = families[i];
+            if (family) {
+                MacOSFontEntry *fe = family->FindFont(&mStyle);
+                // if ch in cmap, create and return a gfxFont
+                if (fe && fe->TestCharacterMap(aCh)) {
+                    return GetOrMakeFont(fe, &mStyle);
+                }
+            }
+        }
+    }
+    
+    return nsnull;
+}
+
 already_AddRefed<gfxAtsuiFont>
 gfxAtsuiFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh, PRUint32 aNextCh, gfxAtsuiFont* aPrevMatchedFont)
 {
@@ -760,23 +758,9 @@ gfxAtsuiFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh, PRUint32 aNex
         return selectedFont.forget();
     
     // 2. search pref fonts if none of the font group fonts match
-    if (aCh <= 0xFFFF) {  // FindCharUnicodeRange only supports BMP character points and there are no non-BMP fonts in prefs
-        nsresult rv;
-        PRUint32 unicodeRange = FindCharUnicodeRange(aCh);
-        PRUint32 didAppendFonts = 0;
-                
-        nsAutoTArray<nsRefPtr<gfxFont>, 15> prefFonts;
-
-        // xxx - god this sucks to be doing this per-character in the fallback case
-        eFontPrefLang prefLang = GetFontPrefLangFor(unicodeRange);
-        
-        rv = AppendAllPrefFonts(&prefFonts, prefLang, didAppendFonts, GetStyle());
-        if (!NS_FAILED(rv)) {
-            selectedFont = WhichFontSupportsChar(prefFonts, aCh);
-            if (selectedFont) { 
-                return selectedFont.forget();
-            }
-        }
+    //    FindCharUnicodeRange only supports BMP character points and there are no non-BMP fonts in prefs
+    if ((selectedFont = WhichPrefFontSupportsChar(aCh))) {
+        return selectedFont.forget();
     }
 
     // 3. use fallback fonts
@@ -1140,22 +1124,13 @@ PostLayoutOperationCallback(ATSULayoutOperationSelector iCurrentOperation,
     return noErr;
 }
 
-static eFontPrefLang
-GetFontPrefLangFor(const char* aLang)
-{
-    if (!aLang || aLang[0])
-        return eFontPrefLang_Others;
-    for (PRUint32 i = 0; i < PRUint32(eFontPrefLang_LangCount); ++i) {
-        if (!PL_strcasecmp(gPrefLangNames[i], aLang))
-            return eFontPrefLang(i);
-    }
-    return eFontPrefLang_Others;
-}
+// xxx - leaving this here for now, probably belongs in platform code somewhere
 
 eFontPrefLang
 GetFontPrefLangFor(PRUint8 aUnicodeRange)
 {
     switch (aUnicodeRange) {
+        case kRangeSetLatin:   return eFontPrefLang_Western;
         case kRangeCyrillic:   return eFontPrefLang_Cyrillic;
         case kRangeGreek:      return eFontPrefLang_Greek;
         case kRangeTurkish:    return eFontPrefLang_Turkish;
@@ -1181,169 +1156,6 @@ GetFontPrefLangFor(PRUint8 aUnicodeRange)
         case kRangeSetCJK:     return eFontPrefLang_CJKSet;
         default:               return eFontPrefLang_Others;
     }
-}
-
-static const char*
-GetPrefLangName(eFontPrefLang aLang)
-{
-    if (PRUint32(aLang) < PRUint32(eFontPrefLang_AllCount))
-        return gPrefLangNames[PRUint32(aLang)];
-    return nsnull;
-}
-
-struct AFLClosure {
-    const gfxFontStyle *style;
-    nsTArray<nsRefPtr<gfxFont> > *fontArray;
-};
-
-// xxx - this is almost identical to the static method FindATSUFont,
-// except for the closure struct used, we should merge these
-PRBool
-AppendFontToList(const nsAString& aName,
-                 const nsACString& aGenericName,
-                 void *closure)
-{
-    struct AFLClosure *afl = (struct AFLClosure *) closure;
-
-    gfxQuartzFontCache *fc = gfxQuartzFontCache::SharedFontCache();
-
-    MacOSFontEntry *fe = fc->FindFontForFamily(aName, afl->style);
-
-    if (fe) {
-        nsRefPtr<gfxAtsuiFont> font = GetOrMakeFont(fe, afl->style);
-        if (font) {
-            afl->fontArray->AppendElement(font);
-        }
-    }
-
-    return PR_TRUE;
-}
-
-static nsresult
-AppendPrefFonts(nsTArray<nsRefPtr<gfxFont> > *aFonts,
-                eFontPrefLang aLang,
-                PRUint32& didAppendBits,
-                const gfxFontStyle *aStyle)
-{
-    if (didAppendBits & (1 << aLang))
-        return NS_OK;
-
-    didAppendBits |= (1 << aLang);
-
-    const char* langGroup = GetPrefLangName(aLang);
-    if (!langGroup || !langGroup[0]) {
-        NS_ERROR("The langGroup is null");
-        return NS_ERROR_FAILURE;
-    }
-    gfxPlatform *platform = gfxPlatform::GetPlatform();
-    NS_ENSURE_TRUE(platform, NS_ERROR_OUT_OF_MEMORY);
-    nsString fonts;
-    platform->GetPrefFonts(langGroup, fonts, PR_FALSE);
-    if (fonts.IsEmpty())
-        return NS_OK;
-
-    struct AFLClosure afl = { aStyle, aFonts };
-    gfxFontGroup::ForEachFont(fonts, nsDependentCString(langGroup),
-                              AppendFontToList, &afl);
-    return NS_OK;
-}
-
-static nsresult
-AppendCJKPrefFonts(nsTArray<nsRefPtr<gfxFont> > *aFonts,
-                   PRUint32& didAppendBits,
-                   const gfxFontStyle *aStyle)
-{
-    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
-
-    // Add the CJK pref fonts from accept languages, the order should be same order
-    nsCAutoString list;
-    nsresult rv;
-    if (prefs) {
-        nsCOMPtr<nsIPrefLocalizedString> prefString;
-        rv = prefs->GetComplexValue("intl.accept_languages", NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(prefString));
-        if (prefString) {
-            nsAutoString temp;
-            prefString->ToString(getter_Copies(temp));
-            LossyCopyUTF16toASCII(temp, list);
-        }
-    }
-    
-    if (NS_SUCCEEDED(rv) && !list.IsEmpty()) {
-        const char kComma = ',';
-        const char *p, *p_end;
-        list.BeginReading(p);
-        list.EndReading(p_end);
-        while (p < p_end) {
-            while (nsCRT::IsAsciiSpace(*p)) {
-                if (++p == p_end)
-                    break;
-            }
-            if (p == p_end)
-                break;
-            const char *start = p;
-            while (++p != p_end && *p != kComma)
-                /* nothing */ ;
-            nsCAutoString lang(Substring(start, p));
-            lang.CompressWhitespace(PR_FALSE, PR_TRUE);
-            eFontPrefLang fpl = GetFontPrefLangFor(lang.get());
-            switch (fpl) {
-                case eFontPrefLang_Japanese:
-                case eFontPrefLang_Korean:
-                case eFontPrefLang_ChineseCN:
-                case eFontPrefLang_ChineseHK:
-                case eFontPrefLang_ChineseTW:
-                    rv = AppendPrefFonts(aFonts, fpl, didAppendBits, aStyle);
-                    NS_ENSURE_SUCCESS(rv, rv);
-                    break;
-                default:
-                    break;
-            }
-            p++;
-        }
-    }
-
-    // Prefer the system locale if it is CJK.
-    ScriptCode sysScript = ::GetScriptManagerVariable(smSysScript);
-    // XXX Is not there the HK locale?
-    switch (sysScript) {
-        case smJapanese:    rv = AppendPrefFonts(aFonts, eFontPrefLang_Japanese, didAppendBits, aStyle);  break;
-        case smTradChinese: rv = AppendPrefFonts(aFonts, eFontPrefLang_ChineseTW, didAppendBits, aStyle); break;
-        case smKorean:      rv = AppendPrefFonts(aFonts, eFontPrefLang_Korean, didAppendBits, aStyle);    break;
-        case smSimpChinese: rv = AppendPrefFonts(aFonts, eFontPrefLang_ChineseCN, didAppendBits, aStyle); break;
-        default:            rv = NS_OK;
-    }
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // last resort... (the order is same as old gfx.)
-    rv = AppendPrefFonts(aFonts, eFontPrefLang_Japanese, didAppendBits, aStyle);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = AppendPrefFonts(aFonts, eFontPrefLang_Korean, didAppendBits, aStyle);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = AppendPrefFonts(aFonts, eFontPrefLang_ChineseCN, didAppendBits, aStyle);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = AppendPrefFonts(aFonts, eFontPrefLang_ChineseHK, didAppendBits, aStyle);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = AppendPrefFonts(aFonts, eFontPrefLang_ChineseTW, didAppendBits, aStyle);
-    return rv;
-}
-
-static nsresult
-AppendAllPrefFonts(nsTArray<nsRefPtr<gfxFont> > *aFonts,
-                eFontPrefLang aLang,
-                PRUint32& didAppendBits,
-                const gfxFontStyle *aStyle)
-{
-    nsresult rv;
-    
-    if (aLang == eFontPrefLang_CJKSet)
-        rv = AppendCJKPrefFonts(aFonts, didAppendBits, aStyle);
-    else
-        rv = AppendPrefFonts(aFonts, aLang, didAppendBits, aStyle);
-    
-    if (NS_FAILED(rv)) return rv;
-
-    rv = AppendPrefFonts(aFonts, eFontPrefLang_Others, didAppendBits, aStyle);
-    return rv;
 }
 
 static void
@@ -1510,10 +1322,6 @@ SetLayoutRangeToFont(ATSUTextLayout layout, ATSUStyle mainStyle, UniCharArrayOff
     return subStyle;
 }
 
-#ifdef DUMP_TEXT_RUNS
-static PRLogModuleInfo *gAtsuiTextRunLog = PR_NewLogModule("atsuiTextRun");
-#endif
-
 PRBool
 gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
                                const PRUnichar *aString, PRUint32 aLength,
@@ -1532,7 +1340,7 @@ gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
 #ifdef DUMP_TEXT_RUNS
     NS_ConvertUTF16toUTF8 str(realString, aSegmentLength);
     NS_ConvertUTF16toUTF8 families(mFamilies);
-    PR_LOG(gAtsuiTextRunLog, PR_LOG_DEBUG, ("InitTextRun %p fontgroup %p (%s) len %d TEXTRUN \"%s\" ENDTEXTRUN\n", aRun, this, families.get(), aSegmentLength, str.get()) );
+    PR_LOG(gAtsuiTextRunLog, PR_LOG_DEBUG, ("InitTextRun %p fontgroup %p (%s) lang: %s len %d TEXTRUN \"%s\" ENDTEXTRUN\n", aRun, this, families.get(), mStyle.langGroup.get(), aSegmentLength, str.get()) );
     PR_LOG(gAtsuiTextRunLog, PR_LOG_DEBUG, ("InitTextRun font: %s\n", NS_ConvertUTF16toUTF8(firstFont->GetUniqueName()).get()) );
 #endif
 

@@ -39,6 +39,7 @@
 #ifndef GFX_PLATFORM_MAC_H
 #define GFX_PLATFORM_MAC_H
 
+#include "nsTArray.h"
 #include "gfxPlatform.h"
 
 class THEBES_API gfxPlatformMac : public gfxPlatform {
@@ -64,8 +65,16 @@ public:
                          nsStringArray& aListOfFonts);
     nsresult UpdateFontList();
 
+    // in some situations, need to make decisions about ambiguous characters, may need to look at multiple pref langs
+    void GetLangPrefs(eFontPrefLang aPrefLangs[], PRUint32 &aLen, eFontPrefLang aCharLang, eFontPrefLang aPageLang);
+    
 private:
+    void gfxPlatformMac::AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], PRUint32 &aLen, 
+                                            eFontPrefLang aCharLang, eFontPrefLang aPageLang);
+                                               
     virtual cmsHPROFILE GetPlatformCMSOutputProfile();
+    
+    nsTArray<PRUint32> mCJKPrefLangs;
 };
 
 #endif /* GFX_PLATFORM_MAC_H */
