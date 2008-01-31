@@ -3654,6 +3654,13 @@ nsNavHistory::AddVisitChain(nsIURI* aURI, PRTime aTime,
       transitionType = nsINavHistoryService::TRANSITION_EMBED;
     }
   } else if (aReferrer) {
+    // We do not want to add a new visit if the referring site is the same as
+    // the new site.  This is the situation where a page refreshes itself to
+    // give the user updated information.
+    PRBool referrerIsSame;
+    if (NS_SUCCEEDED(aURI->Equals(aReferrer, &referrerIsSame)) && referrerIsSame)
+      return NS_OK;
+
     // If there is a referrer, we know you came from somewhere, either manually
     // or automatically. For toplevel windows, assume its manual and you want
     // to see this in history. For other things, it's some kind of embedded
@@ -3679,8 +3686,9 @@ nsNavHistory::AddVisitChain(nsIURI* aURI, PRTime aTime,
     // most commonly happens on redirects.
     visitTime = PR_Now();
 
-    // try to turn the referrer into a visit
-    if (! FindLastVisit(aReferrer, &referringVisit, aSessionID)) {
+    // Try to turn the referrer into a visit.
+    // This also populates the session id.
+    if (!FindLastVisit(aReferrer, &referringVisit, aSessionID)) {
       // we couldn't find a visit for the referrer, don't set it
       *aSessionID = GetNewSessionID();
     }
