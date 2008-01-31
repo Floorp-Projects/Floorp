@@ -6,7 +6,6 @@ package Bootstrap::Step::Tag;
 use Cwd;
 use File::Copy qw(move);
 use POSIX qw(strftime);
-#use Date::Manip;
 
 use MozBuild::Util qw(MkdirWithPath RunShellCommand);
 use Bootstrap::Util qw(CvsCatfile);
@@ -187,11 +186,11 @@ sub Execute {
         }
 
         # relBranchDateSpec now has something like: "2006/12/05 19:12:58" 
-        # convert to local timezone
-        my $relBranchDateSpec = ParseDate($cvsDateSpec);
-        $relBranchDateSpec = Date_ConvTZ($relBranchDateSpec,'UTC');
-        $relBranchDateSpec = UnixDate($relBranchDateSpec, '%Y%m%d');
-        # now we have our datespec: 20061205
+        my $relBranchDateSpec = $cvsDateSpec;
+        # Strip off the time...
+        $relBranchDateSpec =~ s/^\s*([\d\/]+).*/$1/;
+        # Strip out the /'s; now we have our datespec: 20061205
+        $relBranchDateSpec =~ s/\///g;
 
         $geckoTag = $this->GenerateRelbranchName(milestone => $milestone,
          datespec => $relBranchDateSpec);
