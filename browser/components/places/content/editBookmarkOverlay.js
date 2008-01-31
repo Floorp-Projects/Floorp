@@ -465,6 +465,9 @@ var gEditItemOverlay = {
   },
 
   onNamePickerChange: function EIO_onNamePickerChange() {
+    if (this._itemId == -1)
+      return;
+
     var namePicker = this._element("namePicker")
     var txns = [];
     const ptm = PlacesUtils.ptm;
