@@ -276,10 +276,14 @@ PlacesController.prototype = {
       if (nodes[i] == root)
         return false;
 
-      // Disallow removing the toolbar, menu and unfiled-bookmarks folders
+      // Disallow removing shortcuts from the left pane
       var nodeItemId = nodes[i].itemId;
+      if (PlacesUtils.annotations
+                     .itemHasAnnotation(nodeItemId, ORGANIZER_QUERY_ANNO))
+        return false;
+
+      // Disallow removing the toolbar, menu and unfiled-bookmarks folders
       if (!aIsMoveCommand &&
-           PlacesUtils.nodeIsFolder(nodes[i]) &&
            (nodeItemId == PlacesUtils.toolbarFolderId ||
             nodeItemId == PlacesUtils.unfiledBookmarksFolderId ||
             nodeItemId == PlacesUtils.bookmarksMenuFolderId))
