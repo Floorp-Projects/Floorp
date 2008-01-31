@@ -81,7 +81,6 @@
 #include "nsIDirectoryEnumerator.h"
 #include "nsISimpleEnumerator.h"
 #include "nsITimelineService.h"
-#include "nsIProgrammingLanguage.h"
 
 #ifdef MOZ_WIDGET_GTK2
 #include "nsIGnomeVFSService.h"
@@ -258,20 +257,10 @@ nsLocalFile::nsLocalFile(const nsLocalFile& other)
 {
 }
 
-NS_IMPL_THREADSAFE_ADDREF(nsLocalFile)
-NS_IMPL_THREADSAFE_RELEASE(nsLocalFile)
-NS_IMPL_QUERY_INTERFACE4_CI(nsLocalFile,
-                            nsILocalFile,
-                            nsIFile,
-                            nsIHashable,
-                            nsIClassInfo)
-NS_IMPL_CI_INTERFACE_GETTER3(nsLocalFile,
-                             nsILocalFile,
-                             nsIFile,
-                             nsIHashable)
-
-NS_DECL_CLASSINFO(nsLocalFile)
-NS_IMPL_THREADSAFE_CI(nsLocalFile)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsLocalFile,
+                              nsIFile,
+                              nsILocalFile,
+                              nsIHashable)
 
 nsresult
 nsLocalFile::nsLocalFileConstructor(nsISupports *outer, 
