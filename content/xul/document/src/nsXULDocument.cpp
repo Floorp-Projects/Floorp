@@ -181,7 +181,7 @@ struct BroadcasterMapEntry : public PLDHashEntryHdr {
 };
 
 struct BroadcastListener {
-    nsIDOMElement*    mListener; // [WEAK] XXXwaterson crash waiting to happen!
+    nsCOMPtr<nsIDOMElement> mListener; // [OWNING], and traversed
     nsCOMPtr<nsIAtom> mAttribute;
 };
 
@@ -323,11 +323,33 @@ TraverseObservers(nsIURI* aKey, nsIObserver* aData, void* aContext)
     return PL_DHASH_NEXT;
 }
 
+static PLDHashOperator PR_CALLBACK
+TraverseBroadcasters(PLDHashTable* aTable, PLDHashEntryHdr* aEntry,
+                     PRUint32 aNumber, void* aContext)
+{
+    BroadcasterMapEntry* entry =
+        static_cast<BroadcasterMapEntry*>(aEntry);
+    nsCycleCollectionTraversalCallback *cb =
+        static_cast<nsCycleCollectionTraversalCallback*>(aContext);
+
+    for (PRInt32 i = entry->mListeners.Count() - 1; i >= 0; --i) {
+        BroadcastListener *listener =
+            (BroadcastListener *)entry->mListeners[i];
+
+        cb->NoteXPCOMChild(listener->mListener);
+    }
+
+    return PL_DHASH_NEXT;
+}
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULDocument, nsXMLDocument)
     // XXX tmp->mForwardReferences?
     // XXX tmp->mContextStack?
 
     tmp->mElementMap.Enumerate(TraverseElement, &cb);
+
+    if (tmp->mBroadcasterMap)
+        PL_DHashTableEnumerate(tmp->mBroadcasterMap, TraverseBroadcasters, &cb);
 
     // An element will only have a template builder as long as it's in the
     // document, so we'll traverse the table here instead of from the element.
@@ -773,13 +795,13 @@ nsXULDocument::AddBroadcastListenerFor(nsIDOMElement* aBroadcaster,
     BroadcasterMapEntry* entry =
         static_cast<BroadcasterMapEntry*>
                    (PL_DHashTableOperate(mBroadcasterMap, aBroadcaster,
-                                            PL_DHASH_LOOKUP));
+                                         PL_DHASH_LOOKUP));
 
     if (PL_DHASH_ENTRY_IS_FREE(entry)) {
         entry =
             static_cast<BroadcasterMapEntry*>
                        (PL_DHashTableOperate(mBroadcasterMap, aBroadcaster,
-                                                PL_DHASH_ADD));
+                                             PL_DHASH_ADD));
 
         if (! entry)
             return NS_ERROR_OUT_OF_MEMORY;
@@ -828,7 +850,7 @@ nsXULDocument::RemoveBroadcastListenerFor(nsIDOMElement* aBroadcaster,
     BroadcasterMapEntry* entry =
         static_cast<BroadcasterMapEntry*>
                    (PL_DHashTableOperate(mBroadcasterMap, aBroadcaster,
-                                            PL_DHASH_LOOKUP));
+                                         PL_DHASH_LOOKUP));
 
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
         nsCOMPtr<nsIAtom> attr = do_GetAtom(aAttr);
@@ -945,7 +967,7 @@ nsXULDocument::AttributeChanged(nsIDocument* aDocument,
         BroadcasterMapEntry* entry =
             static_cast<BroadcasterMapEntry*>
                        (PL_DHashTableOperate(mBroadcasterMap, domele.get(),
-                                                PL_DHASH_LOOKUP));
+                                             PL_DHASH_LOOKUP));
 
         if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
             // We've got listeners: push the value.
