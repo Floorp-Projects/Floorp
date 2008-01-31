@@ -702,16 +702,17 @@ gfxAtsuiFontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
     
     for (i = 0; i < numLangs; i++) {
         nsAutoTArray<nsRefPtr<MacOSFamilyEntry>, 5> families;
+        eFontPrefLang currentLang = prefLangs[i];
         
         gfxQuartzFontCache *fc = gfxQuartzFontCache::SharedFontCache();
 
         // get the pref families for a single pref lang
-        if (!fc->GetPrefFontFamilyEntries(charLang, &families)) {
-            eFontPrefLang prefLangs[1] = { charLang };
+        if (!fc->GetPrefFontFamilyEntries(currentLang, &families)) {
+            eFontPrefLang prefLangsToSearch[1] = { currentLang };
             PrefFontCallbackData prefFontData(families);
-            gfxPlatform::ForEachPrefFont(prefLangs, 1, PrefFontCallbackData::AddFontFamilyEntry,
+            gfxPlatform::ForEachPrefFont(prefLangsToSearch, 1, PrefFontCallbackData::AddFontFamilyEntry,
                                            &prefFontData);
-            fc->SetPrefFontFamilyEntries(charLang, families);
+            fc->SetPrefFontFamilyEntries(currentLang, families);
         }
     
         // find the first pref font that includes the character
