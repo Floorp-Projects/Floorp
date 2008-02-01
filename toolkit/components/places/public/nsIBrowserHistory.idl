@@ -42,11 +42,12 @@
 #include "nsISupports.idl"
 #include "nsIGlobalHistory2.idl"
 
-[scriptable, uuid(c43079c3-3d8d-4b7c-af14-0e30ab46865f)]
+[scriptable, uuid(ef807ae6-4ae9-4d1f-8ade-3ee75e24d18c)]
 interface nsIBrowserHistory : nsIGlobalHistory2
 {
-    /** 
+    /**
      * addPageWithDetails
+     *
      * Adds a page to history with specific time stamp information. This is used in
      * the History migrator. 
      */
@@ -54,23 +55,38 @@ interface nsIBrowserHistory : nsIGlobalHistory2
 
     /**
      * lastPageVisited
+     *
      * The last page that was visited in a top-level window.
      */
     readonly attribute AUTF8String lastPageVisited;
 
     /**
      * count
+     *
      * The number of entries in global history
      */
     readonly attribute PRUint32 count;
 
     /**
-     * remove a page from history
+     * removePage
+     *
+     * Remove a page from history
      */
     void removePage(in nsIURI aURI);
 
     /**
+     * removePages
+     *
+     * Remove a bunch of pages from history
+     * Notice that this does not call observers for performance reasons,
+     * instead setting aDoBatchNotify true will send Begin/EndUpdateBatch
+     */
+    void removePages([array, size_is(aLength)] in nsIURI aURIs,
+                     in unsigned long aLength, in boolean aDoBatchNotify);
+
+    /**
      * removePagesFromHost
+     *
      * Remove all pages from the given host.
      * If aEntireDomain is true, will assume aHost is a domain,
      * and remove all pages from the entire domain.
@@ -79,22 +95,24 @@ interface nsIBrowserHistory : nsIGlobalHistory2
 
     /**
      * removeAllPages
+     *
      * Remove all pages from global history
      */
     void removeAllPages();
 
     /**
      * hidePage
+     *
      * Hide the specified URL from being enumerated (and thus
      * displayed in the UI)
-     *
-     * if the page hasn't been visited yet, then it will be added
+     * If the page hasn't been visited yet, then it will be added
      * as if it was visited, and then marked as hidden
      */
     void hidePage(in nsIURI aURI);
 
     /**
      * markPageAsTyped
+     *
      * Designate the url as having been explicitly typed in by
      * the user, so it's okay to be an autocomplete result.
      */
