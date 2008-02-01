@@ -1,0 +1,470 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  Tests for scriptable IO
+  -->
+<window title="Scriptable IO" width="500" height="600"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+
+<label value="Scriptable IO Tests"/>
+
+  <!-- test resuls are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+function testIO()
+{
+
+// delete files used for this test first in case it failed last time
+var fl = IO.getFile("Desk", "test-sample.txt");
+if (fl.exists())
+  fl.remove(false);
+
+var iswin = navigator.userAgent.indexOf("Windows") >= 0;
+
+ok(IO, "IO is avaialble");
+ok(typeof IO.getFile == "function", "IO.getFile is a function");
+
+// -------- Creating a file object --------
+
+fl = IO.getFile("Desk", "test-sample.txt");
+is(fl.leafName, "test-sample.txt", "getFile creates file");
+ok(fl instanceof Components.interfaces.nsIFile, "getFile creates an nsIFile");
+is(fl.exists(), false, "file returned by getFile does not exist yet");
+
+var dir = IO.getFile("Desktop", "");
+is(dir.isDirectory(), true, "directory returned when filename is null");
+
+expectException(function() { var s = IO.newInputStream(dir, "", ""); s.readString(5); },
+                "open input stream on directory");
+expectException(function() { IO.newOutputStream(dir, ""); },
+                "open output stream on directory");
+
+expectException(function() { IO.getFile("", ""); }, "open null file");
+
+is(IO.getFileWithPath(fl.path + "2").leafName, "test-sample.txt2",
+   "getFileWithPath creates file");
+
+expectException(function() { IO.getFileWithPath(""); },
+                "getFileWithPath with null path");
+
+ok(IO.getFile("Application", "").path.length > 0, "Application directory");
+ok(IO.getFile("Working", "").path.length > 0, "Working directory");
+ok(IO.getFile("Profile", "").path.length > 0, "Profile directory");
+ok(IO.getFile("Desktop", "").path.length > 0, "Desktop directory");
+ok(IO.getFile("Components", "").path.length > 0, "Components directory");
+ok(IO.getFile("Temp", "").path.length > 0, "Temp directory");
+
+// -------- Writing to a standard stream --------
+
+// Mac is the only platform where the file size is updated after writing
+var checkFileSize = (navigator.platform.indexOf("Mac") >= 0);
+
+var stream;
+var types = ["", "buffered"];
+
+for (var t = 0; t < types.length; t++) {
+  var etype = types[t];
+  var ename = etype + " ";
+
+  stream = IO.newOutputStream(fl, etype);
+  ok(typeof stream.write == "function", ename + "IO.newOutputStream returned a stream");
+  is(fl.exists(), true, ename + "file after creating output stream does not exist yet");
+  is(stream.tell(), 0, ename + "file write position is 0");
+  stream.write("This is a string", 16);
+
+  if (etype == "buffered") {
+    if (checkFileSize)
+      is(fl.fileSize, 0, ename + "file size after writing before flush");
+    stream.flush();
+  }
+  if (checkFileSize)
+    is(fl.fileSize, 16, ename + "file size after writing");
+  is(stream.tell(), 16, ename + "file write position after writing is 16");
+  stream.flush(); // just call flush to make sure no error occurs
+  // disable this test for now because the default permissions is different
+  // on each machine
+  // if (!win)
+  //   is(fl.permissions & 511, 0644, ename + "permissions after creating file");
+
+  // check stream constants
+  is(stream.NS_SEEK_SET, 0, ename + "NS_SEEK_SET is 0");
+  is(stream.NS_SEEK_CUR, 1, ename + "NS_SEEK_CUR is 1");
+  is(stream.NS_SEEK_END, 2, ename + "NS_SEEK_END is 2");
+
+  // check file seeking with writing
+  stream.seek(stream.NS_SEEK_SET, 8);
+  is(stream.tell(), 8, ename + "file write position after seek is correct");
+  stream.write("another string", 14);
+  if (etype == "buffered")
+    stream.flush();
+  if (checkFileSize)
+    is(fl.fileSize, 22, ename + "file size after writing again is correct");
+  is(stream.tell(), 22, ename + "file write position after writing again is correct");
+
+  stream.seek(stream.NS_SEEK_SET, 2);
+  stream.seek(stream.NS_SEEK_CUR, 9);
+  is(stream.tell(), 11, ename + "file write position after current position seek");
+  stream.seek(stream.NS_SEEK_CUR, -3);
+  is(stream.tell(), 8, ename + "file write position after reverse current position seek");
+  stream.seek(stream.NS_SEEK_END, 0);
+  is(stream.tell(), 22, ename + "file write position after end position seek");
+  stream.seek(stream.NS_SEEK_END, 10);
+  is(stream.tell(), 32, ename + "file write position after end position with value seek");
+  // seeking past the end of the file and writing will fill the blank area with zeros
+  stream.write(".", 1);
+  if (etype == "buffered")
+    stream.flush();
+  if (checkFileSize)
+    is(fl.fileSize, 33, ename + "file size after writing beyond end is correct");
+  is(stream.tell(), 33, ename + "file write position after writing beyond end seek");
+  stream.seek(stream.NS_SEEK_END, -11);
+  is(stream.tell(), 22, ename + "file write position after reverse end position seek");
+  stream.write("   ", 3);
+  stream.writeString("*a*");
+  stream.write("\u03a9", 2); // unicode isn't processed so should output a9 and 00
+  stream.write("\u03a9", 1); // one character, so should output a9
+  stream.write("\u00a8", 2); // write single character as a8 and 00
+  stream.write("\u00a8", 1); // write single character as a8
+  stream.writeString(".");
+  stream.write("Ends Here", 3);
+  is(stream.tell(), 38, ename + "file write position extra writing is 38");
+
+  stream.writeString("More Text");
+  if (etype = "buffered")
+    stream.flush();
+
+  stream.seek(stream.NS_SEEK_SET, 42);
+  stream.setEOF();
+  if (checkFileSize)
+    is(fl.fileSize, 42, ename + "setEOF truncates output stream");
+
+  stream.close();
+  // buffered streams cause an infinite loop when writing to a closed stream
+  if (etype != "buffered")
+    expectException(function() { stream.write("write after close", 17); },
+                    ename + "writing after stream is closed");
+  stream.close(); // calling close on a closed stream should do nothing
+
+  // -------- Reading from a standard stream --------
+
+  stream = IO.newInputStream(fl, etype);
+  ok(typeof stream.available == "function", ename + "IO.newInputStream returned a stream");
+  ok(!stream.isNonBlocking(), ename + "file input stream is blocking");
+  is(stream.tell(), 0, ename + "file read position is 0");
+  is(stream.available(), 42, ename + "available count after input stream creation");
+  is(stream.read(9), "This is a", ename + "file read");
+  is(stream.available(), 33, ename + "available count after read");
+  is(stream.tell(), 9, ename + "file read position after reading is 9");
+
+  expectException(function() { stream.setEOF(); }, ename + "setEOF on input stream");
+
+  // check file seeking with reading
+  stream.seek(stream.NS_SEEK_SET, 5);
+  is(stream.tell(), 5, ename + "file write position after seek is correct");
+  is(stream.read(2), "is", ename + "file read after seek");
+  is(stream.tell(), 7, ename + "file read position after seek and read is 7");
+
+  stream.seek(stream.NS_SEEK_CUR, 3);
+  is(stream.read(5), "other", ename + "file read after current seek");
+  stream.seek(stream.NS_SEEK_CUR, -4);
+  is(stream.read(3), "the", ename + "file read after reverse current seek");
+
+  stream.seek(stream.NS_SEEK_END, 0);
+  is(stream.available(), 0, ename + "available count after end seek");
+  is(stream.read(5), "", ename + "file read after end seek");
+  stream.seek(stream.NS_SEEK_END, -26);
+  is(stream.read(6), "string", ename + "file read after reverse end seek");
+
+  stream.seek(stream.NS_SEEK_SET, 5);
+
+  // this will only read to the 0 added when the unicode character was written above
+  is(stream.read(1000), "is another string   *a*\u00a9", ename + "file read after large read");
+  is(stream.tell(), 42, ename + "file read position after large read is 7");
+  stream.seek(stream.NS_SEEK_END, -9)
+  is(stream.read(1000), "\u00a8.EndMore", ename + "file read after another large read");
+  is(stream.available(), 0, ename + "available count after end of file reached");
+
+  stream.close();
+  // buffered input streams don't fail when reading after closing
+  if (etype != "buffered")
+    expectException(function() { stream.read(5); },
+                    ename + "reading after stream is closed");
+  stream.close();
+
+  // -------- Check other modes --------
+
+  // notruncate should open file at position 0 but doesn't truncate the file
+  // set the sync flag just to make sure that it doesn't cause an error
+  stream = IO.newOutputStream(fl, ename + "notruncate syncsave");
+  is(stream.tell(), 0, ename + "file write position after notruncate opening");
+  if (checkFileSize)
+    is(fl.fileSize, 42, ename + "file size after notruncate opening");
+  stream.writeString("That");
+  stream.close();
+
+  checkFile(fl, "That is", ename + "writing after notruncate opening");
+
+  stream = IO.newOutputStream(fl, "");
+  stream.writeString("This is a string.");
+  stream.close();
+
+  stream = IO.newOutputStream(fl, ename + "notruncate append");
+  // for appending, the write position isn't updated until a write occurs so
+  // it will still be 0 at this point
+  is(stream.tell(), 0, ename + "file write position after append opening");
+  if (checkFileSize)
+    is(fl.fileSize, 17, ename + "file size after append opening");
+  stream.writeString("...");
+  stream.close();
+
+  checkFile(fl, "This is a string....",
+            ename + "Writing after append opening");
+
+  stream = IO.newOutputStream(fl, etype);
+  is(stream.tell(), 0, ename + "file write position after reopening");
+  if (checkFileSize)
+    is(fl.fileSize, 0, ename + "file size after reopening");
+  stream.writeString("Hello");
+  stream.close();
+
+  checkFile(fl, "Hello", ename + "Writing after reopening");
+
+  var stream = IO.newInputStream(fl, "closeoneof", "", "", 512);
+  stream.read(50);
+  // the closeoneof flag actually only closes the file when an attempt is made
+  // to read when the end of file is already reached, so another call to read
+  // is needed
+  stream.read(1);
+  expectException(function() { stream.read(1); },
+                  ename + "read after end from closeoneof opened stream");
+
+  stream = IO.newInputStream(fl, "deleteonclose");
+  stream.readString(5);
+  stream.close();
+  is(fl.exists(), false, ename + "file is deleted with deleteonclose flag");
+
+  expectException(function() { stream = IO.newOutputStream(fl, ename + "nocreate"); },
+                  ename + "opening with nocreate when file doesn't exist");
+  is(fl.exists(), false, ename + "file doesn't exist after opening output stream with nocreate flag");
+
+  if (fl.exists())
+    fl.remove(false);
+
+  // -------- Check string streams --------
+
+  stream = IO.newInputStream("This is a string to read from", etype);
+  is(stream.available(), 29, ename + "available count in string stream");
+  is(stream.tell(), 0, ename + "string read positon is initially 0");
+  is(stream.read(4), "This", ename + "read from string stream");
+  is(stream.tell(), 4, ename + "string read positon after read is 4");
+  stream.seek(stream.NS_SEEK_SET, 10);
+  is(stream.tell(), 10, ename + "string read positon after set seek is 10");
+  is(stream.read(6), "string", ename + "string read after set seek");
+
+  stream.seek(stream.NS_SEEK_CUR, -8);
+  is(stream.read(1), "a", ename + "string read after cur seek");
+  stream.seek(stream.NS_SEEK_END, -4);
+  is(stream.read(40), "from", ename + "string read after end seek");
+
+  stream.close();
+}
+
+expectException(function() { IO.newInputStream(null, ""); },
+                "newInputStream with null base");
+expectException(function() { IO.newOutputStream(null, ""); },
+                "newOutputStream with null base");
+
+// -------- Writing to a text stream --------
+
+stream = IO.newOutputStream(fl, "text");
+ok(!stream.isNonBlocking(), "file output stream is blocking");
+stream.write("This is cool", 12);
+is(fl.fileSize, 12, "file size after text write");
+stream.writeString(" \u03a9\u03a9End");
+if (checkFileSize)
+  is(fl.fileSize, 20, "file size after text writeString");
+stream.close();
+
+// -------- Reading from a text stream --------
+
+stream = IO.newInputStream(fl, "text");
+// for text streams, 1 means text can be read, 0 means no text available
+is(stream.available(), 20, "available count after text input stream creation");
+is(stream.readString(4), "This", "read text file");
+is(stream.available(), 1, "available count after read");
+is(stream.readString(13), " is cool \u03a9\u03a9En", "read string from text file");
+is(stream.available(), 1, "available count at end");
+is(stream.readString(1), "d", "read string at end from text file");
+is(stream.available(), 1, "available count at end");
+is(stream.readString(1), "", "read string after end from text file");
+is(stream.available(), 0, "available count after end");
+
+stream.close();
+
+fl.remove(false);
+
+// -------- Check other character sets --------
+
+stream = IO.newOutputStream(fl, "text", "UTF-16", "*", 2048, 0755);
+
+ok("writeString" in stream, "newOutputStream for UTF-16 returns output stream");
+stream.write("This is cool", 12);
+// file size is 12 characters times 2 bytes each plus two bytes for
+// the byte order mark
+is(fl.fileSize, 26, "file size after UTF-16 text write");
+stream.writeString(" \u03a9\u03a9End\u9999");
+if (checkFileSize)
+  is(fl.fileSize, 40, "file size after UTF-16 text writeString");
+// XXXndeakin
+// disable this test for now because the default permissions is different
+// on each machine
+//if (!iswin)
+//  is(fl.permissions & 511, 0755, "permissions after creating file with newOutputStream");
+stream.close();
+
+stream = IO.newInputStream(fl, "text", "UTF-16", "*", 1024);
+is(stream.available(), 40, "available count after UTF-16 input stream creation");
+is(stream.readString(16), "This is cool \u03a9\u03a9E", "read UTF-16 file");
+stream.close();
+
+// -------- Check linefeed handling --------
+
+stream = IO.newOutputStream(fl, "text");
+stream.writeString("Line One\rLine Two\nLine Three\r\nLine Four\n\rLine Five\n\nLine Six");
+stream.close();
+
+stream = IO.newInputStream(fl, "text");
+is(stream.readLine(), "Line One", "read line with carriage return");
+is(stream.readLine(), "Line Two", "read line with newline");
+is(stream.readLine(), "Line Three", "read line with carriage return and newline");
+is(stream.readLine(), "Line Four", "read line with newline and carriage return");
+is(stream.readLine(), "Line Five", "read line with newline and newline");
+is(stream.readLine(), "", "read blank line");
+is(stream.readLine(), "Line Six", "read last line");
+is(stream.readLine(), "", "read after end");
+
+// -------- Check multiplex streams --------
+
+expectException(function() { stream.count(); }, "multi functions on non-multi stream");
+
+stream = IO.newOutputStream(fl, "");
+stream.writeString("A middle string. ");
+stream.close();
+
+stream = IO.newInputStream(fl, "multi");
+is(stream.count, 1, "count on multi stream");
+
+var stream2 = IO.newInputStream("A final string.", "");
+stream.appendStream(stream2);
+is(stream.getStream(1), stream2, "stream appended");
+is(stream.count, 2, "count on multi stream after appending");
+
+var stream3 = IO.newInputStream("An initial string. ", "");
+stream.insertStream(stream3, 0);
+is(stream.getStream(0), stream3, "stream inserting");
+is(stream.count, 3, "count on multi stream after inserting");
+
+stream.insertStream(IO.newInputStream("A small string", ""), 1);
+stream.removeStream(1);
+is(stream.count, 3, "count on multi stream after removing");
+
+expectException(function() { stream.removeStream(5); },
+                "remove out of range index in multi stream");
+
+var expectedText = "An initial string. A middle string. A final string.";
+is(stream.read(expectedText.length), expectedText, "read from multi stream");
+
+stream.close();
+
+// -------- Check binary methods --------
+
+stream = IO.newOutputStream(fl, "");
+stream.writeBoolean(true);
+stream.writeBoolean(false);
+stream.write8(10);
+stream.write16(8209);
+stream.write16(-8209);
+stream.write16(300000);
+stream.write32(200000);
+is(stream.tell(), 13, "write position after binary write");
+stream.writeFloat(0.25);
+stream.writeDouble(56020.65);
+stream.writeByteArray([100, 0, 1000, 5], 4);
+stream.seek(stream.NS_SEEK_SET, 3);
+stream.write16(8211);
+stream.close();
+if (checkFileSize)
+  is(fl.fileSize, 29, "file size after binary write");
+
+stream = IO.newInputStream(fl, "");
+is(stream.readBoolean(), true, "read boolean true from binary");
+is(stream.readBoolean(), false, "read boolean false from binary");
+is(stream.read8(), 10, "read 8-bit integer from binary");
+is(stream.read16(), 8211, "read 16-bit integer from binary");
+is(stream.read16(), 57327, "read negative 16-bit integer from binary");
+is(stream.read16(), 37856, "read another 16-bit integer from binary");
+is(stream.tell(), 9, "read position from binary");
+is(stream.read32(), 200000, "read 32-bit integer from binary");
+is(stream.readFloat(), 0.25, "read float from binary");
+is(stream.readDouble(), 56020.65, "read double from binary");
+
+stream.seek(stream.NS_SEEK_SET, 2);
+var arr = stream.readByteArray(27);
+var expectedArr = [10, 32, 19, 223, 239, 147, 224, 0, 3, 13, 64, 62, 128,
+                   0, 0, 64, 235, 90, 148, 204, 204, 204, 205, 100, 0, 232, 5];
+var isok = true;
+for (var a = 0; a < expectedArr.length; a++) {
+  if (expectedArr[a] != arr[a]) {
+    isok = false;
+    break;
+  }
+}
+ok(isok && arr.length == expectedArr.length, "read byte array from binary");
+stream.close();
+
+// -------- Check newURI method --------
+
+var uri = IO.newURI("http://www.mozilla.org");
+is(uri.spec, "http://www.mozilla.org/", "newURI returns nsIURI");
+
+ok(IO.newURI(fl).spec.indexOf("file:/") == 0, "newURI returns nsIURI for file");
+
+expectException(function() { IO.newURI(""); }, "newURI with null uri");
+
+}
+
+function checkFile(fl, expectedText, testname)
+{
+  var stream = IO.newInputStream(fl, "");
+  is(stream.read(expectedText.length), expectedText, testname);
+  stream.close();
+}
+
+function expectException(fn, testname)
+{
+  var exh = false;
+  try {
+    fn();
+  }
+  catch(ex) {
+    exh = true;
+    ok(ex, testname + " failed properly");
+  }
+  if (!exh) ok(false, testname + " didn't fail"); 
+}
+
+testIO();
+
+]]>
+
+</script>
+
+</window>
