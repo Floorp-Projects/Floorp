@@ -32,9 +32,6 @@ function test_kTimeFormatSeconds() {
 
 function run_test()
 {
-      var os = Components.classes["@mozilla.org/xre/app-info;1"].getService(Components.interfaces.nsIXULRuntime).OS;
-      if (os == "Linux" || os == "SunOS" || os == "IRIX" || os == "AIX") {
-          do_check_true(test_full());
-          do_check_true(test_kTimeFormatSeconds());
-      }
+    do_check_true(test_full());
+    do_check_true(test_kTimeFormatSeconds());
 }
