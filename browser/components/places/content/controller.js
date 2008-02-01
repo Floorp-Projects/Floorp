@@ -51,6 +51,17 @@ const RELOAD_ACTION_REMOVE = 2;
 // rows.
 const RELOAD_ACTION_MOVE = 3;
 
+// when removing a bunch of pages we split them in chunks to avoid passing
+// a too big array to RemovePages
+// 300 is the best choice with an history of about 150000 visits
+// smaller chunks could cause a Slow Script warning with a huge history
+const REMOVE_PAGES_CHUNKLEN = 300;
+// if we are removing less than this pages we will remove them one by one
+// since it will be reflected faster on the UI
+// 10 is a good compromise, since allows the user to delete a little amount of
+// urls for privacy reasons, but does not cause heavy disk access
+const REMOVE_PAGES_MAX_SINGLEREMOVES = 10;
+
 /**
  * Represents an insertion point within a container where we can insert
  * items. 
@@ -912,19 +923,44 @@ PlacesController.prototype = {
   },
 
   /**
-   * Removes the set of selected ranges from history. 
+   * Removes the set of selected ranges from history.
    */
   _removeRowsFromHistory: function PC__removeRowsFromHistory() {
     // Other containers are history queries, just delete from history
     // history deletes are not undoable.
     var nodes = this._view.getSelectionNodes();
+    var URIs = [];
+    var bhist = PlacesUtils.history.QueryInterface(Ci.nsIBrowserHistory);
+    var resultView = this._view.getResultView();
     for (var i = 0; i < nodes.length; ++i) {
       var node = nodes[i];
-      var bhist = PlacesUtils.history.QueryInterface(Ci.nsIBrowserHistory);
       if (PlacesUtils.nodeIsHost(node))
         bhist.removePagesFromHost(node.title, true);
-      else if (PlacesUtils.nodeIsURI(node))
-        bhist.removePage(PlacesUtils._uri(node.uri));
+      else if (PlacesUtils.nodeIsURI(node)) {
+        var uri = PlacesUtils._uri(node.uri);
+        // avoid trying to delete the same url twice
+        if (URIs.indexOf(uri) < 0) {
+          URIs.push(uri);
+        }
+      }
+    }
+
+    // if we have to delete a lot of urls RemovePage will be slow, it's better
+    // to delete them in bunch and rebuild the full treeView
+    if (URIs.length > REMOVE_PAGES_MAX_SINGLEREMOVES) {
+      // do removal in chunks to avoid passing a too big array to removePages
+      for (var i = 0; i < URIs.length; i += REMOVE_PAGES_CHUNKLEN) {
+        var URIslice = URIs.slice(i, Math.max(i + REMOVE_PAGES_CHUNKLEN, URIs.length));
+        // set DoBatchNotify only on the last chunk
+        bhist.removePages(URIslice, URIslice.length,
+                          (i + REMOVE_PAGES_CHUNKLEN) >= URIs.length);
+      }
+    }
+    else {
+      // if we have to delete fewer urls, removepage will allow us to avoid
+      // rebuilding the full treeView
+      for (var i = 0; i < URIs.length; ++i)
+        bhist.removePage(URIs[i]);
     }
   },
 
