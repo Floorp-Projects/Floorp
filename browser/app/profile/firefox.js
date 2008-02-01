@@ -502,7 +502,7 @@ pref("layout.spellcheckDefault", 1);
 pref("view_source.editor.path", "");
 pref("view_source.editor.external", false);
 
-pref("browser.send_pings", true);
+pref("browser.send_pings", false);
 
 /* initial web feed readers list */
 pref("browser.contentHandlers.types.0.title", "chrome://browser-region/locale/region.properties");
