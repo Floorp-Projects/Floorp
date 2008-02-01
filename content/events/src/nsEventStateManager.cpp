@@ -5300,10 +5300,19 @@ nsEventStateManager::MoveCaretToFocus()
             if (NS_SUCCEEDED(rv)) {
               // Set the range to the start of the currently focused node
               // Make sure it's collapsed
-              if (NS_FAILED(newRange->SelectNode(currentFocusNode)))
-                newRange->SelectNodeContents(currentFocusNode);
-              newRange->Collapse(PR_TRUE);
+              newRange->SelectNodeContents(currentFocusNode);
+              nsCOMPtr<nsIDOMNode> firstChild;
+              currentFocusNode->GetFirstChild(getter_AddRefs(firstChild));
+              if (!firstChild ||
+                  mCurrentFocus->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
+                // If current focus node is a leaf, set range to before the
+                // node by using the parent as a container.
+                // This prevents it from appearing as selected.
+                newRange->SetStartBefore(currentFocusNode);
+                newRange->SetEndBefore(currentFocusNode);
+              }
               domSelection->AddRange(newRange);
+              domSelection->CollapseToStart();
             }
           }
         }
