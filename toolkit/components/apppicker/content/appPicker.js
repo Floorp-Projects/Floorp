@@ -124,6 +124,7 @@ AppPicker.prototype =
           var item = document.createElement("richlistitem");
           item.setAttribute("id", "app-picker-item");
           item.value = file;
+          item.label = this.getFileDisplayName(file.executable);
           item.setAttribute("ondblclick", "g_dialog.appDoubleClick();");
 
           var hbox1 = document.createElement("hbox");
