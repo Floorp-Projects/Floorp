@@ -679,14 +679,26 @@ nsChromeRegistry::Canonify(nsIURL* aChromeURL)
     aChromeURL->SetPath(path);
   }
   else {
-    nsCAutoString filePath;
-    rv = aChromeURL->GetFilePath(filePath);
-    NS_ENSURE_SUCCESS(rv, rv);
-    filePath.SetLength(nsUnescapeCount(filePath.BeginWriting()));
-
-    if (filePath.Find(NS_LITERAL_CSTRING("..")) != kNotFound ||
-        filePath.FindChar(':') != kNotFound) {
-      return NS_ERROR_DOM_BAD_URI;
+    // prevent directory traversals ("..")
+    // path is already unescaped once, but uris can get unescaped twice
+    const char* curChar = path.BeginReading();
+    const char* end = path.EndReading();
+    while (curChar < end) {
+      switch (*curChar) {
+        case ':':
+          return NS_ERROR_DOM_BAD_URI;
+        case '.':
+          if (*(curChar+1) == '.')
+            return NS_ERROR_DOM_BAD_URI;
+        case '%':
+          // chrome: URIs with double-escapes are trying to trick us.
+          // watch for %2e, and %25 in case someone triple unescapes
+          if (*(curChar+1) == '2' &&
+               ( *(curChar+2) == 'e' || *(curChar+2) == 'E' || 
+                 *(curChar+2) == '5' ))
+            return NS_ERROR_DOM_BAD_URI;
+      }
+      ++curChar;
     }
   }
 
@@ -744,7 +756,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult)
   else if (provider.EqualsLiteral("skin")) {
     baseURI = entry->skins.GetBase(mSelectedSkin, nsProviderArray::ANY);
   }
-  else {
+  else if (provider.EqualsLiteral("content")) {
     baseURI = entry->baseURI;
   }
 
