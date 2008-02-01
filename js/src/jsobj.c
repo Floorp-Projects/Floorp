@@ -343,12 +343,8 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
     uintN attrs;
 #endif
     jsval val;
-    int stackDummy;
 
-    if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
-        js_ReportOverRecursed(cx);
-        return NULL;
-    }
+    JS_CHECK_RECURSION(cx, return NULL);
 
     map = &cx->sharpObjectMap;
     table = map->table;
@@ -628,12 +624,8 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
     JSString *gsopold[2];
     JSString *gsop[2];
     JSString *idstr, *valstr, *str;
-    int stackDummy;
 
-    if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
-        js_ReportOverRecursed(cx);
-        return JS_FALSE;
-    }
+    JS_CHECK_RECURSION(cx, return JS_FALSE);
 
     /* After this, control must flow through out: to exit. */
     JS_PUSH_TEMP_ROOT(cx, 4, localroot, &tvr);
@@ -4540,12 +4532,8 @@ js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
     jsid id;
     jsval fval;
     JSBool ok;
-    int stackDummy;
 
-    if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
-        js_ReportOverRecursed(cx);
-        return JS_FALSE;
-    }
+    JS_CHECK_RECURSION(cx, return JS_FALSE);
 
     /*
      * Report failure only if an appropriate method was found, and calling it

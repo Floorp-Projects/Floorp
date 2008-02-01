@@ -1602,7 +1602,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 #define inXML JS_FALSE
 #endif
     jsval val;
-    int stackDummy;
 
     static const char exception_cookie[] = "/*EXCEPTION*/";
     static const char retsub_pc_cookie[] = "/*RETSUB_PC*/";
@@ -1687,10 +1686,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
     JS_END_MACRO
 
     cx = ss->sprinter.context;
-    if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
-        js_ReportOverRecursed(cx);
-        return NULL;
-    }
+    JS_CHECK_RECURSION(cx, return NULL);
 
     jp = ss->printer;
     startpc = pc;
