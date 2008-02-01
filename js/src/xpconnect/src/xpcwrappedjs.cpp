@@ -51,35 +51,10 @@ NS_IMETHODIMP
 NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
    (void *p, nsCycleCollectionTraversalCallback &cb)
 {
-    // REVIEW ME PLEASE: this is a very odd area and it's easy to get
-    // it wrong. I'm not sure I got it right.
-    //
-    // We *might* have a stub that's not actually connected to an
-    // nsXPCWrappedJS, so we begin by QI'ing over to a "real"
-    // nsIXPConnectWrappedJS. Since that's a mostly-empty class, we
-    // then downcast from there to the "true" nsXPCWrappedJS.
-    //
-    // Is this right? It's hard to know. It seems to work, but who
-    // knows for how long. 
-
-    nsresult rv;
-    nsIXPConnectWrappedJS *base;
-    nsXPCWrappedJS *tmp;
-    {
-        // Put the nsCOMPtr in a local scope, to avoid messing up the refcount
-        // below.
-        nsCOMPtr<nsIXPConnectWrappedJS> owner =
-            do_QueryInterface(static_cast<nsISupports*>(p), &rv);
-        if (NS_FAILED(rv))
-            return rv;
-
-        base = owner.get();
-        tmp = static_cast<nsXPCWrappedJS*>(base);
-        NS_ASSERTION(tmp->mRefCnt.get() > 2,
-                     "How can this be, no one else holds a strong ref?");
-    }
-
-    NS_ASSERTION(tmp->IsValid(), "How did we get here?");
+    nsISupports *s = static_cast<nsISupports*>(p);
+    NS_ASSERTION(CheckForRightISupports(s),
+                 "not the nsISupports pointer we expect");
+    nsXPCWrappedJS *tmp = Downcast(s);
 
     nsrefcnt refcnt = tmp->mRefCnt.get();
 #ifdef DEBUG_CC
@@ -93,7 +68,7 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
 
     // nsXPCWrappedJS keeps its own refcount artificially at or above 1, see the
     // comment above nsXPCWrappedJS::AddRef.
-    cb.NoteXPCOMChild(base);
+    cb.NoteXPCOMChild(s);
 
     if(refcnt > 1)
         // nsXPCWrappedJS roots its mJSObj when its refcount is > 1, see
