@@ -35,8 +35,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-var TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
-
 var gAppManagerDialog = {
   _removed: [],
 
