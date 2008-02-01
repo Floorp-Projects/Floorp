@@ -48,6 +48,8 @@
 #include "nsISimpleEnumerator.h"
 #include "nsITimelineService.h"
 #include "nsVoidArray.h"
+#include "nsIClassInfoImpl.h"
+#include "nsIProgrammingLanguage.h"
 
 #include "plbase64.h"
 #include "prmem.h"
@@ -345,12 +347,23 @@ nsLocalFile::~nsLocalFile()
 #pragma mark -
 #pragma mark [nsISupports]
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsLocalFile,
-                              nsILocalFileMac,
-                              nsILocalFile,
-                              nsIFile,
-                              nsIHashable)
-                              
+NS_IMPL_THREADSAFE_ADDREF(nsLocalFile)
+NS_IMPL_THREADSAFE_RELEASE(nsLocalFile)
+NS_IMPL_QUERY_INTERFACE5_CI(nsLocalFile,
+                            nsILocalFileMac,
+                            nsILocalFile,
+                            nsIFile,
+                            nsIHashable,
+                            nsIClassInfo)
+NS_IMPL_CI_INTERFACE_GETTER4(nsLocalFile,
+                             nsILocalFileMac,
+                             nsILocalFile,
+                             nsIFile,
+                             nsIHashable)
+
+NS_DECL_CLASSINFO(nsLocalFile)
+NS_IMPL_THREADSAFE_CI(nsLocalFile)
+
 NS_METHOD nsLocalFile::nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtr);

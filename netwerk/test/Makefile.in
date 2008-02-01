@@ -46,6 +46,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= test_necko
 
 DIRS            = \
+                  chrome \
                   httpserver \
                   $(NULL)
 

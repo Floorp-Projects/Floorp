@@ -83,7 +83,8 @@
 #endif
 
 class NS_COM nsLocalFile : public nsILocalFile,
-                           public nsIHashable
+                           public nsIHashable,
+                           public nsIClassInfo
 {
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_LOCAL_FILE_CID)
@@ -103,6 +104,9 @@ public:
 
     // nsIHashable
     NS_DECL_NSIHASHABLE
+
+    // nsIClassInfo
+    NS_DECL_NSICLASSINFO
 
 public:
     static void GlobalInit();

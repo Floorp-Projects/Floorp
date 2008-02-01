@@ -73,7 +73,9 @@
 class TypeEaEnumerator;
 
 class NS_COM nsLocalFile : public nsILocalFileOS2,
-                                   public nsIHashable
+                           public nsIHashable,
+                           public nsIClassInfo
+
 {
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_LOCAL_FILE_CID)
@@ -96,6 +98,9 @@ public:
 
     // nsIHashable interface
     NS_DECL_NSIHASHABLE
+
+    // nsIClassInfo interface
+    NS_DECL_NSICLASSINFO
 
 public:
     static void GlobalInit();
