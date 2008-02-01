@@ -165,8 +165,7 @@ math_atan2(JSContext *cx, uintN argc, jsval *vp)
         z = fd_copysign(M_PI / 4, x);
         if (y < 0)
             z *= 3;
-        *vp = js_NewUnrootedDoubleValue(cx, z);
-        return *vp != JSVAL_NULL;
+        return js_NewDoubleValue(cx, z, vp);
     }
 #endif
     z = fd_atan2(x, y);

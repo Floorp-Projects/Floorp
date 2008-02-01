@@ -183,7 +183,6 @@ struct JSRuntime {
     /* Garbage collector state, used by jsgc.c. */
     JSGCChunkInfo       *gcChunkList;
     JSGCArenaList       gcArenaList[GC_NUM_FREELISTS];
-    JSGCDoubleArenaList gcDoubleArenaList;
     JSDHashTable        gcRootsHash;
     JSDHashTable        *gcLocksHash;
     jsrefcount          gcKeepAtoms;
@@ -765,8 +764,6 @@ struct JSContext {
 
     /* Stack of thread-stack-allocated temporary GC roots. */
     JSTempValueRooter   *tempValueRooters;
-
-    JSGCDoubleCell      *doubleFreeList;
 
     /* Debug hooks associated with the current context. */
     JSDebugHooks        *debugHooks;

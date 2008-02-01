@@ -147,9 +147,6 @@ extern JSBool
 js_InitRuntimeNumberState(JSContext *cx);
 
 extern void
-js_TraceRuntimeNumberState(JSTracer *trc);
-
-extern void
 js_FinishRuntimeNumberState(JSContext *cx);
 
 /* Initialize the Number class, returning its prototype object. */
@@ -168,29 +165,18 @@ extern const char js_isFinite_str[];
 extern const char js_parseFloat_str[];
 extern const char js_parseInt_str[];
 
+/* GC-allocate a new JS number. */
+extern jsdouble *
+js_NewDouble(JSContext *cx, jsdouble d, uintN gcflag);
+
 extern void
 js_FinalizeDouble(JSContext *cx, jsdouble *dp);
 
-/*
- * Create a new double value corresponding to d. The result is weakly rooted.
- */
-extern jsdouble *
-js_NewWeaklyRootedDouble(JSContext *cx, jsdouble d);
-
-/*
- * Set *vp to int or double value corresponding to d.
- *
- * vp must be a root.
- */
 extern JSBool
-js_NewNumberValue(JSContext *cx, jsdouble d, jsval *vp);
+js_NewDoubleValue(JSContext *cx, jsdouble d, jsval *rval);
 
-/*
- * If d is int, return it as jsval. Otherwise allocate a new double, weakly
- * root and return it as jsval. Returns JSVAL_NULL when the allocation fails.
- */
-extern jsval
-js_NewWeakNumberValue(JSContext *cx, jsdouble d);
+extern JSBool
+js_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval);
 
 /* Convert a number to a GC'ed string. */
 extern JSString *

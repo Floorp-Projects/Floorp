@@ -915,8 +915,7 @@ date_now(JSContext *cx, uintN argc, jsval *vp)
     JSLL_DIV(ms, us, us2ms);
     JSLL_L2D(msec_time, ms);
 
-    *vp = js_NewUnrootedDoubleValue(cx, msec_time);
-    return *vp != JSVAL_NULL;
+    return js_NewDoubleValue(cx, msec_time, vp);
 }
 
 /*
@@ -964,7 +963,7 @@ SetUTCTimePtr(JSContext *cx, JSObject *obj, jsval *vp, jsdouble *dp)
 static JSBool
 SetUTCTime(JSContext *cx, JSObject *obj, jsval *vp, jsdouble t)
 {
-    jsdouble *dp = js_NewWeaklyRootedDouble(cx, t);
+    jsdouble *dp = js_NewDouble(cx, t, 0);
     if (!dp)
         return JS_FALSE;
     return SetUTCTimePtr(cx, obj, vp, dp);
@@ -994,7 +993,7 @@ GetLocalTime(JSContext *cx, JSObject *obj, jsval *vp, jsdouble *dp)
         if (JSDOUBLE_IS_FINITE(result))
             result = LocalTime(result);
 
-        cached = js_NewWeaklyRootedDouble(cx, result);
+        cached = js_NewDouble(cx, result, 0);
         if (!cached)
             return JS_FALSE;
 
@@ -1544,8 +1543,7 @@ date_setYear(JSContext *cx, uintN argc, jsval *vp)
     if (!JSDOUBLE_IS_FINITE(year)) {
         if (!SetUTCTimePtr(cx, obj, NULL, cx->runtime->jsNaN))
             return JS_FALSE;
-        *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
-        return JS_TRUE;
+        return js_NewNumberValue(cx, *cx->runtime->jsNaN, vp);
     }
 
     year = js_DoubleToInteger(year);
@@ -2021,7 +2019,7 @@ date_constructor(JSContext *cx, JSObject* obj)
 {
     jsdouble *date;
 
-    date = js_NewWeaklyRootedDouble(cx, 0.0);
+    date = js_NewDouble(cx, 0.0, 0);
     if (!date)
         return NULL;
 
