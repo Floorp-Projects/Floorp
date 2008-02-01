@@ -167,6 +167,7 @@ static JSBool
 Number(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     jsdouble d;
+    jsval v;
 
     if (argc != 0) {
         if (!js_ValueToNumber(cx, argv[0], &d))
@@ -174,10 +175,14 @@ Number(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     } else {
         d = 0.0;
     }
-    return js_NewNumberValue(cx, d,
-                             !(cx->fp->flags & JSFRAME_CONSTRUCTING)
-                             ? rval
-                             : STOBJ_FIXED_SLOT_PTR(obj, JSSLOT_PRIVATE));
+    if (!js_NewNumberValue(cx, d, &v))
+        return JS_FALSE;
+    if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
+        *rval = v;
+        return JS_TRUE;
+    }
+    OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, v);
+    return JS_TRUE;
 }
 
 #if JS_HAS_TOSOURCE
@@ -533,7 +538,6 @@ js_InitRuntimeNumberState(JSContext *cx)
 {
     JSRuntime *rt;
     jsdpun u;
-    jsval v;
     struct lconv *locale;
 
     rt = cx->runtime;
@@ -544,26 +548,23 @@ js_InitRuntimeNumberState(JSContext *cx)
     u.s.hi = JSDOUBLE_HI32_EXPMASK | JSDOUBLE_HI32_MANTMASK;
     u.s.lo = 0xffffffff;
     number_constants[NC_NaN].dval = NaN = u.d;
-    v = js_NewUnrootedDoubleValue(cx, NaN);
-    if (v == JSVAL_NULL)
+    rt->jsNaN = js_NewDouble(cx, NaN, GCF_LOCK);
+    if (!rt->jsNaN)
         return JS_FALSE;
-    rt->jsNaN = JSVAL_TO_DOUBLE(v);
 
     u.s.hi = JSDOUBLE_HI32_EXPMASK;
     u.s.lo = 0x00000000;
     number_constants[NC_POSITIVE_INFINITY].dval = u.d;
-    v = js_NewUnrootedDoubleValue(cx, u.d);
-    if (v == JSVAL_NULL)
+    rt->jsPositiveInfinity = js_NewDouble(cx, u.d, GCF_LOCK);
+    if (!rt->jsPositiveInfinity)
         return JS_FALSE;
-    rt->jsPositiveInfinity = JSVAL_TO_DOUBLE(v);
 
     u.s.hi = JSDOUBLE_HI32_SIGNBIT | JSDOUBLE_HI32_EXPMASK;
     u.s.lo = 0x00000000;
     number_constants[NC_NEGATIVE_INFINITY].dval = u.d;
-    v = js_NewUnrootedDoubleValue(cx, u.d);
-    if (v == JSVAL_NULL)
+    rt->jsNegativeInfinity = js_NewDouble(cx, u.d, GCF_LOCK);
+    if (!rt->jsNegativeInfinity)
         return JS_FALSE;
-    rt->jsNegativeInfinity = JSVAL_TO_DOUBLE(v);
 
     u.s.hi = 0;
     u.s.lo = 1;
@@ -581,23 +582,13 @@ js_InitRuntimeNumberState(JSContext *cx)
 }
 
 void
-js_TraceRuntimeNumberState(JSTracer *trc)
-{
-    JSRuntime *rt;
-
-    rt = trc->context->runtime;
-    if (rt->jsNaN)
-        JS_CALL_DOUBLE_TRACER(trc, rt->jsNaN, "NaN");
-    if (rt->jsPositiveInfinity)
-        JS_CALL_DOUBLE_TRACER(trc, rt->jsPositiveInfinity, "+Infinity");
-    if (rt->jsNegativeInfinity)
-        JS_CALL_DOUBLE_TRACER(trc, rt->jsNegativeInfinity, "-Infinity");
-}
-
-void
 js_FinishRuntimeNumberState(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
+
+    js_UnlockGCThingRT(rt, rt->jsNaN);
+    js_UnlockGCThingRT(rt, rt->jsNegativeInfinity);
+    js_UnlockGCThingRT(rt, rt->jsPositiveInfinity);
 
     rt->jsNaN = NULL;
     rt->jsNegativeInfinity = NULL;
@@ -646,41 +637,47 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
 }
 
 jsdouble *
-js_NewWeaklyRootedDouble(JSContext *cx, jsdouble d)
+js_NewDouble(JSContext *cx, jsdouble d, uintN gcflag)
 {
-    jsval v;
+    jsdouble *dp;
 
-    v = js_NewUnrootedDoubleValue(cx, d);
-    if (v == JSVAL_NULL || !js_WeaklyRootDouble(cx, v))
+    dp = (jsdouble *) js_NewGCThing(cx, gcflag | GCX_DOUBLE, sizeof(jsdouble));
+    if (!dp)
         return NULL;
-    return JSVAL_TO_DOUBLE(v);
+    *dp = d;
+    return dp;
+}
+
+void
+js_FinalizeDouble(JSContext *cx, jsdouble *dp)
+{
+    *dp = NaN;
 }
 
 JSBool
-js_NewNumberValue(JSContext *cx, jsdouble d, jsval *vp)
+js_NewDoubleValue(JSContext *cx, jsdouble d, jsval *rval)
+{
+    jsdouble *dp;
+
+    dp = js_NewDouble(cx, d, 0);
+    if (!dp)
+        return JS_FALSE;
+    *rval = DOUBLE_TO_JSVAL(dp);
+    return JS_TRUE;
+}
+
+JSBool
+js_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval)
 {
     jsint i;
 
     if (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i)) {
-        *vp = INT_TO_JSVAL(i);
-        return JS_TRUE;
+        *rval = INT_TO_JSVAL(i);
+    } else {
+        if (!js_NewDoubleValue(cx, d, rval))
+            return JS_FALSE;
     }
-    *vp = js_NewUnrootedDoubleValue(cx, d);
-    return *vp != JSVAL_VOID;
-}
-
-jsval
-js_NewWeakNumberValue(JSContext *cx, jsdouble d)
-{
-    jsint i;
-    jsval v;
-
-    if (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i))
-        return INT_TO_JSVAL(i);
-    v = js_NewUnrootedDoubleValue(cx, d);
-    if (v != JSVAL_NULL && !js_WeaklyRootDouble(cx, v))
-        v = JSVAL_NULL;
-    return v;
+    return JS_TRUE;
 }
 
 char *
