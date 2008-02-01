@@ -967,6 +967,16 @@ js_ReportOutOfScriptQuota(JSContext *cx);
 extern void
 js_ReportOverRecursed(JSContext *cx);
 
+#define JS_CHECK_RECURSION(cx, onerror)                                       \
+    JS_BEGIN_MACRO                                                            \
+        int stackDummy_;                                                      \
+                                                                              \
+        if (!JS_CHECK_STACK_SIZE(cx, stackDummy_)) {                          \
+            js_ReportOverRecursed(cx);                                        \
+            onerror;                                                          \
+        }                                                                     \
+    JS_END_MACRO
+
 /*
  * Report an exception using a previously composed JSErrorReport.
  * XXXbe remove from "friend" API

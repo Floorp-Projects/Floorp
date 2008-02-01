@@ -521,12 +521,8 @@ array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
     JSString *str;
     JSHashEntry *he;
     JSAtom *atom;
-    int stackDummy;
 
-    if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
-        js_ReportOverRecursed(cx);
-        return JS_FALSE;
-    }
+    JS_CHECK_RECURSION(cx, return JS_FALSE);
 
     ok = js_GetLengthProperty(cx, obj, &length);
     if (!ok)
