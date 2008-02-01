@@ -95,7 +95,7 @@
 - (IBAction)emailMeClicked:(id)sender;
 
 - (void)controlTextDidChange:(NSNotification *)note;
-- (void)textDidEndEditing:(NSNotification *)aNotification;
+- (void)textDidChange:(NSNotification *)aNotification;
 - (BOOL)textView:(NSTextView *)aTextView shouldChangeTextInRange:(NSRange)affectedCharRange replacementString:(NSString *)replacementString;
 
 - (void)doInitialResizing;
