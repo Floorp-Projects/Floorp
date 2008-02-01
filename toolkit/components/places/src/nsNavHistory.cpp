@@ -3089,96 +3089,107 @@ nsNavHistory::GetCount(PRUint32 *aCount)
 }
 
 
+// nsNavHistory::RemovePages
+//
+//    Removes a bunch of uris from history.
+//    Has better performance than RemovePage when deleting a lot of history.
+//    Notice that this function does not call the onDeleteURI observers,
+//    instead, if aDoBatchNotify is true, we call OnBegin/EndUpdateBatch.
+//    We don't do duplicates removal, URIs array should be cleaned-up before.
+
+NS_IMETHODIMP
+nsNavHistory::RemovePages(nsIURI **aURIs, PRUint32 aLength, PRBool aDoBatchNotify)
+{
+  // build a list of place ids to delete
+  nsCString deletePlaceIdsQueryString;
+  nsresult rv;
+  for (PRInt32 i = 0; i < aLength; i++) {
+    PRInt64 placeId;
+    rv = GetUrlIdFor(aURIs[i], &placeId, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (placeId != 0) {
+      if (!deletePlaceIdsQueryString.IsEmpty())
+        deletePlaceIdsQueryString.AppendLiteral(",");
+      deletePlaceIdsQueryString.AppendInt(placeId);
+    }
+  }
+
+  // early return if there is nothing to delete
+  if (deletePlaceIdsQueryString.IsEmpty())
+    return NS_OK;
+
+  mozStorageTransaction transaction(mDBConn, PR_FALSE);
+  nsCOMPtr<mozIStorageStatement> statement;
+
+  // delete all visits
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "DELETE FROM moz_historyvisits WHERE place_id IN (") +
+        deletePlaceIdsQueryString +
+        NS_LITERAL_CSTRING(")"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // now that visits have been removed, run annotation expiration.
+  // this will remove all expire-able annotations for these URIs.
+  (void)mExpire.OnDeleteURI();
+
+  // if there are no more annotations, and the entry is not bookmarked
+  // then we can remove the moz_places entry.
+  // Note that we do NOT delete favicons. Any unreferenced favicons will be
+  // deleted next time the browser is shut down.
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "DELETE FROM moz_places WHERE id IN ("
+        "SELECT h.id FROM moz_places h WHERE h.id IN (") +
+        deletePlaceIdsQueryString +
+        NS_LITERAL_CSTRING(") AND "
+        "NOT EXISTS (SELECT b.id FROM moz_bookmarks b WHERE b.fk = h.id) AND "
+        "NOT EXISTS (SELECT a.id FROM moz_annos a WHERE a.place_id = h.id))"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // if a moz_place was annotated or was a bookmark,
+  // we didn't delete it, but we did delete the moz_visits
+  // so we need to reset the frecency.  Note, we don't
+  // reset the visit_count, as we use that in our "on idle"
+  // query to figure out which places to recalculate frecency first.
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "UPDATE moz_places SET frecency = -1 WHERE id IN(") +
+        deletePlaceIdsQueryString +
+        NS_LITERAL_CSTRING(")"));
+  NS_ENSURE_SUCCESS(rv, rv);
+ 
+  // placeId could have a livemark item, so setting the frecency to -1
+  // would cause it to show up in the url bar autocomplete
+  // call FixInvalidFrecenciesForExcludedPlaces() to handle that scenario
+  // XXX this might be dog slow, further degrading delete perf.
+  rv = FixInvalidFrecenciesForExcludedPlaces();
+  NS_ENSURE_SUCCESS(rv, rv);
+ 
+  // XXX todo
+  // forcibly call the "on idle" timer here to do a little work
+  // but the rest will happen on idle.  
+  
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // force a full refresh calling onEndUpdateBatch (will call Refresh())
+  if (aDoBatchNotify)
+    UpdateBatchScoper batch(*this); // sends Begin/EndUpdateBatch to observers
+
+  return NS_OK;
+}
+
+
 // nsNavHistory::RemovePage
 //
 //    Removes all visits and the main history entry for the given URI.
 //    Silently fails if we have no knowledge of the page.
 
-NS_IMETHODIMP
+ NS_IMETHODIMP
 nsNavHistory::RemovePage(nsIURI *aURI)
 {
-  PRInt64 placeId;
-  nsresult rv = GetUrlIdFor(aURI, &placeId, PR_TRUE);
+  nsIURI** URIs = &aURI;
+  nsresult rv = RemovePages(URIs, 1, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  mozStorageTransaction transaction(mDBConn, PR_FALSE);
-  nsCOMPtr<mozIStorageStatement> statement;
-
-  // delete all visits for this page
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_historyvisits WHERE place_id = ?1"),
-      getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt64Parameter(0, placeId);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // now that visits have been removed, run annotation expiration.
-  // this will remove all expire-able annotations for this URI.
-  (void)mExpire.OnDeleteURI();
-
-  // does the uri have un-expirable annotations?
-  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
-  NS_ENSURE_STATE(annosvc);
-  nsTArray<nsCString> annoNames;
-  rv = annosvc->GetAnnotationNamesTArray(placeId, &annoNames, PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // is the uri bookmarked?
-  nsNavBookmarks* bookmarksService = nsNavBookmarks::GetBookmarksService();
-  NS_ENSURE_STATE(bookmarksService);
-  PRBool bookmarked = PR_FALSE;
-  rv = bookmarksService->IsBookmarked(aURI, &bookmarked);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // if there are no more annotations, and the entry is not bookmarked
-  // then we can remove the moz_places entry.
-  if (annoNames.Length() == 0 && !bookmarked) {
-    // Note that we do NOT delete favicons. Any unreferenced favicons will be
-    // deleted next time the browser is shut down.
-
-    // delete main history entries
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "DELETE FROM moz_places WHERE id = ?1"),
-        getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->BindInt64Parameter(0, placeId);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  else {
-    // because the moz_place was annotated (or it was a bookmark), 
-    // we didn't delete it, but we did delete the moz_visits
-    // so we need to reset the frecency.  Note, we don't
-    // reset the visit_count, as we use that in our "on idle"
-    // query to figure out which places to recalcuate frecency first.
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "UPDATE moz_places SET frecency = -1 WHERE id = ?1"),
-        getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->BindInt64Parameter(0, placeId);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // placeId could have a livemark item, so setting the frecency to -1
-    // would cause it to show up in the url bar autocomplete
-    // call FixInvalidFrecenciesForExcludedPlaces() to handle that scenario
-    // XXX this might be dog slow, further degrading delete perf.
-    rv = FixInvalidFrecenciesForExcludedPlaces();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // XXX todo
-    // forcibly call the "on idle" timer here to do a little work
-    // but the rest will happen on idle.
-  }
-
-  // Observers: Be sure to finish transaction before calling observers. Note also
-  // that we always call the observers even though we aren't sure something
-  // actually got deleted.
-  transaction.Commit();
+  // call observers here for the removed url
   ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver, OnDeleteURI(aURI))
   return NS_OK;
 }
