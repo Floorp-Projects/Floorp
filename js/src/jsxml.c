@@ -3432,6 +3432,8 @@ DeepCopyInLRS(JSContext *cx, JSXML *xml, uintN flags)
     /* Our caller must be protecting newborn objects. */
     JS_ASSERT(cx->localRootStack);
 
+    JS_CHECK_RECURSION(cx, return JS_FALSE);
+
     copy = js_NewXML(cx, (JSXMLClass) xml->xml_class);
     if (!copy)
         return NULL;
@@ -3532,6 +3534,8 @@ DescendantsHelper(JSContext *cx, JSXML *xml, JSXMLQName *nameqn, JSXML *list)
 {
     uint32 i, n;
     JSXML *attr, *kid;
+
+    JS_CHECK_RECURSION(cx, return JS_FALSE);
 
     if (xml->xml_class == JSXML_CLASS_ELEMENT &&
         OBJ_GET_CLASS(cx, nameqn->object) == &js_AttributeNameClass) {
