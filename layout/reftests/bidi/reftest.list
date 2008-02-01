@@ -18,7 +18,6 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-02-j.html mixedChartype-0
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-03.html mixedChartype-03-ref.html
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-03-j.html mixedChartype-03-ref.html
 == 386339.html 386339-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT!="gtk2") == 387653.html 387653-ref.html # Linux-specific bug
 == 409375.html 409375-ref.html
 == 413542-1.html 413542-1-ref.html
 == 413542-2.html 413542-2-ref.html
