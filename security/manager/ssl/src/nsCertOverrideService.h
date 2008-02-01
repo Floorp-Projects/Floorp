@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Kai Engert <kengert@redhat.com>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,6 +48,7 @@
 #include "nsIFile.h"
 #include "prmon.h"
 #include "secoidt.h"
+#include "nsWeakReference.h"
 
 class nsCertOverride
 {
@@ -152,6 +154,7 @@ class nsCertOverrideEntry : public PLDHashEntryHdr
 
 class nsCertOverrideService : public nsICertOverrideService
                             , public nsIObserver
+                            , public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
