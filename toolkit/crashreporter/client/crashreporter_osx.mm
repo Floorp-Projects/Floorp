@@ -276,7 +276,7 @@ static bool RestartApplication()
   [self updateEmail];
 }
 
-- (void)textDidEndEditing:(NSNotification *)aNotification
+- (void)textDidChange:(NSNotification *)aNotification
 {
   // update comment parameter
   if ([[[mCommentText textStorage] mutableString] length] > 0)
