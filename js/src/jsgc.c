@@ -2201,21 +2201,23 @@ JS_FRIEND_API(void)
 js_TraceContext(JSTracer *trc, JSContext *acx)
 {
     JSArena *a;
-    int64 *timestamp;
+    int64 age;
     JSStackFrame *fp, *nextChain;
     JSStackHeader *sh;
     JSTempValueRooter *tvr;
 
-    /*
-     * Release stackPool here, if it has been in existence for longer
-     * than the limit specified by gcStackPoolLifespan.
-     */
-    a = acx->stackPool.current;
-    if (a == acx->stackPool.first.next &&
-        a->avail == a->base + sizeof(int64)) {
-        timestamp = (int64 *) a->base;
-        if (JS_Now() - *timestamp > acx->runtime->gcStackPoolLifespan * 1000)
-            JS_FinishArenaPool(&acx->stackPool);
+    if (IS_GC_MARKING_TRACER(trc)) {
+        /*
+         * Release stackPool here, if it has been in existence for longer than
+         * the limit specified by gcStackPoolLifespan.
+         */
+        a = acx->stackPool.current;
+        if (a == acx->stackPool.first.next &&
+            a->avail == a->base + sizeof(int64)) {
+            age = JS_Now() - *(int64 *) a->base;
+            if (age > (int64) acx->runtime->gcStackPoolLifespan * 1000)
+                JS_FinishArenaPool(&acx->stackPool);
+        }
     }
 
     /*
