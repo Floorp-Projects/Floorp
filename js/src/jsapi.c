@@ -331,16 +331,19 @@ JS_PushArgumentsVA(JSContext *cx, void **markp, const char *format, va_list ap)
             break;
           case 'i':
           case 'j':
-            if (!js_NewNumberValue(cx, (jsdouble) va_arg(ap, int32), sp))
+            *sp = js_NewWeakNumberValue(cx, (jsdouble) va_arg(ap, int32));
+            if (*sp == JSVAL_NULL)
                 goto bad;
             break;
           case 'u':
-            if (!js_NewNumberValue(cx, (jsdouble) va_arg(ap, uint32), sp))
+            *sp = js_NewWeakNumberValue(cx, (jsdouble) va_arg(ap, uint32));
+            if (*sp == JSVAL_NULL)
                 goto bad;
             break;
           case 'd':
           case 'I':
-            if (!js_NewDoubleValue(cx, va_arg(ap, jsdouble), sp))
+            *sp = js_NewUnrootedDoubleValue(cx, va_arg(ap, jsdouble));
+            if (*sp == JSVAL_NULL || !js_WeaklyRootDouble(cx, *sp))
                 goto bad;
             break;
           case 's':
@@ -462,7 +465,7 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
     JSBool ok;
     JSObject *obj;
     JSString *str;
-    jsdouble d, *dp;
+    jsdouble d;
 
     CHECK_REQUEST(cx);
     switch (type) {
@@ -489,10 +492,8 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
       case JSTYPE_NUMBER:
         ok = js_ValueToNumber(cx, v, &d);
         if (ok) {
-            dp = js_NewDouble(cx, d, 0);
-            ok = (dp != NULL);
-            if (ok)
-                *vp = DOUBLE_TO_JSVAL(dp);
+            *vp = js_NewUnrootedDoubleValue(cx, d);
+            ok = *vp != JSVAL_NULL && js_WeaklyRootDouble(cx, *vp);
         }
         break;
       case JSTYPE_BOOLEAN:
@@ -1766,21 +1767,23 @@ JS_PUBLIC_API(jsdouble *)
 JS_NewDouble(JSContext *cx, jsdouble d)
 {
     CHECK_REQUEST(cx);
-    return js_NewDouble(cx, d, 0);
+    return js_NewWeaklyRootedDouble(cx, d);
 }
 
 JS_PUBLIC_API(JSBool)
-JS_NewDoubleValue(JSContext *cx, jsdouble d, jsval *rval)
+JS_NewDoubleValue(JSContext *cx, jsdouble d, jsval *vp)
 {
     CHECK_REQUEST(cx);
-    return js_NewDoubleValue(cx, d, rval);
+    *vp = js_NewUnrootedDoubleValue(cx, d);
+    return *vp != JSVAL_NULL && js_WeaklyRootDouble(cx, *vp);
 }
 
 JS_PUBLIC_API(JSBool)
-JS_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval)
+JS_NewNumberValue(JSContext *cx, jsdouble d, jsval *vp)
 {
     CHECK_REQUEST(cx);
-    return js_NewNumberValue(cx, d, rval);
+    *vp = js_NewWeakNumberValue(cx, d);
+    return vp != JSVAL_NULL;
 }
 
 #undef JS_AddRoot
@@ -3051,23 +3054,21 @@ JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *clasp,
 JS_PUBLIC_API(JSBool)
 JS_DefineConstDoubles(JSContext *cx, JSObject *obj, JSConstDoubleSpec *cds)
 {
-    JSBool ok;
     jsval value;
     uintN flags;
 
     CHECK_REQUEST(cx);
-    for (ok = JS_TRUE; cds->name; cds++) {
-        ok = js_NewNumberValue(cx, cds->dval, &value);
-        if (!ok)
-            break;
+    for (; cds->name; cds++) {
+        value = js_NewWeakNumberValue(cx, cds->dval);
+        if (value == JSVAL_NULL)
+            return JS_FALSE;
         flags = cds->flags;
         if (!flags)
             flags = JSPROP_READONLY | JSPROP_PERMANENT;
-        ok = DefineProperty(cx, obj, cds->name, value, NULL, NULL, flags, 0, 0);
-        if (!ok)
-            break;
+        if (!DefineProperty(cx, obj, cds->name, value, NULL, NULL, flags, 0, 0))
+            return JS_FALSE;
     }
-    return ok;
+    return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)

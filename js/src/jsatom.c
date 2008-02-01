@@ -586,7 +586,7 @@ js_AtomizeDouble(JSContext *cx, jsdouble d)
         gen = ++state->tablegen;
         JS_UNLOCK(&state->lock, cx);
 
-        key = js_NewDouble(cx, d, 0);
+        key = js_NewWeaklyRootedDouble(cx, d);
         if (!key)
             return NULL;
 
