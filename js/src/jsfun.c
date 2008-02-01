@@ -2126,7 +2126,7 @@ js_ValueToFunctionObject(JSContext *cx, jsval *vp, uintN flags)
 
     caller = JS_GetScriptedCaller(cx, cx->fp);
     if (caller) {
-        principals = caller->script->principals;
+        principals = JS_StackFramePrincipals(cx, caller);
     } else {
         /* No scripted caller, don't allow access. */
         principals = NULL;
