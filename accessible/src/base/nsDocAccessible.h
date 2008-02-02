@@ -143,6 +143,13 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
     virtual nsresult RemoveEventListeners();
     void AddScrollListener();
     void RemoveScrollListener();
+
+    /**
+     * For any accessibles in this subtree, invalidate their knowledge of
+     * their children. Only weak refrences are destroyed, not accessibles.
+     * @param aStartNode  The root of the subrtee to invalidate accessible child refs in
+     */
+    void InvalidateChildrenInSubtree(nsIDOMNode *aStartNode);
     void RefreshNodes(nsIDOMNode *aStartNode);
     static void ScrollTimerCallback(nsITimer *aTimer, void *aClosure);
 
