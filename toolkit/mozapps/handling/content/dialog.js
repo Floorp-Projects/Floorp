@@ -130,6 +130,8 @@ var dialog = {
     var items = document.getElementById("items");
     var possibleHandlers = this._handlerInfo.possibleApplicationHandlers;
     var preferredHandler = this._handlerInfo.preferredApplicationHandler;
+    var ios = Cc["@mozilla.org/network/io-service;1"].
+              getService(Ci.nsIIOService);
     for (let i = possibleHandlers.length - 1; i >= 0; --i) {
       let app = possibleHandlers.queryElementAt(i, Ci.nsIHandlerApp);
       let elm = document.createElement("richlistitem");
@@ -139,19 +141,18 @@ var dialog = {
 
       if (app instanceof Ci.nsILocalHandlerApp) {
         // See if we have an nsILocalHandlerApp and set the icon
-        let uri = Cc["@mozilla.org/network/util;1"].
-                  getService(Ci.nsIIOService).
-                  newFileURI(app.executable);
+        let uri = ios.newFileURI(app.executable);
         elm.setAttribute("image", "moz-icon://" + uri.spec + "?size=32");
       }
       else if (app instanceof Ci.nsIWebHandlerApp) {
-        let uri = IO.newURI(app.uriTemplate);
+        let uri = ios.newURI(app.uriTemplate, null, null);
         if (/^https?/.test(uri.scheme)) {
           let iconURI;
           try {
             iconURI = Cc["@mozilla.org/browser/favicon-service;1"].
                       getService(Ci.nsIFaviconService).
-                      getFaviconForPage(IO.newURI(uri.prePath)).spec;
+                      getFaviconForPage(ios.newURI(uri.prePath, null, null)).
+                      spec;
           }
           catch (e) {
             iconURI = uri.prePath + "/favicon.ico";

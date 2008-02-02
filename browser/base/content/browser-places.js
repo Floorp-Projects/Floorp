@@ -422,7 +422,7 @@ var PlacesCommandHook = {
    *        The link text
    */
   bookmarkLink: function PCH_bookmarkLink(aParent, aURL, aTitle) {
-    var linkURI = IO.newURI(aURL)
+    var linkURI = makeURI(aURL);
     var itemId = PlacesUtils.getMostRecentBookmarkForURI(linkURI);
     if (itemId == -1) {
       var txn = PlacesUtils.ptm.createItem(linkURI, aParent, -1, aTitle);
