@@ -46,7 +46,9 @@ MODULE		= xpcom_tests
 XPIDL_MODULE	= proxytest
 REQUIRES	= xpcom
 
-CPPSRCS		= proxytests.cpp
+CPPSRCS		= proxytests.cpp \
+		proxy-create-threadsafety.cpp \
+		$(NULL)
 XPIDLSRCS	= nsITestProxy.idl
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX)) 
