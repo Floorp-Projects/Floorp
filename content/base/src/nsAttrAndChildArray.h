@@ -75,10 +75,8 @@ class nsMappedAttributeElement;
 class nsAttrAndChildArray
 {
 public:
-  nsAttrAndChildArray(nsDOMNodeAllocator* aAllocator);
+  nsAttrAndChildArray();
   ~nsAttrAndChildArray();
-  void SetAllocator(nsDOMNodeAllocator* aAllocator);
-  nsDOMNodeAllocator* Allocator() { return mAllocator; }
 
   PRUint32 ChildCount() const
   {
@@ -124,6 +122,8 @@ public:
                                 nsHTMLStyleSheet* aSheet);
   nsresult SetMappedAttrStyleSheet(nsHTMLStyleSheet* aSheet);
   void WalkMappedAttributeStyleRules(nsRuleWalker* aRuleWalker);
+
+  void Compact();
 
 private:
   nsAttrAndChildArray(const nsAttrAndChildArray& aOther); // Not to be implemented
@@ -186,8 +186,7 @@ private:
     void* mBuffer[1];
   };
 
-  Impl*               mImpl;
-  nsDOMNodeAllocator* mAllocator;
+  Impl* mImpl;
 };
 
 #endif

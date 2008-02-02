@@ -536,7 +536,6 @@ public:
   {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-  virtual nsDOMNodeAllocator* GetAllocator() { return nsnull; }
 
   // nsIRadioGroupContainer
   NS_IMETHOD WalkRadioGroup(const nsAString& aName,
@@ -659,7 +658,6 @@ public:
                                                const nsAString& aClasses,
                                                nsIDOMNodeList** aReturn);
 protected:
-  virtual nsINode::nsSlots* CreateSlots();
 
   /**
    * Check that aId is not empty and log a message to the console

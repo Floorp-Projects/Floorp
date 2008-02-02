@@ -119,28 +119,20 @@ GetIndexFromCache(const nsAttrAndChildArray* aArray)
 #define NS_IMPL_EXTRA_SIZE \
   ((sizeof(Impl) - sizeof(mImpl->mBuffer)) / sizeof(void*))
 
-nsAttrAndChildArray::nsAttrAndChildArray(nsDOMNodeAllocator* aAllocator)
-  : mImpl(nsnull), mAllocator(aAllocator)
+nsAttrAndChildArray::nsAttrAndChildArray()
+  : mImpl(nsnull)
 {
-  NS_IF_ADDREF(mAllocator);
 }
 
 nsAttrAndChildArray::~nsAttrAndChildArray()
 {
-  if (mImpl) {
-    Clear();
-    mAllocator->Free((mImpl->mBufferSize + NS_IMPL_EXTRA_SIZE) * sizeof(void*),
-                     mImpl);
+  if (!mImpl) {
+    return;
   }
 
-  NS_IF_RELEASE(mAllocator);
-}
+  Clear();
 
-void
-nsAttrAndChildArray::SetAllocator(nsDOMNodeAllocator* aAllocator)
-{
-  NS_ASSERTION(!mAllocator, "Allocator already set!");
-  NS_ADDREF(mAllocator = aAllocator);
+  PR_Free(mImpl);
 }
 
 nsIContent*
@@ -602,6 +594,39 @@ nsAttrAndChildArray::WalkMappedAttributeStyleRules(nsRuleWalker* aRuleWalker)
 }
 
 void
+nsAttrAndChildArray::Compact()
+{
+  if (!mImpl) {
+    return;
+  }
+
+  // First compress away empty attrslots
+  PRUint32 slotCount = AttrSlotCount();
+  PRUint32 attrCount = NonMappedAttrCount();
+  PRUint32 childCount = ChildCount();
+
+  if (attrCount < slotCount) {
+    memmove(mImpl->mBuffer + attrCount * ATTRSIZE,
+            mImpl->mBuffer + slotCount * ATTRSIZE,
+            childCount * sizeof(nsIContent*));
+    SetAttrSlotCount(attrCount);
+  }
+
+  // Then resize or free buffer
+  PRUint32 newSize = attrCount * ATTRSIZE + childCount;
+  if (!newSize && !mImpl->mMappedAttrs) {
+    PR_Free(mImpl);
+    mImpl = nsnull;
+  }
+  else if (newSize < mImpl->mBufferSize) {
+    mImpl = static_cast<Impl*>(PR_Realloc(mImpl, (newSize + NS_IMPL_EXTRA_SIZE) * sizeof(nsIContent*)));
+    NS_ASSERTION(mImpl, "failed to reallocate to smaller buffer");
+
+    mImpl->mBufferSize = newSize;
+  }
+}
+
+void
 nsAttrAndChildArray::Clear()
 {
   if (!mImpl) {
@@ -730,17 +755,16 @@ nsAttrAndChildArray::GrowBy(PRUint32 aGrowSize)
     size = PR_BIT(PR_CeilingLog2(minSize));
   }
 
-  Impl* newImpl = static_cast<Impl*>(mAllocator->Alloc(size * sizeof(void*)));
+  Impl* newImpl = static_cast<Impl*>
+                             (mImpl ? PR_Realloc(mImpl, size * sizeof(void*)) :
+              PR_Malloc(size * sizeof(void*)));
   NS_ENSURE_TRUE(newImpl, PR_FALSE);
+
   Impl* oldImpl = mImpl;
   mImpl = newImpl;
-  if (oldImpl) {
-    PRUint32 oldSize =
-      (oldImpl->mBufferSize + NS_IMPL_EXTRA_SIZE) * sizeof(void*);
-    memcpy(newImpl, oldImpl, oldSize);
-    mAllocator->Free(oldSize, oldImpl);
-  } else {
-    // Set initial counts if we didn't have a buffer before
+
+  // Set initial counts if we didn't have a buffer before
+  if (!oldImpl) {
     mImpl->mMappedAttrs = nsnull;
     SetAttrSlotAndChildCount(0, 0);
   }

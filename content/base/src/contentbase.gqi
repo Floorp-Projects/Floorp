@@ -18,7 +18,7 @@
 %import-idl "nsIDOMXPathEvaluator.idl"
 
 %pseudo-iid nsIContent fba9aa39-016e-4d5d-ab62-22a1b84a3c7b
-%pseudo-iid nsINode cf677826-d7f1-4ec5-bf3a-d41811ac5846
+%pseudo-iid nsINode d1c2e967-854a-436b-bfa5-f6a49a974674
 %pseudo-iid nsPIDOMEventTarget 44a6597b-9fc3-4a8d-b7a4-d9009abf9d15
 %pseudo-iid nsIDocument 626d86d2-615f-4a12-94d8-e3db3a298372
 %pseudo-iid nsIScriptObjectPrincipal 3eedba38-8d22-41e1-817a-0e43e165b664
