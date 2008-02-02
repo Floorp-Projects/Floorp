@@ -188,7 +188,6 @@ void
 nsNodeUtils::LastRelease(nsINode* aNode)
 {
   nsINode::nsSlots* slots = aNode->GetExistingSlots();
-  nsRefPtr<nsDOMNodeAllocator> allocator = aNode->GetAllocator();
   if (slots) {
     if (!slots->mMutationObservers.IsEmpty()) {
       NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(slots->mMutationObservers,
@@ -197,14 +196,7 @@ nsNodeUtils::LastRelease(nsINode* aNode)
     }
 
     PtrBits flags = slots->mFlags | NODE_DOESNT_HAVE_SLOTS;
-    delete slots; // Calls destructor and sets size to *slots.
-    NS_ASSERTION(allocator || aNode->IsNodeOfType(nsINode::eDOCUMENT),
-                 "Should have allocator or document!");
-    nsDOMNodeAllocator* slotsAllocator = allocator ?
-      allocator.get() : aNode->mNodeInfo->NodeInfoManager()->NodeAllocator();
-    size_t* sz = reinterpret_cast<size_t*>(slots);
-    slotsAllocator->Free(*sz, static_cast<void*>(slots));
-    NS_RELEASE(slotsAllocator);
+    delete slots;
     aNode->mFlagsOrSlots = flags;
   }
 
@@ -243,16 +235,7 @@ nsNodeUtils::LastRelease(nsINode* aNode)
     aNode->UnsetFlags(NODE_HAS_LISTENERMANAGER);
   }
 
-  if (aNode->IsNodeOfType(nsINode::eDOCUMENT)) {
-    delete aNode;
-  } else {
-    NS_ASSERTION(allocator, "Should have allocator here!");
-    delete aNode; // Calls destructor and sets size to *aNode.
-    size_t* sz = reinterpret_cast<size_t*>(aNode);
-    allocator->Free(*sz, static_cast<void*>(aNode));
-    nsDOMNodeAllocator* tmpAlloc = allocator;
-    NS_RELEASE(tmpAlloc);
-  }
+  delete aNode;
 }
 
 static nsresult

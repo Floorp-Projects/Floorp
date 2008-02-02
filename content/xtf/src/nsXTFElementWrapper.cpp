@@ -1003,8 +1003,7 @@ NS_NewXTFElementWrapper(nsIXTFElement* aXTFElement,
   *aResult = nsnull;
    NS_ENSURE_ARG(aXTFElement);
 
-  nsXTFElementWrapper* result =
-    new (aNodeInfo) nsXTFElementWrapper(aNodeInfo, aXTFElement);
+  nsXTFElementWrapper* result = new nsXTFElementWrapper(aNodeInfo, aXTFElement);
   if (!result) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

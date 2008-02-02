@@ -171,43 +171,7 @@ nsINode::nsSlots::~nsSlots()
   }
 }
 
-void*
-nsINode::nsSlots::operator new(size_t aSize, nsDOMNodeAllocator* aAllocator)
-{
-  void* result = aAllocator->Alloc(aSize);
-  if (result) {
-    NS_ADDREF(aAllocator);
-  }
-  return result;
-}
-
-void
-nsINode::nsSlots::operator delete(void* aPtr, size_t aSize)
-{
-  size_t* szPtr = static_cast<size_t*>(aPtr);
-  *szPtr = aSize;
-}
-
 //----------------------------------------------------------------------
-
-void*
-nsINode::operator new(size_t aSize, nsINodeInfo* aNodeInfo)
-{
-  nsDOMNodeAllocator* allocator =
-    aNodeInfo->NodeInfoManager()->NodeAllocator();
-  void* result = allocator->Alloc(aSize);
-  if (result) {
-    NS_ADDREF(allocator);
-  }
-  return result;
-}
-
-void
-nsINode::operator delete(void* aPtr, size_t aSize)
-{
-  size_t* szPtr = static_cast<size_t*>(aPtr);
-  *szPtr = aSize;
-}
 
 nsINode::~nsINode()
 {
@@ -312,7 +276,7 @@ nsGenericElement::GetSystemEventGroup(nsIDOMEventGroup** aGroup)
 nsINode::nsSlots*
 nsINode::CreateSlots()
 {
-  return new (GetAllocator()) nsSlots(mFlagsOrSlots);
+  return new nsSlots(mFlagsOrSlots);
 }
 
 void
@@ -1158,8 +1122,7 @@ nsGenericElement::nsDOMSlots::~nsDOMSlots()
 }
 
 nsGenericElement::nsGenericElement(nsINodeInfo *aNodeInfo)
-  : nsIContent(aNodeInfo),
-    mAttrsAndChildren(aNodeInfo->NodeInfoManager()->NodeAllocator())
+  : nsIContent(aNodeInfo)
 {
   // Set the default scriptID to JS - but skip SetScriptTypeID as it
   // does extra work we know isn't necessary here...
@@ -4218,7 +4181,7 @@ nsGenericElement::IndexOf(nsINode* aPossibleChild) const
 nsINode::nsSlots*
 nsGenericElement::CreateSlots()
 {
-  return new (GetAllocator()) nsDOMSlots(mFlagsOrSlots);
+  return new nsDOMSlots(mFlagsOrSlots);
 }
 
 PRBool

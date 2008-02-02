@@ -420,8 +420,7 @@ nsHTMLScriptElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
   *aResult = nsnull;
 
-  nsHTMLScriptElement* it =
-    new (aNodeInfo) nsHTMLScriptElement(aNodeInfo, PR_FALSE);
+  nsHTMLScriptElement* it = new nsHTMLScriptElement(aNodeInfo, PR_FALSE);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -461,7 +461,7 @@ ShouldBeInElements(nsIFormControl* aFormControl)
 nsGenericHTMLElement*
 NS_NewHTMLFormElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
 {
-  nsHTMLFormElement* it = new (aNodeInfo) nsHTMLFormElement(aNodeInfo);
+  nsHTMLFormElement* it = new nsHTMLFormElement(aNodeInfo);
   if (!it) {
     return nsnull;
   }

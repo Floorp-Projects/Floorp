@@ -97,9 +97,7 @@ nsSVGEnumMapping nsSVGElement::sSVGUnitTypesMap[] = {
 };
 
 nsSVGElement::nsSVGElement(nsINodeInfo *aNodeInfo)
-  : nsSVGElementBase(aNodeInfo),
-    mMappedAttributes(aNodeInfo->NodeInfoManager()->NodeAllocator()),
-    mSuppressNotification(PR_FALSE)
+  : nsSVGElementBase(aNodeInfo), mSuppressNotification(PR_FALSE)
 {
 }
 

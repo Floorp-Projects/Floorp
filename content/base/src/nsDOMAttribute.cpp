@@ -64,9 +64,7 @@ PRBool nsDOMAttribute::sInitialized;
 nsDOMAttribute::nsDOMAttribute(nsDOMAttributeMap *aAttrMap,
                                nsINodeInfo       *aNodeInfo,
                                const nsAString   &aValue)
-  : nsIAttribute(aAttrMap, aNodeInfo),
-    mAllocator(aNodeInfo->NodeInfoManager()->NodeAllocator()),
-    mValue(aValue)
+  : nsIAttribute(aAttrMap, aNodeInfo), mValue(aValue)
 {
   NS_ABORT_IF_FALSE(mNodeInfo, "We must get a nodeinfo here!");
 
@@ -374,7 +372,7 @@ nsDOMAttribute::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   nsAutoString value;
   const_cast<nsDOMAttribute*>(this)->GetValue(value);
 
-  *aResult = new (aNodeInfo) nsDOMAttribute(nsnull, aNodeInfo, value);
+  *aResult = new nsDOMAttribute(nsnull, aNodeInfo, value);
   if (!*aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
