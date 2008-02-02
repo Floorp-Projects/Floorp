@@ -1507,14 +1507,22 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
     accessibleEvent->GetEventType(&eventType);
     if (eventType == nsIAccessibleEvent::EVENT_DOM_CREATE || 
         eventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW) {
+      nsCOMPtr<nsIDOMNode> domNode;
+      accessibleEvent->GetDOMNode(getter_AddRefs(domNode));
       nsCOMPtr<nsIAccessible> containerAccessible;
-      if (accessible && eventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW) {
-        // For asynch show, delayed invalidatation of parent's children
-        accessible->GetParent(getter_AddRefs(containerAccessible));
-        nsCOMPtr<nsPIAccessible> privateContainerAccessible =
-          do_QueryInterface(containerAccessible);
-        if (privateContainerAccessible)
-          privateContainerAccessible->InvalidateChildren();
+      if (eventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW) {
+        if (accessible) {
+          // For asynch show, delayed invalidatation of parent's children
+          accessible->GetParent(getter_AddRefs(containerAccessible));
+          nsCOMPtr<nsPIAccessible> privateContainerAccessible =
+            do_QueryInterface(containerAccessible);
+          if (privateContainerAccessible)
+            privateContainerAccessible->InvalidateChildren();
+        }
+        // Some show events in the subtree may have been removed to 
+        // avoid firing redundant events. But, we still need to make sure any
+        // accessibles parenting those shown nodes lose their child references.
+        InvalidateChildrenInSubtree(domNode);
       }
 
       // Also fire text changes if the node being created could affect the text in an nsIAccessibleText parent.
@@ -1522,8 +1530,6 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
       // At this point we now have the frame and accessible for this node if there is one. That is why we
       // wait to fire this here, instead of in InvalidateCacheSubtree(), where we wouldn't be able to calculate
       // the offset, length and text for the text change.
-      nsCOMPtr<nsIDOMNode> domNode;
-      accessibleEvent->GetDOMNode(getter_AddRefs(domNode));
       PRBool isFromUserInput;
       accessibleEvent->GetIsFromUserInput(&isFromUserInput);
       if (domNode && domNode != mDOMNode) {
@@ -1619,6 +1625,24 @@ void nsDocAccessible::FlushEventsCallback(nsITimer *aTimer, void *aClosure)
     // A lot of crashes were happening here, so now we're reffing the doc
     // now until the events are flushed
     accessibleDoc->FlushPendingEvents();
+  }
+}
+
+void nsDocAccessible::InvalidateChildrenInSubtree(nsIDOMNode *aStartNode)
+{
+  nsCOMPtr<nsIAccessNode> accessNode;
+  GetCachedAccessNode(aStartNode, getter_AddRefs(accessNode));
+  nsCOMPtr<nsPIAccessible> accessible(do_QueryInterface(accessNode));
+  if (accessible)
+    accessible->InvalidateChildren();
+
+  // Invalidate accessible children in the DOM subtree 
+  nsCOMPtr<nsINode> node = do_QueryInterface(aStartNode);
+  PRInt32 index, numChildren = node->GetChildCount();
+  for (index = 0; index < numChildren; index ++) {
+    nsCOMPtr<nsIDOMNode> childNode = do_QueryInterface(node->GetChildAt(index));
+    if (childNode)
+      InvalidateChildrenInSubtree(childNode);
   }
 }
 
