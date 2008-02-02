@@ -681,24 +681,29 @@ nsChromeRegistry::Canonify(nsIURL* aChromeURL)
   else {
     // prevent directory traversals ("..")
     // path is already unescaped once, but uris can get unescaped twice
-    const char* curChar = path.BeginReading();
+    const char* pos = path.BeginReading();
     const char* end = path.EndReading();
-    while (curChar < end) {
-      switch (*curChar) {
+    while (pos < end) {
+      switch (*pos) {
         case ':':
           return NS_ERROR_DOM_BAD_URI;
         case '.':
-          if (*(curChar+1) == '.')
+          if (pos[1] == '.')
             return NS_ERROR_DOM_BAD_URI;
+          break;
         case '%':
           // chrome: URIs with double-escapes are trying to trick us.
           // watch for %2e, and %25 in case someone triple unescapes
-          if (*(curChar+1) == '2' &&
-               ( *(curChar+2) == 'e' || *(curChar+2) == 'E' || 
-                 *(curChar+2) == '5' ))
+          if (pos[1] == '2' &&
+               ( pos[2] == 'e' || pos[2] == 'E' || 
+                 pos[2] == '5' ))
             return NS_ERROR_DOM_BAD_URI;
+          break;
+        case '?':
+          pos = end;
+          continue;
       }
-      ++curChar;
+      ++pos;
     }
   }
 
