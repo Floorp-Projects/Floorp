@@ -11,7 +11,7 @@
    - for the specific language governing rights and limitations under the
    - License.
    -
-   - The Original Code is Mozilla QA Extension Code.
+   - The Original Code is Mozilla QA Companion Code.
    -
    - The Initial Developer of the Original Code is the Mozilla Corporation.
    - Portions created by the Initial Developer are Copyright (C) 2007
@@ -20,6 +20,7 @@
    - Contributor(s):
    -  Zach Lipton <zach@zachlipton.com>
    -  Ben Hsieh <bhsieh@mozilla.com>
+   -  Jay Patel <jay@mozilla.org>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,17 +37,17 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY qa.litmus.title "Litmus">
-<!ENTITY qa.litmus.selecttests "Select Tests">
+<!ENTITY qa.litmus.selecttests "Select/Change Tests">
 <!ENTITY qa.litmus.testlist.initiallabel "No tests loaded, select some tests!">
 <!ENTITY qa.litmus.testlist.initialdescription "No testcase">
 <!ENTITY qa.statusbar.label "QA">
 <!ENTITY qa.mainwindow.prefs  "Preferences">
-<!ENTITY qa.mainwindow.title  "Mozilla QA">
+<!ENTITY qa.mainwindow.title  "Mozilla QA Companion">
 <!ENTITY qa.testcase.steps  "Steps to Perform">
 <!ENTITY qa.testcase.expected  "Expected Results">
-<!ENTITY qa.testcase.result.pass  "Test Passed">
-<!ENTITY qa.testcase.result.fail  "Test Failed">
-<!ENTITY qa.testcase.result.unclearbroken  "Test is unclear or broken">
+<!ENTITY qa.testcase.result.pass  "Passed">
+<!ENTITY qa.testcase.result.fail  "Failed">
+<!ENTITY qa.testcase.result.unclearbroken  "Unclear or Broken">
 <!ENTITY qa.testcase.comment  "Comment (optional):">
 
 <!ENTITY qa.selecttests.load  "Loading...">
@@ -57,17 +58,17 @@
 <!ENTITY qa.preferences.litmus.username "Email:">
 <!ENTITY qa.preferences.litmus.password "Password:">
 <!ENTITY qa.preferences.litmus.OK "Save">
-<!ENTITY qa.preferences.litmus.createAccount "Create New Account">
+<!ENTITY qa.preferences.litmus.createAccount "Create/Update Account">
 
 <!ENTITY qa.preferences.notification.title "Notification Settings">
 <!ENTITY qa.preferences.notification.disableall "Disable all notifications">
 <!ENTITY qa.preferences.notification.header "Notify me when:">
-<!ENTITY qa.preferences.notification.testday "Mozilla QA is holding a test day event (biweekly)">
-<!ENTITY qa.preferences.notification.bugday "Mozilla QA is holding a bug triaging event (weekly)">
-<!ENTITY qa.preferences.notification.prerelease "My help is needed with pre-release testing">
-<!ENTITY qa.preferences.notification.qmo "There is new news from quality.mozilla.org">
-<!ENTITY qa.preferences.notification.newbuild "New builds of Firefox are recomended for testing">
-<!ENTITY qa.preferences.notification.other "There is a special QA announcement">
+<!ENTITY qa.preferences.notification.testday "Mozilla QA is holding a Test Day event">
+<!ENTITY qa.preferences.notification.bugday "Mozilla QA is holding a Bug Day event">
+<!ENTITY qa.preferences.notification.prerelease "I can help test pre-releases (alpha, beta, etc.)">
+<!ENTITY qa.preferences.notification.qmo "There is new news from QMO (quality.mozilla.org)">
+<!ENTITY qa.preferences.notification.newbuild "New releases/builds of Firefox are recommended">
+<!ENTITY qa.preferences.notification.other "There is a special Mozilla QA announcement">
 
 <!ENTITY qa.qmo.title "QMO">
 <!ENTITY qa.qmo.visit "Visit QMO">
@@ -77,10 +78,10 @@
 <!ENTITY qa.qmo.thelatest "The latest from QMO">
 
 
-<!ENTITY qa.setup.title	"Mozilla QA Extension: Setup">
-<!ENTITY qa.setup.welcomeheader	"Welcome to the Mozilla QA Extension!">
+<!ENTITY qa.setup.title	"Mozilla QA Companion: Setup">
+<!ENTITY qa.setup.welcomeheader	"Welcome to the Mozilla QA Companion!">
 <!ENTITY qa.setup.welcometext	"
-<html:h4>Welcome to the Mozilla Quality Assurance community!</html:h4>
+<html:h4>Welcome to the Mozilla QA community!</html:h4>
 Mozilla Quality Assurance (QA) is a network of countless volunteers
 from the Internet community, along with a group of Mozilla employees, who share
 the common mission of <html:i>taming the lizard</html:i> through testing and
@@ -98,15 +99,18 @@ and we use them to ensure that all features work properly across a wide range
 of platforms, operating systems, and configurations.
 
 <html:h4>Why Should I Get Involved?</html:h4>
-xxx
+If you are a fan of Firefox and want to help us make it even better, the 
+easiest way to get involved is to help us test!  The Mozilla QA team and
+community play an important role in making sure millions of people have the
+best Web experience possible... so what are you waiting for?  Join the Mozilla
+QA community now!
 
-<html:h5>For more information on Mozilla Quality Assurance, please
-see
+<html:h5>For more information, please visit the home of Mozilla QA at
 <html:a href='http://quality.mozilla.org' target='_blank'>
-Quality.Mozilla.Org (QMO)</html:a>.</html:h5>
+quality.mozilla.org (QMO)</html:a>.</html:h5>
 ">
 
-<!ENTITY qa.setup.aboutheader	"About the Mozilla QA Extension">
+<!ENTITY qa.setup.aboutheader	"About the Mozilla QA Companion">
 <!ENTITY qa.setup.abouttext	"
 <html:h4>How do I get started?</html:h4>
 Getting started with Mozilla QA is easy! This setup wizard will ask you a
@@ -116,11 +120,11 @@ results to Litmus. You'll also have a chance to learn about QA Community
 events and other ways to get involved.
 
 <html:h4>A note on privacy</html:h4>
-When you use the QA Extension, you are submitting test results to an
+When you use the Mozilla QA Companion, you are submitting test results to an
 open system. Other members of the community will access the information you
 submit in order to improve the quality of Mozilla products. You
 <html:b>should not</html:b> submit any private or confidential information
-using the Mozilla QA Extension. If you provide your real name or an IRC nickname
+using the Mozilla QA Companion. If you provide your real name or an IRC nickname
 to display instead, we will hide your email address from
 public view to help prevent email harvesting bots from spamming you.
 For more information, please see our
@@ -131,7 +135,7 @@ privacy policy</html:a>.
 ">
 
 <!ENTITY qa.setup.accountheader	"Creating an account">
-<!ENTITY qa.setup.accounttext	"To use the QA Extension, you will need an account
+<!ENTITY qa.setup.accounttext	"To use the Mozilla QA Companion, you will need an account
 on Litmus, our test management system.">
 <!ENTITY qa.setup.haveaccount	"Do you already have a Litmus account?">
 <!ENTITY qa.setup.accountno	"I do not have a Litmus account">
@@ -145,17 +149,16 @@ account is created, press the 'Continue' button to complete setup.">
 <html:h4>Account Created</html:h4>
 <html:b>Congratulations!</html:b> Your Litmus
 account has been created. You'll be able to use your new account both here in
-the QA Extension, and on the Litmus website.
+the Mozilla QA Companion, and on the <html:a href='http://litmus.mozilla.org'>Litmus</html:a> website.
 
 <html:h4>That's it!</html:h4>
 <html:b>You're ready to start testing.</html:b> If you have any questions along
 the way, you may post to the
-<html:a href='http://weblogs.mozillazine.org/qa/' target='_blank'>Mozilla QA Blog
-</html:a>, or, if you prefer, you can join us on
+<html:a href='http://quality.mozilla.org/forums' target='_blank'>QMO Forums
+</html:a> or join us on
 <html:a href='http://irc.mozilla.org' target='_blank'>IRC</html:a> (Internet Relay
 Chat) and become more involved in our testing community.
-We are in #qa on irc.mozilla.org. If you have an irc client installed already,
-you should be able to join by clicking this link: <html:a href='irc://irc.mozilla.org/qa'>
+We are in #qa on irc.mozilla.org.  You can click the Join IRC Now button in the Chat tab or if you have an IRC client installed already, you can join by clicking this link: <html:a href='irc://irc.mozilla.org/qa'>
 join #qa</html:a>.
 ">
 

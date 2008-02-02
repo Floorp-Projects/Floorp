@@ -53,8 +53,8 @@
 <window
   id="qa-mainwindow"
   title="&qa.mainwindow.title;"
-  width="400"
-  height="720"
+  width="425px"
+  height="750px"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml"
   onload="qaMain.onToolOpen();">
@@ -84,26 +84,24 @@
     }, false);
 </script>
 
-<tabbox id="qa_tabbox">
+<tabbox id="qa_tabbox" flex="1" pack="start" >
   <tabs id="qa_tabrow">
     <tab id="qa-tabbar-qmo" class="tabbrowser-tab" />
     <tab label="&qa.litmus.title;" class="tabbrowser-tab" />
     <tab label="&qa.bugzilla.title;" id="qa-tabbar-bugzilla" class="tabbrowser-tab" />
     <tab label="&qa.chat.title;" class="tabbrowser-tab" />
-    <spacer id="qa-tabbar-spacer" />
+    <spacer id="qa-tabbar-spacer"/>
     <tab label="&qa.preferences.title;" id="qa-tabbar-prefs" class="tabbrowser-tab" />
     <tab label="&qa.help.title;" class="tabbrowser-tab" />
   </tabs>
-  <tabpanels id="qa_tabpanels">
-    <tabpanel id="qa-tab-qmo"></tabpanel>
-    <tabpanel id="qa-tab-litmus"></tabpanel>
-    <tabpanel id="qa-tab-bugzilla"></tabpanel>
-    <tabpanel id="qa-tab-chat"></tabpanel>
-
-    <tabpanel id="qa-tab-SPACER"></tabpanel>
-
-    <tabpanel id="qa-tab-settings"></tabpanel>
-    <tabpanel id="qa-tab-help"></tabpanel>
+  <tabpanels id="qa_tabpanels" flex="1">
+    <tabpanel id="qa-tab-qmo" flex="1"></tabpanel>
+    <tabpanel id="qa-tab-litmus" flex="1"></tabpanel>
+    <tabpanel id="qa-tab-bugzilla" flex="1"></tabpanel>
+    <tabpanel id="qa-tab-chat" flex="1"></tabpanel>
+    <tabpanel id="qa-tab-SPACER" flex="1"></tabpanel>
+    <tabpanel id="qa-tab-settings" flex="1"></tabpanel>
+    <tabpanel id="qa-tab-help" flex="1"></tabpanel>
   </tabpanels>
 </tabbox>
 </window>
