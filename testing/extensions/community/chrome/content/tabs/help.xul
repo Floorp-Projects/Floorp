@@ -45,12 +45,13 @@
 
 <script type="application/x-javascript" src="chrome://qa/content/tabs/qa.js" />
 <tabpanel id="qa-tab-help">
-<vbox>
+<vbox flex="1">
   <groupbox>
-    <div xmlns="http://www.w3.org/1999/xhtml" id="qa-bz-bugzilla">
-      Help coming soon.
+    <caption label="Mozilla QA Help" />
+    <div xmlns="http://www.w3.org/1999/xhtml" id="qa-help-info" flex="1">
     </div>
   </groupbox>
+  
 </vbox>
 </tabpanel>
 

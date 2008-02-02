@@ -40,7 +40,7 @@ var qaMain = {
 
   openQATool : function() {
     window.open("chrome://qa/content/qa.xul", "_blank",
-                "chrome,all,dialog=no,resizable=no");
+                "chrome,all,dialog=no,resizable=yes");
   },
   onToolOpen : function() {
     if (qaPref.getPref(qaPref.prefBase+'.isFirstTime', 'bool') == true) {

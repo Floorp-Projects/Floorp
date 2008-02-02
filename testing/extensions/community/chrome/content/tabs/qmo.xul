@@ -49,7 +49,7 @@
 </script>
 
 <tabpanel id="qa-tab-qmo">
-<vbox pack="start">
+<vbox flex="1">
   <hbox>
     <html:a href="http://quality.mozilla.org" target="blank">
       <image src='chrome://qa/skin/qmo-badge.png'
@@ -57,36 +57,35 @@
                margin-top: 3px; margin-left: 3px;' />
     </html:a>
   </hbox>
-
-
-  <hbox class="box-mheight">
-  <groupbox  class="box-mheight">
+  
+  <hbox>
+  <groupbox>
     <caption label="&qa.qmo.help;" />
-    <div class="box-mheight" xmlns="http://www.w3.org/1999/xhtml"
-         id="qa-qmo-help">
+    <div xmlns="http://www.w3.org/1999/xhtml"
+         id="qa-qmo-help" crop="end">
     </div>
   </groupbox>
-  <groupbox class="box-mheight">
+  <groupbox flex="1">
     <caption label="&qa.qmo.events;" />
-    <div class="box-mheight" xmlns="http://www.w3.org/1999/xhtml"
-         id="qa-qmo-events">
+    <div xmlns="http://www.w3.org/1999/xhtml"
+         id="qa-qmo-events" flex="1" crop="end">
       <ul>
       </ul>
     </div>
   </groupbox>
   </hbox>
+  
   <groupbox>
     <caption label="&qa.qmo.forumposts;" />
-    <div xmlns="http://www.w3.org/1999/xhtml" id="qa-qmo-forumposts">
-      <ul>
-      </ul>
+    <div xmlns="http://www.w3.org/1999/xhtml" id="qa-qmo-forumposts" crop="end" flex="1">
+        <ul>
+        </ul>
     </div>
   </groupbox>
 
-  <groupbox id="qa-qmo-latestbox">
+  <groupbox id="qa-qmo-latestbox" flex="1">
     <caption label="&qa.qmo.thelatest;" />
-    <div xmlns="http://www.w3.org/1999/xhtml" id="qa-qmo-latest">
-
+    <div xmlns="http://www.w3.org/1999/xhtml" id="qa-qmo-latest" crop="end" flex="1" overflow="auto">
     </div>
   </groupbox>
 

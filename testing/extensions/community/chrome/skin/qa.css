@@ -101,7 +101,7 @@ html|li {
 
 #qa_tabbox #qa-tabbar-qmo {
   list-style-image: url(qmo-16px.png);
-  text-align: center;
+  text-align: right;
   width: 24px;
 }
 
@@ -181,18 +181,13 @@ tab:focus > .tab-middle {
 
 #qa-qmo-help,
 #qa-qmo-events,
+#qa-qmo-forumposts,
 .box-mheight {
-  max-height: 130px;
-  height: 130px;
 }
-#qa-qmo-forumposts {
-  width: 290px;
-}
-#qa-qmo-latestbox {
-  height: 200px;
-  width: 290px;
-  overflow: auto;
-  margin-right: 12px;
+
+#qa-qmo-latestbox,
+#qa-qmo-latest {
+  
 }
 
 

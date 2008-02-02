@@ -96,8 +96,8 @@
     },
 
     handleDialog : function() {
-        if ($("qa-testrun-label").value != "") {
-            litmus.lastTestRunSummary = $("qa-testrun-label").value;
+        if ($("qa-testrun-label").label != "") {
+            litmus.lastTestRunSummary = $("qa-testrun-label").label;
             litmus.lastTestGroupSummary = $("qa-testgroup-label").value;
             lastTestcaseIndex = $("testlist").selectedIndex;
         }
@@ -113,7 +113,7 @@
         if (litmus.lastTestRunSummary == "") return;
 
         // this code is v. similar to readStateFromPref, but without an async call.
-        $("qa-testrun-label").value = litmus.lastTestRunSummary;
+        $("qa-testrun-label").label = litmus.lastTestRunSummary;
         $("qa-testgroup-label").value = litmus.lastTestGroupSummary;
         litmus.lastSubgroupObject = litmus.preDialogueSubgroupObject;
         litmus.lastTestcaseObject = litmus.preDialogTestcaseObject;
@@ -173,7 +173,7 @@
         qaPref.setPref(qaPref.prefBase + ".currentTestcase.testcaseIndex", index, "int");
     },
     readStateFromPref : function() {
-        $("qa-testrun-label").value = qaPref.getPref(qaPref.prefBase + ".currentTestcase.testrunSummary", "char");
+        $("qa-testrun-label").label = qaPref.getPref(qaPref.prefBase + ".currentTestcase.testrunSummary", "char");
         $("qa-testgroup-label").value = qaPref.getPref(qaPref.prefBase + ".currentTestcase.testgroupSummary", "char");
         litmus.currentSubgroupID = qaPref.getPref(qaPref.prefBase + ".currentTestcase.subgroupId", "int");
         litmus.disableAll();
@@ -222,7 +222,7 @@
         litmus.disableAll();
         litmus.getTestcase($("testlist").selectedItem.value, function(testcase) {
           litmus.populateTestcase(testcase);
-          $('qa-testcase-progress').value =
+          $('qa-testcase-progress').label =
             qaMain.bundle.getFormattedString('qa.extension.litmus.progress',
               [$("testlist").selectedIndex+1, $("testlist").getRowCount()]);
             litmus.undisableAll();
@@ -238,29 +238,33 @@
         };
 
         for (var i = 0; i < testcases.length; i++) {
-            var row = document.createElement("listitem");
+            var row = document.createElement("richlistitem");
             row.value = testcases[i].testcase_id;
+                      
             var checkbox = document.createElement("listcell");
             checkbox.setAttribute("label", "");
             checkbox.setAttribute("type", "checkbox");
             checkbox.setAttribute("disabled", "true");
+            
             var name = document.createElement("listcell");
             name.setAttribute("label", (i+1) + " -- " + testcases[i].summary);
             name.setAttribute("crop", "end");
-            name.setAttribute("maxwidth", "175");
+            name.setAttribute("flex", "1");
+            
             row.appendChild(checkbox);
             row.appendChild(name);
             menu.appendChild(row);
-        }
+        }        
+
     },
     populateTestcase : function(testcase) {
         litmus.lastTestcaseObject = testcase;
         if (testcase == undefined) {
                 return;
             }
-        document.getElementById('qa-testcase-id').value =
-            qaMain.bundle.getString("qa.extension.testcase.head")+testcase.testcase_id;
-    document.getElementById('qa-testcase-summary').value = testcase.summary;
+        document.getElementById('qa-testcase-id').value = "(" +
+            qaMain.bundle.getString("qa.extension.testcase.head")+testcase.testcase_id + ")";
+        document.getElementById('qa-testcase-summary').value = testcase.summary;
 
         qaTools.writeSafeHTML('qa-testcase-steps', testcase.steps_formatted);
         qaTools.writeSafeHTML('qa-testcase-expected', testcase.expected_results_formatted);
