@@ -108,7 +108,6 @@ public:
                                             const nsIID& aIID);
   virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  virtual nsDOMNodeAllocator* GetAllocator() { return mAllocator; }
 
   static void Initialize();
   static void Shutdown();
@@ -121,7 +120,6 @@ protected:
 private:
   nsresult EnsureChildState(PRBool aSetText, PRBool &aHasChild) const;
 
-  nsDOMNodeAllocator* mAllocator;
   nsString mValue;
   // XXX For now, there's only a single child - a text
   // element representing the value
