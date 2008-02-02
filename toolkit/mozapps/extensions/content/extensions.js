@@ -1493,8 +1493,9 @@ function onAddonSelect(aEvent)
         previewImageDeck.selectedIndex = 3;
       }
       else {
-        if (isSafeURI(gExtensionsView.selectedItem.getAttribute("availableUpdateInfo")))
-          UpdateInfoLoader.loadInfo(uri.spec);
+        var uri = gExtensionsView.selectedItem.getAttribute("availableUpdateInfo");
+        if (isSafeURI(uri))
+          UpdateInfoLoader.loadInfo(uri);
         else
           previewImageDeck.selectedIndex = 4;
       }
