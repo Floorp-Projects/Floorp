@@ -594,8 +594,8 @@
 
   <binding id="status-footer-recommended">
     <content align="end">
-      <xul:label class="text-link" xbl:inherits="searchURL=link" value="&recommendedResults.label;"
-                 onclick="openURL(this.getAttribute('homepageURL'));"/>
+      <xul:label class="text-link" xbl:inherits="recommendedURL=link" value="&recommendedResults.label;"
+                 onclick="openURL(this.getAttribute('recommendedURL'));"/>
     </content>
   </binding>
 
