@@ -649,7 +649,9 @@ var PlacesOrganizer = {
     var placeSpec = PlacesUtils.history.queriesToQueryString(queries,
                                                              queries.length,
                                                              options);
-    var placeURI = IO.newURI(placeSpec);
+    var placeURI = Cc["@mozilla.org/network/io-service;1"].
+                   getService(Ci.nsIIOService).
+                   newURI(placeSpec, null, null);
 
     // Prompt the user for a name for the query.
     // XXX - using prompt service for now; will need to make
@@ -1230,14 +1232,16 @@ var PlacesQueryBuilder = {
     else {
       query.uriIsPrefix = (type == "startswith");
       var spec = document.getElementById(prefix + "Textbox").value;
+      var ios = Cc["@mozilla.org/network/io-service;1"].
+                getService(Ci.nsIIOService);
       try {
-        query.uri = IO.newURI(spec);
+        query.uri = ios.newURI(spec, null, null);
       }
       catch (e) {
         // Invalid input can cause newURI to barf, that's OK, tack "http://"
         // onto the front and try again to see if the user omitted it
         try {
-          query.uri = IO.newURI("http://" + spec);
+          query.uri = ios.newURI("http://" + spec, null, null);
         }
         catch (e) {
           // OK, they have entered something which can never match. This should
