@@ -554,6 +554,7 @@ res/fonts/fontNameMap.properties
 components/nsDictionary.js
 components/nsXmlRpcClient.js
 components/nsInterfaceInfoToIDL.js
+components/nsScriptableIO.js
 chrome/chromelist.txt
 #ifdef XP_MACOSX
 LICENSE
