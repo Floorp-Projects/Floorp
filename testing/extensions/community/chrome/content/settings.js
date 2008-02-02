@@ -60,7 +60,7 @@ var qaPrefsWindow = {
         prefCounter++;
       }
     }
-  },
+  }, 
   savePrefsWindow : function() {
     // save notification settings
     var notify = $('qa-prefs-notify').childNodes;
@@ -216,11 +216,10 @@ var qaSetup = {
     litmus.validateLogin(uname, passwd, callback);
     return false; // not ready to advance yet
   },
-
+    
   loadSysconfig : function() {
     $('qa-setup-sysconfig-loading').value =
       $("bundle_qa").getString("qa.extension.sysconfig.loadingMsg");
-
     var guessInfo = function() {
       var sysconfig;
       try {

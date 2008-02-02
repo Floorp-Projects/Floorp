@@ -55,8 +55,7 @@ var qmo = {
         var item = items.queryElementAt(i, Ci.nsIFeedEntry);
         if (item != null) {
           qmo.populateLinkBox(postBox,
-            [{text : item.title.plainText(), url : item.link.resolve("")}],
-            64);
+            [{text : item.title.plainText(), url : item.link.resolve("")}]);
         }
       }
     };
@@ -76,8 +75,7 @@ var qmo = {
         var item = items.queryElementAt(i, Ci.nsIFeedEntry);
         if (item != null) {
           qmo.populateLinkBox(eventBox,
-            [{text : item.title.plainText(), url : item.link.resolve("")}],
-            37);
+            [{text : item.title.plainText(), url : item.link.resolve("")}]);
         }
       }
     };
