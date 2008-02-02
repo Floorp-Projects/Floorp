@@ -1035,13 +1035,13 @@ FeedWriter.prototype = {
         var textfeedinfo1 = null;
         switch (this._getFeedType()) {
           case Ci.nsIFeed.TYPE_VIDEO:
-            textfeedinfo1 = "feedSubscriptionFeed1";
+            textfeedinfo1 = "feedSubscriptionVideoPodcast1";
             break;
           case Ci.nsIFeed.TYPE_AUDIO:
             textfeedinfo1 = "feedSubscriptionAudioPodcast1";
             break;
           default:
-            textfeedinfo1 = "feedSubscriptionVideoPodcast1";
+            textfeedinfo1 = "feedSubscriptionFeed1";
         }
         var feedinfo1 = this._document.getElementById("feedSubscriptionInfo1")
         feedinfo1.setAttribute("value", this._getString(textfeedinfo1));
@@ -1049,13 +1049,13 @@ FeedWriter.prototype = {
         var textfeedinfo2 = null;
         switch (this._getFeedType()) {
           case Ci.nsIFeed.TYPE_VIDEO:
-            textfeedinfo2 = "feedSubscriptionFeed2";
+            textfeedinfo2 = "feedSubscriptionVideoPodcast2";
             break;
           case Ci.nsIFeed.TYPE_AUDIO:
             textfeedinfo2 = "feedSubscriptionAudioPodcast2";
             break;
           default:
-            textfeedinfo2 = "feedSubscriptionVideoPodcast2";
+            textfeedinfo2 = "feedSubscriptionFeed2";
         }
         var feedinfo2 = this._document.getElementById("feedSubscriptionInfo2")
         feedinfo2.setAttribute("value", this._getString(textfeedinfo2));
