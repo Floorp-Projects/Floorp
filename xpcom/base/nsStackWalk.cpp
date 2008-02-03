@@ -811,7 +811,12 @@ BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aMo
          * Not loaded, here's the magic.
          * Go through all the modules.
          */
-        enumRes = _EnumerateLoadedModules(aProcess, callbackEspecial, (PVOID)&aAddr);
+        // Need to cast to PENUMLOADED_MODULES_CALLBACK because the
+        // constness of the first parameter of
+        // PENUMLOADED_MODULES_CALLBACK varies over SDK versions (from
+        // non-const to const over time).  See bug 391848 and bug
+        // 415252.
+        enumRes = _EnumerateLoadedModules(aProcess, (PENUMLOADED_MODULES_CALLBACK)callbackEspecial, (PVOID)&aAddr);
         if (FALSE != enumRes)
         {
             /*
@@ -878,7 +883,12 @@ BOOL SymGetModuleInfoEspecial64(HANDLE aProcess, DWORD64 aAddr, PIMAGEHLP_MODULE
          * Not loaded, here's the magic.
          * Go through all the modules.
          */
-        enumRes = _EnumerateLoadedModules64(aProcess, callbackEspecial64, (PVOID)&aAddr);
+        // Need to cast to PENUMLOADED_MODULES_CALLBACK64 because the
+        // constness of the first parameter of
+        // PENUMLOADED_MODULES_CALLBACK64 varies over SDK versions (from
+        // non-const to const over time).  See bug 391848 and bug
+        // 415252.
+        enumRes = _EnumerateLoadedModules64(aProcess, (PENUMLOADED_MODULES_CALLBACK64)callbackEspecial64, (PVOID)&aAddr);
         if (FALSE != enumRes)
         {
             /*
