@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=414815
+-->
+<head>
+  <title>postMessage's interaction with a &lt;base&gt; tag</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="browserFu.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <base href="http://example.com/" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=414815">Mozilla Bug 414815</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+/** Test for Bug 414815 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function receiveMessage(evt)
+{
+  is(evt.domain, "localhost", "wrong sender");
+  is(evt.uri, "http://localhost:8888/tests/dom/tests/mochitest/whatwg/test_postMessage_basehref.html",
+     "wrong sender");
+  ok(evt.source === window, "wrong source");
+
+  is(evt.data, "generate-event", "wrong data");
+
+  SimpleTest.finish();
+}
+
+document.addEventListener("message", receiveMessage, false);
+
+function run()
+{
+  window.postMessage("generate-event");
+}
+
+window.addEventListener("load", run, false);
+</script>
+</pre>
+</body>
+</html>
