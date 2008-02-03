@@ -712,8 +712,8 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
 
 
 static BOOL CALLBACK callbackEspecial(
-  LPSTR aModuleName,
-  DWORD aModuleBase,
+  PCSTR aModuleName,
+  ULONG aModuleBase,
   ULONG aModuleSize,
   PVOID aUserContext)
 {
@@ -734,7 +734,7 @@ static BOOL CALLBACK callbackEspecial(
        ? (addr >= aModuleBase && addr <= (aModuleBase + aModuleSize))
        : (addr <= aModuleBase && addr >= (aModuleBase - aModuleSize))
         ) {
-        retval = _SymLoadModule(GetCurrentProcess(), NULL, aModuleName, NULL, aModuleBase, aModuleSize);
+        retval = _SymLoadModule(GetCurrentProcess(), NULL, (PSTR)aModuleName, NULL, aModuleBase, aModuleSize);
         if (!retval)
             PrintError("SymLoadModule");
     }
@@ -743,7 +743,7 @@ static BOOL CALLBACK callbackEspecial(
 }
 
 static BOOL CALLBACK callbackEspecial64(
-  PTSTR aModuleName,
+  PCSTR aModuleName,
   DWORD64 aModuleBase,
   ULONG aModuleSize,
   PVOID aUserContext)
@@ -766,7 +766,7 @@ static BOOL CALLBACK callbackEspecial64(
        ? (addr >= aModuleBase && addr <= (aModuleBase + aModuleSize))
        : (addr <= aModuleBase && addr >= (aModuleBase - aModuleSize))
         ) {
-        retval = _SymLoadModule64(GetCurrentProcess(), NULL, aModuleName, NULL, aModuleBase, aModuleSize);
+        retval = _SymLoadModule64(GetCurrentProcess(), NULL, (PSTR)aModuleName, NULL, aModuleBase, aModuleSize);
         if (!retval)
             PrintError("SymLoadModule64");
     }
@@ -811,9 +811,7 @@ BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aMo
          * Not loaded, here's the magic.
          * Go through all the modules.
          */
-        // Need to cast to PENUMLOADED_MODULES_CALLBACK for some compiler
-        // or platform SDK; see bug 391848.
-        enumRes = _EnumerateLoadedModules(aProcess, (PENUMLOADED_MODULES_CALLBACK)callbackEspecial, (PVOID)&aAddr);
+        enumRes = _EnumerateLoadedModules(aProcess, callbackEspecial, (PVOID)&aAddr);
         if (FALSE != enumRes)
         {
             /*
@@ -880,9 +878,7 @@ BOOL SymGetModuleInfoEspecial64(HANDLE aProcess, DWORD64 aAddr, PIMAGEHLP_MODULE
          * Not loaded, here's the magic.
          * Go through all the modules.
          */
-        // Need to cast to PENUMLOADED_MODULES_CALLBACK for some compiler
-        // or platform SDK; see bug 391848.
-        enumRes = _EnumerateLoadedModules64(aProcess, (PENUMLOADED_MODULES_CALLBACK64)callbackEspecial64, (PVOID)&aAddr);
+        enumRes = _EnumerateLoadedModules64(aProcess, callbackEspecial64, (PVOID)&aAddr);
         if (FALSE != enumRes)
         {
             /*
