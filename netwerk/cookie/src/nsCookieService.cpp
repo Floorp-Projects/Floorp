@@ -1045,7 +1045,7 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
     const nsASingleFragmentCString &host = Substring(buffer, hostIndex, isDomainIndex - hostIndex - 1);
     // check for bad legacy cookies (domain not starting with a dot, or containing a port),
     // and discard
-    if (isDomain && !host.IsEmpty() && host.First() != '.' ||
+    if ((isDomain && !host.IsEmpty() && host.First() != '.') ||
         host.FindChar(':') != kNotFound) {
       continue;
     }
