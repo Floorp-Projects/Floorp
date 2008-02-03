@@ -229,6 +229,8 @@ LoginManagerPrompter.prototype = {
             return ok;
 
         try {
+            var [username, password] = this._GetAuthInfo(aAuthInfo);
+
             // If there's a notification box, use it to allow the user to
             // determine if the login should be saved. If there isn't a
             // notification box, only save the login if the user set the
@@ -239,16 +241,14 @@ LoginManagerPrompter.prototype = {
                 var newLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
                                createInstance(Ci.nsILoginInfo);
                 newLogin.init(hostname, null, httpRealm,
-                              aAuthInfo.username, aAuthInfo.password,
-                              "", "");
+                              username, password, "", "");
 
                 // If we didn't find an existing login, or if the username
                 // changed, save as a new login.
-                if (!selectedLogin ||
-                    aAuthInfo.username != selectedLogin.username) {
+                if (!selectedLogin || username != selectedLogin.username) {
 
                     // add as new
-                    this.log("New login seen for " + aAuthInfo.username +
+                    this.log("New login seen for " + username +
                              " @ " + hostname + " (" + httpRealm + ")");
                     if (notifyBox)
                         this._showSaveLoginNotification(notifyBox, newLogin);
@@ -256,9 +256,9 @@ LoginManagerPrompter.prototype = {
                         this._pwmgr.addLogin(newLogin);
 
                 } else if (selectedLogin &&
-                           aAuthInfo.password != selectedLogin.password) {
+                           password != selectedLogin.password) {
 
-                    this.log("Updating password for " + aAuthInfo.username +
+                    this.log("Updating password for " + username +
                              " @ " + hostname + " (" + httpRealm + ")");
                     // update password
                     this._pwmgr.modifyLogin(foundLogins[0], newLogin);
@@ -706,6 +706,29 @@ LoginManagerPrompter.prototype = {
         return [hostname, realm];
     },
 
+
+    /**
+     * Returns [username, password] as extracted from aAuthInfo (which
+     * holds this info after having prompted the user).
+     *
+     * If the authentication was for a Windows domain, we'll prepend the
+     * return username with the domain. (eg, "domain\user")
+     */
+    _GetAuthInfo : function (aAuthInfo) {
+        var username, password;
+
+        var flags = aAuthInfo.flags;
+        if (flags & Ci.nsIAuthInformation.NEED_DOMAIN)
+            username = aAuthInfo.domain + "\\" + aAuthInfo.username;
+        else
+            username = aAuthInfo.username;
+
+        password = aAuthInfo.password;
+
+        return [username, password];
+    },
+
+
     /**
      * Given a username (possibly in DOMAIN\user form) and password, parses the
      * domain out of the username if necessary and sets domain, username and
@@ -734,5 +757,3 @@ var component = [LoginManagerPromptFactory, LoginManagerPrompter];
 function NSGetModule(compMgr, fileSpec) {
     return XPCOMUtils.generateModule(component);
 }
-
-
