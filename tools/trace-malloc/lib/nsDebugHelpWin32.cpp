@@ -222,8 +222,12 @@ static BOOL CALLBACK ModuleEnumCallback(PCSTR ModuleName,
 PRBool 
 DHWImportHooker::PatchAllModules()
 {
+    // Need to cast to PENUMLOADED_MODULES_CALLBACK because the
+    // constness of the first parameter of PENUMLOADED_MODULES_CALLBACK
+    // varies over SDK versions (from non-const to const over time).
+    // See bug 391848 and bug 415252.
     return dhwEnumerateLoadedModules(::GetCurrentProcess(), 
-                                     ModuleEnumCallback, this);
+               (PENUMLOADED_MODULES_CALLBACK)ModuleEnumCallback, this);
 }    
                                 
 PRBool 
