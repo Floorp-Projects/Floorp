@@ -208,7 +208,7 @@ DHWImportHooker::~DHWImportHooker()
         PR_Unlock(gLock);
 }    
 
-static BOOL CALLBACK ModuleEnumCallback(LPSTR ModuleName,
+static BOOL CALLBACK ModuleEnumCallback(PCSTR ModuleName,
                                         ULONG ModuleBase,
                                         ULONG ModuleSize,
                                         PVOID UserContext)
