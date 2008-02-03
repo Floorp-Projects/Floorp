@@ -106,7 +106,7 @@
            ignorekeys="true"
            hidden="true"
            onpopupshown="StarUI.panelShown(event);"
-           label="&bookmarkPageCmd2.label;">
+           aria-labelledby="editBookmarkPanelTitle">
       <hbox flex="1" align="top">
         <image id="editBookmarkPanelStarIcon"/>
         <vbox flex="1">
