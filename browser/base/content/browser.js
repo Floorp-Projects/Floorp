@@ -4209,8 +4209,8 @@ var gHomeButton = {
   {
     var homeButton = document.getElementById("home-button");
     if (homeButton)
-      homeButton.className = homeButton.parentNode.id == "personal-toolbar"
-                               || homeButton.parentNode.parentNode.id == "personal-toolbar" ?
+      homeButton.className = homeButton.parentNode.id == "PersonalToolbar"
+                               || homeButton.parentNode.parentNode.id == "PersonalToolbar" ?
                              homeButton.className.replace("toolbarbutton-1", "bookmark-item") :
                              homeButton.className.replace("bookmark-item", "toolbarbutton-1");
   }
@@ -4583,7 +4583,7 @@ function getBrowser()
 function getNavToolbox()
 {
   if (!gNavToolbox)
-    gNavToolbox = document.getElementById("browser-toolbox");
+    gNavToolbox = document.getElementById("navigator-toolbox");
   return gNavToolbox;
 }
 
