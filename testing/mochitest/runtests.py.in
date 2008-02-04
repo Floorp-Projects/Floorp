@@ -147,7 +147,7 @@ class MochitestOptions(optparse.OptionParser):
     self.add_option("--log-file",
                     action = "store", type = "string", dest = "logFile",
                     help = "file to which logging occurs")
-    defaults["logFile"] = None
+    defaults["logFile"] = ""
 
     self.add_option("--autorun",
                     action = "store_true", dest = "autorun",
