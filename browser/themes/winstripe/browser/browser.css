@@ -54,7 +54,7 @@
   -moz-box-flex: 1; /* make menu items expand to fill toolbar height */
 }
 
-#personal-toolbar {
+#PersonalToolbar {
   min-height: 26px;
 }
 
@@ -77,8 +77,8 @@
   visibility: hidden;
 }
 
-#browser-toolbox[inFullscreen="true"],
-#browser-toolbox[inFullscreen="true"] > #navigation-toolbar {
+#navigator-toolbox[inFullscreen="true"],
+#navigator-toolbox[inFullscreen="true"] > #nav-bar {
   border-top: none;
 }
 
