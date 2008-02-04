@@ -276,6 +276,7 @@ var StarUI = {
   },
 
   removeBookmarkButtonCommand: function SU_removeBookmarkButtonCommand() {
+#ifdef ADVANCED_STARRING_UI
     // In minimal mode ("page bookmarked" notification), the bookmark
     // is removed and the panel is hidden immediately. In full edit mode,
     // a "Bookmark Removed" notification along with an Undo button is
@@ -298,6 +299,7 @@ var StarUI = {
       this._element("editBookmarkPanelStarIcon").setAttribute("unstarred", "true");
       this.panel.focus();
     }
+#endif
 
     // cache its uri so we can get the new itemId in the case of undo
     this._uri = PlacesUtils.bookmarks.getBookmarkURI(this._itemId);
@@ -310,9 +312,11 @@ var StarUI = {
       PlacesUtils.ptm.doTransaction(txn);
     }
 
+#ifdef ADVANCED_STARRING_UI
     // hidePopup resets our itemId, thus we call it only after removing
     // the bookmark
     if (!this._batching)
+#endif
       this.panel.hidePopup();
   },
 
@@ -395,8 +399,10 @@ var PlacesCommandHook = {
       if (starIcon && isElementVisible(starIcon)) {
         if (aShowEditUI)
           StarUI.showEditBookmarkPopup(itemId, starIcon, "after_end");
+#ifdef ADVANCED_STARRING_UI
         else
           StarUI.showPageBookmarkedNotification(itemId, starIcon, "after_end");
+#endif
         return;
       }
     }
