@@ -216,8 +216,8 @@ pref("browser.urlbar.maxRichResults", 25);
 // Size of "chunks" affects the number of places to process between each search
 // timeout (ms). Too big and the UI will be unresponsive; too small and we'll
 // be waiting on the timeout too often without many results.
-pref("browser.urlbar.search.chunkSize", 100);
-pref("browser.urlbar.search.timeout", 100);
+pref("browser.urlbar.search.chunkSize", 1000);
+pref("browser.urlbar.search.timeout", 50);
 
 pref("browser.download.useDownloadDir", true);
 pref("browser.download.folderList", 0);
