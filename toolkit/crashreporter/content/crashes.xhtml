@@ -85,10 +85,15 @@ function populateReportList() {
   var prefService = Cc["@mozilla.org/preferences-service;1"].
                     getService(Ci.nsIPrefBranch);
 
+  var reportURL = null;
   try {
-    var reportURL = prefService.getCharPref("breakpad.reportURL");
+    reportURL = prefService.getCharPref("breakpad.reportURL");
+    // Ignore any non http/https urls
+    if (!/^https?:/i.test(reportURL))
+      reportURL = null;
   }
-  catch (e) {
+  catch (e) { }
+  if (!reportURL) {
     document.getElementById("reportList").style.display = "none";
     document.getElementById("noConfig").style.display = "block";
     return;
