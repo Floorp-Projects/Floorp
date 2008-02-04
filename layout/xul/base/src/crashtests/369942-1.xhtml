@@ -1,0 +1,36 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      class="reftest-wait">
+<head>
+
+<script>
+function boom()
+{
+  var span = document.getElementById("span");
+  var radio = document.getElementById("radio");
+  
+  radio.appendChild(span);
+  
+  document.documentElement.removeAttribute("class");
+}
+</script>
+
+
+<style>
+body {
+	text-align: center;
+	font-size: 9px;
+}
+</style>
+
+</head>
+
+
+<body onload="setTimeout(boom, 30);">
+
+<span id="span"><xul:wizard/><div>Industries</div></span>
+
+<xul:radio id="radio"/>
+
+</body>
+</html>
