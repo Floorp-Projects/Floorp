@@ -719,6 +719,9 @@ nsThebesDeviceContext::CalcPrintingSize()
         // we already set the size in the surface constructor we set for
         // printing, so just get those values here
         size = reinterpret_cast<gfxOS2Surface*>(mPrintingSurface.get())->GetSize();
+        // as they are in pixels we need to scale them to app units
+        size.width = NSFloatPixelsToAppUnits(size.width, AppUnitsPerDevPixel());
+        size.height = NSFloatPixelsToAppUnits(size.height, AppUnitsPerDevPixel());
         // still need to get the depth from the device context
         HDC dc = GetPrintHDC();
         LONG value;
