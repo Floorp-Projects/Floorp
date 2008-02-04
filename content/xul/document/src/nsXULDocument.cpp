@@ -219,6 +219,7 @@ nsXULDocument::~nsXULDocument()
 
     // Destroy our broadcaster map.
     if (mBroadcasterMap) {
+        NS_ASSERTION(mBroadcasterMap->entryCount == 0, "Leaking BroadcastListeners");
         PL_DHashTableDestroy(mBroadcasterMap);
     }
 
@@ -1004,9 +1005,11 @@ nsXULDocument::AttributeChanged(nsIDocument* aDocument,
         }
     }
 
-    // checks for modifications in broadcasters
-    PRBool listener, resolved;
-    CheckBroadcasterHookup(aElement, &listener, &resolved);
+    if ((aAttribute == nsGkAtoms::observes) || (aAttribute == nsGkAtoms::command)) {
+        // checks for modifications in broadcasters
+        PRBool listener, resolved;
+        CheckBroadcasterHookup(aElement, &listener, &resolved);
+    }
 
     // See if there is anything we need to persist in the localstore.
     //
