@@ -159,6 +159,7 @@ MODULES_core :=                                 \
   mozilla/gfx                                   \
   mozilla/parser                                \
   mozilla/layout                                \
+  mozilla/memory/jemalloc                       \
   mozilla/jpeg                                  \
   mozilla/js/src/fdlibm                         \
   mozilla/js/src/liveconnect                    \
