@@ -483,10 +483,6 @@ SessionStoreService.prototype = {
     tabbrowser.removeEventListener("TabClose", this, true);
     tabbrowser.removeEventListener("TabSelect", this, true);
     
-    for (var i = 0; i < tabpanels.childNodes.length; i++) {
-      this.onTabRemove(aWindow, tabpanels.childNodes[i], true);
-    }
-    
     if (this._loadState == STATE_RUNNING) { // window not closed during a regular shut-down 
       // update all window data for a last time
       this._collectWindowData(aWindow);
@@ -501,6 +497,10 @@ SessionStoreService.prototype = {
       
       // save the state without this window to disk
       this.saveStateDelayed();
+    }
+    
+    for (var i = 0; i < tabpanels.childNodes.length; i++) {
+      this.onTabRemove(aWindow, tabpanels.childNodes[i], true);
     }
     
     // cache the window state until the window is completely gone
