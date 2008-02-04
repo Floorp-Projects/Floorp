@@ -1962,7 +1962,10 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
   // we would need to root rval.
   JSAutoRequest ar(mContext);
   if (NS_SUCCEEDED(rv)) {
-    rv = nsContentUtils::XPConnect()->JSToVariant(mContext, rval, arv);
+    if (rval == JSVAL_NULL)
+      *arv = nsnull;
+    else
+      rv = nsContentUtils::XPConnect()->JSToVariant(mContext, rval, arv);
   }
 
   // ScriptEvaluated needs to come after we pop the stack
