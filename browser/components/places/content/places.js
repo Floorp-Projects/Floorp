@@ -291,6 +291,14 @@ var PlacesOrganizer = {
   },
 
   /**
+   * Returns the queries associated with the query currently loaded in the
+   * main places pane.
+   */
+  getCurrentQueries: function PO_getCurrentQueries() {
+    return asQuery(this._content.getResult().root).getQueries({});
+  },
+
+  /**
    * Show the migration wizard for importing from a file.
    */
   importBookmarks: function PO_import() {
@@ -1042,9 +1050,7 @@ var PlacesQueryBuilder = {
       var searchTermsField = document.getElementById("advancedSearch1Textbox");
       if (searchTermsField)
         setTimeout(function() { searchTermsField.value = PlacesSearchBox.value; }, 10);
-      var query = PlacesUtils.history.getNewQuery();
-      query.searchTerms = PlacesSearchBox.value;
-      this.queries = [query];
+      this.queries = PlacesOrganizer.getCurrentQueries();
       return;
     }
 
