@@ -113,10 +113,11 @@ public:
   static nsresult SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSettings, ULONG printer);
 
 protected:
-
   OS2PrData mPrData;
   PRTQUEUE *mQueue;
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
+  HDC mPrintDC;
+  PRPackedBool mPrintingStarted;
 };
 
 //-------------------------------------------------------------------------

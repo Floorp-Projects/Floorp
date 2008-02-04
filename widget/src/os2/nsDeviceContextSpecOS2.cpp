@@ -99,7 +99,7 @@ ULONG          GlobalPrinters::mGlobalNumPrinters = 0;
 //---------------
 
 nsDeviceContextSpecOS2::nsDeviceContextSpecOS2()
-  : mQueue(nsnull)
+  : mQueue(nsnull), mPrintDC(nsnull), mPrintingStarted(PR_FALSE)
 {
 }
 
@@ -391,7 +391,8 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::GetSurfaceForPrinter(gfxASurface **surface
     if (!printerDest) {
       GetPath(&filename);
     }
-    HDC printdc = PrnOpenDC(mQueue, "Mozilla", numCopies, printerDest, filename);
+    mPrintingStarted = PR_TRUE;
+    mPrintDC = PrnOpenDC(mQueue, "Mozilla", numCopies, printerDest, filename);
 
     double width, height;
     mPrintSettings->GetEffectivePageSize(&width, &height);
@@ -405,21 +406,22 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::GetSurfaceForPrinter(gfxASurface **surface
     // to approx. 100dpi
     double hDPI = 3937., vDPI = 3937.;
     LONG value;
-    if (DevQueryCaps(printdc, CAPS_HORIZONTAL_RESOLUTION, 1, &value))
+    if (DevQueryCaps(mPrintDC, CAPS_HORIZONTAL_RESOLUTION, 1, &value))
       hDPI = value * 0.0254;
-    if (DevQueryCaps(printdc, CAPS_VERTICAL_RESOLUTION, 1, &value))
+    if (DevQueryCaps(mPrintDC, CAPS_VERTICAL_RESOLUTION, 1, &value))
       vDPI = value * 0.0254;
     width = width * hDPI / 1440;
     height = height * vDPI / 1440;
 #ifdef debug_thebes_print
-    printf("nsDeviceContextSpecOS2::GetSurfaceForPrinter(): %fx%fpx (res=%fx%f)\n",
-           width, height, hDPI, vDPI);
+    printf("nsDeviceContextSpecOS2::GetSurfaceForPrinter(): %fx%fpx (res=%fx%f)\n"
+           "  expected size: %7.2f MiB\n",
+           width, height, hDPI, vDPI, width*height*4./1024./1024.);
 #endif
 
     // Now pass the created DC into the thebes surface for printing.
     // It gets destroyed there.
     newSurface = new(std::nothrow)
-      gfxOS2Surface(printdc, gfxIntSize(int(ceil(width)), int(ceil(height))));
+      gfxOS2Surface(mPrintDC, gfxIntSize(int(ceil(width)), int(ceil(height))));
   }
   if (!newSurface) {
     *surface = nsnull;
@@ -430,27 +432,70 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::GetSurfaceForPrinter(gfxASurface **surface
   return NS_OK;
 }
 
+// Helper function to convert the string to the native codepage,
+// similar to UnicodeToCodepage() in nsDragService.cpp.
+char *GetACPString(const PRUnichar* aStr)
+{
+   nsString str(aStr);
+   if (str.Length() == 0) {
+      return nsnull;
+   }
+
+   nsAutoCharBuffer buffer;
+   PRInt32 bufLength;
+   WideCharToMultiByte(0, PromiseFlatString(str).get(), str.Length(),
+                       buffer, bufLength);
+   return ToNewCString(nsDependentCString(buffer.Elements()));
+}
+
 NS_IMETHODIMP nsDeviceContextSpecOS2::BeginDocument(PRUnichar* aTitle,
                                                     PRUnichar* aPrintToFileName,
                                                     PRInt32 aStartPage,
                                                     PRInt32 aEndPage)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+#ifdef debug_thebes_print
+  printf("nsDeviceContextSpecOS2[%#x]::BeginPrinting(%s, %s)\n", (unsigned)this,
+         NS_LossyConvertUTF16toASCII(nsString(aTitle)).get(),
+         NS_LossyConvertUTF16toASCII(nsString(aPrintToFileName)).get());
+#endif
+  char *title = GetACPString(aTitle);
+  const PSZ pszGenericDocName = "Mozilla Document";
+  PSZ pszDocName = title ? title : pszGenericDocName;
+  LONG lResult = DevEscape(mPrintDC, DEVESC_STARTDOC,
+                           strlen(pszDocName) + 1, pszDocName,
+                           (PLONG)NULL, (PBYTE)NULL);
+  mPrintingStarted = PR_TRUE;
+  if (title) {
+    nsMemory::Free(title);
+  }
+
+  return lResult == DEV_OK ? NS_OK : NS_ERROR_GFX_PRINTER_STARTDOC;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecOS2::EndDocument()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  LONG lOutCount = 2;
+  USHORT usJobID = 0;
+  LONG lResult = DevEscape(mPrintDC, DEVESC_ENDDOC, 0L, (PBYTE)NULL,
+                           &lOutCount, (PBYTE)&usJobID);
+  return lResult == DEV_OK ? NS_OK : NS_ERROR_GFX_PRINTER_ENDDOC;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecOS2::BeginPage()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mPrintingStarted) {
+    // we don't want an extra page break at the start of the document
+    mPrintingStarted = PR_FALSE;
+    return NS_OK;
+  }
+  LONG lResult = DevEscape(mPrintDC, DEVESC_NEWFRAME, 0L, (PBYTE)NULL,
+                           (PLONG)NULL, (PBYTE)NULL);
+  return lResult == DEV_OK ? NS_OK : NS_ERROR_GFX_PRINTER_STARTPAGE;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecOS2::EndPage()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 //  Printer Enumerator
