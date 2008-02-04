@@ -142,9 +142,6 @@ struct JSObject {
 #define STOBJ_NSLOTS(obj)                                                     \
     ((obj)->dslots ? (uint32)(obj)->dslots[-1] : (uint32)JS_INITIAL_NSLOTS)
 
-#define STOBJ_FIXED_SLOT_PTR(obj, slot)                                       \
-    (JS_ASSERT((slot) < JS_INITIAL_NSLOTS), &(obj)->fslots[(slot)])
-
 #define STOBJ_GET_SLOT(obj,slot)                                              \
     ((slot) < JS_INITIAL_NSLOTS                                               \
      ? (obj)->fslots[(slot)]                                                  \

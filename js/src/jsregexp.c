@@ -4319,7 +4319,7 @@ js_SetLastIndex(JSContext *cx, JSObject *obj, jsdouble lastIndex)
 {
     jsval v;
 
-    v = js_NewWeakNumberValue(cx, lastIndex);
-    return v != JSVAL_NULL && JS_SetReservedSlot(cx, obj, 0, v);
+    return js_NewNumberValue(cx, lastIndex, &v) &&
+           JS_SetReservedSlot(cx, obj, 0, v);
 }
 

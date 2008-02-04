@@ -187,9 +187,6 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
     return ok;
 }
 
-/*
- * vp must be a root.
- */
 static JSBool
 IndexToValue(JSContext *cx, jsuint index, jsval *vp)
 {
@@ -197,8 +194,7 @@ IndexToValue(JSContext *cx, jsuint index, jsval *vp)
         *vp = INT_TO_JSVAL(index);
         return JS_TRUE;
     }
-    *vp = js_NewUnrootedDoubleValue(cx, (jsdouble)index);
-    return *vp != JSVAL_NULL;
+    return js_NewDoubleValue(cx, (jsdouble)index, vp);
 }
 
 static JSBool
@@ -338,16 +334,13 @@ SetOrDeleteArrayElement(JSContext *cx, JSObject *obj, jsuint index,
 JSBool
 js_SetLengthProperty(JSContext *cx, JSObject *obj, jsuint length)
 {
+    jsval v;
     jsid id;
-    JSTempValueRooter tvr;
-    JSBool ok;
 
+    if (!IndexToValue(cx, length, &v))
+        return JS_FALSE;
     id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
-    JS_PUSH_SINGLE_TEMP_ROOT(cx, JSVAL_NULL, &tvr);
-    ok = IndexToValue(cx, length, &tvr.u.value) &&
-         OBJ_SET_PROPERTY(cx, obj, id, &tvr.u.value);
-    JS_POP_TEMP_ROOT(cx, &tvr);
-    return ok;
+    return OBJ_SET_PROPERTY(cx, obj, id, &v);
 }
 
 JSBool
@@ -781,13 +774,12 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint end,
 static JSBool
 InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, jsval *vector)
 {
-    jsval *vp;
+    jsval v;
 
     JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_ArrayClass);
-
-    vp = STOBJ_FIXED_SLOT_PTR(obj, JSSLOT_ARRAY_LENGTH);
-    if (!IndexToValue(cx, length, vp))
+    if (!IndexToValue(cx, length, &v))
         return JS_FALSE;
+    STOBJ_SET_SLOT(obj, JSSLOT_ARRAY_LENGTH, v);
     return !vector || InitArrayElements(cx, obj, 0, length, vector);
 }
 

@@ -127,8 +127,7 @@
             v_ = INT_TO_JSVAL(i_);                                            \
         } else {                                                              \
             SAVE_SP_AND_PC(fp);                                               \
-            v_ = js_NewUnrootedDoubleValue(cx, d);                            \
-            ok = v_ != JSVAL_NULL;                                            \
+            ok = js_NewDoubleValue(cx, d, &v_);                               \
             if (!ok)                                                          \
                 goto out;                                                     \
         }                                                                     \
@@ -143,8 +142,7 @@
             v_ = INT_TO_JSVAL(i);                                             \
         } else {                                                              \
             SAVE_SP_AND_PC(fp);                                               \
-            v_ = js_NewUnrootedDoubleValue(cx, (jsdouble) (i));               \
-            ok = v_ != JSVAL_NULL;                                            \
+            ok = js_NewDoubleValue(cx, (jsdouble)(i), &v_);                   \
             if (!ok)                                                          \
                 goto out;                                                     \
         }                                                                     \
@@ -159,8 +157,7 @@
             v_ = INT_TO_JSVAL(u);                                             \
         } else {                                                              \
             SAVE_SP_AND_PC(fp);                                               \
-            v_ = js_NewUnrootedDoubleValue(cx, (jsdouble) (u));               \
-            ok = v_ != JSVAL_NULL;                                            \
+            ok = js_NewDoubleValue(cx, (jsdouble)(u), &v_);                   \
             if (!ok)                                                          \
                 goto out;                                                     \
         }                                                                     \
@@ -3155,8 +3152,7 @@ interrupt:
 #else
                 d = -d;
 #endif
-                rval = js_NewUnrootedDoubleValue(cx, d);
-                ok = rval != JSVAL_NULL;
+                ok = js_NewNumberValue(cx, d, &rval);
                 if (!ok)
                     goto out;
             }
@@ -3170,8 +3166,7 @@ interrupt:
                 ok = js_ValueToNumber(cx, rval, &d);
                 if (!ok)
                     goto out;
-                rval = js_NewUnrootedDoubleValue(cx, d);
-                ok = rval != JSVAL_NULL;
+                ok = js_NewNumberValue(cx, d, &rval);
                 if (!ok)
                     goto out;
                 sp[-1] = rval;
@@ -3325,20 +3320,18 @@ interrupt:
         if (cs->format & JOF_POST) {                                          \
             rtmp = rval;                                                      \
             if (!JSVAL_IS_NUMBER(rtmp)) {                                     \
-                rtmp = js_NewWeakNumberValue(cx, d);                          \
-                ok = (rtmp != JSVAL_NULL);                                    \
+                ok = js_NewNumberValue(cx, d, &rtmp);                         \
                 if (!ok)                                                      \
                     goto out;                                                 \
             }                                                                 \
             *vp = rtmp;                                                       \
             (cs->format & JOF_INC) ? d++ : d--;                               \
-            rval = js_NewWeakNumberValue(cx, d);                              \
+            ok = js_NewNumberValue(cx, d, &rval);                             \
         } else {                                                              \
             (cs->format & JOF_INC) ? ++d : --d;                               \
-            rval = js_NewWeakNumberValue(cx, d);                              \
+            ok = js_NewNumberValue(cx, d, &rval);                             \
             rtmp = rval;                                                      \
         }                                                                     \
-        ok = (rval != JSVAL_NULL);                                            \
         if (!ok)                                                              \
             goto out;                                                         \
     JS_END_MACRO
