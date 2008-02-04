@@ -355,6 +355,9 @@ endif
 libs::
 	touch $(DIST)/bin/.autoreg
 
+libs:: $(srcdir)/profile/prefs.js
+	$(INSTALL) $^ $(DIST)/bin/defaults/profile
+
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 
 APP_NAME = $(MOZ_APP_DISPLAYNAME)
@@ -375,9 +378,6 @@ APPFILES = Resources
 else
 APPFILES = MacOS
 endif
-
-libs:: $(srcdir)/profile/prefs.js
-	$(INSTALL) $^ $(DIST)/bin/defaults/profile
 
 libs repackage:: $(PROGRAM) application.ini
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS
