@@ -18,7 +18,7 @@ use Bootstrap::Util qw(CvsCatfile GetBouncerPlatforms
 
 use strict;
 
-my $RELEASE_CANDIDATE_CHANNELS = ['beta', 'betatest'];
+my $RELEASE_CANDIDATE_CHANNELS = ['beta', 'betatest','DisableCompleteJump'];
 
 sub Execute {
     my $this = shift;
