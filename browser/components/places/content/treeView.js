@@ -664,36 +664,10 @@ PlacesTreeView.prototype = {
       this._refreshVisibleSection(aItem);
   },
 
-  /**
-   * THIS FUNCTION DOES NOT HANDLE cases where a collapsed node is being
-   * removed but the node it is collapsed with is not being removed (this then
-   * just swap out the removee with it's collapsing partner). The only time
-   * when we really remove things is when deleting URIs, which will apply to
-   * all collapsees. This function is called sometimes when resorting items.
-   * However, we won't do this when sorted by date because dates will never
-   * change for visits, and date sorting is the only time things are collapsed.
-   */
-  itemRemoved: function PTV_itemRemoved(aParent, aItem, aOldIndex) {
-    NS_ASSERT(this._result, "Got a notification but have no result!");
-    if (!this._tree)
-      return; // nothing to do
-
+  // this is used in itemRemoved and itemMoved to fix viewIndex values
+  // throw if the item has an invalid viewIndex
+  _fixViewIndexOnRemove: function PTV_fixViewIndexOnRemove(aItem, aParent) {
     var oldViewIndex = aItem.viewIndex;
-    if (oldViewIndex < 0)
-      return; // item was already invisible, nothing to do
-
-    // if the item was exclusively selected, the node next to it will be
-    // selected
-    var selectNext = false;
-    var selection = this.selection;
-    if (selection.getRangeCount() == 1) {
-      var min = { }, max = { };
-      selection.getRangeAt(0, min, max);
-      if (min.value == max.value &&
-          this.nodeForTreeIndex(min.value) == aItem)
-        selectNext = true;
-    }
-
     // this may have been a container, in which case it has a lot of rows
     var count = this._countVisibleRowsForItem(aItem);
 
@@ -701,10 +675,8 @@ PlacesTreeView.prototype = {
     // remove after this when duplicates are being collapsed. This loop
     // emulates that.
     while (true) {
-      NS_ASSERT(oldViewIndex <= this._visibleElements.length,
-                "Trying to remove invalid row");
       if (oldViewIndex > this._visibleElements.length)
-        return;
+        throw("Trying to remove an item with an invalid viewIndex");
 
       this._visibleElements.splice(oldViewIndex, count);
       for (var i = oldViewIndex; i < this._visibleElements.length; i++)
@@ -738,7 +710,43 @@ PlacesTreeView.prototype = {
     if (!aParent.hasChildren)
       this.itemChanged(aParent);
 
-    // restore selection
+    return;
+  },
+
+  /**
+   * THIS FUNCTION DOES NOT HANDLE cases where a collapsed node is being
+   * removed but the node it is collapsed with is not being removed (this then
+   * just swap out the removee with it's collapsing partner). The only time
+   * when we really remove things is when deleting URIs, which will apply to
+   * all collapsees. This function is called sometimes when resorting items.
+   * However, we won't do this when sorted by date because dates will never
+   * change for visits, and date sorting is the only time things are collapsed.
+   */
+  itemRemoved: function PTV_itemRemoved(aParent, aItem, aOldIndex) {
+    NS_ASSERT(this._result, "Got a notification but have no result!");
+    if (!this._tree)
+      return; // nothing to do
+
+    var oldViewIndex = aItem.viewIndex;
+    if (oldViewIndex < 0)
+      return; // item was already invisible, nothing to do
+
+    // if the item was exclusively selected, the node next to it will be
+    // selected
+    var selectNext = false;
+    var selection = this.selection;
+    if (selection.getRangeCount() == 1) {
+      var min = { }, max = { };
+      selection.getRangeAt(0, min, max);
+      if (min.value == max.value &&
+          this.nodeForTreeIndex(min.value) == aItem)
+        selectNext = true;
+    }
+
+    // remove the item and fix viewIndex values
+    this._fixViewIndexOnRemove(aItem, aParent);
+
+    // restore selection if the item was exclusively selected
     if (selectNext && this._visibleElements.length > oldViewIndex)
       selection.rangedSelect(oldViewIndex, oldViewIndex, true);
   },
@@ -777,9 +785,10 @@ PlacesTreeView.prototype = {
     if (nodesToSelect.length > 0)
       selection.selectEventsSuppressed = true;
 
-    // remove the nodes, let itemInserted restore all of its contents
-    this._visibleElements.splice(oldViewIndex, count);
-    this._tree.rowCountChanged(oldViewIndex, -count);
+    // remove item from the old position
+    this._fixViewIndexOnRemove(aItem, aOldParent);
+
+    // insert the item into the new position
     this.itemInserted(aNewParent, aItem, aNewIndex);
 
     // restore selection
