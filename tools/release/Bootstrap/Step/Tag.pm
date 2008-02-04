@@ -320,7 +320,7 @@ sub GenerateRelbranchName {
     }
 
     my $geckoDateSpec = exists($args{'datespec'}) ? $args{'datespec'} : 
-     strftime('%Y%m%d', localtime());
+     strftime('%Y%m%d', gmtime());
 
     # This assert()ion has a Y21k (among other) problem(s)...
     die "ASSERT: GenerateRelbranchName(): invalid datespec" if 
