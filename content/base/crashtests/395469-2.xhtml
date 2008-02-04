@@ -1,0 +1,45 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+
+<bindings xmlns="http://www.mozilla.org/xbl"><binding id="empty"><content></content></binding></bindings>
+
+<style>
+
+.bef:before { content: counter(c); }
+
+.fl:first-letter { }
+
+</style>
+
+<script>
+
+var xblize, div;
+
+function boom()
+{
+  xblize = document.getElementById("xblize");
+  div = document.getElementById("div");
+  
+  xblize.style.MozBinding = "url('#empty')";
+
+  // Give the XBL extra time to settle
+  setTimeout(boom2, 200);
+}
+
+function boom2()
+{
+  div.removeChild(xblize);
+  div.appendChild(xblize);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+
+<div class="fl" id="div"><span class="bef" id="xblize"></span><span class="bef"></span></div>
+
+</body>
+</html>
