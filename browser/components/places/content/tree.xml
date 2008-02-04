@@ -542,6 +542,10 @@
               container = lastSelected;
               index = -1;
             }
+            else if (resultview.isSorted()) {
+              // If we are into a sorted view we should append at the end
+              index = -1;
+            }
             else if (!this._disallowInsertion(lastSelected) &&
                      lastSelected.containerOpen &&
                      orientation == Ci.nsITreeView.DROP_AFTER) {
