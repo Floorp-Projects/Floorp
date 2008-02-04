@@ -685,8 +685,10 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
                                                            JS_DHASH_ADD));
                 if (!entry)
                     goto failed_hash_add;
-                if (entry->keyAndFlags != 0)
+                if (entry->keyAndFlags != 0) {
+                    key = (JSString *)ATOM_ENTRY_KEY(entry);
                     goto finish;
+                }
                 ++state->tablegen;
             }
         }
