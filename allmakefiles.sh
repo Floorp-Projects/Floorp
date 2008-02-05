@@ -67,6 +67,12 @@ probes/Makefile
 extensions/Makefile
 "
 
+if [ "$MOZ_MEMORY" ]; then
+  add_makefiles "
+    memory/jemalloc/Makefile
+  "
+fi
+
 #
 # Application-specific makefiles
 #

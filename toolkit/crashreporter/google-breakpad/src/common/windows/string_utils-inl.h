@@ -56,6 +56,10 @@
 // _snwprintf when using older CRTs.
 #if _MSC_VER < 1400  // MSVC 2005/8
 #define swprintf _snwprintf
+#else
+// For MSVC8 and newer, swprintf_s is the recommended method. Conveniently,
+// it takes the same argument list as swprintf.
+#define swprintf swprintf_s
 #endif  // MSC_VER < 1400
 
 namespace google_breakpad {
