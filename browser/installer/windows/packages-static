@@ -47,6 +47,7 @@ bin\Microsoft.VC80.CRT.manifest
 bin\msvcm80.dll
 bin\msvcp80.dll
 bin\msvcr80.dll
+bin\mozcrt19.dll
 
 [browser]
 ; [Base Browser Files]
