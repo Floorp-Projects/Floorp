@@ -103,13 +103,20 @@ TaggingService.prototype = {
   /**
    * If there's no tag with the given name, null is returned;
    */
-  _getTagNode: function TS__getTagIndex(aName) {
-    var nameLower = aName.toLowerCase();
+  _getTagNode: function TS__getTagIndex(aTagNameOrId) {
+    if (!aTagNameOrId)
+      throw Cr.NS_ERROR_INVALID_ARG;
+
+    var nameLower = null;
+    if (typeof(aTagNameOrId) == "string")
+      nameLower = aTagNameOrId.toLowerCase();
+
     var root = this._tagsResult.root;
     var cc = root.childCount;
     for (var i=0; i < cc; i++) {
       var child = root.getChild(i);
-      if (child.title.toLowerCase() == nameLower)
+      if ((nameLower && child.title.toLowerCase() == nameLower) ||
+          child.itemId === aTagNameOrId)
         return child;
     }
 
@@ -158,11 +165,11 @@ TaggingService.prototype = {
       throw Cr.NS_ERROR_INVALID_ARG;
 
     for (var i=0; i < aTags.length; i++) {
-      if (aTags[i].length == 0)
-        throw Cr.NS_ERROR_INVALID_ARG;
-
       var tagNode = this._getTagNode(aTags[i]);
       if (!tagNode) {
+        if (typeof(aTags[i]) == "number")
+          throw Cr.NS_ERROR_INVALID_ARG;
+
         var tagId = this._createTag(aTags[i]);
         this._bms.insertBookmark(tagId, aURI, this._bms.DEFAULT_INDEX, null);
       }
@@ -174,7 +181,7 @@ TaggingService.prototype = {
         // _getTagNode ignores case sensitivity
         // rename the tag container so the places view would match the
         // user-typed values
-        if (tagNode.title != aTags[i])
+        if (typeof(aTags[i]) == "string" && tagNode.title != aTags[i])
           this._bms.setItemTitle(tagNode.itemId, aTags[i]);
       }
     }
@@ -209,9 +216,6 @@ TaggingService.prototype = {
     }
 
     for (var i=0; i < aTags.length; i++) {
-      if (aTags[i].length == 0)
-        throw Cr.NS_ERROR_INVALID_ARG;
-
       var tagNode = this._getTagNode(aTags[i]);
       if (tagNode) {
         var itemId = { };
@@ -220,6 +224,8 @@ TaggingService.prototype = {
           this._removeTagIfEmpty(tagNode.itemId);
         }
       }
+      else if (typeof(aTags[i]) == "number")
+        throw Cr.NS_ERROR_INVALID_ARG;
     }
   },
 
