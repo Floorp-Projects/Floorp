@@ -247,15 +247,10 @@ WeaveSyncService.prototype = {
     dapp.level = Log4Moz.Level.All;
     root.addAppender(dapp);
 
-    let logFile = this._dirSvc.get("ProfD", Ci.nsIFile);
-
     let brief = this._dirSvc.get("ProfD", Ci.nsIFile);
     brief.QueryInterface(Ci.nsILocalFile);
 
     brief.append("weave");
-    if (!brief.exists())
-      brief.create(brief.DIRECTORY_TYPE, PERMS_DIRECTORY);
-
     brief.append("logs");
     if (!brief.exists())
       brief.create(brief.DIRECTORY_TYPE, PERMS_DIRECTORY);

@@ -35,7 +35,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 const EXPORTED_SYMBOLS = ['deepEquals', 'makeFile', 'makeURI', 'xpath',
-			  'bind2', 'generatorAsync', 'generatorDone', 'EventListener'];
+			  'bind2', 'generatorAsync', 'generatorDone',
+                          'EventListener',
+                          'runCmd', 'getTmp', 'open', 'readStream'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -190,3 +192,95 @@ EventListener.prototype = {
     this._handler(timer);
   }
 };
+
+function runCmd() {
+  var binary;
+  var args = [];
+
+  for (let i = 0; i < arguments.length; ++i) {
+    args.push(arguments[i]);
+  }
+
+  if (args[0] instanceof Ci.nsIFile) {
+    binary = args.shift();
+  } else {
+    binary = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    binary.initWithPath(args.shift());
+  }
+
+  var p = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+  p.init(binary);
+
+  p.run(true, args, args.length);
+  return p.exitValue;
+}
+
+function getTmp(name) {
+  let ds = Cc["@mozilla.org/file/directory_service;1"].
+    getService(Ci.nsIProperties);
+
+  let tmp = ds.get("ProfD", Ci.nsIFile);
+  tmp.QueryInterface(Ci.nsILocalFile);
+
+  tmp.append("weave");
+  tmp.append("tmp");
+  if (!tmp.exists())
+    tmp.create(tmp.DIRECTORY_TYPE, PERMS_DIRECTORY);
+
+  if (name)
+    tmp.append(name);
+
+  return tmp;
+}
+
+function open(pathOrFile, mode, perms) {
+  let stream, file;
+
+  if (pathOrFile instanceof Ci.nsIFile) {
+    file = pathOrFile;
+  } else {
+    file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    file.initWithPath(pathOrFile);
+  }
+
+  if (!perms)
+    perms = PERMS_FILE;
+
+  switch(mode) {
+  case "<": {
+    if (!file.exists())
+      throw "Cannot open file for reading, file does not exist";
+    stream = Cc["@mozilla.org/network/file-input-stream;1"].
+      createInstance(Ci.nsIFileInputStream);
+    stream.init(file, MODE_RDONLY, perms, 0);
+    stream.QueryInterface(Ci.nsILineInputStream);
+  } break;
+
+  case ">": {
+    stream = Cc["@mozilla.org/network/file-output-stream;1"].
+      createInstance(Ci.nsIFileOutputStream);
+    stream.init(file, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, perms, 0);
+  } break;
+
+  case ">>": {
+    stream = Cc["@mozilla.org/network/file-output-stream;1"].
+      createInstance(Ci.nsIFileOutputStream);
+    stream.init(file, MODE_WRONLY | MODE_CREATE | MODE_APPEND, perms, 0);
+  } break;
+
+  default:
+    throw "Illegal mode to open(): " + mode;
+  }
+
+  return [stream, file];
+}
+
+function readStream(fis) {
+  let data = "";
+  while (fis.available()) {
+    let ret = {};
+    fis.readLine(ret);
+    data += ret.value;
+  }
+  return data;
+}
