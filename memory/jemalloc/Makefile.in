@@ -1,0 +1,102 @@
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Mozilla Foundation
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#  Ted Mielczarek <ted.mielczarek@gmail.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= jemalloc
+
+ifeq (WINNT,$(OS_TARGET))
+# Two options for Windows, either you build the CRT from source,
+# or you use a pre-built DLL.
+ifneq (,$(WIN32_CRT_SRC_DIR))
+# Building the CRT from source
+CRT_OBJ_DIR=./$(shell basename "$(WIN32_CRT_SRC_DIR)")
+libs:: $(CRT_OBJ_DIR)/build/intel/mozcrt19.dll
+	$(INSTALL) $< $(FINAL_TARGET)
+
+# patch if necessary
+$(CRT_OBJ_DIR)/jemalloc.c: $(srcdir)/crtsp1.diff
+	rm -rf $(CRT_OBJ_DIR)
+	cp -R "$(WIN32_CRT_SRC_DIR)" .
+	# per http://forums.microsoft.com/MSDN/ShowPost.aspx?PostID=1189363&SiteID=1
+	for i in dll mt xdll xmt; do \
+	  pushd $(CRT_OBJ_DIR)/intel/$${i}_lib && lib -extract:..\\build\\intel\\$${i}_obj\\unhandld.obj eh.lib && popd; \
+	done
+	# truly awful
+	#XXX: get ed into mozillabuild, bug 415123
+	$(PERL) $(srcdir)/apply-ed-patches.pl $(srcdir)/crtsp1.diff \
+	$(CRT_OBJ_DIR) $(srcdir)/ed.exe
+
+$(CRT_OBJ_DIR)/build/intel/mozcrt19.dll: \
+  $(CRT_OBJ_DIR)/jemalloc.c $(srcdir)/jemalloc.c $(srcdir)/tree.h
+	cp $(srcdir)/jemalloc.c $(srcdir)/tree.h $(CRT_OBJ_DIR)
+# this pretty much sucks, but nmake and make don't play well together
+	$(PYTHON) $(srcdir)/build-crt.py $(CRT_OBJ_DIR)
+	#XXX: these don't link right for some reason
+	rm $(CRT_OBJ_DIR)/build/intel/{libcmt,libcpmt}.lib
+else
+# Using a pre-built DLL, so just install it.
+libs:: $(WIN32_CUSTOM_CRT_DIR)/mozcrt19.dll
+	$(INSTALL) $< $(FINAL_TARGET)
+endif
+
+else
+# for other platforms, just build jemalloc as a shared lib
+
+MODULE_OPTIMIZE_FLAGS = -O2
+LIBRARY_NAME	= jemalloc
+EXPORT_LIBRARY	= 1
+LIBXUL_LIBRARY	= 0
+FORCE_SHARED_LIB= 1
+
+CSRCS		= \
+		jemalloc.c \
+		$(NULL)
+
+endif
+
+include $(topsrcdir)/config/rules.mk
+
+ifeq (Darwin,$(OS_TARGET))
+LDFLAGS += -init _jemalloc_darwin_init
+endif
