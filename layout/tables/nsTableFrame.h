@@ -538,6 +538,11 @@ protected:
       mTableLayoutStrategy;
   }
 
+private:
+  /* Handle a row that got inserted during reflow.  aNewHeight is the
+     new height of the table after reflow. */
+  void ProcessRowInserted(nscoord aNewHeight);
+
   // WIDTH AND HEIGHT CALCULATION
 
 public:
