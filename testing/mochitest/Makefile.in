@@ -96,6 +96,10 @@ else
 TEST_DRIVER_PPARGS += -DIS_MAC=0
 endif
 
+ifeq ($(host_os), cygwin)
+TEST_DRIVER_PPARGS += -DIS_CYGWIN=1
+endif
+
 runtests.pl: runtests.pl.in
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py \
 	$(TEST_DRIVER_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@

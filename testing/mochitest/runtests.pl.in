@@ -278,11 +278,24 @@ sub usage_and_exit {
  # MAKE A WINDOWS PATH #
  #######################
 
+#ifdef IS_CYGWIN
+
 sub winPathFromDir {
   my ($path) = abs_path(@_);
 
-  # XXXsayrer need to test for cygwin here.
-  # we can shell out to the cygpath utility to do this for us
+  # Use external cygpath command to get the windows-like path
+  $path = `cygpath -w $path`;
+  
+  # Just remove the traling CR char
+  chop($path);
+  return $path;
+}
+
+#else
+# Non-cygwin version
+
+sub winPathFromDir {
+  my ($path) = abs_path(@_);
 
   # This is a windows mingw32 build, we need to translate the
   # given path to the "actual" windows path.
@@ -321,6 +334,9 @@ sub winPathFromDir {
   my @dirs = File::Spec->splitdir( $directories );
   return $bestmatch . "\\" . join "\\", @dirs;
 }
+
+# End of non-cygwin version
+#endif
 
  ##################
  # SERVER STARTUP #
