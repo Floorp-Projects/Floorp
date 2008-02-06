@@ -364,7 +364,6 @@ js_InitAtomState(JSRuntime *rt)
     */
     JS_ASSERT(!state->stringAtoms.ops);
     JS_ASSERT(!state->doubleAtoms.ops);
-    JS_ASSERT(state->tablegen == 0);
 
     if (!JS_DHashTableInit(&state->stringAtoms, &StringHashOps,
                            NULL, sizeof(JSAtomHashEntry),
@@ -559,10 +558,11 @@ js_SweepAtomState(JSContext *cx)
     JS_DHashTableEnumerate(&state->stringAtoms, js_atom_sweeper, cx);
 
     /*
-     * Optimize for simplicity and mutate tablegen even if the sweeper has not
-     * removed any entries.
+     * Optimize for simplicity and mutate table generation numbers even if the
+     * sweeper has not removed any entries.
      */
-    state->tablegen++;
+    state->doubleAtoms.generation++;
+    state->stringAtoms.generation++;
 }
 
 JSAtom *
@@ -583,7 +583,7 @@ js_AtomizeDouble(JSContext *cx, jsdouble d)
     if (!entry)
         goto failed_hash_add;
     if (entry->keyAndFlags == 0) {
-        gen = ++state->tablegen;
+        gen = ++table->generation;
         JS_UNLOCK(&state->lock, cx);
 
         key = js_NewDouble(cx, d, 0);
@@ -591,7 +591,7 @@ js_AtomizeDouble(JSContext *cx, jsdouble d)
             return NULL;
 
         JS_LOCK(&state->lock, cx);
-        if (state->tablegen == gen) {
+        if (table->generation == gen) {
             JS_ASSERT(entry->keyAndFlags == 0);
         } else {
             entry = TO_ATOM_ENTRY(JS_DHashTableOperate(table, key,
@@ -600,7 +600,7 @@ js_AtomizeDouble(JSContext *cx, jsdouble d)
                 goto failed_hash_add;
             if (entry->keyAndFlags != 0)
                 goto finish;
-            ++state->tablegen;
+            ++table->generation;
         }
         INIT_ATOM_ENTRY(entry, key);
     }
@@ -647,12 +647,12 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
          * string construction is a complex operation. For example, it can
          * trigger GC which may rehash the table and make the entry invalid.
          */
-        ++state->tablegen;
+        ++table->generation;
         if (!(flags & ATOM_TMPSTR) && JSSTRING_IS_FLAT(str)) {
             JSFLATSTR_CLEAR_MUTABLE(str);
             key = str;
         } else {
-            gen = state->tablegen;
+            gen = table->generation;
             JS_UNLOCK(&state->lock, cx);
 
             if (flags & ATOM_TMPSTR) {
@@ -678,7 +678,7 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
             }
 
             JS_LOCK(&state->lock, cx);
-            if (state->tablegen == gen) {
+            if (table->generation == gen) {
                 JS_ASSERT(entry->keyAndFlags == 0);
             } else {
                 entry = TO_ATOM_ENTRY(JS_DHashTableOperate(table, key,
@@ -689,7 +689,7 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
                     key = (JSString *)ATOM_ENTRY_KEY(entry);
                     goto finish;
                 }
-                ++state->tablegen;
+                ++table->generation;
             }
         }
         INIT_ATOM_ENTRY(entry, key);
