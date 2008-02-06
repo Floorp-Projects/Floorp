@@ -5799,14 +5799,12 @@ IdentityHandler.prototype = {
   },
 
   /**
-   * Handler for mouseclicks on the "Tell me more about this website" link text
-   * in the "identity-popup" panel.
+   * Handler for mouseclicks on the "More Information" button in the
+   * "identity-popup" panel.
    */
   handleMoreInfoClick : function(event) {
-    if (event.button == 0) {
-      displaySecurityInfo();
-      event.stopPropagation();
-    }   
+    displaySecurityInfo();
+    event.stopPropagation();
   },
   
   /**
