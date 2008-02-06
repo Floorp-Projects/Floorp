@@ -1,0 +1,31 @@
+<html><head>
+<title>Testcase bug 344164 - Hang when moving right in caret browsing with this testcase</title>
+<script>
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefBranch);
+prefs.setBoolPref("accessibility.browsewithcaret", true);
+
+function keymove(i){
+netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserWrite");
+
+  var ev = document.createEvent ('KeyEvents');
+  ev.initKeyEvent('keypress', true,true, window, false,false, false, false, 39, 0);
+  document.dispatchEvent(ev);
+
+setTimeout(keymove,50,i);
+}
+setTimeout(keymove,500,0);
+window.focus();
+</script>
+</head>
+<body>
+text
+<button>
+<div>
+&#1593;
+<input type="submit">
+<map>&#1593;</map>
+</div>
+</button>
+</body></html>
