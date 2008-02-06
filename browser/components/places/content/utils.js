@@ -1795,10 +1795,11 @@ var PlacesUtils = {
 
         if (aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY)
           element.setAttribute("query", "true");
-        if (this.nodeIsLivemarkContainer(aNode))
-          element.setAttribute("livemark", "true");
-        else if (this.bookmarks
-                     .getFolderIdForItem(aNode.itemId) == this.tagsFolderId) {
+	else if (aNode.itemId != -1) {
+          if (this.nodeIsLivemarkContainer(aNode))
+            element.setAttribute("livemark", "true");
+          else if (this.bookmarks
+                     .getFolderIdForItem(aNode.itemId) == this.tagsFolderId)
             element.setAttribute("tagContainer", "true");
         }
 
