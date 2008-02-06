@@ -51,6 +51,7 @@ sub unescape_pattern;
 
 my $option_desc = "b=s branch>b T=s buildtype>T t=s testtype>t l=s rawlogfile>l f=s failurelogfile>f o=s os>o r=s patterns>r z=s timezone>z O=s outputprefix>O A=s arch>A K=s kernel>K D debug>D";
 
+my $testid;
 my $branch;
 my $buildtype;
 my $testtype;
@@ -87,12 +88,13 @@ my @failures;
 my @fixes;
 my @excludedtests;
 my $excludedtest;
+my $excludedfile;
+my %includedtests = {};
+my $includedfile;
 my @results;
 
 my $regchars = '\[\^\-\]\|\{\}\?\*\+\.\<\>\$\(\)';
 
-my @excludedfiles = ('spidermonkey-n.tests', 'slow-n.tests', 'performance.tests');
-my $excludedfile;
 
 &parse_options;
 
@@ -101,6 +103,9 @@ my $jsdir = $ENV{TEST_JSDIR};
 if (!defined($jsdir)) {
      $jsdir = "/work/mozilla/mozilla.com/test.mozilla.com/www/tests/mozilla.org/js";
 }
+
+my @excludedfiles = ("excluded-$branch-$testtype-$buildtype.tests");
+my @includedfiles = ("included-$branch-$testtype-$buildtype.tests");
 
  # create working patterns file consisting of matches to users selection
  # and which has the test description patterns escaped
@@ -124,6 +129,20 @@ foreach $excludedfile ( @excludedfiles ) {
 
 @excludedtests = sort @excludedtests;
 
+foreach $includedfile ( @includedfiles ) {
+    open INCLUDED, "<$jsdir/$includedfile" or die "Unable to open included file $jsdir/$includedfile: $!\n";
+    while (<INCLUDED>) {
+        chomp;
+
+        next if ($_ =~ /^\#/);
+
+        s/\s+$//;
+
+        $includedtests{$_} = 1;
+    }
+    close INCLUDED;
+}
+
 debug "loading patterns $patterns";
 debug "pattern filter: /^TEST_ID=[^,]*, TEST_BRANCH=$knownfailurebranchpattern, TEST_RESULT=[^,]*, TEST_BUILDTYPE=$knownfailurebuildtypepattern, TEST_TYPE=$knownfailuretesttypepattern, TEST_OS=$knownfailureospattern, TEST_MACHINE=[^,]*, TEST_PROCESSORTYPE=$knownfailurearchpattern, TEST_KERNEL=$knownfailurekernelpattern, TEST_DATE=[^,]*, TEST_TIMEZONE=$knownfailuretimezonepattern,/\n";
 
@@ -133,7 +152,13 @@ while (<PATTERNS>) {
 
     s/\s+$//;
 
-    if ($_ =~ /^TEST_ID=[^,]*, TEST_BRANCH=$knownfailurebranchpattern, TEST_RESULT=[^,]*, TEST_BUILDTYPE=$knownfailurebuildtypepattern, TEST_TYPE=$knownfailuretesttypepattern, TEST_OS=$knownfailureospattern, TEST_MACHINE=[^,]*, TEST_PROCESSORTYPE=$knownfailurearchpattern, TEST_KERNEL=$knownfailurekernelpattern, TEST_DATE=[^,]*, TEST_TIMEZONE=$knownfailuretimezonepattern,/) {
+    ($testid) = $_ =~ /^TEST_ID=([^,]*),/;
+
+    if (!$includedtests{$testid})
+    {
+        debug "test $testid was not included during this run";
+    }
+    elsif ($_ =~ /^TEST_ID=[^,]*, TEST_BRANCH=$knownfailurebranchpattern, TEST_RESULT=[^,]*, TEST_BUILDTYPE=$knownfailurebuildtypepattern, TEST_TYPE=$knownfailuretesttypepattern, TEST_OS=$knownfailureospattern, TEST_MACHINE=[^,]*, TEST_PROCESSORTYPE=$knownfailurearchpattern, TEST_KERNEL=$knownfailurekernelpattern, TEST_DATE=[^,]*, TEST_TIMEZONE=$knownfailuretimezonepattern,/) {
         debug "adding pattern: $_";
         push @patterns, (escape_pattern($_));   
     }
@@ -155,7 +180,7 @@ if (defined($rawlogfile)) {
 
     debug "writing failures $failurelogfile";
 
-    open INPUTLOG, "$jsdir/post-process-logs.pl $rawlogfile|sort|uniq|" or die "Unable to open $rawlogfile $!\n";
+    open INPUTLOG, "$jsdir/post-process-logs.pl $rawlogfile |" or die "Unable to open $rawlogfile $!\n";
     open ALLLOG, ">$alllog" or die "Unable to open $alllog $!\n";
     open FAILURELOG, ">$failurelogfile" or die "Unable to open $failurelogfile $!\n";
 
@@ -171,8 +196,11 @@ if (defined($rawlogfile)) {
         }
     }
     close INPUTLOG;
+    my $inputrc = $?;
     close ALLLOG;
     close FAILURELOG;
+
+    die "FATAL ERROR in post-process-logs.pl" if $inputrc != 0;
 
 }
 else {
@@ -208,6 +236,7 @@ foreach $pattern (@patterns) {
 }
 
 foreach $excludedtest ( @excludedtests ) {
+    # remove any potential fixes which are due to the test being excluded
 
     if ($debug) {
         @results = grep m@$excludedtest@, @fixes;
@@ -302,7 +331,7 @@ print STDOUT "log: $outputprefix-results-possible-regressions.log\n";
 sub debug {
     if ($debug) {
         my $msg = shift;
-        print "DEBUG: $msg\n";
+        print STDERR "DEBUG: $msg\n";
     }
 }
 
@@ -322,7 +351,7 @@ known-failures.pl [-b|--branch] branch [-T|--buildtype] buildtype
 
     variable            description
     ===============     ============================================================
-    -b branch           branch 1.8.1, 1.9.0, all
+    -b branch           branch 1.8.0, 1.8.1, 1.9.0, all
     -T buildtype        build type opt, debug, all
     -t testtype         test type browser, shell, all
     -l rawlogfile       raw logfile
@@ -426,6 +455,10 @@ sub parse_options {
         usage "missing outputprefix";
     }
 
+    if ($branch eq "1.8.0") {
+        $knownfailurebranchpattern = "([^,]*1\\.8\\.0[^,]*|\\.\\*)";
+        $failurebranchpattern      = "1\\.8\\.0";
+    }
     if ($branch eq "1.8.1") {
         $knownfailurebranchpattern = "([^,]*1\\.8\\.1[^,]*|\\.\\*)";
         $failurebranchpattern      = "1\\.8\\.1";

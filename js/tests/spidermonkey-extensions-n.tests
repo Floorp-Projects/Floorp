@@ -164,11 +164,13 @@ js1_5/extensions/regress-354541-03.js
 js1_5/extensions/regress-354541-04.js
 js1_5/extensions/regress-355339.js
 js1_5/extensions/regress-355497.js
+js1_5/extensions/regress-355622.js
 js1_5/extensions/regress-355655.js
 js1_5/extensions/regress-355736.js
 js1_5/extensions/regress-355820.js
 js1_5/extensions/regress-355982.js
 js1_5/extensions/regress-356085.js
+js1_5/extensions/regress-356106.js
 js1_5/extensions/regress-356402.js
 js1_5/extensions/regress-358594-01.js
 js1_5/extensions/regress-358594-02.js
@@ -212,11 +214,13 @@ js1_5/extensions/regress-374589.js
 js1_5/extensions/regress-375183.js
 js1_5/extensions/regress-375801.js
 js1_5/extensions/regress-376052.js
+js1_5/extensions/regress-379523.js
 js1_5/extensions/regress-380581.js
 js1_5/extensions/regress-380831.js
 js1_5/extensions/regress-380889.js
 js1_5/extensions/regress-381205.js
 js1_5/extensions/regress-381211.js
+js1_5/extensions/regress-381304.js
 js1_5/extensions/regress-382509.js
 js1_5/extensions/regress-383965.js
 js1_5/extensions/regress-384680.js
@@ -244,6 +248,7 @@ js1_5/extensions/toLocaleFormat-02.js
 js1_6/extensions/regress-312385-01.js
 js1_6/extensions/regress-352392.js
 js1_6/extensions/regress-385393-08.js
+js1_6/extensions/regress-414098.js
 js1_7/extensions/basic-for-each.js
 js1_7/extensions/basic-for-in.js
 js1_7/extensions/basic-Iterator.js

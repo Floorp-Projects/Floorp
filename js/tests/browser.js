@@ -134,16 +134,7 @@ window.onerror = function (msg, page, line)
     testcase.passed = true;
   }
 
-  testcase.reason += msg;
-
-  if (typeof(page) != 'undefined')
-  {
-    testcase.reason += ' Page: ' + page;
-  }
-  if (typeof(line) != 'undefined')
-  {
-    testcase.reason += ' Line: ' + line;
-  }
+  testcase.reason = page + ':' + line + ': ' + msg;
 
   reportFailure(msg);
 
