@@ -1,21 +1,21 @@
-MozJSHTTP README
-================
+httpd.js README
+===============
 
-MozJSHTTP is a small cross-platform implementation of an HTTP/1.1 server in
+httpd.js is a small cross-platform implementation of an HTTP/1.1 server in
 JavaScript for the Mozilla platform.
 
-MozJSHTTP may be used as an XPCOM component, as an inline script in a document
+httpd.js may be used as an XPCOM component, as an inline script in a document
 with XPCOM privileges, or from the XPCOM shell (xpcshell).  Currently, its most-
 supported method of use is from the XPCOM shell, where you can get all the
 dynamicity of JS in adding request handlers and the like, but component-based
 equivalent functionality is planned.
 
 
-Using MozJSHTTP as an XPCOM Component
--------------------------------------
+Using httpd.js as an XPCOM Component
+------------------------------------
 
 First, create an XPT file for nsIHttpServer.idl, using the xpidl tool included
-in the Mozilla SDK for the environment in which you wish to run MozJSHTTP.  See
+in the Mozilla SDK for the environment in which you wish to run httpd.js.  See
 <http://developer.mozilla.org/en/docs/XPIDL:xpidl> for further details on how to
 do this.
 
@@ -47,10 +47,10 @@ code which does this:
   server.stop();
 
 
-Using MozJSHTTP as an Inline Script or from xpcshell
-----------------------------------------------------
+Using httpd.js as an Inline Script or from xpcshell
+---------------------------------------------------
 
-Using MozJSHTTP as a script or from xpcshell isn't very different from using it
+Using httpd.js as a script or from xpcshell isn't very different from using it
 as a component; the only real difference lies in how you create an instance of
 the server.  To create an instance, do the following:
 
@@ -58,18 +58,18 @@ the server.  To create an instance, do the following:
 
 You now can use |server| exactly as you would when |server| was created as an
 XPCOM component.  Note, however, that doing so will trample over the global
-namespace, and global values defined in MozJSHTTP will leak into your script.
+namespace, and global values defined in httpd.js will leak into your script.
 This may typically be benign, but since some of the global values defined are
 constants (specifically, Cc/Ci/Cr as abbreviations for the classes, interfaces,
 and results properties of Components), it's possible this trampling could
-break your script.  In general you should use MozJSHTTP as an XPCOM component
+break your script.  In general you should use httpd.js as an XPCOM component
 whenever possible.
 
 
 Known Issues
 ------------
 
-While MozJSHTTP runs on Mozilla 1.8 and 1.9 platforms, it doesn't run quite as
+While httpd.js runs on Mozilla 1.8 and 1.9 platforms, it doesn't run quite as
 well on 1.8 due to the absence of some APIs, specifically the threading APIs.
 The biggest problem here is that server shutdown (see nsIHttpServer.stop) is not
 guaranteed to complete after all pending requests have been served; if you are
@@ -78,7 +78,7 @@ calling server.stop() before the host application closes to ensure that all
 requests have completed.  Things probably aren't going to break too horribly if
 you don't do this, but better safe than sorry.
 
-MozJSHTTP makes no effort to time out requests, beyond any the socket itself
+httpd.js makes no effort to time out requests, beyond any the socket itself
 might or might not provide.  I don't believe it provides any by default, but
 I haven't verified this.
 
@@ -96,6 +96,6 @@ A special testing function, |server|, is provided for use in xpcshell for quick
 testing of the server; see the source code for details on its use.  You don't
 want to use this in a script, however, because doing so will block until the
 server is shut down.  It's also a good example of how to use the basic
-functionality of MozJSHTTP, if you need one.
+functionality of httpd.js, if you need one.
 
 Have fun!
