@@ -59,7 +59,6 @@ usage()
 {
     cat <<EOF
 usage: process-logs.sh.sh -l testlogfiles -A arch -K kernel
-usage: process-logs.sh.sh -l $testlogfiles -A $arch -K $kernel
 
 variable            description
 ===============     ============================================================
@@ -103,42 +102,52 @@ fi
 
 for testlogfile in `ls $testlogfiles`; do
 
+    debug "testlogfile=$testlogfile"
+
     case "$testlogfile" in
         *,js,*) testtype=shell;;
         *,firefox,*) testtype=browser;;
-        *) error "unknown testtype in logfile $testlogfile";;
+        *) error "unknown testtype in logfile $testlogfile" $LINENO;;
     esac
+
+    debug "testtype=$testtype"
 
     case "$testlogfile" in
         *,nightly,*) buildtype=nightly;;
         *,opt,*) buildtype=opt;;
         *,debug,*) buildtype=debug;;
-        *) error "unknown buildtype in logfile $testlogfile";;
+        *) error "unknown buildtype in logfile $testlogfile" $LINENO;
     esac
+
+    debug "buildtype=$buildtype"
 
     case "$testlogfile" in
         *,1.8.0*) branch=1.8.0;;
         *,1.8.1*) branch=1.8.1;;
         *,1.9.0*) branch=1.9.0;;
         *) 
-            branch=`grep TEST_BRANCH= $testlogfile | sed 's|.*TEST_BRANCH=\(.*\)|\1|'`
+            branch=`grep '^environment: TEST_BRANCH=' $testlogfile | sed 's|.*TEST_BRANCH=\(.*\)|\1|'`
             if [[ -z "$branch" ]]; then
-                error "unknown branch in logfile $testlogfile"
+                error "unknown branch in logfile $testlogfile" $LINENO
             fi
             ;;
     esac
+
+    debug "branch=$branch"
 
     case "$testlogfile" in 
         *,win32,*) OSID=win32;;
         *,linux,*) OSID=linux;;
         *,mac,*) OSID=mac;;
         *) 
-            OSID=`grep OSID= $testlogfile | sed 's|.*OSID=\(.*\)|\1|'`
+            OSID=`grep '^environment: OSID=' $testlogfile | sed 's|.*OSID=\(.*\)|\1|'`
             if [[ -z "$OSID" ]]; then
-                error "unknown OS in logfile $testlogfile"
+                error "unknown OS in logfile $testlogfile" $LINENO
             fi
             ;;
     esac
+
+    debug "OSID=$OSID"
 
     if [[ -n "$optkernel" ]]; then
         kernel="$optkernel"
@@ -146,10 +155,12 @@ for testlogfile in `ls $testlogfiles`; do
         if [[ "$OSID" == "win32" ]]; then
             kernel=all
         else
-            kernel=`grep TEST_KERNEL $testlogfile | sed 's|.*TEST_KERNEL=\(.*\)|\1|'`
+            kernel=`grep '^environment: TEST_KERNEL=' $testlogfile | sed 's|.*TEST_KERNEL=\(.*\)|\1|'`
             kernel=`echo $kernel | sed 's|\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)[-.0-9]*\.\([a-zA-Z0-9]*\)|\1.\2.\3.*\4|'`
         fi
     fi
+
+    debug "kernel=$kernel"
 
     if [[ -n "$optarch" ]]; then
         arch="$optarch"
@@ -157,17 +168,23 @@ for testlogfile in `ls $testlogfiles`; do
         if [[ "$OSID" == "win32" ]]; then
             arch=all
         else
-            arch=`grep TEST_PROCESSORTYPE $testlogfile | sed 's|.*TEST_PROCESSORTYPE=\(.*\)|\1|'`
+            arch=`grep '^environment: TEST_PROCESSORTYPE=' $testlogfile | sed 's|.*TEST_PROCESSORTYPE=\(.*\)|\1|'`
         fi
     fi
 
-    timezone=`echo $testlogfile | sed 's|^[-0-9]*\([-+]\)\([0-9]\{4,4\}\),.*|\1\2|'`
+    debug "arch=$arch"
+
+    timezone=`basename $testlogfile | sed 's|^[-0-9]*\([-+]\)\([0-9]\{4,4\}\),.*|\1\2|'`
+
+    debug "timezone=$timezone"
 
     outputprefix=$testlogfile
 
-    if [[ -n "$DEBUG" ]]; then
-        dumpvars branch buildtype testtype OSID timezone testlogfile arch kernel 
-    fi
+    includetests="included-$branch-$testtype-$buildtype.tests"
+    excludetests="excluded-$branch-$testtype-$buildtype.tests"
+
+    grep '^include: ' $testlogfile | sed 's|include: ||' > $TEST_DIR/tests/mozilla.org/js/$includetests
+    grep '^exclude: ' $testlogfile | sed 's|exclude: ||' > $TEST_DIR/tests/mozilla.org/js/$excludetests
 
     $TEST_DIR/tests/mozilla.org/js/known-failures.pl -b "$branch" -T "$buildtype" -t "$testtype" -o "$OSID" -z "$timezone" -l "$testlogfile" -A "$arch" -K "$kernel" -r "$TEST_JSDIR/failures.txt" -O "$outputprefix"
 

@@ -70,8 +70,8 @@ source ${TEST_BIN}/library.sh
 usage()
 {
     cat <<EOF
-usage: runtests.sh -p products -b branches -T  buildtypes -B buildcommands  [-e extra] [-v]
-usage: runtests.sh -p "$products" -b "$branches" -T  "$buildtypes" -B "$buildcommands" -e "$extra"
+usage: runtests.sh -p products -b branches -T  buildtypes -B buildcommands  -e extra [-v] \\
+                   -S -R -X exclude -I include -c -t
 
 variable            description
 ===============     ============================================================
@@ -87,6 +87,29 @@ variable            description
 -v                  optional. verbose - copies log file output to stdout.
 -S                  optional. summary - output tailered for use with
                     Buildbot|Tinderbox
+-R                  optional. by default the browser test will start Firefox
+                    Spider and execute the tests one after another in the same
+                    process. -R will start an new instance of Firefox for each
+                    test. This has no effect for shell based tests.
+-X exclude          optional. By default the test will exclude the 
+                    tests listed in spidermonkey-n-\$branch.tests, 
+                    performance-\$branch.tests. exclude is a list of either
+                    individual tests, manifest files or sub-directories which 
+                    will override the default exclusion list.
+-I include          optional. By default the test will include the 
+                    JavaScript tests appropriate for the branch. include is a
+                    list of either individual tests, manifest files or 
+                    sub-directories which will override the default inclusion 
+                    list.
+-c                  optional. By default the test will exclude tests 
+                    which crash on this branch, test type, build type and 
+                    operating system. -c will include tests which crash. 
+                    Typically this should only be used in combination with -R. 
+                    This has no effect on shell based tests which execute crash
+                    tests regardless.
+-t                  optional. By default the test will exclude tests 
+                    which time out on this branch, test type, build type and 
+                    operating system. -t will include tests which timeout.
 
 if an argument contains more than one value, it must be quoted.
 EOF
@@ -95,19 +118,24 @@ EOF
 
 verbose=0
 
-while getopts "p:b:T:B:e:vS" optname;
-  do
-  case $optname in
-      p) products=$OPTARG;;
-      b) branches=$OPTARG;;
-      T) buildtypes=$OPTARG;;
-      e) extra="$OPTARG"
-          extraflag="-e $OPTARG";;
-      B) buildcommands=$OPTARG;;
-      v) verbose=1
-          verboseflag="-v";;
-      S) summary=1;;
-  esac
+while getopts "p:b:T:B:e:X:I:vSRct" optname;
+do
+    case $optname in
+        p) products=$OPTARG;;
+        b) branches=$OPTARG;;
+        T) buildtypes=$OPTARG;;
+        e) extra="$OPTARG"
+            extraflag="-e $OPTARG";;
+        B) buildcommands=$OPTARG;;
+        v) verbose=1
+            verboseflag="-v";;
+        R) restart=1;;
+        S) summary=1;;
+        X) exclude=$OPTARG;;
+        I) include=$OPTARG;;
+        c) crashes=1;;
+        t) timeouts=1;;
+    esac
 done
 
 if [[ -z "$products" || -z "$branches" || -z "$buildtypes" ]]; then
@@ -130,6 +158,7 @@ case $buildtypes in
 esac
 
 testlogfilelist=`mktemp /tmp/TESTLOGFILES.XXXX`
+trap "_exit; rm -f $testlogfilelist" EXIT
 
 export testlogfiles
 export testlogfile
@@ -139,13 +168,18 @@ export testlogfile
 # look into the testlogfilelist for the error
 
 branchesextra=`combo.sh -d - "$branches" "$extra"`
+
+# can't test tester.sh's exit code to see if there was
+# an error since we are piping it and can't count on pipefail
 tester.sh -t $TEST_JSDIR/test.sh  $verboseflag "$products" "$branchesextra" "$buildtypes" 2>&1 | tee -a $testlogfilelist
-if grep -q 'test-setup.sh failed' $testlogfilelist; then
-    error "runtests.sh: terminating due to error"
-fi
 testlogfiles="`grep '^log:' $testlogfilelist|sed 's|^log: ||'`"
 
-rm $testlogfilelist
+fatalerrors=`grep 'FATAL ERROR' $testlogfiles | cat`
+if [[ -n "$fatalerrors" ]]; then
+    testlogarray=( $testlogfiles )
+    let itestlog=${#testlogarray[*]}-1
+    error "`tail -n 20 ${testlogarray[$itestlog]}`" $LINENO
+fi
 
 case "$OSID" in
     win32)
@@ -161,26 +195,31 @@ case "$OSID" in
         kernel=all
         ;;
     *)
-        error "$OSID not supported"
+        error "$OSID not supported" $LINENO
         ;;
 esac
 
 for testlogfile in $testlogfiles; do
+
+    if [[ -n "$DEBUG" ]]; then
+        dumpvars testlogfile
+    fi
+
     case "$testlogfile" in
         *,js,*) testtype=shell;;
         *,firefox,*) testtype=browser;;
-        *) error "unknown testtype in logfile $testlogfile";;
+        *) error "unknown testtype in logfile $testlogfile" $LINENO;;
     esac
     case "$testlogfile" in
         *,opt,*) buildtype=opt;;
         *,debug,*) buildtype=debug;;
-        *) error "unknown buildtype in logfile $testlogfile";;
+        *) error "unknown buildtype in logfile $testlogfile" $LINENO;;
     esac
     case "$testlogfile" in
         *,1.8.0*) branch=1.8.0;;
         *,1.8.1*) branch=1.8.1;;
         *,1.9.0*) branch=1.9.0;;
-        *) error "unknown branch in logfile $testlogfile";;
+        *) error "unknown branch in logfile $testlogfile" $LINENO;;
     esac
     outputprefix=$testlogfile
 
@@ -189,7 +228,7 @@ for testlogfile in $testlogfiles; do
     fi
 
     if ! $TEST_DIR/tests/mozilla.org/js/known-failures.pl -b $branch -T $buildtype -t $testtype -o "$OSID" -z `date +%z` -l $testlogfile -A "$arch" -K "$kernel" -r $TEST_JSDIR/failures.txt -O $outputprefix; then
-        error "known-failures.pl"
+        error "known-failures.pl" $LINENO
     fi
 
     if [[ -n "$summary" ]]; then
@@ -211,7 +250,9 @@ for testlogfile in $testlogfiles; do
         cat "${outputprefix}-results-possible-fixes.log"
         echo -e "\nPossible Regressions:\n"
         cat "${outputprefix}-results-possible-regressions.log"
-        echo -e "\nTinderboxPrint: js tests<br/>$branch $buildtype $testtype<br/>$npass/$nfail<br/>F:$nfixes R:$nregressions"
+        echo -e "\nTinderboxPrint:<div title=\"$testlogfile\">\n"
+        echo -e "\nTinderboxPrint:js tests<br/>$branch $buildtype $testtype<br/>$npass/$nfail<br/>F:$nfixes R:$nregressions"
+        echo -e "\nTinderboxPrint:</div>\n"
 
     fi
 done

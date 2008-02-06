@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 # -*- Mode: Shell-script; tab-width: 4; indent-tabs-mode: nil; -*-
 
 # ***** BEGIN LICENSE BLOCK *****

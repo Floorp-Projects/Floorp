@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 # -*- Mode: Shell-script; tab-width: 4; indent-tabs-mode: nil; -*-
 
 # ***** BEGIN LICENSE BLOCK *****
@@ -68,25 +68,50 @@ fi
 source ${TEST_BIN}/library.sh
 
 TEST_JSEACH_TIMEOUT=${TEST_JSEACH_TIMEOUT:-900}
-TEST_JSEACH_PAGE_TIMEOUT=${TEST_JSEACH_PAGE_TIMEOUT:-900}
-
+TEST_JSEACH_PAGE_TIMEOUT=${TEST_JSEACH_PAGE_TIMEOUT:-840}
+TEST_JSALL_TIMEOUT=${TEST_JSALL_TIMEOUT:-10800}
 TEST_WWW_JS=`echo $TEST_JSDIR|sed "s|$TEST_DIR||"`
+
 #
 # options processing
 #
-options="p:b:x:N:d:"
 usage()
 {
     cat <<EOF
-usage: $SCRIPT -p product -b branch -x executablepath -N profilename
+usage: $SCRIPT -p product -b branch -T buildtype -x executablepath -N profilename \\
+               -R -X exclude -I include -c -t -F [-d datafiles]
 
 variable            description
 ===============     ============================================================
 -p product          required. firefox|thunderbird
 -b branch           required. 1.8.0|1.8.1|1.9.0
+-T buildtype        required. one of opt debug
 -x executablepath   required. directory-tree containing executable 'product'
 -N profilename      required. profile name 
-
+-R                  optional. by default the browser test will start Firefox
+                    spider and execute the tests one after another in the same
+                    process. -R will start an new instance of Firefox for each
+                    test.
+-X exclude          optional. By default the test will exclude the 
+                    tests listed in spidermonkey-n-\$branch.tests, 
+                    performance-\$branch.tests. exclude is a list of either
+                    individual tests, manifest files or sub-directories which 
+                    will override the default exclusion list.
+-I include          optional. By default the test will include the 
+                    JavaScript tests appropriate for the branch. include is a
+                    list of either individual tests, manifest files or 
+                    sub-directories which will override the default inclusion 
+                    list.
+-c                  optional. By default the test will exclude tests 
+                    which crash on this branch, test type, build type and 
+                    operating system. -c will include tests which crash. 
+                    Typically this should only be used in combination with -R. 
+                    This has no effect on shell based tests which execute crash
+                    tests regardless.
+-t                  optional. By default the test will exclude tests 
+                    which time out on this branch, test type, build type and 
+                    operating system. -t will include tests which timeout.
+-F                  optional. Just generate file lists without running any tests.
 -d datafiles        optional. one or more filenames of files containing 
                     environment variable definitions to be included.
 
@@ -98,15 +123,20 @@ EOF
     exit 2
 }
 
-unset product branch profilename executablepath datafiles
-
-while getopts $options optname ; 
+while getopts "p:b:T:x:N:d:X:I:RctF" optname
 do 
     case $optname in
         p) product=$OPTARG;;
         b) branch=$OPTARG;;
+        T) buildtype=$OPTARG;;
         N) profilename=$OPTARG;;
         x) executablepath=$OPTARG;;
+        R) restart=1;;
+        X) exclude=$OPTARG;;
+        I) include=$OPTARG;;
+        c) crashes=1;;
+        t) timeouts=1;;
+        F) filesonly=1;;
         d) datafiles=$OPTARG;;
     esac
 done
@@ -118,38 +148,191 @@ if [[ -n "$datafiles" ]]; then
     done
 fi
 
+dumpvars product branch buildtype profilename executablepath restart exclude include crashes timeouts filesonly datafiles | sed "s|^|arguments: |"
+
 if [[ -z "$product" || -z "$branch" || -z "$executablepath" || -z "$profilename" ]]; then
     usage
 fi
 
 executable=`get_executable $product $branch $executablepath`
 
-case "$branch" in 
-    1.8.0)
-        list=1.8.0-list.txt
+pushd $TEST_JSDIR
+
+rm -f finished-$branch-browser-$buildtype
+
+if ! make failures.txt; then
+    error "during make failures.txt" $LINENO
+fi
+
+includetests="included-$branch-browser-$buildtype.tests"
+rm -f $includetests
+touch $includetests
+
+if [[ -z "$include" ]]; then
+    # by default include tests appropriate for the branch
+    include="e4x ecma ecma_2 ecma_3 js1_1 js1_2 js1_3 js1_4 js1_5 js1_6"
+
+    case "$branch" in 
+        1.8.0)
+            ;;
+        1.8.1)
+            include="$include js1_7"
+            ;;
+        1.9.0)
+            include="$include js1_7 js1_8"
+            ;;
+    esac
+fi
+
+for i in $include; do
+    if [[ -f "$i" ]]; then
+        echo "# including $i" >> $includetests
+        if echo $i | grep -q '\.js$'; then
+            echo $i >> $includetests
+        else
+            cat $i >> $includetests
+        fi
+    elif [[ -d "$i" ]]; then
+        find $i -name '*.js' -print | egrep -v '(shell|browser|template|jsref|userhook.*|\.#.*)\.js' | sed 's/^\.\///' | sort >> $includetests
+    fi
+done
+
+excludetests="excluded-$branch-browser-$buildtype.tests"
+rm -f $excludetests
+touch $excludetests
+
+if [[ -z "$exclude" ]]; then
+    exclude="spidermonkey-n-$branch.tests performance-$branch.tests"
+fi
+
+for e in $exclude; do
+    if [[ -f "$e" ]]; then
+        echo "# excluding $e" >> $excludetests
+        if echo $e | grep -q '\.js$'; then
+            echo $e >> $excludetests
+        else
+            cat $e >> $excludetests
+        fi
+    elif [[ -d "$e" ]]; then
+        find $e -name '*.js' -print | egrep -v '(shell|browser|template|jsref|userhook.*|\.#.*)\.js' | sed 's/^\.\///' | sort >> $excludetests
+    fi
+done
+
+case "$OSID" in
+    win32)
+        arch='.*'
+        kernel='.*'
         ;;
-    1.8.1)
-        list=1.8.1-list.txt
+    linux)
+        arch="`uname -p`"
+        kernel="`uname -r | sed 's|\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)[-.0-9]*\.\([a-zA-Z0-9]*\)|\1.\2.\3.*\4|'`"
         ;;
-    1.9.0)
-        list=1.9.0-list.txt
+    mac)
+        arch="`uname -p`"
+        kernel='[^,]*'
+        ;;
+    *)
+        error "$OSID not supported" $LINENO
         ;;
 esac
 
-pushd $TEST_JSDIR
+if [[ -z "$timeouts" ]]; then
+    echo "# exclude tests that time out" >> $excludetests
+    egrep "TEST_BRANCH=([^,]*$branch[^,]*|[.][*]), TEST_RESULT=FAILED, TEST_BUILDTYPE=([^,]*$buildtype[^,]*|[.][*]), TEST_TYPE=([^,]*browser[^,]*|[.][*]), TEST_OS=([^,]*$OSID[^,]*|[.][*]), .*, TEST_PROCESSORTYPE=([^,]*$arch[^,]*|[.][*]), TEST_KERNEL=([^,]*$kernel[^,]*|[.][*]), .*, TEST_DESCRIPTION=.*EXIT STATUS: TIMED OUT" \
+        failures.txt  | sed 's/TEST_ID=\([^,]*\),.*/\1/' | sort | uniq >> $excludetests
+fi
 
-# clock skew causes failures. clean first
-make clean
-make
+if [[ -z "$crashes" ]]; then
+    echo "# exclude tests that crash" >> $excludetests
+    pattern="TEST_BRANCH=([^,]*$branch[^,]*|[.][*]), TEST_RESULT=FAILED, TEST_BUILDTYPE=([^,]*$buildtype[^,]*|[.][*]), TEST_TYPE=([^,]*browser[^,]*|[.][*]), TEST_OS=([^,]*$OSID[^,]*|[.][*]), .*, TEST_PROCESSORTYPE=([^,]*$arch[^,]*|[.][*]), TEST_KERNEL=([^,]*$kernel[^,]*|[.][*]), .*, TEST_DESCRIPTION=.*"
+    case "$buildtype" in
+        opt)
+            pattern="${pattern}EXIT STATUS: CRASHED"
+            ;;
+        debug)
+            pattern="${pattern}(EXIT STATUS: CRASHED|Assertion failure:)"
+            ;;
+    esac
+    egrep "$pattern" failures.txt  | sed 's/TEST_ID=\([^,]*\),.*/\1/' | sort | uniq >> $excludetests
 
-cat "$list" | while read url; do 
-	edit-talkback.sh -p "$product" -b "$branch" -x "$executablepath" -i "$url"
-	time timed_run.py $TEST_JSEACH_TIMEOUT "$url" \
-		"$executable" -P "$profilename" \
-		-spider -start -quit \
-		-uri "$url" \
-		-depth 0 -timeout "$TEST_JSEACH_PAGE_TIMEOUT" \
-		-hook "http://$TEST_HTTP$TEST_WWW_JS/userhookeach.js"; 
+fi
+
+urllist="urllist-$branch-browser-$buildtype.tests"
+urlhtml="urllist-$branch-browser-$buildtype.html"
+
+rm -f $urllist $urlhtml
+
+cat > $urlhtml <<EOF
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>JavaScript Tests</title>
+</head>
+<body>
+<ul>
+EOF
+
+cat $includetests | while read jsfile
+do
+    if echo $jsfile | grep -q '^#'; then
+        continue
+    fi
+
+    if ! grep -q $jsfile $excludetests; then
+
+        result=`echo $jsfile | sed 's/.*js\([0-9]\)_\([0-9]\).*/\1.\2/'`
+
+        case $result in
+            1.5) version=";version=1.5";;
+            1.6) version=";version=1.6";;
+            1.7) version=";version=1.7";;
+            1.8) version=";version=1.8";;
+            1.9) version=";version=1.9";;
+            2.0) version=";version=2.0";;
+            *) version="";;
+        esac
+        
+        echo "http://$TEST_HTTP$TEST_WWW_JS/js-test-driver-standards.html?test=$jsfile;language=type;text/javascript$version" >> $urllist
+        echo "<li><a href='http://$TEST_HTTP$TEST_WWW_JS/js-test-driver-standards.html?test=$jsfile;language=type;text/javascript$version'>$jsfile</a></li>" >> $urlhtml
+    fi
 done
+
+cat >> $urlhtml <<EOF
+</ul>
+</body>
+</html>
+EOF
+
+chmod a+r $urlhtml
+
+cat $includetests | sed 's|^|include: |'
+cat $excludetests | sed 's|^|exclude: |'
+
+if [[ -z "$filesonly" ]]; then
+    if [[ "$restart" == "1" ]]; then
+        cat "$urllist" | while read url; 
+        do 
+	        edit-talkback.sh -p "$product" -b "$branch" -x "$executablepath" -i "$url"
+	        if time timed_run.py $TEST_JSEACH_TIMEOUT "$url" \
+		        "$executable" -P "$profilename" \
+		        -spider -start -quit \
+		        -uri "$url" \
+		        -depth 0 -timeout "$TEST_JSEACH_PAGE_TIMEOUT" \
+		        -hook "http://$TEST_HTTP$TEST_WWW_JS/userhookeach.js"; then
+                true;
+            fi
+
+        done
+    else
+	    edit-talkback.sh -p "$product" -b "$branch" -x "$executablepath" -i "http://$TEST_HTTP$TEST_WWW_JS/$urlhtml"
+	    if ! time timed_run.py $TEST_JSALL_TIMEOUT "http://$TEST_HTTP$TEST_WWW_JS/$urlhtml" \
+		    "$executable" -P "$profilename" \
+		    -spider -start -quit \
+		    -uri "http://$TEST_HTTP$TEST_WWW_JS/$urlhtml" \
+		    -depth 1 -timeout "$TEST_JSEACH_PAGE_TIMEOUT" \
+		    -hook "http://$TEST_HTTP$TEST_WWW_JS/userhookeach.js"; then
+            error "timed_run.py ended abnormally: $?" $LINENO
+        fi
+    fi
+fi
 
 popd
