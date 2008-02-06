@@ -154,6 +154,7 @@ nsNavBookmarks::Init()
   // item_child, and folder_child from moz_bookmarks.
   // Results are kGetInfoIndex_*
 
+  // mDBGetChildren: select all children of a given folder, sorted by position
   nsCAutoString selectChildren(
     NS_LITERAL_CSTRING("SELECT h.id, h.url, COALESCE(a.title, h.title), "
       "h.rev_host, h.visit_count, "
@@ -164,12 +165,10 @@ nsNavBookmarks::Init()
      "FROM moz_bookmarks a "
      "LEFT JOIN moz_places h ON a.fk = h.id "
      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
-     "WHERE a.parent = ?1 AND a.position >= ?2 AND a.position <= ?3"
+     "WHERE a.parent = ?1 "
      " ORDER BY a.position"));
 
-  // mDBGetChildren: select all children of a given folder, sorted by position
-  rv = dbConn->CreateStatement(selectChildren,
-                               getter_AddRefs(mDBGetChildren));
+  rv = dbConn->CreateStatement(selectChildren, getter_AddRefs(mDBGetChildren));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // mDBFolderCount: count all of the children of a given folder
@@ -1514,10 +1513,6 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolder)
     mozStorageStatementScoper scope(mDBGetChildren);
     rv = mDBGetChildren->BindInt64Parameter(0, aFolder);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBGetChildren->BindInt32Parameter(1, 0);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBGetChildren->BindInt32Parameter(2, PR_INT32_MAX);
-    NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool hasMore;
     while (NS_SUCCEEDED(mDBGetChildren->ExecuteStep(&hasMore)) && hasMore) {
@@ -2054,12 +2049,6 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolderId,
   nsresult rv = mDBGetChildren->BindInt64Parameter(0, aFolderId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mDBGetChildren->BindInt32Parameter(1, 0);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDBGetChildren->BindInt32Parameter(2, PR_INT32_MAX);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   PRBool results;
 
   nsCOMPtr<nsNavHistoryQueryOptions> options = do_QueryInterface(aOptions, &rv);
@@ -2075,7 +2064,21 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolderId,
     PRInt32 itemType = mDBGetChildren->AsInt32(kGetChildrenIndex_Type);
     PRInt64 id = mDBGetChildren->AsInt64(nsNavHistory::kGetInfoIndex_ItemId);
     nsRefPtr<nsNavHistoryResultNode> node;
-    if (itemType == TYPE_FOLDER || itemType == TYPE_DYNAMIC_CONTAINER) {
+    if (itemType == TYPE_BOOKMARK) {
+      rv = History()->RowToResult(mDBGetChildren, options,
+                                  getter_AddRefs(node));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      PRUint32 nodeType;
+      node->GetType(&nodeType);
+      if ((nodeType == nsINavHistoryResultNode::RESULT_TYPE_QUERY &&
+           aOptions->ExcludeQueries()) ||
+          (nodeType != nsINavHistoryResultNode::RESULT_TYPE_QUERY &&
+           nodeType != nsINavHistoryResultNode::RESULT_TYPE_FOLDER_SHORTCUT &&
+           aOptions->ExcludeItems())) {
+        continue;
+      }
+    } else if (itemType == TYPE_FOLDER || itemType == TYPE_DYNAMIC_CONTAINER) {
       if (itemType == TYPE_DYNAMIC_CONTAINER ||
           (itemType == TYPE_FOLDER && options->ExcludeReadOnlyFolders())) {
         // see if it's read only and skip it
@@ -2088,7 +2091,7 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolderId,
       rv = ResultNodeForContainer(id, aOptions, getter_AddRefs(node));
       if (NS_FAILED(rv))
         continue;
-    } else if (mDBGetChildren->AsInt32(kGetChildrenIndex_Type) == TYPE_SEPARATOR) {
+    } else {
       // separator
       if (aOptions->ExcludeItems()) {
         continue;
@@ -2106,21 +2109,6 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolderId,
         mDBGetChildren->AsInt64(nsNavHistory::kGetInfoIndex_ItemDateAdded);
       node->mLastModified =
         mDBGetChildren->AsInt64(nsNavHistory::kGetInfoIndex_ItemLastModified);
-    } else {
-      rv = History()->RowToResult(mDBGetChildren, options,
-                                  getter_AddRefs(node));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      PRUint32 nodeType;
-      node->GetType(&nodeType);
-      if ((nodeType == nsINavHistoryResultNode::RESULT_TYPE_QUERY &&
-           aOptions->ExcludeQueries()) ||
-          (nodeType != nsINavHistoryResultNode::RESULT_TYPE_QUERY &&
-           nodeType != nsINavHistoryResultNode::RESULT_TYPE_FOLDER &&
-           nodeType != nsINavHistoryResultNode::RESULT_TYPE_FOLDER_SHORTCUT &&
-           aOptions->ExcludeItems())) {
-        continue;
-      }
     }
 
     // this method fills all bookmark queries, so we store the index of the
@@ -2303,7 +2291,6 @@ nsNavBookmarks::GetBookmarkIdsForURITArray(nsIURI *aURI,
                                          nsTArray<PRInt64> *aResult) 
 {
   mozStorageStatementScoper scope(mDBFindURIBookmarks);
-  mozStorageTransaction transaction(DBConn(), PR_FALSE);
 
   nsresult rv = BindStatementURI(mDBFindURIBookmarks, 0, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2317,8 +2304,7 @@ nsNavBookmarks::GetBookmarkIdsForURITArray(nsIURI *aURI,
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
-
-  return transaction.Commit();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
