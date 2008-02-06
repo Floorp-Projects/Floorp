@@ -56,6 +56,9 @@
   <script type="application/javascript"
           src="chrome://inspector/content/viewers/accessibleProps/accessibleProps.js"/>
 
+  <stringbundle id="accessiblePropsBundle"
+                src="chrome://inspector/locale/viewers/accessibleProps.properties"/>
+
   <grid>
     <columns>
       <column/>
@@ -86,9 +89,28 @@
         <description>&descActionName.label;</description>
         <description prop="actionNames"/>
       </row>
+      <row>
+        <description>&descBounds.label;</description>
+        <grid>
+          <columns>
+            <column/>
+            <column/>
+            <column/>
+            <column/>
+          </columns>
+          <rows>
+            <row>
+              <description id="bounds-x"/>
+              <description id="bounds-y"/>
+              <description id="bounds-width"/>
+              <description id="bounds-height"/>
+            </row>
+          </rows>
+        </grid>
+      </row>
     </rows>
   </grid>
-  
+
   <tree flex="1">
     <treecols>
       <treecol label="attrKey" flex="1"/>
@@ -97,3 +119,4 @@
     <treechildren id="trAttrBody"/>
   </tree>
 </page>
+

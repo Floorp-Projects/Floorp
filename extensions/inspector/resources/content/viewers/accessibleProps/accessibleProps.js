@@ -41,6 +41,7 @@
 //// Global Variables
 
 var viewer;
+var gBundle;
 
 ///////////////////////////////////////////////////////////////////////////////
 //// Global Constants
@@ -59,6 +60,8 @@ window.addEventListener("load", AccessiblePropsViewer_initialize, false);
 
 function AccessiblePropsViewer_initialize()
 {
+  gBundle = document.getElementById("accessiblePropsBundle");
+
   viewer = new AccessiblePropsViewer();
   viewer.initialize(parent.FrameExchange.receiveData(window));
 }
@@ -136,6 +139,7 @@ AccessiblePropsViewer.prototype =
       return;
     }
 
+    // accessible properties.
     var containers = document.getElementsByAttribute("prop", "*");
     for (var i = 0; i < containers.length; ++i) {
       var value = "";
@@ -152,6 +156,23 @@ AccessiblePropsViewer.prototype =
         containers[i].textContent = value;
     }
 
+    // accessible bounds
+    var x = { value: 0 };
+    var y = { value: 0 };
+    var width = {value: 0 };
+    var height = {value: 0 };
+    this.mAccSubject.getBounds(x, y, width, height);
+
+    document.getElementById("bounds-x").textContent =
+      gBundle.getFormattedString("accBoundsX", [x.value]);
+    document.getElementById("bounds-y").textContent =
+      gBundle.getFormattedString("accBoundsY", [y.value]);
+    document.getElementById("bounds-width").textContent =
+      gBundle.getFormattedString("accBoundsWidth", [width.value]);
+    document.getElementById("bounds-height").textContent =
+      gBundle.getFormattedString("accBoundsHeight", [height.value]);
+
+    // accessible attributes
     var attrs = this.mAccSubject.attributes;
     if (attrs) {
       var enumerate = attrs.enumerate();
