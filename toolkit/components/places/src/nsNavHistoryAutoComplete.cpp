@@ -266,7 +266,9 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
   // not reusing results, see bug #412730 for details
 
   NS_ENSURE_ARG_POINTER(aListener);
-  mCurrentSearchString = aSearchString;
+
+  // Copy the input search string for case-insensitive search
+  ToLowerCase(aSearchString, mCurrentSearchString);
   // remove whitespace, see bug #392141 for details
   mCurrentSearchString.Trim(" \r\n\t\b");
 
@@ -278,8 +280,12 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
 
   mCurrentChunkOffset = 0;
   mCurrentResultURLs.Clear();
+  mCurrentSearchTokens.Clear();
   mLivemarkFeedItemIds.Clear();
   mLivemarkFeedURIs.Clear();
+
+  // Make the array of search tokens from the search string
+  GenerateSearchTokens();
 
   // find all the items that have the "livemark/feedURI" annotation
   // and save off their item ids and URIs. when doing autocomplete, 
@@ -323,6 +329,37 @@ nsNavHistory::StopSearch()
   DoneSearching();
 
   return NS_OK;
+}
+
+void
+nsNavHistory::GenerateSearchTokens()
+{
+  // Split the search string into multiple search tokens
+  nsString::const_iterator strStart, strEnd;
+  mCurrentSearchString.BeginReading(strStart);
+  mCurrentSearchString.EndReading(strEnd);
+  nsString::const_iterator start = strStart, end = strEnd;
+  while (FindInReadable(NS_LITERAL_STRING(" "), start, end)) {
+    // Add in the current match
+    nsAutoString currentMatch(Substring(strStart, start));
+    AddSearchToken(currentMatch);
+
+    // Reposition iterators
+    strStart = start = end;
+    end = strEnd;
+  }
+  
+  // Add in the last match
+  nsAutoString lastMatch(Substring(strStart, strEnd));
+  AddSearchToken(lastMatch);
+} 
+
+inline void
+nsNavHistory::AddSearchToken(nsAutoString &aToken)
+{
+  aToken.Trim("\r\n\t\b");
+  if (!aToken.IsEmpty())
+    mCurrentSearchTokens.AppendString(aToken);
 }
 
 // nsNavHistory::AutoCompleteTypedSearch
@@ -405,30 +442,12 @@ nsNavHistory::AutoCompleteTagsSearch()
 
   PRInt64 tagsFolder = GetTagsFolder();
 
-  nsString::const_iterator strStart, strEnd;
-  mCurrentSearchString.BeginReading(strStart);
-  mCurrentSearchString.EndReading(strEnd);
-  nsString::const_iterator start = strStart, end = strEnd;
-
-  nsStringArray tagTokens;
-
-  // check if we have any delimiters
-  while (FindInReadable(NS_LITERAL_STRING(" "), start, end,
-                        nsDefaultStringComparator())) {
-    nsAutoString currentMatch(Substring(strStart, start));
-    currentMatch.Trim("\r\n\t\b");
-    if (!currentMatch.IsEmpty())
-      tagTokens.AppendString(currentMatch);
-    strStart = start = end;
-    end = strEnd;
-  }
-
   nsCOMPtr<mozIStorageStatement> tagAutoCompleteQuery;
 
   // we didn't find any spaces, so we only have one possible tag, which is
   // the search string.  this is the common case, so we use 
   // our pre-compiled query
-  if (!tagTokens.Count()) {
+  if (!mCurrentSearchTokens.Count()) {
     tagAutoCompleteQuery = mDBTagAutoCompleteQuery;
 
     rv = tagAutoCompleteQuery->BindInt64Parameter(0, tagsFolder);
@@ -438,12 +457,6 @@ nsNavHistory::AutoCompleteTagsSearch()
     NS_ENSURE_SUCCESS(rv, rv);
   }
   else {
-    // add in the last match (if it is non-empty)
-    nsAutoString lastMatch(Substring(strStart, strEnd));
-    lastMatch.Trim("\r\n\t\b");
-    if (!lastMatch.IsEmpty())
-      tagTokens.AppendString(lastMatch);
-
     nsCString tagQuery = NS_LITERAL_CSTRING(
       "SELECT h.url, h.title, f.url, b.id, b.parent "
       "FROM moz_places h "
@@ -454,7 +467,7 @@ nsNavHistory::AutoCompleteTagsSearch()
       " (SELECT t.id FROM moz_bookmarks t WHERE t.parent = ?1 AND (");
 
     nsStringArray terms;
-    CreateTermsFromTokens(tagTokens, terms);
+    CreateTermsFromTokens(mCurrentSearchTokens, terms);
 
     for (PRUint32 i=0; i<terms.Count(); i++) {
       if (i)
