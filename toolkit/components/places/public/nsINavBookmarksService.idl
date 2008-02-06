@@ -165,7 +165,7 @@ interface nsINavBookmarkObserver : nsISupports
  * folders.  A URI in history can be contained in one or more such folders.
  */
 
-[scriptable, uuid(617fe3a9-5c5b-4854-aae6-23a66ddf1c25)]
+[scriptable, uuid(3b6ff5c5-0ab4-4aab-b1be-d569763a6ce0)]
 interface nsINavBookmarksService : nsISupports
 {
   /**
@@ -213,7 +213,7 @@ interface nsINavBookmarksService : nsISupports
    *  @param aURI
    *         The URI to insert
    *  @param aIndex
-   *         The index to insert at, or -1 to append
+   *         The index to insert at, or DEFAULT_INDEX to append
    *  @param aTitle
    *         The title for the new bookmark
    *  @returns The ID of the newly-created bookmark
@@ -235,7 +235,7 @@ interface nsINavBookmarksService : nsISupports
    *  @param aName
    *         The name of the new folder
    *  @param aIndex
-   *         The index to insert at, or -1 to append
+   *         The index to insert at, or DEFAULT_INDEX to append
    *  @returns the ID of the newly-inserted folder
    */
   long long createFolder(in long long aParentFolder, in AUTF8String name,
@@ -252,7 +252,7 @@ interface nsINavBookmarksService : nsISupports
    *         The contract id of the service which is to manipulate this
    *         container.
    *  @param aIndex
-   *         The index to insert at, or -1 to append
+   *         The index to insert at, or DEFAULT_INDEX to append
    *         
    *  @returns the ID of the newly-inserted folder
    */
@@ -299,7 +299,7 @@ interface nsINavBookmarksService : nsISupports
    *  @param aNewParent
    *         The id of the new parent
    *  @param aIndex
-   *         The index under aNewParent, or -1 to append
+   *         The index under aNewParent, or DEFAULT_INDEX to append
    */
   void moveItem(in long long aFolder, in long long newParent, in long aIndex);
 
@@ -320,7 +320,7 @@ interface nsINavBookmarksService : nsISupports
    *  @param aFolder
    *         Parent folder of the separator
    *  @param aIndex
-   *         The separator's index under folder, or -1 to append
+   *         The separator's index under folder, or DEFAULT_INDEX to append
    *  @returns the id of the new separator
    */
   long long insertSeparator(in long long aFolder, in long aIndex);
@@ -333,6 +333,17 @@ interface nsINavBookmarksService : nsISupports
    *         The index of the child to remove
    */
   void removeChildAt(in long long aFolder, in long aIndex);
+
+  /**
+   * Get the itemId given the containing folder and the index.
+   *  @param aFolder
+   *         The direct parent folder of the item
+   *  @param aIndex
+   *         The index of the item within aFolder, DEFAULT_INDEX for the last item
+   *  @returns the id of the found item
+   *  @throws if the item does not exist
+   */
+  long long getIdForItemAt(in long long aFolder, in long aIndex);
 
   /**
    * Get a globally unique identifier for an item, meant to be used in

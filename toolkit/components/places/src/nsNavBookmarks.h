@@ -122,6 +122,8 @@ private:
   PRInt32 FolderCount(PRInt64 aFolder);
   nsresult GetFolderType(PRInt64 aFolder, nsACString &aType);
 
+  nsresult GetLastChildId(PRInt64 aFolder, PRInt64* aItemId);
+
   // remove me when there is better query initialization
   nsNavHistory* History() { return nsNavHistory::GetHistoryService(); }
 
