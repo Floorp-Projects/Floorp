@@ -430,8 +430,6 @@ JS_GetRuntimePrivate(JSRuntime *rt);
 JS_PUBLIC_API(void)
 JS_SetRuntimePrivate(JSRuntime *rt, void *data);
 
-#ifdef JS_THREADSAFE
-
 extern JS_PUBLIC_API(void)
 JS_BeginRequest(JSContext *cx);
 
@@ -480,8 +478,6 @@ class JSAutoRequest {
 
 JS_BEGIN_EXTERN_C
 #endif
-
-#endif /* JS_THREADSAFE */
 
 extern JS_PUBLIC_API(void)
 JS_Lock(JSRuntime *rt);
