@@ -52,6 +52,7 @@ import sys
 import time
 from urllib import quote_plus as encodeURIComponent
 import urllib2
+import commands
 
 
 # Path to the test script on the server
@@ -118,6 +119,12 @@ PROFILE_DIRECTORY = os.path.abspath("./mochitesttestingprofile")
 #expand DIST_BIN = "./" + __XPC_BIN_PATH__
 #expand IS_WIN32 = len("__WIN32__") != 0
 #expand IS_MAC = __IS_MAC__ != 0
+#ifdef IS_CYGWIN
+#expand IS_CYGWIN = __IS_CYGWIN__ == 1
+#else
+IS_CYGWIN = False
+#endif
+
 UNIXISH = not IS_WIN32 and not IS_MAC
 
 
@@ -588,7 +595,13 @@ def runTests(testURL, browserEnv, options):
   args = []
   if IS_MAC:
     args.append("-foreground")
-  args.extend(("-no-remote", "-profile", PROFILE_DIRECTORY + "/", testURL))
+
+  if IS_CYGWIN:
+    profileDirectory = commands.getoutput("cygpath -w \"" + PROFILE_DIRECTORY + "/\"")
+  else:
+    profileDirectory = PROFILE_DIRECTORY + "/"
+
+  args.extend(("-no-remote", "-profile", profileDirectory, testURL))
 
   proc = Process(cmd, args, env = env)
   print "Application pid: " + str(proc.pid)
