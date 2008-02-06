@@ -524,10 +524,18 @@ function addNewToolbar()
 
   var name = {};
 
+  // Quitting from the toolbar dialog while the new toolbar prompt is up
+  // can cause things to become unresponsive on the Mac. Until dialog modality
+  // is fixed (395465), disable the "Done" button explicitly.
+  var doneButton = document.getElementById("donebutton");
+  doneButton.disabled = true;
+
   while (true) {
 
-    if (!promptService.prompt(window, title, message, name, null, {}))
+    if (!promptService.prompt(window, title, message, name, null, {})) {
+      doneButton.disabled = false;
       return;
+    }
     
     if (!name.value) {
       message = stringBundle.getFormattedString("enterToolbarBlank", [name.value]);
@@ -558,6 +566,8 @@ function addNewToolbar()
   gToolbox.appendCustomToolbar(name.value, "");
   
   toolboxChanged();
+
+  doneButton.disabled = false;
 }
 
 /**
