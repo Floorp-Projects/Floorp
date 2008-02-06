@@ -59,6 +59,9 @@
 #include <gtk/gtkwindow.h>
 #include <gdk/gdkx.h>
 #include <gdk/gdkkeysyms.h>
+#include <X11/XF86keysym.h>
+
+#include "nsWidgetAtoms.h"
 
 #ifdef MOZ_ENABLE_STARTUP_NOTIFICATION
 #define SN_API_NOT_YET_FROZEN
@@ -2236,6 +2239,15 @@ is_latin_shortcut_key(guint aKeyval)
             (GDK_a <= aKeyval && aKeyval <= GDK_z));
 }
 
+PRBool
+nsWindow::DispatchCommandKeyEvent(nsIAtom* aCommand)
+{
+    nsEventStatus status;
+    nsCommandEvent event(PR_TRUE, nsWidgetAtoms::onAppCommand, aCommand, this);
+    DispatchEvent(&event, status);
+    return TRUE;
+}
+
 gboolean
 nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 {
@@ -2297,6 +2309,25 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
         || aEvent->keyval == GDK_Meta_R) {
         return TRUE;
     }
+
+    // Look for specialized app-command keys
+    switch (aEvent->keyval) {
+        case XF86XK_Back:
+            return DispatchCommandKeyEvent(nsWidgetAtoms::Back);
+        case XF86XK_Forward:
+            return DispatchCommandKeyEvent(nsWidgetAtoms::Forward);
+        case XF86XK_Refresh:
+            return DispatchCommandKeyEvent(nsWidgetAtoms::Reload);
+        case XF86XK_Stop:
+            return DispatchCommandKeyEvent(nsWidgetAtoms::Stop);
+        case XF86XK_Search:
+            return DispatchCommandKeyEvent(nsWidgetAtoms::Search);
+        case XF86XK_Favorites:
+            return DispatchCommandKeyEvent(nsWidgetAtoms::Bookmarks);
+        case XF86XK_HomePage:
+            return DispatchCommandKeyEvent(nsWidgetAtoms::Home);
+    }
+
     nsKeyEvent event(PR_TRUE, NS_KEY_PRESS, this);
     InitKeyEvent(event, aEvent);
     if (isKeyDownCancelled) {
