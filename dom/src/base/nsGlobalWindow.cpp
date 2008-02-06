@@ -3297,10 +3297,8 @@ nsGlobalWindow::CheckSecurityWidthAndHeight(PRInt32* aWidth, PRInt32* aHeight)
 #ifdef MOZ_XUL
   if (!nsContentUtils::IsCallerTrustedForWrite()) {
     // if attempting to resize the window, hide any open popups
-    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
-    if (pm && doc)
-      pm->HidePopupsInDocument(doc);
+    nsContentUtils::HidePopupsInDocument(doc);
   }
 #endif
 
@@ -3332,10 +3330,8 @@ nsGlobalWindow::CheckSecurityLeftAndTop(PRInt32* aLeft, PRInt32* aTop)
   if (!nsContentUtils::IsCallerTrustedForWrite()) {
 #ifdef MOZ_XUL
     // if attempting to move the window, hide any open popups
-    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
-    if (pm && doc)
-      pm->HidePopupsInDocument(doc);
+    nsContentUtils::HidePopupsInDocument(doc);
 #endif
 
     PRInt32 screenLeft, screenTop, screenWidth, screenHeight;
