@@ -595,11 +595,6 @@ PlacesTreeView.prototype = {
         // in our list takes up (it could be a container with many children).
         var prevChild = aParent.getChild(aNewIndex - 1);
         newViewIndex = prevChild.viewIndex + this._countVisibleRowsForItem(prevChild);
-        // If we were in the same parent and we are swapping the order, we need to adjust
-        if (prevChild.parent == aItem.parent && 
-            aItem.viewIndex != -1 && // view index may not be set
-            prevChild.viewIndex > aItem.viewIndex)
-          newViewIndex--;
       }
     }
 
