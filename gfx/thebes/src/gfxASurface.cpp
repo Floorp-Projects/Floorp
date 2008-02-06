@@ -52,6 +52,7 @@
 
 #ifdef CAIRO_HAS_QUARTZ_SURFACE
 #include "gfxQuartzSurface.h"
+#include "gfxQuartzImageSurface.h"
 #endif
 
 #include <stdio.h>
@@ -157,6 +158,9 @@ gfxASurface::Wrap (cairo_surface_t *csurf)
 #ifdef CAIRO_HAS_QUARTZ_SURFACE
     else if (stype == CAIRO_SURFACE_TYPE_QUARTZ) {
         result = new gfxQuartzSurface(csurf);
+    }
+    else if (stype == CAIRO_SURFACE_TYPE_QUARTZ_IMAGE) {
+        result = new gfxQuartzImageSurface(csurf);
     }
 #endif
     else {

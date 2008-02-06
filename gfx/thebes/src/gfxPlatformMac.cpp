@@ -40,6 +40,7 @@
 
 #include "gfxImageSurface.h"
 #include "gfxQuartzSurface.h"
+#include "gfxQuartzImageSurface.h"
 
 #include "gfxQuartzFontCache.h"
 #include "gfxAtsuiFonts.h"
@@ -142,6 +143,26 @@ gfxPlatformMac::CreateOffscreenSurface(const gfxIntSize& size,
 
     NS_IF_ADDREF(newSurface);
     return newSurface;
+}
+
+already_AddRefed<gfxASurface>
+gfxPlatformMac::OptimizeImage(gfxImageSurface *aSurface,
+                              gfxASurface::gfxImageFormat format)
+{
+    const gfxIntSize& surfaceSize = aSurface->GetSize();
+    nsRefPtr<gfxImageSurface> isurf = aSurface;
+
+    if (format != aSurface->Format()) {
+        isurf = new gfxImageSurface (surfaceSize, format);
+        if (!isurf->CopyFrom (aSurface)) {
+            // don't even bother doing anything more
+            NS_ADDREF(aSurface);
+            return aSurface;
+        }
+    }
+
+    nsRefPtr<gfxASurface> ret = new gfxQuartzImageSurface(isurf);
+    return ret.forget();
 }
 
 nsresult
