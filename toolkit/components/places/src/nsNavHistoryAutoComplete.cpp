@@ -607,15 +607,27 @@ nsNavHistory::AutoCompleteFullHistorySearch(PRBool* aHasMoreResults)
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // If the search string is in the bookmark title, show that in the result
-      // (instead of the page title)
-      PRBool matchInBookmarkTitle = itemId && 
-        CaseInsensitiveFindInReadable(mCurrentSearchString, entryBookmarkTitle);
+      // If any part of the search string is in the bookmark title, show that
+      // in the result instead of the page title
+      PRBool everMatchedBookmark = PR_FALSE;
+      // Determine if every token matches either the bookmark, title, or url
+      PRBool matchAll = PR_TRUE;
+      for (PRUint32 i = 0; i < mCurrentSearchTokens.Count() && matchAll; i++) {
+        const nsString *token = mCurrentSearchTokens.StringAt(i);
 
-      // If we don't match the bookmark, title or url, don't add the result
-      if (!matchInBookmarkTitle &&
-          !CaseInsensitiveFindInReadable(mCurrentSearchString, entryTitle) &&
-          !CaseInsensitiveFindInReadable(mCurrentSearchString, entryURL))
+        // Check if the current token matches the bookmark
+        PRBool bookmarkMatch = itemId &&
+          CaseInsensitiveFindInReadable(*token, entryBookmarkTitle);
+        everMatchedBookmark |= bookmarkMatch;
+
+        // True if any of them match; false makes us quit the loop
+        matchAll = bookmarkMatch ||
+          CaseInsensitiveFindInReadable(*token, entryTitle) ||
+          CaseInsensitiveFindInReadable(*token, entryURL);
+      }
+
+      // Skip if we don't match all terms in the bookmark, title or url
+      if (!matchAll)
         continue;
 
       // don't show rss feed items as bookmarked,
@@ -637,7 +649,7 @@ nsNavHistory::AutoCompleteFullHistorySearch(PRBool* aHasMoreResults)
         NS_ConvertUTF16toUTF8(entryFavicon), faviconSpec);
 
       rv = mCurrentResult->AppendMatch(entryURL, 
-        matchInBookmarkTitle ? entryBookmarkTitle : entryTitle, 
+        everMatchedBookmark ? entryBookmarkTitle : entryTitle, 
         NS_ConvertUTF8toUTF16(faviconSpec), 
         isBookmark ? NS_LITERAL_STRING("bookmark") : NS_LITERAL_STRING("favicon"));
       NS_ENSURE_SUCCESS(rv, rv);
