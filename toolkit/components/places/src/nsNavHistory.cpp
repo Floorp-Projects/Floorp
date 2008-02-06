@@ -441,10 +441,13 @@ nsNavHistory::Init()
   NS_ENSURE_TRUE(mRecentBookmark.Init(128), NS_ERROR_OUT_OF_MEMORY);
   NS_ENSURE_TRUE(mRecentRedirects.Init(128), NS_ERROR_OUT_OF_MEMORY);
 
-  // The AddObserver calls must be the last lines in this function, because
-  // this function may fail, and thus, this object would be not completely
-  // initialized), but the observerservice would still keep a reference to us
-  // and notify us about shutdown, which may cause crashes.
+  /*****************************************************************************
+   *** IMPORTANT NOTICE!
+   ***
+   *** Nothing after these add observer calls should return anything but NS_OK.
+   *** If a failure code is returned, this nsNavHistory object will be held onto
+   *** by the observer service and the preference service. 
+   ****************************************************************************/
 
   nsCOMPtr<nsIObserverService> observerService =
     do_GetService("@mozilla.org/observer-service;1", &rv);
@@ -463,6 +466,14 @@ nsNavHistory::Init()
 
   observerService->AddObserver(this, gQuitApplicationMessage, PR_FALSE);
   observerService->AddObserver(this, gXpcomShutdown, PR_FALSE);
+
+  /*****************************************************************************
+   *** IMPORTANT NOTICE!
+   ***
+   *** NO CODE SHOULD GO BEYOND THIS POINT THAT WOULD PROPAGATE AN ERROR.  IN
+   *** OTHER WORDS, THE ONLY THING THAT SHOULD BE RETURNED AFTER THIS POINT IS
+   *** NS_OK.
+   ****************************************************************************/
 
   if (migrationType == DB_MIGRATION_CREATED) {
     nsCOMPtr<nsIFile> historyFile;

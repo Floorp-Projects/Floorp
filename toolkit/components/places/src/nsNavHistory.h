@@ -396,6 +396,15 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBUrlToUrlResult; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBBookmarkToUrlResult; // kGetInfoIndex_* results
 
+  /**
+   * Recalculates aCount frecencies.  If aRecalcOld, it will also calculate
+   * the frecency of aCount history visits that have not occurred recently.
+   *
+   * @param aCount
+   *        The number of entries to update.
+   * @param aRecalcOld
+   *        Indicates that we should update old visits as well.
+   */
   nsresult RecalculateFrecencies(PRInt32 aCount, PRBool aRecalcOld);
   nsresult RecalculateFrecenciesInternal(mozIStorageStatement *aStatement, PRInt64 aBindParameter, PRInt32 aCount);
 
@@ -410,8 +419,36 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBVisitCountForFrecency;
   nsCOMPtr<mozIStorageStatement> mDBTrueVisitCount;
 
+  /**
+   * Initializes the database file.  If the database does not exist, was
+   * corrupted, or aForceInit is true, we recreate the database.  We also backup
+   * the database if it was corrupted or aForceInit is true.
+   *
+   * @param aForceInit
+   *        Indicates if we should close an open database connection or not.
+   */
   nsresult InitDBFile(PRBool aForceInit);
+
+  /**
+   * Creates a uniquely named backup of the places database.
+   */
   nsresult BackupDBFile();
+
+  /**
+   * Initializes the database.  This performs any necessary migrations for the
+   * database.  All migration is done inside a transaction that is rolled back
+   * if any error occurs.  Upon initialization, history is imported, and some
+   * preferences that are used are set.
+   *
+   * @param aMadeChanges [out]
+   *        Returns a constant indicating what occurred:
+   *        DB_MIGRATION_NONE
+   *          No migration occurred.
+   *        DB_MIGRATION_CREATED
+   *          The database did not exist in the past, and was created.
+   *        DB_MIGRATION_UPDATED
+   *          The database was migrated to a new version.
+   */
   nsresult InitDB(PRInt16 *aMadeChanges);
   nsresult InitStatements();
   nsresult ForceMigrateBookmarksDB(mozIStorageConnection *aDBConn);
@@ -446,6 +483,14 @@ protected:
   PRBool FindLastVisit(nsIURI* aURI, PRInt64* aVisitID,
                        PRInt64* aSessionID);
   PRBool IsURIStringVisited(const nsACString& url);
+
+  /**
+   * This loads all of the preferences that we use into member variables.
+   * NOTE:  If mPrefBranch is NULL, this does nothing.
+   *
+   * @param aInitializing
+   *        Indicates if the autocomplete queries should be regenerated or not.
+   */
   nsresult LoadPrefs(PRBool aInitializing);
 
   // Current time optimization
@@ -680,6 +725,10 @@ protected:
                            nsCOMArray<nsNavHistoryQuery>* aQueries,
                            nsNavHistoryQueryOptions* aOptions);
 
+  /**
+   * Used to setup the idle timer used to perform various tasks when the user is
+   * idle..
+   */
   nsCOMPtr<nsITimer> mIdleTimer;
   nsresult InitializeIdleTimer();
   static void IdleTimerCallback(nsITimer* aTimer, void* aClosure);
