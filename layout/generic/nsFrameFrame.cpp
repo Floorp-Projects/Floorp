@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
- *   Håkan Waara <hwaara@chello.se>
+ *   HÃ‚kan Waara <hwaara@chello.se>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -93,6 +93,10 @@
 #include "nsIScrollableFrame.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsLayoutUtils.h"
+
+#ifdef MOZ_XUL
+#include "nsXULPopupManager.h"
+#endif
 
 // For Accessibility
 #ifdef ACCESSIBILITY
@@ -672,6 +676,15 @@ nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
       mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, value);
 
       PRBool is_primary = value.LowerCaseEqualsLiteral("content-primary");
+
+#ifdef MOZ_XUL
+      // when a content panel is no longer primary, hide any open popups it may have
+      if (!is_primary) {
+        nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+        if (pm)
+          pm->HidePopupsInDocShell(docShellAsItem);
+      }
+#endif
 
       parentTreeOwner->ContentShellRemoved(docShellAsItem);
 
