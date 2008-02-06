@@ -3591,8 +3591,9 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     nsIFrame* topFrame =
       aPresContext->PresShell()->FrameManager()->GetRootFrame();
     NS_ASSERTION(topFrame, "no root frame");
+    nsIFrame* pageContentFrame = nsnull;
     if (aPresContext->IsPaginated()) {
-      nsIFrame* pageContentFrame =
+      pageContentFrame =
         nsLayoutUtils::GetClosestFrameOfType(aForFrame, nsGkAtoms::pageContentFrame);
       if (pageContentFrame) {
         topFrame = pageContentFrame;
@@ -3600,8 +3601,19 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
       // else this is an embedded shell and its root frame is what we want
     }
 
-    // Get the anchor point, relative to the viewport.
     nsRect viewportArea = topFrame->GetRect();
+
+    if (!pageContentFrame) {
+      // Subtract the size of scrollbars.
+      nsIScrollableFrame* scrollableFrame =
+        aPresContext->PresShell()->GetRootScrollFrameAsScrollable();
+      if (scrollableFrame) {
+        nsMargin scrollbars = scrollableFrame->GetActualScrollbarSizes();
+        viewportArea.Deflate(scrollbars);
+      }
+    }
+     
+    // Get the anchor point, relative to the viewport.
     ComputeBackgroundAnchorPoint(aColor, viewportArea, viewportArea, tileWidth, tileHeight, anchor);
 
     // Convert the anchor point from viewport coordinates to aForFrame
