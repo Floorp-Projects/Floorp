@@ -50,6 +50,7 @@
 
 #include "nsIDragService.h"
 #include "nsITimer.h"
+#include "nsWidgetAtoms.h"
 
 #include <gtk/gtk.h>
 
@@ -362,6 +363,7 @@ private:
     nsresult           SetWindowIconList(const nsCStringArray &aIconList);
     void               SetDefaultIcon(void);
     void               InitButtonEvent(nsMouseEvent &aEvent, GdkEventButton *aGdkEvent);
+    PRBool             DispatchCommandKeyEvent(nsIAtom* aCommand);
 
     GtkWidget          *mShell;
     MozContainer       *mContainer;
