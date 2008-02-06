@@ -35,6 +35,11 @@
 #
 # ***** END LICENSE BLOCK *****
 
+#ifdef XP_MACOSX
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+#endif
+
 var gAppManagerDialog = {
   _removed: [],
 
