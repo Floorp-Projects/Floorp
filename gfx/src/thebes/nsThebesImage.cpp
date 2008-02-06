@@ -111,7 +111,7 @@ nsThebesImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequi
 
     mFormat = format;
 
-#if defined(XP_WIN)
+#ifdef XP_WIN
     if (!ShouldUseImageSurfaces()) {
         mWinSurface = new gfxWindowsSurface(gfxIntSize(mWidth, mHeight), format);
         if (mWinSurface && mWinSurface->CairoStatus() == 0) {
@@ -122,16 +122,6 @@ nsThebesImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequi
 
     if (!mImageSurface)
         mWinSurface = nsnull;
-#elif defined(XP_MACOSX)
-    if (!ShouldUseImageSurfaces()) {
-        mQuartzSurface = new gfxQuartzSurface(gfxSize(mWidth, mHeight), format);
-        if (mQuartzSurface && mQuartzSurface->CairoStatus() == 0) {
-            mImageSurface = mQuartzSurface->GetImageSurface();
-        }
-    }
-
-    if (!mImageSurface)
-        mQuartzSurface = nsnull;
 #endif
 
     if (!mImageSurface)
@@ -142,6 +132,10 @@ nsThebesImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequi
         // guess
         return NS_ERROR_OUT_OF_MEMORY;
     }
+
+#ifdef XP_MACOSX
+    mQuartzSurface = new gfxQuartzImageSurface(mImageSurface);
+#endif
 
     mStride = mImageSurface->Stride();
 

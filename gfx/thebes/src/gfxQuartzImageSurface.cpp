@@ -15,7 +15,7 @@
  * The Original Code is Mozilla Corporation code.
  *
  * The Initial Developer of the Original Code is Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,67 +35,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "gfxQuartzSurface.h"
-#include "gfxContext.h"
+#include "gfxQuartzImageSurface.h"
 
 #include "cairo-quartz.h"
 
-gfxQuartzSurface::gfxQuartzSurface(const gfxSize& size, gfxImageFormat format,
-                                   PRBool aForPrinting)
-    : mSize(size), mForPrinting(aForPrinting)
+gfxQuartzImageSurface::gfxQuartzImageSurface(gfxImageSurface *imageSurface)
 {
-    unsigned int width = (unsigned int) floor(size.width);
-    unsigned int height = (unsigned int) floor(size.height);
-
-    if (!CheckSurfaceSize(gfxIntSize(width, height)))
+    if (imageSurface->CairoStatus() || imageSurface->CairoSurface() == NULL)
         return;
 
-    cairo_surface_t *surf = cairo_quartz_surface_create
-        ((cairo_format_t) format, width, height);
-
-    mCGContext = cairo_quartz_surface_get_cg_context (surf);
-
-    CGContextRetain(mCGContext);
-
-    Init(surf);
+    cairo_surface_t *surf = cairo_quartz_image_surface_create (imageSurface->CairoSurface());
+    Init (surf);
 }
 
-gfxQuartzSurface::gfxQuartzSurface(CGContextRef context,
-                                   const gfxSize& size,
-                                   PRBool aForPrinting)
-    : mCGContext(context), mSize(size), mForPrinting(aForPrinting)
+gfxQuartzImageSurface::gfxQuartzImageSurface(cairo_surface_t *csurf)
 {
-    unsigned int width = (unsigned int) floor(size.width);
-    unsigned int height = (unsigned int) floor(size.height);
-
-    cairo_surface_t *surf = 
-        cairo_quartz_surface_create_for_cg_context(context,
-                                                   width, height);
-
-    CGContextRetain(mCGContext);
-
-    Init(surf);
+    Init (csurf, PR_TRUE);
 }
 
-gfxQuartzSurface::gfxQuartzSurface(cairo_surface_t *csurf,
-                                   PRBool aForPrinting) :
-    mSize(-1.0, -1.0), mForPrinting(aForPrinting)
+gfxQuartzImageSurface::~gfxQuartzImageSurface()
 {
-    mCGContext = cairo_quartz_surface_get_cg_context (csurf);
-    CGContextRetain (mCGContext);
-
-    Init(csurf, PR_TRUE);
 }
 
-PRInt32 gfxQuartzSurface::GetDefaultContextFlags() const
+already_AddRefed<gfxImageSurface>
+gfxQuartzImageSurface::GetImageSurface()
 {
-    if (mForPrinting)
-        return gfxContext::FLAG_DISABLE_SNAPPING;
+    if (!mSurfaceValid)
+        return nsnull;
 
-    return 0;
-}
+    cairo_surface_t *isurf = cairo_quartz_image_surface_get_image (CairoSurface());
+    if (!isurf) {
+        NS_WARNING ("Couldn't obtain an image surface from a QuartzImageSurface?!");
+        return nsnull;
+    }
 
-gfxQuartzSurface::~gfxQuartzSurface()
-{
-    CGContextRelease(mCGContext);
+    nsRefPtr<gfxASurface> asurf = gfxASurface::Wrap(isurf);
+    gfxImageSurface *imgsurf = (gfxImageSurface*) asurf.get();
+    NS_ADDREF(imgsurf);
+    return imgsurf;
 }

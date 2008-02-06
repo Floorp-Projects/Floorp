@@ -81,7 +81,8 @@ public:
         SurfaceTypeDirectFB,
         SurfaceTypeSVG,
         SurfaceTypeOS2,
-        SurfaceTypeWin32Printing
+        SurfaceTypeWin32Printing,
+        SurfaceTypeQuartzImage
     } gfxSurfaceType;
 
     typedef enum {
