@@ -15,11 +15,10 @@
  * The Original Code is Mozilla Corporation code.
  *
  * The Initial Developer of the Original Code is Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Stuart Parmenter <pavlov@pavlov.net>
  *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -36,32 +35,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFX_QUARTZSURFACE_H
-#define GFX_QUARTZSURFACE_H
+#ifndef GFX_QUARTZIMAGESURFACE_H
+#define GFX_QUARTZIMAGESURFACE_H
 
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
 
-#include <Carbon/Carbon.h>
-
-class THEBES_API gfxQuartzSurface : public gfxASurface {
+class THEBES_API gfxQuartzImageSurface : public gfxASurface {
 public:
-    gfxQuartzSurface(const gfxSize& size, gfxImageFormat format, PRBool aForPrinting = PR_FALSE);
-    gfxQuartzSurface(CGContextRef context, const gfxSize& size, PRBool aForPrinting = PR_FALSE);
-    gfxQuartzSurface(cairo_surface_t *csurf, PRBool aForPrinting = PR_FALSE);
+    gfxQuartzImageSurface(gfxImageSurface *imageSurface);
+    gfxQuartzImageSurface(cairo_surface_t *csurf);
 
-    virtual ~gfxQuartzSurface();
+    virtual ~gfxQuartzImageSurface();
 
-    const gfxSize& GetSize() const { return mSize; }
-
-    CGContextRef GetCGContext() { return mCGContext; }
-
-    virtual PRInt32 GetDefaultContextFlags() const;
-
-protected:
-    CGContextRef mCGContext;
-    gfxSize      mSize;
-    PRPackedBool mForPrinting;
+    already_AddRefed<gfxImageSurface> GetImageSurface();
 };
 
-#endif /* GFX_QUARTZSURFACE_H */
+#endif /* GFX_QUARTZIMAGESURFACE_H */

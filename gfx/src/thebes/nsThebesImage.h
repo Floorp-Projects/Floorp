@@ -47,7 +47,7 @@
 #if defined(XP_WIN)
 #include "gfxWindowsSurface.h"
 #elif defined(XP_MACOSX)
-#include "gfxQuartzSurface.h"
+#include "gfxQuartzImageSurface.h"
 #endif
 
 class nsThebesImage : public nsIImage
@@ -162,7 +162,7 @@ protected:
 #if defined(XP_WIN)
     nsRefPtr<gfxWindowsSurface> mWinSurface;
 #elif defined(XP_MACOSX)
-    nsRefPtr<gfxQuartzSurface> mQuartzSurface;
+    nsRefPtr<gfxQuartzImageSurface> mQuartzSurface;
 #endif
 
     PRUint8 mAlphaDepth;
