@@ -82,6 +82,7 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_tree_hier_cell.xul \
 		test_tree_column_reorder.xul \
 		tree_shared.js \
+		test_textbox_emptytext.xul \
 		test_textbox_number.xul \
 		xul_selectcontrol.js \
 		test_popupincontent.xul \

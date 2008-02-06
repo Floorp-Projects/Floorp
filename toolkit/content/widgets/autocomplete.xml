@@ -82,10 +82,6 @@
       <field name="mEnterEvent">null</field>
       <field name="mConsumeRollupEvent">false</field>
 
-      <field name="mInputElt">
-        document.getAnonymousElementByAttribute(this, "anonid", "input");
-      </field>
-
       <constructor><![CDATA[
         mController = Components.classes["@mozilla.org/autocomplete/controller;1"].
                         getService(Components.interfaces.nsIAutoCompleteController);
@@ -200,7 +196,7 @@
         <parameter name="aStartIndex"/>
         <parameter name="aEndIndex"/>
         <body><![CDATA[
-          this.mInputElt.setSelectionRange(aStartIndex, aEndIndex);
+          this.inputField.setSelectionRange(aStartIndex, aEndIndex);
         ]]></body>
       </method>
 
@@ -238,8 +234,6 @@
                 onset="this.setAttribute('crop',val); return val;"
                 onget="return this.getAttribute('crop');"/>
 
-      <property name="label" readonly="true" onget="return this.mInputElt.value;"/>
-
       <property name="open"
                 onget="return this.getAttribute('open') == 'true';">
         <setter><![CDATA[
@@ -257,14 +251,22 @@
       <!-- =================== PUBLIC MEMBERS =================== -->
 
       <property name="value"
-                onget="return this.mInputElt.value;">
+                onget="return this.hasAttribute('empty') ? '' : this.inputField.value;">
         <setter><![CDATA[
           this.mIgnoreInput = true;
-          this.mInputElt.value = val;
+          if (val) {
+            // clear the emptyText _before_ setting a new non-empty value
+            this._clearEmptyText();
+            this.inputField.value = val;
+          } else {
+            // display the emptyText _after_ setting a value that's an empty string
+            this.inputField.value = val;
+            this._updateVisibleText();
+          }
           this.mIgnoreInput = false;
           var event = document.createEvent('Events');
           event.initEvent('ValueChange', true, true);
-          this.mInputElt.dispatchEvent(event);
+          this.inputField.dispatchEvent(event);
           return val;
         ]]></setter>
       </property>
@@ -516,7 +518,7 @@
       <handler event="focus" phase="capturing">
         <![CDATA[
           this.attachController(); 
-          this.mInputElt.parentNode.parentNode.setAttribute('focused', 'true');
+          this.inputField.parentNode.parentNode.setAttribute('focused', 'true');
         ]]>
       </handler>
 
@@ -524,7 +526,7 @@
         <![CDATA[
           if (!this._dontBlur) {
             this.detachController();
-            this.mInputElt.parentNode.parentNode.removeAttribute('focused');
+            this.inputField.parentNode.parentNode.removeAttribute('focused');
           }
         ]]>
       </handler>

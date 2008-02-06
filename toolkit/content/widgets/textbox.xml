@@ -24,7 +24,7 @@
       </xul:hbox>
     </content>
 
-    <implementation implements="nsIAccessibleProvider, nsIDOMXULTextBoxElement">
+    <implementation implements="nsIAccessibleProvider, nsIDOMXULTextBoxElement, nsIDOMXULLabeledControlElement">
       <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
@@ -32,6 +32,12 @@
           ]]>
         </getter>
       </property>
+
+      <!-- nsIDOMXULLabeledControlElement -->
+      <field name="crop">""</field>
+      <field name="image">""</field>
+      <field name="command">""</field>
+      <field name="accessKey">""</field>
 
       <field name="mInputField">null</field>
       <field name="mIgnoreClick">false</field>
@@ -45,10 +51,30 @@
         ]]></getter>
       </property>
 
-      <property name="value"      onset="this.inputField.value = val; return val;"
-                                  onget="return this.inputField.value;"/>
+      <property name="value"
+                onget="return this.hasAttribute('empty') ? '' : this.inputField.value;">
+        <setter><![CDATA[
+          if (val) {
+            // clear the emptyText _before_ setting a new non-empty value
+            this._clearEmptyText();
+            this.inputField.value = val;
+          } else {
+            // display the emptyText _after_ setting a value that's an empty string
+            this.inputField.value = val;
+            this._updateVisibleText();
+          }
+          return val;
+        ]]></setter>
+      </property>
       <property name="defaultValue" onset="this.inputField.defaultValue = val; return val;"
                                   onget="return this.inputField.defaultValue;"/>
+      <property name="label"      onset="this.setAttribute('label', val); return val;"
+                                  onget="return this.getAttribute('label') ||
+                                                (this.labelElement ? this.labelElement.value :
+                                                 this.emptyText);"/>
+      <property name="emptyText"  onget="return this.getAttribute('emptytext') || '';"
+                                  onset="this.setAttribute('emptytext', val);
+                                         this._updateVisibleText(); return val;" />
       <property name="type"       onset="if (val) this.setAttribute('type', val);
                                          else this.removeAttribute('type'); return val;"
                                   onget="return this.getAttribute('type');"/>
@@ -131,16 +157,53 @@
         ]]></body>
       </method>
 
+      <method name="_updateVisibleText">
+        <body><![CDATA[
+          if (!this.value && this.emptyText) {
+            // This section is a wee bit hacky; without the timeout, the CSS
+            // style corresponding to the "empty" attribute doesn't kick in
+            // until the text has changed, leading to an unpleasant moment
+            // where the emptyText flashes black before turning gray.
+            this.setAttribute("empty", true);
+
+            setTimeout(function (textbox) {
+              if (textbox.hasAttribute("empty")) {
+                try {
+                  textbox.editor.transactionManager.beginBatch();
+                } catch (e) {}
+                textbox.inputField.value = textbox.emptyText;
+              }
+            }, 0, this);
+          }
+        ]]></body>
+      </method>
+
+      <method name="_clearEmptyText">
+        <body><![CDATA[
+          if (this.hasAttribute("empty")) {
+            this.inputField.value = "";
+            try {
+              this.editor.transactionManager.endBatch();
+            } catch (e) {}
+            this.removeAttribute("empty");
+          }
+        ]]></body>
+      </method>
+
       <constructor><![CDATA[
         var str = this.boxObject.getProperty("value");
         if (str) {
           this.inputField.value = str;
           this.boxObject.removeProperty("value");
         }
+
         // this.editor may not be initialized yet in
         // bindings that inherit from xul:textbox, so
         // do this after construction
-        setTimeout(function (a) { a._setNewlineHandling(); }, 0, this);
+        setTimeout(function (a) {
+          a._updateVisibleText();
+          a._setNewlineHandling();
+        }, 0, this);
       ]]></constructor>
 
       <destructor>
@@ -156,6 +219,8 @@
     <handlers>
       <handler event="focus" phase="capturing">
         <![CDATA[
+          this._clearEmptyText();
+
           if (!this.hasAttribute("focused")) {
             if (event.originalTarget == this)
               this.inputField.focus(); // Forward focus to actual HTML input
@@ -174,7 +239,16 @@
       <handler event="blur" phase="capturing">
         <![CDATA[
           this.removeAttribute('focused');
+          this._updateVisibleText();
         ]]>
+      </handler>
+
+      <handler event="dragover" phase="capturing">
+        this._clearEmptyText();
+      </handler>
+
+      <handler event="dragexit" phase="capturing">
+        this._updateVisibleText();
       </handler>
 
       <handler event="mousedown">

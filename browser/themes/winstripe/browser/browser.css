@@ -58,21 +58,6 @@
   min-height: 26px;
 }
 
-#searchbar[empty="true"] > .searchbar-textbox {
-  color: GrayText;
-  direction: ltr !important;
-}
-
-#searchbar[empty="true"] > .searchbar-textbox > hbox > hbox > html|input {
-  direction: ltr !important;
-  text-align: left !important;
-}
-
-#searchbar[chromedir="rtl"][empty="true"] > .searchbar-textbox > hbox > hbox > html|input {
-  direction: rtl !important;
-  text-align: right !important;
-}
-
 #wrapper-search-container #searchbar html|*.textbox-input {
   visibility: hidden;
 }
