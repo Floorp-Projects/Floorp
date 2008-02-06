@@ -620,7 +620,11 @@ protected:
   PRInt32 mAutoCompleteSearchTimeout;
   nsCOMPtr<nsITimer> mAutoCompleteTimer;
 
+  // Search string and tokens for case-insensitive matching
   nsString mCurrentSearchString;
+  nsStringArray mCurrentSearchTokens;
+  void GenerateSearchTokens();
+  void AddSearchToken(nsAutoString &aToken);
 
 #ifdef MOZ_XUL
   nsCOMPtr<nsIAutoCompleteObserver> mCurrentListener;
