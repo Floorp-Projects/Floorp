@@ -1602,7 +1602,8 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
   width: auto;
 }
 
-#urlbar > .autocomplete-history-dropmarker:hover {
+#urlbar > .autocomplete-history-dropmarker:hover ,
+#urlbar > .autocomplete-history-dropmarker[open="true"] {
   background-color: -moz-dialog !important;
   -moz-appearance: toolbox;
   outline: 1px solid ThreeDShadow;
@@ -1614,7 +1615,8 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
   -moz-margin-end: 5px;
 }
 
-#urlbar > .autocomplete-history-dropmarker:hover > .dropmarker-icon {
+#urlbar > .autocomplete-history-dropmarker:hover > .dropmarker-icon ,
+#urlbar > .autocomplete-history-dropmarker[open="true"] > .dropmarker-icon {
   -moz-margin-start: 5px;
 }
 
