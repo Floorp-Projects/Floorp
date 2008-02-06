@@ -87,8 +87,8 @@ interface nsIHttpServer : nsIServerSocketListener
    *   the path which is to be mapped to the given file; must begin with "/" and
    *   be a valid URI path (i.e., no query string, hash reference, etc.)
    * @param file
-   *   the file to serve for the given path; this file must exist for the
-   *   lifetime of the server
+   *   the file to serve for the given path, or null to remove any mapping that
+   *   might exist; this file must exist for the lifetime of the server
    */
   void registerFile(in string path, in nsILocalFile file);
 
@@ -147,6 +147,27 @@ interface nsIHttpServer : nsIServerSocketListener
    *   does not begin with and end with a forward slash
    */
   void registerDirectory(in string path, in nsILocalFile dir);
+
+  /**
+   * Associates files with the given extension with the given Content-Type when
+   * served by this server, in the absence of any file-specific information
+   * about the desired Content-Type.  If type is empty, removes any extant
+   * mapping, if one is present.
+   *
+   * @throws NS_ERROR_INVALID_ARG
+   *   if the given type is not a valid header field value, i.e. if it doesn't
+   *   match the field-value production in RFC 2616
+   * @note
+   *   No syntax checking is done of the given type, beyond ensuring that it is
+   *   a valid header field value.  Behavior when not given a string matching
+   *   the media-type production in RFC 2616 section 3.7 is undefined.
+   *   Implementations may choose to define specific behavior for types which do
+   *   not match the production, such as for CGI functionality.
+   * @note
+   *   Implementations MAY treat type as a trusted argument; users who fail to
+   *   generate this string from trusted data risk security vulnerabilities.
+   */
+  void registerContentType(in string extension, in string type);
 
   /**
    * Sets the handler used to display the contents of a directory if
