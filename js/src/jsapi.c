@@ -831,11 +831,10 @@ JS_SetRuntimePrivate(JSRuntime *rt, void *data)
     rt->data = data;
 }
 
-#ifdef JS_THREADSAFE
-
 JS_PUBLIC_API(void)
 JS_BeginRequest(JSContext *cx)
 {
+#ifdef JS_THREADSAFE
     JSRuntime *rt;
 
     JS_ASSERT(cx->thread->id == js_CurrentThreadId());
@@ -859,11 +858,13 @@ JS_BeginRequest(JSContext *cx)
     }
     cx->requestDepth++;
     cx->outstandingRequests++;
+#endif
 }
 
 JS_PUBLIC_API(void)
 JS_EndRequest(JSContext *cx)
 {
+#ifdef JS_THREADSAFE
     JSRuntime *rt;
     JSScope *scope, **todop;
     uintN nshares;
@@ -918,12 +919,14 @@ JS_EndRequest(JSContext *cx)
 
     cx->requestDepth--;
     cx->outstandingRequests--;
+#endif
 }
 
 /* Yield to pending GC operations, regardless of request depth */
 JS_PUBLIC_API(void)
 JS_YieldRequest(JSContext *cx)
 {
+#ifdef JS_THREADSAFE
     JSRuntime *rt;
 
     JS_ASSERT(cx->thread);
@@ -945,27 +948,32 @@ JS_YieldRequest(JSContext *cx)
     }
     rt->requestCount++;
     JS_UNLOCK_GC(rt);
+#endif
 }
 
 JS_PUBLIC_API(jsrefcount)
 JS_SuspendRequest(JSContext *cx)
 {
+#ifdef JS_THREADSAFE
     jsrefcount saveDepth = cx->requestDepth;
 
     while (cx->requestDepth)
         JS_EndRequest(cx);
     return saveDepth;
+#else
+    return 0;
+#endif
 }
 
 JS_PUBLIC_API(void)
 JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth)
 {
+#ifdef JS_THREADSAFE
     JS_ASSERT(!cx->requestDepth);
     while (--saveDepth >= 0)
         JS_BeginRequest(cx);
+#endif
 }
-
-#endif /* JS_THREADSAFE */
 
 JS_PUBLIC_API(void)
 JS_Lock(JSRuntime *rt)
