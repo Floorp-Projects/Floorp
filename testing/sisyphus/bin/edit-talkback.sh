@@ -97,11 +97,11 @@ fi
 executable=`get_executable $product $branch $executablepath`
 
 if [[ -z "$executable" ]]; then
-    error "get_executable $product $branch $executablepath returned empty path"
+    error "get_executable $product $branch $executablepath returned empty path" $LINENO
 fi
 
 if [[ ! -x "$executable" ]]; then 
-    error "executable \"$executable\" is not executable"
+    error "executable \"$executable\" is not executable" $LINENO
 fi
 
 executablepath=`dirname $executable`
@@ -159,12 +159,12 @@ if [[ $talkback -eq 1 ]]; then
             IFS=:
             ;;
         *)
-            error "unknown os $OSID"
+            error "unknown os $OSID" $LINENO
             ;;
     esac
 
     if [[ -z "$talkbackdir" ]]; then
-        error "empty talkback directory"
+        error "empty talkback directory" $LINENO
     fi
 
     mkdir -p "$talkbackdir"
@@ -197,6 +197,6 @@ if [[ $talkback -eq 1 ]]; then
             sed -i.bak "s@URLEditControl .*@URLEditControl = \"mozqa:$talkbackid\"@" Talkback.ini
             ;;
         *)
-            error "unknown os=$OSID"
+            error "unknown os=$OSID" $LINENO
     esac
 fi

@@ -111,7 +111,7 @@ if [[ $OSID == "win32" ]]; then
     elif echo  $filetype | grep -iq 'zip archive'; then
 	    unzip -o -d "$executablepath" "$filename"
     else
-	    error "$unknown file type $filetype"
+	    error "$unknown file type $filetype" $LINENO
     fi
 
 else
@@ -123,7 +123,7 @@ else
         elif echo $filetype | grep -iq 'gzip'; then
             tar -zxvf $filename -C "$executablepath" 
         else
-            error "unknown file type $filetype"
+            error "unknown file type $filetype" $LINENO
         fi
         ;; 
 
@@ -138,7 +138,7 @@ else
         echo "disk=$disk"
         echo "volume=$volume"
         if [[ -z "$disk" || -z "$volume" ]]; then
-            error "mounting disk image: $result"
+            error "mounting disk image: $result" $LINENO
         fi
 
         for app in $volume/*.app; do
@@ -155,7 +155,7 @@ else
     #
     executable=`get_executable $product $branch $executablepath`
     if [[ -z "$executable" ]]; then
-        error "get_executable $product $branch $executablepath returned empty directory"
+        error "get_executable $product $branch $executablepath returned empty directory" $LINENO
     fi
     executabledir=`dirname $executable`
 

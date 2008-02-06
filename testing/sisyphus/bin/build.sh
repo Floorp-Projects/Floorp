@@ -50,14 +50,14 @@ case $product in
         if ! make -f client.mk build 2>&1; then
 
             if [[ -z "$TEST_FORCE_CLOBBER_ON_ERROR" ]]; then
-                error "error during build"
+                error "error during build" $LINENO
             else
-                echo "error occured during build. attempting a clobber build"
+                echo "error occured during build. attempting a clobber build" $LINENO
                 if ! make -f client.mk distclean 2>&1; then
-                    error "error during forced clobber"
+                    error "error during forced clobber" $LINENO
                 fi
                 if ! make -f client.mk build 2>&1; then
-                    error "error during forced build"
+                    error "error during forced build" $LINENO
                 fi
             fi
         fi
@@ -90,7 +90,7 @@ case $product in
             #
             executable=`get_executable $product $branch $executablepath`
             if [[ -z "$executable" ]]; then
-                error "get_executable $product $branch $executablepath returned empty path"
+                error "get_executable $product $branch $executablepath returned empty path" $LINENO
             fi
 
 
@@ -120,11 +120,11 @@ case $product in
     fi
 
     if ! make -f Makefile.ref ${JSBUILDOPT} clean 2>&1; then
-        error "during js/src clean"
+        error "during js/src clean" $LINENO
     fi 
 
     if ! make -f Makefile.ref ${JSBUILDOPT} 2>&1; then
-        error "during js/src build"
+        error "during js/src build" $LINENO
     fi
     ;;
 esac

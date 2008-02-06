@@ -100,30 +100,30 @@ if [[ -z "$product" || -z "$branch" || \
 fi
 
 if [[ "$product" != "firefox" && "$product" != "thunderbird" ]]; then
-    error "product \"$product\" must be one of firefox or thunderbird"
+    error "product \"$product\" must be one of firefox or thunderbird" $LINENO
 fi
 
 if [[ "$branch" != "1.8.0" && "$branch" != "1.8.1" && "$branch" != "1.9.0" ]]; 
     then
-    error "branch \"$branch\" must be one of 1.8.0, 1.8.1, 1.9.0"
+    error "branch \"$branch\" must be one of 1.8.0, 1.8.1, 1.9.0" $LINENO
 fi
 
 executable=`get_executable $product $branch $executablepath`
 
 if [[ -z "$executable" ]]; then
-    error "get_executable $product $branch $executablepath returned empty path"
+    error "get_executable $product $branch $executablepath returned empty path" $LINENO
 fi
 
 if [[ ! -x "$executable" ]]; then 
-    error "executable \"$executable\" is not executable"
+    error "executable \"$executable\" is not executable" $LINENO
 fi
 
 if echo $profilename | egrep -qiv '[a-z0-9_]'; then
-    error "profile name must consist of letters, digits or _"
+    error "profile name must consist of letters, digits or _" $LINENO
 fi
 
-for extension in $extensions/all/*; do 
-    if [[ $extension == "$extensions/all/*" ]]; then
+for extension in $extensions/all/*.xpi; do 
+    if [[ $extension == "$extensions/all/*.xpi" ]]; then
 	    break
     fi
     if [[ "$OSID" == "win32" ]]; then
@@ -150,7 +150,7 @@ for extension in $extensions/$OSID/*; do
 
     echo installing $extension
     if ! $TEST_BIN/timed_run.py ${TEST_STARTUP_TIMEOUT} "-" $executable -P $profilename -install-global-extension "$extensionos"; then
-        error "Failed to install $extensionos"
+        error "Failed to install $extensionos" $LINENO
     fi
 
 done
@@ -164,6 +164,6 @@ fi
 
 if ! $TEST_BIN/timed_run.py ${TEST_STARTUP_TIMEOUT} "install extensions - second restart" \
     $executable -P $profilename "http://${TEST_HTTP}/bin/install-extensions-2.html"; then
-    error "Fatal 2nd failure to load the install-extensions page"
+    error "Fatal 2nd failure to load the install-extensions page" $LINENO
 fi
 
