@@ -168,7 +168,7 @@
 
     <!-- Popup for site identity information -->
     <panel id="identity-popup" position="after_start" hidden="true" noautofocus="true"
-           onpopupshown="document.getElementById('identity-popup-more-info-link').focus();"
+           onpopupshown="document.getElementById('identity-popup-more-info-button').focus();"
            onpopuphidden="focusAndSelectUrlBar();" norestorefocus="true">
       <hbox id="identity-popup-container" align="top">
         <image id="identity-popup-icon"/>
@@ -189,12 +189,14 @@
             <description id="identity-popup-encryption-label" flex="1"/>
           </hbox>
           <spacer flex="1"/>
-          <!-- Footer link to page info -->
-          <label id="identity-popup-more-info-link"
-                 class="text-link plain"
-                 value="&identity.moreInfoLinkText;"
-                 onblur="getIdentityHandler().hideIdentityPopup();"
-                 onclick="getIdentityHandler().handleMoreInfoClick(event);"/>
+          <!-- Footer button to open security page info -->
+          <hbox>
+            <spacer flex="1"/>
+            <button id="identity-popup-more-info-button"
+                    label="&identity.moreInfoLinkText;"
+                    onblur="getIdentityHandler().hideIdentityPopup();"
+                    oncommand="getIdentityHandler().handleMoreInfoClick(event);"/>
+          </hbox>
         </vbox>
       </hbox>
     </panel>
