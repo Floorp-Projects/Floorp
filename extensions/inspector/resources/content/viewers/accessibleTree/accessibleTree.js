@@ -136,6 +136,23 @@ AccessibleTreeViewer.prototype =
     this.mObsMan.removeObserver(aEvent, aObserver);
   },
 
+  // UI commands
+  cmdEvalJS: function cmdEvalJS()
+  {
+    var sel = this.getSelectedAccessible();
+    if (sel) {
+      var win = openDialog("chrome://inspector/content/viewers/accessibleTree/evalJSDialog.xul", 
+                           "_blank", "chrome,resizable=yes", sel);
+    }
+  },
+
+  cmdInspectInNewView: function cmdInspectInNewView()
+  {
+    var sel = this.getSelectedAccessible();
+    if (sel)
+      inspectObject(sel);
+  },
+
   // stuff
 
   onItemSelected: function onItemSelected()
@@ -144,7 +161,13 @@ AccessibleTreeViewer.prototype =
     this.mSelection = this.mView.getDOMNode(idx);
     this.mObsMan.dispatchEvent("selectionChange",
                                { selection: this.mSelection } );
-  }
+  },
+
+  getSelectedAccessible: function getSelectedAccessible()
+  {
+    var idx = this.mTree.currentIndex;
+    return this.mView.getAccessible(idx);
+}
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -408,6 +431,23 @@ function getDOMNode(aRow)
     return null;
 
   return this.getDOMNodeFor(node.accessible);
+}
+
+/**
+ * Return accessible of the tree node pointed by the given
+ * row index.
+ *
+ * @param aRow  The row index to get the accessible from.
+ * @returns     The accessible for the given index.
+ */
+inAccTreeView.prototype.getAccessible =
+function getAccessible(aRow)
+{
+  var node = this.mNodes[aRow];
+  if (!node)
+    return null;
+
+  return node.accessible;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

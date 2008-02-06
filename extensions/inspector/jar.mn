@@ -76,6 +76,8 @@ inspector.jar:
   content/inspector/viewers/accessibleRelations/accessibleRelations.xul (resources/content/viewers/accessibleRelations/accessibleRelations.xul)
   content/inspector/viewers/accessibleTree/accessibleTree.js          (resources/content/viewers/accessibleTree/accessibleTree.js)
   content/inspector/viewers/accessibleTree/accessibleTree.xul         (resources/content/viewers/accessibleTree/accessibleTree.xul)
+  content/inspector/viewers/accessibleTree/evalJSDialog.js            (resources/content/viewers/accessibleTree/evalJSDialog.js)
+  content/inspector/viewers/accessibleTree/evalJSDialog.xul           (resources/content/viewers/accessibleTree/evalJSDialog.xul)
   content/inspector/viewers/computedStyle/computedStyle.js            (resources/content/viewers/computedStyle/computedStyle.js)
   content/inspector/viewers/computedStyle/computedStyle.xul           (resources/content/viewers/computedStyle/computedStyle.xul)
   content/inspector/viewers/dom/FindDialog.js                         (resources/content/viewers/dom/FindDialog.js)

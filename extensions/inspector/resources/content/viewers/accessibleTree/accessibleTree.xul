@@ -57,8 +57,21 @@
   <script type="application/javascript"
           src="chrome://inspector/content/viewers/accessibleTree/accessibleTree.js"/>
 
+  <commandset id="cmdsAccTreeViewer">
+    <command id="cmdEvalJS" oncommand="viewer.cmdEvalJS();"/>
+    <command id="cmdInspectInNewView"
+             oncommand="viewer.cmdInspectInNewView();"/>
+  </commandset>
+
+  <popup id="popupContext">
+    <menuitem label="&inspectNewWindow.label;" observes="cmdInspectInNewView"/>
+    <menuseparator/>
+    <menuitem label="&evaluateJS.label;" observes="cmdEvalJS"/>
+  </popup>
+
   <tree id="olAccessibleTree" class="plain" flex="1"
-        onselect="viewer.onItemSelected()">
+        onselect="viewer.onItemSelected()"
+        context="popupContext">
     <treecols>
       <treecol id="olcRole"
                label="&role.label;"
