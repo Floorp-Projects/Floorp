@@ -256,8 +256,7 @@ function openssl(op, algorithm, input, password) {
   case "WINNT":
     wrap.append("win32");
     wrap.append("exec.bat");
-    bin = wrap.parent.path + "\openssl.exe";
-    dump("FIXME TESTING path: " + bin + "\n");
+    bin = wrap.parent.path + "\\openssl.exe";
     break;
   case "Linux":
   case "Darwin":
