@@ -16,11 +16,11 @@
    -
    - The Initial Developer of the Original Code is
    - Mozilla Foundation.
-   - Portions created by the Initial Developer are Copyright (C) 2007
+   - Portions created by the Initial Developer are Copyright (C) 2008
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
-   -   Alexander Surkov <surkov.alexander@gmail.com>
+   -   Alexander Surkov <surkov.alexander@gmail.com> (original author)
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,9 +37,12 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY role.label "Role">
-<!ENTITY name.label "Name">
-<!ENTITY nodeName.label "Node Name">
+  <!ENTITY evaluateDialog.title "Evaluate JavaScript Dialog">
 
-<!ENTITY evaluateJS.label "Evaluate JavaScript">
-
+  <!ENTITY btnEvaluateJS.label "Evaluate">
+  <!ENTITY btnEvaluateJS.accesskey "E">
+  
+  <!ENTITY txtInputArea.label "Input Area (use 'accessible' variable to operate with the selected accessible and 'output' function to write into 'Output Area' window): ">
+  <!ENTITY txtInputArea.accesskey "I">
+  <!ENTITY txtOutputArea.label "Output Area: ">
+  <!ENTITY txtOutputArea.accesskey "O">
