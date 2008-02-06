@@ -90,25 +90,27 @@
 
   <groupbox id="certStatusGroupBox" flex="1">
     <caption label="&exceptionMgr.certstatus.caption;"/>
-    <hbox>
-      <description id="headerDescription" style="white-space: -moz-pre-wrap;"
-                   flex="1"/>
-      <vbox>
-        <button id="viewCertButton" label="&exceptionMgr.certstatus.viewCert;"
-                accesskey="&exceptionMgr.certstatus.accesskey;"
-                disabled="true" oncommand="viewCertButtonClick();"/>
-      </vbox>
-    </hbox>      
-    <description id="statusDescription"
-                 style="font-weight: bold; padding-bottom: 1em;"/>
-    <description id="statusLongDescription" style="white-space: -moz-pre-wrap;"/>
-    <description id="status2Description"
-                 style="font-weight: bold; padding-bottom: 1em;"/>
-    <description id="status2LongDescription" style="white-space: -moz-pre-wrap;"/>
-    <description id="status3Description" 
-                 style="font-weight: bold; padding-bottom: 1em;"/>
-    <description id="status3LongDescription" style="white-space: -moz-pre-wrap;"/>
-    <spacer flex="1"/>
+    <vbox  style="overflow: auto;" flex="1">
+      <hbox>
+        <description id="headerDescription" style="white-space: -moz-pre-wrap;"
+                     flex="1"/>
+        <vbox>
+          <button id="viewCertButton" label="&exceptionMgr.certstatus.viewCert;"
+                  accesskey="&exceptionMgr.certstatus.accesskey;"
+                  disabled="true" oncommand="viewCertButtonClick();"/>
+        </vbox>
+      </hbox>      
+      <description id="statusDescription"
+                   style="font-weight: bold; padding-bottom: 1em;"/>
+      <description id="statusLongDescription" style="white-space: -moz-pre-wrap;"/>
+      <description id="status2Description"
+                   style="font-weight: bold; padding-bottom: 1em;"/>
+      <description id="status2LongDescription" style="white-space: -moz-pre-wrap;"/>
+      <description id="status3Description" 
+                   style="font-weight: bold; padding-bottom: 1em;"/>
+      <description id="status3LongDescription" style="white-space: -moz-pre-wrap;"/>
+      <spacer flex="1"/>
+    </vbox>
     <checkbox id="permanent" checked="true" disabled="true"
               label="&exceptionMgr.permanent.label;"
               accesskey="&exceptionMgr.permanent.accesskey;"/>
