@@ -339,8 +339,6 @@
 
       <method name="showHistoryPopup">
         <body><![CDATA[
-          this.setAttribute("open", "true");
-
           // Store our "normal" maxRows on the popup, so that it can reset the
           // value when the popup is hidden.
           this.popup._normalMaxRows = this.maxRows;
@@ -858,7 +856,6 @@
         // see bug #400671 for details
         this.selectedIndex = -1;
         this.mPopupOpen = false;
-        this.mInput.removeAttribute("open");
 
         // Reset the maxRows property to the cached "normal" value, and reset
         // _normalMaxRows so that we can detect whether it was set by the input
