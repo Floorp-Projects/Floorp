@@ -27,7 +27,7 @@ stage:
 	# ftp
 	mkdir -p /home/ftp/pub/${PRODUCT}/nightly
 	chown -R cltbld:${PRODUCT} /home/ftp/pub/${PRODUCT}
-	chmod -R g+rwxs /home/ftp/pub/${PRODUCT}
+	chmod -R g+rwx /home/ftp/pub/${PRODUCT}
 	chmod -R o+rx /home/ftp/pub
 	# staging environment
 	mkdir -p /data/cltbld/${PRODUCT}-${VERSION}/batch1/stage
