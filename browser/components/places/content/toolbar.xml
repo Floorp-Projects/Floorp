@@ -1034,6 +1034,15 @@
     </implementation>
 
     <handlers>
+      <handler event="mouseover"><![CDATA[
+        var button = event.target;
+        if (button.parentNode == this && button.node &&
+            PlacesUtils.nodeIsURI(button.node))
+          window.XULBrowserWindow.setOverLink(event.target.node.uri, null);
+      ]]></handler>
+      <handler event="mouseout"><![CDATA[
+        window.XULBrowserWindow.setOverLink("", null);
+      ]]></handler>
       <handler event="mousedown"><![CDATA[
         // When the user clicks down on a button, set it as the selection and 
         // tell the controller that we are the active view.
