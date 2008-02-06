@@ -43,8 +43,6 @@ source ${TEST_BIN}/library.sh
 
 TEST_LOG=/dev/null
 
-trap 'echo -e "\n*** ERROR ***\n\b" && tail $TEST_LOG' ERR
-
 #
 # options processing
 #

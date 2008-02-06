@@ -91,26 +91,26 @@ if [[ -z $directory ]]
 fi
 
 if [[ `whoami` == "root" ]]; then
-    error "can not be run as root"
+    error "can not be run as root" $LINENO
 fi
 
 # get the cannonical name directory name
 mkdir -p "$directory"
 if ! pushd "$directory" > /dev/null ; then 
-    error "$directory is not accessible"
+    error "$directory is not accessible" $LINENO
 fi
 directory=`pwd`
 popd > /dev/null
 
 if [[ "$directory" == "/" ]]; then
-    error "directory $directory can not be root"
+    error "directory $directory can not be root" $LINENO
 fi
 
 parent=`dirname "$directory"`
 grandparent=`dirname "$parent"`
 
 if [[ "$parent" != "/tmp" && ( "$parent" == "/" || "$grandparent" == "/" ) ]]; then
-    error "directory $directory can not be a subdirectory of $parent"
+    error "directory $directory can not be a subdirectory of $parent" $LINENO
 fi
 
 

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 # -*- Mode: Shell-script; tab-width: 4; indent-tabs-mode: nil; -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -43,8 +43,6 @@ source ${TEST_BIN}/library.sh
 
 TEST_LOG=/dev/null
 
-#trap 'echo -e "\n*** ERROR ***\n\b" && tail $TEST_LOG' ERR
-
 #
 # options processing
 #
@@ -53,7 +51,7 @@ function usage()
 {
     cat<<EOF
 usage: 
-$SCRIPT -t testscript datalist1 [datalist2 [datalist3 [datalist4]]]
+$SCRIPT -t testscript [-v ] datalist1 [datalist2 [datalist3 [datalist4]]]
 
 variable            description
 ===============     ===========================================================
@@ -109,14 +107,10 @@ for data in $datalist; do
     echo "log: $TEST_LOG "
 
     if [[ "$verbose" == "1" ]]; then
-        if ! test-setup.sh -d $TEST_DIR/data/$data.data 2>&1 | tee -a $TEST_LOG; then
-            error "test-setup.sh failed"
-        fi
+        test-setup.sh -d $TEST_DIR/data/$data.data 2>&1 | tee -a $TEST_LOG
         $testscript $testargs -d $TEST_DIR/data/$data.data 2>&1 | tee -a $TEST_LOG
     else
-        if ! test-setup.sh -d $TEST_DIR/data/$data.data >> $TEST_LOG 2>&1; then
-            error "test-setup.sh failed"
-        fi
+        test-setup.sh -d $TEST_DIR/data/$data.data >> $TEST_LOG 2>&1
         $testscript $testargs -d $TEST_DIR/data/$data.data >> $TEST_LOG 2>&1
     fi
 

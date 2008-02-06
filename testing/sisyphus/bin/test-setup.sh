@@ -255,18 +255,10 @@ fi
 
 if [[ -n "$extensiondir" ]]; then
 
-    if ! install-extensions.sh -p $product -b $branch \
-        -x $executablepath -N $profilename -E $extensiondir; then
-        exit 2
-    fi
+    install-extensions.sh -p $product -b $branch \
+        -x $executablepath -N $profilename -E $extensiondir
 
-    if ! check-spider.sh -p $product -b $branch \
-        -x $executablepath -N $profilename; then
-        exit 2
-    fi
+    check-spider.sh -p $product -b $branch \
+        -x $executablepath -N $profilename
 
 fi
-
-
-
-

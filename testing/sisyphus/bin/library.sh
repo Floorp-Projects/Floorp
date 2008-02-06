@@ -43,22 +43,72 @@
 # TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
 # TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
 # source ${TEST_BIN}/library.sh
-#
-#trap "echo error $0 `caller 1`; exit" ERR
-
-# skip remainder of script if it has already 
-# included
 
 if [[ -n "$DEBUG" ]]; then
     echo "calling $0 $@" 1>&2
 fi
 
+# export variables
+set -a 
+
+# in the event of an untrapped script error tail the test log, 
+# if it exists, to stderr then echo a FATAL ERROR message to the 
+# test log and stderr.
+
+function _err()
+{
+    local rc=$?
+    debug "_err: $0"
+
+    if [[ "$rc" -gt 0 ]]; then
+        if [[ -n "$TEST_LOG" ]]; then
+            echo -e "\nFATAL ERROR in $0 exit code $rc\n" >> $TEST_LOG
+        else
+            echo -e "\nFATAL ERROR in $0 exit code $rc\n" 1>&2
+        fi
+    fi
+    exit $rc
+}
+
+trap "_err" ERR
+
+function _exit()
+{
+    local rc=$?
+    local currscript=`get_scriptname $0`
+
+    debug "_exit: $0"
+
+    if [[ "$rc" -gt 0 && -n "$TEST_LOG" && "$SCRIPT" == "$currscript" ]]; then
+        # only tail the log once at the top level script
+        tail $TEST_LOG 1>&2
+    fi
+}
+
+trap "_exit" EXIT
+
+    # error message
+    # output error message end exit 2
+
+    error()
+    {
+        local message=$1
+        local lineno=$2
+
+        debug "error: $0:$LINENO"
+    
+        echo -e "FATAL ERROR in script $0:$lineno $message\n" 1>&2
+        if [[ "$0" == "-bash" || "$0" == "bash" ]]; then
+            return 0
+        fi
+        exit 2
+    } 
+
+
 if [[ -z "$LIBRARYSH" ]]; then
+    # skip remainder of script if it has already included
 
     LIBRARYSH=1
-
-    # export variables
-    set -a 
 
     # set time format for pipeline timing reports
     TIMEFORMAT="Elapsed time %0R seconds, User %0U seconds, System %0S seconds, CPU %P%%"
@@ -86,21 +136,9 @@ if [[ -z "$LIBRARYSH" ]]; then
 
     console()
     {
-        echo "$@" 1>&2
+        echo -e "$@" 1>&2
     }
 
-
-    # error message
-    # output error message end exit 2
-
-    error()
-    {
-        echo "error in script $SCRIPT: $1"
-        if [[ "$0" == "-bash" || "$0" == "bash" ]]; then
-            return 0
-        fi
-        exit 2
-    } 
 
     # dumpenvironment
     #
@@ -167,11 +205,18 @@ if [[ -z "$LIBRARYSH" ]]; then
         fi
     }
 
-    if [[ "$0" == "-bash" || "$0" == "bash" ]]; then
-        SCRIPT="library.sh"
-    else
-        SCRIPT=`basename $0`
-    fi
+    function get_scriptname()
+    {
+        local script
+        if [[ "$0" == "-bash" || "$0" == "bash" ]]; then
+            script="library.sh"
+        else
+            script=`basename $0`
+        fi
+        echo $script
+    }
+
+    SCRIPT=`get_scriptname $0`
 
     TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
     TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}

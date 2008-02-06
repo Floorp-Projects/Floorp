@@ -142,7 +142,7 @@ if [[ $OSID == "win32" ]]; then
                 fi
             fi
         else
-            error "Unknown branch $branch"
+            error "Unknown branch $branch" $LINENO
         fi
         # the NSIS uninstaller will copy itself, then fork to the new
         # copy so that it can delete itself. This causes a race condition

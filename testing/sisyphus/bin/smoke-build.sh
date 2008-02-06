@@ -63,7 +63,7 @@ for filepath in $@; do
 
     if ! install-build.sh  -p "$product" -b "$branch" -x "/tmp/$product-$branch" \
 	-f "$filepath"; then
-	error "installing build $product $branch into /tmp/$product-$branch"
+	error "installing build $product $branch into /tmp/$product-$branch" $LINENO
     fi
 
     if [[ "$product" == "thunderbird" ]]; then
@@ -77,20 +77,20 @@ for filepath in $@; do
 	-D "/tmp/$product-$branch-profile" -N "$product-$branch-profile" \
 	-U ${TEST_DIR}/prefs/test-user.js \
 	$template; then
-	error "creating profile $product-$branch-profile at /tmp/$product-$branch"
+	error "creating profile $product-$branch-profile at /tmp/$product-$branch" $LINENO
     fi
 
     if ! install-extensions.sh -p "$product" -b "$branch" \
 	-x "/tmp/$product-$branch" \
 	-N "$product-$branch-profile" \
 	-E ${TEST_DIR}/xpi; then
-        error "installing extensions from ${TEST_DIR}/xpi"
+        error "installing extensions from ${TEST_DIR}/xpi" $LINENO
     fi
 
     if ! check-spider.sh -p "$product" -b "$branch" \
 	-x "/tmp/$product-$branch" \
 	-N "$product-$branch-profile"; then
-        error "check-spider.sh failed."
+        error "check-spider.sh failed." $LINENO
     fi
 
     uninstall-build.sh  -p "$product" -b "$branch" -x "/tmp/$product-$branch"

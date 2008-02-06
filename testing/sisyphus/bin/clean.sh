@@ -48,7 +48,7 @@ case $product in
         cd $TREE/mozilla
 
         if ! make -f client.mk clean 2>&1; then
-            error "during client.mk clean"
+            error "during client.mk clean" $LINENO
         fi
         ;;
 
@@ -56,7 +56,7 @@ case $product in
         cd $TREE/mozilla/js/src
 
         if ! make -f Makefile.ref clean 2>&1; then
-            error "during SpiderMonkey clean"
+            error "during SpiderMonkey clean" $LINENO
         fi
         ;;
 esac
