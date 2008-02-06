@@ -95,17 +95,17 @@ if [[ -z "$product" || -z "$branch" || \
 fi
 
 if [[ "$product" != "firefox" && "$product" != "thunderbird" ]]; then
-    error "product \"$product\" must be one of firefox or thunderbird"
+    error "product \"$product\" must be one of firefox or thunderbird" $LINENO
 fi
 
 executable=`get_executable $product $branch $executablepath`
 
 if [[ -z "$executable" ]]; then
-    error "get_executable $product $branch $executablepath returned empty path"
+    error "get_executable $product $branch $executablepath returned empty path" $LINENO
 fi
 
 if [[ ! -x "$executable" ]]; then 
-    error "executable \"$executable\" is not executable"
+    error "executable \"$executable\" is not executable" $LINENO
 fi
 
 executablepath=`dirname $executable`

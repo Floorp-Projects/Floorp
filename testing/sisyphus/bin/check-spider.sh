@@ -41,6 +41,8 @@ TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
 TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
 source ${TEST_BIN}/library.sh
 
+TEST_STARTUP_TRIES=${TEST_STARTUP_TRIES:-3}
+
 #
 # options processing
 #
@@ -68,7 +70,7 @@ note that the environment variables should have the same names as in the
 Checks if the Spider extension is installed either in the named profile
 or as a global extension, by attempting up to 3 times to launch the Spider.
 
-If Spider fails to launch, the script returns exit code 66.
+If Spider fails to launch, the script returns exit code 2.
 
 EOF
     exit 1
@@ -101,26 +103,26 @@ if [[ -z "$product" || -z "$branch" || -z "$executablepath" || -z "$profilename"
 fi
 
 if [[ "$product" != "firefox" && "$product" != "thunderbird" ]]; then
-    error "product \"$product\" must be one of firefox or thunderbird"
+    error "product \"$product\" must be one of firefox or thunderbird" $LINENO
 fi
 
 if [[ "$branch" != "1.8.0" && "$branch" != "1.8.1" && "$branch" != "1.9.0" ]]; 
     then
-    error "branch \"$branch\" must be one of 1.8.0, 1.8.1, 1.9.0"
+    error "branch \"$branch\" must be one of 1.8.0, 1.8.1, 1.9.0" $LINENO
 fi
 
 executable=`get_executable $product $branch $executablepath`
 
 if [[ -z "$executable" ]]; then
-    error "get_executable $product $branch $executablepath returned empty path"
+    error "get_executable $product $branch $executablepath returned empty path" $LINENO
 fi
 
 if [[ ! -x "$executable" ]]; then 
-    error "executable \"$executable\" is not executable"
+    error "executable \"$executable\" is not executable" $LINENO
 fi
 
 if echo "$profilename" | egrep -qiv '[a-z0-9_]'; then
-    error "profile name must consist of letters, digits or _"
+    error "profile name must consist of letters, digits or _" $LINENO
 fi
 
 echo # attempt to force Spider to load
@@ -132,9 +134,8 @@ while ! $TEST_BIN/timed_run.py ${TEST_STARTUP_TIMEOUT} "Start Spider: try $tries
     -uri "http://${TEST_HTTP}/bin/start-spider.html" \
     -hook "http://${TEST_HTTP}/bin/userhook-checkspider.js"; do
   let tries=tries+1
-  if [ "$tries" -gt 3 ]; then
-      echo "Failed to start spider. Exiting..."
-      exit 66
+  if [ "$tries" -gt $TEST_STARTUP_TRIES  ]; then
+      error "Failed to start spider. Exiting..." $LINENO
   fi
 done
 

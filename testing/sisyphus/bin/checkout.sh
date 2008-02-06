@@ -44,7 +44,7 @@ source ${TEST_BIN}/library.sh
 source ${TEST_BIN}/set-build-env.sh $@
 
 if [[ -z "$TREE" ]]; then
-    error "source tree not specified!"
+    error "source tree not specified!" $LINENO
 fi
 
 cd $TREE
@@ -56,14 +56,14 @@ case $product in
             -e "mozilla/$project/config/mozconfig" ) ]]; then
             if ! eval cvs -z3 -q co $BRANCH_CO_FLAGS \
                 mozilla/client.mk mozilla/$project/config/mozconfig; then
-                error "during checkout of mozconfig"
+                error "during checkout of mozconfig" $LINENO
             fi
         fi
 
         cd mozilla
 
         if ! make -f client.mk checkout 2>&1; then
-            error "during checkout of tree"
+            error "during checkout of tree" $LINENO
         fi
         ;;
 
@@ -77,15 +77,15 @@ case $product in
     cd mozilla/js/src
 
     if ! eval cvs -z3 -q update $BRANCH_CO_FLAGS $DATE_CO_FLAGS -d -P 2>&1; then
-        error "during checkout of js/src"
+        error "during checkout of js/src" $LINENO
     fi
 
     if ! cvs -z3 -q update -d -P -A editline config  2>&1; then
-        error "during checkout of js/src"
+        error "during checkout of js/src" $LINENO
     fi
     # end for js shell
     ;;
     *)
-    error "unknown product $product"
+    error "unknown product $product" $LINENO
     ;;
 esac
