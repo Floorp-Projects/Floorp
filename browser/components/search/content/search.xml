@@ -122,7 +122,6 @@
 
           // Refresh the display (updating icon, etc)
           this.updateDisplay();
-          this._textbox._displayCurrentEngine();
 
           var os =
                Components.classes["@mozilla.org/observer-service;1"]
@@ -191,31 +190,8 @@
         ]]></getter>
       </property>
 
-      <property name="value"
-                onget="return this._textbox.value;">
-        <setter><![CDATA[
-          // Make sure to remove the "empty" attribute if someone is setting
-          // the search bar value to a non-empty string. Similarly, we need to
-          // add the "empty" attribute if someone is clearing the search box,
-          // but only if the search box currently doesn't have focus.
-          if (val) {
-            this.removeAttribute("empty");
-            this._textbox.value = val;
-          }
-          else {
-            if (this._textbox.hasAttribute("focused")) {
-              // Just clear the textbox
-              this._textbox.value = "";
-            }
-            else {
-              // Display the current engine
-              this._textbox._displayCurrentEngine();
-            }
-          }
-
-          return val;
-        ]]></setter>
-      </property>
+      <property name="value" onget="return this._textbox.value;"
+                             onset="return this._textbox.value = val;"/>
 
       <method name="focus">
         <body><![CDATA[
@@ -339,18 +315,13 @@
       <method name="updateDisplay">
         <body><![CDATA[
           var uri = this.currentEngine.iconURI;
-          if (uri)
-            this.setAttribute("src", uri.spec);
-          else
-            this.setAttribute("src", "");
-
-          // Update current engine display
-          if (this.hasAttribute("empty"))
-            this._textbox._displayCurrentEngine();
+          this.setAttribute("src", uri ? uri.spec : "");
 
           var name = this.currentEngine.name;
           var text = this._stringBundle.getFormattedString("searchtip", [name]);
-          this.setAttribute("tooltiptext", text);
+          this._textbox.emptyText = name;
+          this._textbox.label = text;
+          this._textbox.tooltipText = text;
         ]]></body>
       </method>
 
@@ -495,9 +466,6 @@
         <body><![CDATA[
           var textBox = this._textbox;
           var textValue = textBox.value;
-          // Ignore greyed-out hint text in "empty" searchboxes.
-          if (this.getAttribute("empty") == "true")
-            textValue = "";
 
           // Save the current value in the form history
           if (textValue) {
@@ -564,7 +532,7 @@
 
   <binding id="searchbar-textbox"
       extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
-    <implementation implements="nsIObserver nsIDOMXULLabeledControlElement">
+    <implementation implements="nsIObserver">
       <constructor><![CDATA[
         if (document.getBindingParent(this).parentNode.parentNode.localName ==
             "toolbarpaletteitem")
@@ -584,9 +552,6 @@
         } catch (ex) { }
       ]]></destructor>
 
-      <property name="label" readonly="true"
-                onget="return '&searchItem.title; ' + 
-                      document.getBindingParent(this).currentEngine.name;"/>
       <field name="_stringBundle"/>
       <field name="_formHistSvc"/>
       <field name="_prefBranch"/>
@@ -710,28 +675,6 @@
         </body>
       </method>
 
-      <!-- Displays a grayed-out hint string containing the name of the
-           current search engine in the search text box.  (It makes it gray
-           by setting an empty="true" attribute on the searchbox element.)
-      -->
-      <method name="_displayCurrentEngine">
-        <body><![CDATA[
-          var searchbar = document.getBindingParent(this);
-
-          // This section is a wee bit hacky; without the timeout, the CSS
-          // style corresponding to the "empty" attribute doesn't kick in
-          // until the text has changed, leading to an unpleasant moment
-          // where the engine name flashes black before turning gray.
-          searchbar.setAttribute("empty", "true");
-
-          var searchTextbox = this;
-          setTimeout(function() {
-            if (searchbar.getAttribute("empty") == "true")
-              searchTextbox.value = searchbar.currentEngine.name;
-          }, 0);
-        ]]></body>
-      </method>
-
       <!-- overload |onTextEntered| in autocomplete.xml -->
       <method name="onTextEntered">
         <parameter name="aEvent"/>
@@ -785,12 +728,7 @@
           var data = transferUtils.retrieveURLFromData(aXferData.data,
                          aXferData.flavour.contentType);
           if (data) {
-            // Remove the search bar's empty attribute, since we're setting
-            // a value without focusing the textbox. If it's not empty, this
-            // won't do anything. This can be removed if bug 280635 is fixed.
-            document.getBindingParent(this.mOuter).removeAttribute("empty");
             this.mOuter.value = data;
-
             this.mOuter.onTextEntered(aEvent);
           }
         },
@@ -832,20 +770,6 @@
       <handler event="dragdrop" phase="capturing">
         nsDragAndDrop.drop(event, this.searchbarDNDObserver);
       </handler>
-
-      <handler event="focus" phase="capturing"><![CDATA[
-        var searchbar = document.getBindingParent(this);
-        if (searchbar.getAttribute("empty") == "true") {
-          searchbar.removeAttribute("empty");
-          this.value = "";
-        }
-      ]]></handler>
-
-      <handler event="blur" phase="capturing"><![CDATA[
-        var searchbar = document.getBindingParent(this);
-        if (this.value == "")
-          this._displayCurrentEngine();
-      ]]></handler>
 
     </handlers>
   </binding>

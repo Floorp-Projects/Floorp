@@ -63,7 +63,11 @@ textbox {
   background-color: -moz-Field;
   color: -moz-FieldText;
 }
-    
+
+textbox[empty="true"] {
+  color: GrayText;
+}
+
 html|*.textbox-input, 
 html|*.textbox-textarea {
   margin: 0px !important;
