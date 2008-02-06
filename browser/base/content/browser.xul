@@ -257,10 +257,12 @@
         </toolbarbutton>
         <toolbarbutton id="back-forward-dropmarker" type="menu" chromedir="&locale.dir;"
                        disabled="true">
+          <!-- bug 415444: event.stopPropagation is here for the cloned version of
+               this menupopup -->
           <menupopup context=""
                      position="after_start"
                      onpopupshowing="return FillHistoryMenu(event.target);"
-                     oncommand="gotoHistoryIndex(event);"
+                     oncommand="gotoHistoryIndex(event); event.stopPropagation();"
                      onclick="checkForMiddleClick(this, event);"/>
         </toolbarbutton>
       </toolbaritem>
