@@ -1,7 +1,5 @@
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html>
   <head>
-    <title>Import Test List</title>
     <script language="JavaScript" src="importList.js"></script>
   </head>
 
@@ -9,17 +7,16 @@
     
     <form name="foo">
       <textarea rows="25" cols="50" name="testList"></textarea><br>
-      <input type="checkbox" name="clear_all" checked>
-      &nbsp;Clear all selections before import.<br>
+      <script language="javascript">
+if (include)
+{
+  document.write('<input type="checkbox" name="clear_all" checked>');
+  document.write('&nbsp;Clear all selections before import.<br>');
+}
+      </script>
       <input type="button" value="Import" onclick="doImport();">
       <input type="button" value="Cancel" onclick="window.close();">
     </form>
 
-    <hr>
-    <address><a href="mailto:rginda@netscape.com"></a></address>
-<!-- Created: Wed Nov 17 13:52:23 PST 1999 -->
-<!-- hhmts start -->
-Last modified: Wed Nov 17 14:18:42 PST 1999
-<!-- hhmts end -->
   </body>
 </html>

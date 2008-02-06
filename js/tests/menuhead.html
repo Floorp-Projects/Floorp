@@ -15,8 +15,10 @@
 
     <form name="testCases" action="">
     <input type='button' value='Export Test List' onClick='createList();'>
-    <input type='button' value='Import Test List' 
-      onClick='window.open("importList.html", "other_window");'>
+    <input type='button' value='Include Test List' 
+      onClick='window.open("importList.html?include", "include_window");'>
+    <input type='button' value='Exclude Test List' 
+      onClick='window.open("importList.html?exclude", "exclude_window");'>
 
     <h2>Browser Test Options</h2>
     <p>
