@@ -198,7 +198,7 @@ JS_DumpHistogram(JSBasicStats *bs, FILE *fp)
         fprintf(fp, "%s %8u ", (bin == 10) ? "+" : ":", cnt);
         if (cnt != 0) {
             if (max > 1e6 && mean > 1e3)
-                cnt = ceil(log10(cnt));
+                cnt = (uint32) ceil(log10(cnt));
             else if (max > 16 && mean > 8)
                 cnt = JS_CeilingLog2(cnt);
             for (i = 0; i < cnt; i++)

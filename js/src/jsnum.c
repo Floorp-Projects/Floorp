@@ -778,7 +778,7 @@ js_DoubleToECMAInt32(jsdouble d)
 
     d = fmod(d, two32);
     d = (d >= 0) ? floor(d) : ceil(d) + two32;
-    return (int32) (d >= two31) ? (d - two32) : d;
+    return (int32) (d >= two31 ? d - two32 : d);
 }
 
 JSBool
@@ -807,7 +807,7 @@ js_DoubleToECMAUint32(jsdouble d)
 
     d = fmod(d, two32);
 
-    return (uint32) (d >= 0) ? d : d + two32;
+    return (uint32) (d >= 0 ? d : d + two32);
 }
 
 JSBool
