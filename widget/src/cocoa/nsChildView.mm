@@ -4069,8 +4069,8 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   if (!mGeckoChild)
     return YES;
 
-  // return 'NO' if we are in a transaction of IME.
-  if (nsTSMManager::IsComposing())
+  // Return 'NO' if we are in a transaction of IME or we are not the first responder.
+  if (nsTSMManager::IsComposing() || [[self window] firstResponder] != self)
     return NO;
 
   // see if the menu system will handle the event
