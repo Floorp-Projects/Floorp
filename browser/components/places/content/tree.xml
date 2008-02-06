@@ -745,54 +745,6 @@
         ]]></body>
       </method>
 
-      <field name="_nextSelection">[]</field>
-      <field name="SAVE_SELECTION_RELOAD">0</field>
-      <field name="SAVE_SELECTION_INSERT">1</field>
-      <method name="saveSelection">
-        <parameter name="mode"/>
-        <body><![CDATA[ 
-          // mode can be one of any of the SAVE_SELECTION field values, 
-          // specifying how selection is to be saved.
-          var s = this.view.selection;
-          var rc = s.getRangeCount();
-          switch (mode) {
-          case this.SAVE_SELECTION_INSERT:
-            var min = { }, max = { };
-            s.getRangeAt(rc - 1, min, max);
-            this._nextSelection = [{ min: max.value, max: max.value }];
-            break;
-          case this.SAVE_SELECTION_RELOAD:
-            this._nextSelection = [];
-            for (var i = 0; i < rc; ++i) {
-              var min = { }, max = { };
-              s.getRangeAt(i, range.min, range.max);
-              this._nextSelection.push({ min: range.min, max: range.max });
-            }
-            break;
-          }
-        ]]></body>
-      </method>
-
-      <method name="restoreSelection">
-        <body><![CDATA[
-          var allowedMaxIndex = this.view.rowCount - 1;
-
-          for (var i = 0; i < this._nextSelection.length; ++i) {
-            var range = this._nextSelection[i];
-
-            // make sure the index is not over the end of the view
-            // this fixes bug 376581
-            if (range.max > allowedMaxIndex)
-              range.max = allowedMaxIndex;
-            if (range.min > allowedMaxIndex)
-              range.min = allowedMaxIndex;
-
-            if (range.min > -1 && range.max > -1)
-              this.view.selection.rangedSelect(range.min, range.max, true);
-          }
-        ]]></body>
-      </method>
-
       <method name="buildContextMenu">
         <parameter name="aPopup"/>
         <body><![CDATA[
