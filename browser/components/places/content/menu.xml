@@ -542,16 +542,6 @@
         ]]></body>
       </method>
 
-      <method name="saveSelection">
-        <parameter name="mode"/>
-        <body><![CDATA[
-        ]]></body>
-      </method>
-      <method name="restoreSelection">
-        <body><![CDATA[
-        ]]></body>
-      </method>
-
       <property name="selType" readonly="true" onget="return 'single';"/>
 
       <method name="buildContextMenu">

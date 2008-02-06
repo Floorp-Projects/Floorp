@@ -1271,6 +1271,64 @@ nsNavBookmarks::InsertSeparator(PRInt64 aParent, PRInt32 aIndex,
   return NS_OK;
 }
 
+nsresult
+nsNavBookmarks::GetLastChildId(PRInt64 aFolder, PRInt64* aItemId)
+{
+  mozIStorageConnection *dbConn = DBConn();
+
+  nsCOMPtr<mozIStorageStatement> statement;
+  nsresult rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT id FROM moz_bookmarks WHERE parent = ?1 "
+      "ORDER BY position DESC LIMIT 1"), getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->BindInt64Parameter(0, aFolder);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasMore;
+  rv = statement->ExecuteStep(&hasMore);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!hasMore) {
+    // Item doesn't exist
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  *aItemId = statement->AsInt64(0);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavBookmarks::GetIdForItemAt(PRInt64 aFolder, PRInt32 aIndex, PRInt64* aItemId)
+{
+  nsresult rv;
+  if (aIndex == nsINavBookmarksService::DEFAULT_INDEX) {
+    // we want the last item within aFolder
+    return GetLastChildId(aFolder, aItemId);
+  } else {
+    mozIStorageConnection *dbConn = DBConn();
+    {
+      // get the item in aFolder with position aIndex
+      mozStorageStatementScoper scope(mDBGetChildAt);
+
+      rv = mDBGetChildAt->BindInt64Parameter(0, aFolder);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = mDBGetChildAt->BindInt32Parameter(1, aIndex);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      PRBool hasMore;
+      rv = mDBGetChildAt->ExecuteStep(&hasMore);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (!hasMore) {
+        // Item doesn't exist
+        return NS_ERROR_INVALID_ARG;
+      }
+      // actually found an item
+      *aItemId = mDBGetChildAt->AsInt64(0);
+    }
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsNavBookmarks::RemoveChildAt(PRInt64 aParent, PRInt32 aIndex)
 {

@@ -784,8 +784,6 @@ PlacesController.prototype = {
     if (!ip)
       throw Cr.NS_ERROR_NOT_AVAILABLE;
 
-    this._view.saveSelection(this._view.SAVE_SELECTION_INSERT);
-
     var performed = false;
     if (aType == "bookmark")
       performed = PlacesUtils.showAddBookmarkUI(null, null, null, ip);
@@ -794,8 +792,12 @@ PlacesController.prototype = {
     else // folder
       performed = PlacesUtils.showAddFolderUI(null, ip);
 
-    if (performed)
-      this._view.restoreSelection();
+    if (performed) {
+      // select the new item
+      var insertedNodeId = PlacesUtils.bookmarks
+                                      .getIdForItemAt(ip.itemId, ip.index);
+      this._view.selectItems([insertedNodeId], ip.itemId);
+    }
   },
 
 
@@ -808,9 +810,14 @@ PlacesController.prototype = {
     if (!ip)
       throw Cr.NS_ERROR_NOT_AVAILABLE;
 
-    this._view.saveSelection(this._view.SAVE_SELECTION_INSERT);
-    if (PlacesUtils.showAddFolderUI(null, ip))
-      this._view.restoreSelection();
+    var performed = false;
+    performed = PlacesUtils.showAddFolderUI(null, ip);
+    if (performed) {
+      // select the new item
+      var insertedNodeId = PlacesUtils.bookmarks
+                                      .getIdForItemAt(ip.itemId, ip.index);
+      this._view.selectItems([insertedNodeId]);
+    }
   },
 
   /**
@@ -822,6 +829,10 @@ PlacesController.prototype = {
       throw Cr.NS_ERROR_NOT_AVAILABLE;
     var txn = PlacesUtils.ptm.createSeparator(ip.itemId, ip.index);
     PlacesUtils.ptm.doTransaction(txn);
+    // select the new item
+    var insertedNodeId = PlacesUtils.bookmarks
+                                    .getIdForItemAt(ip.itemId, ip.index);
+    this._view.selectItems([insertedNodeId]);
   },
 
   /**
@@ -1201,6 +1212,14 @@ PlacesController.prototype = {
                                         PlacesUtils.TYPE_UNICODE]);
     var txn = PlacesUtils.ptm.aggregateTransactions("Paste", transactions);
     PlacesUtils.ptm.doTransaction(txn);
+
+    // select the pasted items, they should be consecutive
+    var insertedNodeIds = [];
+    for (var i = 0; i < transactions.length; ++i)
+      insertedNodeIds.push(PlacesUtils.bookmarks
+                                      .getIdForItemAt(ip.itemId, ip.index + i));
+    if (insertedNodeIds.length > 0)
+      this._view.selectItems(insertedNodeIds);
   }
 };
 
