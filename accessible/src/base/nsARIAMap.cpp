@@ -213,6 +213,15 @@ nsRoleMapEntry nsARIAMap::gLandmarkRoleMap = {
   kEndEntry
 };
 
+nsRoleMapEntry nsARIAMap::gEmptyRoleMap = {
+  "",
+  nsIAccessibleRole::ROLE_NOTHING,
+  eNameLabelOrTitle,
+  eNoValue,
+  kNoReqStates,
+  kEndEntry
+};
+
 /**
  * Universal states:
  * The following state rules are applied to any accessible element,

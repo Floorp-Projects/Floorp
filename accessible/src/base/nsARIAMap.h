@@ -125,9 +125,29 @@ struct nsRoleMapEntry
  */
 struct nsARIAMap
 {
+  /**
+   * Array of supported ARIA role map entries and its length.
+   */
   static nsRoleMapEntry gWAIRoleMap[];
   static PRUint32 gWAIRoleMapLength;
+
+  /**
+   * Landmark role map entry. Used when specified ARIA role isn't mapped to
+   * accessibility API.
+   */
   static nsRoleMapEntry gLandmarkRoleMap;
+
+  /**
+   * Empty role map entry. Used by accessibility service to create an accessible
+   * if the accessible can't use role of used accessible class. For example,
+   * it is used for table cells that aren't contained by table.
+   */
+  static nsRoleMapEntry gEmptyRoleMap;
+
+  /**
+   * State map of ARIA states applied to any accessible not depending on
+   * the role.
+   */
   static nsStateMapEntry gWAIUnivStateMap[];
 };
 
