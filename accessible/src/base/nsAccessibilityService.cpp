@@ -1450,8 +1450,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
           }
           if (tableAccessible && nsAccessible::Role(tableAccessible) != nsIAccessibleRole::ROLE_TABLE) {
             NS_ASSERTION(!roleMapEntry, "Should not be changing ARIA role, just overriding impl class role");
-            // Not in table: override role (roleMap entry was null).
-            roleMapEntry = &nsARIAMap::gEmptyRoleMap;
+            roleMapEntry = &nsARIAMap::gLandmarkRoleMap; // Not in table: override role (roleMap entry was null)
           }
           break;
         }
@@ -1459,8 +1458,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
           // Stop before we are fooled by any additional table ancestors
           // This table cell frameis part of a separate ancestor table.
           NS_ASSERTION(!roleMapEntry, "Should not be changing ARIA role, just overriding impl class role");
-          // Not in table: override role (roleMap entry was null).
-          roleMapEntry = &nsARIAMap::gEmptyRoleMap;
+          roleMapEntry = &nsARIAMap::gLandmarkRoleMap; // Not in table: override role
           break;
         }
       }
