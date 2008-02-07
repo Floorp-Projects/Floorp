@@ -175,7 +175,7 @@ nsNavHistoryResultNode::GetTags(nsAString& aTags) {
     return NS_OK;
   }
 
-  // Initially, the tags string is set to a void string (see constructor). We
+  // Initially, the tags string is set to a void string (see construtor). We
   // then build it the first time this method called is called (and by that,
   // implicitly unset the void flag). Result observers may re-set the void flag
   // in order to force rebuilding of the tags string.
@@ -587,6 +587,9 @@ nsNavHistoryContainerResultNode::ReverseUpdateStats(PRInt32 aAccessCountChange)
           sortMode == nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING) &&
          timeChanged)) {
 
+      SortComparator comparator = GetSortingComparator(sortMode);
+      nsCAutoString sortingAnnotation;
+      GetSortingAnnotation(sortingAnnotation);
       PRUint32 ourIndex = mParent->FindChild(this);
       resorted = EnsureItemPosition(ourIndex);
     }
@@ -2314,11 +2317,11 @@ nsNavHistoryQueryResultNode::FillChildren()
   // once we've computed all tree stats, we can sort, because containers will
   // then have proper visit counts and dates
   SortComparator comparator = GetSortingComparator(GetSortType());
-  if (comparator) {
-    nsCAutoString sortingAnnotation;
-    GetSortingAnnotation(sortingAnnotation);
+  nsCAutoString sortingAnnotation;
+  GetSortingAnnotation(sortingAnnotation);
+
+  if (comparator)
     RecursiveSort(sortingAnnotation.get(), comparator);
-  }
 
   // if our options apply to containers and we are limiting our results
   // remove items from the end of the mChildren array after sorting.
@@ -3076,11 +3079,11 @@ nsNavHistoryFolderResultNode::FillChildren()
   // once we've computed all tree stats, we can sort, because containers will
   // then have proper visit counts and dates
   SortComparator comparator = GetSortingComparator(GetSortType());
-  if (comparator) {
-    nsCAutoString sortingAnnotation;
-    GetSortingAnnotation(sortingAnnotation);
+  nsCAutoString sortingAnnotation;
+  GetSortingAnnotation(sortingAnnotation);
+
+  if (comparator)
     RecursiveSort(sortingAnnotation.get(), comparator);
-  }
 
   // register with the result for updates
   nsNavHistoryResult* result = GetResult();
