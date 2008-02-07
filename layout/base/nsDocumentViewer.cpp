@@ -3657,16 +3657,16 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
     if (NS_SUCCEEDED(CallQueryInterface(seqFrame, &sqf))) {
       sqf->GetDeadSpaceValue(&deadSpaceGapTwips);
     }
-    nscoord deadSpaceGap = mPresContext->TwipsToAppUnits(deadSpaceGapTwips);
 
-    // XXXdholbert: deadSpaceGap should be subtracted from
-    // fndPageFrame->GetPosition().y, before the scaling.  However,
-    // deadSpaceGap isn't matching up to the actual visible dead space in Print
-    // Preview right now -- see bug 414075.  Hence, ignoring deadSpaceGap for
-    // now -- instead, we'll navigate to exactly the top of the given page.
+    // To compute deadSpaceGap, use the same presContext as was used
+    // to layout the seqFrame. (That presContext may have different
+    // TwipsToAppUnits conversion from this->mPresContext)
+    nscoord deadSpaceGap = 
+      seqFrame->PresContext()->TwipsToAppUnits(deadSpaceGapTwips);
+
     nscoord newYPosn = 
       nscoord(mPrintEngine->GetPrintPreviewScale() * 
-              float(fndPageFrame->GetPosition().y));
+              float(fndPageFrame->GetPosition().y - deadSpaceGap));
     scrollableView->ScrollTo(0, newYPosn, PR_TRUE);
   }
   return NS_OK;
