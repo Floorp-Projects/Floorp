@@ -1,6 +1,7 @@
 <!-- LOCALIZATION NOTE (places.library.title): use "Library", "Archive" or "Repository" -->
 <!ENTITY places.library.title  "Library">
 <!ENTITY organize.label        "Organize">
+<!ENTITY organize.accesskey    "O">
 
 <!ENTITY file.accesskey                 "F">
 <!ENTITY file.close.label               "Close">
@@ -9,7 +10,7 @@
 <!ENTITY edit.label                     "Edit">
 <!ENTITY edit.accesskey                 "E">
 <!ENTITY views.label                    "Views">
-<!ENTITY view.accesskey                 "V">
+<!ENTITY views.accesskey                "V">
 <!ENTITY view.toolbar.label             "Toolbar">
 <!ENTITY view.toolbar.accesskey         "o">
 <!ENTITY view.columns.label             "Show Columns">
@@ -193,7 +194,8 @@
 
 <!ENTITY view.addons.label   "Get View Add-ons">
 
-<!ENTITY maintenance.label   "Import and Backup">
+<!ENTITY maintenance.label      "Import and Backup">
+<!ENTITY maintenance.accesskey  "I">
 
 <!ENTITY backCmd.label       "Back">
 <!ENTITY backCmd.accesskey   "B">

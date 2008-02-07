@@ -36,6 +36,27 @@
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar&state=disabled");
 }
 
+/* Menu */
+#placesMenu {
+  -moz-appearance: none;
+  border: none;
+}
+
+#placesMenu > menu {
+  -moz-padding-start: 4px;
+  -moz-appearance: toolbarbutton;
+  color: -moz-DialogText;
+}
+
+#placesMenu > menu > label {
+  -moz-padding-end: 8px;
+  background: url(chrome://global/skin/arrow/arrow-dn.gif) right center no-repeat;
+}
+
+#placesMenu[chromedir="rtl"] > menu > label {
+  background-position: left center;
+}
+
 /* organize button */
 #organizeButton {
   list-style-image: url("moz-icon://stock/gtk-properties?size=button");
