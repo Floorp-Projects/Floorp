@@ -55,15 +55,15 @@
       <hbox>
       <label control="qa-preferences-litmus-username"
              value="&qa.preferences.litmus.username;" width="60px" />
-      <textbox id="qa-preferences-litmus-username" width="200px" />
+      <textbox id="qa-preferences-litmus-username" size="35" width="250px" />
       </hbox>
       <hbox>
       <label control="qa-preferences-litmus-password"
              value="&qa.preferences.litmus.password;" width="60px" />
-      <textbox id="qa-preferences-litmus-password" type="password" width="200px" />
+      <textbox id="qa-preferences-litmus-password" type="password" size="35" width="250px" />
       </hbox>
       <hbox>
-      <button style="margin-left: 50px; padding-left: 2em; padding-right: 2em;"
+      <button style="margin-left: 50px;"
               id="qa-preferences-litmus-createAccount"
               label="&qa.preferences.litmus.createAccount;"
               oncommand="qaPrefsWindow.createAccount();"/>
