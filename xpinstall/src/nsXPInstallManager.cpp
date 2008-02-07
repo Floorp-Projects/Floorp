@@ -117,17 +117,22 @@ nsXPInstallManager::~nsXPInstallManager()
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS10(nsXPInstallManager,
-                               nsIXPIDialogService,
-                               nsIXPInstallManager,
-                               nsIObserver,
-                               nsIStreamListener,
-                               nsIProgressEventSink,
-                               nsIInterfaceRequestor,
-                               nsPICertNotification,
-                               nsIBadCertListener2,
-                               nsIChannelEventSink,
-                               nsISupportsWeakReference)
+NS_INTERFACE_MAP_BEGIN(nsXPInstallManager)
+  NS_INTERFACE_MAP_ENTRY(nsIXPIDialogService)
+  NS_INTERFACE_MAP_ENTRY(nsIXPInstallManager)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+  NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
+  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+  NS_INTERFACE_MAP_ENTRY(nsPICertNotification)
+  NS_INTERFACE_MAP_ENTRY(nsIBadCertListener2)
+  NS_INTERFACE_MAP_ENTRY(nsISSLErrorListener)
+  NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISupportsWeakReference)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(nsXPInstallManager)
+NS_IMPL_RELEASE(nsXPInstallManager)
 
 NS_IMETHODIMP
 nsXPInstallManager::InitManagerFromChrome(const PRUnichar **aURLs,
@@ -1308,6 +1313,16 @@ nsXPInstallManager::NotifyCertProblem(nsIInterfaceRequestor *socketInfo,
     return NS_OK;
 }
 
+// nsISSLErrorListener methods
+NS_IMETHODIMP
+nsXPInstallManager::NotifySSLError(nsIInterfaceRequestor *socketInfo, 
+                                    PRInt32 error, 
+                                    const nsACString &targetSite, 
+                                    PRBool *_retval)
+{
+    *_retval = PR_TRUE;
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsXPInstallManager::OnCertAvailable(nsIURI *aURI,
