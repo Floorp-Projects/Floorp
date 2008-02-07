@@ -328,9 +328,9 @@
 
       <spacer flex="1"/>
 
-      <textbox id="searchFilter" style="width: 23em;" timeout="500"
-               oncommand="PlacesSearchBox.search(this.value);" 
-               onreset="PlacesOrganizer.onPlaceSelected(false); return true;" 
+      <textbox id="searchFilter" style="width: 23em;" timeout="500" clickSelectsAll="true"
+               oncommand="PlacesSearchBox.search(this.value);"
+               onreset="PlacesOrganizer.onPlaceSelected(false);"
                collection="bookmarks">
       </textbox>
     </toolbar>
