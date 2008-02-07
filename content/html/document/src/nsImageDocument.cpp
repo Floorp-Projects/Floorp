@@ -69,6 +69,9 @@
 #include "nsIDOMNSHTMLElement.h"
 #include "nsContentErrors.h"
 #include "ImageErrors.h"
+#include "nsIDocShell.h"
+#include "nsIContentViewer.h"
+#include "nsIMarkupDocumentViewer.h"
 
 #define AUTOMATIC_IMAGE_RESIZING_PREF "browser.enable_automatic_image_resizing"
 
@@ -127,6 +130,9 @@ protected:
     return PR_MIN((float)mVisibleWidth / mImageWidth,
                   (float)mVisibleHeight / mImageHeight);
   }
+
+  void SetZoomLevel(float aZoomLevel);
+  float GetZoomLevel();
 
   nsCOMPtr<nsIContent>          mImageContent;
 
@@ -409,6 +415,10 @@ nsImageDocument::GetImageRequest(imgIRequest** aImageRequest)
 NS_IMETHODIMP
 nsImageDocument::ShrinkToFit()
 {
+  if (GetZoomLevel() != 1.0 && mImageIsResized) {
+    return NS_OK;
+  }
+
   // Keep image content alive while changing the attributes.
   nsCOMPtr<nsIContent> imageContent = mImageContent;
   nsCOMPtr<nsIDOMHTMLImageElement> image = do_QueryInterface(mImageContent);
@@ -519,6 +529,7 @@ nsImageDocument::HandleEvent(nsIDOMEvent* aEvent)
     CheckOverflowing(PR_FALSE);
   }
   else if (eventType.EqualsLiteral("click")) {
+    SetZoomLevel(1.0);
     mShouldResize = PR_TRUE;
     if (mImageIsResized) {
       PRInt32 x = 0, y = 0;
@@ -548,6 +559,7 @@ nsImageDocument::HandleEvent(nsIDOMEvent* aEvent)
     if (charCode == 0x2B) {
       mShouldResize = PR_FALSE;
       if (mImageIsResized) {
+        SetZoomLevel(1.0);
         RestoreImage();
       }
     }
@@ -555,6 +567,7 @@ nsImageDocument::HandleEvent(nsIDOMEvent* aEvent)
     else if (charCode == 0x2D) {
       mShouldResize = PR_TRUE;
       if (mImageIsOverflowing) {
+        SetZoomLevel(1.0);
         ShrinkToFit();
       }
     }
@@ -637,8 +650,11 @@ nsImageDocument::CheckOverflowing(PRBool changeState)
     if (styleContext->GetStylePadding()->GetPadding(m))
       visibleArea.Deflate(m);
 
-    mVisibleWidth = nsPresContext::AppUnitsToIntCSSPixels(visibleArea.width);
-    mVisibleHeight = nsPresContext::AppUnitsToIntCSSPixels(visibleArea.height);
+    float zoomLevel = GetZoomLevel();
+    mVisibleWidth = PRInt32(zoomLevel *
+      nsPresContext::AppUnitsToIntCSSPixels(visibleArea.width));
+    mVisibleHeight = PRInt32(zoomLevel *
+      nsPresContext::AppUnitsToIntCSSPixels(visibleArea.height));
   }
 
   PRBool imageWasOverflowing = mImageIsOverflowing;
@@ -723,6 +739,35 @@ nsImageDocument::UpdateTitleAndCharset()
                                          mImageWidth, mImageHeight, status);
 }
 
+void
+nsImageDocument::SetZoomLevel(float aZoomLevel)
+{
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocumentContainer);
+  if (docShell) {
+    nsCOMPtr<nsIContentViewer> cv;
+    docShell->GetContentViewer(getter_AddRefs(cv));
+    nsCOMPtr<nsIMarkupDocumentViewer> mdv = do_QueryInterface(cv);
+    if (mdv) {
+      mdv->SetFullZoom(aZoomLevel);
+    }
+  }
+}
+
+float
+nsImageDocument::GetZoomLevel()
+{
+  float zoomLevel = 1.0;
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocumentContainer);
+  if (docShell) {
+    nsCOMPtr<nsIContentViewer> cv;
+    docShell->GetContentViewer(getter_AddRefs(cv));
+    nsCOMPtr<nsIMarkupDocumentViewer> mdv = do_QueryInterface(cv);
+    if (mdv) {
+      mdv->GetFullZoom(&zoomLevel);
+    }
+  }
+  return zoomLevel;
+}
 
 nsresult
 NS_NewImageDocument(nsIDocument** aResult)
