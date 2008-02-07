@@ -218,9 +218,11 @@ private:
   nsIBox* GetScrollbar();
 
   void PageUpDown(nscoord change);
-  void SetCurrentPosition(nsIContent* scrollbar, nscoord pos, PRBool aIsSmooth,
+  void SetCurrentThumbPosition(nsIContent* aScrollbar, nscoord aNewPos, PRBool aIsSmooth,
+                               PRBool aImmediateRedraw, PRBool aMaySnap);
+  void SetCurrentPosition(nsIContent* aScrollbar, PRInt32 aNewPos, PRBool aIsSmooth,
                           PRBool aImmediateRedraw);
-  void SetCurrentPositionInternal(nsIContent* scrollbar, nscoord pos,
+  void SetCurrentPositionInternal(nsIContent* aScrollbar, PRInt32 pos,
                                   PRBool aIsSmooth, PRBool aImmediateRedraw);
   nsresult CurrentPositionChanged(nsPresContext* aPresContext,
                                   PRBool aImmediateRedraw);
