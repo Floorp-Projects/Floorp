@@ -192,6 +192,9 @@ public:
   /** @see nsITableFrame::GetTableSize */
   NS_IMETHOD GetTableSize(PRInt32& aRowCount, PRInt32& aColCount);
 
+  NS_IMETHOD GetIndexByRowAndColumn(PRInt32 aRow, PRInt32 aColumn, PRInt32 *aIndex);
+  NS_IMETHOD GetRowAndColumnByIndex(PRInt32 aIndex, PRInt32 *aRow, PRInt32 *aColumn);
+
   PRBool IsNested(const nsHTMLReflowState& aReflowState) const;
 
 protected:
