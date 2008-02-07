@@ -101,7 +101,3 @@ menuitem:not([type]) {
   min-height: 32px;
   min-width: 32px;
 }
-
-#searchbox[empty] {
-  color: GrayText;
-}

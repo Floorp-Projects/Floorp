@@ -82,10 +82,6 @@ richlistitem[type="download"] button {
   background-repeat: repeat-x;
 }
 
-#search > spacer {
-  display: none;
-}
-
 #searchbox {
   -moz-appearance: none;
   border: 3px solid;
@@ -98,8 +94,4 @@ richlistitem[type="download"] button {
   -moz-background-clip: padding !important;
   padding: 0 8px;
   -moz-padding-start: 16px;
-}
-
-#searchbox[empty] {
-  color: -moz-Field;
 }

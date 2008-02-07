@@ -68,7 +68,3 @@ richlistitem[type="download"] .dateTime {
   min-height: 32px;
   min-width: 32px;
 }
-
-#searchbox[empty] {
-  color: GrayText;
-}
