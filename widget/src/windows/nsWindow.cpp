@@ -968,8 +968,6 @@ LPARAM nsWindow::lParamToClient(LPARAM lParam)
 //-------------------------------------------------------------------------
 void nsWindow::InitEvent(nsGUIEvent& event, nsPoint* aPoint)
 {
-  NS_ADDREF(event.widget);
-
   if (nsnull == aPoint) {     // use the point from the event
     // get the message position in client coordinates and in twips
     if (mWnd != NULL) {
@@ -1092,7 +1090,6 @@ PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
   InitEvent(event);
 
   PRBool result = DispatchWindowEvent(&event);
-  NS_RELEASE(event.widget);
   return result;
 }
 
@@ -1133,7 +1130,6 @@ PRBool nsWindow::DispatchCommandEvent(PRUint32 aEventCommand)
 
   InitEvent(event);
   DispatchWindowEvent(&event);
-  NS_RELEASE(event.widget);
 
   return PR_TRUE;
 }
@@ -3185,7 +3181,6 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVir
   event.nativeMsg = (void *)&pluginEvent;
 
   PRBool result = DispatchWindowEvent(&event);
-  NS_RELEASE(event.widget);
 
   return result;
 }
@@ -3541,7 +3536,6 @@ void nsWindow::ConstrainZLevel(HWND *aAfter)
     }
   }
   NS_IF_RELEASE(event.mActualBelow);
-  NS_RELEASE(event.widget);
 }
 
 //-------------------------------------------------------------------------
@@ -4041,13 +4035,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         nsPoint point(0,0);
         InitEvent(event, &point); // this add ref's event.widget
         result = DispatchWindowEvent(&event);
-        NS_RELEASE(event.widget);
       } else if (wNotifyCode == 0) { // Menu selection
         nsMenuEvent event(PR_TRUE, NS_MENU_SELECTED, this);
         event.mCommand = LOWORD(wParam);
         InitEvent(event);
         result = DispatchWindowEvent(&event);
-        NS_RELEASE(event.widget);
       }
     }
     break;
@@ -4594,7 +4586,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           event.acceptActivation = PR_TRUE;
   
           PRBool result = DispatchWindowEvent(&event);
-          NS_RELEASE(event.widget);
 
           if (event.acceptActivation)
             *aRetValue = MA_ACTIVATE;
@@ -4802,8 +4793,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
           result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
         }
-
-        NS_RELEASE(event.widget);
       }
     }
     break;
@@ -4924,7 +4913,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         event.mIsFileURL = PR_FALSE;
         event.mURL       = fileStr.get();
         DispatchEvent(&event, status);
-        NS_RELEASE(event.widget);
       }
 #endif // 0
     }
@@ -5154,7 +5142,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         if (nsnull != mEventCallback) {
           result = DispatchWindowEvent(&scrollEvent);
         }
-        NS_RELEASE(scrollEvent.widget);
         // Note that we should return zero if we process WM_MOUSEWHEEL.
         // But if we process WM_MOUSEHWHEEL, we should return non-zero.
         if (result)
@@ -5555,9 +5542,7 @@ PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
   event.refPoint.x = aX;
   event.refPoint.y = aY;
 
-  PRBool result = DispatchWindowEvent(&event);
-  NS_RELEASE(event.widget);
-  return result;
+  return DispatchWindowEvent(&event);
 }
 
 //-------------------------------------------------------------------------
@@ -5700,8 +5685,6 @@ PRBool nsWindow::OnPaint(HDC aDC)
         thebesContext->Paint();
       }
 #endif
-
-      NS_RELEASE(event.widget);
     }
   }
 
@@ -5754,9 +5737,7 @@ PRBool nsWindow::OnResize(nsRect &aWindowRect)
       event.mWinWidth  = 0;
       event.mWinHeight = 0;
     }
-    PRBool result = DispatchWindowEvent(&event);
-    NS_RELEASE(event.widget);
-    return result;
+    return DispatchWindowEvent(&event);
   }
 
   return PR_FALSE;
@@ -5808,10 +5789,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
   if (aEventType == NS_MOUSE_MOVE) 
   {
     if ((gLastMouseMovePoint.x == mpScreen.x) && (gLastMouseMovePoint.y == mpScreen.y))
-    {
-      NS_RELEASE(event.widget);
       return result;
-    }
     gLastMouseMovePoint.x = mpScreen.x;
     gLastMouseMovePoint.y = mpScreen.y;
   }
@@ -5978,7 +5956,6 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
     // Release the widget with NS_IF_RELEASE() just in case
     // the context menu key code in nsEventListenerManager::HandleEvent()
     // released it already.
-    NS_IF_RELEASE(event.widget);
     return result;
   }
 
@@ -6007,8 +5984,6 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
         break;
     } // switch
   }
-
-  NS_RELEASE(event.widget);
   return result;
 }
 
@@ -6042,8 +6017,6 @@ PRBool nsWindow::DispatchAccessibleEvent(PRUint32 aEventType, nsIAccessible** aA
   // if the event returned an accesssible get it.
   if (event.accessible)
     *aAcc = event.accessible;
-
-  NS_RELEASE(event.widget);
 
   return result;
 }
@@ -6086,11 +6059,7 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType, PRBool isMozWindowTakingFocu
 
     event.nativeMsg = (void *)&pluginEvent;
 
-    PRBool result = DispatchWindowEvent(&event);
-
-    NS_RELEASE(event.widget);
-
-    return result;
+    return DispatchWindowEvent(&event);
   }
   return PR_FALSE;
 }
@@ -6282,7 +6251,6 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
   event.isAlt = mIsAltDown;
 
   DispatchWindowEvent(&event);
-  NS_RELEASE(event.widget);
 
   if (event.rangeArray)
     delete [] event.rangeArray;
@@ -6410,8 +6378,6 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
     // the best we can do now is to ignore the invalid result
   }
 
-  NS_RELEASE(event.widget);
-
   if (!sIMECompUnicode)
     sIMECompUnicode = new nsAutoString();
   sIMEIsComposing = PR_TRUE;
@@ -6436,7 +6402,6 @@ nsWindow::HandleEndComposition(void)
 
   InitEvent(event,&point);
   DispatchWindowEvent(&event);
-  NS_RELEASE(event.widget);
   PR_FREEIF(sIMECompCharPos);
   sIMECompCharPos = nsnull;
   sIMECaretHeight = 0;
@@ -6923,7 +6888,6 @@ PRBool nsWindow::OnIMEReconvert(LPARAM aData, LRESULT *oResult)
     DispatchWindowEvent(&event);
 
     sIMEReconvertUnicode = event.theReply.mReconversionString;
-    NS_RELEASE(event.widget);
 
     // Return need size
 
@@ -6995,7 +6959,6 @@ PRBool nsWindow::OnIMEQueryCharPosition(LPARAM aData, LRESULT *oResult)
       *oResult = FALSE;
       return PR_FALSE;
     }
-    NS_RELEASE(event.widget);
 
     nsRect screenRect;
     ResolveIMECaretPos(nsnull, event.theReply.mCaretRect, screenRect);
