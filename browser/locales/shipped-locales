@@ -4,6 +4,7 @@ ca
 cs
 de
 en-US
+es-ES
 eu
 fi
 fr
@@ -13,6 +14,8 @@ gu-IN
 he
 hu
 it
+ja-JP-mac osx
+ja win32 linux
 ka
 ko
 lt
