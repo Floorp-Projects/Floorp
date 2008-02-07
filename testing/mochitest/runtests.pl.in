@@ -132,6 +132,10 @@ my @servers = (
                "sub.sectest2.example.org:80",
                "sub1.xn--lt-uia.example.org:8000", # U+00E4 U+006C U+0074
                "sub2.xn--lt-uia.example.org:80",   # U+00E4 U+006C U+0074
+               "xn--exmple-cua.test:80",
+               "sub1.xn--exmple-cua.test:80",
+               "xn--hxajbheg2az3al.xn--jxalpdlp:80", # Greek IDN for example.test
+               "sub1.xn--hxajbheg2az3al.xn--jxalpdlp:80",
               );
 
 

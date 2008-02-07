@@ -657,6 +657,10 @@ pref("network.IDN.whitelist.info", true);
 pref("network.IDN.whitelist.museum", true);
 pref("network.IDN.whitelist.org", true);
 
+// NOTE: Before these can be removed, one of bug 414812's tests must be updated
+//       or it will likely fail!  Please CC jwalden+bmo on the bug associated
+//       with removing these so he can provide a patch to make the necessary
+//       changes to avoid bustage.
 // ".test" localised TLDs for ICANN's top-level IDN trial
 pref("network.IDN.whitelist.xn--0zwm56d", true);
 pref("network.IDN.whitelist.xn--11b5bs3a9aj6g", true);
