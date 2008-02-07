@@ -59,8 +59,7 @@ const LS_CLASSNAME = "Livemark Service";
 const LS_CONTRACTID = "@mozilla.org/browser/livemark-service;2";
 
 const LIVEMARK_TIMEOUT = 15000; // fire every 15 seconds
-const LIVEMARK_ICON_URI = "chrome://browser/skin/places/livemarkItem.png";
-const PLACES_BUNDLE_URI = "chrome://browser/locale/places/places.properties";
+const PLACES_BUNDLE_URI = "chrome://places/locale/places.properties";
 const DEFAULT_LOAD_MSG = "Live Bookmark loading...";
 const DEFAULT_FAIL_MSG = "Live Bookmark feed failed to load.";
 const LMANNO_FEEDURI = "livemark/feedURI";
@@ -141,7 +140,6 @@ function LivemarkService() {
   // [ {folderId:, folderURI:, feedURI:, loadGroup:, locked: } ];
   this._livemarks = [];
 
-  this._iconURI = gIoService.newURI(LIVEMARK_ICON_URI, null, null);
   this._loading = GetString("bookmarksLivemarkLoading") || DEFAULT_LOAD_MSG;
   this._observerServiceObserver =
     new G_ObserverServiceObserver('xpcom-shutdown',
