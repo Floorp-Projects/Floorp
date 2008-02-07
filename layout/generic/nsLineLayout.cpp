@@ -990,6 +990,11 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     // runs (hence return false here) except for text frames and inline containers.
     PRBool continuingTextRun = aFrame->CanContinueTextRun();
     
+    // Clear any residual mTrimmableWidth if this isn't a text frame
+    if (!continuingTextRun && !pfd->GetFlag(PFD_SKIPWHENTRIMMINGWHITESPACE)) {
+      mTrimmableWidth = 0;
+    }
+
     // See if we can place the frame. If we can't fit it, then we
     // return now.
     PRBool optionalBreakAfterFits;
@@ -1009,9 +1014,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       }
       
       if (!continuingTextRun) {
-        if (!pfd->GetFlag(PFD_SKIPWHENTRIMMINGWHITESPACE)) {
-          mTrimmableWidth = 0;
-        }
         if (!psd->mNoWrap && (!CanPlaceFloatNow() || placedFloat)) {
           // record soft break opportunity after this content that can't be
           // part of a text run. This is not a text frame so we know
