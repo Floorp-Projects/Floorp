@@ -97,11 +97,12 @@ nsJSON::Encode(nsAString &aJSON)
   if (NS_SUCCEEDED(rv) || rv == NS_ERROR_INVALID_ARG) {
     rv = NS_OK;
     // if we didn't consume anything, it's not JSON, so return null
-    if (writer->mBuffer.IsEmpty()) {
+    if (!writer->DidWrite()) {
       aJSON.Truncate();
       aJSON.SetIsVoid(PR_TRUE);
     } else {
-      aJSON.Append(writer->mBuffer);
+      writer->FlushBuffer();
+      aJSON.Append(writer->mOutputString);
     }
   }
 
@@ -430,17 +431,25 @@ nsJSON::ToJSON(JSContext *cx, jsval *vp)
   return ok;
 }
 
-nsJSONWriter::nsJSONWriter() : mStream(nsnull), mEncoder(nsnull)
+nsJSONWriter::nsJSONWriter() : mStream(nsnull),
+                               mBuffer(nsnull),
+                               mBufferCount(0),
+                               mDidWrite(PR_FALSE),
+                               mEncoder(nsnull)
 {
 }
 
-nsJSONWriter::nsJSONWriter(nsIOutputStream *aStream) : mStream(aStream),
+nsJSONWriter::nsJSONWriter(nsIOutputStream *aStream) : mStream(nsnull),
+                                                       mBuffer(nsnull),
+                                                       mBufferCount(0),
+                                                       mDidWrite(PR_FALSE),
                                                        mEncoder(nsnull)
 {
 }
 
 nsJSONWriter::~nsJSONWriter()
 {
+  delete [] mBuffer;
 }
 
 nsresult
@@ -512,14 +521,37 @@ nsJSONWriter::WriteString(const PRUnichar *aBuffer, PRUint32 aLength)
 nsresult
 nsJSONWriter::Write(const PRUnichar *aBuffer, PRUint32 aLength)
 {
-  nsresult rv = NS_OK;
   if (mStream) {
-    rv = WriteToStream(mStream, mEncoder, aBuffer, aLength);
-  } else {
-    mBuffer.Append(aBuffer, aLength);
+    return WriteToStream(mStream, mEncoder, aBuffer, aLength);
   }
 
-  return rv;
+  if (!mDidWrite) {
+    mBuffer = new PRUnichar[JSON_PARSER_BUFSIZE];
+    if (!mBuffer)
+      return NS_ERROR_OUT_OF_MEMORY;
+    mDidWrite = PR_TRUE;
+  }
+
+  if (JSON_PARSER_BUFSIZE <= aLength + mBufferCount) {
+    mOutputString.Append(mBuffer, mBufferCount);
+    mBufferCount = 0;
+  }
+
+  memcpy(&mBuffer[mBufferCount], aBuffer, aLength * sizeof(PRUnichar));
+  mBufferCount += aLength;
+
+  return NS_OK;
+}
+
+PRBool nsJSONWriter::DidWrite()
+{
+  return mDidWrite;
+}
+
+void
+nsJSONWriter::FlushBuffer()
+{
+  mOutputString.Append(mBuffer, mBufferCount);
 }
 
 nsresult
@@ -547,6 +579,7 @@ nsJSONWriter::WriteToStream(nsIOutputStream *aStream,
     rv = aStream->Write(destBuf, aDestLength, &bytesWritten);
 
   NS_Free(destBuf);
+  mDidWrite = PR_TRUE;
 
   return rv;
 }
@@ -597,11 +630,13 @@ nsJSON::DecodeInternal(nsIInputStream *aStream,
 
   // Consume the stream
   nsCOMPtr<nsIChannel> jsonChannel;
-  nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("about:blank"), 0, 0 );
-  if (!uri)
-    return NS_ERROR_OUT_OF_MEMORY;
-  rv = NS_NewInputStreamChannel(getter_AddRefs(jsonChannel), uri, aStream,
+  if (!mURI) {
+    NS_NewURI(getter_AddRefs(mURI), NS_LITERAL_CSTRING("about:blank"), 0, 0 );
+    if (!mURI)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  rv = NS_NewInputStreamChannel(getter_AddRefs(jsonChannel), mURI, aStream,
                                 NS_LITERAL_CSTRING("application/json"));
   if (!jsonChannel || NS_FAILED(rv))
     return NS_ERROR_FAILURE;
@@ -684,9 +719,7 @@ trace_json_stack(JSTracer *trc, JSTempValueRooter *tvr)
 
 nsJSONListener::nsJSONListener(JSContext *cx, jsval *rootVal,
                                PRBool needsConverter)
-  : mLineNum(0),
-    mColumn(0),
-    mHexChar(0),
+  : mHexChar(0),
     mNumHex(0),
     mCx(cx),
     mRootVal(rootVal),
@@ -883,8 +916,19 @@ nsresult
 nsJSONListener::Consume(const PRUnichar *data, PRUint32 len)
 {
   nsresult rv;
-  nsString numchars = NS_LITERAL_STRING("-+0123456789eE.");
   PRUint32 i;
+
+  // we'll try to avoid string munging during parsing
+  PRUnichar buf[JSON_PARSER_BUFSIZE + 1];
+  PRUint32 bufIndex = 0;
+
+#define PUSHCHAR(_c)                         \
+if (bufIndex == JSON_PARSER_BUFSIZE) {       \
+  mStringBuffer.Append(buf, bufIndex);       \
+  bufIndex = 0;                              \
+}                                            \
+buf[bufIndex] = _c;                          \
+bufIndex++;
 
   if (*mStatep == JSON_PARSE_STATE_INIT) {
     PushState(JSON_PARSE_STATE_VALUE);
@@ -892,12 +936,6 @@ nsJSONListener::Consume(const PRUnichar *data, PRUint32 len)
 
   for (i = 0; i < len; i++) {
     PRUnichar c = data[i];
-    if (c == '\n') {
-      mLineNum++;
-      mColumn = 0;
-    } else {
-      mColumn++;
-    }
 
     switch (*mStatep) {
       case JSON_PARSE_STATE_VALUE :
@@ -929,12 +967,12 @@ nsJSONListener::Consume(const PRUnichar *data, PRUint32 len)
           return NS_ERROR_FAILURE; // unexpected failure
         } else if (c == '"') {
           *mStatep = JSON_PARSE_STATE_STRING;
-        } else if (numchars.FindChar(c) >= 0) {
+        } else if (IsNumChar(c)) {
           *mStatep = JSON_PARSE_STATE_NUMBER;
-          mStringBuffer.Append(c);
+          PUSHCHAR(c);
         } else if (NS_IsAsciiAlpha(c)) {
           *mStatep = JSON_PARSE_STATE_KEYWORD;
-          mStringBuffer.Append(c);
+          PUSHCHAR(c);
         } else if (!NS_IsAsciiWhitespace(c)) {
           return NS_ERROR_FAILURE; // unexpected
         }
@@ -996,12 +1034,18 @@ nsJSONListener::Consume(const PRUnichar *data, PRUint32 len)
         if (c == '"') {
           rv = PopState();
           NS_ENSURE_SUCCESS(rv, rv);
-          rv = HandleString();
+          buf[bufIndex] = nsnull;
+          if (*mStatep == JSON_PARSE_STATE_OBJECT_IN_PAIR) {
+            rv = HandleData(JSON_DATA_KEYSTRING, buf, bufIndex);
+          } else {
+            rv = HandleData(JSON_DATA_STRING, buf, bufIndex);
+          }
+          bufIndex = 0;
           NS_ENSURE_SUCCESS(rv, rv);
         } else if (c == '\\') {
           *mStatep = JSON_PARSE_STATE_STRING_ESCAPE;
         } else {
-          mStringBuffer.Append(c);
+          PUSHCHAR(c);
         }
         break;
       case JSON_PARSE_STATE_STRING_ESCAPE:
@@ -1026,7 +1070,7 @@ nsJSONListener::Consume(const PRUnichar *data, PRUint32 len)
             }
         }
 
-        mStringBuffer.Append(c);
+        PUSHCHAR(c);
         *mStatep = JSON_PARSE_STATE_STRING;
         break;
       case JSON_PARSE_STATE_STRING_HEX:
@@ -1041,7 +1085,7 @@ nsJSONListener::Consume(const PRUnichar *data, PRUint32 len)
         }
 
         if (++(mNumHex) == 4) {
-          mStringBuffer.Append(mHexChar);
+          PUSHCHAR(mHexChar);
           mHexChar = 0;
           mNumHex = 0;
           *mStatep = JSON_PARSE_STATE_STRING;
@@ -1049,25 +1093,29 @@ nsJSONListener::Consume(const PRUnichar *data, PRUint32 len)
         break;
       case JSON_PARSE_STATE_KEYWORD:
         if (NS_IsAsciiAlpha(c)) {
-          mStringBuffer.Append(c);
+          PUSHCHAR(c);
         } else {
           // this character isn't part of the keyword, process it again
           i--;
           rv = PopState();
           NS_ENSURE_SUCCESS(rv, rv);
-          rv = HandleKeyword();
+          buf[bufIndex] = nsnull;
+          rv = HandleData(JSON_DATA_KEYWORD, buf, bufIndex);
+          bufIndex = 0;
           NS_ENSURE_SUCCESS(rv, rv);
         }
         break;
       case JSON_PARSE_STATE_NUMBER:
-        if (numchars.FindChar(c) >= 0) {
-          mStringBuffer.Append(c);
+        if (IsNumChar(c)) {
+          PUSHCHAR(c);
         } else {
           // this character isn't part of the number, process it again
           i--;
           rv = PopState();
           NS_ENSURE_SUCCESS(rv, rv);
-          rv = HandleNumber();
+          buf[bufIndex] = nsnull;
+          rv = HandleData(JSON_DATA_NUMBER, buf, bufIndex);
+          bufIndex = 0;
           NS_ENSURE_SUCCESS(rv, rv);
         }
         break;
@@ -1079,6 +1127,14 @@ nsJSONListener::Consume(const PRUnichar *data, PRUint32 len)
       default:
         NS_NOTREACHED("Invalid JSON parser state");
       }
+    }
+
+#undef PUSH_CHAR
+
+    // Preserve partially consumed data for the next call to Consume
+    // This can happen when a primitive spans a stream buffer
+    if (bufIndex != 0) {
+      mStringBuffer.Append(buf, bufIndex);
     }
 
     return NS_OK;
@@ -1133,11 +1189,6 @@ nsJSONListener::PushObject(JSObject *aObj)
 nsresult
 nsJSONListener::OpenObject()
 {
-  if (*mStatep != JSON_PARSE_STATE_VALUE &&
-      *mStatep != JSON_PARSE_STATE_OBJECT) {
-    return NS_ERROR_FAILURE;
-  }
-
   JSObject *obj = JS_NewObject(mCx, NULL, NULL, NULL);
   if (!obj)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1148,11 +1199,6 @@ nsJSONListener::OpenObject()
 nsresult
 nsJSONListener::OpenArray()
 {
-  if (*mStatep != JSON_PARSE_STATE_VALUE &&
-      *mStatep != JSON_PARSE_STATE_ARRAY) {
-    return NS_ERROR_FAILURE;
-  }
-
   // Add an array to an existing array or object
   JSObject *arr = JS_NewArrayObject(mCx, 0, NULL);
   if (!arr)
@@ -1177,34 +1223,74 @@ nsJSONListener::CloseArray()
 }
 
 nsresult
-nsJSONListener::HandleString()
+nsJSONListener::HandleData(JSONDataType aType, const PRUnichar *aBuf,
+                           PRUint32 aLength)
 {
   nsresult rv = NS_OK;
-  if (*mStatep == JSON_PARSE_STATE_OBJECT_IN_PAIR) {
-    mObjectKey = mStringBuffer;
+  PRUint32 len;
+  const PRUnichar *buf;
+  PRBool needsTruncate = PR_FALSE;
+
+  if (mStringBuffer.IsEmpty()) {
+    buf = aBuf;
+    len = aLength;
   } else {
-    JSObject *obj = mObjectStack.ElementAt(mObjectStack.Length() - 1);
-    JSString *str = JS_NewUCStringCopyN(mCx, (jschar *) mStringBuffer.get(),
-                                        mStringBuffer.Length());
-    if (!str)
-      return NS_ERROR_OUT_OF_MEMORY;
-    rv = PushValue(obj, STRING_TO_JSVAL(str));
+    needsTruncate = PR_TRUE;
+    mStringBuffer.Append(aBuf, aLength);
+    buf = mStringBuffer.get();
+    len = mStringBuffer.Length();
   }
 
-  mStringBuffer.Truncate();
+  switch (aType) {
+    case JSON_DATA_STRING:
+      rv = HandleString(buf, len);
+      break;
+
+    case JSON_DATA_KEYSTRING:
+      mObjectKey = nsDependentString(buf, len);
+      rv = NS_OK;
+      break;
+
+    case JSON_DATA_NUMBER:
+      rv = HandleNumber(buf, len);
+      break;
+
+    case JSON_DATA_KEYWORD:
+      rv = HandleKeyword(buf, len);
+      break;
+
+    default:
+      NS_NOTREACHED("Should have a JSON data type");
+  }
+
+  if (needsTruncate)
+    mStringBuffer.Truncate();
+
   return rv;
 }
 
 nsresult
-nsJSONListener::HandleNumber()
+nsJSONListener::HandleString(const PRUnichar *aBuf, PRUint32 aLength)
+{
+  JSObject *obj = mObjectStack.ElementAt(mObjectStack.Length() - 1);
+  JSString *str = JS_NewUCStringCopyN(mCx, aBuf, aLength);
+  if (!str)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return PushValue(obj, STRING_TO_JSVAL(str));
+}
+
+nsresult
+nsJSONListener::HandleNumber(const PRUnichar *aBuf, PRUint32 aLength)
 {
   nsresult rv;
   JSObject *obj = mObjectStack.ElementAt(mObjectStack.Length() - 1);
 
   char *estr;
   int err;
-  double val = JS_strtod(NS_ConvertUTF16toUTF8(mStringBuffer).get(),
-                         &estr, &err);
+  double val =
+    JS_strtod(NS_ConvertUTF16toUTF8(nsDependentString(aBuf, aLength)).get(),
+              &estr, &err);
   if (err == JS_DTOA_ENOMEM) {
     rv = NS_ERROR_OUT_OF_MEMORY;
   } else if (err || *estr) {
@@ -1219,27 +1305,26 @@ nsJSONListener::HandleNumber()
     }
   }
 
-  mStringBuffer.Truncate();
-
   return rv;
 }
 
 nsresult
-nsJSONListener::HandleKeyword()
+nsJSONListener::HandleKeyword(const PRUnichar *aBuf, PRUint32 aLength)
 {
+  nsAutoString buf;
+  buf.Append(aBuf, aLength);
+
   JSObject *obj = mObjectStack.ElementAt(mObjectStack.Length() - 1);
   jsval keyword;
-  if (mStringBuffer.Equals(NS_LITERAL_STRING("null"))) {
+  if (buf.Equals(NS_LITERAL_STRING("null"))) {
     keyword = JSVAL_NULL;
-  } else if (mStringBuffer.Equals(NS_LITERAL_STRING("true"))) {
+  } else if (buf.Equals(NS_LITERAL_STRING("true"))) {
     keyword = JSVAL_TRUE;
-  } else if (mStringBuffer.Equals(NS_LITERAL_STRING("false"))) {
+  } else if (buf.Equals(NS_LITERAL_STRING("false"))) {
     keyword = JSVAL_FALSE;
   } else {
     return NS_ERROR_FAILURE;
   }
-
-  mStringBuffer.Truncate();
 
   return PushValue(obj, keyword);
 }

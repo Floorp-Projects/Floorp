@@ -50,8 +50,11 @@
 #include "nsIStreamListener.h"
 #include "nsTArray.h"
 
+class nsIURI;
+
 #define JSON_MAX_DEPTH  2048
 #define JSON_PARSER_BUFSIZE 1024
+
 class nsJSONWriter
 {
 public:
@@ -59,12 +62,17 @@ public:
   nsJSONWriter(nsIOutputStream *aStream);
   virtual ~nsJSONWriter();
   nsresult SetCharset(const char *aCharset);
-  nsString mBuffer;
   nsCOMPtr<nsIOutputStream> mStream;
   nsresult WriteString(const PRUnichar* aBuffer, PRUint32);
   nsresult Write(const PRUnichar *aBuffer, PRUint32 aLength);
+  nsString mOutputString;
+  PRBool DidWrite();
+  void FlushBuffer();
 
 protected:
+  PRUnichar *mBuffer;
+  PRUint32 mBufferCount;
+  PRBool mDidWrite;
   nsresult WriteToStream(nsIOutputStream *aStream, nsIUnicodeEncoder *encoder,
                          const PRUnichar *aBuffer, PRUint32 aLength);
 
@@ -88,6 +96,7 @@ protected:
   nsresult DecodeInternal(nsIInputStream *aStream,
                           PRInt32 aContentLength,
                           PRBool aNeedsConverter);
+  nsCOMPtr<nsIURI> mURI;
 };
 
 NS_IMETHODIMP
@@ -108,6 +117,13 @@ enum JSONParserState {
     JSON_PARSE_STATE_FINISHED
 };
 
+enum JSONDataType {
+  JSON_DATA_STRING,
+  JSON_DATA_KEYSTRING,
+  JSON_DATA_NUMBER,
+  JSON_DATA_KEYWORD
+};
+
 class nsJSONObjectStack : public nsTArray<JSObject *>,
                           public JSTempValueRooter
 {
@@ -124,8 +140,6 @@ public:
   NS_DECL_NSISTREAMLISTENER
 
 protected:
-  PRUint32 mLineNum;
-  PRUint32 mColumn;
 
   /* Used while handling \uNNNN in strings */
   PRUnichar mHexChar;
@@ -146,6 +160,16 @@ protected:
   nsresult ConsumeConverted(const char* aBuffer, PRUint32 aByteLength);
   nsresult Consume(const PRUnichar *data, PRUint32 len);
 
+  // helper to determine whether a character could be part of a number
+  PRBool IsNumChar(PRUnichar c) 
+  {
+    if ((c <= '9' && c >= '0') ||
+        c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E')
+      return PR_TRUE;
+
+    return PR_FALSE;
+  }
+
   // These handle parsed tokens. Could be split to separate interface.
   nsJSONObjectStack mObjectStack;
 
@@ -155,9 +179,12 @@ protected:
   nsresult CloseObject();
   nsresult OpenArray();
   nsresult CloseArray();
-  nsresult HandleString();
-  nsresult HandleNumber();
-  nsresult HandleKeyword();
+
+  nsresult HandleData(JSONDataType aType, const PRUnichar *aBuf,
+                      PRUint32 aLength);
+  nsresult HandleString(const PRUnichar *aBuf, PRUint32 aLength);
+  nsresult HandleNumber(const PRUnichar *aBuf, PRUint32 aLength);
+  nsresult HandleKeyword(const PRUnichar *aBuf, PRUint32 aLength);
   nsString mObjectKey;
 };
 
