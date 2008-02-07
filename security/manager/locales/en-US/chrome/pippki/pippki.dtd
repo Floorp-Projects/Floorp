@@ -82,7 +82,6 @@
 <!-- Certificate Exists in database -->
 <!ENTITY caCertExists.title "Certificate Exists">
 <!ENTITY caCertExists.message "The Certificate already exists.">
-<!ENTITY examineCert.accesskey "V">
 
 <!-- Strings for the SSL client auth ask dialog -->
 <!ENTITY clientAuthAsk.title "User Identification Request">
@@ -111,6 +110,8 @@
 <!ENTITY escrowWarn.message1 "Important: This certificate authority has asked to make a backup of your encryption private key.">
 <!ENTITY escrowWarn.benefit1 "The benefit is that if you lose access to your encryption private key, you can request a copy from this certificate authority.">
 <!ENTITY escrowWarn.message2 "However, your encryption private key will be stored by the certificate authority, and could be used to read your encrypted email or documents without your permission.">
+<!ENTITY examineCert.label "View Certificate">
+<!ENTITY examineCert.accesskey "V">
 
 <!ENTITY serverCrlNextupdate.message "Please ask your system administrator for assistance">
 
