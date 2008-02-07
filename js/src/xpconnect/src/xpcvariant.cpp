@@ -663,7 +663,9 @@ VARIANT_DONE:
 
                 JSObject *obj;
                 holder->GetJSObject(&obj);
+                NS_ASSERTION(obj, "No JS object but the QIs above succeeded?");
                 *pJSVal = OBJECT_TO_JSVAL(obj);
+                success = JS_TRUE;
             }
         }
         if(!JSVAL_IS_OBJECT(*pJSVal))
