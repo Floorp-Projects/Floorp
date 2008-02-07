@@ -259,6 +259,8 @@ private:
     // the userpass field of the URL to obscure the actual origin server.
     PRUint8  mPhishyUserPassLength;
 
+    PRPackedBool mPipeliningOverSSL;
+
     nsCString mAccept;
     nsCString mAcceptLanguages;
     nsCString mAcceptEncodings;
