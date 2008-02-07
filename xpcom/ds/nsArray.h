@@ -42,6 +42,7 @@
 #include "nsIMutableArray.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
 
 #define NS_ARRAY_CLASSNAME \
   "nsIArray implementation"
@@ -63,7 +64,8 @@ public:
     nsArray(const nsCOMArray_base& aBaseArray) : mArray(aBaseArray)
     { }
     
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS(nsArray)
     NS_DECL_NSIARRAY
     NS_DECL_NSIMUTABLEARRAY
 
