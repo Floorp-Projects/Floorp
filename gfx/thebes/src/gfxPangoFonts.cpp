@@ -376,14 +376,18 @@ gfxPangoFont::GetOrMakeFont(PangoFont *aPangoFont)
         (g_object_get_qdata(G_OBJECT(aPangoFont), GetFontQuark()));
 
     if (!font) {
-        PangoFontDescription *desc =
-            pango_font_describe_with_absolute_size(aPangoFont);
+        // pango_font_describe_with_absolute_size requires Pango-1.14
+        PangoFontDescription *desc = pango_font_describe(aPangoFont);
+
+        PangoFcFont *fcfont = PANGO_FC_FONT(aPangoFont);
+        double size;
+        if (FcPatternGetDouble(fcfont->font_pattern, FC_PIXEL_SIZE, 0, &size)
+            != FcResultMatch)
+            size = pango_font_description_get_size(desc) / FLOAT_PANGO_SCALE;
 
         // Shouldn't actually need to take too much care about the correct
         // family or style, as size is the only thing expected to be
         // important.
-        gfxFloat size =
-            pango_font_description_get_size(desc) / FLOAT_PANGO_SCALE;
         PRUint8 style =
             PangoStyleToThebesStyle(pango_font_description_get_style(desc));
         PRUint16 weight = pango_font_description_get_weight(desc);
