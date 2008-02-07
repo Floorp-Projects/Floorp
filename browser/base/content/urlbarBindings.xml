@@ -116,6 +116,7 @@
             nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, url);
 
             this.value = url;
+            SetPageProxyState("invalid");
             try {
               urlSecurityCheck(this.value,
                                gBrowser.contentPrincipal,
