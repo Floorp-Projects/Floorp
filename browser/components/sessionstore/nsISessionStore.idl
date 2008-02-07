@@ -46,7 +46,7 @@ interface nsIDOMNode;
  * - and allows to restore everything into one window.
  */
 
-[scriptable, uuid(11852a90-20de-11db-a98b-0800200c9a66)]
+[scriptable, uuid(58d17e12-a80f-11dc-8314-0800200c9a66)]
 interface nsISessionStore : nsISupports
 {
   /**
@@ -82,6 +82,29 @@ interface nsISessionStore : nsISupports
    * @param aOverwrite boolean overwrite existing tabs
    */
   void setWindowState(in nsIDOMWindow aWindow, in AString aState, in boolean aOverwrite);
+
+  /**
+   * @param aTab is the tab whose state is to be returned.
+   * 
+   * @return a JSON string representing the state of the tab
+   *         (note: doesn't contain cookies - if you need them, use getWindowState instead).
+   */
+  AString getTabState(in nsIDOMNode aTab);
+
+  /**
+   * @param aTab   is the tab whose state is to be set.
+   * @param aState is a JSON string representing a session state.
+   */
+  void setTabState(in nsIDOMNode aTab, in AString aState);
+
+  /**
+   * Duplicates a given tab as thoroughly as possible.
+   *
+   * @param aWindow is the window into which the tab will be duplicated.
+   * @param aTab    is the tab to duplicate (can be from a different window).
+   * @return a reference to the newly created tab.
+   */
+  nsIDOMNode duplicateTab(in nsIDOMWindow aWindow, in nsIDOMNode aTab);
 
   /**
    * Get the number of restore-able tabs for a window
