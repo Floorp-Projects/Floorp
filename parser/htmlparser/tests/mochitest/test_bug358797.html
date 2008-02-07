@@ -20,18 +20,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=358797
 
 /** Test for Bug 358797 **/
 
-var isOK = false;
-try {
-  var range;
-  range = document.createRange();
-  range.selectNode(document.firstChild);
-  range.createContextualFragment('<span></span>');
-}
-catch (ex) {
-  isOK = true;
-}
-ok(isOK, "range.createContextualFragment() should throw when range node is " +
-         "DocType");
+var range = document.createRange();
+range.selectNode(document.firstChild);
+var cf = range.createContextualFragment('<span></span>');
+ok(cf != null,
+   "range.createContextualFragment() should work when range node is DocType");
 
 </script>
 </pre>
