@@ -1161,10 +1161,6 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
           newURI->GetSpec(newSpec);
           NS_ConvertUTF8toUTF16 newSpecW(newSpec);
 
-          // This seems evil, since it is modifying the original URL
-          rv = url->SetSpec(newSpec);
-          if (NS_FAILED(rv)) return rv;
-
           return LoadURI(newSpecW.get(),      // URI string
                          LOAD_FLAGS_NONE, // Load flags
                          nsnull,          // Referring URI
