@@ -349,8 +349,15 @@ nsSVGGeometryFrame::SetupCairoFill(gfxContext *aContext)
   if (GetStateBits() & NS_STATE_SVG_FILL_PSERVER) {
     nsSVGPaintServerFrame *ps = static_cast<nsSVGPaintServerFrame*>
                                            (GetProperty(nsGkAtoms::fill));
-    return ps->SetupPaintServer(aContext, this, opacity);
-  } else if (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_Server) {
+    if (ps->SetupPaintServer(aContext, this, opacity))
+      return PR_TRUE;
+
+    // On failure, use the fallback colour in case we have an
+    // objectBoundingBox where the width or height of the object is zero.
+    // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
+  }
+
+  if (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_Server) {
     SetupCairoColor(aContext,
                     GetStyleSVG()->mFill.mFallbackColor,
                     opacity);
@@ -418,8 +425,15 @@ nsSVGGeometryFrame::SetupCairoStroke(gfxContext *aContext)
   if (GetStateBits() & NS_STATE_SVG_STROKE_PSERVER) {
     nsSVGPaintServerFrame *ps = static_cast<nsSVGPaintServerFrame*>
                                            (GetProperty(nsGkAtoms::stroke));
-    return ps->SetupPaintServer(aContext, this, opacity);
-  } else if (GetStyleSVG()->mStroke.mType == eStyleSVGPaintType_Server) {
+    if (ps->SetupPaintServer(aContext, this, opacity))
+      return PR_TRUE;
+
+    // On failure, use the fallback colour in case we have an
+    // objectBoundingBox where the width or height of the object is zero.
+    // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
+  }
+
+  if (GetStyleSVG()->mStroke.mType == eStyleSVGPaintType_Server) {
     SetupCairoColor(aContext,
                     GetStyleSVG()->mStroke.mFallbackColor,
                     opacity);
