@@ -69,6 +69,9 @@
 #include "nscore.h"
 #include "nsStringGlue.h"
 
+#ifdef XPCOM_GLUE
+#error "nsTextFormatter is not available in the standalone glue due to NSPR dependencies."
+#endif
 
 class NS_COM_GLUE nsTextFormatter {
 

@@ -94,6 +94,7 @@ struct nsID {
    */
   NS_COM_GLUE PRBool Parse(const char *aIDStr);
 
+#ifndef XPCOM_GLUE_AVOID_NSPR
   /**
    * nsID string encoder. Returns an allocated string in 
    * {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} format. Caller should free string.
@@ -107,6 +108,9 @@ struct nsID {
    * buffer provided by the caller (for instance, on the stack).
    */
   NS_COM_GLUE void ToProvidedString(char (&dest)[NSID_LENGTH]) const;
+
+#endif // XPCOM_GLUE_AVOID_NSPR
+
   //@}
 };
 
