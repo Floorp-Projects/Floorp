@@ -338,7 +338,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     JS_ASSERT(priv->stackElems + stackDepth == elem);
     JS_ASSERT(GetStackTraceValueBuffer(priv) + valueCount == values);
 
-    OBJ_SET_SLOT(cx, exnObject, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(priv));
+    STOBJ_SET_SLOT(exnObject, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(priv));
 
     if (report) {
         /*
@@ -759,7 +759,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * data so that the finalizer doesn't attempt to free it.
      */
     if (OBJ_GET_CLASS(cx, obj) == &js_ErrorClass)
-        OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, JSVAL_VOID);
+        STOBJ_SET_SLOT(obj, JSSLOT_PRIVATE, JSVAL_VOID);
 
     /* Set the 'message' property. */
     if (argc != 0) {
@@ -1048,7 +1048,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
             break;
 
         /* So exn_finalize knows whether to destroy private data. */
-        OBJ_SET_SLOT(cx, protos[i], JSSLOT_PRIVATE, JSVAL_VOID);
+        STOBJ_SET_SLOT(protos[i], JSSLOT_PRIVATE, JSVAL_VOID);
 
         /* Make a constructor function for the current name. */
         atom = cx->runtime->atomState.classAtoms[exceptions[i].key];

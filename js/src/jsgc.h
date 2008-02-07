@@ -122,6 +122,26 @@ js_GetGCStringRuntime(JSString *str);
 #define GC_POKE(cx, oldval) ((cx)->runtime->gcPoke = JSVAL_IS_GCTHING(oldval))
 #endif
 
+/*
+ * Write barrier macro monitoring property update from oldval to newval in
+ * scope->object.
+ *
+ * Since oldval is used only for the branded scope case, and the oldval actual
+ * argument expression is typically not used otherwise by callers, performance
+ * benefits if oldval is *not* evaluated into a callsite temporary variable,
+ * and instead passed to GC_WRITE_BARRIER for conditional evaluation (we rely
+ * on modern compilers to do a good CSE job). Yay, C macros.
+ */
+#define GC_WRITE_BARRIER(cx,scope,oldval,newval)                              \
+    JS_BEGIN_MACRO                                                            \
+        if (SCOPE_IS_BRANDED(scope) &&                                        \
+            (oldval) != (newval) &&                                           \
+            (VALUE_IS_FUNCTION(cx,oldval) || VALUE_IS_FUNCTION(cx,newval))) { \
+            SCOPE_GENERATE_PCTYPE(cx, scope);                                 \
+        }                                                                     \
+        GC_POKE(cx, oldval);                                                  \
+    JS_END_MACRO
+
 extern JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes);
 

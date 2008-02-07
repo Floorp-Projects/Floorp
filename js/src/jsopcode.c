@@ -116,7 +116,7 @@ GetJumpOffset(jsbytecode *pc, jsbytecode *pc2)
 {
     uint32 type;
 
-    type = (js_CodeSpec[*pc].format & JOF_TYPEMASK);
+    type = JOF_OPTYPE(*pc);
     if (JOF_TYPE_IS_EXTENDED_JUMP(type))
         return GET_JUMPX_OFFSET(pc2);
     return GET_JUMP_OFFSET(pc2);
@@ -236,7 +236,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
     if (lines)
         fprintf(fp, "%4u", JS_PCToLineNumber(cx, script, pc));
     fprintf(fp, "  %s", CodeName[op]);
-    type = cs->format & JOF_TYPEMASK;
+    type = JOF_TYPE(cs->format);
     switch (type) {
       case JOF_BYTE:
         if (op == JSOP_TRAP) {
@@ -1392,10 +1392,15 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
             }
             break;
 
+          case JSOP_LENGTH:
+            atom = cx->runtime->atomState.lengthAtom;
+            goto do_destructure_atom;
+
           case JSOP_CALLPROP:
           case JSOP_GETPROP:
-            *OFF2STR(&ss->sprinter, head) = '{';
             GET_ATOM_FROM_BYTECODE(jp->script, pc, 0, atom);
+          do_destructure_atom:
+            *OFF2STR(&ss->sprinter, head) = '{';
             str = ATOM_TO_STRING(atom);
 #if JS_HAS_DESTRUCTURING_SHORTHAND
             nameoff = ss->sprinter.offset;
@@ -1761,7 +1766,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * JSOP_GETARG or JSOP_GETVAR appropriately, instead of to
                      * JSOP_NAME.
                      */
-                    type = format & JOF_TYPEMASK;
+                    type = JOF_TYPE(format);
                     op = (type == JOF_QARG)
                          ? JSOP_GETARG
                          : (type == JOF_QVAR)
@@ -1835,7 +1840,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 }
             }
             LOCAL_ASSERT(js_CodeSpec[saveop].length == oplen ||
-                         (format & JOF_TYPEMASK) == JOF_SLOTATOM);
+                         JOF_TYPE(format) == JOF_SLOTATOM);
 
             jp->dvgfence = NULL;
         }
@@ -3509,6 +3514,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 }
                 break;
 
+              case JSOP_LENGTH:
+                fmt = dot_format;
+                rval = js_length_str;
+                goto do_getprop_lval;
+
               case JSOP_GETPROP2:
                 op = JSOP_GETPROP;
                 (void) PopOff(ss, lastop);
@@ -3521,6 +3531,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               do_getprop:
                 GET_QUOTE_AND_FMT(index_format, dot_format, rval);
+              do_getprop_lval:
                 lval = POP_STR();
                 todo = Sprint(&ss->sprinter, fmt, lval, rval);
                 break;
@@ -5011,7 +5022,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
             }
         }
 
-        type = cs->format & JOF_TYPEMASK;
+        type = JOF_TYPE(cs->format);
         switch (type) {
           case JOF_TABLESWITCH:
           case JOF_TABLESWITCHX:

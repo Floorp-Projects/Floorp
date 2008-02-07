@@ -1234,8 +1234,10 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 setCallerVarObj = JS_TRUE;
             }
         }
-        /* From here on, control must exit through label out with ok set. */
 #endif
+
+        /* From here on, control must exit through label out with ok set. */
+        js_DisablePropertyCache(cx);
 
         /*
          * Compile using caller's current scope object.
@@ -1324,6 +1326,7 @@ out:
         caller->varobj = callerVarObj;
 #endif
 
+    js_EnablePropertyCache(cx);
     return ok;
 }
 
@@ -2862,6 +2865,41 @@ CheckForStringIndex(jsid id, const jschar *cp, const jschar *end,
     return id;
 }
 
+static JSBool
+PurgeProtoChain(JSContext *cx, JSObject *obj, jsid id)
+{
+    JSScope *scope;
+    JSScopeProperty *sprop;
+
+    while (obj) {
+        if (!OBJ_IS_NATIVE(obj)) {
+            obj = OBJ_GET_PROTO(cx, obj);
+            continue;
+        }
+        JS_LOCK_OBJ(cx, obj);
+        scope = OBJ_SCOPE(obj);
+        sprop = SCOPE_GET_PROPERTY(scope, id);
+        if (sprop) {
+            SCOPE_GENERATE_PCTYPE(cx, scope);
+            JS_UNLOCK_SCOPE(cx, scope);
+            return JS_TRUE;
+        }
+        obj = LOCKED_OBJ_GET_PROTO(scope->object);
+        JS_UNLOCK_SCOPE(cx, scope);
+    }
+    return JS_FALSE;
+}
+
+static void
+PurgeScopeChain(JSContext *cx, JSObject *obj, jsid id)
+{
+    PurgeProtoChain(cx, OBJ_GET_PROTO(cx, obj), id);
+    while ((obj = OBJ_GET_PARENT(cx, obj)) != NULL) {
+        if (PurgeProtoChain(cx, obj, id))
+            return;
+    }
+}
+
 JSScopeProperty *
 js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
                      JSPropertyOp getter, JSPropertyOp setter, uint32 slot,
@@ -2870,15 +2908,19 @@ js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
     JSScope *scope;
     JSScopeProperty *sprop;
 
+    /*
+     * Purge the property cache of now-shadowed id in obj's scope chain. Do
+     * this optimistically (assuming no failure below) before locking obj, so
+     * we can lock the shadowed scope.
+     */
+    PurgeScopeChain(cx, obj, id);
+
     JS_LOCK_OBJ(cx, obj);
     scope = js_GetMutableScope(cx, obj);
     if (!scope) {
         sprop = NULL;
     } else {
-        /*
-         * Handle old bug that took empty string as zero index.  Also convert
-         * string indices to integers if appropriate.
-         */
+        /* Convert string indices to integers if appropriate. */
         CHECK_FOR_STRING_INDEX(id);
         sprop = js_AddScopeProperty(cx, scope, id, getter, setter, slot, attrs,
                                     flags, shortid);
@@ -2944,10 +2986,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     JSScope *scope;
     JSScopeProperty *sprop;
 
-    /*
-     * Handle old bug that took empty string as zero index.  Also convert
-     * string indices to integers if appropriate.
-     */
+    /* Convert string indices to integers if appropriate. */
     CHECK_FOR_STRING_INDEX(id);
 
 #if JS_HAS_GETTER_SETTER
@@ -2996,6 +3035,12 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
         }
     }
 #endif /* JS_HAS_GETTER_SETTER */
+
+    /*
+     * Purge the property cache of now-shadowed id in obj's scope chain.
+     * Do this early, before locking obj to avoid nesting locks.
+     */
+    PurgeScopeChain(cx, obj, id);
 
     /* Lock if object locking is required by this implementation. */
     JS_LOCK_OBJ(cx, obj);
@@ -3140,13 +3185,10 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     uint32 format;
     JSBool ok;
 
-    /*
-     * Handle old bug that took empty string as zero index.  Also convert
-     * string indices to integers if appropriate.
-     */
+    /* Convert string indices to integers if appropriate. */
     CHECK_FOR_STRING_INDEX(id);
-
     JS_COUNT_OPERATION(cx, JSOW_LOOKUP_PROPERTY);
+
     /* Search scopes starting with obj and following the prototype link. */
     start = obj;
     for (protoIndex = 0; ; protoIndex++) {
@@ -3226,6 +3268,11 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                         if (obj2 != obj) {
                             JS_UNLOCK_OBJ(cx, obj);
                             JS_LOCK_OBJ(cx, obj2);
+                        }
+                        protoIndex = 0;
+                        for (proto = start; proto && proto != obj2;
+                             proto = OBJ_GET_PROTO(cx, proto)) {
+                            protoIndex++;
                         }
                         scope = OBJ_SCOPE(obj2);
                         if (!MAP_IS_NATIVE(&scope->map)) {
@@ -3308,31 +3355,53 @@ out:
     return protoIndex;
 }
 
-JS_FRIEND_API(int)
-js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
-                JSProperty **propp)
+int
+js_FindPropertyHelper(JSContext *cx, jsid id, JSObject **objp,
+                      JSObject **pobjp, JSProperty **propp,
+                      JSPropCacheEntry **entryp)
 {
-    JSRuntime *rt;
     JSObject *obj, *pobj, *lastobj;
-    int scopeIndex;
+    uint32 type;
+    int scopeIndex, protoIndex;
     JSProperty *prop;
+    JSScopeProperty *sprop;
 
-    rt = cx->runtime;
     obj = cx->fp->scopeChain;
-    scopeIndex = 0;
-    do {
-        if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &pobj, &prop))
-            return -1;
+    type = OBJ_SCOPE(obj)->shape;
+    for (scopeIndex = 0; ; scopeIndex++) {
+        if (obj->map->ops->lookupProperty == js_LookupProperty) {
+            protoIndex =
+                js_LookupPropertyWithFlags(cx, obj, id, 0, &pobj, &prop);
+        } else {
+            if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &pobj, &prop))
+                return -1;
+            protoIndex = -1;
+        }
+
         if (prop) {
+            if (entryp) {
+                if (protoIndex >= 0 && OBJ_IS_NATIVE(pobj)) {
+                    sprop = (JSScopeProperty *) prop;
+                    js_FillPropertyCache(cx, cx->fp->scopeChain, type,
+                                         scopeIndex, protoIndex, pobj, sprop,
+                                         entryp);
+                } else {
+                    PCMETER(JS_PROPERTY_CACHE(cx).nofills++);
+                    *entryp = NULL;
+                }
+            }
             SCOPE_DEPTH_ACCUM(&rt->scopeSearchDepthStats, scopeIndex);
             *objp = obj;
             *pobjp = pobj;
             *propp = prop;
             return scopeIndex;
         }
+
         lastobj = obj;
-        scopeIndex++;
-    } while ((obj = OBJ_GET_PARENT(cx, obj)) != NULL);
+        obj = OBJ_GET_PARENT(cx, obj);
+        if (!obj)
+            break;
+    }
 
     *objp = lastobj;
     *pobjp = NULL;
@@ -3340,8 +3409,15 @@ js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
     return scopeIndex;
 }
 
+JS_FRIEND_API(JSBool)
+js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
+                JSProperty **propp)
+{
+    return js_FindPropertyHelper(cx, id, objp, pobjp, propp, NULL) >= 0;
+}
+
 JSObject *
-js_FindIdentifierBase(JSContext *cx, jsid id)
+js_FindIdentifierBase(JSContext *cx, jsid id, JSPropCacheEntry *entry)
 {
     JSObject *obj, *pobj;
     JSProperty *prop;
@@ -3350,10 +3426,15 @@ js_FindIdentifierBase(JSContext *cx, jsid id)
      * Look for id's property along the "with" statement chain and the
      * statically-linked scope chain.
      */
-    if (js_FindProperty(cx, id, &obj, &pobj, &prop) < 0)
+    if (js_FindPropertyHelper(cx, id, &obj, &pobj, &prop, &entry) < 0)
         return NULL;
     if (prop) {
         OBJ_DROP_PROPERTY(cx, pobj, prop);
+
+        JS_ASSERT(!entry ||
+                  entry->kpc == (PCVCAP_TAG(entry->vcap)
+                                 ? (jsbytecode *) JSID_TO_ATOM(id)
+                                 : cx->fp->pc));
         return obj;
     }
 
@@ -3379,6 +3460,7 @@ js_FindIdentifierBase(JSContext *cx, jsid id)
             return NULL;
         }
     }
+
     return obj;
 }
 
@@ -3470,28 +3552,29 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp)
         (JS_LIKELY(cx->runtime->propertyRemovals == sample) ||
          SCOPE_GET_PROPERTY(scope, sprop->id) == sprop)) {
   set_slot:
-        GC_POKE(cx, pval);
-        LOCKED_OBJ_SET_SLOT(obj, slot, *vp);
+        LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, *vp);
     }
 
     return JS_TRUE;
 }
 
 JSBool
-js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
+                     JSPropCacheEntry **entryp)
 {
+    uint32 type;
+    int protoIndex;
     JSObject *obj2;
     JSProperty *prop;
     JSScopeProperty *sprop;
 
-    /*
-     * Handle old bug that took empty string as zero index.  Also convert
-     * string indices to integers if appropriate.
-     */
+    /* Convert string indices to integers if appropriate. */
     CHECK_FOR_STRING_INDEX(id);
-
     JS_COUNT_OPERATION(cx, JSOW_GET_PROPERTY);
-    if (!js_LookupProperty(cx, obj, id, &obj2, &prop))
+
+    type = OBJ_SCOPE(obj)->shape;
+    protoIndex = js_LookupPropertyWithFlags(cx, obj, id, 0, &obj2, &prop);
+    if (protoIndex < 0)
         return JS_FALSE;
     if (!prop) {
         jsbytecode *pc;
@@ -3500,6 +3583,11 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
         if (!OBJ_GET_CLASS(cx, obj)->getProperty(cx, obj, ID_TO_VALUE(id), vp))
             return JS_FALSE;
+
+        if (entryp) {
+            PCMETER(JS_PROPERTY_CACHE(cx).nofills++);
+            *entryp = NULL;
+        }
 
         /*
          * Give a strict warning if foo.bar is evaluated by a script for an
@@ -3553,13 +3641,26 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if (!js_NativeGet(cx, obj, obj2, sprop, vp))
         return JS_FALSE;
 
+    if (entryp) {
+        js_FillPropertyCache(cx, obj, type, 0, protoIndex, obj2, sprop,
+                             entryp);
+    }
     JS_UNLOCK_OBJ(cx, obj2);
     return JS_TRUE;
 }
 
 JSBool
-js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
+    return js_GetPropertyHelper(cx, obj, id, vp, NULL);
+}
+
+JSBool
+js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
+                     JSPropCacheEntry **entryp)
+{
+    uint32 type;
+    int protoIndex;
     JSObject *pobj;
     JSProperty *prop;
     JSScopeProperty *sprop;
@@ -3569,14 +3670,13 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     JSClass *clasp;
     JSPropertyOp getter, setter;
 
-    /*
-     * Handle old bug that took empty string as zero index.  Also convert
-     * string indices to integers if appropriate.
-     */
+    /* Convert string indices to integers if appropriate. */
     CHECK_FOR_STRING_INDEX(id);
-
     JS_COUNT_OPERATION(cx, JSOW_SET_PROPERTY);
-    if (!js_LookupProperty(cx, obj, id, &pobj, &prop))
+
+    type = OBJ_SCOPE(obj)->shape;
+    protoIndex = js_LookupPropertyWithFlags(cx, obj, id, 0, &pobj, &prop);
+    if (protoIndex < 0)
         return JS_FALSE;
 
     if (prop && !OBJ_IS_NATIVE(pobj)) {
@@ -3625,6 +3725,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             if (attrs & JSPROP_READONLY) {
                 if (!JS_HAS_STRICT_OPTION(cx)) {
                     /* Just return true per ECMA if not in strict mode. */
+                    PCMETER(!entryp || JS_PROPERTY_CACHE(cx).rofills++);
                     return JS_TRUE;
                 }
 
@@ -3637,17 +3738,36 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         if (pobj != obj) {
             /*
              * We found id in a prototype object: prepare to share or shadow.
+             *
              * NB: Thanks to the immutable, garbage-collected property tree
              * maintained by jsscope.c in cx->runtime, we needn't worry about
              * sprop going away behind our back after we've unlocked scope.
+             *
+             * But if we are shadowing (not sharing) the proto-property, then
+             * we need to regenerate the property cache shape id for scope, in
+             * case the cache contains the old type in an entry value that was
+             * filled by a get on obj that delegated up the prototype chain to
+             * pobj. Once we've shadowed the proto-property, that cache entry
+             * must not be hit.
              */
+            if (!(attrs & JSPROP_SHARED))
+                SCOPE_GENERATE_PCTYPE(cx, scope);
             JS_UNLOCK_SCOPE(cx, scope);
 
             /* Don't clone a shared prototype property. */
             if (attrs & JSPROP_SHARED) {
                 if (SPROP_HAS_STUB_SETTER(sprop) &&
                     !(sprop->attrs & JSPROP_GETTER)) {
+                    if (entryp) {
+                        PCMETER(JS_PROPERTY_CACHE(cx).nofills++);
+                        *entryp = NULL;
+                    }
                     return JS_TRUE;
+                }
+
+                if (entryp) {
+                    js_FillPropertyCache(cx, obj, type, 0, protoIndex,
+                                         pobj, sprop, entryp);
                 }
                 return SPROP_SET(cx, sprop, obj, pobj, vp);
             }
@@ -3687,6 +3807,12 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             goto read_only_error;
         }
 
+        /*
+         * Purge the property cache of now-shadowed id in obj's scope chain.
+         * Do this early, before locking obj to avoid nesting locks.
+         */
+        PurgeScopeChain(cx, obj, id);
+
         /* Find or make a property descriptor with the right heritage. */
         JS_LOCK_OBJ(cx, obj);
         scope = js_GetMutableScope(cx, obj);
@@ -3720,6 +3846,9 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
     if (!js_NativeSet(cx, obj, sprop, vp))
         return JS_FALSE;
+
+    if (entryp)
+        js_FillPropertyCache(cx, obj, type, 0, 0, obj, sprop, entryp);
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_TRUE;
 
@@ -3727,6 +3856,12 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     return js_ReportValueErrorFlags(cx, flags, JSMSG_READ_ONLY,
                                     JSDVG_IGNORE_STACK, ID_TO_VALUE(id), NULL,
                                     NULL, NULL);
+}
+
+JSBool
+js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+{
+    return js_SetPropertyHelper(cx, obj, id, vp, NULL);
 }
 
 JSBool
@@ -3795,13 +3930,10 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
 
     *rval = JSVAL_TRUE;
 
-    /*
-     * Handle old bug that took empty string as zero index.  Also convert
-     * string indices to integers if appropriate.
-     */
+    /* Convert string indices to integers if appropriate. */
     CHECK_FOR_STRING_INDEX(id);
-
     JS_COUNT_OPERATION(cx, JSOW_DELETE_PROPERTY);
+
     if (!js_LookupProperty(cx, obj, id, &proto, &prop))
         return JS_FALSE;
     if (!prop || proto != obj) {
@@ -4475,7 +4607,7 @@ js_PrimitiveToObject(JSContext *cx, jsval *vp)
     obj = js_NewObject(cx, clasp, NULL, NULL);
     if (!obj)
         return JS_FALSE;
-    OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, *vp);
+    STOBJ_SET_SLOT(obj, JSSLOT_PRIVATE, *vp);
     *vp = OBJECT_TO_JSVAL(obj);
     return JS_TRUE;
 }
@@ -4747,28 +4879,75 @@ PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
 void
 js_TraceObject(JSTracer *trc, JSObject *obj)
 {
-    JSScope *scope;
     JSContext *cx;
+    JSScope *scope;
+    JSBool traceScope;
     JSScopeProperty *sprop;
     JSClass *clasp;
     size_t nslots, i;
     jsval v;
 
     JS_ASSERT(OBJ_IS_NATIVE(obj));
+    cx = trc->context;
     scope = OBJ_SCOPE(obj);
+
+    traceScope = (scope->object == obj);
+    if (!traceScope) {
+        JSObject *pobj = obj;
+
+        /*
+         * Because obj does not own scope, we should be able to assert that an
+         * object on obj's prototype chain does -- or scope's properties might
+         * go untraced. It indeed turns out that you can disconnect an object
+         * from the prototype object whose scope it shares, so we may have to
+         * mark scope even though scope->object != obj.
+         */
+        while ((pobj = LOCKED_OBJ_GET_PROTO(pobj)) != NULL) {
+            if (pobj == scope->object)
+                break;
+        }
+        JS_ASSERT_IF(pobj, OBJ_SCOPE(pobj) == scope);
+        traceScope = !pobj;
+    }
+
+    if (traceScope) {
 #ifdef JS_DUMP_SCOPE_METERS
-    if (scope->object == obj)
         MeterEntryCount(scope->entryCount);
 #endif
 
-    JS_ASSERT(!SCOPE_LAST_PROP(scope) ||
-              SCOPE_HAS_PROPERTY(scope, SCOPE_LAST_PROP(scope)));
+        sprop = SCOPE_LAST_PROP(scope);
+        if (sprop) {
+            JS_ASSERT(SCOPE_HAS_PROPERTY(scope, sprop));
 
-    cx = trc->context;
-    for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
-        if (SCOPE_HAD_MIDDLE_DELETE(scope) && !SCOPE_HAS_PROPERTY(scope, sprop))
-            continue;
-        TRACE_SCOPE_PROPERTY(trc, sprop);
+            /* Regenerate property cache shape ids if GC'ing. */
+            if (IS_GC_MARKING_TRACER(trc)) {
+                uint32 shape, oldshape;
+
+                shape = ++cx->runtime->shapeGen;
+                JS_ASSERT(shape != 0);
+
+                if (!(sprop->flags & SPROP_MARK)) {
+                    oldshape = sprop->shape;
+                    sprop->shape = shape;
+                    sprop->flags |= SPROP_FLAG_SHAPE_REGEN;
+                    if (scope->shape != oldshape) {
+                        shape = ++cx->runtime->shapeGen;
+                        JS_ASSERT(shape != 0);
+                    }
+                }
+
+                scope->shape = shape;
+            }
+
+            /* Trace scope's property tree ancestor line. */
+            do {
+                if (SCOPE_HAD_MIDDLE_DELETE(scope) &&
+                    !SCOPE_HAS_PROPERTY(scope, sprop)) {
+                    continue;
+                }
+                TRACE_SCOPE_PROPERTY(trc, sprop);
+            } while ((sprop = sprop->parent) != NULL);
+        }
     }
 
     if (!JS_CLIST_IS_EMPTY(&cx->runtime->watchPointList))
@@ -4778,21 +4957,23 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
     clasp = LOCKED_OBJ_GET_CLASS(obj);
     if (clasp->mark) {
         if (clasp->flags & JSCLASS_MARK_IS_TRACE)
-            ((JSTraceOp)(clasp->mark))(trc, obj);
+            ((JSTraceOp) clasp->mark)(trc, obj);
         else if (IS_GC_MARKING_TRACER(trc))
             (void) clasp->mark(cx, obj, trc);
     }
 
-    if (scope->object != obj) {
-        /*
-         * An unmutated object that shares a prototype's scope.  We can't tell
-         * how many slots are in use in obj by looking at scope, so we use
-         * STOBJ_NSLOTS(obj).
-         */
-        nslots = STOBJ_NSLOTS(obj);
-    } else {
-        nslots = LOCKED_OBJ_NSLOTS(obj);
-    }
+    /*
+     * An unmutated object that shares a prototype object's scope. We can't
+     * tell how many slots are in use in obj by looking at its scope, so we
+     * use STOBJ_NSLOTS(obj).
+     *
+     * NB: In case clasp->mark mutates something, leave this code here --
+     * don't move it up and unify it with the |if (!traceScope)| section
+     * above.
+     */
+    nslots = (scope->object != obj)
+             ? STOBJ_NSLOTS(obj)
+             : LOCKED_OBJ_NSLOTS(obj);
 
     for (i = 0; i != nslots; ++i) {
         v = STOBJ_GET_SLOT(obj, i);

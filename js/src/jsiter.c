@@ -244,7 +244,7 @@ IteratorNextImpl(JSContext *cx, JSObject *obj, jsval *rval)
     if (!ok)
         return JS_FALSE;
 
-    OBJ_SET_SLOT(cx, obj, JSSLOT_ITER_STATE, state);
+    STOBJ_SET_SLOT(obj, JSSLOT_ITER_STATE, state);
     if (JSVAL_IS_NULL(state))
         goto stop;
 

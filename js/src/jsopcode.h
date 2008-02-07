@@ -124,6 +124,10 @@ typedef enum JSOpLength {
                                      to root intermediate objects */
 #define JOF_TMPSLOT_SHIFT 23
 
+/* Shorthands for type from format and type from opcode. */
+#define JOF_TYPE(fmt)   ((fmt) & JOF_TYPEMASK)
+#define JOF_OPTYPE(op)  JOF_TYPE(js_CodeSpec[op].format)
+
 /* Shorthands for mode from format and mode from opcode. */
 #define JOF_MODE(fmt)   ((fmt) & JOF_MODEMASK)
 #define JOF_OPMODE(op)  JOF_MODE(js_CodeSpec[op].format)

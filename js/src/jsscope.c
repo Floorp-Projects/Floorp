@@ -92,6 +92,7 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
 static void
 InitMinimalScope(JSScope *scope)
 {
+    scope->shape = 0;
     scope->hashShift = JS_DHASH_BITS - MIN_SCOPE_SIZE_LOG2;
     scope->entryCount = scope->removedCount = 0;
     scope->table = NULL;
@@ -161,7 +162,7 @@ js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
      */
     scope->u.link = NULL;
 
-#ifdef DEBUG
+#ifdef JS_DEBUG_SCOPE_LOCKS
     scope->file[0] = scope->file[1] = scope->file[2] = scope->file[3] = NULL;
     scope->line[0] = scope->line[1] = scope->line[2] = scope->line[3] = 0;
 #endif
@@ -390,7 +391,7 @@ ChangeScope(JSContext *cx, JSScope *scope, int change)
 /*
  * Take care to exclude the mark bits in case we're called from the GC.
  */
-#define SPROP_FLAGS_NOT_MATCHED SPROP_MARK
+#define SPROP_FLAGS_NOT_MATCHED (SPROP_MARK | SPROP_FLAG_SHAPE_REGEN)
 
 JS_STATIC_DLL_CALLBACK(JSDHashNumber)
 js_HashScopeProperty(JSDHashTable *table, const void *key)
@@ -903,6 +904,8 @@ locked_not_found:
     sprop->flags = child->flags;
     sprop->shortid = child->shortid;
     sprop->parent = sprop->kids = NULL;
+    sprop->shape = js_GenerateShape(cx);
+
     if (!parent) {
         entry->child = sprop;
     } else {
@@ -1099,6 +1102,7 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
             }
             SCOPE_SET_MIDDLE_DELETE(scope);
         }
+        SCOPE_GENERATE_PCTYPE(cx, scope);
 
         /*
          * If we fail later on trying to find or create a new sprop, we will
@@ -1269,6 +1273,16 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
         if (!sprop)
             goto fail_overwrite;
 
+        /*
+         * The scope's shape defaults to its last property's shape, but may
+         * be regenerated later as the scope diverges (from the property cache
+         * point of view) from the structural type associated with sprop.
+         */
+        if (!scope->lastProp || scope->shape == scope->lastProp->shape)
+            scope->shape = sprop->shape;
+        else
+            SCOPE_GENERATE_PCTYPE(cx, scope);
+
         /* Store the tree node pointer in the table entry for id. */
         if (scope->table)
             SPROP_STORE_PRESERVING_COLLISION(spp, sprop);
@@ -1402,8 +1416,14 @@ js_ChangeScopePropertyAttrs(JSContext *cx, JSScope *scope,
                                        child.attrs, child.flags, child.shortid);
     }
 
+    if (newsprop) {
+        if (scope->shape == sprop->shape)
+            scope->shape = newsprop->shape;
+        else
+            SCOPE_GENERATE_PCTYPE(cx, scope);
+    }
 #ifdef JS_DUMP_PROPTREE_STATS
-    if (!newsprop)
+    else
         METER(changeFailures);
 #endif
     return newsprop;
@@ -1470,6 +1490,7 @@ js_RemoveScopeProperty(JSContext *cx, JSScope *scope, jsid id)
     } else if (!SCOPE_HAD_MIDDLE_DELETE(scope)) {
         SCOPE_SET_MIDDLE_DELETE(scope);
     }
+    SCOPE_GENERATE_PCTYPE(cx, scope);
     CHECK_ANCESTOR_LINE(scope, JS_TRUE);
 
     /* Last, consider shrinking scope's table if its load factor is <= .25. */
@@ -1707,9 +1728,22 @@ js_SweepScopeProperties(JSContext *cx)
             if (sprop->id == JSVAL_NULL)
                 continue;
 
-            /* If the mark bit is set, sprop is alive, so we skip it. */
+            /*
+             * If the mark bit is set, sprop is alive, so clear the mark bit
+             * and continue the while loop.
+             *
+             * Regenerate sprop->shape if it hasn't already been refreshed
+             * during the mark phase, when live scopes' lastProp members are
+             * followed to update both scope->shape and lastProp->shape.
+             */
             if (sprop->flags & SPROP_MARK) {
                 sprop->flags &= ~SPROP_MARK;
+                if (sprop->flags & SPROP_FLAG_SHAPE_REGEN) {
+                    sprop->flags &= ~SPROP_FLAG_SHAPE_REGEN;
+                } else {
+                    sprop->shape = ++cx->runtime->shapeGen;
+                    JS_ASSERT(sprop->shape != 0);
+                }
                 liveCount++;
                 continue;
             }

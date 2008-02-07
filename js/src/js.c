@@ -1571,7 +1571,7 @@ DumpStats(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         } else {
             if (!JS_ValueToId(cx, STRING_TO_JSVAL(str), &id))
                 return JS_FALSE;
-            if (js_FindProperty(cx, id, &obj, &obj2, &prop) < 0)
+            if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
                 return JS_FALSE;
             if (prop) {
                 OBJ_DROP_PROPERTY(cx, obj2, prop);

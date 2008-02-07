@@ -541,9 +541,9 @@ typedef void
                                     JSProperty *prop);
 
 /*
- * Function type for JSObjectOps.setProto and JSObjectOps.setParent.  These
- * hooks must check for cycles without deadlocking, and otherwise take special
- * steps.  See jsobj.c, js_SetProtoOrParent, for an example.
+ * Function pointer type for JSObjectOps.setProto and JSObjectOps.setParent.
+ * These hooks must check for cycles without deadlocking, and otherwise take
+ * special steps. See jsobj.c and jsgc.c for details.
  */
 typedef JSBool
 (* JS_DLL_CALLBACK JSSetObjectSlotOp)(JSContext *cx, JSObject *obj,

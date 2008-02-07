@@ -131,7 +131,7 @@ Boolean(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         *rval = bval;
         return JS_TRUE;
     }
-    OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, bval);
+    STOBJ_SET_SLOT(obj, JSSLOT_PRIVATE, bval);
     return JS_TRUE;
 }
 
@@ -144,7 +144,7 @@ js_InitBooleanClass(JSContext *cx, JSObject *obj)
                         NULL, boolean_methods, NULL, NULL);
     if (!proto)
         return NULL;
-    OBJ_SET_SLOT(cx, proto, JSSLOT_PRIVATE, JSVAL_FALSE);
+    STOBJ_SET_SLOT(proto, JSSLOT_PRIVATE, JSVAL_FALSE);
     return proto;
 }
 

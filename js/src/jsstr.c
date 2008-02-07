@@ -2294,7 +2294,7 @@ String(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         *rval = STRING_TO_JSVAL(str);
         return JS_TRUE;
     }
-    OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, STRING_TO_JSVAL(str));
+    STOBJ_SET_SLOT(obj, JSSLOT_PRIVATE, STRING_TO_JSVAL(str));
     return JS_TRUE;
 }
 
@@ -2467,8 +2467,8 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
                          NULL, string_static_methods);
     if (!proto)
         return NULL;
-    OBJ_SET_SLOT(cx, proto, JSSLOT_PRIVATE,
-                 STRING_TO_JSVAL(cx->runtime->emptyString));
+    STOBJ_SET_SLOT(proto, JSSLOT_PRIVATE,
+                   STRING_TO_JSVAL(cx->runtime->emptyString));
     return proto;
 }
 

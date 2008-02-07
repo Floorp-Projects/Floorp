@@ -617,7 +617,7 @@ BuildSpanDepTable(JSContext *cx, JSCodeGenerator *cg)
         op = (JSOp)*pc;
         cs = &js_CodeSpec[op];
 
-        switch (cs->format & JOF_TYPEMASK) {
+        switch (JOF_TYPE(cs->format)) {
           case JOF_TABLESWITCH:
           case JOF_LOOKUPSWITCH:
             pc = AddSwitchSpanDeps(cx, cg, pc);
@@ -793,7 +793,7 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
                 pivot = sd->offset;
                 pc = base + top;
                 op = (JSOp) *pc;
-                type = (js_CodeSpec[op].format & JOF_TYPEMASK);
+                type = JOF_OPTYPE(op);
                 if (JOF_TYPE_IS_EXTENDED_JUMP(type)) {
                     /*
                      * We already extended all the jump offset operands for
@@ -926,7 +926,7 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
         if (sd->top != top) {
             top = sd->top;
             op = (JSOp) base[top];
-            type = (js_CodeSpec[op].format & JOF_TYPEMASK);
+            type = JOF_OPTYPE(op);
 
             for (sd2 = sd - 1; sd2 >= sdbase && sd2->top == top; sd2--)
                 continue;
@@ -1109,7 +1109,7 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
             top = sd->top;
             JS_ASSERT(top == sd->before);
             op = (JSOp) base[offset];
-            type = (js_CodeSpec[op].format & JOF_TYPEMASK);
+            type = JOF_OPTYPE(op);
             JS_ASSERT(type == JOF_JUMP ||
                       type == JOF_JUMPX ||
                       type == JOF_TABLESWITCH ||
@@ -1773,7 +1773,11 @@ EmitAtomOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 {
     JSAtomListElement *ale;
 
-    JS_ASSERT((js_CodeSpec[op].format & JOF_TYPEMASK) == JOF_ATOM);
+    JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
+    if (op == JSOP_GETPROP &&
+        pn->pn_atom == cx->runtime->atomState.lengthAtom) {
+        return js_Emit1(cx, cg, JSOP_LENGTH) >= 0;
+    }
     ale = js_IndexAtom(cx, pn->pn_atom, &cg->atomList);
     if (!ale)
         return JS_FALSE;
@@ -1787,7 +1791,7 @@ static JSBool
 EmitObjectOp(JSContext *cx, JSParsedObjectBox *pob, JSOp op,
              JSCodeGenerator *cg)
 {
-    JS_ASSERT((js_CodeSpec[op].format & JOF_TYPEMASK) == JOF_OBJECT);
+    JS_ASSERT(JOF_OPTYPE(op) == JOF_OBJECT);
     return EmitIndexOp(cx, op, IndexParsedObject(pob, &cg->objectList), cg);
 }
 
@@ -1809,8 +1813,8 @@ EmitSlotIndexOp(JSContext *cx, JSOp op, uintN slot, uintN index,
     ptrdiff_t off;
     jsbytecode *pc;
 
-    JS_ASSERT((js_CodeSpec[op].format & JOF_TYPEMASK) == JOF_SLOTATOM ||
-              (js_CodeSpec[op].format & JOF_TYPEMASK) == JOF_SLOTOBJECT);
+    JS_ASSERT(JOF_OPTYPE(op) == JOF_SLOTATOM ||
+              JOF_OPTYPE(op) == JOF_SLOTOBJECT);
     bigSuffix = EmitBigIndexPrefix(cx, cg, index);
     if (bigSuffix == JSOP_FALSE)
         return JS_FALSE;
@@ -1953,9 +1957,9 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
         }
 
         /*
-         * We are optimizing global variables, and there is no pre-existing
+         * We are optimizing global variables and there may be no pre-existing
          * global property named atom.  If atom was declared via const or var,
-         * optimize pn to access fp->vars using the appropriate JOF_QVAR op.
+         * optimize pn to access fp->vars using the appropriate JSOP_*GVAR op.
          */
         ATOM_LIST_SEARCH(ale, &tc->decls, atom);
         if (!ale) {
@@ -3250,7 +3254,7 @@ MaybeEmitVarDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
         atomIndex = ALE_INDEX(ale);
     }
 
-    if ((js_CodeSpec[pn->pn_op].format & JOF_TYPEMASK) == JOF_ATOM &&
+    if (JOF_OPTYPE(pn->pn_op) == JOF_ATOM &&
         (!(cg->treeContext.flags & TCF_IN_FUNCTION) ||
          (cg->treeContext.flags & TCF_FUN_HEAVYWEIGHT))) {
         /* Emit a prolog bytecode to predefine the variable. */
@@ -3279,7 +3283,7 @@ EmitDestructuringDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
     JSOp decltype;
 
     JS_ASSERT(pn->pn_type == TOK_NAME);
-    decltype = (prologOp == JSOP_NOP) ? (JSOp) LET_DECL : (JSOp) VAR_DECL;
+    decltype = (JSOp) ((prologOp == JSOP_NOP) ? LET_DECL : VAR_DECL);
     if (!BindNameToSlot(cx, cg, pn, decltype))
         return JS_FALSE;
 
@@ -5407,14 +5411,19 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                                        atomIndex);
                     break;
                 }
-                /* FALL THROUGH */
+                if (js_Emit1(cx, cg, JSOP_DUP) < 0)
+                    return JS_FALSE;
+                EMIT_INDEX_OP(JSOP_GETXPROP, atomIndex);
+                break;
               case TOK_DOT:
                 if (js_Emit1(cx, cg, JSOP_DUP) < 0)
                     return JS_FALSE;
-                EMIT_INDEX_OP((pn2->pn_type == TOK_NAME)
-                              ? JSOP_GETXPROP
-                              : JSOP_GETPROP,
-                              atomIndex);
+                if (pn2->pn_atom == cx->runtime->atomState.lengthAtom) {
+                    if (js_Emit1(cx, cg, JSOP_LENGTH) < 0)
+                        return JS_FALSE;
+                } else {
+                    EMIT_INDEX_OP(JSOP_GETPROP, atomIndex);
+                }
                 break;
               case TOK_LB:
 #if JS_HAS_LVALUE_RETURN
@@ -5714,7 +5723,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (pn2->pn_slot >= 0) {
                 if (pn2->pn_const) {
                     /* Incrementing a declared const: just get its value. */
-                    op = ((js_CodeSpec[op].format & JOF_TYPEMASK) == JOF_ATOM)
+                    op = (JOF_OPTYPE(op) == JOF_ATOM)
                          ? JSOP_GETGVAR
                          : JSOP_GETVAR;
                 }

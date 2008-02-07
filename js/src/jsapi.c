@@ -2946,8 +2946,10 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
     /* Ensure that obj has its own, mutable scope, and seal that scope. */
     JS_LOCK_OBJ(cx, obj);
     scope = js_GetMutableScope(cx, obj);
-    if (scope)
+    if (scope) {
         SCOPE_SET_SEALED(scope);
+        SCOPE_GENERATE_PCTYPE(cx, scope);
+    }
     JS_UNLOCK_OBJ(cx, obj);
     if (!scope)
         return JS_FALSE;
@@ -4010,7 +4012,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
             *idp = JSVAL_VOID;
         } else {
             *idp = ida->vector[--i];
-            OBJ_SET_SLOT(cx, iterobj, JSSLOT_ITER_INDEX, INT_TO_JSVAL(i));
+            STOBJ_SET_SLOT(iterobj, JSSLOT_ITER_INDEX, INT_TO_JSVAL(i));
         }
     }
     return JS_TRUE;
@@ -4567,6 +4569,9 @@ JS_NewScriptObject(JSContext *cx, JSScript *script)
     if (obj) {
         JS_SetPrivate(cx, obj, script);
         script->object = obj;
+#ifdef CHECK_SCRIPT_OWNER
+        script->owner = NULL;
+#endif
     }
     JS_POP_TEMP_ROOT(cx, &tvr);
     return obj;
