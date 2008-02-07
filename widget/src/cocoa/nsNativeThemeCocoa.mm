@@ -535,10 +535,11 @@ nsNativeThemeCocoa::DrawFrame(CGContextRef cgContext, HIThemeFrameKind inKind,
   fdi.version = 0;
   fdi.kind = inKind;
   fdi.state = inIsDisabled ? kThemeStateUnavailable : kThemeStateActive;
-  // We do not draw focus rings for frame widgets because their complex layout has nasty
-  // drawing bugs and it looks terrible.
-  // fdi.isFocused = (inState & NS_EVENT_STATE_FOCUS) != 0;
-  fdi.isFocused = 0;
+  // for some reason focus rings on listboxes draw incorrectly
+  if (inKind == kHIThemeFrameListBox)
+    fdi.isFocused = 0;
+  else
+    fdi.isFocused = (inState & NS_EVENT_STATE_FOCUS) != 0;
 
   // HIThemeDrawFrame takes the rect for the content area of the frame, not
   // the bounding rect for the frame. Here we reduce the size of the rect we
@@ -1186,6 +1187,16 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       CGContextMoveToPoint(cgContext, macRect.origin.x, macRect.origin.y + 1);
       CGContextAddLineToPoint(cgContext, macRect.origin.x + macRect.size.width - 1, macRect.origin.y + 1);
       CGContextStrokePath(cgContext);
+
+      // draw a focus ring
+      if (eventState & NS_EVENT_STATE_FOCUS) {
+        // We need to bring the rectangle in by 2 pixels on each side.
+        CGRect cgr = CGRectMake(macRect.origin.x + 2,
+                                macRect.origin.y + 2,
+                                macRect.size.width - 4,
+                                macRect.size.height - 4);
+        HIThemeDrawFocusRect(&cgr, true, cgContext, kHIThemeOrientationNormal);
+      }
     }
       break;
 
@@ -1602,8 +1613,6 @@ nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
     case NS_THEME_TOOLTIP:
     case NS_THEME_TAB_PANELS:
     case NS_THEME_TAB_PANEL:
-    case NS_THEME_TEXTFIELD:
-    case NS_THEME_TEXTFIELD_MULTILINE:
     case NS_THEME_DIALOG:
     case NS_THEME_MENUPOPUP:
       *aShouldRepaint = PR_FALSE;
