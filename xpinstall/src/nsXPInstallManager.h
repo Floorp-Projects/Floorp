@@ -57,6 +57,7 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIObserver.h"
 #include "nsIBadCertListener2.h"
+#include "nsISSLErrorListener.h"
 #include "nsIChannelEventSink.h"
 #include "nsIZipReader.h"
 #include "nsIXPIInstallInfo.h"
@@ -85,6 +86,7 @@ class nsXPInstallManager : public nsIXPIDialogService,
                            public nsIInterfaceRequestor,
                            public nsPICertNotification,
                            public nsIBadCertListener2,
+                           public nsISSLErrorListener,
                            public nsIChannelEventSink,
                            public nsSupportsWeakReference
 {
@@ -102,6 +104,7 @@ class nsXPInstallManager : public nsIXPIDialogService,
         NS_DECL_NSIINTERFACEREQUESTOR
         NS_DECL_NSPICERTNOTIFICATION
         NS_DECL_NSIBADCERTLISTENER2
+        NS_DECL_NSISSLERRORLISTENER
         NS_DECL_NSICHANNELEVENTSINK
 
         NS_IMETHOD InitManager(nsIDOMWindowInternal* aParentWindow, nsXPITriggerInfo* aTrigger, PRUint32 aChromeType );
