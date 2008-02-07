@@ -113,7 +113,7 @@ function outputProfileDir() {
     outFile.init(file, MODE_WRONLY | MODE_CREATE | MODE_APPEND | MODE_TRUNCATE,
                   0600, 0);
     // Need to create the converterStream
-    convStream = Cc["@mozilla.org/intl/converter-output-stream;1"]
+    var convStream = Cc["@mozilla.org/intl/converter-output-stream;1"]
                   .createInstance(Ci.nsIConverterOutputStream);
     convStream.init(outFile, "UTF-8", 0, 0x0000);
 
@@ -127,12 +127,47 @@ function outputProfileDir() {
 }
 
 function listEngines() {
+  // search field
+  var submission = null;
+  var engineIndex = 0;
+
+  function outputEngine(idx, eng, submission) {
+    var url = null;
+    if (submission && submission.uri)
+       url = submission.uri.spec;
+    if (url)
+      output("<l>" + idx + "|" + eng.name + "|" + url + "</l>\n");
+    else
+      output("<l>" + idx + "|" + eng.name + "|" + "none" + "</l>\n");
+  }
+
+  // List out the default engine information such as icon, description, and
+  // hidden status
   output("\n<section id=\"searchengine\">\n");
   for each (var engine in engines) {
     engineIndex++;
-    var submission = engine.getSubmission("foo", null);
-    var url = submission.uri.spec;
-    output("<l>" + engineIndex + "|" + engine.name + "|" + url + "</l>\n");
+    // Output the engine details
+    if (engine.iconURI)
+      output("<l>" + engineIndex + "|" + engine.name + "|" + engine.description +
+             "|" + engine.hidden + "|" + engine.alias + "|" + engine.iconURI.spec + "</l>\n");
+    else
+      output("<l>" + engineIndex + "|" + engine.name + "|" + engine.description +
+             "|" + engine.hidden + "|" + engine.alias + "|none</l>\n");
+
+    // Output the normal Search URL for when the user types a query into the
+    submission = engine.getSubmission("foo", null);
+    outputEngine(engineIndex, engine, submission);
+
+    // List the search Form URL that is used when the field is left blank and the
+    // user hits enter.
+    if (engine.searchForm)
+      output("<l>" + engineIndex + "|" + engine.name + "|" + engine.searchForm + "</l>\n");
+    else
+      output("<l>" + engineIndex + "|" + engine.name + "|" + "none</l>\n");
+
+    // List the search suggest URL.
+    submission = engine.getSubmission("foo", "application/x-suggestions+json");
+    outputEngine(engineIndex, engine, submission);
   }
   output("</section>");
 }
@@ -251,8 +286,11 @@ function listExtensions() {
   var exts = extmgr.getItemList(Ci.nsIUpdateItem.TYPE_ANY, { });
   for (var i=0; i < exts.length; ++i) {
       var item = exts[i];
-      output("<l>" + i + "|" + item.name + "|" + item.id + "|" + item.version + "|"
-           + item.iconURL + "|" + item.xpiURL + "|" + item.type + "</l>\n");
+      // Don't output DOM inspector and Ffx default theme information
+      if (item.id != "inspector@mozilla.org" &&
+          item.id != "{972ce4c6-7e08-4474-a285-3208198ce6fd}")
+        output("<l>" + i + "|" + item.name + "|" + item.id + "|" + item.version + "|"
+              + item.iconURL + "|" + item.xpiURL + "|" + item.type + "</l>\n");
   }
   output("</section>");
 }
