@@ -89,7 +89,7 @@
   <commandset id="editMenuCommands"/>
   <commandset id="placesCommands"/>
 #endif
-  
+
   <commandset id="organizerCommandSet">
     <command id="OrganizerCommand_find:all"
              label="&cmd.findInBookmarks.label;"
@@ -145,17 +145,14 @@
   </popupset>
 
   <toolbox id="placesToolbox">
-    <toolbar class="chromeclass-toolbar" id="placesToolbar" align="center"
-             onmouseover="PlacesToolbar.autoOpenMenu(event.target);"
-             onpopupshowing="PlacesToolbar.onMenuOpen(event.target);"
-             onpopuphidden="PlacesToolbar.onMenuClose(event.target);">
+    <toolbar class="chromeclass-toolbar" id="placesToolbar" align="center">
       <toolbarbutton id="back-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      command="OrganizerCommand:Back"
                      tooltiptext="&backButton.tooltip;"
                      accesskey="&backCmd.accesskey;"
                      chromedir="&locale.dir;"
                      disabled="true"/>
-    
+
       <toolbarbutton id="forward-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      command="OrganizerCommand:Forward"
                      tooltiptext="&forwardButton.tooltip;"
@@ -163,168 +160,187 @@
                      chromedir="&locale.dir;"
                      disabled="true"/>
 
-      <toolbarbutton id="organizeButton" type="menu" label="&organize.label;">
-        <menupopup id="organizeButtonPopup">
-          <menuitem id="newbookmark"
-                    command="placesCmd_new:bookmark"
-                    label="&cmd.new_bookmark.label;"
-                    accesskey="&cmd.new_bookmark.accesskey;"/>
-          <menuitem id="newfolder"
-                    command="placesCmd_new:folder"
-                    label="&cmd.new_folder.label;"
-                    accesskey="&cmd.new_folder.accesskey;"/>
-          <menuitem id="newseparator"
-                    command="placesCmd_new:separator"
-                    label="&cmd.new_separator.label;"
-                    accesskey="&cmd.new_separator.accesskey;"/>
-
-#ifndef XP_MACOSX
-          <menuseparator id="orgCutSeparator"/>
-          
-          <menuitem id="orgCut"
-                    command="cmd_cut"
-                    label="&cutCmd.label;"
-                    key="key_cut"
-                    accesskey="&cutCmd.accesskey;"
-                    selection="separator|link|folder|mixed"/>
-          <menuitem id="orgCopy"
-                    command="cmd_copy"
-                    label="&copyCmd.label;"
-                    key="key_copy"
-                    accesskey="&copyCmd.accesskey;"
-                    selection="separator|link|folder|mixed"/>
-          <menuitem id="orgPaste"
-                    command="cmd_paste"
-                    label="&pasteCmd.label;"
-                    key="key_paste"
-                    accesskey="&pasteCmd.accesskey;"
-                    selection="mutable"/>
-          <menuitem id="orgUndo"
-                    command="cmd_undo"
-                    label="&undoCmd.label;"
-                    key="key_undo"
-                    accesskey="&undoCmd.accesskey;"/>
-          <menuitem id="orgRedo"
-                    command="cmd_redo"
-                    label="&redoCmd.label;"
-                    key="key_redo"
-                    accesskey="&redoCmd.accesskey;"/>
-
-          <menuseparator id="selectAllSeparator"/>
-          
-          <menuitem id="orgSelectAll"
-                    command="cmd_selectAll"
-                    label="&selectAllCmd.label;"
-                    key="key_selectAll"
-                    accesskey="&selectAllCmd.accesskey;"/>
-
-#endif
-          <menuseparator id="orgMoveSeparator"/>
-          <menuitem id="orgMoveBookmarks"
-                    command="placesCmd_moveBookmarks"
-                    label="&cmd.moveBookmarks.label;"
-                    accesskey="&cmd.moveBookmarks.accesskey;"/>
-          <menuitem id="orgDelete"
-                    command="cmd_delete"
-                    label="&deleteCmd.label;"
-                    key="key_delete"
-                    accesskey="&deleteCmd.accesskey;"/>
-#ifndef XP_MACOSX
-          <menuseparator id="orgCloseSeparator"/>
-
-          <menuitem id="orgClose"
-                    key="placesKey_close" 
-                    label="&file.close.label;"
-                    accesskey="&file.close.accesskey;" 
-                    oncommand="close();"/>
-#endif
-        </menupopup>
-      </toolbarbutton>
-
-      <toolbarbutton id="viewMenu" type="menu"
-                     label="&views.label;"
-                     accesskey="&view.accesskey;">
-        <menupopup id="viewMenuPopup">
-<!--
-          <menuitem id="viewDetails"
-                    type="radio"
-#ifdef MACOSX
-                    label="&view.detailsMacOSX.label;"
+#ifdef XP_MACOSX
+        <toolbarbutton type="menu" class="tabbable"
+              onpopupshowing="document.getElementById('placeContent').focus()"
 #else
-                    label="&view.details.label;"
+      <menubar id="placesMenu" chromedir="&locale.dir;">
+        <menu accesskey="&organize.accesskey;" class="menu-iconic"
 #endif
-                    accesskey="&view.details.accesskey;">
-          </menuitem>
+              id="organizeButton" label="&organize.label;">
+          <menupopup id="organizeButtonPopup">
+            <menuitem id="newbookmark"
+                      command="placesCmd_new:bookmark"
+                      label="&cmd.new_bookmark.label;"
+                      accesskey="&cmd.new_bookmark.accesskey;"/>
+            <menuitem id="newfolder"
+                      command="placesCmd_new:folder"
+                      label="&cmd.new_folder.label;"
+                      accesskey="&cmd.new_folder.accesskey;"/>
+            <menuitem id="newseparator"
+                      command="placesCmd_new:separator"
+                      label="&cmd.new_separator.label;"
+                      accesskey="&cmd.new_separator.accesskey;"/>
 
-          <menuseparator id="addonsSeparator"/>
+#ifndef XP_MACOSX
+            <menuseparator id="orgCutSeparator"/>
 
-          <menuitem id="viewAddons"
-                    command=""
-                    label="&view.addons.label;"
-                    accesskey="&view.addons.label;"/>
-          <menuseparator id="sortingSeparator"/>
--->
+            <menuitem id="orgCut"
+                      command="cmd_cut"
+                      label="&cutCmd.label;"
+                      key="key_cut"
+                      accesskey="&cutCmd.accesskey;"
+                      selection="separator|link|folder|mixed"/>
+            <menuitem id="orgCopy"
+                      command="cmd_copy"
+                      label="&copyCmd.label;"
+                      key="key_copy"
+                      accesskey="&copyCmd.accesskey;"
+                      selection="separator|link|folder|mixed"/>
+            <menuitem id="orgPaste"
+                      command="cmd_paste"
+                      label="&pasteCmd.label;"
+                      key="key_paste"
+                      accesskey="&pasteCmd.accesskey;"
+                      selection="mutable"/>
+            <menuitem id="orgUndo"
+                      command="cmd_undo"
+                      label="&undoCmd.label;"
+                      key="key_undo"
+                      accesskey="&undoCmd.accesskey;"/>
+            <menuitem id="orgRedo"
+                      command="cmd_redo"
+                      label="&redoCmd.label;"
+                      key="key_redo"
+                      accesskey="&redoCmd.accesskey;"/>
 
-          <menu id="viewColumns" 
-                label="&view.columns.label;" accesskey="&view.columns.accesskey;">
-            <menupopup onpopupshowing="ViewMenu.fillWithColumns(event, null, null, 'checkbox', null);"
-                       oncommand="ViewMenu.showHideColumn(event.target); event.stopPropagation();"/>
-          </menu>
+            <menuseparator id="selectAllSeparator"/>
+            
+            <menuitem id="orgSelectAll"
+                      command="cmd_selectAll"
+                      label="&selectAllCmd.label;"
+                      key="key_selectAll"
+                      accesskey="&selectAllCmd.accesskey;"/>
 
-          <menu id="viewSort" label="&view.sort.label;"
-                accesskey="&view.sort.accesskey;">
-            <menupopup onpopupshowing="ViewMenu.populateSortMenu(event);"
-                       oncommand="ViewMenu.setSortColumn(event.target.column, null);">
-              <menuitem id="viewUnsorted" type="radio" name="columns" 
-                        label="&view.unsorted.label;" accesskey="&view.unsorted.accesskey;"
-                        oncommand="ViewMenu.setSortColumn(null, null);"/>
-              <menuseparator id="directionSeparator"/>
-              <menuitem id="viewSortAscending" type="radio" name="direction" 
-                        label="&view.sortAscending.label;" accesskey="&view.sortAscending.accesskey;"
-                        oncommand="ViewMenu.setSortColumn(null, 'ascending'); event.stopPropagation();"/>
-              <menuitem id="viewSortDescending" type="radio" name="direction" 
-                        label="&view.sortDescending.label;" accesskey="&view.sortDescending.accesskey;"
-                        oncommand="ViewMenu.setSortColumn(null, 'descending'); event.stopPropagation();"/>
-            </menupopup>
-          </menu>
+#endif
+            <menuseparator id="orgMoveSeparator"/>
+            <menuitem id="orgMoveBookmarks"
+                      command="placesCmd_moveBookmarks"
+                      label="&cmd.moveBookmarks.label;"
+                      accesskey="&cmd.moveBookmarks.accesskey;"/>
+            <menuitem id="orgDelete"
+                      command="cmd_delete"
+                      label="&deleteCmd.label;"
+                      key="key_delete"
+                      accesskey="&deleteCmd.accesskey;"/>
+#ifndef XP_MACOSX
+            <menuseparator id="orgCloseSeparator"/>
+
+            <menuitem id="orgClose"
+                      key="placesKey_close" 
+                      label="&file.close.label;"
+                      accesskey="&file.close.accesskey;" 
+                      oncommand="close();"/>
+#endif
+          </menupopup>
+#ifdef XP_MACOSX
+        </toolbarbutton>
+        <toolbarbutton type="menu" class="tabbable"
+#else
+        </menu>
+        <menu accesskey="&views.accesskey;" class="menu-iconic"
+#endif
+              id="viewMenu" label="&views.label;">
+          <menupopup id="viewMenuPopup">
 <!--
-          <menuseparator id="groupingSeparator" observes="placesBC_grouping:separator"/>
+            <menuitem id="viewDetails"
+                      type="radio"
+#ifdef MACOSX
+                      label="&view.detailsMacOSX.label;"
+#else
+                      label="&view.details.label;"
+#endif
+                      accesskey="&view.details.accesskey;">
+            </menuitem>
 
-          <menuitem id="viewGroupNone" type="radio" name="group"
-                    observes="placesBC_grouping:off"/>
-          <menuitem id="viewGroupGroup" type="radio" name="group"
-                    observes="placesBC_grouping:on"/>
+            <menuseparator id="addonsSeparator"/>
+
+            <menuitem id="viewAddons"
+                      command=""
+                      label="&view.addons.label;"
+                      accesskey="&view.addons.label;"/>
+            <menuseparator id="sortingSeparator"/>
 -->
-        </menupopup>
-      </toolbarbutton>
 
-      <toolbarbutton id="maintenanceButton" style="min-width:0px !important;"
-                     type="menu" label="&maintenance.label;">
-        <menupopup id="maintenanceButtonPopup">
-          <menuitem id="fileImport"
-                    command="OrganizerCommand_import"
-                    label="&cmd.import.label;"
-                    accesskey="&cmd.import.accesskey;"/>
-          <menuitem id="fileExport"
-                    command="OrganizerCommand_export"
-                    label="&cmd.export.label;"
-                    accesskey="&cmd.export.accesskey;"/>
-          <menuseparator/>
-          <menuitem id="backupBookmarks"
-                    command="OrganizerCommand_backup"
-                    label="&cmd.backup.label;"
-                    accesskey="&cmd.backup.accesskey;"/>
-          <menu id="fileRestoreMenu" label="&cmd.restore.label;"
-                    accesskey="&cmd.restore.accesskey;">
-            <menupopup id="fileRestorePopup" onpopupshowing="PlacesOrganizer.populateRestoreMenu();">
-              <menuitem id="restoreFromFile"
-                        command="OrganizerCommand_restoreFromFile"
-                        label="&cmd.restoreFromFile.label;"
-                        accesskey="&cmd.restoreFromFile.accesskey;"/>
-            </menupopup>
-          </menu>
-        </menupopup>
-      </toolbarbutton>
+            <menu id="viewColumns" 
+                  label="&view.columns.label;" accesskey="&view.columns.accesskey;">
+              <menupopup onpopupshowing="ViewMenu.fillWithColumns(event, null, null, 'checkbox', null);"
+                         oncommand="ViewMenu.showHideColumn(event.target); event.stopPropagation();"/>
+            </menu>
+
+            <menu id="viewSort" label="&view.sort.label;"
+                  accesskey="&view.sort.accesskey;">
+              <menupopup onpopupshowing="ViewMenu.populateSortMenu(event);"
+                         oncommand="ViewMenu.setSortColumn(event.target.column, null);">
+                <menuitem id="viewUnsorted" type="radio" name="columns" 
+                          label="&view.unsorted.label;" accesskey="&view.unsorted.accesskey;"
+                          oncommand="ViewMenu.setSortColumn(null, null);"/>
+                <menuseparator id="directionSeparator"/>
+                <menuitem id="viewSortAscending" type="radio" name="direction" 
+                          label="&view.sortAscending.label;" accesskey="&view.sortAscending.accesskey;"
+                          oncommand="ViewMenu.setSortColumn(null, 'ascending'); event.stopPropagation();"/>
+                <menuitem id="viewSortDescending" type="radio" name="direction" 
+                          label="&view.sortDescending.label;" accesskey="&view.sortDescending.accesskey;"
+                          oncommand="ViewMenu.setSortColumn(null, 'descending'); event.stopPropagation();"/>
+              </menupopup>
+            </menu>
+<!--
+            <menuseparator id="groupingSeparator" observes="placesBC_grouping:separator"/>
+
+            <menuitem id="viewGroupNone" type="radio" name="group"
+                      observes="placesBC_grouping:off"/>
+            <menuitem id="viewGroupGroup" type="radio" name="group"
+                      observes="placesBC_grouping:on"/>
+-->
+          </menupopup>
+#ifdef XP_MACOSX
+        </toolbarbutton>
+        <toolbarbutton type="menu" class="tabbable"
+#else
+        </menu>
+        <menu accesskey="&maintenance.accesskey;" class="menu-iconic"
+#endif
+              id="maintenanceButton" label="&maintenance.label;">
+          <menupopup id="maintenanceButtonPopup">
+            <menuitem id="fileImport"
+                      command="OrganizerCommand_import"
+                      label="&cmd.import.label;"
+                      accesskey="&cmd.import.accesskey;"/>
+            <menuitem id="fileExport"
+                      command="OrganizerCommand_export"
+                      label="&cmd.export.label;"
+                      accesskey="&cmd.export.accesskey;"/>
+            <menuseparator/>
+            <menuitem id="backupBookmarks"
+                      command="OrganizerCommand_backup"
+                      label="&cmd.backup.label;"
+                      accesskey="&cmd.backup.accesskey;"/>
+            <menu id="fileRestoreMenu" label="&cmd.restore.label;"
+                      accesskey="&cmd.restore.accesskey;">
+              <menupopup id="fileRestorePopup" onpopupshowing="PlacesOrganizer.populateRestoreMenu();">
+                <menuitem id="restoreFromFile"
+                          command="OrganizerCommand_restoreFromFile"
+                          label="&cmd.restoreFromFile.label;"
+                          accesskey="&cmd.restoreFromFile.accesskey;"/>
+              </menupopup>
+            </menu>
+          </menupopup>
+#ifdef XP_MACOSX
+        </toolbarbutton>
+#else
+        </menu>
+      </menubar>
+#endif
 
       <spacer flex="1"/>
 
