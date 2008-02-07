@@ -733,6 +733,7 @@ write_type(IDL_tree type_tree, gboolean is_out, FILE *outfile)
 #define ATTR_IDENT(tree) (IDL_IDENT(IDL_LIST(IDL_ATTR_DCL(tree).simple_declarations).data))
 #define ATTR_TYPE_DECL(tree) (IDL_ATTR_DCL(tree).param_type_spec)
 #define ATTR_TYPE(tree) (IDL_NODE_TYPE(ATTR_TYPE_DECL(tree)))
+#define ATTR_DECLS(tree) (IDL_LIST(IDL_ATTR_DCL(tree).simple_declarations).data)
 
 /*
  *  AS_DECL writes 'NS_IMETHOD foo(string bar, long sil)'
@@ -744,15 +745,24 @@ write_attr_accessor(IDL_tree attr_tree, FILE * outfile,
                     gboolean getter, int mode, const char *className)
 {
     char *attrname = ATTR_IDENT(attr_tree).str;
+    const char *binaryname;
 
     if (mode == AS_DECL) {
         fputs("NS_IMETHOD ", outfile);
     } else if (mode == AS_IMPL) {
         fprintf(outfile, "NS_IMETHODIMP %s::", className);
     }
-    fprintf(outfile, "%cet%c%s(",
-            getter ? 'G' : 'S',
-            toupper(*attrname), attrname + 1);
+    fprintf(outfile, "%cet",
+            getter ? 'G' : 'S');
+    binaryname = IDL_tree_property_get(ATTR_DECLS(attr_tree), "binaryname");
+    if (binaryname) {
+        fprintf(outfile, "%s(",
+                binaryname);
+    } else {
+        fprintf(outfile, "%c%s(",
+                toupper(*attrname),
+                attrname + 1);
+    }
     if (mode == AS_DECL || mode == AS_IMPL) {
         /* Setters for string, wstring, nsid, domstring, utf8string, 
          * cstring and astring get const. 
@@ -1009,6 +1019,7 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, int mode,
     gboolean op_notxpcom =
         (IDL_tree_property_get(op->ident, "notxpcom") != NULL);
     const char *name;
+    const char *binaryname;
     IDL_tree iter;
 
     if (mode == AS_DECL) {
@@ -1035,7 +1046,11 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, int mode,
     }
     name = IDL_IDENT(op->ident).str;
     if (mode == AS_IMPL) {
-        fprintf(outfile, "%s::%c%s(", className, toupper(*name), name + 1);
+        fprintf(outfile, "%s::", className);
+    }
+    binaryname = IDL_tree_property_get(op->ident, "binaryname");
+    if (binaryname) {
+        fprintf(outfile, "%s(", binaryname);
     } else {
         fprintf(outfile, "%c%s(", toupper(*name), name + 1);
     }
