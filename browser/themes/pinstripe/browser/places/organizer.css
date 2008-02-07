@@ -287,10 +287,6 @@
   -moz-padding-start: 14px;
 }
 
-#searchFilter[empty="true"] {
-  color: GrayText;
-}
-
 #searchFilter > .textbox-input-box {
   padding: 2px;
   border-left: 2px solid transparent;

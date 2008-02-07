@@ -118,10 +118,6 @@
   padding: 0px;
 }
 
-#searchFilter[empty="true"] {
-  color: GrayText;
-}
-
 #searchFilter .textbox-input-box {
   padding: 2px 2px 3px 4px;
 }

@@ -794,22 +794,10 @@ var PlacesSearchBox = {
    *          The title of the current collection.
    */
   updateCollectionTitle: function PSB_updateCollectionTitle(title) {
-    if (title) {
-      this.searchFilter.grayText =
-        PlacesUtils.getFormattedString("searchCurrentDefault", [title]);
-    }
-    else
-      this.searchFilter.grayText = PlacesUtils.getString("searchByDefault");
-
-    this.syncGrayText();
-  },
-
-  /**
-   * Updates the display with the current gray text.
-   */
-  syncGrayText: function PSB_syncGrayText() {
-    this.searchFilter.value = this.searchFilter.grayText;
-    this.searchFilter.setAttribute("label", this.searchFilter.grayText);
+    this.searchFilter.emptyText =
+      title ?
+      PlacesUtils.getFormattedString("searchCurrentDefault", [title]) :
+      PlacesUtils.getString("searchByDefault");
   },
 
   /**
@@ -840,10 +828,7 @@ var PlacesSearchBox = {
    * Set up the gray text in the search bar as the Places View loads.
    */
   init: function PSB_init() {
-    var searchFilter = this.searchFilter;
-    searchFilter.grayText = PlacesUtils.getString("searchByDefault");
-    searchFilter.setAttribute("label", searchFilter.grayText);
-    searchFilter.reset();
+    this.updateCollectionTitle();
   },
 
   /**
