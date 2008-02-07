@@ -1344,10 +1344,10 @@ nsTableOuterFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex,
 {
   NS_ASSERTION(mInnerTableFrame, "no inner table frame yet?");
   
-  mInnerTableFrame->GetCellDataAt(aRowIndex, aColIndex, aCell,
-                                  aStartRowIndex, aStartColIndex, 
-                                  aRowSpan, aColSpan, aActualRowSpan,
-                                  aActualColSpan, aIsSelected);
+  return mInnerTableFrame->GetCellDataAt(aRowIndex, aColIndex, aCell,
+                                        aStartRowIndex, aStartColIndex, 
+                                        aRowSpan, aColSpan, aActualRowSpan,
+                                        aActualColSpan, aIsSelected);
 }
 
 NS_IMETHODIMP
@@ -1355,7 +1355,7 @@ nsTableOuterFrame::GetTableSize(PRInt32& aRowCount, PRInt32& aColCount)
 {
   NS_ASSERTION(mInnerTableFrame, "no inner table frame yet?");
 
-  mInnerTableFrame->GetTableSize(aRowCount, aColCount);
+  return mInnerTableFrame->GetTableSize(aRowCount, aColCount);
 }
 
 NS_IMETHODIMP
