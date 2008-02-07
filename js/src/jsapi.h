@@ -186,6 +186,10 @@ JS_BEGIN_EXTERN_C
                                            note that bit #15 is used internally
                                            to flag interpreted functions */
 
+#define JSFUN_STUB_GSOPS      0x1000    /* use JS_PropertyStub getter/setter
+                                           instead of defaulting to class gsops
+                                           for property holding function */
+
 #endif
 
 /*
@@ -1460,7 +1464,8 @@ struct JSFunctionSpec {
  * frame when activated.
  */
 #define JS_FN(name,fastcall,minargs,nargs,flags)                              \
-    {name, (JSNative)(fastcall), nargs, (flags) | JSFUN_FAST_NATIVE,          \
+    {name, (JSNative)(fastcall), nargs,                                       \
+     (flags) | JSFUN_FAST_NATIVE | JSFUN_STUB_GSOPS,                          \
      (minargs) << 16}
 
 extern JS_PUBLIC_API(JSObject *)
