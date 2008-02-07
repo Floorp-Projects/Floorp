@@ -332,7 +332,7 @@
           <hbox id="urlbar-icons">
             <button type="menu"
                     style="-moz-user-focus: none"
-                    class="plain"
+                    class="plain urlbar-icon"
                     id="feed-button"
                     chromedir="&locale.dir;"
                     onclick="return FeedHandler.onFeedButtonClick(event);">
@@ -344,11 +344,14 @@
 #ifdef MOZ_SAFE_BROWSING
             <image id="safebrowsing-urlbar-icon" tooltiptext="&safeb.urlbaricon.tooltip;"
                    level="safe"
+                   class="urlbar-icon"
                    onclick="goDoCommand('safebrowsing-show-warning')"/>
 #endif
           <image id="star-button"
+                 class="urlbar-icon"
                  onclick="PlacesStarButton.onClick(event);"/>
           <image id="go-button" chromedir="&locale.dir;"
+                 class="urlbar-icon"
                  tooltiptext="&goEndCap.tooltip;"
                  onclick="handleURLBarCommand(event);"/>
           </hbox>
