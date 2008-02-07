@@ -1000,7 +1000,6 @@ function buildDownloadList()
   // Clear out values before using them
   clearTimeout(gBuilder);
   gStmt.reset();
-  gSearchTerms = "";
 
   // Clear the list before adding items by replacing with a shallow copy
   let (empty = gDownloadsView.cloneNode(false)) {
@@ -1008,9 +1007,7 @@ function buildDownloadList()
     gDownloadsView = empty;
   }
 
-  // If the search box isn't empty, trim the search terms
-  if (!gSearchBox.hasAttribute("empty"))
-    gSearchTerms = gSearchBox.value.replace(/^\s+|\s+$/, "");
+  gSearchTerms = gSearchBox.value.replace(/^\s+|\s+$/g, "");
 
   let like = "%" + gStmt.escapeStringForLIKE(gSearchTerms, "/") + "%";
 
@@ -1152,20 +1149,6 @@ function stripeifyList(aItem)
   while (aItem) {
     flipFrom(aItem.previousSibling);
     aItem = aItem.nextSibling;
-  }
-}
-
-function onSearchboxBlur() {
-  if (gSearchBox.value == "") {
-    gSearchBox.setAttribute("empty", "true");
-    gSearchBox.value = gSearchBox.getAttribute("defaultValue");
-  }
-}
-
-function onSearchboxFocus() {
-  if (gSearchBox.hasAttribute("empty")) {
-    gSearchBox.value = "";
-    gSearchBox.removeAttribute("empty");
   }
 }
 
