@@ -72,8 +72,8 @@ const kDownloadProperties =
   "chrome://mozapps/locale/downloads/downloads.properties";
 
 // These strings will be converted to the corresponding ones from the string
-// bundle on load
-let gStr = {
+// bundle on use
+let kStrings = {
   statusFormat: "statusFormat2",
   transferSameUnits: "transferSameUnits",
   transferDiffUnits: "transferDiffUnits",
@@ -90,19 +90,55 @@ let gStr = {
   timeUnits: ["seconds", "minutes", "hours", "days"],
 };
 
-// Convert strings to those in the string bundle
-let (getStr = Cc["@mozilla.org/intl/stringbundle;1"].
-              getService(Ci.nsIStringBundleService).
-              createBundle(kDownloadProperties).
-              GetStringFromName) {
-  for (let [name, value] in Iterator(gStr)) {
-    try {
-      gStr[name] = typeof value == "string" ? getStr(value) : value.map(getStr);
-    } catch (e) {
-      log(["Couldn't get string '", name, "' from property '", value, "'"]);
-    }
-  }
-}
+// This object will lazily load the strings defined in kStrings
+let gStr = {
+  /**
+   * Initialize lazy string getters
+   */
+  _init: function()
+  {
+    // Make each "name" a lazy-loading string that knows how to load itself. We
+    // need to locally scope name and value to keep them around for the getter.
+    for (let [name, value] in Iterator(kStrings))
+      let ([n, v] = [name, value])
+        gStr.__defineGetter__(n, function() gStr._getStr(n, v));
+  },
+
+  /**
+   * Convert strings to those in the string bundle. This lazily loads the
+   * string bundle *once* only when used the first time.
+   */
+  get _getStr()
+  {
+    // Delete the getter to be overwritten
+    delete gStr._getStr;
+
+    // Lazily load the bundle into the closure on first call to _getStr
+    let getStr = Cc["@mozilla.org/intl/stringbundle;1"].
+                 getService(Ci.nsIStringBundleService).
+                 createBundle(kDownloadProperties).
+                 GetStringFromName;
+
+    // _getStr is a function that sets string "name" to stringbundle's "value"
+    return gStr._getStr = function(name, value) {
+      // Delete the getter to be overwritten
+      delete gStr[name];
+
+      try {
+        // "name" is a string or array of the stringbundle-loaded "value"
+        return gStr[name] = typeof value == "string" ?
+                            getStr(value) :
+                            value.map(getStr);
+      } catch (e) {
+        log(["Couldn't get string '", name, "' from property '", value, "'"]);
+        // Don't return anything (undefined), and because we deleted ourselves,
+        // future accesses will also be undefined
+      }
+    };
+  },
+};
+// Initialize the lazy string getters!
+gStr._init();
 
 let DownloadUtils = {
   /**

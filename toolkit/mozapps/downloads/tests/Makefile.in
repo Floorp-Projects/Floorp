@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #	  Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+#   Edward Lee <edward.lee@engineering.uiuc.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,6 +42,12 @@ topsrcdir      = @top_srcdir@
 srcdir         = @srcdir@
 VPATH          = @srcdir@
 include $(DEPTH)/config/autoconf.mk
+
+MODULE = test_downloads
+
+XPCSHELL_TESTS = \
+  unit \
+  $(NULL)
 
 DIRS += browser
 
