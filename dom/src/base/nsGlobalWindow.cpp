@@ -5046,15 +5046,10 @@ nsGlobalWindow::CallerInnerWindow()
   return static_cast<nsGlobalWindow*>(win.get());
 }
 
-/* I hate you, Windows. */
-#ifdef PostMessage
-#undef PostMessage
-#endif
-
 NS_IMETHODIMP
-nsGlobalWindow::PostMessage(const nsAString& aMessage)
+nsGlobalWindow::PostMessageMoz(const nsAString& aMessage)
 {
-  FORWARD_TO_INNER_CREATE(PostMessage, (aMessage));
+  FORWARD_TO_INNER_CREATE(PostMessageMoz, (aMessage));
 
   //
   // Window.postMessage is an intentional subversion of the same-origin policy.

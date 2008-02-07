@@ -44,13 +44,6 @@ interface nsIControllers;
 interface nsIDOMLocation;
 interface nsIVariant;
 
-%{C++
-/* I hate you, Windows. */
-#ifdef PostMessage
-#undef PostMessage
-#endif
-%}
-
 [scriptable, uuid(86f7b733-aff9-469a-9e8c-2996f7db2720)]
 interface nsIDOMWindowInternal : nsIDOMWindow2
 {
@@ -221,5 +214,5 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
    * 
    * See the WHATWG HTML5 specification, section 6.4, for more details.
    */
-  void postMessage(in DOMString message);
+  [binaryname(PostMessageMoz)] void postMessage(in DOMString message);
 };
