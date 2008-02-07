@@ -1056,6 +1056,15 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       // HIThemeSetFill is not available on 10.3
       CGContextSetRGBFillColor(cgContext, 1.0, 1.0, 1.0, 1.0);
       CGContextFillRect(cgContext, macRect);
+
+      // XUL textboxes set the native appearance on the containing box, while
+      // concrete focus is set on the html:input element within it. We can
+      // though, check the focused attribute of xul textboxes in this case.
+      if (aFrame->GetContent()->IsNodeOfType(nsINode::eXUL) &&
+          IsFocused(aFrame)) {
+        eventState |= NS_EVENT_STATE_FOCUS;
+      }
+
       DrawFrame(cgContext, kHIThemeFrameTextFieldSquare,
                 macRect, (IsDisabled(aFrame) || IsReadOnly(aFrame)), eventState);
       break;
