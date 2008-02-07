@@ -682,6 +682,39 @@ SessionStoreService.prototype = {
     this.restoreWindow(aWindow, "(" + aState + ")", aOverwrite);
   },
 
+  getTabState: function sss_getTabState(aTab) {
+    var tabState = this._collectTabData(aTab);
+    
+    var window = aTab.ownerDocument.defaultView;
+    this._updateTextAndScrollDataForTab(window, aTab.linkedBrowser, tabState);
+    
+    return this._toJSONString(tabState);
+  },
+
+  setTabState: function sss_setTabState(aTab, aState) {
+    var tabState = this._safeEval("(" + aState + ")");
+    if (!tabState.entries || !tabState.entries.length) {
+      Components.returnCode = Cr.NS_ERROR_INVALID_ARG;
+      return;
+    }
+    tabState._tab = aTab;
+    
+    var window = aTab.ownerDocument.defaultView;
+    this.restoreHistoryPrecursor(window, [tabState], 0, 0, 0);
+  },
+
+  duplicateTab: function sss_duplicateTab(aWindow, aTab) {
+    var tabState = this._collectTabData(aTab, true);
+    var sourceWindow = aTab.ownerDocument.defaultView;
+    this._updateTextAndScrollDataForTab(sourceWindow, aTab.linkedBrowser, tabState, true);
+    
+    var newTab = aWindow.getBrowser().addTab();
+    tabState._tab = newTab;
+    this.restoreHistoryPrecursor(aWindow, [tabState], 0, 0, 0);
+    
+    return newTab;
+  },
+
   getClosedTabCount: function sss_getClosedTabCount(aWindow) {
     if (!aWindow.__SSi && aWindow.__SS_dyingCache)
       return aWindow.__SS_dyingCache._closedTabs.length;
@@ -824,9 +857,11 @@ SessionStoreService.prototype = {
    * Collect data related to a single tab
    * @param aTab
    *        tabbrowser tab
+   * @param aFullData
+   *        always return privacy sensitive data (use with care)
    * @returns object
    */
-  _collectTabData: function sss_collectTabData(aTab) {
+  _collectTabData: function sss_collectTabData(aTab, aFullData) {
     var tabData = { entries: [], index: 0 };
     var browser = aTab.linkedBrowser;
     
@@ -844,7 +879,7 @@ SessionStoreService.prototype = {
     catch (ex) { } // this could happen if we catch a tab during (de)initialization
     
     if (history && browser.parentNode.__SS_data &&
-        browser.parentNode.__SS_data.entries[history.index]) {
+        browser.parentNode.__SS_data.entries[history.index] && !aFullData) {
       tabData = browser.parentNode.__SS_data;
       tabData.index = history.index + 1;
     }
@@ -854,11 +889,13 @@ SessionStoreService.prototype = {
 
       var startIndex = -1 < cap && cap < history.index ? history.index - cap : 0;
       for (var j = startIndex; j < history.count; j++)
-        tabData.entries.push(this._serializeHistoryEntry(history.getEntryAtIndex(j, false)));
-
+        tabData.entries.push(this._serializeHistoryEntry(history.getEntryAtIndex(j, false),
+                                                         aFullData));
       tabData.index = history.index - startIndex + 1;
 
-      browser.parentNode.__SS_data = tabData;
+      // make sure not to cache privacy sensitive data which shouldn't get out
+      if (!aFullData)
+        browser.parentNode.__SS_data = tabData;
     }
     else {
       tabData.entries[0] = { url: browser.currentURI.spec };
@@ -896,9 +933,11 @@ SessionStoreService.prototype = {
    * Used for data storage
    * @param aEntry
    *        nsISHEntry instance
+   * @param aFullData
+   *        always return privacy sensitive data (use with care)
    * @returns object
    */
-  _serializeHistoryEntry: function sss_serializeHistoryEntry(aEntry) {
+  _serializeHistoryEntry: function sss_serializeHistoryEntry(aEntry, aFullData) {
     var entry = { url: aEntry.URI.spec };
     
     if (aEntry.title && aEntry.title != entry.url) {
@@ -930,7 +969,8 @@ SessionStoreService.prototype = {
     
     try {
       var prefPostdata = this._prefBranch.getIntPref("sessionstore.postdata");
-      if (prefPostdata && aEntry.postData && this._checkPrivacyLevel(aEntry.URI.schemeIs("https"))) {
+      if (aEntry.postData && (aFullData ||
+            prefPostdata && this._checkPrivacyLevel(aEntry.URI.schemeIs("https")))) {
         aEntry.postData.QueryInterface(Ci.nsISeekableStream).
                         seek(Ci.nsISeekableStream.NS_SEEK_SET, 0);
         var stream = Cc["@mozilla.org/binaryinputstream;1"].
@@ -938,7 +978,7 @@ SessionStoreService.prototype = {
         stream.setInputStream(aEntry.postData);
         var postBytes = stream.readByteArray(stream.available());
         var postdata = String.fromCharCode.apply(null, postBytes);
-        if (prefPostdata == -1 ||
+        if (aFullData || prefPostdata == -1 ||
             postdata.replace(/^(Content-.*\r\n)+(\r\n)*/, "").length <=
               prefPostdata) {
           // We can stop doing base64 encoding once our serialization into JSON
@@ -985,7 +1025,7 @@ SessionStoreService.prototype = {
       for (var i = 0; i < aEntry.childCount; i++) {
         var child = aEntry.GetChildAt(i);
         if (child) {
-          entry.children.push(this._serializeHistoryEntry(child));
+          entry.children.push(this._serializeHistoryEntry(child), aFullData);
         }
         else { // to maintain the correct frame order, insert a dummy entry 
           entry.children.push({ url: "about:blank" });
@@ -1075,12 +1115,14 @@ SessionStoreService.prototype = {
    *        single browser reference
    * @param aTabData
    *        tabData object to add the information to
+   * @param aFullData
+   *        always return privacy sensitive data (use with care)
    */
   _updateTextAndScrollDataForTab:
-    function sss_updateTextAndScrollDataForTab(aWindow, aBrowser, aTabData) {
+    function sss_updateTextAndScrollDataForTab(aWindow, aBrowser, aTabData, aFullData) {
     var text = [];
     if (aBrowser.parentNode.__SS_text &&
-        this._checkPrivacyLevel(aBrowser.currentURI.schemeIs("https"))) {
+        (aFullData || this._checkPrivacyLevel(aBrowser.currentURI.schemeIs("https")))) {
       for (var ix = aBrowser.parentNode.__SS_text.length - 1; ix >= 0; ix--) {
         var data = aBrowser.parentNode.__SS_text[ix];
         if (!data.cache)
@@ -1097,8 +1139,11 @@ SessionStoreService.prototype = {
     else if (aTabData.text)
       delete aTabData.text;
     
-    this._updateTextAndScrollDataForFrame(aWindow, aBrowser.contentWindow,
-                                          aTabData.entries[aTabData.index - 1]);
+    var tabIndex = (aTabData.index || aTabData.entries.length) - 1;
+    // entry data needn't exist for tabs just initialized with an incomplete session state
+    if (aTabData.entries[tabIndex])
+      this._updateTextAndScrollDataForFrame(aWindow, aBrowser.contentWindow,
+                                            aTabData.entries[tabIndex], aFullData);
   },
 
   /**
@@ -1110,18 +1155,21 @@ SessionStoreService.prototype = {
    *        frame reference
    * @param aData
    *        part of a tabData object to add the information to
+   * @param aFullData
+   *        always return privacy sensitive data (use with care)
    */
   _updateTextAndScrollDataForFrame:
-    function sss_updateTextAndScrollDataForFrame(aWindow, aContent, aData) {
+    function sss_updateTextAndScrollDataForFrame(aWindow, aContent, aData, aFullData) {
     for (var i = 0; i < aContent.frames.length; i++) {
       if (aData.children && aData.children[i])
-        this._updateTextAndScrollDataForFrame(aWindow, aContent.frames[i], aData.children[i]);
+        this._updateTextAndScrollDataForFrame(aWindow, aContent.frames[i], aData.children[i], aFullData);
     }
     // designMode is undefined e.g. for XUL documents (as about:config)
     var isHTTPS = this._getURIFromString((aContent.parent || aContent).
                                          document.location.href).schemeIs("https");
-    if ((aContent.document.designMode || "") == "on" && this._checkPrivacyLevel(isHTTPS)) {
-      if (aData.innerHTML === undefined) {
+    if ((aContent.document.designMode || "") == "on" &&
+        (aFullData || this._checkPrivacyLevel(isHTTPS))) {
+      if (aData.innerHTML === undefined && !aFullData) {
         // we get no "input" events from iframes - listen for keypress here
         var _this = this;
         aContent.addEventListener("keypress", function(aEvent) {
@@ -1410,6 +1458,8 @@ SessionStoreService.prototype = {
    *        Array of tab references
    * @param aSelectTab
    *        Index of selected tab
+   * @param aIx
+   *        Index of the next tab to check readyness for
    * @param aCount
    *        Counter for number of times delaying b/c browser or history aren't ready
    */
