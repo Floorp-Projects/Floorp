@@ -115,10 +115,10 @@ TestRunner.runNextTest = function() {
         $("current-test").innerHTML = "<b>Finished</b>";
         TestRunner._makeIframe("about:blank");
         if (TestRunner.logEnabled) {
-            TestRunner.logger.log("SimpleTest FINISHED");
             TestRunner.logger.log("Passed: " + $("pass-count").innerHTML);
             TestRunner.logger.log("Failed: " + $("fail-count").innerHTML);
             TestRunner.logger.log("Todo:   " + $("todo-count").innerHTML);
+            TestRunner.logger.log("SimpleTest FINISHED");
         }
         if (TestRunner.onComplete)
             TestRunner.onComplete();
