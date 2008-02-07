@@ -566,18 +566,22 @@ LoginManagerPrompter.prototype = {
             // upon submission of credentials. We want to put the notification
             // bar in the opener window if this seems to be happening.
             if (notifyWindow.opener) {
-                var chromeWin = notifyWindow
+                var webnav = notifyWindow
                                     .QueryInterface(Ci.nsIInterfaceRequestor)
-                                    .getInterface(Ci.nsIWebNavigation)
+                                    .getInterface(Ci.nsIWebNavigation);
+                var chromeWin = webnav
                                     .QueryInterface(Ci.nsIDocShellTreeItem)
                                     .rootTreeItem
                                     .QueryInterface(Ci.nsIInterfaceRequestor)
                                     .getInterface(Ci.nsIDOMWindow);
                 var chromeDoc = chromeWin.document.documentElement;
 
-                // Check to see if the current window was opened with
-                // chrome disabled, and if so use the opener window.
-                if (chromeDoc.getAttribute("chromehidden")) {
+                // Check to see if the current window was opened with chrome
+                // disabled, and if so use the opener window. But if the window
+                // has been used to visit other pages (ie, has a history),
+                // assume it'll stick around and *don't* use the opener.
+                if (chromeDoc.getAttribute("chromehidden") &&
+                    webnav.sessionHistory.count == 1) {
                     this.log("Using opener window for notification bar.");
                     notifyWindow = notifyWindow.opener;
                 }
