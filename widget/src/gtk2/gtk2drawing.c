@@ -716,6 +716,24 @@ moz_gtk_splitter_get_metrics(gint orientation, gint* size)
     return MOZ_GTK_SUCCESS;
 }
 
+gint
+moz_gtk_button_get_inner_border(GtkWidget* widget, GtkBorder* inner_border)
+{
+    static const GtkBorder default_inner_border = { 1, 1, 1, 1 };
+    GtkBorder *tmp_border;
+
+    gtk_widget_style_get (widget, "inner-border", &tmp_border, NULL);
+
+    if (tmp_border) {
+        *inner_border = *tmp_border;
+        gtk_border_free(tmp_border);
+    }
+    else
+        *inner_border = default_inner_border;
+
+    return MOZ_GTK_SUCCESS;
+}
+
 static gint
 moz_gtk_toggle_paint(GdkDrawable* drawable, GdkRectangle* rect,
                      GdkRectangle* cliprect, GtkWidgetState* state,
@@ -2197,8 +2215,7 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
     switch (widget) {
     case MOZ_GTK_BUTTON:
         {
-            /* Constant in gtkbutton.c */
-            static const gint child_spacing = 1;
+            GtkBorder inner_border;
             gboolean interior_focus;
             gint focus_width, focus_pad;
 
@@ -2209,10 +2226,11 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
                become too big and stuff the layout. */
             if (!inhtml) {
                 moz_gtk_widget_get_focus(gButtonWidget, &interior_focus, &focus_width, &focus_pad);
-                *left += focus_width + focus_pad + child_spacing;
-                *right += focus_width + focus_pad + child_spacing;
-                *top += focus_width + focus_pad + child_spacing;
-                *bottom += focus_width + focus_pad + child_spacing;
+                moz_gtk_button_get_inner_border(gButtonWidget, &inner_border);
+                *left += focus_width + focus_pad + inner_border.left;
+                *right += focus_width + focus_pad + inner_border.right;
+                *top += focus_width + focus_pad + inner_border.top;
+                *bottom += focus_width + focus_pad + inner_border.bottom;
             }
 
             *left += gButtonWidget->style->xthickness;
@@ -2242,19 +2260,19 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
              * That is why the following code is the same as for MOZ_GTK_BUTTON.  
              * */
 
-            /* Constant in gtkbutton.c */
-            static const gint child_spacing = 1;
+            GtkBorder inner_border;
             gboolean interior_focus;
             gint focus_width, focus_pad;
 
             ensure_tree_header_cell_widget();
             *left = *top = *right = *bottom = GTK_CONTAINER(gTreeHeaderCellWidget)->border_width;
 
-            moz_gtk_widget_get_focus(gTreeHeaderCellWidget, &interior_focus, &focus_width, &focus_pad);     
-            *left += focus_width + focus_pad;
-            *right += focus_width + focus_pad;
-            *top += focus_width + focus_pad + child_spacing;
-            *bottom += focus_width + focus_pad + child_spacing;
+            moz_gtk_widget_get_focus(gTreeHeaderCellWidget, &interior_focus, &focus_width, &focus_pad);
+            moz_gtk_button_get_inner_border(gTreeHeaderCellWidget, &inner_border);
+            *left += focus_width + focus_pad + inner_border.left;
+            *right += focus_width + focus_pad + inner_border.right;
+            *top += focus_width + focus_pad + inner_border.top;
+            *bottom += focus_width + focus_pad + inner_border.bottom;
             
             *left += gTreeHeaderCellWidget->style->xthickness;
             *right += gTreeHeaderCellWidget->style->xthickness;

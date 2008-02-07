@@ -289,6 +289,16 @@ moz_gtk_checkbox_get_metrics(gint* indicator_size, gint* indicator_spacing);
 gint
 moz_gtk_radio_get_metrics(gint* indicator_size, gint* indicator_spacing);
 
+/**
+ * Get the inner-border value for a GtkButton widget (button or tree header)
+ * widget:             [IN]  the widget to get the border value for 
+ * inner_border:       [OUT] the inner border
+ *
+ * returns:   MOZ_GTK_SUCCESS if there was no error, an error code otherwise
+ */
+gint
+moz_gtk_button_get_inner_border(GtkWidget* widget, GtkBorder* inner_border);
+
 /** Get the focus metrics for a treeheadercell, button, checkbox, or radio button.
  * widget:             [IN]  the widget to get the focus metrics for    
  * interior_focus:     [OUT] whether the focus is drawn around the
