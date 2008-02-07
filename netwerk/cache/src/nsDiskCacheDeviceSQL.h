@@ -143,6 +143,9 @@ public:
 
   nsresult                ClearKeysOwnedByDomain(const char *clientID,
                                                  const nsACString &ownerDomain);
+  nsresult                GetDomainUsage(const char *clientID,
+                                         const nsACString &ownerDomain,
+                                         PRUint32 *usage);
   nsresult                EvictUnownedEntries(const char *clientID);
 
   nsresult                CreateTemporaryClientID(nsACString &clientID);
@@ -179,6 +182,7 @@ private:
   nsRefPtr<nsOfflineCacheEvictionFunction> mEvictionFunction;
 
   nsCOMPtr<mozIStorageStatement>  mStatement_CacheSize;
+  nsCOMPtr<mozIStorageStatement>  mStatement_DomainSize;
   nsCOMPtr<mozIStorageStatement>  mStatement_EntryCount;
   nsCOMPtr<mozIStorageStatement>  mStatement_UpdateEntry;
   nsCOMPtr<mozIStorageStatement>  mStatement_UpdateEntrySize;
