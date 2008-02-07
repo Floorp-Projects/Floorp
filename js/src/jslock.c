@@ -51,6 +51,7 @@
 #include "jscntxt.h"
 #include "jsdtoa.h"
 #include "jsgc.h"
+#include "jsfun.h"      /* for VALUE_IS_FUNCTION used by *_WRITE_BARRIER */
 #include "jslock.h"
 #include "jsscope.h"
 #include "jsstr.h"
@@ -676,7 +677,7 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     if (CX_THREAD_IS_RUNNING_GC(cx) ||
         (SCOPE_IS_SEALED(scope) && scope->object == obj) ||
         (scope->ownercx && ClaimScope(scope, cx))) {
-        STOBJ_SET_SLOT(obj, slot, v);
+        LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, v);
         return;
     }
 
@@ -686,7 +687,7 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     JS_ASSERT(CURRENT_THREAD_IS_ME(me));
     if (js_CompareAndSwap(&tl->owner, 0, me)) {
         if (scope == OBJ_SCOPE(obj)) {
-            STOBJ_SET_SLOT(obj, slot, v);
+            LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, v);
             if (!js_CompareAndSwap(&tl->owner, me, 0)) {
                 /* Assert that scope locks never revert to flyweight. */
                 JS_ASSERT(scope->ownercx != cx);
@@ -700,20 +701,16 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
             js_Dequeue(tl);
     }
     else if (Thin_RemoveWait(ReadWord(tl->owner)) == me) {
-        STOBJ_SET_SLOT(obj, slot, v);
+        LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, v);
         return;
     }
 #endif
 
     js_LockObj(cx, obj);
-    STOBJ_SET_SLOT(obj, slot, v);
+    LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, v);
 
     /*
-     * Same drill as above, in js_GetSlotThreadSafe.  Note that we cannot
-     * assume obj has its own mutable scope (where scope->object == obj) yet,
-     * because OBJ_SET_SLOT is called for the "universal", common slots such
-     * as JSSLOT_PROTO and JSSLOT_PARENT, without a prior js_GetMutableScope.
-     * See also the JSPROP_SHARED attribute and its usage.
+     * Same drill as above, in js_GetSlotThreadSafe.
      */
     scope = OBJ_SCOPE(obj);
     if (scope->ownercx != cx)

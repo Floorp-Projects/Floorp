@@ -93,6 +93,7 @@ typedef struct JSGenerator          JSGenerator;
 typedef struct JSParseContext       JSParseContext;
 typedef struct JSParsedObjectBox    JSParsedObjectBox;
 typedef struct JSParseNode          JSParseNode;
+typedef struct JSPropCacheEntry     JSPropCacheEntry;
 typedef struct JSSharpObjectMap     JSSharpObjectMap;
 typedef struct JSTempValueRooter    JSTempValueRooter;
 typedef struct JSThread             JSThread;

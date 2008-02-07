@@ -1293,6 +1293,9 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 
     if (xdr->mode == JSXDR_DECODE) {
         *objp = fun->object;
+#ifdef CHECK_SCRIPT_OWNER
+        fun->u.i.script->owner = NULL;
+#endif
         js_CallNewScriptHook(cx, fun->u.i.script, fun);
     }
 
@@ -1918,6 +1921,9 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     if (!fun->u.i.script)
         goto bad;
     fun->u.i.script->code[0] = JSOP_STOP;
+#ifdef CHECK_SCRIPT_OWNER
+    fun->u.i.script->owner = NULL;
+#endif
     return proto;
 
 bad:
@@ -2067,13 +2073,15 @@ js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative native,
                   uintN nargs, uintN attrs)
 {
     JSFunction *fun;
+    JSPropertyOp gsop;
 
     fun = js_NewFunction(cx, NULL, native, nargs, attrs, obj, atom);
     if (!fun)
         return NULL;
+    gsop = (attrs & JSFUN_STUB_GSOPS) ? JS_PropertyStub : NULL;
     if (!OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(atom),
                              OBJECT_TO_JSVAL(fun->object),
-                             NULL, NULL,
+                             gsop, gsop,
                              attrs & ~JSFUN_FLAGS_MASK, NULL)) {
         return NULL;
     }

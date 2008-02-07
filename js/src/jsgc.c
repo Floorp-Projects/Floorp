@@ -2387,9 +2387,8 @@ ProcessSetSlotRequest(JSContext *cx, JSSetSlotRequest *ssr)
             }
         }
 
-#if 0
         /*
-         * Regenerate property cache type ids for all of the scopes along the
+         * Regenerate property cache shape ids for all of the scopes along the
          * old prototype chain, in case any property cache entries were filled
          * by looking up starting from obj.
          */
@@ -2398,7 +2397,6 @@ ProcessSetSlotRequest(JSContext *cx, JSSetSlotRequest *ssr)
             SCOPE_GENERATE_PCTYPE(cx, scope);
             oldproto = STOBJ_GET_PROTO(scope->object);
         }
-#endif
     }
 
     /* Finally, do the deed. */
@@ -2613,7 +2611,12 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     /* Reset malloc counter. */
     rt->gcMallocBytes = 0;
 
-#if 0
+#ifdef JS_DUMP_SCOPE_METERS
+  { extern void js_DumpScopeMeters(JSRuntime *rt);
+    js_DumpScopeMeters(rt);
+  }
+#endif
+
     /*
      * Clear property cache weak references and disable the cache so nothing
      * can fill it during GC (this is paranoia, since scripts should not run
@@ -2621,13 +2624,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
      */
     js_DisablePropertyCache(cx);
     js_FlushPropertyCache(cx);
-#endif
-
-#ifdef JS_DUMP_SCOPE_METERS
-  { extern void js_DumpScopeMeters(JSRuntime *rt);
-    js_DumpScopeMeters(rt);
-  }
-#endif
 
 #ifdef JS_THREADSAFE
     /*
@@ -2648,9 +2644,8 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
             continue;
         memset(acx->thread->gcFreeLists, 0, sizeof acx->thread->gcFreeLists);
         GSN_CACHE_CLEAR(&acx->thread->gsnCache);
-#if 0
+        js_DisablePropertyCache(acx);
         js_FlushPropertyCache(acx);
-#endif
     }
 #else
     /* The thread-unsafe case just has to clear the runtime's GSN cache. */
@@ -2662,10 +2657,8 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     JS_ASSERT(!rt->gcUntracedArenaStackTop);
     JS_ASSERT(rt->gcTraceLaterCount == 0);
 
-#if 0
     /* Reset the property cache's type id generator so we can compress ids. */
-    rt->pcTypeGen = 0;
-#endif
+    rt->shapeGen = 0;
 
     /*
      * Mark phase.
@@ -2898,10 +2891,17 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         goto restart;
     }
 
-#if 0
-    if (!(rt->pcTypeGen & PCTYPE_OVERFLOW_BIT))
+    if (!(rt->shapeGen & SHAPE_OVERFLOW_BIT)) {
         js_EnablePropertyCache(cx);
+#ifdef JS_THREADSAFE
+        iter = NULL;
+        while ((acx = js_ContextIterator(rt, JS_FALSE, &iter)) != NULL) {
+            if (!acx->thread || acx->thread == cx->thread)
+                continue;
+            js_EnablePropertyCache(acx);
+        }
 #endif
+    }
 
     rt->gcLastBytes = rt->gcBytes;
   done_running:

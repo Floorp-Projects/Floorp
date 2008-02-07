@@ -121,9 +121,13 @@ struct JSThread {
      * among two or more contexts running script in one thread.
      */
     JSGSNCache          gsnCache;
+
+    /* Property cache for faster call/get/set invocation. */
+    JSPropertyCache     propertyCache;
 };
 
-#define JS_GSN_CACHE(cx) ((cx)->thread->gsnCache)
+#define JS_GSN_CACHE(cx)        ((cx)->thread->gsnCache)
+#define JS_PROPERTY_CACHE(cx)   ((cx)->thread->propertyCache)
 
 extern void JS_DLL_CALLBACK
 js_ThreadDestructorCB(void *ptr);
@@ -386,8 +390,26 @@ struct JSRuntime {
      */
     JSGSNCache          gsnCache;
 
-#define JS_GSN_CACHE(cx) ((cx)->runtime->gsnCache)
+    /* Property cache for faster call/get/set invocation. */
+    JSPropertyCache     propertyCache;
+
+#define JS_GSN_CACHE(cx)        ((cx)->runtime->gsnCache)
+#define JS_PROPERTY_CACHE(cx)   ((cx)->runtime->propertyCache)
 #endif
+
+    /*
+     * Object shape (property cache structural type) identifier generator.
+     *
+     * Type 0 stands for the empty scope, and must not be regenerated due to
+     * uint32 wrap-around. Since we use atomic pre-increment, the initial
+     * value for the first typed non-empty scope will be 1.
+     *
+     * The GC compresses live types, minimizing rt->shapeGen in the process.
+     * If this counter overflows into SHAPE_OVERFLOW_BIT (in jsinterp.h), the
+     * GC will disable property caches for all threads, to avoid aliasing two
+     * different types. Updated by js_GenerateShape (in jsinterp.c).
+     */
+    uint32              shapeGen;
 
     /* Literal table maintained by jsatom.c functions. */
     JSAtomState         atomState;
