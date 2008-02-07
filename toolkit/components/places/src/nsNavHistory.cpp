@@ -402,12 +402,6 @@ nsNavHistory::Init()
       mLastSessionID = 1;
   }
 
-  // effective tld service
-  mTLDService = do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  mIDNService = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // string bundle for localization
   nsCOMPtr<nsIStringBundleService> bundleService =
     do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
@@ -2050,14 +2044,21 @@ void
 nsNavHistory::DomainNameFromURI(nsIURI *aURI,
                                 nsACString& aDomainName)
 {
-  // get the base domain for a given hostname.
-  // e.g. for "images.bbc.co.uk", this would be "bbc.co.uk".
-  nsresult rv = mTLDService->GetBaseDomain(aURI, 0, aDomainName);
-  if (NS_FAILED(rv)) {
-    // just return the original hostname
-    // (it's also possible the host is an IP address)
-    aURI->GetAsciiHost(aDomainName);
+  // lazily get the effective tld service
+  if (!mTLDService)
+    mTLDService = do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+
+  if (mTLDService) {
+    // get the base domain for a given hostname.
+    // e.g. for "images.bbc.co.uk", this would be "bbc.co.uk".
+    nsresult rv = mTLDService->GetBaseDomain(aURI, 0, aDomainName);
+    if (NS_SUCCEEDED(rv))
+      return;
   }
+
+  // just return the original hostname
+  // (it's also possible the host is an IP address)
+  aURI->GetAsciiHost(aDomainName);
 }
 
 
@@ -4652,10 +4653,16 @@ nsNavHistory::GroupByHost(nsNavHistoryQueryResultNode *aResultNode,
         nsCAutoString domainName;
         DomainNameFromURI(uri, domainName);
 
-        // domainName will be ASCII/ACE encoded; convert it back to display IDN
-        // to be consistent with nsIURI::GetHost()
-        PRBool isAscii;
-        rv = mIDNService->ConvertToDisplayIDN(domainName, &isAscii, curHostName);
+        // lazily get the idn service
+        if (!mIDNService)
+          mIDNService = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
+
+        if (mIDNService) {
+          // domainName will be ASCII/ACE encoded; convert it back to display IDN
+          // to be consistent with nsIURI::GetHost()
+          PRBool isAscii;
+          rv = mIDNService->ConvertToDisplayIDN(domainName, &isAscii, curHostName);
+        }
 
       } else {
         // just use the full host name
