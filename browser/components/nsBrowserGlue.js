@@ -67,6 +67,13 @@ function BrowserGlue() {
 BrowserGlue.prototype = {
   _saveSession: false,
 
+  _setPrefToSaveSession: function()
+  {
+    var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                     getService(Ci.nsIPrefBranch);
+    prefBranch.setBoolPref("browser.sessionstore.resume_session_once", true);
+  },
+
   // nsIObserver implementation 
   observe: function(subject, topic, data) 
   {
@@ -98,10 +105,13 @@ BrowserGlue.prototype = {
         break;
       case "quit-application-granted":
         if (this._saveSession) {
-          var prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                           getService(Ci.nsIPrefBranch);
-          prefBranch.setBoolPref("browser.sessionstore.resume_session_once", true);
+          this._setPrefToSaveSession();
         }
+        break;
+      case "session-save":
+        this._setPrefToSaveSession();
+        subject.QueryInterface(Ci.nsISupportsPRBool);
+        subject.data = true;
         break;
     }
   }
@@ -120,6 +130,7 @@ BrowserGlue.prototype = {
     osvr.addObserver(this, "browser:purge-session-history", false);
     osvr.addObserver(this, "quit-application-requested", false);
     osvr.addObserver(this, "quit-application-granted", false);
+    osvr.addObserver(this, "session-save", false);
   },
 
   // cleanup (called on application shutdown)
@@ -136,6 +147,7 @@ BrowserGlue.prototype = {
     osvr.removeObserver(this, "browser:purge-session-history");
     osvr.removeObserver(this, "quit-application-requested");
     osvr.removeObserver(this, "quit-application-granted");
+    osvr.removeObserver(this, "session-save");
   },
 
   _onAppDefaults: function()
