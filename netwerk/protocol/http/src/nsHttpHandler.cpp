@@ -168,6 +168,7 @@ nsHttpHandler::nsHttpHandler()
     , mMaxPipelinedRequests(2)
     , mRedirectionLimit(10)
     , mPhishyUserPassLength(1)
+    , mPipeliningOverSSL(PR_FALSE)
     , mLastUniqueID(NowInSeconds())
     , mSessionStartTime(0)
     , mProduct("Gecko")
@@ -1019,6 +1020,12 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         }
     }
 
+    if (PREF_CHANGED(HTTP_PREF("pipelining.ssl"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("pipelining.ssl"), &cVar);
+        if (NS_SUCCEEDED(rv))
+            mPipeliningOverSSL = cVar;
+    }
+
     if (PREF_CHANGED(HTTP_PREF("proxy.pipelining"))) {
         rv = prefs->GetBoolPref(HTTP_PREF("proxy.pipelining"), &cVar);
         if (NS_SUCCEEDED(rv)) {
@@ -1495,6 +1502,10 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
         caps = mCapabilities;
 
     if (https) {
+        // enable pipelining over SSL if requested
+        if (mPipeliningOverSSL)
+            caps |= NS_HTTP_ALLOW_PIPELINING;
+
         // HACK: make sure PSM gets initialized on the main thread.
         nsCOMPtr<nsISocketProviderService> spserv =
                 do_GetService(kSocketProviderServiceCID);
