@@ -2948,6 +2948,16 @@ function FillHistoryMenu(aParent) {
 
     item.setAttribute("label", entry.title || entry.URI.spec);
     item.setAttribute("index", j);
+
+    if (j != index) {
+      try {
+        let iconURL = Cc["@mozilla.org/browser/favicon-service;1"]
+                         .getService(Ci.nsIFaviconService)
+                         .getFaviconForPage(entry.URI).spec;
+        item.setAttribute("image", iconURL);
+      } catch (ex) {}
+    }
+
     if (j < index) {
       item.className = "unified-nav-back";
       item.setAttribute("tooltiptext", tooltipBack);
