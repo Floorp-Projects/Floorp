@@ -681,6 +681,8 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 != 409659-1c.html 409659-1-ref.html
 == 409659-1d.html 409659-1-ref.html
 # == 400813-1.html 400813-1-ref.html
+== 412607-1a.html 412607-1-ref.html
+== 412607-1b.html 412607-1-ref.html
 == 412679-1.html 412679-1-ref.html
 == 412679-2.html 412679-2-ref.html
 == 411334-1.xml 411334-1-ref.xml
