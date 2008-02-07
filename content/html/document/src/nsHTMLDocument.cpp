@@ -1739,26 +1739,28 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain)
   // For example, a page from foo.bar.com may set domain to bar.com,
   // but not to ar.com, baz.com, or fi.foo.bar.com.
   nsCAutoString current, domain;
-  if (NS_FAILED(uri->GetHost(current)))
+  if (NS_FAILED(uri->GetAsciiHost(current)))
     current.Truncate();
-  if (NS_FAILED(newURI->GetHost(domain)))
+  if (NS_FAILED(newURI->GetAsciiHost(domain)))
     domain.Truncate();
 
   PRBool ok = current.Equals(domain);
   if (current.Length() > domain.Length() &&
       StringEndsWith(current, domain) &&
       current.CharAt(current.Length() - domain.Length() - 1) == '.') {
-    // Using only a TLD is forbidden (bug 368700)
+    // We're golden if the new domain is the current page's base domain or a
+    // subdomain of it.
     nsCOMPtr<nsIEffectiveTLDService> tldService =
       do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
     if (!tldService)
       return NS_ERROR_NOT_AVAILABLE;
 
-    // try to get the base domain; if this works, we're ok.
-    // if we're dealing with an IP address, getting the base domain
-    // will fail, as required.
-    nsCAutoString baseDomain;
-    ok = NS_SUCCEEDED(tldService->GetBaseDomain(newURI, 0, baseDomain));
+    nsCAutoString currentBaseDomain;
+    ok = NS_SUCCEEDED(tldService->GetBaseDomain(uri, 0, currentBaseDomain));
+    NS_ASSERTION(StringEndsWith(domain, currentBaseDomain) ==
+                 (domain.Length() >= currentBaseDomain.Length()),
+                 "uh-oh!  slight optimization wasn't valid somehow!");
+    ok = ok && domain.Length() >= currentBaseDomain.Length();
   }
   if (!ok) {
     // Error: illegal domain
