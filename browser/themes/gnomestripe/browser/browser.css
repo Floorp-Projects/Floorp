@@ -743,6 +743,10 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   -moz-padding-end: 2px;
 }
 
+.urlbar-icon {
+  cursor: pointer;
+}
+
 #urlbar[pageproxystate="invalid"] > #urlbar-icons > :not(#go-button) ,
 #urlbar[pageproxystate="valid"] > #urlbar-icons > #go-button {
   visibility: collapse;

@@ -64,6 +64,7 @@
 .search-go-button {
   padding: 1px;
   list-style-image: url("chrome://browser/skin/Search-glass.png");
+  cursor: pointer;
 }
 
 .search-go-button[chromedir="rtl"] {
