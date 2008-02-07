@@ -148,9 +148,6 @@ nsCommonWidget::DispatchEvent(nsGUIEvent *aEvent,
 {
     aStatus = nsEventStatus_eIgnore;
 
-    // hold a widget reference while we dispatch this event
-    NS_ADDREF(aEvent->widget);
-
     // send it to the standard callback
     if (mEventCallback)
         aStatus = (* mEventCallback)(aEvent);
@@ -158,8 +155,6 @@ nsCommonWidget::DispatchEvent(nsGUIEvent *aEvent,
     // dispatch to event listener if event was not consumed
     if ((aStatus != nsEventStatus_eIgnore) && mEventListener)
         aStatus = mEventListener->ProcessEvent(*aEvent);
-
-    NS_IF_RELEASE(aEvent->widget);
 
     return NS_OK;
 }
