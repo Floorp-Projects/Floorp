@@ -2812,6 +2812,7 @@ SendSourceToJSDebugger(const char *filename, uintN lineno,
 #endif /* JSD_LOWLEVEL_SOURCE */
 
 static JSBool its_noisy;    /* whether to be noisy when finalizing it */
+static JSBool its_enum_fail;/* whether to fail when enumerating it */
 
 static JSBool
 its_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
@@ -2852,24 +2853,70 @@ its_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 static JSBool
 its_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
+    char *str;
     if (its_noisy) {
         fprintf(gOutFile, "setting its property %s,",
                JS_GetStringBytes(JS_ValueToString(cx, id)));
         fprintf(gOutFile, " new value %s\n",
                JS_GetStringBytes(JS_ValueToString(cx, *vp)));
     }
-    if (JSVAL_IS_STRING(id) &&
-        !strcmp(JS_GetStringBytes(JSVAL_TO_STRING(id)), "noisy")) {
+
+    if (!JSVAL_IS_STRING(id))
+        return JS_TRUE;
+
+    str = JS_GetStringBytes(JSVAL_TO_STRING(id));
+    if (!strcmp(str, "noisy"))
         return JS_ValueToBoolean(cx, *vp, &its_noisy);
-    }
+    else if (!strcmp(str, "enum_fail"))
+        return JS_ValueToBoolean(cx, *vp, &its_enum_fail);
+
     return JS_TRUE;
 }
 
+/*
+ * Its enumerator, implemented using the "new" enumerate API,
+ * see class flags.
+ */
 static JSBool
-its_enumerate(JSContext *cx, JSObject *obj)
+its_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
+		  jsval *statep, jsid *idp)
 {
-    if (its_noisy)
-        fprintf(gOutFile, "enumerate its properties\n");
+    JSObject *iterator;
+
+    switch (enum_op) {
+      case JSENUMERATE_INIT:
+        if (its_noisy)
+            fprintf(gOutFile, "enumerate its properties\n");
+
+        iterator = JS_NewPropertyIterator(cx, obj);
+        if (!iterator)
+            return JS_FALSE;
+
+        *statep = OBJECT_TO_JSVAL(iterator);
+        if (idp)
+            *idp = JSVAL_ZERO;
+        break;
+
+      case JSENUMERATE_NEXT:
+        if (its_enum_fail) {
+            JS_ReportError(cx, "its enumeration failed");
+            return JS_FALSE;
+        }
+
+        iterator = (JSObject *) JSVAL_TO_OBJECT(*statep);
+        if (!JS_NextProperty(cx, iterator, idp))
+            return JS_FALSE;
+
+        if (*idp != JSVAL_VOID)
+            break;
+        /* Fall through. */
+
+      case JSENUMERATE_DESTROY:
+        /* Allow our iterator object to be GC'd. */
+        *statep = JSVAL_NULL;
+        break;
+    }
+
     return JS_TRUE;
 }
 
@@ -2903,9 +2950,9 @@ its_finalize(JSContext *cx, JSObject *obj)
 }
 
 static JSClass its_class = {
-    "It", JSCLASS_NEW_RESOLVE,
+    "It", JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE,
     its_addProperty,  its_delProperty,  its_getProperty,  its_setProperty,
-    its_enumerate,    (JSResolveOp)its_resolve,
+    (JSEnumerateOp)its_enumerate, (JSResolveOp)its_resolve,
     its_convert,      its_finalize,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
