@@ -45,8 +45,8 @@
 <wizard
  id="qa-setup"
  title="&qa.setup.title;"
- height="625"
- width="850"
+ height="600"
+ width="500"
  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
  xmlns:html="http://www.w3.org/1999/xhtml">
 
@@ -81,16 +81,16 @@
   <spacer height="20px" />
 
   <vbox id="qa-setup-accountyes" style="display: none;">
-    <label value="&qa.setup.accountyes.enterinfo;"/>
+    <description>&qa.setup.accountyes.enterinfo;</description>
     <groupbox>
       <hbox>
-        <vbox>
-          <label control="username" value="&qa.preferences.litmus.username;"/>
-          <textbox id="username" size="35"/>
-          <label control="password" value="&qa.preferences.litmus.password;"/>
-          <textbox id="password" type="password" size="35"/>
-       </vbox>
-     </hbox>
+          <label control="username" value="&qa.preferences.litmus.username;" width="60px"/>
+          <textbox id="username" size="35" width="250px"/>
+      </hbox>
+      <hbox>
+          <label control="password" value="&qa.preferences.litmus.password;" width="60px"/>
+          <textbox id="password" type="password" size="35" width="250px"/>
+      </hbox>
     </groupbox>
     <label id="qa-setup-accountconfirmloading"/>
   </vbox>
@@ -98,7 +98,7 @@
   <vbox id="qa-setup-accountno" style="display: none;">
     <description>&qa.setup.accountno.text;</description>
     <html:iframe id="qa-setup-createaccount-iframe"
-                 height="280"/>
+                 height="250" width="300" scrolling="auto"/>
   </vbox>
 </wizardpage>
 
@@ -108,27 +108,27 @@
   <vbox>
     <description>&qa.setup.sysconfig.text;</description>
     <spacer height="20px" />
+    <label id="qa-setup-sysconfig-loading"/>
+    <spacer height="10px" />
     <hbox>
-    <label control="qa-setup-platform" value="&qa.setup.sysconfig.platform;"/>
+    <label control="qa-setup-platform" value="&qa.setup.sysconfig.platform;" width="100px"/>
     <menulist id="qa-setup-platform">
       <menupopup>
       </menupopup>
     </menulist>
     </hbox>
-    <spacer height="20px" />
     <hbox>
-    <label control="qa-setup-opsys" value="&qa.setup.sysconfig.opsys;"/>
+    <label control="qa-setup-opsys" value="&qa.setup.sysconfig.opsys;" width="100px"/>
     <menulist id="qa-setup-opsys">
       <menupopup>
       </menupopup>
     </menulist>
     </hbox>
     <spacer height="20px" />
-    <label id="qa-setup-sysconfig-loading"/>
   </vbox>
 </wizardpage>
 
-<wizardpage pageid="finish" onpageshow="qaSetup.finish();">
+<wizardpage pageid="finish" onpageshow="qaSetup.finish();" label="&qa.setup.finish.header;">
   <description>&qa.setup.accountdone;</description>
 </wizardpage>
 

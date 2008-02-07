@@ -78,7 +78,7 @@
         </div>
       </vbox>
       <vbox>
-        <button style="margin-top: 10px; margin-left: 20px; padding-left: 2em; padding-right: 2em;"
+        <button style="margin-left: 50px;"
                 oncommand="openQAChat();" label="&qa.chat.howdoI.joinnow;" />
         <spacer flex="1" />    
       </vbox>

@@ -42,6 +42,7 @@
 <?xml-stylesheet href="chrome://qa/skin/" type="text/css"?>
 
 <dialog id="dialog-name"
+  title="&qa.selecttests.header;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   persist="screenX screenY width height"
   buttons="accept,cancel"
@@ -57,9 +58,13 @@
   <script type="application/x-javascript" src="chrome://qa/content/common.js" />
   <script type="application/x-javascript" src="chrome://qa/content/tabs/selecttests.js" />
 
-  <dialogheader description="&qa.selecttests.header;" />
-  <spacer height="20" />
-  <vbox>
+  <vbox flex="1">
+    <hbox>
+        <description flex="1"> Please select a Test Run, Group and Subgroup.  Your selections will show
+        changes in the main Mozilla QA Companion, but will only take effect if you press the "OK" button.
+        Pressing "Cancel" will take you back to your previous tests.</description>
+    </hbox>
+    <spacer height="10" />
     <hbox>
     <description value="Test Run:" />
     <menulist label="  " id="qa-st-testrun" onselect="handleRunSelect()">
@@ -68,20 +73,20 @@
       </menupopup>
     </menulist>
     </hbox>
-    <spacer height="20" />
-    <hbox>
+    <spacer height="10" />
+    <hbox flex="1">
       <vbox>
         <description value="Test Group:" />
-        <listbox id="qa-st-testgroup" rows = "5"
-                onselect="handleTestgroupSelect()">
-          <listitem label="&qa.selecttests.load;" />
+        <listbox id="qa-st-testgroup"
+                onselect="handleTestgroupSelect()" flex="1">
+          <listitem label="&qa.selecttests.load;"/>
         </listbox>
       </vbox>
-      <vbox>
-        <description value="Subgroup" />
-        <listbox id="qa-st-subgroup" rows = "5"
-                 onselect="handleSubgroupSelect()">
-          <listitem label="&qa.selecttests.load;" />
+      <vbox flex="1">
+        <description value="Test Subgroup:" />
+        <listbox id="qa-st-subgroup"
+                 onselect="handleSubgroupSelect()" flex="1">
+          <listitem label="&qa.selecttests.load;" flex="1"/>
         </listbox>
       </vbox>
     </hbox>
