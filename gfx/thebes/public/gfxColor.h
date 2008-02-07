@@ -56,6 +56,7 @@
     #define GFX_NTOHL(x) _byteswap_ulong(x)
     #define GFX_HAVE_CHEAP_NTOHL
   #else
+    #include "prbit.h"
     // A reasonably fast generic little-endian implementation.
     #define GFX_NTOHL(x) \
          ( (PR_ROTATE_RIGHT32((x),8) & 0xFF00FF00) | \
