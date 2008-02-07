@@ -1267,7 +1267,9 @@ nsPrintEngine::MapContentForPO(nsPrintObject*   aPO,
         po->mContent  = aContent;
 
         nsCOMPtr<nsIDOMHTMLFrameElement> frame(do_QueryInterface(aContent));
-        if (frame) {
+        // "frame" elements not in a frameset context should be treated
+        // as iframes
+        if (frame && po->mParent->mFrameType == eFrameSet) {
           po->mFrameType = eFrame;
         } else {
           // Assume something iframe-like, i.e. iframe, object, or embed
