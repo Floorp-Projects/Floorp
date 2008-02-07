@@ -145,7 +145,6 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIDOMNSUIEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsXULPopupManager.h"
 #include "nsIPermissionManager.h"
 
 #ifdef IBMBIDI
@@ -3923,21 +3922,6 @@ nsContentUtils::DOMEventToNativeKeyEvent(nsIDOMEvent* aDOMEvent,
   aNativeEvent->nativeEvent = GetNativeEvent(aDOMEvent);
 
   return PR_TRUE;
-}
-
-/* static */
-void
-nsContentUtils::HidePopupsInDocument(nsIDocument* aDocument)
-{
-  NS_PRECONDITION(aDocument, "Null document");
-
-  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-  if (pm) {
-    nsCOMPtr<nsISupports> container = aDocument->GetContainer();
-    nsCOMPtr<nsIDocShellTreeItem> docShellToHide = do_QueryInterface(container);
-    if (docShellToHide)
-      pm->HidePopupsInDocShell(docShellToHide);
-  }
 }
 
 /* static */
