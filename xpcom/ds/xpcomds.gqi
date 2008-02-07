@@ -34,7 +34,11 @@
 %pseudo-iid nsIByteBuffer e4a6e4b0-93b4-11d1-895b-006008911b81
 %pseudo-iid nsIUnicharBuffer 14cf6970-93b5-11d1-895b-006008911b81
 
-NS_IMPL_ISUPPORTS2(nsArray, nsIArray, nsIMutableArray)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsArray)
+  NS_INTERFACE_MAP_ENTRY(nsIArray)
+  NS_INTERFACE_MAP_ENTRY(nsIMutableArray)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMutableArray)
+NS_INTERFACE_MAP_END
 
 NS_IMPL_ISUPPORTS1(nsSimpleProperty, nsIProperty)
 
