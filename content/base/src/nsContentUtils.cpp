@@ -3329,19 +3329,19 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
   nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aContextNode);
-  NS_ENSURE_TRUE(content, NS_ERROR_NOT_AVAILABLE);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aContextNode);
+  NS_ENSURE_TRUE(node, NS_ERROR_NOT_AVAILABLE);
 
   // If we don't have a document here, we can't get the right security context
   // for compiling event handlers... so just bail out.
-  nsCOMPtr<nsIDocument> document = content->GetOwnerDoc();
+  nsCOMPtr<nsIDocument> document = node->GetOwnerDoc();
   NS_ENSURE_TRUE(document, NS_ERROR_NOT_AVAILABLE);
 
   nsAutoTArray<nsAutoString, 32> tagStack;
   nsAutoString uriStr, nameStr;
-
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aContextNode);
   // just in case we have a text node
-  if (!content->IsNodeOfType(nsINode::eELEMENT))
+  if (content && !content->IsNodeOfType(nsINode::eELEMENT))
     content = content->GetParent();
 
   while (content && content->IsNodeOfType(nsINode::eELEMENT)) {
