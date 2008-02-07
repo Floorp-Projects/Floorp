@@ -231,57 +231,30 @@ nsThebesImage::Optimize(nsIDeviceContext* aContext)
     if (mOptSurface || mSinglePixel)
         return NS_OK;
 
-    /* Figure out if the entire image is a constant color */
+    if (mWidth == 1 && mHeight == 1) {
+        // yeah, let's optimize this.
+        if (mFormat == gfxImageSurface::ImageFormatARGB32 ||
+            mFormat == gfxImageSurface::ImageFormatRGB24)
+        {
+            PRUint32 pixel = *((PRUint32 *) mImageSurface->Data());
 
-    // this should always be true
-    if (mStride == mWidth * 4) {
-        PRUint32 *imgData = (PRUint32*) mImageSurface->Data();
-        PRUint32 firstPixel = * (PRUint32*) imgData;
-        PRUint32 pixelCount = mWidth * mHeight + 1;
+            mSinglePixelColor = gfxRGBA
+                (pixel,
+                 (mFormat == gfxImageSurface::ImageFormatRGB24 ?
+                  gfxRGBA::PACKED_XRGB :
+                  gfxRGBA::PACKED_ARGB_PREMULTIPLIED));
 
-        while (--pixelCount && *imgData++ == firstPixel)
-            ;
+            mSinglePixel = PR_TRUE;
 
-        if (pixelCount == 0) {
-            // all pixels were the same
-            if (mFormat == gfxImageSurface::ImageFormatARGB32 ||
-                mFormat == gfxImageSurface::ImageFormatRGB24)
-            {
-                mSinglePixelColor = gfxRGBA
-                    (firstPixel,
-                     (mFormat == gfxImageSurface::ImageFormatRGB24 ?
-                      gfxRGBA::PACKED_XRGB :
-                      gfxRGBA::PACKED_ARGB_PREMULTIPLIED));
-
-                mSinglePixel = PR_TRUE;
-
-                // XXX we can't do this until we either teach anyone
-                // who calls GetSurface() about single-color stuff,
-                // or until we make GetSurface() create a new temporary
-                // surface to return (and that callers understand that
-                // modifying that surface won't modify the image).
-                // Current users are drag & drop and clipboard.
-#if 0
-                // blow away the older surfaces, to release data
-
-                mImageSurface = nsnull;
-                mOptSurface = nsnull;
-#ifdef XP_WIN
-                mWinSurface = nsnull;
-#endif
-#ifdef XP_MACOSX
-                mQuartzSurface = nsnull;
-#endif
-#endif
-                return NS_OK;
-            }
+            return NS_OK;
         }
 
-        // if it's not RGB24/ARGB32, don't optimize, but we never hit this at the moment
+        // if it's not RGB24/ARGB32, don't optimize, but we should
+        // never hit this.
     }
 
     // if we're being forced to use image surfaces due to
-    // resource constraints, don't try to optimize beyond same-pixel.
+    // resource constraints, don't try to optimize beyond single-pixel.
     if (ShouldUseImageSurfaces())
         return NS_OK;
 
