@@ -1190,11 +1190,11 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
 
       // draw a focus ring
       if (eventState & NS_EVENT_STATE_FOCUS) {
-        // We need to bring the rectangle in by 2 pixels on each side.
-        CGRect cgr = CGRectMake(macRect.origin.x + 2,
-                                macRect.origin.y + 2,
-                                macRect.size.width - 4,
-                                macRect.size.height - 4);
+        // We need to bring the rectangle in by 1 pixel on each side.
+        CGRect cgr = CGRectMake(macRect.origin.x + 1,
+                                macRect.origin.y + 1,
+                                macRect.size.width - 2,
+                                macRect.size.height - 2);
         HIThemeDrawFocusRect(&cgr, true, cgContext, kHIThemeOrientationNormal);
       }
     }
