@@ -54,8 +54,7 @@
         <label value="" id="qa-subgroup-label" style="font-weight: bold;" crop="end"/>
       </vbox>
       <vbox>
-      <button label="&qa.litmus.selecttests;" oncommand="litmus.handleDialog()"
-              style="padding-left: 2em; padding-right: 2em;" />
+      <button label="&qa.litmus.selecttests;" oncommand="litmus.handleDialog()"/>
       <spacer flex="1"/>
       </vbox>
     </hbox>
@@ -106,10 +105,9 @@
         </hbox>
         <spacer flex="1"/>
         <hbox>
-          <button style="margin-left: 50px; padding-left: 2em; padding-right: 2em;"
-                  id="qa-mainwindow-previousButton" label="Previous" oncommand="litmus.prevButton()"/>
-          <button style="padding-left: 2em; padding-right: 2em;"
-                  id="qa-mainwindow-nextButton" label="Next (Submit)" oncommand="litmus.nextButton()"/>
+          <button style="margin-left: 50px;" id="qa-mainwindow-previousButton" label="Previous"
+                  oncommand="litmus.prevButton()"/>
+          <button id="qa-mainwindow-nextButton" label="Next (Submit)" oncommand="litmus.nextButton()"/>
         </hbox> 
       </vbox>
     </hbox>

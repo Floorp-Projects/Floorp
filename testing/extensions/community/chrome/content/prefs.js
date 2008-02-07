@@ -139,7 +139,7 @@ var CC_loginManager = Components.classes["@mozilla.org/login-manager;1"];
        // for the current baseURL. If we do, remove it before adding
        // any new passwords:
        var p;
-       while (p = this.getPasswordObj()) {
+       while (p == this.getPasswordObj()) {
          m.removeUser(p.host, p.user);
        }
        m.addUser(this.passwordName(), username, password);

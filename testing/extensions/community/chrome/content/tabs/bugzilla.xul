@@ -70,10 +70,8 @@
       <checkbox id="qa-bugzilla-input-version" label="Product Version" />
     </hbox>
     <hbox>
-      <button style="margin-left: 50px; padding-left: 2em; padding-right: 2em;" 
-              label="Find!" oncommand="bugzilla.doSearch(); "/>
-      <button style="padding-left: 2em; padding-right: 2em;"
-              label="Show all bugs filed today" oncommand="bugzilla.showRecent()"/>
+      <button style="margin-left: 50px;" label="Find!" oncommand="bugzilla.doSearch(); "/>
+      <button label="Show all bugs filed today" oncommand="bugzilla.showRecent()"/>
     </hbox>
   </groupbox>
 
@@ -106,8 +104,8 @@
                multiline="true" disabled="true" flex="1" />
                
     <hbox>
-      <button style="margin-left: 50px; padding-left: 2em; padding-right: 2em;" 
-              label="Show in Bugzilla" oncommand="bugzilla.openInBugzilla();"/>
+      <button style="margin-left: 50px;" label="Show in Bugzilla"
+              oncommand="bugzilla.openInBugzilla();"/>
     </hbox>
   </groupbox>
   
