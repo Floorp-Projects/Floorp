@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title>Setting document.domain and IDN</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+
+<!--
+
+This testing all gets a bit complicated here; the problem is that our
+document.domain implementation will do a suffix comparison of the value to which
+it's being set against the current URI's base domain (where "base domain" is
+defined as the effective TLD plus one; see nsIEffectiveTLDService.idl).  Seems
+simple enough, right?  Wrong.
+
+The problem, as usual, is IDN.  Our current, wholly-inadequate solution to
+preventing Unicode domain-name spoofing is done at the level of the URL
+implementation, not at the presentation level.  However, the value of the
+base domain for the current URI is always calculated in punycode; if the
+provided domain is one which is whitelisted, we'll get an IDN name and the
+suffix-comparison will fail.  Nice great big mess, huh?
+
+Anyway: "test" currently fits the bill as a TLD which is not whitelisted, while
+"δοκιμή" (the Greek IDN TLD for "test") fits the bill as a TLD which is
+whitelisted.  RFC 2606 reserves "test" for DNS testing, so nobody's going to
+clamor for it to be whitelisted any time soon.  The latter is as of February
+2008 undergoing testing for IDN TLDs, and it's at least temporarily whitelisted
+for now.  Once the testing period ends the latter's probably going to be
+un-whitelisted, so we're going to have to do a careful bit of stepping to ensure
+that in the future this test tests what it was intended to test (and, until
+bug 414090 is fixed, that it doesn't break when the Greek TLD is
+un-whitelisted).
+
+-->
+
+<div>
+<h2>Whitelisted</h2>
+<iframe name="idnKidWhitelist" src="http://sub1.παράδειγμα.δοκιμή/tests/dom/tests/mochitest/dom-level0/idn_child.html?idn-whitelist"></iframe>
+<iframe name="punycodeKidWhitelist" src="http://sub1.παράδειγμα.δοκιμή/tests/dom/tests/mochitest/dom-level0/idn_child.html?punycode-whitelist"></iframe>
+</div>
+
+<div>
+<h2>Not whitelisted</h2>
+<iframe name="idnKidNoWhitelist" src="http://sub1.exämple.test/tests/dom/tests/mochitest/dom-level0/idn_child.html?idn-nowhitelist"></iframe>
+<iframe name="punycodeKidNoWhitelist" src="http://sub1.exämple.test/tests/dom/tests/mochitest/dom-level0/idn_child.html?punycode-nowhitelist"></iframe>
+</div>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var gotIDNNoWhitelist = false;
+var gotPunycodeNoWhitelist = false;
+var gotIDNWhitelist = false;
+var gotPunycodeWhitelist = false;
+
+var whitelistRegex =
+  new RegExp("^http://sub1\\.παράδειγμα\\.δοκιμή/tests/dom/tests/" +
+             "mochitest/dom-level0/idn_child\\.html\\?(.+)$");
+
+var noWhitelistRegex =
+  new RegExp("^http://sub1\\.exämple\\.test/tests/dom/tests/" +
+             "mochitest/dom-level0/idn_child\\.html\\?(.+)$");
+
+function receiveMessage(evt)
+{
+  var domain = evt.domain;
+  var match;
+  if (/test$/.test(domain))
+  {
+    // XXX bug 414090
+    // The value of MessageEvent.domain with postMessage *should* always be IDN;
+    // unfortunately, given our current setup for dealing with Unicode-based
+    // domain-name spoofing, whether a domain is in the safe-for-IDN whitelist
+    // affects the value of this property (likewise for window.location,
+    // document.location, MessageEvent.uri, document.domain, and probably a slew
+    // of other things).  :-(
+    //
+    // These two tests should illustrate what currently happens and what should
+    // happen once bug 414090 is fixed.
+    todo_is(evt.domain, "sub1.exämple.test", "wrong sender");
+    todo_isnot(evt.domain, "sub1.xn--exmple-cua.test", "wrong sender");
+
+    match = noWhitelistRegex.exec(evt.uri);
+    todo(match, "unexpected sender");
+    if (!match)
+      match = [, evt.uri.substring(evt.uri.indexOf("?") + 1)];
+  }
+  else
+  {
+    // We're receiving data from the Greek IDN name; since that TLD is
+    // whitelisted for now, the domain we get isn't going to be punycoded.
+    is(evt.domain, "sub1.παράδειγμα.δοκιμή", "wrong sender");
+
+    match = whitelistRegex.exec(evt.uri);
+    ok(match, "should have matched, unexpected sender");
+  }
+
+  is(match[1] + "-response", evt.data.split(" ")[0],
+     "unexpected data: " + evt.data);
+
+  switch (match[1])
+  {
+    case "idn-whitelist":
+      gotIDNWhitelist = true;
+      ok(evt.source === window.frames.idnKidWhitelist, "wrong source");
+      is(evt.data, "idn-whitelist-response", "wrong response for IDN");
+      break;
+
+    case "punycode-whitelist":
+      gotPunycodeWhitelist = true;
+      ok(evt.source === window.frames.punycodeKidWhitelist, "wrong source");
+      is(evt.data, "punycode-whitelist-response", "wrong response for punycode");
+      break;
+
+    case "idn-nowhitelist":
+      gotIDNNoWhitelist = true;
+      ok(evt.source === window.frames.idnKidNoWhitelist, "wrong source");
+      is(evt.data, "idn-nowhitelist-response", "wrong response for IDN");
+      break;
+
+    case "punycode-nowhitelist":
+      gotPunycodeNoWhitelist = true;
+      ok(evt.source === window.frames.punycodeKidNoWhitelist, "wrong source");
+      is(evt.data, "punycode-nowhitelist-response", "wrong response for punycode");
+      break;
+
+    default:
+      ok(false, "unreached");
+      break;
+  }
+}
+
+function run()
+{
+  window.frames.idnKidWhitelist.postMessage("idn-whitelist");
+  ok(gotIDNWhitelist, "IDN whitelist message not received");
+
+  window.frames.punycodeKidWhitelist.postMessage("punycode-whitelist");
+  ok(gotPunycodeWhitelist, "punycode whitelist message not received");
+
+  window.frames.idnKidNoWhitelist.postMessage("idn-nowhitelist");
+  ok(gotIDNNoWhitelist, "IDN no-whitelist message not received");
+
+  window.frames.punycodeKidNoWhitelist.postMessage("punycode-nowhitelist");
+  ok(gotPunycodeNoWhitelist, "punycode no-whitelist message not received");
+
+  SimpleTest.finish();
+}
+
+document.addEventListener("message", receiveMessage, false);
+window.addEventListener("load", run, false);
+</script>
+</pre>
+</body>
+</html>
