@@ -136,6 +136,9 @@ public:
 
     static nsresult  ClearOfflineKeysOwnedByDomain(nsCacheSession   * session,
                                                    const nsACString & domain);
+    static nsresult  GetOfflineDomainUsage(nsCacheSession           * session,
+                                           const nsACString         & domain,
+                                           PRUint32                 * usage);
 
     static nsresult  EvictUnownedOfflineEntries(nsCacheSession *      session);
 

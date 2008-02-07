@@ -63,7 +63,7 @@
  * the domain.
  */
 
-[scriptable, uuid(de7875e5-a7e2-4d8d-ad01-807ef55ef8c0)]
+[scriptable, uuid(3a33e268-4175-4440-a933-89d461c86c5f)]
 interface nsIOfflineCacheSession : nsISupports
 {
     /**
@@ -205,6 +205,13 @@ interface nsIOfflineCacheSession : nsISupports
      *        !! IMPORTANT !! : This must be ascii encoded host - nsIURI.asciiHost
      */
     void clearKeysOwnedByDomain(in ACString ownerAsciiDomain);
+
+    /**
+     * Get the number of bytes used in the cache by a domain.
+     *
+     * @param domain The domain to check.
+     */
+    unsigned long getDomainUsage(in ACString ownerDomain);
 
     /**
      * Evict all entries that are not owned by a domain.
