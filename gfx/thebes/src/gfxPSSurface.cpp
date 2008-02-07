@@ -57,7 +57,9 @@ write_func(void *closure, const unsigned char *data, unsigned int length)
 gfxPSSurface::gfxPSSurface(nsIOutputStream *aStream, const gfxSize& aSizeInPoints)
     : mStream(aStream), mXDPI(-1), mYDPI(-1), mSize(aSizeInPoints)
 {
-    Init(cairo_ps_surface_create_for_stream(write_func, (void*)mStream, mSize.width, mSize.height));
+    cairo_surface_t* ps_surface = cairo_ps_surface_create_for_stream(write_func, (void*)mStream, mSize.width, mSize.height);
+    cairo_ps_surface_restrict_to_level(ps_surface, CAIRO_PS_LEVEL_2);
+    Init(ps_surface);
 }
 
 gfxPSSurface::~gfxPSSurface()
