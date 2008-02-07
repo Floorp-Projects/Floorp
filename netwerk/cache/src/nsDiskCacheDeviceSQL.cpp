@@ -779,6 +779,7 @@ nsOfflineCacheDevice::Init()
       statement (aStatement), sql (aSql) {}
   } prepared[] = {
     StatementSql ( mStatement_CacheSize,         "SELECT Sum(DataSize) from moz_cache;" ),
+    StatementSql ( mStatement_DomainSize,        "SELECT Sum(moz_cache.DataSize) FROM moz_cache INNER JOIN moz_cache_owners ON moz_cache.ClientID=moz_cache_owners.ClientID AND moz_cache.Key = moz_cache_owners.Key WHERE moz_cache.ClientID=? AND moz_cache_owners.Domain=?;" ),
     StatementSql ( mStatement_EntryCount,        "SELECT count(*) from moz_cache;" ),
     StatementSql ( mStatement_UpdateEntry,       "UPDATE moz_cache SET MetaData = ?, Flags = ?, DataSize = ?, FetchCount = ?, LastFetched = ?, LastModified = ?, ExpirationTime = ? WHERE ClientID = ? AND Key = ?;" ),
     StatementSql ( mStatement_UpdateEntrySize,   "UPDATE moz_cache SET DataSize = ? WHERE ClientID = ? AND Key = ?;" ),
@@ -1478,6 +1479,36 @@ nsOfflineCacheDevice::ClearKeysOwnedByDomain(const char *clientID,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return statement->Execute();
+}
+
+nsresult
+nsOfflineCacheDevice::GetDomainUsage(const char *clientID,
+                                     const nsACString &domain,
+                                     PRUint32 *usage)
+{
+  LOG(("nsOfflineCacheDevice::GetDomainUsage [cid=%s]\n", clientID));
+
+  *usage = 0;
+
+  AutoResetStatement statement(mStatement_DomainSize);
+  nsresult rv;
+      
+  rv = statement->BindUTF8StringParameter(0, nsDependentCString(clientID));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->BindUTF8StringParameter(1, domain);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasRows;
+  rv = statement->ExecuteStep(&hasRows);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!hasRows)
+      return NS_OK;
+
+  *usage = statement->AsInt32(0);
+
+  return NS_OK;
 }
 
 nsresult

@@ -1013,6 +1013,26 @@ nsresult nsCacheService::ClearOfflineKeysOwnedByDomain(nsCacheSession * session,
 #endif
 }
 
+nsresult nsCacheService::GetOfflineDomainUsage(nsCacheSession * session,
+                                               const nsACString & domain,
+                                               PRUint32 * usage)
+{
+#ifdef NECKO_OFFLINE_CACHE
+    if (session->StoragePolicy() != nsICache::STORE_OFFLINE)
+        return NS_ERROR_NOT_AVAILABLE;
+    if (!gService->mOfflineDevice) {
+        nsresult rv = gService->CreateOfflineDevice();
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    return gService->mOfflineDevice->GetDomainUsage(session->ClientID()->get(),
+                                                    domain,
+                                                    usage);
+#else // !NECKO_OFFLINE_CACHE
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 nsresult nsCacheService::EvictUnownedOfflineEntries(nsCacheSession * session)
 {
 #ifdef NECKO_OFFLINE_CACHE

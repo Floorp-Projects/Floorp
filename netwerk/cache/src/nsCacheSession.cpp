@@ -192,6 +192,12 @@ NS_IMETHODIMP nsCacheSession::ClearKeysOwnedByDomain(const nsACString & domain)
     return nsCacheService::ClearOfflineKeysOwnedByDomain(this, domain);
 }
 
+NS_IMETHODIMP nsCacheSession::GetDomainUsage(const nsACString & domain,
+                                             PRUint32 *usage)
+{
+    return nsCacheService::GetOfflineDomainUsage(this, domain, usage);
+}
+
 NS_IMETHODIMP nsCacheSession::EvictUnownedEntries()
 {
     return nsCacheService::EvictUnownedOfflineEntries(this);
