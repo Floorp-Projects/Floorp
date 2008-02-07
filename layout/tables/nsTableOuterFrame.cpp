@@ -1342,25 +1342,41 @@ nsTableOuterFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex,
                                  PRInt32& aActualRowSpan, PRInt32& aActualColSpan,
                                  PRBool& aIsSelected)
 {
-  if (!mInnerTableFrame) { return NS_ERROR_NOT_INITIALIZED; }
-  nsITableLayout *inner;
-  if (NS_SUCCEEDED(CallQueryInterface(mInnerTableFrame, &inner))) {
-    return (inner->GetCellDataAt(aRowIndex, aColIndex, aCell,
-                                 aStartRowIndex, aStartColIndex, 
-                                 aRowSpan, aColSpan, aActualRowSpan, aActualColSpan, 
-                                 aIsSelected));
-  }
-  return NS_ERROR_NULL_POINTER;
+  NS_ASSERTION(mInnerTableFrame, "no inner table frame yet?");
+  
+  mInnerTableFrame->GetCellDataAt(aRowIndex, aColIndex, aCell,
+                                  aStartRowIndex, aStartColIndex, 
+                                  aRowSpan, aColSpan, aActualRowSpan,
+                                  aActualColSpan, aIsSelected);
 }
 
-NS_IMETHODIMP nsTableOuterFrame::GetTableSize(PRInt32& aRowCount, PRInt32& aColCount)
+NS_IMETHODIMP
+nsTableOuterFrame::GetTableSize(PRInt32& aRowCount, PRInt32& aColCount)
 {
-  if (!mInnerTableFrame) { return NS_ERROR_NOT_INITIALIZED; }
-  nsITableLayout *inner;
-  if (NS_SUCCEEDED(CallQueryInterface(mInnerTableFrame, &inner))) {
-    return (inner->GetTableSize(aRowCount, aColCount));
-  }
-  return NS_ERROR_NULL_POINTER;
+  NS_ASSERTION(mInnerTableFrame, "no inner table frame yet?");
+
+  mInnerTableFrame->GetTableSize(aRowCount, aColCount);
+}
+
+NS_IMETHODIMP
+nsTableOuterFrame::GetIndexByRowAndColumn(PRInt32 aRow, PRInt32 aColumn,
+                                          PRInt32 *aIndex)
+{
+  NS_ENSURE_ARG_POINTER(aIndex);
+
+  NS_ASSERTION(mInnerTableFrame, "no inner table frame yet?");
+  return mInnerTableFrame->GetIndexByRowAndColumn(aRow, aColumn, aIndex);
+}
+
+NS_IMETHODIMP
+nsTableOuterFrame::GetRowAndColumnByIndex(PRInt32 aIndex,
+                                          PRInt32 *aRow, PRInt32 *aColumn)
+{
+  NS_ENSURE_ARG_POINTER(aRow);
+  NS_ENSURE_ARG_POINTER(aColumn);
+
+  NS_ASSERTION(mInnerTableFrame, "no inner table frame yet?");
+  return mInnerTableFrame->GetRowAndColumnByIndex(aIndex, aRow, aColumn);
 }
 
 /*---------------- end of nsITableLayout implementation ------------------*/
