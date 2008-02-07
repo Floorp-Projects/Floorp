@@ -508,7 +508,7 @@ CallEnumeratorNext(JSContext *cx, JSObject *iterobj, uintN flags, jsval *rval)
     {
       restart:
         if (!OBJ_ENUMERATE(cx, obj, JSENUMERATE_NEXT, &state, &id))
-            return JS_TRUE;
+            return JS_FALSE;
 
         STOBJ_SET_SLOT(iterobj, JSSLOT_ITER_STATE, state);
         if (JSVAL_IS_NULL(state)) {
