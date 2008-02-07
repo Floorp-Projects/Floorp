@@ -658,15 +658,9 @@ nsSliderFrame::CurrentPositionChanged(nsPresContext* aPresContext,
   // set the rect
   thumbFrame->SetRect(newThumbRect);
 
-  // Figure out the union of the rect so we know what to redraw.
-  // Combine the old and new thumb overflow areas.
-  nsRect changeRect;
-  changeRect.UnionRect(thumbFrame->GetOverflowRect() + thumbRect.TopLeft(),
-                       thumbFrame->GetOverflowRect() + newThumbRect.TopLeft());
+  // Redraw the scrollbar
+  Invalidate(clientRect, aImmediateRedraw);
 
-  // redraw just the change
-  Invalidate(changeRect, aImmediateRedraw);
-    
   if (mScrollbarListener)
     mScrollbarListener->PositionChanged(aPresContext, mCurPos, curpospx);
 
