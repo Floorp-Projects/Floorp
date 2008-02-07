@@ -3904,26 +3904,13 @@ nsCSSRendering::PaintBackgroundColor(nsPresContext* aPresContext,
   }
 
   // Rounded version of the border
-  // XXXdwh Composite borders (with multiple colors per side) use their own border radius
-  // algorithm now, since the current one doesn't work right for small radii.
-  if (!aBorder.mBorderColors) {
-    for (side = 0; side < 4; ++side) {
-      if (borderRadii[side] > 0) {
-        PaintRoundedBackground(aPresContext, aRenderingContext, aForFrame,
-                               bgClipArea, aColor, aBorder, borderRadii,
-                               aCanPaintNonWhite);
-        return;
-      }
+  for (side = 0; side < 4; ++side) {
+    if (borderRadii[side] > 0) {
+      PaintRoundedBackground(aPresContext, aRenderingContext, aForFrame,
+                             bgClipArea, aColor, aBorder, borderRadii,
+                             aCanPaintNonWhite);
+      return;
     }
-  }
-  else if (aColor.mBackgroundClip == NS_STYLE_BG_CLIP_BORDER) {
-    // XXX users of -moz-border-*-colors expect a transparent border-color
-    // to show the parent's background-color instead of its background-color.
-    // This seems wrong, but we handle that here by explictly clipping the
-    // background to the padding area.
-    nsMargin border = aForFrame->GetUsedBorder();
-    aForFrame->ApplySkipSides(border);
-    bgClipArea.Deflate(border);
   }
 
   nscolor color;
