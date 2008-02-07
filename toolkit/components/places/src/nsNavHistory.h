@@ -688,7 +688,6 @@ protected:
   nsDataHashtable<nsTrimInt64HashKey, PRBool> mLivemarkFeedItemIds;
   nsDataHashtable<nsStringHashKey, PRBool> mLivemarkFeedURIs;
 
-  nsresult AutoCompleteTypedSearch();
   nsresult AutoCompleteFullHistorySearch(PRBool* aHasMoreResults);
   nsresult AutoCompleteTagsSearch();
 
