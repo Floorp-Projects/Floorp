@@ -159,7 +159,9 @@
 
       <method name="_updateVisibleText">
         <body><![CDATA[
-          if (!this.value && this.emptyText) {
+          if (!this.hasAttribute("focused") &&
+              !this.value &&
+              this.emptyText) {
             // This section is a wee bit hacky; without the timeout, the CSS
             // style corresponding to the "empty" attribute doesn't kick in
             // until the text has changed, leading to an unpleasant moment
