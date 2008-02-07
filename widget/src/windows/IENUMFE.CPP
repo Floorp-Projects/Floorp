@@ -293,6 +293,7 @@ STDMETHODIMP CEnumFormatEtc::Reset(void)
  *
  * Purpose:
  *  Returns another IEnumFORMATETC with the same state as ourselves.
+ *  It is addrefed.
  *
  * Parameters:
  *  ppEnum          LPENUMFORMATETC * in which to return the
