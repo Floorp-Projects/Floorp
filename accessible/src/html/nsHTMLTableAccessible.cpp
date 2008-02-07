@@ -531,20 +531,11 @@ nsHTMLTableAccessible::GetIndexAt(PRInt32 aRow, PRInt32 aColumn,
 
   NS_ENSURE_TRUE(IsValidRow(aRow) && IsValidColumn(aColumn), NS_ERROR_INVALID_ARG);
 
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIDOMElement> domElement;
-  rv = GetCellAt(aRow, aColumn, *getter_AddRefs(domElement));
+  nsITableLayout *tableLayout = nsnull;
+  nsresult rv = GetTableLayout(&tableLayout);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIAccessible> accessible;
-  GetAccService()->GetCachedAccessible(domElement, mWeakShell, getter_AddRefs(accessible));
-  if (accessible) {
-    rv = accessible->GetIndexInParent(aIndex);
-  } else {
-    // not found the corresponding cell
-    *aIndex = -1;
-  }
-  return rv;
+  return tableLayout->GetIndexByRowAndColumn(aRow, aColumn, aIndex);
 }
 
 NS_IMETHODIMP
@@ -552,16 +543,12 @@ nsHTMLTableAccessible::GetColumnAtIndex(PRInt32 aIndex, PRInt32 *aColumn)
 {
   NS_ENSURE_ARG_POINTER(aColumn);
 
-  nsCOMPtr<nsIAccessible> child;
-  GetChildAt(aIndex, getter_AddRefs(child));
-  NS_ENSURE_TRUE(child, NS_ERROR_FAILURE);
-  nsCOMPtr<nsPIAccessNode> childNode(do_QueryInterface(child));
-  NS_ASSERTION(childNode, "childNode not valid in GetColumnAtIndex!");
-  nsIFrame* frame = childNode->GetFrame();
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-  nsCOMPtr<nsITableCellLayout> cellLayout(do_QueryInterface(frame));
-  NS_ENSURE_TRUE(cellLayout, NS_ERROR_FAILURE);
-  return cellLayout->GetColIndex(*aColumn);
+  nsITableLayout *tableLayout = nsnull;
+  nsresult rv = GetTableLayout(&tableLayout);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 row;
+  return tableLayout->GetRowAndColumnByIndex(aIndex, &row, aColumn);
 }
 
 NS_IMETHODIMP
@@ -569,16 +556,12 @@ nsHTMLTableAccessible::GetRowAtIndex(PRInt32 aIndex, PRInt32 *aRow)
 {
   NS_ENSURE_ARG_POINTER(aRow);
 
-  nsCOMPtr<nsIAccessible> child;
-  GetChildAt(aIndex, getter_AddRefs(child));
-  NS_ENSURE_TRUE(child, NS_ERROR_FAILURE);
-  nsCOMPtr<nsPIAccessNode> childNode(do_QueryInterface(child));
-  NS_ASSERTION(childNode, "childNode not valid in GetRowAtIndex!");
-  nsIFrame* frame = childNode->GetFrame();
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-  nsCOMPtr<nsITableCellLayout> cellLayout(do_QueryInterface(frame));
-  NS_ENSURE_TRUE(cellLayout, NS_ERROR_FAILURE);
-  return cellLayout->GetRowIndex(*aRow);
+  nsITableLayout *tableLayout = nsnull;
+  nsresult rv = GetTableLayout(&tableLayout);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 column;
+  return tableLayout->GetRowAndColumnByIndex(aIndex, aRow, &column);
 }
 
 NS_IMETHODIMP
