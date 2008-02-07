@@ -1025,7 +1025,7 @@ SessionStoreService.prototype = {
       for (var i = 0; i < aEntry.childCount; i++) {
         var child = aEntry.GetChildAt(i);
         if (child) {
-          entry.children.push(this._serializeHistoryEntry(child), aFullData);
+          entry.children.push(this._serializeHistoryEntry(child, aFullData));
         }
         else { // to maintain the correct frame order, insert a dummy entry 
           entry.children.push({ url: "about:blank" });
