@@ -228,9 +228,10 @@ nsSVGOuterSVGFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   nsSVGLength2 &width = svg->mLengthAttributes[nsSVGSVGElement::WIDTH];
 
   if (width.IsPercentage()) {
-    // If we're being called then our containing block's width depends on our
-    // width - fall back to 300px as required by CSS 2.1 section 10.3.2:
-    result = nsPresContext::CSSPixelsToAppUnits(300);
+    // It looks like our containing block's width may depend on our width. In
+    // that case our behavior is undefined according to CSS 2.1 section 10.3.2,
+    // so return zero.
+    result = nscoord(0);
   } else {
     result = nsPresContext::CSSPixelsToAppUnits(width.GetAnimValue(svg));
     if (result < 0) {
