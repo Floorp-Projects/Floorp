@@ -246,10 +246,10 @@ nsDocAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     frame = frame->GetParent();
   }
  
-  if (frame != nsnull) {
-    if (!CheckVisibilityInParentChain(mDocument, frame->GetViewExternal())) {
-      *aState |= nsIAccessibleStates::STATE_INVISIBLE;
-    }
+  if (frame == nsnull ||
+      !CheckVisibilityInParentChain(mDocument, frame->GetViewExternal())) {
+    *aState |= nsIAccessibleStates::STATE_INVISIBLE |
+               nsIAccessibleStates::STATE_OFFSCREEN;
   }
 
   nsCOMPtr<nsIEditor> editor;
