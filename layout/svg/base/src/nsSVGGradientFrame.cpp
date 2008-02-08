@@ -328,18 +328,20 @@ nsSVGGradientFrame::SetupPaintServer(gfxContext *aContext,
                                      nsSVGGeometryFrame *aSource,
                                      float aGraphicOpacity)
 {
-  PRUint32 nStops = GetStopCount();
-
-  // SVG specification says that no stops should be treated like
-  // the corresponding fill or stroke had "none" specified.
-  if (nStops == 0)
-    return PR_FALSE;
-
   // Get the transform list (if there is one)
   gfxMatrix patternMatrix = GetGradientTransform(aSource);
 
   if (patternMatrix.IsSingular())
     return PR_FALSE;
+
+  PRUint32 nStops = GetStopCount();
+
+  // SVG specification says that no stops should be treated like
+  // the corresponding fill or stroke had "none" specified.
+  if (nStops == 0) {
+    aContext->SetColor(gfxRGBA(0, 0, 0, 0));
+    return PR_TRUE;
+  }
 
   patternMatrix.Invert();
 
