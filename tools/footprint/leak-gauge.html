@@ -121,7 +121,12 @@ function run() {
                         var m = rest.match(/^ (.*)$/);
                         if (!m)
                             throw "URI expected";
-                        this.docs[addr][m[1]] = true;
+                        var uri = m[1];
+                        var doc_info = this.docs[addr];
+                        doc_info[uri] = true;
+                        if ("nim" in doc_info) {
+                            doc_info["nim"][uri] = true;
+                        }
                     }
                 }
             },
@@ -130,7 +135,9 @@ function run() {
                     var doc = this.docs[addr];
                     result += "Leaked document at address " + addr + ".\n";
                     for (var uri in doc) {
-                        result += " ... with URI \"" + uri + "\".\n";
+                        if (uri != "nim") {
+                            result += " ... with URI \"" + uri + "\".\n";
+                        }
                     }
                 }
             },
@@ -180,6 +187,53 @@ function run() {
                     ++len;
                 result += 'Leaked ' + len + ' out of ' +
                           this.count + " docshells\n";
+            }
+        },
+        "NODEINFOMANAGER": {
+            count: 0,
+            nims: {},
+            handle_line: function(line) {
+                var match = line.match(/^([0-9a-f]*) (\S*)(.*)/);
+                if (match) {
+                    var addr = match[1];
+                    var verb = match[2];
+                    var rest = match[3];
+                    if (verb == "created") {
+                        this.nims[addr] = {};
+                        ++this.count;
+                    } else if (verb == "destroyed") {
+                        delete this.nims[addr];
+                    } else if (verb == "Init") {
+                        var m = rest.match(/^ document=(.*)$/);
+                        if (!m)
+                            throw "document pointer expected";
+                        var nim_info = this.nims[addr];
+                        var doc = m[1];
+                        if (doc != "0") {
+                            var doc_info = handlers["DOCUMENT"].docs[doc];
+                            for (var uri in doc_info) {
+                                nim_info[uri] = true;
+                            }
+                            doc_info["nim"] = nim_info;
+                        }
+                    }
+                }
+            },
+            dump: function() {
+                for (var addr in this.nims) {
+                    var nim = this.nims[addr];
+                    result += "Leaked content nodes associated with node info manager at address " + addr + ".\n";
+                    for (var uri in nim) {
+                        result += " ... with document URI \"" + uri + "\".\n";
+                    }
+                }
+            },
+            summary: function() {
+                var len = 0;
+                for (var w in this.nims)
+                    ++len;
+                result += 'Leaked content nodes in ' + len + ' out of ' +
+                          this.count + " documents\n";
             }
         }
     };
@@ -237,7 +291,7 @@ function run() {
 
 <h1>Leak Gauge</h1>
 
-<pre>$Id: leak-gauge.html,v 1.6 2006/01/14 00:27:41 dbaron%dbaron.org Exp $</pre>
+<pre>$Id: leak-gauge.html,v 1.7 2008/02/08 19:55:03 dbaron%dbaron.org Exp $</pre>
 
 <p>This script is designed to help testers isolate and simplify testcases
 for many classes of leaks (those that involve large graphs of core
@@ -249,7 +303,7 @@ leak.  Once a site is known to leak, the logging can then be repeated
 to figure out under what conditions the leak occurs.</p>
 
 <p>The way to create this log is to set the environment variables:</p>
-<pre>  NSPR_LOG_MODULES=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5
+<pre>  NSPR_LOG_MODULES=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5,NodeInfoManagerLeak:5
   NSPR_LOG_FILE=nspr.log     <i>(or any other filename of your choice)</i></pre>
 <p>in your shell and then run the program.</p>
 <ul>

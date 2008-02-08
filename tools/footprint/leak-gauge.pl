@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# $Id: leak-gauge.pl,v 1.7 2006/01/14 00:27:41 dbaron%dbaron.org Exp $
+# $Id: leak-gauge.pl,v 1.8 2008/02/08 19:55:03 dbaron%dbaron.org Exp $
 # This script is designed to help testers isolate and simplify testcases
 # for many classes of leaks (those that involve large graphs of core
 # data structures) in Mozilla-based browsers.  It is designed to print
@@ -47,7 +47,7 @@
 # to figure out under what conditions the leak occurs.
 #
 # The way to create this log is to set the environment variables:
-#   NSPR_LOG_MODULES=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5
+#   NSPR_LOG_MODULES=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5,NodeInfoManagerLeak:5
 #   NSPR_LOG_FILE=nspr.log     (or any other filename of your choice)
 # in your shell and then run the program.
 # * In a Windows command prompt, set environment variables with
@@ -127,7 +127,9 @@ my $handlers = {
         docs => {},
         handle_line => sub($$) {
             my ($self, $line) = @_;
-            my $docs = ${$self}{docs};
+            # This doesn't work; I don't have time to figure out why not.
+            # my $docs = ${$self}{docs};
+            my $docs = ${$handlers}{"DOCUMENT"}{docs};
             if ($line =~ /^([0-9a-f]*) (\S*)/) {
                 my ($addr, $verb, $rest) = ($1, $2, $');
                 if ($verb eq "created") {
@@ -139,7 +141,11 @@ my $handlers = {
                          $verb eq "StartDocumentLoad") {
                     $rest =~ /^ (.*)$/ || die "URI expected";
                     my $uri = $1;
-                    ${${$docs}{$addr}}{$uri} = 1;
+                    my $doc_info = ${$docs}{$addr};
+                    ${$doc_info}{$uri} = 1;
+                    if (exists(${$doc_info}{"nim"})) {
+                        ${$doc_info}{"nim"}{$uri} = 1;
+                    }
                 }
             }
         },
@@ -149,7 +155,7 @@ my $handlers = {
             foreach my $addr (keys(%{$docs})) {
                 print "Leaked document at address $addr.\n";
                 foreach my $uri (keys(%{${$docs}{$addr}})) {
-                    print " ... with URI \"$uri\".\n";
+                    print " ... with URI \"$uri\".\n" unless $uri eq "nim";
                 }
             }
         },
@@ -196,6 +202,51 @@ my $handlers = {
             my $shells = ${$self}{shells};
             print 'Leaked ' . keys(%{$shells}) . ' out of ' .
                   ${$self}{count} . " docshells\n";
+        }
+    },
+    "NODEINFOMANAGER" => {
+        count => 0,
+        nims => {},
+        handle_line => sub($$) {
+            my ($self, $line) = @_;
+            my $nims = ${$self}{nims};
+            if ($line =~ /^([0-9a-f]*) (\S*)/) {
+                my ($addr, $verb, $rest) = ($1, $2, $');
+                if ($verb eq "created") {
+                    ${$nims}{$addr} = {};
+                    ++${$self}{count};
+                } elsif ($verb eq "destroyed") {
+                    delete ${$nims}{$addr};
+                } elsif ($verb eq "Init") {
+                    $rest =~ /^ document=(.*)$/ ||
+                        die "document pointer expected";
+                    my $doc = $1;
+                    if ($doc ne "0") {
+                        my $nim_info = ${$nims}{$addr};
+                        my $doc_info = ${$handlers}{"DOCUMENT"}{docs}{$doc};
+                        foreach my $uri (keys(%{$doc_info})) {
+                            ${$nim_info}{$uri} = 1;
+                        }
+                        ${$doc_info}{"nim"} = $nim_info;
+                    }
+                }
+            }
+        },
+        dump => sub ($) {
+            my ($self) = @_;
+            my $nims = ${$self}{nims};
+            foreach my $addr (keys(%{$nims})) {
+                print "Leaked content nodes associated with node info manager at address $addr.\n";
+                foreach my $uri (keys(%{${$nims}{$addr}})) {
+                    print " ... with document URI \"$uri\".\n";
+                }
+            }
+        },
+        summary => sub($) {
+            my ($self) = @_;
+            my $nims = ${$self}{nims};
+            print 'Leaked content nodes within ' . keys(%{$nims}) . ' out of ' .
+                  ${$self}{count} . " documents\n";
         }
     }
 };
