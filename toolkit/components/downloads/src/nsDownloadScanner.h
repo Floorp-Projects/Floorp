@@ -10,6 +10,12 @@
 #include <Windows.h>
 #define AVVENDOR
 #include <msoav.h>
+// To cope with both msvs8 header and sdk6 header
+#ifdef _WIN32_IE_IE60SP2
+#undef _WIN32_IE
+#define _WIN32_IE _WIN32_IE_IE60SP2
+#endif
+#include <shlobj.h>
 
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
@@ -35,7 +41,9 @@ public:
 
 private:
   PRBool mHaveAVScanner;
+  PRBool mHaveAttachmentExecute;
   nsTArray<CLSID> mScanCLSID;
+  PRBool IsAESAvailable();
   PRInt32 ListCLSID();
 
   static unsigned int __stdcall ScannerThreadFunction(void *p);
@@ -60,6 +68,8 @@ private:
     NS_IMETHOD Run();
 
     void DoScan();
+    void DoScanAES();
+    void DoScanOAV();
 
     friend unsigned int __stdcall nsDownloadScanner::ScannerThreadFunction(void *);
   };
