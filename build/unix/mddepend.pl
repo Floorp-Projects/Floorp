@@ -54,11 +54,9 @@ my $silent = $ENV{MAKEFLAGS} =~ /^\w*s|\s-s/;
 %alldeps={};
 # Parse dependency files
 while ($line = <>) {
-  chomp $line;
-  # Remove extra ^M caused by using dos-mode line-endings
-  chop $line if (substr($line, -1, 1) eq "\r");
+  $line =~ s/\r?\n$//; # Handle both unix and DOS line endings
   ($obj,$rest) = split /\s*:\s+/, $line, 2;
-  next if $obj eq '';
+  next if $obj eq '' || $rest eq '';
 
   if ($line =~ /\\$/) {
     chop $rest;
@@ -70,7 +68,7 @@ while ($line = <>) {
   print "add $obj $rest\n" if $debug;
 
   while ($hasSlash and $line = <>) {
-    chomp $line;
+    $line =~ s/\r?\n$//; # Handle both unix and DOS line endings
     if ($line =~ /\\$/) {
       chop $line;
     } else {
