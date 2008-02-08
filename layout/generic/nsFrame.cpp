@@ -3601,6 +3601,21 @@ nsIFrame::InvalidateInternal(const nsRect& aDamageRect, nscoord aX, nscoord aY,
 }
 
 void
+nsIFrame::InvalidateRectDifference(const nsRect& aR1, const nsRect& aR2)
+{
+  nsRect sizeHStrip, sizeVStrip;
+  nsLayoutUtils::GetRectDifferenceStrips(aR1, aR2, &sizeHStrip, &sizeVStrip);
+  Invalidate(sizeVStrip);
+  Invalidate(sizeHStrip);
+}
+
+void
+nsIFrame::InvalidateOverflowRect()
+{
+  Invalidate(GetOverflowRect());
+}
+
+void
 nsIFrame::InvalidateRoot(const nsRect& aDamageRect,
                          nscoord aX, nscoord aY, PRBool aImmediate)
 {

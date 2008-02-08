@@ -2486,3 +2486,21 @@ nsLayoutUtils::GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
 #endif
   return result;
 }
+
+/* static */ void
+nsLayoutUtils::GetRectDifferenceStrips(const nsRect& aR1, const nsRect& aR2,
+                                       nsRect* aHStrip, nsRect* aVStrip) {
+  NS_ASSERTION(aR1.TopLeft() == aR2.TopLeft(),
+               "expected rects at the same position");
+  nsRect unionRect(aR1.x, aR1.y, PR_MAX(aR1.width, aR2.width),
+                   PR_MAX(aR1.height, aR2.height));
+  nscoord VStripStart = PR_MIN(aR1.width, aR2.width);
+  nscoord HStripStart = PR_MIN(aR1.height, aR2.height);
+  *aVStrip = unionRect;
+  aVStrip->x += VStripStart;
+  aVStrip->width -= VStripStart;
+  *aHStrip = unionRect;
+  aHStrip->y += HStripStart;
+  aHStrip->height -= HStripStart;
+}
+
