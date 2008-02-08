@@ -378,9 +378,16 @@ IsLoadableDTD(const nsCatalogData* aCatalogData, nsIURI* aDTD,
 
 /***************************** END CATALOG UTILS *****************************/
 
-NS_IMPL_ISUPPORTS2(nsExpatDriver,
-                   nsITokenizer,
-                   nsIDTD)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsExpatDriver)
+  NS_INTERFACE_MAP_ENTRY(nsITokenizer)
+  NS_INTERFACE_MAP_ENTRY(nsIDTD)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDTD)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsExpatDriver)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsExpatDriver)
+
+NS_IMPL_CYCLE_COLLECTION_2(nsExpatDriver, mSink, mExtendedSink)
 
 nsExpatDriver::nsExpatDriver()
   : mExpatParser(nsnull),

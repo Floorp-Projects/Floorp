@@ -245,19 +245,39 @@ static PRBool gDumpContent=PR_FALSE;
  */
 nsParser::nsParser()
 {
+  Initialize(PR_TRUE);
+}
+
+nsParser::~nsParser()
+{
+  Cleanup();
+}
+
+void
+nsParser::Initialize(PRBool aConstructor)
+{
 #ifdef NS_DEBUG
   if (!gDumpContent) {
     gDumpContent = PR_GetEnv("PARSER_DUMP_CONTENT") != nsnull;
   }
 #endif
 
+  if (aConstructor) {
+    // Raw pointer
+    mParserContext = 0;
+  }
+  else {
+    // nsCOMPtrs
+    mObserver = nsnull;
+    mParserFilter = nsnull;
+  }
+
+  mContinueEvent = nsnull;
+  mCharsetSource = kCharsetUninitialized;
   mCharset.AssignLiteral("ISO-8859-1");
-  mParserContext=0;
-  mStreamStatus=0;
-  mCharsetSource=kCharsetUninitialized;
-  mInternalState=NS_OK;
-  mContinueEvent=nsnull;
-  mCommand=eViewNormal;
+  mInternalState = NS_OK;
+  mStreamStatus = 0;
+  mCommand = eViewNormal;
   mFlags = NS_PARSER_FLAG_OBSERVERS_ENABLED |
            NS_PARSER_FLAG_PARSER_ENABLED |
            NS_PARSER_FLAG_CAN_TOKENIZE;
@@ -268,12 +288,9 @@ nsParser::nsParser()
   MOZ_TIMER_RESET(mTokenizeTime);
 }
 
-/**
- *  Destructor
- */
-nsParser::~nsParser()
+void
+nsParser::Cleanup()
 {
-
 #ifdef NS_DEBUG
   if (gDumpContent) {
     if (mSink) {
@@ -306,14 +323,31 @@ nsParser::~nsParser()
   NS_ASSERTION(!(mFlags & NS_PARSER_FLAG_PENDING_CONTINUE_EVENT), "bad");
 }
 
-NS_IMPL_CYCLE_COLLECTION_2(nsParser, mSink, mObserver)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsParser)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsParser)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mSink)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mObserver)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsParser)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSink)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mObserver)
+  CParserContext *pc = tmp->mParserContext;
+  while (pc) {
+    cb.NoteXPCOMChild(pc->mDTD);
+    cb.NoteXPCOMChild(pc->mTokenizer);
+    pc = pc->mPrevContext;
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsParser, nsIParser)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsParser, nsIParser)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsParser)
- NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
- NS_INTERFACE_MAP_ENTRY(nsIParser)
- NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
- NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIParser)
+  NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+  NS_INTERFACE_MAP_ENTRY(nsIParser)
+  NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIParser)
 NS_INTERFACE_MAP_END
 
 // The parser continue event is posted only if

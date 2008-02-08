@@ -78,6 +78,8 @@
 #include "nsIParser.h"
 #include "nsIFragmentContentSink.h"
 #include "nsIContentSink.h"
+#include "nsIHTMLContentSink.h"
+#include "nsIXMLContentSink.h"
 #include "nsHTMLParts.h"
 #include "nsIParserService.h"
 #include "nsIServiceManager.h"
@@ -130,7 +132,6 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIEventListenerManager.h"
 #include "nsAttrName.h"
 #include "nsIDOMUserDataHandler.h"
-#include "nsIFragmentContentSink.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsTPtrArray.h"
 #include "nsGUIEvent.h"
@@ -3325,11 +3326,7 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
   NS_ENSURE_ARG(aContextNode);
   *aReturn = nsnull;
 
-  // Create a new parser for this entire operation
   nsresult rv;
-  nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsINode> node = do_QueryInterface(aContextNode);
   NS_ENSURE_TRUE(node, NS_ERROR_NOT_AVAILABLE);
 
@@ -3402,17 +3399,52 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
 
   nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(document));
   PRBool bHTML = htmlDoc && !bCaseSensitive;
-  nsCOMPtr<nsIFragmentContentSink> sink;
-  if (bHTML) {
-    rv = NS_NewHTMLFragmentContentSink(getter_AddRefs(sink));
-  } else {
-    rv = NS_NewXMLFragmentContentSink(getter_AddRefs(sink));
+
+  // See if the document has a cached fragment parser. nsHTMLDocument is the
+  // only one that should really have one at the moment.
+  nsCOMPtr<nsIParser> parser = document->GetFragmentParser();
+  if (parser) {
+    // Get the parser ready to use.
+    parser->Reset();
   }
-  NS_ENSURE_SUCCESS(rv, rv);
+  else {
+    // Create a new parser for this operation.
+    parser = do_CreateInstance(kCParserCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // See if the parser already has a content sink that we can reuse.
+  nsCOMPtr<nsIFragmentContentSink> sink;
+  nsCOMPtr<nsIContentSink> contentsink = parser->GetContentSink();
+  if (contentsink) {
+    // Make sure it's the correct type.
+    if (bHTML) {
+      nsCOMPtr<nsIHTMLContentSink> htmlsink = do_QueryInterface(contentsink);
+      sink = do_QueryInterface(htmlsink);
+    }
+    else {
+      nsCOMPtr<nsIXMLContentSink> xmlsink = do_QueryInterface(contentsink);
+      sink = do_QueryInterface(xmlsink);
+    }
+  }
+
+  if (!sink) {
+    // Either there was no cached content sink or it was the wrong type. Make a
+    // new one.
+    if (bHTML) {
+      rv = NS_NewHTMLFragmentContentSink(getter_AddRefs(sink));
+    } else {
+      rv = NS_NewXMLFragmentContentSink(getter_AddRefs(sink));
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    contentsink = do_QueryInterface(sink);
+    NS_ASSERTION(contentsink, "Sink doesn't QI to nsIContentSink!");
+
+    parser->SetContentSink(contentsink);
+  }
 
   sink->SetTargetDocument(document);
-  nsCOMPtr<nsIContentSink> contentsink(do_QueryInterface(sink));
-  parser->SetContentSink(contentsink);
 
   nsDTDMode mode = eDTDMode_autodetect;
   switch (document->GetCompatibilityMode()) {
@@ -3436,6 +3468,8 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
   if (NS_SUCCEEDED(rv)) {
     rv = sink->GetFragment(aReturn);
   }
+
+  document->SetFragmentParser(parser);
 
   return NS_OK;
 }

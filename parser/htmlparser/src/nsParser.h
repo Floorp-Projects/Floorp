@@ -381,7 +381,15 @@ class nsParser : public nsIParser,
       return sCharsetConverterManager;
     }
 
-protected:
+    virtual void Reset() {
+      Cleanup();
+      Initialize();
+    }
+
+ protected:
+
+    void Initialize(PRBool aConstructor = PR_FALSE);
+    void Cleanup();
 
     /**
      * 
