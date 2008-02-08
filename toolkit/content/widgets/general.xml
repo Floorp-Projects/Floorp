@@ -310,7 +310,10 @@
       <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULImage;
+            // Expose XUL images with an onclick as a toolbarbutton
+            return this.hasAttribute("onclick") ?
+              Components.interfaces.nsIAccessibleProvider.XULToolbarButton :
+              Components.interfaces.nsIAccessibleProvider.XULImage;
           ]]>
         </getter>
       </property>
