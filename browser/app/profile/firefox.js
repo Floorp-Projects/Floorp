@@ -542,6 +542,9 @@ pref("gecko.handlerService.defaultHandlersVersion", "0");
 pref("gecko.handlerService.schemes.webcal.0.name", "WebCal Test Handler");
 pref("gecko.handlerService.schemes.webcal.0.uriTemplate", "http://handler-test.mozilla.org/webcal?url=%s");
 
+// By default, we don't want protocol/content handlers to be registered from a different host, see bug 402287
+pref("gecko.handlerService.allowRegisterFromDifferentHost", false);
+
 #ifdef MOZ_SAFE_BROWSING
 // Safe browsing does nothing unless both these prefs are set.
 pref("browser.safebrowsing.enabled", true);
