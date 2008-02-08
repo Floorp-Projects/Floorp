@@ -726,7 +726,7 @@
         <xul:vbox flex="1">
           <xul:hbox class="addon-name-version" xbl:inherits="name, version"/>
           <xul:hbox>
-            <xul:description xbl:inherits="value=updateStatus" flex="1" crop="end"/>
+            <xul:label xbl:inherits="value=updateStatus" flex="1" crop="end"/>
           </xul:hbox>
         </xul:vbox>
       </xul:hbox>
@@ -742,7 +742,7 @@
         <xul:vbox flex="1">
           <xul:hbox class="addon-name-version" xbl:inherits="name, version"/>
           <xul:hbox>
-            <xul:description xbl:inherits="value=updateAvailableMsg" flex="1" crop="end"/>
+            <xul:label xbl:inherits="value=updateAvailableMsg" flex="1" crop="end"/>
           </xul:hbox>
           <xul:hbox pack="end" align="end">
             <xul:checkbox anonid="includeUpdate" class="includeUpdate" checked="true"
