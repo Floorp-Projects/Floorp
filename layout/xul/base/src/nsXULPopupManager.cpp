@@ -60,7 +60,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIBaseWindow.h"
-#include "nsIDocShellTreeItem.h"
 
 // See matching definitions in nsXULPopupManager.h
 nsNavigationDirection DirectionFromKeyCode_lr_tb [6] = {
@@ -766,25 +765,8 @@ nsXULPopupManager::HidePopupsInList(const nsTArray<nsMenuPopupFrame *> &aFrames,
   SetCaptureState(nsnull);
 }
 
-PRBool
-nsXULPopupManager::IsChildOfDocShell(nsIDocument* aDoc, nsIDocShellTreeItem* aExpected)
-{
-  nsCOMPtr<nsISupports> doc = aDoc->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> docShellItem(do_QueryInterface(doc));
-  while(docShellItem) {
-    if (docShellItem == aExpected)
-      return PR_TRUE;
-
-    nsCOMPtr<nsIDocShellTreeItem> parent;
-    docShellItem->GetParent(getter_AddRefs(parent));
-    docShellItem = parent;
-  }
-
-  return PR_FALSE;
-}
-
 void
-nsXULPopupManager::HidePopupsInDocShell(nsIDocShellTreeItem* aDocShellToHide)
+nsXULPopupManager::HidePopupsInDocument(nsIDocument* aDocument)
 {
   nsTArray<nsMenuPopupFrame *> popupsToHide;
 
@@ -793,7 +775,7 @@ nsXULPopupManager::HidePopupsInDocShell(nsIDocShellTreeItem* aDocShellToHide)
   while (item) {
     nsMenuChainItem* parent = item->GetParent();
     if (item->Frame()->PopupState() != ePopupInvisible &&
-        IsChildOfDocShell(item->Content()->GetOwnerDoc(), aDocShellToHide)) {
+        aDocument && item->Content()->GetOwnerDoc() == aDocument) {
       nsMenuPopupFrame* frame = item->Frame();
       item->Detach(&mCurrentMenu);
       delete item;
@@ -807,7 +789,7 @@ nsXULPopupManager::HidePopupsInDocShell(nsIDocShellTreeItem* aDocShellToHide)
   while (item) {
     nsMenuChainItem* parent = item->GetParent();
     if (item->Frame()->PopupState() != ePopupInvisible &&
-        IsChildOfDocShell(item->Content()->GetOwnerDoc(), aDocShellToHide)) {
+        aDocument && item->Content()->GetOwnerDoc() == aDocument) {
       nsMenuPopupFrame* frame = item->Frame();
       item->Detach(&mPanels);
       delete item;
