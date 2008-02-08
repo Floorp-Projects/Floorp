@@ -468,6 +468,8 @@ protected:
   nsresult InitMemDB();
 #endif
 
+  nsresult RemovePagesInternal(const nsCString& aPlaceIdsQueryString);
+
   nsresult AddURIInternal(nsIURI* aURI, PRTime aTime, PRBool aRedirect,
                           PRBool aToplevel, nsIURI* aReferrer);
 

@@ -90,6 +90,8 @@ interface nsIBrowserHistory : nsIGlobalHistory2
      * Remove all pages from the given host.
      * If aEntireDomain is true, will assume aHost is a domain,
      * and remove all pages from the entire domain.
+     * Notice that this does not call observers for single deleted uris,
+     * instead it will send Begin/EndUpdateBatch
      */
     void removePagesFromHost(in AUTF8String aHost, in boolean aEntireDomain);
 
