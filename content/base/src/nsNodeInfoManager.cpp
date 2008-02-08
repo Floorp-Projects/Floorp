@@ -53,6 +53,16 @@
 #include "nsComponentManagerUtils.h"
 #include "nsLayoutStatics.h"
 
+#ifdef MOZ_LOGGING
+// so we can get logging even in release builds
+#define FORCE_PR_LOG 1
+#endif
+#include "prlog.h"
+
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gNodeInfoManagerLeakPRLog;
+#endif
+
 PLHashNumber
 nsNodeInfoManager::GetNodeInfoInnerHashValue(const void *key)
 {
@@ -91,6 +101,15 @@ nsNodeInfoManager::nsNodeInfoManager()
 {
   nsLayoutStatics::AddRef();
 
+#ifdef PR_LOGGING
+  if (!gNodeInfoManagerLeakPRLog)
+    gNodeInfoManagerLeakPRLog = PR_NewLogModule("NodeInfoManagerLeak");
+
+  if (gNodeInfoManagerLeakPRLog)
+    PR_LOG(gNodeInfoManagerLeakPRLog, PR_LOG_DEBUG,
+           ("NODEINFOMANAGER %p created", this));
+#endif
+
   mNodeInfoHash = PL_NewHashTable(32, GetNodeInfoInnerHashValue,
                                   NodeInfoInnerKeyCompare,
                                   PL_CompareValues, nsnull, nsnull);
@@ -104,6 +123,12 @@ nsNodeInfoManager::~nsNodeInfoManager()
 
   // Note: mPrincipal may be null here if we never got inited correctly
   NS_IF_RELEASE(mPrincipal);
+
+#ifdef PR_LOGGING
+  if (gNodeInfoManagerLeakPRLog)
+    PR_LOG(gNodeInfoManagerLeakPRLog, PR_LOG_DEBUG,
+           ("NODEINFOMANAGER %p destroyed", this));
+#endif
 
   nsLayoutStatics::Release();
 }
@@ -149,6 +174,12 @@ nsNodeInfoManager::Init(nsIDocument *aDocument)
   mDefaultPrincipal = mPrincipal;
 
   mDocument = aDocument;
+
+#ifdef PR_LOGGING
+  if (gNodeInfoManagerLeakPRLog)
+    PR_LOG(gNodeInfoManagerLeakPRLog, PR_LOG_DEBUG,
+           ("NODEINFOMANAGER %p Init document=%p", this, aDocument));
+#endif
 
   return NS_OK;
 }
