@@ -739,7 +739,7 @@ nsXULTreeitemAccessible::nsXULTreeitemAccessible(nsIAccessible *aParent, nsIDOMN
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXULTreeitemAccessible, nsLeafAccessible,
-                             nsPIAccessibleTreeItem);
+                             nsPIAccessibleTreeItem)
 
 NS_IMETHODIMP nsXULTreeitemAccessible::Shutdown()
 {
