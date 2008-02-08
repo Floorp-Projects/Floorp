@@ -315,6 +315,24 @@ WeaveSyncService.prototype = {
       this._dav.login.async(this._dav, cont, this.username, this.password);
       success = yield;
 
+      // FIXME: we want to limit this to when we get a 404!
+      if (!success) {
+        this._log.debug("Attempting to create user directory");
+
+        this._dav.baseURL = this._serverURL;
+        this._dav.MKCOL("user/" + this.userPath, cont);
+        let ret = yield;
+
+        if (ret.status == 201) {
+          this._log.debug("Successfully created user directory.  Re-attempting login.");
+          this._dav.baseURL = this._serverURL + "user/" + this.userPath + "/";
+          this._dav.login.async(this._dav, cont, this.username, this.password);
+          success = yield;
+        } else {
+          this._log.debug("Could not create user directory.  Got status: " + ret.status);
+        }
+      }
+
     } catch (e) {
       this._log.error("Exception caught: " + e.message);
 
