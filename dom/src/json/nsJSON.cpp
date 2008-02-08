@@ -1273,7 +1273,9 @@ nsresult
 nsJSONListener::HandleString(const PRUnichar *aBuf, PRUint32 aLength)
 {
   JSObject *obj = mObjectStack.ElementAt(mObjectStack.Length() - 1);
-  JSString *str = JS_NewUCStringCopyN(mCx, aBuf, aLength);
+  JSString *str = JS_NewUCStringCopyN(mCx, 
+                                      reinterpret_cast<const jschar*> (aBuf),
+                                      aLength);
   if (!str)
     return NS_ERROR_OUT_OF_MEMORY;
 
