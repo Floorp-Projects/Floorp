@@ -106,6 +106,10 @@ richlistitem[selected="true"] {
   color: -moz-cellhighlighttext;
 }
 
+richlistitem[selected="true"] .text-link {
+  color: inherit;
+}
+
 #extensionsView:focus > richlistitem[selected="true"] {
   background-image: url("chrome://mozapps/skin/extensions/itemEnabledFader.png");
   background-color: Highlight;

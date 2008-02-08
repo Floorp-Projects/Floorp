@@ -62,6 +62,10 @@ richlistitem[selected="true"] {
   color: HighlightText;
 }
 
+richlistitem[selected="true"] .text-link {
+  color: inherit;
+}
+
 richlistitem[selected="true"][isDisabled="true"] {
   background-image: url("chrome://mozapps/skin/extensions/itemDisabledFader.png");
 }
