@@ -867,7 +867,7 @@
     <content align="center">
       <xul:image class="searchbox-image" xbl:inherits="src=image"/>
       <xul:textbox class="plain"
-                   xbl:inherits="emptyText,onfocus,onblur,spellcheck,value,maxlength,disabled,size,readonly,tabindex,accesskey"/>
+                   xbl:inherits="emptytext,onfocus,onblur,spellcheck,value,maxlength,disabled,size,readonly,tabindex,accesskey"/>
       <xul:button class="searchbox-search" xbl:inherits="disabled" oncommand="this.parentNode.startSearch()"/>
       <xul:button class="searchbox-cancel" xbl:inherits="disabled" hidden="true" oncommand="this.parentNode.clearSearch()"/>
     </content>
