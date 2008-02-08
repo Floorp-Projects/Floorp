@@ -1153,6 +1153,12 @@ public:
                                          PRBool aGetCharCode);
 
   /**
+   * Hide any XUL popups associated with aDocument, including any documents
+   * displayed in child frames.
+   */
+  static void HidePopupsInDocument(nsIDocument* aDocument);
+
+  /**
    * Get the application manifest URI for this context.  The manifest URI
    * is specified in the manifest= attribute of the root element of the
    * toplevel window.
