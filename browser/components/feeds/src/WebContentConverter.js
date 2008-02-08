@@ -62,6 +62,7 @@ const PREF_CONTENTHANDLERS_BRANCH = "browser.contentHandlers.types.";
 const PREF_SELECTED_WEB = "browser.feeds.handlers.webservice";
 const PREF_SELECTED_ACTION = "browser.feeds.handler";
 const PREF_SELECTED_READER = "browser.feeds.handler.default";
+const PREF_ALLOW_DIFFERENT_HOST = "gecko.handlerService.allowRegisterFromDifferentHost";
 
 const STRING_BUNDLE_URI = "chrome://browser/locale/feeds/subscribe.properties";
 
@@ -346,7 +347,7 @@ WebContentConverterRegistrar.prototype = {
   },
 
   _checkAndGetURI:
-  function WCCR_checkAndGetURI(aURIString)
+  function WCCR_checkAndGetURI(aURIString, aContentWindow)
   {
     try {
       var uri = this._makeURI(aURIString);
@@ -355,12 +356,20 @@ WebContentConverterRegistrar.prototype = {
       return; 
     }
 
-    // For security reasons we reject non-http(s) urls (see bug Bug 354316),
+    // For security reasons we reject non-http(s) urls (see bug 354316),
     // we may need to revise this once we support more content types
     // XXX this should be a "security exception" according to spec, but that
     // isn't defined yet.
     if (uri.scheme != "http" && uri.scheme != "https")
       throw("Permission denied to add " + uri.spec + " as a content or protocol handler");
+
+    // We also reject handlers registered from a different host (see bug 402287)
+    // The pref allows us to test the feature
+    var pb = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+    if ((!pb.prefHasUserValue(PREF_ALLOW_DIFFERENT_HOST) ||
+         !pb.getBoolPref(PREF_ALLOW_DIFFERENT_HOST)) &&
+        aContentWindow.location.hostname != uri.host)
+      throw("Permision denied to add " + uri.spec + " as a content or protocol handler");
 
     // If the uri doesn't contain '%s', it won't be a good handler
     if (uri.spec.indexOf("%s") < 0)
@@ -413,7 +422,7 @@ WebContentConverterRegistrar.prototype = {
       throw("Permission denied to add " + aURIString + "as a protocol handler");
     }
  
-    var uri = this._checkAndGetURI(aURIString);
+    var uri = this._checkAndGetURI(aURIString, aContentWindow);
 
     var buttons, message;
     if (this._protocolHandlerRegistered(aProtocol, uri.spec))
@@ -489,7 +498,7 @@ WebContentConverterRegistrar.prototype = {
     if (contentType != TYPE_MAYBE_FEED)
       return;
 
-    var uri = this._checkAndGetURI(aURIString);
+    var uri = this._checkAndGetURI(aURIString, aContentWindow);
 
     var browserWindow = this._getBrowserWindowForContentWindow(aContentWindow);
     var browserElement = this._getBrowserForContentWindow(browserWindow, aContentWindow);
