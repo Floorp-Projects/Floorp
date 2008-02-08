@@ -413,6 +413,7 @@ protected:
   void PostScrollEvent();
   void FireScrollEvent();
 
+#ifdef ACCESSIBILITY
   /**
    * Fires 'treeRowCountChanged' event asynchronously. The event supports
    * nsIDOMDataContainerEvent interface that is used to expose the following
@@ -423,6 +424,24 @@ protected:
    *                an operation, plus - addition, minus - removing)
    */
   void FireRowCountChangedEvent(PRInt32 aIndex, PRInt32 aCount);
+
+  /**
+   * Fires 'treeInvalidated' event asynchronously. The event supports
+   * nsIDOMDataContainerEvent interface that is used to expose the information
+   * structures described by method arguments.
+   *
+   * @param aStartRow  the start index of invalidated rows, -1 means that
+   *                   columns have been invalidated only
+   * @param aEndRow    the end index of invalidated rows, -1 means that columns
+   *                   have been invalidated only
+   * @param aStartCol  the start invalidated column, nsnull means that only rows
+   *                   have been invalidated
+   * @param aEndCol    the end invalidated column, nsnull means that rows have
+   *                   been invalidated only
+   */
+  void FireInvalidateEvent(PRInt32 aStartRow, PRInt32 aEndRow,
+                           nsITreeColumn *aStartCol, nsITreeColumn *aEndCol);
+#endif
 
 protected: // Data Members
   // The cached box object parent.
