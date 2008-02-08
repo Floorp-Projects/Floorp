@@ -61,6 +61,7 @@
 #include "nsIDocument.h"
 #include "nsInterfaceHashtable.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsChangeHint.h"
 // XXX we need only gfxTypes.h, but we cannot include it directly.
 #include "gfxPoint.h"
 class nsImageLoader;
@@ -200,7 +201,7 @@ public:
     { return GetPresShell()->FrameManager(); } 
 #endif
 
-  void RebuildAllStyleData();
+  void RebuildAllStyleData(nsChangeHint aExtraHint);
   void PostRebuildAllStyleDataEvent();
 
   /**
@@ -465,7 +466,7 @@ public:
   float TextZoom() { return mTextZoom; }
   void SetTextZoom(float aZoom) {
     mTextZoom = aZoom;
-    RebuildAllStyleData();
+    RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
   }
 
   float GetFullZoom() { return mFullZoom; }
@@ -849,6 +850,7 @@ protected:
   unsigned              mPrefScrollbarSide : 2;
   unsigned              mPendingSysColorChanged : 1;
   unsigned              mPendingThemeChanged : 1;
+  unsigned              mPrefChangePendingNeedsReflow : 1;
   unsigned              mRenderedPositionVaryingContent : 1;
 
   // resize reflow is supressed when the only change has been to zoom
