@@ -280,8 +280,6 @@ const char* const docEvents[] = {
   "focus",
   // capture Form change events 
   "select",
-  // capture NameChange events (fired whenever name changes, immediately after, whether focus moves or not)
-  "NameChange",
   // capture ValueChange events (fired whenever value changes, immediately after, whether focus moves or not)
   "ValueChange",
   // capture AlertActive events (fired whenever alert pops up)
@@ -289,6 +287,7 @@ const char* const docEvents[] = {
   // add ourself as a TreeViewChanged listener (custom event fired in nsTreeBodyFrame.cpp)
   "TreeViewChanged",
   "TreeRowCountChanged",
+  "TreeInvalidated",
   // add ourself as a OpenStateChange listener (custom event fired in tree.xml)
   "OpenStateChange",
   // add ourself as a CheckboxStateChange listener (custom event fired in nsHTMLInputElement.cpp)
@@ -687,32 +686,11 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     return NS_OK;
 
 #ifdef MOZ_XUL
-  if (eventType.EqualsLiteral("TreeRowCountChanged")) {
-    if (!isTree)
-      return NS_OK;
-
-    nsCOMPtr<nsIDOMDataContainerEvent> dataEvent(do_QueryInterface(aEvent));
-    NS_ENSURE_STATE(dataEvent);
-
-    nsCOMPtr<nsIVariant> indexVariant;
-    dataEvent->GetData(NS_LITERAL_STRING("index"),
-                       getter_AddRefs(indexVariant));
-    NS_ENSURE_STATE(indexVariant);
-
-    nsCOMPtr<nsIVariant> countVariant;
-    dataEvent->GetData(NS_LITERAL_STRING("count"),
-                       getter_AddRefs(countVariant));
-    NS_ENSURE_STATE(countVariant);
-
-    PRInt32 index, count;
-    indexVariant->GetAsInt32(&index);
-    countVariant->GetAsInt32(&count);
-
-    nsCOMPtr<nsIAccessibleTreeCache> treeAccCache(do_QueryInterface(accessible));
-    NS_ENSURE_STATE(treeAccCache);
-
-    return treeAccCache->InvalidateCache(index, count);
-  }
+  if (eventType.EqualsLiteral("TreeRowCountChanged"))
+    return HandleTreeRowCountChangedEvent(aEvent, accessible, localName);
+  
+  if (eventType.EqualsLiteral("TreeInvalidated"))
+    return HandleTreeInvalidatedEvent(aEvent, accessible, localName);
 #endif
 
   if (eventType.EqualsLiteral("RadioStateChange")) {
@@ -851,9 +829,6 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
       }
     }
     FireAccessibleFocusEvent(accessible, focusedItem, aEvent);
-  }
-  else if (eventType.EqualsLiteral("NameChange")) {
-    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, accessible);
   }
   else if (eventType.EqualsLiteral("AlertActive")) { 
     nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_ALERT, accessible);
@@ -1104,3 +1079,82 @@ NS_IMETHODIMP nsRootAccessible::FireDocLoadEvents(PRUint32 aEventType)
 
   return NS_OK;
 }
+
+nsresult
+nsRootAccessible::HandleTreeRowCountChangedEvent(nsIDOMEvent *aEvent,
+                                                 nsIAccessible *aAccessible,
+                                                 const nsAString& aTargetName)
+{
+  if (!aTargetName.EqualsLiteral("tree"))
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMDataContainerEvent> dataEvent(do_QueryInterface(aEvent));
+  if (!dataEvent)
+    return NS_OK;
+
+  nsCOMPtr<nsIVariant> indexVariant;
+  dataEvent->GetData(NS_LITERAL_STRING("index"),
+                     getter_AddRefs(indexVariant));
+  if (!indexVariant)
+    return NS_OK;
+
+  nsCOMPtr<nsIVariant> countVariant;
+  dataEvent->GetData(NS_LITERAL_STRING("count"),
+                     getter_AddRefs(countVariant));
+  if (!countVariant)
+    return NS_OK;
+
+  PRInt32 index, count;
+  indexVariant->GetAsInt32(&index);
+  countVariant->GetAsInt32(&count);
+
+  nsCOMPtr<nsIAccessibleTreeCache> treeAccCache(do_QueryInterface(aAccessible));
+  NS_ENSURE_STATE(treeAccCache);
+
+  return treeAccCache->InvalidateCache(index, count);
+}
+
+nsresult
+nsRootAccessible::HandleTreeInvalidatedEvent(nsIDOMEvent *aEvent,
+                                             nsIAccessible *aAccessible,
+                                             const nsAString& aTargetName)
+{
+  if (!aTargetName.EqualsLiteral("tree"))
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMDataContainerEvent> dataEvent(do_QueryInterface(aEvent));
+  if (!dataEvent)
+    return NS_OK;
+
+  PRInt32 startRow = 0, endRow = -1, startCol = 0, endCol = -1;
+
+  nsCOMPtr<nsIVariant> startRowVariant;
+  dataEvent->GetData(NS_LITERAL_STRING("startrow"),
+                     getter_AddRefs(startRowVariant));
+  if (startRowVariant)
+    startRowVariant->GetAsInt32(&startRow);
+
+  nsCOMPtr<nsIVariant> endRowVariant;
+  dataEvent->GetData(NS_LITERAL_STRING("endrow"),
+                     getter_AddRefs(endRowVariant));
+  if (endRowVariant)
+    endRowVariant->GetAsInt32(&endRow);
+
+  nsCOMPtr<nsIVariant> startColVariant;
+  dataEvent->GetData(NS_LITERAL_STRING("startcolumn"),
+                     getter_AddRefs(startColVariant));
+  if (startColVariant)
+    startColVariant->GetAsInt32(&startCol);
+
+  nsCOMPtr<nsIVariant> endColVariant;
+  dataEvent->GetData(NS_LITERAL_STRING("endcolumn"),
+                     getter_AddRefs(endColVariant));
+  if (endColVariant)
+    endColVariant->GetAsInt32(&endCol);
+
+  nsCOMPtr<nsIAccessibleTreeCache> treeAcc(do_QueryInterface(aAccessible));
+  NS_ENSURE_STATE(treeAcc);
+
+  return treeAcc->TreeViewInvalidated(startRow, endRow, startCol, endCol);
+}
+

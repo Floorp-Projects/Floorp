@@ -663,6 +663,12 @@ nsTreeBodyFrame::InvalidateColumn(nsITreeColumn* aCol)
   if (!col)
     return NS_ERROR_INVALID_ARG;
 
+#ifdef ACCESSIBILITY
+  nsIPresShell *presShell = PresContext()->PresShell();
+  if (presShell->IsAccessibilityActive())
+    FireInvalidateEvent(-1, -1, aCol, aCol);
+#endif
+
   nsRect columnRect;
   nsresult rv = col->GetRect(this, mInnerBox.y, mInnerBox.height, &columnRect);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -696,6 +702,12 @@ nsTreeBodyFrame::InvalidateCell(PRInt32 aIndex, nsITreeColumn* aCol)
   if (mUpdateBatchNest)
     return NS_OK;
 
+#ifdef ACCESSIBILITY
+  nsIPresShell *presShell = PresContext()->PresShell();
+  if (presShell->IsAccessibilityActive())
+    FireInvalidateEvent(aIndex, aIndex, aCol, aCol);
+#endif
+
   aIndex -= mTopRowIndex;
   if (aIndex < 0 || aIndex > mPageLength)
     return NS_OK;
@@ -723,6 +735,12 @@ nsTreeBodyFrame::InvalidateRange(PRInt32 aStart, PRInt32 aEnd)
 
   if (aStart == aEnd)
     return InvalidateRow(aStart);
+
+#ifdef ACCESSIBILITY
+  nsIPresShell *presShell = PresContext()->PresShell();
+  if (presShell->IsAccessibilityActive())
+    FireInvalidateEvent(aStart, aEnd, nsnull, nsnull);
+#endif
 
   PRInt32 last = GetLastVisibleRow();
   if (aStart > aEnd || aEnd < mTopRowIndex || aStart > last)
@@ -752,6 +770,12 @@ nsTreeBodyFrame::InvalidateColumnRange(PRInt32 aStart, PRInt32 aEnd, nsITreeColu
 
   if (aStart == aEnd)
     return InvalidateCell(aStart, col);
+
+#ifdef ACCESSIBILITY
+  nsIPresShell *presShell = PresContext()->PresShell();
+  if (presShell->IsAccessibilityActive())
+    FireInvalidateEvent(aStart, aEnd, aCol, aCol);
+#endif
 
   PRInt32 last = GetLastVisibleRow();
   if (aStart > aEnd || aEnd < mTopRowIndex || aStart > last)
@@ -4363,6 +4387,7 @@ nsTreeBodyFrame::PostScrollEvent()
   }
 }
 
+#ifdef ACCESSIBILITY
 void
 nsTreeBodyFrame::FireRowCountChangedEvent(PRInt32 aIndex, PRInt32 aCount)
 {
@@ -4382,11 +4407,11 @@ nsTreeBodyFrame::FireRowCountChangedEvent(PRInt32 aIndex, PRInt32 aCount)
   domEventDoc->CreateEvent(NS_LITERAL_STRING("datacontainerevents"),
                            getter_AddRefs(event));
 
-  event->InitEvent(NS_LITERAL_STRING("TreeRowCountChanged"), PR_TRUE, PR_FALSE);
-
   nsCOMPtr<nsIDOMDataContainerEvent> treeEvent(do_QueryInterface(event));
   if (!treeEvent)
     return;
+
+  event->InitEvent(NS_LITERAL_STRING("TreeRowCountChanged"), PR_TRUE, PR_FALSE);
 
   // Set 'index' data - the row index rows are changed from.
   nsCOMPtr<nsIWritableVariant> indexVariant(
@@ -4419,6 +4444,96 @@ nsTreeBodyFrame::FireRowCountChangedEvent(PRInt32 aIndex, PRInt32 aCount)
 
   plevent->PostDOMEvent();
 }
+
+void
+nsTreeBodyFrame::FireInvalidateEvent(PRInt32 aStartRowIdx, PRInt32 aEndRowIdx,
+                                     nsITreeColumn *aStartCol,
+                                     nsITreeColumn *aEndCol)
+{
+  nsCOMPtr<nsIContent> content(GetBaseElement());
+  if (!content)
+    return;
+
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  node->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDOMDocumentEvent> domEventDoc(do_QueryInterface(domDoc));
+  if (!domEventDoc)
+    return;
+
+  nsCOMPtr<nsIDOMEvent> event;
+  domEventDoc->CreateEvent(NS_LITERAL_STRING("datacontainerevents"),
+                           getter_AddRefs(event));
+
+  nsCOMPtr<nsIDOMDataContainerEvent> treeEvent(do_QueryInterface(event));
+  if (!treeEvent)
+    return;
+
+  event->InitEvent(NS_LITERAL_STRING("TreeInvalidated"), PR_TRUE, PR_FALSE);
+
+  if (aStartRowIdx != -1 && aEndRowIdx != -1) {
+    // Set 'startrow' data - the start index of invalidated rows.
+    nsCOMPtr<nsIWritableVariant> startRowVariant(
+      do_CreateInstance("@mozilla.org/variant;1"));
+    if (!startRowVariant)
+      return;
+
+    startRowVariant->SetAsInt32(aStartRowIdx);
+    treeEvent->SetData(NS_LITERAL_STRING("startrow"), startRowVariant);
+
+    // Set 'endrow' data - the end index of invalidated rows.
+    nsCOMPtr<nsIWritableVariant> endRowVariant(
+      do_CreateInstance("@mozilla.org/variant;1"));
+    if (!endRowVariant)
+      return;
+
+    endRowVariant->SetAsInt32(aEndRowIdx);
+    treeEvent->SetData(NS_LITERAL_STRING("endrow"), endRowVariant);
+  }
+
+  if (aStartCol && aEndCol) {
+    // Set 'startcolumn' data - the start index of invalidated rows.
+    nsCOMPtr<nsIWritableVariant> startColVariant(
+      do_CreateInstance("@mozilla.org/variant;1"));
+    if (!startColVariant)
+      return;
+
+    PRInt32 startColIdx = 0;
+    nsresult rv = aStartCol->GetIndex(&startColIdx);
+    if (NS_FAILED(rv))
+      return;
+
+    startColVariant->SetAsInt32(startColIdx);
+    treeEvent->SetData(NS_LITERAL_STRING("column"), startColVariant);
+
+    // Set 'endcolumn' data - the start index of invalidated rows.
+    nsCOMPtr<nsIWritableVariant> endColVariant(
+      do_CreateInstance("@mozilla.org/variant;1"));
+    if (!endColVariant)
+      return;
+
+    PRInt32 endColIdx = 0;
+    rv = aEndCol->GetIndex(&endColIdx);
+    if (NS_FAILED(rv))
+      return;
+
+    endColVariant->SetAsInt32(endColIdx);
+    treeEvent->SetData(NS_LITERAL_STRING("columncount"), endColVariant);
+  }
+
+  // Fire an event.
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
+  if (!privateEvent)
+    return;
+
+  privateEvent->SetTrusted(PR_TRUE);
+
+  nsRefPtr<nsPLDOMEvent> plevent = new nsPLDOMEvent(node, event);
+  if (plevent)
+    plevent->PostDOMEvent();
+}
+#endif
 
 PRBool
 nsTreeBodyFrame::FullScrollbarsUpdate(PRBool aNeedsFullInvalidation)

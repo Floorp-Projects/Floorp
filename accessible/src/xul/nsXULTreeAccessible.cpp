@@ -627,6 +627,84 @@ nsXULTreeAccessible::InvalidateCache(PRInt32 aRow, PRInt32 aCount)
   return NS_OK;
 }
 
+// void nsIAccessibleTreeCache::
+//   treeViewInvalidated(in long aStartRow, in long aEndRow,
+//                       in long aStartCol, in long aEndCol);
+NS_IMETHODIMP
+nsXULTreeAccessible::TreeViewInvalidated(PRInt32 aStartRow, PRInt32 aEndRow,
+                                         PRInt32 aStartCol, PRInt32 aEndCol)
+{
+  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+
+  PRInt32 endRow = aEndRow, endCol = aEndCol;
+
+  nsresult rv;
+  if (endRow == -1) {
+    PRInt32 rowCount = 0;
+    rv = mTreeView->GetRowCount(&rowCount);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    endRow = rowCount - 1;
+  }
+
+  nsCOMPtr<nsITreeColumns> treeColumns;
+  mTree->GetColumns(getter_AddRefs(treeColumns));
+  NS_ENSURE_STATE(treeColumns);
+
+#ifdef MOZ_ACCESSIBILITY_ATK
+  if (endCol == -1) {
+    PRInt32 colCount = 0;
+    rv = treeColumns->GetCount(&colCount);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    endCol = colCount - 1;
+  }
+#else
+  nsCOMPtr<nsITreeColumn> col;
+  rv = treeColumns->GetKeyColumn(getter_AddRefs(col));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 colIdx = 0;
+  rv = col->GetIndex(&colIdx);
+  NS_ENSURE_SUCCESS(rv, rv);
+#endif
+
+  for (PRInt32 rowIdx = aStartRow; rowIdx <= endRow; ++rowIdx) {
+#ifdef MOZ_ACCESSIBILITY_ATK
+    for (PRInt32 colIdx = startCol; colIdx <= endCol; ++colIdx)
+#endif
+    {
+      void *key = reinterpret_cast<void*>(rowIdx * kMaxTreeColumns + colIdx);
+
+      nsCOMPtr<nsIAccessNode> accessNode;
+      GetCacheEntry(*mAccessNodeCache, key, getter_AddRefs(accessNode));
+
+      if (accessNode) {
+        nsCOMPtr<nsIAccessible> acc(do_QueryInterface(accessNode));
+        NS_ENSURE_STATE(acc);
+
+        nsCOMPtr<nsPIAccessibleTreeItem> treeItemAcc(
+          do_QueryInterface(accessNode));
+        NS_ENSURE_STATE(treeItemAcc);
+
+        nsAutoString name, cachedName;
+        rv = acc->GetName(name);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = treeItemAcc->GetCachedName(cachedName);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (name != cachedName) {
+          nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, acc);
+          treeItemAcc->SetCachedName(name);
+        }
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
 nsresult nsXULTreeAccessible::GetColumnCount(nsITreeBoxObject* aBoxObject, PRInt32* aCount)
 {
   NS_ENSURE_TRUE(aBoxObject, NS_ERROR_FAILURE);
@@ -660,7 +738,8 @@ nsXULTreeitemAccessible::nsXULTreeitemAccessible(nsIAccessible *aParent, nsIDOMN
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsXULTreeitemAccessible, nsLeafAccessible)
+NS_IMPL_ISUPPORTS_INHERITED1(nsXULTreeitemAccessible, nsLeafAccessible,
+                             nsPIAccessibleTreeItem);
 
 NS_IMETHODIMP nsXULTreeitemAccessible::Shutdown()
 {
@@ -694,6 +773,16 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetUniqueID(void **aUniqueID)
   // Since mDOMNode is same for all tree item, use |this| pointer as the unique Id
   *aUniqueID = static_cast<void*>(this);
   return NS_OK;
+}
+
+// nsPIAccessNode::init()
+NS_IMETHODIMP
+nsXULTreeitemAccessible::Init()
+{
+  nsresult rv = nsLeafAccessible::Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return GetName(mCachedName);
 }
 
 NS_IMETHODIMP nsXULTreeitemAccessible::GetRole(PRUint32 *aRole)
@@ -1173,6 +1262,22 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetAccessibleRelated(PRUint32 aRelationTy
 #ifdef MOZ_ACCESSIBILITY_ATK
   }
 #endif
+}
+
+// attribute AString nsIAccessibleTreeItem::cachedName
+NS_IMETHODIMP
+nsXULTreeitemAccessible::GetCachedName(nsAString &aName)
+{
+  aName = mCachedName;
+  return NS_OK;
+}
+
+// attribute AString nsIAccessibleTreeItem::cachedName
+NS_IMETHODIMP
+nsXULTreeitemAccessible::SetCachedName(const nsAString &aName)
+{
+  mCachedName = aName;
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

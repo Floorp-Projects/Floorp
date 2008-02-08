@@ -19,6 +19,10 @@
  * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
+ * Contributor(s):
+ *   Louie Zhao <Louie.Zhao@sun.com> (original author)
+ *   Alexander Surkov <surkov.alexander@gmail.com>
+ *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -39,11 +43,11 @@
 interface nsIAccessible;
 
 /**
- * A cross-platform interface that supports cache for tree item 
+ * A private interface to operate with tree accessible.
  *
  * @status UNDER_REVIEW
  */
-[uuid(7cdad914-948b-4bbc-9c47-ee5e1ae6b148)]
+[uuid(7e0f50b0-6444-4372-b00f-4ce81c6b058a)]
 interface nsIAccessibleTreeCache : nsISupports
 {
   /**
@@ -66,5 +70,26 @@ interface nsIAccessibleTreeCache : nsISupports
    *                inserted (plus) or removed (minus)
    */
   void invalidateCache(in long aRow, in long aCount);
+
+  /**
+   * Fires name change events for invalidated area of tree.
+   *
+   * @param aStartRow  row index invalidation starts from
+   * @param aEndRow    row index invalidation ends, -1 means last row index
+   * @param aStartCol  column index invalidation starts from
+   * @param aEndCol    column index invalidation ends, -1 mens last column
+   *                   index
+   */
+  void treeViewInvalidated(in long aStartRow, in long aEndRow,
+                           in long aStartCol, in long aEndCol);
+};
+
+[uuid(b71532f9-53b2-4647-a5b2-1c5f57e9aed6)]
+interface nsPIAccessibleTreeItem : nsISupports
+{
+  /**
+   * Get/set cached name.
+   */
+  attribute AString cachedName;
 };
 
