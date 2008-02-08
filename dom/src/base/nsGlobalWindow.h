@@ -663,7 +663,7 @@ protected:
   PRPackedBool                  mIsChrome : 1;
 
   nsCOMPtr<nsIScriptContext>    mContext;
-  nsWeakPtr                     mOpener;
+  nsCOMPtr<nsIDOMWindowInternal> mOpener;
   nsCOMPtr<nsIControllers>      mControllers;
   nsCOMPtr<nsIArray>            mArguments;
   nsCOMPtr<nsIArray>            mArgumentsLast;
