@@ -392,7 +392,6 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
               event.mSizeMode = nsSizeMode_Normal;
             InitEvent(event);
             DispatchWindowEvent(&event);
-            NS_RELEASE(event.widget);
          }
 
          break;
