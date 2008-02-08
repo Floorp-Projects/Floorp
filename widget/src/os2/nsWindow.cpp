@@ -406,8 +406,6 @@ NS_METHOD nsWindow::ScreenToWidget( const nsRect &aOldRect, nsRect &aNewRect)
 //-------------------------------------------------------------------------
 void nsWindow::InitEvent(nsGUIEvent& event, nsPoint* aPoint)
 {
-  NS_ADDREF(event.widget);
-
   // if no point was supplied, calculate it
   if (nsnull == aPoint) {
     // for most events, get the message position;  for drag events,
@@ -491,9 +489,7 @@ PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
   nsGUIEvent event(PR_TRUE, aMsg, this);
   InitEvent(event);
 
-  PRBool result = DispatchWindowEvent(&event);
-  NS_RELEASE(event.widget);
-  return result;
+  return DispatchWindowEvent(&event);
 }
 
 //-------------------------------------------------------------------------
@@ -523,10 +519,7 @@ PRBool nsWindow::DispatchCommandEvent(PRUint32 aEventCommand)
   nsCommandEvent event(PR_TRUE, nsWidgetAtoms::onAppCommand, command, this);
 
   InitEvent(event);
-  PRBool result = DispatchWindowEvent(&event);
-  NS_RELEASE(event.widget);
-
-  return result;
+  return DispatchWindowEvent(&event);
 }
 
 //-------------------------------------------------------------------------
@@ -545,10 +538,7 @@ PRBool nsWindow::DispatchDragDropEvent(PRUint32 aMsg)
   event.isAlt     = WinIsKeyDown(VK_ALT) || WinIsKeyDown(VK_ALTGRAF);
   event.isMeta    = PR_FALSE;
 
-  PRBool result = DispatchWindowEvent(&event);
-  NS_RELEASE(event.widget);
-
-  return result;
+  return DispatchWindowEvent(&event);
 }
 
 //-------------------------------------------------------------------------
@@ -2483,7 +2473,6 @@ PRBool nsWindow::OnKey(MPARAM mp1, MPARAM mp2)
 
   // Break off now if this was a key-up.
   if (fsFlags & KC_KEYUP) {
-    NS_RELEASE(event.widget);
     return rc;
   }
 
@@ -2494,7 +2483,6 @@ PRBool nsWindow::OnKey(MPARAM mp1, MPARAM mp2)
     mHaveDeadKey = FALSE;
     // actually, not sure whether we're supposed to abort the keypress
     //     or process it as though the dead key has been pressed.
-    NS_RELEASE(event.widget);
     return rc;
   }
 
@@ -2540,7 +2528,6 @@ PRBool nsWindow::OnKey(MPARAM mp1, MPARAM mp2)
     rc = DispatchWindowEvent(&pressEvent);
   }
 
-  NS_RELEASE(pressEvent.widget);
   return rc;
 }
 
@@ -2580,7 +2567,6 @@ void nsWindow::ConstrainZLevel(HWND *aAfter) {
     }
   }
   NS_IF_RELEASE(event.mActualBelow);
-  NS_RELEASE(event.widget);
 }
 
 
@@ -2596,7 +2582,6 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
            event.mCommand = SHORT1FROMMP(mp1);
            InitEvent(event);
            result = DispatchWindowEvent(&event);
-           NS_RELEASE(event.widget);
         }
 
         case WM_CONTROL: // remember this is resent to the orginator...
@@ -3059,16 +3044,13 @@ void nsWindow::OnDestroy()
 //
 //-------------------------------------------------------------------------
 PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
-{            
+{
   // Params here are in XP-space for the desktop
   nsGUIEvent event(PR_TRUE, NS_MOVE, this);
   InitEvent( event);
   event.refPoint.x = aX;
   event.refPoint.y = aY;
-
-  PRBool result = DispatchWindowEvent( &event);
-  NS_RELEASE(event.widget);
-  return result;
+  return DispatchWindowEvent(&event);
 }
 
 //-------------------------------------------------------------------------
@@ -3158,7 +3140,6 @@ PRBool nsWindow::OnPaint()
           thebesContext->SetOperator(gfxContext::OPERATOR_SOURCE);
           thebesContext->Paint();
         }
-        NS_RELEASE(event.widget);
       } // if (mEventCallback)
       mThebesSurface->Refresh(&rcl, hPS);
     } // if (!WinIsRectEmpty(0, &rcl))
@@ -3218,7 +3199,6 @@ PRBool nsWindow::OnResize(PRInt32 aX, PRInt32 aY)
 
 PRBool nsWindow::DispatchResizeEvent( PRInt32 aX, PRInt32 aY)
 {
-   PRBool result;
    // call the event callback 
    nsSizeEvent event(PR_TRUE, NS_SIZE, this);
    nsRect      rect( 0, 0, aX, aY);
@@ -3228,10 +3208,8 @@ PRBool nsWindow::DispatchResizeEvent( PRInt32 aX, PRInt32 aY)
    event.mWinWidth = mBounds.width;
    event.mWinHeight = mBounds.height;
 
-   result = DispatchWindowEvent( &event);
-   NS_RELEASE(event.widget);
-   return result;
-}                                           
+   return DispatchWindowEvent(&event);
+}
 
 //-------------------------------------------------------------------------
 //
@@ -3363,13 +3341,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, MPARAM mp1, MPARAM mp2,
 
   // call the event callback 
   if (nsnull != mEventCallback) {
-    result = DispatchWindowEvent(&event);
-
-    // Release the widget with NS_IF_RELEASE() just in case
-    // the context menu key code in nsEventListenerManager::HandleEvent()
-    // released it already.
-    NS_IF_RELEASE(event.widget);
-    return result;
+    return DispatchWindowEvent(&event);
   }
 
   if (nsnull != mMouseListener) {
@@ -3399,7 +3371,6 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, MPARAM mp1, MPARAM mp2,
     } // switch
   } 
 
-  NS_RELEASE(event.widget);
   return result;
 }
 
@@ -3440,10 +3411,7 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType, PRBool isMozWindowTakingFocu
     }
 
     event.nativeMsg = (void *)&pluginEvent;
-
-    PRBool result = DispatchWindowEvent(&event);
-    NS_RELEASE(event.widget);
-    return result;
+    return DispatchWindowEvent(&event);
   }
   return PR_FALSE;
 }
@@ -3489,7 +3457,6 @@ PRBool nsWindow::OnVScroll( MPARAM mp1, MPARAM mp2)
             break;
         }
         DispatchWindowEvent(&scrollEvent);
-        NS_RELEASE(scrollEvent.widget);
     }
     return PR_FALSE;
 }
@@ -3524,7 +3491,6 @@ PRBool nsWindow::OnHScroll( MPARAM mp1, MPARAM mp2)
             break;
         }
         DispatchWindowEvent(&scrollEvent);
-        NS_RELEASE(scrollEvent.widget);
     }
     return PR_FALSE;
 }
