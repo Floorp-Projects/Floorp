@@ -51,6 +51,7 @@ _TEST_FILES =	test_bug408328.html \
 		bug408328-data.xml \
 		test_bug368464.html \
 		bug368464-data.xml \
+		test_registerHandler.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
