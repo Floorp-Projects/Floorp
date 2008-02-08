@@ -2047,6 +2047,17 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
     }
   }
 
+  nsCOMPtr<nsIAccessibleValue> supportsValue = do_QueryInterface(static_cast<nsIAccessible*>(this));
+  if (supportsValue) {
+    // We support values, so expose the string value as well, via the valuetext object attribute
+    // We test for the value interface because we don't want to expose traditional get_accValue()
+    // information such as URL's on links and documents, or text in an input
+    nsAutoString valuetext;
+    GetValue(valuetext);
+    attributes->SetStringProperty(NS_LITERAL_CSTRING("valuetext"), valuetext, oldValueUnused);
+  }
+
+
   // Get container-foo computed live region properties based on the closest container with
   // the live region attribute
   nsAutoString atomic, live, relevant, channel, busy;
@@ -2407,8 +2418,11 @@ NS_IMETHODIMP nsAccessible::GetValue(nsAString& aValue)
       return NS_OK;
     }
     nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-    if (content && content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_valuenow, aValue)) {
-      return NS_OK;
+    NS_ENSURE_STATE(content);
+    // aria-valuenow is a number, and aria-valuetext is the optional text equivalent
+    // For the string value, we will try the optional text equivalent first
+    if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_valuetext, aValue)) {
+      content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_valuenow, aValue);
     }
   }
   return NS_OK;

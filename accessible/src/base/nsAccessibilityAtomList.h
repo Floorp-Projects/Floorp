@@ -218,6 +218,7 @@ ACCESSIBILITY_ATOM(aria_sort, "aria-sort")
 ACCESSIBILITY_ATOM(aria_valuenow, "aria-valuenow")
 ACCESSIBILITY_ATOM(aria_valuemin, "aria-valuemin")
 ACCESSIBILITY_ATOM(aria_valuemax, "aria-valuemax")
+ACCESSIBILITY_ATOM(aria_valuetext, "aria-valuetext")
 
   // misc atoms
 // a form property used to obtain the default label
