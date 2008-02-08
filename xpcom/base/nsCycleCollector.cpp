@@ -1596,6 +1596,20 @@ nsCycleCollector::CollectWhite()
             Fault("Failed unroot call while unlinking", pinfo);
     }
 
+#ifdef DEBUG_CC
+    for (i = 0; i < count; ++i) {
+        PtrInfo *pinfo = static_cast<PtrInfo*>(mBuf.ObjectAt(i));
+        if (pinfo->mLangID == nsIProgrammingLanguage::CPLUSPLUS &&
+            mPurpleBuf.Exists(pinfo->mPointer)) {
+            printf("nsCycleCollector: %s object @%p is still alive after\n"
+                   "  calling RootAndUnlinkJSObjects, Unlink, and Unroot on "
+                   "it!  This probably\n"
+                   "  means the Unlink implementation was insufficient.\n",
+                   pinfo->mName, pinfo->mPointer);
+        }
+    }
+#endif
+
     mBuf.Empty();
 
 #if defined(DEBUG_CC) && !defined(__MINGW32__) && defined(WIN32)
@@ -2655,7 +2669,8 @@ nsCycleCollector::CreateReversedEdges()
             ++current;
         }
     }
-    NS_ASSERTION(current - mGraph.mReversedEdges == edgeCount, "misallocation");
+    NS_ASSERTION(current - mGraph.mReversedEdges == ptrdiff_t(edgeCount),
+                 "misallocation");
     return PR_TRUE;
 }
 
