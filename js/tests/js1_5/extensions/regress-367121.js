@@ -91,4 +91,7 @@ function handleLoad()
   jsTestDriverEnd();
 }
 
-window.onload = handleLoad;
+if (typeof window != 'undefined')
+{
+  window.onload = handleLoad;
+}
