@@ -3432,7 +3432,7 @@ js_FindIdentifierBase(JSContext *cx, jsid id, JSPropCacheEntry *entry)
         OBJ_DROP_PROPERTY(cx, pobj, prop);
 
         JS_ASSERT(!entry ||
-                  entry->kpc == (PCVCAP_TAG(entry->vcap)
+                  entry->kpc == ((PCVCAP_TAG(entry->vcap) > 1)
                                  ? (jsbytecode *) JSID_TO_ATOM(id)
                                  : cx->fp->pc));
         return obj;
