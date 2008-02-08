@@ -119,6 +119,21 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     void TryFireEarlyLoadEvent(nsIDOMNode *aDocNode);
     void FireCurrentFocusEvent();
     void GetChromeEventHandler(nsIDOMEventTarget **aChromeTarget);
+
+    /**
+     * Handles 'TreeRowCountChanged' event. Used in HandleEventWithTarget().
+     */
+    nsresult HandleTreeRowCountChangedEvent(nsIDOMEvent *aEvent,
+                                            nsIAccessible *aAccessible,
+                                            const nsAString& aTargetName);
+
+    /**
+     * Handles 'TreeInvalidated' event. Used in HandleEventWithTarget().
+     */
+    nsresult HandleTreeInvalidatedEvent(nsIDOMEvent *aEvent,
+                                        nsIAccessible *aAccessible,
+                                        const nsAString& aTargetName);
+
 #ifdef MOZ_XUL
     PRUint32 GetChromeFlags();
 #endif

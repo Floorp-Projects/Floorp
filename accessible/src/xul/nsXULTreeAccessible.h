@@ -93,19 +93,21 @@ protected:
 /**
   * Treeitems -- used in Trees
   */
-class nsXULTreeitemAccessible : public nsLeafAccessible
+class nsXULTreeitemAccessible : public nsLeafAccessible,
+                                public nsPIAccessibleTreeItem
 {
 public:
   enum { eAction_Click = 0, eAction_Expand = 1 };
 
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSPIACCESSIBLETREEITEM
 
   nsXULTreeitemAccessible(nsIAccessible *aParent, nsIDOMNode *aDOMNode, nsIWeakReference *aShell, PRInt32 aRow, nsITreeColumn* aColumn = nsnull);
   virtual ~nsXULTreeitemAccessible() {}
 
   NS_IMETHOD Shutdown();
 
-  /* ----- nsIAccessible ----- */
+  // nsIAccessible
   NS_IMETHOD GetName(nsAString& _retval);
   NS_IMETHOD GetRole(PRUint32 *_retval);
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
@@ -123,8 +125,12 @@ public:
   NS_IMETHOD TakeFocus(void); 
 
   NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated);
-  /* ------ nsIAccessNode ----- */
+
+  // nsIAccessNode
   NS_IMETHOD GetUniqueID(void **aUniqueID);
+
+  // nsPIAccessNode
+  NS_IMETHOD Init();
 
   // nsAccessNode
   virtual PRBool IsDefunct();
@@ -135,6 +141,7 @@ protected:
   nsCOMPtr<nsITreeView> mTreeView;
   PRInt32 mRow;
   nsCOMPtr<nsITreeColumn> mColumn;
+  nsString mCachedName;
 };
 
 class nsXULTreeColumnsAccessible : public nsXULColumnsAccessible
