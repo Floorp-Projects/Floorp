@@ -179,7 +179,7 @@
   <notificationbox id="addonsMsg" flex="1">
     <vbox id="extensionsBox" flex="1">
       <hbox id="searchPanel" align="center">
-        <textbox id="searchbox" emptyText="&searchAddons.label;"
+        <textbox id="searchbox" emptytext="&searchAddons.label;"
                  oncommand="retrieveRepositoryAddons(this.value);"
                  persist="value"/>
         <spacer flex="1"/>
