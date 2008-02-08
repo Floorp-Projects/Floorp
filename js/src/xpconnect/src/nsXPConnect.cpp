@@ -749,6 +749,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     CCNodeType type;
 
 #ifdef DEBUG_CC
+    {
     // Note that the conditions under which we specify GCMarked vs.
     // GCUnmarked are different between ExplainLiveExpectedGarbage and
     // the normal case.  In the normal case, we're saying that anything
@@ -772,11 +773,11 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         type = JS_IsAboutToBeFinalized(cx, p) ? GCUnmarked : GCMarked;
     }
 
+    char name[72];
     if(traceKind == JSTRACE_OBJECT)
     {
         JSObject *obj = static_cast<JSObject*>(p);
         JSClass *clazz = OBJ_GET_CLASS(cx, obj);
-        char name[72];
         if(XPCNativeWrapper::IsNativeWrapperClass(clazz))
         {
             XPCWrappedNative* wn = XPCNativeWrapper::GetWrappedNative(obj);
@@ -867,12 +868,33 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
                 JS_snprintf(name, sizeof(name), "JS Object (%s)", clazz->name);
             }
         }
-
-        cb.DescribeNode(type, 0, sizeof(JSObject), name);
     }
     else
     {
-        cb.DescribeNode(type, 0, sizeof(JSObject), "JS Object");
+        static const char trace_types[JSTRACE_LIMIT][10] = {
+            "Object",
+            "Double",
+            "String",
+            "Function",
+            "Namespace",
+            "Qname",
+            "Xml"
+        };
+        JS_snprintf(name, sizeof(name), "JS %s", trace_types[traceKind]);
+    }
+
+    if(traceKind == JSTRACE_OBJECT || traceKind == JSTRACE_NAMESPACE ||
+       traceKind == JSTRACE_QNAME || traceKind == JSTRACE_XML) {
+        JSObject *global = static_cast<JSObject*>(p), *parent;
+        while((parent = JS_GetParent(cx, global)))
+            global = parent;
+        char fullname[100];
+        JS_snprintf(fullname, sizeof(fullname), "%s (global=%p)", name, global);
+        cb.DescribeNode(type, 0, sizeof(JSObject), fullname);
+    } else {
+        cb.DescribeNode(type, 0, sizeof(JSObject), name);
+    }
+
     }
 #else
     type = JS_IsAboutToBeFinalized(cx, p) ? GCUnmarked : GCMarked;
