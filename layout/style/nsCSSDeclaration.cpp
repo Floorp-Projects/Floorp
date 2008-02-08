@@ -344,37 +344,9 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     }
   }
   else if (eCSSUnit_Integer == unit) {
-    switch (aProperty) {
-      case eCSSProperty_color:
-      case eCSSProperty_background_color:
-      case eCSSProperty_border_top_color:
-      case eCSSProperty_border_bottom_color:
-      case eCSSProperty_border_left_color_value:
-      case eCSSProperty_border_right_color_value:
-      case eCSSProperty_border_start_color_value:
-      case eCSSProperty_border_end_color_value:
-      case eCSSProperty_outline_color: {
-        // we can lookup the property in the ColorTable and then
-        // get a string mapping the name
-        nsCAutoString str;
-        if (nsCSSProps::GetColorName(aValue.GetIntValue(), str)){
-          AppendASCIItoUTF16(str, aResult);
-        } else {
-          nsAutoString tmpStr;
-          tmpStr.AppendInt(aValue.GetIntValue(), 10);
-          aResult.Append(tmpStr);
-        }
-      }
-      break;
-
-      default:
-        {
-          nsAutoString tmpStr;
-          tmpStr.AppendInt(aValue.GetIntValue(), 10);
-          aResult.Append(tmpStr);
-        }
-      break;
-    }
+    nsAutoString tmpStr;
+    tmpStr.AppendInt(aValue.GetIntValue(), 10);
+    aResult.Append(tmpStr);
   }
   else if (eCSSUnit_Enumerated == unit) {
     if (eCSSProperty_text_decoration == aProperty) {
@@ -420,6 +392,16 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     else {
       const nsAFlatCString& name = nsCSSProps::LookupPropertyValue(aProperty, aValue.GetIntValue());
       AppendASCIItoUTF16(name, aResult);
+    }
+  }
+  else if (eCSSUnit_EnumColor == unit) {
+    // we can lookup the property in the ColorTable and then
+    // get a string mapping the name
+    nsCAutoString str;
+    if (nsCSSProps::GetColorName(aValue.GetIntValue(), str)){
+      AppendASCIItoUTF16(str, aResult);
+    } else {
+      NS_NOTREACHED("bad color value");
     }
   }
   else if (eCSSUnit_Color == unit) {
@@ -487,6 +469,7 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     case eCSSUnit_Counters:     aResult.Append(PRUnichar(')'));    break;
     case eCSSUnit_Integer:      break;
     case eCSSUnit_Enumerated:   break;
+    case eCSSUnit_EnumColor:    break;
     case eCSSUnit_Color:        break;
     case eCSSUnit_Percent:      aResult.Append(PRUnichar('%'));    break;
     case eCSSUnit_Number:       break;
