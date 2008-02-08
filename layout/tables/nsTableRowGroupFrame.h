@@ -313,7 +313,8 @@ protected:
   void PlaceChild(nsPresContext*        aPresContext,
                   nsRowGroupReflowState& aReflowState,
                   nsIFrame*              aKidFrame,
-                  nsHTMLReflowMetrics&   aDesiredSize);
+                  nsHTMLReflowMetrics&   aDesiredSize,
+                  const nsRect&          aOriginalKidRect);
 
   void CalculateRowHeights(nsPresContext*          aPresContext, 
                            nsHTMLReflowMetrics&     aDesiredSize,

@@ -755,6 +755,15 @@ public:
                                           const nsStyleFont* aStyleFont);
 
   /**
+   * Takes two rectangles whose origins must be the same, and computes
+   * the difference between their union and their intersection as two
+   * rectangles. (This difference is a superset of the difference
+   * between the two rectangles.)
+   */
+  static void GetRectDifferenceStrips(const nsRect& aR1, const nsRect& aR2,
+                                      nsRect* aHStrip, nsRect* aVStrip);
+
+  /**
    * Indicates if the nsIFrame::GetUsedXXX assertions in nsFrame.cpp should
    * disabled.
    */

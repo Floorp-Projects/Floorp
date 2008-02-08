@@ -1656,6 +1656,21 @@ public:
                                   nsIFrame* aForChild, PRBool aImmediate);
 
   /**
+   * Take two rectangles in the coordinate system of this frame which
+   * have the same origin and invalidate the difference between them.
+   * This is a helper method to be used when a frame is being resized.
+   *
+   * @param aR1 the first rectangle
+   * @param aR2 the second rectangle
+   */
+  void InvalidateRectDifference(const nsRect& aR1, const nsRect& aR2);
+
+  /**
+   * Invalidate the overflow rect of this frame
+   */
+  void InvalidateOverflowRect();
+  
+  /**
    * Computes a rect that encompasses everything that might be painted by
    * this frame.  This includes this frame, all its descendent frames, this
    * frame's outline, and descentant frames' outline, but does not include
