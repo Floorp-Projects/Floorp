@@ -36,9 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCOMPtr.h"
 #include "nsRootAccessibleWrap.h"
 
+#include "mozDocAccessible.h"
+
+#include "nsCOMPtr.h"
 #include "nsIWidget.h"
 #include "nsIViewManager.h"
 

@@ -1441,7 +1441,8 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
           if (!tableAccessible && !content->IsFocusable()) {
 #ifdef DEBUG
             nsRoleMapEntry *tableRoleMapEntry = nsAccUtils::GetRoleMapEntry(tableNode);
-            NS_ASSERTION(roleMapEntry && !nsCRT::strcmp(roleMapEntry->roleString, "presentation"),
+            NS_ASSERTION(tableRoleMapEntry &&
+                         !nsCRT::strcmp(tableRoleMapEntry->roleString, "presentation"),
                          "No accessible for parent table and it didn't have role of presentation");
 #endif
             // Table-related descendants of presentation table are also presentation

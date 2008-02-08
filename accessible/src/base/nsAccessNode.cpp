@@ -467,7 +467,7 @@ nsAccessNode::ScrollToPoint(PRUint32 aCoordinateType, PRInt32 aX, PRInt32 aY)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIFrame *parentFrame = frame;
-  while (parentFrame = parentFrame->GetParent())
+  while ((parentFrame = parentFrame->GetParent()))
     nsAccUtils::ScrollFrameToPoint(parentFrame, frame, coords);
 
   return NS_OK;
