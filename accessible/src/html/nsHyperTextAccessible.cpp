@@ -1873,7 +1873,7 @@ nsHyperTextAccessible::ScrollSubstringToPoint(PRInt32 aStartIndex,
 
   PRBool initialScrolled = PR_FALSE;
   nsIFrame *parentFrame = frame;
-  while (parentFrame = parentFrame->GetParent()) {
+  while ((parentFrame = parentFrame->GetParent())) {
     nsIScrollableFrame *scrollableFrame = nsnull;
     CallQueryInterface(parentFrame, &scrollableFrame);
     if (scrollableFrame) {
