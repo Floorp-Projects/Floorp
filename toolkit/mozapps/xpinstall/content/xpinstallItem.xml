@@ -13,7 +13,7 @@
     </resources>
     <content>
       <xul:hbox flex="1">
-        <xul:vbox align="center" pack="center">
+        <xul:vbox align="center" pack="center" class="xpinstallIconContainer">
           <xul:image class="xpinstallItemIcon" xbl:inherits="src=icon"/>
         </xul:vbox>
         <xul:vbox flex="1" pack="center">
