@@ -113,11 +113,18 @@ static const  char kInvalidTagStackPos[] = "Error: invalid tag stack position";
 #define NS_DTD_FLAG_HAS_MAIN_CONTAINER     (NS_DTD_FLAG_HAD_BODY |            \
                                             NS_DTD_FLAG_HAD_FRAMESET)
 
-NS_IMPL_ISUPPORTS1(CNavDTD, nsIDTD)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CNavDTD)
+  NS_INTERFACE_MAP_ENTRY(nsIDTD)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDTD)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(CNavDTD)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(CNavDTD)
+
+NS_IMPL_CYCLE_COLLECTION_1(CNavDTD, mSink)
 
 CNavDTD::CNavDTD()
   : mMisplacedContent(0),
-    mSink(0),
     mTokenAllocator(0),
     mBodyContext(new nsDTDContext()),
     mTempContext(0),
@@ -181,8 +188,6 @@ CNavDTD::~CNavDTD()
     }
   }
 #endif
-
-  NS_IF_RELEASE(mSink);
 }
 
 nsresult
@@ -212,7 +217,7 @@ CNavDTD::WillBuildModel(const CParserContext& aParserContext,
     START_TIMER();
 
     if (NS_SUCCEEDED(result) && !mSink) {
-      result = CallQueryInterface(aSink, &mSink);
+      mSink = do_QueryInterface(aSink, &result);
       if (NS_FAILED(result)) {
         mFlags |= NS_DTD_FLAG_STOP_PARSING;
         return result;

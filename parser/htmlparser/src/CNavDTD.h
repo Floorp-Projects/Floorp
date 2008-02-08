@@ -106,6 +106,7 @@
 #include "nsTime.h"
 #include "nsDTDUtils.h"
 #include "nsParser.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIHTMLContentSink;
 class nsIParserNode;
@@ -158,8 +159,9 @@ public:
                            eHTMLTags aTag,
                            nsEntryStack* aStyleStack = nsnull);
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_NSIDTD
+    NS_DECL_CYCLE_COLLECTION_CLASS(CNavDTD)
 
 private:
     /**
@@ -381,7 +383,7 @@ protected:
     
     nsDeque             mMisplacedContent;
     
-    nsIHTMLContentSink* mSink;
+    nsCOMPtr<nsIHTMLContentSink> mSink;
     nsTokenAllocator*   mTokenAllocator;
     nsDTDContext*       mBodyContext;
     nsDTDContext*       mTempContext;

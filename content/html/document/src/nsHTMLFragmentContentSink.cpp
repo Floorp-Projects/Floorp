@@ -64,6 +64,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsContentSink.h"
 #include "nsTHashtable.h"
+#include "nsCycleCollectionParticipant.h"
 
 //
 // XXX THIS IS TEMPORARY CODE
@@ -79,7 +80,9 @@ public:
   virtual ~nsHTMLFragmentContentSink();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsHTMLFragmentContentSink,
+                                           nsIContentSink)
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -223,12 +226,22 @@ nsHTMLFragmentContentSink::~nsHTMLFragmentContentSink()
   }
 }
 
-NS_IMPL_ISUPPORTS3(nsHTMLFragmentContentSink,
-                   nsIFragmentContentSink,
-                   nsIHTMLContentSink,
-                   nsIContentSink)
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsHTMLFragmentContentSink,
+                                          nsIContentSink)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsHTMLFragmentContentSink,
+                                           nsIContentSink)
 
-NS_IMETHODIMP 
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsHTMLFragmentContentSink)
+  NS_INTERFACE_MAP_ENTRY(nsIFragmentContentSink)
+  NS_INTERFACE_MAP_ENTRY(nsIHTMLContentSink)
+  NS_INTERFACE_MAP_ENTRY(nsIContentSink)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentSink)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_3(nsHTMLFragmentContentSink, mParser, mTargetDocument,
+                           mRoot)
+
+NS_IMETHODIMP
 nsHTMLFragmentContentSink::WillBuildModel(void)
 {
   if (mRoot) {

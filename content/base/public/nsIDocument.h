@@ -941,6 +941,16 @@ public:
     mJSObject = aJSObject;
   }
 
+  // This method should return an addrefed nsIParser* or nsnull. Implementations
+  // should transfer ownership of the parser to the caller.
+  virtual already_AddRefed<nsIParser> GetFragmentParser() {
+    return nsnull;
+  }
+
+  virtual void SetFragmentParser(nsIParser* aParser) {
+    // Do nothing.
+  }
+
 protected:
   ~nsIDocument()
   {
