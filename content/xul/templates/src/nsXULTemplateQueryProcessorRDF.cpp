@@ -1400,7 +1400,13 @@ nsXULTemplateQueryProcessorRDF::CompileTripleCondition(nsRDFQuery* aQuery,
 
     nsCOMPtr<nsIAtom> svar;
     nsCOMPtr<nsIRDFResource> sres;
-    if (!subject.IsEmpty() && subject[0] == PRUnichar('?'))
+    if (subject.IsEmpty()) {
+        PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+               ("xultemplate[%p] has empty <triple> 'subject'", this));
+        return NS_OK;
+    }
+
+    if (subject[0] == PRUnichar('?'))
         svar = do_GetAtom(subject);
     else
         gRDFService->GetUnicodeResource(subject, getter_AddRefs(sres));
@@ -1410,15 +1416,21 @@ nsXULTemplateQueryProcessorRDF::CompileTripleCondition(nsRDFQuery* aQuery,
     aCondition->GetAttr(kNameSpaceID_None, nsGkAtoms::predicate, predicate);
 
     nsCOMPtr<nsIRDFResource> pres;
-    if (!predicate.IsEmpty() && predicate[0] == PRUnichar('?')) {
+    if (predicate.IsEmpty()) {
+        PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+               ("xultemplate[%p] has empty <triple> 'predicate'", this));
+
+        return NS_OK;
+    }
+
+    if (predicate[0] == PRUnichar('?')) {
         PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
                ("xultemplate[%p] cannot handle variables in <triple> 'predicate'", this));
 
         return NS_OK;
     }
-    else {
-        gRDFService->GetUnicodeResource(predicate, getter_AddRefs(pres));
-    }
+
+    gRDFService->GetUnicodeResource(predicate, getter_AddRefs(pres));
 
     // object
     nsAutoString object;
@@ -1426,7 +1438,13 @@ nsXULTemplateQueryProcessorRDF::CompileTripleCondition(nsRDFQuery* aQuery,
 
     nsCOMPtr<nsIAtom> ovar;
     nsCOMPtr<nsIRDFNode> onode;
-    if (!object.IsEmpty() && object[0] == PRUnichar('?')) {
+    if (object.IsEmpty()) {
+        PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+               ("xultemplate[%p] has empty <triple> 'object'", this));
+        return NS_OK;
+    }
+
+    if (object[0] == PRUnichar('?')) {
         ovar = do_GetAtom(object);
     }
     else if (object.FindChar(':') != -1) { // XXXwaterson evil.
