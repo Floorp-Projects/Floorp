@@ -391,7 +391,11 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   // We must always ensure that we populate the structs on the new style
   // context that are filled in on the old context, so that if we get
   // two style changes in succession, the second of which causes a real
-  // style change, the PeekStyleData doesn't fail.
+  // style change, the PeekStyleData doesn't return null (implying that
+  // nobody ever looked at that struct's data).  In other words, we
+  // can't skip later structs if we get a big change up front, because
+  // we could later get a small change in one of those structs that we
+  // don't want to miss.
 
   // If our rule nodes are the same, then we are looking at the same
   // style data.  We know this because CalcStyleDifference is always

@@ -584,6 +584,10 @@ nsPresContext::GetUserPreferences()
     nsContentUtils::GetIntPref("browser.display.base_font_scaler",
                                mFontScaler);
 
+
+  mAutoQualityMinFontSizePixelsPref =
+    nsContentUtils::GetIntPref("browser.display.auto_quality_min_font_size");
+
   // * document colors
   GetDocumentColorPreferences();
 
@@ -661,6 +665,8 @@ nsPresContext::GetUserPreferences()
     mImageAnimationModePref = imgIContainer::kDontAnimMode;
   else if (animatePref.Equals("once"))
     mImageAnimationModePref = imgIContainer::kLoopOnceAnimMode;
+  else // dynamic change to invalid value should act like it does initially
+    mImageAnimationModePref = imgIContainer::kNormalAnimMode;
 
   PRUint32 bidiOptions = GetBidi();
 
@@ -701,12 +707,11 @@ nsPresContext::GetUserPreferences()
   SetBidi(bidiOptions, PR_FALSE);
 }
 
-static const char sMinFontSizePref[] = "browser.display.auto_quality_min_font_size";
-
 void
 nsPresContext::PreferenceChanged(const char* aPrefName)
 {
-  if (!nsCRT::strcmp(aPrefName, "layout.css.dpi")) {
+  nsDependentCString prefName(aPrefName);
+  if (prefName.EqualsLiteral("layout.css.dpi")) {
     PRInt32 oldAppUnitsPerDevPixel = AppUnitsPerDevPixel();
     if (mDeviceContext->CheckDPIChange() && mShell) {
       mDeviceContext->FlushFontCache();
@@ -723,14 +728,20 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
       nscoord height = NSToCoordRound(oldHeightDevPixels*AppUnitsPerDevPixel());
       vm->SetWindowDimensions(width, height);
 
-      RebuildAllStyleData();
+      RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
     }
     return;
   }
-  if (!nsCRT::strcmp(aPrefName, sMinFontSizePref)) {
-    mAutoQualityMinFontSizePixelsPref = nsContentUtils::GetIntPref(sMinFontSizePref);
-    RebuildAllStyleData();
-    return;
+  if (StringBeginsWith(prefName, NS_LITERAL_CSTRING("font."))) {
+    // Changes to font family preferences don't change anything in the
+    // computed style data, so the style system won't generate a reflow
+    // hint for us.  We need to do that manually.
+
+    // FIXME We could probably also handle changes to
+    // browser.display.auto_quality_min_font_size here, but that
+    // probably also requires clearing the text run cache, so don't
+    // bother (yet, anyway).
+    mPrefChangePendingNeedsReflow = PR_TRUE;
   }
   // we use a zero-delay timer to coalesce multiple pref updates
   if (!mPrefChangedTimer)
@@ -764,7 +775,14 @@ nsPresContext::UpdateAfterPreferencesChanged()
   }
 
   mDeviceContext->FlushFontCache();
-  RebuildAllStyleData();
+
+  nsChangeHint hint = nsChangeHint(0);
+
+  if (mPrefChangePendingNeedsReflow) {
+    NS_UpdateHint(hint, NS_STYLE_HINT_REFLOW);
+  }
+
+  RebuildAllStyleData(hint);
 }
 
 nsresult
@@ -828,9 +846,6 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
   nsContentUtils::RegisterPrefCallback("layout.css.dpi",
                                        nsPresContext::PrefChangedCallback,
                                        this);
-
-  // This is observed thanks to the browser.display. observer above.
-  mAutoQualityMinFontSizePixelsPref = nsContentUtils::GetIntPref(sMinFontSizePref);
 
   rv = mEventManager->Init();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -950,7 +965,7 @@ nsPresContext::Observe(nsISupports* aSubject,
   if (!nsCRT::strcmp(aTopic, "charset")) {
     UpdateCharSet(NS_LossyConvertUTF16toASCII(aData));
     mDeviceContext->FlushFontCache();
-    RebuildAllStyleData();
+    RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
     return NS_OK;
   }
 
@@ -1145,7 +1160,7 @@ nsPresContext::SetFullZoom(float aZoom)
   mFullZoom = aZoom;
   GetViewManager()->SetWindowDimensions(NSToCoordRound(oldWidthDevPixels * AppUnitsPerDevPixel()),
                                         NSToCoordRound(oldHeightDevPixels * AppUnitsPerDevPixel()));
-  RebuildAllStyleData();
+  RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
 
   mSupressResizeReflow = PR_FALSE;
 
@@ -1286,7 +1301,7 @@ nsPresContext::SetBidi(PRUint32 aSource, PRBool aForceRestyle)
     }
   }
   if (aForceRestyle) {
-    RebuildAllStyleData();
+    RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
   }
 }
 
@@ -1343,11 +1358,11 @@ nsPresContext::ThemeChangedInternal()
     sLookAndFeelChanged = PR_FALSE;
   }
 
-  // We have to clear style data because the assumption of style rule
-  // immutability has been violated since any style rule that uses
-  // system colors or fonts (and probably -moz-appearance as well) has
-  // changed.
-  RebuildAllStyleData();
+  // Changes in theme can change system colors (whose changes are
+  // properly reflected in computed style data), system fonts (whose
+  // changes are not), and -moz-appearance (whose changes likewise are
+  // not), so we need to reflow.
+  RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
 }
 
 void
@@ -1379,23 +1394,19 @@ nsPresContext::SysColorChangedInternal()
   // they may be using system colors
   GetDocumentColorPreferences();
 
-  // We need to do a full reflow (and view update) here. Clearing the style
-  // data without reflowing/updating views will lead to incorrect change hints
-  // later, because when generating change hints, any style structs which have
-  // been cleared and not reread are assumed to not be used at all.
-  // XXXroc not sure what to make of the above comment, because we don't reflow
-  // synchronously here
-  RebuildAllStyleData();
+  // The system color values are computed to colors in the style data,
+  // so normal style data comparison is sufficient here.
+  RebuildAllStyleData(nsChangeHint(0));
 }
 
 void
-nsPresContext::RebuildAllStyleData()
+nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint)
 {
   if (!mShell) {
     // We must have been torn down. Nothing to do here.
     return;
   }
-  mShell->FrameConstructor()->RebuildAllStyleData();
+  mShell->FrameConstructor()->RebuildAllStyleData(aExtraHint);
 }
 
 void

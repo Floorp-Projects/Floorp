@@ -181,10 +181,11 @@ public:
   NS_HIDDEN_(nsresult) ReParentStyleContext(nsIFrame* aFrame);
 
   /*
-   * Re-resolve the style contexts for a frame tree.  Returns the top-level
-   * change hint resulting from the style re-resolution.
+   * Re-resolve the style contexts for a frame tree, building
+   * aChangeList based on the resulting style changes, plus aMinChange
+   * applied to aFrame.
    */
-  NS_HIDDEN_(nsChangeHint)
+  NS_HIDDEN_(void)
     ComputeStyleChangeFor(nsIFrame* aFrame,
                           nsStyleChangeList* aChangeList,
                           nsChangeHint aMinChange);
