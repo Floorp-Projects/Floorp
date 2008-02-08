@@ -237,22 +237,10 @@ nsIMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
     return nsIContent::IME_STATUS_DISABLE;
   }
 
-  if (sInstalledMenuKeyboardListener)
+  if (sInstalledMenuKeyboardListener || !aContent)
     return nsIContent::IME_STATUS_DISABLE;
 
-  PRBool isEditable = PR_FALSE;
-  nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
-  nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(container));
-  if (editorDocShell)
-    editorDocShell->GetEditable(&isEditable);
-
-  if (isEditable)
-    return nsIContent::IME_STATUS_ENABLE;
-
-  if (aContent)
-    return aContent->GetDesiredIMEState();
-
-  return nsIContent::IME_STATUS_DISABLE;
+  return aContent->GetDesiredIMEState();
 }
 
 void
