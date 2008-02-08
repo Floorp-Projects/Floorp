@@ -54,6 +54,7 @@
  * nsUnknownContentTypeDialog component.
  */
 
+const PREF_BD_USEDOWNLOADDIR = "browser.download.useDownloadDir";
 
 /* ctor
  */
@@ -138,9 +139,14 @@ nsUnknownContentTypeDialog.prototype = {
       this.mLauncher = aLauncher;
 
       // Check to see if the user wishes to auto save to the default download
-      // folder without prompting.
-      var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-      var autodownload = prefs.getBoolPref("browser.download.useDownloadDir");
+      // folder without prompting.  This preferences may not be set, so default
+      // to not prompting.
+      let prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefBranch);
+      let autodownload = true;
+      try {
+        autodownload = prefs.getBoolPref(PREF_BD_USEDOWNLOADDIR);
+      } catch (e) { }
       
       if (autodownload) {
         // Retrieve the user's default download directory

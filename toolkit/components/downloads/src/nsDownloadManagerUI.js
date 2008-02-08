@@ -108,7 +108,11 @@ nsDownloadManagerUI.prototype = {
 
     var prefs = Cc["@mozilla.org/preferences-service;1"].
                 getService(Ci.nsIPrefBranch);
-    var flashCount = prefs.getIntPref(PREF_FLASH_COUNT);
+    // This preference may not be set, so defaulting to two.
+    let flashCount = 2;
+    try {
+      flashCount = prefs.getIntPref(PREF_FLASH_COUNT);
+    } catch (e) { }
 
     var win = this.recentWindow.QueryInterface(Ci.nsIDOMChromeWindow);
     win.getAttentionWithCycleCount(flashCount);
