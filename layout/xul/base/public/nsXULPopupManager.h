@@ -75,7 +75,6 @@ class nsMenuPopupFrame;
 class nsMenuBarFrame;
 class nsIMenuParent;
 class nsIDOMKeyEvent;
-class nsIDocShellTreeItem;
 
 enum nsPopupType {
   ePopupTypePanel,
@@ -474,10 +473,10 @@ public:
   void HidePopupAfterDelay(nsMenuPopupFrame* aPopup);
 
   /**
-   * Hide all of the popups from a given docshell. This should be called when the
+   * Hide all of the popups from a given document. This should be called when the
    * document is hidden.
    */
-  void HidePopupsInDocShell(nsIDocShellTreeItem* aDocShellToHide);
+  void HidePopupsInDocument(nsIDocument* aDocument);
 
   /**
    * Execute a menu command from the triggering event aEvent.
@@ -712,11 +711,6 @@ protected:
    * so that keyboard navigation between menus on the menubar may be done.
    */
   void UpdateKeyboardListeners();
-
-  /*
-   * Returns true if the docshell for aDoc is aExpected or a child of aExpected.
-   */
-  PRBool IsChildOfDocShell(nsIDocument* aDoc, nsIDocShellTreeItem* aExpected);
 
   // the document the key event listener is attached to
   nsCOMPtr<nsIDOMEventTarget> mKeyListener;
