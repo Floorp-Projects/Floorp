@@ -182,8 +182,13 @@ function autoRemoveAndClose(aDownload)
     // For the moment, just use the simple heuristic that if this window was
     // opened by the download process, rather than by the user, it should
     // auto-close if the pref is set that way. If the user opened it themselves,
-    // it should not close until they explicitly close it.
-    var autoClose = pref.getBoolPref(PREF_BDM_CLOSEWHENDONE);
+    // it should not close until they explicitly close it.  Additionally, the
+    // preference to control the feature may not be set, so defaulting to
+    // keeping the window open.
+    let autoClose = false;
+    try {
+      autoClose = pref.getBoolPref(PREF_BDM_CLOSEWHENDONE);
+    } catch (e) { }
     var autoOpened =
       !window.opener || window.opener.location.href == window.location.href;
     if (autoClose && autoOpened && !gUserInteracted) {
