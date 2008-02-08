@@ -108,7 +108,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "red green", "red #fc3", "#ff00cc" ],
+		other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
 		invalid_values: [ "red none", "red inherit", "red, green" ]
 	},
 	"-moz-border-end": {
@@ -154,7 +154,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "red green", "red #fc3", "#ff00cc" ],
+		other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
 		invalid_values: [ "red none", "red inherit", "red, green" ]
 	},
 	"-moz-border-radius": {
@@ -203,7 +203,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "red green", "red #fc3", "#ff00cc" ],
+		other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
 		invalid_values: [ "red none", "red inherit", "red, green" ]
 	},
 	"-moz-border-start": {
@@ -249,7 +249,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "red green", "red #fc3", "#ff00cc" ],
+		other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
 		invalid_values: [ "red none", "red inherit", "red, green" ]
 	},
 	"-moz-box-align": {
@@ -1495,7 +1495,7 @@ var gCSSProperties = {
 		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "2px 2px", "2px 2px 1px", "2px 2px green", "2px 2px 1px green", "green 2px 2px", "green 2px 2px 1px", "green 2px 2px, blue 1px 3px 4px" ],
+		other_values: [ "2px 2px", "2px 2px 1px", "2px 2px green", "2px 2px 1px green", "green 2px 2px", "green 2px 2px 1px", "green 2px 2px, blue 1px 3px 4px", "currentColor 3px 3px", "blue 2px 2px, currentColor 1px 2px" ],
 		invalid_values: [ "3% 3%", "2px 2px 2px 2px", "2px 2px, none" ]
 	},
 	"text-transform": {
@@ -1651,8 +1651,9 @@ var gCSSProperties = {
 		domProp: null,
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "color": "blue" },
 		initial_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)" ],
-		other_values: [ "green", "#fc3", "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green', "none" ],
+		other_values: [ "green", "#fc3", "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green', "none", "currentColor" ],
 		invalid_values: []
 	},
 	"fill-opacity": {
@@ -1683,8 +1684,9 @@ var gCSSProperties = {
 		domProp: null,
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "color": "blue" },
 		initial_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)" ],
-		other_values: [ "green", "#fc3" ],
+		other_values: [ "green", "#fc3", "currentColor" ],
 		invalid_values: [ "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green' ]
 	},
 	"flood-opacity": {
@@ -1699,8 +1701,9 @@ var gCSSProperties = {
 		domProp: null,
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "color": "blue" },
 		initial_values: [ "white", "#fff", "#ffffff", "rgb(255,255,255)", "rgba(255,255,255,1.0)", "rgba(255,255,255,42.0)" ],
-		other_values: [ "green", "#fc3" ],
+		other_values: [ "green", "#fc3", "currentColor" ],
 		invalid_values: [ "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green' ]
 	},
 	"marker": {
@@ -1764,8 +1767,9 @@ var gCSSProperties = {
 		domProp: null,
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "color": "blue" },
 		initial_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)" ],
-		other_values: [ "green", "#fc3" ],
+		other_values: [ "green", "#fc3", "currentColor" ],
 		invalid_values: [ "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green' ]
 	},
 	"stop-opacity": {
@@ -1781,7 +1785,7 @@ var gCSSProperties = {
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)", "green", "#fc3", "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green' ],
+		other_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)", "green", "#fc3", "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green', "currentColor" ],
 		invalid_values: []
 	},
 	"stroke-dasharray": {

@@ -73,7 +73,8 @@ enum nsCSSUnit {
   eCSSUnit_Image        = 31,     // (nsCSSValue::Image*) value
   eCSSUnit_Integer      = 50,     // (int) simple value
   eCSSUnit_Enumerated   = 51,     // (int) value has enumerated meaning
-  eCSSUnit_Color        = 80,     // (color) an RGBA value
+  eCSSUnit_EnumColor    = 80,     // (int) enumerated color (kColorKTable)
+  eCSSUnit_Color        = 81,     // (nscolor) an RGBA value
   eCSSUnit_Percent      = 90,     // (float) 1.0 == 100%) value is percentage of something
   eCSSUnit_Number       = 91,     // (float) value is numeric (usually multiplier, different behavior that percent)
 
@@ -174,7 +175,8 @@ public:
 
   PRInt32 GetIntValue() const
   {
-    NS_ASSERTION(mUnit == eCSSUnit_Integer || mUnit == eCSSUnit_Enumerated,
+    NS_ASSERTION(mUnit == eCSSUnit_Integer || mUnit == eCSSUnit_Enumerated ||
+                 mUnit == eCSSUnit_EnumColor,
                  "not an int value");
     return mValue.mInt;
   }

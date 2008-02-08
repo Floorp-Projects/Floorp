@@ -52,10 +52,10 @@
 nsCSSValue::nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit)
   : mUnit(aUnit)
 {
-  NS_ASSERTION((eCSSUnit_Integer == aUnit) ||
-               (eCSSUnit_Enumerated == aUnit), "not an int value");
-  if ((eCSSUnit_Integer == aUnit) ||
-      (eCSSUnit_Enumerated == aUnit)) {
+  NS_ASSERTION(aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated ||
+               aUnit == eCSSUnit_EnumColor, "not an int value");
+  if (aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated ||
+      aUnit == eCSSUnit_EnumColor) {
     mValue.mInt = aValue;
   }
   else {
@@ -131,7 +131,7 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
     mValue.mString = aCopy.mValue.mString;
     mValue.mString->AddRef();
   }
-  else if ((eCSSUnit_Integer <= mUnit) && (mUnit <= eCSSUnit_Enumerated)) {
+  else if ((eCSSUnit_Integer <= mUnit) && (mUnit <= eCSSUnit_EnumColor)) {
     mValue.mInt = aCopy.mValue.mInt;
   }
   else if (eCSSUnit_Color == mUnit){
@@ -173,7 +173,7 @@ PRBool nsCSSValue::operator==(const nsCSSValue& aOther) const
       return (NS_strcmp(GetBufferValue(mValue.mString),
                         GetBufferValue(aOther.mValue.mString)) == 0);
     }
-    else if ((eCSSUnit_Integer <= mUnit) && (mUnit <= eCSSUnit_Enumerated)) {
+    else if ((eCSSUnit_Integer <= mUnit) && (mUnit <= eCSSUnit_EnumColor)) {
       return mValue.mInt == aOther.mValue.mInt;
     }
     else if (eCSSUnit_Color == mUnit) {
@@ -255,11 +255,11 @@ void nsCSSValue::DoReset()
 
 void nsCSSValue::SetIntValue(PRInt32 aValue, nsCSSUnit aUnit)
 {
-  NS_ASSERTION((eCSSUnit_Integer == aUnit) ||
-               (eCSSUnit_Enumerated == aUnit), "not an int value");
+  NS_ASSERTION(aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated ||
+               aUnit == eCSSUnit_EnumColor, "not an int value");
   Reset();
-  if ((eCSSUnit_Integer == aUnit) ||
-      (eCSSUnit_Enumerated == aUnit)) {
+  if (aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated ||
+      aUnit == eCSSUnit_EnumColor) {
     mUnit = aUnit;
     mValue.mInt = aValue;
   }
