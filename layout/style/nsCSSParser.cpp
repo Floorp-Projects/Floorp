@@ -1124,7 +1124,7 @@ CSSParserImpl::ParseColorString(const nsSubstring& aBuffer,
   } else if (value.GetUnit() == eCSSUnit_Color) {
     (*aColor) = value.GetColorValue();
     rv = NS_OK;
-  } else if (value.GetUnit() == eCSSUnit_Integer) {
+  } else if (value.GetUnit() == eCSSUnit_EnumColor) {
     PRInt32 intValue = value.GetIntValue();
     if (intValue >= 0) {
       nsCOMPtr<nsILookAndFeel> lfSvc = do_GetService("@mozilla.org/widget/lookandfeel;1");
@@ -2941,7 +2941,7 @@ PRBool CSSParserImpl::ParseColor(nsresult& aErrorCode, nsCSSValue& aValue)
             return PR_TRUE;
           }
           if (nsCSSProps::FindKeyword(keyword, nsCSSProps::kColorKTable, value)) {
-            aValue.SetIntValue(value, eCSSUnit_Integer);
+            aValue.SetIntValue(value, eCSSUnit_EnumColor);
             return PR_TRUE;
           }
         }
@@ -6374,7 +6374,7 @@ PRBool CSSParserImpl::ParseTextShadow(nsresult& aErrorCode)
       } else {
         // Must be a color (as string or color value)
         NS_ASSERTION(unit == eCSSUnit_String || unit == eCSSUnit_Color ||
-                     unit == eCSSUnit_Integer,
+                     unit == eCSSUnit_EnumColor,
                      "Must be a color value (named color, numeric color, "
                      "or system color)");
         haveColor = PR_TRUE;
