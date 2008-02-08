@@ -8,4 +8,4 @@ pref("extensions.weave.bookmarks", true);
 pref("extensions.weave.history", true);
 pref("extensions.weave.schedule", 1);
 pref("extensions.weave.lastsync", "0");
-pref("extensions.weave.encryption", "XXTEA");
+pref("extensions.weave.encryption", "aes-256-cbc");
