@@ -2681,24 +2681,6 @@ nsDocument::CheckGetElementByIdArg(const nsAString& aId)
   return PR_TRUE;
 }
 
-static void
-GetDocumentFromDocShellTreeItem(nsIDocShellTreeItem *aDocShell,
-                                nsIDocument **aDocument)
-{
-  *aDocument = nsnull;
-
-  nsCOMPtr<nsIDOMWindow> window(do_GetInterface(aDocShell));
-
-  if (window) {
-    nsCOMPtr<nsIDOMDocument> dom_doc;
-    window->GetDocument(getter_AddRefs(dom_doc));
-
-    if (dom_doc) {
-      CallQueryInterface(dom_doc, aDocument);
-    }
-  }
-}
-
 void
 nsDocument::DispatchContentLoadedEvents()
 {
@@ -2717,45 +2699,26 @@ nsDocument::DispatchContentLoadedEvents()
   // other external files such as images and stylesheets) in a frame
   // has finished loading.
 
-  nsCOMPtr<nsIDocShellTreeItem> docShellParent;
-
   // target_frame is the [i]frame element that will be used as the
   // target for the event. It's the [i]frame whose content is done
   // loading.
   nsCOMPtr<nsIDOMEventTarget> target_frame;
 
-  nsPIDOMWindow *win = GetWindow();
-  if (win) {
-    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
-      do_QueryInterface(win->GetDocShell());
-
-    if (docShellAsItem) {
-      docShellAsItem->GetSameTypeParent(getter_AddRefs(docShellParent));
-
-      nsCOMPtr<nsIDocument> parent_doc;
-
-      GetDocumentFromDocShellTreeItem(docShellParent,
-                                      getter_AddRefs(parent_doc));
-
-      if (parent_doc) {
-        target_frame = do_QueryInterface(parent_doc->FindContentForSubDocument(this));
-      }
-    }
+  if (mParentDocument) {
+    target_frame =
+      do_QueryInterface(mParentDocument->FindContentForSubDocument(this));
   }
 
   if (target_frame) {
-    while (docShellParent) {
-      nsCOMPtr<nsIDocument> ancestor_doc;
-
-      GetDocumentFromDocShellTreeItem(docShellParent,
-                                      getter_AddRefs(ancestor_doc));
-
-      if (!ancestor_doc) {
+    nsCOMPtr<nsIDocument> parent = mParentDocument;
+    while (parent) {
+      parent = parent->GetParentDocument();
+      if (!parent) {
         break;
       }
 
       nsCOMPtr<nsIDOMDocumentEvent> document_event =
-        do_QueryInterface(ancestor_doc);
+        do_QueryInterface(parent);
 
       nsCOMPtr<nsIDOMEvent> event;
       nsCOMPtr<nsIPrivateDOMEvent> privateEvent;
@@ -2784,20 +2747,17 @@ nsDocument::DispatchContentLoadedEvents()
         if (innerEvent) {
           nsEventStatus status = nsEventStatus_eIgnore;
 
-          nsIPresShell *shell = ancestor_doc->GetPrimaryShell();
+          nsIPresShell *shell = parent->GetPrimaryShell();
           if (shell) {
             nsCOMPtr<nsPresContext> context = shell->GetPresContext();
 
             if (context) {
-              nsEventDispatcher::Dispatch(ancestor_doc, context, innerEvent,
-                                          event, &status);
+              nsEventDispatcher::Dispatch(parent, context, innerEvent, event,
+                                          &status);
             }
           }
         }
       }
-
-      nsCOMPtr<nsIDocShellTreeItem> tmp(docShellParent);
-      tmp->GetSameTypeParent(getter_AddRefs(docShellParent));
     }
   }
 
@@ -4811,34 +4771,13 @@ nsDocument::FlushPendingNotifications(mozFlushType aType)
     return;
   }
 
-  // We should be able to replace all this nsIDocShell* code with code
-  // that uses mParentDocument, but mParentDocument is never set in
-  // the current code!
-
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
-    do_QueryInterface(window->GetDocShell());
-
-  if (docShellAsItem) {
-    nsCOMPtr<nsIDocShellTreeItem> docShellParent;
-    docShellAsItem->GetSameTypeParent(getter_AddRefs(docShellParent));
-
-    nsCOMPtr<nsIDOMWindow> parentWin(do_GetInterface(docShellParent));
-
-    if (parentWin) {
-      nsCOMPtr<nsIDOMDocument> dom_doc;
-      parentWin->GetDocument(getter_AddRefs(dom_doc));
-
-      nsCOMPtr<nsIDocument> doc(do_QueryInterface(dom_doc));
-
-      // If we have a parent we must flush the parent too to ensure that our
-      // container is reflown if its size was changed.  But if it's not safe to
-      // flush ourselves, then don't flush the parent, since that can cause
-      // things like resizes of our frame's widget, which we can't handle while
-      // flushing is unsafe.
-      if (doc && IsSafeToFlush()) {
-        doc->FlushPendingNotifications(aType);
-      }
-    }
+  // If we have a parent we must flush the parent too to ensure that our
+  // container is reflown if its size was changed.  But if it's not safe to
+  // flush ourselves, then don't flush the parent, since that can cause things
+  // like resizes of our frame's widget, which we can't handle while flushing
+  // is unsafe.
+  if (mParentDocument && IsSafeToFlush()) {
+    mParentDocument->FlushPendingNotifications(aType);
   }
 
   nsPresShellIterator iter(this);
