@@ -3098,42 +3098,26 @@ nsNavHistory::GetCount(PRUint32 *aCount)
 }
 
 
-// nsNavHistory::RemovePages
+// nsNavHistory::RemovePagesInternal
 //
-//    Removes a bunch of uris from history.
-//    Has better performance than RemovePage when deleting a lot of history.
-//    Notice that this function does not call the onDeleteURI observers,
-//    instead, if aDoBatchNotify is true, we call OnBegin/EndUpdateBatch.
-//    We don't do duplicates removal, URIs array should be cleaned-up before.
+//    Deletes a list of placeIds from history.
+//    This is an internal method used by RemovePages and RemovePagesFromHost.
+//    Takes a comma separated list of place ids.
+//    This method does not do any observer notification.
 
-NS_IMETHODIMP
-nsNavHistory::RemovePages(nsIURI **aURIs, PRUint32 aLength, PRBool aDoBatchNotify)
+nsresult
+nsNavHistory::RemovePagesInternal(const nsCString& aPlaceIdsQueryString)
 {
-  // build a list of place ids to delete
-  nsCString deletePlaceIdsQueryString;
-  nsresult rv;
-  for (PRInt32 i = 0; i < aLength; i++) {
-    PRInt64 placeId;
-    rv = GetUrlIdFor(aURIs[i], &placeId, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (placeId != 0) {
-      if (!deletePlaceIdsQueryString.IsEmpty())
-        deletePlaceIdsQueryString.AppendLiteral(",");
-      deletePlaceIdsQueryString.AppendInt(placeId);
-    }
-  }
-
   // early return if there is nothing to delete
-  if (deletePlaceIdsQueryString.IsEmpty())
+  if (aPlaceIdsQueryString.IsEmpty())
     return NS_OK;
 
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
-  nsCOMPtr<mozIStorageStatement> statement;
 
   // delete all visits
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+  nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "DELETE FROM moz_historyvisits WHERE place_id IN (") +
-        deletePlaceIdsQueryString +
+        aPlaceIdsQueryString +
         NS_LITERAL_CSTRING(")"));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3148,7 +3132,7 @@ nsNavHistory::RemovePages(nsIURI **aURIs, PRUint32 aLength, PRBool aDoBatchNotif
   rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "DELETE FROM moz_places WHERE id IN ("
         "SELECT h.id FROM moz_places h WHERE h.id IN (") +
-        deletePlaceIdsQueryString +
+        aPlaceIdsQueryString +
         NS_LITERAL_CSTRING(") AND "
         "NOT EXISTS (SELECT b.id FROM moz_bookmarks b WHERE b.fk = h.id) AND "
         "NOT EXISTS (SELECT a.id FROM moz_annos a WHERE a.place_id = h.id))"));
@@ -3161,22 +3145,51 @@ nsNavHistory::RemovePages(nsIURI **aURIs, PRUint32 aLength, PRBool aDoBatchNotif
   // query to figure out which places to recalculate frecency first.
   rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "UPDATE moz_places SET frecency = -1 WHERE id IN(") +
-        deletePlaceIdsQueryString +
+        aPlaceIdsQueryString +
         NS_LITERAL_CSTRING(")"));
   NS_ENSURE_SUCCESS(rv, rv);
- 
+
   // placeId could have a livemark item, so setting the frecency to -1
   // would cause it to show up in the url bar autocomplete
   // call FixInvalidFrecenciesForExcludedPlaces() to handle that scenario
   // XXX this might be dog slow, further degrading delete perf.
   rv = FixInvalidFrecenciesForExcludedPlaces();
   NS_ENSURE_SUCCESS(rv, rv);
- 
+
   // XXX todo
   // forcibly call the "on idle" timer here to do a little work
-  // but the rest will happen on idle.  
-  
-  rv = transaction.Commit();
+  // but the rest will happen on idle.
+
+  return transaction.Commit();
+}
+
+
+// nsNavHistory::RemovePages
+//
+//    Removes a bunch of uris from history.
+//    Has better performance than RemovePage when deleting a lot of history.
+//    Notice that this function does not call the onDeleteURI observers,
+//    instead, if aDoBatchNotify is true, we call OnBegin/EndUpdateBatch.
+//    We don't do duplicates removal, URIs array should be cleaned-up before.
+
+NS_IMETHODIMP
+nsNavHistory::RemovePages(nsIURI **aURIs, PRUint32 aLength, PRBool aDoBatchNotify)
+{
+  nsresult rv;
+  // build a list of place ids to delete
+  nsCString deletePlaceIdsQueryString;
+  for (PRInt32 i = 0; i < aLength; i++) {
+    PRInt64 placeId;
+    rv = GetUrlIdFor(aURIs[i], &placeId, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (placeId != 0) {
+      if (!deletePlaceIdsQueryString.IsEmpty())
+        deletePlaceIdsQueryString.AppendLiteral(",");
+      deletePlaceIdsQueryString.AppendInt(placeId);
+    }
+  }
+
+  rv = RemovePagesInternal(deletePlaceIdsQueryString);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // force a full refresh calling onEndUpdateBatch (will call Refresh())
@@ -3215,16 +3228,12 @@ nsNavHistory::RemovePage(nsIURI *aURI)
 //
 //    Silently fails if we have no knowledge of the host.
 //
-//    This function is actually pretty simple, it just boils down to a DELETE
-//    statement, but is made complex due to the observers and the two types of
-//    similar delete operations that we need to support.
+//    This sends onBeginUpdateBatch/onEndUpdateBatch to observers
 
 NS_IMETHODIMP
 nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
 {
   nsresult rv;
-  mozStorageTransaction transaction(mDBConn, PR_FALSE);
-
   // Local files don't have any host name. We don't want to delete all files in
   // history when we get passed an empty string, so force to exact match
   if (aHost.IsEmpty())
@@ -3252,37 +3261,19 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
   revHostSlash.Truncate(revHostSlash.Length() - 1);
   revHostSlash.Append(NS_LITERAL_STRING("/"));
 
-  // how we are selecting host names
+  // build condition string based on host selection type
   nsCAutoString conditionString;
   if (aEntireDomain)
     conditionString.AssignLiteral("h.rev_host >= ?1 AND h.rev_host < ?2 ");
   else
     conditionString.AssignLiteral("h.rev_host = ?1 ");
 
-  // Tell the observers about the non-hidden items we are about to delete.
-  // Since this is a two-step process, if we get an error, we may tell them we
-  // will delete something but then not actually delete it. Too bad.
-  //
-  // Note also that we *include* bookmarked items here. We generally want to
-  // send out delete notifications for bookmarked items since in general,
-  // deleting the visits (like we always do) will cause the item to disappear
-  // from history views. This will also cause all visit dates to be deleted,
-  // which affects many bookmark views
-
-  // is bookmarked?
-  conditionString.AppendLiteral("AND (b.type = ?3 OR b.id IS NULL) ");
-
-  // has EXPIRES_NEVER annotations?
-  conditionString.AppendLiteral("AND (a.expiration = ?4 OR a.id IS NULL) ");
+  nsCOMPtr<mozIStorageStatement> statement;
 
   // create statement depending on delete type
-  nsCAutoString getURIsForDeletion = NS_LITERAL_CSTRING(
-    "SELECT h.id, h.url, b.id, a.id FROM moz_places h "
-      "LEFT OUTER JOIN moz_bookmarks b ON h.id = b.fk "
-      "LEFT OUTER JOIN moz_annos a ON h.id = a.place_id WHERE ") +
-      conditionString;
-  nsCOMPtr<mozIStorageStatement> statement;
-  rv = mDBConn->CreateStatement(getURIsForDeletion, getter_AddRefs(statement));
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT h.id FROM moz_places h WHERE ") +
+      conditionString, getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->BindStringParameter(0, revHostDot);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3290,110 +3281,24 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
     rv = statement->BindStringParameter(1, revHostSlash);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  rv = statement->BindInt32Parameter(2, nsNavBookmarks::TYPE_BOOKMARK);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt32Parameter(3, nsIAnnotationService::EXPIRE_NEVER);
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString deletedPlaceIds;
-  nsCAutoString deletedPlaceIdsBookmarked;
-  nsCAutoString deletedPlaceIdsWithAnno;
-  nsCStringArray deletedURIs;
-
+  nsCString hostPlaceIds;
   PRBool hasMore = PR_FALSE;
   while ((statement->ExecuteStep(&hasMore) == NS_OK) && hasMore) {
-    nsCAutoString thisURIString;
-    if (NS_FAILED(statement->GetUTF8String(1, thisURIString)) || 
-        thisURIString.IsEmpty())
-      continue; // no URI
-    if (!deletedURIs.AppendCString(thisURIString))
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    if (!deletedPlaceIds.IsEmpty())
-      deletedPlaceIds.AppendLiteral(", ");
-
+    if (!hostPlaceIds.IsEmpty())
+      hostPlaceIds.AppendLiteral(",");
     PRInt64 placeId;
     rv = statement->GetInt64(0, &placeId);
     NS_ENSURE_SUCCESS(rv, rv);
-    deletedPlaceIds.AppendInt(placeId);
-    if (statement->AsInt64(2)) {
-      if (!deletedPlaceIdsBookmarked.IsEmpty())
-        deletedPlaceIdsBookmarked.AppendLiteral(", ");
-      deletedPlaceIdsBookmarked.AppendInt(placeId);
-    }
-    if (statement->AsInt64(3)) {
-      if (!deletedPlaceIdsWithAnno.IsEmpty())
-        deletedPlaceIdsWithAnno.AppendLiteral(", ");
-      deletedPlaceIdsWithAnno.AppendInt(placeId);
-    }
+    hostPlaceIds.AppendInt(placeId);
   }
 
-  // first, delete all the visits
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "DELETE FROM moz_historyvisits WHERE place_id IN (") +
-      deletedPlaceIds + NS_LITERAL_CSTRING(")"));
+  rv = RemovePagesInternal(hostPlaceIds);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // delete annotations (except EXPIRE_NEVER)
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "DELETE FROM moz_annos WHERE place_id NOT IN (") +
-      deletedPlaceIdsWithAnno + NS_LITERAL_CSTRING(")"));
-  NS_ENSURE_SUCCESS(rv, rv);
+  // force a full refresh calling onEndUpdateBatch (will call Refresh())
+  UpdateBatchScoper batch(*this); // sends Begin/EndUpdateBatch to observers
 
-  // finally, delete the actual moz_places records that are
-  // - not bookmarked
-  // - do not have EXPIRE_NEVER annotations 
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "DELETE FROM moz_places WHERE id IN (") + deletedPlaceIds +
-      NS_LITERAL_CSTRING(") AND id NOT IN (") + deletedPlaceIdsBookmarked +
-      NS_LITERAL_CSTRING(") AND id NOT IN (") + deletedPlaceIdsWithAnno +
-      NS_LITERAL_CSTRING(")")); 
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // reset the frecency for the places we did not delete.  Note, we don't
-  // reset the visit_count, as we use that in our "on idle"
-  // query to figure out which places to recalcuate frecency first.
-  if (!deletedPlaceIdsBookmarked.IsEmpty() ||
-      !deletedPlaceIdsWithAnno.IsEmpty()) {
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "UPDATE moz_places SET frecency = -1 WHERE id IN (") + 
-        deletedPlaceIdsBookmarked +
-        NS_LITERAL_CSTRING(") OR id IN (") + deletedPlaceIdsWithAnno +
-        NS_LITERAL_CSTRING(")")); 
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // the places could be livemark items, so setting the frecency to -1
-    // would cause them show up in the url bar autocomplete
-    // call FixInvalidFrecenciesForExcludedPlaces() to handle that scenario
-    rv = FixInvalidFrecenciesForExcludedPlaces();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // XXX todo
-    // forcibly call the "on idle" timer here to do a little work
-    // but the rest will happen on idle.
-  }
-  
-  transaction.Commit();
-
-  // notify observers
-  UpdateBatchScoper batch(*this); // sends Begin/EndUpdateBatch to obsrvrs.
-  if (deletedURIs.Count()) {
-    nsCOMPtr<nsIURI> thisURI;
-    for (PRUint32 observerIndex = 0; observerIndex < mObservers.Length();
-         observerIndex ++) {
-      const nsCOMPtr<nsINavHistoryObserver> &obs = mObservers.ElementAt(observerIndex);
-      if (! obs)
-        continue;
-
-      // send it all the URIs
-      for (PRInt32 i = 0; i < deletedURIs.Count(); i ++) {
-        if (NS_FAILED(NS_NewURI(getter_AddRefs(thisURI), *deletedURIs[i],
-                                nsnull, nsnull)))
-          continue; // bad URI
-        obs->OnDeleteURI(thisURI);
-      }
-    }
-  }
   return NS_OK;
 }
 
