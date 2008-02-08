@@ -178,7 +178,7 @@ public:
   // itself.
   void ProcessPendingRestyles();
   
-  void RebuildAllStyleData();
+  void RebuildAllStyleData(nsChangeHint aExtraHint);
 
   void PostRestyleEvent(nsIContent* aContent, nsReStyleHint aRestyleHint,
                         nsChangeHint aMinChangeHint);

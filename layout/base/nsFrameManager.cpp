@@ -1439,11 +1439,15 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
   return aMinChange;
 }
 
-nsChangeHint
+void
 nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame, 
                                       nsStyleChangeList *aChangeList,
                                       nsChangeHint       aMinChange)
 {
+  if (aMinChange) {
+    aChangeList->AppendChange(aFrame, aFrame->GetContent(), aMinChange);
+  }
+
   nsChangeHint topLevelChange = aMinChange;
 
   nsIFrame* frame = aFrame;
@@ -1472,7 +1476,7 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
         // clobbered by the frame reconstruct anyway.
         NS_ASSERTION(!frame->GetPrevContinuation(),
                      "continuing frame had more severe impact than first-in-flow");
-        return topLevelChange;
+        return;
       }
 
       frame = frame->GetNextContinuation();
@@ -1481,14 +1485,13 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
     // Might we have special siblings?
     if (!(frame2->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
       // nothing more to do here
-      return topLevelChange;
+      return;
     }
     
     frame2 = static_cast<nsIFrame*>
                         (propTable->GetProperty(frame2, nsGkAtoms::IBSplitSpecialSibling));
     frame = frame2;
   } while (frame2);
-  return topLevelChange;
 }
 
 
