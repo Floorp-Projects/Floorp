@@ -1617,7 +1617,7 @@ PRBool CSSParserImpl::ParseNameSpaceRule(nsresult& aErrorCode,
 
   if (eCSSToken_Ident == mToken.mType) {
     prefix = mToken.mIdent;
-    ToLowerCase(prefix); // always case insensitive, since stays within CSS
+    // user-specified identifiers are case-sensitive (bug 416106)
     if (! GetToken(aErrorCode, PR_TRUE)) {
       REPORT_UNEXPECTED_EOF(PEAtNSURIEOF);
       return PR_FALSE;
@@ -2176,7 +2176,7 @@ CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&       aDataMask,
       aDataMask |= SEL_MASK_NSPACE;
       PRInt32 nameSpaceID = kNameSpaceID_Unknown;
       if (mNameSpaceMap) {
-        ToLowerCase(buffer); // always case insensitive, since stays within CSS
+        // user-specified identifiers are case-sensitive (bug 416106)
         nsCOMPtr<nsIAtom> prefix = do_GetAtom(buffer);
         nameSpaceID = mNameSpaceMap->FindNameSpaceID(prefix);
       } // else, no declared namespaces
@@ -2341,7 +2341,7 @@ CSSParserImpl::ParseAttributeSelector(PRInt32&       aDataMask,
     if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // was a namespace
       nameSpaceID = kNameSpaceID_Unknown;
       if (mNameSpaceMap) {
-        ToLowerCase(attr); // always case insensitive, since stays within CSS
+        // user-specified identifiers are case-sensitive (bug 416106)
         nsCOMPtr<nsIAtom> prefix = do_GetAtom(attr);
         nameSpaceID = mNameSpaceMap->FindNameSpaceID(prefix);
       } // else, no declared namespaces
@@ -4012,7 +4012,7 @@ PRBool CSSParserImpl::ParseAttr(nsresult& aErrorCode, nsCSSValue& aValue)
         if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // namespace
           PRInt32 nameSpaceID = kNameSpaceID_Unknown;
           if (mNameSpaceMap) {
-            ToLowerCase(holdIdent); // always case insensitive, since stays within CSS
+            // user-specified identifiers are case-sensitive (bug 416106)
             nsCOMPtr<nsIAtom> prefix = do_GetAtom(holdIdent);
             nameSpaceID = mNameSpaceMap->FindNameSpaceID(prefix);
           } // else, no declared namespaces
