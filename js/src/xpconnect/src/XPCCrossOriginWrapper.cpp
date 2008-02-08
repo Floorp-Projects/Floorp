@@ -215,7 +215,7 @@ XPC_XOW_WrapperMoved(JSContext *cx, XPCWrappedNative *innerObj,
     return JS_TRUE;
   }
 
-  return JS_SetReservedSlot(cx, xow, XPCWrapper::sNumSlots,
+  return JS_SetReservedSlot(cx, xow, XPC_XOW_ScopeSlot,
                             PRIVATE_TO_JSVAL(newScope)) &&
          JS_SetParent(cx, xow, newScope->GetGlobalJSObject());
 }
@@ -1062,7 +1062,7 @@ XPC_XOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
   if (!JS_SetReservedSlot(cx, wrapperIter, XPCWrapper::sWrappedObjSlot, v) ||
       !JS_SetReservedSlot(cx, wrapperIter, XPCWrapper::sResolvingSlot,
                           JSVAL_FALSE) ||
-      !JS_SetReservedSlot(cx, wrapperIter, XPCWrapper::sNumSlots,
+      !JS_SetReservedSlot(cx, wrapperIter, XPC_XOW_ScopeSlot,
                           PRIVATE_TO_JSVAL(nsnull))) {
     return nsnull;
   }
