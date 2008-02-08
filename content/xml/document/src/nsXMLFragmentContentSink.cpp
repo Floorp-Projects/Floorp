@@ -60,6 +60,7 @@
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "nsTArray.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsXMLFragmentContentSink : public nsXMLContentSink,
                                  public nsIFragmentContentSink
@@ -72,6 +73,8 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsXMLFragmentContentSink,
+                                                     nsXMLContentSink)
 
   // nsIExpatSink
   NS_IMETHOD HandleDoctypeDecl(const nsAString & aSubset, 
@@ -169,9 +172,20 @@ nsXMLFragmentContentSink::~nsXMLFragmentContentSink()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsXMLFragmentContentSink,
-                             nsXMLContentSink,
-                             nsIFragmentContentSink)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXMLFragmentContentSink)
+  NS_INTERFACE_MAP_ENTRY(nsIFragmentContentSink)
+NS_INTERFACE_MAP_END_INHERITING(nsXMLContentSink)
+
+NS_IMPL_ADDREF_INHERITED(nsXMLFragmentContentSink, nsXMLContentSink)
+NS_IMPL_RELEASE_INHERITED(nsXMLFragmentContentSink, nsXMLContentSink)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLFragmentContentSink)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLFragmentContentSink,
+                                                  nsXMLContentSink)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTargetDocument)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRoot)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMETHODIMP 
 nsXMLFragmentContentSink::WillBuildModel(void)

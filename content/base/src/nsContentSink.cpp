@@ -147,10 +147,17 @@ nsScriptLoaderObserverProxy::ScriptEvaluated(nsresult aResult,
 }
 
 
-NS_IMPL_ISUPPORTS3(nsContentSink,
-                   nsICSSLoaderObserver,
-                   nsISupportsWeakReference,
-                   nsIScriptLoaderObserver)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsContentSink)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsContentSink)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsContentSink)
+  NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsIScriptLoaderObserver)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptLoaderObserver)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_2(nsContentSink, mDocument, mParser)
 
 nsContentSink::nsContentSink()
 {

@@ -185,15 +185,30 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED7(nsXMLContentSink,
-                             nsContentSink,
-                             nsIContentSink,
-                             nsIXMLContentSink,
-                             nsIExpatSink,
-                             nsITimerCallback,
-                             nsIDocumentObserver,
-                             nsIMutationObserver,
-                             nsITransformObserver)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXMLContentSink)
+  NS_INTERFACE_MAP_ENTRY(nsIContentSink)
+  NS_INTERFACE_MAP_ENTRY(nsIXMLContentSink)
+  NS_INTERFACE_MAP_ENTRY(nsIExpatSink)
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
+  NS_INTERFACE_MAP_ENTRY(nsITransformObserver)
+NS_INTERFACE_MAP_END_INHERITING(nsContentSink)
+
+NS_IMPL_ADDREF_INHERITED(nsXMLContentSink, nsContentSink)
+NS_IMPL_RELEASE_INHERITED(nsXMLContentSink, nsContentSink)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLContentSink)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLContentSink,
+                                                  nsContentSink)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCurrentHead)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mDocElement)
+  for (PRUint32 i = 0, count = tmp->mContentStack.Length(); i < count; i++) {
+    const StackNode& node = tmp->mContentStack.ElementAt(i);
+    cb.NoteXPCOMChild(node.mContent);
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // nsIContentSink
 NS_IMETHODIMP
