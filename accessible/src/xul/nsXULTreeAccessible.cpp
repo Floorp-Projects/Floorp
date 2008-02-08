@@ -671,7 +671,7 @@ nsXULTreeAccessible::TreeViewInvalidated(PRInt32 aStartRow, PRInt32 aEndRow,
 
   for (PRInt32 rowIdx = aStartRow; rowIdx <= endRow; ++rowIdx) {
 #ifdef MOZ_ACCESSIBILITY_ATK
-    for (PRInt32 colIdx = startCol; colIdx <= endCol; ++colIdx)
+    for (PRInt32 colIdx = aStartCol; colIdx <= endCol; ++colIdx)
 #endif
     {
       void *key = reinterpret_cast<void*>(rowIdx * kMaxTreeColumns + colIdx);
