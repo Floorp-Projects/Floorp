@@ -72,7 +72,7 @@
         <parameter name="aLabel"/>
         <parameter name="aValue"/>
         <body>
-          this.insertItemAt(-1, aLabel, aValue);
+          return this.insertItemAt(-1, aLabel, aValue);
         </body>
       </method>
 
@@ -96,9 +96,8 @@
 
           var before = this.getItemAtIndex(aIndex);
           if (before)
-            menupopup.insertBefore(menuitem, before);
-          else
-            menupopup.appendChild(menuitem);
+            return menupopup.insertBefore(menuitem, before);
+          return menupopup.appendChild(menuitem);
         </body>
       </method>
 
