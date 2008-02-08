@@ -835,8 +835,10 @@ nsSVGPatternFrame::SetupPaintServer(gfxContext *aContext,
                                     nsSVGGeometryFrame *aSource,
                                     float aGraphicOpacity)
 {
-  if (aGraphicOpacity == 0.0f)
-    return PR_FALSE;
+  if (aGraphicOpacity == 0.0f) {
+    aContext->SetColor(gfxRGBA(0, 0, 0, 0));
+    return PR_TRUE;
+  }
 
   gfxMatrix matrix = aContext->CurrentMatrix();
 
