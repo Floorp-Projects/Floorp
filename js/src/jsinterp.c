@@ -3558,10 +3558,10 @@ interrupt:
                 JS_ASSERT(INT_FITS_IN_JSVAL(i));
                 rval = INT_TO_JSVAL(i);
             } else {
+                SAVE_SP_AND_PC(fp);
                 if (JSVAL_IS_DOUBLE(rval)) {
                     d = *JSVAL_TO_DOUBLE(rval);
                 } else {
-                    SAVE_SP_AND_PC(fp);
                     ok = js_ValueToNumber(cx, rval, &d);
                     if (!ok)
                         goto out;
