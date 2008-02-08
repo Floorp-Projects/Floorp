@@ -393,11 +393,8 @@ void nsRootAccessible::TryFireEarlyLoadEvent(nsIDOMNode *aDocNode)
     return;
   }
 
-  // At minimum, create doc accessible so that events are listened to,
-  // allowing us to see any mutations from a page load handler
-  nsCOMPtr<nsIAccessible> docAccessible;
-  GetAccService()->GetAccessibleFor(aDocNode, getter_AddRefs(docAccessible));
-
+  // The doc accessible should already be created as a result of the
+  // OnStateChange() for the initiation of page loading
   nsCOMPtr<nsIDocShellTreeNode> treeNode(do_QueryInterface(treeItem));
   if (treeNode) {
     PRInt32 subDocuments;
@@ -420,8 +417,10 @@ void nsRootAccessible::TryFireEarlyLoadEvent(nsIDOMNode *aDocNode)
     if (!rootContentAccessible) {
       return;
     }
-    PRUint32 state = State(rootContentAccessible);
-    if (state & nsIAccessibleStates::STATE_BUSY) {
+    PRUint32 state, extState;
+    rootContentAccessible->GetFinalState(&state, &extState);
+    if ((state & nsIAccessibleStates::STATE_BUSY) ||
+        (extState & nsIAccessibleStates::EXT_STATE_DEFUNCT)) {
       // Don't fire page load events on subdocuments for initial page load of entire page
       return;
     }
