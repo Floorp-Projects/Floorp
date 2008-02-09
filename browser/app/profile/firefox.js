@@ -546,9 +546,8 @@ pref("gecko.handlerService.schemes.webcal.0.uriTemplate", "http://handler-test.m
 pref("gecko.handlerService.allowRegisterFromDifferentHost", false);
 
 #ifdef MOZ_SAFE_BROWSING
-// Safe browsing does nothing unless both these prefs are set.
+// Safe browsing does nothing unless this pref is set
 pref("browser.safebrowsing.enabled", true);
-pref("browser.safebrowsing.remoteLookups", false);
 
 // Prevent loading of pages identified as malware
 pref("browser.safebrowsing.malware.enabled", true);

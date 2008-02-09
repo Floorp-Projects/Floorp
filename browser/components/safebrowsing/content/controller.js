@@ -99,12 +99,6 @@ function PROT_Controller(win, tabBrowser, phishingWarden) {
   // (displayers embody the how).
   this.browserView_ = new PROT_BrowserView(this.tabBrowser_);
 
-  // We need to let the phishing warden know about this browser view so it 
-  // can be given the opportunity to handle problem documents. We also need
-  // to let the warden know when this window and hence this browser view
-  // is going away.
-  this.phishingWarden_.addBrowserView(this.browserView_);
-
   G_Debug(this, "Controller initialized.");
 }
 
@@ -113,9 +107,6 @@ function PROT_Controller(win, tabBrowser, phishingWarden) {
  */
 PROT_Controller.prototype.shutdown = function(e) {
   G_Debug(this, "Browser window closing. Shutting controller down.");
-  if (this.browserView_) {
-    this.phishingWarden_.removeBrowserView(this.browserView_);
-  }
 
   if (this.commandController_) {
     this.win_.controllers.removeController(this.commandController_);
