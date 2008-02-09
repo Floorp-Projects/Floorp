@@ -55,6 +55,19 @@ NS_NewPageContentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsPageContentFrame(aContext);
 }
 
+/* virtual */ nsSize
+nsPageContentFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
+                                nsSize aCBSize, nscoord aAvailableWidth,
+                                nsSize aMargin, nsSize aBorder, nsSize aPadding,
+                                PRBool aShrinkWrap)
+{
+  NS_ASSERTION(mPD, "Pages are supposed to have page data");
+  nscoord height = (!mPD || mPD->mReflowSize.height == NS_UNCONSTRAINEDSIZE)
+                   ? NS_UNCONSTRAINEDSIZE
+                   : (mPD->mReflowSize.height - mPD->mReflowMargin.TopBottom());
+  return nsSize(aAvailableWidth, height);
+}
+
 NS_IMETHODIMP
 nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,

@@ -271,6 +271,10 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   // Tile the pages vertically
   nsHTMLReflowMetrics kidSize;
   for (nsIFrame* kidFrame = mFrames.FirstChild(); nsnull != kidFrame; ) {
+    // Set the shared data into the page frame before reflow
+    nsPageFrame * pf = static_cast<nsPageFrame*>(kidFrame);
+    pf->SetSharedPageData(mPageData);
+
     // Reflow the page
     nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
                                      availSize);
@@ -279,10 +283,6 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
     kidReflowState.SetComputedWidth(kidReflowState.availableWidth);
     //kidReflowState.SetComputedHeight(kidReflowState.availableHeight);
     PR_PL(("AV W: %d   H: %d\n", kidReflowState.availableWidth, kidReflowState.availableHeight));
-
-    // Set the shared data into the page frame before reflow
-    nsPageFrame * pf = static_cast<nsPageFrame*>(kidFrame);
-    pf->SetSharedPageData(mPageData);
 
     // Place and size the page. If the page is narrower than our
     // max width then center it horizontally
