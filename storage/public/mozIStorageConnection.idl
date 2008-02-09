@@ -67,7 +67,10 @@ interface mozIStorageConnection : nsISupports {
    void close();
 
   /**
-   * whether the database is open or not
+   * Indicates if the connection is open and ready to use.  This will be false
+   * if the connection failed to open, or it has been closed.  It is strongly
+   * recommended that the database be backed up before removing the file by
+   * calling backupDB.
    */
   readonly attribute boolean connectionReady;
 
