@@ -39,7 +39,6 @@ searchplugins/yahoo.gif
 searchplugins/
 #ifdef MOZ_ENABLE_LIBXUL
 @DLL_PREFIX@xpcom_core@DLL_SUFFIX@
-@DLL_PREFIX@xpistub@DLL_SUFFIX@
 components/@DLL_PREFIX@jar50@DLL_SUFFIX@
 #ifdef XP_WIN
 components/jsd3250.dll
@@ -48,7 +47,6 @@ components/xpinstal.dll
 components/@DLL_PREFIX@jsd@DLL_SUFFIX@
 components/@DLL_PREFIX@xpinstall@DLL_SUFFIX@
 #endif
-components/@DLL_PREFIX@jar50@DLL_SUFFIX@
 #else
 #ifdef XP_MACOSX
 XUL
@@ -56,6 +54,7 @@ XUL
 @DLL_PREFIX@xul@DLL_SUFFIX@
 #endif
 #endif
+@DLL_PREFIX@xpistub@DLL_SUFFIX@
 component.reg
 components/compreg.dat
 components/@DLL_PREFIX@myspell@DLL_SUFFIX@
@@ -529,6 +528,7 @@ extensions/talkback@mozilla.org/components/talkback/talkback.so
 #endif
 components/airbag.xpt
 components/nsUrlClassifierTable.js
+res/cmessage.txt
 res/html/gopher-audio.gif
 res/html/gopher-binary.gif
 res/html/gopher-find.gif
@@ -580,3 +580,8 @@ readme.txt
 #endif
 dictionaries/PL.dic
 dictionaries/PL.aff
+#ifdef XP_WIN
+xpicleanup.exe
+#else
+xpicleanup
+#endif
