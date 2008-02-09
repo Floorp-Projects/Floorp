@@ -1781,58 +1781,7 @@ nsTableRowGroupFrame::GetNextSiblingOnLine(nsIFrame*& aFrame,
                                            PRInt32    aLineNumber)
 {
   NS_ENSURE_ARG_POINTER(aFrame);
-
-  nsITableCellLayout* cellFrame;
-  nsresult result = CallQueryInterface(aFrame, &cellFrame);
-  if (NS_FAILED(result))
-    return result;
-
-  nsTableFrame* parentFrame = nsTableFrame::GetTableFrame(this);
-  if (!parentFrame)
-    return NS_ERROR_FAILURE;
-  nsTableCellMap* cellMap = parentFrame->GetCellMap();
-  if (!cellMap)
-     return NS_ERROR_FAILURE;
-
-
-  PRInt32 colIndex;
-  PRInt32& colIndexRef = colIndex;
-  cellFrame->GetColIndex(colIndexRef);
-
-  CellData* cellData = cellMap->GetDataAt(aLineNumber, colIndex + 1);
-  
-  if (!cellData)// if this isn't a valid cell, drop down and check the next line
-  {
-    cellData = cellMap->GetDataAt(aLineNumber + 1, 0);
-    if (!cellData)
-    {
-      //*aFrame = nsnull;
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  aFrame = (nsIFrame*)cellData->GetCellFrame();
-  if (!aFrame)
-  {
-    //PRInt32 numCellsInRow = cellMap->GetNumCellsOriginatingInRow(aLineNumber) - 1;
-    PRInt32 tempCol = colIndex + 1;
-    PRInt32 tempRow = aLineNumber;
-    while ((tempCol > 0) && (!aFrame))
-    {
-      tempCol--;
-      cellData = cellMap->GetDataAt(aLineNumber, tempCol);
-      aFrame = (nsIFrame*)cellData->GetCellFrame();
-      if (!aFrame && (tempCol==0))
-      {
-        while ((tempRow > 0) && (!aFrame))
-        {
-          tempRow--;
-          cellData = cellMap->GetDataAt(tempRow, 0);
-          aFrame = (nsIFrame*)cellData->GetCellFrame();
-        }
-      }
-    }
-  }
+  aFrame = aFrame->GetNextSibling();
   return NS_OK;
 }
 
