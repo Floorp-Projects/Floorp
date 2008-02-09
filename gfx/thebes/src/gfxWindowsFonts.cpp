@@ -64,6 +64,7 @@
 
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
+#include "nsIPrefLocalizedString.h"
 #include "nsServiceManagerUtils.h"
 
 #include "nsCRT.h"
@@ -1397,10 +1398,17 @@ private:
             if (!prefBranch)
                 return;
 
-            // Add by the order of accept languages.
-            nsXPIDLCString list;
-            nsresult rv = prefBranch->GetCharPref("intl.accept_languages", getter_Copies(list));
-            if (NS_SUCCEEDED(rv) && !list.IsEmpty()) {
+            // Add the CJK pref fonts from accept languages, the order should be same order
+            nsCAutoString list;
+            nsCOMPtr<nsIPrefLocalizedString> val;
+            nsresult rv = prefBranch->GetComplexValue("intl.accept_languages", NS_GET_IID(nsIPrefLocalizedString),
+                                                      getter_AddRefs(val));
+            if (NS_SUCCEEDED(rv) && val) {
+                nsAutoString temp;
+                val->ToString(getter_Copies(temp));
+                LossyCopyUTF16toASCII(temp, list);
+            }
+            if (!list.IsEmpty()) {
                 const char kComma = ',';
                 const char *p, *p_end;
                 list.BeginReading(p);
