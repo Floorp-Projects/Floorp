@@ -247,13 +247,22 @@ nsDownloadManager::InitDB(PRBool *aDoImport)
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = storage->OpenDatabase(dbFile, getter_AddRefs(mDBConn));
-  if (rv == NS_ERROR_FILE_CORRUPTED) {
-    // delete and try again
-    rv = dbFile->Remove(PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool ready;
+  (void)mDBConn->GetConnectionReady(&ready);
+  if (!ready) {
+    // delete and try again, since we don't care so much about losing a users
+    // download history
+    rv = dbFile->Remove(PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = storage->OpenDatabase(dbFile, getter_AddRefs(mDBConn));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    (void)mDBConn->GetConnectionReady(&ready);
+    if (!ready)
+      return NS_ERROR_UNEXPECTED;
   }
-  NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool tableExists;
   rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_downloads"), &tableExists);
