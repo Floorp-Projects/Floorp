@@ -108,6 +108,7 @@ runtests.py: runtests.py.in
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py \
 	$(TEST_DRIVER_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
 
+GARBAGE += runtests.pl runtests.py
 
 libs:: $(_SERV_FILES)
 	$(INSTALL) $^ $(_DEST_DIR)
