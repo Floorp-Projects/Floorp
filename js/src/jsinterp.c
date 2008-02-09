@@ -610,7 +610,6 @@ js_EnablePropertyCache(JSContext *cx)
         sp--;                                                                 \
     JS_END_MACRO
 
-/* SAVE_SP_AND_PC must be already called. */
 #define VALUE_TO_OBJECT(cx, n, v, obj)                                        \
     JS_BEGIN_MACRO                                                            \
         if (!JSVAL_IS_PRIMITIVE(v)) {                                         \
@@ -2427,8 +2426,10 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     ok = !cx->throwing;
     if (!ok) {
 #ifdef DEBUG_NOT_THROWING
-        printf("JS INTERPRETER CALLED WITH PENDING EXCEPTION %lx\n",
-               (unsigned long) cx->exception);
+        if (cx->exception != JSVAL_ARETURN) {
+            printf("JS INTERPRETER CALLED WITH PENDING EXCEPTION %lx\n",
+                   (unsigned long) cx->exception);
+        }
 #endif
         goto out;
     }
@@ -4160,6 +4161,7 @@ interrupt:
                                     PCMETER(cache->pchits++);
                                     PCMETER(cache->setpchits++);
                                     NATIVE_SET(cx, obj, sprop, &rval);
+                                    JS_UNLOCK_SCOPE(cx, scope);
                                     break;
                                 }
                             } else {
