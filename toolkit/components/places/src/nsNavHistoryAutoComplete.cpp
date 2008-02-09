@@ -130,25 +130,6 @@ nsNavHistory::CreateAutoCompleteQueries()
     getter_AddRefs(mDBAutoCompleteQuery));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // NOTE:
-  // after migration or clear all private data, we might end up with
-  // a lot of places with frecency = -1 (until idle)
-  // 
-  // XXX bug 412736
-  // in the case of a frecency tie, break it with h.typed and h.visit_count
-  // which is better than nothing.  but this is slow, so not doing it yet.
-  sql = NS_LITERAL_CSTRING(
-    "SELECT h.url, h.title, f.url, b.id, b.parent "
-    "FROM moz_places h "
-    "JOIN moz_bookmarks b ON b.fk = h.id "
-    "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
-    "WHERE h.frecency <> 0 AND "
-    "(b.parent in (SELECT t.id FROM moz_bookmarks t WHERE t.parent = ?1 AND LOWER(t.title) = LOWER(?2))) "
-    "ORDER BY h.frecency DESC");
-
-  rv = mDBConn->CreateStatement(sql, getter_AddRefs(mDBTagAutoCompleteQuery));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   return NS_OK;
 }
 
@@ -356,62 +337,48 @@ nsNavHistory::AddSearchToken(nsAutoString &aToken)
 nsresult
 nsNavHistory::AutoCompleteTagsSearch()
 {
-  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-  nsresult rv;
+  // NOTE:
+  // after migration or clear all private data, we might end up with
+  // a lot of places with frecency = -1 (until idle)
+  // 
+  // XXX bug 412736
+  // in the case of a frecency tie, break it with h.typed and h.visit_count
+  // which is better than nothing.  but this is slow, so not doing it yet.
+  nsCString sql = NS_LITERAL_CSTRING(
+    "SELECT h.url, h.title, f.url, b.id, b.parent, b.title "
+    "FROM moz_places h "
+    "JOIN moz_bookmarks b ON b.fk = h.id "
+    "LEFT OUTER JOIN moz_favicons f ON f.id = h.favicon_id "
+    "WHERE h.frecency <> 0 AND (b.parent IN "
+      "(SELECT t.id FROM moz_bookmarks t WHERE t.parent = ?1 AND (");
 
-  PRInt64 tagsFolder = GetTagsFolder();
+  nsStringArray terms;
+  CreateTermsFromTokens(mCurrentSearchTokens, terms);
+
+  for (PRInt32 i = 0; i < terms.Count(); i++) {
+    if (i)
+      sql += NS_LITERAL_CSTRING(" OR");
+
+    // +2 to skip over the "?1", which is the tag root parameter
+    sql += NS_LITERAL_CSTRING(" LOWER(t.title) = ") +
+           nsPrintfCString("LOWER(?%d)", i + 2);
+  }
+
+  sql += NS_LITERAL_CSTRING("))) "
+    "ORDER BY h.frecency DESC");
 
   nsCOMPtr<mozIStorageStatement> tagAutoCompleteQuery;
+  nsresult rv = mDBConn->CreateStatement(sql,
+    getter_AddRefs(tagAutoCompleteQuery));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // we didn't find any spaces, so we only have one possible tag, which is
-  // the search string.  this is the common case, so we use 
-  // our pre-compiled query
-  if (!mCurrentSearchTokens.Count()) {
-    tagAutoCompleteQuery = mDBTagAutoCompleteQuery;
+  rv = tagAutoCompleteQuery->BindInt64Parameter(0, GetTagsFolder());
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = tagAutoCompleteQuery->BindInt64Parameter(0, tagsFolder);
+  for (PRInt32 i = 0; i < terms.Count(); i++) {
+    // +1 to skip over the "?1", which is the tag root parameter
+    rv = tagAutoCompleteQuery->BindStringParameter(i + 1, *(terms.StringAt(i)));
     NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = tagAutoCompleteQuery->BindStringParameter(1, mCurrentSearchString);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  else {
-    nsCString tagQuery = NS_LITERAL_CSTRING(
-      "SELECT h.url, h.title, f.url, b.id, b.parent "
-      "FROM moz_places h "
-      "JOIN moz_bookmarks b ON b.fk = h.id "
-      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
-      "WHERE h.frecency <> 0 AND "
-      "(b.parent in "
-      " (SELECT t.id FROM moz_bookmarks t WHERE t.parent = ?1 AND (");
-
-    nsStringArray terms;
-    CreateTermsFromTokens(mCurrentSearchTokens, terms);
-
-    for (PRUint32 i=0; i<terms.Count(); i++) {
-      if (i)
-        tagQuery += NS_LITERAL_CSTRING(" OR");
-
-      // +2 to skip over the "?1", which is the tag root parameter
-      tagQuery += NS_LITERAL_CSTRING(" LOWER(t.title) = ") +
-                  nsPrintfCString("LOWER(?%d)", i+2);
-    }
-
-    tagQuery += NS_LITERAL_CSTRING("))) "
-      "GROUP BY h.id ORDER BY h.frecency DESC");
-
-    rv = mDBConn->CreateStatement(tagQuery, getter_AddRefs(tagAutoCompleteQuery));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = tagAutoCompleteQuery->BindInt64Parameter(0, tagsFolder);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    for (PRUint32 i=0; i<terms.Count(); i++) {
-      // +1 to skip over the "?1", which is the tag root parameter
-      rv = tagAutoCompleteQuery->BindStringParameter(i+1, *(terms.StringAt(i)));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
   }
 
   nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
