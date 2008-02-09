@@ -39,7 +39,6 @@ bin\nspr4.dll
 bin\xul.dll
 #else
 bin\xpcom_core.dll
-bin\xpistub.dll
 bin\components\xpinstal.dll
 bin\components\jar50.dll
 #endif
@@ -55,9 +54,7 @@ bin\@MOZ_APP_NAME@.exe
 bin\application.ini
 bin\platform.ini
 bin\plugins\npnul32.dll
-bin\res\cmessage.txt
 bin\res\effective_tld_names.dat
-bin\xpicleanup.exe
 bin\LICENSE
 bin\README.txt
 bin\sqlite3.dll
