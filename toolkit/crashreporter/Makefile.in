@@ -89,10 +89,6 @@ DIRS += client
 LOCAL_INCLUDES = -I$(srcdir)/google-breakpad/src
 DEFINES += -DUNICODE -D_UNICODE
 
-XPIDLSRCS = \
-	nsICrashReporter.idl \
-	$(NULL)
-
 EXPORTS = \
 	nsExceptionHandler.h \
 	$(NULL)

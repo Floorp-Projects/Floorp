@@ -49,6 +49,7 @@ XPIDLSRCS = \
         nsIXULAppInfo.idl \
         nsIGConfService.idl \
         nsIGnomeVFSService.idl \
+        nsICrashReporter.idl \
         $(NULL)
 
 include $(topsrcdir)/config/rules.mk

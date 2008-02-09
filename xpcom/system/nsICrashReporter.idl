@@ -43,7 +43,7 @@
  *                    future releases.
  */
 
-[scriptable, uuid(da7020ad-fad4-443e-b02b-c5cc9d482e2f)]
+[scriptable, uuid(4d6449fe-d642-45e5-9773-41af5793c99a)]
 interface nsICrashReporter : nsISupports
 {
   /**
@@ -59,4 +59,12 @@ interface nsICrashReporter : nsISupports
    *                             '\n'.  Invalid character for data is '\0'.
    */
   void annotateCrashReport(in ACString key, in ACString data);
+  
+  /**
+    * Write a minidump immediately, with the user-supplied exception
+    * information. This is implemented on Windows only, because
+    * SEH (structured exception handling) exists on Windows only.
+    * @param aExceptionInfo  EXCEPTION_INFO* provided by Window's SEH
+    */
+  [noscript] void WriteMinidumpForException(in voidPtr aExceptionInfo);
 };
