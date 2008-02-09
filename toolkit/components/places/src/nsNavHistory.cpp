@@ -492,44 +492,15 @@ nsNavHistory::Init()
   return NS_OK;
 }
 
-// nsNavHistory::BackupDBFile
-//
-//    backup a corrupted db file
-//
-nsresult
-nsNavHistory::BackupDBFile()
-{
-  // move the database file to a uniquely named backup
-  nsCOMPtr<nsIFile> profDir;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                              getter_AddRefs(profDir));
-
-  // create unique file
-  nsCOMPtr<nsIFile> corruptBackup;
-  rv = profDir->Clone(getter_AddRefs(corruptBackup));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = corruptBackup->Append(DB_CORRUPT_FILENAME);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = corruptBackup->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // get unique name, and remove tmp file
-  nsAutoString backupName;
-  rv = corruptBackup->GetLeafName(backupName);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = corruptBackup->Remove(PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // copy contents of db file to new uniquely-named backup file
-  rv = mDBFile->CopyTo(profDir, backupName);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
-}
-  
 // nsNavHistory::InitDBFile
 nsresult
 nsNavHistory::InitDBFile(PRBool aForceInit)
 {
+  if (aForceInit) {
+    NS_ASSERTION(mDBConn,
+                 "When forcing initialization, a database connection must exist!");
+  }
+
   // get profile dir, file
   nsCOMPtr<nsIFile> profDir;
   nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
@@ -543,13 +514,16 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
   // if forcing, backup and remove the old file
   PRBool dbExists;
   if (aForceInit) {
-    if (mDBConn) {
-      // close db connection if open
-      rv = mDBConn->Close();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    rv = BackupDBFile();
+    // backup the database
+    nsCOMPtr<nsIFile> backup;
+    rv = mDBConn->BackupDB(DB_CORRUPT_FILENAME, profDir, getter_AddRefs(backup));
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // close database connection if open
+    rv = mDBConn->Close();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // and remove the file
     rv = mDBFile->Remove(PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
     dbExists = PR_FALSE;
@@ -564,21 +538,35 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
   mDBService = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBService->OpenDatabase(mDBFile, getter_AddRefs(mDBConn));
-  if (rv == NS_ERROR_FILE_CORRUPTED) {
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool ready;
+  (void)mDBConn->GetConnectionReady(&ready);
+  if (!ready) {
     dbExists = PR_FALSE;
   
     // backup file
-    rv = BackupDBFile();
+    nsCOMPtr<nsIFile> backup;
+    rv = mDBConn->BackupDB(DB_CORRUPT_FILENAME, profDir, getter_AddRefs(backup));
     NS_ENSURE_SUCCESS(rv, rv);
-  
-    // create new db file, and try to open again
+ 
+    // remove existing file 
+    rv = mDBFile->Remove(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // and try again
     rv = profDir->Clone(getter_AddRefs(mDBFile));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mDBFile->Append(DB_FILENAME);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mDBService->OpenDatabase(mDBFile, getter_AddRefs(mDBConn));
+    NS_ENSURE_SUCCESS(rv, rv);
+    (void)mDBConn->GetConnectionReady(&ready);
+    if (!ready) {
+      mDBConn = nsnull;
+      return NS_ERROR_UNEXPECTED;
+    }
   }
-  NS_ENSURE_SUCCESS(rv, rv);
   
   // if the db didn't previously exist, or was corrupted, re-import bookmarks.
   if (!dbExists) {
