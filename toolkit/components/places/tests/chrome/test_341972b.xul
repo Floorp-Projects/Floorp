@@ -69,7 +69,7 @@ var observer =
 const FEEDSPEC = "http://localhost:8888/tests/toolkit/components/places/tests/chrome/sample_feed.atom";
 const FEEDSITESPEC = "http://example.org/"; 
 
-gLivemarkId = lmsvc.createLivemarkFolderOnly(bmsvc, toolbarFolderId, "foo",
+gLivemarkId = lmsvc.createLivemarkFolderOnly(toolbarFolderId, "foo",
                                              null, uri(FEEDSPEC), -1);
 annosvc.addObserver(observer, false);
 lmsvc.reloadLivemarkFolder(gLivemarkId);
