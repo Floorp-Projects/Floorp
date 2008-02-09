@@ -17,6 +17,9 @@ include moz-only/reftest.list
 == fallback-color-02a.svg fallback-color-02-ref.svg
 == fallback-color-02b.svg fallback-color-02-ref.svg
 == fallback-color-03.svg pass.svg
+== filter-basic-01.svg pass.svg
+== filter-basic-02.svg pass.svg
+== filter-basic-03.svg pass.svg
 == foreignObject-01.svg pass.svg
 == foreignObject-ancestor-style-change-01.svg foreignObject-ancestor-style-change-01-ref.svg
 == foreignObject-change-transform-01.svg pass.svg
