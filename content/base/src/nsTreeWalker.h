@@ -181,8 +181,9 @@ private:
      */
     void SetChildIndex(PRInt32 aIndexPos, PRInt32 aChildIndex)
     {
-        mPossibleIndexes.ReplaceElementAt(NS_INT32_TO_PTR(aChildIndex),
-                                          aIndexPos);
+        if (aIndexPos != -1)
+            mPossibleIndexes.ReplaceElementAt(NS_INT32_TO_PTR(aChildIndex),
+                                              aIndexPos);
     }
 };
 
