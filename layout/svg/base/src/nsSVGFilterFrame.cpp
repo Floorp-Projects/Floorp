@@ -93,15 +93,20 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
 
   PRUint32 requirements = 0;
   PRUint32 count = mContent->GetChildCount();
+  PRBool filterExists = PR_FALSE;
   for (PRUint32 i=0; i<count; ++i) {
     nsIContent* child = mContent->GetChildAt(i);
 
     nsCOMPtr<nsISVGFilter> filter = do_QueryInterface(child);
     if (filter) {
+      filterExists = PR_TRUE;
       PRUint32 tmp;
       filter->GetRequirements(&tmp);
       requirements |= tmp;
     }
+  }
+  if (!filterExists) {
+    return NS_OK;
   }
 
   // check for source requirements that we don't support yet
@@ -141,8 +146,12 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
     filter->mEnumAttributes[nsSVGFilterElement::FILTERUNITS].GetAnimValue();
 
   if (units == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
-    if (!bbox)
+    if (!bbox) {
+      aTarget->SetMatrixPropagation(PR_TRUE);
+      aTarget->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
+                                nsISVGChildFrame::TRANSFORM_CHANGED);
       return NS_OK;
+    }
 
     bbox->GetX(&x);
     x += nsSVGUtils::ObjectSpace(bbox, tmpX);
@@ -180,8 +189,12 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
 
 
   // 0 disables rendering, < 0 is error
-  if (filterRes.width <= 0 || filterRes.height <= 0)
+  if (filterRes.width <= 0 || filterRes.height <= 0) {
+    aTarget->SetMatrixPropagation(PR_TRUE);
+    aTarget->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
+                              nsISVGChildFrame::TRANSFORM_CHANGED);
     return NS_OK;
+  }
 
 #ifdef DEBUG_tor
   fprintf(stderr, "filter bbox: %f,%f  %fx%f\n", x, y, width, height);
