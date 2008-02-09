@@ -827,6 +827,16 @@ nsXULAppInfo::AnnotateCrashReport(const nsACString& key,
 {
   return CrashReporter::AnnotateCrashReport(key, data);
 }
+
+NS_IMETHODIMP
+nsXULAppInfo::WriteMinidumpForException(void* aExceptionInfo)
+{
+#ifdef XP_WIN32
+  return CrashReporter::WriteMinidumpForException(static_cast<EXCEPTION_POINTERS*>(aExceptionInfo));
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
 #endif
 
 static const nsXULAppInfo kAppInfo;
