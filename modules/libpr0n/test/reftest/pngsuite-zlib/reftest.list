@@ -9,10 +9,10 @@
 # See /mozilla/layout/tools/reftest/README.txt for more information.
 
 # z00n2c08 - color, no interlacing, compression level 0 (none)
-== z00n2c08.png z00n2c08.html
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == z00n2c08.png z00n2c08.html
 # z03n2c08 - color, no interlacing, compression level 3
-== z03n2c08.png z03n2c08.html
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == z03n2c08.png z03n2c08.html
 # z06n2c08 - color, no interlacing, compression level 6 (default)
-== z06n2c08.png z06n2c08.html
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == z06n2c08.png z06n2c08.html
 # z09n2c08 - color, no interlacing, compression level 9 (maximum) 
-== z09n2c08.png z09n2c08.html
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == z09n2c08.png z09n2c08.html
