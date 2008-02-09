@@ -203,10 +203,11 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
      *
      * @param aDOMNode               the given node
      * @param aEventType             event type to fire an event
+     * @param aAvoidOnThisNode       Call with PR_TRUE the first time to prevent event firing on root node for change
      * @param aDelay                 whether to fire the event on a delay
      * @param aForceIsFromUserInput  the event is known to be from user input
      */
-    nsresult FireShowHideEvents(nsIDOMNode *aDOMNode, PRUint32 aEventType,
+    nsresult FireShowHideEvents(nsIDOMNode *aDOMNode, PRBool aAvoidOnThisNode, PRUint32 aEventType,
                                 PRBool aDelay, PRBool aForceIsFromUserInput);
 
     nsAccessNodeHashtable mAccessNodeCache;
@@ -222,6 +223,7 @@ protected:
     PRBool mIsAnchor;
     PRBool mIsAnchorJumped;
     static PRUint32 gLastFocusedAccessiblesState;
+    static nsIAtom *gLastFocusedFrameType;
 
 private:
     static void DocLoadCallback(nsITimer *aTimer, void *aClosure);

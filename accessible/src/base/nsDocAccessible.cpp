@@ -78,6 +78,7 @@
 //=============================//
 
 PRUint32 nsDocAccessible::gLastFocusedAccessiblesState = 0;
+nsIAtom *nsDocAccessible::gLastFocusedFrameType = nsnull;
 
 //-----------------------------------------------------
 // construction
@@ -1502,13 +1503,40 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
 
     nsCOMPtr<nsIAccessible> accessible;
     accessibleEvent->GetAccessible(getter_AddRefs(accessible));
-
+    nsCOMPtr<nsIDOMNode> domNode;
+    accessibleEvent->GetDOMNode(getter_AddRefs(domNode));
     PRUint32 eventType;
     accessibleEvent->GetEventType(&eventType);
+    PRBool isFromUserInput;
+    accessibleEvent->GetIsFromUserInput(&isFromUserInput);
+
+    if (domNode == gLastFocusedNode &&
+        eventType == nsIAccessibleEvent::EVENT_ASYNCH_HIDE || 
+        eventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW) {
+      // If frame type didn't change for this event, then we don't actually need to invalidate
+      // However, we only keep track of the old frame type for the focus, where it's very
+      // important not to destroy and recreate the accessible for minor style changes,
+      // such as a:focus { overflow: scroll; }
+      nsCOMPtr<nsIContent> focusContent(do_QueryInterface(domNode));
+      if (focusContent) {
+        nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+        nsIFrame *focusFrame = presShell->GetRealPrimaryFrameFor(focusContent);
+        nsIAtom *newFrameType =
+          (focusFrame && focusFrame->GetStyleVisibility()->IsVisible()) ?
+          focusFrame->GetType() : nsnull;
+
+        if (newFrameType == gLastFocusedFrameType) {
+          // Don't need to invalidate this current accessible, but can
+          // just invalidate the children instead
+          FireShowHideEvents(domNode, PR_TRUE, eventType, PR_FALSE, isFromUserInput); 
+          continue;
+        }
+        gLastFocusedFrameType = newFrameType;
+      }
+    }
+
     if (eventType == nsIAccessibleEvent::EVENT_DOM_CREATE || 
         eventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW) {
-      nsCOMPtr<nsIDOMNode> domNode;
-      accessibleEvent->GetDOMNode(getter_AddRefs(domNode));
       nsCOMPtr<nsIAccessible> containerAccessible;
       if (eventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW) {
         if (accessible) {
@@ -1530,8 +1558,6 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
       // At this point we now have the frame and accessible for this node if there is one. That is why we
       // wait to fire this here, instead of in InvalidateCacheSubtree(), where we wouldn't be able to calculate
       // the offset, length and text for the text change.
-      PRBool isFromUserInput;
-      accessibleEvent->GetIsFromUserInput(&isFromUserInput);
       if (domNode && domNode != mDOMNode) {
         if (!containerAccessible)
           GetAccessibleInParentChain(domNode, PR_TRUE,
@@ -1551,7 +1577,7 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
       }
 
       // Fire show/create events for this node or first accessible descendants of it
-      FireShowHideEvents(domNode, eventType, PR_FALSE, isFromUserInput); 
+      FireShowHideEvents(domNode, PR_FALSE, eventType, PR_FALSE, isFromUserInput); 
       continue;
     }
 
@@ -1862,7 +1888,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
 
     // Fire an event if the accessible existed for node being hidden, otherwise
     // for the first line accessible descendants. Fire before the accessible(s) away.
-    nsresult rv = FireShowHideEvents(childNode, removalEventType, PR_TRUE, PR_FALSE);
+    nsresult rv = FireShowHideEvents(childNode, PR_FALSE, removalEventType, PR_TRUE, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
     if (childNode != mDOMNode) { // Fire text change unless the node being removed is for this doc
       // When a node is hidden or removed, the text in an ancestor hyper text will lose characters
@@ -1988,22 +2014,24 @@ nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
 }
 
 nsresult
-nsDocAccessible::FireShowHideEvents(nsIDOMNode *aDOMNode, PRUint32 aEventType,
+nsDocAccessible::FireShowHideEvents(nsIDOMNode *aDOMNode, PRBool aAvoidOnThisNode, PRUint32 aEventType,
                                     PRBool aDelay, PRBool aForceIsFromUserInput)
 {
   NS_ENSURE_ARG(aDOMNode);
 
   nsCOMPtr<nsIAccessible> accessible;
-  if (aEventType == nsIAccessibleEvent::EVENT_ASYNCH_HIDE ||
-      aEventType == nsIAccessibleEvent::EVENT_DOM_DESTROY) {
-    // Don't allow creation for accessibles when nodes going away
-    nsCOMPtr<nsIAccessNode> accessNode;
-    GetCachedAccessNode(aDOMNode, getter_AddRefs(accessNode));
-    accessible = do_QueryInterface(accessNode);
-  } else {
-    // Allow creation of new accessibles for show events
-    GetAccService()->GetAttachedAccessibleFor(aDOMNode,
-                                              getter_AddRefs(accessible));
+  if (!aAvoidOnThisNode) {
+    if (aEventType == nsIAccessibleEvent::EVENT_ASYNCH_HIDE ||
+        aEventType == nsIAccessibleEvent::EVENT_DOM_DESTROY) {
+      // Don't allow creation for accessibles when nodes going away
+      nsCOMPtr<nsIAccessNode> accessNode;
+      GetCachedAccessNode(aDOMNode, getter_AddRefs(accessNode));
+      accessible = do_QueryInterface(accessNode);
+    } else {
+      // Allow creation of new accessibles for show events
+      GetAccService()->GetAttachedAccessibleFor(aDOMNode,
+                                                getter_AddRefs(accessible));
+    }
   }
 
   if (accessible) {
@@ -2030,7 +2058,7 @@ nsDocAccessible::FireShowHideEvents(nsIDOMNode *aDOMNode, PRUint32 aEventType,
   PRUint32 count = content->GetChildCount();
   for (PRUint32 index = 0; index < count; index++) {
     nsCOMPtr<nsIDOMNode> childNode = do_QueryInterface(content->GetChildAt(index));
-    nsresult rv = FireShowHideEvents(childNode, aEventType,
+    nsresult rv = FireShowHideEvents(childNode, PR_FALSE, aEventType,
                                      aDelay, aForceIsFromUserInput);
     NS_ENSURE_SUCCESS(rv, rv);
   }
