@@ -253,6 +253,8 @@ export:: $(addprefix $(topsrcdir)/xpfe/bootstrap/, $(SHAREDCPPSRCS))
 platform.ini: FORCE
 	$(PYTHON) $(srcdir)/make-platformini.py --buildid=$(shell cat $(DEPTH)/config/buildid) $(topsrcdir)/config/milestone.txt > $@
 
+GARBAGE += platform.ini
+
 libs:: platform.ini
 	$(INSTALL) $^ $(DIST)/bin
 

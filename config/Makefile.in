@@ -127,13 +127,15 @@ export::
 		-DMOZ_NATIVE_LCMS=$(MOZ_NATIVE_LCMS) \
 		$(srcdir)/system-headers | $(PERL) $(topsrcdir)/nsprpub/config/make-system-wrappers.pl system_wrappers
 	$(INSTALL) system_wrappers $(DIST)/include
+
+GARBAGE_DIRS += system_wrappers
 endif
 
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(DEPTH)/mozilla-config.h $(DESTDIR)$(includedir)
 
 GARBAGE += \
-	$(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES)
+	$(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES) buildid
 
 ifndef CROSS_COMPILE
 ifdef USE_ELF_DYNSTR_GC
