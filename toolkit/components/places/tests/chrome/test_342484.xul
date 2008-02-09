@@ -85,9 +85,9 @@ function runTest() {
 var root = bmsvc.bookmarksRoot;
 const FEEDSPEC = "http://localhost:8888/tests/toolkit/components/places/tests/chrome/bad_links.atom";
 
-gLivemarkId = lmsvc.createLivemarkFolderOnly(bmsvc, toolbarFolderId, "foo",
-                                            uri("http:/localhost/"),
-                                            uri(FEEDSPEC), -1);
+gLivemarkId = lmsvc.createLivemarkFolderOnly(toolbarFolderId, "foo",
+                                             uri("http:/localhost/"),
+                                             uri(FEEDSPEC), -1);
 bmsvc.addObserver(observer, false);
 lmsvc.reloadLivemarkFolder(gLivemarkId);
 ]]>

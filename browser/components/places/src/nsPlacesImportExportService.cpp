@@ -1033,13 +1033,12 @@ BookmarkContentSink::HandleLinkEnd()
 
     if (!isLivemark) {
       if (mIsImportDefaults) {
-        rv = mLivemarkService->CreateLivemarkFolderOnly(mBookmarksService,
-                                                   frame.mContainerID,
-                                                   frame.mPreviousText,
-                                                   frame.mPreviousLink,
-                                                   frame.mPreviousFeed,
-                                                   -1,
-                                                   &frame.mPreviousId);
+        rv = mLivemarkService->CreateLivemarkFolderOnly(frame.mContainerID,
+                                                        frame.mPreviousText,
+                                                        frame.mPreviousLink,
+                                                        frame.mPreviousFeed,
+                                                        -1,
+                                                        &frame.mPreviousId);
         NS_ASSERTION(NS_SUCCEEDED(rv), "CreateLivemarkFolderOnly failed!");
       } else {
         rv = mLivemarkService->CreateLivemark(frame.mContainerID,

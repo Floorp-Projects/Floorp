@@ -308,8 +308,7 @@ LivemarkService.prototype = {
     // Don't add livemarks to livemarks
     if (this.isLivemark(folder))
       throw Cr.NS_ERROR_INVALID_ARG;
-    var livemarkID = this._createFolder(this._bms, folder, name, siteURI,
-                                        feedURI, index);
+    var livemarkID = this._createFolder(folder, name, siteURI, feedURI, index);
 
     // kick off http fetch
     this._updateLivemarkChildren(
@@ -321,21 +320,19 @@ LivemarkService.prototype = {
   },
 
   createLivemarkFolderOnly:
-  function LS_createLivemarkFolderOnly(bms, folder, name, siteURI,
-                                       feedURI, index) {
-    var livemarkID = this._createFolder(bms, folder, name, siteURI, feedURI,
-                                        index);
+  function LS_createLivemarkFolderOnly(folder, name, siteURI, feedURI, index) {
+    var livemarkID = this._createFolder(folder, name, siteURI, feedURI, index);
     this._pushLivemark(livemarkID, feedURI);
     var livemarkIndex = this._getLivemarkIndex(livemarkID);
     var livemark = this._livemarks[livemarkIndex];
-    this.insertLivemarkLoadingItem(bms, livemark);
+    this.insertLivemarkLoadingItem(this._bms, livemark);
 
     return livemarkID;
   },
 
   _createFolder:
-  function LS__createFolder(bms, folder, name, siteURI, feedURI, index) {
-    var livemarkID = bms.createFolder(folder, name, index);
+  function LS__createFolder(folder, name, siteURI, feedURI, index) {
+    var livemarkID = this._bms.createFolder(folder, name, index);
     this._bms.setFolderReadonly(livemarkID, true);
 
     // Add an annotation to map the folder id to the livemark feed URI

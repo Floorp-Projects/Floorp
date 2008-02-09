@@ -69,7 +69,7 @@ const FEEDSPEC = "http://localhost:8888/tests/toolkit/components/places/tests/ch
 const INITIALSITESPEC = "http://localhost:8888/";
 const FEEDSITESPEC = "http://example.org/"; 
 
-gLivemarkId = lmsvc.createLivemarkFolderOnly(bmsvc, toolbarFolderId, "foo",
+gLivemarkId = lmsvc.createLivemarkFolderOnly(toolbarFolderId, "foo",
                                              uri(INITIALSITESPEC),
                                              uri(FEEDSPEC), -1);
 annosvc.addObserver(observer, false);

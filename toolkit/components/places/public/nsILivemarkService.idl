@@ -42,7 +42,7 @@
 interface nsIURI;
 interface nsINavBookmarksService;
 
-[scriptable, uuid(7879747e-8871-4a7b-9032-5c4fff1d6017)]
+[scriptable, uuid(0b0985c7-f34b-447a-8d52-ebfb7da94a6a)]
 interface nsILivemarkService : nsISupports
 {
   /**
@@ -70,8 +70,7 @@ interface nsILivemarkService : nsISupports
   /**
    * Same as above, use during startup to avoid HTTP traffic
    */
-  long long createLivemarkFolderOnly(in nsINavBookmarksService bms,
-                                     in long long folder,
+  long long createLivemarkFolderOnly(in long long folder,
                                      in AString name,
                                      in nsIURI siteURI,
                                      in nsIURI feedURI,
