@@ -58,6 +58,9 @@
 #include <winable.h>
 #endif
 #undef ERROR /// Otherwise we can't include nsIDOMNSEvent.h if we include this
+#ifdef MOZ_CRASHREPORTER
+#include "nsICrashReporter.h"
+#endif
 
 typedef LRESULT (STDAPICALLTYPE *LPFNNOTIFYWINEVENT)(DWORD event,HWND hwnd,LONG idObjectType,LONG idObject);
 typedef LRESULT (STDAPICALLTYPE *LPFNGETGUITHREADINFO)(DWORD idThread, GUITHREADINFO* pgui);
@@ -145,6 +148,8 @@ class nsAccessNodeWrap :  public nsAccessNode,
     static LPFNACCESSIBLEOBJECTFROMWINDOW gmAccessibleObjectFromWindow;
     static LPFNNOTIFYWINEVENT gmNotifyWinEvent;
     static LPFNGETGUITHREADINFO gmGetGUIThreadInfo;
+
+    static int FilterA11yExceptions(unsigned int aCode, EXCEPTION_POINTERS *aExceptionInfo);
 
   protected:
     void GetAccessibleFor(nsIDOMNode *node, nsIAccessible **newAcc);

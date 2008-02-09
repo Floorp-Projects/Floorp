@@ -834,4 +834,15 @@ SetRestartArgs(int argc, char **argv)
 
   return NS_OK;
 }
+
+#ifdef XP_WIN32
+nsresult WriteMinidumpForException(EXCEPTION_POINTERS* aExceptionInfo)
+{
+  if (!gExceptionHandler)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  return gExceptionHandler->WriteMinidumpForException(aExceptionInfo) ? NS_OK : NS_ERROR_FAILURE;
+}
+#endif
+
 } // namespace CrashReporter
