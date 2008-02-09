@@ -428,13 +428,9 @@ protected:
    *
    * @param aForceInit
    *        Indicates if we should close an open database connection or not.
+   *        Note: A valid database connection must be opened if this is true.
    */
   nsresult InitDBFile(PRBool aForceInit);
-
-  /**
-   * Creates a uniquely named backup of the places database.
-   */
-  nsresult BackupDBFile();
 
   /**
    * Initializes the database.  This performs any necessary migrations for the
