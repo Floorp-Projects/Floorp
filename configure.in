@@ -2179,8 +2179,8 @@ case "$target" in
         LDFLAGS='-Zmap'
         WARNINGS_AS_ERRORS='-Werror'
         MOZ_DEBUG_FLAGS="-g -fno-inline"
-        MOZ_OPTIMIZE_FLAGS="-O2 -s"
-        MOZ_OPTIMIZE_LDFLAGS="-Zlinker /EXEPACK:2 -Zlinker /PACKCODE -Zlinker /PACKDATA"
+        MOZ_OPTIMIZE_FLAGS="-O2"
+        MOZ_OPTIMIZE_LDFLAGS="-s -Zlinker /EXEPACK:2 -Zlinker /PACKCODE -Zlinker /PACKDATA"
         MOZ_XPCOM_OBSOLETE_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcomct.lib'
         DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcomcor.lib'
         LIBXUL_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib'
