@@ -68,14 +68,7 @@
                   type="bool"/>
       <preference id="browser.safebrowsing.enabled"
                   name="browser.safebrowsing.enabled"
-                  type="bool"
-                  onchange="gSecurityPane.onSBChange();"/>
-      <preference id="browser.safebrowsing.remoteLookups"
-                  name="browser.safebrowsing.remoteLookups"
                   type="bool"/>
-      <preference id="browser.safebrowsing.dataProvider"
-                  name="browser.safebrowsing.dataProvider"
-                  type="int"/>
 
       <!-- Passwords -->
       <preference id="signon.rememberSignons" name="signon.rememberSignons" type="bool"/>
@@ -109,28 +102,7 @@
       <checkbox id="tellMaybeForgery"
                 label="&tellMaybeForgery.label;"
                 accesskey="&tellMaybeForgery.accesskey;"
-                preference="browser.safebrowsing.enabled"
-                onsyncfrompreference="return gSecurityPane.readCheckPhish();"/>
-      <radiogroup id="checkPhishChoice" class="indent"
-                  preference="browser.safebrowsing.remoteLookups"
-                  onsynctopreference="return gSecurityPane.writePhishChoice();">
-        <radio id="cachedRadio"
-               label="&useDownloadedList.label;"
-               accesskey="&useDownloadedList.accesskey;"
-               value="false"/>
-        <hbox align="center">
-          <radio id="onloadRadio"
-                 label="&askThirdParty.label;"
-                 accesskey="&askThirdParty.accesskey;"
-                 value="true" aaa:labelledby="onloadRadio onloadProvider onloadAfter"/>
-          <menulist id="onloadProvider"
-                    preference="browser.safebrowsing.dataProvider"
-                    onsyncfrompreference="return gSecurityPane.readOnloadPhishProvider();"
-                    aaa:labelledby="onloadRadio onloadProvider onloadAfter"/>
-          <label id="onloadAfter">&askThirdPartyAfter.label;</label>
-        </hbox>
-      </radiogroup>
-
+                preference="browser.safebrowsing.enabled" />
     </groupbox>
 
     <!-- Passwords -->

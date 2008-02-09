@@ -81,10 +81,6 @@ function PROT_DataProvider() {
   // Watch for when anti-phishing is toggled on or off.
   this.prefs_.addObserver(kPhishWardenEnabledPref,
                           BindToObject(this.loadDataProviderPrefs_, this));
-
-  // Watch for when remote lookups are toggled on or off.
-  this.prefs_.addObserver(kPhishWardenRemoteLookups,
-                          BindToObject(this.loadDataProviderPrefs_, this));
 }
 
 /**
@@ -138,14 +134,6 @@ PROT_DataProvider.prototype.updateListManager_ = function() {
   // This shouldn't happen if anti-phishing is disabled or we're in local
   // list mode, so we need to check for that.
   var isEnabled = this.prefs_.getPref(kPhishWardenEnabledPref, false);
-  var remoteLookups = this.prefs_.getPref(kPhishWardenRemoteLookups, false);
-  if (isEnabled && remoteLookups) {
-    listManager.setKeyUrl(this.getKeyURL());
-  } else {
-    // Clear the key to stop updates.
-    listManager.setKeyUrl("");
-  }
-
   listManager.setGethashUrl(this.getGethashURL());
 }
 
