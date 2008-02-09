@@ -12,10 +12,10 @@ diff -re crt/src/crt0.c crt-sp1/src/crt0.c
 	 */
 	_init_pointers();       /* initialize global function pointers */
 
-        if ( malloc_init() )                /* initialize heap */
+        if ( malloc_init_hard() )                /* initialize heap */
 .
 101a
-extern BOOL malloc_init(void);
+extern BOOL malloc_init_hard(void);
 .
 diff -re crt/src/crt0dat.c crt-sp1/src/crt0dat.c
 789d
@@ -44,10 +44,10 @@ diff -re crt/src/crtlib.c crt-sp1/src/crtlib.c
              */
             _init_pointers();       /* initialize global function pointers */
 
-            if ( malloc_init() )   /* initialize heap */
+            if ( malloc_init_hard() )   /* initialize heap */
 .
 43a
-extern BOOL malloc_init(void);
+extern BOOL malloc_init_hard(void);
 extern void malloc_shutdown(void);
 
 .
