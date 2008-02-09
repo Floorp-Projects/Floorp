@@ -135,10 +135,11 @@ mozStorageService::OpenDatabase(nsIFile *aDatabaseFile, mozIStorageConnection **
     if (!msc)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = msc->Initialize (aDatabaseFile);
-    NS_ENSURE_SUCCESS(rv, rv);
-
+    // We want to return a valid connection regardless if it succeeded or not so
+    // that consumers can backup the database if it failed.
+    (void)msc->Initialize(aDatabaseFile);
     NS_ADDREF(*_retval = msc);
+
     return NS_OK;
 }
 
@@ -158,11 +159,12 @@ mozStorageService::OpenUnsharedDatabase(nsIFile *aDatabaseFile, mozIStorageConne
     // lifetimes, unaffected by changes to the shared caches setting, so we can
     // disable shared caches temporarily while we initialize the new connection
     // without affecting the caches currently in use by other connections.
+    // We want to return a valid connection regardless if it succeeded or not so
+    // that consumers can backup the database if it failed.
     sqlite3_enable_shared_cache(0);
-    rv = msc->Initialize (aDatabaseFile);
+    (void)msc->Initialize(aDatabaseFile);
     sqlite3_enable_shared_cache(1);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     NS_ADDREF(*_retval = msc);
+
     return NS_OK;
 }

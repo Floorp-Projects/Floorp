@@ -70,6 +70,11 @@ interface mozIStorageService : nsISupports {
   /**
    * Open a connection to the specified file.
    *
+   * Consumers should check mozIStorageConnection::connectionReady to ensure
+   * that they can use the database.  If this value is false, it is strongly
+   * recommended that the database be backed up with
+   * mozIStorageConnection::backupDB so user data is not lost.
+   *
    * ==========
    *   DANGER
    * ==========
@@ -88,11 +93,13 @@ interface mozIStorageService : nsISupports {
    * containing virtual tables, it will think the database is corrupted and
    * throw NS_ERROR_FILE_CORRUPTED.
    *
-   * @param aDatabaseFile a nsIFile of the database to open.
+   * @param aDatabaseFile
+   *        A nsIFile that represents the database that is to be opened..
    *
    * @returns a mozIStorageConnection for the requested database file.
    *
-   * @throws NS_ERROR_FAILURE if any operation fails while opening the database.
+   * @throws NS_ERROR_OUT_OF_MEMORY
+   *         If allocating a new storage object fails.
    */
   mozIStorageConnection openDatabase(in nsIFile aDatabaseFile);
 
@@ -103,6 +110,11 @@ interface mozIStorageService : nsISupports {
    * should use openDatabase instead of this method unless you need a feature
    * of SQLite that is incompatible with a shared cache, like virtual table
    * and full text indexing support.
+   *
+   * Consumers should check mozIStorageConnection::connectionReady to ensure
+   * that they can use the database.  If this value is false, it is strongly
+   * recommended that the database be backed up with
+   * mozIStorageConnection::backupDB so user data is not lost.
    *
    * ==========
    *   DANGER
@@ -116,11 +128,13 @@ interface mozIStorageService : nsISupports {
    * The connection object returned by this function is not threadsafe. You must
    * use it only from the thread you created it from.
    *
-   * @param aDatabaseFile a nsIFile of the database to open.
+   * @param aDatabaseFile
+   *        A nsIFile that represents the database that is to be opened..
    *
    * @returns a mozIStorageConnection for the requested database file.
    *
-   * @throws NS_ERROR_FAILURE if any operation fails while opening the database.
+   * @throws NS_ERROR_OUT_OF_MEMORY
+   *         If allocating a new storage object fails.
    */
   mozIStorageConnection openUnsharedDatabase(in nsIFile aDatabaseFile);
 

@@ -81,6 +81,7 @@ var gDBConn = null;
  *        whether or not to open a connection to the database that doesn't share
  *        its cache; if true, we use mozIStorageService::openUnsharedDatabase
  *        to create the connection; otherwise we use openDatabase.
+ * @returns the mozIStorageConnection for the file.
  */
 function getOpenedDatabase(unshared)
 {
@@ -90,6 +91,18 @@ function getOpenedDatabase(unshared)
               (getTestDB());
   }
   return gDBConn;
+}
+
+/**
+ * Obtains a specific database to use.
+ *
+ * @param aFile
+ *        The nsIFile representing the db file to open.
+ * @returns the mozIStorageConnection for the file.
+ */
+function getDatabase(aFile)
+{
+  return getService().openDatabase(aFile);
 }
 
 function createStatement(aSQL)
