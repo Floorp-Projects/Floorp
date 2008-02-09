@@ -180,6 +180,8 @@ NS_IMETHODIMP nsTreeWalker::SetCurrentNode(nsIDOMNode * aCurrentNode)
     NS_ENSURE_SUCCESS(rv, rv);
 
     mCurrentNode = do_QueryInterface(aCurrentNode);
+    mPossibleIndexes.Clear();
+    mPossibleIndexesPos = -1;
 
     return NS_OK;
 }
