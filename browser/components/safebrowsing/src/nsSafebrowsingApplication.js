@@ -20,7 +20,6 @@ Function.prototype.inherits = function(parentCtor) {
 #include ../content/phishing-warden.js
 #include ../content/malware-warden.js
 #include ../content/reporter.js
-#include ../content/tr-fetcher.js
 
 var modScope = this;
 function Init() {

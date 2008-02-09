@@ -71,19 +71,7 @@ function PROT_Reporter() {
  *                urlencoded)
  */
 PROT_Reporter.prototype.report = function(subject, data) {
-  // Send a report iff we're in advanced protection mode
-  if (!this.prefs_.getPref(kPhishWardenRemoteLookups, false))
-    return;
-  // Make sure a report url is defined
-  var url = gDataProvider.getReportURL();
-
-  // Report url is optional, so we just ignore the request if a report
-  // url isn't provided.
-  if (!url)
-    return;
-
-  url += "evts=" + encodeURIComponent(subject)
-         + "&evtd=" + encodeURIComponent(data);
-  G_Debug(this, "Sending report: " + url);
-  (new PROT_XMLFetcher(true /* strip cookies */)).get(url, null /* no cb */);
+  // XXX: this is disabled for now, since we don't have advanced mode
+  // anymore.
+  return;
 }
