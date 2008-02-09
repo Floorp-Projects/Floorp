@@ -166,6 +166,8 @@ export::
 $(RESOURCE): nsMacWidget.r
 	/Developer/Tools/Rez -i /Developer/Headers/FlatCarbon -useDF $< -o $@
 
+GARBAGE += $(RESOURCE)
+
 libs:: $(RESOURCE)
 	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin
 

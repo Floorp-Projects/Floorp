@@ -76,12 +76,14 @@ export::
 	ln -fs $(srcdir)/res
 	ln -fs $(srcdir)/public
 	ln -fs $(srcdir)/Info-*.plist .
+
+GARBAGE += src res public Info-*.plist
+GARBAGE_DIRS += $(PROJECT)
 endif
+
+GARBAGE_DIRS += build
 
 libs::
 	$(PBBUILD) $(PROJECT_ARG) -target PrintPDE -buildstyle $(BUILDSTYLE) $(PBBUILD_ARG)
 	mkdir -p $(DIST)/package
 	$(INSTALL) $(XCODE_PRODUCT_DIR)/PrintPDE.plugin $(DIST)/package
-
-clean clobber::
-	rm -rf build

@@ -72,7 +72,19 @@ export::
 	ln -fs $(srcdir)/npmac.cpp
 	ln -fs $(srcdir)/Info-*.plist .
 	ln -fs $(srcdir)/NullPlugin.rsrc
+
+GARBAGE_DIRS += $(PROJECT)
+GARBAGE += \
+	English.lproj \
+	DefaultPluginPrefix.h \
+	NullPlugin.cpp \
+	npmac.cpp \
+	Info-*.plist \
+	NullPlugin.rsrc \
+	$(NULL)
 endif
+
+GARBAGE_DIRS += build
 
 libs install:: install-plugin
 
@@ -82,6 +94,3 @@ install-plugin: build-plugin
 build-plugin:
 	$(PBBUILD) $(PROJECT_ARG) -target $(TARGET) -buildstyle $(BUILDSTYLE) $(PBBUILD_ARG)
 	echo -n NSPLMOSS > "$(XCODE_PRODUCT_DIR)/Default Plugin.plugin/Contents/PkgInfo"
-
-clean clobber distclean::
-	rm -rf build
