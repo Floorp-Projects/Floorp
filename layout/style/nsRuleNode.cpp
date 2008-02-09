@@ -2401,7 +2401,11 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
 #endif
 
   // enforce the user' specified minimum font-size on the value that we expose
-  aFont->mFont.size = PR_MAX(aFont->mSize, aMinFontSize);
+  // (but don't change font-size:0)
+  if (0 < aFont->mSize && aFont->mSize < aMinFontSize)
+    aFont->mFont.size = aMinFontSize;
+  else
+    aFont->mFont.size = aFont->mSize;
 
   // font-size-adjust: number, none, inherit
   if (eCSSUnit_Number == aFontData.mSizeAdjust.GetUnit()) {
