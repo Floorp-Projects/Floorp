@@ -5698,38 +5698,16 @@ JS_SetGCZeal(JSContext *cx, uint8 zeal)
 
 /************************************************************************/
 
-#if defined(XP_WIN)
+#if !defined(STATIC_JS_API) && defined(XP_WIN)
+
 #include <windows.h>
-/*
- * Initialization routine for the JS DLL...
- */
 
 /*
- * Global Instance handle...
- * In Win32 this is the module handle of the DLL.
- *
- * In Win16 this is the instance handle of the application
- * which loaded the DLL.
+ * Initialization routine for the JS DLL.
  */
-
-#ifdef _WIN32
 BOOL WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 {
     return TRUE;
 }
 
-#else  /* !_WIN32 */
-
-int CALLBACK LibMain( HINSTANCE hInst, WORD wDataSeg,
-                      WORD cbHeapSize, LPSTR lpszCmdLine )
-{
-    return TRUE;
-}
-
-BOOL CALLBACK __loadds WEP(BOOL fSystemExit)
-{
-    return TRUE;
-}
-
-#endif /* !_WIN32 */
-#endif /* XP_WIN */
+#endif
