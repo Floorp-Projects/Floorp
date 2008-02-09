@@ -1198,27 +1198,35 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         argv[1] = OBJECT_TO_JSVAL(scopeobj);
     }
 
+    /* From here on, control must exit through label out with ok set. */
+    js_DisablePropertyCache(cx);
+
     if (!scopeobj) {
 #if JS_HAS_EVAL_THIS_SCOPE
         /* If obj.eval(str), emulate 'with (obj) eval(str)' in the caller. */
         if (indirectCall) {
             callerScopeChain = js_GetScopeChain(cx, caller);
-            if (!callerScopeChain)
-                return JS_FALSE;
+            if (!callerScopeChain) {
+                ok = JS_FALSE;
+                goto out;
+            }
             OBJ_TO_INNER_OBJECT(cx, obj);
-            if (!obj)
-                return JS_FALSE;
+            if (!obj) {
+                ok = JS_FALSE;
+                goto out;
+            }
             if (obj != callerScopeChain) {
-                if (!js_CheckPrincipalsAccess(cx, obj,
+                ok = js_CheckPrincipalsAccess(cx, obj,
                                               caller->script->principals,
-                                              cx->runtime->atomState.evalAtom))
-                {
-                    return JS_FALSE;
-                }
+                                              cx->runtime->atomState.evalAtom);
+                if (!ok)
+                    goto out;
 
                 scopeobj = js_NewWithObject(cx, obj, callerScopeChain, -1);
-                if (!scopeobj)
-                    return JS_FALSE;
+                if (!scopeobj) {
+                    ok = JS_FALSE;
+                    goto out;
+                }
 
                 /* Set fp->scopeChain too, for the compiler. */
                 caller->scopeChain = fp->scopeChain = scopeobj;
@@ -1235,9 +1243,6 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             }
         }
 #endif
-
-        /* From here on, control must exit through label out with ok set. */
-        js_DisablePropertyCache(cx);
 
         /*
          * Compile using caller's current scope object.
