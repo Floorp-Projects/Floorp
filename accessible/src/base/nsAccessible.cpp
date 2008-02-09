@@ -2674,6 +2674,11 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
     {
       relatedNode =
         do_QueryInterface(nsAccUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::aria_owns));
+      if (!relatedNode && mRoleMapEntry && mRoleMapEntry->role == nsIAccessibleRole::ROLE_OUTLINEITEM) {
+        // This is an ARIA tree that doesn't use owns, so we need to get the parent the hard way
+        nsAccUtils::GetARIATreeItemParent(this, content, aRelated);
+        return NS_OK;
+      }
       break;
     }
   case nsIAccessibleRelation::RELATION_CONTROLLED_BY:
