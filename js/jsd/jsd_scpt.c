@@ -761,13 +761,16 @@ jsd_SetExecutionHook(JSDContext*           jsdc,
     {
         jsdhook->hook       = hook;
         jsdhook->callerdata = callerdata;
+        JSD_UNLOCK();
         return JS_TRUE;
     }
     /* else... */
 
     jsdhook = (JSDExecHook*)calloc(1, sizeof(JSDExecHook));
-    if( ! jsdhook )
+    if( ! jsdhook ) {
+        JSD_UNLOCK();
         return JS_FALSE;
+    }
     jsdhook->jsdscript  = jsdscript;
     jsdhook->pc         = pc;
     jsdhook->hook       = hook;
@@ -778,6 +781,7 @@ jsd_SetExecutionHook(JSDContext*           jsdc,
                      (void*) PRIVATE_TO_JSVAL(jsdhook)) )
     {
         free(jsdhook);
+        JSD_UNLOCK();
         return JS_FALSE;
     }
 
