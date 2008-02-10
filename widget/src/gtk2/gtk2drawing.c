@@ -946,9 +946,11 @@ moz_gtk_scrollbar_thumb_paint(GtkThemeWidgetType widget,
 {
     GtkStateType state_type = (state->inHover || state->active) ?
         GTK_STATE_PRELIGHT : GTK_STATE_NORMAL;
+    GtkShadowType shadow_type = GTK_SHADOW_OUT;
     GtkStyle* style;
     GtkScrollbar *scrollbar;
     GtkAdjustment *adj;
+    gboolean activate_slider;
 
     ensure_scrollbar_widget();
 
@@ -989,10 +991,17 @@ moz_gtk_scrollbar_thumb_paint(GtkThemeWidgetType widget,
     gtk_adjustment_changed(adj);
 
     style = GTK_WIDGET(scrollbar)->style;
+    
+    gtk_widget_style_get(scrollbar, "activate-slider", &activate_slider, NULL);
+    
+    if (activate_slider && state->active) {
+        shadow_type = GTK_SHADOW_IN;
+        state_type = GTK_STATE_ACTIVE;
+    }
 
     TSOffsetStyleGCs(style, rect->x, rect->y);
 
-    gtk_paint_slider(style, drawable, state_type, GTK_SHADOW_OUT, cliprect,
+    gtk_paint_slider(style, drawable, state_type, shadow_type, cliprect,
                      GTK_WIDGET(scrollbar), "slider", rect->x, rect->y,
                      rect->width,  rect->height,
                      (widget == MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL) ?
