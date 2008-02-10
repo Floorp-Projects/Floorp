@@ -4346,15 +4346,6 @@ function asyncOpenWebPanel(event)
    var wrapper = null;
    if (linkNode) {
      wrapper = linkNode;
-
-     // javascript links should be executed in the current browser
-     if (wrapper.href.substr(0, 11) === "javascript:")
-       return true;
-
-     // data links should be executed in the current browser
-     if (wrapper.href.substr(0, 5) === "data:")
-       return true;
-
      if (event.button == 0 && !event.ctrlKey && !event.shiftKey &&
          !event.altKey && !event.metaKey) {
        // A Web panel's links should target the main content area.  Do this
@@ -4370,6 +4361,12 @@ function asyncOpenWebPanel(event)
          if (!wrapper.href)
            return true;
          if (wrapper.getAttribute("onclick"))
+           return true;
+         // javascript links should be executed in the current browser
+         if (wrapper.href.substr(0, 11) === "javascript:")
+           return true;
+         // data links should be executed in the current browser
+         if (wrapper.href.substr(0, 5) === "data:")
            return true;
 
          try {
