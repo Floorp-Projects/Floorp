@@ -38,9 +38,10 @@
 <!ENTITY AdvancedEditButton.label "Advanced Edit…">
 <!ENTITY AdvancedEditButton.accessKey "E">
 <!ENTITY AdvancedEditButton.tooltip "Add or modify HTML attributes, style attributes, and JavaScript">
-<!ENTITY chooseButton.label "Choose File…">
-<!ENTITY chooseFile.accessKey "F">
-<!ENTITY chooseFileLink.accessKey "o">
+<!ENTITY chooseFileButton.label "Choose File...">
+<!ENTITY chooseFileButton.accessKey "F">
+<!ENTITY chooseFileLinkButton.label "Choose File...">
+<!ENTITY chooseFileLinkButton.accessKey "o">
 <!ENTITY makeUrlRelative.label "URL is relative to page location">
 <!ENTITY makeUrlRelative.accessKey "r">
 <!ENTITY makeUrlRelative.tooltip "Change between relative and absolute URL. You must first save the page to change this.">
