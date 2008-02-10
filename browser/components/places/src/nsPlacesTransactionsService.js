@@ -157,8 +157,8 @@ placesTransactionsService.prototype = {
     return new placesEditItemLastModifiedTransaction(aID, aNewLastModified);
   },
 
-  sortFolderByName: function placesSortFldrByName(aFolderId, aFolderIndex) {
-    return new placesSortFolderByNameTransactions(aFolderId, aFolderIndex);
+  sortFolderByName: function placesSortFldrByName(aFolderId) {
+    return new placesSortFolderByNameTransactions(aFolderId);
   },
 
   tagURI: function placesTagURI(aURI, aTags) {
@@ -818,9 +818,8 @@ placesEditItemLastModifiedTransaction.prototype = {
   }
 };
 
-function placesSortFolderByNameTransactions(aFolderId, aFolderIndex) {
+function placesSortFolderByNameTransactions(aFolderId) {
   this._folderId = aFolderId;
-  this._folderIndex = aFolderIndex;
   this._oldOrder = null,
   this.redoTransaction = this.doTransaction;
 }
