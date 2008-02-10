@@ -4192,87 +4192,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 break;
               }
 
-              case JSOP_INITPROP:
               {
                 JSBool isFirst;
-
-                LOAD_ATOM(0);
-                xval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom),
-                                   (jschar)
-                                   (ATOM_IS_IDENTIFIER(atom) ? 0 : '\''));
-                if (!xval)
-                    return NULL;
-                isFirst = (ss->opcodes[ss->top - 2] == JSOP_NEWINIT);
-                rval = POP_STR();
-                lval = POP_STR();
-                todo = Sprint(&ss->sprinter, "%s%s",
-                              lval,
-                              isFirst ? "" : ", ");
-              }
-
-              do_initprop:
-                /*
-                 * NB: From here onward we must not overwrite todo, which must
-                 * be the offset just before we print the [ or { which starts
-                 * this literal.  This is important both for JSOP_INITPROP and
-                 * for JSOP_INITELEM (whose control flow can extend through
-                 * here via a goto).
-                 */
-#ifdef OLD_GETTER_SETTER
-                if (Sprint(&ss->sprinter, "%s%s%s%s%s:%s",
-                           xval,
-                           (lastop == JSOP_GETTER || lastop == JSOP_SETTER)
-                           ? " " : "",
-                           (lastop == JSOP_GETTER) ? js_getter_str :
-                           (lastop == JSOP_SETTER) ? js_setter_str :
-                           "",
-                           rval) < 0) {
-                    return NULL;
-                }
-#else
-                if (lastop == JSOP_GETTER || lastop == JSOP_SETTER) {
-                    if (!atom ||
-                        !ATOM_IS_STRING(atom) ||
-                        !ATOM_IS_IDENTIFIER(atom) ||
-                        ATOM_IS_KEYWORD(atom) ||
-                        (ss->opcodes[ss->top+1] != JSOP_ANONFUNOBJ &&
-                         ss->opcodes[ss->top+1] != JSOP_NAMEDFUNOBJ)) {
-                        if (Sprint(&ss->sprinter, "%s %s: %s", xval,
-                                   (lastop == JSOP_GETTER) ? js_getter_str :
-                                   (lastop == JSOP_SETTER) ? js_setter_str :
-                                   "",
-                                   rval) < 0) {
-                            return NULL;
-                        }
-                    } else {
-                        const char *end = rval + strlen(rval);
-
-                        if (*rval == '(')
-                            ++rval, --end;
-                        LOCAL_ASSERT(strncmp(rval, js_function_str, 8) == 0);
-                        LOCAL_ASSERT(rval[8] == ' ');
-                        rval += 8 + 1;
-                        LOCAL_ASSERT(*end ? *end == ')' : end[-1] == '}');
-                        if (Sprint(&ss->sprinter, "%s %s%s%.*s",
-                                   (lastop == JSOP_GETTER)
-                                   ? js_get_str : js_set_str,
-                                   xval,
-                                   (rval[0] != '(') ? " " : "",
-                                   end - rval, rval) < 0) {
-                            return NULL;
-                        }
-                    }
-                } else {
-                    if (Sprint(&ss->sprinter, "%s: %s", xval, rval) < 0)
-                        return NULL;
-                }
-#endif
-                break;
+                const char *maybeComma;
 
               case JSOP_INITELEM:
-              {
-                JSBool isFirst;
-
                 /* Turn off most parens (all if there's only one initialiser). */
                 LOCAL_ASSERT(pc + len < endpc);
                 isFirst = (ss->opcodes[ss->top - 3] == JSOP_NEWINIT);
@@ -4289,18 +4213,81 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 lval = POP_STR();
                 sn = js_GetSrcNote(jp->script, pc);
 
-                /* NB: must not overwrite todo after this! */
-                todo = Sprint(&ss->sprinter, "%s%s",
-                              lval,
-                              isFirst ? "" : ", ");
-                if (todo < 0) 
-                    break;
                 if (sn && SN_TYPE(sn) == SRC_INITPROP) {
                     atom = NULL;
                     goto do_initprop;
                 }
-                if (SprintCString(&ss->sprinter, rval) < 0)
+                maybeComma = isFirst ? "" : ", ";
+                todo = Sprint(&ss->sprinter, "%s%s%s",
+                              lval,
+                              maybeComma,
+                              rval);
+                break;
+
+              case JSOP_INITPROP:
+                LOAD_ATOM(0);
+                xval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom),
+                                   (jschar)
+                                   (ATOM_IS_IDENTIFIER(atom) ? 0 : '\''));
+                if (!xval)
                     return NULL;
+                isFirst = (ss->opcodes[ss->top - 2] == JSOP_NEWINIT);
+                rval = POP_STR();
+                lval = POP_STR();
+                /* fall through */
+
+              do_initprop:
+                maybeComma = isFirst ? "" : ", ";
+#ifdef OLD_GETTER_SETTER
+                todo = Sprint(&ss->sprinter, "%s%s%s%s%s%s%s:%s",
+                              lval,
+                              maybeComma,
+                              xval,
+                              (lastop == JSOP_GETTER || lastop == JSOP_SETTER)
+                              ? " " : "",
+                              (lastop == JSOP_GETTER) ? js_getter_str :
+                              (lastop == JSOP_SETTER) ? js_setter_str :
+                              "",
+                              rval);
+#else
+                if (lastop == JSOP_GETTER || lastop == JSOP_SETTER) {
+                    if (!atom ||
+                        !ATOM_IS_STRING(atom) ||
+                        !ATOM_IS_IDENTIFIER(atom) ||
+                        ATOM_IS_KEYWORD(atom) ||
+                        (ss->opcodes[ss->top+1] != JSOP_ANONFUNOBJ &&
+                         ss->opcodes[ss->top+1] != JSOP_NAMEDFUNOBJ)) {
+                        todo = Sprint(&ss->sprinter, "%s%s%s %s: %s",
+                                      lval,
+                                      maybeComma,
+                                      xval,
+                                      (lastop == JSOP_GETTER) ? js_getter_str :
+                                      (lastop == JSOP_SETTER) ? js_setter_str :
+                                      "",
+                                      rval);
+                    } else {
+                        const char *end = rval + strlen(rval);
+
+                        if (*rval == '(')
+                            ++rval, --end;
+                        LOCAL_ASSERT(strncmp(rval, js_function_str, 8) == 0);
+                        LOCAL_ASSERT(rval[8] == ' ');
+                        rval += 8 + 1;
+                        LOCAL_ASSERT(*end ? *end == ')' : end[-1] == '}');
+                        todo = Sprint(&ss->sprinter, "%s%s%s %s%s%.*s",
+                                      lval,
+                                      maybeComma,
+                                      (lastop == JSOP_GETTER)
+                                      ? js_get_str : js_set_str,
+                                      xval,
+                                      (rval[0] != '(') ? " " : "",
+                                      end - rval, rval);
+                    }
+                } else {
+                    todo = Sprint(&ss->sprinter, "%s%s%s: %s",
+                                  lval, maybeComma, xval, rval);
+                }
+#endif
                 break;
               }
 
