@@ -46,11 +46,11 @@
 <!ENTITY widthEditField.accessKey "W">
 <!ENTITY pixelsPopup.value "pixels">
 <!ENTITY alignmentBox.label "Alignment">
-<!ENTITY leftRadio.value "Left">
+<!ENTITY leftRadio.label "Left">
 <!ENTITY leftRadio.accessKey "L">
-<!ENTITY centerRadio.value "Center">
+<!ENTITY centerRadio.label "Center">
 <!ENTITY centerRadio.accessKey "C">
-<!ENTITY rightRadio.value "Right">
+<!ENTITY rightRadio.label "Right">
 <!ENTITY rightRadio.accessKey "R">
 
 <!ENTITY threeDShading.label "3-D Shading">
