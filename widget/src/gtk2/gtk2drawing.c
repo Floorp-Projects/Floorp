@@ -90,6 +90,7 @@ static GtkWidget* gToolbarSeparatorWidget;
 static GtkWidget* gMenuSeparatorWidget;
 static GtkWidget* gHPanedWidget;
 static GtkWidget* gVPanedWidget;
+static GtkWidget* gScrolledWindowWidget;
 
 static GtkShadowType gMenuBarShadowType;
 static GtkShadowType gToolbarShadowType;
@@ -496,6 +497,16 @@ ensure_expander_widget()
     if (!gExpanderWidget) {
         gExpanderWidget = gtk_expander_new("M");
         setup_widget_prototype(gExpanderWidget);
+    }
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
+ensure_scrolled_window_widget()
+{
+    if (!gScrolledWindowWidget) {
+        gScrolledWindowWidget = gtk_scrolled_window_new(NULL, NULL);
+        setup_widget_prototype(gScrolledWindowWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -1293,7 +1304,10 @@ moz_gtk_treeview_paint(GdkDrawable* drawable, GdkRectangle* rect,
     GtkStateType state_type;
 
     ensure_tree_view_widget();
+    ensure_scrolled_window_widget();
+
     gtk_widget_set_direction(gTreeViewWidget, direction);
+    gtk_widget_set_direction(gScrolledWindowWidget, direction);
 
     /* only handle disabled and normal states, otherwise the whole background
      * area will be painted differently with other states */
@@ -1305,20 +1319,21 @@ moz_gtk_treeview_paint(GdkDrawable* drawable, GdkRectangle* rect,
     gtk_widget_modify_bg(gTreeViewWidget, state_type,
                          &gTreeViewWidget->style->base[state_type]);
 
-    style = gTreeViewWidget->style;
+    style = gScrolledWindowWidget->style;
     xthickness = XTHICKNESS(style);
     ythickness = YTHICKNESS(style);
 
+    TSOffsetStyleGCs(gTreeViewWidget->style, rect->x, rect->y);
     TSOffsetStyleGCs(style, rect->x, rect->y);
 
-    gtk_paint_flat_box(style, drawable, state_type, GTK_SHADOW_NONE,
-                       cliprect, gTreeViewWidget, "treeview",
+    gtk_paint_flat_box(gTreeViewWidget->style, drawable, state_type,
+                       GTK_SHADOW_NONE, cliprect, gTreeViewWidget, "treeview",
                        rect->x + xthickness, rect->y + ythickness,
                        rect->width - 2 * xthickness,
                        rect->height - 2 * ythickness);
 
     gtk_paint_shadow(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_IN,
-                     cliprect, gTreeViewWidget, "scrolled_window",
+                     cliprect, gScrolledWindowWidget, "scrolled_window",
                      rect->x, rect->y, rect->width, rect->height); 
 
     return MOZ_GTK_SUCCESS;
@@ -2849,6 +2864,7 @@ moz_gtk_shutdown()
     gMenuSeparatorWidget = NULL;
     gHPanedWidget = NULL;
     gVPanedWidget = NULL;
+    gScrolledWindowWidget = NULL;
 
     is_initialized = FALSE;
 
