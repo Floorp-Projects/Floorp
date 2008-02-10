@@ -1,0 +1,36 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+	<title>Test case for list items flowing around floats</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="Content-Style-Type" content="text/css">
+	<style type="text/css">
+
+	ul, ol, li { margin-top: 0; margin-bottom: 0; }
+	li { height: 2em; background: aqua; color: black; }
+
+	</style>
+</head>
+<body>
+
+<div style="background: aqua; color: black; margin-left: 40px">
+<div style="margin-left: -40px">
+<div style="margin-left: 60px"><ol start="1"><li>one</li></ol></div>
+<div style="margin-left: 60px"><ol start="2"><li>two</li></ol></div>
+<ol start="3"><li>three</li></ol>
+<ol start="4"><li>four</li></ol>
+</div>
+</div>
+
+<div style="background: aqua; color: black; margin-left: 40px">
+<div style="margin-left: -40px">
+<div style="margin-left: 60px"><ul><li>one</li></ul></div>
+<div style="margin-left: 60px"><ul><li>two</li></ul></div>
+<ul><li>three</li></ul>
+<ul><li>four</li></ul>
+</div>
+</div>
+
+</body>
+</html>

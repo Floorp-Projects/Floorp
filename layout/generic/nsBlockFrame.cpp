@@ -1066,13 +1066,18 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // rare case: an empty first line followed by a second line that
   // contains a block (example: <LI>\n<P>... ). This is where
   // the second case can happen.
-  if (mBullet && HaveOutsideBullet() &&
-      (mLines.empty() ||
-       mLines.front()->IsBlock() ||
-       0 == mLines.front()->mBounds.height)) {
+  if (mBullet && HaveOutsideBullet() && !mLines.empty() &&
+      (mLines.front()->IsBlock() ||
+       (0 == mLines.front()->mBounds.height &&
+        mLines.front() != mLines.back() &&
+        mLines.begin().next()->IsBlock()))) {
     // Reflow the bullet
     nsHTMLReflowMetrics metrics;
-    ReflowBullet(state, metrics);
+    // FIXME: aReflowState.mComputedBorderPadding.top isn't even the
+    // right place -- we really want the top of the line whose baseline
+    // we're using (or, actually, the entire line, once we fix bug
+    // 25888)
+    ReflowBullet(state, metrics, aReflowState.mComputedBorderPadding.top);
 
     nscoord baseline;
     if (nsLayoutUtils::GetFirstLineBaseline(this, &baseline)) {
@@ -2189,7 +2194,8 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   // Handle an odd-ball case: a list-item with no lines
   if (mBullet && HaveOutsideBullet() && mLines.empty()) {
     nsHTMLReflowMetrics metrics;
-    ReflowBullet(aState, metrics);
+    ReflowBullet(aState, metrics,
+                 aState.mReflowState.mComputedBorderPadding.top);
 
     // There are no lines so we have to fake up some y motion so that
     // we end up with *some* height.
@@ -3955,18 +3961,16 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   //
   // There are exactly two places a bullet can be placed: near the
   // first or second line. It's only placed on the second line in a
-  // rare case: an empty first line followed by a second line that
-  // contains a block (example: <LI>\n<P>... ).
-  //
-  // For this code, only the first case is possible because this
-  // method is used for placing a line of inline frames. If the rare
-  // case is happening then the worst that will happen is that the
-  // bullet frame will be reflowed twice.
+  // rare case: when the first line is empty.
   PRBool addedBullet = PR_FALSE;
-  if (mBullet && HaveOutsideBullet() && (aLine == mLines.front()) &&
-      (!aLineLayout.IsZeroHeight() || (aLine == mLines.back()))) {
+  if (mBullet && HaveOutsideBullet() &&
+      ((aLine == mLines.front() &&
+        (!aLineLayout.IsZeroHeight() || (aLine == mLines.back()))) ||
+       (mLines.front() != mLines.back() &&
+        0 == mLines.front()->mBounds.height &&
+        aLine == mLines.begin().next()))) {
     nsHTMLReflowMetrics metrics;
-    ReflowBullet(aState, metrics);
+    ReflowBullet(aState, metrics, aState.mY);
     aLineLayout.AddBulletFrame(mBullet, metrics);
     addedBullet = PR_TRUE;
   }
@@ -6542,7 +6546,8 @@ nsBlockFrame::RenumberListsFor(nsPresContext* aPresContext,
 
 void
 nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
-                           nsHTMLReflowMetrics& aMetrics)
+                           nsHTMLReflowMetrics& aMetrics,
+                           nscoord aLineTop)
 {
   const nsHTMLReflowState &rs = aState.mReflowState;
 
@@ -6561,19 +6566,39 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   mBullet->WillReflow(aState.mPresContext);
   mBullet->Reflow(aState.mPresContext, aMetrics, reflowState, status);
 
-  // Place the bullet now; use its right margin to distance it
-  // from the rest of the frames in the line
-  nscoord x = 
-#ifdef IBMBIDI
-           (NS_STYLE_DIRECTION_RTL == GetStyleVisibility()->mDirection)
-             // According to the CSS2 spec, section 12.6.1, outside marker box
-             // is distanced from the associated principal box's border edge.
-             // |rs.availableWidth| reflects exactly a border edge: it includes
-             // border, padding, and content area, without margins.
-             ? rs.ComputedWidth() + rs.mComputedBorderPadding.LeftRight() +
-               reflowState.mComputedMargin.left :
-#endif
-             - reflowState.mComputedMargin.right - aMetrics.width;
+  // Place the bullet now.  We want to place the bullet relative to the
+  // border-box of the associated box (using the right/left margin of
+  // the bullet frame as separation).  However, if a line box would be
+  // displaced by floats, we want to displace it by the same amount.
+  // That is, we act as though the edge of the floats is the
+  // content-edge of the block, and place the bullet at a position
+  // offset from there by the block's padding, the block's border, and
+  // the bullet frame's margin.
+  // FIXME (bug 25888): need to check the entire region that the first
+  // line overlaps, not just the top pixel.
+  nscoord x;
+  aState.GetAvailableSpace(aLineTop, PR_FALSE);
+  if (rs.mStyleVisibility->mDirection == NS_STYLE_DIRECTION_LTR) {
+    // Note: mAvailSpaceRect.x is relative to the content box and never
+    // less than zero.  Converting to frame coordinates and subtracting
+    // the padding and border cancel each other out, and the PR_MAX()
+    // with 0 (or with the left border+padding) is even implied in the
+    // right place.
+    x = aState.mAvailSpaceRect.x
+        - reflowState.mComputedMargin.right - aMetrics.width;
+  } else {
+    // The XMost() of the available space and the computed width both
+    // give us offsets from the left content edge.  Then we add the left
+    // border/padding to get into frame coordinates, and the right
+    // border/padding and the bullet's margin to offset the position.
+    x = PR_MIN(rs.ComputedWidth(), aState.mAvailSpaceRect.XMost())
+        + rs.mComputedBorderPadding.LeftRight()
+        + reflowState.mComputedMargin.left;
+  }
+
+  // FIXME: come up with rules for when mAvailSpaceRect is valid so we
+  // don't need to do this.
+  aState.GetAvailableSpace();
 
   // Approximate the bullets position; vertical alignment will provide
   // the final vertical location.
