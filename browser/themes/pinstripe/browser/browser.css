@@ -1471,11 +1471,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   list-style-image: url("chrome://mozapps/skin/downloads/downloadStatusIcon.png");
 }
 
-#download-monitor image {
-  height: 16px;
-  width: 16px;
-}
-
 /* Hide the dropmarker until it's styled */
 #back-forward-dropmarker {
   display: none;

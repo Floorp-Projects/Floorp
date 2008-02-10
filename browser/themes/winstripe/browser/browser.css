@@ -1840,10 +1840,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 #download-monitor {
-  list-style-image: url("chrome://mozapps/skin/downloads/downloadIcon.png");
-}
-
-#download-monitor image {
-  height: 16px;
-  width: 16px;
+  list-style-image: url("chrome://browser/skin/Toolbar-small.png");
+  -moz-image-region: rect(0px 96px 16px 80px);
 }
