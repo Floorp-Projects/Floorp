@@ -1374,11 +1374,11 @@ IsSameOrigin(nsIPrincipal* aPrincipal, nsIChannel* aChannel)
 
   nsCOMPtr<nsIURI> codebase;
   nsresult rv = aPrincipal->GetURI(getter_AddRefs(codebase));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   nsCOMPtr<nsIURI> channelURI;
   rv = aChannel->GetURI(getter_AddRefs(channelURI));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   rv = nsContentUtils::GetSecurityManager()->
     CheckSameOriginURI(codebase, channelURI, PR_FALSE);
@@ -2477,7 +2477,7 @@ nsXMLHttpRequest::OverrideMimeType(const nsACString& aMimeType)
 NS_IMETHODIMP
 nsXMLHttpRequest::GetMultipart(PRBool *_retval)
 {
-  *_retval = mState & XML_HTTP_REQUEST_MULTIPART;
+  *_retval = !!(mState & XML_HTTP_REQUEST_MULTIPART);
 
   return NS_OK;
 }

@@ -456,7 +456,7 @@ MBool txStepPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext
     // Create the context node set for evaluating the predicates
     nsRefPtr<txNodeSet> nodes;
     nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(nodes));
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, MB_FALSE);
 
     PRBool hasNext = mIsAttr ? walker.moveToFirstAttribute() :
                                walker.moveToFirstChild();
@@ -471,7 +471,7 @@ MBool txStepPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext
     Expr* predicate = mPredicates[0];
     nsRefPtr<txNodeSet> newNodes;
     rv = aContext->recycler()->getNodeSet(getter_AddRefs(newNodes));
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, MB_FALSE);
 
     PRUint32 i, predLen = mPredicates.Length();
     for (i = 1; i < predLen; ++i) {

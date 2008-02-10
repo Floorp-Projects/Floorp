@@ -1111,7 +1111,7 @@ TX_XSLTFunctionAvailable(nsIAtom* aName, PRInt32 aNameSpaceID)
 {
     nsRefPtr<txStylesheetCompiler> compiler =
         new txStylesheetCompiler(EmptyString(), nsnull);
-    NS_ENSURE_TRUE(compiler, NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(compiler, PR_FALSE);
 
     nsAutoPtr<FunctionCall> fnCall;
 

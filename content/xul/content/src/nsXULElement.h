@@ -604,7 +604,7 @@ public:
     void ClearLazyState(LazyState aFlags)
     { UnsetFlags(aFlags << XUL_ELEMENT_LAZY_STATE_OFFSET); }
     PRBool GetLazyState(LazyState aFlag)
-    { return GetFlags() & (aFlag << XUL_ELEMENT_LAZY_STATE_OFFSET); }
+    { return !!(GetFlags() & (aFlag << XUL_ELEMENT_LAZY_STATE_OFFSET)); }
 
     // nsIDOMNode
     NS_FORWARD_NSIDOMNODE(nsGenericElement::)

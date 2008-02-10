@@ -1097,7 +1097,7 @@ nsGenericHTMLElement::UpdateEditableState()
   // XXX Should we do this only when in a document?
   ContentEditableTristate value = GetContentEditableValue();
   if (value != eInherit) {
-    SetEditableFlag(value);
+    SetEditableFlag(!!value);
 
     return;
   }
@@ -1882,7 +1882,7 @@ nsGenericHTMLFormElement::UpdateEditableFormControlState()
 {
   ContentEditableTristate value = GetContentEditableValue();
   if (value != eInherit) {
-    SetEditableFlag(value);
+    SetEditableFlag(!!value);
 
     return;
   }
