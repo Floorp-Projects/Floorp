@@ -282,18 +282,22 @@
       <property name="timeout"
                 onset="this.setAttribute('timeout', val); return val;"
                 onget="return parseInt(this.getAttribute('timeout')) || 0;"/>
-      <property name="value">
-        <getter>
-          return this.inputField.value;
-        </getter>
-        <setter>
-          <![CDATA[
+      <property name="value"
+                onget="return this.hasAttribute('empty') ? '' : this.inputField.value;">
+        <setter><![CDATA[
+          if (val) {
+            // clear the emptyText _before_ setting a new non-empty value
+            this._clearEmptyText();
             this.inputField.value = val;
-            if (this._timer)
-              clearTimeout(this._timer);
-            return val;
-          ]]>
-        </setter>
+          } else {
+            // display the emptyText _after_ setting a value that's an empty string
+            this.inputField.value = val;
+            this._updateVisibleText();
+          }
+          if (this._timer)
+            clearTimeout(this._timer);
+          return val;
+        ]]></setter>
       </property>
       <method name="_fireCommand">
         <parameter name="me"/>
