@@ -566,6 +566,8 @@ moz_gtk_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
     if (state->isDefault)
         GTK_WIDGET_SET_FLAGS(widget, GTK_HAS_DEFAULT);
 
+    GTK_BUTTON(widget)->relief = relief;
+
     if (!interior_focus && state->focused) {
         x += focus_width + focus_pad;
         y += focus_width + focus_pad;
@@ -576,7 +578,7 @@ moz_gtk_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
     shadow_type = button_state == GTK_STATE_ACTIVE ||
                       state->depressed ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
  
-    if (state->isDefault && GTK_BUTTON(widget)->relief == GTK_RELIEF_NORMAL) {
+    if (state->isDefault && relief == GTK_RELIEF_NORMAL) {
         gtk_paint_box(style, drawable, button_state, shadow_type, cliprect,
                       widget, "buttondefault", x, y, width, height);                   
     }
