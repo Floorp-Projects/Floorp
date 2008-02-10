@@ -1145,7 +1145,7 @@ lg.jp
 ne.jp
 or.jp
 // jp geographical names
-// I can't find an official english explanantrion, but used https://bugzilla.mozilla.org/show_bug.cgi?id=252342#c31
+// I can't find an official English explanation, but used https://bugzilla.mozilla.org/show_bug.cgi?id=252342#c31
 *.aichi.jp
 *.akita.jp
 *.aomori.jp
