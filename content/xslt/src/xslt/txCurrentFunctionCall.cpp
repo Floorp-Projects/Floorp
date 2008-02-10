@@ -47,7 +47,7 @@ CurrentFunctionCall::getReturnType()
 PRBool
 CurrentFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 {
-    return (aContext & PRIVATE_CONTEXT);
+    return !!(aContext & PRIVATE_CONTEXT);
 }
 
 #ifdef TX_TO_STRING

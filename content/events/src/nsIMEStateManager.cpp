@@ -201,7 +201,7 @@ nsIMEStateManager::OnInstalledMenuKeyboardListener(PRBool aInstalling)
 PRBool
 nsIMEStateManager::IsActive(nsPresContext* aPresContext)
 {
-  NS_ENSURE_ARG_POINTER(aPresContext);
+  NS_ENSURE_TRUE(aPresContext, PR_FALSE);
   nsPIDOMWindow* window = aPresContext->Document()->GetWindow();
   NS_ENSURE_TRUE(window, PR_FALSE);
   if (!sActiveWindow || sActiveWindow != window->GetPrivateRoot()) {
@@ -254,7 +254,7 @@ nsIMEStateManager::SetIMEState(nsPresContext*     aPresContext,
     aKB->SetIMEEnabled(state);
   }
   if (aState & nsIContent::IME_STATUS_MASK_OPENED) {
-    PRBool open = (aState & nsIContent::IME_STATUS_OPEN);
+    PRBool open = !!(aState & nsIContent::IME_STATUS_OPEN);
     aKB->SetIMEOpenState(open);
   }
 }

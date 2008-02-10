@@ -1835,7 +1835,7 @@ nsCanvasRenderingContext2D::IsPointInPath(float x, float y, PRBool *retVal)
     if (!FloatValidate(x,y))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
-    *retVal = (PRBool) cairo_in_fill(mCairo, x, y);
+    *retVal = !!cairo_in_fill(mCairo, x, y);
     return NS_OK;
 }
 

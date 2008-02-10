@@ -916,7 +916,7 @@ nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
 
   PRBool subsumes;
   nsresult rv = subjectPrincipal->Subsumes(nodePrincipal, &subsumes);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   if (subsumes) {
     return PR_TRUE;
