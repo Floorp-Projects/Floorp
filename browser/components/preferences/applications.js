@@ -1716,8 +1716,10 @@ var gApplicationsPane = {
     // update the richlistitem too. Will be visible when selecting another row
     typeItem.setAttribute("actionDescription",
                           this._describePreferredAction(handlerInfo));
-    typeItem.setAttribute("actionIcon",
-                          this._getIconURLForPreferredAction(handlerInfo));
+    if (!this._setIconClassForPreferredAction(handlerInfo, typeItem)) {
+      typeItem.setAttribute("actionIcon",
+                            this._getIconURLForPreferredAction(handlerInfo));
+    }
   },
 
   chooseApp: function(aEvent) {
