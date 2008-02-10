@@ -16,11 +16,11 @@
    -
    - The Initial Developer of the Original Code is
    - Mozilla Foundation.
-   - Portions created by the Initial Developer are Copyright (C) 2007
+   - Portions created by the Initial Developer are Copyright (C) 2008
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
-   -   Alexander Surkov <surkov.alexander@gmail.com>
+   -   Alexander Surkov <surkov.alexander@gmail.com> (original author)
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,8 +37,12 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY role.label "Rôle">
-<!ENTITY name.label "Nom">
-<!ENTITY nodeName.label "Nom du nœud">
+<!ENTITY evaluateDialog.title "Dialogue d'évaluation de JavaScript">
 
-<!ENTITY evaluateJS.label "Évaluer le JavaScript">
+<!ENTITY btnEvaluateJS.label "Évaluer">
+<!ENTITY btnEvaluateJS.accesskey "v">
+
+<!ENTITY txtInputArea.label "Zone de saisie (utiliser la variable « accessible » pour fonctionner avec l'élément accessible sélectionné et la fonction « output » pour écrire dans la fenêtre « Zone d'affichage ») : ">
+<!ENTITY txtInputArea.accesskey "Z">
+<!ENTITY txtOutputArea.label "Zone d'affichage : ">
+<!ENTITY txtOutputArea.accesskey "o">
