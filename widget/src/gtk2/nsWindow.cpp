@@ -2497,11 +2497,11 @@ nsWindow::OnScrollEvent(GtkWidget *aWidget, GdkEventScroll *aEvent)
         break;
     case GDK_SCROLL_LEFT:
         event.scrollFlags = nsMouseScrollEvent::kIsHorizontal;
-        event.delta = -3;
+        event.delta = -1;
         break;
     case GDK_SCROLL_RIGHT:
         event.scrollFlags = nsMouseScrollEvent::kIsHorizontal;
-        event.delta = 3;
+        event.delta = 1;
         break;
     }
 
