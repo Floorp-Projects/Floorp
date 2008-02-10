@@ -75,7 +75,7 @@ int wmain(int argc, WCHAR **argv)
     }
   }
   argvConverted[argc] = NULL;
-  
+
   // need to save argvConverted copy for later deletion.
   char **deleteUs = new char*[argc+1];
   if (!deleteUs) {
@@ -85,10 +85,9 @@ int wmain(int argc, WCHAR **argv)
   for (int i=0; i<argc; i++)
     deleteUs[i] = argvConverted[i];
   int result = main(argc, argvConverted);
- 
+
   delete[] argvConverted;
   FreeAllocStrings(argc, deleteUs);
-  
+
   return result;
 }
-
