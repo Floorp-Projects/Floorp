@@ -50,16 +50,18 @@ toolbox {
 
 /* ::::: menubar & toolbar ::::: */
 
-menubar, toolbar[type="menubar"] {
-  -moz-appearance: menubar !important;
-  min-width: 1px;
-  min-height: 20px;
-}
-
 toolbar {
   -moz-appearance: toolbar !important;
   min-width: 1px;
   min-height: 20px;
+  padding: 2px 0px;
+}
+
+menubar, toolbar[type="menubar"] {
+  -moz-appearance: menubar !important;
+  min-width: 1px;
+  min-height: 20px;
+  padding: 1px 0px;
 }
 
 /* in browser.xul, the menubar is inside a toolbar... */

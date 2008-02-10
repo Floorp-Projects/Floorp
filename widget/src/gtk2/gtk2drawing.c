@@ -2269,11 +2269,6 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
             *bottom += gButtonWidget->style->ythickness;
             return MOZ_GTK_SUCCESS;
         }
-
-    case MOZ_GTK_TOOLBAR:
-        ensure_toolbar_widget();
-        w = gToolbarWidget;
-        break;
     case MOZ_GTK_ENTRY:
         ensure_entry_widget();
         w = gEntryWidget;
@@ -2427,10 +2422,6 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
 
             return MOZ_GTK_SUCCESS;
         }
-    case MOZ_GTK_MENUBAR:
-        ensure_menu_bar_widget();
-        w = gMenuBarWidget;
-        break;
     case MOZ_GTK_MENUPOPUP:
         ensure_menu_popup_widget();
         w = gMenuPopupWidget;
@@ -2473,6 +2464,8 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
     case MOZ_GTK_RESIZER:
     case MOZ_GTK_MENUARROW:
     case MOZ_GTK_TOOLBARBUTTON_ARROW:
+    case MOZ_GTK_TOOLBAR:
+    case MOZ_GTK_MENUBAR:
         *left = *top = *right = *bottom = 0;
         return MOZ_GTK_SUCCESS;
     default:
