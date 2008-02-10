@@ -820,6 +820,7 @@ menulist[type="description"] {
 
 html|*.menulist-editable-input {
   -moz-appearance: none !important;
+  background: transparent ! important;
 }
 
 menulist > menupopup > menuitem {
