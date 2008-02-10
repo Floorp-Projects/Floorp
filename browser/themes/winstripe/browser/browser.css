@@ -302,16 +302,16 @@ toolbar[iconsize="large"][mode="icons"] #forward-button:not([disabled="true"]):a
 /* unified forward button with keyhole icons, RTL version */
 
 toolbar[iconsize="large"][mode="icons"] #forward-button[chromedir="rtl"] {
-  -moz-image-region: rect(3px 470px 31px 432px);
+  -moz-image-region: rect(3px 470px 31px 444px);
 }
 toolbar[iconsize="large"][mode="icons"] #forward-button[chromedir="rtl"]:not([disabled="true"]):hover {
-  -moz-image-region: rect(37px 470px 65px 432px);
+  -moz-image-region: rect(37px 470px 65px 444px);
 }
 toolbar[iconsize="large"][mode="icons"] #forward-button[chromedir="rtl"][disabled="true"] {
-  -moz-image-region: rect(71px 470px 99px 432px);
+  -moz-image-region: rect(71px 470px 99px 444px);
 }
 toolbar[iconsize="large"][mode="icons"] #forward-button[chromedir="rtl"]:not([disabled="true"]):active {
-  -moz-image-region: rect(105px 470px 133px 432px);
+  -moz-image-region: rect(105px 470px 133px 444px);
 }
 
 /* dropmarker for unified back and forward buttons with keyhole icons */
