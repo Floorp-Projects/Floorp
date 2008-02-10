@@ -1,12 +1,8 @@
 <!ENTITY brandMotto       "Rediscover the Web">
 <!ENTITY credit.thanks    "Special Thanks To">
 
-<!ENTITY credit.thanks2      "Many thanks to our">
-<!ENTITY credit.prethanks    "">
-<!ENTITY credit.friends      "Friends">
-<!ENTITY credit.and          "&amp;">
-<!ENTITY credit.contributors "Contributors" >
-<!ENTITY credit.postthanks   "">
+<!ENTITY credit.thanks2       "Many thanks to our">
+<!ENTITY credit.contributors2 "contributors">
 
 <!-- localization credits look like this: -->
 <!--
