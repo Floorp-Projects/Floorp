@@ -63,7 +63,7 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
         txNodeSet* nodeSet = static_cast<txNodeSet*>(aLeft);
         nsRefPtr<StringResult> strResult;
         rv = aContext->recycler()->getStringResult(getter_AddRefs(strResult));
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
         PRInt32 i;
         for (i = 0; i < nodeSet->size(); ++i) {
@@ -88,7 +88,7 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
         txNodeSet* nodeSet = static_cast<txNodeSet*>(aRight);
         nsRefPtr<StringResult> strResult;
         rv = aContext->recycler()->getStringResult(getter_AddRefs(strResult));
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
         PRInt32 i;
         for (i = 0; i < nodeSet->size(); ++i) {

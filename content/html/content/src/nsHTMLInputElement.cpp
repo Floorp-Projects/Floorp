@@ -1596,10 +1596,10 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     return NS_OK;
   }
   nsresult rv = NS_OK;
-  PRBool outerActivateEvent = aVisitor.mItemFlags & NS_OUTER_ACTIVATE_EVENT;
+  PRBool outerActivateEvent = !!(aVisitor.mItemFlags & NS_OUTER_ACTIVATE_EVENT);
   PRBool originalCheckedValue =
-    aVisitor.mItemFlags & NS_ORIGINAL_CHECKED_VALUE;
-  PRBool noContentDispatch = aVisitor.mItemFlags & NS_NO_CONTENT_DISPATCH;
+    !!(aVisitor.mItemFlags & NS_ORIGINAL_CHECKED_VALUE);
+  PRBool noContentDispatch = !!(aVisitor.mItemFlags & NS_NO_CONTENT_DISPATCH);
   PRInt8 oldType = NS_CONTROL_TYPE(aVisitor.mItemFlags);
   // Ideally we would make the default action for click and space just dispatch
   // DOMActivate, and the default action for DOMActivate flip the checkbox/
