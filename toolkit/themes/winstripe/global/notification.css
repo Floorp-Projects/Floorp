@@ -7,10 +7,12 @@ notification {
 
 notification[type="info"] {
   background-color: -moz-Dialog;
+  color: -moz-DialogText;
 }
 
 notification[type="critical"] {
   background-color: red;
+  color: white;
 }
 
 .messageImage {
