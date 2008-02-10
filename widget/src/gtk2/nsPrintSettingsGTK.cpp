@@ -430,6 +430,12 @@ nsPrintSettingsGTK::SetToFileName(const PRUnichar * aToFileName)
     return NS_OK;
   }
 
+  if (StringEndsWith(nsDependentString(aToFileName), NS_LITERAL_STRING(".ps"))) {
+    gtk_print_settings_set(mPrintSettings, GTK_PRINT_SETTINGS_OUTPUT_FILE_FORMAT, "ps");
+  } else {
+    gtk_print_settings_set(mPrintSettings, GTK_PRINT_SETTINGS_OUTPUT_FILE_FORMAT, "pdf");
+  }
+
   nsCOMPtr<nsILocalFile> file;
   NS_NewLocalFile(nsDependentString(aToFileName), PR_TRUE, getter_AddRefs(file));
 
