@@ -410,7 +410,7 @@
                     xbl:inherits="value=label,value,disabled,tabindex,readonly"/>
       </xul:hbox>
       <xul:dropmarker class="menulist-dropmarker" type="menu"
-          xbl:inherits="open"/>
+          xbl:inherits="open,disabled"/>
       <children includes="menupopup"/>
     </content>
 
