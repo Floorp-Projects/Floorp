@@ -528,8 +528,7 @@ protected:
     void
     SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
                                  nsIDOMElement   *aListener,
-                                 const nsAString &aAttr,
-                                 PRBool aAddingListener);
+                                 const nsAString &aAttr);
 
     static
     nsresult

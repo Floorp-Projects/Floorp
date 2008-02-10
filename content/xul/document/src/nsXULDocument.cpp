@@ -664,8 +664,7 @@ CanBroadcast(PRInt32 aNameSpaceID, nsIAtom* aAttribute)
 void
 nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
                                             nsIDOMElement   *aListener,
-                                            const nsAString &aAttr,
-                                            PRBool aAddingListener)
+                                            const nsAString &aAttr)
 {
     nsCOMPtr<nsIContent> broadcaster = do_QueryInterface(aBroadcaster);
     nsCOMPtr<nsIContent> listener = do_QueryInterface(aListener);
@@ -685,14 +684,10 @@ nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
             if (! CanBroadcast(nameSpaceID, name))
                 continue;
 
-            if (aAddingListener) {
-                nsAutoString value;
-                broadcaster->GetAttr(nameSpaceID, name, value);
-                listener->SetAttr(nameSpaceID, name, attrName->GetPrefix(), 
-                                  value, mInitialLayoutComplete);
-            } else {
-                listener->UnsetAttr(nameSpaceID, name, mInitialLayoutComplete);
-            }
+            nsAutoString value;
+            broadcaster->GetAttr(nameSpaceID, name, value);
+            listener->SetAttr(nameSpaceID, name, attrName->GetPrefix(), value, 
+                              mInitialLayoutComplete);
 
 #if 0
             // XXX we don't fire the |onbroadcast| handler during
@@ -709,13 +704,9 @@ nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
         nsCOMPtr<nsIAtom> name = do_GetAtom(aAttr);
 
         nsAutoString value;
-        if (broadcaster->GetAttr(kNameSpaceID_None, name, value) 
-            && aAddingListener) {
+        if (broadcaster->GetAttr(kNameSpaceID_None, name, value)) {
             listener->SetAttr(kNameSpaceID_None, name, value,
                               mInitialLayoutComplete);
-        }
-        else {
-            listener->UnsetAttr(kNameSpaceID_None, name, mInitialLayoutComplete);
         }
 
 #if 0
@@ -813,7 +804,7 @@ nsXULDocument::AddBroadcastListenerFor(nsIDOMElement* aBroadcaster,
 
     entry->mListeners.AppendElement(bl);
 
-    SynchronizeBroadcastListener(aBroadcaster, aListener, aAttr, PR_TRUE);
+    SynchronizeBroadcastListener(aBroadcaster, aListener, aAttr);
     return NS_OK;
 }
 
@@ -848,7 +839,7 @@ nsXULDocument::RemoveBroadcastListenerFor(nsIDOMElement* aBroadcaster,
                     PL_DHashTableOperate(mBroadcasterMap, aBroadcaster,
                                          PL_DHASH_REMOVE);
 
-                SynchronizeBroadcastListener(aBroadcaster, aListener, aAttr, PR_FALSE);
+                SynchronizeBroadcastListener(aBroadcaster, aListener, aAttr);
 
                 break;
             }

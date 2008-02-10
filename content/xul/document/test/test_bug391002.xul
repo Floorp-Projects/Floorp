@@ -34,14 +34,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=391002
     $("btn1").setAttribute("command", "cmd2");
     is($("btn1").getAttribute("label"), $("cmd2").getAttribute("label"))
 
-    $("btn1").removeAttribute("command");
-    is($("btn1").getAttribute("label"), "");
-
     $("observes").setAttribute("element", "cmd2");
     is($("btn2").getAttribute("label"), $("cmd2").getAttribute("label"))
-
-    $("observes").removeAttribute("element");
-    todo_is($("btn2").getAttribute("label"), "");
 
   ]]></script>
 </window>
