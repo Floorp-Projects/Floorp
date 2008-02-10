@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=382990
         </treecols>
         <treechildren>
             <treeitem><treerow><treecell label="a"/></treerow></treeitem>
-            <treeitem><treerow><treecell label="b"/></treerow></treeitem>
+            <treeitem><treerow><treecell label="z"/></treerow></treeitem>
         </treechildren>
     </tree>
     
@@ -37,11 +37,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=382990
         var treeElem = document.getElementById("testTree");
         treeElem.view.selection.select(0);
         treeElem.focus();
-        synthesizeKey("b", {ctrlKey: true});
+        synthesizeKey("z", {ctrlKey: true});
         ok(!treeElem.view.selection.isSelected(1), "Tree selection should not change for key events with ctrl pressed.");
-        // depending on the platform, that ctrl+b might have opened the
-        // bookmarks sidebar - close it
-        synthesizeKey("b", {ctrlKey: true});
         SimpleTest.finish();
     }
   ]]></script>
