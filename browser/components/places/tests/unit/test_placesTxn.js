@@ -363,7 +363,7 @@ function run_test() {
   do_check_eq(0, bmsvc.getItemIndex(b1));
   do_check_eq(1, bmsvc.getItemIndex(b2));
   do_check_eq(2, bmsvc.getItemIndex(b3));
-  var txn17 = ptSvc.sortFolderByName(srtFldId, 1);
+  var txn17 = ptSvc.sortFolderByName(srtFldId);
   txn17.doTransaction();
   do_check_eq(2, bmsvc.getItemIndex(b1));
   do_check_eq(1, bmsvc.getItemIndex(b2));

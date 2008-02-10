@@ -52,7 +52,7 @@ interface nsITransaction;
  * the global scope of a js window.
  */
 
-[scriptable, uuid(d91e4575-14cf-497d-b497-bd47b40c50e3)]
+[scriptable, uuid(7179d28c-bc41-4110-8225-b3ba7e1cb293)]
 interface nsIPlacesTransactionsService : nsITransactionManager
 {
   /**
@@ -315,12 +315,9 @@ interface nsIPlacesTransactionsService : nsITransactionManager
    *
    * @param aFolderId
    *        id of the folder to sort
-   * @oaram aFolderIndex
-   *        index of the folder to sort
    * @returns nsITransaction object
    */
-  nsITransaction sortFolderByName(in long long aFolderId,
-                                  in long long aFolderIndex);
+  nsITransaction sortFolderByName(in long long aFolderId);
 
   /**
    * Transaction for tagging a URL with the given set of tags. Current tags set
