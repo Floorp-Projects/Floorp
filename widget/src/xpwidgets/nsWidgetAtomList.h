@@ -94,12 +94,12 @@ WIDGET_ATOM(menuFrame, "MenuFrame")
 WIDGET_ATOM(minpos, "minpos")
 WIDGET_ATOM(mode, "mode")
 WIDGET_ATOM(modifiers, "modifiers") // The modifiers attribute
-WIDGET_ATOM(mozinputchecked, "_moz-input-checked")
 WIDGET_ATOM(mozmenuactive, "_moz-menuactive")
 WIDGET_ATOM(name, "name")
 WIDGET_ATOM(onAppCommand, "onAppCommand")
 WIDGET_ATOM(open, "open") // Whether or not a menu, tree, etc. is open
 WIDGET_ATOM(orient, "orient")
+WIDGET_ATOM(parentfocused, "parentfocused")
 WIDGET_ATOM(radio, "radio")
 WIDGET_ATOM(readonly, "readonly")
 WIDGET_ATOM(Reload, "Reload")

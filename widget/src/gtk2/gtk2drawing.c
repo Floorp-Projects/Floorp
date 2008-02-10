@@ -1200,7 +1200,9 @@ moz_gtk_entry_paint(GdkDrawable* drawable, GdkRectangle* rect,
                     GdkRectangle* cliprect, GtkWidgetState* state,
                     GtkWidget* widget, GtkTextDirection direction)
 {
-    gint x, y, width = rect->width, height = rect->height;
+    GtkStateType bg_state = state->disabled ?
+                                GTK_STATE_INSENSITIVE : GTK_STATE_NORMAL;
+    gint x, y, bg_width, width = rect->width, height = rect->height;
     GtkStyle* style;
     gboolean interior_focus;
     gint focus_width;
@@ -1212,14 +1214,21 @@ moz_gtk_entry_paint(GdkDrawable* drawable, GdkRectangle* rect,
     /* paint the background first */
     x = XTHICKNESS(style);
     y = YTHICKNESS(style);
+    bg_width = rect->width - 2*x;
+
+    if (GTK_IS_COMBO_BOX_ENTRY(widget->parent)) {
+        bg_width += x;
+        if (direction == GTK_TEXT_DIR_RTL)
+            x = 0;
+    }
 
     /* This gets us a lovely greyish disabledish look */
     gtk_widget_set_sensitive(widget, !state->disabled);
 
     TSOffsetStyleGCs(style, rect->x + x, rect->y + y);
-    gtk_paint_flat_box(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_NONE,
+    gtk_paint_flat_box(style, drawable, bg_state, GTK_SHADOW_NONE,
                        cliprect, widget, "entry_bg",  rect->x + x,
-                       rect->y + y, rect->width - 2*x, rect->height - 2*y);
+                       rect->y + y, bg_width, rect->height - 2*y);
 
     gtk_widget_style_get(widget,
                          "interior-focus", &interior_focus,
@@ -1502,9 +1511,9 @@ moz_gtk_downarrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
 static gint
 moz_gtk_dropdown_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
                              GdkRectangle* cliprect, GtkWidgetState* state,
-                             GtkTextDirection direction)
+                             gboolean input_focus, GtkTextDirection direction)
 {
-    static gfloat arrow_scaling = 0.7;
+    const gfloat arrow_scaling = 0.7;
     gint real_arrow_padding;
     GdkRectangle arrow_rect, real_arrow_rect;
     GtkStateType state_type = ConvertGtkState(state);
@@ -1512,10 +1521,20 @@ moz_gtk_dropdown_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
     GtkStyle* style;
 
     ensure_arrow_widget();
+    ensure_dropdown_entry_widget();
     gtk_widget_set_direction(gDropdownButtonWidget, direction);
+
+    if (input_focus) {
+        /* Some themes draw a complementary focus ring for the dropdown button
+         * when the dropdown entry has focus */
+        GTK_WIDGET_SET_FLAGS(gDropdownEntryWidget, GTK_HAS_FOCUS);
+    }
 
     moz_gtk_button_paint(drawable, rect, cliprect, state, GTK_RELIEF_NORMAL,
                          gDropdownButtonWidget, direction);
+
+    if (input_focus)
+        GTK_WIDGET_UNSET_FLAGS(gDropdownEntryWidget, GTK_HAS_FOCUS);
 
     /* This mirrors gtkbutton's child positioning */
     style = gDropdownButtonWidget->style;
@@ -2690,7 +2709,7 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
         break;
     case MOZ_GTK_DROPDOWN_ARROW:
         return moz_gtk_dropdown_arrow_paint(drawable, rect, cliprect, state,
-                                            direction);
+                                            flags, direction);
         break;
     case MOZ_GTK_DROPDOWN_ENTRY:
         ensure_dropdown_entry_widget();
