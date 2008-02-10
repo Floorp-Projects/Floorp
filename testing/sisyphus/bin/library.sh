@@ -269,15 +269,15 @@ if [[ -z "$LIBRARYSH" ]]; then
     MOZ_BYPASS_PROFILE_AT_STARTUP=1
 
     # ah crap handler timeout
-    MOZ_GDB_SLEEP=10
+    MOZ_GDB_SLEEP={$MOZ_GDB_SLEEP:-10}
 
     # no dialogs on asserts
     XPCOM_DEBUG_BREAK=${XPCOM_DEBUG_BREAK:-warn}
 
     # no airbag
     unset MOZ_AIRBAG
-    MOZ_CRASHREPORTER_DISABLE=1
-    MOZ_CRASHREPORTER_NO_REPORT=1
+    MOZ_CRASHREPORTER_DISABLE=${MOZ_CRASHREPORTER_DISABLE:-1}
+    MOZ_CRASHREPORTER_NO_REPORT=${MOZ_CRASHREPORTER_NO_REPORT:-1}
 
     #leak gauge
     #NSPR_LOG_MODULES=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5
