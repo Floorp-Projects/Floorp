@@ -170,13 +170,16 @@
               if (uri && !uri.schemeIs("javascript") && !uri.schemeIs("data"))
                  val = uri.spec;
 
-              if (aCommand == "cmd_cut")
+              if (aCommand == "cmd_cut" && this.isCommandEnabled(aCommand)) {
                 urlbar.value = "";
+                SetPageProxyState("invalid");
+              }
             } else {
               val = urlbar.value.substring(start, end);
-              if (aCommand == "cmd_cut") {
+              if (aCommand == "cmd_cut" && this.isCommandEnabled(aCommand)) {
                 urlbar.value = urlbar.value.substring(0, start) + urlbar.value.substring(end);
                 urlbar.selectionStart = urlbar.selectionEnd = start;
+                SetPageProxyState("invalid");
               }
             }
             Cc["@mozilla.org/widget/clipboardhelper;1"]
@@ -192,7 +195,9 @@
             return false;
           },
           isCommandEnabled: function(aCommand) {
-            return this.supportsCommand(aCommand) && this.urlbar.selectionStart < this.urlbar.selectionEnd;
+            return this.supportsCommand(aCommand) &&
+                   (aCommand != "cmd_cut" || !this.urlbar.readOnly) &&
+                   this.urlbar.selectionStart < this.urlbar.selectionEnd;
           },
           onEvent: function(aEventName) {}
         })
