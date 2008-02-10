@@ -352,6 +352,12 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
           // we must not highlight buttons with open drop down menus on hover.
           aState->inHover = aState->inHover && !menuOpen;
         }
+
+        // When the input field of the drop down button has focus, some themes
+        // should draw focus for the drop down button as well.
+        if (aWidgetType == NS_THEME_DROPDOWN_BUTTON && aWidgetFlags) {
+          *aWidgetFlags = CheckBooleanAttr(aFrame, nsWidgetAtoms::parentfocused);
+        }
       }
     }
   }
@@ -1174,7 +1180,8 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
         aAttribute == nsWidgetAtoms::readonly ||
         aAttribute == nsWidgetAtoms::_default ||
         aAttribute == nsWidgetAtoms::mozmenuactive ||
-        aAttribute == nsWidgetAtoms::open)
+        aAttribute == nsWidgetAtoms::open ||
+        aAttribute == nsWidgetAtoms::parentfocused)
       *aShouldRepaint = PR_TRUE;
   }
 
