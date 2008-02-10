@@ -64,8 +64,6 @@ html|*.numberbox-input {
   -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
   padding: 3px;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
 }
 
 textbox[hidespinbuttons="true"] > .numberbox-input-box {

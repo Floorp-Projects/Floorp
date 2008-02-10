@@ -14,7 +14,7 @@
     </resources>
 
     <content>
-      <xul:hbox class="textbox-input-box numberbox-input-box" flex="1" xbl:inherits="context">
+      <xul:hbox class="textbox-input-box numberbox-input-box" flex="1" xbl:inherits="context,disabled">
         <html:input class="numberbox-input textbox-input" flex="1" anonid="input"
                     xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,tabindex,accesskey"/>
       </xul:hbox>
