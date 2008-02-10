@@ -2676,8 +2676,10 @@ nsNavHistory::ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries
         ", f.url, null, null "
       "FROM moz_places h "
       "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id WHERE "
-      "h.id IN (SELECT id FROM moz_places WHERE hidden <> 1 "
-      " ORDER BY visit_count DESC LIMIT ");
+      "h.id IN (SELECT p.id FROM moz_places p WHERE p.hidden <> 1 "
+      " AND EXISTS (SELECT id FROM moz_historyvisits WHERE "
+      " place_id = p.id AND visit_type NOT IN(0,4) LIMIT 1) "
+      " ORDER BY p.visit_count DESC LIMIT ");
     queryString.AppendInt(aOptions->MaxResults());
     queryString += NS_LITERAL_CSTRING(") ORDER BY h.visit_count DESC");
     return NS_OK;
