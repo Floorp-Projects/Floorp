@@ -73,8 +73,8 @@
 <button 
   id        = "ChooseFile" 
   oncommand = "chooseFile()"
-  label     = "&chooseButton.label;"
-  accesskey = "&chooseFile.accessKey;"/>
+  label     = "&chooseFileButton.label;"
+  accesskey = "&chooseFileButton.accessKey;"/>
 
 <checkbox
   id        = "MakeRelativeCheckbox"
@@ -102,7 +102,7 @@
               oncommand="MakeInputValueRelativeOrAbsolute(this);"
               tooltiptext="&makeUrlRelative.tooltip;"/>
     <spacer flex="1"/>
-    <button label="&chooseButton.label;" accesskey="&chooseFileLink.accessKey;" oncommand="chooseLinkFile();"/>
+    <button label="&chooseFileLinkButton.label;" accesskey="&chooseFileLinkButton.accessKey;" oncommand="chooseLinkFile();"/>
   </hbox>
 </vbox>  
 
