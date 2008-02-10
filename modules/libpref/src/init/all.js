@@ -882,25 +882,6 @@ pref("mousewheel.withmetakey.action",0);
 pref("mousewheel.withmetakey.numlines",1);
 pref("mousewheel.withmetakey.sysnumlines",true);
 
-// on platforms where scroll messages differ between horizontal scroll
-// and back/forward button events we can activate them by default
-#ifdef XP_WIN
-#define HORIZSCROLL_AVAILABLE
-#endif
-#ifdef XP_MACOSX
-#define HORIZSCROLL_AVAILABLE
-// The Mac does interesting things with horizontal scrolling.  If a
-// scroll event comes from a pointing device with a scroll wheel for
-// the vertical axis, and the user is holding the shift key, the event
-// comes through as a horizontal scroll event with the shift key
-// (mousewheel.horizscroll.withshiftkey) and not mousewheel.withshiftkey.
-// These events should map to horizontal scroll to maintain platform
-// UI consistency.
-#endif
-#ifdef XP_OS2
-#define HORIZSCROLL_AVAILABLE
-#endif
-#ifdef HORIZSCROLL_AVAILABLE
 // activate horizontal scrolling by default
 pref("mousewheel.horizscroll.withnokey.action",0);
 pref("mousewheel.horizscroll.withnokey.numlines",1);
@@ -917,25 +898,6 @@ pref("mousewheel.horizscroll.withaltkey.sysnumlines",false);
 pref("mousewheel.horizscroll.withmetakey.action",0);
 pref("mousewheel.horizscroll.withmetakey.numlines",1);
 pref("mousewheel.horizscroll.withmetakey.sysnumlines",true);
-#endif
-#ifndef HORIZSCROLL_AVAILABLE
-// disable horizontal scrolling to be able to use back/forward buttons
-pref("mousewheel.horizscroll.withnokey.action",2);
-pref("mousewheel.horizscroll.withnokey.numlines",-1);
-pref("mousewheel.horizscroll.withnokey.sysnumlines",false);
-pref("mousewheel.horizscroll.withcontrolkey.action",2);
-pref("mousewheel.horizscroll.withcontrolkey.numlines",-1);
-pref("mousewheel.horizscroll.withcontrolkey.sysnumlines",false);
-pref("mousewheel.horizscroll.withshiftkey.action",2);
-pref("mousewheel.horizscroll.withshiftkey.numlines",-1);
-pref("mousewheel.horizscroll.withshiftkey.sysnumlines",false);
-pref("mousewheel.horizscroll.withaltkey.action",2);
-pref("mousewheel.horizscroll.withaltkey.numlines",-1);
-pref("mousewheel.horizscroll.withaltkey.sysnumlines",false);
-pref("mousewheel.horizscroll.withmetakey.action",2);
-pref("mousewheel.horizscroll.withmetakey.numlines",-1);
-pref("mousewheel.horizscroll.withmetakey.sysnumlines",false);
-#endif
 
 pref("profile.confirm_automigration",true);
 // profile.migration_behavior determines how the profiles root is set
