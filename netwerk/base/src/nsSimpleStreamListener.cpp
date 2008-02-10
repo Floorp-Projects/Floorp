@@ -66,10 +66,8 @@ nsSimpleStreamListener::OnStopRequest(nsIRequest* request,
                                       nsISupports *aContext,
                                       nsresult aStatus)
 {
-    if (!mObserver)
-        return mSink->Close();
-
-    return mObserver->OnStopRequest(request, aContext, aStatus);
+    return mObserver ?
+        mObserver->OnStopRequest(request, aContext, aStatus) : NS_OK;
 }
 
 //
