@@ -254,21 +254,21 @@ nsRange::CharacterDataChanged(nsIDocument* aDocument,
 {
   NS_ASSERTION(mIsPositioned, "shouldn't be notified if not positioned");
 
-  // If the changed node contains our start boundry and the change starts
-  // before the boundry we'll need to adjust the offset.
+  // If the changed node contains our start boundary and the change starts
+  // before the boundary we'll need to adjust the offset.
   if (aContent == mStartParent &&
       aInfo->mChangeStart < (PRUint32)mStartOffset) {
-    // If boundry is inside changed text, position it before change
+    // If boundary is inside changed text, position it before change
     // else adjust start offset for the change in length
-    mStartOffset = (PRUint32)mStartOffset < aInfo->mChangeEnd ?
+    mStartOffset = (PRUint32)mStartOffset <= aInfo->mChangeEnd ?
        aInfo->mChangeStart :
        mStartOffset + aInfo->mChangeStart - aInfo->mChangeEnd +
          aInfo->mReplaceLength;
   }
 
-  // Do same thing for end boundry.
+  // Do the same thing for the end boundary.
   if (aContent == mEndParent && aInfo->mChangeStart < (PRUint32)mEndOffset) {
-    mEndOffset = (PRUint32)mEndOffset < aInfo->mChangeEnd ?
+    mEndOffset = (PRUint32)mEndOffset <= aInfo->mChangeEnd ?
        aInfo->mChangeStart :
        mEndOffset + aInfo->mChangeStart - aInfo->mChangeEnd +
          aInfo->mReplaceLength;
