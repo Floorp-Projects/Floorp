@@ -55,7 +55,7 @@ interface nsIFileView : nsISupports
 
   void sort(in short sortType, in boolean reverseSort);
   void setDirectory(in nsIFile directory);
-  void setFilter(in wstring filterString);
+  void setFilter(in AString filterString);
 
   readonly attribute nsIArray selectedFiles;
 };
