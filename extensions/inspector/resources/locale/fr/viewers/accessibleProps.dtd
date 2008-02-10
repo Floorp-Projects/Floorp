@@ -42,3 +42,4 @@
 <!ENTITY descValue.label "Valeur :">
 <!ENTITY descState.label "État :">
 <!ENTITY descActionName.label "Nom de l'action :">
+<!ENTITY descBounds.label "Liaisons :">
