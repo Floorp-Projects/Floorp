@@ -225,6 +225,7 @@ public:
   nscoord mY;
 
   // The available space within the current band.
+  // (relative to the *content*-rect of the block)
   nsRect mAvailSpaceRect;
 
   // The combined area of all floats placed so far

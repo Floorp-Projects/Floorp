@@ -341,7 +341,6 @@ ol {
 
 li {
   display: list-item;
-  -moz-float-edge: margin-box;
 }
 
 /* nested lists have no top/bottom margins */
