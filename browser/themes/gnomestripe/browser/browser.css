@@ -772,6 +772,10 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   cursor: -moz-grab;
 }
 
+#wrapper-urlbar-container #urlbar > .autocomplete-textbox-container {
+  -moz-appearance: textfield;
+}
+
 #wrapper-urlbar-container #urlbar > .autocomplete-history-dropmarker {
   display: none;
 }
@@ -949,6 +953,11 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 #urlbar[chromedir="rtl"] > .autocomplete-textbox-container > #autocomplete-security-wrapper {
   margin-right: 0px;
   margin-left: -3px;
+}
+
+#wrapper-urlbar-container #urlbar >
+.autocomplete-textbox-container > #autocomplete-security-wrapper {
+  margin: 0px;
 }
 
 /* Feed icon */
