@@ -232,7 +232,7 @@ while ($file = shift @ARGV)
             {
                 dbg "Begin loading $tmp_test_id";
 
-                die "FATAL ERROR: Spider Begin loading: previous test not completed: test: $test_id, current test: $tmp_test_id, test state: $test_state" 
+                die "FATAL ERROR: Spider Begin loading: previous test not completed: test: $test_id, current test: $tmp_test_id, test state: $test_state, log: $file" 
                     if ("started program, loading list, finished test, exited program" !~ /$test_state/);
 
                 $test_state  = 'loading test';
@@ -247,10 +247,10 @@ while ($file = shift @ARGV)
             {
                 dbg "Begin Test: test: $test_id, current test: $tmp_test_id";
 
-                die "FATAL ERROR: JavaScript Begin Test: test mismatch: test $test_id, current test $tmp_test_id" 
+                die "FATAL ERROR: JavaScript Begin Test: test mismatch: test $test_id, current test $tmp_test_id, log: $file" 
                     if ($test_id ne $tmp_test_id);
 
-                die "FATAL ERROR: JavaScript Begin Test: test not loaded: test $test_id, current test $tmp_test_id, test state: $test_state" 
+                die "FATAL ERROR: JavaScript Begin Test: test not loaded: test $test_id, current test $tmp_test_id, test state: $test_state, log: $file" 
                     if ("loading test" !~ /$test_state/);
 
                 $test_state = 'running test';
@@ -260,7 +260,7 @@ while ($file = shift @ARGV)
                 dbg "processing jstest";
 
                 # may be in 'completed test' for delayed browser only tests.
-                die "FATAL ERROR: jstest not in test: test state: $test_state: $_" 
+                die "FATAL ERROR: jstest not in test: test state: $test_state: $_, log: $file" 
                     if ('running test, reporting test, completed test' !~ /$test_state/);
 
                 $test_state         = 'reporting test';
@@ -284,10 +284,10 @@ while ($file = shift @ARGV)
                     dbg "test_description: $test_description";
                 }
 
-                die "FATAL ERROR: jstest test id mismatch: start test_id: $test_id, current test_id: $tmp_test_id, test state: $test_state" 
+                die "FATAL ERROR: jstest test id mismatch: start test_id: $test_id, current test_id: $tmp_test_id, test state: $test_state, log: $file" 
                     if ($test_id ne $tmp_test_id);
 
-                die "FATAL ERROR: jstest test type mismatch: start test_type: $test_type, current test_type: $tmp_test_type, test state: $test_state" 
+                die "FATAL ERROR: jstest test type mismatch: start test_type: $test_type, current test_type: $tmp_test_type, test state: $test_state, log: $file" 
                     if ($test_type ne $tmp_test_type);
 
                 outputrecord;
@@ -296,12 +296,12 @@ while ($file = shift @ARGV)
             {
                 dbg "Processing PAGE STATUS: test_state: $test_state, page_flag: $page_flag, page_status: $page_status";
 
-                die "FATAL ERROR: Test loaded but not in a test: $test_state: $_" 
+                die "FATAL ERROR: Test loaded but not in a test: $test_state: $_, log: $file" 
                     if ('loading test, running test, reporting test' !~ /$test_state/);
                     
                 ($tmp_test_id) = $page_flag =~ /http.*test=([^;]*);/;
 
-                die "FATAL ERROR: Test loaded does not match currently running test: test: $test_id, current test: $tmp_test_id"
+                die "FATAL ERROR: Test loaded does not match currently running test: test: $test_id, current test: $tmp_test_id, log: $file"
                     if ($test_id ne $tmp_test_id);
 
                 if ($page_status =~ /^NORMAL/)
@@ -326,7 +326,7 @@ while ($file = shift @ARGV)
                 }
                 else
                 {
-                    die "FATAL ERROR: Invalid Page Status: $page_status";
+                    die "FATAL ERROR: Invalid Page Status: $page_status, log: $file";
                 }
 
                 $test_state = 'completed test';
@@ -337,10 +337,10 @@ while ($file = shift @ARGV)
             {
                 dbg "End test test_id: $test_id, tmp_test_id: $tmp_test_id";
 
-                die "FATAL ERROR: JavaScript End Test: test mismatch: test $test_id, current test $tmp_test_id" 
+                die "FATAL ERROR: JavaScript End Test: test mismatch: test $test_id, current test $tmp_test_id, log: $file" 
                     if ($test_id ne $tmp_test_id);
     
-                die "FATAL ERROR: JavaScript End Test: not in a test: test $test_id, current test $tmp_test_id, test state: $test_state" 
+                die "FATAL ERROR: JavaScript End Test: not in a test: test $test_id, current test $tmp_test_id, test state: $test_state, log: $file" 
                     if ('reporting test, completed test' !~ /$test_state/);
 
                 if ($page_status && $page_status =~ /^NORMAL/)
@@ -385,10 +385,10 @@ while ($file = shift @ARGV)
                 {
                     dbg "Program exited normally";
                     
-                    die "FATAL ERROR: Program exited normally without running tests: test state: $test_state, $_"
+                    die "FATAL ERROR: Program exited normally without running tests: test state: $test_state, $_, log: $file"
                         if ('started program, loading list' =~ /$test_state/);
 
-                    die "FATAL ERROR: Program exited normally without finishing last test: test state: $test_state, $_"
+                    die "FATAL ERROR: Program exited normally without finishing last test: test state: $test_state, $_, log: $file"
                         if ($test_state ne 'finished test');
                 }
                 else
