@@ -514,31 +514,3 @@ JS_DumpArenaStats(FILE *fp)
     }
 }
 #endif /* JS_ARENAMETER */
-
-#ifdef DEBUG
-
-JSBool
-js_GuardedArenaMark(JSArenaPool *pool, void *mark, void *guardMark)
-{
-    JSArena *a;
-
-    a = pool->current;
-    if (JS_ARENA_MARK_MATCH(a, mark)) {
-        return !JS_ARENA_MARK_MATCH(a, guardMark) ||
-               (uint8 *)guardMark <= (uint8 *)mark;
-    }
-
-    for (a = &pool->first; !JS_ARENA_MARK_MATCH(a, guardMark); a = a->next) {
-        if (JS_ARENA_MARK_MATCH(a, mark))
-            return JS_FALSE;
-    }
-
-    /*
-     * We found the guarded arena. Mark follows the guard when it either marks
-     * arenas after a or if it is greater or equal to the guard.
-     */
-    return !JS_ARENA_MARK_MATCH(a, mark) ||
-           (uint8 *)guardMark <= (uint8 *)mark;
-}
-
-#endif
