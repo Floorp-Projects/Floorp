@@ -18,3 +18,7 @@ include pngsuite-oddsizes/reftest.list
 include pngsuite-palettes/reftest.list
 include pngsuite-transparency/reftest.list
 include pngsuite-zlib/reftest.list
+
+
+include generic/reftest.list
+
