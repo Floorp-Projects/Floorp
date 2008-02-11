@@ -2391,6 +2391,12 @@ nsNavHistoryQueryResultNode::Refresh()
   if (mBatchInProgress)
     return NS_OK;
 
+  // This is not a root node but it does not have a parent - this means that 
+  // the node has already been cleared and it is now called, because it was 
+  // left in a local copy of the observers array.
+  if (mIndentLevel > -1 && !mParent)
+    return NS_OK;
+
   if (! mExpanded) {
     // when we are not expanded, we don't update, just invalidate and unhook
     ClearChildren(PR_TRUE);
