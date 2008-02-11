@@ -163,7 +163,7 @@ while ($file = shift @ARGV)
                 {
                     if ($actual_exit > 3 || $actual_signal > 0)
                     {
-                        $test_description =~ s/ *expected: Expected exit 0 actual: Actual exit ([0-9]*), signal ([0-9]*) /EXIT STATUS: CRASHED $actual_exit signal $actual_signal, /;
+                        $test_description =~ s/ *expected: Expected exit [03] actual: Actual exit ([0-9]*), signal ([0-9]*) /EXIT STATUS: CRASHED $actual_exit signal $actual_signal, /;
                     }
                 }
                 elsif ($test_result eq "FAILED TIMED OUT")
@@ -284,13 +284,24 @@ while ($file = shift @ARGV)
                     dbg "test_description: $test_description";
                 }
 
-                die "FATAL ERROR: jstest test id mismatch: start test_id: $test_id, current test_id: $tmp_test_id, test state: $test_state, log: $file" 
-                    if ($test_id ne $tmp_test_id);
-
                 die "FATAL ERROR: jstest test type mismatch: start test_type: $test_type, current test_type: $tmp_test_type, test state: $test_state, log: $file" 
                     if ($test_type ne $tmp_test_type);
 
-                outputrecord;
+                if ($test_id ne $tmp_test_id)
+                {
+                    # a previous test delayed its output either due to buffering or another reason
+                    # recover by temporarily setting the test id to the previous test and outputing 
+                    # the record.
+                    warn "WARNING: jstest test id mismatch: start test_id: $test_id, current test_id: $tmp_test_id, test state: $test_state, log: $file";
+                    my $save_test_id = $test_id;
+                    $test_id = $tmp_test_id;
+                    outputrecord;
+                    $test_id = $save_test_id;
+                }
+                else
+                {
+                    outputrecord;
+                }
             }
             elsif ( $test_state ne 'loading list' && (($page_flag, $page_status) = $_ =~ /(http:[^:]*): PAGE STATUS: (.*)/) )
             {
