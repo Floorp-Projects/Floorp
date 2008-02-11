@@ -206,12 +206,9 @@ js_NewParsedObjectBox(JSContext *cx, JSParseContext *pc, JSObject *obj)
 
     /*
      * We use JSContext.tempPool to allocate parsed objects and place them on
-     * a list in JSTokenStream to ensure GC safety. Thus the tempPool area
-     * containing the entries must be alive until we done with scanning,
+     * a list in JSTokenStream to ensure GC safety. Thus the tempPool arenas
+     * containing the entries must be alive until we are done with scanning,
      * parsing and code generation for the whole script or top-level function.
-     * To assert that we update debug-only lastAllocMark each time we allocate
-     * and then check is jsemit.c that the code generator never releases the
-     * alive structures when it calls JS_ARENA_RELEASE(cx->&tempPool).
      */
     JS_ASSERT(obj);
     JS_ARENA_ALLOCATE_TYPE(pob, JSParsedObjectBox, &cx->tempPool);
@@ -219,9 +216,6 @@ js_NewParsedObjectBox(JSContext *cx, JSParseContext *pc, JSObject *obj)
         js_ReportOutOfScriptQuota(cx);
         return NULL;
     }
-#ifdef DEBUG
-    pc->lastAllocMark = JS_ARENA_MARK(&cx->tempPool);
-#endif
     pob->traceLink = pc->traceListHead;
     pob->emitLink = NULL;
     pob->object = obj;
@@ -272,9 +266,6 @@ NewOrRecycledNode(JSContext *cx, JSTreeContext *tc)
         JS_ARENA_ALLOCATE_TYPE(pn, JSParseNode, &cx->tempPool);
         if (!pn)
             js_ReportOutOfScriptQuota(cx);
-#ifdef DEBUG
-        tc->parseContext->lastAllocMark = JS_ARENA_MARK(&cx->tempPool);
-#endif
     } else {
         tc->parseContext->nodeList = pn->pn_next;
 

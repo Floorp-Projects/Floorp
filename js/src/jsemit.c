@@ -3999,8 +3999,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 
         /* Generate code for the function's body. */
-        cg2mark = JS_ARENA_MARK(&cx->tempPool);
-        JS_ARENA_ALLOCATE_TYPE(cg2, JSCodeGenerator, &cx->tempPool);
+        cg2mark = JS_ARENA_MARK(cg->codePool);
+        JS_ARENA_ALLOCATE_TYPE(cg2, JSCodeGenerator, cg->codePool);
         if (!cg2) {
             js_ReportOutOfScriptQuota(cx);
             return JS_FALSE;
@@ -4025,10 +4025,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             }
         }
         js_FinishCodeGenerator(cx, cg2);
-        JS_ASSERT(js_GuardedArenaMark(&cx->tempPool, cg2mark,
-                                      cg->treeContext.
-                                      parseContext->lastAllocMark));
-        JS_ARENA_RELEASE(&cx->tempPool, cg2mark);
+        JS_ARENA_RELEASE(cg->codePool, cg2mark);
+        cg2 = NULL;
         if (!pn)
             return JS_FALSE;
 
