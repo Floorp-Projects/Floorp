@@ -2824,28 +2824,9 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
     }
 }
 
-/* JSVAL_INT_MAX as a string */
-#define JSVAL_INT_MAX_STRING "1073741823"
-
-#define CHECK_FOR_STRING_INDEX(id)                                            \
-    JS_BEGIN_MACRO                                                            \
-        if (JSID_IS_ATOM(id)) {                                               \
-            JSAtom *atom_ = JSID_TO_ATOM(id);                                 \
-            JSString *str_ = ATOM_TO_STRING(atom_);                           \
-            const jschar *cp_ = JSFLATSTR_CHARS(str_);                        \
-            JSBool negative_ = (*cp_ == '-');                                 \
-            if (negative_) cp_++;                                             \
-            if (JS7_ISDEC(*cp_)) {                                            \
-                size_t n_ = JSFLATSTR_LENGTH(str_) - negative_;               \
-                if (n_ <= sizeof(JSVAL_INT_MAX_STRING) - 1)                   \
-                    id = CheckForStringIndex(id, cp_, cp_ + n_, negative_);   \
-            }                                                                 \
-        }                                                                     \
-    JS_END_MACRO
-
-static jsid
-CheckForStringIndex(jsid id, const jschar *cp, const jschar *end,
-                    JSBool negative)
+jsid
+js_CheckForStringIndex(jsid id, const jschar *cp, const jschar *end,
+                       JSBool negative)
 {
     jsuint index = JS7_UNDEC(*cp++);
     jsuint oldIndex = 0;
