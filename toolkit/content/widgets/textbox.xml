@@ -125,7 +125,9 @@
       </method>
 
       <property name="controllers"    readonly="true" onget="return this.inputField.controllers"/>
-      <property name="textLength"     readonly="true" onget="return this.inputField.textLength;"/>
+      <property name="textLength"     readonly="true"
+                                      onget="return this.hasAttribute('empty') ?
+                                                    0 : this.inputField.textLength;"/>
       <property name="selectionStart" onset="this.inputField.selectionStart = val; return val;"
                                       onget="return this.inputField.selectionStart;"/>
       <property name="selectionEnd"   onset="this.inputField.selectionEnd = val; return val;"
