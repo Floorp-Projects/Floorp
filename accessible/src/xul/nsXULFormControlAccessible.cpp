@@ -796,10 +796,10 @@ already_AddRefed<nsIDOMNode> nsXULTextFieldAccessible::GetInputField()
 NS_IMETHODIMP
 nsXULTextFieldAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
-
   nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   nsCOMPtr<nsIDOMNode> inputField = GetInputField();
   NS_ENSURE_TRUE(inputField, NS_ERROR_FAILURE);
