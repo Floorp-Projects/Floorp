@@ -33,9 +33,9 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == linearGradient-basic-01.svg pass.svg
 == linearGradient-basic-02.svg pass.svg
 == nested-viewBox-01.svg pass.svg
-== objectBoundingBox-and-pattern-01a.svg objectBoundingBox-and-pattern-ref-01.svg
-== objectBoundingBox-and-pattern-01b.svg objectBoundingBox-and-pattern-ref-01.svg
-== objectBoundingBox-and-pattern-01c.svg objectBoundingBox-and-pattern-ref-01.svg
+== objectBoundingBox-and-pattern-01a.svg objectBoundingBox-and-pattern-01-ref.svg
+== objectBoundingBox-and-pattern-01b.svg objectBoundingBox-and-pattern-01-ref.svg
+== objectBoundingBox-and-pattern-01c.svg objectBoundingBox-and-pattern-01-ref.svg
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == opacity-and-gradient-01.svg pass.svg # bug 379610
 == opacity-and-pattern-01.svg pass.svg
 == pseudo-classes-01.svg pass.svg
