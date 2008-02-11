@@ -106,6 +106,8 @@ nsHTMLCheckboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   nsresult rv = nsFormControlAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   *aState |= nsIAccessibleStates::STATE_CHECKABLE;
 
@@ -133,6 +135,8 @@ nsHTMLRadioButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   nsresult rv = nsAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   *aState |= nsIAccessibleStates::STATE_CHECKABLE;
   
@@ -249,11 +253,13 @@ NS_IMETHODIMP nsHTMLButtonAccessible::DoAction(PRUint8 index)
 NS_IMETHODIMP
 nsHTMLButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
-
   nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
+  NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
 
   nsAutoString buttonType;
   element->GetAttribute(NS_LITERAL_STRING("type"), buttonType);
@@ -350,11 +356,13 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetRole(PRUint32 *_retval)
 NS_IMETHODIMP
 nsHTML4ButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);  // Button accessible shut down
-
   nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
+  NS_ASSERTION(element, "No element for button's dom node!");
 
   *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
 
@@ -432,6 +440,8 @@ nsHTMLTextFieldAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   // can be focusable, focused, protected. readonly, unavailable, selected
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
