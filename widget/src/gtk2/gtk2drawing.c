@@ -1213,7 +1213,7 @@ moz_gtk_entry_paint(GdkDrawable* drawable, GdkRectangle* rect,
 {
     GtkStateType bg_state = state->disabled ?
                                 GTK_STATE_INSENSITIVE : GTK_STATE_NORMAL;
-    gint x, y, bg_width, width = rect->width, height = rect->height;
+    gint x, y, width = rect->width, height = rect->height;
     GtkStyle* style;
     gboolean interior_focus;
     gint focus_width;
@@ -1222,46 +1222,48 @@ moz_gtk_entry_paint(GdkDrawable* drawable, GdkRectangle* rect,
 
     style = widget->style;
 
-    /* paint the background first */
-    x = XTHICKNESS(style);
-    y = YTHICKNESS(style);
-    bg_width = rect->width - 2*x;
-
-    if (GTK_IS_COMBO_BOX_ENTRY(widget->parent)) {
-        bg_width += x;
-        if (direction == GTK_TEXT_DIR_RTL)
-            x = 0;
-    }
-
-    /* This gets us a lovely greyish disabledish look */
-    gtk_widget_set_sensitive(widget, !state->disabled);
-
-    TSOffsetStyleGCs(style, rect->x + x, rect->y + y);
-    gtk_paint_flat_box(style, drawable, bg_state, GTK_SHADOW_NONE,
-                       cliprect, widget, "entry_bg",  rect->x + x,
-                       rect->y + y, bg_width, rect->height - 2*y);
-
     gtk_widget_style_get(widget,
                          "interior-focus", &interior_focus,
                          "focus-line-width", &focus_width,
                          NULL);
 
-    /*
-     * Now paint the shadow and focus border.
-     *
-     * gtk+ is able to draw over top of the entry when it gains focus,
-     * so the non-focused text border is implicitly already drawn when
-     * the entry is drawn in a focused state.
-     *
-     * Gecko doesn't quite work this way, so always draw the non-focused
-     * shadow, then draw the shadow again, inset, if we're focused.
-     */
+    /* gtkentry.c uses two windows, one for the entire widget and one for the
+     * text area inside it. The background of both windows is set to the "base"
+     * color of the new state in gtk_entry_state_changed, but only the inner
+     * textarea window uses gtk_paint_flat_box when exposed */
 
+    TSOffsetStyleGCs(style, rect->x, rect->y);
+
+    /* This gets us a lovely greyish disabledish look */
+    gtk_widget_set_sensitive(widget, !state->disabled);
+
+    /* Draw the default window background */
+    gdk_draw_rectangle(drawable, style->base_gc[bg_state], TRUE,
+                       rect->x, rect->y, rect->width, rect->height);
+
+    /* Get the position of the inner window, see _gtk_entry_get_borders */
+    x = XTHICKNESS(style);
+    y = YTHICKNESS(style);
+
+    if (!interior_focus) {
+        x += focus_width;
+        y += focus_width;
+    }
+
+    /* Simulate an expose of the inner window */
+    gtk_paint_flat_box(style, drawable, bg_state, GTK_SHADOW_NONE,
+                       cliprect, widget, "entry_bg",  rect->x + x,
+                       rect->y + y, rect->width - 2*x, rect->height - 2*y);
+
+    /* Now paint the shadow and focus border.
+     * We do like in gtk_entry_draw_frame, we first draw the shadow, a tad
+     * smaller when focused if the focus is not interior, then the focus. */
     x = rect->x;
     y = rect->y;
 
     if (state->focused && !state->disabled) {
-         /* This will get us the lit borders that focused textboxes enjoy on some themes. */
+        /* This will get us the lit borders that focused textboxes enjoy on
+         * some themes. */
         GTK_WIDGET_SET_FLAGS(widget, GTK_HAS_FOCUS);
 
         if (!interior_focus) {
@@ -1274,19 +1276,18 @@ moz_gtk_entry_paint(GdkDrawable* drawable, GdkRectangle* rect,
         }
     }
 
-    TSOffsetStyleGCs(style, x, y);
     gtk_paint_shadow(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_IN,
                      cliprect, widget, "entry", x, y, width, height);
 
     if (state->focused && !state->disabled) {
         if (!interior_focus) {
-            TSOffsetStyleGCs(style, rect->x, rect->y);
             gtk_paint_focus(style, drawable,  GTK_STATE_NORMAL, cliprect,
                             widget, "entry",
                             rect->x, rect->y, rect->width, rect->height);
         }
 
-        /* Now unset the focus flag. We don't want other entries to look like they're focused too! */
+        /* Now unset the focus flag. We don't want other entries to look
+         * like they're focused too! */
         GTK_WIDGET_UNSET_FLAGS(widget, GTK_HAS_FOCUS);
     }
 
