@@ -65,6 +65,8 @@ _TEST_FILES	= \
 		test_postMessage_idn.xhtml \
 		postMessage_idn_helper.html \
 		test_postMessage_basehref.html \
+		test_postMessage_hash.html \
+		postMessage_hash.html \
 		$(NULL)
 
 _CHROME_FILES	= \
