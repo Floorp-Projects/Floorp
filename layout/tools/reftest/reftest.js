@@ -99,8 +99,10 @@ function OnRefTestLoad()
 
     try {
         ReadTopManifest(window.arguments[0]);
-        if (gServer)
+        if (gServer) {
+            gServer.registerContentType("sjs", "sjs");
             gServer.start(HTTP_SERVER_PORT);
+        }
         StartCurrentTest();
     } catch (ex) {
         //gBrowser.loadURI('data:text/plain,' + ex);
