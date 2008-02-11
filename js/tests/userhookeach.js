@@ -97,6 +97,23 @@ function userOnPageTimeout()
 {
   gPageStop = new Date();
   cdump(gSpider.mCurrentUrl.mUrl + ': PAGE STATUS: TIMED OUT (' + ((gPageStop - gPageStart)/1000).toFixed(0) + ' seconds)');
+  if (typeof gSpider.mDocument != 'undefined')
+  {
+    try
+    {
+      var win = gSpider.mDocument.defaultView;
+      if (win.wrappedJSObject)
+      {
+        win = win.wrappedJSObject;
+      }
+      gPageCompleted = win.gPageCompleted = true;
+      checkTestCompleted();
+    }
+    catch(ex)
+    {
+      cdump('userOnPageTimeout: ' + ex);
+    }
+  }
   cdump('JavaScriptTest: End Test ' + gCurrentTestId);
 }
 
