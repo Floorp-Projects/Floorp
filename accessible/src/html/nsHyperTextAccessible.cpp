@@ -343,6 +343,9 @@ nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset,
 
   PRInt32 startOffset = aStartOffset;
   PRInt32 endOffset = aEndOffset;
+  // XXX this prevents text interface usage on <input type="password">
+  // but work is needed on aria-secret (which may be removed)
+  PRBool isPassword = (Role(this) == nsIAccessibleRole::ROLE_PASSWORD_TEXT);
 
   // Clear out parameters and set up loop
   if (aText) {
@@ -433,9 +436,15 @@ nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset,
           aEndOffset = endOffset;
         }
         if (aText) {
-          nsCOMPtr<nsPIAccessible> pAcc(do_QueryInterface(accessible));
-          pAcc->AppendTextTo(*aText, startOffset,
-                             substringEndOffset - startOffset);
+          if (isPassword) {
+            for (PRInt32 count = startOffset; count < substringEndOffset; count ++)
+              *aText += '*'; // Show *'s only for password text
+          }
+          else {
+            nsCOMPtr<nsPIAccessible> pAcc(do_QueryInterface(accessible));
+            pAcc->AppendTextTo(*aText, startOffset,
+                               substringEndOffset - startOffset);
+          }
         }
         if (aBoundsRect) {    // Caller wants the bounds of the text
           aBoundsRect->UnionRect(*aBoundsRect,
