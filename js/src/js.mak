@@ -77,6 +77,7 @@ CLEAN :
 	-@erase "$(INTDIR)\jsgc.obj"
 	-@erase "$(INTDIR)\jshash.obj"
 	-@erase "$(INTDIR)\jsinterp.obj"
+	-@erase "$(INTDIR)\jsiter.obj"
 	-@erase "$(INTDIR)\jslock.obj"
 	-@erase "$(INTDIR)\jslog2.obj"
 	-@erase "$(INTDIR)\jslong.obj"
@@ -147,10 +148,10 @@ BSC32_FLAGS=/nologo /o"$(OUTDIR)/js.bsc"
 BSC32_SBRS= \
 	
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386 /out:"Release/js32.dll"
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winmm.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winmm.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386 /out:"Release/js32.dll"
 # SUBTRACT LINK32 /nodefaultlib
-LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
+LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winmm.lib winspool.lib comdlg32.lib\
  advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib\
  odbccp32.lib /nologo /subsystem:windows /dll /incremental:no\
  /pdb:"$(OUTDIR)/js32.pdb" /machine:I386 /out:"$(OUTDIR)/js32.dll"\
@@ -172,6 +173,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\jsgc.obj" \
 	"$(INTDIR)\jshash.obj" \
 	"$(INTDIR)\jsinterp.obj" \
+	"$(INTDIR)\jsiter.obj" \
 	"$(INTDIR)\jslock.obj" \
 	"$(INTDIR)\jslog2.obj" \
 	"$(INTDIR)\jslong.obj" \
@@ -231,6 +233,7 @@ CLEAN :
 	-@erase "$(INTDIR)\jsgc.obj"
 	-@erase "$(INTDIR)\jshash.obj"
 	-@erase "$(INTDIR)\jsinterp.obj"
+	-@erase "$(INTDIR)\jsiter.obj"
 	-@erase "$(INTDIR)\jslock.obj"
 	-@erase "$(INTDIR)\jslog2.obj"
 	-@erase "$(INTDIR)\jslong.obj"
@@ -303,10 +306,10 @@ BSC32_FLAGS=/nologo /o"$(OUTDIR)/js.bsc"
 BSC32_SBRS= \
 	
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /out:"Debug/js32.dll"
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winmm.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winmm.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /out:"Debug/js32.dll"
 # SUBTRACT LINK32 /nodefaultlib
-LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
+LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winmm.lib winspool.lib comdlg32.lib\
  advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib\
  odbccp32.lib /nologo /subsystem:windows /dll /incremental:yes\
  /pdb:"$(OUTDIR)/js32.pdb" /debug /machine:I386 /out:"$(OUTDIR)/js32.dll"\
@@ -328,6 +331,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\jsgc.obj" \
 	"$(INTDIR)\jshash.obj" \
 	"$(INTDIR)\jsinterp.obj" \
+	"$(INTDIR)\jsiter.obj" \
 	"$(INTDIR)\jslock.obj" \
 	"$(INTDIR)\jslog2.obj" \
 	"$(INTDIR)\jslong.obj" \
@@ -414,9 +418,9 @@ BSC32_FLAGS=/nologo /o"$(INTDIR)/jskwgen.bsc"
 BSC32_SBRS= \
 	
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winmm.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winmm.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
+LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winmm.lib winspool.lib comdlg32.lib\
  advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib\
  odbccp32.lib /nologo /subsystem:console /incremental:no\
  /pdb:"$(INTDIR)/jskwgen.pdb" /machine:I386 /out:"$(INTDIR)/host_jskwgen.exe" 
@@ -489,9 +493,9 @@ BSC32_FLAGS=/nologo /o"$(INTDIR)/jskwgen.bsc"
 BSC32_SBRS= \
 	
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winmm.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winmm.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
+LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winmm.lib winspool.lib comdlg32.lib\
  advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib\
  odbccp32.lib /nologo /subsystem:console /incremental:no\
  /pdb:"$(INTDIR)/jskwgen.pdb" /machine:I386 /out:"$(INTDIR)/host_jskwgen.exe" 
@@ -566,9 +570,9 @@ BSC32_FLAGS=/nologo /o"$(OUTDIR)/jsshell.bsc"
 BSC32_SBRS= \
 	
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winmm.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winmm.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
+LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winmm.lib winspool.lib comdlg32.lib\
  advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib\
  odbccp32.lib /nologo /subsystem:console /incremental:no\
  /pdb:"$(OUTDIR)/jsshell.pdb" /machine:I386 /out:"$(OUTDIR)/jsshell.exe" 
@@ -646,9 +650,9 @@ BSC32_FLAGS=/nologo /o"$(OUTDIR)/jsshell.bsc"
 BSC32_SBRS= \
 	
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386
-LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winmm.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winmm.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386
+LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winmm.lib winspool.lib comdlg32.lib\
  advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib\
  odbccp32.lib /nologo /subsystem:console /incremental:yes\
  /pdb:"$(OUTDIR)/jsshell.pdb" /debug /machine:I386 /out:"$(OUTDIR)/jsshell.exe" 
@@ -896,6 +900,7 @@ DEP_CPP_JSAPI=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsmath.h"\
@@ -951,6 +956,7 @@ DEP_CPP_JSAPI=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsmath.h"\
@@ -1060,6 +1066,7 @@ DEP_CPP_JSARR=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -1102,6 +1109,7 @@ DEP_CPP_JSARR=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -1150,6 +1158,7 @@ DEP_CPP_JSATO=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -1193,6 +1202,7 @@ DEP_CPP_JSATO=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -1245,6 +1255,7 @@ DEP_CPP_JSBOO=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -1287,6 +1298,7 @@ DEP_CPP_JSBOO=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -1338,6 +1350,7 @@ DEP_CPP_JSCNT=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsobj.h"\
@@ -1384,6 +1397,7 @@ DEP_CPP_JSCNT=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsobj.h"\
@@ -1438,6 +1452,7 @@ DEP_CPP_JSDAT=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -1482,6 +1497,7 @@ DEP_CPP_JSDAT=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -1534,6 +1550,7 @@ DEP_CPP_JSDBG=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsobj.h"\
@@ -1578,6 +1595,7 @@ DEP_CPP_JSDBG=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsobj.h"\
@@ -1734,6 +1752,7 @@ DEP_CPP_JSEMI=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -1782,6 +1801,7 @@ DEP_CPP_JSEMI=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -1838,6 +1858,7 @@ DEP_CPP_JSEXN=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsobj.h"\
@@ -1880,6 +1901,7 @@ DEP_CPP_JSEXN=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsobj.h"\
@@ -1930,6 +1952,7 @@ DEP_CPP_JSFUN=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -1978,6 +2001,7 @@ DEP_CPP_JSFUN=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -2033,6 +2057,7 @@ DEP_CPP_JSGC_=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -2077,6 +2102,7 @@ DEP_CPP_JSGC_=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -2182,6 +2208,7 @@ DEP_CPP_JSINT=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -2231,6 +2258,7 @@ DEP_CPP_JSINT=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -2267,6 +2295,114 @@ NODEP_CPP_JSINT=\
 ################################################################################
 # Begin Source File
 
+SOURCE=.\jsiter.c
+
+!IF  "$(CFG)" == "js - Win32 Release"
+
+DEP_CPP_JSINT=\
+	".\js.msg"\
+	".\jsapi.h"\
+	".\jsarena.h"\
+	".\jsarray.h"\
+	".\jsatom.h"\
+	".\jsbool.h"\
+	".\jsclist.h"\
+	".\jscntxt.h"\
+	".\jscompat.h"\
+	".\jsconfig.h"\
+	".\jscpucfg.h"\
+	".\jsdbgapi.h"\
+	".\jsfun.h"\
+	".\jsgc.h"\
+	".\jshash.h"\
+	".\jsinterp.h"\
+	".\jsiter.h"\
+	".\jslock.h"\
+	".\jslong.h"\
+	".\jsnum.h"\
+	".\jsobj.h"\
+	".\jsopcode.h"\
+	".\jsopcode.tbl"\
+	".\jsosdep.h"\
+	".\jsotypes.h"\
+	".\jsprf.h"\
+	".\jsprvtd.h"\
+	".\jspubtd.h"\
+	".\jsregexp.h"\
+	".\jsscope.h"\
+	".\jsscript.h"\
+	".\jsstddef.h"\
+	".\jsstr.h"\
+	".\jstypes.h"\
+	".\jsutil.h"\
+	".\jsxml.h"\
+	{$(INCLUDE)}"\sys\types.h"\
+	
+NODEP_CPP_JSINT=\
+	".\jsautocfg.h"\
+	".\prcvar.h"\
+	".\prlock.h"\
+	
+
+"$(INTDIR)\jsiter.obj" : $(SOURCE) $(DEP_CPP_JSINT) "$(INTDIR)"
+
+
+!ELSEIF  "$(CFG)" == "js - Win32 Debug"
+
+DEP_CPP_JSINT=\
+	".\js.msg"\
+	".\jsapi.h"\
+	".\jsarena.h"\
+	".\jsarray.h"\
+	".\jsatom.h"\
+	".\jsbool.h"\
+	".\jsclist.h"\
+	".\jscntxt.h"\
+	".\jscompat.h"\
+	".\jsconfig.h"\
+	".\jscpucfg.h"\
+	".\jsdbgapi.h"\
+	".\jsfun.h"\
+	".\jsgc.h"\
+	".\jshash.h"\
+	".\jsinterp.h"\
+	".\jsiter.h"\
+	".\jslock.h"\
+	".\jslong.h"\
+	".\jsnum.h"\
+	".\jsobj.h"\
+	".\jsopcode.h"\
+	".\jsopcode.tbl"\
+	".\jsosdep.h"\
+	".\jsotypes.h"\
+	".\jsprf.h"\
+	".\jsprvtd.h"\
+	".\jspubtd.h"\
+	".\jsregexp.h"\
+	".\jsscope.h"\
+	".\jsscript.h"\
+	".\jsstddef.h"\
+	".\jsstr.h"\
+	".\jstypes.h"\
+	".\jsutil.h"\
+	".\jsxml.h"\
+	{$(INCLUDE)}"\sys\types.h"\
+	
+NODEP_CPP_JSINT=\
+	".\jsautocfg.h"\
+	".\prcvar.h"\
+	".\prlock.h"\
+	
+
+"$(INTDIR)\jsiter.obj" : $(SOURCE) $(DEP_CPP_JSINT) "$(INTDIR)"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
 SOURCE=.\jslock.c
 
 !IF  "$(CFG)" == "js - Win32 Release"
@@ -2284,6 +2420,7 @@ DEP_CPP_JSLOC=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsobj.h"\
@@ -2325,6 +2462,7 @@ DEP_CPP_JSLOC=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsobj.h"\
@@ -2458,6 +2596,7 @@ DEP_CPP_JSMAT=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslibmath.h"\
 	".\jslock.h"\
 	".\jslong.h"\
@@ -2500,6 +2639,7 @@ DEP_CPP_JSMAT=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslibmath.h"\
 	".\jslock.h"\
 	".\jslong.h"\
@@ -2551,6 +2691,7 @@ DEP_CPP_JSNUM=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -2595,6 +2736,7 @@ DEP_CPP_JSNUM=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -2649,6 +2791,7 @@ DEP_CPP_JSOBJ=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -2697,6 +2840,7 @@ DEP_CPP_JSOBJ=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -2755,6 +2899,7 @@ DEP_CPP_JSOPC=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsobj.h"\
@@ -2803,6 +2948,7 @@ DEP_CPP_JSOPC=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsobj.h"\
@@ -2856,6 +3002,7 @@ DEP_CPP_JSPAR=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -2903,6 +3050,7 @@ DEP_CPP_JSPAR=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -3004,6 +3152,7 @@ DEP_CPP_JSREG=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -3049,6 +3198,7 @@ DEP_CPP_JSREG=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -3102,6 +3252,7 @@ DEP_CPP_JSSCA=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -3151,6 +3302,7 @@ DEP_CPP_JSSCA=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -3208,7 +3360,7 @@ DEP_CPP_JSSCO=\
 	".\jskwgen.c"\
 	{$(INCLUDE)}"\sys\types.h"\
 		
-LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
+LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winmm.lib winspool.lib comdlg32.lib\
  advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib\
  odbccp32.lib /nologo /subsystem:console /incremental:no\
  /pdb:"$(INTDIR)/host_jskwgen.pdb" /machine:I386 /out:"$(INTDIR)/host_jskwgen.exe" 
@@ -3245,6 +3397,7 @@ DEP_CPP_JSSCO=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -3285,6 +3438,7 @@ DEP_CPP_JSSCO=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -3336,6 +3490,7 @@ DEP_CPP_JSSCR=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -3384,6 +3539,7 @@ DEP_CPP_JSSCR=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -3439,6 +3595,7 @@ DEP_CPP_JSSTR=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -3484,6 +3641,7 @@ DEP_CPP_JSSTR=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsnum.h"\
@@ -3579,6 +3737,7 @@ DEP_CPP_JSXDR=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsobj.h"\
@@ -3620,6 +3779,7 @@ DEP_CPP_JSXDR=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsobj.h"\
@@ -3667,6 +3827,7 @@ DEP_CPP_JSXML=\
 	".\jsfun.h"\
 	".\jsgc.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jsnum.h"\
 	".\jsobj.h"\
@@ -3704,6 +3865,7 @@ DEP_CPP_JSXML=\
 	".\jsfun.h"\
 	".\jsgc.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jsnum.h"\
 	".\jsobj.h"\
@@ -3832,6 +3994,7 @@ DEP_CPP_JS_C42=\
 	".\jsgc.h"\
 	".\jshash.h"\
 	".\jsinterp.h"\
+	".\jsiter.h"\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsobj.h"\
