@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>postMessage's interaction with hash URIs</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="browserFu.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <base href="http://example.com/" />
+</head>
+<body>
+<p>(no bug; this is a preemptive test)</p>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe src="http://localhost:8888/tests/dom/tests/mochitest/whatwg/postMessage_hash.html#hash"
+        name="kid"></iframe>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function receiveMessage(evt)
+{
+  is(evt.domain, "localhost", "wrong sender");
+  is(evt.uri, "http://localhost:8888/tests/dom/tests/mochitest/whatwg/postMessage_hash.html#hash",
+     "wrong sender");
+  ok(evt.source === window.frames.kid, "wrong source");
+
+  is(evt.data, "response-message", "wrong data");
+
+  SimpleTest.finish();
+}
+
+document.addEventListener("message", receiveMessage, false);
+
+function run()
+{
+  window.frames.kid.postMessage("from-parent");
+}
+
+window.addEventListener("load", run, false);
+</script>
+</pre>
+</body>
+</html>
