@@ -114,7 +114,7 @@ NS_IMETHODIMP nsDeviceContextSpecX::BeginDocument(PRUnichar*  aTitle,
     if (aTitle) {
       CFStringRef cfString = ::CFStringCreateWithCharacters(NULL, aTitle, nsCRT::strlen(aTitle));
       if (cfString) {
-        ::PMSetJobNameCFString(mPrintSettings, cfString);
+        ::PMPrintSettingsSetJobName(mPrintSettings, cfString);
         ::CFRelease(cfString);
       }
     }
@@ -168,10 +168,25 @@ void nsDeviceContextSpecX::GetPageRect(double* aTop, double* aLeft, double* aBot
     *aBottom = pageRect.bottom, *aRight = pageRect.right;
 }
 
+void nsDeviceContextSpecX::GetPageMargins(double *aTopMargin, double* aLeftMargin,
+                                          double* aBottomMargin, double *aRightMargin)
+{
+    PMPaper paper;
+    PMPaperMargins margins;
+    ::PMGetPageFormatPaper(mPageFormat, &paper);
+    ::PMPaperGetMargins(paper, &margins);
+    *aTopMargin    = margins.top;
+    *aLeftMargin   = margins.left;
+    *aBottomMargin = margins.bottom;
+    *aRightMargin  = margins.right;
+}
+
 NS_IMETHODIMP nsDeviceContextSpecX::GetSurfaceForPrinter(gfxASurface **surface)
 {
     double top, left, bottom, right;
+    double topMargin, leftMargin, bottomMargin, rightMargin;
     GetPageRect(&top, &left, &bottom, &right);
+    GetPageMargins(&topMargin, &leftMargin, &bottomMargin, &rightMargin);
 
     const double width = right - left;
     const double height = bottom - top;
@@ -182,7 +197,9 @@ NS_IMETHODIMP nsDeviceContextSpecX::GetSurfaceForPrinter(gfxASurface **surface)
     nsRefPtr<gfxASurface> newSurface;
 
     if (context) {
-        CGContextTranslateCTM(context, 0.0, height);
+        // Initially, origin is at bottom-left corner of the paper.
+        // Here, we translate it to top-left corner of the printable area.
+        CGContextTranslateCTM(context, leftMargin, bottomMargin + height);
         CGContextScaleCTM(context, 1.0, -1.0);
         newSurface = new gfxQuartzSurface(context, gfxSize(width, height), PR_TRUE);
     } else {
