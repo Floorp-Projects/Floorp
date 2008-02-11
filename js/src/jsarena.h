@@ -320,18 +320,6 @@ JS_DumpArenaStats(FILE *fp);
 
 #endif /* !JS_ARENAMETER */
 
-#ifdef DEBUG
-
-/*
- * Debug-only function to return true if mark was taken after guardMark
- * calling JS_ARENA_RELEASE(pool, mark) does not affect allocations done
- * before guardMark.
- */
-extern JSBool
-js_GuardedArenaMark(JSArenaPool *pool, void *mark, void *guardMark);
-
-#endif
-
 JS_END_EXTERN_C
 
 #endif /* jsarena_h___ */
