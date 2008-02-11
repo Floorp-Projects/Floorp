@@ -412,6 +412,7 @@ new_gtk_browser(guint32 chromeMask)
 		     0);    // padding
   // create our new gtk moz embed widget
   browser->mozEmbed = gtk_moz_embed_new();
+  gtk_moz_embed_push_startup();
   // add it to the toplevel vbox
   gtk_box_pack_start(GTK_BOX(browser->topLevelVBox), browser->mozEmbed,
 		     TRUE, // expand
@@ -698,6 +699,20 @@ delete_cb(GtkWidget *widget, GdkEventAny *event, TestGtkBrowser *browser)
   return TRUE;
 }
 
+static gboolean
+idle_quit(void*)
+{
+  gtk_main_quit();
+  return FALSE;
+}
+
+static gboolean
+idle_pop(void*)
+{
+  gtk_moz_embed_pop_startup();
+  return FALSE;
+}
+
 void
 destroy_cb         (GtkWidget *widget, TestGtkBrowser *browser)
 {
@@ -708,8 +723,9 @@ destroy_cb         (GtkWidget *widget, TestGtkBrowser *browser)
   browser_list = g_list_remove_link(browser_list, tmp_list);
   if (browser->tempMessage)
     g_free(browser->tempMessage);
+  gtk_idle_add(idle_pop, NULL);
   if (num_browsers == 0)
-    gtk_main_quit();
+    gtk_idle_add (idle_quit, NULL);
 }
 
 void
