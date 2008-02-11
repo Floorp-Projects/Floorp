@@ -4440,10 +4440,8 @@ nsBlockFrame::DrainOverflowLines(nsBlockReflowState& aState)
           nsIFrame* next;
           for (nsPlaceholderFrame* f = static_cast<nsPlaceholderFrame*>(line->mFirstChild);
                n > 0; --n, f = static_cast<nsPlaceholderFrame*>(next)) {
-            if (!IsContinuationPlaceholder(f)) {
-              NS_ASSERTION(IsContinuationPlaceholder(f),
-                           "Line frames should all be continuation placeholders");
-            }
+            NS_ASSERTION(IsContinuationPlaceholder(f),
+                         "Line frames should all be continuation placeholders");
             next = f->GetNextSibling();
             nsIFrame* fpif = f->GetPrevInFlow();
             nsIFrame* oof = f->GetOutOfFlowFrame();
