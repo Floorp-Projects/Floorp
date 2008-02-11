@@ -756,7 +756,7 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
   // if we have a next in flow because we don't want to suck all its
   // content back here and then have to push it out again!
   nsIFrame* nextInFlow = GetNextInFlow();
-  PRBool unboundedLastColumn = isBalancing && nextInFlow;
+  PRBool unboundedLastColumn = isBalancing && !nextInFlow;
   nsCollapsingMargin carriedOutBottomMargin;
   PRBool feasible = ReflowChildren(aDesiredSize, aReflowState,
     aStatus, config, unboundedLastColumn, &carriedOutBottomMargin);
