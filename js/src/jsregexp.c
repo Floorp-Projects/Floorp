@@ -1055,7 +1055,10 @@ lexHex:
             break;
         }
         if (state->flags & JSREG_FOLD) {
-            c = (jschar) JS_MAX(upcase(localMax), downcase(localMax));
+            jschar uc = upcase(localMax);
+            jschar dc = downcase(localMax);
+
+            c = JS_MAX(uc, dc);
             if (c > localMax)
                 localMax = c;
         }
