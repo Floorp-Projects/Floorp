@@ -329,8 +329,13 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
     }
 
     if (PCVCAP_PCTYPE(vcap) == OBJ_SCOPE(pobj)->shape) {
+#ifdef DEBUG
+        jsid id = ATOM_TO_JSID(atom);
+
+        CHECK_FOR_STRING_INDEX(id);
+        JS_ASSERT(SCOPE_GET_PROPERTY(OBJ_SCOPE(pobj), id));
         JS_ASSERT(OBJ_SCOPE(pobj)->object == pobj);
-        JS_ASSERT(SCOPE_GET_PROPERTY(OBJ_SCOPE(pobj), ATOM_TO_JSID(atom)));
+#endif
         *pobjp = pobj;
         return NULL;
     }

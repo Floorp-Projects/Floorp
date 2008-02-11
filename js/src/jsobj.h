@@ -450,6 +450,29 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp);
 extern void
 js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot);
 
+/* JSVAL_INT_MAX as a string */
+#define JSVAL_INT_MAX_STRING "1073741823"
+
+#define CHECK_FOR_STRING_INDEX(id)                                            \
+    JS_BEGIN_MACRO                                                            \
+        if (JSID_IS_ATOM(id)) {                                               \
+            JSAtom *atom_ = JSID_TO_ATOM(id);                                 \
+            JSString *str_ = ATOM_TO_STRING(atom_);                           \
+            const jschar *s_ = JSFLATSTR_CHARS(str_);                         \
+            JSBool negative_ = (*s_ == '-');                                  \
+            if (negative_) s_++;                                              \
+            if (JS7_ISDEC(*s_)) {                                             \
+                size_t n_ = JSFLATSTR_LENGTH(str_) - negative_;               \
+                if (n_ <= sizeof(JSVAL_INT_MAX_STRING) - 1)                   \
+                    id = js_CheckForStringIndex(id, s_, s_ + n_, negative_);  \
+            }                                                                 \
+        }                                                                     \
+    JS_END_MACRO
+
+extern jsid
+js_CheckForStringIndex(jsid id, const jschar *cp, const jschar *end,
+                       JSBool negative);
+
 /*
  * Find or create a property named by id in obj's scope, with the given getter
  * and setter, slot, attributes, and other members.
