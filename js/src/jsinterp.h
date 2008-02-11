@@ -205,7 +205,7 @@ typedef struct JSPropertyCache {
     uint32              flushes;        /* cache flushes */
 # define PCMETER(x)     x
 #else
-# define PCMETER(x)     /* nothing */
+# define PCMETER(x)     ((void)0)
 #endif
 } JSPropertyCache;
 
