@@ -2122,10 +2122,6 @@ pref("font.name.monospace.he", "monospace");
 pref("font.name.serif.ja", "serif");
 pref("font.name.sans-serif.ja", "sans-serif");
 pref("font.name.monospace.ja", "monospace");
-// Include Latin fonts explicitly for bug 339513
-pref("font.name-list.sans-serif.ja", "Bitstream Vera Sans, DejaVu Sans, Verdana");
-pref("font.name-list.serif.ja", "Bitstream Vera Serif, DejaVu Serif, Times New Roman");
-pref("font.name-list.monospace.ja", "Bitstream Vera Sans Mono, DejaVu Sans Mono, Andale Mono");
 
 pref("font.name.serif.ko", "serif");
 pref("font.name.sans-serif.ko", "sans-serif");
@@ -2164,18 +2160,12 @@ pref("font.name.monospace.x-western", "monospace");
 pref("font.name.serif.zh-CN", "serif");
 pref("font.name.sans-serif.zh-CN", "sans-serif");
 pref("font.name.monospace.zh-CN", "monospace");
-pref("font.name-list.sans-serif.zh-CN", "Bitstream Vera Sans, DejaVu Sans, Verdana");
-pref("font.name-list.serif.zh-CN", "Bitstream Vera Serif, DejaVu Serif, Times New Roman");
-pref("font.name-list.monospace.zh-CN", "Bitstream Vera Sans Mono, DejaVu Sans Mono, Andale Mono");
 
 // ming_uni.ttf (HKSCS-2001) 
 // http://www.info.gov.hk/digital21/eng/hkscs/download/uime.exe
 pref("font.name.serif.zh-HK", "serif");
 pref("font.name.sans-serif.zh-HK", "sans-serif");
 pref("font.name.monospace.zh-HK", "monospace");
-pref("font.name-list.sans-serif.zh-HK", "Bitstream Vera Sans, DejaVu Sans, Verdana");
-pref("font.name-list.serif.zh-HK", "Bitstream Vera Serif, DejaVu Serif, Times New Roman");
-pref("font.name-list.monospace.zh-HK", "Bitstream Vera Sans Mono, DejaVu Sans Mono, Andale Mono");
 
 // zh-TW
 
