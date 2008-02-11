@@ -41,6 +41,8 @@ var BUGNUMBER = 410571;
 var summary = 'incorrect decompilation of last element of object literals';
 var actual, expect;
 
+actual =  expect = 'PASSED';
+
 printBugNumber(BUGNUMBER);
 printStatus(summary);
 
@@ -134,12 +136,12 @@ function checkItems(name, gen)
   for (var item in gen)
   {
     if (!test.generates[i](item))
-      throw "wrong generated value (" + item + ") " +
+      actual = "wrong generated value (" + item + ") " +
             "for test " + name + ", item " + i;
     i++;
   }
   if (i !== test.generates.length)
-    throw "Didn't iterate all of test " + name;
+    actual = "Didn't iterate all of test " + name;
 }
 
 for (var i = 0, sz = tests.length; i < sz; i++)
@@ -149,11 +151,9 @@ for (var i = 0, sz = tests.length; i < sz; i++)
   var fun = test.fun;
   checkItems(i, fun());
 
-  var dec = fun.toString();
+  var dec = '(' + fun.toString() + ')';
   var rec = eval(dec);
   checkItems("recompiled " + i, rec());
 }
-
-expect = actual = "no exception thrown";
 
 reportCompare(expect, actual, summary);
