@@ -957,8 +957,10 @@ JS_SuspendRequest(JSContext *cx)
 #ifdef JS_THREADSAFE
     jsrefcount saveDepth = cx->requestDepth;
 
-    while (cx->requestDepth)
+    while (cx->requestDepth) {
+        cx->outstandingRequests++;  /* compensate for JS_EndRequest */
         JS_EndRequest(cx);
+    }
     return saveDepth;
 #else
     return 0;
@@ -970,8 +972,10 @@ JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth)
 {
 #ifdef JS_THREADSAFE
     JS_ASSERT(!cx->requestDepth);
-    while (--saveDepth >= 0)
+    while (--saveDepth >= 0) {
         JS_BeginRequest(cx);
+        cx->outstandingRequests--;  /* compensate for JS_BeginRequest */
+    }
 #endif
 }
 
