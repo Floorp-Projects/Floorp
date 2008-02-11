@@ -480,7 +480,7 @@ input[type="submit"] {
 
 button {
   /* Buttons should lay out like "normal" html, mostly */
-  white-space: normal;  
+  white-space: inherit;
   text-indent: 0;
 }
 
