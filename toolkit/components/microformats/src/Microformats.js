@@ -1466,13 +1466,16 @@ function geo(node, validate) {
 geo.prototype.toString = function() {
   if (this.latitude && this.longitude) {
     var s;
-    if ((this.node.localName.toLowerCase() != "abbr") && (this.node.localName.toLowerCase() == "html:abbr")) {
+    if ((this.node.localName.toLowerCase() != "abbr") && (this.node.localName.toLowerCase() != "html:abbr")) {
       s = Microformats.parser.textGetter(this.node);
     } else {
       s = this.node.textContent;
     }
 
-    /* FIXME - THIS IS FIREFOX SPECIFIC */
+    if (s) {
+      return s;
+    }
+
     /* check if geo is contained in a vcard */
     var xpathExpression = "ancestor::*[contains(concat(' ', @class, ' '), ' vcard ')]";
     var xpathResult = this.node.ownerDocument.evaluate(xpathExpression, this.node, null,  Components.interfaces.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, null);
