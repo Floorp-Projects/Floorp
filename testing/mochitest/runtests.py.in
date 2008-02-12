@@ -350,14 +350,23 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
     sys.exit(1)
 
   # browser environment
-  browserEnv = {}
+  browserEnv = dict(os.environ)
+
+  # These variables are necessary for correct application startup; change
+  # via the commandline at your own risk.
+  browserEnv["NO_EM_RESTART"] = "1"
+  browserEnv["XPCOM_DEBUG_BREAK"] = "warn"
+  if UNIXISH:
+    browserEnv["LD_LIBRARY_PATH"] = DIST_BIN 
+    browserEnv["MOZILLA_FIVE_HOME"] = DIST_BIN 
+
   for v in options.environment:
     ix = v.find("=")
     if ix <= 0:
       print "Error: syntax error in --setenv=" + v
       sys.exit(1)
     browserEnv[v[:ix]] = v[ix + 1:]
-  
+
   manifest = initializeProfile(options)
   server = MochitestServer(options)
   server.start()
@@ -572,23 +581,11 @@ toolbar#nav-bar {
  # TEST EXECUTION #
  ##################
 
-def runTests(testURL, browserEnv, options):
+def runTests(testURL, env, options):
   "Run the tests, returning the time at which the tests were started."
 
   # mark the start
   start = datetime.now()
-
-  # Set env vars so Firefox doesn't quit weirdly and break the script, but
-  # otherwise start empty so we can override from outside this method.
-  env = {"NO_EM_RESTART": "1", "XPCOM_DEBUG_BREAK": "warn"}
-  
-  if UNIXISH:
-    env["LD_LIBRARY_PATH"] = DIST_BIN
-    env["MOZILLA_FIVE_HOME"] = DIST_BIN
-
-  # copy over anything provided outside this function
-  env.update(browserEnv)
-
 
   # now run with the profile we created
   cmd = options.app
