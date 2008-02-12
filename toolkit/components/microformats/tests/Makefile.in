@@ -48,6 +48,7 @@ _TEST_FILES = \
 		test_Microformats_hCard.html \
 		test_Microformats_geo.html \
 		test_Microformats_hCalendar.html \
+		test_Microformats_adr.html \
 		$(NULL)
 
 libs::	$(_TEST_FILES)
