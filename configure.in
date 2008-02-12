@@ -6987,6 +6987,8 @@ MOZ_TREE_CAIRO=1 )
 AC_CHECK_HEADERS(stdint.h inttypes.h sys/int_types.h)
 
 if test "$MOZ_TREE_CAIRO"; then
+    AC_DEFINE(MOZ_TREE_CAIRO)
+
     # For now we assume that we will have a uint64_t available through
     # one of the above headers or mozstdint.h.
     AC_DEFINE(HAVE_UINT64_T)
