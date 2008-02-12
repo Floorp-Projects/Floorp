@@ -22,7 +22,33 @@
     </span>
 
     <abbr class="geo" id="01-geo-abbr" title="30.267991;-97.739568">Paradise</abbr>
-  
+
+    <span class="vcard">
+    <span class="fn org">John Doe</span>
+    <abbr class="geo" id="02-geo-vcard-01" title="37.77;-122.41"></abbr>
+    </span>
+
+    <span class="vcard">
+    <span class="fn org">John Doe</span>
+    <abbr class="geo" id="02-geo-vcard-02" title="37.77;-122.41">Northern California</abbr>
+    </span>
+
+    <span class="vevent">
+      <span class="summary">SXSW Interactive (South by Southwest)</span>
+      <ABBR title="20080307" class="dtstart">Friday, March 7, 2008</ABBR>
+      -
+      <ABBR title="20080311" class="dtend">Tuesday, March 11, 2008</ABBR>
+      <abbr class="geo"  id="02-geo-vevent-01" title="30.2622;-97.7399"></abbr>
+    </span>
+
+    <span class="vevent">
+      <span class="summary">SXSW Interactive (South by Southwest)</span>
+      <ABBR title="20080307" class="dtstart">Friday, March 7, 2008</ABBR>
+      -
+      <ABBR title="20080311" class="dtend">Tuesday, March 11, 2008</ABBR>
+      <abbr class="geo"  id="02-geo-vevent-02" title="30.2622;-97.7399">Convention Center</abbr>
+    </span>
+    
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -59,6 +85,22 @@ function test_geo() {
 
   is(Geo.latitude, "30.267991", "01-geo-abbr - latitude");
   is(Geo.longitude, "-97.739568", "01-geo-abbr - longitude");
+  
+  Geo = new geo(document.getElementById("02-geo-vcard-01"));
+
+  is(Geo.toString(), "John Doe", "02-geo-vcard-01");
+
+  Geo = new geo(document.getElementById("02-geo-vcard-02"));
+
+  is(Geo.toString(), "Northern California", "02-geo-vcard-02");
+
+  Geo = new geo(document.getElementById("02-geo-vevent-01"));
+
+  is(Geo.toString(), "SXSW Interactive (South by Southwest)", "02-geo-vevent-01");
+
+  Geo = new geo(document.getElementById("02-geo-vevent-02"));
+
+  is(Geo.toString(), "Convention Center", "02-geo-vevent-02");
 }
 
 </script>
