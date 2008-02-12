@@ -73,6 +73,7 @@ clean_stage: clean_logs
 	rm -rf /builds/updates/*
 	rm -rf /builds/verify/*
 	rm -rf /data/cltbld/${PRODUCT}-*/
+	rm -rf /data/symbols/*
 	rm -rf /home/ftp/pub/${PRODUCT}/*
 
 clean_cvsmirror: clean_cvsmirror_main clean_cvsmirror_mofo
