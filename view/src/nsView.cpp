@@ -200,6 +200,13 @@ nsView::~nsView()
 {
   MOZ_COUNT_DTOR(nsView);
 
+  if (this == nsViewManager::GetViewFocusedBeforeSuppression()) {
+    nsViewManager::SetViewFocusedBeforeSuppression(nsnull);
+  }
+  if (this == nsViewManager::GetCurrentlyFocusedView()) {
+    nsViewManager::SetCurrentlyFocusedView(nsnull);
+  }
+
   while (GetFirstChild())
   {
     nsView* child = GetFirstChild();
