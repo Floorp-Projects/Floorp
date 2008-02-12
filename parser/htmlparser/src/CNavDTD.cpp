@@ -1707,6 +1707,7 @@ CNavDTD::HandleEndToken(CToken* aToken)
                   result = HandleToken(theStartToken, mParser);
                   NS_ENSURE_SUCCESS(result, result);
 
+                  IF_HOLD(aToken);
                   result = HandleToken(aToken, mParser);
                 }
               }
