@@ -357,19 +357,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_ADDREF_INHERITED(nsXULDocument, nsXMLDocument)
 NS_IMPL_RELEASE_INHERITED(nsXULDocument, nsXMLDocument)
 
-
-// QueryInterface implementation for nsXULDocument
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsXULDocument)
-    NS_INTERFACE_TABLE_INHERITED4(nsXULDocument,
-                                  nsIXULDocument,
-                                  nsIDOMXULDocument,
-                                  nsIStreamLoaderObserver,
-                                  nsICSSLoaderObserver)
-    NS_INTERFACE_TABLE_TO_MAP_SEGUE
-    NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XULDocument)
-NS_INTERFACE_MAP_END_INHERITING(nsXMLDocument)
-
-
 //----------------------------------------------------------------------
 //
 // nsIDocument interface

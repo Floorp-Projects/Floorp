@@ -54,7 +54,7 @@
 #include "nsIDNSListener.h"
 #include "nsIDNSRecord.h"
 #include "nsICancelable.h"
-#include "nsIClassInfo.h"
+#include "nsIClassInfoImpl.h"
 
 class nsSocketTransport;
 
@@ -318,5 +318,7 @@ private:
     void TraceOutBuf(const char *buf, PRInt32 n);
 #endif
 };
+
+NS_DECL_CI_INTERFACE_GETTER(nsSocketTransport);
 
 #endif // !nsSocketTransport_h__
