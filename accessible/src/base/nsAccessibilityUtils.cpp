@@ -54,6 +54,7 @@
 #include "nsIDOMDocumentXBL.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
+#include "nsIDOMXULContainerElement.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMWindowInternal.h"
@@ -202,6 +203,57 @@ nsAccUtils::SetAccAttrsForXULSelectControlItem(nsIDOMNode *aNode,
   }
 
   SetAccGroupAttrs(aAttributes, 0, posInSet + 1, setSize);
+}
+
+void
+nsAccUtils::SetAccAttrsForXULContainerItem(nsIDOMNode *aNode,
+                                           nsIPersistentProperties *aAttributes)
+{
+  nsCOMPtr<nsIDOMXULContainerItemElement> item(do_QueryInterface(aNode));
+  if (!item)
+    return;
+
+  nsCOMPtr<nsIDOMXULContainerElement> container;
+  item->GetParentContainer(getter_AddRefs(container));
+  if (!container)
+    return;
+
+  // Get item count.
+  PRUint32 itemsCount = 0;
+  container->GetItemCount(&itemsCount);
+
+  // Get item index.
+  PRInt32 indexOf = 0;
+  container->GetIndexOfItem(item, &indexOf);
+  
+  PRUint32 setSize = itemsCount, posInSet = indexOf;
+  for (PRUint32 index = 0; index < itemsCount; index++) {
+    nsCOMPtr<nsIDOMXULElement> currItem;
+    container->GetItemAtIndex(index, getter_AddRefs(currItem));
+    nsCOMPtr<nsIDOMNode> currNode(do_QueryInterface(currItem));
+    
+    nsCOMPtr<nsIAccessible> itemAcc;
+    nsAccessNode::GetAccService()->GetAccessibleFor(currNode,
+                                                    getter_AddRefs(itemAcc));
+    if (!itemAcc ||
+        nsAccessible::State(itemAcc) & nsIAccessibleStates::STATE_INVISIBLE) {
+      setSize--;
+      if (index < static_cast<PRUint32>(indexOf))
+        posInSet--;
+    }
+  }
+
+  // Get level of the item.
+  PRInt32 level = -1;
+  while (container) {
+    level++;
+
+    nsCOMPtr<nsIDOMXULContainerElement> parentContainer;
+    container->GetParentContainer(getter_AddRefs(parentContainer));
+    parentContainer.swap(container);
+  }
+  
+  SetAccGroupAttrs(aAttributes, level, posInSet + 1, setSize);
 }
 
 PRBool

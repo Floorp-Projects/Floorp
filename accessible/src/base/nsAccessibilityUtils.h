@@ -109,6 +109,16 @@ public:
                                                  nsIPersistentProperties *aAttributes);
 
   /**
+   * Set group attributes - 'level', 'setsize', 'posinset'.
+   *
+   * @param  aNode        XUL element that implements
+   *                      nsIDOMXULContainerItemElement interface
+   * @param  aAttributes  attributes container
+   */
+  static void SetAccAttrsForXULContainerItem(nsIDOMNode *aNode,
+                                             nsIPersistentProperties *aAttributes);
+
+  /**
    * Return true if the given node has registered event listener of the given
    * type.
    */
