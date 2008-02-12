@@ -424,6 +424,8 @@ gfxAtsuiFontGroup::gfxAtsuiFontGroup(const nsAString& families,
             mFonts.AppendElement(font);
         }
     }
+    
+    mPageLang = gfxPlatform::GetFontPrefLangFor(mStyle.langGroup.get());
 }
 
 PRBool
@@ -691,14 +693,19 @@ gfxAtsuiFontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
     // get the pref font list if it hasn't been set up already
     PRUint32 unicodeRange = FindCharUnicodeRange(aCh);
     eFontPrefLang charLang = GetFontPrefLangFor(unicodeRange);
-    eFontPrefLang pageLang = gfxPlatform::GetFontPrefLangFor(mStyle.langGroup.get());    
+
+    // if the last pref font was the first family in the pref list, no need to recheck through a list of families
+    if (mLastPrefFont && charLang == mLastPrefLang && mLastPrefFirstFont && mLastPrefFont->TestCharacterMap(aCh)) {
+        nsRefPtr<gfxAtsuiFont> prefFont = mLastPrefFont;
+        return prefFont.forget();
+    }
     
     // based on char lang and page lang, set up list of pref lang fonts to check
     eFontPrefLang prefLangs[kMaxLenPrefLangList];
     PRUint32 i, numLangs = 0;
     
     gfxPlatformMac *macPlatform = gfxPlatformMac::GetPlatform();
-    macPlatform->GetLangPrefs(prefLangs, numLangs, charLang, pageLang);
+    macPlatform->GetLangPrefs(prefLangs, numLangs, charLang, mPageLang);
     
     for (i = 0; i < numLangs; i++) {
         nsAutoTArray<nsRefPtr<MacOSFamilyEntry>, 5> families;
@@ -721,13 +728,28 @@ gfxAtsuiFontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
         for (i = 0; i < numPrefs; i++) {
             // look up the appropriate face
             MacOSFamilyEntry *family = families[i];
-            if (family) {
-                MacOSFontEntry *fe = family->FindFont(&mStyle);
-                // if ch in cmap, create and return a gfxFont
-                if (fe && fe->TestCharacterMap(aCh)) {
-                    return GetOrMakeFont(fe, &mStyle);
-                }
+            if (!family) continue;
+            
+            // if a pref font is used, it's likely to be used again in the same text run.
+            // the style doesn't change so the face lookup can be cached rather than calling
+            // GetOrMakeFont repeatedly.  speeds up FindFontForChar lookup times for subsequent
+            // pref font lookups
+            if (family == mLastPrefFamily && mLastPrefFont->TestCharacterMap(aCh)) {
+                nsRefPtr<gfxAtsuiFont> prefFont = mLastPrefFont;
+                return prefFont.forget();
             }
+            
+            MacOSFontEntry *fe = family->FindFont(&mStyle);
+            // if ch in cmap, create and return a gfxFont
+            if (fe && fe->TestCharacterMap(aCh)) {
+                nsRefPtr<gfxAtsuiFont> prefFont = GetOrMakeFont(fe, &mStyle);
+                mLastPrefFamily = family;
+                mLastPrefFont = prefFont;
+                mLastPrefLang = charLang;
+                mLastPrefFirstFont == (i == 0);
+                return prefFont.forget();
+            }
+
         }
     }
     
