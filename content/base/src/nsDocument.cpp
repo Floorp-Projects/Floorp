@@ -5202,9 +5202,12 @@ nsDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
   aName->GetUTF8String(&name);
   AppendUTF8toUTF16(name, qName);
 
-  rv = nsContentUtils::CheckQName(qName, PR_TRUE);
-  NS_ASSERTION(NS_SUCCEEDED(rv),
-               "Don't pass invalid names to nsDocument::CreateElem, "
+  // Note: "a:b:c" is a valid name in non-namespaces XML, and
+  // nsDocument::CreateElement can call us with such a name and no prefix,
+  // which would cause an error if we just used PR_TRUE here.
+  PRBool nsAware = aPrefix != nsnull || aNamespaceID != GetDefaultNamespaceID();
+  NS_ASSERTION(NS_SUCCEEDED(nsContentUtils::CheckQName(qName, nsAware)),
+               "Don't pass invalid prefixes to nsDocument::CreateElem, "
                "check caller.");
 #endif
 
