@@ -368,12 +368,6 @@ nsXBLPrototypeBinding::UnlinkJSObjects()
 {
   if (mImplementation)
     mImplementation->UnlinkJSObjects();
-
-  nsXBLPrototypeHandler* curr = mPrototypeHandler;
-  while (curr) {
-    curr->UnlinkJSObjects();
-    curr = curr->GetNextHandler();
-  }
 }
 
 void
@@ -381,12 +375,6 @@ nsXBLPrototypeBinding::Trace(TraceCallback aCallback, void *aClosure) const
 {
   if (mImplementation)
     mImplementation->Trace(aCallback, aClosure);
-
-  nsXBLPrototypeHandler* curr = mPrototypeHandler;
-  while (curr) {
-    curr->Trace(aCallback, aClosure);
-    curr = curr->GetNextHandler();
-  }
 }
 
 void
