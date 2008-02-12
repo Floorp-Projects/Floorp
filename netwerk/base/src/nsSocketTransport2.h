@@ -319,6 +319,6 @@ private:
 #endif
 };
 
-NS_DECL_CI_INTERFACE_GETTER(nsSocketTransport);
+NS_DECL_CI_INTERFACE_GETTER(nsSocketTransport)
 
 #endif // !nsSocketTransport_h__
