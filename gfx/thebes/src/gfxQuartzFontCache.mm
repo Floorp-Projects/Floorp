@@ -531,7 +531,8 @@ enum {
 // xxx - rather than use ATSUI calls, probably faster to load name table directly, 
 // this avoids copying around strings that are of no interest
 
-static void ReadLocalizedNames(NSString *familyName, NSArray *faceArray, 
+// read in family names other than the canonical family name, including localized family names
+static void ReadOtherFamilyNames(NSString *familyName, NSArray *faceArray, 
                                 int faceIndex, NSMutableArray *localizedNames)
 {
     OSStatus err;
@@ -543,7 +544,13 @@ static void ReadLocalizedNames(NSString *familyName, NSArray *faceArray,
     NSFont *font = [NSFont fontWithName:psname size:0.0];
     fontID = [font _atsFontID];
     
+    if (fontID == kATSUInvalidFontID)
+        return;
+
     err = ATSUCountFontNames(fontID, &nameCount);
+    if (err != noErr) 
+        return;
+    
     for (i = 0; i < nameCount; i++) {
 
         FontNameCode nameCode;
@@ -555,6 +562,13 @@ static void ReadLocalizedNames(NSString *familyName, NSArray *faceArray,
         ByteCount len;
 
         err = ATSUGetIndFontName(fontID, i, kBufLength, buf, &len, &nameCode, &platformCode, &scriptCode, &langCode);
+        // couldn't find a font name? just continue to the next name table entry
+        if (err == kATSUNoFontNameErr) 
+            continue;
+        // any other error, bail
+        if (err != noErr) 
+            return;
+        
         if (!(nameCode == kFontFamilyName || nameCode == kMozillaFontPreferredFamilyName)) continue; 
         if (len >= kBufLength) continue; 
         buf[len] = 0;
@@ -579,8 +593,10 @@ static void ReadLocalizedNames(NSString *familyName, NSArray *faceArray,
                 }
                 
                 // didn't find it in the list? add it
-                if (!foundName)
+                if (!foundName) {
                     [localizedNames addObject:name];
+                    PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(init-otherfamily) canonical family: %s, other family: %s\n", [familyName UTF8String], [name UTF8String]));
+                }
             }
     
             [name release];
@@ -659,11 +675,11 @@ gfxQuartzFontCache::InitFontList()
         
         // read the name table for the normal face; if localized names exist for that face, scan all font entries for more localized names
         [localizedNames removeAllObjects];
-        ReadLocalizedNames(availableFamily, fontfaces, normalFaceIndex, localizedNames);
+        ReadOtherFamilyNames(availableFamily, fontfaces, normalFaceIndex, localizedNames);
         if ([localizedNames count] != 0) {
             for (faceIndex = 0; faceIndex < faceCount; faceIndex++) {
                 if (faceIndex == normalFaceIndex) continue;
-                ReadLocalizedNames(availableFamily, fontfaces, faceIndex, localizedNames);
+                ReadOtherFamilyNames(availableFamily, fontfaces, faceIndex, localizedNames);
             }
         }
         
