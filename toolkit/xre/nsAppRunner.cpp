@@ -2366,6 +2366,10 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
   }
   else {
     gdk_display_close(display);
+#if GTK_CHECK_VERSION(2,8,0) && \
+  (defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING) || defined(NS_TRACE_MALLOC))
+    cairo_debug_reset_static_data();
+#endif
   }
 }
 #endif // MOZ_WIDGET_GTK2
