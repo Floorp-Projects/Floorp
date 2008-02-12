@@ -326,11 +326,15 @@ class Process:
     stdout = sys.stdout
     out = p.fromchild
     while p.poll() == -1:
-      print >> stdout, out.readline().rstrip()
+      line = out.readline().rstrip()
+      if len(line) > 0:
+        print >> stdout, line
     # read in the last lines that happened between the last -1 poll and the
     # process finishing
     for line in out:
-      print >> stdout, line.rstrip()
+      line = line.rstrip()
+      if len(line) > 0:
+        print >> stdout, line
     return p.poll()
 
 
