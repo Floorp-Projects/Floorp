@@ -201,43 +201,10 @@ public:
   /* Update the cached RootViewManager pointer on this view manager. */
   void InvalidateHierarchy();
 
-  virtual void SuppressFocusEvents();
-  virtual void UnsuppressFocusEvents();
-
-  virtual PRBool IsFocusSuppressed()
-  {
-    return sSuppressCount > 0;
-  }
-
-  static void SetCurrentlyFocusedView(nsView *aView)
-  {
-    sCurrentlyFocusView = aView;
-  }
-  
-  static nsView* GetCurrentlyFocusedView()
-  {
-    return sCurrentlyFocusView;
-  }
-
-  static void SetViewFocusedBeforeSuppression(nsView *aView)
-  {
-    sViewFocusedBeforeSuppression = aView;
-  }
-
-  static nsView* GetViewFocusedBeforeSuppression()
-  {
-    return sViewFocusedBeforeSuppression;
-  }
-
 protected:
   virtual ~nsViewManager();
 
 private:
-
-  static nsView *sCurrentlyFocusView;
-  static nsView *sViewFocusedBeforeSuppression;
-  static PRInt32 sSuppressCount;
-
   void FlushPendingInvalidates();
   void ProcessPendingUpdates(nsView *aView, PRBool aDoInvalidate);
   void ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget);
