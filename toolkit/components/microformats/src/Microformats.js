@@ -1103,7 +1103,9 @@ var hCard_definition = {
       microformat: "adr"
     },
     "agent" : {
-      plural: true
+      plural: true,
+      datatype: "microformat",
+      microformat: "hCard"
     },
     "bday" : {
       datatype: "dateTime"
