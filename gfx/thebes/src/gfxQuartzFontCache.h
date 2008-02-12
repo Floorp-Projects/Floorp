@@ -215,6 +215,9 @@ private:
     // maps list of family names ==> array of family entries, one per lang group
     nsDataHashtable<nsUint32HashKey, nsTArray<nsRefPtr<MacOSFamilyEntry> > > mPrefFonts;
 
+    // when system-wide font lookup fails for a character, cache it to skip future searches
+    gfxSparseBitSet mCodepointsWithNoFonts;
+
 };
 
 #endif /* GFXQUARTZFONTCACHE_H_ */
