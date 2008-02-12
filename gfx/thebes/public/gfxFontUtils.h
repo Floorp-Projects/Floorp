@@ -59,9 +59,10 @@
 
 class gfxSparseBitSet {
 private:
-    enum { BLOCK_SIZE = 32 };
+    enum { BLOCK_SIZE = 32 };   // ==> 256 codepoints per block
     enum { BLOCK_SIZE_BITS = BLOCK_SIZE * 8 };
-
+    enum { BLOCK_INDEX_SHIFT = 8 };
+    
     struct Block {
         Block(unsigned char memsetValue = 0) { memset(mBits, memsetValue, BLOCK_SIZE); }
         PRUint8 mBits[BLOCK_SIZE];
@@ -75,9 +76,67 @@ public:
         Block *block = mBlocks[blockIndex];
         if (!block)
             return PR_FALSE;
-        return ((block->mBits[(aIndex/8) & (BLOCK_SIZE - 1)]) & (1 << (aIndex & 0x7))) != 0;
+        return ((block->mBits[(aIndex>>3) & (BLOCK_SIZE - 1)]) & (1 << (aIndex & 0x7))) != 0;
     }
 
+    PRBool TestRange(PRUint32 aStart, PRUint32 aEnd) {
+        PRUint32 startBlock, endBlock, blockLen;
+        
+        // start point is beyond the end of the block array? return false immediately
+        startBlock = aStart >> BLOCK_INDEX_SHIFT;
+        blockLen = mBlocks.Length();
+        if (startBlock >= blockLen) return PR_FALSE;
+        
+        // check for blocks in range, if none, return false
+        PRUint32 blockIndex;
+        PRBool hasBlocksInRange = PR_FALSE;
+
+        endBlock = aEnd >> BLOCK_INDEX_SHIFT;
+        blockIndex = startBlock;
+        for (blockIndex = startBlock; blockIndex <= endBlock; blockIndex++) {
+            if (blockIndex < blockLen && mBlocks[blockIndex])
+                hasBlocksInRange = PR_TRUE;
+        }
+        if (!hasBlocksInRange) return PR_FALSE;
+
+        Block *block;
+        PRUint32 i, start, end;
+        
+        // first block, check bits
+        if ((block = mBlocks[startBlock])) {
+            start = aStart;
+            end = PR_MIN(aEnd, ((startBlock+1) << BLOCK_INDEX_SHIFT) - 1);
+            for (i = start; i <= end; i++) {
+                if ((block->mBits[(i>>3) & (BLOCK_SIZE - 1)]) & (1 << (i & 0x7)))
+                    return PR_TRUE;
+            }
+        }
+        if (endBlock == startBlock) return PR_FALSE;
+
+        // [2..n-1] blocks check bytes
+        for (blockIndex = startBlock + 1; blockIndex < endBlock; blockIndex++) {
+            PRUint32 index;
+            
+            if (blockIndex >= blockLen || !(block = mBlocks[blockIndex])) continue;
+            for (index = 0; index < BLOCK_SIZE; index++) {
+                if (block->mBits[index]) 
+                    return PR_TRUE;
+            }
+        }
+        
+        // last block, check bits
+        if (endBlock < blockLen && (block = mBlocks[endBlock])) {
+            start = endBlock << BLOCK_INDEX_SHIFT;
+            end = aEnd;
+            for (i = start; i <= end; i++) {
+                if ((block->mBits[(i>>3) & (BLOCK_SIZE - 1)]) & (1 << (i & 0x7)))
+                    return PR_TRUE;
+            }
+        }
+        
+        return PR_FALSE;
+    }
+    
     void set(PRUint32 aIndex) {
         PRUint32 blockIndex = aIndex/BLOCK_SIZE_BITS;
         if (blockIndex >= mBlocks.Length()) {
@@ -92,7 +151,7 @@ public:
                 return;
             mBlocks[blockIndex] = block;
         }
-        block->mBits[(aIndex/8) & (BLOCK_SIZE - 1)] |= 1 << (aIndex & 0x7);
+        block->mBits[(aIndex>>3) & (BLOCK_SIZE - 1)] |= 1 << (aIndex & 0x7);
     }
 
     void SetRange(PRUint32 aStart, PRUint32 aEnd) {
@@ -130,7 +189,64 @@ public:
             const PRUint32 end = PR_MIN(aEnd - blockFirstBit, BLOCK_SIZE_BITS - 1);
 
             for (PRUint32 bit = start; bit <= end; ++bit) {
-                block->mBits[bit/8] |= 1 << (bit & 0x7);
+                block->mBits[bit>>3] |= 1 << (bit & 0x7);
+            }
+        }
+    }
+
+    void clear(PRUint32 aIndex) {
+        PRUint32 blockIndex = aIndex/BLOCK_SIZE_BITS;
+        if (blockIndex >= mBlocks.Length()) {
+            nsAutoPtr<Block> *blocks = mBlocks.AppendElements(blockIndex + 1 - mBlocks.Length());
+            if (NS_UNLIKELY(!blocks)) // OOM
+                return;
+        }
+        Block *block = mBlocks[blockIndex];
+        if (!block) {
+            block = new Block;
+            if (NS_UNLIKELY(!block)) // OOM
+                return;
+            mBlocks[blockIndex] = block;
+        }
+        block->mBits[(aIndex>>3) & (BLOCK_SIZE - 1)] &= ~(1 << (aIndex & 0x7));
+    }
+
+    void ClearRange(PRUint32 aStart, PRUint32 aEnd) {
+        const PRUint32 startIndex = aStart/BLOCK_SIZE_BITS;
+        const PRUint32 endIndex = aEnd/BLOCK_SIZE_BITS;
+
+        if (endIndex >= mBlocks.Length()) {
+            PRUint32 numNewBlocks = endIndex + 1 - mBlocks.Length();
+            nsAutoPtr<Block> *blocks = mBlocks.AppendElements(numNewBlocks);
+            if (NS_UNLIKELY(!blocks)) // OOM
+                return;
+        }
+
+        for (PRUint32 i = startIndex; i <= endIndex; ++i) {
+            const PRUint32 blockFirstBit = i * BLOCK_SIZE_BITS;
+            const PRUint32 blockLastBit = blockFirstBit + BLOCK_SIZE_BITS - 1;
+
+            Block *block = mBlocks[i];
+            if (!block) {
+                PRBool fullBlock = PR_FALSE;
+                if (aStart <= blockFirstBit && aEnd >= blockLastBit)
+                    fullBlock = PR_TRUE;
+
+                block = new Block(fullBlock ? 0xFF : 0);
+
+                if (NS_UNLIKELY(!block)) // OOM
+                    return;
+                mBlocks[i] = block;
+
+                if (fullBlock)
+                    continue;
+            }
+
+            const PRUint32 start = aStart > blockFirstBit ? aStart - blockFirstBit : 0;
+            const PRUint32 end = PR_MIN(aEnd - blockFirstBit, BLOCK_SIZE_BITS - 1);
+
+            for (PRUint32 bit = start; bit <= end; ++bit) {
+                block->mBits[bit>>3] &= ~(1 << (bit & 0x7));
             }
         }
     }
