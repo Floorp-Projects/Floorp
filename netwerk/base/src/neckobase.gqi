@@ -1,0 +1,82 @@
+%import-idl "nsIStandardURL.idl"
+%import-idl "nsIURL.idl"
+%import-idl "nsIFileURL.idl"
+%import-idl "nsISerializable.idl"
+%import-idl "nsIClassInfo.idl"
+%import-idl "nsIIOService2.idl"
+%import-idl "nsINetUtil.idl"
+%import-idl "nsIObserver.idl"
+%import-idl "nsIWeakReference.idl"
+%import-idl "nsIChannel.idl"
+%import-idl "nsIInterfaceRequestor.idl"
+%import-idl "nsITransport.idl"
+%import-idl "nsIStreamListener.idl"
+%import-idl "nsISocketTransportService.idl"
+%import-idl "nsIEventTarget.idl"
+%import-idl "nsIThreadInternal.idl"
+%import-idl "nsIRunnable.idl"
+%import-idl "nsPISocketTransportService.idl"
+%import-idl "nsISocketTransport.idl"
+%import-idl "nsIDNSListener.idl"
+
+%import "xpcomds.gqi"
+
+%{C++
+#include "nsStandardURL.h"
+#include "nsIOService.h"
+#include "nsBaseChannel.h"
+#include "nsSocketTransportService2.h"
+#include "nsSocketTransport2.h"
+%}
+
+// See nsStandardURL.h
+%pseudo-cid nsStandardURL b8e3e97b-1ccd-4b45-af5a-79596770f5d7 NS_THIS_STANDARDURL_IMPL_CID
+
+NS_INTERFACE_MAP_BEGIN(nsStandardURL)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStandardURL)
+    NS_INTERFACE_MAP_ENTRY(nsIURI)
+    NS_INTERFACE_MAP_ENTRY(nsIURL)
+    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIFileURL, mSupportsFileURL)
+    NS_INTERFACE_MAP_ENTRY(nsIStandardURL)
+    NS_INTERFACE_MAP_ENTRY(nsISerializable)
+    NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
+    NS_INTERFACE_MAP_ENTRY(nsIMutable)
+    NS_INTERFACE_MAP_ENTRY(NS_THIS_STANDARDURL_IMPL_CID)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsIOService,
+                              nsIIOService,
+                              nsIIOService2,
+                              nsINetUtil,
+                              nsIObserver,
+                              nsISupportsWeakReference)
+
+NS_IMPL_ISUPPORTS_INHERITED6(nsBaseChannel,
+                             nsHashPropertyBag,
+                             nsIRequest,
+                             nsIChannel,
+                             nsIInterfaceRequestor,
+                             nsITransportEventSink,
+                             nsIRequestObserver,
+                             nsIStreamListener)
+
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsSocketTransportService,
+                              nsISocketTransportService,
+                              nsIEventTarget,
+                              nsIThreadObserver,
+                              nsIRunnable,
+                              nsPISocketTransportService)
+
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsSocketTransport,
+                              nsISocketTransport,
+                              nsITransport,
+                              nsIDNSListener,
+                              nsIClassInfo)
+
+%{C++
+NS_IMPL_CI_INTERFACE_GETTER3(nsSocketTransport,
+                             nsISocketTransport,
+                             nsITransport,
+                             nsIDNSListener)
+
+%}

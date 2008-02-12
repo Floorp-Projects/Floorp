@@ -1,0 +1,16 @@
+%import "contentbase.gqi"
+
+%import-idl "nsIDOMXMLDocument.idl"
+%import-idl "nsIInterfaceRequestor.idl"
+%import-idl "nsIChannelEventSink.idl"
+
+%{C++
+#include "nsXMLDocument.h"
+%}
+
+NS_INTERFACE_MAP_BEGIN(nsXMLDocument, nsDocument)
+  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+  NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMXMLDocument)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XMLDocument)
+NS_INTERFACE_MAP_END

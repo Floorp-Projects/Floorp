@@ -278,13 +278,6 @@ nsIOService::GetInstance() {
     return gIOService;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS5(nsIOService,
-                              nsIIOService,
-                              nsIIOService2,
-                              nsINetUtil,
-                              nsIObserver,
-                              nsISupportsWeakReference)
-
 ////////////////////////////////////////////////////////////////////////////////
 
 nsresult
