@@ -481,6 +481,31 @@ public:
    * (aFromScroll is false) or scrolled (aFromScroll is true).
    */
   NS_IMETHOD SynthesizeMouseMove(PRBool aFromScroll)=0;
+   
+  /**
+   * Enables focus/blur event suppression. This stops focus/blur
+   * events from reaching the widgets. This should be enabled 
+   * when we're messing with the frame tree, so focus/blur handlers
+   * don't mess with stuff while we are. See Bug 399852.   
+   */
+  virtual void SuppressFocusEvents()=0;
+  
+  /**
+   * Disables focus/blur event suppression. This "reboots" the focus
+   * by sending a blur to what was focused before suppression began,
+   * and by sending a focus event to what should be currently focused.
+   * Note this can run arbitrary code, and could even destroy the view
+   * manager. The suppression should be enabled when we're messing with
+   * the frame tree, so focus/blur handlers don't mess with stuff while
+   * we are. See Bug 399852.
+   */
+  virtual void UnsuppressFocusEvents()=0;
+
+  /**
+   * Returns true when focus suppression is on.
+   */
+  virtual PRBool IsFocusSuppressed()=0;
+
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIViewManager, NS_IVIEWMANAGER_IID)
