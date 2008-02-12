@@ -66,10 +66,11 @@ def dump_hex_tuple(t):
     return "(%s)" % ", ".join(["%#x" % i for i in t])
 
 class UUID(object):
-    def __init__(self, name, iidstr, pseudo=False, base=None):
+    type = 'UUID'
+
+    def __init__(self, name, iidstr, base=None):
         """This method *assumes* that the UUID is validly formed."""
         self.name = name
-        self.pseudo = pseudo
         self.base = base
 
         # iid is in 32-16-16-8*8 format, as hex *strings*
@@ -99,25 +100,59 @@ class UUID(object):
         return self.iid == uuid.iid and self.name == uuid.name
 
     def __repr__(self):
-        return """UUID(%r, "%s-%s-%s-%s-%s", pseudo=%r, base=%r)""" % (
-            self.name, self.iid[0], self.iid[1], self.iid[2], self.iid[3] + self.iid[4],
-            "".join([self.iid[i] for i in xrange(5, 11)]), self.pseudo, self.base)
+        return """%s(%r, "%s-%s-%s-%s-%s", base=%r)""" % (
+            self.type, self.name,
+            self.iid[0], self.iid[1], self.iid[2], self.iid[3] + self.iid[4],
+            "".join([self.iid[i] for i in xrange(5, 11)]), self.base)
 
     def asstruct(self):
         return "{ 0x%s, 0x%s, 0x%s, { 0x%s, 0x%s, 0x%s, 0x%s, 0x%s, 0x%s, 0x%s, 0x%s } }" % self.iid
 
-    def runtime_assertion(self):
-        if self.pseudo:
-            return """
-            static const nsID kGQI_%(iname)s = %(struct)s;
-            NS_ASSERTION(NS_GET_IID(%(iname)s).Equals(kGQI_%(iname)s),
-                         "GQI pseudo-IID doesn't match reality.");
-            """ % {
-                'iname': self.name,
-                'struct': self.asstruct()
-                }
-        else:
-            return ""
+    def decl(self):
+        return ""
+
+    def ref(self):
+        return "NS_GET_IID(%s)" % self.name
+
+class PseudoUUID(UUID):
+    type = 'PseudoUUID'
+
+    # No special init method needed
+
+    def decl(self):
+        return """
+        #ifdef DEBUG
+        static const nsID kGQI_%(iname)s = %(struct)s;
+        NS_ASSERTION(NS_GET_IID(%(iname)s).Equals(kGQI_%(iname)s),
+                     "GQI pseudo-IID doesn't match reality.");
+        #endif
+        """ % {
+            'iname': self.name,
+            'struct': self.asstruct()
+            }
+
+class CID(UUID):
+    type = 'CID'
+
+    def __init__(self, name, iid, decl):
+        UUID.__init__(self, name, iid)
+        self.pdecl = decl
+
+    def decl(self):
+        return """
+        static const nsID kGQI_%(pdecl)s = %(struct)s;
+        #ifdef DEBUG
+        static const nsID kGQI_TEST_%(pdecl)s = %(pdecl)s;
+        #endif
+        NS_ASSERTION(kGQI_%(pdecl)s.Equals(kGQI_TEST_%(pdecl)s),
+                     "GQI pseudo-IID doesn't match reality.");
+        """ % {
+            'pdecl': self.pdecl,
+            'struct': self.asstruct()
+            }
+
+    def ref(self):
+        return "kGQI_%s" % self.pdecl
 
 _uuid_pattern_string = r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
 
@@ -167,24 +202,24 @@ def importidl(file, includedirs):
 def gqi(ifaces, endian):
     """Find an algorithm that uniquely identifies interfaces by a single
     word. Returns (indexfunction, table)"""
-    for bits in xrange(3, 10):
+    for bits in xrange(3, 11):
         bitmask = (1 << bits) - 1
         for word in xrange(0, 4):
             for sh in xrange(0, 33 - bits):
                 shmask = bitmask << sh
 
-                # print "Trying word: %i, bits: %i, shift: %i" % (word, bits, sh)
-                # print "Bitmask: %x" % (bitmask)
-                # print "Shifter mask: %x" % (shmask)
+                if debug:
+                    print "Trying word: %i, bits: %i, shift: %i" % (word, bits, sh)
 
                 l = list([None for i in xrange(0, 1 << bits)])
                 try:
                     for i in xrange(0, len(ifaces)):
                         n = (ifaces[i].uuid.words[endian][word] & shmask) >> sh
                         if l[n] is not None:
-                            # print "found conflict, index %i" % n
-                            # print "old iface: %s" % l[n].uuid
-                            # print "new iface: %s" % i.uuid
+                            if debug:
+                                print "found conflict, index %i" % n
+                                print "old iface: %s" % ifaces[l[n]].uuid
+                                print "new iface: %s" % ifaces[i].uuid
                             raise IndexError()
 
                         l[n] = i
@@ -196,7 +231,7 @@ def gqi(ifaces, endian):
                 indexfunc = "(reinterpret_cast<const PRUint32*>(&aIID)[%i] & 0x%x) >> %i" % (word, shmask, sh)
                 return indexfunc, l
 
-    raise Exception("No run of 9 bits within a word was unique!: interfaces: %s" % [i.uuid for i in ifaces])
+    raise Exception("No run of 10 bits within a word was unique!: interfaces: %s" % [i.uuid for i in ifaces])
 
 def basecast(item, baselist):
     """Returns a string where an item is static_cast through a list of bases."""
@@ -227,9 +262,7 @@ class QIImpl(object):
 
     NS_IMETHODIMP %(cname)s::QueryInterface(REFNSIID aIID, void **aResult)
     {
-#ifdef DEBUG
-      %(pseudoassertions)s
-#endif
+      %(uuiddecls)s
 
       static const PRUint8 kLookupTable[] = {
 #ifdef IS_BIG_ENDIAN
@@ -282,7 +315,7 @@ class QIImpl(object):
 
     _actiontable_entry = """
         {
-          &NS_GET_IID(%(iname)s),
+          &(%(iref)s),
           %(enumtype)s
           %(emitTable)s
         },
@@ -319,11 +352,6 @@ class QIImpl(object):
         self.ifaces = ifaces
         self.unfound = unfound
 
-        # ensure that interfaces are not duplicated
-        ifdict = uniqdict()
-        for i, baselist in self.iter_all_ifaces():
-            ifdict[i.uuid.name] = i
-
     def iter_self_and_bases(self):
         """yields (impl, baselist) for all bases"""
         impl = self
@@ -339,7 +367,8 @@ class QIImpl(object):
         """yields (iface, baselist) for all interfaces"""
         for impl, baselist in self.iter_self_and_bases():
             for i in impl.ifaces:
-                yield i, baselist
+                if len(baselist) == 1 or i.inherit:
+                    yield i, baselist
 
     def output(self, fd):
         unfound = None
@@ -373,11 +402,20 @@ class QIImpl(object):
                                                  'name': name}
                               for name, type in types.iteritems()])
 
-        # list of (i, baselist)
-        ilist = [i for i in self.iter_all_ifaces()]
+        # ensure that interfaces are not duplicated
+        # maps name -> (uuid, baselist)
+        ifdict = uniqdict()
+        for i, baselist in self.iter_all_ifaces():
+            if i.uuid.name in ifdict:
+                print >>sys.stderr, "warning: interface '%s' from derived class '%s' overrides base class '%s'" % (i.uuid.name, baselist[0], baselist[len(baselist) - 1])
+            else:
+                ifdict[i.uuid.name] = (i, baselist)
 
-        pseudoassertions = "".join([i.uuid.runtime_assertion()
-                                    for i, baselist in ilist])
+        # list of (i, baselist)
+        ilist = [i for i in ifdict.itervalues()]
+
+        uuiddecls = "".join([i.uuid.decl()
+                             for i, baselist in ilist])
 
         bigindexfunc, bigitable = gqi([iface for iface, baselist in ilist], False)
         littleindexfunc, littleitable = gqi([iface for iface, baselist in ilist], True)
@@ -400,6 +438,7 @@ class QIImpl(object):
                {'enumtype': enumtype % {'cname': self.cname, 
                                         'enumtype': iface.action.enumtype},
                 'iname': iface.uuid.name,
+                'iref': iface.uuid.ref(),
                 'emitTable': iface.emitTable(self.cname, baselist)}
                                for iface, baselist in ilist])
 
@@ -426,7 +465,7 @@ class QIImpl(object):
             'actionenums': actionenums,
             'actiontype': actiontype,
             'actiondata': actiondata,
-            'pseudoassertions': pseudoassertions,
+            'uuiddecls': uuiddecls,
             'biglookup': biglookup,
             'littlelookup': littlelookup,
             'actiontable': actiontable,
@@ -451,10 +490,11 @@ class PointerAction(object):
                    return NS_OK;"""
     needsnullcheck = False
 
-nsCycleCollectionParticipant = UUID("nsCycleCollectionParticipant", "9674489b-1f6f-4550-a730-ccaedd104cf9", pseudo=True)
+nsCycleCollectionParticipant = PseudoUUID("nsCycleCollectionParticipant", "9674489b-1f6f-4550-a730-ccaedd104cf9")
 
 class CCParticipantResponse(object):
     action = PointerAction
+    inherit = True
 
     def __init__(self, classname):
         self.classname = classname
@@ -467,6 +507,7 @@ class TearoffResponse(object):
     """Because each tearoff is different, this response is its own action."""
     datatype = None
     needsnullcheck = True
+    inherit = True
 
     def __init__(self, uuid, allocator):
         self.setResult = """
@@ -480,7 +521,29 @@ class TearoffResponse(object):
     def emitTable(self, classname, baselist):
         return "{0}"
 
-nsCycleCollectionISupports = UUID("nsCycleCollectionISupports", "c61eac14-5f7a-4481-965e-7eaa6effa85f", pseudo=True)
+class ConditionalResponse(object):
+    """Because each condition is different, this response is its own action."""
+    datatype = None
+    needsnullcheck = False
+    inherit = True
+
+    def __init__(self, uuid, condition):
+        self.setResult = """
+        if (!(%s)) {
+            goto unfound;
+        }
+        found = static_cast<%s*>(this);
+        goto exit_addref;
+        """ % (condition, uuid.name);
+
+        self.uuid = uuid
+        self.action = self
+        self.enumtype = "NS_CONDITIONAL_%s" % uuid.name
+
+    def emitTable(self, classname, baselist):
+        return "{0}"
+
+nsCycleCollectionISupports = PseudoUUID("nsCycleCollectionISupports", "c61eac14-5f7a-4481-965e-7eaa6effa85f")
 
 class CCSupportsAction(object):
     enumtype = "CC_ISUPPORTS"
@@ -493,6 +556,7 @@ class CCSupportsAction(object):
 
 class CCISupportsResponse(object):
     action = CCSupportsAction
+    inherit = True
 
     def __init__(self, classname):
         self.classname = classname
@@ -501,12 +565,13 @@ class CCISupportsResponse(object):
     def emitTable(self, classname, baselist):
         return "{ 0 }"
 
-nsIClassInfo = UUID("nsIClassInfo", "986c11d0-f340-11d4-9075-0010a4e73d9a", pseudo=True)
+nsIClassInfo = PseudoUUID("nsIClassInfo", "986c11d0-f340-11d4-9075-0010a4e73d9a")
 
 class DOMCIResult(object):
     datatype = None
     enumtype = "DOMCI"
     needsnullcheck = True
+    inherit = False
 
     def __init__(self, domciname):
         self.action = self
@@ -531,6 +596,7 @@ class OffsetAction(object):
 
 class OffsetThisQIResponse(object):
     action = OffsetAction
+    inherit = True
 
     def __init__(self, uuid):
         self.uuid = uuid
@@ -548,6 +614,7 @@ class OffsetThisQIResponse(object):
 
 class OffsetFutureThisQIResponse(OffsetThisQIResponse):
     action = OffsetAction
+    inherit = True
 
     def __init__(self, uuid):
         self.uuid = uuid
@@ -590,6 +657,8 @@ class LiteralAction(object):
         self.needsnullcheck = code.find('exit_nullcheck_addref') != -1
 
 class LiteralResponse(object):
+    inherit = True
+
     def __init__(self, action, uuid):
         self.action = action
         self.uuid = uuid
@@ -641,6 +710,9 @@ def build_map(f, cname, iids):
         elif action == 'NS_INTERFACE_MAP_ENTRY_TEAROFF':
             iname, allocator = items
             members.append(TearoffResponse(iids[iname], allocator))
+        elif action == 'NS_INTERFACE_MAP_ENTRY_CONDITIONAL':
+            iname, condition = items
+            members.append(ConditionalResponse(iids[iname], condition))
         elif action == 'NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO':
             domciname, = items
             members.append(DOMCIResult(domciname))
@@ -661,8 +733,9 @@ def build_map(f, cname, iids):
     raise Exception("%s: Unexpected EOF" % f.loc())
 
 _import = re.compile(r'%(?P<type>import|import-idl)\s+(?:"|\<)(?P<filename>[a-z\.\-\_0-9]+)(?:"|\>)\s*$', re.I)
-_impl_qi = re.compile(r'NS_IMPL_(?P<threadsafe>THREADSAFE_)?(?P<type>QUERY_INTERFACE|ISUPPORTS)(?:\d+)\((?P<bases>.*)\)\s*$')
+_impl_qi = re.compile(r'NS_IMPL_(?P<threadsafe>THREADSAFE_)?(?P<type>QUERY_INTERFACE|ISUPPORTS)(?P<inherited>_INHERITED)?(?:\d+)\((?P<bases>.*)\)\s*$')
 _pseudoiid = re.compile(r'%pseudo-iid\s+(?P<name>[a-z_0-9]+)\s+(?P<iid>' + _uuid_pattern_string + r')\s*$', re.I)
+_pseudocid = re.compile(r'%pseudo-cid\s+(?P<name>[a-z_0-9]+)\s+(?P<iid>' + _uuid_pattern_string + r')\s+(?P<decl>[a-z_0-9]+)$', re.I)
 _map_begin = re.compile(r'NS_INTERFACE_MAP_BEGIN(?P<cc>_CYCLE_COLLECTION)?\((?P<classname>[A-Za-z0-9+]+)(?:\s*,\s*(?P<base>[A-Za-z0-9+]+))?\)$')
 
 def parsefile(file, fd, includedirs):
@@ -689,8 +762,14 @@ def parsefile(file, fd, includedirs):
 
         m = _pseudoiid.match(line)
         if m is not None:
-            uuid = UUID(m.group('name'), m.group('iid'), pseudo=True)
+            uuid = PseudoUUID(m.group('name'), m.group('iid'))
             iids[m.group('name')] = uuid
+            continue
+
+        m = _pseudocid.match(line)
+        if m is not None:
+            uuid = CID(m.group('name'), m.group('iid'), m.group('decl'))
+            iids[m.group('decl')] = uuid
             continue
 
         m = _import.match(line)
@@ -722,12 +801,22 @@ def parsefile(file, fd, includedirs):
 
             bases = _split_commas.split(m.group('bases'))
             cname = bases.pop(0)
+            if m.group('inherited'):
+                inherited = bases.pop(0)
+                if inherited in impls:
+                    base = impls[inherited]
+                else:
+                    base = imported[inherited]
+            else:
+                base = None
+
             baseuuids = [iids[name] for name in bases]
             ifaces = [OffsetThisQIResponse(uuid) for uuid in baseuuids]
             ifaces.append(OffsetThisQIResponseAmbiguous(iids['nsISupports'], ifaces[0].uuid))
             q = QIImpl(cname, ifaces,
                        emitrefcount=(m.group('type') == 'ISUPPORTS'),
-                       threadsafe=m.group('threadsafe') or '')
+                       threadsafe=m.group('threadsafe') or '',
+                       base=base)
             impls[cname] = q
             continue
 
@@ -761,8 +850,14 @@ def main():
                  help="Write dependencies to a file")
     o.add_option("-o", dest="out_file",
                  help="Write output to file. Required")
+    o.add_option("-v", dest="verbose", action="store_true",
+                 help="Print verbose debugging output.")
 
     (options, files) = o.parse_args()
+
+    if options.verbose:
+        global debug
+        debug = True
 
     if options.out_file is None:
         o.print_help()

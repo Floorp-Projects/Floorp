@@ -1597,16 +1597,6 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
 //-----------------------------------------------------------------------------
 // xpcom api
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsSocketTransport,
-                              nsISocketTransport,
-                              nsITransport,
-                              nsIDNSListener,
-                              nsIClassInfo)
-NS_IMPL_CI_INTERFACE_GETTER3(nsSocketTransport,
-                             nsISocketTransport,
-                             nsITransport,
-                             nsIDNSListener)
-
 NS_IMETHODIMP
 nsSocketTransport::OpenInputStream(PRUint32 flags,
                                    PRUint32 segsize,

@@ -913,30 +913,6 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalWindow)
 
-// QueryInterface implementation for nsGlobalWindow
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
-  // Make sure this matches the cast in nsGlobalWindow::FromWrapper()
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptGlobalObject)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMWindowInternal)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMWindow)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMWindow2)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMJSWindow)
-  NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObject)
-  NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
-  NS_INTERFACE_MAP_ENTRY(nsPIDOMEventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsPIDOMWindow)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMViewCSS)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMAbstractView)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMStorageWindow)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Window)
-NS_INTERFACE_MAP_END
-
-
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsGlobalWindow, nsIScriptGlobalObject)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsGlobalWindow,
                                            nsIScriptGlobalObject)

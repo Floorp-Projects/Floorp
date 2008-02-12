@@ -1,0 +1,44 @@
+%import-idl "nsIDOMWindowInternal.idl"
+%import-idl "nsIDOMWindow2.idl"
+%import-idl "nsIDOMJSWindow.idl"
+%import-idl "nsIDOMEventTarget.idl"
+%import-idl "nsIDOM3EventTarget.idl"
+%import-idl "nsIDOMNSEventTarget.idl"
+%import-idl "nsIDOMViewCSS.idl"
+%import-idl "nsIDOMAbstractView.idl"
+%import-idl "nsIDOMStorageWindow.idl"
+%import-idl "nsIWeakReference.idl"
+%import-idl "nsIInterfaceRequestor.idl"
+
+%pseudo-iid nsIScriptGlobalObject 6afecd40-0b9a-4cfd-8c42-0f645cd91829
+%pseudo-iid nsIScriptObjectPrincipal  3eedba38-8d22-41e1-817a-0e43e165b664
+%pseudo-iid nsPIDOMEventTarget  44a6597b-9fc3-4a8d-b7a4-d9009abf9d15
+%pseudo-iid nsPIDOMWindow 909852b5-b9e6-4d94-8de3-051634800b73
+
+%{C++
+#include "nsGlobalWindow.h"
+#include "nsDOMClassInfo.h"
+%}
+
+// QueryInterface implementation for nsGlobalWindow
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
+  // Make sure this matches the cast in nsGlobalWindow::FromWrapper()
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptGlobalObject)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMWindowInternal)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMWindow)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMWindow2)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMJSWindow)
+  NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObject)
+  NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
+  NS_INTERFACE_MAP_ENTRY(nsPIDOMEventTarget)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
+  NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
+  NS_INTERFACE_MAP_ENTRY(nsPIDOMWindow)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMViewCSS)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMAbstractView)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMStorageWindow)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Window)
+NS_INTERFACE_MAP_END

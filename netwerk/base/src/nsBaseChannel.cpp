@@ -235,18 +235,6 @@ nsBaseChannel::BeginPumpingData()
 }
 
 //-----------------------------------------------------------------------------
-// nsBaseChannel::nsISupports
-
-NS_IMPL_ISUPPORTS_INHERITED6(nsBaseChannel,
-                             nsHashPropertyBag,
-                             nsIRequest,
-                             nsIChannel,
-                             nsIInterfaceRequestor,
-                             nsITransportEventSink,
-                             nsIRequestObserver,
-                             nsIStreamListener)
-
-//-----------------------------------------------------------------------------
 // nsBaseChannel::nsIRequest
 
 NS_IMETHODIMP

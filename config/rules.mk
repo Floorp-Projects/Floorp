@@ -1199,7 +1199,7 @@ endif # COMPILER_DEPEND
 endif # MOZ_AUTO_DEPS
 
 %QI.cpp: %.gqi $(topsrcdir)/xpcom/base/gqi.py
-	$(PYTHON) $(topsrcdir)/xpcom/base/gqi.py $(INCLUDES) -I $(IDL_DIR) -o $@ -D $(MDDEPDIR)/$(@F).pp $<
+	$(PYTHON) $(topsrcdir)/xpcom/base/gqi.py $(GQIFLAGS) $(INCLUDES) -I $(IDL_DIR) -o $@ -D $(MDDEPDIR)/$(@F).pp $<
 
 # Rules for building native targets must come first because of the host_ prefix
 host_%.$(OBJ_SUFFIX): %.c Makefile Makefile.in

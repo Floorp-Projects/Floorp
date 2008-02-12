@@ -354,16 +354,6 @@ nsSocketTransportService::Poll(PRBool wait, PRUint32 *interval)
     return rv;
 }
 
-//-----------------------------------------------------------------------------
-// xpcom api
-
-NS_IMPL_THREADSAFE_ISUPPORTS5(nsSocketTransportService,
-                              nsISocketTransportService,
-                              nsIEventTarget,
-                              nsIThreadObserver,
-                              nsIRunnable,
-                              nsPISocketTransportService)
-
 // called from main thread only
 NS_IMETHODIMP
 nsSocketTransportService::Init()
