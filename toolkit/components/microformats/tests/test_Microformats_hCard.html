@@ -331,6 +331,10 @@
         </span>
         <span class="title"><strong>President</strong></span> and
         <span class="role"><em>Chief</em></span>
+        <span class="agent vcard">
+          <span class="fn">Bob Smith</span>
+          <span class="title">Executive Assistant</span>
+        </span>
   <!--       <span class="agent</span> @TODO -->
         <span class="org">
           <span class="organization-name"><strong>Intellicorp</strong></span>
@@ -872,6 +876,8 @@ function test_hCard() {
   is(hcard.org[0]["organization-name"], "Intellicorp", "26-ancestors - organization-name");
   is(hcard.org[0]["organization-unit"][0], "Intelligence", "26-ancestors - organization-unit");
   is(hcard.role, "Chief", "26-ancestors - role");
+  is(hcard.agent[0].fn, "Bob Smith", "26-ancestors - agent.fn");
+  is(hcard.agent[0].title, "Executive Assistant", "26-ancestors - agent.title");
   is(hcard.tel[0].value, "415.555.1234", "26-ancestors - tel");
   is(hcard.title[0], "President", "26-ancestors - title");
   is(hcard.tz, "-0700", "26-ancestors - tz");
