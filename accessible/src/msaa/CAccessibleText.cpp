@@ -47,6 +47,7 @@
 #include "nsIAccessibleText.h"
 #include "nsIAccessibleTypes.h"
 #include "nsIWinAccessNode.h"
+#include "nsAccessNodeWrap.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -83,16 +84,22 @@ CAccessibleText::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 CAccessibleText::addSelection(long aStartOffset, long aEndOffset)
 {
+__try {
   GET_NSIACCESSIBLETEXT
 
   nsresult rv = textAcc->AddSelection(aStartOffset, aEndOffset);
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  if (NS_SUCCEEDED(rv))
+    return S_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleText::get_attributes(long aOffset, long *aStartOffset,
                                 long *aEndOffset, BSTR *aTextAttributes)
 {
+__try {
   GET_NSIACCESSIBLETEXT
 
   nsCOMPtr<nsIAccessible> accessible;
@@ -117,20 +124,25 @@ CAccessibleText::get_attributes(long aOffset, long *aStartOffset,
 
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
-
   return hr;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleText::get_caretOffset(long *aOffset)
 {
+__try {
   GET_NSIACCESSIBLETEXT
 
   PRInt32 offset = 0;
   nsresult rv = textAcc->GetCaretOffset(&offset);
   *aOffset = offset;
+  if (NS_SUCCEEDED(rv))
+    return S_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  return E_FAIL;
 }
 
 STDMETHODIMP
@@ -139,6 +151,7 @@ CAccessibleText::get_characterExtents(long aOffset,
                                       long *aX, long *aY,
                                       long *aWidth, long *aHeight)
 {
+__try {
   GET_NSIACCESSIBLETEXT
 
   PRUint32 geckoCoordType = (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE) ?
@@ -153,19 +166,28 @@ CAccessibleText::get_characterExtents(long aOffset,
   *aWidth = width;
   *aHeight = height;
 
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  if (NS_SUCCEEDED(rv))
+    return S_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleText::get_nSelections(long *aNSelections)
 {
+__try {
   GET_NSIACCESSIBLETEXT
 
   PRInt32 selCount = 0;
   nsresult rv = textAcc->GetSelectionCount(&selCount);
   *aNSelections = selCount;
 
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  if (NS_SUCCEEDED(rv))
+    return S_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
+  return E_FAIL;
 }
 
 STDMETHODIMP
@@ -173,6 +195,7 @@ CAccessibleText::get_offsetAtPoint(long aX, long aY,
                                    enum IA2CoordinateType aCoordType,
                                    long *aOffset)
 {
+__try {
   GET_NSIACCESSIBLETEXT
 
   PRUint32 geckoCoordType = (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE) ?
@@ -183,13 +206,18 @@ CAccessibleText::get_offsetAtPoint(long aX, long aY,
   nsresult rv = textAcc->GetOffsetAtPoint(aX, aY, geckoCoordType, &offset);
   *aOffset = offset;
 
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  if (NS_SUCCEEDED(rv))
+    return S_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleText::get_selection(long aSelectionIndex, long *aStartOffset,
                                long *aEndOffset)
 {
+__try {
   GET_NSIACCESSIBLETEXT
 
   PRInt32 startOffset = 0, endOffset = 0;
@@ -198,12 +226,17 @@ CAccessibleText::get_selection(long aSelectionIndex, long *aStartOffset,
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
 
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  if (NS_SUCCEEDED(rv))
+    return S_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleText::get_text(long aStartOffset, long aEndOffset, BSTR *aText)
 {
+__try {
   GET_NSIACCESSIBLETEXT
 
   nsAutoString text;
@@ -211,8 +244,11 @@ CAccessibleText::get_text(long aStartOffset, long aEndOffset, BSTR *aText)
   if (NS_FAILED(rv))
     return E_FAIL;
 
-  INT result = ::SysReAllocStringLen(aText, text.get(), text.Length());
-  return result ? NS_OK : E_OUTOFMEMORY;
+  if (!::SysReAllocStringLen(aText, text.get(), text.Length()))
+    return E_OUTOFMEMORY;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
+  return S_OK;
 }
 
 STDMETHODIMP
@@ -221,6 +257,7 @@ CAccessibleText::get_textBeforeOffset(long aOffset,
                                       long *aStartOffset, long *aEndOffset,
                                       BSTR *aText)
 {
+__try {
   GET_NSIACCESSIBLETEXT
 
   nsresult rv = NS_OK;
@@ -245,8 +282,11 @@ CAccessibleText::get_textBeforeOffset(long aOffset,
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
 
-  INT result = ::SysReAllocStringLen(aText, text.get(), text.Length());
-  return result ? NS_OK : E_OUTOFMEMORY;
+  if (!::SysReAllocStringLen(aText, text.get(), text.Length()))
+    return E_OUTOFMEMORY;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
+  return S_OK;
 }
 
 STDMETHODIMP
@@ -255,6 +295,7 @@ CAccessibleText::get_textAfterOffset(long aOffset,
                                      long *aStartOffset, long *aEndOffset,
                                      BSTR *aText)
 {
+__try {
   GET_NSIACCESSIBLETEXT
 
   nsresult rv = NS_OK;
@@ -279,8 +320,11 @@ CAccessibleText::get_textAfterOffset(long aOffset,
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
 
-  INT result = ::SysReAllocStringLen(aText, text.get(), text.Length());
-  return result ? NS_OK : E_OUTOFMEMORY;
+  if (!::SysReAllocStringLen(aText, text.get(), text.Length()))
+    return E_OUTOFMEMORY;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
+  return S_OK;
 }
 
 STDMETHODIMP
@@ -289,6 +333,7 @@ CAccessibleText::get_textAtOffset(long aOffset,
                                   long *aStartOffset, long *aEndOffset,
                                   BSTR *aText)
 {
+__try {
   GET_NSIACCESSIBLETEXT
 
   nsresult rv = NS_OK;
@@ -313,59 +358,87 @@ CAccessibleText::get_textAtOffset(long aOffset,
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
 
-  INT result = ::SysReAllocStringLen(aText, text.get(), text.Length());
-  return result ? NS_OK : E_OUTOFMEMORY;
+  if (!::SysReAllocStringLen(aText, text.get(), text.Length()))
+    return E_OUTOFMEMORY;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
+  return S_OK;
 }
 
 STDMETHODIMP
 CAccessibleText::removeSelection(long aSelectionIndex)
 {
+__try {
   GET_NSIACCESSIBLETEXT
 
   nsresult rv = textAcc->RemoveSelection(aSelectionIndex);
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  if (NS_SUCCEEDED(rv))
+    return S_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleText::setCaretOffset(long aOffset)
 {
+__try {
   GET_NSIACCESSIBLETEXT
 
   nsresult rv = textAcc->SetCaretOffset(aOffset);
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  if (NS_SUCCEEDED(rv))
+    return S_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleText::setSelection(long aSelectionIndex, long aStartOffset,
                               long aEndOffset)
 {
+__try {
   GET_NSIACCESSIBLETEXT
 
   nsresult rv = textAcc->SetSelectionBounds(aSelectionIndex,
                                             aStartOffset, aEndOffset);
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  if (NS_SUCCEEDED(rv))
+    return S_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleText::get_nCharacters(long *aNCharacters)
 {
+__try {
   GET_NSIACCESSIBLETEXT
 
   PRInt32 charCount = 0;
   nsresult rv = textAcc->GetCharacterCount(&charCount);
   *aNCharacters = charCount;
 
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  if (NS_SUCCEEDED(rv))
+    return S_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleText::scrollSubstringTo(long aStartIndex, long aEndIndex,
                                    enum IA2ScrollType aScrollType)
 {
+__try {
   GET_NSIACCESSIBLETEXT
 
   nsresult rv = textAcc->ScrollSubstringTo(aStartIndex, aEndIndex, aScrollType);
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  if (NS_SUCCEEDED(rv))
+    return S_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
+  return E_FAIL;
 }
 
 STDMETHODIMP
@@ -373,6 +446,7 @@ CAccessibleText::scrollSubstringToPoint(long aStartIndex, long aEndIndex,
                                         enum IA2CoordinateType aCoordType,
                                         long aX, long aY)
 {
+__try {
   GET_NSIACCESSIBLETEXT
 
   PRUint32 geckoCoordType = (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE) ?
@@ -381,19 +455,29 @@ CAccessibleText::scrollSubstringToPoint(long aStartIndex, long aEndIndex,
 
   nsresult rv = textAcc->ScrollSubstringToPoint(aStartIndex, aEndIndex,
                                                 geckoCoordType, aX, aY);
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  if (NS_SUCCEEDED(rv))
+    return S_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleText::get_newText(IA2TextSegment *aNewText)
 {
+__try {
   return GetModifiedText(PR_TRUE, aNewText);
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleText::get_oldText(IA2TextSegment *aOldText)
 {
+__try {
   return GetModifiedText(PR_FALSE, aOldText);
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
 // CAccessibleText

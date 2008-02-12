@@ -44,6 +44,7 @@
 
 #include "nsIAccessibleHypertext.h"
 #include "nsIWinAccessNode.h"
+#include "nsAccessNodeWrap.h"
 
 #include "nsCOMPtr.h"
 
@@ -53,7 +54,6 @@ STDMETHODIMP
 CAccessibleHypertext::QueryInterface(REFIID iid, void** ppv)
 {
   *ppv = NULL;
-
   if (IID_IAccessibleHypertext == iid) {
     nsCOMPtr<nsIAccessibleHyperText> hyperAcc(do_QueryInterface(this));
     if (!hyperAcc)
@@ -72,6 +72,7 @@ CAccessibleHypertext::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 CAccessibleHypertext::get_nHyperlinks(long *aHyperlinkCount)
 {
+__try {
   *aHyperlinkCount = 0;
 
   nsCOMPtr<nsIAccessibleHyperText> hyperAcc(do_QueryInterface(this));
@@ -82,13 +83,17 @@ CAccessibleHypertext::get_nHyperlinks(long *aHyperlinkCount)
   nsresult rv = hyperAcc->GetLinks(&count);
   *aHyperlinkCount = count;
 
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  if (NS_SUCCEEDED(rv))
+    return S_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleHypertext::get_hyperlink(long aIndex,
                                     IAccessibleHyperlink **aHyperlink)
 {
+__try {
   *aHyperlink = NULL;
 
   nsCOMPtr<nsIAccessibleHyperText> hyperAcc(do_QueryInterface(this));
@@ -108,13 +113,17 @@ CAccessibleHypertext::get_hyperlink(long aIndex,
   nsresult rv =  winAccessNode->QueryNativeInterface(IID_IAccessibleHyperlink,
                                                      &instancePtr);
   *aHyperlink = static_cast<IAccessibleHyperlink*>(instancePtr);
+  if (NS_SUCCEEDED(rv))
+    return S_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleHypertext::get_hyperlinkIndex(long aCharIndex, long *aHyperlinkIndex)
 {
+__try {
   *aHyperlinkIndex = 0;
 
   nsCOMPtr<nsIAccessibleHyperText> hyperAcc(do_QueryInterface(this));
@@ -124,7 +133,10 @@ CAccessibleHypertext::get_hyperlinkIndex(long aCharIndex, long *aHyperlinkIndex)
   PRInt32 index = 0;
   nsresult rv = hyperAcc->GetLinkIndex(aCharIndex, &index);
   *aHyperlinkIndex = index;
+  if (NS_SUCCEEDED(rv))
+    return S_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  return E_FAIL;
 }
 

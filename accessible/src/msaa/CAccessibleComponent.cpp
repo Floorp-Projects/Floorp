@@ -45,6 +45,7 @@
 #include "nsIAccessNode.h"
 #include "nsIAccessible.h"
 #include "nsIAccessibleStates.h"
+#include "nsAccessNodeWrap.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -80,6 +81,7 @@ CAccessibleComponent::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 CAccessibleComponent::get_locationInParent(long *aX, long *aY)
 {
+__try {
   *aX = 0;
   *aY = 0;
 
@@ -124,6 +126,7 @@ CAccessibleComponent::get_locationInParent(long *aX, long *aY)
 
   *aX = x - parentx;
   *aY = y - parenty;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
 }
@@ -131,20 +134,29 @@ CAccessibleComponent::get_locationInParent(long *aX, long *aY)
 STDMETHODIMP
 CAccessibleComponent::get_foreground(IA2Color *aForeground)
 {
+__try {
   return GetARGBValueFromCSSProperty(NS_LITERAL_STRING("color"), aForeground);
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleComponent::get_background(IA2Color *aBackground)
 {
+__try {
   return GetARGBValueFromCSSProperty(NS_LITERAL_STRING("background-color"),
                                      aBackground);
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
+  return E_FAIL;
 }
 
 HRESULT
 CAccessibleComponent::GetARGBValueFromCSSProperty(const nsAString& aPropName,
                                                   IA2Color *aColorValue)
 {
+__try {
   *aColorValue = 0;
 
   nsCOMPtr<nsIAccessNode> acc(do_QueryInterface(this));
@@ -215,6 +227,7 @@ CAccessibleComponent::GetARGBValueFromCSSProperty(const nsAString& aPropName,
                  (((IA2Color) green) << IA2GreenShift) |
                  (((IA2Color) red) << IA2RedShift) |
                  (((IA2Color) (alpha * 0xff)) << IA2AlphaShift);
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
 }

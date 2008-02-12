@@ -62,13 +62,6 @@
 #include "nsEventMap.h"
 #include "nsArrayUtils.h"
 
-// Avoid warning C4509:
-// nonstandard extension used: 'nsAccessibleWrap::[methodname]' 
-// uses SEH and 'xpAccessible' has destructor
-// At this point we're catching a crash which is of much greater
-// importance than the missing dereference for the nsCOMPtr<>
-#pragma warning( disable : 4509 )
-
 /* For documentation of the accessibility architecture,
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */

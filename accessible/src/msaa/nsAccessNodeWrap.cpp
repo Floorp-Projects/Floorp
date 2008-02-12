@@ -168,6 +168,7 @@ STDMETHODIMP nsAccessNodeWrap::get_nodeInfo(
     /* [out] */ unsigned int __RPC_FAR *aUniqueID,
     /* [out] */ unsigned short __RPC_FAR *aNodeType)
 {
+__try{
   *aNodeName = nsnull;
   *aNodeValue = nsnull;
 
@@ -207,6 +208,7 @@ STDMETHODIMP nsAccessNodeWrap::get_nodeInfo(
   if (nodeList && NS_OK == nodeList->GetLength(&numChildren))
     *aNumChildren = static_cast<unsigned int>(numChildren);
 
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return S_OK;
 }
 
@@ -219,6 +221,7 @@ STDMETHODIMP nsAccessNodeWrap::get_attributes(
     /* [length_is][size_is][out] */ BSTR __RPC_FAR *aAttribValues,
     /* [out] */ unsigned short __RPC_FAR *aNumAttribs)
 {
+__try{
   *aNumAttribs = 0;
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
@@ -243,6 +246,7 @@ STDMETHODIMP nsAccessNodeWrap::get_attributes(
     content->GetAttr(name->NamespaceID(), name->LocalName(), attributeValue);
     aAttribValues[index] = ::SysAllocString(attributeValue.get());
   }
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK; 
 }
@@ -254,6 +258,7 @@ STDMETHODIMP nsAccessNodeWrap::get_attributesForNames(
     /* [length_is][size_is][in] */ short __RPC_FAR *aNameSpaceID,
     /* [length_is][size_is][retval] */ BSTR __RPC_FAR *aAttribValues)
 {
+__try {
   nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
 
@@ -285,6 +290,7 @@ STDMETHODIMP nsAccessNodeWrap::get_attributesForNames(
         aAttribValues[index] = ::SysAllocString(attributeValue.get());
     }
   }
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK; 
 }
@@ -297,6 +303,7 @@ STDMETHODIMP nsAccessNodeWrap::get_computedStyle(
     /* [length_is][size_is][out] */ BSTR __RPC_FAR *aStyleValues,
     /* [out] */ unsigned short __RPC_FAR *aNumStyleProperties)
 {
+__try{
   nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
   if (!domElement)
     return E_FAIL;
@@ -321,6 +328,7 @@ STDMETHODIMP nsAccessNodeWrap::get_computedStyle(
     }
   }
   *aNumStyleProperties = static_cast<unsigned short>(realIndex);
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
 }
@@ -332,6 +340,7 @@ STDMETHODIMP nsAccessNodeWrap::get_computedStyleForProperties(
     /* [length_is][size_is][in] */ BSTR __RPC_FAR *aStyleProperties,
     /* [length_is][size_is][out] */ BSTR __RPC_FAR *aStyleValues)
 {
+__try {
   nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
   if (!domElement)
     return E_FAIL;
@@ -347,12 +356,14 @@ STDMETHODIMP nsAccessNodeWrap::get_computedStyleForProperties(
       cssDecl->GetPropertyValue(nsDependentString(static_cast<PRUnichar*>(aStyleProperties[index])), value);  // Get property value
     aStyleValues[index] = ::SysAllocString(value.get());
   }
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
 }
 
 STDMETHODIMP nsAccessNodeWrap::scrollTo(/* [in] */ boolean aScrollTopLeft)
 {
+__try {
   PRUint32 scrollType =
     aScrollTopLeft ? nsIAccessibleScrollType::SCROLL_TYPE_TOP_LEFT :
                      nsIAccessibleScrollType::SCROLL_TYPE_BOTTOM_RIGHT;
@@ -360,6 +371,7 @@ STDMETHODIMP nsAccessNodeWrap::scrollTo(/* [in] */ boolean aScrollTopLeft)
   nsresult rv = ScrollTo(scrollType);
   if (NS_SUCCEEDED(rv))
     return S_OK;
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return E_FAIL;
 }
@@ -416,60 +428,70 @@ ISimpleDOMNode* nsAccessNodeWrap::MakeAccessNode(nsIDOMNode *node)
 
 STDMETHODIMP nsAccessNodeWrap::get_parentNode(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
+__try {
   if (!mDOMNode)
     return E_FAIL;
  
   nsCOMPtr<nsIDOMNode> node;
   mDOMNode->GetParentNode(getter_AddRefs(node));
   *aNode = MakeAccessNode(node);
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
 }
 
 STDMETHODIMP nsAccessNodeWrap::get_firstChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
+__try {
   if (!mDOMNode)
     return E_FAIL;
  
   nsCOMPtr<nsIDOMNode> node;
   mDOMNode->GetFirstChild(getter_AddRefs(node));
   *aNode = MakeAccessNode(node);
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
 }
 
 STDMETHODIMP nsAccessNodeWrap::get_lastChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
+  __try {
   if (!mDOMNode)
     return E_FAIL;
 
   nsCOMPtr<nsIDOMNode> node;
   mDOMNode->GetLastChild(getter_AddRefs(node));
   *aNode = MakeAccessNode(node);
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
 }
 
 STDMETHODIMP nsAccessNodeWrap::get_previousSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
+__try {
   if (!mDOMNode)
     return E_FAIL;
 
   nsCOMPtr<nsIDOMNode> node;
   mDOMNode->GetPreviousSibling(getter_AddRefs(node));
   *aNode = MakeAccessNode(node);
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
 }
 
 STDMETHODIMP nsAccessNodeWrap::get_nextSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
+__try {
   if (!mDOMNode)
     return E_FAIL;
 
   nsCOMPtr<nsIDOMNode> node;
   mDOMNode->GetNextSibling(getter_AddRefs(node));
   *aNode = MakeAccessNode(node);
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
 }
@@ -478,6 +500,7 @@ STDMETHODIMP
 nsAccessNodeWrap::get_childAt(unsigned aChildIndex,
                               ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
+__try {
   *aNode = nsnull;
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
@@ -491,6 +514,7 @@ nsAccessNodeWrap::get_childAt(unsigned aChildIndex,
     return E_FAIL; // No such child
 
   *aNode = MakeAccessNode(node);
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
 }
@@ -498,6 +522,7 @@ nsAccessNodeWrap::get_childAt(unsigned aChildIndex,
 STDMETHODIMP 
 nsAccessNodeWrap::get_innerHTML(BSTR __RPC_FAR *aInnerHTML)
 {
+__try {
   *aInnerHTML = nsnull;
 
   nsCOMPtr<nsIDOMNSHTMLElement> domNSElement(do_QueryInterface(mDOMNode));
@@ -507,6 +532,7 @@ nsAccessNodeWrap::get_innerHTML(BSTR __RPC_FAR *aInnerHTML)
   nsAutoString innerHTML;
   domNSElement->GetInnerHTML(innerHTML);
   *aInnerHTML = ::SysAllocString(innerHTML.get());
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
 }
@@ -514,6 +540,7 @@ nsAccessNodeWrap::get_innerHTML(BSTR __RPC_FAR *aInnerHTML)
 STDMETHODIMP 
 nsAccessNodeWrap::get_language(BSTR __RPC_FAR *aLanguage)
 {
+__try {
   *aLanguage = nsnull;
 
   nsAutoString language;
@@ -521,6 +548,8 @@ nsAccessNodeWrap::get_language(BSTR __RPC_FAR *aLanguage)
     return E_FAIL;
   }
   *aLanguage = ::SysAllocString(language.get());
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
   return S_OK;
 }
 
@@ -528,8 +557,10 @@ STDMETHODIMP
 nsAccessNodeWrap::get_localInterface( 
     /* [out] */ void __RPC_FAR *__RPC_FAR *localInterface)
 {
+__try {
   *localInterface = static_cast<nsIAccessNode*>(this);
   NS_ADDREF_THIS();
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return S_OK;
 }
  
