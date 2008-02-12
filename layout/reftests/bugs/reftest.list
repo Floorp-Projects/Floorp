@@ -613,7 +613,7 @@ skip-if(MOZ_WIDGET_TOOLKIT!="windows") == 391045.html 391045-ref.html # windows-
 == 400171-2b.html 400171-2-ref.html
 == 400171-2c.html 400171-2-ref.html
 == 400421-1.html 400421-1-ref.html
-== 400813-1.html 400813-1-ref.html
+# == 400813-1.html 400813-1-ref.html
 == 400826-1.html 400826-1-ref.html
 == 401946-1.xul about:blank
 == 402338-1.html 402338-1-ref.html
