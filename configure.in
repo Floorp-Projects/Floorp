@@ -1735,6 +1735,8 @@ case "$target" in
                                       # when using DWARF2 as the debugging
                                       # format)    
 
+    MOZ_MEMORY=1
+
     case "${target_cpu}" in
     alpha*)
     	CFLAGS="$CFLAGS -mieee"
