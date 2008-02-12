@@ -140,6 +140,30 @@ ATSUFontID MacOSFontEntry::GetFontID()
     return mATSUFontID; 
 }
 
+// ATSUI requires AAT-enabled fonts to render complex scripts correctly.
+// For now, simple clear out the cmap codepoints for fonts that have
+// codepoints for complex scripts. (Bug 361986)
+
+enum eComplexScript {
+    eComplexScriptArabic,
+    eComplexScriptIndic,
+    eComplexScriptTibetan
+};
+
+struct ScriptRange {
+    eComplexScript   script;
+    PRUint32         rangeStart;
+    PRUint32         rangeEnd;
+};
+
+const ScriptRange gScriptsThatRequireShaping[] = {
+    { eComplexScriptArabic, 0x0600, 0x077F },   // Basic Arabic and Arabic Supplement
+    { eComplexScriptIndic, 0x0900, 0x0D7F },     // Indic scripts - Devanagari, Bengali, ..., Malayalam
+    { eComplexScriptTibetan, 0x0F00, 0x0FFF }     // Tibetan
+    // Thai seems to be "renderable" without AAT morphing tables
+    // xxx - Lao, Khmer?
+};
+
 nsresult
 MacOSFontEntry::ReadCMAP()
 {
@@ -167,7 +191,49 @@ MacOSFontEntry::ReadCMAP()
     nsresult rv = NS_ERROR_FAILURE;
     PRPackedBool  unicodeFont, symbolFont; // currently ignored
     rv = gfxFontUtils::ReadCMAP(cmap, size, mCharacterMap, mUnicodeRanges, unicodeFont, symbolFont);
+
+    // for complex scripts, check for the presence of mort/morx
+    PRBool checkedForMorphTable = PR_FALSE, hasMorphTable = PR_FALSE;
     
+    PRUint32 s, numScripts = sizeof(gScriptsThatRequireShaping) / sizeof(ScriptRange);
+    
+    for (s = 0; s < numScripts; s++) {
+        eComplexScript  whichScript = gScriptsThatRequireShaping[s].script;
+        
+        // check to see if the cmap includes complex script codepoints
+        if (mCharacterMap.TestRange(gScriptsThatRequireShaping[s].rangeStart, gScriptsThatRequireShaping[s].rangeEnd)) {
+            
+            // check for mort/morx table, if haven't already
+            if (!checkedForMorphTable) {
+                status = ATSFontGetTable(fontID, 'morx', 0, 0, 0, &size);
+                if ( status == noErr ) {
+                    checkedForMorphTable = PR_TRUE;
+                    hasMorphTable = PR_TRUE;
+                } else {
+                    // check for a mort table
+                    status = ATSFontGetTable(fontID, 'mort', 0, 0, 0, &size);
+                    checkedForMorphTable = PR_TRUE;
+                    if ( status == noErr ) {
+                        hasMorphTable = PR_TRUE;
+                    }
+                }
+            }
+            
+            // rude hack - the Chinese STxxx fonts on 10.4 contain morx tables and Arabic glyphs but 
+            // lack the proper info for shaping Arabic, so exclude explicitly, ick
+            if (whichScript == eComplexScriptArabic && hasMorphTable) {
+                if (mPostscriptName.CharAt(0) == 'S' && mPostscriptName.CharAt(1) == 'T') {
+                    mCharacterMap.ClearRange(gScriptsThatRequireShaping[s].rangeStart, gScriptsThatRequireShaping[s].rangeEnd);
+                }
+            }
+
+            // general exclusion - if no morph table, exclude codepoints
+            if (!hasMorphTable) {
+                mCharacterMap.ClearRange(gScriptsThatRequireShaping[s].rangeStart, gScriptsThatRequireShaping[s].rangeEnd);
+            }
+        }
+    }
+
     return rv;
 }
 
