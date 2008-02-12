@@ -542,10 +542,7 @@ user_pref("network.proxy.autoconfig_url", "%(pacURL)s");
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
 toolbar,
 toolbarpalette {
-  background-repeat: repeat-x !important;
-  background-position: top right !important;
   background-color: rgb(235, 235, 235) !important;
-  background-image: url("chrome://browser/skin/bookmark_toolbar_background.gif") !important;
 }
 toolbar#nav-bar {
   background-image: none !important;
