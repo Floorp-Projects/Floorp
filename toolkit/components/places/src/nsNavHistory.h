@@ -688,6 +688,16 @@ protected:
   nsresult AutoCompleteFullHistorySearch(PRBool* aHasMoreResults);
   nsresult AutoCompleteTagsSearch();
 
+  /**
+   * Query type passed to AutoCompleteProcessSearch to determine what style to
+   * use and if results should be filtered
+   */
+  enum QueryType { QUERY_TAGS, QUERY_FULL };
+  nsresult AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
+                                     const QueryType aType,
+                                     PRBool *aHasMoreResults = nsnull);
+  PRBool AutoCompleteHasEnoughResults();
+
   nsresult PerformAutoComplete();
   nsresult StartAutoCompleteTimer(PRUint32 aMilliseconds);
   static void AutoCompleteTimerCallback(nsITimer* aTimer, void* aClosure);
