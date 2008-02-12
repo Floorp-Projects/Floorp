@@ -1034,6 +1034,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 struct TraceData
 {
+  TraceData(TraceCallback& aCallback, void* aClosure) :
+    callback(aCallback), closure(aClosure) {}
+
   TraceCallback& callback;
   void* closure;
 };
@@ -1048,7 +1051,7 @@ TraceXBLHandlers(const void* aKey, void* aData, void* aClosure)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsGlobalWindow)
   if (tmp->mCachedXBLPrototypeHandlers.IsInitialized()) {
-    TraceData data = { aCallback, aClosure };
+    TraceData data(aCallback, aClosure);
     tmp->mCachedXBLPrototypeHandlers.EnumerateRead(TraceXBLHandlers, &data);
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
