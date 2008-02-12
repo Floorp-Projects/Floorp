@@ -8,6 +8,8 @@ use File::Temp qw(tempfile);
 use Bootstrap::Step;
 use Bootstrap::Util qw(CvsCatfile SyncToStaging);
 
+use MozBuild::Util qw(MkdirWithPath);
+
 @ISA = ("Bootstrap::Step");
 
 sub Execute {
@@ -60,6 +62,11 @@ sub Execute {
         $this->Log(msg => 'Skip buildID storage for nightly mode');
     } else {
         $this->StoreBuildID();
+    }
+
+    # proxy for version is 2.0.0.* and osname is win32
+    if ($sysname =~ /cygwin/i) {
+        $this->PublishTalkbackSymbols();
     }
 }
 
@@ -265,6 +272,109 @@ sub StoreBuildID() {
                   $stagingUser . '@' . $stagingServer . ':' .
                   $pushDir . '/' . $buildIDFile],
       logFile => $pushLog,
+    );
+}
+
+sub PublishTalkbackSymbols() {
+    my $this = shift;
+
+    my $config = new Bootstrap::Config();
+    my $product = $config->Get(var => 'product');
+    my $version = $config->Get(var => 'version');
+    my $rc = $config->Get(var => 'rc');
+    my $productTag = $config->Get(var => 'productTag');
+    my $logDir = $config->Get(sysvar => 'logDir');
+    my $buildDir = $config->Get(sysvar => 'buildDir');
+    my $buildPlatform = $config->Get(sysvar => 'buildPlatform');
+    my $symbolDir = $config->Get(var => 'symbolDir');
+    my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
+    my $symbolServer = $config->Get(var => 'symbolServer');
+    my $symbolServerUser = $config->Get(var => 'symbolServerUser');
+    my $symbolServerPath = $config->Get(var => 'symbolServerPath');
+    my $symbolServerKey = $config->Get(var => 'symbolServerKey');
+
+    my $rcTag = $productTag . '_RC' . $rc;
+    my $buildLog = catfile($logDir, 'build_' . $rcTag . '-build.log');
+    my $symbolLog  = catfile($logDir, 'build_' . $rcTag . '-symbols.log');
+    my $versionedSymbolDir = catfile($symbolDir, $product . '-' . $version,
+                                     'rc' . $rc);
+
+    # Create symbols work area.
+    if (-e $versionedSymbolDir) {
+       die("ASSERT: Build:PublishTalkbackSymbols(): $versionedSymbolDir already exists?"); 
+    }
+    MkdirWithPath(dir => $versionedSymbolDir) 
+       or die("Cannot mkdir $versionedSymbolDir: $!");
+
+    # checkouts
+    $this->CvsCo(cvsroot => $mozillaCvsroot,
+                 checkoutDir => 'tools',
+                 modules => [CvsCatfile('mozilla', 'toolkit', 
+                                        'crashreporter', 'tools')],
+                 logFile => $symbolLog,
+                 workDir => $versionedSymbolDir
+    );
+
+    # unpack the symbols tarball from tinderbox
+    my $logParser = new MozBuild::TinderLogParse(
+        logFile => $buildLog,
+    );
+    my $buildID = $logParser->GetBuildID();
+    if (! $buildID =~ /^\d{10}$/) {
+       die("ASSERT: Build:PublishTalkbackSymbols(): No buildID found in $buildLog");
+    }
+
+    # yields dir $versionedSymbolDir/$buildID
+    $this->Shell(
+       cmd => 'tar',
+       cmdArgs => ['xfj', 
+                   catfile($buildDir, $buildPlatform, $buildID, 'symbols', 
+                           $buildID.'.tar.bz2')],
+       dir => $versionedSymbolDir,
+       logFile => $symbolLog,
+    );
+
+    # process symbols
+    my $symbolOutputDir = catfile($versionedSymbolDir,'symbol');
+    MkdirWithPath(dir => $symbolOutputDir) 
+       or die("Cannot mkdir $symbolOutputDir: $!");
+
+    my @pdbFiles = glob(catfile($versionedSymbolDir, $buildID, '*.pdb'));
+    foreach $pdbFile (@pdbFiles) {
+       $pdbFile =~ s/.*($buildID.*)/$1/;
+       $this->Shell(
+          cmd => 'tools/symbolstore.py',
+          cmdArgs => ['-c', 'tools/win32/dump_syms.exe',
+                      'symbol',
+                      $pdbFile],
+          logFile => catfile($symbolOutputDir, 
+                             $product . '-' . $version . 'rc' . $rc .
+                                '-WINNT-' . $buildID . '-symbols.txt'),
+          dir => $versionedSymbolDir,
+          timeout => 600,
+       );
+    }
+
+    # push the symbols to the server
+    $this->Shell(
+       cmd => 'zip',
+       cmdArgs => ['-r', catfile($versionedSymbolDir, 'symbols.zip'), '.'],
+       dir => $symbolOutputDir,
+       logFile => $symbolLog,
+       timeout => 600,
+    );
+
+    $ENV{'SYMBOL_SERVER_HOST'} = $symbolServer;
+    $ENV{'SYMBOL_SERVER_USER'} = $symbolServerUser;
+    $ENV{'SYMBOL_SERVER_SSH_KEY'} = $symbolServerKey;
+    $ENV{'SYMBOL_SERVER_PATH'} = $symbolServerPath;
+
+    $this->Shell(
+       cmd => catfile('tools', 'upload_symbols.sh'),
+       cmdArgs => ['symbols.zip'],
+       dir => $versionedSymbolDir,
+       logFile => $symbolLog,
+       timeout => 600,
     );
 }
 
