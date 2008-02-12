@@ -209,9 +209,14 @@ function xpcWaitForFinishedFrames(callback, numFrames) {
   }
 
   function poll() {
-    // This only gives us UniversalXPConnect for the current stack frame
-    // We're using setInterval, so the main page's privileges are still normal
-    xpcEnumerateContentWindows(searchForFinishedFrames);
+    try {
+      // This only gives us UniversalXPConnect for the current stack frame
+      // We're using setInterval, so the main page's privileges are still normal
+      xpcEnumerateContentWindows(searchForFinishedFrames);
+    } catch(ex) {
+      // We might be accessing windows before they are fully constructed,
+      // which can throw.  We'll find those frames on our next poll().
+    }
   }
 
   var frameWaitInterval = setInterval(poll, 500);

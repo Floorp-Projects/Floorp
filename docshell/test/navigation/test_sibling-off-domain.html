@@ -16,17 +16,17 @@ window.onload = function () {
       '<iframe src="http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#child1,open"></iframe>' +
       '<iframe src="http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#child2,form"></iframe>' +
       '<iframe src="http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#child3,hyperlink"></iframe>';
+
+  xpcWaitForFinishedFrames(function() {
+    isBlank(frames[0], "Should not be able to navigate off-domain sibling by setting location.");
+    isBlank(frames[1], "Should not be able to navigate off-domain sibling by calling window.open.");
+    isBlank(frames[2], "Should not be able to navigate off-domain sibling by submitting form.");
+    isBlank(frames[3], "Should not be able to navigate off-domain sibling by targeted hyperlink.");
+
+    xpcCleanupWindows();
+    SimpleTest.finish();
+  }, 4);
 }
-
-xpcWaitForFinishedFrames(function() {
-  isBlank(frames[0], "Should not be able to navigate off-domain sibling by setting location.");
-  isBlank(frames[1], "Should not be able to navigate off-domain sibling by calling window.open.");
-  isBlank(frames[2], "Should not be able to navigate off-domain sibling by submitting form.");
-  isBlank(frames[3], "Should not be able to navigate off-domain sibling by targeted hyperlink.");
-
-  xpcCleanupWindows();
-  SimpleTest.finish();
-}, 4);
 </script>
 </head>
 <body>
