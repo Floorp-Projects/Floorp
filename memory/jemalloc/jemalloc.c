@@ -1042,6 +1042,8 @@ const char	*_malloc_options
 = "A10n2F"
 #elif (defined(MOZ_MEMORY_DARWIN))
 = "AP10n"
+#elif (defined(MOZ_MEMORY_LINUX))
+= "A10n2F"
 #endif
 ;
 
