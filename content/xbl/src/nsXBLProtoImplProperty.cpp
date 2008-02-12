@@ -78,29 +78,14 @@ nsXBLProtoImplProperty::nsXBLProtoImplProperty(const PRUnichar* aName,
 nsXBLProtoImplProperty::~nsXBLProtoImplProperty()
 {
   MOZ_COUNT_DTOR(nsXBLProtoImplProperty);
-}
 
-void
-nsXBLProtoImplProperty::Destroy(PRBool aIsCompiled)
-{
-  NS_PRECONDITION(aIsCompiled == mIsCompiled,
-                  "Incorrect aIsCompiled in nsXBLProtoImplProperty::Destroy");
-
-  if ((mJSAttributes & JSPROP_GETTER) && mJSGetterObject) {
-    mJSGetterObject = nsnull;
-  }
-  else {
+  if (!(mJSAttributes & JSPROP_GETTER)) {
     delete mGetterText;
   }
 
-  if ((mJSAttributes & JSPROP_SETTER) && mJSSetterObject) {
-    mJSSetterObject = nsnull;
-  }
-  else {
+  if (!(mJSAttributes & JSPROP_SETTER)) {
     delete mSetterText;
   }
-
-  mGetterText = mSetterText = nsnull;
 }
 
 void 
@@ -341,13 +326,11 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
 void
 nsXBLProtoImplProperty::Trace(TraceCallback aCallback, void *aClosure) const
 {
-  NS_ASSERTION(mIsCompiled, "Shouldn't traverse uncompiled method");
-
-  if ((mJSAttributes & JSPROP_GETTER) && mJSGetterObject) {
+  if (mJSAttributes & JSPROP_GETTER) {
     aCallback(nsIProgrammingLanguage::JAVASCRIPT, mJSGetterObject, aClosure);
   }
 
-  if ((mJSAttributes & JSPROP_SETTER) && mJSSetterObject) {
+  if (mJSAttributes & JSPROP_SETTER) {
     aCallback(nsIProgrammingLanguage::JAVASCRIPT, mJSSetterObject, aClosure);
   }
 }

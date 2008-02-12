@@ -55,7 +55,6 @@ public:
                          const PRUnichar* aReadOnly);
  
   virtual ~nsXBLProtoImplProperty();
-  virtual void Destroy(PRBool aIsCompiled);
 
   void AppendGetterText(const nsAString& aGetter);
   void AppendSetterText(const nsAString& aSetter);

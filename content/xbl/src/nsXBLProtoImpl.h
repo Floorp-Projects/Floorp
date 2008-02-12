@@ -65,8 +65,6 @@ public:
     MOZ_COUNT_DTOR(nsXBLProtoImpl);
     // Note: the constructor and destructor are in mMembers, so we'll
     // clean them up automatically.
-    for (nsXBLProtoImplMember* curr = mMembers; curr; curr=curr->GetNext())
-      curr->Destroy(mClassObject != nsnull);
     delete mMembers;
     delete mFields;
   }
@@ -108,11 +106,7 @@ public:
   }
 
 protected:
-  // Function to call if compilation of a member fails.  When this is called,
-  // all members before aBrokenMember are compiled, compilation of
-  // aBrokenMember failed, and members after aBrokenMember are uncompiled.
-  // This function assumes that aBrokenMember is _not_ compiled.
-  void DestroyMembers(nsXBLProtoImplMember* aBrokenMember);
+  void DestroyMembers();
   
 public:
   nsCString mClassName; // The name of the class. 

@@ -192,7 +192,7 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
        curr = curr->GetNext()) {
     nsresult rv = curr->CompileMember(context, mClassName, mClassObject);
     if (NS_FAILED(rv)) {
-      DestroyMembers(curr);
+      DestroyMembers();
       return rv;
     }
   }
@@ -219,7 +219,7 @@ void
 nsXBLProtoImpl::UnlinkJSObjects()
 {
   if (mClassObject) {
-    DestroyMembers(nsnull);
+    DestroyMembers();
   }
 }
 
@@ -272,18 +272,10 @@ nsXBLProtoImpl::UndefineFields(JSContext *cx, JSObject *obj) const
 }
 
 void
-nsXBLProtoImpl::DestroyMembers(nsXBLProtoImplMember* aBrokenMember)
+nsXBLProtoImpl::DestroyMembers()
 {
   NS_ASSERTION(mClassObject, "This should never be called when there is no class object");
-  PRBool compiled = PR_TRUE;
-  for (nsXBLProtoImplMember* curr = mMembers; curr; curr = curr->GetNext()) {
-    if (curr == aBrokenMember) {
-      compiled = PR_FALSE;
-    }
-    curr->Destroy(compiled);
-  }
 
-  // Now clear out mMembers so we don't try to call Destroy() on them again
   delete mMembers;
   mMembers = nsnull;
   mConstructor = nsnull;
