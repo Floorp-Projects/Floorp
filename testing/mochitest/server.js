@@ -141,6 +141,8 @@ function runServer()
 
   server.registerPathHandler("/redirect", redirect);
 
+  server.registerContentType("sjs", "sjs"); // .sjs == CGI-like functionality
+
   server.setIndexHandler(defaultDirHandler);
   server.start(SERVER_PORT);
 
