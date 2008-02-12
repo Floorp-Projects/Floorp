@@ -2066,6 +2066,11 @@ nsXULContentBuilder::RebuildAll()
     if (mQueriesCompiled)
         Uninit(PR_FALSE);
 
+    // clear rebuild flag while processing the queries, or a recursive call to
+    // build children may occur.
+//    if (xulcontent)
+//        xulcontent->ClearLazyState(nsXULElement::eChildrenMustBeRebuilt);
+
     nsresult rv = CompileQueries();
     if (NS_FAILED(rv))
         return rv;
