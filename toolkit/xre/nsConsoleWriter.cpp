@@ -115,7 +115,7 @@ WriteConsoleLog()
   nsCAutoString nativemsg;
 
   for (PRUint32 i = 0; i < mcount; ++i) {
-    rv = messages[i]->GetMessage(getter_Copies(msg));
+    rv = messages[i]->GetMessageMoz(getter_Copies(msg));
     if (NS_SUCCEEDED(rv)) {
       NS_CopyUnicodeToNative(msg, nativemsg);
       PR_fprintf(file, "%s" NS_LINEBREAK, nativemsg.get());

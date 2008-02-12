@@ -232,7 +232,7 @@ nsBaseDOMException::~nsBaseDOMException()
 NS_IMPL_ISUPPORTS2(nsBaseDOMException, nsIException, nsIBaseDOMException)
 
 NS_IMETHODIMP
-nsBaseDOMException::GetMessage(char **aMessage)
+nsBaseDOMException::GetMessageMoz(char **aMessage)
 {
   if (mMessage) {
     *aMessage = NS_strdup(mMessage);

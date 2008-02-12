@@ -96,7 +96,7 @@ HRESULT Error(HRESULT hResult, const char * message)
 static void BuildMessage(nsIException * exception, nsCString & result)
 {
     nsXPIDLCString msg;
-    exception->GetMessage(getter_Copies(msg));
+    exception->GetMessageMoz(getter_Copies(msg));
     nsXPIDLCString filename;
     exception->GetFilename(getter_Copies(filename));
 

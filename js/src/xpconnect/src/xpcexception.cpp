@@ -176,7 +176,7 @@ nsXPCException::Reset()
 
 /* readonly attribute string message; */
 NS_IMETHODIMP
-nsXPCException::GetMessage(char * *aMessage)
+nsXPCException::GetMessageMoz(char * *aMessage)
 {
     if(!mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
