@@ -63,7 +63,13 @@ local ($test_id,
        $test_kernel, 
        $test_suite,
        $exit_flag,
+       $exit_status,
+       $tmp_exit_flag,
+       $tmp_exit_status,
        $page_flag, 
+       $page_status,
+       $tmp_page_status,
+       $tmp_page_flag,
        $test_state);
 
 local ($actual_exit, $actual_signal);
@@ -158,7 +164,7 @@ while ($file = shift @ARGV)
             }
             else
             {
-                ($actual_exit, $actual_signal) = $test_description =~ /expected: Expected exit 0 actual: Actual exit ([0-9]*), signal ([0-9]*)/;
+                ($actual_exit, $actual_signal) = $test_description =~ /expected: Expected exit [03] actual: Actual exit ([0-9]*), signal ([0-9]*)/;
                 if (defined($actual_exit) or defined($actual_signal))
                 {
                     if ($actual_exit > 3 || $actual_signal > 0)
@@ -221,7 +227,14 @@ while ($file = shift @ARGV)
             $_ =~ s/[\x01-\x08]//g;
             $_ =~ s/\s+$//;
 
-            dbg "INPUT: $_";
+            if ($debug)
+            {
+                dbg "INPUT: $_";
+                dbg "test_id: $test_id, test_state: $test_state, page_status: $page_status";
+            }
+
+            # massage the input to make more uniform across test types and platforms
+            s/\.js, line ([0-9]*): out of memory/.js:$1: out of memory/g;
 
             if ( /^Spider: Begin loading.*urllist/)
             {
@@ -303,8 +316,11 @@ while ($file = shift @ARGV)
                     outputrecord;
                 }
             }
-            elsif ( $test_state ne 'loading list' && (($page_flag, $page_status) = $_ =~ /(http:[^:]*): PAGE STATUS: (.*)/) )
+            elsif ( $test_state ne 'loading list' && (($tmp_page_flag, $tmp_page_status) = $_ =~ /(http:[^:]*): PAGE STATUS: (.*)/) )
             {
+                $page_flag = $tmp_page_flag;
+                $page_status = $tmp_page_status;
+
                 dbg "Processing PAGE STATUS: test_state: $test_state, page_flag: $page_flag, page_status: $page_status";
 
                 die "FATAL ERROR: Test loaded but not in a test: $test_state: $_, log: $file" 
@@ -334,25 +350,26 @@ while ($file = shift @ARGV)
                     $test_description = "EXIT STATUS: $page_status, $test_description";
 
                     outputrecord;
+
+                    $test_state = 'completed test';
+                    @messages   = ();
+
                 }
                 else
                 {
                     die "FATAL ERROR: Invalid Page Status: $page_status, log: $file";
                 }
 
-                $test_state = 'completed test';
-                @messages   = ();
-
             }
             elsif ( ($tmp_test_id) = $_ =~ /^JavaScriptTest: End Test (.*)/)
             {
-                dbg "End test test_id: $test_id, tmp_test_id: $tmp_test_id";
+                dbg "End test test_id: $test_id, tmp_test_id: $tmp_test_id, page_status: $page_status, test_state: $test_state";
 
                 die "FATAL ERROR: JavaScript End Test: test mismatch: test $test_id, current test $tmp_test_id, log: $file" 
                     if ($test_id ne $tmp_test_id);
     
                 die "FATAL ERROR: JavaScript End Test: not in a test: test $test_id, current test $tmp_test_id, test state: $test_state, log: $file" 
-                    if ('reporting test, completed test' !~ /$test_state/);
+                    if ('reporting test, running test, completed test' !~ /$test_state/);
 
                 if ($page_status && $page_status =~ /^NORMAL/)
                 {
@@ -388,8 +405,11 @@ while ($file = shift @ARGV)
 
                 $test_state = 'finished test';
             }
-            elsif ( ($exit_flag, $exit_status) = $_ =~ /(http:[^:]*): EXIT STATUS: (.*)/ )
+            elsif ( ($tmp_exit_flag, $tmp_exit_status) = $_ =~ /(http:[^:]*): EXIT STATUS: (.*)/ )
             {
+                $exit_flag = $tmp_exit_flag,
+                $exit_status = $tmp_exit_status;
+
                 dbg "Processing EXIT STATUS: exit_flag: $exit_flag, exit_status: $exit_status";
 
                 if ($exit_status =~ /^NORMAL/)
