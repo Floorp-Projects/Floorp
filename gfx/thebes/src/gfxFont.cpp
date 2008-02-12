@@ -810,48 +810,6 @@ gfxFontGroup::FontResolverProc(const nsAString& aName, void *aClosure)
     return (data->mCallback)(aName, data->mGenericFamily, data->mClosure);
 }
 
-void
-gfxFontGroup::FindGenericFontFromStyle(PRBool aResolveFontName,
-                                       FontCreationCallback fc,
-                                       void *closure)
-{
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-    if (!prefs)
-        return;
-
-    nsCAutoString prefName;
-    nsXPIDLString genericName;
-    nsXPIDLString familyName;
-
-    // add the default font to the end of the list
-    prefName.AssignLiteral("font.default.");
-    prefName.Append(mStyle.langGroup);
-    nsresult rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(genericName));
-    if (NS_SUCCEEDED(rv)) {
-        prefName.AssignLiteral("font.name.");
-        prefName.Append(NS_LossyConvertUTF16toASCII(genericName));
-        prefName.AppendLiteral(".");
-        prefName.Append(mStyle.langGroup);
-
-        rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(familyName));
-        if (NS_SUCCEEDED(rv)) {
-            ForEachFontInternal(familyName, mStyle.langGroup,
-                                PR_FALSE, aResolveFontName, fc, closure);
-        }
-
-        prefName.AssignLiteral("font.name-list.");
-        prefName.Append(NS_LossyConvertUTF16toASCII(genericName));
-        prefName.AppendLiteral(".");
-        prefName.Append(mStyle.langGroup);
-
-        rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(familyName));
-        if (NS_SUCCEEDED(rv)) {
-            ForEachFontInternal(familyName, mStyle.langGroup,
-                                PR_FALSE, aResolveFontName, fc, closure);
-        }
-    }
-}
-
 gfxTextRun *
 gfxFontGroup::MakeEmptyTextRun(const Parameters *aParams, PRUint32 aFlags)
 {
