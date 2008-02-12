@@ -379,23 +379,6 @@ static nsresult
 DeletingFrameSubtree(nsFrameManager* aFrameManager,
                      nsIFrame*       aFrame);
 
-void nsFocusEventSuppressor::Suppress(nsIPresShell *aPresShell)
-{
-  NS_ASSERTION(aPresShell, "Need non-null nsIPresShell!");
-  if (!mViewManager) {
-    nsFrameManager *frameManager = aPresShell->FrameManager();
-    mViewManager = frameManager->GetPresContext()->GetViewManager();
-    NS_ASSERTION(mViewManager, "We must have an mViewManager here");
-  }
-  mViewManager->SuppressFocusEvents();
-}
-
-void nsFocusEventSuppressor::Unsuppress()
-{
-  NS_ASSERTION(mViewManager, "We must have an mViewManager here");
-  mViewManager->UnsuppressFocusEvents();
-}
-
 #ifdef  MOZ_SVG
 
 static nsIFrame *
@@ -10251,12 +10234,6 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
 }
 
 void
-nsCSSFrameConstructor::BeginUpdate() {
-  mFocusSuppressor.Suppress(mPresShell);
-  ++mUpdateCount;
-}
-
-void
 nsCSSFrameConstructor::EndUpdate()
 {
   if (mUpdateCount == 1) {
@@ -10266,7 +10243,7 @@ nsCSSFrameConstructor::EndUpdate()
     RecalcQuotesAndCounters();
     NS_ASSERTION(mUpdateCount == 1, "Odd update count");
   }
-  mFocusSuppressor.Unsuppress();
+
   --mUpdateCount;
 }
 
