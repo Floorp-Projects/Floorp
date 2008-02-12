@@ -532,6 +532,7 @@ gfxQuartzFontCache::InitFontList()
     mFontFamilies.Clear();
     mLocalizedFamilies.Clear();
     mPrefFonts.Clear();
+    mCodepointsWithNoFonts.reset();
     
     // iterate over available families
     NSFontManager *fontManager = [NSFontManager sharedFontManager];
@@ -618,6 +619,11 @@ gfxQuartzFontCache::InitFontList()
     
     // xxx - need to remove bogus Helvetica/Courier italic faces (Cocoa inanity!)
     
+    // initialize ranges of characters for which system-wide font search should be skipped
+    mCodepointsWithNoFonts.SetRange(0,0x1f);     // C0 controls
+    mCodepointsWithNoFonts.SetRange(0x7f,0x9f);  // C1 controls
+    mCodepointsWithNoFonts.set(0xfffd);          // unknown
+                               
     [localizedNames release];
 }
 
@@ -701,11 +707,21 @@ gfxQuartzFontCache::GetFontList (const nsACString& aLangGroup,
 MacOSFontEntry*  
 gfxQuartzFontCache::FindFontForChar(const PRUint32 aCh, gfxAtsuiFont *aPrevFont)
 {
+    // is codepoint with no matching font? return null immediately
+    if (mCodepointsWithNoFonts.test(aCh)) {
+        return nsnull;
+    }
+
     FontSearch data(aCh, aPrevFont);
 
     // iterate over all font families to find a font that support the character
     mFontFamilies.Enumerate(gfxQuartzFontCache::FindFontForCharProc, &data);
 
+    // no match? add to set of non-matching codepoints
+    if (!data.bestMatch) {
+        mCodepointsWithNoFonts.set(aCh);
+    }
+    
     return data.bestMatch;
 }
 
