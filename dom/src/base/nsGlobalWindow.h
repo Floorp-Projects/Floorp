@@ -51,6 +51,7 @@
 #include "nsHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsDOMScriptObjectHolder.h"
 
 // Interfaces Needed
 #include "nsDOMWindowList.h"
@@ -410,6 +411,7 @@ public:
                    const PRUnichar* aData);
 
   static void ShutDown();
+  static void CleanupCachedXBLHandlers(nsGlobalWindow* aWindow);
   static PRBool IsCallerChrome();
   static void CloseBlockScriptTerminationFunc(nsISupports *aRef);
 
@@ -418,10 +420,18 @@ public:
 
   friend class WindowStateHolder;
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsGlobalWindow,
-                                           nsIScriptGlobalObject)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsGlobalWindow,
+                                                         nsIScriptGlobalObject)
 
   void InitJavaProperties();
+
+  virtual NS_HIDDEN_(void*)
+    GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey);
+
+  virtual NS_HIDDEN_(void)
+    CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
+                             nsScriptObjectHolder& aHandler);
+
 
 protected:
   // Object Management
@@ -721,6 +731,8 @@ protected:
 #endif
 
   nsCOMPtr<nsIDOMOfflineResourceList> mApplicationCache;
+
+  nsDataHashtable<nsVoidPtrHashKey, void*> mCachedXBLPrototypeHandlers;
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
