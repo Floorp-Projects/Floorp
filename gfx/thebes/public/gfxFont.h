@@ -1469,10 +1469,6 @@ protected:
                                       FontCreationCallback fc,
                                       void *closure);
 
-    /* this will call back fc with the a generic font based on the style's langgroup */
-    void FindGenericFontFromStyle(PRBool aResolveFontName,
-                                  FontCreationCallback fc, void *closure);
-
     static PRBool FontResolverProc(const nsAString& aName, void *aClosure);
 };
 #endif
