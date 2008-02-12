@@ -1329,7 +1329,7 @@ XPCConvert::ConstructException(nsresult rv, const char* message,
 
     nsCOMPtr<nsIScriptError> errorObject = do_QueryInterface(data);
     if(errorObject) {
-        if (NS_SUCCEEDED(errorObject->GetMessage(getter_Copies(xmsg)))) {
+        if (NS_SUCCEEDED(errorObject->GetMessageMoz(getter_Copies(xmsg)))) {
             CopyUTF16toUTF8(xmsg, sxmsg);
             msg = sxmsg.get();
         }

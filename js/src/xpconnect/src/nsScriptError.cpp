@@ -61,7 +61,7 @@ nsScriptError::~nsScriptError() {}
 
 // nsIConsoleMessage methods
 NS_IMETHODIMP
-nsScriptError::GetMessage(PRUnichar **result) {
+nsScriptError::GetMessageMoz(PRUnichar **result) {
     nsresult rv;
 
     nsCAutoString message;

@@ -139,7 +139,6 @@
 // Nasty MS defines
 #undef GetClassInfo
 #undef GetClassName
-#undef GetMessage
 #endif
 
 /***************************************************************************/
