@@ -580,6 +580,7 @@ nsTimeout::~nsTimeout()
   MOZ_COUNT_DTOR(nsTimeout);
 }
 
+
   
 //*****************************************************************************
 //***    nsGlobalWindow: Object Management
@@ -752,23 +753,6 @@ nsGlobalWindow::ShutDown()
   NS_IF_RELEASE(sComputedDOMStyleFactory);
 }
 
-// static
-void
-nsGlobalWindow::CleanupCachedXBLHandlers(nsGlobalWindow* aWindow)
-{
-  if (aWindow->mCachedXBLPrototypeHandlers.IsInitialized() &&
-      aWindow->mCachedXBLPrototypeHandlers.Count() > 0) {
-    aWindow->mCachedXBLPrototypeHandlers.Clear();
-
-    nsCOMPtr<nsISupports> supports;
-    aWindow->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
-                            getter_AddRefs(supports));
-    NS_ASSERTION(supports, "Failed to QI to nsCycleCollectionISupports?!");
-
-    nsContentUtils::DropJSObjects(supports);
-  }
-}
-
 void
 nsGlobalWindow::CleanUp()
 {
@@ -813,8 +797,6 @@ nsGlobalWindow::CleanUp()
   }
   mArguments = nsnull;
   mArgumentsLast = nsnull;
-
-  CleanupCachedXBLHandlers(this);
 
 #ifdef DEBUG
   nsCycleCollector_DEBUG_shouldBeFreed(static_cast<nsIScriptGlobalObject*>(this));
@@ -899,8 +881,6 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
     mDummyJavaPluginOwner = nsnull;
   }
 #endif
-
-  CleanupCachedXBLHandlers(this);
 
 #ifdef DEBUG
   nsCycleCollector_DEBUG_shouldBeFreed(static_cast<nsIScriptGlobalObject*>(this));
@@ -1008,33 +988,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-struct TraceData
-{
-  TraceData(TraceCallback& aCallback, void* aClosure) :
-    callback(aCallback), closure(aClosure) {}
-
-  TraceCallback& callback;
-  void* closure;
-};
-
-PR_STATIC_CALLBACK(PLDHashOperator)
-TraceXBLHandlers(const void* aKey, void* aData, void* aClosure)
-{
-  TraceData* data = static_cast<TraceData*>(aClosure);
-  data->callback(nsIProgrammingLanguage::JAVASCRIPT, aData, data->closure);
-  return PL_DHASH_NEXT;
-}
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsGlobalWindow)
-  if (tmp->mCachedXBLPrototypeHandlers.IsInitialized()) {
-    TraceData data(aCallback, aClosure);
-    tmp->mCachedXBLPrototypeHandlers.EnumerateRead(TraceXBLHandlers, &data);
-  }
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsGlobalWindow)
-  nsGlobalWindow::CleanupCachedXBLHandlers(tmp);
-NS_IMPL_CYCLE_COLLECTION_ROOT_END
 
 //*****************************************************************************
 // nsGlobalWindow::nsIScriptGlobalObject
@@ -5581,49 +5534,6 @@ nsGlobalWindow::InitJavaProperties()
     manager->InitLiveConnectClasses(cx, mJSObject);
   }
 #endif
-}
-
-void*
-nsGlobalWindow::GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey)
-{
-  void* handler = nsnull;
-  if (mCachedXBLPrototypeHandlers.IsInitialized()) {
-    mCachedXBLPrototypeHandlers.Get(aKey, &handler);
-  }
-  return handler;
-}
-
-void
-nsGlobalWindow::CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
-                                         nsScriptObjectHolder& aHandler)
-{
-  if (!mCachedXBLPrototypeHandlers.IsInitialized() &&
-      !mCachedXBLPrototypeHandlers.Init()) {
-    NS_ERROR("Failed to initiailize hashtable!");
-    return;
-  }
-
-  if (!mCachedXBLPrototypeHandlers.Count()) {
-    // Can't use macros to get the participant because nsGlobalChromeWindow also
-    // runs through this code. Use QueryInterface to get the correct objects.
-    nsXPCOMCycleCollectionParticipant* participant;
-    CallQueryInterface(this, &participant);
-    NS_ASSERTION(participant,
-                 "Failed to QI to nsXPCOMCycleCollectionParticipant!");
-
-    nsCOMPtr<nsISupports> thisSupports;
-    QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
-                   getter_AddRefs(thisSupports));
-    NS_ASSERTION(thisSupports, "Failed to QI to nsCycleCollectionISupports!");
-
-    nsresult rv = nsContentUtils::HoldJSObjects(thisSupports, participant);
-    if (NS_FAILED(rv)) {
-      NS_ERROR("nsContentUtils::HoldJSObjects failed!");
-      return;
-    }
-  }
-
-  mCachedXBLPrototypeHandlers.Put(aKey, aHandler);
 }
 
 NS_IMETHODIMP

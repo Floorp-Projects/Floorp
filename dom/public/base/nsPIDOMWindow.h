@@ -70,8 +70,6 @@ class nsIDocument;
 class nsIScriptTimeoutHandler;
 class nsPresContext;
 struct nsTimeout;
-class nsScriptObjectHolder;
-class nsXBLPrototypeHandler;
 
 #define NS_PIDOMWINDOW_IID \
 { 0x909852b5, 0xb9e6, 0x4d94, \
@@ -380,10 +378,6 @@ public:
    * if we're running with a non-NPRuntime enabled Java plugin.
    */
   virtual void InitJavaProperties() = 0;
-
-  virtual void* GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey) = 0;
-  virtual void CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
-                                        nsScriptObjectHolder& aHandler) = 0;
 
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should
