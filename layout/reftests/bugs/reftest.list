@@ -696,6 +696,7 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 == 413840-rtl-offsets.html 413840-rtl-offsets-ref.html
 == 413840-pushed-line-bullet.html 413840-pushed-line-bullet-ref.html
 == 413840-bullet-first-line.html 413840-bullet-first-line-ref.html
+== 413982.html 413982-ref.html
 == 414123.xhtml 414123-ref.xhtml
 == 414851-1.html 414851-1-ref.html
 == 416106-1.xhtml 416106-1-ref.xhtml
