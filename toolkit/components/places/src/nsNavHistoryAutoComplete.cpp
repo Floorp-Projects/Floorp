@@ -183,6 +183,9 @@ nsNavHistory::PerformAutoComplete()
   PRBool moreChunksToSearch = PR_FALSE;
   rv = AutoCompleteFullHistorySearch(&moreChunksToSearch);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Only search more chunks if there are more and we need more results
+  moreChunksToSearch &= !AutoCompleteHasEnoughResults();
  
   // Determine the result of the search
   PRUint32 count;
@@ -381,54 +384,8 @@ nsNavHistory::AutoCompleteTagsSearch()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
-  NS_ENSURE_TRUE(faviconService, NS_ERROR_OUT_OF_MEMORY);
-
-  mozStorageStatementScoper scope(tagAutoCompleteQuery);
-
-  PRBool hasMore = PR_FALSE;
-
-  // Determine the result of the search
-  while (NS_SUCCEEDED(tagAutoCompleteQuery->ExecuteStep(&hasMore)) && hasMore) {
-    nsAutoString entryURL;
-    rv = tagAutoCompleteQuery->GetString(kAutoCompleteIndex_URL, entryURL);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRBool dummy;
-    // prevent duplicates.  this can happen when chunking as we
-    // may have already seen this URL.
-    // NOTE:  because we use mCurrentResultURLs to remove duplicates,
-    // the first url wins.
-    // so we might not show it as a "star" if the parentId we get first is
-    // the one for the livemark item, and not the bookmark item,
-    // we may not show the "star" even though we should.
-    // XXX bug 412734
-    if (!mCurrentResultURLs.Get(entryURL, &dummy)) {
-      nsAutoString entryTitle, entryFavicon;
-      rv = tagAutoCompleteQuery->GetString(kAutoCompleteIndex_Title, entryTitle);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = tagAutoCompleteQuery->GetString(kAutoCompleteIndex_FaviconURL, entryFavicon);
-      NS_ENSURE_SUCCESS(rv, rv);
-      PRInt64 itemId = 0;
-      rv = tagAutoCompleteQuery->GetInt64(kAutoCompleteIndex_ItemId, &itemId);
-      NS_ENSURE_SUCCESS(rv, rv);
-      PRInt64 parentId = 0;
-      if (itemId) {
-        rv = tagAutoCompleteQuery->GetInt64(kAutoCompleteIndex_ParentId, &parentId);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      // new item, append to our results and put it in our hash table.
-      nsCAutoString faviconSpec;
-      faviconService->GetFaviconSpecForIconString(
-        NS_ConvertUTF16toUTF8(entryFavicon), faviconSpec);
-      rv = mCurrentResult->AppendMatch(entryURL, entryTitle, 
-        NS_ConvertUTF8toUTF16(faviconSpec), NS_LITERAL_STRING("tag"));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      mCurrentResultURLs.Put(entryURL, PR_TRUE);
-    }
-  }
+  rv = AutoCompleteProcessSearch(tagAutoCompleteQuery, QUERY_TAGS);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -453,21 +410,37 @@ nsNavHistory::AutoCompleteFullHistorySearch(PRBool* aHasMoreResults)
   rv = mDBAutoCompleteQuery->BindInt32Parameter(1, mCurrentChunkOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = AutoCompleteProcessSearch(mDBAutoCompleteQuery, QUERY_FULL, aHasMoreResults);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
+                                        const QueryType aType,
+                                        PRBool *aHasMoreResults)
+{
+  // Don't bother processing results if we already have enough results
+  if (AutoCompleteHasEnoughResults())
+    return NS_OK;
+
   nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
   NS_ENSURE_TRUE(faviconService, NS_ERROR_OUT_OF_MEMORY);
 
   PRBool hasMore = PR_FALSE;
-
   // Determine the result of the search
-  while (NS_SUCCEEDED(mDBAutoCompleteQuery->ExecuteStep(&hasMore)) && hasMore) {
-    *aHasMoreResults = PR_TRUE;
+  while (NS_SUCCEEDED(aQuery->ExecuteStep(&hasMore)) && hasMore) {
     nsAutoString escapedEntryURL;
-    rv = mDBAutoCompleteQuery->GetString(kAutoCompleteIndex_URL, escapedEntryURL);
+    nsresult rv = aQuery->GetString(kAutoCompleteIndex_URL, escapedEntryURL);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // prevent duplicates.  this can happen when chunking as we
-    // may have already seen this URL from our tag search or an earlier
-    // chunk.
+    // Prevent duplicates that might appear from previous searches such as tag
+    // results and chunking. Because we use mCurrentResultURLs to remove
+    // duplicates, the first url wins, so we might not show it as a "star" if
+    // the parentId we get first is the one for the livemark and not the
+    // bookmark or no "star" at all.
+    // XXX bug 412734
     PRBool dummy;
     if (!mCurrentResultURLs.Get(escapedEntryURL, &dummy)) {
       // Convert the escaped UTF16 (all ascii) to ASCII then unescape to UTF16
@@ -476,81 +449,109 @@ nsNavHistory::AutoCompleteFullHistorySearch(PRBool* aHasMoreResults)
       NS_ConvertUTF8toUTF16 entryURL(cEntryURL);
 
       nsAutoString entryTitle, entryFavicon, entryBookmarkTitle;
-      rv = mDBAutoCompleteQuery->GetString(kAutoCompleteIndex_Title, entryTitle);
+      rv = aQuery->GetString(kAutoCompleteIndex_Title, entryTitle);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = mDBAutoCompleteQuery->GetString(kAutoCompleteIndex_FaviconURL, entryFavicon);
+      rv = aQuery->GetString(kAutoCompleteIndex_FaviconURL, entryFavicon);
       NS_ENSURE_SUCCESS(rv, rv);
       PRInt64 itemId = 0;
-      rv = mDBAutoCompleteQuery->GetInt64(kAutoCompleteIndex_ItemId, &itemId);
+      rv = aQuery->GetInt64(kAutoCompleteIndex_ItemId, &itemId);
       NS_ENSURE_SUCCESS(rv, rv);
 
       PRInt64 parentId = 0;
-      // only bother to fetch parent id and bookmark title 
-      // if we have a bookmark (itemId != 0)
+      // Only bother to fetch parent id and bookmark title if we have a bookmark
       if (itemId) {
-        rv = mDBAutoCompleteQuery->GetInt64(kAutoCompleteIndex_ParentId, &parentId);
+        rv = aQuery->GetInt64(kAutoCompleteIndex_ParentId, &parentId);
         NS_ENSURE_SUCCESS(rv, rv);
-        rv = mDBAutoCompleteQuery->GetString(kAutoCompleteIndex_BookmarkTitle, entryBookmarkTitle);
+        rv = aQuery->GetString(kAutoCompleteIndex_BookmarkTitle, entryBookmarkTitle);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // If any part of the search string is in the bookmark title, show that
-      // in the result instead of the page title
-      PRBool everMatchedBookmark = PR_FALSE;
-      // Determine if every token matches either the bookmark, title, or url
-      PRBool matchAll = PR_TRUE;
-      for (PRUint32 i = 0; i < mCurrentSearchTokens.Count() && matchAll; i++) {
-        const nsString *token = mCurrentSearchTokens.StringAt(i);
+      PRBool useBookmark = PR_FALSE;
+      nsString style;
+      switch (aType) {
+        case QUERY_TAGS: {
+          // Always prefer the bookmark title unless we don't have one
+          useBookmark = !entryBookmarkTitle.IsEmpty();
 
-        // Check if the current token matches the bookmark
-        PRBool bookmarkMatch = itemId &&
-          CaseInsensitiveFindInReadable(*token, entryBookmarkTitle);
-        everMatchedBookmark |= bookmarkMatch;
+          // Tags have a special stype to show a tag icon
+          style = NS_LITERAL_STRING("tag");
 
-        // True if any of them match; false makes us quit the loop
-        matchAll = bookmarkMatch ||
-          CaseInsensitiveFindInReadable(*token, entryTitle) ||
-          CaseInsensitiveFindInReadable(*token, entryURL);
+          break;
+        }
+        case QUERY_FULL: {
+          // If we get any results, there's potentially another chunk to proces
+          if (aHasMoreResults)
+            *aHasMoreResults = PR_TRUE;
+
+          // Determine if every token matches either the bookmark, title, or url
+          PRBool matchAll = PR_TRUE;
+          for (PRInt32 i = 0; i < mCurrentSearchTokens.Count() && matchAll; i++) {
+            const nsString *token = mCurrentSearchTokens.StringAt(i);
+
+            // Check if the current token matches the bookmark
+            PRBool bookmarkMatch = itemId &&
+              CaseInsensitiveFindInReadable(*token, entryBookmarkTitle);
+            // If any part of the search string is in the bookmark title, show
+            // that in the result instead of the page title
+            useBookmark |= bookmarkMatch;
+
+            // True if any of them match; false makes us quit the loop
+            matchAll = bookmarkMatch ||
+              CaseInsensitiveFindInReadable(*token, entryTitle) ||
+              CaseInsensitiveFindInReadable(*token, entryURL);
+          }
+
+          // Skip if we don't match all terms in the bookmark, title or url
+          if (!matchAll)
+            continue;
+
+          // Style bookmarks that aren't feed items and feed URIs as bookmark
+          style = (itemId && !mLivemarkFeedItemIds.Get(parentId, &dummy)) ||
+            mLivemarkFeedURIs.Get(escapedEntryURL, &dummy) ?
+            NS_LITERAL_STRING("bookmark") : NS_LITERAL_STRING("favicon");
+
+          break;
+        }
+        default: {
+          // Always prefer the bookmark title unless we don't have one
+          useBookmark = !entryBookmarkTitle.IsEmpty();
+
+          // Style bookmarks that aren't feed items and feed URIs as bookmark
+          style = (itemId && !mLivemarkFeedItemIds.Get(parentId, &dummy)) ||
+            mLivemarkFeedURIs.Get(escapedEntryURL, &dummy) ?
+            NS_LITERAL_STRING("bookmark") : NS_LITERAL_STRING("favicon");
+
+          break;
+        }
       }
 
-      // Skip if we don't match all terms in the bookmark, title or url
-      if (!matchAll)
-        continue;
+      // Pick the right title to show based on the result of the query type
+      const nsAString &title = useBookmark ? entryBookmarkTitle : entryTitle;
 
-      // don't show rss feed items as bookmarked,
-      // but do show rss feed URIs as bookmarked.
-      //
-      // NOTE:  because we use mCurrentResultURLs to remove duplicates,
-      // the first url wins.
-      // so we might not show it as a "star" if the parentId we get first is
-      // the one for the livemark item, and not the bookmark item,
-      // we may not show the "star" even though we should.
-      // XXX bug 412734
-      PRBool isBookmark = (itemId && 
-                           !mLivemarkFeedItemIds.Get(parentId, &dummy)) ||
-                           mLivemarkFeedURIs.Get(entryURL, &dummy);  
-
-      // new item, append to our results and put it in our hash table.
+      // Get the URI for the favicon
       nsCAutoString faviconSpec;
       faviconService->GetFaviconSpecForIconString(
         NS_ConvertUTF16toUTF8(entryFavicon), faviconSpec);
+      NS_ConvertUTF8toUTF16 faviconURI(faviconSpec);
 
-      rv = mCurrentResult->AppendMatch(entryURL, 
-        everMatchedBookmark ? entryBookmarkTitle : entryTitle, 
-        NS_ConvertUTF8toUTF16(faviconSpec), 
-        isBookmark ? NS_LITERAL_STRING("bookmark") : NS_LITERAL_STRING("favicon"));
+      // New item: append to our results and put it in our hash table
+      rv = mCurrentResult->AppendMatch(entryURL, title, faviconURI, style);
       NS_ENSURE_SUCCESS(rv, rv);
+      mCurrentResultURLs.Put(escapedEntryURL, PR_TRUE);
 
-      mCurrentResultURLs.Put(entryURL, PR_TRUE);
-
-      if (mCurrentResultURLs.Count() >= mAutoCompleteMaxResults) {
-        *aHasMoreResults = PR_FALSE;
+      // Stop processing if we have enough results
+      if (AutoCompleteHasEnoughResults())
         break;
-      }
     }
   }
 
   return NS_OK;
+}
+
+inline PRBool
+nsNavHistory::AutoCompleteHasEnoughResults()
+{
+  return mCurrentResultURLs.Count() >= (PRUint32)mAutoCompleteMaxResults;
 }
 
 // nsNavHistory::OnValueRemoved (nsIAutoCompleteSimpleResultListener)
