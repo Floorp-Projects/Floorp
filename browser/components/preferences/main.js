@@ -131,6 +131,7 @@ var gMainPane = {
   _updateUseCurrentButton: function () {
     var useCurrent = document.getElementById("useCurrent");
 
+    var windowIsPresent;
     var win;
     if (document.documentElement.instantApply) {
       const Cc = Components.classes, Ci = Components.interfaces;
@@ -144,7 +145,7 @@ var gMainPane = {
 
     if (win && win.document.documentElement
                   .getAttribute("windowtype") == "navigator:browser") {
-      useCurrent.disabled = false;
+      windowIsPresent = true;
 
       var tabbrowser = win.document.getElementById("content");
       if (tabbrowser.browsers.length > 1)
@@ -153,9 +154,16 @@ var gMainPane = {
         useCurrent.label = useCurrent.getAttribute("label1");
     }
     else {
+      windowIsPresent = false;
       useCurrent.label = useCurrent.getAttribute("label1");
-      useCurrent.disabled = true;
     }
+
+    // In this case, the button's disabled state is set by preferences.xml.
+    if (document.getElementById
+        ("pref.browser.homepage.disable_button.current_page").locked)
+      return;
+
+    useCurrent.disabled = !windowIsPresent;
   },
 
   /**
