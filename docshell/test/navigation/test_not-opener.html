@@ -15,21 +15,21 @@ window.onload = function () {
   navigateByOpen("window1");
   navigateByForm("window2");
   navigateByHyperlink("window3");
+
+  xpcWaitForFinishedFrames(function() {
+    is(xpcGetFramesByName("window1").length, 2, "Should not be able to navigate popup's popup by calling window.open.");
+    is(xpcGetFramesByName("window2").length, 2, "Should not be able to navigate popup's popup by submitting form.");
+    is(xpcGetFramesByName("window3").length, 2, "Should not be able to navigate popup's popup by targeted hyperlink.");
+
+    //opener0.close();
+    opener1.close();
+    opener2.close();
+    opener3.close();
+
+    xpcCleanupWindows();
+    SimpleTest.finish();
+  }, 3);
 }
-
-xpcWaitForFinishedFrames(function() {
-  is(xpcGetFramesByName("window1").length, 2, "Should not be able to navigate popup's popup by calling window.open.");
-  is(xpcGetFramesByName("window2").length, 2, "Should not be able to navigate popup's popup by submitting form.");
-  is(xpcGetFramesByName("window3").length, 2, "Should not be able to navigate popup's popup by targeted hyperlink.");
-
-  //opener0.close();
-  opener1.close();
-  opener2.close();
-  opener3.close();
-
-  xpcCleanupWindows();
-  SimpleTest.finish();
-}, 3);
 
 //opener0 = window.open("http://test1.example.org:80/tests/docshell/test/navigation/open.html#window0", "_blank", "width=10,height=10");
 opener1 = window.open("http://test1.example.org:80/tests/docshell/test/navigation/open.html#window1", "_blank", "width=10,height=10");
