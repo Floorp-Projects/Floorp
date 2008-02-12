@@ -47,6 +47,7 @@
 #include "nsIAccessible.h"
 #include "nsIAccessibleHyperlink.h"
 #include "nsIWinAccessNode.h"
+#include "nsAccessNodeWrap.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -78,6 +79,7 @@ CAccessibleHyperlink::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 CAccessibleHyperlink::get_anchor(long aIndex, VARIANT *aAnchor)
 {
+__try {
   VariantInit(aAnchor);
 
   nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryInterface(this));
@@ -102,6 +104,7 @@ CAccessibleHyperlink::get_anchor(long aIndex, VARIANT *aAnchor)
   IUnknown *unknownPtr = static_cast<IUnknown*>(instancePtr);
   aAnchor->ppunkVal = &unknownPtr;
   aAnchor->vt = VT_UNKNOWN;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
 }
@@ -109,6 +112,7 @@ CAccessibleHyperlink::get_anchor(long aIndex, VARIANT *aAnchor)
 STDMETHODIMP
 CAccessibleHyperlink::get_anchorTarget(long aIndex, VARIANT *aAnchorTarget)
 {
+__try {
   VariantInit(aAnchorTarget);
 
   nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryInterface(this));
@@ -135,14 +139,17 @@ CAccessibleHyperlink::get_anchorTarget(long aIndex, VARIANT *aAnchorTarget)
   AppendUTF8toUTF16(path, stringURI);
 
   aAnchorTarget->vt = VT_BSTR;
-  INT result = ::SysReAllocStringLen(&aAnchorTarget->bstrVal, stringURI.get(),
-                                     stringURI.Length());
-  return result ? NS_OK : E_OUTOFMEMORY;
+  if (!::SysReAllocStringLen(&aAnchorTarget->bstrVal, stringURI.get(), stringURI.Length()))
+    return E_OUTOFMEMORY;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
+  return S_OK;
 }
 
 STDMETHODIMP
 CAccessibleHyperlink::get_startIndex(long *aIndex)
 {
+__try {
   *aIndex = 0;
 
   nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryInterface(this));
@@ -152,13 +159,17 @@ CAccessibleHyperlink::get_startIndex(long *aIndex)
   PRInt32 index = 0;
   nsresult rv = acc->GetStartIndex(&index);
   *aIndex = index;
+  if (NS_SUCCEEDED(rv))
+    return S_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleHyperlink::get_endIndex(long *aIndex)
 {
+__try {
   *aIndex = 0;
 
   nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryInterface(this));
@@ -169,12 +180,17 @@ CAccessibleHyperlink::get_endIndex(long *aIndex)
   nsresult rv = acc->GetEndIndex(&index);
   *aIndex = index;
 
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  if (NS_SUCCEEDED(rv))
+    return S_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleHyperlink::get_valid(boolean *aValid)
 {
+__try {
   nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryInterface(this));
   if (!acc)
     return E_FAIL;
@@ -182,7 +198,10 @@ CAccessibleHyperlink::get_valid(boolean *aValid)
   PRBool isValid = PR_FALSE;
   nsresult rv = acc->IsValid(&isValid);
   *aValid = isValid;
+  if (NS_SUCCEEDED(rv))
+    return S_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  return E_FAIL;
 }
 

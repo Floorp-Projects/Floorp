@@ -46,6 +46,8 @@
 
 #include "nsCOMPtr.h"
 
+#include "nsAccessNodeWrap.h"
+
 // IUnknown
 
 STDMETHODIMP
@@ -71,6 +73,7 @@ CAccessibleValue::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 CAccessibleValue::get_currentValue(VARIANT *aCurrentValue)
 {
+__try {
   VariantInit(aCurrentValue);
 
   nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryInterface(this));
@@ -85,12 +88,14 @@ CAccessibleValue::get_currentValue(VARIANT *aCurrentValue)
   aCurrentValue->vt = VT_R8;
   aCurrentValue->dblVal = currentValue;
 
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return NS_OK;
 }
 
 STDMETHODIMP
 CAccessibleValue::setCurrentValue(VARIANT aValue)
 {
+__try {
   nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryInterface(this));
   if (!valueAcc)
     return E_FAIL;
@@ -98,13 +103,17 @@ CAccessibleValue::setCurrentValue(VARIANT aValue)
   if (aValue.vt != VT_R8)
     return E_INVALIDARG;
 
-  nsresult rv = valueAcc->SetCurrentValue(aValue.dblVal);
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  if (NS_SUCCEEDED(valueAcc->SetCurrentValue(aValue.dblVal)))
+    return S_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleValue::get_maximumValue(VARIANT *aMaximumValue)
 {
+__try {
   VariantInit(aMaximumValue);
 
   nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryInterface(this));
@@ -118,6 +127,7 @@ CAccessibleValue::get_maximumValue(VARIANT *aMaximumValue)
 
   aMaximumValue->vt = VT_R8;
   aMaximumValue->dblVal = maximumValue;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return NS_OK;
 }
@@ -125,6 +135,7 @@ CAccessibleValue::get_maximumValue(VARIANT *aMaximumValue)
 STDMETHODIMP
 CAccessibleValue::get_minimumValue(VARIANT *aMinimumValue)
 {
+__try {
   VariantInit(aMinimumValue);
 
   nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryInterface(this));
@@ -138,6 +149,7 @@ CAccessibleValue::get_minimumValue(VARIANT *aMinimumValue)
 
   aMinimumValue->vt = VT_R8;
   aMinimumValue->dblVal = minimumValue;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return NS_OK;
 }

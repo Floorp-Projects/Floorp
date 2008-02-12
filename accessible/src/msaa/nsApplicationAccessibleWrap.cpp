@@ -71,6 +71,7 @@ nsApplicationAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 nsApplicationAccessibleWrap::get_appName(BSTR *aName)
 {
+__try {
   if (!sAppInfo)
     return E_FAIL;
 
@@ -81,13 +82,17 @@ nsApplicationAccessibleWrap::get_appName(BSTR *aName)
     return E_FAIL;
 
   NS_ConvertUTF8toUTF16 name(cname);
-  INT result = ::SysReAllocStringLen(aName, name.get(), name.Length());
-  return result ? NS_OK : E_OUTOFMEMORY;
+  if (!::SysReAllocStringLen(aName, name.get(), name.Length()))
+    return E_OUTOFMEMORY;
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
+  return S_OK;
 }
 
 STDMETHODIMP
 nsApplicationAccessibleWrap::get_appVersion(BSTR *aVersion)
 {
+__try {
   if (!sAppInfo)
     return E_FAIL;
 
@@ -98,8 +103,10 @@ nsApplicationAccessibleWrap::get_appVersion(BSTR *aVersion)
     return E_FAIL;
 
   NS_ConvertUTF8toUTF16 version(cversion);
-  INT result = ::SysReAllocStringLen(aVersion, version.get(), version.Length());
-  return result ? NS_OK : E_OUTOFMEMORY;
+  if (!::SysReAllocStringLen(aVersion, version.get(), version.Length()))
+    return E_OUTOFMEMORY;
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return S_OK;
 }
 
 STDMETHODIMP
@@ -111,6 +118,7 @@ nsApplicationAccessibleWrap::get_toolkitName(BSTR *aName)
 STDMETHODIMP
 nsApplicationAccessibleWrap::get_toolkitVersion(BSTR *aVersion)
 {
+__try {
   if (!sAppInfo)
     return E_FAIL;
 
@@ -121,8 +129,10 @@ nsApplicationAccessibleWrap::get_toolkitVersion(BSTR *aVersion)
     return E_FAIL;
 
   NS_ConvertUTF8toUTF16 version(cversion);
-  INT result = ::SysReAllocStringLen(aVersion, version.get(), version.Length());
-  return result ? NS_OK : E_OUTOFMEMORY;
+  if (!::SysReAllocStringLen(aVersion, version.get(), version.Length()))
+    return E_OUTOFMEMORY;
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return S_OK;
 }
 
 // nsApplicationAccessibleWrap

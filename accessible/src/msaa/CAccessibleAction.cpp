@@ -43,7 +43,7 @@
 #include "AccessibleAction_i.c"
 
 #include "nsIAccessible.h"
-
+#include "nsAccessNodeWrap.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIDOMDOMStringList.h"
@@ -69,6 +69,7 @@ CAccessibleAction::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 CAccessibleAction::nActions(long *aNumActions)
 {
+__try {
   nsCOMPtr<nsIAccessible> acc(do_QueryInterface(this));
   if (!acc)
     return E_FAIL;
@@ -79,12 +80,15 @@ CAccessibleAction::nActions(long *aNumActions)
 
   if (NS_SUCCEEDED(rv))
     return NS_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
   return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleAction::doAction(long aActionIndex)
 {
+__try {
   nsCOMPtr<nsIAccessible> acc(do_QueryInterface(this));
   if (!acc)
     return E_FAIL;
@@ -92,12 +96,15 @@ CAccessibleAction::doAction(long aActionIndex)
   PRUint8 index = static_cast<PRUint8>(aActionIndex);
   if (NS_SUCCEEDED(acc->DoAction(index)))
     return S_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
   return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleAction::get_description(long aActionIndex, BSTR *aDescription)
 {
+__try {
   *aDescription = NULL;
 
   nsCOMPtr<nsIAccessible> acc(do_QueryInterface(this));
@@ -115,6 +122,7 @@ CAccessibleAction::get_description(long aActionIndex, BSTR *aDescription)
     if (!result)
       return E_OUTOFMEMORY;
   }
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
 }
@@ -124,6 +132,7 @@ CAccessibleAction::get_keyBinding(long aActionIndex, long aNumMaxBinding,
                                  BSTR **aKeyBinding,
                                  long *aNumBinding)
 {
+__try {
   *aKeyBinding = NULL;
   aNumBinding = 0;
 
@@ -159,6 +168,7 @@ CAccessibleAction::get_keyBinding(long aActionIndex, long aNumMaxBinding,
     if (!result)
       return E_OUTOFMEMORY;
   }
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
 }
@@ -166,6 +176,7 @@ CAccessibleAction::get_keyBinding(long aActionIndex, long aNumMaxBinding,
 STDMETHODIMP
 CAccessibleAction::get_name(long aActionIndex, BSTR *aName)
 {
+__try {
   *aName = NULL;
 
   nsCOMPtr<nsIAccessible> acc(do_QueryInterface(this));
@@ -182,6 +193,7 @@ CAccessibleAction::get_name(long aActionIndex, BSTR *aName)
     if (!result)
       return E_OUTOFMEMORY;
   }
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
 }
