@@ -52,7 +52,6 @@
 #include "nsHashKeys.h"
 #include "nsThreadUtils.h"
 #include "nsPageContentFrame.h"
-#include "nsIViewManager.h"
 
 class nsIDocument;
 struct nsFrameItems;
@@ -72,19 +71,6 @@ struct nsFindFrameHint
 {
   nsIFrame *mPrimaryFrameForPrevSibling;  // weak ref to the primary frame for the content for which we need a frame
   nsFindFrameHint() : mPrimaryFrameForPrevSibling(nsnull) { }
-};
-
-// Class which makes an nsIPresShell's ViewManager supress
-// focus/blur events. This prevents the frame tree from being changed
-// by focus handlers etc while *we* are trying to change it.
-// Fix for bug 399852.
-class nsFocusEventSuppressor
-{
-public:
-  void Suppress(nsIPresShell *aPresShell);
-  void Unsuppress();
-private:
-  nsCOMPtr<nsIViewManager> mViewManager;
 };
 
 typedef void (PR_CALLBACK nsLazyFrameConstructionCallback)
@@ -162,7 +148,7 @@ public:
                             PRInt32     aModType,
                             PRUint32    aStateMask);
 
-  void BeginUpdate();
+  void BeginUpdate() { ++mUpdateCount; }
   void EndUpdate();
   void RecalcQuotesAndCounters();
 
@@ -176,9 +162,6 @@ public:
   nsresult ProcessRestyledFrames(nsStyleChangeList& aRestyleArray);
 
 private:
-
-  nsFocusEventSuppressor mFocusSuppressor;
-
   // Note: It's the caller's responsibility to make sure to wrap a
   // ProcessOneRestyle call in a view update batch.
   // This function does not call ProcessAttachedQueue() on the binding manager.
