@@ -118,6 +118,7 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(const PRUnichar* aEvent,
                                              PRUint32 aLineNumber)
   : mHandlerText(nsnull),
     mLineNumber(aLineNumber),
+    mCachedHandler(nsnull),
     mNextHandler(nsnull),
     mPrototypeBinding(aBinding)
 {
@@ -134,6 +135,7 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(const PRUnichar* aEvent,
 nsXBLPrototypeHandler::nsXBLPrototypeHandler(nsIContent* aHandlerElement)
   : mHandlerElement(nsnull),
     mLineNumber(0),
+    mCachedHandler(nsnull),
     mNextHandler(nsnull),
     mPrototypeBinding(nsnull)
 {
@@ -159,6 +161,19 @@ nsXBLPrototypeHandler::~nsXBLPrototypeHandler()
   delete mNextHandler;
 }
 
+void
+nsXBLPrototypeHandler::Trace(TraceCallback aCallback, void *aClosure) const
+{
+  if (mCachedHandler)
+    aCallback(nsIProgrammingLanguage::JAVASCRIPT, mCachedHandler, aClosure);
+}
+
+void
+nsXBLPrototypeHandler::UnlinkJSObjects()
+{
+  ForgetCachedHandler();
+}
+
 already_AddRefed<nsIContent>
 nsXBLPrototypeHandler::GetHandlerElement()
 {
@@ -181,9 +196,11 @@ nsXBLPrototypeHandler::AppendHandlerText(const nsAString& aText)
     mHandlerText = ToNewUnicode(nsDependentString(temp) + aText);
     nsMemory::Free(temp);
   }
-  else {
+  else
     mHandlerText = ToNewUnicode(aText);
-  }
+
+  // Remove our cached handler
+  ForgetCachedHandler();
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -352,12 +369,15 @@ nsXBLPrototypeHandler::EnsureEventHandler(nsIScriptGlobalObject* aGlobal,
                                           nsScriptObjectHolder &aHandler)
 {
   // Check to see if we've already compiled this
-  nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(aGlobal);
-  if (pWindow) {
-    void* cachedHandler = pWindow->GetCachedXBLPrototypeHandler(this);
-    if (cachedHandler) {
-      aHandler.set(cachedHandler);
-      return aHandler ? NS_OK : NS_ERROR_FAILURE;
+  if (mCachedHandler) {
+    nsCOMPtr<nsIScriptGlobalObject> cachedGlobal =
+      do_QueryReferent(mGlobalForCachedHandler);
+    if (cachedGlobal == aGlobal) {
+      aHandler.set(mCachedHandler);
+      if (!aHandler)
+        return NS_ERROR_FAILURE;
+  
+      return NS_OK;
     }
   }
 
@@ -378,9 +398,8 @@ nsXBLPrototypeHandler::EnsureEventHandler(nsIScriptGlobalObject* aGlobal,
                                                    mLineNumber, aHandler);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (pWindow) {
-    pWindow->CacheXBLPrototypeHandler(this, aHandler);
-  }
+  mCachedHandler = aHandler;
+  mGlobalForCachedHandler = do_GetWeakReference(aGlobal);
 
   return NS_OK;
 }
@@ -852,6 +871,7 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   mMisc = 0;
   mKeyMask = 0;
   mPhase = NS_PHASE_BUBBLING;
+  ForgetCachedHandler();
 
   if (aAction)
     mHandlerText = ToNewUnicode(nsDependentString(aAction));
