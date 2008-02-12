@@ -15,17 +15,17 @@ window.onload = function() {
   navigateByOpen("child1");
   navigateByForm("child2");
   navigateByHyperlink("child3");
+
+  xpcWaitForFinishedFrames(function() {
+    isNavigated(frames[0], "Should be able to navigate off-domain child by setting location.");
+    isNavigated(frames[1], "Should be able to navigate off-domain child by calling window.open.");
+    isNavigated(frames[2], "Should be able to navigate off-domain child by submitting form.");
+    isNavigated(frames[3], "Should be able to navigate off-domain child by targeted hyperlink.");
+
+    xpcCleanupWindows();
+    SimpleTest.finish();
+  }, 4);
 }
-
-xpcWaitForFinishedFrames(function() {
-  isNavigated(frames[0], "Should be able to navigate off-domain child by setting location.");
-  isNavigated(frames[1], "Should be able to navigate off-domain child by calling window.open.");
-  isNavigated(frames[2], "Should be able to navigate off-domain child by submitting form.");
-  isNavigated(frames[3], "Should be able to navigate off-domain child by targeted hyperlink.");
-
-  xpcCleanupWindows();
-  SimpleTest.finish();
-}, 4);
 </script>
 </head>
 <body>

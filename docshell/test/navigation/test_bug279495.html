@@ -13,6 +13,14 @@ window.onload = function () {
 
   sendMouseEvent({type:"click"}, "link0");
   sendMouseEvent({type:"click"}, "link1");
+
+  xpcWaitForFinishedFrames(function() {
+    countAndClose("window0", 1);
+    countAndClose("window1", 1);
+
+    xpcCleanupWindows();
+    SimpleTest.finish();
+  }, 2);
 }
 
 function countAndClose(name, expected_count) {
@@ -24,14 +32,6 @@ function countAndClose(name, expected_count) {
   for (var i=0; i < array_of_frames.length; ++i)
     array_of_frames[i].close();
 }
-
-xpcWaitForFinishedFrames(function() {
-  countAndClose("window0", 1);
-  countAndClose("window1", 1);
-
-  xpcCleanupWindows();
-  SimpleTest.finish();
-}, 2);
 </script>
 </head>
 <body>
