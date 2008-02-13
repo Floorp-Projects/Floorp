@@ -46,7 +46,7 @@ Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
 
-Function.prototype.async = generatorAsync;
+Function.prototype.async = Utils.generatorAsync;
 
 /*
  * SyncCore objects
@@ -70,7 +70,7 @@ SyncCore.prototype = {
   _getEdits: function SC__getEdits(a, b) {
     let ret = {numProps: 0, props: {}};
     for (prop in a) {
-      if (!deepEquals(a[prop], b[prop])) {
+      if (!Utils.deepEquals(a[prop], b[prop])) {
         ret.numProps++;
         ret.props[prop] = b[prop];
       }
@@ -91,7 +91,7 @@ SyncCore.prototype = {
 
   _detectUpdates: function SC__detectUpdates(onComplete, a, b) {
     let [self, cont] = yield;
-    let listener = new EventListener(cont);
+    let listener = new Utils.EventListener(cont);
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
     let cmds = [];
@@ -145,7 +145,7 @@ SyncCore.prototype = {
 
     } finally {
       timer = null;
-      generatorDone(this, self, onComplete, cmds);
+      Utils.generatorDone(this, self, onComplete, cmds);
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
@@ -162,11 +162,11 @@ SyncCore.prototype = {
     // Check that all other properties are the same
     // FIXME: could be optimized...
     for (let key in a) {
-      if (key != "GUID" && !deepEquals(a[key], b[key]))
+      if (key != "GUID" && !Utils.deepEquals(a[key], b[key]))
         return false;
     }
     for (let key in b) {
-      if (key != "GUID" && !deepEquals(a[key], b[key]))
+      if (key != "GUID" && !Utils.deepEquals(a[key], b[key]))
         return false;
     }
     return true;
@@ -189,7 +189,7 @@ SyncCore.prototype = {
   },
 
   _conflicts: function SC__conflicts(a, b) {
-    if ((a.GUID == b.GUID) && !deepEquals(a, b))
+    if ((a.GUID == b.GUID) && !Utils.deepEquals(a, b))
       return true;
     return false;
   },
@@ -218,7 +218,7 @@ SyncCore.prototype = {
 
   _reconcile: function SC__reconcile(onComplete, listA, listB) {
     let [self, cont] = yield;
-    let listener = new EventListener(cont);
+    let listener = new Utils.EventListener(cont);
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
     let propagations = [[], []];
@@ -242,7 +242,7 @@ SyncCore.prototype = {
 	  if (skip)
 	    return true;
 
-          if (deepEquals(a, b)) {
+          if (Utils.deepEquals(a, b)) {
             delete listA[i]; // a
 	    skip = true;
 	    return false; // b
@@ -301,7 +301,7 @@ SyncCore.prototype = {
 
     } finally {
       timer = null;
-      generatorDone(this, self, onComplete, ret);
+      Utils.generatorDone(this, self, onComplete, ret);
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");

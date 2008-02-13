@@ -49,7 +49,7 @@ Cu.import("resource://weave/crypto.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/syncCores.js");
 
-Function.prototype.async = generatorAsync;
+Function.prototype.async = Utils.generatorAsync;
 let Crypto = new WeaveCrypto();
 
 function Engine(davCollection, cryptoId) {
@@ -171,7 +171,7 @@ Engine.prototype = {
         this._log.debug("Server reset failed");
         this._os.notifyObservers(null, this._osPrefix + "reset-server:error", "");
       }
-      generatorDone(this, self, onComplete, done)
+      Utils.generatorDone(this, self, onComplete, done)
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
@@ -200,7 +200,7 @@ Engine.prototype = {
         this._log.debug("Client reset failed");
         this._os.notifyObservers(null, this._osPrefix + "reset-client:error", "");
       }
-      generatorDone(this, self, onComplete, done);
+      Utils.generatorDone(this, self, onComplete, done);
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
@@ -366,7 +366,7 @@ Engine.prototype = {
 
       // Log an error if not the same
       if (!(serverConflicts.length ||
-            deepEquals(serverChanges, serverDelta)))
+            Utils.deepEquals(serverChanges, serverDelta)))
         this._log.warn("Predicted server changes differ from " +
                        "actual server->client diff (can be ignored in many cases)");
 
@@ -437,10 +437,10 @@ Engine.prototype = {
       }
       if (ok && synced) {
         this._os.notifyObservers(null, this._osPrefix + "sync:success", "");
-        generatorDone(this, self, onComplete, true);
+        Utils.generatorDone(this, self, onComplete, true);
       } else {
         this._os.notifyObservers(null, this._osPrefix + "sync:error", "");
-        generatorDone(this, self, onComplete, false);
+        Utils.generatorDone(this, self, onComplete, false);
       }
       yield; // onComplete is responsible for closing the generator
     }
@@ -496,7 +496,7 @@ Engine.prototype = {
         if (status.formatVersion > STORAGE_FORMAT_VERSION) {
           this._log.error("Server uses storage format v" + status.formatVersion +
                     ", this client understands up to v" + STORAGE_FORMAT_VERSION);
-          generatorDone(this, self, onComplete, ret)
+          Utils.generatorDone(this, self, onComplete, ret)
           return;
         }
 
@@ -634,7 +634,7 @@ Engine.prototype = {
 	this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
-      generatorDone(this, self, onComplete, ret)
+      Utils.generatorDone(this, self, onComplete, ret)
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
@@ -680,7 +680,7 @@ Engine.prototype = {
 	this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
-      generatorDone(this, self, onComplete, ret)
+      Utils.generatorDone(this, self, onComplete, ret)
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");

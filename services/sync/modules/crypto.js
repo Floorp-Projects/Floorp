@@ -46,7 +46,7 @@ Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
 
-Function.prototype.async = generatorAsync;
+Function.prototype.async = Utils.generatorAsync;
 
 function WeaveCrypto() {
   this._init();
@@ -131,7 +131,7 @@ WeaveCrypto.prototype = {
 
   PBEencrypt: function Crypto_PBEencrypt(onComplete, data, identity, algorithm) {
     let [self, cont] = yield;
-    let listener = new EventListener(cont);
+    let listener = new Utils.EventListener(cont);
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     let ret;
 
@@ -179,7 +179,7 @@ WeaveCrypto.prototype = {
 
     } finally {
       timer = null;
-      generatorDone(this, self, onComplete, ret);
+      Utils.generatorDone(this, self, onComplete, ret);
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
@@ -187,7 +187,7 @@ WeaveCrypto.prototype = {
 
   PBEdecrypt: function Crypto_PBEdecrypt(onComplete, data, identity, algorithm) {
     let [self, cont] = yield;
-    let listener = new EventListener(cont);
+    let listener = new Utils.EventListener(cont);
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     let ret;
 
@@ -235,7 +235,7 @@ WeaveCrypto.prototype = {
 
     } finally {
       timer = null;
-      generatorDone(this, self, onComplete, ret);
+      Utils.generatorDone(this, self, onComplete, ret);
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
@@ -268,24 +268,24 @@ function openssl(op, algorithm, input, password) {
     throw "encryption not supported on this platform: " + os;
   }
 
-  let inputFile = getTmp("input");
-  let [inputFOS] = open(inputFile, ">");
+  let inputFile = Utils.getTmp("input");
+  let [inputFOS] = Utils.open(inputFile, ">");
   inputFOS.write(input, input.length);
   inputFOS.close();
 
-  let outputFile = getTmp("output");
+  let outputFile = Utils.getTmp("output");
   if (outputFile.exists())
     outputFile.remove(false);
 
   // nsIProcess doesn't support stdin, so we write a file instead
-  let passFile = getTmp("pass");
-  let [passFOS] = open(passFile, ">", PERMS_PASSFILE);
+  let passFile = Utils.getTmp("pass");
+  let [passFOS] = Utils.open(passFile, ">", PERMS_PASSFILE);
   passFOS.write(password, password.length);
   passFOS.close();
 
   try {
-    runCmd(wrap, getTmp().path, bin, algorithm, op, "-a", "-salt",
-           "-in", "input", "-out", "output", "-pass", "file:pass");
+    Utils.runCmd(wrap, Utils.getTmp().path, bin, algorithm, op, "-a", "-salt",
+                 "-in", "input", "-out", "output", "-pass", "file:pass");
   } catch (e) {
     throw e;
   } finally {
@@ -293,8 +293,8 @@ function openssl(op, algorithm, input, password) {
     inputFile.remove(false);
   }
 
-  let [outputFIS] = open(outputFile, "<");
-  let ret = readStream(outputFIS);
+  let [outputFIS] = Utils.open(outputFile, "<");
+  let ret = Utils.readStream(outputFIS);
   outputFIS.close();
   outputFile.remove(false);
 

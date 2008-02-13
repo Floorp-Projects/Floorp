@@ -45,7 +45,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/util.js");
 
-Function.prototype.async = generatorAsync;
+Function.prototype.async = Utils.generatorAsync;
 
 /*
  * DAV object
@@ -90,8 +90,8 @@ DAVCollection.prototype = {
       let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
       request = request.QueryInterface(Ci.nsIDOMEventTarget);
     
-      request.addEventListener("load", new EventListener(cont, "load"), false);
-      request.addEventListener("error", new EventListener(cont, "error"), false);
+      request.addEventListener("load", new Utils.EventListener(cont, "load"), false);
+      request.addEventListener("error", new Utils.EventListener(cont, "error"), false);
       request = request.QueryInterface(Ci.nsIXMLHttpRequest);
       request.open(op, this._baseURL + path, true);
 
@@ -128,7 +128,7 @@ DAVCollection.prototype = {
       this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
-      generatorDone(this, self, onComplete, ret);
+      Utils.generatorDone(this, self, onComplete, ret);
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
@@ -184,7 +184,7 @@ DAVCollection.prototype = {
       this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
-      generatorDone(this, self, onComplete, ret);
+      Utils.generatorDone(this, self, onComplete, ret);
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
@@ -244,7 +244,7 @@ DAVCollection.prototype = {
    
       this._log.info("Logging in");
 
-      let URI = makeURI(this._baseURL);
+      let URI = Utils.makeURI(this._baseURL);
       this._auth = "Basic " + btoa(username + ":" + password);
 
       // Make a call to make sure it's working
@@ -260,7 +260,7 @@ DAVCollection.prototype = {
       this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
-      generatorDone(this, self, onComplete, this._loggedIn);
+      Utils.generatorDone(this, self, onComplete, this._loggedIn);
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
@@ -290,7 +290,7 @@ DAVCollection.prototype = {
       if (this._authProvider._authFailed || resp.status < 200 || resp.status >= 300)
         return;
 
-      let tokens = xpath(resp.responseXML, '//D:locktoken/D:href');
+      let tokens = Utils.xpath(resp.responseXML, '//D:locktoken/D:href');
       let token = tokens.iterateNext();
       ret = token.textContent;
 
@@ -302,7 +302,7 @@ DAVCollection.prototype = {
         this._log.debug("Found an active lock token");
       else
         this._log.debug("No active lock token found");
-      generatorDone(this, self, onComplete, ret);
+      Utils.generatorDone(this, self, onComplete, ret);
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
@@ -331,7 +331,7 @@ DAVCollection.prototype = {
       if (this._authProvider._authFailed || resp.status < 200 || resp.status >= 300)
         return;
 
-      let tokens = xpath(resp.responseXML, '//D:locktoken/D:href');
+      let tokens = Utils.xpath(resp.responseXML, '//D:locktoken/D:href');
       let token = tokens.iterateNext();
       if (token)
         this._token = token.textContent;
@@ -344,7 +344,7 @@ DAVCollection.prototype = {
         this._log.info("Lock acquired");
       else
         this._log.warn("Could not acquire lock");
-      generatorDone(this, self, onComplete, this._token);
+      Utils.generatorDone(this, self, onComplete, this._token);
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
@@ -374,10 +374,10 @@ DAVCollection.prototype = {
     } finally {
       if (this._token) {
         this._log.info("Could not release lock");
-        generatorDone(this, self, onComplete, false);
+        Utils.generatorDone(this, self, onComplete, false);
       } else {
         this._log.info("Lock released (or we didn't have one)");
-        generatorDone(this, self, onComplete, true);
+        Utils.generatorDone(this, self, onComplete, true);
       }
       yield; // onComplete is responsible for closing the generator
     }
@@ -411,7 +411,7 @@ DAVCollection.prototype = {
         this._log.debug("Lock released");
       else
         this._log.debug("No lock released");
-      generatorDone(this, self, onComplete, unlocked);
+      Utils.generatorDone(this, self, onComplete, unlocked);
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
@@ -434,7 +434,7 @@ DAVCollection.prototype = {
       this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
-      generatorDone(this, self, onComplete, stolen);
+      Utils.generatorDone(this, self, onComplete, stolen);
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
