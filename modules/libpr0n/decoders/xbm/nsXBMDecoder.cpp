@@ -100,6 +100,8 @@ NS_IMETHODIMP nsXBMDecoder::Init(imgILoad *aLoad)
 
 NS_IMETHODIMP nsXBMDecoder::Close()
 {
+    mImage->DecodingComplete();
+
     mObserver->OnStopContainer(nsnull, mImage);
     mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
     mObserver = nsnull;
@@ -112,7 +114,6 @@ NS_IMETHODIMP nsXBMDecoder::Close()
 
 NS_IMETHODIMP nsXBMDecoder::Flush()
 {
-    mFrame->SetMutable(PR_FALSE);
     return NS_OK;
 }
 

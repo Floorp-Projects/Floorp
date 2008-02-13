@@ -113,6 +113,8 @@ NS_IMETHODIMP nsICODecoder::Close()
   if (img)
     img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
 
+  mImage->DecodingComplete();
+
   if (mObserver) {
     mObserver->OnDataAvailable(nsnull, mFrame, &r);
     mObserver->OnStopFrame(nsnull, mFrame);
