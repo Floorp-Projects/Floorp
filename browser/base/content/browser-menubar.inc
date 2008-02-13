@@ -173,7 +173,7 @@
 #endif
                 <menuitem label="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" command="Browser:Reload" key="key_reload"/>
                 <menuseparator/>
-                <menu id="viewFullZoomMenu" label="&fullZoom.label;" accesskey="&fullZoom.accesskey;">
+                <menu id="viewFullZoomMenu" label="&fullZoom.label;" accesskey="&fullZoom.accesskey;" onpopupshowing="FullZoom.updateMenu();">
                   <menupopup>
                     <menuitem key="key_fullZoomEnlarge" label="&fullZoomEnlargeCmd.label;" accesskey="&fullZoomEnlargeCmd.accesskey;"
                               command="cmd_fullZoomEnlarge"/>
@@ -182,6 +182,9 @@
                     <menuseparator/>
                     <menuitem key="key_fullZoomReset" label="&fullZoomResetCmd.label;" accesskey="&fullZoomResetCmd.accesskey;"
                               command="cmd_fullZoomReset"/>
+                    <menuseparator/>
+                    <menuitem id="toggle_zoom" label="&fullZoomToggleCmd.label;" accesskey="&fullZoomToggleCmd.accesskey;"
+                              type="checkbox" command="cmd_fullZoomToggle" checked="false"/>
                   </menupopup>
                 </menu>
                 <menu id="pageStyleMenu" label="&pageStyleMenu.label;" accesskey="&pageStyleMenu.accesskey;" observes="isImage">

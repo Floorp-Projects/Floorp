@@ -215,9 +215,8 @@ enum {
  MOUSE_SCROLL_N_LINES,
  MOUSE_SCROLL_PAGE,
  MOUSE_SCROLL_HISTORY,
- MOUSE_SCROLL_TEXTSIZE,
- MOUSE_SCROLL_PIXELS,
- MOUSE_SCROLL_FULLZOOM
+ MOUSE_SCROLL_ZOOM,
+ MOUSE_SCROLL_PIXELS
 };
 
 // mask values for ui.key.chromeAccess and ui.key.contentAccess
@@ -2025,8 +2024,8 @@ nsEventStateManager::ChangeFullZoom(PRInt32 change)
   NS_ENSURE_SUCCESS(rv, rv);
 
   float fullzoom;
-  float zoomMin = ((float)nsContentUtils::GetIntPref("fullZoom.minPercent", 50)) / 100;
-  float zoomMax = ((float)nsContentUtils::GetIntPref("fullZoom.maxPercent", 300)) / 100;
+  float zoomMin = ((float)nsContentUtils::GetIntPref("zoom.minPercent", 50)) / 100;
+  float zoomMax = ((float)nsContentUtils::GetIntPref("zoom.maxPercent", 300)) / 100;
   mv->GetFullZoom(&fullzoom);
   fullzoom += ((float)change) / 10;
   if (fullzoom < zoomMin)
@@ -2055,8 +2054,8 @@ nsEventStateManager::DoScrollHistory(PRInt32 direction)
 }
 
 void
-nsEventStateManager::DoScrollTextsize(nsIFrame *aTargetFrame,
-                                      PRInt32 adjustment)
+nsEventStateManager::DoScrollZoom(nsIFrame *aTargetFrame,
+                                  PRInt32 adjustment)
 {
   // Exclude form controls and XUL content.
   nsIContent *content = aTargetFrame->GetContent();
@@ -2064,23 +2063,13 @@ nsEventStateManager::DoScrollTextsize(nsIFrame *aTargetFrame,
       !content->IsNodeOfType(nsINode::eHTML_FORM_CONTROL) &&
       !content->IsNodeOfType(nsINode::eXUL))
     {
-      // negative adjustment to increase text size, positive to decrease
-      ChangeTextSize((adjustment > 0) ? -1 : 1);
-    }
-}
+      // positive adjustment to decrease zoom, negative to increase
+      PRInt32 change = (adjustment > 0) ? -1 : 1;
 
-void
-nsEventStateManager::DoScrollFullZoom(nsIFrame *aTargetFrame,
-                                      PRInt32 adjustment)
-{
-  // Exclude form controls and XUL content.
-  nsIContent *content = aTargetFrame->GetContent();
-  if (content &&
-      !content->IsNodeOfType(nsINode::eHTML_FORM_CONTROL) &&
-      !content->IsNodeOfType(nsINode::eXUL))
-    {
-      // negative adjustment to increase zoom, positive to decrease
-      ChangeFullZoom((adjustment > 0) ? -1 : 1);
+      if (nsContentUtils::GetBoolPref("browser.zoom.full"))
+        ChangeFullZoom(change);
+      else
+        ChangeTextSize(change);
     }
 }
 
@@ -2471,15 +2460,9 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         }
         break;
 
-      case MOUSE_SCROLL_TEXTSIZE:
+      case MOUSE_SCROLL_ZOOM:
         {
-          DoScrollTextsize(aTargetFrame, msEvent->delta);
-        }
-        break;
-
-      case MOUSE_SCROLL_FULLZOOM:
-        {
-          DoScrollFullZoom(aTargetFrame, msEvent->delta);
+          DoScrollZoom(aTargetFrame, msEvent->delta);
         }
         break;
 
