@@ -80,7 +80,7 @@ panel[type="autocomplete-richlistbox"],
   -moz-border-bottom-colors: ThreeDDarkShadow;
   -moz-border-left-colors: ThreeDDarkShadow;
   padding: 0;
-  background-color: -moz-Field !important;
+  background-color: -moz-Field;
 }
 
 .autocomplete-history-popup {
@@ -127,14 +127,7 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
 /* ::::: richlistbox autocomplete ::::: */
 
 .autocomplete-richlistbox {
-  -moz-appearance: none !important;
   margin: 0;
-  border: none !important;
-  background-color: transparent !important;
-}
-
-.autocomplete-richlistbox > scrollbox {
-  overflow-x: hidden !important;
 }
 
 .autocomplete-richlistitem[selected="true"] {
@@ -143,8 +136,6 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
 }
 
 .autocomplete-richlistitem {
-  -moz-box-orient: vertical;
-  overflow:-moz-hidden-unscrollable;
   padding: 1px 0px 1px 2px;
   border-bottom: 1px solid ThreeDShadow;
 }
