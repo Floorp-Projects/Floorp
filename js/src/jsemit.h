@@ -78,7 +78,8 @@ typedef enum JSStmtType {
     STMT_DO_LOOP,               /* do/while loop statement */
     STMT_FOR_LOOP,              /* for loop statement */
     STMT_FOR_IN_LOOP,           /* for/in loop statement */
-    STMT_WHILE_LOOP             /* while loop statement */
+    STMT_WHILE_LOOP,            /* while loop statement */
+    STMT_LIMIT
 } JSStmtType;
 
 #define STMT_TYPE_IN_RANGE(t,b,e) ((uint)((t) - (b)) <= (uintN)((e) - (b)))

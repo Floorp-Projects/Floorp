@@ -262,6 +262,7 @@ static const char *statementName[] = {
     "label statement",       /* LABEL */
     "if statement",          /* IF */
     "else statement",        /* ELSE */
+    "destructuring body",    /* BODY */
     "switch statement",      /* SWITCH */
     "block",                 /* BLOCK */
     js_with_statement_str,   /* WITH */
@@ -274,6 +275,8 @@ static const char *statementName[] = {
     "for/in loop",           /* FOR_IN_LOOP */
     "while loop",            /* WHILE_LOOP */
 };
+
+JS_STATIC_ASSERT(JS_ARRAY_LENGTH(statementName) == STMT_LIMIT);
 
 static const char *
 StatementName(JSCodeGenerator *cg)
@@ -5862,11 +5865,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         jmp = js_Emit3(cx, cg, JSOP_FILTER, 0, 0);
         if (jmp < 0)
             return JS_FALSE;
+        top = CG_OFFSET(cg);
         if (!js_EmitTree(cx, cg, pn->pn_right))
             return JS_FALSE;
-        if (js_Emit1(cx, cg, JSOP_ENDFILTER) < 0)
-            return JS_FALSE;
         CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, jmp);
+        if (EmitJump(cx, cg, JSOP_ENDFILTER, top - CG_OFFSET(cg)) < 0)
+            return JS_FALSE;
         break;
 #endif
 
