@@ -1064,14 +1064,6 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
             SetTitlebarColor(color);
         }
 
-        // handle :read-only/:read-write
-        if (aName == nsGkAtoms::readonly && document) {
-            mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, PR_TRUE);
-            document->ContentStatesChanged(this, nsnull,
-                                           NS_EVENT_STATE_MOZ_READONLY |
-                                           NS_EVENT_STATE_MOZ_READWRITE);
-        }
-
         // XXX need to check if they're changing an event handler: if
         // so, then we need to unhook the old one.  Or something.
     }
