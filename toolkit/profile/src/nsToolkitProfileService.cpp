@@ -402,6 +402,12 @@ nsToolkitProfileService::Init()
         return NS_OK;
     }
 
+    PRInt64 size;
+    rv = listFile->GetFileSize(&size);
+    if (NS_FAILED(rv) || !size) {
+        return NS_OK;
+    }
+
     nsINIParser parser;
     rv = parser.Init(mListFile);
     // Init does not fail on parsing errors, only on OOM/really unexpected
