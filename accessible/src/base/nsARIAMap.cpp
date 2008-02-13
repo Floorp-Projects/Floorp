@@ -177,7 +177,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
             // Manually map EXT_STATE_SUPPORTS_AUTOCOMPLETION aria-autocomplete
             {&nsAccessibilityAtoms::aria_autocomplete, "list", nsIAccessibleStates::STATE_HASPOPUP},
             {&nsAccessibilityAtoms::aria_autocomplete, "both", nsIAccessibleStates::STATE_HASPOPUP},
-            {&nsAccessibilityAtoms::aria_secret, kBoolState, nsIAccessibleStates::STATE_PROTECTED},
             {&nsAccessibilityAtoms::aria_disabled, kBoolState, nsIAccessibleStates::STATE_UNAVAILABLE},
             {&nsAccessibilityAtoms::aria_readonly, kBoolState, nsIAccessibleStates::STATE_READONLY}, kEndEntry},
   {"toolbar", nsIAccessibleRole::ROLE_TOOLBAR, eNameLabelOrTitle, eNoValue, kNoReqStates,
