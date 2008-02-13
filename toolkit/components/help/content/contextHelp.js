@@ -65,7 +65,14 @@ function openHelp(topic, contentPack)
     params.SetString(1, topic);
     const ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                          .getService(Components.interfaces.nsIWindowWatcher);
+#ifdef XP_WIN
+#define HELP_ALWAYS_RAISED_TOGGLE
+#endif
+#ifdef HELP_ALWAYS_RAISED_TOGGLE
     ww.openWindow(null, "chrome://help/content/help.xul", "_blank", "chrome,all,alwaysRaised,dialog=no", params);
+#else
+    ww.openWindow(null, "chrome://help/content/help.xul", "_blank", "chrome,all,dialog=no", params);
+#endif
   }
 }
 
