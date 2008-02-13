@@ -95,8 +95,7 @@ nsSliderFrame::nsSliderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   nsBoxFrame(aPresShell, aContext),
   mCurPos(0),
   mScrollbarListener(nsnull),
-  mChange(0),
-  mMediator(nsnull)
+  mChange(0)
 {
 }
 
@@ -955,7 +954,6 @@ nsSliderFrame::AddListener()
 {
   if (!mMediator) {
     mMediator = new nsSliderMediator(this);
-    NS_ADDREF(mMediator);
   }
 
   nsIFrame* thumbFrame = mFrames.FirstChild();
@@ -1027,7 +1025,6 @@ nsSliderFrame::Destroy()
   // tell our mediator if we have one we are gone.
   if (mMediator) {
     mMediator->SetSlider(nsnull);
-    NS_RELEASE(mMediator);
     mMediator = nsnull;
   }
 
