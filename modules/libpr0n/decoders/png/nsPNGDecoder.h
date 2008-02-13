@@ -72,9 +72,11 @@ public:
   virtual ~nsPNGDecoder();
 
   void CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset, 
-                    PRInt32 width, PRInt32 height, gfx_format format);
+                   PRInt32 width, PRInt32 height, gfx_format format);
   void SetAnimFrameInfo();
   
+  void EndImageFrame();
+
 public:
   nsCOMPtr<imgIContainer> mImage;
   nsCOMPtr<gfxIImageFrame> mFrame;
@@ -88,12 +90,11 @@ public:
   cmsHPROFILE mInProfile;
   cmsHTRANSFORM mTransform;
 
-  PRUint32 ibpr;
   gfx_format format;
-  PRUint8 apngFlags;
   PRUint8 mChannels;
   PRPackedBool mError;
   PRPackedBool mFrameHasNoAlpha;
+  PRPackedBool mFrameIsHidden;
 };
 
 #endif // nsPNGDecoder_h__
