@@ -65,6 +65,7 @@
 
 #include "nsCRT.h"
 
+#include <locale.h>
 #include <freetype/tttables.h>
 
 #include <cairo.h>
@@ -544,12 +545,13 @@ gfxPangoFont::GetMetrics()
     if (NS_LIKELY(GetStyle()->size > 0.0)) {
         font = GetPangoFont(); // RealizePangoFont is called here.
         PangoLanguage *lang = GetPangoLanguage(GetStyle()->langGroup);
+        // If lang is NULL, Pango will measure a string of many languages,
+        // which will require many FcFontSorts, but we don't want to go to
+        // that much trouble.
+        // pango_language_get_default() is available from Pango-1.16.
+        if (!lang)
+            lang = pango_language_from_string(setlocale(LC_CTYPE, NULL));
 
-        // XXX
-        // 1.18 null is fine
-        // 1.16 might want to use pango_language_get_default if lang is null here.
-        // earlier we want to use something other than null where possible.
-        //
         pfm = pango_font_get_metrics(font, lang);
     } else {
         // Don't ask pango when the font-size is zero since it causes
