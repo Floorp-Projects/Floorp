@@ -90,8 +90,8 @@ extern long __cdecl
 _InterlockedCompareExchange(long *volatile dest, long exchange, long comp);
 #pragma intrinsic(_InterlockedCompareExchange)
 
-static JS_INLINE int
-js_CompareAndSwapHelper(jsword *w, jsword ov, jsword nv)
+JS_INLINE(static int
+js_CompareAndSwapHelper(jsword *w, jsword ov, jsword nv))
 {
     _InterlockedCompareExchange(w, nv, ov);
     __asm {
@@ -99,8 +99,8 @@ js_CompareAndSwapHelper(jsword *w, jsword ov, jsword nv)
     }
 }
 
-static JS_INLINE int
-js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
+JS_INLINE(static int
+js_CompareAndSwap(jsword *w, jsword ov, jsword nv))
 {
     return (js_CompareAndSwapHelper(w, ov, nv) & 1);
 }
@@ -109,8 +109,8 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 
 #include <libkern/OSAtomic.h>
 
-static JS_INLINE int
-js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
+JS_INLINE(static int
+js_CompareAndSwap(jsword *w, jsword ov, jsword nv))
 {
     /* Details on these functions available in the manpage for atomic */
 #if JS_BYTES_PER_WORD == 8 && JS_BYTES_PER_LONG != 8
@@ -123,8 +123,8 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 #elif defined(__GNUC__) && defined(__i386__)
 
 /* Note: This fails on 386 cpus, cmpxchgl is a >= 486 instruction */
-static JS_INLINE int
-js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
+JS_INLINE(static int
+js_CompareAndSwap(jsword *w, jsword ov, jsword nv))
 {
     unsigned int res;
 
@@ -179,8 +179,8 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 
 #elif defined(SOLARIS) && defined(sparc) && defined(ULTRA_SPARC)
 
-static JS_INLINE int
-js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
+JS_INLINE(static int
+js_CompareAndSwap(jsword *w, jsword ov, jsword nv))
 {
 #if defined(__GNUC__)
     unsigned int res;
@@ -207,8 +207,8 @@ mov 0,%0\n\
 
 #include <sys/atomic_op.h>
 
-static JS_INLINE int
-js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
+JS_INLINE(static int
+js_CompareAndSwap(jsword *w, jsword ov, jsword nv))
 {
     return !_check_lock((atomic_p)w, ov, nv);
 }
@@ -1003,8 +1003,8 @@ js_Dequeue(JSThinLock *tl)
     js_ResumeThread(tl);
 }
 
-JS_INLINE void
-js_Lock(JSThinLock *tl, jsword me)
+JS_INLINE(void
+js_Lock(JSThinLock *tl, jsword me))
 {
     JS_ASSERT(CURRENT_THREAD_IS_ME(me));
     if (js_CompareAndSwap(&tl->owner, 0, me))
@@ -1017,8 +1017,8 @@ js_Lock(JSThinLock *tl, jsword me)
 #endif
 }
 
-JS_INLINE void
-js_Unlock(JSThinLock *tl, jsword me)
+JS_INLINE(void
+js_Unlock(JSThinLock *tl, jsword me))
 {
     JS_ASSERT(CURRENT_THREAD_IS_ME(me));
 
