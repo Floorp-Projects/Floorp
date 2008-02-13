@@ -996,7 +996,7 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)
   lockIconState newSecurityState;
 
   PRBool showWarning = PR_FALSE;
-  lockIconState warnSecurityState;
+  lockIconState warnSecurityState = lis_no_security;
 
   if (mNewToplevelSecurityState & STATE_IS_SECURE)
   {
