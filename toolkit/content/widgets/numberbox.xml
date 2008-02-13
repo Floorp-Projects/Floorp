@@ -14,7 +14,7 @@
     </resources>
 
     <content>
-      <xul:hbox class="textbox-input-box numberbox-input-box" flex="1" xbl:inherits="context,disabled">
+      <xul:hbox class="textbox-input-box numberbox-input-box" flex="1" xbl:inherits="context,disabled,focused">
         <html:input class="numberbox-input textbox-input" flex="1" anonid="input"
                     xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,tabindex,accesskey"/>
       </xul:hbox>
@@ -292,14 +292,6 @@
           newval = newval.replace(this.decimalSymbol, ".");
           this._validateValue(newval, false);
         }
-      </handler>
-
-      <handler event="focus" phase="capturing">
-        this.inputField.parentNode.setAttribute('focused', 'true');
-      </handler>
-
-      <handler event="blur" phase="capturing">
-        this.inputField.parentNode.removeAttribute('focused');
       </handler>
     </handlers>
 
