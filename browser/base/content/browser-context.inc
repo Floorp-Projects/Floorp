@@ -74,6 +74,10 @@
                 accesskey="&copyLinkCmd.accesskey;"
                 oncommand="goDoCommand('cmd_copyLink');"/>
       <menuseparator id="context-sep-copylink"/>
+      <menuitem id="context-showimage"
+                label="&showImageCmd.label;"
+                accesskey="&showImageCmd.accesskey;"
+                oncommand="gContextMenu.showImage();"/>
       <menuitem id="context-viewimage"
                 label="&viewImageCmd.label;"
                 accesskey="&viewImageCmd.accesskey;"
