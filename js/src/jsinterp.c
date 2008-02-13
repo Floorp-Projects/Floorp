@@ -2029,6 +2029,61 @@ InternNonIntElementId(JSContext *cx, JSObject *obj, jsval idval, jsid *idp)
 }
 
 /*
+ * Enter the new with scope using an object at sp[-1] and associate the depth
+ * of the with block with sp + stackIndex.
+ */
+static JSBool
+EnterWith(JSContext *cx, jsint stackIndex)
+{
+    JSStackFrame *fp;
+    jsval *sp;
+    JSObject *obj, *parent, *withobj;
+
+    fp = cx->fp;
+    sp = fp->sp;
+    JS_ASSERT(stackIndex < 0);
+    JS_ASSERT(fp->spbase <= sp + stackIndex);
+
+    if (!JSVAL_IS_PRIMITIVE(sp[-1])) {
+        obj = JSVAL_TO_OBJECT(sp[-1]);
+    } else {
+        obj = js_ValueToNonNullObject(cx, sp[-1]);
+        if (!obj)
+            return JS_FALSE;
+        sp[-1] = OBJECT_TO_JSVAL(obj);
+    }
+
+    parent = js_GetScopeChain(cx, fp);
+    if (!parent)
+        return JS_FALSE;
+
+    OBJ_TO_INNER_OBJECT(cx, obj);
+    if (!obj)
+        return JS_FALSE;
+
+    withobj = js_NewWithObject(cx, obj, parent,
+                               sp + stackIndex - fp->spbase);
+    if (!withobj)
+        return JS_FALSE;
+
+    fp->scopeChain = withobj;
+    js_DisablePropertyCache(cx);
+    return JS_TRUE;
+}
+
+static void
+LeaveWith(JSContext *cx)
+{
+    JSObject *withobj;
+
+    withobj = cx->fp->scopeChain;
+    JS_ASSERT(OBJ_GET_CLASS(cx, withobj) == &js_WithClass);
+    cx->fp->scopeChain = OBJ_GET_PARENT(cx, withobj);
+    JS_SetPrivate(cx, withobj, NULL);
+    js_EnablePropertyCache(cx);
+}
+
+/*
  * Threaded interpretation via computed goto appears to be well-supported by
  * GCC 3 and higher.  IBM's C compiler when run with the right options (e.g.,
  * -qlanglvl=extended) also supports threading.  Ditto the SunPro C compiler.
@@ -2231,7 +2286,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     uintN argc, attrs, flags, slot;
     jsval *vp, lval, rval, ltmp, rtmp;
     jsid id;
-    JSObject *withobj, *iterobj;
+    JSObject *iterobj;
     JSProperty *prop;
     JSScopeProperty *sprop;
     JSString *str, *str2;
@@ -2594,30 +2649,27 @@ interrupt:
 
           BEGIN_CASE(JSOP_ENTERWITH)
             SAVE_SP_AND_PC(fp);
-            FETCH_OBJECT(cx, -1, rval, obj);
-            OBJ_TO_INNER_OBJECT(cx, obj);
-            if (!obj || !(obj2 = js_GetScopeChain(cx, fp))) {
-                ok = JS_FALSE;
+            ok = EnterWith(cx, -1);
+            if (!ok)
                 goto out;
-            }
-            withobj = js_NewWithObject(cx, obj, obj2, sp - fp->spbase - 1);
-            if (!withobj) {
-                ok = JS_FALSE;
-                goto out;
-            }
-            fp->scopeChain = withobj;
-            STORE_OPND(-1, OBJECT_TO_JSVAL(withobj));
-            js_DisablePropertyCache(cx);
+
+            /*
+             * We must ensure that different "with" blocks have different
+             * stack depth associated with them. This allows the try handler
+             * search to properly recover the scope chain. Thus we must keep
+             * the stack at least at the current level.
+             *
+             * We set sp[-1] to the current "with" object to help asserting
+             * the enter/leave balance in [leavewith].
+             */
+            sp[-1] = OBJECT_TO_JSVAL(fp->scopeChain);
           END_CASE(JSOP_ENTERWITH)
 
           BEGIN_CASE(JSOP_LEAVEWITH)
-            rval = POP_OPND();
-            JS_ASSERT(JSVAL_IS_OBJECT(rval));
-            withobj = JSVAL_TO_OBJECT(rval);
-            JS_ASSERT(OBJ_GET_CLASS(cx, withobj) == &js_WithClass);
-            fp->scopeChain = OBJ_GET_PARENT(cx, withobj);
-            JS_SetPrivate(cx, withobj, NULL);
-            js_EnablePropertyCache(cx);
+            JS_ASSERT(sp[-1] == OBJECT_TO_JSVAL(fp->scopeChain));
+            sp--;
+            SAVE_SP_AND_PC(fp);
+            LeaveWith(cx);
           END_CASE(JSOP_LEAVEWITH)
 
           BEGIN_CASE(JSOP_SETRVAL)
@@ -6080,19 +6132,43 @@ interrupt:
           END_CASE(JSOP_DESCENDANTS)
 
           BEGIN_CASE(JSOP_FILTER)
+            /*
+             * We push the hole value before jumping to [enditer] so we can
+             * detect the first iteration and direct js_StepXMLListFilter to
+             * initialize filter's state.
+             */
+            PUSH_OPND(JSVAL_HOLE);
             len = GET_JUMP_OFFSET(pc);
-            SAVE_SP_AND_PC(fp);
-            FETCH_OBJECT(cx, -1, lval, obj);
-            ok = js_FilterXMLList(cx, obj, pc + js_CodeSpec[op].length, &rval);
-            if (!ok)
-                goto out;
-            JS_ASSERT(fp->sp == sp);
-            STORE_OPND(-1, rval);
+            JS_ASSERT(len > 0);
           END_VARLEN_CASE
 
           BEGIN_CASE(JSOP_ENDFILTER)
-            *result = POP_OPND();
-            goto out;
+            SAVE_SP_AND_PC(fp);
+            cond = (sp[-1] != JSVAL_HOLE);
+            if (cond) {
+                /* Exit the "with" block left from the previous iteration. */
+                LeaveWith(cx);
+            }
+            ok = js_StepXMLListFilter(cx, cond);
+            if (!ok)
+                goto out;
+            if (sp[-1] != JSVAL_NULL) {
+                /*
+                 * Decrease sp after EnterWith returns as we use sp[-1] there
+                 * to root temporaries.
+                 */
+                JS_ASSERT(VALUE_IS_XML(cx, sp[-1]));
+                ok = EnterWith(cx, -2);
+                if (!ok)
+                    goto out;
+                sp--;
+                len = GET_JUMP_OFFSET(pc);
+                JS_ASSERT(len < 0);
+                CHECK_BRANCH(len);
+                DO_NEXT_OP(len);
+            }
+            sp--;
+          END_CASE(JSOP_ENDFILTER);
 
           EMPTY_CASE(JSOP_STARTXML)
           EMPTY_CASE(JSOP_STARTXMLEXPR)
@@ -6338,7 +6414,7 @@ interrupt:
              */
             SAVE_SP_AND_PC(fp);
             ok = js_CloseIterator(cx, sp[-1]);
-            --sp;
+            sp--;
             if (!ok)
                 goto out;
           END_CASE(JSOP_ENDITER)
@@ -6358,13 +6434,6 @@ interrupt:
 
           BEGIN_CASE(JSOP_YIELD)
             ASSERT_NOT_THROWING(cx);
-            if (fp->flags & JSFRAME_FILTERING) {
-                /* FIXME: bug 309894 -- fix to eliminate this error. */
-                JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
-                                       JSMSG_YIELD_FROM_FILTER);
-                ok = JS_FALSE;
-                goto out;
-            }
             if (FRAME_TO_GENERATOR(fp)->state == JSGEN_CLOSING) {
                 js_ReportValueError(cx, JSMSG_BAD_GENERATOR_YIELD,
                                     JSDVG_SEARCH_STACK, fp->argv[-2], NULL);
@@ -6406,7 +6475,7 @@ interrupt:
             ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
             if (!ok)
                 goto out;
-            --sp;
+            sp--;
           END_CASE(JSOP_ARRAYPUSH)
 #endif /* JS_HAS_GENERATORS */
 
@@ -6514,31 +6583,8 @@ interrupt:
 
 out:
     JS_ASSERT((size_t)(pc - script->code) < script->length);
-    if (!ok && cx->throwing && !(fp->flags & JSFRAME_FILTERING)) {
-        /*
-         * An exception has been raised and we are not in an XML filtering
-         * predicate expression. The latter check is necessary to avoid
-         * catching exceptions within the filtering predicate, such as this
-         * example taken from tests/e4x/Regress/regress-301596.js:
-         *
-         *    try {
-         *        <xml/>.(@a == 1);
-         *        throw 5;
-         *    } catch (e) {
-         *    }
-         *
-         * The inner interpreter activation executing the predicate bytecode
-         * will throw "reference to undefined XML name @a" (or 5, in older
-         * versions that followed the first edition of ECMA-357 and evaluated
-         * unbound identifiers to undefined), and the exception must not be
-         * caught until control unwinds to the outer interpreter activation.
-         *
-         * Otherwise, the wrong stack depth will be restored by JSOP_SETSP,
-         * and the catch will move into the filtering predicate expression,
-         * leading to double catch execution if it rethrows.
-         *
-         * FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=309894
-         */
+    if (!ok && cx->throwing) {
+        /* An exception has been raised. */
         JSTrapHandler handler;
         JSTryNote *tn, *tnlimit;
         uint32 offset;
@@ -6618,7 +6664,8 @@ out:
             fp->blockChain = obj;
 
             JS_ASSERT(ok);
-            for (obj = fp->scopeChain; ; obj = OBJ_GET_PARENT(cx, obj)) {
+            for (;;) {
+                obj = fp->scopeChain;
                 clasp = OBJ_GET_CLASS(cx, obj);
                 if (clasp != &js_WithClass && clasp != &js_BlockClass)
                     break;
@@ -6629,14 +6676,12 @@ out:
                 if (clasp == &js_BlockClass) {
                     /* Don't fail until after we've updated all stacks. */
                     ok &= js_PutBlockObject(cx, obj);
+                    fp->scopeChain = OBJ_GET_PARENT(cx, obj);
                 } else {
-                    JS_ASSERT(clasp == &js_WithClass);
-                    JS_SetPrivate(cx, obj, NULL);
-                    js_EnablePropertyCache(cx);
+                    LeaveWith(cx);
                 }
             }
 
-            fp->scopeChain = obj;
             sp = fp->spbase + i;
 
             /*
@@ -6731,8 +6776,7 @@ out:
      * (a) an inline call in the same js_Interpret;
      * (b) an "out of line" call made through js_Invoke;
      * (c) a js_Execute activation;
-     * (d) a generator (SendToGenerator, jsiter.c);
-     * (e) js_FilterXMLList.
+     * (d) a generator (SendToGenerator, jsiter.c).
      */
     if (!ok) {
         for (obj = fp->scopeChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {

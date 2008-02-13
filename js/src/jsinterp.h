@@ -106,11 +106,10 @@ typedef struct JSInlineFrame {
 #define JSFRAME_EVAL          0x10  /* frame for obj_eval */
 #define JSFRAME_SCRIPT_OBJECT 0x20  /* compiling source for a Script object */
 #define JSFRAME_YIELDING      0x40  /* js_Interpret dispatched JSOP_YIELD */
-#define JSFRAME_FILTERING     0x80  /* XML filtering predicate expression */
-#define JSFRAME_ITERATOR      0x100 /* trying to get an iterator for for-in */
-#define JSFRAME_POP_BLOCKS    0x200 /* scope chain contains blocks to pop */
-#define JSFRAME_GENERATOR     0x400 /* frame belongs to generator-iterator */
-#define JSFRAME_ROOTED_ARGV   0x800 /* frame.argv is rooted by the caller */
+#define JSFRAME_ITERATOR      0x80  /* trying to get an iterator for for-in */
+#define JSFRAME_POP_BLOCKS   0x100  /* scope chain contains blocks to pop */
+#define JSFRAME_GENERATOR    0x200  /* frame belongs to generator-iterator */
+#define JSFRAME_ROOTED_ARGV  0x400  /* frame.argv is rooted by the caller */
 
 #define JSFRAME_OVERRIDE_SHIFT 24   /* override bit-set params; see jsfun.c */
 #define JSFRAME_OVERRIDE_BITS  8

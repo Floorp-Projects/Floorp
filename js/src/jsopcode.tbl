@@ -397,7 +397,7 @@ OPDEF(JSOP_SETXMLNAME,    171,"setxmlname", NULL,     1,  3,  1,  3,  JOF_BYTE|J
 OPDEF(JSOP_XMLNAME,       172,"xmlname",    NULL,     1,  1,  1, 19,  JOF_BYTE)
 OPDEF(JSOP_DESCENDANTS,   173,"descendants",NULL,     1,  2,  1, 18,  JOF_BYTE)
 OPDEF(JSOP_FILTER,        174,"filter",     NULL,     3,  1,  1,  0,  JOF_JUMP)
-OPDEF(JSOP_ENDFILTER,     175,"endfilter",  NULL,     1,  1,  0, 18,  JOF_BYTE)
+OPDEF(JSOP_ENDFILTER,     175,"endfilter",  NULL,     3,  2,  1, 18,  JOF_JUMP)
 OPDEF(JSOP_TOXML,         176,"toxml",      NULL,     1,  1,  1, 19,  JOF_BYTE)
 OPDEF(JSOP_TOXMLLIST,     177,"toxmllist",  NULL,     1,  1,  1, 19,  JOF_BYTE)
 OPDEF(JSOP_XMLTAGEXPR,    178,"xmltagexpr", NULL,     1,  1,  1,  0,  JOF_BYTE)
