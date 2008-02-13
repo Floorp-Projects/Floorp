@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title></title>
+	<style type="text/css">
+
+	table#viewer { border-spacing: 0 }
+	table#viewer > tbody > tr > td,
+	table#viewer > tbody > tr > th { padding: 0; vertical-align: top; }
+
+	form#imgcontrols { margin: 0; display: block; }
+
+	#itemlist > table { border-collapse: collapse; }
+	#itemlist > table > tbody > tr > td { border: 1px solid; padding: 1px; }
+
+	/*
+	#itemlist > table > tbody > tr.pass > td.url { background: lime; }
+	#itemlist > table > tbody > tr.fail > td.url { background: red; }
+	*/
+
+	</style>
+	<script type="text/javascript"><![CDATA[
+
+var XLINK_NS = "http://www.w3.org/1999/xlink";
+var SVG_NS = "http://www.w3.org/2000/svg";
+
+var gPhases = null;
+
+var gImage1 = null;
+var gImage2 = null;
+var gDiffRect = null;
+var gImgControls = null;
+var gFeImage1 = null;
+var gFeImage2 = null;
+var gSVG = null;
+
+function load() {
+	gPhases = [
+		document.getElementById("entry"),
+		document.getElementById("loading"),
+		document.getElementById("viewer")
+	];
+	gImage1 = document.getElementById("image1");
+	gImage2 = document.getElementById("image2");
+	var feImages = document.getElementsByTagNameNS(SVG_NS, "feImage");
+	gFeImage1 = feImages[0];
+	gFeImage2 = feImages[1];
+	gDiffRect = document.getElementById("diffrect");
+	gImgControls = document.getElementById("imgcontrols");
+	gSVG = document.getElementById("svg");
+}
+
+function show_phase(phaseid) {
+	for (var i in gPhases) {
+		var phase = gPhases[i];
+		phase.style.display = (phase.id == phaseid) ? "" : "none";
+	}
+
+	if (phase == "viewer")
+		document.getElementById("images").style.display = "none";
+}
+
+function fileentry_changed() {
+	show_phase("loading");
+	var input = document.getElementById("fileentry");
+	var files = input.files;
+	var log = null;
+	if (files.length > 0) {
+		// Only handle the first file; don't handle multiple selection.
+		log = files[0].getAsText("iso-8859-1");
+	}
+	// So the user can process the same filename again (after
+	// overwriting the log), clear the value on the form input so we
+	// will always get an onchange event.
+	input.value = "";
+
+	if (log)
+		process_log(log);
+	else
+		show_phase("entry");
+}
+
+function log_pasted() {
+	show_phase("loading");
+	var entry = document.getElementById("logentry");
+	var log = entry.value;
+	entry.value = "";
+	process_log(log);
+}
+
+var gTestItems;
+
+function process_log(contents) {
+	document.getElementById("entry")
+
+	var lines = contents.split(/[\r\n]+/);
+	gTestItems = [];
+	for (var j in lines) {
+		var line = lines[j];
+		var match = line.match(/^REFTEST (.*)$/);
+		if (!match)
+			continue;
+		line = match[1];
+		match = line.match(/^(PASS|UNEXPECTED PASS|KNOWN FAIL|UNEXPECTED FAIL)( \(RESULT EXPECTED TO BE RANDOM\)| \(SKIP\)|): (.*)/);
+		if (match) {
+			var state = match[1];
+			var extra = match[2];
+			var url = match[3];
+			gTestItems.push(
+				{
+					pass: !state.match(/FAIL$/),
+					// only one of the following three should ever be true
+					unexpected: !!state.match(/^UNEXPECTED/),
+					random: (extra == " (RESULT EXPECTED TO BE RANDOM)"),
+					skip: (extra == " (SKIP)"),
+					url: url,
+					images: []
+				});
+			continue;
+		}
+		match = line.match(/^  IMAGE[^:]*: (.*)$/);
+		if (match) {
+			var item = gTestItems[gTestItems.length - 1];
+			item.images.push(match[1]);
+		}
+	}
+
+	build_viewer();
+}
+
+function build_viewer() {
+	if (gTestItems.length == 0) {
+		show_phase("entry");
+		return;
+	}
+
+	var cell = document.getElementById("itemlist");
+	while (cell.childNodes.length > 0)
+		cell.removeChild(cell.childNodes[cell.childNodes.length - 1]);
+
+	var table = document.createElement("table");
+	var tbody = document.createElement("tbody");
+	table.appendChild(tbody);
+
+	for (var i in gTestItems) {
+		var item = gTestItems[i];
+		var tr = document.createElement("tr");
+		var rowclass = item.pass ? "pass" : "fail";
+		var td;
+		var text;
+
+		td = document.createElement("td");
+		text = "";
+		if (item.unexpected) { text += "!"; rowclass += " unexpected"; }
+		if (item.random) { text += "R"; rowclass += " random"; }
+		if (item.skip) { text += "S"; rowclass += " skip"; }
+		td.appendChild(document.createTextNode(text));
+		tr.appendChild(td);
+
+		td = document.createElement("td");
+		td.className = "url";
+		text = document.createTextNode(item.url);
+		if (item.images.length > 0) {
+			var a = document.createElement("a");
+			a.href = "javascript:show_images(" + i + ")";
+			a.appendChild(text);
+			td.appendChild(a);
+		} else {
+			td.appendChild(text);
+		}
+		tr.appendChild(td);
+
+		tbody.appendChild(tr);
+	}
+
+	cell.appendChild(table);
+
+	show_phase("viewer");
+}
+
+function show_images(i) {
+	var item = gTestItems[i];
+	var cell = document.getElementById("images");
+
+	gImage1.style.display = "";
+	gImage2.style.display = "none";
+	gDiffRect.style.display = "none";
+	gImgControls.reset();
+
+	gImage1.setAttributeNS(XLINK_NS, "xlink:href", item.images[0]);
+	// Making the href be #image1 doesn't seem to work
+	gFeImage1.setAttributeNS(XLINK_NS, "xlink:href", item.images[0]);
+	if (item.images.length == 1) {
+		gImgControls.style.display = "none";
+	} else {
+		gImgControls.style.display = "";
+
+		gImage2.setAttributeNS(XLINK_NS, "xlink:href", item.images[1]);
+		// Making the href be #image2 doesn't seem to work
+		gFeImage2.setAttributeNS(XLINK_NS, "xlink:href", item.images[1]);
+	}
+
+	// Force reprocessing of the filters!
+	var p = gSVG.parentNode;
+	p.removeChild(gSVG);
+	p.appendChild(gSVG);
+
+	cell.style.display = "";
+}
+
+function show_image(i) {
+	if (i == 1) {
+		gImage1.style.display = "";
+		gImage2.style.display = "none";
+	} else {
+		gImage1.style.display = "none";
+		gImage2.style.display = "";
+	}
+}
+
+function show_differences(cb) {
+	gDiffRect.style.display = cb.checked ? "" : "none";
+}
+
+	]]></script>
+
+</head>
+<body onload="load()">
+
+<div id="entry">
+
+<h1>Reftest analyzer: load reftest log</h1>
+
+<p>Either paste your log into this textarea:<br />
+<textarea cols="80" rows="10" id="logentry" /><br/>
+<input type="button" value="Process pasted log" onclick="log_pasted()" /></p>
+
+<p>... or load it from a file:<br/>
+<input type="file" id="fileentry" onchange="fileentry_changed()" />
+</p>
+</div>
+
+<div id="loading" style="display:none">Loading log...</div>
+
+<table width="100%" height="100%" id="viewer" style="display:none"><tbody><tr>
+	<td id="itemlist">
+	</td>
+	<td id="images" style="display:none">
+		<form id="imgcontrols">
+			<label><input type="radio" name="which" value="0" onchange="show_image(1)" checked="checked" />Image 1</label>
+			<label><input type="radio" name="which" value="1" onchange="show_image(2)" />Image 2</label>
+			<label><input type="checkbox" onchange="show_differences(this)" />Show differences</label>
+		</form>
+		<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="800px" height="1000px" viewbox="0 0 800 1000" id="svg">
+			<defs>
+				<filter id="showDifferences" x="0%" y="0%" width="100%" height="100%">
+					<feImage result="img1" xlink:href="#image1" />
+					<feImage result="img2" xlink:href="#image2" />
+					<!-- inv1 and inv2 are the images with RGB inverted -->
+					<feComponentTransfer result="inv1" in="img1">
+						<feFuncR type="linear" slope="-1" intercept="1" />
+						<feFuncG type="linear" slope="-1" intercept="1" />
+						<feFuncB type="linear" slope="-1" intercept="1" />
+					</feComponentTransfer>
+					<feComponentTransfer result="inv2" in="img2">
+						<feFuncR type="linear" slope="-1" intercept="1" />
+						<feFuncG type="linear" slope="-1" intercept="1" />
+						<feFuncB type="linear" slope="-1" intercept="1" />
+					</feComponentTransfer>
+					<!-- c1 will have non-black pixels anywhere that img2 is brighter than img1, and c2 for the reverse -->
+					<!-- Why doesn't this work?
+					<feComposite result="c1" in="img1" in2="inv2" operator="arithmetic" k2="-1" k3="-1" k4="1" />
+					<feComposite result="c2" in="img2" in2="inv1" operator="arithmetic" k2="-1" k3="-1" k4="1" />
+					-->
+					<feComposite result="w1" in="img1" in2="inv2" operator="arithmetic" k2="1" k3="1" />
+					<feComposite result="w2" in="img2" in2="inv1" operator="arithmetic" k2="1" k3="1" />
+					<feComponentTransfer result="c1" in="w1">
+						<feFuncR type="linear" slope="-1" intercept="1" />
+						<feFuncG type="linear" slope="-1" intercept="1" />
+						<feFuncB type="linear" slope="-1" intercept="1" />
+					</feComponentTransfer>
+					<feComponentTransfer result="c2" in="w2">
+						<feFuncR type="linear" slope="-1" intercept="1" />
+						<feFuncG type="linear" slope="-1" intercept="1" />
+						<feFuncB type="linear" slope="-1" intercept="1" />
+					</feComponentTransfer>
+					<!-- c will be nonblack (and fully on) for every component where there are differences -->
+					<feComposite result="c" in="c1" in2="c2" operator="arithmetic" k2="255" k3="255" />
+					<!-- a will be opaque for every pixel with differences and transparent for all others -->
+					<feColorMatrix result="a" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 1 1 0 0" />
+
+					<!-- a, dilated by 3 pixels -->
+					<feMorphology result="dila" in="a" operator="dilate" radius="3" />
+
+					<!-- all the pixels in the dilation but not in a, to highlight the diffs -->
+					<feComposite result="highlight" in="dila" in2="a" operator="out" />
+
+					<feFlood result="red" flood-color="red" />
+					<feComposite result="redhighlight" in="red" in2="highlight" operator="in" />
+					<feFlood result="black" flood-color="black" flood-opacity="0.5" />
+					<feMerge>
+						<feMergeNode in="black" />
+						<feMergeNode in="redhighlight" />
+					</feMerge>
+				</filter>
+			</defs>
+			<!-- why doesn't g work? -->
+			<image x="0" y="0" width="100%" height="100%" id="image1" />
+			<image x="0" y="0" width="100%" height="100%" id="image2" />
+			<rect id="diffrect" filter="url(#showDifferences)" x="0" y="0" width="100%" height="100%" />
+		</svg>
+	</td>
+</tr></tbody></table>
+
+</body>
+</html>
