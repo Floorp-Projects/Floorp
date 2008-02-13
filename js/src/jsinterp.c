@@ -686,12 +686,11 @@ js_AllocRawStack(JSContext *cx, uintN nslots, void **markp)
     if (!cx->stackPool.first.next) {
         int64 *timestamp;
 
-        JS_ARENA_ALLOCATE(timestamp, &cx->stackPool, sizeof(*timestamp));
+        JS_ARENA_ALLOCATE(timestamp, &cx->stackPool, sizeof *timestamp);
         if (!timestamp) {
             js_ReportOutOfScriptQuota(cx);
             return NULL;
         }
-
         *timestamp = JS_Now();
     }
 
@@ -3092,6 +3091,7 @@ interrupt:
         JSObject *obj_, *pobj_;                                               \
         JSProperty *prop_;                                                    \
         JSScopeProperty *sprop_;                                              \
+        uint32 sample_ = rt->gcNumber;                                        \
         SAVE_SP_AND_PC(fp);                                                   \
         if (pcoff >= 0)                                                       \
             GET_ATOM_FROM_BYTECODE(script, pc, pcoff, atom_);                 \
@@ -3107,6 +3107,8 @@ interrupt:
         }                                                                     \
         if (!ok)                                                              \
             goto out;                                                         \
+        if (rt->gcNumber != sample_)                                          \
+            break;                                                            \
         JS_ASSERT(prop_);                                                     \
         JS_ASSERT(pobj_ == pobj);                                             \
         sprop_ = (JSScopeProperty *) prop_;                                   \
