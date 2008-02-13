@@ -4077,7 +4077,7 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsFrameConstructorState& aState,
   InitAndRestoreFrame(aState, aContent, aNewCellOuterFrame, nsnull, aNewCellInnerFrame);
 
   if (!aIsPseudo) {
-    PRBool haveFirstLetterStyle, haveFirstLineStyle;
+    PRBool haveFirstLetterStyle = PR_FALSE, haveFirstLineStyle = PR_FALSE;
     if (isBlock) {
       ShouldHaveSpecialBlockStyle(aContent, aStyleContext,
                                   &haveFirstLetterStyle, &haveFirstLineStyle);
@@ -4085,10 +4085,9 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsFrameConstructorState& aState,
 
     // The block frame is a float container
     nsFrameConstructorSaveState floatSaveState;
-    if (isBlock) {
-      aState.PushFloatContainingBlock(aNewCellInnerFrame, floatSaveState,
-                                      haveFirstLetterStyle, haveFirstLineStyle);
-    }
+    aState.PushFloatContainingBlock(isBlock ? aNewCellInnerFrame : nsnull,
+                                    floatSaveState,
+                                    haveFirstLetterStyle, haveFirstLineStyle);
 
     // Process the child content
     nsFrameItems childItems;
