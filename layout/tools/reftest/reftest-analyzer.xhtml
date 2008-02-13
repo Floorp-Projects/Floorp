@@ -314,16 +314,18 @@ function show_differences(cb) {
 						<feFuncG type="linear" slope="-1" intercept="1" />
 						<feFuncB type="linear" slope="-1" intercept="1" />
 					</feComponentTransfer>
-					<!-- c will be nonblack (and fully on) for every component where there are differences -->
+					<!-- c will be nonblack (and fully on) for every pixel+component where there are differences -->
 					<feComposite result="c" in="c1" in2="c2" operator="arithmetic" k2="255" k3="255" />
 					<!-- a will be opaque for every pixel with differences and transparent for all others -->
 					<feColorMatrix result="a" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 1 1 0 0" />
 
-					<!-- a, dilated by 3 pixels -->
-					<feMorphology result="dila" in="a" operator="dilate" radius="3" />
+					<!-- a, dilated by 4 pixels -->
+					<feMorphology result="dila4" in="a" operator="dilate" radius="4" />
+					<!-- a, dilated by 1 pixel -->
+					<feMorphology result="dila1" in="a" operator="dilate" radius="1" />
 
-					<!-- all the pixels in the dilation but not in a, to highlight the diffs -->
-					<feComposite result="highlight" in="dila" in2="a" operator="out" />
+					<!-- all the pixels in the 3-pixel dilation of a but not in the 1-pixel dilation of a, to highlight the diffs -->
+					<feComposite result="highlight" in="dila4" in2="dila1" operator="out" />
 
 					<feFlood result="red" flood-color="red" />
 					<feComposite result="redhighlight" in="red" in2="highlight" operator="in" />
@@ -334,9 +336,9 @@ function show_differences(cb) {
 					</feMerge>
 				</filter>
 			</defs>
-			<!-- why doesn't g work? -->
 			<image x="0" y="0" width="100%" height="100%" id="image1" />
 			<image x="0" y="0" width="100%" height="100%" id="image2" />
+			<!-- why do I need a rect rather than a g? -->
 			<rect id="diffrect" filter="url(#showDifferences)" x="0" y="0" width="100%" height="100%" />
 		</svg>
 	</td>
