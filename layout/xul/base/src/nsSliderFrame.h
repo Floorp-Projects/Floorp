@@ -242,7 +242,7 @@ private:
 
   nscoord mChange;
   nsPoint mDestinationPoint;
-  nsSliderMediator* mMediator;
+  nsRefPtr<nsSliderMediator> mMediator;
 
   static PRBool gMiddlePref;
   static PRInt32 gSnapMultiplier;
