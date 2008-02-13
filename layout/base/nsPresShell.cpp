@@ -1864,7 +1864,7 @@ nsresult PresShell::CreatePreferenceStyleSheet(void)
     result = NS_NewURI(getter_AddRefs(uri), "about:PreferenceStyleSheet", nsnull);
     if (NS_SUCCEEDED(result)) {
       NS_ASSERTION(uri, "null but no error");
-      result = mPrefStyleSheet->SetURIs(uri, nsnull, uri);
+      result = mPrefStyleSheet->SetURIs(uri, uri, uri);
       if (NS_SUCCEEDED(result)) {
         mPrefStyleSheet->SetComplete();
         PRUint32 index;
