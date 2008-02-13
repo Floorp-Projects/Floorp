@@ -1932,11 +1932,12 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     FireDelayedToolkitEvent(additionEvent, childNode,
                             eCoalesceFromSameSubtree, isAsynch);
 
-    // Check to see change occured in an ARIA menu, and fire an EVENT_MENUPOPUP_START if it did
+    // Check to see change occured in an ARIA menu, and fire
+    // an EVENT_MENUPOPUP_START if it did.
     nsRoleMapEntry *roleMapEntry = nsAccUtils::GetRoleMapEntry(childNode);
     if (roleMapEntry && roleMapEntry->role == nsIAccessibleRole::ROLE_MENUPOPUP) {
       FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_START,
-                              childNode, eAllowDupes, isAsynch);
+                              childNode, eRemoveDupes, isAsynch);
     }
 
     // Check to see if change occured inside an alert, and fire an EVENT_ALERT if it did
