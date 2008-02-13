@@ -300,39 +300,44 @@ var Microformats = {
         return propnode.value;
       } else {
         var values = Microformats.getElementsByClassName(propnode, "value");
+        /* Verify that values are children of the propnode */
+        for (let i = values.length-1; i >= 0; i--) {
+          if (values[i].parentNode != propnode) {
+            values.splice(i,1);
+          }
+        }
         if (values.length > 0) {
           var value = "";
           for (let j=0;j<values.length;j++) {
             value += Microformats.parser.defaultGetter(values[j], propnode, datatype);
           }
           return value;
+        }
+        var s;
+        if (datatype == "HTML") {
+          s = propnode.innerHTML;
         } else {
-          var s;
-          if (datatype == "HTML") {
-            s = propnode.innerHTML;
+          if (propnode.innerText) {
+            s = propnode.innerText;
           } else {
-            if (propnode.innerText) {
-              s = propnode.innerText;
-            } else {
-              s = propnode.textContent;
-            }
+            s = propnode.textContent;
           }
-          /* If we are processing a value node, don't remove whitespace */
-          if (!Microformats.matchClass(propnode, "value")) {
-            /* Remove new lines, carriage returns and tabs */
-            s	= s.replace(/[\n\r\t]/gi, ' ');
-            /* Replace any double spaces with single spaces */
-            s	= s.replace(/\s{2,}/gi, ' ');
-            /* Remove any double spaces that are left */
-            s	= s.replace(/\s{2,}/gi, '');
-            /* Remove any spaces at the beginning */
-            s	= s.replace(/^\s+/, '');
-            /* Remove any spaces at the end */
-            s	= s.replace(/\s+$/, '');
-          }
-          if (s.length > 0) {
-            return s;
-          }
+        }
+        /* If we are processing a value node, don't remove whitespace */
+        if (!Microformats.matchClass(propnode, "value")) {
+          /* Remove new lines, carriage returns and tabs */
+          s	= s.replace(/[\n\r\t]/gi, ' ');
+          /* Replace any double spaces with single spaces */
+          s	= s.replace(/\s{2,}/gi, ' ');
+          /* Remove any double spaces that are left */
+          s	= s.replace(/\s{2,}/gi, '');
+          /* Remove any spaces at the beginning */
+          s	= s.replace(/^\s+/, '');
+          /* Remove any spaces at the end */
+          s	= s.replace(/\s+$/, '');
+        }
+        if (s.length > 0) {
+          return s;
         }
       }
     },
