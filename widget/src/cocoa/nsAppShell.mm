@@ -54,6 +54,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIWebBrowserChrome.h"
+#include "nsObjCExceptions.h"
 
 // defined in nsChildView.mm
 extern nsIRollupListener * gRollupListener;
@@ -125,6 +126,8 @@ nsAppShell::nsAppShell()
 
 nsAppShell::~nsAppShell()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (mCFRunLoop) {
     if (mCFRunLoopSource) {
       ::CFRunLoopRemoveSource(mCFRunLoop, mCFRunLoopSource,
@@ -163,6 +166,8 @@ nsAppShell::~nsAppShell()
   // on the current thread, which is the main thread).
   if (!mNotifiedWillTerminate)
     [mMainPool release];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK
 }
 
 // Init
@@ -174,6 +179,8 @@ nsAppShell::~nsAppShell()
 nsresult
 nsAppShell::Init()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // No event loop is running yet (unless Camino is running, or another
   // embedding app that uses NSApplicationMain()).  Avoid autoreleasing
   // objects to mMainPool.  The appshell retains objects it needs to be
@@ -238,6 +245,8 @@ nsAppShell::Init()
   [localPool release];
 
   return rv;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 // ProcessGeckoEvents
@@ -260,6 +269,8 @@ nsAppShell::Init()
 void
 nsAppShell::ProcessGeckoEvents(void* aInfo)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   nsAppShell* self = static_cast<nsAppShell*> (aInfo);
 
   if (self->mRunningEventLoop) {
@@ -313,6 +324,8 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
   // Each Release() here is balanced by exactly one AddRef() in
   // ScheduleNativeEventCallback().
   NS_RELEASE(self);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // WillTerminate
@@ -366,6 +379,8 @@ nsAppShell::WillTerminate()
 void
 nsAppShell::ScheduleNativeEventCallback()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (mTerminated)
     return;
 
@@ -376,6 +391,8 @@ nsAppShell::ScheduleNativeEventCallback()
   // This will invoke ProcessGeckoEvents on the main thread.
   ::CFRunLoopSourceSignal(mCFRunLoopSource);
   ::CFRunLoopWakeUp(mCFRunLoop);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // ProcessNextNativeEvent
@@ -395,6 +412,9 @@ PRBool
 nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
 {
   PRBool moreEvents = PR_FALSE;
+
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   PRBool eventProcessed = PR_FALSE;
   NSString* currentMode = nil;
 
@@ -510,6 +530,8 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
 
   mRunningEventLoop = wasRunningEventLoop;
 
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+
   return moreEvents;
 }
 
@@ -562,7 +584,7 @@ nsAppShell::Run(void)
     return NS_OK;
 
   mStarted = PR_TRUE;
-  [NSApp run];
+  NS_OBJC_TRY_ABORT([NSApp run]);
 
   return NS_OK;
 }
@@ -570,6 +592,8 @@ nsAppShell::Run(void)
 NS_IMETHODIMP
 nsAppShell::Exit(void)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // This method is currently called more than once -- from (according to
   // mento) an nsAppExitEvent dispatched by nsAppStartup::Quit() and from an
   // XPCOM shutdown notification that nsBaseAppShell has registered to
@@ -600,6 +624,8 @@ nsAppShell::Exit(void)
   [NSApp stop:nsnull];
 
   return nsBaseAppShell::Exit();
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 // OnProcessNextEvent
@@ -616,6 +642,8 @@ NS_IMETHODIMP
 nsAppShell::OnProcessNextEvent(nsIThreadInternal *aThread, PRBool aMayWait,
                                PRUint32 aRecursionDepth)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   mRecursionDepth = aRecursionDepth;
 
   NS_ASSERTION(mAutoreleasePools,
@@ -625,6 +653,8 @@ nsAppShell::OnProcessNextEvent(nsIThreadInternal *aThread, PRBool aMayWait,
   ::CFArrayAppendValue(mAutoreleasePools, pool);
 
   return nsBaseAppShell::OnProcessNextEvent(aThread, aMayWait, aRecursionDepth);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 // AfterProcessNextEvent
@@ -638,6 +668,8 @@ NS_IMETHODIMP
 nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
                                   PRUint32 aRecursionDepth)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   mRecursionDepth = aRecursionDepth;
 
   CFIndex count = ::CFArrayGetCount(mAutoreleasePools);
@@ -651,6 +683,8 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
   [pool release];
 
   return nsBaseAppShell::AfterProcessNextEvent(aThread, aRecursionDepth);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 // AppShellDelegate implementation
@@ -661,6 +695,8 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
 // Constructs the AppShellDelegate object
 - (id)initWithAppShell:(nsAppShell*)aAppShell
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   if ((self = [self init])) {
     mAppShell = aAppShell;
 
@@ -675,13 +711,19 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
   }
 
   return self;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (void)dealloc
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [[NSDistributedNotificationCenter defaultCenter] removeObserver:self];
   [super dealloc];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // applicationWillTerminate:
@@ -689,7 +731,11 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
 // Notify the nsAppShell that native event processing should be discontinued.
 - (void)applicationWillTerminate:(NSNotification*)aNotification
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   mAppShell->WillTerminate();
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // beginMenuTracking
@@ -699,12 +745,15 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
 // send ourselves (whose 'sender' will be @"org.mozilla.gecko.PopupWindow").
 - (void)beginMenuTracking:(NSNotification*)aNotification
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   NSString *sender = [aNotification object];
   if (!sender || ![sender isEqualToString:@"org.mozilla.gecko.PopupWindow"]) {
     if (gRollupListener && gRollupWidget)
       gRollupListener->Rollup(nsnull);
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 @end
-
