@@ -50,6 +50,8 @@
 #include "nsCOMPtr.h"
 #include "nsEvent.h"
 
+#define DOM_WINDOW_DESTROYED_TOPIC "dom-window-destroyed"
+
 class nsIPrincipal;
 
 // Popup control state enum. The values in this enum must go from most
