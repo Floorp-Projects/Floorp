@@ -69,3 +69,4 @@ include $(topsrcdir)/config/rules.mk
 $(RDF_UTIL_SRC_LCPPSRCS): %: $(srcdir)/../%
 	$(INSTALL) $^ .
 
+GARBAGE += $(RDF_UTIL_SRC_LCPPSRCS)

@@ -73,7 +73,7 @@ JAVA_CLASSPATH += $(IFACES_JAR)
 # install jars into SDK
 SDK_LIBRARY = $(JAVA_LIBRARY_NAME).jar $(IFACES_JAR) $(IFACES_JAR_SRC)
 
-GARBAGE += $(IFACES_JAR) $(IFACES_JAR_SRC) IXPCOMError.java java.files
+GARBAGE += $(IFACES_JAR) $(IFACES_JAR_SRC) $(PACKAGE_DIR)/IXPCOMError.java java.files
 
 include $(topsrcdir)/config/rules.mk
 
