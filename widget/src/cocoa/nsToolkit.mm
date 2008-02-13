@@ -382,3 +382,37 @@ PRBool nsToolkit::OnLeopardOrLater()
 {
     return (OSXVersion() >= MAC_OS_X_VERSION_10_5_HEX) ? PR_TRUE : PR_FALSE;
 }
+
+
+// An alternative to [NSObject poseAsClass:] that isn't deprecated on OS X
+// Leopard and is available to 64-bit binaries on Leopard and above.  Based on
+// ideas and code from http://www.cocoadev.com/index.pl?MethodSwizzling.
+// Since the Method type becomes an opaque type as of Objective-C 2.0, we'll
+// have to switch to using accessor methods like method_exchangeImplementations()
+// when we build 64-bit binaries that use Objective-C 2.0 (on and for Leopard
+// and above).  But these accessor methods aren't available in Objective-C 1
+// (or on Tiger).  So we need to access Method's members directly for (Tiger-
+// capable) binaries (32-bit or 64-bit) that use Objective-C 1 (as long as we
+// keep supporting Tiger).
+//
+// Be aware that, if aClass doesn't have an orgMethod selector but one of its
+// superclasses does, the method substitution will (in effect) take place in
+// that superclass (rather than in aClass itself).  The substitution has
+// effect on the class where it takes place and all of that class's
+// subclasses.  In order for method swizzling to work properly, posedMethod
+// needs to be unique in the class where the substitution takes place and all
+// of its subclasses.
+nsresult nsToolkit::SwizzleMethods(Class aClass, SEL orgMethod, SEL posedMethod)
+{
+  Method original = class_getInstanceMethod(aClass, orgMethod);
+  Method posed = class_getInstanceMethod(aClass, posedMethod);
+
+  if (!original || !posed)
+    return NS_ERROR_FAILURE;
+
+  IMP aMethodImp = original->method_imp;
+  original->method_imp = posed->method_imp;
+  posed->method_imp = aMethodImp;
+
+  return NS_OK;
+}

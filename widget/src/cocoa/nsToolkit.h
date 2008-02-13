@@ -42,6 +42,8 @@
 #include "nsIToolkit.h"
 
 #import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
+#import <objc/Object.h>
 #import <IOKit/IOKitLib.h>
 
 #define MAC_OS_X_VERSION_10_4_HEX 0x00001040
@@ -63,6 +65,8 @@ public:
   static PRBool      OnLeopardOrLater();
   
   static void        PostSleepWakeNotification(const char* aNotification);
+
+  static nsresult    SwizzleMethods(Class aClass, SEL orgMethod, SEL posedMethod);
 
 protected:
 
