@@ -75,9 +75,6 @@
       		label="&fullZoomReduceBtn.label;"
       		accesskey="&fullZoomReduceBtn.accesskey;"
       		oncommand="ZoomManager.reduce();"/>
-#ifdef XP_MACOSX
-#define HELP_ALWAYS_RAISED_TOGGLE
-#endif
 #ifdef XP_WIN
 #define HELP_ALWAYS_RAISED_TOGGLE
 #endif

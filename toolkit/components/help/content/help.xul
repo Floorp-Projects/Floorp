@@ -55,9 +55,6 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="700"
         height="550"
-#ifdef XP_MACOSX
-#define HELP_ALWAYS_RAISED_TOGGLE
-#endif
 #ifdef XP_WIN
 #define HELP_ALWAYS_RAISED_TOGGLE
 #endif

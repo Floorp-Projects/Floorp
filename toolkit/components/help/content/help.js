@@ -785,13 +785,10 @@ function getXulWin()
 }
 
 # toggleZLevel - Toggles whether or not the window will always appear on top. Because
-#   alwaysRaised is not supported on an OS other than Windows and Mac OS X, this code
-#   will not appear in those builds.
+#   alwaysRaised is not supported on an OS other than Windows, this code will not
+#   appear in those builds.
 #
 #   element - The DOM node that persists the checked state.
-#ifdef XP_MACOSX
-#define HELP_ALWAYS_RAISED_TOGGLE
-#endif
 #ifdef XP_WIN
 #define HELP_ALWAYS_RAISED_TOGGLE
 #endif
