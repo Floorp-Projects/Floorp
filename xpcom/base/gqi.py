@@ -2,7 +2,7 @@
 
 """Implement QueryInterface using optimized generated code."""
 
-import os, errno, re, sys, sets
+import os, posixpath, errno, re, sys, sets
 
 # Global controlling debug output to sys.stderr
 debug = False
@@ -18,7 +18,7 @@ def findfile(f, curfile, includedirs):
     sdirs.extend(includedirs)
 
     for dir in sdirs:
-        t = os.path.join(dir, f)
+        t = posixpath.join(dir, f)
         if os.path.exists(t):
             return t
 
