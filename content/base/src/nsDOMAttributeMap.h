@@ -105,7 +105,7 @@ public:
       if (!aKey)
         return 0;
 
-      return PR_ROTATE_LEFT32(static_cast<PRUint32>aKey->mNamespaceID, 4) ^
+      return PR_ROTATE_LEFT32(static_cast<PRUint32>(aKey->mNamespaceID), 4) ^
              NS_PTR_TO_INT32(aKey->mLocalName);
     }
   enum { ALLOW_MEMMOVE = PR_TRUE };
