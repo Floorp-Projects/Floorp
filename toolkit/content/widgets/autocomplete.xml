@@ -237,14 +237,10 @@
       <property name="open"
                 onget="return this.getAttribute('open') == 'true';">
         <setter><![CDATA[
-            if (val) {
-              this.setAttribute("open", "true"); 
-              this.showHistoryPopup();
-            }
-            else {
-              this.removeAttribute("open");
-              this.closePopup();
-            }
+          if (val)
+            this.showHistoryPopup();
+          else
+            this.closePopup();
         ]]></setter>
       </property>
 
@@ -339,6 +335,23 @@
 
       <method name="showHistoryPopup">
         <body><![CDATA[
+          // history dropmarker pushed state
+          function cleanup(popup) {
+            popup.removeEventListener("popupshowing", onShow, false);
+          }
+          function onShow(event) {
+            var popup = event.target, input = popup.input;
+            cleanup(popup);
+            input.setAttribute("open", "true");
+            function onHide() {
+              input.removeAttribute("open");
+              popup.removeEventListener("popuphiding", onHide, false);
+            }
+            popup.addEventListener("popuphiding", onHide, false);
+          }
+          this.popup.addEventListener("popupshowing", onShow, false);
+          setTimeout(cleanup, 1000, this.popup);
+
           // Store our "normal" maxRows on the popup, so that it can reset the
           // value when the popup is hidden.
           this.popup._normalMaxRows = this.maxRows;
