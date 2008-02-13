@@ -520,7 +520,7 @@ public:
   };
   virtual PRUint32 GetDesiredIMEState()
   {
-    if (!HasFlag(NODE_IS_EDITABLE))
+    if (!IsEditableInternal())
       return IME_STATUS_DISABLE;
     nsIContent *editableAncestor = nsnull;
     for (nsIContent* parent = GetParent();
