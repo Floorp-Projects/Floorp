@@ -54,9 +54,10 @@
 #include "nsCRT.h"
 #include "nsIServiceManager.h"
 #include "nsCharTraits.h"
+#include "prbit.h"
 
 #define ADD_TO_HASHVAL(hashval, c) \
-    hashval = (hashval>>28) ^ (hashval<<4) ^ (c)
+    hashval = PR_ROTATE_LEFT32(hashval, 4) ^ (c);
 
 //----------------------------------------------------------------------
 
@@ -346,8 +347,7 @@ PRUint32 nsCRT::BufferHashCode(const PRUnichar* s, PRUint32 len)
   const PRUnichar* done = s + len;
 
   while ( s < done )
-    h = (h>>28) ^ (h<<4) ^ PRUint16(*s++); // cast to unsigned to prevent possible sign extension
-
+    h = PR_ROTATE_LEFT32(h, 4) ^ PRUint16(*s++); // cast to unsigned to prevent possible sign extension
   return h;
 }
 

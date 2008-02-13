@@ -88,6 +88,7 @@
 #include "rdf.h"
 #include "nsCRT.h"
 #include "nsCRTGlue.h"
+#include "prbit.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -408,7 +409,7 @@ struct BlobHashEntry : public PLDHashEntryHdr {
         const PRUint8 *p = data->mBytes, *limit = p + data->mLength;
         PLDHashNumber h = 0;
         for ( ; p < limit; ++p)
-            h = (h >> 28) ^ (h << 4) ^ *p;
+            h = PR_ROTATE_LEFT32(h, 4) ^ *p;
         return h;
     }
 
