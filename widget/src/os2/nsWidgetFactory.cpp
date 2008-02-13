@@ -89,6 +89,8 @@
 
 #include "nsFrameWindow.h" // OS/2 only
 
+#include "nsIdleServiceOS2.h"
+
 // objects that just require generic constructors
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
@@ -108,6 +110,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsOS2, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerOS2)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceOS2)
 
 // component definition, will be exported using XPCOM
 static const nsModuleComponentInfo components[] =
@@ -191,6 +194,10 @@ static const nsModuleComponentInfo components[] =
     NS_RWSSERVICE_CID,
     NS_RWSSERVICE_CONTRACTID,
     nsRwsServiceConstructor },
+  { "User Idle Service",
+    NS_IDLE_SERVICE_CID,
+    "@mozilla.org/widget/idleservice;1",
+    nsIdleServiceOS2Constructor },
 };
 
 PR_STATIC_CALLBACK(void)
