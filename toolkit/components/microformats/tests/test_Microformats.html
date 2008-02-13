@@ -59,7 +59,13 @@
     </div>
   </a>
   
-  
+  <div class="vcard" id="value_test">
+    <span class="fn">
+      <span class="value">John</span>
+      <span><span class="value">Middle</span></span>
+      <span class="value">Doe</span>
+    </span>
+  </span>
   
 </div>
 <pre id="test">
@@ -107,6 +113,10 @@ function test_Microformats() {
 
   var inner_parent = Microformats.getParent(document.getElementById("inner_vevent5"));
   is(inner_parent.id, "outer_tag5", "GetParent gets correct ancestor 5");
+  
+  var valueCard = new hCard(document.getElementById("value_test"));
+
+  is(valueCard.fn, "JohnDoe", "value_test");
 }
 
 function test_hCard() {
