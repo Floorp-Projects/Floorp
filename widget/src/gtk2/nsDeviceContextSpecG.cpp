@@ -386,6 +386,8 @@ nsStringArray* GlobalPrinters::mGlobalPrinterList = nsnull;
 nsDeviceContextSpecGTK::nsDeviceContextSpecGTK()
 {
   DO_PR_DEBUG_LOG(("nsDeviceContextSpecGTK::nsDeviceContextSpecGTK()\n"));
+  mGtkPageSetup = nsnull;
+  mGtkPrintSettings = nsnull;
 }
 
 nsDeviceContextSpecGTK::~nsDeviceContextSpecGTK()
@@ -394,12 +396,10 @@ nsDeviceContextSpecGTK::~nsDeviceContextSpecGTK()
 
   if (mGtkPageSetup) {
     g_object_unref(mGtkPageSetup);
-    mGtkPageSetup = NULL;
   }
 
   if (mGtkPrintSettings) {
     g_object_unref(mGtkPrintSettings);
-    mGtkPrintSettings = NULL;
   }
 }
 
@@ -706,7 +706,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::BeginDocument(PRUnichar * aTitle, PRUnicha
 NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument()
 {
   if (mToPrinter) {
-    if (!gtk_print_job_set_source_file(mPrintJob, mSpoolName.get(), NULL))
+    if (!gtk_print_job_set_source_file(mPrintJob, mSpoolName.get(), nsnull))
       return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
 
     NS_ADDREF(mSpoolFile.get());
