@@ -59,11 +59,6 @@
 
 #include "gfxPlatform.h"
 
-// for nsPNGDecoder.apngFlags
-enum { 
-  FRAME_HIDDEN         = 0x01
-};
-
 static void PNGAPI info_callback(png_structp png_ptr, png_infop info_ptr);
 static void PNGAPI row_callback(png_structp png_ptr, png_bytep new_row,
                            png_uint_32 row_num, int pass);
@@ -83,7 +78,7 @@ nsPNGDecoder::nsPNGDecoder() :
   mPNG(nsnull), mInfo(nsnull),
   mCMSLine(nsnull), interlacebuf(nsnull),
   mInProfile(nsnull), mTransform(nsnull),
-  ibpr(0), apngFlags(0), mChannels(0), mError(PR_FALSE)
+  mChannels(0), mError(PR_FALSE), mFrameIsHidden(PR_FALSE)
 {
 }
 
@@ -169,6 +164,38 @@ void nsPNGDecoder::SetAnimFrameInfo()
       mFrame->SetBlendMethod(imgIContainer::kBlendSource);
   /*else // 'over' is the default for a gfxImageFrame
       mFrame->SetBlendMethod(imgIContainer::kBlendOver); */
+}
+
+// set timeout and frame disposal method for the current frame
+void nsPNGDecoder::EndImageFrame()
+{
+  if (mFrameHasNoAlpha) {
+    nsCOMPtr<nsIImage> img(do_GetInterface(mFrame));
+    img->SetHasNoAlpha();
+  }
+
+  // First tell the container that this frame is complete
+  PRInt32 timeout = 100;
+  PRUint32 numFrames = 0;
+  mFrame->GetTimeout(&timeout);
+  mImage->GetNumFrames(&numFrames);
+
+  // We can't use mPNG->num_frames_read as it may be one ahead.
+  if (numFrames > 1) {
+    // Tell the image renderer that the frame is complete
+    PRInt32 width, height;
+    mFrame->GetWidth(&width);
+    mFrame->GetWidth(&height);
+
+    nsIntRect r(0, 0, width, height);
+    nsCOMPtr<nsIImage> img(do_GetInterface(mFrame));
+    img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
+    mObserver->OnDataAvailable(nsnull, mFrame, &r);
+  }
+
+  mImage->EndFrameDecode(numFrames, timeout);
+  if (mObserver)
+    mObserver->OnStopFrame(nsnull, mFrame);
 }
 
 
@@ -603,7 +630,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
     decoder->format = gfxIFormats::RGB;
   } else if (channels == 2 || channels == 4) {
     if (alpha_bits == 8) {
-      decoder->mImage->GetPreferredAlphaChannelFormat(&(decoder->format));
+      decoder->format = gfxIFormats::RGB_A8;
     } else if (alpha_bits == 1) {
       decoder->format = gfxIFormats::RGB_A1;
     }
@@ -613,22 +640,11 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
     png_set_progressive_frame_fn(png_ptr, frame_info_callback, NULL);
   
   if (png_get_first_frame_is_hidden(png_ptr, info_ptr)) {
-    decoder->apngFlags |= FRAME_HIDDEN;
-    
-    // create a frame just to get bpr, to allocate interlacebuf
-    decoder->mFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
-    if (!decoder->mFrame)
-      longjmp(png_ptr->jmpbuf, 5); // NS_ERROR_OUT_OF_MEMORY
-    nsresult rv = decoder->mFrame->Init(0, 0, width, height, decoder->format, 24);
-    if (NS_FAILED(rv))
-      longjmp(png_ptr->jmpbuf, 5); // NS_ERROR_OUT_OF_MEMORY
+    decoder->mFrameIsHidden = PR_TRUE;
   } else {
     decoder->CreateFrame(0, 0, width, height, decoder->format);
   }
   
-  PRUint32 bpr;
-  decoder->mFrame->GetImageBytesPerRow(&bpr);
-
   if (decoder->mTransform &&
       (channels <= 2 || interlace_type == PNG_INTERLACE_ADAM7)) {
     PRUint32 bpp[] = { 0, 3, 4, 3, 4 };
@@ -639,8 +655,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   }
 
   if (interlace_type == PNG_INTERLACE_ADAM7) {
-      decoder->ibpr = channels * width;
-    decoder->interlacebuf = (PRUint8 *)nsMemory::Alloc(decoder->ibpr*height);
+    decoder->interlacebuf = (PRUint8 *)nsMemory::Alloc(channels * width * height);
     if (!decoder->interlacebuf) {
       longjmp(decoder->mPNG->jmpbuf, 5); // NS_ERROR_OUT_OF_MEMORY
     }
@@ -685,26 +700,20 @@ row_callback(png_structp png_ptr, png_bytep new_row,
    */
   nsPNGDecoder *decoder = static_cast<nsPNGDecoder*>(png_get_progressive_ptr(png_ptr));
   
-  // do nothing
-  // is it ok that we're not telling the observer there is some data?
-  if (decoder->apngFlags & FRAME_HIDDEN)
+  // skip this frame
+  if (decoder->mFrameIsHidden)
     return;
-
-  png_bytep line;
-  if (decoder->interlacebuf) {
-    line = decoder->interlacebuf+(row_num*decoder->ibpr);
-    png_progressive_combine_row(png_ptr, line, new_row);
-  }
-  else
-    line = new_row;
 
   if (new_row) {
     PRInt32 width;
     decoder->mFrame->GetWidth(&width);
     PRUint32 iwidth = width;
 
-    gfx_format format;
-    decoder->mFrame->GetFormat(&format);
+    png_bytep line = new_row;
+    if (decoder->interlacebuf) {
+      line = decoder->interlacebuf + (row_num * decoder->mChannels * width);
+      png_progressive_combine_row(png_ptr, line, new_row);
+    }
 
     // we're thebes. we can write stuff directly to the data
     PRUint8 *imageData;
@@ -728,9 +737,8 @@ row_callback(png_structp png_ptr, png_bytep new_row,
        }
      }
 
-    switch (format) {
+    switch (decoder->format) {
     case gfxIFormats::RGB:
-    case gfxIFormats::BGR:
       {
         // counter for while() loops below
         PRUint32 idx = iwidth;
@@ -758,7 +766,6 @@ row_callback(png_structp png_ptr, png_bytep new_row,
       }
       break;
     case gfxIFormats::RGB_A1:
-    case gfxIFormats::BGR_A1:
       {
         for (PRUint32 x=iwidth; x>0; --x) {
           *cptr32++ = GFX_PACKED_PIXEL(line[3]?0xFF:0x00, line[0], line[1], line[2]);
@@ -769,7 +776,6 @@ row_callback(png_structp png_ptr, png_bytep new_row,
       }
       break;
     case gfxIFormats::RGB_A8:
-    case gfxIFormats::BGR_A8:
       {
         for (PRUint32 x=width; x>0; --x) {
           *cptr32++ = GFX_PACKED_PIXEL(line[3], line[0], line[1], line[2]);
@@ -784,10 +790,15 @@ row_callback(png_structp png_ptr, png_bytep new_row,
     if (!rowHasNoAlpha)
       decoder->mFrameHasNoAlpha = PR_FALSE;
 
-    nsIntRect r(0, row_num, width, 1);
-    nsCOMPtr<nsIImage> img(do_GetInterface(decoder->mFrame));
-    img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
-    decoder->mObserver->OnDataAvailable(nsnull, decoder->mFrame, &r);
+    PRUint32 numFrames = 0;
+    decoder->mImage->GetNumFrames(&numFrames);
+    if (numFrames <= 1) {
+      // Only do incremental image display for the first frame
+      nsIntRect r(0, row_num, width, 1);
+      nsCOMPtr<nsIImage> img(do_GetInterface(decoder->mFrame));
+      img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
+      decoder->mObserver->OnDataAvailable(nsnull, decoder->mFrame, &r);
+    }
   }
 }
 
@@ -801,18 +812,10 @@ frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
   nsPNGDecoder *decoder = static_cast<nsPNGDecoder*>(png_get_progressive_ptr(png_ptr));
   
   // old frame is done
-  if (!(decoder->apngFlags & FRAME_HIDDEN)) {
-    PRInt32 timeout;
-    decoder->mFrame->GetTimeout(&timeout);
-    if (decoder->mFrameHasNoAlpha) {
-      nsCOMPtr<nsIImage> img(do_GetInterface(decoder->mFrame));
-      img->SetHasNoAlpha();
-    }
-    decoder->mImage->EndFrameDecode(frame_num, timeout);
-    decoder->mObserver->OnStopFrame(nsnull, decoder->mFrame);
-  }
+  if (!decoder->mFrameIsHidden)
+    decoder->EndImageFrame();
   
-  decoder->apngFlags &= ~FRAME_HIDDEN;
+  decoder->mFrameIsHidden = PR_FALSE;
   
   x_offset = png_get_next_frame_x_offset(png_ptr, decoder->mInfo);
   y_offset = png_get_next_frame_y_offset(png_ptr, decoder->mInfo);
@@ -844,21 +847,12 @@ end_callback(png_structp png_ptr, png_infop info_ptr)
     decoder->mImage->SetLoopCount(num_plays - 1);
   }
   
-  if (!(decoder->apngFlags & FRAME_HIDDEN)) {
-    PRInt32 timeout;
-    decoder->mFrame->GetTimeout(&timeout);
-    if (decoder->mFrameHasNoAlpha) {
-      nsCOMPtr<nsIImage> img(do_GetInterface(decoder->mFrame));
-      img->SetHasNoAlpha();
-    }
-    decoder->mImage->EndFrameDecode(decoder->mPNG->num_frames_read, timeout);
-  }
+  if (!decoder->mFrameIsHidden)
+    decoder->EndImageFrame();
   
   decoder->mImage->DecodingComplete();
 
   if (decoder->mObserver) {
-    if (!(decoder->apngFlags & FRAME_HIDDEN))
-      decoder->mObserver->OnStopFrame(nsnull, decoder->mFrame);
     decoder->mObserver->OnStopContainer(nsnull, decoder->mImage);
     decoder->mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
   }
