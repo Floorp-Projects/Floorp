@@ -2600,6 +2600,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
          */
         if (rt->gcLevel == 1 && !rt->gcPoke)
             goto done_running;
+
         rt->gcLevel = 0;
         rt->gcPoke = JS_FALSE;
         rt->gcRunning = JS_FALSE;
@@ -2608,7 +2609,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         rt->requestCount += requestDebit;
 #endif
         gckind = GC_LOCK_HELD;
-        
         goto restart_at_beginning;
     }
 
