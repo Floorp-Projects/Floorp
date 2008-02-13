@@ -83,12 +83,12 @@ const char *reop_names[] = {
 #endif
 
 #ifdef __GNUC__
-static int
+inline static int
 re_debug(const char *fmt, ...) __attribute__ ((format(printf, 1, 2)));
 #endif
 
 #ifdef REGEXP_DEBUG
-static int
+inline static int
 re_debug(const char *fmt, ...)
 {
     va_list ap;
@@ -100,7 +100,7 @@ re_debug(const char *fmt, ...)
     return retval;
 }
 
-static void
+inline static void
 re_debug_chars(const jschar *chrs, size_t length)
 {
     int i = 0;
@@ -113,13 +113,13 @@ re_debug_chars(const jschar *chrs, size_t length)
 }
 #else  /* !REGEXP_DEBUG */
 /* This should be optimized to a no-op by our tier-1 compilers. */
-static int
+inline static int
 re_debug(const char *fmt, ...)
 {
     return 0;
 }
 
-static void
+inline static void
 re_debug_chars(const jschar *chrs, size_t length)
 {
 }
@@ -237,8 +237,8 @@ GetCompactIndexWidth(size_t index)
     return width;
 }
 
-static jsbytecode *
-WriteCompactIndex(jsbytecode *pc, size_t index)
+JS_INLINE(static jsbytecode *
+WriteCompactIndex(jsbytecode *pc, size_t index))
 {
     size_t next;
 
@@ -250,8 +250,8 @@ WriteCompactIndex(jsbytecode *pc, size_t index)
     return pc;
 }
 
-static jsbytecode *
-ReadCompactIndex(jsbytecode *pc, size_t *result)
+JS_INLINE(static jsbytecode *
+ReadCompactIndex(jsbytecode *pc, size_t *result))
 {
     size_t nextByte;
 
@@ -353,8 +353,8 @@ typedef struct REGlobalData {
  *    code point value is less than decimal 128, then return ch.
  * 6. Return cu.
  */
-static uintN
-upcase(uintN ch)
+JS_INLINE(static uintN
+upcase(uintN ch))
 {
     uintN cu;
 
@@ -369,8 +369,8 @@ upcase(uintN ch)
     return (cu < 128) ? ch : cu;
 }
 
-static uintN
-downcase(uintN ch)
+JS_INLINE(static uintN
+downcase(uintN ch))
 {
     JS_ASSERT((uintN) (jschar) ch == ch);
     if (ch < 128) {
@@ -2152,9 +2152,9 @@ FlatNMatcher(REGlobalData *gData, REMatchState *x, jschar *matchChars,
 }
 #endif
 
-static REMatchState *
+JS_INLINE(static REMatchState *
 FlatNIMatcher(REGlobalData *gData, REMatchState *x, jschar *matchChars,
-              size_t length)
+              size_t length))
 {
     size_t i;
     JS_ASSERT(gData->cpend >= x->cp);
@@ -2511,9 +2511,9 @@ ReallocStateStack(REGlobalData *gData)
  * true, then update the current state's cp. Always update startpc to the next
  * op.
  */
-static REMatchState *
+JS_INLINE(static REMatchState *
 SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
-            jsbytecode **startpc, JSBool updatecp)
+            jsbytecode **startpc, JSBool updatecp))
 {
     REMatchState *result = NULL;
     jschar matchCh;
@@ -2720,8 +2720,8 @@ SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
     return NULL;
 }
 
-static REMatchState *
-ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
+JS_INLINE(static REMatchState *
+ExecuteREBytecode(REGlobalData *gData, REMatchState *x))
 {
     REMatchState *result = NULL;
     REBackTrackData *backTrackData;
