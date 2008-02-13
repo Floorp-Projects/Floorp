@@ -377,7 +377,7 @@ prepare_range_limit_table (j_decompress_ptr cinfo)
   MEMCOPY(table + (4 * (MAXJSAMPLE+1) - CENTERJSAMPLE),
 	  cinfo->sample_range_limit, CENTERJSAMPLE * SIZEOF(JSAMPLE));
 
-#endif ! 0
+#endif /* 0 */
 }
 
 
