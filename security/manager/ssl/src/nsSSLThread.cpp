@@ -489,7 +489,7 @@ PRInt32 nsSSLThread::requestRead(nsNSSSocketInfo *si, void *buf, PRInt32 amount,
 
   PRBool this_socket_is_busy = PR_FALSE;
   PRBool some_other_socket_is_busy = PR_FALSE;
-  nsSSLSocketThreadData::ssl_state my_ssl_state;
+  nsSSLSocketThreadData::ssl_state my_ssl_state = nsSSLSocketThreadData::ssl_invalid;
   PRFileDesc *blockingFD = nsnull;
 
   {
@@ -716,7 +716,7 @@ PRInt32 nsSSLThread::requestWrite(nsNSSSocketInfo *si, const void *buf, PRInt32 
 
   PRBool this_socket_is_busy = PR_FALSE;
   PRBool some_other_socket_is_busy = PR_FALSE;
-  nsSSLSocketThreadData::ssl_state my_ssl_state;
+  nsSSLSocketThreadData::ssl_state my_ssl_state = nsSSLSocketThreadData::ssl_invalid;
   PRFileDesc *blockingFD = nsnull;
   
   {

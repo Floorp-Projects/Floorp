@@ -74,6 +74,7 @@ public:
   PRBool ensure_buffer_size(PRInt32 amount);
   
   enum ssl_state { 
+    ssl_invalid,       // used for initializating, should never occur
     ssl_idle,          // not in use by SSL thread, no activity pending
     ssl_pending_write, // waiting for SSL thread to complete writing
     ssl_pending_read,  // waiting for SSL thread to complete reading
