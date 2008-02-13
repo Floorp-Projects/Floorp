@@ -1018,17 +1018,9 @@
             var owner = bgLoad ? null : this.selectedTab;
             var tab = this.addTab(aURI, aReferrerURI, aCharset, aPostData, owner,
                                   aAllowThirdPartyFixup);
-            // Set newly selected tab after quick timeout, otherwise hideous focus problems
-            // can occur when "browser.tabs.loadInBackground" is false and presshell is not ready
-            if (!bgLoad) {
-              function selectNewForegroundTab(browser, tab) {
-                browser.selectedTab = tab;
-              }
-              setTimeout(selectNewForegroundTab, 0, getBrowser(), tab);
-            }
             if (!bgLoad)
               this.selectedTab = tab;
-            
+
             return tab;
          ]]>
         </body>
