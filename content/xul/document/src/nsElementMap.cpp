@@ -54,6 +54,7 @@
 #include "nsIAtom.h"
 #include "nsReadableUtils.h"
 #include "prlog.h"
+#include "prbit.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gMapLog;
@@ -415,7 +416,7 @@ nsElementMap::Hash(const void* aKey)
     PLHashNumber result = 0;
     const PRUnichar* s = reinterpret_cast<const PRUnichar*>(aKey);
     while (*s != nsnull) {
-        result = (result >> 28) ^ (result << 4) ^ *s;
+        result = PR_ROTATE_LEFT32(result, 4) ^ *s;
         ++s;
     }
     return result;

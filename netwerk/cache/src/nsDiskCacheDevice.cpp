@@ -55,6 +55,7 @@
 
 #include "prtypes.h"
 #include "prthread.h"
+#include "prbit.h"
 
 #include "private/pprio.h"
 
@@ -249,7 +250,7 @@ nsDiskCache::Hash(const char * key)
 {
     PLDHashNumber h = 0;
     for (const PRUint8* s = (PRUint8*) key; *s != '\0'; ++s)
-        h = (h >> (PL_DHASH_BITS - 4)) ^ (h << 4) ^ *s;
+        h = PR_ROTATE_LEFT32(h, 4) ^ *s;
     return (h == 0 ? ULONG_MAX : h);
 }
 
