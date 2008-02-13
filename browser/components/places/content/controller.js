@@ -1477,7 +1477,7 @@ PlacesMenuDNDObserver.prototype = {
   getSupportedFlavours: function TBV_DO_getSupportedFlavours() {
     var flavorSet = new FlavourSet();
     var types = PlacesUtils.GENERIC_VIEW_DROP_TYPES;
-    for (var i = 0; i < types; ++i)
+    for (var i = 0; i < types.length; ++i)
       flavorSet.appendFlavour(types[i]);
     return flavorSet;
   },
