@@ -37,13 +37,10 @@
 
 #include "nsISupports.idl"
 
-interface nsIChannel;
 interface nsIDOMDocument;
 interface nsIDOMEventListener;
-interface nsIPrincipal;
-interface nsIScriptContext;
+interface nsIChannel;
 interface nsIVariant;
-interface nsPIDOMWindow;
 
 /**
  * Mozilla's XMLHttpRequest is modelled after Microsoft's IXMLHttpRequest
@@ -300,20 +297,6 @@ interface nsIXMLHttpRequest : nsISupports
    * will be called as each part of the response is received.
    */
   attribute boolean multipart;
-
-  /**
-   * Initialize the object for use from C++ code with the principal, script
-   * context, and owner window that should be used.
-   *
-   * @param principal The principal to use for the request. This must not be
-   *                  null.
-   * @param scriptContext The script context to use for the request. May be
-   *                      null.
-   * @param ownerWindow The associated window for the request. May be null.
-   */
-  [noscript] void init(in nsIPrincipal principal,
-                       in nsIScriptContext scriptContext,
-                       in nsPIDOMWindow ownerWindow);
 };
 
 [scriptable, uuid(261676b4-d508-43bf-b099-74635a0ee2e9)]
