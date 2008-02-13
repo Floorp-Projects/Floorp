@@ -1163,12 +1163,18 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   DestroyLinkMap();
 
   PRUint32 count = mChildren.ChildCount();
-  for (PRInt32 i = PRInt32(count) - 1; i >= 0; i--) {
-    nsCOMPtr<nsIContent> content = mChildren.ChildAt(i);
+  { // Scope for update
+    MOZ_AUTO_DOC_UPDATE(this, UPDATE_CONTENT_MODEL, PR_TRUE);    
+    for (PRInt32 i = PRInt32(count) - 1; i >= 0; i--) {
+      nsCOMPtr<nsIContent> content = mChildren.ChildAt(i);
 
-    nsNodeUtils::ContentRemoved(this, content, i);
-    content->UnbindFromTree();
-    mChildren.RemoveChildAt(i);
+      // XXXbz this is backwards from how ContentRemoved normally works.  That
+      // is, usually it's dispatched after the content has been removed from
+      // the tree.
+      nsNodeUtils::ContentRemoved(this, content, i);
+      content->UnbindFromTree();
+      mChildren.RemoveChildAt(i);
+    }
   }
   mCachedRootContent = nsnull;
 
