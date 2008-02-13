@@ -209,6 +209,7 @@ nsIFactory *nsGlobalWindow::sComputedDOMStyleFactory   = nsnull;
 
 static nsIEntropyCollector *gEntropyCollector          = nsnull;
 static PRInt32              gRefCnt                    = 0;
+static PRUint32             gSerialCounter             = 0;
 static PRInt32              gOpenPopupSpamCount        = 0;
 static PopupControlState    gPopupControlState         = openAbused;
 static PRInt32              gRunningTimeoutDepth       = 0;
@@ -654,7 +655,10 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     CallGetService(NS_ENTROPYCOLLECTOR_CONTRACTID, &gEntropyCollector);
   }
 #ifdef DEBUG
-  printf("++DOMWINDOW == %d\n", gRefCnt);
+  printf("++DOMWINDOW == %d (%p) [serial = %d] [Outer = %p]\n", gRefCnt,
+         static_cast<nsIScriptGlobalObject*>(this), ++gSerialCounter,
+         aOuterWindow);
+  mSerial = gSerialCounter;
 #endif
 
 #ifdef PR_LOGGING
@@ -673,7 +677,8 @@ nsGlobalWindow::~nsGlobalWindow()
     NS_IF_RELEASE(gEntropyCollector);
   }
 #ifdef DEBUG
-  printf("--DOMWINDOW == %d\n", gRefCnt);
+  printf("--DOMWINDOW == %d (%p) [serial = %d] [Outer = %p]\n", gRefCnt,
+         static_cast<nsIScriptGlobalObject*>(this), mSerial, mOuterWindow);
 #endif
 
 #ifdef PR_LOGGING
@@ -866,6 +871,9 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
   if (mDocument)
     nsCycleCollector_DEBUG_shouldBeFreed(nsCOMPtr<nsISupports>(do_QueryInterface(mDocument)));
 #endif
+
+  // Make sure that this is called before we null out the document.
+  NotifyDOMWindowDestroyed(this);
 
   // Remove our reference to the document and the document principal.
   mDocument = nsnull;
@@ -1964,6 +1972,9 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
       NS_ASSERTION(inner->mOuterWindow == this, "bad outer window pointer");
       inner->FreeInnerObjects(PR_TRUE);
     }
+
+    // Make sure that this is called before we null out the document.
+    NotifyDOMWindowDestroyed(this);
 
     nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
 
@@ -5505,6 +5516,18 @@ nsGlobalWindow::IsInModalState()
   return static_cast<nsGlobalWindow *>
                     (static_cast<nsIDOMWindow *>
                                 (top.get()))->mModalStateDepth != 0;
+}
+
+// static
+void
+nsGlobalWindow::NotifyDOMWindowDestroyed(nsGlobalWindow* aWindow) {
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  if (observerService) {
+    observerService->
+      NotifyObservers(static_cast<nsIScriptGlobalObject*>(aWindow),
+                      DOM_WINDOW_DESTROYED_TOPIC, nsnull);
+  }
 }
 
 void
