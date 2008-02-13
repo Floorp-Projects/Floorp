@@ -50,12 +50,14 @@
 # define QNAME_INIT                     js_InitQNameClass
 # define ANYNAME_INIT                   js_InitAnyNameClass
 # define ATTRIBUTE_INIT                 js_InitAttributeNameClass
+# define XMLFILTER_INIT                 js_InitXMLFilterClass
 #else
 # define XML_INIT                       js_InitNullClass
 # define NAMESPACE_INIT                 js_InitNullClass
 # define QNAME_INIT                     js_InitNullClass
 # define ANYNAME_INIT                   js_InitNullClass
 # define ATTRIBUTE_INIT                 js_InitNullClass
+# define XMLFILTER_INIT                 js_InitNullClass
 #endif
 
 #if JS_HAS_GENERATORS
@@ -106,6 +108,7 @@ JS_PROTO(StopIteration,         27,     js_InitIteratorClasses)
 JS_PROTO(UnusedProto28,         28,     js_InitNullClass)
 JS_PROTO(File,                  29,     FILE_INIT)
 JS_PROTO(Block,                 30,     js_InitBlockClass)
+JS_PROTO(XMLFilter,             31,     XMLFILTER_INIT)
 
 #undef SCRIPT_INIT
 #undef XML_INIT

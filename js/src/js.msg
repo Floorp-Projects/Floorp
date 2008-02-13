@@ -296,7 +296,7 @@ MSG_DEF(JSMSG_KEYWORD_NOT_NS,         213, 0, JSEXN_SYNTAXERR, "keyword is used 
 MSG_DEF(JSMSG_BAD_GENERATOR_YIELD,    214, 1, JSEXN_TYPEERR, "yield from closing generator {0}")
 MSG_DEF(JSMSG_BAD_GENERATOR_SYNTAX,   215, 1, JSEXN_SYNTAXERR, "{0} expression must be parenthesized")
 MSG_DEF(JSMSG_ARRAY_COMP_LEFTSIDE,    216, 0, JSEXN_SYNTAXERR, "invalid array comprehension left-hand side")
-MSG_DEF(JSMSG_YIELD_FROM_FILTER,      217, 0, JSEXN_INTERNALERR, "yield not yet supported from filtering predicate")
+MSG_DEF(JSMSG_NON_XML_FILTER,         217, 1, JSEXN_TYPEERR, "XML filter is applied to non-XML value {0}")
 MSG_DEF(JSMSG_EMPTY_ARRAY_REDUCE,     218, 0, JSEXN_TYPEERR, "reduce of empty array with no initial value")
 MSG_DEF(JSMSG_NON_LIST_XML_METHOD,    219, 2, JSEXN_TYPEERR, "cannot call {0} method on an XML list with {1} elements")
 MSG_DEF(JSMSG_BAD_DELETE_OPERAND,     220, 0, JSEXN_SYNTAXERR, "invalid delete operand")

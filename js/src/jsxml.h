@@ -229,6 +229,7 @@ extern JS_FRIEND_DATA(JSExtendedClass)  js_NamespaceClass;
 extern JS_FRIEND_DATA(JSExtendedClass)  js_QNameClass;
 extern JS_FRIEND_DATA(JSClass)          js_AttributeNameClass;
 extern JS_FRIEND_DATA(JSClass)          js_AnyNameClass;
+extern JSClass                          js_XMLFilterClass;
 
 /*
  * Macros to test whether an object or a value is of type "xml" (per typeof).
@@ -315,8 +316,11 @@ js_GetXMLDescendants(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 extern JSBool
 js_DeleteXMLListElements(JSContext *cx, JSObject *listobj);
 
+extern JSObject *
+js_InitXMLFilterClass(JSContext *cx, JSObject* obj);
+
 extern JSBool
-js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp);
+js_StepXMLListFilter(JSContext *cx, JSBool initialized);
 
 extern JSObject *
 js_ValueToXMLObject(JSContext *cx, jsval v);
