@@ -131,20 +131,30 @@ NSView* nsFilePicker::GetAccessoryView()
   PRInt32 numMenuItems = mTitles.Count();
   for (int i = 0; i < numMenuItems; i++) {
     const nsString& currentTitle = *mTitles[i];
-    NSString *titleString = [[NSString alloc] initWithCharacters:currentTitle.get()
-                                                          length:currentTitle.Length()];
+    NSString *titleString;
+    if (currentTitle.IsEmpty()) {
+      const nsString& currentFilter = *mFilters[i];
+      titleString = [[NSString alloc] initWithCharacters:currentFilter.get()
+                                                  length:currentFilter.Length()];
+    }
+    else {
+      titleString = [[NSString alloc] initWithCharacters:currentTitle.get()
+                                                  length:currentTitle.Length()];
+    }
     [popupButton addItemWithTitle:titleString];
     [titleString release];
   }
   [popupButton setTag:kSaveTypeControlTag];
-  [popupButton sizeToFit];
+  [popupButton sizeToFit]; // we have to do sizeToFit to get the height calculated for us
+  // This is just a default width that works well, doesn't truncate the vast majority of
+  // things that might end up in the menu.
+  [popupButton setFrameSize:NSMakeSize(180, [popupButton frame].size.height)];
 
   // position everything based on control sizes with kAccessoryViewPadding pix padding
   // on each side kAccessoryViewPadding pix horizontal padding between controls
   float greatestHeight = [textField frame].size.height;
   if ([popupButton frame].size.height > greatestHeight)
     greatestHeight = [popupButton frame].size.height;
-
   float totalViewHeight = greatestHeight + kAccessoryViewPadding * 2;
   float totalViewWidth  = [textField frame].size.width + [popupButton frame].size.width + kAccessoryViewPadding * 3;
   [accessoryView setFrameSize:NSMakeSize(totalViewWidth, totalViewHeight)];
