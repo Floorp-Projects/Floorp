@@ -304,8 +304,7 @@ protected:
                         ScrollQuantity aScrollQuantity);
   void ForceViewUpdate(nsIView* aView);
   void DoScrollHistory(PRInt32 direction);
-  void DoScrollTextsize(nsIFrame *aTargetFrame, PRInt32 adjustment);
-  void DoScrollFullZoom(nsIFrame *aTargetFrame, PRInt32 adjustment);
+  void DoScrollZoom(nsIFrame *aTargetFrame, PRInt32 adjustment);
   nsresult GetMarkupDocumentViewer(nsIMarkupDocumentViewer** aMv);
   nsresult ChangeTextSize(PRInt32 change);
   nsresult ChangeFullZoom(PRInt32 change);
