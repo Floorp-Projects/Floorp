@@ -431,10 +431,10 @@ var PlacesCommandHook = {
     var linkURI = makeURI(aURL);
     var itemId = PlacesUtils.getMostRecentBookmarkForURI(linkURI);
     if (itemId == -1) {
+      StarUI.beginBatch();
       var txn = PlacesUtils.ptm.createItem(linkURI, aParent, -1, aTitle);
       PlacesUtils.ptm.doTransaction(txn);
       itemId = PlacesUtils.getMostRecentBookmarkForURI(linkURI);
-      StarUI.beginBatch();
     }
 
     StarUI.showEditBookmarkPopup(itemId, getBrowser(), "overlap");
