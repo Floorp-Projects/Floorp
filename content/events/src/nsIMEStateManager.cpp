@@ -237,8 +237,17 @@ nsIMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
     return nsIContent::IME_STATUS_DISABLE;
   }
 
-  if (sInstalledMenuKeyboardListener || !aContent)
+  if (sInstalledMenuKeyboardListener)
     return nsIContent::IME_STATUS_DISABLE;
+
+  if (!aContent) {
+    // Even if there are no focused content, the focused document might be
+    // editable, such case is design mode.
+    nsIDocument* doc = aPresContext->Document();
+    if (doc && doc->HasFlag(NODE_IS_EDITABLE))
+      return nsIContent::IME_STATUS_ENABLE;
+    return nsIContent::IME_STATUS_DISABLE;
+  }
 
   return aContent->GetDesiredIMEState();
 }
