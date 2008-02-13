@@ -296,7 +296,7 @@ build_ycc_rgb_table (j_decompress_ptr cinfo)
     /* We also add in ONE_HALF so that need not do it in inner loop */
     cconvert->Cb_g_tab[i] = (- FIX(0.34414)) * x + ONE_HALF;
   }
-#endif ! 0
+#endif /* 0 */
 }
 
 
