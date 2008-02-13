@@ -35,9 +35,29 @@
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
    - ***** END LICENSE BLOCK ***** -->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<!--
+
+Features to add:
+* make the left and right parts of the viewer independantly scrollable
+* make the test list filterable
+** default to only showing unexpecteds
+* add other ways to highlight differences other than circling?
+* add zoom/pan to images
+* Add ability to load log via XMLHttpRequest (also triggered via URL param)
+* color the test list based on pass/fail and expected/unexpected/random/skip
+* ability to load multiple logs ?
+** rename them by clicking on the name and editing
+** turn the test list into a collapsing tree view
+** move log loading into popup from viewer UI
+
+Bugs I've hit:
+* Problems with k4 on feComposite type="arithmetic"; likely to be fixed by the nsSVGFECompositeElement::Filter changes in https://bugzilla.mozilla.org/show_bug.cgi?id=414784
+** when fixed, can go back to the simpler way of computing filter results c1 and c2 (currently commented out)
+* dynamic changes to xlink:href of feImage require removal/reinsertion from document: https://bugzilla.mozilla.org/show_bug.cgi?id=417339
+** when fixed, can remove the removal and reinsertion near the end of showImages
+
+-->
+<html lang="en-US" xml:lang="en-US" xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<title>Reftest analyzer</title>
 	<style type="text/css"><![CDATA[
@@ -279,7 +299,7 @@ function show_differences(cb) {
 		<form id="imgcontrols">
 			<label><input type="radio" name="which" value="0" onchange="show_image(1)" checked="checked" />Image 1</label>
 			<label><input type="radio" name="which" value="1" onchange="show_image(2)" />Image 2</label>
-			<label><input type="checkbox" onchange="show_differences(this)" />Show differences</label>
+			<label><input type="checkbox" onchange="show_differences(this)" />Circle differences</label>
 		</form>
 		<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="800px" height="1000px" viewbox="0 0 800 1000" id="svg">
 			<defs>
@@ -338,7 +358,6 @@ function show_differences(cb) {
 			</defs>
 			<image x="0" y="0" width="100%" height="100%" id="image1" />
 			<image x="0" y="0" width="100%" height="100%" id="image2" />
-			<!-- why do I need a rect rather than a g? -->
 			<rect id="diffrect" filter="url(#showDifferences)" x="0" y="0" width="100%" height="100%" />
 		</svg>
 	</td>
