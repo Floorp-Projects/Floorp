@@ -360,7 +360,7 @@ BookmarksStore.prototype = {
         item.title = node.title;
       }
       item.URI = node.uri;
-      item.tags = this._ts.getTagsForURI(makeURI(node.uri), {});
+      item.tags = this._ts.getTagsForURI(Utils.makeURI(node.uri), {});
       item.keyword = this._bms.getKeywordForBookmark(node.itemId);
     } else if (node.type == node.RESULT_TYPE_SEPARATOR) {
       item.type = "separator";
@@ -404,7 +404,7 @@ BookmarksStore.prototype = {
     case "bookmark":
     case "microsummary": {
       this._log.info(" -> creating bookmark \"" + command.data.title + "\"");
-      let URI = makeURI(command.data.URI);
+      let URI = Utils.makeURI(command.data.URI);
       newId = this._bms.insertBookmark(parentId,
                                        URI,
                                        command.data.index,
@@ -415,7 +415,7 @@ BookmarksStore.prototype = {
 
       if (command.data.type == "microsummary") {
         this._log.info("   \-> is a microsummary");
-        let genURI = makeURI(command.data.generatorURI);
+        let genURI = Utils.makeURI(command.data.generatorURI);
         try {
           let micsum = this._ms.createMicrosummary(URI, genURI);
           this._ms.setMicrosummary(newId, micsum);
@@ -433,8 +433,8 @@ BookmarksStore.prototype = {
       this._log.info(" -> creating livemark \"" + command.data.title + "\"");
       newId = this._ls.createLivemark(parentId,
                                       command.data.title,
-                                      makeURI(command.data.siteURI),
-                                      makeURI(command.data.feedURI),
+                                      Utils.makeURI(command.data.siteURI),
+                                      Utils.makeURI(command.data.feedURI),
                                       command.data.index);
       break;
     case "separator":
@@ -498,7 +498,7 @@ BookmarksStore.prototype = {
         this._bms.setItemTitle(itemId, command.data.title);
         break;
       case "URI":
-        this._bms.changeBookmarkURI(itemId, makeURI(command.data.URI));
+        this._bms.changeBookmarkURI(itemId, Utils.makeURI(command.data.URI));
         break;
       case "index":
         this._bms.moveItem(itemId, this._bms.getFolderIdForItem(itemId),
@@ -520,16 +520,16 @@ BookmarksStore.prototype = {
         this._bms.setKeywordForBookmark(itemId, command.data.keyword);
         break;
       case "generatorURI": {
-        let micsumURI = makeURI(this._bms.getBookmarkURI(itemId));
-        let genURI = makeURI(command.data.generatorURI);
+        let micsumURI = Utils.makeURI(this._bms.getBookmarkURI(itemId));
+        let genURI = Utils.makeURI(command.data.generatorURI);
         let micsum = this._ms.createMicrosummary(micsumURI, genURI);
         this._ms.setMicrosummary(itemId, micsum);
       } break;
       case "siteURI":
-        this._ls.setSiteURI(itemId, makeURI(command.data.siteURI));
+        this._ls.setSiteURI(itemId, Utils.makeURI(command.data.siteURI));
         break;
       case "feedURI":
-        this._ls.setFeedURI(itemId, makeURI(command.data.feedURI));
+        this._ls.setFeedURI(itemId, Utils.makeURI(command.data.feedURI));
         break;
       default:
         this._log.warn("Can't change item property: " + key);
@@ -595,10 +595,10 @@ HistoryStore.prototype = {
   _createCommand: function HistStore__createCommand(command) {
     this._log.info("  -> creating history entry: " + command.GUID);
     try {
-      this._browserHist.addPageWithDetails(makeURI(command.GUID),
+      this._browserHist.addPageWithDetails(Utils.makeURI(command.GUID),
 					   command.data.title,
 					   command.data.time);
-      this._hsvc.setPageDetails(makeURI(command.GUID), command.data.title,
+      this._hsvc.setPageDetails(Utils.makeURI(command.GUID), command.data.title,
 				command.data.accessCount, false, false);
     } catch (e) {
       this._log.error("Exception caught: " + (e.message? e.message : e));

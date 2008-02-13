@@ -51,7 +51,7 @@ Cu.import("resource://weave/dav.js");
 Cu.import("resource://weave/identity.js");
 
 
-Function.prototype.async = generatorAsync;
+Function.prototype.async = Utils.generatorAsync;
 
 /*
  * Service singleton
@@ -60,6 +60,14 @@ Function.prototype.async = generatorAsync;
 
 function WeaveSyncService() { this._init(); }
 WeaveSyncService.prototype = {
+
+  __prefs: null,
+  get _prefs() {
+    if (!this.__prefs)
+      this.__prefs = Cc["@mozilla.org/preferences-service;1"]
+        .getService(Ci.nsIPrefBranch);
+    return this.__prefs;
+  },
 
   __os: null,
   get _os() {
@@ -122,17 +130,13 @@ WeaveSyncService.prototype = {
   },
 
   get username() {
-    let branch = Cc["@mozilla.org/preferences-service;1"]
-      .getService(Ci.nsIPrefBranch);
-    return branch.getCharPref("extensions.weave.username");
+    return this._prefs.getCharPref("extensions.weave.username");
   },
   set username(value) {
-    let branch = Cc["@mozilla.org/preferences-service;1"]
-      .getService(Ci.nsIPrefBranch);
     if (value)
-      branch.setCharPref("extensions.weave.username", value);
+      this._prefs.setCharPref("extensions.weave.username", value);
     else
-      branch.clearUserPref("extensions.weave.username");
+      this._prefs.clearUserPref("extensions.weave.username");
 
     // fixme - need to loop over all Identity objects - needs some rethinking...
     this._mozId.username = value;
@@ -185,13 +189,11 @@ WeaveSyncService.prototype = {
     let enabled = false;
     let schedule = 0;
     try {
-      let branch = Cc["@mozilla.org/preferences-service;1"].
-        getService(Ci.nsIPrefBranch2);
-      this._serverURL = branch.getCharPref("extensions.weave.serverURL");
-      enabled = branch.getBoolPref("extensions.weave.enabled");
-      schedule = branch.getIntPref("extensions.weave.schedule");
+      this._serverURL = this._prefs.getCharPref("extensions.weave.serverURL");
+      enabled = this._prefs.getBoolPref("extensions.weave.enabled");
+      schedule = this._prefs.getIntPref("extensions.weave.schedule");
 
-      branch.addObserver("extensions.weave", this, false);
+      this._prefs.addObserver("extensions.weave", this, false);
     }
     catch (ex) { /* use defaults */ }
 
@@ -215,10 +217,13 @@ WeaveSyncService.prototype = {
     }
   },
 
+  _scheduleChanged: function WeaveSync__scheduleChanged() {
+  },
+
   _enableSchedule: function WeaveSync__enableSchedule() {
     this._scheduleTimer = Cc["@mozilla.org/timer;1"].
       createInstance(Ci.nsITimer);
-    let listener = new EventListener(bind2(this, this._onSchedule));
+    let listener = new Utils.EventListener(Utils.bind2(this, this._onSchedule));
     this._scheduleTimer.initWithCallback(listener, 1800000, // 30 min
                                          this._scheduleTimer.TYPE_REPEATING_SLACK);
   },
@@ -345,7 +350,7 @@ WeaveSyncService.prototype = {
         //this._log.debug("Login error");
         this._os.notifyObservers(null, "weave:service-login:error", "");
       }
-      generatorDone(this, self, onComplete, success);
+      Utils.generatorDone(this, self, onComplete, success);
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
@@ -373,7 +378,7 @@ WeaveSyncService.prototype = {
         this._log.debug("Server lock reset failed");
         this._os.notifyObservers(null, "weave:server-lock-reset:error", "");
       }
-      generatorDone(this, self, onComplete, success);
+      Utils.generatorDone(this, self, onComplete, success);
       yield; // generatorDone is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
@@ -405,7 +410,7 @@ WeaveSyncService.prototype = {
         this._os.notifyObservers(null, "weave:service:sync:success", "");
       else
         this._os.notifyObservers(null, "weave:service:sync:error", "");
-      generatorDone(this, self);
+      Utils.generatorDone(this, self);
       yield; // generatorDone is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
@@ -427,7 +432,7 @@ WeaveSyncService.prototype = {
       this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
-      generatorDone(this, self);
+      Utils.generatorDone(this, self);
       yield; // generatorDone is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
@@ -449,7 +454,7 @@ WeaveSyncService.prototype = {
       this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
-      generatorDone(this, self);
+      Utils.generatorDone(this, self);
       yield; // generatorDone is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
