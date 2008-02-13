@@ -114,6 +114,7 @@ SDK_HEADERS     = \
 		nsISupportsBase.h \
 		nscore.h \
 		nsCycleCollector.h \
+		nsObjCExceptions.h \
 
 XPIDLSRCS	= \
 		nsIConsoleListener.idl \
