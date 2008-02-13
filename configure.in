@@ -5970,12 +5970,33 @@ elif test -z "$_ENABLE_LOGREFCNT"; then
 fi
 
 dnl ========================================================
-dnl = memory
+dnl = Enable trace malloc
+dnl ========================================================
+NS_TRACE_MALLOC=${MOZ_TRACE_MALLOC}
+MOZ_ARG_ENABLE_BOOL(trace-malloc,
+[  --enable-trace-malloc   Enable malloc tracing],
+    NS_TRACE_MALLOC=1,
+    NS_TRACE_MALLOC= )
+if test "$NS_TRACE_MALLOC"; then
+  # Please, Mr. Linker Man, don't take away our symbol names
+  MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
+  USE_ELF_DYNSTR_GC=
+  AC_DEFINE(NS_TRACE_MALLOC)
+fi
+AC_SUBST(NS_TRACE_MALLOC)
+
+dnl ========================================================
+dnl = Enable jemalloc
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(jemalloc,
 [  --enable-jemalloc         Replace memory allocator with jemalloc],
     MOZ_MEMORY=1,
     MOZ_MEMORY=)
+
+if test "$NS_TRACE_MALLOC"; then
+    MOZ_MEMORY=
+fi
+
 if test "$MOZ_MEMORY"; then
 
   dnl Don't try to run compiler tests on Windows  
@@ -6238,22 +6259,6 @@ if test -n "$_ENABLE_CODESIGHS"; then
         AC_MSG_ERROR([Codesighs directory $srcdir/tools/codesighs required.])
     fi
 fi
-
-dnl ========================================================
-dnl = Enable trace malloc
-dnl ========================================================
-NS_TRACE_MALLOC=${MOZ_TRACE_MALLOC}
-MOZ_ARG_ENABLE_BOOL(trace-malloc,
-[  --enable-trace-malloc   Enable malloc tracing],
-    NS_TRACE_MALLOC=1,
-    NS_TRACE_MALLOC= )
-if test "$NS_TRACE_MALLOC"; then
-  # Please, Mr. Linker Man, don't take away our symbol names
-  MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
-  USE_ELF_DYNSTR_GC=
-  AC_DEFINE(NS_TRACE_MALLOC)
-fi
-AC_SUBST(NS_TRACE_MALLOC)
 
 dnl ========================================================
 dnl = Add support for Eazel profiler
