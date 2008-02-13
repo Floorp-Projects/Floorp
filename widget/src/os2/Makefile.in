@@ -95,6 +95,7 @@ CPPSRCS		= \
 		nsDeviceContextSpecOS2.cpp \
 		nsPrintOptionsOS2.cpp \
 		nsRwsService.cpp \
+		nsIdleServiceOS2.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = \
