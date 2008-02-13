@@ -83,12 +83,12 @@ const char *reop_names[] = {
 #endif
 
 #ifdef __GNUC__
-inline static int
+static int
 re_debug(const char *fmt, ...) __attribute__ ((format(printf, 1, 2)));
 #endif
 
 #ifdef REGEXP_DEBUG
-inline static int
+static int
 re_debug(const char *fmt, ...)
 {
     va_list ap;
@@ -100,7 +100,7 @@ re_debug(const char *fmt, ...)
     return retval;
 }
 
-inline static void
+static void
 re_debug_chars(const jschar *chrs, size_t length)
 {
     int i = 0;
@@ -113,13 +113,13 @@ re_debug_chars(const jschar *chrs, size_t length)
 }
 #else  /* !REGEXP_DEBUG */
 /* This should be optimized to a no-op by our tier-1 compilers. */
-inline static int
+static int
 re_debug(const char *fmt, ...)
 {
     return 0;
 }
 
-inline static void
+static void
 re_debug_chars(const jschar *chrs, size_t length)
 {
 }
