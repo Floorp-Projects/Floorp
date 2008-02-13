@@ -791,9 +791,9 @@ ifdef RUN_AUTOCONF_LOCALLY
 	$(RM) -f $(CONFIGURES)
 endif
 	@echo "checkout start: "`date` | tee $(CVSCO_LOGFILE)
-	@echo '$(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/client.mk $(MOZCONFIG_MODULES)'; \
+	@echo '$(CVSCO) mozilla/client.mk $(MOZCONFIG_MODULES)'; \
         cd $(ROOTDIR) && \
-	$(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/client.mk $(MOZCONFIG_MODULES)
+	$(CVSCO) mozilla/client.mk $(MOZCONFIG_MODULES)
 	@cd $(ROOTDIR) && $(MAKE) -f mozilla/client.mk real_checkout
 
 #	Start the checkout. Split the output to the tty and a log file.
@@ -889,9 +889,9 @@ l10n-checkout:
 	else true; \
 	fi
 	@echo "checkout start: "`date` | tee $(CVSCO_LOGFILE_L10N)
-	@echo '$(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/client.mk $(MOZCONFIG_MODULES)'; \
+	@echo '$(CVSCO) mozilla/client.mk $(MOZCONFIG_MODULES)'; \
         cd $(ROOTDIR) && \
-	$(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/client.mk $(MOZCONFIG_MODULES)
+	$(CVSCO) mozilla/client.mk $(MOZCONFIG_MODULES)
 	@cd $(ROOTDIR) && $(MAKE) -f mozilla/client.mk real_l10n-checkout
 
 FULL_EN_US_DIRS := toolkit \
