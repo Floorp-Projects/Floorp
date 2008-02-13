@@ -6,7 +6,7 @@
 
 	<title>Testcase for invalid filter</title>
 
-	<!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=414550 -->
+	<!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=407463 -->
 
 	<defs>
 		<filter id="null"/>
