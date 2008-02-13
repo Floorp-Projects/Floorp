@@ -65,6 +65,7 @@ function nsContextMenu(aXulMenu, aBrowser) {
   this.onKeywordField    = false;
   this.onImage           = false;
   this.onLoadedImage     = false;
+  this.onCompletedImage  = false;
   this.onCanvas          = false;
   this.onLink            = false;
   this.onMailtoLink      = false;
@@ -197,6 +198,9 @@ nsContextMenu.prototype = {
       document.getElementById("context-setDesktopBackground")
               .disabled = this.disableSetDesktopBackground();
     }
+
+    // Show image depends on an image that's not fully loaded
+    this.showItem("context-showimage", (this.onImage && !this.onCompletedImage));
 
     // View image depends on having an image that's not standalone
     // (or is in a frame), or a canvas.
@@ -366,6 +370,7 @@ nsContextMenu.prototype = {
     // Initialize contextual info.
     this.onImage           = false;
     this.onLoadedImage     = false;
+    this.onCompletedImage  = false;
     this.onStandaloneImage = false;
     this.onCanvas          = false;
     this.onMetaDataItem    = false;
@@ -407,6 +412,8 @@ nsContextMenu.prototype = {
           this.target.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
         if (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE))
           this.onLoadedImage = true;
+        if (request && (request.imageStatus & request.STATUS_LOAD_COMPLETE))
+          this.onCompletedImage = true;
 
         this.imageURL = this.target.currentURI.spec;
         if (this.target.ownerDocument instanceof ImageDocument)
@@ -590,6 +597,7 @@ nsContextMenu.prototype = {
         this.onKeywordField    = false;
         this.onImage           = false;
         this.onLoadedImage     = false;
+        this.onCompletedImage  = false;
         this.onMetaDataItem    = false;
         this.onMathML          = false;
         this.inFrame           = false;
@@ -717,6 +725,15 @@ nsContextMenu.prototype = {
 
   viewFrameInfo: function() {
     BrowserPageInfo(this.target.ownerDocument);
+  },
+
+  showImage: function(e) {
+    urlSecurityCheck(this.imageURL,
+                     this.browser.contentPrincipal,
+                     Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+
+    if (this.target instanceof Ci.nsIImageLoadingContent)
+      this.target.forceReload();
   },
 
   // Change current window to the URL of the image.
