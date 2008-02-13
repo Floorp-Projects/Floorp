@@ -116,6 +116,7 @@ protected:
 
   nsSize mIntrinsicSize;
   nsSize mComputedSize;
+  PRBool mTextIsRTL;
 };
 
 #endif /* nsBulletFrame_h___ */
