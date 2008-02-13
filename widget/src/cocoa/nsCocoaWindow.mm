@@ -54,8 +54,11 @@
 #include "nsIPrefBranch.h"
 #include "nsToolkit.h"
 #include "nsPrintfCString.h"
+#include "nsThreadUtils.h"
 
 PRInt32 gXULModalLevel = 0;
+
+PRBool gCocoaWindowMethodsSwizzled = PR_FALSE;
 
 // defined in nsMenuBarX.mm
 extern NSMenu* sApplicationMenu; // Application menu shared by all menubars
@@ -1749,6 +1752,42 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 
 @end
 
+
+@interface NSWindow (MethodSwizzling)
+- (void)nsCocoaWindow_NSWindow_sendEvent:(NSEvent *)anEvent;
+@end
+
+@implementation NSWindow (MethodSwizzling)
+
+// A mouseDown event can change the focus, and (if this happens) we may need
+// to send NS_LOSTFOCUS and NS_GOTFOCUS events to Gecko.  Otherwise other
+// Gecko events may be sent to the wrong nsChildView, or the "right"
+// nsChildView may not be focused.  This resolves bmo bug 413882.
+// For non-embedders (e.g. Firefox and Seamonkey), it would probably only be
+// necessary to add a sendEvent: method to the ToolbarWindow class.  But
+// embedders (like Camino) generally create their own NSWindows.  So in order
+// to fix this problem everywhere, it's necessary to "hook" NSWindow's own
+// sendEvent: method.
+- (void)nsCocoaWindow_NSWindow_sendEvent:(NSEvent *)anEvent
+{
+  NSResponder *oldFirstResponder = nil;
+  NSEventType type = [anEvent type];
+  if (type == NSLeftMouseDown)
+    oldFirstResponder = [[self firstResponder] retain];
+  [self nsCocoaWindow_NSWindow_sendEvent:anEvent];
+  if (type == NSLeftMouseDown) {
+    NSResponder *newFirstResponder = [self firstResponder];
+    if (oldFirstResponder != newFirstResponder) {
+      if ([oldFirstResponder isKindOfClass:[ChildView class]])
+        [(ChildView *)oldFirstResponder sendFocusEvent:NS_LOSTFOCUS];
+      if ([newFirstResponder isKindOfClass:[ChildView class]])
+        [(ChildView *)newFirstResponder sendFocusEvent:NS_GOTFOCUS];
+    }
+    [oldFirstResponder release];
+  }
+}
+
+@end
 
 @implementation PopupWindow
 

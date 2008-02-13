@@ -96,6 +96,8 @@ extern "C" {
   CG_EXTERN void CGContextResetClip(CGContextRef);
 }
 
+extern PRBool gCocoaWindowMethodsSwizzled; // Defined in nsCocoaWindow.mm
+
 extern nsISupportsArray *gDraggedTransferables;
 
 PRBool nsTSMManager::sIsIMEEnabled = PR_TRUE;
@@ -391,6 +393,13 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
                       nsWidgetInitData *aInitData,
                       nsNativeWidget aNativeParent)
 {
+  // See NSWindow (MethodSwizzling) in nsCocoaWindow.mm.
+  if (!gCocoaWindowMethodsSwizzled) {
+    nsToolkit::SwizzleMethods([NSWindow class], @selector(sendEvent:),
+                              @selector(nsCocoaWindow_NSWindow_sendEvent:));
+    gCocoaWindowMethodsSwizzled = PR_TRUE;
+  }
+
   mBounds = aRect;
 
   BaseCreate(aParent, aRect, aHandleEventFunction, 
