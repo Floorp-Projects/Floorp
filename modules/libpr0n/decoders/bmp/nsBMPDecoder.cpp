@@ -103,6 +103,8 @@ NS_IMETHODIMP nsBMPDecoder::Init(imgILoad *aLoad)
 NS_IMETHODIMP nsBMPDecoder::Close()
 {
     PR_LOG(gBMPLog, PR_LOG_DEBUG, ("nsBMPDecoder::Close()\n"));
+
+    mImage->DecodingComplete();
     if (mObserver) {
         mObserver->OnStopFrame(nsnull, mFrame);
         mObserver->OnStopContainer(nsnull, mImage);
@@ -116,7 +118,6 @@ NS_IMETHODIMP nsBMPDecoder::Close()
 
 NS_IMETHODIMP nsBMPDecoder::Flush()
 {
-    mFrame->SetMutable(PR_FALSE);
     return NS_OK;
 }
 
