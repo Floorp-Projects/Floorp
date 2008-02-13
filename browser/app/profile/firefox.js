@@ -406,7 +406,7 @@ pref("mousewheel.withmetakey.action",0);
 pref("mousewheel.withmetakey.sysnumlines",true);
 pref("mousewheel.withmetakey.numlines",1);
 #endif
-pref("mousewheel.withcontrolkey.action",5);
+pref("mousewheel.withcontrolkey.action",3);
 pref("mousewheel.withcontrolkey.sysnumlines",false);
 pref("mousewheel.withcontrolkey.numlines",1);
 
@@ -673,6 +673,9 @@ pref("browser.ssl_override_behavior", 1);
 // 1 - show effectiveTLD + 1 (e.g. mozilla.org)
 // 2 - show full domain (e.g. bugzilla.mozilla.org)
 pref("browser.identity.ssl_domain_display", 0);
+
+// if true, use full page zoom instead of text zoom
+pref("browser.zoom.full", true);
 
 // replace newlines with spaces when pasting into <input type="text"> fields
 pref("editor.singleLine.pasteNewlines", 2);

@@ -2371,6 +2371,7 @@ pref("signon.autofillForms",                true);
 pref("signon.debug",                        false); // logs to Error Console
 
 // Zoom prefs
-pref("fullZoom.minPercent", 50);
-pref("fullZoom.maxPercent", 300);
-pref("toolkit.zoomManager.fullZoomValues", ".5,.75,1,1.25,1.5,2,3");
+pref("browser.zoom.full", false);
+pref("zoom.minPercent", 50);
+pref("zoom.maxPercent", 300);
+pref("toolkit.zoomManager.zoomValues", ".5,.75,1,1.25,1.5,2,3");
