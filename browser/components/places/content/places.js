@@ -22,6 +22,7 @@
  *   Ben Goodger <beng@google.com>
  *   Annie Sullivan <annie.sullivan@gmail.com>
  *   Asaf Romano <mano@mozilla.com>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -797,7 +798,7 @@ var PlacesSearchBox = {
     this.searchFilter.emptyText =
       title ?
       PlacesUtils.getFormattedString("searchCurrentDefault", [title]) :
-      PlacesUtils.getString("searchByDefault");
+      PlacesUtils.getString("searchBookmarks");
   },
 
   /**
