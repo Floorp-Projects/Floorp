@@ -686,6 +686,12 @@ nsTreeBodyFrame::InvalidateRow(PRInt32 aIndex)
   if (mUpdateBatchNest)
     return NS_OK;
 
+#ifdef ACCESSIBILITY
+  nsIPresShell *presShell = PresContext()->PresShell();
+  if (presShell->IsAccessibilityActive())
+    FireInvalidateEvent(aIndex, aIndex, nsnull, nsnull);
+#endif
+
   aIndex -= mTopRowIndex;
   if (aIndex < 0 || aIndex > mPageLength)
     return NS_OK;
@@ -4505,7 +4511,7 @@ nsTreeBodyFrame::FireInvalidateEvent(PRInt32 aStartRowIdx, PRInt32 aEndRowIdx,
       return;
 
     startColVariant->SetAsInt32(startColIdx);
-    treeEvent->SetData(NS_LITERAL_STRING("column"), startColVariant);
+    treeEvent->SetData(NS_LITERAL_STRING("startcolumn"), startColVariant);
 
     // Set 'endcolumn' data - the start index of invalidated rows.
     nsCOMPtr<nsIWritableVariant> endColVariant(
@@ -4519,7 +4525,7 @@ nsTreeBodyFrame::FireInvalidateEvent(PRInt32 aStartRowIdx, PRInt32 aEndRowIdx,
       return;
 
     endColVariant->SetAsInt32(endColIdx);
-    treeEvent->SetData(NS_LITERAL_STRING("columncount"), endColVariant);
+    treeEvent->SetData(NS_LITERAL_STRING("endcolumn"), endColVariant);
   }
 
   // Fire an event.
