@@ -70,6 +70,7 @@
 #include "nsBindingManager.h"
 #include "nsIDOMNodeList.h"
 #include "nsINameSpaceManager.h"
+#include "nsIObserverService.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFInferDataSource.h"
 #include "nsIRDFContainerUtils.h"
@@ -98,6 +99,7 @@
 #include "pldhash.h"
 #include "plhash.h"
 #include "nsIDOMClassInfo.h"
+#include "nsPIDOMWindow.h"
 
 #include "nsNetUtil.h"
 #include "nsXULTemplateBuilder.h"
@@ -120,6 +122,7 @@ nsIRDFService*            nsXULTemplateBuilder::gRDFService;
 nsIRDFContainerUtils*     nsXULTemplateBuilder::gRDFContainerUtils;
 nsIScriptSecurityManager* nsXULTemplateBuilder::gScriptSecurityManager;
 nsIPrincipal*             nsXULTemplateBuilder::gSystemPrincipal;
+nsIObserverService*       nsXULTemplateBuilder::gObserverService;
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gXULTemplateLog;
@@ -135,7 +138,8 @@ PRLogModuleInfo* gXULTemplateLog;
 nsXULTemplateBuilder::nsXULTemplateBuilder(void)
     : mQueriesCompiled(PR_FALSE),
       mFlags(0),
-      mTop(nsnull)
+      mTop(nsnull),
+      mObservedDocument(nsnull)
 {
 }
 
@@ -161,6 +165,7 @@ nsXULTemplateBuilder::~nsXULTemplateBuilder(void)
         NS_IF_RELEASE(gRDFContainerUtils);
         NS_IF_RELEASE(gSystemPrincipal);
         NS_IF_RELEASE(gScriptSecurityManager);
+        NS_IF_RELEASE(gObserverService);
     }
 
     Uninit(PR_TRUE);
@@ -189,6 +194,10 @@ nsXULTemplateBuilder::InitGlobals()
             return rv;
 
         rv = gScriptSecurityManager->GetSystemPrincipal(&gSystemPrincipal);
+        if (NS_FAILED(rv))
+            return rv;
+
+        rv = CallGetService(NS_OBSERVERSERVICE_CONTRACTID, &gObserverService);
         if (NS_FAILED(rv))
             return rv;
     }
@@ -227,6 +236,8 @@ nsXULTemplateBuilder::Uninit(PRBool aIsFinal)
     mMemberVariable = nsnull;
 
     mQueriesCompiled = PR_FALSE;
+
+    NS_ASSERTION(!mObservedDocument, "Shouldn't be observing anymore!");
 }
 
 static PLDHashOperator
@@ -286,6 +297,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULTemplateBuilder)
   NS_INTERFACE_MAP_ENTRY(nsIXULTemplateBuilder)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXULTemplateBuilder)
   NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(XULTemplateBuilder)
 NS_INTERFACE_MAP_END
@@ -409,6 +421,10 @@ nsXULTemplateBuilder::Init(nsIContent* aElement)
     if (NS_SUCCEEDED(rv)) {
         // Add ourselves as a document observer
         doc->AddObserver(this);
+
+        mObservedDocument = doc;
+        gObserverService->AddObserver(this, DOM_WINDOW_DESTROYED_TOPIC,
+                                      PR_FALSE);
     }
 
     return rv;
@@ -1029,6 +1045,26 @@ nsXULTemplateBuilder::RemoveListener(nsIXULBuilderListener* aListener)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULTemplateBuilder::Observe(nsISupports* aSubject,
+                              const char* aTopic,
+                              const PRUnichar* aData)
+{
+    // Uuuuber hack to clean up circular references that the cycle collector
+    // doesn't know about. See bug 394514.
+    if (!strcmp(aTopic, DOM_WINDOW_DESTROYED_TOPIC)) {
+        nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aSubject);
+        if (window) {
+            nsCOMPtr<nsIDocument> doc =
+                do_QueryInterface(window->GetExtantDocument());
+            NS_ASSERTION(doc, "Null document, notification came too late?");
+
+            if (doc == mObservedDocument)
+                NodeWillBeDestroyed(doc);
+        }
+    }
+    return NS_OK;
+}
 //----------------------------------------------------------------------
 //
 // nsIDocumentOberver interface
@@ -1069,6 +1105,11 @@ nsXULTemplateBuilder::ContentRemoved(nsIDocument* aDocument,
     if (mRoot && nsContentUtils::ContentIsDescendantOf(mRoot, aChild)) {
         nsRefPtr<nsXULTemplateBuilder> kungFuDeathGrip(this);
 
+        if (mObservedDocument) {
+            gObserverService->RemoveObserver(this, DOM_WINDOW_DESTROYED_TOPIC);
+            mObservedDocument = nsnull;
+        }
+
         if (mQueryProcessor)
             mQueryProcessor->Done();
 
@@ -1102,6 +1143,11 @@ nsXULTemplateBuilder::NodeWillBeDestroyed(const nsINode* aNode)
     // The call to RemoveObserver could release the last reference to
     // |this|, so hold another reference.
     nsRefPtr<nsXULTemplateBuilder> kungFuDeathGrip(this);
+
+    if (mObservedDocument) {
+        gObserverService->RemoveObserver(this, DOM_WINDOW_DESTROYED_TOPIC);
+        mObservedDocument = nsnull;
+    }
 
     // Break circular references
     if (mQueryProcessor)
