@@ -59,8 +59,14 @@ REQUIRES += \
   $(NULL)
 
 CPPSRCS += $(CPP_UNIT_TESTS)
+
+LIBS += \
+  $(XPCOM_GLUE_LDOPTS) \
+  $(XPCOM_LIBS) \
+  $(NSPR_LIBS) \
+  $(NULL)
+
 SIMPLE_PROGRAMS += $(CPP_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
-LIBS += $(XPCOM_GLUE_LDOPTS) $(NSPR_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
