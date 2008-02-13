@@ -42,32 +42,6 @@ VPATH		= @srcdir@
 relativesrcdir  = content/base/test
 
 include $(DEPTH)/config/autoconf.mk
-
-CPP_UNIT_TESTS = TestNativeXMLHttpRequest.cpp
-
-LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/tests
-
-REQUIRES += \
-  caps \
-  content \
-  dom \
-  js \
-  netwerk \
-  string \
-  xpcom \
-  xpconnect \
-  $(NULL)
-
-CPPSRCS += $(CPP_UNIT_TESTS)
-
-LIBS += \
-  $(XPCOM_GLUE_LDOPTS) \
-  $(XPCOM_LIBS) \
-  $(NSPR_LIBS) \
-  $(NULL)
-
-SIMPLE_PROGRAMS += $(CPP_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
-
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = 	test_bug5141.html \
@@ -173,9 +147,3 @@ _TEST_FILES = 	test_bug5141.html \
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-
-check::
-	@$(EXIT_ON_ERROR) \
-	for f in $(subst .cpp,,$(CPP_UNIT_TESTS)); do \
-	  XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) $(DIST)/bin/$$f; \
-	done
