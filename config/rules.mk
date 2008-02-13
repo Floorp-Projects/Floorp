@@ -1991,6 +1991,7 @@ endif # COMPILER_DEPEND
 $(MDDEPDIR):
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; mkdir $@; else true; fi
 
+ifneq (,$(filter-out all chrome default export realchrome tools clean clobber clobber_all distclean realclean,$(MAKECMDGOALS)))
 ifneq (,$(OBJS)$(XPIDLSRCS)$(SDK_XPIDLSRCS)$(SIMPLE_PROGRAMS))
 MDDEPEND_FILES		:= $(strip $(wildcard $(MDDEPDIR)/*.pp))
 
@@ -2002,14 +2003,17 @@ ifdef PERL
 # The script has an advantage over including the *.pp files directly
 # because it handles the case when header files are removed from the build.
 # 'make' would complain that there is no way to build missing headers.
+ifeq (,$(MAKE_RESTARTS))
 $(MDDEPDIR)/.all.pp: FORCE
 	@$(PERL) $(BUILD_TOOLS)/mddepend.pl $@ $(MDDEPEND_FILES)
+endif
 -include $(MDDEPDIR)/.all.pp
 else
 include $(MDDEPEND_FILES)
 endif
 endif
 
+endif
 endif
 #############################################################################
 
