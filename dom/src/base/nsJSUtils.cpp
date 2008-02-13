@@ -56,6 +56,7 @@
 #include "nsIXPConnect.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
+#include "nsIScriptSecurityManager.h"
 
 #include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
 
@@ -78,10 +79,27 @@ nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,
     // If aPrincipals is non-null then our caller is asking us to ensure
     // that the filename we return does not have elevated privileges.
     if (aPrincipals) {
+      // The principals might not be in the script, but we can always
+      // find the right principals in the frame's callee.
       JSPrincipals* scriptPrins = JS_GetScriptPrincipals(aContext, script);
+      if (!scriptPrins) {
+        JSObject *callee = JS_GetFrameCalleeObject(aContext, frame);
+        nsCOMPtr<nsIPrincipal> prin;
+        nsIScriptSecurityManager *ssm = nsContentUtils::GetSecurityManager();
+        if (NS_FAILED(ssm->GetObjectPrincipal(aContext, callee,
+                                              getter_AddRefs(prin))) ||
+            !prin) {
+          return JS_FALSE;
+        }
+
+        prin->GetJSPrincipals(aContext, &scriptPrins);
+
+        // The script has a reference to the principals.
+        JSPRINCIPALS_DROP(aContext, scriptPrins);
+      }
 
       // Return the weaker of the two principals if they differ.
-      if (scriptPrins && scriptPrins != aPrincipals &&
+      if (scriptPrins != aPrincipals &&
           scriptPrins->subsume(scriptPrins, aPrincipals)) {
         *aFilename = aPrincipals->codebase;
         *aLineno = 0;
