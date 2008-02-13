@@ -213,7 +213,7 @@
     <spacer flex="1"/>
     <label>&finishedBackground.more1;</label>
     <separator class="thin"/>
-    <label>&finishedBackground.more2;</label>
+    <label>&finishedBackground.textNotNow;</label>
   </wizardpage>
   
   <wizardpage id="installed" pageid="installed"
