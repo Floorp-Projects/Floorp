@@ -626,7 +626,7 @@ alldep::
 endif # TIERS
 endif # SUPPRESS_DEFAULT_RULES
 
-MAKE_TIER_SUBMAKEFILES = $(if $(tier_$*_dirs),$(MAKE) $(addsuffix /Makefile,$(tier_$*_dirs)))
+MAKE_TIER_SUBMAKEFILES = +$(if $(tier_$*_dirs),$(MAKE) $(addsuffix /Makefile,$(tier_$*_dirs)))
 
 export_tier_%: 
 	@echo "$@"
