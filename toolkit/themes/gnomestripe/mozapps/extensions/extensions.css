@@ -286,6 +286,8 @@ richlistitem[opType="needs-uninstall"] .notifyBadge {
 
 .addonMissingThumbnail {
   color: GrayText;
+  font-size: larger;
+  font-weight: bold;
 }
 
 .addonFailure {
