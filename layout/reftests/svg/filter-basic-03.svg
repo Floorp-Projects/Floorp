@@ -4,7 +4,7 @@
 -->
 <svg xmlns="http://www.w3.org/2000/svg" >
 
-	<title>Testcase for currentColor</title>
+	<title>Testcase for invalid filter</title>
 
 	<!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=414550 -->
 
