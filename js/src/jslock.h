@@ -226,8 +226,8 @@ extern JSBool js_IsScopeLocked(JSContext *cx, JSScope *scope);
 
 #undef NSPR_LOCK
 
-extern JS_INLINE void js_Lock(JSThinLock *tl, jsword me);
-extern JS_INLINE void js_Unlock(JSThinLock *tl, jsword me);
+extern void js_Lock(JSThinLock *tl, jsword me);
+extern void js_Unlock(JSThinLock *tl, jsword me);
 
 #endif /* arch-tests */
 
