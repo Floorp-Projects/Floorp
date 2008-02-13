@@ -490,9 +490,11 @@
             <xul:vbox flex="1">
               <xul:label anonid="addonDescriptionWrap" class="descriptionWrap"
                          xbl:inherits="xbl:text=description"/>
-              <xul:label class="addonLearnMore text-link" xbl:inherits="homepageURL"
-                         value="&searchResultHomepage.value;"
-                         onclick="openURL(this.getAttribute('homepageURL'));"/>
+              <xul:hbox pack="start">
+                <xul:label class="addonLearnMore text-link" xbl:inherits="homepageURL"
+                           value="&searchResultHomepage.value;"
+                           onclick="openURL(this.getAttribute('homepageURL'));"/>
+              </xul:hbox>
               <xul:spacer flex="1"/>
               <xul:hbox anonid="selectedButtons" class="selectedButtons">
                 <xul:hbox align="center" class="addonType addonTypeExtension">
