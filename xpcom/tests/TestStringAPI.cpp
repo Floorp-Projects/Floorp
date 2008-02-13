@@ -106,6 +106,40 @@ int testWrite() {
   return res;
 }
 
+int testFind() {
+  nsString str_haystack;
+  nsString str_needle;
+  str_needle.AssignLiteral("world");
+
+  PRInt32 ret = 0;
+  ret += CHECK(-1 == str_haystack.Find("world"));
+  ret += CHECK(-1 == str_haystack.Find(str_needle));
+
+  str_haystack.AssignLiteral("hello world hello world hello");
+  ret += CHECK( 6 == str_haystack.Find("world"));
+  ret += CHECK( 6 == str_haystack.Find(str_needle));
+  ret += CHECK(-1 == str_haystack.Find("world", 20, PR_FALSE));
+  ret += CHECK(-1 == str_haystack.Find(str_needle, 20));
+  ret += CHECK(18 == str_haystack.Find("world", 12, PR_FALSE));
+  ret += CHECK(18 == str_haystack.Find(str_needle, 12));
+
+  nsCString cstr_haystack;
+  nsCString cstr_needle;
+  cstr_needle.AssignLiteral("world");
+  
+  ret += CHECK(-1 == cstr_haystack.Find("world"));
+  ret += CHECK(-1 == cstr_haystack.Find(cstr_needle));
+
+  cstr_haystack.AssignLiteral("hello world hello world hello");
+  ret += CHECK( 6 == cstr_haystack.Find("world"));
+  ret += CHECK( 6 == cstr_haystack.Find(cstr_needle));
+  ret += CHECK(-1 == cstr_haystack.Find(cstr_needle, 20));
+  ret += CHECK(18 == cstr_haystack.Find(cstr_needle, 12));
+  ret += CHECK( 6 == cstr_haystack.Find("world", 5));
+
+  return ret;
+}
+
 int testVoid() {
   nsString s;
   int ret = CHECK(!s.IsVoid());
@@ -126,6 +160,7 @@ int main() {
   rv += testEmpty();
   rv += testAccess();
   rv += testWrite();
+  rv += testFind();
   rv += testVoid();
   if (0 == rv) {
     fprintf(stderr, "PASS: StringAPI tests\n");

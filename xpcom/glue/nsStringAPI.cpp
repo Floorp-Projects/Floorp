@@ -328,11 +328,11 @@ nsAString::Find(const self_type& aStr, PRUint32 aOffset,
   const char_type *begin, *end;
   PRUint32 selflen = BeginReading(&begin, &end);
 
-  const char_type *other;
-  PRUint32 otherlen = aStr.BeginReading(&other);
-
   if (aOffset > selflen)
     return -1;
+
+  const char_type *other;
+  PRUint32 otherlen = aStr.BeginReading(&other);
 
   if (otherlen > selflen - aOffset)
     return -1;
@@ -389,7 +389,7 @@ nsAString::Find(const char *aStr, PRUint32 aOffset, PRBool aIgnoreCase) const
 
   PRUint32 otherlen = strlen(aStr);
 
-  if (otherlen > selflen)
+  if (otherlen > selflen - aOffset)
     return -1;
 
   // We want to stop searching otherlen characters before the end of the string
@@ -710,17 +710,26 @@ PRInt32
 nsACString::Find(const self_type& aStr, PRUint32 aOffset,
                  ComparatorFunc c) const
 {
-  const char_type *begin;
-  PRUint32 len = aStr.BeginReading(&begin);
+  const char_type *begin, *end;
+  PRUint32 selflen = BeginReading(&begin, &end);
 
-  if (aOffset > len)
+  if (aOffset > selflen)
     return -1;
 
-  PRInt32 found = Find(begin + aOffset, len - aOffset, c);
-  if (found == -1)
-    return found;
+  const char_type *other;
+  PRUint32 otherlen = aStr.BeginReading(&other);
 
-  return found + aOffset;
+  if (otherlen > selflen - aOffset)
+    return -1;
+
+  // We want to stop searching otherlen characters before the end of the string
+  end -= otherlen;
+
+  for (const char_type *cur = begin + aOffset; cur <= end; ++cur) {
+    if (!c(cur, other, otherlen))
+      return cur - begin;
+  }
+  return -1;
 }
 
 PRInt32
