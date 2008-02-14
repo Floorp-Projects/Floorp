@@ -57,11 +57,15 @@ _SERV_FILES = 	\
 		runtests.py \
 		gen_template.pl \
 		server.js \
+		harness-ally.xul \
+		harness-overlay.xul \
 		harness.xul \
 		browser-test-overlay.xul \
 		browser-test.js \
 		browser-harness.xul \
+		redirect-ally.html \
 		redirect.html \
+		redirect.js \
 		$(topsrcdir)/netwerk/test/httpserver/httpd.js \
 		$(NULL)	
 
