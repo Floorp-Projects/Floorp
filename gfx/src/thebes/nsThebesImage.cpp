@@ -212,6 +212,10 @@ void
 nsThebesImage::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
 {
     mDecoded.UnionRect(mDecoded, *aUpdateRect);
+#ifdef XP_MACOSX
+    if (mQuartzSurface)
+        mQuartzSurface->Flush();
+#endif
 }
 
 PRBool
@@ -329,8 +333,10 @@ nsThebesImage::Optimize(nsIDeviceContext* aContext)
 #endif
 
 #ifdef XP_MACOSX
-    if (mQuartzSurface && !mFormatChanged)
+    if (mQuartzSurface) {
+        mQuartzSurface->Flush();
         mOptSurface = mQuartzSurface;
+    }
 #endif
 
     if (mOptSurface == nsnull)
@@ -394,14 +400,11 @@ nsThebesImage::UnlockImagePixels(PRBool aMaskPixels)
 {
     if (aMaskPixels)
         return NS_ERROR_NOT_IMPLEMENTED;
-    if (mImageSurface && mOptSurface) {
-        gfxContext context(mOptSurface);
-        context.SetOperator(gfxContext::OPERATOR_SOURCE);
-        context.SetSource(mImageSurface);
-        context.Paint();
-        // Don't need the pixel data anymore
-        mImageSurface = nsnull;
-    }
+    mOptSurface = nsnull;
+#ifdef XP_MACOSX
+    if (mQuartzSurface)
+        mQuartzSurface->Flush();
+#endif
     return NS_OK;
 }
 
