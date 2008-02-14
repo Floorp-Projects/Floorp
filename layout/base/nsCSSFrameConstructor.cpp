@@ -3441,7 +3441,7 @@ IsSpecialContent(nsIContent*     aContent,
       aTag == nsGkAtoms::menuitem ||
       aTag == nsGkAtoms::menubutton ||
       aTag == nsGkAtoms::menubar ||
-      aTag == nsGkAtoms::popupgroup ||
+      (aTag == nsGkAtoms::popupgroup && aContent->IsNativeAnonymous()) ||
       aTag == nsGkAtoms::iframe ||
       aTag == nsGkAtoms::editor ||
       aTag == nsGkAtoms::browser ||
