@@ -953,14 +953,15 @@ function delayedStartup()
   var shell = getShellService();
   if (shell) {
     var shouldCheck = shell.shouldCheckDefaultBrowser;
-    var willRestoreSession = false;
+    var willRecoverSession = false;
     try {
       var ss = Cc["@mozilla.org/browser/sessionstartup;1"].
                getService(Ci.nsISessionStartup);
-      willRestoreSession = ss.doRestore();
+      willRecoverSession =
+        (ss.sessionType == Ci.nsISessionStartup.RECOVER_SESSION);
     }
     catch (ex) { /* never mind; suppose SessionStore is broken */ }
-    if (shouldCheck && !shell.isDefaultBrowser(true) && !willRestoreSession) {
+    if (shouldCheck && !shell.isDefaultBrowser(true) && !willRecoverSession) {
       var brandBundle = document.getElementById("bundle_brand");
       var shellBundle = document.getElementById("bundle_shell");
 
