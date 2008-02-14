@@ -4601,17 +4601,18 @@ nsWindowSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_FAILED(rv) ? rv : NS_SUCCESS_I_DID_SOMETHING;
   }
 
-  // Let the event receiver helper deal with event handler properties,
-  // all other properties that make it here are handled below.
-  if (IsEventName(id)) {
-    return nsEventReceiverSH::SetProperty(wrapper, cx, obj, id, vp, _retval);
-  }
+  if (JSVAL_IS_STRING(id)) {
+    // Let the event receiver helper deal with event handler
+    // properties, all other properties that make it here are handled
+    // below.
+    if (IsEventName(id)) {
+      return nsEventReceiverSH::SetProperty(wrapper, cx, obj, id, vp, _retval);
+    }
 
-  if (win->IsInnerWindow()) {
-    // Define a fast expando so that we can access this global script
-    // defined property w/o going through XPConnect.
+    if (win->IsInnerWindow()) {
+      // Define a fast expando so that we can access this global script
+      // defined property w/o going through XPConnect.
 
-    if (JSVAL_IS_STRING(id)) {
       JSString *str = JSVAL_TO_STRING(id);
 
       ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
