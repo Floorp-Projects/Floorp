@@ -76,7 +76,7 @@ CAIRO_BEGIN_DECLS
 
 #ifdef CAIRO_MUTEX_INIT
 
-/* If CAIRO_MUTEX_INIT is defined, we may need to initialize all
+/* If %CAIRO_MUTEX_INIT is defined, we may need to initialize all
  * static mutex'es. */
 # ifndef CAIRO_MUTEX_INITIALIZE
 #  define CAIRO_MUTEX_INITIALIZE() do {	\
@@ -108,7 +108,7 @@ CAIRO_BEGIN_DECLS
 
 #ifdef CAIRO_MUTEX_FINI
 
-/* If CAIRO_MUTEX_FINI is defined, we may need to finalize all
+/* If %CAIRO_MUTEX_FINI is defined, we may need to finalize all
  * static mutex'es. */
 # ifndef CAIRO_MUTEX_FINALIZE
 #  define CAIRO_MUTEX_FINALIZE() do {	\

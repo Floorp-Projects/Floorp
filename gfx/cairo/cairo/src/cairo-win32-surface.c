@@ -205,7 +205,7 @@ _create_dc_and_bitmap (cairo_win32_surface_t *surface,
      * break if we do, especially if we don't set up an image
      * fallback.  It could be a bug with using a 24bpp pixman image
      * (and creating one with masks).  So treat them like 32bpp.
-     * NOTE: This causes problems when using BitBlt/AlphaBlend/etc!
+     * Note: This causes problems when using BitBlt/AlphaBlend/etc!
      * see end of file.
      */
     case CAIRO_FORMAT_RGB24:
@@ -1261,7 +1261,7 @@ UNSUPPORTED:
 /* This big function tells us how to optimize operators for the
  * case of solid destination and constant-alpha source
  *
- * NOTE: This function needs revisiting if we add support for
+ * Note: This function needs revisiting if we add support for
  *       super-luminescent colors (a == 0, r,g,b > 0)
  */
 static enum { DO_CLEAR, DO_SOURCE, DO_NOTHING, DO_UNSUPPORTED }
@@ -1844,10 +1844,10 @@ _cairo_surface_is_win32 (cairo_surface_t *surface)
  * cairo_win32_surface_get_dc
  * @surface: a #cairo_surface_t
  *
- * Returns the HDC associated with this surface, or NULL if none.
- * Also returns NULL if the surface is not a win32 surface.
+ * Returns the HDC associated with this surface, or %NULL if none.
+ * Also returns %NULL if the surface is not a win32 surface.
  *
- * Return value: HDC or NULL if no HDC available.
+ * Return value: HDC or %NULL if no HDC available.
  *
  * Since: 1.2
  **/
@@ -1871,10 +1871,10 @@ cairo_win32_surface_get_dc (cairo_surface_t *surface)
  *
  * Returns a #cairo_surface_t image surface that refers to the same bits
  * as the DIB of the Win32 surface.  If the passed-in win32 surface
- * is not a DIB surface, NULL is returned.
+ * is not a DIB surface, %NULL is returned.
  *
- * Return value: a #cairo_surface_t (owned by the win32 cairo_surface_t),
- * or NULL if the win32 surface is not a DIB.
+ * Return value: a #cairo_surface_t (owned by the win32 #cairo_surface_t),
+ * or %NULL if the win32 surface is not a DIB.
  *
  * Since: 1.4
  */
@@ -2036,7 +2036,6 @@ _cairo_win32_save_initial_clip (HDC hdc, cairo_win32_surface_t *surface)
     if (clipBoxType == COMPLEXREGION) {
 	surface->initial_clip_rgn = CreateRectRgn (0, 0, 0, 0);
 	if (GetClipRgn (hdc, surface->initial_clip_rgn) <= 0) {
-	    /* this should never happen */
 	    DeleteObject(surface->initial_clip_rgn);
 	    surface->initial_clip_rgn = NULL;
 	}

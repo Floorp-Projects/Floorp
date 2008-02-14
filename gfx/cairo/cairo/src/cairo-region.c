@@ -149,7 +149,7 @@ _cairo_region_boxes_fini (cairo_region_t *region, cairo_box_int_t *boxes)
  * @region: a #cairo_region_t
  * @rect: rectangle into which to store the extents
  *
- * Gets the bounding box of a region as a cairo_rectangle_int_t
+ * Gets the bounding box of a region as a #cairo_rectangle_int_t
  **/
 void
 _cairo_region_get_extents (cairo_region_t *region, cairo_rectangle_int_t *extents)

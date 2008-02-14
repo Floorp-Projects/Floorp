@@ -34,7 +34,7 @@
  *	Keith R. Packard <keithp@keithp.com>
  *	Carl D. Worth <cworth@cworth.org>
  *
- * 2002-07-15: Converted from XRenderCompositeDoublePoly to cairo_trap. Carl D. Worth
+ * 2002-07-15: Converted from XRenderCompositeDoublePoly to #cairo_trap_t. Carl D. Worth
  */
 
 #include "cairoint.h"
@@ -75,6 +75,14 @@ _cairo_traps_limit (cairo_traps_t	*traps,
     traps->limits = *limits;
 }
 
+cairo_bool_t
+_cairo_traps_get_limit (cairo_traps_t *traps,
+			cairo_box_t   *limits)
+{
+    *limits = traps->limits;
+    return traps->has_limits;
+}
+
 void
 _cairo_traps_fini (cairo_traps_t *traps)
 {
@@ -92,7 +100,7 @@ _cairo_traps_fini (cairo_traps_t *traps)
  * @box: a box that will be converted to a single trapezoid
  *       to store in @traps.
  *
- * Initializes a cairo_traps_t to contain a single rectangular
+ * Initializes a #cairo_traps_t to contain a single rectangular
  * trapezoid.
  **/
 cairo_status_t

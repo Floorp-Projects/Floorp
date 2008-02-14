@@ -86,6 +86,16 @@ DisableFPUException (void)
     _control87 (usCW, MCW_EM | 0x80);
 }
 
+/**
+ * cairo_os2_init:
+ *
+ * Initializes the Cairo library. This function is automatically called if
+ * Cairo was compiled to be a DLL (however it's not a problem if it's called
+ * multiple times). But if you link to Cairo statically, you have to call it
+ * once to set up Cairo's internal structures and mutexes.
+ *
+ * Since: 1.4
+ **/
 cairo_public void
 cairo_os2_init (void)
 {
@@ -102,6 +112,16 @@ cairo_os2_init (void)
     CAIRO_MUTEX_INITIALIZE ();
 }
 
+/**
+ * cairo_os2_fini:
+ *
+ * Uninitializes the Cairo library. This function is automatically called if
+ * Cairo was compiled to be a DLL (however it's not a problem if it's called
+ * multiple times). But if you link to Cairo statically, you have to call it
+ * once to shut down Cairo, to let it free all the resources it has allocated.
+ *
+ * Since: 1.4
+ **/
 cairo_public void
 cairo_os2_fini (void)
 {
@@ -716,6 +736,26 @@ _cairo_os2_surface_get_extents (void                    *abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+/**
+ * cairo_os2_surface_create:
+ * @hps_client_window: the presentation handle to bind the surface to
+ * @width: the width of the surface
+ * @height: the height of the surface
+ *
+ * Create a Cairo surface which is bound to a given presentation space (HPS).
+ * The surface will be created to have the given size.
+ * By default every change to the surface will be made visible immediately by
+ * blitting it into the window. This can be changed with
+ * cairo_os2_surface_set_manual_window_refresh().
+ * Note that the surface will contain garbage when created, so the pixels have
+ * to be initialized by hand first. You can use the Cairo functions to fill it
+ * with black, or use cairo_surface_mark_dirty() to fill the surface with pixels
+ * from the window/HPS.
+ *
+ * Return value: the newly created surface
+ *
+ * Since: 1.4
+ **/
 cairo_surface_t *
 cairo_os2_surface_create (HPS hps_client_window,
                           int width,
@@ -814,6 +854,31 @@ cairo_os2_surface_create (HPS hps_client_window,
     return (cairo_surface_t *)local_os2_surface;
 }
 
+/**
+ * cairo_os2_surface_set_size:
+ * @surface: the cairo surface to resize
+ * @new_width: the new width of the surface
+ * @new_height: the new height of the surface
+ * @timeout: timeout value in milliseconds
+ *
+ * When the client window is resized, call this API to set the new size in the
+ * underlying surface accordingly. This function will reallocate everything,
+ * so you'll have to redraw everything in the surface after this call.
+ * The surface will contain garbage after the resizing. So the notes of
+ * cairo_os2_surface_create() apply here, too.
+ *
+ * The timeout value specifies how long the function should wait on other parts
+ * of the program to release the buffers. It is necessary, because it can happen
+ * that Cairo is just drawing something into the surface while we want to
+ * destroy and recreate it.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS if the surface could be resized,
+ * %CAIRO_STATUS_SURFACE_TYPE_MISMATCH if the surface is not an OS/2 surface,
+ * %CAIRO_STATUS_NO_MEMORY if the new size could not be allocated, for invalid
+ * sizes, or if the timeout happened before all the buffers were released
+ *
+ * Since: 1.4
+ **/
 int
 cairo_os2_surface_set_size (cairo_surface_t *surface,
                             int              new_width,
@@ -921,6 +986,31 @@ cairo_os2_surface_set_size (cairo_surface_t *surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+/**
+ * cairo_os2_surface_refresh_window:
+ * @surface: the cairo surface to refresh
+ * @hps_begin_paint: the presentation handle of the window to refresh
+ * @prcl_begin_paint_rect: the rectangle to redraw
+ *
+ * This function can be used to force a repaint of a given area of the client
+ * window. It should usually be called from the WM_PAINT processing of the
+ * window procedure. However, it can be called any time a given part of the
+ * window has to be updated.
+ *
+ * The HPS and RECTL to be passed can be taken from the usual WinBeginPaint call
+ * of the window procedure, but you can also get the HPS using WinGetPS, and you
+ * can assemble your own update rectangle by hand.
+ * If hps_begin_paint is %NULL, the function will use the HPS passed into
+ * cairo_os2_surface_create(). If @prcl_begin_paint_rect is %NULL, the function
+ * will query the current window size and repaint the whole window.
+ *
+ * Cairo assumes that if you set the HWND to the surface using
+ * cairo_os2_surface_set_hwnd(), this function will be called by the application
+ * every time it gets a WM_PAINT for that HWND. If the HWND is set in the
+ * surface, Cairo uses this function to handle dirty areas too.
+ *
+ * Since: 1.4
+ **/
 void
 cairo_os2_surface_refresh_window (cairo_surface_t *surface,
                                   HPS              hps_begin_paint,
@@ -1018,6 +1108,28 @@ _cairo_os2_surface_finish (void *abstract_surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
+/**
+ * cairo_os2_surface_set_hwnd:
+ * @surface: the cairo surface to associate with the window handle
+ * @hwnd_client_window: the window handle of the client window
+ *
+ * Sets window handle for surface. If Cairo wants to blit into the window
+ * because it is set to blit as the surface changes (see
+ * cairo_os2_surface_set_manual_window_refresh()), then there are two ways it
+ * can choose:
+ * If it knows the HWND of the surface, then it invalidates that area, so the
+ * application will get a WM_PAINT message and it can call
+ * cairo_os2_surface_refresh_window() to redraw that area. Otherwise cairo itself
+ * will use the HPS it got at surface creation time, and blit the pixels itself.
+ * It's also a solution, but experience shows that if this happens from a non-PM
+ * thread, then it can screw up PM internals.
+ *
+ * So, best solution is to set the HWND for the surface after the surface
+ * creation, so every blit will be done from application's message processing
+ * loop, which is the safest way to do.
+ *
+ * Since: 1.4
+ **/
 void
 cairo_os2_surface_set_hwnd (cairo_surface_t *surface,
                             HWND             hwnd_client_window)
@@ -1044,6 +1156,25 @@ cairo_os2_surface_set_hwnd (cairo_surface_t *surface,
     DosReleaseMutexSem (local_os2_surface->hmtx_use_private_fields);
 }
 
+/**
+ * cairo_os2_surface_set_manual_window_refresh:
+ * @surface: the cairo surface to set the refresh mode for
+ * @manual_refresh: the switch for manual surface refresh
+ *
+ * This API can tell Cairo if it should show every change to this surface
+ * immediately in the window or if it should be cached and will only be visible
+ * once the user calls cairo_os2_surface_refresh_window() explicitly. If the
+ * HWND was not set in the cairo surface, then the HPS will be used to blit the
+ * graphics. Otherwise it will invalidate the given window region so the user
+ * will get the WM_PAINT message to redraw that area of the window.
+ *
+ * So, if you're only interested in displaying the final result after several
+ * drawing operations, you might get better performance if you put the surface
+ * into manual refresh mode by passing a true value to this function. Then call
+ * cairo_os2_surface_refresh() whenever desired.
+ *
+ * Since: 1.4
+ **/
 void
 cairo_os2_surface_set_manual_window_refresh (cairo_surface_t *surface,
                                              cairo_bool_t     manual_refresh)
@@ -1061,6 +1192,14 @@ cairo_os2_surface_set_manual_window_refresh (cairo_surface_t *surface,
     local_os2_surface->blit_as_changes = !manual_refresh;
 }
 
+/**
+ * cairo_os2_surface_get_manual_window_refresh:
+ * @surface: the cairo surface to query the refresh mode from
+ *
+ * Return value: current refresh mode of the surface (true by default)
+ *
+ * Since: 1.4
+ **/
 cairo_bool_t
 cairo_os2_surface_get_manual_window_refresh (cairo_surface_t *surface)
 {

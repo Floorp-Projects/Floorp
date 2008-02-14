@@ -389,7 +389,7 @@ _cairo_pattern_create_in_error (cairo_status_t status)
  * @green: green component of the color
  * @blue: blue component of the color
  *
- * Creates a new cairo_pattern_t corresponding to an opaque color.  The
+ * Creates a new #cairo_pattern_t corresponding to an opaque color.  The
  * color components are floating point numbers in the range 0 to 1.
  * If the values passed in are outside that range, they will be
  * clamped.
@@ -433,7 +433,7 @@ slim_hidden_def (cairo_pattern_create_rgb);
  * @blue: blue component of the color
  * @alpha: alpha component of the color
  *
- * Creates a new cairo_pattern_t corresponding to a translucent color.
+ * Creates a new #cairo_pattern_t corresponding to a translucent color.
  * The color components are floating point numbers in the range 0 to
  * 1.  If the values passed in are outside that range, they will be
  * clamped.
@@ -476,7 +476,7 @@ slim_hidden_def (cairo_pattern_create_rgba);
  * cairo_pattern_create_for_surface:
  * @surface: the surface
  *
- * Create a new cairo_pattern_t for the given surface.
+ * Create a new #cairo_pattern_t for the given surface.
  *
  * Return value: the newly created #cairo_pattern_t if successful, or
  * an error pattern in case of no memory.  The caller owns the
@@ -519,7 +519,7 @@ slim_hidden_def (cairo_pattern_create_for_surface);
  * @x1: x coordinate of the end point
  * @y1: y coordinate of the end point
  *
- * Create a new linear gradient cairo_pattern_t along the line defined
+ * Create a new linear gradient #cairo_pattern_t along the line defined
  * by (x0, y0) and (x1, y1).  Before using the gradient pattern, a
  * number of color stops should be defined using
  * cairo_pattern_add_color_stop_rgb() or
@@ -565,7 +565,7 @@ cairo_pattern_create_linear (double x0, double y0, double x1, double y1)
  * @cy1: y coordinate for the center of the end circle
  * @radius1: radius of the end circle
  *
- * Creates a new radial gradient cairo_pattern_t between the two
+ * Creates a new radial gradient #cairo_pattern_t between the two
  * circles defined by (cx0, cy0, radius0) and (cx1, cy1, radius1).  Before using the
  * gradient pattern, a number of color stops should be defined using
  * cairo_pattern_add_color_stop_rgb() or
@@ -1050,6 +1050,17 @@ cairo_pattern_get_matrix (cairo_pattern_t *pattern, cairo_matrix_t *matrix)
  *
  * Sets the filter to be used for resizing when using this pattern.
  * See #cairo_filter_t for details on each filter.
+ *
+ * * Note that you might want to control filtering even when you do not
+ * have an explicit #cairo_pattern_t object, (for example when using
+ * cairo_set_source_surface()). In these cases, it is convenient to
+ * use cairo_get_source() to get access to the pattern that cairo
+ * creates implicitly. For example:
+ *
+ * <informalexample><programlisting>
+ * cairo_set_source_surface (cr, image, x, y);
+ * cairo_pattern_set_filter (cairo_get_source (cr), %CAIRO_FILTER_NEAREST);
+ * </programlisting></informalexample>
  **/
 void
 cairo_pattern_set_filter (cairo_pattern_t *pattern, cairo_filter_t filter)

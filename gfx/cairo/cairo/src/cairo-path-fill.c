@@ -208,7 +208,7 @@ BAIL:
  * the general tessellator when drawing very common rectangles.
  *
  * If the path described anything but a device-axis aligned rectangle,
- * this function will return CAIRO_INT_STATUS_UNSUPPORTED.
+ * this function will return %CAIRO_INT_STATUS_UNSUPPORTED.
  */
 static cairo_int_status_t
 _cairo_path_fixed_fill_rectangle (cairo_path_fixed_t	*path,

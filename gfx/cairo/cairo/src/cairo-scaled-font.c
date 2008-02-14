@@ -41,16 +41,16 @@
 #include "cairo-scaled-font-private.h"
 
 /*
- *  NOTES:
+ *  Notes:
  *
  *  To store rasterizations of glyphs, we use an image surface and the
  *  device offset to represent the glyph origin.
  *
  *  A device_transform converts from device space (a conceptual space) to
  *  surface space.  For simple cases of translation only, it's called a
- *  device_offset and is public API (cairo_surface_[gs]et_device_offset).
+ *  device_offset and is public API (cairo_surface_[gs]et_device_offset()).
  *  A possibly better name for those functions could have been
- *  cairo_surface_[gs]et_origing.  So, that's what they do: they set where
+ *  cairo_surface_[gs]et_origin().  So, that's what they do: they set where
  *  the device-space origin (0,0) is in the surface.  If the origin is inside
  *  the surface, device_offset values are positive.  It may look like this:
  *
@@ -271,21 +271,21 @@ cairo_scaled_font_status (cairo_scaled_font_t *scaled_font)
 slim_hidden_def (cairo_scaled_font_status);
 
 /* Here we keep a unique mapping from
- * cairo_font_face_t/matrix/ctm/options => cairo_scaled_font_t.
+ * font_face/matrix/ctm/font_options => #cairo_scaled_font_t.
  *
  * Here are the things that we want to map:
  *
- *  a) All otherwise referenced cairo_scaled_font_t's
- *  b) Some number of not otherwise referenced cairo_scaled_font_t's
+ *  a) All otherwise referenced #cairo_scaled_font_t's
+ *  b) Some number of not otherwise referenced #cairo_scaled_font_t's
  *
  * The implementation uses a hash table which covers (a)
  * completely. Then, for (b) we have an array of otherwise
  * unreferenced fonts (holdovers) which are expired in
  * least-recently-used order.
  *
- * The cairo_scaled_font_create code gets to treat this like a regular
+ * The cairo_scaled_font_create() code gets to treat this like a regular
  * hash table. All of the magic for the little holdover cache is in
- * cairo_scaled_font_reference and cairo_scaled_font_destroy.
+ * cairo_scaled_font_reference() and cairo_scaled_font_destroy().
  */
 
 /* This defines the size of the holdover array ... that is, the number
@@ -453,7 +453,7 @@ _cairo_scaled_font_keys_equal (const void *abstract_key_a, const void *abstract_
 #define MAX_GLYPHS_CACHED_PER_FONT 256
 
 /*
- * Basic cairo_scaled_font_t object management
+ * Basic #cairo_scaled_font_t object management
  */
 
 cairo_status_t
@@ -544,15 +544,18 @@ _cairo_scaled_font_reset_cache (cairo_scaled_font_t *scaled_font)
 					       MAX_GLYPHS_CACHED_PER_FONT);
 }
 
-void
+cairo_status_t
 _cairo_scaled_font_set_metrics (cairo_scaled_font_t	    *scaled_font,
 				cairo_font_extents_t	    *fs_metrics)
 {
+    cairo_status_t status;
     double  font_scale_x, font_scale_y;
 
-    _cairo_matrix_compute_scale_factors (&scaled_font->font_matrix,
-					 &font_scale_x, &font_scale_y,
-					 /* XXX */ 1);
+    status = _cairo_matrix_compute_scale_factors (&scaled_font->font_matrix,
+						  &font_scale_x, &font_scale_y,
+						  /* XXX */ 1);
+    if (status)
+	return status;
 
     /*
      * The font responded in unscaled units, scale by the font
@@ -564,6 +567,8 @@ _cairo_scaled_font_set_metrics (cairo_scaled_font_t	    *scaled_font,
     scaled_font->extents.height = fs_metrics->height * font_scale_y;
     scaled_font->extents.max_x_advance = fs_metrics->max_x_advance * font_scale_x;
     scaled_font->extents.max_y_advance = fs_metrics->max_y_advance * font_scale_y;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 void
@@ -704,7 +709,7 @@ slim_hidden_def (cairo_scaled_font_create);
 
 /**
  * cairo_scaled_font_reference:
- * @scaled_font: a #cairo_scaled_font_t, (may be NULL in which case
+ * @scaled_font: a #cairo_scaled_font_t, (may be %NULL in which case
  * this function does nothing)
  *
  * Increases the reference count on @scaled_font by one. This prevents
@@ -1270,7 +1275,8 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 	/* If we have glyphs of different formats, we "upgrade" the mask
 	 * to the wider of the formats. */
 	if (glyph_surface->format != mask_format &&
-	    _cairo_format_width (mask_format) < _cairo_format_width (glyph_surface->format) )
+	    _cairo_format_bits_per_pixel (mask_format) <
+	    _cairo_format_bits_per_pixel (glyph_surface->format) )
 	{
 	    cairo_surface_t *new_mask;
 	    cairo_surface_pattern_t mask_pattern;
@@ -1454,7 +1460,7 @@ _add_unit_rectangle_to_path (cairo_path_fixed_t *path, int x, int y)
 
 /**
  * _trace_mask_to_path:
- * @bitmap: An alpha mask (either CAIRO_FORMAT_A1 or _A8)
+ * @bitmap: An alpha mask (either %CAIRO_FORMAT_A1 or %CAIRO_FORMAT_A8)
  * @path: An initialized path to hold the result
  *
  * Given a mask surface, (an alpha image), fill out the provided path
@@ -1701,7 +1707,7 @@ _cairo_scaled_glyph_set_path (cairo_scaled_glyph_t *scaled_glyph,
  * @scaled_glyph_ret: a #cairo_scaled_glyph_t * where the glyph
  * is returned.
  *
- * Returns a glyph with the requested portions filled in. Glyph
+ * Returns: a glyph with the requested portions filled in. Glyph
  * lookup is cached and glyph will be automatically freed along
  * with the scaled_font so no explicit free is required.
  * @info can be one or more of:
@@ -1713,7 +1719,7 @@ _cairo_scaled_glyph_set_path (cairo_scaled_glyph_t *scaled_glyph,
  * get INFO_PATH with a bitmapped font), this function will return
  * CAIRO_INT_STATUS_UNSUPPORTED.
  *
- * NOTE: This function must be called with scaled_font->mutex held.
+ * Note: This function must be called with scaled_font->mutex held.
  **/
 cairo_int_status_t
 _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,

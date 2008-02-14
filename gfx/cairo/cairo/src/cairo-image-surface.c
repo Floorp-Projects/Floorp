@@ -280,7 +280,7 @@ _pixman_format_to_masks (pixman_format_code_t	 pixman_format,
 /* XXX: This function really should be eliminated. We don't really
  * want to advertise a cairo image surface that supports any possible
  * format. A minimal step would be to replace this function with one
- * that accepts a cairo_internal_format_t rather than mask values. */
+ * that accepts a #cairo_internal_format_t rather than mask values. */
 cairo_surface_t *
 _cairo_image_surface_create_with_masks (unsigned char	       *data,
 					cairo_format_masks_t   *masks,
@@ -358,7 +358,7 @@ _cairo_image_surface_create_with_pixman_format (unsigned char		*data,
  * but not belonging to the given format are undefined).
  *
  * Return value: a pointer to the newly created surface. The caller
- * owns the surface and should call cairo_surface_destroy when done
+ * owns the surface and should call cairo_surface_destroy() when done
  * with it.
  *
  * This function always returns a valid pointer, but it will return a
@@ -394,17 +394,55 @@ _cairo_image_surface_create_with_content (cairo_content_t	content,
 				       width, height);
 }
 
+/* pixman required stride alignment in bytes.  should be power of two. */
+#define STRIDE_ALIGNMENT (sizeof (uint32_t))
+
+/**
+ * cairo_format_stride_for_width:
+ * @format: A #cairo_format_t value
+ * @width: The desired width of an image surface to be created.
+ *
+ * This function provides a stride value that will respect all
+ * alignment requirements of the accelerated image-rendering code
+ * within cairo. Typical usage will be of the form:
+ *
+ * <informalexample><programlisting>
+ * int stride;
+ * unsigned char *data;
+ * #cairo_surface_t *surface;
+ *
+ * stride = cairo_format_stride_for_width (format, width);
+ * data = malloc (stride * height);
+ * surface = cairo_image_surface_create_for_data (data, format,
+ *						  width, height);
+ * </programlisting></informalexample>
+ *
+ * Return value: the appropriate stride to use given the desired
+ * format and width.
+ *
+ * Since: 1.6
+ **/
+int
+cairo_format_stride_for_width (cairo_format_t	format,
+			       int		width)
+{
+    int bpp = _cairo_format_bits_per_pixel (format);
+
+    return ((bpp*width+7)/8 + STRIDE_ALIGNMENT-1) & ~(STRIDE_ALIGNMENT-1);
+}
+
 /**
  * cairo_image_surface_create_for_data:
- * @data: a pointer to a buffer supplied by the application
- *    in which to write contents.
+ * @data: a pointer to a buffer supplied by the application in which
+ *     to write contents. This pointer must be suitably aligned for any
+ *     kind of variable, (for example, a pointer returned by malloc).
  * @format: the format of pixels in the buffer
  * @width: the width of the image to be stored in the buffer
  * @height: the height of the image to be stored in the buffer
- * @stride: the number of bytes between the start of rows
- *   in the buffer. Having this be specified separate from @width
- *   allows for padding at the end of rows, or for writing
- *   to a subportion of a larger image.
+ * @stride: the number of bytes between the start of rows in the
+ *     buffer as allocated. This value should always be computed by
+ *     cairo_format_stride_for_width() before allocating the data
+ *     buffer.
  *
  * Creates an image surface for the provided pixel data. The output
  * buffer must be kept around until the #cairo_surface_t is destroyed
@@ -413,13 +451,25 @@ _cairo_image_surface_create_with_content (cairo_content_t	content,
  * must explicitly clear the buffer, using, for example,
  * cairo_rectangle() and cairo_fill() if you want it cleared.
  *
+ * Note that the stride may be larger than
+ * width*bytes_per_pixel to provide proper alignment for each pixel
+ * and row. This alignment is required to allow high-performance rendering
+ * within cairo. The correct way to obtain a legal stride value is to
+ * call cairo_format_stride_for_width() with the desired format and
+ * maximum image width value, and the use the resulting stride value
+ * to allocate the data and to create the image surface. See
+ * cairo_format_stride_for_width() for example code.
+ *
  * Return value: a pointer to the newly created surface. The caller
- * owns the surface and should call cairo_surface_destroy when done
+ * owns the surface and should call cairo_surface_destroy() when done
  * with it.
  *
  * This function always returns a valid pointer, but it will return a
- * pointer to a "nil" surface if an error such as out of memory
- * occurs. You can use cairo_surface_status() to check for this.
+ * pointer to a "nil" surface in the case of an error such as out of
+ * memory or an invalid stride value. In case of invalid stride value
+ * the error status of the returned surface will be
+ * %CAIRO_STATUS_INVALID_STRIDE.  You can use
+ * cairo_surface_status() to check for this.
  *
  * See cairo_surface_set_user_data() for a means of attaching a
  * destroy-notification fallback to the surface if necessary.
@@ -433,11 +483,11 @@ cairo_image_surface_create_for_data (unsigned char     *data,
 {
     pixman_format_code_t pixman_format;
 
-    /* XXX pixman does not support images with arbitrary strides and
-     * attempting to create such surfaces will failure but we will interpret
-     * such failure as CAIRO_STATUS_NO_MEMORY.  */
-    if (! CAIRO_FORMAT_VALID (format) || stride % sizeof (uint32_t) != 0)
+    if (! CAIRO_FORMAT_VALID (format))
 	return _cairo_surface_create_in_error (_cairo_error(CAIRO_STATUS_INVALID_FORMAT));
+
+    if ((stride & (STRIDE_ALIGNMENT-1)) != 0)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_STRIDE));
 
     pixman_format = _cairo_format_to_pixman_format_code (format);
 
@@ -468,7 +518,7 @@ _cairo_image_surface_create_for_data_with_content (unsigned char	*data,
  * Get a pointer to the data of the image surface, for direct
  * inspection or modification.
  *
- * Return value: a pointer to the image data of this surface or NULL
+ * Return value: a pointer to the image data of this surface or %NULL
  * if @surface is not an image surface.
  *
  * Since: 1.2
@@ -615,14 +665,14 @@ _cairo_content_from_format (cairo_format_t format)
     return CAIRO_CONTENT_COLOR_ALPHA;
 }
 
-cairo_private cairo_format_t
-_cairo_format_width (cairo_format_t format)
+int
+_cairo_format_bits_per_pixel (cairo_format_t format)
 {
     switch (format) {
     case CAIRO_FORMAT_ARGB32:
 	return 32;
     case CAIRO_FORMAT_RGB24:
-	return 24;
+	return 32;
     case CAIRO_FORMAT_A8:
 	return 8;
     case CAIRO_FORMAT_A1:
@@ -1200,7 +1250,7 @@ _cairo_image_surface_reset (void *abstract_surface)
  *
  * Checks if a surface is an #cairo_image_surface_t
  *
- * Return value: TRUE if the surface is an image surface
+ * Return value: %TRUE if the surface is an image surface
  **/
 cairo_bool_t
 _cairo_surface_is_image (const cairo_surface_t *surface)

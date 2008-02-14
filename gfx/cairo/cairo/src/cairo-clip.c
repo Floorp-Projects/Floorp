@@ -451,11 +451,41 @@ _cairo_clip_intersect_mask (cairo_clip_t      *clip,
 
     _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE,
 			       CAIRO_CONTENT_COLOR);
+    /* The clipping operation should ideally be something like the following to
+     * avoid having to do as many passes over the data
+
+	if (clip->surface != NULL) {
+	    _cairo_pattern_init_for_surface (&pattern.surface, clip->surface);
+	} else {
+	    _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE,
+			       CAIRO_CONTENT_COLOR);
+	}
+	status = _cairo_surface_composite_trapezoids (CAIRO_OPERATOR_IN,
+						  &pattern.base,
+						  surface,
+						  antialias,
+						  0, 0,
+						  0, 0,
+						  surface_rect.width,
+						  surface_rect.height,
+						  traps->traps,
+						  traps->num_traps);
+
+	However this operation is not accelerated by pixman
+
+	I believe the best possible operation would probably an unbounded SRC
+	operator.  Using SRC we could potentially avoid having to initialize
+	the surface which would be ideal from an efficiency point of view.
+	However, _cairo_surface_composite_trapezoids (CAIRO_OPERATOR_SOURCE) is
+	bounded by the mask.
+
+    */
+
     surface = _cairo_surface_create_similar_solid (target,
 						   CAIRO_CONTENT_ALPHA,
 						   surface_rect.width,
 						   surface_rect.height,
-						   CAIRO_COLOR_WHITE,
+						   CAIRO_COLOR_TRANSPARENT,
 						   &pattern.base);
     if (surface->status) {
 	_cairo_pattern_fini (&pattern.base);
@@ -466,7 +496,7 @@ _cairo_clip_intersect_mask (cairo_clip_t      *clip,
 
     _cairo_traps_translate (traps, -surface_rect.x, -surface_rect.y);
 
-    status = _cairo_surface_composite_trapezoids (CAIRO_OPERATOR_IN,
+    status = _cairo_surface_composite_trapezoids (CAIRO_OPERATOR_ADD,
 						  &pattern.base,
 						  surface,
 						  antialias,
