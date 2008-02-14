@@ -2377,6 +2377,27 @@ JSObject *
 js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
 {
     jsid id;
+
+    /* Bootstrap the ur-object, and make it the default prototype object. */
+    if (!proto) {
+        if (!js_GetClassId(cx, clasp, &id))
+            return NULL;
+        if (!js_GetClassPrototype(cx, parent, id, &proto))
+            return NULL;
+        if (!proto &&
+            !js_GetClassPrototype(cx, parent, INT_TO_JSID(JSProto_Object),
+                                  &proto)) {
+            return NULL;
+        }
+    }
+
+    return js_NewObjectWithGivenProto(cx, clasp, proto, parent);
+}
+
+JSObject *
+js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
+                           JSObject *parent)
+{
     JSObject *obj;
     JSObjectOps *ops;
     JSObjectMap *map;
@@ -2388,19 +2409,6 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     if (JAVASCRIPT_OBJECT_CREATE_START_ENABLED())
         jsdtrace_object_create_start(cx->fp, clasp);
 #endif
-
-    /* Bootstrap the ur-object, and make it the default prototype object. */
-    if (!proto) {
-        if (!js_GetClassId(cx, clasp, &id))
-            goto earlybad;
-        if (!js_GetClassPrototype(cx, parent, id, &proto))
-            goto earlybad;
-        if (!proto &&
-            !js_GetClassPrototype(cx, parent, INT_TO_JSID(JSProto_Object),
-                                  &proto)) {
-            goto earlybad;
-        }
-    }
 
     /* Always call the class's getObjectOps hook if it has one. */
     ops = clasp->getObjectOps

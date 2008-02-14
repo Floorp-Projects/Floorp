@@ -425,6 +425,13 @@ extern JSObject *
 js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
 
 /*
+ * See jsapi.h, JS_NewObjectWithGivenProto.
+ */
+extern JSObject *
+js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
+                           JSObject *parent);
+
+/*
  * Fast access to immutable standard objects (constructors and prototypes).
  */
 extern JSBool
