@@ -439,7 +439,6 @@ ycck_cmyk_convert (j_decompress_ptr cinfo,
 {
   my_cconvert_ptr cconvert = (my_cconvert_ptr) cinfo->cconvert;
   register int y, cb, cr;
-  JSAMPLE * range_limit_y;
   register JSAMPROW outptr;
   register JSAMPROW inptr0, inptr1, inptr2, inptr3;
   register JDIMENSION col;
@@ -459,13 +458,12 @@ ycck_cmyk_convert (j_decompress_ptr cinfo,
       y  = GETJSAMPLE(inptr0[col]);
       cb = GETJSAMPLE(inptr1[col]);
       cr = GETJSAMPLE(inptr2[col]);
-      range_limit_y = range_limit + MAXJSAMPLE - y;
       /* Range-limiting is essential due to noise introduced by DCT losses. */
-      outptr[0] = range_limit_y + Cr_r_tab[cr];   /* red */
-      outptr[1] = range_limit_y +                 /* green */
-			      ((int) RIGHT_SHIFT(Cb_g_tab[cb] + Cr_g_tab[cr],
-						 SCALEBITS));
-      outptr[2] = range_limit_y + Cb_b_tab[cb];   /* blue */
+      outptr[0] = range_limit[MAXJSAMPLE - (y + Cr_r_tab[cr])];   /* red */
+      outptr[1] = range_limit[MAXJSAMPLE - (y +                   /* green */
+				  ((int) RIGHT_SHIFT(Cb_g_tab[cb] + Cr_g_tab[cr],
+                         SCALEBITS)))];
+      outptr[2] = range_limit[MAXJSAMPLE - (y + Cb_b_tab[cb])];   /* blue */
       /* K passes through unchanged */
       outptr[3] = inptr3[col];	/* don't need GETJSAMPLE here */
       outptr += 4;
