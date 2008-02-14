@@ -2277,6 +2277,10 @@ CheckSaneSubrectSize (PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, PRInt32 realWi
 static void
 FlushLayoutForTree(nsIDOMWindow* aWindow)
 {
+    nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(aWindow);
+    if (!piWin)
+        return;
+
     // Note that because FlushPendingNotifications flushes parents, this
     // is O(N^2) in docshell tree depth.  However, the docshell tree is
     // usually pretty shallow.
@@ -2288,7 +2292,6 @@ FlushLayoutForTree(nsIDOMWindow* aWindow)
         doc->FlushPendingNotifications(Flush_Layout);
     }
 
-    nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(aWindow);
     nsCOMPtr<nsIDocShellTreeNode> node =
         do_QueryInterface(piWin->GetDocShell());
     if (node) {
