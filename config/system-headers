@@ -968,3 +968,6 @@ libsn/sn-launcher.h
 libsn/sn-monitor.h
 libsn/sn-util.h
 #endif
+#if MOZ_NATIVE_HUNSPELL==1
+hunspell.hxx
+#endif

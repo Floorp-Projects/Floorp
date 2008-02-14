@@ -59,7 +59,7 @@
 #ifndef mozHunspell_h__
 #define mozHunspell_h__
 
-#include "hunspell.hxx"
+#include <hunspell.hxx>
 #include "mozISpellCheckingEngine.h"
 #include "mozIPersonalDictionary.h"
 #include "nsString.h"
