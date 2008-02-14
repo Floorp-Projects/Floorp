@@ -91,8 +91,10 @@ use strict;
 use constant TEST_SERVER_HOST => "localhost:8888";
 use constant TEST_PATH => "/tests/";
 use constant CHROME_PATH => "/redirect.html";
+use constant A11Y_PATH => "/redirect-a11y.html";
 use constant TESTS_URL => "http://" . TEST_SERVER_HOST . TEST_PATH;
 use constant CHROMETESTS_URL => "http://" . TEST_SERVER_HOST . CHROME_PATH;
+use constant A11YTESTS_URL => "http://" . TEST_SERVER_HOST . A11Y_PATH;
 
  # Max time in seconds to wait for server startup before tests will fail -- if
  # this seems big, it's mostly for debug machines where cold startup
@@ -164,7 +166,7 @@ my $unixish = (!($is_win32) && !($is_mac));
 sub main {
   my ($close_when_done, $appoverride, $log_path, $autorun,
       $console_level, $file_level, $help, $do_chrome, $test_path,
-      $do_browser_chrome, %browser_env, %browser_args);
+      $do_browser_chrome, $do_a11y, %browser_env, %browser_args);
   GetOptions("close-when-done!"=> \$close_when_done,
              "appname:s"=> \$appoverride,
              "log-file:s" => \$log_path,
@@ -174,6 +176,7 @@ sub main {
              "chrome!" => \$do_chrome,
              "test-path:s" => \$test_path,
              "browser-chrome!" => \$do_browser_chrome,
+             "a11y!" => \$do_a11y,
              "setenv=s%" => \%browser_env,
              "browser-arg=s%" => \%browser_args,
              "help!" => \$help);
@@ -213,6 +216,8 @@ sub main {
    # Tests will run from an overlay, no need to load any URL.  We'll include
    # the test path in the config file so the browser chrome harness can use it.
    $url = "about:blank";
+  } elsif ($do_a11y) {
+   $url = A11YTESTS_URL . ($test_path ? $test_path : "") . "?";
   } else {
    $url = TESTS_URL . ($test_path ? $test_path : "") . "?";
   }
@@ -259,14 +264,16 @@ sub usage_and_exit {
   print "\n";
   print "Usage instructons for runtests.pl.\n";
   print "If --log-file is specified, --file-level must be specified as well.\n";
-  print "If --chrome is specified, chrome tests will be run instead of web content tests";
-  print "If --browser-chrome is specified, browser-chrome tests will be run instead of web content tests";
+  print "If --chrome is specified, chrome tests will be run instead of web content tests.\n";
+  print "If --browser-chrome is specified, browser-chrome tests will be run instead of web content tests.\n";
+  print "If --a11y is specified, a11y tests will be run instead of web content tests.";
   print "\n\n";
   print "Syntax:\n";
   print "  runtests.pl \\\n";
   print "   [--autorun] \\\n";
   print "   [--chrome] \\\n";
   print "   [--browser-chrome] \\\n";
+  print "   [--a11y] \\\n";
   print "   [--close-when-done] \\\n";
   print "   [--appname=/path/to/app] \\\n";
   print "   [--log-file=/path/to/logfile] \\\n";
