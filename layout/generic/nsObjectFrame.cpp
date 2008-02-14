@@ -126,6 +126,10 @@
 
 #include "gfxContext.h"
 
+#ifdef XP_WIN
+#include "gfxWindowsNativeDrawing.h"
+#endif
+
 // accessibility support
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
@@ -1168,10 +1172,60 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
 
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("plugin printing done, return code is %lx\n", (long)rv));
 
+#elif defined(XP_WIN)
+
+  /* On Windows, we use the win32 printing surface to print.  This, in
+   * turn, uses the Cairo paginated surface, which in turn uses the
+   * meta surface to record all operations and then play them back.
+   * This doesn't work too well for plugins, because if plugins render
+   * directly into the DC, the meta surface won't have any knowledge
+   * of them, and so at the end when it actually does the replay step,
+   * it'll fill the background with white and draw over whatever was
+   * rendered before.
+   *
+   * So, to avoid this, we use PushGroup, which creates a new windows
+   * surface, the plugin renders to that, and then we use normal
+   * cairo methods to composite that in such that it's recorded using the
+   * meta surface.
+   */
+
+  gfxContext *ctx = aRenderingContext.ThebesContext();
+
+  ctx->Save();
+
+  ctx->NewPath();
+  ctx->Rectangle(gfxRect(window.x, window.y,
+                         window.width, window.height));
+  ctx->Clip();
+  ctx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+
+  gfxWindowsNativeDrawing nativeDraw(ctx,
+                                     gfxRect(window.x, window.y,
+                                             window.width, window.height));
+  do {
+    HDC dc = nativeDraw.BeginNativeDrawing();
+    if (!dc)
+      return;
+
+    npprint.print.embedPrint.platformPrint = dc;
+    npprint.print.embedPrint.window = window;
+    // send off print info to plugin
+    rv = pi->Print(&npprint);
+
+    nativeDraw.EndNativeDrawing();
+  } while (nativeDraw.ShouldRenderAgain());
+  nativeDraw.PaintToContext();
+
+  ctx->PopGroupToSource();
+  ctx->Paint();
+
+  ctx->Restore();
+
 #else
 
   // we need the native printer device context to pass to plugin
-  // On Windows, this will be the HDC
+  // NATIVE_WINDOWS_DC is a misnomer, it's whatever the native platform
+  // thing is.
   void* dc;
   dc = aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
   if (!dc)
