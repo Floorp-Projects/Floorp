@@ -327,7 +327,6 @@ function checkForLink(elem, htmllocalname)
       setInfo("link-target", gMetadataBundle.getString("parentFrameText"));
       break;
     case "_blank":
-    case "_new":
       var where = "Window";
       var newWindowPref = prefs.getIntPref("browser.link.open_newwindow");
       if (newWindowPref == 3)
