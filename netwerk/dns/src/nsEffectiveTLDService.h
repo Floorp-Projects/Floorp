@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Pamela Greene <pamg.bugs@gmail.com> (original author)
  *   Daniel Witte <dwitte@stanford.edu>
+ *   Jeff Walden <jwalden+code@mit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,7 +45,14 @@
 #include "nsCOMPtr.h"
 
 class nsIIDNService;
-class nsIFile;
+
+// struct for static data generated from effective_tld_names.dat
+struct ETLDEntry {
+  const char* domain;
+  PRPackedBool exception;
+  PRPackedBool wild;
+};
+
 
 // hash entry class
 class nsDomainEntry : public PLDHashEntryHdr
@@ -54,7 +62,9 @@ public:
   typedef const char* KeyType;
   typedef const char* KeyTypePointer;
 
-  nsDomainEntry(const char* aDomain);
+  nsDomainEntry(KeyTypePointer aEntry)
+  {
+  }
 
   nsDomainEntry(const nsDomainEntry& toCopy)
   {
@@ -69,12 +79,12 @@ public:
 
   KeyType GetKey() const
   {
-    return mDomain;
+    return mData->domain;
   }
 
   PRBool KeyEquals(KeyTypePointer aKey) const
   {
-    return !strcmp(mDomain, aKey);
+    return !strcmp(mData->domain, aKey);
   }
 
   static KeyTypePointer KeyToPointer(KeyType aKey)
@@ -91,15 +101,14 @@ public:
 
   enum { ALLOW_MEMMOVE = PR_TRUE };
 
-  PRPackedBool& IsNormal()    { return mIsNormal; }
-  PRPackedBool& IsException() { return mIsException; }
-  PRPackedBool& IsWild()      { return mIsWild; }
+  void SetData(const ETLDEntry* entry) { mData = entry; }
+
+  PRPackedBool IsNormal() { return mData->wild || !mData->exception; }
+  PRPackedBool IsException() { return mData->exception; }
+  PRPackedBool IsWild() { return mData->wild; }
 
 private:
-  const char   *mDomain;
-  PRPackedBool  mIsNormal;
-  PRPackedBool  mIsException;
-  PRPackedBool  mIsWild;
+  const ETLDEntry* mData;
 };
 
 class nsEffectiveTLDService : public nsIEffectiveTLDService
@@ -108,17 +117,13 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIEFFECTIVETLDSERVICE
 
-  nsEffectiveTLDService();
+  nsEffectiveTLDService() { }
   nsresult Init();
 
 private:
   nsresult GetBaseDomainInternal(nsCString &aHostname, PRUint32 aAdditionalParts, nsACString &aBaseDomain);
   nsresult NormalizeHostname(nsCString &aHostname);
-  nsresult AddEffectiveTLDEntry(nsCString &aDomainName);
-  nsresult LoadEffectiveTLDFiles();
-  nsresult LoadOneEffectiveTLDFile(nsCOMPtr<nsIFile>& effTLDFile);
-
-  virtual ~nsEffectiveTLDService();
+  ~nsEffectiveTLDService() { }
 
   nsTHashtable<nsDomainEntry> mHash;
   nsCOMPtr<nsIIDNService>     mIDNService;

@@ -68,16 +68,19 @@ CSRCS		= race.c  \
 # static lib.
 FORCE_STATIC_LIB = 1
 
+# need to include etld_data.inc
 LOCAL_INCLUDES =  \
                  -I$(srcdir)/../../base/src   \
+                 -I. \
                  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DIMPL_NS_NET
 
-libs::
-	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/effective_tld_names.dat $(DIST)/bin/res
+# Generate the include file containing compact, static definitions
+# for effective TLD data.
+nsEffectiveTLDService.$(OBJ_SUFFIX): etld_data.inc
 
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/effective_tld_names.dat $(DESTDIR)$(mozappdir)/res
+etld_data.inc: $(srcdir)/prepare_tlds.py $(srcdir)/effective_tld_names.dat
+	$(PYTHON) $(srcdir)/prepare_tlds.py $(srcdir)/effective_tld_names.dat > etld_data.inc
