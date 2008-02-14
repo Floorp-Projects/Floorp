@@ -4087,6 +4087,18 @@ fi
 
 fi # SKIP_LIBRARY_CHECKS
 
+dnl system HunSpell Support
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(system-hunspell,
+[  --enable-system-hunspell  Use system hunspell (located with pkgconfig)],
+    SYSTEM_HUNSPELL=1 )
+
+if test -n "$SYSTEM_HUNSPELL"; then
+    PKG_CHECK_MODULES(MOZ_HUNSPELL, hunspell)
+fi
+
+AC_SUBST(SYSTEM_HUNSPELL)
+
 dnl check whether to enable glitz
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(glitz,
