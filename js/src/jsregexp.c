@@ -237,8 +237,8 @@ GetCompactIndexWidth(size_t index)
     return width;
 }
 
-JS_INLINE(static jsbytecode *
-WriteCompactIndex(jsbytecode *pc, size_t index))
+static JS_INLINE jsbytecode *
+WriteCompactIndex(jsbytecode *pc, size_t index)
 {
     size_t next;
 
@@ -250,8 +250,8 @@ WriteCompactIndex(jsbytecode *pc, size_t index))
     return pc;
 }
 
-JS_INLINE(static jsbytecode *
-ReadCompactIndex(jsbytecode *pc, size_t *result))
+static JS_INLINE jsbytecode *
+ReadCompactIndex(jsbytecode *pc, size_t *result)
 {
     size_t nextByte;
 
@@ -353,8 +353,8 @@ typedef struct REGlobalData {
  *    code point value is less than decimal 128, then return ch.
  * 6. Return cu.
  */
-JS_INLINE(static uintN
-upcase(uintN ch))
+static JS_INLINE uintN
+upcase(uintN ch)
 {
     uintN cu;
 
@@ -369,8 +369,8 @@ upcase(uintN ch))
     return (cu < 128) ? ch : cu;
 }
 
-JS_INLINE(static uintN
-downcase(uintN ch))
+static JS_INLINE uintN
+downcase(uintN ch)
 {
     JS_ASSERT((uintN) (jschar) ch == ch);
     if (ch < 128) {
@@ -2152,9 +2152,9 @@ FlatNMatcher(REGlobalData *gData, REMatchState *x, jschar *matchChars,
 }
 #endif
 
-JS_INLINE(static REMatchState *
+static JS_INLINE REMatchState *
 FlatNIMatcher(REGlobalData *gData, REMatchState *x, jschar *matchChars,
-              size_t length))
+              size_t length)
 {
     size_t i;
     JS_ASSERT(gData->cpend >= x->cp);
@@ -2511,9 +2511,9 @@ ReallocStateStack(REGlobalData *gData)
  * true, then update the current state's cp. Always update startpc to the next
  * op.
  */
-JS_INLINE(static REMatchState *
+static JS_INLINE REMatchState *
 SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
-            jsbytecode **startpc, JSBool updatecp))
+            jsbytecode **startpc, JSBool updatecp)
 {
     REMatchState *result = NULL;
     jschar matchCh;
@@ -2720,8 +2720,8 @@ SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
     return NULL;
 }
 
-JS_INLINE(static REMatchState *
-ExecuteREBytecode(REGlobalData *gData, REMatchState *x))
+static JS_INLINE REMatchState *
+ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
 {
     REMatchState *result = NULL;
     REBackTrackData *backTrackData;
