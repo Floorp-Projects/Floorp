@@ -1349,6 +1349,37 @@ nsNavHistory::CleanUpOnQuit()
     NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_annos_item_idindex"));
   idxTransaction.Commit();
 
+  // Do a one-time re-creation of the moz_annos indexes (bug 415201)
+  PRBool oldIndexExists = PR_FALSE;
+  rv = mDBConn->IndexExists(NS_LITERAL_CSTRING("moz_annos_attributesindex"), &oldIndexExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (oldIndexExists) {
+    // wrap in a transaction for safety and performance
+    mozStorageTransaction annoIndexTransaction(mDBConn, PR_FALSE);
+
+    // drop old uri annos index
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("DROP INDEX moz_annos_attributesindex"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // create new uri annos index
+    rv = mDBConn->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE UNIQUE INDEX moz_annos_placeattributeindex ON moz_annos (place_id, anno_attribute_id)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // drop old item annos index
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_items_annos_attributesindex"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // create new item annos index
+    rv = mDBConn->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE UNIQUE INDEX moz_items_annos_itemattributeindex ON moz_items_annos (item_id, anno_attribute_id)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = annoIndexTransaction.Commit();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   return NS_OK;
 }
 

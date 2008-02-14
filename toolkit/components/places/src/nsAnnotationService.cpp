@@ -259,8 +259,9 @@ nsAnnotationService::InitTables(mozIStorageConnection* aDBConn)
         "dateAdded INTEGER DEFAULT 0," 
         "lastModified INTEGER DEFAULT 0)"));
     NS_ENSURE_SUCCESS(rv, rv);
+
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_annos_attributesindex ON moz_annos (anno_attribute_id)"));
+        "CREATE UNIQUE INDEX moz_annos_placeattributeindex ON moz_annos (place_id, anno_attribute_id)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -289,7 +290,7 @@ nsAnnotationService::InitTables(mozIStorageConnection* aDBConn)
         "lastModified INTEGER DEFAULT 0)"));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_items_annos_attributesindex ON moz_items_annos (item_id, anno_attribute_id)"));
+        "CREATE UNIQUE INDEX moz_items_annos_itemattributeindex ON moz_items_annos (item_id, anno_attribute_id)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
