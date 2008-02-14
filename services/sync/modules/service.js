@@ -63,9 +63,12 @@ WeaveSyncService.prototype = {
 
   __prefs: null,
   get _prefs() {
-    if (!this.__prefs)
+    if (!this.__prefs) {
       this.__prefs = Cc["@mozilla.org/preferences-service;1"]
-        .getService(Ci.nsIPrefBranch);
+        .getService(Ci.nsIPrefService);
+      this.__prefs = this.__prefs.getBranch(PREFS_BRANCH);
+      this.__prefs.QueryInterface(Ci.nsIPrefBranch2);
+    }
     return this.__prefs;
   },
 
@@ -130,13 +133,13 @@ WeaveSyncService.prototype = {
   },
 
   get username() {
-    return this._prefs.getCharPref("extensions.weave.username");
+    return this._prefs.getCharPref("username");
   },
   set username(value) {
     if (value)
-      this._prefs.setCharPref("extensions.weave.username", value);
+      this._prefs.setCharPref("username", value);
     else
-      this._prefs.clearUserPref("extensions.weave.username");
+      this._prefs.clearUserPref("username");
 
     // fixme - need to loop over all Identity objects - needs some rethinking...
     this._mozId.username = value;
@@ -180,61 +183,70 @@ WeaveSyncService.prototype = {
     return null;
   },
 
+  get enabled() {
+    return this._prefs.getBoolPref("enabled");
+  },
+
+  get schedule() {
+    if (!this.enabled)
+      return 0; // manual/off
+    return this._prefs.getIntPref("schedule");
+  },
+
   _init: function WeaveSync__init() {
     this._initLogs();
     this._log.info("Weave Sync Service Initializing");
 
-    this._serverURL = 'https://services.mozilla.com/';
-    this._user = '';
-    let enabled = false;
-    let schedule = 0;
-    try {
-      this._serverURL = this._prefs.getCharPref("extensions.weave.serverURL");
-      enabled = this._prefs.getBoolPref("extensions.weave.enabled");
-      schedule = this._prefs.getIntPref("extensions.weave.schedule");
+    this._prefs.addObserver("", this, false);
 
-      this._prefs.addObserver("extensions.weave", this, false);
-    }
-    catch (ex) { /* use defaults */ }
-
-    if (!enabled) {
-      this._log.info("Bookmarks sync disabled");
+    if (!this.enabled) {
+      this._log.info("Weave Sync disabled");
       return;
     }
 
-    switch (schedule) {
+    this._setSchedule(this.schedule);
+  },
+
+  _setSchedule: function Weave__setSchedule(schedule) {
+    switch (this.schedule) {
     case 0:
-      this._log.info("Bookmarks sync enabled, manual mode");
+      this._disableSchedule();
       break;
     case 1:
-      this._log.info("Bookmarks sync enabled, automagic mode");
       this._enableSchedule();
       break;
     default:
-      this._log.info("Bookmarks sync enabled");
-      this._log.info("Invalid schedule setting: " + schedule);
+      this._log.info("Invalid Weave scheduler setting: " + schedule);
       break;
     }
   },
 
-  _scheduleChanged: function WeaveSync__scheduleChanged() {
-  },
-
   _enableSchedule: function WeaveSync__enableSchedule() {
+    if (this._scheduleTimer) {
+      this._scheduleTimer.cancel();
+      this._scheduleTimer = null;
+    }
     this._scheduleTimer = Cc["@mozilla.org/timer;1"].
       createInstance(Ci.nsITimer);
     let listener = new Utils.EventListener(Utils.bind2(this, this._onSchedule));
     this._scheduleTimer.initWithCallback(listener, 1800000, // 30 min
                                          this._scheduleTimer.TYPE_REPEATING_SLACK);
+    this._log.info("Weave scheduler enabled");
   },
 
   _disableSchedule: function WeaveSync__disableSchedule() {
-    this._scheduleTimer = null;
+    if (this._scheduleTimer) {
+      this._scheduleTimer.cancel();
+      this._scheduleTimer = null;
+    }
+    this._log.info("Weave scheduler disabled");
   },
 
   _onSchedule: function WeaveSync__onSchedule() {
-    this._log.info("Running scheduled sync");
-    this.sync();
+    if (this.enabled) {
+      this._log.info("Running scheduled sync");
+      this.sync();
+    }
   },
 
   _initLogs: function WeaveSync__initLogs() {
@@ -242,14 +254,14 @@ WeaveSyncService.prototype = {
 
     let formatter = Log4Moz.Service.newFormatter("basic");
     let root = Log4Moz.Service.rootLogger;
-    root.level = Log4Moz.Level.Debug;
+    root.level = Log4Moz.Level[this._prefs.getCharPref("log.rootLogger")];
 
     let capp = Log4Moz.Service.newAppender("console", formatter);
-    capp.level = Log4Moz.Level.Warn;
+    capp.level = Log4Moz.Level[this._prefs.getCharPref("log.appender.console")];
     root.addAppender(capp);
 
     let dapp = Log4Moz.Service.newAppender("dump", formatter);
-    dapp.level = Log4Moz.Level.All;
+    dapp.level = Log4Moz.Level[this._prefs.getCharPref("log.appender.dump")];
     root.addAppender(dapp);
 
     let brief = this._dirSvc.get("ProfD", Ci.nsIFile);
@@ -270,10 +282,10 @@ WeaveSyncService.prototype = {
       verbose.create(verbose.NORMAL_FILE_TYPE, PERMS_FILE);
 
     let fapp = Log4Moz.Service.newFileAppender("rotating", brief, formatter);
-    fapp.level = Log4Moz.Level.Info;
+    fapp.level = Log4Moz.Level[this._prefs.getCharPref("log.appender.briefLog")];
     root.addAppender(fapp);
     let vapp = Log4Moz.Service.newFileAppender("rotating", verbose, formatter);
-    vapp.level = Log4Moz.Level.Debug;
+    vapp.level = Log4Moz.Level[this._prefs.getCharPref("log.appender.debugLog")];
     root.addAppender(vapp);
   },
 
@@ -295,8 +307,6 @@ WeaveSyncService.prototype = {
     this._os.notifyObservers(null, "weave:service-unlock:success", "");
   },
 
-  // IBookmarksSyncService internal implementation
-
   _login: function WeaveSync__login(onComplete) {
     let [self, cont] = yield;
     let success = false;
@@ -314,7 +324,8 @@ WeaveSyncService.prototype = {
 	return;
       }
 
-      this._dav.baseURL = this._serverURL + "user/" + this.userPath + "/";
+      let serverURL = this._prefs.getCharPref("serverURL");
+      this._dav.baseURL = serverURL + "user/" + this.userPath + "/";
       this._log.info("Using server URL: " + this._dav.baseURL);
 
       this._dav.login.async(this._dav, cont, this.username, this.password);
@@ -324,13 +335,13 @@ WeaveSyncService.prototype = {
       if (!success) {
         this._log.debug("Attempting to create user directory");
 
-        this._dav.baseURL = this._serverURL;
+        this._dav.baseURL = serverURL;
         this._dav.MKCOL("user/" + this.userPath, cont);
         let ret = yield;
 
         if (ret.status == 201) {
           this._log.debug("Successfully created user directory.  Re-attempting login.");
-          this._dav.baseURL = this._serverURL + "user/" + this.userPath + "/";
+          this._dav.baseURL = serverURL + "user/" + this.userPath + "/";
           this._dav.login.async(this._dav, cont, this.username, this.password);
           success = yield;
         } else {
@@ -465,40 +476,16 @@ WeaveSyncService.prototype = {
   // nsIObserver
 
   observe: function WeaveSync__observe(subject, topic, data) {
-    switch (topic) {
-    case "extensions.weave.enabled":
-      switch (data) {
-      case false:
-        this._log.info("Disabling automagic bookmarks sync");
-        this._disableSchedule();
-        break;
-      case true:
-        this._log.info("Enabling automagic bookmarks sync");
-        this._enableSchedule();
-        break;
-      }
+    if (topic != "nsPref:changed")
+      return;
+
+    switch (data) {
+    case "enabled": // this works because this.schedule is 0 when disabled
+    case "schedule":
+      this._setSchedule(this.schedule);
       break;
-    case "extensions.weave.schedule":
-      switch (data) {
-      case 0:
-        this._log.info("Disabling automagic bookmarks sync");
-        this._disableSchedule();
-        break;
-      case 1:
-        this._log.info("Enabling automagic bookmarks sync");
-        this._enableSchedule();
-        break;
-      default:
-        this._log.warn("Unknown schedule value set");
-        break;
-      }
-      break;
-    default:
-      // ignore, there are prefs we observe but don't care about
     }
   },
-
-  // IBookmarksSyncService public methods
 
   // These are global (for all engines)
 
