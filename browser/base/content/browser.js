@@ -6117,9 +6117,8 @@ let DownloadMonitorPanel = {
   },
 
   uninit: function DMP_uninit() {
-    if (this._listening) {
+    if (this._listening)
       gDownloadMgr.removeListener(this);
-    }
   },
 
   /**
