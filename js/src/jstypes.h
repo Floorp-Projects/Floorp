@@ -162,15 +162,15 @@
 #define JS_FRIEND_DATA(t)   JS_PUBLIC_DATA(t)
 
 #ifdef _WIN32
-# define JS_INLINE(x) __forceinline x
+# define JS_INLINE __forceinline
 #elif defined(__GNUC__)
 # ifndef DEBUG
-#  define JS_INLINE(x) x __attribute__((always_inline)); x
+#  define JS_INLINE __attribute__((always_inline))
 # else
-#  define JS_INLINE(x) inline x
+#  define JS_INLINE inline
 # endif
 #else
-# define JS_INLINE(x) x
+# define JS_INLINE
 #endif
 
 /***********************************************************************
