@@ -877,51 +877,6 @@ nsNavHistoryExpire::ExpireAnnotationsParanoid(mozIStorageConnection* aConnection
       NS_LITERAL_CSTRING("))"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // XXX REMOVE ME BEFORE FINAL
-  // There was a period in which we inserted bogus charset annos during bookmark
-  // import, we must move them into items annos, since those pages will
-  // never get deleted from moz_places and that is a valid privacy concern.
-  nsCAutoString charsetAnno("URIProperties/characterSet");
-
-  // XXX REMOVE ME BEFORE FINAL
-  // Move current page annos to items annos for bookmarked items.
-  // In the migration query we use NULL as the id, since we don't know the
-  // new id where the annotation will be inserted
-  nsCOMPtr<mozIStorageStatement> migrateStatement;
-  rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-        "INSERT INTO moz_items_annos "
-        "SELECT null, b.id, a.anno_attribute_id, a.mime_type, a.content, "
-        " a.flags, a.expiration, a.type, a.dateAdded, a.lastModified "
-        "FROM moz_annos a "
-        "JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id "
-        "JOIN moz_bookmarks b ON b.fk = a.place_id "
-        "WHERE b.id IS NOT NULL AND n.name = ?1 AND a.expiration = ") +
-        nsPrintfCString("%d", nsIAnnotationService::EXPIRE_NEVER),
-      getter_AddRefs(migrateStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = migrateStatement->BindUTF8StringParameter(0, charsetAnno);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = migrateStatement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // XXX REMOVE ME BEFORE FINAL
-  // Delete old bogus page annos for bookmarked items
-  nsCOMPtr<mozIStorageStatement> cleanupStatement;
-  rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-        "DELETE FROM moz_annos WHERE id IN "
-        "(SELECT a.id FROM moz_annos a "
-        "JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id "
-        "JOIN moz_bookmarks b ON b.fk = a.place_id "
-        "WHERE b.id IS NOT NULL AND n.name = ?1 AND a.expiration = ") +
-        nsPrintfCString("%d", nsIAnnotationService::EXPIRE_NEVER) +
-        NS_LITERAL_CSTRING(")"),
-      getter_AddRefs(cleanupStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = cleanupStatement->BindUTF8StringParameter(0, charsetAnno);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = cleanupStatement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // delete item annos w/o a corresponding item id
   rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "DELETE FROM moz_items_annos WHERE id IN "
