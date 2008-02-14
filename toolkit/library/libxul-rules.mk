@@ -51,6 +51,10 @@ else
 EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
 endif
 
+ifdef MOZ_NATIVE_HUNSPELL
+EXTRA_DSO_LDOPTS += $(MOZ_HUNSPELL_LIBS)
+endif
+
 # need widget/src/windows for resource.h (included from widget.rc)
 LOCAL_INCLUDES += \
 	-I$(topsrcdir)/config \
