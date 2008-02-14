@@ -90,6 +90,8 @@ METHODDEF(void) skip_input_data (j_decompress_ptr jd, long num_bytes);
 METHODDEF(void) term_source (j_decompress_ptr jd);
 METHODDEF(void) my_error_exit (j_common_ptr cinfo);
 
+static void cmyk_convert_rgb(JSAMPROW row, JDIMENSION width);
+
 /* Normal JFIF markers can't have more bytes than this. */
 #define MAX_JPEG_MARKER_LENGTH  (((PRUint32)1 << 16) - 1)
 
@@ -422,6 +424,11 @@ nsresult nsJPEGDecoder::ProcessData(const char *data, PRUint32 count, PRUint32 *
       case JCS_YCbCr:
         mInfo.out_color_space = JCS_RGB;
         break;
+      case JCS_CMYK:
+      case JCS_YCCK:
+        /* libjpeg can convert from YCCK to CMYK, but not to RGB */
+        mInfo.out_color_space = JCS_CMYK;
+        break;
       default:
         mState = JPEG_ERROR;
         PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
@@ -699,8 +706,7 @@ nsJPEGDecoder::OutputScanlines()
       }
 
       JSAMPROW sampleRow = (JSAMPROW)imageRow;
-      if (!mTransform || (mInfo.out_color_space != JCS_GRAYSCALE &&
-                          mInfo.out_color_space != JCS_CMYK)) {
+      if (mInfo.output_components == 3) {
         /* Put the pixels at end of row to enable in-place expansion */
         sampleRow += mInfo.output_width;
       }
@@ -726,11 +732,20 @@ nsJPEGDecoder::OutputScanlines()
                   3 * mInfo.output_width);
           sampleRow += mInfo.output_width;
         }
-      } else if (gfxPlatform::IsCMSEnabled()) {
-        /* No embedded ICC profile - treat as sRGB */
-        cmsHTRANSFORM transform = gfxPlatform::GetCMSRGBTransform();
-        if (transform) {
-          cmsDoTransform(transform, sampleRow, sampleRow, mInfo.output_width);
+      } else {
+        if (mInfo.out_color_space == JCS_CMYK) {
+          /* Convert from CMYK to RGB */
+          /* We cannot convert directly to Cairo, as the CMSRGBTransform may wants to do a RGB transform... */
+          /* Would be better to have platform CMSenabled transformation from CMYK to (A)RGB... */
+          cmyk_convert_rgb((JSAMPROW)imageRow, mInfo.output_width);
+          sampleRow += mInfo.output_width;
+        }
+        if (gfxPlatform::IsCMSEnabled()) {
+          /* No embedded ICC profile - treat as sRGB */
+          cmsHTRANSFORM transform = gfxPlatform::GetCMSRGBTransform();
+          if (transform) {
+            cmsDoTransform(transform, sampleRow, sampleRow, mInfo.output_width);
+          }
         }
       }
 
@@ -1265,5 +1280,52 @@ ycc_rgb_convert_argb (j_decompress_ptr cinfo,
                     ( range_limit_y[((int) RIGHT_SHIFT(Cb_g_tab[cb] + Cr_g_tab[cr], SCALEBITS))] << 8 ) |
                     ( range_limit_y[Cb_b_tab[cb]] );
     }
+  }
+}
+
+
+/**************** Inverted CMYK -> RGB conversion **************/
+/*
+ * Input is (Inverted) CMYK stored as 4 bytes per pixel.
+ * Output is RGB stored as 3 bytes per pixel.
+ * @param row Points to row buffer containing the CMYK bytes for each pixel in the row.
+ * @param width Number of pixels in the row.
+ */
+static void cmyk_convert_rgb(JSAMPROW row, JDIMENSION width)
+{
+  /* Work from end to front to shrink from 4 bytes per pixel to 3 */
+  JSAMPROW in = row + width*4;
+  JSAMPROW out = in;
+
+  for (PRUint32 i = width; i > 0; i--) {
+    in -= 4;
+    out -= 3;
+
+    // Source is 'Inverted CMYK', output is RGB.
+    // See: http://www.easyrgb.com/math.php?MATH=M12#text12
+    // Or:  http://www.ilkeratalay.com/colorspacesfaq.php#rgb
+
+    // From CMYK to CMY
+    // C = ( C * ( 1 - K ) + K )
+    // M = ( M * ( 1 - K ) + K )
+    // Y = ( Y * ( 1 - K ) + K )
+
+    // From Inverted CMYK to CMY is thus:
+    // C = ( (1-iC) * (1 - (1-iK)) + (1-iK) ) => 1 - iC*iK
+    // Same for M and Y
+
+    // Convert from CMY (0..1) to RGB (0..1)
+    // R = 1 - C => 1 - (1 - iC*iK) => iC*iK
+    // G = 1 - M => 1 - (1 - iM*iK) => iM*iK
+    // B = 1 - Y => 1 - (1 - iY*iK) => iY*iK
+  
+    // Convert from Inverted CMYK (0..255) to RGB (0..255)
+    const PRUint32 iC = in[0];
+    const PRUint32 iM = in[1];
+    const PRUint32 iY = in[2];
+    const PRUint32 iK = in[3];
+    out[0] = iC*iK/255;   // Red
+    out[1] = iM*iK/255;   // Green
+    out[2] = iY*iK/255;   // Blue
   }
 }
