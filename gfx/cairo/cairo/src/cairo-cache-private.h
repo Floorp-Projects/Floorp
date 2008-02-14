@@ -46,8 +46,8 @@
  * cairo_cache_entry_t:
  *
  * A #cairo_cache_entry_t contains both a key and a value for
- * cairo_cache_t. User-derived types for cairo_cache_entry_t must
- * have a cairo_cache_entry_t as their first field. For example:
+ * #cairo_cache_t. User-derived types for #cairo_cache_entry_t must
+ * have a #cairo_cache_entry_t as their first field. For example:
  *
  * 	typedef _my_entry {
  *	    cairo_cache_entry_t base;
@@ -55,7 +55,7 @@
  *	} my_entry_t;
  *
  * which then allows a pointer to my_entry_t to be passed to any of
- * the cairo_cache functions as follows without requiring a cast:
+ * the #cairo_cache_t functions as follows without requiring a cast:
  *
  *	_cairo_cache_insert (cache, &my_entry->base, size);
  *
@@ -78,7 +78,7 @@
  * Which parts of the entry make up the "key" and which part make up
  * the value are entirely up to the caller, (as determined by the
  * computation going into base.hash as well as the keys_equal
- * function). A few of the cairo_cache functions accept an entry which
+ * function). A few of the #cairo_cache_t functions accept an entry which
  * will be used exclusively as a "key", (indicated by a parameter name
  * of key). In these cases, the value-related fields of the entry need
  * not be initialized if so desired.

@@ -55,8 +55,8 @@ typedef struct {
  * Acquire destination image surface needed for an image-based
  * fallback.
  *
- * Return value: CAIRO_INT_STATUS_NOTHING_TO_DO if the extents are not
- * visible, CAIRO_STATUS_SUCCESS if some portion is visible and all
+ * Return value: %CAIRO_INT_STATUS_NOTHING_TO_DO if the extents are not
+ * visible, %CAIRO_STATUS_SUCCESS if some portion is visible and all
  * went well, or some error status otherwise.
  **/
 static cairo_int_status_t
@@ -273,7 +273,7 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
     return status;
 }
 
-/* Handles compositing for CAIRO_OPERATOR_SOURCE, which is special; it's
+/* Handles compositing for %CAIRO_OPERATOR_SOURCE, which is special; it's
  * defined as (src IN mask IN clip) ADD (dst OUT (mask IN clip))
  */
 static cairo_status_t

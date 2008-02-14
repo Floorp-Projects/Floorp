@@ -168,7 +168,7 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
 	return NULL;
     }
 
-    pix = XCreatePixmap (dpy, RootWindowOfScreen (src->screen),
+    pix = XCreatePixmap (dpy, src->drawable,
 			 width <= 0 ? 1 : width, height <= 0 ? 1 : height,
 			 depth);
 
@@ -246,7 +246,7 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
     /* We've got a compatible XRenderFormat now, which means the
      * similar surface will match the existing surface as closely in
      * visual/depth etc. as possible. */
-    pix = XCreatePixmap (src->dpy, RootWindowOfScreen (src->screen),
+    pix = XCreatePixmap (src->dpy, src->drawable,
 			 width <= 0 ? 1 : width, height <= 0 ? 1 : height,
 			 xrender_format->depth);
 
@@ -2070,7 +2070,7 @@ _cairo_xlib_screen_from_visual (Display *dpy, Visual *visual)
  * The way that colors are represented in the drawable is specified
  * by the provided visual.
  *
- * NOTE: If @drawable is a Window, then the function
+ * Note: If @drawable is a Window, then the function
  * cairo_xlib_surface_set_size must be called whenever the size of the
  * window changes.
  *
@@ -2108,7 +2108,7 @@ cairo_xlib_surface_create (Display     *dpy,
  * @height: the current height of @bitmap.
  *
  * Creates an Xlib surface that draws to the given bitmap.
- * This will be drawn to as a CAIRO_FORMAT_A1 object.
+ * This will be drawn to as a %CAIRO_FORMAT_A1 object.
  *
  * Return value: the newly created surface
  **/
@@ -2140,7 +2140,7 @@ cairo_xlib_surface_create_for_bitmap (Display  *dpy,
  * The way that colors are represented in the drawable is specified
  * by the provided picture format.
  *
- * NOTE: If @drawable is a Window, then the function
+ * Note: If @drawable is a Window, then the function
  * cairo_xlib_surface_set_size must be called whenever the size of the
  * window changes.
  *
@@ -2160,6 +2160,35 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
 						NULL, format, width, height, 0);
 }
 slim_hidden_def (cairo_xlib_surface_create_with_xrender_format);
+
+/**
+ * cairo_xlib_surface_get_xrender_format:
+ * @surface: an xlib surface
+ *
+ * Gets the X Render picture format that @surface uses for rendering with the
+ * X Render extension. If the surface was created by
+ * cairo_xlib_surface_create_with_xrender_format() originally, the return
+ * value is the format passed to that constructor.
+ *
+ * Return value: the XRenderPictFormat* associated with @surface,
+ * or %NULL if the surface is not an xlib surface
+ * or if the X Render extension is not available.
+ *
+ * Since: 1.6
+ **/
+XRenderPictFormat *
+cairo_xlib_surface_get_xrender_format (cairo_surface_t *surface)
+{
+    cairo_xlib_surface_t *xlib_surface = (cairo_xlib_surface_t *) surface;
+
+    /* Throw an error for a non-xlib surface */
+    if (! _cairo_surface_is_xlib (surface)) {
+	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return NULL;
+    }
+
+    return xlib_surface->xrender_format;
+}
 #endif
 
 /**
@@ -2834,7 +2863,7 @@ typedef void (*cairo_xrender_composite_text_func_t)
 	       _Xconst XGlyphElt8           *elts,
 	       int                          nelt);
 
-/* Build a struct of the same size of cairo_glyph_t that can be used both as
+/* Build a struct of the same size of #cairo_glyph_t that can be used both as
  * an input glyph with double coordinates, and as "working" glyph with
  * integer from-current-point offsets. */
 typedef struct {
@@ -2851,7 +2880,7 @@ typedef struct {
   } p;
 } cairo_xlib_glyph_t;
 
-/* compile-time assert that cairo_xlib_glyph_t is the same size as cairo_glyph_t */
+/* compile-time assert that #cairo_xlib_glyph_t is the same size as #cairo_glyph_t */
 typedef int cairo_xlib_glyph_t_size_assertion [sizeof (cairo_xlib_glyph_t) == sizeof (cairo_glyph_t) ? 1 : -1];
 
 #define GLYPH_INDEX_SKIP ((unsigned long) -1)

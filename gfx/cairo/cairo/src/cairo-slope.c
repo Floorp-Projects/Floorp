@@ -88,7 +88,7 @@ _cairo_slope_compare (cairo_slope_t *a, cairo_slope_t *b)
 
 /* Is a clockwise of b?
  *
- * NOTE: The strict equality here is not significant in and of itself,
+ * Note: The strict equality here is not significant in and of itself,
  * but there are functions up above that are sensitive to it,
  * (cf. _cairo_pen_find_active_cw_vertex_index).
  */

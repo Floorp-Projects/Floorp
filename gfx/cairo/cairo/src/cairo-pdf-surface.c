@@ -332,7 +332,7 @@ BAIL0:
  * incrementally to the stream represented by @write_func and @closure.
  *
  * Return value: a pointer to the newly created surface. The caller
- * owns the surface and should call cairo_surface_destroy when done
+ * owns the surface and should call cairo_surface_destroy() when done
  * with it.
  *
  * This function always returns a valid pointer, but it will return a
@@ -368,7 +368,7 @@ cairo_pdf_surface_create_for_stream (cairo_write_func_t		 write_func,
  * to @filename.
  *
  * Return value: a pointer to the newly created surface. The caller
- * owns the surface and should call cairo_surface_destroy when done
+ * owns the surface and should call cairo_surface_destroy() when done
  * with it.
  *
  * This function always returns a valid pointer, but it will return a
@@ -401,7 +401,7 @@ _cairo_surface_is_pdf (cairo_surface_t *surface)
 
 /* If the abstract_surface is a paginated surface, and that paginated
  * surface's target is a pdf_surface, then set pdf_surface to that
- * target. Otherwise return CAIRO_STATUS_SURFACE_TYPE_MISMATCH.
+ * target. Otherwise return %CAIRO_STATUS_SURFACE_TYPE_MISMATCH.
  */
 static cairo_status_t
 _extract_pdf_surface (cairo_surface_t		 *surface,
@@ -424,7 +424,7 @@ _extract_pdf_surface (cairo_surface_t		 *surface,
 
 /**
  * cairo_pdf_surface_set_size:
- * @surface: a PDF cairo_surface_t
+ * @surface: a PDF #cairo_surface_t
  * @width_in_points: new surface width, in points (1 point == 1/72.0 inch)
  * @height_in_points: new surface height, in points (1 point == 1/72.0 inch)
  *
@@ -727,6 +727,8 @@ _cairo_pdf_surface_create_smask_group (cairo_pdf_surface_t	*surface)
 	free (group);
 	return NULL;
     }
+    group->width = surface->width;
+    group->height = surface->height;
 
     return group;
 }
@@ -800,6 +802,8 @@ _cairo_pdf_surface_add_pdf_pattern (cairo_pdf_surface_t		*surface,
         }
     }
 
+    pdf_pattern.width = surface->width;
+    pdf_pattern.height = surface->height;
     *pattern_res = pdf_pattern.pattern_res;
     *gstate_res = pdf_pattern.gstate_res;
 
@@ -1245,9 +1249,16 @@ compress_dup (const void *data, unsigned long data_size,
 	      unsigned long *compressed_size)
 {
     void *compressed;
+    unsigned long additional_size;
 
     /* Bound calculation taken from zlib. */
-    *compressed_size = data_size + (data_size >> 12) + (data_size >> 14) + 11;
+    additional_size = (data_size >> 12) + (data_size >> 14) + 11;
+    if (INT32_MAX - data_size <= additional_size) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	return NULL;
+    }
+
+    *compressed_size = data_size + additional_size;
     compressed = malloc (*compressed_size);
     if (compressed == NULL) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
@@ -1291,11 +1302,18 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 
     stream_ret->id = 0;
 
-    if (image->format == CAIRO_FORMAT_A1)
-	alpha_size = (image->height * image->width + 7)/8;
-    else
+    if (image->format == CAIRO_FORMAT_A1) {
+	/* We allocate using slightly different math so that we can get
+	 * the overflow checking from _cairo_malloc_ab, but alpha_size
+	 * needs to be the correct size for emitting the data in the PDF.
+	 */
+	alpha_size = (image->width*image->height + 7) / 8;
+	alpha = _cairo_malloc_ab ((image->width+7) / 8, image->height);
+    } else {
 	alpha_size = image->height * image->width;
-    alpha = malloc (alpha_size);
+	alpha = _cairo_malloc_ab (image->height, image->width);
+    }
+
     if (alpha == NULL) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP;
@@ -1416,7 +1434,7 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t   *surface,
 	    image->format == CAIRO_FORMAT_A1);
 
     rgb_size = image->height * image->width * 3;
-    rgb = malloc (rgb_size);
+    rgb = _cairo_malloc_abc (image->width, image->height, 3);
     if (rgb == NULL) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP;
@@ -2572,23 +2590,42 @@ _cairo_pdf_surface_emit_radial_pattern (cairo_pdf_surface_t    *surface,
 static cairo_status_t
 _cairo_pdf_surface_emit_pattern (cairo_pdf_surface_t *surface, cairo_pdf_pattern_t *pdf_pattern)
 {
+    double old_width, old_height;
+    cairo_status_t status;
+
+    old_width = surface->width;
+    old_height = surface->height;
+    surface->width = pdf_pattern->width;
+    surface->height = pdf_pattern->height;
+
     switch (pdf_pattern->pattern->type) {
     case CAIRO_PATTERN_TYPE_SOLID:
 	ASSERT_NOT_REACHED;
+	status = _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
 	break;
 
     case CAIRO_PATTERN_TYPE_SURFACE:
-	return _cairo_pdf_surface_emit_surface_pattern (surface, pdf_pattern);
+	status = _cairo_pdf_surface_emit_surface_pattern (surface, pdf_pattern);
+	break;
 
     case CAIRO_PATTERN_TYPE_LINEAR:
-	return _cairo_pdf_surface_emit_linear_pattern (surface, pdf_pattern);
+	status = _cairo_pdf_surface_emit_linear_pattern (surface, pdf_pattern);
+	break;
 
     case CAIRO_PATTERN_TYPE_RADIAL:
-	return _cairo_pdf_surface_emit_radial_pattern (surface, pdf_pattern);
+	status = _cairo_pdf_surface_emit_radial_pattern (surface, pdf_pattern);
+	break;
+
+    default:
+	ASSERT_NOT_REACHED;
+	status = _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
+	break;
     }
 
-    ASSERT_NOT_REACHED;
-    return _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
+    surface->width = old_width;
+    surface->height = old_height;
+
+    return status;
 }
 
 static cairo_status_t
@@ -3895,7 +3932,18 @@ static cairo_status_t
 _cairo_pdf_surface_write_smask_group (cairo_pdf_surface_t     *surface,
 				      cairo_pdf_smask_group_t *group)
 {
+    double old_width, old_height;
+    cairo_matrix_t old_cairo_to_pdf;
     cairo_status_t status;
+
+    old_width = surface->width;
+    old_height = surface->height;
+    old_cairo_to_pdf = surface->cairo_to_pdf;
+    surface->width = group->width;
+    surface->height = group->height;
+    cairo_matrix_init (&surface->cairo_to_pdf, 1, 0, 0, -1, 0, surface->height);
+    _cairo_pdf_operators_set_cairo_to_pdf_matrix (&surface->pdf_operators,
+						  surface->cairo_to_pdf);
 
     /* _mask is a special case that requires two groups - source
      * and mask as well as a smask and gstate dictionary */
@@ -3945,8 +3993,15 @@ _cairo_pdf_surface_write_smask_group (cairo_pdf_surface_t     *surface,
 	return status;
 
     _cairo_pdf_surface_unselect_pattern (surface);
+    status = _cairo_pdf_surface_close_group (surface, NULL);
 
-    return _cairo_pdf_surface_close_group (surface, NULL);
+    surface->width = old_width;
+    surface->height = old_height;
+    surface->cairo_to_pdf = old_cairo_to_pdf;
+    _cairo_pdf_operators_set_cairo_to_pdf_matrix (&surface->pdf_operators,
+						  surface->cairo_to_pdf);
+
+    return status;
 }
 
 static cairo_status_t

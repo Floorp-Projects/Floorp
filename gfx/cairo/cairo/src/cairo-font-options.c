@@ -241,7 +241,7 @@ slim_hidden_def (cairo_font_options_equal);
  * @options: a #cairo_font_options_t
  *
  * Compute a hash for the font options object; this value will
- * be useful when storing an object containing a cairo_font_options_t
+ * be useful when storing an object containing a #cairo_font_options_t
  * in a hash table.
  *
  * Return value: the hash value for the font options object.

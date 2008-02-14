@@ -36,7 +36,7 @@
 #ifndef CAIRO_DEPRECATED_H
 #define CAIRO_DEPRECATED_H
 
-/* The CAIRO_FORMAT_RGB16_565 value was added in cairo 1.2.0 as part
+/* The %CAIRO_FORMAT_RGB16_565 value was added in cairo 1.2.0 as part
  * of fixing cairo's xlib backend to work with X servers advertising a
  * 16-bit, 565 visual. But as it turned out, adding this format to
  * #cairo_format_t was not necessary, and was a mistake, (cairo's xlib

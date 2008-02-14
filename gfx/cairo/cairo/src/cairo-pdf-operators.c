@@ -278,7 +278,7 @@ _cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t	*pdf_operators,
 
     _cairo_output_stream_printf (pdf_operators->stream,
 				 "%f M ",
-				 style->miter_limit);
+				 style->miter_limit < 1.0 ? 1.0 : style->miter_limit);
 
     return _cairo_output_stream_get_status (pdf_operators->stream);
 }

@@ -48,7 +48,7 @@ CAIRO_BEGIN_DECLS
 /* PS-surface functions */
 
 /**
- * cairo_ps_level_t
+ * cairo_ps_level_t:
  * @CAIRO_PS_LEVEL_2: The language level 2 of the PostScript specification.
  * @CAIRO_PS_LEVEL_3: The language level 3 of the PostScript specification.
  *

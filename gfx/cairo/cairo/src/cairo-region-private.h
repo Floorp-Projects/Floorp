@@ -41,7 +41,7 @@
 
 #include "cairo-compiler-private.h"
 
-/* cairo_region_t is defined in cairoint.h */
+/* #cairo_region_t is defined in cairoint.h */
 
 struct _cairo_region {
     pixman_region16_t rgn;
