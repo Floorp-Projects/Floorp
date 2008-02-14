@@ -40,7 +40,7 @@
 /**
  * _cairo_array_init:
  *
- * Initialize a new cairo_array object to store objects each of size
+ * Initialize a new #cairo_array_t object to store objects each of size
  * @element_size.
  *
  * The #cairo_array_t object provides grow-by-doubling storage. It
@@ -177,7 +177,7 @@ _cairo_array_truncate (cairo_array_t *array, unsigned int num_elements)
  * pointer may be used for further direct indexing with []. For
  * example:
  *
- * 	cairo_array_t array;
+ * 	#cairo_array_t array;
  *	double *values;
  *
  *	_cairo_array_init (&array, sizeof(double));
@@ -231,7 +231,7 @@ _cairo_array_copy_element (cairo_array_t *array, int index, void *dst)
  *
  * _cairo_array_index (array, _cairo_array_num_elements (array) - 1);
  *
- * Return value: CAIRO_STATUS_SUCCESS if successful or
+ * Return value: %CAIRO_STATUS_SUCCESS if successful or
  * CAIRO_STATUS_NO_MEMORY if insufficient memory is available for the
  * operation.
  **/
@@ -251,7 +251,7 @@ _cairo_array_append (cairo_array_t	*array,
  * @num_elements, then copying @num_elements * element_size bytes from
  * @elements into the array.
  *
- * Return value: CAIRO_STATUS_SUCCESS if successful or
+ * Return value: %CAIRO_STATUS_SUCCESS if successful or
  * CAIRO_STATUS_NO_MEMORY if insufficient memory is available for the
  * operation.
  **/
@@ -282,7 +282,7 @@ _cairo_array_append_multiple (cairo_array_t	*array,
  * @elements. This memory will be unitialized, but will be accounted
  * for in the return value of _cairo_array_num_elements().
  *
- * Return value: CAIRO_STATUS_SUCCESS if successful or
+ * Return value: %CAIRO_STATUS_SUCCESS if successful or
  * CAIRO_STATUS_NO_MEMORY if insufficient memory is available for the
  * operation.
  **/
@@ -331,7 +331,7 @@ _cairo_array_size (cairo_array_t *array)
     return array->size;
 }
 
-/* cairo_user_data_array_t */
+/* #cairo_user_data_array_t */
 
 typedef struct {
     const cairo_user_data_key_t *key;

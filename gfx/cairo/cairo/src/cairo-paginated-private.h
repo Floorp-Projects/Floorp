@@ -41,7 +41,7 @@
 struct _cairo_paginated_surface_backend {
     /* Optional. Will be called once for each page.
      *
-     * NOTE: With respect to the order of drawing operations as seen
+     * Note: With respect to the order of drawing operations as seen
      * by the target, this call will occur before any drawing
      * operations for the relevant page. However, with respect to the
      * function calls as made by the user, this call will be *after*
@@ -69,17 +69,17 @@ struct _cairo_paginated_surface_backend {
 			 cairo_box_t	*bbox);
 };
 
-/* A cairo_paginated_surface provides a very convenient wrapper that
+/* A #cairo_paginated_surface_t provides a very convenient wrapper that
  * is well-suited for doing the analysis common to most surfaces that
  * have paginated output, (that is, things directed at printers, or
  * for saving content in files such as PostScript or PDF files).
  *
  * To use the paginated surface, you'll first need to create your
- * 'real' surface using _cairo_surface_init and the standard
- * cairo_surface_backend_t. Then you also call
+ * 'real' surface using _cairo_surface_init() and the standard
+ * #cairo_surface_backend_t. Then you also call
  * _cairo_paginated_surface_create which takes its own, much simpler,
- * cairo_paginated_surface_backend. You are free to return the result
- * of _cairo_paginated_surface_create from your public
+ * #cairo_paginated_surface_backend_t. You are free to return the result
+ * of _cairo_paginated_surface_create() from your public
  * cairo_<foo>_surface_create. The paginated backend will be careful
  * to not let the user see that they really got a "wrapped"
  * surface. See test-paginated-surface.c for a fairly minimal example
@@ -92,7 +92,7 @@ struct _cairo_paginated_surface_backend {
  * sequence of operations (using the backend functions passed to
  * cairo_paginated_surface_create):
  *
- * 1. Calls start_page (if non NULL). At this point, it is appropriate
+ * 1. Calls start_page (if non %NULL). At this point, it is appropriate
  *    for the target to emit any page-specific header information into
  *    its output.
  *
@@ -121,13 +121,13 @@ struct _cairo_paginated_surface_backend {
  * the target should not actually perform any rendering, (for example,
  * if performing output to a file, no output should be generated
  * during this stage). Instead the drawing functions simply need to
- * return CAIRO_STATUS_SUCCESS or CAIRO_INT_STATUS_UNSUPPORTED to
+ * return %CAIRO_STATUS_SUCCESS or %CAIRO_INT_STATUS_UNSUPPORTED to
  * indicate whether rendering would be supported. And it should do
  * this as quickly as possible. The FALLBACK phase allows the surface
  * to distinguish fallback images from native rendering in case they
  * need to be handled as a special case.
  *
- * NOTE: The paginated surface layer assumes that the target surface
+ * Note: The paginated surface layer assumes that the target surface
  * is "blank" by default at the beginning of each page, without any
  * need for an explicit erase operation, (as opposed to an image
  * surface, for example, which might have uninitialized content

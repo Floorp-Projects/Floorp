@@ -159,7 +159,7 @@ static const cairo_paginated_surface_backend_t cairo_svg_surface_paginated_backe
  * incrementally to the stream represented by @write_func and @closure.
  *
  * Return value: a pointer to the newly created surface. The caller
- * owns the surface and should call cairo_surface_destroy when done
+ * owns the surface and should call cairo_surface_destroy() when done
  * with it.
  *
  * This function always returns a valid pointer, but it will return a
@@ -193,7 +193,7 @@ cairo_svg_surface_create_for_stream (cairo_write_func_t		 write_func,
  * to @filename.
  *
  * Return value: a pointer to the newly created surface. The caller
- * owns the surface and should call cairo_surface_destroy when done
+ * owns the surface and should call cairo_surface_destroy() when done
  * with it.
  *
  * This function always returns a valid pointer, but it will return a
@@ -224,7 +224,7 @@ _cairo_surface_is_svg (cairo_surface_t *surface)
 
 /* If the abstract_surface is a paginated surface, and that paginated
  * surface's target is a svg_surface, then set svg_surface to that
- * target. Otherwise return CAIRO_STATUS_SURFACE_TYPE_MISMATCH.
+ * target. Otherwise return %CAIRO_STATUS_SURFACE_TYPE_MISMATCH.
  */
 static cairo_status_t
 _extract_svg_surface (cairo_surface_t		 *surface,
@@ -303,7 +303,7 @@ cairo_svg_get_versions (cairo_svg_version_t const	**versions,
  * @version: a version id
  *
  * Get the string representation of the given @version id. This function
- * will return NULL if @version isn't valid. See cairo_svg_get_versions()
+ * will return %NULL if @version isn't valid. See cairo_svg_get_versions()
  * for a way to get the list of valid version ids.
  *
  * Return value: the string associated to given version.
@@ -1045,7 +1045,8 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
 	return status;
     }
 
-    status = cairo_surface_show_page (paginated_surface);
+    cairo_surface_show_page (paginated_surface);
+    status = cairo_surface_status (paginated_surface);
     if (status) {
 	cairo_surface_destroy (&meta->base);
 	cairo_surface_destroy (paginated_surface);
@@ -1133,7 +1134,7 @@ _cairo_svg_surface_emit_composite_meta_pattern (cairo_output_stream_t	*output,
     cairo_meta_surface_t *meta_surface;
     cairo_matrix_t p2u;
     cairo_status_t status;
-    int id;
+    int id = 0;
 
     p2u = pattern->base.matrix;
     status = cairo_matrix_invert (&p2u);

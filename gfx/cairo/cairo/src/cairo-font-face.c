@@ -45,7 +45,7 @@
  */
 static const cairo_font_face_backend_t _cairo_toy_font_face_backend;
 
-/* cairo_font_face_t */
+/* #cairo_font_face_t */
 
 const cairo_font_face_t _cairo_font_face_nil = {
     { 0 },			/* hash_entry */
@@ -256,10 +256,10 @@ _cairo_toy_font_face_keys_equal (const void *key_a,
 				 const void *key_b);
 
 /* We maintain a hash table from family/weight/slant =>
- * cairo_font_face_t for cairo_toy_font_t. The primary purpose of
- * this mapping is to provide unique cairo_font_face_t values so that
- * our cache and mapping from cairo_font_face_t => cairo_scaled_font_t
- * works. Once the corresponding cairo_font_face_t objects fall out of
+ * #cairo_font_face_t for #cairo_toy_font_t. The primary purpose of
+ * this mapping is to provide unique #cairo_font_face_t values so that
+ * our cache and mapping from #cairo_font_face_t => #cairo_scaled_font_t
+ * works. Once the corresponding #cairo_font_face_t objects fall out of
  * downstream caches, we don't need them in this hash table anymore.
  *
  * Modifications to this hash table are protected by
@@ -295,11 +295,11 @@ _cairo_toy_font_face_hash_table_unlock (void)
 /**
  * _cairo_toy_font_face_init_key:
  *
- * Initialize those portions of cairo_toy_font_face_t needed to use
+ * Initialize those portions of #cairo_toy_font_face_t needed to use
  * it as a hash table key, including the hash code buried away in
  * font_face->base.hash_entry. No memory allocation is performed here
  * so that no fini call is needed. We do this to make it easier to use
- * an automatic cairo_toy_font_face_t variable as a key.
+ * an automatic #cairo_toy_font_face_t variable as a key.
  **/
 static void
 _cairo_toy_font_face_init_key (cairo_toy_font_face_t *key,

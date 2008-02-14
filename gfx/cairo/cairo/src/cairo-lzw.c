@@ -58,7 +58,7 @@ typedef struct _lzw_buf {
  * Instead of returning failure from any functions, lzw_buf_t provides
  * a status value that the caller can query, (and should query at
  * least once when done with the object). The status value will be
- * either CAIRO_STATUS_SUCCESS or CAIRO_STATUS_NO_MEMORY;
+ * either %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY;
  */
 static void
 _lzw_buf_init (lzw_buf_t *buf, int size)
@@ -82,7 +82,7 @@ _lzw_buf_init (lzw_buf_t *buf, int size)
 
 /* Increase the buffer size by doubling.
  *
- * Returns CAIRO_STATUS_SUCCESS or CAIRO_STATUS_NO_MEMORY
+ * Returns %CAIRO_STATUS_SUCCESS or CAIRO_STATUS_NO_MEMORY
  */
 static cairo_status_t
 _lzw_buf_grow (lzw_buf_t *buf)
@@ -113,13 +113,13 @@ _lzw_buf_grow (lzw_buf_t *buf)
 
 /* Store the lowest num_bits bits of values into buf.
  *
- * NOTE: The bits of value above size_in_bits must be 0, (so don't lie
+ * Note: The bits of value above size_in_bits must be 0, (so don't lie
  * about the size).
  *
  * See also _lzw_buf_store_pending which must be called after the last
  * call to _lzw_buf_store_bits.
  *
- * Sets buf->status to either CAIRO_STATUS_SUCCESS or CAIRO_STATUS_NO_MEMORY.
+ * Sets buf->status to either %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY.
  */
 static void
 _lzw_buf_store_bits (lzw_buf_t *buf, uint16_t value, int num_bits)
@@ -147,10 +147,10 @@ _lzw_buf_store_bits (lzw_buf_t *buf, uint16_t value, int num_bits)
 
 /* Store the last remaining pending bits into the buffer.
  *
- * NOTE: This function must be called after the last call to
+ * Note: This function must be called after the last call to
  * _lzw_buf_store_bits.
  *
- * Sets buf->status to either CAIRO_STATUS_SUCCESS or CAIRO_STATUS_NO_MEMORY.
+ * Sets buf->status to either %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY.
  */
 static void
 _lzw_buf_store_pending  (lzw_buf_t *buf)
@@ -234,11 +234,11 @@ _lzw_symbol_table_init (lzw_symbol_table_t *table)
 /* Lookup a symbol in the symbol table. The PREV and NEXT fields of
  * symbol form the key for the lookup.
  *
- * If successful, then this function returns TRUE and slot_ret will be
+ * If successful, then this function returns %TRUE and slot_ret will be
  * left pointing at the result that will have the CODE field of
  * interest.
  *
- * If the lookup fails, then this function returns FALSE and slot_ret
+ * If the lookup fails, then this function returns %FALSE and slot_ret
  * will be pointing at the location in the table to which a new CODE
  * value should be stored along with PREV and NEXT.
  */
@@ -312,7 +312,7 @@ _lzw_symbol_table_lookup (lzw_symbol_table_t	 *table,
  * to 12 bits).
  *
  * This function returns a pointer to a newly allocated buffer holding
- * the compressed data, or NULL if an out-of-memory situation
+ * the compressed data, or %NULL if an out-of-memory situation
  * occurs.
  *
  * Notice that any one of the _lzw_buf functions called here could

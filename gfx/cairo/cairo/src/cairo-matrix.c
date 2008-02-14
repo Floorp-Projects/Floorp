@@ -68,7 +68,7 @@ slim_hidden_def(cairo_matrix_init_identity);
 
 /**
  * cairo_matrix_init:
- * @matrix: a cairo_matrix_t
+ * @matrix: a #cairo_matrix_t
  * @xx: xx component of the affine transformation
  * @yx: yx component of the affine transformation
  * @xy: xy component of the affine transformation
@@ -137,7 +137,7 @@ _cairo_matrix_get_affine (const cairo_matrix_t *matrix,
 
 /**
  * cairo_matrix_init_translate:
- * @matrix: a cairo_matrix_t
+ * @matrix: a #cairo_matrix_t
  * @tx: amount to translate in the X direction
  * @ty: amount to translate in the Y direction
  *
@@ -157,7 +157,7 @@ slim_hidden_def(cairo_matrix_init_translate);
 
 /**
  * cairo_matrix_translate:
- * @matrix: a cairo_matrix_t
+ * @matrix: a #cairo_matrix_t
  * @tx: amount to translate in the X direction
  * @ty: amount to translate in the Y direction
  *
@@ -179,7 +179,7 @@ slim_hidden_def (cairo_matrix_translate);
 
 /**
  * cairo_matrix_init_scale:
- * @matrix: a cairo_matrix_t
+ * @matrix: a #cairo_matrix_t
  * @sx: scale factor in the X direction
  * @sy: scale factor in the Y direction
  *
@@ -220,7 +220,7 @@ slim_hidden_def(cairo_matrix_scale);
 
 /**
  * cairo_matrix_init_rotate:
- * @matrix: a cairo_matrix_t
+ * @matrix: a #cairo_matrix_t
  * @radians: angle of rotation, in radians. The direction of rotation
  * is defined such that positive angles rotate in the direction from
  * the positive X axis toward the positive Y axis. With the default
@@ -514,7 +514,7 @@ _cairo_matrix_compute_determinant (const cairo_matrix_t *matrix,
 }
 
 /* Compute the amount that each basis vector is scaled by. */
-void
+cairo_status_t
 _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
 				     double *sx, double *sy, int x_major)
 {
@@ -522,7 +522,8 @@ _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
 
     _cairo_matrix_compute_determinant (matrix, &det);
 
-    assert (ISFINITE (det));
+    if (! ISFINITE (det))
+	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
     if (det == 0)
     {
@@ -556,6 +557,8 @@ _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
 	    *sy = major;
 	}
     }
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_bool_t

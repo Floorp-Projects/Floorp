@@ -485,7 +485,7 @@ _cairo_meta_surface_show_glyphs (void			*abstract_surface,
  *
  * The caller owns the return value and should call
  * cairo_surface_destroy when finished with it. This function will not
- * return NULL, but will return a nil surface instead.
+ * return %NULL, but will return a nil surface instead.
  *
  * Return value: The snapshot surface.
  **/
@@ -583,7 +583,7 @@ _cairo_meta_surface_get_extents (void			 *abstract_surface,
  *
  * Checks if a surface is a #cairo_meta_surface_t
  *
- * Return value: TRUE if the surface is a meta surface
+ * Return value: %TRUE if the surface is a meta surface
  **/
 cairo_bool_t
 _cairo_surface_is_meta (const cairo_surface_t *surface)
@@ -868,7 +868,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 }
 
 /* Replay meta to surface. When the return status of each operation is
- * one of CAIRO_STATUS_SUCCESS, CAIRO_INT_STATUS_UNSUPPORTED, or
+ * one of %CAIRO_STATUS_SUCCESS, %CAIRO_INT_STATUS_UNSUPPORTED, or
  * CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY the status of each operation
  * will be stored in the meta surface. Any other status will abort the
  * replay and return the status.

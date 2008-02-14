@@ -129,7 +129,7 @@ typedef struct _cairo_bo_event_queue {
     unsigned num_startstop_events;
 } cairo_bo_event_queue_t;
 
-/* This structure extends cairo_skip_list_t, which must come first. */
+/* This structure extends #cairo_skip_list_t, which must come first. */
 typedef struct _cairo_bo_sweep_line {
     cairo_skip_list_t active_edges;
     cairo_bo_edge_t *head;
@@ -385,7 +385,7 @@ cairo_bo_event_compare (cairo_bo_event_t const *a,
      * need a different sense for start and stop events based on the
      * shortening rule.
      *
-     * NOTE: Fortunately, we get to ignore errors in the relative
+     * Note: Fortunately, we get to ignore errors in the relative
      * ordering of intersection events. This means we don't even have
      * to look at e2 here, nor worry about which sense of the slope
      * comparison test is used for intersection events.
@@ -507,7 +507,7 @@ det64_128 (cairo_int64_t a,
 /* Compute the intersection of two lines as defined by two edges. The
  * result is provided as a coordinate pair of 128-bit integers.
  *
- * Returns CAIRO_BO_STATUS_INTERSECTION if there is an intersection or
+ * Returns %CAIRO_BO_STATUS_INTERSECTION if there is an intersection or
  * CAIRO_BO_STATUS_PARALLEL if the two lines are exactly parallel.
  */
 static cairo_bo_status_t
@@ -638,10 +638,10 @@ _cairo_bo_edge_contains_intersect_point (cairo_bo_edge_t		*edge,
 /* Compute the intersection of two edges. The result is provided as a
  * coordinate pair of 128-bit integers.
  *
- * Returns CAIRO_BO_STATUS_INTERSECTION if there is an intersection
- * that is within both edges, CAIRO_BO_STATUS_NO_INTERSECTION if the
+ * Returns %CAIRO_BO_STATUS_INTERSECTION if there is an intersection
+ * that is within both edges, %CAIRO_BO_STATUS_NO_INTERSECTION if the
  * intersection of the lines defined by the edges occurs outside of
- * one or both edges, and CAIRO_BO_STATUS_PARALLEL if the two edges
+ * one or both edges, and %CAIRO_BO_STATUS_PARALLEL if the two edges
  * are exactly parallel.
  *
  * Note that when determining if a candidate intersection is "inside"
@@ -1053,7 +1053,7 @@ print_state (const char			*msg,
 }
 #endif
 
-/* Adds the trapezoid, if any, of the left edge to the cairo_traps_t
+/* Adds the trapezoid, if any, of the left edge to the #cairo_traps_t
  * of bo_traps. */
 static cairo_status_t
 _cairo_bo_edge_end_trap (cairo_bo_edge_t	*left,

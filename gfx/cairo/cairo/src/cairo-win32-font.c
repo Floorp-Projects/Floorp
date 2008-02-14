@@ -130,7 +130,7 @@ _cairo_win32_scaled_font_init_glyph_path (cairo_win32_scaled_font_t *scaled_font
 
 #define NEARLY_ZERO(d) (fabs(d) < (1. / 65536.))
 
-static void
+static cairo_status_t
 _compute_transform (cairo_win32_scaled_font_t *scaled_font,
 		    cairo_matrix_t            *sc)
 {
@@ -175,9 +175,11 @@ _compute_transform (cairo_win32_scaled_font_t *scaled_font,
 		       sc->xx, sc->yx, sc->xy, sc->yy, 0, 0);
 
     if (!scaled_font->preserve_axes) {
-	_cairo_matrix_compute_scale_factors (&scaled_font->logical_to_device,
-					     &scaled_font->x_scale, &scaled_font->y_scale,
-					     TRUE);	/* XXX: Handle vertical text */
+	status = _cairo_matrix_compute_scale_factors (&scaled_font->logical_to_device,
+						      &scaled_font->x_scale, &scaled_font->y_scale,
+						      TRUE);	/* XXX: Handle vertical text */
+	if (status)
+	    return status;
 
 	scaled_font->logical_size = _cairo_lround (WIN32_FONT_LOGICAL_SCALE *
                                                    scaled_font->y_scale);
@@ -192,6 +194,8 @@ _compute_transform (cairo_win32_scaled_font_t *scaled_font,
     status = cairo_matrix_invert (&scaled_font->device_to_logical);
     if (status)
 	cairo_matrix_init_identity (&scaled_font->device_to_logical);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_bool_t
@@ -240,7 +244,7 @@ _get_system_quality (void)
     }
 }
 
-/* If face_hfont is non-NULL then font_matrix must be a simple scale by some
+/* If face_hfont is non-%NULL then font_matrix must be a simple scale by some
  * factor S, ctm must be the identity, logfont->lfHeight must be -S,
  * logfont->lfWidth, logfont->lfEscapement, logfont->lfOrientation must
  * all be 0, and face_hfont is the result of calling CreateFontIndirectW on
@@ -312,7 +316,9 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
     f->delete_scaled_hfont = !f->scaled_hfont;
 
     cairo_matrix_multiply (&scale, font_matrix, ctm);
-    _compute_transform (f, &scale);
+    status = _compute_transform (f, &scale);
+    if (status)
+	goto FAIL;
 
     status = _cairo_scaled_font_init (&f->base, font_face,
 				      font_matrix, ctm, options,
@@ -872,9 +878,7 @@ _cairo_win32_scaled_font_set_metrics (cairo_win32_scaled_font_t *scaled_font)
 	 }
     }
 
-    _cairo_scaled_font_set_metrics (&scaled_font->base, &extents);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_scaled_font_set_metrics (&scaled_font->base, &extents);
 }
 
 static cairo_status_t
@@ -1763,11 +1767,11 @@ const cairo_scaled_font_backend_t cairo_win32_scaled_font_backend = {
     _cairo_win32_scaled_font_map_glyphs_to_unicode,
 };
 
-/* cairo_win32_font_face_t */
+/* #cairo_win32_font_face_t */
 
 typedef struct _cairo_win32_font_face cairo_win32_font_face_t;
 
-/* If hfont is non-NULL then logfont->lfHeight must be -S for some S,
+/* If hfont is non-%NULL then logfont->lfHeight must be -S for some S,
  * logfont->lfWidth, logfont->lfEscapement, logfont->lfOrientation must
  * all be 0, and hfont is the result of calling CreateFontIndirectW on
  * logfont.

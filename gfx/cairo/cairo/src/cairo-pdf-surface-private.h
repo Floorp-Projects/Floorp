@@ -61,6 +61,8 @@ typedef struct _cairo_pdf_group_resources {
 } cairo_pdf_group_resources_t;
 
 typedef struct _cairo_pdf_pattern {
+    double width;
+    double height;
     cairo_pattern_t *pattern;
     cairo_pdf_resource_t pattern_res;
     cairo_pdf_resource_t gstate_res;
@@ -76,6 +78,8 @@ typedef enum _cairo_pdf_operation {
 
 typedef struct _cairo_pdf_smask_group
 {
+    double 		  width;
+    double 		  height;
     cairo_pdf_resource_t  group_res;
     cairo_pdf_operation_t operation;
     cairo_pattern_t	 *source;

@@ -208,6 +208,7 @@ CreateSizedCopyOfStyle(ATSUStyle inStyle,
 static cairo_status_t
 _cairo_atsui_font_set_metrics (cairo_atsui_font_t *font)
 {
+    cairo_status_t status;
     ATSFontRef atsFont;
     ATSFontMetrics metrics;
     OSStatus err;
@@ -228,9 +229,9 @@ _cairo_atsui_font_set_metrics (cairo_atsui_font_t *font)
             /* The FT backend doesn't handle max_y_advance either, so we'll ignore it for now. */
             extents.max_y_advance = 0.0;
 
-	    _cairo_scaled_font_set_metrics (&font->base, &extents);
+	    status = _cairo_scaled_font_set_metrics (&font->base, &extents);
 
-            return CAIRO_STATUS_SUCCESS;
+            return status;
         }
     }
 
@@ -256,6 +257,8 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
     if (font == NULL)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
+    memset (font, 0, sizeof(cairo_atsui_font_t));
+
     status = _cairo_scaled_font_init (&font->base,
 				      font_face, font_matrix, ctm, options,
 				      &cairo_atsui_scaled_font_backend);
@@ -264,12 +267,23 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
 	return status;
     }
 
-    _cairo_matrix_compute_scale_factors (&font->base.scale, 
-					 &xscale, &yscale, 1);
+    status = _cairo_matrix_compute_scale_factors (&font->base.scale,
+						  &xscale, &yscale, 1);
+    if (status)
+	goto FAIL;
+
+    /* ATS can't handle 0-sized bits; we end up in an odd infinite loop
+     * if we send down a size of 0. */
+    if (xscale == 0.0) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto FAIL;
+    }
+
     font->font_matrix = CGAffineTransformMake (1., 0.,
 					       0., yscale/xscale,
 					       0., 0.);
     font->size = FloatToFixed (xscale);
+    font->style = NULL;
 
     err = CreateSizedCopyOfStyle (style, &font->size, &font->font_matrix, &font->style);
     if (err != noErr) {
@@ -306,6 +320,7 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
 	if (font) {
 	    if (font->style)
 		ATSUDisposeStyle(font->style);
+	    _cairo_scaled_font_fini(font);
 	    free (font);
 	}
 
@@ -466,6 +481,7 @@ static cairo_status_t
 _cairo_atsui_font_init_glyph_metrics (cairo_atsui_font_t *scaled_font,
 				      cairo_scaled_glyph_t *scaled_glyph)
 {
+    cairo_status_t status;
     cairo_text_extents_t extents = {0, 0, 0, 0, 0, 0};
     OSStatus err;
     ATSGlyphScreenMetrics metricsH;
@@ -489,8 +505,11 @@ _cairo_atsui_font_init_glyph_metrics (cairo_atsui_font_t *scaled_font,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     /* Scale down to font units.*/
-    _cairo_matrix_compute_scale_factors (&scaled_font->base.scale,
-					 &xscale, &yscale, 1);
+    status = _cairo_matrix_compute_scale_factors (&scaled_font->base.scale,
+						  &xscale, &yscale, 1);
+    if (status)
+	return status;
+
     xscale = 1.0/xscale;
     yscale = 1.0/yscale;
 
@@ -601,6 +620,7 @@ static cairo_status_t
 _cairo_atsui_scaled_font_init_glyph_path (cairo_atsui_font_t *scaled_font,
 					  cairo_scaled_glyph_t *scaled_glyph)
 {
+    cairo_status_t status;
     static ATSCubicMoveToUPP moveProc = NULL;
     static ATSCubicLineToUPP lineProc = NULL;
     static ATSCubicCurveToUPP curveProc = NULL;
@@ -625,7 +645,10 @@ _cairo_atsui_scaled_font_init_glyph_path (cairo_atsui_font_t *scaled_font,
     }
 
     /* extract the rotation/shear component of the scale matrix. */
-    _cairo_matrix_compute_scale_factors (font_to_device, &xscale, &yscale, 1);
+    status = _cairo_matrix_compute_scale_factors (font_to_device, &xscale, &yscale, 1);
+    if (status)
+	goto FAIL;
+
     cairo_matrix_init (&unscaled_font_to_device, 
 		      font_to_device->xx, 
 		      font_to_device->yx, 
@@ -649,14 +672,18 @@ _cairo_atsui_scaled_font_init_glyph_path (cairo_atsui_font_t *scaled_font,
 				 curveProc,
 				 closePathProc, (void *)&scaled_path, &err);
     if (err != noErr) {
-	_cairo_path_fixed_destroy (scaled_path.path);
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto FAIL;
     }
 
     _cairo_scaled_glyph_set_path (scaled_glyph, &scaled_font->base, 
 				  scaled_path.path);
 
     return CAIRO_STATUS_SUCCESS;
+
+  FAIL:
+    _cairo_path_fixed_destroy (scaled_path.path);
+    return status;
 }
 
 static cairo_status_t
@@ -681,7 +708,6 @@ _cairo_atsui_scaled_font_init_glyph_surface (cairo_atsui_font_t *scaled_font,
     CGRect bbox;
     CGAffineTransform transform;
 
-
     if (theGlyph == kATSDeletedGlyphcode) {
 	surface = (cairo_image_surface_t *)cairo_image_surface_create (CAIRO_FORMAT_A8, 2, 2);
 	status = cairo_surface_status ((cairo_surface_t *)surface);
@@ -701,8 +727,11 @@ _cairo_atsui_scaled_font_init_glyph_surface (cairo_atsui_font_t *scaled_font,
     height = extents.ascent + extents.descent + 2.0;
     bottom = -extents.descent - 1.0;
 
-    _cairo_matrix_compute_scale_factors (&base.scale,
-					&xscale, &yscale, 1);
+    status = _cairo_matrix_compute_scale_factors (&base.scale,
+						  &xscale, &yscale, 1);
+    if (status)
+	return status;
+
     bbox = CGRectApplyAffineTransform (CGRectMake (1.0, bottom, 1.0, height), CGAffineTransformMakeScale(xscale, yscale));
     bottom = CGRectGetMinY (bbox);
     height = bbox.size.height;
@@ -734,8 +763,11 @@ _cairo_atsui_scaled_font_init_glyph_surface (cairo_atsui_font_t *scaled_font,
 				      -base.scale.xy, 
 				      base.scale.yy, 
 				      0., 0.);
-    _cairo_matrix_compute_scale_factors (&base.scale, 
-					&xscale, &yscale, 1);
+    status = _cairo_matrix_compute_scale_factors (&base.scale,
+						  &xscale, &yscale, 1);
+    if (status)
+	return status;
+
     transform = CGAffineTransformScale (transform, 1.0/xscale, 1.0/yscale);
 
     /* Rotate the bounding box. This computes the smallest CGRect
@@ -896,6 +928,11 @@ _cairo_atsui_font_text_to_glyphs (void		*abstract_font,
 	goto BAIL2;
     }
 
+    status = _cairo_matrix_compute_scale_factors (&font->base.ctm,
+						  &xscale, &yscale, 1);
+    if (status)
+	goto BAIL2;
+
     *num_glyphs = glyphCount - 1;
     *glyphs =
 	(cairo_glyph_t *) _cairo_malloc_ab(*num_glyphs, sizeof (cairo_glyph_t));
@@ -903,7 +940,7 @@ _cairo_atsui_font_text_to_glyphs (void		*abstract_font,
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto BAIL1;
     }
-    _cairo_matrix_compute_scale_factors (&font->base.ctm, &xscale, &yscale, 1);
+
     device_to_user_scale = 
 	CGAffineTransformInvert (CGAffineTransformMake (xscale, 0,
 							0, yscale,

@@ -45,7 +45,7 @@ enum cairo_path_op {
 /* we want to make sure a single byte is used for thie enum */
 typedef char cairo_path_op_t;
 
-/* make cairo_path_fixed fit a 512 bytes.  about 50 items */
+/* make _cairo_path_fixed fit a 512 bytes.  about 50 items */
 #define CAIRO_PATH_BUF_SIZE ((512 - 4 * sizeof (void*) - sizeof (cairo_path_buf_t)) \
 			   / (2 * sizeof (cairo_point_t) + sizeof (cairo_path_op_t)))
 

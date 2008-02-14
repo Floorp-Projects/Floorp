@@ -302,7 +302,7 @@ _cairo_pen_compute_slopes (cairo_pen_t *pen)
 /*
  * Find active pen vertex for clockwise edge of stroke at the given slope.
  *
- * NOTE: The behavior of this function is sensitive to the sense of
+ * Note: The behavior of this function is sensitive to the sense of
  * the inequality within _cairo_slope_clockwise/_cairo_slope_counter_clockwise.
  *
  * The issue is that the slope_ccw member of one pen vertex will be
@@ -336,7 +336,7 @@ _cairo_pen_find_active_cw_vertex_index (cairo_pen_t *pen,
 
 /* Find active pen vertex for counterclockwise edge of stroke at the given slope.
  *
- * NOTE: The behavior of this function is sensitive to the sense of
+ * Note: The behavior of this function is sensitive to the sense of
  * the inequality within _cairo_slope_clockwise/_cairo_slope_counter_clockwise.
  */
 void
