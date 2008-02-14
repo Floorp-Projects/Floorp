@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Dean Tessman <dean_tessman@hotmail.com>
+ *   Stan Shebs <stanshebs@earthlink.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -83,6 +84,26 @@ GetContentOfBox(nsIBox *aBox)
   nsIContent* content = aBox->GetContent();
   NS_IF_ADDREF(content);
   return content;
+}
+
+// Helper function to collect the "scroll to click" metric. Beware of
+// caching this, users expect to be able to change the system preference
+// and see the browser change its behavior immediately.
+static PRInt32
+GetScrollToClick()
+{
+  PRInt32 scrollToClick = PR_FALSE;
+  nsresult rv;
+  nsCOMPtr<nsILookAndFeel> lookNFeel =
+    do_GetService("@mozilla.org/widget/lookandfeel;1", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    PRInt32 scrollToClickMetric;
+    rv = lookNFeel->GetMetric(nsILookAndFeel::eMetric_ScrollToClick,
+                              scrollToClickMetric);
+    if (NS_SUCCEEDED(rv) && scrollToClickMetric == 1)
+      scrollToClick = PR_TRUE;
+  }
+  return scrollToClick;
 }
 
 nsIFrame*
@@ -512,7 +533,12 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
   } else if ((aEvent->message == NS_MOUSE_BUTTON_DOWN &&
               static_cast<nsMouseEvent*>(aEvent)->button ==
                 nsMouseEvent::eLeftButton &&
+#ifdef XP_MACOSX
+              // On Mac the option key inverts the scroll-to-here preference.
+              (static_cast<nsMouseEvent*>(aEvent)->isAlt != GetScrollToClick())) ||
+#else
               static_cast<nsMouseEvent*>(aEvent)->isShift) ||
+#endif
              (gMiddlePref && aEvent->message == NS_MOUSE_BUTTON_DOWN &&
               static_cast<nsMouseEvent*>(aEvent)->button ==
                 nsMouseEvent::eMiddleButton)) {
@@ -825,9 +851,15 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aMouseEvent));
 
-  PRUint16 button = 0;
   PRBool scrollToClick = PR_FALSE;
+#ifdef XP_MACOSX
+  // On Mac the option key inverts the scroll-to-here preference.
+  PRBool invertScrollToClick = PR_FALSE;
+  mouseEvent->GetAltKey(&invertScrollToClick);
+  scrollToClick = (invertScrollToClick != GetScrollToClick());
+#else
   mouseEvent->GetShiftKey(&scrollToClick);
+  PRUint16 button = 0;
   mouseEvent->GetButton(&button);
   if (button != 0) {
     if (button != 1 || !gMiddlePref)
@@ -837,18 +869,9 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 
   // Check if we should scroll-to-click regardless of the pressed button and
   // modifiers
-  if (!scrollToClick) {
-    nsresult rv;
-    nsCOMPtr<nsILookAndFeel> lookNFeel =
-      do_GetService("@mozilla.org/widget/lookandfeel;1", &rv);
-    if (NS_SUCCEEDED(rv)) {
-      PRInt32 scrollToClickMetric;
-      rv = lookNFeel->GetMetric(nsILookAndFeel::eMetric_ScrollToClick,
-                                scrollToClickMetric);
-      if (NS_SUCCEEDED(rv) && scrollToClickMetric == 1)
-        scrollToClick = PR_TRUE;
-    }
-  }
+  if (!scrollToClick)
+    scrollToClick = GetScrollToClick();
+#endif
 
   nsPoint pt =  nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(mouseEvent,
                                                                 this);
@@ -981,7 +1004,12 @@ nsSliderFrame::HandlePress(nsPresContext* aPresContext,
                            nsGUIEvent*     aEvent,
                            nsEventStatus*  aEventStatus)
 {
+#ifdef XP_MACOSX
+  // On Mac the option key inverts the scroll-to-here preference.
+  if (((nsMouseEvent *)aEvent)->isAlt != GetScrollToClick())
+#else
   if (((nsMouseEvent *)aEvent)->isShift)
+#endif
     return NS_OK;
 
   nsIFrame* thumbFrame = mFrames.FirstChild();
