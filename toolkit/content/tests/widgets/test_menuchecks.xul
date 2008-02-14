@@ -18,7 +18,7 @@
 SimpleTest.waitForExplicitFinish();
 function runTest()
 {
-  window.open("window_menuchecks.xul", "_new", "width=600,height=600");
+  window.open("window_menuchecks.xul", "_blank", "width=600,height=600");
 }
 </script>
 

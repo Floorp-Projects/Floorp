@@ -26,7 +26,7 @@ function runTest()
   // test can fail on Mac
   synthesizeMouse(document.documentElement, 1, 1, { type: "mousemove" });
 
-  window.open("window_panel_focus.xul", "_new", "chrome,width=600,height=600");
+  window.open("window_panel_focus.xul", "_blank", "chrome,width=600,height=600");
 }
 </script>
 

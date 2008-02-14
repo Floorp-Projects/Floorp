@@ -17,7 +17,7 @@
 SimpleTest.waitForExplicitFinish();
 function runTest()
 {
-  window.open("window_largemenu.xul", "_new", "chrome,width=200,height=200");
+  window.open("window_largemenu.xul", "_blank", "chrome,width=200,height=200");
 }
 </script>
 
