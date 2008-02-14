@@ -87,6 +87,7 @@ SessionStartup.prototype = {
 
   // the state to restore at startup
   _iniString: null,
+  _sessionType: Ci.nsISessionStartup.NO_SESSION,
 
 /* ........ Global Event Handlers .............. */
 
@@ -127,17 +128,22 @@ SessionStartup.prototype = {
         catch (ex) { debug("The session file is invalid: " + ex); } 
       }
     }
-    
+
     // prompt and check prefs
-    this._doRestore = this._lastSessionCrashed ? this._doRecoverSession() : this._doResumeSession();
-    if (this._iniString && !this._doRestore) {
-      this._iniString = null; // reset the state string
+    if (this._iniString) {
+      if (this._lastSessionCrashed && this._doRecoverSession())
+        this._sessionType = Ci.nsISessionStartup.RECOVER_SESSION;
+      else if (!this._lastSessionCrashed && this._doResumeSession())
+        this._sessionType = Ci.nsISessionStartup.RESUME_SESSION;
+      else
+        this._iniString = null; // reset the state string
     }
+
     if (this._prefBranch.getBoolPref("sessionstore.resume_session_once")) {
       this._prefBranch.setBoolPref("sessionstore.resume_session_once", false);
     }
     
-    if (this.doRestore()) {
+    if (this._sessionType != Ci.nsISessionStartup.NO_SESSION) {
       // wait for the first browser window to open
       var observerService = Cc["@mozilla.org/observer-service;1"].
                             getService(Ci.nsIObserverService);
@@ -219,7 +225,14 @@ SessionStartup.prototype = {
    * @returns bool
    */
   doRestore: function sss_doRestore() {
-    return this._doRestore && this._iniString != null;
+    return this._sessionType != Ci.nsISessionStartup.NO_SESSION;
+  },
+
+  /**
+   * Get the type of pending session store, if any.
+   */
+  get sessionType() {
+    return this._sessionType;
   },
 
 /* ........ Auxiliary Functions .............. */
