@@ -235,6 +235,13 @@ nsNodeUtils::LastRelease(nsINode* aNode)
     aNode->UnsetFlags(NODE_HAS_LISTENERMANAGER);
   }
 
+  if (aNode->IsNodeOfType(nsINode::eELEMENT)) {
+    nsIDocument* ownerDoc = aNode->GetOwnerDoc();
+    if (ownerDoc) {
+      ownerDoc->ClearBoxObjectFor(static_cast<nsIContent*>(aNode));
+    }
+  }
+
   delete aNode;
 }
 
@@ -544,6 +551,9 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
     nsCOMPtr<nsISupports> oldRef;
     nsIDocument* oldDoc = aNode->GetOwnerDoc();
     if (oldDoc) {
+      if (aNode->IsNodeOfType(nsINode::eELEMENT)) {
+        oldDoc->ClearBoxObjectFor(static_cast<nsIContent*>(aNode));
+      }
       oldRef = oldDoc->GetReference(aNode);
       if (oldRef) {
         oldDoc->RemoveReference(aNode);
