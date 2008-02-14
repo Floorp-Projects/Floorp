@@ -1074,7 +1074,6 @@ function delayedStartup()
                    getService(Ci.nsIDownloadManager);
 
     // Initialize the downloads monitor panel listener
-    gDownloadMgr.addListener(DownloadMonitorPanel);
     DownloadMonitorPanel.init();
   }, 10000);
 
@@ -1120,6 +1119,7 @@ function BrowserShutdown()
 
   BrowserOffline.uninit();
   OfflineApps.uninit();
+  DownloadMonitorPanel.uninit();
 
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
   var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
@@ -6088,6 +6088,7 @@ let DownloadMonitorPanel = {
   _activeStr: null,
   _pausedStr: null,
   _lastTime: Infinity,
+  _listening: false,
 
   //////////////////////////////////////////////////////////////////////////////
   //// DownloadMonitorPanel Public Methods
@@ -6109,7 +6110,16 @@ let DownloadMonitorPanel = {
       this._pausedStr = bundle.getString("pausedDownloads");
     }
 
+    gDownloadMgr.addListener(this);
+    this._listening = true;
+
     this.updateStatus();
+  },
+
+  uninit: function DMP_uninit() {
+    if (this._listening) {
+      gDownloadMgr.removeListener(this);
+    }
   },
 
   /**
