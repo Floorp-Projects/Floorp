@@ -785,6 +785,15 @@ nsDocument::nsDocument(const char* aContentType)
   SetDOMStringToNull(mLastStyleSheetSet);
 }
 
+PR_STATIC_CALLBACK(PLDHashOperator)
+ClearAllBoxObjects(const void* aKey, nsPIBoxObject* aBoxObject, void* aUserArg)
+{
+  if (aBoxObject) {
+    aBoxObject->Clear();
+  }
+  return PL_DHASH_NEXT;
+}
+
 nsDocument::~nsDocument()
 {
 #ifdef PR_LOGGING
@@ -876,7 +885,12 @@ nsDocument::~nsDocument()
   }
 
   delete mHeaderData;
-  delete mBoxObjectTable;
+
+  if (mBoxObjectTable) {
+    mBoxObjectTable->EnumerateRead(ClearAllBoxObjects, nsnull);
+    delete mBoxObjectTable;
+  }
+
   delete mContentWrapperHash;
 }
 
@@ -919,12 +933,11 @@ RadioGroupsTraverser(const nsAString& aKey, nsAutoPtr<nsRadioGroupStruct>& aData
 }
 
 PR_STATIC_CALLBACK(PLDHashOperator)
-BoxObjectTraverser(nsISupports* key, nsPIBoxObject* boxObject, void* userArg)
+BoxObjectTraverser(const void* key, nsPIBoxObject* boxObject, void* userArg)
 {
   nsCycleCollectionTraversalCallback *cb = 
     static_cast<nsCycleCollectionTraversalCallback*>(userArg);
  
-  cb->NoteXPCOMChild(key);
   cb->NoteXPCOMChild(boxObject);
 
   return PL_DHASH_NEXT;
@@ -3662,14 +3675,25 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
   nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
   NS_ENSURE_TRUE(content, NS_ERROR_UNEXPECTED);
 
-  nsIDocument* doc = content->HasFlag(NODE_FORCE_XBL_BINDINGS) ?
-    content->GetOwnerDoc() : content->GetCurrentDoc();
+  nsIDocument* doc = content->GetOwnerDoc();
   NS_ENSURE_TRUE(doc == this, NS_ERROR_DOM_WRONG_DOCUMENT_ERR);
-  
+
+  if (!mHasWarnedAboutBoxObjects && !content->IsNodeOfType(eXUL)) {
+    mHasWarnedAboutBoxObjects = PR_TRUE;
+    nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
+                                    "UseOfGetBoxObjectForWarning",
+                                    nsnull, 0,
+                                    static_cast<nsIDocument*>(this)->
+                                      GetDocumentURI(),
+                                    EmptyString(), 0, 0,
+                                    nsIScriptError::warningFlag,
+                                    "BoxObjects");
+  }
+
   *aResult = nsnull;
 
   if (!mBoxObjectTable) {
-    mBoxObjectTable = new nsInterfaceHashtable<nsISupportsHashKey, nsPIBoxObject>;
+    mBoxObjectTable = new nsInterfaceHashtable<nsVoidPtrHashKey, nsPIBoxObject>;
     if (mBoxObjectTable && !mBoxObjectTable->Init(12)) {
       mBoxObjectTable = nsnull;
     }

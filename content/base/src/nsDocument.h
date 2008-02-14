@@ -776,11 +776,13 @@ protected:
   // True if document has ever had script handling object.
   PRPackedBool mHasHadScriptHandlingObject:1;
 
+  PRPackedBool mHasWarnedAboutBoxObjects:1;
+
   PRUint8 mXMLDeclarationBits;
 
   PRUint8 mDefaultElementType;
 
-  nsInterfaceHashtable<nsISupportsHashKey, nsPIBoxObject> *mBoxObjectTable;
+  nsInterfaceHashtable<nsVoidPtrHashKey, nsPIBoxObject> *mBoxObjectTable;
   nsInterfaceHashtable<nsVoidPtrHashKey, nsISupports> *mContentWrapperHash;
 
   // The channel that got passed to StartDocumentLoad(), if any
