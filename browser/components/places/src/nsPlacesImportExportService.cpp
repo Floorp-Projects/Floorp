@@ -976,10 +976,10 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   // import last charset
   if (!lastCharset.IsEmpty()) {
     PRBool hasCharset = PR_FALSE;
-    mAnnotationService->PageHasAnnotation(frame.mPreviousLink,
+    mAnnotationService->ItemHasAnnotation(frame.mPreviousId,
                                           LAST_CHARSET_ANNO, &hasCharset);
     if (!hasCharset)
-      mAnnotationService->SetPageAnnotationString(frame.mPreviousLink, LAST_CHARSET_ANNO,
+      mAnnotationService->SetItemAnnotationString(frame.mPreviousId, LAST_CHARSET_ANNO,
                                                   lastCharset, 0,
                                                   nsIAnnotationService::EXPIRE_NEVER);
   }
@@ -1907,12 +1907,12 @@ nsPlacesImportExportService::WriteItem(nsINavHistoryResultNode* aItem,
 
   // last charset
   PRBool hasLastCharset = PR_FALSE;
-  rv = mAnnotationService->PageHasAnnotation(pageURI, LAST_CHARSET_ANNO,
+  rv = mAnnotationService->ItemHasAnnotation(itemId, LAST_CHARSET_ANNO,
                                              &hasLastCharset);
   NS_ENSURE_SUCCESS(rv, rv);
   if (hasLastCharset) {
     nsAutoString lastCharset;
-    rv = mAnnotationService->GetPageAnnotationString(pageURI, LAST_CHARSET_ANNO,
+    rv = mAnnotationService->GetItemAnnotationString(itemId, LAST_CHARSET_ANNO,
                                                      lastCharset);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aOutput->Write(kLastCharsetAttribute, sizeof(kLastCharsetAttribute)-1, &dummy);
