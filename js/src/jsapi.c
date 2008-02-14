@@ -927,27 +927,9 @@ JS_PUBLIC_API(void)
 JS_YieldRequest(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
-    JSRuntime *rt;
-
     JS_ASSERT(cx->thread);
     CHECK_REQUEST(cx);
-
-    rt = cx->runtime;
-    JS_LOCK_GC(rt);
-    JS_ASSERT(rt->requestCount > 0);
-    rt->requestCount--;
-    if (rt->requestCount == 0)
-        JS_NOTIFY_REQUEST_DONE(rt);
-    JS_UNLOCK_GC(rt);
-    /* XXXbe give the GC or another request calling it a chance to run here?
-             Assumes FIFO scheduling */
-    JS_LOCK_GC(rt);
-    if (rt->gcThread != cx->thread) {
-        while (rt->gcLevel > 0)
-            JS_AWAIT_GC_DONE(rt);
-    }
-    rt->requestCount++;
-    JS_UNLOCK_GC(rt);
+    JS_ResumeRequest(cx, JS_SuspendRequest(cx));
 #endif
 }
 
