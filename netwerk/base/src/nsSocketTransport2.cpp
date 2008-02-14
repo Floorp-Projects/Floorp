@@ -1582,7 +1582,8 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
         secCtrl->SetNotificationCallbacks(nsnull);
 
     // finally, release our reference to the socket (must do this within
-    // the transport lock) possibly closing the socket.
+    // the transport lock) possibly closing the socket. Also release our
+    // listeners to break potential refcount cycles.
     {
         nsAutoLock lock(mLock);
         if (mFD) {
@@ -1591,6 +1592,8 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
             // acquiring a reference to mFD.
             mFDconnected = PR_FALSE;
         }
+        mCallbacks = nsnull;
+        mEventSink = nsnull;
     }
 }
 
