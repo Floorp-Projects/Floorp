@@ -2028,8 +2028,7 @@ nsDocShell::FindItemWithName(const PRUnichar * aName,
         if (name.LowerCaseEqualsLiteral("_self")) {
             foundItem = this;
         }
-        else if (name.LowerCaseEqualsLiteral("_blank") ||
-                 name.LowerCaseEqualsLiteral("_new"))
+        else if (name.LowerCaseEqualsLiteral("_blank"))
         {
             // Just return null.  Caller must handle creating a new window with
             // a blank name himself.
