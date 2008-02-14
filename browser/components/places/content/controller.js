@@ -1485,8 +1485,7 @@ PlacesMenuDNDObserver.prototype = {
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
     case "draggesture":
-      if (aEvent.target.localName != "menu" && aEvent.target.node) {
-        // TODO--allow menu drag if shift (or alt??) key is down
+      if (aEvent.target.node) {
         nsDragAndDrop.startDrag(aEvent, this);
       }
       break;
