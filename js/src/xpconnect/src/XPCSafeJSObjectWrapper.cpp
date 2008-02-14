@@ -921,13 +921,12 @@ XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   // Don't use the object the JS engine created for us, it is in most
   // cases incorectly parented and has a proto from the wrong scope.
-  JSObject *wrapperObj = ::JS_NewObject(cx, &sXPC_SJOW_JSClass.base, nsnull,
-                                        nsnull);
+  JSObject *wrapperObj =
+    ::JS_NewObjectWithGivenProto(cx, &sXPC_SJOW_JSClass.base, nsnull,
+                                 objToWrap);
 
-  if (!wrapperObj ||
-      !::JS_SetPrototype(cx, wrapperObj, nsnull) ||
-      !::JS_SetParent(cx, wrapperObj, objToWrap)) {
-    // JS_NewObject already threw.
+  if (!wrapperObj) {
+    // JS_NewObjectWithGivenProto already threw.
     return JS_FALSE;
   }
 
@@ -982,11 +981,9 @@ XPC_SJOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
   }
 
   // Create our dummy SJOW.
-  JSObject *wrapperIter = ::JS_NewObject(cx, &sXPC_SJOW_JSClass.base, nsnull,
-                                         nsnull);
-  if (!wrapperIter ||
-      !::JS_SetParent(cx, wrapperIter, innerObj) ||
-      !::JS_SetPrototype(cx, wrapperIter, nsnull)) {
+  JSObject *wrapperIter =
+    ::JS_NewObjectWithGivenProto(cx, &sXPC_SJOW_JSClass.base, nsnull, innerObj);
+  if (!wrapperIter) {
     return nsnull;
   }
 

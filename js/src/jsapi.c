@@ -2847,9 +2847,28 @@ JS_PUBLIC_API(JSBool)
 JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto)
 {
     CHECK_REQUEST(cx);
+#ifdef DEBUG
+    /*
+     * FIXME: bug 408416. The cycle-detection required for script-writeable
+     * __proto__ lives in js_SetProtoOrParent over in jsobj.c, also known as
+     * js_ObjectOps.setProto. This hook must detect cycles, to prevent scripts
+     * from ilooping SpiderMonkey trivially. But the overhead of detecting
+     * cycles is high enough, and the threat from JS-API-calling C++ code is
+     * low enough, that it's not worth burdening the non-DEBUG callers. Same
+     * goes for JS_SetParent, below.
+     */
     if (obj->map->ops->setProto)
         return obj->map->ops->setProto(cx, obj, JSSLOT_PROTO, proto);
     OBJ_SET_PROTO(cx, obj, proto);
+#else
+    JS_LOCK_OBJ(cx, obj);
+    if (OBJ_IS_NATIVE(obj) && !js_GetMutableScope(cx, obj)) {
+        JS_UNLOCK_OBJ(cx, obj);
+        return JS_FALSE;
+    }
+    LOCKED_OBJ_SET_PROTO(obj, proto);
+    JS_UNLOCK_OBJ(cx, obj);
+#endif
     return JS_TRUE;
 }
 
@@ -2868,8 +2887,11 @@ JS_PUBLIC_API(JSBool)
 JS_SetParent(JSContext *cx, JSObject *obj, JSObject *parent)
 {
     CHECK_REQUEST(cx);
+#ifdef DEBUG
+    /* FIXME: bug 408416, see JS_SetPrototype just above. */
     if (obj->map->ops->setParent)
         return obj->map->ops->setParent(cx, obj, JSSLOT_PARENT, parent);
+#endif
     OBJ_SET_PARENT(cx, obj, parent);
     return JS_TRUE;
 }
@@ -2908,6 +2930,16 @@ JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
     return js_NewObject(cx, clasp, proto, parent);
+}
+
+JS_PUBLIC_API(JSObject *)
+JS_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
+                           JSObject *parent)
+{
+    CHECK_REQUEST(cx);
+    if (!clasp)
+        clasp = &js_ObjectClass;    /* default class is Object */
+    return js_NewObjectWithGivenProto(cx, clasp, proto, parent);
 }
 
 JS_PUBLIC_API(JSBool)
