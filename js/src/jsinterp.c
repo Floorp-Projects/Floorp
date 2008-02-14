@@ -5683,7 +5683,9 @@ interrupt:
                 id = ATOM_TO_JSID(atom);
                 goto gs_get_lval;
 
-              case JSOP_INITELEM:
+              default:
+                JS_ASSERT(op2 == JSOP_INITELEM);
+
                 JS_ASSERT(sp - fp->spbase >= 3);
                 rval = FETCH_OPND(-1);
                 id = 0;
@@ -5694,9 +5696,6 @@ interrupt:
                 obj = JSVAL_TO_OBJECT(lval);
                 SAVE_SP_AND_PC(fp);
                 break;
-
-              default:
-                JS_ASSERT(0);
             }
 
             /* Ensure that id has a type suitable for use with obj. */
@@ -6435,6 +6434,7 @@ interrupt:
           BEGIN_CASE(JSOP_YIELD)
             ASSERT_NOT_THROWING(cx);
             if (FRAME_TO_GENERATOR(fp)->state == JSGEN_CLOSING) {
+                SAVE_SP_AND_PC(fp);
                 js_ReportValueError(cx, JSMSG_BAD_GENERATOR_YIELD,
                                     JSDVG_SEARCH_STACK, fp->argv[-2], NULL);
                 ok = JS_FALSE;
@@ -6463,6 +6463,7 @@ interrupt:
             lval = obj->fslots[JSSLOT_ARRAY_LENGTH];
             JS_ASSERT(JSVAL_IS_INT(lval));
             i = JSVAL_TO_INT(lval);
+            SAVE_SP_AND_PC(fp);
             if (i == ARRAY_INIT_LIMIT) {
                 JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
                                        JSMSG_ARRAY_INIT_TOO_BIG);
@@ -6470,8 +6471,6 @@ interrupt:
                 goto out;
             }
             id = INT_TO_JSID(i);
-
-            SAVE_SP_AND_PC(fp);
             ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
             if (!ok)
                 goto out;
@@ -6826,7 +6825,10 @@ out2:
 
 atom_not_defined:
     {
-        const char *printable = js_AtomToPrintableString(cx, atom);
+        const char *printable;
+
+        ASSERT_SAVED_SP_AND_PC(fp);
+        printable = js_AtomToPrintableString(cx, atom);
         if (printable)
             js_ReportIsNotDefined(cx, printable);
         ok = JS_FALSE;
