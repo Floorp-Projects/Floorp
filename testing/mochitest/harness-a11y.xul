@@ -6,10 +6,10 @@
 <?xul-overlay href="chrome://mochikit/content/harness-overlay.xul"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="Chrome Test Harness"
+        title="Accessibility Chrome Test Harness"
         id="browserTestOverlay"
         aonload="loadTests('chrome');">
   <script type="text/javascript">
-    gDir = "chrome";
+    gDir = "a11y";
   </script>
 </window>
