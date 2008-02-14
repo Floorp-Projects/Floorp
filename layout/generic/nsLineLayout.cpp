@@ -395,6 +395,7 @@ nsLineLayout::NewPerSpanData(PerSpanData** aResult)
   psd->mLastFrame = nsnull;
   psd->mContainsFloat = PR_FALSE;
   psd->mZeroEffectiveSpanBox = PR_FALSE;
+  psd->mHasNonemptyContent = PR_FALSE;
 
 #ifdef DEBUG
   mSpansAllocated++;
@@ -862,11 +863,14 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   pfd->mJustificationNumSpaces = mTextJustificationNumSpaces;
   pfd->mJustificationNumLetters = mTextJustificationNumLetters;
 
-  // XXX See if the frame is a placeholderFrame and if it is process
-  // the float.
+  // See if the frame is a placeholderFrame and if it is process
+  // the float. At the same time, check if the frame has any non-collapsed-away
+  // content.
   PRBool placedFloat = PR_FALSE;
+  PRBool hasNoncollapsedContent = PR_TRUE;
   if (frameType) {
     if (nsGkAtoms::placeholderFrame == frameType) {
+      hasNoncollapsedContent = PR_FALSE;
       pfd->SetFlag(PFD_SKIPWHENTRIMMINGWHITESPACE, PR_TRUE);
       nsIFrame* outOfFlowFrame = nsLayoutUtils::GetFloatFromPlaceholder(aFrame);
       if (outOfFlowFrame) {
@@ -887,11 +891,12 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     else if (nsGkAtoms::textFrame == frameType) {
       // Note non-empty text-frames for inline frame compatibility hackery
       pfd->SetFlag(PFD_ISTEXTFRAME, PR_TRUE);
-      // XXX An empty text frame at the end of the line seems not
-      // to have zero width.
-      if (metrics.width) {
+      nsTextFrame* textFrame = static_cast<nsTextFrame*>(pfd->mFrame);
+      if (!textFrame->HasNoncollapsedCharacters()) {
+        hasNoncollapsedContent = PR_FALSE;
+      } else {
         pfd->SetFlag(PFD_ISNONEMPTYTEXTFRAME, PR_TRUE);
-        nsIContent* content = pfd->mFrame->GetContent();
+        nsIContent* content = textFrame->GetContent();
 
         const nsTextFragment* frag = content->GetText();
         if (frag) {
@@ -916,12 +921,20 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         }
       }
     }
-    else if (nsGkAtoms::letterFrame==frameType) {
-      pfd->SetFlag(PFD_ISLETTERFRAME, PR_TRUE);
-    }
     else if (nsGkAtoms::brFrame == frameType) {
       pfd->SetFlag(PFD_SKIPWHENTRIMMINGWHITESPACE, PR_TRUE);
+    } else {
+      if (nsGkAtoms::letterFrame==frameType) {
+        pfd->SetFlag(PFD_ISLETTERFRAME, PR_TRUE);
+      }
+      if (pfd->mSpan &&
+          !pfd->mSpan->mHasNonemptyContent && pfd->mFrame->IsSelfEmpty()) {
+        hasNoncollapsedContent = PR_FALSE;
+      }
     }
+  }
+  if (hasNoncollapsedContent) {
+    psd->mHasNonemptyContent = PR_TRUE;
   }
 
   mSpaceManager->Translate(-tx, -ty);
@@ -2059,7 +2072,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       }
     }
     if (applyMinLH) {
-      if ((psd->mX != psd->mLeftEdge) || preMode || foundLI) {
+      if (psd->mHasNonemptyContent || preMode || foundLI) {
 #ifdef NOISY_VERTICAL_ALIGN
         printf("  [span]==> adjusting min/maxY: currentValues: %d,%d", minY, maxY);
 #endif
