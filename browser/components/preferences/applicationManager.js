@@ -64,6 +64,9 @@ var gAppManagerDialog = {
     var apps = this.handlerInfo.possibleApplicationHandlers.enumerate();
     while (apps.hasMoreElements()) {
       let app = apps.getNext();
+      if (!gApplicationsPane.isValidHandlerApp(app))
+        continue;
+
       app.QueryInterface(Ci.nsIHandlerApp);
       var item = list.appendItem(app.name);
       item.setAttribute("image", gApplicationsPane._getIconURLForHandlerApp(app));
