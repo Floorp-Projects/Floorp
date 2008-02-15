@@ -230,14 +230,14 @@ struct JSObject {
 /* Thread-safe functions and wrapper macros for accessing slots in obj. */
 #define OBJ_GET_SLOT(cx,obj,slot)                                             \
     (OBJ_CHECK_SLOT(obj, slot),                                               \
-     (OBJ_IS_NATIVE(obj) && OBJ_SCOPE(obj)->ownercx == cx)                    \
+     (OBJ_IS_NATIVE(obj) && OBJ_SCOPE(obj)->title.ownercx == cx)              \
      ? LOCKED_OBJ_GET_SLOT(obj, slot)                                         \
      : js_GetSlotThreadSafe(cx, obj, slot))
 
 #define OBJ_SET_SLOT(cx,obj,slot,value)                                       \
     JS_BEGIN_MACRO                                                            \
         OBJ_CHECK_SLOT(obj, slot);                                            \
-        if (OBJ_IS_NATIVE(obj) && OBJ_SCOPE(obj)->ownercx == cx)              \
+        if (OBJ_IS_NATIVE(obj) && OBJ_SCOPE(obj)->title.ownercx == cx)        \
             LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, value);                   \
         else                                                                  \
             js_SetSlotThreadSafe(cx, obj, slot, value);                       \
