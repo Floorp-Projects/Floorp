@@ -110,8 +110,7 @@ public:
                    nsIURI*                aBaseURI,
                    nsIPrincipal*          aSheetPrincipal,
                    PRUint32               aLineNumber,
-                   PRBool                 aAllowUnsafeRules,
-                   nsICSSStyleSheet*&     aResult);
+                   PRBool                 aAllowUnsafeRules);
 
   NS_IMETHOD ParseStyleAttribute(const nsAString&  aAttributeValue,
                                  nsIURI*           aDocURL,
@@ -584,16 +583,15 @@ CSSParserImpl::~CSSParserImpl()
 NS_IMETHODIMP
 CSSParserImpl::SetStyleSheet(nsICSSStyleSheet* aSheet)
 {
-  NS_PRECONDITION(nsnull != aSheet, "null ptr");
-  if (nsnull == aSheet) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
   if (aSheet != mSheet) {
-    // Switch to using the new sheet
+    // Switch to using the new sheet, if any
     mGroupStack.Clear();
     mSheet = aSheet;
-    mNameSpaceMap = mSheet->GetNameSpaceMap();
+    if (mSheet) {
+      mNameSpaceMap = mSheet->GetNameSpaceMap();
+    } else {
+      mNameSpaceMap = nsnull;
+    }
   }
 
   return NS_OK;
@@ -684,6 +682,7 @@ CSSParserImpl::ReleaseScanner(void)
 #endif
   mBaseURL = nsnull;
   mSheetURL = nsnull;
+  mSheetPrincipal = nsnull;
   return NS_OK;
 }
 
@@ -694,34 +693,26 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
                      nsIURI*                aBaseURI,
                      nsIPrincipal*          aSheetPrincipal,
                      PRUint32               aLineNumber,
-                     PRBool                 aAllowUnsafeRules,
-                     nsICSSStyleSheet*&     aResult)
+                     PRBool                 aAllowUnsafeRules)
 {
   NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
   
   NS_ASSERTION(nsnull != aBaseURI, "need base URL");
   NS_ASSERTION(nsnull != aSheetURI, "need sheet URL");
 
-  if (! mSheet) {
-    NS_NewCSSStyleSheet(getter_AddRefs(mSheet));
-    NS_ENSURE_TRUE(mSheet, NS_ERROR_OUT_OF_MEMORY);
+  NS_PRECONDITION(mSheet, "Must have sheet to parse into");
+  NS_ENSURE_STATE(mSheet);
 
-    mSheet->SetURIs(aSheetURI, aSheetURI, aBaseURI);
-    mSheet->SetPrincipal(aSheetPrincipal);
-    mNameSpaceMap = nsnull;
-  }
 #ifdef DEBUG
-  else {
-    nsCOMPtr<nsIURI> uri;
-    mSheet->GetSheetURI(getter_AddRefs(uri));
-    PRBool equal;
-    NS_ASSERTION(NS_SUCCEEDED(aSheetURI->Equals(uri, &equal)) && equal,
-                 "Sheet URI does not match passed URI");
-    NS_ASSERTION(NS_SUCCEEDED(mSheet->Principal()->Equals(aSheetPrincipal,
-                                                          &equal)) &&
-                 equal,
-                 "Sheet principal does not match passed principal");
-  }
+  nsCOMPtr<nsIURI> uri;
+  mSheet->GetSheetURI(getter_AddRefs(uri));
+  PRBool equal;
+  NS_ASSERTION(NS_SUCCEEDED(aSheetURI->Equals(uri, &equal)) && equal,
+               "Sheet URI does not match passed URI");
+  NS_ASSERTION(NS_SUCCEEDED(mSheet->Principal()->Equals(aSheetPrincipal,
+                                                        &equal)) &&
+               equal,
+               "Sheet principal does not match passed principal");
 #endif
   
   nsresult errorCode = NS_OK;
@@ -783,9 +774,6 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
   ReleaseScanner();
 
   mUnsafeRulesEnabled = PR_FALSE;
-
-  aResult = mSheet;
-  NS_ADDREF(aResult);
 
   return NS_OK;
 }
