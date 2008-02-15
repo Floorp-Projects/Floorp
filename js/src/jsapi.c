@@ -732,10 +732,10 @@ JS_NewRuntime(uint32 maxbytes)
     rt->stateChange = JS_NEW_CONDVAR(rt->gcLock);
     if (!rt->stateChange)
         goto bad;
-    rt->scopeSharingDone = JS_NEW_CONDVAR(rt->gcLock);
-    if (!rt->scopeSharingDone)
+    rt->titleSharingDone = JS_NEW_CONDVAR(rt->gcLock);
+    if (!rt->titleSharingDone)
         goto bad;
-    rt->scopeSharingTodo = NO_SCOPE_SHARING_TODO;
+    rt->titleSharingTodo = NO_TITLE_SHARING_TODO;
     rt->debuggerLock = JS_NEW_LOCK();
     if (!rt->debuggerLock)
         goto bad;
@@ -792,8 +792,8 @@ JS_DestroyRuntime(JSRuntime *rt)
         JS_DESTROY_LOCK(rt->rtLock);
     if (rt->stateChange)
         JS_DESTROY_CONDVAR(rt->stateChange);
-    if (rt->scopeSharingDone)
-        JS_DESTROY_CONDVAR(rt->scopeSharingDone);
+    if (rt->titleSharingDone)
+        JS_DESTROY_CONDVAR(rt->titleSharingDone);
     if (rt->debuggerLock)
         JS_DESTROY_LOCK(rt->debuggerLock);
 #else
@@ -866,8 +866,8 @@ JS_EndRequest(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
     JSRuntime *rt;
-    JSScope *scope, **todop;
-    uintN nshares;
+    JSTitle *title, **todop;
+    JSBool shared;
 
     CHECK_REQUEST(cx);
     JS_ASSERT(cx->requestDepth > 0);
@@ -879,16 +879,16 @@ JS_EndRequest(JSContext *cx)
         cx->requestDepth = 0;
         cx->outstandingRequests--;
 
-        /* See whether cx has any single-threaded scopes to start sharing. */
-        todop = &rt->scopeSharingTodo;
-        nshares = 0;
-        while ((scope = *todop) != NO_SCOPE_SHARING_TODO) {
-            if (scope->ownercx != cx) {
-                todop = &scope->u.link;
+        /* See whether cx has any single-threaded titles to start sharing. */
+        todop = &rt->titleSharingTodo;
+        shared = JS_FALSE;
+        while ((title = *todop) != NO_TITLE_SHARING_TODO) {
+            if (title->ownercx != cx) {
+                todop = &title->u.link;
                 continue;
             }
-            *todop = scope->u.link;
-            scope->u.link = NULL;       /* null u.link for sanity ASAP */
+            *todop = title->u.link;
+            title->u.link = NULL;       /* null u.link for sanity ASAP */
 
             /*
              * If js_DropObjectMap returns null, we held the last ref to scope.
@@ -897,15 +897,15 @@ JS_EndRequest(JSContext *cx)
              * requires that the GC ran (e.g., from an operation callback)
              * during this request, but possible.
              */
-            if (js_DropObjectMap(cx, &scope->map, NULL)) {
-                js_InitLock(&scope->lock);
-                scope->u.count = 0;                 /* NULL may not pun as 0 */
-                js_FinishSharingScope(cx, scope);   /* set ownercx = NULL */
-                nshares++;
+            if (js_DropObjectMap(cx, TITLE_TO_MAP(title), NULL)) {
+                js_InitLock(&title->lock);
+                title->u.count = 0;   /* NULL may not pun as 0 */
+                js_FinishSharingTitle(cx, title); /* set ownercx = NULL */
+                shared = JS_TRUE;
             }
         }
-        if (nshares)
-            JS_NOTIFY_ALL_CONDVAR(rt->scopeSharingDone);
+        if (shared)
+            JS_NOTIFY_ALL_CONDVAR(rt->titleSharingDone);
 
         /* Give the GC a chance to run if this was the last request running. */
         JS_ASSERT(rt->requestCount > 0);
@@ -2943,10 +2943,10 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
 
 #if defined JS_THREADSAFE && defined DEBUG
     /* Insist on scope being used exclusively by cx's thread. */
-    if (scope->ownercx != cx) {
+    if (scope->title.ownercx != cx) {
         JS_LOCK_OBJ(cx, obj);
         JS_ASSERT(OBJ_SCOPE(obj) == scope);
-        JS_ASSERT(scope->ownercx == cx);
+        JS_ASSERT(scope->title.ownercx == cx);
         JS_UNLOCK_SCOPE(cx, scope);
     }
 #endif

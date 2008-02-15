@@ -197,6 +197,9 @@ JS_BEGIN_EXTERN_C
 
 struct JSScope {
     JSObjectMap     map;                /* base class state */
+#ifdef JS_THREADSAFE
+    JSTitle         title;              /* lock state */
+#endif
     JSObject        *object;            /* object that owns this scope */
     uint32          shape;              /* property cache shape identifier */
     uint8           flags;              /* flags, see below */
@@ -206,19 +209,13 @@ struct JSScope {
     uint32          removedCount;       /* removed entry sentinels in table */
     JSScopeProperty **table;            /* table of ptrs to shared tree nodes */
     JSScopeProperty *lastProp;          /* pointer to last property added */
-#ifdef JS_THREADSAFE
-    JSContext       *ownercx;           /* creating context, NULL if shared */
-    JSThinLock      lock;               /* binary semaphore protecting scope */
-    union {                             /* union lockful and lock-free state: */
-        jsrefcount  count;              /* lock entry count for reentrancy */
-        JSScope     *link;              /* next link in rt->scopeSharingTodo */
-    } u;
-#ifdef JS_DEBUG_SCOPE_LOCKS
-    const char      *file[4];           /* file where lock was (re-)taken */
-    unsigned int    line[4];            /* line where lock was (re-)taken */
-#endif
-#endif
 };
+
+#ifdef JS_THREADSAFE
+JS_STATIC_ASSERT(offsetof(JSScope, title) == sizeof(JSObjectMap));
+#endif
+
+#define JS_IS_SCOPE_LOCKED(cx, scope)   JS_IS_TITLE_LOCKED(cx, &(scope)->title)
 
 #define OBJ_SCOPE(obj)                  ((JSScope *)(obj)->map)
 #define SCOPE_GENERATE_PCTYPE(cx,scope) ((scope)->shape = js_GenerateShape(cx))

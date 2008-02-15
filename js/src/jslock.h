@@ -81,6 +81,31 @@ typedef struct JSFatLockTable {
     JSFatLock   *taken;
 } JSFatLockTable;
 
+typedef struct JSTitle JSTitle;
+
+struct JSTitle {
+    JSContext       *ownercx;           /* creating context, NULL if shared */
+    JSThinLock      lock;               /* binary semaphore protecting title */
+    union {                             /* union lockful and lock-free state: */
+        jsrefcount  count;              /* lock entry count for reentrancy */
+        JSTitle     *link;              /* next link in rt->titleSharingTodo */
+    } u;
+#ifdef JS_DEBUG_SCOPE_LOCKS
+    const char      *file[4];           /* file where lock was (re-)taken */
+    unsigned int    line[4];            /* line where lock was (re-)taken */
+#endif
+};    
+
+/*
+ * Title structures must be immediately preceded by JSObjectMap structures for
+ * maps that use titles for threadsafety.  This is enforced by assertion in
+ * jsscope.h; see bug 408416 for future remedies to this somewhat fragile
+ * architecture.
+ */
+
+#define TITLE_TO_MAP(title)                                                   \
+    ((JSObjectMap *)((char *)(title) - sizeof(JSObjectMap)))
+
 /*
  * Atomic increment and decrement for a reference counter, given jsrefcount *p.
  * NB: jsrefcount is int32, aka PRInt32, so that pratom.h functions work.
@@ -122,17 +147,23 @@ JS_END_EXTERN_C
 #include "jsscope.h"
 JS_BEGIN_EXTERN_C
 
-#ifdef JS_DEBUG_SCOPE_LOCKS
+#ifdef JS_DEBUG_TITLE_LOCKS
 
-#define SET_OBJ_INFO(obj_,file_,line_)                                        \
-    SET_SCOPE_INFO(OBJ_SCOPE(obj_),file_,line_)
+#define SET_OBJ_INFO(obj_, file_, line_)                                       \
+    SET_SCOPE_INFO(OBJ_SCOPE(obj_), file_, line_)
 
-#define SET_SCOPE_INFO(scope_,file_,line_)                                    \
-    ((scope_)->ownercx ? (void)0 :                                            \
-     (JS_ASSERT((0 < (scope_)->u.count && (scope_)->u.count <= 4) ||          \
-                SCOPE_IS_SEALED(scope_)),                                     \
-      (void)((scope_)->file[(scope_)->u.count-1] = (file_),                   \
-             (scope_)->line[(scope_)->u.count-1] = (line_))))
+#define SET_SCOPE_INFO(scope_,file_,line_)                                     \
+    do {                                                                       \
+        JSTitle *title = &(scope_)->title;                                     \
+        jsrefcount count;                                                      \
+        if (title->ownercx)                                                    \
+            break;                                                             \
+        count = title->u.count;                                                \
+        JS_ASSERT((0 < count && count <= 4) ||                                 \
+                  SCOPE_IS_SEALED(scope_)));                                   \
+        title->file[count - 1] = (file_);                                      \
+        title->line[line - 1] = (line_);                                       \
+    } while (0)
 
 #endif
 
@@ -146,52 +177,60 @@ JS_BEGIN_EXTERN_C
  * are for optimizations above the JSObjectOps layer, under which object locks
  * normally hide.
  */
-#define JS_LOCK_OBJ(cx,obj)       ((OBJ_SCOPE(obj)->ownercx == (cx))          \
-                                   ? (void)0                                  \
-                                   : (js_LockObj(cx, obj),                    \
+#define JS_LOCK_OBJ(cx,obj)       ((OBJ_SCOPE(obj)->title.ownercx == (cx))     \
+                                   ? (void)0                                   \
+                                   : (js_LockObj(cx, obj),                     \
                                       SET_OBJ_INFO(obj,__FILE__,__LINE__)))
-#define JS_UNLOCK_OBJ(cx,obj)     ((OBJ_SCOPE(obj)->ownercx == (cx))          \
+#define JS_UNLOCK_OBJ(cx,obj)     ((OBJ_SCOPE(obj)->title.ownercx == (cx))     \
                                    ? (void)0 : js_UnlockObj(cx, obj))
 
-#define JS_LOCK_SCOPE(cx,scope)   ((scope)->ownercx == (cx) ? (void)0         \
-                                   : (js_LockScope(cx, scope),                \
-                                      SET_SCOPE_INFO(scope,__FILE__,__LINE__)))
-#define JS_UNLOCK_SCOPE(cx,scope) ((scope)->ownercx == (cx) ? (void)0         \
-                                   : js_UnlockScope(cx, scope))
-#define JS_TRANSFER_SCOPE_LOCK(cx, scope, newscope)                           \
-                                  js_TransferScopeLock(cx, scope, newscope)
+#define JS_LOCK_TITLE(cx,title)                                                \
+    ((title)->ownercx == (cx) ? (void)0                                        \
+     : (js_LockTitle(cx, (title)),                                             \
+        SET_TITLE_INFO(title,__FILE__,__LINE__)))
+
+#define JS_UNLOCK_TITLE(cx,title) ((title)->ownercx == (cx) ? (void)0          \
+                                   : js_UnlockTitle(cx, title))
+
+#define JS_LOCK_SCOPE(cx,scope)   JS_LOCK_TITLE(cx,&(scope)->title)
+#define JS_UNLOCK_SCOPE(cx,scope) JS_UNLOCK_TITLE(cx,&(scope)->title)
+
+#define JS_TRANSFER_SCOPE_LOCK(cx, scope, newscope)                            \
+    js_TransferTitle(cx, &scope->title, &newscope->title)
 
 extern void js_LockRuntime(JSRuntime *rt);
 extern void js_UnlockRuntime(JSRuntime *rt);
 extern void js_LockObj(JSContext *cx, JSObject *obj);
 extern void js_UnlockObj(JSContext *cx, JSObject *obj);
-extern void js_LockScope(JSContext *cx, JSScope *scope);
-extern void js_UnlockScope(JSContext *cx, JSScope *scope);
+extern void js_InitTitle(JSContext *cx, JSTitle *title);
+extern void js_FinishTitle(JSContext *cx, JSTitle *title);
+extern void js_LockTitle(JSContext *cx, JSTitle *title);
+extern void js_UnlockTitle(JSContext *cx, JSTitle *title);
 extern int js_SetupLocks(int,int);
 extern void js_CleanupLocks();
-extern void js_TransferScopeLock(JSContext *, JSScope *, JSScope *);
+extern void js_TransferTitle(JSContext *, JSTitle *, JSTitle *);
 extern JS_FRIEND_API(jsval)
 js_GetSlotThreadSafe(JSContext *, JSObject *, uint32);
 extern void js_SetSlotThreadSafe(JSContext *, JSObject *, uint32, jsval);
 extern void js_InitLock(JSThinLock *);
 extern void js_FinishLock(JSThinLock *);
-extern void js_FinishSharingScope(JSContext *cx, JSScope *scope);
+extern void js_FinishSharingTitle(JSContext *cx, JSTitle *title);
 
 #ifdef DEBUG
 
 #define JS_IS_RUNTIME_LOCKED(rt)        js_IsRuntimeLocked(rt)
 #define JS_IS_OBJ_LOCKED(cx,obj)        js_IsObjLocked(cx,obj)
-#define JS_IS_SCOPE_LOCKED(cx,scope)    js_IsScopeLocked(cx,scope)
+#define JS_IS_TITLE_LOCKED(cx,title)    js_IsTitleLocked(cx,title)
 
 extern JSBool js_IsRuntimeLocked(JSRuntime *rt);
 extern JSBool js_IsObjLocked(JSContext *cx, JSObject *obj);
-extern JSBool js_IsScopeLocked(JSContext *cx, JSScope *scope);
+extern JSBool js_IsTitleLocked(JSContext *cx, JSTitle *title);
 
 #else
 
 #define JS_IS_RUNTIME_LOCKED(rt)        0
 #define JS_IS_OBJ_LOCKED(cx,obj)        1
-#define JS_IS_SCOPE_LOCKED(cx,scope)    1
+#define JS_IS_TITLE_LOCKED(cx,title)    1
 
 #endif /* DEBUG */
 
@@ -264,7 +303,7 @@ JS_BEGIN_EXTERN_C
 
 #define JS_IS_RUNTIME_LOCKED(rt)        1
 #define JS_IS_OBJ_LOCKED(cx,obj)        1
-#define JS_IS_SCOPE_LOCKED(cx,scope)    1
+#define JS_IS_TITLE_LOCKED(cx,title)    1
 #define JS_LOCK_VOID(cx, e)             JS_LOCK_RUNTIME_VOID((cx)->runtime, e)
 
 #endif /* !JS_THREADSAFE */
@@ -291,8 +330,8 @@ JS_BEGIN_EXTERN_C
 #ifndef SET_OBJ_INFO
 #define SET_OBJ_INFO(obj,f,l)       ((void)0)
 #endif
-#ifndef SET_SCOPE_INFO
-#define SET_SCOPE_INFO(scope,f,l)   ((void)0)
+#ifndef SET_TITLE_INFO
+#define SET_TITLE_INFO(title,f,l)   ((void)0)
 #endif
 
 JS_END_EXTERN_C
