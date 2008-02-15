@@ -438,6 +438,9 @@ CSSLoaderImpl::RecycleParser(nsICSSParser* aParser)
   if (!gParsers->AppendObject(aParser)) {
     return NS_ERROR_FAILURE;
   }
+
+  // Make sure the parser doesn't keep the last sheet it parsed alive
+  aParser->SetStyleSheet(nsnull);
   
   return NS_OK;
 }
@@ -1497,9 +1500,6 @@ CSSLoaderImpl::ParseSheet(nsIUnicharInputStream* aStream,
     return rv;
   }
 
-  // The parser insists on passing out a strong ref to the sheet it
-  // parsed.  We don't care.
-  nsCOMPtr<nsICSSStyleSheet> dummySheet;
   // Push our load data on the stack so any kids can pick it up
   mParsingDatas.AppendElement(aLoadData);
   nsCOMPtr<nsIURI> sheetURI, baseURI;
@@ -1507,8 +1507,7 @@ CSSLoaderImpl::ParseSheet(nsIUnicharInputStream* aStream,
   aLoadData->mSheet->GetBaseURI(getter_AddRefs(baseURI));
   rv = parser->Parse(aStream, sheetURI, baseURI,
                      aLoadData->mSheet->Principal(), aLoadData->mLineNumber,
-                     aLoadData->mAllowUnsafeRules,
-                     *getter_AddRefs(dummySheet));
+                     aLoadData->mAllowUnsafeRules);
   mParsingDatas.RemoveElementAt(mParsingDatas.Count() - 1);
   RecycleParser(parser);
 
