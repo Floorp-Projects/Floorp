@@ -129,7 +129,7 @@ else
 ifdef USE_MSVC
 OPTIMIZER  = -Zi
 else
-OPTIMIZER  = -g
+OPTIMIZER  = -g3
 endif
 DEFINES    += -DDEBUG -DDEBUG_$(USER)
 OBJDIR_TAG = _DBG
