@@ -667,9 +667,6 @@ extern void
 js_TraceObject(JSTracer *trc, JSObject *obj);
 
 extern void
-js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize);
-
-extern void
 js_Clear(JSContext *cx, JSObject *obj);
 
 extern jsval
