@@ -6,7 +6,7 @@
 <!ENTITY btnInspect.accesskey "r">
 <!ENTITY bxDocPanel.title "Dokument">
 <!ENTITY bxObjectPanel.title "Objekt">
-<!ENTITY btnSelecting.tooltip "Vyhľadať kliknutím uzol na preskúmanie">
+<!ENTITY btnSelecting.tooltip "Pomocou myši vybrať uzol na preskúmanie">
 <!ENTITY btnFind.tooltip "Vyhľadať uzol podľa ID, tagu alebo atribútu">
 
 <!-- MAIN MENU ITEMS -->
@@ -54,6 +54,6 @@
   
 <!ENTITY inspectNewWindow.label "Preskúmať v novom okne">
 
-<!ENTITY saveCmd.key "U">
+<!ENTITY saveCmd.key "S">
 <!ENTITY closeCmd.key "W">
 
