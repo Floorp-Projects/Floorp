@@ -2029,6 +2029,36 @@ moz_gtk_tabpanels_paint(GdkDrawable* drawable, GdkRectangle* rect,
 }
 
 static gint
+moz_gtk_tab_scroll_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                               GdkRectangle* cliprect, GtkWidgetState* state,
+                               GtkArrowType arrow_type,
+                               GtkTextDirection direction)
+{
+    GtkStateType state_type = ConvertGtkState(state);
+    GtkShadowType shadow_type = state->active ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
+    GtkStyle* style;
+    gint arrow_size = MIN(rect->width, rect->height);
+    gint x = rect->x + (rect->width - arrow_size) / 2;
+    gint y = rect->y + (rect->height - arrow_size) / 2;
+
+    ensure_tab_widget();
+
+    style = gTabWidget->style;
+    TSOffsetStyleGCs(style, rect->x, rect->y);
+
+    if (direction == GTK_TEXT_DIR_RTL) {
+        arrow_type = (arrow_type == GTK_ARROW_LEFT) ?
+                         GTK_ARROW_RIGHT : GTK_ARROW_LEFT;
+    }
+
+    gtk_paint_arrow(style, drawable, state_type, shadow_type, NULL,
+                    gTabWidget, "notebook", arrow_type, TRUE,
+                    x, y, arrow_size, arrow_size);
+
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
 moz_gtk_menu_bar_paint(GdkDrawable* drawable, GdkRectangle* rect,
                        GdkRectangle* cliprect, GtkTextDirection direction)
 {
@@ -2482,6 +2512,7 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
     case MOZ_GTK_TOOLBARBUTTON_ARROW:
     case MOZ_GTK_TOOLBAR:
     case MOZ_GTK_MENUBAR:
+    case MOZ_GTK_TAB_SCROLLARROW:
         *left = *top = *right = *bottom = 0;
         return MOZ_GTK_SUCCESS;
     default:
@@ -2512,6 +2543,21 @@ moz_gtk_get_dropdown_arrow_size(gint* width, gint* height)
 
     *height = 2 * (1 + YTHICKNESS(gDropdownButtonWidget->style));
     *height += min_arrow_size + GTK_MISC(gArrowWidget)->ypad * 2;
+
+    return MOZ_GTK_SUCCESS;
+}
+
+gint
+moz_gtk_get_tab_scroll_arrow_size(gint* width, gint* height)
+{
+    gint arrow_size;
+
+    ensure_tab_widget();
+    gtk_widget_style_get(gTabWidget,
+                         "scroll-arrow-hlength", &arrow_size,
+                         NULL);
+
+    *height = *width = arrow_size;
 
     return MOZ_GTK_SUCCESS;
 }
@@ -2767,6 +2813,10 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
         break;
     case MOZ_GTK_TABPANELS:
         return moz_gtk_tabpanels_paint(drawable, rect, cliprect, direction);
+        break;
+    case MOZ_GTK_TAB_SCROLLARROW:
+        return moz_gtk_tab_scroll_arrow_paint(drawable, rect, cliprect, state,
+                                              (GtkArrowType) flags, direction);
         break;
     case MOZ_GTK_MENUBAR:
         return moz_gtk_menu_bar_paint(drawable, rect, cliprect, direction);

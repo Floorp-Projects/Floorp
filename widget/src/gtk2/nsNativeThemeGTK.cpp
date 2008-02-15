@@ -525,6 +525,13 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
   case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
     aGtkWidgetType = MOZ_GTK_PROGRESS_CHUNK;
     break;
+  case NS_THEME_TAB_SCROLLARROW_BACK:
+  case NS_THEME_TAB_SCROLLARROW_FORWARD:
+    if (aWidgetFlags)
+      *aWidgetFlags = aWidgetType == NS_THEME_TAB_SCROLLARROW_BACK ?
+                        GTK_ARROW_LEFT : GTK_ARROW_RIGHT;
+    aGtkWidgetType = MOZ_GTK_TAB_SCROLLARROW;
+    break;
   case NS_THEME_TAB_PANELS:
     aGtkWidgetType = MOZ_GTK_TABPANELS;
     break;
@@ -890,7 +897,9 @@ nsNativeThemeGTK::GetWidgetPadding(nsIDeviceContext* aContext,
 {
   if (aWidgetType == NS_THEME_BUTTON_FOCUS ||
       aWidgetType == NS_THEME_TOOLBAR_BUTTON ||
-      aWidgetType == NS_THEME_TOOLBAR_DUAL_BUTTON) {
+      aWidgetType == NS_THEME_TOOLBAR_DUAL_BUTTON ||
+      aWidgetType == NS_THEME_TAB_SCROLLARROW_BACK ||
+      aWidgetType == NS_THEME_TAB_SCROLLARROW_FORWARD) {
     aResult->SizeTo(0, 0, 0, 0);
     return PR_TRUE;
   }
@@ -1031,6 +1040,13 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
           aResult->height = thumb_height;
         }
 
+        *aIsOverridable = PR_FALSE;
+      }
+      break;
+    case NS_THEME_TAB_SCROLLARROW_BACK:
+    case NS_THEME_TAB_SCROLLARROW_FORWARD:
+      {
+        moz_gtk_get_tab_scroll_arrow_size(&aResult->width, &aResult->height);
         *aIsOverridable = PR_FALSE;
       }
       break;
@@ -1244,6 +1260,8 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case NS_THEME_TAB:
     // case NS_THEME_TAB_PANEL:
     case NS_THEME_TAB_PANELS:
+    case NS_THEME_TAB_SCROLLARROW_BACK:
+    case NS_THEME_TAB_SCROLLARROW_FORWARD:
   case NS_THEME_TOOLTIP:
   case NS_THEME_SPINNER:
   case NS_THEME_SPINNER_UP_BUTTON:
@@ -1305,9 +1323,11 @@ NS_IMETHODIMP_(PRBool)
 nsNativeThemeGTK::WidgetIsContainer(PRUint8 aWidgetType)
 {
   // XXXdwh At some point flesh all of this out.
-  if (aWidgetType == NS_THEME_DROPDOWN_BUTTON || 
+  if (aWidgetType == NS_THEME_DROPDOWN_BUTTON ||
       IsRadioWidgetType(aWidgetType) ||
-      IsCheckboxWidgetType(aWidgetType))
+      IsCheckboxWidgetType(aWidgetType) ||
+      aWidgetType == NS_THEME_TAB_SCROLLARROW_BACK ||
+      aWidgetType == NS_THEME_TAB_SCROLLARROW_FORWARD)
     return PR_FALSE;
   return PR_TRUE;
 }

@@ -114,6 +114,10 @@
 // The tab panels container.
 #define NS_THEME_TAB_PANELS                                65
 
+// The tabs scroll arrows (left/right)
+#define NS_THEME_TAB_SCROLLARROW_BACK                      66
+#define NS_THEME_TAB_SCROLLARROW_FORWARD                   67
+
 // A tooltip
 #define NS_THEME_TOOLTIP                                   71
 
