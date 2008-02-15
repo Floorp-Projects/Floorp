@@ -1221,13 +1221,12 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
                  * We may have set slot from a nearly-matching sprop, above.
                  * If so, we're overwriting that nearly-matching sprop, so we
                  * can reuse its slot -- we don't need to allocate a new one.
-                 * Callers should therefore pass SPROP_INVALID_SLOT for all
-                 * non-alias, unshared property adds.
+                 * Similarly, we use a specific slot if provided by the caller.
                  */
-                if (slot != SPROP_INVALID_SLOT)
-                    JS_ASSERT(overwriting);
-                else if (!js_AllocSlot(cx, scope->object, &slot))
+                if (slot == SPROP_INVALID_SLOT &&
+                    !js_AllocSlot(cx, scope->object, &slot)) {
                     goto fail_overwrite;
+                }
             }
         }
 
