@@ -898,9 +898,12 @@ js_ReportOutOfMemory(JSContext *cx)
     }
 
     /*
-     * If debugErrorHook is present then we give it a chance to veto
-     * sending the error on to the regular ErrorReporter.
+     * If debugErrorHook is present then we give it a chance to veto sending
+     * the error on to the regular ErrorReporter. We also clear a pending
+     * exception if any now so the hooks can replace the out-of-memory error
+     * by a script-catchable exception.
      */
+    cx->throwing = JS_FALSE;
     if (onError) {
         JSDebugErrorHook hook = cx->debugHooks->debugErrorHook;
         if (hook &&

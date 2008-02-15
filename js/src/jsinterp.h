@@ -360,10 +360,10 @@ js_ComputeThis(JSContext *cx, jsval *argv);
  * NB: js_Invoke requires that cx is currently running JS (i.e., that cx->fp
  * is non-null), and that vp points to the callee, |this| parameter, and
  * actual arguments of the call. [vp .. vp + 2 + argc) must belong to the last
- * JS stack segment that js_AllocStack or js_AllocRawStack allocated. The
- * function may use the space available after vp + 2 + argc in the stack
- * segment for temporaries so the caller should not use that space for values
- * that must be preserved across the call.
+ * JS stack segment that js_AllocStack allocated. The function may use the
+ * space available after vp + 2 + argc in the stack segment for temporaries,
+ * so the caller should not use that space for values that must be preserved
+ * across the call.
  */
 extern JS_FRIEND_API(JSBool)
 js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags);

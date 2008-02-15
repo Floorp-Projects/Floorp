@@ -66,7 +66,6 @@ js_Emit1 ; 63012
 JS_ContextIterator ; 57847
 JS_GetInstancePrivate ; 57817
 JS_HashTableRawRemove ; 57057
-js_AllocRawStack ; 54181
 js_Invoke ; 53568
 js_FindProperty ; 53150
 JS_GetFrameScript ; 51395
@@ -123,7 +122,6 @@ js_DestroyScope ; 17198
 JS_GetStringLength ; 16306
 js_PopStatementCG ; 15418
 JS_GetFrameAnnotation ; 14949
-js_FreeRawStack ; 14032
 js_Interpret ; 14032
 js_TransferScopeLock ; 13899
 JS_ResolveStandardClass ; 13645
