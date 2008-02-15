@@ -467,8 +467,8 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
         // but the mouse just moved.  Make sure to update our
         // destination point.
         mDestinationPoint = eventPoint;
-        nsRepeatService::GetInstance()->Stop();
-        nsRepeatService::GetInstance()->Start(mMediator);
+        StopRepeat();
+        StartRepeat();
         break;
       }
 
@@ -520,7 +520,7 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
         AddListener();
         DragThumb(PR_FALSE);
         if (mChange) {
-          nsRepeatService::GetInstance()->Stop();
+          StopRepeat();
           mChange = 0;
         }
         //we MUST call nsFrame HandleEvent for mouse ups to maintain the selection state and capture state.
@@ -1032,7 +1032,7 @@ nsSliderFrame::HandlePress(nsPresContext* aPresContext,
   mChange = change;
   DragThumb(PR_TRUE);
   mDestinationPoint = eventPoint;
-  nsRepeatService::GetInstance()->Start(mMediator);
+  StartRepeat();
   PageUpDown(change);
   return NS_OK;
 }
@@ -1042,7 +1042,7 @@ nsSliderFrame::HandleRelease(nsPresContext* aPresContext,
                                  nsGUIEvent*     aEvent,
                                  nsEventStatus*  aEventStatus)
 {
-  nsRepeatService::GetInstance()->Stop();
+  StopRepeat();
 
   return NS_OK;
 }
@@ -1055,6 +1055,7 @@ nsSliderFrame::Destroy()
     mMediator->SetSlider(nsnull);
     mMediator = nsnull;
   }
+  StopRepeat();
 
   // call base class Destroy()
   nsBoxFrame::Destroy();
@@ -1103,20 +1104,13 @@ nsSliderFrame::SetScrollbarListener(nsIScrollbarListener* aListener)
   mScrollbarListener = aListener;
 }
 
-NS_IMETHODIMP nsSliderMediator::Notify(nsITimer *timer)
-{
-  if (mSlider)
-    mSlider->Notify(timer);
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(void) nsSliderFrame::Notify(nsITimer *timer)
+void nsSliderFrame::Notify(void)
 {
     PRBool stop = PR_FALSE;
 
     nsIFrame* thumbFrame = mFrames.FirstChild();
     if (!thumbFrame) {
-      nsRepeatService::GetInstance()->Stop();
+      StopRepeat();
       return;
     }
     nsRect thumbRect = thumbFrame->GetRect();
@@ -1145,18 +1139,10 @@ NS_IMETHODIMP_(void) nsSliderFrame::Notify(nsITimer *timer)
 
 
     if (stop) {
-       nsRepeatService::GetInstance()->Stop();
+      StopRepeat();
     } else {
       PageUpDown(mChange);
     }
 }
 
-NS_INTERFACE_MAP_BEGIN(nsSliderMediator)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
-  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITimerCallback)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(nsSliderMediator)
-NS_IMPL_RELEASE(nsSliderMediator)
-
+NS_IMPL_ISUPPORTS1(nsSliderMediator, nsIDOMMouseListener)
