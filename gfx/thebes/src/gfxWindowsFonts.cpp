@@ -996,12 +996,9 @@ public:
         return PR_FALSE;
     }
 
-    HRESULT Place() {
+
+    HRESULT PlaceUniscribe() {
         HRESULT rv;
-
-        mOffsets.SetLength(mNumGlyphs);
-        mAdvances.SetLength(mNumGlyphs);
-
         HDC placeDC = nsnull;
 
         while (PR_TRUE) {
@@ -1020,6 +1017,52 @@ public:
         }
 
         return rv;
+    }
+
+    HRESULT PlaceGDI() {
+        SelectFont();
+
+        nsAutoTArray<int,500> partialWidthArray;
+        if (!partialWidthArray.SetLength(mNumGlyphs))
+            return GDI_ERROR;
+        SIZE size;
+
+        GetTextExtentExPointI(mDC,
+                              (WORD*) mGlyphs.Elements(),
+                              mNumGlyphs,
+                              INT_MAX,
+                              NULL,
+                              partialWidthArray.Elements(),
+                              &size);
+
+        PRInt32 lastWidth = 0;
+
+        for (PRUint32 i = 0; i < mNumGlyphs; i++) {
+            mAdvances[i] = partialWidthArray[i] - lastWidth;
+            lastWidth = partialWidthArray[i];
+            mOffsets[i].du = mOffsets[i].dv = 0;
+        }
+        return 0;
+    }
+
+    HRESULT Place() {
+        mOffsets.SetLength(mNumGlyphs);
+        mAdvances.SetLength(mNumGlyphs);
+
+        PRBool allCJK = PR_TRUE;
+        for (PRUint32 i = 0; i < mRangeLength; i++) {
+            const PRUnichar ch = mRangeString[i];
+            if (ch == ' ' || FindCharUnicodeRange(ch) == kRangeSetCJK)
+                continue;
+
+            allCJK = PR_FALSE;
+            break;
+        }
+
+        if (allCJK)
+            return PlaceGDI();
+
+        return PlaceUniscribe();
     }
 
     const SCRIPT_PROPERTIES *ScriptProperties() {
