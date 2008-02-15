@@ -287,6 +287,54 @@ function testSubsDifferentChunks() {
   doTest([subUpdate1, subUpdate2, addUpdate], assertions);
 }
 
+// Test lists of expired chunks
+function testExpireLists() {
+  var addUpdate = buildPhishingUpdate(
+        [
+          { "chunkNum" : 1,
+            "urls" : [ "foo.com/a" ]
+          },
+          { "chunkNum" : 3,
+            "urls" : [ "bar.com/a" ]
+          },
+          { "chunkNum" : 4,
+            "urls" : [ "baz.com/a" ]
+          },
+          { "chunkNum" : 5,
+            "urls" : [ "blah.com/a" ]
+          },
+          ]);
+  var subUpdate = buildPhishingUpdate(
+        [
+          { "chunkNum" : 1,
+            "chunkType" : "s",
+            "urls" : [ "50:foo.com/1" ]
+          },
+          { "chunkNum" : 2,
+            "chunkType" : "s",
+            "urls" : [ "50:bar.com/1" ]
+          },
+          { "chunkNum" : 3,
+            "chunkType" : "s",
+            "urls" : [ "50:baz.com/1" ]
+          },
+          { "chunkNum" : 5,
+            "chunkType" : "s",
+            "urls" : [ "50:blah.com/1" ]
+          },
+          ]);
+
+  var expireUpdate = buildPhishingUpdate(
+    [ { "chunkType" : "ad:1,3-5" },
+      { "chunkType" : "sd:1-3,5" }]);
+
+  var assertions = {
+    "tableData" : "test-phish-simple;"
+  };
+
+  doTest([addUpdate, subUpdate, expireUpdate], assertions);
+}
+
 function run_test()
 {
   runTests([
@@ -300,7 +348,8 @@ function run_test()
     testDuplicateAdds,
     testSubPartiallyMatches,
     testSubPartiallyMatches2,
-    testSubsDifferentChunks
+    testSubsDifferentChunks,
+    testExpireLists,
   ]);
 }
 
