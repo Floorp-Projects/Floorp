@@ -266,7 +266,3 @@ res/entityTables/transliterate.properties
 ;res/fonts/mathfontPUA.properties
 ;res/fonts/mathfontSymbol.properties
 ;components/libucvmath.so
-
-; Effective TLD
-res/effective_tld_names.dat
-
