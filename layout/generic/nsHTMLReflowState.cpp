@@ -89,8 +89,8 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*       aPresContext,
                                      nsIRenderingContext* aRenderingContext,
                                      const nsSize&        aAvailableSpace)
   : nsCSSOffsetState(aFrame, aRenderingContext)
-  , mReflowDepth(0)
   , mBlockDelta(0)
+  , mReflowDepth(0)
 {
   NS_PRECONDITION(aPresContext, "no pres context");
   NS_PRECONDITION(aRenderingContext, "no rendering context");
@@ -130,9 +130,9 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*           aPresContext,
                                      nscoord                  aContainingBlockHeight,
                                      PRBool                   aInit)
   : nsCSSOffsetState(aFrame, aParentReflowState.rendContext)
+  , mBlockDelta(0)
   , mReflowDepth(aParentReflowState.mReflowDepth + 1)
   , mFlags(aParentReflowState.mFlags)
-  , mBlockDelta(0)
 {
   NS_PRECONDITION(aPresContext, "no pres context");
   NS_PRECONDITION(aFrame, "no frame");
@@ -1201,6 +1201,9 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
                        shrinkWrap);
   mComputedWidth = size.width;
   mComputedHeight = size.height;
+  NS_ASSERTION(mComputedWidth >= 0, "Bogus width");
+  NS_ASSERTION(mComputedHeight == NS_UNCONSTRAINEDSIZE ||
+               mComputedHeight >= 0, "Bogus height");
 
   // XXX Now that we have ComputeSize, can we condense many of the
   // branches off of widthIsAuto?
@@ -1733,7 +1736,10 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
           // cells have border and padding
           mComputedWidth -= mComputedBorderPadding.left +
             mComputedBorderPadding.right;
+          if (mComputedWidth < 0)
+            mComputedWidth = 0;
         }
+        NS_ASSERTION(mComputedWidth >= 0, "Bogus computed width");
       
       } else {
         NS_ASSERTION(widthUnit == mStylePosition->mWidth.GetUnit(),
@@ -1787,6 +1793,9 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
 
       mComputedWidth = size.width;
       mComputedHeight = size.height;
+      NS_ASSERTION(mComputedWidth >= 0, "Bogus width");
+      NS_ASSERTION(mComputedHeight == NS_UNCONSTRAINEDSIZE ||
+                   mComputedHeight >= 0, "Bogus height");
 
       if (isBlock)
         CalculateBlockSideMargins(availableWidth, mComputedWidth);
