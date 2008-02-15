@@ -560,6 +560,7 @@ chrome/chromelist.txt
 LICENSE
 extensions/inspector@mozilla.org/chrome/chromelist.txt
 components/accessibility.xpt
+components/crashreporter.xpt
 components/gksvgrenderer.xpt
 components/jsconsole.xpt
 components/necko_data.xpt
