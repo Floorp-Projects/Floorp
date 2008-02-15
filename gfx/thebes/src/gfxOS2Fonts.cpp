@@ -154,7 +154,7 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
             mMetrics->subscriptOffset   = fabs(os2->ySubscriptYOffset * yScale);
             mMetrics->subscriptOffset   = PR_MAX(1, fabs(mMetrics->subscriptOffset));
             mMetrics->strikeoutOffset   = os2->yStrikeoutPosition * yScale;
-            mMetrics->strikeoutSize     = PR_MAX(1, os2->yStrikeoutSize * yScale);
+            mMetrics->strikeoutSize     = os2->yStrikeoutSize * yScale;
         } else {
             // use fractions of emHeight instead of xHeight for these to be more robust
             mMetrics->superscriptOffset = mMetrics->emHeight * 0.5;
@@ -164,7 +164,7 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
         }
         // seems that underlineOffset really has to be negative
         mMetrics->underlineOffset = face->underline_position * yScale;
-        mMetrics->underlineSize   = PR_MAX(1, face->underline_thickness * yScale);
+        mMetrics->underlineSize   = face->underline_thickness * yScale;
 
         // descents are negative in FT but Thebes wants them positive
         mMetrics->emAscent        = face->ascender * yScale;
@@ -181,6 +181,8 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
             mMetrics->internalLeading = 0;
         }
         mMetrics->externalLeading = 0; // normal value for OS/2 fonts, too
+
+        SanitizeMetrics(mMetrics);
 
 #ifdef DEBUG_thebes_1
         printf("gfxOS2Font[%#x]::GetMetrics():\n"
