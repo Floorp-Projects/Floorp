@@ -804,7 +804,7 @@ str_toLocaleUpperCase(JSContext *cx, uintN argc, jsval *vp)
 
     /*
      * Forcefully ignore the first (or any) argument and return toUpperCase(),
-     * ECMA has reserved that argument, presumbaly for defining the locale.
+     * ECMA has reserved that argument, presumably for defining the locale.
      */
     if (cx->localeCallbacks && cx->localeCallbacks->localeToUpperCase) {
         str = js_ValueToString(cx, vp[1]);
@@ -1277,7 +1277,8 @@ match_glob(JSContext *cx, jsint count, GlobData *data)
     if (!matchstr)
         return JS_FALSE;
     v = STRING_TO_JSVAL(matchstr);
-    return js_SetProperty(cx, arrayobj, INT_TO_JSID(count), &v);
+    JS_ASSERT(count <= JSVAL_INT_MAX);
+    return OBJ_SET_PROPERTY(cx, arrayobj, INT_TO_JSID(count), &v);
 }
 
 static JSBool
@@ -1813,7 +1814,7 @@ str_split(JSContext *cx, uintN argc, jsval *vp)
 
     if (argc == 0) {
         v = STRING_TO_JSVAL(str);
-        ok = JS_SetElement(cx, arrayobj, 0, &v);
+        ok = OBJ_SET_PROPERTY(cx, arrayobj, INT_TO_JSID(0), &v);
     } else {
         if (JSVAL_IS_REGEXP(cx, vp[2])) {
             re = (JSRegExp *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(vp[2]));
