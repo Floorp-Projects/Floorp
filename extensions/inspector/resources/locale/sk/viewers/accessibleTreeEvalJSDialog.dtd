@@ -16,11 +16,11 @@
    -
    - The Initial Developer of the Original Code is
    - Mozilla Foundation.
-   - Portions created by the Initial Developer are Copyright (C) 2007
+   - Portions created by the Initial Developer are Copyright (C) 2008
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
-   -   Alexander Surkov <surkov.alexander@gmail.com>
+   -   Alexander Surkov <surkov.alexander@gmail.com> (original author)
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,8 +37,12 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY role.label "Úloha">
-<!ENTITY name.label "Názov">
-<!ENTITY nodeName.label "Názov uzla">
+  <!ENTITY evaluateDialog.title "Dialógové okno vyhodnotenia JavaScriptu">
 
-<!ENTITY evaluateJS.label "Vyhodnotiť JavaScript">
+  <!ENTITY btnEvaluateJS.label "Vyhodnotiť">
+  <!ENTITY btnEvaluateJS.accesskey "V">
+  
+  <!ENTITY txtInputArea.label "Vstup (použite premennú 'accessible' na obsluhu aktuálneho prístupového bodu a funkciu 'output' na zápis do okna 'Výstup'): ">
+  <!ENTITY txtInputArea.accesskey "t">
+  <!ENTITY txtOutputArea.label "Výstup: ">
+  <!ENTITY txtOutputArea.accesskey "s">

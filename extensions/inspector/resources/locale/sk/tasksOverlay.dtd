@@ -1,5 +1,5 @@
 <!ENTITY inspectorTaskCmd.label "DOM Inspector">
-<!ENTITY inspectorTaskCmd.commandkey "d">
+<!ENTITY inspectorTaskCmd.commandkey "I">
 <!ENTITY inspectorTaskCmd.accesskey.ff "n">
 <!ENTITY inspectorTaskCmd.accesskey "I">
 
