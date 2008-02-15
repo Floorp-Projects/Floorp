@@ -42,3 +42,5 @@
 <!ENTITY descValue.label "Hodnota:">
 <!ENTITY descState.label "Stav:">
 <!ENTITY descActionName.label "Názov akcie:">
+<!ENTITY descBounds.label "Okraje:">
+

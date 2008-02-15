@@ -51,7 +51,7 @@
 <!ENTITY cmdToggleWhitespaceNodes.label "Zobraziť prázdne uzly">
 <!ENTITY cmdToggleWhitespaceNodes.accesskey "u">
 
-<!ENTITY cmdToggleAccessibleNodes.label "Zobraziť dostupné uzly">
+<!ENTITY cmdToggleAccessibleNodes.label "Zobraziť prístupové uzly">
 <!ENTITY cmdToggleAccessibleNodes.accesskey "b">
 
   <!ENTITY cmdToggleProcessingInstructions.label "Zobraziť vykonávacie inštrukcie">
