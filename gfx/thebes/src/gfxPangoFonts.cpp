@@ -570,16 +570,15 @@ gfxPangoFont::GetMetrics()
         mMetrics.aveCharWidth =
             pango_font_metrics_get_approximate_char_width(pfm) / FLOAT_PANGO_SCALE;
 
-        gfxFloat temp =
+        mMetrics.underlineOffset =
             pango_font_metrics_get_underline_position(pfm) / FLOAT_PANGO_SCALE;
-        mMetrics.underlineOffset = PR_MIN(temp, -1.0);
-        
+
         mMetrics.underlineSize =
             pango_font_metrics_get_underline_thickness(pfm) / FLOAT_PANGO_SCALE;
-        
+
         mMetrics.strikeoutOffset =
             pango_font_metrics_get_strikethrough_position(pfm) / FLOAT_PANGO_SCALE;
-        
+
         mMetrics.strikeoutSize =
             pango_font_metrics_get_strikethrough_thickness(pfm) / FLOAT_PANGO_SCALE;
 
@@ -654,6 +653,8 @@ gfxPangoFont::GetMetrics()
         mMetrics.superscriptOffset = mMetrics.xHeight;
         mMetrics.subscriptOffset = mMetrics.xHeight;
     }
+
+    SanitizeMetrics(&mMetrics);
 
 #if 0
     //    printf("font name: %s %f %f\n", NS_ConvertUTF16toUTF8(mName).get(), GetStyle()->size, mAdjustedSize);
