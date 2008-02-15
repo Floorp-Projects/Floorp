@@ -1201,15 +1201,16 @@ public:
 #endif
     void Traverse(PtrInfo* aPtrInfo);
 
-private:
     // nsCycleCollectionTraversalCallback methods.
+    NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root);
+
+private:
 #ifdef DEBUG_CC
     NS_IMETHOD_(void) DescribeNode(CCNodeType type, nsrefcnt refCount,
                                    size_t objSz, const char *objName);
 #else
     NS_IMETHOD_(void) DescribeNode(CCNodeType type, nsrefcnt refCount);
 #endif
-    NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root);
     NS_IMETHOD_(void) NoteRoot(PRUint32 langID, void *child,
                                nsCycleCollectionParticipant* participant);
     NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child);
