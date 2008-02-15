@@ -398,7 +398,7 @@
           </rows>
         </grid>
         <spacer flex="1"/>
-        <hbox><!-- Cert button -->
+        <hbox align="center"><!-- Cert button -->
           <description id="security-view-text" class="fieldLabel"
                  control="security-view-cert" flex="1"/>
           <button id="security-view-cert" label="&securityView.certView;"
@@ -429,7 +429,7 @@
               <label id="security-privacy-cookies-label"
                            control="security-privacy-cookies-value"
                            class="fieldLabel">&securityView.privacy.cookies;</label>
-              <hbox>
+              <hbox align="center">
                 <textbox id="security-privacy-cookies-value"
                          class="fieldValue"
                          value="&securityView.unknown;"
@@ -445,7 +445,7 @@
               <label id="security-privacy-passwords-label"
                             control="security-privacy-passwords-value"
                             class="fieldLabel">&securityView.privacy.passwords;</label>
-              <hbox>
+              <hbox align="center">
                 <textbox id="security-privacy-passwords-value"
                          class="fieldValue"
                          value="&securityView.unknown;"
