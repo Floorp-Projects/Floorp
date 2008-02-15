@@ -4614,11 +4614,24 @@ nsWindowSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       // defined property w/o going through XPConnect.
 
       JSString *str = JSVAL_TO_STRING(id);
+      jschar *name = ::JS_GetStringChars(str);
+      size_t length = ::JS_GetStringLength(str);
+      uintN attrs;
+      JSBool found;
 
-      ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                            ::JS_GetStringLength(str), *vp,
-                            JS_PropertyStub, JS_PropertyStub,
-                            JSPROP_ENUMERATE);
+      if (!::JS_GetUCPropertyAttributes(cx, obj, name, length,
+                                        &attrs, &found)) {
+        *_retval = PR_FALSE;
+        return NS_OK;
+      }
+
+      if (!::JS_DefineUCProperty(cx, obj, name, length, *vp,
+                                 JS_PropertyStub, JS_PropertyStub,
+                                 attrs & (JSPROP_ENUMERATE |
+                                          JSPROP_PERMANENT))) {
+        *_retval = PR_FALSE;
+        return NS_OK;
+      }
     }
   }
 
