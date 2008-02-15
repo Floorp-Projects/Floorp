@@ -70,14 +70,9 @@ int MOZ_XMLCheckQName(const char* ptr, const char* end, int ns_aware,
   do {
     switch (BYTE_TYPE(ptr)) {
     case BT_COLON:
-      if (nmstrt) {
-        /* We're at the first character and it's a colon; it's a malformed
-           QName if we're namespace-aware and an invalid character otherwise. */
-        return ns_aware ? MOZ_EXPAT_MALFORMED : MOZ_EXPAT_INVALID_CHARACTER;
-      }
-      if (ns_aware && (ptr + 2 == end || *colon)) {
-        /* This is the last character or a second colon when we're
-           namespace-aware, so the QName is malformed. */
+       /* We're namespace-aware and either first or last character is a colon
+          or we've already seen a colon. */
+      if (ns_aware && (nmstrt || *colon || ptr + 2 == end)) {
         return MOZ_EXPAT_MALFORMED;
       }
       *colon = ptr;
