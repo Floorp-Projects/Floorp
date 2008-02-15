@@ -3652,7 +3652,7 @@ JS_NewArrayObject(JSContext *cx, jsint length, jsval *vector)
 JS_PUBLIC_API(JSBool)
 JS_IsArrayObject(JSContext *cx, JSObject *obj)
 {
-    return OBJ_IS_ARRAY(cx, obj);
+    return OBJ_GET_CLASS(cx, obj) == &js_ArrayClass;
 }
 
 JS_PUBLIC_API(JSBool)
