@@ -4098,10 +4098,8 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     rt = cx->runtime;
     clasp = OBJ_GET_CLASS(cx, obj);
     enumerate = clasp->enumerate;
-    if (clasp->flags & JSCLASS_NEW_ENUMERATE) {
-        JS_ASSERT(enumerate != JS_EnumerateStub);
+    if (clasp->flags & JSCLASS_NEW_ENUMERATE)
         return ((JSNewEnumerateOp) enumerate)(cx, obj, enum_op, statep, idp);
-    }
 
     switch (enum_op) {
       case JSENUMERATE_INIT:
@@ -4813,8 +4811,8 @@ js_DumpScopeMeters(JSRuntime *rt)
 #endif
 
 #ifdef DEBUG
-void
-js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
+static void
+PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
 {
     JSObject *obj;
     uint32 slot;
@@ -4825,18 +4823,14 @@ js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
     uint32 key;
     const char *slotname;
 
-    JS_ASSERT(trc->debugPrinter == js_PrintObjectSlotName);
+    JS_ASSERT(trc->debugPrinter == PrintObjectSlotName);
     obj = (JSObject *)trc->debugPrintArg;
     slot = (uint32)trc->debugPrintIndex;
 
-    if (OBJ_IS_NATIVE(obj)) {
-        scope = OBJ_SCOPE(obj);
-        sprop = SCOPE_LAST_PROP(scope);
-        while (sprop && sprop->slot != slot)
-            sprop = sprop->parent;
-    } else {
-        sprop = NULL;
-    }
+    scope = OBJ_SCOPE(obj);
+    sprop = SCOPE_LAST_PROP(scope);
+    while (sprop && sprop->slot != slot)
+        sprop = sprop->parent;
 
     if (!sprop) {
         switch (slot) {
@@ -4978,7 +4972,7 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
     for (i = 0; i != nslots; ++i) {
         v = STOBJ_GET_SLOT(obj, i);
         if (JSVAL_IS_TRACEABLE(v)) {
-            JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, obj, i);
+            JS_SET_TRACING_DETAILS(trc, PrintObjectSlotName, obj, i);
             JS_CallTracer(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
         }
     }
