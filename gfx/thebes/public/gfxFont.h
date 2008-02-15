@@ -547,6 +547,9 @@ protected:
     nsExpirationState          mExpirationState;
     gfxFontStyle               mStyle;
     nsAutoTArray<gfxGlyphExtents*,1> mGlyphExtentsArray;
+
+    // some fonts have bad metrics, this method sanitize them.
+    void SanitizeMetrics(gfxFont::Metrics *aMetrics);
 };
 
 class THEBES_API gfxTextRunFactory {

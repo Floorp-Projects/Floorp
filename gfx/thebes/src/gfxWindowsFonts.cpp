@@ -293,9 +293,9 @@ gfxWindowsFont::ComputeMetrics()
     if (0 < GetOutlineTextMetrics(dc, sizeof(oMetrics), &oMetrics)) {
         mMetrics->superscriptOffset = (double)oMetrics.otmptSuperscriptOffset.y;
         mMetrics->subscriptOffset = (double)oMetrics.otmptSubscriptOffset.y;
-        mMetrics->strikeoutSize = PR_MAX(1, (double)oMetrics.otmsStrikeoutSize);
+        mMetrics->strikeoutSize = (double)oMetrics.otmsStrikeoutSize;
         mMetrics->strikeoutOffset = (double)oMetrics.otmsStrikeoutPosition;
-        mMetrics->underlineSize = PR_MAX(1, (double)oMetrics.otmsUnderscoreSize);
+        mMetrics->underlineSize = (double)oMetrics.otmsUnderscoreSize;
         mMetrics->underlineOffset = (double)oMetrics.otmsUnderscorePosition;
 
         const MAT2 kIdentityMatrix = { {0, 1}, {0, 0}, {0, 0}, {0, 1} };
@@ -307,20 +307,10 @@ gfxWindowsFont::ComputeMetrics()
         } else {
             mMetrics->xHeight = gm.gmptGlyphOrigin.y;
         }
-        // The MS (P)Gothic and MS (P)Mincho are not having suitable values
-        // in them super script offset. If the values are not suitable,
-        // we should use x-height instead of them.
-        // See https://bugzilla.mozilla.org/show_bug.cgi?id=353632
-        if (mMetrics->superscriptOffset == 0 ||
-            mMetrics->superscriptOffset >= metrics.tmAscent) {
-            mMetrics->superscriptOffset = mMetrics->xHeight;
-        }
-        // And also checking the case of sub script offset.
-        // The old gfx has checked this too.
-        if (mMetrics->subscriptOffset == 0 ||
-            mMetrics->subscriptOffset >= metrics.tmAscent) {
-            mMetrics->subscriptOffset = mMetrics->xHeight;
-        }
+        mMetrics->emHeight = metrics.tmHeight - metrics.tmInternalLeading;
+        gfxFloat typEmHeight = (double)oMetrics.otmAscent - (double)oMetrics.otmDescent;
+        mMetrics->emAscent = ROUND(mMetrics->emHeight * (double)oMetrics.otmAscent / typEmHeight);
+        mMetrics->emDescent = mMetrics->emHeight - mMetrics->emAscent;
     } else {
         // Make a best-effort guess at extended metrics
         // this is based on general typographic guidelines
@@ -333,13 +323,13 @@ gfxWindowsFont::ComputeMetrics()
         mMetrics->strikeoutOffset = ROUND(mMetrics->xHeight / 2.0f); // 50% of xHeight
         mMetrics->underlineSize = 1;
         mMetrics->underlineOffset = -ROUND((float)metrics.tmDescent * 0.30f); // 30% of descent
+        mMetrics->emHeight = metrics.tmHeight - metrics.tmInternalLeading;
+        mMetrics->emAscent = metrics.tmAscent - metrics.tmInternalLeading;
+        mMetrics->emDescent = metrics.tmDescent;
     }
 
     mMetrics->internalLeading = metrics.tmInternalLeading;
     mMetrics->externalLeading = metrics.tmExternalLeading;
-    mMetrics->emHeight = (metrics.tmHeight - metrics.tmInternalLeading);
-    mMetrics->emAscent = (metrics.tmAscent - metrics.tmInternalLeading);
-    mMetrics->emDescent = metrics.tmDescent;
     mMetrics->maxHeight = metrics.tmHeight;
     mMetrics->maxAscent = metrics.tmAscent;
     mMetrics->maxDescent = metrics.tmDescent;
@@ -364,6 +354,8 @@ gfxWindowsFont::ComputeMetrics()
     SelectObject(dc, oldFont);
 
     ReleaseDC((HWND)nsnull, dc);
+
+    SanitizeMetrics(mMetrics);
 }
 
 void
