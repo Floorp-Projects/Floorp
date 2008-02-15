@@ -153,21 +153,8 @@ js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
     InitMinimalScope(scope);
 
 #ifdef JS_THREADSAFE
-    scope->ownercx = cx;
-    memset(&scope->lock, 0, sizeof scope->lock);
-
-    /*
-     * Set u.link = NULL, not u.count = 0, in case the target architecture's
-     * null pointer has a non-zero integer representation.
-     */
-    scope->u.link = NULL;
-
-#ifdef JS_DEBUG_SCOPE_LOCKS
-    scope->file[0] = scope->file[1] = scope->file[2] = scope->file[3] = NULL;
-    scope->line[0] = scope->line[1] = scope->line[2] = scope->line[3] = 0;
+    js_InitTitle(cx, &scope->title);
 #endif
-#endif
-
     JS_RUNTIME_METER(cx->runtime, liveScopes);
     JS_RUNTIME_METER(cx->runtime, totalScopes);
     return scope;
@@ -193,10 +180,7 @@ js_DestroyScope(JSContext *cx, JSScope *scope)
 #endif
 
 #ifdef JS_THREADSAFE
-    /* Scope must be single-threaded at this point, so set scope->ownercx. */
-    JS_ASSERT(scope->u.count == 0);
-    scope->ownercx = cx;
-    js_FinishLock(&scope->lock);
+    js_FinishTitle(cx, &scope->title);
 #endif
     if (scope->table)
         JS_free(cx, scope->table);

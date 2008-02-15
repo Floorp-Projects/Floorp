@@ -299,26 +299,26 @@ struct JSRuntime {
     PRCondVar           *stateChange;
 
     /*
-     * State for sharing single-threaded scopes, once a second thread tries to
-     * lock a scope.  The scopeSharingDone condvar is protected by rt->gcLock,
+     * State for sharing single-threaded titles, once a second thread tries to
+     * lock a title.  The titleSharingDone condvar is protected by rt->gcLock
      * to minimize number of locks taken in JS_EndRequest.
      *
-     * The scopeSharingTodo linked list is likewise "global" per runtime, not
+     * The titleSharingTodo linked list is likewise "global" per runtime, not
      * one-list-per-context, to conserve space over all contexts, optimizing
-     * for the likely case that scopes become shared rarely, and among a very
+     * for the likely case that titles become shared rarely, and among a very
      * small set of threads (contexts).
      */
-    PRCondVar           *scopeSharingDone;
-    JSScope             *scopeSharingTodo;
+    PRCondVar           *titleSharingDone;
+    JSTitle             *titleSharingTodo;
 
 /*
- * Magic terminator for the rt->scopeSharingTodo linked list, threaded through
- * scope->u.link.  This hack allows us to test whether a scope is on the list
- * by asking whether scope->u.link is non-null.  We use a large, likely bogus
+ * Magic terminator for the rt->titleSharingTodo linked list, threaded through
+ * title->u.link.  This hack allows us to test whether a title is on the list
+ * by asking whether title->u.link is non-null.  We use a large, likely bogus
  * pointer here to distinguish this value from any valid u.count (small int)
  * value.
  */
-#define NO_SCOPE_SHARING_TODO   ((JSScope *) 0xfeedbeef)
+#define NO_TITLE_SHARING_TODO   ((JSTitle *) 0xfeedbeef)
 
     /*
      * Lock serializing trapList and watchPointList accesses, and count of all
@@ -427,13 +427,13 @@ struct JSRuntime {
     jsrefcount          nonInlineCalls;
     jsrefcount          constructs;
 
-    /* Scope lock and property metering. */
+    /* Title lock and scope property metering. */
     jsrefcount          claimAttempts;
-    jsrefcount          claimedScopes;
+    jsrefcount          claimedTitles;
     jsrefcount          deadContexts;
     jsrefcount          deadlocksAvoided;
     jsrefcount          liveScopes;
-    jsrefcount          sharedScopes;
+    jsrefcount          sharedTitles;
     jsrefcount          totalScopes;
     jsrefcount          liveScopeProps;
     jsrefcount          liveScopePropsPreSweep;
@@ -769,9 +769,9 @@ struct JSContext {
     jsrefcount          requestDepth;
     /* Same as requestDepth but ignoring JS_SuspendRequest/JS_ResumeRequest */
     jsrefcount          outstandingRequests;
-    JSScope             *scopeToShare;      /* weak reference, see jslock.c */
-    JSScope             *lockedSealedScope; /* weak ref, for low-cost sealed
-                                               scope locking */
+    JSTitle             *titleToShare;      /* weak reference, see jslock.c */
+    JSTitle             *lockedSealedTitle; /* weak ref, for low-cost sealed
+                                               title locking */
     JSCList             threadLinks;        /* JSThread contextList linkage */
 
 #define CX_FROM_THREAD_LINKS(tl) \
@@ -897,7 +897,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode);
 
 /*
  * Return true if cx points to a context in rt->contextList, else return false.
- * NB: the caller (see jslock.c:ClaimScope) must hold rt->gcLock.
+ * NB: the caller (see jslock.c:ClaimTitle) must hold rt->gcLock.
  */
 extern JSBool
 js_ValidContextPointer(JSRuntime *rt, JSContext *cx);

@@ -316,69 +316,76 @@ js_unlog_scope(JSScope *scope)
  * (i) rt->gcLock held
  */
 static JSBool
-WillDeadlock(JSScope *scope, JSContext *cx)
+WillDeadlock(JSTitle *title, JSContext *cx)
 {
     JSContext *ownercx;
 
     do {
-        ownercx = scope->ownercx;
+        ownercx = title->ownercx;
         if (ownercx == cx) {
             JS_RUNTIME_METER(cx->runtime, deadlocksAvoided);
             return JS_TRUE;
         }
-    } while (ownercx && (scope = ownercx->scopeToShare) != NULL);
+    } while (ownercx && (title = ownercx->titleToShare) != NULL);
     return JS_FALSE;
 }
 
 /*
- * Make scope multi-threaded, i.e. share its ownership among contexts in rt
+ * Make title multi-threaded, i.e. share its ownership among contexts in rt
  * using a "thin" or (if necessary due to contention) "fat" lock.  Called only
- * from ClaimScope, immediately below, when we detect deadlock were we to wait
- * for scope's lock, because its ownercx is waiting on a scope owned by the
+ * from ClaimTitle, immediately below, when we detect deadlock were we to wait
+ * for title's lock, because its ownercx is waiting on a title owned by the
  * calling cx.
  *
  * (i) rt->gcLock held
  */
 static void
-ShareScope(JSContext *cx, JSScope *scope)
+ShareTitle(JSContext *cx, JSTitle *title)
 {
     JSRuntime *rt;
-    JSScope **todop;
+    JSTitle **todop;
 
     rt = cx->runtime;
-    if (scope->u.link) {
-        for (todop = &rt->scopeSharingTodo; *todop != scope;
+    if (title->u.link) {
+        for (todop = &rt->titleSharingTodo; *todop != title;
              todop = &(*todop)->u.link) {
-            JS_ASSERT(*todop != NO_SCOPE_SHARING_TODO);
+            JS_ASSERT(*todop != NO_TITLE_SHARING_TODO);
         }
-        *todop = scope->u.link;
-        scope->u.link = NULL;       /* null u.link for sanity ASAP */
-        JS_NOTIFY_ALL_CONDVAR(rt->scopeSharingDone);
+        *todop = title->u.link;
+        title->u.link = NULL;       /* null u.link for sanity ASAP */
+        JS_NOTIFY_ALL_CONDVAR(rt->titleSharingDone);
     }
-    js_InitLock(&scope->lock);
-    scope->u.count = 0;
-    js_FinishSharingScope(cx, scope);
+    js_InitLock(&title->lock);
+    title->u.count = 0;
+    js_FinishSharingTitle(cx, title);
 }
 
 /*
- * js_FinishSharingScope is the tail part of ShareScope, split out to become a
+ * js_FinishSharingTitle is the tail part of ShareTitle, split out to become a
  * subroutine of JS_EndRequest too.  The bulk of the work here involves making
- * mutable strings in the scope's object's slots be immutable.  We have to do
+ * mutable strings in the title's object's slots be immutable.  We have to do
  * this because such strings will soon be available to multiple threads, so
  * their buffers can't be realloc'd any longer in js_ConcatStrings, and their
  * members can't be modified by js_ConcatStrings, js_MinimizeDependentStrings,
  * or js_UndependString.
  *
- * The last bit of work done by js_FinishSharingScope nulls scope->ownercx and
- * updates rt->sharedScopes.
+ * The last bit of work done by js_FinishSharingTitle nulls title->ownercx and
+ * updates rt->sharedTitles.
  */
 
 void
-js_FinishSharingScope(JSContext *cx, JSScope *scope)
+js_FinishSharingTitle(JSContext *cx, JSTitle *title)
 {
+    JSObjectMap *map;
+    JSScope *scope;
     JSObject *obj;
     uint32 nslots, i;
     jsval v;
+
+    map = TITLE_TO_MAP(title);
+    if (!MAP_IS_NATIVE(map))
+        return;
+    scope = (JSScope *)map;
 
     obj = scope->object;
     nslots = LOCKED_OBJ_NSLOTS(obj);
@@ -396,20 +403,20 @@ js_FinishSharingScope(JSContext *cx, JSScope *scope)
         }
     }
 
-    scope->ownercx = NULL;  /* NB: set last, after lock init */
-    JS_RUNTIME_METER(cx->runtime, sharedScopes);
+    title->ownercx = NULL;  /* NB: set last, after lock init */
+    JS_RUNTIME_METER(cx->runtime, sharedTitles);
 }
 
 /*
- * Given a scope with apparently non-null ownercx different from cx, try to
- * set ownercx to cx, claiming exclusive (single-threaded) ownership of scope.
+ * Given a title with apparently non-null ownercx different from cx, try to
+ * set ownercx to cx, claiming exclusive (single-threaded) ownership of title.
  * If we claim ownership, return true.  Otherwise, we wait for ownercx to be
- * set to null (indicating that scope is multi-threaded); or if waiting would
- * deadlock, we set ownercx to null ourselves via ShareScope.  In any case,
+ * set to null (indicating that title is multi-threaded); or if waiting would
+ * deadlock, we set ownercx to null ourselves via ShareTitle.  In any case,
  * once ownercx is null we return false.
  */
 static JSBool
-ClaimScope(JSScope *scope, JSContext *cx)
+ClaimTitle(JSTitle *title, JSContext *cx)
 {
     JSRuntime *rt;
     JSContext *ownercx;
@@ -421,69 +428,69 @@ ClaimScope(JSScope *scope, JSContext *cx)
     JS_LOCK_GC(rt);
 
     /* Reload in case ownercx went away while we blocked on the lock. */
-    while ((ownercx = scope->ownercx) != NULL) {
+    while ((ownercx = title->ownercx) != NULL) {
         /*
          * Avoid selflock if ownercx is dead, or is not running a request, or
-         * has the same thread as cx.  Set scope->ownercx to cx so that the
+         * has the same thread as cx.  Set title->ownercx to cx so that the
          * matching JS_UNLOCK_SCOPE or JS_UNLOCK_OBJ macro call will take the
-         * fast path around the corresponding js_UnlockScope or js_UnlockObj
+         * fast path around the corresponding js_UnlockTitle or js_UnlockObj
          * function call.
          *
-         * If scope->u.link is non-null, scope has already been inserted on
-         * the rt->scopeSharingTodo list, because another thread's context
-         * already wanted to lock scope while ownercx was running a request.
-         * We can't claim any scope whose u.link is non-null at this point,
+         * If title->u.link is non-null, title has already been inserted on
+         * the rt->titleSharingTodo list, because another thread's context
+         * already wanted to lock title while ownercx was running a request.
+         * We can't claim any title whose u.link is non-null at this point,
          * even if ownercx->requestDepth is 0 (see below where we suspend our
-         * request before waiting on rt->scopeSharingDone).
+         * request before waiting on rt->titleSharingDone).
          */
-        if (!scope->u.link &&
+        if (!title->u.link &&
             (!js_ValidContextPointer(rt, ownercx) ||
              !ownercx->requestDepth ||
              ownercx->thread == cx->thread)) {
-            JS_ASSERT(scope->u.count == 0);
-            scope->ownercx = cx;
+            JS_ASSERT(title->u.count == 0);
+            title->ownercx = cx;
             JS_UNLOCK_GC(rt);
-            JS_RUNTIME_METER(rt, claimedScopes);
+            JS_RUNTIME_METER(rt, claimedTitles);
             return JS_TRUE;
         }
 
         /*
-         * Avoid deadlock if scope's owner context is waiting on a scope that
-         * we own, by revoking scope's ownership.  This approach to deadlock
-         * avoidance works because the engine never nests scope locks.
+         * Avoid deadlock if title's owner context is waiting on a title that
+         * we own, by revoking title's ownership.  This approach to deadlock
+         * avoidance works because the engine never nests title locks.
          *
-         * If cx could hold locks on ownercx->scopeToShare, or if ownercx
-         * could hold locks on scope, we would need to keep reentrancy counts
-         * for all such "flyweight" (ownercx != NULL) locks, so that control
-         * would unwind properly once these locks became "thin" or "fat".
-         * The engine promotes a scope from exclusive to shared access only
-         * when locking, never when holding or unlocking.
+         * If cx could hold locks on ownercx->titleToShare, or if ownercx could
+         * hold locks on title, we would need to keep reentrancy counts for all
+         * such "flyweight" (ownercx != NULL) locks, so that control would
+         * unwind properly once these locks became "thin" or "fat".  The engine
+         * promotes a title from exclusive to shared access only when locking,
+         * never when holding or unlocking.
          *
-         * Avoid deadlock before any of this scope/context cycle detection if
+         * Avoid deadlock before any of this title/context cycle detection if
          * cx is on the active GC's thread, because in that case, no requests
-         * will run until the GC completes.  Any scope wanted by the GC (from
+         * will run until the GC completes.  Any title wanted by the GC (from
          * a finalizer) that can't be claimed must become shared.
          */
         if (rt->gcThread == cx->thread ||
-            (ownercx->scopeToShare &&
-             WillDeadlock(ownercx->scopeToShare, cx))) {
-            ShareScope(cx, scope);
+            (ownercx->titleToShare &&
+             WillDeadlock(ownercx->titleToShare, cx))) {
+            ShareTitle(cx, title);
             break;
         }
 
         /*
-         * Thanks to the non-zero NO_SCOPE_SHARING_TODO link terminator, we
-         * can decide whether scope is on rt->scopeSharingTodo with a single
+         * Thanks to the non-zero NO_TITLE_SHARING_TODO link terminator, we
+         * can decide whether title is on rt->titleSharingTodo with a single
          * non-null test, and avoid double-insertion bugs.
          */
-        if (!scope->u.link) {
-            scope->u.link = rt->scopeSharingTodo;
-            rt->scopeSharingTodo = scope;
-            js_HoldObjectMap(cx, &scope->map);
+        if (!title->u.link) {
+            title->u.link = rt->titleSharingTodo;
+            rt->titleSharingTodo = title;
+            js_HoldObjectMap(cx, TITLE_TO_MAP(title));
         }
 
         /*
-         * Inline JS_SuspendRequest before we wait on rt->scopeSharingDone,
+         * Inline JS_SuspendRequest before we wait on rt->titleSharingDone,
          * saving and clearing cx->requestDepth so we don't deadlock if the
          * GC needs to run on ownercx.
          *
@@ -504,16 +511,16 @@ ClaimScope(JSScope *scope, JSContext *cx)
         }
 
         /*
-         * We know that some other thread's context owns scope, which is now
-         * linked onto rt->scopeSharingTodo, awaiting the end of that other
-         * thread's request.  So it is safe to wait on rt->scopeSharingDone.
+         * We know that some other thread's context owns title, which is now
+         * linked onto rt->titleSharingTodo, awaiting the end of that other
+         * thread's request.  So it is safe to wait on rt->titleSharingDone.
          */
-        cx->scopeToShare = scope;
-        stat = PR_WaitCondVar(rt->scopeSharingDone, PR_INTERVAL_NO_TIMEOUT);
+        cx->titleToShare = title;
+        stat = PR_WaitCondVar(rt->titleSharingDone, PR_INTERVAL_NO_TIMEOUT);
         JS_ASSERT(stat != PR_FAILURE);
 
         /*
-         * Inline JS_ResumeRequest after waiting on rt->scopeSharingDone,
+         * Inline JS_ResumeRequest after waiting on rt->titleSharingDone,
          * restoring cx->requestDepth.  Same note as above for the inlined,
          * specialized JS_SuspendRequest code: beware rt->gcThread.
          */
@@ -527,18 +534,18 @@ ClaimScope(JSScope *scope, JSContext *cx)
         }
 
         /*
-         * Don't clear cx->scopeToShare until after we're through waiting on
+         * Don't clear cx->titleToShare until after we're through waiting on
          * all condition variables protected by rt->gcLock -- that includes
-         * rt->scopeSharingDone *and* rt->gcDone (hidden in JS_AWAIT_GC_DONE,
+         * rt->titleSharingDone *and* rt->gcDone (hidden in JS_AWAIT_GC_DONE,
          * in the inlined JS_ResumeRequest code immediately above).
          *
          * Otherwise, the GC could easily deadlock with another thread that
-         * owns a scope wanted by a finalizer.  By keeping cx->scopeToShare
+         * owns a title wanted by a finalizer.  By keeping cx->titleToShare
          * set till here, we ensure that such deadlocks are detected, which
-         * results in the finalized object's scope being shared (it must, of
+         * results in the finalized object's title being shared (it must, of
          * course, have other, live objects sharing it).
          */
-        cx->scopeToShare = NULL;
+        cx->titleToShare = NULL;
     }
 
     JS_UNLOCK_GC(rt);
@@ -551,6 +558,7 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
 {
     jsval v;
     JSScope *scope;
+    JSTitle *title;
 #ifndef NSPR_LOCK
     JSThinLock *tl;
     jsword me;
@@ -574,7 +582,8 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
      * and contention-free multi-threaded cases.
      */
     scope = OBJ_SCOPE(obj);
-    JS_ASSERT(scope->ownercx != cx);
+    title = &scope->title;
+    JS_ASSERT(title->ownercx != cx);
     JS_ASSERT(slot < obj->map->freeslot);
 
     /*
@@ -585,12 +594,12 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
      */
     if (CX_THREAD_IS_RUNNING_GC(cx) ||
         (SCOPE_IS_SEALED(scope) && scope->object == obj) ||
-        (scope->ownercx && ClaimScope(scope, cx))) {
+        (title->ownercx && ClaimTitle(title, cx))) {
         return STOBJ_GET_SLOT(obj, slot);
     }
 
 #ifndef NSPR_LOCK
-    tl = &scope->lock;
+    tl = &title->lock;
     me = CX_THINLOCK_ID(cx);
     JS_ASSERT(CURRENT_THREAD_IS_ME(me));
     if (js_CompareAndSwap(&tl->owner, 0, me)) {
@@ -604,9 +613,9 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
             v = STOBJ_GET_SLOT(obj, slot);
             if (!js_CompareAndSwap(&tl->owner, me, 0)) {
                 /* Assert that scope locks never revert to flyweight. */
-                JS_ASSERT(scope->ownercx != cx);
+                JS_ASSERT(title->ownercx != cx);
                 LOGIT(scope, '1');
-                scope->u.count = 1;
+                title->u.count = 1;
                 js_UnlockObj(cx, obj);
             }
             return v;
@@ -631,15 +640,16 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
      * object's scope (whose lock was not flyweight, else we wouldn't be here
      * in the first place!).
      */
-    scope = OBJ_SCOPE(obj);
-    if (scope->ownercx != cx)
-        js_UnlockScope(cx, scope);
+    title = &OBJ_SCOPE(obj)->title;
+    if (title->ownercx != cx)
+        js_UnlockTitle(cx, title);
     return v;
 }
 
 void
 js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
 {
+    JSTitle *title;
     JSScope *scope;
 #ifndef NSPR_LOCK
     JSThinLock *tl;
@@ -667,7 +677,8 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
      * and contention-free multi-threaded cases.
      */
     scope = OBJ_SCOPE(obj);
-    JS_ASSERT(scope->ownercx != cx);
+    title = &scope->title;
+    JS_ASSERT(title->ownercx != cx);
     JS_ASSERT(slot < obj->map->freeslot);
 
     /*
@@ -678,13 +689,13 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
      */
     if (CX_THREAD_IS_RUNNING_GC(cx) ||
         (SCOPE_IS_SEALED(scope) && scope->object == obj) ||
-        (scope->ownercx && ClaimScope(scope, cx))) {
+        (title->ownercx && ClaimTitle(title, cx))) {
         LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, v);
         return;
     }
 
 #ifndef NSPR_LOCK
-    tl = &scope->lock;
+    tl = &title->lock;
     me = CX_THINLOCK_ID(cx);
     JS_ASSERT(CURRENT_THREAD_IS_ME(me));
     if (js_CompareAndSwap(&tl->owner, 0, me)) {
@@ -692,9 +703,9 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
             LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, v);
             if (!js_CompareAndSwap(&tl->owner, me, 0)) {
                 /* Assert that scope locks never revert to flyweight. */
-                JS_ASSERT(scope->ownercx != cx);
+                JS_ASSERT(title->ownercx != cx);
                 LOGIT(scope, '1');
-                scope->u.count = 1;
+                title->u.count = 1;
                 js_UnlockObj(cx, obj);
             }
             return;
@@ -714,9 +725,9 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     /*
      * Same drill as above, in js_GetSlotThreadSafe.
      */
-    scope = OBJ_SCOPE(obj);
-    if (scope->ownercx != cx)
-        js_UnlockScope(cx, scope);
+    title = &OBJ_SCOPE(obj)->title;
+    if (title->ownercx != cx)
+        js_UnlockTitle(cx, title);
 }
 
 #ifndef NSPR_LOCK
@@ -1059,50 +1070,50 @@ js_UnlockRuntime(JSRuntime *rt)
 }
 
 void
-js_LockScope(JSContext *cx, JSScope *scope)
+js_LockTitle(JSContext *cx, JSTitle *title)
 {
     jsword me = CX_THINLOCK_ID(cx);
 
     JS_ASSERT(CURRENT_THREAD_IS_ME(me));
-    JS_ASSERT(scope->ownercx != cx);
+    JS_ASSERT(title->ownercx != cx);
     if (CX_THREAD_IS_RUNNING_GC(cx))
         return;
-    if (scope->ownercx && ClaimScope(scope, cx))
+    if (title->ownercx && ClaimTitle(title, cx))
         return;
 
-    if (Thin_RemoveWait(ReadWord(scope->lock.owner)) == me) {
-        JS_ASSERT(scope->u.count > 0);
+    if (Thin_RemoveWait(ReadWord(title->lock.owner)) == me) {
+        JS_ASSERT(title->u.count > 0);
         LOGIT(scope, '+');
-        scope->u.count++;
+        title->u.count++;
     } else {
-        JSThinLock *tl = &scope->lock;
+        JSThinLock *tl = &title->lock;
         JS_LOCK0(tl, me);
-        JS_ASSERT(scope->u.count == 0);
+        JS_ASSERT(title->u.count == 0);
         LOGIT(scope, '1');
-        scope->u.count = 1;
+        title->u.count = 1;
     }
 }
 
 void
-js_UnlockScope(JSContext *cx, JSScope *scope)
+js_UnlockTitle(JSContext *cx, JSTitle *title)
 {
     jsword me = CX_THINLOCK_ID(cx);
 
     /* We hope compilers use me instead of reloading cx->thread in the macro. */
     if (CX_THREAD_IS_RUNNING_GC(cx))
         return;
-    if (cx->lockedSealedScope == scope) {
-        cx->lockedSealedScope = NULL;
+    if (cx->lockedSealedTitle == title) {
+        cx->lockedSealedTitle = NULL;
         return;
     }
 
     /*
-     * If scope->ownercx is not null, it's likely that two contexts not using
-     * requests nested locks for scope.  The first context, cx here, claimed
-     * scope; the second, scope->ownercx here, re-claimed it because the first
+     * If title->ownercx is not null, it's likely that two contexts not using
+     * requests nested locks for title.  The first context, cx here, claimed
+     * title; the second, title->ownercx here, re-claimed it because the first
      * was not in a request, or was on the same thread.  We don't want to keep
      * track of such nesting, because it penalizes the common non-nested case.
-     * Instead of asserting here and silently coping, we simply re-claim scope
+     * Instead of asserting here and silently coping, we simply re-claim title
      * for cx and return.
      *
      * See http://bugzilla.mozilla.org/show_bug.cgi?id=229200 for a real world
@@ -1110,94 +1121,94 @@ js_UnlockScope(JSContext *cx, JSScope *scope)
      * to be the only thread that runs the GC) combined with multiple contexts
      * per thread has led to such request-less nesting.
      */
-    if (scope->ownercx) {
-        JS_ASSERT(scope->u.count == 0);
-        JS_ASSERT(scope->lock.owner == 0);
-        scope->ownercx = cx;
+    if (title->ownercx) {
+        JS_ASSERT(title->u.count == 0);
+        JS_ASSERT(title->lock.owner == 0);
+        title->ownercx = cx;
         return;
     }
 
-    JS_ASSERT(scope->u.count > 0);
-    if (Thin_RemoveWait(ReadWord(scope->lock.owner)) != me) {
+    JS_ASSERT(title->u.count > 0);
+    if (Thin_RemoveWait(ReadWord(title->lock.owner)) != me) {
         JS_ASSERT(0);   /* unbalanced unlock */
         return;
     }
     LOGIT(scope, '-');
-    if (--scope->u.count == 0) {
-        JSThinLock *tl = &scope->lock;
+    if (--title->u.count == 0) {
+        JSThinLock *tl = &title->lock;
         JS_UNLOCK0(tl, me);
     }
 }
 
 /*
- * NB: oldscope may be null if our caller is js_GetMutableScope and it just
- * dropped the last reference to oldscope.
+ * NB: oldtitle may be null if our caller is js_GetMutableScope and it just
+ * dropped the last reference to oldtitle.
  */
 void
-js_TransferScopeLock(JSContext *cx, JSScope *oldscope, JSScope *newscope)
+js_TransferTitle(JSContext *cx, JSTitle *oldtitle, JSTitle *newtitle)
 {
     jsword me;
     JSThinLock *tl;
 
-    JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, newscope));
+    JS_ASSERT(JS_IS_TITLE_LOCKED(cx, newtitle));
 
     /*
-     * If the last reference to oldscope went away, newscope needs no lock
+     * If the last reference to oldtitle went away, newtitle needs no lock
      * state update.
      */
-    if (!oldscope)
+    if (!oldtitle)
         return;
-    JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, oldscope));
+    JS_ASSERT(JS_IS_TITLE_LOCKED(cx, oldtitle));
 
     /*
-     * Special case in js_LockScope and js_UnlockScope for the GC calling
+     * Special case in js_LockTitle and js_UnlockTitle for the GC calling
      * code that locks, unlocks, or mutates.  Nothing to do in these cases,
-     * because scope and newscope were "locked" by the GC thread, so neither
+     * because title and newtitle were "locked" by the GC thread, so neither
      * was actually locked.
      */
     if (CX_THREAD_IS_RUNNING_GC(cx))
         return;
 
     /*
-     * Special case in js_LockObj and js_UnlockScope for locking the sealed
+     * Special case in js_LockObj and js_UnlockTitle for locking the sealed
      * scope of an object that owns that scope (the prototype or mutated obj
      * for which OBJ_SCOPE(obj)->object == obj), and unlocking it.
      */
-    JS_ASSERT(cx->lockedSealedScope != newscope);
-    if (cx->lockedSealedScope == oldscope) {
-        JS_ASSERT(newscope->ownercx == cx ||
-                  (!newscope->ownercx && newscope->u.count == 1));
-        cx->lockedSealedScope = NULL;
+    JS_ASSERT(cx->lockedSealedTitle != newtitle);
+    if (cx->lockedSealedTitle == oldtitle) {
+        JS_ASSERT(newtitle->ownercx == cx ||
+                  (!newtitle->ownercx && newtitle->u.count == 1));
+        cx->lockedSealedTitle = NULL;
         return;
     }
 
     /*
-     * If oldscope is single-threaded, there's nothing to do.
+     * If oldtitle is single-threaded, there's nothing to do.
      */
-    if (oldscope->ownercx) {
-        JS_ASSERT(oldscope->ownercx == cx);
-        JS_ASSERT(newscope->ownercx == cx ||
-                  (!newscope->ownercx && newscope->u.count == 1));
+    if (oldtitle->ownercx) {
+        JS_ASSERT(oldtitle->ownercx == cx);
+        JS_ASSERT(newtitle->ownercx == cx ||
+                  (!newtitle->ownercx && newtitle->u.count == 1));
         return;
     }
 
     /*
-     * We transfer oldscope->u.count only if newscope is not single-threaded.
-     * Flow unwinds from here through some number of JS_UNLOCK_SCOPE and/or
-     * JS_UNLOCK_OBJ macro calls, which will decrement newscope->u.count only
-     * if they find newscope->ownercx != cx.
+     * We transfer oldtitle->u.count only if newtitle is not single-threaded.
+     * Flow unwinds from here through some number of JS_UNLOCK_TITLE and/or
+     * JS_UNLOCK_OBJ macro calls, which will decrement newtitle->u.count only
+     * if they find newtitle->ownercx != cx.
      */
-    if (newscope->ownercx != cx) {
-        JS_ASSERT(!newscope->ownercx);
-        newscope->u.count = oldscope->u.count;
+    if (newtitle->ownercx != cx) {
+        JS_ASSERT(!newtitle->ownercx);
+        newtitle->u.count = oldtitle->u.count;
     }
 
     /*
-     * Reset oldscope's lock state so that it is completely unlocked.
+     * Reset oldtitle's lock state so that it is completely unlocked.
      */
     LOGIT(oldscope, '0');
-    oldscope->u.count = 0;
-    tl = &oldscope->lock;
+    oldtitle->u.count = 0;
+    tl = &oldtitle->lock;
     me = CX_THINLOCK_ID(cx);
     JS_UNLOCK0(tl, me);
 }
@@ -1206,33 +1217,35 @@ void
 js_LockObj(JSContext *cx, JSObject *obj)
 {
     JSScope *scope;
+    JSTitle *title;
 
     JS_ASSERT(OBJ_IS_NATIVE(obj));
 
     /*
      * We must test whether the GC is calling and return without mutating any
      * state, especially cx->lockedSealedScope.  Note asymmetry with respect to
-     * js_UnlockObj, which is a thin-layer on top of js_UnlockScope.
+     * js_UnlockObj, which is a thin-layer on top of js_UnlockTitle.
      */
     if (CX_THREAD_IS_RUNNING_GC(cx))
         return;
 
     for (;;) {
         scope = OBJ_SCOPE(obj);
+        title = &scope->title;
         if (SCOPE_IS_SEALED(scope) && scope->object == obj &&
-            !cx->lockedSealedScope) {
-            cx->lockedSealedScope = scope;
+            !cx->lockedSealedTitle) {
+            cx->lockedSealedTitle = title;
             return;
         }
 
-        js_LockScope(cx, scope);
+        js_LockTitle(cx, title);
 
         /* If obj still has this scope, we're done. */
         if (scope == OBJ_SCOPE(obj))
             return;
 
         /* Lost a race with a mutator; retry with obj's new scope. */
-        js_UnlockScope(cx, scope);
+        js_UnlockTitle(cx, title);
     }
 }
 
@@ -1240,7 +1253,38 @@ void
 js_UnlockObj(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(OBJ_IS_NATIVE(obj));
-    js_UnlockScope(cx, OBJ_SCOPE(obj));
+    js_UnlockTitle(cx, &OBJ_SCOPE(obj)->title);
+}
+
+void
+js_InitTitle(JSContext *cx, JSTitle *title)
+{
+#ifdef JS_THREADSAFE
+    title->ownercx = cx;
+    memset(&title->lock, 0, sizeof title->lock);
+
+    /*
+     * Set u.link = NULL, not u.count = 0, in case the target architecture's
+     * null pointer has a non-zero integer representation.
+     */
+    title->u.link = NULL;
+
+#ifdef JS_DEBUG_TITLE_LOCKS
+    title->file[0] = title->file[1] = title->file[2] = title->file[3] = NULL;
+    title->line[0] = title->line[1] = title->line[2] = title->line[3] = 0;
+#endif
+#endif
+}
+
+void
+js_FinishTitle(JSContext *cx, JSTitle *title)
+{
+#ifdef JS_THREADSAFE
+    /* Title must be single-threaded at this point, so set ownercx. */
+    JS_ASSERT(title->u.count == 0);
+    title->ownercx = cx;
+    js_FinishLock(&title->lock);
+#endif
 }
 
 #ifdef DEBUG
@@ -1256,30 +1300,30 @@ js_IsObjLocked(JSContext *cx, JSObject *obj)
 {
     JSScope *scope = OBJ_SCOPE(obj);
 
-    return MAP_IS_NATIVE(&scope->map) && js_IsScopeLocked(cx, scope);
+    return MAP_IS_NATIVE(&scope->map) && js_IsTitleLocked(cx, &scope->title);
 }
 
 JSBool
-js_IsScopeLocked(JSContext *cx, JSScope *scope)
+js_IsTitleLocked(JSContext *cx, JSTitle *title)
 {
-    /* Special case: the GC locking any object's scope, see js_LockScope. */
+    /* Special case: the GC locking any object's title, see js_LockTitle. */
     if (CX_THREAD_IS_RUNNING_GC(cx))
         return JS_TRUE;
 
     /* Special case: locked object owning a sealed scope, see js_LockObj. */
-    if (cx->lockedSealedScope == scope)
+    if (cx->lockedSealedTitle == title)
         return JS_TRUE;
 
     /*
-     * General case: the scope is either exclusively owned (by cx), or it has
+     * General case: the title is either exclusively owned (by cx), or it has
      * a thin or fat lock to cope with shared (concurrent) ownership.
      */
-    if (scope->ownercx) {
-        JS_ASSERT(scope->ownercx == cx || scope->ownercx->thread == cx->thread);
+    if (title->ownercx) {
+        JS_ASSERT(title->ownercx == cx || title->ownercx->thread == cx->thread);
         return JS_TRUE;
     }
     return js_CurrentThreadId() ==
-           ((JSThread *)Thin_RemoveWait(ReadWord(scope->lock.owner)))->id;
+           ((JSThread *)Thin_RemoveWait(ReadWord(title->lock.owner)))->id;
 }
 
 #endif /* DEBUG */
