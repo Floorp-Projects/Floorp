@@ -49,7 +49,6 @@ bin/platform.ini
 bin/mozilla-xremote-client
 bin/run-mozilla.sh
 bin/plugins/libnullplugin.so
-bin/res/effective_tld_names.dat
 bin/libsqlite3.so
 bin/README.txt
 bin/libjemalloc.so
