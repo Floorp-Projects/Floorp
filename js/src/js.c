@@ -52,7 +52,6 @@
 #include "jsutil.h"
 #include "jsprf.h"
 #include "jsapi.h"
-#include "jsarray.h"
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsdbgapi.h"
@@ -326,11 +325,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: js [-zKPswWxCi] [-b branchlimit] [-c stackchunksize] [-o option] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] "
-#ifdef JS_GC_ZEAL
-"[-Z gczeal] "
-#endif
-"[scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: js [-PswWxCi] [-b branchlimit] [-c stackchunksize] [-o option] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -376,9 +371,6 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
           case 'e':
           case 'v':
           case 'S':
-#ifdef JS_GC_ZEAL
-          case 'Z':
-#endif
             ++i;
             break;
           default:;
@@ -422,14 +414,6 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 
             JS_SetVersion(cx, (JSVersion) atoi(argv[i]));
             break;
-
-#ifdef JS_GC_ZEAL
-        case 'Z':
-            if (++i == argc)
-                return usage();
-            JS_SetGCZeal(cx, atoi(argv[i]));
-            break;
-#endif
 
         case 'w':
             reportWarnings = JS_TRUE;
@@ -2548,9 +2532,6 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("connectShark",    ConnectShark,    0,0,0),
     JS_FS("disconnectShark", DisconnectShark, 0,0,0),
 #endif
-#ifdef DEBUG_ARRAYS
-    JS_FS("arrayInfo",       js_ArrayInfo,       1,0,0),
-#endif
     JS_FS_END
 };
 
@@ -2620,9 +2601,6 @@ static const char *const shell_help_messages[] = {
 "connectShark()           Connect to Shark.\n"
 "                         The -k switch does this automatically.",
 "disconnectShark()        Disconnect from Shark.",
-#endif
-#ifdef DEBUG_ARRAYS
-"arrayInfo(a1, a2, ...)   Report statistics about arrays.",
 #endif
 };
 
