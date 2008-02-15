@@ -292,7 +292,3 @@ res\html\folder.png
 ; res\fonts\mathfontMTExtra.properties
 ; res\fonts\mathfontPUA.properties
 ; res\fonts\mathfontSymbol.properties
-
-
-; Effective TLD
-res\effective_tld_names.dat

@@ -284,6 +284,3 @@ res\cmessage.txt
 ; storage
 components\storage.xpt
 components\strgcmps.dll
-
-; Effective TLD
-res\effective_tld_names.dat
