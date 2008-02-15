@@ -57,8 +57,8 @@ class nsMediaList;
 class nsIPrincipal;
 
 #define NS_ICSS_PARSER_IID    \
-{ 0x2cb34728, 0x0f17, 0x4753, \
-  {0x8e, 0xad, 0xec, 0x73, 0xe5, 0x69, 0xcd, 0xcd} }
+{ 0xad4a3778, 0xdae0, 0x4640, \
+ { 0xb2, 0x5a, 0x24, 0xff, 0x09, 0xc3, 0x70, 0xef } }
 
 // Rule processing function
 typedef void (*PR_CALLBACK RuleAppendFunc) (nsICSSRule* aRule, void* aData);
@@ -69,7 +69,8 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSS_PARSER_IID)
 
   // Set a style sheet for the parser to fill in. The style sheet must
-  // implement the nsICSSStyleSheet interface
+  // implement the nsICSSStyleSheet interface.  Null can be passed in to clear
+  // out an existing stylesheet reference.
   NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet) = 0;
 
   // Set whether or not tags & classes are case sensitive or uppercased
@@ -87,16 +88,27 @@ public:
   NS_IMETHOD SetChildLoader(nsICSSLoader* aChildLoader) = 0;
 
   /**
+   * Parse aInput into the stylesheet that was previously set by calling
+   * SetStyleSheet.  Calling this method without calling SetStyleSheet first is
+   * an error.
+   *
+   * @param aInput the data to parse
+   * @param aSheetURL the URI to use as the sheet URI (for error reporting).
+   *                  This must match the URI of the sheet passed to
+   *                  SetStyleSheet.
+   * @param aBaseURI the URI to use for relative URI resolution
+   * @param aSheetPrincipal the principal of the stylesheet.  This must match
+   *                        the principal of the sheet passed to SetStyleSheet.
+   * @param aLineNumber the line number of the first line of the sheet.   
    * @param aAllowUnsafeRules see aEnableUnsafeRules in
-   * nsICSSLoader::LoadSheetSync
+   *                          nsICSSLoader::LoadSheetSync
    */
   NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
                    nsIURI*                aSheetURL,
                    nsIURI*                aBaseURI,
                    nsIPrincipal*          aSheetPrincipal,
                    PRUint32               aLineNumber,
-                   PRBool                 aAllowUnsafeRules,
-                   nsICSSStyleSheet*&     aResult) = 0;
+                   PRBool                 aAllowUnsafeRules) = 0;
 
   // Parse HTML style attribute or its equivalent in other markup
   // languages.  aBaseURL is the base url to use for relative links in

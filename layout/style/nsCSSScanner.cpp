@@ -190,7 +190,7 @@ nsCSSScanner::nsCSSScanner()
     BuildLexTable();
   }
   mPushback = mLocalPushback;
-  mPushbackSize = 4;
+  mPushbackSize = NS_ARRAY_LENGTH(mLocalPushback);
   // No need to init the other members, since they represent state
   // which can get cleared.  We'll init them every time Init() is
   // called.
@@ -456,6 +456,16 @@ void nsCSSScanner::Close()
 {
   mInputStream = nsnull;
   mReadPointer = nsnull;
+
+  // Clean things up so we don't hold on to memory if our parser gets recycled.
+  mFileName.Truncate();
+  mURI = nsnull;
+  mError.Truncate();
+  if (mPushback != mLocalPushback) {
+    delete [] mPushback;
+    mPushback = mLocalPushback;
+    mPushbackSize = NS_ARRAY_LENGTH(mLocalPushback);
+  }
 }
 
 #ifdef CSS_REPORT_PARSE_ERRORS
