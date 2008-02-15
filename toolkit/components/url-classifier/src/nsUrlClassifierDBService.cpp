@@ -878,8 +878,11 @@ private:
                            nsACString& chunk,
                            nsTArray<nsUrlClassifierEntry>& entries);
 
-  // Parse a stringified range of chunks of the form "n" or "n-m".
-  PRBool ParseChunkRange(const nsACString& chunkStr,
+  // Parse one stringified range of chunks of the form "n" or "n-m" from a
+  // comma-separated list of chunks.  Upon return, 'begin' will point to the
+  // next range of chunks in the list of chunks.
+  PRBool ParseChunkRange(nsACString::const_iterator &begin,
+                         const nsACString::const_iterator &end,
                          PRUint32 *first, PRUint32 *last);
 
   // Expand a stringified chunk list into an array of ints.
@@ -1850,12 +1853,20 @@ nsUrlClassifierDBServiceWorker::GetChunkEntries(const nsACString& table,
 }
 
 PRBool
-nsUrlClassifierDBServiceWorker::ParseChunkRange(const nsACString& chunkStr,
+nsUrlClassifierDBServiceWorker::ParseChunkRange(nsACString::const_iterator &begin,
+                                                const nsACString::const_iterator &end,
                                                 PRUint32 *first,
                                                 PRUint32 *last)
 {
-  PRUint32 numRead = PR_sscanf(PromiseFlatCString(chunkStr).get(),
-                               "%u-%u", first, last);
+  nsACString::const_iterator iter = begin;
+  FindCharInReadable(',', iter, end);
+
+  nsCAutoString element(Substring(begin, iter));
+  begin = iter;
+  if (begin != end)
+    begin++;
+
+  PRUint32 numRead = PR_sscanf(element.get(), "%u-%u", first, last);
   if (numRead == 2) {
     if (*first > *last) {
       PRUint32 tmp = *first;
@@ -1879,14 +1890,12 @@ nsUrlClassifierDBServiceWorker::ParseChunkList(const nsACString& chunkStr,
 {
   LOG(("Parsing %s", PromiseFlatCString(chunkStr).get()));
 
-  nsCStringArray elements;
-  elements.ParseString(PromiseFlatCString(chunkStr).get() , ",");
-
-  for (PRInt32 i = 0; i < elements.Count(); i++) {
-    nsCString& element = *elements[i];
-    PRUint32 first;
-    PRUint32 last;
-    if (ParseChunkRange(element, &first, &last)) {
+  nsACString::const_iterator begin, end;
+  chunkStr.BeginReading(begin);
+  chunkStr.EndReading(end);
+  while (begin != end) {
+    PRUint32 first, last;
+    if (ParseChunkRange(begin, end, &first, &last)) {
       for (PRUint32 num = first; num <= last; num++) {
         chunks.AppendElement(num);
       }
@@ -2314,26 +2323,36 @@ nsUrlClassifierDBServiceWorker::ProcessResponseLines(PRBool* done)
       *done = PR_FALSE;
       break;
     } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("ad:"))) {
-      PRUint32 first;
-      PRUint32 last;
-      if (!ParseChunkRange(Substring(line, 3), &first, &last)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      for (PRUint32 chunkNum = first; chunkNum <= last; chunkNum++) {
-        rv = ExpireAdd(mUpdateTableId, chunkNum);
-        NS_ENSURE_SUCCESS(rv, rv);
+      const nsCSubstring &list = Substring(line, 3);
+      nsACString::const_iterator begin, end;
+      list.BeginReading(begin);
+      list.EndReading(end);
+      while (begin != end) {
+        PRUint32 first, last;
+        if (ParseChunkRange(begin, end, &first, &last)) {
+          for (PRUint32 num = first; num <= last; num++) {
+            rv = ExpireAdd(mUpdateTableId, num);
+            NS_ENSURE_SUCCESS(rv, rv);
+          }
+        } else {
+          return NS_ERROR_FAILURE;
+        }
       }
     } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("sd:"))) {
-      PRUint32 first;
-      PRUint32 last;
-      if (!ParseChunkRange(Substring(line, 3), &first, &last)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      for (PRUint32 chunkNum = first; chunkNum <= last; chunkNum++) {
-        rv = ExpireSub(mUpdateTableId, chunkNum);
-        NS_ENSURE_SUCCESS(rv, rv);
+      const nsCSubstring &list = Substring(line, 3);
+      nsACString::const_iterator begin, end;
+      list.BeginReading(begin);
+      list.EndReading(end);
+      while (begin != end) {
+        PRUint32 first, last;
+        if (ParseChunkRange(begin, end, &first, &last)) {
+          for (PRUint32 num = first; num <= last; num++) {
+            rv = ExpireSub(mUpdateTableId, num);
+            NS_ENSURE_SUCCESS(rv, rv);
+          }
+        } else {
+          return NS_ERROR_FAILURE;
+        }
       }
     } else {
       LOG(("ignoring unknown line: '%s'", PromiseFlatCString(line).get()));
