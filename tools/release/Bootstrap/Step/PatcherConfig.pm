@@ -26,6 +26,8 @@ sub Execute {
     my $config = new Bootstrap::Config();
     my $logDir = $config->Get(sysvar => 'logDir');
     my $configBumpDir = $config->Get(var => 'configBumpDir');
+    my $product = $config->Get(var => 'product');
+    my $rc = $config->Get(var => 'rc');
     my $version = $config->GetVersion(longName => 0);
     my $oldVersion = $config->GetOldVersion(longName => 0);
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
@@ -33,10 +35,13 @@ sub Execute {
     my $ftpServer = $config->Get(var => 'ftpServer');
     my $bouncerServer = $config->Get(var => 'bouncerServer');
 
+    my $versionedConfigBumpDir = catfile($configBumpDir, 
+                                          "$product-$version-rc$rc");
+
     # Create patcher config area in the config bump area.
-    if (not -d $configBumpDir) {
-        MkdirWithPath(dir => $configBumpDir) 
-          or die("Cannot mkdir $configBumpDir: $!");
+    if (not -d $versionedConfigBumpDir) {
+        MkdirWithPath(dir => $versionedConfigBumpDir) 
+          or die("Cannot mkdir $versionedConfigBumpDir: $!");
     }
 
     # checkout config to bump
@@ -45,7 +50,7 @@ sub Execute {
                  modules => [CvsCatfile('mozilla', 'tools', 'patcher-configs',
                                         $patcherConfig)],
                  logFile => catfile($logDir, 'patcherconfig-checkout.log'),
-                 workDir => $configBumpDir
+                 workDir => $versionedConfigBumpDir
     );
 
     # Do all the work...
@@ -61,7 +66,7 @@ sub Execute {
       cmdArgs => ['diff', $patcherConfig ],
       logFile => catfile($logDir, 'patcherconfig-diff.log'),
       ignoreExitValue => 1,
-      dir => catfile($configBumpDir, 'patcher'),
+      dir => catfile($versionedConfigBumpDir, 'patcher'),
     ); 
 
     $this->Shell(
@@ -70,7 +75,7 @@ sub Execute {
                   'ci', '-m', "\"Automated configuration bump: $patcherConfig, "
                    .  "from $oldVersion to $version\"", $patcherConfig],
       logFile => catfile($logDir, 'patcherconfig-checkin.log'),
-      dir => catfile($configBumpDir, 'patcher'),
+      dir => catfile($versionedConfigBumpDir, 'patcher'),
     ); 
 }
 
@@ -93,9 +98,12 @@ sub BumpPatcherConfig {
     my $bouncerServer = $config->Get(var => 'bouncerServer');
     my $logDir = $config->Get(sysvar => 'logDir');
 
+    my $versionedConfigBumpDir = catfile($configBumpDir,
+                                           $product . '-' . $version);
+
     # First, parse the file.
-    my $checkedOutPatcherConfig = catfile($configBumpDir, 'patcher', 
-     $patcherConfig);
+    my $checkedOutPatcherConfig = catfile($versionedConfigBumpDir, 'patcher', 
+                                           $patcherConfig);
 
     my $patcherConfigObj = new Config::General(-ConfigFile => 
      $checkedOutPatcherConfig);
