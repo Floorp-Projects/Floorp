@@ -1325,57 +1325,12 @@ FlushPops(JSContext *cx, JSCodeGenerator *cg, intN *npops)
 
 /*
  * Emit additional bytecode(s) for non-local jumps.
- *
- * FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=379758
  */
 static JSBool
-EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
-                      JSOp *returnop)
+EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt)
 {
     intN depth, npops;
     JSStmtInfo *stmt;
-    ptrdiff_t jmp;
-
-    /*
-     * Return from a try block that has a finally clause or from a for-in loop
-     * must be split into two ops: JSOP_SETRVAL, to pop the r.v. and store it
-     * in fp->rval; and JSOP_RETRVAL, which makes control flow go back to the
-     * caller, who picks up fp->rval as usual.  Otherwise, the stack will be
-     * unbalanced when executing the finally clause.
-     *
-     * We mutate *returnop once only if we find an enclosing try-block (viz,
-     * STMT_FINALLY) or a for-in loop to ensure that we emit just one
-     * JSOP_SETRVAL before one or more JSOP_GOSUBs/JSOP_ENDITERs and other
-     * fixup opcodes emitted by this function.
-     *
-     * Our caller (the TOK_RETURN case of js_EmitTree) then emits *returnop.
-     * The fixup opcodes and gosubs/enditers must interleave in the proper
-     * order, from inner statement to outer, so that finally clauses run at
-     * the correct stack depth.
-     */
-    if (returnop) {
-        JS_ASSERT(*returnop == JSOP_RETURN);
-        for (stmt = cg->treeContext.topStmt; stmt != toStmt;
-             stmt = stmt->down) {
-            if (stmt->type == STMT_FINALLY ||
-                ((cg->treeContext.flags & TCF_FUN_HEAVYWEIGHT) &&
-                 STMT_MAYBE_SCOPE(stmt)) ||
-                stmt->type == STMT_FOR_IN_LOOP) {
-                if (js_Emit1(cx, cg, JSOP_SETRVAL) < 0)
-                    return JS_FALSE;
-                *returnop = JSOP_RETRVAL;
-                break;
-            }
-        }
-
-        /*
-         * If there are no try-with-finally blocks open around this return
-         * statement, we can generate a return forthwith and skip generating
-         * any fixup code.
-         */
-        if (*returnop == JSOP_RETURN)
-            return JS_TRUE;
-    }
 
     /*
      * The non-local jump fixup we emit will unbalance cg->stackDepth, because
@@ -1394,8 +1349,7 @@ EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
             FLUSH_POPS();
             if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
                 return JS_FALSE;
-            jmp = EmitBackPatchOp(cx, cg, JSOP_BACKPATCH, &GOSUBS(*stmt));
-            if (jmp < 0)
+            if (EmitBackPatchOp(cx, cg, JSOP_BACKPATCH, &GOSUBS(*stmt)) < 0)
                 return JS_FALSE;
             break;
 
@@ -1455,7 +1409,7 @@ EmitGoto(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
 {
     intN index;
 
-    if (!EmitNonLocalJumpFixup(cx, cg, toStmt, NULL))
+    if (!EmitNonLocalJumpFixup(cx, cg, toStmt))
         return -1;
 
     if (label)
@@ -5112,18 +5066,26 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 
         /*
-         * EmitNonLocalJumpFixup mutates op to JSOP_RETRVAL after emitting a
-         * JSOP_SETRVAL if there are open try blocks having finally clauses.
+         * EmitNonLocalJumpFixup may add fixup bytecode to close open try
+         * blocks having finally clauses and to exit intermingled let blocks.
          * We can't simply transfer control flow to our caller in that case,
-         * because we must gosub to those clauses from inner to outer, with
-         * the correct stack pointer (i.e., after popping any with, for/in,
-         * etc., slots nested inside the finally's try).
+         * because we must gosub to those finally clauses from inner to outer,
+         * with the correct stack pointer (i.e., after popping any with,
+         * for/in, etc., slots nested inside the finally's try).
+         *
+         * In this case we mutate JSOP_RETURN into JSOP_SETRVAL and add an
+         * extra JSOP_RETRVAL after the fixups.
          */
-        op = JSOP_RETURN;
-        if (!EmitNonLocalJumpFixup(cx, cg, NULL, &op))
+        top = CG_OFFSET(cg);
+        if (js_Emit1(cx, cg, JSOP_RETURN) < 0)
             return JS_FALSE;
-        if (js_Emit1(cx, cg, op) < 0)
+        if (!EmitNonLocalJumpFixup(cx, cg, NULL))
             return JS_FALSE;
+        if (top + JSOP_RETURN_LENGTH != CG_OFFSET(cg)) {
+            CG_BASE(cg)[top] = JSOP_SETRVAL;
+            if (js_Emit1(cx, cg, JSOP_RETRVAL) < 0)
+                return JS_FALSE;
+        }
         break;
 
 #if JS_HAS_GENERATORS

@@ -1922,33 +1922,44 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSObject *parent,
  *          the prototype's scope harder!
  */
 JSBool
-js_PutBlockObject(JSContext *cx, JSObject *obj)
+js_PutBlockObject(JSContext *cx, JSObject *obj, JSBool normalUnwind)
 {
     JSStackFrame *fp;
     uintN depth, slot;
     JSScopeProperty *sprop;
 
-    fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
-    JS_ASSERT(fp);
-    depth = OBJ_BLOCK_DEPTH(cx, obj);
-    for (sprop = OBJ_SCOPE(obj)->lastProp; sprop; sprop = sprop->parent) {
-        if (sprop->getter != js_BlockClass.getProperty)
-            continue;
-        if (!(sprop->flags & SPROP_HAS_SHORTID))
-            continue;
-        slot = depth + (uintN)sprop->shortid;
-        JS_ASSERT(slot < fp->script->depth);
-        if (!js_DefineNativeProperty(cx, obj, sprop->id,
-                                     fp->spbase[slot], NULL, NULL,
-                                     JSPROP_ENUMERATE | JSPROP_PERMANENT,
-                                     SPROP_HAS_SHORTID, sprop->shortid,
-                                     NULL)) {
-            JS_SetPrivate(cx, obj, NULL);
-            return JS_FALSE;
+    if (normalUnwind) {
+        fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
+        JS_ASSERT(fp);
+        depth = OBJ_BLOCK_DEPTH(cx, obj);
+        for (sprop = OBJ_SCOPE(obj)->lastProp; sprop; sprop = sprop->parent) {
+            if (sprop->getter != js_BlockClass.getProperty)
+                continue;
+            if (!(sprop->flags & SPROP_HAS_SHORTID))
+                continue;
+            slot = depth + (uintN)sprop->shortid;
+            JS_ASSERT(slot < fp->script->depth);
+            if (!js_DefineNativeProperty(cx, obj, sprop->id,
+                                         fp->spbase[slot], NULL, NULL,
+                                         JSPROP_ENUMERATE | JSPROP_PERMANENT,
+                                         SPROP_HAS_SHORTID, sprop->shortid,
+                                         NULL)) {
+                /*
+                 * Stop adding properties if we failed due to out-of-memory or
+                 * other quit-asap errors.
+                 */
+                if (!cx->throwing) {
+                    normalUnwind = JS_FALSE;
+                    goto out;
+                }
+            }
         }
     }
 
-    return JS_SetPrivate(cx, obj, NULL);
+  out:
+    /* We must clear the private slot even with errors. */
+    JS_SetPrivate(cx, obj, NULL);
+    return normalUnwind;
 }
 
 static JSBool
