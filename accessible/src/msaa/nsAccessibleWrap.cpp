@@ -1474,7 +1474,7 @@ __try {
     return E_FAIL;
 
   if (!attributes)
-    return S_OK;
+    return S_FALSE;
 
   nsCOMPtr<nsISimpleEnumerator> propEnum;
   attributes->Enumerate(getter_AddRefs(propEnum));

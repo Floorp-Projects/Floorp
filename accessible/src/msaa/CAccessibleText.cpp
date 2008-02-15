@@ -113,12 +113,12 @@ __try {
   if (!winAccessNode)
     return E_FAIL;
 
-  void **instancePtr = 0;
-  winAccessNode->QueryNativeInterface(IID_IAccessible2, instancePtr);
+  void *instancePtr = 0;
+  winAccessNode->QueryNativeInterface(IID_IAccessible2, &instancePtr);
   if (!instancePtr)
     return E_FAIL;
 
-  IAccessible2 *pAccessible2 = static_cast<IAccessible2*>(*instancePtr);
+  IAccessible2 *pAccessible2 = static_cast<IAccessible2*>(instancePtr);
   HRESULT hr = pAccessible2->get_attributes(aTextAttributes);
   pAccessible2->Release();
 
