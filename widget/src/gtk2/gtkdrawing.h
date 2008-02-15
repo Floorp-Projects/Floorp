@@ -176,6 +176,8 @@ typedef enum {
   MOZ_GTK_TAB,
   /* Paints the background and border of a GtkNotebook. */
   MOZ_GTK_TABPANELS,
+  /* Paints a GtkArrow for a GtkNotebook. flags is a GtkArrowType. */
+  MOZ_GTK_TAB_SCROLLARROW,
   /* Paints the background and border of a GtkTreeView */
   MOZ_GTK_TREEVIEW,
   /* Paints treeheader cells */
@@ -340,6 +342,15 @@ moz_gtk_get_scrollbar_metrics(MozGtkScrollbarMetrics* metrics);
  * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
 gint moz_gtk_get_dropdown_arrow_size(gint* width, gint* height);
+
+/**
+ * Get the desired size of a scroll arrow widget
+ * width:   [OUT] the desired width
+ * height:  [OUT] the desired height
+ *
+ * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
+ */
+gint moz_gtk_get_tab_scroll_arrow_size(gint* width, gint* height);
 
 /**
  * Get the desired size of a toolbar separator
