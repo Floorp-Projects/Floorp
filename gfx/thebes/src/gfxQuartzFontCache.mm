@@ -312,7 +312,7 @@ MacOSFamilyEntry::FindFontForChar(FontSearch *aMatchData)
     
         // if we didn't match any characters don't bother wasting more time.
         if (rank == 0)
-            return;
+            continue;
             
         // omitting from original windows code -- family name, lang group, pitch
         // not available in current FontEntry implementation
