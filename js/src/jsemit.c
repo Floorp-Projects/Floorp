@@ -2246,7 +2246,7 @@ EmitNameOp(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     if (op == JSOP_ARGUMENTS) {
         if (js_Emit1(cx, cg, op) < 0)
             return JS_FALSE;
-        if (callContext && js_Emit1(cx, cg, JSOP_GLOBALTHIS) < 0)
+        if (callContext && js_Emit1(cx, cg, JSOP_NULL) < 0)
             return JS_FALSE;
     } else {
         if (pn->pn_slot >= 0) {
@@ -5894,16 +5894,11 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             /* FALL THROUGH */
           default:
             /*
-             * Push the appropriate global object after the expression as the
-             * |this| parameter for the function call. ECMA-262 specifies that
-             * this happens after actual argument evaluation, but the result
-             * can't be affected by argument evaluation so we do it early and
-             * avoid null testing in js_ComputeThis.
+             * Push null as a placeholder for the global object, per ECMA-262
+             * 11.2.3 step 6.
              */
-            if (!js_EmitTree(cx, cg, pn2) ||
-                !js_Emit1(cx, cg, JSOP_GLOBALTHIS) < 0) {
+            if (!js_EmitTree(cx, cg, pn2) || !js_Emit1(cx, cg, JSOP_NULL) < 0)
                 return JS_FALSE;
-            }
         }
 
         /* Remember start of callable-object bytecode for decompilation hint. */

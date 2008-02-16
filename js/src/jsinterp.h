@@ -353,8 +353,8 @@ js_GetPrimitiveThis(JSContext *cx, jsval *vp, JSClass *clasp, jsval *thisvp);
  * objects as, per ECMA-262, they may not be referred to by |this|. argv[-1]
  * must not be a JSVAL_VOID.
  */
-extern JSBool
-js_ComputeThis(JSContext *cx, jsval *argv);
+extern JSObject *
+js_ComputeThis(JSContext *cx, JSBool lazy, jsval *argv);
 
 /*
  * NB: js_Invoke requires that cx is currently running JS (i.e., that cx->fp
