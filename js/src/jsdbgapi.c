@@ -1090,7 +1090,7 @@ JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameThis(JSContext *cx, JSStackFrame *fp)
 {
-    if (!fp->thisp) {
+    if (!fp->thisp && fp->argv) {
         fp->thisp = js_ComputeThis(cx, JS_TRUE, fp->argv);
         if (!fp->thisp)
             return NULL;
