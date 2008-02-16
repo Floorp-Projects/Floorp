@@ -209,10 +209,13 @@ nsIFactory *nsGlobalWindow::sComputedDOMStyleFactory   = nsnull;
 
 static nsIEntropyCollector *gEntropyCollector          = nsnull;
 static PRInt32              gRefCnt                    = 0;
-static PRUint32             gSerialCounter             = 0;
 static PRInt32              gOpenPopupSpamCount        = 0;
 static PopupControlState    gPopupControlState         = openAbused;
 static PRInt32              gRunningTimeoutDepth       = 0;
+
+#ifdef DEBUG
+static PRUint32             gSerialCounter             = 0;
+#endif
 
 #ifdef DEBUG_jst
 PRInt32 gTimeoutCnt                                    = 0;
