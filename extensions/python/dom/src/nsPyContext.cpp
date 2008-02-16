@@ -475,7 +475,7 @@ nsPythonContext::CompileEventHandler(nsIAtom *aName,
                                  const char** aArgNames,
                                  const nsAString& aBody,
                                  const char *aURL, PRUint32 aLineNo,
-                                 PRUint32 aVersion;
+				     PRUint32 aVersion,
                                  nsScriptObjectHolder &aHandler)
 {
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
