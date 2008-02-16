@@ -6507,7 +6507,9 @@ AC_TRY_COMPILE([], [return 0;],
 AC_MSG_RESULT([$result])
 
 if test $result = "yes"; then
+  PROFILE_GEN_LDFLAGS="-fprofile-generate"
   PROFILE_USE_CFLAGS="-fprofile-use"
+  PROFILE_USE_LDFLAGS="-fprofile-use"
 else
   CFLAGS="$_SAVE_CFLAGS -fprofile-arcs"
   AC_MSG_CHECKING([whether C compiler supports -fprofile-arcs])
@@ -6518,12 +6520,17 @@ else
   if test $result = "yes"; then
     PROFILE_USE_CFLAGS="-fbranch-probabilities"
   fi
+  # don't really care, this is an old GCC
+  PROFILE_GEN_LDFLAGS=
+  PROFILE_USE_LDFLAGS=
 fi
 
 CFLAGS="$_SAVE_CFLAGS"
 
 AC_SUBST(PROFILE_GEN_CFLAGS)
+AC_SUBST(PROFILE_GEN_LDFLAGS)
 AC_SUBST(PROFILE_USE_CFLAGS)
+AC_SUBST(PROFILE_USE_LDFLAGS)
 
 AC_LANG_CPLUSPLUS
 

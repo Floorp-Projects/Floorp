@@ -278,16 +278,6 @@ endif
 endif # MOZ_DEBUG
 endif # WINNT && !GNU_CC
 
-
-# If we're applying MOZ_PROFILE_GENERATE to a non-static build, then we
-# need to create a static build _with_ PIC.  This allows us to generate
-# profile data that will still be valid when the object files are linked into
-# shared libraries.
-ifdef MOZ_PROFILE_GENERATE
-BUILD_STATIC_LIBS=1
-STATIC_BUILD_PIC=1
-endif
-
 #
 # Build using PIC by default
 # Do not use PIC if not building a shared lib (see exceptions below)
@@ -352,20 +342,6 @@ FORCE_SHARED_LIB=1
 endif
 endif
 
-ifdef STATIC_BUILD_PIC
-ifndef _ENABLE_PIC
-# If PIC hasn't been enabled now, object files in this directory will not
-# ever be linked into a DSO.  Turn PIC on and set ENABLE_PROFILE_GENERATE.
-ENABLE_PROFILE_GENERATE=1
-_ENABLE_PIC=1
-endif
-else
-# For static builds, always enable profile generation for non-PIC objects.
-ifndef _ENABLE_PIC
-ENABLE_PROFILE_GENERATE=1
-endif
-endif
-
 #
 # Disable PIC if necessary
 #
@@ -377,23 +353,27 @@ DSO_PIC_CFLAGS=-mdynamic-no-pic
 else
 DSO_PIC_CFLAGS=
 endif
-
-MKSHLIB=
 endif
 
-# Enable profile-based feedback for non-PIC objects
-ifdef ENABLE_PROFILE_GENERATE
+# Enable profile-based feedback
 ifdef MOZ_PROFILE_GENERATE
-DSO_PIC_CFLAGS += $(PROFILE_GEN_CFLAGS)
+# No sense in profiling tools
+ifndef INTERNAL_TOOLS
+OS_CFLAGS += $(PROFILE_GEN_CFLAGS)
+OS_CXXFLAGS += $(PROFILE_GEN_CFLAGS)
+endif # INTERNAL_TOOLS
+OS_LDFLAGS += $(PROFILE_GEN_LDFLAGS)
 endif
-endif
+
 # We always use the profile-use flags, even in cases where we didn't use the
 # profile-generate flags.  It's harmless, and it saves us from having to
 # answer the question "Would these objects have been built using
 # the profile-generate flags?" which is not trivial.
 ifdef MOZ_PROFILE_USE
-DSO_PIC_CFLAGS += $(PROFILE_USE_CFLAGS)
+OS_CFLAGS += $(PROFILE_USE_CFLAGS)
+OS_CXXFLAGS += $(PROFILE_USE_CFLAGS)
 endif
+
 
 # Does the makefile specifies the internal XPCOM API linkage?
 ifneq (,$(MOZILLA_INTERNAL_API)$(LIBXUL_LIBRARY))
