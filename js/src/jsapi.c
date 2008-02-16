@@ -2841,16 +2841,19 @@ JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto)
      */
     if (obj->map->ops->setProto)
         return obj->map->ops->setProto(cx, obj, JSSLOT_PROTO, proto);
-    OBJ_SET_PROTO(cx, obj, proto);
 #else
-    JS_LOCK_OBJ(cx, obj);
-    if (OBJ_IS_NATIVE(obj) && !js_GetMutableScope(cx, obj)) {
+    if (OBJ_IS_NATIVE(obj)) {
+        JS_LOCK_OBJ(cx, obj);
+        if (!js_GetMutableScope(cx, obj)) {
+            JS_UNLOCK_OBJ(cx, obj);
+            return JS_FALSE;
+        }
+        LOCKED_OBJ_SET_PROTO(obj, proto);
         JS_UNLOCK_OBJ(cx, obj);
-        return JS_FALSE;
+        return JS_TRUE;
     }
-    LOCKED_OBJ_SET_PROTO(obj, proto);
-    JS_UNLOCK_OBJ(cx, obj);
 #endif
+    OBJ_SET_PROTO(cx, obj, proto);
     return JS_TRUE;
 }
 
