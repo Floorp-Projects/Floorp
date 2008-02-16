@@ -68,7 +68,7 @@ fi
 source ${TEST_BIN}/library.sh
 
 
-TEST_JSSHELL_TIMEOUT=${TEST_JSSHELL_TIMEOUT:-900}
+TEST_JSSHELL_TIMEOUT=${TEST_JSSHELL_TIMEOUT:-120}
 
 #
 # options processing

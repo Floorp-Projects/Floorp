@@ -274,9 +274,13 @@ while ($file = shift @ARGV)
 
                 # may be in 'completed test' for delayed browser only tests.
                 die "FATAL ERROR: jstest not in test: test state: $test_state: $_, log: $file" 
-                    if ('running test, reporting test, completed test' !~ /$test_state/);
+                    if ('running test, reporting test, completed test, finished test' !~ /$test_state/);
 
-                $test_state         = 'reporting test';
+                if ($test_state ne 'finished test')
+                {
+                    # once the test is finished, don't change state here.
+                    $test_state = 'reporting test';
+                }
                 ($tmp_test_id)      = $_ =~ /^jstest: (.*?) *bug:/;
                 ($test_result)      = $_ =~ /result: (.*?) *type:/;
                 ($tmp_test_type)    = $_ =~ /type: (.*?) *description:/;
