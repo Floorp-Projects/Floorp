@@ -374,8 +374,10 @@ nsXBLPrototypeHandler::EnsureEventHandler(nsIScriptGlobalObject* aGlobal,
   nsContentUtils::GetEventArgNames(kNameSpaceID_XBL, aName, &argCount,
                                    &argNames);
   nsresult rv = aBoundContext->CompileEventHandler(aName, argCount, argNames,
-                                                   handlerText, bindingURI.get(), 
-                                                   mLineNumber, aHandler);
+                                                   handlerText,
+                                                   bindingURI.get(), 
+                                                   mLineNumber,
+                                                   JSVERSION_LATEST, aHandler);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (pWindow) {

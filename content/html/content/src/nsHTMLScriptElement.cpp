@@ -283,6 +283,7 @@ nsHTMLScriptEventHandler::Invoke(nsISupports *aTargetObject,
                                       scriptBody, // script text
                                       nsnull,     // XXX: URL
                                       lineNumber, // line no (for errors)
+                                      JSVERSION_DEFAULT, // Default for now?
                                       PR_FALSE,   // shared ?
                                       &funcObject);
   // Free the argument names array if it was heap allocated...
