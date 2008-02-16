@@ -1184,11 +1184,11 @@ static void	arena_dalloc_lazy_hard(arena_t *arena, arena_chunk_t *chunk,
 #endif
 static void	arena_dalloc_large(arena_t *arena, arena_chunk_t *chunk,
     void *ptr);
-static void	arena_ralloc_resize_shrink(arena_t *arena, arena_chunk_t *chunk,
+static void	arena_ralloc_large_shrink(arena_t *arena, arena_chunk_t *chunk,
     void *ptr, size_t size, size_t oldsize);
-static bool	arena_ralloc_resize_grow(arena_t *arena, arena_chunk_t *chunk,
+static bool	arena_ralloc_large_grow(arena_t *arena, arena_chunk_t *chunk,
     void *ptr, size_t size, size_t oldsize);
-static bool	arena_ralloc_resize(void *ptr, size_t size, size_t oldsize);
+static bool	arena_ralloc_large(void *ptr, size_t size, size_t oldsize);
 static void	*arena_ralloc(void *ptr, size_t size, size_t oldsize);
 static bool	arena_new(arena_t *arena);
 static arena_t	*arenas_extend(unsigned ind);
@@ -4201,7 +4201,7 @@ idalloc(void *ptr)
 }
 
 static void
-arena_ralloc_resize_shrink(arena_t *arena, arena_chunk_t *chunk, void *ptr,
+arena_ralloc_large_shrink(arena_t *arena, arena_chunk_t *chunk, void *ptr,
     size_t size, size_t oldsize)
 {
 	extent_node_t *node, key;
@@ -4229,7 +4229,7 @@ arena_ralloc_resize_shrink(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 }
 
 static bool
-arena_ralloc_resize_grow(arena_t *arena, arena_chunk_t *chunk, void *ptr,
+arena_ralloc_large_grow(arena_t *arena, arena_chunk_t *chunk, void *ptr,
     size_t size, size_t oldsize)
 {
 	extent_node_t *nodeC, key;
@@ -4287,21 +4287,50 @@ arena_ralloc_resize_grow(arena_t *arena, arena_chunk_t *chunk, void *ptr,
  * always fail if growing an object, and the following run is already in use.
  */
 static bool
-arena_ralloc_resize(void *ptr, size_t size, size_t oldsize)
+arena_ralloc_large(void *ptr, size_t size, size_t oldsize)
 {
-	arena_chunk_t *chunk;
-	arena_t *arena;
+	size_t psize;
 
-	chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(ptr);
-	arena = chunk->arena;
-	assert(arena->magic == ARENA_MAGIC);
-
-	if (size < oldsize) {
-		arena_ralloc_resize_shrink(arena, chunk, ptr, size, oldsize);
+	psize = PAGE_CEILING(size);
+	if (psize == oldsize) {
+		/* Same size class. */
+#ifdef MALLOC_FILL
+		if (opt_junk && size < oldsize) {
+			memset((void *)((uintptr_t)ptr + size), 0x5a, oldsize -
+			    size);
+		}
+#endif
 		return (false);
 	} else {
-		return (arena_ralloc_resize_grow(arena, chunk, ptr, size,
-		    oldsize));
+		arena_chunk_t *chunk;
+		arena_t *arena;
+
+		chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(ptr);
+		arena = chunk->arena;
+		assert(arena->magic == ARENA_MAGIC);
+
+		if (psize < oldsize) {
+#ifdef MALLOC_FILL
+			/* Fill before shrinking in order avoid a race. */
+			if (opt_junk) {
+				memset((void *)((uintptr_t)ptr + size), 0x5a,
+				    oldsize - size);
+			}
+#endif
+			arena_ralloc_large_shrink(arena, chunk, ptr, psize,
+			    oldsize);
+			return (false);
+		} else {
+			bool ret = arena_ralloc_large_grow(arena, chunk, ptr,
+			    psize, oldsize);
+#ifdef MALLOC_FILL
+			if (ret == false && opt_zero) {
+				memset((void *)((uintptr_t)ptr + oldsize), 0,
+				    size - oldsize);
+			}
+#endif
+			return (ret);
+		}
 	}
 }
 
@@ -4327,16 +4356,9 @@ arena_ralloc(void *ptr, size_t size, size_t oldsize)
 		    pow2_ceil(size) == pow2_ceil(oldsize))
 			goto IN_PLACE; /* Same size class. */
 	} else if (oldsize > bin_maxclass && oldsize <= arena_maxclass) {
-		size_t psize;
-
 		assert(size > bin_maxclass);
-		psize = PAGE_CEILING(size);
-
-		if (psize == oldsize)
-			goto IN_PLACE; /* Same size class. */
-
-		if (arena_ralloc_resize(ptr, psize, oldsize) == false)
-			goto IN_PLACE;
+		if (arena_ralloc_large(ptr, size, oldsize) == false)
+			return (ptr);
 	}
 
 	/*
