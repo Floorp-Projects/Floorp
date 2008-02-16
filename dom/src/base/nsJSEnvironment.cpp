@@ -299,6 +299,50 @@ nsCCMemoryPressureObserver::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
+class nsJSVersionSetter {
+public:
+  nsJSVersionSetter(JSContext *aContext, PRUint32 aVersion);
+  ~nsJSVersionSetter();
+
+private:
+  JSContext* mContext;
+  uint32 mOldOptions;
+  JSVersion mOldVersion;
+  JSBool mOptionsChanged;
+};
+
+nsJSVersionSetter::nsJSVersionSetter(JSContext *aContext, PRUint32 aVersion)
+  : mContext(aContext)
+{
+  // JSVERSION_HAS_XML may be set in our version mask - however, we can't
+  // simply pass this directly to JS_SetOptions as it masks out that bit -
+  // the only way to make this happen is via JS_SetOptions.
+  JSBool hasxml = (aVersion & JSVERSION_HAS_XML) != 0;
+  mOldOptions = ::JS_GetOptions(mContext);
+  mOptionsChanged = ((hasxml) ^ !!(mOldOptions & JSOPTION_XML));
+
+  if (mOptionsChanged) {
+    ::JS_SetOptions(mContext,
+                    hasxml
+                    ? mOldOptions | JSOPTION_XML
+                    : mOldOptions & ~JSOPTION_XML);
+  }
+
+  // Change the version - this is cheap when the versions match, so no need
+  // to optimize here...
+  JSVersion newVer = (JSVersion)(aVersion & JSVERSION_MASK);
+  mOldVersion = ::JS_SetVersion(mContext, newVer);
+}
+
+nsJSVersionSetter::~nsJSVersionSetter()
+{
+  ::JS_SetVersion(mContext, mOldVersion);
+
+  if (mOptionsChanged) {
+      ::JS_SetOptions(mContext, mOldOptions);
+  }
+}
+
 
 /****************************************************************
  ************************** AutoFree ****************************
@@ -1260,29 +1304,12 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
   nsJSContext::TerminationFuncHolder holder(this);
 
   // SecurityManager said "ok", but don't compile if aVersion is unknown.
-  // Do compile with the default version (and avoid thrashing the context's
-  // version) if aVersion is the default.
-  // As the caller is responsible for parsing the version strings, we just
+  // Since the caller is responsible for parsing the version strings, we just
   // check it isn't JSVERSION_UNKNOWN.
   if (ok && ((JSVersion)aVersion) != JSVERSION_UNKNOWN) {
-    // JSVERSION_HAS_XML may be set in our version mask - however, we can't
-    // simply pass this directly to JS_SetOptions as it masks out that bit -
-    // the only way to make this happen is via JS_SetOptions.
-    JSBool hasxml = (aVersion & JSVERSION_HAS_XML) != 0;
-    uint32 jsoptions = ::JS_GetOptions(mContext);
-    JSBool optionsChanged = ((hasxml) ^ !!(jsoptions & JSOPTION_XML));
 
-    if (optionsChanged) {
-      ::JS_SetOptions(mContext,
-                      hasxml
-                      ? jsoptions | JSOPTION_XML
-                      : jsoptions & ~JSOPTION_XML);
-    }
-    // Change the version - this is cheap when the versions match, so no need
-    // to optimize here...
-    JSVersion newVer = (JSVersion)(aVersion & JSVERSION_MASK);
-    JSVersion oldVer = ::JS_SetVersion(mContext, newVer);
     JSAutoRequest ar(mContext);
+    nsJSVersionSetter setVersion(mContext, aVersion);
 
     ok = ::JS_EvaluateUCScriptForPrincipals(mContext,
                                             (JSObject *)aScopeObject,
@@ -1292,12 +1319,6 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
                                             aURL,
                                             aLineNo,
                                             &val);
-
-    ::JS_SetVersion(mContext, oldVer);
-
-    if (optionsChanged) {
-      ::JS_SetOptions(mContext, jsoptions);
-    }
 
     if (!ok) {
         // Tell XPConnect about any pending exceptions. This is needed
@@ -1463,29 +1484,11 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   nsJSContext::TerminationFuncHolder holder(this);
 
   // SecurityManager said "ok", but don't compile if aVersion is unknown.
-  // Do compile with the default version (and avoid thrashing the context's
-  // version) if aVersion is the default.
-  // As the caller is responsible for parsing the version strings, we just
+  // Since the caller is responsible for parsing the version strings, we just
   // check it isn't JSVERSION_UNKNOWN.
   if (ok && ((JSVersion)aVersion) != JSVERSION_UNKNOWN) {
     JSAutoRequest ar(mContext);
-    // JSVERSION_HAS_XML may be set in our version mask - however, we can't
-    // simply pass this directly to JS_SetOptions as it masks out that bit -
-    // the only way to make this happen is via JS_SetOptions.
-    JSBool hasxml = (aVersion & JSVERSION_HAS_XML) != 0;
-    uint32 jsoptions = ::JS_GetOptions(mContext);
-    JSBool optionsChanged = ((hasxml) ^ !!(jsoptions & JSOPTION_XML));
-
-    if (optionsChanged) {
-      ::JS_SetOptions(mContext,
-                      hasxml
-                      ? jsoptions | JSOPTION_XML
-                      : jsoptions & ~JSOPTION_XML);
-    }
-    // Change the version - this is cheap when the versions match, so no need
-    // to optimize here...
-    JSVersion newVer = (JSVersion)(aVersion & JSVERSION_MASK);
-    JSVersion oldVer = ::JS_SetVersion(mContext, newVer);
+    nsJSVersionSetter setVersion(mContext, aVersion);
 
     ok = ::JS_EvaluateUCScriptForPrincipals(mContext,
                                               (JSObject *)aScopeObject,
@@ -1495,12 +1498,6 @@ nsJSContext::EvaluateString(const nsAString& aScript,
                                               aURL,
                                               aLineNo,
                                               &val);
-
-    ::JS_SetVersion(mContext, oldVer);
-
-    if (optionsChanged) {
-      ::JS_SetOptions(mContext, jsoptions);
-    }
 
     if (!ok) {
         // Tell XPConnect about any pending exceptions. This is needed
@@ -1572,29 +1569,11 @@ nsJSContext::CompileScript(const PRUnichar* aText,
   aScriptObject.drop(); // ensure old object not used on failure...
 
   // SecurityManager said "ok", but don't compile if aVersion is unknown.
-  // Do compile with the default version (and avoid thrashing the context's
-  // version) if aVersion is the default.
-  // As the caller is responsible for parsing the version strings, we just
+  // Since the caller is responsible for parsing the version strings, we just
   // check it isn't JSVERSION_UNKNOWN.
   if (ok && ((JSVersion)aVersion) != JSVERSION_UNKNOWN) {
-    // JSVERSION_HAS_XML may be set in our version mask - however, we can't
-    // simply pass this directly to JS_SetOptions as it masks out that bit -
-    // the only way to make this happen is via JS_SetOptions.
     JSAutoRequest ar(mContext);
-    JSBool hasxml = (aVersion & JSVERSION_HAS_XML) != 0;
-    uint32 jsoptions = ::JS_GetOptions(mContext);
-    JSBool optionsChanged = ((hasxml) ^ !!(jsoptions & JSOPTION_XML));
-
-    if (optionsChanged) {
-      ::JS_SetOptions(mContext,
-                      hasxml
-                      ? jsoptions | JSOPTION_XML
-                      : jsoptions & ~JSOPTION_XML);
-    }
-    // Change the version - this is cheap when the versions match, so no need
-    // to optimize here...
-    JSVersion newVer = (JSVersion)(aVersion & JSVERSION_MASK);
-    JSVersion oldVer = ::JS_SetVersion(mContext, newVer);
+    nsJSVersionSetter setVersion(mContext, aVersion);
 
     JSScript* script =
         ::JS_CompileUCScriptForPrincipals(mContext,
@@ -1614,13 +1593,8 @@ nsJSContext::CompileScript(const PRUnichar* aText,
         ::JS_DestroyScript(mContext, script);
         script = nsnull;
       }
-    } else
+    } else {
       rv = NS_ERROR_OUT_OF_MEMORY;
-
-    ::JS_SetVersion(mContext, oldVer);
-
-    if (optionsChanged) {
-      ::JS_SetOptions(mContext, jsoptions);
     }
   }
 
@@ -1760,6 +1734,7 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
                                  const char** aArgNames,
                                  const nsAString& aBody,
                                  const char *aURL, PRUint32 aLineNo,
+                                 PRUint32 aVersion,
                                  nsScriptObjectHolder &aHandler)
 {
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
@@ -1771,12 +1746,20 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
     return NS_ERROR_UNEXPECTED;
   }
 
+  // Don't compile if aVersion is unknown.  Since the caller is responsible for
+  // parsing the version strings, we just check it isn't JSVERSION_UNKNOWN.
+  if ((JSVersion)aVersion == JSVERSION_UNKNOWN) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
   const char *charName = AtomToEventHandlerName(aName);
 
   // Event handlers are always shared, and must be bound before use.
   // Therefore we never bother compiling with principals.
   // (that probably means we should avoid JS_CompileUCFunctionForPrincipals!)
   JSAutoRequest ar(mContext);
+  nsJSVersionSetter setVersion(mContext, aVersion);
+
   JSFunction* fun =
       ::JS_CompileUCFunctionForPrincipals(mContext,
                                           nsnull, nsnull,
@@ -1805,10 +1788,17 @@ nsJSContext::CompileFunction(void* aTarget,
                              const nsAString& aBody,
                              const char* aURL,
                              PRUint32 aLineNo,
+                             PRUint32 aVersion,
                              PRBool aShared,
                              void** aFunctionObject)
 {
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
+
+  // Don't compile if aVersion is unknown.  Since the caller is responsible for
+  // parsing the version strings, we just check it isn't JSVERSION_UNKNOWN.
+  if ((JSVersion)aVersion == JSVERSION_UNKNOWN) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
 
   JSPrincipals *jsprin = nsnull;
 
@@ -1827,6 +1817,7 @@ nsJSContext::CompileFunction(void* aTarget,
   JSObject *target = (JSObject*)aTarget;
 
   JSAutoRequest ar(mContext);
+  nsJSVersionSetter setVersion(mContext, aVersion);
 
   JSFunction* fun =
       ::JS_CompileUCFunctionForPrincipals(mContext,

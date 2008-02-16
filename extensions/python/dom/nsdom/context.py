@@ -445,7 +445,7 @@ class ScriptContext:
         # The line number passed is the first; offset is -1
         return domcompile.compile(text, url, lineno=lineno-1)
 
-    def CompileEventHandler(self, name, argNames, body, url, lineno):
+    def CompileEventHandler(self, name, argNames, body, url, lineno, version):
         if __debug__:
             logger.debug("%s.CompileEventHandler %s %s:%s ('%s')",
                          self, name, url, lineno, body[:100])

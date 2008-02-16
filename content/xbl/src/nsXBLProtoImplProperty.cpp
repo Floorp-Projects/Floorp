@@ -242,6 +242,7 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
                                      getter, 
                                      functionUri.get(),
                                      mGetterText->GetLineNumber(),
+                                     JSVERSION_LATEST,
                                      PR_TRUE,
                                      (void **) &getterObject);
 
@@ -291,6 +292,7 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
                                      setter, 
                                      functionUri.get(),
                                      mSetterText->GetLineNumber(),
+                                     JSVERSION_LATEST,
                                      PR_TRUE,
                                      (void **) &setterObject);
 
