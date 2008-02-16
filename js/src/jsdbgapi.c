@@ -1087,10 +1087,14 @@ JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp)
     return js_GetCallObject(cx, fp, NULL);
 }
 
-
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameThis(JSContext *cx, JSStackFrame *fp)
 {
+    if (!fp->thisp) {
+        fp->thisp = js_ComputeThis(cx, JS_TRUE, fp->argv);
+        if (!fp->thisp)
+            return NULL;
+    }
     return fp->thisp;
 }
 

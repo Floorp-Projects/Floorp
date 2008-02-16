@@ -896,8 +896,8 @@ js_GetPrimitiveThis(JSContext *cx, jsval *vp, JSClass *clasp, jsval *thisvp)
  *
  * The alert should display "true".
  */
-static JSBool
-ComputeGlobalThis(JSContext *cx, jsval *argv)
+static JSObject *
+ComputeGlobalThis(JSContext *cx, JSBool lazy, jsval *argv)
 {
     JSObject *thisp;
     JSClass *clasp;
@@ -906,67 +906,94 @@ ComputeGlobalThis(JSContext *cx, jsval *argv)
         !OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(argv[-2]))) {
         thisp = cx->globalObject;
     } else {
+        JSStackFrame *fp;
         jsid id;
         jsval v;
         uintN attrs;
+        JSBool ok;
         JSObject *parent;
 
-        /* Walk up the parent chain. */
+        /*
+         * Walk up the parent chain, first checking that the running script
+         * has access to the callee's parent object. Note that if lazy, the
+         * running script whose principals we want to check is the script
+         * associated with fp->down, not with fp.
+         *
+         * FIXME: 417851 -- this access check should not be required, as it
+         * imposes a performance penalty on all ComputeGlobalThis calls, and
+         * it represents a maintenance hazard.
+         */
+        fp = cx->fp;    /* quell GCC overwarning */
+        if (lazy) {
+            JS_ASSERT(!fp->thisp && fp->argv == argv);
+            fp->dormantNext = cx->dormantFrameChain;
+            cx->dormantFrameChain = fp;
+            cx->fp = fp->down;
+            fp->down = NULL;
+        }
         thisp = JSVAL_TO_OBJECT(argv[-2]);
         id = ATOM_TO_JSID(cx->runtime->atomState.parentAtom);
-        for (;;) {
-            if (!OBJ_CHECK_ACCESS(cx, thisp, id, JSACC_PARENT, &v, &attrs))
-                return JS_FALSE;
-            parent = JSVAL_IS_VOID(v)
-                     ? OBJ_GET_PARENT(cx, thisp)
-                     : JSVAL_TO_OBJECT(v);
-            if (!parent)
-                break;
-            thisp = parent;
+
+        ok = OBJ_CHECK_ACCESS(cx, thisp, id, JSACC_PARENT, &v, &attrs);
+        if (lazy) {
+            cx->dormantFrameChain = fp->dormantNext;
+            fp->dormantNext = NULL;
+            fp->down = cx->fp;
+            cx->fp = fp;
         }
+        if (!ok)
+            return NULL;
+
+        thisp = JSVAL_IS_VOID(v)
+                ? OBJ_GET_PARENT(cx, thisp)
+                : JSVAL_TO_OBJECT(v);
+        while ((parent = OBJ_GET_PARENT(cx, thisp)) != NULL)
+            thisp = parent;
     }
 
     clasp = OBJ_GET_CLASS(cx, thisp);
     if (clasp->flags & JSCLASS_IS_EXTENDED) {
         JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
         if (xclasp->outerObject && !(thisp = xclasp->outerObject(cx, thisp)))
-            return JS_FALSE;
+            return NULL;
     }
 
     argv[-1] = OBJECT_TO_JSVAL(thisp);
-    return JS_TRUE;
+    return thisp;
 }
 
-static JSBool
-ComputeThis(JSContext *cx, jsval *argv)
+static JSObject *
+ComputeThis(JSContext *cx, JSBool lazy, jsval *argv)
 {
     JSObject *thisp;
 
     JS_ASSERT(!JSVAL_IS_NULL(argv[-1]));
-    if (!JSVAL_IS_OBJECT(argv[-1]))
-        return js_PrimitiveToObject(cx, &argv[-1]);
+    if (!JSVAL_IS_OBJECT(argv[-1])) {
+        if (!js_PrimitiveToObject(cx, &argv[-1]))
+            return NULL;
+        thisp = JSVAL_TO_OBJECT(argv[-1]);
+    } else {
+        thisp = JSVAL_TO_OBJECT(argv[-1]);
+        if (OBJ_GET_CLASS(cx, thisp) == &js_CallClass)
+            return ComputeGlobalThis(cx, lazy, argv);
 
-    thisp = JSVAL_TO_OBJECT(argv[-1]);
-    if (OBJ_GET_CLASS(cx, thisp) == &js_CallClass)
-        return ComputeGlobalThis(cx, argv);
-
-    if (!thisp->map->ops->thisObject)
-        return JS_TRUE;
-
-    /* Some objects (e.g., With) delegate 'this' to another object. */
-    thisp = thisp->map->ops->thisObject(cx, thisp);
-    if (!thisp)
-        return JS_FALSE;
-    argv[-1] = OBJECT_TO_JSVAL(thisp);
-    return JS_TRUE;
+        if (thisp->map->ops->thisObject) {
+            /* Some objects (e.g., With) delegate 'this' to another object. */
+            thisp = thisp->map->ops->thisObject(cx, thisp);
+            if (!thisp)
+                return NULL;
+        }
+        argv[-1] = OBJECT_TO_JSVAL(thisp);
+    }
+    return thisp;
 }
 
-JSBool
-js_ComputeThis(JSContext *cx, jsval *argv)
+JSObject *
+js_ComputeThis(JSContext *cx, JSBool lazy, jsval *argv)
 {
     if (JSVAL_IS_NULL(argv[-1]))
-        return ComputeGlobalThis(cx, argv);
-    return ComputeThis(cx, argv);
+        return ComputeGlobalThis(cx, lazy, argv);
+    return ComputeThis(cx, lazy, argv);
 }
 
 #if JS_HAS_NO_SUCH_METHOD
@@ -983,9 +1010,9 @@ NoSuchMethod(JSContext *cx, uintN argc, jsval *vp, uint32 flags)
     JSBool ok;
     jsbytecode *pc;
 
-    /* NB: js_ComputeThis or equivalent must have been called already. */
+    /* NB: vp[1] aka |this| may be null still, requiring ComputeGlobalThis. */
     JS_ASSERT(JSVAL_IS_PRIMITIVE(vp[0]));
-    JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[1]));
+    JS_ASSERT(JSVAL_IS_OBJECT(vp[1]));
     fp = cx->fp;
     RESTORE_SP(fp);
 
@@ -993,8 +1020,17 @@ NoSuchMethod(JSContext *cx, uintN argc, jsval *vp, uint32 flags)
     memset(roots, 0, sizeof roots);
     JS_PUSH_TEMP_ROOT(cx, JS_ARRAY_LENGTH(roots), roots, &tvr);
 
-    id = ATOM_TO_JSID(cx->runtime->atomState.noSuchMethodAtom);
     thisp = JSVAL_TO_OBJECT(vp[1]);
+    if (!thisp) {
+        thisp = ComputeGlobalThis(cx, JS_FALSE, vp + 2);
+        if (!thisp) {
+            ok = JS_FALSE;
+            goto out;
+        }
+        fp->thisp = thisp;
+    }
+
+    id = ATOM_TO_JSID(cx->runtime->atomState.noSuchMethodAtom);
 #if JS_HAS_XML_SUPPORT
     if (OBJECT_IS_XML(cx, thisp)) {
         JSXMLObjectOps *ops;
@@ -1225,9 +1261,10 @@ have_fun:
          * interpreter, where a prior bytecode has computed an appropriate
          * |this| already.
          */
-        ok = js_ComputeThis(cx, vp + 2);
-        if (!ok)
+        if (!js_ComputeThis(cx, JS_FALSE, vp + 2)) {
+            ok = JS_FALSE;
             goto out2;
+        }
     }
 
   init_slots:
@@ -3987,6 +4024,14 @@ interrupt:
           BEGIN_CASE(JSOP_GETTHISPROP)
             i = 0;
             obj = fp->thisp;
+            if (!obj) {
+                obj = ComputeGlobalThis(cx, JS_TRUE, fp->argv);
+                if (!obj) {
+                    ok = JS_FALSE;
+                    goto out;
+                }
+                fp->thisp = obj;
+            }
             PUSH(JSVAL_NULL);
             len = JSOP_GETTHISPROP_LENGTH;
             goto do_getprop_with_obj;
@@ -4168,9 +4213,10 @@ interrupt:
                     goto out;
                 STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
                 STORE_OPND(-2, rval);
-                ok = ComputeThis(cx, sp);
-                if (!ok)
+                if (!ComputeThis(cx, JS_FALSE, sp)) {
+                    ok = JS_FALSE;
                     goto out;
+                }
             } else {
                 JS_ASSERT(obj->map->ops->getProperty == js_GetProperty);
                 ok = js_GetPropertyHelper(cx, obj, id, &rval, &entry);
@@ -4500,7 +4546,7 @@ interrupt:
 
                     /* Compute the 'this' parameter now that argv is set. */
                     JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
-                    JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[1]));
+                    JS_ASSERT(JSVAL_IS_OBJECT(vp[1]));
                     newifp->frame.thisp = (JSObject *)vp[1];
 
                     /* Push void to initialize local variables. */
@@ -4602,7 +4648,7 @@ interrupt:
                         SAVE_SP(fp);
                     }
 
-                    JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[1]) ||
+                    JS_ASSERT(JSVAL_IS_OBJECT(vp[1]) ||
                               PRIMITIVE_THIS_TEST(fun, vp[1]));
 
                     ok = ((JSFastNative) fun->u.n.native)(cx, argc, vp);
@@ -4758,9 +4804,10 @@ interrupt:
             if (op == JSOP_CALLNAME) {
                 PUSH_OPND(OBJECT_TO_JSVAL(obj));
                 SAVE_SP(fp);
-                ok = ComputeThis(cx, sp);
-                if (!ok)
+                if (!ComputeThis(cx, JS_FALSE, sp)) {
+                    ok = JS_FALSE;
                     goto out;
+                }
             }
           }
           END_CASE(JSOP_NAME)
@@ -4954,20 +5001,14 @@ interrupt:
 
           BEGIN_CASE(JSOP_THIS)
             obj = fp->thisp;
-            clasp = OBJ_GET_CLASS(cx, obj);
-            if (clasp->flags & JSCLASS_IS_EXTENDED) {
-                JSExtendedClass *xclasp;
-
-                xclasp = (JSExtendedClass *) clasp;
-                if (xclasp->outerObject) {
-                    obj = xclasp->outerObject(cx, obj);
-                    if (!obj) {
-                        ok = JS_FALSE;
-                        goto out;
-                    }
+            if (!obj) {
+                obj = ComputeGlobalThis(cx, JS_TRUE, fp->argv);
+                if (!obj) {
+                    ok = JS_FALSE;
+                    goto out;
                 }
+                fp->thisp = obj;
             }
-
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
           END_CASE(JSOP_THIS)
 
@@ -5227,20 +5268,6 @@ interrupt:
             PUSH_OPND(rval);
           END_CASE(JSOP_ARGCNT)
 
-#define PUSH_GLOBAL_THIS(cx,sp)                                               \
-    JS_BEGIN_MACRO                                                            \
-        PUSH_OPND(JSVAL_NULL);                                                \
-        SAVE_SP_AND_PC(fp);                                                   \
-        ok = ComputeGlobalThis(cx, sp);                                       \
-        if (!ok)                                                              \
-            goto out;                                                         \
-        JS_ASSERT(!JSVAL_IS_NULL(sp[-1]) && !JSVAL_IS_VOID(sp[-1]));          \
-    JS_END_MACRO
-
-          BEGIN_CASE(JSOP_GLOBALTHIS)
-            PUSH_GLOBAL_THIS(cx, sp);
-          END_CASE(JSOP_GLOBALTHIS)
-
           BEGIN_CASE(JSOP_GETARG)
           BEGIN_CASE(JSOP_CALLARG)
             slot = GET_ARGNO(pc);
@@ -5248,7 +5275,7 @@ interrupt:
             METER_SLOT_OP(op, slot);
             PUSH_OPND(fp->argv[slot]);
             if (op == JSOP_CALLARG)
-                PUSH_GLOBAL_THIS(cx, sp);
+                PUSH_OPND(JSVAL_NULL);
           END_CASE(JSOP_GETARG)
 
           BEGIN_CASE(JSOP_SETARG)
@@ -5267,7 +5294,7 @@ interrupt:
             METER_SLOT_OP(op, slot);
             PUSH_OPND(fp->vars[slot]);
             if (op == JSOP_CALLVAR)
-                PUSH_GLOBAL_THIS(cx, sp);
+                PUSH_OPND(JSVAL_NULL);
           END_CASE(JSOP_GETVAR)
 
           BEGIN_CASE(JSOP_SETVAR)
@@ -6140,9 +6167,10 @@ interrupt:
             if (op == JSOP_CALLXMLNAME) {
                 PUSH_OPND(OBJECT_TO_JSVAL(obj));
                 SAVE_SP(fp);
-                ok = ComputeThis(cx, sp);
-                if (!ok)
+                if (!ComputeThis(cx, JS_FALSE, sp)) {
+                    ok = JS_FALSE;
                     goto out;
+                }
             }
           END_CASE(JSOP_XMLNAME)
 
@@ -6400,7 +6428,7 @@ interrupt:
             JS_ASSERT(slot < (uintN)depth);
             PUSH_OPND(fp->spbase[slot]);
             if (op == JSOP_CALLLOCAL)
-                PUSH_GLOBAL_THIS(cx, sp);
+                PUSH_OPND(JSVAL_NULL);
           END_CASE(JSOP_GETLOCAL)
 
           BEGIN_CASE(JSOP_SETLOCAL)
@@ -6563,6 +6591,8 @@ interrupt:
           L_JSOP_ANYNAME:
           L_JSOP_DEFXMLNS:
 # endif
+
+          L_JSOP_UNUSED117:
 
 #else /* !JS_THREADED_INTERP */
           default:
