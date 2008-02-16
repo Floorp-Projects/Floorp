@@ -812,6 +812,7 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
         rv = context->CompileEventHandler(aName, argCount, argNames,
                                           aBody,
                                           url.get(), lineNo,
+                                          SCRIPTVERSION_DEFAULT, // for now?
                                           handler);
         if (rv == NS_ERROR_ILLEGAL_VALUE) {
           NS_WARNING("Probably a syntax error in the event handler!");
@@ -1027,6 +1028,7 @@ nsEventListenerManager::CompileEventHandlerInternal(nsIScriptContext *aContext,
                                                argCount, argNames,
                                                handlerBody,
                                                url.get(), lineNo,
+                                               SCRIPTVERSION_DEFAULT, // for now?
                                                handler);
         NS_ENSURE_SUCCESS(result, result);
         // And bind it.
