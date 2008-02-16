@@ -107,6 +107,34 @@ must be one of the following:
                     otherwise the format exactly matches that from HTTP
                     itself.
 
+      HTTP tests may also incorporate SJS files.  SJS files provide similar
+      functionality to CGI scripts, in that the response they produce can be
+      dependent on properties of the incoming request.  Currently these
+      properties are restricted to method type and headers, but eventually
+      it should be possible to examine data in the body of the request as
+      well when computing the generated response.  An SJS file is a JavaScript
+      file with a .sjs extension which defines a global |handleRequest|
+      function (called every time that file is loaded during reftests) in this
+      format:
+
+      function handleRequest(request, response)
+      {
+        response.setStatusLine(request.httpVersion, 200, "OK");
+
+        // You *probably* want this, or else you'll get bitten if you run
+        // reftest multiple times with the same profile.
+        response.setHeader("Cache-Control", "no-cache");
+
+        response.write("any ASCII data you want");
+
+        var outputStream = response.bodyOutputStream;
+        // ...anything else you want to do, synchronously...
+      }
+
+      For more details on exactly which functions and properties are available
+      on request/response in handleRequest, see the nsIHttpRe(quest|sponse)
+      definitions in <netwerk/test/httpserver/nsIHttpServer.idl>.
+
    c. <type> is one of the following:
 
       ==    The test passes if the images of the two renderings are the
