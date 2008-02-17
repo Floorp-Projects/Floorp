@@ -71,9 +71,11 @@ function searchDiscovery() {
     { rel: "search search search", count: 1, text: "only one engine should be added" }
   ];
 
+  var head = gTestPage.document.getElementById("linkparent");
+  var browser = gBrowser.getBrowserForDocument(gTestPage.document);
+
   for (let i = 0; i < tests.length; i++) {
     var test = tests[i];
-    var head = gTestPage.document.getElementById("linkparent");
     var link = gTestPage.document.createElement("link");
 
     var rel = test.rel || "search";
@@ -89,7 +91,6 @@ function searchDiscovery() {
     link.title = title;
     head.appendChild(link);
 
-    var browser = gBrowser.getBrowserForDocument(gTestPage.document);
     if (browser.engines) {
       var hasEngine = (test.count) ? (browser.engines[0].title == title &&
                                       browser.engines.length == test.count) :
@@ -100,6 +101,23 @@ function searchDiscovery() {
     else
       ok(!test.pass, test.text);
   }
+
+  // Test multiple engines with the same title
+  var link = gTestPage.document.createElement("link");
+  link.rel = "search";
+  link.href = "http://first.mozilla.com/search.xml";
+  link.type = "application/opensearchdescription+xml";
+  link.title = "Test Engine";
+  var link2 = link.cloneNode(false);
+  link2.href = "http://second.mozilla.com/search.xml";
+
+  head.appendChild(link);
+  head.appendChild(link2);
+
+  ok(browser.engines, "has engines");
+  is(browser.engines.length, 1, "only one engine");
+  is(browser.engines[0].uri, "http://first.mozilla.com/search.xml", "first engine wins");
+
   gTestPage.close();
-  finish();  
+  finish();
 }
