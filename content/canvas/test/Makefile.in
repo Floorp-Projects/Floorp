@@ -482,6 +482,7 @@ _TEST_FILES_E = \
 	test_2d.imageData.put.unchanged.html \
 	test_2d.imageData.put.unaffected.html \
 	test_2d.imageData.put.path.html \
+	test_bug397524.html \
 	test_bug405982.html \
 	image_transparent50.png \
 	image_redtransparent.png \
@@ -489,6 +490,8 @@ _TEST_FILES_E = \
 	image_green-16x16.png \
 	image_red-16x16.png \
 	image_green-1x1.png \
+	image_green-redirect \
+	image_green-redirect^headers^ \
 	image_ggrr-256x256.png \
 	image_yellow75.png \
 	image_broken.png \
