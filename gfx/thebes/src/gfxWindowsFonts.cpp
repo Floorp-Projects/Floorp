@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Stuart Parmenter <stuart@mozilla.com>
  *   Masayuki Nakano <masayuki@d-toybox.com>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -292,7 +293,8 @@ gfxWindowsFont::ComputeMetrics()
 
     if (0 < GetOutlineTextMetrics(dc, sizeof(oMetrics), &oMetrics)) {
         mMetrics->superscriptOffset = (double)oMetrics.otmptSuperscriptOffset.y;
-        mMetrics->subscriptOffset = (double)oMetrics.otmptSubscriptOffset.y;
+        // Some fonts have wrong sign on their subscript offset, bug 410917.
+        mMetrics->subscriptOffset = fabs((double)oMetrics.otmptSubscriptOffset.y);
         mMetrics->strikeoutSize = (double)oMetrics.otmsStrikeoutSize;
         mMetrics->strikeoutOffset = (double)oMetrics.otmsStrikeoutPosition;
         mMetrics->underlineSize = (double)oMetrics.otmsUnderscoreSize;
