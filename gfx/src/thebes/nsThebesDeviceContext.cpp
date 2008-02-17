@@ -117,6 +117,7 @@ nsThebesDeviceContext::nsThebesDeviceContext()
     mDepth = 0;
     mWidth = 0;
     mHeight = 0;
+    mPrintingScale = 1.0f;
 
     mWidgetSurfaceCache.Init();
 
@@ -180,16 +181,21 @@ nsThebesDeviceContext::SetDPI()
 #elif defined(XP_WIN)
         // XXX we should really look at the widget if !dc but it is currently always null
         HDC dc = GetPrintHDC();
-        if (!dc)
+        if (dc) {
+            PRInt32 OSVal = GetDeviceCaps(dc, LOGPIXELSY);
+
+            dpi = 144;
+            mPrintingScale = float(OSVal)/dpi;
+        } else {
             dc = GetDC((HWND)nsnull);
 
-        PRInt32 OSVal = GetDeviceCaps(dc, LOGPIXELSY);
+            PRInt32 OSVal = GetDeviceCaps(dc, LOGPIXELSY);
 
-        if (dc != GetPrintHDC())
             ReleaseDC((HWND)nsnull, dc);
 
-        if (OSVal != 0)
-            dpi = OSVal;
+            if (OSVal != 0)
+                dpi = OSVal;
+        }
 
 #elif defined(XP_OS2)
         // get a printer DC if available, otherwise create a new (memory) DC
@@ -327,6 +333,7 @@ nsThebesDeviceContext::CreateRenderingContext(nsIRenderingContext *&aContext)
             rv = NS_ERROR_FAILURE;
 
         if (NS_SUCCEEDED(rv)) {
+            pContext->Scale(mPrintingScale, mPrintingScale);
             aContext = pContext;
             NS_ADDREF(aContext);
         }
@@ -703,8 +710,8 @@ nsThebesDeviceContext::CalcPrintingSize()
         HDC dc =  GetPrintHDC();
         if (!dc)
             dc = GetDC((HWND)mWidget);
-        size.width = NSIntPixelsToAppUnits(::GetDeviceCaps(dc, HORZRES), AppUnitsPerDevPixel());
-        size.height = NSIntPixelsToAppUnits(::GetDeviceCaps(dc, VERTRES), AppUnitsPerDevPixel());
+        size.width = NSFloatPixelsToAppUnits(::GetDeviceCaps(dc, HORZRES)/mPrintingScale, AppUnitsPerDevPixel());
+        size.height = NSFloatPixelsToAppUnits(::GetDeviceCaps(dc, VERTRES)/mPrintingScale, AppUnitsPerDevPixel());
         mDepth = (PRUint32)::GetDeviceCaps(dc, BITSPIXEL);
         if (dc != (HDC)GetPrintHDC())
             ReleaseDC((HWND)mWidget, dc);
