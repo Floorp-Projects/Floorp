@@ -306,7 +306,6 @@ morkRowCellCursor::NextCell( // get next cell in the row
    *outColumn = col;
      
   mRowCellCursor_Col = pos;
-  *outPos = pos;
   return NS_OK;
 }
   
