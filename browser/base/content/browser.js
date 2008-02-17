@@ -2202,11 +2202,10 @@ function BrowserImport()
  * Handle command events bubbling up from error page content
  */
 function BrowserOnCommand(event) {
-    
     // Don't trust synthetic events
     if (!event.isTrusted)
       return;
-    
+
     // If the event came from an ssl error page, it is probably either the "Add
     // Exception…" or "Get me out of here!" button
     if (/^about:neterror\?e=nssBadCert/.test(event.originalTarget.ownerDocument.documentURI)) {
@@ -2771,7 +2770,15 @@ const BrowserSearch = {
   addEngine: function(engine, targetDoc) {
     if (!this.searchBar)
       return;
+
     var browser = gBrowser.getBrowserForDocument(targetDoc);
+
+    // Check to see whether we've already added an engine with this title
+    if (browser.engines) {
+      if (browser.engines.some(function (e) e.title == engine.title))
+        return;
+    }
+
     // Append the URI and an appropriate title to the browser data.
     var iconURL = null;
     if (gBrowser.shouldLoadFavIcon(browser.currentURI))
@@ -2797,7 +2804,7 @@ const BrowserSearch = {
       browser.hiddenEngines = engines;
     else {
       browser.engines = engines;
-      if (browser == gBrowser || browser == gBrowser.mCurrentBrowser)
+      if (browser == gBrowser.mCurrentBrowser)
         this.updateSearchButton();
     }
   },
