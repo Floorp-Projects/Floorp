@@ -1147,15 +1147,15 @@ CheckLeakedRoots(JSRuntime *rt)
     if (leakedroots > 0) {
         if (leakedroots == 1) {
             fprintf(stderr,
-"JS engine warning: 1 GC root remains after destroying the JSRuntime.\n"
+"JS engine warning: 1 GC root remains after destroying the JSRuntime at %p.\n"
 "                   This root may point to freed memory. Objects reachable\n"
-"                   through it have not been finalized.\n");
+"                   through it have not been finalized.\n", rt);
         } else {
             fprintf(stderr,
-"JS engine warning: %lu GC roots remain after destroying the JSRuntime.\n"
+"JS engine warning: %lu GC roots remain after destroying the JSRuntime at %p.\n"
 "                   These roots may point to freed memory. Objects reachable\n"
 "                   through them have not been finalized.\n",
-                        (unsigned long) leakedroots);
+                    (unsigned long) leakedroots, rt);
         }
     }
 }
