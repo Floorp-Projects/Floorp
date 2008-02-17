@@ -325,7 +325,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal", "1em" ],
 		other_values: [ "2px", "4em" ],
-		invalid_values: [ "3%" ]
+		invalid_values: [ "3%", "-1px" ]
 	},
 	"-moz-column-width": {
 		domProp: "MozColumnWidth",
@@ -333,7 +333,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
 		other_values: [ "15px", "50%" ],
-		invalid_values: [ "20" ]
+		invalid_values: [ "20", "-1px" ]
 	},
 	"-moz-float-edge": {
 		domProp: "MozFloatEdge",
