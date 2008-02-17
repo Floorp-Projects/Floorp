@@ -42,17 +42,17 @@ for (i = 0; i < passFiles.length; ++i)
     doFail("Sending failed : " + passFiles[i][0]);
   }
   
-  // Check the Referer-Root
+  // Check the Access-Control-Origin
   var channel =
     xhr.channel.QueryInterface(Components.interfaces.nsIHttpChannel);
   var value = null;
   try {
-    value = channel.getRequestHeader("Referer-Root");
+    value = channel.getRequestHeader("Access-Control-Origin");
   }
   catch(e) {
     doFail("Getting request header failed : " + passFiles[i][0]);
   }
-  if (value != "http://sub2.xn--lt-uia.example.org:80")
+  if (value != "http://sub2.xn--lt-uia.example.org")
    doFail("Referer-root incorrect : " + value);
   
   // Check the response

@@ -277,31 +277,15 @@ nsACProxyListener::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     rv = status;
   }
 
-  nsCOMPtr<nsIHttpChannel> http;
-  if (NS_SUCCEEDED(rv)) {
-    http = do_QueryInterface(aRequest, &rv);
-  }
-  if (NS_SUCCEEDED(rv)) {
-    rv = NS_ERROR_DOM_BAD_URI;
-    nsCString allow;
-    http->GetResponseHeader(NS_LITERAL_CSTRING("Allow"), allow);
-    nsCWhitespaceTokenizer tok(allow);
-    while (tok.hasMoreTokens()) {
-      if (mRequestMethod.Equals(tok.nextToken(),
-                                nsCaseInsensitiveCStringComparator())) {
-        rv = NS_OK;
-        break;
-      }
-    }
-  }
-
   if (NS_SUCCEEDED(rv)) {
     // Everything worked, check to see if there is an expiration time set on
     // this access control list. If so go ahead and cache it.
 
-    // The "Method-Check-Max-Age" header should return an age in seconds.
+    nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(aRequest, &rv);
+
+    // The "Access-Control-Max-Age" header should return an age in seconds.
     nsCAutoString ageString;
-    http->GetResponseHeader(NS_LITERAL_CSTRING("Method-Check-Max-Age"),
+    http->GetResponseHeader(NS_LITERAL_CSTRING("Access-Control-Max-Age"),
                             ageString);
 
     // Sanitize the string. We only allow 'delta-seconds' as specified by
@@ -322,8 +306,7 @@ nsACProxyListener::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 
         // PR_Now gives microseconds
         PRTime expirationTime = PR_Now() + age * PR_USEC_PER_SEC;
-        nsXMLHttpRequest::sAccessControlCache->PutEntry(mRequestMethod, uri,
-                                                        mReferrerPrincipal,
+        nsXMLHttpRequest::sAccessControlCache->PutEntry(uri, mReferrerPrincipal,
                                                         expirationTime);
       }
     }
@@ -405,13 +388,12 @@ GetDocumentFromScriptContext(nsIScriptContext *aScriptContext)
 }
 
 void
-nsAccessControlLRUCache::GetEntry(const nsACString& aMethod,
-                                  nsIURI* aURI,
+nsAccessControlLRUCache::GetEntry(nsIURI* aURI,
                                   nsIPrincipal* aPrincipal,
                                   PRTime* _retval)
 {
   nsCAutoString key;
-  if (GetCacheKey(aMethod, aURI, aPrincipal, key)) {
+  if (GetCacheKey(aURI, aPrincipal, key)) {
     CacheEntry* entry;
     if (GetEntryInternal(key, &entry)) {
       *_retval = entry->value;
@@ -422,13 +404,12 @@ nsAccessControlLRUCache::GetEntry(const nsACString& aMethod,
 }
 
 void
-nsAccessControlLRUCache::PutEntry(const nsACString& aMethod,
-                                  nsIURI* aURI,
+nsAccessControlLRUCache::PutEntry(nsIURI* aURI,
                                   nsIPrincipal* aPrincipal,
                                   PRTime aValue)
 {
   nsCString key;
-  if (!GetCacheKey(aMethod, aURI, aPrincipal, key)) {
+  if (!GetCacheKey(aURI, aPrincipal, key)) {
     NS_WARNING("Invalid cache key!");
     return;
   }
@@ -520,12 +501,10 @@ nsAccessControlLRUCache::RemoveExpiredEntries(const nsACString& aKey,
 }
 
 /* static */ PRBool
-nsAccessControlLRUCache::GetCacheKey(const nsACString& aMethod,
-                                     nsIURI* aURI,
+nsAccessControlLRUCache::GetCacheKey(nsIURI* aURI,
                                      nsIPrincipal* aPrincipal,
                                      nsACString& _retval)
 {
-  NS_ASSERTION(!aMethod.IsEmpty(), "Empty method string!");
   NS_ASSERTION(aURI, "Null uri!");
   NS_ASSERTION(aPrincipal, "Null principal!");
   
@@ -544,7 +523,7 @@ nsAccessControlLRUCache::GetCacheKey(const nsACString& aMethod,
   rv = aURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
-  _retval.Assign(aMethod + space + host + space + spec);
+  _retval.Assign(host + space + spec);
 
   return PR_TRUE;
 }
@@ -1560,7 +1539,7 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
     // our special Access Control Cache.
     PRTime expiration = 0;
     if (sAccessControlCache) {
-      sAccessControlCache->GetEntry(method, uri, mPrincipal, &expiration);
+      sAccessControlCache->GetEntry(uri, mPrincipal, &expiration);
     }
 
     if (expiration <= PR_Now()) {
@@ -1576,10 +1555,6 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
       NS_ASSERTION(acHttp, "Failed to QI to nsIHttpChannel!");
 
       rv = acHttp->SetRequestMethod(NS_LITERAL_CSTRING("OPTIONS"));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = acHttp->SetRequestHeader(NS_LITERAL_CSTRING("Method-Check"), method,
-                                    PR_FALSE);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -2398,7 +2373,7 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
     const char *kInvalidHeaders[] = {
       "accept-charset", "accept-encoding", "connection", "content-length",
       "content-transfer-encoding", "date", "expect", "host", "keep-alive",
-      "proxy-connection", "referer", "referer-root", "te", "trailer",
+      "proxy-connection", "referer", "access-control-origin", "te", "trailer",
       "transfer-encoding", "upgrade", "via", "xmlhttprequest-security-check"
     };
     PRUint32 i;

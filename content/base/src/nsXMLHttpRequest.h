@@ -107,11 +107,11 @@ public:
     return mTable.Init();
   }
 
-  void GetEntry(const nsACString& aMethod, nsIURI* aURI,
-                nsIPrincipal* aPrincipal, PRTime* _retval);
+  void GetEntry(nsIURI* aURI, nsIPrincipal* aPrincipal,
+                PRTime* _retval);
 
-  void PutEntry(const nsACString& aMethod, nsIURI* aURI,
-                nsIPrincipal* aPrincipal, PRTime aValue);
+  void PutEntry(nsIURI* aURI, nsIPrincipal* aPrincipal,
+                PRTime aValue);
 
   void Clear();
 
@@ -122,8 +122,8 @@ private:
     RemoveExpiredEntries(const nsACString& aKey, nsAutoPtr<CacheEntry>& aValue,
                          void* aUserData);
 
-  static PRBool GetCacheKey(const nsACString& aMethod, nsIURI* aURI,
-                            nsIPrincipal* aPrincipal, nsACString& _retval);
+  static PRBool GetCacheKey(nsIURI* aURI, nsIPrincipal* aPrincipal,
+                            nsACString& _retval);
 
   nsClassHashtable<nsCStringHashKey, CacheEntry> mTable;
   PRCList mList;
