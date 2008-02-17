@@ -121,7 +121,14 @@
         <body><![CDATA[
           var result = PlacesUtils.history.executeQueries(queries, queries.length, 
                                                           options);
-          var treeView = new PlacesTreeView(this.showRoot, this.flatList);
+          var callback;
+          if (this.flatList) {
+            var onOpenFlatContainer = this.onOpenFlatContainer;
+            if (onOpenFlatContainer)
+              callback = new Function("aContainer", onOpenFlatContainer);
+          }
+
+          var treeView = new PlacesTreeView(this.showRoot, this.flatList, callback);
           result.viewer = treeView;
           this.view = treeView;
           if (!this._controller) {
@@ -154,6 +161,21 @@
         <setter><![CDATA[
           if (this.flatList != val) {
             this.setAttribute("flatList", val);
+            // reload with the last place set
+            if (this.place)
+              this.place = this.place;
+          }
+          return val;
+        ]]></setter>
+      </property>
+
+      <property name="onOpenFlatContainer">
+        <getter><![CDATA[
+          return this.getAttribute("onopenflatcontainer");
+        ]]></getter>
+        <setter><![CDATA[
+          if (this.onOpenFlatContainer != val) {
+            this.setAttribute("onopenflatcontainer", val);
             // reload with the last place set
             if (this.place)
               this.place = this.place;

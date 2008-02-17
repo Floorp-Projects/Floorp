@@ -355,20 +355,22 @@ PlacesTreeView.prototype = {
     if (newElements.length)
       this._tree.rowCountChanged(startReplacement, newElements.length);
 
-    // now, open any containers that were persisted
-    for (var i = 0; i < toOpenElements.length; i++) {
-      var item = toOpenElements[i];
-      var parent = item.parent;
-      // avoid recursively opening containers
-      while (parent) {
-        if (parent.uri == item.uri)
-          break;
-        parent = parent.parent;
+    if (!this._flatList) {
+      // now, open any containers that were persisted
+      for (var i = 0; i < toOpenElements.length; i++) {
+        var item = toOpenElements[i];
+        var parent = item.parent;
+        // avoid recursively opening containers
+        while (parent) {
+          if (parent.uri == item.uri)
+            break;
+          parent = parent.parent;
+        }
+        // if we don't have a parent, we made it all the way to the root
+        // and didn't find a match, so we can open our item
+        if (!parent)
+          item.containerOpen = !item.containerOpen;
       }
-      // if we don't have a parent, we made it all the way to the root
-      // and didn't find a match, so we can open our item
-      if (!parent)
-        item.containerOpen = !item.containerOpen;
     }
 
     this._tree.endUpdateBatch();
@@ -1000,11 +1002,6 @@ PlacesTreeView.prototype = {
 
     var nodeType = node.type;
     if (PlacesUtils.containerTypes.indexOf(nodeType) != -1) {
-      // To disable the tree gestures for containers (e.g. double-click to open)
-      // we don't mark container nodes as such in flat list mode. The container
-      // appearance is desired though, so we add the container atom manually.
-      if (this._flatList)
-        aProperties.AppendElement(this._getAtomFor("container"));
       if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY)
         aProperties.AppendElement(this._getAtomFor("query"));
       else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER ||
@@ -1025,8 +1022,6 @@ PlacesTreeView.prototype = {
 
   isContainer: function PTV_isContainer(aRow) {
     this._ensureValidRow(aRow);
-    if (this._flatList)
-      return false; // but see getCellProperties
 
     var node = this._visibleElements[aRow];
     if (PlacesUtils.nodeIsContainer(node)) {
@@ -1095,7 +1090,7 @@ PlacesTreeView.prototype = {
       if (node.parent && PlacesUtils.nodeIsReadOnly(node.parent))
         return false;
     }
-    return PlacesControllerDragHelper.canDrop(this, aOrientation);
+    return PlacesControllerDragHelper.canDrop();
   },
 
   // XXXmano: these two are copied over from tree.xml, to fix this we need to
@@ -1307,6 +1302,11 @@ PlacesTreeView.prototype = {
     if (!PlacesUtils.nodeIsContainer(node))
       return; // not a container, nothing to do
 
+    if (this._flatList && this._openContainerCallback) {
+      this._openContainerCallback(node);
+      return;
+    }
+
     var resource = this._getResourceForNode(node);
     if (resource) {
       const openLiteral = PlacesUtils.RDF.GetResource("http://home.netscape.com/NC-rdf#open");
@@ -1456,7 +1456,7 @@ PlacesTreeView.prototype = {
   performActionOnCell: function(aAction, aRow, aColumn) { }
 };
 
-function PlacesTreeView(aShowRoot, aFlatList) {
+function PlacesTreeView(aShowRoot, aFlatList, aOnOpenFlatContainer) {
   if (aShowRoot && aFlatList)
     throw("Flat-list mode is not supported when show-root is set");
 
@@ -1468,4 +1468,5 @@ function PlacesTreeView(aShowRoot, aFlatList) {
   this._visibleElements = [];
   this._showRoot = aShowRoot;
   this._flatList = aFlatList;
+  this._openContainerCallback = aOnOpenFlatContainer;
 }

@@ -200,7 +200,8 @@ var PlacesOrganizer = {
     var placeURI = PlacesUtils.history.queriesToQueryString(queries, queries.length, options);
 
     // update the right-pane contents
-    this._content.place = placeURI;
+    if (this._content.place != placeURI)
+      this._content.place = placeURI;
 
     // This just updates the back/forward buttons, it doesn't call us back
     // because node.uri is our current selection.
@@ -249,38 +250,19 @@ var PlacesOrganizer = {
     }
   },
 
-  _openSelectedRow: function PO__openSelectedRow(aEvent) {
-    var node = this._content.selectedNode;
-    if (!node)
-      return;
-
-    if (PlacesUtils.nodeIsContainer(node)) {
-      if (node.itemId != -1)
-        this._places.selectItems([node.itemId]);
-      else if (PlacesUtils.nodeIsQuery(node))
-        this._places.selectPlaceURI(node.uri);
-    }
-    else if (PlacesUtils.nodeIsURI(this._content.selectedNode))
-      this._content.controller.openSelectedNodeWithEvent(aEvent);
-  },
-
-  onContentTreeDblClick: function PO_onContentTreeDblClick(aEvent) {
-    if (aEvent.button != 0 || !this._content.hasSingleSelection ||
-        aEvent.originalTarget.localName != "treechildren")
-      return;
-
-    var row = { }, col = { }, obj = { };
-    this._content.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row,
-                                         col, obj);
-    if (row.value == -1)
-      return;
-
-    this._openSelectedRow(aEvent);
+  openFlatContainer: function PO_openFlatContainerFlatContainer(aContainer) {
+    if (aContainer.itemId != -1)
+      this._places.selectItems([aContainer.itemId]);
+    else if (PlacesUtils.nodeIsQuery(aContainer))
+      this._places.selectPlaceURI(aContainer.uri);
   },
 
   onContentTreeKeypress: function PO_onContentTreeKeypress(aEvent) {
-    if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN)
-      this._openSelectedRow(aEvent);
+    if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN) {
+      var node = this._content.selectedNode;
+      if (node && PlacesUtils.nodeIsURI(node))
+        this._content.controller.openSelectedNodeWithEvent(aEvent);
+    }
   },
 
   /**

@@ -1411,7 +1411,12 @@ PlacesMenuDNDObserver.prototype = {
   },
 
   canDrop: function TBV_DO_canDrop(event, session) {
-    return PlacesControllerDragHelper.canDrop(this._view._viewer, -1);
+    // Can't drop if the menu isn't a folder
+    var resultNode = this._popup._resultNode;
+    if (!PlacesUtils.nodeIsFolder(resultNode))
+      return null;
+
+    return PlacesControllerDragHelper.canDrop();
   },
 
   onDragOver: function TBV_DO_onDragOver(event, flavor, session) {
@@ -1545,20 +1550,9 @@ var PlacesControllerDragHelper = {
 
   /**
    * Determines whether or not the data currently being dragged can be dropped
-   * on the specified view. 
-   * @param   view
-   *          A places view object (nsINavHistoryResultViewer)
-   * @param   orientation
-   *          The orientation of the drop
-   * @returns true if the data being dragged is of a type supported by the view
-   *          it is being dragged over, false otherwise. 
+   * on a places view.
    */
-  canDrop: function PCDH_canDrop(view, orientation) {
-    var root = view.result.root;
-    if (PlacesUtils.nodeIsReadOnly(root) || 
-        !PlacesUtils.nodeIsFolder(root))
-      return false;
-
+  canDrop: function PCDH_canDrop() {
     var session = this.getSession();
     if (session) {
       var types = PlacesUtils.GENERIC_VIEW_DROP_TYPES;
