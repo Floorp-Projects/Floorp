@@ -886,25 +886,22 @@ nsCrossSiteListenerProxy::AddRequestHeaders(nsIChannel* aChannel,
   rv = uri->GetAsciiHost(host);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCString root = scheme + NS_LITERAL_CSTRING("://") + host +
-                   NS_LITERAL_CSTRING(":");
-
-  // If needed, append the default port
+  nsCString root = scheme + NS_LITERAL_CSTRING("://") + host;
+  // Append the port
   PRInt32 port;
   uri->GetPort(&port);
-  if (port == -1) {
-    port = NS_GetDefaultPort(scheme.get());
-    if (port == -1) {
-      return NS_ERROR_DOM_BAD_URI;
+  if (port != -1) {
+    PRInt32 defaultPort = NS_GetDefaultPort(scheme.get());
+    if (port != defaultPort) {
+      root.Append(":");
+      root.AppendInt(port);
     }
   }
 
-  root.AppendInt(port);
-  
-  // Now add the referer-root header
+  // Now add the access-control-origin header
   nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(aChannel);
   NS_ENSURE_TRUE(http, NS_ERROR_FAILURE);
 
-  return http->SetRequestHeader(NS_LITERAL_CSTRING("Referer-Root"),
+  return http->SetRequestHeader(NS_LITERAL_CSTRING("Access-Control-Origin"),
     root, PR_FALSE);
 }
