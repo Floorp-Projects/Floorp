@@ -142,6 +142,7 @@ private:
     nsRefPtrHashtable<nsISupportsHashKey, gfxASurface> mWidgetSurfaceCache;
 
     nsRefPtr<gfxASurface> mPrintingSurface;
+    float mPrintingScale;
     nsCOMPtr<nsIDeviceContextSpec> mDeviceContextSpec;
 };
 
