@@ -40,7 +40,7 @@
 interface nsIDOMOfflineResourceList;
 interface nsIDOMLoadStatusList;
 
-[scriptable, uuid(4de9dbd5-0eff-47aa-8520-c062c6933d6a)]
+[scriptable, uuid(f8bbf8c3-c47b-465a-a221-22824449f689)]
 interface nsIDOMClientInformation : nsISupports
 {
   /**
@@ -52,7 +52,7 @@ interface nsIDOMClientInformation : nsISupports
   void registerContentHandler(in DOMString mimeType, in DOMString uri, in DOMString title);
   void registerProtocolHandler(in DOMString protocol, in DOMString uri, in DOMString title);
 
-  boolean isLocallyAvailable(in DOMString uri, in boolean whenOffline);
+  boolean mozIsLocallyAvailable(in DOMString uri, in boolean whenOffline);
 };
 
 
