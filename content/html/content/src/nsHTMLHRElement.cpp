@@ -129,7 +129,7 @@ nsHTMLHRElement::ParseAttribute(PRInt32 aNamespaceID,
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::width) {
-      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE);
     }
     if (aAttribute == nsGkAtoms::size) {
       return aResult.ParseIntWithBounds(aValue, 1, 1000);

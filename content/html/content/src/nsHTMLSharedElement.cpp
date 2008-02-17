@@ -207,7 +207,7 @@ nsHTMLSharedElement::ParseAttribute(PRInt32 aNamespaceID,
       }
       if (aAttribute == nsGkAtoms::width ||
           aAttribute == nsGkAtoms::height) {
-        return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
+        return aResult.ParseSpecialIntValue(aValue, PR_TRUE);
       }
     }
     else if (mNodeInfo->Equals(nsGkAtoms::dir) ||
