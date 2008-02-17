@@ -774,10 +774,9 @@ var BookmarksMenuDropHandler = {
    *          otherwise.
    */
   canDrop: function BMDH_canDrop(event, session) {
-    var view = document.getElementById("bookmarksMenuPopup");
-    return PlacesControllerDragHelper.canDrop(view._viewer, -1);
+    return PlacesControllerDragHelper.canDrop();
   },
-  
+
   /**
    * Called when the user drops onto the top level Bookmarks Menu item.
    * @param   event

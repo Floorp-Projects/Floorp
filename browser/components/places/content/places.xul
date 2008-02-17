@@ -417,8 +417,8 @@
             <tree id="placeContent" class="placesTree" context="placesContext" 
                   flex="1" type="places"
                   flatList="true"
-                  ondblclick="PlacesOrganizer.onContentTreeDblClick(event);"
                   onkeypress="PlacesOrganizer.onContentTreeKeypress(event);"
+                  onopenflatcontainer="PlacesOrganizer.openFlatContainer(aContainer);"
                   onselect="PlacesOrganizer.onContentTreeSelect();"
                   onclick="PlacesOrganizer.onTreeClick(event);">
               <treecols id="placeContentColumns">
