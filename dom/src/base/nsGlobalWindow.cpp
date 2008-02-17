@@ -9340,9 +9340,9 @@ nsNavigator::RegisterProtocolHandler(const nsAString& aProtocol,
 
 
 NS_IMETHODIMP
-nsNavigator::IsLocallyAvailable(const nsAString &aURI,
-                                PRBool aWhenOffline,
-                                PRBool *aIsAvailable)
+nsNavigator::MozIsLocallyAvailable(const nsAString &aURI,
+                                   PRBool aWhenOffline,
+                                   PRBool *aIsAvailable)
 {
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aURI);
