@@ -2527,10 +2527,10 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("toint32",        ToInt32,        1,1,0),
     JS_FS("evalcx",         EvalInContext,  1,0,0),
 #ifdef MOZ_SHARK
-    JS_FS("startShark",      StartShark,      0,0,0),
-    JS_FS("stopShark",       StopShark,       0,0,0),
-    JS_FS("connectShark",    ConnectShark,    0,0,0),
-    JS_FS("disconnectShark", DisconnectShark, 0,0,0),
+    JS_FS("startShark",      js_StartShark,      0,0,0),
+    JS_FS("stopShark",       js_StopShark,       0,0,0),
+    JS_FS("connectShark",    js_ConnectShark,    0,0,0),
+    JS_FS("disconnectShark", js_DisconnectShark, 0,0,0),
 #endif
     JS_FS_END
 };
