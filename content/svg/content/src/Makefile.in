@@ -153,7 +153,6 @@ FORCE_STATIC_LIB = 1
 EXPORTS =  			\
 	nsIDOMSVGListener.h \
 	nsIDOMSVGZoomListener.h \
-	nsISVGFilter.h             \
 	nsISVGTextContentMetrics.h \
 	nsISVGValue.h              \
 	nsISVGValueObserver.h      \
