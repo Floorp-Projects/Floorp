@@ -161,7 +161,7 @@
 #define JS_FRIEND_API(t)    JS_PUBLIC_API(t)
 #define JS_FRIEND_DATA(t)   JS_PUBLIC_DATA(t)
 
-#ifdef _WIN32
+#if defined(_MSC_VER)
 # define JS_INLINE __forceinline
 #elif defined(__GNUC__)
 # ifndef DEBUG
