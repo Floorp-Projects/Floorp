@@ -56,8 +56,6 @@ REQUIRES	= xpcom \
 		  string \
 		  necko \
 		  dom \
-		  widget \
-		  content \
 		  pref \
 		  windowwatcher \
 		  docshell \

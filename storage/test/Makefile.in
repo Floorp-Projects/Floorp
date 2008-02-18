@@ -56,7 +56,6 @@ REQUIRES = \
 	xpcom \
 	string \
 	storage \
-	storagecomps \
 	$(NULL)
 
 LIBS = \

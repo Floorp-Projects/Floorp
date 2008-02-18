@@ -56,7 +56,6 @@ REQUIRES	= xpcom \
 		  string \
 		  dom \
 		  content \
-		  xul \
 		  xuldoc \
 		  gfx \
 		  widget \
@@ -76,13 +75,14 @@ REQUIRES	= xpcom \
 		  htmlparser \
 		  util \
 		  windowwatcher \
-		  accessibility \
 		  shistory \
 		  caps \
 		  thebes \
-		  cairo \
 		  $(NULL)
 
+ifdef ACCESSIBILITY
+REQUIRES	+= accessibility
+endif
 
 XPIDLSRCS	= \
 		nsIStyleSheetService.idl	\

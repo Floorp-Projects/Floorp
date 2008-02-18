@@ -92,7 +92,6 @@ endif
 REQUIRES = \
 	xpcom \
 	string \
-	xulapp \
 	$(NULL)
 
 CPPSRCS = nsBrowserApp.cpp

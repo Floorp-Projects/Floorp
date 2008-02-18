@@ -53,7 +53,6 @@ IS_COMPONENT	= 1
 REQUIRES	= xpcom \
 		  string \
 		  dom \
-		  intl \
 		  $(NULL)
 
 CPPSRCS		= nsAutoComplete.cpp

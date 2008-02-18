@@ -57,24 +57,13 @@ REQUIRES	= \
 		locale \
 		unicharutil \
 		webshell \
-		uriloader \
-		htmlparser \
 		necko \
-		view \
 		pref \
 		docshell \
 		xpconnect \
-		xuldoc \
 		caps \
-		editor \
 		imglib2 \
-		mimetype \
-		exthandler \
-		uconv \
-		intl \
-		plugin \
 		cairo \
-		libpixman \
 		thebes \
 		$(NULL)
 

@@ -55,7 +55,6 @@ REQUIRES	= xpcom \
 		  string \
 		  unicharutil \
 		  dom \
-		  js \
 		  layout \
 		  content \
 		  uriloader \

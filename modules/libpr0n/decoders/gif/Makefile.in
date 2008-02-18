@@ -52,7 +52,6 @@ REQUIRES	= xpcom \
 		  string \
 		  gfx \
 		  thebes \
-		  cairo \
 		  imglib2 \
 		  $(LCMS_REQUIRES) \
 		  $(NULL)

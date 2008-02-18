@@ -52,9 +52,7 @@ IS_COMPONENT = 1
 
 REQUIRES = xpcom \
            string \
-           history \
            docshell \
-           rdf \
            dom \
            morkreader \
            pref \
@@ -67,17 +65,9 @@ REQUIRES = xpcom \
            unicharutil \
            autocomplete \
            storage \
-           uconv \
-           htmlparser \
-           content \
            txmgr \
-           caps \
-           xpconnect \
-           js \
            nkcache \
            widget \
-           url-classifier \
-           microsummaries \
            $(NULL)
 
 CPPSRCS = \

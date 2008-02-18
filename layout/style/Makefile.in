@@ -65,8 +65,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  mimetype \
 		  webshell \
-		  docshell \
-		  htmlparser \
 		  uconv \
 		  xuldoc \
 		  xpconnect \

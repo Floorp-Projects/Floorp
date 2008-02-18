@@ -53,11 +53,6 @@ REQUIRES= \
 		  string \
 		  imglib2 \
 		  widget \
-		  content \
-		  layout \
-		  necko \
-		  dom \
-		  locale \
 		  thebes \
 		  $(NULL)
 

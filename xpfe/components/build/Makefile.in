@@ -54,28 +54,12 @@ PACKAGE_VARS += MOZ_PHOENIX
 
 REQUIRES	= xpcom \
 		  string \
-		  content \
 		  rdf \
 		  necko \
-		  nkcache \
-		  intl \
-		  locale \
-		  mork \
-		  widget \
-		  dom \
 		  uriloader \
-		  mimetype \
-		  embed_base \
-		  webbrowserpersist \
-		  progressDlg \
-		  pref \
 		  docshell \
 		  webshell \
-		  appshell \
 		  browser \
-		  txmgr \
-		  chardet \
-		  autocomplete \
 		  $(NULL)
 
 CPPSRCS		= nsModule.cpp
@@ -96,7 +80,14 @@ endif
 
 # Suite specific includes
 ifdef MOZ_SUITE
-REQUIRES += downloadmanager
+REQUIRES	+= \
+		downloadmanager \
+		intl \
+		mork \
+		widget \
+		mimetype \
+		autocomplete \
+		$(NULL)
 
 SHARED_LIBRARY_LIBS += \
 	../download-manager/src/$(LIB_PREFIX)downloadmanager_s.$(LIB_SUFFIX) \

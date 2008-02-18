@@ -17,18 +17,12 @@ FORCE_SHARED_LIB = 1
 USE_STATIC_LIBS = 1
 
 REQUIRES = \
-	docshell \
 	xpcom \
 	string \
-	pref \
 	rdf \
 	uriloader \
-	webbrowserpersist \
 	intl \
 	necko \
-	nkcache \
-	txmgr \
-	chardet \
 	migration \
 	shellservice \
 	xulapp \

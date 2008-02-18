@@ -55,11 +55,8 @@ REQUIRES	= xpcom \
 		  layout \
 		  widget \
 		  necko \
-		  caps \
 		  webshell \
 		  docshell \
-		  htmlparser \
-		  xpconnect \
 		  unicharutil \
 		  pref \
 		  locale \
