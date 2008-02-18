@@ -59,15 +59,16 @@ sub Execute {
     );
 
     if ($version eq 'nightly') {
-        $this->Log(msg => 'Skip buildID storage for nightly mode');
+        $this->Log(msg => 'Nightly mode: skipping buildID storage and Talkback
+                             ' symbol push to Breakpad server');
     } else {
         $this->StoreBuildID();
+        # proxy for version is 2.0.0.* and osname is win32
+        if ($sysname =~ /cygwin/i) {
+           $this->PublishTalkbackSymbols();
+        }
     }
 
-    # proxy for version is 2.0.0.* and osname is win32
-    if ($sysname =~ /cygwin/i) {
-        $this->PublishTalkbackSymbols();
-    }
 }
 
 sub Verify {
