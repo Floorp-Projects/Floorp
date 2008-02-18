@@ -1761,7 +1761,8 @@ ImportProperty(JSContext *cx, JSObject *obj, jsid id)
         if (prop && target == obj2) {
             ok = OBJ_SET_PROPERTY(cx, target, id, &value);
         } else {
-            ok = OBJ_DEFINE_PROPERTY(cx, target, id, value, NULL, NULL,
+            ok = OBJ_DEFINE_PROPERTY(cx, target, id, value,
+                                     JS_PropertyStub, JS_PropertyStub,
                                      attrs & ~(JSPROP_EXPORTED |
                                                JSPROP_GETTER |
                                                JSPROP_SETTER),
@@ -3264,7 +3265,7 @@ interrupt:
             rval = FETCH_OPND(-1);
             SAVE_SP_AND_PC(fp);
             ok = OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(atom), rval,
-                                     NULL, NULL,
+                                     JS_PropertyStub, JS_PropertyStub,
                                      JSPROP_ENUMERATE | JSPROP_PERMANENT |
                                      JSPROP_READONLY,
                                      NULL);
@@ -3279,7 +3280,8 @@ interrupt:
             SAVE_SP_AND_PC(fp);
             FETCH_OBJECT(cx, -2, lval, obj);
             FETCH_ELEMENT_ID(obj, -1, id);
-            ok = OBJ_DEFINE_PROPERTY(cx, obj, id, rval, NULL, NULL,
+            ok = OBJ_DEFINE_PROPERTY(cx, obj, id, rval,
+                                     JS_PropertyStub, JS_PropertyStub,
                                      JSPROP_ENUMERATE | JSPROP_PERMANENT |
                                      JSPROP_READONLY,
                                      NULL);
@@ -5183,7 +5185,8 @@ interrupt:
             if (!ok)
                 goto out;
             if (!prop) {
-                ok = OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID, NULL, NULL,
+                ok = OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID,
+                                         JS_PropertyStub, JS_PropertyStub,
                                          JSPROP_EXPORTED, NULL);
             } else {
                 ok = OBJ_GET_ATTRIBUTES(cx, obj, id, prop, &attrs);
@@ -5378,7 +5381,8 @@ interrupt:
 
             /* Bind a variable only if it's not yet defined. */
             if (!prop) {
-                ok = OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID, NULL, NULL,
+                ok = OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID,
+                                         JS_PropertyStub, JS_PropertyStub,
                                          attrs, &prop);
                 if (!ok)
                     goto out;
@@ -5517,10 +5521,10 @@ interrupt:
                     ok = OBJ_DEFINE_PROPERTY(cx, parent, id, rval,
                                              (flags & JSPROP_GETTER)
                                              ? JS_EXTENSION (JSPropertyOp) obj
-                                             : NULL,
+                                             : JS_PropertyStub,
                                              (flags & JSPROP_SETTER)
                                              ? JS_EXTENSION (JSPropertyOp) obj
-                                             : NULL,
+                                             : JS_PropertyStub,
                                              attrs,
                                              NULL);
                 }
@@ -5651,10 +5655,10 @@ interrupt:
             ok = OBJ_DEFINE_PROPERTY(cx, parent, ATOM_TO_JSID(fun->atom), rval,
                                      (attrs & JSPROP_GETTER)
                                      ? JS_EXTENSION (JSPropertyOp) obj
-                                     : NULL,
+                                     : JS_PropertyStub,
                                      (attrs & JSPROP_SETTER)
                                      ? JS_EXTENSION (JSPropertyOp) obj
-                                     : NULL,
+                                     : JS_PropertyStub,
                                      attrs |
                                      JSPROP_ENUMERATE | JSPROP_PERMANENT |
                                      JSPROP_READONLY,
@@ -5786,10 +5790,10 @@ interrupt:
 
             if (op == JSOP_GETTER) {
                 getter = JS_EXTENSION (JSPropertyOp) JSVAL_TO_OBJECT(rval);
-                setter = NULL;
+                setter = JS_PropertyStub;
                 attrs = JSPROP_GETTER;
             } else {
-                getter = NULL;
+                getter = JS_PropertyStub;
                 setter = JS_EXTENSION (JSPropertyOp) JSVAL_TO_OBJECT(rval);
                 attrs = JSPROP_SETTER;
             }

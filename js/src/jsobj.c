@@ -1604,7 +1604,8 @@ obj_defineGetter(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     *vp = JSVAL_VOID;
     return OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID,
-                               (JSPropertyOp) JSVAL_TO_OBJECT(fval), NULL,
+                               (JSPropertyOp) JSVAL_TO_OBJECT(fval),
+                               JS_PropertyStub,
                                JSPROP_ENUMERATE | JSPROP_GETTER | JSPROP_SHARED,
                                NULL);
 }
@@ -1638,7 +1639,8 @@ obj_defineSetter(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     *vp = JSVAL_VOID;
     return OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID,
-                               NULL, (JSPropertyOp) JSVAL_TO_OBJECT(fval),
+                               JS_PropertyStub,
+                               (JSPropertyOp) JSVAL_TO_OBJECT(fval),
                                JSPROP_ENUMERATE | JSPROP_SETTER | JSPROP_SHARED,
                                NULL);
 }
