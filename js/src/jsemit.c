@@ -106,6 +106,8 @@ js_FinishCodeGenerator(JSContext *cx, JSCodeGenerator *cg)
     TREE_CONTEXT_FINISH(&cg->treeContext);
     JS_ARENA_RELEASE(cg->codePool, cg->codeMark);
     JS_ARENA_RELEASE(cg->notePool, cg->noteMark);
+    if (cg->spanDeps) /* non-null only after OOM */
+        JS_free(cx, cg->spanDeps);
 }
 
 static ptrdiff_t
@@ -522,17 +524,10 @@ AddSpanDep(JSContext *cx, JSCodeGenerator *cg, jsbytecode *pc, jsbytecode *pc2,
 
     if ((index & (index - 1)) == 0 &&
         (!(sdbase = cg->spanDeps) || index >= SPANDEPS_MIN)) {
-        if (!sdbase) {
-            size = SPANDEPS_SIZE_MIN;
-            JS_ARENA_ALLOCATE_CAST(sdbase, JSSpanDep *, &cx->tempPool, size);
-        } else {
-            size = SPANDEPS_SIZE(index);
-            JS_ARENA_GROW_CAST(sdbase, JSSpanDep *, &cx->tempPool, size, size);
-        }
-        if (!sdbase) {
-            js_ReportOutOfScriptQuota(cx);
+        size = sdbase ? SPANDEPS_SIZE(index) : SPANDEPS_SIZE_MIN / 2;
+        sdbase = (JSSpanDep *) JS_realloc(cx, sdbase, size + size);
+        if (!sdbase)
             return JS_FALSE;
-        }
         cg->spanDeps = sdbase;
     }
 
@@ -1146,8 +1141,7 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
      * can span top-level statements, because JS lacks goto.
      */
     size = SPANDEPS_SIZE(JS_BIT(JS_CeilingLog2(cg->numSpanDeps)));
-    JS_ArenaFreeAllocation(&cx->tempPool, cg->spanDeps,
-                           JS_MAX(size, SPANDEPS_SIZE_MIN));
+    JS_free(cx, cg->spanDeps);
     cg->spanDeps = NULL;
     FreeJumpTargets(cg, cg->jumpTargets);
     cg->jumpTargets = NULL;
