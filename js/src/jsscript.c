@@ -649,7 +649,7 @@ script_freeze(JSContext *cx, uintN argc, jsval *vp)
     void *buf;
     JSString *str;
 
-    obj = JSVAL_TO_OBJECT(vp[1]);
+    obj = JS_THIS_OBJECT(cx, vp);
     if (!JS_InstanceOf(cx, obj, &js_ScriptClass, vp + 2))
         return JS_FALSE;
     script = (JSScript *) JS_GetPrivate(cx, obj);
@@ -715,7 +715,7 @@ script_thaw(JSContext *cx, uintN argc, jsval *vp)
     JSBool ok, hasMagic;
     jsint execDepth;
 
-    obj = JSVAL_TO_OBJECT(vp[1]);
+    obj = JS_THIS_OBJECT(cx, vp);
     if (!JS_InstanceOf(cx, obj, &js_ScriptClass, vp + 2))
         return JS_FALSE;
 

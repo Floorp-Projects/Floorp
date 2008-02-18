@@ -284,7 +284,7 @@ iterator_next(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj;
 
-    obj = JSVAL_TO_OBJECT(vp[1]);
+    obj = JS_THIS_OBJECT(cx, vp);
     if (!JS_InstanceOf(cx, obj, &js_IteratorClass, vp + 2))
         return JS_FALSE;
 
@@ -302,8 +302,8 @@ iterator_next(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 iterator_self(JSContext *cx, uintN argc, jsval *vp)
 {
-    *vp = vp[1];
-    return JS_TRUE;
+    *vp = JS_THIS(cx, vp);
+    return !JSVAL_IS_NULL(*vp);
 }
 
 #define JSPROP_ROPERM   (JSPROP_READONLY | JSPROP_PERMANENT)
@@ -954,7 +954,7 @@ generator_op(JSContext *cx, JSGeneratorOp op, jsval *vp)
     JSGenerator *gen;
     jsval arg;
 
-    obj = JSVAL_TO_OBJECT(vp[1]);
+    obj = JS_THIS_OBJECT(cx, vp);
     if (!JS_InstanceOf(cx, obj, &js_GeneratorClass, vp + 2))
         return JS_FALSE;
 
