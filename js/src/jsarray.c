@@ -724,7 +724,7 @@ array_toSource(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj;
 
-    obj = JSVAL_TO_OBJECT(vp[1]);
+    obj = JS_THIS_OBJECT(cx, vp);
     if (!JS_InstanceOf(cx, obj, &js_ArrayClass, vp + 2))
         return JS_FALSE;
     return array_join_sub(cx, obj, TO_SOURCE, NULL, vp);
@@ -736,7 +736,7 @@ array_toString(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj;
 
-    obj = JSVAL_TO_OBJECT(vp[1]);
+    obj = JS_THIS_OBJECT(cx, vp);
     if (!JS_InstanceOf(cx, obj, &js_ArrayClass, vp + 2))
         return JS_FALSE;
     return array_join_sub(cx, obj, TO_STRING, NULL, vp);
@@ -747,7 +747,7 @@ array_toLocaleString(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj;
 
-    obj = JSVAL_TO_OBJECT(vp[1]);
+    obj = JS_THIS_OBJECT(cx, vp);
     if (!JS_InstanceOf(cx, obj, &js_ArrayClass, vp + 2))
         return JS_FALSE;
 
@@ -790,6 +790,7 @@ static JSBool
 array_join(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
+    JSObject *obj;
 
     if (JSVAL_IS_VOID(vp[2])) {
         str = NULL;
@@ -799,7 +800,8 @@ array_join(JSContext *cx, uintN argc, jsval *vp)
             return JS_FALSE;
         vp[2] = STRING_TO_JSVAL(str);
     }
-    return array_join_sub(cx, JS_THIS_OBJECT(cx, vp), TO_STRING, str, vp);
+    obj = JS_THIS_OBJECT(cx, vp);
+    return obj && array_join_sub(cx, obj, TO_STRING, str, vp);
 }
 
 static JSBool
@@ -811,7 +813,7 @@ array_reverse(JSContext *cx, uintN argc, jsval *vp)
     JSBool ok, hole, hole2;
 
     obj = JS_THIS_OBJECT(cx, vp);
-    if (!js_GetLengthProperty(cx, obj, &len))
+    if (!obj || !js_GetLengthProperty(cx, obj, &len))
         return JS_FALSE;
 
     ok = JS_TRUE;
@@ -1084,7 +1086,7 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
     }
 
     obj = JS_THIS_OBJECT(cx, vp);
-    if (!js_GetLengthProperty(cx, obj, &len))
+    if (!obj || !js_GetLengthProperty(cx, obj, &len))
         return JS_FALSE;
     if (len == 0) {
         *vp = OBJECT_TO_JSVAL(obj);
@@ -1341,7 +1343,9 @@ array_push(JSContext *cx, uintN argc, jsval *vp)
     jsval v;
 
     /* Insist on one argument and obj of the expected class. */
-    obj = JSVAL_TO_OBJECT(vp[1]);
+    obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return JS_FALSE;
     if (argc != 1 || OBJ_GET_CLASS(cx, obj) != &js_ArrayClass)
         return slow_array_push(cx, obj, argc, vp);
 
@@ -1376,7 +1380,7 @@ array_pop(JSContext *cx, uintN argc, jsval *vp)
     JSBool hole;
 
     obj = JS_THIS_OBJECT(cx, vp);
-    if (!js_GetLengthProperty(cx, obj, &index))
+    if (!obj || !js_GetLengthProperty(cx, obj, &index))
         return JS_FALSE;
     if (index == 0) {
         *vp = JSVAL_VOID;
@@ -1401,7 +1405,7 @@ array_shift(JSContext *cx, uintN argc, jsval *vp)
     JSTempValueRooter tvr;
 
     obj = JS_THIS_OBJECT(cx, vp);
-    if (!js_GetLengthProperty(cx, obj, &length))
+    if (!obj || !js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
     if (length == 0) {
         *vp = JSVAL_VOID;
@@ -1443,7 +1447,7 @@ array_unshift(JSContext *cx, uintN argc, jsval *vp)
     JSTempValueRooter tvr;
 
     obj = JS_THIS_OBJECT(cx, vp);
-    if (!js_GetLengthProperty(cx, obj, &length))
+    if (!obj || !js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
     if (argc > 0) {
         /* Slide up the array to make room for argc at the bottom. */
@@ -1495,7 +1499,7 @@ array_splice(JSContext *cx, uintN argc, jsval *vp)
         return JS_TRUE;
     argv = JS_ARGV(cx, vp);
     obj = JS_THIS_OBJECT(cx, vp);
-    if (!js_GetLengthProperty(cx, obj, &length))
+    if (!obj || !js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
 
     /* Convert the first argument into a starting index. */
@@ -1707,7 +1711,7 @@ array_slice(JSContext *cx, uintN argc, jsval *vp)
     *vp = OBJECT_TO_JSVAL(nobj);
 
     obj = JS_THIS_OBJECT(cx, vp);
-    if (!js_GetLengthProperty(cx, obj, &length))
+    if (!obj || !js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
     begin = 0;
     end = length;
@@ -1774,8 +1778,8 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, jsval *vp)
     jsint direction;
     JSBool hole;
 
-    obj = JSVAL_TO_OBJECT(vp[1]);
-    if (!js_GetLengthProperty(cx, obj, &length))
+    obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj || !js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
     if (length == 0)
         goto not_found;
@@ -1867,8 +1871,8 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, jsval *vp)
     jsint start, end, step, i;
     void *mark;
 
-    obj = JSVAL_TO_OBJECT(vp[1]);
-    if (!js_GetLengthProperty(cx, obj, &length))
+    obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj || !js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
 
     /*

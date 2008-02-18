@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -656,6 +657,16 @@ JS_GetGlobalForObject(JSContext *cx, JSObject *obj);
  * without breaking source and binary compatibility (argv[-2] is well-known to
  * be the callee jsval, and argv[-1] is as well known to be |this|).
  *
+ * Note well: However, argv[-1] may be JSVAL_NULL where with slow natives it
+ * is the global object, so embeddings implementing fast natives *must* call
+ * JS_THIS or JS_THIS_OBJECT and test for failure indicated by a null return,
+ * which should propagate as a false return from native functions and hooks.
+ *
+ * To reduce boilerplace checks, JS_InstanceOf and JS_GetInstancePrivate now
+ * handle a null obj parameter by returning false (throwing a TypeError if
+ * given non-null argv), so most native functions that type-check their |this|
+ * parameter need not add null checking.
+ *
  * NB: there is an anti-dependency between JS_CALLEE and JS_SET_RVAL: native
  * methods that may inspect their callee must defer setting their return value
  * until after any such possible inspection. Otherwise the return value will be
@@ -667,11 +678,16 @@ JS_GetGlobalForObject(JSContext *cx, JSObject *obj);
  */
 #define JS_CALLEE(cx,vp)        ((vp)[0])
 #define JS_ARGV_CALLEE(argv)    ((argv)[-2])
-#define JS_THIS(cx,vp)          ((vp)[1])
+#define JS_THIS(cx,vp)          (JSVAL_IS_NULL((vp)[1])                       \
+                                 ? JS_ComputeThis(cx, vp)                     \
+                                 : (vp)[1])
 #define JS_THIS_OBJECT(cx,vp)   ((JSObject *) JS_THIS(cx,vp))
 #define JS_ARGV(cx,vp)          ((vp) + 2)
 #define JS_RVAL(cx,vp)          (*(vp))
 #define JS_SET_RVAL(cx,vp,v)    (*(vp) = (v))
+
+extern JS_PUBLIC_API(jsval)
+JS_ComputeThis(JSContext *cx, jsval *vp);
 
 extern JS_PUBLIC_API(void *)
 JS_malloc(JSContext *cx, size_t nbytes);

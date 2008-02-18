@@ -1706,6 +1706,14 @@ JS_GetGlobalForObject(JSContext *cx, JSObject *obj)
     return obj;
 }
 
+JS_PUBLIC_API(jsval)
+JS_ComputeThis(JSContext *cx, jsval *vp)
+{
+    if (!js_ComputeThis(cx, JS_FALSE, vp + 2))
+        return JSVAL_NULL;
+    return vp[1];
+}
+
 JS_PUBLIC_API(void *)
 JS_malloc(JSContext *cx, size_t nbytes)
 {
@@ -2764,7 +2772,7 @@ JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
     JSFunction *fun;
 
     CHECK_REQUEST(cx);
-    if (OBJ_GET_CLASS(cx, obj) == clasp)
+    if (obj && OBJ_GET_CLASS(cx, obj) == clasp)
         return JS_TRUE;
     if (argv) {
         fun = js_ValueToFunction(cx, &argv[-2], 0);
@@ -2772,7 +2780,9 @@ JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_INCOMPATIBLE_PROTO,
                                  clasp->name, JS_GetFunctionName(fun),
-                                 OBJ_GET_CLASS(cx, obj)->name);
+                                 obj
+                                 ? OBJ_GET_CLASS(cx, obj)->name
+                                 : js_null_str);
         }
     }
     return JS_FALSE;

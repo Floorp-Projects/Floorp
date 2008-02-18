@@ -819,8 +819,9 @@ exn_toString(JSContext *cx, uintN argc, jsval *vp)
     jschar *chars, *cp;
     size_t name_length, message_length, length;
 
-    obj = JSVAL_TO_OBJECT(vp[1]);
-    if (!OBJ_GET_PROPERTY(cx, obj,
+    obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj ||
+        !OBJ_GET_PROPERTY(cx, obj,
                           ATOM_TO_JSID(cx->runtime->atomState.nameAtom),
                           &v)) {
         return JS_FALSE;
@@ -880,7 +881,8 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
     jschar *chars, *cp;
 
     obj = JS_THIS_OBJECT(cx, vp);
-    if (!OBJ_GET_PROPERTY(cx, obj,
+    if (!obj ||
+        !OBJ_GET_PROPERTY(cx, obj,
                           ATOM_TO_JSID(cx->runtime->atomState.nameAtom),
                           vp)) {
         return JS_FALSE;
