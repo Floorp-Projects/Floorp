@@ -139,6 +139,15 @@ public:
   NS_DECL_NSIAUTOCOMPLETESIMPLERESULTLISTENER
 #endif
 
+
+  /**
+   * Obtains the nsNavHistory object.
+   */
+  static nsNavHistory *GetSingleton();
+
+  /**
+   * Initializes the nsNavHistory object.  This should only be called once.
+   */
   nsresult Init();
 
   /**
@@ -148,15 +157,13 @@ public:
    */
   static nsNavHistory* GetHistoryService()
   {
-    if (! gHistoryService) {
-      nsresult rv;
-      nsCOMPtr<nsINavHistoryService> serv(do_GetService("@mozilla.org/browser/nav-history-service;1", &rv));
-      NS_ENSURE_SUCCESS(rv, nsnull);
+    if (gHistoryService)
+      return gHistoryService;
 
-      // our constructor should have set the static variable. If it didn't,
-      // something is wrong.
-      NS_ASSERTION(gHistoryService, "History service creation failed");
-    }
+    nsCOMPtr<nsINavHistoryService> serv =
+      do_GetService("@mozilla.org/browser/nav-history-service;1");
+    NS_ENSURE_TRUE(serv, nsnull);
+
     return gHistoryService;
   }
 

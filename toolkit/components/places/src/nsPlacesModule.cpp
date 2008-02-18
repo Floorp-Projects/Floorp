@@ -7,7 +7,8 @@
 #include "nsFaviconService.h"
 #include "nsDocShellCID.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNavHistory, Init)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsNavHistory,
+                                         nsNavHistory::GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAnnoProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAnnotationService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNavBookmarks, Init)
