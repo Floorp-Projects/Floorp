@@ -78,7 +78,7 @@ public:
   // Allocates an image surface that covers mSurfaceRect (it uses
   // device offsets so that its origin is positioned at mSurfaceRect.TopLeft()
   // when using cairo to draw into the surface). The surface is cleared
-  // to transparent black.
+  // to transprent black.
   already_AddRefed<gfxImageSurface> GetImage();
 
   void LookupImage(const nsAString &aName,
