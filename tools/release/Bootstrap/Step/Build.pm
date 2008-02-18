@@ -59,7 +59,7 @@ sub Execute {
     );
 
     if ($version eq 'nightly') {
-        $this->Log(msg => 'Nightly mode: skipping buildID storage and Talkback
+        $this->Log(msg => 'Nightly mode: skipping buildID storage and Talkback' . 
                              ' symbol push to Breakpad server');
     } else {
         $this->StoreBuildID();
