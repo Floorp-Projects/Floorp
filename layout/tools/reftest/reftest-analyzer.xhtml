@@ -51,8 +51,6 @@ Features to add:
 ** move log loading into popup from viewer UI
 
 Bugs I've hit:
-* Problems with k4 on feComposite type="arithmetic"; likely to be fixed by the nsSVGFECompositeElement::Filter changes in https://bugzilla.mozilla.org/show_bug.cgi?id=414784
-** when fixed, can go back to the simpler way of computing filter results c1 and c2 (currently commented out)
 * dynamic changes to xlink:href of feImage require removal/reinsertion from document: https://bugzilla.mozilla.org/show_bug.cgi?id=417339
 ** when fixed, can remove the removal and reinsertion near the end of showImages
 
@@ -317,13 +315,16 @@ function show_differences(cb) {
 						<feFuncG type="linear" slope="-1" intercept="1" />
 						<feFuncB type="linear" slope="-1" intercept="1" />
 					</feComponentTransfer>
-					<!-- c1 will have non-black pixels anywhere that img2 is brighter than img1, and c2 for the reverse -->
-					<!-- Why doesn't this work?
-					<feComposite result="c1" in="img1" in2="inv2" operator="arithmetic" k2="-1" k3="-1" k4="1" />
-					<feComposite result="c2" in="img2" in2="inv1" operator="arithmetic" k2="-1" k3="-1" k4="1" />
-					-->
+					<!-- w1 will have non-white pixels anywhere that img2
+					     is brighter than img1, and w2 for the reverse.
+					     It would be nice not to have to go through these
+					     intermediate states, but feComposite
+					     type="arithmetic" can't transform the RGB channels
+					     and leave the alpha channel untouched. -->
 					<feComposite result="w1" in="img1" in2="inv2" operator="arithmetic" k2="1" k3="1" />
 					<feComposite result="w2" in="img2" in2="inv1" operator="arithmetic" k2="1" k3="1" />
+					<!-- c1 will have non-black pixels anywhere that img2
+					     is brighter than img1, and c2 for the reverse -->
 					<feComponentTransfer result="c1" in="w1">
 						<feFuncR type="linear" slope="-1" intercept="1" />
 						<feFuncG type="linear" slope="-1" intercept="1" />
