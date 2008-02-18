@@ -62,7 +62,6 @@ REQUIRES	= xpcom \
 		  pref \
 		  docshell \
 		  webshell \
-		  lwbrk \
 		  xuldoc \
 		  rdf \
 		  imglib2 \

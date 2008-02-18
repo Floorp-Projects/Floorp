@@ -54,7 +54,6 @@ REQUIRES	= xpcom \
 		  dom \
 		  content \
 		  thebes \
-		  cairo \
 		  gfx \
 		  widget \
 		  locale \
@@ -67,22 +66,21 @@ REQUIRES	= xpcom \
 		  webshell \
 		  plugin \
 		  docshell \
-		  uriloader \
-		  mimetype \
 		  webbrwsr \
 		  oji \
 		  unicharutil \
 		  lwbrk \
 		  imglib2 \
-		  accessibility \
 		  xpconnect \
 		  java \
-		  exthandler \
 		  intl \
-		  uconv \
 		  thebes \
 		  cairo \
 		  $(NULL)
+
+ifdef ACCESSIBILITY
+REQUIRES	+= accessibility
+endif
 
 # Sun's Complex Text Layout support
 ifdef SUNCTL

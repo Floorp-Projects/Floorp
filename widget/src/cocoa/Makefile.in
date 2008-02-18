@@ -60,7 +60,6 @@ REQUIRES = xpcom \
 		  content \
 		  layout \
 		  view \
-		  xul \
 		  necko \
 		  locale \
 		  pref \
@@ -68,7 +67,6 @@ REQUIRES = xpcom \
 		  exthandler \
 		  appshell \
 		  thebes \
-		  cairo \
 		  js \
 		  xpconnect \
 		  imglib2 \

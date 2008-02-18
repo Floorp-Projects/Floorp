@@ -55,25 +55,12 @@ LIBXUL_LIBRARY = 1
 
 REQUIRES =  xpcom \
             string \
-            cairo \
-            libpixman \
-            glitz \
             thebes \
-            gfx \
             widget \
-            intl \
             view \
             pref \
-            uconv \
             unicharutil \
-            locale \
-            necko \
-            content \
-            layout \
-            dom \
-            debug \
             imglib2 \
-            widget \
             $(ZLIB_REQUIRES) \
             $(NULL)
 
@@ -103,7 +90,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS		+= nsSystemFontsWin.cpp \
 		   $(NULL)
 
-REQUIRES        += glitzwgl
+REQUIRES	+= \
+		glitzwgl \
+		cairo \
+		$(NULL)
 
 _OS_LIBS	= usp10
 OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))

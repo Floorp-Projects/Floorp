@@ -54,7 +54,6 @@ REQUIRES	= xpcom \
 		  content \
 		  txmgr \
 		  txtsvc \
-		  htmlparser \
 		  necko \
 		  pref \
 		  lwbrk \

@@ -47,7 +47,6 @@ LIBRARY_NAME	= nslocale_s
 LIBXUL_LIBRARY  = 1
 
 REQUIRES	= xpcom \
-		  gfx \
 		  string \
 		  uconv \
 		  unicharutil \

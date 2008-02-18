@@ -61,21 +61,15 @@ REQUIRES = 	\
 		widget \
 		layout \
 		dom \
-		pref \
-		rdf \
 		intl \
 		docshell \
-		autocomplete \
 		appcomps \
 		downloads \
 		fastfind \
 		mimetype \
 		webbrowserpersist \
-		progressDlg \
 		necko \
-		windowwatcher \
 		uriloader \
-		xpinstall \
 		xulapp \
 		embed_base \
 		content \
@@ -85,11 +79,13 @@ REQUIRES = 	\
 		locale \
 		unicharutil \
 		xuldoc \
-		alerts \
-		url-classifier \
 		feeds \
 		storage \
 		$(NULL)
+
+ifdef ALERTS_SERVICE
+REQUIRES	+= alerts
+endif
 
 EXPORTS = nsToolkitCompsCID.h
 
@@ -131,6 +127,7 @@ endif
 ifdef MOZ_URL_CLASSIFIER
 SHARED_LIBRARY_LIBS += ../url-classifier/src/$(LIB_PREFIX)urlclassifier_s.$(LIB_SUFFIX)
 EXTRA_DSO_LDOPTS += $(ZLIB_LIBS)
+REQUIRES += url-classifier
 endif
 
 ifdef MOZ_FEEDS

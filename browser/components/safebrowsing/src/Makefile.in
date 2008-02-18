@@ -49,7 +49,6 @@ USE_STATIC_LIBS = 1
 
 REQUIRES = \
 						necko \
-						safebrowsing \
 						string \
 						uriloader \
 						xpcom

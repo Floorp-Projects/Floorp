@@ -55,14 +55,16 @@ REQUIRES	= xpcom \
 		  widget \
 		  locale \
 		  view \
-		  accessibility \
 		  necko \
 		  webshell \
 		  js \
-		  xpconnect \
 		  pref \
 		  docshell \
 		  $(NULL)
+
+ifdef ACCESSIBILITY
+REQUIRES	+= accessibility
+endif
 
 EXPORTS		= \
 		nsITableCellLayout.h \

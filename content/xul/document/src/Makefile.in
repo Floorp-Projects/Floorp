@@ -63,9 +63,7 @@ REQUIRES	= xpcom \
 		  locale \
 		  view \
 		  necko \
-		  uriloader \
 		  htmlparser \
-		  lwbrk \
 		  docshell \
 		  pref \
 		  xultmpl \

@@ -56,7 +56,6 @@ REQUIRES  = xpcom \
             mimetype \
             necko \
             pref \
-            progressDlg \
             intl \
             windowwatcher \
             webbrowserpersist \
@@ -65,7 +64,6 @@ REQUIRES  = xpcom \
             embed_base \
             alerts \
             storage \
-            xulapp \
             exthandler \
             docshell \
             $(NULL)
@@ -77,6 +75,7 @@ CPPSRCS   = \
 ifndef GNU_CXX
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS += nsDownloadScanner.cpp
+REQUIRES += xulapp
 endif
 endif
 

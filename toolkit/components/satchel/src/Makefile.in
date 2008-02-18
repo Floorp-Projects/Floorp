@@ -54,7 +54,6 @@ REQUIRES =	\
 		xpcom \
 		string \
 		autocomplete \
-		uriloader \
 		dom \
 		layout \
 		docshell \
@@ -63,13 +62,9 @@ REQUIRES =	\
 		necko \
 		widget \
 		content \
-		view \
 		locale \
 		unicharutil \
-		intl \
 		pref \
-		windowwatcher \
-		toolkitcomps \
 		loginmgr \
 		$(NULL)
 

@@ -51,12 +51,10 @@ REQUIRES = \
 	appcomps \
 	toolkitcomps \
 	appshell \
-	appstartup \
 	chrome \
 	content \
 	docshell \
 	dom \
-	layout \
 	embed_base \
 	embedcomponents \
 	extensions \
@@ -68,13 +66,11 @@ REQUIRES = \
 	profile \
 	string \
 	uriloader \
-        layout \
 	widget \
 	windowwatcher \
 	xpcom \
 	xpconnect \
 	xpinstall \
-	xremoteservice \
 	$(NULL)
 
 ifdef MOZ_JPROF

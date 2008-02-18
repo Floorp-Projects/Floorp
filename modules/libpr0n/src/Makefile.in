@@ -55,7 +55,6 @@ REQUIRES	= xpcom \
 		  nkcache \
 		  gfx \
 		  thebes \
-		  cairo \
 		  caps \
 		  xpconnect \
 		  js \

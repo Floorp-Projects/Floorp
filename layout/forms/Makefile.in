@@ -64,13 +64,10 @@ REQUIRES	= xpcom \
 		  necko \
 		  webshell \
 		  editor \
-		  txtsvc \
-		  intl \
 		  uconv \
 		  txmgr \
 		  xuldoc \
 		  imglib2 \
-		  accessibility \
 		  unicharutil \
 		  commandhandler \
 		  xpconnect \
@@ -78,6 +75,10 @@ REQUIRES	= xpcom \
 		  pref \
 		  docshell \
 		  $(NULL)
+
+ifdef ACCESSIBILITY
+REQUIRES	+= accessibility
+endif
 
 EXPORTS		= \
 		nsIListControlFrame.h \

@@ -60,12 +60,10 @@ REQUIRES	= xpcom \
 		  view \
 		  webshell \
 		  locale \
-		  intl \
 		  unicharutil \
 		  necko \
 		  docshell \
 		  webbrwsr \
-		  windowwatcher \
 		  pref \
 		  js \
 		  $(NULL)

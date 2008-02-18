@@ -57,7 +57,6 @@ SDK_LIBRARY = $(LIBRARY)
 
 REQUIRES=xpcom \
 		string \
-		uconv \
 		$(NULL)
 
 SDK_HEADERS = \

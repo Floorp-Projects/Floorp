@@ -54,7 +54,6 @@ GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
 REQUIRES	= xpcom \
-		  xpcom_obsolete \
 		  string \
 		  intl \
 		  necko \
@@ -64,6 +63,10 @@ ifdef MOZ_PROFILESHARING
 REQUIRES	+= ipcd \
 		  profilesharingsetup \
 		  $(NULL)
+endif
+
+ifndef MOZ_NO_XPCOM_OBSOLETE
+REQUIRES	+= xpcom_obsolete
 endif
 
 include $(topsrcdir)/config/config.mk
