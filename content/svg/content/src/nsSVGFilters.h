@@ -46,10 +46,6 @@ class nsIDOMSVGAnimatedString;
 
 typedef nsSVGStylableElement nsSVGFEBase;
 
-#define NS_SVG_FE_CID \
-{ 0x60483958, 0xd229, 0x4a77, \
-  { 0x96, 0xb2, 0x62, 0x3e, 0x69, 0x95, 0x1e, 0x0e } }
-
 class nsSVGFE : public nsSVGFEBase
 //, public nsIDOMSVGFilterPrimitiveStandardAttributes
 {
@@ -64,7 +60,7 @@ protected:
     nsRefPtr<gfxImageSurface> mRealTarget;
     nsRefPtr<gfxImageSurface> mSource;
     nsRefPtr<gfxImageSurface> mTarget;
-    nsRect mRect; // rect in mSource and mTarget to operate on
+    nsRect mRect;
     PRPackedBool mRescaling;
   };
 
@@ -93,44 +89,10 @@ public:
   // See http://www.w3.org/TR/SVG/filters.html#FilterPrimitiveSubRegion
   virtual PRBool SubregionIsUnionOfRegions() { return PR_TRUE; }
 
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_SVG_FE_CID)
-  
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES
 
-  nsIDOMSVGAnimatedString* GetResultImageName() { return mResult; }
-  // Return a list of all image names used as sources. Default is to
-  // return no sources.
-  virtual void GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources);
-  // Compute the bounding-box of the filter output. The default is just the
-  // union of the source bounding-boxes. The caller is
-  // responsible for clipping this to the filter primitive subregion, so
-  // if the filter fills its filter primitive subregion, it can just
-  // return GetMaxRect() here.
-  // The source bounding-boxes are ordered corresponding to GetSourceImageNames.
-  virtual nsRect ComputeTargetBBox(const nsTArray<nsRect>& aSourceBBoxes,
-          const nsSVGFilterInstance& aInstance);
-  // Given a bounding-box for what we need to compute in the target,
-  // compute which regions of the inputs are needed. On input
-  // aSourceBBoxes contains the bounding box of what's rendered by
-  // each source; this function should change those boxes to indicate
-  // which region of the source's output it needs.
-  // The default implementation sets all the source bboxes to the
-  // target bbox.
-  virtual void ComputeNeededSourceBBoxes(const nsRect& aTargetBBox,
-          nsTArray<nsRect>& aSourceBBoxes, const nsSVGFilterInstance& aInstance);
-  // Perform the actual filter operation.
-  virtual nsresult Filter(nsSVGFilterInstance* aInstance) = 0;
-
-  static nsRect GetMaxRect() {
-    // Try to avoid overflow errors dealing with this rect. It will
-    // be intersected with some other reasonable-sized rect eventually.
-    return nsRect(PR_INT32_MIN/2, PR_INT32_MIN/2, PR_INT32_MAX, PR_INT32_MAX);
-  }
-
-  operator nsISupports*() { return static_cast<nsIContent*>(this); }
-  
 protected:
   virtual PRBool OperatesOnPremultipledAlpha() { return PR_TRUE; }
 
