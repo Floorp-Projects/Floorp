@@ -324,7 +324,7 @@ js_GetNativeIteratorFlags(JSContext *cx, JSObject *iterobj)
 
 /*
  * Call ToObject(v).__iterator__(keyonly) if ToObject(v).__iterator__ exists.
- * Otherwise construct the defualt iterator.
+ * Otherwise construct the default iterator.
  */
 JS_FRIEND_API(JSBool)
 js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)

@@ -4125,14 +4125,23 @@ interrupt:
                 str = JSVAL_TO_STRING(lval);
                 rval = INT_TO_JSVAL(JSSTRING_LENGTH(str));
             } else if (!JSVAL_IS_PRIMITIVE(lval) &&
-                       (obj = JSVAL_TO_OBJECT(lval),
-                        OBJ_GET_CLASS(cx, obj) == &js_ArrayClass)) {
+                       (obj = JSVAL_TO_OBJECT(lval), OBJ_IS_ARRAY(cx, obj))) {
+
+                jsuint length;
+
                 /*
                  * We know that the array is created with only its 'length'
                  * private data in a fixed slot at JSSLOT_ARRAY_LENGTH. See
                  * also JSOP_ARRAYPUSH, far below.
                  */
-                rval = obj->fslots[JSSLOT_ARRAY_LENGTH];
+                length = obj->fslots[JSSLOT_ARRAY_LENGTH];
+                if (length <= JSVAL_INT_MAX) {
+                    rval = INT_TO_JSVAL(length);
+                } else {
+                    ok = js_NewDoubleValue(cx, (jsdouble)length, &rval);
+                    if (!ok)
+                        goto out;
+                }
             } else {
                 i = -1;
                 len = JSOP_LENGTH_LENGTH;
@@ -6544,10 +6553,7 @@ interrupt:
              * of the comprehension have added the only properties directly in
              * the array object.
              */
-            lval = obj->fslots[JSSLOT_ARRAY_LENGTH];
-            JS_ASSERT(JSVAL_IS_INT(lval));
-            i = JSVAL_TO_INT(lval);
-            SAVE_SP_AND_PC(fp);
+            i = obj->fslots[JSSLOT_ARRAY_LENGTH];
             if (i == ARRAY_INIT_LIMIT) {
                 JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
                                        JSMSG_ARRAY_INIT_TOO_BIG);
