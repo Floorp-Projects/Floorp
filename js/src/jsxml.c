@@ -496,6 +496,8 @@ qname_toString(JSContext *cx, uintN argc, jsval *vp)
     jschar *chars;
 
     obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return JS_FALSE;
     clasp = OBJ_GET_CLASS(cx, obj);
     if (clasp == &js_AttributeNameClass || clasp == &js_AnyNameClass) {
         qn = (JSXMLQName *) JS_GetPrivate(cx, obj);
@@ -6072,7 +6074,7 @@ xml_hasOwnProperty(JSContext *cx, uintN argc, jsval *vp)
     jsval name;
     JSBool found;
 
-    obj = JSVAL_TO_OBJECT(vp[1]);
+    obj = JS_THIS_OBJECT(cx, vp);
     if (!JS_InstanceOf(cx, obj, &js_XMLClass, vp + 2))
         return JS_FALSE;
 
@@ -7151,9 +7153,13 @@ xml_toString_helper(JSContext *cx, JSXML *xml)
 static JSBool
 xml_toSource(JSContext *cx, uintN argc, jsval *vp)
 {
+    jsval thisv;
     JSString *str;
 
-    str = ToXMLString(cx, vp[1], TO_SOURCE_FLAG);
+    thisv = JS_THIS(cx, vp);
+    if (JSVAL_IS_NULL(thisv))
+        return JS_FALSE;
+    str = ToXMLString(cx, thisv, TO_SOURCE_FLAG);
     if (!str)
         return JS_FALSE;
     *vp = STRING_TO_JSVAL(str);
@@ -7177,9 +7183,13 @@ xml_toString(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 xml_toXMLString(JSContext *cx, uintN argc, jsval *vp)
 {
+    jsval thisv;
     JSString *str;
 
-    str = ToXMLString(cx, vp[1], 0);
+    thisv = JS_THIS(cx, vp);
+    if (JSVAL_IS_NULL(thisv))
+        return JS_FALSE;
+    str = ToXMLString(cx, thisv, 0);
     if (!str)
         return JS_FALSE;
     *vp = STRING_TO_JSVAL(str);
@@ -7190,8 +7200,8 @@ xml_toXMLString(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 xml_valueOf(JSContext *cx, uintN argc, jsval *vp)
 {
-    *vp = vp[1];
-    return JS_TRUE;
+    *vp = JS_THIS(cx, vp);
+    return !JSVAL_IS_NULL(*vp);
 }
 
 static JSFunctionSpec xml_methods[] = {
@@ -7280,12 +7290,14 @@ static JSBool
 xml_settings(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *settings;
+    JSObject *obj;
 
     settings = JS_NewObject(cx, NULL, NULL, NULL);
     if (!settings)
         return JS_FALSE;
     *vp = OBJECT_TO_JSVAL(settings);
-    return CopyXMLSettings(cx, JS_THIS_OBJECT(cx, vp), settings);
+    obj = JS_THIS_OBJECT(cx, vp);
+    return obj && CopyXMLSettings(cx, obj, settings);
 }
 
 static JSBool
@@ -7296,6 +7308,8 @@ xml_setSettings(JSContext *cx, uintN argc, jsval *vp)
     JSBool ok;
 
     obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return JS_FALSE;
     v = vp[2];
     if (JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v)) {
         cx->xmlSettingFlags = 0;

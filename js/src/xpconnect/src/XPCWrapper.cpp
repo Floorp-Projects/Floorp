@@ -69,8 +69,12 @@ IteratorFinalize(JSContext *cx, JSObject *obj)
 JS_STATIC_DLL_CALLBACK(JSBool)
 IteratorNext(JSContext *cx, uintN argc, jsval *vp)
 {
-  JSObject *obj = JSVAL_TO_OBJECT(vp[1]);
+  JSObject *obj;
   jsval v;
+ 
+  obj = JS_THIS_OBJECT(cx, vp);
+  if (!obj)
+    return JS_FALSE;
 
   JS_GetReservedSlot(cx, obj, 0, &v);
   JSIdArray *ida = reinterpret_cast<JSIdArray *>(JSVAL_TO_PRIVATE(v));

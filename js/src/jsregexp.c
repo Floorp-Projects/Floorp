@@ -3969,7 +3969,10 @@ js_regexp_toString(JSContext *cx, JSObject *obj, jsval *vp)
 static JSBool
 regexp_toString(JSContext *cx, uintN argc, jsval *vp)
 {
-    return js_regexp_toString(cx, JS_THIS_OBJECT(cx, vp), vp);
+    JSObject *obj;
+
+    obj = JS_THIS_OBJECT(cx, vp);
+    return obj && js_regexp_toString(cx, obj, vp);
 }
 
 static JSBool
@@ -4094,7 +4097,10 @@ created:
 static JSBool
 regexp_compile(JSContext *cx, uintN argc, jsval *vp)
 {
-    return regexp_compile_sub(cx, JS_THIS_OBJECT(cx, vp), argc, vp + 2, vp);
+    JSObject *obj;
+
+    obj = JS_THIS_OBJECT(cx, vp);
+    return obj && regexp_compile_sub(cx, obj, argc, vp + 2, vp);
 }
 
 static JSBool
