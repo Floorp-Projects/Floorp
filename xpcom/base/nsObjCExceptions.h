@@ -134,4 +134,10 @@ NS_OBJC_TRY(_e, )
                                                }                               \
                                                return NS_ERROR_FAILURE;
 
+#define NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN    @try {
+#define NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(_rv) } @catch(NSException *_exn) {   \
+                                                  nsObjCExceptionLogAbort(_exn);\
+                                                }                               \
+                                                return _rv;
+
 #endif // nsObjCExceptions_h_
