@@ -54,7 +54,6 @@ REQUIRES  = xpcom \
             uriloader \
             mimetype \
             necko \
-            progressDlg \
             intl \
             windowwatcher \
             webbrowserpersist \
@@ -63,7 +62,6 @@ REQUIRES  = xpcom \
             profile \
             widget \
             pref \
-            appcomps \
             embed_base \
             $(NULL)
 

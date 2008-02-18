@@ -63,7 +63,6 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  lcms \
 		  thebes \
-		  cairo \
 		  $(NULL)
 
 DEFINES		+= -D_IMPL_NS_WIDGET -DUSE_TLS_FOR_TOOLKIT

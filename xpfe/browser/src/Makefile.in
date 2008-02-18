@@ -54,12 +54,9 @@ REQUIRES	= xpcom \
 		  widget \
 		  gfx \
 		  docshell \
-		  appshell \
 		  appcomps \
 		  dom \
 		  content \
-		  layout \
-		  js \
 		  uriloader \
 		  pref \
 		  webbrwsr \

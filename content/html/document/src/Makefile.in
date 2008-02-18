@@ -65,11 +65,8 @@ REQUIRES	= xpcom \
 		  util \
 		  uconv \
 		  pref \
-		  uriloader \
-		  rdf \
 		  chardet \
 		  nkcache \
-		  lwbrk \
 		  imglib2 \
 		  xpconnect \
 		  unicharutil \

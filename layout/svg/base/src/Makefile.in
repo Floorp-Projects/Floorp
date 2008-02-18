@@ -59,8 +59,6 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  webshell \
 		  imglib2 \
-		  intl \
-		  windowwatcher \
 		  js \
 		  xpconnect \
 		  docshell \

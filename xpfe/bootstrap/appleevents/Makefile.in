@@ -52,7 +52,6 @@ REQUIRES	= xpcom \
 		  gfx \
 		  widget \
 		  necko \
-		  pref \
 		  docshell \
 		  appshell \
 		  appcomps \

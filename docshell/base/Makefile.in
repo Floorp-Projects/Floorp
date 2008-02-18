@@ -84,7 +84,6 @@ REQUIRES	= xpcom \
 		  editor \
 		  windowwatcher \
 		  imglib2 \
-		  mimetype \
 		  jar \
 		  $(NULL)
 

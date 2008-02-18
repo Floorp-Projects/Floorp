@@ -52,7 +52,6 @@ REQUIRES	= xpcom \
 		  string \
 		  editor \
 		  gfx \
-		  thebes \
 		  layout \
 		  content \
 		  dom \

@@ -83,14 +83,12 @@ REQUIRES	= xpcom \
 		  htmlparser \
 		  js \
 		  xpconnect \
-		  uriloader \
 		  caps \
 		  rdf \
 		  xuldoc \
 		  imglib2 \
 		  pref \
 		  unicharutil \
-		  xul \
 		  xultmpl \
 		  lwbrk \
 		  plugin \

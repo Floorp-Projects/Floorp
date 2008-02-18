@@ -48,10 +48,8 @@ LIBRARY_NAME	= nkgopher_s
 LIBXUL_LIBRARY  = 1
 
 REQUIRES	= xpcom \
-		  necko \
 		  string \
 		  mimetype \
-		  pref \
 		  intl \
 		  uconv \
 		  $(NULL)

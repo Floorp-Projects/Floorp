@@ -63,10 +63,12 @@ REQUIRES	= xpcom \
 		  locale \
 		  view \
 		  pref \
-		  appshell \
-		  appcomps \
 		  toolkitcomps \
 		  $(NULL)
+
+ifndef MOZ_XUL_APP
+REQUIRES	+= appcomps
+endif
 
 XPIDLSRCS	= \
 		nsILayoutRegressionTester.idl \

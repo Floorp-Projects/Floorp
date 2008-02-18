@@ -50,7 +50,6 @@ REQUIRES = \
   xpcom \
   string \
   necko \
-  xulapp \
   intl \
   $(NULL)
 

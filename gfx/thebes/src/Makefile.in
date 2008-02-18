@@ -13,7 +13,6 @@ EXPORT_LIBRARY	= 1
 
 REQUIRES = \
 	cairo \
-	libpixman \
 	string \
 	pref \
 	xpcom \

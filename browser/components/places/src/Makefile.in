@@ -53,7 +53,6 @@ USE_STATIC_LIBS = 1
 REQUIRES	= \
 		  xpcom \
 		  string \
-		  docshell \
 		  necko \
 		  browsercomps \
 		  toolkitcomps \

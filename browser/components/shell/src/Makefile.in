@@ -54,13 +54,10 @@ REQUIRES	= \
 		  webbrowserpersist \
 		  dom \
 		  intl \
-		  unicharutil \
 		  necko \
 		  content \
 		  imglib2 \
-		  browsercomps \
 		  gfx \
-		  thebes \
 		  widget \
 		  pref \
 		  layout \
@@ -68,13 +65,19 @@ REQUIRES	= \
 
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS = nsWindowsShellService.cpp
+REQUIRES	+= \
+		browsercomps \
+		$(NULL)
 else
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS = nsMacShellService.cpp
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT), gtk2)
 CPPSRCS = nsGNOMEShellService.cpp
-REQUIRES += mozgnome
+REQUIRES	+= \
+		mozgnome \
+		thebes \
+		$(NULL)
 endif
 endif
 endif

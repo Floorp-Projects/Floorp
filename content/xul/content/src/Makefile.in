@@ -64,12 +64,10 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  pref \
 		  locale \
-		  lwbrk \
 		  xuldoc \
 		  xultmpl \
 		  webshell \
 		  view \
-		  docshell \
 		  htmlparser \
 		  $(NULL)
 
