@@ -40,8 +40,9 @@
 #include "nsRect.h"
 #include "nsSVGContainerFrame.h"
 
-typedef nsSVGContainerFrame nsSVGFilterFrameBase;
+class nsSVGFilterInstance;
 
+typedef nsSVGContainerFrame nsSVGFilterFrameBase;
 class nsSVGFilterFrame : public nsSVGFilterFrameBase
 {
   friend nsIFrame*
@@ -49,7 +50,7 @@ class nsSVGFilterFrame : public nsSVGFilterFrameBase
 protected:
   nsSVGFilterFrame(nsStyleContext* aContext) : nsSVGFilterFrameBase(aContext) {}
 
-public:
+public:    
   nsresult FilterPaint(nsSVGRenderState *aContext,
                        nsISVGChildFrame *aTarget);
 

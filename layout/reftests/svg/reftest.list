@@ -5,7 +5,7 @@ include bugs/reftest.list
 # sizing tests
 include sizing/reftest.list
 
-# include filters/reftest.list
+include filters/reftest.list
 
 # Mozilla only tests (i.e. those containing XUL/XBL/etc.)
 include moz-only/reftest.list
