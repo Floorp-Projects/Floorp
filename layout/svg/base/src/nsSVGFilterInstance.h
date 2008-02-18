@@ -66,32 +66,26 @@ public:
              mAlphaChannel == aOther.mAlphaChannel;
     }
     ColorSpace   mColorSpace;
-    AlphaChannel mAlphaChannel;
+    PRPackedBool mAlphaChannel;
   };
 
-  float GetPrimitiveLength(nsSVGLength2 *aLength) const;
+  float GetPrimitiveLength(nsSVGLength2 *aLength);
 
   void GetFilterSubregion(nsIContent *aFilter,
                           nsRect defaultRegion,
                           nsRect *result);
 
-  // Allocates an image surface that covers mSurfaceRect (it uses
-  // device offsets so that its origin is positioned at mSurfaceRect.TopLeft()
-  // when using cairo to draw into the surface). The surface is cleared
-  // to transprent black.
   already_AddRefed<gfxImageSurface> GetImage();
-
   void LookupImage(const nsAString &aName,
                    gfxImageSurface **aImage,
                    nsRect *aRegion,
                    const ColorModel &aColorModel);
-  nsRect LookupImageRegion(const nsAString &aName);
   ColorModel LookupImageColorModel(const nsAString &aName);
   void DefineImage(const nsAString &aName,
                    gfxImageSurface *aImage,
                    const nsRect &aRegion,
                    const ColorModel &aColorModel);
-  void GetFilterBox(float *x, float *y, float *width, float *height) const {
+  void GetFilterBox(float *x, float *y, float *width, float *height) {
     *x = mFilterX;
     *y = mFilterY;
     *width = mFilterWidth;
@@ -110,20 +104,9 @@ public:
     mFilterX(aFilterX), mFilterY(aFilterY),
     mFilterWidth(aFilterWidth), mFilterHeight(aFilterHeight),
     mFilterResX(aFilterResX), mFilterResY(aFilterResY),
-    mSurfaceRect(0, 0, aFilterResX, aFilterResY),
     mPrimitiveUnits(aPrimitiveUnits) {
     mImageDictionary.Init();
   }
-  
-  void SetSurfaceRect(const nsRect& aRect) { mSurfaceRect = aRect; }
-  
-  const nsRect& GetSurfaceRect() const { return mSurfaceRect; }
-  PRInt32 GetSurfaceWidth() const { return mSurfaceRect.width; }
-  PRInt32 GetSurfaceHeight() const { return mSurfaceRect.height; }
-  PRInt32 GetSurfaceStride() const { return mSurfaceStride; }
-  
-  PRUint32 GetFilterResX() const { return mFilterResX; }
-  PRUint32 GetFilterResY() const { return mFilterResY; }
 
 private:
   class ImageEntry {
@@ -146,8 +129,6 @@ private:
 
   float mFilterX, mFilterY, mFilterWidth, mFilterHeight;
   PRUint32 mFilterResX, mFilterResY;
-  nsRect mSurfaceRect;
-  PRInt32 mSurfaceStride;
   PRUint16 mPrimitiveUnits;
 };
 
