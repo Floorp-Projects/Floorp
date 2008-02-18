@@ -92,6 +92,68 @@ WeaveCrypto.prototype = {
     branch.addObserver("extensions.weave.encryption", this, false);
   },
 
+  _openssl: function Crypto__openssl(op, algorithm, input, password) {
+    let extMgr = Components.classes["@mozilla.org/extensions/manager;1"]
+      .getService(Components.interfaces.nsIExtensionManager);
+    let loc = extMgr.getInstallLocation("{340c2bbc-ce74-4362-90b5-7c26312808ef}");
+
+    let wrap = loc.getItemLocation("{340c2bbc-ce74-4362-90b5-7c26312808ef}");
+    wrap.append("openssl");
+    let bin;
+
+    let os = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
+    switch(os) {
+    case "WINNT":
+      wrap.append("win32");
+      wrap.append("exec.bat");
+      bin = wrap.parent.path + "\\openssl.exe";
+      break;
+    case "Linux":
+    case "Darwin":
+      wrap.append("unix");
+      wrap.append("exec.sh");
+      bin = "openssl";
+      break;
+    default:
+      throw "encryption not supported on this platform: " + os;
+    }
+
+    let inputFile = Utils.getTmp("input");
+    let [inputFOS] = Utils.open(inputFile, ">");
+    inputFOS.write(input, input.length);
+    inputFOS.close();
+
+    let outputFile = Utils.getTmp("output");
+    if (outputFile.exists())
+      outputFile.remove(false);
+
+    // nsIProcess doesn't support stdin, so we write a file instead
+    let passFile = Utils.getTmp("pass");
+    let [passFOS] = Utils.open(passFile, ">", PERMS_PASSFILE);
+    passFOS.write(password, password.length);
+    passFOS.close();
+
+    try {
+      this._log.debug("Running command: " + wrap.path + " " +
+                      Utils.getTmp().path + " " + bin + " " + algorithm + " " +
+                      op + "-a -salt -in input -out output -pass file:pass");
+      Utils.runCmd(wrap, Utils.getTmp().path, bin, algorithm, op, "-a", "-salt",
+                   "-in", "input", "-out", "output", "-pass", "file:pass");
+    } catch (e) {
+      throw e;
+    } finally {
+      //passFile.remove(false);
+      //inputFile.remove(false);
+    }
+
+    let [outputFIS] = Utils.open(outputFile, "<");
+    let ret = Utils.readStream(outputFIS);
+    outputFIS.close();
+    //outputFile.remove(false);
+
+    return ret;
+  },
+
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupports]),
 
   // nsIObserver
@@ -164,7 +226,7 @@ WeaveCrypto.prototype = {
       case "aes-256-cbc":
       case "bf-cbc":
       case "des-ede3-cbc":
-        ret = openssl("-e", algorithm, data, identity.password);
+        ret = this._openssl("-e", algorithm, data, identity.password);
         break;
 
       default:
@@ -220,7 +282,7 @@ WeaveCrypto.prototype = {
       case "aes-256-cbc":
       case "bf-cbc":
       case "des-ede3-cbc":
-        ret = openssl("-d", algorithm, data, identity.password);
+        ret = this._openssl("-d", algorithm, data, identity.password);
         break;
 
       default:
@@ -241,62 +303,3 @@ WeaveCrypto.prototype = {
     this._log.warn("generator not properly closed");
   }
 };
-
-function openssl(op, algorithm, input, password) {
-  let extMgr = Components.classes["@mozilla.org/extensions/manager;1"]
-    .getService(Components.interfaces.nsIExtensionManager);
-  let loc = extMgr.getInstallLocation("{340c2bbc-ce74-4362-90b5-7c26312808ef}");
-
-  let wrap = loc.getItemLocation("{340c2bbc-ce74-4362-90b5-7c26312808ef}");
-  wrap.append("openssl");
-  let bin;
-
-  let os = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
-  switch(os) {
-  case "WINNT":
-    wrap.append("win32");
-    wrap.append("exec.bat");
-    bin = wrap.parent.path + "\\openssl.exe";
-    break;
-  case "Linux":
-  case "Darwin":
-    wrap.append("unix");
-    wrap.append("exec.sh");
-    bin = "openssl";
-    break;
-  default:
-    throw "encryption not supported on this platform: " + os;
-  }
-
-  let inputFile = Utils.getTmp("input");
-  let [inputFOS] = Utils.open(inputFile, ">");
-  inputFOS.write(input, input.length);
-  inputFOS.close();
-
-  let outputFile = Utils.getTmp("output");
-  if (outputFile.exists())
-    outputFile.remove(false);
-
-  // nsIProcess doesn't support stdin, so we write a file instead
-  let passFile = Utils.getTmp("pass");
-  let [passFOS] = Utils.open(passFile, ">", PERMS_PASSFILE);
-  passFOS.write(password, password.length);
-  passFOS.close();
-
-  try {
-    Utils.runCmd(wrap, Utils.getTmp().path, bin, algorithm, op, "-a", "-salt",
-                 "-in", "input", "-out", "output", "-pass", "file:pass");
-  } catch (e) {
-    throw e;
-  } finally {
-    passFile.remove(false);
-    inputFile.remove(false);
-  }
-
-  let [outputFIS] = Utils.open(outputFile, "<");
-  let ret = Utils.readStream(outputFIS);
-  outputFIS.close();
-  outputFile.remove(false);
-
-  return ret;
-}
