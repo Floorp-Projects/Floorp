@@ -3810,15 +3810,16 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                              ? JSOP_POP
                              : JSOP_SETNAME;
 
-                    /*
-                     * Stack this result as if it's a name, not an anonymous
-                     * function, so it doesn't get decompiled as a generator
-                     * function in a getter or setter context. The precedence
-                     * level is the same for JSOP_NAME and JSOP_ANONFUNOBJ.
-                     */
-                    LOCAL_ASSERT(js_CodeSpec[JSOP_NAME].prec ==
-                                 js_CodeSpec[saveop].prec);
-                    saveop = JSOP_NAME;
+                        /*
+                         * Stack this result as if it's a name and not an
+                         * anonymous function, so it doesn't get decompiled as
+                         * a generator function in a getter or setter context.
+                         * The precedence level is the same for JSOP_NAME and
+                         * JSOP_ANONFUNOBJ.
+                         */
+                        LOCAL_ASSERT(js_CodeSpec[JSOP_NAME].prec ==
+                                     js_CodeSpec[saveop].prec);
+                        saveop = JSOP_NAME;
                     }
 
                     /*
