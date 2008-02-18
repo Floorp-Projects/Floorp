@@ -3292,15 +3292,21 @@ interrupt:
 #endif
 
           BEGIN_CASE(JSOP_BINDNAME)
-          {
-            JSPropCacheEntry *entry;
+            do {
+                JSPropCacheEntry *entry;
 
-            obj = fp->scopeChain;
-            PROPERTY_CACHE_TEST(cx, pc, obj, obj2, entry, atom);
-            if (!atom) {
-                ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
-                JS_UNLOCK_OBJ(cx, obj2);
-            } else {
+                obj = fp->scopeChain;
+                if (JS_LIKELY(OBJ_IS_NATIVE(obj))) {
+                    PROPERTY_CACHE_TEST(cx, pc, obj, obj2, entry, atom);
+                    if (!atom) {
+                        ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
+                        JS_UNLOCK_OBJ(cx, obj2);
+                        break;
+                    }
+                } else {
+                    entry = NULL;
+                    LOAD_ATOM(0);
+                }
                 id = ATOM_TO_JSID(atom);
                 SAVE_SP_AND_PC(fp);
                 obj = js_FindIdentifierBase(cx, id, entry);
@@ -3308,9 +3314,8 @@ interrupt:
                     ok = JS_FALSE;
                     goto out;
                 }
-            }
+            } while (0);
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
-          }
           END_CASE(JSOP_BINDNAME)
 
 #define INTEGER_OP(OP, EXTRA_CODE)                                            \
@@ -4077,8 +4082,6 @@ interrupt:
             do {
                 JSPropCacheEntry *entry;
                
-                entry = NULL;
-                atom = NULL;
                 if (JS_LIKELY(obj->map->ops->getProperty == js_GetProperty)) {
                     PROPERTY_CACHE_TEST(cx, pc, obj, obj2, entry, atom);
                     if (!atom) {
@@ -4097,9 +4100,8 @@ interrupt:
                         JS_UNLOCK_OBJ(cx, obj2);
                         break;
                     }
-                }
-
-                if (!atom) {
+                } else {
+                    entry = NULL;
                     if (i < 0)
                         atom = rt->atomState.lengthAtom;
                     else
@@ -4167,24 +4169,29 @@ interrupt:
                     goto out;
             }
 
-            PROPERTY_CACHE_TEST(cx, pc, obj, obj2, entry, atom);
-            if (!atom) {
-                ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
-                if (PCVAL_IS_OBJECT(entry->vword)) {
-                    rval = PCVAL_OBJECT_TO_JSVAL(entry->vword);
-                } else if (PCVAL_IS_SLOT(entry->vword)) {
-                    slot = PCVAL_TO_SLOT(entry->vword);
-                    JS_ASSERT(slot < obj2->map->freeslot);
-                    rval = LOCKED_OBJ_GET_SLOT(obj2, slot);
-                } else {
-                    JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
-                    sprop = PCVAL_TO_SPROP(entry->vword);
-                    NATIVE_GET(cx, obj, obj2, sprop, &rval);
+            if (JS_LIKELY(obj->map->ops->getProperty == js_GetProperty)) {
+                PROPERTY_CACHE_TEST(cx, pc, obj, obj2, entry, atom);
+                if (!atom) {
+                    ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
+                    if (PCVAL_IS_OBJECT(entry->vword)) {
+                        rval = PCVAL_OBJECT_TO_JSVAL(entry->vword);
+                    } else if (PCVAL_IS_SLOT(entry->vword)) {
+                        slot = PCVAL_TO_SLOT(entry->vword);
+                        JS_ASSERT(slot < obj2->map->freeslot);
+                        rval = LOCKED_OBJ_GET_SLOT(obj2, slot);
+                    } else {
+                        JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
+                        sprop = PCVAL_TO_SPROP(entry->vword);
+                        NATIVE_GET(cx, obj, obj2, sprop, &rval);
+                    }
+                    JS_UNLOCK_OBJ(cx, obj2);
+                    STORE_OPND(-1, rval);
+                    PUSH_OPND(lval);
+                    goto end_callname;
                 }
-                JS_UNLOCK_OBJ(cx, obj2);
-                STORE_OPND(-1, rval);
-                PUSH_OPND(lval);
-                goto end_callname;
+            } else {
+                entry = NULL;
+                LOAD_ATOM(0);
             }
 
             /*
@@ -4743,26 +4750,31 @@ interrupt:
             JSPropCacheEntry *entry;
 
             obj = fp->scopeChain;
-            PROPERTY_CACHE_TEST(cx, pc, obj, obj2, entry, atom);
-            if (!atom) {
-                ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
-                if (PCVAL_IS_OBJECT(entry->vword)) {
-                    rval = PCVAL_OBJECT_TO_JSVAL(entry->vword);
-                    JS_UNLOCK_OBJ(cx, obj2);
-                    goto do_push_rval;
-                }
+            if (JS_LIKELY(OBJ_IS_NATIVE(obj))) {
+                PROPERTY_CACHE_TEST(cx, pc, obj, obj2, entry, atom);
+                if (!atom) {
+                    ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
+                    if (PCVAL_IS_OBJECT(entry->vword)) {
+                        rval = PCVAL_OBJECT_TO_JSVAL(entry->vword);
+                        JS_UNLOCK_OBJ(cx, obj2);
+                        goto do_push_rval;
+                    }
 
-                if (PCVAL_IS_SLOT(entry->vword)) {
-                    slot = PCVAL_TO_SLOT(entry->vword);
-                    JS_ASSERT(slot < obj2->map->freeslot);
-                    rval = LOCKED_OBJ_GET_SLOT(obj2, slot);
-                    JS_UNLOCK_OBJ(cx, obj2);
-                    goto do_push_rval;
-                }
+                    if (PCVAL_IS_SLOT(entry->vword)) {
+                        slot = PCVAL_TO_SLOT(entry->vword);
+                        JS_ASSERT(slot < obj2->map->freeslot);
+                        rval = LOCKED_OBJ_GET_SLOT(obj2, slot);
+                        JS_UNLOCK_OBJ(cx, obj2);
+                        goto do_push_rval;
+                    }
 
-                JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
-                sprop = PCVAL_TO_SPROP(entry->vword);
-                goto do_native_get;
+                    JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
+                    sprop = PCVAL_TO_SPROP(entry->vword);
+                    goto do_native_get;
+                }
+            } else {
+                entry = NULL;
+                LOAD_ATOM(0);
             }
 
             id = ATOM_TO_JSID(atom);
