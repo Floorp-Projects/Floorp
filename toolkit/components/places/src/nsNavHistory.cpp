@@ -293,7 +293,25 @@ static const char* gXpcomShutdown = "xpcom-shutdown";
 const char nsNavHistory::kAnnotationPreviousEncoding[] = "history/encoding";
 
 
-nsNavHistory* nsNavHistory::gHistoryService;
+nsNavHistory *nsNavHistory::gHistoryService = nsnull;
+
+nsNavHistory *
+nsNavHistory::GetSingleton()
+{
+  if (gHistoryService) {
+    NS_ADDREF(gHistoryService);
+    return gHistoryService;
+  }
+
+  gHistoryService = new nsNavHistory();
+  if (gHistoryService) {
+    NS_ADDREF(gHistoryService);
+    if (NS_FAILED(gHistoryService->Init()))
+      NS_RELEASE(gHistoryService);
+  }
+
+  return gHistoryService;
+}
 
 // nsNavHistory::nsNavHistory
 
