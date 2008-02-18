@@ -310,7 +310,11 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 nsXULTemplateBuilder::GetRoot(nsIDOMElement** aResult)
 {
-    return CallQueryInterface(mRoot, aResult);
+    if (mRoot) {
+        return CallQueryInterface(mRoot, aResult);
+    }
+    *aResult = nsnull;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -407,7 +411,7 @@ nsXULTemplateBuilder::Refresh()
 NS_IMETHODIMP
 nsXULTemplateBuilder::Init(nsIContent* aElement)
 {
-    NS_PRECONDITION(aElement, "null ptr");
+    NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
     mRoot = aElement;
 
     nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();

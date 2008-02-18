@@ -1685,6 +1685,8 @@ nsXULContentBuilder::HasGeneratedContent(nsIRDFResource* aResource,
                                          PRBool* aGenerated)
 {
     *aGenerated = PR_FALSE;
+    NS_ENSURE_TRUE(mRoot, NS_ERROR_NOT_INITIALIZED);
+    NS_ENSURE_STATE(mRootResult);
 
     nsCOMPtr<nsIRDFResource> rootresource;
     nsresult rv = mRootResult->GetResource(getter_AddRefs(rootresource));
@@ -2037,9 +2039,7 @@ nsXULContentBuilder::CloseContainer(nsIContent* aElement)
 nsresult
 nsXULContentBuilder::RebuildAll()
 {
-    NS_PRECONDITION(mRoot != nsnull, "not initialized");
-    if (! mRoot)
-        return NS_ERROR_NOT_INITIALIZED;
+    NS_ENSURE_TRUE(mRoot, NS_ERROR_NOT_INITIALIZED);
 
     nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
 
