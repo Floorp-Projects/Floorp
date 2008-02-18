@@ -2123,6 +2123,8 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     if (HasAttr(kNameSpaceID_XLink, nsGkAtoms::href)) {
       document->ForgetLink(this);
     }
+
+    document->ClearBoxObjectFor(this);
   }
 
   // Unset things in the reverse order from how we set them in BindToTree
@@ -2889,6 +2891,7 @@ nsGenericElement::DestroyContent()
   nsIDocument *document = GetOwnerDoc();
   if (document) {
     document->BindingManager()->ChangeDocumentFor(this, document, nsnull);
+    document->ClearBoxObjectFor(this);
   }
 
   PRUint32 i, count = mAttrsAndChildren.ChildCount();
