@@ -39,15 +39,20 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCocoaUtils.h"
+#include "nsObjCExceptions.h"
 
 
 float nsCocoaUtils::MenuBarScreenHeight()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   NSArray* allScreens = [NSScreen screens];
   if ([allScreens count])
     return [[allScreens objectAtIndex:0] frame].size.height;
   else
-    return 0; // If there are no screens, there's not much we can say.
+    return 0.0; // If there are no screens, there's not much we can say.
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0.0);
 }
 
 
@@ -59,12 +64,16 @@ float nsCocoaUtils::FlippedScreenY(float y)
 
 NSRect nsCocoaUtils::GeckoRectToCocoaRect(const nsRect &geckoRect)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   // We only need to change the Y coordinate by starting with the primary screen
   // height, subtracting the gecko Y coordinate, and subtracting the height.
   return NSMakeRect(geckoRect.x,
                     MenuBarScreenHeight() - (geckoRect.y + geckoRect.height),
                     geckoRect.width,
                     geckoRect.height);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSMakeRect(0.0, 0.0, 0.0, 0.0));
 }
 
 
@@ -82,24 +91,38 @@ nsRect nsCocoaUtils::CocoaRectToGeckoRect(const NSRect &cocoaRect)
 
 NSPoint nsCocoaUtils::ScreenLocationForEvent(NSEvent* anEvent)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   return [[anEvent window] convertBaseToScreen:[anEvent locationInWindow]];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSMakePoint(0.0, 0.0));
 }
 
 
 BOOL nsCocoaUtils::IsEventOverWindow(NSEvent* anEvent, NSWindow* aWindow)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   return NSPointInRect(ScreenLocationForEvent(anEvent), [aWindow frame]);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
 
 NSPoint nsCocoaUtils::EventLocationForWindow(NSEvent* anEvent, NSWindow* aWindow)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   return [aWindow convertScreenToBase:ScreenLocationForEvent(anEvent)];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSMakePoint(0.0, 0.0));
 }
 
 
 NSWindow* nsCocoaUtils::FindWindowUnderPoint(NSPoint aPoint)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   int windowCount;
   NSCountWindows(&windowCount);
   int* windowList = (int*)malloc(sizeof(int) * windowCount);
@@ -118,4 +141,6 @@ NSWindow* nsCocoaUtils::FindWindowUnderPoint(NSPoint aPoint)
 
   free(windowList);
   return nil;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
