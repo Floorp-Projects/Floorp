@@ -123,12 +123,15 @@ GetJumpOffset(jsbytecode *pc, jsbytecode *pc2)
 }
 
 uintN
-js_GetIndexFromBytecode(JSScript *script, jsbytecode *pc, ptrdiff_t pcoff)
+js_GetIndexFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
+                        ptrdiff_t pcoff)
 {
     JSOp op;
     uintN span, base;
 
     op = (JSOp)*pc;
+    if (op == JSOP_TRAP)
+        op = JS_GetTrapOpcode(cx, script, pc);
     JS_ASSERT(js_CodeSpec[op].length >= 1 + pcoff + UINT16_LEN);
 
     /*
@@ -241,8 +244,6 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
       case JOF_BYTE:
         if (op == JSOP_TRAP) {
             op = JS_GetTrapOpcode(cx, script, pc);
-            if (op == JSOP_LIMIT)
-                return 0;
             len = (ptrdiff_t) js_CodeSpec[op].length;
         }
         break;
@@ -256,7 +257,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
       case JOF_ATOM:
       case JOF_OBJECT:
       case JOF_REGEXP:
-        index = js_GetIndexFromBytecode(script, pc, 0);
+        index = js_GetIndexFromBytecode(cx, script, pc, 0);
         if (type == JOF_ATOM) {
             JS_GET_SCRIPT_ATOM(script, index, atom);
             v = ATOM_KEY(atom);
@@ -348,7 +349,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
       case JOF_SLOTATOM:
       case JOF_SLOTOBJECT:
         fprintf(fp, " %u", GET_VARNO(pc));
-        index = js_GetIndexFromBytecode(script, pc, VARNO_LEN);
+        index = js_GetIndexFromBytecode(cx, script, pc, VARNO_LEN);
         if (type == JOF_SLOTATOM) {
             JS_GET_SCRIPT_ATOM(script, index, atom);
             v = ATOM_KEY(atom);
@@ -4131,10 +4132,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 #endif /* JS_HAS_EXPORT_IMPORT */
 
               case JSOP_TRAP:
-                op = JS_GetTrapOpcode(cx, jp->script, pc);
-                if (op == JSOP_LIMIT)
-                    return NULL;
-                saveop = op;
+                saveop = op = JS_GetTrapOpcode(cx, jp->script, pc);
                 *pc = op;
                 cs = &js_CodeSpec[op];
                 len = cs->length;
