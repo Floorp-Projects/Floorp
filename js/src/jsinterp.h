@@ -269,7 +269,8 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
 #define PROPERTY_CACHE_TEST(cx, pc, obj, pobj, entry, atom)                   \
     do {                                                                      \
         JSPropertyCache *cache_ = &JS_PROPERTY_CACHE(cx);                     \
-        uint32 kshape_ = OBJ_SCOPE(obj)->shape;                               \
+        uint32 kshape_ = (JS_ASSERT(OBJ_IS_NATIVE(obj)),                      \
+                          OBJ_SCOPE(obj)->shape);                             \
         entry = &cache_->table[PROPERTY_CACHE_HASH_PC(pc, kshape_)];          \
         PCMETER(cache_->tests++);                                             \
         JS_ASSERT(&obj != &pobj);                                             \
