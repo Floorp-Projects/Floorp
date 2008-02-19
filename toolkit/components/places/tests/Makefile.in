@@ -52,7 +52,8 @@ XPCSHELL_TESTS = unit \
 ifdef MOZ_MOCHITEST
 DIRS = \
   chrome \
-  browser \
+# These tests are disabled for the time being, see bug 416066
+#  browser \
   $(NULL)
 endif
 
