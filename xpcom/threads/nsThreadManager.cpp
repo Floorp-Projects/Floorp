@@ -200,6 +200,9 @@ nsThreadManager::GetCurrentThread()
   if (data)
     return static_cast<nsThread *>(data);
 
+  if (!mInitialized)
+    return nsnull;
+
   // OK, that's fine.  We'll dynamically create one :-)
   nsRefPtr<nsThread> thread = new nsThread();
   if (!thread || NS_FAILED(thread->InitCurrentThread()))

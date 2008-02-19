@@ -58,6 +58,7 @@
 #include "nsParserUtils.h"
 #include "nsContentUtils.h"
 #include "nsPIDOMWindow.h"
+#include "nsPLDOMEvent.h"
 
 class nsHTMLLinkElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLLinkElement,
@@ -273,9 +274,10 @@ nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
                       strings, eIgnoreCase) != ATTR_VALUE_NO_MATCH)
     return;
 
-  nsContentUtils::DispatchTrustedEvent(aDoc,
-                                       static_cast<nsIContent*>(this),
-                                       aEventName, PR_TRUE, PR_TRUE);
+  nsRefPtr<nsPLDOMEvent> event = new nsPLDOMEvent(this, aEventName);
+  if (event) {
+    event->PostDOMEvent();
+  }
 }
 
 nsresult
