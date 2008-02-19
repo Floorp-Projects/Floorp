@@ -200,6 +200,19 @@ nsView::~nsView()
 {
   MOZ_COUNT_DTOR(nsView);
 
+  if (this == nsViewManager::GetViewFocusedBeforeSuppression()) {
+    if (GetViewManager()->IsFocusSuppressed()) {
+      printf("*** 0 INFO TODO [CPEARCE] destroying view focused before suppression, while suppressed\n");
+    }
+    nsViewManager::SetViewFocusedBeforeSuppression(nsnull);
+  }
+  if (this == nsViewManager::GetCurrentlyFocusedView()) {
+    if (GetViewManager()->IsFocusSuppressed()) {
+      printf("*** 0 INFO TODO [CPEARCE] destroying view currently focused, while suppressed\n");
+    }
+    nsViewManager::SetCurrentlyFocusedView(nsnull);
+  }
+
   while (GetFirstChild())
   {
     nsView* child = GetFirstChild();
