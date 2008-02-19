@@ -100,7 +100,7 @@ nsPlainTextSerializer::nsPlainTextSerializer()
 {
 
   mOutputString = nsnull;
-  mInHead = PR_FALSE;
+  mHeadLevel = 0;
   mAtFirstColumn = PR_TRUE;
   mIndent = 0;
   mCiteQuoteLevel = 0;
@@ -406,8 +406,9 @@ nsPlainTextSerializer::AppendElementStart(nsIDOMElement *aElement,
   mContent = 0;
   mOutputString = nsnull;
 
-  if (!mInHead && id == eHTMLTag_head)
-    mInHead = PR_TRUE;    
+  if (id == eHTMLTag_head) {
+    ++mHeadLevel;
+  }
 
   return rv;
 } 
@@ -436,8 +437,9 @@ nsPlainTextSerializer::AppendElementEnd(nsIDOMElement *aElement,
   mContent = 0;
   mOutputString = nsnull;
 
-  if (mInHead && id == eHTMLTag_head)
-    mInHead = PR_FALSE;    
+  if (id == eHTMLTag_head) {
+    --mHeadLevel;
+  }
 
   return rv;
 }
@@ -464,7 +466,7 @@ nsPlainTextSerializer::OpenContainer(const nsIParserNode& aNode)
   PRInt32 type = aNode.GetNodeType();
 
   if (type == eHTMLTag_head) {
-    mInHead = PR_TRUE;
+    ++mHeadLevel;
     return NS_OK;
   }
 
@@ -475,7 +477,7 @@ NS_IMETHODIMP
 nsPlainTextSerializer::CloseContainer(const nsHTMLTag aTag)
 {
   if (aTag == eHTMLTag_head) {
-    mInHead = PR_FALSE;
+    --mHeadLevel;
     return NS_OK;
   }
 
@@ -512,7 +514,6 @@ nsPlainTextSerializer::AddLeaf(const nsIParserNode& aNode)
 NS_IMETHODIMP 
 nsPlainTextSerializer::OpenHead()
 {
-  mInHead = PR_TRUE;
   return NS_OK;
 }
 
