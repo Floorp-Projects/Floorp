@@ -4553,6 +4553,23 @@ PresShell::CharacterDataChanged(nsIDocument *aDocument,
     // frame to the caret.
     mCaret->InvalidateOutsideCaret();
   }
+
+  // Call this here so it only happens for real content mutations and
+  // not cases when the frame constructor calls its own methods to force
+  // frame reconstruction.
+  nsIContent *container = aContent->GetParent();
+  PRUint32 selectorFlags =
+    container ? (container->GetFlags() & NODE_ALL_SELECTOR_FLAGS) : 0;
+  if (selectorFlags != 0) {
+    PRUint32 index;
+    if (aInfo->mAppend &&
+        container->GetChildAt((index = container->GetChildCount() - 1)) ==
+          aContent)
+      mFrameConstructor->RestyleForAppend(container, index);
+    else
+      mFrameConstructor->RestyleForInsertOrChange(container, aContent);
+  }
+
   mFrameConstructor->CharacterDataChanged(aContent, aInfo->mAppend);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
@@ -4606,6 +4623,7 @@ PresShell::ContentAppended(nsIDocument *aDocument,
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentAppended");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
+  NS_PRECONDITION(aContainer, "must have container");
   
   if (!mDidInitialReflow) {
     return;
@@ -4614,6 +4632,11 @@ PresShell::ContentAppended(nsIDocument *aDocument,
   WillCauseReflow();
   MOZ_TIMER_DEBUGLOG(("Start: Frame Creation: PresShell::ContentAppended(), this=%p\n", this));
   MOZ_TIMER_START(mFrameCreationWatch);
+
+  // Call this here so it only happens for real content mutations and
+  // not cases when the frame constructor calls its own methods to force
+  // frame reconstruction.
+  mFrameConstructor->RestyleForAppend(aContainer, aNewIndexInContainer);
 
   mFrameConstructor->ContentAppended(aContainer, aNewIndexInContainer);
   VERIFY_STYLE_TREE;
@@ -4637,6 +4660,13 @@ PresShell::ContentInserted(nsIDocument* aDocument,
   }
   
   WillCauseReflow();
+
+  // Call this here so it only happens for real content mutations and
+  // not cases when the frame constructor calls its own methods to force
+  // frame reconstruction.
+  if (aContainer)
+    mFrameConstructor->RestyleForInsertOrChange(aContainer, aChild);
+
   mFrameConstructor->ContentInserted(aContainer, aChild,
                                      aIndexInContainer, nsnull);
   VERIFY_STYLE_TREE;
@@ -4662,6 +4692,13 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
   mPresContext->EventStateManager()->ContentRemoved(aChild);
 
   WillCauseReflow();
+
+  // Call this here so it only happens for real content mutations and
+  // not cases when the frame constructor calls its own methods to force
+  // frame reconstruction.
+  if (aContainer)
+    mFrameConstructor->RestyleForRemove(aContainer, aChild, aIndexInContainer);
+
   PRBool didReconstruct;
   mFrameConstructor->ContentRemoved(aContainer, aChild,
                                     aIndexInContainer, &didReconstruct);

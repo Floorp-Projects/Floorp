@@ -359,7 +359,7 @@ function dynamicDefault6() {
   var but = document.createElement("input");
   but.setAttribute("type", "submit");
   $('div6').insertBefore(but, $('div6').firstChild);
-  todo(idColor("6a") == "rgb(0,128,0)", "CSS dynamic-default 6a");
+  is(idColor("6a"),"rgb(0,128,0)", "CSS dynamic-default 6a");
   is(idColor("6b"),"rgb(0,128,0)", "CSS dynamic-default 6b");
 }
 
@@ -375,7 +375,7 @@ function dynamicDefault8() {
   var but = document.createElement("input");
   but.setAttribute("type", "image");
   $('div8').insertBefore(but, $('div8').firstChild);
-  todo(idColor("8a") == "rgb(0,128,0)", "CSS dynamic-default 8a");
+  is(idColor("8a"),"rgb(0,128,0)", "CSS dynamic-default 8a");
   is(idColor("8b"),"rgb(0,128,0)", "CSS dynamic-default 8b");
 }
 
@@ -390,7 +390,7 @@ function dynamicDefault9() {
 function dynamicDefault10() {
   var inputs = $('div10').getElementsByTagName("input");
   $('div10').removeChild(inputs[0]);
-  todo(idColor("10a") == "rgb(0,128,0)", "CSS dynamic-default 10a");
+  is(idColor("10a"),"rgb(0,128,0)", "CSS dynamic-default 10a");
   is(idColor("10b"),"rgb(0,128,0)", "CSS dynamic-default 10b");
 }
 
@@ -404,7 +404,7 @@ function dynamicDefault11() {
 function dynamicDefault12() {
   var inputs = $('div12').getElementsByTagName("input");
   $('div12').removeChild(inputs[0]);
-  todo(idColor("12a") == "rgb(0,128,0)", "CSS dynamic-default 12a");
+  is(idColor("12a"),"rgb(0,128,0)", "CSS dynamic-default 12a");
   is(idColor("12b"),"rgb(0,128,0)", "CSS dynamic-default 12b");
 }
 
@@ -464,7 +464,7 @@ function dynamicDefault19() {
   newSubmit.setAttribute("type", "submit");
   var div1 = document.getElementById("div19");
   div1.insertBefore(newSubmit, div1.firstChild);
-  todo(idColor("19a") == "rgb(0,128,0)", "CSS dynamic-default 19a");
+  is(idColor("19a"),"rgb(0,128,0)", "CSS dynamic-default 19a");
 }
 
 function dynamicDefault20() {
@@ -472,7 +472,7 @@ function dynamicDefault20() {
   newSubmit.setAttribute("type", "image");
   var div1 = document.getElementById("div20");
   div1.insertBefore(newSubmit, div1.firstChild);
-  todo(idColor("20a") == "rgb(0,128,0)", "CSS dynamic-default 20a");
+  is(idColor("20a"),"rgb(0,128,0)", "CSS dynamic-default 20a");
 }
 
 addLoadEvent(dynamicDefault1);

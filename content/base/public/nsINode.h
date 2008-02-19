@@ -96,8 +96,30 @@ enum {
 
   NODE_IS_INSERTION_PARENT =     0x00000800U,
 
+  // Node has an :empty or :-moz-only-whitespace selector
+  NODE_HAS_EMPTY_SELECTOR =      0x00001000U,
+
+  // A child of the node has a selector such that any insertion,
+  // removal, or appending of children requires restyling the parent.
+  NODE_HAS_SLOW_SELECTOR =       0x00002000U,
+
+  // A child of the node has a :first-child, :-moz-first-node,
+  // :only-child, :last-child or :-moz-last-node selector.
+  NODE_HAS_EDGE_CHILD_SELECTOR = 0x00004000U,
+
+  // A child of the node has a selector such that any insertion or
+  // removal of children requires restyling the parent (but append is
+  // OK).
+  NODE_HAS_SLOW_SELECTOR_NOAPPEND
+                               = 0x00008000U,
+
+  NODE_ALL_SELECTOR_FLAGS =      NODE_HAS_EMPTY_SELECTOR |
+                                 NODE_HAS_SLOW_SELECTOR |
+                                 NODE_HAS_EDGE_CHILD_SELECTOR |
+                                 NODE_HAS_SLOW_SELECTOR_NOAPPEND,
+
   // Four bits for the script-type ID
-  NODE_SCRIPT_TYPE_OFFSET =               12,
+  NODE_SCRIPT_TYPE_OFFSET =               16,
 
   NODE_SCRIPT_TYPE_SIZE =                  4,
 
