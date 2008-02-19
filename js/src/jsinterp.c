@@ -1260,8 +1260,13 @@ have_fun:
          * We must call js_ComputeThis in case we are not called from the
          * interpreter, where a prior bytecode has computed an appropriate
          * |this| already.
+         *
+         * But we only need to eagerly compute this only for slow native
+         * functions. Fast natives must use JS_THIS and any scripted functions
+         * will go through the appropriate this-computing bytecode.
          */
-        if (!js_ComputeThis(cx, JS_FALSE, vp + 2)) {
+        if (native && fun && !(fun->flags & JSFUN_FAST_NATIVE) &&
+            !js_ComputeThis(cx, JS_FALSE, vp + 2)) {
             ok = JS_FALSE;
             goto out2;
         }
