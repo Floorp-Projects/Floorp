@@ -1936,7 +1936,9 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
       // to avoid dropping JS exceptions in case we got here through
       // nested calls through XPConnect.
 
-      nsContentUtils::NotifyXPCIfExceptionPending(mContext);
+      if (JS_IsExceptionPending(mContext)) {
+        JS_ReportPendingException(mContext);
+      }
 
       // Don't pass back results from failed calls.
       rval = JSVAL_VOID;
