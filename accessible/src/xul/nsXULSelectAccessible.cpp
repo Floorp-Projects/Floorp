@@ -721,6 +721,23 @@ nsXULListitemAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildr
   return NS_OK;
 }
 
+nsresult
+nsXULListitemAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
+{
+  NS_ENSURE_ARG_POINTER(aAttributes);
+
+  // Call base class instead of nsXULMenuAccessible because menu accessible
+  // has own implementation of group attributes setting which interferes with
+  // this one.
+  nsresult rv = nsAccessible::GetAttributesInternal(aAttributes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAccUtils::SetAccAttrsForXULSelectControlItem(mDOMNode, aAttributes);
+  return NS_OK;
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULListCellAccessible
 nsXULListCellAccessible::
