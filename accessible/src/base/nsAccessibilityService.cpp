@@ -1698,6 +1698,9 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
     case nsIAccessibleProvider::XULListbox:
       *aAccessible = new nsXULListboxAccessible(aNode, weakShell);
       break;
+    case nsIAccessibleProvider::XULListCell:
+      *aAccessible = new nsXULListCellAccessible(aNode, weakShell);
+      break;
     case nsIAccessibleProvider::XULListHead:
       *aAccessible = new nsXULColumnsAccessible(aNode, weakShell);
       break;

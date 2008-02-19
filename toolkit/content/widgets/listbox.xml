@@ -1067,6 +1067,38 @@
         <xul:label class="listcell-label" xbl:inherits="value=label,flex=flexlabel,crop,disabled" flex="1" crop="right"/>
       </children>
     </content>
+
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+        <![CDATA[
+          // Don't expose xul:listcell as cell accessible until listbox is
+          // multicolumn.
+          const Ci = Components.interfaces;
+          const kNoAccessible = Ci.nsIAccessibleProvider.NoAccessible;
+          const kListCellAccessible = Ci.nsIAccessibleProvider.XULListCell;
+
+          var listitem = this.parentNode;
+          if (!(listitem instanceof Ci.nsIDOMXULSelectControlItemElement))
+            return kNoAccessible;
+
+          var list = listitem.control;
+          if (!list)
+            return kNoAccessible;
+
+          var listhead = list.getElementsByTagName("listhead")[0];
+          if (!listhead)
+            return kNoAccessible;
+
+          var listheaders = listhead.getElementsByTagName("listheader");
+          if (listheaders.length <= 1)
+            return kNoAccessible;
+
+          return kListCellAccessible;
+        ]]>
+        </getter>
+      </property>
+    </implementation>
   </binding>
 
   <binding id="listcell-iconic"
