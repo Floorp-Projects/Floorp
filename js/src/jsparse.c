@@ -2224,7 +2224,8 @@ ReturnOrYield(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     if (tt2 != TOK_EOF && tt2 != TOK_EOL && tt2 != TOK_SEMI && tt2 != TOK_RC
 #if JS_HAS_GENERATORS
         && (tt != TOK_YIELD ||
-            (tt2 != tt && tt2 != TOK_RB && tt2 != TOK_RP && tt2 != TOK_COLON))
+            (tt2 != tt && tt2 != TOK_RB && tt2 != TOK_RP &&
+             tt2 != TOK_COLON && tt2 != TOK_COMMA))
 #endif
         ) {
         pn2 = operandParser(cx, ts, tc);
@@ -4339,7 +4340,8 @@ ArgumentList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             if (!argNode)
                 return JS_FALSE;
 #if JS_HAS_GENERATORS
-            if (argNode->pn_type == TOK_YIELD) {
+            if (argNode->pn_type == TOK_YIELD &&
+                js_PeekToken(cx, ts) == TOK_COMMA) {
                 js_ReportCompileErrorNumber(cx, ts, argNode, JSREPORT_ERROR,
                                             JSMSG_BAD_GENERATOR_SYNTAX,
                                             js_yield_str);
