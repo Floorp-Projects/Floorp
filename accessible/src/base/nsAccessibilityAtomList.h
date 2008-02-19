@@ -116,6 +116,8 @@ ACCESSIBILITY_ATOM(label, "label")
 ACCESSIBILITY_ATOM(legend, "legend")
 ACCESSIBILITY_ATOM(li, "li")
 ACCESSIBILITY_ATOM(link, "link")
+ACCESSIBILITY_ATOM(listhead, "listhead") // XUL
+ACCESSIBILITY_ATOM(listheader, "listheader") // XUL
 ACCESSIBILITY_ATOM(map, "map")
 ACCESSIBILITY_ATOM(math, "math")
 ACCESSIBILITY_ATOM(menu, "menu")    // XUL
