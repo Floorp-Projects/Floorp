@@ -68,11 +68,11 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   : mBlock(aFrame),
     mPresContext(aPresContext),
     mReflowState(aReflowState),
+    mOverflowTracker(aPresContext, aFrame, PR_FALSE),
     mPrevBottomMargin(),
     mLineNumber(0),
     mFlags(0),
-    mFloatBreakType(NS_STYLE_CLEAR_NONE),
-    mOverflowTracker(aPresContext, aFrame, PR_FALSE)
+    mFloatBreakType(NS_STYLE_CLEAR_NONE)
 {
   SetFlag(BRS_ISFIRSTINFLOW, aFrame->GetPrevInFlow() == nsnull);
   SetFlag(BRS_ISOVERFLOWCONTAINER,
