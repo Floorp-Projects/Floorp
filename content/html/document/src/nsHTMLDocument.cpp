@@ -3561,6 +3561,12 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
 
 //----------------------------
 
+/* virtual */ nsIContent*
+nsHTMLDocument::GetBodyContentExternal()
+{
+  return GetBodyContent();
+}
+
 nsIContent*
 nsHTMLDocument::GetBodyContent()
 {
