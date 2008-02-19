@@ -245,21 +245,6 @@ nsThebesFontMetrics::GetSpaceWidth(nscoord& aSpaceCharWidth)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesFontMetrics::GetLeading(nscoord& aLeading)
-{
-    aLeading = ROUND_TO_TWIPS(GetMetrics().internalLeading);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsThebesFontMetrics::GetNormalLineHeight(nscoord& aLineHeight)
-{
-    const gfxFont::Metrics& m = GetMetrics();
-    aLineHeight = ROUND_TO_TWIPS(m.emHeight + m.internalLeading);
-    return NS_OK;
-}
-
 PRInt32
 nsThebesFontMetrics::GetMaxStringLength()
 {

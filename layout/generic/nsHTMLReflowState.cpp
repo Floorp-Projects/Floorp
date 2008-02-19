@@ -78,9 +78,7 @@ enum eNormalLineHeightControl {
   eCompensateLeading        // compensate leading if leading provided by font vendor is not enough
 };
 
-#ifdef FONT_LEADING_APIS_V2
 static eNormalLineHeightControl sNormalLineHeightControl = eUninitialized;
-#endif
 
 // Initialize a <b>root</b> reflow state with a rendering context to
 // use for measuring things.
@@ -1574,7 +1572,6 @@ static PRBool BlinkIsAllowed(void)
   return sBlinkIsAllowed;
 }
 
-#ifdef FONT_LEADING_APIS_V2
 static eNormalLineHeightControl GetNormalLineHeightCalcControl(void)
 {
   if (sNormalLineHeightControl == eUninitialized) {
@@ -1586,7 +1583,6 @@ static eNormalLineHeightControl GetNormalLineHeightCalcControl(void)
   }
   return sNormalLineHeightControl;
 }
-#endif
 
 // XXX refactor this code to have methods for each set of properties
 // we are computing: width,height,line-height; margin; offsets
@@ -1987,7 +1983,6 @@ GetNormalLineHeight(nsIFontMetrics* aFontMetrics)
 
   nscoord normalLineHeight;
 
-#ifdef FONT_LEADING_APIS_V2
   nscoord externalLeading, internalLeading, emHeight;
   aFontMetrics->GetExternalLeading(externalLeading);
   aFontMetrics->GetInternalLeading(internalLeading);
@@ -2006,9 +2001,6 @@ GetNormalLineHeight(nsIFontMetrics* aFontMetrics)
     //case eNoExternalLeading:
     normalLineHeight = emHeight + internalLeading;
   }
-#else
-  aFontMetrics->GetNormalLineHeight(normalLineHeight);
-#endif // FONT_LEADING_APIS_V2
   return normalLineHeight;
 }
 
