@@ -95,14 +95,14 @@ void nsAccEvent::CaptureIsFromUserInput(PRBool aIsAsynch)
     return;
   }
 
-  if (aIsAsynch) {
-    // Cannot calculate, so use previous value
-    gLastEventNodeWeak = eventNode;
-  }
-  else {
+  if (!aIsAsynch) {
     PrepareForEvent(eventNode);
+    mIsFromUserInput = gLastEventFromUserInput;
   }
-  
+  // For asynch, cannot calculate if from user input.
+  // Don't reset global last input state here, do it
+  // at the end of FlushPendingEvents()
+
   mIsFromUserInput = gLastEventFromUserInput;
 }
 
@@ -113,13 +113,30 @@ nsAccEvent::GetIsFromUserInput(PRBool *aIsFromUserInput)
   return NS_OK;
 }
 
-void nsAccEvent::PrepareForEvent(nsIAccessibleEvent *aEvent)
+NS_IMETHODIMP
+nsAccEvent::SetIsFromUserInput(PRBool aIsFromUserInput)
 {
+  mIsFromUserInput = aIsFromUserInput;
+  return NS_OK;
+}
+
+void nsAccEvent::PrepareForEvent(nsIAccessibleEvent *aEvent,
+                                 PRBool aForceIsFromUserInput)
+{
+  gLastEventFromUserInput = aForceIsFromUserInput;
   nsCOMPtr<nsIDOMNode> eventNode;
   aEvent->GetDOMNode(getter_AddRefs(eventNode));
-  PRBool isFromUserInput;
-  aEvent->GetIsFromUserInput(&isFromUserInput);
-  PrepareForEvent(eventNode, isFromUserInput);
+  if (!gLastEventFromUserInput) {  // Caller is not forcing user input flag
+    aEvent->GetIsFromUserInput(&gLastEventFromUserInput);
+    if (!gLastEventFromUserInput) {
+      // Event does not have user input flag set to true
+      // One more try -- check to see if we are currently responding to user input
+      PrepareForEvent(eventNode);  
+    }
+  }
+  gLastEventNodeWeak = eventNode;
+  // Make sure this event remembers whether it is from user input
+  aEvent->SetIsFromUserInput(gLastEventFromUserInput);
 }
 
 void nsAccEvent::PrepareForEvent(nsIDOMNode *aEventNode,
@@ -154,7 +171,7 @@ void nsAccEvent::PrepareForEvent(nsIDOMNode *aEventNode,
 
   nsIEventStateManager *esm = presShell->GetPresContext()->EventStateManager();
   if (!esm) {
-    NS_NOTREACHED("Threre should always be an ESM for an event");
+    NS_NOTREACHED("There should always be an ESM for an event");
     return;
   }
 

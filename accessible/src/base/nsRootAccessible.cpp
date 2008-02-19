@@ -519,7 +519,7 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
     nsCOMPtr<nsIAccessibleEvent> menuEndEvent =
       new nsAccEvent(nsIAccessibleEvent::EVENT_MENU_END, mCurrentARIAMenubar, PR_FALSE);
     if (menuEndEvent) {
-      FireDelayedAccessibleEvent(menuEndEvent, eAllowDupes, PR_FALSE);
+      FireDelayedAccessibleEvent(menuEndEvent, eAllowDupes);
     }
     mCurrentARIAMenubar = nsnull;
   }
