@@ -114,8 +114,8 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
       *                      eRemoveDupes (default): events of the same type are discarded
       *                                              (the last one is used)
       *
-      * @param aIsAsyn - set to PR_TRUE if this is not being called from code
-      *                  synchronous with a DOM event
+      * @param aIsAsynch - set to PR_TRUE if this is not being called from code
+      *                    synchronous with a DOM event
       */
     nsresult FireDelayedToolkitEvent(PRUint32 aEvent, nsIDOMNode *aDOMNode,
                                      EDupeEventRule aAllowDupes = eRemoveDupes,
@@ -128,12 +128,9 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
      * @param aAllowDupes - if false then delayed events of the same type and
      *                      for the same DOM node in the event queue won't
      *                      be fired.
-     * @param aIsAsych - set to PR_TRUE if this is being called from
-     *                   an event asynchronous with the DOM
      */
     nsresult FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent,
-                                        EDupeEventRule aAllowDupes = eRemoveDupes,
-                                        PRBool aIsAsynch = PR_FALSE);
+                                        EDupeEventRule aAllowDupes = eRemoveDupes);
 
     void ShutdownChildDocuments(nsIDocShellTreeItem *aStart);
 
