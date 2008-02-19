@@ -218,6 +218,11 @@ nsXULTemplateBuilder::InitGlobals()
 void
 nsXULTemplateBuilder::Uninit(PRBool aIsFinal)
 {
+    if (mObservedDocument) {
+        gObserverService->RemoveObserver(this, DOM_WINDOW_DESTROYED_TOPIC);
+        mObservedDocument = nsnull;
+    }
+
     if (mQueryProcessor)
         mQueryProcessor->Done();
 
@@ -236,8 +241,6 @@ nsXULTemplateBuilder::Uninit(PRBool aIsFinal)
     mMemberVariable = nsnull;
 
     mQueriesCompiled = PR_FALSE;
-
-    NS_ASSERTION(!mObservedDocument, "Shouldn't be observing anymore!");
 }
 
 static PLDHashOperator
@@ -1107,11 +1110,6 @@ nsXULTemplateBuilder::ContentRemoved(nsIDocument* aDocument,
     if (mRoot && nsContentUtils::ContentIsDescendantOf(mRoot, aChild)) {
         nsRefPtr<nsXULTemplateBuilder> kungFuDeathGrip(this);
 
-        if (mObservedDocument) {
-            gObserverService->RemoveObserver(this, DOM_WINDOW_DESTROYED_TOPIC);
-            mObservedDocument = nsnull;
-        }
-
         if (mQueryProcessor)
             mQueryProcessor->Done();
 
@@ -1145,11 +1143,6 @@ nsXULTemplateBuilder::NodeWillBeDestroyed(const nsINode* aNode)
     // The call to RemoveObserver could release the last reference to
     // |this|, so hold another reference.
     nsRefPtr<nsXULTemplateBuilder> kungFuDeathGrip(this);
-
-    if (mObservedDocument) {
-        gObserverService->RemoveObserver(this, DOM_WINDOW_DESTROYED_TOPIC);
-        mObservedDocument = nsnull;
-    }
 
     // Break circular references
     if (mQueryProcessor)
