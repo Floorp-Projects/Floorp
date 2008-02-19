@@ -1389,16 +1389,15 @@ nsresult nsDocAccessible::FireDelayedToolkitEvent(PRUint32 aEvent,
                                                   PRBool aIsAsynch)
 {
   nsCOMPtr<nsIAccessibleEvent> event =
-    new nsAccEvent(aEvent, aDOMNode, PR_TRUE);
+    new nsAccEvent(aEvent, aDOMNode, aIsAsynch);
   NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
-  return FireDelayedAccessibleEvent(event, aAllowDupes, aIsAsynch);
+  return FireDelayedAccessibleEvent(event, aAllowDupes);
 }
 
 nsresult
 nsDocAccessible::FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent,
-                                            EDupeEventRule aAllowDupes,
-                                            PRBool aIsAsynch)
+                                            EDupeEventRule aAllowDupes)
 {
   NS_ENSURE_TRUE(aEvent, NS_ERROR_FAILURE);
 
@@ -1415,13 +1414,6 @@ nsDocAccessible::FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent,
 
   nsCOMPtr<nsIDOMNode> newEventDOMNode;
   aEvent->GetDOMNode(getter_AddRefs(newEventDOMNode));
-
-  if (!aIsAsynch) {
-    // If already asynchronous don't call PrepareFromEvent() -- it
-    // should only be called while ESM still knows if the event occurred
-    // originally because of user input
-    nsAccEvent::PrepareForEvent(newEventDOMNode);
-  }
 
   if (numQueuedEvents == 0) {
     isTimerStarted = PR_FALSE;
@@ -1566,9 +1558,7 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
         nsCOMPtr<nsIAccessibleTextChangeEvent> textChangeEvent =
           CreateTextChangeEventForNode(containerAccessible, domNode, accessible, PR_TRUE, PR_TRUE);
         if (textChangeEvent) {
-          nsCOMPtr<nsIDOMNode> hyperTextNode;
-          textChangeEvent->GetDOMNode(getter_AddRefs(hyperTextNode));
-          nsAccEvent::PrepareForEvent(hyperTextNode, isFromUserInput);
+          nsAccEvent::PrepareForEvent(textChangeEvent, isFromUserInput);
           // XXX Queue them up and merge the text change events
           // XXX We need a way to ignore SplitNode and JoinNode() when they
           // do not affect the text within the hypertext
@@ -1640,6 +1630,10 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
   }
   mEventsToFire.Clear(); // Clear out array
   NS_RELEASE_THIS(); // Release kung fu death grip
+
+  // After a flood of events, reset so that user input flag is off
+  nsAccEvent::ResetLastInputState();
+
   return NS_OK;
 }
 
@@ -1964,9 +1958,9 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     // from SHOW and HIDE so that they don't fetch extra objects
     if (childAccessible) {
       nsCOMPtr<nsIAccessibleEvent> reorderEvent =
-        new nsAccEvent(nsIAccessibleEvent::EVENT_REORDER, containerAccessible, PR_TRUE);
+        new nsAccEvent(nsIAccessibleEvent::EVENT_REORDER, containerAccessible, isAsynch);
       NS_ENSURE_TRUE(reorderEvent, NS_ERROR_OUT_OF_MEMORY);
-      FireDelayedAccessibleEvent(reorderEvent, eCoalesceFromSameSubtree, isAsynch);
+      FireDelayedAccessibleEvent(reorderEvent, eCoalesceFromSameSubtree);
     }
   }
 
@@ -2045,10 +2039,10 @@ nsDocAccessible::FireShowHideEvents(nsIDOMNode *aDOMNode, PRBool aAvoidOnThisNod
       new nsAccEvent(aEventType, accessible, isAsynch);
     NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
     if (aForceIsFromUserInput) {
-      nsAccEvent::PrepareForEvent(aDOMNode, aForceIsFromUserInput);
+      nsAccEvent::PrepareForEvent(event, aForceIsFromUserInput);
     }
     if (aDelay) {
-      return FireDelayedAccessibleEvent(event, eCoalesceFromSameSubtree, isAsynch);
+      return FireDelayedAccessibleEvent(event, eCoalesceFromSameSubtree);
     }
     return FireAccessibleEvent(event);
   }

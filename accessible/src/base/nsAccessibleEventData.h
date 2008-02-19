@@ -81,11 +81,17 @@ private:
   static nsIDOMNode* gLastEventNodeWeak;
 
 public:
+  static void ResetLastInputState()
+   {gLastEventFromUserInput = PR_FALSE; gLastEventNodeWeak = nsnull; }
+
   /**
    * Find and cache the last input state. This will be called automatically
    * for synchronous events. For asynchronous events it should be
    * called from the synchronous code which is the true source of the event,
    * before the event is fired.
+   * @param aChangeNode that event will be on
+   * @param aForceIsFromUserInput  PR_TRUE if the caller knows that this event was
+   *                               caused by user input
    */
   static void PrepareForEvent(nsIDOMNode *aChangeNode,
                               PRBool aForceIsFromUserInput = PR_FALSE);
@@ -95,7 +101,8 @@ public:
    * so use that state now -- call this when about to flush an event that 
    * was waiting in an event queue
    */
-  static void PrepareForEvent(nsIAccessibleEvent *aEvent);
+  static void PrepareForEvent(nsIAccessibleEvent *aEvent,
+                              PRBool aForceIsFromUserInput = PR_FALSE);
 };
 
 class nsAccStateChangeEvent: public nsAccEvent,
