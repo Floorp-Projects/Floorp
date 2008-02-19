@@ -178,6 +178,9 @@ let Utils = {
     var p = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
     p.init(binary);
 
+    let log = Log4Moz.Service.getLogger("Service.Util");
+    log.debug("Running command: " + binary.path + " " + args.join(" "));
+
     p.run(true, args, args.length);
     return p.exitValue;
   },
