@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsDragService.h"
+#include "nsObjCExceptions.h"
 #include "nsITransferable.h"
 #include "nsString.h"
 #include "nsClipboard.h"
@@ -100,6 +101,8 @@ nsDragService::~nsDragService()
 
 static nsresult SetUpDragClipboard(nsISupportsArray* aTransferableArray)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if (!aTransferableArray)
     return NS_ERROR_FAILURE;
 
@@ -150,6 +153,8 @@ static nsresult SetUpDragClipboard(nsISupportsArray* aTransferableArray)
   }
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -158,6 +163,8 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
                                   nsRect* aDragRect,
                                   nsIScriptableRegion* aRegion)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   NSPoint screenPoint = [[gLastDragView window] convertBaseToScreen:[gLastDragEvent locationInWindow]];
   // Y coordinates are bottom to top, so reverse this
   if ([[NSScreen screens] count] > 0)
@@ -233,6 +240,8 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
   [imageRep release];
 
   return [image autorelease];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 // We can only invoke NSView's 'dragImage:at:offset:event:pasteboard:source:slideBack:' from
@@ -242,6 +251,8 @@ NS_IMETHODIMP
 nsDragService::InvokeDragSession(nsIDOMNode* aDOMNode, nsISupportsArray* aTransferableArray,
                                  nsIScriptableRegion* aDragRgn, PRUint32 aActionType)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsBaseDragService::InvokeDragSession(aDOMNode, aTransferableArray, aDragRgn, aActionType);
 
   mDataItems = aTransferableArray;
@@ -299,12 +310,16 @@ nsDragService::InvokeDragSession(nsIDOMNode* aDOMNode, nsISupportsArray* aTransf
                    slideBack:YES];
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
 NS_IMETHODIMP
 nsDragService::GetData(nsITransferable* aTransferable, PRUint32 aItemIndex)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if (!aTransferable)
     return NS_ERROR_FAILURE;
 
@@ -437,12 +452,16 @@ nsDragService::GetData(nsITransferable* aTransferable, PRUint32 aItemIndex)
     */
   }
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
 NS_IMETHODIMP
 nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   *_retval = PR_FALSE;
 
   if (!globalDragPboard)
@@ -499,12 +518,16 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
   }
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
 NS_IMETHODIMP
 nsDragService::GetNumDropItems(PRUint32* aNumItems)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   *aNumItems = 0;
 
   // first check to see if we have a number of items cached
@@ -526,12 +549,16 @@ nsDragService::GetNumDropItems(PRUint32* aNumItems)
     *aNumItems = [fileNames count];
   
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
 NS_IMETHODIMP
 nsDragService::EndDragSession(PRBool aDoneDrag)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if (mNativeDragView) {
     [mNativeDragView release];
     mNativeDragView = nil;
@@ -543,4 +570,6 @@ nsDragService::EndDragSession(PRBool aDoneDrag)
 
   mDataItems = nsnull;
   return nsBaseDragService::EndDragSession(aDoneDrag);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }

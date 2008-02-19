@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsLookAndFeel.h"
+#include "nsObjCExceptions.h"
 #include "nsIInternetConfigService.h"
 #include "nsIServiceManager.h"
 
@@ -354,6 +355,8 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
 NS_IMETHODIMP nsLookAndFeel::GetMacBrushColor(const PRInt32 aBrushType, nscolor & aColor,
                                               const nscolor & aDefaultColor)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   OSStatus err = noErr;
   RGBColor macColor;
 
@@ -364,11 +367,15 @@ NS_IMETHODIMP nsLookAndFeel::GetMacBrushColor(const PRInt32 aBrushType, nscolor 
     aColor = aDefaultColor;
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsLookAndFeel::GetMacTextColor(const PRInt32 aTextType, nscolor & aColor,
                                              const nscolor & aDefaultColor)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   OSStatus err = noErr;
   RGBColor macColor;
 
@@ -379,12 +386,16 @@ NS_IMETHODIMP nsLookAndFeel::GetMacTextColor(const PRInt32 aTextType, nscolor & 
     aColor = aDefaultColor;
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsLookAndFeel::GetMacAccentColor(const nsMacAccentColorOffset aAccent, 
                                                nscolor & aColor,
                                                const nscolor & aDefaultColor)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsresult res = NS_OK;
   OSStatus err = noErr;
   ColorTable colourTable;
@@ -426,10 +437,14 @@ NS_IMETHODIMP nsLookAndFeel::GetMacAccentColor(const nsMacAccentColorOffset aAcc
   }
 
   return res;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsresult res = nsXPLookAndFeel::GetMetric(aID, aMetric);
   if (NS_SUCCEEDED(res))
     return res;
@@ -614,6 +629,8 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
       res = NS_ERROR_FAILURE;
   }
   return res;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetric)

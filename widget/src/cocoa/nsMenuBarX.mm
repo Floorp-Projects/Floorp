@@ -106,16 +106,22 @@ nsMenuBarX::nsMenuBarX()
   mCurrentCommandID(eCommand_ID_Last),
   mDocument(nsnull)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   mRootMenu = [[NSMenu alloc] initWithTitle:@"MainMenuBar"];
   
   // create our global carbon event command handler shared by all windows
   if (!sCommandEventHandler)
     sCommandEventHandler = ::NewEventHandlerUPP(CommandEventHandler);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
 nsMenuBarX::~nsMenuBarX()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   mMenusArray.Clear(); // release all menus
 
   // the quit/pref items of a random window might have been used if there was no
@@ -132,6 +138,8 @@ nsMenuBarX::~nsMenuBarX()
     mDocument->RemoveMutationObserver(this);
   
   [mRootMenu release];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -175,16 +183,20 @@ nsMenuBarX::AquifyMenuBar()
 OSStatus
 nsMenuBarX::InstallCommandEventHandler()
 {
-   OSStatus err = noErr;
-   NSWindow* myWindow = reinterpret_cast<NSWindow*>(mParent->GetNativeData(NS_NATIVE_WINDOW));
-   WindowRef myWindowRef = (WindowRef)[myWindow windowRef];
-   NS_ASSERTION(myWindowRef, "Can't get WindowRef to install command handler!");
-   if (myWindowRef && sCommandEventHandler) {
-     const EventTypeSpec commandEventList[] = {{kEventClassCommand, kEventCommandProcess}};
-     err = ::InstallWindowEventHandler(myWindowRef, sCommandEventHandler, GetEventTypeCount(commandEventList), commandEventList, this, NULL);
-     NS_ASSERTION(err == noErr, "Uh oh, command handler not installed");
-   }
-   return err;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  OSStatus err = noErr;
+  NSWindow* myWindow = reinterpret_cast<NSWindow*>(mParent->GetNativeData(NS_NATIVE_WINDOW));
+  WindowRef myWindowRef = (WindowRef)[myWindow windowRef];
+  NS_ASSERTION(myWindowRef, "Can't get WindowRef to install command handler!");
+  if (myWindowRef && sCommandEventHandler) {
+    const EventTypeSpec commandEventList[] = {{kEventClassCommand, kEventCommandProcess}};
+    err = ::InstallWindowEventHandler(myWindowRef, sCommandEventHandler, GetEventTypeCount(commandEventList), commandEventList, this, NULL);
+    NS_ASSERTION(err == noErr, "Uh oh, command handler not installed");
+  }
+  return err;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(noErr);
 }
 
 
@@ -192,6 +204,8 @@ nsMenuBarX::InstallCommandEventHandler()
 pascal OSStatus
 nsMenuBarX::CommandEventHandler(EventHandlerCallRef inHandlerChain, EventRef inEvent, void* userData)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   OSStatus handled = eventNotHandledErr;
   
   HICommand command;
@@ -264,6 +278,8 @@ nsMenuBarX::CommandEventHandler(EventHandlerCallRef inHandlerChain, EventRef inE
   } // switch on commandID
   
   return handled;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(noErr);
 }
 
 
@@ -377,6 +393,8 @@ NS_IMETHODIMP nsMenuBarX::SetParent(nsIWidget *aParent)
 
 NS_IMETHODIMP nsMenuBarX::AddMenu(nsIMenu * aMenu)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // If we haven't created a global Application menu yet, do it.
   if (!sApplicationMenu) {
     nsresult rv = NS_OK; // avoid warning about rv being unused
@@ -405,6 +423,8 @@ NS_IMETHODIMP nsMenuBarX::AddMenu(nsIMenu * aMenu)
   }
   
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -412,6 +432,8 @@ NS_IMETHODIMP nsMenuBarX::AddMenu(nsIMenu * aMenu)
 NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsIMenu* inMenu, const nsAString& nodeID, SEL action,
                                                 int tag, NativeMenuItemTarget* target)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   nsCOMPtr<nsIContent> menu;
   inMenu->GetMenuContent(getter_AddRefs(menu));
   if (!menu)
@@ -478,6 +500,8 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsIMenu* inMenu, const nsAString
   [newMenuItem setKeyEquivalentModifierMask:macKeyModifiers];
   
   return newMenuItem;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 
@@ -485,6 +509,8 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsIMenu* inMenu, const nsAString
 nsresult
 nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // At this point, the application menu is the application menu from
   // the nib in cocoa widgets. We do not have a way to create an application
   // menu manually, so we grab the one from the nib and use that.
@@ -629,6 +655,8 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
   }
   
   return (sApplicationMenu) ? NS_OK : NS_ERROR_FAILURE;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -658,9 +686,13 @@ NS_IMETHODIMP nsMenuBarX::InsertMenuAt(const PRUint32 aCount, nsIMenu *& aMenu)
 
 NS_IMETHODIMP nsMenuBarX::RemoveMenu(const PRUint32 aCount)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   mMenusArray.RemoveObjectAt(aCount);
   [mRootMenu removeItemAtIndex:aCount];
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -685,6 +717,8 @@ NS_IMETHODIMP nsMenuBarX::SetNativeData(void* aData)
 
 NS_IMETHODIMP nsMenuBarX::Paint()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NSMenu* mainMenu = [NSApp mainMenu];
   NS_ASSERTION([mainMenu numberOfItems] > 0, "Main menu does not have any items, something is terribly wrong!");
 
@@ -702,6 +736,8 @@ NS_IMETHODIMP nsMenuBarX::Paint()
   gSomeMenuBarPainted = YES;
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -912,6 +948,8 @@ MenuHelpersX::DispatchCommandTo(nsIContent* aTargetContent)
 
 NSString* MenuHelpersX::CreateTruncatedCocoaLabel(const nsString& itemLabel)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   // ::TruncateThemeText() doesn't take the number of characters to truncate to, it takes a pixel with
   // to fit the string in. Ugh. I talked it over with sfraser and we couldn't come up with an 
   // easy way to compute what this should be given the system font, etc, so we're just going
@@ -920,6 +958,8 @@ NSString* MenuHelpersX::CreateTruncatedCocoaLabel(const nsString& itemLabel)
   NSMutableString *label = [[NSMutableString stringWithCharacters:itemLabel.get() length:itemLabel.Length()] retain];
   ::TruncateThemeText((CFMutableStringRef)label, kThemeMenuItemFont, kThemeStateActive, kMaxItemPixelWidth, truncMiddle, NULL);
   return label; // caller releases
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 
@@ -975,6 +1015,8 @@ unsigned int MenuHelpersX::MacModifiersForGeckoModifiers(PRUint8 geckoModifiers)
 // called when some menu item in this menu gets hit
 -(IBAction)menuItemHit:(id)sender
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   // just abort if we don't have a target window for events
   if (!nsMenuBarX::sEventTargetWindow) {
     NS_WARNING("No target window for keyboard events!");
@@ -1010,6 +1052,8 @@ unsigned int MenuHelpersX::MacModifiersForGeckoModifiers(PRUint8 geckoModifiers)
     }
     ReleaseEvent(newEvent);
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 @end

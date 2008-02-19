@@ -40,6 +40,7 @@
 #define nsMenuBarX_h_
 
 #include "nsIMenuBar.h"
+#include "nsObjCExceptions.h"
 #include "nsIMutationObserver.h"
 #include "nsCOMArray.h"
 #include "nsHashtable.h"
@@ -79,28 +80,44 @@ namespace MenuHelpersX
 struct CocoaKeyEquivContainer {
   CocoaKeyEquivContainer(const unsigned int modifiers, const NSString* string)
   {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
     mModifiers = modifiers;
     mString = [string retain];
+
+    NS_OBJC_END_TRY_ABORT_BLOCK;
   }
   
   ~CocoaKeyEquivContainer()
   {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
     [mString release];
+
+    NS_OBJC_END_TRY_ABORT_BLOCK;
   }
   
   CocoaKeyEquivContainer(const CocoaKeyEquivContainer& other)
   {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
     mModifiers = other.mModifiers;
     mString = [other.mString retain];
+
+    NS_OBJC_END_TRY_ABORT_BLOCK;
   }
   
   CocoaKeyEquivContainer& operator=(CocoaKeyEquivContainer& other)
   {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
     mModifiers = other.mModifiers;
     if (mString)
       [mString release];
     mString = [other.mString retain];
     return *this;
+
+    NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(*this);
   }
   
   unsigned int mModifiers;
@@ -119,8 +136,12 @@ struct CocoaKeyEquivKey : public PLDHashEntryHdr {
   KeyType GetKey() const { return mObj; }
   
   PRBool KeyEquals(KeyTypePointer aKey) const {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
     return aKey->mModifiers == mObj.mModifiers &&
     [aKey->mString isEqualToString:mObj.mString];
+
+    NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_FALSE);
   }
   
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }

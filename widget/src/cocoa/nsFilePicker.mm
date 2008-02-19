@@ -48,6 +48,7 @@
 #import <Cocoa/Cocoa.h>
 #define DARWIN  
 
+#include "nsObjCExceptions.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsNetUtil.h"
@@ -100,6 +101,8 @@ nsFilePicker::InitNative(nsIWidget *aParent, const nsAString& aTitle,
 
 NSView* nsFilePicker::GetAccessoryView()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   NSView* accessoryView = [[[NSView alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)] autorelease];
 
   // get the localized string for "Save As:"
@@ -169,6 +172,8 @@ NSView* nsFilePicker::GetAccessoryView()
   [accessoryView addSubview:textField];
   [accessoryView addSubview:popupButton];
   return accessoryView;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 //-------------------------------------------------------------------------
@@ -238,6 +243,8 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 PRInt16
 nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsCOMArray<nsILocalFile>& outFiles)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   PRInt16 retVal = (PRInt16)returnCancel;
   NSOpenPanel *thePanel = [NSOpenPanel openPanel];
 
@@ -288,6 +295,8 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsC
     retVal = returnOK;
 
   return retVal;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 } // GetFiles
 
 
@@ -301,6 +310,8 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsC
 PRInt16
 nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   NS_ENSURE_ARG(outFile);
   *outFile = nsnull;
   
@@ -340,6 +351,8 @@ nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
   }
 
   return retVal;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 } // GetFolder
 
 //-------------------------------------------------------------------------
@@ -350,6 +363,8 @@ nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
 PRInt16
 nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultName, nsILocalFile** outFile)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   NS_ENSURE_ARG(outFile);
   *outFile = nsnull;
 
@@ -394,7 +409,9 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
     }
   }
 
-  return retVal;    
+  return retVal;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 }
 
 //-------------------------------------------------------------------------
@@ -410,6 +427,8 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
 NSArray *
 nsFilePicker::GenerateFilterList()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   NSArray *filterArray = nil;
   if (mFilters.Count() > 0) {
     // Set up our filter string
@@ -456,6 +475,8 @@ nsFilePicker::GenerateFilterList()
     }
   }
   return filterArray;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 } // GenerateFilterList
 
 //-------------------------------------------------------------------------
@@ -470,7 +491,11 @@ nsFilePicker::GenerateFilterList()
 void
 nsFilePicker::SetDialogTitle(const nsString& inTitle, id aPanel)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [aPanel setTitle:[NSString stringWithCharacters:(const unichar*)inTitle.get() length:inTitle.Length()]];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 } 
 
 //-------------------------------------------------------------------------
@@ -484,6 +509,8 @@ nsFilePicker::SetDialogTitle(const nsString& inTitle, id aPanel)
 NSString *
 nsFilePicker::PanelDefaultDirectory()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   NSString *directory = nil;
   if (mDisplayDirectory) {
     nsAutoString pathStr;
@@ -491,6 +518,8 @@ nsFilePicker::PanelDefaultDirectory()
     directory = [[[NSString alloc] initWithCharacters:pathStr.get() length:pathStr.Length()] autorelease];
   }
   return directory;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 
