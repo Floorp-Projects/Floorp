@@ -970,7 +970,9 @@ void nsViewManager::UnsuppressFocusEvents()
   if (GetViewFocusedBeforeSuppression()) {
     widget = GetViewFocusedBeforeSuppression()->GetWidget();
     if (widget) {
+#ifdef DEBUG_FOCUS_SUPPRESSION
       printf("*** 0 INFO TODO [CPEARCE] Unsuppressing, dispatching NS_LOSTFOCUS\n");
+#endif
       nsGUIEvent event(PR_TRUE, NS_LOSTFOCUS, widget);
       widget->DispatchEvent(&event, status);
     }
@@ -982,7 +984,9 @@ void nsViewManager::UnsuppressFocusEvents()
   {
     widget = GetCurrentlyFocusedView()->GetWidget();
     if (widget) {
+#ifdef DEBUG_FOCUS_SUPPRESSION
       printf("*** 0 INFO TODO [CPEARCE] Unsuppressing, dispatching NS_GOTFOCUS\n");
+#endif
       nsGUIEvent event(PR_TRUE, NS_GOTFOCUS, widget);
       widget->DispatchEvent(&event, status); 
     }
@@ -1194,16 +1198,19 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
     default:
       {
         if (aEvent->message == NS_GOTFOCUS) {
+#ifdef DEBUG_FOCUS_SUPPRESSION
           printf("*** 0 INFO TODO [CPEARCE] Focus changing%s\n",
-          (nsViewManager::IsFocusSuppressed() ? " while suppressed" : ""));
+            (nsViewManager::IsFocusSuppressed() ? " while suppressed" : ""));
+#endif
           SetCurrentlyFocusedView(nsView::GetViewFor(aEvent->widget));
         }
         if ((aEvent->message == NS_GOTFOCUS || aEvent->message == NS_LOSTFOCUS) &&
              nsViewManager::IsFocusSuppressed())
         {
+#ifdef DEBUG_FOCUS_SUPPRESSION
           printf("*** 0 INFO TODO [CPEARCE] Suppressing %s\n",
             (aEvent->message == NS_GOTFOCUS ? "NS_GOTFOCUS" : "NS_LOSTFOCUS"));
-          
+#endif          
           break;
         }
         
