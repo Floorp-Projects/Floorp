@@ -258,7 +258,11 @@ static const char kRoleNames[][20] = {
   "calendar",            //ROLE_CALENDAR
   "combobox list",       //ROLE_COMBOBOX_LIST
   "combobox option",     //ROLE_COMBOBOX_OPTION
-  "image map"            //ROLE_IMAGE_MAP
+  "image map",           //ROLE_IMAGE_MAP
+  "listbox option",      //ROLE_OPTION
+  "listbox rich option", //ROLE_RICH_OPTION
+  "listbox"              //ROLE_LISTBOX
+  
 };
 
 /**

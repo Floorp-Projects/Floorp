@@ -38,6 +38,8 @@
 #ifndef __nsXULSelectAccessible_h__
 #define __nsXULSelectAccessible_h__
 
+#include "nsIAccessibleTable.h"
+
 #include "nsCOMPtr.h"
 #include "nsXULMenuAccessible.h"
 #include "nsBaseWidgetAccessible.h"
@@ -101,17 +103,23 @@ public:
 /*
  * A class the represents the XUL Listbox widget.
  */
-class nsXULListboxAccessible : public nsXULSelectableAccessible
+class nsXULListboxAccessible : public nsXULSelectableAccessible,
+                               public nsIAccessibleTable
 {
 public:
-
   nsXULListboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
   virtual ~nsXULListboxAccessible() {}
 
-  /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetRole(PRUint32 *_retval);
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIACCESSIBLETABLE
+
+  // nsIAccessible
+  NS_IMETHOD GetRole(PRUint32 *aRole);
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
-  NS_IMETHOD GetValue(nsAString& _retval);
+  NS_IMETHOD GetValue(nsAString& aValue);
+
+protected:
+  PRBool IsTree();
 };
 
 /**
@@ -136,8 +144,23 @@ public:
   NS_IMETHOD GetDescription(nsAString& aDesc) { return nsAccessibleWrap::GetDescription(aDesc); }
   NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
 
+protected:
+  already_AddRefed<nsIAccessible> GetListAccessible();
+
 private:
   PRBool mIsCheckbox;
+};
+
+/**
+ * Class represents xul:listcell.
+ */
+class nsXULListCellAccessible : public nsHyperTextAccessibleWrap
+{
+public:
+  nsXULListCellAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+
+  // nsIAccessible
+  NS_IMETHOD GetRole(PRUint32 *aRole);
 };
 
 /** ------------------------------------------------------ */
