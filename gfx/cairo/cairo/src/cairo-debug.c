@@ -69,5 +69,7 @@ cairo_debug_reset_static_data (void)
 
     _cairo_pattern_reset_static_data ();
 
+    _cairo_scaled_font_reset_static_data ();
+
     CAIRO_MUTEX_FINALIZE ();
 }

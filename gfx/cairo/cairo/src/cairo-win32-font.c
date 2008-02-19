@@ -277,7 +277,7 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
      * XXX: The other option we could pay attention to, but don't
      *      here is the hint_metrics options.
      */
-    if (options == NULL || options->antialias == CAIRO_ANTIALIAS_DEFAULT)
+    if (options->antialias == CAIRO_ANTIALIAS_DEFAULT)
 	f->quality = _get_system_quality ();
     else {
 	switch (options->antialias) {
@@ -304,7 +304,7 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
 
     if (f->quality == logfont->lfQuality ||
         (logfont->lfQuality == DEFAULT_QUALITY &&
-         (options == NULL || options->antialias == CAIRO_ANTIALIAS_DEFAULT))) {
+         options->antialias == CAIRO_ANTIALIAS_DEFAULT)) {
         /* If face_hfont is non-NULL, then we can use it to avoid creating our
          * own --- because the constraints on face_hfont mentioned above
          * guarantee it was created in exactly the same way that

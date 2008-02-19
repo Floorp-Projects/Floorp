@@ -1946,6 +1946,8 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     cairo_xlib_surface_t *surface;
     cairo_xlib_screen_info_t *screen_info;
 
+    CAIRO_MUTEX_INITIALIZE ();
+
     screen_info = _cairo_xlib_screen_info_get (dpy, screen);
     if (screen_info == NULL)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
@@ -2093,8 +2095,6 @@ cairo_xlib_surface_create (Display     *dpy,
     if (screen == NULL)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_VISUAL));
 
-    CAIRO_MUTEX_INITIALIZE ();
-
     return _cairo_xlib_surface_create_internal (dpy, drawable, screen,
 						visual, NULL, width, height, 0);
 }
@@ -2119,8 +2119,6 @@ cairo_xlib_surface_create_for_bitmap (Display  *dpy,
 				      int	width,
 				      int	height)
 {
-    CAIRO_MUTEX_INITIALIZE ();
-
     return _cairo_xlib_surface_create_internal (dpy, bitmap, screen,
 						NULL, NULL, width, height, 1);
 }
@@ -2154,8 +2152,6 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
 					       int		    width,
 					       int		    height)
 {
-    CAIRO_MUTEX_INITIALIZE ();
-
     return _cairo_xlib_surface_create_internal (dpy, drawable, screen,
 						NULL, format, width, height, 0);
 }

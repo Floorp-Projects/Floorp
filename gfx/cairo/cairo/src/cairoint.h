@@ -112,6 +112,14 @@ _cairo_win32_tmpfile (void);
 #undef  ARRAY_LENGTH
 #define ARRAY_LENGTH(__array) ((int) (sizeof (__array) / sizeof (__array[0])))
 
+
+/* This has to be updated whenever #cairo_status_t is extended.  That's
+ * a bit of a pain, but it should be easy to always catch as long as
+ * one adds a new test case to test a trigger of the new status value.
+ */
+#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_STRIDE
+
+
 /* Size in bytes of buffer to use off the stack per functions.
  * Mostly used by text functions.  For larger allocations, they'll
  * malloc(). */
@@ -1234,8 +1242,13 @@ cairo_private cairo_status_t
 _cairo_scaled_font_set_error (cairo_scaled_font_t *scaled_font,
 			      cairo_status_t status);
 
+cairo_private cairo_scaled_font_t *
+_cairo_scaled_font_create_in_error (cairo_status_t status);
+
+cairo_private void
+_cairo_scaled_font_reset_static_data (void);
+
 extern const cairo_private cairo_font_face_t _cairo_font_face_nil;
-extern const cairo_private cairo_scaled_font_t _cairo_scaled_font_nil;
 
 cairo_private void
 _cairo_font_face_init (cairo_font_face_t               *font_face,

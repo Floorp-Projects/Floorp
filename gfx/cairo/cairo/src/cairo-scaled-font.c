@@ -178,7 +178,7 @@ _cairo_scaled_glyph_destroy (void *abstract_glyph)
 }
 
 #define ZOMBIE 0
-const cairo_scaled_font_t _cairo_scaled_font_nil = {
+static const cairo_scaled_font_t _cairo_scaled_font_nil = {
     { ZOMBIE },			/* hash_entry */
     CAIRO_STATUS_NO_MEMORY,	/* status */
     CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
@@ -466,11 +466,9 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 {
     cairo_status_t status;
 
-    if (options != NULL) {
-	status = cairo_font_options_status ((cairo_font_options_t *) options);
-	if (status)
-	    return status;
-    }
+    status = cairo_font_options_status ((cairo_font_options_t *) options);
+    if (status)
+	return status;
 
     _cairo_scaled_font_init_key (scaled_font, font_face,
 				 font_matrix, ctm, options);
@@ -623,20 +621,18 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     cairo_scaled_font_t key, *scaled_font = NULL;
 
     if (font_face->status)
-	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
+	return _cairo_scaled_font_create_in_error (font_face->status);
 
-    if (options != NULL &&
-	cairo_font_options_status ((cairo_font_options_t *) options))
-    {
-	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
-    }
+    status = cairo_font_options_status ((cairo_font_options_t *) options);
+    if (status)
+	return _cairo_scaled_font_create_in_error (status);
 
     /* Note that degenerate ctm or font_matrix *are* allowed.
      * We want to support a font size of 0. */
 
     font_map = _cairo_scaled_font_map_lock ();
     if (font_map == NULL)
-	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
+	return _cairo_scaled_font_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     _cairo_scaled_font_init_key (&key, font_face,
 				 font_matrix, ctm, options);
@@ -687,7 +683,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     if (status) {
 	_cairo_scaled_font_map_unlock ();
 	status = _cairo_font_face_set_error (font_face, status);
-	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
+	return _cairo_scaled_font_create_in_error (status);
     }
 
     status = _cairo_hash_table_insert (font_map->hash_table,
@@ -700,12 +696,62 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	 * hash table. */
 	_cairo_scaled_font_fini (scaled_font);
 	free (scaled_font);
-	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
+	return _cairo_scaled_font_create_in_error (status);
     }
 
     return scaled_font;
 }
 slim_hidden_def (cairo_scaled_font_create);
+
+static cairo_scaled_font_t *_cairo_scaled_font_nil_objects[CAIRO_STATUS_LAST_STATUS + 1];
+
+/* XXX This should disappear in favour of a common pool of error objects. */
+cairo_scaled_font_t *
+_cairo_scaled_font_create_in_error (cairo_status_t status)
+{
+    cairo_scaled_font_t *scaled_font;
+
+    assert (status != CAIRO_STATUS_SUCCESS);
+
+    if (status == CAIRO_STATUS_NO_MEMORY)
+	return (cairo_scaled_font_t *) &_cairo_scaled_font_nil;
+
+    CAIRO_MUTEX_LOCK (_cairo_scaled_font_error_mutex);
+    scaled_font = _cairo_scaled_font_nil_objects[status];
+    if (scaled_font == NULL) {
+	scaled_font = malloc (sizeof (cairo_scaled_font_t));
+	if (scaled_font == NULL) {
+	    CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_error_mutex);
+	    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	    return (cairo_scaled_font_t *) &_cairo_scaled_font_nil;
+	}
+
+	*scaled_font = _cairo_scaled_font_nil;
+	scaled_font->status = status;
+	_cairo_scaled_font_nil_objects[status] = scaled_font;
+    }
+    CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_error_mutex);
+
+    return scaled_font;
+}
+
+void
+_cairo_scaled_font_reset_static_data (void)
+{
+    int status;
+
+    CAIRO_MUTEX_LOCK (_cairo_scaled_font_error_mutex);
+    for (status = CAIRO_STATUS_SUCCESS;
+	 status <= CAIRO_STATUS_LAST_STATUS;
+	 status++)
+    {
+	if (_cairo_scaled_font_nil_objects[status] != NULL) {
+	    free (_cairo_scaled_font_nil_objects[status]);
+	    _cairo_scaled_font_nil_objects[status] = NULL;
+	}
+    }
+    CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_error_mutex);
+}
 
 /**
  * cairo_scaled_font_reference:

@@ -106,8 +106,10 @@ cairo_os2_init (void)
 
     DisableFPUException ();
 
+#if CAIRO_HAS_FT_FONT
     /* Initialize FontConfig */
     FcInit ();
+#endif
 
     CAIRO_MUTEX_INITIALIZE ();
 }
@@ -134,16 +136,18 @@ cairo_os2_fini (void)
     DisableFPUException ();
 
     /* Free allocated memories! */
-    /* (Check cairo_debug_reset_static_date () for an example of this!) */
+    /* (Check cairo_debug_reset_static_data () for an example of this!) */
     _cairo_font_reset_static_data ();
-#ifdef CAIRO_HAS_FT_FONT
+#if CAIRO_HAS_FT_FONT
     _cairo_ft_font_reset_static_data ();
 #endif
 
     CAIRO_MUTEX_FINALIZE ();
 
+#if CAIRO_HAS_FT_FONT
     /* Uninitialize FontConfig */
     FcFini ();
+#endif
 
 #ifdef __WATCOMC__
     /* It can happen that the libraries we use have memory leaks,

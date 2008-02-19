@@ -601,13 +601,23 @@ _compute_normalized_device_slope (double *dx, double *dy, cairo_matrix_t *ctm_in
     }
 
     if (dx0 == 0.0) {
-	mag = dy0;
 	*dx = 0.0;
-	*dy = 1.0;
+	if (dy0 > 0.0) {
+	    mag = dy0;
+	    *dy = 1.0;
+	} else {
+	    mag = -dy0;
+	    *dy = -1.0;
+	}
     } else if (dy0 == 0.0) {
-	mag = dx0;
-	*dx = 1.0;
 	*dy = 0.0;
+	if (dx0 > 0.0) {
+	    mag = dx0;
+	    *dx = 1.0;
+	} else {
+	    mag = -dx0;
+	    *dx = -1.0;
+	}
     } else {
 	mag = sqrt (dx0 * dx0 + dy0 * dy0);
 	*dx = dx0 / mag;

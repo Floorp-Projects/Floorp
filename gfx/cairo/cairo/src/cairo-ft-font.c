@@ -945,7 +945,7 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 					     width, height, stride);
     if ((*surface)->base.status) {
 	free (data);
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (*surface)->base.status;
     }
 
     if (subpixel)
@@ -1064,9 +1064,8 @@ _render_glyph_outline (FT_Face                    face,
 	bitmap.width = width * hmul;
 	bitmap.rows = height * vmul;
 	bitmap.buffer = calloc (stride, bitmap.rows);
-	if (bitmap.buffer == NULL) {
+	if (bitmap.buffer == NULL)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	}
 
 	FT_Outline_Translate (outline, -cbox.xMin*hmul, -cbox.yMin*vmul);
 
@@ -1616,6 +1615,11 @@ _cairo_ft_scaled_font_create_toy (cairo_toy_font_face_t	      *toy_face,
     cairo_ft_font_transform_t sf;
     cairo_ft_options_t ft_options;
 
+    cairo_matrix_multiply (&scale, font_matrix, ctm);
+    status = _compute_transform (&sf, &scale);
+    if (status)
+	return status;
+
     pattern = FcPatternCreate ();
     if (!pattern)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -1662,9 +1666,6 @@ _cairo_ft_scaled_font_create_toy (cairo_toy_font_face_t	      *toy_face,
 	goto FREE_PATTERN;
     }
 
-    cairo_matrix_multiply (&scale, font_matrix, ctm);
-    _compute_transform (&sf, &scale);
-
     if (! FcPatternAddDouble (pattern, FC_PIXEL_SIZE, sf.y_scale)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FREE_PATTERN;
@@ -1675,11 +1676,9 @@ _cairo_ft_scaled_font_create_toy (cairo_toy_font_face_t	      *toy_face,
 	goto FREE_PATTERN;
     }
 
-    if (font_options != NULL) {
-	status = _cairo_ft_font_options_substitute (font_options, pattern);
-	if (status)
-	    goto FREE_PATTERN;
-    }
+    status = _cairo_ft_font_options_substitute (font_options, pattern);
+    if (status)
+	goto FREE_PATTERN;
 
     FcDefaultSubstitute (pattern);
 
@@ -2323,7 +2322,7 @@ _cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
 	    font_face->ft_options.extra_flags == ft_options->extra_flags &&
 	    cairo_font_options_equal (&font_face->ft_options.base, &ft_options->base))
 	{
-	    if (! font_face->base.status)
+	    if (font_face->base.status == CAIRO_STATUS_SUCCESS)
 		return cairo_font_face_reference (&font_face->base);
 
 	    /* The font_face has been left in an error state, abandon it. */
