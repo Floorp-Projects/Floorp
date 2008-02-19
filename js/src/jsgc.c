@@ -2111,16 +2111,13 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
         JS_CALL_OBJECT_TRACER(trc, fp->varobj, "variables");
     if (fp->script) {
         js_TraceScript(trc, fp->script);
-        if (fp->spbase) {
-            /*
-             * Don't mark what has not been pushed yet, or what has been
-             * popped already.
-             */
-            JS_ASSERT(JS_UPTRDIFF(fp->sp, fp->spbase) <=
-                      fp->script->depth * sizeof(jsval));
-            nslots = (uintN) (fp->sp - fp->spbase);
-            TRACE_JSVALS(trc, nslots, fp->spbase, "operand");
-        }
+        /*
+         * Don't mark what has not been pushed yet, or what has been
+         * popped already.
+         */
+        nslots = (uintN) (fp->sp - fp->spbase);
+        JS_ASSERT(nslots <= fp->script->depth);
+        TRACE_JSVALS(trc, nslots, fp->spbase, "operand");
     }
 
     /* Allow for primitive this parameter due to JSFUN_THISP_* flags. */
