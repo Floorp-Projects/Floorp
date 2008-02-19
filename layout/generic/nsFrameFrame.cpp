@@ -145,6 +145,11 @@ public:
 
   virtual nsSize  GetIntrinsicRatio();
 
+  virtual nsSize ComputeAutoSize(nsIRenderingContext *aRenderingContext,
+                                 nsSize aCBSize, nscoord aAvailableWidth,
+                                 nsSize aMargin, nsSize aBorder,
+                                 nsSize aPadding, PRBool aShrinkWrap);
+
   virtual nsSize ComputeSize(nsIRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
@@ -447,6 +452,24 @@ nsSubDocumentFrame::GetIntrinsicRatio()
   }
   return nsLeafFrame::GetIntrinsicRatio();
 }
+
+/* virtual */ nsSize
+nsSubDocumentFrame::ComputeAutoSize(nsIRenderingContext *aRenderingContext,
+                                    nsSize aCBSize, nscoord aAvailableWidth,
+                                    nsSize aMargin, nsSize aBorder,
+                                    nsSize aPadding, PRBool aShrinkWrap)
+{
+  if (!IsInline()) {
+    return nsFrame::ComputeAutoSize(aRenderingContext, aCBSize,
+                                    aAvailableWidth, aMargin, aBorder,
+                                    aPadding, aShrinkWrap);
+  }
+
+  return nsLeafFrame::ComputeAutoSize(aRenderingContext, aCBSize,
+                                      aAvailableWidth, aMargin, aBorder,
+                                      aPadding, aShrinkWrap);  
+}
+
 
 /* virtual */ nsSize
 nsSubDocumentFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
