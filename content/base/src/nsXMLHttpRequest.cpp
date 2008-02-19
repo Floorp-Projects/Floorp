@@ -558,6 +558,9 @@ nsXMLHttpRequest::~nsXMLHttpRequest()
   nsLayoutStatics::Release();
 }
 
+/**
+ * This Init method is called from the factory constructor.
+ */
 nsresult
 nsXMLHttpRequest::Init()
 {
@@ -576,28 +579,55 @@ nsXMLHttpRequest::Init()
     return NS_OK;
   }
 
-  nsIScriptContext* context = GetScriptContextFromJSContext(cx);
-  if (!context) {
-    return NS_OK;
-  }
   nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
   nsCOMPtr<nsIPrincipal> subjectPrincipal;
   if (secMan) {
     secMan->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
   }
   NS_ENSURE_STATE(subjectPrincipal);
-
-  mScriptContext = context;
   mPrincipal = subjectPrincipal;
-  nsCOMPtr<nsPIDOMWindow> window =
-    do_QueryInterface(context->GetGlobalObject());
-  if (window) {
-    mOwner = window->GetCurrentInnerWindow();
+
+  nsIScriptContext* context = GetScriptContextFromJSContext(cx);
+  if (context) {
+    mScriptContext = context;
+    nsCOMPtr<nsPIDOMWindow> window =
+      do_QueryInterface(context->GetGlobalObject());
+    if (window) {
+      mOwner = window->GetCurrentInnerWindow();
+    }
+  }
+
+  return NS_OK;
+}
+/**
+ * This Init method should only be called by C++ consumers.
+ */
+NS_IMETHODIMP
+nsXMLHttpRequest::Init(nsIPrincipal* aPrincipal,
+                       nsIScriptContext* aScriptContext,
+                       nsPIDOMWindow* aOwnerWindow)
+{
+  NS_ENSURE_ARG_POINTER(aPrincipal);
+
+  // This object may have already been initialized in the other Init call above
+  // if JS was on the stack. Clear the old values for mScriptContext and mOwner
+  // if new ones are not supplied here.
+
+  mPrincipal = aPrincipal;
+  mScriptContext = aScriptContext;
+  if (aOwnerWindow) {
+    mOwner = aOwnerWindow->GetCurrentInnerWindow();
+  }
+  else {
+    mOwner = nsnull;
   }
 
   return NS_OK;
 }
 
+/**
+ * This Initialize method is called from XPConnect via nsIJSNativeInitializer.
+ */
 NS_IMETHODIMP
 nsXMLHttpRequest::Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
                              PRUint32 argc, jsval *argv)
@@ -1342,18 +1372,25 @@ nsXMLHttpRequest::GetCurrentHttpChannel()
   return httpChannel;
 }
 
+inline PRBool
+IsSystemPrincipal(nsIPrincipal* aPrincipal)
+{
+  PRBool isSystem = PR_FALSE;
+  nsContentUtils::GetSecurityManager()->
+    IsSystemPrincipal(aPrincipal, &isSystem);
+  return isSystem;
+}
+
 static PRBool
 IsSameOrigin(nsIPrincipal* aPrincipal, nsIChannel* aChannel)
 {
-  if (!aPrincipal) {
-    // XXX Until we got our principal story straight we have to do this to
-    // support C++ callers.
-    return PR_TRUE;
-  }
+  NS_ASSERTION(!IsSystemPrincipal(aPrincipal), "Shouldn't get here!");
 
   nsCOMPtr<nsIURI> codebase;
   nsresult rv = aPrincipal->GetURI(getter_AddRefs(codebase));
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  NS_ASSERTION(codebase, "Principal must have a URI!");
 
   nsCOMPtr<nsIURI> channelURI;
   rv = aChannel->GetURI(getter_AddRefs(channelURI));
@@ -1412,6 +1449,8 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
 {
   NS_ENSURE_ARG(!method.IsEmpty());
   NS_ENSURE_ARG(!url.IsEmpty());
+
+  NS_ENSURE_TRUE(mPrincipal, NS_ERROR_NOT_INITIALIZED);
 
   // Disallow HTTP/1.1 TRACE method (see bug 302489)
   // and MS IIS equivalent TRACK (see bug 381264)
@@ -1513,12 +1552,14 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
   if (NS_FAILED(rv)) return rv;
 
   // Check if we're doing a cross-origin request.
-  if (!(mState & XML_HTTP_REQUEST_XSITEENABLED) &&
-      !IsSameOrigin(mPrincipal, mChannel)) {
+  if (IsSystemPrincipal(mPrincipal)) {
+    // Chrome callers are always allowed to read from different origins.
+    mState |= XML_HTTP_REQUEST_XSITEENABLED;
+  }
+  else if (!(mState & XML_HTTP_REQUEST_XSITEENABLED) &&
+           !IsSameOrigin(mPrincipal, mChannel)) {
     mState |= XML_HTTP_REQUEST_USE_XSITE_AC;
   }
-
-  //mChannel->SetAuthTriedWithPrehost(authp);
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
   if (httpChannel) {
@@ -2037,6 +2078,8 @@ nsXMLHttpRequest::SendAsBinary(const nsAString &aBody)
 NS_IMETHODIMP
 nsXMLHttpRequest::Send(nsIVariant *aBody)
 {
+  NS_ENSURE_TRUE(mPrincipal, NS_ERROR_NOT_INITIALIZED);
+
   nsresult rv = CheckInnerWindowCorrectness();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2062,12 +2105,10 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   if (httpChannel) {
     httpChannel->GetRequestMethod(method); // If GET, method name will be uppercase
 
-    if (mPrincipal) {
-      nsCOMPtr<nsIURI> codebase;
-      mPrincipal->GetURI(getter_AddRefs(codebase));
+    nsCOMPtr<nsIURI> codebase;
+    mPrincipal->GetURI(getter_AddRefs(codebase));
 
-      httpChannel->SetReferrer(codebase);
-    }
+    httpChannel->SetReferrer(codebase);
   }
 
   if (aBody && httpChannel && !method.EqualsLiteral("GET")) {
