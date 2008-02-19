@@ -226,18 +226,18 @@ NS_IMPL_ISUPPORTS1(nsPrintEngine, nsIObserver)
 nsPrintEngine::nsPrintEngine() :
   mIsCreatingPrintPreview(PR_FALSE),
   mIsDoingPrinting(PR_FALSE),
+  mIsDoingPrintPreview(PR_FALSE),
+  mProgressDialogIsShown(PR_FALSE),
   mDocViewerPrint(nsnull),
   mContainer(nsnull),
   mDeviceContext(nsnull),
   mPrt(nsnull),
   mPagePrintTimer(nsnull),
   mPageSeqFrame(nsnull),
-  mIsDoingPrintPreview(PR_FALSE),
   mParentWidget(nsnull),
   mPrtPreview(nsnull),
   mOldPrtPreview(nsnull),
-  mDebugFile(nsnull),
-  mProgressDialogIsShown(PR_FALSE)
+  mDebugFile(nsnull)
 {
 }
 
