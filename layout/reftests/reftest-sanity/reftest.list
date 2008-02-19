@@ -5,3 +5,7 @@
 # these tests make sure async reftests work:
 == test-async.xul test-async-ref.xul
 == test-async.html test-async-ref.html
+
+# This makes sure that the harness is choosing HTML vs. XHTML processing
+# based on the file extensions.
+!= html-vs-xhtml-by-extension.html html-vs-xhtml-by-extension.xhtml
