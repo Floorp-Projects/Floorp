@@ -160,7 +160,7 @@ protected:
 
   inline PRBool DoOutput()
   {
-    return !mInHead;
+    return mHeadLevel == 0;
   }
 
   // Stack handling functions
@@ -171,8 +171,7 @@ protected:
   
 protected:
   nsString         mCurrentLine;
-
-  PRPackedBool     mInHead;
+  PRUint32         mHeadLevel;
   PRPackedBool     mAtFirstColumn;
 
   // Handling of quoted text (for mail):
