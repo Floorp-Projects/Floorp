@@ -69,6 +69,8 @@ var security = {
 
     var isBroken =
       (ui.state == Components.interfaces.nsIWebProgressListener.STATE_IS_BROKEN);
+    var isEV =
+      (ui.state & Components.interfaces.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL);
     ui.QueryInterface(nsISSLStatusProvider);
     var status = ui.SSLStatus;
 
@@ -84,6 +86,7 @@ var security = {
         encryptionAlgorithm : undefined,
         encryptionStrength : undefined,
         isBroken : isBroken,
+        isEV : isEV,
         cert : cert,
         fullLocation : gWindow.location
       };
@@ -103,6 +106,7 @@ var security = {
         encryptionAlgorithm : "",
         encryptionStrength : 0,
         isBroken : isBroken,
+        isEV : isEV,
         cert : null,
         fullLocation : gWindow.location        
       };
@@ -197,21 +201,29 @@ function securityOnLoad() {
   /* Set Identity section text */
   setText("security-identity-domain-value", info.hostName);
   
-  // FIXME - Should only be showing the next two if the cert is EV.  Waiting on
-  // bug 374336
   var owner, verifier, generalPageIdentityString;
   if (info.cert && !info.isBroken) {
     // Try to pull out meaningful values.  Technically these fields are optional
     // so we'll employ fallbacks where appropriate.  The EV spec states that Org
-    // fields must be specified for subject and issuer so when 374336 lands, this
-    // code can be simplified.
-    owner = info.cert.organization || info.cert.commonName ||
-            info.cert.subjectName;
-    verifier = security.mapIssuerOrganization(info.cAName ||
-                                              info.cert.issuerCommonName ||
-                                              info.cert.issuerName);
-    generalPageIdentityString = pageInfoBundle.getFormattedString("generalSiteIdentity",
-                                                                  [owner, verifier]);
+    // fields must be specified for subject and issuer so that case is simpler.
+    if (info.isEV) {
+      owner = info.cert.organization;
+      verifier = security.mapIssuerOrganization(info.cAName);
+      generalPageIdentityString = pageInfoBundle.getFormattedString("generalSiteIdentity",
+                                                                    [owner, verifier]);
+    }
+    else {
+      // Technically, a non-EV cert might specify an owner in the O field or not,
+      // depending on the CA's issuing policies.  However we don't have any programmatic
+      // way to tell those apart, and no policy way to establish which organization
+      // vetting standards are good enough (that's what EV is for) so we default to
+      // treating these certs as domain-validated only.
+      owner = pageInfoBundle.getString("securityNoIdentity");
+      verifier = security.mapIssuerOrganization(info.cAName ||
+                                                info.cert.issuerCommonName ||
+                                                info.cert.issuerName);
+      generalPageIdentityString = owner;
+    }
   }
   else {
     // We don't have valid identity credentials.
