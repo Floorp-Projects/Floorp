@@ -372,7 +372,7 @@ GetArrayElement(JSContext *cx, JSObject *obj, jsuint index, JSBool *hole,
     JSObject *obj2;
     JSProperty *prop;
 
-    if (ARRAY_IS_DENSE(cx, obj)) {
+    if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
         if (index >= ARRAY_DENSELEN(obj)) {
             *vp = JSVAL_VOID;
             *hole = JS_TRUE;
@@ -423,7 +423,7 @@ SetArrayElement(JSContext *cx, JSObject *obj, jsuint index, jsval v)
 {
     jsid id;
 
-    if (ARRAY_IS_DENSE(cx, obj)) {
+    if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
         if (INDEX_TOO_SPARSE(obj, index)) {
             if (!MakeArraySlow(cx, obj))
                 return JS_FALSE;
@@ -456,7 +456,7 @@ DeleteArrayElement(JSContext *cx, JSObject *obj, jsuint index)
     jsid id;
     jsval junk;
 
-    if (ARRAY_IS_DENSE(cx, obj)) {
+    if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
         if (index < ARRAY_DENSELEN(obj)) {
             if (obj->dslots[index] != JSVAL_HOLE)
                 ARRAY_SET_COUNT(obj, ARRAY_COUNT(obj) - 1);
@@ -590,7 +590,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         return JS_TRUE;
     }
 
-    if (ARRAY_IS_DENSE(cx, obj)) {
+    if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
         if (ARRAY_DENSELEN(obj) && !ResizeSlots(cx, obj, oldlen, newlen))
             return JS_FALSE;
     } else if (oldlen - newlen < (1 << 24)) {
@@ -644,7 +644,7 @@ array_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 {
     uint32 i;
 
-    if (!ARRAY_IS_DENSE(cx, obj))
+    if (!OBJ_IS_DENSE_ARRAY(cx, obj))
         return js_LookupProperty(cx, obj, id, objp, propp);
 
     /* 
@@ -679,7 +679,7 @@ array_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 static void
 array_dropProperty(JSContext *cx, JSObject *obj, JSProperty *prop)
 {
-    JS_ASSERT(!ARRAY_IS_DENSE(cx, obj) ||
+    JS_ASSERT(!OBJ_IS_DENSE_ARRAY(cx, obj) ||
               STOBJ_GET_SLOT(obj, JSSLOT_ARRAY_LOOKUP_HOLDER) != JSVAL_VOID);
 #ifdef DEBUG
     STOBJ_SET_SLOT(obj, JSSLOT_ARRAY_LOOKUP_HOLDER, JSVAL_VOID);
@@ -699,7 +699,7 @@ array_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         return JS_TRUE;
     }
 
-    if (!ARRAY_IS_DENSE(cx, obj))
+    if (!OBJ_IS_DENSE_ARRAY(cx, obj))
         return js_GetProperty(cx, obj, id, vp);
 
     if (!js_IdIsIndex(ID_TO_VALUE(id), &i) || i >= ARRAY_DENSELEN(obj) ||
@@ -762,7 +762,7 @@ array_setProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))
         return array_length_setter(cx, obj, id, vp);
 
-    if (!ARRAY_IS_DENSE(cx, obj))
+    if (!OBJ_IS_DENSE_ARRAY(cx, obj))
         return js_SetProperty(cx, obj, id, vp);
 
     if (!js_IdIsIndex(id, &i) || INDEX_TOO_SPARSE(obj, i)) {
@@ -825,7 +825,7 @@ array_deleteProperty(JSContext *cx, JSObject *obj, jsval id, jsval *rval)
 {
     uint32 i;
     
-    if (!ARRAY_IS_DENSE(cx, obj))
+    if (!OBJ_IS_DENSE_ARRAY(cx, obj))
         return js_DeleteProperty(cx, obj, id, rval);
 
     if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
@@ -884,7 +884,7 @@ array_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 {
     uint32 i, length;
 
-    JS_ASSERT(ARRAY_IS_DENSE(cx, obj));
+    JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj));
 
     if (enum_op == JSENUMERATE_DESTROY)
         return JS_TRUE;
@@ -942,7 +942,7 @@ array_trace(JSTracer *trc, JSObject *obj)
     size_t i;
     jsval v;
 
-    JS_ASSERT(ARRAY_IS_DENSE(cx, obj));
+    JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj));
 
     length = ARRAY_DENSELEN(obj);
     for (i = 0; i < length; i++) {
@@ -1201,7 +1201,7 @@ array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
 
     /* Use rval to locally root each element value as we loop and convert. */
     for (index = 0; index < length; index++) {
-        if (ARRAY_IS_DENSE(cx, obj) && index < ARRAY_DENSELEN(obj)) {
+        if (OBJ_IS_DENSE_ARRAY(cx, obj) && index < ARRAY_DENSELEN(obj)) {
             *rval = obj->dslots[index];
             hole = (*rval == JSVAL_HOLE);
             ok = JS_TRUE;
@@ -1369,7 +1369,7 @@ static JSBool
 InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint end,
                   jsval *vector)
 {
-    if (ARRAY_IS_DENSE(cx, obj)) {
+    if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
         if (!EnsureLength(cx, obj, end))
             return JS_FALSE;
 
@@ -1970,7 +1970,7 @@ array_push(JSContext *cx, uintN argc, jsval *vp)
     obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
         return JS_FALSE;
-    if (argc != 1 || !ARRAY_IS_DENSE(cx, obj))
+    if (argc != 1 || !OBJ_IS_DENSE_ARRAY(cx, obj))
         return array_push_slowly(cx, obj, argc, vp);
 
     len = ARRAY_LENGTH(obj);
@@ -2000,7 +2000,7 @@ array_pop(JSContext *cx, uintN argc, jsval *vp)
     obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
         return JS_FALSE;
-    if (ARRAY_IS_DENSE(cx, obj)) {
+    if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
         *vp = JSVAL_VOID;
         index = ARRAY_LENGTH(obj);
         if (index == 0)
@@ -2272,7 +2272,7 @@ array_concat(JSContext *cx, uintN argc, jsval *vp)
 
     /* Create a new Array object and root it using *vp. */
     aobj = JS_THIS_OBJECT(cx, vp);
-    if (ARRAY_IS_DENSE(cx, aobj)) {
+    if (OBJ_IS_DENSE_ARRAY(cx, aobj)) {
         nobj = js_NewArrayObject(cx, ARRAY_DENSELEN(aobj), aobj->dslots);
         if (!nobj)
             return JS_FALSE;
@@ -2397,7 +2397,7 @@ array_slice(JSContext *cx, uintN argc, jsval *vp)
     if (begin > end)
         begin = end;
 
-    if (ARRAY_IS_DENSE(cx, obj)) {
+    if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
         nobj = js_NewArrayObject(cx, end - begin, obj->dslots + begin);
         if (!nobj)
             return JS_FALSE;
@@ -2890,9 +2890,9 @@ js_ArrayInfo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             continue;
         }
         fprintf(stderr, "%s: %s (len %lu", bytes,
-                ARRAY_IS_DENSE(cx, array) ? "dense" : "sparse",
+                OBJ_IS_DENSE_ARRAY(cx, array) ? "dense" : "sparse",
                 ARRAY_LENGTH(array));
-        if (ARRAY_IS_DENSE(cx, array)) {
+        if (OBJ_IS_DENSE_ARRAY(cx, array)) {
             fprintf(stderr, ", count %lu, denselen %lu",
                     ARRAY_COUNT(array), ARRAY_DENSELEN(array));
         }
