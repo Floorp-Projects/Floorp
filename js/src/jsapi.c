@@ -2010,12 +2010,17 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
           case JSTRACE_OBJECT:
           {
             JSObject  *obj = (JSObject *)thing;
-            jsval     privateValue = STOBJ_GET_SLOT(obj, JSSLOT_PRIVATE);
-            void      *privateThing = JSVAL_IS_VOID(privateValue)
-                                      ? NULL
-                                      : JSVAL_TO_PRIVATE(privateValue);
+            JSClass *clasp = STOBJ_GET_CLASS(obj);
+            if (clasp->flags & JSCLASS_HAS_PRIVATE) {
+                jsval     privateValue = STOBJ_GET_SLOT(obj, JSSLOT_PRIVATE);
+                void      *privateThing = JSVAL_IS_VOID(privateValue)
+                                          ? NULL
+                                          : JSVAL_TO_PRIVATE(privateValue);
 
-            JS_snprintf(buf, bufsize, "%p", privateThing);
+                JS_snprintf(buf, bufsize, "%p", privateThing);
+            } else {
+                JS_snprintf(buf, bufsize, "<no private>");
+            }
             break;
           }
 
