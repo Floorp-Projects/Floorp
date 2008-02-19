@@ -1261,9 +1261,10 @@ have_fun:
          * interpreter, where a prior bytecode has computed an appropriate
          * |this| already.
          *
-         * But we only need to eagerly compute this only for slow native
-         * functions. Fast natives must use JS_THIS and any scripted functions
-         * will go through the appropriate this-computing bytecode.
+         * But we need to compute |this| eagerly only for so-called "slow"
+         * (i.e., not fast) native functions. Fast natives must use either
+         * JS_THIS or JS_THIS_OBJECT, and scripted functions will go through
+         * the appropriate this-computing bytecode, e.g., JSOP_THIS.
          */
         if (native && fun && !(fun->flags & JSFUN_FAST_NATIVE) &&
             !js_ComputeThis(cx, JS_FALSE, vp + 2)) {
@@ -4157,6 +4158,7 @@ interrupt:
 
           BEGIN_CASE(JSOP_CALLPROP)
           {
+            JSObject *aobj;
             JSPropCacheEntry *entry;
 
             lval = FETCH_OPND(-1);
@@ -4183,10 +4185,11 @@ interrupt:
                     goto out;
             }
 
-            if (JS_LIKELY(obj->map->ops->getProperty == js_GetProperty)) {
-                PROPERTY_CACHE_TEST(cx, pc, obj, obj2, entry, atom);
+            aobj = OBJ_IS_DENSE_ARRAY(cx, obj) ? OBJ_GET_PROTO(cx, obj) : obj;
+            if (JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)) {
+                PROPERTY_CACHE_TEST(cx, pc, aobj, obj2, entry, atom);
                 if (!atom) {
-                    ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
+                    ASSERT_VALID_PROPERTY_CACHE_HIT(0, aobj, obj2, entry);
                     if (PCVAL_IS_OBJECT(entry->vword)) {
                         rval = PCVAL_OBJECT_TO_JSVAL(entry->vword);
                     } else if (PCVAL_IS_SLOT(entry->vword)) {
@@ -4227,8 +4230,8 @@ interrupt:
                         ok = JS_FALSE;
                 } else
 #endif
-                if (JS_LIKELY(obj->map->ops->getProperty == js_GetProperty)) {
-                    ok = js_GetPropertyHelper(cx, obj, id, &rval, &entry);
+                if (JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)) {
+                    ok = js_GetPropertyHelper(cx, aobj, id, &rval, &entry);
                 } else {
                     ok = OBJ_GET_PROPERTY(cx, obj, id, &rval);
                 }
