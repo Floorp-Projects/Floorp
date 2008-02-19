@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsMacCursor.h"
+#include "nsObjCExceptions.h"
 #include "nsDebug.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsCOMPtr.h"
@@ -195,27 +196,47 @@
 
 + (nsMacCursor *) cursorWithThemeCursor: (ThemeCursor) aCursor
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   return [[[nsThemeCursor alloc] initWithThemeCursor: aCursor] autorelease];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 + (nsMacCursor *) cursorWithResources: (int) aFirstFrame lastFrame: (int) aLastFrame
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   return [[[nsResourceCursor alloc] initWithFirstFrame: aFirstFrame lastFrame: aLastFrame] autorelease];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 + (nsMacCursor *) cursorWithCursor: (NSCursor *) aCursor
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   return [[[nsCocoaCursor alloc] initWithCursor: aCursor] autorelease];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 + (nsMacCursor *) cursorWithImageNamed: (NSString *) aCursorImage hotSpot: (NSPoint) aPoint
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   return [[[nsCocoaCursor alloc] initWithImageNamed: aCursorImage hotSpot: aPoint] autorelease];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 + (nsMacCursor *) cursorWithFrames: (NSArray *) aCursorFrames
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   return [[[nsCocoaCursor alloc] initWithFrames: aCursorFrames] autorelease];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (void) set
@@ -253,6 +274,8 @@
 
 - (void) createTimer
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (mTimer == nil) {
     mTimer = [[NSTimer scheduledTimerWithTimeInterval: 0.25
                                                target: self
@@ -260,22 +283,32 @@
                                              userInfo: nil
                                               repeats: YES] retain];
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (void) destroyTimer
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (mTimer) {
       [mTimer invalidate];
       [mTimer release];
       mTimer = nil;
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (void) spinCursor: (NSTimer *) aTimer
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if ([aTimer isValid]) {
     [self setFrame: [self getNextCursorFrame]];
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (void) setFrame: (int) aFrameIndex
@@ -285,8 +318,12 @@
 
 - (void) dealloc
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [self destroyTimer];
-  [super dealloc];    
+  [super dealloc];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 @end
@@ -295,15 +332,21 @@
 
 - (id) initWithThemeCursor: (ThemeCursor) aCursor
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   self = [super init];
   //Appearance Manager cursors all fall into the range 0..127. Custom application CURS resources begin at id 128.
   NS_ASSERTION(mCursor >= 0 && mCursor < 128, "Theme cursors must be in the range 0 <= num < 128");
   mCursor = aCursor;    
   return self;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (void) setFrame: (int) aFrameIndex
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if ([self isAnimated]) {
     //if the cursor is animated try to draw the appropriate frame
     OSStatus err = ::SetAnimatedThemeCursor(mCursor, aFrameIndex);
@@ -315,6 +358,8 @@
   else {
     ::SetThemeCursor(mCursor);
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (int) numFrames
@@ -336,6 +381,8 @@
 
 - (id) initWithFrames: (NSArray *) aCursorFrames
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   self = [super init];
   NSEnumerator *it = [aCursorFrames objectEnumerator];
   NSObject *frame = nil;
@@ -345,16 +392,24 @@
   mFrames = [aCursorFrames retain];
   mFrameCounter = 0;
   return self;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (id) initWithCursor: (NSCursor *) aCursor
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   NSArray *frame = [NSArray arrayWithObjects: aCursor, nil];
   return [self initWithFrames: frame];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (id) initWithImageNamed: (NSString *) aCursorImage hotSpot: (NSPoint) aPoint
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   nsCOMPtr<nsIFile> resDir;
   nsCAutoString resPath;
   NSString* pathToImage;
@@ -381,27 +436,45 @@ INIT_FAILURE:
   NS_WARNING("Problem getting path to cursor image file!");
   [self release];
   return nil;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (void) setFrame: (int) aFrameIndex
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [[mFrames objectAtIndex: aFrameIndex] performSelectorOnMainThread: @selector(set)  withObject: nil waitUntilDone: NO];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (int) numFrames
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   return [mFrames count];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 }
 
 - (NSString *) description
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   return [mFrames description];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (void) dealloc
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [mFrames release];
   [super dealloc];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 @end
@@ -414,6 +487,8 @@ static short sSaveResFile = 0;
 // this could be simplified if it was rewritten using Cocoa
 +(void)openLocalResourceFile
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (sRefNum == kResFileNotOpened) {
     CFBundleRef appBundle = ::CFBundleGetMainBundle();
     if (appBundle) {
@@ -441,18 +516,26 @@ static short sSaveResFile = 0;
   
   sSaveResFile = ::CurResFile();
   ::UseResFile(sRefNum);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 +(void)closeLocalResourceFile
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (sRefNum == kResFileNotOpened)
     return;
 
   ::UseResFile(sSaveResFile);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 -(id) initWithFirstFrame: (int) aFirstFrame lastFrame: (int) aLastFrame
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   if ((self = [super init])) {
     //Appearance Manager cursors all fall into the range 0..127. Custom application CURS resources begin at id 128.
     NS_ASSERTION(aFirstFrame >= 128 && aLastFrame >= 128 && aLastFrame >= aFirstFrame, "Nonsensical frame indicies");
@@ -460,10 +543,14 @@ static short sSaveResFile = 0;
     mLastFrame = aLastFrame;
   }
   return self;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (void) setFrame: (int) aFrameIndex
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [nsResourceCursor openLocalResourceFile];
   CursHandle cursHandle = ::GetCursor(mFirstFrame + aFrameIndex);
   NS_ASSERTION(cursHandle, "Can't load cursor, is the resource file installed correctly?");
@@ -471,6 +558,8 @@ static short sSaveResFile = 0;
     ::SetCursor(*cursHandle);
   }
   [nsResourceCursor closeLocalResourceFile];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (int) numFrames
