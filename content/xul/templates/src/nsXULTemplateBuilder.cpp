@@ -1061,8 +1061,6 @@ nsXULTemplateBuilder::Observe(nsISupports* aSubject,
         if (window) {
             nsCOMPtr<nsIDocument> doc =
                 do_QueryInterface(window->GetExtantDocument());
-            NS_WARN_IF_FALSE(doc, "Null document, notification came too late?");
-
             if (doc && doc == mObservedDocument)
                 NodeWillBeDestroyed(doc);
         }
