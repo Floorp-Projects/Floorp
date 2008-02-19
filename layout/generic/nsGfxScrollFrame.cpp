@@ -70,7 +70,7 @@
 #include "nsPresState.h"
 #include "nsIGlobalHistory3.h"
 #include "nsDocShellCID.h"
-#include "nsIDOMHTMLDocument.h"
+#include "nsIHTMLDocument.h"
 #include "nsEventDispatcher.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
@@ -2107,11 +2107,9 @@ nsGfxScrollFrameInner::IsLTR() const
     nsIContent *root = document->GetRootContent();
 
     // But for HTML we want the body element.
-    nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(document);
+    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document);
     if (htmlDoc) {
-      nsCOMPtr<nsIDOMHTMLElement> body;
-      htmlDoc->GetBody(getter_AddRefs(body));
-      nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(body);
+      nsIContent *bodyContent = htmlDoc->GetBodyContentExternal();
       if (bodyContent)
         root = bodyContent; // we can trust the document to hold on to it
     }
