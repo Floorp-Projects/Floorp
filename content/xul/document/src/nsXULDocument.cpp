@@ -2593,12 +2593,10 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic,
     NS_ENSURE_TRUE(secMan, NS_ERROR_NOT_AVAILABLE);
 
     // Chrome documents are allowed to load overlays from anywhere.
-    // Also, any document may load a chrome:// overlay.
     // In all other cases, the overlay is only allowed to load if
     // the master document and prototype document have the same origin.
 
-    PRBool overlayIsChrome = IsChromeURI(aURI);
-    if (!IsChromeURI(mDocumentURI) && !overlayIsChrome) {
+    if (!IsChromeURI(mDocumentURI)) {
         // Make sure we're allowed to load this overlay.
         rv = secMan->CheckSameOriginURI(mDocumentURI, aURI, PR_TRUE);
         if (NS_FAILED(rv)) {
@@ -2609,6 +2607,7 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic,
 
     // Look in the prototype cache for the prototype document with
     // the specified overlay URI.
+    PRBool overlayIsChrome = IsChromeURI(aURI);
     mCurrentPrototype = overlayIsChrome ?
         nsXULPrototypeCache::GetInstance()->GetPrototype(aURI) : nsnull;
 
