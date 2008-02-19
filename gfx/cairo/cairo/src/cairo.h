@@ -238,7 +238,7 @@ typedef enum _cairo_status {
     CAIRO_STATUS_CLIP_NOT_REPRESENTABLE,
     CAIRO_STATUS_TEMP_FILE_ERROR,
     CAIRO_STATUS_INVALID_STRIDE
-    /* after adding a new error: update CAIRO_STATUS_LAST_STATUS in cairo.c */
+    /* after adding a new error: update CAIRO_STATUS_LAST_STATUS in cairoint.h */
 } cairo_status_t;
 
 /**

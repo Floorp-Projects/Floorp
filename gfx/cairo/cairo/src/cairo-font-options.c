@@ -52,9 +52,6 @@ static const cairo_font_options_t _cairo_font_options_nil = {
 void
 _cairo_font_options_init_default (cairo_font_options_t *options)
 {
-    if (cairo_font_options_status (options))
-	return;
-
     options->antialias = CAIRO_ANTIALIAS_DEFAULT;
     options->subpixel_order = CAIRO_SUBPIXEL_ORDER_DEFAULT;
     options->hint_style = CAIRO_HINT_STYLE_DEFAULT;
@@ -65,13 +62,10 @@ void
 _cairo_font_options_init_copy (cairo_font_options_t		*options,
 			       const cairo_font_options_t	*other)
 {
-    if (other != NULL) {
-	options->antialias = other->antialias;
-	options->subpixel_order = other->subpixel_order;
-	options->hint_style = other->hint_style;
-	options->hint_metrics = other->hint_metrics;
-    } else
-	_cairo_font_options_init_default (options);
+    options->antialias = other->antialias;
+    options->subpixel_order = other->subpixel_order;
+    options->hint_style = other->hint_style;
+    options->hint_metrics = other->hint_metrics;
 }
 
 /**
@@ -121,11 +115,8 @@ cairo_font_options_copy (const cairo_font_options_t *original)
 {
     cairo_font_options_t *options;
 
-    if (original != NULL &&
-	cairo_font_options_status ((cairo_font_options_t *) original))
-    {
+    if (cairo_font_options_status ((cairo_font_options_t *) original))
 	return (cairo_font_options_t *) &_cairo_font_options_nil;
-    }
 
     options = malloc (sizeof (cairo_font_options_t));
     if (!options) {
@@ -193,7 +184,6 @@ cairo_font_options_merge (cairo_font_options_t       *options,
     if (cairo_font_options_status (options))
 	return;
 
-    /* A NULL other maps to the defaults and would not overwrite options */
     if (cairo_font_options_status ((cairo_font_options_t *) other))
 	return;
 
@@ -215,16 +205,18 @@ slim_hidden_def (cairo_font_options_merge);
  *
  * Compares two font options objects for equality.
  *
- * Return value: %TRUE if all fields of the two font options objects match
+ * Return value: %TRUE if all fields of the two font options objects match.
+ *	Note that this function will return %FALSE if either object is in
+ *	error.
  **/
 cairo_bool_t
 cairo_font_options_equal (const cairo_font_options_t *options,
 			  const cairo_font_options_t *other)
 {
-    if (options == NULL)
-	options = &_cairo_font_options_nil;
-    if (other == NULL)
-	other = &_cairo_font_options_nil;
+    if (cairo_font_options_status ((cairo_font_options_t *) options))
+	return FALSE;
+    if (cairo_font_options_status ((cairo_font_options_t *) other))
+	return FALSE;
 
     if (options == other)
 	return TRUE;
@@ -251,8 +243,8 @@ slim_hidden_def (cairo_font_options_equal);
 unsigned long
 cairo_font_options_hash (const cairo_font_options_t *options)
 {
-    if (options == NULL)
-	options = &_cairo_font_options_nil;
+    if (cairo_font_options_status ((cairo_font_options_t *) options))
+	options = &_cairo_font_options_nil; /* force default values */
 
     return ((options->antialias) |
 	    (options->subpixel_order << 4) |

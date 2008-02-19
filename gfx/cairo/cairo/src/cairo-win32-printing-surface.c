@@ -201,15 +201,21 @@ _cairo_win32_printing_surface_analyze_operation (cairo_win32_surface_t *surface,
     if (! pattern_supported (surface, pattern))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    if (!(op == CAIRO_OPERATOR_SOURCE ||
+	  op == CAIRO_OPERATOR_OVER ||
+	  op == CAIRO_OPERATOR_CLEAR))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
+
+	if ( _cairo_surface_is_meta (surface_pattern->surface))
+	    return CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN;
+    }
+
     if (op == CAIRO_OPERATOR_SOURCE ||
 	op == CAIRO_OPERATOR_CLEAR)
 	return CAIRO_STATUS_SUCCESS;
-
-    /* If the operation is anything other than CLEAR, SOURCE, or
-     * OVER, we have to go to fallback.
-     */
-    if (op != CAIRO_OPERATOR_OVER)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* CAIRO_OPERATOR_OVER is only supported for opaque patterns. If
      * the pattern contains transparency, we return
@@ -224,10 +230,7 @@ _cairo_win32_printing_surface_analyze_operation (cairo_win32_surface_t *surface,
     if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
 
-	if ( _cairo_surface_is_meta (surface_pattern->surface))
-	    return CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN;
-	else
-	    return analyze_surface_pattern_transparency (surface_pattern);
+	return analyze_surface_pattern_transparency (surface_pattern);
     }
 
     if (_cairo_pattern_is_opaque (pattern))
@@ -461,8 +464,9 @@ _cairo_win32_printing_surface_paint_meta_pattern (cairo_win32_surface_t   *surfa
 	    SelectClipPath (surface->dc, RGN_AND);
 
 	    SaveDC (surface->dc); /* Allow clip path to be reset during replay */
-	    status = _cairo_meta_surface_replay (meta_surface, &surface->base);
-
+	    status = _cairo_meta_surface_replay_region (meta_surface, &surface->base,
+							CAIRO_META_REGION_NATIVE);
+	    assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
 	    /* Restore both the clip save and our earlier path SaveDC */
 	    RestoreDC (surface->dc, -2);
 

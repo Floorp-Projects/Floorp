@@ -1662,13 +1662,16 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		op,
 void
 cairo_surface_copy_page (cairo_surface_t *surface)
 {
+    cairo_status_t status_ignored;
+
     assert (! surface->is_snapshot);
 
     if (surface->status)
 	return;
 
     if (surface->finished) {
-	_cairo_surface_set_error (surface,CAIRO_STATUS_SURFACE_FINISHED);
+	status_ignored = _cairo_surface_set_error (surface,
+		                                 CAIRO_STATUS_SURFACE_FINISHED);
 	return;
     }
 
@@ -1676,8 +1679,8 @@ cairo_surface_copy_page (cairo_surface_t *surface)
     if (surface->backend->copy_page == NULL)
 	return;
 
-    _cairo_surface_set_error (surface,
-			      surface->backend->copy_page (surface));
+    status_ignored = _cairo_surface_set_error (surface,
+			                 surface->backend->copy_page (surface));
 }
 slim_hidden_def (cairo_surface_copy_page);
 
@@ -1693,13 +1696,16 @@ slim_hidden_def (cairo_surface_copy_page);
 void
 cairo_surface_show_page (cairo_surface_t *surface)
 {
+    cairo_status_t status_ignored;
+
     assert (! surface->is_snapshot);
 
     if (surface->status)
 	return;
 
     if (surface->finished) {
-	_cairo_surface_set_error (surface,CAIRO_STATUS_SURFACE_FINISHED);
+	status_ignored = _cairo_surface_set_error (surface,
+		                                 CAIRO_STATUS_SURFACE_FINISHED);
 	return;
     }
 
@@ -1707,8 +1713,8 @@ cairo_surface_show_page (cairo_surface_t *surface)
     if (surface->backend->show_page == NULL)
 	return;
 
-    _cairo_surface_set_error (surface,
-			      surface->backend->show_page (surface));
+    status_ignored = _cairo_surface_set_error (surface,
+			                 surface->backend->show_page (surface));
 }
 slim_hidden_def (cairo_surface_show_page);
 

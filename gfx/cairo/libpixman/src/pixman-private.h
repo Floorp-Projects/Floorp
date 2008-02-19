@@ -602,6 +602,8 @@ union pixman_image
 #define DIV(a,b) ((((a) < 0) == ((b) < 0)) ? (a) / (b) :		\
 		  ((a) - (b) + 1 - (((b) < 0) << 1)) / (b))
 
+#define CLIP(a,b,c) ((a) < (b) ? (b) : ((a) > (c) ? (c) : (a)))
+
 #if 0
 /* FIXME: the MOD macro above is equivalent, but faster I think */
 #define mod(a,b) ((b) == 1 ? 0 : (a) >= 0 ? (a) % (b) : (b) - (-a) % (b))

@@ -1,3 +1,4 @@
+/* -*- Mode: c; tab-width: 8; c-basic-offset: 4; indent-tabs-mode: t; -*- */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2003 University of Southern California
@@ -43,6 +44,7 @@
 #include "cairo-ps.h"
 
 #include "cairo-surface-private.h"
+#include "cairo-pdf-operators-private.h"
 
 typedef struct cairo_ps_surface {
     cairo_surface_t base;
@@ -62,6 +64,10 @@ typedef struct cairo_ps_surface {
     double width;
     double height;
     int bbox_x1, bbox_y1, bbox_x2, bbox_y2;
+    cairo_matrix_t cairo_to_ps;
+    cairo_image_surface_t *image;
+    void *image_extra;
+    cairo_bool_t use_string_datasource;
 
     int num_pages;
 
@@ -80,6 +86,7 @@ typedef struct cairo_ps_surface {
     cairo_ps_level_t ps_level;
     cairo_ps_level_t ps_level_used;
 
+    cairo_pdf_operators_t pdf_operators;
     cairo_surface_t *paginated_surface;
 } cairo_ps_surface_t;
 

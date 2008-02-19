@@ -132,21 +132,23 @@ write_png (cairo_surface_t	*surface,
 						  &image,
 						  &image_extra);
 
-    if (status == CAIRO_STATUS_NO_MEMORY)
-        return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-    else if (status != CAIRO_STATUS_SUCCESS)
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
 	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+    else if (status)
+        return status;
 
-    if (image->height && image->width) {
-	rows = _cairo_malloc_ab (image->height, sizeof (png_byte*));
-	if (rows == NULL) {
-	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    goto BAIL1;
-	}
+    /* PNG complains about "Image width or height is zero in IHDR" */
+    if (image->width == 0 || image->height == 0)
+	return _cairo_error (CAIRO_STATUS_WRITE_ERROR);
 
-	for (i = 0; i < image->height; i++)
-	    rows[i] = (png_byte *) image->data + i * image->stride;
+    rows = _cairo_malloc_ab (image->height, sizeof (png_byte*));
+    if (rows == NULL) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto BAIL1;
     }
+
+    for (i = 0; i < image->height; i++)
+	rows[i] = (png_byte *) image->data + i * image->stride;
 
     png = png_create_write_struct (PNG_LIBPNG_VER_STRING, &status,
 	                           png_simple_error_callback,
