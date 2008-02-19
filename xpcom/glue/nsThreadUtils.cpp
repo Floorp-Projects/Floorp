@@ -136,7 +136,7 @@ NS_DispatchToCurrentThread(nsIRunnable *event)
 {
 #ifdef MOZILLA_INTERNAL_API
   nsIThread *thread = NS_GetCurrentThread();
-  NS_ENSURE_STATE(thread);
+  if (!thread) { return NS_ERROR_UNEXPECTED; }
 #else
   nsCOMPtr<nsIThread> thread;
   nsresult rv = NS_GetCurrentThread(getter_AddRefs(thread));
