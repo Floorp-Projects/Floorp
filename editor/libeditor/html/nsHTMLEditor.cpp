@@ -161,9 +161,9 @@ nsHTMLEditor::nsHTMLEditor()
 , mIsMoving(PR_FALSE)
 , mSnapToGridEnabled(PR_FALSE)
 , mIsInlineTableEditingEnabled(PR_TRUE)
-, mGridSize(0)
 , mInfoXIncrement(20)
 , mInfoYIncrement(20)
+, mGridSize(0)
 {
 } 
 

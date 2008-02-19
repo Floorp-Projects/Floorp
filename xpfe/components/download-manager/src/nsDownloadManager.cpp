@@ -400,8 +400,8 @@ nsDownloadManager::AssertProgressInfoFor(const nsACString& aTargetPath)
                                  internalDownload->GetTransferInformation();
 
   // convert from bytes to kbytes for progress display
-  PRInt64 current = (PRFloat64)transferInfo.mCurrBytes / 1024 + .5;
-  PRInt64 max = (PRFloat64)transferInfo.mMaxBytes / 1024 + .5;
+  PRInt64 current = (transferInfo.mCurrBytes + 512) / 1024;
+  PRInt64 max = (transferInfo.mMaxBytes + 512) / 1024;
 
   nsAutoString currBytes; currBytes.AppendInt(current);
   nsAutoString maxBytes; maxBytes.AppendInt(max);
@@ -906,8 +906,8 @@ nsDownload::nsDownload(nsDownloadManager* aManager,
                          mCurrBytes(LL_ZERO),
                          mMaxBytes(LL_ZERO),
                          mStartTime(LL_ZERO),
-                         mSpeed(0),
-                         mLastUpdate(PR_Now() - (PRUint32)gInterval)
+                         mLastUpdate(PR_Now() - (PRUint32)gInterval),
+                         mSpeed(0)
 {
 }
 

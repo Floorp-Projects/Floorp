@@ -127,8 +127,8 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
 #ifdef MOZ_MATHML
   , mScriptLevel(aSrc.mScriptLevel)
   , mScriptUnconstrainedSize(aSrc.mScriptUnconstrainedSize)
-  , mScriptSizeMultiplier(aSrc.mScriptSizeMultiplier)
   , mScriptMinSize(aSrc.mScriptMinSize)
+  , mScriptSizeMultiplier(aSrc.mScriptSizeMultiplier)
 #endif
 {
 }

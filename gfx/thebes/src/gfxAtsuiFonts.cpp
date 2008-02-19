@@ -93,7 +93,7 @@ eFontPrefLang GetFontPrefLangFor(PRUint8 aUnicodeRange);
 gfxAtsuiFont::gfxAtsuiFont(MacOSFontEntry *aFontEntry,
                            const gfxFontStyle *fontStyle)
     : gfxFont(aFontEntry->Name(), fontStyle),
-      mFontStyle(fontStyle), mFontEntry(aFontEntry), mATSUStyle(nsnull),
+      mFontStyle(fontStyle), mATSUStyle(nsnull), mFontEntry(aFontEntry),
       mHasMirroring(PR_FALSE), mHasMirroringLookedUp(PR_FALSE), mAdjustedSize(0.0f)
 {
     ATSUFontID fontID = mFontEntry->GetFontID();
