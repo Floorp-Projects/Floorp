@@ -144,6 +144,8 @@ public:
   NS_IMETHOD GetDescription(nsAString& aDesc) { return nsAccessibleWrap::GetDescription(aDesc); }
   NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
 
+  virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
+
 protected:
   already_AddRefed<nsIAccessible> GetListAccessible();
 
