@@ -1088,7 +1088,7 @@ nsXULElement::ParseAttribute(PRInt32 aNamespaceID,
     if (aNamespaceID == kNameSpaceID_None) {
         if (aAttribute == nsGkAtoms::style) {
             SetFlags(NODE_MAY_HAVE_STYLE);
-            nsStyledElement::ParseStyleAttribute(this, aValue, aResult);
+            nsStyledElement::ParseStyleAttribute(this, aValue, aResult, PR_FALSE);
             return PR_TRUE;
         }
 
