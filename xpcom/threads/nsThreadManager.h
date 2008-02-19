@@ -69,8 +69,7 @@ public:
   // method must be called when the given thread is the current thread.
   void UnregisterCurrentThread(nsThread *thread);
 
-  // Returns the current thread.  Returns null if OOM or if ThreadManager isn't
-  // initialized.
+  // Returns the current thread.  Returns null if OOM.
   nsThread *GetCurrentThread();
 
   // This needs to be public in order to support static instantiation of this
