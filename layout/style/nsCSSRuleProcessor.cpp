@@ -986,21 +986,12 @@ inline PRBool IsQuirkEventSensitive(nsIAtom *aContentTag)
 }
 
 
-static PRBool IsSignificantChild(nsIContent* aChild, PRBool aTextIsSignificant, PRBool aWhitespaceIsSignificant)
+static inline PRBool
+IsSignificantChild(nsIContent* aChild, PRBool aTextIsSignificant,
+                   PRBool aWhitespaceIsSignificant)
 {
-  NS_ASSERTION(!aWhitespaceIsSignificant || aTextIsSignificant,
-               "Nonsensical arguments");
-
-  PRBool isText = aChild->IsNodeOfType(nsINode::eTEXT);
-
-  if (!isText && !aChild->IsNodeOfType(nsINode::eCOMMENT) &&
-      !aChild->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
-    return PR_TRUE;
-  }
-
-  return aTextIsSignificant && isText && aChild->TextLength() != 0 &&
-         (aWhitespaceIsSignificant ||
-          !aChild->TextIsOnlyWhitespace());
+  return nsStyleUtil::IsSignificantChild(aChild, aTextIsSignificant,
+                                         aWhitespaceIsSignificant);
 }
 
 // This function is to be called once we have fetched a value for an attribute
@@ -1064,6 +1055,12 @@ static PRBool SelectorMatches(RuleProcessorData &data,
 
   PRBool result = PR_TRUE;
   const PRBool isNegated = (aDependence != nsnull);
+  // The selectors for which we set node bits are, unfortunately, early
+  // in this function (because they're pseudo-classes, which are
+  // generally quick to test, and thus earlier).  If they were later,
+  // we'd probably avoid setting those bits in more cases where setting
+  // them is unnecessary.
+  const PRBool setNodeFlags = aStateMask == 0 && !aAttribute;
 
   // test for pseudo class match
   // first-child, root, lang, active, focus, hover, link, visited...
@@ -1076,6 +1073,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       nsIContent *firstChild = nsnull;
       nsIContent *parent = data.mParentContent;
       if (parent) {
+        if (setNodeFlags)
+          parent->SetFlags(NODE_HAS_EDGE_CHILD_SELECTOR);
+
         PRBool acceptNonWhitespace =
           nsCSSPseudoClasses::firstNode == pseudoClass->mAtom;
         PRInt32 index = -1;
@@ -1093,6 +1093,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       nsIContent *lastChild = nsnull;
       nsIContent *parent = data.mParentContent;
       if (parent) {
+        if (setNodeFlags)
+          parent->SetFlags(NODE_HAS_EDGE_CHILD_SELECTOR);
+
         PRBool acceptNonWhitespace =
           nsCSSPseudoClasses::lastNode == pseudoClass->mAtom;
         PRUint32 index = parent->GetChildCount();
@@ -1110,6 +1113,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       nsIContent *moreChild = nsnull;
       nsIContent *parent = data.mParentContent;
       if (parent) {
+        if (setNodeFlags)
+          parent->SetFlags(NODE_HAS_EDGE_CHILD_SELECTOR);
+
         PRInt32 index = -1;
         do {
           onlyChild = parent->GetChildAt(++index);
@@ -1133,6 +1139,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         nsCSSPseudoClasses::empty == pseudoClass->mAtom;
       PRInt32 index = -1;
 
+      if (setNodeFlags)
+        element->SetFlags(NODE_HAS_EMPTY_SELECTOR);
+
       do {
         child = element->GetChildAt(++index);
         // stop at first non-comment (and non-whitespace for
@@ -1145,6 +1154,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       nsIContent *child = nsnull;
       nsIContent *element = data.mContent;
       PRInt32 index = -1;
+
+      if (setNodeFlags)
+        element->SetFlags(NODE_HAS_SLOW_SELECTOR);
 
       do {
         child = element->GetChildAt(++index);
@@ -1566,6 +1578,8 @@ static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
         nsIContent* content = prevdata->mContent;
         nsIContent* parent = content->GetParent();
         if (parent) {
+          parent->SetFlags(NODE_HAS_SLOW_SELECTOR_NOAPPEND);
+
           PRInt32 index = parent->IndexOf(content);
           while (0 <= --index) {
             content = parent->GetChildAt(index);

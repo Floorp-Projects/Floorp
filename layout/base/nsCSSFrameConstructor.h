@@ -171,6 +171,22 @@ private:
                          nsChangeHint aChangeHint);
 
 public:
+  // Restyling for a ContentInserted (notification after insertion) or
+  // for a CharacterDataChanged.  |aContainer| must be non-null; when
+  // the container is null, no work is needed.
+  void RestyleForInsertOrChange(nsIContent* aContainer,
+                                nsIContent* aChild);
+  // This would be the same as RestyleForInsertOrChange if we got the
+  // notification before the removal.  However, we get it after, so we
+  // have to use the index.  |aContainer| must be non-null; when the
+  // container is null, no work is needed.
+  void RestyleForRemove(nsIContent* aContainer, nsIContent* aOldChild,
+                        PRInt32 aIndexInContainer);
+  // Same for a ContentAppended.  |aContainer| must be non-null; when
+  // the container is null, no work is needed.
+  void RestyleForAppend(nsIContent* aContainer,
+                        PRInt32 aNewIndexInContainer);
+
   // Note: It's the caller's responsibility to make sure to wrap a
   // ProcessPendingRestyles call in a view update batch.
   // This function does not call ProcessAttachedQueue() on the binding manager.
