@@ -195,7 +195,8 @@ nsSVGElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     nsAttrValue attrValue;
     nsAutoString stringValue;
     oldVal->ToString(stringValue);
-    ParseStyleAttribute(this, stringValue, attrValue);
+    // Force in data doc, since we already have a style rule
+    ParseStyleAttribute(this, stringValue, attrValue, PR_TRUE);
     // Don't bother going through SetInlineStyleRule, we don't want to fire off
     // mutation events or document notifications anyway
     rv = mAttrsAndChildren.SetAndTakeAttr(nsGkAtoms::style, attrValue);

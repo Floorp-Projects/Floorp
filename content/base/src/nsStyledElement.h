@@ -77,11 +77,6 @@ public:
                               PRBool aCompileEventHandlers);
 
   /**
-   * Create the style struct from the style attr.  Used when an element is first
-   * put into a document.  Only has an effect if the old value is a string.
-   */
-  nsresult  ReparseStyleAttribute(void);
-  /**
    * Parse a style attr value into a CSS rulestruct (or, if there is no
    * document, leave it as a string) and return as nsAttrValue.
    * Note: this function is used by other classes than nsStyledElement
@@ -91,7 +86,8 @@ public:
    */
   static void ParseStyleAttribute(nsIContent* aContent,
                                   const nsAString& aValue,
-                                  nsAttrValue& aResult);
+                                  nsAttrValue& aResult,
+                                  PRBool aForceInDataDoc);
 
   static void Shutdown();
   
@@ -102,6 +98,13 @@ protected:
 
   nsresult GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
 
+  /**
+   * Create the style struct from the style attr.  Used when an element is
+   * first put into a document.  Only has an effect if the old value is a
+   * string.  If aForceInDataDoc is true, will reparse even if we're in a data
+   * document.
+   */
+  nsresult  ReparseStyleAttribute(PRBool aForceInDataDoc);
 };
 
 #endif // __NS_STYLEDELEMENT_H_
