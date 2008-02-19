@@ -44,6 +44,9 @@
 
 #include "gfxTypes.h"
 
+#include "prbit.h" // for PR_ROTATE_(LEFT,RIGHT)32
+#include "prio.h"  // for ntohl
+
 #define GFX_UINT32_FROM_BPTR(pbptr,i) (((PRUint32*)(pbptr))[i])
 
 #if defined(IS_BIG_ENDIAN)
@@ -56,14 +59,12 @@
     #define GFX_NTOHL(x) _byteswap_ulong(x)
     #define GFX_HAVE_CHEAP_NTOHL
   #else
-    #include "prbit.h"
     // A reasonably fast generic little-endian implementation.
     #define GFX_NTOHL(x) \
          ( (PR_ROTATE_RIGHT32((x),8) & 0xFF00FF00) | \
            (PR_ROTATE_LEFT32((x),8)  & 0x00FF00FF) )
   #endif
 #else
-  #include "prio.h" // for ntohl
   #define GFX_NTOHL(x) ntohl(x)
   #define GFX_HAVE_CHEAP_NTOHL
 #endif
