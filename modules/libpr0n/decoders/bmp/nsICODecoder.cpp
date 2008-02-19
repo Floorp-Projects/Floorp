@@ -223,8 +223,15 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
     }
   }
 
-  while (aCount && mPos < mImageOffset) { // Skip to our offset
-    mPos++; aBuffer++; aCount--;
+  if (mPos < mImageOffset) {
+    // Skip to (or at least towards) the desired image offset
+    PRUint32 toSkip = mImageOffset - mPos;
+    if (toSkip > aCount)
+      toSkip = aCount;
+
+    mPos    += toSkip;
+    aBuffer += toSkip;
+    aCount  -= toSkip;
   }
 
   if (mCurrIcon == mNumIcons && mPos >= mImageOffset && mPos < mImageOffset + BITMAPINFOSIZE) {
