@@ -54,11 +54,9 @@ class nsIContent;
 class nsIDOMHTMLBodyElement;
 class nsIScriptElement;
 
-// Update htmldocument.gqi when updating this IID!
-// 48546d61-6097-462b-89b1-57e2221444dc
 #define NS_IHTMLDOCUMENT_IID \
-{ 0x48546d61, 0x6097, 0x462b, \
-  { 0x89, 0xb1, 0x57, 0xe2, 0x22, 0x14, 0x44, 0xdc } }
+{ 0x61e989a8, 0x70cd, 0x4582, \
+  { 0x84, 0x5e, 0x6e, 0x5e, 0x12, 0x55, 0x9a, 0x83 } }
 
 /**
  * HTML document extensions to nsIDocument.
@@ -175,12 +173,6 @@ public:
    * Disables getting and setting cookies
    */
   virtual void DisableCookieAccess() = 0;
-
-  /**
-   * Get the first <body> child of the root <html>, but don't do
-   * anything <frameset>-related (like nsIDOMHTMLDocument::GetBody).
-   */
-  virtual nsIContent* GetBodyContentExternal() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLDocument, NS_IHTMLDOCUMENT_IID)
