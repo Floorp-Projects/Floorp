@@ -1514,9 +1514,9 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   // correspond to the doc accessible and will be created in any case
   if (!newAcc && content->Tag() != nsAccessibilityAtoms::body && content->GetParent() && 
       (content->IsFocusable() ||
-      (isHTML && nsAccUtils::HasListener(content, NS_LITERAL_STRING("click"))) ||
-       HasUniversalAriaProperty(content, aWeakShell) || roleMapEntry) ||
-       HasRelatedContent(content)) {
+       (isHTML && nsAccUtils::HasListener(content, NS_LITERAL_STRING("click"))) ||
+       HasUniversalAriaProperty(content, aWeakShell) || roleMapEntry ||
+       HasRelatedContent(content))) {
     // This content is focusable or has an interesting dynamic content accessibility property.
     // If it's interesting we need it in the accessibility hierarchy so that events or
     // other accessibles can point to it, or so that it can hold a state, etc.
