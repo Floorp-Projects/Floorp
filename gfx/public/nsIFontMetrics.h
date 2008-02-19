@@ -137,12 +137,6 @@ public:
    */
   NS_IMETHOD  GetHeight(nscoord &aHeight) = 0;
 
-
-#if defined(XP_WIN) || defined(XP_OS2) || defined(MOZ_CAIRO_GFX)
-#define FONT_LEADING_APIS_V2 1
-#endif 
-
-#ifdef FONT_LEADING_APIS_V2
   /**
    * Returns the amount of internal leading (in app units) for the font. This
    * is computed as the "height  - (ascent + descent)"
@@ -155,18 +149,6 @@ public:
    * beside font height.
    */
   NS_IMETHOD  GetExternalLeading(nscoord &aLeading) = 0;
-#else
-  /**
-   * Returns the amount of internal leading (in app units) for the font. This
-   * is computed as the "height  - (ascent + descent)"
-   */
-  NS_IMETHOD  GetLeading(nscoord &aLeading) = 0;
-
-  /**
-   * Returns the normal line height (em height + leading).
-   */
-  NS_IMETHOD  GetNormalLineHeight(nscoord &aHeight) = 0;
-#endif /* FONT_LEADING_APIS_V2 */
 
   /**
    * Returns the height (in app units) of the Western font's em square. This is
