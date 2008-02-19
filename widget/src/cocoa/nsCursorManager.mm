@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCursorManager.h"
+#include "nsObjCExceptions.h"
 #include <math.h>
 
 static nsCursorManager *gInstance;
@@ -76,20 +77,30 @@ static nsCursorManager *gInstance;
 
 + (nsCursorManager *) sharedInstance
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   if (!gInstance) {
     gInstance = [[nsCursorManager alloc] init];
   }
   return gInstance;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 + (void) dispose
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [gInstance release];
   gInstance = nil;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 + (nsMacCursor *) createCursor: (enum nsCursor) aCursor 
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   switch(aCursor)
   {
     case eCursor_standard:
@@ -179,23 +190,35 @@ static nsCursorManager *gInstance;
     default:
       return [nsMacCursor cursorWithCursor: [NSCursor arrowCursor]];
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 + (nsMacCursor *) createNSCursor: (SEL) aCursor
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   return [nsMacCursor cursorWithCursor:[NSCursor performSelector:aCursor]];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (id) init
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   if ((self = [super init])) {
-    mCursors = [[NSMutableDictionary alloc] initWithCapacity: 25];
+    mCursors = [[NSMutableDictionary alloc] initWithCapacity:25];
   }
   return self;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (void) setCursor: (enum nsCursor) aCursor
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (aCursor != mCurrentCursor) {
     [[self getCursor: mCurrentCursor] unset];
     [[self getCursor: aCursor] set];
@@ -208,23 +231,33 @@ static nsCursorManager *gInstance;
 
     mCurrentCursor = aCursor;
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (nsMacCursor *) getCursor: (enum nsCursor) aCursor
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   nsMacCursor * result = [mCursors objectForKey: [NSNumber numberWithInt: aCursor]];
   if (!result) {
     result = [nsCursorManager createCursor: aCursor];
     [mCursors setObject: result forKey: [NSNumber numberWithInt: aCursor]];
   }
   return result;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (void) dealloc
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [[self getCursor: mCurrentCursor] unset];
   [mCursors release];    
-  [super dealloc];    
+  [super dealloc];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 @end
