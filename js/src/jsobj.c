@@ -4289,18 +4289,22 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
         break;
 
       default:
-        if (!js_LookupProperty(cx, obj, id, &pobj, &prop))
+        if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &pobj, &prop))
             return JS_FALSE;
         if (!prop) {
             if (!writing)
                 *vp = JSVAL_VOID;
             *attrsp = 0;
-            clasp = OBJ_GET_CLASS(cx, obj);
-            return !clasp->checkAccess ||
-                   clasp->checkAccess(cx, obj, ID_TO_VALUE(id), mode, vp);
+            pobj = obj;
+            break;
         }
+
         if (!OBJ_IS_NATIVE(pobj)) {
             OBJ_DROP_PROPERTY(cx, pobj, prop);
+
+            /* Avoid diverging for non-natives that reuse js_CheckAccess. */
+            if (pobj->map->ops->checkAccess == js_CheckAccess)
+                break;
             return OBJ_CHECK_ACCESS(cx, pobj, id, mode, vp, attrsp);
         }
 
