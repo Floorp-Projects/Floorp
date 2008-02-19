@@ -92,7 +92,7 @@ WeaveCrypto.prototype = {
     branch.addObserver("extensions.weave.encryption", this, false);
   },
 
-  _openssl: function Crypto__openssl(op, algorithm, input, password) {
+  _openssl: function Crypto__openssl() {
     let extMgr = Components.classes["@mozilla.org/extensions/manager;1"]
       .getService(Components.interfaces.nsIExtensionManager);
     let loc = extMgr.getInstallLocation("{340c2bbc-ce74-4362-90b5-7c26312808ef}");
@@ -118,6 +118,12 @@ WeaveCrypto.prototype = {
       throw "encryption not supported on this platform: " + os;
     }
 
+    let args = [wrap, Utils.getTmp().path, bin];
+    args = args.concat(arguments);
+    return Utils.runCmd.apply(null, args);
+  },
+
+  _opensslPBE: function Crypto__openssl(op, algorithm, input, password) {
     let inputFile = Utils.getTmp("input");
     let [inputFOS] = Utils.open(inputFile, ">");
     inputFOS.write(input, input.length);
@@ -134,24 +140,168 @@ WeaveCrypto.prototype = {
     passFOS.close();
 
     try {
-      this._log.debug("Running command: " + wrap.path + " " +
-                      Utils.getTmp().path + " " + bin + " " + algorithm + " " +
-                      op + "-a -salt -in input -out output -pass file:pass");
-      Utils.runCmd(wrap, Utils.getTmp().path, bin, algorithm, op, "-a", "-salt",
-                   "-in", "input", "-out", "output", "-pass", "file:pass");
+      this._openssl(algorithm, op, "-a", "-salt", "-in", "input",
+                    "-out", "output", "-pass", "file:pass");
+      // FIXME: check rv
+
     } catch (e) {
       throw e;
+
     } finally {
-      //passFile.remove(false);
-      //inputFile.remove(false);
+      passFile.remove(false);
+      inputFile.remove(false);
     }
 
     let [outputFIS] = Utils.open(outputFile, "<");
     let ret = Utils.readStream(outputFIS);
     outputFIS.close();
-    //outputFile.remove(false);
+    outputFile.remove(false);
 
     return ret;
+  },
+
+  // generates a random string that can be used as a passphrase
+  _opensslRand: function Crypto__opensslRand(length) {
+    if (!length)
+      length = 256;
+
+    let outputFile = Utils.getTmp("output");
+    if (outputFile.exists())
+      outputFile.remove(false);
+
+    let rv = this._openssl("rand", "-base64", "-out", "output", length);
+    // FIXME: check rv
+
+    let [outputFIS] = Utils.open(outputFile, "<");
+    let ret = Utils.readStream(outputFIS);
+    outputFIS.close();
+    outputFile.remove(false);
+
+    return ret;
+  },
+
+  // generates an rsa public/private key pair, with the private key encrypted
+  _opensslRSAKeyGen: function Crypto__opensslRSAKeyGen(password, algorithm, bits) {
+    if (!algorithm)
+      algorithm = "aes-256-cbc";
+    if (!bits)
+      bits = "2048";
+
+    let privKeyF = Utils.getTmp("privkey.pem");
+    if (privKeyF.exists())
+      privKeyF.remove(false);
+
+    let rv = this._openssl("genrsa", "-out", "privkey.pem", bits);
+    // FIXME: check rv
+
+    let pubKeyF = Utils.getTmp("pubkey.pem");
+    if (pubKeyF.exists())
+      pubKeyF.remove(false);
+
+    rv = this._openssl("rsa", "-in", "privkey.pem", "-out", "pubkey.pem",
+                       "-outform", "PEM", "-pubout");
+    // FIXME: check rv
+
+    let cryptedKeyF = Utils.getTmp("enckey.pem");
+    if (cryptedKeyF.exists())
+      cryptedKeyF.remove(false);
+
+    // nsIProcess doesn't support stdin, so we write a file instead
+    let passFile = Utils.getTmp("pass");
+    let [passFOS] = Utils.open(passFile, ">", PERMS_PASSFILE);
+    passFOS.write(password, password.length);
+    passFOS.close();
+
+    try {
+      rv = this._openssl("pkcs8", "-in", "privkey.pem", "-out", "enckey.pem",
+                         "-topk8", "-v2", algorithm, "-pass", "file:pass");
+      // FIXME: check rv
+    } catch (e) {
+      throw e;
+    } finally {
+      passFile.remove(false);
+      privKeyF.remove(false);
+    }
+
+    let [cryptedKeyFIS] = Utils.open(cryptedKeyF, "<");
+    let cryptedKey = Utils.readStream(cryptedKeyFIS);
+    cryptedKeyFIS.close();
+    cryptedKey.remove(false);
+
+    let [pubKeyFIS] = Utils.open(pubKeyF, "<");
+    let pubKey = Utils.readStream(pubKeyFIS);
+    pubKeyFIS.close();
+    pubKeyF.remove(false);
+
+    return [cryptedKey, pubKey];
+  },
+
+  // returns 'input' encrypted with the 'pubkey' public RSA key
+  _opensslRSAEncrypt: function Crypto__opensslRSAEncrypt(input, pubkey) {
+    let inputFile = Utils.getTmp("input");
+    let [inputFOS] = Utils.open(inputFile, ">");
+    inputFOS.write(input, input.length);
+    inputFOS.close();
+
+    let keyFile = Utils.getTmp("key");
+    let [keyFOS] = Utils.open(keyFile, ">");
+    keyFOS.write(pubkey, pubkey.length);
+    keyFOS.close();
+
+    let outputFile = Utils.getTmp("output");
+    if (outputFile.exists())
+      outputFile.remove(false);
+
+    let rv = this._openssl("rsautl", "-encrypt", "-pubin", "-inkey", "key",
+                           "-in", "input", "-out", "output");
+    // FIXME: check rv
+
+    let [outputFIS] = Utils.open(outputFile, "<");
+    let output = Utils.readStream(outpusFIS);
+    outputFIS.close();
+    outputFile.remove(false);
+
+    return output;
+  },
+
+  // returns 'input' decrypted with the 'privkey' private RSA key and password
+  _opensslRSADecrypt: function Crypto__opensslRSADecrypt(input, privkey, password) {
+    let inputFile = Utils.getTmp("input");
+    let [inputFOS] = Utils.open(inputFile, ">");
+    inputFOS.write(input, input.length);
+    inputFOS.close();
+
+    let keyFile = Utils.getTmp("key");
+    let [keyFOS] = Utils.open(keyFile, ">");
+    keyFOS.write(privkey, privkey.length);
+    keyFOS.close();
+
+    let outputFile = Utils.getTmp("output");
+    if (outputFile.exists())
+      outputFile.remove(false);
+
+    // nsIProcess doesn't support stdin, so we write a file instead
+    let passFile = Utils.getTmp("pass");
+    let [passFOS] = Utils.open(passFile, ">", PERMS_PASSFILE);
+    passFOS.write(password, password.length);
+    passFOS.close();
+
+    try {
+      let rv = this._openssl("rsautl", "-decrypt", "-inkey", "key", "-pass",
+                             "file:pass", "-in", "input", "-out", "output");
+      // FIXME: check rv
+    } catch(e) {
+      throw e;
+    } finally {
+      passFile.remove(false);
+    }
+
+    let [outputFIS] = Utils.open(outputFile, "<");
+    let output = Utils.readStream(outpusFIS);
+    outputFIS.close();
+    outputFile.remove(false);
+
+    return output;
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupports]),
@@ -226,7 +376,7 @@ WeaveCrypto.prototype = {
       case "aes-256-cbc":
       case "bf-cbc":
       case "des-ede3-cbc":
-        ret = this._openssl("-e", algorithm, data, identity.password);
+        ret = this._opensslPBE("-e", algorithm, data, identity.password);
         break;
 
       default:
@@ -282,7 +432,7 @@ WeaveCrypto.prototype = {
       case "aes-256-cbc":
       case "bf-cbc":
       case "des-ede3-cbc":
-        ret = this._openssl("-d", algorithm, data, identity.password);
+        ret = this._opensslPBE("-d", algorithm, data, identity.password);
         break;
 
       default:
@@ -301,5 +451,21 @@ WeaveCrypto.prototype = {
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
+  },
+
+  PBEkeygen: function Crypto_PBEkeygen() {
+    return this._opensslRand();
+  },
+
+  RSAkeygen: function Crypto_RSAkeygen(password) {
+    return this._opensslRSAKeyGen(password);
+  },
+
+  RSAencrypt: function Crypto_RSAencrypt(data, key) {
+    return this._opensslRSAEncrypt(data, key);
+  },
+
+  RSAdecrypt: function Crypto_RSAdecrypt(data, key, password) {
+    return this._opensslRSADecrypt(data, key, password);
   }
 };
