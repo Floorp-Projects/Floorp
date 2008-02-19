@@ -65,8 +65,7 @@
 #include "nsITheme.h"
 #include "nsThemeConstants.h"
 #include "nsIServiceManager.h"
-#include "nsIDOMHTMLBodyElement.h"
-#include "nsIDOMHTMLDocument.h"
+#include "nsIHTMLDocument.h"
 #include "nsLayoutUtils.h"
 #include "nsINameSpaceManager.h"
 
@@ -3147,11 +3146,9 @@ FindCanvasBackground(nsIFrame* aForFrame,
       if (content) {
         // Use |GetOwnerDoc| so it works during destruction.
         nsIDocument* document = content->GetOwnerDoc();
-        nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(document);
+        nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document);
         if (htmlDoc) {
-          nsCOMPtr<nsIDOMHTMLElement> body;
-          htmlDoc->GetBody(getter_AddRefs(body));
-          nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(body);
+          nsIContent* bodyContent = htmlDoc->GetBodyContentExternal();
           // We need to null check the body node (bug 118829) since
           // there are cases, thanks to the fix for bug 5569, where we
           // will reflow a document with no body.  In particular, if a
@@ -3215,13 +3212,11 @@ FindElementBackground(nsIFrame* aForFrame,
 
   // We should only look at the <html> background if we're in an HTML document
   nsIDocument* document = content->GetOwnerDoc();
-  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(document);
+  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document);
   if (!htmlDoc)
     return PR_TRUE;
 
-  nsCOMPtr<nsIDOMHTMLElement> body;
-  htmlDoc->GetBody(getter_AddRefs(body));
-  nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(body);
+  nsIContent* bodyContent = htmlDoc->GetBodyContentExternal();
   if (bodyContent != content)
     return PR_TRUE; // this wasn't the background that was propagated
 
