@@ -1940,16 +1940,21 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSObject *parent,
  *          the prototype's scope harder!
  */
 JSBool
-js_PutBlockObject(JSContext *cx, JSObject *obj, JSBool normalUnwind)
+js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
 {
     JSStackFrame *fp;
+    JSObject *obj;
     uintN depth, slot;
     JSScopeProperty *sprop;
 
+    fp = cx->fp;
+    obj = fp->scopeChain;
+    JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
+    JS_ASSERT(OBJ_GET_PRIVATE(cx, obj) == cx->fp);
     if (normalUnwind) {
-        fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
-        JS_ASSERT(fp);
         depth = OBJ_BLOCK_DEPTH(cx, obj);
+        JS_ASSERT(depth >= 0);
+        JS_ASSERT(fp->spbase + depth <= fp->sp);
         for (sprop = OBJ_SCOPE(obj)->lastProp; sprop; sprop = sprop->parent) {
             if (sprop->getter != js_BlockClass.getProperty)
                 continue;
@@ -1977,6 +1982,7 @@ js_PutBlockObject(JSContext *cx, JSObject *obj, JSBool normalUnwind)
   out:
     /* We must clear the private slot even with errors. */
     JS_SetPrivate(cx, obj, NULL);
+    fp->scopeChain = OBJ_GET_PARENT(cx, obj);
     return normalUnwind;
 }
 
