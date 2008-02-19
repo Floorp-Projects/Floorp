@@ -288,7 +288,8 @@ protected:
   nsCOMArray<nsIDOMEventListener> mProgressEventListeners;
   nsCOMArray<nsIDOMEventListener> mUploadProgressEventListeners;
   nsCOMArray<nsIDOMEventListener> mReadystatechangeEventListeners;
-  
+
+  // These may be null (native callers or xpcshell).
   nsCOMPtr<nsIScriptContext> mScriptContext;
   nsCOMPtr<nsPIDOMWindow>    mOwner; // Inner window.
 
