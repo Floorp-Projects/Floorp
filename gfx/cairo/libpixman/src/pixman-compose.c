@@ -3678,18 +3678,515 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
     }
 }
 
-static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
+/*
+ * Fetch from region strategies
+ */
+typedef FASTCALL uint32_t (*fetchFromRegionProc)(bits_image_t *pict, int x, int y, uint32_t *buffer, fetchPixelProc fetch, pixman_box16_t *box);
+
+static inline uint32_t
+fbFetchFromNoRegion(bits_image_t *pict, int x, int y, uint32_t *buffer, fetchPixelProc fetch, pixman_box16_t *box)
+{
+    return fetch (pict, x, y);
+}
+
+static uint32_t
+fbFetchFromNRectangles(bits_image_t *pict, int x, int y, uint32_t *buffer, fetchPixelProc fetch, pixman_box16_t *box)
+{
+    pixman_box16_t box2;
+    if (pixman_region_contains_point (pict->common.src_clip, x, y, &box2))
+        return fbFetchFromNoRegion(pict, x, y, buffer, fetch, box);
+    else
+        return 0;
+}
+
+static uint32_t
+fbFetchFromOneRectangle(bits_image_t *pict, int x, int y, uint32_t *buffer, fetchPixelProc fetch, pixman_box16_t *box)
+{
+    pixman_box16_t box2 = *box;
+    return ((x < box2.x1) | (x >= box2.x2) | (y < box2.y1) | (y >= box2.y2)) ?
+        0 : fbFetchFromNoRegion(pict, x, y, buffer, fetch, box);
+}
+
+/*
+ * Fetching Algorithms
+ */
+static void
+fbFetchTransformed_Nearest_Normal(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
+{
+    pixman_box16_t* box = NULL;
+    fetchPixelProc   fetch;
+    fetchFromRegionProc fetchFromRegion;
+    int x, y, i;
+
+    /* initialize the two function pointers */
+    fetch = fetchPixelProcForPicture(pict);
+
+    if(pixman_region_n_rects (pict->common.src_clip) == 1)
+        fetchFromRegion = fbFetchFromNoRegion;
+    else
+        fetchFromRegion = fbFetchFromNRectangles;
+
+    for ( i = 0; i < width; ++i)
+    {
+        if (!mask || mask[i] & maskBits)
+        {
+            if (!v.vector[2])
+            {
+                *(buffer + i) = 0;
+            }
+            else
+            {
+                if (!affine)
+                {
+                    y = MOD(DIV(v.vector[1],v.vector[2]), pict->height);
+                    x = MOD(DIV(v.vector[0],v.vector[2]), pict->width);
+                }
+                else
+                {
+                    y = MOD(v.vector[1]>>16, pict->height);
+                    x = MOD(v.vector[0]>>16, pict->width);
+                }
+                *(buffer + i) = fetchFromRegion(pict, x, y, buffer, fetch, box);
+            }
+        }
+
+        v.vector[0] += unit.vector[0];
+        v.vector[1] += unit.vector[1];
+        v.vector[2] += unit.vector[2];
+    }
+}
+
+static void
+fbFetchTransformed_Nearest_Pad(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
+{
+    pixman_box16_t *box = NULL;
+    fetchPixelProc   fetch;
+    fetchFromRegionProc fetchFromRegion;
+    int x, y, i;
+
+    /* initialize the two function pointers */
+    fetch = fetchPixelProcForPicture(pict);
+
+    if(pixman_region_n_rects (pict->common.src_clip) == 1)
+        fetchFromRegion = fbFetchFromNoRegion;
+    else
+        fetchFromRegion = fbFetchFromNRectangles;
+
+    for (i = 0; i < width; ++i)
+    {
+        if (!mask || mask[i] & maskBits)
+        {
+            if (!v.vector[2])
+            {
+                *(buffer + i) = 0;
+            }
+            else
+            {
+                if (!affine)
+                {
+                    y = CLIP(DIV(v.vector[1], v.vector[2]), 0, pict->height-1);
+                    x = CLIP(DIV(v.vector[0], v.vector[2]), 0, pict->width-1);
+                }
+                else
+                {
+                    y = CLIP(v.vector[1]>>16, 0, pict->height-1);
+                    x = CLIP(v.vector[0]>>16, 0, pict->width-1);
+                }
+
+                *(buffer + i) = fetchFromRegion(pict, x, y, buffer, fetch, box);
+            }
+        }
+
+        v.vector[0] += unit.vector[0];
+        v.vector[1] += unit.vector[1];
+        v.vector[2] += unit.vector[2];
+    }
+}
+
+static void
+fbFetchTransformed_Nearest_General(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
+{
+    pixman_box16_t *box = NULL;
+    fetchPixelProc   fetch;
+    fetchFromRegionProc fetchFromRegion;
+    int x, y, i;
+
+    /* initialize the two function pointers */
+    fetch = fetchPixelProcForPicture(pict);
+
+    if(pixman_region_n_rects (pict->common.src_clip) == 1)
+    {
+        box = &(pict->common.src_clip->extents);
+        fetchFromRegion = fbFetchFromOneRectangle;
+    }
+    else
+    {
+        fetchFromRegion = fbFetchFromNRectangles;
+    }
+
+    for (i = 0; i < width; ++i) {
+        if (!mask || mask[i] & maskBits)
+        {
+            if (!v.vector[2]) {
+                *(buffer + i) = 0;
+            } else {
+                if (!affine) {
+                    y = DIV(v.vector[1],v.vector[2]);
+                    x = DIV(v.vector[0],v.vector[2]);
+                } else {
+                    y = v.vector[1]>>16;
+                    x = v.vector[0]>>16;
+                }
+                *(buffer + i) = fetchFromRegion(pict, x, y, buffer, fetch, box);
+            }
+        }
+        v.vector[0] += unit.vector[0];
+        v.vector[1] += unit.vector[1];
+        v.vector[2] += unit.vector[2];
+    }
+}
+
+static void
+fbFetchTransformed_Bilinear_Normal(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
+{
+    pixman_box16_t *box = NULL;
+    fetchPixelProc   fetch;
+    fetchFromRegionProc fetchFromRegion;
+    int i;
+
+    /* initialize the two function pointers */
+    fetch = fetchPixelProcForPicture(pict);
+
+    if(pixman_region_n_rects (pict->common.src_clip) == 1)
+        fetchFromRegion = fbFetchFromNoRegion;
+    else
+        fetchFromRegion = fbFetchFromNRectangles;
+
+    for (i = 0; i < width; ++i) {
+        if (!mask || mask[i] & maskBits)
+        {
+            if (!v.vector[2]) {
+                *(buffer + i) = 0;
+            } else {
+                int x1, x2, y1, y2, distx, idistx, disty, idisty;
+                uint32_t tl, tr, bl, br, r;
+                uint32_t ft, fb;
+
+                if (!affine) {
+                    pixman_fixed_48_16_t div;
+                    div = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2];
+                    x1 = div >> 16;
+                    distx = ((pixman_fixed_t)div >> 8) & 0xff;
+                    div = ((pixman_fixed_48_16_t)v.vector[1] << 16)/v.vector[2];
+                    y1 = div >> 16;
+                    disty = ((pixman_fixed_t)div >> 8) & 0xff;
+                } else {
+                    x1 = v.vector[0] >> 16;
+                    distx = (v.vector[0] >> 8) & 0xff;
+                    y1 = v.vector[1] >> 16;
+                    disty = (v.vector[1] >> 8) & 0xff;
+                }
+                x2 = x1 + 1;
+                y2 = y1 + 1;
+
+                idistx = 256 - distx;
+                idisty = 256 - disty;
+
+                x1 = MOD (x1, pict->width);
+                x2 = MOD (x2, pict->width);
+                y1 = MOD (y1, pict->height);
+                y2 = MOD (y2, pict->height);
+
+                tl = fetchFromRegion(pict, x1, y1, buffer, fetch, box);
+                tr = fetchFromRegion(pict, x2, y1, buffer, fetch, box);
+                bl = fetchFromRegion(pict, x1, y2, buffer, fetch, box);
+                br = fetchFromRegion(pict, x2, y2, buffer, fetch, box);
+
+                ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
+                fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
+                r = (((ft * idisty + fb * disty) >> 16) & 0xff);
+                ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
+                fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
+                r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
+                ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
+                fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
+                r |= (((ft * idisty + fb * disty)) & 0xff0000);
+                ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
+                fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
+                r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
+                *(buffer + i) = r;
+            }
+        }
+        v.vector[0] += unit.vector[0];
+        v.vector[1] += unit.vector[1];
+        v.vector[2] += unit.vector[2];
+    }
+}
+
+static void
+fbFetchTransformed_Bilinear_Pad(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
+{
+    pixman_box16_t *box = NULL;
+    fetchPixelProc   fetch;
+    fetchFromRegionProc fetchFromRegion;
+    int i;
+
+    /* initialize the two function pointers */
+    fetch = fetchPixelProcForPicture(pict);
+
+    if(pixman_region_n_rects (pict->common.src_clip) == 1)
+        fetchFromRegion = fbFetchFromNoRegion;
+    else
+        fetchFromRegion = fbFetchFromNRectangles;
+
+    for (i = 0; i < width; ++i) {
+        if (!mask || mask[i] & maskBits)
+        {
+            if (!v.vector[2]) {
+                *(buffer + i) = 0;
+            } else {
+                int x1, x2, y1, y2, distx, idistx, disty, idisty;
+                uint32_t tl, tr, bl, br, r;
+                uint32_t ft, fb;
+
+                if (!affine) {
+                    pixman_fixed_48_16_t div;
+                    div = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2];
+                    x1 = div >> 16;
+                    distx = ((pixman_fixed_t)div >> 8) & 0xff;
+                    div = ((pixman_fixed_48_16_t)v.vector[1] << 16)/v.vector[2];
+                    y1 = div >> 16;
+                    disty = ((pixman_fixed_t)div >> 8) & 0xff;
+                } else {
+                    x1 = v.vector[0] >> 16;
+                    distx = (v.vector[0] >> 8) & 0xff;
+                    y1 = v.vector[1] >> 16;
+                    disty = (v.vector[1] >> 8) & 0xff;
+                }
+                x2 = x1 + 1;
+                y2 = y1 + 1;
+
+                idistx = 256 - distx;
+                idisty = 256 - disty;
+
+                x1 = CLIP (x1, 0, pict->width-1);
+                x2 = CLIP (x2, 0, pict->width-1);
+                y1 = CLIP (y1, 0, pict->height-1);
+                y2 = CLIP (y2, 0, pict->height-1);
+
+                tl = fetchFromRegion(pict, x1, y1, buffer, fetch, box);
+                tr = fetchFromRegion(pict, x2, y1, buffer, fetch, box);
+                bl = fetchFromRegion(pict, x1, y2, buffer, fetch, box);
+                br = fetchFromRegion(pict, x2, y2, buffer, fetch, box);
+
+                ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
+                fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
+                r = (((ft * idisty + fb * disty) >> 16) & 0xff);
+                ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
+                fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
+                r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
+                ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
+                fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
+                r |= (((ft * idisty + fb * disty)) & 0xff0000);
+                ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
+                fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
+                r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
+                *(buffer + i) = r;
+            }
+        }
+        v.vector[0] += unit.vector[0];
+        v.vector[1] += unit.vector[1];
+        v.vector[2] += unit.vector[2];
+    }
+}
+
+static void
+fbFetchTransformed_Bilinear_General(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
+{
+    pixman_box16_t *box = NULL;
+    fetchPixelProc   fetch;
+    fetchFromRegionProc fetchFromRegion;
+    int i;
+
+    /* initialize the two function pointers */
+    fetch = fetchPixelProcForPicture(pict);
+
+    if(pixman_region_n_rects (pict->common.src_clip) == 1)
+    {
+        box = &(pict->common.src_clip->extents);
+        fetchFromRegion = fbFetchFromOneRectangle;
+    }
+    else
+    {
+        fetchFromRegion = fbFetchFromNRectangles;
+    }
+
+    for (i = 0; i < width; ++i)
+    {
+        if (!mask || mask[i] & maskBits)
+        {
+            if (!v.vector[2]) {
+                *(buffer + i) = 0;
+            } else {
+                int x1, x2, y1, y2, distx, idistx, disty, idisty;
+                uint32_t tl, tr, bl, br, r;
+                uint32_t ft, fb;
+
+                if (!affine) {
+                    pixman_fixed_48_16_t div;
+                    div = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2];
+                    x1 = div >> 16;
+                    distx = ((pixman_fixed_t)div >> 8) & 0xff;
+                    div = ((pixman_fixed_48_16_t)v.vector[1] << 16)/v.vector[2];
+                    y1 = div >> 16;
+                    disty = ((pixman_fixed_t)div >> 8) & 0xff;
+                } else {
+                    x1 = v.vector[0] >> 16;
+                    distx = (v.vector[0] >> 8) & 0xff;
+                    y1 = v.vector[1] >> 16;
+                    disty = (v.vector[1] >> 8) & 0xff;
+                }
+                x2 = x1 + 1;
+                y2 = y1 + 1;
+
+                idistx = 256 - distx;
+                idisty = 256 - disty;
+
+                tl = fetchFromRegion(pict, x1, y1, buffer, fetch, box);
+                tr = fetchFromRegion(pict, x2, y1, buffer, fetch, box);
+                bl = fetchFromRegion(pict, x1, y2, buffer, fetch, box);
+                br = fetchFromRegion(pict, x2, y2, buffer, fetch, box);
+
+                ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
+                fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
+                r = (((ft * idisty + fb * disty) >> 16) & 0xff);
+                ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
+                fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
+                r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
+                ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
+                fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
+                r |= (((ft * idisty + fb * disty)) & 0xff0000);
+                ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
+                fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
+                r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
+                *(buffer + i) = r;
+            }
+        }
+
+        v.vector[0] += unit.vector[0];
+        v.vector[1] += unit.vector[1];
+        v.vector[2] += unit.vector[2];
+    }
+}
+
+static void
+fbFetchTransformed_Convolution(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
+{
+    pixman_box16_t *box = NULL;
+    fetchPixelProc fetch;
+    int i;
+
+    pixman_fixed_t *params = pict->common.filter_params;
+    int32_t cwidth = pixman_fixed_to_int(params[0]);
+    int32_t cheight = pixman_fixed_to_int(params[1]);
+    int xoff = (params[0] - pixman_fixed_1) >> 1;
+    int yoff = (params[1] - pixman_fixed_1) >> 1;
+    fetch = fetchPixelProcForPicture(pict);
+
+    params += 2;
+    for (i = 0; i < width; ++i) {
+        if (!mask || mask[i] & maskBits)
+        {
+            if (!v.vector[2]) {
+                *(buffer + i) = 0;
+            } else {
+                int x1, x2, y1, y2, x, y;
+                int32_t srtot, sgtot, sbtot, satot;
+                pixman_fixed_t *p = params;
+
+                if (!affine) {
+                    pixman_fixed_48_16_t tmp;
+                    tmp = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2] - xoff;
+                    x1 = pixman_fixed_to_int(tmp);
+                    tmp = ((pixman_fixed_48_16_t)v.vector[1] << 16)/v.vector[2] - yoff;
+                    y1 = pixman_fixed_to_int(tmp);
+                } else {
+                    x1 = pixman_fixed_to_int(v.vector[0] - xoff);
+                    y1 = pixman_fixed_to_int(v.vector[1] - yoff);
+                }
+                x2 = x1 + cwidth;
+                y2 = y1 + cheight;
+
+                srtot = sgtot = sbtot = satot = 0;
+
+                for (y = y1; y < y2; y++) {
+                    int ty;
+                    switch (pict->common.repeat) {
+                        case PIXMAN_REPEAT_NORMAL:
+                            ty = MOD (y, pict->height);
+                            break;
+                        case PIXMAN_REPEAT_PAD:
+                            ty = CLIP (y, 0, pict->height-1);
+                            break;
+                        default:
+                            ty = y;
+                    }
+                    for (x = x1; x < x2; x++) {
+                        if (*p) {
+                            int tx;
+                            switch (pict->common.repeat) {
+                                case PIXMAN_REPEAT_NORMAL:
+                                    tx = MOD (x, pict->width);
+                                    break;
+                                case PIXMAN_REPEAT_PAD:
+                                    tx = CLIP (x, 0, pict->width-1);
+                                    break;
+                                default:
+                                    tx = x;
+                            }
+                            if (pixman_region_contains_point (pict->common.src_clip, tx, ty, box)) {
+                                uint32_t c = fetch(pict, tx, ty);
+
+                                srtot += Red(c) * *p;
+                                sgtot += Green(c) * *p;
+                                sbtot += Blue(c) * *p;
+                                satot += Alpha(c) * *p;
+                            }
+                        }
+                        p++;
+                    }
+                }
+
+                satot >>= 16;
+                srtot >>= 16;
+                sgtot >>= 16;
+                sbtot >>= 16;
+
+                if (satot < 0) satot = 0; else if (satot > 0xff) satot = 0xff;
+                if (srtot < 0) srtot = 0; else if (srtot > 0xff) srtot = 0xff;
+                if (sgtot < 0) sgtot = 0; else if (sgtot > 0xff) sgtot = 0xff;
+                if (sbtot < 0) sbtot = 0; else if (sbtot > 0xff) sbtot = 0xff;
+
+                *(buffer + i) = ((satot << 24) |
+                                 (srtot << 16) |
+                                 (sgtot <<  8) |
+                                 (sbtot       ));
+            }
+        }
+        v.vector[0] += unit.vector[0];
+        v.vector[1] += unit.vector[1];
+        v.vector[2] += unit.vector[2];
+    }
+}
+
+static void
+fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
     uint32_t     *bits;
     int32_t    stride;
-    fetchPixelProc   fetch;
-    pixman_vector_t	v;
-    pixman_vector_t  unit;
-    int         i;
-    pixman_box16_t box;
+    pixman_vector_t v;
+    pixman_vector_t unit;
     pixman_bool_t affine = TRUE;
-
-    fetch = fetchPixelProcForPicture(pict);
 
     bits = pict->bits;
     stride = pict->rowstride;
@@ -3703,7 +4200,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
     if (pict->common.transform)
     {
         if (!pixman_transform_point_3d (pict->common.transform, &v))
-	{
+        {
             fbFinishAccess (pict->pDrawable);
             return;
         }
@@ -3721,104 +4218,18 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 
     if (pict->common.filter == PIXMAN_FILTER_NEAREST || pict->common.filter == PIXMAN_FILTER_FAST)
     {
-        if (pict->common.repeat == PIXMAN_REPEAT_NORMAL) {
-            if (pixman_region_n_rects (pict->common.src_clip) == 1) {
-		for (i = 0; i < width; ++i) {
-		    if (!mask || mask[i] & maskBits)
-		    {
-			if (!v.vector[2]) {
-			    *(buffer + i) = 0;
-			} else {
-			    if (!affine) {
-				y = MOD(DIV(v.vector[1],v.vector[2]), pict->height);
-				x = MOD(DIV(v.vector[0],v.vector[2]), pict->width);
-			    } else {
-				y = MOD(v.vector[1]>>16, pict->height);
-				x = MOD(v.vector[0]>>16, pict->width);
-			    }
-			    *(buffer + i) = fetch(pict, x, y);
-			}
-		    }
+        if (pict->common.repeat == PIXMAN_REPEAT_NORMAL)
+        {
+            fbFetchTransformed_Nearest_Normal(pict, width, buffer, mask, maskBits, affine, v, unit);
 
-                    v.vector[0] += unit.vector[0];
-                    v.vector[1] += unit.vector[1];
-                    v.vector[2] += unit.vector[2];
-                }
-            } else {
-                for (i = 0; i < width; ++i) {
-		    if (!mask || mask[i] & maskBits)
-		    {
-			if (!v.vector[2]) {
-			    *(buffer + i) = 0;
-			} else {
-			    if (!affine) {
-				y = MOD(DIV(v.vector[1],v.vector[2]), pict->height);
-				x = MOD(DIV(v.vector[0],v.vector[2]), pict->width);
-			    } else {
-				y = MOD(v.vector[1]>>16, pict->height);
-				x = MOD(v.vector[0]>>16, pict->width);
-			    }
-			    if (pixman_region_contains_point (pict->common.src_clip, x, y, &box))
-				*(buffer + i) = fetch (pict, x, y);
-			    else
-				*(buffer + i) = 0;
-			}
-		    }
-
-                    v.vector[0] += unit.vector[0];
-                    v.vector[1] += unit.vector[1];
-                    v.vector[2] += unit.vector[2];
-                }
-            }
-        } else {
-            if (pixman_region_n_rects(pict->common.src_clip) == 1) {
-                box = pict->common.src_clip->extents;
-                for (i = 0; i < width; ++i) {
-		    if (!mask || mask[i] & maskBits)
-		    {
-			if (!v.vector[2]) {
-			    *(buffer + i) = 0;
-			} else {
-			    if (!affine) {
-				y = DIV(v.vector[1],v.vector[2]);
-				x = DIV(v.vector[0],v.vector[2]);
-			    } else {
-				y = v.vector[1]>>16;
-				x = v.vector[0]>>16;
-			    }
-			    *(buffer + i) = ((x < box.x1) | (x >= box.x2) | (y < box.y1) | (y >= box.y2)) ?
-				0 : fetch(pict, x, y);
-			}
-		    }
-                    v.vector[0] += unit.vector[0];
-                    v.vector[1] += unit.vector[1];
-                    v.vector[2] += unit.vector[2];
-                }
-            } else {
-                for (i = 0; i < width; ++i) {
-                    if (!mask || mask[i] & maskBits)
-		    {
-			if (!v.vector[2]) {
-			    *(buffer + i) = 0;
-			} else {
-			    if (!affine) {
-				y = DIV(v.vector[1],v.vector[2]);
-				x = DIV(v.vector[0],v.vector[2]);
-			    } else {
-				y = v.vector[1]>>16;
-				x = v.vector[0]>>16;
-			    }
-			    if (pixman_region_contains_point (pict->common.src_clip, x, y, &box))
-				*(buffer + i) = fetch(pict, x, y);
-			    else
-				*(buffer + i) = 0;
-			}
-		    }
-                    v.vector[0] += unit.vector[0];
-                    v.vector[1] += unit.vector[1];
-                    v.vector[2] += unit.vector[2];
-                }
-            }
+        }
+        else if (pict->common.repeat == PIXMAN_REPEAT_PAD)
+        {
+            fbFetchTransformed_Nearest_Pad(pict, width, buffer, mask, maskBits, affine, v, unit);
+        }
+        else
+        {
+            fbFetchTransformed_Nearest_General(pict, width, buffer, mask, maskBits, affine, v, unit);
         }
     } else if (pict->common.filter == PIXMAN_FILTER_BILINEAR	||
 	       pict->common.filter == PIXMAN_FILTER_GOOD	||
@@ -3830,336 +4241,30 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
         unit.vector[0] -= unit.vector[2] / 2;
         unit.vector[1] -= unit.vector[2] / 2;
 
-        if (pict->common.repeat == PIXMAN_REPEAT_NORMAL) {
-            if (pixman_region_n_rects(pict->common.src_clip) == 1) {
-                for (i = 0; i < width; ++i) {
-                    if (!mask || mask[i] & maskBits)
-		    {
-			if (!v.vector[2]) {
-			    *(buffer + i) = 0;
-			} else {
-			    int x1, x2, y1, y2, distx, idistx, disty, idisty;
-			    uint32_t tl, tr, bl, br, r;
-			    uint32_t ft, fb;
-
-			    if (!affine) {
-				pixman_fixed_48_16_t div;
-				div = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2];
-				x1 = div >> 16;
-				distx = ((pixman_fixed_t)div >> 8) & 0xff;
-				div = ((pixman_fixed_48_16_t)v.vector[1] << 16)/v.vector[2];
-				y1 = div >> 16;
-				disty = ((pixman_fixed_t)div >> 8) & 0xff;
-			    } else {
-				x1 = v.vector[0] >> 16;
-				distx = (v.vector[0] >> 8) & 0xff;
-				y1 = v.vector[1] >> 16;
-				disty = (v.vector[1] >> 8) & 0xff;
-			    }
-			    x2 = x1 + 1;
-			    y2 = y1 + 1;
-
-			    idistx = 256 - distx;
-			    idisty = 256 - disty;
-
-			    x1 = MOD (x1, pict->width);
-			    x2 = MOD (x2, pict->width);
-			    y1 = MOD (y1, pict->height);
-			    y2 = MOD (y2, pict->height);
-
-			    tl = fetch(pict, x1, y1);
-			    tr = fetch(pict, x2, y1);
-			    bl = fetch(pict, x1, y2);
-			    br = fetch(pict, x2, y2);
-
-			    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
-			    fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
-			    r = (((ft * idisty + fb * disty) >> 16) & 0xff);
-			    ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
-			    fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
-			    r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
-			    ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
-			    fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
-			    r |= (((ft * idisty + fb * disty)) & 0xff0000);
-			    ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
-			    fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
-			    r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
-			    *(buffer + i) = r;
-			}
-		    }
-                    v.vector[0] += unit.vector[0];
-                    v.vector[1] += unit.vector[1];
-                    v.vector[2] += unit.vector[2];
-                }
-            } else {
-                for (i = 0; i < width; ++i) {
-		    if (!mask || mask[i] & maskBits)
-		    {
-			if (!v.vector[2]) {
-			    *(buffer + i) = 0;
-			} else {
-			    int x1, x2, y1, y2, distx, idistx, disty, idisty;
-			    uint32_t tl, tr, bl, br, r;
-			    uint32_t ft, fb;
-
-			    if (!affine) {
-				pixman_fixed_48_16_t div;
-				div = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2];
-				x1 = div >> 16;
-				distx = ((pixman_fixed_t)div >> 8) & 0xff;
-				div = ((pixman_fixed_48_16_t)v.vector[1] << 16)/v.vector[2];
-				y1 = div >> 16;
-				disty = ((pixman_fixed_t)div >> 8) & 0xff;
-			    } else {
-				x1 = v.vector[0] >> 16;
-				distx = (v.vector[0] >> 8) & 0xff;
-				y1 = v.vector[1] >> 16;
-				disty = (v.vector[1] >> 8) & 0xff;
-			    }
-			    x2 = x1 + 1;
-			    y2 = y1 + 1;
-
-			    idistx = 256 - distx;
-			    idisty = 256 - disty;
-
-			    x1 = MOD (x1, pict->width);
-			    x2 = MOD (x2, pict->width);
-			    y1 = MOD (y1, pict->height);
-			    y2 = MOD (y2, pict->height);
-
-			    tl = pixman_region_contains_point(pict->common.src_clip, x1, y1, &box)
-				? fetch(pict, x1, y1) : 0;
-			    tr = pixman_region_contains_point(pict->common.src_clip, x2, y1, &box)
-				? fetch(pict, x2, y1) : 0;
-			    bl = pixman_region_contains_point(pict->common.src_clip, x1, y2, &box)
-				? fetch(pict, x1, y2) : 0;
-			    br = pixman_region_contains_point(pict->common.src_clip, x2, y2, &box)
-				? fetch(pict, x2, y2) : 0;
-
-			    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
-			    fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
-			    r = (((ft * idisty + fb * disty) >> 16) & 0xff);
-			    ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
-			    fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
-			    r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
-			    ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
-			    fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
-			    r |= (((ft * idisty + fb * disty)) & 0xff0000);
-			    ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
-			    fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
-			    r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
-			    *(buffer + i) = r;
-			}
-		    }
-
-                    v.vector[0] += unit.vector[0];
-                    v.vector[1] += unit.vector[1];
-                    v.vector[2] += unit.vector[2];
-                }
-            }
-        } else {
-            if (pixman_region_n_rects(pict->common.src_clip) == 1) {
-                box = pict->common.src_clip->extents;
-                for (i = 0; i < width; ++i) {
-		    if (!mask || mask[i] & maskBits)
-		    {
-			if (!v.vector[2]) {
-			    *(buffer + i) = 0;
-			} else {
-			    int x1, x2, y1, y2, distx, idistx, disty, idisty;
-			    uint32_t tl, tr, bl, br, r;
-			    pixman_bool_t x1_out, x2_out, y1_out, y2_out;
-			    uint32_t ft, fb;
-
-			    if (!affine) {
-				pixman_fixed_48_16_t div;
-				div = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2];
-				x1 = div >> 16;
-				distx = ((pixman_fixed_t)div >> 8) & 0xff;
-				div = ((pixman_fixed_48_16_t)v.vector[1] << 16)/v.vector[2];
-				y1 = div >> 16;
-				disty = ((pixman_fixed_t)div >> 8) & 0xff;
-			    } else {
-				x1 = v.vector[0] >> 16;
-				distx = (v.vector[0] >> 8) & 0xff;
-				y1 = v.vector[1] >> 16;
-				disty = (v.vector[1] >> 8) & 0xff;
-			    }
-			    x2 = x1 + 1;
-			    y2 = y1 + 1;
-
-			    idistx = 256 - distx;
-			    idisty = 256 - disty;
-
-			    x1_out = (x1 < box.x1) | (x1 >= box.x2);
-			    x2_out = (x2 < box.x1) | (x2 >= box.x2);
-			    y1_out = (y1 < box.y1) | (y1 >= box.y2);
-			    y2_out = (y2 < box.y1) | (y2 >= box.y2);
-
-			    tl = x1_out|y1_out ? 0 : fetch(pict, x1, y1);
-			    tr = x2_out|y1_out ? 0 : fetch(pict, x2, y1);
-			    bl = x1_out|y2_out ? 0 : fetch(pict, x1, y2);
-			    br = x2_out|y2_out ? 0 : fetch(pict, x2, y2);
-
-			    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
-			    fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
-			    r = (((ft * idisty + fb * disty) >> 16) & 0xff);
-			    ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
-			    fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
-			    r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
-			    ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
-			    fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
-			    r |= (((ft * idisty + fb * disty)) & 0xff0000);
-			    ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
-			    fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
-			    r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
-			    *(buffer + i) = r;
-			}
-		    }
-
-                    v.vector[0] += unit.vector[0];
-                    v.vector[1] += unit.vector[1];
-                    v.vector[2] += unit.vector[2];
-                }
-            } else {
-                for (i = 0; i < width; ++i) {
-                    if (!mask || mask[i] & maskBits)
-		    {
-			if (!v.vector[2]) {
-			    *(buffer + i) = 0;
-			} else {
-			    int x1, x2, y1, y2, distx, idistx, disty, idisty;
-			    uint32_t tl, tr, bl, br, r;
-			    uint32_t ft, fb;
-
-			    if (!affine) {
-				pixman_fixed_48_16_t div;
-				div = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2];
-				x1 = div >> 16;
-				distx = ((pixman_fixed_t)div >> 8) & 0xff;
-				div = ((pixman_fixed_48_16_t)v.vector[1] << 16)/v.vector[2];
-				y1 = div >> 16;
-				disty = ((pixman_fixed_t)div >> 8) & 0xff;
-			    } else {
-				x1 = v.vector[0] >> 16;
-				distx = (v.vector[0] >> 8) & 0xff;
-				y1 = v.vector[1] >> 16;
-				disty = (v.vector[1] >> 8) & 0xff;
-			    }
-			    x2 = x1 + 1;
-			    y2 = y1 + 1;
-
-			    idistx = 256 - distx;
-			    idisty = 256 - disty;
-
-			    tl = pixman_region_contains_point(pict->common.src_clip, x1, y1, &box)
-				? fetch(pict, x1, y1) : 0;
-			    tr = pixman_region_contains_point(pict->common.src_clip, x2, y1, &box)
-				? fetch(pict, x2, y1) : 0;
-			    bl = pixman_region_contains_point(pict->common.src_clip, x1, y2, &box)
-				? fetch(pict, x1, y2) : 0;
-			    br = pixman_region_contains_point(pict->common.src_clip, x2, y2, &box)
-				? fetch(pict, x2, y2) : 0;
-
-			    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
-			    fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
-			    r = (((ft * idisty + fb * disty) >> 16) & 0xff);
-			    ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
-			    fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
-			    r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
-			    ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
-			    fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
-			    r |= (((ft * idisty + fb * disty)) & 0xff0000);
-			    ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
-			    fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
-			    r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
-			    *(buffer + i) = r;
-			}
-		    }
-
-                    v.vector[0] += unit.vector[0];
-                    v.vector[1] += unit.vector[1];
-                    v.vector[2] += unit.vector[2];
-                }
-            }
+        if (pict->common.repeat == PIXMAN_REPEAT_NORMAL)
+        {
+            fbFetchTransformed_Bilinear_Normal(pict, width, buffer, mask, maskBits, affine, v, unit);
         }
-    } else if (pict->common.filter == PIXMAN_FILTER_CONVOLUTION) {
-        pixman_fixed_t *params = pict->common.filter_params;
-        int32_t cwidth = pixman_fixed_to_int(params[0]);
-        int32_t cheight = pixman_fixed_to_int(params[1]);
-        int xoff = (params[0] - pixman_fixed_1) >> 1;
-	int yoff = (params[1] - pixman_fixed_1) >> 1;
-        params += 2;
-        for (i = 0; i < width; ++i) {
-	    if (!mask || mask[i] & maskBits)
-	    {
-		if (!v.vector[2]) {
-		    *(buffer + i) = 0;
-		} else {
-		    int x1, x2, y1, y2, x, y;
-		    int32_t srtot, sgtot, sbtot, satot;
-		    pixman_fixed_t *p = params;
-
-		    if (!affine) {
-			pixman_fixed_48_16_t tmp;
-			tmp = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2] - xoff;
-			x1 = pixman_fixed_to_int(tmp);
-			tmp = ((pixman_fixed_48_16_t)v.vector[1] << 16)/v.vector[2] - yoff;
-			y1 = pixman_fixed_to_int(tmp);
-		    } else {
-			x1 = pixman_fixed_to_int(v.vector[0] - xoff);
-			y1 = pixman_fixed_to_int(v.vector[1] - yoff);
-		    }
-		    x2 = x1 + cwidth;
-		    y2 = y1 + cheight;
-
-		    srtot = sgtot = sbtot = satot = 0;
-
-		    for (y = y1; y < y2; y++) {
-			int ty = (pict->common.repeat == PIXMAN_REPEAT_NORMAL) ? MOD (y, pict->height) : y;
-			for (x = x1; x < x2; x++) {
-			    if (*p) {
-				int tx = (pict->common.repeat == PIXMAN_REPEAT_NORMAL) ? MOD (x, pict->width) : x;
-				if (pixman_region_contains_point (pict->common.src_clip, tx, ty, &box)) {
-				    uint32_t c = fetch(pict, tx, ty);
-
-				    srtot += Red(c) * *p;
-				    sgtot += Green(c) * *p;
-				    sbtot += Blue(c) * *p;
-				    satot += Alpha(c) * *p;
-				}
-			    }
-			    p++;
-			}
-		    }
-
-		    satot >>= 16;
-		    srtot >>= 16;
-		    sgtot >>= 16;
-		    sbtot >>= 16;
-
-		    if (satot < 0) satot = 0; else if (satot > 0xff) satot = 0xff;
-		    if (srtot < 0) srtot = 0; else if (srtot > 0xff) srtot = 0xff;
-		    if (sgtot < 0) sgtot = 0; else if (sgtot > 0xff) sgtot = 0xff;
-		    if (sbtot < 0) sbtot = 0; else if (sbtot > 0xff) sbtot = 0xff;
-
-		    *(buffer + i) = ((satot << 24) |
-				     (srtot << 16) |
-				     (sgtot <<  8) |
-				     (sbtot       ));
-		}
-	    }
-            v.vector[0] += unit.vector[0];
-            v.vector[1] += unit.vector[1];
-            v.vector[2] += unit.vector[2];
+        else if (pict->common.repeat == PIXMAN_REPEAT_PAD)
+        {
+            fbFetchTransformed_Bilinear_Pad(pict, width, buffer, mask, maskBits, affine, v, unit);
         }
+        else
+        {
+            fbFetchTransformed_Bilinear_General(pict, width, buffer, mask, maskBits, affine, v, unit);
+        }
+    }
+    else if (pict->common.filter == PIXMAN_FILTER_CONVOLUTION)
+    {
+        fbFetchTransformed_Convolution(pict, width, buffer, mask, maskBits, affine, v, unit);
     }
 
     fbFinishAccess (pict->pDrawable);
 }
 
 
-static void fbFetchExternalAlpha(bits_image_t * pict, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
+static void
+fbFetchExternalAlpha(bits_image_t * pict, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
     int i;
     uint32_t _alpha_buffer[SCANLINE_BUFFER_LENGTH];
@@ -4191,7 +4296,8 @@ static void fbFetchExternalAlpha(bits_image_t * pict, int x, int y, int width, u
         free(alpha_buffer);
 }
 
-static void fbStore(bits_image_t * pict, int x, int y, int width, uint32_t *buffer)
+static void
+fbStore(bits_image_t * pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t *bits;
     int32_t stride;
@@ -4205,7 +4311,8 @@ static void fbStore(bits_image_t * pict, int x, int y, int width, uint32_t *buff
     fbFinishAccess (pict->pDrawable);
 }
 
-static void fbStoreExternalAlpha(bits_image_t * pict, int x, int y, int width, uint32_t *buffer)
+static void
+fbStoreExternalAlpha(bits_image_t * pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t *bits, *alpha_bits;
     int32_t stride, astride;
@@ -4284,7 +4391,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	{
 	    fetchSrc = (scanFetchProc)fbFetchExternalAlpha;
 	}
-	else if (bits->common.repeat == PIXMAN_REPEAT_NORMAL &&
+	else if ((bits->common.repeat == PIXMAN_REPEAT_NORMAL || bits->common.repeat == PIXMAN_REPEAT_PAD) &&
 		 bits->width == 1 &&
 		 bits->height == 1)
 	{
@@ -4322,7 +4429,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	    {
 		fetchMask = (scanFetchProc)fbFetchExternalAlpha;
 	    }
-	    else if (bits->common.repeat == PIXMAN_REPEAT_NORMAL &&
+	    else if ((bits->common.repeat == PIXMAN_REPEAT_NORMAL || bits->common.repeat == PIXMAN_REPEAT_PAD) &&
 		     bits->width == 1 && bits->height == 1)
 	    {
 		fetchMask = (scanFetchProc)fbFetchSolid;

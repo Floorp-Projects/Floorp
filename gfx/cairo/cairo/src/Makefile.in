@@ -94,6 +94,7 @@ CSRCS   = \
         cairo-lzw.c \
         cairo-matrix.c \
         cairo-meta-surface.c \
+	cairo-misc.c \
 	cairo-mutex.c \
         cairo-output-stream.c \
         cairo-paginated-surface.c \

@@ -149,6 +149,7 @@ struct _cairo_pdf_surface {
 
     cairo_pdf_operators_t pdf_operators;
     cairo_paginated_mode_t paginated_mode;
+    cairo_bool_t select_pattern_gstate_saved;
 
     cairo_bool_t force_fallbacks;
 
