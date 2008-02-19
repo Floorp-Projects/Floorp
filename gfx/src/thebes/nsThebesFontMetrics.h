@@ -78,8 +78,6 @@ public:
     NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
     NS_IMETHOD  GetAveCharWidth(nscoord& aAveCharWidth);
     NS_IMETHOD  GetSpaceWidth(nscoord& aSpaceCharWidth);
-    NS_IMETHOD  GetLeading(nscoord& aLeading);
-    NS_IMETHOD  GetNormalLineHeight(nscoord& aLineHeight);
     virtual PRInt32 GetMaxStringLength();
 
 
