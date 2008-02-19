@@ -55,8 +55,9 @@ js_IdIsIndex(jsval id, jsuint *indexp);
 
 extern JSClass js_ArrayClass, js_SlowArrayClass;
 
-#define ARRAY_IS_DENSE(cx, obj) (OBJ_GET_CLASS(cx, obj) == &js_ArrayClass)
-#define OBJ_IS_ARRAY(cx, obj)   (ARRAY_IS_DENSE(cx, obj) ||                    \
+#define OBJ_IS_DENSE_ARRAY(cx,obj)  (OBJ_GET_CLASS(cx, obj) == &js_ArrayClass)
+
+#define OBJ_IS_ARRAY(cx,obj)    (OBJ_IS_DENSE_ARRAY(cx, obj) ||               \
                                  OBJ_GET_CLASS(cx, obj) == &js_SlowArrayClass)
 
 extern JSObject *
