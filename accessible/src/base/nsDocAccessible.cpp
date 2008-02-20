@@ -1015,6 +1015,13 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
     InvalidateCacheSubtree(aContent, nsIAccessibleEvent::EVENT_DOM_SIGNIFICANT_CHANGE);
     return;
   }
+  
+  if (aAttribute == nsAccessibilityAtoms::alt ||
+      aAttribute == nsAccessibilityAtoms::title) {
+    FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE,
+                            targetNode, eRemoveDupes);
+    return;
+  }
 
   if (aAttribute == nsAccessibilityAtoms::selected ||
       aAttribute == nsAccessibilityAtoms::aria_selected) {
