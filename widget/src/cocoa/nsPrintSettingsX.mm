@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsPrintSettingsX.h"
+#include "nsObjCExceptions.h"
 #include "nsIPrintSessionX.h"
 
 #include "nsIPrefService.h"
@@ -74,18 +75,26 @@ public:
 
   ~StHandleOwner()
   {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
     if (mHandle)
       ::DisposeHandle(mHandle);
+
+    NS_OBJC_END_TRY_ABORT_BLOCK;
   }
 
   Handle GetHandle() { return mHandle; }
 
   void   ClearHandle(Boolean disposeIt = false)
   {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
     if (disposeIt)
       ::DisposeHandle(mHandle);
 
     mHandle = nsnull;
+
+    NS_OBJC_END_TRY_ABORT_BLOCK;
   }
 
 protected:
@@ -105,17 +114,24 @@ public:
   StHandleLocker(Handle theHandle)
     :	mHandle(theHandle)
   {
-    if (mHandle)
-      {
-        mOldHandleState = ::HGetState(mHandle);
-        ::HLock(mHandle);
-      }										  
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+    if (mHandle) {
+      mOldHandleState = ::HGetState(mHandle);
+      ::HLock(mHandle);
+    }
+
+    NS_OBJC_END_TRY_ABORT_BLOCK;
   }
 
   ~StHandleLocker()
   {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
     if (mHandle)
       ::HSetState(mHandle, mOldHandleState);
+
+    NS_OBJC_END_TRY_ABORT_BLOCK;
   }
 
 protected:
@@ -150,6 +166,8 @@ nsPrintSettingsX::nsPrintSettingsX(const nsPrintSettingsX& src) :
  */
 nsPrintSettingsX::~nsPrintSettingsX()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (mPageFormat != kPMNoPageFormat) {
     ::PMRelease(mPageFormat);
     mPageFormat = kPMNoPageFormat;
@@ -158,12 +176,16 @@ nsPrintSettingsX::~nsPrintSettingsX()
     ::PMRelease(mPrintSettings);
     mPrintSettings = kPMNoPrintSettings;
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 /** ---------------------------------------------------
  */
 nsPrintSettingsX& nsPrintSettingsX::operator=(const nsPrintSettingsX& rhs)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   if (this == &rhs) {
     return *this;
   }
@@ -205,12 +227,16 @@ nsPrintSettingsX& nsPrintSettingsX::operator=(const nsPrintSettingsX& rhs)
   }
 
   return *this;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(*this);
 }
 
 /** ---------------------------------------------------
  */
 nsresult nsPrintSettingsX::Init()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   OSStatus status;
 
   PMPrintSession printSession = NULL;
@@ -229,6 +255,8 @@ nsresult nsPrintSettingsX::Init()
       status = tempStatus;
   }
   return (status == noErr) ? NS_OK : NS_ERROR_FAILURE;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /** ---------------------------------------------------
@@ -267,6 +295,8 @@ NS_IMETHODIMP nsPrintSettingsX::GetPMPageFormat(PMPageFormat *aPMPageFormat)
  */
 NS_IMETHODIMP nsPrintSettingsX::SetPMPageFormat(PMPageFormat aPMPageFormat)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG(aPMPageFormat);
   
   OSStatus status = ::PMRetain(aPMPageFormat);
@@ -276,6 +306,8 @@ NS_IMETHODIMP nsPrintSettingsX::SetPMPageFormat(PMPageFormat aPMPageFormat)
     mPageFormat = aPMPageFormat;
   }        
   return (status == noErr) ? NS_OK : NS_ERROR_FAILURE;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /** ---------------------------------------------------
@@ -287,15 +319,16 @@ NS_IMETHODIMP nsPrintSettingsX::GetPMPrintSettings(PMPrintSettings *aPMPrintSett
   NS_ENSURE_STATE(mPrintSettings != kPMNoPrintSettings);
   
   *aPMPrintSettings = mPrintSettings;
-  OSStatus status = noErr;
-  
-  return (status == noErr) ? NS_OK : NS_ERROR_FAILURE;
+
+  return NS_OK;
 }
 
 /** ---------------------------------------------------
  */
 NS_IMETHODIMP nsPrintSettingsX::SetPMPrintSettings(PMPrintSettings aPMPrintSettings)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG(aPMPrintSettings);
   
   OSStatus status = ::PMRetain(aPMPrintSettings);
@@ -305,12 +338,16 @@ NS_IMETHODIMP nsPrintSettingsX::SetPMPrintSettings(PMPrintSettings aPMPrintSetti
     mPrintSettings = aPMPrintSettings;
   }        
   return (status == noErr) ? NS_OK : NS_ERROR_FAILURE;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /** ---------------------------------------------------
  */
 NS_IMETHODIMP nsPrintSettingsX::ReadPageFormatFromPrefs()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsresult rv;
   nsCOMPtr<nsIPrefService> prefService(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   if (NS_FAILED(rv))
@@ -365,12 +402,16 @@ NS_IMETHODIMP nsPrintSettingsX::ReadPageFormatFromPrefs()
     }
   }
   return (status == noErr) ? NS_OK : NS_ERROR_FAILURE;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /** ---------------------------------------------------
  */
 NS_IMETHODIMP nsPrintSettingsX::WritePageFormatToPrefs()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if (mPageFormat == kPMNoPageFormat)
     return NS_ERROR_NOT_INITIALIZED;
     
@@ -413,6 +454,8 @@ NS_IMETHODIMP nsPrintSettingsX::WritePageFormatToPrefs()
     return NS_ERROR_OUT_OF_MEMORY;
 
   return prefBranch->SetCharPref(MAC_OS_X_PAGE_SETUP_PREFNAME, encodedData);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 //-------------------------------------------
@@ -443,6 +486,8 @@ NS_IMETHODIMP nsPrintSettingsX::_Assign(nsIPrintSettings *aPS)
 //-------------------------------------------
 OSStatus nsPrintSettingsX::CreateDefaultPageFormat(PMPrintSession aSession, PMPageFormat& outFormat)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   OSStatus status;
   PMPageFormat pageFormat;
   
@@ -456,12 +501,16 @@ OSStatus nsPrintSettingsX::CreateDefaultPageFormat(PMPrintSession aSession, PMPa
     }
   }
   return status;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(noErr);
 }
   
 //-------------------------------------------
 
 OSStatus nsPrintSettingsX::CreateDefaultPrintSettings(PMPrintSession aSession, PMPrintSettings& outSettings)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   OSStatus status;
   PMPrintSettings printSettings;
   
@@ -474,6 +523,7 @@ OSStatus nsPrintSettingsX::CreateDefaultPrintSettings(PMPrintSession aSession, P
       return noErr;
     }
   }
-  return status;  
-}
+  return status;
 
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(noErr);
+}

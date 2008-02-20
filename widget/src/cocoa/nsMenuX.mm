@@ -36,7 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsMenuX.h"
+
 #include "nsCOMPtr.h"
+#include "nsObjCExceptions.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIDOMDocument.h"
@@ -45,7 +48,6 @@
 #include "prinrval.h"
 #include "nsIRollupListener.h"
 
-#include "nsMenuX.h"
 #include "nsMenuItemIconX.h"
 #include "nsIMenu.h"
 #include "nsIMenuBar.h"
@@ -91,15 +93,21 @@ nsMenuX::nsMenuX()
   mDestroyHandlerCalled(PR_FALSE), mNeedsRebuild(PR_TRUE),
   mConstructed(PR_FALSE), mVisible(PR_TRUE), mXBLAttached(PR_FALSE)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   mMenuDelegate = [[MenuDelegate alloc] initWithGeckoMenu:this];
     
   if (!nsMenuBarX::sNativeEventTarget)
     nsMenuBarX::sNativeEventTarget = [[NativeMenuItemTarget alloc] init];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
 nsMenuX::~nsMenuX()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   RemoveAll();
 
   [mMacMenu release];
@@ -109,6 +117,8 @@ nsMenuX::~nsMenuX()
   // alert the change notifier we don't care no more
   if (mMenuContent)
     mMenuBar->UnregisterForContentChanges(mMenuContent);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -116,6 +126,8 @@ NS_IMETHODIMP
 nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
                 nsMenuBarX* aMenuBar, nsIContent* aNode)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   mMenuContent = aNode;
   NS_ASSERTION(mMenuContent, "Menu not given a dom node at creation time");
 
@@ -159,6 +171,8 @@ nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString 
     mIcon = new nsMenuItemIconX(static_cast<nsIMenu*>(this), menu, mMenuContent, mNativeMenuItem);
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -225,6 +239,8 @@ NS_IMETHODIMP nsMenuX::AddItem(nsISupports* aItem)
 
 nsresult nsMenuX::AddMenuItem(nsIMenuItem * aMenuItem)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if (!aMenuItem)
     return NS_ERROR_INVALID_ARG;
 
@@ -250,11 +266,15 @@ nsresult nsMenuX::AddMenuItem(nsIMenuItem * aMenuItem)
   [newNativeMenuItem setTag:mMenuBar->RegisterForCommand(aMenuItem)];
   
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
 nsresult nsMenuX::AddMenu(nsIMenu * aMenu)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // Add a submenu
   if (!aMenu)
     return NS_ERROR_NULL_POINTER;
@@ -277,6 +297,8 @@ nsresult nsMenuX::AddMenu(nsIMenu * aMenu)
     [newNativeMenuItem setSubmenu:childMenu];
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -379,6 +401,8 @@ NS_IMETHODIMP nsMenuX::RemoveItem(const PRUint32 aPos)
 
 NS_IMETHODIMP nsMenuX::RemoveAll()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if (mMacMenu) {
     // clear command id's
     int itemCount = [mMacMenu numberOfItems];
@@ -393,6 +417,8 @@ NS_IMETHODIMP nsMenuX::RemoveAll()
   mVisibleItemsCount = 0;
   
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -405,14 +431,20 @@ NS_IMETHODIMP nsMenuX::GetNativeData(void ** aData)
 
 NS_IMETHODIMP nsMenuX::SetNativeData(void * aData)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   [mMacMenu release];
   mMacMenu = [(NSMenu*)aData retain];
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
 nsEventStatus nsMenuX::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   // printf("JOSH: MenuSelected called for %s \n", NS_LossyConvertUTF16toASCII(mLabel).get());
 
   // Determine if this is the correct menu to handle the event
@@ -456,6 +488,8 @@ nsEventStatus nsMenuX::MenuSelected(const nsMenuEvent & aMenuEvent)
   }
 
   return nsEventStatus_eIgnore;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsEventStatus_eIgnore);
 }
 
 
@@ -587,6 +621,8 @@ NS_IMETHODIMP nsMenuX::GetMenuContent(nsIContent ** aMenuContent)
 
 NSMenu* nsMenuX::CreateMenuWithGeckoString(nsString& menuTitle)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   NSString* title = [NSString stringWithCharacters:(UniChar*)menuTitle.get() length:menuTitle.Length()];
   NSMenu* myMenu = [[NSMenu alloc] initWithTitle:title];
   [myMenu setDelegate:mMenuDelegate];
@@ -601,6 +637,8 @@ NSMenu* nsMenuX::CreateMenuWithGeckoString(nsString& menuTitle)
   // us that a menu is about to display - see the Cocoa MenuDelegate class.
   
   return myMenu;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 
@@ -956,6 +994,8 @@ nsMenuX::GetNativeMenuItem()
 void
 nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aContent, nsIAtom *aAttribute)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   // ignore the |open| attribute, which is by far the most common
   if (gConstructingMenu || (aAttribute == nsWidgetAtoms::open))
     return;
@@ -1029,6 +1069,8 @@ nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aContent, n
   else if (aAttribute == nsWidgetAtoms::image) {
     SetupIcon();
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -1074,6 +1116,8 @@ nsMenuX::SetupIcon()
 
 static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRef event, void* userData)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   UInt32 kind = ::GetEventKind(event);
   if (kind == kEventMenuTargetItem) {
     // get the position of the menu item we want
@@ -1125,11 +1169,15 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
     }
   }
   return eventNotHandledErr;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(noErr);
 }
 
 
 static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, EventHandlerRef* outHandler)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   static EventTypeSpec eventList[] = {
     {kEventClassMenu, kEventMenuOpening},
     {kEventClassMenu, kEventMenuClosed},
@@ -1142,6 +1190,8 @@ static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, Event
                                    userData, outHandler);
   NS_ASSERTION(status == noErr,"Installing carbon menu events failed.");
   return status;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(noErr);
 }
 
 
@@ -1155,18 +1205,26 @@ static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, Event
 
 - (id)initWithGeckoMenu:(nsMenuX*)geckoMenu
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   if ((self = [super init])) {
     mGeckoMenu = geckoMenu;
     mHaveInstalledCarbonEvents = FALSE;
   }
   return self;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 
 - (void)dealloc
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   RemoveEventHandler(mEventHandler);
   [super dealloc];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -1178,6 +1236,8 @@ static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, Event
 // much trouble.
 - (void)menuNeedsUpdate:(NSMenu*)aMenu
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (!mHaveInstalledCarbonEvents) {
     MenuRef myMenuRef = _NSGetCarbonMenu(aMenu);
     if (myMenuRef) {
@@ -1185,6 +1245,8 @@ static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, Event
       mHaveInstalledCarbonEvents = TRUE;
     }
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 @end

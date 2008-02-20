@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsWindowMap.h"
-
+#include "nsObjCExceptions.h"
 #include "nsChildView.h"
 #include "nsCocoaWindow.h"
 
@@ -62,45 +62,73 @@
 
 + (WindowDataMap*)sharedWindowDataMap
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   static WindowDataMap* sWindowMap = nil;
   if (!sWindowMap)
     sWindowMap = [[WindowDataMap alloc] init];
 
   return sWindowMap;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (id)init
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   if ((self = [super init])) {
     mWindowMap = [[NSMutableDictionary alloc] initWithCapacity:10];
   }
   return self;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (void)dealloc
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [mWindowMap release];
   [super dealloc];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (id)dataForWindow:(NSWindow*)inWindow
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   return [mWindowMap objectForKey:[self keyForWindow:inWindow]];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (void)setData:(id)inData forWindow:(NSWindow*)inWindow
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [mWindowMap setObject:inData forKey:[self keyForWindow:inWindow]];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (void)removeDataForWindow:(NSWindow*)inWindow
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [mWindowMap removeObjectForKey:[self keyForWindow:inWindow]];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (NSString*)keyForWindow:(NSWindow*)inWindow
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   return [NSString stringWithFormat:@"%p", inWindow];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 @end
@@ -115,6 +143,8 @@
 
 - (id)initWithWindow:(NSWindow*)inWindow
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   if ((self = [super init])) {
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(windowBecameKey:)
@@ -132,12 +162,18 @@
                                                object:inWindow];
   }
   return self;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (void)dealloc
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [super dealloc];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // As best I can tell, if the notification's object has a corresponding
@@ -163,7 +199,9 @@
 // to child widgets also avoids "win is null" assertions on debug builds
 // (see bug 354768 comments 55 and 58).
 - (void)windowBecameKey:(NSNotification*)inNotification
-{
+{  
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   NSWindow* window = (NSWindow*)[inNotification object];
   id delegate = [window delegate];
   if (delegate && [delegate respondsToSelector:@selector(sendFocusEvent:)]) {
@@ -183,6 +221,8 @@
     if ([firstResponder isKindOfClass:[ChildView class]])
       [firstResponder viewsWindowDidBecomeKey];
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // See comments above windowBecameKey:
@@ -204,6 +244,8 @@
 // viewsWindowDidResignKey (whether or not we're using top-level widgets).
 - (void)windowResignedKey:(NSNotification*)inNotification
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   NSWindow* window = (NSWindow*)[inNotification object];
   id delegate = [window delegate];
   if (delegate && [delegate respondsToSelector:@selector(sendFocusEvent:)]) {
@@ -213,15 +255,21 @@
   id firstResponder = [window firstResponder];
   if ([firstResponder isKindOfClass:[ChildView class]])
     [firstResponder viewsWindowDidResignKey];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (void)windowWillClose:(NSNotification*)inNotification
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   // postpone our destruction
   [[self retain] autorelease];
 
   // remove ourselves from the window map (which owns us)
   [[WindowDataMap sharedWindowDataMap] removeDataForWindow:[inNotification object]];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 @end
