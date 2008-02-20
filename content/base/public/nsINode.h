@@ -48,6 +48,7 @@
 class nsIContent;
 class nsIDocument;
 class nsIDOMEvent;
+class nsIPresShell;
 class nsPresContext;
 class nsEventChainVisitor;
 class nsEventChainPreVisitor;
@@ -59,6 +60,7 @@ class nsIMutationObserver;
 class nsChildContentList;
 class nsNodeWeakReference;
 class nsNodeSupportsWeakRefTearoff;
+class nsIEditor;
 
 enum {
   // This bit will be set if the node doesn't have nsSlots
@@ -144,8 +146,8 @@ inline nsINode* NODE_FROM(C& aContent, D& aDocument)
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0xd1c2e967, 0x854a, 0x436b, \
-  { 0xbf, 0xa5, 0xf6, 0xa4, 0x9a, 0x97, 0x46, 0x74 } }
+{ 0x6f69dd90, 0x318d, 0x40ac, \
+  { 0xb8, 0xb8, 0x99, 0xb8, 0xa7, 0xbb, 0x9a, 0x58 } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -651,6 +653,22 @@ public:
     return IsEditableExternal();
 #endif
   }
+
+  /**
+   * Get the root content of an editor. So, this node must be a descendant of
+   * an editor. Note that this should be only used for getting input or textarea
+   * editor's root content. This method doesn't support HTML editors.
+   */
+  nsIContent* GetTextEditorRootContent(nsIEditor** aEditor = nsnull);
+
+  /**
+   * Get the nearest selection root, ie. the node that will be selected if the
+   * user does "Select All" while the focus is in this node. Note that if this
+   * node is not in an editor, the result comes from the nsFrameSelection that
+   * is related to aPresShell, so the result might not be the ancestor of this
+   * node.
+   */
+  nsIContent* GetSelectionRootContent(nsIPresShell* aPresShell);
 
 protected:
 

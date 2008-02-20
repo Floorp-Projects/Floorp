@@ -96,7 +96,6 @@ union nsPluginPort;
   
   // needed for NSTextInput implementation
   NSRange mMarkedRange;
-  NSRange mSelectedRange;
   BOOL mIgnoreDoCommand;
 
   BOOL mInHandScroll; // true for as long as we are hand scrolling
@@ -240,7 +239,8 @@ public:
   NS_IMETHOD              IsVisible(PRBool& outState);
 
   virtual nsIWidget*      GetParent(void);
-  
+  nsIWidget*              GetTopLevelWidget();
+
   NS_IMETHOD              ModalEventFilter(PRBool aRealEvent, void *aEvent,
                                            PRBool *aForWindow);
 
