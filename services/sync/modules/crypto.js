@@ -120,7 +120,10 @@ WeaveCrypto.prototype = {
 
     let args = [wrap, Utils.getTmp().path, bin];
     args = args.concat(arguments);
-    return Utils.runCmd.apply(null, args);
+
+    let rv = Utils.runCmd.apply(null, args);
+    if (rv != 0)
+      throw "openssl did not run successfully, error code " + rv;
   },
 
   _opensslPBE: function Crypto__openssl(op, algorithm, input, password) {
@@ -128,10 +131,6 @@ WeaveCrypto.prototype = {
     let [inputFOS] = Utils.open(inputFile, ">");
     inputFOS.write(input, input.length);
     inputFOS.close();
-
-    let outputFile = Utils.getTmp("output");
-    if (outputFile.exists())
-      outputFile.remove(false);
 
     // nsIProcess doesn't support stdin, so we write a file instead
     let passFile = Utils.getTmp("pass");
@@ -142,7 +141,6 @@ WeaveCrypto.prototype = {
     try {
       this._openssl(algorithm, op, "-a", "-salt", "-in", "input",
                     "-out", "output", "-pass", "file:pass");
-      // FIXME: check rv
 
     } catch (e) {
       throw e;
@@ -152,6 +150,7 @@ WeaveCrypto.prototype = {
       inputFile.remove(false);
     }
 
+    let outputFile = Utils.getTmp("output");
     let [outputFIS] = Utils.open(outputFile, "<");
     let ret = Utils.readStream(outputFIS);
     outputFIS.close();
@@ -169,8 +168,7 @@ WeaveCrypto.prototype = {
     if (outputFile.exists())
       outputFile.remove(false);
 
-    let rv = this._openssl("rand", "-base64", "-out", "output", length);
-    // FIXME: check rv
+    this._openssl("rand", "-base64", "-out", "output", length);
 
     let [outputFIS] = Utils.open(outputFile, "<");
     let ret = Utils.readStream(outputFIS);
@@ -191,16 +189,14 @@ WeaveCrypto.prototype = {
     if (privKeyF.exists())
       privKeyF.remove(false);
 
-    let rv = this._openssl("genrsa", "-out", "privkey.pem", bits);
-    // FIXME: check rv
+    this._openssl("genrsa", "-out", "privkey.pem", bits);
 
     let pubKeyF = Utils.getTmp("pubkey.pem");
     if (pubKeyF.exists())
       pubKeyF.remove(false);
 
-    rv = this._openssl("rsa", "-in", "privkey.pem", "-out", "pubkey.pem",
-                       "-outform", "PEM", "-pubout");
-    // FIXME: check rv
+    this._openssl("rsa", "-in", "privkey.pem", "-out", "pubkey.pem",
+                  "-outform", "PEM", "-pubout");
 
     let cryptedKeyF = Utils.getTmp("enckey.pem");
     if (cryptedKeyF.exists())
@@ -213,11 +209,12 @@ WeaveCrypto.prototype = {
     passFOS.close();
 
     try {
-      rv = this._openssl("pkcs8", "-in", "privkey.pem", "-out", "enckey.pem",
-                         "-topk8", "-v2", algorithm, "-pass", "file:pass");
-      // FIXME: check rv
+      this._openssl("pkcs8", "-in", "privkey.pem", "-out", "enckey.pem",
+                    "-topk8", "-v2", algorithm, "-pass", "file:pass");
+
     } catch (e) {
       throw e;
+
     } finally {
       passFile.remove(false);
       privKeyF.remove(false);
@@ -252,9 +249,8 @@ WeaveCrypto.prototype = {
     if (outputFile.exists())
       outputFile.remove(false);
 
-    let rv = this._openssl("rsautl", "-encrypt", "-pubin", "-inkey", "key",
-                           "-in", "input", "-out", "output");
-    // FIXME: check rv
+    this._openssl("rsautl", "-encrypt", "-pubin", "-inkey", "key",
+                  "-in", "input", "-out", "output");
 
     let [outputFIS] = Utils.open(outputFile, "<");
     let output = Utils.readStream(outpusFIS);
@@ -287,11 +283,12 @@ WeaveCrypto.prototype = {
     passFOS.close();
 
     try {
-      let rv = this._openssl("rsautl", "-decrypt", "-inkey", "key", "-pass",
-                             "file:pass", "-in", "input", "-out", "output");
-      // FIXME: check rv
+      this._openssl("rsautl", "-decrypt", "-inkey", "key", "-pass",
+                    "file:pass", "-in", "input", "-out", "output");
+
     } catch(e) {
       throw e;
+
     } finally {
       passFile.remove(false);
     }

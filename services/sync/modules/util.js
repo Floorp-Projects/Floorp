@@ -221,10 +221,12 @@ let Utils = {
     case "<": {
       if (!file.exists())
         throw "Cannot open file for reading, file does not exist";
-      stream = Cc["@mozilla.org/network/file-input-stream;1"].
+      let fis = Cc["@mozilla.org/network/file-input-stream;1"].
         createInstance(Ci.nsIFileInputStream);
-      stream.init(file, MODE_RDONLY, perms, 0);
-      stream.QueryInterface(Ci.nsILineInputStream);
+      fis.init(file, MODE_RDONLY, perms, 0);
+      stream = Cc["@mozilla.org/scriptableinputstream;1"].
+        createInstance(Ci.nsIScriptableInputStream);
+      stream.init(fis);
     } break;
 
     case ">": {
@@ -246,14 +248,15 @@ let Utils = {
     return [stream, file];
   },
 
-  readStream: function Weave_readStream(fis) {
-    let data = "";
-    while (fis.available()) {
-      let ret = {};
-      fis.readLine(ret);
-      data += ret.value;
+  // assumes an nsIScriptableInputStream
+  readStream: function Weave_readStream(is) {
+    let ret = "";
+    let chunk = is.read(4096);
+    while (chunk.length > 0) {
+      ret += chunk;
+      chunk = is.read(4096);
     }
-    return data;
+    return ret;
   },
 
   /*
