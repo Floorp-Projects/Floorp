@@ -15,8 +15,9 @@
 </tooltip>
 
 <box tooltiptext="Box Tooltip">
-  <button id="withtext" label="Tooltip Text" tooltiptext="Button Tooltip"/>
-  <button id="without" label="No Tooltip"/>
+  <button id="withtext" label="Tooltip Text" tooltiptext="Button Tooltip"
+          style="-moz-appearance: none;"/>
+  <button id="without" label="No Tooltip" style="-moz-appearance: none;"/>
   <!-- remove the native theme and borders to avoid some platform
        specific sizing differences -->
   <button id="withtooltip" label="Tooltip Element" tooltip="thetooltip"
@@ -42,8 +43,11 @@ function checkCoords(event)
   var mod = (gTestIndex == 5) ? 4 : 6;
 
   var rect = gButton.getBoundingClientRect();
-  is(event.clientX, Math.round(rect.left) + mod, "step " + (gTestIndex + 1) + " clientX");
-  is(event.clientY, Math.round(rect.top) + mod, "step " + (gTestIndex + 1) + " clientY");
+  var popupstyle = window.getComputedStyle(gButton, "");
+  is(event.clientX, Math.round(rect.left) + parseInt(popupstyle.borderLeftWidth) + mod,
+     "step " + (gTestIndex + 1) + " clientX");
+  is(event.clientY, Math.round(rect.top) + parseInt(popupstyle.borderTopWidth) + mod,
+     "step " + (gTestIndex + 1) + " clientY");
   ok(event.screenX > 0, "step " + (gTestIndex + 1) + " screenX");
   ok(event.screenY > 0, "step " + (gTestIndex + 1) + " screenY");
 }
