@@ -364,10 +364,9 @@ sub startServer {
   if ($pid == 0) {
     # Run the server
     my $status = 0;
-    my $command = "";
 
     if ($close_when_done) {
-      $command .= "CLOSE_WHEN_DONE=1 ";
+      $ENV{'CLOSE_WHEN_DONE'} = '1';
     }
 
     if ($unixish) {
@@ -375,18 +374,18 @@ sub startServer {
       $ENV{'MOZILLA_FIVE_HOME'} = $dist_bin;
     }
 
-    $command .= "$dist_bin/xpcshell -v 170 ";
+    my @runargs = ("$dist_bin/xpcshell", "-v", "170");
 
     # this path is passed as a string, so we need to convert it on win32
     if ($is_win32) {
-      $command .= " -f \"" . winPathFromDir($FindBin::Bin) . "\\httpd.js\"";
-      $command .= " -f \"" . winPathFromDir($FindBin::Bin) . "\\server.js\"";
+      push(@runargs, "-f", winPathFromDir($FindBin::Bin) . "\\httpd.js");
+      push(@runargs, "-f", winPathFromDir($FindBin::Bin) . "\\server.js");
     } else {
-      $command .= " -f \"" . $FindBin::Bin .  "/httpd.js\"";
-      $command .= " -f \"" . $FindBin::Bin . "/server.js\"";
+      push(@runargs, "-f", $FindBin::Bin . "/httpd.js");
+      push(@runargs, "-f", $FindBin::Bin . "/server.js");
     }
-    print "$command\n";
-    exec("$command") or die("Error running server: $!\n");
+    print "@runargs\n";
+    exec @runargs or die("Error running server: $!\n");
   }
 
   return ($pid);
