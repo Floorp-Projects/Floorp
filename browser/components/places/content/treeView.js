@@ -905,6 +905,11 @@ PlacesTreeView.prototype = {
   },
 
   set result(val) {
+    // some methods (e.g. getURLsFromContainer) temporarily null out the
+    // viewer when they do temporary changes to the view, this does _not_
+    // call setResult(null), but then, we're called again with the result
+    // object which is already set for this viewer. At that point,
+    // we should do nothing.
     if (this._result != val) {
       this._result = val;
       this._finishInit();
