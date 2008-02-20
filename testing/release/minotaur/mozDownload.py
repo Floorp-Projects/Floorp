@@ -39,6 +39,7 @@ import urllib
 import urlparse
 import shutil
 import subprocess
+import traceback
 from optparse import OptionParser
 import os
 
@@ -76,6 +77,11 @@ class mozURLopener(urllib.FancyURLopener):
       raise IOError, 401
       return None
 
+  def http_error_404(self, url, fp, errcode, errmsg, headers, data=None):
+    debug("mozURLOpener: Got a 404!")
+    raise IOError, 404
+    return None
+
 class MozDownloader:
   def __init__(self, **kwargs):
     assert (kwargs['url'] != "" and kwargs['url'] != None)
@@ -96,8 +102,17 @@ class MozDownloader:
       destfile = open(self.dest, "wb")
       destfile.write(data.read())
       destfile.close()
+    except IOError, errcode:
+      if str(errcode) == "401":
+        print "Download Fails - Invalid username and password"
+      elif str(errcode) == "404":
+        print "Download Fails - URL does not exist: URL = " + self.url
+      else:
+        print "Download Fails, IOError"
+        traceback.print_exc()
     except:
-      print "Download did not work - is your username and password correct?"
+      print "Download Fails, unrecognized error."
+      traceback.print_exc()
 
   def ensureDest(self):
     try:
