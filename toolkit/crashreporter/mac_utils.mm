@@ -38,13 +38,18 @@
 #include <Foundation/Foundation.h>
 
 #include "mac_utils.h"
+#include "nsObjCExceptions.h"
 
 bool PassToOSCrashReporter()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
   NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
   BOOL osCrashReporter = [userDefaults boolForKey:@"OSCrashReporter"];
   [pool release];
 
   return osCrashReporter == YES;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
