@@ -244,7 +244,12 @@ public:
     eMetric_IMERawInputUnderlineStyle,
     eMetric_IMESelectedRawTextUnderlineStyle,
     eMetric_IMEConvertedTextUnderlineStyle,
-    eMetric_IMESelectedConvertedTextUnderline
+    eMetric_IMESelectedConvertedTextUnderline,
+
+    /**
+     * If this metric != 0, show icons in menus.
+     */
+    eMetric_ImagesInMenus
   } nsMetricID;
 
   enum {

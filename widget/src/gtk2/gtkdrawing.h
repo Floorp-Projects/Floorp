@@ -404,6 +404,12 @@ GtkWidget* moz_gtk_get_scrollbar_widget(void);
  */
 gint moz_gtk_get_tab_thickness(void);
 
+/**
+ * Get a boolean which indicates whether or not to use images in menus.
+ * If TRUE, use images in menus.
+ */
+gboolean moz_gtk_images_in_menus(void);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

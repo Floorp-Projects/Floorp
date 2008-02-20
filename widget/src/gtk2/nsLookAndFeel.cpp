@@ -536,7 +536,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_IMESelectedConvertedTextUnderline:
         aMetric = NS_UNDERLINE_STYLE_NONE;
         break;
-
+    case eMetric_ImagesInMenus:
+        aMetric = moz_gtk_images_in_menus();
+        break;
     default:
         aMetric = 0;
         res     = NS_ERROR_FAILURE;
