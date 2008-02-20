@@ -15,7 +15,7 @@
 SimpleTest.waitForExplicitFinish();
 function runTest()
 {
-  window.open("window_popup_attribute.xul", "_blank", "width=600,height=600");
+  window.open("window_popup_attribute.xul", "_blank", "width=600,height=700");
 }
 </script>
 
