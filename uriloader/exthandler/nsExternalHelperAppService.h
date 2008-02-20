@@ -130,16 +130,6 @@ public:
                                                           PRBool     * aFound) = 0;
 
   /**
-   * Given a scheme, looks up the protocol info from the OS.  This should be
-   * overridden by each OS's implementation.
-   *
-   * @param aScheme The protocol scheme we are looking for.
-   * @return An nsIHanderInfo for the protocol.
-   */
-  virtual already_AddRefed<nsIHandlerInfo> GetProtocolInfoFromOS(const nsACString &aScheme,
-                                                                 PRBool *found) = 0;
-
-  /**
    * Given a string identifying an application, create an nsIFile representing
    * it. This function should look in $PATH for the application.
    * The base class implementation will first try to interpret platformAppPath

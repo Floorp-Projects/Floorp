@@ -528,19 +528,37 @@ pref("browser.feeds.handler", "ask");
 pref("browser.videoFeeds.handler", "ask");
 pref("browser.audioFeeds.handler", "ask");
 
-// For now, this is living in content rather than in locales, as per Pike.
-// Eventually it will get merged into region.properties; see bug 395277.
-//
-// At startup, if the handler service notices that the version number here
-// is newer than the version number in the handler service datastore, it will
-// add any handlers it finds in the prefs (as seeded by this file) to its
-// datastore.  
-pref("gecko.handlerService.defaultHandlersVersion", "0");
-//
+// At startup, if the handler service notices that the version number in the
+// region.properties file is newer than the version number in the handler
+// service datastore, it will add any new handlers it finds in the prefs (as
+// seeded by this file) to its datastore.  
+pref("gecko.handlerService.defaultHandlersVersion", "chrome://browser-region/locale/region.properties");
+
 // The default set of web-based protocol handlers shown in the application
-// selection dialog
-pref("gecko.handlerService.schemes.webcal.0.name", "WebCal Test Handler");
-pref("gecko.handlerService.schemes.webcal.0.uriTemplate", "http://handler-test.mozilla.org/webcal?url=%s");
+// selection dialog for webcal: ; I've arbitrarily picked 4 default handlers
+// per protocol, but if some locale wants more than that (or defaults for some
+// protocol not currently listed here), we should go ahead and add those.
+
+// webcal
+pref("gecko.handlerService.schemes.webcal.0.name", "chrome://browser-region/locale/region.properties");
+pref("gecko.handlerService.schemes.webcal.0.uriTemplate", "chrome://browser-region/locale/region.properties");
+pref("gecko.handlerService.schemes.webcal.1.name", "chrome://browser-region/locale/region.properties");
+pref("gecko.handlerService.schemes.webcal.1.uriTemplate", "chrome://browser-region/locale/region.properties");
+pref("gecko.handlerService.schemes.webcal.2.name", "chrome://browser-region/locale/region.properties");
+pref("gecko.handlerService.schemes.webcal.2.uriTemplate", "chrome://browser-region/locale/region.properties");
+pref("gecko.handlerService.schemes.webcal.3.name", "chrome://browser-region/locale/region.properties");
+pref("gecko.handlerService.schemes.webcal.3.uriTemplate", "chrome://browser-region/locale/region.properties");
+
+// mailto
+pref("gecko.handlerService.schemes.mailto.0.name", "chrome://browser-region/locale/region.properties");
+pref("gecko.handlerService.schemes.mailto.0.uriTemplate", "chrome://browser-region/locale/region.properties");
+pref("gecko.handlerService.schemes.mailto.1.name", "chrome://browser-region/locale/region.properties");
+pref("gecko.handlerService.schemes.mailto.1.uriTemplate", "chrome://browser-region/locale/region.properties");
+pref("gecko.handlerService.schemes.mailto.2.name", "chrome://browser-region/locale/region.properties");
+pref("gecko.handlerService.schemes.mailto.2.uriTemplate", "chrome://browser-region/locale/region.properties");
+pref("gecko.handlerService.schemes.mailto.3.name", "chrome://browser-region/locale/region.properties");
+pref("gecko.handlerService.schemes.mailto.3.uriTemplate", "chrome://browser-region/locale/region.properties");
+
 
 // By default, we don't want protocol/content handlers to be registered from a different host, see bug 402287
 pref("gecko.handlerService.allowRegisterFromDifferentHost", false);
