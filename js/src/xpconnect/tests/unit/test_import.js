@@ -104,6 +104,13 @@ function run_test() {
   //     (to manually force it, delete compreg.dat before running the test)
   // do_check_true(foo.wrappedJSObject.postRegisterCalled);
 
+  // Call getInterfaces to test line numbers in JS components.  But as long as
+  // we're doing that, why not test what it returns too?
+  // Kind of odd that this is not returning an array containing the
+  // number... Or for that matter not returning an array containing an object?
+  var interfaces = foo.getInterfaces({});
+  do_check_eq(interfaces, Components.interfaces.nsIClassInfo.number);
+
   // try to create a component by CID
   const cid = "{6b933fe6-6eba-4622-ac86-e4f654f1b474}";
   do_check_true(cid in Components.classesByID);
