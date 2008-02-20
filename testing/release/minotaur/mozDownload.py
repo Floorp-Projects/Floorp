@@ -108,7 +108,7 @@ class MozDownloader:
       elif str(errcode) == "404":
         print "Download Fails - URL does not exist: URL = " + self.url
       else:
-        print "Download Fails, IOError"
+        print "Download Fails, IOError, error code: " + str(errcode)
         traceback.print_exc()
     except:
       print "Download Fails, unrecognized error."
