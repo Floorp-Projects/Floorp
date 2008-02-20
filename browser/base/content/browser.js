@@ -946,7 +946,10 @@ function delayedStartup()
                            gAutoHideTabbarPrefListener, false);
 
   gPrefService.addObserver(gHomeButton.prefDomain, gHomeButton, false);
-  gHomeButton.updateTooltip();
+
+  var homeButton = document.getElementById("home-button");
+  gHomeButton.updateTooltip(homeButton);
+  gHomeButton.updatePersonalToolbarStyle(homeButton);
 
 #ifdef HAVE_SHELL_SERVICE
   // Perform default browser checking (after window opens).
@@ -4198,9 +4201,10 @@ var gHomeButton = {
     this.updateTooltip();
   },
 
-  updateTooltip: function ()
+  updateTooltip: function (homeButton)
   {
-    var homeButton = document.getElementById("home-button");
+    if (!homeButton)
+      homeButton = document.getElementById("home-button");
     if (homeButton) {
       var homePage = this.getHomePage();
       homePage = homePage.replace(/\|/g,', ');
@@ -4227,9 +4231,10 @@ var gHomeButton = {
     return url;
   },
 
-  updatePersonalToolbarStyle: function ()
+  updatePersonalToolbarStyle: function (homeButton)
   {
-    var homeButton = document.getElementById("home-button");
+    if (!homeButton)
+      homeButton = document.getElementById("home-button");
     if (homeButton)
       homeButton.className = homeButton.parentNode.id == "PersonalToolbar"
                                || homeButton.parentNode.parentNode.id == "PersonalToolbar" ?
