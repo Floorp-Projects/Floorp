@@ -334,8 +334,7 @@ static void MoveChildTo(nsIFrame* aParent, nsIFrame* aChild, nsPoint aOrigin) {
     return;
   }
   
-  nsRect* overflowArea = aChild->GetOverflowAreaProperty(PR_FALSE);
-  nsRect r = overflowArea ? *overflowArea : nsRect(nsPoint(0, 0), aChild->GetSize());
+  nsRect r = aChild->GetOverflowRect();
   r += aChild->GetPosition();
   aParent->Invalidate(r);
   r -= aChild->GetPosition();

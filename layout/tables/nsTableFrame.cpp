@@ -1951,10 +1951,8 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
   
   if (!reflowedChildren) {
     // use the old overflow area
-     nsRect* oldOverflowArea = GetOverflowAreaProperty();
-     if (oldOverflowArea) {
-       aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, *oldOverflowArea);
-     }
+     aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea,
+                                          GetOverflowRect());
   }
 
   if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {

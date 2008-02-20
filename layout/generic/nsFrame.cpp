@@ -3657,13 +3657,12 @@ nsIFrame::GetOverflowRect() const
   // of child frames. That's OK because any reflow that updates these
   // areas will invalidate the appropriate area, so any (mis)uses of
   // this method will be fixed up.
-  nsRect* storedOA = const_cast<nsIFrame*>(this)
-    ->GetOverflowAreaProperty(PR_FALSE);
-  if (storedOA) {
-    return *storedOA;
-  } else {
-    return nsRect(nsPoint(0, 0), GetSize());
-  }
+
+  if (GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN)
+    return *const_cast<nsIFrame*>(this)->GetOverflowAreaProperty(PR_FALSE);
+  // NOTE this won't return accurate info if the overflow rect was updated
+  // but the mRect hasn't been set yet!
+  return nsRect(nsPoint(0, 0), GetSize());
 }
   
 void
@@ -3806,10 +3805,10 @@ nsFrame::List(FILE* out, PRInt32 aIndent) const
   }
   fprintf(out, " [content=%p]", static_cast<void*>(mContent));
   nsFrame* f = const_cast<nsFrame*>(this);
-  nsRect* overflowArea = f->GetOverflowAreaProperty(PR_FALSE);
-  if (overflowArea) {
-    fprintf(out, " [overflow=%d,%d,%d,%d]", overflowArea->x, overflowArea->y,
-            overflowArea->width, overflowArea->height);
+  if (f->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
+    nsRect overflowArea = f->GetOverflowRect();
+    fprintf(out, " [overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
+            overflowArea.width, overflowArea.height);
   }
   fputs("\n", out);
   return NS_OK;
@@ -5235,6 +5234,11 @@ DestroyRectFunc(void*    aFrame,
   delete static_cast<nsRect*>(aPropertyValue);
 }
 
+/** Create or retrieve the previously stored overflow area, if the frame does 
+ * not overflow and no creation is required return nsnull.
+ * @param aCreateIfNecessary  create a new nsRect for the overflow area
+ * @return pointer to the overflow area rectangle 
+ */
 nsRect*
 nsIFrame::GetOverflowAreaProperty(PRBool aCreateIfNecessary) 
 {
@@ -5331,15 +5335,9 @@ nsFrame::ConsiderChildOverflow(nsRect&   aOverflowArea,
   // check here also for hidden as table frames (table, tr and td) currently 
   // don't wrap their content into a scrollable frame if overflow is specified
   if (!disp->IsTableClip()) {
-    nsRect* overflowArea = aChildFrame->GetOverflowAreaProperty();
-    if (overflowArea) {
-      nsRect childOverflow(*overflowArea);
-      childOverflow.MoveBy(aChildFrame->GetPosition());
-      aOverflowArea.UnionRect(aOverflowArea, childOverflow);
-    }
-    else {
-      aOverflowArea.UnionRect(aOverflowArea, aChildFrame->GetRect());
-    }
+    nsRect childOverflow = aChildFrame->GetOverflowRect();
+    childOverflow.MoveBy(aChildFrame->GetPosition());
+    aOverflowArea.UnionRect(aOverflowArea, childOverflow);
   }
 }
 
@@ -7294,21 +7292,19 @@ void nsFrame::DisplayReflowExit(nsPresContext*      aPresContext,
       printf("status=0x%x", aStatus);
     }
     if (aFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
-       DR_state->PrettyUC(aMetrics.mOverflowArea.x, x);
-       DR_state->PrettyUC(aMetrics.mOverflowArea.y, y);
-       DR_state->PrettyUC(aMetrics.mOverflowArea.width, width);
-       DR_state->PrettyUC(aMetrics.mOverflowArea.height, height);
-       printf("o=(%s,%s) %s x %s", x, y, width, height);
-       nsRect* storedOverflow = aFrame->GetOverflowAreaProperty();
-       if (storedOverflow) {
-         if (aMetrics.mOverflowArea != *storedOverflow) {
-           DR_state->PrettyUC(storedOverflow->x, x);
-           DR_state->PrettyUC(storedOverflow->y, y);
-           DR_state->PrettyUC(storedOverflow->width, width);
-           DR_state->PrettyUC(storedOverflow->height, height);
-           printf("sto=(%s,%s) %s x %s", x, y, width, height);
-         }
-       }
+      DR_state->PrettyUC(aMetrics.mOverflowArea.x, x);
+      DR_state->PrettyUC(aMetrics.mOverflowArea.y, y);
+      DR_state->PrettyUC(aMetrics.mOverflowArea.width, width);
+      DR_state->PrettyUC(aMetrics.mOverflowArea.height, height);
+      printf("o=(%s,%s) %s x %s", x, y, width, height);
+      if (aFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
+        nsRect storedOverflow = aFrame->GetOverflowRect();
+        DR_state->PrettyUC(storedOverflow.x, x);
+        DR_state->PrettyUC(storedOverflow.y, y);
+        DR_state->PrettyUC(storedOverflow.width, width);
+        DR_state->PrettyUC(storedOverflow.height, height);
+        printf("sto=(%s,%s) %s x %s", x, y, width, height);
+      }
     }
     printf("\n");
     if (DR_state->mDisplayPixelErrors) {

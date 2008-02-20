@@ -352,13 +352,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   aDesiredSize.ascent = GetBoxAscent(state);
 
   // NS_FRAME_OUTSIDE_CHILDREN is set in SetBounds() above
-  if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
-    nsRect* overflowArea = GetOverflowAreaProperty();
-    NS_ASSERTION(overflowArea, "Failed to set overflow area property");
-    aDesiredSize.mOverflowArea = *overflowArea;
-  } else {
-    aDesiredSize.mOverflowArea = nsRect(nsPoint(0, 0), GetSize());
-  }
+  aDesiredSize.mOverflowArea = GetOverflowRect();
 
 #ifdef DO_NOISY_REFLOW
   {
