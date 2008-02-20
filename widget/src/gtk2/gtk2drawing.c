@@ -81,6 +81,7 @@ static GtkWidget* gMenuBarWidget;
 static GtkWidget* gMenuBarItemWidget;
 static GtkWidget* gMenuPopupWidget;
 static GtkWidget* gMenuItemWidget;
+static GtkWidget* gImageMenuItemWidget;
 static GtkWidget* gCheckMenuItemWidget;
 static GtkWidget* gTreeViewWidget;
 static GtkWidget* gTreeHeaderCellWidget;
@@ -433,6 +434,19 @@ ensure_menu_item_widget()
         gtk_menu_shell_append(GTK_MENU_SHELL(gMenuPopupWidget),
                               gMenuItemWidget);
         gtk_widget_realize(gMenuItemWidget);
+    }
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
+ensure_image_menu_item_widget()
+{
+    if (!gImageMenuItemWidget) {
+        ensure_menu_popup_widget();
+        gImageMenuItemWidget = gtk_image_menu_item_new();
+        gtk_menu_shell_append(GTK_MENU_SHELL(gMenuPopupWidget),
+                              gImageMenuItemWidget);
+        gtk_widget_realize(gImageMenuItemWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -2662,6 +2676,19 @@ moz_gtk_get_scrollbar_metrics(MozGtkScrollbarMetrics *metrics)
     return MOZ_GTK_SUCCESS;
 }
 
+gboolean
+moz_gtk_images_in_menus()
+{
+    gboolean result;
+    GtkSettings* settings;
+
+    ensure_image_menu_item_widget();
+    settings = gtk_widget_get_settings(gImageMenuItemWidget);
+
+    g_object_get(settings, "gtk-menu-images", &result, NULL);
+    return result;
+}
+
 gint
 moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
                      GdkRectangle* rect, GdkRectangle* cliprect,
@@ -2906,6 +2933,7 @@ moz_gtk_shutdown()
     gMenuBarItemWidget = NULL;
     gMenuPopupWidget = NULL;
     gMenuItemWidget = NULL;
+    gImageMenuItemWidget = NULL;
     gCheckMenuItemWidget = NULL;
     gTreeViewWidget = NULL;
     gTreeHeaderCellWidget = NULL;
