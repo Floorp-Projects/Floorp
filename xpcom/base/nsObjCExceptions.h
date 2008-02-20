@@ -128,6 +128,12 @@ NS_OBJC_TRY(_e, )
                                           }                                    \
                                           return nil;
 
+#define NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSNULL @try {
+#define NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL   } @catch(NSException *_exn) {     \
+                                               nsObjCExceptionLogAbort(_exn);  \
+                                             }                                 \
+                                             return nsnull;
+
 #define NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT @try {
 #define NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT   } @catch(NSException *_exn) {   \
                                                  nsObjCExceptionLogAbort(_exn);\
