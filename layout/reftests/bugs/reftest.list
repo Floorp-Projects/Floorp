@@ -115,6 +115,9 @@ fails == 134706-6b.html 134706-6b-ref.html # bug 363248 (via bug 414193, anyway)
 == 180085-2.html 180085-2-ref.html
 == 185388-1.html 185388-1-ref.html
 == 201215-1.html 201215-1-ref.html
+== 201293-1a.html 201293-1-ref.html
+== 201293-1b.html 201293-1-ref.html
+== 201293-1c.html 201293-1-ref.html
 == 206516-1.html 206516-1-ref.html
 == 210876-1.html 210876-1-ref.html
 == 212563-1.html 212563-1-ref.html
