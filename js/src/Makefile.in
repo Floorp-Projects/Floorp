@@ -150,7 +150,6 @@ EXPORTS		= \
 		jsobj.h \
 		jsopcode.tbl \
 		jsopcode.h \
-		jsosdep.h \
 		jsotypes.h \
 		jsparse.h \
 		jsprf.h \

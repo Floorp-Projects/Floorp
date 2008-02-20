@@ -908,7 +908,6 @@ DEP_CPP_JSAPI=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsparse.h"\
 	".\jsprf.h"\
@@ -964,7 +963,6 @@ DEP_CPP_JSAPI=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsparse.h"\
 	".\jsprf.h"\
@@ -1005,7 +1003,6 @@ DEP_CPP_JSARE=\
 	".\jscompat.h"\
 	".\jscpucfg.h"\
 	".\jslong.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsstddef.h"\
 	".\jstypes.h"\
@@ -1027,7 +1024,6 @@ DEP_CPP_JSARE=\
 	".\jscompat.h"\
 	".\jscpucfg.h"\
 	".\jslong.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsstddef.h"\
 	".\jstypes.h"\
@@ -1071,7 +1067,6 @@ DEP_CPP_JSARR=\
 	".\jslong.h"\
 	".\jsnum.h"\
 	".\jsobj.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprvtd.h"\
 	".\jspubtd.h"\
@@ -1114,7 +1109,6 @@ DEP_CPP_JSARR=\
 	".\jslong.h"\
 	".\jsnum.h"\
 	".\jsobj.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprvtd.h"\
 	".\jspubtd.h"\
@@ -1165,7 +1159,6 @@ DEP_CPP_JSATO=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -1209,7 +1202,6 @@ DEP_CPP_JSATO=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -1260,7 +1252,6 @@ DEP_CPP_JSBOO=\
 	".\jslong.h"\
 	".\jsnum.h"\
 	".\jsobj.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -1303,7 +1294,6 @@ DEP_CPP_JSBOO=\
 	".\jslong.h"\
 	".\jsnum.h"\
 	".\jsobj.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -1356,7 +1346,6 @@ DEP_CPP_JSCNT=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -1403,7 +1392,6 @@ DEP_CPP_JSCNT=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -1457,7 +1445,6 @@ DEP_CPP_JSDAT=\
 	".\jslong.h"\
 	".\jsnum.h"\
 	".\jsobj.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -1502,7 +1489,6 @@ DEP_CPP_JSDAT=\
 	".\jslong.h"\
 	".\jsnum.h"\
 	".\jsobj.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -1556,7 +1542,6 @@ DEP_CPP_JSDBG=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprvtd.h"\
 	".\jspubtd.h"\
@@ -1601,7 +1586,6 @@ DEP_CPP_JSDBG=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprvtd.h"\
 	".\jspubtd.h"\
@@ -1639,7 +1623,6 @@ DEP_CPP_JSDHA=\
 	".\jscpucfg.h"\
 	".\jsdhash.h"\
 	".\jslong.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jstypes.h"\
 	".\jsutil.h"\
@@ -1660,7 +1643,6 @@ DEP_CPP_JSDHA=\
 	".\jscpucfg.h"\
 	".\jsdhash.h"\
 	".\jslong.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jstypes.h"\
 	".\jsutil.h"\
@@ -1688,7 +1670,6 @@ DEP_CPP_JSDTO=\
 	".\jscpucfg.h"\
 	".\jsdtoa.h"\
 	".\jslong.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsstddef.h"\
@@ -1711,7 +1692,6 @@ DEP_CPP_JSDTO=\
 	".\jscpucfg.h"\
 	".\jsdtoa.h"\
 	".\jslong.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsstddef.h"\
@@ -1759,7 +1739,6 @@ DEP_CPP_JSEMI=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsparse.h"\
 	".\jsprf.h"\
@@ -1808,7 +1787,6 @@ DEP_CPP_JSEMI=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsparse.h"\
 	".\jsprf.h"\
@@ -1862,7 +1840,6 @@ DEP_CPP_JSEXN=\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsobj.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -1905,7 +1882,6 @@ DEP_CPP_JSEXN=\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsobj.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -1959,7 +1935,6 @@ DEP_CPP_JSFUN=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsparse.h"\
 	".\jsprvtd.h"\
@@ -2008,7 +1983,6 @@ DEP_CPP_JSFUN=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsparse.h"\
 	".\jsprvtd.h"\
@@ -2062,7 +2036,6 @@ DEP_CPP_JSGC_=\
 	".\jslong.h"\
 	".\jsnum.h"\
 	".\jsobj.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -2107,7 +2080,6 @@ DEP_CPP_JSGC_=\
 	".\jslong.h"\
 	".\jsnum.h"\
 	".\jsobj.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -2147,7 +2119,6 @@ DEP_CPP_JSHAS=\
 	".\jscpucfg.h"\
 	".\jshash.h"\
 	".\jslong.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jstypes.h"\
 	".\jsutil.h"\
@@ -2168,7 +2139,6 @@ DEP_CPP_JSHAS=\
 	".\jscpucfg.h"\
 	".\jshash.h"\
 	".\jslong.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jstypes.h"\
 	".\jsutil.h"\
@@ -2215,7 +2185,6 @@ DEP_CPP_JSINT=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -2265,7 +2234,6 @@ DEP_CPP_JSINT=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -2323,7 +2291,6 @@ DEP_CPP_JSINT=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -2373,7 +2340,6 @@ DEP_CPP_JSINT=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -2424,7 +2390,6 @@ DEP_CPP_JSLOC=\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsobj.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprvtd.h"\
 	".\jspubtd.h"\
@@ -2466,7 +2431,6 @@ DEP_CPP_JSLOC=\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsobj.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprvtd.h"\
 	".\jspubtd.h"\
@@ -2502,7 +2466,6 @@ SOURCE=.\jslog2.c
 DEP_CPP_JSLOG=\
 	".\jsbit.h"\
 	".\jscpucfg.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jstypes.h"\
 	{$(INCLUDE)}"\sys\types.h"\
@@ -2519,7 +2482,6 @@ NODEP_CPP_JSLOG=\
 DEP_CPP_JSLOG=\
 	".\jsbit.h"\
 	".\jscpucfg.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jstypes.h"\
 	{$(INCLUDE)}"\sys\types.h"\
@@ -2544,7 +2506,6 @@ SOURCE=.\jslong.c
 DEP_CPP_JSLON=\
 	".\jscpucfg.h"\
 	".\jslong.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jstypes.h"\
 	{$(INCLUDE)}"\sys\types.h"\
@@ -2561,7 +2522,6 @@ NODEP_CPP_JSLON=\
 DEP_CPP_JSLON=\
 	".\jscpucfg.h"\
 	".\jslong.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jstypes.h"\
 	{$(INCLUDE)}"\sys\types.h"\
@@ -2603,7 +2563,6 @@ DEP_CPP_JSMAT=\
 	".\jsmath.h"\
 	".\jsnum.h"\
 	".\jsobj.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprvtd.h"\
 	".\jspubtd.h"\
@@ -2646,7 +2605,6 @@ DEP_CPP_JSMAT=\
 	".\jsmath.h"\
 	".\jsnum.h"\
 	".\jsobj.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprvtd.h"\
 	".\jspubtd.h"\
@@ -2698,7 +2656,6 @@ DEP_CPP_JSNUM=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -2743,7 +2700,6 @@ DEP_CPP_JSNUM=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -2798,7 +2754,6 @@ DEP_CPP_JSOBJ=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -2847,7 +2802,6 @@ DEP_CPP_JSOBJ=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -2905,7 +2859,6 @@ DEP_CPP_JSOPC=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -2954,7 +2907,6 @@ DEP_CPP_JSOPC=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -3009,7 +2961,6 @@ DEP_CPP_JSPAR=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsparse.h"\
 	".\jsprvtd.h"\
@@ -3057,7 +3008,6 @@ DEP_CPP_JSPAR=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsparse.h"\
 	".\jsprvtd.h"\
@@ -3094,7 +3044,6 @@ SOURCE=.\jsprf.c
 DEP_CPP_JSPRF=\
 	".\jscpucfg.h"\
 	".\jslong.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jstypes.h"\
@@ -3113,7 +3062,6 @@ NODEP_CPP_JSPRF=\
 DEP_CPP_JSPRF=\
 	".\jscpucfg.h"\
 	".\jslong.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jstypes.h"\
@@ -3159,7 +3107,6 @@ DEP_CPP_JSREG=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprvtd.h"\
 	".\jspubtd.h"\
@@ -3205,7 +3152,6 @@ DEP_CPP_JSREG=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprvtd.h"\
 	".\jspubtd.h"\
@@ -3259,7 +3205,6 @@ DEP_CPP_JSSCA=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -3309,7 +3254,6 @@ DEP_CPP_JSSCA=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -3402,7 +3346,6 @@ DEP_CPP_JSSCO=\
 	".\jslong.h"\
 	".\jsnum.h"\
 	".\jsobj.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprvtd.h"\
 	".\jspubtd.h"\
@@ -3443,7 +3386,6 @@ DEP_CPP_JSSCO=\
 	".\jslong.h"\
 	".\jsnum.h"\
 	".\jsobj.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprvtd.h"\
 	".\jspubtd.h"\
@@ -3497,7 +3439,6 @@ DEP_CPP_JSSCR=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -3546,7 +3487,6 @@ DEP_CPP_JSSCR=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -3602,7 +3542,6 @@ DEP_CPP_JSSTR=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -3648,7 +3587,6 @@ DEP_CPP_JSSTR=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -3682,7 +3620,6 @@ SOURCE=.\jsutil.c
 
 DEP_CPP_JSUTI=\
 	".\jscpucfg.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jstypes.h"\
@@ -3700,7 +3637,6 @@ NODEP_CPP_JSUTI=\
 
 DEP_CPP_JSUTI=\
 	".\jscpucfg.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jstypes.h"\
@@ -3741,7 +3677,6 @@ DEP_CPP_JSXDR=\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsobj.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -3783,7 +3718,6 @@ DEP_CPP_JSXDR=\
 	".\jslock.h"\
 	".\jslong.h"\
 	".\jsobj.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jsprvtd.h"\
@@ -3904,7 +3838,6 @@ DEP_CPP_PRMJT=\
 	".\jscompat.h"\
 	".\jscpucfg.h"\
 	".\jslong.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jstypes.h"\
@@ -3925,7 +3858,6 @@ DEP_CPP_PRMJT=\
 	".\jscompat.h"\
 	".\jscpucfg.h"\
 	".\jslong.h"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsprf.h"\
 	".\jstypes.h"\
@@ -4000,7 +3932,6 @@ DEP_CPP_JS_C42=\
 	".\jsobj.h"\
 	".\jsopcode.h"\
 	".\jsopcode.tbl"\
-	".\jsosdep.h"\
 	".\jsotypes.h"\
 	".\jsparse.h"\
 	".\jsprf.h"\
