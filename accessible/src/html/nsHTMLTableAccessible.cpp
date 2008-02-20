@@ -921,7 +921,7 @@ PRBool nsHTMLTableAccessible::HasDescendant(char *aTagName, PRBool aAllowEmpty)
   nsAutoString tagName;
   tagName.AssignWithConversion(aTagName);
   tableElt->GetElementsByTagName(tagName, getter_AddRefs(nodeList));
-  NS_ENSURE_TRUE(nodeList, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(nodeList, PR_FALSE);
   PRUint32 length;
   nodeList->GetLength(&length);
   

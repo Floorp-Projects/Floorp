@@ -259,7 +259,7 @@ nsAccUtils::SetAccAttrsForXULContainerItem(nsIDOMNode *aNode,
 PRBool
 nsAccUtils::HasListener(nsIContent *aContent, const nsAString& aEventType)
 {
-  NS_ENSURE_ARG_POINTER(aContent);
+  NS_ENSURE_TRUE(aContent, PR_FALSE);
   nsCOMPtr<nsIEventListenerManager> listenerManager;
   aContent->GetListenerManager(PR_FALSE, getter_AddRefs(listenerManager));
 
@@ -319,8 +319,8 @@ PRBool
 nsAccUtils::IsAncestorOf(nsIDOMNode *aPossibleAncestorNode,
                          nsIDOMNode *aPossibleDescendantNode)
 {
-  NS_ENSURE_ARG_POINTER(aPossibleAncestorNode);
-  NS_ENSURE_ARG_POINTER(aPossibleDescendantNode);
+  NS_ENSURE_TRUE(aPossibleAncestorNode, PR_FALSE);
+  NS_ENSURE_TRUE(aPossibleDescendantNode, PR_FALSE);
 
   nsCOMPtr<nsIDOMNode> loopNode = aPossibleDescendantNode;
   nsCOMPtr<nsIDOMNode> parentNode;
