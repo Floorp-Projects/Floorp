@@ -103,6 +103,7 @@ static jsuword gStackBase;
 
 static size_t gScriptStackQuota = JS_DEFAULT_SCRIPT_STACK_QUOTA;
 
+static JSBool gEnableBranchCallback = JS_FALSE;
 static uint32 gBranchCount;
 static uint32 gBranchLimit;
 
@@ -189,8 +190,16 @@ my_BranchCallback(JSContext *cx, JSScript *script)
         gBranchCount = 0;
         return JS_FALSE;
     }
-    if ((gBranchCount & 0x3fff) == 1)
-        JS_MaybeGC(cx);
+#ifdef JS_THREADSAFE
+    if ((gBranchCount & 0xff) == 1) {
+#endif
+        if ((gBranchCount & 0x3fff) == 1)
+            JS_MaybeGC(cx);
+#ifdef JS_THREADSAFE
+        else
+            JS_YieldRequest(cx);
+    }
+#endif
     return JS_TRUE;
 }
 
@@ -213,7 +222,7 @@ SetContextOptions(JSContext *cx)
     }
     JS_SetThreadStackLimit(cx, stackLimit);
     JS_SetScriptStackQuota(cx, gScriptStackQuota);
-    if (gBranchLimit != 0) {
+    if (gEnableBranchCallback) {
         JS_SetBranchCallback(cx, my_BranchCallback);
         JS_ToggleOptions(cx, JSOPTION_NATIVE_BRANCH_CALLBACK);
     }
@@ -482,6 +491,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 
         case 'b':
             gBranchLimit = atoi(argv[++i]);
+            gEnableBranchCallback = (gBranchLimit != 0);
             break;
 
         case 'c':
@@ -552,7 +562,6 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         Process(cx, obj, filename, forceTTY);
     return gExitCode;
 }
-
 
 static JSBool
 Version(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
@@ -1199,7 +1208,6 @@ UpdateSwitchTableBounds(JSScript *script, uintN offset,
     *start = (uintN)(pc - script->code);
     *end = *start + (uintN)(n * jmplen);
 }
-
 
 static void
 SrcNotes(JSContext *cx, JSScript *script)
@@ -2496,6 +2504,262 @@ out:
     return ok;
 }
 
+#ifdef JS_THREADSAFE
+
+static JSBool
+Sleep(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsdouble t_secs;
+    PRUint32 t_ticks;
+    jsrefcount rc;
+
+    if (!JS_ValueToNumber(cx, JS_ARGV(cx, vp)[0], &t_secs))
+        return JS_FALSE;
+
+    rc = JS_SuspendRequest(cx);
+    t_ticks = (PRUint32)(PR_TicksPerSecond() * t_secs);
+    if (PR_Sleep(t_ticks) == PR_SUCCESS)
+        *vp = JSVAL_TRUE;
+    else
+        *vp = JSVAL_FALSE;
+    JS_ResumeRequest(cx, rc);
+    return JS_TRUE;
+}
+
+typedef struct ScatterThreadData ScatterThreadData;
+typedef struct ScatterData ScatterData;
+typedef enum ScatterStatus ScatterStatus;
+
+enum ScatterStatus {
+    SCATTER_WAIT,
+    SCATTER_GO,
+    SCATTER_CANCEL
+};
+
+struct ScatterData {
+    ScatterThreadData   *threads;
+    jsval               *results;
+    PRLock              *lock;
+    PRCondVar           *cvar;
+    ScatterStatus       status;
+};
+
+struct ScatterThreadData {
+    jsint               index;
+    ScatterData         *shared;
+    PRThread            *thr;
+    JSContext           *cx;
+    jsval               fn;
+};
+
+static void
+DoScatteredWork(JSContext *cx, ScatterThreadData *td)
+{
+    jsval *rval = &td->shared->results[td->index];
+
+    if (!JS_CallFunctionValue(cx, NULL, td->fn, 0, NULL, rval)) {
+        *rval = JSVAL_VOID;
+        JS_GetPendingException(cx, rval);
+        JS_ClearPendingException(cx);
+    }
+}
+
+static void
+RunScatterThread(void *arg)
+{
+    ScatterThreadData *td;
+    ScatterStatus st;
+    JSContext *cx;
+
+    td = (ScatterThreadData *)arg;
+    cx = td->cx;
+
+    /* Wait for go signal. */
+    PR_Lock(td->shared->lock);
+    while ((st = td->shared->status) == SCATTER_WAIT)
+        PR_WaitCondVar(td->shared->cvar, PR_INTERVAL_NO_TIMEOUT);
+    PR_Unlock(td->shared->lock);
+
+    if (st == SCATTER_CANCEL)
+        return;
+
+    /* We are go. */
+    JS_SetContextThread(cx);
+    JS_SetThreadStackLimit(cx, 0);
+    JS_BeginRequest(cx);
+    DoScatteredWork(cx, td);
+    JS_EndRequest(cx);
+    JS_ClearContextThread(cx);
+}
+
+/*
+ * scatter(fnArray) - Call each function in `fnArray` without arguments, each
+ * in a different thread. When all threads have finished, return an array: the
+ * return values. Errors are not propagated; if any of the function calls
+ * fails, the corresponding element in the results array gets the exception
+ * object, if any, else (undefined).
+ */
+static JSBool
+Scatter(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsuint i;
+    jsuint n;  /* number of threads */
+    JSObject *inArr;
+    JSObject *arr;
+    ScatterData sd;
+    JSBool ok;
+    jsrefcount rc;
+
+    if (!gEnableBranchCallback) {
+        /* Enable the branch callback, for periodic scope-sharing. */
+        gEnableBranchCallback = JS_TRUE;
+        JS_SetBranchCallback(cx, my_BranchCallback);
+        JS_ToggleOptions(cx, JSOPTION_NATIVE_BRANCH_CALLBACK);
+    }
+
+    sd.lock = NULL;
+    sd.cvar = NULL;
+    sd.results = NULL;
+    sd.threads = NULL;
+    sd.status = SCATTER_WAIT;
+
+    if (JSVAL_IS_PRIMITIVE(JS_ARGV(cx, vp)[0]))
+        goto fail;
+
+    inArr = JSVAL_TO_OBJECT(JS_ARGV(cx, vp)[0]);
+    ok = JS_GetArrayLength(cx, inArr, &n);
+    if (!ok)
+        goto out;
+
+    sd.lock = PR_NewLock();
+    if (!sd.lock)
+        goto fail;
+
+    sd.cvar = PR_NewCondVar(sd.lock);
+    if (!sd.cvar)
+        goto fail;
+
+    sd.results = (jsval *) malloc(n * sizeof(jsval));
+    if (!sd.results)
+        goto fail;
+    for (i = 0; i < n; i++) {
+        sd.results[i] = JSVAL_VOID;
+        ok = JS_AddRoot(cx, &sd.results[i]);
+        if (!ok) {
+            while (i-- > 0)
+                JS_RemoveRoot(cx, &sd.results[i]);
+            free(sd.results);
+            sd.results = NULL;
+            goto fail;
+        }
+    }
+
+    sd.threads = (ScatterThreadData *) malloc(n * sizeof(ScatterThreadData));
+    if (!sd.threads)
+        goto fail;
+    for (i = 0; i < n; i++) {
+        sd.threads[i].index = i;
+        sd.threads[i].shared = &sd;
+        sd.threads[i].thr = NULL;
+        sd.threads[i].cx = NULL;
+        sd.threads[i].fn = JSVAL_NULL;
+
+        ok = JS_AddRoot(cx, &sd.threads[i].fn);
+        if (ok) {
+            ok = JS_GetElement(cx, inArr, (jsint) i, &sd.threads[i].fn);
+            i++;  /* additional root to remove */
+        }
+        if (!ok) {
+            while (i-- > 0)
+                JS_RemoveRoot(cx, &sd.threads[i].fn);
+            free(sd.threads);
+            sd.threads = NULL;
+            goto fail;
+        }
+    }
+
+    for (i = 1; i < n; i++) {
+        JSContext *newcx = JS_NewContext(JS_GetRuntime(cx), 8192);
+        if (!newcx)
+            goto fail;
+        JS_SetGlobalObject(newcx, JS_GetGlobalObject(cx));
+        JS_ClearContextThread(newcx);
+        sd.threads[i].cx = newcx;
+    }
+
+    for (i = 1; i < n; i++) {
+        PRThread *t = PR_CreateThread(PR_USER_THREAD,
+                                      RunScatterThread,
+                                      &sd.threads[i],
+                                      PR_PRIORITY_NORMAL,
+                                      PR_LOCAL_THREAD,
+                                      PR_JOINABLE_THREAD,
+                                      0);
+        if (!t) {
+            /* Failed to start thread. */
+            PR_Lock(sd.lock);
+            sd.status = SCATTER_CANCEL;
+            PR_NotifyAllCondVar(sd.cvar);
+            PR_Unlock(sd.lock);
+            while (i-- > 1)
+                PR_JoinThread(sd.threads[i].thr);
+            goto fail;
+        }
+
+        sd.threads[i].thr = t;
+    }
+    PR_Lock(sd.lock);
+    sd.status = SCATTER_GO;
+    PR_NotifyAllCondVar(sd.cvar);
+    PR_Unlock(sd.lock);
+
+    DoScatteredWork(cx, &sd.threads[0]);
+
+    rc = JS_SuspendRequest(cx);
+    for (i = 1; i < n; i++) {
+        PR_JoinThread(sd.threads[i].thr);
+    }
+    JS_ResumeRequest(cx, rc);
+
+    arr = JS_NewArrayObject(cx, n, sd.results);
+    if (!arr)
+        goto fail;
+    *vp = OBJECT_TO_JSVAL(arr);
+    ok = JS_TRUE;
+
+out:
+    if (sd.threads) {
+        JSContext *acx;
+
+        for (i = 0; i < n; i++) {
+            JS_RemoveRoot(cx, &sd.threads[i].fn);
+            acx = sd.threads[i].cx;
+            if (acx) {
+                JS_SetContextThread(acx);
+                JS_DestroyContext(acx);
+            }
+        }
+        free(sd.threads);
+    }
+    if (sd.results) {
+        for (i = 0; i < n; i++)
+            JS_RemoveRoot(cx, &sd.results[i]);
+        free(sd.results);
+    }
+    if (sd.cvar)
+        PR_DestroyCondVar(sd.cvar);
+    if (sd.lock)
+        PR_DestroyLock(sd.lock);
+
+    return ok;
+
+fail:
+    ok = JS_FALSE;
+    goto out;
+}
+
+#endif
+
 /* We use a mix of JS_FS and JS_FN to test both kinds of natives. */
 static JSFunctionSpec shell_functions[] = {
     JS_FS("version",        Version,        0,0,0),
@@ -2550,6 +2814,10 @@ static JSFunctionSpec shell_functions[] = {
 #endif
 #ifdef DEBUG_ARRAYS
     JS_FS("arrayInfo",       js_ArrayInfo,       1,0,0),
+#endif
+#ifdef JS_THREADSAFE
+    JS_FN("sleep",          Sleep,          1,1,0),
+    JS_FN("scatter",        Scatter,        1,1,0),
 #endif
     JS_FS_END
 };
@@ -2623,6 +2891,10 @@ static const char *const shell_help_messages[] = {
 #endif
 #ifdef DEBUG_ARRAYS
 "arrayInfo(a1, a2, ...)   Report statistics about arrays.",
+#endif
+#ifdef JS_THREADSAFE
+"sleep(dt)                Sleep for dt seconds",
+"scatter(fns)             Call functions concurrently (ignoring errors)",
 #endif
 };
 
