@@ -12,6 +12,7 @@
 
 <!ENTITY reportForm.description                     "Tell us a little about the problem you encountered:">
 <!ENTITY reportForm.url.title                       "Web site URL:">
+<!ENTITY reportForm.url.accesskey                   "U">
 
 <!ENTITY reportForm.behind_login.title              "Web site is password-protected"><!-- No ":" at the end -->
 <!ENTITY reportForm.behind_login.accesskey          "P">

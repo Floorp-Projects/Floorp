@@ -81,7 +81,7 @@
       </columns>
       <rows>
         <row align="center">
-          <label control="url" value="&reportForm.url.title;"/>
+          <label control="url" value="&reportForm.url.title;" accesskey="&reportForm.url.accesskey;"/>
           <textbox id="url" size="60" readonly="true" class="noborder"/>
         </row>
         <row align="center">
