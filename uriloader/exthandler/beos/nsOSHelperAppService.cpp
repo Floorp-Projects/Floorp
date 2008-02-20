@@ -246,7 +246,7 @@ nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
 
   nsMIMEInfoBeOS *handlerInfo =
 	new nsMIMEInfoBeOS(aScheme, nsMIMEInfoBase::eProtocolInfo);
-  NS_ENSURE_TRUE(handlerInfo, nsnull);
+  NS_ENSURE_TRUE(handlerInfo, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*_retval = handlerInfo);
 
   if (!*found) {
