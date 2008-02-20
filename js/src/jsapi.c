@@ -496,7 +496,7 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
         }
         break;
       case JSTYPE_BOOLEAN:
-        *vp = js_ValueToBoolean(v);
+        *vp = BOOLEAN_TO_JSVAL(js_ValueToBoolean(v));
         return JS_TRUE;
       default: {
         char numBuf[12];
