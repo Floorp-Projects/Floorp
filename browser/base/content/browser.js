@@ -1687,12 +1687,16 @@ function getShortcutOrURI(aURL, aPostDataRef) {
     param = aURL.substr(offset + 1);
   }
 
-  var engine = searchService.getEngineByAlias(keyword);
-  if (engine)
-    return engine.getSubmission(param, null).uri.spec;
-
   if (!aPostDataRef)
     aPostDataRef = {};
+
+  var engine = searchService.getEngineByAlias(keyword);
+  if (engine) {
+    var submission = engine.getSubmission(param, null);
+    aPostDataRef.value = submission.postData;
+    return submission.uri.spec;
+  }
+
   [shortcutURL, aPostDataRef.value] =
     PlacesUtils.getURLAndPostDataForKeyword(keyword);
 
