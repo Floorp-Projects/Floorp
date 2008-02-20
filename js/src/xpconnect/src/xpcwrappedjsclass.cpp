@@ -513,6 +513,8 @@ GetContextFromObject(JSObject *obj)
 
     // In order to get a context, we need a context.
     XPCCallContext ccx(NATIVE_CALLER);
+    if(!ccx.IsValid())
+        return nsnull;
     XPCWrappedNativeScope* scope =
         XPCWrappedNativeScope::FindInJSObjectScope(ccx, obj);
     XPCContext *xpcc = scope->GetContext();
