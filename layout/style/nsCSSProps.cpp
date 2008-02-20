@@ -957,7 +957,8 @@ const PRInt32 nsCSSProps::kVolumeKTable[] = {
 const PRInt32 nsCSSProps::kWhitespaceKTable[] = {
   eCSSKeyword_pre, NS_STYLE_WHITESPACE_PRE,
   eCSSKeyword_nowrap, NS_STYLE_WHITESPACE_NOWRAP,
-  eCSSKeyword__moz_pre_wrap, NS_STYLE_WHITESPACE_MOZ_PRE_WRAP,
+  eCSSKeyword_pre_wrap, NS_STYLE_WHITESPACE_PRE_WRAP,
+  eCSSKeyword__moz_pre_wrap, NS_STYLE_WHITESPACE_PRE_WRAP,
   eCSSKeyword_UNKNOWN,-1
 };
 
