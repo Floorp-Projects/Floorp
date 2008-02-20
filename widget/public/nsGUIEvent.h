@@ -1180,4 +1180,33 @@ enum nsDragDropEventStatus {
 #define NS_TEXTRANGE_CONVERTEDTEXT				0x04
 #define NS_TEXTRANGE_SELECTEDCONVERTEDTEXT		0x05
 
+static PRBool NS_TargetUnfocusedEventToLastFocusedContent(nsEvent* aEvent)
+{
+#if defined(MOZ_X11) || defined(XP_MACOSX)
+  // bug 52416 (MOZ_X11)
+  // Lookup region (candidate window) of UNIX IME grabs
+  // input focus from Mozilla but wants to send IME event
+  // to redraw pre-edit (composed) string
+  // If Mozilla does not have input focus and event is IME,
+  // sends IME event to pre-focused element
+
+  // bug 417315 (XP_MACOSX)
+  // The commit event when the window is deactivating is sent after
+  // the next focused widget getting the focus.
+  // We need to send the commit event to last focused content.
+
+  return NS_IS_IME_EVENT(aEvent);
+#elif defined(XP_WIN)
+  // bug 292263 (XP_WIN)
+  // If software keyboard has focus, it may send the key messages and
+  // the IME messages to pre-focused window. Therefore, if Mozilla
+  // doesn't have focus and event is key event or IME event, we should
+  // send the events to pre-focused element.
+
+  return NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent);
+#else
+  return PR_FALSE;
+#endif
+}
+
 #endif // nsGUIEvent_h__

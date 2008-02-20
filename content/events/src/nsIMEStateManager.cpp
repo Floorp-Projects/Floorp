@@ -179,15 +179,6 @@ nsIMEStateManager::OnDeactivate(nsPresContext* aPresContext)
     return NS_OK;
 
   sActiveWindow = nsnull;
-#ifdef NS_KBSC_USE_SHARED_CONTEXT
-  // Reset the latest content. When the window is activated, the IME state
-  // may be changed on other applications.
-  sContent = nsnull;
-  // We should enable the IME state for other applications.
-  nsCOMPtr<nsIKBStateControl> kb = GetKBStateControl(aPresContext);
-  if (kb)
-    SetIMEState(aPresContext, nsIContent::IME_STATUS_ENABLE, kb);
-#endif // NS_KBSC_USE_SHARED_CONTEXT
   return NS_OK;
 }
 
