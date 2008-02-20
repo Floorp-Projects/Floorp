@@ -40,7 +40,19 @@
 
 #include "mozce_internal.h"
 #include "time_conversions.h"
+
+#define strftime __not_supported_on_device_strftime
+#define localtime __not_supported_on_device_localtime
+#define mktime __not_supported_on_device_mktime
+#define gmtime __not_supported_on_device_gmtime
+#define time __not_supported_on_device_time
 #include <time.h>
+#undef strftime
+#undef localtime
+#undef mktime
+#undef gmtime
+#undef time
+
 extern "C" {
 #if 0
 }
@@ -52,11 +64,13 @@ static const int sDaysOfYear[12] = {
 };
 static struct tm tmStorage;
 
+#ifdef strftime
+#undef strftime
+#endif
+
 MOZCE_SHUNT_API size_t strftime(char *, size_t, const char *, const struct tm *)
 {
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
+#ifdef API_LOGGING
     mozce_printf("mozce_strftime called\n");
 #endif
 
@@ -66,9 +80,7 @@ MOZCE_SHUNT_API size_t strftime(char *, size_t, const char *, const struct tm *)
 
 MOZCE_SHUNT_API struct tm* mozce_localtime_r(const time_t* inTimeT,struct tm* outRetval)
 {
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
+#ifdef API_LOGGING
     mozce_printf("tm* mozce_localtime_r called\n");
 #endif
 
@@ -117,9 +129,7 @@ MOZCE_SHUNT_API struct tm* mozce_localtime_r(const time_t* inTimeT,struct tm* ou
 
 MOZCE_SHUNT_API struct tm* localtime(const time_t* inTimeT)
 {
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
+#ifdef API_LOGGING
     mozce_printf("tm* mozce_localtime called\n");
 #endif
 
@@ -129,9 +139,7 @@ MOZCE_SHUNT_API struct tm* localtime(const time_t* inTimeT)
 
 MOZCE_SHUNT_API struct tm* mozce_gmtime_r(const time_t* inTimeT, struct tm* outRetval)
 {
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
+#ifdef API_LOGGING
     mozce_printf("tm* mozce_gmtime_r called\n");
 #endif
 
@@ -180,9 +188,7 @@ MOZCE_SHUNT_API struct tm* mozce_gmtime_r(const time_t* inTimeT, struct tm* outR
 
 MOZCE_SHUNT_API struct tm* gmtime(const time_t* inTimeT)
 {
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
+#ifdef API_LOGGING
     mozce_printf("tm* mozce_gmtime called\n");
 #endif
 
@@ -192,9 +198,7 @@ MOZCE_SHUNT_API struct tm* gmtime(const time_t* inTimeT)
 
 MOZCE_SHUNT_API time_t mktime(struct tm* inTM)
 {
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
+#ifdef API_LOGGING
     mozce_printf("mozce_mktime called\n");
 #endif
 

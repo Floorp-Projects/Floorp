@@ -1,6 +1,14 @@
 
 
+DEVENV_FLAG=/
+
+ifdef MINGW32
+DEVENV_FLAG=//
+endif
+
+
 all:
+	echo $(MINGW32)
 	cl vs8ppc2003arm/arm-wince-as.c
 	mv arm-wince-as.exe vs8ppc2003arm
 	cl vs8ppc2003arm/arm-wince-gcc.c
@@ -10,12 +18,12 @@ all:
 	cl vs8ppc2003arm/arm-wince-link.c
 	mv arm-wince-link.exe vs8ppc2003arm
 	rm -f *.obj
-	devenv ../shunt/build/vs8/mozce_shunt_static.sln //rebuild "Release|Windows Mobile 6 Professional SDK (ARMV4I)"
+	devenv ../shunt/build/vs8/mozce_shunt_static.sln $(DEVENV_FLAG)Rebuild "Release|Windows Mobile 6 Standard SDK (ARMV4I)"
 
 clobber:
 	rm -f vs8ppc2003arm/*.exe
 	rm -f vs8ppc2003arm/*.obj
 	rm -f *.obj
 	rm -f *.exe
-	devenv ../shunt/build/vs8/mozce_shunt_static.sln /clean "Release|Windows Mobile 6 Professional SDK (ARMV4I)"
+	devenv ../shunt/build/vs8/mozce_shunt_static.sln $(DEVENV_FLAG)clean "Release|Windows Mobile 6 Standard SDK (ARMV4I)"
 
