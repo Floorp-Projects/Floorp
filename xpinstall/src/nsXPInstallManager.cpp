@@ -128,6 +128,7 @@ NS_INTERFACE_MAP_BEGIN(nsXPInstallManager)
   NS_INTERFACE_MAP_ENTRY(nsIBadCertListener2)
   NS_INTERFACE_MAP_ENTRY(nsISSLErrorListener)
   NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
