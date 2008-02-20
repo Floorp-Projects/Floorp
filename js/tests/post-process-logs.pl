@@ -245,8 +245,10 @@ while ($file = shift @ARGV)
             {
                 dbg "Begin loading $tmp_test_id";
 
+                # add reporting test as a valid state in case the previous test timed out during 
+                # a restart run and the test was killed before reporting end of test, exit, etc.
                 die "FATAL ERROR: Spider Begin loading: previous test not completed: test: $test_id, current test: $tmp_test_id, test state: $test_state, log: $file" 
-                    if ("started program, loading list, finished test, exited program" !~ /$test_state/);
+                    if ("started program, loading list, finished test, exited program, reporting test" !~ /$test_state/);
 
                 $test_state  = 'loading test';
                 $test_id     = $tmp_test_id;
@@ -273,8 +275,9 @@ while ($file = shift @ARGV)
                 dbg "processing jstest";
 
                 # may be in 'completed test' for delayed browser only tests.
+                # may be in 'exited program' in win32 for tests which timed out.
                 die "FATAL ERROR: jstest not in test: test state: $test_state: $_, log: $file" 
-                    if ('running test, reporting test, completed test, finished test' !~ /$test_state/);
+                    if ('running test, reporting test, completed test, finished test, exited program' !~ /$test_state/);
 
                 if ($test_state ne 'finished test')
                 {
@@ -327,11 +330,12 @@ while ($file = shift @ARGV)
 
                 dbg "Processing PAGE STATUS: test_state: $test_state, page_flag: $page_flag, page_status: $page_status";
 
-                die "FATAL ERROR: Test loaded but not in a test: $test_state: $_, log: $file" 
-                    if ('loading test, running test, reporting test' !~ /$test_state/);
-                    
                 ($tmp_test_id) = $page_flag =~ /http.*test=([^;]*);/;
 
+                # may be in 'exited program' in win32 for tests which timed out.
+                die "FATAL ERROR: Test loaded but not in a test: test_state: $test_state:  test: $test_id, current test: $tmp_test_id, log: $file" 
+                    if ('loading test, running test, reporting test, exited program' !~ /$test_state/);
+                    
                 die "FATAL ERROR: Test loaded does not match currently running test: test: $test_id, current test: $tmp_test_id, log: $file"
                     if ($test_id ne $tmp_test_id);
 
@@ -424,7 +428,16 @@ while ($file = shift @ARGV)
                         if ('started program, loading list' =~ /$test_state/);
 
                     die "FATAL ERROR: Program exited normally without finishing last test: test state: $test_state, $_, log: $file"
-                        if ($test_state ne 'finished test');
+                        if ('finished test, running test' !~ /$test_state/);
+
+                    if ($test_state eq 'running test')
+                    {
+                        $test_result = "FAILED";
+                        $test_description = join '; ', @messages;
+                        $test_description = "No test results reported. $test_description";
+                        $test_description = "EXIT STATUS: $exit_status, $test_description";
+                        outputrecord;
+                    }
                 }
                 else
                 {
