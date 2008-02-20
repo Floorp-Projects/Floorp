@@ -1951,17 +1951,20 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     obj = fp->scopeChain;
     JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
     JS_ASSERT(OBJ_GET_PRIVATE(cx, obj) == cx->fp);
+
+    /* Block and its locals must be on the current stack for GC safety. */
+    JS_ASSERT((size_t) OBJ_BLOCK_DEPTH(cx, obj) <=
+              (size_t) (fp->sp - fp->spbase));
+
     if (normalUnwind) {
         depth = OBJ_BLOCK_DEPTH(cx, obj);
-        JS_ASSERT(depth >= 0);
-        JS_ASSERT(fp->spbase + depth <= fp->sp);
         for (sprop = OBJ_SCOPE(obj)->lastProp; sprop; sprop = sprop->parent) {
             if (sprop->getter != js_BlockClass.getProperty)
                 continue;
             if (!(sprop->flags & SPROP_HAS_SHORTID))
                 continue;
-            slot = depth + (uintN)sprop->shortid;
-            JS_ASSERT(slot < fp->script->depth);
+            slot = depth + (uintN) sprop->shortid;
+            JS_ASSERT(slot < (size_t) (fp->sp - fp->spbase));
             if (!js_DefineNativeProperty(cx, obj, sprop->id,
                                          fp->spbase[slot], NULL, NULL,
                                          JSPROP_ENUMERATE | JSPROP_PERMANENT,
