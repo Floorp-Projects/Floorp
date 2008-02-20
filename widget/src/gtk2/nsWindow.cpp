@@ -2090,6 +2090,13 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     case 3:
         domButton = nsMouseEvent::eRightButton;
         break;
+        // Map buttons 8-9 to back/forward
+    case 8:
+        DispatchCommandEvent(nsWidgetAtoms::Back);
+        return;
+    case 9:
+        DispatchCommandEvent(nsWidgetAtoms::Forward);
+        return;
     default:
         return;
     }
@@ -2240,7 +2247,7 @@ is_latin_shortcut_key(guint aKeyval)
 }
 
 PRBool
-nsWindow::DispatchCommandKeyEvent(nsIAtom* aCommand)
+nsWindow::DispatchCommandEvent(nsIAtom* aCommand)
 {
     nsEventStatus status;
     nsCommandEvent event(PR_TRUE, nsWidgetAtoms::onAppCommand, aCommand, this);
@@ -2313,19 +2320,19 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
     // Look for specialized app-command keys
     switch (aEvent->keyval) {
         case XF86XK_Back:
-            return DispatchCommandKeyEvent(nsWidgetAtoms::Back);
+            return DispatchCommandEvent(nsWidgetAtoms::Back);
         case XF86XK_Forward:
-            return DispatchCommandKeyEvent(nsWidgetAtoms::Forward);
+            return DispatchCommandEvent(nsWidgetAtoms::Forward);
         case XF86XK_Refresh:
-            return DispatchCommandKeyEvent(nsWidgetAtoms::Reload);
+            return DispatchCommandEvent(nsWidgetAtoms::Reload);
         case XF86XK_Stop:
-            return DispatchCommandKeyEvent(nsWidgetAtoms::Stop);
+            return DispatchCommandEvent(nsWidgetAtoms::Stop);
         case XF86XK_Search:
-            return DispatchCommandKeyEvent(nsWidgetAtoms::Search);
+            return DispatchCommandEvent(nsWidgetAtoms::Search);
         case XF86XK_Favorites:
-            return DispatchCommandKeyEvent(nsWidgetAtoms::Bookmarks);
+            return DispatchCommandEvent(nsWidgetAtoms::Bookmarks);
         case XF86XK_HomePage:
-            return DispatchCommandKeyEvent(nsWidgetAtoms::Home);
+            return DispatchCommandEvent(nsWidgetAtoms::Home);
     }
 
     nsKeyEvent event(PR_TRUE, NS_KEY_PRESS, this);

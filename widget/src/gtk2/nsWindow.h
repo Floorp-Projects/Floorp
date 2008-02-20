@@ -363,7 +363,7 @@ private:
     nsresult           SetWindowIconList(const nsCStringArray &aIconList);
     void               SetDefaultIcon(void);
     void               InitButtonEvent(nsMouseEvent &aEvent, GdkEventButton *aGdkEvent);
-    PRBool             DispatchCommandKeyEvent(nsIAtom* aCommand);
+    PRBool             DispatchCommandEvent(nsIAtom* aCommand);
 
     GtkWidget          *mShell;
     MozContainer       *mContainer;
