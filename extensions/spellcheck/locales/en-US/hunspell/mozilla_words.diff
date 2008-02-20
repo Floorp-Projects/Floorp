@@ -1,169 +1,243 @@
-diff -up4 en-US.dic en-US.dic
---- en-US.dic	Sat Nov 24 21:50:56 2007
-+++ en-US.dic	Sat Dec  8 10:05:34 2007
-@@ -2300,8 +2300,9 @@ Budweiser/M
- Buffalo/M
- Buffy/M
- Buford/M
- Bugatti/M
-+Bugzilla/M
- Buick/M
- Buiron/M
- Bujumbura/M
- Bukhara
-@@ -2503,8 +2504,9 @@ Cami/M
- Camila/M
- Camile/M
- Camilla/M
- Camille/M
-+Camino/M
- Cammi/M
- Cammie/M
- Cammy/M
- Camoens/M
-@@ -2942,8 +2944,9 @@ Chateaubriand/M
- Chattahoochee/M
- Chattanooga/M
- Chatterley/M
- Chatterton
-+ChatZilla/M
- Chaucer/M
- Chaunce/M
- Chauncey/M
- Chautauqua
-@@ -6325,8 +6328,9 @@ HS
- HST
- HT
- HTML/M
- HTTP
-+HTTPS
- HUD/M
- Ha
- Haas/M
- Habakkuk
-@@ -6945,8 +6949,9 @@ Hun/SM
- Hunfredo/M
- Hung
- Hungarian/SM
- Hungary/M
-+Hunspell/M
- Hunt/R
- Hunter/M
- Huntington/M
- Huntlee/M
-@@ -9504,8 +9509,9 @@ Mandela
- Mandelbrot
- Mandi/M
- Mandie/M
- Mandingo
-+Mandriva/M
- Mandy/M
- Manet
- Manfred/M
- Manhattan/SM
-@@ -10619,8 +10625,9 @@ Myrtie/M
- Myrtle/M
- Myrvyn/M
- Myrwyn/M
- Mysore
-+MySpell/M
- Myst/M
- N'Djamena
- N/MD
- NAACP
-@@ -13240,8 +13247,9 @@ Scythia
- Scythian
- Se/MH
- Seaborg
- Seagram/M
-+SeaMonkey/M
- Seamus/M
- Sean/M
- Seana/M
- Sears/M
-@@ -13979,8 +13987,9 @@ Sumner/M
- Sumter
- Sun/SM
- Sunbeam/M
- Sunbelt/M
-+Sunbird/M
- Sundanese/M
- Sundas
- Sunday/MS
- Sung
-@@ -42230,8 +42239,10 @@ philosophical/Y
- philosophize/ZGDRS
- philosophizer/M
- philosophy/SM
- philter/MS
-+phish/DGS
-+phisher/MS
- phlebitis/M
- phlebotomy
- phlegm/M
- phlegmatic
-@@ -49102,8 +49113,9 @@ spaghetti/M
- spake
- spam/S
- spamblock/S
- spammed
-+spammer/MS
- spamming
- span/MS
- spandex/M
- spandrels
-@@ -53649,8 +53661,10 @@ unilateralist
- unimportance
- unimportant
- unimpressive
- uninhibited/Y
-+uninstall/GSBD
-+uninstaller/MS
- uninsured
- unintellectual
- unintelligent
- unintended
-@@ -53811,8 +53825,10 @@ unstamped
- unsteady/PTR
- unstinting/Y
- unstoppably
- unstrapping
-+unsubscribe/DGS
-+unsubscriber/MS
- unsubstantial
- unsubtle
- unsure/P
- unsuspecting/Y
-@@ -54984,9 +55000,10 @@ web/SM
- webbed
- webbing/M
- webfeet
- webfoot/M
--webmaster/S
-+webmaster/MS
-+webmistress/S
- website/SM
- wed/AS
- wedded/A
- wedder
-diff -up4 en-US.aff en-US.aff
---- en-US.aff	Fri Jan 11 00:27:09 2008
-+++ en-US.aff	Sat Jan 12 09:00:41 2008
-@@ -109,15 +109,16 @@ SFX B   e     able       [^aeiou]e
+--- en-US.dic	Sun Feb 17 08:05:55 2008
++++ en-US.dic	Sat Jan 19 13:49:14 2008
+@@ -6422,9 +6422,9 @@ Haney/M
+ Hangul/M
+ Hangzhou/M
+ Hank/M
+ Hanna/M
+-Hannah
++Hannah/M
+ Hanni/SM
+ Hannibal/M
+ Hannie/M
+ Hanny/M
+@@ -7363,9 +7363,9 @@ Jamaican/SM
+ Jamal/M
+ Jamar/M
+ Jame/SM
+ Jamel/M
+-James/M
++James
+ Jameson
+ Jamestown
+ Jamesy/M
+ Jamey/M
+@@ -7382,9 +7382,9 @@ Jana/M
+ Janacek/M
+ Janaya/M
+ Janaye/M
+ Jandy/M
+-Jane
++Jane/M
+ Janean/M
+ Janeczka/M
+ Janeen/M
+ Janek/M
+@@ -7395,9 +7395,9 @@ Janella/M
+ Janelle/M
+ Janene/M
+ Janenna/M
+ Janessa/M
+-Janet
++Janet/M
+ Janeta/M
+ Janetta/M
+ Janette/M
+ Janeva/M
+@@ -14433,9 +14433,9 @@ Thieu/M
+ Thimbu
+ Thimphu
+ Thom/M
+ Thoma/SM
+-Thomas/M
++Thomas
+ Thomasa/M
+ Thomasin/M
+ Thomasina/M
+ Thomasine/M
+@@ -14904,9 +14904,8 @@ Unitarian/MS
+ Unitarianism/MS
+ Unitas/M
+ Unix/S
+ Unukalhai/M
+-Ununtu/M
+ Upanishads
+ Updike
+ Upjohn/M
+ Upton/M
+@@ -15446,8 +15445,9 @@ Wiemar/M
+ Wiesel/M
+ Wiesenthal/M
+ Wiggins
+ Wigner/M
++Wikipedia/M
+ Wilberforce
+ Wilbert/M
+ Wilbur/M
+ Wilburn/M
+@@ -17637,8 +17637,9 @@ arcana
+ arcane/PY
+ arch/PZTGVMDRSY
+ archaeological/Y
+ archaeologist/SM
++archaeology/M
+ archaic
+ archaically
+ archaism/MS
+ archaist/MS
+@@ -17651,8 +17652,10 @@ archdiocesan
+ archdiocese/SM
+ archduchess/MS
+ archduke/MS
+ archenemy/SM
++archeological/Y
++archeologist/SM
+ archeology/M
+ archeopteryx
+ archer/M
+ archery/M
+@@ -18318,8 +18321,9 @@ awning/M
+ awoke
+ awoken
+ awry
+ ax/MDSG
++axe/M
+ axehead/S
+ axeman
+ axial/Y
+ axillary
+@@ -20709,10 +20713,9 @@ cachet/MS
+ cackle/MZGDRS
+ cackler/M
+ cacophonous
+ cacophony/SM
+-cacti
+-cactus/M
++cactus/Mi
+ cad/SM
+ cadaver/SM
+ cadaverous
+ caddish/YP
+@@ -25536,9 +25539,10 @@ dialectic/SM
+ dialectical/Y
+ dialectics/M
+ dialer
+ dialing/S
+-dialog/SM
++dialog/SMGD
++dialogue/SMRGD
+ dialysis/M
+ dialyzes
+ diam
+ diamante
+@@ -27393,8 +27397,9 @@ encumber/EGSD
+ encumbered/U
+ encumbrance/SM
+ ency
+ encyclical/SM
++encyclopaedia
+ encyclopedia/MS
+ encyclopedic
+ encyst/LSGD
+ encystment/M
+@@ -29502,11 +29507,10 @@ foamy/RTP
+ fob/SM
+ fobbed
+ fobbing
+ focal/Y
+-focus's
+-focus/ADSG
+-focused/U
++focus/ACGRSMBi
++focused/UC
+ fodder/SM
+ foe/SM
+ foetid
+ fog's
+@@ -36332,9 +36336,8 @@ locatable/A
+ locate/EAGNVDS
+ location's/A
+ location/ESM
+ locational
+-loci
+ lock/MDRSBZG
+ locked/A
+ locker/M
+ locket/MS
+@@ -36348,9 +36351,9 @@ loco/S
+ locomotion/M
+ locomotive/MS
+ locoweed/SM
+ locum/S
+-locus/M
++locus/Mi
+ locust/SM
+ locution/MS
+ lode/MS
+ lodestar/MS
+@@ -37414,8 +37417,9 @@ megalomania/M
+ megalomaniac/SM
+ megalopolis/MS
+ megaparsec
+ megaphone/DSMG
++megapixel
+ megastar/S
+ megaton/SM
+ megawatt/MS
+ meiosis/M
+@@ -40149,9 +40153,9 @@ octant
+ octave/MS
+ octavo/MS
+ octet/SM
+ octogenarian/MS
+-octopus/MS
++octopus/MSi
+ ocular/MS
+ oculist/SM
+ odalisque/SM
+ odd/STRYLP
+@@ -43411,10 +43415,11 @@ predominant/Y
+ predominate/DSYG
+ preemie/SM
+ preeminence/M
+ preeminent/Y
+-preempt/GVSD
++preempt/GSD
+ preemption/M
++preemptive/Y
+ preen/DSG
+ preexist/DGS
+ preexistence/M
+ pref
+@@ -55327,8 +55332,9 @@ wiglet/SM
+ wigwag/SM
+ wigwagged
+ wigwagging
+ wigwam/SM
++wiki/SM
+ wild/MRYSTP
+ wildcat/MS
+ wildcatted
+ wildcatter/MS
+--- en-US.aff	Sun Feb 17 08:06:10 2008
++++ en-US.aff	Tue Jan 22 20:32:39 2008
+@@ -109,9 +109,12 @@ SFX B   e     able       [^aeiou]e
  
  SFX L Y 1
  SFX L   0     ment       .
  
--REP 88
-+REP 89
+-REP 89
++SFX i N 1
++SFX i   us    i          us
++
++REP 90
  REP a ei
  REP ei a
  REP a ey
  REP ey a
- REP ai ie
- REP ie ai
-+REP alot a_lot
- REP are air
- REP are ear
- REP are eir
- REP air are
+@@ -199,4 +202,5 @@ REP z ss
+ REP ss z
+ REP shun tion
+ REP shun sion
+ REP shun cion
++REP sitted sat
