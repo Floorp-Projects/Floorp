@@ -72,9 +72,9 @@ function nsUnknownContentTypeDialog() {
 nsUnknownContentTypeDialog.prototype = {
     nsIMIMEInfo  : Components.interfaces.nsIMIMEInfo,
 
-    // This "class" supports nsIHelperAppLauncherDialog, and nsISupports.
     QueryInterface: function (iid) {
         if (!iid.equals(Components.interfaces.nsIHelperAppLauncherDialog) &&
+            !iid.equals(Components.interfaces.nsITimerCallback) &&
             !iid.equals(Components.interfaces.nsISupports)) {
             throw Components.results.NS_ERROR_NO_INTERFACE;
         }
@@ -101,15 +101,23 @@ nsUnknownContentTypeDialog.prototype = {
     // in nsExternalHelperAppService), the dialog gets a blur and doesn't
     // activate the OK button.  So we wait a bit before doing opening it.
     reallyShow: function() {
-        var ir = this.mContext.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-        var dwi = ir.getInterface(Components.interfaces.nsIDOMWindowInternal);
-        var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                           .getService(Components.interfaces.nsIWindowWatcher);
-        this.mDialog = ww.openWindow(dwi,
-                                     "chrome://mozapps/content/downloads/unknownContentType.xul",
-                                     null,
-                                     "chrome,centerscreen,titlebar,dialog=yes,dependent",
-                                     null);
+        try {
+          var ir = this.mContext.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+          var dwi = ir.getInterface(Components.interfaces.nsIDOMWindowInternal);
+          var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                             .getService(Components.interfaces.nsIWindowWatcher);
+          this.mDialog = ww.openWindow(dwi,
+                                       "chrome://mozapps/content/downloads/unknownContentType.xul",
+                                       null,
+                                       "chrome,centerscreen,titlebar,dialog=yes,dependent",
+                                       null);
+        } catch (ex) {
+          // The containing window may have gone away.  Break reference
+          // cycles and stop doing the download.
+          const NS_BINDING_ABORTED = 0x804b0002;
+          this.mLauncher.cancel(NS_BINDING_ABORTED);
+          return;
+        }
 
         // Hook this object to the dialog.
         this.mDialog.dialog = this;
