@@ -46,6 +46,7 @@
 #include "nsEventStateManager.h"
 #include "nsEventListenerManager.h"
 #include "nsIMEStateManager.h"
+#include "nsQueryContentEventHandler.h"
 #include "nsIContent.h"
 #include "nsINodeInfo.h"
 #include "nsIDocument.h"
@@ -1373,6 +1374,30 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
             ? nsIDOMNSUIEvent::SCROLL_PAGE_DOWN
             : nsIDOMNSUIEvent::SCROLL_PAGE_UP;
       }
+    }
+    break;
+  case NS_QUERY_SELECTED_TEXT:
+    {
+      nsQueryContentEventHandler handler(mPresContext);
+      handler.OnQuerySelectedText((nsQueryContentEvent*)aEvent);
+    }
+    break;
+  case NS_QUERY_TEXT_CONTENT:
+    {
+      nsQueryContentEventHandler handler(mPresContext);
+      handler.OnQueryTextContent((nsQueryContentEvent*)aEvent);
+    }
+    break;
+  case NS_QUERY_CHARACTER_RECT:
+    {
+      nsQueryContentEventHandler handler(mPresContext);
+      handler.OnQueryCharacterRect((nsQueryContentEvent*)aEvent);
+    }
+    break;
+  case NS_QUERY_CARET_RECT:
+    {
+      nsQueryContentEventHandler handler(mPresContext);
+      handler.OnQueryCaretRect((nsQueryContentEvent*)aEvent);
     }
     break;
   }

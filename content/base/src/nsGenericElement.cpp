@@ -84,6 +84,7 @@
 #include "nsXULElement.h"
 #endif /* MOZ_XUL */
 #include "nsFrameManager.h"
+#include "nsFrameSelection.h"
 
 #include "nsBindingManager.h"
 #include "nsXBLBinding.h"
@@ -117,6 +118,9 @@
 #include "nsIDOMNSFeatureFactory.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMUserDataHandler.h"
+#include "nsIDOMNSEditableElement.h"
+#include "nsIEditor.h"
+#include "nsIEditorDocShell.h"
 #include "nsEventDispatcher.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsIFocusController.h"
@@ -309,6 +313,101 @@ nsINode::IsEditableInternal() const
 
   // Check if the node is in a document and the document is in designMode.
   return doc && doc->HasFlag(NODE_IS_EDITABLE);
+}
+
+static nsIContent* GetEditorRootContent(nsIEditor* aEditor)
+{
+  nsCOMPtr<nsIDOMElement> rootElement;
+  aEditor->GetRootElement(getter_AddRefs(rootElement));
+  nsCOMPtr<nsIContent> rootContent(do_QueryInterface(rootElement));
+  return rootContent;
+}
+
+nsIContent*
+nsINode::GetTextEditorRootContent(nsIEditor** aEditor)
+{
+  if (aEditor)
+    *aEditor = nsnull;
+  for (nsINode* node = this; node; node = node->GetNodeParent()) {
+    nsCOMPtr<nsIDOMNSEditableElement> editableElement(do_QueryInterface(node));
+    if (!editableElement)
+      continue;
+
+    nsCOMPtr<nsIEditor> editor;
+    nsresult rv = editableElement->GetEditor(getter_AddRefs(editor));
+    NS_ENSURE_TRUE(editor, nsnull);
+    nsIContent* rootContent = GetEditorRootContent(editor);
+    if (aEditor)
+      editor.swap(*aEditor);
+    return rootContent;
+  }
+  return nsnull;
+}
+
+static nsIEditor* GetHTMLEditor(nsPresContext* aPresContext)
+{
+  nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
+  nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(container));
+  PRBool isEditable;
+  if (!editorDocShell ||
+      NS_FAILED(editorDocShell->GetEditable(&isEditable)) || !isEditable)
+    return nsnull;
+
+  nsCOMPtr<nsIEditor> editor;
+  editorDocShell->GetEditor(getter_AddRefs(editor));
+  return editor;
+}
+
+nsIContent*
+nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
+{
+  NS_ENSURE_TRUE(aPresShell, nsnull);
+
+  if (IsNodeOfType(eDOCUMENT))
+    return static_cast<nsIDocument*>(this)->GetRootContent();
+  if (!IsNodeOfType(eCONTENT))
+    return nsnull;
+
+  nsIFrame* frame =
+    aPresShell->GetPrimaryFrameFor(static_cast<nsIContent*>(this));
+  if (frame && frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION) {
+    // This node should be a descendant of input/textarea editor.
+    nsIContent* content = GetTextEditorRootContent();
+    if (content)
+      return content;
+    NS_ERROR("Editor is not found!");
+  }
+
+  nsPresContext* presContext = aPresShell->GetPresContext();
+  if (presContext) {
+    nsIEditor* editor = GetHTMLEditor(presContext);
+    if (editor) {
+      // This node is in HTML editor.
+      nsIDocument* doc = GetCurrentDoc();
+      if (!doc || doc->HasFlag(NODE_IS_EDITABLE) || !HasFlag(NODE_IS_EDITABLE))
+        return GetEditorRootContent(editor);
+      // If the current document is not editable, but current content is
+      // editable, we should assume that the child of the nearest non-editable
+      // ancestor is selection root.
+      nsIContent* content = static_cast<nsIContent*>(this);
+      for (nsIContent* parent = GetParent();
+           parent && parent->HasFlag(NODE_IS_EDITABLE);
+           parent = content->GetParent())
+        content = parent;
+      return content;
+    }
+  }
+
+  nsCOMPtr<nsFrameSelection> fs = aPresShell->FrameSelection();
+  nsIContent* content = fs->GetLimiter();
+  if (content)
+    return content;
+  content = fs->GetAncestorLimiter();
+  if (content)
+    return content;
+  nsIDocument* doc = aPresShell->GetDocument();
+  NS_ENSURE_TRUE(doc, nsnull);
+  return doc->GetRootContent();
 }
 
 //----------------------------------------------------------------------

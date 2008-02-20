@@ -81,6 +81,7 @@ REQUIRES	= xpcom \
 		  util \
 		  appshell \
 		  shistory \
+		  editor \
 		  $(NULL)
 
 ifdef ACCESSIBILITY

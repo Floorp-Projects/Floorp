@@ -102,6 +102,7 @@ class nsHashKey;
 #define NS_SVGZOOM_EVENT                  31
 #endif // MOZ_SVG
 #define NS_XUL_COMMAND_EVENT              32
+#define NS_QUERY_CONTENT_EVENT            33
 
 // These flags are sort of a mess. They're sort of shared between event
 // listener flags and event flags, but only some of them. You've been
@@ -343,6 +344,22 @@ class nsHashKey;
 #define NS_BEFORECOPY       (NS_CUTCOPYPASTE_EVENT_START + 3)
 #define NS_BEFORECUT        (NS_CUTCOPYPASTE_EVENT_START + 4)
 #define NS_BEFOREPASTE      (NS_CUTCOPYPASTE_EVENT_START + 5)
+
+// Query the content information
+#define NS_QUERY_CONTENT_EVENT_START    3200
+// Query for the selected text information, it return the selection offset,
+// selection length and selected text.
+#define NS_QUERY_SELECTED_TEXT          (NS_QUERY_CONTENT_EVENT_START)
+// Query for the text content of specified range, it returns actual lengh (if
+// the specified range is too long) and the text of the specified range.
+#define NS_QUERY_TEXT_CONTENT           (NS_QUERY_CONTENT_EVENT_START + 1)
+// Query for the character rect of nth character. If there is no character at
+// the offset, the query will be failed. The offset of the result is relative
+// position from the top level widget.
+#define NS_QUERY_CHARACTER_RECT         (NS_QUERY_CONTENT_EVENT_START + 2)
+// Query for the caret rect of nth insertion point. The offset of the result is
+// relative position from the top level widget.
+#define NS_QUERY_CARET_RECT             (NS_QUERY_CONTENT_EVENT_START + 3)
 
 /**
  * Return status for event processors, nsEventStatus, is defined in
@@ -823,6 +840,50 @@ public:
   nsQueryCaretRectEventReply theReply;
 };
 
+class nsQueryContentEvent : public nsGUIEvent
+{
+public:
+  nsQueryContentEvent(PRBool aIsTrusted, PRUint32 aMsg, nsIWidget *aWidget) :
+    nsGUIEvent(aIsTrusted, aMsg, aWidget, NS_QUERY_CONTENT_EVENT),
+    mSucceeded(PR_FALSE)
+  {
+  }
+
+  void InitForQueryTextContent(PRUint32 aOffset, PRUint32 aLength)
+  {
+    NS_ASSERTION(message == NS_QUERY_TEXT_CONTENT,
+                 "wrong initializer is called");
+    mInput.mOffset = aOffset;
+    mInput.mLength = aLength;
+  }
+
+  void InitForQueryCharacterRect(PRUint32 aOffset)
+  {
+    NS_ASSERTION(message == NS_QUERY_CHARACTER_RECT,
+                 "wrong initializer is called");
+    mInput.mOffset = aOffset;
+  }
+
+  void InitForQueryCaretRect(PRUint32 aOffset)
+  {
+    NS_ASSERTION(message == NS_QUERY_CARET_RECT,
+                 "wrong initializer is called");
+    mInput.mOffset = aOffset;
+  }
+
+  PRBool mSucceeded;
+  struct {
+    PRUint32 mOffset;
+    PRUint32 mLength;
+  } mInput;
+  struct {
+    void* mContentsRoot;
+    PRUint32 mOffset;
+    nsString mString;
+    nsRect mRect; // Finally, the coordinates is system coordinates.
+  } mReply;
+};
+
 /**
  * MenuItem event
  * 
@@ -1022,6 +1083,12 @@ enum nsDragDropEventStatus {
         ((evnt)->message == NS_ACTIVATE) || \
         ((evnt)->message == NS_DEACTIVATE) || \
         ((evnt)->message == NS_PLUGIN_ACTIVATE))
+
+#define NS_IS_QUERY_CONTENT_EVENT(evnt) \
+       (((evnt)->message == NS_QUERY_SELECTED_TEXT) || \
+        ((evnt)->message == NS_QUERY_TEXT_CONTENT) || \
+        ((evnt)->message == NS_QUERY_CHARACTER_RECT) || \
+        ((evnt)->message == NS_QUERY_CARET_RECT))
 
 #define NS_IS_TRUSTED_EVENT(event) \
   (((event)->flags & NS_EVENT_FLAG_TRUSTED) != 0)
