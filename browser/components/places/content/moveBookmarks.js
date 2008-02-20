@@ -59,7 +59,7 @@ var gMoveBookmarksDialog = {
     var selectedNode = this.foldersTree.selectedNode;
     NS_ASSERT(selectedNode,
               "selectedNode must be set in a single-selection tree with initial selection set");
-    var selectedFolderID = selectedNode.itemId;
+    var selectedFolderID = PlacesUtils.getConcreteItemId(selectedNode);
 
     var transactions = [];
     for (var i=0; i < this._nodes.length; i++) {
