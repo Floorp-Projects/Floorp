@@ -540,10 +540,7 @@ nsTableOuterFrame::InvalidateDamage(PRUint8         aCaptionSide,
     if (aOldOverflowArea) {
       damage.UnionRect(damage, *aOldOverflowArea);
     }
-    nsRect* overflowArea = GetOverflowAreaProperty();
-    if (overflowArea) {
-      damage.UnionRect(damage, *overflowArea);
-    }
+    damage.UnionRect(damage, GetOverflowRect());
   }
   else {
     nsRect captionRect(0,0,0,0);

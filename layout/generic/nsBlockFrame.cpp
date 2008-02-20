@@ -382,10 +382,10 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
     fprintf(out, " [state=%08x]", mState);
   }
   nsBlockFrame* f = const_cast<nsBlockFrame*>(this);
-  nsRect* overflowArea = f->GetOverflowAreaProperty(PR_FALSE);
-  if (overflowArea) {
-    fprintf(out, " [overflow=%d,%d,%d,%d]", overflowArea->x, overflowArea->y,
-            overflowArea->width, overflowArea->height);
+  if (f->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
+    nsRect overflowArea = f->GetOverflowRect();
+    fprintf(out, " [overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
+            overflowArea.width, overflowArea.height);
   }
   PRInt32 numInlineLines = 0;
   PRInt32 numBlockLines = 0;

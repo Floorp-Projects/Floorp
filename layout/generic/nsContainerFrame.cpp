@@ -1515,10 +1515,10 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
   }
   fprintf(out, " [content=%p]", static_cast<void*>(mContent));
   nsContainerFrame* f = const_cast<nsContainerFrame*>(this);
-  nsRect* overflowArea = f->GetOverflowAreaProperty(PR_FALSE);
-  if (overflowArea) {
-    fprintf(out, " [overflow=%d,%d,%d,%d]", overflowArea->x, overflowArea->y,
-            overflowArea->width, overflowArea->height);
+  if (f->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
+    nsRect overflowArea = f->GetOverflowRect();
+    fprintf(out, " [overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
+            overflowArea.width, overflowArea.height);
   }
   fprintf(out, " [sc=%p]", static_cast<void*>(mStyleContext));
   nsIAtom* pseudoTag = mStyleContext->GetPseudoType();

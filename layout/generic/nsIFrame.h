@@ -1676,6 +1676,13 @@ public:
    * frame's outline, and descentant frames' outline, but does not include
    * areas clipped out by the CSS "overflow" and "clip" properties.
    *
+   * The NS_FRAME_OUTSIDE_CHILDREN state bit is set when this overflow rect
+   * is different from nsRect(0, 0, GetRect().width, GetRect().height).
+   * XXX Note: because of a space optimization using the formula above,
+   * during reflow this function does not give accurate data if
+   * FinishAndStoreOverflow has been called but mRect hasn't yet been
+   * updated yet.
+   *
    * @return the rect relative to this frame's origin
    */
   nsRect GetOverflowRect() const;
@@ -1931,14 +1938,6 @@ NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::baseLevel))
 
 #define NS_GET_EMBEDDING_LEVEL(frame) \
 NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::embeddingLevel))
-
-  /** Create or retrieve the previously stored overflow area, if the frame does 
-    * not overflow and no creation is required return nsnull.
-    * @param aPresContext PresContext
-    * @param aCreateIfNecessary  create a new nsRect for the overflow area
-    * @return pointer to the overflow area rectangle 
-    */
-  nsRect* GetOverflowAreaProperty(PRBool aCreateIfNecessary = PR_FALSE);
 
   /**
    * Return PR_TRUE if and only if this frame obeys visibility:hidden.
@@ -2209,6 +2208,8 @@ protected:
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
+
+  nsRect* GetOverflowAreaProperty(PRBool aCreateIfNecessary = PR_FALSE);
 };
 
 //----------------------------------------------------------------------
