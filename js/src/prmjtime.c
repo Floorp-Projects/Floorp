@@ -110,13 +110,7 @@ PRMJ_LocalGMTDifference()
     memset((char *)&ltime,0,sizeof(ltime));
     ltime.tm_mday = 2;
     ltime.tm_year = 70;
-#ifdef SUNOS4
-    ltime.tm_zone = 0;
-    ltime.tm_gmtoff = 0;
-    return timelocal(&ltime) - (24 * 3600);
-#else
     return (JSInt32)mktime(&ltime) - (24L * 3600L);
-#endif
 }
 
 /* Constants for GMT offset from 1970 */
@@ -637,18 +631,6 @@ PRMJ_FormatTime(char *buf, int buflen, const char *fmt, PRMJTime *prtm)
      * tzoff + dst.  (And mktime seems to return -1 for the exact dst
      * changeover time.)
      */
-
-#if defined(SUNOS4)
-    if (mktime(&a) == -1) {
-        /* Seems to fail whenever the requested date is outside of the 32-bit
-         * UNIX epoch.  We could proceed at this point (setting a.tm_zone to
-         * "") but then strftime returns a string with a 2-digit field of
-         * garbage for the year.  So we return 0 and hope jsdate.c
-         * will fall back on toString.
-         */
-        return 0;
-    }
-#endif
 
 #ifdef NS_HAVE_INVALID_PARAMETER_HANDLER
     oldHandler = _set_invalid_parameter_handler(PRMJ_InvalidParameterHandler);

@@ -165,7 +165,6 @@ JS_HFILES =		\
 	jsdtoa.h	\
 	jshash.h	\
 	jslong.h	\
-	jsosdep.h	\
 	jstypes.h	\
 	jsprvtd.h	\
 	jspubtd.h	\
