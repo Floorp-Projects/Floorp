@@ -1599,20 +1599,23 @@ void nsTableRowGroupFrame::SetContinuousBCBorderWidth(PRUint8     aForSide,
   }
 }
 
-//nsILineIterator methods for nsTableFrame
+//nsILineIterator methods
 NS_IMETHODIMP
 nsTableRowGroupFrame::GetNumLines(PRInt32* aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = GetRowCount();
-  return *aResult; // XXX should return NS_OK
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTableRowGroupFrame::GetDirection(PRBool* aIsRightToLeft)
 {
   NS_ENSURE_ARG_POINTER(aIsRightToLeft);
-  *aIsRightToLeft = PR_FALSE;
+  // rtl is table wide @see nsTableIterator
+  nsTableFrame* table = nsTableFrame::GetTableFrame(this);
+  *aIsRightToLeft = (NS_STYLE_DIRECTION_RTL ==
+                     table->GetStyleVisibility()->mDirection);
   return NS_OK;
 }
   
@@ -1627,40 +1630,34 @@ nsTableRowGroupFrame::GetLine(PRInt32    aLineNumber,
   NS_ENSURE_ARG_POINTER(aNumFramesOnLine);
   NS_ENSURE_ARG_POINTER(aLineFlags);
 
-  nsTableFrame* parentFrame = nsTableFrame::GetTableFrame(this);
-  if (!parentFrame)
-    return NS_ERROR_FAILURE;
+  nsTableFrame* table = nsTableFrame::GetTableFrame(this);
+  nsTableCellMap* cellMap = table->GetCellMap();
 
-  nsTableCellMap* cellMap = parentFrame->GetCellMap();
-  if (!cellMap)
-     return NS_ERROR_FAILURE;
-
-  if (aLineNumber >= cellMap->GetRowCount())
-    return NS_ERROR_INVALID_ARG;
+  *aLineFlags = 0;
+  *aFirstFrameOnLine = nsnull;
+  *aNumFramesOnLine = 0;
+  aLineBounds.SetRect(0, 0, 0, 0);
   
-  *aLineFlags = 0;/// should we fill these in later?
-  // not gonna touch aLineBounds right now
-
-  CellData* firstCellData = cellMap->GetDataAt(aLineNumber, 0);
-  if (!firstCellData)
-    return NS_ERROR_FAILURE;
+  if ((aLineNumber < 0) || (aLineNumber >=  GetRowCount())) {
+    return NS_OK;
+  }
+  aLineNumber += GetStartRowIndex(); 
 
   *aNumFramesOnLine = cellMap->GetNumCellsOriginatingInRow(aLineNumber);
-  *aFirstFrameOnLine = (nsIFrame*)firstCellData->GetCellFrame();
-  if (!(*aFirstFrameOnLine))
-  {
-    while((aLineNumber > 0)&&(!(*aFirstFrameOnLine)))
-    {
-      aLineNumber--;
-      firstCellData = cellMap->GetDataAt(aLineNumber, 0);
-      *aFirstFrameOnLine = (nsIFrame*)firstCellData->GetCellFrame();
+  if (*aNumFramesOnLine == 0) {
+    return NS_OK;
+  }
+  for (PRInt32 i = 0; i < *aNumFramesOnLine; i++) {
+    CellData* data = cellMap->GetDataAt(aLineNumber, i);
+    if (data && data->IsOrig()) {
+      *aFirstFrameOnLine = (nsIFrame*)data->GetCellFrame();
+      nsIFrame* parent = (*aFirstFrameOnLine)->GetParent();
+      aLineBounds = parent->GetRect();
+      return NS_OK;
     }
   }
-  if  (!(*aFirstFrameOnLine)) {
-    NS_ERROR("Failed to find cell frame for cell data");
-    *aNumFramesOnLine = 0;
-  }
-  return NS_OK;
+  NS_ERROR("cellmap is lying");
+  return NS_ERROR_FAILURE;
 }
   
 NS_IMETHODIMP
@@ -1669,17 +1666,12 @@ nsTableRowGroupFrame::FindLineContaining(nsIFrame* aFrame,
 {
   NS_ENSURE_ARG_POINTER(aFrame);
   NS_ENSURE_ARG_POINTER(aLineNumberResult);
-
-  // make sure it is a rowFrame in the RowGroup
-  // - it should be, but we do not validate in every case (see bug 88849)
-  if (aFrame->GetType() != nsGkAtoms::tableRowFrame) {
-    NS_WARNING("RowGroup contains a frame that is not a row");
-    *aLineNumberResult = 0;
-    return NS_ERROR_FAILURE;
-  } 
+  
+  NS_ASSERTION((aFrame->GetType() == nsGkAtoms::tableRowFrame),
+               "RowGroup contains a frame that is not a row");
 
   nsTableRowFrame* rowFrame = (nsTableRowFrame*)aFrame;
-  *aLineNumberResult = rowFrame->GetRowIndex();
+  *aLineNumberResult = rowFrame->GetRowIndex() - GetStartRowIndex();
 
   return NS_OK;
 }
@@ -1711,68 +1703,79 @@ nsTableRowGroupFrame::FindFrameAt(PRInt32    aLineNumber,
                                   PRBool*    aXIsBeforeFirstFrame, 
                                   PRBool*    aXIsAfterLastFrame)
 {
-  PRInt32 colCount = 0;
-  CellData* cellData;
-  nsIFrame* tempFrame = nsnull;
+   nsTableFrame* table = nsTableFrame::GetTableFrame(this);
+   nsTableCellMap* cellMap = table->GetCellMap();
+   
+   *aFrameFound = nsnull;
+   *aXIsBeforeFirstFrame = PR_TRUE;
+   *aXIsAfterLastFrame = PR_FALSE;
 
-  nsTableFrame* parentFrame = nsTableFrame::GetTableFrame(this);
-  if (!parentFrame)
-    return NS_ERROR_FAILURE;
-
-  nsTableCellMap* cellMap = parentFrame->GetCellMap();
-  if (!cellMap)
-     return NS_ERROR_FAILURE;
-
-  colCount = cellMap->GetColCount();
-
-  *aXIsBeforeFirstFrame = PR_FALSE;
-  *aXIsAfterLastFrame = PR_FALSE;
-
-  PRBool gotParentRect = PR_FALSE;
-  for (PRInt32 i = 0; i < colCount; i++)
-  {
-    cellData = cellMap->GetDataAt(aLineNumber, i);
-    if (!cellData)
-      continue; // we hit a cellmap hole
-    if (!cellData->IsOrig())
-      continue;
-    tempFrame = (nsIFrame*)cellData->GetCellFrame();
-
-    if (!tempFrame)
-      continue;
-    
-    nsRect tempRect = tempFrame->GetRect();//offsetting x to be in row coordinates
-    if(!gotParentRect)
-    {//only do this once
-      nsIFrame* tempParentFrame = tempFrame->GetParent();
-      if(!tempParentFrame)
-        return NS_ERROR_FAILURE;
-
-      aX -= tempParentFrame->GetPosition().x;
-      gotParentRect = PR_TRUE;
-    }
-
-    if (i==0 &&(aX <= 0))//short circuit for negative x coords
-    {
-      *aXIsBeforeFirstFrame = PR_TRUE;
-      *aFrameFound = tempFrame;
-      return NS_OK;
-    }
-    if (aX < tempRect.x)
-    {
-      return NS_ERROR_FAILURE;
-    }
-    if(aX < tempRect.XMost())
-    {
-      *aFrameFound = tempFrame;
-      return NS_OK;
-    }
+   aLineNumber += GetStartRowIndex();
+   PRInt32 numCells = cellMap->GetNumCellsOriginatingInRow(aLineNumber);
+   if (numCells == 0) {
+     return NS_OK;
+   }
+  
+   nsIFrame* frame = nsnull;
+   for (PRInt32 i = 0; i < numCells; i++) {
+     CellData* data = cellMap->GetDataAt(aLineNumber, i);
+     if (data && data->IsOrig()) {
+       frame = (nsIFrame*)data->GetCellFrame();
+       break;
+     }
+   }
+   NS_ASSERTION(frame, "cellmap is lying");
+   PRBool isRTL = (NS_STYLE_DIRECTION_RTL ==
+                   table->GetStyleVisibility()->mDirection);
+   
+   nsIFrame* closestFromLeft = nsnull;
+   nsIFrame* closestFromRight = nsnull;
+   PRInt32 n = numCells;
+   nsIFrame* firstFrame = frame;
+   while (n--) {
+     nsRect rect = frame->GetRect();
+     if (rect.width > 0) {
+       // If aX is inside this frame - this is it
+       if (rect.x <= aX && rect.XMost() > aX) {
+         closestFromLeft = closestFromRight = frame;
+         break;
+       }
+       if (rect.x < aX) {
+         if (!closestFromLeft ||
+             rect.XMost() > closestFromLeft->GetRect().XMost())
+           closestFromLeft = frame;
+       }
+       else {
+         if (!closestFromRight ||
+             rect.x < closestFromRight->GetRect().x)
+           closestFromRight = frame;
+       }
+     }
+     frame = frame->GetNextSibling();
+   }
+   if (!closestFromLeft && !closestFromRight) {
+     // All frames were zero-width. Just take the first one.
+     closestFromLeft = closestFromRight = firstFrame;
+   }
+   *aXIsBeforeFirstFrame = isRTL ? !closestFromRight : !closestFromLeft;
+   *aXIsAfterLastFrame =   isRTL ? !closestFromLeft : !closestFromRight;
+   if (closestFromLeft == closestFromRight) {
+     *aFrameFound = closestFromLeft;
+   }
+   else if (!closestFromLeft) {
+     *aFrameFound = closestFromRight;
+   }
+   else if (!closestFromRight) {
+     *aFrameFound = closestFromLeft;
+   }
+   else { // we're between two frames
+     nscoord delta = closestFromRight->GetRect().x -
+                     closestFromLeft->GetRect().XMost();
+     if (aX < closestFromLeft->GetRect().XMost() + delta/2)
+       *aFrameFound = closestFromLeft;
+     else
+       *aFrameFound = closestFromRight;
   }
-  //x coord not found in frame, return last frame
-  *aXIsAfterLastFrame = PR_TRUE;
-  *aFrameFound = tempFrame;
-  if (!(*aFrameFound))
-    return NS_ERROR_FAILURE;
   return NS_OK;
 }
 
