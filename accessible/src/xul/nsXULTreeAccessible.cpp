@@ -878,7 +878,7 @@ nsXULTreeitemAccessible::IsDefunct()
 PRBool nsXULTreeitemAccessible::IsExpandable()
 {
   if (IsDefunct())
-    return NS_ERROR_FAILURE;
+    return PR_FALSE;
 
   PRBool isContainer;
   mTreeView->IsContainer(mRow, &isContainer);
