@@ -146,6 +146,7 @@ dnl Do not allow a separate objdir build if a srcdir build exists.
 dnl ==============================================================
 _topsrcdir=`cd \`dirname $0\`; pwd`
 _objdir=`pwd`
+
 if test "$_topsrcdir" != "$_objdir"
 then
   # Check for a couple representative files in the source tree
@@ -215,11 +216,25 @@ case "$target" in
     echo Building Windows CE Shunt Library and Tool Chain
     echo -----------------------------------------------------------------------------
 
+    ac_exeext=.exe
+
     echo -n "#define TOPSRCDIR \"" > $srcdir/build/wince/tools/topsrcdir.h
-    `$srcdir/build/cygwin-wrapper echo -n $_topsrcdir >> $srcdir/build/wince/tools/topsrcdir.h`
+    MINGW32=""
+    case "$host_os" in 
+    *mingw* )
+    	MINGW32="MINGW32=1"
+	#  MingW path mangling /c/blah -> c:/blah
+	echo -n ${_topsrcdir:1:1}:${_topsrcdir:2} >> $srcdir/build/wince/tools/topsrcdir.h;;	
+    *cygwin* )
+    
+    	echo -n ${_topsrcdir:10:1}:${_topsrcdir:11} >> $srcdir/build/wince/tools/topsrcdir.h;;
+    * )
+ 
+    	echo -n ${_topsrcdir} >> $srcdir/build/wince/tools/topsrcdir.h;;
+    esac
     echo -n \" >> $srcdir/build/wince/tools/topsrcdir.h
 
-    make -C  $srcdir/build/wince/tools
+    make $MINGW32 -C  $srcdir/build/wince/tools
     echo -----------------------------------------------------------------------------
     ;;
 esac
@@ -377,7 +392,7 @@ dnl Special win32 checks
 dnl ========================================================
 case "$target" in
 *-wince)
-    WINVER=400
+    WINVER=500
     ;;
 *)
     if test -n "$GNU_CC"; then  
@@ -1775,6 +1790,8 @@ case "$target" in
     HOST_LD=link
     HOST_AR='lib -OUT:$@'
     HOST_RANLIB='echo ranlib'
+    HOST_CFLAGS="$HOST_CFLAGS -D_X86_"
+        
         
     WARNINGS_AS_ERRORS='-WX'
 	MOZ_OPTIMIZE_FLAGS='-O1'
@@ -4311,7 +4328,7 @@ basic)
   MOZ_SVG=
   MOZ_UNIVERSALCHARDET=
   MOZ_UPDATER=
-  MOZ_USE_NATIVE_UCONV=1
+  MOZ_USE_NATIVE_UCONV=
   MOZ_VIEW_SOURCE=
   MOZ_XPFE_COMPONENTS=
   MOZ_XPINSTALL=
