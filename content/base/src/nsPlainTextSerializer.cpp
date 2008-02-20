@@ -603,7 +603,7 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
     if(NS_SUCCEEDED(GetAttributeValue(aNode, nsGkAtoms::style, style)) &&
        (kNotFound != (whitespace = style.Find("white-space:")))) {
 
-      if (kNotFound != style.Find("-moz-pre-wrap", PR_TRUE, whitespace)) {
+      if (kNotFound != style.Find("pre-wrap", PR_TRUE, whitespace)) {
 #ifdef DEBUG_preformatted
         printf("Set mPreFormatted based on style moz-pre-wrap\n");
 #endif

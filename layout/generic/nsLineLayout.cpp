@@ -1592,8 +1592,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   nsCOMPtr<nsIFontMetrics> fm;
   rc->GetFontMetrics(*getter_AddRefs(fm));
 
-  PRBool preMode = (mStyleText->mWhiteSpace == NS_STYLE_WHITESPACE_PRE) ||
-    (mStyleText->mWhiteSpace == NS_STYLE_WHITESPACE_MOZ_PRE_WRAP);
+  PRBool preMode = mStyleText->WhiteSpaceIsSignificant();
 
   // See if the span is an empty continuation. It's an empty continuation iff:
   // - it has a prev-in-flow
