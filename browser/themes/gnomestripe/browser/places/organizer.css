@@ -44,17 +44,15 @@
 
 #placesMenu > menu {
   -moz-padding-start: 4px;
+  -moz-binding: url("chrome://browser/skin/places/organizer.xml#toolbarbutton-dropdown");
   -moz-appearance: toolbarbutton;
   color: -moz-DialogText;
 }
 
-#placesMenu > menu > label {
-  -moz-padding-end: 8px;
-  background: url(chrome://global/skin/arrow/arrow-dn.gif) right center no-repeat;
-}
-
-#placesMenu[chromedir="rtl"] > menu > label {
-  background-position: left center;
+#placesMenu > menu > .menubar-right {
+  -moz-appearance: toolbarbutton-dropdown;
+  width: 12px;
+  height: 12px;
 }
 
 /* organize button */
