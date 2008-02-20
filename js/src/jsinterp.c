@@ -5119,9 +5119,11 @@ interrupt:
             ida = JS_Enumerate(cx, obj);
             if (!ida)
                 goto error;
+            ok = JS_TRUE;
             for (i = 0; i != ida->length; i++) {
                 id = ida->vector[i];
-                if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
+                ok = OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop);
+                if (!ok)
                     break;
                 if (!prop)
                     continue;
@@ -5134,8 +5136,9 @@ interrupt:
                 if (!ok)
                     break;
             }
+            JS_ASSERT(ok == (i == ida->length));
             JS_DestroyIdArray(cx, ida);
-            if (i != ida->length)
+            if (!ok)
                 goto error;
           END_CASE(JSOP_EXPORTALL)
 
