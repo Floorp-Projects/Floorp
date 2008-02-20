@@ -320,7 +320,7 @@ NS_INTERFACE_MAP_BEGIN(nsSVGFE)
    // nsISupports is an ambiguous base of nsSVGFE so we have to work
    // around that
    if ( aIID.Equals(NS_GET_IID(nsSVGFE)) )
-     foundInterface = static_cast<nsIContent*>(this);
+     foundInterface = static_cast<nsISupports*>(static_cast<void*>(this));
    else
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEBase)
 
@@ -1869,6 +1869,50 @@ nsSVGFEComponentTransferElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
   return NS_OK;
 }
 
+//--------------------------------------------
+
+#define NS_SVG_FE_COMPONENT_TRANSFER_FUNCTION_ELEMENT_CID \
+    { 0xafab106d, 0xbc18, 0x4f7f, \
+  { 0x9e, 0x29, 0xfe, 0xb4, 0xb0, 0x16, 0x5f, 0xf4 } }
+
+typedef nsSVGElement nsSVGComponentTransferFunctionElementBase;
+
+class nsSVGComponentTransferFunctionElement : public nsSVGComponentTransferFunctionElementBase
+{
+  friend nsresult NS_NewSVGComponentTransferFunctionElement(nsIContent **aResult,
+                                                            nsINodeInfo *aNodeInfo);
+protected:
+  nsSVGComponentTransferFunctionElement(nsINodeInfo* aNodeInfo)
+    : nsSVGComponentTransferFunctionElementBase(aNodeInfo) {}
+  nsresult Init();
+
+public:
+  // interfaces:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_SVG_FE_COMPONENT_TRANSFER_FUNCTION_ELEMENT_CID)
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIDOMSVGCOMPONENTTRANSFERFUNCTIONELEMENT
+
+  virtual PRInt32 GetChannel() = 0;
+  void GenerateLookupTable(PRUint8* aTable);
+
+protected:
+  virtual NumberAttributesInfo GetNumberInfo();
+  virtual EnumAttributesInfo GetEnumInfo();
+
+  // nsIDOMSVGComponentTransferFunctionElement properties:
+  nsCOMPtr<nsIDOMSVGAnimatedNumberList>  mTableValues;
+
+  enum { SLOPE, INTERCEPT, AMPLITUDE, EXPONENT, OFFSET };
+  nsSVGNumber2 mNumberAttributes[5];
+  static NumberInfo sNumberInfo[5];
+
+  enum { TYPE };
+  nsSVGEnum mEnumAttributes[1];
+  static nsSVGEnumMapping sTypeMap[];
+  static EnumInfo sEnumInfo[1];
+};
+
 nsresult
 nsSVGFEComponentTransferElement::Filter(nsSVGFilterInstance *instance)
 {
@@ -1890,21 +1934,15 @@ nsSVGFEComponentTransferElement::Filter(nsSVGFilterInstance *instance)
   PRUint8 tableR[256], tableG[256], tableB[256], tableA[256];
   for (int i=0; i<256; i++)
     tableR[i] = tableG[i] = tableB[i] = tableA[i] = i;
+  PRUint8* tables[] = { tableR, tableG, tableB, tableA };
   PRUint32 count = GetChildCount();
   for (PRUint32 k = 0; k < count; k++) {
-    nsCOMPtr<nsIContent> child = GetChildAt(k);
-    nsCOMPtr<nsIDOMSVGFEFuncRElement> elementR = do_QueryInterface(child);
-    nsCOMPtr<nsIDOMSVGFEFuncGElement> elementG = do_QueryInterface(child);
-    nsCOMPtr<nsIDOMSVGFEFuncBElement> elementB = do_QueryInterface(child);
-    nsCOMPtr<nsIDOMSVGFEFuncAElement> elementA = do_QueryInterface(child);
-    if (elementR)
-      elementR->GenerateLookupTable(tableR);
-    if (elementG)
-      elementG->GenerateLookupTable(tableG);
-    if (elementB)
-      elementB->GenerateLookupTable(tableB);
-    if (elementA)
-      elementA->GenerateLookupTable(tableA);
+    nsRefPtr<nsSVGComponentTransferFunctionElement> child;
+    CallQueryInterface(GetChildAt(k),
+            (nsSVGComponentTransferFunctionElement**)getter_AddRefs(child));
+    if (child) {
+      child->GenerateLookupTable(tables[child->GetChannel()]);
+    }
   }
 
   PRInt32 stride = fr.GetDataStride();
@@ -1928,42 +1966,6 @@ nsSVGFEComponentTransferElement::GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedS
 {
   aSources->AppendElement(mIn1);
 }
-
-//--------------------------------------------
-
-typedef nsSVGElement nsSVGComponentTransferFunctionElementBase;
-
-class nsSVGComponentTransferFunctionElement : public nsSVGComponentTransferFunctionElementBase
-{
-  friend nsresult NS_NewSVGComponentTransferFunctionElement(nsIContent **aResult,
-                                                            nsINodeInfo *aNodeInfo);
-protected:
-  nsSVGComponentTransferFunctionElement(nsINodeInfo* aNodeInfo)
-    : nsSVGComponentTransferFunctionElementBase(aNodeInfo) {}
-  nsresult Init();
-
-public:
-  // interfaces:
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGCOMPONENTTRANSFERFUNCTIONELEMENT
-
-protected:
-  virtual NumberAttributesInfo GetNumberInfo();
-  virtual EnumAttributesInfo GetEnumInfo();
-
-  // nsIDOMSVGComponentTransferFunctionElement properties:
-  nsCOMPtr<nsIDOMSVGAnimatedNumberList>  mTableValues;
-
-  enum { SLOPE, INTERCEPT, AMPLITUDE, EXPONENT, OFFSET };
-  nsSVGNumber2 mNumberAttributes[5];
-  static NumberInfo sNumberInfo[5];
-
-  enum { TYPE };
-  nsSVGEnum mEnumAttributes[1];
-  static nsSVGEnumMapping sTypeMap[];
-  static EnumInfo sEnumInfo[1];
-};
 
 nsSVGElement::NumberInfo nsSVGComponentTransferFunctionElement::sNumberInfo[5] =
 {
@@ -2002,7 +2004,14 @@ nsSVGElement::EnumInfo nsSVGComponentTransferFunctionElement::sEnumInfo[1] =
 NS_IMPL_ADDREF_INHERITED(nsSVGComponentTransferFunctionElement,nsSVGComponentTransferFunctionElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGComponentTransferFunctionElement,nsSVGComponentTransferFunctionElementBase)
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsSVGComponentTransferFunctionElement, NS_SVG_FE_COMPONENT_TRANSFER_FUNCTION_ELEMENT_CID)
+
 NS_INTERFACE_MAP_BEGIN(nsSVGComponentTransferFunctionElement)
+   // nsISupports is an ambiguous base of nsSVGFE so we have to work
+   // around that
+   if ( aIID.Equals(NS_GET_IID(nsSVGComponentTransferFunctionElement)) )
+     foundInterface = static_cast<nsISupports*>(static_cast<void*>(this));
+   else
 NS_INTERFACE_MAP_END_INHERITING(nsSVGComponentTransferFunctionElementBase)
 
 //----------------------------------------------------------------------
@@ -2077,7 +2086,7 @@ NS_IMETHODIMP nsSVGComponentTransferFunctionElement::GetOffset(nsIDOMSVGAnimated
   return mNumberAttributes[OFFSET].ToDOMAnimatedNumber(aOffset, this);
 }
 
-NS_IMETHODIMP
+void
 nsSVGComponentTransferFunctionElement::GenerateLookupTable(PRUint8 *aTable)
 {
   PRUint16 type = mEnumAttributes[TYPE].GetAnimValue();
@@ -2167,8 +2176,6 @@ nsSVGComponentTransferFunctionElement::GenerateLookupTable(PRUint8 *aTable)
   default:
     break;
   }
-
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -2205,6 +2212,8 @@ public:
 
   NS_DECL_NSIDOMSVGFEFUNCRELEMENT
 
+  virtual PRInt32 GetChannel() { return 0; }
+  
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGComponentTransferFunctionElement::)
   NS_FORWARD_NSIDOMNODE(nsSVGComponentTransferFunctionElement::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGComponentTransferFunctionElement::)
@@ -2244,6 +2253,8 @@ public:
   NS_FORWARD_NSIDOMSVGCOMPONENTTRANSFERFUNCTIONELEMENT(nsSVGComponentTransferFunctionElement::)
 
   NS_DECL_NSIDOMSVGFEFUNCGELEMENT
+
+  virtual PRInt32 GetChannel() { return 1; }
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGComponentTransferFunctionElement::)
   NS_FORWARD_NSIDOMNODE(nsSVGComponentTransferFunctionElement::)
@@ -2285,6 +2296,8 @@ public:
 
   NS_DECL_NSIDOMSVGFEFUNCBELEMENT
 
+  virtual PRInt32 GetChannel() { return 2; }
+
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGComponentTransferFunctionElement::)
   NS_FORWARD_NSIDOMNODE(nsSVGComponentTransferFunctionElement::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGComponentTransferFunctionElement::)
@@ -2324,6 +2337,8 @@ public:
   NS_FORWARD_NSIDOMSVGCOMPONENTTRANSFERFUNCTIONELEMENT(nsSVGComponentTransferFunctionElement::)
 
   NS_DECL_NSIDOMSVGFEFUNCAELEMENT
+
+  virtual PRInt32 GetChannel() { return 3; }
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGComponentTransferFunctionElement::)
   NS_FORWARD_NSIDOMNODE(nsSVGComponentTransferFunctionElement::)
@@ -2514,7 +2529,7 @@ NS_INTERFACE_MAP_BEGIN(nsSVGFEMergeNodeElement)
    // nsISupports is an ambiguous base of nsSVGFE so we have to work
    // around that
    if ( aIID.Equals(NS_GET_IID(nsSVGFEMergeNodeElement)) )
-     foundInterface = static_cast<nsIContent*>(this);
+     foundInterface = static_cast<nsISupports*>(static_cast<void*>(this));
    else
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEMergeNodeElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEMergeNodeElementBase)
