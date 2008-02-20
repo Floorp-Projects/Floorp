@@ -7997,7 +7997,7 @@ js_GetAnyName(JSContext *cx, jsval *vp)
                     break;
                 }
 
-                obj = js_NewObject(cx, &js_AnyNameClass, NULL, NULL);
+                obj = js_NewObjectWithGivenProto(cx, &js_AnyNameClass, NULL, NULL);
                 if (!obj || !JS_SetPrivate(cx, obj, qn)) {
                     cx->weakRoots.newborn[GCX_OBJECT] = NULL;
                     ok = JS_FALSE;
@@ -8018,7 +8018,7 @@ js_GetAnyName(JSContext *cx, jsval *vp)
                     ok = JS_FALSE;
                     break;
                 }
-                OBJ_SET_PROTO(cx, obj, NULL);
+                JS_ASSERT(!OBJ_GET_PROTO(cx, obj));
                 JS_ASSERT(!OBJ_GET_PARENT(cx, obj));
             } while (0);
 
