@@ -3902,6 +3902,21 @@ NotifyEditableStateChange(nsINode *aNode, nsIDocument *aDocument,
   }
 }
 
+void
+nsHTMLDocument::TearingDownEditor(nsIEditor *aEditor)
+{
+  if (IsEditingOn()) {
+    mEditingState = eTearingDown;
+
+    nsCOMPtr<nsIEditorStyleSheets> editorss = do_QueryInterface(aEditor);
+    if (editorss) {
+      editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/contenteditable.css"));
+      if (mEditingState == eDesignMode)
+        editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/designmode.css"));
+    }
+  }
+}
+
 nsresult
 nsHTMLDocument::TurnEditingOff()
 {
@@ -3916,25 +3931,12 @@ nsHTMLDocument::TurnEditingOff()
     return NS_ERROR_FAILURE;
 
   nsresult rv;
-  nsCOMPtr<nsIEditorDocShell> editorDocShell =
-    do_QueryInterface(docshell, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIEditingSession> editSession = do_GetInterface(docshell, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // turn editing off
   rv = editSession->TearDownEditorOnWindow(window);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIEditor> editor;
-  editorDocShell->GetEditor(getter_AddRefs(editor));
-  nsCOMPtr<nsIEditorStyleSheets> editorss = do_QueryInterface(editor);
-  if (editorss) {
-    editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/contenteditable.css"));
-    if (mEditingState == eDesignMode)
-      editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/designmode.css"));
-  }
 
   mEditingState = eOff;
 
@@ -3954,7 +3956,7 @@ static PRBool HasPresShell(nsPIDOMWindow *aWindow)
 nsresult
 nsHTMLDocument::EditingStateChanged()
 {
-  if (mEditingState == eSettingUp) {
+  if (mEditingState == eSettingUp || mEditingState == eTearingDown) {
     // XXX We shouldn't recurse.
     return NS_OK;
   }

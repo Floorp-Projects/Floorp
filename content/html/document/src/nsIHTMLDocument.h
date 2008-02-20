@@ -53,6 +53,7 @@ class nsICSSLoader;
 class nsIContent;
 class nsIDOMHTMLBodyElement;
 class nsIScriptElement;
+class nsIEditor;
 
 // Update htmldocument.gqi when updating this IID!
 // 48546d61-6097-462b-89b1-57e2221444dc
@@ -142,6 +143,7 @@ public:
                                               PRInt32 aChange) = 0;
 
   enum EditingState {
+    eTearingDown = -2,
     eSettingUp = -1,
     eOff = 0,
     eDesignMode,
@@ -181,6 +183,11 @@ public:
    * anything <frameset>-related (like nsIDOMHTMLDocument::GetBody).
    */
   virtual nsIContent* GetBodyContentExternal() = 0;
+
+  /**
+   * Called when this nsIHTMLDocument's editor is destroyed.
+   */
+  virtual void TearingDownEditor(nsIEditor *aEditor) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLDocument, NS_IHTMLDOCUMENT_IID)
