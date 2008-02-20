@@ -777,6 +777,11 @@ InitSystemMetrics()
     sSystemMetrics->AppendElement(do_GetAtom("scrollbar-thumb-proportional"));
   }
 
+  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ImagesInMenus, metricResult);
+  if (metricResult) {
+    sSystemMetrics->AppendElement(do_GetAtom("images-in-menus"));
+  }
+
   return PR_TRUE;
 }
 
