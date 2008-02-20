@@ -8786,6 +8786,25 @@ nsDocShell::GetRootScrollableView(nsIScrollableView ** aOutScrollView)
     return NS_OK;
 }
 
+#ifdef DEBUG
+class nsDebugAutoBoolTrueSetter
+{
+public:
+    nsDebugAutoBoolTrueSetter(PRBool *aBool)
+        : mBool(aBool)
+    {
+        *mBool = PR_TRUE;
+    }
+
+    ~nsDebugAutoBoolTrueSetter()
+    {
+        *mBool = PR_FALSE;
+    }
+protected:
+    PRBool *mBool;
+};
+#endif
+
 NS_IMETHODIMP
 nsDocShell::EnsureScriptEnvironment()
 {
@@ -8803,7 +8822,7 @@ nsDocShell::EnsureScriptEnvironment()
 
     // Yeah, this isn't re-entrant safe, but that's ok since if we
     // re-enter this method, we'll infinitely loop...
-    mInEnsureScriptEnv = PR_TRUE;
+    nsDebugAutoBoolTrueSetter boolSetter(&mInEnsureScriptEnv);
 #endif
 
     nsCOMPtr<nsIDOMScriptObjectFactory> factory =
@@ -8836,10 +8855,6 @@ nsDocShell::EnsureScriptEnvironment()
     nsresult rv;
     rv = mScriptGlobal->EnsureScriptEnvironment(nsIProgrammingLanguage::JAVASCRIPT);
     NS_ENSURE_SUCCESS(rv, rv);
-
-#ifdef DEBUG
-    mInEnsureScriptEnv = PR_FALSE;
-#endif
 
     return NS_OK;
 }
