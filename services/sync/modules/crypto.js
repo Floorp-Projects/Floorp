@@ -118,8 +118,8 @@ WeaveCrypto.prototype = {
       throw "encryption not supported on this platform: " + os;
     }
 
-    let args = [wrap, Utils.getTmp().path, bin];
-    args = args.concat(arguments);
+    let args = Array.prototype.slice.call(arguments);
+    args.unshift(wrap, Utils.getTmp().path, bin);
 
     let rv = Utils.runCmd.apply(null, args);
     if (rv != 0)
