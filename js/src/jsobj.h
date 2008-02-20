@@ -110,6 +110,16 @@ struct JSObjectMap {
         }                                                                     \
     JS_END_MACRO
 
+#define OBJ_TO_OUTER_OBJECT(cx,obj)                                           \
+    JS_BEGIN_MACRO                                                            \
+        JSClass *clasp_ = OBJ_GET_CLASS(cx, obj);                             \
+        if (clasp_->flags & JSCLASS_IS_EXTENDED) {                            \
+            JSExtendedClass *xclasp_ = (JSExtendedClass*)clasp_;              \
+            if (xclasp_->outerObject)                                         \
+                obj = xclasp_->outerObject(cx, obj);                          \
+        }                                                                     \
+    JS_END_MACRO
+
 #define JS_INITIAL_NSLOTS   6
 
 /*
