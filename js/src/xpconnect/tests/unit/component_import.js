@@ -54,6 +54,17 @@ FooComponent.prototype =
   getInterfaces: function getInterfaces(aCount) {
     var interfaces = [Components.interfaces.nsIClassInfo];
     aCount.value = interfaces.length;
+
+    // Guerilla test for line numbers hiding in this method
+    var threw = true;
+    try {
+      thereIsNoSuchIdentifier;
+      threw = false;
+    } catch (ex) {
+      do_check_true(ex.lineNumber == 61);
+    }
+    do_check_true(threw);
+    
     return interfaces;
   },
 
