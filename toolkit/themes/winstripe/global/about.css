@@ -21,6 +21,10 @@ body {
   background: -moz-Field;
 }
 
+.aboutPageWideContainer {
+  max-width: 80% !important;
+}
+
 #aboutLogoContainer {
   border: 1px solid ThreeDLightShadow;
   width: 300px;
