@@ -464,7 +464,7 @@ Entry.prototype = {
               "atom03:summary", "atom:summary"],
     content: ["content:encoded","atom03:content","atom:content"],
     rights: ["atom03:rights","atom:rights"],
-    published: ["atom03:issued", "dcterms:issued", "atom:published"],
+    published: ["pubDate", "atom03:issued", "dcterms:issued", "atom:published"],
     updated: ["pubDate", "atom03:modified", "dc:date", "dcterms:modified",
               "atom:updated"]
   },
