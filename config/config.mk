@@ -356,23 +356,37 @@ endif
 endif
 
 # Enable profile-based feedback
+ifndef NO_PROFILE_GUIDED_OPTIMIZE
 ifdef MOZ_PROFILE_GENERATE
 # No sense in profiling tools
 ifndef INTERNAL_TOOLS
 OS_CFLAGS += $(PROFILE_GEN_CFLAGS)
 OS_CXXFLAGS += $(PROFILE_GEN_CFLAGS)
-endif # INTERNAL_TOOLS
+OS_LDFLAGS += $(PROFILE_GEN_LDFLAGS)
+ifeq (WINNT,$(OS_ARCH))
+AR_FLAGS += -LTCG
+endif
+else
+# We don't want to link internal tools with profiling,
+# but gcc needs to because xpidl will wind up linking with
+# libs that have been built with PROFILE_GEN_CFLAGS.
+ifdef GNU_CC
 OS_LDFLAGS += $(PROFILE_GEN_LDFLAGS)
 endif
+endif # INTERNAL_TOOLS
+endif # MOZ_PROFILE_GENERATE
 
-# We always use the profile-use flags, even in cases where we didn't use the
-# profile-generate flags.  It's harmless, and it saves us from having to
-# answer the question "Would these objects have been built using
-# the profile-generate flags?" which is not trivial.
 ifdef MOZ_PROFILE_USE
+ifndef INTERNAL_TOOLS
 OS_CFLAGS += $(PROFILE_USE_CFLAGS)
 OS_CXXFLAGS += $(PROFILE_USE_CFLAGS)
+OS_LDFLAGS += $(PROFILE_USE_LDFLAGS)
+ifeq (WINNT,$(OS_ARCH))
+AR_FLAGS += -LTCG
 endif
+endif # INTERNAL_TOOLS
+endif # MOZ_PROFILE_USE
+endif # NO_PROFILE_GUIDED_OPTIMIZE
 
 
 # Does the makefile specifies the internal XPCOM API linkage?
