@@ -45,6 +45,7 @@
 #include "nsIObserverService.h"
 #include "nsAutoPtr.h"
 #include "nsNotificationsList.h"
+#include "nsObjCExceptions.h"
 
 #import "mozGrowlDelegate.h"
 #import "GrowlApplicationBridge.h"
@@ -58,12 +59,20 @@ struct GrowlDelegateWrapper
 
   GrowlDelegateWrapper()
   {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
     delegate = [[mozGrowlDelegate alloc] init];
+
+    NS_OBJC_END_TRY_ABORT_BLOCK;
   }
 
   ~GrowlDelegateWrapper()
   {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
     [delegate release];
+
+    NS_OBJC_END_TRY_ABORT_BLOCK;
   }
 };
 
@@ -78,6 +87,8 @@ DispatchNamedNotification(const nsAString &aName,
                           const nsAString &aCookie,
                           nsIObserver *aListener)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if ([GrowlApplicationBridge isGrowlInstalled] == NO ||
       [GrowlApplicationBridge isGrowlRunning] == NO)
     return NS_ERROR_NOT_AVAILABLE;
@@ -111,6 +122,8 @@ DispatchNamedNotification(const nsAString &aName,
 
   nsCOMPtr<nsIStreamLoader> loader;
   return NS_NewStreamLoader(getter_AddRefs(loader), uri, listener);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,6 +141,8 @@ NS_INTERFACE_MAP_END_THREADSAFE
 nsresult
 nsAlertsService::Init()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if ([GrowlApplicationBridge isGrowlInstalled] == NO)
     return NS_ERROR_SERVICE_NOT_AVAILABLE;
 
@@ -137,6 +152,8 @@ nsAlertsService::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   return os->AddObserver(this, "final-ui-startup", PR_FALSE);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 nsAlertsService::nsAlertsService() : mDelegate(nsnull) {}
@@ -159,6 +176,8 @@ nsAlertsService::ShowAlertNotification(const nsAString& aImageUrl,
                                        nsIObserver* aAlertListener,
                                        const nsAString& aAlertName)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ASSERTION(mDelegate->delegate == [GrowlApplicationBridge growlDelegate],
                "Growl Delegate was not registered properly.");
 
@@ -187,6 +206,8 @@ nsAlertsService::ShowAlertNotification(const nsAString& aImageUrl,
 
   return DispatchNamedNotification(name, aImageUrl, aAlertTitle,
                                    aAlertText, aAlertCookie, aAlertListener);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -196,6 +217,8 @@ NS_IMETHODIMP
 nsAlertsService::Observe(nsISupports* aSubject, const char* aTopic,
                          const PRUnichar* aData)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if (strcmp(aTopic, "final-ui-startup") == 0) {
     NS_ASSERTION([GrowlApplicationBridge growlDelegate] == nil,
                  "We already registered with Growl!");
@@ -218,5 +241,6 @@ nsAlertsService::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   return NS_OK;
-}
 
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}

@@ -42,6 +42,7 @@
 #import <Cocoa/Cocoa.h>
 
 #include "nsCOMPtr.h"
+#include "nsObjCExceptions.h"
 #include "nsNativeAppSupportBase.h"
 
 #include "nsIAppShellService.h"
@@ -104,6 +105,8 @@ nsNativeAppSupportCocoa::Enable()
 /* boolean start (); */
 NS_IMETHODIMP nsNativeAppSupportCocoa::Start(PRBool *_retval)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   long response = 0;
   OSErr err = ::Gestalt (gestaltSystemVersion, &response);
   response &= 0xFFFF; // The system version is in the low order word
@@ -121,11 +124,15 @@ NS_IMETHODIMP nsNativeAppSupportCocoa::Start(PRBool *_retval)
 
   *_retval = PR_TRUE;
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP
 nsNativeAppSupportCocoa::ReOpen()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if (!mCanShowUI)
     return NS_ERROR_FAILURE;
 
@@ -212,6 +219,8 @@ nsNativeAppSupportCocoa::ReOpen()
     
   } // got window mediator
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 nsresult
