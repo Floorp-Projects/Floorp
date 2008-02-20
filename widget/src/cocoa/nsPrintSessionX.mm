@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsPrintSessionX.h"
+#include "nsObjCExceptions.h"
 
 //*****************************************************************************
 //***    nsPrintSessionX
@@ -54,15 +55,21 @@ nsPrintSessionX::nsPrintSessionX()
 //-----------------------------------------------------------------------------
 nsPrintSessionX::~nsPrintSessionX()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (mSession) {
     ::PMRelease(mSession);
     mSession = nsnull;
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 //-----------------------------------------------------------------------------
 nsresult nsPrintSessionX::Init()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsresult rv = nsPrintSession::Init();
   if (NS_FAILED(rv))
     return rv;
@@ -72,6 +79,8 @@ nsresult nsPrintSessionX::Init()
     return NS_ERROR_FAILURE;
     
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 //-----------------------------------------------------------------------------

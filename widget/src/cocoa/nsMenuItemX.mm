@@ -38,7 +38,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
-
+#include "nsObjCExceptions.h"
 #include "nsMenuBarX.h"  // for MenuHelpers namespace
 #include "nsMenuItemX.h"
 #include "nsIMenu.h"
@@ -74,17 +74,23 @@ nsMenuItemX::nsMenuItemX()
 
 nsMenuItemX::~nsMenuItemX()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [mNativeMenuItem autorelease];
   if (mContent)
     mMenuBar->UnregisterForContentChanges(mContent);
   if (mCommandContent)
     mMenuBar->UnregisterForContentChanges(mCommandContent);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
 NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, EMenuItemType aItemType,
                               nsMenuBarX* aMenuBar, nsIContent* aNode)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   mContent = aNode;      // addref
   mMenuParent = aParent; // weak
 
@@ -165,6 +171,8 @@ NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, EMenuIt
   mIcon = new nsMenuItemIconX(static_cast<nsIMenuItem*>(this), mMenuParent, mContent, mNativeMenuItem);
   
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -186,6 +194,8 @@ nsMenuItemX::GetEnabled(PRBool *aIsEnabled)
 
 NS_METHOD nsMenuItemX::SetChecked(PRBool aIsChecked)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   mIsChecked = aIsChecked;
   
   // update the content model. This will also handle unchecking our siblings
@@ -200,6 +210,8 @@ NS_METHOD nsMenuItemX::SetChecked(PRBool aIsChecked)
     [mNativeMenuItem setState:NSOffState];
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -335,6 +347,8 @@ nsMenuItemX::UncheckRadioSiblings(nsIContent* inCheckedContent)
 
 void nsMenuItemX::SetKeyEquiv(PRUint8 aModifiers, const nsString &aText)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   mMenuBar->UnregisterKeyEquivalent([mNativeMenuItem keyEquivalentModifierMask], [mNativeMenuItem keyEquivalent]);
 
   mModifiers = aModifiers;
@@ -349,7 +363,9 @@ void nsMenuItemX::SetKeyEquiv(PRUint8 aModifiers, const nsString &aText)
   else
     [mNativeMenuItem setKeyEquivalent:keyEquivalent];
 
-  mMenuBar->RegisterKeyEquivalent([mNativeMenuItem keyEquivalentModifierMask], [mNativeMenuItem keyEquivalent]);  
+  mMenuBar->RegisterKeyEquivalent([mNativeMenuItem keyEquivalentModifierMask], [mNativeMenuItem keyEquivalent]);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -361,6 +377,8 @@ void nsMenuItemX::SetKeyEquiv(PRUint8 aModifiers, const nsString &aText)
 void
 nsMenuItemX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aContent, nsIAtom *aAttribute)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (!aContent)
     return;
   
@@ -413,6 +431,8 @@ nsMenuItemX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConten
         [mNativeMenuItem setEnabled:YES];
     }
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 

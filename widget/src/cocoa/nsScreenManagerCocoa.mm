@@ -36,9 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCOMPtr.h"
-
 #include "nsScreenManagerCocoa.h"
+#include "nsObjCExceptions.h"
+#include "nsCOMPtr.h"
 #include "nsCocoaUtils.h"
 
 NS_IMPL_ISUPPORTS1(nsScreenManagerCocoa, nsIScreenManager)
@@ -73,6 +73,8 @@ NS_IMETHODIMP
 nsScreenManagerCocoa::ScreenForRect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
                                      nsIScreen **outScreen)
 {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
     NSEnumerator *screenEnum = [[NSScreen screens] objectEnumerator];
     NSRect inRect = nsCocoaUtils::GeckoRectToCocoaRect(nsRect(aX, aY, aWidth, aHeight));
     NSScreen *screenWindowIsOn = [NSScreen mainScreen];
@@ -94,11 +96,15 @@ nsScreenManagerCocoa::ScreenForRect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRI
     *outScreen = ScreenForCocoaScreen(screenWindowIsOn);
     NS_ADDREF(*outScreen);
     return NS_OK;
+
+    NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP
 nsScreenManagerCocoa::GetPrimaryScreen (nsIScreen **outScreen)
 {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
     // the mainScreen is the screen with the "key window" (focus, I assume?)
     NSScreen *sc = [[NSScreen screens] objectAtIndex:0];
 
@@ -106,21 +112,29 @@ nsScreenManagerCocoa::GetPrimaryScreen (nsIScreen **outScreen)
     NS_ADDREF(*outScreen);
 
     return NS_OK;
+
+    NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP
 nsScreenManagerCocoa::GetNumberOfScreens (PRUint32 *aNumberOfScreens)
 {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
     NSArray *ss = [NSScreen screens];
 
     *aNumberOfScreens = [ss count];
 
     return NS_OK;
+
+    NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP
 nsScreenManagerCocoa::ScreenForNativeWidget (void *nativeWidget, nsIScreen **outScreen)
 {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
     NSView *view = (NSView*) nativeWidget;
 
     NSWindow *window = [view window];
@@ -133,4 +147,6 @@ nsScreenManagerCocoa::ScreenForNativeWidget (void *nativeWidget, nsIScreen **out
 
     *outScreen = nsnull;
     return NS_OK;
+
+    NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
