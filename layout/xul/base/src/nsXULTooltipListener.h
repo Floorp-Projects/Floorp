@@ -38,7 +38,6 @@
 #ifndef nsXULTooltipListener_h__
 #define nsXULTooltipListener_h__
 
-#include "nsCycleCollectionParticipant.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseMotionListener.h"
 #include "nsIDOMKeyListener.h"
@@ -53,6 +52,7 @@
 #include "nsITreeBoxObject.h"
 #include "nsITreeColumns.h"
 #endif
+#include "nsWeakPtr.h"
 
 class nsXULTooltipListener : public nsIDOMMouseListener,
                              public nsIDOMMouseMotionListener,
@@ -60,9 +60,7 @@ class nsXULTooltipListener : public nsIDOMMouseListener,
                              public nsIDOMXULListener
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULTooltipListener,
-                                           nsIDOMMouseListener)
+  NS_DECL_ISUPPORTS
 
   // nsIDOMMouseListener
   NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
@@ -134,9 +132,9 @@ protected:
   static nsXULTooltipListener* mInstance;
   static int ToolbarTipsPrefChanged(const char *aPref, void *aClosure);
 
-  nsCOMPtr<nsIContent> mSourceNode;
-  nsCOMPtr<nsIDOMNode> mTargetNode;
-  nsCOMPtr<nsIContent> mCurrentTooltip;
+  nsWeakPtr mSourceNode;
+  nsWeakPtr mTargetNode;
+  nsWeakPtr mCurrentTooltip;
 
   // a timer for showing the tooltip
   nsCOMPtr<nsITimer> mTooltipTimer;

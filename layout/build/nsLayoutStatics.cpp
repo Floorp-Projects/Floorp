@@ -112,6 +112,8 @@ PRBool NS_SVGEnabled();
 #include "nsError.h"
 #include "nsTraceRefcnt.h"
 
+#include "nsCycleCollector.h"
+
 static nsrefcnt sLayoutStaticRefcnt;
 
 nsresult
@@ -216,11 +218,13 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
+#ifndef DEBUG_CC
   rv = nsCCUncollectableMarker::Init();
   if (NS_FAILED(rv)) {
     NS_ERROR("Could not initialize nsCCUncollectableMarker");
     return rv;
   }
+#endif
 
 #ifdef MOZ_XUL
   rv = nsXULPopupManager::Init();
