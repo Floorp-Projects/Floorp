@@ -124,19 +124,23 @@ sub compareProperties
         if (exists $entities2{$entity}) {
             delete $entities2{$entity};
         } else {
-# hack around region.properties#browser.search.order.[1-9]
+# hack to ignore non-fatal region.properties differences
             if ($path !~ /chrome\/browser-region\/region\.properties$/ or
                 ($entity !~ /browser\.search\.order\.[1-9]/ and
-                 $entity !~ /browser\.contentHandlers\.types\.[0-5]/)) {
+                 $entity !~ /browser\.contentHandlers\.types\.[0-5]/ and
+                 $entity !~ /gecko\.handlerService\.schemes\./ and
+                 $entity !~ /gecko\.handlerService\.defaultHandlersVersion/)) {
                 push @extra1, $entity;
             }
         }
     }
-# hack around region.properties#browser.search.order.[1-9]
+# hack to ignore non-fatal region.properties differences
     if ($path =~ /chrome\/browser-region\/region\.properties$/) {
         foreach $entity (keys(%entities2)) {
             if ($entity =~ /browser\.search\.order\.[1-9]/ ||
-                $entity =~ /browser\.contentHandlers\.types\.[0-5]/) {
+                $entity =~ /browser\.contentHandlers\.types\.[0-5]/ ||
+                $entity =~ /gecko\.handlerService\.schemes\./ ||
+                $entity =~ /gecko\.handlerService\.defaultHandlersVersion/) {
                 delete $entities2{$entity};
             }
         }
