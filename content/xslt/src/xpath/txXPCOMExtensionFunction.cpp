@@ -114,12 +114,12 @@ txFunctionEvaluationContext::GetState(nsISupports **aState)
 }
 
 enum txArgumentType {
-    BOOLEAN = nsXPTType::T_BOOL,
-    NUMBER = nsXPTType::T_DOUBLE,
-    STRING = nsXPTType::T_DOMSTRING,
-    NODESET,
-    CONTEXT,
-    UNKNOWN
+    eBOOLEAN = nsXPTType::T_BOOL,
+    eNUMBER = nsXPTType::T_DOUBLE,
+    eSTRING = nsXPTType::T_DOMSTRING,
+    eNODESET,
+    eCONTEXT,
+    eUNKNOWN
 };
 
 class txXPCOMExtensionFunctionCall : public FunctionCall
@@ -302,16 +302,16 @@ txXPCOMExtensionFunctionCall::GetParamType(const nsXPTParamInfo &aParam,
             nsIID iid;
             aInfo->GetIIDForParamNoAlloc(mMethodIndex, &aParam, &iid);
             if (iid.Equals(NS_GET_IID(txINodeSet))) {
-                return NODESET;
+                return eNODESET;
             }
             if (iid.Equals(NS_GET_IID(txIFunctionEvaluationContext))) {
-                return CONTEXT;
+                return eCONTEXT;
             }
         }
         default:
         {
             // XXX Error!
-            return UNKNOWN;
+            return eUNKNOWN;
         }
     }
 }
@@ -390,13 +390,13 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
 
     const nsXPTParamInfo &paramInfo = methodInfo->GetParam(0);
     txArgumentType type = GetParamType(paramInfo, info);
-    if (type == UNKNOWN) {
+    if (type == eUNKNOWN) {
         return NS_ERROR_FAILURE;
     }
 
     txFunctionEvaluationContext *context;
     PRUint32 paramStart = 0;
-    if (type == CONTEXT) {
+    if (type == eCONTEXT) {
         if (paramInfo.IsOut()) {
             // We don't support out values.
             return NS_ERROR_FAILURE;
@@ -431,7 +431,7 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
 
         const nsXPTParamInfo &paramInfo = methodInfo->GetParam(i);
         txArgumentType type = GetParamType(paramInfo, info);
-        if (type == UNKNOWN) {
+        if (type == eUNKNOWN) {
             return NS_ERROR_FAILURE;
         }
 
@@ -443,7 +443,7 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
 
         invokeParam.type = paramInfo.GetType();
         switch (type) {
-            case NODESET:
+            case eNODESET:
             {
                 nsRefPtr<txNodeSet> nodes;
                 rv = evaluateToNodeSet(expr, aContext, getter_AddRefs(nodes));
@@ -462,19 +462,19 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
                 nodeSet.swap((txINodeSet*&)invokeParam.val.p);
                 break;
             }
-            case BOOLEAN:
+            case eBOOLEAN:
             {
                 rv = expr->evaluateToBool(aContext, invokeParam.val.b);
                 NS_ENSURE_SUCCESS(rv, rv);
 
                 break;
             }
-            case NUMBER:
+            case eNUMBER:
             {
                 invokeParam.val.d = evaluateToNumber(expr, aContext);
                 break;
             }
-            case STRING:
+            case eSTRING:
             {
                 nsString *value = new nsString();
                 if (!value) {
@@ -488,8 +488,8 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
                 invokeParam.val.p = value;
                 break;
             }
-            case CONTEXT:
-            case UNKNOWN:
+            case eCONTEXT:
+            case eUNKNOWN:
             {
                 // We only support passing the context as the *first* argument.
                 return NS_ERROR_FAILURE;
@@ -499,13 +499,13 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
 
     const nsXPTParamInfo &returnInfo = methodInfo->GetParam(inArgs);
     txArgumentType returnType = GetParamType(returnInfo, info);
-    if (returnType == UNKNOWN) {
+    if (returnType == eUNKNOWN) {
         return NS_ERROR_FAILURE;
     }
 
     nsXPTCVariant &returnParam = invokeParams[inArgs];
     returnParam.type = returnInfo.GetType();
-    if (returnType == STRING) {
+    if (returnType == eSTRING) {
         nsString *value = new nsString();
         if (!value) {
             return NS_ERROR_FAILURE;
@@ -530,7 +530,7 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
     NS_ENSURE_SUCCESS(rv, rv);
 
     switch (returnType) {
-        case NODESET:
+        case eNODESET:
         {
             txINodeSet *nodeSet = static_cast<txINodeSet*>
                                              (returnParam.val.p);
@@ -539,18 +539,18 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
 
             return NS_OK;
         }
-        case BOOLEAN:
+        case eBOOLEAN:
         {
             aContext->recycler()->getBoolResult(returnParam.val.b, aResult);
 
             return NS_OK;
         }
-        case NUMBER:
+        case eNUMBER:
         {
             return aContext->recycler()->getNumberResult(returnParam.val.d,
                                                          aResult);
         }
-        case STRING:
+        case eSTRING:
         {
             nsString *returned = static_cast<nsString*>
                                             (returnParam.val.p);
