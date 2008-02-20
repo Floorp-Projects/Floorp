@@ -2280,16 +2280,16 @@ nsNavHistory::SetPageDetails(nsIURI* aURI, const nsAString& aTitle,
   // for the titles, be careful to interpret isVoid as NULL SQL command so that
   // we can tell the difference between "set to empty" and "unset"
   if (aTitle.IsVoid())
-    statement->BindNullParameter(1);
+    rv = statement->BindNullParameter(1);
   else
-    statement->BindStringParameter(1, StringHead(aTitle, HISTORY_TITLE_LENGTH_MAX));
+    rv = statement->BindStringParameter(1, StringHead(aTitle, HISTORY_TITLE_LENGTH_MAX));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  statement->BindInt32Parameter(3, aVisitCount);
+  rv = statement->BindInt32Parameter(3, aVisitCount);
   NS_ENSURE_SUCCESS(rv, rv);
-  statement->BindInt32Parameter(4, aHidden ? 1 : 0);
+  rv = statement->BindInt32Parameter(4, aHidden ? 1 : 0);
   NS_ENSURE_SUCCESS(rv, rv);
-  statement->BindInt32Parameter(5, aTyped ? 1 : 0);
+  rv = statement->BindInt32Parameter(5, aTyped ? 1 : 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = statement->Execute();
@@ -3719,30 +3719,35 @@ nsNavHistory::IsVisited(nsIURI *aURI, PRBool *_retval)
 //    Some pages don't: some say <title></title>, and some don't have any title
 //    element. In BOTH cases, we get SetPageTitle(URI, ""), but in both cases,
 //    our default title is more useful to the user than "(no title)".
-//
-//    User titles will accept empty strings so the user can still manually
-//    override it.
 
 NS_IMETHODIMP
-nsNavHistory::SetPageTitle(nsIURI *aURI,
-                           const nsAString & aTitle)
+nsNavHistory::SetPageTitle(nsIURI* aURI,
+                           const nsAString& aTitle)
 {
-  if (aTitle.IsEmpty())
-    return NS_OK;
+  // if aTitle is empty we want to clear the previous title.
+  // We don't want to set it to an empty string, but to a NULL value,
+  // so we use SetIsVoid and SetPageTitleInternal will take care of that
 
 #ifdef LAZY_ADD
   LazyMessage message;
   nsresult rv = message.Init(LazyMessage::Type_Title, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
   message.title = aTitle;
+  if (aTitle.IsEmpty())
+    message.title.SetIsVoid(PR_TRUE);
   return AddLazyMessage(message);
 #else
+  if (aTitle.IsEmpty()) {
+    nsString voidString;
+    voidString.SetIsVoid(PR_TRUE);
+    return SetPageTitleInternal(aURI, voidString);
+  }
   return SetPageTitleInternal(aURI, aTitle);
 #endif
 }
 
 NS_IMETHODIMP
-nsNavHistory::GetPageTitle(nsIURI *aURI, nsAString &aTitle)
+nsNavHistory::GetPageTitle(nsIURI* aURI, nsAString& aTitle)
 {
   aTitle.Truncate(0);
 
@@ -5456,8 +5461,7 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, const nsAString& aTitle)
   // be. For example, going to any web page will always cause a title to be set,
   // even though it will often be unchanged since the last visit. In these
   // cases, we can avoid DB writing and (most significantly) observer overhead.
-  if (aTitle.IsVoid() == title.IsVoid() &&
-      aTitle == title)
+  if ((aTitle.IsVoid() && title.IsVoid()) || aTitle == title)
     return NS_OK;
 
   nsCOMPtr<mozIStorageStatement> dbModStatement;
