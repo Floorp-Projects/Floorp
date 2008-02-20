@@ -145,6 +145,10 @@
 #include "nsContentCID.h"
 static NS_DEFINE_CID(kRangeCID, NS_RANGE_CID);
 
+#ifdef XP_MACOSX
+#include "gfxQuartzNativeDrawing.h"
+#endif
+
 #ifdef MOZ_X11
 #include <X11/Xlib.h>
 /* X headers suck */
@@ -1250,8 +1254,35 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
   // Screen painting code
 #if defined(XP_MACOSX)
   // delegate all painting to the plugin instance.
-  if (mInstanceOwner)
+  if (mInstanceOwner) {
+    if (mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreGraphics) {
+      PRInt32 p2a = PresContext()->AppUnitsPerDevPixel();
+      gfxRect nativeClipRect(aDirtyRect.x, aDirtyRect.y,
+                             aDirtyRect.width, aDirtyRect.height);
+      nativeClipRect.ScaleInverse(gfxFloat(p2a));
+      gfxContext* ctx = aRenderingContext.ThebesContext();
+      gfxQuartzNativeDrawing nativeDrawing(ctx, nativeClipRect);
+
+      CGContextRef cgContext = nativeDrawing.BeginNativeDrawing();
+      if (!cgContext) {
+        NS_WARNING("null CGContextRef during PaintPlugin");
+        return;
+      }
+
+      // XXXkinetik if gfxQuartzNativeDrawing ever gave us a CGContext other
+      // than the current one, we would need to pass that to the plugin via
+      // SetWindow, just assert that they're the same for now
+      nsPluginPort* pluginPort = mInstanceOwner->GetPluginPort();
+      NS_ASSERTION(pluginPort->cgPort.context == cgContext,
+                   "BeginNativeDrawing using different CGContextRef to plugin");
+
       mInstanceOwner->Paint(aDirtyRect);
+
+      nativeDrawing.EndNativeDrawing();
+    } else {
+      mInstanceOwner->Paint(aDirtyRect);
+    }
+  }
 #elif defined(MOZ_X11)
   if (mInstanceOwner)
     {

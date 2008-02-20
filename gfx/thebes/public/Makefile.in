@@ -81,6 +81,7 @@ EXPORTS +=	gfxPlatformMac.h \
 		gfxQuartzImageSurface.h \
 		gfxQuartzPDFSurface.h \
 		gfxAtsuiFonts.h \
+		gfxQuartzNativeDrawing.h \
 		$(NULL)
 
 ifdef MOZ_ENABLE_GLITZ
