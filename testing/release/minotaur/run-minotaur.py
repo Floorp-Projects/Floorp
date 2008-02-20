@@ -37,10 +37,13 @@
 
 from optparse import OptionParser
 import partner
+import urllib
 
 
 def main(branch, version, url, loc, name, vFiles, minDir, creds, aus):
-  partner.doDownload(name, loc, url, minDir, creds)
+  # Ensure the URL is properly encoded, but don't encode : or /
+  quotedurl = urllib.quote(urllib.unquote(url), ":/")
+  partner.doDownload(name, loc, quotedurl, minDir, creds)
   partner.doInstall(branch, name, loc)
   partner.doMinotaur(name, loc, minDir, vFiles, aus, version)
   partner.doUninstall(branch, name, loc)
