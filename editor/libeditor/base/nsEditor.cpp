@@ -2246,6 +2246,14 @@ nsEditor::GetPreferredIMEState(PRUint32 *aState)
 }
 
 NS_IMETHODIMP
+nsEditor::GetComposing(PRBool* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = IsIMEComposing();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsEditor::GetReconversionString(nsReconversionEventReply* aReply)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
