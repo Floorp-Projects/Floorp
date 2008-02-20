@@ -56,10 +56,10 @@ class nsIScriptElement;
 class nsIEditor;
 
 // Update htmldocument.gqi when updating this IID!
-// 48546d61-6097-462b-89b1-57e2221444dc
+// bfd644d6-92cc-4560-a329-f02ba0c91ca5
 #define NS_IHTMLDOCUMENT_IID \
-{ 0x48546d61, 0x6097, 0x462b, \
-  { 0x89, 0xb1, 0x57, 0xe2, 0x22, 0x14, 0x44, 0xdc } }
+{ 0xbfd644d6, 0x92cc, 0x4560, \
+  { 0xa3, 0x29, 0xf0, 0x2b, 0xa0, 0xc9, 0x1c, 0xa5 } }
 
 /**
  * HTML document extensions to nsIDocument.
