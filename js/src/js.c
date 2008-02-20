@@ -60,6 +60,7 @@
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jslock.h"
+#include "jsnum.h"
 #include "jsobj.h"
 #include "jsparse.h"
 #include "jsscope.h"
@@ -2513,8 +2514,11 @@ Sleep(JSContext *cx, uintN argc, jsval *vp)
     PRUint32 t_ticks;
     jsrefcount rc;
 
-    if (!JS_ValueToNumber(cx, JS_ARGV(cx, vp)[0], &t_secs))
+    if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "d", &t_secs))
         return JS_FALSE;
+
+    if (t_secs < 0 || JSDOUBLE_IS_NaN(t_secs))
+        t_secs = 0;
 
     rc = JS_SuspendRequest(cx);
     t_ticks = (PRUint32)(PR_TicksPerSecond() * t_secs);
@@ -2630,6 +2634,8 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
     ok = JS_GetArrayLength(cx, inArr, &n);
     if (!ok)
         goto out;
+    if (n == 0)
+        goto success;
 
     sd.lock = PR_NewLock();
     if (!sd.lock)
@@ -2665,9 +2671,9 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
         sd.threads[i].fn = JSVAL_NULL;
 
         ok = JS_AddRoot(cx, &sd.threads[i].fn);
-        if (ok) {
-            ok = JS_GetElement(cx, inArr, (jsint) i, &sd.threads[i].fn);
-            i++;  /* additional root to remove */
+        if (ok && !JS_GetElement(cx, inArr, (jsint) i, &sd.threads[i].fn)) {
+            JS_RemoveRoot(cx, &sd.threads[i].fn);
+            ok = JS_FALSE;
         }
         if (!ok) {
             while (i-- > 0)
@@ -2692,7 +2698,7 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
                                       RunScatterThread,
                                       &sd.threads[i],
                                       PR_PRIORITY_NORMAL,
-                                      PR_LOCAL_THREAD,
+                                      PR_GLOBAL_THREAD,
                                       PR_JOINABLE_THREAD,
                                       0);
         if (!t) {
@@ -2721,6 +2727,7 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
     }
     JS_ResumeRequest(cx, rc);
 
+success:
     arr = JS_NewArrayObject(cx, n, sd.results);
     if (!arr)
         goto fail;
