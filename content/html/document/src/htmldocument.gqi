@@ -7,7 +7,7 @@
 #include "nsHTMLDocument.h"
 %}
 
-%pseudo-iid nsIHTMLDocument 48546d61-6097-462b-89b1-57e2221444dc
+%pseudo-iid nsIHTMLDocument bfd644d6-92cc-4560-a329-f02ba0c91ca5
 
 NS_INTERFACE_MAP_BEGIN(nsHTMLDocument, nsDocument)
   NS_INTERFACE_MAP_ENTRY(nsIHTMLDocument)
