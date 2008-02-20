@@ -706,8 +706,8 @@ NS_IMETHODIMP nsExternalHelperAppService::ExternalProtocolHandlerExists(const ch
                                                                         PRBool * aHandlerExists)
 {
   nsCOMPtr<nsIHandlerInfo> handlerInfo;
-  nsresult rv = GetProtocolHandlerInfo(
-      nsDependentCString(aProtocolScheme), getter_AddRefs(handlerInfo));
+  nsresult rv = GetProtocolHandlerInfo(nsDependentCString(aProtocolScheme), 
+                                       getter_AddRefs(handlerInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // See if we have any known possible handler apps for this
@@ -890,54 +890,72 @@ static const char kExternalWarningDefaultPref[] =
   "network.protocol-handler.warn-external-default";
 
 NS_IMETHODIMP
-nsExternalHelperAppService::GetProtocolHandlerInfo(const nsACString &aScheme, 
+nsExternalHelperAppService::GetProtocolHandlerInfo(const nsACString &aScheme,
                                                    nsIHandlerInfo **aHandlerInfo)
 {
   // XXX enterprise customers should be able to turn this support off with a
   // single master pref (maybe use one of the "exposed" prefs here?)
 
   PRBool exists;
-  *aHandlerInfo = GetProtocolInfoFromOS(aScheme, &exists).get();
-  if (!(*aHandlerInfo)) {
+  nsresult rv = GetProtocolHandlerInfoFromOS(aScheme, &exists, aHandlerInfo);
+  if (NS_FAILED(rv)) {
     // Either it knows nothing, or we ran out of memory
     return NS_ERROR_FAILURE;
   }
-
-  nsresult rv = NS_ERROR_FAILURE;
+  
+  rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIHandlerService> handlerSvc = do_GetService(NS_HANDLERSERVICE_CONTRACTID);
   if (handlerSvc)
     rv = handlerSvc->FillHandlerInfo(*aHandlerInfo, EmptyCString());
+
+  if (NS_SUCCEEDED(rv))
+    return NS_OK;
   
+  return SetProtocolHandlerDefaults(*aHandlerInfo, exists);
+}
+
+NS_IMETHODIMP
+nsExternalHelperAppService::GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
+                                                         PRBool *found,
+                                                         nsIHandlerInfo **aHandlerInfo)
+{
+  // intended to be implemented by the subclass
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsExternalHelperAppService::SetProtocolHandlerDefaults(nsIHandlerInfo *aHandlerInfo,
+                                                       const PRBool aOSHandlerExists)
+{
   // this type isn't in our database, so we've only got an OS default handler,
   // if one exists
-  if (NS_FAILED(rv)) {
+
+  if (aOSHandlerExists) {
+    // we've got a default, so use it
+    aHandlerInfo->SetPreferredAction(nsIHandlerInfo::useSystemDefault);
+
+    // whether or not to ask the user depends on the warning preference
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (!prefs)
+      return NS_OK; // deny if we can't check prefs
+
+    nsCAutoString scheme;
+    aHandlerInfo->GetType(scheme);
     
-    if (exists) {
-      // we've got a default, so use it
-      (*aHandlerInfo)->SetPreferredAction(nsIHandlerInfo::useSystemDefault);
-
-      // whether or not to ask the user depends on the warning preference
-
-      nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
-      if (!prefs)
-        return NS_OK; // deny if we can't check prefs
-
-      nsCAutoString warningPref(kExternalWarningPrefPrefix);
-      warningPref += aScheme;
-      PRBool warn = PR_TRUE;
-      rv = prefs->GetBoolPref(warningPref.get(), &warn);
-      if (NS_FAILED(rv))
-      {
-        // no scheme-specific value, check the default
-        prefs->GetBoolPref(kExternalWarningDefaultPref, &warn);
-      }
-      (*aHandlerInfo)->SetAlwaysAskBeforeHandling(warn);
-    } else {
-      // If no OS default existed, we set the preferred action to alwaysAsk. 
-      // This really means not initialized (i.e. there's no available handler)
-      // to all the code...
-      (*aHandlerInfo)->SetPreferredAction(nsIHandlerInfo::alwaysAsk);
+    nsCAutoString warningPref(kExternalWarningPrefPrefix);
+    warningPref += scheme;
+    PRBool warn = PR_TRUE;
+    nsresult rv = prefs->GetBoolPref(warningPref.get(), &warn);
+    if (NS_FAILED(rv)) {
+      // no scheme-specific value, check the default
+      prefs->GetBoolPref(kExternalWarningDefaultPref, &warn);
     }
+    aHandlerInfo->SetAlwaysAskBeforeHandling(warn);
+  } else {
+    // If no OS default existed, we set the preferred action to alwaysAsk. 
+    // This really means not initialized (i.e. there's no available handler)
+    // to all the code...
+    aHandlerInfo->SetPreferredAction(nsIHandlerInfo::alwaysAsk);
   }
 
   return NS_OK;
