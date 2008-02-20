@@ -6423,7 +6423,7 @@ Hangul/M
 Hangzhou/M
 Hank/M
 Hanna/M
-Hannah
+Hannah/M
 Hanni/SM
 Hannibal/M
 Hannie/M
@@ -7364,7 +7364,7 @@ Jamal/M
 Jamar/M
 Jame/SM
 Jamel/M
-James/M
+James
 Jameson
 Jamestown
 Jamesy/M
@@ -7383,7 +7383,7 @@ Janacek/M
 Janaya/M
 Janaye/M
 Jandy/M
-Jane
+Jane/M
 Janean/M
 Janeczka/M
 Janeen/M
@@ -7396,7 +7396,7 @@ Janelle/M
 Janene/M
 Janenna/M
 Janessa/M
-Janet
+Janet/M
 Janeta/M
 Janetta/M
 Janette/M
@@ -14434,7 +14434,7 @@ Thimbu
 Thimphu
 Thom/M
 Thoma/SM
-Thomas/M
+Thomas
 Thomasa/M
 Thomasin/M
 Thomasina/M
@@ -14905,7 +14905,6 @@ Unitarianism/MS
 Unitas/M
 Unix/S
 Unukalhai/M
-Ununtu/M
 Upanishads
 Updike
 Upjohn/M
@@ -15447,6 +15446,7 @@ Wiesel/M
 Wiesenthal/M
 Wiggins
 Wigner/M
+Wikipedia/M
 Wilberforce
 Wilbert/M
 Wilbur/M
@@ -17638,6 +17638,7 @@ arcane/PY
 arch/PZTGVMDRSY
 archaeological/Y
 archaeologist/SM
+archaeology/M
 archaic
 archaically
 archaism/MS
@@ -17652,6 +17653,8 @@ archdiocese/SM
 archduchess/MS
 archduke/MS
 archenemy/SM
+archeological/Y
+archeologist/SM
 archeology/M
 archeopteryx
 archer/M
@@ -18319,6 +18322,7 @@ awoke
 awoken
 awry
 ax/MDSG
+axe/M
 axehead/S
 axeman
 axial/Y
@@ -20710,8 +20714,7 @@ cackle/MZGDRS
 cackler/M
 cacophonous
 cacophony/SM
-cacti
-cactus/M
+cactus/Mi
 cad/SM
 cadaver/SM
 cadaverous
@@ -25537,7 +25540,8 @@ dialectical/Y
 dialectics/M
 dialer
 dialing/S
-dialog/SM
+dialog/SMGD
+dialogue/SMRGD
 dialysis/M
 dialyzes
 diam
@@ -27394,6 +27398,7 @@ encumbered/U
 encumbrance/SM
 ency
 encyclical/SM
+encyclopaedia
 encyclopedia/MS
 encyclopedic
 encyst/LSGD
@@ -29503,9 +29508,8 @@ fob/SM
 fobbed
 fobbing
 focal/Y
-focus's
-focus/ADSG
-focused/U
+focus/ACGRSMBi
+focused/UC
 fodder/SM
 foe/SM
 foetid
@@ -36333,7 +36337,6 @@ locate/EAGNVDS
 location's/A
 location/ESM
 locational
-loci
 lock/MDRSBZG
 locked/A
 locker/M
@@ -36349,7 +36352,7 @@ locomotion/M
 locomotive/MS
 locoweed/SM
 locum/S
-locus/M
+locus/Mi
 locust/SM
 locution/MS
 lode/MS
@@ -37415,6 +37418,7 @@ megalomaniac/SM
 megalopolis/MS
 megaparsec
 megaphone/DSMG
+megapixel
 megastar/S
 megaton/SM
 megawatt/MS
@@ -40150,7 +40154,7 @@ octave/MS
 octavo/MS
 octet/SM
 octogenarian/MS
-octopus/MS
+octopus/MSi
 ocular/MS
 oculist/SM
 odalisque/SM
@@ -43412,8 +43416,9 @@ predominate/DSYG
 preemie/SM
 preeminence/M
 preeminent/Y
-preempt/GVSD
+preempt/GSD
 preemption/M
+preemptive/Y
 preen/DSG
 preexist/DGS
 preexistence/M
@@ -55328,6 +55333,7 @@ wigwag/SM
 wigwagged
 wigwagging
 wigwam/SM
+wiki/SM
 wild/MRYSTP
 wildcat/MS
 wildcatted
