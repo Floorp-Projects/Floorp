@@ -6087,6 +6087,10 @@ if test "$MOZ_MEMORY"; then
     dnl Needs to be in PATH too, since our tools will wind up linked against it.
     dnl This needs to be unix style.
     MOZ_PATH="$PATH:$_WIN_UNIX_CRT_PATH"
+    dnl Statically link the C++ stdlib.  We only use this for Breakpad anyway.
+    AC_DEFINE(_STATIC_CPPLIB)
+    dnl Don't generate a manifest, since we're linking to a custom CRT.
+    LDFLAGS="$LDFLAGS -MANIFEST:NO"
     ;;
   *)
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
