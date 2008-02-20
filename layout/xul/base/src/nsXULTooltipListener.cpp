@@ -62,6 +62,7 @@
 #include "nsXULPopupManager.h"
 #endif
 #include "nsIRootBox.h"
+#include "nsEventDispatcher.h"
 
 nsXULTooltipListener* nsXULTooltipListener::mInstance = nsnull;
 
@@ -69,8 +70,8 @@ nsXULTooltipListener* nsXULTooltipListener::mInstance = nsnull;
 //// nsISupports
 
 nsXULTooltipListener::nsXULTooltipListener()
-  : mMouseClientX(0)
-  , mMouseClientY(0)
+  : mMouseScreenX(0)
+  , mMouseScreenY(0)
 #ifdef MOZ_XUL
   , mIsSourceTree(PR_FALSE)
   , mNeedTitletip(PR_FALSE)
@@ -199,10 +200,11 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
   PRInt32 newMouseX, newMouseY;
   mouseEvent->GetScreenX(&newMouseX);
   mouseEvent->GetScreenY(&newMouseY);
-  if (mMouseClientX == newMouseX && mMouseClientY == newMouseY)
+  if (mMouseScreenX == newMouseX && mMouseScreenY == newMouseY)
     return NS_OK;
-  mMouseClientX = newMouseX;
-  mMouseClientY = newMouseY;
+  mMouseScreenX = newMouseX;
+  mMouseScreenY = newMouseY;
+  mCachedMouseEvent = aMouseEvent;
 
   nsCOMPtr<nsIDOMEventTarget> eventTarget;
   aMouseEvent->GetCurrentTarget(getter_AddRefs(eventTarget));
@@ -510,7 +512,11 @@ nsXULTooltipListener::LaunchTooltip()
 
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm) {
-    pm->ShowPopupAtScreen(currentTooltip, mMouseClientX, mMouseClientY, PR_FALSE, nsnull);
+    pm->ShowPopupAtScreen(currentTooltip, mMouseScreenX, mMouseScreenY,
+                          PR_FALSE, mCachedMouseEvent);
+
+    mCachedMouseEvent = nsnull;
+
     // Clear the current tooltip if the popup was not opened successfully.
     if (!pm->IsPopupOpen(currentTooltip))
       mCurrentTooltip = nsnull;
@@ -522,6 +528,8 @@ nsXULTooltipListener::LaunchTooltip()
 nsresult
 nsXULTooltipListener::HideTooltip()
 {
+  mCachedMouseEvent = nsnull;
+
 #ifdef MOZ_XUL
   nsCOMPtr<nsIContent> currentTooltip = do_QueryReferent(mCurrentTooltip);
   if (currentTooltip) {
