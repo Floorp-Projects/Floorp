@@ -697,12 +697,12 @@ struct nsStyleText {
   
   PRBool WhiteSpaceIsSignificant() const {
     return mWhiteSpace == NS_STYLE_WHITESPACE_PRE ||
-           mWhiteSpace == NS_STYLE_WHITESPACE_MOZ_PRE_WRAP;
+           mWhiteSpace == NS_STYLE_WHITESPACE_PRE_WRAP;
   }
 
   PRBool WhiteSpaceCanWrap() const {
     return mWhiteSpace == NS_STYLE_WHITESPACE_NORMAL ||
-           mWhiteSpace == NS_STYLE_WHITESPACE_MOZ_PRE_WRAP;
+           mWhiteSpace == NS_STYLE_WHITESPACE_PRE_WRAP;
   }
 };
 

@@ -4168,8 +4168,7 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
 
   const nsStyleText* styleText = frame->GetStyleText();
 
-  *aResult = NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace ||
-             NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace;
+  *aResult = styleText->WhiteSpaceIsSignificant();
   return NS_OK;
 }
 

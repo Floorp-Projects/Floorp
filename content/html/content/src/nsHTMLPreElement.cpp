@@ -156,7 +156,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     if (aData->mTextData->mWhiteSpace.GetUnit() == eCSSUnit_Null) {
       // wrap: empty
       if (aAttributes->GetAttr(nsGkAtoms::wrap))
-        aData->mTextData->mWhiteSpace.SetIntValue(NS_STYLE_WHITESPACE_MOZ_PRE_WRAP, eCSSUnit_Enumerated);
+        aData->mTextData->mWhiteSpace.SetIntValue(NS_STYLE_WHITESPACE_PRE_WRAP, eCSSUnit_Enumerated);
 
       // width: int (html4 attribute == nav4 cols)
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::width);
@@ -168,7 +168,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       if (value && value->Type() == nsAttrValue::eInteger) {
         // Force wrap property on since we want to wrap at a width
         // boundary not just a newline.
-        aData->mTextData->mWhiteSpace.SetIntValue(NS_STYLE_WHITESPACE_MOZ_PRE_WRAP, eCSSUnit_Enumerated);
+        aData->mTextData->mWhiteSpace.SetIntValue(NS_STYLE_WHITESPACE_PRE_WRAP, eCSSUnit_Enumerated);
       }
     }
   }
