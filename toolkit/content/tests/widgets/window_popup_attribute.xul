@@ -11,7 +11,7 @@
   <script type="application/javascript" src="popup_shared.js"></script>      
   <script type="application/javascript" src="popup_trigger.js"></script>      
 
-<hbox style="margin-left: 275px; margin-top: 275px;">
+<hbox style="margin-left: 325px; margin-top: 325px;">
   <label id="trigger" popup="thepopup" value="Popup"/>
 </hbox>
 
