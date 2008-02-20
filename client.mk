@@ -1097,9 +1097,8 @@ build::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
 profiledbuild:: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	$(MOZ_MAKE) MOZ_PROFILE_GENERATE=1
 	OBJDIR=${OBJDIR} $(PROFILE_GEN_SCRIPT)
-	$(MOZ_MAKE) clobber_all
+	$(MOZ_MAKE) maybe_clobber_profiledbuild
 	$(MOZ_MAKE) MOZ_PROFILE_USE=1
-	find $(OBJDIR) -name "*.da" -exec rm {} \;
 
 ####################################
 # Other targets
