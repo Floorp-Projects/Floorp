@@ -2490,6 +2490,13 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
     JS_PUSH_TEMP_ROOT_OBJECT(cx, obj, &tvr);
 
     /*
+     * Default parent to the parent of the prototype, which was set from
+     * the parent of the prototype's constructor.
+     */
+    if (!parent && proto)
+        STOBJ_SET_PARENT(obj, OBJ_GET_PARENT(cx, proto));
+
+    /*
      * Share proto's map only if it has the same JSObjectOps, and only if
      * proto's class has the same private and reserved slots as obj's map
      * and class have.  We assume that if prototype and object are of the
@@ -2505,17 +2512,9 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
              (JSCLASS_RESERVED_SLOTS_MASK << JSCLASS_RESERVED_SLOTS_SHIFT))) &&
           protoclasp->reserveSlots == clasp->reserveSlots)))
     {
-        /*
-         * Default parent to the parent of the prototype, which was set from
-         * the parent of the prototype's constructor.
-         */
-        if (!parent)
-            STOBJ_SET_PARENT(obj, OBJ_GET_PARENT(cx, proto));
-
         /* Share the given prototype's map. */
         obj->map = js_HoldObjectMap(cx, map);
     } else {
-        /* Leave parent alone.  Allocate a new map for obj. */
         map = ops->newObjectMap(cx, 1, ops, clasp, obj);
         if (!map)
             goto bad;
