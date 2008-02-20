@@ -2592,8 +2592,6 @@ JS_ThrowReportedError(JSContext *cx, const char *message,
 extern JS_PUBLIC_API(JSBool)
 JS_ThrowStopIteration(JSContext *cx);
 
-#ifdef JS_THREADSAFE
-
 /*
  * Associate the current thread with the given context.  This is done
  * implicitly by JS_NewContext.
@@ -2611,8 +2609,6 @@ JS_SetContextThread(JSContext *cx);
 
 extern JS_PUBLIC_API(jsword)
 JS_ClearContextThread(JSContext *cx);
-
-#endif /* JS_THREADSAFE */
 
 /************************************************************************/
 

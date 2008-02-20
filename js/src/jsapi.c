@@ -5691,7 +5691,6 @@ JS_ThrowStopIteration(JSContext *cx)
     return js_ThrowStopIteration(cx);
 }
 
-#ifdef JS_THREADSAFE
 /*
  * Get the owning thread id of a context. Returns 0 if the context is not
  * owned by any thread.
@@ -5699,7 +5698,11 @@ JS_ThrowStopIteration(JSContext *cx)
 JS_PUBLIC_API(jsword)
 JS_GetContextThread(JSContext *cx)
 {
+#ifdef JS_THREADSAFE
     return JS_THREAD_ID(cx);
+#else
+    return 0;
+#endif
 }
 
 /*
@@ -5709,20 +5712,27 @@ JS_GetContextThread(JSContext *cx)
 JS_PUBLIC_API(jsword)
 JS_SetContextThread(JSContext *cx)
 {
+#ifdef JS_THREADSAFE
     jsword old = JS_THREAD_ID(cx);
     if (!js_SetContextThread(cx))
         return -1;
     return old;
+#else
+    return 0;
+#endif
 }
 
 JS_PUBLIC_API(jsword)
 JS_ClearContextThread(JSContext *cx)
 {
+#ifdef JS_THREADSAFE
     jsword old = JS_THREAD_ID(cx);
     js_ClearContextThread(cx);
     return old;
-}
+#else
+    return 0;
 #endif
+}
 
 #ifdef JS_GC_ZEAL
 JS_PUBLIC_API(void)
