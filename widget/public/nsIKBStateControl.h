@@ -47,15 +47,6 @@
 { 0xa7, 0xfd, 0x17, 0x75, 0x01, 0xad, 0xec, 0x98 } }
 
 
-#if defined(XP_MACOSX)
-/*
- * If the all applications use same context for IME, i.e., When gecko changes
- * the state of IME, the same changes can be on other processes.
- * Then, NS_KBSC_USE_SHARED_CONTEXT should be defined.
- */
-#define NS_KBSC_USE_SHARED_CONTEXT 1
-#endif
-
 /**
  * interface to control keyboard input state
  */

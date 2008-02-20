@@ -4183,8 +4183,6 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 // nil -- otherwise the keyboard focus can end up in the wrong NSView.
 - (BOOL)resignFirstResponder
 {
-  nsTSMManager::CommitIME();
-
   return [super resignFirstResponder];
 }
 
@@ -4218,8 +4216,6 @@ static BOOL keyUpAlreadySentKeyDown = NO;
     return;
 
   nsAutoRetainView kungFuDeathGrip(self);
-
-  nsTSMManager::CommitIME();
 
   [self sendFocusEvent:NS_DEACTIVATE];
   [self sendFocusEvent:NS_LOSTFOCUS];
