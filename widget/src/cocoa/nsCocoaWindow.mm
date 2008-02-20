@@ -97,7 +97,6 @@ nsCocoaWindow::nsCocoaWindow()
 , mPopupContentView(nil)
 , mIsResizing(PR_FALSE)
 , mWindowMadeHere(PR_FALSE)
-, mVisible(PR_FALSE)
 , mSheetNeedsShow(PR_FALSE)
 , mModal(PR_FALSE)
 {
@@ -413,7 +412,6 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
   }
   else {
     mWindow = (NSWindow*)aNativeWindow;
-    mVisible = PR_TRUE;
   }
   
   return NS_OK;
@@ -488,7 +486,7 @@ void* nsCocoaWindow::GetNativeData(PRUint32 aDataType)
 
 NS_IMETHODIMP nsCocoaWindow::IsVisible(PRBool & aState)
 {
-  aState = mVisible;
+  aState = ([mWindow isVisible] || mSheetNeedsShow);
   return NS_OK;
 }
 
@@ -509,11 +507,16 @@ NS_IMETHODIMP nsCocoaWindow::SetModal(PRBool aState)
 // Hide or show this window
 NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
 {
+  PRBool isVisible;
+  IsVisible(isVisible);
+  if (bState == isVisible)
+    return NS_OK;
+
   nsIWidget* parentWidget = mParent;
   nsCOMPtr<nsPIWidgetCocoa> piParentWidget(do_QueryInterface(parentWidget));
   NSWindow* nativeParentWindow = (parentWidget) ?
     (NSWindow*)parentWidget->GetNativeData(NS_NATIVE_WINDOW) : nil;
-  
+
   if (bState && !mBounds.IsEmpty()) {
     if (mWindowType == eWindowType_sheet) {
       // bail if no parent window (its basically what we do in Carbon)
@@ -541,7 +544,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
         // tell it to show again. Otherwise the number of calls to
         // [NSApp beginSheet...] won't match up with [NSApp endSheet...].
         if (![mWindow isSheet]) {
-          mVisible = PR_TRUE;
           mSheetNeedsShow = PR_FALSE;
           mSheetWindowParent = topNonSheetWindow;
           [[mSheetWindowParent delegate] sendFocusEvent:NS_LOSTFOCUS];
@@ -565,7 +567,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       }
     }
     else if (mWindowType == eWindowType_popup) {
-      mVisible = PR_TRUE;
       // If a popup window is shown after being hidden, it needs to be "reset"
       // for it to receive any mouse events aside from mouse-moved events
       // (because it was removed from the "window cache" when it was hidden
@@ -597,7 +598,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
                             ordered:NSWindowAbove];
     }
     else {
-      mVisible = PR_TRUE;
       [mWindow setAcceptsMouseMovedEvents:YES];
       [mWindow makeKeyAndOrderFront:nil];
       SendSetZLevelEvent();
@@ -610,9 +610,13 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
 
     // now get rid of the window/sheet
     if (mWindowType == eWindowType_sheet) {
-      if (mVisible) {
-        mVisible = PR_FALSE;
-
+      if (mSheetNeedsShow) {
+        // This is an attempt to hide a sheet that never had a chance to
+        // be shown. There's nothing to do other than make sure that it
+        // won't show.
+        mSheetNeedsShow = PR_FALSE;
+      }
+      else {
         // get sheet's parent *before* hiding the sheet (which breaks the linkage)
         NSWindow* sheetParent = mSheetWindowParent;
         
@@ -626,7 +630,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
 
         nsCocoaWindow* siblingSheetToShow = nsnull;
         PRBool parentIsSheet = PR_FALSE;
-        
+
         if (nativeParentWindow && piParentWidget &&
             NS_SUCCEEDED(piParentWidget->GetChildSheet(PR_FALSE, &siblingSheetToShow)) &&
             siblingSheetToShow) {
@@ -654,12 +658,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
         }
         SendSetZLevelEvent();
       }
-      else if (mSheetNeedsShow) {
-        // This is an attempt to hide a sheet that never had a chance to
-        // be shown. There's nothing to do other than make sure that it
-        // won't show.
-        mSheetNeedsShow = PR_FALSE;
-      }
     }
     else {
       // If the window is a popup window with a parent window we need to
@@ -678,13 +676,27 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       // the NSApplication class (in header files generated using class-dump).
       // This workaround was "borrowed" from the Java Embedding Plugin (which
       // uses it for a different purpose).
-      if (mWindowType == eWindowType_popup)
+      if (mWindowType == eWindowType_popup) {
         [NSApp _removeWindowFromCache:mWindow];
+        // Apple's focus ring APIs sometimes clip themselves when they draw under
+        // other windows. Redraw the window that was likely under the popup to
+        // get focus rings to draw correctly. Sometimes the window is not properly
+        // the parent of the popup, so we can't just tell the parent to redraw.
+        // We only have this problem on 10.4. See bug 417124.
+        if (!nsToolkit::OnLeopardOrLater()) {
+          NSWindow* keyWindow = [NSApp keyWindow];
+          if (keyWindow)
+            [keyWindow display];
+          NSWindow* mainWindow = [NSApp mainWindow];
+          if (mainWindow && mainWindow != keyWindow)
+            [mainWindow display];          
+        }
+      }
 
       // it's very important to turn off mouse moved events when hiding a window, otherwise
       // the windows' tracking rects will interfere with each other. (bug 356528)
       [mWindow setAcceptsMouseMovedEvents:NO];
-      mVisible = PR_FALSE;
+
       // If our popup window is a non-native context menu, tell the OS (and
       // other programs) that a menu has closed.
       if ([mWindow isKindOfClass:[PopupWindow class]] &&
@@ -982,21 +994,14 @@ NS_IMETHODIMP nsCocoaWindow::GetChildSheet(PRBool aShown, nsCocoaWindow** _retva
   nsIWidget* child = GetFirstChild();
 
   while (child) {
-    // find out if this is a top-level window
-    nsCOMPtr<nsPIWidgetCocoa> piChildWidget(do_QueryInterface(child));
-    if (piChildWidget) {
-      // if it implements nsPIWidgetCocoa, it must be an nsCocoaWindow
-      nsCocoaWindow* window = static_cast<nsCocoaWindow*>(child);
-      nsWindowType type;
-      if (NS_SUCCEEDED(window->GetWindowType(type)) &&
-          type == eWindowType_sheet) {
-        // if it's a sheet, it must be an nsCocoaWindow
-        nsCocoaWindow* cocoaWindow = static_cast<nsCocoaWindow*>(window);
-        if ((aShown && cocoaWindow->mVisible) ||
-            (!aShown && cocoaWindow->mSheetNeedsShow)) {
-          *_retval = cocoaWindow;
-          return NS_OK;
-        }
+    nsWindowType type;
+    if (NS_SUCCEEDED(child->GetWindowType(type)) && type == eWindowType_sheet) {
+      // if it's a sheet, it must be an nsCocoaWindow
+      nsCocoaWindow* cocoaWindow = static_cast<nsCocoaWindow*>(child);
+      if ((aShown && [cocoaWindow->mWindow isVisible]) ||
+          (!aShown && cocoaWindow->mSheetNeedsShow)) {
+        *_retval = cocoaWindow;
+        return NS_OK;
       }
     }
     child = child->GetNextSibling();
