@@ -50,9 +50,7 @@ extern "C" {
 
 MOZCE_SHUNT_API int stat(const char* inPath, struct stat* outStats)
 {
-    MOZCE_PRECHECK
-        
-#ifdef DEBUG
+#ifdef API_LOGGING
         mozce_printf("stat called\n");
 #endif
     

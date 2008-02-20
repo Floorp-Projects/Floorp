@@ -41,6 +41,9 @@
 
 #include "mozce_internal.h"
 
+#include "map.h"
+
+
 extern "C" {
 #if 0
 }
@@ -50,9 +53,7 @@ extern "C" {
 
 MOZCE_SHUNT_API void abort(void)
 {
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
+#ifdef API_LOGGING
     mozce_printf("abort called\n");
 #endif
 
@@ -65,58 +66,36 @@ MOZCE_SHUNT_API void abort(void)
 
 MOZCE_SHUNT_API char* getenv(const char* inName)
 {
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
-    mozce_printf("getenv called (%s)\n", inName);
-#endif
-
-    char* retval = NULL;
-
-#ifdef DEBUG_NSPR_ALL
-    if (!strcmp(inName, "NSPR_LOG_MODULES"))
-        return "all:5";
-
-    if (!strcmp(inName, "NSPR_LOG_FILE"))
-        return "nspr.log";
-#endif  
-
-#ifdef TIMELINE
-    if (!strcmp(inName, "NS_TIMELINE_LOG_FILE"))
-        return "\\bin\\timeline.log";
-    
-    if (!strcmp(inName, "NS_TIMELINE_ENABLE"))
-        return "1";
-#endif
-
-	if (!_stricmp(inName, "tmp"))
-        return "/Temp";
-    return retval;
+    return map_get(inName);
 }
 
-MOZCE_SHUNT_API int putenv(const char *a) 
+MOZCE_SHUNT_API int putenv(const char *a)
 {
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
-    mozce_printf("putenv called\n");
+#ifdef API_LOGGING
+    mozce_printf("putenv called %s\n",a);
 #endif
-
-    return 0;
+    int len = strlen(a);
+    char* key = (char*) malloc(len*sizeof(char));
+    strcpy(key,a);
+    char* val = strchr(key,'=');
+    val[0] = '\0';
+    int rv;
+    val++;
+    rv = map_put(key,val);
+    free(key);
+    return rv;
 }
 
 MOZCE_SHUNT_API int getpid(void)
 {
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
+#ifdef API_LOGGING
     mozce_printf("getpid called\n");
 #endif
-
+    
     int retval = 0;
-
+    
     retval = (int)GetCurrentProcessId();
-
+    
     return retval;
 }
 

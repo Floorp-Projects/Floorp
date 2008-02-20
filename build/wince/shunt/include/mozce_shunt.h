@@ -20,7 +20,7 @@
  *
  * Contributor(s):
  *  John Wolfe <wolfe@lobo.us>
- * 
+ *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -43,13 +43,14 @@
 #pragma warning(disable: 4068)
 
 #include "mozce_defs.h"
+#include "../mozce_internal.h"
 
 #include <commdlg.h>
 #include <stdio.h>
+#include <shellapi.h>
 //////////////////////////////////////////////////////////
 // Function Mapping
 //////////////////////////////////////////////////////////
-
 #ifndef MOZCE_SHUNT_EXPORTS
 
 #define _mkdir		mkdir
@@ -58,7 +59,7 @@
 #define _isatty		isatty
 #undef fileno
 #define fileno      (int)_fileno
-#define _mbctolower tolower 
+#define _mbctolower tolower
 #define _mbsicmp    mbsicmp
 #define _mbsdec     mbsdec
 #define _getpid		getpid
@@ -87,10 +88,10 @@
 // From win32.cpp
 
 #define _beginthreadex(security, stack_size, start_proc, arg, flags, pid) \
-        CreateThread(security, stack_size,(LPTHREAD_START_ROUTINE) start_proc, arg, flags, pid) 
+        CreateThread(security, stack_size,(LPTHREAD_START_ROUTINE) start_proc, arg, flags, pid)
 
 #define ExpandEnvironmentStrings   ExpandEnvironmentStringsA
-
+#if 0
 #ifdef GetMessageA
 #undef GetMessageA
 #endif
@@ -108,25 +109,25 @@
 #undef CreateEvent
 #endif
 #define CreateEvent               CreateEvent
+#endif  // if 0
 
-#define GetSystemDirectory        GetSystemDirectoryA
-#define GetWindowsDirectory       GetWindowsDirectoryA
-#define SetCurrentDirectory       SetCurrentDirectoryA
-#define SetEnvironmentVariable    SetEnvironmentVariableA
+#define GetSystemDirectory        GetSystemDirectoryW
+#define GetWindowsDirectory       GetWindowsDirectoryW
+#define SetCurrentDirectory       SetCurrentDirectoryW
+#define SetEnvironmentVariable    SetEnvironmentVariableW
 #define CreateDialogIndirectParamA CreateDialogIndirectParamW
 #define SystemParametersInfoA      SystemParametersInfoW
 #define DispatchMessageA           DispatchMessageW
 #define CallWindowProcA            CallWindowProcW
 #define GetWindowLongA             GetWindowLongW
 #define SetWindowLongA             SetWindowLongW
+#define GetMonitorInfoW           GetMonitorInfo
 
+#if 0
 #define GetProp                   GetPropA
 #define SetProp                   SetPropA
 #define RemoveProp                RemovePropA
 
-#define GetCurrentDirectory       GetCurrentDirectoryW
-#define OpenSemaphore             OpenSemaphoreW
-#define SetCurrentDirectoryW      SetCurrentDirectoryW
 
 #define SetWorldTransform         SetWorldTransform
 #define GetWorldTransform         GetWorldTransform
@@ -137,7 +138,7 @@
 #undef GetProcAddress
 #define GetProcAddress            GetProcAddressA
 
-#define GetMonitorInfoW           GetMonitorInfo
+
 
 // OutlineTextMetrics are tricky. It is a pain to convert W->A text metrics,
 // and we have no A functions. Because we do not define UNICODE, headers specify A function versions
@@ -153,6 +154,13 @@
 #undef wsprintf
 #define wsprintf                wsprintfW
 
+#endif  //if 0
+
+//still need these
+#define GetCurrentDirectory       GetCurrentDirectoryW
+#define OpenSemaphore             OpenSemaphoreW
+#define SetCurrentDirectoryW      SetCurrentDirectoryW
+
 #endif // MOZCE_SHUNT_EXPORTS
 
 //////////////////////////////////////////////////////////
@@ -165,21 +173,20 @@ extern "C" {
 
   // From assert.cpp
   MOZCE_SHUNT_API void mozce_assert(int inExpression);
-  
+
   // From direct.cpp
   MOZCE_SHUNT_API int mkdir(const char* inDirname);
   MOZCE_SHUNT_API int rmdir(const char* inDirname);
-  
+
   // From errno.cpp
   extern MOZCE_SHUNT_API int errno;
-  
+
   // From io.cpp
+  MOZCE_SHUNT_API void setbuf(FILE*, char*);
   MOZCE_SHUNT_API int chmod(const char* inFilename, int inMode);
   MOZCE_SHUNT_API int isatty(int inHandle);
 
-  MOZCE_SHUNT_API struct protoent* getprotobyname(const char* inName);
-  MOZCE_SHUNT_API struct protoent* getprotobynumber(int inNumber);
-  
+
   // From mbstring.cpp
   MOZCE_SHUNT_API unsigned char* _mbsinc(const unsigned char* inCurrent);
   MOZCE_SHUNT_API unsigned char* _mbspbrk(const unsigned char* inString, const unsigned char* inStrCharSet);
@@ -187,7 +194,7 @@ extern "C" {
   MOZCE_SHUNT_API unsigned char* mbsrchr(const unsigned char* inString, unsigned int inC);
   MOZCE_SHUNT_API int            mbsicmp(const unsigned char *string1, const unsigned char *string2);
   MOZCE_SHUNT_API unsigned char* mbsdec(const unsigned char *string1, const unsigned char *string2);
-  
+
   // From process.cpp
   MOZCE_SHUNT_API void abort(void);
   MOZCE_SHUNT_API char* getenv(const char* inName);
@@ -197,10 +204,10 @@ extern "C" {
   // From signal.cpp
   MOZCE_SHUNT_API int raise(int inSignal);
   MOZCE_SHUNT_API _sigsig signal(int inSignal, _sigsig inFunc);
-  
+
   // From stat.cpp
   MOZCE_SHUNT_API int stat(const char *inPath, struct stat * outStat);
-  
+
   // From stdio.cpp
   MOZCE_SHUNT_API int access(const char *path, int mode);
   MOZCE_SHUNT_API void rewind(FILE* inStream);
@@ -209,7 +216,7 @@ extern "C" {
   MOZCE_SHUNT_API int remove(const char* inPath);
 
   MOZCE_SHUNT_API char* getcwd(char* buff, size_t size);
-  
+
   MOZCE_SHUNT_API int mozce_printf(const char *, ...);
 
   MOZCE_SHUNT_API int open(const char *pathname, int flags, int mode);
@@ -230,13 +237,7 @@ extern "C" {
   MOZCE_SHUNT_API char* strerror(int);
 
   // From time.cpp
-  MOZCE_SHUNT_API struct tm* localtime_r(const time_t* inTimeT,struct tm* outRetval);
-  MOZCE_SHUNT_API struct tm* gmtime_r(const time_t* inTimeT, struct tm* outRetval);
 
-  MOZCE_SHUNT_API wchar_t *_wgetcwd(wchar_t *buffer,int maxlen);
-
-  MOZCE_SHUNT_API struct lconv * mozce_localeconv(void);
-       
   MOZCE_SHUNT_API BOOL CreatePipe(PHANDLE hReadPipe, PHANDLE hWritePipe, LPSECURITY_ATTRIBUTES lpPipeAttributes, DWORD nSize);
 
   MOZCE_SHUNT_API DWORD_PTR SetThreadAffinityMask(HANDLE hThread, DWORD_PTR dwThreadAffinityMask);
@@ -245,13 +246,13 @@ extern "C" {
   VOID CALLBACK LineDDAProc(int X, int Y, LPARAM lpData);
   typedef void (*mozce_LINEDDAPROC) (int X, int Y, LPARAM lpData);
 
-  MOZCE_SHUNT_API int MulDiv(int inNumber, int inNumerator, int inDenominator);
+  //dd  MOZCE_SHUNT_API int MulDiv(int inNumber, int inNumerator, int inDenominator);
   MOZCE_SHUNT_API int GetDIBits(HDC inDC, HBITMAP inBMP, UINT inStartScan, UINT inScanLines, LPVOID inBits, LPBITMAPINFO inInfo, UINT inUsage);
   MOZCE_SHUNT_API int SetDIBits(HDC inDC, HBITMAP inBMP, UINT inStartScan, UINT inScanLines, CONST LPVOID inBits, CONST LPBITMAPINFO inInfo, UINT inUsage);
-  MOZCE_SHUNT_API DWORD CommDlgExtendedError(void);
+//dd  MOZCE_SHUNT_API DWORD CommDlgExtendedError(void);
   MOZCE_SHUNT_API HBITMAP CreateDIBitmap(HDC inDC, CONST BITMAPINFOHEADER *inBMIH, DWORD inInit, CONST VOID *inBInit, CONST BITMAPINFO *inBMI, UINT inUsage);
   MOZCE_SHUNT_API int SetPolyFillMode(HDC inDC, int inPolyFillMode);
-  MOZCE_SHUNT_API int SetStretchBltMode(HDC inDC, int inStretchMode);
+//dd  MOZCE_SHUNT_API int SetStretchBltMode(HDC inDC, int inStretchMode);
   MOZCE_SHUNT_API int ExtSelectClipRgn(HDC inDC, HRGN inRGN, int inMode);
   MOZCE_SHUNT_API DWORD ExpandEnvironmentStrings(LPCTSTR lpSrc, LPTSTR lpDst, DWORD nSize);
   MOZCE_SHUNT_API DWORD ExpandEnvironmentStringsW(const unsigned short * lpSrc, const unsigned short * lpDst, DWORD nSize);
@@ -264,11 +265,11 @@ extern "C" {
   MOZCE_SHUNT_API BOOL Pie(HDC inDC, int inLeftRect, int inTopRect, int inRightRect, int inBottomRect, int inXRadial1, int inYRadial1, int inXRadial2, int inYRadial2);
   MOZCE_SHUNT_API UINT GetDriveType(const char* lpRootPathName);
 
-  MOZCE_SHUNT_API DWORD GetFontData(HDC inDC, DWORD inTable, DWORD inOffset, LPVOID outBuffer, DWORD inData);
+//dd  MOZCE_SHUNT_API DWORD GetFontData(HDC inDC, DWORD inTable, DWORD inOffset, LPVOID outBuffer, DWORD inData);
   MOZCE_SHUNT_API UINT GetTextCharset(HDC inDC);
   MOZCE_SHUNT_API UINT GetTextCharsetInfo(HDC inDC, LPFONTSIGNATURE outSig, DWORD inFlags);
   MOZCE_SHUNT_API int GetMapMode(HDC inDC);
-  MOZCE_SHUNT_API BOOL GetIconInfo(HICON inIcon, PICONINFO outIconinfo);
+//dd  MOZCE_SHUNT_API BOOL GetIconInfo(HICON inIcon, PICONINFO outIconinfo);
   MOZCE_SHUNT_API BOOL LPtoDP(HDC inDC, LPPOINT inoutPoints, int inCount);
   MOZCE_SHUNT_API LONG RegCreateKey(HKEY inKey, LPCTSTR inSubKey, PHKEY outResult);
   MOZCE_SHUNT_API BOOL WaitMessage(VOID);
@@ -290,12 +291,6 @@ extern "C" {
   MOZCE_SHUNT_API BOOL GetScrollRange(HWND inWnd, int inBar, LPINT outMinPos, LPINT outMaxPos);
   MOZCE_SHUNT_API HRESULT CoLockObjectExternal(IUnknown* inUnk, BOOL inLock, BOOL inLastUnlockReleases);
   MOZCE_SHUNT_API HRESULT CoInitialize(LPVOID pvReserved);
-  MOZCE_SHUNT_API LRESULT OleInitialize(LPVOID pvReserved);
-  MOZCE_SHUNT_API void    OleUninitialize();;
-  MOZCE_SHUNT_API HRESULT OleSetClipboard(IDataObject* inDataObj);
-  MOZCE_SHUNT_API HRESULT OleGetClipboard(IDataObject** outDataObj);
-  MOZCE_SHUNT_API HRESULT OleFlushClipboard(void);
-  MOZCE_SHUNT_API HRESULT OleQueryLinkFromData(IDataObject* inSrcDataObject);
 
   //MOZCE_SHUNT_API void* mozce_SHBrowseForFolder(void* /*LPBROWSEINFOS*/ inBI);
   MOZCE_SHUNT_API BOOL SetMenu(HWND inWnd, HMENU inMenu);
@@ -305,17 +300,15 @@ extern "C" {
 
   MOZCE_SHUNT_API DWORD GetEnvironmentVariable(LPCSTR lpName, LPCSTR lpBuffer, DWORD nSize);
   MOZCE_SHUNT_API DWORD GetEnvironmentVariableW(LPCWSTR lpName, LPWSTR lpBuffer, DWORD nSize);
-  MOZCE_SHUNT_API HMENU LoadMenuA(HINSTANCE hInstance, LPCSTR lpMenuName);
-
   MOZCE_SHUNT_API void GetSystemTimeAsFileTime(LPFILETIME lpSystemTimeAsFileTime);
   MOZCE_SHUNT_API DWORD GetFullPathName(const char* lpFileName, DWORD nBufferLength, const char* lpBuffer, const char** lpFilePart);
 
-  MOZCE_SHUNT_API UINT GetACP(void);
+//dd  MOZCE_SHUNT_API UINT GetACP(void);
 
   MOZCE_SHUNT_API BOOL mozce_PeekMessage(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg);
   MOZCE_SHUNT_API BOOL mozce_GetMessage(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax);
   MOZCE_SHUNT_API LONG GetMessageTime(void);
-  
+
   MOZCE_SHUNT_API BOOL LockFile(HANDLE hFile, DWORD dwFileOffsetLow, DWORD dwFileOffsetHigh,
                                       DWORD nNumberOfBytesToLockLow, DWORD nNumberOfBytesToLockHigh);
   MOZCE_SHUNT_API BOOL UnlockFile(HANDLE hFile, DWORD dwFileOffsetLow, DWORD dwFileOffsetHigh,
@@ -324,100 +317,6 @@ extern "C" {
   MOZCE_SHUNT_API BOOL GetWorldTransform(HDC hdc, LPXFORM lpXform );
   MOZCE_SHUNT_API int  SetGraphicsMode(HDC hdc, int iMode);
 
-  // from win32a.cpp
-  
-  MOZCE_SHUNT_API BOOL SetHandleInformation(HANDLE hObject, DWORD dwMask, DWORD dwFlags);
-  MOZCE_SHUNT_API BOOL GetHandleInformation(HANDLE hObject, LPDWORD lpdwFlags);
-
-  MOZCE_SHUNT_API DWORD GetGlyphOutlineA(HDC inDC, CHAR inChar, UINT inFormat, void* inGM, DWORD inBufferSize, LPVOID outBuffer, CONST MAT2* inMAT2);
-
-  MOZCE_SHUNT_API ATOM GlobalAddAtomA(LPCSTR lpString);
-  MOZCE_SHUNT_API ATOM RegisterClassA(CONST WNDCLASSA *lpwc);
-  MOZCE_SHUNT_API BOOL CopyFileA(LPCSTR lpExistingFileName, LPCSTR lpNewFileName, BOOL bFailIfExists);
-  MOZCE_SHUNT_API BOOL CreateDirectoryA(LPCSTR lpPathName, LPSECURITY_ATTRIBUTES lpSecurityAttributes);
-  MOZCE_SHUNT_API BOOL RemoveDirectoryA(LPCSTR lpPathName);
-  MOZCE_SHUNT_API HANDLE CreateMutexA(LPSECURITY_ATTRIBUTES lpMutexAttributes, BOOL bInitialOwner, LPCSTR lpName);
-  MOZCE_SHUNT_API BOOL CreateProcessA(LPCSTR pszImageName, LPCSTR pszCmdLine, LPSECURITY_ATTRIBUTES psaProcess, LPSECURITY_ATTRIBUTES psaThread, BOOL fInheritHandles, DWORD fdwCreate, LPVOID pvEnvironment, LPSTR pszCurDir, LPSTARTUPINFO psiStartInfo, LPPROCESS_INFORMATION pProcInfo);
-
-  MOZCE_SHUNT_API BOOL TextOutA(HDC hdc, int  nXStart, int  nYStart, const char* lpString, int  cbString);
-
-  MOZCE_SHUNT_API BOOL GetTextExtentExPointA(HDC inDC, const char* inStr, int inLen, int inMaxExtent, LPINT outFit, LPINT outDx, LPSIZE inSize);
-  MOZCE_SHUNT_API BOOL GetVersionExA(LPOSVERSIONINFOA lpv);
-  MOZCE_SHUNT_API BOOL DeleteFileA(LPCSTR lpFileName);
-  MOZCE_SHUNT_API BOOL MoveFileA(LPCSTR lpExistingFileName, LPCSTR lpNewFileName);
-  MOZCE_SHUNT_API BOOL SetCurrentDirectoryA(LPCSTR inPathName);
-  MOZCE_SHUNT_API BOOL VerQueryValueA(const LPVOID inBlock, LPSTR inSubBlock, LPVOID *outBuffer, PUINT outLen);
-  MOZCE_SHUNT_API BOOL UnregisterClassA(LPCSTR lpClassName, HINSTANCE hInstance);
-  MOZCE_SHUNT_API DWORD GetCurrentDirectoryA(DWORD inBufferLength, LPSTR outBuffer);
-  MOZCE_SHUNT_API BOOL GetDiskFreeSpaceA(LPCTSTR lpRootPathName, LPDWORD lpSectorsPerCluster, LPDWORD lpBytesPerSector, LPDWORD lpNumberOfFreeClusters, LPDWORD lpTotalNumberOfClusters);
-  MOZCE_SHUNT_API DWORD GetEnvironmentVariableA(LPSTR lpName, LPSTR lpBuffer, DWORD nSize);
-  MOZCE_SHUNT_API DWORD GetFileAttributesA(LPCSTR lpFileName);
-  MOZCE_SHUNT_API DWORD GetModuleFileNameA(HMODULE hModule, LPSTR lpFilename, DWORD nSize);
-  MOZCE_SHUNT_API DWORD SetEnvironmentVariableA(LPSTR lpName, LPSTR lpBuffer);
-  MOZCE_SHUNT_API HANDLE CreateFileA(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile);
-  MOZCE_SHUNT_API HANDLE LoadImageA(HINSTANCE inInst, LPCSTR inName, UINT inType, int inCX, int inCY, UINT inLoad);
-  MOZCE_SHUNT_API HANDLE OpenSemaphoreA(DWORD inDesiredAccess, BOOL inInheritHandle, LPCSTR inName);
-  MOZCE_SHUNT_API HDC CreateDCA(LPCSTR inDriver, LPCSTR inDevice, LPCSTR inOutput, CONST DEVMODEA* inInitData);
-  MOZCE_SHUNT_API HDC CreateDCA2(LPCSTR inDriver, LPCSTR inDevice, LPCSTR inOutput, CONST DEVMODE* inInitData);
-  MOZCE_SHUNT_API HWND CreateWindowExA(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int x, int y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam );
-  MOZCE_SHUNT_API HWND FindWindowA(LPCSTR inClass, LPCSTR inWindow);
-  MOZCE_SHUNT_API LONG RegEnumKeyExA(HKEY inKey, DWORD inIndex, LPSTR outName, LPDWORD inoutName, LPDWORD inReserved, LPSTR outClass, LPDWORD inoutClass, PFILETIME inLastWriteTime);
-  MOZCE_SHUNT_API LONG RegOpenKeyExA(HKEY inKey, LPCSTR inSubKey, DWORD inOptions, REGSAM inSAM, PHKEY outResult);
-  MOZCE_SHUNT_API LONG RegQueryValueExA(HKEY inKey, LPCSTR inValueName, LPDWORD inReserved, LPDWORD outType, LPBYTE inoutBData, LPDWORD inoutDData);
-
-  MOZCE_SHUNT_API LONG RegSetValueExA(HKEY hKey, const char *valname, DWORD dwReserved, DWORD dwType, const BYTE* lpData, DWORD dwSize);
-  MOZCE_SHUNT_API LONG RegCreateKeyExA(HKEY hKey, const char *subkey, DWORD dwRes, LPSTR lpszClass, DWORD ulOptions, REGSAM samDesired, LPSECURITY_ATTRIBUTES sec_att, PHKEY phkResult, DWORD *lpdwDisp);
-
-  MOZCE_SHUNT_API LONG RegDeleteValueA(HKEY hKey, const char* lpValueName);
-
-  MOZCE_SHUNT_API LRESULT DefWindowProcA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
-  MOZCE_SHUNT_API LRESULT SendMessageA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
-  MOZCE_SHUNT_API UINT GetSystemDirectoryA(LPSTR inBuffer, UINT inSize);
-  MOZCE_SHUNT_API UINT GetWindowsDirectoryA(LPSTR inBuffer, UINT inSize);
-  MOZCE_SHUNT_API UINT RegisterClipboardFormatA(LPCSTR inFormat);
-  MOZCE_SHUNT_API UINT RegisterWindowMessageA(LPCSTR s);
-  MOZCE_SHUNT_API VOID OutputDebugStringA(LPCSTR inOutputString);
-  MOZCE_SHUNT_API int DrawTextA(HDC inDC, LPCSTR inString, int inCount, LPRECT inRect, UINT inFormat);
-  MOZCE_SHUNT_API int GetLocaleInfoA(LCID Locale, LCTYPE LCType, LPSTR lpLCData, int cchData);
-  MOZCE_SHUNT_API int LoadStringA(HINSTANCE inInstance, UINT inID, LPSTR outBuffer, int inBufferMax);
-  MOZCE_SHUNT_API int MessageBoxA(HWND inWnd, LPCSTR inText, LPCSTR inCaption, UINT uType);
-
-  MOZCE_SHUNT_API HINSTANCE LoadLibraryA(LPCSTR lpLibFileName);
-  MOZCE_SHUNT_API int GetObjectA(HGDIOBJ hgdiobj, int cbBuffer, LPVOID lpvObject);
-  MOZCE_SHUNT_API HBITMAP LoadBitmapA(HINSTANCE hInstance, LPCSTR lpCursorName);
-  MOZCE_SHUNT_API HCURSOR LoadCursorA(HINSTANCE hInstance, LPCSTR lpCursorName);
-
-  MOZCE_SHUNT_API BOOL GetOpenFileNameA(LPOPENFILENAMEA lpofna);
-  MOZCE_SHUNT_API BOOL GetSaveFileNameA(LPOPENFILENAMEA lpofna);
-  MOZCE_SHUNT_API BOOL CreateDirectoryA(const char *lpName, LPSECURITY_ATTRIBUTES lpSecurityAttributes);
-
-  MOZCE_SHUNT_API HMODULE GetModuleHandleA(const char *lpName);
-  MOZCE_SHUNT_API HICON LoadIconA(HINSTANCE hInstance, LPCSTR lpIconName);
-
-  MOZCE_SHUNT_API HRSRC FindResourceA(HMODULE  hModule, LPCSTR  lpName, LPCSTR  lpType);
-  MOZCE_SHUNT_API int MessageBoxA(HWND hwnd, const char *txt, const char *caption, UINT flags);
-  
-  MOZCE_SHUNT_API UINT GetDlgItemTextA(HWND hDlg, int nIDDlgItem, LPSTR lpString, int nMaxCount);
-  MOZCE_SHUNT_API BOOL SetDlgItemTextA(HWND hwndDlg, int idControl, LPCSTR lpsz);
-  MOZCE_SHUNT_API HANDLE CreateEventA(LPSECURITY_ATTRIBUTES lpEventAttributes, BOOL bManualReset, BOOL bInitialState, const char *lpName);
-
-  MOZCE_SHUNT_API HANDLE GetPropA(HWND hWnd, const char* lpString);
-  MOZCE_SHUNT_API BOOL SetPropA(HWND hWnd, const char* lpString, HANDLE hData);
-  MOZCE_SHUNT_API HANDLE RemovePropA(HWND hWnd, const char* lpString);
-
- 
-  MOZCE_SHUNT_API HANDLE CreateFileMappingA(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect, DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCSTR lpName);
-
-  MOZCE_SHUNT_API DWORD FormatMessageA(DWORD dwFlags, LPCVOID lpSource, DWORD dwMessageId, DWORD dwLanguageId, LPSTR lpBuffer, DWORD nSize, va_list* Arguments);
-
-  MOZCE_SHUNT_API HANDLE CreateSemaphoreA(LPSECURITY_ATTRIBUTES lpSemaphoreAttributes, LONG lInitialCount, LONG lMaximumCount, LPCSTR lpName);
-  MOZCE_SHUNT_API HFONT CreateFontIndirectA(CONST LOGFONTA* lplf);
-  MOZCE_SHUNT_API int EnumFontFamiliesA(HDC hdc, const char* lpszFamily, FONTENUMPROC lpEnumFontFamProc, LPARAM lParam);
-  MOZCE_SHUNT_API BOOL GetTextMetricsA(HDC hdc, TEXTMETRICA* lptm);
-
-  MOZCE_SHUNT_API BOOL SetWindowTextA(HWND hWnd, LPCSTR lpString);
-
-
   // From win32w.cpp
   MOZCE_SHUNT_API BOOL SetCurrentDirectoryW(LPCTSTR inPathName);
   MOZCE_SHUNT_API DWORD GetCurrentDirectoryW(DWORD inBufferLength, LPTSTR outBuffer);
@@ -425,7 +324,8 @@ extern "C" {
   MOZCE_SHUNT_API HANDLE OpenSemaphoreW(DWORD inDesiredAccess, BOOL inInheritHandle, LPCWSTR inName);
   MOZCE_SHUNT_API UINT GetSystemDirectoryW(LPWSTR inBuffer, UINT inSize);
   MOZCE_SHUNT_API UINT GetWindowsDirectoryW(LPWSTR inBuffer, UINT inSize);
-  MOZCE_SHUNT_API BOOL SHGetSpecialFolderPathW(HWND hwnd, LPWSTR pszPath, int csidl, BOOL fCreate);
+//  MOZCE_SHUNT_API BOOL SHGetSpecialFolderPathW(HWND hwnd, LPWSTR pszPath, int csidl, BOOL fCreate);
+  MOZCE_SHUNT_API BOOL SetEnvironmentVariableW( LPCWSTR name, LPCWSTR value );
 
   // uniscribe usp10.h & WinGDI.h
   MOZCE_SHUNT_API HRESULT ScriptFreeCache(SCRIPT_CACHE* psc );
@@ -435,19 +335,17 @@ extern "C" {
   MOZCE_SHUNT_API DWORD WINAPI GetGlyphIndicesA( HDC hdc,LPCSTR lpstr, int c, LPWORD pgi, DWORD fl);
   MOZCE_SHUNT_API DWORD WINAPI GetGlyphIndicesW( HDC hdc, LPCWSTR lpstr, int c,  LPWORD pgi, DWORD fl);
 #define DEFAULT_GUI_FONT    SYSTEM_FONT
-  
+
 #define SIC_COMPLEX     1   // Treat complex script letters as complex
-  MOZCE_SHUNT_API HRESULT WINAPI ScriptIsComplex(const WCHAR *pwcInChars, int cInChars, DWORD   dwFlags); 
-  MOZCE_SHUNT_API DWORD WINAPI GetGlyphIndicesA( HDC hdc, LPCSTR lpstr,int c,LPWORD pgi, DWORD fl);
-  MOZCE_SHUNT_API DWORD WINAPI GetGlyphIndicesW( HDC hdc, LPCWSTR lpstr,int c,LPWORD pgi, DWORD fl);
+  MOZCE_SHUNT_API HRESULT WINAPI ScriptIsComplex(const WCHAR *pwcInChars, int cInChars, DWORD   dwFlags);
   MOZCE_SHUNT_API BOOL  WINAPI GetTextExtentExPointI (HDC hdc, LPWORD lpwszString,int cwchString,int nMaxExtent,LPINT lpnFit,LPINT lpnDx,LPSIZE lpSize);
   MOZCE_SHUNT_API HRESULT WINAPI ScriptGetProperties( const SCRIPT_PROPERTIES ***ppSp, int *piNumScripts);
   MOZCE_SHUNT_API HRESULT WINAPI ScriptGetFontProperties(HDC hdc, SCRIPT_CACHE *psc, SCRIPT_FONTPROPERTIES *sfp );
   MOZCE_SHUNT_API HRESULT WINAPI ScriptBreak(  const WCHAR *pwcChars, int cChars, const SCRIPT_ANALYSIS *psa, SCRIPT_LOGATTR *psla );
-  MOZCE_SHUNT_API HRESULT WINAPI ScriptItemize( const WCHAR *pwcInChars, int cInChars, int cMaxItems, const SCRIPT_CONTROL *psControl, const SCRIPT_STATE *psState, SCRIPT_ITEM *pItems, int *pcItems ); 
+  MOZCE_SHUNT_API HRESULT WINAPI ScriptItemize( const WCHAR *pwcInChars, int cInChars, int cMaxItems, const SCRIPT_CONTROL *psControl, const SCRIPT_STATE *psState, SCRIPT_ITEM *pItems, int *pcItems );
   MOZCE_SHUNT_API BOOL WINAPI GetICMProfileW(HDC hDC, LPDWORD lpcbName,LPWSTR lpszFilename);
   MOZCE_SHUNT_API DWORD WINAPI GetGuiResources(HANDLE hProcess,DWORD uiFlags);
-  MOZCE_SHUNT_API HRESULT WINAPI ScriptRecordDigitSubstitution(LCID Locale, SCRIPT_DIGITSUBSTITUTE  *psds); 
+  MOZCE_SHUNT_API HRESULT WINAPI ScriptRecordDigitSubstitution(LCID Locale, SCRIPT_DIGITSUBSTITUTE  *psds);
 
 MOZCE_SHUNT_API HRESULT WINAPI ScriptItemize(const WCHAR *pwcInChars, int cInChars, int cMaxItems, const SCRIPT_CONTROL *psControl, const SCRIPT_STATE *psState,  SCRIPT_ITEM *pItems, int *pcItems );
 
@@ -499,7 +397,7 @@ MOZCE_SHUNT_API HPEN WINAPI ExtCreatePen( __in DWORD iPenStyle,
 MOZCE_SHUNT_API BOOL WINAPI SetMiterLimit(__in HDC hdc, __in FLOAT limit, __out_opt PFLOAT old);
 MOZCE_SHUNT_API BOOL WINAPI FillPath(__in HDC hdc);
 
-MOZCE_SHUNT_API BOOL	      WINAPI GetICMProfileW(    __in HDC hdc, 
+MOZCE_SHUNT_API BOOL	      WINAPI GetICMProfileW(    __in HDC hdc,
                                                 __inout LPDWORD pBufSize,
                                                 __out_ecount_opt(*pBufSize) LPWSTR pszFilename);
 MOZCE_SHUNT_API HRESULT WINAPI ScriptShape(
@@ -537,12 +435,10 @@ MOZCE_SHUNT_API BOOL MoveFileExW(
 MOZCE_SHUNT_API int  _wrmdir(const wchar_t * _Path);
 MOZCE_SHUNT_API int _wremove(const wchar_t * _Filename);
 MOZCE_SHUNT_API int _wchmod(const wchar_t * _Filename, int _Mode);
+MOZCE_SHUNT_API wchar_t *_wgetcwd(wchar_t *buffer,int maxlen);
+MOZCE_SHUNT_API wchar_t *_wfullpath(wchar_t *abspath, const wchar_t *relpath, int maxlen);
 
 MOZCE_SHUNT_API HWND GetAncestor(HWND hwnd, UINT gaFlags);
-MOZCE_SHUNT_API UINT MapVirtualKeyA(UINT uCode, UINT uMapType);
-MOZCE_SHUNT_API BOOL GetClassInfoA(HINSTANCE hInstance, LPCSTR lpClassName, LPWNDCLASSA lpWndClass);
-
-MOZCE_SHUNT_API int WINAPI StartDocA(HDC, CONST DOCINFOA *);
 #ifdef __cplusplus
 };
 #endif
