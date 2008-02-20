@@ -139,7 +139,13 @@ protected:
   // a timer for showing the tooltip
   nsCOMPtr<nsITimer> mTooltipTimer;
   static void sTooltipCallback (nsITimer* aTimer, void* aListener);
-  PRInt32 mMouseClientX, mMouseClientY;
+
+  // screen coordinates of the last mousemove event, stored so that the
+  // tooltip can be opened at this location.
+  PRInt32 mMouseScreenX, mMouseScreenY;
+
+  // last cached mouse event
+  nsCOMPtr<nsIDOMEvent> mCachedMouseEvent;
 
   // a timer for auto-hiding the tooltip after a certain delay
   nsCOMPtr<nsITimer> mAutoHideTimer;

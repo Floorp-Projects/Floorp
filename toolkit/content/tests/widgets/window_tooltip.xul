@@ -2,7 +2,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 
 <window title="Tooltip Tests"
-  onfocus="runTests()"
+  onfocus="runTests()" onpopupshowing="checkCoords(event)"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -28,10 +28,24 @@
 
 var gOriginalWidth = -1;
 var gOriginalHeight = -1;
+var gButton = null;
 
 function runTests()
 {
   startPopupTests(popupTests);
+}
+
+function checkCoords(event)
+{
+  // all but one test open the tooltip at the button location offset by 6
+  // in each direction. Test 5 opens it at 4 in each direction.
+  var mod = (gTestIndex == 5) ? 4 : 6;
+
+  var rect = gButton.getBoundingClientRect();
+  is(event.clientX, Math.round(rect.left) + mod, "step " + (gTestIndex + 1) + " clientX");
+  is(event.clientY, Math.round(rect.top) + mod, "step " + (gTestIndex + 1) + " clientY");
+  ok(event.screenX > 0, "step " + (gTestIndex + 1) + " screenX");
+  ok(event.screenY > 0, "step " + (gTestIndex + 1) + " screenY");
 }
 
 var popupTests = [
@@ -39,10 +53,10 @@ var popupTests = [
   testname: "hover tooltiptext attribute",
   events: [ "popupshowing #tooltip", "popupshown #tooltip" ],
   test: function() {
-    var button = document.getElementById("withtext");
-    synthesizeMouse(button, 2, 2, { type: "mouseover" });
-    synthesizeMouse(button, 4, 4, { type: "mousemove" });
-    synthesizeMouse(button, 6, 6, { type: "mousemove" });
+    gButton = document.getElementById("withtext");
+    synthesizeMouse(gButton, 2, 2, { type: "mouseover" });
+    synthesizeMouse(gButton, 4, 4, { type: "mousemove" });
+    synthesizeMouse(gButton, 6, 6, { type: "mousemove" });
   }
 },
 {
@@ -57,10 +71,10 @@ var popupTests = [
   testname: "hover inherited tooltip",
   events: [ "popupshowing #tooltip", "popupshown #tooltip" ],
   test: function() {
-    var button = document.getElementById("without");
-    synthesizeMouse(button, 2, 2, { type: "mouseover" });
-    synthesizeMouse(button, 4, 4, { type: "mousemove" });
-    synthesizeMouse(button, 6, 6, { type: "mousemove" });
+    gButton = document.getElementById("without");
+    synthesizeMouse(gButton, 2, 2, { type: "mouseover" });
+    synthesizeMouse(gButton, 4, 4, { type: "mousemove" });
+    synthesizeMouse(gButton, 6, 6, { type: "mousemove" });
   }
 },
 {
@@ -69,10 +83,10 @@ var popupTests = [
             "DOMMenuInactive #tooltip",
             "popupshowing thetooltip", "popupshown thetooltip" ],
   test: function() {
-    var button = document.getElementById("withtooltip");
-    synthesizeMouse(button, 2, 2, { type: "mouseover" });
-    synthesizeMouse(button, 4, 4, { type: "mousemove" });
-    synthesizeMouse(button, 6, 6, { type: "mousemove" });
+    gButton = document.getElementById("withtooltip");
+    synthesizeMouse(gButton, 2, 2, { type: "mouseover" });
+    synthesizeMouse(gButton, 4, 4, { type: "mousemove" });
+    synthesizeMouse(gButton, 6, 6, { type: "mousemove" });
   },
   result: function(testname) {
     var buttonrect = document.getElementById("withtooltip").getBoundingClientRect();
@@ -99,8 +113,8 @@ var popupTests = [
   events: [ "popuphiding thetooltip", "popuphidden thetooltip",
             "command withtooltip", "DOMMenuInactive thetooltip" ],
   test: function() {
-    var button = document.getElementById("withtooltip");
-    synthesizeMouse(button, 2, 2, { });
+    gButton = document.getElementById("withtooltip");
+    synthesizeMouse(gButton, 2, 2, { });
   },
 },
 {
@@ -110,10 +124,10 @@ var popupTests = [
     var label = document.getElementById("label");
     label.removeAttribute("value");
     label.textContent = "This is a longer tooltip than before\nIt has multiple lines\nIt is testing tooltip sizing\n";
-    var button = document.getElementById("withtooltip");
-    synthesizeMouse(button, 2, 2, { type: "mouseover" });
-    synthesizeMouse(button, 6, 6, { type: "mousemove" });
-    synthesizeMouse(button, 4, 4, { type: "mousemove" });
+    gButton = document.getElementById("withtooltip");
+    synthesizeMouse(gButton, 2, 2, { type: "mouseover" });
+    synthesizeMouse(gButton, 6, 6, { type: "mousemove" });
+    synthesizeMouse(gButton, 4, 4, { type: "mousemove" });
   },
   result: function(testname) {
     var buttonrect = document.getElementById("withtooltip").getBoundingClientRect();
@@ -153,10 +167,10 @@ var popupTests = [
   test: function() {
     var label = document.getElementById("label");
     label.value = "This is a tooltip";
-    var button = document.getElementById("withtooltip");
-    synthesizeMouse(button, 2, 2, { type: "mouseover" });
-    synthesizeMouse(button, 4, 4, { type: "mousemove" });
-    synthesizeMouse(button, 6, 6, { type: "mousemove" });
+    gButton = document.getElementById("withtooltip");
+    synthesizeMouse(gButton, 2, 2, { type: "mouseover" });
+    synthesizeMouse(gButton, 4, 4, { type: "mousemove" });
+    synthesizeMouse(gButton, 6, 6, { type: "mousemove" });
   },
   result: function(testname) {
     var buttonrect = document.getElementById("withtooltip").getBoundingClientRect();
