@@ -58,6 +58,7 @@
 #include "nsIFileURL.h"
 #include "nsInt64.h"
 #include "nsTArray.h"
+#include "nsObjCExceptions.h"
 
 #include <Cocoa/Cocoa.h>
 
@@ -235,6 +236,8 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
 
 nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBlocking)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsXPIDLCString contentType;
   nsCAutoString fileExt;
   nsCOMPtr<nsIFile> fileloc; // file we want an icon for
@@ -367,6 +370,8 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
   mCallbacks = nsnull;
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsIconChannel::GetLoadFlags(PRUint32 *aLoadAttributes)
