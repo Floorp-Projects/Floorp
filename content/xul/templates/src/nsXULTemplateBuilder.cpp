@@ -321,6 +321,25 @@ nsXULTemplateBuilder::GetRoot(nsIDOMElement** aResult)
 }
 
 NS_IMETHODIMP
+nsXULTemplateBuilder::GetDatasource(nsISupports** aResult)
+{
+    if (mCompDB)
+        NS_ADDREF(*aResult = mCompDB);
+    else
+        NS_IF_ADDREF(*aResult = mDataSource);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULTemplateBuilder::SetDatasource(nsISupports* aResult)
+{
+    mDataSource = aResult;
+    mCompDB = do_QueryInterface(mDataSource);
+
+    return Rebuild();
+}
+
+NS_IMETHODIMP
 nsXULTemplateBuilder::GetDatabase(nsIRDFCompositeDataSource** aResult)
 {
     NS_IF_ADDREF(*aResult = mCompDB);
