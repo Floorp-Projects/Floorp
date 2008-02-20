@@ -159,7 +159,8 @@ sub BumpPatcherConfig {
         $currentUpdateObj->{'from'} = $oldVersion;
     }
 
-    $currentUpdateObj->{'details'} = 'http://%locale%.www.mozilla.com/%locale%/firefox/' . $version . '/releasenotes/';
+    $currentUpdateObj->{'details'} = 'http://%locale%.www.mozilla.com/%locale%/' .
+                                      $product . '/' . $version . '/releasenotes/';
 
     $currentUpdateObj->{'rc'} = {};
     foreach my $c (@{$RELEASE_CANDIDATE_CHANNELS}) {
