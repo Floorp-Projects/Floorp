@@ -41,6 +41,7 @@
 #define GFXQUARTZFONTCACHE_H_
 
 #include "nsDataHashtable.h"
+#include "nsRefPtrHashtable.h"
 
 #include "gfxFontUtils.h"
 #include "gfxAtsuiFonts.h"
@@ -63,6 +64,7 @@ struct FontSearch {
 };
 
 class MacOSFamilyEntry;
+class gfxQuartzFontCache;
 
 // a single member of a font family (i.e. a single face, such as Times Italic)
 class MacOSFontEntry
@@ -104,6 +106,9 @@ protected:
     PRPackedBool mATSUIDInitialized;
 };
 
+// helper class for adding other family names back into font cache
+class AddOtherFamilyNameFunctor;
+
 // a single font family, referencing one or more faces 
 class MacOSFamilyEntry
 {
@@ -111,7 +116,7 @@ public:
     THEBES_INLINE_DECL_REFCOUNTING(MacOSFamilyEntry)
 
     MacOSFamilyEntry(nsString &aName) :
-        mName(aName)
+        mName(aName), mOtherFamilyNamesInitialized(PR_FALSE)
     {
     }
 
@@ -128,6 +133,9 @@ public:
     // used as part of the font fallback process
     void FindFontForChar(FontSearch *aMatchData);
     
+    // read in other family names, if any, and use functor to add each into cache
+    void ReadOtherFamilyNames(AddOtherFamilyNameFunctor& aOtherFamilyFunctor);
+    
 protected:
     
     // add font entries into array that match specified traits, returned in array listed by weight
@@ -141,6 +149,7 @@ protected:
     
     nsString mName;  // canonical font family name returned from NSFontManager
     nsTArray<nsRefPtr<MacOSFontEntry> >  mAvailableFonts;
+    PRPackedBool mOtherFamilyNamesInitialized;
 };
 
 
@@ -184,16 +193,28 @@ public:
     
     PRBool GetPrefFontFamilyEntries(eFontPrefLang aLangGroup, nsTArray<nsRefPtr<MacOSFamilyEntry> > *array);
     void SetPrefFontFamilyEntries(eFontPrefLang aLangGroup, nsTArray<nsRefPtr<MacOSFamilyEntry> >& array);
+    
+    void AddOtherFamilyName(MacOSFamilyEntry *aFamilyEntry, nsAString& aOtherFamilyName);
 
 private:
     static PLDHashOperator PR_CALLBACK FindFontForCharProc(nsStringHashKey::KeyType aKey,
                                                              nsRefPtr<MacOSFamilyEntry>& aFamilyEntry,
                                                              void* userArg);
+
     static gfxQuartzFontCache *sSharedFontCache;
 
     gfxQuartzFontCache();
 
+    // initialize font lists
     void InitFontList();
+    void ReadOtherFamilyNamesForFamily(const nsAString& aFamilyName);
+    
+    // separate initialization for reading in name tables, since this is expensive
+    void InitOtherFamilyNames();
+                                                             
+    static PLDHashOperator PR_CALLBACK InitOtherFamilyNamesProc(nsStringHashKey::KeyType aKey,
+                                                             nsRefPtr<MacOSFamilyEntry>& aFamilyEntry,
+                                                             void* userArg);
     
     void GenerateFontListKey(const nsAString& aKeyName, nsAString& aResult);
     static void ATSNotification(ATSFontNotificationInfoRef aInfo, void* aUserArg);
@@ -205,11 +226,11 @@ private:
                                 void* aUserArg);
 
     // canonical family name ==> family entry (unique, one name per family entry)
-    nsDataHashtable<nsStringHashKey, nsRefPtr<MacOSFamilyEntry> > mFontFamilies;    
+    nsRefPtrHashtable<nsStringHashKey, MacOSFamilyEntry> mFontFamilies;    
 
-    // localized family name ==> family entry (not unique, can have multiple names per 
+    // other family name ==> family entry (not unique, can have multiple names per 
     // family entry, only names *other* than the canonical names are stored here)
-    nsDataHashtable<nsStringHashKey, nsRefPtr<MacOSFamilyEntry> > mLocalizedFamilies;    
+    nsRefPtrHashtable<nsStringHashKey, MacOSFamilyEntry> mOtherFamilyNames;    
 
     // cached pref font lists
     // maps list of family names ==> array of family entries, one per lang group
@@ -217,6 +238,9 @@ private:
 
     // when system-wide font lookup fails for a character, cache it to skip future searches
     gfxSparseBitSet mCodepointsWithNoFonts;
+    
+    // flag set after InitOtherFamilyNames is called upon first name lookup miss
+    PRPackedBool mOtherFamilyNamesInitialized;
 
 };
 
