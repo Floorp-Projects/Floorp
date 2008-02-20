@@ -409,6 +409,12 @@ public:
   /*unsafe*/
   nsresult CharacterMove(PRBool aForward, PRBool aExtend);
 
+  /** CharacterExtendForDelete extends the selection forward (logically) to
+   * the next character cell, so that the selected cell can be deleted.
+   */
+  /*unsafe*/
+  nsresult CharacterExtendForDelete();
+
   /** WordMove will generally be called from the nsiselectioncontroller implementations.
    *  the effect being the selection will move one word left or right.
    * @param aForward move forward in document.
