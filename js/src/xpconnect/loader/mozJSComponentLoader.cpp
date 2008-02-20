@@ -1199,7 +1199,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
         script = JS_CompileScriptForPrincipals(cx, global,
                                                jsPrincipals,
                                                buf, fileSize32,
-                                               nativePath.get(), 0);
+                                               nativePath.get(), 1);
         PR_MemUnmap(buf, fileSize32);
 
 #else  /* HAVE_PR_MEMMAP */
