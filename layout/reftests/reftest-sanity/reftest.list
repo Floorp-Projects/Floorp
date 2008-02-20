@@ -9,3 +9,9 @@
 # This makes sure that the harness is choosing HTML vs. XHTML processing
 # based on the file extensions.
 != html-vs-xhtml-by-extension.html html-vs-xhtml-by-extension.xhtml
+
+# make sure red and green colors are not the default and are different from
+# each other
+!= green.html default.html
+!= green.html red.html
+!= red.html default.html
