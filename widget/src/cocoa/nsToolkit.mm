@@ -53,6 +53,7 @@
 #import <IOKit/IOMessage.h>
 
 #include "nsCocoaUtils.h"
+#include "nsObjCExceptions.h"
 
 #include "nsWidgetAtoms.h"
 #include "nsIRollupListener.h"
@@ -128,6 +129,8 @@ nsToolkit::PostSleepWakeNotification(const char* aNotification)
 // http://developer.apple.com/documentation/DeviceDrivers/Conceptual/IOKitFundamentals/PowerMgmt/chapter_10_section_3.html
 static void ToolkitSleepWakeCallback(void *refCon, io_service_t service, natural_t messageType, void * messageArgument)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   switch (messageType)
   {
     case kIOMessageSystemWillSleep:
@@ -150,12 +153,16 @@ static void ToolkitSleepWakeCallback(void *refCon, io_service_t service, natural
       nsToolkit::PostSleepWakeNotification("wake_notification");
       break;
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
 nsresult
 nsToolkit::RegisterForSleepWakeNotifcations()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   IONotificationPortRef notifyPortRef;
 
   NS_ASSERTION(!mSleepWakeNotificationRLS, "Already registered for sleep/wake");
@@ -172,12 +179,16 @@ nsToolkit::RegisterForSleepWakeNotifcations()
                        kCFRunLoopDefaultMode);
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
 void
 nsToolkit::RemoveSleepWakeNotifcations()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (mSleepWakeNotificationRLS) {
     ::IODeregisterForSystemPower(&mPowerNotifier);
     ::CFRunLoopRemoveSource(::CFRunLoopGetCurrent(),
@@ -186,6 +197,8 @@ nsToolkit::RemoveSleepWakeNotifcations()
 
     mSleepWakeNotificationRLS = nsnull;
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -213,6 +226,8 @@ static NSPoint ConvertCGGlobalToCocoaScreen(CGPoint aPoint)
 // they've already been processed.
 static CGEventRef EventTapCallback(CGEventTapProxy proxy, CGEventType type, CGEventRef event, void *refcon)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   if ((type == kCGEventTapDisabledByUserInput) ||
       (type == kCGEventTapDisabledByTimeout))
     return event;
@@ -235,6 +250,8 @@ static CGEventRef EventTapCallback(CGEventTapProxy proxy, CGEventType type, CGEv
     return event;
   gRollupListener->Rollup(nsnull);
   return event;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NULL);
 }
 
 
@@ -248,6 +265,8 @@ static CGEventRef EventTapCallback(CGEventTapProxy proxy, CGEventType type, CGEv
 void
 nsToolkit::RegisterForAllProcessMouseEvents()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   // Don't do this for apps that (like Camino) use native context menus.
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
@@ -303,12 +322,16 @@ nsToolkit::RegisterForAllProcessMouseEvents()
     }
     CFRunLoopAddSource(CFRunLoopGetCurrent(), mEventTapRLS, kCFRunLoopDefaultMode);
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
 void
 nsToolkit::UnregisterAllProcessMouseEventHandlers()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (mEventMonitorHandler) {
     RemoveEventHandler(mEventMonitorHandler);
     mEventMonitorHandler = nsnull;
@@ -323,13 +346,17 @@ nsToolkit::UnregisterAllProcessMouseEventHandlers()
     CFRelease(mEventTapPort);
     mEventTapPort = nsnull;
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
 // Return the nsIToolkit for the current thread.  If a toolkit does not
 // yet exist, then one will be created...
-NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
+NS_IMETHODIMP NS_GetCurrentToolkit(nsIToolkit* *aResult)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = nsnull;
   
@@ -360,11 +387,15 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
   }
   *aResult = toolkit;
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
 long nsToolkit::OSXVersion()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   static long gOSXVersion = 0x0;
   if (gOSXVersion == 0x0) {
     OSErr err = ::Gestalt(gestaltSystemVersion, &gOSXVersion);
@@ -375,6 +406,8 @@ long nsToolkit::OSXVersion()
     }
   }
   return gOSXVersion;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 }
 
 
@@ -404,6 +437,8 @@ PRBool nsToolkit::OnLeopardOrLater()
 // of its subclasses.
 nsresult nsToolkit::SwizzleMethods(Class aClass, SEL orgMethod, SEL posedMethod)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   Method original = class_getInstanceMethod(aClass, orgMethod);
   Method posed = class_getInstanceMethod(aClass, posedMethod);
 
@@ -415,4 +450,6 @@ nsresult nsToolkit::SwizzleMethods(Class aClass, SEL orgMethod, SEL posedMethod)
   posed->method_imp = aMethodImp;
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }

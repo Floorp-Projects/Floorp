@@ -43,6 +43,7 @@
 
 #include "nsMenuItemIconX.h"
 
+#include "nsObjCExceptions.h"
 #include "prmem.h"
 #include "nsIMenu.h"
 #include "nsIMenuItem.h"
@@ -109,6 +110,8 @@ nsMenuItemIconX::~nsMenuItemIconX()
 nsresult
 nsMenuItemIconX::SetupIcon()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsresult rv;
   if (!mMenuRef || !mMenuItemIndex) {
     // These values are initialized here instead of in the constructor
@@ -138,6 +141,8 @@ nsMenuItemIconX::SetupIcon()
   }
 
   return LoadIcon(iconURI);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -225,6 +230,8 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
 nsresult
 nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if (mIconRequest) {
     // Another icon request is already in flight.  Kill it.
     mIconRequest->Cancel(NS_BINDING_ABORTED);
@@ -293,6 +300,8 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
   }
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -421,6 +430,8 @@ NS_IMETHODIMP
 nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
                             gfxIImageFrame* aFrame)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if (aRequest != mIconRequest) return NS_ERROR_FAILURE;
 
   // Only support one frame.
@@ -543,6 +554,8 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
   mSetIcon = PR_TRUE;
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 

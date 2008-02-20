@@ -39,6 +39,7 @@
 
 #include "nsCocoaWindow.h"
 
+#include "nsObjCExceptions.h"
 #include "nsCOMPtr.h"
 #include "nsWidgetsCID.h"
 #include "nsGUIEvent.h"
@@ -106,6 +107,8 @@ nsCocoaWindow::nsCocoaWindow()
 
 nsCocoaWindow::~nsCocoaWindow()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   // notify the children that we're gone
   for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
     nsCocoaWindow* childWindow = static_cast<nsCocoaWindow*>(kid);
@@ -128,6 +131,8 @@ nsCocoaWindow::~nsCocoaWindow()
     --gXULModalLevel;
     NS_ASSERTION(gXULModalLevel >= 0, "Wierdness setting modality!");
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -206,6 +211,8 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
                         nsWidgetInitData *aInitData,
                         nsNativeWidget aNativeWindow)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if (!WindowSizeAllowed(aRect.width, aRect.height))
     return NS_ERROR_FAILURE;
 
@@ -415,6 +422,8 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
   }
   
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -459,6 +468,8 @@ NS_IMETHODIMP nsCocoaWindow::Destroy()
 
 void* nsCocoaWindow::GetNativeData(PRUint32 aDataType)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSNULL;
+
   void* retVal = nsnull;
   
   switch (aDataType) {
@@ -481,13 +492,19 @@ void* nsCocoaWindow::GetNativeData(PRUint32 aDataType)
   }
 
   return retVal;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL;
 }
 
 
 NS_IMETHODIMP nsCocoaWindow::IsVisible(PRBool & aState)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   aState = ([mWindow isVisible] || mSheetNeedsShow);
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -507,6 +524,8 @@ NS_IMETHODIMP nsCocoaWindow::SetModal(PRBool aState)
 // Hide or show this window
 NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   PRBool isVisible;
   IsVisible(isVisible);
   if (bState == isVisible)
@@ -712,11 +731,15 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       mPopupContentView->Show(bState);
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
 void nsCocoaWindow::MakeBackgroundTransparent(PRBool aTransparent)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   BOOL currentTransparency = ![mWindow isOpaque];
   if (aTransparent != currentTransparency) {
     // Popups have an alpha value we need to toggle.
@@ -727,13 +750,19 @@ void nsCocoaWindow::MakeBackgroundTransparent(PRBool aTransparent)
     [mWindow setBackgroundColor:(aTransparent ? [NSColor clearColor] : [NSColor whiteColor])];
     [mWindow setHasShadow:!aTransparent];
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
 NS_IMETHODIMP nsCocoaWindow::GetHasTransparentBackground(PRBool& aTransparent)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   aTransparent = ![mWindow isOpaque];   
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -741,6 +770,8 @@ NS_IMETHODIMP nsCocoaWindow::GetHasTransparentBackground(PRBool& aTransparent)
 // For other window types, nsChildView::SetHasTransparentBackground is used.
 NS_IMETHODIMP nsCocoaWindow::SetHasTransparentBackground(PRBool aTransparent)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   BOOL currentTransparency = ![mWindow isOpaque];
   if (aTransparent != currentTransparency) {
     // Take care of window transparency
@@ -754,6 +785,8 @@ NS_IMETHODIMP nsCocoaWindow::SetHasTransparentBackground(PRBool aTransparent)
     }
   }
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -826,6 +859,8 @@ NS_METHOD nsCocoaWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
 // from the dock by users.
 NS_METHOD nsCocoaWindow::SetSizeMode(PRInt32 aMode)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   PRInt32 previousMode;
   nsBaseWidget::GetSizeMode(&previousMode);
 
@@ -848,11 +883,15 @@ NS_METHOD nsCocoaWindow::SetSizeMode(PRInt32 aMode)
   }
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
 NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if (!WindowSizeAllowed(aWidth, aHeight))
     return NS_ERROR_FAILURE;
 
@@ -891,21 +930,29 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
   }
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
 NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if (!WindowSizeAllowed(aWidth, aHeight))
     return NS_ERROR_FAILURE;
 
   nsRect windowBounds(nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]));
   return Resize(windowBounds.x, windowBounds.y, aWidth, aHeight, aRepaint);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
 NS_IMETHODIMP nsCocoaWindow::GetScreenBounds(nsRect &aRect)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsRect windowFrame = nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]);
   aRect.x = windowFrame.x;
   aRect.y = windowFrame.y;
@@ -913,6 +960,8 @@ NS_IMETHODIMP nsCocoaWindow::GetScreenBounds(nsRect &aRect)
   aRect.height = windowFrame.height;
   // printf("GetScreenBounds: output: %d,%d,%d,%d\n", aRect.x, aRect.y, aRect.width, aRect.height);
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -924,11 +973,15 @@ PRBool nsCocoaWindow::OnPaint(nsPaintEvent &event)
 
 NS_IMETHODIMP nsCocoaWindow::SetTitle(const nsAString& aTitle)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   const nsString& strTitle = PromiseFlatString(aTitle);
   NSString* title = [NSString stringWithCharacters:strTitle.get() length:strTitle.Length()];
   [mWindow setTitle:title];
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -1065,6 +1118,8 @@ nsCocoaWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 void
 nsCocoaWindow::ReportSizeEvent(NSRect *r)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   NSRect windowFrame;
   if (r)
     windowFrame = [mWindow contentRectForFrameRect:(*r)];
@@ -1082,6 +1137,8 @@ nsCocoaWindow::ReportSizeEvent(NSRect *r)
 
   nsEventStatus status = nsEventStatus_eIgnore;
   DispatchEvent(&sizeEvent, status);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -1117,6 +1174,8 @@ NS_IMETHODIMP nsCocoaWindow::ShowMenuBar(PRBool aShow)
 
 NS_IMETHODIMP nsCocoaWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsRect r = nsCocoaUtils::CocoaRectToGeckoRect([mWindow contentRectForFrameRect:[mWindow frame]]);
 
   aNewRect.x = r.x + aOldRect.x;
@@ -1125,11 +1184,15 @@ NS_IMETHODIMP nsCocoaWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNew
   aNewRect.height = aOldRect.height;
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
 NS_IMETHODIMP nsCocoaWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsRect r = nsCocoaUtils::CocoaRectToGeckoRect([mWindow contentRectForFrameRect:[mWindow frame]]);
 
   aNewRect.x = aOldRect.x - r.x;
@@ -1138,6 +1201,8 @@ NS_IMETHODIMP nsCocoaWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNew
   aNewRect.height = aOldRect.height;
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -1151,6 +1216,8 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
                                                  PRBool aDoCapture, 
                                                  PRBool aConsumeRollupEvent)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_IF_RELEASE(gRollupListener);
   NS_IF_RELEASE(gRollupWidget);
   
@@ -1180,18 +1247,26 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
   }
   
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
 NS_IMETHODIMP nsCocoaWindow::GetAttention(PRInt32 aCycleCount)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   [NSApp requestUserAttention:NSInformationalRequest];
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
 NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // If our cocoa window isn't a ToolbarWindow, something is wrong.
   if (![mWindow isKindOfClass:[ToolbarWindow class]]) {
     // Don't output a warning for the hidden window.
@@ -1211,6 +1286,8 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor)
                                                                     alpha:NS_GET_A(aColor)/255.0]];
   }
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -1224,19 +1301,27 @@ gfxASurface* nsCocoaWindow::GetThebesSurface()
 
 NS_IMETHODIMP nsCocoaWindow::BeginSecureKeyboardInput()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsresult rv = nsBaseWidget::BeginSecureKeyboardInput();
   if (NS_SUCCEEDED(rv))
     ::EnableSecureEventInput();
   return rv;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
 NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsresult rv = nsBaseWidget::EndSecureKeyboardInput();
   if (NS_SUCCEEDED(rv))
     ::DisableSecureEventInput();
   return rv;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -1247,7 +1332,9 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 // the application menu by itself so that a window doesn't have some other
 // window's menu bar.
 + (void)paintMenubarForWindow:(NSWindow*)aWindow
-{  
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   // make sure we only act on windows that have this kind of
   // object as a delegate
   id windowDelegate = [aWindow delegate];
@@ -1282,14 +1369,20 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
     [NSApp setMainMenu:newMenuBar];
     [newMenuBar release];
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
 - (id)initWithGeckoWindow:(nsCocoaWindow*)geckoWind
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   [super init];
   mGeckoWindow = geckoWind;
   return self;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 
@@ -1312,11 +1405,15 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 
 - (void)windowDidBecomeMain:(NSNotification *)aNotification
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   RollUpPopups();
 
   NSWindow* window = [aNotification object];
   if (window)
     [WindowDelegate paintMenubarForWindow:window];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -1334,19 +1431,27 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 
 - (void)windowDidBecomeKey:(NSNotification *)aNotification
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   NSWindow* window = [aNotification object];
   if ([window isSheet])
     [WindowDelegate paintMenubarForWindow:window];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
 - (void)windowDidResignKey:(NSNotification *)aNotification
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   // If a sheet just resigned key then we should paint the menu bar
   // for whatever window is now main.
   NSWindow* window = [aNotification object];
   if ([window isSheet])
     [WindowDelegate paintMenubarForWindow:[NSApp mainWindow]];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -1407,6 +1512,8 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 
 - (void)didEndSheet:(NSWindow*)sheet returnCode:(int)returnCode contextInfo:(void*)contextInfo
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   // Note: 'contextInfo' is the window that is the parent of the sheet,
   // we set that in nsCocoaWindow::Show. 'contextInfo' is always the top-level
   // window, not another sheet itself.
@@ -1415,6 +1522,8 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
   [sheet orderOut:self];
   [[(NSWindow*)contextInfo delegate] sendFocusEvent:NS_GOTFOCUS];
   [[(NSWindow*)contextInfo delegate] sendFocusEvent:NS_ACTIVATE];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -1432,7 +1541,11 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 
 - (NSColor*)windowBackgroundColor
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   return [self backgroundColor];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 @end
@@ -1453,6 +1566,8 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 
 - (id)initWithContentRect:(NSRect)aContentRect styleMask:(unsigned int)aStyle backing:(NSBackingStoreType)aBufferingType defer:(BOOL)aFlag
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   aStyle = aStyle | NSTexturedBackgroundWindowMask;
   if ((self = [super initWithContentRect:aContentRect styleMask:aStyle backing:aBufferingType defer:aFlag])) {
     mColor = [[TitlebarAndBackgroundColor alloc] initWithTitlebarColor:nil
@@ -1467,13 +1582,19 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
       [self setBottomCornerRounded:NO];
   }
   return self;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 
 - (void)dealloc
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [mColor release];
   [super dealloc];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -1482,7 +1603,11 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 // custom NSColor subclass.
 - (void)setBackgroundColor:(NSColor*)aColor
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [mColor setBackgroundColor:aColor];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -1490,20 +1615,32 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 // sense) use this method instead.
 - (NSColor*)windowBackgroundColor
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   return [mColor backgroundColor];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 
 // Pass nil here to get the default appearance.
 - (void)setTitlebarColor:(NSColor*)aColor
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [mColor setTitlebarColor:aColor];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
 - (NSColor*)titlebarColor
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   return [mColor titlebarColor];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 
@@ -1517,11 +1654,15 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 // Dispatch a toolbar pill button clicked message to Gecko.
 - (void)_toolbarPillButtonClicked:(id)sender
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   nsCocoaWindow *geckoWindow = [[self delegate] geckoWidget];
   nsEventStatus status = nsEventStatus_eIgnore;
   nsGUIEvent guiEvent(PR_TRUE, NS_OS_TOOLBAR, geckoWindow);
   guiEvent.time = PR_IntervalNow();
   geckoWindow->DispatchEvent(&guiEvent, status);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // Retain and release "self" to avoid crashes when our widget (and its native
@@ -1530,10 +1671,14 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 // that can become key.
 - (BOOL)performKeyEquivalent:(NSEvent*)theEvent
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   NSWindow *nativeWindow = [self retain];
   BOOL retval = [super performKeyEquivalent:theEvent];
   [nativeWindow release];
   return retval;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
 @end
@@ -1547,6 +1692,8 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
          andBackgroundColor:(NSColor*)aBackgroundColor
                   forWindow:(NSWindow*)aWindow
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   if ((self = [super init])) {
     mTitlebarColor = [aTitlebarColor retain];
     mBackgroundColor = [aBackgroundColor retain];
@@ -1558,14 +1705,20 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
     mTitlebarHeight = frameRect.size.height - [aWindow contentRectForFrameRect:frameRect].size.height;
   }
   return self;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 
 - (void)dealloc
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [mTitlebarColor release];
   [mBackgroundColor release];
   [super dealloc];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // Our pattern width is 1 pixel. CoreGraphics can cache and tile for us.
@@ -1608,6 +1761,8 @@ static void headerShading(void* aInfo, const float* aIn, float* aOut)
 // Callback where all of the drawing for this color takes place.
 void patternDraw(void* aInfo, CGContextRef aContext)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   TitlebarAndBackgroundColor *color = (TitlebarAndBackgroundColor*)aInfo;
   NSColor *titlebarColor = [color titlebarColor];
   NSColor *backgroundColor = [color backgroundColor];
@@ -1657,11 +1812,15 @@ void patternDraw(void* aInfo, CGContextRef aContext)
   NSRectFill(NSMakeRect(0.0f, 0.0f, 1.0f, titlebarOrigin));
 
   [NSGraphicsContext restoreGraphicsState];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
 - (void)setFill
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   CGContextRef context = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
 
   // Set up the pattern to be as tall as our window, and one pixel wide.
@@ -1679,14 +1838,20 @@ void patternDraw(void* aInfo, CGContextRef aContext)
   float component = 1.0f;
   CGContextSetFillPattern(context, pattern, &component);
   CGPatternRelease(pattern);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
 // Pass nil here to get the default appearance.
 - (void)setTitlebarColor:(NSColor*)aColor
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [mTitlebarColor autorelease];
   mTitlebarColor = [aColor retain];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -1698,8 +1863,12 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 
 - (void)setBackgroundColor:(NSColor*)aColor
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [mBackgroundColor autorelease];
   mBackgroundColor = [aColor retain];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -1723,7 +1892,11 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 
 - (void)set
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [self setFill];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -1751,8 +1924,12 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 // in the superclass.
 + (void)drawBevel:(NSRect)bevel inFrame:(NSRect)frame topCornerRounded:(BOOL)top bottomCornerRounded:(BOOL)bottom
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if ([self respondsToSelector:@selector(drawBevel:inFrame:topCornerRounded:)])
     [self drawBevel:bevel inFrame:frame topCornerRounded:top];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 @end
@@ -1775,6 +1952,8 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 // sendEvent: method.
 - (void)nsCocoaWindow_NSWindow_sendEvent:(NSEvent *)anEvent
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   NSResponder *oldFirstResponder = nil;
   NSEventType type = [anEvent type];
   if (type == NSLeftMouseDown)
@@ -1790,6 +1969,8 @@ void patternDraw(void* aInfo, CGContextRef aContext)
     }
     [oldFirstResponder release];
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 @end
@@ -1803,6 +1984,8 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 // events for a given NSWindow object go through its sendEvent: method.)
 - (void)sendEvent:(NSEvent *)anEvent
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   NSView *target = nil;
   NSView *contentView = nil;
   NSEventType type = [anEvent type];
@@ -1907,15 +2090,21 @@ void patternDraw(void* aInfo, CGContextRef aContext)
   } else {
     [super sendEvent:anEvent];
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
 - (id)initWithContentRect:(NSRect)contentRect styleMask:(unsigned int)styleMask
       backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   mIsContextMenu = false;
   return [super initWithContentRect:contentRect styleMask:styleMask
           backing:bufferingType defer:deferCreation];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 
@@ -1951,9 +2140,13 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 // accurate test of what Apple means by "visibility".
 - (BOOL)canBecomeMainWindow
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   if (![self isVisible])
     return NO;
   return YES;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
 // Retain and release "self" to avoid crashes when our widget (and its native
@@ -1962,10 +2155,14 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 // that can become key.
 - (BOOL)performKeyEquivalent:(NSEvent*)theEvent
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   NSWindow *nativeWindow = [self retain];
   BOOL retval = [super performKeyEquivalent:theEvent];
   [nativeWindow release];
   return retval;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
 @end

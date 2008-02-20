@@ -37,62 +37,79 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsScreenCocoa.h"
+#include "nsObjCExceptions.h"
 #include "nsCocoaUtils.h"
 
 NS_IMPL_ISUPPORTS1(nsScreenCocoa, nsIScreen)
 
 nsScreenCocoa::nsScreenCocoa (NSScreen *screen)
 {
-    mScreen = [screen retain];
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  mScreen = [screen retain];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 nsScreenCocoa::~nsScreenCocoa ()
 {
-    [mScreen release];
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  [mScreen release];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 NS_IMETHODIMP
 nsScreenCocoa::GetRect(PRInt32 *outX, PRInt32 *outY, PRInt32 *outWidth, PRInt32 *outHeight)
 {
-    nsRect r = nsCocoaUtils::CocoaRectToGeckoRect([mScreen frame]);
+  nsRect r = nsCocoaUtils::CocoaRectToGeckoRect([mScreen frame]);
 
-    *outX = r.x;
-    *outY = r.y;
-    *outWidth = r.width;
-    *outHeight = r.height;
+  *outX = r.x;
+  *outY = r.y;
+  *outWidth = r.width;
+  *outHeight = r.height;
 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsScreenCocoa::GetAvailRect(PRInt32 *outX, PRInt32 *outY, PRInt32 *outWidth, PRInt32 *outHeight)
 {
-    nsRect r = nsCocoaUtils::CocoaRectToGeckoRect([mScreen visibleFrame]);
+  nsRect r = nsCocoaUtils::CocoaRectToGeckoRect([mScreen visibleFrame]);
 
-    *outX = r.x;
-    *outY = r.y;
-    *outWidth = r.width;
-    *outHeight = r.height;
+  *outX = r.x;
+  *outY = r.y;
+  *outWidth = r.width;
+  *outHeight = r.height;
 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsScreenCocoa::GetPixelDepth(PRInt32 *aPixelDepth)
 {
-    NSWindowDepth depth = [mScreen depth];
-    int bpp = NSBitsPerPixelFromDepth (depth);
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-    *aPixelDepth = bpp;
-    return NS_OK;
+  NSWindowDepth depth = [mScreen depth];
+  int bpp = NSBitsPerPixelFromDepth(depth);
+
+  *aPixelDepth = bpp;
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP
 nsScreenCocoa::GetColorDepth(PRInt32 *aColorDepth)
 {
-    NSWindowDepth depth = [mScreen depth];
-    int bpp = NSBitsPerPixelFromDepth (depth);
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-    *aColorDepth = bpp;
-    return NS_OK;
+  NSWindowDepth depth = [mScreen depth];
+  int bpp = NSBitsPerPixelFromDepth (depth);
+
+  *aColorDepth = bpp;
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
