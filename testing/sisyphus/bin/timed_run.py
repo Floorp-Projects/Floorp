@@ -60,8 +60,10 @@ def alarm_handler(signum, frame):
     global prefix
     try:
         print "%s EXIT STATUS: TIMED OUT (%s seconds)" % (prefix, sys.argv[1])
+        sys.stdout.flush()
         os.kill(pid, signal.SIGKILL)
-    except:
+    except OSError, e:
+        print "timed_run.py: exception trying to kill process: %d (%s)" % (e.errno, e.strerror)
         pass
     sys.exit(exitTimeout)
 
