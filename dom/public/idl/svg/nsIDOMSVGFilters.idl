@@ -184,10 +184,9 @@ interface nsIDOMSVGFEOffsetElement : nsIDOMSVGFilterPrimitiveStandardAttributes 
     readonly attribute nsIDOMSVGAnimatedNumber dy;
 };
 
-[scriptable, uuid(4d507655-08c4-4726-8887-308a18ebbf2b)]
+[scriptable, uuid(2743af95-28c5-429d-9812-12b7b017887e)]
 interface nsIDOMSVGFEFloodElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 {
-    readonly attribute nsIDOMSVGAnimatedString in1;
 };
 
 [scriptable, uuid(ed042a81-39fc-4c89-9385-75758a2434b5)]
