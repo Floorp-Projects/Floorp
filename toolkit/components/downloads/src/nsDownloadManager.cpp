@@ -81,7 +81,7 @@
 #include "nsIDownloadHistory.h"
 #include "nsDocShellCID.h"
 
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(WINCE) 
 #include <shlobj.h>
 #ifndef __MINGW32__
 #include "nsDownloadScanner.h"
@@ -849,7 +849,7 @@ nsDownloadManager::Init()
                                    getter_AddRefs(mBundle));
   NS_ENSURE_SUCCESS(rv, rv);
 
-#if defined(XP_WIN) && !defined(__MINGW32__)
+#if defined(XP_WIN) && !defined(__MINGW32__) && !defined(WINCE)
   mScanner = new nsDownloadScanner();
   if (!mScanner)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1127,7 +1127,7 @@ nsDownloadManager::GetDefaultDownloadsDirectory(nsILocalFile **aResult)
     rv = downloadDir->Append(folderName);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-#elif defined (XP_WIN)
+#elif defined(XP_WIN) && !defined(WINCE)
   rv = dirService->Get(NS_WIN_DEFAULT_DOWNLOAD_DIR,
                        NS_GET_IID(nsILocalFile),
                        getter_AddRefs(downloadDir));
@@ -1827,7 +1827,7 @@ nsDownload::SetState(DownloadState aState)
       // Transfers are finished, so break the reference cycle
       Finalize();
       break;
-#if defined(XP_WIN) && !defined(__MINGW32__)
+#if defined(XP_WIN) && !defined(__MINGW32__) && !defined(WINCE)
     case nsIDownloadManager::DOWNLOAD_SCANNING:
     {
       nsresult rv = mDownloadManager->mScanner ? mDownloadManager->mScanner->ScanDownload(this) : NS_ERROR_NOT_INITIALIZED;
@@ -1887,7 +1887,7 @@ nsDownload::SetState(DownloadState aState)
             }
         }
       }
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(WINCE)
       // Default is to add the download to the system's "recent documents"
       // list, with a pref to disable.
       PRBool addToRecentDocs = PR_TRUE;
@@ -2138,7 +2138,7 @@ nsDownload::OnStateChange(nsIWebProgress *aWebProgress,
       mPercentComplete = 100;
       mLastUpdate = PR_Now();
 
-#if defined(XP_WIN) && !defined(__MINGW32__)
+#if defined(XP_WIN) && !defined(__MINGW32__) && !defined(WINCE)
       PRBool scan = PR_TRUE;
       nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
       if (prefs)
