@@ -270,8 +270,8 @@ protected:
 
   PRPackedBool         mIsResizing;     // we originated the resize, prevent infinite recursion
   PRPackedBool         mWindowMadeHere; // true if we created the window, false for embedding
-  PRPackedBool         mVisible;        // Whether or not we're visible.
   PRPackedBool         mSheetNeedsShow; // if this is a sheet, are we waiting to be shown?
+                                        // this is used for sibling sheet contention only
   PRPackedBool         mModal;
 };
 
