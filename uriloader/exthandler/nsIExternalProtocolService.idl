@@ -55,7 +55,7 @@ interface nsIHandlerInfo;
  * handler for a given protocol scheme. And you can ask it to load 
  * the url using the default handler.
  */
-[scriptable, uuid(7968ffa9-bb51-4b2d-aad2-8ea46c15d27f)]
+[scriptable, uuid(70f93b7a-3ec6-4bcb-b093-92d9984c9f83)]
 interface nsIExternalProtocolService : nsISupports
 {
   /**
@@ -98,6 +98,30 @@ interface nsIExternalProtocolService : nsISupports
    * @return the handler, if any; otherwise a default handler
    */
   nsIHandlerInfo getProtocolHandlerInfo(in ACString aProtocolScheme);
+
+  /**
+   * Given a scheme, looks up the protocol info from the OS.  This should be
+   * overridden by each OS's implementation.
+   *
+   * @param aScheme The protocol scheme we are looking for.
+   * @param aFound  Was an OS default handler for this scheme found?
+   * @return An nsIHanderInfo for the protocol.
+   */
+  nsIHandlerInfo getProtocolHandlerInfoFromOS(in ACString aProtocolScheme,
+                                              out boolean aFound);
+
+  /** 
+   * Set some sane defaults for a protocol handler object.
+   * 
+   * @param aHandlerInfo      nsIHandlerInfo object, as returned by 
+   *                          getProtocolHandlerInfoFromOS
+   * @param aOSHandlerExists  was the object above created for an extant
+   *                          OS default handler?  This is generally the
+   *                          value of the aFound out param from
+   *                          getProtocolHandlerInfoFromOS.
+   */
+  void setProtocolHandlerDefaults(in nsIHandlerInfo aHandlerInfo,
+                                  in boolean aOSHandlerExists);
 
   /**
    * Used to load a url via an external protocol handler (if one exists)

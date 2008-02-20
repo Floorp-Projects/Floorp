@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Scott MacGregor <mscott@netscape.com>
+ *   Dan Mosedale <dmose@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -68,8 +69,9 @@ public:
   already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMimeType,
                                                   const nsACString& aFileExt,
                                                   PRBool     *aFound);
-  already_AddRefed<nsIHandlerInfo> GetProtocolInfoFromOS(const nsACString &aScheme,
-                                                         PRBool *found);
+  NS_IMETHOD GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
+                                          PRBool *found,
+                                          nsIHandlerInfo **_retval);
 
   // override nsIExternalProtocolService methods
   NS_IMETHODIMP GetApplicationDescription(const nsACString& aScheme, nsAString& _retval);
