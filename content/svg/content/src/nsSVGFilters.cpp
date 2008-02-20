@@ -5489,7 +5489,7 @@ nsresult
 nsSVGFEImageElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                   const nsAString* aValue, PRBool aNotify)
 {
-  if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::href) {
+  if (aNamespaceID == kNameSpaceID_XLink && aName == nsGkAtoms::href) {
     nsAutoString href;
     if (GetAttr(kNameSpaceID_XLink, nsGkAtoms::href, href)) {
       // Note: no need to notify here; since we're just now being bound
