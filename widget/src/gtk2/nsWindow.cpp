@@ -137,8 +137,8 @@ static GdkWindow *get_inner_gdk_window (GdkWindow *aWindow,
                                         gint *retx, gint *rety);
 
 static inline PRBool is_context_menu_key(const nsKeyEvent& inKeyEvent);
-static void   key_event_to_context_menu_event(const nsKeyEvent* inKeyEvent,
-                                              nsMouseEvent* outCMEvent);
+static void   key_event_to_context_menu_event(nsMouseEvent &aEvent,
+                                              GdkEventKey *aGdkEvent);
 
 static int    is_parent_ungrab_enter(GdkEventCrossing *aEvent);
 static int    is_parent_grab_leave(GdkEventCrossing *aEvent);
@@ -2428,8 +2428,10 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
     // before we dispatch a key, check if it's the context menu key.
     // If so, send a context menu key event instead.
     if (is_context_menu_key(event)) {
-        nsMouseEvent contextMenuEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
-        key_event_to_context_menu_event(&event, &contextMenuEvent);
+        nsMouseEvent contextMenuEvent(PR_TRUE, NS_CONTEXTMENU, this,
+                                      nsMouseEvent::eReal,
+                                      nsMouseEvent::eContextMenuKey);
+        key_event_to_context_menu_event(contextMenuEvent, aEvent);
         DispatchEvent(&contextMenuEvent, status);
     }
     else {
@@ -5059,18 +5061,16 @@ is_context_menu_key(const nsKeyEvent& aKeyEvent)
 }
 
 void
-key_event_to_context_menu_event(const nsKeyEvent* aKeyEvent,
-                                nsMouseEvent* aCMEvent)
+key_event_to_context_menu_event(nsMouseEvent &aEvent,
+                                GdkEventKey *aGdkEvent)
 {
-    memcpy(aCMEvent, aKeyEvent, sizeof(nsInputEvent));
-    aCMEvent->eventStructType = NS_MOUSE_EVENT;
-    aCMEvent->message = NS_CONTEXTMENU;
-    aCMEvent->context = nsMouseEvent::eContextMenuKey;
-    aCMEvent->button = nsMouseEvent::eLeftButton;
-    aCMEvent->isShift = aCMEvent->isControl = PR_FALSE;
-    aCMEvent->isAlt = aCMEvent->isMeta = PR_FALSE;
-    aCMEvent->clickCount = 0;
-    aCMEvent->acceptActivation = PR_FALSE;
+    aEvent.refPoint = nsPoint(0, 0);
+    aEvent.isShift = PR_FALSE;
+    aEvent.isControl = PR_FALSE;
+    aEvent.isAlt = PR_FALSE;
+    aEvent.isMeta = PR_FALSE;
+    aEvent.time = aGdkEvent->time;
+    aEvent.clickCount = 1;
 }
 
 /* static */
