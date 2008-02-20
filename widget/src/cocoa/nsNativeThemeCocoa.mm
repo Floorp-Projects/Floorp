@@ -23,6 +23,7 @@
  *    Vladimir Vukicevic <vladimir@pobox.com> (HITheme rewrite)
  *    Josh Aas <josh@mozilla.com>
  *    Colin Barrett <cbarrett@mozilla.com>
+ *    Matthew Gregan <kinetik@flim.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -58,19 +59,14 @@
 
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
+#include "gfxQuartzNativeDrawing.h"
 
 #define DRAW_IN_FRAME_DEBUG 0
 #define SCROLLBARS_VISUAL_DEBUG 0
 
-// see cairo-quartz-surface.c for the complete list of these
-enum {
-  kPrivateCGCompositeSourceOver = 2
-};
-
 // private Quartz routines needed here
 extern "C" {
   CG_EXTERN void CGContextSetCTM(CGContextRef, CGAffineTransform);
-  CG_EXTERN void CGContextSetCompositeOperation (CGContextRef, int);
 }
 
 // Copied from nsLookAndFeel.h
@@ -844,67 +840,24 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   aContext->GetDeviceContext(*getter_AddRefs(dctx));
   PRInt32 p2a = dctx->AppUnitsPerDevPixel();
 
+  gfxRect nativeClipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
+  gfxRect nativeWidgetRect(aRect.x, aRect.y, aRect.width, aRect.height);
+  nativeWidgetRect.ScaleInverse(gfxFloat(p2a));
+  nativeClipRect.ScaleInverse(gfxFloat(p2a));
+
   nsRefPtr<gfxContext> thebesCtx = aContext->ThebesContext();
   if (!thebesCtx)
     return NS_ERROR_FAILURE;
 
-  thebesCtx->UpdateSurfaceClip();
+  gfxQuartzNativeDrawing nativeDrawing(thebesCtx, nativeClipRect);
 
-  double offsetX = 0.0, offsetY = 0.0;
-  nsRefPtr<gfxASurface> thebesSurface = thebesCtx->CurrentSurface(&offsetX, &offsetY);
-  if (thebesSurface->CairoStatus() != 0) {
-    NS_WARNING("Got Cairo surface with nonzero error status");
-    return NS_ERROR_FAILURE;
-  }
-
-  if (thebesSurface->GetType() != gfxASurface::SurfaceTypeQuartz) {
-    NS_WARNING("Expected surface of type Quartz, got something else");
-    return NS_ERROR_FAILURE;
-  }
-
-  gfxMatrix mat = thebesCtx->CurrentMatrix();
-  gfxQuartzSurface* quartzSurf = (gfxQuartzSurface*) (thebesSurface.get());
-  CGContextRef cgContext = quartzSurf->GetCGContext();
-
-  //fprintf (stderr, "surface: %p cgContext: %p\n", quartzSurf, cgContext);
-
+  CGContextRef cgContext = nativeDrawing.BeginNativeDrawing();
   if (cgContext == nsnull) {
     // The Quartz surface handles 0x0 surfaces by internally
     // making all operations no-ops; there's no cgcontext created for them.
     // Unfortunately, this means that callers that want to render
     // directly to the CGContext need to be aware of this quirk.
     return NS_OK;
-  }
-
-  // Eventually we can just do a GetCTM and restore it with SetCTM,
-  // but for now do a full save/restore
-  CGAffineTransform mm0 = CGContextGetCTM(cgContext);
-
-  CGContextSaveGState(cgContext);
-  //CGContextSetCTM(cgContext, CGAffineTransformIdentity);
-
-  // Apply any origin offset we have first, so it gets picked up by any other
-  // transforms we have.
-  CGContextTranslateCTM(cgContext, offsetX, offsetY);
-
-  // I -think- that this context will always have an identity
-  // transform (since we don't maintain a transform on it in
-  // cairo-land, and instead push/pop as needed)
-  if (mat.HasNonTranslationOrFlip()) {
-    // If we have a scale, I think we've already lost; so don't round
-    // anything here
-    CGContextConcatCTM(cgContext,
-                       CGAffineTransformMake(mat.xx, mat.yx,
-                                             mat.xy, mat.yy,
-                                             mat.x0, mat.y0));
-  } else {
-    // Otherwise, we round the x0/y0, because otherwise things get rendered badly
-    // XXX how should we be rounding the x0/y0?
-    CGContextConcatCTM(cgContext,
-                       CGAffineTransformMake(mat.xx, mat.yx,
-                                             mat.xy, mat.yy,
-                                             floor(mat.x0 + 0.5),
-                                             floor(mat.y0 + 0.5)));
   }
 
 #if 0
@@ -925,9 +878,6 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
                               NSAppUnitsToIntPixels(aRect.y, p2a),
                               NSAppUnitsToIntPixels(aRect.width, p2a),
                               NSAppUnitsToIntPixels(aRect.height, p2a));
-
-  // 382049 - need to explicitly set the composite operation to sourceOver
-  CGContextSetCompositeOperation(cgContext, kPrivateCGCompositeSourceOver);
 
 #if 0
   fprintf(stderr, "    --> macRect %f %f %f %f\n",
@@ -1230,7 +1180,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
   }
 
-  CGContextRestoreGState(cgContext);
+  nativeDrawing.EndNativeDrawing();
 
   return NS_OK;
 }
