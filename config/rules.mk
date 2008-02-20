@@ -784,6 +784,37 @@ endif # !NO_DIST_INSTALL
 
 ##############################################
 
+ifndef NO_PROFILE_GUIDED_OPTIMIZE
+ifneq (,$(MOZ_PROFILE_GENERATE)$(MOZ_PROFILE_USE))
+ifeq ($(OS_ARCH)_$(GNU_CC)$(INTERNAL_TOOLS), WINNT_)
+# Force re-linking when building with PGO, since
+# the MSVC linker does all the work.  We force re-link
+# in both stages so you can do depend builds with PGO.
+ifdef SHARED_LIBRARY
+$(SHARED_LIBRARY): FORCE
+BINARY_BASENAME = $(SHARED_LIBRARY:$(DLL_SUFFIX)=)
+endif
+ifdef PROGRAM
+$(PROGRAM): FORCE
+BINARY_BASENAME = $(PROGRAM:$(BIN_SUFFIX)=)
+endif
+
+ifdef MOZ_PROFILE_USE
+# In the second pass, we need to merge the pgc files into the pgd file.
+# The compiler would do this for us automatically if they were in the right
+# place, but they're in dist/bin.
+ifdef BINARY_BASENAME
+export::
+	$(PYTHON) $(topsrcdir)/build/win32/pgomerge.py \
+	  $(BINARY_BASENAME) $(DIST)/bin
+endif
+endif # MOZ_PROFILE_USE
+endif # WINNT_
+endif # MOZ_PROFILE_GENERATE || MOZ_PROFILE_USE
+endif # NO_PROFILE_GUIDED_OPTIMIZE
+
+##############################################
+
 checkout:
 	$(MAKE) -C $(topsrcdir) -f client.mk checkout
 

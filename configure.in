@@ -1920,6 +1920,12 @@ case "$target" in
         MOZ_XPCOM_OBSOLETE_LIBS='$(LIBXUL_DIST)/lib/xpcom_compat.lib'
         if test $_MSC_VER -ge 1400; then
             LDFLAGS="$LDFLAGS -NXCOMPAT -SAFESEH"
+            # For profile-guided optimization
+            PROFILE_GEN_CFLAGS="-GL"
+            PROFILE_GEN_LDFLAGS="-LTCG:PGINSTRUMENT"
+            PROFILE_USE_CFLAGS="-GL"
+            #XXX: should be -LTCG:PGOPTIMIZE, but that fails on libxul
+            PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE"
         fi
     fi
     MOZ_JPEG_LIBS='$(call EXPAND_LIBNAME_PATH,jpeg$(MOZ_BITS)$(VERSION_NUMBER),$(DEPTH)/jpeg)'
@@ -6514,6 +6520,9 @@ if test "$_IGNORE_LONG_LONG_WARNINGS"; then
      CFLAGS="$_SAVE_CFLAGS"
 fi
 
+dnl ========================================================
+dnl Profile guided optimization
+dnl ========================================================
 dnl Test for profiling options
 dnl Under gcc 3.3, use -fprofile-arcs/-fbranch-probabilities
 dnl Under gcc 3.4+, use -fprofile-generate/-fprofile-use
