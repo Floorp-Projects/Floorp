@@ -903,7 +903,7 @@ nsIOService::TrackNetworkLinkStatusForOffline()
         // option is set to always autodial. If so, then we are 
         // always up for the purposes of offline management.
         if (autodialEnabled) {
-#if defined(XP_WIN)
+#if defined(XP_WIN) && !defined(WINCE)
             // On Windows, need to do some registry checking to see if
             // autodial is enabled at the OS level. Only if that is
             // enabled are we always up for the purposes of offline
