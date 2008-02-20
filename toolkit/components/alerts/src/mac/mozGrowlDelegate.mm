@@ -40,6 +40,7 @@
 #include "nsStringAPI.h"
 #include "nscore.h"
 #include "nsCOMPtr.h"
+#include "nsObjCExceptions.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIXULAppInfo.h"
 #include "nsIStringBundle.h"
@@ -48,6 +49,8 @@
 
 - (id) init
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   if ((self = [super init])) {
     mKey = 0;
     mDict = [[NSMutableDictionary dictionaryWithCapacity: 8] retain];
@@ -86,26 +89,40 @@
   }
 
   return self;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (void) dealloc
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [mDict release];
 
   [mNames release];
   [mEnabled release];
 
   [super dealloc];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (void) addNotificationNames:(NSArray*)aNames
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [mNames addObjectsFromArray: aNames];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (void) addEnabledNotifications:(NSArray*)aEnabled
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [mEnabled addObjectsFromArray: aEnabled];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 + (void) notifyWithName:(const nsAString&)aName
@@ -115,6 +132,8 @@
                     key:(PRUint32)aKey
                  cookie:(const nsAString&)aCookie
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   NS_ASSERTION(aName.Length(), "No name specified for the alert!");
   
   NSDictionary* clickContext = nil;
@@ -140,28 +159,40 @@
             priority: 0
             isSticky: NO
         clickContext: clickContext];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (PRUint32) addObserver:(nsIObserver*)aObserver
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   NS_ADDREF(aObserver);  // We now own a reference to this!
 
   mKey++;
   [mDict setObject: [NSValue valueWithPointer: aObserver]
             forKey: [NSNumber numberWithUnsignedInt: mKey]];
   return mKey;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 }
 
 - (NSDictionary *) registrationDictionaryForGrowl
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   return [NSDictionary dictionaryWithObjectsAndKeys:
            mNames, GROWL_NOTIFICATIONS_ALL,
            mEnabled, GROWL_NOTIFICATIONS_DEFAULT,
            nil];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (NSString*) applicationNameForGrowl
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   nsresult rv;
 
   nsCOMPtr<nsIXULAppInfo> appInfo =
@@ -175,10 +206,14 @@
   nsAutoString name = NS_ConvertUTF8toUTF16(appName);
   return [NSString stringWithCharacters: name.BeginReading()
                                  length: name.Length()];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (void) growlNotificationTimedOut:(id)clickContext
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   NS_ASSERTION([clickContext valueForKey: OBSERVER_KEY] != nil,
                "OBSERVER_KEY not found!");
   NS_ASSERTION([clickContext valueForKey: COOKIE_KEY] != nil,
@@ -199,10 +234,14 @@
 
     NS_RELEASE(observer);
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (void) growlNotificationWasClicked:(id)clickContext
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   NS_ASSERTION([clickContext valueForKey: OBSERVER_KEY] != nil,
                "OBSERVER_KEY not found!");
   NS_ASSERTION([clickContext valueForKey: COOKIE_KEY] != nil,
@@ -224,6 +263,8 @@
 
     NS_RELEASE(observer);
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 @end
