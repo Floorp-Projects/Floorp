@@ -257,12 +257,8 @@ var PlacesOrganizer = {
       this._places.selectPlaceURI(aContainer.uri);
   },
 
-  onContentTreeKeypress: function PO_onContentTreeKeypress(aEvent) {
-    if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN) {
-      var node = this._content.selectedNode;
-      if (node && PlacesUtils.nodeIsURI(node))
-        this._content.controller.openSelectedNodeWithEvent(aEvent);
-    }
+  openSelectedNode: function PU_openSelectedNode(aEvent) {
+    this._content.controller.openSelectedNodeWithEvent(aEvent);
   },
 
   /**
