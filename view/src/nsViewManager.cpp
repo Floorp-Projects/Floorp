@@ -994,6 +994,14 @@ void nsViewManager::UnsuppressFocusEvents()
 
 }
 
+static void ConvertRectAppUnitsToIntPixels(nsRect& aRect, PRInt32 p2a)
+{
+  aRect.x = NSAppUnitsToIntPixels(aRect.x, p2a);
+  aRect.y = NSAppUnitsToIntPixels(aRect.y, p2a);
+  aRect.width = NSAppUnitsToIntPixels(aRect.width, p2a);
+  aRect.height = NSAppUnitsToIntPixels(aRect.height, p2a);
+}
+
 NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aStatus)
 {
   *aStatus = nsEventStatus_eIgnore;
@@ -1240,6 +1248,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
         
         if (!NS_IS_KEY_EVENT(aEvent) && !NS_IS_IME_EVENT(aEvent) &&
             !NS_IS_CONTEXT_MENU_KEY(aEvent) && !NS_IS_FOCUS_EVENT(aEvent) &&
+            !NS_IS_QUERY_CONTENT_EVENT(aEvent) &&
              aEvent->eventStructType != NS_ACCESSIBLE_EVENT) {
           // will dispatch using coordinates. Pretty bogus but it's consistent
           // with what presshell does.
@@ -1326,26 +1335,27 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           *aStatus = HandleEvent(view, pt, aEvent, capturedEvent);
 
           //
-          // if the event is an nsTextEvent, we need to map the reply back into platform coordinates
+          // need to map the reply back into platform coordinates
           //
-          if (aEvent->message==NS_TEXT_TEXT) {
-            ((nsTextEvent*)aEvent)->theReply.mCursorPosition.x=NSAppUnitsToIntPixels(((nsTextEvent*)aEvent)->theReply.mCursorPosition.x, p2a);
-            ((nsTextEvent*)aEvent)->theReply.mCursorPosition.y=NSAppUnitsToIntPixels(((nsTextEvent*)aEvent)->theReply.mCursorPosition.y, p2a);
-            ((nsTextEvent*)aEvent)->theReply.mCursorPosition.width=NSAppUnitsToIntPixels(((nsTextEvent*)aEvent)->theReply.mCursorPosition.width, p2a);
-            ((nsTextEvent*)aEvent)->theReply.mCursorPosition.height=NSAppUnitsToIntPixels(((nsTextEvent*)aEvent)->theReply.mCursorPosition.height, p2a);
-          }
-          if((aEvent->message==NS_COMPOSITION_START) ||
-             (aEvent->message==NS_COMPOSITION_QUERY)) {
-            ((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.x=NSAppUnitsToIntPixels(((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.x, p2a);
-            ((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.y=NSAppUnitsToIntPixels(((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.y, p2a);
-            ((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.width=NSAppUnitsToIntPixels(((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.width, p2a);
-            ((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.height=NSAppUnitsToIntPixels(((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.height, p2a);
-          }
-          if(aEvent->message==NS_QUERYCARETRECT) {
-            ((nsQueryCaretRectEvent*)aEvent)->theReply.mCaretRect.x=NSAppUnitsToIntPixels(((nsQueryCaretRectEvent*)aEvent)->theReply.mCaretRect.x, p2a);
-            ((nsQueryCaretRectEvent*)aEvent)->theReply.mCaretRect.y=NSAppUnitsToIntPixels(((nsQueryCaretRectEvent*)aEvent)->theReply.mCaretRect.y, p2a);
-            ((nsQueryCaretRectEvent*)aEvent)->theReply.mCaretRect.width=NSAppUnitsToIntPixels(((nsQueryCaretRectEvent*)aEvent)->theReply.mCaretRect.width, p2a);
-            ((nsQueryCaretRectEvent*)aEvent)->theReply.mCaretRect.height=NSAppUnitsToIntPixels(((nsQueryCaretRectEvent*)aEvent)->theReply.mCaretRect.height, p2a);
+          switch (aEvent->message) {
+            case NS_TEXT_TEXT:
+              ConvertRectAppUnitsToIntPixels(
+                ((nsTextEvent*)aEvent)->theReply.mCursorPosition, p2a);
+              break;
+            case NS_COMPOSITION_START:
+            case NS_COMPOSITION_QUERY:
+              ConvertRectAppUnitsToIntPixels(
+                ((nsCompositionEvent*)aEvent)->theReply.mCursorPosition, p2a);
+              break;
+            case NS_QUERYCARETRECT:
+              ConvertRectAppUnitsToIntPixels(
+                ((nsQueryCaretRectEvent*)aEvent)->theReply.mCaretRect, p2a);
+              break;
+            case NS_QUERY_CHARACTER_RECT:
+            case NS_QUERY_CARET_RECT:
+              ConvertRectAppUnitsToIntPixels(
+                ((nsQueryContentEvent*)aEvent)->mReply.mRect, p2a);
+              break;
           }
         }
     

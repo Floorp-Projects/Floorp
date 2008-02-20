@@ -734,6 +734,14 @@ nsChildView::GetParent(void)
   return mParentWidget;
 }
 
+nsIWidget*
+nsChildView::GetTopLevelWidget()
+{
+  nsIWidget* current = this;
+  for (nsIWidget* parent = GetParent(); parent ; parent = parent->GetParent())
+    current = parent;
+  return current;
+}
 
 NS_IMETHODIMP nsChildView::ModalEventFilter(PRBool aRealEvent, void *aEvent,
                                             PRBool *aForWindow)
@@ -1853,8 +1861,6 @@ NSEvent* gLastDragEvent = nil;
     // initialization for NSTextInput
     mMarkedRange.location = NSNotFound;
     mMarkedRange.length = 0;
-    mSelectedRange.location = NSNotFound;
-    mSelectedRange.length = 0;
     mIgnoreDoCommand = NO;
     mLastMenuForEventEvent = nil;
     mDragService = nsnull;
@@ -3590,7 +3596,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 {
 #if DEBUG_IME
   NSLog(@"****in insertText: '%@'", insertString);
-  NSLog(@" markRange = %d, %d;  selRange = %d, %d", mMarkedRange.location, mMarkedRange.length, mSelectedRange.location, mSelectedRange.length);
+  NSLog(@" markRange = %d, %d", mMarkedRange.location, mMarkedRange.length);
 #endif
   if (!mGeckoChild)
     return;
@@ -3671,7 +3677,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     [self sendCompositionEvent:NS_COMPOSITION_END];
     // Note: mGeckoChild might have become null here. Don't count on it from here on.
     nsTSMManager::EndComposing();
-    mSelectedRange = mMarkedRange = NSMakeRange(NSNotFound, 0);
+    mMarkedRange = NSMakeRange(NSNotFound, 0);
   }
 
   if (bufPtr != buffer)
@@ -3708,7 +3714,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 {
 #if DEBUG_IME 
   NSLog(@"****in setMarkedText location: %d, length: %d", selRange.location, selRange.length);
-  NSLog(@" markRange = %d, %d;  selRange = %d, %d", mMarkedRange.location, mMarkedRange.length, mSelectedRange.location, mSelectedRange.length);
+  NSLog(@" markRange = %d, %d", mMarkedRange.location, mMarkedRange.length);
   NSLog(@" aString = '%@'", aString);
 #endif
 
@@ -3717,8 +3723,6 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
   if (![aString isKindOfClass:[NSAttributedString class]])
     aString = [[[NSAttributedString alloc] initWithString:aString] autorelease];
-
-  mSelectedRange = selRange;
 
   NSMutableAttributedString *mutableAttribStr = aString;
   NSString *tmpStr = [mutableAttribStr string];
@@ -3732,14 +3736,17 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   printf("****in setMarkedText, len = %d, text = ", len);
   PRUint32 n = 0;
   PRUint32 maxlen = len > 12 ? 12 : len;
-  for (PRUnichar *a = bufPtr; (*a != PRUnichar('\0')) && n<maxlen; a++, n++) printf((*a&0xff80) ? "\\u%4X" : "%c", *a); 
+  for (PRUnichar *a = bufPtr; (*a != PRUnichar('\0')) && n<maxlen; a++, n++)
+    printf((*a&0xff80) ? "\\u%4X" : "%c", *a); 
   printf("\n");
 #endif
 
-  mMarkedRange.location = 0;
   mMarkedRange.length = len;
 
   if (!nsTSMManager::IsComposing()) {
+    nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, mGeckoChild);
+    mGeckoChild->DispatchWindowEvent(selection);
+    mMarkedRange.location = selection.mSucceeded ? selection.mReply.mOffset : 0;
     [self sendCompositionEvent:NS_COMPOSITION_START];
     // Note: mGeckoChild might have become null here. Don't count on it from here on.
     nsTSMManager::StartComposing(self);
@@ -3771,7 +3778,6 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 #if DEBUG_IME
   NSLog(@"****in unmarkText");
   NSLog(@" markedRange   = %d, %d", mMarkedRange.location, mMarkedRange.length);
-  NSLog(@" selectedRange = %d, %d", mSelectedRange.location, mSelectedRange.length);
 #endif
   nsTSMManager::CommitIME();
 }
@@ -3779,13 +3785,30 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
 - (BOOL) hasMarkedText
 {
+#if DEBUG_IME
+  NSLog(@"****in hasMarkText");
+  NSLog(@" markedRange   = %d, %d", mMarkedRange.location, mMarkedRange.length);
+#endif
   return (mMarkedRange.location != NSNotFound) && (mMarkedRange.length != 0);
 }
 
 
 - (long) conversationIdentifier
 {
-  return (long)self;
+#if DEBUG_IME
+  NSLog(@"****in conversationIdentifier");
+#endif
+  if (!mGeckoChild)
+    return (long)self;
+  nsQueryContentEvent textContent(PR_TRUE, NS_QUERY_TEXT_CONTENT, mGeckoChild);
+  textContent.InitForQueryTextContent(0, 0);
+  mGeckoChild->DispatchWindowEvent(textContent);
+  if (!textContent.mSucceeded)
+    return (long)self;
+#if DEBUG_IME
+  NSLog(@" the ID = %ld", (long)textContent.mReply.mContentsRoot);
+#endif
+  return (long)textContent.mReply.mContentsRoot;
 }
 
 
@@ -3795,24 +3818,25 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   NSLog(@"****in attributedSubstringFromRange");
   NSLog(@" theRange      = %d, %d", theRange.location, theRange.length);
   NSLog(@" markedRange   = %d, %d", mMarkedRange.location, mMarkedRange.length);
-  NSLog(@" selectedRange = %d, %d", mSelectedRange.location, mSelectedRange.length);
 #endif
-  if (!mGeckoChild)
+  if (!mGeckoChild || theRange.length == 0)
     return nil;
 
-  nsReconversionEvent reconversionEvent(PR_TRUE, NS_RECONVERSION_QUERY, mGeckoChild);
-  reconversionEvent.time = PR_IntervalNow();
+  nsAutoString str;
+  nsQueryContentEvent textContent(PR_TRUE, NS_QUERY_TEXT_CONTENT, mGeckoChild);
+  textContent.InitForQueryTextContent(theRange.location, theRange.length);
+  mGeckoChild->DispatchWindowEvent(textContent);
 
-  nsresult rv = mGeckoChild->DispatchWindowEvent(reconversionEvent);
-  PRUnichar* reconvstr;
-  if (NS_SUCCEEDED(rv) && (reconvstr = reconversionEvent.theReply.mReconversionString)) {
-    NSAttributedString* result = [[[NSAttributedString alloc] initWithString:[NSString stringWithCharacters:reconvstr length:nsCRT::strlen(reconvstr)]
-                                                                  attributes:nil] autorelease];
-    nsMemory::Free(reconvstr);
-    return result;
-  }
+  if (!textContent.mSucceeded || textContent.mReply.mString.IsEmpty())
+    return nil;
 
-  return nil;
+  NSString* nsstr =
+    [NSString stringWithCharacters:textContent.mReply.mString.get()
+                            length:textContent.mReply.mString.Length()];
+  NSAttributedString* result =
+    [[[NSAttributedString alloc] initWithString:nsstr
+                                     attributes:nil] autorelease];
+  return result;
 }
 
 
@@ -3821,7 +3845,6 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 #if DEBUG_IME
   NSLog(@"****in markedRange");
   NSLog(@" markedRange   = %d, %d", mMarkedRange.location, mMarkedRange.length);
-  NSLog(@" selectedRange = %d, %d", mSelectedRange.location, mSelectedRange.length);
 #endif
 
   if (![self hasMarkedText]) {
@@ -3837,10 +3860,20 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 #if DEBUG_IME
   NSLog(@"****in selectedRange");
   NSLog(@" markedRange   = %d, %d", mMarkedRange.location, mMarkedRange.length);
-  NSLog(@" selectedRange = %d, %d", mSelectedRange.location, mSelectedRange.length);
 #endif
+  if (!mGeckoChild)
+    return NSMakeRange(NSNotFound, 0);
+  nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, mGeckoChild);
+  mGeckoChild->DispatchWindowEvent(selection);
+  if (!selection.mSucceeded)
+    return NSMakeRange(NSNotFound, 0);
 
-  return mSelectedRange;
+#if DEBUG_IME
+  NSLog(@" result of selectedRange = %d, %d",
+        selection.mReply.mOffset, selection.mReply.mString.Length());
+#endif
+  return NSMakeRange(selection.mReply.mOffset,
+                     selection.mReply.mString.Length());
 }
 
 
@@ -3850,20 +3883,52 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   NSLog(@"****in firstRectForCharacterRange");
   NSLog(@" theRange      = %d, %d", theRange.location, theRange.length);
   NSLog(@" markedRange   = %d, %d", mMarkedRange.location, mMarkedRange.length);
-  NSLog(@" selectedRange = %d, %d", mSelectedRange.location, mSelectedRange.length);
 #endif
+  // XXX this returns first character rect or caret rect, it is limitation of
+  // now. We need more work for returns first line rect. But current
+  // implementation is enough for IMEs.
 
-  nsAutoRetainView kungFuDeathGrip(self);
-  nsRect compositionRect = [self sendCompositionEvent:NS_COMPOSITION_QUERY];
+  NSRect rect;
+  if (!mGeckoChild || theRange.location == NSNotFound)
+    return rect;
 
-  NSRect rangeRect;
-  GeckoRectToNSRect(compositionRect, rangeRect);
+  nsRect r;
+  PRBool useCaretRect = theRange.length == 0;
+  if (!useCaretRect) {
+    nsQueryContentEvent charRect(PR_TRUE, NS_QUERY_CHARACTER_RECT, mGeckoChild);
+    charRect.InitForQueryCharacterRect(theRange.location);
+    mGeckoChild->DispatchWindowEvent(charRect);
+    if (charRect.mSucceeded)
+      r = charRect.mReply.mRect;
+    else
+      useCaretRect = PR_TRUE;
+  }
 
-  // convert to window coords
-  rangeRect = [self convertRect:rangeRect toView:nil];
-  // convert to cocoa screen coords
-  rangeRect.origin = [[self nativeWindow] convertBaseToScreen:rangeRect.origin];
-  return rangeRect;
+  if (useCaretRect) {
+    nsQueryContentEvent caretRect(PR_TRUE, NS_QUERY_CARET_RECT, mGeckoChild);
+    caretRect.InitForQueryCaretRect(theRange.location);
+    mGeckoChild->DispatchWindowEvent(caretRect);
+    if (!caretRect.mSucceeded)
+      return rect;
+    r = caretRect.mReply.mRect;
+    r.width = 0;
+  }
+
+  nsIWidget* rootWidget = mGeckoChild->GetTopLevelWidget();
+  NSWindow* rootWindow =
+    static_cast<NSWindow*>(rootWidget->GetNativeData(NS_NATIVE_WINDOW));
+  NSView* rootView =
+    static_cast<NSView*>(rootWidget->GetNativeData(NS_NATIVE_WIDGET));
+  if (!rootWindow || !rootView)
+    return rect;
+  GeckoRectToNSRect(r, rect);
+  rect = [rootView convertRect:rect toView:nil];
+  rect.origin = [rootWindow convertBaseToScreen:rect.origin];
+#if DEBUG_IME
+  NSLog(@" result rect (x,y,w,h) = %f, %f, %f, %f",
+        rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+#endif
+  return rect;
 }
 
 
@@ -3871,7 +3936,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 {
 #if DEBUG_IME
   NSLog(@"****in characterIndexForPoint");
-  NSLog(@" markRange = %d, %d;  selectRange = %d, %d", mMarkedRange.location, mMarkedRange.length, mSelectedRange.location, mSelectedRange.length);
+  NSLog(@" markRange = %d, %d", mMarkedRange.location, mMarkedRange.length);
 #endif
 
   // To implement this, we'd have to grovel in text frames looking at text offsets.
@@ -3883,7 +3948,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 {
 #if DEBUG_IME
   NSLog(@"****in validAttributesForMarkedText");
-  NSLog(@" markRange = %d, %d;  selectRange = %d, %d", mMarkedRange.location, mMarkedRange.length, mSelectedRange.location, mSelectedRange.length);
+  NSLog(@" markRange = %d, %d", mMarkedRange.location, mMarkedRange.length);
 #endif
 
   //return [NSArray arrayWithObjects:NSUnderlineStyleAttributeName, NSMarkedClauseSegmentAttributeName, NSTextInputReplacementRangeAttributeName, nil];
