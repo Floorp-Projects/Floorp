@@ -49,9 +49,7 @@ extern "C" {
 
 MOZCE_SHUNT_API int mkdir(const char* inDirname)
 {
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
+#ifdef API_LOGGING
     mozce_printf("mkdir called\n");
 #endif
     
@@ -76,9 +74,7 @@ MOZCE_SHUNT_API int mkdir(const char* inDirname)
 
 MOZCE_SHUNT_API int rmdir(const char* inDirname)
 {
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
+#ifdef API_LOGGING
     mozce_printf("rmdir called (%s)\n", inDirname);
 #endif
     

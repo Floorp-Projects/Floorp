@@ -51,22 +51,16 @@ extern "C" {
 }
 #endif
 
-// #define LOG_CALLS
-
 MOZCE_SHUNT_API char *fullpath(char *absPath, const char *relPath, size_t maxLength)
 {
-    MOZCE_PRECHECK
-
-#ifdef LOG_CALLS
-#ifdef DEBUG
+#ifdef API_LOGGING
     mozce_printf("fullpath called\n");
-#endif
 #endif
 
     if (relPath[0] != '\\') 
     {
         int i;
-                unsigned short dir[MAX_PATH];
+        unsigned short dir[MAX_PATH];
         GetModuleFileName(GetModuleHandle (NULL), dir, MAX_PATH);
         for (i = _tcslen(dir); i && dir[i] != TEXT('\\'); i--) {}
         
@@ -74,19 +68,15 @@ MOZCE_SHUNT_API char *fullpath(char *absPath, const char *relPath, size_t maxLen
         
         w2a_buffer(dir, -1, absPath, maxLength);
     }
-    strcat(absPath, relPath);
+    strcpy(absPath, relPath);
     
     return absPath;
 }
 
 MOZCE_SHUNT_API void splitpath(const char* inPath, char* outDrive, char* outDir, char* outFname, char* outExt)
 {
-    MOZCE_PRECHECK
-
-#ifdef LOG_CALLS
-#ifdef DEBUG
+#ifdef API_LOGGING
     mozce_printf("splitpath called\n");
-#endif
 #endif
     if(NULL != outDrive)
     {
@@ -192,12 +182,8 @@ MOZCE_SHUNT_API void splitpath(const char* inPath, char* outDrive, char* outDir,
 
 MOZCE_SHUNT_API void makepath(char* outPath, const char* inDrive, const char* inDir, const char* inFname, const char* inExt)
 {
-    MOZCE_PRECHECK
-
-#ifdef LOG_CALLS
-#ifdef DEBUG
+#ifdef API_LOGGING
     mozce_printf("makepath called\n");
-#endif
 #endif
     if(NULL != outPath)
     {
@@ -222,12 +208,8 @@ MOZCE_SHUNT_API void makepath(char* outPath, const char* inDrive, const char* in
 
 MOZCE_SHUNT_API int mozce_strcmpi(const char *dest, const char *src)
 {
-    MOZCE_PRECHECK
-
-#ifdef LOG_CALLS
-#ifdef DEBUG
+#ifdef API_LOGGING
     mozce_printf("mozce_strcmpi called\n");
-#endif
 #endif
     int f,l;
     

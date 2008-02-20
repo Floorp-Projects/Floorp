@@ -97,9 +97,7 @@ _getnewfd()
 
 MOZCE_SHUNT_API int access(const char *path, int mode)
 {
-    MOZCE_PRECHECK
-        
-#ifdef DEBUG
+#ifdef API_LOGGING
         mozce_printf("-- access called\n");
 #endif
     
@@ -108,9 +106,7 @@ MOZCE_SHUNT_API int access(const char *path, int mode)
 
 MOZCE_SHUNT_API void rewind(FILE* inStream)
 {
-    MOZCE_PRECHECK
-        
-#ifdef DEBUG
+#ifdef API_LOGGING
         mozce_printf("rewind called\n");
 #endif
     
@@ -120,9 +116,7 @@ MOZCE_SHUNT_API void rewind(FILE* inStream)
 
 MOZCE_SHUNT_API FILE* fdopen(int fd, const char* inMode)
 {
-    MOZCE_PRECHECK
-        
-#ifdef DEBUG
+#ifdef API_LOGGING
         mozce_printf("-- fdopen called (mode is ignored!) \n");
 #endif
     
@@ -136,9 +130,7 @@ MOZCE_SHUNT_API FILE* fdopen(int fd, const char* inMode)
 
 MOZCE_SHUNT_API void perror(const char* inString)
 {
-    MOZCE_PRECHECK
-        
-#ifdef DEBUG
+#ifdef API_LOGGING
         mozce_printf("perror called\n");
 #endif
     
@@ -148,9 +140,7 @@ MOZCE_SHUNT_API void perror(const char* inString)
 
 MOZCE_SHUNT_API int remove(const char* inPath)
 {
-    MOZCE_PRECHECK
-        
-#ifdef DEBUG
+#ifdef API_LOGGING
         mozce_printf("remove called on %s\n", inPath);
 #endif
     
@@ -175,9 +165,7 @@ MOZCE_SHUNT_API int remove(const char* inPath)
 
 MOZCE_SHUNT_API char* getcwd(char* buff, size_t size)
 {
-    MOZCE_PRECHECK
-        
-#ifdef DEBUG
+#ifdef API_LOGGING
         mozce_printf("getcwd called.\n");
 #endif
     int i;
@@ -193,7 +181,7 @@ MOZCE_SHUNT_API char* getcwd(char* buff, size_t size)
 
 MOZCE_SHUNT_API int mozce_printf(const char * format, ...)
 {
-#ifdef DEBUG
+    //#ifdef API_LOGGING
 #define MAX_CHARS_IN_VARIABLE_STRING 1024
     
     char buf[MAX_CHARS_IN_VARIABLE_STRING];
@@ -209,7 +197,7 @@ MOZCE_SHUNT_API int mozce_printf(const char * format, ...)
     OutputDebugString(tBuf);
     
     return 1;
-#endif
+    //#endif
 
     return 0;
 }
@@ -244,9 +232,7 @@ static void mode2binstr(int mode, char* buffer)
 
 MOZCE_SHUNT_API int open(const char *pathname, int flags, int mode)
 {
-    MOZCE_PRECHECK
-        
-#ifdef DEBUG
+#ifdef API_LOGGING
         mozce_printf("open called\n");
 #endif
     
@@ -282,9 +268,7 @@ MOZCE_SHUNT_API int open(const char *pathname, int flags, int mode)
 
 MOZCE_SHUNT_API int close(int fd)
 {
-    MOZCE_PRECHECK
-        
-#ifdef DEBUG
+#ifdef API_LOGGING
         mozce_printf("close called\n");
 #endif
     
@@ -303,9 +287,7 @@ MOZCE_SHUNT_API int close(int fd)
 
 MOZCE_SHUNT_API size_t read(int fd, void* buffer, size_t count)
 {
-    MOZCE_PRECHECK
-        
-#ifdef DEBUG
+#ifdef API_LOGGING
         mozce_printf("read called\n");
 #endif
     
@@ -323,9 +305,7 @@ MOZCE_SHUNT_API size_t read(int fd, void* buffer, size_t count)
 
 MOZCE_SHUNT_API size_t write(int fd, const void* buffer, size_t count)
 {
-    MOZCE_PRECHECK
-        
-#ifdef DEBUG
+#ifdef API_LOGGING
         mozce_printf("write called\n");
 #endif
     
@@ -342,9 +322,7 @@ MOZCE_SHUNT_API size_t write(int fd, const void* buffer, size_t count)
 
 MOZCE_SHUNT_API int unlink(const char *pathname)
 {
-    MOZCE_PRECHECK
-        
-#ifdef DEBUG
+#ifdef API_LOGGING
         mozce_printf("unlink called\n");
 #endif
     return remove(pathname);
@@ -353,9 +331,7 @@ MOZCE_SHUNT_API int unlink(const char *pathname)
 
 MOZCE_SHUNT_API int lseek(int fd, int offset, int whence)
 {
-    MOZCE_PRECHECK
-        
-#ifdef DEBUG
+#ifdef API_LOGGING
         mozce_printf("lseek called\n");
 #endif
     

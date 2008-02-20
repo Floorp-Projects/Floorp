@@ -6,9 +6,10 @@
 #include "../topsrcdir.h"
 #endif
 
-#define WCE_BIN   "c:/Program Files/Microsoft Visual Studio 8/VC/ce/bin/x86_arm/"
-#define WCE_INC   "C:/Program Files/Windows Mobile 6 SDK/PocketPC/Include/Armv4i"
-#define WCE_LIB   "C:/Program Files/Windows Mobile 6 SDK/PocketPC/Lib/Armv4i"
+#define WCE_BIN   "c:\\Program Files\\Microsoft Visual Studio 8\\VC\\ce\\bin\\x86_arm\\"
+#define WCE_CRT   "c:\\Program Files\\Microsoft Visual Studio 8\\VC/ce\\lib\\armv4i"
+#define WCE_INC   "C:\\Program Files\\Windows Mobile 6 SDK\\Smartphone\\Include\\Armv4i"
+#define WCE_LIB   "C:\\Program Files\\Windows Mobile 6 SDK\\Smartphone\\Lib\\Armv4i"
 
 #define SHUNT_LIB TOPSRCDIR "/build/wince/shunt/build/vs8/"
 #define SHUNT_INC TOPSRCDIR "/build/wince/shunt/include/"
@@ -55,7 +56,7 @@ int argpath_conv(char **args_in, char **args_out)
          {
            *equalsChar = '\0';
 
-           strcpy(noleak_buffers[next_buffer], args_out[i]);        
+           strcpy(noleak_buffers[next_buffer], args_out[i]);
 
            *equalsChar = '=';
 
@@ -154,7 +155,7 @@ DWORD run(char** args)
  // Wait until child process exits.
  WaitForSingleObject( pi.hProcess, INFINITE );
  GetExitCodeProcess(pi.hProcess, &exitCode);
- // Close process and thread handles. 
+ // Close process and thread handles.
  CloseHandle( pi.hProcess );
  CloseHandle( pi.hThread );
 
