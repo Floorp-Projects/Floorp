@@ -50,10 +50,6 @@ Features to add:
 ** turn the test list into a collapsing tree view
 ** move log loading into popup from viewer UI
 
-Bugs I've hit:
-* dynamic changes to xlink:href of feImage require removal/reinsertion from document: https://bugzilla.mozilla.org/show_bug.cgi?id=417339
-** when fixed, can remove the removal and reinsertion near the end of showImages
-
 -->
 <html lang="en-US" xml:lang="en-US" xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -246,12 +242,6 @@ function show_images(i) {
 		// Making the href be #image2 doesn't seem to work
 		ID("feimage2").setAttributeNS(XLINK_NS, "xlink:href", item.images[1]);
 	}
-
-	// Force reprocessing of the filters!
-	var svg = ID("svg");
-	var p = svg.parentNode;
-	p.removeChild(svg);
-	p.appendChild(svg);
 
 	cell.style.display = "";
 }
