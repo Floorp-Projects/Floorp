@@ -187,6 +187,7 @@ public:
   virtual void AddedForm();
   virtual void RemovedForm();
   virtual PRInt32 GetNumFormsSynchronous();
+  virtual void TearingDownEditor(nsIEditor *aEditor);
 
   PRBool IsXHTML()
   {
