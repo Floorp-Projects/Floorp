@@ -73,7 +73,8 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         onload="PlacesOrganizer.init();"
         onunload="PlacesOrganizer.destroy();"
-        width="700" height="500" screenX="10" screenY="10"
+        width="&places.library.width;" height="&places.library.height;"
+        screenX="10" screenY="10"
         persist="width height screenX screenY sizemode">
 
   <script type="application/x-javascript"
