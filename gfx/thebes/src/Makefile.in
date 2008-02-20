@@ -109,6 +109,7 @@ CPPSRCS	+= \
 	$(NULL)
 #CPPSRCS +=	gfxPDFSurface.cpp
 CPPSRCS +=      nsUnicodeRange.cpp
+CPPSRCS +=      gfxQuartzNativeDrawing.cpp
 
 CMMSRCS = gfxQuartzFontCache.mm
 

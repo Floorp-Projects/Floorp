@@ -649,10 +649,7 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
       if ([mView isKindOfClass:[ChildView class]])
         [(ChildView*)mView setIsPluginView:YES];
 
-      if ([NSView focusView] == mView)
-        mPluginPort.cgPort.context = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
-      else
-        mPluginPort.cgPort.context = NULL;
+      mPluginPort.cgPort.context = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
 
       NSWindow* window = [mView nativeWindow];
       if (window) {
