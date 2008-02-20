@@ -5622,23 +5622,7 @@ PresShell::HandleEvent(nsIView         *aView,
       if (mCurrentEventFrame) {
         esm->GetFocusedContent(getter_AddRefs(mCurrentEventContent));
       } else {
-#if defined(MOZ_X11) || defined(XP_WIN)
-#if defined(MOZ_X11)
-        if (NS_IS_IME_EVENT(aEvent)) {
-          // bug 52416 (MOZ_X11)
-          // Lookup region (candidate window) of UNIX IME grabs
-          // input focus from Mozilla but wants to send IME event
-          // to redraw pre-edit (composed) string
-          // If Mozilla does not have input focus and event is IME,
-          // sends IME event to pre-focused element
-#else
-        if (NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent)) {
-          // bug 292263 (XP_WIN)
-          // If software keyboard has focus, it may send the key messages and
-          // the IME messages to pre-focused window. Therefore, if Mozilla
-          // doesn't have focus and event is key event or IME event, we should
-          // send the events to pre-focused element.
-#endif /* defined(MOZ_X11) */
+        if (NS_TargetUnfocusedEventToLastFocusedContent(aEvent)) {
           nsPIDOMWindow *ourWindow = mDocument->GetWindow();
           if (ourWindow) {
             nsIFocusController *focusController =
@@ -5659,7 +5643,6 @@ PresShell::HandleEvent(nsIView         *aView,
             }
           }
         }
-#endif /* defined(MOZ_X11) || defined(XP_WIN) */
         if (!mCurrentEventContent) {
           mCurrentEventContent = mDocument->GetRootContent();
         }
