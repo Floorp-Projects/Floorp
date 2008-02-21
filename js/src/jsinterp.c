@@ -3200,7 +3200,11 @@ interrupt:
         }                                                                     \
     JS_END_MACRO
 
-#ifdef DEBUG
+/*
+ * Deadlocks or else bad races are likely if JS_THREADSAFE, so we must rely on
+ * single-thread DEBUG js shell testing to verify property cache hits.
+ */
+#if defined DEBUG && !defined JS_THREADSAFE
 # define ASSERT_VALID_PROPERTY_CACHE_HIT(pcoff,obj,pobj,entry)                \
     do {                                                                      \
         JSAtom *atom_;                                                        \
@@ -3214,12 +3218,12 @@ interrupt:
         else                                                                  \
             atom_ = rt->atomState.lengthAtom;                                 \
         if (JOF_OPMODE(*pc) == JOF_NAME) {                                    \
-             ok = js_FindProperty(cx, ATOM_TO_JSID(atom_), &obj_, &pobj_,     \
-                                  &prop_);                                    \
+            ok = js_FindProperty(cx, ATOM_TO_JSID(atom_), &obj_, &pobj_,      \
+                                 &prop_);                                     \
         } else {                                                              \
-             obj_ = obj;                                                      \
-             ok = js_LookupProperty(cx, obj, ATOM_TO_JSID(atom_), &pobj_,     \
-                                    &prop_);                                  \
+            obj_ = obj;                                                       \
+            ok = js_LookupProperty(cx, obj, ATOM_TO_JSID(atom_), &pobj_,      \
+                                   &prop_);                                   \
         }                                                                     \
         if (!ok)                                                              \
             goto error;                                                       \
@@ -3246,7 +3250,7 @@ interrupt:
         OBJ_DROP_PROPERTY(cx, pobj_, prop_);                                  \
     } while (0)
 #else
-# define ASSERT_VALID_PROPERTY_CACHE_HIT(pcoff,obj,pobj,entry) /* nothing */
+# define ASSERT_VALID_PROPERTY_CACHE_HIT(pcoff,obj,pobj,entry) ((void) 0)
 #endif
 
           BEGIN_CASE(JSOP_SETCONST)
