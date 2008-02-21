@@ -1927,7 +1927,7 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsI
 #ifdef WINCE
       (*aResult).width =  16;
       (*aResult).height = 16;
-#endif
+#else
       (*aResult).width = ::GetSystemMetrics(SM_CXMENUCHECK);
       (*aResult).height = ::GetSystemMetrics(SM_CYMENUCHECK);
 #endif
