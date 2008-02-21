@@ -219,9 +219,7 @@ case "$target" in
     ac_exeext=.exe
 
     echo -n "#define TOPSRCDIR \"" > $srcdir/build/wince/tools/topsrcdir.h
-   	echo -n ${_topsrcdir} >> $srcdir/build/wince/tools/topsrcdir.h
-    echo -n \" >> $srcdir/build/wince/tools/topsrcdir.h
-
+    echo `cd "$_topsrcdir" && pwd -W | tr '\n' '\"'` >> $srcdir/build/wince/tools/topsrcdir.h
     make -C $srcdir/build/wince/tools
     echo -----------------------------------------------------------------------------
     ;;
