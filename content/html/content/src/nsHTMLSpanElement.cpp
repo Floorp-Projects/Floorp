@@ -34,16 +34,43 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
-#include "nsHTMLSpanElement.h"
+#include "nsIDOMHTMLElement.h"
 #include "nsIDOMEventTarget.h"
+#include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsIAtom.h"
 #include "nsRuleData.h"
 
+class nsHTMLSpanElement : public nsGenericHTMLElement,
+                          public nsIDOMHTMLElement
+{
+public:
+  nsHTMLSpanElement(nsINodeInfo *aNodeInfo);
+  virtual ~nsHTMLSpanElement();
+
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIDOMNode
+  NS_FORWARD_NSIDOMNODE(nsGenericHTMLElement::)
+
+  // nsIDOMElement
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
+
+  // nsIDOMHTMLElement
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+
+  virtual nsresult GetInnerHTML(nsAString& aInnerHTML);
+  virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+};
+
+
 NS_IMPL_NS_NEW_HTML_ELEMENT(Span)
+
 
 nsHTMLSpanElement::nsHTMLSpanElement(nsINodeInfo *aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
@@ -57,6 +84,12 @@ nsHTMLSpanElement::~nsHTMLSpanElement()
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLSpanElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLSpanElement, nsGenericElement)
+
+
+// QueryInterface implementation for nsHTMLSpanElement
+NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLSpanElement, nsGenericHTMLElement)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLSpanElement)
+
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLSpanElement)
 

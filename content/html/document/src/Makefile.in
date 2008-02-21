@@ -88,8 +88,6 @@ CPPSRCS		= \
 		nsWyciwygProtocolHandler.cpp \
 		$(NULL)
 
-GQI_SRCS = htmldocument.gqi
-
 EXPORTS		= \
 		nsIHTMLDocument.h \
 		$(NULL)

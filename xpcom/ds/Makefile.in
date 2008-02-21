@@ -79,10 +79,6 @@ CPPSRCS		= \
 		nsHashPropertyBag.cpp \
 		$(NULL)
 
-GQI_SRCS = \
-  xpcomds.gqi \
-  $(NULL)
-
 EXPORTS		= \
 		nsAtomService.h \
 		nsCheapSets.h \

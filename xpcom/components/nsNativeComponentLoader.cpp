@@ -87,6 +87,9 @@ static PRLogModuleInfo *nsNativeModuleLoaderLog =
 
 #define LOG(level, args) PR_LOG(nsNativeModuleLoaderLog, level, args)
 
+NS_IMPL_QUERY_INTERFACE1(nsNativeModuleLoader, 
+                         nsIModuleLoader)
+
 NS_IMPL_ADDREF_USING_AGGREGATOR(nsNativeModuleLoader,
                                 nsComponentManagerImpl::gComponentManager)
 NS_IMPL_RELEASE_USING_AGGREGATOR(nsNativeModuleLoader,

@@ -36,8 +36,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
-#include "nsHTMLAnchorElement.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
@@ -65,9 +63,77 @@
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
-#include "nsHTMLAnchorElement.h"
 
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
+
+class nsHTMLAnchorElement : public nsGenericHTMLElement,
+                            public nsIDOMHTMLAnchorElement,
+                            public nsIDOMNSHTMLAnchorElement2,
+                            public nsILink
+{
+public:
+  nsHTMLAnchorElement(nsINodeInfo *aNodeInfo);
+  virtual ~nsHTMLAnchorElement();
+
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIDOMNode
+  NS_FORWARD_NSIDOMNODE(nsGenericHTMLElement::)
+
+  // nsIDOMElement
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
+
+  // nsIDOMHTMLElement
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+
+  // nsIDOMHTMLAnchorElement
+  NS_DECL_NSIDOMHTMLANCHORELEMENT  
+
+  // nsIDOMNSHTMLAnchorElement
+  NS_DECL_NSIDOMNSHTMLANCHORELEMENT
+
+  // nsIDOMNSHTMLAnchorElement2
+  NS_DECL_NSIDOMNSHTMLANCHORELEMENT2
+
+  // nsILink
+  NS_IMETHOD GetLinkState(nsLinkState &aState);
+  NS_IMETHOD SetLinkState(nsLinkState aState);
+  NS_IMETHOD GetHrefURI(nsIURI** aURI);
+  NS_IMETHOD LinkAdded() { return NS_OK; }
+  NS_IMETHOD LinkRemoved() { return NS_OK; }
+
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
+  virtual void SetFocus(nsPresContext* aPresContext);
+  virtual PRBool IsFocusable(PRBool *aTabIndex = nsnull);
+
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+  virtual PRBool IsLink(nsIURI** aURI) const;
+  virtual void GetLinkTarget(nsAString& aTarget);
+
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           PRBool aNotify);
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                             PRBool aNotify);
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+protected:
+  // The cached visited state
+  nsLinkState mLinkState;
+};
+
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Anchor)
 
@@ -87,7 +153,18 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLAnchorElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLAnchorElement, nsGenericElement) 
 
 
+// QueryInterface implementation for nsHTMLAnchorElement
+NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLAnchorElement, nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED4(nsHTMLAnchorElement,
+                                nsIDOMHTMLAnchorElement,
+                                nsIDOMNSHTMLAnchorElement,
+                                nsIDOMNSHTMLAnchorElement2,
+                                nsILink)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLAnchorElement)
+
+
 NS_IMPL_ELEMENT_CLONE(nsHTMLAnchorElement)
+
 
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Charset, charset)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Coords, coords)

@@ -303,6 +303,46 @@ static const PLDHashTableOps contractID_DHashTableOps = {
 ////////////////////////////////////////////////////////////////////////////////
 // Hashtable Enumeration
 ////////////////////////////////////////////////////////////////////////////////
+typedef NS_CALLBACK(EnumeratorConverter)(PLDHashTable *table,
+                                         const PLDHashEntryHdr *hdr,
+                                         void *data,
+                                         nsISupports **retval);
+
+class PLDHashTableEnumeratorImpl : public nsIBidirectionalEnumerator,
+                                   public nsISimpleEnumerator
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIENUMERATOR
+    NS_DECL_NSIBIDIRECTIONALENUMERATOR
+    NS_DECL_NSISIMPLEENUMERATOR
+
+    PLDHashTableEnumeratorImpl(PLDHashTable *table,
+                               EnumeratorConverter converter,
+                               void *converterData);
+    PRInt32 Count() { return mCount; }
+private:
+    PLDHashTableEnumeratorImpl(); /* no implementation */
+
+    ~PLDHashTableEnumeratorImpl();
+    void ReleaseElements();
+
+    nsVoidArray   mElements;
+    PRInt32       mCount, mCurrent;
+    PRMonitor*    mMonitor;
+
+    struct Closure {
+        PRBool                        succeeded;
+        EnumeratorConverter           converter;
+        void                          *data;
+        PLDHashTableEnumeratorImpl    *impl;
+    };
+
+    static PLDHashOperator PR_CALLBACK Enumerator(PLDHashTable *table,
+                                                  PLDHashEntryHdr *hdr,
+                                                  PRUint32 number,
+                                                  void *data);
+};
 
 // static
 PLDHashOperator PR_CALLBACK
@@ -340,6 +380,11 @@ PLDHashTableEnumeratorImpl::PLDHashTableEnumeratorImpl(PLDHashTable *table,
         mCount = 0;
     }
 }
+
+NS_IMPL_ISUPPORTS3(PLDHashTableEnumeratorImpl,
+                   nsIBidirectionalEnumerator,
+                   nsIEnumerator,
+                   nsISimpleEnumerator)
 
 PLDHashTableEnumeratorImpl::~PLDHashTableEnumeratorImpl()
 {
@@ -723,6 +768,16 @@ nsComponentManagerImpl::~nsComponentManagerImpl()
     }
     PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG, ("nsComponentManager: Destroyed."));
 }
+
+NS_IMPL_THREADSAFE_ISUPPORTS7(nsComponentManagerImpl,
+                              nsIComponentManager,
+                              nsIServiceManager,
+                              nsISupportsWeakReference,
+                              nsIInterfaceRequestor,
+                              nsIComponentRegistrar,
+                              nsIServiceManagerObsolete,
+                              nsIComponentManagerObsolete)
+
 
 nsresult
 nsComponentManagerImpl::GetInterface(const nsIID & uuid, void **result)
