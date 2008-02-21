@@ -200,6 +200,12 @@
         ]]></body>
       </method>
 
+      <method name="onSearchBegin">
+        <body><![CDATA[
+          this.fireEvent("searchbegin");
+        ]]></body>
+      </method>
+
       <method name="onSearchComplete">
         <body><![CDATA[
           if (this.mController.matchCount == 0)

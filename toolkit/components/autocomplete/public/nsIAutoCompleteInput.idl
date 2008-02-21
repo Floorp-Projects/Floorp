@@ -40,7 +40,7 @@
 
 interface nsIAutoCompletePopup;
 
-[scriptable, uuid(8a5918dc-89ba-4bd0-934c-90e9c21568b8)]
+[scriptable, uuid(f5eddd39-f8e0-43b7-bc3d-03623f595e52)]
 interface nsIAutoCompleteInput : nsISupports
 {  
   /*
@@ -143,6 +143,11 @@ interface nsIAutoCompleteInput : nsISupports
    * Select a range of text in the autocomplete textbox
    */
   void selectTextRange(in long startIndex, in long endIndex);
+
+  /*
+   * Notification that the search has started
+   */
+  void onSearchBegin();
 
   /*
    * Notification that the search concluded successfully

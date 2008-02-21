@@ -437,6 +437,12 @@ nsFormFillController::SelectTextRange(PRInt32 aStartIndex, PRInt32 aEndIndex)
 }
 
 NS_IMETHODIMP
+nsFormFillController::OnSearchBegin()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFormFillController::OnSearchComplete()
 {
   return NS_OK;
