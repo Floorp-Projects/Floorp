@@ -1,0 +1,275 @@
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Robert Sayre <sayrer@gmail.com>
+#   Jeff Walden <jwalden+bmo@mit.edu>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+from datetime import datetime
+import itertools
+import shutil
+import os
+import sys
+
+"""
+Runs the browser from a script, and provides useful utilities
+for setting up the browser environment.
+"""
+
+# Since some tests require cross-domain support in Mochitest, across ports,
+# domains, subdomains, etc. we use a proxy autoconfig hack to map a bunch of
+# servers onto localhost:8888.  We have to grant them the same privileges as
+# localhost:8888 here, since the browser only knows them as the URLs they're
+# pretending to be.  We also have two servers which are set up but don't have
+# privileges, for testing privilege functionality.
+#
+# These lists must be kept in sync with the following list:
+#
+# http://developer.mozilla.org/en/docs/Mochitest#How_do_I_test_issues_which_only_show_up_when_tests_are_run_across_domains.3F
+#
+servers = [
+           "localhost:8888", # MUST be first -- see PAC pref-setting code
+           "example.org:80",
+           "test1.example.org:80",
+           "test2.example.org:80",
+           "sub1.test1.example.org:80",
+           "sub1.test2.example.org:80",
+           "sub2.test1.example.org:80",
+           "sub2.test2.example.org:80",
+           "example.org:8000",
+           "test1.example.org:8000",
+           "test2.example.org:8000",
+           "sub1.test1.example.org:8000",
+           "sub1.test2.example.org:8000",
+           "sub2.test1.example.org:8000",
+           "sub2.test2.example.org:8000",
+           "example.com:80",
+           "test1.example.com:80",
+           "test2.example.com:80",
+           "sub1.test1.example.com:80",
+           "sub1.test2.example.com:80",
+           "sub2.test1.example.com:80",
+           "sub2.test2.example.com:80",
+           "sectest1.example.org:80",
+           "sub.sectest2.example.org:80",
+           "sub1.xn--lt-uia.example.org:8000", # U+00E4 U+006C U+0074
+           "sub2.xn--lt-uia.example.org:80",   # U+00E4 U+006C U+0074
+           "xn--exmple-cua.test:80",
+           "sub1.xn--exmple-cua.test:80",
+           "xn--hxajbheg2az3al.xn--jxalpdlp:80", # Greek IDN for example.test
+           "sub1.xn--hxajbheg2az3al.xn--jxalpdlp:80",
+          ]
+
+unprivilegedServers = [
+                       "sectest2.example.org:80",
+                       "sub.sectest1.example.org:80",
+                      ]
+
+
+# These are generated in mozilla/build/Makefile.in
+#expand DIST_BIN = "./" + __XPC_BIN_PATH__
+#expand IS_WIN32 = len("__WIN32__") != 0
+#expand IS_MAC = __IS_MAC__ != 0
+#ifdef IS_CYGWIN
+#expand IS_CYGWIN = __IS_CYGWIN__ == 1
+#else
+IS_CYGWIN = False
+#endif
+
+UNIXISH = not IS_WIN32 and not IS_MAC
+
+#expand DEFAULT_APP = "./" + __BROWSER_PATH__
+
+#################
+# SUBPROCESSING #
+#################
+
+class Process:
+  """
+  Represents a subprocess of this process.  We don't just directly use the
+  subprocess module here because we want compatibility with Python 2.3 on
+  non-Windows platforms.  :-(
+  """
+
+  def __init__(self, command, args, env):
+    """
+    Executes the given command, which must be an absolute path, with the given
+    arguments in the given environment.
+    """
+    command = os.path.abspath(command)
+    if IS_WIN32:
+      import subprocess
+      cmd = [command]
+      cmd.extend(args)
+      self._process = subprocess.Popen(cmd, env = env)
+    else:
+      import popen2
+      cmd = []
+      for (k, v) in env.iteritems():
+        cmd.append(k + "='" + v + "' ")
+      cmd.append("'" + command + "'")
+      cmd.extend(map(lambda x: "'" + x + "'", args))
+      cmd = " ".join(cmd)
+      self._process = popen2.Popen4(cmd)
+    self.pid = self._process.pid
+
+  def wait(self):
+    "Waits for this process to finish, then returns the process's status."
+    if IS_WIN32:
+      return self._process.wait()
+    # popen2 is a bit harder to work with because we have to manually redirect
+    # output to stdout
+    p = self._process
+    stdout = sys.stdout
+    out = p.fromchild
+    while p.poll() == -1:
+      line = out.readline().rstrip()
+      if len(line) > 0:
+        print >> stdout, line
+    # read in the last lines that happened between the last -1 poll and the
+    # process finishing
+    for line in out:
+      line = line.rstrip()
+      if len(line) > 0:
+        print >> stdout, line
+    return p.poll()
+
+
+#######################
+# PROFILE SETUP       #
+#######################
+
+def initializeProfile(profileDir):
+  "Sets up the standard testing profile."
+
+  # Start with a clean slate.
+  shutil.rmtree(profileDir, True)
+  os.mkdir(profileDir)
+
+  prefs = []
+
+  part = """\
+user_pref("browser.dom.window.dump.enabled", true);
+user_pref("dom.disable_open_during_load", false);
+user_pref("dom.max_script_run_time", 0); // no slow script dialogs
+user_pref("signed.applets.codebase_principal_support", true);
+user_pref("security.warn_submit_insecure", false);
+user_pref("browser.shell.checkDefaultBrowser", false);
+user_pref("browser.warnOnQuit", false);
+"""
+  prefs.append(part)
+
+  # Grant God-power to all the servers on which tests can run.
+  for (i, server) in itertools.izip(itertools.count(1), servers):
+    part = """
+user_pref("capability.principal.codebase.p%(i)d.granted",
+          "UniversalXPConnect UniversalBrowserRead UniversalBrowserWrite \
+           UniversalPreferencesRead UniversalPreferencesWrite \
+           UniversalFileRead");
+user_pref("capability.principal.codebase.p%(i)d.id", "http://%(server)s");
+user_pref("capability.principal.codebase.p%(i)d.subjectName", "");
+"""  % {"i": i, "server": server}
+    prefs.append(part)
+
+  # Now add the two servers that do NOT have God-power so we can properly test
+  # the granting and receiving of God-power.  Strip off the first server because
+  # we proxy all the others to it.
+  allServers = servers[1:] + unprivilegedServers
+
+
+  # Now actually create the preference to make the proxying happen.
+  quotedServers = ", ".join(map(lambda x: "'" + x + "'", allServers))
+
+  pacURL = """data:text/plain,
+function FindProxyForURL(url, host)
+{
+  var servers = [%(quotedServers)s];
+  var regex = new RegExp('http://(.*?(:\\\\\\\\d+)?)/');
+  var matches = regex.exec(url);
+  if (!matches)
+    return 'DIRECT';
+  var hostport = matches[1], port = matches[2];
+  if (!port)
+    hostport += ':80';
+  if (servers.indexOf(hostport) >= 0)
+    return 'PROXY localhost:8888';
+  return 'DIRECT';
+}""" % {"quotedServers": quotedServers}
+  pacURL = "".join(pacURL.splitlines())
+
+  part = """
+user_pref("network.proxy.type", 2);
+user_pref("network.proxy.autoconfig_url", "%(pacURL)s");
+""" % {"pacURL": pacURL}
+  prefs.append(part)
+
+  # write the preferences
+  prefsFile = open(profileDir + "/" + "user.js", "a")
+  prefsFile.write("".join(prefs))
+  prefsFile.close()
+
+
+#######################
+# RUN THE APP         #
+#######################
+
+def runApp(testURL, env, app, profileDir):
+  "Run the app, returning the time at which it was started."
+  # mark the start
+  start = datetime.now()
+
+  # now run with the profile we created
+  cmd = app
+  if IS_MAC and not cmd.endswith("-bin"):
+    cmd += "-bin"
+  cmd = os.path.abspath(cmd)
+
+  args = []
+  if IS_MAC:
+    args.append("-foreground")
+
+  if IS_CYGWIN:
+    profileDirectory = commands.getoutput("cygpath -w \"" + profileDir + "/\"")
+  else:
+    profileDirectory = profileDir + "/"
+
+  args.extend(("-no-remote", "-profile", profileDirectory, testURL))
+  proc = Process(cmd, args, env = env)
+  print "Application pid: " + str(proc.pid)
+  status = proc.wait()
+  if status != 0:
+    print "FAIL Exited with code " + str(status) + " during test run"
+
+  return start
