@@ -3223,6 +3223,7 @@ nsUrlClassifierDBService::Classify(nsIURI *uri,
     *result = PR_FALSE;
     return NS_OK;
   }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   *result = PR_TRUE;
   return NS_OK;
@@ -3258,7 +3259,8 @@ nsUrlClassifierDBService::LookupURI(nsIURI* uri,
   nsCOMPtr<nsIUrlClassifierUtils> utilsService =
     do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
   nsresult rv = utilsService->GetKeyForURI(uri, key);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv))
+    return rv;
 
   // Create an nsUrlClassifierLookupCallback object.  This object will
   // take care of confirming partial hash matches if necessary before
