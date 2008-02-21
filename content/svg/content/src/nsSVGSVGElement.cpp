@@ -1224,7 +1224,7 @@ nsSVGSVGElement::IsEventName(nsIAtom* aName)
 nsresult
 nsSVGSVGElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
 {
-  nsresult rv = NS_OK;
+  *_retval = nsnull;
 
   float viewportWidth, viewportHeight;
   nsSVGSVGElement *ctx = GetCtx();
@@ -1252,10 +1252,8 @@ nsSVGSVGElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
     viewboxHeight = viewportHeight;
   }
 
-  if (viewboxWidth==0.0f || viewboxHeight==0.0f) {
-    NS_ERROR("XXX. We shouldn't get here. Viewbox width/height is set to 0. Need to disable display of element as per specs.");
-    viewboxWidth = 1.0f;
-    viewboxHeight = 1.0f;
+  if (viewboxWidth <= 0.0f || viewboxHeight <= 0.0f) {
+    return NS_ERROR_FAILURE; // invalid - don't paint element
   }
 
   nsCOMPtr<nsIDOMSVGMatrix> xform =
@@ -1265,7 +1263,7 @@ nsSVGSVGElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
                                     mPreserveAspectRatio);
   xform.swap(*_retval);
 
-  return rv;
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -1340,12 +1338,14 @@ nsSVGSVGElement::InvalidateTransformNotifyFrame()
 already_AddRefed<nsIDOMSVGRect>
 nsSVGSVGElement::GetCtxRect()
 {
+  float w, h;
   nsCOMPtr<nsIDOMSVGRect> vb;
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
     mViewBox->GetAnimVal(getter_AddRefs(vb));
+    vb->GetWidth(&w);
+    vb->GetHeight(&h);
   } else {
     nsSVGSVGElement *ctx = GetCtx();
-    float w, h;
     if (ctx) {
       w = mLengthAttributes[WIDTH].GetAnimValue(ctx);
       h = mLengthAttributes[HEIGHT].GetAnimValue(ctx);
@@ -1353,7 +1353,10 @@ nsSVGSVGElement::GetCtxRect()
       w = mViewportWidth;
       h = mViewportHeight;
     }
-    NS_NewSVGRect(getter_AddRefs(vb), 0, 0, w, h);
+  }
+
+  if (!vb || w < 0.0f || h < 0.0f) {
+    NS_NewSVGRect(getter_AddRefs(vb), 0, 0, PR_MAX(w, 0.0f), PR_MAX(h, 0.0f));
   }
 
   nsIDOMSVGRect *retval = nsnull;
@@ -1380,6 +1383,13 @@ nsSVGSVGElement::GetLength(PRUint8 aCtxType)
       w = mViewportWidth;
       h = mViewportHeight;
     }
+  }
+
+  if (w < 0.0f) {
+    w = 0.0f;
+  }
+  if (h < 0.0f) {
+    h = 0.0f;
   }
 
   switch (aCtxType) {

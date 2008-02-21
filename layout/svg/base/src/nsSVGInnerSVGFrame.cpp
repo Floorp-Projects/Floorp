@@ -351,7 +351,7 @@ nsSVGInnerSVGFrame::GetCanvasTM()
     return retval;
   }
 
-  // parentTM * Translate(x,y) * viewboxToViewportTM
+  // parentTM * Translate(x,y) * viewBoxTM
 
   if (!mCanvasTM) {
     // get the transform from our parent's coordinate system to ours:
@@ -370,10 +370,16 @@ nsSVGInnerSVGFrame::GetCanvasTM()
     parentTM->Translate(x, y, getter_AddRefs(xyTM));
 
     // append the viewbox to viewport transform:
-    nsCOMPtr<nsIDOMSVGMatrix> viewBoxToViewportTM;
+    nsCOMPtr<nsIDOMSVGMatrix> viewBoxTM;
     nsSVGSVGElement *svgElement = static_cast<nsSVGSVGElement*>(mContent);
-    svgElement->GetViewboxToViewportTransform(getter_AddRefs(viewBoxToViewportTM));
-    xyTM->Multiply(viewBoxToViewportTM, getter_AddRefs(mCanvasTM));
+    nsresult res =
+      svgElement->GetViewboxToViewportTransform(getter_AddRefs(viewBoxTM));
+    if (NS_SUCCEEDED(res) && viewBoxTM) {
+      xyTM->Multiply(viewBoxTM, getter_AddRefs(mCanvasTM));
+    } else {
+      NS_WARNING("We should propagate the fact that the viewBox is invalid.");
+      mCanvasTM = xyTM;
+    }
   }    
 
   nsIDOMSVGMatrix* retval = mCanvasTM.get();
