@@ -140,6 +140,7 @@ nsPlainTextSerializer::~nsPlainTextSerializer()
 {
   delete[] mTagStack;
   delete[] mOLStack;
+  NS_WARN_IF_FALSE(mHeadLevel == 0, "Wrong head level!");
 }
 
 NS_IMPL_ISUPPORTS4(nsPlainTextSerializer, 
@@ -439,6 +440,7 @@ nsPlainTextSerializer::AppendElementEnd(nsIDOMElement *aElement,
 
   if (id == eHTMLTag_head) {
     --mHeadLevel;
+    NS_ASSERTION(mHeadLevel >= 0, "mHeadLevel < 0");
   }
 
   return rv;
@@ -478,6 +480,7 @@ nsPlainTextSerializer::CloseContainer(const nsHTMLTag aTag)
 {
   if (aTag == eHTMLTag_head) {
     --mHeadLevel;
+    NS_ASSERTION(mHeadLevel >= 0, "mHeadLevel < 0");
     return NS_OK;
   }
 
@@ -514,6 +517,7 @@ nsPlainTextSerializer::AddLeaf(const nsIParserNode& aNode)
 NS_IMETHODIMP 
 nsPlainTextSerializer::OpenHead()
 {
+  ++mHeadLevel;
   return NS_OK;
 }
 
