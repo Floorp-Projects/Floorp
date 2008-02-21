@@ -1036,22 +1036,28 @@ nsNavHistory::InitStatements()
   // Note, we are not limiting ourselves to places with visits
   // because we may not have any if the place is a bookmark and
   // we expired or deleted all the visits. 
-  // we sort by visit count (even though it might not be correct
-  // as those visits could have been removed or expired.)
+  // We get two sets of places that are 1) most visited and 2) random so that
+  // we don't get stuck recalculating frecencies that end up being -1 every
+  // time
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT id, visit_count, hidden, typed, frecency, url "
-     "FROM moz_places WHERE frecency = -1 "
-     "ORDER BY visit_count DESC LIMIT ?1"),
+    "FROM ("
+      "SELECT * FROM ("
+        "SELECT * FROM moz_places WHERE frecency = -1 "
+        "ORDER BY visit_count DESC LIMIT ROUND(?1 / 2)) "
+      "UNION "
+      "SELECT * FROM ("
+        "SELECT * FROM moz_places WHERE frecency = -1 "
+        "ORDER BY RANDOM() LIMIT ROUND(?1 / 2)))"),
     getter_AddRefs(mDBInvalidFrecencies));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // this query is designed to find places with high frecency and 
-  // an "old" max visit_date.
+  // This query finds random old places to update frecency because frequently
+  // visited places will have their frecencies updated when visited
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT h.id, h.visit_count, h.hidden, h.typed, h.frecency, h.url "
-     "FROM moz_places h WHERE "
-     SQL_STR_FRAGMENT_MAX_VISIT_DATE( "h.id" )
-     " < ?1 ORDER BY h.frecency DESC LIMIT ?2"),
+    "SELECT id, visit_count, hidden, typed, frecency, url "
+     "FROM moz_places "
+     "ORDER BY RANDOM() LIMIT ?1"),
     getter_AddRefs(mDBOldFrecencies));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -6113,36 +6119,22 @@ nsNavHistory::RecalculateFrecencies(PRInt32 aCount, PRBool aRecalcOld)
 {
   mozStorageTransaction transaction(mDBConn, PR_TRUE);
 
-  nsresult rv = RecalculateFrecenciesInternal(mDBInvalidFrecencies, -1, aCount);
+  nsresult rv = RecalculateFrecenciesInternal(mDBInvalidFrecencies, aCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aRecalcOld) {
-    // if the last visit date was "recent" (in the top bucket)
-    // don't bother recalculating as it was recalculated recently
-    // and we are looking for "older" places.
-    PRTime startOfFirstBucket = GetNow() -
-      (USECS_PER_DAY * (mFirstBucketCutoffInDays + 1));
-
-    rv = RecalculateFrecenciesInternal(mDBOldFrecencies, startOfFirstBucket, aCount);
+    rv = RecalculateFrecenciesInternal(mDBOldFrecencies, aCount);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
 }
 
 nsresult 
-nsNavHistory::RecalculateFrecenciesInternal(mozIStorageStatement *aStatement, PRInt64 aBindParameter, PRInt32 aCount)
+nsNavHistory::RecalculateFrecenciesInternal(mozIStorageStatement *aStatement, PRInt32 aCount)
 {
-  nsresult rv;
-
   mozStorageStatementScoper scoper(aStatement);
-  PRInt32 countBindIndex = 0;
-  if (aBindParameter != -1) {
-    rv = aStatement->BindInt64Parameter(0, aBindParameter);
-    NS_ENSURE_SUCCESS(rv, rv);
-    countBindIndex = 1;
-  }
 
-  rv = aStatement->BindInt32Parameter(countBindIndex, aCount);
+  nsresult rv = aStatement->BindInt32Parameter(0, aCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasMore = PR_FALSE;
