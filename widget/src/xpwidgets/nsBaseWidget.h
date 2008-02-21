@@ -110,9 +110,7 @@ public:
   virtual nsIRenderingContext* GetRenderingContext();
   virtual nsIDeviceContext* GetDeviceContext();
   virtual nsIToolkit*     GetToolkit();  
-#ifdef MOZ_CAIRO_GFX
   virtual gfxASurface*    GetThebesSurface();
-#endif
   NS_IMETHOD              SetModal(PRBool aModal); 
   NS_IMETHOD              ModalEventFilter(PRBool aRealEvent, void *aEvent,
                             PRBool *aForWindow);
