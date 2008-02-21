@@ -66,7 +66,20 @@
       <span class="value">Doe</span>
     </span>
   </span>
-  
+
+  <div class="vcard" id="nested_vcard1">
+    <div class="agent vcard" id="nested_vcard2">
+      <div class="agent vcard" id="nested_vcard3">
+        <span class="fn">Bob Smith</span>
+        <span class="title">Office Assistant</span>
+      </div>
+      <span class="fn">Jack Jones</span>
+      <span class="title">Executive Assistant</span>
+    </div>
+    <span class="fn">John Doe</span>
+    <span class="title">CEO</span>
+  </div>
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -117,6 +130,18 @@ function test_Microformats() {
   var valueCard = new hCard(document.getElementById("value_test"));
 
   is(valueCard.fn, "JohnDoe", "value_test");
+
+  var nestCard1 = new hCard(document.getElementById("nested_vcard1"));
+  var nestCard2 = new hCard(document.getElementById("nested_vcard2"));
+  var nestCard3 = new hCard(document.getElementById("nested_vcard3"));
+
+  is(nestCard1.fn, "John Doe", "nesting (fn) 1");
+  is(nestCard1.title, "CEO", "nesting (title) 1");
+  is(nestCard2.fn, "Jack Jones", "nesting (fn) 2");
+  is(nestCard2.title, "Executive Assistant", "nesting (title) 2");
+  is(nestCard3.fn, "Bob Smith", "nesting (fn) 3");
+  is(nestCard3.title, "Office Assistant", "nesting (title) 3");
+  is(nestCard1.agent[0].agent[0].fn, "Bob Smith", "nesting all"); 
 }
 
 function test_hCard() {

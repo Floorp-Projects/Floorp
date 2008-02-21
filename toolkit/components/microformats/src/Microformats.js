@@ -692,6 +692,38 @@ var Microformats = {
       } else {
         propnodes = Microformats.getElementsByClassName(mfnode, propname);
       }
+      for (let i=propnodes.length-1; i >= 0; i--) {
+        /* The reason getParent is not used here is because this code does */
+        /* not apply to attribute based microformats, plus adr and geo */
+        /* when contained in hCard are a special case */
+        var parentnode;
+        var node = propnodes[i];
+        var xpathExpression = "";
+        for (let j=0; j < Microformats.list.length; j++) {
+          /* Don't treat adr or geo in an hCard as a microformat in this case */
+          if ((mfname == "hCard") && ((Microformats.list[j] == "adr") || (Microformats.list[j] == "geo"))) {
+            continue;
+          }
+          if (Microformats[Microformats.list[j]].className) {
+            if (xpathExpression.length == 0) {
+              xpathExpression = "ancestor::*[";
+            } else {
+              xpathExpression += " or ";
+            }
+            xpathExpression += "contains(concat(' ', @class, ' '), ' " + Microformats[Microformats.list[j]].className + " ')";
+          }
+        }
+        xpathExpression += "][1]";
+        var xpathResult = (node.ownerDocument || node).evaluate(xpathExpression, node, null,  Components.interfaces.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, null);
+        if (xpathResult.singleNodeValue) {
+          xpathResult.singleNodeValue.microformat = mfname;
+          parentnode = xpathResult.singleNodeValue;
+        }
+        /* If the propnode is not a child of the microformat, remove it*/
+        if (parentnode != mfnode) {
+          propnodes.splice(i,1);
+        }
+      }
       if (propnodes.length > 0) {
         var resultArray = [];
         for (let i = 0; i < propnodes.length; i++) {
