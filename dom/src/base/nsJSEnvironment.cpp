@@ -1661,7 +1661,7 @@ nsJSContext::ExecuteScript(void *aScriptObject,
   JSAutoRequest ar(mContext);
   ok = ::JS_ExecuteScript(mContext,
                           (JSObject *)aScopeObject,
-                          (JSScript*) ::JS_GetPrivate(mContext,
+                          (JSScript*)::JS_GetPrivate(mContext,
                           (JSObject*)aScriptObject),
                           &val);
 
@@ -3137,6 +3137,13 @@ nsJSContext::InitClasses(void *aGlobalObj)
 void
 nsJSContext::ClearScope(void *aGlobalObj, PRBool aClearFromProtoChain)
 {
+  // Push our JSContext on our thread's context stack.
+  nsCOMPtr<nsIJSContextStack> stack =
+    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+  if (stack && NS_FAILED(stack->Push(mContext))) {
+    stack = nsnull;
+  }
+
   if (aGlobalObj) {
     JSObject *obj = (JSObject *)aGlobalObj;
     JSAutoRequest ar(mContext);
@@ -3167,8 +3174,12 @@ nsJSContext::ClearScope(void *aGlobalObj, PRBool aClearFromProtoChain)
         ::JS_ClearScope(mContext, o);
     }
   }
+
   ::JS_ClearRegExpStatics(mContext);
 
+  if (stack) {
+    stack->Pop(nsnull);
+  }
 }
 
 void
