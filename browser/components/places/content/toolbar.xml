@@ -1069,7 +1069,8 @@
         this._cachedInsertionPoint = undefined;
       ]]></handler>
       <handler event="draggesture"><![CDATA[
-        if (event.target.localName == "toolbarbutton")
+        if (event.target.localName == "toolbarbutton" ||
+            event.target.localName == "toolbarseparator")
           nsDragAndDrop.startDrag(event, this._DNDObserver);
       ]]></handler>
       <handler event="dragover"><![CDATA[
