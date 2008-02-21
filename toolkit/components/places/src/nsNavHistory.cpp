@@ -1011,12 +1011,18 @@ nsNavHistory::InitStatements()
   // because if we do that, mDBVisitsForFrecency would return no visits
   // for places with only embed (or undefined) visits.  That would
   // cause use to estimate a frecency based on what information we do have,
-  // see CalculateFrecencyInternal().  that would result in a 
-  // non-zero frecency for a place with only
-  // embedded visits, instead of a frecency of 0.
+  // see CalculateFrecencyInternal(). That would result in a non-zero frecency
+  // for a place with only embedded visits, instead of a frecency of 0. If we
+  // have a temporary or permanent redirect, calculate the frecency as if it
+  // was the original page visited.
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT visit_date, visit_type FROM moz_historyvisits " 
-    "WHERE place_id = ?1 ORDER BY visit_date DESC LIMIT ") +
+    "SELECT IFNULL(r.visit_date, v.visit_date) date, IFNULL(r.visit_type, v.visit_type) "
+    "FROM moz_historyvisits v "
+    "LEFT OUTER JOIN moz_historyvisits r "
+      "ON r.id = v.from_visit AND v.visit_type IN ") +
+      nsPrintfCString("(%d,%d) ", TRANSITION_REDIRECT_PERMANENT,
+      TRANSITION_REDIRECT_TEMPORARY) + NS_LITERAL_CSTRING(
+    "WHERE v.place_id = ?1 ORDER BY date DESC LIMIT ") +
      nsPrintfCString("%d", mNumVisitsForFrecency),
     getter_AddRefs(mDBVisitsForFrecency));
   NS_ENSURE_SUCCESS(rv, rv);
