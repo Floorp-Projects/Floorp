@@ -4170,11 +4170,9 @@ nsCSSRendering::DrawTableBorderSegment(nsIRenderingContext&     aContext,
     aEndBevelOffset = 0;
   }
 
-#ifdef MOZ_CAIRO_GFX
   gfxContext *ctx = aContext.ThebesContext();
   gfxContext::AntialiasMode oldMode = ctx->CurrentAntialiasMode();
   ctx->SetAntialiasMode(gfxContext::MODE_ALIASED);
-#endif
 
   switch (aBorderStyle) {
   case NS_STYLE_BORDER_STYLE_NONE:
@@ -4370,9 +4368,7 @@ nsCSSRendering::DrawTableBorderSegment(nsIRenderingContext&     aContext,
     break;
   }
 
-#ifdef MOZ_CAIRO_GFX
   ctx->SetAntialiasMode(oldMode);
-#endif
 }
 
 // End table border-collapsing section

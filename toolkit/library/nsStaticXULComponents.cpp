@@ -79,23 +79,7 @@
 #define IPC_MODULE
 #endif
 
-#ifdef MOZ_CAIRO_GFX
-#  define GFX_MODULES MODULE(nsGfxModule)
-#else
-#  if defined(MOZ_WIDGET_PHOTON)
-#    define GFX_MODULES MODULE(nsGfxPhModule)
-#  elif defined(XP_WIN)
-#    define GFX_MODULES MODULE(nsGfxModule)
-#  elif defined(XP_MACOSX)
-#    define GFX_MODULES MODULE(nsGfxMacModule)
-#  elif defined(XP_BEOS)
-#    define GFX_MODULES MODULE(nsGfxBeOSModule)
-#  elif defined(XP_OS2)
-#    define GFX_MODULES MODULE(nsGfxOS2Module)
-#  else
-#    error Unknown GFX module.
-#  endif
-#endif
+#define GFX_MODULES MODULE(nsGfxModule)
 
 #ifdef XP_WIN
 #  define WIDGET_MODULES MODULE(nsWidgetModule)

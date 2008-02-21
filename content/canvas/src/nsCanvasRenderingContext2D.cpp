@@ -194,7 +194,7 @@ public:
         if (offset < 0.0 || offset > 1.0)
             return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
-        nsresult rv = mCSSParser->ParseColorString(nsString(colorstr), nsnull, 0, PR_TRUE, &color);
+        nsresult rv = mCSSParser->ParseColorString(nsString(colorstr), nsnull, 0, &color);
         if (NS_FAILED(rv))
             return NS_ERROR_DOM_SYNTAX_ERR;
 
@@ -491,7 +491,7 @@ nsCanvasRenderingContext2D::SetStyleFromVariant(nsIVariant* aStyle, PRInt32 aWhi
         }
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = mCSSParser->ParseColorString(str, nsnull, 0, PR_TRUE, &color);
+        rv = mCSSParser->ParseColorString(str, nsnull, 0, &color);
         if (NS_FAILED(rv)) {
             // Error reporting happens inside the CSS parser
             return NS_OK;
@@ -2321,7 +2321,7 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
 
     nscolor bgColor;
     nsresult rv = mCSSParser->ParseColorString(PromiseFlatString(aBGColor),
-                                               nsnull, 0, PR_TRUE, &bgColor);
+                                               nsnull, 0, &bgColor);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsIPresShell* presShell = presContext->PresShell();

@@ -76,10 +76,8 @@
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
 
-#ifdef MOZ_CAIRO_GFX
 #include "gfxBeOSSurface.h"
 #include "gfxContext.h"
-#endif
 
 // See comments in nsWindow.h as to why we override these calls from nsBaseWidget
 NS_IMPL_THREADSAFE_ADDREF(nsWindow)
@@ -647,7 +645,6 @@ NS_METHOD nsWindow::Create(nsNativeWidget aParent,
 	                            aParent));
 }
 
-#ifdef MOZ_CAIRO_GFX
 gfxASurface*
 nsWindow::GetThebesSurface()
 {
@@ -657,7 +654,6 @@ nsWindow::GetThebesSurface()
 	}
 	return mThebesSurface;
 }
-#endif
 
 //-------------------------------------------------------------------------
 //
@@ -2548,7 +2544,6 @@ nsresult nsWindow::OnPaint(BRegion *breg)
 	}
 
 	// Double buffering for cairo builds is done here
-#ifdef MOZ_CAIRO_GFX
 	nsRefPtr<gfxContext> ctx = rc->ThebesContext();
 	ctx->Save();
 
@@ -2564,7 +2559,6 @@ nsresult nsWindow::OnPaint(BRegion *breg)
 
 	// double buffer
 	ctx->PushGroup(gfxContext::CONTENT_COLOR);
-#endif
 
 	nsPaintEvent event(PR_TRUE, NS_PAINT, this);
 
@@ -2586,7 +2580,6 @@ nsresult nsWindow::OnPaint(BRegion *breg)
 
 	NS_RELEASE(event.widget);
 
-#ifdef MOZ_CAIRO_GFX
 	// The second half of double buffering
 	if (rv == NS_OK) {
 		ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
@@ -2598,7 +2591,6 @@ nsresult nsWindow::OnPaint(BRegion *breg)
 	}
 
 	ctx->Restore();
-#endif
 
 	return rv;
 }
