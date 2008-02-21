@@ -2983,11 +2983,15 @@ nsComponentManagerImpl::LoadLeftoverComponents(
 
     LoaderType curLoader = GetLoaderCount();
 
-    for (PRInt32 i = aLeftovers.Count() - 1; i >= 0; --i) {
+    for (PRInt32 i = 0; i < aLeftovers.Count(); ) {
         nsresult rv = AutoRegisterComponent(aLeftovers[i], aDeferred,
                                             minLoader);
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv)) {
             aLeftovers.RemoveObjectAt(i);
+        }
+        else {
+            ++i;
+        }
     }
     if (aLeftovers.Count())
         // recursively try this again until there are no new loaders found
@@ -3179,9 +3183,15 @@ nsComponentManagerImpl::AutoRegister(nsIFile *aSpec)
     nsCOMArray<nsILocalFile> leftovers;
     nsTArray<DeferredModule> deferred;
 
-    if (!aSpec)
+    if (!aSpec) {
         mStaticModuleLoader.EnumerateModules(RegisterStaticModule,
                                              deferred);
+
+        // Builtin component loaders (xpconnect!) can be static modules.
+        // Set them up now, so that JS components don't go into
+        // the leftovers list.
+        GetAllLoaders();
+    }
 
     LoaderType curLoader = GetLoaderCount();
 
