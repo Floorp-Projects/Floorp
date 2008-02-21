@@ -307,6 +307,12 @@ nsSVGOuterSVGFrame::GetIntrinsicRatio()
     content->mViewBox->GetAnimVal(getter_AddRefs(viewBox));
     viewBox->GetWidth(&viewBoxWidth);
     viewBox->GetHeight(&viewBoxHeight);
+    if (viewBoxWidth < 0.0f) {
+      viewBoxWidth = 0.0f;
+    }
+    if (viewBoxHeight < 0.0f) {
+      viewBoxHeight = 0.0f;
+    }
     return nsSize(viewBoxWidth, viewBoxHeight);
   }
 
@@ -763,11 +769,16 @@ nsSVGOuterSVGFrame::GetCanvasTM()
                     devPxPerCSSPx, 0.0f,
                     0.0f, devPxPerCSSPx);
 
-    nsCOMPtr<nsIDOMSVGMatrix> viewBoxMatrix;
-    svgElement->GetViewboxToViewportTransform(getter_AddRefs(viewBoxMatrix));
-
-    // PRE-multiply px conversion!
-    devPxToCSSPxMatrix->Multiply(viewBoxMatrix, getter_AddRefs(mCanvasTM));
+    nsCOMPtr<nsIDOMSVGMatrix> viewBoxTM;
+    nsresult res =
+      svgElement->GetViewboxToViewportTransform(getter_AddRefs(viewBoxTM));
+    if (NS_SUCCEEDED(res) && viewBoxTM) {
+      // PRE-multiply px conversion!
+      devPxToCSSPxMatrix->Multiply(viewBoxTM, getter_AddRefs(mCanvasTM));
+    } else {
+      NS_WARNING("We should propagate the fact that the viewBox is invalid.");
+      mCanvasTM = devPxToCSSPxMatrix;
+    }
 
     // our content is the document element so we must premultiply the values
     // of its currentScale and currentTranslate properties

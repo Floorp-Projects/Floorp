@@ -434,7 +434,7 @@ nsSVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
 nsresult
 nsSVGMarkerElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
 {
-  nsresult rv = NS_OK;
+  *_retval = nsnull;
 
   if (!mViewBoxToViewportTransform) {
     float viewportWidth =
@@ -452,10 +452,8 @@ nsSVGMarkerElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
       vb->GetWidth(&viewboxWidth);
       vb->GetHeight(&viewboxHeight);
     }
-    if (viewboxWidth==0.0f || viewboxHeight==0.0f) {
-      NS_ERROR("XXX. We shouldn't get here. Viewbox width/height is set to 0. Need to disable display of element as per specs.");
-      viewboxWidth = 1.0f;
-      viewboxHeight = 1.0f;
+    if (viewboxWidth <= 0.0f || viewboxHeight <= 0.0f) {
+      return NS_ERROR_FAILURE; // invalid - don't paint element
     }
 
     float refX =
@@ -481,7 +479,7 @@ nsSVGMarkerElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
 
   *_retval = mViewBoxToViewportTransform;
   NS_IF_ADDREF(*_retval);
-  return rv;
+  return NS_OK;
 }
 
 
