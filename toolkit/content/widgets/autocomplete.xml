@@ -1297,16 +1297,10 @@
         <body>
           <![CDATA[
           // determine if we need to show the ellipsis
-          if (aBoxObject.width >= aDescriptionElement.width) {
-            // Remove any tooltip text
-            this._urlBox.tooltipText = "";
+          if (aBoxObject.width >= aDescriptionElement.width)
             aEllipsis.value = "";
-          }
-          else {
-            // Set up the tooltip text
-            this._urlBox.tooltipText = this.getAttribute("url");
+          else 
             aEllipsis.value = this.ellipsis;
-          }
           ]]>
         </body>
       </method>
