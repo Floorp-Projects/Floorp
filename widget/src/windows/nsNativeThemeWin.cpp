@@ -1924,8 +1924,13 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsI
     case NS_THEME_MENUCHECKBOX:
     case NS_THEME_MENURADIO:
     case NS_THEME_MENUARROW:
+#ifdef WINCE
+      (*aResult).width =  16;
+      (*aResult).height = 16;
+#endif
       (*aResult).width = ::GetSystemMetrics(SM_CXMENUCHECK);
       (*aResult).height = ::GetSystemMetrics(SM_CYMENUCHECK);
+#endif
       break;
     case NS_THEME_SCROLLBAR_BUTTON_UP:
     case NS_THEME_SCROLLBAR_BUTTON_DOWN:

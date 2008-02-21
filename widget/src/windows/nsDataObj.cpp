@@ -1798,7 +1798,7 @@ HRESULT nsDataObj::GetFileDescriptor_IStreamA(FORMATETC& aFE, STGMEDIUM& aSTG)
   HGLOBAL fileGroupDescHandle = ::GlobalAlloc(GMEM_ZEROINIT|GMEM_SHARE,sizeof(FILEGROUPDESCRIPTORW));
   NS_ENSURE_TRUE(fileGroupDescHandle, E_OUTOFMEMORY);
 
-  LPFILEGROUPDESCRIPTORA fileGroupDescA = reinterpret_cast<LPFILEGROUPDESCRIPTORA>(::GlobalLock(fileGroupDescHandle));
+  LPFILEGROUPDESCRIPTORA fileGroupDescA = reinterpret_cast<LPFILEGROUPDESCRIPTORA>(GlobalLock(fileGroupDescHandle));
   if (!fileGroupDescA) {
     ::GlobalFree(fileGroupDescHandle);
     return E_OUTOFMEMORY;
@@ -1825,7 +1825,7 @@ HRESULT nsDataObj::GetFileDescriptor_IStreamA(FORMATETC& aFE, STGMEDIUM& aSTG)
   fileGroupDescA->cItems = 1;
   fileGroupDescA->fgd[0].dwFlags = FD_PROGRESSUI;
 
-  ::GlobalUnlock( fileGroupDescHandle );
+  GlobalUnlock( fileGroupDescHandle );
   aSTG.hGlobal = fileGroupDescHandle;
   aSTG.tymed = TYMED_HGLOBAL;
 
@@ -1837,7 +1837,7 @@ HRESULT nsDataObj::GetFileDescriptor_IStreamW(FORMATETC& aFE, STGMEDIUM& aSTG)
   HGLOBAL fileGroupDescHandle = ::GlobalAlloc(GMEM_ZEROINIT|GMEM_SHARE,sizeof(FILEGROUPDESCRIPTORW));
   NS_ENSURE_TRUE(fileGroupDescHandle, E_OUTOFMEMORY);
 
-  LPFILEGROUPDESCRIPTORW fileGroupDescW = reinterpret_cast<LPFILEGROUPDESCRIPTORW>(::GlobalLock(fileGroupDescHandle));
+  LPFILEGROUPDESCRIPTORW fileGroupDescW = reinterpret_cast<LPFILEGROUPDESCRIPTORW>(GlobalLock(fileGroupDescHandle));
   if (!fileGroupDescW) {
     ::GlobalFree(fileGroupDescHandle);
     return E_OUTOFMEMORY;
@@ -1860,7 +1860,7 @@ HRESULT nsDataObj::GetFileDescriptor_IStreamW(FORMATETC& aFE, STGMEDIUM& aSTG)
   fileGroupDescW->cItems = 1;
   fileGroupDescW->fgd[0].dwFlags = FD_PROGRESSUI;
 
-  ::GlobalUnlock(fileGroupDescHandle);
+  GlobalUnlock(fileGroupDescHandle);
   aSTG.hGlobal = fileGroupDescHandle;
   aSTG.tymed = TYMED_HGLOBAL;
 
