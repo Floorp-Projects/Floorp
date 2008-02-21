@@ -241,6 +241,21 @@ MacOSFontEntry::ReadCMAP()
 /* MacOSFamilyEntry */
 #pragma mark-
 
+// helper class for adding other family names back into font cache
+class AddOtherFamilyNameFunctor 
+{
+public:
+    AddOtherFamilyNameFunctor(gfxQuartzFontCache *aFontCache) :
+        mFontCache(aFontCache)
+    {}
+        
+    void operator() (MacOSFamilyEntry *aFamilyEntry, nsAString& aOtherName) {
+        mFontCache->AddOtherFamilyName(aFamilyEntry, aOtherName);
+    }
+    
+    gfxQuartzFontCache *mFontCache;
+};
+
 static const PRUint32 kTraits_NonNormalWidthMask = NSNarrowFontMask | NSExpandedFontMask | 
                             NSCondensedFontMask | NSCompressedFontMask | NSFixedPitchFontMask;
 
@@ -310,7 +325,7 @@ MacOSFamilyEntry::FindFontForChar(FontSearch *aMatchData)
             rank += 20;
         }
     
-        // if we didn't match any characters don't bother wasting more time.
+        // if we didn't match any characters don't bother wasting more time with this face.
         if (rank == 0)
             continue;
             
@@ -466,30 +481,6 @@ MacOSFamilyEntry::FindFontWeight(MacOSFontEntry* aFontsForWeights[], const gfxFo
     return aFontsForWeights[baseMatch];
 }
 
-/* gfxQuartzFontCache */
-#pragma mark-
-
-gfxQuartzFontCache *gfxQuartzFontCache::sSharedFontCache = nsnull;
-
-gfxQuartzFontCache::gfxQuartzFontCache()
-{
-    mFontFamilies.Init(100);
-    mLocalizedFamilies.Init(30);
-    mPrefFonts.Init(10);
-
-    InitFontList();
-    ::ATSFontNotificationSubscribe(ATSNotification,
-                                   kATSFontNotifyOptionDefault,
-                                   (void*)this, nsnull);
-
-    // pref changes notification setup
-    nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID);
-    pref->RegisterCallback("font.", PrefChangedCallback, this);
-    pref->RegisterCallback("font.name-list.", PrefChangedCallback, this);
-    pref->RegisterCallback("intl.accept_languages", PrefChangedCallback, this);  // hmmmm...
-    
-}
-
 static NSString* CreateNameFromBuffer(const UInt8 *aBuf, ByteCount aLength, 
         FontPlatformCode aPlatformCode, FontScriptCode aScriptCode, FontLanguageCode aLangCode )
 {
@@ -522,7 +513,6 @@ static NSString* CreateNameFromBuffer(const UInt8 *aBuf, ByteCount aLength,
     return (NSString*) outName;
 }
 
-
 // 10.4 headers only define TT/OT name table id's up to the license id (14) but 10.5 does, so use our own enum
 enum {
   kMozillaFontPreferredFamilyName            = 16,
@@ -531,25 +521,20 @@ enum {
 // xxx - rather than use ATSUI calls, probably faster to load name table directly, 
 // this avoids copying around strings that are of no interest
 
-// read in family names other than the canonical family name, including localized family names
-static void ReadOtherFamilyNames(NSString *familyName, NSArray *faceArray, 
-                                int faceIndex, NSMutableArray *localizedNames)
+// returns true if other names were found, false otherwise
+static PRBool ReadOtherFamilyNamesForFace(AddOtherFamilyNameFunctor& aOtherFamilyFunctor, MacOSFamilyEntry *aFamilyEntry,
+                                        NSString *familyName, ATSUFontID fontID)
 {
     OSStatus err;
     ItemCount i, nameCount;
-    ATSUFontID fontID;
-    
-    NSArray *face = [faceArray objectAtIndex:faceIndex];
-    NSString *psname = [face objectAtIndex:INDEX_FONT_POSTSCRIPT_NAME];
-    NSFont *font = [NSFont fontWithName:psname size:0.0];
-    fontID = [font _atsFontID];
+    PRBool foundNames = PR_FALSE;
     
     if (fontID == kATSUInvalidFontID)
-        return;
+        return foundNames;
 
     err = ATSUCountFontNames(fontID, &nameCount);
     if (err != noErr) 
-        return;
+        return foundNames;
     
     for (i = 0; i < nameCount; i++) {
 
@@ -567,52 +552,94 @@ static void ReadOtherFamilyNames(NSString *familyName, NSArray *faceArray,
             continue;
         // any other error, bail
         if (err != noErr) 
-            return;
+            return foundNames;
         
         if (!(nameCode == kFontFamilyName || nameCode == kMozillaFontPreferredFamilyName)) continue; 
         if (len >= kBufLength) continue; 
         buf[len] = 0;
         
         NSString *name = CreateNameFromBuffer((UInt8*)buf, len, platformCode, scriptCode, langCode);
-        NSString *foundName = nil;
         
         // add if not same as canonical family name or already in list of names
         if (name) {
 
             if (![name isEqualToString:familyName]) {
-                
-                // search other localized names
-                int j, lnameCount = [localizedNames count];
-                NSString *lname;
-                for (j = 0; j < lnameCount; j++) {
-                    lname = [localizedNames objectAtIndex:j];
-                    if ([lname isEqualToString:name]) {
-                        foundName = lname;
-                        break;
-                    }
-                }
-                
-                // didn't find it in the list? add it
-                if (!foundName) {
-                    [localizedNames addObject:name];
-                    PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(init-otherfamily) canonical family: %s, other family: %s\n", [familyName UTF8String], [name UTF8String]));
-                }
+                nsAutoString otherFamilyName;
+                GetStringForNSString(name, otherFamilyName);
+                aOtherFamilyFunctor(aFamilyEntry, otherFamilyName);
+                foundNames = PR_TRUE;
             }
     
             [name release];
         }
     }
 
+    return foundNames;
 }
 
-const int kIndexNormalFace_NotFound = -1;
+void
+MacOSFamilyEntry::ReadOtherFamilyNames(AddOtherFamilyNameFunctor& aOtherFamilyFunctor)
+{
+    if (mOtherFamilyNamesInitialized) 
+        return;
+    mOtherFamilyNamesInitialized = PR_TRUE;
+
+    NSString *familyName = GetNSStringForString(mName);
+
+    // read in other family names for the first face in the list
+    MacOSFontEntry *fe = mAvailableFonts[0];
+
+    PRBool foundNames = ReadOtherFamilyNamesForFace(aOtherFamilyFunctor, this, familyName, fe->GetFontID());
+    
+    // read in other names for the first face in the list with the assumption
+    // that if extra names don't exist in that face then they don't exist in
+    // other faces for the same font
+    if (foundNames) {
+        PRUint32 numFonts, i;
+        
+        // read in names for all faces, needed to catch cases where
+        // fonts all family names for individual weights (e.g. Hiragino Kaku Gothic Pro W6)
+        numFonts = mAvailableFonts.Length();
+        for (i = 1; i < numFonts; i++) {
+            fe = mAvailableFonts[i];
+            ReadOtherFamilyNamesForFace(aOtherFamilyFunctor, this, familyName, fe->GetFontID());
+        }
+    }
+}
+
+/* gfxQuartzFontCache */
+#pragma mark-
+
+gfxQuartzFontCache *gfxQuartzFontCache::sSharedFontCache = nsnull;
+
+gfxQuartzFontCache::gfxQuartzFontCache()
+{
+    mFontFamilies.Init(100);
+    mOtherFamilyNames.Init(30);
+    mOtherFamilyNamesInitialized = PR_FALSE;
+    mPrefFonts.Init(10);
+
+    InitFontList();
+    ::ATSFontNotificationSubscribe(ATSNotification,
+                                   kATSFontNotifyOptionDefault,
+                                   (void*)this, nsnull);
+
+    // pref changes notification setup
+    nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID);
+    pref->RegisterCallback("font.", PrefChangedCallback, this);
+    pref->RegisterCallback("font.name-list.", PrefChangedCallback, this);
+    pref->RegisterCallback("intl.accept_languages", PrefChangedCallback, this);  // hmmmm...
+    
+}
+
 const PRUint32 kNonNormalTraits = NSItalicFontMask | NSBoldFontMask | NSNarrowFontMask | NSExpandedFontMask | NSCondensedFontMask | NSCompressedFontMask;
 
 void
 gfxQuartzFontCache::InitFontList()
 {
     mFontFamilies.Clear();
-    mLocalizedFamilies.Clear();
+    mOtherFamilyNames.Clear();
+    mOtherFamilyNamesInitialized = PR_FALSE;
     mPrefFonts.Clear();
     mCodepointsWithNoFonts.reset();
     
@@ -620,8 +647,7 @@ gfxQuartzFontCache::InitFontList()
     NSFontManager *fontManager = [NSFontManager sharedFontManager];
     NSEnumerator *families = [[fontManager availableFontFamilies] objectEnumerator];  // returns "canonical", non-localized family name
     
-    NSMutableArray* localizedNames = [[NSMutableArray alloc] init];
-    nsAutoString availableFamilyName, postscriptFontName, localizedName;
+    nsAutoString availableFamilyName, postscriptFontName;
    
     NSString *availableFamily = nil;
     while ((availableFamily = [families nextObject])) {
@@ -630,13 +656,12 @@ gfxQuartzFontCache::InitFontList()
         GetStringForNSString(availableFamily, availableFamilyName);
         
         // create a family entry
-        nsRefPtr<MacOSFamilyEntry> familyEntry = new MacOSFamilyEntry(availableFamilyName);
+        MacOSFamilyEntry *familyEntry = new MacOSFamilyEntry(availableFamilyName);
         if (!familyEntry) break;
         
         // create a font entry for each face
         NSArray *fontfaces = [fontManager availableMembersOfFontFamily:availableFamily];  // returns an array of [psname, style name, weight, traits] elements, goofy api
         int faceCount = [fontfaces count];
-        int normalFaceIndex = kIndexNormalFace_NotFound;
         int faceIndex;
 
         for (faceIndex = 0; faceIndex < faceCount; faceIndex++) {
@@ -651,51 +676,31 @@ gfxQuartzFontCache::InitFontList()
             if (!(traits & NSItalicFontMask))
                 traits |= NSUnitalicFontMask;
             
-            PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(init) family: %s, psname: %s, face: %s, apple-weight: %d, css-weight: %d, traits: %8.8x\n", 
+            PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontinit) family: %s, psname: %s, face: %s, apple-weight: %d, css-weight: %d, traits: %8.8x\n", 
                 [availableFamily UTF8String], [psname UTF8String], [[face objectAtIndex:INDEX_FONT_FACE_NAME] UTF8String], weight, gfxQuartzFontCache::AppleWeightToCSSWeight(weight), traits ));
 
             // make a nsString
             GetStringForNSString(psname, postscriptFontName);
         
             // create a font entry
-            nsRefPtr<MacOSFontEntry> fontEntry = new MacOSFontEntry(postscriptFontName, weight, traits, familyEntry);
+            MacOSFontEntry *fontEntry = new MacOSFontEntry(postscriptFontName, weight, traits, familyEntry);
             if (!fontEntry) break;            
             
             // insert into font entry array of family
             familyEntry->AddFontEntry(fontEntry);
-            
-            // if normal face not found yet, check the traits for this one
-            if ( normalFaceIndex == kIndexNormalFace_NotFound && !(traits & kNonNormalTraits))
-                normalFaceIndex = faceIndex;
-        }
-        
-        // if no normal face, just use the first face in the array of available ones
-        if ( normalFaceIndex == kIndexNormalFace_NotFound )
-            normalFaceIndex = 0;
-        
-        // read the name table for the normal face; if localized names exist for that face, scan all font entries for more localized names
-        [localizedNames removeAllObjects];
-        ReadOtherFamilyNames(availableFamily, fontfaces, normalFaceIndex, localizedNames);
-        if ([localizedNames count] != 0) {
-            for (faceIndex = 0; faceIndex < faceCount; faceIndex++) {
-                if (faceIndex == normalFaceIndex) continue;
-                ReadOtherFamilyNames(availableFamily, fontfaces, faceIndex, localizedNames);
-            }
         }
         
         // add the family entry to the hash table
         ToLowerCase(availableFamilyName);
         mFontFamilies.Put(availableFamilyName, familyEntry);
-        
-        // add in an entry for each of the localized names
-        int lnameIndex, lnameCount = [localizedNames count];
-        for (lnameIndex = 0; lnameIndex < lnameCount; lnameIndex++) {
-            GetStringForNSString([localizedNames objectAtIndex:lnameIndex], localizedName);
-            ToLowerCase(localizedName);
-            mLocalizedFamilies.Put(localizedName, familyEntry);
-        }
-        
     }
+    
+    // to avoid full search of font name tables, seed the other names table with localized names from 
+    // some of the prefs fonts which are accessed via their localized names.  changes in the pref fonts will only cause
+    // a font lookup miss earlier. this is a simple optimization, it's not required for correctness
+    ReadOtherFamilyNamesForFamily(NS_LITERAL_STRING("Hiragino Kaku Gothic Pro"));
+    ReadOtherFamilyNamesForFamily(NS_LITERAL_STRING("Hiragino Mincho Pro"));
+    ReadOtherFamilyNamesForFamily(NS_LITERAL_STRING("STSong"));
     
     // xxx - deal with quirks (e.g. Osaka-Mono)
     
@@ -705,19 +710,45 @@ gfxQuartzFontCache::InitFontList()
     mCodepointsWithNoFonts.SetRange(0,0x1f);     // C0 controls
     mCodepointsWithNoFonts.SetRange(0x7f,0x9f);  // C1 controls
     mCodepointsWithNoFonts.set(0xfffd);          // unknown
-                               
-    [localizedNames release];
+       
+}
+
+void 
+gfxQuartzFontCache::InitOtherFamilyNames()
+{
+    mOtherFamilyNamesInitialized = PR_TRUE;
+    
+    // iterate over all font families and read in other family names
+    mFontFamilies.Enumerate(gfxQuartzFontCache::InitOtherFamilyNamesProc, this);
+}
+                                                         
+PLDHashOperator PR_CALLBACK gfxQuartzFontCache::InitOtherFamilyNamesProc(nsStringHashKey::KeyType aKey,
+                                                         nsRefPtr<MacOSFamilyEntry>& aFamilyEntry,
+                                                         void* userArg)
+{
+    gfxQuartzFontCache *fc = (gfxQuartzFontCache*) userArg;
+    AddOtherFamilyNameFunctor addOtherNames(fc);
+    aFamilyEntry->ReadOtherFamilyNames(addOtherNames);
+    return PL_DHASH_NEXT;
+}
+    
+void
+gfxQuartzFontCache::ReadOtherFamilyNamesForFamily(const nsAString& aFamilyName)
+{
+    MacOSFamilyEntry *familyEntry = FindFamily(aFamilyName);
+    
+    if (familyEntry) {
+        AddOtherFamilyNameFunctor addOtherNames(this);
+        familyEntry->ReadOtherFamilyNames(addOtherNames);
+    }
 }
 
 PRBool 
 gfxQuartzFontCache::ResolveFontName(const nsAString& aFontName, nsAString& aResolvedFontName)
 {
-    nsAutoString key;
-    nsRefPtr<MacOSFamilyEntry> familyEntry;
-    GenerateFontListKey(aFontName, key);
-    
-    if (mFontFamilies.Get(key, &familyEntry) || mLocalizedFamilies.Get(key, &familyEntry)) {
-        aResolvedFontName = familyEntry->Name();
+    MacOSFamilyEntry *family = FindFamily(aFontName);
+    if (family) {
+        aResolvedFontName = family->Name();
         return PR_TRUE;
     }
     return PR_FALSE;
@@ -822,12 +853,30 @@ MacOSFamilyEntry*
 gfxQuartzFontCache::FindFamily(const nsAString& aFamily)
 {
     nsAutoString key;
-    nsRefPtr<MacOSFamilyEntry> familyEntry;
+    MacOSFamilyEntry *familyEntry;
+    PRBool found;
     GenerateFontListKey(aFamily, key);
     
-    if (mFontFamilies.Get(key, &familyEntry) || mLocalizedFamilies.Get(key, &familyEntry)) {
+    // lookup in canonical (i.e. English) family name list
+    if ((familyEntry = mFontFamilies.GetWeak(key, &found))) {
         return familyEntry;
     }
+
+    // lookup in other family names list (mostly localized names)
+    if ((familyEntry = mOtherFamilyNames.GetWeak(key, &found))) {
+        return familyEntry;
+    }
+
+    // name not found and other family names not yet fully initialized so
+    // initialize the rest of the list and try again.  this is done lazily
+    // since reading name table entries is expensive
+    if (!mOtherFamilyNamesInitialized) {
+        InitOtherFamilyNames();
+        if ((familyEntry = mOtherFamilyNames.GetWeak(key, &found))) {
+            return familyEntry;
+        }
+    }
+    
     return nsnull;
 }
     
@@ -864,3 +913,18 @@ gfxQuartzFontCache::SetPrefFontFamilyEntries(eFontPrefLang aLangGroup, nsTArray<
     mPrefFonts.Put(PRUint32(aLangGroup), array);
 }
 
+void 
+gfxQuartzFontCache::AddOtherFamilyName(MacOSFamilyEntry *aFamilyEntry, nsAString& aOtherFamilyName)
+{
+    nsAutoString key;
+    MacOSFamilyEntry *familyEntry;
+    PRBool found;
+    GenerateFontListKey(aOtherFamilyName, key);
+
+    if (!mOtherFamilyNames.GetWeak(key, &found)) {
+        mOtherFamilyNames.Put(key, aFamilyEntry);
+        PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontinit-otherfamily) canonical family: %s, other family: %s\n", 
+                                            NS_ConvertUTF16toUTF8(aFamilyEntry->Name()).get(), 
+                                            NS_ConvertUTF16toUTF8(aOtherFamilyName).get()));
+    }
+}
