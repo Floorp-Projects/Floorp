@@ -1795,7 +1795,7 @@ var PlacesUtils = {
 
         if (aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY)
           element.setAttribute("query", "true");
-	else if (aNode.itemId != -1) {
+        else if (aNode.itemId != -1) {
           if (this.nodeIsLivemarkContainer(aNode))
             element.setAttribute("livemark", "true");
           else if (this.bookmarks
@@ -1804,6 +1804,7 @@ var PlacesUtils = {
         }
 
         var popup = document.createElement("menupopup");
+        popup.setAttribute("placespopup", "true");
         popup._resultNode = asContainer(aNode);
 #ifndef XP_MACOSX
         // no context menu on mac
