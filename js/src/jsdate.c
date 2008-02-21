@@ -974,7 +974,7 @@ SetUTCTime(JSContext *cx, JSObject *obj, jsval *vp, jsdouble t)
  * (e.g., NaN), the local time slot is set to the UTC time without conversion.
  */
 static JSBool
-GetLocalTime(JSContext *cx, JSObject *obj, jsval *vp, jsdouble *dp)
+GetAndCacheLocalTime(JSContext *cx, JSObject *obj, jsval *vp, jsdouble *dp)
 {
     jsval v;
     jsdouble result;
@@ -1024,7 +1024,7 @@ GetYear(JSContext *cx, JSBool fullyear, jsval *vp)
 {
     jsdouble result;
 
-    if (!GetLocalTime(cx, JS_THIS_OBJECT(cx, vp), vp, &result))
+    if (!GetAndCacheLocalTime(cx, JS_THIS_OBJECT(cx, vp), vp, &result))
         return JS_FALSE;
 
     if (JSDOUBLE_IS_FINITE(result)) {
@@ -1069,7 +1069,7 @@ date_getMonth(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble result;
 
-    if (!GetLocalTime(cx, JS_THIS_OBJECT(cx, vp), vp, &result))
+    if (!GetAndCacheLocalTime(cx, JS_THIS_OBJECT(cx, vp), vp, &result))
         return JS_FALSE;
 
     if (JSDOUBLE_IS_FINITE(result))
@@ -1097,7 +1097,7 @@ date_getDate(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble result;
 
-    if (!GetLocalTime(cx, JS_THIS_OBJECT(cx, vp), vp, &result))
+    if (!GetAndCacheLocalTime(cx, JS_THIS_OBJECT(cx, vp), vp, &result))
         return JS_FALSE;
 
     if (JSDOUBLE_IS_FINITE(result))
@@ -1125,7 +1125,7 @@ date_getDay(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble result;
 
-    if (!GetLocalTime(cx, JS_THIS_OBJECT(cx, vp), vp, &result))
+    if (!GetAndCacheLocalTime(cx, JS_THIS_OBJECT(cx, vp), vp, &result))
         return JS_FALSE;
 
     if (JSDOUBLE_IS_FINITE(result))
@@ -1153,7 +1153,7 @@ date_getHours(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble result;
 
-    if (!GetLocalTime(cx, JS_THIS_OBJECT(cx, vp), vp, &result))
+    if (!GetAndCacheLocalTime(cx, JS_THIS_OBJECT(cx, vp), vp, &result))
         return JS_FALSE;
 
     if (JSDOUBLE_IS_FINITE(result))
@@ -1181,7 +1181,7 @@ date_getMinutes(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble result;
 
-    if (!GetLocalTime(cx, JS_THIS_OBJECT(cx, vp), vp, &result))
+    if (!GetAndCacheLocalTime(cx, JS_THIS_OBJECT(cx, vp), vp, &result))
         return JS_FALSE;
 
     if (JSDOUBLE_IS_FINITE(result))
@@ -1245,7 +1245,7 @@ date_getTimezoneOffset(JSContext *cx, uintN argc, jsval *vp)
     obj = JS_THIS_OBJECT(cx, vp);
     if (!GetUTCTime(cx, obj, vp, &utctime))
         return JS_FALSE;
-    if (!GetLocalTime(cx, obj, NULL, &localtime))
+    if (!GetAndCacheLocalTime(cx, obj, NULL, &localtime))
         return JS_FALSE;
 
     /*
@@ -2182,8 +2182,10 @@ js_DateGetYear(JSContext *cx, JSObject* obj)
     jsdouble localtime;
 
     /* Preserve legacy API behavior of returning 0 for invalid dates. */
-    if (!GetLocalTime(cx, obj, NULL, &localtime) || JSDOUBLE_IS_NaN(localtime))
+    if (!GetAndCacheLocalTime(cx, obj, NULL, &localtime) ||
+        JSDOUBLE_IS_NaN(localtime)) {
         return 0;
+    }
 
     return (int) YearFromTime(localtime);
 }
@@ -2193,8 +2195,10 @@ js_DateGetMonth(JSContext *cx, JSObject* obj)
 {
     jsdouble localtime;
 
-    if (!GetLocalTime(cx, obj, NULL, &localtime) || JSDOUBLE_IS_NaN(localtime))
+    if (!GetAndCacheLocalTime(cx, obj, NULL, &localtime) ||
+        JSDOUBLE_IS_NaN(localtime)) {
         return 0;
+    }
 
     return (int) MonthFromTime(localtime);
 }
@@ -2204,8 +2208,10 @@ js_DateGetDate(JSContext *cx, JSObject* obj)
 {
     jsdouble localtime;
 
-    if (!GetLocalTime(cx, obj, NULL, &localtime) || JSDOUBLE_IS_NaN(localtime))
+    if (!GetAndCacheLocalTime(cx, obj, NULL, &localtime) ||
+        JSDOUBLE_IS_NaN(localtime)) {
         return 0;
+    }
 
     return (int) DateFromTime(localtime);
 }
@@ -2215,8 +2221,10 @@ js_DateGetHours(JSContext *cx, JSObject* obj)
 {
     jsdouble localtime;
 
-    if (!GetLocalTime(cx, obj, NULL, &localtime) || JSDOUBLE_IS_NaN(localtime))
+    if (!GetAndCacheLocalTime(cx, obj, NULL, &localtime) ||
+        JSDOUBLE_IS_NaN(localtime)) {
         return 0;
+    }
 
     return (int) HourFromTime(localtime);
 }
@@ -2226,8 +2234,10 @@ js_DateGetMinutes(JSContext *cx, JSObject* obj)
 {
     jsdouble localtime;
 
-    if (!GetLocalTime(cx, obj, NULL, &localtime) || JSDOUBLE_IS_NaN(localtime))
+    if (!GetAndCacheLocalTime(cx, obj, NULL, &localtime) ||
+        JSDOUBLE_IS_NaN(localtime)) {
         return 0;
+    }
 
     return (int) MinFromTime(localtime);
 }
@@ -2248,7 +2258,7 @@ js_DateSetYear(JSContext *cx, JSObject *obj, int year)
 {
     jsdouble local;
 
-    if (!GetLocalTime(cx, obj, NULL, &local))
+    if (!GetAndCacheLocalTime(cx, obj, NULL, &local))
         return;
 
     /* reset date if it was NaN */
@@ -2274,7 +2284,7 @@ js_DateSetMonth(JSContext *cx, JSObject *obj, int month)
 
     JS_ASSERT(month < 12);
 
-    if (!GetLocalTime(cx, obj, NULL, &local))
+    if (!GetAndCacheLocalTime(cx, obj, NULL, &local))
         return;
 
     /* bail if date was NaN */
@@ -2296,7 +2306,7 @@ js_DateSetDate(JSContext *cx, JSObject *obj, int date)
 {
     jsdouble local;
 
-    if (!GetLocalTime(cx, obj, NULL, &local))
+    if (!GetAndCacheLocalTime(cx, obj, NULL, &local))
         return;
 
     if (JSDOUBLE_IS_NaN(local))
@@ -2317,7 +2327,7 @@ js_DateSetHours(JSContext *cx, JSObject *obj, int hours)
 {
     jsdouble local;
 
-    if (!GetLocalTime(cx, obj, NULL, &local))
+    if (!GetAndCacheLocalTime(cx, obj, NULL, &local))
         return;
 
     if (JSDOUBLE_IS_NaN(local))
@@ -2337,7 +2347,7 @@ js_DateSetMinutes(JSContext *cx, JSObject *obj, int minutes)
 {
     jsdouble local;
 
-    if (!GetLocalTime(cx, obj, NULL, &local))
+    if (!GetAndCacheLocalTime(cx, obj, NULL, &local))
         return;
 
     if (JSDOUBLE_IS_NaN(local))
@@ -2357,7 +2367,7 @@ js_DateSetSeconds(JSContext *cx, JSObject *obj, int seconds)
 {
     jsdouble local;
 
-    if (!GetLocalTime(cx, obj, NULL, &local))
+    if (!GetAndCacheLocalTime(cx, obj, NULL, &local))
         return;
 
     if (JSDOUBLE_IS_NaN(local))
