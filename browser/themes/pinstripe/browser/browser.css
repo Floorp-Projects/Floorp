@@ -994,19 +994,17 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-user-focus: normal;
 }
 
-.tabbrowser-tab > .tab-image-middle > .tab-text {
-  outline: 1.4pt solid transparent;
+.tabbrowser-tab[selected="true"]:focus > .tab-image-middle > .tab-text-stack > .tab-text {
+  outline: 1px solid -moz-mac-focusring;
 }
 
-.tabbrowser-tab:focus > .tab-image-middle > .tab-text {
-  outline: 1.4pt solid -moz-mac-focusring;
-}
-
-.tabbrowser-tab[selected="true"], .tabbrowser-tab:hover {
+.tabbrowser-tab[selected="true"],
+.tabbrowser-tab:hover {
   color: #000000;
 }
 
-.tab-image-left, .tab-image-right {
+.tab-image-left,
+.tab-image-right {
   width: 8px;
   margin: 0px;
   padding: 0px;
