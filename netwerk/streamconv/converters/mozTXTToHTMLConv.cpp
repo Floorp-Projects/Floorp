@@ -1080,9 +1080,9 @@ mozTXTToHTMLConv::CiteLevelTXT(const PRUnichar *line,
 void
 mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, PRUint32 whattodo, nsString& aOutString)
 {
-  PRBool doURLs = whattodo & kURLs;
-  PRBool doGlyphSubstitution = whattodo & kGlyphSubstitution;
-  PRBool doStructPhrase = whattodo & kStructPhrase;
+  PRBool doURLs = 0 != (whattodo & kURLs);
+  PRBool doGlyphSubstitution = 0 != (whattodo & kGlyphSubstitution);
+  PRBool doStructPhrase = 0 != (whattodo & kStructPhrase);
 
   PRUint32 structPhrase_strong = 0;  // Number of currently open tags
   PRUint32 structPhrase_underline = 0;

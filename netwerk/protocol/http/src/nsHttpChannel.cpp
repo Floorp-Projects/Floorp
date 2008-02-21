@@ -2548,9 +2548,9 @@ nsHttpChannel::GenCredsAndSetEntry(nsIHttpAuthenticator *auth,
     // find out if this authenticator allows reuse of credentials and/or
     // challenge.
     PRBool saveCreds =
-        authFlags & nsIHttpAuthenticator::REUSABLE_CREDENTIALS;
+        0 != (authFlags & nsIHttpAuthenticator::REUSABLE_CREDENTIALS);
     PRBool saveChallenge =
-        authFlags & nsIHttpAuthenticator::REUSABLE_CHALLENGE;
+        0 != (authFlags & nsIHttpAuthenticator::REUSABLE_CHALLENGE);
 
     // this getter never fails
     nsHttpAuthCache *authCache = gHttpHandler->AuthCache();
