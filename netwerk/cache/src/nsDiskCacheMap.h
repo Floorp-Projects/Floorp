@@ -144,7 +144,7 @@ public:
     void      SetEvictionRank( PRUint32 rank)   { mEvictionRank = rank ? rank : 1; }
 
     // DataLocation accessors
-    PRBool    DataLocationInitialized() const { return mDataLocation & eLocationInitializedMask; }
+    PRBool    DataLocationInitialized() const { return 0 != (mDataLocation & eLocationInitializedMask); }
     void      ClearDataLocation()       { mDataLocation = 0; }
     
     PRUint32  DataFile() const
@@ -211,7 +211,7 @@ public:
     }
 
     // MetaLocation accessors
-    PRBool    MetaLocationInitialized() const { return mMetaLocation & eLocationInitializedMask; }
+    PRBool    MetaLocationInitialized() const { return 0 != (mMetaLocation & eLocationInitializedMask); }
     void      ClearMetaLocation()             { mMetaLocation = 0; }   
     PRUint32  MetaLocation() const            { return mMetaLocation; }
     

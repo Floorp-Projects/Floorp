@@ -118,10 +118,10 @@ private:
 
 
     void   MarkDoomEntriesIfExpired()   { mInfo |=  eDoomEntriesIfExpiredMask; }
-    PRBool WillDoomEntriesIfExpired()   { return (mInfo & eDoomEntriesIfExpiredMask); }
+    PRBool WillDoomEntriesIfExpired()   { return (0 != (mInfo & eDoomEntriesIfExpiredMask)); }
     
     void   MarkBlockingMode()           { mInfo |= eBlockingModeMask; }
-    PRBool IsBlocking()                 { return  (mInfo & eBlockingModeMask); }
+    PRBool IsBlocking()                 { return (0 != (mInfo & eBlockingModeMask)); }
     PRBool IsNonBlocking()              { return !(mInfo & eBlockingModeMask); }
 
     void SetStoragePolicy(nsCacheStoragePolicy policy)
