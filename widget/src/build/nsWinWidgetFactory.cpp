@@ -64,10 +64,11 @@
 #include "nsScreenManagerWin.h"
 #include "nsIGenericFactory.h"
 
-// printing
+#ifdef NS_PRINTING
 #include "nsDeviceContextSpecWin.h"
 #include "nsPrintOptionsWin.h"
 #include "nsPrintSession.h"
+#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
@@ -76,7 +77,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 
-#ifndef WINCE
+#ifdef NS_PRINTING
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
@@ -90,10 +91,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerWin)
 
+#ifdef NS_PRINTING
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsWin, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecWin)
+#endif
 
 static const nsModuleComponentInfo components[] =
 {
@@ -164,6 +167,7 @@ static const nsModuleComponentInfo components[] =
     NS_SCREENMANAGER_CID,
     "@mozilla.org/gfx/screenmanager;1",
     nsScreenManagerWinConstructor },
+#ifdef NS_PRINTING
   { "nsPrintOptionsWin",
     NS_PRINTSETTINGSSERVICE_CID,
     "@mozilla.org/gfx/printsettings-service;1",
@@ -180,6 +184,7 @@ static const nsModuleComponentInfo components[] =
     NS_DEVICE_CONTEXT_SPEC_CID,
     "@mozilla.org/gfx/devicecontextspec;1",
     nsDeviceContextSpecWinConstructor },
+#endif
 };
 
 NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsWidgetModule, components,

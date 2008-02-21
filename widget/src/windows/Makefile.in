@@ -87,10 +87,15 @@ CPPSRCS		= \
 	nsFilePicker.cpp     \
 	nsScreenWin.cpp	\
 	nsScreenManagerWin.cpp \
+	$(NULL)
+
+ifdef NS_PRINTING
+CPPSRCS		+= \
 	nsPrintOptionsWin.cpp \
 	nsPrintSettingsWin.cpp \
 	nsDeviceContextSpecWin.cpp \
 	$(NULL)
+endif
 
 ifneq ($(OS_ARCH), WINCE)
 CPPSRCS += \
