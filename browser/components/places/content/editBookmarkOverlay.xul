@@ -161,7 +161,8 @@
                  observes="paneElementsBroadcaster"/>
           <textbox id="editBMPanel_tagsField"
                    onblur="gEditItemOverlay.onTagsFieldBlur();"
-                   observes="paneElementsBroadcaster"/>
+                   observes="paneElementsBroadcaster"
+                   emptytext="&editBookmarkOverlay.tagsEmptyText.label;"/>
           <button id="editBMPanel_tagsSelectorExpander"
                   class="expander-down"
                   tooltiptext="&editBookmarkOverlay.tagsExpanderDown.tooltip;"
