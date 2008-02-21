@@ -369,6 +369,9 @@ public:
                                      // basis?
     PRUint16 mTableIsSplittable:1;   // tables are splittable, this should happen only inside a page
                                      // and never insider a column frame
+    PRUint16 mHeightDependsOnAncestorCell:1;   // Does frame height depend on
+                                               // an ancestor table-cell?
+    
   } mFlags;
 
   // Note: The copy constructor is written by the compiler automatically. You
