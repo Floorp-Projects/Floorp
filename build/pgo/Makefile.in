@@ -12,18 +12,19 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is Mozilla Communicator client code, released
+# March 31, 1998.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Mozilla Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -39,39 +40,21 @@ DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir  = testing/mochitest
+relativesrcdir = build/pgo
 
 include $(DEPTH)/config/autoconf.mk
-
-DIRS =	MochiKit \
-	static \
-	tests \
-	chrome \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
-# files that get copied into $objdir/_tests/
-_SERV_FILES = 	\
-		runtests.pl \
-		runtests.py \
+# Stuff to make a build with a profile
+_PROFILE_DIR = $(DEPTH)/_profile/pgo
+
+_PGO_FILES = 	\
 		automation.py \
-		gen_template.pl \
-		server.js \
-		harness-a11y.xul \
-		harness-overlay.xul \
-		harness.xul \
-		browser-test-overlay.xul \
-		browser-test.js \
-		browser-harness.xul \
-		redirect-a11y.html \
-		redirect.html \
-		redirect.js \
-		$(topsrcdir)/netwerk/test/httpserver/httpd.js \
-		$(NULL)	
+		profileserver.py \
+		index.html \
+		quit.js \
+		$(NULL)
 
-
-_DEST_DIR = $(DEPTH)/_tests/$(relativesrcdir)
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
 PROGRAM = $(MOZ_APP_NAME)$(BIN_SUFFIX)
@@ -81,43 +64,38 @@ endif
 
 ifeq ($(OS_ARCH),Darwin)
 ifdef MOZ_DEBUG
-browser_path = \"../$(DIST)/$(MOZ_APP_DISPLAYNAME)Debug.app/Contents/MacOS/$(PROGRAM)\"
+browser_path = \"$(DIST)/$(MOZ_APP_DISPLAYNAME)Debug.app/Contents/MacOS/$(PROGRAM)\"
 else
-browser_path = \"../$(DIST)/$(MOZ_APP_DISPLAYNAME).app/Contents/MacOS/$(PROGRAM)\"
+browser_path = \"$(DIST)/$(MOZ_APP_DISPLAYNAME).app/Contents/MacOS/$(PROGRAM)\"
 endif
 else
-browser_path = \"../$(DIST)/bin/$(PROGRAM)\"
+browser_path = \"$(DIST)/bin/$(PROGRAM)\"
 endif
 
-# These go in _tests/ so they need to go up an extra path segement
-TEST_DRIVER_PPARGS = 	\
+AUTOMATION_PPARGS = 	\
 			-DBROWSER_PATH=$(browser_path) \
-			-DXPC_BIN_PATH=\"../$(DIST)/bin\" \
+			-DXPC_BIN_PATH=\"$(DIST)/bin\" \
 			$(NULL)
 
 ifeq ($(OS_ARCH),Darwin)
-TEST_DRIVER_PPARGS += -DIS_MAC=1
+AUTOMATION_PPARGS += -DIS_MAC=1
 else
-TEST_DRIVER_PPARGS += -DIS_MAC=0
+AUTOMATION_PPARGS += -DIS_MAC=0
 endif
 
 ifeq ($(host_os), cygwin)
-TEST_DRIVER_PPARGS += -DIS_CYGWIN=1
+AUTOMATION_PPARGS += -DIS_CYGWIN=1
 endif
 
-runtests.pl: runtests.pl.in
+automation.py: automation.py.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-	$(TEST_DRIVER_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
+	$(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
 
-runtests.py: runtests.py.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-	$(TEST_DRIVER_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
+profileserver.py: profileserver.py.in
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $^ > $@
+	chmod +x $@
 
-automation.py: $(topsrcdir)/build/pgo/automation.py.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-	$(TEST_DRIVER_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
+GARBAGE += automation.py profileserver.py
 
-GARBAGE += runtests.pl runtests.py automation.py
-
-libs:: $(_SERV_FILES)
-	$(INSTALL) $^ $(_DEST_DIR)
+libs:: $(_PGO_FILES)
+	$(INSTALL) $^ $(_PROFILE_DIR)
