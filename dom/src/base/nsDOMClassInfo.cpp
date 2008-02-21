@@ -6277,8 +6277,8 @@ NS_IMETHODIMP
 nsWindowSH::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                         JSObject * obj, JSObject * *_retval)
 {
-  nsGlobalWindow *origWin = nsGlobalWindow::FromWrapper(wrapper);
-  nsGlobalWindow *win = origWin->GetOuterWindowInternal();
+  nsGlobalWindow *win =
+    nsGlobalWindow::FromWrapper(wrapper)->GetOuterWindowInternal();
 
   if (!win) {
     // If we no longer have an outer window. No code should ever be
@@ -6297,14 +6297,7 @@ nsWindowSH::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
   nsresult rv;
   if (win->IsChromeWindow()) {
     // Chrome windows don't get XOW wrapping.
-    JSObject *outerObj = win->GetGlobalJSObject();
-    if (!outerObj) {
-      NS_ASSERTION(origWin->IsOuterWindow(), "What window is this?");
-      *_retval = obj;
-    } else {
-      *_retval = outerObj;
-    }
-
+    *_retval = win->GetGlobalJSObject();
     rv = NS_OK;
   } else {
     JSObject *winObj = win->GetGlobalJSObject();
@@ -7648,7 +7641,7 @@ nsDocumentSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsIDOMDocument* currentDoc = win->GetExtantDocument();
 
   if (SameCOMIdentity(doc, currentDoc)) {
-    jsval winVal;
+    jsval winVal, docVal;
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = WrapNative(cx, obj, win, NS_GET_IID(nsIDOMWindow), &winVal,
