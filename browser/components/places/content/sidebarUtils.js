@@ -69,5 +69,37 @@ var SidebarUtils = {
       tbo.view.selection.select(row.value);
       aTree.controller.openSelectedNodeWithEvent(aEvent);
     }
+  },
+  
+  /**
+   * The following function displays the URL of a node that is being
+   * hovered over.
+   */
+  handleTreeMouseMove: function SU_handleTreeMouseMove(aEvent) {
+    if (aEvent.target.localName != "treechildren")
+      return;
+
+    var tree = aEvent.target.parentNode;
+    var tbo = tree.treeBoxObject;
+    var row = { }, col = { }, obj = { };
+    tbo.getCellAt(aEvent.clientX, aEvent.clientY, row, col, obj);
+
+    // row.value is -1 when the mouse is hovering an empty area within the tree.
+    // To avoid showing a URL from a previously hovered node,
+    // for a currently hovered non-url node, we must clear the URL from the
+    // status bar in these cases.
+    if (row.value != -1) {
+      var cell = tree.view.nodeForTreeIndex(row.value);
+      if (PlacesUtils.nodeIsURI(cell))
+        window.top.XULBrowserWindow.setOverLink(cell.uri, null);
+      else
+        this.clearURLFromStausBar();
+    }
+    else
+      this.clearURLFromStausBar();
+  },
+
+  clearURLFromStausBar: function SU_clearURLFromStausBar() {
+    window.top.XULBrowserWindow.setOverLink("", null);  
   }
 };
