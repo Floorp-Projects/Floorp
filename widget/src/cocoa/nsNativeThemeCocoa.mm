@@ -40,6 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsNativeThemeCocoa.h"
+#include "nsObjCExceptions.h"
 #include "nsIRenderingContext.h"
 #include "nsRect.h"
 #include "nsSize.h"
@@ -121,6 +122,8 @@ NS_IMPL_ISUPPORTS1(nsNativeThemeCocoa, nsITheme)
 
 nsNativeThemeCocoa::nsNativeThemeCocoa()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   mPushButtonCell = [[NSButtonCell alloc] initTextCell:nil];
   [mPushButtonCell setButtonType:NSMomentaryPushInButton];
   [mPushButtonCell setHighlightsBy:NSPushInCellMask];
@@ -129,12 +132,18 @@ nsNativeThemeCocoa::nsNativeThemeCocoa()
   [mRadioButtonCell setButtonType:NSRadioButton];
   [mRadioButtonCell setBezelStyle:NSRoundedBezelStyle];
   [mRadioButtonCell setHighlightsBy:NSPushInCellMask];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 nsNativeThemeCocoa::~nsNativeThemeCocoa()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [mPushButtonCell release];
   [mRadioButtonCell release];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -168,6 +177,8 @@ nsNativeThemeCocoa::DrawCheckbox(CGContextRef cgContext, ThemeButtonKind inKind,
                                  const HIRect& inBoxRect, PRBool inChecked,
                                  PRBool inDisabled, PRInt32 inState)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   HIThemeButtonDrawInfo bdi;
   bdi.version = 0;
   bdi.kind = inKind;
@@ -192,6 +203,8 @@ nsNativeThemeCocoa::DrawCheckbox(CGContextRef cgContext, ThemeButtonKind inKind,
   CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.8);
   CGContextFillRect(cgContext, inBoxRect);
 #endif
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -224,6 +237,8 @@ void
 nsNativeThemeCocoa::DrawRadioButton(CGContextRef cgContext, const HIRect& inBoxRect, PRBool inSelected,
                                     PRBool inDisabled, PRInt32 inState)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   NSRect drawRect = NSMakeRect(inBoxRect.origin.x, inBoxRect.origin.y, inBoxRect.size.width, inBoxRect.size.height);
 
   [mRadioButtonCell setEnabled:!inDisabled];
@@ -311,6 +326,8 @@ nsNativeThemeCocoa::DrawRadioButton(CGContextRef cgContext, const HIRect& inBoxR
   CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.8);
   CGContextFillRect(cgContext, inBoxRect);
 #endif
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -343,6 +360,8 @@ void
 nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRect, PRBool inIsDefault,
                                    PRBool inDisabled, PRInt32 inState)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   NSRect drawRect = NSMakeRect(inBoxRect.origin.x, inBoxRect.origin.y, inBoxRect.size.width, inBoxRect.size.height);
 
   [mPushButtonCell setEnabled:!inDisabled];
@@ -457,6 +476,8 @@ nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRe
   CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.8);
   CGContextFillRect(cgContext, inBoxRect);
 #endif
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -466,6 +487,8 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
                                ThemeButtonValue inValue, ThemeButtonAdornment inAdornment,
                                PRInt32 inState)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   HIThemeButtonDrawInfo bdi;
   bdi.version = 0;
   bdi.kind = inKind;
@@ -499,6 +522,8 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
   CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.8);
   CGContextFillRect(cgContext, inBoxRect);
 #endif
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -509,6 +534,8 @@ nsNativeThemeCocoa::DrawSpinButtons(CGContextRef cgContext, ThemeButtonKind inKi
                                     ThemeButtonAdornment inAdornment,
                                     PRInt32 inState)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   HIThemeButtonDrawInfo bdi;
   bdi.version = 0;
   bdi.kind = inKind;
@@ -520,6 +547,8 @@ nsNativeThemeCocoa::DrawSpinButtons(CGContextRef cgContext, ThemeButtonKind inKi
     bdi.state = kThemeStateUnavailable;
 
   HIThemeDrawButton(&inBoxRect, &bdi, cgContext, HITHEME_ORIENTATION, NULL);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -527,6 +556,8 @@ void
 nsNativeThemeCocoa::DrawFrame(CGContextRef cgContext, HIThemeFrameKind inKind,
                               const HIRect& inBoxRect, PRBool inIsDisabled, PRInt32 inState)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   HIThemeFrameDrawInfo fdi;
   fdi.version = 0;
   fdi.kind = inKind;
@@ -564,6 +595,8 @@ nsNativeThemeCocoa::DrawFrame(CGContextRef cgContext, HIThemeFrameKind inKind,
 #endif
 
   HIThemeDrawFrame(&drawRect, &fdi, cgContext, HITHEME_ORIENTATION);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -572,6 +605,8 @@ nsNativeThemeCocoa::DrawProgress(CGContextRef cgContext,
                                  const HIRect& inBoxRect, PRBool inIsIndeterminate, 
                                  PRBool inIsHorizontal, PRInt32 inValue)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   HIThemeTrackDrawInfo tdi;
   static SInt32 sPhase = 0;
 
@@ -586,12 +621,16 @@ nsNativeThemeCocoa::DrawProgress(CGContextRef cgContext,
   tdi.trackInfo.progress.phase = sPhase++; // animate for the next time we're called
 
   HIThemeDrawTrack(&tdi, NULL, cgContext, HITHEME_ORIENTATION);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
 void
 nsNativeThemeCocoa::DrawTabPanel(CGContextRef cgContext, const HIRect& inBoxRect)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   HIThemeTabPaneDrawInfo tpdi;
 
   tpdi.version = 0;
@@ -600,6 +639,8 @@ nsNativeThemeCocoa::DrawTabPanel(CGContextRef cgContext, const HIRect& inBoxRect
   tpdi.size = kHIThemeTabSizeNormal;
 
   HIThemeDrawTabPane(&inBoxRect, &tpdi, cgContext, HITHEME_ORIENTATION);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -610,6 +651,8 @@ nsNativeThemeCocoa::DrawScale(CGContextRef cgContext, const HIRect& inBoxRect,
                               PRInt32 inCurrentValue,
                               PRInt32 inMinValue, PRInt32 inMaxValue)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   HIThemeTrackDrawInfo tdi;
 
   tdi.version = 0;
@@ -630,6 +673,8 @@ nsNativeThemeCocoa::DrawScale(CGContextRef cgContext, const HIRect& inBoxRect,
   tdi.trackInfo.slider.pressState = 0;
 
   HIThemeDrawTrack(&tdi, NULL, cgContext, HITHEME_ORIENTATION);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -639,6 +684,8 @@ nsNativeThemeCocoa::DrawTab(CGContextRef cgContext, const HIRect& inBoxRect,
                             PRBool inIsHorizontal, PRBool inTabBottom,
                             PRInt32 inState)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   HIThemeTabDrawInfo tdi;
 
   tdi.version = 0;
@@ -663,6 +710,8 @@ nsNativeThemeCocoa::DrawTab(CGContextRef cgContext, const HIRect& inBoxRect,
   tdi.adornment = kThemeAdornmentNone;
 
   HIThemeDrawTab(&inBoxRect, &tdi, cgContext, HITHEME_ORIENTATION, NULL);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -716,6 +765,8 @@ void
 nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *aFrame, 
                                          const HIRect& aRect, PRBool aShouldGetButtonStates)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   PRInt32 curpos = CheckIntAttr(aFrame, nsWidgetAtoms::curpos);
   PRInt32 minpos = CheckIntAttr(aFrame, nsWidgetAtoms::minpos);
   PRInt32 maxpos = CheckIntAttr(aFrame, nsWidgetAtoms::maxpos);
@@ -773,12 +824,16 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
                                             ConvertToPressState(buttonStates[3], kThemeBottomOutsideArrowPressed);
     }
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
 void
 nsNativeThemeCocoa::DrawScrollbar(CGContextRef aCGContext, const HIRect& aBoxRect, nsIFrame *aFrame)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   // If we're drawing offscreen, make the origin (0, 0), since that's where in
   // the offscreen buffer we'll be drawing.
   PRBool drawOnScreen = IsTransformOnlyTranslateOrFlip(CGContextGetCTM(aCGContext));
@@ -813,6 +868,8 @@ nsNativeThemeCocoa::DrawScrollbar(CGContextRef aCGContext, const HIRect& aBoxRec
 
     [buffer release];
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -835,6 +892,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
                                          PRUint8 aWidgetType, const nsRect& aRect,
                                          const nsRect& aClipRect)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // setup to draw into the correct port
   nsCOMPtr<nsIDeviceContext> dctx;
   aContext->GetDeviceContext(*getter_AddRefs(dctx));
@@ -1183,6 +1242,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   nativeDrawing.EndNativeDrawing();
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -1195,6 +1256,8 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
                                     PRUint8 aWidgetType,
                                     nsMargin* aResult)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   aResult->SizeTo(0, 0, 0, 0);
 
   switch (aWidgetType) {
@@ -1262,6 +1325,8 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
   }
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -1327,6 +1392,8 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
                                          nsSize* aResult,
                                          PRBool* aIsOverridable)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   aResult->SizeTo(0,0);
   *aIsOverridable = PR_TRUE;
 
@@ -1548,6 +1615,8 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
   }
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
