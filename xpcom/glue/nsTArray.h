@@ -440,6 +440,36 @@ class nsTArray : public nsTArray_base {
       return LastIndexOf(item, start, nsDefaultComparator<elem_type, Item>());
     }
 
+    // This method searches for the offset for the element in this array
+    // that is equal to the given element. The array is assumed to be sorted.
+    // @param item   The item to search for.
+    // @param comp   The Comparator used.
+    // @return       The index of the found element or NoIndex if not found.
+    template<class Item, class Comparator>
+    index_type BinaryIndexOf(const Item& item, const Comparator& comp) const {
+      index_type low = 0, high = Length();
+      while (high > low) {
+        index_type mid = (high + low) >> 1;
+        if (comp.Equals(ElementAt(mid), item))
+          return mid;
+        if (comp.LessThan(ElementAt(mid), item))
+          low = mid + 1;
+        else
+          high = mid;
+      }
+      return NoIndex;
+    }
+
+    // This method searches for the offset for the element in this array
+    // that is equal to the given element. The array is assumed to be sorted.
+    // This method assumes that 'operator==' and 'operator<' are defined.
+    // @param item   The item to search for.
+    // @return       The index of the found element or NoIndex if not found.
+    template<class Item>
+    index_type BinaryIndexOf(const Item& item) const {
+      return BinaryIndexOf(item, nsDefaultComparator<elem_type, Item>());
+    }
+
     //
     // Mutation methods
     //
