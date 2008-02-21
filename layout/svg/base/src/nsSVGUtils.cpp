@@ -998,6 +998,9 @@ nsSVGUtils::GetViewBoxTransform(float aViewportWidth, float aViewportHeight,
                                 nsIDOMSVGAnimatedPreserveAspectRatio *aPreserveAspectRatio,
                                 PRBool aIgnoreAlign)
 {
+  NS_ASSERTION(aViewboxWidth > 0, "viewBox width must be greater than zero!");
+  NS_ASSERTION(aViewboxHeight > 0, "viewBox height must be greater than zero!");
+
   PRUint16 align, meetOrSlice;
   {
     nsCOMPtr<nsIDOMSVGPreserveAspectRatio> par;

@@ -694,7 +694,7 @@ nsSVGPatternFrame::ConstructCTM(nsIDOMSVGMatrix **aCTM,
   viewRect->GetY(&viewBoxY);
   viewRect->GetHeight(&viewBoxHeight);
   viewRect->GetWidth(&viewBoxWidth);
-  if (viewBoxHeight != 0.0f && viewBoxWidth != 0.0f) {
+  if (viewBoxHeight > 0.0f && viewBoxWidth > 0.0f) {
 
     float viewportWidth = GetLengthValue(GetWidth());
     float viewportHeight = GetLengthValue(GetHeight());
