@@ -49,7 +49,8 @@
 <page id="bookmarksPanel"
       xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="init();">
+      onload="init();"
+      onunload="SidebarUtils.clearURLFromStausBar();">
 
   <script type="application/x-javascript" 
           src="chrome://browser/content/bookmarks/sidebarUtils.js"/>
@@ -72,7 +73,9 @@
         hidecolumnpicker="true"
         context="placesContext"
         onkeypress="if (event.keyCode == 13) this.controller.openSelectedNodeWithEvent(event);"
-        onclick="SidebarUtils.handleClick(this, event);">
+        onclick="SidebarUtils.handleClick(this, event);"
+        onmousemove="SidebarUtils.handleTreeMouseMove(event);"
+        onmouseout="SidebarUtils.clearURLFromStausBar();">
     <treecols>
       <treecol id="title" flex="1" primary="true" hideheader="true"/>
     </treecols>
