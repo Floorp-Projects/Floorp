@@ -219,22 +219,10 @@ case "$target" in
     ac_exeext=.exe
 
     echo -n "#define TOPSRCDIR \"" > $srcdir/build/wince/tools/topsrcdir.h
-    MINGW32=""
-    case "$host_os" in 
-    *mingw* )
-    	MINGW32="MINGW32=1"
-	#  MingW path mangling /c/blah -> c:/blah
-	echo -n ${_topsrcdir:1:1}:${_topsrcdir:2} >> $srcdir/build/wince/tools/topsrcdir.h;;	
-    *cygwin* )
-    
-    	echo -n ${_topsrcdir:10:1}:${_topsrcdir:11} >> $srcdir/build/wince/tools/topsrcdir.h;;
-    * )
- 
-    	echo -n ${_topsrcdir} >> $srcdir/build/wince/tools/topsrcdir.h;;
-    esac
+   	echo -n ${_topsrcdir} >> $srcdir/build/wince/tools/topsrcdir.h
     echo -n \" >> $srcdir/build/wince/tools/topsrcdir.h
 
-    make $MINGW32 -C  $srcdir/build/wince/tools
+    make -C $srcdir/build/wince/tools
     echo -----------------------------------------------------------------------------
     ;;
 esac
