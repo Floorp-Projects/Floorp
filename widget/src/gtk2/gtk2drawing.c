@@ -510,20 +510,20 @@ ensure_tree_header_cell_widget()
 
         ensure_tree_view_widget();
 
-        // Create and append our three columns
+        /* Create and append our three columns */
         firstTreeViewColumn = gtk_tree_view_column_new();
         gtk_tree_view_column_set_title(firstTreeViewColumn, "M");
         gtk_tree_view_append_column(GTK_TREE_VIEW(gTreeViewWidget), firstTreeViewColumn);
-        
+
         middleTreeViewColumn = gtk_tree_view_column_new();
         gtk_tree_view_column_set_title(middleTreeViewColumn, "M");
         gtk_tree_view_append_column(GTK_TREE_VIEW(gTreeViewWidget), middleTreeViewColumn);
-        
+
         lastTreeViewColumn = gtk_tree_view_column_new();
         gtk_tree_view_column_set_title(lastTreeViewColumn, "M");
         gtk_tree_view_append_column(GTK_TREE_VIEW(gTreeViewWidget), lastTreeViewColumn);
 
-        // Use the middle column's header for our button
+        /* Use the middle column's header for our button */
         gTreeHeaderCellWidget = middleTreeViewColumn->button;
         gtk_tree_view_column_set_sort_indicator(middleTreeViewColumn, TRUE);
         gTreeHeaderSortArrowWidget = middleTreeViewColumn->arrow;
