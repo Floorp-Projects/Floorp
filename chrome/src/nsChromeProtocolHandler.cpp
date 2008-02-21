@@ -42,6 +42,7 @@
 
 */
 
+#include "nsAutoPtr.h"
 #include "nsChromeProtocolHandler.h"
 #include "nsChromeRegistry.h"
 #include "nsCOMPtr.h"
@@ -100,6 +101,10 @@ static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 //
 #define LOG(args) PR_LOG(gLog, PR_LOG_DEBUG, args)
 
+#define NS_CACHEDCHROMECHANNEL_IMPL_IID \
+{ 0x281371d3, 0x6bc2, 0x499f, \
+  { 0x8d, 0x70, 0xcb, 0xfc, 0x01, 0x1b, 0xa0, 0x43 } }
+
 class nsCachedChromeChannel : public nsIChannel
 {
 protected:
@@ -123,6 +128,8 @@ protected:
 public:
     nsCachedChromeChannel(nsIURI* aURI);
 
+    NS_DECLARE_STATIC_IID_ACCESSOR(nsCachedChromeChannel)
+
     NS_DECL_ISUPPORTS
 
     // nsIRequest
@@ -141,11 +148,15 @@ public:
     NS_DECL_NSICHANNEL
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsCachedChromeChannel,
+                              NS_CACHEDCHROMECHANNEL_IMPL_IID)
+
 #ifdef PR_LOGGING
 PRLogModuleInfo* nsCachedChromeChannel::gLog;
 #endif
 
-NS_IMPL_ISUPPORTS2(nsCachedChromeChannel, nsIChannel, nsIRequest)
+NS_IMPL_ISUPPORTS3(nsCachedChromeChannel, nsIChannel, nsIRequest,
+                   nsCachedChromeChannel)
 
 nsCachedChromeChannel::nsCachedChromeChannel(nsIURI* aURI)
     : mURI(aURI)
@@ -562,9 +573,14 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
             nsCOMPtr<nsIJARChannel> jarChan
                 (do_QueryInterface(result));
             if (!jarChan) {
-                NS_WARNING("Remote chrome not allowed! Only file:, resource:, and jar: are valid.\n");
-                result = nsnull;
-                return NS_ERROR_FAILURE;
+                nsRefPtr<nsCachedChromeChannel> cachedChannel;
+                if (NS_FAILED(CallQueryInterface(result.get(),
+                        static_cast<nsCachedChromeChannel**>(
+                            getter_AddRefs(cachedChannel))))) {
+                    NS_WARNING("Remote chrome not allowed! Only file:, resource:, jar:, and cached chrome channels are valid.\n");
+                    result = nsnull;
+                    return NS_ERROR_FAILURE;
+                }
             }
         }
 
