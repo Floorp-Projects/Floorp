@@ -195,6 +195,7 @@ AutoCompleteInput.prototype = {
     return this.searches[aIndex];
   },
   
+  onSearchBegin: function() {},
   onSearchComplete: function() {},
   
   popupOpen: false,  
@@ -236,7 +237,14 @@ function run_test() {
   // Search is asynchronous, so don't let the test finish immediately
   do_test_pending();
 
+  var numSearchesStarted = 0;
+  input.onSearchBegin = function() {
+    numSearchesStarted++;
+    do_check_eq(numSearchesStarted, 1);
+  };
+
   input.onSearchComplete = function() {
+    do_check_eq(numSearchesStarted, 1);
     do_check_eq(controller.searchStatus, 
                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
 

@@ -71,6 +71,7 @@ AutoCompleteInput.prototype = {
     return this.searches[aIndex];
   },
 
+  onSearchBegin: function() {},
   onSearchComplete: function() {},
 
   popupOpen: false,
@@ -110,7 +111,14 @@ function ensure_results(aSearch, aExpected)
 
   controller.input = input;
 
+  var numSearchesStarted = 0;
+  input.onSearchBegin = function() {
+    numSearchesStarted++;
+    do_check_eq(numSearchesStarted, 1);
+  };
+
   input.onSearchComplete = function() {
+    do_check_eq(numSearchesStarted, 1);
     // If we expect results, make sure we got matches
     do_check_eq(controller.searchStatus, aExpected.length ?
                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH :
