@@ -47,6 +47,7 @@
             title="&connectionsDialog.title;"
             dlgbuttons="accept,cancel,help"
             onbeforeaccept="return gConnectionsDialog.beforeAccept();"
+            onload="gConnectionsDialog.checkForSystemProxy();"
 #ifdef XP_MACOSX
             style="width: &window.macWidth; !important;">
 #else
@@ -100,6 +101,7 @@
                   onsyncfrompreference="return gConnectionsDialog.readProxyType();">
         <radio value="0" label="&directTypeRadio.label;" accesskey="&directTypeRadio.accesskey;"/>
         <radio value="4" label="&WPADTypeRadio.label;" accesskey="&WPADTypeRadio.accesskey;"/>
+        <radio value="5" label="&systemTypeRadio.label;" accesskey="&systemTypeRadio.accesskey;" id="systemPref" hidden="true"/>
         <radio value="1" label="&manualTypeRadio.label;" accesskey="&manualTypeRadio.accesskey;"/>
         <grid class="indent" flex="1">
           <columns>
