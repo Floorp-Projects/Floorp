@@ -559,19 +559,22 @@ nsNavHistoryExpire::EraseVisits(mozIStorageConnection* aConnection,
   if (placeIds.IsEmpty())
     return NS_OK;
 
-  // reset the frecencies for these places.
-  // Note, we don't reset the visit_count, as we use that in our "on idle"
-  // query to figure out which places to recalcuate frecency first.
+  // Reset the frecencies for the places that don't have any more visits after
+  // we deleted them and make sure they aren't bookmarked either. This means we
+  // keep the old frecencies when possible as an estimate for the new frecency
+  // unless we know it has to be -1.
   rv = aConnection->ExecuteSimpleSQL(
-    NS_LITERAL_CSTRING("UPDATE moz_places SET "
-      "frecency = -1 WHERE id IN (") +
+    NS_LITERAL_CSTRING(
+      "UPDATE moz_places "
+      "SET frecency = -1 "
+      "WHERE id IN ("
+        "SELECT h.id FROM moz_places h "
+        "LEFT OUTER JOIN moz_historyvisits v ON v.place_id = h.id "
+        "LEFT OUTER JOIN moz_bookmarks b ON b.fk = h.id "
+        "WHERE v.id IS NULL AND b.id IS NULL AND h.id IN (") +
     placeIds +
-    NS_LITERAL_CSTRING(")"));
+    NS_LITERAL_CSTRING("))"));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // XXX todo
-  // forcibly call the "on idle" timer here to do a little work
-  // but the rest will happen on idle.
 
   return NS_OK;
 }
