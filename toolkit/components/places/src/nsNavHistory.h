@@ -415,7 +415,7 @@ protected:
    *        Indicates that we should update old visits as well.
    */
   nsresult RecalculateFrecencies(PRInt32 aCount, PRBool aRecalcOld);
-  nsresult RecalculateFrecenciesInternal(mozIStorageStatement *aStatement, PRInt64 aBindParameter, PRInt32 aCount);
+  nsresult RecalculateFrecenciesInternal(mozIStorageStatement *aStatement, PRInt32 aCount);
 
   nsresult CalculateFrecency(PRInt64 aPageID, PRInt32 aTyped, PRInt32 aVisitCount, nsCAutoString &aURL, PRInt32 *aFrecency);
   nsresult CalculateFrecencyInternal(PRInt64 aPageID, PRInt32 aTyped, PRInt32 aVisitCount, PRBool aIsBookmarked, PRInt32 *aFrecency);
