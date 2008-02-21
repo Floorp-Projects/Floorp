@@ -1646,7 +1646,7 @@ nsXULElement::EnsureContentsGenerated(void) const
                         return NS_OK;
                     }
 
-                    return builder->CreateContents(unconstThis);
+                    return builder->CreateContents(unconstThis, PR_FALSE);
                 }
             }
 

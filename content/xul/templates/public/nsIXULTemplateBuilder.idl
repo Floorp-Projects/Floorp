@@ -42,8 +42,6 @@
 
 #include "domstubs.idl"
 #include "nsISupports.idl"
-#include "nsIRDFCompositeDataSource.idl"
-#include "nsIRDFResource.idl"
 
 interface nsIAtom;
 interface nsIContent;
@@ -51,6 +49,8 @@ interface nsIXULBuilderListener;
 interface nsIXULTemplateResult;
 interface nsIXULTemplateRuleFilter;
 interface nsIXULTemplateQueryProcessor;
+interface nsIRDFResource;
+interface nsIRDFCompositeDataSource;
 
 /**
  * A template builder, given an input source of data, a template, and a
@@ -158,7 +158,7 @@ interface nsIXULTemplateQueryProcessor;
  *
  * See http://wiki.mozilla.org/XUL:Templates_Plan for details about templates.
  */
-[scriptable, uuid(1762801E-1147-4197-BF0D-D749C903AF74)]
+[scriptable, uuid(A583B676-5B02-4F9C-A0C9-CB850CB99818)]
 interface nsIXULTemplateBuilder : nsISupports
 {
     /**
@@ -328,10 +328,13 @@ interface nsIXULTemplateBuilder : nsISupports
     [noscript] void init(in nsIContent aElement);
 
     /**
-     * Invoked lazily by a XUL element that needs its child content
-     * built.
+     * Invoked lazily by a XUL element that needs its child content built.
+     * If aForceCreation is true, then the contents of an element will be
+     * generated even if it is closed. If false, the element will only
+     * generate its contents if it is open. This behaviour is used with menus.
      */
-    [noscript] void createContents(in nsIContent aElement);
+    [noscript] void createContents(in nsIContent aElement,
+                                   in boolean aForceCreation);
 
     /**
      * Add a listener to this template builder. The template builder
