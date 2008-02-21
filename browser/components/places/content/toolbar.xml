@@ -199,6 +199,7 @@
                 button.setAttribute("livemark", "true");
 
               var popup = document.createElement("menupopup");
+              popup.setAttribute("placespopup", "true");
               button.appendChild(popup);
               popup._result = this._result;
               popup._resultNode = asContainer(aChild);
@@ -1014,9 +1015,6 @@
             this._showEmptyMenuItem(aPopup);
           }
           aPopup._built = true;
-
-          if (!aPopup._DNDObserver)
-            aPopup._DNDObserver = new PlacesMenuDNDObserver(this, aPopup);
         ]]></body>
       </method>
 
