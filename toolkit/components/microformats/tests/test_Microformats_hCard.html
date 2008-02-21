@@ -534,7 +534,12 @@
     <span class="fn">Ryan King</span>
     <map id="foo"><area class="url uid" href="http://theryanking.com/contact/" alt="my other hcard" /></map>
   </div>
-  
+
+  <div class="vcard" id="39-noteHTML">
+    <a class="fn">Joe Public</a>
+    <span class="note"><b>Note</b></span>
+  </div>
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -1131,6 +1136,13 @@ function test_hCard() {
   is(hcard.n["family-name"], "King", "38-uid.4 - family-name");
   is(hcard.uid, "http://theryanking.com/contact/", "38-uid.4 - uid");
   is(hcard.url[0], "http://theryanking.com/contact/", "38-uid.4 - url");
+
+  hcard = new hCard(document.getElementById("39-noteHTML"));
+
+  is(hcard.note[0], "Note", "39-noteHTML - note");
+  is(hcard.note[0].toHTML(), "<b>Note</b>", "39-noteHTML - note as HTML");
+  is(hcard.note[0].match("Note"), "Note", "39-noteHTML - match in note");
+  
 }
 
 </script>
