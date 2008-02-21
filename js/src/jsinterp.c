@@ -268,6 +268,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
     }
 
     obj = *objp;
+    JS_ASSERT(OBJ_IS_NATIVE(obj));
     entry = &JS_PROPERTY_CACHE(cx).table[PROPERTY_CACHE_HASH_ATOM(atom, obj, NULL)];
     *entryp = entry;
     vcap = entry->vcap;
@@ -307,7 +308,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
     if (JOF_MODE(cs->format) == JOF_NAME) {
         while (vcap & (PCVCAP_SCOPEMASK << PCVCAP_PROTOBITS)) {
             tmp = LOCKED_OBJ_GET_PARENT(pobj);
-            if (!tmp)
+            if (!tmp || !OBJ_IS_NATIVE(tmp))
                 break;
             JS_UNLOCK_OBJ(cx, pobj);
             pobj = tmp;
@@ -320,7 +321,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
 
     while (vcap & PCVCAP_PROTOMASK) {
         tmp = LOCKED_OBJ_GET_PROTO(pobj);
-        if (!tmp)
+        if (!tmp || !OBJ_IS_NATIVE(tmp))
             break;
         JS_UNLOCK_OBJ(cx, pobj);
         pobj = tmp;

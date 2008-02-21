@@ -280,7 +280,8 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
             JS_LOCK_OBJ(cx, pobj);                                            \
             JS_ASSERT(PCVCAP_TAG(entry->vcap) <= 1);                          \
             if (PCVCAP_TAG(entry->vcap) == 1 &&                               \
-                (tmp_ = LOCKED_OBJ_GET_PROTO(pobj)) != NULL) {                \
+                (tmp_ = LOCKED_OBJ_GET_PROTO(pobj)) != NULL &&                \
+                OBJ_IS_NATIVE(tmp_)) {                                        \
                 JS_UNLOCK_OBJ(cx, pobj);                                      \
                 pobj = tmp_;                                                  \
                 JS_LOCK_OBJ(cx, pobj);                                        \
