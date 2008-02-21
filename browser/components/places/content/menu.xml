@@ -964,6 +964,12 @@
         ]]></body>
       </method>
 
+      <method name="selectItems">
+        <body><![CDATA[
+          // Nothing
+        ]]></body>
+      </method>
+
       <property name="selType" readonly="true" onget="return 'single';"/>
 
       <method name="buildContextMenu">

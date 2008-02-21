@@ -420,6 +420,12 @@
         ]]></body>
       </method>
 
+      <method name="selectItems">
+        <body><![CDATA[
+          // Nothing
+        ]]></body>
+      </method>
+
       <!-- nsINavHistoryResultViewer -->
       <field name="_viewer"><![CDATA[({
         _self: this,
