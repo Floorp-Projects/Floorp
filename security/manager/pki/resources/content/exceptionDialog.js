@@ -78,7 +78,7 @@ function initExceptionDialog() {
 
   var brandName = gBundleBrand.GetStringFromName("brandShortName");
   
-  setText("warningText", gPKIBundle.formatStringFromName("addExceptionBrandedWarning",
+  setText("warningText", gPKIBundle.formatStringFromName("addExceptionBrandedWarning2",
                                                          [brandName], 1));
   gDialog.getButton("extra1").disabled = true;
   
