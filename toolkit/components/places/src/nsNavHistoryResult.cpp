@@ -368,8 +368,8 @@ nsNavHistoryContainerResultNode::nsNavHistoryContainerResultNode(
   mContainerType(aContainerType),
   mExpanded(PR_FALSE),
   mChildrenReadOnly(aReadOnly),
-  mDynamicContainerType(aDynamicContainerType),
-  mOptions(aOptions)
+  mOptions(aOptions),
+  mDynamicContainerType(aDynamicContainerType)
 {
 }
 
