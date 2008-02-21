@@ -51,6 +51,13 @@
 #include <stdlib.h>
 #include <glib.h>
 #include <glib-object.h>
+#include <gtk/gtk.h>
+
+#define MIN_GTK_MAJOR_VERSION 2
+#define MIN_GTK_MINOR_VERSION 10
+#define UNSUPPORTED_GTK_MSG "We're sorry, this application requires a version of the GTK+ library that is not installed on your computer.\n\n\
+You have GTK+ %d.%d.\nThis application requires GTK+ %d.%d or newer.\n\n\
+Please upgrade your GTK+ library if you wish to use this application."
 
 typedef struct _GnomeProgram GnomeProgram;
 typedef struct _GnomeModuleInfo GnomeModuleInfo;
@@ -187,6 +194,24 @@ public:
 NS_IMETHODIMP
 nsNativeAppSupportUnix::Start(PRBool *aRetVal)
 {
+
+  if (gtk_major_version < MIN_GTK_MAJOR_VERSION ||
+      (gtk_major_version == MIN_GTK_MAJOR_VERSION && gtk_minor_version < MIN_GTK_MINOR_VERSION)) {
+    GtkWidget* versionErrDialog = gtk_message_dialog_new(NULL,
+                     GtkDialogFlags(GTK_DIALOG_MODAL |
+                                    GTK_DIALOG_DESTROY_WITH_PARENT),
+                     GTK_MESSAGE_ERROR,
+                     GTK_BUTTONS_OK,
+                     UNSUPPORTED_GTK_MSG,
+                     gtk_major_version,
+                     gtk_minor_version,
+                     MIN_GTK_MAJOR_VERSION,
+                     MIN_GTK_MINOR_VERSION);
+    gtk_dialog_run(GTK_DIALOG(versionErrDialog));
+    gtk_widget_destroy(versionErrDialog);
+    exit(0);
+  }
+
   *aRetVal = PR_TRUE;
 
   PRLibrary *gnomeuiLib = PR_LoadLibrary("libgnomeui-2.so.0");
