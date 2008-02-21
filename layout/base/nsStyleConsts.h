@@ -43,9 +43,8 @@
 
 #include "nsFont.h"
 
-#ifndef MOZ_CAIRO_GFX
-#define GFX_HAS_INVERT
-#endif
+// cairo doesn't support invert
+// #define GFX_HAS_INVERT
 
 // XXX fold this into nsStyleContext and group by nsStyleXXX struct
 
