@@ -2442,7 +2442,7 @@ void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
       }
     }
   } 
-
+  
   // delete the old cell map
   for (rowX = 0; rowX < numOrigRows; rowX++) {
     CellDataArray& row = origRows[rowX];
@@ -2451,6 +2451,11 @@ void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
       DestroyCellData(row.SafeElementAt(colX));
     }
   }
+  // expand the cellmap to cover empty content rows
+  if (mRows.Length() < mContentRowCount) {
+    Grow(aMap, mContentRowCount - mRows.Length());
+  }
+
 }
 
 void nsCellMap::RemoveCell(nsTableCellMap&   aMap,
