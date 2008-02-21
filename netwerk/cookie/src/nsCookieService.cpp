@@ -922,8 +922,8 @@ nsCookieService::Read()
 
     PRInt64 expiry = stmt->AsInt64(5);
     PRInt64 lastAccessed = stmt->AsInt64(6);
-    PRBool isSecure = stmt->AsInt32(7);
-    PRBool isHttpOnly = stmt->AsInt32(8);
+    PRBool isSecure = 0 != stmt->AsInt32(7);
+    PRBool isHttpOnly = 0 != stmt->AsInt32(8);
 
     // create a new nsCookie and assign the data.
     nsCookie* newCookie =
