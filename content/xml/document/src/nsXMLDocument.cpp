@@ -193,6 +193,17 @@ nsXMLDocument::~nsXMLDocument()
   mLoopingForSyncLoad = PR_FALSE;
 }
 
+// QueryInterface implementation for nsXMLDocument
+NS_INTERFACE_TABLE_HEAD(nsXMLDocument)
+  NS_INTERFACE_TABLE_INHERITED3(nsXMLDocument,
+                                nsIInterfaceRequestor,
+                                nsIChannelEventSink,
+                                nsIDOMXMLDocument)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XMLDocument)
+NS_INTERFACE_MAP_END_INHERITING(nsDocument)
+
+
 NS_IMPL_ADDREF_INHERITED(nsXMLDocument, nsDocument)
 NS_IMPL_RELEASE_INHERITED(nsXMLDocument, nsDocument)
 

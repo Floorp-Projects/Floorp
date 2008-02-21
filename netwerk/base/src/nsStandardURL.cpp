@@ -848,6 +848,21 @@ nsStandardURL::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 NS_IMPL_ADDREF(nsStandardURL)
 NS_IMPL_RELEASE(nsStandardURL)
 
+NS_INTERFACE_MAP_BEGIN(nsStandardURL)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStandardURL)
+    NS_INTERFACE_MAP_ENTRY(nsIURI)
+    NS_INTERFACE_MAP_ENTRY(nsIURL)
+    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIFileURL, mSupportsFileURL)
+    NS_INTERFACE_MAP_ENTRY(nsIStandardURL)
+    NS_INTERFACE_MAP_ENTRY(nsISerializable)
+    NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
+    NS_INTERFACE_MAP_ENTRY(nsIMutable)
+    // see nsStandardURL::Equals
+    if (aIID.Equals(kThisImplCID))
+        foundInterface = static_cast<nsIURI *>(this);
+    else
+NS_INTERFACE_MAP_END
+
 //----------------------------------------------------------------------------
 // nsStandardURL::nsIURI
 //----------------------------------------------------------------------------

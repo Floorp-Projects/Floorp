@@ -74,6 +74,8 @@ UnicharBufferImpl::Init(PRUint32 aBufferSize)
   return mBuffer ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
+NS_IMPL_ISUPPORTS1(UnicharBufferImpl, nsIUnicharBuffer)
+
 UnicharBufferImpl::~UnicharBufferImpl()
 {
   if (nsnull != mBuffer) {
