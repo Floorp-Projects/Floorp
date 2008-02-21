@@ -239,20 +239,6 @@ toolbarpaletteitem[place="toolbar"] .places-toolbar-items {
   height: 16px;
 }
 
-/* ----- DRAG AND DROP STYLES ----- */	
-
-.bookmark-item[dragover-left="true"] {
-  -moz-border-left-colors: #000000;
-}
-.bookmark-item[dragover-right="true"] {
-  -moz-border-right-colors: #000000;
-}
-.bookmark-item[dragover-top="true"] {
-  -moz-border-top-colors: #000000;
-}
-.bookmark-item[dragover-bottom="true"] {
-  -moz-border-bottom-colors: #000000;
-}
 /* ----- PRIMARY TOOLBAR BUTTONS ----- */	
 
 .toolbarbutton-1 {
@@ -1280,17 +1266,25 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   -moz-image-region: rect(0px, 16px, 16px, 0px) !important;
 }
 
+/* Bookmark drag and drop styles */
 .bookmark-item[dragover-into="true"] {
   background: Highlight !important;
   color: HighlightText !important;
 }
 
-.bookmark-item[dragover-top="true"] {
-  -moz-border-top-colors: #000000;
+/* rules for menupopup drop indicators */
+.menupopup-drop-indicator-bar {
+  position: relative;
+  /* these two margins must together compensate the indicator's height */
+  margin-top: -1px;
+  margin-bottom: -1px;
 }
 
-.bookmark-item[dragover-bottom="true"] {
-  -moz-border-bottom-colors: #000000;
+.menupopup-drop-indicator {
+  list-style-image: none;
+  height: 2px;
+  -moz-margin-end: -4em;
+  background-color: Highlight;
 }
 
 #CustomizeToolbarSheet > #main-box {
