@@ -1288,5 +1288,19 @@ js_IsTitleLocked(JSContext *cx, JSTitle *title)
            ((JSThread *)Thin_RemoveWait(ReadWord(title->lock.owner)))->id;
 }
 
+#ifdef JS_DEBUG_TITLE_LOCKS
+void
+js_SetScopeInfo(JSScope *scope, const char *file, int line)
+{
+    JSTitle *title = &scope->title;
+    if (!title->ownercx) {
+        jsrefcount count = title->u.count;
+        JS_ASSERT_IF(!SCOPE_IS_SEALED(scope), count > 0);
+        JS_ASSERT(count <= 4);
+        title->file[count - 1] = file;
+        title->line[count - 1] = line;
+    }
+}
+#endif /* JS_DEBUG_TITLE_LOCKS */
 #endif /* DEBUG */
 #endif /* JS_THREADSAFE */
