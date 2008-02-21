@@ -167,6 +167,8 @@ bucketPrefs.every(function(bucket) {
 // sort results by frecency
 results.sort(function(a,b) a[1] - b[1]);
 results.reverse();
+// Make sure there's enough results returned
+prefs.setIntPref("browser.urlbar.maxRichResults", results.length);
 
 //results.every(function(el) { dump("result: " + el[1] + ": " + el[0].spec + " (" + el[2] + ")\n"); return true; })
 
