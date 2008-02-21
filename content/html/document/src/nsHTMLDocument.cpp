@@ -417,6 +417,18 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_ADDREF_INHERITED(nsHTMLDocument, nsDocument)
 NS_IMPL_RELEASE_INHERITED(nsHTMLDocument, nsDocument)
 
+
+// QueryInterface implementation for nsHTMLDocument
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLDocument)
+  NS_INTERFACE_TABLE_INHERITED3(nsHTMLDocument,
+                                nsIHTMLDocument,
+                                nsIDOMHTMLDocument,
+                                nsIDOMNSHTMLDocument)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLDocument)
+NS_INTERFACE_MAP_END_INHERITING(nsDocument)
+
+
 nsresult
 nsHTMLDocument::Init()
 {

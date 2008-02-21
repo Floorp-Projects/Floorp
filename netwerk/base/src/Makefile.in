@@ -95,9 +95,6 @@ CPPSRCS		= \
 		nsSerializationHelper.cpp \
 		$(NULL)
 
-GQI_SRCS = neckobase.gqi
-LOCAL_INCLUDES = -I$(topsrcdir)/xpcom/ds
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 	CPPSRCS += nsURLHelperOS2.cpp
 else

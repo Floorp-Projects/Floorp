@@ -59,6 +59,8 @@ ByteBufferImpl::Init(PRUint32 aBufferSize)
   return mBuffer ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
+NS_IMPL_ISUPPORTS1(ByteBufferImpl,nsIByteBuffer)
+
 ByteBufferImpl::~ByteBufferImpl()
 {
   if (nsnull != mBuffer) {

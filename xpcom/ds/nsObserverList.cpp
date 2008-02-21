@@ -129,6 +129,8 @@ nsObserverList::NotifyObservers(nsISupports *aSubject,
     }
 }
 
+NS_IMPL_ISUPPORTS1(nsObserverEnumerator, nsISimpleEnumerator)
+
 nsObserverEnumerator::nsObserverEnumerator(nsObserverList* aObserverList)
     : mIndex(0)
 {
