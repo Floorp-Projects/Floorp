@@ -315,20 +315,20 @@ nsNavHistory::GetSingleton()
 
 // nsNavHistory::nsNavHistory
 
-nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
+nsNavHistory::nsNavHistory() : mBatchLevel(0),
+                               mLock(nsnull),
+                               mBatchHasTransaction(PR_FALSE),
+                               mNowValid(PR_FALSE),
                                mExpireNowTimer(nsnull),
                                mExpire(this),
-                               mExpireDaysMin(0),
-                               mExpireDaysMax(0),
-                               mExpireSites(0),
-                               mNumVisitsForFrecency(10),
                                mAutoCompleteOnlyTyped(PR_FALSE),
                                mAutoCompleteMaxResults(25),
                                mAutoCompleteSearchChunkSize(100),
                                mAutoCompleteSearchTimeout(100),
-                               mBatchLevel(0),
-                               mLock(nsnull),
-                               mBatchHasTransaction(PR_FALSE),
+                               mExpireDaysMin(0),
+                               mExpireDaysMax(0),
+                               mExpireSites(0),
+                               mNumVisitsForFrecency(10),
                                mTagsFolder(-1)
 {
 #ifdef LAZY_ADD
