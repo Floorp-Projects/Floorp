@@ -41,6 +41,7 @@
 #include "mozOSXSpell.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
+#include "nsObjCExceptions.h"
 
 #import <Cocoa/Cocoa.h>
 
@@ -69,10 +70,14 @@ mozOSXSpell::~mozOSXSpell()
 //
 NS_IMETHODIMP mozOSXSpell::GetDictionary(PRUnichar **aDictionary)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG_POINTER(aDictionary);
 
   *aDictionary = [@"" createNewUnicodeBuffer];
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 //
@@ -93,6 +98,8 @@ NS_IMETHODIMP mozOSXSpell::SetDictionary(const PRUnichar *aDictionary)
 //
 NS_IMETHODIMP mozOSXSpell::GetLanguage(PRUnichar **aLanguage)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG_POINTER(aLanguage);
 
   if (!mLanguage.Length()) {
@@ -104,6 +111,8 @@ NS_IMETHODIMP mozOSXSpell::GetLanguage(PRUnichar **aLanguage)
     *aLanguage = ToNewUnicode(mLanguage);
 
   return *aLanguage ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 //
@@ -202,6 +211,8 @@ NS_IMETHODIMP mozOSXSpell::GetDictionaryList(PRUnichar ***aDictionaries, PRUint3
 //
 NS_IMETHODIMP mozOSXSpell::Check(const PRUnichar *aWord, PRBool *aResult)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG_POINTER(aWord);
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = PR_FALSE;
@@ -214,6 +225,8 @@ NS_IMETHODIMP mozOSXSpell::Check(const PRUnichar *aWord, PRBool *aResult)
     *aResult = PR_TRUE;
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 //
@@ -226,6 +239,8 @@ NS_IMETHODIMP mozOSXSpell::Check(const PRUnichar *aWord, PRBool *aResult)
 //
 NS_IMETHODIMP mozOSXSpell::Suggest(const PRUnichar *aWord, PRUnichar ***aSuggestions, PRUint32 *aSuggestionCount)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG_POINTER(aSuggestions);
   NS_ENSURE_ARG_POINTER(aSuggestionCount);
   *aSuggestions = NULL;
@@ -248,6 +263,8 @@ NS_IMETHODIMP mozOSXSpell::Suggest(const PRUnichar *aWord, PRUnichar ***aSuggest
   }
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 #pragma mark -
@@ -260,19 +277,27 @@ NS_IMETHODIMP mozOSXSpell::Suggest(const PRUnichar *aWord, PRUnichar ***aSuggest
 
 - (PRUnichar*)createNewUnicodeBuffer
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSNULL;
+
   PRUint32 length = [self length];
   PRUnichar* retStr = (PRUnichar*)nsMemory::Alloc((length + 1) * sizeof(PRUnichar));
   [self getCharacters:retStr];
   retStr[length] = PRUnichar(0);
   return retStr;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL;
 }
 
 + (id)stringWithPRUnichars:(const PRUnichar*)inString
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   if (inString)
     return [self stringWithCharacters:inString length:nsCRT::strlen(inString)];
   else
     return [self string];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 @end
