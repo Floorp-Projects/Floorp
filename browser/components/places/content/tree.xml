@@ -68,7 +68,7 @@
       <!-- overriding -->
       <property name="view">
         <getter><![CDATA[
-          return this.treeBoxObject.view;
+          return this.treeBoxObject.view.QueryInterface(Ci.nsINavHistoryResultTreeViewer);
         ]]></getter>
         <setter><![CDATA[ 
           return this.treeBoxObject.view = val;
