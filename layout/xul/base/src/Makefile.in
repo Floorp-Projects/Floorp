@@ -64,6 +64,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  xpconnect \
 		  js \
+		  xultmpl \
 		  $(NULL)
 
 ifdef MOZ_ENABLE_CANVAS
