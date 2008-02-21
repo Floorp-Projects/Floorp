@@ -5906,7 +5906,8 @@ nsNavHistory::UpdateFrecency(PRInt64 aPlaceId, PRBool aIsBookmarked)
   // On refresh, when we remove and then add the livemark items,
   // the frecency (for a given moz_places) will not have changed
   // (if we've never visited that place).
-  if (newFrecency == oldFrecency)
+  // Additionally, don't bother overwriting a valid frecency with -1
+  if (newFrecency == oldFrecency || oldFrecency && newFrecency == -1)
     return NS_OK;
 
   mozStorageStatementScoper updateScoper(mDBUpdateFrecencyAndHidden);
