@@ -1,5 +1,7 @@
 classic.jar:
 % skin global classic/1.0 %skin/classic/global/
+% override chrome://global/skin/icons/find.png chrome://global/skin/icons/find-aero.png                                          os=WINNT osversion>=6
+% override chrome://global/skin/icons/wrap.png chrome://global/skin/icons/wrap-aero.png                                          os=WINNT osversion>=6
         skin/classic/global/about.css
         skin/classic/global/appPicker.css
         skin/classic/global/arrow.css
@@ -76,6 +78,7 @@ classic.jar:
         skin/classic/global/icons/close.png                         (icons/close.png)
         skin/classic/global/icons/Error.png                         (icons/Error.png)
         skin/classic/global/icons/find.png                          (icons/find.png)
+        skin/classic/global/icons/find-aero.png                     (icons/find-aero.png)
         skin/classic/global/icons/folder-item.png                   (icons/folder-item.png)
         skin/classic/global/icons/Minimize.gif                      (icons/Minimize.gif)
         skin/classic/global/icons/notfound.png                      (icons/notfound.png)
@@ -87,6 +90,7 @@ classic.jar:
         skin/classic/global/icons/Warning.png                       (icons/Warning.png)
         skin/classic/global/icons/warning-large.png                 (icons/warning-large.png)
         skin/classic/global/icons/wrap.png                          (icons/wrap.png)
+        skin/classic/global/icons/wrap-aero.png                     (icons/wrap-aero.png)
         skin/classic/global/radio/radio-check.gif                   (radio/radio-check.gif)
         skin/classic/global/radio/radio-check-dis.gif               (radio/radio-check-dis.gif)
         skin/classic/global/scrollbar/slider.gif                    (scrollbar/slider.gif)
