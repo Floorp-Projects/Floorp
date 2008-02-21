@@ -183,7 +183,6 @@ static const char kMozHeapDumpMessageString[] = "MOZ_HeapDump";
 
 #ifndef ULW_ALPHA
 #define ULW_ALPHA               0x00000002
-
 extern "C"
 WINUSERAPI
 BOOL WINAPI UpdateLayeredWindow(HWND hWnd, HDC hdcDst, POINT *pptDst,
@@ -197,78 +196,6 @@ BOOL WINAPI UpdateLayeredWindow(HWND hWnd, HDC hdcDst, POINT *pptDst,
 
 #ifdef WINCE
 static PRBool gSoftKeyMenuBar = PR_FALSE;
-static PRBool gOverrideHWKeys = PR_TRUE;
-
-typedef BOOL (__stdcall *UnregisterFunc1Proc)( UINT, UINT );
-static UnregisterFunc1Proc gProcUnregisterFunc = NULL;
-static HINSTANCE gCoreDll = NULL;
-
-UINT gHardwareKeys[][2] =
-  {
-    { 0xc1, MOD_WIN },
-    { 0xc2, MOD_WIN },
-    { 0xc3, MOD_WIN },
-    { 0xc4, MOD_WIN },
-    { 0xc5, MOD_WIN },
-    { 0xc6, MOD_WIN },
-
-    { 0x72, 0 },// Answer - 0x72 Modifier - 0  
-    { 0x73, 0 },// Hangup - 0x73 Modifier - 0 
-    { 0x74, 0 },// 
-    { 0x75, 0 },// Volume Up   - 0x75 Modifier - 0
-    { 0x76, 0 },// Volume Down - 0x76 Modifier - 0
-    { 0, 0 },
-  };
-
-static void MapHardwareButtons(HWND window)
-{
-  if (!window)
-    return;
-
-  // handle hardware buttons so that they broadcast into our
-  // application. the following code is based on an article
-  // on the Pocket PC Developer Network:
-  //
-  // http://www.pocketpcdn.com/articles/handle_hardware_keys.html
-  
-  if (gOverrideHWKeys)
-  {
-    if (!gProcUnregisterFunc)
-    {
-      gCoreDll = LoadLibrary(_T("coredll.dll")); // leak
-      
-      if (gCoreDll)
-        gProcUnregisterFunc = (UnregisterFunc1Proc)GetProcAddress( gCoreDll, _T("UnregisterFunc1"));
-    }
-    
-    if (gProcUnregisterFunc)
-    {    
-      for (int i=0; gHardwareKeys[i][0]; i++)
-      {
-        UINT mod = gHardwareKeys[i][1];
-        UINT kc = gHardwareKeys[i][0];
-        
-        gProcUnregisterFunc(mod, kc);
-        RegisterHotKey(window, kc, mod, kc);
-      }
-    }
-  }
-}
-
-static void UnmapHardwareButtons()
-{
-  if (!gProcUnregisterFunc)
-    return;
-
-  for (int i=0; gHardwareKeys[i][0]; i++)
-  {
-    UINT mod = gHardwareKeys[i][1];
-    UINT kc = gHardwareKeys[i][0];
-
-    gProcUnregisterFunc(mod, kc);
-  }
-}
-
 void CreateSoftKeyMenuBar(HWND wnd)
 {
   if (!wnd)
@@ -779,25 +706,16 @@ nsWindow::nsWindow() : nsBaseWidget()
   mIsTopWidgetWindow = PR_FALSE;
   mLastKeyboardLayout = 0;
 
+#ifndef WINCE
   if (!sInstanceCount && SUCCEEDED(::OleInitialize(NULL))) {
     sIsOleInitialized = TRUE;
   }
   NS_ASSERTION(sIsOleInitialized, "***** OLE is not initialized!\n");
 
   sInstanceCount++;
-
-#ifdef WINCE
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs) {
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    prefs->GetBranch(0, getter_AddRefs(prefBranch));
-    if (prefBranch)
-    {
-      prefBranch->GetBoolPref("config.wince.overrideHWKeys", &gOverrideHWKeys);
-    }
-  }
 #endif
-}
+
+    }
 
 
 HKL nsWindow::gKeyboardLayout = 0;
@@ -836,6 +754,7 @@ nsWindow::~nsWindow()
     SetCursor(eCursor_standard);
   }
 
+#ifndef WINCE
   //
   // delete any of the IME structures that we allocated
   //
@@ -858,6 +777,7 @@ nsWindow::~nsWindow()
       sIsOleInitialized = FALSE;
     }
   }
+#endif
 
   NS_IF_RELEASE(mNativeDragTarget);
 
@@ -1452,7 +1372,6 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
   if (mWindowType == eWindowType_dialog || mWindowType == eWindowType_toplevel )
     CreateSoftKeyMenuBar(mWnd);
   
-  MapHardwareButtons(mWnd);
 #endif
 
   return NS_OK;
@@ -2226,11 +2145,6 @@ NS_METHOD nsWindow::SetFocus(PRBool aRaise)
     if (::IsIconic(toplevelWnd))
       ::ShowWindow(toplevelWnd, SW_RESTORE);
     ::SetFocus(mWnd);
-
-#ifdef WINCE
-    MapHardwareButtons(mWnd);
-#endif
-
   }
   return NS_OK;
 }
