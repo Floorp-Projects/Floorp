@@ -45,6 +45,8 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMNSUIEvent.h"
+#include "nsIDOMXULElement.h"
+#include "nsIXULTemplateBuilder.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsEventStateManager.h"
@@ -366,6 +368,24 @@ nsXULPopupManager::ShowMenu(nsIContent *aMenu,
                             PRBool aSelectFirstItem,
                             PRBool aAsynchronous)
 {
+  // generate any template content first. Otherwise, the menupopup may not
+  // have been created yet.
+  if (aMenu) {
+    nsIContent* element = aMenu;
+    do {
+      nsCOMPtr<nsIDOMXULElement> xulelem = do_QueryInterface(element);
+      if (xulelem) {
+        nsCOMPtr<nsIXULTemplateBuilder> builder;
+        xulelem->GetBuilder(getter_AddRefs(builder));
+        if (builder) {
+          builder->CreateContents(aMenu, PR_TRUE);
+          break;
+        }
+      }
+      element = element->GetParent();
+    } while (element);
+  }
+
   nsMenuFrame* menuFrame = GetMenuFrameForContent(aMenu);
   if (!menuFrame || !menuFrame->IsMenu())
     return;
@@ -913,12 +933,6 @@ nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
                                          PRBool aSelectFirstItem)
 {
   nsCOMPtr<nsIPresShell> presShell = aPresContext->PresShell();
-
-  // set the open attribute on the menu first so that templates will generate
-  // their content before the popupshowing event fires.
-  if (aMenu)
-    aMenu->SetAttr(kNameSpaceID_None, nsGkAtoms::open,
-                   NS_LITERAL_STRING("true"), PR_TRUE);
 
   // XXXndeakin (bug 383930)
   //   eventually, the popup events will be a different event type with

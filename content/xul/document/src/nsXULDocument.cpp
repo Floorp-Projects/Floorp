@@ -3659,7 +3659,7 @@ nsXULDocument::CreateTemplateBuilder(nsIContent* aElement)
         }
         else {
             // Force construction of immediate template sub-content _now_.
-            builder->CreateContents(aElement);
+            builder->CreateContents(aElement, PR_FALSE);
         }
     }
 

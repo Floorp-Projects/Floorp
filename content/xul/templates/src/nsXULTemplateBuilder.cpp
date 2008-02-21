@@ -457,7 +457,7 @@ nsXULTemplateBuilder::Init(nsIContent* aElement)
 }
 
 NS_IMETHODIMP
-nsXULTemplateBuilder::CreateContents(nsIContent* aElement)
+nsXULTemplateBuilder::CreateContents(nsIContent* aElement, PRBool aForceCreation)
 {
     return NS_OK;
 }
