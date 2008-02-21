@@ -574,7 +574,8 @@ endif
 
 ifeq ($(OS_TARGET), WINCE)
 OUTOPTION = -Fo# eol
-endif
+HOST_OUTOPTION = -Fo# eol
+else
 
 ifeq (,$(CROSS_COMPILE))
 HOST_OUTOPTION = $(OUTOPTION)
@@ -582,6 +583,7 @@ else
 HOST_OUTOPTION = -o # eol
 endif
 
+endif
 ################################################################################
 
 # SUBMAKEFILES: List of Makefiles for next level down.
