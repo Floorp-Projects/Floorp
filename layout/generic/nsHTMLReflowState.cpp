@@ -104,6 +104,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*       aPresContext,
   mFlags.mNextInFlowUntouched = PR_FALSE;
   mFlags.mAssumingHScrollbar = mFlags.mAssumingVScrollbar = PR_FALSE;
   mFlags.mHasClearance = PR_FALSE;
+  mFlags.mHeightDependsOnAncestorCell = PR_FALSE;
   mDiscoveredClearance = nsnull;
   mPercentHeightObserver = nsnull;
   mPercentHeightReflowInitiator = nsnull;
@@ -410,14 +411,17 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext)
     frame->IsBoxFrame() ||
     frame->GetIntrinsicSize().height.GetUnit() == eStyleUnit_Percent;
 
-  // If we're the child of a table cell that performs special height
+  // If we're the descendant of a table cell that performs special height
   // reflows and we could be the child that requires them, always set
   // the vertical resize in case this is the first pass before the
   // special height reflow.
   if (!mFlags.mVResize && mCBReflowState &&
-      IS_TABLE_CELL(mCBReflowState->frame->GetType()) &&
-      dependsOnCBHeight)
+      (IS_TABLE_CELL(mCBReflowState->frame->GetType()) || 
+       mCBReflowState->mFlags.mHeightDependsOnAncestorCell) &&
+      dependsOnCBHeight) {
     mFlags.mVResize = PR_TRUE;
+    mFlags.mHeightDependsOnAncestorCell = PR_TRUE;
+  }
 
   // Set NS_FRAME_CONTAINS_RELATIVE_HEIGHT if it's needed.
 
