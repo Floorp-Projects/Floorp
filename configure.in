@@ -128,6 +128,7 @@ LIBGNOME_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
 LCMS_VERSION=1.17
+SQLITE_VERSION=3.5
 
 MSMANIFEST_TOOL=
 
@@ -5730,7 +5731,6 @@ fi
 
 dnl ========================================================
 dnl = Enable mozStorage
-dnl = XXX need to implement --with-system-sqlite3 (see bug 263381)
 dnl ========================================================
 dnl Implicitly enabled by default if building calendar or places
 MOZ_ARG_ENABLE_BOOL(storage,
@@ -5740,6 +5740,30 @@ MOZ_ARG_ENABLE_BOOL(storage,
 if test -n "$MOZ_STORAGE"; then
     AC_DEFINE(MOZ_STORAGE)
 fi
+
+dnl ========================================================
+dnl Check for sqlite
+dnl ========================================================
+
+MOZ_NATIVE_SQLITE=
+MOZ_ARG_ENABLE_BOOL(system-sqlite,
+[  --enable-system-sqlite  Use system sqlite (located with pkgconfig)],
+MOZ_NATIVE_SQLITE=1,
+MOZ_NATIVE_SQLITE= )
+
+if test -z "$MOZ_NATIVE_SQLITE"
+then
+    SQLITE_CFLAGS=
+    if test -z "$GNU_CC" && test "$OS_ARCH" = "WINNT" -o "$OS_ARCH" = "WINCE" -o "$OS_ARCH" = "OS2"; then
+        SQLITE_LIBS='$(DIST)/lib/$(LIB_PREFIX)sqlite3.$(LIB_SUFFIX)'
+    else
+        SQLITE_LIBS='-lsqlite3'
+    fi
+else
+    PKG_CHECK_MODULES(SQLITE, sqlite3 >= $SQLITE_VERSION)
+fi
+
+AC_SUBST(MOZ_NATIVE_SQLITE)
 
 dnl ========================================================
 dnl = Enable safe browsing (anti-phishing)

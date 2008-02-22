@@ -44,11 +44,15 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= storage
-DIRS		= ../db/sqlite3/src \
-		  public \
-		  src \
-		  build \
-		  $(NULL)
+
+ifndef MOZ_NATIVE_SQLITE
+DIRS		= ../db/sqlite3/src
+endif
+
+DIRS		+= public \
+		   src \
+		   build \
+		   $(NULL)
 
 ifdef ENABLE_TESTS
 TOOL_DIRS += test

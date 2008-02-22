@@ -66,6 +66,9 @@ CPPSRCS = \
 	mozStorageUnicodeFunctions.cpp \
 	$(NULL)
 
+LOCAL_INCLUDES = \
+	$(SQLITE_CFLAGS)
+
 # This is the default value.  If we ever change it when compiling sqlite, we
 # will need to change it here as well.
 DEFINES += -DSQLITE_MAX_LIKE_PATTERN_LENGTH=50000

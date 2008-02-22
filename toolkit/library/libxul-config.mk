@@ -231,7 +231,7 @@ endif
 
 ifdef MOZ_STORAGE
 COMPONENT_LIBS += storagecomps
-EXTRA_DSO_LIBS += sqlite3
+EXTRA_DSO_LDOPTS += $(SQLITE_LIBS)
 endif
 
 ifdef MOZ_PLACES
