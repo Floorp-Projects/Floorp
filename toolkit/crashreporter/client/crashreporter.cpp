@@ -384,12 +384,26 @@ void RewriteStrings(StringTable& queryParameters)
               vendor.c_str());
   gStrings[ST_CRASHREPORTERTITLE] = buf;
 
-  // Leave a format specifier for UIError to fill in
-  UI_SNPRINTF(buf, sizeof(buf),
-              gStrings[ST_CRASHREPORTERPRODUCTERROR].c_str(),
-              product.c_str(),
-              "%s");
-  gStrings[ST_CRASHREPORTERERROR] = buf;
+
+  string str = gStrings[ST_CRASHREPORTERPRODUCTERROR];
+  // Only do the replacement here if the string has two
+  // format specifiers to start.  Otherwise
+  // we assume it has the product name hardcoded.
+  string::size_type pos = str.find("%s");
+  if (pos != string::npos)
+    pos = str.find("%s", pos+2);
+  if (pos != string::npos) {
+    // Leave a format specifier for UIError to fill in
+    UI_SNPRINTF(buf, sizeof(buf),
+                gStrings[ST_CRASHREPORTERPRODUCTERROR].c_str(),
+                product.c_str(),
+                "%s");
+    gStrings[ST_CRASHREPORTERERROR] = buf;
+  }
+  else {
+    // product name is hardcoded
+    gStrings[ST_CRASHREPORTERERROR] = str;
+  }
 
   UI_SNPRINTF(buf, sizeof(buf),
               gStrings[ST_CRASHREPORTERDESCRIPTION].c_str(),
