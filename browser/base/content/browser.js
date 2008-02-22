@@ -5513,6 +5513,7 @@ var FeedHandler = {
       menuItem.setAttribute("label", labelStr);
       menuItem.setAttribute("feed", feedInfo.href);
       menuItem.setAttribute("tooltiptext", feedInfo.href);
+      menuItem.setAttribute("crop", "center");
       menuPopup.appendChild(menuItem);
     }
     return true;
