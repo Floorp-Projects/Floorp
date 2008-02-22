@@ -70,6 +70,9 @@ base + "//asdf.zxcv,\n#a {color: red}",
 base + "p {text-indent: 0.5in;} color: maroon #a {color: red;}",
 base + "p {text-indent: 0.5in;} color: maroon; #a {color: red;}",
 
+// string tokenization as error token, not EOF (bug 311566 comment 70)
+"#a { color: green; foo: { \"bar\n;color: red}",
+
 // CSS 2.1 section 4.1.3
 "@MediA All {#a {ColOR :RgB(\t0,\r128,\n0 ) } };",
 base + "\\#a{color:red;}",
@@ -179,8 +182,7 @@ base + "#a:: before {content: 'FAIL'}",
 base + "#a ::before {content: 'FAIL'}",
 "#a::before {content: 'This is \\a",
 
-], prop: "content", pseudo: "::before",
-todo: {"#a::before {content: 'This is \\a" : 1}
+], prop: "content", pseudo: "::before"
 },
 
 // Background color tests
