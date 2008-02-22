@@ -16,7 +16,12 @@ div { height: 1px; background: blue;
 
 Differences between CSS 2.1 and this reference:
 
-1. it incorporates proposal in http://lists.w3.org/Archives/Public/www-style/2008Feb/0224.html
+1. it incorporates proposal in
+   http://lists.w3.org/Archives/Public/www-style/2008Feb/0224.html
+
+2. it ignores single 'auto' margins (one side only) when they should
+   become negative; this is a bug that we should fix:
+   https://bugzilla.mozilla.org/show_bug.cgi?id=419100
 
 -->
 
@@ -60,6 +65,7 @@ Differences between CSS 2.1 and this reference:
 <div style="margin-left: -53px; width: 660px;"></div>
 <div style="margin-left: -53px; width: 660px;"></div>
 <!-- only margin-left auto -->
+<!-- THIS SET AFFECTED BY CHANGE (2) FROM CSS 2.1 SPEC -->
 <div style="margin-left: 53px; width: 660px;"></div>
 <div style="margin-left: -11px; width: 660px;"></div>
 <div style="margin-left: 53px; width: 660px;"></div>
@@ -97,6 +103,7 @@ Differences between CSS 2.1 and this reference:
 <div style="margin-left: -53px; width: 660px;"></div>
 <div style="margin-left: -53px; width: 660px;"></div>
 <!-- only margin-right auto -->
+<!-- THIS SET AFFECTED BY CHANGE (2) FROM CSS 2.1 SPEC -->
 <div style="margin-left: 70px; width: 660px;"></div>
 <div style="margin-left: 8px; width: 660px;"></div>
 <div style="margin-left: 70px; width: 660px;"></div>
@@ -513,6 +520,7 @@ Differences between CSS 2.1 and this reference:
 <div style="margin-left: -53px; width: 660px;"></div>
 <div style="margin-left: -53px; width: 660px;"></div>
 <!-- only margin-left auto -->
+<!-- THIS SET AFFECTED BY CHANGE (2) FROM CSS 2.1 SPEC -->
 <div style="margin-left: 53px; width: 660px;"></div>
 <div style="margin-left: -11px; width: 660px;"></div>
 <div style="margin-left: 53px; width: 660px;"></div>
@@ -550,6 +558,7 @@ Differences between CSS 2.1 and this reference:
 <div style="margin-left: -53px; width: 660px;"></div>
 <div style="margin-left: -53px; width: 660px;"></div>
 <!-- only margin-right auto -->
+<!-- THIS SET AFFECTED BY CHANGE (2) FROM CSS 2.1 SPEC -->
 <div style="margin-left: 70px; width: 660px;"></div>
 <div style="margin-left: 8px; width: 660px;"></div>
 <div style="margin-left: 70px; width: 660px;"></div>
