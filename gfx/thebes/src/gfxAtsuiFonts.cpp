@@ -922,10 +922,10 @@ SetGlyphsForCharacterGroup(ATSLayoutRecord *aGlyphs, PRUint32 aGlyphCount,
     // Also make them not be cluster boundaries, i.e., fuse them into a cluster,
     // if the glyphs are out of character order.
     for (offset = firstOffset + 2; offset <= lastOffset; offset += 2) {
-        PRUint32 index = offset/2;        
-        PRBool makeClusterStart = inOrder && aRun->IsClusterStart(index);
+        PRUint32 charIndex = aSegmentStart + offset/2;
+        PRBool makeClusterStart = inOrder && aRun->IsClusterStart(charIndex);
         g.SetComplex(makeClusterStart, PR_FALSE, 0);
-        aRun->SetGlyphs(aSegmentStart + index, g, nsnull);
+        aRun->SetGlyphs(charIndex, g, nsnull);
     }
 
     // Grab total advance for all glyphs
@@ -935,7 +935,8 @@ SetGlyphsForCharacterGroup(ATSLayoutRecord *aGlyphs, PRUint32 aGlyphCount,
         if (advance >= 0 &&
             (!aBaselineDeltas || aBaselineDeltas[displayGlyph - aGlyphs] == 0) &&
             gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
-            gfxTextRun::CompressedGlyph::IsSimpleGlyphID(displayGlyph->glyphID)) {
+            gfxTextRun::CompressedGlyph::IsSimpleGlyphID(displayGlyph->glyphID) &&
+            aRun->IsClusterStart(charIndex)) {
             aRun->SetSimpleGlyph(charIndex, g.SetSimpleGlyph(advance, displayGlyph->glyphID));
             return;
         }
