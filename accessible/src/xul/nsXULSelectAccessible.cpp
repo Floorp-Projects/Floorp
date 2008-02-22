@@ -599,7 +599,9 @@ nsXULListitemAccessible::GetListAccessible()
   
   nsCOMPtr<nsIDOMXULSelectControlItemElement> listItem =
     do_QueryInterface(mDOMNode);
-  
+  if (!listItem)
+    return nsnull;
+
   nsCOMPtr<nsIDOMXULSelectControlElement> list;
   listItem->GetControl(getter_AddRefs(list));
   if (!list)
