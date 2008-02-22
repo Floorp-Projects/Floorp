@@ -180,6 +180,7 @@
 <!ENTITY showAllHistoryCmd.commandkey "H">
 
 <!ENTITY openCmd.commandkey           "l">
+<!ENTITY urlbar.emptyText             "Search Bookmarks and History">
 <!ENTITY urlbar.accesskey             "d">
 
 <!-- 
