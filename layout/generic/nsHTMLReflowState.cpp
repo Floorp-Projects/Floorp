@@ -1124,14 +1124,12 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
                                mComputedOffsets.right);
   }
 
-  PRUint8 direction = cbrs ? cbrs->mStyleVisibility->mDirection : NS_STYLE_DIRECTION_LTR;
-
   // Use the horizontal component of the hypothetical box in the cases
   // where it's needed.
   if (leftIsAuto && rightIsAuto) {
-    // Use the 'direction' to dictate whether 'left' or 'right' is
-    // treated like 'static-position'
-    if (NS_STYLE_DIRECTION_LTR == direction) {
+    // Use the direction of the original ("static-position") containing block
+    // to dictate whether 'left' or 'right' is treated like 'static-position'.
+    if (NS_STYLE_DIRECTION_LTR == cbFrame->GetStyleVisibility()->mDirection) {
       if (hypotheticalBox.mLeftIsExact) {
         mComputedOffsets.left = hypotheticalBox.mLeft;
         leftIsAuto = PR_FALSE;
@@ -1259,15 +1257,16 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
 
     if (availMarginSpace < 0 ||
         (!marginLeftIsAuto && !marginRightIsAuto)) {
-      // We're over-constrained so use 'direction' to dictate which
-      // value to ignore.  (And note that the spec says to ignore 'left'
-      // or 'right' rather than 'margin-left' or 'margin-right'.)
-      if (NS_STYLE_DIRECTION_LTR == direction) {
-        // Ignore the specified value for 'right'.
-        mComputedOffsets.right += availMarginSpace;
-      } else {
+      // We're over-constrained so use the direction of the containing block
+      // to dictate which value to ignore.  (And note that the spec says to ignore
+      // 'left' or 'right' rather than 'margin-left' or 'margin-right'.)
+      if (cbrs &&
+          NS_STYLE_DIRECTION_RTL == cbrs->mStyleVisibility->mDirection) {
         // Ignore the specified value for 'left'.
         mComputedOffsets.left += availMarginSpace;
+      } else {
+        // Ignore the specified value for 'right'.
+        mComputedOffsets.right += availMarginSpace;
       }
     } else if (marginLeftIsAuto) {
       if (marginRightIsAuto) {
