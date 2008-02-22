@@ -61,7 +61,6 @@ const BrowserGlueServiceFactory = {
 
 function BrowserGlue() {
   this._init();
-  this._profileStarted = false;
 }
 
 BrowserGlue.prototype = {
@@ -81,10 +80,7 @@ BrowserGlue.prototype = {
       case "xpcom-shutdown":
         this._dispose();
         break;
-      case "profile-before-change":
-        this._onProfileChange();
-        break;
-      case "profile-change-teardown": 
+      case "quit-application": 
         this._onProfileShutdown();
         break;
       case "prefservice:after-app-defaults":
@@ -122,8 +118,7 @@ BrowserGlue.prototype = {
     // observer registration
     const osvr = Cc['@mozilla.org/observer-service;1'].
                  getService(Ci.nsIObserverService);
-    osvr.addObserver(this, "profile-before-change", false);
-    osvr.addObserver(this, "profile-change-teardown", false);
+    osvr.addObserver(this, "quit-application", false);
     osvr.addObserver(this, "xpcom-shutdown", false);
     osvr.addObserver(this, "prefservice:after-app-defaults", false);
     osvr.addObserver(this, "final-ui-startup", false);
@@ -139,8 +134,7 @@ BrowserGlue.prototype = {
     // observer removal 
     const osvr = Cc['@mozilla.org/observer-service;1'].
                  getService(Ci.nsIObserverService);
-    osvr.removeObserver(this, "profile-before-change");
-    osvr.removeObserver(this, "profile-change-teardown");
+    osvr.removeObserver(this, "quit-application");
     osvr.removeObserver(this, "xpcom-shutdown");
     osvr.removeObserver(this, "prefservice:after-app-defaults");
     osvr.removeObserver(this, "final-ui-startup");
@@ -199,37 +193,13 @@ BrowserGlue.prototype = {
 
     // handle any UI migration
     this._migrateUI();
-
-    // indicate that the profile was initialized
-    this._profileStarted = true;
-  },
-
-  _onProfileChange: function()
-  {
-    // this block is for code that depends on _onProfileStartup() having 
-    // been called.
-    if (this._profileStarted) {
-      // final places cleanup
-      this._shutdownPlaces();
-    }
   },
 
   // profile shutdown handler (contains profile cleanup routines)
   _onProfileShutdown: function() 
   {
-    // here we enter last survival area, in order to avoid multiple
-    // "quit-application" notifications caused by late window closings
-    const appStartup = Cc['@mozilla.org/toolkit/app-startup;1'].
-                       getService(Ci.nsIAppStartup);
-    try {
-      appStartup.enterLastWindowClosingSurvivalArea();
-
-      this.Sanitizer.onShutdown();
-
-    } catch(ex) {
-    } finally {
-      appStartup.exitLastWindowClosingSurvivalArea();
-    }
+    this._shutdownPlaces();
+    this.Sanitizer.onShutdown();
   },
 
   _onQuitRequest: function(aCancelQuit, aQuitType)
