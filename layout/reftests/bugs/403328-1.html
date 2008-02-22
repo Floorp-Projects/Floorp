@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html><head>
+<title>Testcase for bug 403328</title>
+<style>
+body {
+	margin-left:40px;
+}
+div.cb {
+	background-color: lime;
+    position: relative;
+	width: 80px;
+}
+div.spcb {
+	background-color: blue;
+    margin-left:auto;
+    margin-right:auto;
+	width: 40px;
+	height: 20px;
+}
+div.abs {
+	background-color: red;
+	position: absolute;
+	height: 20px;
+}
+div.auto-margins {
+    margin-left: auto;
+    margin-right: auto;
+}
+div.zero-margins {
+    margin-left: 0;
+    margin-right: 0;
+}
+div.extrawide {
+	width: 100px;
+}
+div.narrow {
+	width: 20px;
+}
+div.leftright {
+    left: 0;
+    right: 0;
+}
+
+</style>
+</head><body>
+
+<div dir="ltr" class="cb">
+<div dir="rtl" class="spcb">
+<div dir="ltr" class="abs"><div class="narrow"></div></div>
+</div>
+<div dir="rtl" class="spcb">
+<div dir="rtl" class="abs"><div class="narrow"></div></div>
+</div>
+</div>
+<div dir="rtl" class="cb">
+<div dir="ltr" class="spcb">
+<div dir="ltr" class="abs"><div class="narrow"></div></div>
+</div>
+<div dir="ltr" class="spcb">
+<div dir="rtl" class="abs"><div class="narrow"></div></div>
+</div>
+</div>
+
+<div dir="ltr" class="cb">
+<div dir="rtl" class="spcb">
+<div dir="ltr" class="abs leftright extrawide auto-margins"></div>
+</div>
+<div dir="rtl" class="spcb">
+<div dir="rtl" class="abs leftright extrawide auto-margins"></div>
+</div>
+</div>
+<div dir="rtl" class="cb">
+<div dir="ltr" class="spcb">
+<div dir="ltr" class="abs leftright extrawide auto-margins"></div>
+</div>
+<div dir="ltr" class="spcb">
+<div dir="rtl" class="abs leftright extrawide auto-margins"></div>
+</div>
+</div>
+
+<div dir="ltr" class="cb">
+<div dir="rtl" class="spcb">
+<div dir="ltr" class="abs leftright narrow zero-margins"></div>
+</div>
+<div dir="rtl" class="spcb">
+<div dir="rtl" class="abs leftright narrow zero-margins"></div>
+</div>
+</div>
+<div dir="rtl" class="cb">
+<div dir="ltr" class="spcb">
+<div dir="ltr" class="abs leftright narrow zero-margins"></div>
+</div>
+<div dir="ltr" class="spcb">
+<div dir="rtl" class="abs leftright narrow zero-margins"></div>
+</div>
+</div>
+
+<div dir="ltr" class="cb">
+<div dir="rtl" class="spcb">
+<div dir="ltr" class="abs narrow"></div>
+</div>
+<div dir="rtl" class="spcb">
+<div dir="rtl" class="abs narrow"></div>
+</div>
+</div>
+<div dir="rtl" class="cb">
+<div dir="ltr" class="spcb">
+<div dir="ltr" class="abs narrow"></div>
+</div>
+<div dir="ltr" class="spcb">
+<div dir="rtl" class="abs narrow"></div>
+</div>
+</div>
+
+</body></html>
