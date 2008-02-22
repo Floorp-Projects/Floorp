@@ -80,6 +80,14 @@ struct nsMyTrustedEVInfo
 
 static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
   {
+    "2.16.840.1.114412.2.1",
+    "DigiCert EV OID",
+    SEC_OID_UNKNOWN,
+    "CN=DigiCert High Assurance EV Root CA,OU=www.digicert.com,O=DigiCert Inc,C=US",
+    "CN=DigiCert High Assurance EV Root CA,OU=www.digicert.com,O=DigiCert Inc,C=US",
+    "5F:B7:EE:06:33:E2:59:DB:AD:0C:4C:9A:E6:D3:8F:1A:61:C7:DC:25"
+  },
+  {
     "1.3.6.1.4.1.8024.0.2.100.1.2",
     "Quo Vadis EV OID",
     SEC_OID_UNKNOWN,
