@@ -3908,6 +3908,33 @@ nsNavHistory::OnIdle()
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
+    // detect and replace bogus moz_places_visitcount index
+    // see bug 402161
+    // XXX REMOVE ME AFTER FINAL
+    nsCOMPtr<mozIStorageStatement> detectBogusIndex;
+    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+        "SELECT name FROM sqlite_master WHERE type = 'index' AND "
+        "name = 'moz_places_visitcount' AND sql LIKE '%rev_host%'"),
+        getter_AddRefs(detectBogusIndex));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool hasResult;
+    rv = detectBogusIndex->ExecuteStep(&hasResult);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = detectBogusIndex->Reset();
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (hasResult) {
+      // drop old index
+      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "DROP INDEX IF EXISTS moz_places_visitcount"));
+      NS_ENSURE_SUCCESS(rv, rv);
+      // create new index
+      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "CREATE INDEX IF NOT EXISTS moz_places_visitcount "
+          "ON moz_places (visit_count)"));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
 #if 0
     // Currently commented out because vacuum is very slow
     // see bug #390244 for more details.
