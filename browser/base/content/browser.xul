@@ -224,7 +224,8 @@
 #else
              defaultset="menubar-items,spring,throbber-box"
 #endif
-             mode="icons" context="toolbar-context-menu">
+             mode="icons" iconsize="small" defaulticonsize="small"
+             context="toolbar-context-menu">
       <toolbaritem id="menubar-items" align="center">
 # The entire main menubar is placed into browser-menubar.inc, so that it can be shared by 
 # hiddenWindow.xul.
@@ -466,7 +467,8 @@
 
     <toolbarset id="customToolbars" context="toolbar-context-menu"/>
 
-    <toolbar id="PersonalToolbar" mode="icons" iconsize="small"
+    <toolbar id="PersonalToolbar"
+             mode="icons" iconsize="small" defaulticonsize="small"
              class="chromeclass-directories"
              context="toolbar-context-menu"
              defaultset="home-button,personal-bookmarks"
