@@ -15,9 +15,12 @@ div { height: 1px; background: navy; }
 
 Differences between CSS 2.1 and this reference:
 
-1. it incorporates proposal in http://lists.w3.org/Archives/Public/www-style/2008Feb/0224.html
+1. it incorporates proposal in
+   http://lists.w3.org/Archives/Public/www-style/2008Feb/0224.html
 
-2. it ignores single 'auto' margins (one side only) when they would become negative (rather than just double)
+2. it ignores single 'auto' margins (one side only) when they should
+   become negative; this is a bug that we should fix:
+   https://bugzilla.mozilla.org/show_bug.cgi?id=419100
 
 -->
 
