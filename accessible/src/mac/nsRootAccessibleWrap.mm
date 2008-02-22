@@ -41,6 +41,7 @@
 #include "mozDocAccessible.h"
 
 #include "nsCOMPtr.h"
+#include "nsObjCExceptions.h"
 #include "nsIWidget.h"
 #include "nsIViewManager.h"
 
@@ -59,7 +60,11 @@ nsRootAccessibleWrap::~nsRootAccessibleWrap()
 objc_class*
 nsRootAccessibleWrap::GetNativeType ()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   return [mozRootAccessible class];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 void

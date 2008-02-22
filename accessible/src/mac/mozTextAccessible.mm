@@ -1,4 +1,5 @@
 #include "nsAccessibleWrap.h"
+#include "nsObjCExceptions.h"
 
 #import "mozTextAccessible.h"
 
@@ -18,11 +19,15 @@ extern const NSString *kTopLevelUIElementAttribute;   // NSAccessibilityTopLevel
 
 - (id)initWithAccessible:(nsAccessibleWrap*)accessible
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   if ((self = [super initWithAccessible:accessible])) {
     CallQueryInterface(accessible, &mGeckoTextAccessible);
     CallQueryInterface(accessible, &mGeckoEditableTextAccessible);
   }
   return self;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (BOOL)accessibilityIsIgnored
@@ -32,6 +37,8 @@ extern const NSString *kTopLevelUIElementAttribute;   // NSAccessibilityTopLevel
 
 - (NSArray*)accessibilityAttributeNames
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   static NSArray *supportedAttributes = nil;
   if (!supportedAttributes) {
     // standard attributes that are shared and supported by all generic elements.
@@ -59,10 +66,14 @@ extern const NSString *kTopLevelUIElementAttribute;   // NSAccessibilityTopLevel
                                                            nil];
   }
   return supportedAttributes;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (id)accessibilityAttributeValue:(NSString*)attribute
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   if ([attribute isEqualToString:NSAccessibilityNumberOfCharactersAttribute])
     return [NSNumber numberWithInt:[self textLength]];
   if ([attribute isEqualToString:NSAccessibilitySelectedTextRangeAttribute])
@@ -72,23 +83,33 @@ extern const NSString *kTopLevelUIElementAttribute;   // NSAccessibilityTopLevel
   
   // let mozAccessible handle all other attributes
   return [super accessibilityAttributeValue:attribute];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (BOOL)accessibilityIsAttributeSettable:(NSString*)attribute
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   if ([attribute isEqualToString:NSAccessibilityValueAttribute])
     return [self isReadOnly];
   
   return [super accessibilityIsAttributeSettable:attribute];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
 - (void)accessibilitySetValue:(id)value forAttribute:(NSString *)attribute
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if ([attribute isEqualToString:NSAccessibilityValueAttribute]) {
     if ([value isKindOfClass:[NSString class]])
       [self setText:(NSString*)value];
   } else
     [super accessibilitySetValue:value forAttribute:attribute];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (NSString*)subrole
@@ -99,15 +120,21 @@ extern const NSString *kTopLevelUIElementAttribute;   // NSAccessibilityTopLevel
 
 - (void)expire
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   NS_IF_RELEASE(mGeckoTextAccessible);
   NS_IF_RELEASE(mGeckoEditableTextAccessible);
   [super expire];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 #pragma mark -
 
 - (BOOL)isReadOnly
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   if ([[self role] isEqualToString:NSAccessibilityStaticTextRole])
     return YES;
     
@@ -118,27 +145,39 @@ extern const NSString *kTopLevelUIElementAttribute;   // NSAccessibilityTopLevel
   }
 
   return NO;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
 - (void)setText:(NSString*)newString
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (mGeckoEditableTextAccessible) {
     mGeckoEditableTextAccessible->SetTextContents(NS_ConvertUTF8toUTF16([newString UTF8String]));
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (long)textLength
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   if (mGeckoTextAccessible) {
     PRInt32 charCount = 0;
     mGeckoTextAccessible->GetCharacterCount(&charCount);
     return charCount;
   }
   return 0;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 }
 
 - (long)selectedTextLength
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   if (mGeckoTextAccessible) {
     PRInt32 start, end;
     start = end = 0;
@@ -146,10 +185,14 @@ extern const NSString *kTopLevelUIElementAttribute;   // NSAccessibilityTopLevel
     return (end - start);
   }
   return 0;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 }
 
 - (NSString*)selectedText
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   if (mGeckoTextAccessible) {
     PRInt32 start, end;
     start = end = 0;
@@ -161,10 +204,14 @@ extern const NSString *kTopLevelUIElementAttribute;   // NSAccessibilityTopLevel
     }
   }
   return nil;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (NSValue*)selectedTextRange
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   if (mGeckoTextAccessible) {
     PRInt32 start, end;
     start = end = 0;
@@ -172,14 +219,20 @@ extern const NSString *kTopLevelUIElementAttribute;   // NSAccessibilityTopLevel
     return [NSValue valueWithRange:NSMakeRange(start, start-end)];
   }
   return nil;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 #pragma mark -
 
 - (void)valueDidChange
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   NSAccessibilityPostNotification([self hasRepresentedView] ? [self representedView] : self, 
                                   NSAccessibilityValueChangedNotification);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 @end
@@ -188,6 +241,8 @@ extern const NSString *kTopLevelUIElementAttribute;   // NSAccessibilityTopLevel
 
 - (NSArray*)accessibilityAttributeNames
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   static NSArray *supportedAttributes = nil;
   if (!supportedAttributes) {
     // standard attributes that are shared and supported by all generic elements.
@@ -218,10 +273,14 @@ extern const NSString *kTopLevelUIElementAttribute;   // NSAccessibilityTopLevel
                                                            nil];
   }
   return supportedAttributes;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (NSArray *)accessibilityActionNames
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   if ([self isEnabled]) {
     return [NSArray arrayWithObjects:NSAccessibilityConfirmAction,
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
@@ -230,10 +289,14 @@ extern const NSString *kTopLevelUIElementAttribute;   // NSAccessibilityTopLevel
                                      nil];
   }
   return nil;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (NSString *)accessibilityActionDescription:(NSString *)action
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
   if ([action isEqualToString:NSAccessibilityShowMenuAction])
     return @"show menu";
@@ -242,10 +305,14 @@ extern const NSString *kTopLevelUIElementAttribute;   // NSAccessibilityTopLevel
     return @"confirm";
     
   return [super accessibilityActionDescription:action];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (void)accessibilityPerformAction:(NSString *)action
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   // both the ShowMenu and Click action do the same thing.
   if ([self isEnabled]) {
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
@@ -255,6 +322,8 @@ extern const NSString *kTopLevelUIElementAttribute;   // NSAccessibilityTopLevel
     if ([action isEqualToString:NSAccessibilityConfirmAction])
       [self confirm];
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (void)showMenu

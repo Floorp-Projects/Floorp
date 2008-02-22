@@ -39,6 +39,7 @@
 #include "nsAccessibleWrap.h"
 #include "nsIAccessibleDocument.h"
 #include "nsIAccessibleText.h"
+#include "nsObjCExceptions.h"
 
 #import "nsRoleMap.h"
 
@@ -100,6 +101,8 @@ nsAccessibleWrap::GetNativeWindow (void **aOutNativeWindow)
 objc_class*
 nsAccessibleWrap::GetNativeType () 
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   PRUint32 role = Role(this);
   switch (role) {
     case nsIAccessibleRole::ROLE_PUSHBUTTON:
@@ -138,6 +141,8 @@ nsAccessibleWrap::GetNativeType ()
   }
   
   return nil;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 // this method is very important. it is fired when an accessible object "dies". after this point
@@ -157,6 +162,8 @@ nsAccessibleWrap::Shutdown ()
 NS_IMETHODIMP
 nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG_POINTER(aEvent);
 
   nsresult rv = nsAccessible::FireAccessibleEvent(aEvent);
@@ -190,16 +197,22 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
   }
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 nsresult
 nsAccessibleWrap::InvalidateChildren ()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if (mNativeWrapper) {
     mozAccessible *object = mNativeWrapper->getNativeObject();
     [object invalidateChildren];
   }
   return nsAccessible::InvalidateChildren();
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 PRInt32

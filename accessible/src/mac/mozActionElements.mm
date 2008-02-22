@@ -39,6 +39,8 @@
 #import "mozActionElements.h"
 #import "nsIAccessible.h"
 
+#include "nsObjCExceptions.h"
+
 extern const NSString *kInstanceDescriptionAttribute; // NSAccessibilityDescriptionAttribute
 extern const NSString *kTopLevelUIElementAttribute;   // NSAccessibilityTopLevelUIElementAttribute
 
@@ -53,6 +55,8 @@ enum CheckboxValue {
 
 - (NSArray*)accessibilityAttributeNames
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   static NSArray *attributes = nil;
   if (!attributes) {
     attributes = [[NSArray alloc] initWithObjects:NSAccessibilityParentAttribute, // required
@@ -70,13 +74,19 @@ enum CheckboxValue {
                                                   nil];
   }
   return attributes;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (id)accessibilityAttributeValue:(NSString *)attribute
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   if ([attribute isEqualToString:NSAccessibilityChildrenAttribute])
     return nil;
   return [super accessibilityAttributeValue:attribute];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (BOOL)accessibilityIsIgnored
@@ -86,24 +96,36 @@ enum CheckboxValue {
 
 - (NSArray*)accessibilityActionNames
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   if ([self isEnabled])
     return [NSArray arrayWithObject:NSAccessibilityPressAction];
     
   return nil;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (NSString*)accessibilityActionDescription:(NSString*)action 
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   if ([action isEqualToString:NSAccessibilityPressAction])
     return @"press button"; // XXX: localize this later?
     
   return nil;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (void)accessibilityPerformAction:(NSString*)action 
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if ([action isEqualToString:NSAccessibilityPressAction])
     [self click];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (void)click
@@ -119,6 +141,8 @@ enum CheckboxValue {
 
 - (NSString*)accessibilityActionDescription:(NSString*)action 
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   if ([action isEqualToString:NSAccessibilityPressAction]) {
     if ([self isChecked] != kUnchecked)
       return @"uncheck checkbox"; // XXX: localize this later?
@@ -127,6 +151,8 @@ enum CheckboxValue {
   }
   
   return nil;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (int)isChecked
@@ -144,7 +170,11 @@ enum CheckboxValue {
 
 - (id)value
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   return [NSNumber numberWithInt:[self isChecked]];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 @end
@@ -153,6 +183,8 @@ enum CheckboxValue {
 
 - (NSArray *)accessibilityAttributeNames
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   static NSArray *attributes = nil;
   
   if (!attributes) {
@@ -171,18 +203,26 @@ enum CheckboxValue {
                                                   nil];
   }
   return attributes;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (id)accessibilityAttributeValue:(NSString *)attribute
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   if ([attribute isEqualToString:NSAccessibilityChildrenAttribute]) {
     return [super children];
   }
   return [super accessibilityAttributeValue:attribute];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (NSArray *)accessibilityActionNames
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   if ([self isEnabled]) {
     return [NSArray arrayWithObjects:NSAccessibilityPressAction,
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
@@ -191,19 +231,27 @@ enum CheckboxValue {
                                      nil];
   }
   return nil;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (NSString *)accessibilityActionDescription:(NSString *)action
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
   if ([action isEqualToString:NSAccessibilityShowMenuAction])
     return @"show menu";
 #endif
   return [super accessibilityActionDescription:action];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (void)accessibilityPerformAction:(NSString *)action
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   // both the ShowMenu and Click action do the same thing.
   if ([self isEnabled]) {
     // TODO: this should bring up the menu, but currently doesn't.
@@ -211,6 +259,8 @@ enum CheckboxValue {
     //       the action needed to show the menu.
     [super click];
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 @end
