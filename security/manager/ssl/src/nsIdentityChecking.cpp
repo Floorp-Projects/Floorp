@@ -80,6 +80,14 @@ struct nsMyTrustedEVInfo
 
 static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
   {
+    "1.3.6.1.4.1.8024.0.2.100.1.2",
+    "Quo Vadis EV OID",
+    SEC_OID_UNKNOWN,
+    "CN=QuoVadis Root CA 2,O=QuoVadis Limited,C=BM",
+    "CN=QuoVadis Root CA 2,O=QuoVadis Limited,C=BM",
+    "CA:3A:FB:CF:12:40:36:4B:44:B2:16:20:88:80:48:39:19:93:7C:F7"
+  },
+  {
     "2.16.840.1.113733.1.7.23.6",
     "Verisign EV OID",
     SEC_OID_UNKNOWN,
