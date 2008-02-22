@@ -341,8 +341,8 @@ nsContextMenu.prototype = {
     // Copy email link depends on whether we're on an email link.
     this.showItem("context-copyemail", this.onMailtoLink);
 
-    // Copy link location depends on whether we're on a link.
-    this.showItem("context-copylink", this.onLink);
+    // Copy link location depends on whether we're on a non-mailto link.
+    this.showItem("context-copylink", this.onLink && !this.onMailtoLink);
     this.showItem("context-sep-copylink", this.onLink && this.onImage);
 
 #ifdef CONTEXT_COPY_IMAGE_CONTENTS
