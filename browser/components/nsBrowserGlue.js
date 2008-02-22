@@ -538,9 +538,6 @@ BrowserGlue.prototype = {
     var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
                 getService(Ci.nsINavBookmarksService);
 
-    // XXXmano bug 405497: this should be batched even if we're not called from
-    // the import service. However, calling runInBatchedMode from within a
-    // RunBatched implementation hangs the browser.
     var callback = {
       _placesBundle: Cc["@mozilla.org/intl/stringbundle;1"].
                      getService(Ci.nsIStringBundleService).
@@ -612,9 +609,7 @@ BrowserGlue.prototype = {
     };
 
     try {
-      callback.runBatched();
-      // See XXX note above
-      // bmsvc.runInBatchMode(callback, null);
+      bmsvc.runInBatchMode(callback, null);
     }
     catch(ex) {
       Components.utils.reportError(ex);
