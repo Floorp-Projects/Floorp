@@ -83,7 +83,7 @@
 
       <!-- Network tab -->
       <preference id="browser.cache.disk.capacity"     name="browser.cache.disk.capacity"     type="int"/>
-
+      <preference id="browser.offline-apps.notify"     name="browser.offline-apps.notify"     type="bool"/>
 
       <!-- Update tab -->
       <preference id="app.update.enabled"              name="app.update.enabled"              type="bool"
@@ -232,6 +232,16 @@
                        label="&clearCacheNow.label;" accesskey="&clearCacheNow.accesskey;"
                        oncommand="gAdvancedPane.clearCache();"/>
              </hbox>
+	     <hbox>
+	       <checkbox id="offlineNotify" flex="1"
+			 label="&offlineNotify.label;" accesskey="&offlineNotify.accesskey;"
+			 preference="browser.offline-apps.notify"
+			 onsyncfrompreference="return gAdvancedPane.readOfflineNotify();"/>
+	       <button id="offlineNotifyExceptions"
+		       label="&offlineNotifyExceptions.label;"
+		       accesskey="&offlineNotifyExceptions.accesskey;"
+		       oncommand="gAdvancedPane.showOfflineExceptions();"/>
+	     </hbox>
 	     <hbox>
 	       <vbox flex="1">
 

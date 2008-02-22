@@ -5014,6 +5014,10 @@ var OfflineApps = {
   },
 
   offlineAppRequested: function(aContentWindow) {
+    if (!gPrefService.getBoolPref("browser.offline-apps.notify")) {
+      return;
+    }
+
     var browserWindow = this._getBrowserWindowForContentWindow(aContentWindow);
     var browser = this._getBrowserForContentWindow(browserWindow,
                                                    aContentWindow);
@@ -5045,6 +5049,14 @@ var OfflineApps = {
         label: bundle_browser.getString("offlineApps.allow"),
         accessKey: bundle_browser.getString("offlineApps.allowAccessKey"),
         callback: function() { OfflineApps.allowSite(); }
+      },{
+        label: bundle_browser.getString("offlineApps.never"),
+        accessKey: bundle_browser.getString("offlineApps.neverAccessKey"),
+        callback: function() { OfflineApps.disallowSite(); }
+      },{
+        label: bundle_browser.getString("offlineApps.notNow"),
+        accessKey: bundle_browser.getString("offlineApps.notNowAccessKey"),
+        callback: function() { /* noop */ }
       }];
 
       const priority = notificationBox.PRIORITY_INFO_LOW;
@@ -5066,6 +5078,13 @@ var OfflineApps = {
     // resources will start fetching immediately.  This one time we need to
     // do it ourselves.
     this._startFetching();
+  },
+
+  disallowSite: function() {
+    var currentURI = gBrowser.selectedBrowser.webNavigation.currentURI;
+    var pm = Cc["@mozilla.org/permissionmanager;1"].
+             getService(Ci.nsIPermissionManager);
+    pm.add(currentURI, "offline-app", Ci.nsIPermissionManager.DENY_ACTION);
   },
 
   _startFetching: function() {
