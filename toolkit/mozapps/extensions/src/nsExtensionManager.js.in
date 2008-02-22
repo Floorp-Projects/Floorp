@@ -6206,10 +6206,8 @@ RDFItemUpdater.prototype = {
     catch (e) { }
     if (!dsURI)
       dsURI = aItem.updateRDF;
-    if (!dsURI) {
-      dsURI = gPref.getComplexValue(PREF_UPDATE_DEFAULT_URL,
-                                    Ci.nsIPrefLocalizedString).data;
-    }
+    if (!dsURI)
+      dsURI = gPref.getCharPref(PREF_UPDATE_DEFAULT_URL);
 
     dsURI = escapeAddonURI(aItem, dsURI, emDS);
 
