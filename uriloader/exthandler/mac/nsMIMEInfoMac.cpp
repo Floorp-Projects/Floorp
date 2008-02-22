@@ -24,6 +24,7 @@
  *   Scott MacGregor <mscott@netscape.com>
  *   Christian Biesinger <cbiesinger@web.de>
  *   Dan Mosedale <dmose@mozilla.org>
+ *   Stan Shebs <stanshebs@earthlink.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -115,12 +116,3 @@ nsMIMEInfoMac::LoadUriInternal(nsIURI *aURI)
   }
   return rv;
 }
-
-NS_IMETHODIMP
-nsMIMEInfoMac::GetHasDefaultHandler(PRBool *_retval)
-{
-  // We have a default application if we have a description
-  *_retval = !mDefaultAppDescription.IsEmpty();
-  return NS_OK;
-}
-
