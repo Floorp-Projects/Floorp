@@ -1607,22 +1607,6 @@ nsCycleCollector::CollectWhite()
             Fault("Failed unroot call while unlinking", pinfo);
     }
 
-#ifdef DEBUG_CC
-    for (i = 0; i < count; ++i) {
-        PtrInfo *pinfo = mWhiteNodes->ElementAt(i);
-        if (pinfo->mLangID == nsIProgrammingLanguage::CPLUSPLUS &&
-            mPurpleBuf.Exists(pinfo->mPointer)) {
-            printf("nsCycleCollector: %s object @%p is still alive after\n"
-                   "  calling RootAndUnlinkJSObjects, Unlink, and Unroot on "
-                   "it!  This probably\n"
-                   "  means the Unlink implementation was insufficient.\n",
-                   pinfo->mName, pinfo->mPointer);
-        }
-    }
-#endif
-
-    mWhiteNodes->Clear();
-
 #if defined(DEBUG_CC) && !defined(__MINGW32__) && defined(WIN32)
     _CrtMemCheckpoint(&ms2);
     if (ms2.lTotalCount < ms1.lTotalCount)
@@ -2195,6 +2179,27 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
             collected = BeginCollection() && FinishCollection();
         }
 
+#ifdef DEBUG_CC
+        // We wait until after FinishCollection to check the white nodes because
+        // some objects may outlive CollectWhite but then be freed by
+        // FinishCycleCollection (like XPConnect's deferred release of native
+        // objects).
+        PRUint32 i, count = mWhiteNodes->Length();
+        for (i = 0; i < count; ++i) {
+            PtrInfo *pinfo = mWhiteNodes->ElementAt(i);
+            if (pinfo->mLangID == nsIProgrammingLanguage::CPLUSPLUS &&
+                mPurpleBuf.Exists(pinfo->mPointer)) {
+                printf("nsCycleCollector: %s object @%p is still alive after\n"
+                       "  calling RootAndUnlinkJSObjects, Unlink, and Unroot on"
+                       " it!  This probably\n"
+                       "  means the Unlink implementation was insufficient.\n",
+                       pinfo->mName, pinfo->mPointer);
+            }
+        }
+#endif
+        mWhiteNodes->Clear();
+        ClearGraph();
+
         if (!collected)
             break;
         
@@ -2363,8 +2368,6 @@ nsCycleCollector::FinishCollection()
     }
 
     mFollowupCollection = PR_TRUE;
-
-    ClearGraph();
 
     return collected;
 }
