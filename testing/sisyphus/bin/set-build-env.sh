@@ -121,7 +121,7 @@ for step in step1; do # dummy loop for handling exits
     fi
 
     if [[ -n "$MOZ_CO_DATE" ]]; then
-        export DATE_CO_FLAGS="-D $MOZ_CO_DATE"
+        export DATE_CO_FLAGS="-D \"$MOZ_CO_DATE\""
     fi
 
     if [[ -n "$WINDIR" ]] ; then
