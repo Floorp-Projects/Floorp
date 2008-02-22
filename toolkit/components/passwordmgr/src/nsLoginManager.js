@@ -87,7 +87,20 @@ LoginManager.prototype = {
     __storage : null, // Storage component which contains the saved logins
     get _storage() {
         if (!this.__storage) {
-            this.__storage = Cc["@mozilla.org/login-manager/storage/legacy;1"].
+
+            var contractID = "@mozilla.org/login-manager/storage/legacy;1";
+            try {
+                var catMan = Cc["@mozilla.org/categorymanager;1"].
+                             getService(Ci.nsICategoryManager);
+                contractID = catMan.getCategoryEntry("login-manager-storage",
+                                                     "nsILoginManagerStorage");
+                this.log("Found alternate nsILoginManagerStorage with " +
+                         "contract ID: " + contractID);
+            } catch (e) {
+                this.log("No alternate nsILoginManagerStorage registered");
+            }
+
+            this.__storage = Cc[contractID].
                              createInstance(Ci.nsILoginManagerStorage);
             try {
                 this.__storage.init();
