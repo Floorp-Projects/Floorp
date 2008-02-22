@@ -678,7 +678,8 @@ AllocRawStack(JSContext *cx, uintN nslots, void **markp)
     if (!cx->stackPool.first.next) {
         int64 *timestamp;
 
-        JS_ARENA_ALLOCATE(timestamp, &cx->stackPool, sizeof *timestamp);
+        JS_ARENA_ALLOCATE_CAST(timestamp, int64 *,
+                               &cx->stackPool, sizeof *timestamp);
         if (!timestamp) {
             js_ReportOutOfScriptQuota(cx);
             return NULL;

@@ -331,7 +331,7 @@ ResizeSlots(JSContext *cx, JSObject *obj, uint32 oldlen, uint32 len)
     }
 
     slots = obj->dslots ? obj->dslots - 1 : NULL;
-    newslots = JS_realloc(cx, slots, sizeof (jsval) * (len + 1));
+    newslots = (jsval *) JS_realloc(cx, slots, sizeof (jsval) * (len + 1));
     if (!newslots)
         return JS_FALSE;
     
@@ -970,7 +970,7 @@ array_newObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
     extern JSClass js_ArrayClass;
     extern JSObjectOps js_ArrayObjectOps;
 #endif
-    JSObjectMap *map = JS_malloc(cx, sizeof(*map));
+    JSObjectMap *map = (JSObjectMap *) JS_malloc(cx, sizeof(*map));
     if (!map)
         return NULL;
 
