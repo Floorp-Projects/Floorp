@@ -931,8 +931,7 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 #urlbar[level="high"][pageproxystate="valid"] > .autocomplete-textbox-container,
 #urlbar[level="low"][pageproxystate="valid"] > .autocomplete-textbox-container,
 #urlbar[level="high"][pageproxystate="valid"] #autocomplete-security-wrapper,
-#urlbar[level="low"][pageproxystate="valid"] #autocomplete-security-wrapper,
-#urlbar[level="broken"][pageproxystate="valid"] #autocomplete-security-wrapper {
+#urlbar[level="low"][pageproxystate="valid"] #autocomplete-security-wrapper {
   background-color: #F5F6BE; /* #F7F898; */
   color: #000000;
 }
