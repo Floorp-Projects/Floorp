@@ -67,6 +67,7 @@
 #include "nsIThread.h"
 #include "nsIWindowWatcher.h"
 #include "nsIPrompt.h"
+#include "nsProxyRelease.h"
 
 #include "ssl.h"
 #include "cert.h"
@@ -565,6 +566,11 @@ nsHTTPListener::~nsHTTPListener()
   
   if (mLock)
     PR_DestroyLock(mLock);
+
+  if (mLoader) {
+    nsCOMPtr<nsIThread> mainThread(do_GetMainThread());
+    NS_ProxyRelease(mainThread, mLoader);
+  }
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsHTTPListener, nsIStreamLoaderObserver)
