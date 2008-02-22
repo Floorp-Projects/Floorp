@@ -526,9 +526,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  PRBool isVisible;
-  IsVisible(isVisible);
-  if (bState == isVisible)
+  if (!mSheetNeedsShow && bState == [mWindow isVisible])
     return NS_OK;
 
   nsIWidget* parentWidget = mParent;
@@ -562,7 +560,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
         // If this sheet is already the sheet actually being shown, don't
         // tell it to show again. Otherwise the number of calls to
         // [NSApp beginSheet...] won't match up with [NSApp endSheet...].
-        if (![mWindow isSheet]) {
+        if (![mWindow isVisible]) {
           mSheetNeedsShow = PR_FALSE;
           mSheetWindowParent = topNonSheetWindow;
           [[mSheetWindowParent delegate] sendFocusEvent:NS_LOSTFOCUS];
