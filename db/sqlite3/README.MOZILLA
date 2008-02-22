@@ -12,4 +12,7 @@ To move to a new version:
 
 Simply copy the sqlite3.h and sqlite3.c files from the amalgamation of sqlite.
 
+If mozstorage or nss code need changes due to API changes in sqlite3, be sure
+to update SQLITE_VERSION accordingly in $(topsrcdir)/configure.in.
+
 -- Shawn Wilsher <me@shawnwilsher.com> 01/2008

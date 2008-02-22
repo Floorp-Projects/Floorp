@@ -65,17 +65,16 @@ EXPORTS = mozStorageCID.h
 CPPSRCS = mozStorageModule.cpp
 
 LOCAL_INCLUDES = \
+	$(SQLITE_CFLAGS) \
 	-I$(srcdir)/../src
 
 SHARED_LIBRARY_LIBS = \
 	../src/$(LIB_PREFIX)storage_s.$(LIB_SUFFIX) \
 	$(NULL)
 
-EXTRA_DSO_LIBS += sqlite3
-
 EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \
-	$(EXTRA_DSO_LIBS) \
+	$(SQLITE_LIBS) \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(MOZ_JS_LIBS) \
