@@ -650,6 +650,12 @@ nsSVGOuterSVGFrame::Paint(nsIRenderingContext& aRenderingContext,
   aRenderingContext.PopState();
 }
 
+nsSplittableType
+nsSVGOuterSVGFrame::GetSplittableType() const
+{
+  return NS_FRAME_NOT_SPLITTABLE;
+}
+
 nsIAtom *
 nsSVGOuterSVGFrame::GetType() const
 {

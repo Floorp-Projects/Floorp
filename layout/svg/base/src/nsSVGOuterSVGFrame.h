@@ -105,6 +105,8 @@ public:
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow);
 
+  virtual nsSplittableType GetSplittableType() const;
+
   /**
    * Get the "type" of the frame
    *
