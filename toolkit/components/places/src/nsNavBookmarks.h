@@ -147,9 +147,6 @@ private:
   // the level of nesting of batches, 0 when no batches are open
   PRInt32 mBatchLevel;
 
-  // lock for RunInBatchMode
-  PRLock* mLock;
-
   // true if the outermost batch has an associated transaction that should
   // be committed when our batch level reaches 0 again.
   PRBool mBatchHasTransaction;

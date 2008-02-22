@@ -47,7 +47,6 @@
 #include "nsFaviconService.h"
 #include "nsAnnotationService.h"
 #include "nsPrintfCString.h"
-#include "nsAutoLock.h"
 #include "nsIUUIDGenerator.h"
 #include "prprf.h"
 #include "nsILivemarkService.h"
@@ -84,7 +83,7 @@ nsNavBookmarks* nsNavBookmarks::sInstance = nsnull;
 
 nsNavBookmarks::nsNavBookmarks()
   : mItemCount(0), mRoot(0), mBookmarksRoot(0), mTagRoot(0), mToolbarFolder(0), mBatchLevel(0),
-    mLock(nsnull), mBatchHasTransaction(PR_FALSE)
+    mBatchHasTransaction(PR_FALSE)
 {
   NS_ASSERTION(!sInstance, "Multiple nsNavBookmarks instances!");
   sInstance = this;
@@ -94,8 +93,6 @@ nsNavBookmarks::~nsNavBookmarks()
 {
   NS_ASSERTION(sInstance == this, "Expected sInstance == this");
   sInstance = nsnull;
-  if (mLock)
-    PR_DestroyLock(mLock);
 }
 
 NS_IMPL_ISUPPORTS3(nsNavBookmarks,
@@ -287,9 +284,6 @@ nsNavBookmarks::Init()
 
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  mLock = PR_NewLock();
-  NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
 
   // Temporary migration code for bug 396300
   nsCOMPtr<mozIStorageStatement> moveUnfiledBookmarks;
@@ -2530,7 +2524,7 @@ nsNavBookmarks::GetURIForKeyword(const nsAString& aKeyword, nsIURI** aURI)
   return NS_NewURI(aURI, spec);
 }
 
-// See RunInBatchMode, mLock _must_ be set when batching
+// See RunInBatchMode
 nsresult
 nsNavBookmarks::BeginUpdateBatch()
 {
@@ -2545,8 +2539,6 @@ nsNavBookmarks::BeginUpdateBatch()
     ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
                         OnBeginUpdateBatch())
   }
-  mozIStorageConnection *dbConn = DBConn();
-  mozStorageTransaction transaction(dbConn, PR_FALSE);
   return NS_OK;
 }
 
@@ -2566,16 +2558,13 @@ nsNavBookmarks::EndUpdateBatch()
 NS_IMETHODIMP
 nsNavBookmarks::RunInBatchMode(nsINavHistoryBatchCallback* aCallback,
                                nsISupports* aUserData) {
-  NS_ENSURE_STATE(mLock);
   NS_ENSURE_ARG_POINTER(aCallback);
 
-  nsAutoLock lock(mLock);
   BeginUpdateBatch();
   nsresult rv = aCallback->RunBatched(aUserData);
   EndUpdateBatch();
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP

@@ -85,7 +85,6 @@
 #include "mozStorageCID.h"
 #include "mozStorageHelper.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsAutoLock.h"
 #include "nsIIdleService.h"
 #include "nsILivemarkService.h"
 
@@ -316,7 +315,6 @@ nsNavHistory::GetSingleton()
 // nsNavHistory::nsNavHistory
 
 nsNavHistory::nsNavHistory() : mBatchLevel(0),
-                               mLock(nsnull),
                                mBatchHasTransaction(PR_FALSE),
                                mNowValid(PR_FALSE),
                                mExpireNowTimer(nsnull),
@@ -348,9 +346,6 @@ nsNavHistory::~nsNavHistory()
   // in case somebody creates an extra instance of the service.
   NS_ASSERTION(gHistoryService == this, "YOU CREATED 2 COPIES OF THE HISTORY SERVICE.");
   gHistoryService = nsnull;
-
-  if (mLock)
-    PR_DestroyLock(mLock);
 }
 
 
@@ -367,9 +362,6 @@ nsNavHistory::Init()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = prefService->GetBranch(PREF_BRANCH_BASE, getter_AddRefs(mPrefBranch));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  mLock = PR_NewLock();
-  NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
 
   // prefs
   LoadPrefs(PR_TRUE);
@@ -3024,7 +3016,7 @@ nsNavHistory::RemoveObserver(nsINavHistoryObserver* aObserver)
 }
 
 // nsNavHistory::BeginUpdateBatch
-// See RunInBatchMode, mLock _must_ be set when batching
+// See RunInBatchMode
 nsresult
 nsNavHistory::BeginUpdateBatch()
 {
@@ -3038,7 +3030,6 @@ nsNavHistory::BeginUpdateBatch()
     ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
                         OnBeginUpdateBatch())
   }
-  mozStorageTransaction transaction(mDBConn, PR_FALSE);
   return NS_OK;
 }
 
@@ -3059,15 +3050,10 @@ NS_IMETHODIMP
 nsNavHistory::RunInBatchMode(nsINavHistoryBatchCallback* aCallback,
                              nsISupports* aUserData) 
 {
-  NS_ENSURE_STATE(mLock);
   NS_ENSURE_ARG_POINTER(aCallback);
 
-  nsAutoLock lock(mLock);
-
   UpdateBatchScoper batch(*this);
-  nsresult rv = aCallback->RunBatched(aUserData);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
+  return aCallback->RunBatched(aUserData);
 }
 
 NS_IMETHODIMP
