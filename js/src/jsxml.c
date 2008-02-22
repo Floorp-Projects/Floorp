@@ -8315,7 +8315,7 @@ js_StepXMLListFilter(JSContext *cx, JSBool initialized)
         if (!filterobj)
             return JS_FALSE;
 
-        filter = JS_malloc(cx, sizeof *filter);
+        filter = (JSXMLFilter *) JS_malloc(cx, sizeof *filter);
         if (!filter)
             return JS_FALSE;
 
