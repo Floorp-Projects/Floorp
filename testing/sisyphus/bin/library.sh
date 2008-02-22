@@ -269,7 +269,7 @@ if [[ -z "$LIBRARYSH" ]]; then
     MOZ_BYPASS_PROFILE_AT_STARTUP=1
 
     # ah crap handler timeout
-    MOZ_GDB_SLEEP={$MOZ_GDB_SLEEP:-10}
+    MOZ_GDB_SLEEP=${MOZ_GDB_SLEEP:-10}
 
     # no dialogs on asserts
     XPCOM_DEBUG_BREAK=${XPCOM_DEBUG_BREAK:-warn}
