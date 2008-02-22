@@ -180,6 +180,30 @@ var gAdvancedPane = {
     } catch(ex) {}
   },
 
+  readOfflineNotify: function()
+  {
+    var pref = document.getElementById("browser.offline-apps.notify");
+    var button = document.getElementById("offlineNotifyExceptions");
+    button.disabled = !pref.value;
+    return pref.value;
+  },
+
+  showOfflineExceptions: function()
+  {
+    var bundlePreferences = document.getElementById("bundlePreferences");
+    var params = { blockVisible     : false,
+                   sessionVisible   : false,
+                   allowVisible     : false,
+                   prefilledHost    : "",
+                   permissionType   : "offline-app",
+                   manageCapability : Ci.nsIPermissionManager.DENY_ACTION,
+                   windowTitle      : bundlePreferences.getString("offlinepermissionstitle"),
+                   introText        : bundlePreferences.getString("offlinepermissionstext") };
+    document.documentElement.openWindow("Browser:Permissions",
+                                        "chrome://browser/content/preferences/permissions.xul",
+                                        "", params);
+  },
+
   /**
    * Updates the list of offline applications
    */

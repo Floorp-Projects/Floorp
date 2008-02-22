@@ -67,7 +67,12 @@
 <!ENTITY updateHistory.label             "Show Update History">
 <!ENTITY updateHistory.accesskey         "p">
 
-<!ENTITY offlineAppsList.label           "The following websites have data installed for offline use:">
+<!ENTITY offlineNotify.label             "Tell me when a website asks to store data for offline use">
+<!ENTITY offlineNotify.accesskey         "T">
+<!ENTITY offlineNotifyExceptions.label   "Exceptions…">
+<!ENTITY offlineNotifyExceptions.accesskey "x">
+
+<!ENTITY offlineAppsList.label           "The following websites have stored data for offline use:">
 <!ENTITY offlineAppsList.height          "7em">
 <!ENTITY offlineAppsListRemove.label     "Remove…">
 <!ENTITY offlineAppsListRemove.accesskey "R">
