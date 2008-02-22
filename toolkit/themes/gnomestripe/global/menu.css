@@ -45,7 +45,7 @@
 /* ::::: menu/menuitem ::::: */
 
 menu, menuitem {
-  -moz-appearance: menuitem !important;
+  -moz-appearance: menuitem;
   -moz-box-align: center;
   max-width: 42em;
   color: MenuText;
