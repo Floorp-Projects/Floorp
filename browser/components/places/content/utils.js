@@ -249,7 +249,7 @@ var PlacesUtils = {
   },
 
   /**
-   * Determines whether or not a ResultNode is a Bookmark folder or not.
+   * Determines whether or not a ResultNode is a Bookmark folder.
    * @param   aNode
    *          A result node
    * @returns true if the node is a Bookmark folder, false otherwise
@@ -285,7 +285,7 @@ var PlacesUtils = {
   },
 
   /**
-   * Determines whether or not a ResultNode is a visit item or not
+   * Determines whether or not a ResultNode is a visit item.
    * @param   aNode
    *          A result node
    * @returns true if the node is a visit item, false otherwise
@@ -300,7 +300,7 @@ var PlacesUtils = {
   },
 
   /**
-   * Determines whether or not a ResultNode is a URL item or not
+   * Determines whether or not a ResultNode is a URL item.
    * @param   aNode
    *          A result node
    * @returns true if the node is a URL item, false otherwise
@@ -314,7 +314,7 @@ var PlacesUtils = {
   },
 
   /**
-   * Determines whether or not a ResultNode is a Query item or not
+   * Determines whether or not a ResultNode is a Query item.
    * @param   aNode
    *          A result node
    * @returns true if the node is a Query item, false otherwise
@@ -342,10 +342,10 @@ var PlacesUtils = {
   },
 
   /**
-   * Determines whether or not a ResultNode is a host folder or not
+   * Determines whether or not a ResultNode is a host container.
    * @param   aNode
    *          A result node
-   * @returns true if the node is a host item, false otherwise
+   * @returns true if the node is a host container, false otherwise
    */
   nodeIsHost: function PU_nodeIsHost(aNode) {
     NS_ASSERT(aNode, "null node");
@@ -353,7 +353,17 @@ var PlacesUtils = {
   },
 
   /**
-   * Determines whether or not a ResultNode is a container item or not
+   * Determines whether or not a ResultNode is a day container.
+   * @param   node
+   *          A NavHistoryResultNode
+   * @returns true if the node is a day container, false otherwise
+   */
+  nodeIsDay: function PU_nodeIsDay(aNode) {
+    return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_DAY;
+  },
+
+  /**
+   * Determines whether or not a ResultNode is a container.
    * @param   aNode
    *          A result node
    * @returns true if the node is a container item, false otherwise
