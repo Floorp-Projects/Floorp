@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Scott MacGregor <mscott@netscape.com>
  *   Dan Mosedale <dmose@mozilla.org>
+ *   Stan Shebs <stanshebs@earthlink.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -281,13 +282,37 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
   if (!mimeInfo) {
     *aFound = PR_FALSE;
     PR_LOG(mLog, PR_LOG_DEBUG, ("Creating new mimeinfo\n"));
-    mimeInfo = new nsMIMEInfoMac(aMIMEType);
-    if (!mimeInfo)
+    // Create a Mac-specific MIME info so we can use Mac-specific members.
+    nsMIMEInfoMac* mimeInfoMac = new nsMIMEInfoMac(aMIMEType);
+    if (!mimeInfoMac)
       return nsnull;
-    NS_ADDREF(mimeInfo);
+    NS_ADDREF(mimeInfoMac);
 
     if (!aFileExt.IsEmpty())
-      mimeInfo->AppendExtension(aFileExt);
+      mimeInfoMac->AppendExtension(aFileExt);
+
+    // Now see if Launch Services knows of an application that should be run for this type.
+    OSStatus err;
+    FSRef appFSRef;
+    CFStringRef CFExt = ::CFStringCreateWithCString(NULL, flatExt.get(), kCFStringEncodingUTF8);
+    err = ::LSGetApplicationForInfo(kLSUnknownType, kLSUnknownCreator, CFExt,
+                                    kLSRolesAll, &appFSRef, nsnull);
+    if (err == noErr) {
+      nsCOMPtr<nsILocalFileMac> app(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
+      if (!app) {
+        ::CFRelease(CFExt);
+        NS_RELEASE(mimeInfoMac);
+        return nsnull;
+      }
+      app->InitWithFSRef(&appFSRef);
+      mimeInfoMac->SetDefaultApplication(app);
+      PR_LOG(mLog, PR_LOG_DEBUG, ("LSGetApplicationForInfo found a default application\n"));
+    } else {
+      // Just leave the default application unset.
+      PR_LOG(mLog, PR_LOG_DEBUG, ("LSGetApplicationForInfo returned error code %d; default application was not set\n", err));
+    }
+    mimeInfo = mimeInfoMac;
+    ::CFRelease(CFExt);
   }
   
   return mimeInfo;
