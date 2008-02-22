@@ -175,6 +175,9 @@ nsSSLSocketThreadData::~nsSSLSocketThreadData()
                &&
                mSSLState != ssl_pending_read, 
                "oops??? ssl socket is not idle at the time it is being destroyed");
+  if (mSSLDataBuffer) {
+    nsMemory::Free(mSSLDataBuffer);
+  }
 }
 
 PRBool nsSSLSocketThreadData::ensure_buffer_size(PRInt32 amount)
