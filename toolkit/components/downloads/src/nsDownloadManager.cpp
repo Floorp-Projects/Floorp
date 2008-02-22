@@ -2000,8 +2000,13 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
     // Obtain the referrer
     nsresult rv;
     nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+    nsCOMPtr<nsIURI> referrer = mReferrer;
     if (channel)
       (void)NS_GetReferrerFromChannel(channel, getter_AddRefs(mReferrer));
+
+    // Restore the original referrer if the new one isn't useful
+    if (!mReferrer)
+      mReferrer = referrer;
 
     // If we have a MIME info, we know that exthandler has already added this to
     // the history, but if we do not, we'll have to add it ourselves.
