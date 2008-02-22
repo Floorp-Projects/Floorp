@@ -93,13 +93,13 @@ var SidebarUtils = {
       if (PlacesUtils.nodeIsURI(cell))
         window.top.XULBrowserWindow.setOverLink(cell.uri, null);
       else
-        this.clearURLFromStausBar();
+        this.clearURLFromStatusBar();
     }
     else
-      this.clearURLFromStausBar();
+      this.clearURLFromStatusBar();
   },
 
-  clearURLFromStausBar: function SU_clearURLFromStausBar() {
+  clearURLFromStatusBar: function SU_clearURLFromStatusBar() {
     window.top.XULBrowserWindow.setOverLink("", null);  
   }
 };
