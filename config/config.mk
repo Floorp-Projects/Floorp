@@ -240,18 +240,14 @@ ifneq (,$(MOZ_BROWSE_INFO)$(MOZ_BSCFILE))
 OS_CFLAGS += -FR
 OS_CXXFLAGS += -FR
 endif
-else
-# if MOZ_DEBUG is not set and MOZ_PROFILE is set, then we generate
-# an optimized build with debugging symbols. Useful for debugging
-# compiler optimization bugs, as well as running with Quantify.
-# MOZ_DEBUG_SYMBOLS works the same way as MOZ_PROFILE, but generates debug
-# symbols in separate PDB files, rather than embedded into the binary.
-ifneq (,$(MOZ_PROFILE)$(MOZ_DEBUG_SYMBOLS))
-MOZ_OPTIMIZE_FLAGS=-Zi -O1 -UDEBUG -DNDEBUG
-OS_LDFLAGS = -DEBUG -OPT:REF -OPT:nowin98
-ifdef MOZ_PROFILE
-OS_LDFLAGS += -PDB:NONE
-endif
+else # ! MOZ_DEBUG
+
+# MOZ_DEBUG_SYMBOLS generates debug symbols in separate PDB files.
+# Used for generating an optimized build with debugging symbols.
+# Used in the Windows nightlies to generate symbols for crash reporting.
+ifdef MOZ_DEBUG_SYMBOLS
+OS_CXXFLAGS += -Zi -UDEBUG -DNDEBUG
+OS_LDFLAGS += -DEBUG -OPT:REF -OPT:nowin98
 endif
 
 ifdef MOZ_QUANTIFY
@@ -272,8 +268,7 @@ endif
 ifdef NS_TRACE_MALLOC
 MOZ_OPTIMIZE_FLAGS=-Zi -Od -UDEBUG -DNDEBUG
 OS_LDFLAGS = -DEBUG -PDB:NONE -OPT:REF -OPT:nowin98
-endif
-# NS_TRACE_MALLOC
+endif # NS_TRACE_MALLOC
 
 endif # MOZ_DEBUG
 endif # WINNT && !GNU_CC
