@@ -277,6 +277,11 @@ nsXULTemplateQueryProcessorStorage::InitializeForBuilding(nsISupports* aDatasour
     if (!mStorageConnection)
         return NS_ERROR_INVALID_ARG;
 
+    PRBool ready;
+    mStorageConnection->GetConnectionReady(&ready);
+    if (!ready)
+      return NS_ERROR_UNEXPECTED;
+
     return NS_OK;
 }
 
