@@ -3,6 +3,7 @@
 @AB_CD@.jar:
 % locale browser @AB_CD@ %locale/browser/
     locale/browser/aboutDialog.dtd                 (%chrome/browser/aboutDialog.dtd)
+    locale/browser/aboutRobots.dtd                 (%chrome/browser/aboutRobots.dtd)
     locale/browser/credits.dtd                     (%chrome/browser/credits.dtd)
 *   locale/browser/browser.dtd                     (%chrome/browser/browser.dtd)
     locale/browser/baseMenuOverlay.dtd             (%chrome/browser/baseMenuOverlay.dtd)
