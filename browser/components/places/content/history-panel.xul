@@ -58,7 +58,7 @@
 <page id="history-panel" orient="vertical"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="HistorySidebarInit();"
-      onunload="SidebarUtils.clearURLFromStausBar();">
+      onunload="SidebarUtils.clearURLFromStatusBar();">
 
   <script type="application/x-javascript" 
           src="chrome://browser/content/bookmarks/sidebarUtils.js"/>
@@ -123,7 +123,7 @@
         hidecolumnpicker="true"
         onclick="SidebarUtils.handleClick(this, event, true);"
         onmousemove="SidebarUtils.handleTreeMouseMove(event);"
-        onmouseout="SidebarUtils.clearURLFromStausBar();">
+        onmouseout="SidebarUtils.clearURLFromStatusBar();">
     <treecols>
       <treecol id="title" flex="1" primary="true" hideheader="true"/>
     </treecols>
