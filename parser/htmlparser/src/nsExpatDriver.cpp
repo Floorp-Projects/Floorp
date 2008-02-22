@@ -56,6 +56,9 @@
 #include "nsCRT.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
+#include "nsIContentPolicy.h"
+#include "nsContentPolicyUtils.h"
+#include "nsContentErrors.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsUnicharInputStream.h"
 
@@ -794,6 +797,24 @@ nsExpatDriver::OpenInputStreamFromExternalDTD(const PRUnichar* aFPIStr,
     }
 
     localURI.swap(uri);
+  }
+
+  nsCOMPtr<nsIContentSink> sink = do_QueryInterface(mSink);
+  nsCOMPtr<nsIDocument> doc;
+  if (sink)
+    doc = do_QueryInterface(sink->GetTarget());
+  PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
+  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OTHER,
+                                uri,
+                                (doc ? doc->NodePrincipal() : nsnull),
+                                doc,
+                                EmptyCString(), //mime guess
+                                nsnull,         //extra
+                                &shouldLoad);
+  if (NS_FAILED(rv)) return rv;
+  if (NS_CP_REJECTED(shouldLoad)) {
+    // Disallowed by content policy
+    return NS_ERROR_CONTENT_BLOCKED;
   }
 
   rv = NS_OpenURI(aStream, uri);
