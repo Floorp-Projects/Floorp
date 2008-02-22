@@ -154,13 +154,18 @@ var popupTests = [
       // next item needs to be selected
       "popupshowing editpopup", "DOMMenuItemInactive item1",
       // not sure why the menu inactivated event is firing so late
-      "DOMMenuInactive filepopup",
-      // finally, the first item is activated and popupshown is fired
-      "DOMMenuItemActive copy", "popupshown editpopup"
+      "DOMMenuInactive filepopup"
     ];
-    // don't skip disabled items on Windows
+    // finally, the first item is activated and popupshown is fired.
+    // On Windows, don't skip disabled items. A style rule in the Windows
+    // theme causes a reflow to happen once the open attribute is set, which
+    // in turn pushes a popupshown event onto the event queue. The themes on
+    // other platforms don't have this, so the reflow which pushes the
+    // popupshown event doesn't happen until later.
     if (navigator.platform.indexOf("Win") == 0)
-      elist[elist.length - 2] = "DOMMenuItemActive cut";
+      elist.push("popupshown editpopup", "DOMMenuItemActive cut");
+    else
+      elist.push("DOMMenuItemActive copy", "popupshown editpopup");
     return elist;
   },
   test: function() { synthesizeKey("VK_RIGHT", { }); },
@@ -197,7 +202,8 @@ var popupTests = [
   events: function() {
     var elist = ["DOMMenuBarActive menubar",
                  "popupshowing viewpopup", "DOMMenuItemActive viewmenu"];
-    // XXXndeakin not sure why, but windows fires these in a different order
+    // see the 'cursor right skip disabled' test above for why this is
+    // reversed on Windows
     if (navigator.platform.indexOf("Win") == 0)
       elist.push("popupshown viewpopup", "DOMMenuItemActive toolbar");
     else

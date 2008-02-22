@@ -934,10 +934,6 @@ nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
 {
   nsCOMPtr<nsIPresShell> presShell = aPresContext->PresShell();
 
-  if (aMenu)
-    aMenu->SetAttr(kNameSpaceID_None, nsGkAtoms::open,
-                   NS_LITERAL_STRING("true"), PR_TRUE);
-
   // XXXndeakin (bug 383930)
   //   eventually, the popup events will be a different event type with
   //   additional fields for the anchor node and position and so forth. This
