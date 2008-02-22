@@ -149,6 +149,10 @@ NS_IMETHODIMP nsHTMLBRAccessible::GetName(nsAString& aName)
   return NS_OK;
 }
 
+// A label is an element (not a leaf) and thus can support advanced interfaces.
+// We need to skip over nsTextAccessible QI which prevents that
+NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLLabelAccessible, nsLinkableAccessible)
+
 nsHTMLLabelAccessible::nsHTMLLabelAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
 nsTextAccessible(aDomNode, aShell)
 { 
