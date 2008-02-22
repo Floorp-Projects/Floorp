@@ -411,8 +411,8 @@ MODULES_all :=                                  \
 # For branches, uncomment the MOZ_CO_TAG line with the proper tag,
 # and commit this file on that tag.
 #MOZ_CO_TAG          = <tag>
-NSPR_CO_TAG          = NSPR_HEAD_20080129_PLUS_414997
-NSS_CO_TAG           = NSS_3_12_BETA1
+NSPR_CO_TAG          = NSPR_4_7_1_BETA1
+NSS_CO_TAG           = NSS_3_12_BETA2
 LDAPCSDK_CO_TAG      = LDAPCSDK_6_0_3_CLIENT_BRANCH
 LOCALES_CO_TAG       =
 
