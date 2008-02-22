@@ -136,8 +136,8 @@ static PLDHashTableOps gMapOps = {
 
 
 nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
-  : mPreviousSecurityState(lis_no_security),
-    mPreviousToplevelWasEV(PR_FALSE),
+  : mNotifiedSecurityState(lis_no_security),
+    mNotifiedToplevelIsEV(PR_FALSE),
     mIsViewSource(PR_FALSE)
 {
   mTransferringRequests.ops = nsnull;
@@ -235,7 +235,7 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window)
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::GetState(PRUint32* aState)
 {
-  return MapInternalToExternalState(aState, mPreviousSecurityState, mPreviousToplevelWasEV);
+  return MapInternalToExternalState(aState, mNotifiedSecurityState, mNotifiedToplevelIsEV);
 }
 
 nsresult
@@ -276,7 +276,7 @@ nsSecureBrowserUIImpl::MapInternalToExternalState(PRUint32* aState, lockIconStat
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::GetTooltipText(nsAString& aText)
 {
-  if (mPreviousSecurityState == lis_mixed_security)
+  if (mNotifiedSecurityState == lis_mixed_security)
   {
     GetBundleString(NS_LITERAL_STRING("SecurityButtonMixedContentTooltipText").get(),
                     aText);
@@ -1049,10 +1049,10 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)
 
   PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
          ("SecureUI:%p: UpdateSecurityState:  old-new  %d - %d\n", this,
-         mPreviousSecurityState, newSecurityState
+         mNotifiedSecurityState, newSecurityState
           ));
 
-  if (mPreviousSecurityState != newSecurityState)
+  if (mNotifiedSecurityState != newSecurityState)
   {
     // must show alert
     
@@ -1093,7 +1093,7 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)
 
     showWarning = PR_TRUE;
     
-    switch (mPreviousSecurityState)
+    switch (mNotifiedSecurityState)
     {
       case lis_no_security:
       case lis_broken_security:
@@ -1117,9 +1117,7 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)
       warnSecurityState = newSecurityState;
     }
     
-    mPreviousSecurityState = newSecurityState;
-    mPreviousToplevelWasEV = mNewToplevelIsEV;
-    
+    mNotifiedSecurityState = newSecurityState;
 
     if (lis_no_security == newSecurityState)
     {
@@ -1128,10 +1126,12 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)
     }
   }
 
+  mNotifiedToplevelIsEV = mNewToplevelIsEV;
+
   if (mToplevelEventSink)
   {
     PRUint32 newState = STATE_IS_INSECURE;
-    MapInternalToExternalState(&newState, newSecurityState, mNewToplevelIsEV);
+    MapInternalToExternalState(&newState, mNotifiedSecurityState, mNotifiedToplevelIsEV);
 
     PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
            ("SecureUI:%p: UpdateSecurityState: calling OnSecurityChange\n", this
