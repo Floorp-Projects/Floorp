@@ -16,3 +16,5 @@
 == box-sizing-2.html box-sizing-2-ref.html
 == box-sizing-3.html box-sizing-1-ref.html
 == box-sizing-4.html box-sizing-4-ref.html
+fails == abspos-non-replaced-width-offset-margin.html abspos-non-replaced-width-offset-margin-ref.html # bug 419060, bug 419072
+fails fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == abspos-replaced-width-offset-margin.html abspos-replaced-width-offset-margin-ref.html # bug 419060, bug 419072, bug 371316 or other image scaling issue
