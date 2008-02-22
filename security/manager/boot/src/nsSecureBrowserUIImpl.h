@@ -106,8 +106,8 @@ protected:
     lis_high_security
   };
 
-  lockIconState mPreviousSecurityState;
-  PRBool mPreviousToplevelWasEV;
+  lockIconState mNotifiedSecurityState;
+  PRBool mNotifiedToplevelIsEV;
 
   void ResetStateTracking();
   PRUint32 mNewToplevelSecurityState;
