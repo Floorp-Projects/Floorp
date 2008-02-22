@@ -716,6 +716,27 @@ nsDownloadManager::RestoreDatabaseState()
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Switch any download that is supposed to automatically resume and is in a
+  // finished state to *not* automatically resume.  See Bug 409179 for details.
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "UPDATE moz_downloads "
+    "SET autoResume = ?1 "
+    "WHERE state = ?2 "
+      "AND autoResume = ?3"),
+    getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  i = 0;
+  rv = stmt->BindInt32Parameter(i++, nsDownload::DONT_RESUME);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_FINISHED);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt32Parameter(i++, nsDownload::AUTO_RESUME);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -2317,6 +2338,9 @@ nsDownload::Finalize()
 
   // Remove ourself from the active downloads
   (void)mDownloadManager->mCurrentDownloads.RemoveObject(this);
+
+  // Make sure we do not automatically resume
+  mAutoResume = DONT_RESUME;
 }
 
 nsresult
