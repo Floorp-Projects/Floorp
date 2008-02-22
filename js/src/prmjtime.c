@@ -63,7 +63,8 @@
 #include <winbase.h>
 #include <math.h>     /* for fabs */
 #include <mmsystem.h> /* for timeBegin/EndPeriod */
-#if _MSC_VER >= 1400 /* VC++ 8.0 or later */
+/* VC++ 8.0 or later, and not WINCE */
+#if _MSC_VER >= 1400 && !defined(WINCE)
 #define NS_HAVE_INVALID_PARAMETER_HANDLER 1
 #endif
 #ifdef NS_HAVE_INVALID_PARAMETER_HANDLER
