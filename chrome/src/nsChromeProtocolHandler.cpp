@@ -128,7 +128,7 @@ protected:
 public:
     nsCachedChromeChannel(nsIURI* aURI);
 
-    NS_DECLARE_STATIC_IID_ACCESSOR(nsCachedChromeChannel)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_CACHEDCHROMECHANNEL_IMPL_IID)
 
     NS_DECL_ISUPPORTS
 
