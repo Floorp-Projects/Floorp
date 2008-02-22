@@ -848,7 +848,7 @@ slowarray_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                     jsval *statep, jsid *idp)
 {
     /* Are we continuing an enumeration that started when we were dense? */
-    if (JSVAL_IS_BOOLEAN(*statep)) {
+    if (enum_op != JSENUMERATE_INIT && JSVAL_IS_BOOLEAN(*statep)) {
         jsid lastIndex = INT_TO_JSID(JSVAL_TO_BOOLEAN(*statep));
 
         /* Replace our enumeration state with a native one. */
