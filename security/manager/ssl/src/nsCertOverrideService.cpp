@@ -58,6 +58,7 @@
 #include "pk11pub.h"
 #include "certdb.h"
 #include "sechash.h"
+#include "ssl.h" // For SSL_ClearSessionCache
 
 #include "nsNSSCleaner.h"
 NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
@@ -655,6 +656,7 @@ nsCertOverrideService::ClearValidityOverride(const nsAString & aHostNameWithPort
     mSettingsTable.RemoveEntry(hp8.get());
     Write();
   }
+  SSL_ClearSessionCache();
   return NS_OK;
 }
 
