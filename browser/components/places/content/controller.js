@@ -943,6 +943,8 @@ PlacesController.prototype = {
     var URIs = [];
     var bhist = PlacesUtils.history.QueryInterface(Ci.nsIBrowserHistory);
     var resultView = this._view.getResultView();
+    var root = this._view.getResultNode();
+
     for (var i = 0; i < nodes.length; ++i) {
       var node = nodes[i];
       if (PlacesUtils.nodeIsHost(node))
@@ -953,6 +955,26 @@ PlacesController.prototype = {
         if (URIs.indexOf(uri) < 0) {
           URIs.push(uri);
         }
+      }
+      else if (PlacesUtils.nodeIsDay(node)) {
+        // this is the oldest date
+        // for the last node endDate is end of epoch
+        var beginDate = 0;
+        // this is the newest date
+        // day nodes have time property set to the last day in the interval
+        var endDate = node.time;
+
+        // if this is not the last day container, then beginDate
+        // is the time property of the next day container
+        for (var j = 0; j < root.childCount-1 && !beginDate; ++j) {
+          if (root.getChild(j) != node)
+            continue;
+          var nextNode = root.getChild(j+1);
+          beginDate = nextNode.time
+        }
+
+        // we want to exclude beginDate from the removal
+        bhist.removePagesByTimeframe(beginDate+1, endDate);
       }
     }
 

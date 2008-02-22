@@ -41,33 +41,63 @@
 
 // Get global history service
 try {
-  var bhist = Cc["@mozilla.org/browser/global-history;2"].getService(Ci.nsIBrowserHistory);
+  var bhist = Cc["@mozilla.org/browser/global-history;2"].
+                getService(Ci.nsIBrowserHistory);
 } catch(ex) {
   do_throw("Could not get history service\n");
-} 
+}
 
 // Get annotation service
 try {
-  var annosvc= Cc["@mozilla.org/browser/annotation-service;1"].getService(Ci.nsIAnnotationService);
+  var annosvc= Cc["@mozilla.org/browser/annotation-service;1"].
+                 getService(Ci.nsIAnnotationService);
 } catch(ex) {
   do_throw("Could not get annotation service\n");
-} 
+}
 
 // Get bookmark service
 try {
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
+  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+                getService(Ci.nsINavBookmarksService);
 } catch(ex) {
   do_throw("Could not get nav-bookmarks-service\n");
+}
+
+// Get history service
+try {
+  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+                  getService(Ci.nsINavHistoryService);
+} catch(ex) {
+  do_throw("Could not get history service\n");
+}
+
+/**
+ * Checks to see that a URI is in the database.
+ *
+ * @param aURI
+ *        The URI to check.
+ * @returns true if the URI is in the DB, false otherwise.
+ */
+function uri_in_db(aURI) {
+  var options = histsvc.getNewQueryOptions();
+  options.maxResults = 1;
+  options.resultType = options.RESULTS_AS_URI;
+  var query = histsvc.getNewQuery();
+  query.uri = aURI;
+  var result = histsvc.executeQuery(query, options);
+  var root = result.root;
+  root.containerOpen = true;
+  return (root.childCount == 1);
 }
 
 // main
 function run_test() {
   var testURI = uri("http://mozilla.com");
 
-  /** 
+  /**
    * addPageWithDetails
-   * Adds a page to history with specific time stamp information. This is used in
-   * the History migrator. 
+   * Adds a page to history with specific time stamp information.
+   * This is used in the History migrator.
    */
   try {
     bhist.addPageWithDetails(testURI, "testURI", Date.now() * 1000);
@@ -83,7 +113,7 @@ function run_test() {
 
   /**
    * count
-   * The number of entries in global history
+   * Indicate if there are entries in global history
    */
   do_check_eq(1, bhist.count);
 
@@ -113,7 +143,8 @@ function run_test() {
 
   try {
     for (var i = 0; i < deletedPages.length ; ++i)
-      bhist.addPageWithDetails(deletedPages[i], "testURI" + (i+1), Date.now() * 1000);
+      bhist.addPageWithDetails(deletedPages[i], "testURI" + (i+1),
+                               Date.now() * 1000);
   } catch(ex) {
     do_throw("addPageWithDetails failed");
   }
@@ -137,12 +168,42 @@ function run_test() {
   do_check_eq(0, bhist.count);
   do_check_eq("", bhist.lastPageVisited);
   // check that bookmark and annotation still exist
-  do_check_eq(bmsvc.getBookmarkURI(bookmark).spec, deletedPages[bookmarkIndex].spec);
-  do_check_eq(annosvc.getPageAnnotation(deletedPages[annoIndex], annoName), annoValue);
+  do_check_eq(bmsvc.getBookmarkURI(bookmark).spec,
+              deletedPages[bookmarkIndex].spec);
+  do_check_eq(annosvc.getPageAnnotation(deletedPages[annoIndex], annoName),
+              annoValue);
   // remove annotation and bookmark
   annosvc.removePageAnnotation(deletedPages[annoIndex], annoName);
   bmsvc.removeItem(bookmark);
   bhist.removeAllPages();
+
+  /**
+   * removePagesByTimeframe
+   * Remove all pages for a given timeframe.
+   */
+  // PRTime is microseconds while JS time is milliseconds
+  var startDate = Date.now() * 1000;
+  try {
+    for (var i = 0; i < 10; ++i) {
+      let testURI = uri("http://mirror" + i + ".mozilla.com");
+      bhist.addPageWithDetails(testURI, "testURI" + i, startDate + i);
+    }
+  } catch(ex) {
+    do_throw("addPageWithDetails failed");
+  }
+  // delete all pages except the first and the last
+  bhist.removePagesByTimeframe(startDate+1, startDate+8);
+  // check that we have removed correct pages
+  for (var i = 0; i < 10; ++i) {
+    let testURI = uri("http://mirror" + i + ".mozilla.com");
+    if (i > 0 && i < 9)
+      do_check_false(uri_in_db(testURI));
+    else
+      do_check_true(uri_in_db(testURI));
+  }
+  // clear remaining items and check that all pages have been removed
+  bhist.removePagesByTimeframe(startDate, startDate+9);
+  do_check_eq(0, bhist.count);
 
   /**
    * removePagesFromHost
@@ -156,7 +217,8 @@ function run_test() {
 
   // test aEntireDomain
   bhist.addPageWithDetails(testURI, "testURI", Date.now() * 1000);
-  bhist.addPageWithDetails(uri("http://foobar.mozilla.com"), "testURI2", Date.now() * 1000);
+  var testURI2 = uri("http://foobar.mozilla.com");
+  bhist.addPageWithDetails(testURI2, "testURI2", Date.now() * 1000);
   bhist.removePagesFromHost("mozilla.com", false);
   do_check_eq(1, bhist.count);
 

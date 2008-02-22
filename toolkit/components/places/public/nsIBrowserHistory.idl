@@ -42,7 +42,7 @@
 #include "nsISupports.idl"
 #include "nsIGlobalHistory2.idl"
 
-[scriptable, uuid(ef807ae6-4ae9-4d1f-8ade-3ee75e24d18c)]
+[scriptable, uuid(96602bf3-de2a-42ed-812f-a83b130e6299)]
 interface nsIBrowserHistory : nsIGlobalHistory2
 {
     /**
@@ -63,7 +63,8 @@ interface nsIBrowserHistory : nsIGlobalHistory2
     /**
      * count
      *
-     * The number of entries in global history
+     * Indicate if there are entries in global history
+     * For performance reasons this does not return the real number of entries
      */
     readonly attribute PRUint32 count;
 
@@ -94,6 +95,16 @@ interface nsIBrowserHistory : nsIGlobalHistory2
      * instead it will send Begin/EndUpdateBatch
      */
     void removePagesFromHost(in AUTF8String aHost, in boolean aEntireDomain);
+
+    /**
+     * removePagesByTimeframe
+     *
+     * Remove all pages for a given timeframe.
+     * Limits are included: aBeginTime <= timeframe <= aEndTime
+     * Notice that this does not call observers for single deleted uris,
+     * instead it will send Begin/EndUpdateBatch
+     */
+    void removePagesByTimeframe(in long long aBeginTime, in long long aEndTime);
 
     /**
      * removeAllPages

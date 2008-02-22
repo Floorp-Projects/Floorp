@@ -3341,6 +3341,57 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
 }
 
 
+// nsNavHistory::RemovePagesByTimeframe
+//
+//    This function will delete all history information about
+//    pages for a given timeframe.
+//    Limits are included: aBeginTime <= timeframe <= aEndTime
+//
+//    This method sends onBeginUpdateBatch/onEndUpdateBatch to observers
+
+NS_IMETHODIMP
+nsNavHistory::RemovePagesByTimeframe(PRTime aBeginTime, PRTime aEndTime)
+{
+  nsresult rv;
+  // build a list of place ids to delete
+  nsCString deletePlaceIdsQueryString;
+
+  // we only need to know if a place has a visit into the given timeframe
+  // this query is faster than actually selecting in moz_historyvisits
+  nsCOMPtr<mozIStorageStatement> selectByTime;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT h.id FROM moz_places h WHERE "
+      "EXISTS (SELECT id FROM moz_historyvisits v WHERE v.place_id = h.id "
+      " AND v.visit_date >= ?1 AND v.visit_date <= ?2 LIMIT 1)"),
+    getter_AddRefs(selectByTime));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = selectByTime->BindInt64Parameter(0, aBeginTime);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = selectByTime->BindInt64Parameter(1, aEndTime);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasMore = PR_FALSE;
+  while (NS_SUCCEEDED(selectByTime->ExecuteStep(&hasMore)) && hasMore) {
+    PRInt64 placeId;
+    rv = selectByTime->GetInt64(0, &placeId);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (placeId != 0) {
+      if (!deletePlaceIdsQueryString.IsEmpty())
+        deletePlaceIdsQueryString.AppendLiteral(",");
+      deletePlaceIdsQueryString.AppendInt(placeId);
+    }
+  }
+
+  rv = RemovePagesInternal(deletePlaceIdsQueryString);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // force a full refresh calling onEndUpdateBatch (will call Refresh())
+  UpdateBatchScoper batch(*this); // sends Begin/EndUpdateBatch to observers
+
+  return NS_OK;
+}
+
+
 // nsNavHistory::RemoveAllPages
 //
 //    This function is used to clear history.
