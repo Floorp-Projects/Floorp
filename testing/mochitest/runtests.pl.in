@@ -324,7 +324,7 @@ sub winPathFromDir {
   foreach $mount (@m) {
     if ( $mount =~ /(.*) on ([^ ]*) type /) {
       my ($mingw, $real)=($2, $1);
-      if ($path =~ /^$mingw/) {
+      if ($path =~ /^$mingw/i) {
         # the path starts with the path we
         # found on this line in the mount output
         my $len = length($mingw);
