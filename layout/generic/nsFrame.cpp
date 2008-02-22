@@ -4540,8 +4540,9 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
       aFrame->GetType() == nsGkAtoms::brFrame) {
     nsIContent* content = aFrame->GetContent();
     result.mContent = content->GetParent();
-    result.mOffset = result.mContent->IndexOf(content) + 
-      (aDirection == eDirPrevious ? 1 : 0);
+    if (result.mContent)
+      result.mOffset = result.mContent->IndexOf(content) + 
+        (aDirection == eDirPrevious ? 1 : 0);
     return result;
   }
 
