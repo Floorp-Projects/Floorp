@@ -400,26 +400,61 @@ nsDownloadScanner::Scan::Run()
   return NS_OK;
 }
 
+static DWORD
+ExceptionFilterFunction(DWORD exceptionCode) {
+  switch(exceptionCode) {
+    case EXCEPTION_ACCESS_VIOLATION:
+    case EXCEPTION_ILLEGAL_INSTRUCTION:
+    case EXCEPTION_IN_PAGE_ERROR:
+    case EXCEPTION_PRIV_INSTRUCTION:
+    case EXCEPTION_STACK_OVERFLOW:
+      return EXCEPTION_EXECUTE_HANDLER;
+    default:
+      return EXCEPTION_CONTINUE_SEARCH;
+  }
+}
+
 PRBool
 nsDownloadScanner::Scan::DoScanAES()
 {
+  // This warning is for the destructor of ae which will not be invoked in the
+  // event of a win32 exception
+#pragma warning(disable: 4509)
   HRESULT hr;
   nsRefPtr<IAttachmentExecute> ae;
-  hr = CoCreateInstance(CLSID_AttachmentServices, NULL, CLSCTX_ALL,
-                        IID_IAttachmentExecute, getter_AddRefs(ae));
+  __try {
+    hr = CoCreateInstance(CLSID_AttachmentServices, NULL, CLSCTX_ALL,
+                          IID_IAttachmentExecute, getter_AddRefs(ae));
+  } __except(ExceptionFilterFunction(GetExceptionCode())) {
+    return CheckAndSetState(AVSCAN_NOTSTARTED,AVSCAN_FAILED);
+  }
 
   // If we (somehow) already timed out, then don't bother scanning
   if (CheckAndSetState(AVSCAN_SCANNING, AVSCAN_NOTSTARTED)) {
     AVScanState newState;
     if (SUCCEEDED(hr)) {
-      (void)ae->SetClientGuid(GUID_MozillaVirusScannerPromptGeneric);
-      (void)ae->SetLocalPath(mPath.BeginWriting());
-      (void)ae->SetSource(mOrigin.BeginWriting());
+      PRBool gotException = PR_FALSE;
+      __try {
+        (void)ae->SetClientGuid(GUID_MozillaVirusScannerPromptGeneric);
+        (void)ae->SetLocalPath(mPath.BeginWriting());
+        (void)ae->SetSource(mOrigin.BeginWriting());
 
-      // Save() will invoke the scanner
-      hr = ae->Save();
+        // Save() will invoke the scanner
+        hr = ae->Save();
+      } __except(ExceptionFilterFunction(GetExceptionCode())) {
+        gotException = PR_TRUE;
+      }
 
-      if (SUCCEEDED(hr)) { // Passed the scan
+      __try {
+        ae = NULL;
+      } __except(ExceptionFilterFunction(GetExceptionCode())) {
+        gotException = PR_TRUE;
+      }
+
+      if(gotException) {
+        newState = AVSCAN_FAILED;
+      }
+      else if (SUCCEEDED(hr)) { // Passed the scan
         newState = AVSCAN_GOOD;
       }
       else if (HRESULT_CODE(hr) == ERROR_FILE_NOT_FOUND) {
@@ -437,6 +472,7 @@ nsDownloadScanner::Scan::DoScanAES()
   }
   return PR_FALSE;
 }
+#pragma warning(default: 4509)
 
 PRBool
 nsDownloadScanner::Scan::DoScanOAV()
@@ -457,19 +493,43 @@ nsDownloadScanner::Scan::DoScanOAV()
   AVScanState newState = AVSCAN_GOOD;
   // If we (somehow) already timed out, then don't bother scanning
   if (CheckAndSetState(AVSCAN_SCANNING, AVSCAN_NOTSTARTED)) {
+    // This warning is for the destructor of vScanner which will not be invoked
+    // in the event of a win32 exception
+#pragma warning(disable: 4509)
     for (PRUint32 i = 0; i < mDLScanner->mScanCLSID.Length(); i++) {
       nsRefPtr<IOfficeAntiVirus> vScanner;
-      hr = CoCreateInstance(mDLScanner->mScanCLSID[i], NULL, CLSCTX_ALL,
-                            IID_IOfficeAntiVirus, getter_AddRefs(vScanner));
+      __try {
+        hr = CoCreateInstance(mDLScanner->mScanCLSID[i], NULL, CLSCTX_ALL,
+                              IID_IOfficeAntiVirus, getter_AddRefs(vScanner));
+      } __except(ExceptionFilterFunction(GetExceptionCode())) {
+        newState = AVSCAN_FAILED;
+        // Try the next one if there is one
+        continue;
+      }
       if (FAILED(hr)) {
         NS_WARNING("Could not instantiate antivirus scanner");
         newState = AVSCAN_FAILED;
       } else {
+        PRBool gotException = PR_FALSE;
         newState = AVSCAN_SCANNING;
 
-        hr = vScanner->Scan(&info);
+        __try {
+          hr = vScanner->Scan(&info);
+        } __except(ExceptionFilterFunction(GetExceptionCode())) {
+          gotException = PR_TRUE;
+        }
 
-        if (hr == S_OK) { // Passed the scan
+        // Invoke destructor
+        __try {
+          vScanner = NULL;
+        } __except(ExceptionFilterFunction(GetExceptionCode())) {
+          gotException = PR_TRUE;
+        }
+
+        if(gotException) {
+          newState = AVSCAN_FAILED;
+          continue;
+        } else if (hr == S_OK) { // Passed the scan
           newState = AVSCAN_GOOD;
           continue;
         }
@@ -492,6 +552,7 @@ nsDownloadScanner::Scan::DoScanOAV()
         }
       }
     }
+#pragma warning(default: 4509)
   }
 
   // If the previous CheckAndSetState call failed, then this one will too
@@ -515,7 +576,11 @@ nsDownloadScanner::Scan::DoScan()
     }
   }
 
-  CoUninitialize();
+  __try {
+    CoUninitialize();
+  } __except(ExceptionFilterFunction(GetExceptionCode())) {
+    // Not much we can do at this point...
+  }
 }
 
 HANDLE
