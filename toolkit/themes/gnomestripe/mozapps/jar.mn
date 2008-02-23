@@ -5,6 +5,9 @@ classic.jar:
 + skin/classic/mozapps/downloads/downloadIcon.png          (downloads/downloadIcon.png)
 + skin/classic/mozapps/downloads/downloads.css             (downloads/downloads.css)
 + skin/classic/mozapps/extensions/extensions.css           (extensions/extensions.css)
++ skin/classic/mozapps/extensions/ratings.png              (extensions/ratings.png)
++ skin/classic/mozapps/extensions/viewButtons.png          (extensions/viewButtons.png)
++ skin/classic/mozapps/extensions/themeGeneric.png         (extensions/themeGeneric.png)
 + skin/classic/mozapps/passwordmgr/key.png                 (passwordmgr/key.png)
 + skin/classic/mozapps/xpinstall/xpinstallItemGeneric.png  (xpinstall/xpinstallItemGeneric.png)
 #ifdef MOZ_PLACES
