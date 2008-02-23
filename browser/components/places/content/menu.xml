@@ -248,28 +248,27 @@
           <body><![CDATA[
             // Can't drop if the menu isn't a folder
             var resultNode = this._resultNode;
-
             if (!PlacesUtils.nodeIsFolder(resultNode))
               return null;
 
             var dropPoint = { ip: null, beforeIndex: null, folderNode: null };
-            // Loop through all the nodes to see which one this should
-            // get dropped in/above/below.
+
+            // set the limits for valid items
             var start = 0;
             var popup = this;
             var end = popup.childNodes.length;
-            if (popup == this._rootView &&
-                this._rootView.localName == "menupopup") {
-              // Ignore static content at the top and bottom of the menu.
-              start = this._rootView._startMarker + 1;
-              if (this._rootView._endMarker != -1)
-                end = this._rootView._endMarker;
-            }
+            if (this._startMarker != -1)
+              start = this._startMarker + 1;
+            if (this._endMarker != -1)
+              end = this._endMarker;
 
-            var popupFirstChildY = popup.firstChild.boxObject.y;
+            // Loop through all the nodes to find the correct dropPoint
+            var popupY = popup.boxObject.y;
+            // we should add the scrollBox button height if visible
+            popupY += this._scrollBox.scrollBoxObject.y - popup.boxObject.y;
             for (var i = start; i < end; i++) {
               var xulNode = popup.childNodes[i];
-              var nodeY = xulNode.boxObject.y - popupFirstChildY;
+              var nodeY = xulNode.boxObject.y - popupY;
               var nodeHeight = xulNode.boxObject.height;
               if (xulNode.node &&
                   PlacesUtils.nodeIsFolder(xulNode.node) &&
@@ -295,7 +294,7 @@
               else {
                 // This is a non-folder node. If the mouse is above the middle,
                 // drop above the folder.  Otherwise, drop below.
-                if (aEvent.layerY < nodeY + (nodeHeight / 2)) {
+                if (aEvent.layerY <= nodeY + (nodeHeight / 2)) {
                   // Drop above this bookmark.
                   dropPoint.ip = new InsertionPoint(resultNode.itemId,
                                                     i - start, -1);
