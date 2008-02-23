@@ -69,6 +69,7 @@
 #include "txXMLUtils.h"
 #include "nsAttrName.h"
 #include "nsIScriptError.h"
+#include "nsIURL.h"
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
@@ -771,8 +772,18 @@ TX_CompileStylesheet(nsINode* aNode, txMozillaXSLTProcessor* aProcessor,
     uri->GetSpec(spec);
     NS_ConvertUTF8toUTF16 baseURI(spec);
 
-    uri = doc->GetDocumentURI();
+    nsIURI* docUri = doc->GetDocumentURI();
+    NS_ENSURE_TRUE(docUri, NS_ERROR_FAILURE);
+
+    docUri->Clone(getter_AddRefs(uri));
     NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+
+    // We need to remove the ref, a URL with a ref would mean that we have an
+    // embedded stylesheet.
+    nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
+    if (url) {
+        url->SetRef(EmptyCString());
+    }
 
     uri->GetSpec(spec);
     NS_ConvertUTF8toUTF16 stylesheetURI(spec);
