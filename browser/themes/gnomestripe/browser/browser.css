@@ -1273,6 +1273,10 @@ tabpanels {
   opacity: 0.6;
 }
 
+.tabs-alltabs-button > .toolbarbutton-icon {
+   margin: 0px;
+}
+
 /* Sidebar */
 #sidebar-box .tabs-closebutton {
   margin-bottom: 0px !important;
