@@ -443,19 +443,21 @@ LivemarkService.prototype = {
     }
     var livemark = this._livemarks[livemarkIndex];
 
+    // remove the livemark from the update array
+    this._livemarks.splice(livemarkIndex, 1);
+
+    // check if we have more then one livemark for this address
+    // if exists we should not delete the annotation since it's still in use
     var stillInUse = false;
     stillInUse = this._livemarks.some(
                  function(mark) { return mark.feedURI.equals(livemark.feedURI) }
                  );
     if (!stillInUse) {
-      // ??? the code in the C++ had "livemark_expiration" as
-      // the second arg... that must be wrong
       this._ans.removePageAnnotation(livemark.feedURI, LMANNO_EXPIRATION);
     }
 
     if (livemark.loadGroup)
       livemark.loadGroup.cancel(NS_BINDING_ABORTED);
-    this._livemarks.splice(livemarkIndex, 1);
   },
 
   createInstance: function LS_createInstance(outer, iid) {
