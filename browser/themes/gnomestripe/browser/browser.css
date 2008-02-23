@@ -830,7 +830,7 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 
 #page-proxy-button[pageproxystate="invalid"] {
   cursor: default;
-  -moz-image-region: rect(32px, 16px, 48px, 0px) !important;
+  -moz-image-region: rect(16px, 16px, 32px, 0px) !important;
 }
 
 /* Identity indicator */
