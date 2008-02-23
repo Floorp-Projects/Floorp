@@ -45,6 +45,7 @@
 #include "nsXULAppAPI.h"
 #include "nsIPrefService.h"
 #include "nsNetUtil.h"
+#include "nsDeque.h"
 
 /**
  * Code overview
@@ -69,15 +70,62 @@
  * The only function of nsDownloadScanner::Scan which is invoked on another
  * thread is DoScan.
  *
- * There are 4 possible outcomes of the virus scan:
- *    AVSCAN_GOOD   => the file is clean
- *    AVSCAN_BAD    => the file has a virus
- *    AVSCAN_UGLY   => the file had a virus, but it was cleaned
- *    AVSCAN_FAILED => something else went wrong with the virus scanner.
+ * Watchdog overview
+ *
+ * The watchdog is used internally by the scanner. It maintains a queue of
+ * current download scans. In a separate thread, it dequeues the oldest scan
+ * and waits on that scan's thread with a timeout given by WATCHDOG_TIMEOUT
+ * (default is 30 seconds). If the wait times out, then the watchdog notifies
+ * the Scan that it has timed out. If the scan really has timed out, then the
+ * Scan object will dispatch its run method to the main thread; this will
+ * release the watchdog thread's addref on the Scan. If it has not timed out
+ * (i.e. the Scan just finished in time), then the watchdog dispatches a 
+ * ReleaseDispatcher to release its ref of the Scan on the main thread.
+ *
+ * In order to minimize execution time, there are two events used to notify the
+ * watchdog thread of a non-empty queue and a quit event. Every blocking wait 
+ * that the watchdog thread does waits on the quit event; this lets the thread
+ * quickly exit when shutting down. Also, the download scan queue will be empty
+ * most of the time; rather than use a spin loop, a simple event is triggered
+ * by the main thread when a new scan is added to an empty queue. When the
+ * watchdog thread knows that it has run out of elements in the queue, it will
+ * wait on the new item event.
+ *
+ * Memory/resource leaks due to timeout:
+ * In the event of a timeout, the thread must remain alive; terminating it may
+ * very well cause the antivirus scanner to crash or be put into an
+ * inconsistent state; COM resources may also not be cleaned up. The downside
+ * is that we need to leave the thread running; suspending it may lead to a
+ * deadlock. Because the scan call may be ongoing, it may be dependent on the
+ * memory referenced by the MSOAVINFO structure, so we cannot free mName, mPath
+ * or mOrigin; this means that we cannot free the Scan object since doing so
+ * will deallocate that memory. Note that mDownload is set to null upon timeout
+ * or completion, so the download itself is never leaked. If the scan does
+ * eventually complete, then the all the memory and resources will be freed.
+ * It is possible, however extremely rare, that in the event of a timeout, the
+ * mStateSync critical section will leak its event; this will happen only if
+ * the scanning thread, watchdog thread or main thread try to enter the
+ * critical section when one of the others is already in it.
+ *
+ * Reasoning for CheckAndSetState - there exists a race condition between the time when
+ * either the timeout or normal scan sets the state and when Scan::Run is
+ * executed on the main thread. Ex: mStatus could be set by Scan::DoScan* which
+ * then queues a dispatch on the main thread. Before that dispatch is executed,
+ * the timeout code fires and sets mStatus to AVSCAN_TIMEDOUT which then queues
+ * its dispatch to the main thread (the same function as DoScan*). Both
+ * dispatches run and both try to set the download state to AVSCAN_TIMEDOUT
+ * which is incorrect.
+ *
+ * There are 5 possible outcomes of the virus scan:
+ *    AVSCAN_GOOD     => the file is clean
+ *    AVSCAN_BAD      => the file has a virus
+ *    AVSCAN_UGLY     => the file had a virus, but it was cleaned
+ *    AVSCAN_FAILED   => something else went wrong with the virus scanner.
+ *    AVSCAN_TIMEDOUT => the scan (thread setup + execution) took too long
  *
  * Both the good and ugly states leave the user with a benign file, so they
  * transition to the finished state. Bad files are sent to the blocked state.
- * Failed states transition to finished downloads.
+ * The failed and timedout states transition to finished downloads.
  *
  * Possible Future enhancements:
  *  * Create an interface for scanning files in general
@@ -99,9 +147,41 @@
 static const GUID GUID_MozillaVirusScannerPromptGeneric =
   MOZ_VIRUS_SCANNER_PROMPT_GUID;
 
+// Initial timeout is 30 seconds
+#define WATCHDOG_TIMEOUT (30*PR_USEC_PER_SEC)
+
+class nsDownloadScannerWatchdog 
+{
+  typedef nsDownloadScanner::Scan Scan;
+public:
+  nsDownloadScannerWatchdog();
+  ~nsDownloadScannerWatchdog();
+
+  nsresult Init();
+  nsresult Shutdown();
+
+  void Watch(Scan *scan);
+private:
+  static unsigned int __stdcall WatchdogThread(void *p);
+  CRITICAL_SECTION mQueueSync;
+  nsDeque mScanQueue;
+  HANDLE mThread;
+  HANDLE mNewItemEvent;
+  HANDLE mQuitEvent;
+};
+
 nsDownloadScanner::nsDownloadScanner()
   : mHaveAVScanner(PR_FALSE), mHaveAttachmentExecute(PR_FALSE)
 {
+}
+ 
+// This destructor appeases the compiler; it would otherwise complain about an
+// incomplete type for nsDownloadWatchdog in the instantiation of
+// nsAutoPtr::~nsAutoPtr
+// Plus, it's a handy location to call nsDownloadScannerWatchdog::Shutdown from
+nsDownloadScanner::~nsDownloadScanner() {
+  if (mWatchdog)
+    (void)mWatchdog->Shutdown();
 }
 
 nsresult
@@ -114,6 +194,16 @@ nsDownloadScanner::Init()
   if (!IsAESAvailable() && ListCLSID() < 0)
     rv = NS_ERROR_NOT_AVAILABLE;
   CoUninitialize();
+  if (NS_SUCCEEDED(rv)) {
+    mWatchdog = new nsDownloadScannerWatchdog();
+    if (mWatchdog) {
+      rv = mWatchdog->Init();
+      if (FAILED(rv))
+        mWatchdog = nsnull;
+    } else {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
 
   return rv;
 }
@@ -179,15 +269,41 @@ nsDownloadScanner::ScannerThreadFunction(void *p)
   return 0;
 }
 
+// The sole purpose of this class is to release an object on the main thread
+// It assumes that its creator will addref it and it will release itself on
+// the main thread too
+class ReleaseDispatcher : public nsRunnable {
+public:
+  ReleaseDispatcher(nsISupports *ptr)
+    : mPtr(ptr) {}
+  NS_IMETHOD Run();
+private:
+  nsISupports *mPtr;
+};
+
+nsresult ReleaseDispatcher::Run() {
+  NS_ASSERTION(NS_IsMainThread(), "Antivirus scan release dispatch should be run on the main thread");
+  NS_RELEASE(mPtr);
+  NS_RELEASE_THIS();
+  return NS_OK;
+}
+
 nsDownloadScanner::Scan::Scan(nsDownloadScanner *scanner, nsDownload *download)
   : mDLScanner(scanner), mThread(NULL), 
     mDownload(download), mStatus(AVSCAN_NOTSTARTED)
 {
+  InitializeCriticalSection(&mStateSync);
+}
+
+nsDownloadScanner::Scan::~Scan() {
+  DeleteCriticalSection(&mStateSync);
 }
 
 nsresult
 nsDownloadScanner::Scan::Start()
 {
+  mStartTime = PR_Now();
+
   mThread = (HANDLE)_beginthreadex(NULL, 0, ScannerThreadFunction,
       this, CREATE_SUSPENDED, NULL);
   if (!mThread)
@@ -250,11 +366,15 @@ nsDownloadScanner::Scan::Start()
 nsresult
 nsDownloadScanner::Scan::Run()
 {
+  NS_ASSERTION(NS_IsMainThread(), "Antivirus scan dispatch should be run on the main thread");
+
   // Cleanup our thread
-  WaitForSingleObject(mThread, INFINITE);
+  if (mStatus != AVSCAN_TIMEDOUT)
+    WaitForSingleObject(mThread, INFINITE);
   CloseHandle(mThread);
 
   DownloadState downloadState = 0;
+  EnterCriticalSection(&mStateSync);
   switch (mStatus) {
     case AVSCAN_BAD:
       downloadState = nsIDownloadManager::DOWNLOAD_DIRTY;
@@ -263,16 +383,24 @@ nsDownloadScanner::Scan::Run()
     case AVSCAN_FAILED:
     case AVSCAN_GOOD:
     case AVSCAN_UGLY:
+    case AVSCAN_TIMEDOUT:
       downloadState = nsIDownloadManager::DOWNLOAD_FINISHED;
       break;
   }
-  (void)mDownload->SetState(downloadState);
+  LeaveCriticalSection(&mStateSync);
+  // Download will be null if we already timed out
+  if (mDownload)
+    (void)mDownload->SetState(downloadState);
+
+  // Clean up some other variables
+  // In the event of a timeout, our destructor won't be called
+  mDownload = nsnull;
 
   NS_RELEASE_THIS();
   return NS_OK;
 }
 
-void
+PRBool
 nsDownloadScanner::Scan::DoScanAES()
 {
   HRESULT hr;
@@ -280,33 +408,37 @@ nsDownloadScanner::Scan::DoScanAES()
   hr = CoCreateInstance(CLSID_AttachmentServices, NULL, CLSCTX_ALL,
                         IID_IAttachmentExecute, getter_AddRefs(ae));
 
-  mStatus = AVSCAN_SCANNING;
+  // If we (somehow) already timed out, then don't bother scanning
+  if (CheckAndSetState(AVSCAN_SCANNING, AVSCAN_NOTSTARTED)) {
+    AVScanState newState;
+    if (SUCCEEDED(hr)) {
+      (void)ae->SetClientGuid(GUID_MozillaVirusScannerPromptGeneric);
+      (void)ae->SetLocalPath(mPath.BeginWriting());
+      (void)ae->SetSource(mOrigin.BeginWriting());
 
-  if (SUCCEEDED(hr)) {
-    (void)ae->SetClientGuid(GUID_MozillaVirusScannerPromptGeneric);
-    (void)ae->SetLocalPath(mPath.BeginWriting());
-    (void)ae->SetSource(mOrigin.BeginWriting());
+      // Save() will invoke the scanner
+      hr = ae->Save();
 
-    // Save() will invoke the scanner
-    hr = ae->Save();
-
-    if (SUCCEEDED(hr)) { // Passed the scan
-      mStatus = AVSCAN_GOOD;
+      if (SUCCEEDED(hr)) { // Passed the scan
+        newState = AVSCAN_GOOD;
+      }
+      else if (HRESULT_CODE(hr) == ERROR_FILE_NOT_FOUND) {
+        NS_WARNING("Downloaded file disappeared before it could be scanned");
+        newState = AVSCAN_FAILED;
+      }
+      else { 
+        newState = AVSCAN_UGLY;
+      }
     }
-    else if (HRESULT_CODE(hr) == ERROR_FILE_NOT_FOUND) {
-      NS_WARNING("Downloaded file disappeared before it could be scanned");
-      mStatus = AVSCAN_FAILED;
+    else {
+      newState = AVSCAN_FAILED;
     }
-    else { 
-      mStatus = AVSCAN_UGLY;
-    }
+    return CheckAndSetState(newState, AVSCAN_SCANNING);
   }
-  else {
-    mStatus = AVSCAN_FAILED;
-  }
+  return PR_FALSE;
 }
 
-void
+PRBool
 nsDownloadScanner::Scan::DoScanOAV()
 {
   HRESULT hr;
@@ -322,41 +454,48 @@ nsDownloadScanner::Scan::DoScanOAV()
   info.u.pwzFullPath = mPath.BeginWriting();
   info.pwzOrigURL = mOrigin.BeginWriting();
 
-  for (PRUint32 i = 0; i < mDLScanner->mScanCLSID.Length(); i++) {
-    nsRefPtr<IOfficeAntiVirus> vScanner;
-    hr = CoCreateInstance(mDLScanner->mScanCLSID[i], NULL, CLSCTX_ALL,
-                          IID_IOfficeAntiVirus, getter_AddRefs(vScanner));
-    if (FAILED(hr)) {
-      NS_WARNING("Could not instantiate antivirus scanner");
-      mStatus = AVSCAN_FAILED;
-    } else {
-      mStatus = AVSCAN_SCANNING;
+  AVScanState newState = AVSCAN_GOOD;
+  // If we (somehow) already timed out, then don't bother scanning
+  if (CheckAndSetState(AVSCAN_SCANNING, AVSCAN_NOTSTARTED)) {
+    for (PRUint32 i = 0; i < mDLScanner->mScanCLSID.Length(); i++) {
+      nsRefPtr<IOfficeAntiVirus> vScanner;
+      hr = CoCreateInstance(mDLScanner->mScanCLSID[i], NULL, CLSCTX_ALL,
+                            IID_IOfficeAntiVirus, getter_AddRefs(vScanner));
+      if (FAILED(hr)) {
+        NS_WARNING("Could not instantiate antivirus scanner");
+        newState = AVSCAN_FAILED;
+      } else {
+        newState = AVSCAN_SCANNING;
 
-      hr = vScanner->Scan(&info);
+        hr = vScanner->Scan(&info);
 
-      if (hr == S_OK) { // Passed the scan
-        mStatus = AVSCAN_GOOD;
-        continue;
-      }
-      else if (hr == S_FALSE) { // Failed but cleaned up
-        mStatus = AVSCAN_UGLY;
-        continue;
-      }
-      else if (HRESULT_CODE(hr) == ERROR_FILE_NOT_FOUND) {
-        NS_WARNING("Downloaded file disappeared before it could be scanned");
-        mStatus = AVSCAN_FAILED;
-        break;
-      }
-      else if (hr == E_FAIL) { // Failed
-        mStatus = AVSCAN_BAD;
-        break;
-      }
-      else {
-        mStatus = AVSCAN_FAILED;
-        break;
+        if (hr == S_OK) { // Passed the scan
+          newState = AVSCAN_GOOD;
+          continue;
+        }
+        else if (hr == S_FALSE) { // Failed but cleaned up
+          newState = AVSCAN_UGLY;
+          continue;
+        }
+        else if (hr == ERROR_FILE_NOT_FOUND) {
+          NS_WARNING("Downloaded file disappeared before it could be scanned");
+          newState = AVSCAN_FAILED;
+          break;
+        }
+        else if (hr == E_FAIL) { // Failed
+          newState = AVSCAN_BAD;
+          break;
+        }
+        else {
+          newState = AVSCAN_FAILED;
+          break;
+        }
       }
     }
   }
+
+  // If the previous CheckAndSetState call failed, then this one will too
+  return CheckAndSetState(newState, AVSCAN_SCANNING);
 }
 
 void
@@ -364,15 +503,53 @@ nsDownloadScanner::Scan::DoScan()
 {
   CoInitialize(NULL);
 
-  if (mDLScanner->mHaveAttachmentExecute)
-    DoScanAES();
-  else
-    DoScanOAV();
+  if (mDLScanner->mHaveAttachmentExecute ? DoScanAES() : DoScanOAV()) {
+    // We need to do a few more things on the main thread
+    NS_DispatchToMainThread(this);
+  } else {
+    // We timed out, so just release
+    ReleaseDispatcher* releaser = new ReleaseDispatcher(this);
+    if(releaser) {
+      NS_ADDREF(releaser);
+      NS_DispatchToMainThread(releaser);
+    }
+  }
 
   CoUninitialize();
+}
 
-  // We need to do a few more things on the main thread
-  NS_DispatchToMainThread(this);
+HANDLE
+nsDownloadScanner::Scan::GetWaitableThreadHandle() const
+{
+  HANDLE targetHandle = INVALID_HANDLE_VALUE;
+  (void)DuplicateHandle(GetCurrentProcess(), mThread,
+                        GetCurrentProcess(), &targetHandle,
+                        SYNCHRONIZE, // Only allow clients to wait on this handle
+                        FALSE, // cannot be inherited by child processes
+                        0);
+  return targetHandle;
+}
+
+PRBool
+nsDownloadScanner::Scan::NotifyTimeout()
+{
+  PRBool didTimeout = CheckAndSetState(AVSCAN_TIMEDOUT, AVSCAN_SCANNING) ||
+                      CheckAndSetState(AVSCAN_TIMEDOUT, AVSCAN_NOTSTARTED);
+  if (didTimeout) {
+    // We need to do a few more things on the main thread
+    NS_DispatchToMainThread(this);
+  }
+  return didTimeout;
+}
+
+PRBool
+nsDownloadScanner::Scan::CheckAndSetState(AVScanState newState, AVScanState expectedState) {
+  PRBool gotExpectedState = PR_FALSE;
+  EnterCriticalSection(&mStateSync);
+  if(gotExpectedState = (mStatus == expectedState))
+    mStatus = newState;
+  LeaveCriticalSection(&mStateSync);
+  return gotExpectedState;
 }
 
 nsresult
@@ -394,6 +571,148 @@ nsDownloadScanner::ScanDownload(nsDownload *download)
   // to a new thread. It is eventually released in Scan::Run on the main thread.
   if (NS_FAILED(rv))
     NS_RELEASE(scan);
+  else
+    // Notify the watchdog
+    mWatchdog->Watch(scan);
 
   return rv;
+}
+
+nsDownloadScannerWatchdog::nsDownloadScannerWatchdog() 
+  : mNewItemEvent(NULL), mQuitEvent(NULL) {
+  InitializeCriticalSection(&mQueueSync);
+}
+nsDownloadScannerWatchdog::~nsDownloadScannerWatchdog() {
+  DeleteCriticalSection(&mQueueSync);
+}
+
+nsresult
+nsDownloadScannerWatchdog::Init() {
+  // Both events are auto-reset
+  mNewItemEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+  if (INVALID_HANDLE_VALUE == mNewItemEvent)
+    return NS_ERROR_OUT_OF_MEMORY;
+  mQuitEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+  if (INVALID_HANDLE_VALUE == mQuitEvent) {
+    (void)CloseHandle(mNewItemEvent);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // This thread is always running, however it will be asleep
+  // for most of the dlmgr's lifetime
+  mThread = (HANDLE)_beginthreadex(NULL, 0, WatchdogThread,
+                                   this, 0, NULL);
+  if (!mThread) {
+    (void)CloseHandle(mNewItemEvent);
+    (void)CloseHandle(mQuitEvent);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsDownloadScannerWatchdog::Shutdown() {
+  // Tell the watchdog thread to quite
+  (void)SetEvent(mQuitEvent);
+  (void)WaitForSingleObject(mThread, INFINITE);
+  (void)CloseHandle(mThread);
+  // Manually clear and release the queued scans
+  while (mScanQueue.GetSize() != 0) {
+    Scan *scan = reinterpret_cast<Scan*>(mScanQueue.Pop());
+    NS_RELEASE(scan);
+  }
+  (void)CloseHandle(mNewItemEvent);
+  (void)CloseHandle(mQuitEvent);
+  return NS_OK;
+}
+
+void
+nsDownloadScannerWatchdog::Watch(Scan *scan) {
+  PRBool wasEmpty;
+  // Note that there is no release in this method
+  // The scan will be released by the watchdog ALWAYS on the main thread
+  // when either the watchdog thread processes the scan or the watchdog
+  // is shut down
+  NS_ADDREF(scan);
+  EnterCriticalSection(&mQueueSync);
+  wasEmpty = mScanQueue.GetSize()==0;
+  mScanQueue.Push(scan);
+  LeaveCriticalSection(&mQueueSync);
+  // If the queue was empty, then the watchdog thread is/will be asleep
+  if (wasEmpty)
+    (void)SetEvent(mNewItemEvent);
+}
+
+unsigned int
+__stdcall
+nsDownloadScannerWatchdog::WatchdogThread(void *p) {
+  NS_ASSERTION(!NS_IsMainThread(), "Antivirus scan watchdog should not be run on the main thread");
+  nsDownloadScannerWatchdog *watchdog = (nsDownloadScannerWatchdog*)p;
+  HANDLE waitHandles[3] = {watchdog->mNewItemEvent, watchdog->mQuitEvent, INVALID_HANDLE_VALUE};
+  DWORD waitStatus;
+  DWORD queueItemsLeft = 0;
+  // Loop until quit event or error
+  while (0 != queueItemsLeft ||
+         (WAIT_OBJECT_0 + 1) !=
+           (waitStatus =
+              WaitForMultipleObjects(2, waitHandles, FALSE, INFINITE)) &&
+         waitStatus != WAIT_FAILED) {
+    Scan *scan = NULL;
+    PRTime startTime, expectedEndTime, now;
+    DWORD waitTime;
+
+    // Pop scan from queue
+    EnterCriticalSection(&watchdog->mQueueSync);
+    scan = reinterpret_cast<Scan*>(watchdog->mScanQueue.Pop());
+    queueItemsLeft = watchdog->mScanQueue.GetSize();
+    LeaveCriticalSection(&watchdog->mQueueSync);
+
+    // Calculate expected end time
+    startTime = scan->GetStartTime();
+    expectedEndTime = WATCHDOG_TIMEOUT + startTime;
+    now = PR_Now();
+    // PRTime is not guaranteed to be a signed integral type (afaik), but
+    // currently it is
+    if (now > expectedEndTime) {
+      waitTime = 0;
+    } else {
+      // This is a positive value, and we know that it will not overflow
+      // (bounded by WATCHDOG_TIMEOUT)
+      // waitTime is in milliseconds, nspr uses microseconds
+      waitTime = static_cast<DWORD>((expectedEndTime - now)/PR_USEC_PER_MSEC);
+    }
+    HANDLE hThread = waitHandles[2] = scan->GetWaitableThreadHandle();
+
+    // Wait for the thread (obj 1) or quit event (obj 0)
+    waitStatus = WaitForMultipleObjects(2, (waitHandles+1), FALSE, waitTime);
+    CloseHandle(hThread);
+
+    ReleaseDispatcher* releaser = new ReleaseDispatcher(scan);
+    if(!releaser)
+      continue;
+    NS_ADDREF(releaser);
+    // Got quit event or error
+    if (waitStatus == WAIT_FAILED || waitStatus == WAIT_OBJECT_0) {
+      NS_DispatchToMainThread(releaser);
+      break;
+    // Thread exited normally
+    } else if (waitStatus == (WAIT_OBJECT_0+1)) {
+      NS_DispatchToMainThread(releaser);
+      continue;
+    // Timeout case
+    } else { 
+      NS_ASSERTION(waitStatus == WAIT_TIMEOUT, "Unexpected wait status in dlmgr watchdog thread");
+      if (!scan->NotifyTimeout()) {
+        // If we didn't time out, then release the thread
+        NS_DispatchToMainThread(releaser);
+      } else {
+        // NotifyTimeout did a dispatch which will release the scan, so we
+        // don't need to release the scan
+        NS_RELEASE(releaser);
+      }
+    }
+  }
+  _endthreadex(0);
+  return 0;
 }
