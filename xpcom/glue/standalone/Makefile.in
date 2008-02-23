@@ -59,7 +59,7 @@ LOCAL_INCLUDES	= \
 ifeq (Darwin,$(OS_ARCH))
 LINKSRC = nsGlueLinkingOSX.cpp
 endif
-ifeq (WINNT,$(OS_ARCH))
+ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 LINKSRC = nsGlueLinkingWin.cpp
 endif
 ifneq (,$(filter AIX DragonFly FreeBSD Linux NetBSD OpenBSD SunOS,$(OS_ARCH)))
