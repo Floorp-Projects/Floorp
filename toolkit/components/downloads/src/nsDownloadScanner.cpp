@@ -259,12 +259,24 @@ nsDownloadScanner::ListCLSID()
   return 0;
 }
 
+#ifndef THREAD_MODE_BACKGROUND_BEGIN
+#define THREAD_MODE_BACKGROUND_BEGIN 0x00010000
+#endif
+
+#ifndef THREAD_MODE_BACKGROUND_END
+#define THREAD_MODE_BACKGROUND_END 0x00020000
+#endif
+
 unsigned int __stdcall
 nsDownloadScanner::ScannerThreadFunction(void *p)
 {
+  HANDLE currentThread = GetCurrentThread();
   NS_ASSERTION(!NS_IsMainThread(), "Antivirus scan should not be run on the main thread");
   nsDownloadScanner::Scan *scan = static_cast<nsDownloadScanner::Scan*>(p);
+  if (!SetThreadPriority(currentThread, THREAD_MODE_BACKGROUND_BEGIN))
+    (void)SetThreadPriority(currentThread, THREAD_PRIORITY_IDLE);
   scan->DoScan();
+  (void)SetThreadPriority(currentThread, THREAD_MODE_BACKGROUND_END);
   _endthreadex(0);
   return 0;
 }
