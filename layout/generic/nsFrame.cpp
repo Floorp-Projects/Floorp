@@ -4519,6 +4519,7 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
 {
   nsContentAndOffset result;
   result.mContent =  nsnull;
+  result.mOffset = 0;
 
   if (aFrame->IsGeneratedContentFrame())
     return result;
@@ -4540,6 +4541,10 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
       aFrame->GetType() == nsGkAtoms::brFrame) {
     nsIContent* content = aFrame->GetContent();
     result.mContent = content->GetParent();
+    // In some cases (bug 310589, bug 370174) we end up here with a null content.
+    // This probably shouldn't ever happen, but since it sometimes does, we want
+    // to avoid crashing here.
+    NS_ASSERTION(result.mContent, "Unexpected orphan content");
     if (result.mContent)
       result.mOffset = result.mContent->IndexOf(content) + 
         (aDirection == eDirPrevious ? 1 : 0);
