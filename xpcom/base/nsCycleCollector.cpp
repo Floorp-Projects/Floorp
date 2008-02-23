@@ -118,7 +118,7 @@
 // objects alive during the unlinking.
 // 
 
-#ifndef __MINGW32__
+#if !defined(__MINGW32__) && !defined(WINCE)
 #ifdef WIN32
 #include <crtdbg.h>
 #include <errno.h>

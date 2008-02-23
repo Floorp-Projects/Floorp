@@ -2869,7 +2869,9 @@ nsLocalFile::EnsureShortPath()
 {
     if (!mShortWorkingPath.IsEmpty())
         return;
-
+#ifdef WINCE
+	 mShortWorkingPath.Assign(mWorkingPath);
+#else
     WCHAR thisshort[MAX_PATH];
     DWORD thisr = ::GetShortPathNameW(mWorkingPath.get(), thisshort,
                                       sizeof(thisshort));
@@ -2878,6 +2880,7 @@ nsLocalFile::EnsureShortPath()
         mShortWorkingPath.Assign(thisshort);
     else
         mShortWorkingPath.Assign(mWorkingPath);
+#endif
 }
 
 // nsIHashable
