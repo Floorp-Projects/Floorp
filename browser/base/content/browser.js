@@ -2969,12 +2969,12 @@ function FillHistoryMenu(aParent) {
         let iconURL = Cc["@mozilla.org/browser/favicon-service;1"]
                          .getService(Ci.nsIFaviconService)
                          .getFaviconForPage(entry.URI).spec;
-        item.setAttribute("image", iconURL);
+        item.style.listStyleImage = "url(" + iconURL + ")";
       } catch (ex) {}
     }
 
     if (j < index) {
-      item.className = "unified-nav-back";
+      item.className = "unified-nav-back menuitem-iconic";
       item.setAttribute("tooltiptext", tooltipBack);
     } else if (j == index) {
       item.setAttribute("type", "radio");
@@ -2982,7 +2982,7 @@ function FillHistoryMenu(aParent) {
       item.className = "unified-nav-current";
       item.setAttribute("tooltiptext", tooltipCurrent);
     } else {
-      item.className = "unified-nav-forward";
+      item.className = "unified-nav-forward menuitem-iconic";
       item.setAttribute("tooltiptext", tooltipForward);
     }
 
