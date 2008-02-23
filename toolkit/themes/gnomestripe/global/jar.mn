@@ -23,6 +23,7 @@ classic.jar:
 +  skin/classic/global/printPreview.css
 +  skin/classic/global/printPageSetup.css
 +  skin/classic/global/preferences.css
++  skin/classic/global/console/console.png                     (console/console.png)
 +  skin/classic/global/Filepicker.png                          (filepicker/Filepicker.png)
 +  skin/classic/global/icons/blacklist_favicon.png             (icons/blacklist_favicon.png)
 +  skin/classic/global/icons/blacklist_large.png               (icons/blacklist_large.png)
