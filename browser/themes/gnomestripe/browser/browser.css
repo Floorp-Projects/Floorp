@@ -324,8 +324,7 @@ menuitem[command="cmd_selectAll"] {
 }
 
 menuitem[command="Browser:Stop"],
-#context-stop,
-#javascriptConsole {
+#context-stop {
   list-style-image: url("moz-icon://stock/gtk-stop?size=menu");
 }
 
@@ -434,6 +433,10 @@ menuitem[key="key_openHelp"] {
 
 #aboutName {
   list-style-image: url("moz-icon://stock/gtk-about?size=menu");
+}
+
+#javascriptConsole {
+  list-style-image: url("chrome://global/skin/console/console.png");
 }
 
 /* Primary toolbar buttons */
