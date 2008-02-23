@@ -586,3 +586,11 @@ xpicleanup.exe
 #else
 xpicleanup
 #endif
+#ifdef MOZ_MEMORY
+#ifdef XP_WIN
+Microsoft.VC80.CRT.manifest
+msvcm80.dll
+msvcp80.dll
+msvcr80.dll
+#endif
+#endif
