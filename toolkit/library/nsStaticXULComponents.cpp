@@ -229,6 +229,7 @@
 #define XULENABLED_MODULES                   \
     MODULE(tkAutoCompleteModule)             \
     MODULE(satchel)                          \
+    MODULE(PKI)
 #else
 #define XULENABLED_MODULES
 #endif
@@ -243,15 +244,6 @@
 #define XMLEXTRAS_MODULE MODULE(nsXMLExtrasModule)
 #else
 #define XMLEXTRAS_MODULE
-#endif
-
-#ifdef MOZ_PSM
-#define PSM_MODULES \
-    MODULE(BOOT)    \
-    MODULE(NSS)     \
-    MODULE(PKI)
-#else
-#define PSM_MODULES
 #endif
 
 #ifdef MOZ_XUL
@@ -308,7 +300,8 @@
     XREMOTE_MODULES                          \
     XPINSTALL_MODULES                        \
     JSDEBUGGER_MODULES                       \
-    PSM_MODULES                              \
+    MODULE(BOOT)                             \
+    MODULE(NSS)                              \
     SYSTEMPREF_MODULES                       \
     SPELLCHECK_MODULE                        \
     XMLEXTRAS_MODULE                         \

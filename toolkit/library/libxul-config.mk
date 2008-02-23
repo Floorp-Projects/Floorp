@@ -122,14 +122,9 @@ COMPONENT_LIBS += \
 	chrome \
 	commandlines \
 	toolkitcomps \
-	$(NULL)
-
-ifdef MOZ_PSM_
-COMPONENT_LIBS += \
 	pipboot \
 	pipnss \
 	$(NULL)
-endif
 
 ifdef MOZ_XMLEXTRAS
 COMPONENT_LIBS += \
@@ -260,14 +255,8 @@ ifdef MOZ_XUL
 COMPONENT_LIBS += \
 	tkautocomplete \
 	satchel \
-	$(NULL)
-
-ifdef MOZ_PSM_
-COMPONENT_LIBS += \
 	pippki \
 	$(NULL)
-endif
-
 endif
 
 ifdef MOZ_MATHML
