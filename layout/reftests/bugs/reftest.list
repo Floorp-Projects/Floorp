@@ -128,22 +128,22 @@ fails == 134706-6b.html 134706-6b-ref.html # bug 363248 (via bug 414193, anyway)
 == 234686-1.html 234686-ref.html
 == 234686-2.html 234686-ref.html
 == 234686-3.html 234686-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-4.html 234686-ref.html # bug 371316 or other image scaling issue
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-5.html 234686-ref.html # bug 371316 or other image scaling issue
+== 234686-4.html 234686-ref.html
+== 234686-5.html 234686-ref.html
 == 234686-6.html 234686-ref.html
 == 234686-7.html 234686-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-8.html 234686-ref.html # bug 371316 or other image scaling issue
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-9.html 234686-ref.html # bug 371316 or other image scaling issue
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-10.html 234686-ref.html # bug 371316 or other image scaling issue
+== 234686-8.html 234686-ref.html
+== 234686-9.html 234686-ref.html
+== 234686-10.html 234686-ref.html
 == 234686-11.html 234686-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-12.html 234686-ref.html # bug 371316 or other image scaling issue
+== 234686-12.html 234686-ref.html
 == 234686-13.html 234686-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-14.html 234686-ref.html # bug 371316 or other image scaling issue
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-15.html 234686-ref.html # bug 371316 or other image scaling issue
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-16.html 234686-ref.html # bug 371316 or other image scaling issue
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-17.html 234686-ref.html # bug 371316 or other image scaling issue
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-18.html 234686-ref.html # bug 371316 or other image scaling issue
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-19.html 234686-ref.html # bug 371316 or other image scaling issue
+== 234686-14.html 234686-ref.html
+== 234686-15.html 234686-ref.html
+== 234686-16.html 234686-ref.html
+== 234686-17.html 234686-ref.html
+== 234686-18.html 234686-ref.html
+== 234686-19.html 234686-ref.html
 == 234964-1.html 234964-1-ref.html
 == 234964-2.html 234964-2-ref.html
 == 235593-1.html 235593-1-ref.html
