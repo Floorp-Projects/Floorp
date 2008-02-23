@@ -47,7 +47,9 @@
 
 #include <commdlg.h>
 #include <stdio.h>
+
 #include <shellapi.h>
+
 //////////////////////////////////////////////////////////
 // Function Mapping
 //////////////////////////////////////////////////////////
@@ -263,6 +265,8 @@ extern "C" {
   MOZCE_SHUNT_API int SetArcDirection(HDC inDC, int inArcDirection);
   MOZCE_SHUNT_API BOOL Arc(HDC inDC, int inLeftRect, int inTopRect, int inRightRect, int inBottomRect, int inXStartArc, int inYStartArc, int inXEndArc, int inYEndArc);
   MOZCE_SHUNT_API BOOL Pie(HDC inDC, int inLeftRect, int inTopRect, int inRightRect, int inBottomRect, int inXRadial1, int inYRadial1, int inXRadial2, int inYRadial2);
+
+  #define GetDriveTypeW GetDriveType
   MOZCE_SHUNT_API UINT GetDriveType(const char* lpRootPathName);
 
 //dd  MOZCE_SHUNT_API DWORD GetFontData(HDC inDC, DWORD inTable, DWORD inOffset, LPVOID outBuffer, DWORD inData);
@@ -301,6 +305,9 @@ extern "C" {
   MOZCE_SHUNT_API DWORD GetEnvironmentVariable(LPCSTR lpName, LPCSTR lpBuffer, DWORD nSize);
   MOZCE_SHUNT_API DWORD GetEnvironmentVariableW(LPCWSTR lpName, LPWSTR lpBuffer, DWORD nSize);
   MOZCE_SHUNT_API void GetSystemTimeAsFileTime(LPFILETIME lpSystemTimeAsFileTime);
+
+
+  #define GetFullPathNameW GetFullPathName
   MOZCE_SHUNT_API DWORD GetFullPathName(const char* lpFileName, DWORD nBufferLength, const char* lpBuffer, const char** lpFilePart);
 
 //dd  MOZCE_SHUNT_API UINT GetACP(void);
@@ -439,6 +446,7 @@ MOZCE_SHUNT_API wchar_t *_wgetcwd(wchar_t *buffer,int maxlen);
 MOZCE_SHUNT_API wchar_t *_wfullpath(wchar_t *abspath, const wchar_t *relpath, int maxlen);
 
 MOZCE_SHUNT_API HWND GetAncestor(HWND hwnd, UINT gaFlags);
+
 #ifdef __cplusplus
 };
 #endif
