@@ -56,11 +56,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsSVGMatrix.h"
 
-#if defined(DEBUG) && defined(SVG_DEBUG_PRINTING)
-#include "nsIDeviceContext.h"
-#include "nsTransform2D.h"
-#endif
-
 class nsSVGMutationObserver : public nsStubMutationObserver
 {
 public:
@@ -551,32 +546,6 @@ void
 nsSVGOuterSVGFrame::Paint(nsIRenderingContext& aRenderingContext,
                           const nsRect& aDirtyRect, nsPoint aPt)
 {
-#if defined(DEBUG) && defined(SVG_DEBUG_PRINTING)
-  {
-    nsCOMPtr<nsIDeviceContext>  dx;
-    aRenderingContext.GetDeviceContext(*getter_AddRefs(dx));
-    float zoom,tzoom,scale;
-    dx->GetZoom(zoom);
-    dx->GetTextZoom(tzoom);
-    dx->GetCanonicalPixelScale(scale);
-    printf("nsSVGOuterSVGFrame(%p)::Paint()[ z=%f tz=%f ps=%f\n",this,zoom,tzoom,scale);
-    printf("dirtyrect= %d, %d, %d, %d\n", aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
-    nsTransform2D* xform;
-    aRenderingContext.GetCurrentTransform(xform);
-    printf("translation=(%f,%f)\n", xform->GetXTranslation(), xform->GetYTranslation());
-    float sx=1.0f,sy=1.0f;
-    xform->TransformNoXLate(&sx,&sy);
-    printf("scale=(%f,%f)\n", sx, sy);
-    float twipsPerScPx = aPresContext->ScaledPixelsToTwips();
-    float twipsPerPx = aPresContext->PixelsToTwips();
-    printf("tw/sc(px)=%f tw/px=%f\n", twipsPerScPx, twipsPerPx);
-    int fontsc;
-    GetPresContext()->GetFontScaler(&fontsc);
-    printf("font scale=%d\n",fontsc);
-    printf("]\n");
-  }
-#endif
-  
   // initialize Mozilla rendering context
   aRenderingContext.PushState();
 
