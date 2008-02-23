@@ -611,6 +611,11 @@ toolbar[iconsize="small"] .toolbarbutton-1 {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
 }
 
+.unified-nav-back[_moz-menuactive] ,
+.unified-nav-forward[_moz-menuactive] {
+  list-style-image: url("chrome://browser/skin/Toolbar-small.png") !important;
+}
+
 toolbar[iconsize="small"] .toolbarbutton-1 .toolbarbutton-icon {
   -moz-margin-end: 0px;
 }
@@ -628,7 +633,8 @@ toolbar[iconsize="small"] #back-button {
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 toolbar[iconsize="small"] #back-button:not([disabled="true"]):hover,
-toolbar[iconsize="small"] #back-button[buttonover="true"] {
+toolbar[iconsize="small"] #back-button[buttonover="true"] ,
+.unified-nav-back[_moz-menuactive] {
   -moz-image-region: rect(16px 16px 32px 0px);
 }
 toolbar[iconsize="small"] #back-button[disabled="true"] {
@@ -642,7 +648,8 @@ toolbar[iconsize="small"] #back-button[chromedir="rtl"] {
   -moz-image-region: rect(0px 32px 16px 16px);
 }
 toolbar[iconsize="small"] #back-button[chromedir="rtl"]:not([disabled="true"]):hover,
-toolbar[iconsize="small"] #back-button[chromedir="rtl"][buttonover="true"] {
+toolbar[iconsize="small"] #back-button[chromedir="rtl"][buttonover="true"] ,
+menupopup[chromedir="rtl"] > .unified-nav-back[_moz-menuactive] {
   -moz-image-region: rect(16px 32px 32px 16px);
 }
 toolbar[iconsize="small"] #back-button[chromedir="rtl"][disabled="true"] {
@@ -661,7 +668,8 @@ toolbar[iconsize="small"] #forward-button {
   -moz-image-region: rect(0px 32px 16px 16px);
 }
 toolbar[iconsize="small"] #forward-button:not([disabled="true"]):hover,
-toolbar[iconsize="small"] #forward-button[buttonover="true"] {
+toolbar[iconsize="small"] #forward-button[buttonover="true"] ,
+.unified-nav-forward[_moz-menuactive] {
   -moz-image-region: rect(16px 32px 32px 16px);
 }
 toolbar[iconsize="small"] #forward-button[disabled="true"] {
@@ -675,7 +683,8 @@ toolbar[iconsize="small"] #forward-button[chromedir="rtl"] {
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 toolbar[iconsize="small"] #forward-button[chromedir="rtl"]:not([disabled="true"]):hover,
-toolbar[iconsize="small"] #forward-button[chromedir="rtl"][buttonover="true"] {
+toolbar[iconsize="small"] #forward-button[chromedir="rtl"][buttonover="true"] ,
+menupopup[chromedir="rtl"] > .unified-nav-forward[_moz-menuactive] {
   -moz-image-region: rect(16px 16px 32px 0px);
 }
 toolbar[iconsize="small"] #forward-button[chromedir="rtl"][disabled="true"] {
