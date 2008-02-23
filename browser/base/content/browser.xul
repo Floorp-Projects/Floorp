@@ -90,6 +90,7 @@
 
   <popupset id="mainPopupSet">
     <menupopup id="backForwardMenu"
+               chromedir="&locale.dir;"
                onpopupshowing="return FillHistoryMenu(event.target);"
                oncommand="gotoHistoryIndex(event);"
                onclick="checkForMiddleClick(this, event);"/>
@@ -261,6 +262,7 @@
           <!-- bug 415444: event.stopPropagation is here for the cloned version of
                this menupopup -->
           <menupopup context=""
+                     chromedir="&locale.dir;"
                      position="after_start"
                      onpopupshowing="return FillHistoryMenu(event.target);"
                      oncommand="gotoHistoryIndex(event); event.stopPropagation();"
