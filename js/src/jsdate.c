@@ -963,7 +963,7 @@ SetUTCTimePtr(JSContext *cx, JSObject *obj, jsval *vp, jsdouble *dp)
 static JSBool
 SetUTCTime(JSContext *cx, JSObject *obj, jsval *vp, jsdouble t)
 {
-    jsdouble *dp = js_NewDouble(cx, t, 0);
+    jsdouble *dp = js_NewDouble(cx, t);
     if (!dp)
         return JS_FALSE;
     return SetUTCTimePtr(cx, obj, vp, dp);
@@ -993,7 +993,7 @@ GetAndCacheLocalTime(JSContext *cx, JSObject *obj, jsval *vp, jsdouble *dp)
         if (JSDOUBLE_IS_FINITE(result))
             result = LocalTime(result);
 
-        cached = js_NewDouble(cx, result, 0);
+        cached = js_NewDouble(cx, result);
         if (!cached)
             return JS_FALSE;
 
@@ -2019,7 +2019,7 @@ date_constructor(JSContext *cx, JSObject* obj)
 {
     jsdouble *date;
 
-    date = js_NewDouble(cx, 0.0, 0);
+    date = js_NewDouble(cx, 0.0);
     if (!date)
         return NULL;
 
