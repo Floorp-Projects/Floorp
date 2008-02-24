@@ -1496,7 +1496,8 @@ nsContentUtils::ComparePosition(nsINode* aNode1,
 /* static */
 PRInt32
 nsContentUtils::ComparePoints(nsINode* aParent1, PRInt32 aOffset1,
-                              nsINode* aParent2, PRInt32 aOffset2)
+                              nsINode* aParent2, PRInt32 aOffset2,
+                              PRBool* aDisconnected)
 {
   if (aParent1 == aParent2) {
     return aOffset1 < aOffset2 ? -1 :
@@ -1519,8 +1520,12 @@ nsContentUtils::ComparePoints(nsINode* aParent1, PRInt32 aOffset1,
   PRUint32 pos1 = parents1.Length() - 1;
   PRUint32 pos2 = parents2.Length() - 1;
 
-  NS_ASSERTION(parents1.ElementAt(pos1) == parents2.ElementAt(pos2),
+  NS_ASSERTION(parents1.ElementAt(pos1) == parents2.ElementAt(pos2) ||
+               aDisconnected,
                "disconnected nodes");
+  if (aDisconnected) {
+    *aDisconnected = (parents1.ElementAt(pos1) != parents2.ElementAt(pos2));
+  }
 
   // Find where the parent chains differ
   nsINode* parent = parents1.ElementAt(pos1);
