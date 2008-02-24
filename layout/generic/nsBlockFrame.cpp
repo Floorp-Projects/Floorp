@@ -5153,6 +5153,14 @@ nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
   }
 }
 
+nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
+    PRBool* aFoundValidLine)
+  : mFrame(aFrame), mInOverflowLines(nsnull)
+{
+  mLine = aFrame->begin_lines();
+  *aFoundValidLine = FindValidLine();
+}
+
 PRBool
 nsBlockInFlowLineIterator::IsLastLineInList()
 {
@@ -5164,29 +5172,7 @@ PRBool
 nsBlockInFlowLineIterator::Next()
 {
   ++mLine;
-  line_iterator end = mInOverflowLines ? mInOverflowLines->end() : mFrame->end_lines();
-  if (mLine != end)
-    return PR_TRUE;
-  PRBool currentlyInOverflowLines = mInOverflowLines != nsnull;
-  while (PR_TRUE) {
-    if (currentlyInOverflowLines) {
-      mFrame = static_cast<nsBlockFrame*>(mFrame->GetNextInFlow());
-      if (!mFrame)
-        return PR_FALSE;
-      mInOverflowLines = nsnull;
-      mLine = mFrame->begin_lines();
-      if (mLine != mFrame->end_lines())
-        return PR_TRUE;
-    } else {
-      mInOverflowLines = mFrame->GetOverflowLines();
-      if (mInOverflowLines) {
-        mLine = mInOverflowLines->begin();
-        NS_ASSERTION(mLine != mInOverflowLines->end(), "empty overflow line list?");
-        return PR_TRUE;
-      }
-    }
-    currentlyInOverflowLines = !currentlyInOverflowLines;
-  }
+  return FindValidLine();
 }
 
 PRBool
@@ -5214,6 +5200,34 @@ nsBlockInFlowLineIterator::Prev()
         mLine = mInOverflowLines->end();
         NS_ASSERTION(mLine != mInOverflowLines->begin(), "empty overflow line list?");
         --mLine;
+        return PR_TRUE;
+      }
+    }
+    currentlyInOverflowLines = !currentlyInOverflowLines;
+  }
+}
+
+PRBool
+nsBlockInFlowLineIterator::FindValidLine()
+{
+  line_iterator end = mInOverflowLines ? mInOverflowLines->end() : mFrame->end_lines();
+  if (mLine != end)
+    return PR_TRUE; 
+  PRBool currentlyInOverflowLines = mInOverflowLines != nsnull;
+  while (PR_TRUE) {
+    if (currentlyInOverflowLines) {
+      mFrame = static_cast<nsBlockFrame*>(mFrame->GetNextInFlow());
+      if (!mFrame)
+        return PR_FALSE;
+      mInOverflowLines = nsnull;
+      mLine = mFrame->begin_lines();
+      if (mLine != mFrame->end_lines())
+        return PR_TRUE;
+    } else {
+      mInOverflowLines = mFrame->GetOverflowLines();
+      if (mInOverflowLines) {
+        mLine = mInOverflowLines->begin();
+        NS_ASSERTION(mLine != mInOverflowLines->end(), "empty overflow line list?");
         return PR_TRUE;
       }
     }
@@ -6453,29 +6467,28 @@ nsBlockFrame::RenumberListsInBlock(nsPresContext* aPresContext,
                                    PRInt32* aOrdinal,
                                    PRInt32 aDepth)
 {
+  // Examine each line in the block
+  PRBool foundValidLine;
+  nsBlockInFlowLineIterator bifLineIter(aBlockFrame, &foundValidLine);
+  
+  if (!foundValidLine)
+    return PR_FALSE;
+
   PRBool renumberedABullet = PR_FALSE;
 
-  while (nsnull != aBlockFrame) {
-    // Examine each line in the block
-    for (line_iterator line = aBlockFrame->begin_lines(),
-                       line_end = aBlockFrame->end_lines();
-         line != line_end;
-         ++line) {
-      nsIFrame* kid = line->mFirstChild;
-      PRInt32 n = line->GetChildCount();
-      while (--n >= 0) {
-        PRBool kidRenumberedABullet = RenumberListsFor(aPresContext, kid, aOrdinal, aDepth);
-        if (kidRenumberedABullet) {
-          line->MarkDirty();
-          renumberedABullet = PR_TRUE;
-        }
-        kid = kid->GetNextSibling();
+  do {
+    nsLineList::iterator line = bifLineIter.GetLine();
+    nsIFrame* kid = line->mFirstChild;
+    PRInt32 n = line->GetChildCount();
+    while (--n >= 0) {
+      PRBool kidRenumberedABullet = RenumberListsFor(aPresContext, kid, aOrdinal, aDepth);
+      if (kidRenumberedABullet) {
+        line->MarkDirty();
+        renumberedABullet = PR_TRUE;
       }
+      kid = kid->GetNextSibling();
     }
-
-    // Advance to the next continuation
-    aBlockFrame = static_cast<nsBlockFrame*>(aBlockFrame->GetNextInFlow());
-  }
+  } while (bifLineIter.Next());
 
   return renumberedABullet;
 }
@@ -6492,13 +6505,17 @@ nsBlockFrame::RenumberListsFor(nsPresContext* aPresContext,
   if (MAX_DEPTH_FOR_LIST_RENUMBERING < aDepth)
     return PR_FALSE;
 
-  PRBool kidRenumberedABullet = PR_FALSE;
-
   // if the frame is a placeholder, then get the out of flow frame
   nsIFrame* kid = nsPlaceholderFrame::GetRealFrameFor(aKid);
 
   // drill down through any wrappers to the real frame
   kid = kid->GetContentInsertionFrame();
+
+  // possible there is no content insertion frame
+  if (!kid)
+    return PR_FALSE;
+
+  PRBool kidRenumberedABullet = PR_FALSE;
 
   // If the frame is a list-item and the frame implements our
   // block frame API then get its bullet and set the list item

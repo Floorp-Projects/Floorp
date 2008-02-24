@@ -570,12 +570,12 @@ protected:
   // reflow.
   PRBool RenumberLists(nsPresContext* aPresContext);
 
-  PRBool RenumberListsInBlock(nsPresContext* aPresContext,
-                              nsBlockFrame* aContainerFrame,
-                              PRInt32* aOrdinal,
-                              PRInt32 aDepth);
+  static PRBool RenumberListsInBlock(nsPresContext* aPresContext,
+                                     nsBlockFrame* aBlockFrame,
+                                     PRInt32* aOrdinal,
+                                     PRInt32 aDepth);
 
-  PRBool RenumberListsFor(nsPresContext* aPresContext, nsIFrame* aKid, PRInt32* aOrdinal, PRInt32 aDepth);
+  static PRBool RenumberListsFor(nsPresContext* aPresContext, nsIFrame* aKid, PRInt32* aOrdinal, PRInt32 aDepth);
 
   static PRBool FrameStartsCounterScope(nsIFrame* aFrame);
 
@@ -692,6 +692,7 @@ class nsBlockInFlowLineIterator {
 public:
   typedef nsBlockFrame::line_iterator line_iterator;
   nsBlockInFlowLineIterator(nsBlockFrame* aFrame, line_iterator aLine, PRBool aInOverflow);
+  nsBlockInFlowLineIterator(nsBlockFrame* aFrame, PRBool* aFoundValidLine);
   
   line_iterator GetLine() { return mLine; }
   PRBool IsLastLineInList();
@@ -712,6 +713,12 @@ private:
   nsBlockFrame* mFrame;
   line_iterator mLine;
   nsLineList*   mInOverflowLines;
+
+  /**
+   * Moves iterator to next valid line reachable from the current block.
+   * Returns false if there are no valid lines.
+   */
+  PRBool FindValidLine();
 };
 
 #endif /* nsBlockFrame_h___ */

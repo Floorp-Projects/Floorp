@@ -74,7 +74,13 @@ public:
   virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
 
   virtual nsIFrame* GetContentInsertionFrame() {
-    return GetFirstChild(nsnull)->GetContentInsertionFrame();
+    nsIFrame* frame = GetFirstChild(nsnull);
+
+    // if no children return nsnull
+    if (!frame)
+      return nsnull;
+
+    return frame->GetContentInsertionFrame();
   }
 
   virtual nsresult StealFrame(nsPresContext* aPresContext,
