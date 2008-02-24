@@ -267,11 +267,13 @@ public:
    *  node/offset pair
    *  Returns -1 if point1 < point2, 1, if point1 > point2,
    *  0 if error or if point1 == point2.
-   *  NOTE! The two nodes MUST be in the same connected subtree!
-   *  if they are not the result is undefined.
+   *  NOTE! If the two nodes aren't in the same connected subtree,
+   *  the result is undefined, but the optional aDisconnected parameter
+   *  is set to PR_TRUE.
    */
   static PRInt32 ComparePoints(nsINode* aParent1, PRInt32 aOffset1,
-                               nsINode* aParent2, PRInt32 aOffset2);
+                               nsINode* aParent2, PRInt32 aOffset2,
+                               PRBool* aDisconnected = nsnull);
 
   /**
    * Find the first child of aParent with a resolved tag matching
