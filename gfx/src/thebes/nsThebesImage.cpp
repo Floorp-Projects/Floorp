@@ -436,10 +436,15 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
             return NS_OK;
 
         // otherwise
+        gfxContext::GraphicsOperator op = ctx->CurrentOperator();
+        if (op == gfxContext::OPERATOR_OVER && mSinglePixelColor.a == 1.0)
+            ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+
         ctx->SetColor(mSinglePixelColor);
         ctx->NewPath();
         ctx->Rectangle(aDestRect, PR_TRUE);
         ctx->Fill();
+        ctx->SetOperator(op);
         return NS_OK;
     }
 
@@ -553,10 +558,17 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
 #endif
     }
 
+    gfxContext::GraphicsOperator op = ctx->CurrentOperator();
+    if (op == gfxContext::OPERATOR_OVER && mFormat == gfxASurface::ImageFormatRGB24)
+        ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+
     ctx->NewPath();
     ctx->SetPattern(pat);
     ctx->Rectangle(destRect);
     ctx->Fill();
+
+    ctx->SetOperator(op);
+    ctx->SetColor(gfxRGBA(0,0,0,0));
 
     return NS_OK;
 }
@@ -650,10 +662,15 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
         thebesContext->SetPattern(&pat);
     }
 
+    gfxContext::GraphicsOperator op = thebesContext->CurrentOperator();
+    if (op == gfxContext::OPERATOR_OVER && mFormat == gfxASurface::ImageFormatRGB24)
+        thebesContext->SetOperator(gfxContext::OPERATOR_SOURCE);
+
     thebesContext->NewPath();
     thebesContext->Rectangle(targetRect, doSnap);
     thebesContext->Fill();
 
+    thebesContext->SetOperator(op);
     thebesContext->SetColor(gfxRGBA(0,0,0,0));
 
     return NS_OK;
