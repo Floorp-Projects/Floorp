@@ -428,12 +428,21 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
   nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
   NS_ENSURE_TRUE(faviconService, NS_ERROR_OUT_OF_MEMORY);
 
+  // We want to filter javascript: URIs if the search doesn't start with it
+  const nsString &javascriptColon = NS_LITERAL_STRING("javascript:");
+  PRBool filterJavascript = mAutoCompleteFilterJavascript &&
+    mCurrentSearchString.Find(javascriptColon) != 0;
+
   PRBool hasMore = PR_FALSE;
   // Determine the result of the search
   while (NS_SUCCEEDED(aQuery->ExecuteStep(&hasMore)) && hasMore) {
     nsAutoString escapedEntryURL;
     nsresult rv = aQuery->GetString(kAutoCompleteIndex_URL, escapedEntryURL);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // If we need to filter and have a javascript URI.. skip!
+    if (filterJavascript && escapedEntryURL.Find(javascriptColon) == 0)
+      continue;
 
     // Prevent duplicates that might appear from previous searches such as tag
     // results and chunking. Because we use mCurrentResultURLs to remove

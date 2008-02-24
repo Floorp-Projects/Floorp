@@ -667,6 +667,7 @@ protected:
   nsresult InitAutoComplete();
   nsresult CreateAutoCompleteQueries();
   PRBool mAutoCompleteOnlyTyped;
+  PRBool mAutoCompleteFilterJavascript;
   PRInt32 mAutoCompleteMaxResults;
   PRInt32 mAutoCompleteSearchChunkSize;
   PRInt32 mAutoCompleteSearchTimeout;
