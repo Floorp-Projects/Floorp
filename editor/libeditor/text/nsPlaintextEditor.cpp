@@ -1220,12 +1220,8 @@ NS_IMETHODIMP nsPlaintextEditor::CanCut(PRBool *aCanCut)
   NS_ENSURE_ARG_POINTER(aCanCut);
   *aCanCut = PR_FALSE;
 
-  nsresult rv = FireClipboardEvent(NS_BEFORECUT, aCanCut);
-  if (NS_FAILED(rv) || *aCanCut)
-    return rv;
-
   nsCOMPtr<nsISelection> selection;
-  rv = GetSelection(getter_AddRefs(selection));
+  nsresult rv = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(rv)) return rv;
     
   PRBool isCollapsed;
@@ -1253,12 +1249,8 @@ NS_IMETHODIMP nsPlaintextEditor::CanCopy(PRBool *aCanCopy)
   NS_ENSURE_ARG_POINTER(aCanCopy);
   *aCanCopy = PR_FALSE;
 
-  nsresult rv = FireClipboardEvent(NS_BEFORECOPY, aCanCopy);
-  if (NS_FAILED(rv) || *aCanCopy)
-    return rv;
-
   nsCOMPtr<nsISelection> selection;
-  rv = GetSelection(getter_AddRefs(selection));
+  nsresult rv = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(rv)) return rv;
     
   PRBool isCollapsed;
