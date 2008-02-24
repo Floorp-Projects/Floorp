@@ -585,6 +585,7 @@ public:
 
   /**
    * Get the frame that should be the parent for the frames of child elements
+   * May return nsnull during reflow
    */
   virtual nsIFrame* GetContentInsertionFrame() { return this; }
 
