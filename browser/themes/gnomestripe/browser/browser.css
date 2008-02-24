@@ -280,7 +280,8 @@ menuitem[command="cmd_cut"][disabled],
 menuitem[command="cmd_copy"],
 #context-copy,
 #context-copyimage,
-#context-copylink {
+#context-copylink,
+#context-copyemail {
   list-style-image: url("moz-icon://stock/gtk-copy?size=menu");
 }
 
