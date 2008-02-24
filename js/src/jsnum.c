@@ -548,21 +548,21 @@ js_InitRuntimeNumberState(JSContext *cx)
     u.s.hi = JSDOUBLE_HI32_EXPMASK | JSDOUBLE_HI32_MANTMASK;
     u.s.lo = 0xffffffff;
     number_constants[NC_NaN].dval = NaN = u.d;
-    rt->jsNaN = js_NewDouble(cx, NaN);
+    rt->jsNaN = js_NewDouble(cx, NaN, GCF_LOCK);
     if (!rt->jsNaN)
         return JS_FALSE;
 
     u.s.hi = JSDOUBLE_HI32_EXPMASK;
     u.s.lo = 0x00000000;
     number_constants[NC_POSITIVE_INFINITY].dval = u.d;
-    rt->jsPositiveInfinity = js_NewDouble(cx, u.d);
+    rt->jsPositiveInfinity = js_NewDouble(cx, u.d, GCF_LOCK);
     if (!rt->jsPositiveInfinity)
         return JS_FALSE;
 
     u.s.hi = JSDOUBLE_HI32_SIGNBIT | JSDOUBLE_HI32_EXPMASK;
     u.s.lo = 0x00000000;
     number_constants[NC_NEGATIVE_INFINITY].dval = u.d;
-    rt->jsNegativeInfinity = js_NewDouble(cx, u.d);
+    rt->jsNegativeInfinity = js_NewDouble(cx, u.d, GCF_LOCK);
     if (!rt->jsNegativeInfinity)
         return JS_FALSE;
 
@@ -579,20 +579,6 @@ js_InitRuntimeNumberState(JSContext *cx)
         JS_strdup(cx, locale->grouping ? locale->grouping : "\3\0");
 
     return rt->thousandsSeparator && rt->decimalSeparator && rt->numGrouping;
-}
-
-void
-js_TraceRuntimeNumberState(JSTracer *trc)
-{
-    JSRuntime *rt;
-
-    rt = trc->context->runtime;
-    if (rt->jsNaN)
-        JS_CALL_DOUBLE_TRACER(trc, rt->jsNaN, "NaN");
-    if (rt->jsPositiveInfinity)
-        JS_CALL_DOUBLE_TRACER(trc, rt->jsPositiveInfinity, "+Infinity");
-    if (rt->jsNegativeInfinity)
-        JS_CALL_DOUBLE_TRACER(trc, rt->jsNegativeInfinity, "-Infinity");
 }
 
 void
@@ -651,15 +637,21 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
 }
 
 jsdouble *
-js_NewDouble(JSContext *cx, jsdouble d)
+js_NewDouble(JSContext *cx, jsdouble d, uintN gcflag)
 {
     jsdouble *dp;
 
-    dp = js_NewDoubleGCThing(cx);
+    dp = (jsdouble *) js_NewGCThing(cx, gcflag | GCX_DOUBLE, sizeof(jsdouble));
     if (!dp)
         return NULL;
     *dp = d;
     return dp;
+}
+
+void
+js_FinalizeDouble(JSContext *cx, jsdouble *dp)
+{
+    *dp = NaN;
 }
 
 JSBool
@@ -667,10 +659,9 @@ js_NewDoubleValue(JSContext *cx, jsdouble d, jsval *rval)
 {
     jsdouble *dp;
 
-    dp = js_NewDoubleGCThing(cx);
+    dp = js_NewDouble(cx, d, 0);
     if (!dp)
         return JS_FALSE;
-    *dp = d;
     *rval = DOUBLE_TO_JSVAL(dp);
     return JS_TRUE;
 }
