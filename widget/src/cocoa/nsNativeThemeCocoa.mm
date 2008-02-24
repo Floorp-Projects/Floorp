@@ -984,6 +984,21 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
     }
       break;
 
+    case NS_THEME_MENUSEPARATOR: {
+      ThemeMenuState menuState;
+      if (IsDisabled(aFrame)) {
+        menuState = kThemeMenuDisabled;
+      }
+      else {
+        menuState = CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive) ?
+                    kThemeMenuSelected : kThemeMenuActive;
+      }
+
+      HIThemeMenuItemDrawInfo midi = { 0, kThemeMenuItemPlain, menuState };
+      HIThemeDrawMenuSeparator(&macRect, &macRect, &midi, cgContext, HITHEME_ORIENTATION);
+    }
+      break;
+
     case NS_THEME_TOOLTIP:
       CGContextSetRGBFillColor(cgContext, 1.0, 1.0, 0.78, 1.0);
       CGContextFillRect(cgContext, macRect);
@@ -1701,6 +1716,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_WINDOW:
     case NS_THEME_MENUPOPUP:
     case NS_THEME_MENUITEM:
+    case NS_THEME_MENUSEPARATOR:
     case NS_THEME_TOOLTIP:
     
     case NS_THEME_CHECKBOX:
