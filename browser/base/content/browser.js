@@ -1968,8 +1968,7 @@ function URLBarSetURI(aURI) {
   SetPageProxyState(state);
 }
 
-// If "ESC" is pressed in the url bar, we replace the urlbar's value with the url of the page
-// and highlight it, unless it is empty.
+// Replace the urlbar's value with the url of the page.
 function handleURLBarRevert() {
   var throbberElement = document.getElementById("navigator-throbber");
   var isScrolling = gURLBar.popupOpen;
@@ -1980,7 +1979,9 @@ function handleURLBarRevert() {
   // and user is NOT key-scrolling through autocomplete list
   if ((!throbberElement || !throbberElement.hasAttribute("busy")) && !isScrolling) {
     URLBarSetURI();
-    if (gURLBar.value)
+
+    // If the value isn't empty and the urlbar has focus, select the value.
+    if (gURLBar.value && gURLBar.hasAttribute("focused"))
       gURLBar.select();
   }
 
