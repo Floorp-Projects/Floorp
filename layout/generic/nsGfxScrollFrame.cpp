@@ -2415,8 +2415,16 @@ nsGfxScrollFrameInner::ReflowFinished()
     nscoord curPosX, curPosY;
     scrollable->GetScrollPosition(curPosX, curPosY);
     if (vScroll) {
+      // We normally use (scrollArea.height - fontHeight) for height
+      // of page scrolling.  However, it is too small when
+      // fontHeight is very large. (If fontHeight is larger than
+      // scrollArea.height, direction of scrolling will be opposite).
+      // To avoid it, we use (float(scrollArea.height) * 0.8) as
+      // lower bound value of height of page scrolling. (bug 383267)
+      nscoord pageincrement = nscoord(scrollArea.height - fontHeight);
+      nscoord pageincrementMin = nscoord(float(scrollArea.height) * 0.8);
       FinishReflowForScrollbar(vScroll, minY, maxY, curPosY,
-                               nscoord(scrollArea.height - fontHeight),
+                               PR_MAX(pageincrement,pageincrementMin),
                                fontHeight);
     }
     if (hScroll) {
