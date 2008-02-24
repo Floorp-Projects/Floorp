@@ -491,16 +491,42 @@ static gint
 ensure_tree_header_cell_widget()
 {
     if(!gTreeHeaderCellWidget) {
-        GtkTreeViewColumn* treeViewColumn;
+        /*
+         * Some GTK engines paint the first and last cell
+         * of a TreeView header with a highlight.
+         * Since we do not know where our widget will be relative
+         * to the other buttons in the TreeView header, we must
+         * paint it as a button that is between two others,
+         * thus ensuring it is neither the first or last button
+         * in the header.
+         * GTK doesn't give us a way to do this explicitly,
+         * so we must paint with a button that is between two
+         * others.
+         */
+
+        GtkTreeViewColumn* firstTreeViewColumn;
+        GtkTreeViewColumn* middleTreeViewColumn;
+        GtkTreeViewColumn* lastTreeViewColumn;
+
         ensure_tree_view_widget();
 
-        treeViewColumn = gtk_tree_view_column_new();
-        gtk_tree_view_column_set_title(treeViewColumn, "M");
+        /* Create and append our three columns */
+        firstTreeViewColumn = gtk_tree_view_column_new();
+        gtk_tree_view_column_set_title(firstTreeViewColumn, "M");
+        gtk_tree_view_append_column(GTK_TREE_VIEW(gTreeViewWidget), firstTreeViewColumn);
 
-        gtk_tree_view_append_column(GTK_TREE_VIEW(gTreeViewWidget), treeViewColumn);
-        gTreeHeaderCellWidget = treeViewColumn->button;
-        gtk_tree_view_column_set_sort_indicator(treeViewColumn, TRUE);
-        gTreeHeaderSortArrowWidget = treeViewColumn->arrow;
+        middleTreeViewColumn = gtk_tree_view_column_new();
+        gtk_tree_view_column_set_title(middleTreeViewColumn, "M");
+        gtk_tree_view_append_column(GTK_TREE_VIEW(gTreeViewWidget), middleTreeViewColumn);
+
+        lastTreeViewColumn = gtk_tree_view_column_new();
+        gtk_tree_view_column_set_title(lastTreeViewColumn, "M");
+        gtk_tree_view_append_column(GTK_TREE_VIEW(gTreeViewWidget), lastTreeViewColumn);
+
+        /* Use the middle column's header for our button */
+        gTreeHeaderCellWidget = middleTreeViewColumn->button;
+        gtk_tree_view_column_set_sort_indicator(middleTreeViewColumn, TRUE);
+        gTreeHeaderSortArrowWidget = middleTreeViewColumn->arrow;
     }
     return MOZ_GTK_SUCCESS;
 }
