@@ -71,7 +71,7 @@ static const char* const sEventNames[] = {
   "DOMAttrModified", "DOMCharacterDataModified",
   "DOMActivate", "DOMFocusIn", "DOMFocusOut",
   "pageshow", "pagehide", "DOMMouseScroll", "offline", "online",
-  "copy", "cut", "paste", "beforecopy", "beforecut", "beforepaste"
+  "copy", "cut", "paste"
 #ifdef MOZ_SVG
  ,
   "SVGLoad", "SVGUnload", "SVGAbort", "SVGError", "SVGResize", "SVGScroll",
@@ -505,12 +505,6 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_CUT;
     else if (atom == nsGkAtoms::onpaste)
       mEvent->message = NS_PASTE;
-    else if (atom == nsGkAtoms::onbeforecopy)
-      mEvent->message = NS_BEFORECOPY;
-    else if (atom == nsGkAtoms::onbeforecut)
-      mEvent->message = NS_BEFORECUT;
-    else if (atom == nsGkAtoms::onbeforepaste)
-      mEvent->message = NS_BEFOREPASTE;
   } else if (mEvent->eventStructType == NS_MUTATION_EVENT) {
     if (atom == nsGkAtoms::onDOMAttrModified)
       mEvent->message = NS_MUTATION_ATTRMODIFIED;
@@ -1323,12 +1317,6 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_cut];
   case NS_PASTE:
     return sEventNames[eDOMEvents_paste];
-  case NS_BEFORECOPY:
-    return sEventNames[eDOMEvents_beforecopy];
-  case NS_BEFORECUT:
-    return sEventNames[eDOMEvents_beforecut];
-  case NS_BEFOREPASTE:
-    return sEventNames[eDOMEvents_beforepaste];
 #ifdef MOZ_SVG
   case NS_SVG_LOAD:
     return sEventNames[eDOMEvents_SVGLoad];

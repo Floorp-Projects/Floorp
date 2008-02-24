@@ -1335,9 +1335,6 @@ jsval nsDOMClassInfo::sDocumentURIObject_id=JSVAL_VOID;
 jsval nsDOMClassInfo::sOncopy_id          = JSVAL_VOID;
 jsval nsDOMClassInfo::sOncut_id           = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnpaste_id         = JSVAL_VOID;
-jsval nsDOMClassInfo::sOnbeforecopy_id    = JSVAL_VOID;
-jsval nsDOMClassInfo::sOnbeforecut_id     = JSVAL_VOID;
-jsval nsDOMClassInfo::sOnbeforepaste_id   = JSVAL_VOID;
 #ifdef OJI
 jsval nsDOMClassInfo::sJava_id            = JSVAL_VOID;
 jsval nsDOMClassInfo::sPackages_id        = JSVAL_VOID;
@@ -1530,9 +1527,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sOncopy_id,          cx, "oncopy");
   SET_JSVAL_TO_STRING(sOncut_id,           cx, "oncut");
   SET_JSVAL_TO_STRING(sOnpaste_id,         cx, "onpaste");
-  SET_JSVAL_TO_STRING(sOnbeforecopy_id,    cx, "oncopy");
-  SET_JSVAL_TO_STRING(sOnbeforecut_id,     cx, "oncut");
-  SET_JSVAL_TO_STRING(sOnbeforepaste_id,   cx, "onpaste");
 #ifdef OJI
   SET_JSVAL_TO_STRING(sJava_id,            cx, "java");
   SET_JSVAL_TO_STRING(sPackages_id,        cx, "Packages");
@@ -4094,9 +4088,6 @@ nsDOMClassInfo::ShutDown()
   sOncopy_id          = JSVAL_VOID;
   sOncut_id           = JSVAL_VOID;
   sOnpaste_id         = JSVAL_VOID;
-  sOnbeforecopy_id    = JSVAL_VOID;
-  sOnbeforecut_id     = JSVAL_VOID;
-  sOnbeforepaste_id   = JSVAL_VOID;
 #ifdef OJI
   sJava_id            = JSVAL_VOID;
   sPackages_id        = JSVAL_VOID;
@@ -6685,10 +6676,7 @@ nsEventReceiverSH::ReallyIsEventName(jsval id, jschar aFirstChar)
     return id == sOnabort_id;
   case 'b' :
     return (id == sOnbeforeunload_id ||
-            id == sOnblur_id         ||
-            id == sOnbeforecopy_id   ||
-            id == sOnbeforecut_id    ||
-            id == sOnbeforepaste_id);
+            id == sOnblur_id);
   case 'e' :
     return id == sOnerror_id;
   case 'f' :

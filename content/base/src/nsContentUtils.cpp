@@ -386,9 +386,6 @@ nsContentUtils::InitializeEventTable() {
     { &nsGkAtoms::oncopy,                        { NS_COPY, EventNameType_HTMLXUL }},
     { &nsGkAtoms::oncut,                         { NS_CUT, EventNameType_HTMLXUL }},
     { &nsGkAtoms::onpaste,                       { NS_PASTE, EventNameType_HTMLXUL }},
-    { &nsGkAtoms::onbeforecopy,                  { NS_BEFORECOPY, EventNameType_HTMLXUL }},
-    { &nsGkAtoms::onbeforecut,                   { NS_BEFORECUT, EventNameType_HTMLXUL }},
-    { &nsGkAtoms::onbeforepaste,                 { NS_BEFOREPASTE, EventNameType_HTMLXUL }},
     // XUL specific events
     { &nsGkAtoms::ontext,                        { NS_TEXT_TEXT, EventNameType_XUL }},
     { &nsGkAtoms::oncompositionstart,            { NS_COMPOSITION_START, EventNameType_XUL }},
