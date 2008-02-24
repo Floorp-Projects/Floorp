@@ -273,6 +273,13 @@ public:
                                            nsReflowStatus&          aStatus);
 
   /**
+   * Inserts aFrameList's frames into our main child list--without reparenting
+   * or requesting reflow.
+   */
+  virtual nsresult AddFrames(nsIFrame* aFrameList,
+                             nsIFrame* aPrevSibling);
+
+  /**
    * Removes aChild without destroying it and without requesting reflow.
    * Continuations are not affected. Checks the primary and overflow
    * or overflow containers and excess overflow containers lists, depending
