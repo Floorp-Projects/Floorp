@@ -586,7 +586,7 @@ js_AtomizeDouble(JSContext *cx, jsdouble d)
         gen = ++table->generation;
         JS_UNLOCK(&state->lock, cx);
 
-        key = js_NewDouble(cx, d);
+        key = js_NewDouble(cx, d, 0);
         if (!key)
             return NULL;
 
