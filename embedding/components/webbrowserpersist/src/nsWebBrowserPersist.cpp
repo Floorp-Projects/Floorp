@@ -1556,11 +1556,11 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
                     break;
                 }
 
-                nsCAutoString dirName;
-                dataDirParent->GetNativeLeafName(dirName);
+                nsAutoString dirName;
+                dataDirParent->GetLeafName(dirName);
 
                 nsCAutoString newRelativePathToData;
-                newRelativePathToData = dirName
+                newRelativePathToData = NS_ConvertUTF16toUTF8(dirName)
                                       + NS_LITERAL_CSTRING("/")
                                       + relativePathToData;
                 relativePathToData = newRelativePathToData;
@@ -2222,7 +2222,7 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
 
                 if (localFile)
                 {
-                    localFile->SetNativeLeafName(newFileName);
+                    localFile->SetLeafName(NS_ConvertUTF8toUTF16(newFileName));
 
                     // Resync the URI with the file after the extension has been appended
                     nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aURI, &rv);
