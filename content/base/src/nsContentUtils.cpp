@@ -3965,6 +3965,7 @@ nsContentUtils::HidePopupsInDocument(nsIDocument* aDocument)
 {
   NS_PRECONDITION(aDocument, "Null document");
 
+#ifdef MOZ_XUL
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm) {
     nsCOMPtr<nsISupports> container = aDocument->GetContainer();
@@ -3972,6 +3973,7 @@ nsContentUtils::HidePopupsInDocument(nsIDocument* aDocument)
     if (docShellToHide)
       pm->HidePopupsInDocShell(docShellToHide);
   }
+#endif
 }
 
 /* static */
