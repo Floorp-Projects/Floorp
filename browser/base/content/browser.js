@@ -75,9 +75,7 @@ var gLastBrowserCharset = null;
 var gPrevCharset = null;
 var gURLBar = null;
 var gFindBar = null;
-var gProxyButton = null;
 var gProxyFavIcon = null;
-var gProxyDeck = null;
 var gNavigatorBundle = null;
 var gIsLoadingBlank = false;
 var gLastValidURLStr = "";
@@ -2108,6 +2106,28 @@ function UpdateUrlbarSearchSplitterState()
     splitter.parentNode.removeChild(splitter);
 }
 
+var LocationBarHelpers = {
+  _timeoutID: null,
+
+  _searchBegin: function LocBar_searchBegin() {
+    function delayedBegin(self) {
+      self._timeoutID = null;
+      document.getElementById("urlbar-throbber").setAttribute("busy", "true");
+    }
+
+    this._timeoutID = setTimeout(delayedBegin, 500, this);
+  },
+
+  _searchComplete: function LocBar_searchComplete() {
+    // Did we finish the search before delayedBegin was invoked?
+    if (this._timeoutID) {
+      clearTimeout(this._timeoutID);
+      this._timeoutID = null;
+    }
+    document.getElementById("urlbar-throbber").removeAttribute("busy");
+  }
+};
+
 function UpdatePageProxyState()
 {
   if (gURLBar && gURLBar.value != gLastValidURLStr)
@@ -2119,15 +2139,11 @@ function SetPageProxyState(aState)
   if (!gURLBar)
     return;
 
-  if (!gProxyButton)
-    gProxyButton = document.getElementById("page-proxy-button");
   if (!gProxyFavIcon)
     gProxyFavIcon = document.getElementById("page-proxy-favicon");
-  if (!gProxyDeck)
-    gProxyDeck = document.getElementById("page-proxy-deck");
 
   gURLBar.setAttribute("pageproxystate", aState);
-  gProxyButton.setAttribute("pageproxystate", aState);
+  gProxyFavIcon.setAttribute("pageproxystate", aState);
 
   // the page proxy state is set to valid via OnLocationChange, which
   // gets called when we switch tabs.
@@ -2151,21 +2167,17 @@ function PageProxySetIcon (aURL)
     PageProxyClearIcon();
   else if (gProxyFavIcon.getAttribute("src") != aURL)
     gProxyFavIcon.setAttribute("src", aURL);
-  else if (gProxyDeck.selectedIndex != 1)
-    gProxyDeck.selectedIndex = 1;
 }
 
 function PageProxyClearIcon ()
 {
-  if (gProxyDeck.selectedIndex != 0)
-    gProxyDeck.selectedIndex = 0;
-  if (gProxyFavIcon.hasAttribute("src"))
-    gProxyFavIcon.removeAttribute("src");
+  gProxyFavIcon.removeAttribute("src");
 }
+
 
 function PageProxyDragGesture(aEvent)
 {
-  if (gProxyButton.getAttribute("pageproxystate") == "valid") {
+  if (gProxyFavIcon.getAttribute("pageproxystate") == "valid") {
     nsDragAndDrop.startDrag(aEvent, proxyIconDNDObserver);
     return true;
   }
@@ -3123,9 +3135,7 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
   // Update global UI elements that may have been added or removed
   if (aToolboxChanged) {
     gURLBar = document.getElementById("urlbar");
-    gProxyButton = document.getElementById("page-proxy-button");
     gProxyFavIcon = document.getElementById("page-proxy-favicon");
-    gProxyDeck = document.getElementById("page-proxy-deck");
     gHomeButton.updateTooltip();
     gIdentityHandler._cacheElements();
     window.XULBrowserWindow.init();

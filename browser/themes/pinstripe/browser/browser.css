@@ -652,36 +652,36 @@ toolbar[mode="icons"] #forward-button[open="true"] {
 
 /* ----- PAGE PROXY ICON ----- */
 
-#page-proxy-deck,
+#page-proxy-stack,
 #page-proxy-favicon,
-#page-proxy-button {
+#urlbar-throbber {
   width: 16px;
   height: 16px;
   margin: 0px;
   padding: 0px;
 }
 
-#page-proxy-deck {
+#page-proxy-stack {
   -moz-margin-start: 11px;
   margin-bottom: 1px;
   opacity: 1.0;
 }
 
-#page-proxy-favicon {
-  list-style-image: none;
-}
-
-#page-proxy-button {
+#page-proxy-favicon:not([src]) {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
-#page-proxy-button[pageproxystate="invalid"] {
-  cursor: default;
+#page-proxy-favicon[pageproxystate="invalid"] {
   opacity: 0.5;
 }
 
-#identity-box:active > #page-proxy-deck,
-#identity-box[open="true"] > #page-proxy-deck {
+#urlbar-throbber {
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+}
+
+
+#identity-box:active > #page-proxy-stack,
+#identity-box[open="true"] > #page-proxy-stack {
   opacity: 0.75;
 }
 
@@ -1363,8 +1363,8 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   -moz-box-pack: center;
 }
 
-#identity-box.verifiedIdentity > hbox > #page-proxy-deck,
-#identity-box.verifiedDomain > hbox > #page-proxy-deck {
+#identity-box.verifiedIdentity > hbox > #page-proxy-stack,
+#identity-box.verifiedDomain > hbox > #page-proxy-stack {
   -moz-margin-start: 0;
 }
 
