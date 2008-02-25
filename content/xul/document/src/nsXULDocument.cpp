@@ -707,6 +707,9 @@ nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
         if (broadcaster->GetAttr(kNameSpaceID_None, name, value)) {
             listener->SetAttr(kNameSpaceID_None, name, value,
                               mInitialLayoutComplete);
+        } else {
+            listener->UnsetAttr(kNameSpaceID_None, name,
+                                mInitialLayoutComplete);
         }
 
 #if 0
