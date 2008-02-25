@@ -341,7 +341,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
                                            "expect": threshold}
         break
     else:
-      print "FAIL missing output line for total leaks!"
+      print "ERROR FAIL missing output line for total leaks!"
     leaks.close()
 
 
