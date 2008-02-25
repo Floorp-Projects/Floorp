@@ -157,13 +157,29 @@ var uri6 = uri("http://site.tld/6/bbb");
   
 var tests = [
   function() ensure_tag_results([uri1, uri4, uri6], "foo"), 
+  function() ensure_tag_results([uri1], "foo aaa"), 
+  function() ensure_tag_results([uri4, uri6], "foo bbb"), 
   function() ensure_tag_results([uri2, uri4, uri5, uri6], "bar"), 
+  function() ensure_tag_results([uri5], "bar aaa"), 
+  function() ensure_tag_results([uri2, uri4, uri6], "bar bbb"), 
   function() ensure_tag_results([uri3, uri5, uri6], "cheese"), 
+  function() ensure_tag_results([uri3, uri5], "chees aaa"), 
+  function() ensure_tag_results([uri6], "chees bbb"), 
   function() ensure_tag_results([uri4, uri6], "fo bar"), 
+  function() ensure_tag_results([], "fo bar aaa"), 
+  function() ensure_tag_results([uri4, uri6], "fo bar bbb"), 
   function() ensure_tag_results([uri4, uri6], "ba foo"), 
+  function() ensure_tag_results([], "ba foo aaa"), 
+  function() ensure_tag_results([uri4, uri6], "ba foo bbb"), 
   function() ensure_tag_results([uri5, uri6], "ba chee"), 
+  function() ensure_tag_results([uri5], "ba chee aaa"), 
+  function() ensure_tag_results([uri6], "ba chee bbb"), 
   function() ensure_tag_results([uri5, uri6], "eese bar"), 
+  function() ensure_tag_results([uri5], "heese bar aaa"), 
+  function() ensure_tag_results([uri6], "ees bar bbb"), 
   function() ensure_tag_results([uri6], "cheese bar foo"),
+  function() ensure_tag_results([], "foo bar cheese aaa"),
+  function() ensure_tag_results([uri6], "foo bar cheese bbb"),
 ];
 
 /** 
