@@ -130,6 +130,17 @@ nsNavHistory::CreateAutoCompleteQueries()
     getter_AddRefs(mDBAutoCompleteQuery));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  sql = NS_LITERAL_CSTRING(
+    // Leverage the PRIMARY KEY (place_id, input) to insert/update entries
+    "INSERT OR REPLACE INTO moz_inputhistory "
+    // use_count will asymptotically approach the max of 10
+    "SELECT h.id, IFNULL(i.input, ?1), IFNULL(i.use_count, 0) * .9 + 1 "
+    "FROM moz_places h "
+    "LEFT OUTER JOIN moz_inputhistory i ON i.place_id = h.id AND i.input = ?1 "
+    "WHERE h.url = ?2");
+  rv = mDBConn->CreateStatement(sql, getter_AddRefs(mDBFeedbackIncrease));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -578,6 +589,30 @@ nsNavHistory::OnValueRemoved(nsIAutoCompleteSimpleResult* aResult,
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = RemovePage(uri);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+nsNavHistory::AutoCompleteFeedback(PRInt32 aIndex,
+                                   nsIAutoCompleteController *aController)
+{
+  mozStorageStatementScoper scope(mDBFeedbackIncrease);
+
+  nsAutoString input;
+  nsresult rv = aController->GetSearchString(input);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBFeedbackIncrease->BindStringParameter(0, input);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString url;
+  rv = aController->GetValueAt(aIndex, url);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBFeedbackIncrease->BindStringParameter(1, url);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBFeedbackIncrease->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
