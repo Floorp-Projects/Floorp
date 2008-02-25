@@ -77,33 +77,36 @@
                   ondragexit="nsDragAndDrop.dragExit(event, this.parentNode.parentNode); event.stopPropagation();">
           <xul:tooltip onpopupshowing="return this.parentNode.parentNode.parentNode.createTooltip(event);"/>
           <xul:menupopup anonid="tabContextMenu" onpopupshowing="this.parentNode.parentNode.parentNode.updatePopupMenu(this);">
-            <xul:menuitem label="&newTab.label;" accesskey="&newTab.accesskey;"
+            <xul:menuitem id="context_newTab" label="&newTab.label;" accesskey="&newTab.accesskey;"
                           xbl:inherits="oncommand=onnewtab"/>
             <xul:menuseparator/>
-            <xul:menuitem label="&reloadTab.label;" accesskey="&reloadTab.accesskey;"
+            <xul:menuitem id="context_reloadTab" label="&reloadTab.label;" accesskey="&reloadTab.accesskey;"
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
                                      tabbrowser.reloadTab(tabbrowser.mContextTab);"/>
-            <xul:menuitem label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;"
+            <xul:menuitem id="context_reloadAllTabs" label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;"
                           tbattr="tabbrowser-multiple"
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
                                      tabbrowser.reloadAllTabs(tabbrowser.mContextTab);"/>
-            <xul:menuitem label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;"
+            <xul:menuitem id="context_closeOtherTabs" label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;"
                           tbattr="tabbrowser-multiple"
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
                                      tabbrowser.removeAllTabsBut(tabbrowser.mContextTab);"/>
             <xul:menuseparator/>
-            <xul:menuitem label="&bookmarkThisTab.label;"
+            <xul:menuitem id="context_bookmarkTab"
+                          label="&bookmarkThisTab.label;"
                           accesskey="&bookmarkThisTab.accesskey;"
                           oncommand="BookmarkThisTab();"/>
-            <xul:menuitem label="&bookmarkAllTabs.label;"
+            <xul:menuitem id="context_bookmarkAllTabs"
+                          label="&bookmarkAllTabs.label;"
                           accesskey="&bookmarkAllTabs.accesskey;"
                           command="Browser:BookmarkAllTabs"/>
-            <xul:menuitem label="&undoCloseTab.label;"
+            <xul:menuitem id="context_undoCloseTab"
+                          label="&undoCloseTab.label;"
                           accesskey="&undoCloseTab.accesskey;"
                           command="History:UndoCloseTab"
                           anonid="undoCloseTabMenuItem"/>
             <xul:menuseparator/>
-            <xul:menuitem label="&closeTab.label;" accesskey="&closeTab.accesskey;"
+            <xul:menuitem id="context_closeTab" label="&closeTab.label;" accesskey="&closeTab.accesskey;"
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
                                      tabbrowser.removeTab(tabbrowser.mContextTab);"/>
           </xul:menupopup>
