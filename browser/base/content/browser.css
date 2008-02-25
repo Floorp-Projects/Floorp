@@ -23,6 +23,11 @@ toolbar[printpreview="true"] {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#urlbar-rich-result-popup");
 }
 
+#urlbar-throbber:not([busy="true"]),
+#urlbar-throbber[busy="true"] + #page-proxy-favicon {
+  display: none;
+} 
+
 /* ::::: Unified Back-/Forward Button ::::: */
 #back-forward-dropmarker > image ,
 #back-forward-dropmarker > label {
