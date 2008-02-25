@@ -2068,8 +2068,25 @@ nsresult nsExternalAppHandler::OpenWithApplication()
   // if a stop request was already issued then proceed with launching the application.
   if (mStopRequestIssued)
   {
+    PRBool deleteTempFileOnExit;
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (!prefs || NS_FAILED(prefs->GetBoolPref(
+        "browser.helperApps.deleteTempFileOnExit", &deleteTempFileOnExit))) {
+      // No prefservice or no pref set; use default value
+#if !defined(XP_MACOSX)
+      // Mac users have been very verbal about temp files being deleted on
+      // app exit - they don't like it - but we'll continue to do this on
+      // other platforms for now.
+      deleteTempFileOnExit = PR_TRUE;
+#else
+      deleteTempFileOnExit = PR_FALSE;
+#endif
+    }
+
     // make the tmp file readonly so users won't edit it and lose the changes
-    mFinalFileDestination->SetPermissions(0400);
+    // only if we're going to delete the file
+    if (deleteTempFileOnExit)
+      mFinalFileDestination->SetPermissions(0400);
 
     rv = mMimeInfo->LaunchWithFile(mFinalFileDestination);        
     if (NS_FAILED(rv))
@@ -2080,30 +2097,9 @@ nsresult nsExternalAppHandler::OpenWithApplication()
       SendStatusChange(kLaunchError, rv, nsnull, path);
       Cancel(rv); // Cancel, and clean up temp file.
     }
-    else
-    {
-      PRBool deleteTempFileOnExit;
-      nsresult result = NS_ERROR_NOT_AVAILABLE;  // don't return this!
-      nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
-      if (prefs) {
-        result = prefs->GetBoolPref("browser.helperApps.deleteTempFileOnExit",
-                                    &deleteTempFileOnExit);
-      }
-      if (NS_FAILED(result)) {
-        // No pref set; use default value
-#if !defined(XP_MACOSX)
-          // Mac users have been very verbal about temp files being deleted on
-          // app exit - they don't like it - but we'll continue to do this on
-          // other platforms for now.
-        deleteTempFileOnExit = PR_TRUE;
-#else
-        deleteTempFileOnExit = PR_FALSE;
-#endif
-      }
-      if (deleteTempFileOnExit) {
-        NS_ASSERTION(gExtProtSvc, "Service gone away!?");
-        gExtProtSvc->DeleteTemporaryFileOnExit(mFinalFileDestination);
-      }
+    else if (deleteTempFileOnExit) {
+      NS_ASSERTION(gExtProtSvc, "Service gone away!?");
+      gExtProtSvc->DeleteTemporaryFileOnExit(mFinalFileDestination);
     }
   }
 
