@@ -160,7 +160,10 @@ var tests = [
   function() ensure_tag_results([uri2, uri4, uri5, uri6], "bar"), 
   function() ensure_tag_results([uri3, uri5, uri6], "cheese"), 
   function() ensure_tag_results([uri4, uri6], "fo bar"), 
+  function() ensure_tag_results([uri4, uri6], "ba foo"), 
   function() ensure_tag_results([uri5, uri6], "ba chee"), 
+  function() ensure_tag_results([uri5, uri6], "eese bar"), 
+  function() ensure_tag_results([uri6], "cheese bar foo"),
 ];
 
 /** 
