@@ -211,11 +211,7 @@ void nsXPITriggerInfo::SaveCallback( JSContext *aCx, jsval aVal )
 
     JSClass* clazz;
 
-#ifdef JS_THREADSAFE
-    clazz = ::JS_GetClass(aCx, obj);
-#else
-    clazz = ::JS_GetClass(obj);
-#endif
+    clazz = ::JS_GET_CLASS(aCx, obj);
 
     if (clazz &&
         (clazz->flags & JSCLASS_HAS_PRIVATE) &&

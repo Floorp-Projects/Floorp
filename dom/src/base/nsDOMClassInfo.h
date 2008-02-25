@@ -169,7 +169,7 @@ public:
 #endif
 
     return sXPCNativeWrapperClass &&
-      ::JS_GetClass(cx, obj) == sXPCNativeWrapperClass;
+      ::JS_GET_CLASS(cx, obj) == sXPCNativeWrapperClass;
   }
 
   static nsresult PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper);

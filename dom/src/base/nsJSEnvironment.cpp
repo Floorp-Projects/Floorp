@@ -2824,7 +2824,7 @@ nsJSContext::FindXPCNativeWrapperClass(nsIXPConnectJSObjectHolder *aHolder)
   NS_ASSERTION(JSVAL_IS_OBJECT(wrapper), "This should be an object!");
 
   NS_DOMClassInfo_SetXPCNativeWrapperClass(
-    ::JS_GetClass(mContext, JSVAL_TO_OBJECT(wrapper)));
+    ::JS_GET_CLASS(mContext, JSVAL_TO_OBJECT(wrapper)));
   return NS_OK;
 }
 
