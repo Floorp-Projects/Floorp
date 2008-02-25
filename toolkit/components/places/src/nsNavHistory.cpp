@@ -24,6 +24,7 @@
  *   Seth Spitzer <sspitzer@mozilla.com>
  *   Asaf Romano <mano@mozilla.com>
  *   Marco Bonardo <mak77@supereva.it>
+ *   Edward Lee <edward.lee@engineering.uiuc.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -288,6 +289,7 @@ const PRInt32 nsNavHistory::kAutoCompleteIndex_BookmarkTitle = 5;
 
 static const char* gQuitApplicationMessage = "quit-application";
 static const char* gXpcomShutdown = "xpcom-shutdown";
+static const char* gAutoCompleteFeedback = "autocomplete-will-enter-text";
 
 // annotation names
 const char nsNavHistory::kAnnotationPreviousEncoding[] = "history/encoding";
@@ -474,6 +476,7 @@ nsNavHistory::Init()
 
   observerService->AddObserver(this, gQuitApplicationMessage, PR_FALSE);
   observerService->AddObserver(this, gXpcomShutdown, PR_FALSE);
+  observerService->AddObserver(this, gAutoCompleteFeedback, PR_FALSE);
 
   /*****************************************************************************
    *** IMPORTANT NOTICE!
@@ -815,6 +818,18 @@ nsNavHistory::InitDB(PRInt16 *aMadeChanges)
 
     rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
         "CREATE INDEX moz_historyvisits_dateindex ON moz_historyvisits (visit_date)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // moz_inputhistory
+  rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_inputhistory"), &tableExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!tableExists) {
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_inputhistory ("
+        "place_id INTEGER NOT NULL, "
+        "input LONGVARCHAR NOT NULL, "
+        "use_count INTEGER, "
+        "PRIMARY KEY (place_id, input))"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -4056,8 +4071,40 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     nsCOMPtr<nsIObserverService> observerService =
       do_GetService("@mozilla.org/observer-service;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
+    observerService->RemoveObserver(this, gAutoCompleteFeedback);
     observerService->RemoveObserver(this, gXpcomShutdown);
     observerService->RemoveObserver(this, gQuitApplicationMessage);
+  } else if (nsCRT::strcmp(aTopic, gAutoCompleteFeedback) == 0) {
+    nsCOMPtr<nsIAutoCompleteInput> input = do_QueryInterface(aSubject);
+    if (!input)
+      return NS_OK;
+
+    nsCOMPtr<nsIAutoCompletePopup> popup;
+    input->GetPopup(getter_AddRefs(popup));
+    if (!popup)
+      return NS_OK;
+
+    nsCOMPtr<nsIAutoCompleteController> controller;
+    input->GetController(getter_AddRefs(controller));
+    if (!controller)
+      return NS_OK;
+
+    // Don't bother if the popup is closed
+    PRBool open;
+    nsresult rv = popup->GetPopupOpen(&open);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!open)
+      return NS_OK;
+
+    // Ignore if nothing selected from the popup
+    PRInt32 selectedIndex;
+    rv = popup->GetSelectedIndex(&selectedIndex);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (selectedIndex == -1)
+      return NS_OK;
+
+    rv = AutoCompleteFeedback(selectedIndex, controller);
+    NS_ENSURE_SUCCESS(rv, rv);
   } else if (nsCRT::strcmp(aTopic, "nsPref:changed") == 0) {
     PRInt32 oldDaysMin = mExpireDaysMin;
     PRInt32 oldDaysMax = mExpireDaysMax;

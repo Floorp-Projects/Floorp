@@ -227,6 +227,9 @@ nsNavHistoryExpire::OnQuit()
   rv = ExpireAnnotationsParanoid(connection);
   if (NS_FAILED(rv))
     NS_WARNING("ExpireAnnotationsParanoid failed.");
+  rv = ExpireInputHistoryParanoid(connection);
+  if (NS_FAILED(rv))
+    NS_WARNING("ExpireInputHistoryParanoid failed.");
 }
 
 
@@ -258,6 +261,10 @@ nsNavHistoryExpire::ClearHistory()
   rv = ExpireAnnotationsParanoid(connection);
   if (NS_FAILED(rv))
     NS_WARNING("ExpireAnnotationsParanoid failed.");
+
+  rv = ExpireInputHistoryParanoid(connection);
+  if (NS_FAILED(rv))
+    NS_WARNING("ExpireInputHistoryParanoid failed.");
 
   // for all remaining places, reset the frecency
   // Note, we don't reset the visit_count, as we use that in our "on idle"
@@ -944,6 +951,25 @@ nsNavHistoryExpire::ExpireAnnotationsParanoid(mozIStorageConnection* aConnection
       "JOIN moz_items_annos c ON c.anno_attribute_id = a.id "
       "JOIN moz_bookmarks p ON c.item_id = p.id)"));
   NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+
+// nsNavHistoryExpire::ExpireInputHistoryParanoid
+//
+//    Deletes dangling input history
+
+nsresult
+nsNavHistoryExpire::ExpireInputHistoryParanoid(mozIStorageConnection* aConnection)
+{
+  // Delete dangling input history that have no associated pages
+  nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_inputhistory WHERE place_id IN "
+    "(SELECT i.place_id FROM moz_inputhistory i "
+      "LEFT OUTER JOIN moz_places h ON i.place_id = h.id "
+      "WHERE h.id IS NULL)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
