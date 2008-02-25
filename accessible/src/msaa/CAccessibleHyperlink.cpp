@@ -121,17 +121,17 @@ __try {
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = acc->GetURI(aIndex, getter_AddRefs(uri));
-  if (NS_SUCCEEDED(rv))
+  if (NS_FAILED(rv) || !uri)
     return E_FAIL;
 
   nsCAutoString prePath;
   rv = uri->GetPrePath(prePath);
-  if (NS_SUCCEEDED(rv))
+  if (NS_FAILED(rv))
     return E_FAIL;
 
   nsCAutoString path;
   rv = uri->GetPath(path);
-  if (NS_SUCCEEDED(rv))
+  if (NS_FAILED(rv))
     return E_FAIL;
 
   nsAutoString stringURI;
