@@ -763,6 +763,17 @@ struct nsPurpleBuffer
             }
         }
     }
+
+    PRUint32 Count()
+    {
+        PRUint32 count = mBackingStore.Count();
+        for (PRUint32 i = 0; i < N_POINTERS; ++i) {
+            if (mCache[i]) {
+                ++count;
+            }
+        }
+        return count;
+    }
 };
 
 static PR_CALLBACK PLDHashOperator
@@ -867,6 +878,7 @@ struct nsCycleCollector
     PRBool mCollectionInProgress;
     PRBool mScanInProgress;
     PRBool mFollowupCollection;
+    PRUint32 mCollectedObjects;
 
     nsCycleCollectionLanguageRuntime *mRuntimes[nsIProgrammingLanguage::MAX+1];
     nsCycleCollectionXPCOMRuntime mXPCOMRuntime;
@@ -895,9 +907,10 @@ struct nsCycleCollector
 
     PRBool Suspect(nsISupports *n);
     PRBool Forget(nsISupports *n);
-    PRBool Collect(PRUint32 aTryCollections = 1);
+    PRUint32 Collect(PRUint32 aTryCollections = 1);
     PRBool BeginCollection();
     PRBool FinishCollection();
+    PRUint32 SuspectedCount();
     void Shutdown();
 
     void ClearGraph()
@@ -1613,6 +1626,7 @@ nsCycleCollector::CollectWhite()
         mStats.mFreedBytes += (ms1.lTotalCount - ms2.lTotalCount);
 #endif
 
+    mCollectedObjects += count;
     return count > 0;
 }
 
@@ -1818,6 +1832,7 @@ InitMemHook(void)
 nsCycleCollector::nsCycleCollector() : 
     mCollectionInProgress(PR_FALSE),
     mScanInProgress(PR_FALSE),
+    mCollectedObjects(0),
     mWhiteNodes(nsnull),
     mWhiteNodeCount(0),
 #ifdef DEBUG_CC
@@ -2138,7 +2153,7 @@ nsCycleCollector::Freed(void *n)
 }
 #endif
 
-PRBool
+PRUint32
 nsCycleCollector::Collect(PRUint32 aTryCollections)
 {
 #if defined(DEBUG_CC) && !defined(__MINGW32__)
@@ -2148,7 +2163,7 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
 
     // This can legitimately happen in a few cases. See bug 383651.
     if (mCollectionInProgress)
-        return PR_FALSE;
+        return 0;
 
 #ifdef COLLECT_TIME_DEBUG
     printf("cc: Starting nsCycleCollector::Collect(%d)\n", aTryCollections);
@@ -2164,7 +2179,7 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
     }
 
     mFollowupCollection = PR_FALSE;
-
+    mCollectedObjects = 0;
     nsAutoTPtrArray<PtrInfo, 4000> whiteNodes;
     mWhiteNodes = &whiteNodes;
 
@@ -2224,7 +2239,7 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
 #ifdef DEBUG_CC
     ExplainLiveExpectedGarbage();
 #endif
-    return totalCollections > 0;
+    return mCollectedObjects;
 }
 
 PRBool
@@ -2340,7 +2355,7 @@ nsCycleCollector::BeginCollection()
         RootWhite();
 
 #ifdef COLLECT_TIME_DEBUG
-        printf("cc: CollectWhite() took %lldms\n",
+        printf("cc: RootWhite() took %lldms\n",
                (PR_Now() - now) / PR_USEC_PER_MSEC);
 #endif
     }
@@ -2354,7 +2369,15 @@ nsCycleCollector::BeginCollection()
 PRBool
 nsCycleCollector::FinishCollection()
 {
+#ifdef COLLECT_TIME_DEBUG
+    PRTime now = PR_Now();
+#endif
     PRBool collected = CollectWhite();
+
+#ifdef COLLECT_TIME_DEBUG
+    printf("cc: CollectWhite() took %lldms\n",
+           (PR_Now() - now) / PR_USEC_PER_MSEC);
+#endif
 
 #ifdef DEBUG_CC
     mStats.mCollection++;
@@ -2370,6 +2393,12 @@ nsCycleCollector::FinishCollection()
     mFollowupCollection = PR_TRUE;
 
     return collected;
+}
+
+PRUint32
+nsCycleCollector::SuspectedCount()
+{
+    return mPurpleBuf.Count();
 }
 
 void
@@ -2780,10 +2809,16 @@ NS_CycleCollectorForget(nsISupports *n)
 }
 
 
-PRBool
+PRUint32
 nsCycleCollector_collect()
 {
-    return sCollector ? sCollector->Collect() : PR_FALSE;
+    return sCollector ? sCollector->Collect() : 0;
+}
+
+PRUint32
+nsCycleCollector_suspectedCount()
+{
+    return sCollector ? sCollector->SuspectedCount() : 0;
 }
 
 PRBool 
