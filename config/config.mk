@@ -361,13 +361,6 @@ OS_LDFLAGS += $(PROFILE_GEN_LDFLAGS)
 ifeq (WINNT,$(OS_ARCH))
 AR_FLAGS += -LTCG
 endif
-else
-# We don't want to link internal tools with profiling,
-# but gcc needs to because xpidl will wind up linking with
-# libs that have been built with PROFILE_GEN_CFLAGS.
-ifdef GNU_CC
-OS_LDFLAGS += $(PROFILE_GEN_LDFLAGS)
-endif
 endif # INTERNAL_TOOLS
 endif # MOZ_PROFILE_GENERATE
 
