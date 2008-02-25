@@ -1230,7 +1230,7 @@
           // need to set up the ellipsis on a time out, 
           // because the width of the description element may still be 0
           // even though the aText length is non-zero
-          setTimeout(function(self) { self._setUpEllipsis(aBoxObject, aDescriptionElement.boxObject, aEllipsis); }, 0, this);
+          setTimeout(function(self) { self._setUpEllipsis(aBoxObject, aDescriptionElement, aEllipsis); }, 0, this);
           ]]>
         </body>
       </method>
@@ -1303,10 +1303,14 @@
         <body>
           <![CDATA[
           // determine if we need to show the ellipsis
-          if (aBoxObject.width >= aDescriptionElement.width)
+          if (aBoxObject.width >= aDescriptionElement.boxObject.width) {
             aEllipsis.value = "";
-          else 
+            aDescriptionElement.tooltipText = "";
+          }
+          else {
             aEllipsis.value = this.ellipsis;
+            aDescriptionElement.tooltipText = aDescriptionElement.textContent;
+          }
           ]]>
         </body>
       </method>
