@@ -354,7 +354,7 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
                         aAssumeVScroll ? &vScrollbarPrefSize : nsnull, PR_TRUE);
   }
   nscoord vScrollbarDesiredWidth = aAssumeVScroll ? vScrollbarPrefSize.width : 0;
-  nscoord vScrollbarDesiredHeight = aAssumeVScroll ? vScrollbarPrefSize.height : 0;
+  nscoord vScrollbarMinHeight = aAssumeVScroll ? vScrollbarMinSize.height : 0;
 
   nsSize hScrollbarMinSize(0, 0);
   nsSize hScrollbarPrefSize(0, 0);
@@ -364,15 +364,15 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
                         aAssumeHScroll ? &hScrollbarPrefSize : nsnull, PR_FALSE);
   }
   nscoord hScrollbarDesiredHeight = aAssumeHScroll ? hScrollbarPrefSize.height : 0;
-  nscoord hScrollbarDesiredWidth = aAssumeHScroll ? hScrollbarPrefSize.width : 0;
+  nscoord hScrollbarMinWidth = aAssumeHScroll ? hScrollbarMinSize.width : 0;
 
   // First, compute our inside-border size and scrollport size
   // XXXldb Can we depend more on ComputeSize here?
   nsSize desiredInsideBorderSize;
   desiredInsideBorderSize.width = vScrollbarDesiredWidth +
-    PR_MAX(aKidMetrics->width, hScrollbarDesiredWidth);
+    PR_MAX(aKidMetrics->width, hScrollbarMinWidth);
   desiredInsideBorderSize.height = hScrollbarDesiredHeight +
-    PR_MAX(aKidMetrics->height, vScrollbarDesiredHeight);
+    PR_MAX(aKidMetrics->height, vScrollbarMinHeight);
   aState->mInsideBorderSize =
     ComputeInsideBorderSize(aState, desiredInsideBorderSize);
   nsSize scrollPortSize = nsSize(PR_MAX(0, aState->mInsideBorderSize.width - vScrollbarDesiredWidth),
