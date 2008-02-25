@@ -49,6 +49,9 @@
 #include "nsDataHashtable.h"
 #include "nsINavHistoryService.h"
 #ifdef MOZ_XUL
+#include "nsIAutoCompleteController.h"
+#include "nsIAutoCompleteInput.h"
+#include "nsIAutoCompletePopup.h"
 #include "nsIAutoCompleteSearch.h"
 #include "nsIAutoCompleteResult.h"
 #include "nsIAutoCompleteSimpleResult.h"
@@ -663,6 +666,7 @@ protected:
   static const PRInt32 kAutoCompleteIndex_ParentId;
   static const PRInt32 kAutoCompleteIndex_BookmarkTitle;
   nsCOMPtr<mozIStorageStatement> mDBAutoCompleteQuery; //  kAutoCompleteIndex_* results
+  nsCOMPtr<mozIStorageStatement> mDBFeedbackIncrease;
 
   nsresult InitAutoComplete();
   nsresult CreateAutoCompleteQueries();
@@ -678,6 +682,9 @@ protected:
   nsStringArray mCurrentSearchTokens;
   void GenerateSearchTokens();
   void AddSearchToken(nsAutoString &aToken);
+
+  nsresult AutoCompleteFeedback(PRInt32 aIndex,
+                                nsIAutoCompleteController *aController);
 
 #ifdef MOZ_XUL
   nsCOMPtr<nsIAutoCompleteObserver> mCurrentListener;
