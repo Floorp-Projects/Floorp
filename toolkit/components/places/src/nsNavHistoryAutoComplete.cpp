@@ -106,11 +106,30 @@ nsNavHistory::InitAutoComplete()
 nsresult
 nsNavHistory::CreateAutoCompleteQueries()
 {
+  // Helper to get a particular column from the bookmark/tags table based on if
+  // we want to include tags or not
+#define SQL_STR_FRAGMENT_GET_BOOK_TAG(column, comparison, getMostRecent) \
+  NS_LITERAL_CSTRING( \
+  "(SELECT " column " " \
+  "FROM moz_bookmarks b " \
+  "JOIN moz_bookmarks t ON t.id = b.parent AND t.parent " comparison " ?1 " \
+  "WHERE b.type = ") + nsPrintfCString("%d", \
+    nsINavBookmarksService::TYPE_BOOKMARK) + \
+    NS_LITERAL_CSTRING(" AND b.fk = h.id") + \
+  (getMostRecent ? NS_LITERAL_CSTRING(" " \
+    "ORDER BY b.lastModified DESC LIMIT 1), ") : NS_LITERAL_CSTRING("), "))
+
+  // This gets three columns from the bookmarks and tags table followed by ", "
+  const nsCString &bookTag = 
+    SQL_STR_FRAGMENT_GET_BOOK_TAG("b.parent", "!=", PR_TRUE) +
+    SQL_STR_FRAGMENT_GET_BOOK_TAG("b.title", "!=", PR_TRUE) +
+    SQL_STR_FRAGMENT_GET_BOOK_TAG("GROUP_CONCAT(t.title, ' ')", "=", PR_FALSE);
+
   nsCString sql = NS_LITERAL_CSTRING(
-    "SELECT h.url, h.title, f.url, b.id, b.parent, b.title "
+    "SELECT h.url, h.title, f.url, ") + bookTag +
+      NS_LITERAL_CSTRING("NULL "
     "FROM moz_places h "
-    "LEFT OUTER JOIN moz_bookmarks b ON b.fk = h.id "
-    "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
+    "LEFT OUTER JOIN moz_favicons f ON f.id = h.favicon_id "
     "WHERE h.frecency <> 0 ");
 
   if (mAutoCompleteOnlyTyped)
@@ -124,7 +143,7 @@ nsNavHistory::CreateAutoCompleteQueries()
   // in the case of a frecency tie, break it with h.typed and h.visit_count
   // which is better than nothing.  but this is slow, so not doing it yet.
   sql += NS_LITERAL_CSTRING(
-    "ORDER BY h.frecency DESC LIMIT ?1 OFFSET ?2");
+    "ORDER BY h.frecency DESC LIMIT ?2 OFFSET ?3");
 
   nsresult rv = mDBConn->CreateStatement(sql, 
     getter_AddRefs(mDBAutoCompleteQuery));
@@ -184,11 +203,6 @@ nsNavHistory::PerformAutoComplete()
   nsresult rv;
   // Only do some extra searches on the first chunk
   if (!mCurrentChunkOffset) {
-    // No need to search for tags if there's nothing to search
-    if (!mCurrentSearchString.IsEmpty()) {
-      rv = AutoCompleteTagsSearch();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
   }
 
   PRBool moreChunksToSearch = PR_FALSE;
@@ -348,59 +362,6 @@ nsNavHistory::AddSearchToken(nsAutoString &aToken)
     mCurrentSearchTokens.AppendString(aToken);
 }
 
-nsresult
-nsNavHistory::AutoCompleteTagsSearch()
-{
-  // NOTE:
-  // after migration or clear all private data, we might end up with
-  // a lot of places with frecency = -1 (until idle)
-  // 
-  // XXX bug 412736
-  // in the case of a frecency tie, break it with h.typed and h.visit_count
-  // which is better than nothing.  but this is slow, so not doing it yet.
-  nsCString sql = NS_LITERAL_CSTRING(
-    "SELECT h.url, h.title, f.url, b.id, b.parent, b.title "
-    "FROM moz_places h "
-    "JOIN moz_bookmarks b ON b.fk = h.id "
-    "LEFT OUTER JOIN moz_favicons f ON f.id = h.favicon_id "
-    "WHERE h.frecency <> 0 AND (b.parent IN "
-      "(SELECT t.id FROM moz_bookmarks t WHERE t.parent = ?1 AND (");
-
-  nsStringArray terms;
-  CreateTermsFromTokens(mCurrentSearchTokens, terms);
-
-  for (PRInt32 i = 0; i < terms.Count(); i++) {
-    if (i)
-      sql += NS_LITERAL_CSTRING(" OR");
-
-    // +2 to skip over the "?1", which is the tag root parameter
-    sql += NS_LITERAL_CSTRING(" LOWER(t.title) = ") +
-           nsPrintfCString("LOWER(?%d)", i + 2);
-  }
-
-  sql += NS_LITERAL_CSTRING("))) "
-    "ORDER BY h.frecency DESC");
-
-  nsCOMPtr<mozIStorageStatement> tagAutoCompleteQuery;
-  nsresult rv = mDBConn->CreateStatement(sql,
-    getter_AddRefs(tagAutoCompleteQuery));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = tagAutoCompleteQuery->BindInt64Parameter(0, GetTagsFolder());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  for (PRInt32 i = 0; i < terms.Count(); i++) {
-    // +1 to skip over the "?1", which is the tag root parameter
-    rv = tagAutoCompleteQuery->BindStringParameter(i + 1, *(terms.StringAt(i)));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  rv = AutoCompleteProcessSearch(tagAutoCompleteQuery, QUERY_TAGS);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
 // nsNavHistory::AutoCompleteFullHistorySearch
 //
 // Search for places that have a title, url, 
@@ -415,10 +376,13 @@ nsNavHistory::AutoCompleteFullHistorySearch(PRBool* aHasMoreResults)
 {
   mozStorageStatementScoper scope(mDBAutoCompleteQuery);
 
-  nsresult rv = mDBAutoCompleteQuery->BindInt32Parameter(0, mAutoCompleteSearchChunkSize);
+  nsresult rv = mDBAutoCompleteQuery->BindInt32Parameter(0, GetTagsFolder());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mDBAutoCompleteQuery->BindInt32Parameter(1, mCurrentChunkOffset);
+  rv = mDBAutoCompleteQuery->BindInt32Parameter(1, mAutoCompleteSearchChunkSize);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBAutoCompleteQuery->BindInt32Parameter(2, mCurrentChunkOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = AutoCompleteProcessSearch(mDBAutoCompleteQuery, QUERY_FULL, aHasMoreResults);
@@ -468,82 +432,91 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
       NS_UnescapeURL(cEntryURL);
       NS_ConvertUTF8toUTF16 entryURL(cEntryURL);
 
+      PRInt64 parentId = 0;
       nsAutoString entryTitle, entryFavicon, entryBookmarkTitle;
       rv = aQuery->GetString(kAutoCompleteIndex_Title, entryTitle);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = aQuery->GetString(kAutoCompleteIndex_FaviconURL, entryFavicon);
       NS_ENSURE_SUCCESS(rv, rv);
-      PRInt64 itemId = 0;
-      rv = aQuery->GetInt64(kAutoCompleteIndex_ItemId, &itemId);
+      rv = aQuery->GetInt64(kAutoCompleteIndex_ParentId, &parentId);
       NS_ENSURE_SUCCESS(rv, rv);
-
-      PRInt64 parentId = 0;
-      // Only bother to fetch parent id and bookmark title if we have a bookmark
-      if (itemId) {
-        rv = aQuery->GetInt64(kAutoCompleteIndex_ParentId, &parentId);
-        NS_ENSURE_SUCCESS(rv, rv);
+      
+      // Only fetch the bookmark title if we have a bookmark
+      if (parentId) {
         rv = aQuery->GetString(kAutoCompleteIndex_BookmarkTitle, entryBookmarkTitle);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
+      nsAutoString entryTags;
+      rv = aQuery->GetString(kAutoCompleteIndex_Tags, entryTags);
+      NS_ENSURE_SUCCESS(rv, rv);
+
       PRBool useBookmark = PR_FALSE;
+      PRBool showTags = PR_FALSE;
       nsString style;
       switch (aType) {
-        case QUERY_TAGS: {
-          // Always prefer the bookmark title unless we don't have one
-          useBookmark = !entryBookmarkTitle.IsEmpty();
-
-          // Tags have a special stype to show a tag icon
-          style = NS_LITERAL_STRING("tag");
-
-          break;
-        }
         case QUERY_FULL: {
           // If we get any results, there's potentially another chunk to proces
           if (aHasMoreResults)
             *aHasMoreResults = PR_TRUE;
 
-          // Determine if every token matches either the bookmark, title, or url
+          // Determine if every token matches either the bookmark title, tags,
+          // page title, or page url
           PRBool matchAll = PR_TRUE;
           for (PRInt32 i = 0; i < mCurrentSearchTokens.Count() && matchAll; i++) {
             const nsString *token = mCurrentSearchTokens.StringAt(i);
 
             // Check if the current token matches the bookmark
-            PRBool bookmarkMatch = itemId &&
+            PRBool bookmarkMatch = parentId &&
               CaseInsensitiveFindInReadable(*token, entryBookmarkTitle);
             // If any part of the search string is in the bookmark title, show
             // that in the result instead of the page title
             useBookmark |= bookmarkMatch;
 
+            // If the token is in any of the tags, remember to show tags
+            PRBool tagsMatch = CaseInsensitiveFindInReadable(*token, entryTags);
+            showTags |= tagsMatch;
+
             // True if any of them match; false makes us quit the loop
-            matchAll = bookmarkMatch ||
+            matchAll = bookmarkMatch || tagsMatch ||
               CaseInsensitiveFindInReadable(*token, entryTitle) ||
               CaseInsensitiveFindInReadable(*token, entryURL);
           }
 
-          // Skip if we don't match all terms in the bookmark, title or url
+          // Skip if we don't match all terms in the bookmark, tag, title or url
           if (!matchAll)
             continue;
-
-          // Style bookmarks that aren't feed items and feed URIs as bookmark
-          style = (itemId && !mLivemarkFeedItemIds.Get(parentId, &dummy)) ||
-            mLivemarkFeedURIs.Get(escapedEntryURL, &dummy) ?
-            NS_LITERAL_STRING("bookmark") : NS_LITERAL_STRING("favicon");
 
           break;
         }
         default: {
-          // Always prefer the bookmark title unless we don't have one
-          useBookmark = !entryBookmarkTitle.IsEmpty();
-
-          // Style bookmarks that aren't feed items and feed URIs as bookmark
-          style = (itemId && !mLivemarkFeedItemIds.Get(parentId, &dummy)) ||
-            mLivemarkFeedURIs.Get(escapedEntryURL, &dummy) ?
-            NS_LITERAL_STRING("bookmark") : NS_LITERAL_STRING("favicon");
+          // Always prefer to show tags if we have them; otherwise, prefer the
+          // bookmark title if we have it
+          if (!entryTags.IsEmpty())
+            showTags = PR_TRUE;
+          else
+            useBookmark = !entryBookmarkTitle.IsEmpty();
 
           break;
         }
       }
+
+      // Add the tags to the title if necessary
+      if (showTags) {
+        // Always show the bookmark if possible when we have tags
+        useBookmark = !entryBookmarkTitle.IsEmpty();
+        /* XXX bug 418257 to look at RTL issues of appending tags
+        (useBookmark ? entryBookmarkTitle : entryTitle)
+          += NS_LITERAL_STRING(" (") + entryTags + NS_LITERAL_STRING(")");
+        */
+      }
+
+      // Tags have a special style to show a tag icon; otherwise, style the
+      // bookmarks that aren't feed items and feed URIs as bookmark
+      style = showTags ? NS_LITERAL_STRING("tag") : (parentId &&
+        !mLivemarkFeedItemIds.Get(parentId, &dummy)) ||
+        mLivemarkFeedURIs.Get(escapedEntryURL, &dummy) ?
+        NS_LITERAL_STRING("bookmark") : NS_LITERAL_STRING("favicon");
 
       // Pick the right title to show based on the result of the query type
       const nsAString &title = useBookmark ? entryBookmarkTitle : entryTitle;
