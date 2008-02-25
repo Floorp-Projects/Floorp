@@ -394,7 +394,8 @@ public:
    * Given aFrame, the root frame of a stacking context, paint it and its
    * descendants to aRenderingContext. 
    * @param aRenderingContext a rendering context translated so that (0,0)
-   * is the origin of aFrame
+   * is the origin of aFrame; for best results, (0,0) should transform
+   * to pixel-aligned coordinates
    * @param aDirtyRegion the region that must be painted, in the coordinates
    * of aFrame
    * @param aBackground paint the dirty area with this color before drawing
