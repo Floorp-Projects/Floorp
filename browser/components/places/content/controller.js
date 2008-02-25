@@ -128,7 +128,8 @@ PlacesController.prototype = {
     case "placesCmd_open":
     case "placesCmd_open:window":
     case "placesCmd_open:tab":
-      return this._view.selectedURINode;
+      var selectedNode = this._view.selectedNode;
+      return selectedNode && PlacesUtils.nodeIsURI(selectedNode);
     case "placesCmd_new:folder":
     case "placesCmd_new:livemark":
       return this._canInsert();
@@ -140,8 +141,8 @@ PlacesController.prototype = {
              this._view.getResult().sortingMode ==
                  Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
     case "placesCmd_show:info":
-      if (this._view.hasSingleSelection) {
-        var selectedNode = this._view.selectedNode;
+      var selectedNode = this._view.selectedNode;
+      if (selectedNode) {
         if (PlacesUtils.nodeIsFolder(selectedNode) ||
             (PlacesUtils.nodeIsBookmark(selectedNode) &&
             !PlacesUtils.nodeIsLivemarkItem(selectedNode)))
@@ -149,24 +150,13 @@ PlacesController.prototype = {
       }
       return false;
     case "placesCmd_reloadMicrosummary":
-      if (this._view.hasSingleSelection) {
-        var selectedNode = this._view.selectedNode;
-        if (PlacesUtils.nodeIsBookmark(selectedNode)) {
-          var mss = PlacesUtils.microsummaries;
-          if (mss.hasMicrosummary(selectedNode.itemId))
-            return true;
-        }
-      }
-      return false;
+      var selectedNode = this._view.selectedNode;
+      return selectedNode && PlacesUtils.nodeIsBookmark(selectedNode) &&
+             PlacesUtils.microsummaries.hasMicrosummary(selectedNode.itemId);
     case "placesCmd_reload":
-      if (this._view.hasSingleSelection) {
-        var selectedNode = this._view.selectedNode;
-
-        // Livemark containers
-        if (PlacesUtils.nodeIsLivemarkContainer(selectedNode))
-          return true;
-      }
-      return false;
+      // Livemark containers
+      var selectedNode = this._view.selectedNode;
+      return selectedNode && PlacesUtils.nodeIsLivemarkContainer(selectedNode);
     case "placesCmd_sortBy:name":
       var selectedNode = this._view.selectedNode;
       return selectedNode &&
@@ -277,9 +267,6 @@ PlacesController.prototype = {
    *          false otherwise.
    */
   _hasRemovableSelection: function PC__hasRemovableSelection(aIsMoveCommand) {
-    if (!this._view.hasSelection)
-      return false;
-
     var nodes = this._view.getSelectionNodes();
     var root = this._view.getResultNode();
 
@@ -328,14 +315,13 @@ PlacesController.prototype = {
    * Determines whether or not the root node for the view is selected
    */
   rootNodeIsSelected: function PC_rootNodeIsSelected() {
-    if (this._view.hasSelection) {
-      var nodes = this._view.getSelectionNodes();
-      var root = this._view.getResultNode();
-      for (var i = 0; i < nodes.length; ++i) {
-        if (nodes[i] == root)
-          return true;      
-      }
+    var nodes = this._view.getSelectionNodes();
+    var root = this._view.getResultNode();
+    for (var i = 0; i < nodes.length; ++i) {
+      if (nodes[i] == root)
+        return true;      
     }
+
     return false;
   },
 
@@ -411,12 +397,10 @@ PlacesController.prototype = {
    */
   _buildSelectionMetadata: function PC__buildSelectionMetadata() {
     var metadata = [];
-    var nodes = [];
     var root = this._view.getResult().root;
-    if (this._view.hasSelection)
-      nodes = this._view.getSelectionNodes();
-    else // See the second note above
-      nodes = [root];
+    var nodes = this._view.getSelectionNodes();
+    if (nodes.length == 0)
+      nodes.push(root); // See the second note above
 
     for (var i=0; i < nodes.length; i++) {
       var nodeData = {};
@@ -646,8 +630,9 @@ PlacesController.prototype = {
    * see also openUILinkIn
    */
   openSelectedNodeIn: function PC_openSelectedNodeIn(aWhere) {
-    var node = this._view.selectedURINode;
-    if (node && PlacesUtils.checkURLSecurity(node)) {
+    var node = this._view.selectedNode;
+    if (node && PlacesUtils.nodeIsURI(node) &&
+        PlacesUtils.checkURLSecurity(node)) {
       var isBookmark = PlacesUtils.nodeIsBookmark(node);
 
       if (isBookmark)
@@ -699,11 +684,9 @@ PlacesController.prototype = {
    * Reloads the selected livemark if any.
    */
   reloadSelectedLivemark: function PC_reloadSelectedLivemark() {
-    if (this._view.hasSingleSelection) {
-      var selectedNode = this._view.selectedNode;
-      if (PlacesUtils.nodeIsLivemarkContainer(selectedNode))
-        PlacesUtils.livemarks.reloadLivemarkFolder(selectedNode.itemId);
-    }
+    var selectedNode = this._view.selectedNode;
+    if (selectedNode && PlacesUtils.nodeIsLivemarkContainer(selectedNode))
+      PlacesUtils.livemarks.reloadLivemarkFolder(selectedNode.itemId);
   },
 
   /**
@@ -768,7 +751,7 @@ PlacesController.prototype = {
    */
   openSelectionInTabs: function PC_openLinksInTabs(aEvent) {
     var node = this._view.selectedNode;
-    if (this._view.hasSingleSelection && PlacesUtils.nodeIsContainer(node))
+    if (node && PlacesUtils.nodeIsContainer(node))
       PlacesUtils.openContainerNodeInTabs(this._view.selectedNode, aEvent);
     else
       PlacesUtils.openURINodesInTabs(this._view.getSelectionNodes(), aEvent);
@@ -1036,11 +1019,14 @@ PlacesController.prototype = {
     var oldViewer = result.viewer;
     try {
       result.viewer = null;
-      var nodes = null;
-      if (dragAction == Ci.nsIDragService.DRAGDROP_ACTION_COPY)
-        nodes = this._view.getCopyableSelection();
-      else
-        nodes = this._view.getDragableSelection();
+      var nodes = this._view.getDragableSelection();
+      if (dragAction == Ci.nsIDragService.DRAGDROP_ACTION_MOVE) {
+        nodes = nodes.filter(function(node) {
+          var parent = node.parent;
+          return parent && !PlacesUtils.nodeIsReadOnly(parent);
+        });
+      }
+
       var dataSet = new TransferDataSet();
       for (var i = 0; i < nodes.length; ++i) {
         var node = nodes[i];
@@ -1086,14 +1072,14 @@ PlacesController.prototype = {
     var oldViewer = result.viewer;
     try {
       result.viewer = null;
-      var nodes = this._view.getCopyableSelection();
+      var nodes = this._view.getSelectionNodes();
 
       var xferable =  Cc["@mozilla.org/widget/transferable;1"].
                       createInstance(Ci.nsITransferable);
       var foundFolder = false, foundLink = false;
       var copiedFolders = [];
       var placeString = mozURLString = htmlString = unicodeString = "";
-    
+
       for (var i = 0; i < nodes.length; ++i) {
         var node = nodes[i];
         if (this._shouldSkipNode(node, copiedFolders))
@@ -1114,7 +1100,7 @@ PlacesController.prototype = {
                                                  uri) + suffix);
           htmlString += (PlacesUtils.wrapNode(node, PlacesUtils.TYPE_HTML,
                                                  uri) + suffix);
-        
+
           var placeSuffix = i < (nodes.length - 1) ? "," : "";
           return PlacesUtils.wrapNode(node, type, overrideURI) + placeSuffix;
         }
