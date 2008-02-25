@@ -573,6 +573,8 @@ export LIB = @MOZ_LIB@
 export PATH = @MOZ_PATH@
 endif
 endif
+DLLFLAGS = @DLLFLAGS@
+
 # python options.
 MOZ_PYTHON_EXTENSIONS = @MOZ_PYTHON_EXTENSIONS@
 MOZ_PYTHON = @MOZ_PYTHON@

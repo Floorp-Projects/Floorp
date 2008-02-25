@@ -143,6 +143,9 @@ NSPR_LIB_DIR := $(subst -L,,$(subst -L$(DIST),-L$(ABS_DIST),$(NSPR_LIB_DIR)))
 else
 NSPR_LIB_DIR = $(ABS_DIST)/lib
 endif
+# Can't pass this in DEFAULT_GMAKE_FLAGS because that overrides
+# definitions in NSS, so just export it into the sub-make's environment.
+export DLLFLAGS
 # NSS makefiles are not safe for parallel execution.
 DEFAULT_GMAKE_FLAGS = MAKE="$(MAKE) -j1" -j1
 DEFAULT_GMAKE_FLAGS += CC="$(CC)"
