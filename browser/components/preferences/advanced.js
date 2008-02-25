@@ -196,7 +196,7 @@ var gAdvancedPane = {
                    allowVisible     : false,
                    prefilledHost    : "",
                    permissionType   : "offline-app",
-                   manageCapability : Ci.nsIPermissionManager.DENY_ACTION,
+                   manageCapability : Components.interfaces.nsIPermissionManager.DENY_ACTION,
                    windowTitle      : bundlePreferences.getString("offlinepermissionstitle"),
                    introText        : bundlePreferences.getString("offlinepermissionstext") };
     document.documentElement.openWindow("Browser:Permissions",
