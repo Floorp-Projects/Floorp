@@ -35,10 +35,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIVariant.idl"
-#include "nsIURI.idl"
-#include "nsIPropertyBag2.idl"
-#include "nsIContentURIGrouper.idl"
+
+interface nsIVariant;
+interface nsIURI;
+interface nsIPropertyBag2;
+interface nsIContentURIGrouper;
+interface mozIStorageConnection;
 
 [scriptable, uuid(746c7a02-f6c1-4869-b434-7c8b86e60e61)]
 interface nsIContentPrefObserver : nsISupports
@@ -63,7 +65,7 @@ interface nsIContentPrefObserver : nsISupports
   void onContentPrefRemoved(in AString aGroup, in AString aName);
 };
 
-[scriptable, uuid(5b1f6044-72f8-4920-9043-0c52d0ae4f4c)]
+[scriptable, uuid(72c05ba2-9d92-4661-b053-f8f869973e6a)]
 interface nsIContentPrefService : nsISupports
 {
   /**
@@ -135,8 +137,20 @@ interface nsIContentPrefService : nsISupports
    */
   void removeObserver(in AString aName, in nsIContentPrefObserver aObserver);
 
-  // The component that the service uses to determine the groups to which
-  // URIs belong.  By default this is the "hostname grouper", which groups
-  // URIs by full hostname (a.k.a. site).
+  /**
+   * The component that the service uses to determine the groups to which
+   * URIs belong.  By default this is the "hostname grouper", which groups
+   * URIs by full hostname (a.k.a. site).
+   */
   readonly attribute nsIContentURIGrouper grouper;
+
+  /**
+   * The database connection to the content preferences database.
+   * Useful for accessing and manipulating preferences in ways that are caller-
+   * specific or for which there is not yet a generic method, although generic
+   * functionality useful to multiple callers should generally be added to this
+   * unfrozen interface.  Also useful for testing the database creation
+   * and migration code.
+   */
+  readonly attribute mozIStorageConnection DBConnection;
 };
