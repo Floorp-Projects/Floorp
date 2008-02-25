@@ -42,6 +42,7 @@ const Cr = Components.results;
 const Cu = Components.utils;
 
 const CONTENT_PREFS_DB_FILENAME = "content-prefs.sqlite";
+const CONTENT_PREFS_BACKUP_DB_FILENAME = "content-prefs.sqlite.corrupt";
 
 var ContentPrefTest = {
   //**************************************************************************//
@@ -129,18 +130,27 @@ var ContentPrefTest = {
 
   /**
    * Delete the content pref service's persistent datastore.  We do this before
-   * and after running tests to make sure we start from scratch each time.
+   * and after running tests to make sure we start from scratch each time. We
+   * also do it during the database creation, schema migration, and backup tests.
    */
   deleteDatabase: function ContentPrefTest_deleteDatabase() {
-    try {
-      var file = this.getProfileDir()
-      file.append(CONTENT_PREFS_DB_FILENAME);
-      if (file.exists())
-        file.remove(false);
-    }
-    catch(ex) {
-      Cu.reportError(ex);
-    }
+    var file = this.getProfileDir();
+    file.append(CONTENT_PREFS_DB_FILENAME);
+    if (file.exists())
+      file.remove(false);
+    return file;
+  },
+
+  /**
+   * Delete the backup of the content pref service's persistent datastore.
+   * We do this during the database creation, schema migration, and backup tests.
+   */
+  deleteBackupDatabase: function ContentPrefTest_deleteBackupDatabase() {
+    var file = this.getProfileDir();
+    file.append(CONTENT_PREFS_BACKUP_DB_FILENAME);
+    if (file.exists())
+      file.remove(false);
+    return file;
   },
 
   /**
