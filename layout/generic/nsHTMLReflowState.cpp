@@ -733,7 +733,9 @@ nsHTMLReflowState::GetNearestContainingBlock(nsIFrame* aFrame, nscoord& aCBLeftE
 // In that case depending on the progression direction either the left or
 // right edge would be marked as not being exact
 struct nsHypotheticalBox {
+  // offsets from left edge of containing block (which is a padding edge)
   nscoord       mLeft, mRight;
+  // offset from top edge of containing block (which is a padding edge)
   nscoord       mTop;
   PRPackedBool  mLeftIsExact, mRightIsExact;
 
@@ -911,7 +913,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
     
     } else {
       // We need to compute it. It's important we do this, because if it's
-      // percentage based this computed value may be different from the comnputed
+      // percentage based this computed value may be different from the computed
       // value calculated using the absolute containing block width
       boxWidth = ComputeWidthValue(aBlockContentWidth,
                                    insideBoxSizing, outsideBoxSizing,
@@ -1065,7 +1067,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   // translate.
   nsMargin border = cbrs->mComputedBorderPadding - cbrs->mComputedPadding;
   aHypotheticalBox.mLeft -= border.left;
-  aHypotheticalBox.mRight -= border.right;
+  aHypotheticalBox.mRight -= border.left;
   aHypotheticalBox.mTop -= border.top;
 }
 
