@@ -69,3 +69,11 @@
   list-style-image: url("chrome://browser/skin/Search-glass-rtl.png");
 }
 
+menuitem[cmd="cmd_clearhistory"] {
+  list-style-image: url("moz-icon://stock/gtk-clear?size=menu");
+}
+
+menuitem[cmd="cmd_clearhistory"][disabled] {
+  list-style-image: url("moz-icon://stock/gtk-clear?size=menu&state=disabled");
+}
+
