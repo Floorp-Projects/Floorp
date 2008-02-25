@@ -361,6 +361,7 @@ function showView(aView) {
     case "plugins":
       prefURL = PREF_EXTENSIONS_GETMOREPLUGINSURL;
       types = [ [ ["plugin", "true", null] ] ];
+      showCheckUpdatesAll = false;
       break;
     case "updates":
       document.getElementById("updates-view").hidden = false;
