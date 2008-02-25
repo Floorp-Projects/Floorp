@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Justin Dolske <dolske@mozilla.com> (original author)
+ *  Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -317,6 +318,39 @@ LoginManagerPrompter.prototype = {
 
 
     /*
+     * _showLoginNotification
+     *
+     * Displays a notification bar.
+     *
+     */
+    _showLoginNotification : function (aNotifyBox, aName, aText, aButtons) {
+        var oldBar = aNotifyBox.getNotificationWithValue(aName);
+        const priority = aNotifyBox.PRIORITY_INFO_MEDIUM;
+
+        this.log("Adding new " + aName + " notification bar");
+        var newBar = aNotifyBox.appendNotification(
+                                aText, aName,
+                                "chrome://mozapps/skin/passwordmgr/key.png",
+                                priority, aButtons);
+
+        // The page we're going to hasn't loaded yet, so we want to persist
+        // across the first location change.
+        newBar.persistence++;
+
+        // Sites like Gmail perform a funky redirect dance before you end up
+        // at the post-authentication page. I don't see a good way to
+        // heuristically determine when to ignore such location changes, so
+        // we'll try ignoring location changes based on a time interval.
+        newBar.timeout = Date.now() + 20000; // 20 seconds
+
+        if (oldBar) {
+            this.log("(...and removing old " + aName + " notification bar)");
+            aNotifyBox.removeNotification(oldBar);
+        }
+    },
+
+
+    /*
      * _showSaveLoginNotification
      *
      * Displays a notification bar (rather than a popup), to allow the user to
@@ -384,30 +418,8 @@ LoginManagerPrompter.prototype = {
             }
         ];
 
-
-        var oldBar = aNotifyBox.getNotificationWithValue("password-save");
-        const priority = aNotifyBox.PRIORITY_INFO_MEDIUM;
-
-        this.log("Adding new save-password notification bar");
-        var newBar = aNotifyBox.appendNotification(
-                                notificationText, "password-save",
-                                "chrome://mozapps/skin/passwordmgr/key.png",
-                                priority, buttons);
-
-        // The page we're going to hasn't loaded yet, so we want to persist
-        // across the first location change.
-        newBar.persistence++;
-
-        // Sites like Gmail perform a funky redirect dance before you end up
-        // at the post-authentication page. I don't see a good way to
-        // heuristically determine when to ignore such location changes, so
-        // we'll try ignoring location changes based on a time interval.
-        newBar.timeout = Date.now() + 20000; // 20 seconds
-
-        if (oldBar) {
-            this.log("(...and removing old save-password notification bar)");
-            aNotifyBox.removeNotification(oldBar);
-        }
+        this._showLoginNotification(aNotifyBox, "password-save",
+             notificationText, buttons);
     },
 
 
@@ -485,6 +497,79 @@ LoginManagerPrompter.prototype = {
      *
      */
     promptToChangePassword : function (aOldLogin, aNewLogin) {
+        var notifyBox = this._getNotifyBox();
+
+        if (notifyBox)
+            this._showChangeLoginNotification(notifyBox, aOldLogin, aNewLogin);
+        else
+            this._showChangeLoginDialog(aOldLogin, aNewLogin);
+    },
+
+
+    /*
+     * _showChangeLoginNotification
+     *
+     * Shows the Change Password notification bar.
+     *
+     */
+    _showChangeLoginNotification : function (notifyBox, aOldLogin, aNewLogin) {
+        var notificationText;
+        if (aOldLogin.username)
+            notificationText  = this._getLocalizedString(
+                                          "passwordChangeText",
+                                          [aOldLogin.username]);
+        else
+            notificationText  = this._getLocalizedString(
+                                          "passwordChangeTextNoUser");
+
+        var changeButtonText =
+              this._getLocalizedString("notifyBarChangeButtonText");
+        var changeButtonAccessKey =
+              this._getLocalizedString("notifyBarChangeButtonAccessKey");
+        var dontChangeButtonText =
+              this._getLocalizedString("notifyBarDontChangeButtonText");
+        var dontChangeButtonAccessKey =
+              this._getLocalizedString("notifyBarDontChangeButtonAccessKey");
+
+        // The callbacks in |buttons| have a closure to access the variables
+        // in scope here; set one to |this._pwmgr| so we can get back to pwmgr
+        // without a getService() call.
+        var pwmgr = this._pwmgr;
+
+        var buttons = [
+            // "Yes" button
+            {
+                label:     changeButtonText,
+                accessKey: changeButtonAccessKey,
+                popup:     null,
+                callback:  function(aNotificationBar, aButton) {
+                    pwmgr.modifyLogin(aOldLogin, aNewLogin);
+                }
+            },
+
+            // "No" button
+            {
+                label:     dontChangeButtonText,
+                accessKey: dontChangeButtonAccessKey,
+                popup:     null,
+                callback:  function(aNotificationBar, aButton) {
+                    // do nothing
+                }
+            }
+        ];
+
+        this._showLoginNotification(aNotifyBox, "password-change",
+             notificationText, buttons);
+    },
+
+
+    /*
+     * _showChangeLoginDialog
+     *
+     * Shows the Change Password dialog.
+     *
+     */
+    _showChangeLoginDialog : function (aOldLogin, aNewLogin) {
         const buttonFlags = Ci.nsIPrompt.STD_YES_NO_BUTTONS;
 
         var dialogText;
