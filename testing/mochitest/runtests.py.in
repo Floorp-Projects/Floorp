@@ -45,6 +45,7 @@ from datetime import datetime
 import optparse
 import os
 import os.path
+import re
 import signal
 import sys
 import time
@@ -69,6 +70,8 @@ SERVER_SHUTDOWN_URL = "http://" + TEST_SERVER_HOST + "/server/shutdown"
 SERVER_STARTUP_TIMEOUT = 45
 
 PROFILE_DIRECTORY = os.path.abspath("./mochitesttestingprofile")
+
+LEAK_REPORT_FILE = "leaks-report.log"
 
 #######################
 # COMMANDLINE OPTIONS #
@@ -143,6 +146,14 @@ class MochitestOptions(optparse.OptionParser):
                     action = "append", type = "string", dest = "browserArgs",
                     help = "provides an argument to the test application")
     defaults["browserArgs"] = []
+
+    self.add_option("--leak-threshold",
+                    action = "store", type = "int", dest = "leakThreshold",
+                    help = "fail if the number of bytes leaked through "
+                           "refcounted objects (or bytes in classes with "
+                           "MOZ_COUNT_CTOR and MOZ_COUNT_DTOR) is greater "
+                           "than the given number")
+    defaults["leakThreshold"] = -1
 
     # -h, --help are automatically handled by OptionParser
 
@@ -303,10 +314,36 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
     if len(urlOpts) > 0:
       testURL += "?" + "&".join(urlOpts)
 
+  if options.leakThreshold >= 0:
+    browserEnv["XPCOM_MEM_BLOAT_LOG"] = LEAK_REPORT_FILE
 
   start = automation.runApp(testURL, browserEnv, options.app, PROFILE_DIRECTORY)
 
   server.stop()
+
+  if options.leakThreshold >= 0:
+    leaks = open(LEAK_REPORT_FILE, "r")
+    for line in leaks:
+      print line,
+    leaks.close()
+
+    threshold = options.leakThreshold
+    leaks = open(LEAK_REPORT_FILE, "r")
+    for line in leaks:
+      if "0 TOTAL" in line:
+        matches = re.match(r"^\s+0\s+TOTAL\s+\d+\s+(\d+)", line)
+        if matches:
+          bytesLeaked = int(matches.group(1))
+          if bytesLeaked > threshold:
+            print ("ERROR FAIL leaked %(actual)d bytes during test "
+                   "execution (should have leaked no more than "
+                   "%(expect)d bytes)") % {"actual": bytesLeaked,
+                                           "expect": threshold}
+        break
+    else:
+      print "FAIL missing output line for total leaks!"
+    leaks.close()
+
 
   # print test run times
   finish = datetime.now()
