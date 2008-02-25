@@ -187,11 +187,12 @@
         <parameter name="aXferData"/>
         <parameter name="aDragAction"/>
         <body><![CDATA[
-          this._rootView._selection = aEvent.target.node;
-          this._rootView._cachedInsertionPoint = undefined;
-
           if (aEvent.ctrlKey)
             aDragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
+
+          // activate the view and cache the dragged node
+          this._rootView._draggedNode = aEvent.target.node;
+          this._rootView.focus();
           aXferData.data = this._rootView.controller
                                          .getTransferData(aDragAction.action);
         ]]></body>
@@ -506,8 +507,6 @@
         ]]></body>
       </method>
 
-      <field name="_selection">null</field>
-
       <!-- nsIPlacesView -->
       <method name="getResult">
         <body><![CDATA[
@@ -587,6 +586,11 @@
             }
           }
 
+          // if document.popupNode pointed to this child, null it out,
+          // otherwise controller's command-updating may rely on the removed
+          // item still being "selected".
+          if (document.popupNode == child)
+            document.popupNode = null;
           child.parentNode.removeChild(child);
         ]]></body>
       </method>
@@ -871,21 +875,15 @@
       <!-- nsIPlacesView -->
       <property name="hasSelection">
         <getter><![CDATA[
-          return this._selection != null;
-        ]]></getter>
-      </property>
-
-      <!-- nsIPlacesView -->
-      <property name="hasSingleSelection">
-        <getter><![CDATA[
-          return this.hasSelection;
+          return this.selectedNode != null;
         ]]></getter>
       </property>
 
       <!-- nsIPlacesView -->
       <method name="getSelectionNodes">
         <body><![CDATA[
-          return this.hasSelection ? [this.selectedNode] : [];
+          var selectedNode = this.selectedNode;
+          return selectedNode ? [selectedNode] : [];
         ]]></body>
       </method>
 
@@ -897,76 +895,57 @@
       </method>
 
       <!-- nsIPlacesView -->
-      <method name="getCopyableSelection">
-        <body><![CDATA[
-          return this.getSelectionNodes();
-        ]]></body>
-      </method>
-
-      <!-- nsIPlacesView -->
       <method name="getDragableSelection">
         <body><![CDATA[
-          if (PlacesUtils.nodeIsReadOnly(this._resultNode))
-            return null;
-          return this.getSelectionNodes();
+          return [this._draggedNode];
         ]]></body>
       </method>
 
       <!-- nsIPlacesView -->
       <property name="selectedNode">
         <getter><![CDATA[
-          return this.hasSelection ? this._selection : null;
-        ]]></getter>
-      </property>
-
-      <!-- nsIPlacesView -->
-      <property name="selectedURINode">
-        <getter><![CDATA[
-          var node = this.selectedNode;
-          return node && PlacesUtils.nodeIsURI(node) ? node : null;
+          if (this._contextMenuShown) {
+            var popupNode = document.popupNode;
+            return popupNode.node || popupNode.parentNode._resultNode || null;
+          }
+          return null;
         ]]></getter>
       </property>
 
       <!-- nsIPlacesView -->
       <property name="insertionPoint">
         <getter><![CDATA[
-          if (this._cachedInsertionPoint !== undefined)
-            return this._cachedInsertionPoint;
-
           // By default, the insertion point is at the top level, at the end.
           var index = -1;
           var folderId = 0;
           if (PlacesUtils.nodeIsFolder(this._resultNode))
             folderId = PlacesUtils.getConcreteItemId(this._resultNode);
 
-          if (this.hasSelection) {
-            if (PlacesUtils.nodeIsFolder(this.selectedNode)) {
+          var selectedNode = this.selectedNode;
+          if (selectedNode) {
+            if (PlacesUtils.nodeIsFolder(selectedNode)) {
               // If there is a folder selected, the insertion point is the
               // end of the folder.
-              folderId = PlacesUtils.getConcreteItemId(this.selectedNode);
-            } else {
+              folderId = PlacesUtils.getConcreteItemId(selectedNode);
+            }
+            else {
               // If there is another type of node selected, the insertion point
               // is after that node.
-              folderId = PlacesUtils.getConcreteItemId(this.selectedNode.parent);
-              index = PlacesUtils.getIndexOfNode(this.selectedNode)
+              folderId = PlacesUtils.getConcreteItemId(selectedNode.parent);
+              index = PlacesUtils.getIndexOfNode(selectedNode)
             }
           }
-          this._cachedInsertionPoint = new InsertionPoint(folderId, index);
-          return this._cachedInsertionPoint;
+          return new InsertionPoint(folderId, index);
         ]]></getter>
       </property>
 
       <!-- nsIPlacesView -->
       <method name="selectAll">
-        <body><![CDATA[
-          // Nothing
-        ]]></body>
+        <body/>
       </method>
 
       <method name="selectItems">
-        <body><![CDATA[
-          // Nothing
-        ]]></body>
+        <body/>
       </method>
 
       <property name="selType" readonly="true" onget="return 'single';"/>
@@ -975,6 +954,7 @@
         <parameter name="aPopup"/>
         <body><![CDATA[
           this._ensureInitialized();
+          this._contextMenuShown = true;
           this.focus();
           return this.controller.buildContextMenu(aPopup);
         ]]></body>
@@ -984,6 +964,7 @@
         <parameter name="aPopup"/>
         <body>
           <![CDATA[
+            this._contextMenuShown = false;
             if (window.content)
               window.content.focus();
           ]]>
@@ -1011,28 +992,6 @@
         // automatically opened when dragged over.  Turn off this attribute
         // when the folder closes because it is no longer applicable.
         popup.removeAttribute("autoopened");
-      ]]></handler>
-
-      <!-- Set selected node on DOMMenuItemActive/contextmenu events
-           so that they're set up when command and click events fire. -->
-      <handler event="DOMMenuItemActive"><![CDATA[
-        // Set the selection to the node that was activated.  If that
-        // node has a command but no data associated with it, it should
-        // act on the entire menu.
-        if (event.target.parentNode._resultNode) {
-          this._cachedInsertionPoint = undefined;
-          this._selection = event.target.node ||
-                            event.target.parentNode._resultNode;
-        }
-      ]]></handler>
-      <handler event="contextmenu"><![CDATA[
-        // DOMMenuItemActive is not dispatched for disabled menuitems and
-        // menuseparators. Set the selection here manually.
-        var popupNode = document.popupNode;
-        // |popupNode == menupopup| happens when the area between
-        // menuseparators is clicked.
-        this._selection = popupNode.node || popupNode.parentNode._resultNode;
-        this._cachedInsertionPoint = undefined;
       ]]></handler>
     </handlers>
   </binding>

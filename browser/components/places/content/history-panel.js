@@ -102,11 +102,9 @@ function historyAddBookmarks()
   // no need to check gHistoryTree.view.selection.count
   // node will be null if there is a multiple selection 
   // or if the selected item is not a URI node
-  var node = gHistoryTree.selectedURINode;
-  if (!node) 
-    return;
-
-  PlacesUtils.showMinimalAddBookmarkUI(PlacesUtils._uri(node.uri), node.title);
+  var node = gHistoryTree.selectedNode;
+  if (node && PlacesUtils.nodeIsURI(node))
+    PlacesUtils.showMinimalAddBookmarkUI(PlacesUtils._uri(node.uri), node.title);
 }
 
 function searchHistory(aInput)
