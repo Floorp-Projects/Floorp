@@ -662,9 +662,9 @@ protected:
   static const PRInt32 kAutoCompleteIndex_URL;
   static const PRInt32 kAutoCompleteIndex_Title;
   static const PRInt32 kAutoCompleteIndex_FaviconURL;
-  static const PRInt32 kAutoCompleteIndex_ItemId;
   static const PRInt32 kAutoCompleteIndex_ParentId;
   static const PRInt32 kAutoCompleteIndex_BookmarkTitle;
+  static const PRInt32 kAutoCompleteIndex_Tags;
   nsCOMPtr<mozIStorageStatement> mDBAutoCompleteQuery; //  kAutoCompleteIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBFeedbackIncrease;
 
@@ -698,13 +698,14 @@ protected:
   nsDataHashtable<nsStringHashKey, PRBool> mLivemarkFeedURIs;
 
   nsresult AutoCompleteFullHistorySearch(PRBool* aHasMoreResults);
-  nsresult AutoCompleteTagsSearch();
 
   /**
    * Query type passed to AutoCompleteProcessSearch to determine what style to
    * use and if results should be filtered
    */
-  enum QueryType { QUERY_TAGS, QUERY_FULL };
+  enum QueryType {
+    QUERY_FULL
+  };
   nsresult AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
                                      const QueryType aType,
                                      PRBool *aHasMoreResults = nsnull);
