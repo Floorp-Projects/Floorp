@@ -283,9 +283,9 @@ const PRInt32 nsNavHistory::kGetInfoIndex_ItemLastModified = 10;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_URL = 0;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_Title = 1;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_FaviconURL = 2;
-const PRInt32 nsNavHistory::kAutoCompleteIndex_ItemId = 3;
-const PRInt32 nsNavHistory::kAutoCompleteIndex_ParentId = 4;
-const PRInt32 nsNavHistory::kAutoCompleteIndex_BookmarkTitle = 5;
+const PRInt32 nsNavHistory::kAutoCompleteIndex_ParentId = 3;
+const PRInt32 nsNavHistory::kAutoCompleteIndex_BookmarkTitle = 4;
+const PRInt32 nsNavHistory::kAutoCompleteIndex_Tags = 5;
 
 static const char* gQuitApplicationMessage = "quit-application";
 static const char* gXpcomShutdown = "xpcom-shutdown";
