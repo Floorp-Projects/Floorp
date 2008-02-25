@@ -1,12 +1,8 @@
 classic.jar:
 % skin mozapps classic/1.0 %skin/classic/mozapps/
 #ifndef MINIMO
-% override chrome://mozapps/skin/downloads/buttons.png chrome://mozapps/skin/downloads/buttons-aero.png                          os=WINNT osversion>=6
-% override chrome://mozapps/skin/downloads/downloadIcon.png chrome://mozapps/skin/downloads/downloadIcon-aero.png                os=WINNT osversion>=6
         skin/classic/mozapps/downloads/buttons.png                    (downloads/buttons.png)
-        skin/classic/mozapps/downloads/buttons-aero.png               (downloads/buttons-aero.png)
         skin/classic/mozapps/downloads/downloadIcon.png               (downloads/downloadIcon.png)
-        skin/classic/mozapps/downloads/downloadIcon-aero.png          (downloads/downloadIcon-aero.png)
         skin/classic/mozapps/downloads/downloads.css                  (downloads/downloads.css)
         skin/classic/mozapps/downloads/unknownContentType.css         (downloads/unknownContentType.css)
         skin/classic/mozapps/extensions/about.css                     (extensions/about.css)
