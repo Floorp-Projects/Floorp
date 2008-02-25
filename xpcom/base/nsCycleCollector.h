@@ -60,8 +60,9 @@ struct nsCycleCollectionLanguageRuntime
 };
 
 nsresult nsCycleCollector_startup();
-// Returns PR_TRUE if some nodes were collected.
-NS_COM PRBool nsCycleCollector_collect();
+// Returns the number of collected nodes.
+NS_COM PRUint32 nsCycleCollector_collect();
+NS_COM PRUint32 nsCycleCollector_suspectedCount();
 void nsCycleCollector_shutdown();
 
 // The JS runtime is special, it needs to call cycle collection during its GC.
