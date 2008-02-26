@@ -11,15 +11,10 @@ Function.prototype.inherits = function(parentCtor) {
 }  
 
 #include ../content/application.js
-#include ../content/browser-view.js
-#include ../content/controller.js
-#include ../content/firefox-commands.js
 #include ../content/globalstore.js
 #include ../content/list-warden.js
-#include ../content/phishing-afterload-displayer.js
 #include ../content/phishing-warden.js
 #include ../content/malware-warden.js
-#include ../content/reporter.js
 
 var modScope = this;
 function Init() {
