@@ -647,6 +647,8 @@ public:
   virtual NS_HIDDEN_(nsresult) GetContentListFor(nsIContent* aContent,
                                                  nsIDOMNodeList** aResult);
   virtual NS_HIDDEN_(void) FlushSkinBindings();
+  
+  virtual NS_HIDDEN_(nsresult) FinalizeFrameLoader(nsFrameLoader* aLoader);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDocument, nsIDocument)
 
@@ -839,6 +841,8 @@ private:
 
   // Member to store out last-selected stylesheet set.
   nsString mLastStyleSheetSet;
+
+  nsTArray<nsRefPtr<nsFrameLoader> > mFinalizableFrameLoaders;
 };
 
 

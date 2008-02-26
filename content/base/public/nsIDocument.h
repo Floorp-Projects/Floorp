@@ -93,11 +93,12 @@ class nsBindingManager;
 class nsIDOMNodeList;
 class mozAutoSubtreeModified;
 struct JSObject;
+class nsFrameLoader;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x626d86d2, 0x615f, 0x4a12, \
- { 0x94, 0xd8, 0xe3, 0xdb, 0x3a, 0x29, 0x83, 0x72 } }
+{ 0x3c441ae9, 0xaa82, 0x4102, \
+  { 0xa3, 0x16, 0x3b, 0x97, 0x2b, 0x60, 0x2b, 0x05 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -951,6 +952,7 @@ public:
     // Do nothing.
   }
 
+  virtual nsresult FinalizeFrameLoader(nsFrameLoader* aLoader) = 0;
 protected:
   ~nsIDocument()
   {
