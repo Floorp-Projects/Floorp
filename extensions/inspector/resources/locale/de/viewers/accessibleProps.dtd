@@ -42,3 +42,5 @@
 <!ENTITY descValue.label "Wert:">
 <!ENTITY descState.label "Status:">
 <!ENTITY descActionName.label "Aktionsname:">
+<!ENTITY descBounds.label "Maße:">
+
