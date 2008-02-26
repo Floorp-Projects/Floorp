@@ -1781,6 +1781,51 @@ var PlacesUtils = {
   },
 
   /**
+   * Loads the node's URL in the appropriate tab or window or as a web
+   * panel given the user's preference specified by modifier keys tracked by a
+   * DOM mouse/key event.
+   * @param   aNode
+   *          An uri result node.
+   * @param   aEvent
+   *          The DOM mouse/key event with modifier keys set that track the
+   *          user's preferred destination window or tab.
+   */
+  openNodeWithEvent: function PU_openNodeWithEvent(aNode, aEvent) {
+    this.openNodeIn(aNode, whereToOpenLink(aEvent));
+  },
+  
+  /**
+   * Loads the node's URL in the appropriate tab or window or as a
+   * web panel.
+   * see also openUILinkIn
+   */
+  openNodeIn: function PU_openNodeIn(aNode, aWhere) {
+    if (aNode && PlacesUtils.nodeIsURI(aNode) &&
+        PlacesUtils.checkURLSecurity(aNode)) {
+      var isBookmark = PlacesUtils.nodeIsBookmark(aNode);
+
+      if (isBookmark)
+        PlacesUtils.markPageAsFollowedBookmark(aNode.uri);
+      else
+        PlacesUtils.markPageAsTyped(aNode.uri);
+
+      // Check whether the node is a bookmark which should be opened as
+      // a web panel
+      if (aWhere == "current" && isBookmark) {
+        if (PlacesUtils.annotations
+                       .itemHasAnnotation(aNode.itemId, LOAD_IN_SIDEBAR_ANNO)) {
+          var w = getTopWin();
+          if (w) {
+            w.openWebPanel(aNode.title, aNode.uri);
+            return;
+          }
+        }
+      }
+      openUILinkIn(aNode.uri, aWhere);
+    }
+  },
+
+  /**
    * Helper for the toolbar and menu views
    */
   createMenuItemForNode: function(aNode, aContainersMap) {
