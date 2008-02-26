@@ -119,6 +119,8 @@ public:
       nsHTMLContainerFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
   }
 
+  virtual PRIntn GetSkipSides() const { return 0; }
+
   NS_IMETHOD
   AppendFrames(nsIAtom*        aListName,
                nsIFrame*       aFrameList);
@@ -229,17 +231,28 @@ public:
   FinalizeReflow(nsIRenderingContext& aRenderingContext,
                  nsHTMLReflowMetrics& aDesiredSize);
 
-  // helper method to facilitate getting the reflow and bounding metrics.
-  // The argument aMathMLFrameType, when non null, will return the 'type' of
-  // the frame, which is used to determine the inter-frame spacing.
-  // IMPORTANT: This function is only meant to be called in Place() methods 
-  // where it is assumed that the frame's rect is still acting as place holder
-  // for the frame's ascent and descent information
+  // Record metrics of a child frame for recovery through the following method
+  static void
+  SaveReflowAndBoundingMetricsFor(nsIFrame*                  aFrame,
+                                  const nsHTMLReflowMetrics& aReflowMetrics,
+                                  const nsBoundingMetrics&   aBoundingMetrics);
+
+  // helper method to facilitate getting the reflow and bounding metrics of a
+  // child frame.  The argument aMathMLFrameType, when non null, will return
+  // the 'type' of the frame, which is used to determine the inter-frame
+  // spacing.
+  // IMPORTANT: This function is only meant to be called in Place() methods as
+  // the information is available only when set up with the above method
+  // during Reflow/Stretch() and GetPrefWidth().
   static void
   GetReflowAndBoundingMetricsFor(nsIFrame*            aFrame,
                                  nsHTMLReflowMetrics& aReflowMetrics,
                                  nsBoundingMetrics&   aBoundingMetrics,
                                  eMathMLFrameType*    aMathMLFrameType = nsnull);
+
+  // helper method to clear metrics saved with
+  // SaveReflowAndBoundingMetricsFor() from all child frames.
+  void ClearSavedChildMetrics();
 
   // helper to let the update of presentation data pass through
   // a subtree that may contain non-MathML container frames
@@ -284,8 +297,6 @@ public:
   ReLayoutChildren(nsIFrame* aParentFrame, nsFrameState aBits);
 
 protected:
-  virtual PRIntn GetSkipSides() const { return 0; }
-
   // Helper method which positions child frames as an <mrow> on given baseline
   // y = aBaseline starting from x = aOffsetX, calling FinishReflowChild()
   // on the frames.

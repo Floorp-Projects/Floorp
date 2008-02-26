@@ -1491,6 +1491,9 @@ GK_ATOM(changeListProperty, "ChangeListProperty") // void*
 GK_ATOM(collapseOffsetProperty, "CollapseOffsetProperty")  // nsPoint*
 GK_ATOM(computedOffsetProperty, "ComputedOffsetProperty")  // nsPoint*
 GK_ATOM(generatedContent, "GeneratedContentProperty")  // nsCOMArray<nsIContent>*
+#ifdef MOZ_MATHML
+GK_ATOM(HTMLReflowMetricsProperty, "HTMLReflowMetricsProperty") // nsHTMLReflowMetrics*
+#endif
 GK_ATOM(IBSplitSpecialPrevSibling, "IBSplitSpecialPrevSibling")// nsIFrame*
 GK_ATOM(IBSplitSpecialSibling, "IBSplitSpecialSibling")    // nsIFrame*
 GK_ATOM(lineCursorProperty, "LineCursorProperty") // nsLineBox*
