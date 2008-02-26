@@ -674,7 +674,7 @@ private:
 
   HINT  mHint;   //hint to tell if the selection is at the end of this line or beginning of next
 #ifdef IBMBIDI
-  PRInt8 mCaretBidiLevel;
+  PRUint8 mCaretBidiLevel;
 #endif
 
   PRInt32 mDesiredX;
