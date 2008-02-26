@@ -571,9 +571,9 @@ ifdef MOZ_MEMORY
 ifneq (,$(WIN32_CRT_SRC_DIR)$(WIN32_CUSTOM_CRT_DIR))
 export LIB = @MOZ_LIB@
 export PATH = @MOZ_PATH@
-endif
-endif
 DLLFLAGS = @DLLFLAGS@
+endif
+endif
 
 # python options.
 MOZ_PYTHON_EXTENSIONS = @MOZ_PYTHON_EXTENSIONS@
