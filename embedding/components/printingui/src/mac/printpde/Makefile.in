@@ -48,20 +48,11 @@ else
 BUILDSTYLE	= Deployment
 endif
 
-ifeq (,$(findstring pbxbuild,$(PBBUILD)))
-    # pbbuild or xcodebuild indicates Xcode; the Xcode project contains
-    # native targets needed for proper SDK builds.
-    PROJECT=PrintPDE.xcode
-    PROJECT_ARG=-project $(PROJECT)
-    PBBUILD_ARG=$(PBBUILD_SETTINGS)
-else
-    # pbxbuild indicates Project Builder; this will only be used where Xcode
-    # is unavailable (pre-10.3).  SDK build unsupported, but with such an
-    # early build host, that should be OK.
-    PROJECT=PrintPDE.pbproj
-    PROJECT_ARG=
-    PBBUILD_ARG=
-endif
+# pbbuild or xcodebuild indicates Xcode; the Xcode project contains
+# native targets needed for proper SDK builds.
+PROJECT=PrintPDE.xcode
+PROJECT_ARG=-project $(PROJECT)
+PBBUILD_ARG=$(PBBUILD_SETTINGS)
 
 MODULE       = printpde
 PACKAGE_FILE = printpde.pkg
