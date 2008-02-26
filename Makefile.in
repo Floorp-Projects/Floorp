@@ -47,6 +47,8 @@ include $(topsrcdir)/config/config.mk
 default alldep all::
 	$(RM) -rf $(DIST)/sdk
 	$(RM) -rf $(DIST)/include
+	$(RM) -rf $(DIST)/private
+	$(RM) -rf $(DIST)/public
 	$(RM) -rf _tests
 
 TIERS += base
