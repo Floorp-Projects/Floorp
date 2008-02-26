@@ -499,7 +499,7 @@ NS_IMETHODIMP
 nsFilePicker::GetFileURL(nsIURI **aFileURL)
 {
   *aFileURL = nsnull;
-  return NS_NewFileURI(aFileURL, mFileURL);
+  return NS_NewURI(aFileURL, mFileURL);
 }
 
 NS_IMETHODIMP
