@@ -49,6 +49,7 @@ function SignonsStartup() {
   kSignonBundle = document.getElementById("signonBundle");
   document.getElementById("togglePasswords").label = kSignonBundle.getString("showPasswords");
   document.getElementById("togglePasswords").accessKey = kSignonBundle.getString("showPasswordsAccessKey");
+  document.getElementById("signonsIntro").value = kSignonBundle.getString("passwordsAll");
   LoadSignons();
 
   // filter the table if requested by caller
