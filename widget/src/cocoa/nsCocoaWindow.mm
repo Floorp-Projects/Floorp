@@ -56,6 +56,12 @@
 #include "nsToolkit.h"
 #include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
+#include "nsIFocusController.h"
+#include "nsIWindowWatcher.h"
+#include "nsIServiceManager.h"
+#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
+#include "nsIDOMElement.h"
 
 PRInt32 gXULModalLevel = 0;
 
@@ -1935,6 +1941,37 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 @end
 
 
+already_AddRefed<nsIDOMElement> GetFocusedElement()
+{
+  nsresult rv;
+
+  nsIDOMElement *focusedElement = nsnull;
+
+  nsCOMPtr<nsIWindowWatcher> wwatch =
+    (do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
+  if (!NS_SUCCEEDED(rv) || !wwatch)
+    return nsnull;
+
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  wwatch->GetActiveWindow(getter_AddRefs(domWindow));
+  nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(domWindow));
+  if (!piWin)
+    return nsnull;
+
+  nsIFocusController *fc = piWin->GetRootFocusController();
+  if (!fc)
+    return nsnull;
+
+  rv = fc->GetFocusedElement(&focusedElement);
+  if (!NS_SUCCEEDED(rv)) {
+    NS_IF_RELEASE(focusedElement);
+    return nsnull;
+  }
+
+  return focusedElement;
+}
+
+
 @interface NSWindow (MethodSwizzling)
 - (void)nsCocoaWindow_NSWindow_sendEvent:(NSEvent *)anEvent;
 @end
@@ -1945,28 +1982,53 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 // to send NS_LOSTFOCUS and NS_GOTFOCUS events to Gecko.  Otherwise other
 // Gecko events may be sent to the wrong nsChildView, or the "right"
 // nsChildView may not be focused.  This resolves bmo bug 413882.
-// For non-embedders (e.g. Firefox and Seamonkey), it would probably only be
-// necessary to add a sendEvent: method to the ToolbarWindow class.  But
-// embedders (like Camino) generally create their own NSWindows.  So in order
-// to fix this problem everywhere, it's necessary to "hook" NSWindow's own
-// sendEvent: method.
+// But if the mouseDown event doesn't change the focus where it really counts
+// (if it doesn't change the focused nsIDOMElement/nsIContent), put the
+// Cocoa keyboard focus back where it originally was.  This resolves bmo bug
+// 413882 without regressing bmo bugs 404433, 403232 and 357535/418031.
+// For non-embedders (e.g. Firefox, Thunderbird and Seamonkey), it would
+// probably only be necessary to add a sendEvent: method to the ToolbarWindow
+// class.  But embedders (like Camino) generally create their own NSWindows.
+// So in order to fix this problem everywhere, it's necessary to "hook"
+// NSWindow's own sendEvent: method.
 - (void)nsCocoaWindow_NSWindow_sendEvent:(NSEvent *)anEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NSResponder *oldFirstResponder = nil;
+  nsCOMPtr<nsIDOMElement> oldFocusedElement;
+  NSResponder *oldFirstResponder;
   NSEventType type = [anEvent type];
-  if (type == NSLeftMouseDown)
-    oldFirstResponder = [[self firstResponder] retain];
+  if (type == NSLeftMouseDown) {
+    oldFirstResponder = [self firstResponder];
+    if ([oldFirstResponder isKindOfClass:[ChildView class]]) {
+      oldFirstResponder = [oldFirstResponder retain];
+      oldFocusedElement = GetFocusedElement();
+    }
+    else {
+      oldFirstResponder = nil;
+    }
+  }
   [self nsCocoaWindow_NSWindow_sendEvent:anEvent];
   if (type == NSLeftMouseDown) {
+    nsCOMPtr<nsIDOMElement> newFocusedElement;
     NSResponder *newFirstResponder = [self firstResponder];
-    if (oldFirstResponder != newFirstResponder) {
-      if ([oldFirstResponder isKindOfClass:[ChildView class]])
-        [(ChildView *)oldFirstResponder sendFocusEvent:NS_LOSTFOCUS];
-      if ([newFirstResponder isKindOfClass:[ChildView class]])
-        [(ChildView *)newFirstResponder sendFocusEvent:NS_GOTFOCUS];
+    if ([newFirstResponder isKindOfClass:[ChildView class]]) {
+      newFirstResponder = [newFirstResponder retain];
+      newFocusedElement = GetFocusedElement();
     }
+    else {
+      newFirstResponder = nil;
+    }
+    if (oldFirstResponder != newFirstResponder) {
+      if (oldFocusedElement != newFocusedElement) {
+        [(ChildView *)oldFirstResponder sendFocusEvent:NS_LOSTFOCUS];
+        [(ChildView *)newFirstResponder sendFocusEvent:NS_GOTFOCUS];
+      }
+      else if (newFocusedElement && [(ChildView *)oldFirstResponder widget]) {
+        [self makeFirstResponder:oldFirstResponder];
+      }
+    }
+    [newFirstResponder release];
     [oldFirstResponder release];
   }
 
