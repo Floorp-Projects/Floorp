@@ -74,6 +74,10 @@ js_NewSlowArrayObject(JSContext *cx);
 #define JSSLOT_ARRAY_COUNT             (JSSLOT_ARRAY_LENGTH + 1)
 #define JSSLOT_ARRAY_LOOKUP_HOLDER     (JSSLOT_ARRAY_COUNT + 1)
 
+#define ARRAY_DENSE_LENGTH(obj)                                                \
+    (JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj)),                                   \
+     (obj)->dslots ? (uint32)(obj)->dslots[-1] : 0)
+
 extern JSBool
 js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
 

@@ -4381,7 +4381,43 @@ interrupt:
           END_CASE(JSOP_SETPROP)
 
           BEGIN_CASE(JSOP_GETELEM)
-            ELEMENT_OP(-1, OBJ_GET_PROPERTY(cx, obj, id, &rval));
+            /* Open-coded ELEMENT_OP optimized for strings and dense arrays. */
+            SAVE_SP_AND_PC(fp);
+            lval = FETCH_OPND(-2);
+            rval = FETCH_OPND(-1);
+            if (JSVAL_IS_STRING(lval) && JSVAL_IS_INT(rval)) {
+                str = JSVAL_TO_STRING(lval);
+                i = JSVAL_TO_INT(rval);
+                if ((size_t)i < JSSTRING_LENGTH(str)) {
+                    str = js_GetUnitString(cx, JSSTRING_CHARS(str)[i]);
+                    if (!str)
+                        goto error;
+                    rval = STRING_TO_JSVAL(str);
+                    goto end_getelem;
+                }
+            }
+            VALUE_TO_OBJECT(cx, -2, lval, obj);
+            if (JSVAL_IS_INT(rval)) {
+                if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
+                    jsuint length;
+                    
+                    length = ARRAY_DENSE_LENGTH(obj);
+                    i = JSVAL_TO_INT(rval);
+                    if ((jsuint)i < length && 
+                        i < obj->fslots[JSSLOT_ARRAY_LENGTH]) {
+                        rval = obj->dslots[i];
+                        if (rval != JSVAL_HOLE)
+                            goto end_getelem;
+                    }
+                }
+                id = INT_JSVAL_TO_JSID(rval);
+            } else {
+                if (!InternNonIntElementId(cx, obj, rval, &id))
+                    goto error;
+            }
+            if (!OBJ_GET_PROPERTY(cx, obj, id, &rval))
+                goto error;
+          end_getelem:
             sp--;
             STORE_OPND(-1, rval);
           END_CASE(JSOP_GETELEM)
@@ -4398,7 +4434,27 @@ interrupt:
 
           BEGIN_CASE(JSOP_SETELEM)
             rval = FETCH_OPND(-1);
-            ELEMENT_OP(-2, OBJ_SET_PROPERTY(cx, obj, id, &rval));
+            SAVE_SP_AND_PC(fp);
+            FETCH_OBJECT(cx, -3, lval, obj);
+            FETCH_ELEMENT_ID(obj, -2, id);
+            if (OBJ_IS_DENSE_ARRAY(cx, obj) && JSID_IS_INT(id)) {
+                jsuint length;
+
+                length = ARRAY_DENSE_LENGTH(obj);
+                i = JSID_TO_INT(id);
+                if ((jsuint)i < length) {
+                    if (obj->dslots[i] == JSVAL_HOLE) {
+                        if (i >= obj->fslots[JSSLOT_ARRAY_LENGTH])
+                            obj->fslots[JSSLOT_ARRAY_LENGTH] = i + 1;
+                        obj->fslots[JSSLOT_ARRAY_COUNT]++;
+                    }
+                    obj->dslots[i] = rval;
+                    goto end_setelem;
+                }
+            }
+            if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
+                goto error;
+        end_setelem:
             sp -= 2;
             STORE_OPND(-1, rval);
           END_CASE(JSOP_SETELEM)
