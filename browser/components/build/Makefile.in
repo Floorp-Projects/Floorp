@@ -64,12 +64,6 @@ SHARED_LIBRARY_LIBS += ../shell/src/$(LIB_PREFIX)shellservice_s.$(LIB_SUFFIX) \
 	$(NULL)
 endif
 
-ifdef MOZ_SAFE_BROWSING
-REQUIRES += safebrowsing
-LOCAL_INCLUDES += -I$(srcdir)/../safebrowsing/src
-SHARED_LIBRARY_LIBS += ../safebrowsing/src/$(LIB_PREFIX)safebrowsing_s.$(LIB_SUFFIX)
-endif
-
 EXTRA_DSO_LDOPTS += \
 	$(call EXPAND_LIBNAME_PATH,unicharutil_external_s,$(LIBXUL_DIST)/lib) \
 	$(LIBXUL_DIST)/lib/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX) \

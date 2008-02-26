@@ -69,9 +69,6 @@
 #include "nsFeedSniffer.h"
 #include "nsAboutFeeds.h"
 #include "nsIAboutModule.h"
-#ifdef MOZ_SAFE_BROWSING
-#include "nsDocNavStartProgressListener.h"
-#endif
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -102,9 +99,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsCaminoProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsICabProfileMigrator)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFeedSniffer)
-#ifdef MOZ_SAFE_BROWSING
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDocNavStartProgressListener)
-#endif
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -141,13 +135,6 @@ static const nsModuleComponentInfo components[] =
     NS_ABOUT_MODULE_CONTRACTID_PREFIX "feeds",
     nsAboutFeeds::Create
   },
-
-#ifdef MOZ_SAFE_BROWSING
-  { "Safe browsing document nav start progress listener",
-    NS_DOCNAVSTARTPROGRESSLISTENER_CID,
-    NS_DOCNAVSTARTPROGRESSLISTENER_CONTRACTID,
-    nsDocNavStartProgressListenerConstructor },
-#endif
 
   { "Profile Migrator",
     NS_FIREFOX_PROFILEMIGRATOR_CID,
