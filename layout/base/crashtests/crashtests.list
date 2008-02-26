@@ -8,6 +8,8 @@ load 310267-1.xml
 load 310638-1.svg
 load 310638-2.html
 load 313086-1.xml
+load 321058-1.xul
+load 321058-2.xul
 load 322436-1.html
 load 325967-1.html
 load 325984-1.xhtml
@@ -79,6 +81,7 @@ load 399676-1.xhtml
 load 399687-1.html
 load 399940-1.xhtml
 load 399946-1.xhtml
+load 400185-1.xul
 load 400445-1.xhtml
 load 400904-1.xhtml
 load 401589-1.xul
