@@ -100,4 +100,14 @@
 
   </binding>
 
+  <binding id="offlineapp"
+	   extends="chrome://global/content/bindings/listbox.xml#listitem">
+    <content>
+      <children>
+	<xul:listcell xbl:inherits="label=host"/>
+	<xul:listcell xbl:inherits="label=usage"/>
+      </children>
+    </content>
+  </binding>
+
 </bindings>

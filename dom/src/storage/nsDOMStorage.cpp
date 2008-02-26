@@ -135,7 +135,7 @@ GetQuota(const nsAString &aDomain, PRInt32 *aQuota, PRInt32 *aWarnQuota)
         perm != nsIPermissionManager::DENY_ACTION) {
       // This is an offline app, give more space by default.
       *aQuota = ((PRInt32)nsContentUtils::GetIntPref(kOfflineAppQuota,
-                                                     DEFAULT_OFFLINE_WARN_QUOTA * 1024));
+                                                     DEFAULT_OFFLINE_APP_QUOTA) * 1024);
 
       if (perm == nsIOfflineCacheUpdateService::ALLOW_NO_WARN) {
         *aWarnQuota = -1;

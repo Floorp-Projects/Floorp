@@ -384,10 +384,28 @@ function openPreferences(paneID)
       var pane = win.document.getElementById(paneID);
       win.document.documentElement.showPane(pane);
     }
+    return win;
   }
-  else
-    openDialog("chrome://browser/content/preferences/preferences.xul",
-               "Preferences", features, paneID);
+
+  return openDialog("chrome://browser/content/preferences/preferences.xul",
+                    "Preferences", features, paneID);
+}
+
+function openAdvancedPreferences(tabID)
+{
+  var win = openPreferences("paneAdvanced");
+  if (win) {
+    var selectTab = function() {
+      var tabs = win.document.getElementById("advancedPrefs");
+      tabs.selectedTab = win.document.getElementById(tabID);
+    }
+
+    if (win.document.getElementById("advancedPrefs")) {
+      selectTab();
+    } else {
+      win.addEventListener("load", selectTab, false);
+    }
+  }
 }
 
 /**
@@ -637,3 +655,21 @@ function isValidFeed(aData, aPrincipal, aIsFeed)
 
   return aIsFeed;
 }
+
+function getOfflineAppUsage(host)
+{
+  var cacheService = Components.classes["@mozilla.org/network/cache-service;1"].
+                     getService(Components.interfaces.nsICacheService);
+  var cacheSession = cacheService.createSession("HTTP-offline",
+                                                Components.interfaces.nsICache.STORE_OFFLINE,
+                                                true).
+                     QueryInterface(Components.interfaces.nsIOfflineCacheSession);
+  var usage = cacheSession.getDomainUsage(host);
+
+  var storageManager = Components.classes["@mozilla.org/dom/storagemanager;1"].
+                       getService(Components.interfaces.nsIDOMStorageManager);
+  usage += storageManager.getUsage(host);
+
+  return usage;
+}
+
