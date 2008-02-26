@@ -51,3 +51,7 @@ richlistitem[selected="true"] {
   display: -moz-box;
   min-width: 16px;
 }
+
+listitem.offlineapp {
+  -moz-binding: url("chrome://browser/content/preferences/handlers.xml#offlineapp");
+}

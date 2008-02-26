@@ -4999,12 +4999,18 @@ var OfflineApps = {
   // OfflineApps Public Methods
   init: function ()
   {
-    // XXX: empty init left as a placeholder for patch in bug 397417
+    var obs = Cc["@mozilla.org/observer-service;1"].
+              getService(Ci.nsIObserverService);
+    obs.addObserver(this, "dom-storage-warn-quota-exceeded", false);
+    obs.addObserver(this, "offline-cache-update-completed", false);
   },
 
   uninit: function ()
   {
-    // XXX: empty uninit left as a placeholder for patch in bug 397417
+    var obs = Cc["@mozilla.org/observer-service;1"].
+              getService(Ci.nsIObserverService);
+    obs.removeObserver(this, "dom-storage-warn-quota-exceeded");
+    obs.removeObserver(this, "offline-cache-update-completed");
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -5030,6 +5036,92 @@ var OfflineApps = {
       if (browsers[i].contentWindow == aContentWindow)
         return browsers[i];
     }
+  },
+
+  _getManifestURI: function(aWindow) {
+    var attr = aWindow.document.documentElement.getAttribute("manifest");
+    if (!attr) return null;
+
+    try {
+      var ios = Cc["@mozilla.org/network/io-service;1"].
+                getService(Ci.nsIIOService);
+
+      var contentURI = ios.newURI(aWindow.location.href, null, null);
+      return ios.newURI(attr, aWindow.document.characterSet, contentURI);
+    } catch (e) {
+      return null;
+    }
+  },
+
+  // A cache update isn't tied to a specific window.  Try to find
+  // the best browser in which to warn the user about space usage
+  _getBrowserForCacheUpdate: function(aCacheUpdate) {
+    // Prefer the current browser
+    var uri = this._getManifestURI(gBrowser.mCurrentBrowser.contentWindow);
+    if (uri && uri.equals(aCacheUpdate.manifestURI)) {
+      return gBrowser.mCurrentBrowser;
+    }
+
+    var browsers = getBrowser().browsers;
+    for (var i = 0; i < browsers.length; ++i) {
+      uri = this._getManifestURI(browsers[i].contentWindow);
+      if (uri && uri.equals(aCacheUpdate.manifestURI)) {
+        return browsers[i];
+      }
+    }
+
+    return null;
+  },
+
+  _warnUsage: function(aBrowser, aURI) {
+    if (!aBrowser)
+      return;
+
+    var notificationBox = gBrowser.getNotificationBox(aBrowser);
+    var notification = notificationBox.getNotificationWithValue("offline-app-usage");
+    if (!notification) {
+      var bundle_browser = document.getElementById("bundle_browser");
+
+      var buttons = [{
+          label: bundle_browser.getString("offlineApps.manageUsage"),
+          accessKey: bundle_browser.getString("offlineApps.manageUsageAccessKey"),
+          callback: OfflineApps.manage
+        }];
+
+      var warnQuota = gPrefService.getIntPref("offline-apps.quota.warn");
+      const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
+      var message = bundle_browser.getFormattedString("offlineApps.usage",
+                                                      [ aURI.host,
+                                                        warnQuota / 1024 ]);
+
+      notificationBox.appendNotification(message, "offline-app-usage",
+                                         "chrome://browser/skin/Info.png",
+                                         priority, buttons);
+    }
+
+    // Now that we've warned once, prevent the warning from showing up
+    // again.
+    var pm = Cc["@mozilla.org/permissionmanager;1"].
+             getService(Ci.nsIPermissionManager);
+    pm.add(aURI, "offline-app",
+           Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN);
+  },
+
+  _checkUsage: function(aURI) {
+    var pm = Cc["@mozilla.org/permissionmanager;1"].
+             getService(Ci.nsIPermissionManager);
+
+    // if the user has already allowed excessive usage, don't bother checking
+    if (pm.testExactPermission(aURI, "offline-app") !=
+        Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN) {
+      var usage = getOfflineAppUsage(aURI.asciiHost);
+      var warnQuota = gPrefService.getIntPref("offline-apps.quota.warn");
+      if (usage >= warnQuota * 1024) {
+        return true;
+      }
+    }
+
+    return false;
   },
 
   offlineAppRequested: function(aContentWindow) {
@@ -5106,6 +5198,10 @@ var OfflineApps = {
     pm.add(currentURI, "offline-app", Ci.nsIPermissionManager.DENY_ACTION);
   },
 
+  manage: function() {
+    openAdvancedPreferences("networkTab");
+  },
+
   _startFetching: function() {
     var manifest = content.document.documentElement.getAttribute("manifest");
     if (!manifest)
@@ -5121,6 +5217,37 @@ var OfflineApps = {
     var updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"].
                         getService(Ci.nsIOfflineCacheUpdateService);
     updateService.scheduleUpdate(manifestURI, contentURI);
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // nsIObserver
+  observe: function (aSubject, aTopic, aState)
+  {
+    if (aTopic == "dom-storage-warn-quota-exceeded") {
+      if (aSubject) {
+        var uri = Cc["@mozilla.org/network/io-service;1"].
+                  getService(Ci.nsIIOService).
+                  newURI(aSubject.location.href, null, null);
+
+        if (OfflineApps._checkUsage(uri)) {
+          var browserWindow =
+            this._getBrowserWindowForContentWindow(aSubject);
+          var browser = this._getBrowserForContentWindow(browserWindow,
+                                                         aSubject);
+          OfflineApps._warnUsage(browser, uri);
+        }
+      }
+    } else if (aTopic == "offline-cache-update-completed") {
+      var cacheUpdate = aSubject.QueryInterface(Ci.nsIOfflineCacheUpdate);
+
+      var uri = cacheUpdate.manifestURI;
+      if (OfflineApps._checkUsage(uri)) {
+        var browser = this._getBrowserForCacheUpdate(cacheUpdate);
+        if (browser) {
+          OfflineApps._warnUsage(browser, cacheUpdate.manifestURI);
+        }
+      }
+    }
   }
 };
 
