@@ -48,7 +48,7 @@
   </broadcasterset>
   <menupopup id="menu_HelpPopup">
     <menuitem id="menu_HelpPopup_reportPhishingtoolmenu"
-              label="&reportPhishSiteMenu.title2;"
+              label="&reportPhishSiteMenu.title;..."
               accesskey="&reportPhishSiteMenu.accesskey;"
               insertbefore="updateSeparator"
               observes="reportPhishingBroadcaster"
@@ -56,7 +56,7 @@
               onclick="checkForMiddleClick(this, event);"/>
     <!-- XXX Bug 415846
     <menuitem id="menu_HelpPopup_reportPhishingErrortoolmenu"
-              label="&safeb.palm.notforgery.label2;"
+              label="&safeb.palm.notforgery.label;..."
               accesskey="&reportPhishSiteMenu.accesskey;"
               insertbefore="updateSeparator"
               observes="reportPhishingErrorBroadcaster"
