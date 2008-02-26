@@ -87,6 +87,14 @@ extensions/reporter@mozilla.org/install.rdf
 extensions/reporter@mozilla.org/chrome.manifest
 extensions/reporter@mozilla.org/chrome/reporter.jar
 extensions/reporter@mozilla.org/defaults/preferences/reporter.js
+#Remove Inspector (present from upgrades from Fx2/Fx3b1)
+components/inspector.xpt
+extensions/inspector@mozilla.org/install.rdf
+extensions/inspector@mozilla.org/components/inspector-cmdline.js
+extensions/inspector@mozilla.org/chrome.manifest
+extensions/inspector@mozilla.org/chrome/inspector.jar
+extensions/inspector@mozilla.org/defaults/preferences/inspector.js
+extensions/inspector@mozilla.org/platform/WINNT/chrome/icons/default/winInspectorMain.ico
 extensions/inspector@mozilla.org/components/inspector.xpt
 extensions/inspector@mozilla.org/components/@DLL_PREFIX@inspector@DLL_SUFFIX@
 extensions/inspector@mozilla.org/chrome/icons/default/winInspectorMain.ico
