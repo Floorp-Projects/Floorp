@@ -701,6 +701,9 @@ pref("browser.offline-apps.notify", true);
 // if true, use full page zoom instead of text zoom
 pref("browser.zoom.full", true);
 
+// Whether or not to save and restore zoom levels on a per-site basis.
+pref("browser.zoom.siteSpecific", true);
+
 // replace newlines with spaces when pasting into <input type="text"> fields
 pref("editor.singleLine.pasteNewlines", 2);
 
