@@ -2536,7 +2536,7 @@ nsUrlClassifierDBServiceWorker::FinishStream()
   NS_ENSURE_STATE(mInStream);
   NS_ENSURE_STATE(mUpdateObserver);
 
-  mUpdateObserver->StreamFinished();
+  mUpdateObserver->StreamFinished(mUpdateStatus);
 
   ResetStream();
 

@@ -249,12 +249,12 @@ nsUrlClassifierStreamUpdater::UpdateUrlRequested(const nsACString &aUrl,
 }
 
 NS_IMETHODIMP
-nsUrlClassifierStreamUpdater::StreamFinished()
+nsUrlClassifierStreamUpdater::StreamFinished(nsresult status)
 {
   nsresult rv;
 
   // Pop off a pending URL and update it.
-  if (mPendingUpdates.Length() > 0) {
+  if (NS_SUCCEEDED(status) && mPendingUpdates.Length() > 0) {
     PendingUpdate &update = mPendingUpdates[0];
     rv = FetchUpdate(update.mUrl, EmptyCString(), update.mTable);
     if (NS_FAILED(rv)) {
