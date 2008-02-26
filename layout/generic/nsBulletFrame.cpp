@@ -1258,17 +1258,6 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
       mComputedSize.width = mIntrinsicSize.width;
       mComputedSize.height = mIntrinsicSize.height;
 
-#if 0 // don't do scaled images in bullets
-      if (mComputedSize == mIntrinsicSize) {
-        mTransform.SetToIdentity();
-      } else {
-        if (mComputedSize.width != 0 && mComputedSize.height != 0) {
-          mTransform.SetToScale(float(mIntrinsicSize.width) / float(mComputedSize.width),
-                                float(mIntrinsicSize.height) / float(mComputedSize.height));
-        }
-      }
-#endif
-
       aMetrics.width = mComputedSize.width;
       aMetrics.ascent = aMetrics.height = mComputedSize.height;
 
