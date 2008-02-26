@@ -427,6 +427,37 @@ nsIContent::UpdateEditableState()
   SetEditableFlag(parent && parent->HasFlag(NODE_IS_EDITABLE));
 }
 
+nsIContent*
+nsIContent::FindFirstNonNativeAnonymous() const
+{
+  // This handles also nested native anonymous content.
+  nsIContent* content = GetBindingParent();
+  nsIContent* possibleResult = 
+    !IsNativeAnonymous() ? const_cast<nsIContent*>(this) : nsnull;
+  while (content) {
+    if (content->IsNativeAnonymous()) {
+      content = possibleResult = content->GetParent();
+    } else {
+      content = content->GetBindingParent();
+    }
+  }
+
+  return possibleResult;
+}
+
+PRBool
+nsIContent::IsInNativeAnonymousSubtree() const
+{
+  nsIContent* content = GetBindingParent();
+  while (content) {
+    if (content->IsNativeAnonymous()) {
+      return PR_TRUE;
+    }
+    content = content->GetBindingParent();
+  }
+  return PR_FALSE;
+}
+
 //----------------------------------------------------------------------
 
 nsChildContentList::~nsChildContentList()
@@ -2073,11 +2104,11 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   NS_PRECONDITION(!aParent || !aDocument ||
                   !aParent->HasFlag(NODE_FORCE_XBL_BINDINGS),
                   "Parent in document but flagged as forcing XBL");
-  // XXXbz XUL's SetNativeAnonymous is all weird, so can't assert
-  // anything here
-  NS_PRECONDITION(IsNodeOfType(eXUL) ||
-                  aBindingParent != this || IsNativeAnonymous(),
+  NS_PRECONDITION(aBindingParent != this || IsNativeAnonymous(),
                   "Only native anonymous content should have itself as its "
+                  "own binding parent");
+  NS_PRECONDITION(!IsNativeAnonymous() || aBindingParent == this,
+                  "Native anonymous content must have itself as its "
                   "own binding parent");
   
   if (!aBindingParent && aParent) {
@@ -2272,24 +2303,6 @@ nsGenericElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   return nsGenericElement::doPreHandleEvent(this, aVisitor);
 }
 
-static nsIContent*
-FindFirstNonAnonContent(nsIContent* aContent)
-{
-  while (aContent && aContent->IsNativeAnonymous()) {
-    aContent = aContent->GetParent();
-  }
-  return aContent;
-}
-
-static PRBool
-IsInAnonContent(nsIContent* aContent)
-{
-  while (aContent && !aContent->IsNativeAnonymous()) {
-    aContent = aContent->GetParent();
-  }
-  return !!aContent;
-}
-
 nsresult
 nsGenericElement::doPreHandleEvent(nsIContent* aContent,
                                    nsEventChainPreVisitor& aVisitor)
@@ -2315,10 +2328,12 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
       // must be updated.
       if (isAnonForEvents || aVisitor.mRelatedTargetIsInAnon ||
           (aVisitor.mEvent->originalTarget == aContent &&
-           (aVisitor.mRelatedTargetIsInAnon = IsInAnonContent(relatedTarget)))) {
-        nsIContent* nonAnon = FindFirstNonAnonContent(aContent);
+           (aVisitor.mRelatedTargetIsInAnon =
+            relatedTarget->IsInNativeAnonymousSubtree()))) {
+        nsIContent* nonAnon = aContent->FindFirstNonNativeAnonymous();
         if (nonAnon) {
-          nsIContent* nonAnonRelated = FindFirstNonAnonContent(relatedTarget);
+          nsIContent* nonAnonRelated =
+            relatedTarget->FindFirstNonNativeAnonymous();
           if (nonAnonRelated) {
             if (nonAnon == nonAnonRelated ||
                 nsContentUtils::ContentIsDescendantOf(nonAnonRelated, nonAnon)) {

@@ -1280,9 +1280,7 @@ nsBindingManager::WalkRules(nsStyleSet* aStyleSet,
 
     nsIContent* parent = content->GetBindingParent();
     if (parent == content) {
-      NS_ASSERTION(content->IsNativeAnonymous() ||
-                   content->IsNodeOfType(nsINode::eXUL),
-                   "Unexpected binding parent");
+      NS_ASSERTION(content->IsNativeAnonymous(), "Unexpected binding parent");
                              
       break; // The anonymous content case is often deliberately hacked to
              // return itself to cut off style inheritance here.  Do that.
