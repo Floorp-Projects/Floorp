@@ -1269,12 +1269,27 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
         return;
       }
 
-      // XXXkinetik if gfxQuartzNativeDrawing ever gave us a CGContext other
-      // than the current one, we would need to pass that to the plugin via
-      // SetWindow, just assert that they're the same for now
+      // If gfxQuartzNativeDrawing hands out a CGContext other than the last
+      // one we passed to the plugin, we need to pass the new one to the
+      // plugin via SetWindow.
+      // XXXkinetik it's not necessary to call SetWindow for every paint so
+      // this should eventually be optimized to only do so when necessary
       nsPluginPort* pluginPort = mInstanceOwner->GetPluginPort();
-      NS_ASSERTION(pluginPort->cgPort.context == cgContext,
-                   "BeginNativeDrawing using different CGContextRef to plugin");
+      nsCOMPtr<nsIPluginInstance> inst;
+      GetPluginInstance(*getter_AddRefs(inst));
+      if (!inst) {
+        NS_WARNING("null plugin instance during PaintPlugin");
+        return;
+      }
+      nsPluginWindow* window;
+      mInstanceOwner->GetWindow(window);
+      if (!window) {
+        NS_WARNING("null plugin window during PaintPlugin");
+        return;
+      }
+      pluginPort->cgPort.context = cgContext;
+      window->window = pluginPort;
+      inst->SetWindow(window);
 
       mInstanceOwner->Paint(aDirtyRect);
 
