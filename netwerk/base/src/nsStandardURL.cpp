@@ -1481,7 +1481,7 @@ nsStandardURL::SetPath(const nsACString &input)
 
         return SetSpec(spec);
     }
-    else if (mPath.mLen > 1) {
+    else if (mPath.mLen >= 1) {
         mSpec.Cut(mPath.mPos + 1, mPath.mLen - 1);
         // these contain only a '/'
         mPath.mLen = 1;
