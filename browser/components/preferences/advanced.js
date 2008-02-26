@@ -37,6 +37,9 @@
 #
 # ***** END LICENSE BLOCK *****
 
+// Load DownloadUtils module for convertByteUnits
+Cu.import("resource://gre/modules/DownloadUtils.jsm");
+
 var gAdvancedPane = {
   _inited: false,
 
@@ -217,6 +220,8 @@ var gAdvancedPane = {
       list.removeChild(list.firstChild);
     }
 
+    var bundle = document.getElementById("bundlePreferences");
+
     var enumerator = pm.enumerator;
     while (enumerator.hasMoreElements()) {
       var perm = enumerator.getNext().QueryInterface(Components.interfaces.nsIPermission);
@@ -225,9 +230,13 @@ var gAdvancedPane = {
           perm.capability != Components.interfaces.nsIPermissionManager.DENY_ACTION) {
         var row = document.createElement("listitem");
         row.id = "";
-        row.className = "listitem";
-        row.setAttribute("label", perm.host);
-
+        row.className = "offlineapp";
+        row.setAttribute("host", perm.host);
+        var converted = DownloadUtils.
+                        convertByteUnits(getOfflineAppUsage(perm.host));
+        row.setAttribute("usage",
+                         bundle.getFormattedString("offlineAppUsage",
+                                                   converted));
         list.appendChild(row);
       }
     }
@@ -248,7 +257,7 @@ var gAdvancedPane = {
   {
     var list = document.getElementById("offlineAppsList");
     var item = list.selectedItem;
-    var host = item.getAttribute("label");
+    var host = item.getAttribute("host");
 
     var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                             .getService(Components.interfaces.nsIPromptService);
