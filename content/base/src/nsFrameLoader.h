@@ -62,16 +62,17 @@ public:
     mInDestructor(PR_FALSE)
   {}
 
+  ~nsFrameLoader() {
+    mInDestructor = PR_TRUE;
+    nsFrameLoader::Destroy();
+  }
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsFrameLoader)
   NS_DECL_NSIFRAMELOADER
   NS_HIDDEN_(nsresult) CheckForRecursiveLoad(nsIURI* aURI);
   void Finalize();
 private:
-  ~nsFrameLoader() {
-    mInDestructor = PR_TRUE;
-    nsFrameLoader::Destroy();
-  }
 
   NS_HIDDEN_(nsresult) EnsureDocShell();
   NS_HIDDEN_(void) GetURL(nsString& aURL);

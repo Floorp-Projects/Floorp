@@ -89,6 +89,7 @@ public:
     if (base_win) {
       base_win->Destroy();
     }
+    return NS_OK;
   }
   nsRefPtr<nsIDocShell> mDocShell;
 };
