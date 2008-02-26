@@ -5743,16 +5743,18 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
     nsIContent* content = newAnonymousItems[i];
     NS_ASSERTION(content, "null anonymous content?");
 
-    content->SetNativeAnonymous();
-
     nsIContent* bindingParent = content;
 #ifdef MOZ_SVG
     // least-surprise CSS binding until we do the SVG specified
     // cascading rules for <svg:use> - bug 265894
     if (aParent &&
-        aParent->NodeInfo()->Equals(nsGkAtoms::use, kNameSpaceID_SVG))
+        aParent->NodeInfo()->Equals(nsGkAtoms::use, kNameSpaceID_SVG)) {
       bindingParent = aParent;
+    } else
 #endif
+    {
+      content->SetNativeAnonymous();
+    }
 
     rv = content->BindToTree(aDocument, aParent, bindingParent, PR_TRUE);
     if (NS_FAILED(rv)) {

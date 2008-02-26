@@ -5761,7 +5761,7 @@ nsDocument::MutationEventDispatched(nsINode* aTarget)
     for (PRInt32 i = 0; i < count; ++i) {
       nsINode* possibleTarget = mSubtreeModifiedTargets[i];
       nsCOMPtr<nsIContent> content = do_QueryInterface(possibleTarget);
-      if (content && content->IsNativeAnonymous()) {
+      if (content && content->IsInNativeAnonymousSubtree()) {
         if (realTargets.IndexOf(possibleTarget) == -1) {
           realTargets.AppendObject(possibleTarget);
         }

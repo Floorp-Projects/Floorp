@@ -856,7 +856,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
     {
         // No access to anonymous content from the web!  (bug 164086)
         nsIContent *content = static_cast<nsIContent*>(aObj);
-        if (content->IsNativeAnonymous()) {
+        if (content->IsInNativeAnonymousSubtree()) {
             rv = NS_ERROR_DOM_SECURITY_ERR;
         }
     }

@@ -509,7 +509,8 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
   nsRuleNode* lastPresHintRN = mRuleWalker->GetCurrentNode();
 
   mRuleWalker->SetLevel(eUserSheet, PR_FALSE);
-  PRBool skipUserStyles = nsContentUtils::IsNativeAnonymous(aData->mContent);
+  PRBool skipUserStyles =
+    aData->mContent && aData->mContent->IsInNativeAnonymousSubtree();
   if (!skipUserStyles && mRuleProcessors[eUserSheet]) // NOTE: different
     (*aCollectorFunc)(mRuleProcessors[eUserSheet], aData);
   nsRuleNode* lastUserRN = mRuleWalker->GetCurrentNode();
@@ -573,7 +574,8 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
   if (mRuleProcessors[ePresHintSheet])
     (*aFunc)(mRuleProcessors[ePresHintSheet], aData);
 
-  PRBool skipUserStyles = nsContentUtils::IsNativeAnonymous(aData->mContent);
+  PRBool skipUserStyles =
+    aData->mContent && aData->mContent->IsInNativeAnonymousSubtree();
   if (!skipUserStyles && mRuleProcessors[eUserSheet]) // NOTE: different
     (*aFunc)(mRuleProcessors[eUserSheet], aData);
 
