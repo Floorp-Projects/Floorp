@@ -225,8 +225,10 @@ NS_IMETHODIMP nsAccessNode::GetUniqueID(void **aUniqueID)
 
 NS_IMETHODIMP nsAccessNode::GetOwnerWindow(void **aWindow)
 {
+  *aWindow = nsnull;
   nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
-  NS_ASSERTION(docAccessible, "No root accessible pointer back, Init() not called.");
+  if (!docAccessible)
+    return NS_ERROR_FAILURE; // This node or doc accessible is shut down
   return docAccessible->GetWindowHandle(aWindow);
 }
 
