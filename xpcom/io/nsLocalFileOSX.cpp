@@ -938,15 +938,26 @@ NS_IMETHODIMP nsLocalFile::GetFileSizeOfLink(PRInt64 *aFileSizeOfLink)
 /* readonly attribute AString target; */
 NS_IMETHODIMP nsLocalFile::GetTarget(nsAString& aTarget)
 {
-    NS_ERROR("NS_ERROR_NOT_IMPLEMENTED");
-    return NS_ERROR_NOT_IMPLEMENTED;
+  nsCAutoString nativeString;
+  nsresult rv = GetNativeTarget(nativeString);
+  if (NS_FAILED(rv))
+    return rv;
+  CopyUTF8toUTF16NFC(nativeString, aTarget);
+  return NS_OK;
 }
 
 /* [noscript] readonly attribute ACString nativeTarget; */
 NS_IMETHODIMP nsLocalFile::GetNativeTarget(nsACString& aNativeTarget)
 {
-    NS_ERROR("NS_ERROR_NOT_IMPLEMENTED");
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mTargetRef)
+    return NS_ERROR_NOT_INITIALIZED;
+  nsresult rv = NS_ERROR_FAILURE;
+  CFStringRef pathStrRef = ::CFURLCopyFileSystemPath(mTargetRef, kCFURLPOSIXPathStyle);
+  if (pathStrRef) {
+    rv = CFStringReftoUTF8(pathStrRef, aNativeTarget);
+    ::CFRelease(pathStrRef);
+  }
+  return rv;
 }
 
 /* readonly attribute AString path; */
