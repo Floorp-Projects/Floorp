@@ -69,8 +69,12 @@ interface nsIUrlClassifierUpdateObserver : nsISupports {
    */
   void updateUrlRequested(in ACString url, in ACString table);
 
-  /* A stream update has completed */
-  void streamFinished();
+  /**
+   * A stream update has completed.
+   *
+   * @param status The state of the update process.
+   */
+  void streamFinished(in nsresult status);
 
   /* The update has encountered an error and should be cancelled */
   void updateError(in nsresult error);
