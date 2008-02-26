@@ -583,9 +583,13 @@ components/xpcom_obsolete.xpt
 init.d/README
 redo-prebinding.sh
 res/viewer.properties
+res/bloatcycle.html
 #endif
 #ifdef XP_UNIX
+#ifndef XP_MACOSX
 readme.txt
+chrome/icons/default/default.xpm
+#endif
 #endif
 dictionaries/PL.dic
 dictionaries/PL.aff
