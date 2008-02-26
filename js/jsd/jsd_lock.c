@@ -103,7 +103,6 @@ void ASSERT_VALID_LOCK(JSDStaticLock* lock)
     JS_ASSERT(lock);
     JS_ASSERT(lock->lock);
     JS_ASSERT(lock->count >= 0);
-    JS_ASSERT((! lock->count && ! lock->owner) || (lock->count && lock->owner));
     JS_ASSERT(lock->sig == (uint16) JSD_LOCK_SIG);
 }    
 #else
@@ -134,34 +133,35 @@ void
 jsd_Lock(JSDStaticLock* lock)
 {
     void* me;
-
+    ASSERT_VALID_LOCK(lock);
     _CURRENT_THREAD(me);
 
-    ASSERT_VALID_LOCK(lock);
-
     if(lock->owner == me)
+    {
         lock->count++;
+        JS_ASSERT(lock->count > 1);
+    }
     else
     {
         PR_Lock(lock->lock);            /* this can block... */
         JS_ASSERT(lock->owner == 0);
+        JS_ASSERT(lock->count == 0);
         lock->count = 1;
         lock->owner = me;
     }
-    ASSERT_VALID_LOCK(lock);
 }    
 
 void
 jsd_Unlock(JSDStaticLock* lock)
 {
     void* me;
-
     ASSERT_VALID_LOCK(lock);
     _CURRENT_THREAD(me);
 
+    /* it's an error to unlock a lock you don't own */
+    JS_ASSERT(lock->owner == me);
     if(lock->owner != me)
     {
-        JS_ASSERT(0);   /* it's an error to unlock a lock you don't own */
         return;
     }
     if(--lock->count == 0)
@@ -169,7 +169,6 @@ jsd_Unlock(JSDStaticLock* lock)
         lock->owner = NULL;
         PR_Unlock(lock->lock);
     }
-    ASSERT_VALID_LOCK(lock);
 }    
 
 #ifdef DEBUG
@@ -179,7 +178,10 @@ jsd_IsLocked(JSDStaticLock* lock)
     void* me;
     ASSERT_VALID_LOCK(lock);
     _CURRENT_THREAD(me);
-    return lock->owner == me ? JS_TRUE : JS_FALSE;
+    if (lock->owner != me)
+        return JS_FALSE;
+    JS_ASSERT(lock->count > 0);
+    return JS_TRUE;
 }    
 #endif /* DEBUG */
 
