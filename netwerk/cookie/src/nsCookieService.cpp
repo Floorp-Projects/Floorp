@@ -770,13 +770,13 @@ nsCookieService::PrefChanged(nsIPrefBranch *aPrefBranch)
 {
   PRInt32 val;
   if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefCookiesPermissions, &val)))
-    mCookiesPermissions = LIMIT(val, 0, 2, 0);
+    mCookiesPermissions = (PRUint8) LIMIT(val, 0, 2, 0);
 
   if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefMaxNumberOfCookies, &val)))
-    mMaxNumberOfCookies = LIMIT(val, 0, 0xFFFF, 0xFFFF);
+    mMaxNumberOfCookies = (PRUint16) LIMIT(val, 0, 0xFFFF, 0xFFFF);
 
   if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefMaxCookiesPerHost, &val)))
-    mMaxCookiesPerHost = LIMIT(val, 0, 0xFFFF, 0xFFFF);
+    mMaxCookiesPerHost = (PRUint16) LIMIT(val, 0, 0xFFFF, 0xFFFF);
 }
 
 /******************************************************************************
