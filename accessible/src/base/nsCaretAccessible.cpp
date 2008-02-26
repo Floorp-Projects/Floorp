@@ -78,11 +78,14 @@ void nsCaretAccessible::Shutdown()
 
 nsresult nsCaretAccessible::ClearControlSelectionListener()
 {
-  nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryReferent(mCurrentControlSelection));
-  NS_ENSURE_TRUE(selPrivate, NS_ERROR_FAILURE);
-
-  mCurrentControlSelection = nsnull;
   mCurrentControl = nsnull;
+  mCurrentControlSelection = nsnull;
+
+  nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryReferent(mCurrentControlSelection));
+  if (!selPrivate) {
+    return NS_OK;
+  }
+
   return selPrivate->RemoveSelectionListener(this);
 }
 
