@@ -108,14 +108,14 @@ function test()
         // Next phase eventually checks for two downloads
         testPhase++;
         return doTest();
-      default:
+      case 1:
         // List is being populated
         ok(downloadView.itemCount > 0, "Search found something");
 
         // Actually check for the two downloads
         testPhase++;
         return doTest();
-      case 4:
+      case 2:
         // Done populating the two items
         ok(downloadView.itemCount == 2, "Search matched both downloads");
 
@@ -126,7 +126,7 @@ function test()
         // Next phase checks for a single item
         testPhase++;
         return doTest();
-      case 5:
+      case 3:
         // Done populating the one result
         ok(downloadView.itemCount == 1, "Found the single download");
 
