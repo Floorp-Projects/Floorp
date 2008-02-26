@@ -17,7 +17,8 @@
   -moz-binding: url("chrome://global/content/consoleBindings.xml#message");
 }
 
-.console-msg-text {
+.console-msg-text,
+.console-error-msg {
   white-space: -moz-pre-wrap;
 }
 
