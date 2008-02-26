@@ -583,7 +583,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 
     slot = JSVAL_TO_INT(id);
     if ((size_t)slot < JSSTRING_LENGTH(str)) {
-        str1 = js_NewDependentString(cx, str, (size_t)slot, 1);
+        str1 = js_GetUnitString(cx, JSSTRING_CHARS(str)[slot]);
         if (!str1)
             return JS_FALSE;
         if (!OBJ_DEFINE_PROPERTY(cx, obj, INT_TO_JSID(slot),
