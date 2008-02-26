@@ -1719,6 +1719,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #identity-box {
   background-color: -moz-dialog;
+  color: -moz-dialogtext;
   -moz-appearance: toolbox;
   outline: 1px solid ThreeDShadow;
   -moz-margin-start: -1px;
