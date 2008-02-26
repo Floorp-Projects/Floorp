@@ -12,6 +12,6 @@
 <!ENTITY safeb.palm.accept.statustext "Navigate to my home page">
 <!ENTITY safeb.palm.decline.label "Ignore this warning">
 <!ENTITY safeb.palm.decline.statustext "Close warning" >
-<!ENTITY safeb.palm.notforgery.label "This isn't a web forgery">
+<!ENTITY safeb.palm.notforgery.label2 "This isn't a web forgery…">
 
 <!ENTITY safeb.urlbaricon.tooltip "This page might be dangerous; click for details.">
