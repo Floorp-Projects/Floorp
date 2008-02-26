@@ -34,108 +34,36 @@
 #
 # ***** END LICENSE BLOCK *****
 
-
-/**
- * This file is included into the main browser chrome from
- * browser/base/content/global-scripts.inc
- */
-
 var safebrowsing = {
-  controller: null,
-  phishWarden: null,
+  appContext: null,
 
   startup: function() {
     setTimeout(safebrowsing.deferredStartup, 2000);
-
-    // clean up
     window.removeEventListener("load", safebrowsing.startup, false);
   },
-  
+
   deferredStartup: function() {
-    var appContext = Cc["@mozilla.org/safebrowsing/application;1"]
-                     .getService().wrappedJSObject;
-
-    var malwareWarden = new appContext.PROT_MalwareWarden();
-    safebrowsing.malwareWarden = malwareWarden;
-
-    // Register tables
-    malwareWarden.registerBlackTable("goog-malware-shavar");
-
-    malwareWarden.maybeToggleUpdateChecking();
-
-    var phishWarden = new appContext.PROT_PhishingWarden();
-    safebrowsing.phishWarden = phishWarden;
-
-    // Register tables
-    // XXX: move table names to a pref that we originally will download
-    // from the provider (need to workout protocol details)
-    phishWarden.registerBlackTable("goog-phish-shavar");
-
-    // Download/update lists if we're in non-enhanced mode
-    phishWarden.maybeToggleUpdateChecking();
-    safebrowsing.controller = new appContext.PROT_Controller(
-        window, getBrowser(), phishWarden);
-  },
-
-  /**
-   * Clean up.
-   */
-  shutdown: function() {
-    if (safebrowsing.controller) {
-      // If the user shuts down before deferredStartup, there is no controller.
-      safebrowsing.controller.shutdown();
-    }
-    if (safebrowsing.phishWarden) {
-      safebrowsing.phishWarden.shutdown();
-    }
-    if (safebrowsing.malwareWarden) {
-      safebrowsing.malwareWarden.shutdown();
-    }
-    
-    window.removeEventListener("unload", safebrowsing.shutdown, false);
+    this.appContext = Cc["@mozilla.org/safebrowsing/application;1"].
+                      getService().wrappedJSObject;
+    this.appContext.initialize();
   },
 
   setReportPhishingMenu: function() {
     var uri = getBrowser().currentURI;
-    if (!uri)
-      return;
-
-    var sbIconElt = document.getElementById("safebrowsing-urlbar-icon");
-    var helpMenuElt = document.getElementById("helpMenu");
-    var phishLevel = sbIconElt.getAttribute("level");
-
-    // Show/hide the appropriate menu item.
-    document.getElementById("menu_HelpPopup_reportPhishingtoolmenu")
-            .hidden = ("safe" != phishLevel);
-    document.getElementById("menu_HelpPopup_reportPhishingErrortoolmenu")
-            .hidden = ("safe" == phishLevel);
-
-    var broadcasterId;
-    if ("safe" == phishLevel) {
-      broadcasterId = "reportPhishingBroadcaster";
-    } else {
-      broadcasterId = "reportPhishingErrorBroadcaster";
-    }
-
-    var broadcaster = document.getElementById(broadcasterId);
-    if (!broadcaster)
-      return;
-
-    var progressListener =
-      Cc["@mozilla.org/browser/safebrowsing/navstartlistener;1"]
-      .createInstance(Ci.nsIDocNavStartProgressListener);
-    broadcaster.setAttribute("disabled", progressListener.isSpurious(uri));
+    var broadcaster = document.getElementById("reportPhishingBroadcaster");
+    if (uri && (uri.schemeIs("http") || uri.schemeIs("https")))
+      broadcaster.removeAttribute("disabled");
+    else
+      broadcaster.disabled = true;
   },
-  
+
   /**
    * Used to report a phishing page or a false positive
    * @param name String either "Phish" or "Error"
    * @return String the report phishing URL.
    */
   getReportURL: function(name) {
-    var appContext = Cc["@mozilla.org/safebrowsing/application;1"]
-                     .getService().wrappedJSObject;
-    var reportUrl = appContext.getReportURL(name);
+    var reportUrl = this.appContext.getReportURL(name);
 
     var pageUrl = getBrowser().currentURI.asciiSpec;
     reportUrl += "&url=" + encodeURIComponent(pageUrl);
@@ -145,4 +73,3 @@ var safebrowsing = {
 }
 
 window.addEventListener("load", safebrowsing.startup, false);
-window.addEventListener("unload", safebrowsing.shutdown, false);
