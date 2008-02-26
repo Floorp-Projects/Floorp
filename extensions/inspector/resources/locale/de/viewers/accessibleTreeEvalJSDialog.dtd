@@ -16,11 +16,11 @@
    -
    - The Initial Developer of the Original Code is
    - Mozilla Foundation.
-   - Portions created by the Initial Developer are Copyright (C) 2007
+   - Portions created by the Initial Developer are Copyright (C) 2008
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
-   -   Alexander Surkov <surkov.alexander@gmail.com>
+   -   Alexander Surkov <surkov.alexander@gmail.com> (original author)
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,9 +37,12 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY role.label "Rolle">
-<!ENTITY name.label "Name">
-<!ENTITY nodeName.label "Knoten-Name">
+  <!ENTITY evaluateDialog.title "JavaScript-Dialog evaluieren">
 
-<!ENTITY evaluateJS.label "JavaScript evaluieren">
-
+  <!ENTITY btnEvaluateJS.label "Evaluieren">
+  <!ENTITY btnEvaluateJS.accesskey "E">
+  
+  <!ENTITY txtInputArea.label "Eingabebereich ('accessible'-Variable verwenden, um mit dem ausgewählten Accessibility-Element zu arbeiten und die 'output'-Funktion um in das 'Ausgabebereich'-Fenster zu schreiben):">
+  <!ENTITY txtInputArea.accesskey "E">
+  <!ENTITY txtOutputArea.label "Ausgabebereich:">
+  <!ENTITY txtOutputArea.accesskey "A">
