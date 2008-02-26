@@ -348,7 +348,7 @@ ReadMultipleFiles(gpointer filename, gpointer array)
 void
 nsFilePicker::ReadValuesFromFileChooser(GtkWidget *file_chooser)
 {
-  mFilesURL.Clear();
+  mFiles.Clear();
 
   if (mMode == nsIFilePicker::modeOpenMultiple) {
     mFileURL.Truncate();
