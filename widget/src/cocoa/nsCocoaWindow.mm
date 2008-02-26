@@ -526,7 +526,9 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  if (!mSheetNeedsShow && bState == [mWindow isVisible])
+  // We need to re-execute sometimes in order to bring already-visible
+  // windows forward.
+  if (!mSheetNeedsShow && !bState && ![mWindow isVisible])
     return NS_OK;
 
   nsIWidget* parentWidget = mParent;
