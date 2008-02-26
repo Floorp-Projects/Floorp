@@ -53,6 +53,7 @@ _BROWSER_FILES = \
   browser_bug_413985.js \
   browser_bug_416303.js \
   browser_bug_406857.js \
+  browser_multiword_search.js \
   $(NULL)
 
 ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
