@@ -44,8 +44,9 @@ interface nsIDocument;
 interface nsIFrame;
 interface nsObjectFrame;
 interface nsIContent;
+interface nsITimer;
 
-[uuid(933f7472-cbe3-4d95-a77a-ce7ea3812b32)]
+[uuid(27386cf1-f27e-4d2d-9bf4-c4621d50d299)]
 interface nsIAccessibilityService : nsIAccessibleRetrieval
 {
   nsIAccessible createOuterDocAccessible(in nsIDOMNode aNode);
@@ -100,6 +101,17 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
   void invalidateSubtreeFor(in nsIPresShell aPresShell,
                             in nsIContent aChangedContent,
                             in PRUint32 aEvent);
+
+  /**
+   *  An internal doc load event has occured. Handle the event and remove it from the list.
+   *  @param aTimer      The timer created to handle this doc load event
+   *  @param aClosure    The nsIWebProgress* for the load event
+   *  @param aEventType  The type of load event, one of: nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_START,
+   *                                                     nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE or
+   *                                                     nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED
+   */
+  void processDocLoadEvent(in nsITimer aTimer, in voidPtr aClosure, in PRUint32 aEventType);
+
 };
 
 

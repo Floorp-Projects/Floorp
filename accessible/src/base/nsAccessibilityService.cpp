@@ -41,6 +41,7 @@
 #include "nsAccessibilityService.h"
 #include "nsAccessibilityUtils.h"
 #include "nsARIAMap.h"
+#include "nsIContentViewer.h"
 #include "nsCURILoader.h"
 #include "nsDocAccessible.h"
 #include "nsHTMLImageAccessibleWrap.h"
@@ -155,10 +156,21 @@ nsAccessibilityService::Observe(nsISupports *aSubject, const char *aTopic,
       observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     }
     nsCOMPtr<nsIWebProgress> progress(do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID));
-    if (progress) {
+    if (progress)
       progress->RemoveProgressListener(static_cast<nsIWebProgressListener*>(this));
-    }
     nsAccessNodeWrap::ShutdownAccessibility();
+    // Cancel and release load timers
+    while (mLoadTimers.Count() > 0 ) {
+      nsCOMPtr<nsITimer> timer = mLoadTimers.ObjectAt(0);
+      void *closure = nsnull;
+      timer->GetClosure(&closure);
+      if (closure) {
+        nsIWebProgress *webProgress = static_cast<nsIWebProgress*>(closure);
+        NS_RELEASE(webProgress);  // Release nsIWebProgress for timer
+      }
+      timer->Cancel();
+      mLoadTimers.RemoveObjectAt(0);
+    }
   }
   return NS_OK;
 }
@@ -169,68 +181,92 @@ NS_IMETHODIMP nsAccessibilityService::OnStateChange(nsIWebProgress *aWebProgress
 {
   NS_ASSERTION(aStateFlags & STATE_IS_DOCUMENT, "Other notifications excluded");
 
-  if (0 == (aStateFlags & (STATE_START | STATE_STOP))) {
+  if (!aWebProgress || 0 == (aStateFlags & (STATE_START | STATE_STOP))) {
     return NS_OK;
   }
+  
+  nsCAutoString name;
+  aRequest->GetName(name);
+  if (name.EqualsLiteral("about:blank"))
+    return NS_OK;
 
+  if (NS_FAILED(aStatus) && (aStateFlags & STATE_START))
+    return NS_OK;
+ 
+  nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1");
+  if (!timer)
+    return NS_OK;
+  mLoadTimers.AppendObject(timer);
+  NS_ADDREF(aWebProgress);
+
+  if (aStateFlags & STATE_START)
+    timer->InitWithFuncCallback(StartLoadCallback, aWebProgress, 0,
+                                nsITimer::TYPE_ONE_SHOT);
+  else if (NS_SUCCEEDED(aStatus)) 
+    timer->InitWithFuncCallback(EndLoadCallback, aWebProgress, 0,
+                                nsITimer::TYPE_ONE_SHOT);
+  else // Failed end load
+    timer->InitWithFuncCallback(FailedLoadCallback, aWebProgress, 0,
+                                nsITimer::TYPE_ONE_SHOT);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessibilityService::ProcessDocLoadEvent(nsITimer *aTimer, void *aClosure, PRUint32 aEventType)
+{
   nsCOMPtr<nsIDOMWindow> domWindow;
-  aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
-  NS_ASSERTION(domWindow, "DOM Window for state change is null");
-  NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
+  nsIWebProgress *webProgress = static_cast<nsIWebProgress*>(aClosure);
+  webProgress->GetDOMWindow(getter_AddRefs(domWindow));
+  NS_RELEASE(webProgress);
+  mLoadTimers.RemoveObject(aTimer);
+  NS_ENSURE_STATE(domWindow);
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  domWindow->GetDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDOMNode> domDocNode(do_QueryInterface(domDoc));
-  NS_ENSURE_TRUE(domDocNode, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIAccessibleDocument> docAccessible;
-
-  PRUint32 eventType = 0;
-  if (aStateFlags & STATE_STOP) {
-    // Do not create accessible for page load end events
-    // in case it was already shut down before page finished loading
-    docAccessible = nsAccessNode::GetDocAccessibleFor(domDocNode);  // Cached doc accessibles only
-    if (!docAccessible)
-      return NS_OK;
-    nsCOMPtr<nsIDOMDocument> domDocTest;
-    docAccessible->GetDocument(getter_AddRefs(domDocTest));
-    if (domDocTest != domDoc) {
-      // Doc from accessible is not the doc we started from
-      // We must be shutdown, and domDocTest should be null
-      NS_ASSERTION(!domDocTest, "Doc not shut down but reports incorrect DOM document");
-      return NS_OK;
-    }
-    
-    eventType = NS_FAILED(aStatus) ? nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED :
-                                     nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE;
-  }
-  else {
-    // Get the accessible for the new document.
-    // If it not created yet this will create it & cache it, as well as 
-    // set up event listeners so that MSAA/ATK toolkit and internal 
-    // accessibility events will get fired.
-    nsCOMPtr<nsIAccessible> accessible;
-    GetAccessibleFor(domDocNode, getter_AddRefs(accessible));  // Create if necessary
-    docAccessible = do_QueryInterface(accessible);
-    eventType = nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_START;
+  if (aEventType == nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_START) {
     nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(domWindow));
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(webNav));
-    NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+    NS_ENSURE_STATE(docShell);
     PRUint32 loadType;
     docShell->GetLoadType(&loadType);
     if (loadType == LOAD_RELOAD_NORMAL ||
         loadType == LOAD_RELOAD_BYPASS_CACHE ||
         loadType == LOAD_RELOAD_BYPASS_PROXY ||
         loadType == LOAD_RELOAD_BYPASS_PROXY_AND_CACHE) {
-      eventType = nsIAccessibleEvent::EVENT_DOCUMENT_RELOAD;
+      aEventType = nsIAccessibleEvent::EVENT_DOCUMENT_RELOAD;
     }
   }
       
-  nsCOMPtr<nsPIAccessibleDocument> privDocAccessible = do_QueryInterface(docAccessible);
-  if (eventType && privDocAccessible) {
-    privDocAccessible->FireDocLoadEvents(eventType);
-  }
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  domWindow->GetDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDOMNode> docNode = do_QueryInterface(domDoc);
+  NS_ENSURE_STATE(docNode);
+
+  nsCOMPtr<nsIAccessible> accessible;
+  GetAccessibleFor(docNode, getter_AddRefs(accessible));
+  nsCOMPtr<nsPIAccessibleDocument> privDocAccessible = do_QueryInterface(accessible);
+  NS_ENSURE_STATE(privDocAccessible);
+  privDocAccessible->FireDocLoadEvents(aEventType);
 
   return NS_OK;
+}
+
+void nsAccessibilityService::StartLoadCallback(nsITimer *aTimer, void *aClosure)
+{
+  nsIAccessibilityService *accService = nsAccessNode::GetAccService();
+  if (accService)
+    accService->ProcessDocLoadEvent(aTimer, aClosure, nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_START);
+}
+
+void nsAccessibilityService::EndLoadCallback(nsITimer *aTimer, void *aClosure)
+{
+  nsIAccessibilityService *accService = nsAccessNode::GetAccService();
+  if (accService)
+    accService->ProcessDocLoadEvent(aTimer, aClosure, nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE);
+}
+
+void nsAccessibilityService::FailedLoadCallback(nsITimer *aTimer, void *aClosure)
+{
+  nsIAccessibilityService *accService = nsAccessNode::GetAccService();
+  if (accService)
+    accService->ProcessDocLoadEvent(aTimer, aClosure, nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED);
 }
 
 /* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
@@ -378,6 +414,12 @@ nsAccessibilityService::CreateRootAccessible(nsIPresShell *aShell,
   nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
 
   nsCOMPtr<nsISupports> container = aDocument->GetContainer();
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  docShell->GetContentViewer(getter_AddRefs(contentViewer));
+  NS_ENSURE_TRUE(contentViewer, NS_ERROR_FAILURE); // Doc was already shut down
+
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
     do_QueryInterface(container);
   NS_ENSURE_TRUE(docShellTreeItem, NS_ERROR_FAILURE);
