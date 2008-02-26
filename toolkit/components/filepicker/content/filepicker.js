@@ -45,6 +45,7 @@
 const nsIFilePicker       = Components.interfaces.nsIFilePicker;
 const nsIProperties       = Components.interfaces.nsIProperties;
 const NS_DIRECTORYSERVICE_CONTRACTID = "@mozilla.org/file/directory_service;1";
+const NS_IOSERVICE_CONTRACTID = "@mozilla.org/network/io-service;1";
 const nsITreeBoxObject = Components.interfaces.nsITreeBoxObject;
 const nsIFileView = Components.interfaces.nsIFileView;
 const NS_FILEVIEW_CONTRACTID = "@mozilla.org/filepicker/fileview;1";
@@ -59,6 +60,7 @@ var retvals;
 var filePickerMode;
 var homeDir;
 var treeView;
+var allowURLs;
 
 var textInput;
 var okButton;
@@ -91,6 +93,7 @@ function filepickerLoad() {
     const numFilters = filterTitles.length;
 
     document.title = title;
+    allowURLs = o.allowURLs;
 
     if (initialText) {
       textInput.value = initialText;
@@ -235,9 +238,28 @@ function selectOnOK()
   var isDir = false;
   var isFile = false;
 
-  var fileList = processPath(textInput.value);
+  retvals.filterIndex = document.getElementById("filterMenuList");
+  retvals.fileURL = null;
 
-  if (!fileList) { // generic error message, should probably never happen
+  if (allowURLs) {
+    try {
+      var ios = Components.classes[NS_IOSERVICE_CONTRACTID].getService(Components.interfaces.nsIIOService);
+      retvals.fileURL = ios.newURI(textInput.value, '', null);
+      var fileList = [];
+      if (retvals.fileURL instanceof Components.interfaces.nsIFileURL)
+        fileList.push(retvals.fileURL.nsIFileURL.file);
+      gFilesEnumerator.mFiles = fileList;
+      retvals.files = gFilesEnumerator;
+      retvals.buttonStatus = ret;
+
+      return true;
+    } catch (e) {
+    }
+  }
+
+  var fileList = processPath(textInput.value);
+  if (!fileList) {
+    // generic error message, should probably never happen
     showErrorDialog("errorPathProblemTitle",
                     "errorPathProblemMessage",
                     textInput.value);
@@ -377,9 +399,6 @@ function selectOnOK()
 
   retvals.files = gFilesEnumerator;
   retvals.buttonStatus = ret;
-
-  var filterMenuList = document.getElementById("filterMenuList");
-  retvals.filterIndex = filterMenuList.selectedIndex;
   
   return (ret != nsIFilePicker.returnCancel);
 }
