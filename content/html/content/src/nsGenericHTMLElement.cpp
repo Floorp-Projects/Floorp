@@ -3111,6 +3111,16 @@ nsGenericHTMLElement::RemoveFocus(nsPresContext *aPresContext)
 PRBool
 nsGenericHTMLElement::IsFocusable(PRInt32 *aTabIndex)
 {
+  nsIDocument *doc = GetCurrentDoc();
+  if (!doc || doc->HasFlag(NODE_IS_EDITABLE)) {
+    // In designMode documents we only allow focusing the document.
+    if (aTabIndex) {
+      *aTabIndex = -1;
+    }
+
+    return PR_FALSE;
+  }
+
   PRInt32 tabIndex = 0;   // Default value for non HTML elements with -moz-user-focus
   GetTabIndex(&tabIndex);
 
