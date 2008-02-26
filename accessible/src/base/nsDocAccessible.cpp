@@ -85,7 +85,7 @@ nsIAtom *nsDocAccessible::gLastFocusedFrameType = nsnull;
 //-----------------------------------------------------
 nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell):
   nsHyperTextAccessibleWrap(aDOMNode, aShell), mWnd(nsnull),
-  mScrollPositionChangedTicks(0), mIsContentLoaded(PR_FALSE)
+  mScrollPositionChangedTicks(0), mIsContentLoaded(PR_FALSE), mIsLoadCompleteFired(PR_FALSE)
 {
   // For GTK+ native window, we do nothing here.
   if (!mDOMNode)
@@ -766,10 +766,12 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
              (aEventType == nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE ||
               aEventType == nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED);
 
-  if (mIsContentLoaded == isFinished) {
-    return NS_OK;
-  }
   mIsContentLoaded = isFinished;
+  if (isFinished) {
+    if (mIsLoadCompleteFired)
+      return NS_OK;
+    mIsLoadCompleteFired = PR_TRUE;
+  }
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem =
     nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
@@ -793,19 +795,19 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
       // doc load event which causes screen readers to act is if entire page is reloaded
       InvalidateCacheSubtree(nsnull, nsIAccessibleEvent::EVENT_DOM_SIGNIFICANT_CHANGE);
     }
-  }
-  // Fire STATE_CHANGE event for doc load finish if focus is in same doc tree
-  if (gLastFocusedNode) {
-    nsCOMPtr<nsIDocShellTreeItem> focusedTreeItem =
-      nsAccUtils::GetDocShellTreeItemFor(gLastFocusedNode);
-    if (focusedTreeItem) {
-      nsCOMPtr<nsIDocShellTreeItem> sameTypeRootOfFocus;
-      focusedTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRootOfFocus));
-      if (sameTypeRoot == sameTypeRootOfFocus) {
-        nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
-          new nsAccStateChangeEvent(this, nsIAccessibleStates::STATE_BUSY, PR_FALSE, PR_FALSE);
-        FireAccessibleEvent(accEvent);
-        FireAnchorJumpEvent();
+    // Fire STATE_CHANGE event for doc load finish if focus is in same doc tree
+    if (gLastFocusedNode) {
+      nsCOMPtr<nsIDocShellTreeItem> focusedTreeItem =
+        nsAccUtils::GetDocShellTreeItemFor(gLastFocusedNode);
+      if (focusedTreeItem) {
+        nsCOMPtr<nsIDocShellTreeItem> sameTypeRootOfFocus;
+        focusedTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRootOfFocus));
+        if (sameTypeRoot == sameTypeRootOfFocus) {
+          nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
+            new nsAccStateChangeEvent(this, nsIAccessibleStates::STATE_BUSY, PR_FALSE, PR_FALSE);
+          FireAccessibleEvent(accEvent);
+          FireAnchorJumpEvent();
+        }
       }
     }
   }
