@@ -219,7 +219,7 @@ ICON_FILES	= \
 		$(NULL)
 
 libs:: $(ICON_FILES)
-	$(INSTALL) $^ $(DIST)/bin/icons
+	$(SYSINSTALL) $^ $(DIST)/bin/icons
 
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(ICON_FILES) $(DESTDIR)$(mozappdir)/icons
@@ -288,5 +288,5 @@ endif
 README_FILE = $(topsrcdir)/README.txt
 
 libs::
-	$(INSTALL) $(README_FILE) $(DIST)/bin
-	$(INSTALL) $(topsrcdir)/LICENSE	$(DIST)/bin
+	$(SYSINSTALL) $(README_FILE) $(DIST)/bin
+	$(SYSINSTALL) $(topsrcdir)/LICENSE	$(DIST)/bin
