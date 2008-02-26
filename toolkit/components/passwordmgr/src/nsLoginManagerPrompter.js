@@ -817,7 +817,7 @@ LoginManagerPrompter.prototype = {
         var username, password;
 
         var flags = aAuthInfo.flags;
-        if (flags & Ci.nsIAuthInformation.NEED_DOMAIN)
+        if (flags & Ci.nsIAuthInformation.NEED_DOMAIN && aAuthInfo.domain)
             username = aAuthInfo.domain + "\\" + aAuthInfo.username;
         else
             username = aAuthInfo.username;
