@@ -3853,36 +3853,6 @@ nsContentUtils::TriggerLink(nsIContent *aContent, nsPresContext *aPresContext,
 }
 
 /* static */
-PRBool
-nsContentUtils::IsNativeAnonymous(nsIContent* aContent)
-{
-  while (aContent) {
-    nsIContent* bindingParent = aContent->GetBindingParent();
-    if (bindingParent == aContent) {
-      NS_ASSERTION(bindingParent->IsNativeAnonymous() ||
-                   bindingParent->IsNodeOfType(nsINode::eXUL),
-                   "Bogus binding parent?");
-      return PR_TRUE;
-    }
-
-    // Nasty hack to work around spell-check resolving style on
-    // native-anonymous content that's already been torn down.  Don't assert
-    // !IsNativeAnonymous() if aContent->GetCurrentDoc() is null.  The caller
-    // will get "wrong" style data, but it's just asking for that sort of thing
-    // anyway.
-    NS_ASSERTION(!aContent->IsNativeAnonymous() ||
-                 !aContent->GetCurrentDoc() ||
-                 (aContent->GetParent() &&
-                  aContent->GetParent()->NodeInfo()->
-                    Equals(nsGkAtoms::use, kNameSpaceID_SVG)),
-                 "Native anonymous node with wrong binding parent");
-    aContent = bindingParent;
-  }
-
-  return PR_FALSE;
-}
-
-/* static */
 nsIWidget*
 nsContentUtils::GetTopLevelWidget(nsIWidget* aWidget)
 {

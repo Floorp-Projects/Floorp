@@ -1129,12 +1129,6 @@ public:
                           PRBool aClick, PRBool aIsUserTriggered);
 
   /**
-   * Return true if aContent or one of its ancestors in the
-   * bindingParent chain is native anonymous.
-   */
-  static PRBool IsNativeAnonymous(nsIContent* aContent);
-
-  /**
    * Return top-level widget in the parent chain.
    */
   static nsIWidget* GetTopLevelWidget(nsIWidget* aWidget);
