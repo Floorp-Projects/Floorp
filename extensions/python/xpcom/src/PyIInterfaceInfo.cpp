@@ -88,7 +88,7 @@ static PyObject *PyGetIID(PyObject *self, PyObject *args)
 	if (pI==NULL)
 		return NULL;
 
-	nsIID *iid_ret;
+	const nsIID *iid_ret;
 	nsresult r;
 	Py_BEGIN_ALLOW_THREADS;
 	r = pI->GetIIDShared(&iid_ret);
