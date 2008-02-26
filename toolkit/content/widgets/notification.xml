@@ -362,7 +362,7 @@
                             onget="return this.getAttribute('type');"/>
       <property name="priority" onget="return parseInt(this.getAttribute('priority')) || 0;"
                                 onset="this.setAttribute('priority', val); return val;"/>
-      <property name="persistence" onget="return parseInt(this.getAttribute('persistance')) || 0;"
+      <property name="persistence" onget="return parseInt(this.getAttribute('persistence')) || 0;"
                                    onset="this.setAttribute('persistence', val); return val;"/>
       <field name="timeout">0</field>
 
