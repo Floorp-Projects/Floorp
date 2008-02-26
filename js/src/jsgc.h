@@ -45,6 +45,7 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsdhash.h"
+#include "jsbit.h"
 #include "jsutil.h"
 
 JS_BEGIN_EXTERN_C
@@ -202,8 +203,13 @@ struct JSGCThing {
 extern void *
 js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes);
 
-extern JSBool
-js_LockGCThing(JSContext *cx, void *thing);
+/*
+ * Return a pointer to a new GC-allocated and weakly rooted jsdouble number
+ * or null when the allocation fails. The caller must initialize the returned
+ * double.
+ */
+extern jsdouble *
+js_NewDoubleGCThing(JSContext *cx);
 
 extern JSBool
 js_LockGCThingRT(JSRuntime *rt, void *thing);
@@ -303,6 +309,21 @@ struct JSGCArenaList {
     JSGCThing       *freeList;      /* list of free GC things */
 };
 
+typedef union JSGCDoubleCell JSGCDoubleCell;
+
+union JSGCDoubleCell {
+    double          number;
+    JSGCDoubleCell  *link;
+};
+
+JS_STATIC_ASSERT(sizeof(JSGCDoubleCell) == sizeof(double));
+
+typedef struct JSGCDoubleArenaList {
+    JSGCArenaInfo   *first;             /* first allocated GC arena */
+    uint8           *nextDoubleFlags;   /* bitmask with flags to check for free
+                                           things */
+} JSGCDoubleArenaList;
+
 struct JSWeakRoots {
     /* Most recently created things by type, members of the GC's root set. */
     void            *newborn[GCX_NTYPES];
@@ -324,28 +345,22 @@ JS_STATIC_ASSERT(JSVAL_NULL == 0);
 #ifdef JS_GCMETER
 
 typedef struct JSGCArenaStats {
-    uint32  narenas;        /* number of arena in list */
-    uint32  maxarenas;      /* maximun number of allocated arenas */
-    uint32  nthings;        /* number of allocates JSGCThing */
-    uint32  maxthings;      /* maximum number number of allocates JSGCThing */
-    uint32  totalnew;       /* number of succeeded calls to js_NewGCThing */
-    uint32  freelen;        /* freeList lengths */
-    uint32  recycle;        /* number of things recycled through freeList */
+    uint32  alloc;          /* allocation attempts */
+    uint32  localalloc;     /* allocations from local lists */
+    uint32  retry;          /* allocation retries after running the GC */
+    uint32  fail;           /* allocation failures */
+    uint32  nthings;        /* live GC things */
+    uint32  maxthings;      /* maximum of live GC cells */
+    double  totalthings;    /* live GC things the GC scanned so far */
+    uint32  narenas;        /* number of arena in list before the GC */
+    uint32  newarenas;      /* new arenas allocated before the last GC */
+    uint32  livearenas;     /* number of live arenas after the last GC */
+    uint32  maxarenas;      /* maximum of allocated arenas */
     uint32  totalarenas;    /* total number of arenas with live things that
                                GC scanned so far */
-    uint32  totalfreelen;   /* total number of things that GC put to free
-                               list so far */
 } JSGCArenaStats;
 
 typedef struct JSGCStats {
-#ifdef JS_THREADSAFE
-    uint32  localalloc; /* number of succeeded allocations from local lists */
-#endif
-    uint32  alloc;      /* number of allocation attempts */
-    uint32  retry;      /* allocation attempt retries after running the GC */
-    uint32  retryhalt;  /* allocation retries halted by the operation
-                           callback */
-    uint32  fail;       /* allocation failures */
     uint32  finalfail;  /* finalizer calls allocator failures */
     uint32  lockborn;   /* things born locked */
     uint32  lock;       /* valid lock calls */
@@ -370,7 +385,8 @@ typedef struct JSGCStats {
     uint32  closelater; /* number of close hooks scheduled to run */
     uint32  maxcloselater; /* max number of close hooks scheduled to run */
 
-    JSGCArenaStats  arenas[GC_NUM_FREELISTS];
+    JSGCArenaStats  arenaStats[GC_NUM_FREELISTS];
+    JSGCArenaStats  doubleArenaStats;
 } JSGCStats;
 
 extern JS_FRIEND_API(void)
