@@ -4389,13 +4389,14 @@ interrupt:
                 str = JSVAL_TO_STRING(lval);
                 i = JSVAL_TO_INT(rval);
                 if ((size_t)i < JSSTRING_LENGTH(str)) {
-                    str = js_GetUnitString(cx, JSSTRING_CHARS(str)[i]);
+                    str = js_GetUnitString(cx, str, (size_t)i);
                     if (!str)
                         goto error;
                     rval = STRING_TO_JSVAL(str);
                     goto end_getelem;
                 }
             }
+
             VALUE_TO_OBJECT(cx, -2, lval, obj);
             if (JSVAL_IS_INT(rval)) {
                 if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
@@ -4415,6 +4416,7 @@ interrupt:
                 if (!InternNonIntElementId(cx, obj, rval, &id))
                     goto error;
             }
+
             if (!OBJ_GET_PROPERTY(cx, obj, id, &rval))
                 goto error;
           end_getelem:
