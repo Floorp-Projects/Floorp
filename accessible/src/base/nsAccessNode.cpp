@@ -95,6 +95,9 @@ nsApplicationAccessibleWrap *nsAccessNode::gApplicationAccessible = nsnull;
 nsIAccessibilityService *nsAccessNode::sAccService = nsnull;
 nsIAccessibilityService *nsAccessNode::GetAccService()
 {
+  if (!gIsAccessibilityActive)
+    return nsnull;
+
   if (!sAccService) {
     nsresult rv = CallGetService("@mozilla.org/accessibilityService;1",
                                  &sAccService);
@@ -315,7 +318,7 @@ void nsAccessNode::ShutdownXPAccessibility()
   NS_IF_RELEASE(sAccService);
 
   nsApplicationAccessibleWrap::Unload();
-  ClearCache(gGlobalDocAccessibleCache);
+  gGlobalDocAccessibleCache.Enumerate(ClearDocCacheEntry, nsnull);
 
   // Release gApplicationAccessible after everything else is shutdown
   // so we don't accidently create it again while tearing down root accessibles
@@ -789,6 +792,14 @@ PLDHashOperator nsAccessNode::ClearCacheEntry(const void* aKey, nsCOMPtr<nsIAcce
   privateAccessNode->Shutdown();
 
   return PL_DHASH_REMOVE;
+}
+
+PLDHashOperator nsAccessNode::ClearDocCacheEntry(const void* aKey, nsCOMPtr<nsIAccessNode>& aAccessNode, void* aUserArg)
+{
+  nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(aAccessNode));
+  privateAccessNode->Shutdown();
+
+  return PL_DHASH_NEXT; // nsDocAccessible::Shutdown() removes the doc from doc cache
 }
 
 void

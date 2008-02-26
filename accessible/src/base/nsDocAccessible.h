@@ -221,10 +221,6 @@ protected:
     PRBool mIsAnchorJumped;
     static PRUint32 gLastFocusedAccessiblesState;
     static nsIAtom *gLastFocusedFrameType;
-
-private:
-    static void DocLoadCallback(nsITimer *aTimer, void *aClosure);
-    nsCOMPtr<nsITimer> mDocLoadTimer;
 };
 
 #endif  

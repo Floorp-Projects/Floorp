@@ -406,29 +406,11 @@ void nsRootAccessible::TryFireEarlyLoadEvent(nsIDOMNode *aDocNode)
   nsCOMPtr<nsIDocShellTreeItem> rootContentTreeItem;
   treeItem->GetSameTypeRootTreeItem(getter_AddRefs(rootContentTreeItem));
   NS_ASSERTION(rootContentTreeItem, "No root content tree item");
-  if (!rootContentTreeItem) { // Not at root of content
-    return;
+  if (rootContentTreeItem == treeItem) {
+    // No frames or iframes, so we can fire the doc load finished event early
+    FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_INTERNAL_LOAD, aDocNode,
+                            eRemoveDupes);
   }
-  if (rootContentTreeItem != treeItem) {
-    nsCOMPtr<nsIAccessibleDocument> rootContentDocAccessible =
-      GetDocAccessibleFor(rootContentTreeItem);
-    nsCOMPtr<nsIAccessible> rootContentAccessible =
-      do_QueryInterface(rootContentDocAccessible);
-    if (!rootContentAccessible) {
-      return;
-    }
-    PRUint32 state, extState;
-    rootContentAccessible->GetFinalState(&state, &extState);
-    if ((state & nsIAccessibleStates::STATE_BUSY) ||
-        (extState & nsIAccessibleStates::EXT_STATE_DEFUNCT)) {
-      // Don't fire page load events on subdocuments for initial page load of entire page
-      return;
-    }
-  }
-
-  // No frames or iframes, so we can fire the doc load finished event early
-  FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_INTERNAL_LOAD, aDocNode,
-                          eRemoveDupes);
 }
 
 PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
@@ -632,9 +614,6 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     nsCOMPtr<nsPIAccessNode> privateAcc = do_QueryInterface(accDoc);
     if (privateAcc) {
       privateAcc->Shutdown();
-      // Remove from the cache after Shutdown(), so that Shutdown() procedures
-      // can find the doc or root accessible in the cache if they need it.
-      gGlobalDocAccessibleCache.Remove(static_cast<void*>(doc));
     }
     return NS_OK;
   }
