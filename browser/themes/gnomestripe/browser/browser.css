@@ -841,6 +841,7 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 /* Identity indicator */
 #identity-box {
   background-color: -moz-dialog;
+  color: -moz-dialogtext;
   -moz-border-end: 1px solid ThreeDShadow;
 }
 
