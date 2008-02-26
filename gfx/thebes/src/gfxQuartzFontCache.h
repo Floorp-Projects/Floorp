@@ -116,11 +116,17 @@ public:
     THEBES_INLINE_DECL_REFCOUNTING(MacOSFamilyEntry)
 
     MacOSFamilyEntry(nsString &aName) :
-        mName(aName), mOtherFamilyNamesInitialized(PR_FALSE)
-    {
-    }
-
+        mName(aName), mOtherFamilyNamesInitialized(PR_FALSE), mHasOtherFamilyNames(PR_FALSE)
+    {}
+  
+    virtual ~MacOSFamilyEntry() {}
+        
     const nsString& Name() { return mName; }
+    virtual void LocalizedName(nsString& aLocalizedName);
+    virtual PRBool HasOtherFamilyNames();
+    
+    nsTArray<nsRefPtr<MacOSFontEntry> >& GetFontList() { return mAvailableFonts; }
+    
     void AddFontEntry(nsRefPtr<MacOSFontEntry> aFontEntry) {
         mAvailableFonts.AppendElement(aFontEntry);
     }
@@ -134,7 +140,10 @@ public:
     void FindFontForChar(FontSearch *aMatchData);
     
     // read in other family names, if any, and use functor to add each into cache
-    void ReadOtherFamilyNames(AddOtherFamilyNameFunctor& aOtherFamilyFunctor);
+    virtual void ReadOtherFamilyNames(AddOtherFamilyNameFunctor& aOtherFamilyFunctor);
+    
+    // search for a specific face using the Postscript name
+    MacOSFontEntry* FindFont(const nsString& aPostscriptName);
     
 protected:
     
@@ -150,8 +159,24 @@ protected:
     nsString mName;  // canonical font family name returned from NSFontManager
     nsTArray<nsRefPtr<MacOSFontEntry> >  mAvailableFonts;
     PRPackedBool mOtherFamilyNamesInitialized;
+    PRPackedBool mHasOtherFamilyNames;
 };
 
+// special-case situation where specific faces need to be treated as separate font family
+class SingleFaceFamily : public MacOSFamilyEntry
+{
+public:
+    SingleFaceFamily(nsString &aName) :
+        MacOSFamilyEntry(aName)
+    {}
+    
+    virtual ~SingleFaceFamily() {}
+    
+    virtual void LocalizedName(nsString& aLocalizedName);
+    
+    // read in other family names, if any, and use functor to add each into cache
+    virtual void ReadOtherFamilyNames(AddOtherFamilyNameFunctor& aOtherFamilyFunctor);
+};
 
 class gfxQuartzFontCache {
 public:
@@ -211,6 +236,15 @@ private:
     
     // separate initialization for reading in name tables, since this is expensive
     void InitOtherFamilyNames();
+    
+    // special case font faces treated as font families (set via prefs)
+    void InitSingleFaceList();
+    
+    // commonly used fonts for which the name table should be loaded at startup
+    void PreloadNamesList();
+    
+    // eliminate faces which have the same ATSUI id
+    void EliminateDuplicateFaces(const nsAString& aFamilyName);
                                                              
     static PLDHashOperator PR_CALLBACK InitOtherFamilyNamesProc(nsStringHashKey::KeyType aKey,
                                                              nsRefPtr<MacOSFamilyEntry>& aFamilyEntry,
