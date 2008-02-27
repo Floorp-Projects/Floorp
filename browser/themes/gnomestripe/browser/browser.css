@@ -968,7 +968,7 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 #autocomplete-security-wrapper {
   /* keep the URL bar content LTR */
   direction: ltr;
-  -moz-box-align: stretch;
+  -moz-box-align: center;
   /* cover the white gap between the text field and the drop down button */
   margin-right: -3px;
 }
