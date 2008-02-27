@@ -889,40 +889,40 @@ nsNavHistory::UpdateSchemaVersion()
 //
 //    Called after InitDB, this creates our own functions
 
-  class mozStorageFunctionGetUnreversedHost: public mozIStorageFunction
-  {
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_MOZISTORAGEFUNCTION
-  };
+class mozStorageFunctionGetUnreversedHost: public mozIStorageFunction
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+};
 
-  NS_IMPL_ISUPPORTS1(mozStorageFunctionGetUnreversedHost, mozIStorageFunction)
+NS_IMPL_ISUPPORTS1(mozStorageFunctionGetUnreversedHost, mozIStorageFunction)
 
-  NS_IMETHODIMP mozStorageFunctionGetUnreversedHost::OnFunctionCall(
-    mozIStorageValueArray* aFunctionArguments,
-    nsIVariant** _retval)
-  {
-    NS_ENSURE_ARG_POINTER(_retval);
+NS_IMETHODIMP mozStorageFunctionGetUnreversedHost::OnFunctionCall(
+  mozIStorageValueArray* aFunctionArguments,
+  nsIVariant** _retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
 
-    nsAutoString src;
-    aFunctionArguments->GetString(0, src);
+  nsAutoString src;
+  aFunctionArguments->GetString(0, src);
 
-    nsresult rv;
-    nsCOMPtr<nsIWritableVariant> result(do_CreateInstance(
-        "@mozilla.org/variant;1", &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv;
+  nsCOMPtr<nsIWritableVariant> result(do_CreateInstance(
+      "@mozilla.org/variant;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    if (src.Length()>1) {
-      src.Truncate(src.Length() - 1);
-      nsAutoString dest;
-      ReverseString(src, dest);
-      result->SetAsAString(dest);
-    } else {
-      result->SetAsAString(NS_LITERAL_STRING(""));
-    }
-    NS_ADDREF(*_retval = result);
-    return NS_OK;
-  };
+  if (src.Length()>1) {
+    src.Truncate(src.Length() - 1);
+    nsAutoString dest;
+    ReverseString(src, dest);
+    result->SetAsAString(dest);
+  } else {
+    result->SetAsAString(NS_LITERAL_STRING(""));
+  }
+  NS_ADDREF(*_retval = result);
+  return NS_OK;
+}
 
 nsresult
 nsNavHistory::InitFunctions()
