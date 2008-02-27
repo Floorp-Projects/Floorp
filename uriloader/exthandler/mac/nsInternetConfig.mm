@@ -40,7 +40,6 @@
 #include "nsReadableUtils.h"
 #include "nsDebug.h"
 
-#include <CodeFragments.h>   
 #include <Processes.h>
 ICInstance nsInternetConfig::sInstance = NULL;
 long nsInternetConfig::sSeed = 0;
@@ -80,9 +79,6 @@ ICInstance nsInternetConfig::GetInstance()
 		}
 		else
 		{
-#if !TARGET_CARBON
-			::ICFindConfigFile( sInstance, 0 , nil );
-#endif
 			::ICGetSeed( sInstance, &sSeed );
 		}
 	}
