@@ -1662,7 +1662,7 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRB
   nsRect oldDimensions;
 
   view->GetDimensions(oldDimensions);
-  if (oldDimensions != aRect) {
+  if (!oldDimensions.IsExactEqual(aRect)) {
     nsView* parentView = view->GetParent();
     if (parentView == nsnull)
       parentView = view;
