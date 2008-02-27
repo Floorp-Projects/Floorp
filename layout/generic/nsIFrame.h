@@ -718,6 +718,10 @@ public:
    * frame has at least *started*.
    *
    * This doesn't include any margin collapsing that may have occurred.
+   *
+   * It also treats 'auto' margins as zero, and treats any margins that
+   * should have been turned into 'auto' because of overconstraint as
+   * having their original values.
    */
   virtual nsMargin GetUsedMargin() const;
 
@@ -753,6 +757,11 @@ public:
   /**
    * Like the frame's rect (see |GetRect|), which is the border rect,
    * other rectangles of the frame, in twips, relative to the parent.
+   *
+   * Note that GetMarginRect is not meaningful for blocks (anything with
+   * 'display:block', whether block frame or not) because of both the
+   * collapsing and 'auto' issues with GetUsedMargin (on which it
+   * depends).
    */
   nsRect GetMarginRect() const;
   nsRect GetPaddingRect() const;
