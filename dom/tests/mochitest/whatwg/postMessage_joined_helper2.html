@@ -45,15 +45,9 @@ http://example.org/tests/dom/tests/mochitest/whatwg/postMessage_joined_helper2.h
       if (!passed)
         response += " expected-joined-domains";
 
-      if (evt.uri !== "http://sub1.test1.example.org/tests/dom/tests/mochitest/whatwg/postMessage_joined_helper.html")
+      if (evt.origin !== "http://sub1.test1.example.org")
       {
-        response += " wrong-uri(" + evt.uri + ")";
-        response += " location(" + window.location.href + ")";
-      }
-
-      if (evt.domain !== "sub1.test1.example.org")
-      {
-        response += " wrong-domain(" + evt.domain + ")";
+        response += " wrong-origin(" + evt.origin + ")";
         response += " location(" + window.location.href + ")";
       }
 

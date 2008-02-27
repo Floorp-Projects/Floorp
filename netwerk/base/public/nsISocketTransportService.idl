@@ -39,8 +39,17 @@
 
 interface nsISocketTransport;
 interface nsIProxyInfo;
+interface nsIRunnable;
 
-[scriptable, uuid(7B19AC06-A5FB-11D9-9F82-0011246ECD24)]
+%{C++
+class nsASocketHandler;
+struct PRFileDesc;
+%}
+
+[ptr] native PRFileDescPtr(PRFileDesc);
+[ptr] native nsASocketHandlerPtr(nsASocketHandler);
+
+[scriptable, uuid(185B3A5D-8729-436D-9693-7BDCCB9C2216)]
 interface nsISocketTransportService : nsISupports 
 {
     /**
@@ -69,4 +78,35 @@ interface nsISocketTransportService : nsISupports
                                        in AUTF8String aHost, 
                                        in long aPort,
                                        in nsIProxyInfo aProxyInfo);
+
+    /**
+     * Adds a new socket to the list of controlled sockets.
+     *
+     * This will fail with the error code NS_ERROR_NOT_AVAILABLE if the maximum
+     * number of sockets is already reached.
+     * In this case, the notifyWhenCanAttachSocket method should be used.
+     *
+     * @param aFd
+     *        Open file descriptor of the socket to control.
+     * @param aHandler
+     *        Socket handler that will receive notifications when the socket is
+     *        ready or detached.
+     *
+     * NOTE: this function may only be called from an event dispatch on the
+     *       socket thread.
+     */
+    [noscript] void attachSocket(in PRFileDescPtr aFd,
+                                 in nsASocketHandlerPtr aHandler);
+
+    /**
+     * if the number of sockets reaches the limit, then consumers can be
+     * notified when the number of sockets becomes less than the limit.  the
+     * notification is asynchronous, delivered via the given nsIRunnable
+     * instance on the socket transport thread.
+     *
+     * @param aEvent
+     *        Event that will receive the notification when a new socket can
+     *        be attached
+     */
+    [noscript] void notifyWhenCanAttachSocket(in nsIRunnable aEvent);
 };

@@ -98,8 +98,8 @@ sub BumpPatcherConfig {
     my $bouncerServer = $config->Get(var => 'bouncerServer');
     my $logDir = $config->Get(sysvar => 'logDir');
 
-    my $versionedConfigBumpDir = catfile($configBumpDir,
-                                           $product . '-' . $version);
+    my $versionedConfigBumpDir = catfile($configBumpDir, 
+                                          "$product-$version-rc$rc");
 
     # First, parse the file.
     my $checkedOutPatcherConfig = catfile($versionedConfigBumpDir, 'patcher', 

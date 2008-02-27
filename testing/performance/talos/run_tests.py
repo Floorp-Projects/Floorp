@@ -166,6 +166,7 @@ def send_to_graph(results_server, results_link, title, date, browser_config, res
     browser_dump, counter_dump = results[res]
     utils.debug("Working with test: " + res)
     utils.debug("Sending results: " + " ".join(browser_dump))
+    utils.stamped_msg("Transmitting test: " + res, "Started")
     filename = tempfile.mktemp()
     tmpf = open(filename, "w")
     if res in ('ts', 'twinopen'):
@@ -222,6 +223,7 @@ def send_to_graph(results_server, results_link, title, date, browser_config, res
           chunk_link = post_chunk(results_server, results_link, '%s_%s (%d values)' % (res, count_type, len(chunk)), filename)
           os.remove(filename)
         links += chunk_link
+    utils.stamped_msg("Transmitting test: " + res, "Stopped")
  
   first_results = ''
   last_results = '' 
@@ -323,7 +325,9 @@ def test_file(filename):
   #process the results
   if (results_server != '') and (results_link != ''):
     #send results to the graph server
+    utils.stamped_msg("Sending results", "Started")
     send_to_graph(results_server, results_link, title, date, browser_config, results)
+    utils.stamped_msg("Completed sending results", "Stopped")
   if csv_dir != '':
     send_to_csv(csv_dir, results)
   

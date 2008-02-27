@@ -658,9 +658,10 @@ public:
   void OptimizeVisibility(nsDisplayListBuilder* aBuilder, nsRegion* aVisibleRegion);
   /**
    * Paint the list to the rendering context. We assume that (0,0) in aCtx
-   * corresponds to the origin of the reference frame. The rectangle in
-   * aDirtyRect is painted, which *must* be contained in the dirty rect
-   * used to construct the display list.
+   * corresponds to the origin of the reference frame. For best results,
+   * aCtx's current transform should make (0,0) pixel-aligned. The
+   * rectangle in aDirtyRect is painted, which *must* be contained in the
+   * dirty rect used to construct the display list.
    */
   void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
              const nsRect& aDirtyRect) const;

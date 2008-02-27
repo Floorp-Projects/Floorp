@@ -110,8 +110,11 @@ CreateScopeTable(JSContext *cx, JSScope *scope, JSBool report)
 
     if (scope->entryCount > SCOPE_HASH_THRESHOLD) {
         /*
-         * Ouch: calloc failed at least once already -- let's try again,
-         * overallocating to hold at least twice the current population.
+         * Either we're creating a table for a large scope that was populated
+         * via property cache hit logic under JSOP_INITPROP, JSOP_SETNAME, or
+         * JSOP_SETPROP; or else calloc failed at least once already. In any
+         * event, let's try to grow, overallocating to hold at least twice the
+         * current population.
          */
         sizeLog2 = JS_CeilingLog2(2 * scope->entryCount);
         scope->hashShift = JS_DHASH_BITS - sizeLog2;
@@ -261,9 +264,8 @@ js_SearchScope(JSScope *scope, jsid id, JSBool adding)
         return spp;
     }
 
-    METER(hashes);
-
     /* Compute the primary hash address. */
+    METER(hashes);
     hash0 = SCOPE_HASH0(id);
     hashShift = scope->hashShift;
     hash1 = SCOPE_HASH1(hash0, hashShift);
@@ -334,6 +336,9 @@ ChangeScope(JSContext *cx, JSScope *scope, int change)
     int oldlog2, newlog2;
     uint32 oldsize, newsize, nbytes;
     JSScopeProperty **table, **oldtable, **spp, **oldspp, *sprop;
+
+    if (!scope->table)
+        return CreateScopeTable(cx, scope, JS_TRUE);
 
     /* Grow, shrink, or compress by changing scope->table. */
     oldlog2 = JS_DHASH_BITS - scope->hashShift;
@@ -1086,7 +1091,7 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
             }
             SCOPE_SET_MIDDLE_DELETE(scope);
         }
-        SCOPE_GENERATE_PCTYPE(cx, scope);
+        SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
 
         /*
          * If we fail later on trying to find or create a new sprop, we will
@@ -1261,10 +1266,7 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
          * be regenerated later as the scope diverges (from the property cache
          * point of view) from the structural type associated with sprop.
          */
-        if (!scope->lastProp || scope->shape == scope->lastProp->shape)
-            scope->shape = sprop->shape;
-        else
-            SCOPE_GENERATE_PCTYPE(cx, scope);
+        SCOPE_EXTEND_SHAPE(cx, scope, sprop);
 
         /* Store the tree node pointer in the table entry for id. */
         if (scope->table)
@@ -1403,7 +1405,7 @@ js_ChangeScopePropertyAttrs(JSContext *cx, JSScope *scope,
         if (scope->shape == sprop->shape)
             scope->shape = newsprop->shape;
         else
-            SCOPE_GENERATE_PCTYPE(cx, scope);
+            SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
     }
 #ifdef JS_DUMP_PROPTREE_STATS
     else
@@ -1473,7 +1475,7 @@ js_RemoveScopeProperty(JSContext *cx, JSScope *scope, jsid id)
     } else if (!SCOPE_HAD_MIDDLE_DELETE(scope)) {
         SCOPE_SET_MIDDLE_DELETE(scope);
     }
-    SCOPE_GENERATE_PCTYPE(cx, scope);
+    SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
     CHECK_ANCESTOR_LINE(scope, JS_TRUE);
 
     /* Last, consider shrinking scope's table if its load factor is <= .25. */

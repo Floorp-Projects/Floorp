@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=417075
+-->
+<head>
+  <title>postMessage from a page with username/password in its URI</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=417075">Mozilla Bug 417075</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe src="http://bobhope:password@example.org/tests/dom/tests/mochitest/whatwg/postMessage_userpass_helper.html"
+        name="userPassKid"></iframe>
+
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+/** Test for Bug 417075 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function receiveMessage(evt)
+{
+  is(evt.origin, "http://example.org", "wrong origin");
+  is(evt.data, "child-message", "wrong data");
+  ok(evt.source === window.frames.userPassKid, "wrong source");
+  SimpleTest.finish();
+}
+
+document.addEventListener("message", receiveMessage, false);
+
+function sendMessage(evt)
+{
+  window.frames.userPassKid.postMessage("parent-message");
+}
+
+window.addEventListener("load", sendMessage, false);
+</script>
+</pre>
+</body>
+</html>

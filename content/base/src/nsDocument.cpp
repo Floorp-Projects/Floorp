@@ -158,6 +158,8 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsCCUncollectableMarker.h"
 #include "nsIContentPolicy.h"
 
+#include "nsFrameLoader.h"
+
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
 #define FORCE_PR_LOG 1
@@ -2719,6 +2721,17 @@ nsDocument::EndUpdate(nsUpdateType aUpdateType)
   if (mScriptLoader) {
     mScriptLoader->RemoveExecuteBlocker();
   }
+
+  if (mUpdateNestLevel == 0) {
+    PRUint32 length = mFinalizableFrameLoaders.Length();
+    if (length > 0) {
+      nsTArray<nsRefPtr<nsFrameLoader> > loaders;
+      mFinalizableFrameLoaders.SwapElements(loaders);
+      for (PRInt32 i = 0; i < length; ++i) {
+        loaders[i]->Finalize();
+      }
+    }
+  }
 }
 
 void
@@ -3823,6 +3836,21 @@ void
 nsDocument::FlushSkinBindings()
 {
   mBindingManager->FlushSkinBindings();
+}
+
+nsresult
+nsDocument::FinalizeFrameLoader(nsFrameLoader* aLoader)
+{
+  if (mInDestructor) {
+    return NS_ERROR_FAILURE;
+  }
+  if (mUpdateNestLevel == 0) {
+    nsRefPtr<nsFrameLoader> loader = aLoader;
+    loader->Finalize();
+  } else {
+    mFinalizableFrameLoaders.AppendElement(aLoader);
+  }
+  return NS_OK;
 }
 
 struct DirTable {
@@ -5761,7 +5789,7 @@ nsDocument::MutationEventDispatched(nsINode* aTarget)
     for (PRInt32 i = 0; i < count; ++i) {
       nsINode* possibleTarget = mSubtreeModifiedTargets[i];
       nsCOMPtr<nsIContent> content = do_QueryInterface(possibleTarget);
-      if (content && content->IsNativeAnonymous()) {
+      if (content && content->IsInNativeAnonymousSubtree()) {
         if (realTargets.IndexOf(possibleTarget) == -1) {
           realTargets.AppendObject(possibleTarget);
         }

@@ -499,15 +499,15 @@ nsBox::GetMaxSize(nsBoxLayoutState& aState)
 {
   NS_ASSERTION(aState.GetRenderingContext(), "must have rendering context");
 
-  nsSize max(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
-  DISPLAY_MAX_SIZE(this, max);
+  nsSize maxSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+  DISPLAY_MAX_SIZE(this, maxSize);
 
   if (IsCollapsed(aState))
-    return max;
+    return maxSize;
 
-  AddBorderAndPadding(max);
-  nsIBox::AddCSSMaxSize(aState, this, max);
-  return max;
+  AddBorderAndPadding(maxSize);
+  nsIBox::AddCSSMaxSize(aState, this, maxSize);
+  return maxSize;
 }
 
 nscoord

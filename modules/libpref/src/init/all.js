@@ -1740,6 +1740,14 @@ pref("font.size.fixed.zh-HK", 16);
 // Apple's Symbol is Unicode so use it
 pref("font.mathfont-family", "STIXNonUnicode, STIXSize1, STIXGeneral, Cambria Math, Symbol, DejaVu Sans");
 
+// individual font faces to be treated as independent families
+// names are Postscript names of each face
+pref("font.single-face-list", "Osaka-Mono");
+
+// optimization hint for fonts with localized names to be read in at startup, otherwise read in at lookup miss
+// names are canonical family names (typically English names)
+pref("font.preload-names-list", "Hiragino Kaku Gothic Pro,Hiragino Mincho Pro,STSong");
+
 pref("browser.urlbar.clickAtEndSelects", false);
 
 // Override the Windows settings: no menu key, meta accelerator key. ctrl for general access key in HTML/XUL

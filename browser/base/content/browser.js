@@ -75,9 +75,7 @@ var gLastBrowserCharset = null;
 var gPrevCharset = null;
 var gURLBar = null;
 var gFindBar = null;
-var gProxyButton = null;
 var gProxyFavIcon = null;
-var gProxyDeck = null;
 var gNavigatorBundle = null;
 var gIsLoadingBlank = false;
 var gLastValidURLStr = "";
@@ -1968,8 +1966,7 @@ function URLBarSetURI(aURI) {
   SetPageProxyState(state);
 }
 
-// If "ESC" is pressed in the url bar, we replace the urlbar's value with the url of the page
-// and highlight it, unless it is empty.
+// Replace the urlbar's value with the url of the page.
 function handleURLBarRevert() {
   var throbberElement = document.getElementById("navigator-throbber");
   var isScrolling = gURLBar.popupOpen;
@@ -1980,7 +1977,9 @@ function handleURLBarRevert() {
   // and user is NOT key-scrolling through autocomplete list
   if ((!throbberElement || !throbberElement.hasAttribute("busy")) && !isScrolling) {
     URLBarSetURI();
-    if (gURLBar.value)
+
+    // If the value isn't empty and the urlbar has focus, select the value.
+    if (gURLBar.value && gURLBar.hasAttribute("focused"))
       gURLBar.select();
   }
 
@@ -2107,6 +2106,28 @@ function UpdateUrlbarSearchSplitterState()
     splitter.parentNode.removeChild(splitter);
 }
 
+var LocationBarHelpers = {
+  _timeoutID: null,
+
+  _searchBegin: function LocBar_searchBegin() {
+    function delayedBegin(self) {
+      self._timeoutID = null;
+      document.getElementById("urlbar-throbber").setAttribute("busy", "true");
+    }
+
+    this._timeoutID = setTimeout(delayedBegin, 500, this);
+  },
+
+  _searchComplete: function LocBar_searchComplete() {
+    // Did we finish the search before delayedBegin was invoked?
+    if (this._timeoutID) {
+      clearTimeout(this._timeoutID);
+      this._timeoutID = null;
+    }
+    document.getElementById("urlbar-throbber").removeAttribute("busy");
+  }
+};
+
 function UpdatePageProxyState()
 {
   if (gURLBar && gURLBar.value != gLastValidURLStr)
@@ -2118,15 +2139,11 @@ function SetPageProxyState(aState)
   if (!gURLBar)
     return;
 
-  if (!gProxyButton)
-    gProxyButton = document.getElementById("page-proxy-button");
   if (!gProxyFavIcon)
     gProxyFavIcon = document.getElementById("page-proxy-favicon");
-  if (!gProxyDeck)
-    gProxyDeck = document.getElementById("page-proxy-deck");
 
   gURLBar.setAttribute("pageproxystate", aState);
-  gProxyButton.setAttribute("pageproxystate", aState);
+  gProxyFavIcon.setAttribute("pageproxystate", aState);
 
   // the page proxy state is set to valid via OnLocationChange, which
   // gets called when we switch tabs.
@@ -2150,21 +2167,17 @@ function PageProxySetIcon (aURL)
     PageProxyClearIcon();
   else if (gProxyFavIcon.getAttribute("src") != aURL)
     gProxyFavIcon.setAttribute("src", aURL);
-  else if (gProxyDeck.selectedIndex != 1)
-    gProxyDeck.selectedIndex = 1;
 }
 
 function PageProxyClearIcon ()
 {
-  if (gProxyDeck.selectedIndex != 0)
-    gProxyDeck.selectedIndex = 0;
-  if (gProxyFavIcon.hasAttribute("src"))
-    gProxyFavIcon.removeAttribute("src");
+  gProxyFavIcon.removeAttribute("src");
 }
+
 
 function PageProxyDragGesture(aEvent)
 {
-  if (gProxyButton.getAttribute("pageproxystate") == "valid") {
+  if (gProxyFavIcon.getAttribute("pageproxystate") == "valid") {
     nsDragAndDrop.startDrag(aEvent, proxyIconDNDObserver);
     return true;
   }
@@ -2969,12 +2982,12 @@ function FillHistoryMenu(aParent) {
         let iconURL = Cc["@mozilla.org/browser/favicon-service;1"]
                          .getService(Ci.nsIFaviconService)
                          .getFaviconForPage(entry.URI).spec;
-        item.setAttribute("image", iconURL);
+        item.style.listStyleImage = "url(" + iconURL + ")";
       } catch (ex) {}
     }
 
     if (j < index) {
-      item.className = "unified-nav-back";
+      item.className = "unified-nav-back menuitem-iconic";
       item.setAttribute("tooltiptext", tooltipBack);
     } else if (j == index) {
       item.setAttribute("type", "radio");
@@ -2982,7 +2995,7 @@ function FillHistoryMenu(aParent) {
       item.className = "unified-nav-current";
       item.setAttribute("tooltiptext", tooltipCurrent);
     } else {
-      item.className = "unified-nav-forward";
+      item.className = "unified-nav-forward menuitem-iconic";
       item.setAttribute("tooltiptext", tooltipForward);
     }
 
@@ -3122,9 +3135,7 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
   // Update global UI elements that may have been added or removed
   if (aToolboxChanged) {
     gURLBar = document.getElementById("urlbar");
-    gProxyButton = document.getElementById("page-proxy-button");
     gProxyFavIcon = document.getElementById("page-proxy-favicon");
-    gProxyDeck = document.getElementById("page-proxy-deck");
     gHomeButton.updateTooltip();
     gIdentityHandler._cacheElements();
     window.XULBrowserWindow.init();
@@ -3134,6 +3145,14 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
       backForwardDropmarker.disabled =
         document.getElementById('Browser:Back').hasAttribute('disabled') &&
         document.getElementById('Browser:Forward').hasAttribute('disabled');
+
+    // support downgrading to Firefox 2.0
+    var navBar = document.getElementById("nav-bar");
+    navBar.setAttribute("currentset",
+                        navBar.getAttribute("currentset")
+                              .replace("unified-back-forward-button",
+                                "unified-back-forward-button,back-button,forward-button"));
+    document.persist(navBar.id, "currentset");
 
 #ifndef XP_MACOSX
     updateEditUIVisibility();
@@ -4980,12 +4999,18 @@ var OfflineApps = {
   // OfflineApps Public Methods
   init: function ()
   {
-    // XXX: empty init left as a placeholder for patch in bug 397417
+    var obs = Cc["@mozilla.org/observer-service;1"].
+              getService(Ci.nsIObserverService);
+    obs.addObserver(this, "dom-storage-warn-quota-exceeded", false);
+    obs.addObserver(this, "offline-cache-update-completed", false);
   },
 
   uninit: function ()
   {
-    // XXX: empty uninit left as a placeholder for patch in bug 397417
+    var obs = Cc["@mozilla.org/observer-service;1"].
+              getService(Ci.nsIObserverService);
+    obs.removeObserver(this, "dom-storage-warn-quota-exceeded");
+    obs.removeObserver(this, "offline-cache-update-completed");
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -5011,6 +5036,92 @@ var OfflineApps = {
       if (browsers[i].contentWindow == aContentWindow)
         return browsers[i];
     }
+  },
+
+  _getManifestURI: function(aWindow) {
+    var attr = aWindow.document.documentElement.getAttribute("manifest");
+    if (!attr) return null;
+
+    try {
+      var ios = Cc["@mozilla.org/network/io-service;1"].
+                getService(Ci.nsIIOService);
+
+      var contentURI = ios.newURI(aWindow.location.href, null, null);
+      return ios.newURI(attr, aWindow.document.characterSet, contentURI);
+    } catch (e) {
+      return null;
+    }
+  },
+
+  // A cache update isn't tied to a specific window.  Try to find
+  // the best browser in which to warn the user about space usage
+  _getBrowserForCacheUpdate: function(aCacheUpdate) {
+    // Prefer the current browser
+    var uri = this._getManifestURI(gBrowser.mCurrentBrowser.contentWindow);
+    if (uri && uri.equals(aCacheUpdate.manifestURI)) {
+      return gBrowser.mCurrentBrowser;
+    }
+
+    var browsers = getBrowser().browsers;
+    for (var i = 0; i < browsers.length; ++i) {
+      uri = this._getManifestURI(browsers[i].contentWindow);
+      if (uri && uri.equals(aCacheUpdate.manifestURI)) {
+        return browsers[i];
+      }
+    }
+
+    return null;
+  },
+
+  _warnUsage: function(aBrowser, aURI) {
+    if (!aBrowser)
+      return;
+
+    var notificationBox = gBrowser.getNotificationBox(aBrowser);
+    var notification = notificationBox.getNotificationWithValue("offline-app-usage");
+    if (!notification) {
+      var bundle_browser = document.getElementById("bundle_browser");
+
+      var buttons = [{
+          label: bundle_browser.getString("offlineApps.manageUsage"),
+          accessKey: bundle_browser.getString("offlineApps.manageUsageAccessKey"),
+          callback: OfflineApps.manage
+        }];
+
+      var warnQuota = gPrefService.getIntPref("offline-apps.quota.warn");
+      const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
+      var message = bundle_browser.getFormattedString("offlineApps.usage",
+                                                      [ aURI.host,
+                                                        warnQuota / 1024 ]);
+
+      notificationBox.appendNotification(message, "offline-app-usage",
+                                         "chrome://browser/skin/Info.png",
+                                         priority, buttons);
+    }
+
+    // Now that we've warned once, prevent the warning from showing up
+    // again.
+    var pm = Cc["@mozilla.org/permissionmanager;1"].
+             getService(Ci.nsIPermissionManager);
+    pm.add(aURI, "offline-app",
+           Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN);
+  },
+
+  _checkUsage: function(aURI) {
+    var pm = Cc["@mozilla.org/permissionmanager;1"].
+             getService(Ci.nsIPermissionManager);
+
+    // if the user has already allowed excessive usage, don't bother checking
+    if (pm.testExactPermission(aURI, "offline-app") !=
+        Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN) {
+      var usage = getOfflineAppUsage(aURI.asciiHost);
+      var warnQuota = gPrefService.getIntPref("offline-apps.quota.warn");
+      if (usage >= warnQuota * 1024) {
+        return true;
+      }
+    }
+
+    return false;
   },
 
   offlineAppRequested: function(aContentWindow) {
@@ -5087,6 +5198,10 @@ var OfflineApps = {
     pm.add(currentURI, "offline-app", Ci.nsIPermissionManager.DENY_ACTION);
   },
 
+  manage: function() {
+    openAdvancedPreferences("networkTab");
+  },
+
   _startFetching: function() {
     var manifest = content.document.documentElement.getAttribute("manifest");
     if (!manifest)
@@ -5102,6 +5217,37 @@ var OfflineApps = {
     var updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"].
                         getService(Ci.nsIOfflineCacheUpdateService);
     updateService.scheduleUpdate(manifestURI, contentURI);
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // nsIObserver
+  observe: function (aSubject, aTopic, aState)
+  {
+    if (aTopic == "dom-storage-warn-quota-exceeded") {
+      if (aSubject) {
+        var uri = Cc["@mozilla.org/network/io-service;1"].
+                  getService(Ci.nsIIOService).
+                  newURI(aSubject.location.href, null, null);
+
+        if (OfflineApps._checkUsage(uri)) {
+          var browserWindow =
+            this._getBrowserWindowForContentWindow(aSubject);
+          var browser = this._getBrowserForContentWindow(browserWindow,
+                                                         aSubject);
+          OfflineApps._warnUsage(browser, uri);
+        }
+      }
+    } else if (aTopic == "offline-cache-update-completed") {
+      var cacheUpdate = aSubject.QueryInterface(Ci.nsIOfflineCacheUpdate);
+
+      var uri = cacheUpdate.manifestURI;
+      if (OfflineApps._checkUsage(uri)) {
+        var browser = this._getBrowserForCacheUpdate(cacheUpdate);
+        if (browser) {
+          OfflineApps._warnUsage(browser, cacheUpdate.manifestURI);
+        }
+      }
+    }
   }
 };
 

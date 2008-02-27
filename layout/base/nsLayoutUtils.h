@@ -394,7 +394,8 @@ public:
    * Given aFrame, the root frame of a stacking context, paint it and its
    * descendants to aRenderingContext. 
    * @param aRenderingContext a rendering context translated so that (0,0)
-   * is the origin of aFrame
+   * is the origin of aFrame; for best results, (0,0) should transform
+   * to pixel-aligned coordinates
    * @param aDirtyRegion the region that must be painted, in the coordinates
    * of aFrame
    * @param aBackground paint the dirty area with this color before drawing
@@ -470,13 +471,27 @@ public:
                           PRInt32&   aIndex,
                           PRInt32&   aTextWidth);
 
+  class RectCallback {
+  public:
+    virtual void AddRect(const nsRect& aRect) = 0;
+  };
   /**
-   * Get the union of all rects in aFrame and its continuations, relative
-   * to aFrame's origin. Scrolling is taken into account, but this shouldn't
-   * matter because it should be impossible to have some continuations scrolled
-   * differently from others.
+   * Collect all CSS border-boxes associated with aFrame and its
+   * continuations, "drilling down" through outer table frames and
+   * some anonymous blocks since they're not real CSS boxes.
+   * The boxes are positioned relative to aRelativeTo (taking scrolling
+   * into account) and passed to the callback in frame-tree order.
+   * If aFrame is null, no boxes are returned.
+   * For SVG frames, returns one rectangle, the bounding box.
    */
-  static nsRect GetAllInFlowBoundingRect(nsIFrame* aFrame);
+  static void GetAllInFlowRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
+                                RectCallback* aCallback);
+
+  /**
+   * Computes the union of all rects returned by GetAllInFlowRects. If
+   * the union is empty, returns the first rect.
+   */
+  static nsRect GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo);
 
   /**
    * Get the font metrics corresponding to the frame's style data.

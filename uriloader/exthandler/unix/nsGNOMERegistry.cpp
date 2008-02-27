@@ -149,38 +149,10 @@ nsGNOMERegistry::GetFromType(const nsACString& aMIMEType)
   vfs->GetDescriptionForMimeType(aMIMEType, description);
   mimeInfo->SetDescription(NS_ConvertUTF8toUTF16(description));
 
-  // Convert UTF-8 registry value to filesystem encoding, which
-  // g_find_program_in_path() uses.
-
-  nsCAutoString command;
-  handlerApp->GetCommand(command);
-  gchar *nativeCommand = g_filename_from_utf8(command.get(),
-                                              -1, NULL, NULL, NULL);
-  if (!nativeCommand) {
-    NS_ERROR("Could not convert helper app command to filesystem encoding");
-    return nsnull;
-  }
-
-  gchar *commandPath = g_find_program_in_path(nativeCommand);
-
-  g_free(nativeCommand);
-
-  if (!commandPath) {
-    return nsnull;
-  }
-
-  nsCOMPtr<nsILocalFile> appFile;
-  NS_NewNativeLocalFile(nsDependentCString(commandPath), PR_TRUE,
-                        getter_AddRefs(appFile));
-  if (appFile) {
-    mimeInfo->SetDefaultApplication(appFile);
-    nsCAutoString name;
-    handlerApp->GetName(name);
-    mimeInfo->SetDefaultDescription(NS_ConvertUTF8toUTF16(name));
-    mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
-  }
-
-  g_free(commandPath);
+  nsCAutoString name;
+  handlerApp->GetName(name);
+  mimeInfo->SetDefaultDescription(NS_ConvertUTF8toUTF16(name));
+  mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
 
   nsMIMEInfoBase* retval;
   NS_ADDREF((retval = mimeInfo));

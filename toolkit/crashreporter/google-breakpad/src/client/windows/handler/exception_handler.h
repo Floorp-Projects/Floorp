@@ -52,9 +52,6 @@
 //   ExceptionHandler *f = new ExceptionHandler(...);
 //   delete e;
 // This will put the exception filter stack into an inconsistent state.
-//
-// To use this library in your project, you will need to link against
-// ole32.lib.
 
 #ifndef CLIENT_WINDOWS_HANDLER_EXCEPTION_HANDLER_H__
 #define CLIENT_WINDOWS_HANDLER_EXCEPTION_HANDLER_H__
@@ -62,10 +59,11 @@
 #include <stdlib.h>
 #include <Windows.h>
 #include <DbgHelp.h>
+#include <rpc.h>
 
 #pragma warning( push )
 // Disable exception handler warnings.
-#pragma warning( disable : 4530 ) 
+#pragma warning( disable : 4530 )
 
 #include <string>
 #include <vector>
@@ -195,6 +193,9 @@ class ExceptionHandler {
       CONST PMINIDUMP_USER_STREAM_INFORMATION UserStreamParam,
       CONST PMINIDUMP_CALLBACK_INFORMATION CallbackParam);
 
+  // Function pointer type for UuidCreate, which is looked up dynamically.
+  typedef RPC_STATUS (RPC_ENTRY *UuidCreate_type)(UUID *Uuid);
+
   // Runs the main loop for the exception handler thread.
   static DWORD WINAPI ExceptionHandlerThreadMain(void *lpParameter);
 
@@ -271,6 +272,9 @@ class ExceptionHandler {
 
   HMODULE dbghelp_module_;
   MiniDumpWriteDump_type minidump_write_dump_;
+
+  HMODULE rpcrt4_module_;
+  UuidCreate_type uuid_create_;
 
   // Tracks the handler types that were installed according to the
   // handler_types constructor argument.

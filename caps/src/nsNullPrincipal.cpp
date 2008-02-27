@@ -49,6 +49,8 @@
 #include "nsNetUtil.h"
 #include "nsIClassInfoImpl.h"
 #include "nsNetCID.h"
+#include "nsDOMError.h"
+#include "nsScriptSecurityManager.h"
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 
@@ -314,6 +316,17 @@ nsNullPrincipal::Subsumes(nsIPrincipal *aOther, PRBool *aResult)
   // reasonable nsPrincipals.
   *aResult = (aOther == this);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNullPrincipal::CheckMayLoad(nsIURI* aURI, PRBool aReport)
+{
+  if (aReport) {
+    nsScriptSecurityManager::ReportError(
+      nsnull, NS_LITERAL_STRING("CheckSameOriginError"), mURI, aURI);
+  }
+
+  return NS_ERROR_DOM_BAD_URI;
 }
 
 NS_IMETHODIMP 

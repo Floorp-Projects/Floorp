@@ -506,6 +506,13 @@ SessionStoreService.prototype = {
     // cache the window state until the window is completely gone
     aWindow.__SS_dyingCache = this._windows[aWindow.__SSi] || this._lastWindowClosed;
     
+    // reset the _tab property to avoid keeping the tab's XUL element alive
+    // longer than we need it
+    var tabCount = aWindow.__SS_dyingCache.tabs.length;
+    for (var t = 0; t < tabCount; t++) {
+      delete aWindow.__SS_dyingCache.tabs[t]._tab;
+    }
+    
     delete aWindow.__SSi;
   },
 
@@ -575,6 +582,10 @@ SessionStoreService.prototype = {
     // make sure that the tab related data is up-to-date
     var tabState = this._collectTabData(aTab);
     this._updateTextAndScrollDataForTab(aWindow, aTab.linkedBrowser, tabState);
+
+    // reset the _tab property to avoid keeping the tab's XUL element alive
+    // longer than we need it
+    delete tabState._tab;
     
     // store closed-tab data for undo
     if (tabState.entries.length > 1 || tabState.entries[0].url != "about:blank") {

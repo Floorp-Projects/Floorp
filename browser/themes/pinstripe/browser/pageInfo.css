@@ -74,6 +74,12 @@
   -moz-appearance: none;
 }
 
+/* Extensions will provide icons because the view buttons have icons
+   on the winstripe and gnomestripe themes. We don't want to display them */
+.viewButtonIcon {
+  display: none;
+}
+
 deck {
   padding: 10px 10px 10px 10px;
 }

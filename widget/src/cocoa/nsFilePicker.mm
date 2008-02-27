@@ -56,7 +56,6 @@
 #include "nsILocalFile.h"
 #include "nsILocalFileMac.h"
 #include "nsIURL.h"
-#include "nsIFileURL.h"
 #include "nsArrayEnumerator.h"
 #include "nsIStringBundle.h"
 
@@ -540,7 +539,7 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
+NS_IMETHODIMP nsFilePicker::GetFileURL(nsIURI **aFileURL)
 {
   NS_ENSURE_ARG_POINTER(aFileURL);
   *aFileURL = nsnull;
@@ -548,15 +547,7 @@ NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
   if (mFiles.Count() == 0)
     return NS_OK;
 
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewFileURI(getter_AddRefs(uri), mFiles.ObjectAt(0));
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIFileURL> fileURL(do_QueryInterface(uri));
-  NS_ENSURE_TRUE(fileURL, NS_ERROR_FAILURE);
-  
-  NS_ADDREF(*aFileURL = fileURL);
-  return NS_OK;
+  return NS_NewFileURI(aFileURL, mFiles.ObjectAt(0));
 }
 
 //-------------------------------------------------------------------------

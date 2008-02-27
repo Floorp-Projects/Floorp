@@ -1335,9 +1335,6 @@ jsval nsDOMClassInfo::sDocumentURIObject_id=JSVAL_VOID;
 jsval nsDOMClassInfo::sOncopy_id          = JSVAL_VOID;
 jsval nsDOMClassInfo::sOncut_id           = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnpaste_id         = JSVAL_VOID;
-jsval nsDOMClassInfo::sOnbeforecopy_id    = JSVAL_VOID;
-jsval nsDOMClassInfo::sOnbeforecut_id     = JSVAL_VOID;
-jsval nsDOMClassInfo::sOnbeforepaste_id   = JSVAL_VOID;
 #ifdef OJI
 jsval nsDOMClassInfo::sJava_id            = JSVAL_VOID;
 jsval nsDOMClassInfo::sPackages_id        = JSVAL_VOID;
@@ -1530,9 +1527,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sOncopy_id,          cx, "oncopy");
   SET_JSVAL_TO_STRING(sOncut_id,           cx, "oncut");
   SET_JSVAL_TO_STRING(sOnpaste_id,         cx, "onpaste");
-  SET_JSVAL_TO_STRING(sOnbeforecopy_id,    cx, "oncopy");
-  SET_JSVAL_TO_STRING(sOnbeforecut_id,     cx, "oncut");
-  SET_JSVAL_TO_STRING(sOnbeforepaste_id,   cx, "onpaste");
 #ifdef OJI
   SET_JSVAL_TO_STRING(sJava_id,            cx, "java");
   SET_JSVAL_TO_STRING(sPackages_id,        cx, "Packages");
@@ -4094,9 +4088,6 @@ nsDOMClassInfo::ShutDown()
   sOncopy_id          = JSVAL_VOID;
   sOncut_id           = JSVAL_VOID;
   sOnpaste_id         = JSVAL_VOID;
-  sOnbeforecopy_id    = JSVAL_VOID;
-  sOnbeforecut_id     = JSVAL_VOID;
-  sOnbeforepaste_id   = JSVAL_VOID;
 #ifdef OJI
   sJava_id            = JSVAL_VOID;
   sPackages_id        = JSVAL_VOID;
@@ -4791,8 +4782,9 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
 
   nsCOMPtr<nsIJSNativeInitializer> initializer(do_QueryInterface(native));
   if (initializer) {
-    nsCOMPtr<nsISupports> owner = do_QueryReferent(aWeakOwner);
-    NS_ENSURE_STATE(owner);
+    nsCOMPtr<nsPIDOMWindow> owner = do_QueryReferent(aWeakOwner);
+    NS_ENSURE_STATE(owner && owner->GetOuterWindow() &&
+                    owner->GetOuterWindow()->GetCurrentInnerWindow() == owner);
     rv = initializer->Initialize(owner, cx, obj, argc, argv);
     if (NS_FAILED(rv)) {
       return NS_ERROR_NOT_INITIALIZED;
@@ -4899,15 +4891,22 @@ DefineInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
 
 class nsDOMConstructor : public nsIDOMDOMConstructor
 {
-public:
+protected:
   nsDOMConstructor(const PRUnichar *aName,
                    const nsGlobalNameStruct *aNameStruct,
-                   nsISupports* aOwner)
+                   nsPIDOMWindow* aOwner)
     : mClassName(aName),
       mConstructable(IsConstructable(aNameStruct)),
       mWeakOwner(do_GetWeakReference(aOwner))
   {
   }
+
+public:
+
+  static nsresult Create(const PRUnichar* aName,
+                         const nsGlobalNameStruct* aNameStruct,
+                         nsPIDOMWindow* aOwner,
+                         nsDOMConstructor** aResult);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMDOMCONSTRUCTOR
@@ -4988,6 +4987,27 @@ private:
   const PRPackedBool mConstructable;
   nsWeakPtr          mWeakOwner;
 };
+
+//static
+nsresult
+nsDOMConstructor::Create(const PRUnichar* aName,
+                         const nsGlobalNameStruct* aNameStruct,
+                         nsPIDOMWindow* aOwner,
+                         nsDOMConstructor** aResult)
+{
+  *aResult = nsnull;
+  if (!aOwner->IsOuterWindow()) {
+    *aResult = new nsDOMConstructor(aName, aNameStruct, aOwner);
+  } else if (!nsContentUtils::CanCallerAccess(aOwner)) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  } else {
+    *aResult =
+      new nsDOMConstructor(aName, aNameStruct, aOwner->GetCurrentInnerWindow());
+  }
+  NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}
 
 NS_IMPL_ADDREF(nsDOMConstructor)
 NS_IMPL_RELEASE(nsDOMConstructor)
@@ -5236,14 +5256,13 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     // We're resolving a name of a DOM interface for which there is no
     // direct DOM class, create a constructor object...
 
-    nsRefPtr<nsDOMConstructor> constructor =
-      new nsDOMConstructor(reinterpret_cast<PRUnichar *>
-                                           (::JS_GetStringChars(str)),
-                           name_struct,
-                           static_cast<nsPIDOMWindow*>(aWin));
-    if (!constructor) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    nsRefPtr<nsDOMConstructor> constructor;
+    rv = nsDOMConstructor::Create(reinterpret_cast<PRUnichar *>
+                                    (::JS_GetStringChars(str)),
+                                  name_struct,
+                                  static_cast<nsPIDOMWindow*>(aWin),
+                                  getter_AddRefs(constructor));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
     sDoSecurityCheckInAddProperty = PR_FALSE;
@@ -5301,12 +5320,11 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
     const PRUnichar *name = reinterpret_cast<PRUnichar *>
                                             (::JS_GetStringChars(str));
-    nsRefPtr<nsDOMConstructor> constructor =
-      new nsDOMConstructor(name, name_struct,
-                           static_cast<nsPIDOMWindow*>(aWin));
-    if (!constructor) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    nsRefPtr<nsDOMConstructor> constructor;
+    rv = nsDOMConstructor::Create(name, name_struct,
+                                  static_cast<nsPIDOMWindow*>(aWin),
+                                  getter_AddRefs(constructor));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
     sDoSecurityCheckInAddProperty = PR_FALSE;
@@ -5521,12 +5539,11 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
   }
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructor) {
-    nsRefPtr<nsDOMConstructor> constructor =
-      new nsDOMConstructor(class_name, name_struct,
-                           static_cast<nsPIDOMWindow*>(aWin));
-    if (!constructor) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    nsRefPtr<nsDOMConstructor> constructor;
+    rv = nsDOMConstructor::Create(class_name, name_struct,
+                                  static_cast<nsPIDOMWindow*>(aWin),
+                                  getter_AddRefs(constructor));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     jsval val;
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
@@ -6685,10 +6702,7 @@ nsEventReceiverSH::ReallyIsEventName(jsval id, jschar aFirstChar)
     return id == sOnabort_id;
   case 'b' :
     return (id == sOnbeforeunload_id ||
-            id == sOnblur_id         ||
-            id == sOnbeforecopy_id   ||
-            id == sOnbeforecut_id    ||
-            id == sOnbeforepaste_id);
+            id == sOnblur_id);
   case 'e' :
     return id == sOnerror_id;
   case 'f' :

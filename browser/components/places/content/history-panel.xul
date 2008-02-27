@@ -119,9 +119,9 @@
         flex="1"
         type="places"
         context="placesContext"
-        onkeypress="if (event.keyCode == 13) this.controller.openSelectedNodeWithEvent(event);"
         hidecolumnpicker="true"
-        onclick="SidebarUtils.handleClick(this, event, true);"
+        onkeypress="SidebarUtils.handleTreeKeyPress(event);"
+        onclick="SidebarUtils.handleTreeClick(this, event);"
         onmousemove="SidebarUtils.handleTreeMouseMove(event);"
         onmouseout="SidebarUtils.clearURLFromStatusBar();">
     <treecols>

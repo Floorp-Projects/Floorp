@@ -69,6 +69,9 @@
 #include "txXMLUtils.h"
 #include "nsAttrName.h"
 #include "nsIScriptError.h"
+#include "nsIURL.h"
+#include "nsCrossSiteListenerProxy.h"
+#include "nsDOMError.h"
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
@@ -93,7 +96,6 @@ getSpec(nsIChannel* aChannel, nsAString& aSpec)
 class txStylesheetSink : public nsIXMLContentSink,
                          public nsIExpatSink,
                          public nsIStreamListener,
-                         public nsIChannelEventSink,
                          public nsIInterfaceRequestor
 {
 public:
@@ -103,7 +105,6 @@ public:
     NS_DECL_NSIEXPATSINK
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSICHANNELEVENTSINK
     NS_DECL_NSIINTERFACEREQUESTOR
 
     // nsIContentSink
@@ -135,13 +136,12 @@ txStylesheetSink::txStylesheetSink(txStylesheetCompiler* aCompiler,
     mListener = do_QueryInterface(aParser);
 }
 
-NS_IMPL_ISUPPORTS7(txStylesheetSink,
+NS_IMPL_ISUPPORTS6(txStylesheetSink,
                    nsIXMLContentSink,
                    nsIContentSink,
                    nsIExpatSink,
                    nsIStreamListener,
                    nsIRequestObserver,
-                   nsIChannelEventSink,
                    nsIInterfaceRequestor)
 
 NS_IMETHODIMP
@@ -374,29 +374,6 @@ txStylesheetSink::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
 }
 
 NS_IMETHODIMP
-txStylesheetSink::OnChannelRedirect(nsIChannel *aOldChannel,
-                                    nsIChannel *aNewChannel,
-                                    PRUint32    aFlags)
-{
-    NS_PRECONDITION(aNewChannel, "Redirect without a channel?");
-
-    nsresult rv;
-    nsCOMPtr<nsIScriptSecurityManager> secMan =
-        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIURI> oldURI;
-    rv = aOldChannel->GetURI(getter_AddRefs(oldURI)); // The original URI
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIURI> newURI;
-    rv = aNewChannel->GetURI(getter_AddRefs(newURI)); // The new URI
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return secMan->CheckSameOriginURI(oldURI, newURI, PR_TRUE);
-}
-
-NS_IMETHODIMP
 txStylesheetSink::GetInterface(const nsIID& aIID, void** aResult)
 {
     if (aIID.Equals(NS_GET_IID(nsIAuthPrompt))) {
@@ -419,7 +396,7 @@ txStylesheetSink::GetInterface(const nsIID& aIID, void** aResult)
         return NS_OK;
     }
 
-    return QueryInterface(aIID, aResult);
+    return NS_ERROR_NO_INTERFACE;
 }
 
 class txCompileObserver : public txACompileObserver
@@ -492,13 +469,19 @@ txCompileObserver::loadURI(const nsAString& aUri,
       GetCodebasePrincipal(referrerUri, getter_AddRefs(referrerPrincipal));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Do security check.
-    rv = nsContentUtils::
-      CheckSecurityBeforeLoad(uri, referrerPrincipal,
-                              nsIScriptSecurityManager::STANDARD, PR_FALSE,
-                              nsIContentPolicy::TYPE_STYLESHEET,
-                              nsnull, NS_LITERAL_CSTRING("application/xml"));
+    // Content Policy
+    PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
+    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_STYLESHEET,
+                                   uri,
+                                   referrerPrincipal,
+                                   nsnull,
+                                   NS_LITERAL_CSTRING("application/xml"),
+                                   nsnull,
+                                   &shouldLoad);
     NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_CP_REJECTED(shouldLoad)) {
+        return NS_ERROR_DOM_BAD_URI;
+    }
 
     return startLoad(uri, aCompiler, referrerPrincipal);
 }
@@ -554,6 +537,12 @@ txCompileObserver::startLoad(nsIURI* aUri, txStylesheetCompiler* aCompiler,
     parser->SetContentSink(sink);
     parser->Parse(aUri);
 
+    // Always install in case of redirects
+    nsCOMPtr<nsIStreamListener> listener =
+        new nsCrossSiteListenerProxy(sink, aReferrerPrincipal, channel, &rv);
+    NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     return channel->AsyncOpen(sink, parser);
 }
 
@@ -565,14 +554,20 @@ TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
     aUri->GetSpec(spec);
     PR_LOG(txLog::xslt, PR_LOG_ALWAYS, ("TX_LoadSheet: %s\n", spec.get()));
 
-    // Pass source document as the context
-    nsresult rv = nsContentUtils::
-      CheckSecurityBeforeLoad(aUri, aCallerPrincipal,
-                              nsIScriptSecurityManager::STANDARD, PR_FALSE,
-                              nsIContentPolicy::TYPE_STYLESHEET,
-                              aProcessor->GetSourceContentModel(),
-                              NS_LITERAL_CSTRING("application/xml"));
+    // Content Policy
+    PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
+    nsresult rv =
+        NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_STYLESHEET,
+                                  aUri,
+                                  aCallerPrincipal,
+                                  aProcessor->GetSourceContentModel(),
+                                  NS_LITERAL_CSTRING("application/xml"),
+                                  nsnull,
+                                  &shouldLoad);
     NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_CP_REJECTED(shouldLoad)) {
+        return NS_ERROR_DOM_BAD_URI;
+    }
 
     nsRefPtr<txCompileObserver> observer =
         new txCompileObserver(aProcessor, aLoadGroup);
@@ -714,18 +709,25 @@ txSyncCompileObserver::loadURI(const nsAString& aUri,
       GetCodebasePrincipal(referrerUri, getter_AddRefs(referrerPrincipal));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = nsContentUtils::
-      CheckSecurityBeforeLoad(uri, referrerPrincipal,
-                              nsIScriptSecurityManager::STANDARD,
-                              PR_FALSE, nsIContentPolicy::TYPE_STYLESHEET,
-                              nsnull, NS_LITERAL_CSTRING("application/xml"));
+    // Content Policy
+    PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
+    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_STYLESHEET,
+                                   uri,
+                                   referrerPrincipal,
+                                   nsnull,
+                                   NS_LITERAL_CSTRING("application/xml"),
+                                   nsnull,
+                                   &shouldLoad);
     NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_CP_REJECTED(shouldLoad)) {
+        return NS_ERROR_DOM_BAD_URI;
+    }
 
     // This is probably called by js, a loadGroup for the channel doesn't
     // make sense.
     nsCOMPtr<nsIDOMDocument> document;
-    rv = nsSyncLoadService::LoadDocument(uri, referrerUri, nsnull, PR_FALSE,
-                                         getter_AddRefs(document));
+    rv = nsSyncLoadService::LoadDocument(uri, referrerPrincipal, nsnull,
+                                         PR_FALSE, getter_AddRefs(document));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(document);
@@ -771,8 +773,18 @@ TX_CompileStylesheet(nsINode* aNode, txMozillaXSLTProcessor* aProcessor,
     uri->GetSpec(spec);
     NS_ConvertUTF8toUTF16 baseURI(spec);
 
-    uri = doc->GetDocumentURI();
+    nsIURI* docUri = doc->GetDocumentURI();
+    NS_ENSURE_TRUE(docUri, NS_ERROR_FAILURE);
+
+    docUri->Clone(getter_AddRefs(uri));
     NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+
+    // We need to remove the ref, a URL with a ref would mean that we have an
+    // embedded stylesheet.
+    nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
+    if (url) {
+        url->SetRef(EmptyCString());
+    }
 
     uri->GetSpec(spec);
     NS_ConvertUTF8toUTF16 stylesheetURI(spec);

@@ -62,6 +62,8 @@ ExceptionHandler::ExceptionHandler(const wstring &dump_path,
       next_minidump_path_c_(NULL),
       dbghelp_module_(NULL),
       minidump_write_dump_(NULL),
+      rpcrt4_module_(NULL),
+      uuid_create_(NULL),
       handler_types_(handler_types),
       previous_filter_(NULL),
       previous_pch_(NULL),
@@ -77,10 +79,6 @@ ExceptionHandler::ExceptionHandler(const wstring &dump_path,
 #if _MSC_VER >= 1400  // MSVC 2005/8
   previous_iph_ = NULL;
 #endif  // _MSC_VER >= 1400
-
-  // set_dump_path calls UpdateNextID.  This sets up all of the path and id
-  // strings, and their equivalent c_str pointers.
-  set_dump_path(dump_path);
 
   // Set synchronization primitives and the handler thread.  Each
   // ExceptionHandler object gets its own handler thread because that's the
@@ -104,6 +102,19 @@ ExceptionHandler::ExceptionHandler(const wstring &dump_path,
     minidump_write_dump_ = reinterpret_cast<MiniDumpWriteDump_type>(
         GetProcAddress(dbghelp_module_, "MiniDumpWriteDump"));
   }
+
+  // Load this library dynamically to not affect existing projects.  Most
+  // projects don't link against this directly, it's usually dynamically
+  // loaded by dependent code.
+  rpcrt4_module_ = LoadLibrary(L"rpcrt4.dll");
+  if (rpcrt4_module_) {
+    uuid_create_ = reinterpret_cast<UuidCreate_type>(
+        GetProcAddress(rpcrt4_module_, "UuidCreate"));
+  }
+
+  // set_dump_path calls UpdateNextID.  This sets up all of the path and id
+  // strings, and their equivalent c_str pointers.
+  set_dump_path(dump_path);
 
   if (handler_types != HANDLER_NONE) {
     if (!handler_stack_critical_section_initialized_) {
@@ -138,6 +149,10 @@ ExceptionHandler::ExceptionHandler(const wstring &dump_path,
 ExceptionHandler::~ExceptionHandler() {
   if (dbghelp_module_) {
     FreeLibrary(dbghelp_module_);
+  }
+
+  if (rpcrt4_module_) {
+    FreeLibrary(rpcrt4_module_);
   }
 
   if (handler_types_ != HANDLER_NONE) {
@@ -518,8 +533,11 @@ bool ExceptionHandler::WriteMinidumpWithException(
 }
 
 void ExceptionHandler::UpdateNextID() {
-  GUID id;
-  CoCreateGuid(&id);
+  assert(uuid_create_);
+  UUID id = {0};
+  if (uuid_create_) {
+    uuid_create_(&id);
+  }
   next_minidump_id_ = GUIDString::GUIDToWString(&id);
   next_minidump_id_c_ = next_minidump_id_.c_str();
 

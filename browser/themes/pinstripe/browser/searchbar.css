@@ -1,41 +1,60 @@
 /* *** pinstripe *** */
 
 .searchbar-textbox {
-  background: url("chrome://browser/skin/search-bar-background-mid.png") repeat-x;
-  margin-left: 15px;
-  margin-right: 15px;
   -moz-appearance: none;
   font: icon;
-  height: 23px;
+  height: 26px;
   width: 5em;
+  -moz-margin-start: 5px;
   min-width: 5em;
   border: none;
+  background-color: transparent;
+}
+
+.searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box {
+  background: url("chrome://browser/skin/urlbar/textfield-mid.png") repeat-x;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.searchbar-textbox[focused="true"] > .autocomplete-textbox-container > .textbox-input-box {
+  background-image: url("chrome://browser/skin/urlbar/textfield-mid-focused.png");
 }
 
 .searchbar-engine-image {
   width: 16px;
   height: 16px;
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+  -moz-margin-start: 2px;
+}
+
+.searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box {
+  -moz-margin-start: 44px !important;
 }
 
 .searchbar-engine-button {
-  background: url("chrome://browser/skin/urlbar/startcap.png") left center no-repeat;
-  height: 23px;
+  background: url("chrome://browser/skin/urlbar/startcap.png") center center no-repeat;
   -moz-appearance: none;
-  min-width: 42px;
-  margin: 0 3px 0 -11px;
+  height: 26px;
+  min-width: 44px;
   border: 0;
   -moz-box-align: center;
+  margin: 0;
+  -moz-margin-start: -44px;
+  padding: 0;
+}
+
+.searchbar-textbox[focused="true"] > .searchbar-engine-button {
+  background-image: url("chrome://browser/skin/urlbar/startcap-focused.png");
 }
 
 .searchbar-engine-button:active,
 .searchbar-engine-button[open="true"] {
-  background-image: url("chrome://browser/skin/urlbar/startcap-active.png");
+  background-image: url("chrome://browser/skin/urlbar/startcap-active.png") !important;
 }
 
 .searchbar-engine-button > .button-box {
   -moz-appearance: none;
-  -moz-margin-start: -1px;
   margin-bottom: 1px;
   padding: 0;
   -moz-padding-end: 3px;
@@ -43,7 +62,7 @@
 }
 
 .searchbar-engine-button[addengines="true"] > .button-box {
-  background: transparent url(chrome://browser/skin/Search-addengines.png) no-repeat right center;
+  background: transparent url(chrome://browser/skin/Search-addengines.png) no-repeat 25px 50%;
 }
 
 .searchbar-dropmarker-image {
@@ -54,9 +73,11 @@
 .search-go-container {
   -moz-box-align: center;
   background: url("chrome://browser/skin/urlbar/endcap.png") no-repeat right top;
-  height: 23px;
-  margin-right: -11px;
   padding-right: 4px;
+}
+
+.searchbar-textbox[focused="true"] > .search-go-container {
+  background-image: url("chrome://browser/skin/urlbar/endcap-focused.png");
 }
 
 
@@ -67,6 +88,8 @@
 .search-go-button {
   padding: 1px;
   list-style-image: url("chrome://browser/skin/Search.png");
+  margin: 0;
+  padding: 0;
   -moz-padding-end: 6px;
 }
 

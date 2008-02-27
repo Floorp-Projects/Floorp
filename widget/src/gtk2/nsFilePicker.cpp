@@ -88,6 +88,8 @@ typedef enum
 
 typedef gchar* (*_gtk_file_chooser_get_filename_fn)(GtkFileChooser *chooser);
 typedef GSList* (*_gtk_file_chooser_get_filenames_fn)(GtkFileChooser *chooser);
+typedef gchar* (*_gtk_file_chooser_get_uri_fn)(GtkFileChooser *chooser);
+typedef GSList* (*_gtk_file_chooser_get_uris_fn)(GtkFileChooser *chooser);
 typedef GtkWidget* (*_gtk_file_chooser_dialog_new_fn)(const gchar *title,
                                                       GtkWindow *parent,
                                                       GtkFileChooserAction action,
@@ -110,10 +112,12 @@ typedef void (*_gtk_image_set_from_pixbuf_fn)(GtkImage *image, GdkPixbuf *pixbuf
 typedef void (*_gtk_file_chooser_set_preview_widget_fn)(GtkFileChooser *chooser, GtkWidget *preview_widget);
 typedef GtkWidget* (*_gtk_image_new_fn)();
 typedef void (*_gtk_misc_set_padding_fn)(GtkMisc *misc, gint xpad, gint ypad);
-
+typedef void (*_gtk_file_chooser_set_local_only_fn)(GtkFileChooser *chooser, gboolean local_only);
 
 DECL_FUNC_PTR(gtk_file_chooser_get_filename);
 DECL_FUNC_PTR(gtk_file_chooser_get_filenames);
+DECL_FUNC_PTR(gtk_file_chooser_get_uri);
+DECL_FUNC_PTR(gtk_file_chooser_get_uris);
 DECL_FUNC_PTR(gtk_file_chooser_dialog_new);
 DECL_FUNC_PTR(gtk_file_chooser_set_select_multiple);
 DECL_FUNC_PTR(gtk_file_chooser_set_do_overwrite_confirmation);
@@ -132,6 +136,7 @@ DECL_FUNC_PTR(gtk_image_set_from_pixbuf);
 DECL_FUNC_PTR(gtk_file_chooser_set_preview_widget);
 DECL_FUNC_PTR(gtk_image_new);
 DECL_FUNC_PTR(gtk_misc_set_padding);
+DECL_FUNC_PTR(gtk_file_chooser_set_local_only);
 
 static GtkWindow *
 get_gtk_window_for_nsiwidget(nsIWidget *widget)
@@ -204,6 +209,8 @@ nsFilePicker::LoadSymbolsGTK24()
   }
 
   GET_LIBGTK_FUNC(gtk_file_chooser_get_filenames);
+  GET_LIBGTK_FUNC(gtk_file_chooser_get_uri);
+  GET_LIBGTK_FUNC(gtk_file_chooser_get_uris);
   GET_LIBGTK_FUNC(gtk_file_chooser_dialog_new);
   GET_LIBGTK_FUNC(gtk_file_chooser_set_select_multiple);
   GET_LIBGTK_FUNC_OPT(gtk_file_chooser_set_do_overwrite_confirmation);
@@ -222,6 +229,7 @@ nsFilePicker::LoadSymbolsGTK24()
   GET_LIBGTK_FUNC(gtk_file_chooser_set_preview_widget);
   GET_LIBGTK_FUNC(gtk_image_new);
   GET_LIBGTK_FUNC(gtk_misc_set_padding);
+  GET_LIBGTK_FUNC(gtk_file_chooser_set_local_only);
 
   initialized = PR_TRUE;
 
@@ -343,14 +351,14 @@ nsFilePicker::ReadValuesFromFileChooser(GtkWidget *file_chooser)
   mFiles.Clear();
 
   if (mMode == nsIFilePicker::modeOpenMultiple) {
-    mFile.Truncate();
+    mFileURL.Truncate();
 
     GSList *list = _gtk_file_chooser_get_filenames (GTK_FILE_CHOOSER(file_chooser));
     g_slist_foreach(list, ReadMultipleFiles, static_cast<gpointer>(&mFiles));
     g_slist_free(list);
   } else {
-    gchar *filename = _gtk_file_chooser_get_filename (GTK_FILE_CHOOSER(file_chooser));
-    mFile.Assign(filename);
+    gchar *filename = _gtk_file_chooser_get_uri (GTK_FILE_CHOOSER(file_chooser));
+    mFileURL.Assign(filename);
     g_free(filename);
   }
 
@@ -397,6 +405,7 @@ nsFilePicker::InitNative(nsIWidget *aParent,
 NS_IMETHODIMP
 nsFilePicker::AppendFilters(PRInt32 aFilterMask)
 {
+  mAllowURLs = !!(aFilterMask & filterAllowURLs);
   return nsBaseFilePicker::AppendFilters(aFilterMask);
 }
 
@@ -471,31 +480,26 @@ nsFilePicker::GetFile(nsILocalFile **aFile)
   NS_ENSURE_ARG_POINTER(aFile);
 
   *aFile = nsnull;
-  if (mFile.IsEmpty()) {
-    return NS_OK;
-  }
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = GetFileURL(getter_AddRefs(uri));
+  if (!uri)
+    return rv;
 
-  nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
-  NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIFileURL> fileURL(do_QueryInterface(uri, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  file->InitWithNativePath(mFile);
+  nsCOMPtr<nsIFile> file;
+  rv = fileURL->GetFile(getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ADDREF(*aFile = file);
-
-  return NS_OK;
+  return CallQueryInterface(file, aFile);
 }
 
 NS_IMETHODIMP
-nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
+nsFilePicker::GetFileURL(nsIURI **aFileURL)
 {
-  nsCOMPtr<nsILocalFile> file;
-  GetFile(getter_AddRefs(file));
-
-  nsCOMPtr<nsIURI> uri;
-  NS_NewFileURI(getter_AddRefs(uri), file);
-  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
-
-  return CallQueryInterface(uri, aFileURL);
+  *aFileURL = nsnull;
+  return NS_NewURI(aFileURL, mFileURL);
 }
 
 NS_IMETHODIMP
@@ -573,6 +577,9 @@ nsFilePicker::Show(PRInt16 *aReturn)
                                    GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                    accept_button, GTK_RESPONSE_ACCEPT,
                                    NULL);
+  if (mAllowURLs) {
+    _gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(file_chooser), FALSE);
+  }
 
   if (mMode == GTK_FILE_CHOOSER_ACTION_OPEN || mMode == GTK_FILE_CHOOSER_ACTION_SAVE) {
     GtkWidget *img_preview = _gtk_image_new();

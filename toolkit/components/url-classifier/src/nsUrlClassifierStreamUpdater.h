@@ -89,21 +89,25 @@ private:
 
   nsresult FetchUpdate(nsIURI *aURI,
                        const nsACString &aRequestBody,
-                       const nsACString &aTable);
+                       const nsACString &aTable,
+                       const nsACString &aServerMAC);
   nsresult FetchUpdate(const nsACString &aURI,
                        const nsACString &aRequestBody,
-                       const nsACString &aTable);
+                       const nsACString &aTable,
+                       const nsACString &aServerMAC);
 
   PRBool mIsUpdating;
   PRBool mInitialized;
   nsCOMPtr<nsIURI> mUpdateUrl;
   nsCString mStreamTable;
+  nsCString mServerMAC;
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIUrlClassifierDBService> mDBService;
 
   struct PendingUpdate {
     nsCString mUrl;
     nsCString mTable;
+    nsCString mServerMAC;
   };
   nsTArray<PendingUpdate> mPendingUpdates;
 

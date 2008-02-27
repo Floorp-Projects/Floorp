@@ -48,6 +48,7 @@
 #include <sstream>
 #include <memory>
 #include <time.h>
+#include <string.h>
 
 using std::string;
 using std::istream;

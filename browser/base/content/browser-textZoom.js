@@ -79,13 +79,24 @@ var FullZoom = {
                        getService(Ci.nsIContentPrefService);
   },
 
+  get _prefBranch FullZoom_get__prefBranch() {
+    delete this._prefBranch;
+    return this._prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                              getService(Ci.nsIPrefBranch2);
+  },
+
+  // browser.zoom.siteSpecific preference cache
+  siteSpecific: undefined,
+
 
   //**************************************************************************//
   // nsISupports
 
   // We can't use the Ci shortcut here because it isn't defined yet.
   interfaces: [Components.interfaces.nsIDOMEventListener,
+               Components.interfaces.nsIObserver,
                Components.interfaces.nsIContentPrefObserver,
+               Components.interfaces.nsISupportsWeakReference,
                Components.interfaces.nsISupports],
 
   QueryInterface: function FullZoom_QueryInterface(aIID) {
@@ -104,9 +115,16 @@ var FullZoom = {
 
     // Register ourselves with the service so we know when our pref changes.
     this._cps.addObserver(this.name, this);
+
+    // Listen for changes to the browser.zoom.siteSpecific preference so we can
+    // enable/disable per-site saving and restoring of zoom levels accordingly.
+    this.siteSpecific =
+      this._prefBranch.getBoolPref("browser.zoom.siteSpecific");
+    this._prefBranch.addObserver("browser.zoom.siteSpecific", this, true);
   },
 
   destroy: function FullZoom_destroy() {
+    this._prefBranch.removeObserver("browser.zoom.siteSpecific", this);
     this._cps.removeObserver(this.name, this);
     window.removeEventListener("DOMMouseScroll", this, false);
     delete this._cps;
@@ -162,6 +180,21 @@ var FullZoom = {
     // the event before the event state manager has a chance to apply the zoom
     // during nsEventStateManager::PostHandleEvent.
     window.setTimeout(function (self) { self._applySettingToPref() }, 0, this);
+  },
+
+  // nsIObserver
+
+  observe: function (aSubject, aTopic, aData) {
+    switch(aTopic) {
+      case "nsPref:changed":
+        switch(aData) {
+          case "browser.zoom.siteSpecific":
+            this.siteSpecific =
+              this._prefBranch.getBoolPref("browser.zoom.siteSpecific");
+            break;
+        }
+        break;
+    }
   },
 
   // nsIContentPrefObserver
@@ -257,7 +290,7 @@ var FullZoom = {
    * one.
    **/
   _applyPrefToSetting: function FullZoom__applyPrefToSetting(aValue) {
-    if (gInPrintPreviewMode)
+    if (!this.siteSpecific || gInPrintPreviewMode)
       return;
 
     try {
@@ -272,7 +305,7 @@ var FullZoom = {
   },
 
   _applySettingToPref: function FullZoom__applySettingToPref() {
-    if (gInPrintPreviewMode)
+    if (!this.siteSpecific || gInPrintPreviewMode)
       return;
 
     var zoomLevel = ZoomManager.zoom;

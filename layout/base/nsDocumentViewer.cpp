@@ -1011,6 +1011,7 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   if (mPresShell && !mStopped) {
     nsCOMPtr<nsIPresShell> shellDeathGrip(mPresShell); // bug 378682
     mPresShell->UnsuppressPainting();
+    mPresShell->ScrollToAnchor();
   }
 
   nsJSContext::LoadEnd();
@@ -2450,12 +2451,8 @@ NS_IMETHODIMP DocumentViewerImpl::GetCopyable(PRBool *aCopyable)
   NS_ENSURE_ARG_POINTER(aCopyable);
   *aCopyable = PR_FALSE;
 
-  nsresult rv = FireClipboardEvent(NS_BEFORECOPY, aCopyable);
-  if (NS_FAILED(rv) || *aCopyable)
-    return rv;
-
   nsCOMPtr<nsISelection> selection;
-  rv = mPresShell->GetSelectionForCopy(getter_AddRefs(selection));
+  nsresult rv = mPresShell->GetSelectionForCopy(getter_AddRefs(selection));
   if (NS_FAILED(rv))
     return rv;
 
@@ -2478,10 +2475,7 @@ NS_IMETHODIMP DocumentViewerImpl::GetCutable(PRBool *aCutable)
 {
   NS_ENSURE_ARG_POINTER(aCutable);
   *aCutable = PR_FALSE;
-
-  // If event handler requests to prevent default behavior, enable
-  // the cut command -- pass aCutable in as aPreventDefault.
-  return FireClipboardEvent(NS_BEFORECUT, aCutable);
+  return NS_OK;
 }
 
 NS_IMETHODIMP DocumentViewerImpl::Paste()
@@ -2496,10 +2490,7 @@ NS_IMETHODIMP DocumentViewerImpl::GetPasteable(PRBool *aPasteable)
 {
   NS_ENSURE_ARG_POINTER(aPasteable);
   *aPasteable = PR_FALSE;
-
-  // If event handler requests to prevent default behavior, enable
-  // the paste command -- pass aPasteable in as aPreventDefault.
-  return FireClipboardEvent(NS_BEFOREPASTE, aPasteable);
+  return NS_OK;
 }
 
 /* AString getContents (in string mimeType, in boolean selectionOnly); */

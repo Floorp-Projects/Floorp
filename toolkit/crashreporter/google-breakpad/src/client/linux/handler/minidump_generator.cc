@@ -40,6 +40,7 @@
 
 #include <cstdlib>
 #include <ctime>
+#include <string.h>
 
 #include "common/linux/file_id.h"
 #include "client/linux/handler/linux_thread.h"

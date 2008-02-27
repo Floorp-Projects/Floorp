@@ -838,6 +838,9 @@ static void
 BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
               nsIFrame* aLineContainer, const nsLineList::iterator* aForFrameLine)
 {
+  NS_ASSERTION(aForFrame || aForFrameLine,
+               "One of aForFrame or aForFrameLine must be set!");
+  
   if (!aLineContainer) {
     aLineContainer = FindLineContainer(aForFrame);
   } else {
@@ -869,23 +872,18 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
   }
 
   // Find the line containing aForFrame
-  nsBlockFrame::line_iterator startLine;
+
+  PRBool isValid = PR_TRUE;
+  nsBlockInFlowLineIterator backIterator(block, &isValid);
   if (aForFrameLine) {
-    startLine = *aForFrameLine;
+    backIterator = nsBlockInFlowLineIterator(block, *aForFrameLine, PR_FALSE);
   } else {
-    NS_ASSERTION(aForFrame, "One of aForFrame or aForFrameLine must be set!");
-    nsIFrame* immediateChild =
-      nsLayoutUtils::FindChildContainingDescendant(block, aForFrame);
-    // This may be a float e.g. for a floated first-letter
-    if (immediateChild->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
-      immediateChild =
-        nsLayoutUtils::FindChildContainingDescendant(block,
-          presContext->FrameManager()->GetPlaceholderFrameFor(immediateChild));
-    }
-    startLine = block->FindLineFor(immediateChild);
-    NS_ASSERTION(startLine != block->end_lines(),
-                 "Frame is not in the block!!!");
+    backIterator = nsBlockInFlowLineIterator(block, aForFrame, &isValid);
+    NS_ASSERTION(isValid, "aForFrame not found in block, someone lied to us");
+    NS_ASSERTION(backIterator.GetContainer() == block,
+                 "Someone lied to us about the block");
   }
+  nsBlockFrame::line_iterator startLine = backIterator.GetLine();
 
   // Find a line where we can start building text runs. We choose the last line
   // where:
@@ -900,17 +898,14 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
   // but we discard them instead of assigning them to frames.
   // This is a little awkward because we traverse lines in the reverse direction
   // but we traverse the frames in each line in the forward direction.
-  nsBlockInFlowLineIterator backIterator(block, startLine, PR_FALSE);
+  nsBlockInFlowLineIterator forwardIterator = backIterator;
   nsTextFrame* stopAtFrame = aForFrame;
   nsTextFrame* nextLineFirstTextFrame = nsnull;
   PRBool seenTextRunBoundaryOnLaterLine = PR_FALSE;
   PRBool mayBeginInTextRun = PR_TRUE;
-  PRBool inOverflow = PR_FALSE;
-  nsBlockFrame::line_iterator line;
   while (PR_TRUE) {
-    line = backIterator.GetLine();
-    block = backIterator.GetContainer();
-    inOverflow = backIterator.GetInOverflow();
+    forwardIterator = backIterator;
+    nsBlockFrame::line_iterator line = backIterator.GetLine();
     if (!backIterator.Prev() || backIterator.GetLine()->IsBlock()) {
       mayBeginInTextRun = PR_FALSE;
       break;
@@ -954,11 +949,10 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
   // text frames will be accumulated into textRunFrames as we go. When a
   // text run boundary is required we flush textRunFrames ((re)building their
   // gfxTextRuns as necessary).
-  nsBlockInFlowLineIterator forwardIterator(block, line, inOverflow);
   PRBool seenStartLine = PR_FALSE;
   PRUint32 linesAfterStartLine = 0;
   do {
-    line = forwardIterator.GetLine();
+    nsBlockFrame::line_iterator line = forwardIterator.GetLine();
     if (line->IsBlock())
       break;
     line->SetInvalidateTextRuns(PR_FALSE);
@@ -2081,7 +2075,11 @@ protected:
   nsTextFrame*          mFrame;
   gfxSkipCharsIterator  mStart;  // Offset in original and transformed string
   gfxSkipCharsIterator  mTempIterator;
-  nsTArray<gfxFloat>*   mTabWidths;  // widths for each transformed string character
+  
+  // Widths for each transformed string character, 0 for non-tab characters.
+  // Either null, or pointing to the frame's tabWidthProperty.
+  nsTArray<gfxFloat>*   mTabWidths;
+
   PRInt32               mLength; // DOM string length, may be PR_INT32_MAX
   gfxFloat              mWordSpacing;     // space for each whitespace char
   gfxFloat              mLetterSpacing;   // space for each letter
@@ -2266,6 +2264,16 @@ PropertyProvider::GetTabWidths(PRUint32 aStart, PRUint32 aLength)
         return nsnull;
       }
     } else {
+      if (!mLineContainer) {
+        // Intrinsic width computation, no way to compute real tab widths
+        // (and we wouldn't want to use it if we could, because it depends
+        // on layout). Don't wipe out existing tab widths that might still
+        // be useful for painting. Just return null which uses zero for
+        // all tab widths.
+        NS_WARNING("Preformatted tabs encountered in intrinsic width situation");
+        return nsnull;
+      }
+
       nsAutoPtr<nsTArray<gfxFloat> > tabs(new nsTArray<gfxFloat>());
       if (!tabs)
         return nsnull;
@@ -2288,47 +2296,38 @@ PropertyProvider::GetTabWidths(PRUint32 aStart, PRUint32 aLength)
     if (!mTabWidths->AppendElements(aStart + aLength - tabsEnd))
       return nsnull;
     
-    PRUint32 i;
-    if (!mLineContainer) {
-      NS_WARNING("Tabs encountered in a situation where we don't support tabbing");
-      for (i = tabsEnd; i < aStart + aLength; ++i) {
+    gfxFloat tabWidth = NS_round(8*mTextRun->GetAppUnitsPerDevUnit()*
+      GetFontMetrics(GetFontGroupForFrame(mLineContainer)).spaceWidth);
+    for (PRUint32 i = tabsEnd; i < aStart + aLength; ++i) {
+      Spacing spacing;
+      GetSpacingInternal(i, 1, &spacing, PR_TRUE);
+      mOffsetFromBlockOriginForTabs += spacing.mBefore;
+
+      if (mTextRun->GetChar(i) != '\t') {
         (*mTabWidths)[i - startOffset] = 0;
-      }
-    } else {
-      gfxFloat tabWidth = NS_round(8*mTextRun->GetAppUnitsPerDevUnit()*
-        GetFontMetrics(GetFontGroupForFrame(mLineContainer)).spaceWidth);
-      
-      for (i = tabsEnd; i < aStart + aLength; ++i) {
-        Spacing spacing;
-        GetSpacingInternal(i, 1, &spacing, PR_TRUE);
-        mOffsetFromBlockOriginForTabs += spacing.mBefore;
-  
-        if (mTextRun->GetChar(i) != '\t') {
-          (*mTabWidths)[i - startOffset] = 0;
-          if (mTextRun->IsClusterStart(i)) {
-            PRUint32 clusterEnd = i + 1;
-            while (clusterEnd < mTextRun->GetLength() &&
-                   !mTextRun->IsClusterStart(clusterEnd)) {
-              ++clusterEnd;
-            }
-            mOffsetFromBlockOriginForTabs +=
-              mTextRun->GetAdvanceWidth(i, clusterEnd - i, nsnull);
+        if (mTextRun->IsClusterStart(i)) {
+          PRUint32 clusterEnd = i + 1;
+          while (clusterEnd < mTextRun->GetLength() &&
+                 !mTextRun->IsClusterStart(clusterEnd)) {
+            ++clusterEnd;
           }
-        } else {
-          // Advance mOffsetFromBlockOriginForTabs to the next multiple of tabWidth
-          // Ensure that if it's just epsilon less than a multiple of tabWidth, we still
-          // advance by tabWidth.
-          static const double EPSILON = 0.000001;
-          double nextTab = NS_ceil(mOffsetFromBlockOriginForTabs/tabWidth)*tabWidth;
-          if (nextTab < mOffsetFromBlockOriginForTabs + EPSILON) {
-            nextTab += tabWidth;
-          }
-          (*mTabWidths)[i - startOffset] = nextTab - mOffsetFromBlockOriginForTabs;
-          mOffsetFromBlockOriginForTabs = nextTab;
+          mOffsetFromBlockOriginForTabs +=
+            mTextRun->GetAdvanceWidth(i, clusterEnd - i, nsnull);
         }
-  
-        mOffsetFromBlockOriginForTabs += spacing.mAfter;
+      } else {
+        // Advance mOffsetFromBlockOriginForTabs to the next multiple of tabWidth
+        // Ensure that if it's just epsilon less than a multiple of tabWidth, we still
+        // advance by tabWidth.
+        static const double EPSILON = 0.000001;
+        double nextTab = NS_ceil(mOffsetFromBlockOriginForTabs/tabWidth)*tabWidth;
+        if (nextTab < mOffsetFromBlockOriginForTabs + EPSILON) {
+          nextTab += tabWidth;
+        }
+        (*mTabWidths)[i - startOffset] = nextTab - mOffsetFromBlockOriginForTabs;
+        mOffsetFromBlockOriginForTabs = nextTab;
       }
+
+      mOffsetFromBlockOriginForTabs += spacing.mAfter;
     }
   }
 

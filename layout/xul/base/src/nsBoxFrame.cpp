@@ -616,7 +616,7 @@ nsBoxFrame::DidReflow(nsPresContext*           aPresContext,
 PRBool
 nsBoxFrame::HonorPrintBackgroundSettings()
 {
-  return (!mContent || !nsContentUtils::IsNativeAnonymous(mContent)) &&
+  return (!mContent || !mContent->IsInNativeAnonymousSubtree()) &&
     nsContainerFrame::HonorPrintBackgroundSettings();
 }
 

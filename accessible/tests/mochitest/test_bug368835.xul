@@ -167,7 +167,7 @@
 
     function doTest()
     {
-      // Check whether accessbility support is enabled.
+      // Check whether accessibility support is enabled.
       if (!("@mozilla.org/accessibleRetrieval;1" in Components.classes)) {
         SimpleTest.finish();
         return;

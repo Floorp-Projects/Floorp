@@ -457,6 +457,11 @@ nsHostResolver::ResolveHost(const char            *host,
                 // put reference to host record on stack...
                 result = he->rec;
             }
+            // if the host name is an IP address literal and has been parsed,
+            // go ahead and use it.
+            else if (he->rec->addr) {
+                result = he->rec;
+            }
             // try parsing the host name as an IP address literal to short
             // circuit full host resolution.  (this is necessary on some
             // platforms like Win9x.  see bug 219376 for more details.)

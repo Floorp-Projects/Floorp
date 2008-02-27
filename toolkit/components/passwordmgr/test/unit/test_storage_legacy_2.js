@@ -209,12 +209,33 @@ do_check_eq(2, storage.countLogins("http://dummyhost2.mozilla.org", "http://cgi.
 /* ========== 10 ========== */
 testnum++;
 
-// test writing a file that already contained entries
-// test overwriting a file early
-// test permissions on output file (osx/unix)
-// test starting with an invalid file, and a non-existant file.
-// excercise case where we immediately write the data on init, for empty entries
-// test writing a gazillion entries
+testdesc = "[init with 1 login, 1 disabled host]";
+
+LoginTest.initStorage(storage, INDIR, "signons-06.txt",
+                               OUTDIR, "output-06.txt");
+
+var oldfile1 = PROFDIR.clone();
+oldfile1.append("signons.txt");
+// Shouldn't exist, but if a previous run failed it could be left over
+if (oldfile1.exists())
+    oldfile1.remove(false);
+oldfile1.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+do_check_true(oldfile1.exists());
+
+var oldfile2 = PROFDIR.clone();
+oldfile2.append("signons2.txt");
+// Shouldn't exist, but if a previous run failed it could be left over
+if (oldfile2.exists())
+    oldfile2.remove(false);
+oldfile2.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+do_check_true(oldfile2.exists());
+
+testdesc = "Ensure old files are deleted when removeAllLogins is called";
+storage.removeAllLogins();
+
+LoginTest.checkStorageData(storage, ["https://www.site.net"], []);
+do_check_false(oldfile1.exists());
+do_check_false(oldfile2.exists());
 
 } catch (e) {
     throw ("FAILED in test #" + testnum + " -- " + testdesc + ": " + e);

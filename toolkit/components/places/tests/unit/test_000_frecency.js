@@ -24,6 +24,7 @@ version(180);
  *   Matt Crocker <matt@songbirdnest.com>
  *   Seth Spitzer <sspitzer@mozilla.org>
  *   Dietrich Ayala <dietrich@mozilla.com>
+ *   Edward Lee <edward.lee@engineering.uiuc.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -253,8 +254,19 @@ function run_test() {
 
     // test that matches are sorted by frecency
     for (var i = 0; i < controller.matchCount; i++) {
-      do_check_eq(controller.getValueAt(i), results[i][0].spec);
-      do_check_eq(controller.getCommentAt(i), results[i][2]);
+      let searchURL = controller.getValueAt(i);
+      let expectURL = results[i][0].spec;
+      if (searchURL == expectURL) {
+        do_check_eq(controller.getValueAt(i), results[i][0].spec);
+        do_check_eq(controller.getCommentAt(i), results[i][2]);
+      } else {
+        // If the results didn't match exactly, perhaps it's still the right
+        // frecency just in the wrong "order" (order of same frecency is
+        // undefined), so check if frecency matches. This is okay because we
+        // can still ensure the correct number of expected frecencies.
+        let getFrecency = function(aURL) aURL.match(/frecency:(-?\d+)$/)[1];
+        do_check_eq(getFrecency(searchURL), getFrecency(expectURL));
+      }
     }
 
     do_test_finished();

@@ -733,7 +733,9 @@ nsHTMLReflowState::GetNearestContainingBlock(nsIFrame* aFrame, nscoord& aCBLeftE
 // In that case depending on the progression direction either the left or
 // right edge would be marked as not being exact
 struct nsHypotheticalBox {
+  // offsets from left edge of containing block (which is a padding edge)
   nscoord       mLeft, mRight;
+  // offset from top edge of containing block (which is a padding edge)
   nscoord       mTop;
   PRPackedBool  mLeftIsExact, mRightIsExact;
 
@@ -911,7 +913,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
     
     } else {
       // We need to compute it. It's important we do this, because if it's
-      // percentage based this computed value may be different from the comnputed
+      // percentage based this computed value may be different from the computed
       // value calculated using the absolute containing block width
       boxWidth = ComputeWidthValue(aBlockContentWidth,
                                    insideBoxSizing, outsideBoxSizing,
@@ -934,11 +936,11 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   nsBlockFrame* blockFrame;
   if (NS_SUCCEEDED(aContainingBlock->QueryInterface(kBlockFrameCID,
                                   reinterpret_cast<void**>(&blockFrame)))) {
-    // We need the immediate child of the block frame, and that may not be
-    // the placeholder frame
-    nsIFrame *blockChild =
-      nsLayoutUtils::FindChildContainingDescendant(blockFrame, aPlaceholderFrame);
-    nsBlockFrame::line_iterator lineBox = blockFrame->FindLineFor(blockChild);
+    PRBool isValid;
+    nsBlockInFlowLineIterator iter(blockFrame, aPlaceholderFrame, &isValid);
+    NS_ASSERTION(isValid, "Can't find placeholder!");
+    NS_ASSERTION(iter.GetContainer() == blockFrame, "Found placeholder in wrong block!");
+    nsBlockFrame::line_iterator lineBox = iter.GetLine();
 
     // How we determine the hypothetical box depends on whether the element
     // would have been inline-level or block-level
@@ -1065,7 +1067,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   // translate.
   nsMargin border = cbrs->mComputedBorderPadding - cbrs->mComputedPadding;
   aHypotheticalBox.mLeft -= border.left;
-  aHypotheticalBox.mRight -= border.right;
+  aHypotheticalBox.mRight -= border.left;
   aHypotheticalBox.mTop -= border.top;
 }
 
@@ -1276,11 +1278,11 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
         mComputedMargin.right = availMarginSpace - mComputedMargin.left;
       } else {
         // Just 'margin-left' is 'auto'
-        mComputedMargin.left = availMarginSpace - mComputedMargin.right;
+        mComputedMargin.left = availMarginSpace;
       }
     } else {
       // Just 'margin-right' is 'auto'
-      mComputedMargin.right = availMarginSpace - mComputedMargin.left;
+      mComputedMargin.right = availMarginSpace;
     }
   }
 
@@ -1587,6 +1589,16 @@ static eNormalLineHeightControl GetNormalLineHeightCalcControl(void)
   return sNormalLineHeightControl;
 }
 
+static inline PRBool
+IsSideCaption(nsIFrame* aFrame, const nsStyleDisplay* aStyleDisplay)
+{
+  if (aStyleDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CAPTION)
+    return PR_FALSE;
+  PRUint8 captionSide = aFrame->GetStyleTableBorder()->mCaptionSide;
+  return captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
+         captionSide == NS_STYLE_CAPTION_SIDE_RIGHT;
+}
+
 // XXX refactor this code to have methods for each set of properties
 // we are computing: width,height,line-height; margin; offsets
 
@@ -1796,7 +1808,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
       NS_ASSERTION(mComputedHeight == NS_UNCONSTRAINEDSIZE ||
                    mComputedHeight >= 0, "Bogus height");
 
-      if (isBlock)
+      if (isBlock && !IsSideCaption(frame, mStyleDisplay))
         CalculateBlockSideMargins(availableWidth, mComputedWidth);
     }
   }
@@ -2108,6 +2120,9 @@ nsCSSOffsetState::ComputeMargin(nscoord aContainingBlockWidth)
                                mComputedMargin.bottom);
 
     // XXX We need to include 'auto' horizontal margins in this too!
+    // ... but if we did that, we'd need to fix nsFrame::GetUsedMargin
+    // to use it even when the margins are all zero (since sometimes
+    // they get treated as auto)
     frame->SetProperty(nsGkAtoms::usedMarginProperty,
                        new nsMargin(mComputedMargin),
                        DestroyMarginFunc);

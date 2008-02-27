@@ -108,10 +108,10 @@ NS_IMPL_STRING_ATTR(nsHTMLTableCaptionElement, Align, align)
 
 
 static const nsAttrValue::EnumTable kCaptionAlignTable[] = {
-  { "left",  NS_SIDE_LEFT },
-  { "right", NS_SIDE_RIGHT },
-  { "top",   NS_SIDE_TOP},
-  { "bottom",NS_SIDE_BOTTOM},
+  { "left",   NS_STYLE_CAPTION_SIDE_LEFT },
+  { "right",  NS_STYLE_CAPTION_SIDE_RIGHT },
+  { "top",    NS_STYLE_CAPTION_SIDE_TOP },
+  { "bottom", NS_STYLE_CAPTION_SIDE_BOTTOM },
   { 0 }
 };
 

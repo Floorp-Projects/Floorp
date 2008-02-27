@@ -29,10 +29,6 @@ chrome://mochikit/content/chrome/dom/tests/mochitest/whatwg/test_postMessage_chr
 
 SimpleTest.waitForExplicitFinish();
 
-var pathHead = "chrome://mochikit/content/chrome";
-var path = "/dom/tests/mochitest/whatwg/test_postMessage_chrome.html";
-var otherPath = "/tests/dom/tests/mochitest/whatwg/postMessage_chrome_helper.html";
-
 var testsCompletedCount = 0;
 
 /** Receives MessageEvents to this window. */
@@ -69,8 +65,7 @@ function messageReceiver(evt)
 function checkSelf(evt)
 {
   is(evt.isTrusted, true, "should have sent a trusted event");
-  is(evt.domain, "mochikit", "chrome: protocol's domain is the package");
-  is(evt.uri, pathHead + path, "event has wrong URI");
+  is(evt.origin, "chrome://mochikit", "wrong origin for chrome: URL");
   is(evt.source, null, "chrome posters get a null source, for security");
 }
 
@@ -82,9 +77,7 @@ function checkSelf(evt)
 function receiveContent(evt)
 {
   is(evt.isTrusted, true, "should have sent a trusted event");
-  is(evt.domain, "example.org", "wrong domain for content page");
-  is(evt.uri, "http://example.org" + otherPath,
-     "content response event has wrong URI");
+  is(evt.origin, "http://example.org", "content response event has wrong URI");
   is(evt.source, window.frames.contentDomain,
      "wrong source for same-domain message!");
 }

@@ -73,6 +73,27 @@
 #include "nsGkAtoms.h"
 #include "nsINameSpaceManager.h"
 
+#include "nsThreadUtils.h"
+
+class nsAsyncDocShellDestroyer : public nsRunnable
+{
+public:
+  nsAsyncDocShellDestroyer(nsIDocShell* aDocShell)
+    : mDocShell(aDocShell)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    nsCOMPtr<nsIBaseWindow> base_win(do_QueryInterface(mDocShell));
+    if (base_win) {
+      base_win->Destroy();
+    }
+    return NS_OK;
+  }
+  nsRefPtr<nsIDocShell> mDocShell;
+};
+
 // Bug 136580: Limit to the number of nested content frames that can have the
 //             same URL. This is to stop content that is recursively loading
 //             itself.  Note that "#foo" on the end of URL doesn't affect
@@ -140,6 +161,7 @@ NS_IMETHODIMP
 nsFrameLoader::LoadURI(nsIURI* aURI)
 {
   NS_PRECONDITION(aURI, "Null URI?");
+  NS_ENSURE_STATE(!mDestroyCalled);
   if (!aURI)
     return NS_ERROR_INVALID_POINTER;
 
@@ -227,11 +249,27 @@ nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
   return NS_OK;
 }
 
+void
+nsFrameLoader::Finalize()
+{
+  nsCOMPtr<nsIBaseWindow> base_win(do_QueryInterface(mDocShell));
+  if (base_win) {
+    base_win->Destroy();
+  }
+  mDocShell = nsnull;
+}
+
 NS_IMETHODIMP
 nsFrameLoader::Destroy()
 {
+  if (mDestroyCalled) {
+    return NS_OK;
+  }
+  mDestroyCalled = PR_TRUE;
+
+  nsCOMPtr<nsIDocument> doc;
   if (mOwnerContent) {
-    nsCOMPtr<nsIDocument> doc = mOwnerContent->GetDocument();
+    doc = mOwnerContent->GetOwnerDoc();
 
     if (doc) {
       doc->SetSubDocumentFor(mOwnerContent, nsnull);
@@ -258,14 +296,21 @@ nsFrameLoader::Destroy()
   if (win_private) {
     win_private->SetFrameElementInternal(nsnull);
   }
-  
-  nsCOMPtr<nsIBaseWindow> base_win(do_QueryInterface(mDocShell));
 
-  if (base_win) {
-    base_win->Destroy();
+  if ((mInDestructor || !doc ||
+       NS_FAILED(doc->FinalizeFrameLoader(this))) && mDocShell) {
+    nsCOMPtr<nsIRunnable> event = new nsAsyncDocShellDestroyer(mDocShell);
+    NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
+    NS_DispatchToCurrentThread(event);
+
+    // Let go of our docshell now that the async destroyer holds on to
+    // the docshell.
+
+    mDocShell = nsnull;
   }
 
-  mDocShell = nsnull;
+  // NOTE: 'this' may very well be gone by now.
+
   return NS_OK;
 }
 
@@ -282,6 +327,7 @@ nsFrameLoader::EnsureDocShell()
   if (mDocShell) {
     return NS_OK;
   }
+  NS_ENSURE_STATE(!mDestroyCalled);
 
   // Get our parent docshell off the document of mOwnerContent
   // XXXbz this is such a total hack.... We really need to have a

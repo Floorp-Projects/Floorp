@@ -846,6 +846,11 @@
  */
 #define NS_CRYPTO_HASH_CONTRACTID "@mozilla.org/security/hash;1"
 
+/**
+ * Must implement nsICryptoHMAC.
+ */
+#define NS_CRYPTO_HMAC_CONTRACTID "@mozilla.org/security/hmac;1"
+
 /******************************************************************************
  * Categories
  */

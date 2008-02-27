@@ -264,7 +264,7 @@ gfxWindowsNativeDrawing::PaintToContext()
             gfxAlphaRecovery::RecoverAlpha(black, white, mTempSurfaceSize);
 
         mContext->Save();
-        mContext->MoveTo(mNativeRect.pos);
+        mContext->Translate(mNativeRect.pos);
         mContext->NewPath();
         mContext->Rectangle(gfxRect(gfxPoint(0.0, 0.0), mNativeRect.size));
 

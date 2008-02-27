@@ -174,7 +174,7 @@ static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile)
 //----------------------------------------------------------------------------------------
 {
     WCHAR path[MAX_PATH + 2];
-    HRESULT result = ::SHGetSpecialFolderPathW(NULL, path, folder, true);
+    HRESULT result = SHGetSpecialFolderPathW(NULL, path, folder, true);
     
     if (!SUCCEEDED(result)) 
         return NS_ERROR_FAILURE;
