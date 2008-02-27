@@ -85,7 +85,7 @@ nsIAtom *nsDocAccessible::gLastFocusedFrameType = nsnull;
 //-----------------------------------------------------
 nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell):
   nsHyperTextAccessibleWrap(aDOMNode, aShell), mWnd(nsnull),
-  mScrollPositionChangedTicks(0), mIsContentLoaded(PR_FALSE)
+  mScrollPositionChangedTicks(0), mIsContentLoaded(PR_FALSE), mIsLoadCompleteFired(PR_FALSE)
 {
   // For GTK+ native window, we do nothing here.
   if (!mDOMNode)
@@ -526,17 +526,13 @@ NS_IMETHODIMP nsDocAccessible::Shutdown()
     nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
   ShutdownChildDocuments(treeItem);
 
-  if (mDocLoadTimer) {
-    mDocLoadTimer->Cancel();
-    mDocLoadTimer = nsnull;
-  }
-
   RemoveEventListeners();
 
   mWeakShell = nsnull;  // Avoid reentrancy
 
   ClearCache(mAccessNodeCache);
 
+  nsCOMPtr<nsIDocument> kungFuDeathGripDoc = mDocument;
   mDocument = nsnull;
 
   nsHyperTextAccessibleWrap::Shutdown();
@@ -552,6 +548,10 @@ NS_IMETHODIMP nsDocAccessible::Shutdown()
       NS_RELEASE_THIS();
     }
   }
+
+  // Remove from the cache after other parts of Shutdown(), so that Shutdown() procedures
+  // can find the doc or root accessible in the cache if they need it.
+  gGlobalDocAccessibleCache.Remove(static_cast<void*>(kungFuDeathGripDoc));
 
   return NS_OK;
 }
@@ -766,10 +766,20 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
              (aEventType == nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE ||
               aEventType == nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED);
 
-  if (mIsContentLoaded == isFinished) {
+  mIsContentLoaded = isFinished;
+  if (isFinished) {
+    if (mIsLoadCompleteFired)
+      return NS_OK;
+    mIsLoadCompleteFired = PR_TRUE;
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> treeItem =
+    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
+  if (!treeItem) {
     return NS_OK;
   }
-  mIsContentLoaded = isFinished;
+  nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
+  treeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
 
   if (isFinished) {
     // Need to wait until scrollable view is available
@@ -780,36 +790,31 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
       // Make the parent forget about the old document as a child
       privateAccessible->InvalidateChildren();
     }
-    // Use short timer before firing state change event for finished doc,
-    // because the window is made visible asynchronously
-    if (!mDocLoadTimer) {
-      mDocLoadTimer = do_CreateInstance("@mozilla.org/timer;1");
-    }
-    if (mDocLoadTimer) {
-      mDocLoadTimer->InitWithFuncCallback(DocLoadCallback, this, 0,
-                                          nsITimer::TYPE_ONE_SHOT);
-    }
-  } else {
-    nsCOMPtr<nsIDocShellTreeItem> treeItem =
-      nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
-    if (!treeItem) {
-      return NS_OK;
-    }
-
-    nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
-    treeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
     if (sameTypeRoot != treeItem) {
-      return NS_OK; 
+      // Fire show/hide events to indicate frame/iframe content is new, rather than
+      // doc load event which causes screen readers to act is if entire page is reloaded
+      InvalidateCacheSubtree(nsnull, nsIAccessibleEvent::EVENT_DOM_SIGNIFICANT_CHANGE);
     }
-
-    // Loading document: fire EVENT_STATE_CHANGE to set STATE_BUSY
-    nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
-      new nsAccStateChangeEvent(this, nsIAccessibleStates::STATE_BUSY,
-                                PR_FALSE, PR_TRUE);
-    FireAccessibleEvent(accEvent);
+    // Fire STATE_CHANGE event for doc load finish if focus is in same doc tree
+    if (gLastFocusedNode) {
+      nsCOMPtr<nsIDocShellTreeItem> focusedTreeItem =
+        nsAccUtils::GetDocShellTreeItemFor(gLastFocusedNode);
+      if (focusedTreeItem) {
+        nsCOMPtr<nsIDocShellTreeItem> sameTypeRootOfFocus;
+        focusedTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRootOfFocus));
+        if (sameTypeRoot == sameTypeRootOfFocus) {
+          nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
+            new nsAccStateChangeEvent(this, nsIAccessibleStates::STATE_BUSY, PR_FALSE, PR_FALSE);
+          FireAccessibleEvent(accEvent);
+          FireAnchorJumpEvent();
+        }
+      }
+    }
   }
-
-  nsAccUtils::FireAccEvent(aEventType, this);
+  if (sameTypeRoot == treeItem) {
+    // Not a frame or iframe
+    nsAccUtils::FireAccEvent(aEventType, this);
+  }
   return NS_OK;
 }
 
@@ -2067,55 +2072,3 @@ nsDocAccessible::FireShowHideEvents(nsIDOMNode *aDOMNode, PRBool aAvoidOnThisNod
 
   return NS_OK;
 }
-
-void nsDocAccessible::DocLoadCallback(nsITimer *aTimer, void *aClosure)
-{
-  // Doc has finished loading, fire "load finished" event
-  // By using short timer we can wait make the window visible, 
-  // which it does asynchronously. This avoids confusing the screen reader with a
-  // hidden window. Waiting also allows us to see of the document has focus,
-  // which is important because we only fire doc loaded events for focused documents.
-
-  nsDocAccessible *docAcc =
-    reinterpret_cast<nsDocAccessible*>(aClosure);
-  if (!docAcc) {
-    return;
-  }
-
-  // Fire doc finished event
-  nsCOMPtr<nsIDOMNode> docDomNode;
-  docAcc->GetDOMNode(getter_AddRefs(docDomNode));
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(docDomNode));
-  if (doc) {
-    nsCOMPtr<nsISupports> container = doc->GetContainer();
-    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = do_QueryInterface(container);
-    if (!docShellTreeItem) {
-      return;
-    }
-    nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
-    docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
-    if (sameTypeRoot != docShellTreeItem) {
-      // A frame or iframe has finished loading new content
-      docAcc->InvalidateCacheSubtree(nsnull, nsIAccessibleEvent::EVENT_DOM_SIGNIFICANT_CHANGE);
-      return;
-    }
-
-    // Fire STATE_CHANGE event for doc load finish if focus is in same doc tree
-    if (gLastFocusedNode) {
-      nsCOMPtr<nsIDocShellTreeItem> focusedTreeItem =
-        nsAccUtils::GetDocShellTreeItemFor(gLastFocusedNode);
-      if (focusedTreeItem) {
-        nsCOMPtr<nsIDocShellTreeItem> sameTypeRootOfFocus;
-        focusedTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRootOfFocus));
-        if (sameTypeRoot == sameTypeRootOfFocus) {
-          nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
-            new nsAccStateChangeEvent(docAcc, nsIAccessibleStates::STATE_BUSY,
-                                      PR_FALSE, PR_FALSE);
-          docAcc->FireAccessibleEvent(accEvent);
-          docAcc->FireAnchorJumpEvent();
-        }
-      }
-    }
-  }
-}
-

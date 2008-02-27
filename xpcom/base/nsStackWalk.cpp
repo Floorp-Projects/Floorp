@@ -909,6 +909,10 @@ BOOL SymGetModuleInfoEspecial64(HANDLE aProcess, DWORD64 aAddr, PIMAGEHLP_MODULE
         DWORD displacement = 0;
         BOOL lineRes = FALSE;
         lineRes = _SymGetLineFromAddr64(aProcess, aAddr, &displacement, aLineInfo);
+        if (!lineRes) {
+            // Clear out aLineInfo to indicate that it's not valid
+            memset(aLineInfo, 0, sizeof(*aLineInfo));
+        }
     }
 
     return retval;
@@ -984,9 +988,12 @@ NS_DescribeCodeAddress(void *aPC, nsCodeAddressDetails *aDetails)
             PL_strncpyz(aDetails->library, modInfo.ModuleName,
                         sizeof(aDetails->library));
             aDetails->loffset = (char*) aPC - (char*) modInfo.BaseOfImage;
-            PL_strncpyz(aDetails->filename, lineInfo.FileName,
-                        sizeof(aDetails->filename));
-            aDetails->lineno = lineInfo.LineNumber;
+            
+            if (lineInfo.FileName) {
+                PL_strncpyz(aDetails->filename, lineInfo.FileName,
+                            sizeof(aDetails->filename));
+                aDetails->lineno = lineInfo.LineNumber;
+            }
         }
 
         ULONG64 buffer[(sizeof(SYMBOL_INFO) +

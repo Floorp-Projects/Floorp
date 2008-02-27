@@ -39,7 +39,10 @@ EXPORTED_SYMBOLS = [ "PluralForm" ];
 /**
  * This module provides the PluralForm object which contains a method to figure
  * out which plural form of a word to use for a given number based on the
- * current localization.
+ * current localization. There is also a makeGetter method that creates a get
+ * function for the desired plural rule. This is useful for extensions that
+ * specify their own plural rule instead of relying on the browser default.
+ * (I.e., the extension hasn't been localized to the browser's locale.)
  *
  * See: http://developer.mozilla.org/en/docs/Localization_and_Plurals
  *
@@ -50,6 +53,10 @@ EXPORTED_SYMBOLS = [ "PluralForm" ];
  *
  * int numForms
  * numForms()
+ *
+ * [string pluralForm get(int aNum, string aWords), int numForms numForms()]
+ * makeGetter(int aRuleNum)
+ * Note: Basically, makeGetter returns 2 functions that do "get" and "numForm"
  */
 
 const Cc = Components.classes;
@@ -93,8 +100,6 @@ let gFunctions = [
   [3, function(n) n%10==1?0:n%10==2?1:2],
 ];
 
-let gNumForms;
-
 let PluralForm = {
   /**
    * Get the correct plural form of a word based on the number
@@ -105,30 +110,49 @@ let PluralForm = {
    *        A semi-colon (;) separated string of words to pick the plural form
    * @return The appropriate plural form of the word
    */
-  get: (function initGetPluralForm()
+  get get()
   {
-    // initGetPluralForm gets called right away when this module is loaded and
+    // This method will lazily load to avoid perf when it is first needed and
     // creates getPluralForm function. The function it creates is based on the
     // value of pluralRule specified in the intl stringbundle.
     // See: http://developer.mozilla.org/en/docs/Localization_and_Plurals
+
+    // Delete the getters to be overwritten
+    delete PluralForm.numForms;
+    delete PluralForm.get;
 
     // Get the plural rule number from the intl stringbundle
     let ruleNum = Number(Cc["@mozilla.org/intl/stringbundle;1"].
       getService(Ci.nsIStringBundleService).createBundle(kIntlProperties).
       GetStringFromName("pluralRule"));
 
+    // Make the plural form get function and set it as the default get
+    [PluralForm.get, PluralForm.numForms] = PluralForm.makeGetter(ruleNum);
+    return PluralForm.get;
+  },
+
+  /**
+   * Create a pair of plural form functions for the given plural rule number.
+   *
+   * @param aRuleNum
+   *        The plural rule number to create functions
+   * @return A pair: [function that gets the right plural form,
+   *                  function that returns the number of plural forms]
+   */
+  makeGetter: function(aRuleNum)
+  {
     // Default to "all plural" if the value is out of bounds or invalid
-    if (ruleNum < 0 || ruleNum >= gFunctions.length || isNaN(ruleNum)) {
-      log(["Invalid rule number: ", ruleNum, " -- defaulting to 0"]);
-      ruleNum = 0;
+    if (aRuleNum < 0 || aRuleNum >= gFunctions.length || isNaN(aRuleNum)) {
+      log(["Invalid rule number: ", aRuleNum, " -- defaulting to 0"]);
+      aRuleNum = 0;
     }
 
     // Get the desired pluralRule function
-    let pluralFunc;
-    [gNumForms, pluralFunc] = gFunctions[ruleNum];
+    let [numForms, pluralFunc] = gFunctions[aRuleNum];
 
-    // Return a function that gets the right plural form
-    return function(aNum, aWords) {
+    // Return functions that give 1) the number of forms and 2) gets the right
+    // plural form
+    return [function(aNum, aWords) {
       // Figure out which index to use for the semi-colon separated words
       let index = pluralFunc(aNum ? Number(aNum) : 0);
       let words = aWords ? aWords.split(/;/) : [""];
@@ -139,26 +163,31 @@ let PluralForm = {
       // Check for array out of bounds or empty strings
       if ((ret == undefined) || (ret == "")) {
         // Report the caller to help figure out who is causing badness
-        let caller = this.get.caller ? this.get.caller.name : "top";
+        let caller = PluralForm.get.caller ? PluralForm.get.caller.name : "top";
 
         // Display a message in the error console
         log(["Index #", index, " of '", aWords, "' for value ", aNum,
-            " is invalid -- plural rule #", ruleNum, "; called by ", caller]);
+            " is invalid -- plural rule #", aRuleNum, "; called by ", caller]);
 
         // Default to the first entry (which might be empty, but not undefined)
         ret = words[0];
       }
 
       return ret;
-    };
-  })(),
+    }, function() numForms];
+  },
 
   /**
    * Get the number of forms for the current plural rule
    *
    * @return The number of forms
    */
-  numForms: function() gNumForms,
+  get numForms()
+  {
+    // We lazily load numForms, so trigger the init logic with get()
+    PluralForm.get();
+    return PluralForm.numForms;
+  },
 };
 
 /**

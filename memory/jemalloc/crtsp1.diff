@@ -12,7 +12,7 @@ diff -re crt/src/crt0.c crt-sp1/src/crt0.c
 	 */
 	_init_pointers();       /* initialize global function pointers */
 
-        if ( malloc_init_hard() )                /* initialize heap */
+        if ( malloc_init_hard() )           /* initialize heap */
 .
 101a
 extern BOOL malloc_init_hard(void);
@@ -60,6 +60,15 @@ diff -re crt/src/dllcrt0.c crt-sp1/src/dllcrt0.c
 diff -re crt/src/intel/_sample_.def crt-sp1/src/intel/_sample_.def
 1208d
 723,724d
+669a
+    posix_memalign
+.
+643a
+    memalign
+.
+500a
+    malloc_usable_size
+.
 336,341d
 324d
 313,314d
@@ -120,6 +129,9 @@ $(OBJDIR)\unhandld.obj: $(PREOBJDIR)\unhandld.obj
 323d
 320d
 diff -re crt/src/makefile.sub crt-sp1/src/makefile.sub
+103c
+LIB=link -lib -nologo
+.
 69c
 CFLAGS=$(CFLAGS) -O2 -DMOZ_MEMORY=1 -DMOZ_MEMORY_WINDOWS=1
 .

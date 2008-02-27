@@ -125,8 +125,9 @@ invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
 }
 
 
-XPTC_PUBLIC_API(nsresult)
-XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex, PRUint32 paramCount, nsXPTCVariant* params)
+extern "C" NS_EXPORT  nsresult NS_FROZENCALL
+NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
+                 PRUint32 paramCount, nsXPTCVariant* params)
 {
   return asmXPTC_InvokeByIndex(that,
                                methodIndex,

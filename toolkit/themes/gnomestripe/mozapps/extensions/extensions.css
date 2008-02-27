@@ -308,33 +308,33 @@ richlistitem[opType="needs-uninstall"] .notifyBadge {
 
 .addonRating[rating] {
   display: -moz-box;
-  width: 68px;
-  height: 12px;
+  width: 70px;
+  height: 14px;
   list-style-image: url("chrome://mozapps/skin/extensions/ratings.png");
 }
 
 .addonRating[rating="0"] {
-  -moz-image-region: rect(0px 68px 12px 0px);
+  -moz-image-region: rect(0px 70px 14px 0px);
 }
 
 .addonRating[rating="1"], .addonRating[rating="2"] {
-  -moz-image-region: rect(12px 68px 24px 0px);
+  -moz-image-region: rect(14px 70px 28px 0px);
 }
 
 .addonRating[rating="3"], .addonRating[rating="4"] {
-  -moz-image-region: rect(24px 68px 36px 0px);
+  -moz-image-region: rect(28px 70px 42px 0px);
 }
 
 .addonRating[rating="5"], .addonRating[rating="6"] {
-  -moz-image-region: rect(36px 68px 48px 0px);
+  -moz-image-region: rect(42px 70px 56px 0px);
 }
 
 .addonRating[rating="7"], .addonRating[rating="8"] {
-  -moz-image-region: rect(48px 68px 60px 0px);
+  -moz-image-region: rect(56px 70px 70px 0px);
 }
 
 .addonRating[rating="9"], .addonRating[rating="10"] {
-  -moz-image-region: rect(60px 68px 72px 0px);
+  -moz-image-region: rect(70px 70px 84px 0px);
 }
 
 .addonType image {
@@ -433,50 +433,29 @@ vbox[typeName="status"][type="header-recommended"] {
 radio#extensions-view {
   -moz-image-region: rect(0px, 32px,  32px, 0px)
 }
-radio#extensions-view:hover, radio#extensions-view[selected="true"]  {
-  -moz-image-region: rect(32px, 32px,  64px, 0px)
-}
 
 radio#themes-view {
   -moz-image-region: rect(0px, 64px,  32px, 32px)
-}
-radio#themes-view:hover, radio#themes-view[selected="true"]  {
-  -moz-image-region: rect(32px, 64px,  64px, 32px)
 }
 
 radio#locales-view {
   -moz-image-region: rect(0px, 96px,  32px, 64px)
 }
-radio#locales-view:hover, radio#locales-view[selected="true"]  {
-  -moz-image-region: rect(32px, 96px,  64px, 64px)
-}
 
 radio#plugins-view {
   -moz-image-region: rect(0px, 128px, 32px, 96px)
-}
-radio#plugins-view:hover, radio#plugins-view[selected="true"] {
-  -moz-image-region: rect(32px, 128px, 64px, 96px)
 }
 
 radio#updates-view {
   -moz-image-region: rect(0px, 160px, 32px, 128px)
 }
-radio#updates-view:hover, radio#updates-view[selected="true"] {
-  -moz-image-region: rect(32px, 160px, 64px, 128px)
-}
 
 radio#installs-view {
   -moz-image-region: rect(0px, 192px, 32px, 160px)
 }
-radio#installs-view:hover, radio#installs-view[selected="true"] {
-  -moz-image-region: rect(32px, 192px, 64px, 160px)
-}
 
 radio#search-view {
   -moz-image-region: rect(0px, 224px, 32px, 192px)
-}
-radio#search-view:hover, radio#search-view[selected="true"] {
-  -moz-image-region: rect(32px, 224px, 64px, 192px)
 }
 
 /* Update view checkbox */

@@ -214,6 +214,7 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
     nsCOMPtr<nsITimer> mFireEventTimer;
     PRUint16 mScrollPositionChangedTicks; // Used for tracking scroll events
     PRPackedBool mIsContentLoaded;
+    PRPackedBool mIsLoadCompleteFired;
     nsCOMArray<nsIAccessibleEvent> mEventsToFire;
 
 protected:
@@ -221,10 +222,6 @@ protected:
     PRBool mIsAnchorJumped;
     static PRUint32 gLastFocusedAccessiblesState;
     static nsIAtom *gLastFocusedFrameType;
-
-private:
-    static void DocLoadCallback(nsITimer *aTimer, void *aClosure);
-    nsCOMPtr<nsITimer> mDocLoadTimer;
 };
 
 #endif  

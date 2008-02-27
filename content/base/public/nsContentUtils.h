@@ -96,6 +96,7 @@ class nsVoidArray;
 struct JSRuntime;
 class nsICaseConversion;
 class nsIWidget;
+class nsPIDOMWindow;
 #ifdef MOZ_XTF
 class nsIXTFService;
 #endif
@@ -267,11 +268,13 @@ public:
    *  node/offset pair
    *  Returns -1 if point1 < point2, 1, if point1 > point2,
    *  0 if error or if point1 == point2.
-   *  NOTE! The two nodes MUST be in the same connected subtree!
-   *  if they are not the result is undefined.
+   *  NOTE! If the two nodes aren't in the same connected subtree,
+   *  the result is undefined, but the optional aDisconnected parameter
+   *  is set to PR_TRUE.
    */
   static PRInt32 ComparePoints(nsINode* aParent1, PRInt32 aOffset1,
-                               nsINode* aParent2, PRInt32 aOffset2);
+                               nsINode* aParent2, PRInt32 aOffset2,
+                               PRBool* aDisconnected = nsnull);
 
   /**
    * Find the first child of aParent with a resolved tag matching
@@ -368,6 +371,10 @@ public:
 
   // Check if the (JS) caller can access aNode.
   static PRBool CanCallerAccess(nsIDOMNode *aNode);
+
+  // Check if the (JS) caller can access aWindow.
+  // aWindow can be either outer or inner window.
+  static PRBool CanCallerAccess(nsPIDOMWindow* aWindow);
 
   /**
    * Get the docshell through the JS context that's currently on the stack.
@@ -1127,12 +1134,6 @@ public:
                           PRBool aClick, PRBool aIsUserTriggered);
 
   /**
-   * Return true if aContent or one of its ancestors in the
-   * bindingParent chain is native anonymous.
-   */
-  static PRBool IsNativeAnonymous(nsIContent* aContent);
-
-  /**
    * Return top-level widget in the parent chain.
    */
   static nsIWidget* GetTopLevelWidget(nsIWidget* aWidget);
@@ -1191,6 +1192,9 @@ private:
   static nsresult HoldScriptObject(PRUint32 aLangID, void* aObject);
   PR_STATIC_CALLBACK(void) DropScriptObject(PRUint32 aLangID, void *aObject,
                                             void *aClosure);
+
+  static PRBool CanCallerAccess(nsIPrincipal* aSubjectPrincipal,
+                                nsIPrincipal* aPrincipal);
 
   static nsIDOMScriptObjectFactory *sDOMScriptObjectFactory;
 

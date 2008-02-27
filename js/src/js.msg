@@ -85,7 +85,7 @@ MSG_DEF(JSMSG_INACTIVE,                 2, 0, JSEXN_INTERNALERR, "nothing active
 MSG_DEF(JSMSG_MORE_ARGS_NEEDED,         3, 3, JSEXN_TYPEERR, "{0} requires more than {1} argument{2}")
 MSG_DEF(JSMSG_BAD_CHAR,                 4, 1, JSEXN_INTERNALERR, "invalid format character {0}")
 MSG_DEF(JSMSG_BAD_TYPE,                 5, 1, JSEXN_TYPEERR, "unknown type {0}")
-MSG_DEF(JSMSG_CANT_LOCK,                6, 0, JSEXN_INTERNALERR, "can't lock memory")
+MSG_DEF(JSMSG_UNUSED6,                  6, 0, JSEXN_NONE, "")
 MSG_DEF(JSMSG_CANT_UNLOCK,              7, 0, JSEXN_INTERNALERR, "can't unlock memory")
 MSG_DEF(JSMSG_INCOMPATIBLE_PROTO,       8, 3, JSEXN_TYPEERR, "{0}.prototype.{1} called on incompatible {2}")
 MSG_DEF(JSMSG_NO_CONSTRUCTOR,           9, 1, JSEXN_TYPEERR, "{0} has no constructor")

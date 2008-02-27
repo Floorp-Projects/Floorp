@@ -224,11 +224,14 @@ NS_IMETHODIMP nsCaret::SetCaretVisible(PRBool inMakeVisible)
 {
   mVisible = inMakeVisible;
   nsresult  err = NS_OK;
-  if (mVisible)
+  if (mVisible) {
     err = StartBlinking();
-  else
+    SetIgnoreUserModify(PR_TRUE);
+  } else {
     err = StopBlinking();
-    
+    SetIgnoreUserModify(PR_FALSE);
+  }
+
   return err;
 }
 
@@ -546,7 +549,7 @@ nsresult nsCaret::StopBlinking()
   if (mDrawn)     // erase the caret if necessary
     DrawCaret(PR_TRUE);
 
-  NS_ASSERTION(!mDrawn, "We just erased ourselves");
+  NS_ASSERTION(!mDrawn, "Caret still drawn after StopBlinking().");
   KillTimer();
 
   return NS_OK;
@@ -643,8 +646,9 @@ FindContainingLine(nsIFrame* aFrame)
     nsBlockFrame* blockParent;
     if (NS_SUCCEEDED(parent->QueryInterface(kBlockFrameCID, (void**)&blockParent)))
     {
-      nsBlockFrame::line_iterator line = blockParent->FindLineFor(aFrame);
-      return line != blockParent->end_lines() ? line.get() : nsnull;
+      PRBool isValid;
+      nsBlockInFlowLineIterator iter(blockParent, aFrame, &isValid);
+      return isValid ? iter.GetLine().get() : nsnull;
     }
     aFrame = parent;
   }
@@ -1217,6 +1221,19 @@ nsCaret::GetFrameSelection()
 void
 nsCaret::SetIgnoreUserModify(PRBool aIgnoreUserModify)
 {
+  if (!aIgnoreUserModify && mIgnoreUserModify && mDrawn) {
+    // We're turning off mIgnoreUserModify. If the caret's drawn
+    // in a read-only node we must erase it, else the next call
+    // to DrawCaret() won't erase the old caret, due to the new
+    // mIgnoreUserModify value.
+    nsIFrame *frame = GetCaretFrame();
+    if (frame) {
+      const nsStyleUserInterface* userinterface = frame->GetStyleUserInterface();
+      if (userinterface->mUserModify == NS_STYLE_USER_MODIFY_READ_ONLY) {
+        StopBlinking();
+      }
+    }
+  }
   mIgnoreUserModify = aIgnoreUserModify;
 }
 

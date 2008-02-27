@@ -707,6 +707,9 @@ nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
         if (broadcaster->GetAttr(kNameSpaceID_None, name, value)) {
             listener->SetAttr(kNameSpaceID_None, name, value,
                               mInitialLayoutComplete);
+        } else {
+            listener->UnsetAttr(kNameSpaceID_None, name,
+                                mInitialLayoutComplete);
         }
 
 #if 0
@@ -2602,16 +2605,13 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic,
     if (aIsDynamic)
         mResolutionPhase = nsForwardReference::eStart;
 
-    nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-    NS_ENSURE_TRUE(secMan, NS_ERROR_NOT_AVAILABLE);
-
     // Chrome documents are allowed to load overlays from anywhere.
     // In all other cases, the overlay is only allowed to load if
     // the master document and prototype document have the same origin.
 
     if (!IsChromeURI(mDocumentURI)) {
         // Make sure we're allowed to load this overlay.
-        rv = secMan->CheckSameOriginURI(mDocumentURI, aURI, PR_TRUE);
+        rv = NodePrincipal()->CheckMayLoad(aURI, PR_TRUE);
         if (NS_FAILED(rv)) {
             *aFailureFromContent = PR_TRUE;
             return rv;
@@ -2992,6 +2992,7 @@ nsXULDocument::ResumeWalk()
         if (! count)
             break;
 
+        nsCOMPtr<nsIURI> overlayURI = mCurrentPrototype->GetURI();
         nsCOMPtr<nsIURI> uri = mUnloadedOverlays[count-1];
         mUnloadedOverlays.RemoveObjectAt(count-1);
 
@@ -3005,8 +3006,21 @@ nsXULDocument::ResumeWalk()
             continue;
         if (NS_FAILED(rv))
             return rv;
-        if (shouldReturn)
+        if (shouldReturn) {
+            if (mOverlayLoadObservers.IsInitialized()) {
+                nsIObserver *obs = mOverlayLoadObservers.GetWeak(overlayURI);
+                if (obs) {
+                    // This overlay has an unloaded overlay, so it will never
+                    // notify. The best we can do is to notify for the unloaded
+                    // overlay instead, assuming nobody is already notifiable
+                    // for it. Note that this will confuse the observer.
+                    if (!mOverlayLoadObservers.GetWeak(uri))
+                        mOverlayLoadObservers.Put(uri, obs);
+                    mOverlayLoadObservers.Remove(overlayURI);
+                }
+            }
             return NS_OK;
+        }
     }
 
     // If we get here, there is nothing left for us to walk. The content

@@ -57,7 +57,7 @@ interface nsIUrlClassifierCallback : nsISupports {
  * clients streaming updates to the url-classifier (usually
  * nsUrlClassifierStreamUpdater.
  */
-[scriptable, uuid(bb0528b3-71e2-4795-8732-d60a4476e6df)]
+[scriptable, uuid(1c9bd1c2-f6fe-43a8-a2b9-48359eb4a9b1)]
 interface nsIUrlClassifierUpdateObserver : nsISupports {
   /**
    * The update requested a new URL whose contents should be downloaded
@@ -65,12 +65,26 @@ interface nsIUrlClassifierUpdateObserver : nsISupports {
    *
    * @param url The url that was requested.
    * @param table The table name that this URL's contents will be associated
-   *              with.
+   *              with.  This should be passed back to beginStream().
+   * @param serverMAC The server-supplied MAC of the data at this URL.  This
+   *                  should be passed back to beginStream().
    */
-  void updateUrlRequested(in ACString url, in ACString table);
+  void updateUrlRequested(in ACString url,
+                          in ACString table,
+                          in ACString serverMAC);
 
-  /* A stream update has completed */
-  void streamFinished();
+  /**
+   * The server has requested that the client get a new client key for
+   * MAC requests.
+   */
+  void rekeyRequested();
+
+  /**
+   * A stream update has completed.
+   *
+   * @param status The state of the update process.
+   */
+  void streamFinished(in nsresult status);
 
   /* The update has encountered an error and should be cancelled */
   void updateError(in nsresult error);
@@ -89,7 +103,7 @@ interface nsIUrlClassifierUpdateObserver : nsISupports {
  * It provides async methods for querying and updating the database.  As the
  * methods complete, they call the callback function.
  */
-[scriptable, uuid(bcc32b18-78be-49f6-a895-a1a341a9e94b)]
+[scriptable, uuid(aaf2c3b2-b7cd-4368-9d46-3fe92e5f78b1)]
 interface nsIUrlClassifierDBService : nsISupports
 {
   /**
@@ -146,8 +160,13 @@ interface nsIUrlClassifierDBService : nsISupports
   /**
    * Begin an update process.  Will throw NS_ERROR_NOT_AVAILABLE if there
    * is already an update in progress.
+   *
+   * @param updater The update observer tied to this update.
+   * @param clientKey The client key for calculating an update's MAC,
+   *        or empty to ignore MAC.
    */
-  void beginUpdate(in nsIUrlClassifierUpdateObserver updater);
+  void beginUpdate(in nsIUrlClassifierUpdateObserver updater,
+                   in ACString clientKey);
 
   /**
    * Begin a stream update.  This should be called once per url being
@@ -155,8 +174,12 @@ interface nsIUrlClassifierDBService : nsISupports
    *
    * @param table The table the contents of this stream will be associated
    *              with, or empty for the initial stream.
+   * @param serverMAC The MAC specified by the update server for this stream.
+   *                  If the server has not specified a MAC (which is the case
+   *                  for the initial stream), this will be empty.
    */
-  void beginStream(in ACString table);
+  void beginStream(in ACString table,
+                   in ACString serverMAC);
 
   /**
    * Update the table incrementally.

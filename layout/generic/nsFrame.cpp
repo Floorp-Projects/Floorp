@@ -4519,6 +4519,7 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
 {
   nsContentAndOffset result;
   result.mContent =  nsnull;
+  result.mOffset = 0;
 
   if (aFrame->IsGeneratedContentFrame())
     return result;
@@ -4540,8 +4541,13 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
       aFrame->GetType() == nsGkAtoms::brFrame) {
     nsIContent* content = aFrame->GetContent();
     result.mContent = content->GetParent();
-    result.mOffset = result.mContent->IndexOf(content) + 
-      (aDirection == eDirPrevious ? 1 : 0);
+    // In some cases (bug 310589, bug 370174) we end up here with a null content.
+    // This probably shouldn't ever happen, but since it sometimes does, we want
+    // to avoid crashing here.
+    NS_ASSERTION(result.mContent, "Unexpected orphan content");
+    if (result.mContent)
+      result.mOffset = result.mContent->IndexOf(content) + 
+        (aDirection == eDirPrevious ? 1 : 0);
     return result;
   }
 
@@ -5287,6 +5293,11 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
       aOverflowArea->UnionRect(*aOverflowArea, r);
     }
   }
+  
+  // Overflow area must always include the frame's top-left and bottom-right,
+  // even if the frame rect is empty.
+  aOverflowArea->UnionRectIncludeEmpty(*aOverflowArea,
+                                       nsRect(nsPoint(0, 0), aNewSize));
 
   PRBool geometricOverflow =
     aOverflowArea->x < 0 || aOverflowArea->y < 0 ||
@@ -5312,7 +5323,6 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
   }
 
   if (outlineRect != nsRect(nsPoint(0, 0), aNewSize)) {
-    // Throw out any overflow if we're -moz-hidden-unscrollable
     mState |= NS_FRAME_OUTSIDE_CHILDREN;
     nsRect* overflowArea = GetOverflowAreaProperty(PR_TRUE); 
     NS_ASSERTION(overflowArea, "should have created rect");

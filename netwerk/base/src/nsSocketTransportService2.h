@@ -48,6 +48,7 @@
 #include "prinrval.h"
 #include "prlog.h"
 #include "prio.h"
+#include "nsASocketHandler.h"
 
 //-----------------------------------------------------------------------------
 
@@ -64,63 +65,6 @@ extern PRLogModuleInfo *gSocketTransportLog;
 
 #define NS_SOCKET_MAX_COUNT    50
 #define NS_SOCKET_POLL_TIMEOUT PR_INTERVAL_NO_TIMEOUT
-
-//-----------------------------------------------------------------------------
-// socket handler: methods are only called on the socket thread.
-
-class nsASocketHandler : public nsISupports
-{
-public:
-    nsASocketHandler()
-        : mCondition(NS_OK)
-        , mPollFlags(0)
-        , mPollTimeout(PR_UINT16_MAX)
-        {}
-
-    //
-    // this condition variable will be checked to determine if the socket
-    // handler should be detached.  it must only be accessed on the socket
-    // thread.
-    //
-    nsresult mCondition;
-
-    //
-    // these flags can only be modified on the socket transport thread.
-    // the socket transport service will check these flags before calling
-    // PR_Poll.
-    //
-    PRUint16 mPollFlags;
-
-    //
-    // this value specifies the maximum amount of time in seconds that may be
-    // spent waiting for activity on this socket.  if this timeout is reached,
-    // then OnSocketReady will be called with outFlags = -1.
-    //
-    // the default value for this member is PR_UINT16_MAX, which disables the
-    // timeout error checking.  (i.e., a timeout value of PR_UINT16_MAX is
-    // never reached.)
-    //
-    PRUint16 mPollTimeout;
-
-    //
-    // called to service a socket
-    // 
-    // params:
-    //   socketRef - socket identifier
-    //   fd        - socket file descriptor
-    //   outFlags  - value of PR_PollDesc::out_flags after PR_Poll returns
-    //               or -1 if a timeout occured
-    //
-    virtual void OnSocketReady(PRFileDesc *fd, PRInt16 outFlags) = 0;
-
-    //
-    // called when a socket is no longer under the control of the socket
-    // transport service.  the socket handler may close the socket at this
-    // point.  after this call returns, the handler will no longer be owned
-    // by the socket transport service.
-    //
-    virtual void OnSocketDetached(PRFileDesc *fd) = 0;
-};
 
 //-----------------------------------------------------------------------------
 
@@ -149,24 +93,6 @@ public:
     PRBool CanAttachSocket() {
         return mActiveCount + mIdleCount < NS_SOCKET_MAX_COUNT;
     }
-
-    //
-    // if the number of sockets reaches the limit, then consumers can be
-    // notified when the number of sockets becomes less than the limit.  the
-    // notification is asynchronous, delivered via the given nsIRunnable
-    // instance on the socket transport thread.
-    //
-    nsresult NotifyWhenCanAttachSocket(nsIRunnable *);
-
-    //
-    // add a new socket to the list of controlled sockets.  returns a socket
-    // reference for the newly attached socket that can be used with other
-    // methods to control the socket.
-    //
-    // NOTE: this function may only be called from an event dispatch on the
-    //       socket thread.
-    //
-    nsresult AttachSocket(PRFileDesc *fd, nsASocketHandler *);
 
 protected:
 

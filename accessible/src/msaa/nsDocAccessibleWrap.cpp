@@ -162,11 +162,6 @@ __try {
   return E_FAIL;
 }
 
-NS_IMETHODIMP nsDocAccessibleWrap::Shutdown()
-{
-  return nsDocAccessible::Shutdown();
-}
-
 NS_IMETHODIMP nsDocAccessibleWrap::FireAnchorJumpEvent()
 {
   // Staying on the same page, jumping to a named anchor

@@ -52,6 +52,8 @@
 #include "nsString.h"
 #include "nsWeakReference.h"
 
+class nsUrlClassifierHashCompleter;
+
 class nsUrlClassifierHashCompleterRequest : public nsIStreamListener
                                           , public nsIObserver
 {
@@ -61,32 +63,45 @@ public:
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIOBSERVER
 
-  nsUrlClassifierHashCompleterRequest(nsIURI *uri)
+  nsUrlClassifierHashCompleterRequest(nsUrlClassifierHashCompleter *completer)
     : mShuttingDown(PR_FALSE)
-    , mURI(uri) { }
+    , mCompleter(completer)
+    , mVerified(PR_FALSE)
+    , mRescheduled(PR_FALSE)
+    { }
   ~nsUrlClassifierHashCompleterRequest() { }
 
   nsresult Begin();
   nsresult Add(const nsACString &partialHash,
                nsIUrlClassifierHashCompleterCallback *c);
 
+  void SetURI(nsIURI *uri) { mURI = uri; }
+  void SetClientKey(const nsACString &clientKey) { mClientKey = clientKey; }
+
 private:
   nsresult OpenChannel();
   nsresult BuildRequest(nsCAutoString &request);
   nsresult AddRequestBody(const nsACString &requestBody);
+  void RescheduleItems();
+  nsresult HandleMAC(nsACString::const_iterator &begin,
+                     const nsACString::const_iterator &end);
   nsresult HandleItem(const nsACString &item,
                       const nsACString &table,
                       PRUint32 chunkId);
-  nsresult HandleTable(const nsACString &response,
-                       nsACString::const_iterator &begin);
+  nsresult HandleTable(nsACString::const_iterator &begin,
+                       const nsACString::const_iterator &end);
   nsresult HandleResponse();
   void NotifySuccess();
   void NotifyFailure(nsresult status);
 
   PRBool mShuttingDown;
+  nsRefPtr<nsUrlClassifierHashCompleter> mCompleter;
   nsCOMPtr<nsIURI> mURI;
+  nsCString mClientKey;
   nsCOMPtr<nsIChannel> mChannel;
   nsCString mResponse;
+  PRBool mVerified;
+  PRBool mRescheduled;
 
   struct Response {
     nsCString completeHash;
@@ -114,16 +129,22 @@ public:
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSIOBSERVER
 
-  nsUrlClassifierHashCompleter() : mShuttingDown(PR_FALSE) {}
+  nsUrlClassifierHashCompleter()
+    : mShuttingDown(PR_FALSE)
+    {}
   ~nsUrlClassifierHashCompleter() {}
 
   nsresult Init();
 
+  nsresult RekeyRequested();
+
 private:
   nsRefPtr<nsUrlClassifierHashCompleterRequest> mRequest;
-  nsCOMPtr<nsIURI> mURI;
-  PRBool mShuttingDown;
+  nsCString mGethashUrl;
+  nsCString mClientKey;
+  nsCString mWrappedKey;
 
+  PRBool mShuttingDown;
 };
 
 #endif // nsUrlClassifierHashCompleter_h_

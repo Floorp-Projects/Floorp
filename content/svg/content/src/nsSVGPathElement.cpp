@@ -151,9 +151,9 @@ nsSVGPathElement::GetPathSegAtLength(float distance, PRUint32 *_retval)
   //  because if distance is longer than the total length of the path we return 
   //  the index of the final segment anyway.
   while (distCovered < distance && i < numSegments - 1) {
-    nsIDOMSVGPathSeg *iSeg;
-    mSegments->GetItem(i, &iSeg);
-    nsSVGPathSeg* curSeg = static_cast<nsSVGPathSeg*>(iSeg);
+    nsCOMPtr<nsIDOMSVGPathSeg> segment;
+    mSegments->GetItem(i, getter_AddRefs(segment));
+    nsSVGPathSeg* curSeg = static_cast<nsSVGPathSeg*>(segment.get());
     if (i == 0) {
       curSeg->GetLength(&ts);
     } else {

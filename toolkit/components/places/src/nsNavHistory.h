@@ -49,6 +49,9 @@
 #include "nsDataHashtable.h"
 #include "nsINavHistoryService.h"
 #ifdef MOZ_XUL
+#include "nsIAutoCompleteController.h"
+#include "nsIAutoCompleteInput.h"
+#include "nsIAutoCompletePopup.h"
 #include "nsIAutoCompleteSearch.h"
 #include "nsIAutoCompleteResult.h"
 #include "nsIAutoCompleteSimpleResult.h"
@@ -91,6 +94,7 @@
 #define QUERYUPDATE_SIMPLE 1
 #define QUERYUPDATE_COMPLEX 2
 #define QUERYUPDATE_COMPLEX_WITH_BOOKMARKS 3
+#define QUERYUPDATE_HOST 4
 
 // this is a work-around for a problem with the optimizer of sqlite
 // A sub-select on MAX(visit_date) is slower than this query with our indexes
@@ -107,6 +111,7 @@ class nsNavBookmarks;
 class QueryKeyValuePair;
 class nsIEffectiveTLDService;
 class nsIIDNService;
+class PlacesSQLQueryBuilder;
 
 // nsNavHistory
 
@@ -123,6 +128,8 @@ class nsNavHistory : public nsSupportsWeakReference,
 {
   friend class AutoCompleteIntermediateResultSet;
   friend class AutoCompleteResultComparator;
+  friend class PlacesSQLQueryBuilder;
+
 public:
   nsNavHistory();
 
@@ -234,6 +241,7 @@ public:
     { return mCollation; }
   nsIDateTimeFormat* GetDateFormatter()
     { return mDateFormatter; }
+  void GetStringFromName(const PRUnichar* aName, nsACString& aResult);
 
   // returns true if history has been disabled
   PRBool IsHistoryDisabled() { return mExpireDaysMax == 0; }
@@ -316,10 +324,6 @@ public:
   void DomainNameFromURI(nsIURI* aURI,
                          nsACString& aDomainName);
   static PRTime NormalizeTime(PRUint32 aRelative, PRTime aOffset);
-  nsresult RecursiveGroup(nsNavHistoryQueryResultNode *aResultNode,
-                          const nsCOMArray<nsNavHistoryResultNode>& aSource,
-                          const PRUint16* aGroupingMode, PRUint32 aGroupCount,
-                          nsCOMArray<nsNavHistoryResultNode>* aDest);
 
   // Don't use these directly, inside nsNavHistory use UpdateBatchScoper,
   // else use nsINavHistoryService::RunInBatchMode
@@ -393,7 +397,7 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBGetPageVisitStats; // used by AddVisit
   nsCOMPtr<mozIStorageStatement> mDBUpdatePageVisitStats; // used by AddVisit
   nsCOMPtr<mozIStorageStatement> mDBAddNewPage; // used by InternalAddNewPage
-  nsCOMPtr<mozIStorageStatement> mDBURIHasTag; // used by UriHasTag
+  nsCOMPtr<mozIStorageStatement> mDBGetTags; // used by FilterResultSet
   nsCOMPtr<mozIStorageStatement> mFoldersWithAnnotationQuery;  // used by StartSearch and FilterResultSet
 
   // these are used by VisitIdToResultNode for making new result nodes from IDs
@@ -452,6 +456,7 @@ protected:
    *          The database was migrated to a new version.
    */
   nsresult InitDB(PRInt16 *aMadeChanges);
+  nsresult InitFunctions();
   nsresult InitStatements();
   nsresult ForceMigrateBookmarksDB(mozIStorageConnection *aDBConn);
   nsresult MigrateV3Up(mozIStorageConnection *aDBConn);
@@ -561,14 +566,14 @@ protected:
 
   nsresult ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries, 
                                 nsNavHistoryQueryOptions *aOptions,
-                                nsCString &queryString);
+                                nsCString& queryString,
+                                PRBool& aParamsPresent);
 
   nsresult QueryToSelectClause(nsNavHistoryQuery* aQuery,
                                nsNavHistoryQueryOptions* aOptions,
                                PRInt32 aStartParameter,
                                nsCString* aClause,
-                               PRInt32* aParamCount,
-                               const nsACString& aCommonConditions);
+                               PRInt32* aParamCount);
   nsresult BindQueryClauseParameters(mozIStorageStatement* statement,
                                      PRInt32 aStartParameter,
                                      nsNavHistoryQuery* aQuery,
@@ -582,28 +587,9 @@ protected:
   void GetAgeInDaysString(PRInt32 aInt, const PRUnichar *aName, 
                           nsACString& aResult);
 
-  void GetStringFromName(const PRUnichar *aName, nsACString& aResult);
-
   void TitleForDomain(const nsCString& domain, nsACString& aTitle);
 
   nsresult SetPageTitleInternal(nsIURI* aURI, const nsAString& aTitle);
-
-  nsresult GroupByDay(nsNavHistoryQueryResultNode *aResultNode,
-                      const nsCOMArray<nsNavHistoryResultNode>& aSource,
-                      nsCOMArray<nsNavHistoryResultNode>* aDest);
-
-  nsresult GroupByHost(nsNavHistoryQueryResultNode *aResultNode,
-                       const nsCOMArray<nsNavHistoryResultNode>& aSource,
-                       nsCOMArray<nsNavHistoryResultNode>* aDest,
-                       PRBool aIsDomain);
-
-  nsresult GroupByFolder(nsNavHistoryQueryResultNode *aResultNode,
-                         const nsCOMArray<nsNavHistoryResultNode>& aSource,
-                         nsCOMArray<nsNavHistoryResultNode>* aDest);
-
-  PRBool URIHasTag(const nsACString& aURISpec, const nsAString& aTag);
-  PRBool URIHasAnyTagFromTerms(const nsACString& aURISpec, const nsStringArray& aTerms);
-  void CreateTermsFromTokens(const nsStringArray& aTagTokens, nsStringArray& aTerms);
 
   nsresult FilterResultSet(nsNavHistoryQueryResultNode *aParentNode,
                            const nsCOMArray<nsNavHistoryResultNode>& aSet,
@@ -659,14 +645,16 @@ protected:
   static const PRInt32 kAutoCompleteIndex_URL;
   static const PRInt32 kAutoCompleteIndex_Title;
   static const PRInt32 kAutoCompleteIndex_FaviconURL;
-  static const PRInt32 kAutoCompleteIndex_ItemId;
   static const PRInt32 kAutoCompleteIndex_ParentId;
   static const PRInt32 kAutoCompleteIndex_BookmarkTitle;
+  static const PRInt32 kAutoCompleteIndex_Tags;
   nsCOMPtr<mozIStorageStatement> mDBAutoCompleteQuery; //  kAutoCompleteIndex_* results
+  nsCOMPtr<mozIStorageStatement> mDBFeedbackIncrease;
 
   nsresult InitAutoComplete();
   nsresult CreateAutoCompleteQueries();
   PRBool mAutoCompleteOnlyTyped;
+  PRBool mAutoCompleteFilterJavascript;
   PRInt32 mAutoCompleteMaxResults;
   PRInt32 mAutoCompleteSearchChunkSize;
   PRInt32 mAutoCompleteSearchTimeout;
@@ -677,6 +665,9 @@ protected:
   nsStringArray mCurrentSearchTokens;
   void GenerateSearchTokens();
   void AddSearchToken(nsAutoString &aToken);
+
+  nsresult AutoCompleteFeedback(PRInt32 aIndex,
+                                nsIAutoCompleteController *aController);
 
 #ifdef MOZ_XUL
   nsCOMPtr<nsIAutoCompleteObserver> mCurrentListener;
@@ -690,13 +681,14 @@ protected:
   nsDataHashtable<nsStringHashKey, PRBool> mLivemarkFeedURIs;
 
   nsresult AutoCompleteFullHistorySearch(PRBool* aHasMoreResults);
-  nsresult AutoCompleteTagsSearch();
 
   /**
    * Query type passed to AutoCompleteProcessSearch to determine what style to
    * use and if results should be filtered
    */
-  enum QueryType { QUERY_TAGS, QUERY_FULL };
+  enum QueryType {
+    QUERY_FULL
+  };
   nsresult AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
                                      const QueryType aType,
                                      PRBool *aHasMoreResults = nsnull);

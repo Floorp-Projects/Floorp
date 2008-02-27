@@ -489,7 +489,7 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
       case JSTYPE_NUMBER:
         ok = js_ValueToNumber(cx, v, &d);
         if (ok) {
-            dp = js_NewDouble(cx, d, 0);
+            dp = js_NewDouble(cx, d);
             ok = (dp != NULL);
             if (ok)
                 *vp = DOUBLE_TO_JSVAL(dp);
@@ -1768,7 +1768,7 @@ JS_PUBLIC_API(jsdouble *)
 JS_NewDouble(JSContext *cx, jsdouble d)
 {
     CHECK_REQUEST(cx);
-    return js_NewDouble(cx, d, 0);
+    return js_NewDouble(cx, d);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1877,9 +1877,9 @@ JS_LockGCThing(JSContext *cx, void *thing)
     JSBool ok;
 
     CHECK_REQUEST(cx);
-    ok = js_LockGCThing(cx, thing);
+    ok = js_LockGCThingRT(cx->runtime, thing);
     if (!ok)
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_LOCK);
+        JS_ReportOutOfMemory(cx);
     return ok;
 }
 
@@ -2984,7 +2984,7 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
     scope = js_GetMutableScope(cx, obj);
     if (scope) {
         SCOPE_SET_SEALED(scope);
-        SCOPE_GENERATE_PCTYPE(cx, scope);
+        SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
     }
     JS_UNLOCK_OBJ(cx, obj);
     if (!scope)

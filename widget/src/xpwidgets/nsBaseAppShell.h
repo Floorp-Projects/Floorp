@@ -100,14 +100,26 @@ private:
   PRBool DoProcessNextNativeEvent(PRBool mayWait);
 
   nsCOMPtr<nsIRunnable> mDummyEvent;
+  /**
+   * mBlockedWait points back to a slot that controls the wait loop in
+   * an outer OnProcessNextEvent invocation.  Nested calls always set
+   * it to PR_FALSE to unblock an outer loop, since all events may
+   * have been consumed by the inner event loop(s).
+   */
+  PRBool *mBlockedWait;
   PRInt32 mFavorPerf;
   PRInt32 mNativeEventPending;
   PRIntervalTime mStarvationDelay;
   PRIntervalTime mSwitchTime;
   PRIntervalTime mLastNativeEventTime;
+  enum EventloopNestingState {
+    eEventloopNone,  // top level thread execution
+    eEventloopXPCOM, // innermost native event loop is ProcessNextNativeEvent
+    eEventloopOther  // innermost native event loop is a native library/plugin etc
+  };
+  EventloopNestingState mEventloopNestingState;
   PRPackedBool mRunWasCalled;
   PRPackedBool mExiting;
-  PRPackedBool mProcessingNextNativeEvent;
 };
 
 #endif // nsBaseAppShell_h__

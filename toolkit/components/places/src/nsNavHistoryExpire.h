@@ -103,6 +103,7 @@ protected:
   nsresult ExpireHistoryParanoid(mozIStorageConnection* aConnection, PRInt32 aMaxRecords);
   nsresult ExpireFaviconsParanoid(mozIStorageConnection* aConnection);
   nsresult ExpireAnnotationsParanoid(mozIStorageConnection* aConnection);
+  nsresult ExpireInputHistoryParanoid(mozIStorageConnection* aConnection);
 
   PRBool ExpireForDegenerateRuns();
 

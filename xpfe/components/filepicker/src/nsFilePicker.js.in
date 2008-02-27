@@ -116,16 +116,19 @@ nsFilePicker.prototype = {
   set files(a) { throw "readonly property"; },
   get files()  { return this.mFilesEnumerator; },
 
-  /* readonly attribute nsIFileURL fileURL; */
+  /* readonly attribute nsIURI fileURL; */
   set fileURL(a) { throw "readonly property"; },
   get fileURL()  {
-    if (this.mFilesEnumerator) {
+    if (this.mFileURL)
+      return this.mFileURL;
+
+    if (!this.mFilesEnumerator)
+      return null;
+
       var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                     .getService(Components.interfaces.nsIIOService);
-      var url       = ioService.newFileURI(this.file);
-      return url;
-    }
-    return null;
+
+    return this.mFileURL = ioService.newFileURI(this.file);
   },
 
   /* attribute wstring defaultString; */
@@ -172,6 +175,7 @@ nsFilePicker.prototype = {
       this.appendFilter(bundle.GetStringFromName("xulTitle"),
                    bundle.GetStringFromName("xulFilter"));
     }
+    this.mAllowURLs = !!(filterMask & nsIFilePicker.filterAllowURLs);
     if (filterMask & nsIFilePicker.filterApps) {
       // We use "..apps" as a special filter for executable files
       this.appendFilter(bundle.GetStringFromName("appsTitle"),
@@ -207,6 +211,7 @@ nsFilePicker.prototype = {
     o.filters = new Object();
     o.filters.titles = this.mFilterTitles;
     o.filters.types = this.mFilters;
+    o.allowURLs = this.mAllowURLs;
     o.retvals = new Object();
 
     var parent;
@@ -247,6 +252,7 @@ nsFilePicker.prototype = {
 
       this.mFilterIndex = o.retvals.filterIndex;
       this.mFilesEnumerator = o.retvals.files;
+      this.mFileURL = o.retvals.fileURL;
       lastDirectory = o.retvals.directory;
       return o.retvals.buttonStatus;
     } catch(ex) { dump("unable to open file picker\n" + ex + "\n"); }

@@ -1241,11 +1241,11 @@ host_%.$(OBJ_SUFFIX): %.cc Makefile Makefile.in
 
 host_%.$(OBJ_SUFFIX): %.m Makefile Makefile.in
 	$(REPORT_BUILD)
-	$(ELOG) $(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
+	$(ELOG) $(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CFLAGS) $(HOST_CMFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
 host_%.$(OBJ_SUFFIX): %.mm Makefile Makefile.in
 	$(REPORT_BUILD)
-	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
+	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(HOST_CMMFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
 %: %.c Makefile Makefile.in
 	$(REPORT_BUILD)
@@ -1300,12 +1300,12 @@ endif #STRICT_CPLUSPLUS_SUFFIX
 $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.mm Makefile Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
-	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
+	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $(COMPILE_CMMFLAGS) $(_VPATH_SRCS)
 
 $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.m Makefile Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CC)
-	$(ELOG) $(CC) -o $@ -c $(COMPILE_CFLAGS) $(_VPATH_SRCS)
+	$(ELOG) $(CC) -o $@ -c $(COMPILE_CFLAGS) $(COMPILE_CMFLAGS) $(_VPATH_SRCS)
 
 %.s: %.cpp
 	$(CCC) -S $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
@@ -2173,6 +2173,8 @@ showbuild:
 	@echo "CXXFLAGS           = $(CXXFLAGS)"
 	@echo "OS_CXXFLAGS        = $(OS_CXXFLAGS)"
 	@echo "COMPILE_CXXFLAGS   = $(COMPILE_CXXFLAGS)"
+	@echo "COMPILE_CMFLAGS    = $(COMPILE_CMFLAGS)"
+	@echo "COMPILE_CMMFLAGS   = $(COMPILE_CMMFLAGS)"
 	@echo "LDFLAGS            = $(LDFLAGS)"
 	@echo "OS_LDFLAGS         = $(OS_LDFLAGS)"
 	@echo "DSO_LDOPTS         = $(DSO_LDOPTS)"

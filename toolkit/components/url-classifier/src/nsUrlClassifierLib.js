@@ -52,7 +52,6 @@ const G_GDEBUG = false;
 #include ../content/moz/protocol4.js
 
 #include ../content/request-backoff.js
-#include ../content/url-crypto.js
 #include ../content/url-crypto-key-manager.js
 #include ../content/xml-fetcher.js
 

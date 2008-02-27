@@ -1001,7 +1001,7 @@ nsStyleTableBorder::nsStyleTableBorder(nsPresContext* aPresContext)
   mEmptyCells = (compatMode == eCompatibility_NavQuirks)
                   ? NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND     
                   : NS_STYLE_TABLE_EMPTY_CELLS_SHOW;
-  mCaptionSide = NS_SIDE_TOP;
+  mCaptionSide = NS_STYLE_CAPTION_SIDE_TOP;
   mBorderSpacingX.SetCoordValue(0);
   mBorderSpacingY.SetCoordValue(0);
 }

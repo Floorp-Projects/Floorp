@@ -151,6 +151,10 @@
     <menuitem id="menuitem_includeUpdate" command="cmd_includeUpdate"
               label="&cmd.includeUpdate.label;" accesskey="&cmd.includeUpdate.accesskey;"
               type="checkbox"/>
+    <menuitem id="menuitem_learnMore" command="cmd_homepage"
+              label="&searchResultHomepage.value;"/>
+    <menuitem id="menuitem_installSearchResult" command="cmd_installSearchResult"
+              label="&cmd.installSearchResult.label;"/>
   </vbox>
 
   <popup id="addonContextMenu" onpopupshowing="return buildContextMenu(event);"/>

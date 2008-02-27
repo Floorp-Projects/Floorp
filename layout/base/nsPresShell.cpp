@@ -835,6 +835,7 @@ public:
   NS_IMETHOD CreateRenderingContext(nsIFrame *aFrame,
                                     nsIRenderingContext** aContext);
   NS_IMETHOD GoToAnchor(const nsAString& aAnchorName, PRBool aScroll);
+  NS_IMETHOD ScrollToAnchor();
 
   NS_IMETHOD ScrollContentIntoView(nsIContent* aContent,
                                    PRIntn      aVPercent,
@@ -1134,6 +1135,8 @@ protected:
   nsVoidArray mCurrentEventFrameStack;
   nsCOMArray<nsIContent> mCurrentEventContentStack;
 
+  nsCOMPtr<nsIContent>          mLastAnchorScrolledTo;
+  nscoord                       mLastAnchorScrollPositionY;
   nsCOMPtr<nsICaret>            mCaret;
   nsCOMPtr<nsICaret>            mOriginalCaret;
   PRInt16                       mSelectionFlags;
@@ -3620,11 +3623,16 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
   esm->SetContentState(content, NS_EVENT_STATE_URLTARGET);
 
   if (content) {
-    // Flush notifications so we scroll to the right place
     if (aScroll) {
       rv = ScrollContentIntoView(content, NS_PRESSHELL_SCROLL_TOP,
                                  NS_PRESSHELL_SCROLL_ANYWHERE);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      nsIScrollableFrame* rootScroll = GetRootScrollFrameAsScrollable();
+      if (rootScroll) {
+        mLastAnchorScrolledTo = content;
+        mLastAnchorScrollPositionY = rootScroll->GetScrollPosition().y;
+      }
     }
 
     // Should we select the target? This action is controlled by a
@@ -3705,6 +3713,23 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
     }
   }
 
+  return rv;
+}
+
+NS_IMETHODIMP
+PresShell::ScrollToAnchor()
+{
+  if (!mLastAnchorScrolledTo)
+    return NS_OK;
+
+  nsIScrollableFrame* rootScroll = GetRootScrollFrameAsScrollable();
+  if (!rootScroll ||
+      mLastAnchorScrollPositionY != rootScroll->GetScrollPosition().y)
+    return NS_OK;
+
+  nsresult rv = ScrollContentIntoView(mLastAnchorScrolledTo, NS_PRESSHELL_SCROLL_TOP,
+                                      NS_PRESSHELL_SCROLL_ANYWHERE);
+  mLastAnchorScrolledTo = nsnull;
   return rv;
 }
 
@@ -3803,11 +3828,7 @@ UnionRectForClosestScrolledView(nsIFrame* aFrame,
       // We can't use nsRect::UnionRect since it drops empty rects on
       // the floor, and we need to include them.  (Thus we need
       // aHaveRect to know when to drop the initial value on the floor.)
-      nscoord x = PR_MIN(aRect.x, frameBounds.x),
-              y = PR_MIN(aRect.y, frameBounds.y),
-          xmost = PR_MAX(aRect.XMost(), frameBounds.XMost()),
-          ymost = PR_MAX(aRect.YMost(), frameBounds.YMost());
-      aRect.SetRect(x, y, xmost - x, ymost - y);
+      aRect.UnionRectIncludeEmpty(aRect, frameBounds);
     } else {
       aHaveRect = PR_TRUE;
       aRect = frameBounds;

@@ -91,6 +91,9 @@ CSRCS		= \
 		jemalloc.c \
 		$(NULL)
 
+#XXX: PGO on Linux causes problems here
+# See bug 419470
+NO_PROFILE_GUIDED_OPTIMIZE = 1
 endif
 
 include $(topsrcdir)/config/rules.mk

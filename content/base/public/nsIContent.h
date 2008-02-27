@@ -62,8 +62,8 @@ class nsIDocShell;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0xfba9aa39, 0x016e, 0x4d5d, \
-  { 0xab, 0x62, 0x22, 0xa1, 0xb8, 0x4a, 0x3c, 0x7b } }
+{ 0xd3434698, 0x3a16, 0x4dbe, \
+  { 0x9d, 0xed, 0xbe, 0x64, 0x16, 0x1a, 0xa3, 0x52 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -159,6 +159,17 @@ public:
   {
     SetFlags(NODE_IS_ANONYMOUS);
   }
+
+  /**
+   * Returns |this| if it is not native anonymous, otherwise
+   * first non native anonymous ancestor.
+   */
+  virtual nsIContent* FindFirstNonNativeAnonymous() const;
+
+  /**
+   * Returns PR_TRUE if |this| or any of its ancestors is native anonymous.
+   */
+  virtual PRBool IsInNativeAnonymousSubtree() const;
 
   /**
    * Get the namespace that this element's tag is defined in

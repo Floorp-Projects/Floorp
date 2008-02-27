@@ -54,7 +54,7 @@ else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 OSDIR		= win
 else
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 OSDIR		= mac
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
@@ -92,19 +92,18 @@ ifdef MOZ_PHOENIX
 REQUIRES	+= toolkitcomps
 endif
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 REQUIRES		+= windowwatcher \
 	             $(NULL)
-endif
 
-OSHELPER	= nsOSHelperAppService.cpp
-
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-OSHELPER		+= nsInternetConfig.cpp \
-			nsInternetConfigService.cpp \
-			nsMIMEInfoMac.cpp \
-			nsLocalHandlerAppMac.cpp \
+CMMSRCS	= nsOSHelperAppService.mm \
+			nsInternetConfig.mm \
+			nsInternetConfigService.mm \
+			nsMIMEInfoMac.mm \
+			nsLocalHandlerAppMac.mm \
 			$(NULL)
+else
+OSHELPER	= nsOSHelperAppService.cpp
 endif
 
 LOCAL_INCLUDES = -I$(srcdir)
@@ -141,7 +140,7 @@ XPIDLSRCS = \
 	nsIHandlerService.idl	\
 	$(NULL)
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 XPIDLSRCS		+= nsIInternetConfigService.idl
 endif
 

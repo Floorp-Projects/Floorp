@@ -1,0 +1,21 @@
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="setTimeout(doe, 30);" class="reftest-wait">
+<popupgroup id="a"/>
+<listcols>
+<nativescrollbar id="c">
+<treecols/>
+</nativescrollbar>
+</listcols>
+
+<script>
+function doe() {
+  document.documentElement.id = "true";
+  document.documentElement.removeChild(document.getElementById('a')); 
+  var ne = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", 'popupgroup'); 
+  document.documentElement.appendChild(ne); 
+  document.getElementById('c').appendChild(document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", 'treecols'));
+  document.documentElement.removeChild(ne);
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</window>

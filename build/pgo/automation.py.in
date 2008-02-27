@@ -216,7 +216,7 @@ user_pref("capability.principal.codebase.p%(i)d.subjectName", "");
 function FindProxyForURL(url, host)
 {
   var servers = [%(quotedServers)s];
-  var regex = new RegExp('http://(.*?(:\\\\\\\\d+)?)/');
+  var regex = new RegExp('http://(?:[^/@]*@)?(.*?(:\\\\\\\\d+)?)/');
   var matches = regex.exec(url);
   if (!matches)
     return 'DIRECT';

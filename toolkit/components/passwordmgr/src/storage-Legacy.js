@@ -73,11 +73,27 @@ LoginManagerStorage_legacy.prototype = {
         return this.__decoderRing;
     },
 
+    __profileDir: null,  // nsIFile for the user's profile dir
+    get _profileDir() {
+        if (!this.__profileDir) {
+            var dirService = Cc["@mozilla.org/file/directory_service;1"].
+                             getService(Ci.nsIProperties);
+            this.__profileDir = dirService.get("ProfD", Ci.nsIFile);
+        }
+        return this.__profileDir;
+    },
+
     _prefBranch : null,  // Preferences service
 
     _signonsFile : null,  // nsIFile for "signons3.txt" (or whatever pref is)
     _debug       : false, // mirrors signon.debug
 
+    /*
+     * A list of prefs that have been used to specify the filename for storing
+     * logins. (We've used a number over time due to compatibility issues.)
+     * This list is also used by _removeOldSignonsFile() to clean up old files.
+     */
+    _filenamePrefs : ["SignonFileName3", "SignonFileName2", "SignonFileName"],
 
     /*
      * Core datastructures
@@ -310,9 +326,11 @@ LoginManagerStorage_legacy.prototype = {
      * Removes all logins from storage.
      */
     removeAllLogins : function () {
-        this._logins = {};
-        // Disabled hosts kept, as one presumably doesn't want to erase those.
+        // Delete any old, unused files.
+        this._removeOldSignonsFiles();
 
+        // Disabled hosts kept, as one presumably doesn't want to erase those.
+        this._logins = {};
         this._writeFile();
     },
 
@@ -519,26 +537,16 @@ LoginManagerStorage_legacy.prototype = {
     _getSignonsFile : function() {
         var destFile = null, importFile = null;
 
-        // Get the location of the user's profile.
-        var DIR_SERVICE = new Components.Constructor(
-                "@mozilla.org/file/directory_service;1", "nsIProperties");
-        var pathname = (new DIR_SERVICE()).get("ProfD", Ci.nsIFile).path;
-
         // We've used a number of prefs over time due to compatibility issues.
         // Use the filename specified in the newest pref, but import from
         // older files if needed.
-        var prefs = ["SignonFileName3", "SignonFileName2", "SignonFileName"];
-        for (var i = 0; i < prefs.length; i++) {
-            var prefName = prefs[i];
-
-            var filename = this._prefBranch.getCharPref(prefName);
-
-            this.log("Checking file " + filename + " (" + prefName + ")");
-
-            var file = Cc["@mozilla.org/file/local;1"].
-                       createInstance(Ci.nsILocalFile);
-            file.initWithPath(pathname);
+        for (var i = 0; i < this._filenamePrefs.length; i++) {
+            var prefname = this._filenamePrefs[i];
+            var filename = this._prefBranch.getCharPref(prefname);
+            var file = this._profileDir.clone();
             file.append(filename);
+
+            this.log("Checking file " + filename + " (" + prefname + ")");
 
             // First loop through, save the preferred filename.
             if (!destFile)
@@ -552,6 +560,32 @@ LoginManagerStorage_legacy.prototype = {
 
         // If we can't find any existing file, use the preferred file.
         return [destFile, null];
+    },
+
+
+    /*
+     * _removeOldSignonsFiles
+     *
+     * Deletes any storage files that we're not using any more.
+     */
+    _removeOldSignonsFiles : function() {
+        // We've used a number of prefs over time due to compatibility issues.
+        // Skip the first entry (the newest) and delete the others.
+        for (var i = 1; i < this._filenamePrefs.length; i++) {
+            var prefname = this._filenamePrefs[i];
+            var filename = this._prefBranch.getCharPref(prefname);
+            var file = this._profileDir.clone();
+            file.append(filename);
+
+            if (file.exists()) {
+                this.log("Deleting old " + filename + " (" + prefname + ")");
+                try {
+                    file.remove(false);
+                } catch (e) {
+                    this.log("NOTICE: Couldn't delete " + filename + ": " + e);
+                }
+            }
+        }
     },
 
 

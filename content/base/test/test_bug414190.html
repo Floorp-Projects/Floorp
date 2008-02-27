@@ -73,8 +73,7 @@ is(cellBoundingRect.right - cellBoundingRect.left, 80, "Cell incorrect width");
 is(cellBoundingRect.bottom - cellBoundingRect.top, 100, "Cell incorrect height");
 is(captionBoundingRect.right - captionBoundingRect.left, 50, "Caption incorrect width");
 is(captionBoundingRect.bottom - captionBoundingRect.top, 70, "Caption incorrect height");
-// This fails right now, see bug 414193
-todo_is(captionBoundingRect.right + 10, cellBoundingRect.left, "Discontiguous horizontal geometry");
+is(captionBoundingRect.right + 10, cellBoundingRect.left, "Discontiguous horizontal geometry");
 is(tableBoundingRect.top, cellBoundingRect.top - 10, "Table top error");
 is(tableBoundingRect.left, captionBoundingRect.left, "Table left error");
 is(tableBoundingRect.bottom, cellBoundingRect.bottom + 10, "Table bottom error");

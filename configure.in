@@ -6093,6 +6093,9 @@ if test "$MOZ_MEMORY"; then
     AC_DEFINE(_STATIC_CPPLIB)
     dnl Don't generate a manifest, since we're linking to a custom CRT.
     LDFLAGS="$LDFLAGS -MANIFEST:NO"
+    dnl Also pass this to NSPR/NSS
+    DLLFLAGS="$DLLFLAGS -MANIFEST:NO"
+    export DLLFLAGS
     ;;
   *)
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
@@ -6104,6 +6107,8 @@ AC_SUBST(WIN32_CRT_SRC_DIR)
 AC_SUBST(WIN32_CUSTOM_CRT_DIR)
 AC_SUBST(MOZ_LIB)
 AC_SUBST(MOZ_PATH)
+dnl Need to set this for make because NSS doesn't have configure
+AC_SUBST(DLLFLAGS)
 
 dnl ========================================================
 dnl = Use malloc wrapper lib

@@ -1932,14 +1932,11 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
   NS_ENSURE_ARG_POINTER(aCanPaste);
   *aCanPaste = PR_FALSE;
 
-  nsresult rv = FireClipboardEvent(NS_BEFOREPASTE, aCanPaste);
-  if (NS_FAILED(rv) || *aCanPaste)
-    return rv;
-  
   // can't paste if readonly
   if (!IsModifiable())
     return NS_OK;
-    
+
+  nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
   if (NS_FAILED(rv)) return rv;
   

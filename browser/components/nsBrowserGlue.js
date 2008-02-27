@@ -237,7 +237,9 @@ BrowserGlue.prototype = {
           prefBranch.getBoolPref("browser.sessionstore.resume_session_once"))
         showPrompt = false;
       else
-        showPrompt = prefBranch.getBoolPref("browser.warnOnQuit");
+        showPrompt = aQuitType == "restart" ?
+                     prefBranch.getBoolPref("browser.warnOnRestart") :
+                     prefBranch.getBoolPref("browser.warnOnQuit");
     } catch (ex) {}
 
     var buttonChoice = 0;
@@ -297,10 +299,15 @@ BrowserGlue.prototype = {
         break;
       case 0:
         this._saveSession = true;
-        // could also set browser.warnOnQuit to false here,
-        // but not setting it is a little safer.
-        if (neverAsk.value)
-          prefBranch.setIntPref("browser.startup.page", 3);
+        if (neverAsk.value) {
+          if (aQuitType == "restart")
+            prefBranch.setBoolPref("browser.warnOnRestart", false);
+          else {
+            // could also set browser.warnOnQuit to false here,
+            // but not setting it is a little safer.
+            prefBranch.setIntPref("browser.startup.page", 3);
+          }
+        }
         break;
       }
     }
@@ -532,7 +539,6 @@ BrowserGlue.prototype = {
         var bookmarksMenuFolder = bmsvc.bookmarksMenuFolder;
         var unfiledBookmarksFolder = bmsvc.unfiledBookmarksFolder;
         var toolbarFolder = bmsvc.toolbarFolder;
-        var tagsFolder = bmsvc.tagsFolder;
         var defaultIndex = bmsvc.DEFAULT_INDEX;
 
         // index = 0, make it the first folder
@@ -567,14 +573,11 @@ BrowserGlue.prototype = {
         var sep =  bmsvc.insertSeparator(placesFolder, defaultIndex);
 
         var recentTagsItem = bmsvc.insertBookmark(placesFolder,
-          this._uri("place:folder=" + tagsFolder +
-              "&group=" + Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER +
-              "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
-              "&applyOptionsToContainers=1" +
-              "&sort=" +
-              Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
+          this._uri("place:"+
+              "type=" + Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY +
+              "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
               "&maxResults=" + maxResults),
-              defaultIndex, recentTagsTitle);
+          defaultIndex, recentTagsTitle);
       }
     };
 

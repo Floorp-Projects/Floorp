@@ -38,6 +38,7 @@
 
 #include "nsUrlClassifierHashCompleter.h"
 #include "nsIChannel.h"
+#include "nsICryptoHMAC.h"
 #include "nsIHttpChannel.h"
 #include "nsIObserverService.h"
 #include "nsIUploadChannel.h"
@@ -47,6 +48,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsUrlClassifierDBService.h"
+#include "nsUrlClassifierUtils.h"
 #include "prlog.h"
 #include "prprf.h"
 
@@ -172,6 +174,84 @@ nsUrlClassifierHashCompleterRequest::AddRequestBody(const nsACString &aRequestBo
   return NS_OK;
 }
 
+void
+nsUrlClassifierHashCompleterRequest::RescheduleItems()
+{
+  // This request has failed in a way that we expect might succeed if
+  // we try again.  Schedule the individual hashes for another attempt.
+  for (PRUint32 i = 0; i < mRequests.Length(); i++) {
+    Request &request = mRequests[i];
+    nsresult rv = mCompleter->Complete(request.partialHash, request.callback);
+    if (NS_FAILED(rv)) {
+      // We couldn't reschedule the request - the best we can do here is
+      // tell it that we failed to complete the request.
+      request.callback->CompletionFinished(rv);
+    }
+  }
+
+  mRescheduled = PR_TRUE;
+}
+
+/**
+ * Reads the MAC from the response and checks it against the
+ * locally-computed MAC.
+ */
+nsresult
+nsUrlClassifierHashCompleterRequest::HandleMAC(nsACString::const_iterator& begin,
+                                               const nsACString::const_iterator& end)
+{
+  mVerified = PR_FALSE;
+
+  // First line should be either the MAC or a k:pleaserekey request.
+  nsACString::const_iterator iter = begin;
+  if (!FindCharInReadable('\n', iter, end)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCAutoString serverMAC(Substring(begin, iter++));
+  begin = iter;
+
+  if (serverMAC.EqualsLiteral("e:pleaserekey")) {
+    LOG(("Rekey requested"));
+
+    // Reschedule our items to be requested again.
+    RescheduleItems();
+
+    // Let the hash completer know that we need a new key.
+    return mCompleter->RekeyRequested();
+  }
+
+  nsUrlClassifierUtils::UnUrlsafeBase64(serverMAC);
+
+  nsresult rv;
+  nsCOMPtr<nsICryptoHMAC> hmac =
+    do_CreateInstance(NS_CRYPTO_HMAC_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = hmac->Init(nsICryptoHMAC::SHA1,
+                  reinterpret_cast<const PRUint8*>(mClientKey.BeginReading()),
+                  mClientKey.Length());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  const nsCSubstring &remaining = Substring(begin, end);
+  rv = hmac->Update(reinterpret_cast<const PRUint8*>(remaining.BeginReading()),
+                    remaining.Length());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString clientMAC;
+  rv = hmac->Finish(PR_TRUE, clientMAC);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (clientMAC != serverMAC) {
+    NS_WARNING("Invalid MAC in gethash response.");
+    return NS_ERROR_FAILURE;
+  }
+
+  mVerified = PR_TRUE;
+
+  return NS_OK;
+}
+
 nsresult
 nsUrlClassifierHashCompleterRequest::HandleItem(const nsACString& item,
                                                 const nsACString& tableName,
@@ -194,18 +274,16 @@ nsUrlClassifierHashCompleterRequest::HandleItem(const nsACString& item,
   return NS_OK;
 }
 
-
 /**
  * Reads one table of results from the response.  Leaves begin pointing at the
  * next table.
  */
 nsresult
-nsUrlClassifierHashCompleterRequest::HandleTable(const nsACString& response,
-                                                 nsACString::const_iterator& begin)
+nsUrlClassifierHashCompleterRequest::HandleTable(nsACString::const_iterator& begin,
+                                                 const nsACString::const_iterator& end)
 {
-  nsACString::const_iterator iter, end;
+  nsACString::const_iterator iter;
   iter = begin;
-  response.EndReading(end);
   if (!FindCharInReadable(':', iter, end)) {
     // No table line.
     NS_WARNING("Received badly-formatted gethash response.");
@@ -273,8 +351,22 @@ nsUrlClassifierHashCompleterRequest::HandleResponse()
   mResponse.BeginReading(begin);
   mResponse.EndReading(end);
 
+  nsresult rv;
+
+  // If we have a client key, we're expecting a MAC.
+  if (!mClientKey.IsEmpty()) {
+    rv = HandleMAC(begin, end);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (mRescheduled) {
+      // We were rescheduled due to a k:pleaserekey request from the
+      // server.  Don't bother reading the rest of the response.
+      return NS_OK;
+    }
+  }
+
   while (begin != end) {
-    nsresult rv = HandleTable(mResponse, begin);
+    rv = HandleTable(begin, end);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -293,7 +385,8 @@ nsUrlClassifierHashCompleterRequest::NotifySuccess()
       Response &response = request.responses[j];
       request.callback->Completion(response.completeHash,
                                    response.tableName,
-                                   response.chunkId);
+                                   response.chunkId,
+                                   mVerified);
     }
 
     request.callback->CompletionFinished(NS_OK);
@@ -370,10 +463,13 @@ nsUrlClassifierHashCompleterRequest::OnStopRequest(nsIRequest *request,
   if (NS_SUCCEEDED(status))
     status = HandleResponse();
 
-  if (NS_SUCCEEDED(status))
-    NotifySuccess();
-  else
-    NotifyFailure(status);
+  // If we were rescheduled, don't bother notifying success or failure.
+  if (!mRescheduled) {
+    if (NS_SUCCEEDED(status))
+      NotifySuccess();
+    else
+      NotifyFailure(status);
+  }
 
   mChannel = nsnull;
 
@@ -426,15 +522,10 @@ nsUrlClassifierHashCompleter::Complete(const nsACString &partialHash,
   if (mShuttingDown)
     return NS_ERROR_NOT_INITIALIZED;
 
-  if (!mURI) {
-    NS_WARNING("Trying to use nsUrlClassifierHashCompleter without setting the gethash URI.");
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
   // We batch all of the requested completions in a single request until the
   // next time we reach the main loop.
   if (!mRequest) {
-    mRequest = new nsUrlClassifierHashCompleterRequest(mURI);
+    mRequest = new nsUrlClassifierHashCompleterRequest(this);
     if (!mRequest) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -449,16 +540,36 @@ nsUrlClassifierHashCompleter::Complete(const nsACString &partialHash,
 NS_IMETHODIMP
 nsUrlClassifierHashCompleter::SetGethashUrl(const nsACString &url)
 {
-  return NS_NewURI(getter_AddRefs(mURI), url);
+  mGethashUrl = url;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsUrlClassifierHashCompleter::GetGethashUrl(nsACString &url)
 {
-  url.Truncate();
-  if (mURI) {
-    return mURI->GetSpec(url);
+  url = mGethashUrl;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrlClassifierHashCompleter::SetKeys(const nsACString &clientKey,
+                                      const nsACString &wrappedKey)
+{
+  LOG(("nsUrlClassifierHashCompleter::SetKeys [%p]", this));
+
+  NS_ASSERTION(clientKey.IsEmpty() == wrappedKey.IsEmpty(),
+               "Must either have both a client key and a wrapped key or neither.");
+
+  if (clientKey.IsEmpty()) {
+    mClientKey.Truncate();
+    mWrappedKey.Truncate();
+    return NS_OK;
   }
+
+  nsresult rv = nsUrlClassifierUtils::DecodeClientKey(clientKey, mClientKey);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mWrappedKey = wrappedKey;
+
   return NS_OK;
 }
 
@@ -475,8 +586,28 @@ nsUrlClassifierHashCompleter::Run()
   if (!mRequest)
     return NS_OK;
 
+  NS_ASSERTION(!mGethashUrl.IsEmpty(),
+               "Request dispatched without a gethash url specified.");
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv;
+  if (mClientKey.IsEmpty()) {
+    rv = NS_NewURI(getter_AddRefs(uri), mGethashUrl);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    mRequest->SetClientKey(mClientKey);
+
+    nsCAutoString requestURL(mGethashUrl);
+    requestURL.Append("&wrkey=");
+    requestURL.Append(mWrappedKey);
+    rv = NS_NewURI(getter_AddRefs(uri), requestURL);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  mRequest->SetURI(uri);
+
   // Dispatch the http request.
-  nsresult rv = mRequest->Begin();
+  rv = mRequest->Begin();
   mRequest = nsnull;
   return rv;
 }
@@ -488,6 +619,28 @@ nsUrlClassifierHashCompleter::Observe(nsISupports *subject, const char *topic,
   if (!strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     mShuttingDown = PR_TRUE;
   }
+
+  return NS_OK;
+}
+
+nsresult
+nsUrlClassifierHashCompleter::RekeyRequested()
+{
+  // Our keys are no longer valid.
+  SetKeys(EmptyCString(), EmptyCString());
+
+  // Notify the key manager that we need a new key.  Until we get a
+  // new key, gethash requests will be unauthenticated (and therefore
+  // uncacheable).
+  nsresult rv;
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService("@mozilla.org/observer-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = observerService->NotifyObservers(static_cast<nsIUrlClassifierHashCompleter*>(this),
+                                        "url-classifier-rekey-requested",
+                                        nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }

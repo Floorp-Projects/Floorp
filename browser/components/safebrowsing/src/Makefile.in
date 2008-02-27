@@ -41,18 +41,4 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = safebrowsing
-LIBRARY_NAME = safebrowsing_s
-FORCE_STATIC_LIB = 1
-FORCE_USE_PIC = 1
-USE_STATIC_LIBS = 1
-
-REQUIRES = \
-						necko \
-						string \
-						uriloader \
-						xpcom
-
-CPPSRCS = nsDocNavStartProgressListener.cpp
-
 include $(topsrcdir)/config/rules.mk

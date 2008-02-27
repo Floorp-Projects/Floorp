@@ -28,7 +28,7 @@ function run()
   {
     var msg = document.createEvent("MessageEvent");
     msg.initMessageEvent("message", true, true,
-                         "foo", "evil.com", "http://evil.com/", window);
+                         "foo", "http://evil.com", window);
 
     try
     {

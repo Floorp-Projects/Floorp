@@ -54,6 +54,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIClassInfoImpl.h"
+#include "nsDOMError.h"
 
 #include "nsPrincipal.h"
 
@@ -304,6 +305,21 @@ NS_IMETHODIMP
 nsPrincipal::Subsumes(nsIPrincipal *aOther, PRBool *aResult)
 {
   return Equals(aOther, aResult);
+}
+
+NS_IMETHODIMP
+nsPrincipal::CheckMayLoad(nsIURI* aURI, PRBool aReport)
+{
+  if (!nsScriptSecurityManager::SecurityCompareURIs(mCodebase, aURI)) {
+    if (aReport) {
+      nsScriptSecurityManager::ReportError(
+        nsnull, NS_LITERAL_STRING("CheckSameOriginError"), mCodebase, aURI);
+    }
+    
+    return NS_ERROR_DOM_BAD_URI;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

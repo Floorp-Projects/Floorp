@@ -72,7 +72,7 @@ function run_test() {
                                 bmsvc.DEFAULT_INDEX, "3 title");
 
   // bookmark query that should result in the "hierarchical" result
-  // because there is one query, no grouping, one folder,
+  // because there is one query, one folder,
   // no begin time, no end time, no domain, no uri, no search term
   // and no max results.  See GetSimpleBookmarksQueryFolder()
   // for more details.
@@ -122,43 +122,4 @@ function run_test() {
   // multiple folders, a begin time, an end time, a domain, a uri
   // or a search term, that we get the (correct) flat list results
   // (like we do when specified maxResults)
-
-  // bookmark query that should result in results grouped by folder
-  // because we specified GROUP_BY_FOLDER
-  var options = histsvc.getNewQueryOptions();
-  options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
-  options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
-  var query = histsvc.getNewQuery();
-  query.setFolders([folder], 1);
-  var result = histsvc.executeQuery(query, options);
-  var root = result.root;
-  root.containerOpen = true;
-  do_check_eq(root.childCount, 3);
-
-  // note these containers are nsNavHistoryContainerResultNodes, 
-  // created in GroupByFolder() and not nsNavHistoryFolderResultNodes,
-  do_check_eq(root.getChild(0).title, "test folder");
-  do_check_eq(root.getChild(1).title, "subfolder 1");
-  do_check_eq(root.getChild(2).title, "subfolder 2");
-
-  // check the contents of the "test folder" container
-  var rfNode = root.getChild(0);
-  rfNode = rfNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
-  rfNode.containerOpen = true;
-  do_check_eq(rfNode.childCount, 1);
-  do_check_eq(rfNode.getChild(0).itemId, b1);
-
-  // check the contents of the "subfolder 1" container
-  var sf1Node = root.getChild(1);
-  sf1Node = sf1Node.QueryInterface(Ci.nsINavHistoryContainerResultNode);
-  sf1Node.containerOpen = true;
-  do_check_eq(sf1Node.childCount, 1);
-  do_check_eq(sf1Node.getChild(0).itemId, b2);
-
-  // check the contents of the "subfolder 1" container
-  var sf2Node = root.getChild(2);
-  sf2Node = sf2Node.QueryInterface(Ci.nsINavHistoryContainerResultNode);
-  sf2Node.containerOpen = true;
-  do_check_eq(sf2Node.childCount, 1);
-  do_check_eq(sf2Node.getChild(0).itemId, b3);
 }

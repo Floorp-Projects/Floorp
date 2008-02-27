@@ -131,9 +131,13 @@ PROT_DataProvider.prototype.updateListManager_ = function() {
   listManager.setUpdateUrl(this.getUpdateURL());
 
   // setKeyUrl has the side effect of fetching a key from the server.
-  // This shouldn't happen if anti-phishing is disabled or we're in local
-  // list mode, so we need to check for that.
-  var isEnabled = this.prefs_.getPref(kPhishWardenEnabledPref, false);
+  // This shouldn't happen if anti-phishing/anti-malware is disabled.
+  var isEnabled = this.prefs_.getPref(kPhishWardenEnabledPref, false) ||
+                  this.prefs_.getPref(kMalwareWardenEnabledPref, false);
+  if (isEnabled) {
+    listManager.setKeyUrl(this.keyURL_);
+  }
+
   listManager.setGethashUrl(this.getGethashURL());
 }
 

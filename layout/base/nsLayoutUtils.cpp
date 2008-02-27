@@ -47,6 +47,7 @@
 #include "nsGkAtoms.h"
 #include "nsIAtom.h"
 #include "nsCSSPseudoElements.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsIView.h"
 #include "nsIScrollableView.h"
 #include "nsPlaceholderFrame.h"
@@ -70,9 +71,11 @@
 #include "nsCSSRendering.h"
 #include "nsContentUtils.h"
 
+#ifdef MOZ_SVG
+#include "nsSVGUtils.h"
+#endif
 #ifdef MOZ_SVG_FOREIGNOBJECT
 #include "nsSVGForeignObjectFrame.h"
-#include "nsSVGUtils.h"
 #include "nsSVGOuterSVGFrame.h"
 #endif
 
@@ -1080,27 +1083,73 @@ nsLayoutUtils::BinarySearchForPosition(nsIRenderingContext* aRendContext,
   return PR_FALSE;
 }
 
-nsRect
-nsLayoutUtils::GetAllInFlowBoundingRect(nsIFrame* aFrame)
+static void
+AddRectsForFrame(nsIFrame* aFrame, nsIFrame* aRelativeTo,
+                 nsLayoutUtils::RectCallback* aCallback)
 {
-  // Get the union of all rectangles in this and continuation frames
-  nsRect r = aFrame->GetRect();
-  nsIFrame* parent = aFrame->GetParent();
-  if (!parent)
-    return r;
+  nsIAtom* pseudoType = aFrame->GetStyleContext()->GetPseudoType();
 
-  for (nsIFrame* f = nsLayoutUtils::GetNextContinuationOrSpecialSibling(aFrame);
-       f; f = nsLayoutUtils::GetNextContinuationOrSpecialSibling(f)) {
-    r.UnionRect(r, nsRect(f->GetOffsetTo(parent), f->GetSize()));
+  if (pseudoType == nsCSSAnonBoxes::tableOuter) {
+    AddRectsForFrame(aFrame->GetFirstChild(nsnull), aRelativeTo,
+                     aCallback);
+    nsIFrame* kid = aFrame->GetFirstChild(nsGkAtoms::captionList);
+    if (kid) {
+      AddRectsForFrame(kid, aRelativeTo, aCallback);
+    }
+  } else if (pseudoType == nsCSSAnonBoxes::mozAnonymousBlock ||
+             pseudoType == nsCSSAnonBoxes::mozAnonymousPositionedBlock ||
+             pseudoType == nsCSSAnonBoxes::mozMathMLAnonymousBlock ||
+             pseudoType == nsCSSAnonBoxes::mozXULAnonymousBlock) {
+    for (nsIFrame* kid = aFrame->GetFirstChild(nsnull); kid; kid = kid->GetNextSibling()) {
+      AddRectsForFrame(kid, aRelativeTo, aCallback);
+    }
+  } else {
+#ifdef MOZ_SVG
+    nsRect r;
+    nsIFrame* outer = nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(aFrame, &r);
+    if (outer) {
+      // r is in pixels relative to 'outer', get it into appunits
+      // relative to aRelativeTo
+      r.ScaleRoundOut(1.0/aFrame->PresContext()->AppUnitsPerDevPixel());
+      aCallback->AddRect(r + outer->GetOffsetTo(aRelativeTo));
+    } else
+#endif
+      aCallback->AddRect(nsRect(aFrame->GetOffsetTo(aRelativeTo), aFrame->GetSize()));
   }
+}
 
-  if (r.IsEmpty()) {
-    // It could happen that all the rects are empty (eg zero-width or
-    // zero-height).  In that case, use the first rect for the frame.
-    r = aFrame->GetRect();
+void
+nsLayoutUtils::GetAllInFlowRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
+                                 RectCallback* aCallback)
+{
+  while (aFrame) {
+    AddRectsForFrame(aFrame, aRelativeTo, aCallback);
+    aFrame = nsLayoutUtils::GetNextContinuationOrSpecialSibling(aFrame);
   }
+}
 
-  return r - aFrame->GetPosition();
+struct RectAccumulator : public nsLayoutUtils::RectCallback {
+  nsRect       mResultRect;
+  nsRect       mFirstRect;
+  PRPackedBool mSeenFirstRect;
+
+  RectAccumulator() : mSeenFirstRect(PR_FALSE) {}
+
+  virtual void AddRect(const nsRect& aRect) {
+    mResultRect.UnionRect(mResultRect, aRect);
+    if (!mSeenFirstRect) {
+      mSeenFirstRect = PR_TRUE;
+      mFirstRect = aRect;
+    }
+  }
+};
+
+nsRect
+nsLayoutUtils::GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo) {
+  RectAccumulator accumulator;
+  GetAllInFlowRects(aFrame, aRelativeTo, &accumulator);
+  return accumulator.mResultRect.IsEmpty() ? accumulator.mFirstRect
+          : accumulator.mResultRect;
 }
 
 nsresult

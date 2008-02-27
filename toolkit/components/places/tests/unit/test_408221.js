@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Matt Crocker <matt@songbirdnest.com>
  *   Seth Spitzer <sspitzer@mozilla.org>
+ *   Edward Lee <edward.lee@engineering.uiuc.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -124,10 +125,14 @@ function ensure_tag_results(uris, searchTerm)
     do_check_eq(controller.searchStatus, 
                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
     do_check_eq(controller.matchCount, uris.length);
+    let vals = [];
     for (var i=0; i<controller.matchCount; i++) {
-      do_check_eq(controller.getValueAt(i), uris[i].spec);
+      // Keep the URL for later because order of tag results is undefined
+      vals.push(controller.getValueAt(i));
       do_check_eq(controller.getStyleAt(i), "tag");
     }
+    // Sort the results then check if we have the right items
+    vals.sort().forEach(function(val, i) do_check_eq(val, uris[i].spec))
    
     if (current_test < (tests.length - 1)) {
       current_test++;

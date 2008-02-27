@@ -11,8 +11,6 @@
       $("domain").textContent = location.hostname + ":" + (location.port || 80);
     }
 
-    var otherPath = "/tests/dom/tests/mochitest/whatwg/test_postMessage.html";
-    
     function receiveMessage(evt)
     {
       var response = evt.data + "-response";
@@ -52,10 +50,8 @@
       var source = evt.source;
       try
       {
-        if (evt.domain != "localhost")
-          response += " unexpected-domain(" + evt.domain + ")";
-        if (evt.uri != "http://localhost:8888" + otherPath)
-          response += " unexpected-uri(" + evt.uri + ")";
+        if (evt.origin != "http://localhost:8888")
+          response += " unexpected-origin(" + evt.origin + ")";
           
         try
         {
@@ -79,10 +75,8 @@
     function receiveCross(evt, response)
     {
       var source = evt.source;
-      if (evt.domain != "localhost")
-        response += " unexpected-domain(" + evt.domain + ")";
-      if (evt.uri != "http://localhost:8888" + otherPath)
-        response += " unexpected-uri(" + evt.uri + ")";
+      if (evt.origin != "http://localhost:8888")
+        response += " unexpected-origin(" + evt.origin + ")";
         
       try
       {

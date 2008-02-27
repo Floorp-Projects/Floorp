@@ -187,10 +187,12 @@ menuitem.bookmark-item {
   list-style-image: url("moz-icon://stock/gtk-directory?size=menu");
 }
 
-/* livemarks have the same layout as folder-item, but in the browser-only livemark-item.png */
-/* only the folder icon has any effect for now, item icon is unused */
 .bookmark-item[container][livemark] { 
-  list-style-image: url("chrome://browser/skin/page-livemarks.png");
+  list-style-image: url("chrome://browser/skin/feeds/feedIcon16.png");
+}
+
+.bookmark-item[container][livemark] .bookmark-item {
+  list-style-image: url("chrome://browser/skin/places/livemark-item.png");
 }
 
 .bookmark-item[container][tagContainer] {
@@ -209,13 +211,15 @@ menuitem:not([type]) {
 }
 
 menuitem[command="cmd_newNavigator"],
-#context-openlink {
+#context-openlink,
+#context-openframe {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 80px 16px 64px);
 }
 
 menuitem[command="cmd_newNavigatorTab"],
-#context-openlinkintab {
+#context-openlinkintab,
+#context-openframeintab {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 64px 16px 48px);
 }
@@ -231,7 +235,8 @@ menuitem[command="Browser:OpenFile"] {
 menuitem[command="Browser:SavePage"],
 #context-savelink,
 #context-saveimage,
-#context-savepage {
+#context-savepage,
+#context-saveframe {
   list-style-image: url("moz-icon://stock/gtk-save-as?size=menu");
 }
 
@@ -239,7 +244,8 @@ menuitem[command="cmd_printPreview"] {
   list-style-image: url("moz-icon://stock/gtk-print-preview?size=menu");
 }
 
-menuitem[command="cmd_print"] {
+menuitem[command="cmd_print"],
+#context-printframe {
   list-style-image: url("moz-icon://stock/gtk-print?size=menu");
 }
 
@@ -278,7 +284,8 @@ menuitem[command="cmd_cut"][disabled],
 menuitem[command="cmd_copy"],
 #context-copy,
 #context-copyimage,
-#context-copylink {
+#context-copylink,
+#context-copyemail {
   list-style-image: url("moz-icon://stock/gtk-copy?size=menu");
 }
 
@@ -324,8 +331,7 @@ menuitem[command="cmd_selectAll"] {
 }
 
 menuitem[command="Browser:Stop"],
-#context-stop,
-#javascriptConsole {
+#context-stop {
   list-style-image: url("moz-icon://stock/gtk-stop?size=menu");
 }
 
@@ -335,7 +341,8 @@ menuitem[command="Browser:Stop"][disabled],
 }
 
 menuitem[command="Browser:Reload"],
-#context-reload {
+#context-reload,
+#context-reloadframe {
   list-style-image: url("moz-icon://stock/gtk-refresh?size=menu");
 }
 
@@ -416,7 +423,8 @@ menuitem[command="Browser:ShowAllBookmarks"] {
 }
 
 menuitem[command="View:PageInfo"],
-#context-viewinfo {
+#context-viewinfo,
+#context-viewframeinfo {
   list-style-image: url("moz-icon://stock/gtk-info?size=menu");
 }
 
@@ -434,6 +442,10 @@ menuitem[key="key_openHelp"] {
 
 #aboutName {
   list-style-image: url("moz-icon://stock/gtk-about?size=menu");
+}
+
+#javascriptConsole {
+  list-style-image: url("chrome://global/skin/console/console.png");
 }
 
 /* Primary toolbar buttons */
@@ -600,12 +612,18 @@ toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"] {
 toolbar[iconsize="small"] #back-button {
   list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu");
 }
+.unified-nav-back[_moz-menuactive] {
+  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu") !important;
+}
 toolbar[iconsize="small"] #back-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu&state=disabled");
 }
 
 toolbar[iconsize="small"] #back-button[chromedir="rtl"] {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu");
+}
+menupopup[chromedir="rtl"] > .unified-nav-back[_moz-menuactive] {
+  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu") !important;
 }
 toolbar[iconsize="small"] #back-button[disabled="true"][chromedir="rtl"] {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu&state=disabled");
@@ -614,12 +632,18 @@ toolbar[iconsize="small"] #back-button[disabled="true"][chromedir="rtl"] {
 toolbar[iconsize="small"] #forward-button {
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu");
 }
+.unified-nav-forward[_moz-menuactive] {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu") !important;
+}
 toolbar[iconsize="small"] #forward-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu&state=disabled");
 }
 
 toolbar[iconsize="small"] #forward-button[chromedir="rtl"] {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu");
+}
+menupopup[chromedir="rtl"] > .unified-nav-forward[_moz-menuactive] {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu") !important;
 }
 toolbar[iconsize="small"] #forward-button[disabled="true"][chromedir="rtl"] {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu&state=disabled");
@@ -796,33 +820,34 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 }
 
 /* Favicon */
-#page-proxy-deck,
+#page-proxy-stack,
 #page-proxy-favicon,
-#page-proxy-button {
+#urlbar-throbber {
   width: 16px;
   height: 16px;
 }
 
-#page-proxy-deck {
+#page-proxy-stack {
   margin: 2px 3px;
 }
 
-#page-proxy-favicon {
-  list-style-image: none;
+#page-proxy-favicon:not([src]) {
+  list-style-image: url("chrome://global/skin/icons/folder-item.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
-#page-proxy-button {
-  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
-  -moz-image-region: rect(0px, 16px, 16px, 0px);}
+#page-proxy-favicon[pageproxystate="invalid"] {
+  -moz-image-region: rect(16px, 16px, 32px, 0px);
+}
 
-#page-proxy-button[pageproxystate="invalid"] {
-  cursor: default;
-  -moz-image-region: rect(32px, 16px, 48px, 0px) !important;
+#urlbar-throbber {
+  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
 }
 
 /* Identity indicator */
 #identity-box {
   background-color: -moz-dialog;
+  color: -moz-dialogtext;
   -moz-border-end: 1px solid ThreeDShadow;
 }
 
@@ -1186,6 +1211,35 @@ tabpanels {
   border-bottom: 1px solid threedshadow;
 }
 
+#context_newTab {
+  list-style-image: url("chrome://browser/skin/Toolbar-small.png");
+  -moz-image-region: rect(0px 64px 16px 48px);
+}
+
+#context_newTab[disabled] {
+  -moz-image-region: rect(16px 64px 32px 48px);
+}
+
+#context_reloadTab {
+  list-style-image: url("moz-icon://stock/gtk-refresh?size=menu");
+}
+
+#context_closeOtherTabs {
+  list-style-image: url("moz-icon://stock/gtk-clear?size=menu");
+}
+
+#context_closeOtherTabs[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-clear?size=menu&state=disabled");
+}
+
+#context_undoCloseTab {
+  list-style-image: url("moz-icon://stock/gtk-undelete?size=menu");
+}
+
+#context_closeTab {
+  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
+}
+
 /* tabbrowser-tab focus ring */
 .tabbrowser-tab > .tab-text {
   border: 1px dotted transparent;
@@ -1270,6 +1324,10 @@ tabpanels {
 .alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
   list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
   opacity: 0.6;
+}
+
+.tabs-alltabs-button > .toolbarbutton-icon {
+   margin: 0px;
 }
 
 /* Sidebar */

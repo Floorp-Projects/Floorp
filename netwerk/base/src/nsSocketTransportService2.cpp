@@ -133,7 +133,7 @@ nsSocketTransportService::IsOnCurrentThread(PRBool *result)
 //-----------------------------------------------------------------------------
 // socket api (socket thread only)
 
-nsresult
+NS_IMETHODIMP
 nsSocketTransportService::NotifyWhenCanAttachSocket(nsIRunnable *event)
 {
     LOG(("nsSocketTransportService::NotifyWhenCanAttachSocket\n"));
@@ -141,7 +141,6 @@ nsSocketTransportService::NotifyWhenCanAttachSocket(nsIRunnable *event)
     NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
     if (CanAttachSocket()) {
-        NS_WARNING("should have called CanAttachSocket");
         return Dispatch(event, NS_DISPATCH_NORMAL);
     }
 
@@ -149,12 +148,16 @@ nsSocketTransportService::NotifyWhenCanAttachSocket(nsIRunnable *event)
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsSocketTransportService::AttachSocket(PRFileDesc *fd, nsASocketHandler *handler)
 {
     LOG(("nsSocketTransportService::AttachSocket [handler=%x]\n", handler));
 
     NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+
+    if (!CanAttachSocket()) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
 
     SocketContext sock;
     sock.mFD = fd;

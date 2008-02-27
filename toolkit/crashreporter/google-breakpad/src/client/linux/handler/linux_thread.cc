@@ -37,6 +37,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <string.h>
 
 #include <algorithm>
 #include <cassert>

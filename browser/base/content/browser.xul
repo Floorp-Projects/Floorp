@@ -90,6 +90,7 @@
 
   <popupset id="mainPopupSet">
     <menupopup id="backForwardMenu"
+               chromedir="&locale.dir;"
                onpopupshowing="return FillHistoryMenu(event.target);"
                oncommand="gotoHistoryIndex(event);"
                onclick="checkForMiddleClick(this, event);"/>
@@ -261,6 +262,7 @@
           <!-- bug 415444: event.stopPropagation is here for the cloned version of
                this menupopup -->
           <menupopup context=""
+                     chromedir="&locale.dir;"
                      position="after_start"
                      onpopupshowing="return FillHistoryMenu(event.target);"
                      oncommand="gotoHistoryIndex(event); event.stopPropagation();"
@@ -305,6 +307,8 @@
                  ontextentered="return handleURLBarCommand(param);"
                  ontextreverted="return handleURLBarRevert();"
                  pageproxystate="invalid"
+                 onsearchbegin="LocationBarHelpers._searchBegin();"
+                 onsearchcomplete="LocationBarHelpers._searchComplete();"
                  onfocus="document.getElementById('identity-box').style.MozUserFocus= 'normal'"
                  onblur="document.getElementById('identity-box').style.MozUserFocus = 'ignore';">
           <!-- Use onclick instead of normal popup= syntax since the popup
@@ -315,18 +319,14 @@
                onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
                onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
             <hbox align="center">
-              <deck id="page-proxy-deck" onclick="PageProxyClickHandler(event);">
-                <image id="page-proxy-button"
-                       ondraggesture="PageProxyDragGesture(event);"
-                       tooltiptext="&proxyIcon.tooltip;"/>
+              <stack id="page-proxy-stack"
+                     onclick="PageProxyClickHandler(event);"
+                     tooltiptext="&proxyIcon.tooltip;">
+                <image id="urlbar-throbber" busy="false"/>
                 <image id="page-proxy-favicon" validate="never"
                        ondraggesture="PageProxyDragGesture(event);"
-                       onload="this.parentNode.selectedIndex = 1;
-                               event.stopPropagation();"
-                       onerror="this.removeAttribute('src');
-                                this.parentNode.selectedIndex = 0;"
-                       tooltiptext="&proxyIcon.tooltip;"/>
-              </deck>
+                       onerror="this.removeAttribute('src');"/>
+              </stack>
               <label id="identity-icon-label"/>
             </hbox>
           </box>

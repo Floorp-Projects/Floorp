@@ -2911,7 +2911,7 @@ PurgeProtoChain(JSContext *cx, JSObject *obj, jsid id)
         scope = OBJ_SCOPE(obj);
         sprop = SCOPE_GET_PROPERTY(scope, id);
         if (sprop) {
-            SCOPE_GENERATE_PCTYPE(cx, scope);
+            SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
             JS_UNLOCK_SCOPE(cx, scope);
             return JS_TRUE;
         }
@@ -3782,7 +3782,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
              * must not be hit.
              */
             if (!(attrs & JSPROP_SHARED))
-                SCOPE_GENERATE_PCTYPE(cx, scope);
+                SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
             JS_UNLOCK_SCOPE(cx, scope);
 
             /* Don't clone a shared prototype property. */

@@ -103,6 +103,7 @@ nsresult
 nsRange::CompareNodeToRange(nsIContent* aNode, nsIRange* aRange,
                             PRBool *outNodeBefore, PRBool *outNodeAfter)
 {
+  NS_ENSURE_STATE(aNode);
   // create a pair of dom points that expresses location of node:
   //     NODE(start), NODE(end)
   // Let incoming range be:
@@ -142,14 +143,19 @@ nsRange::CompareNodeToRange(nsIContent* aNode, nsIRange* aRange,
   PRInt32 rangeEndOffset = range->EndOffset();
 
   // is RANGE(start) <= NODE(start) ?
+  PRBool disconnected = PR_FALSE;
   *outNodeBefore = nsContentUtils::ComparePoints(rangeStartParent,
                                                  rangeStartOffset,
-                                                 parent, nodeStart) > 0;
+                                                 parent, nodeStart,
+                                                 &disconnected) > 0;
+  NS_ENSURE_TRUE(!disconnected, NS_ERROR_DOM_WRONG_DOCUMENT_ERR);
+
   // is RANGE(end) >= NODE(end) ?
   *outNodeAfter = nsContentUtils::ComparePoints(rangeEndParent,
                                                 rangeEndOffset,
-                                                parent, nodeEnd) < 0;
-
+                                                parent, nodeEnd,
+                                                &disconnected) < 0;
+  NS_ENSURE_TRUE(!disconnected, NS_ERROR_DOM_WRONG_DOCUMENT_ERR);
   return NS_OK;
 }
 
@@ -335,6 +341,18 @@ nsRange::NodeWillBeDestroyed(const nsINode* aNode)
   DoSetRange(nsnull, 0, nsnull, 0, nsnull);
 }
 
+void
+nsRange::ParentChainChanged(nsIContent *aContent)
+{
+  NS_ASSERTION(mRoot == aContent, "Wrong ParentChainChanged notification?");
+  nsINode* newRoot = mRoot;
+  nsINode* tmp;
+  while ((tmp = newRoot->GetNodeParent())) {
+    newRoot = tmp;
+  }
+  DoSetRange(mStartParent, mStartOffset, mEndParent, mEndOffset, newRoot);
+}
+
 /********************************************************
  * Utilities for comparing points: API from nsIDOMNSRange
  ********************************************************/
@@ -433,7 +451,9 @@ nsRange::DoSetRange(nsINode* aStartN, PRInt32 aStartOffset,
                   (!aRoot->GetNodeParent() &&
                    (aRoot->IsNodeOfType(nsINode::eDOCUMENT) ||
                     aRoot->IsNodeOfType(nsINode::eATTRIBUTE) ||
-                    aRoot->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT))),
+                    aRoot->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT) ||
+                     /*For backward compatibility*/
+                    aRoot->IsNodeOfType(nsINode::eCONTENT))),
                   "Bad root");
 
   if (mRoot != aRoot) {
@@ -592,22 +612,14 @@ nsINode* nsRange::IsValidBoundary(nsINode* aNode)
   NS_ASSERTION(!root->IsNodeOfType(nsINode::eDOCUMENT),
                "GetCurrentDoc should have returned a doc");
 
-  if (root->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT) ||
-      root->IsNodeOfType(nsINode::eATTRIBUTE)) {
-    return root;
-  }
-
 #ifdef DEBUG_smaug
-  nsCOMPtr<nsIContent> cont = do_QueryInterface(root);
-  if (cont) {
-    nsAutoString name;
-    cont->Tag()->ToString(name);
-    printf("nsRange::IsValidBoundary: node is not a valid boundary point [%s]\n",
-           NS_ConvertUTF16toUTF8(name).get());
-  }
+  NS_WARN_IF_FALSE(root->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT) ||
+                   root->IsNodeOfType(nsINode::eATTRIBUTE),
+                   "Creating a DOM Range using root which isn't in DOM!");
 #endif
 
-  return nsnull;
+  // We allow this because of backward compatibility.
+  return root;
 }
 
 nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
@@ -1526,7 +1538,7 @@ nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
       tmpNode = clone;
       res = tmpNode->GetParentNode(getter_AddRefs(clone));
       if (NS_FAILED(res)) return res;
-      if (!node) return NS_ERROR_FAILURE;
+      if (!clone) return NS_ERROR_FAILURE;
     }
 
     commonCloneAncestor = clone;
@@ -1576,6 +1588,7 @@ nsresult nsRange::InsertNode(nsIDOMNode* aN)
     nsCOMPtr<nsIDOMNode> tSCParentNode;
     res = tStartContainer->GetParentNode(getter_AddRefs(tSCParentNode));
     if(NS_FAILED(res)) return res;
+    NS_ENSURE_STATE(tSCParentNode);
     
     PRBool isCollapsed;
     res = GetCollapsed(&isCollapsed);

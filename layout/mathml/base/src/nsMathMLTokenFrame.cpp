@@ -145,17 +145,12 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
       return rv;
     }
 
-    // origins are used as placeholders to store the child's ascent.
-    childFrame->SetRect(nsRect(0, childDesiredSize.ascent,
-                               childDesiredSize.width, childDesiredSize.height));
-    // compute and cache the bounding metrics
-    aDesiredSize.mBoundingMetrics += childDesiredSize.mBoundingMetrics;
+    SaveReflowAndBoundingMetricsFor(childFrame, childDesiredSize,
+                                    childDesiredSize.mBoundingMetrics);
 
     childFrame = childFrame->GetNextSibling();
   }
 
-  // cache the frame's mBoundingMetrics
-  mBoundingMetrics = aDesiredSize.mBoundingMetrics;
 
   // place and size children
   FinalizeReflow(*aReflowState.rendContext, aDesiredSize);
@@ -173,6 +168,18 @@ nsMathMLTokenFrame::Place(nsIRenderingContext& aRenderingContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
 {
+  mBoundingMetrics.Clear();
+  nsIFrame* childFrame = GetFirstChild(nsnull);
+  while (childFrame) {
+    nsHTMLReflowMetrics childSize;
+    GetReflowAndBoundingMetricsFor(childFrame, childSize,
+                                   childSize.mBoundingMetrics, nsnull);
+    // compute and cache the bounding metrics
+    mBoundingMetrics += childSize.mBoundingMetrics;
+
+    childFrame = childFrame->GetNextSibling();
+  }
+
   nsCOMPtr<nsIFontMetrics> fm =
     PresContext()->GetMetricsFor(GetStyleFont()->mFont);
   nscoord ascent, descent;
@@ -189,15 +196,14 @@ nsMathMLTokenFrame::Place(nsIRenderingContext& aRenderingContext,
     nscoord dy, dx = 0;
     nsIFrame* childFrame = GetFirstChild(nsnull);
     while (childFrame) {
-      nsRect rect = childFrame->GetRect();
       nsHTMLReflowMetrics childSize;
-      childSize.width = rect.width;
-      childSize.height = rect.height;
+      GetReflowAndBoundingMetricsFor(childFrame, childSize,
+                                     childSize.mBoundingMetrics);
 
       // place and size the child; (dx,0) makes the caret happy - bug 188146
-      dy = rect.IsEmpty() ? 0 : aDesiredSize.ascent - rect.y;
+      dy = childSize.height == 0 ? 0 : aDesiredSize.ascent - childSize.ascent;
       FinishReflowChild(childFrame, PresContext(), nsnull, childSize, dx, dy, 0);
-      dx += rect.width;
+      dx += childSize.width;
       childFrame = childFrame->GetNextSibling();
     }
   }

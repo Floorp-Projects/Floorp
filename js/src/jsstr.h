@@ -407,14 +407,11 @@ js_InitDeflatedStringCache(JSRuntime *rt);
 #define UNIT_STRING_LIMIT 256U
 
 /*
- * Get the independent string containing only character code c (backstopped
- * with a NUL as usual for independent strings).
- *
- * This function must be called only for c < UNIT_STRING_LIMIT. It asserts to
- * insist on this requirement in DEBUG builds.
+ * Get the independent string containing only character code at index in str
+ * (backstopped with a zero character as usual for independent strings).
  */
 extern JSString *
-js_GetUnitString(JSContext *cx, jschar c);
+js_GetUnitString(JSContext *cx, JSString *str, size_t index);
 
 extern void
 js_FinishUnitStrings(JSRuntime *rt);
