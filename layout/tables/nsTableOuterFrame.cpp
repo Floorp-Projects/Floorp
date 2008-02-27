@@ -878,6 +878,8 @@ nsTableOuterFrame::GetCaptionOrigin(PRUint32         aCaptionSide,
                                     nsMargin&        aCaptionMargin,
                                     nsPoint&         aOrigin)
 {
+  // FIXME: This function expects computed margin values to be
+  // NS_AUTOMARGIN, but this is no longer the case.
   aOrigin.x = aOrigin.y = 0;
   if ((NS_UNCONSTRAINEDSIZE == aInnerSize.width) || (NS_UNCONSTRAINEDSIZE == aInnerSize.height) ||  
       (NS_UNCONSTRAINEDSIZE == aCaptionSize.width) || (NS_UNCONSTRAINEDSIZE == aCaptionSize.height)) {
@@ -885,6 +887,8 @@ nsTableOuterFrame::GetCaptionOrigin(PRUint32         aCaptionSide,
   }
   if (!mCaptionFrame) return NS_OK;
 
+  // FIXME: Have two separate switch statements so we can coalesce the
+  // horizontal computation for top and bottom.
   switch(aCaptionSide) {
   case NS_STYLE_CAPTION_SIDE_BOTTOM:
   case NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE: {
@@ -893,9 +897,16 @@ nsTableOuterFrame::GetCaptionOrigin(PRUint32         aCaptionSide,
                                            aContainBlockSize.width, aCaptionSize.width);
     }
     aOrigin.x = aCaptionMargin.left;
+    if (aCaptionSide == NS_STYLE_CAPTION_SIDE_BOTTOM) {
+      // We placed the caption using only the table's width as available
+      // width, and we should position it this way as well.
+      aOrigin.x += aInnerMargin.left;
+    }
     if (NS_AUTOMARGIN == aCaptionMargin.top) {
       aCaptionMargin.top = 0;
     }
+    // FIXME: Position relative to right edge for RTL.  (Based on table
+    // direction or table parent direction?)
     nsCollapsingMargin marg;
     marg.Include(aCaptionMargin.top);
     marg.Include(aInnerMargin.bottom);
@@ -964,6 +975,13 @@ nsTableOuterFrame::GetCaptionOrigin(PRUint32         aCaptionSide,
                                            aContainBlockSize.width, aCaptionSize.width);
     }
     aOrigin.x = aCaptionMargin.left;
+    if (aCaptionSide == NS_STYLE_CAPTION_SIDE_TOP) {
+      // We placed the caption using only the table's width as available
+      // width, and we should position it this way as well.
+      aOrigin.x += aInnerMargin.left;
+    }
+    // FIXME: Position relative to right edge for RTL.  (Based on table
+    // direction or table parent direction?)
     if (NS_AUTOMARGIN == aCaptionMargin.bottom) {
       aCaptionMargin.bottom = 0;
     }
@@ -991,6 +1009,8 @@ nsTableOuterFrame::GetInnerOrigin(PRUint32         aCaptionSide,
                                   nsMargin&        aInnerMargin,
                                   nsPoint&         aOrigin)
 {
+  // FIXME: This function expects computed margin values to be
+  // NS_AUTOMARGIN, but this is no longer the case.
   aOrigin.x = aOrigin.y = 0;
   if ((NS_UNCONSTRAINEDSIZE == aInnerSize.width) || (NS_UNCONSTRAINEDSIZE == aInnerSize.height) ||  
       (NS_UNCONSTRAINEDSIZE == aCaptionSize.width) || (NS_UNCONSTRAINEDSIZE == aCaptionSize.height)) {
@@ -1271,7 +1291,8 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
     // It's good that CSS 2.1 says not to include margins, since we
     // can't, since they already been converted so they exactly
     // fill the available width (ignoring the margin on one side if
-    // neither are auto).
+    // neither are auto).  (We take advantage of that later when we call
+    // GetCaptionOrigin, though.)
     nscoord innerBorderWidth = innerRS->ComputedWidth() +
                                innerRS->mComputedBorderPadding.LeftRight();
     OuterBeginReflowChild(aPresContext, mCaptionFrame, aOuterRS,
