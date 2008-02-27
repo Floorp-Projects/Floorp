@@ -763,7 +763,17 @@ pref("network.ntlm.send-lm-response", false);
 pref("network.hosts.nntp_server",           "news.mozilla.org");
 
 pref("permissions.default.image",           1); // 1-Accept, 2-Deny, 3-dontAcceptForeign
+
+#ifndef XP_MACOSX
+#ifdef XP_UNIX
+pref("network.proxy.type",                  5);
+#else
 pref("network.proxy.type",                  0);
+#endif
+#else
+pref("network.proxy.type",                  0);
+#endif
+
 pref("network.proxy.ftp",                   "");
 pref("network.proxy.ftp_port",              0);
 pref("network.proxy.gopher",                "");
