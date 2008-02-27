@@ -788,8 +788,8 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
     }
     ++childCount;
     nsSize pref(0,0);
-    nsSize min(0,0);
-    nsSize max(NS_INTRINSICSIZE,NS_INTRINSICSIZE);
+    nsSize minSize(0,0);
+    nsSize maxSize(NS_INTRINSICSIZE,NS_INTRINSICSIZE);
     nscoord ascent = 0;
     PRBool collapsed = child->IsCollapsed(aState);
 
@@ -799,19 +799,19 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
     //if (flexes != 1)  {
 
       pref = child->GetPrefSize(aState);
-      min = child->GetMinSize(aState);
-      max = nsBox::BoundsCheckMinMax(min, child->GetMaxSize(aState));
+      minSize = child->GetMinSize(aState);
+      maxSize = nsBox::BoundsCheckMinMax(minSize, child->GetMaxSize(aState));
       ascent = child->GetBoxAscent(aState);
       nsMargin margin;
       child->GetMargin(margin);
       ascent += margin.top;
     //}
 
-      pref = nsBox::BoundsCheck(min, pref, max);
+      pref = nsBox::BoundsCheck(minSize, pref, maxSize);
 
       AddMargin(child, pref);
-      AddMargin(child, min);
-      AddMargin(child, max);
+      AddMargin(child, minSize);
+      AddMargin(child, maxSize);
     }
 
     if (!currentBox) {
@@ -831,12 +831,12 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
 
       // get sizes from child
       if (isHorizontal) {
-          minWidth  = min.width;
-          maxWidth  = max.width;
+          minWidth  = minSize.width;
+          maxWidth  = maxSize.width;
           prefWidth = pref.width;
       } else {
-          minWidth = min.height;
-          maxWidth = max.height;
+          minWidth = minSize.height;
+          maxWidth = maxSize.height;
           prefWidth = pref.height;
       }
 
@@ -875,18 +875,18 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
     }
 
     if (!isHorizontal) {
-      if (min.width > aMinSize)
-        aMinSize = min.width;
+      if (minSize.width > aMinSize)
+        aMinSize = minSize.width;
 
-      if (max.width < aMaxSize)
-        aMaxSize = max.width;
+      if (maxSize.width < aMaxSize)
+        aMaxSize = maxSize.width;
 
     } else {
-      if (min.height > aMinSize)
-        aMinSize = min.height;
+      if (minSize.height > aMinSize)
+        aMinSize = minSize.height;
 
-      if (max.height < aMaxSize)
-        aMaxSize = max.height;
+      if (maxSize.height < aMaxSize)
+        aMaxSize = maxSize.height;
     }
 
     currentBox->ascent  = ascent;

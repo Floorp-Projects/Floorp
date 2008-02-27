@@ -1157,11 +1157,11 @@ nsXULScrollFrame::GetMaxSize(nsBoxLayoutState& aState)
   PropagateDebug(aState);
 #endif
 
-  nsSize max(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+  nsSize maxSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
 
-  AddBorderAndPadding(max);
-  nsIBox::AddCSSMaxSize(aState, this, max);
-  return max;
+  AddBorderAndPadding(maxSize);
+  nsIBox::AddCSSMaxSize(aState, this, maxSize);
+  return maxSize;
 }
 
 #if 0 // XXXldb I don't think this is even needed
