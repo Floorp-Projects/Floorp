@@ -100,18 +100,15 @@ txParseDocumentFromURI(const nsAString& aHref, const txXPathNode& aLoader,
 
     nsCOMPtr<nsILoadGroup> loadGroup = loaderDocument->GetDocumentLoadGroup();
 
-    nsCOMPtr<nsIURI> loaderUri;
-    rv = loaderDocument->NodePrincipal()->GetURI(getter_AddRefs(loaderUri));
-    NS_ENSURE_SUCCESS(rv, rv);
-
     // For the system principal loaderUri will be null here, which is good
     // since that means that chrome documents can load any uri.
 
     // Raw pointer, we want the resulting txXPathNode to hold a reference to
     // the document.
     nsIDOMDocument* theDocument = nsnull;
-    rv = nsSyncLoadService::LoadDocument(documentURI, loaderUri, loadGroup,
-                                         PR_TRUE, &theDocument);
+    rv = nsSyncLoadService::LoadDocument(documentURI,
+                                         loaderDocument->NodePrincipal(),
+                                         loadGroup, PR_TRUE, &theDocument);
 
     if (NS_FAILED(rv)) {
         aErrMsg.Append(NS_LITERAL_STRING("Document load of ") + 

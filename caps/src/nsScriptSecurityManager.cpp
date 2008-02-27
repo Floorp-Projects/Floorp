@@ -98,6 +98,7 @@ nsIIOService    *nsScriptSecurityManager::sIOService = nsnull;
 nsIXPConnect    *nsScriptSecurityManager::sXPConnect = nsnull;
 nsIStringBundle *nsScriptSecurityManager::sStrBundle = nsnull;
 JSRuntime       *nsScriptSecurityManager::sRuntime   = 0;
+PRInt32 nsScriptSecurityManager::sFileURIOriginPolicy = FILEURI_SOP_SELF;
 
 // Info we need about the JSClasses used by XPConnects wrapped
 // natives, to avoid having to QI to nsIXPConnectWrappedNative all the
@@ -277,6 +278,7 @@ nsScriptSecurityManager::GetSafeJSContext()
     return cx;
 }
 
+/* static */
 PRBool
 nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
                                              nsIURI* aTargetURI)
@@ -378,7 +380,7 @@ nsScriptSecurityManager::SecurityCompareFileURIs(nsIURI* aSourceURI,
                                                  nsIURI* aTargetURI)
 {
     // in traditional unsafe behavior all files are the same origin
-    if (mFileURIOriginPolicy == FILEURI_SOP_TRADITIONAL)
+    if (sFileURIOriginPolicy == FILEURI_SOP_TRADITIONAL)
         return PR_TRUE;
 
 
@@ -387,7 +389,7 @@ nsScriptSecurityManager::SecurityCompareFileURIs(nsIURI* aSourceURI,
     PRBool filesAreEqual = PR_FALSE;
     if (NS_FAILED( aSourceURI->Equals(aTargetURI, &filesAreEqual) ))
         return PR_FALSE;
-    if (filesAreEqual || mFileURIOriginPolicy == FILEURI_SOP_SELF)
+    if (filesAreEqual || sFileURIOriginPolicy == FILEURI_SOP_SELF)
         return filesAreEqual;
 
 
@@ -406,7 +408,7 @@ nsScriptSecurityManager::SecurityCompareFileURIs(nsIURI* aSourceURI,
 
 
     // For policy ANYFILE we're done
-    if (mFileURIOriginPolicy == FILEURI_SOP_ANYFILE)
+    if (sFileURIOriginPolicy == FILEURI_SOP_ANYFILE)
         return PR_TRUE;
 
 
@@ -425,7 +427,7 @@ nsScriptSecurityManager::SecurityCompareFileURIs(nsIURI* aSourceURI,
     }
 
     // check remaining policies
-    if (mFileURIOriginPolicy == FILEURI_SOP_SAMEDIR)
+    if (sFileURIOriginPolicy == FILEURI_SOP_SAMEDIR)
     {
         // file: URIs in the same directory have the same origin
         PRBool sameParent = PR_FALSE;
@@ -436,7 +438,7 @@ nsScriptSecurityManager::SecurityCompareFileURIs(nsIURI* aSourceURI,
         return sameParent;
     }
 
-    if (mFileURIOriginPolicy == FILEURI_SOP_SUBDIR)
+    if (sFileURIOriginPolicy == FILEURI_SOP_SUBDIR)
     {
         // file: URIs can access files in the same or lower directories
         PRBool isChild = PR_FALSE;
@@ -3259,11 +3261,10 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
       mIsJavaScriptEnabled(PR_FALSE),
       mIsMailJavaScriptEnabled(PR_FALSE),
       mIsWritingPrefs(PR_FALSE),
-      mPolicyPrefsChanged(PR_TRUE),
+      mPolicyPrefsChanged(PR_TRUE)
 #ifdef XPC_IDISPATCH_SUPPORT
-      mXPCDefaultGrantAll(PR_FALSE),
+      , mXPCDefaultGrantAll(PR_FALSE)
 #endif
-      mFileURIOriginPolicy(FILEURI_SOP_SELF)
 {
     NS_ASSERTION(sizeof(long) == sizeof(void*), "long and void* have different lengths on this platform. This may cause a security failure.");
     mPrincipals.Init(31);
@@ -3877,7 +3878,7 @@ nsScriptSecurityManager::ScriptSecurityPrefChanged()
 
     PRInt32 policy;
     rv = mSecurityPref->SecurityGetIntPref(sFileOriginPolicyPrefName, &policy);
-    mFileURIOriginPolicy = NS_SUCCEEDED(rv) ? policy : FILEURI_SOP_SELF;
+    sFileURIOriginPolicy = NS_SUCCEEDED(rv) ? policy : FILEURI_SOP_SELF;
 
 #ifdef XPC_IDISPATCH_SUPPORT
     rv = mSecurityPref->SecurityGetBoolPref(sXPCDefaultGrantAllName, &temp);
