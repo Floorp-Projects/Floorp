@@ -539,7 +539,6 @@ BrowserGlue.prototype = {
         var bookmarksMenuFolder = bmsvc.bookmarksMenuFolder;
         var unfiledBookmarksFolder = bmsvc.unfiledBookmarksFolder;
         var toolbarFolder = bmsvc.toolbarFolder;
-        var tagsFolder = bmsvc.tagsFolder;
         var defaultIndex = bmsvc.DEFAULT_INDEX;
 
         // index = 0, make it the first folder
@@ -574,14 +573,11 @@ BrowserGlue.prototype = {
         var sep =  bmsvc.insertSeparator(placesFolder, defaultIndex);
 
         var recentTagsItem = bmsvc.insertBookmark(placesFolder,
-          this._uri("place:folder=" + tagsFolder +
-              "&group=" + Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER +
-              "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
-              "&applyOptionsToContainers=1" +
-              "&sort=" +
-              Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
+          this._uri("place:"+
+              "type=" + Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY +
+              "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
               "&maxResults=" + maxResults),
-              defaultIndex, recentTagsTitle);
+          defaultIndex, recentTagsTitle);
       }
     };
 

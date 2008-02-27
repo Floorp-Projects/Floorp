@@ -1024,7 +1024,7 @@ function placesMigrationTasks() {
   // XXX - REMOVE ME FOR BETA 3 (bug 391419)
   if (gPrefService.getBoolPref("browser.places.migratePostDataAnnotations")) {
     const annosvc = PlacesUtils.annotations;
-    const bmsvc = PlacesUtils.bookmarks;
+    var bmsvc = PlacesUtils.bookmarks;
     const oldPostDataAnno = "URIProperties/POSTData";
     var pages = annosvc.getPagesWithAnnotation(oldPostDataAnno, {});
     for (let i = 0; i < pages.length; i++) {
@@ -1047,5 +1047,31 @@ function placesMigrationTasks() {
       } catch(ex) {}
     }
     gPrefService.setBoolPref("browser.places.migratePostDataAnnotations", false);
+  }
+
+  if (gPrefService.getBoolPref("browser.places.updateRecentTagsUri")) {
+    var bmsvc = PlacesUtils.bookmarks;
+    var tagsFolder = bmsvc.tagsFolder;
+    var oldUriSpec = "place:folder=" + tagsFolder + "&group=3&queryType=1"+
+                     "&applyOptionsToContainers=1&sort=12&maxResults=10";
+
+    var maxResults = 10;
+    var newUriSpec = "place:type=" + 
+                     Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY +
+                     "&sort=" + 
+                     Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
+                     "&maxResults=" + maxResults;
+                     
+    var ios = Cc["@mozilla.org/network/io-service;1"].
+              getService(Ci.nsIIOService);
+
+    var oldUri = ios.newURI(oldUriSpec, null, null);
+    var newUri = ios.newURI(newUriSpec, null, null);
+
+    let bookmarks = bmsvc.getBookmarkIdsForURI( oldUri, {});
+    for (let i = 0; i < bookmarks.length; i++) {
+      bmsvc.changeBookmarkURI( bookmarks[i], newUri);
+    }
+    gPrefService.setBoolPref("browser.places.updateRecentTagsUri", false);
   }
 }

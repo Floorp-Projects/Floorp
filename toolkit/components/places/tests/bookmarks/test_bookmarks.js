@@ -283,8 +283,9 @@ function run_test() {
   do_check_eq(observer._itemChangedProperty, "title");
 
   // insert query item
-  var newId6 = bmsvc.insertBookmark(testRoot, uri("place:domain=google.com&group=1"),
-                                    bmsvc.DEFAULT_INDEX, "");
+  var uri6 = uri("place:domain=google.com&type="+
+                 Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY);
+  var newId6 = bmsvc.insertBookmark(testRoot, uri6, bmsvc.DEFAULT_INDEX, "");
   do_check_eq(observer._itemAddedParent, testRoot);
   do_check_eq(observer._itemAddedIndex, 3);
 

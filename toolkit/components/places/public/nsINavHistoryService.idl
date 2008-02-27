@@ -79,17 +79,15 @@ interface nsINavHistoryResultNode : nsISupports
   const unsigned long RESULT_TYPE_URI = 0;               // nsINavHistoryResultNode
   const unsigned long RESULT_TYPE_VISIT = 1;             // nsINavHistoryVisitResultNode
   const unsigned long RESULT_TYPE_FULL_VISIT = 2;        // nsINavHistoryFullVisitResultNode
-  const unsigned long RESULT_TYPE_HOST = 3;              // nsINavHistoryContainerResultNode
   const unsigned long RESULT_TYPE_DYNAMIC_CONTAINER = 4; // nsINavHistoryContainerResultNode
   const unsigned long RESULT_TYPE_QUERY = 5;             // nsINavHistoryQueryResultNode
   const unsigned long RESULT_TYPE_FOLDER = 6;            // nsINavHistoryQueryResultNode
   const unsigned long RESULT_TYPE_SEPARATOR = 7;         // nsINavHistoryResultNode
-  const unsigned long RESULT_TYPE_DAY = 8;               // nsINavHistoryContainerResultNode
   const unsigned long RESULT_TYPE_FOLDER_SHORTCUT = 9;   // nsINavHistoryQueryResultNode
   readonly attribute unsigned long type;
 
   /**
-   * Title of the web page, or of the node's grouping (day, host, folder, etc)
+   * Title of the web page, or of the node's query (day, host, folder, etc)
    */
   readonly attribute AUTF8String title;
 
@@ -113,8 +111,8 @@ interface nsINavHistoryResultNode : nsISupports
    * For hosts, or other node types with children, this is the most recent
    * access time for any of the children.
    *
-   * For days, this is midnight on the morning of the day in question in
-   * UTC time.
+   * For days queries this is the respective endTime - a maximum possible
+   * visit time to fit in the day range.
    */
   readonly attribute PRTime time;
 
@@ -340,8 +338,8 @@ interface nsINavHistoryContainerResultNode : nsINavHistoryResultNode
    * container API. TO BE CALLED FROM nsIDynamicContainer::OnContainerOpening()
    * ONLY, and only for non-bookmark-folder containers.
    *
-   * aContainerType should be either RESULT_TYPE_HOST or
-   * RESULT_TYPE_DYNAMIC_CONTAINER. When type is dynamic container you must
+   * aContainerType should be RESULT_TYPE_DYNAMIC_CONTAINER.
+   * When type is dynamic container you must
    * specify a dynamic container type, otherwise, the dynamic container type must
    * be null. Use appendQueryNode and appendFolderNode for the other container
    * types.
@@ -500,8 +498,7 @@ interface nsINavHistoryResultViewer : nsISupports
 
   /**
    * Called when something significant is changing that requires everything
-   * to be recomputed. For example, changing sorting or changing collapse
-   * duplicates can affect every row.
+   * to be recomputed. For example, changing sorting can affect every row.
    */
   void invalidateAll();
 
@@ -537,24 +534,9 @@ interface nsINavHistoryResultViewer : nsISupports
  * object, attach it to a result, never attach it to a tree, and forget about
  * it, it will leak!
  */
-[scriptable, uuid(e0ce87df-8b77-407b-a52b-7510eab14fb5)]
+[scriptable, uuid(fa77e4e9-9fc8-45d2-9507-0fe4f0602505)]
 interface nsINavHistoryResultTreeViewer : nsINavHistoryResultViewer
 {
-  /**
-   * Controls whether duplicate adjacent elements are collapsed into a single
-   * item in the tree. This prevents you from seeing multiple entries for
-   * things when you have selected to get visits. When you sort by date, the
-   * multiple entries will then appear because they will be separated (unless
-   * you clicked reload a bunch of times in a row). If you know you'll only
-   * ever want one entry per site, you should ask for URIs back instead of
-   * visits so it will be more efficient.
-   * Default = true
-   *
-   * Changing this value is somewhat heavyweight since it will force a tree
-   * refresh.
-   */
-  attribute boolean collapseDuplicates;
-
   /**
    * This allows you to get at the real node for a given row index. This is
    * only valid when a tree is attached.
@@ -637,7 +619,7 @@ interface nsINavHistoryResult : nsISupports
  * DANGER! If you are in the middle of a batch transaction, there may be a
  * database transaction active. You can still access the DB, but be careful.
  */
-[scriptable, uuid(849e2184-3dee-416f-91cd-6a619ca49d1c)]
+[scriptable, uuid(eacb76eb-3eeb-419b-a963-9b3a9d65f356)]
 interface nsINavHistoryObserver : nsISupports
 {
   /**
@@ -666,10 +648,14 @@ interface nsINavHistoryObserver : nsISupports
    * @param aSessionID      The ID of one connected sequence of visits.
    * @param aReferringID    The ID of the visit the user came from. 0 if empty.
    * @param aTransitionType One of nsINavHistory.TRANSITION_*
+   * @param aAdded          Incremented by query nodes when the visited uri
+   *                        belongs to them. If no such query exists, the 
+   *                        history result creates a new query node dynamically.
+   *                        It is used in places views only and can be ignored.
    */
   void onVisit(in nsIURI aURI, in long long aVisitID, in PRTime aTime,
                in long long aSessionID, in long long aReferringID,
-               in unsigned long aTransitionType);
+               in unsigned long aTransitionType, out unsigned long aAdded);
 
   /**
    * Called whenever either the "real" title or the custom title of the page
@@ -868,41 +854,9 @@ interface nsINavHistoryQuery : nsISupports
 /**
  * This object represents the global options for executing a query.
  */
-[scriptable, uuid(ff73bf85-2755-4c1a-a48d-8c91ccca770e)]
+[scriptable, uuid(a46c132e-35f3-4e1e-bb3d-4e3043657248)]
 interface nsINavHistoryQueryOptions : nsISupports
 {
-  /**
-   * Grouping by day. The results will be an array of nsINavHistoryResults with
-   * type = RESULT_TYPE_DAY, one for each day where there are results. These
-   * will have children of corresponding to the search results of that day.
-   */
-  const unsigned short GROUP_BY_DAY = 0;
-
-  /**
-   * Grouping by exact host. The results will be an array of nsINavHistoryResults
-   * with type = RESULT_TYPE_HOST, one for each unique host (for example,
-   * "bugzilla.mozilla.org" and "www.mozilla.org" will be separate). The
-   * children of these will correspond to the results for each host.
-   */
-  const unsigned short GROUP_BY_HOST = 1;
-
-  /**
-   * Grouping by toplevel domain. Similar to GROUP_BY_HOST, but there will be
-   * one result for each toplevel domain (mozilla.org will be one entry, and
-   * will contain results including, for example, "bugzilla.mozilla.org" and
-   * "www.mozilla.org").
-   */
-  const unsigned short GROUP_BY_DOMAIN = 2;
-
-  /**
-   * Group by bookmark folders.  Results from the query are grouped in folders
-   * containers.  This option requires there to be at least one parent folder specified 
-   * via nsINavHistoryQuery::setFolders.  Note, since the folder containers are built
-   * from the items that match the results that we are grouping, you will not get any
-   * folders (when grouping by folder) with zero items.
-   */
-  const unsigned short GROUP_BY_FOLDER = 3;
-
   /**
    * You can ask for the results to be pre-sorted. Since the DB has indices
    * of many items, it can produce sorted results almost for free. These should
@@ -928,8 +882,6 @@ interface nsINavHistoryQueryOptions : nsISupports
   const unsigned short SORT_BY_DATEADDED_DESCENDING = 12;
   const unsigned short SORT_BY_LASTMODIFIED_ASCENDING = 13;
   const unsigned short SORT_BY_LASTMODIFIED_DESCENDING = 14;
-  const unsigned short SORT_BY_COUNT_ASCENDING = 15;
-  const unsigned short SORT_BY_COUNT_DESCENDING = 16;
   const unsigned short SORT_BY_TAGS_ASCENDING = 17;
   const unsigned short SORT_BY_TAGS_DESCENDING = 18;
   const unsigned short SORT_BY_ANNOTATION_ASCENDING = 19;
@@ -958,18 +910,32 @@ interface nsINavHistoryQueryOptions : nsISupports
   const unsigned short RESULTS_AS_FULL_VISIT = 2;
 
   /**
-   * The grouping mode to be used for this query.
-   * Grouping mode is an array of GROUP_BY_* values that specifies the
-   * structure of the tree you want.  For example, an array consisting of
-   * [GROUP_BY_DAY, GROUP_BY_DOMAIN] will give you a tree whose first level is
-   * a list of days, and whose second level is a list of domains, and whose
-   * third level is a list of pages in those domains.
-   * If you don't want grouping, you can specify an empty array.
+   * This returns query nodes for each predefined date range where we 
+   * had visits. The node contains information how to load its content:
+   * - visits for the given date range will be loaded.
    */
-  void getGroupingMode(out unsigned long groupCount,
-                       [retval,array,size_is(groupCount)] out unsigned short groupingMode);
-  void setGroupingMode([const,array,size_is(groupCount)] in unsigned short groupingMode,
-                       in unsigned long groupCount);
+  const unsigned short RESULTS_AS_DATE_QUERY = 3;
+
+  /**
+   * This returns nsINavHistoryQueryResultNode nodes for each site where we 
+   * have visits. The node contains information how to load its content:
+   * - last visit for each url in the given host will be loaded.
+   */
+  const unsigned short RESULTS_AS_SITE_QUERY = 4;
+
+  /**
+   * This returns nsINavHistoryQueryResultNode nodes for each day where we 
+   * have visits. The node contains information how to load its content:
+   * - list of hosts visited in the given period will be loaded.
+   */
+  const unsigned short RESULTS_AS_DATE_SITE_QUERY = 5;
+
+  /**
+   * This returns nsINavHistoryQueryResultNode nodes for each tag.
+   * The node contains information how to load its content:
+   * - list of bookmarks with the given tag will be loaded.
+   */
+  const unsigned short RESULTS_AS_TAG_QUERY = 6;
 
   /**
    * The sorting mode to be used for this query.
@@ -1062,11 +1028,6 @@ interface nsINavHistoryQueryOptions : nsISupports
    * ones, and THEN sort by title.
    */
   attribute unsigned long maxResults;
-
-  /**
-   * only apply our query options to the containers
-   */
-  attribute boolean applyOptionsToContainers;
 
   const unsigned short QUERY_TYPE_HISTORY = 0;
   const unsigned short QUERY_TYPE_BOOKMARKS = 1;

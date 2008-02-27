@@ -349,7 +349,10 @@ var PlacesUtils = {
    */
   nodeIsHost: function PU_nodeIsHost(aNode) {
     NS_ASSERT(aNode, "null node");
-    return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_HOST;
+    return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY &&
+           aNode.parent &&
+           asQuery(aNode.parent).queryOptions.resultType ==
+             Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY;
   },
 
   /**
@@ -359,7 +362,13 @@ var PlacesUtils = {
    * @returns true if the node is a day container, false otherwise
    */
   nodeIsDay: function PU_nodeIsDay(aNode) {
-    return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_DAY;
+    NS_ASSERT(aNode, "null node");
+    var resultType;
+    return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY &&
+           aNode.parent &&
+           ((resultType = asQuery(aNode.parent).queryOptions.resultType) ==
+               Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY ||
+             resultType == Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY);
   },
 
   /**
@@ -371,8 +380,6 @@ var PlacesUtils = {
   containerTypes: [Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
                    Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT,
                    Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY,
-                   Ci.nsINavHistoryResultNode.RESULT_TYPE_HOST,
-                   Ci.nsINavHistoryResultNode.RESULT_TYPE_DAY,
                    Ci.nsINavHistoryResultNode.RESULT_TYPE_DYNAMIC_CONTAINER],
   nodeIsContainer: function PU_nodeIsContainer(aNode) {
     NS_ASSERT(aNode, "null node");
@@ -1666,11 +1673,8 @@ var PlacesUtils = {
           // Include visible url nodes only
           let child = aNode.getChild(i);
           if (this.nodeIsURI(child)) {
-            // If the node contents is visible, add the uri only if its node is
-            // visible. Otherwise follow viewer's collapseDuplicates property,
-            // default to true
+            // If the node contents is visible, add the uri
             if ((wasOpen && oldViewer && child.viewIndex != -1) ||
-                (oldViewer && !oldViewer.collapseDuplicates) ||
                 urls.indexOf(child.uri) == -1) {
               urls.push({ uri: child.uri,
                           isBookmark: this.nodeIsBookmark(child) });
