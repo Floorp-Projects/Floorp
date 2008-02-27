@@ -78,6 +78,7 @@ try {
   do_throw("Could not get io service\n");
 }
 
+
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const POST_DATA_ANNO = "bookmarkProperties/POSTData";

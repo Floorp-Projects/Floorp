@@ -191,8 +191,8 @@ PlacesTreeView.prototype = {
     if (!aContainer.containerOpen)
       return;  // nothing to do
 
-    const openLiteral = PlacesUIUtils.RDF.GetResource("http://home.netscape.com/NC-rdf#open");
-    const trueLiteral = PlacesUIUtils.RDF.GetLiteral("true");
+    const openLiteral = PlacesUtils.RDF.GetResource("http://home.netscape.com/NC-rdf#open");
+    const trueLiteral = PlacesUtils.RDF.GetLiteral("true");
 
     var cc = aContainer.childCount;
     for (var i=0; i < cc; i++) {
@@ -218,8 +218,8 @@ PlacesTreeView.prototype = {
 
         var resource = this._getResourceForNode(curChild);
         var isopen = resource != null &&
-                     PlacesUIUtils.localStore.HasAssertion(resource, openLiteral,
-                                                           trueLiteral, true);
+                     PlacesUtils.localStore.HasAssertion(resource, openLiteral,
+                                                         trueLiteral, true);
         if (isopen != curChild.containerOpen)
           aToOpen.push(curChild);
         else if (curChild.containerOpen && curChild.childCount > 0)
@@ -829,7 +829,7 @@ PlacesTreeView.prototype = {
   {
     var uri = aNode.uri;
     NS_ASSERT(uri, "if there is no uri, we can't persist the open state");
-    return uri ? PlacesUIUtils.RDF.GetResource(uri) : null;
+    return uri ? PlacesUtils.RDF.GetResource(uri) : null;
   },
 
   // nsITreeView
@@ -1117,7 +1117,7 @@ PlacesTreeView.prototype = {
         // if they go through the "result" API.
         if (PlacesUtils.nodeIsSeparator(node))
           return "";
-        return node.title || PlacesUIUtils.getString("noTitle");
+        return node.title || PlacesUtils.getString("noTitle");
       case this.COLUMN_TYPE_TAGS:
         return node.tags;
       case this.COLUMN_TYPE_URI:
@@ -1191,13 +1191,13 @@ PlacesTreeView.prototype = {
 
     var resource = this._getResourceForNode(node);
     if (resource) {
-      const openLiteral = PlacesUIUtils.RDF.GetResource("http://home.netscape.com/NC-rdf#open");
-      const trueLiteral = PlacesUIUtils.RDF.GetLiteral("true");
+      const openLiteral = PlacesUtils.RDF.GetResource("http://home.netscape.com/NC-rdf#open");
+      const trueLiteral = PlacesUtils.RDF.GetLiteral("true");
 
       if (node.containerOpen)
-        PlacesUIUtils.localStore.Unassert(resource, openLiteral, trueLiteral);
+        PlacesUtils.localStore.Unassert(resource, openLiteral, trueLiteral);
       else
-        PlacesUIUtils.localStore.Assert(resource, openLiteral, trueLiteral, true);
+        PlacesUtils.localStore.Assert(resource, openLiteral, trueLiteral, true);
     }
 
     node.containerOpen = !node.containerOpen;
