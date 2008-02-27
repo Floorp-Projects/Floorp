@@ -1582,33 +1582,6 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
 
 //----------------------------------------
 
-nsBlockFrame::line_iterator
-nsBlockFrame::FindLineFor(nsIFrame* aFrame)
-{
-  NS_PRECONDITION(aFrame, "why pass a null frame?");
-  line_iterator line = begin_lines(),
-                line_end = end_lines();
-  for ( ; line != line_end; ++line) {
-    // If the target frame is in-flow, and this line contains the it,
-    // then we've found our line.
-    if (line->Contains(aFrame))
-      return line;
-
-    // If the target frame is floated, and this line contains the
-    // float's placeholder, then we've found our line.
-    if (line->HasFloats()) {
-      for (nsFloatCache *fc = line->GetFirstFloat();
-           fc != nsnull;
-           fc = fc->Next()) {
-        if (aFrame == fc->mPlaceholder->GetOutOfFlowFrame())
-          return line;
-      }
-    }
-  }
-
-  return line_end;
-}
-
 /**
  * Propagate reflow "damage" from from earlier lines to the current
  * line.  The reflow damage comes from the following sources:
@@ -3597,9 +3570,10 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     aState.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
     nsBlockFrame* ourNext = static_cast<nsBlockFrame*>(GetNextInFlow());
     if (ourNext && aFrame->GetNextInFlow()) {
-      line_iterator f = ourNext->FindLineFor(aFrame->GetNextInFlow());
-      if (f != ourNext->end_lines()) {
-        f->MarkDirty();
+      PRBool isValid;
+      nsBlockInFlowLineIterator iter(ourNext, aFrame->GetNextInFlow(), &isValid);
+      if (isValid) {
+        iter.GetLine()->MarkDirty();
       }
     }
   }
@@ -5161,6 +5135,51 @@ nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
   *aFoundValidLine = FindValidLine();
 }
 
+static nsIFrame*
+FindChildContaining(nsBlockFrame* aFrame, nsIFrame* aFindFrame)
+{
+  nsIFrame* child;
+  while (PR_TRUE) {
+    nsIFrame* block = aFrame;
+    while (PR_TRUE) {
+      child = nsLayoutUtils::FindChildContainingDescendant(block, aFindFrame);
+      if (child)
+        break;
+      block = block->GetNextContinuation();
+    }
+    if (!child)
+      return nsnull;
+    if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW))
+      break;
+    aFindFrame = aFrame->PresContext()->FrameManager()->GetPlaceholderFrameFor(child);
+  }
+
+  return child;
+}
+
+nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
+    nsIFrame* aFindFrame, PRBool* aFoundValidLine)
+  : mFrame(aFrame), mInOverflowLines(nsnull)
+{
+  mLine = aFrame->begin_lines();
+
+  *aFoundValidLine = PR_FALSE;
+
+  nsIFrame* child = FindChildContaining(aFrame, aFindFrame);
+  if (!child)
+    return;
+
+  if (!FindValidLine())
+    return;
+
+  do {
+    if (mLine->Contains(child)) {
+      *aFoundValidLine = PR_TRUE;
+      return;
+    }
+  } while (Next());
+}
+
 PRBool
 nsBlockInFlowLineIterator::IsLastLineInList()
 {
@@ -6244,9 +6263,10 @@ nsBlockFrame::ChildIsDirty(nsIFrame* aChild)
     // Mark the line containing the child frame dirty. We would rather do this
     // in MarkIntrinsicWidthsDirty but that currently won't tell us which
     // child is being dirtied.
-    line_iterator fline = FindLineFor(aChild);
-    if (fline != end_lines()) {
-      MarkLineDirty(fline);
+    PRBool isValid;
+    nsBlockInFlowLineIterator iter(this, aChild, &isValid);
+    if (isValid) {
+      MarkLineDirty(iter.GetLine());
     }
   }
 
