@@ -84,7 +84,6 @@ NS_INTERFACE_MAP_BEGIN(nsFormFillController)
   NS_INTERFACE_MAP_ENTRY(nsIDOMKeyListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFormListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMLoadListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCompositionListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMContextMenuListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFormFillController)
@@ -558,6 +557,13 @@ nsFormFillController::HandleEvent(nsIDOMEvent* aEvent)
     if (!domDoc)
       return NS_OK;
 
+    if (mFocusedInput) {
+      nsCOMPtr<nsIDOMDocument> inputDoc;
+      mFocusedInput->GetOwnerDocument(getter_AddRefs(inputDoc));
+      if (domDoc == inputDoc)
+        StopControllingInput();
+    }
+
     mPwmgrInputs.Enumerate(RemoveForDOMDocumentEnumerator, domDoc);
   }
 
@@ -878,50 +884,7 @@ nsFormFillController::MouseOut(nsIDOMEvent* aMouseEvent)
 }
 
 ////////////////////////////////////////////////////////////////////////
-//// nsIDOMLoadListener
-
-NS_IMETHODIMP
-nsFormFillController::Load(nsIDOMEvent *aLoadEvent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFormFillController::BeforeUnload(nsIDOMEvent *aLoadEvent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFormFillController::Unload(nsIDOMEvent *aLoadEvent)
-{
-  if (mFocusedInput) {
-    nsCOMPtr<nsIDOMEventTarget> target;
-    aLoadEvent->GetTarget(getter_AddRefs(target));
-
-    nsCOMPtr<nsIDOMDocument> eventDoc = do_QueryInterface(target);
-    nsCOMPtr<nsIDOMDocument> inputDoc;
-    mFocusedInput->GetOwnerDocument(getter_AddRefs(inputDoc));
-
-    if (eventDoc == inputDoc)
-      StopControllingInput();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFormFillController::Abort(nsIDOMEvent *aLoadEvent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFormFillController::Error(nsIDOMEvent *aLoadEvent)
-{
-  return NS_OK;
-}
-
+//// nsIDOMContextMenuListener
 NS_IMETHODIMP
 nsFormFillController::ContextMenu(nsIDOMEvent* aContextMenuEvent)
 {
@@ -973,10 +936,6 @@ nsFormFillController::AddWindowListeners(nsIDOMWindow *aWindow)
                            static_cast<nsIDOMFormListener *>(this),
                            PR_TRUE);
 
-  target->AddEventListener(NS_LITERAL_STRING("unload"),
-                           static_cast<nsIDOMLoadListener *>(this),
-                           PR_TRUE);
-
   target->AddEventListener(NS_LITERAL_STRING("compositionstart"),
                            static_cast<nsIDOMCompositionListener *>(this),
                            PR_TRUE);
@@ -998,6 +957,10 @@ nsFormFillController::RemoveWindowListeners(nsIDOMWindow *aWindow)
 
   StopControllingInput();
   
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  aWindow->GetDocument(getter_AddRefs(domDoc));
+  mPwmgrInputs.Enumerate(RemoveForDOMDocumentEnumerator, domDoc);
+
   nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(aWindow));
   nsPIDOMEventTarget* chromeEventHandler = nsnull;
   if (privateDOMWindow)
@@ -1030,10 +993,6 @@ nsFormFillController::RemoveWindowListeners(nsIDOMWindow *aWindow)
 
   target->RemoveEventListener(NS_LITERAL_STRING("input"),
                               static_cast<nsIDOMFormListener *>(this),
-                              PR_TRUE);
-
-  target->RemoveEventListener(NS_LITERAL_STRING("unload"),
-                              static_cast<nsIDOMLoadListener *>(this),
                               PR_TRUE);
 
   target->RemoveEventListener(NS_LITERAL_STRING("compositionstart"),
