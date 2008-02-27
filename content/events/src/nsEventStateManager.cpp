@@ -226,6 +226,8 @@ enum {
 #define NS_MODIFIER_ALT      4
 #define NS_MODIFIER_META     8
 
+static PRBool GetWindowShowCaret(nsIDocument *aDocument);
+
 static nsIDocument *
 GetDocumentFromWindow(nsIDOMWindow *aWindow)
 {
@@ -1041,11 +1043,20 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
   case NS_LOSTFOCUS:
     {
-      // Hide the caret used in "browse with caret mode"
-      if (mBrowseWithCaret && mPresContext) {
+      // Hide the caret if it's visible.
+      if (mPresContext) {
         nsIPresShell *presShell = mPresContext->GetPresShell();
-        if (presShell)
-           SetContentCaretVisible(presShell, mCurrentFocus, PR_FALSE);
+        if (presShell) {
+           nsCOMPtr<nsICaret> caret;
+           presShell->GetCaret(getter_AddRefs(caret));
+           if (caret) {
+             PRBool caretVisible = PR_FALSE;
+             caret->GetCaretVisible(&caretVisible);
+             if (caretVisible) {
+               SetContentCaretVisible(presShell, mCurrentFocus, PR_FALSE);
+             }
+           }
+        }
       }
 
       // If focus is going to another mozilla window, we wait for the
@@ -4714,7 +4725,7 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
     }
   }
 
-  if (mBrowseWithCaret)
+  if (mBrowseWithCaret || GetWindowShowCaret(mDocument))
     SetContentCaretVisible(presShell, aContent, PR_TRUE);
 
   return NS_OK;
@@ -5342,6 +5353,7 @@ nsEventStateManager::SetCaretEnabled(nsIPresShell *aPresShell, PRBool aEnabled)
 
   selCon->SetCaretEnabled(aEnabled);
   caret->SetCaretVisible(aEnabled);
+  caret->SetIgnoreUserModify(aEnabled);
 
   return NS_OK;
 }
@@ -5373,9 +5385,6 @@ nsEventStateManager::SetContentCaretVisible(nsIPresShell* aPresShell,
       // First, tell the caret which selection to use
       caret->SetCaretDOMSelection(domSelection);
 
-      // Ignore user-modify status of nodes when browsing with caret
-      caret->SetIgnoreUserModify(aVisible);
-
       // In content, we need to set the caret
       // the only other case is edit fields, where they have a different frame selection from the doc's
       // in that case they'll take care of making the caret visible themselves
@@ -5388,11 +5397,30 @@ nsEventStateManager::SetContentCaretVisible(nsIPresShell* aPresShell,
   return NS_OK;
 }
 
-
 PRBool
 nsEventStateManager::GetBrowseWithCaret()
 {
   return mBrowseWithCaret;
+}
+
+// Checks if the window corresponding to |aDocument| has the 
+// showcaret="true" attribute set.
+static PRBool
+GetWindowShowCaret(nsIDocument *aDocument)
+{
+  if (!aDocument) return PR_FALSE;
+
+  nsPIDOMWindow* window = aDocument->GetWindow();
+  if (!window) return PR_FALSE;
+
+  nsCOMPtr<nsIContent> docContent =
+    do_QueryInterface(window->GetFrameElementInternal());
+  if (!docContent) return PR_FALSE;
+
+  return docContent->AttrValueIs(kNameSpaceID_None,
+                                 nsGkAtoms::showcaret,
+                                 NS_LITERAL_STRING("true"),
+                                 eCaseMatters);
 }
 
 void
@@ -5436,12 +5464,20 @@ nsEventStateManager::ResetBrowseWithCaret()
 
   mBrowseWithCaret = browseWithCaret;
 
-
-  // Make caret visible or not, depending on what's appropriate
-  // Set caret visibility for focused document only
-  // Others will be set when they get focused again
+  // Make caret visible or not, depending on what's appropriate.
+  // Set caret visibility for focused document only,
+  // others will be set when they get focused again
   if (presShell && gLastFocusedDocument && gLastFocusedDocument == mDocument) {
-    SetContentCaretVisible(presShell, mCurrentFocus, browseWithCaret);
+
+    // Contenteditable nodes should always have a caret.
+    PRBool isFocusEditable =
+      (mCurrentFocus) ? mCurrentFocus->HasFlag(NODE_IS_EDITABLE) : PR_FALSE;
+
+    PRBool caretShouldBeVisible = isFocusEditable ||
+                                  browseWithCaret ||
+                                  GetWindowShowCaret(mDocument);
+
+    SetContentCaretVisible(presShell, mCurrentFocus, caretShouldBeVisible);
   }
 }
 

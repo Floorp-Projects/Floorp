@@ -171,7 +171,9 @@ protected:
     nscoord               mBidiIndicatorSize;   // width and height of bidi indicator
 
     PRPackedBool          mVisible;           // is the caret blinking
-    PRPackedBool          mDrawn;             // this should be mutable
+
+    PRPackedBool          mDrawn;             // Denotes when the caret is physically drawn on the screen.
+
     PRPackedBool          mReadOnly;          // it the caret in readonly state (draws differently)      
     PRPackedBool          mShowDuringSelection; // show when text is selected
 
