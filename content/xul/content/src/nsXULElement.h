@@ -77,7 +77,6 @@
 #include "nsAutoPtr.h"
 #include "nsGenericElement.h"
 #include "nsDOMScriptObjectHolder.h"
-#include "nsIFrameLoader.h"
 
 class nsIDocument;
 class nsString;
@@ -549,9 +548,6 @@ public:
                                    PRBool aNotify);
 
     // nsIContent
-    virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                                nsIContent* aBindingParent,
-                                PRBool aCompileEventHandlers);
     virtual void UnbindFromTree(PRBool aDeep, PRBool aNullParent);
     virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
     virtual nsIAtom *GetIDAttributeName() const;
@@ -624,8 +620,6 @@ public:
 
     nsresult GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
 
-    nsresult GetFrameLoader(nsIFrameLoader** aFrameLoader);
-
     virtual void RecompileScriptEventListeners();
 
     // This function should ONLY be used by BindToTree implementations.
@@ -661,8 +655,6 @@ protected:
     public:
        nsXULSlots(PtrBits aFlags);
        virtual ~nsXULSlots();
-
-       nsCOMPtr<nsIFrameLoader> mFrameLoader;
     };
 
     virtual nsINode::nsSlots* CreateSlots();

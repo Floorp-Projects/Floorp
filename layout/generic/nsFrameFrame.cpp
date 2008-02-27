@@ -211,12 +211,13 @@ protected:
   nsCOMPtr<nsIFrameLoader> mFrameLoader;
   nsIView* mInnerView;
   PRPackedBool mDidCreateDoc;
+  PRPackedBool mOwnsFrameLoader;
   PRPackedBool mIsInline;
   PRPackedBool mPostedReflowCallback;
 };
 
 nsSubDocumentFrame::nsSubDocumentFrame(nsStyleContext* aContext)
-  : nsLeafFrame(aContext), mDidCreateDoc(PR_FALSE),
+  : nsLeafFrame(aContext), mDidCreateDoc(PR_FALSE), mOwnsFrameLoader(PR_FALSE),
     mIsInline(PR_FALSE), mPostedReflowCallback(PR_FALSE)
 {
 }
@@ -634,8 +635,13 @@ nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
     return NS_OK;
   }
   
+  if (aAttribute == nsGkAtoms::src) {
+    if (mOwnsFrameLoader && mFrameLoader) {
+      mFrameLoader->LoadFrame();
+    }
+  }
   // If the noResize attribute changes, dis/allow frame to be resized
-  if (aAttribute == nsGkAtoms::noresize) {
+  else if (aAttribute == nsGkAtoms::noresize) {
     // Note that we're not doing content type checks, but that's ok -- if
     // they'd fail we will just end up with a null framesetFrame.
     if (mContent->GetParent()->Tag() == nsGkAtoms::frameset) {
@@ -768,6 +774,13 @@ nsSubDocumentFrame::Destroy()
     }
   }
 
+  if (mFrameLoader && mOwnsFrameLoader) {
+    // We own this frame loader, and we're going away, so destroy our
+    // frame loader.
+
+    mFrameLoader->Destroy();
+  }
+
   nsLeafFrame::Destroy();
 }
 
@@ -807,7 +820,21 @@ nsSubDocumentFrame::GetDocShell(nsIDocShell **aDocShell)
       loaderOwner->GetFrameLoader(getter_AddRefs(mFrameLoader));
     }
 
-    NS_ENSURE_STATE(mFrameLoader);
+    if (!mFrameLoader) {
+      // No frame loader available from the content, create our own...
+      mFrameLoader = new nsFrameLoader(content);
+      if (!mFrameLoader)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+      // ... remember that we own this frame loader...
+      mOwnsFrameLoader = PR_TRUE;
+
+      // ... and tell it to start loading.
+      // the failure to load a URL does not constitute failure to 
+      // create/initialize the docshell and therefore the LoadFrame() 
+      // call's return value should not be propagated.
+      mFrameLoader->LoadFrame();
+    }
   }
 
   return mFrameLoader->GetDocShell(aDocShell);
