@@ -102,10 +102,10 @@ class gfxContext;
 typedef short SelectionType;
 typedef PRUint32 nsFrameState;
 
-// ff2bdd39-75ed-4392-92b8-8b650c4db574
+// 228a7d67-811b-4d75-85c0-1ee22c0d2af0
 #define NS_IPRESSHELL_IID \
-{ 0xff2bdd39, 0x75ed, 0x4392, \
-  { 0x92, 0xb8, 0x8b, 0x65, 0x0c, 0x4d, 0xb5, 0x74 } }
+{ 0x228a7d67, 0x811b, 0x4d75, \
+  { 0x85, 0xc0, 0x1e, 0xe2, 0x2c, 0x0d, 0x2a, 0xf0 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -428,6 +428,16 @@ public:
    * be false.
    */
   NS_IMETHOD GoToAnchor(const nsAString& aAnchorName, PRBool aScroll) = 0;
+
+  /**
+   * Tells the presshell to scroll again to the last anchor scrolled to by
+   * GoToAnchor, if any. This scroll only happens if the scroll
+   * position has not changed since the last GoToAnchor. This is called
+   * by nsDocumentViewer::LoadComplete. This clears the last anchor
+   * scrolled to by GoToAnchor (we don't want to keep it alive if it's
+   * removed from the DOM), so don't call this more than once.
+   */
+  NS_IMETHOD ScrollToAnchor() = 0;
 
   /**
    * Scrolls the view of the document so that the primary frame of the content
