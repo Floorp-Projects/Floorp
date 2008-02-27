@@ -273,10 +273,6 @@ public:
     */
   nsIFrame* GetTopBlockChild(nsPresContext *aPresContext);
 
-  // Returns the line containing aFrame, or end_lines() if the frame
-  // isn't in the block.
-  line_iterator FindLineFor(nsIFrame* aFrame);
-
   static nsresult GetCurrentLine(nsBlockReflowState *aState, nsLineBox **aOutCurrentLine);
 
   // Create a contination for aPlaceholder and its out of flow frame and
@@ -692,8 +688,20 @@ class nsBlockInFlowLineIterator {
 public:
   typedef nsBlockFrame::line_iterator line_iterator;
   nsBlockInFlowLineIterator(nsBlockFrame* aFrame, line_iterator aLine, PRBool aInOverflow);
+  /**
+   * Set up the iterator to point to the first line found starting from
+   * aFrame. Sets aFoundValidLine to false if there is no such line.
+   */
   nsBlockInFlowLineIterator(nsBlockFrame* aFrame, PRBool* aFoundValidLine);
-  
+  /**
+   * Set up the iterator to point to the line that contains aFindFrame (either
+   * directly or indirectly).  If aFrame is out of flow, or contained in an
+   * out-of-flow, finds the line containing the out-of-flow's placeholder. If
+   * the frame is not found, sets aFoundValidLine to false.
+   */
+  nsBlockInFlowLineIterator(nsBlockFrame* aFrame, nsIFrame* aFindFrame,
+                            PRBool* aFoundValidLine);
+
   line_iterator GetLine() { return mLine; }
   PRBool IsLastLineInList();
   nsBlockFrame* GetContainer() { return mFrame; }
