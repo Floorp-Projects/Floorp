@@ -1627,6 +1627,7 @@ var gUpdateContextMenus = ["menuitem_homepage", "menuitem_about", "menuseparator
 // For Firefox don't display context menuitems that can open a browser window.
 var gUpdateContextMenusNoBrowser = ["menuitem_installUpdate", "menuitem_includeUpdate"];
 var gInstallContextMenus = ["menuitem_homepage", "menuitem_about"];
+var gSearchContextMenus = ["menuitem_learnMore", "menuitem_installSearchResult"];
 
 function buildContextMenu(aEvent)
 {
@@ -1639,11 +1640,14 @@ function buildContextMenu(aEvent)
     popup.removeChild(popup.firstChild);
 
   switch (gView) {
+  case "search":
+    var menus = gSearchContextMenus;
+    break;
   case "extensions":
   case "themes":
   case "locales":
   case "plugins":
-    var menus = gAddonContextMenus;
+    menus = gAddonContextMenus;
     break;
   case "updates":
     menus = gUpdateContextMenus;
