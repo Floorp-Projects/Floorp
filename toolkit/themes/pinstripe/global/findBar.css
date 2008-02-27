@@ -104,6 +104,9 @@ findbar > checkbox > .checkbox-label-box > .checkbox-label {
 }
 
 .findbar-textbox[focused="true"] {
+  outline: 2px solid #4A8BC7;
+  outline-offset: -2px;
+  -moz-outline-radius: 11px;
 }
 
 findbar[flash="true"] > .find-field-container > .findbar-textbox {
