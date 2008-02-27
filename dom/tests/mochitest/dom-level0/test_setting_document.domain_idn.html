@@ -71,11 +71,22 @@ var noWhitelistRegex =
   new RegExp("^http://sub1\\.exämple\\.test/tests/dom/tests/" +
              "mochitest/dom-level0/idn_child\\.html\\?(.+)$");
 
+var state = 0;
+
+var messages =
+  [
+   "idn-whitelist",
+   "punycode-whitelist",
+   "idn-nowhitelist",
+   "punycode-nowhitelist",
+  ];
+
+
 function receiveMessage(evt)
 {
-  var domain = evt.domain;
+  var origin = evt.origin;
   var match;
-  if (/test$/.test(domain))
+  if (/test$/.test(origin))
   {
     // XXX bug 414090
     // The value of MessageEvent.domain with postMessage *should* always be IDN;
@@ -87,28 +98,20 @@ function receiveMessage(evt)
     //
     // These two tests should illustrate what currently happens and what should
     // happen once bug 414090 is fixed.
-    todo_is(evt.domain, "sub1.exämple.test", "wrong sender");
-    todo_isnot(evt.domain, "sub1.xn--exmple-cua.test", "wrong sender");
-
-    match = noWhitelistRegex.exec(evt.uri);
-    todo(match, "unexpected sender");
-    if (!match)
-      match = [, evt.uri.substring(evt.uri.indexOf("?") + 1)];
+    todo_is(evt.origin, "http://sub1.exämple.test", "wrong sender");
+    todo_isnot(evt.origin, "http://sub1.xn--exmple-cua.test", "wrong sender");
   }
   else
   {
     // We're receiving data from the Greek IDN name; since that TLD is
     // whitelisted for now, the domain we get isn't going to be punycoded.
-    is(evt.domain, "sub1.παράδειγμα.δοκιμή", "wrong sender");
-
-    match = whitelistRegex.exec(evt.uri);
-    ok(match, "should have matched, unexpected sender");
+    is(evt.origin, "http://sub1.παράδειγμα.δοκιμή", "wrong sender");
   }
 
-  is(match[1] + "-response", evt.data.split(" ")[0],
+  is(messages[state] + "-response", evt.data.split(" ")[0],
      "unexpected data: " + evt.data);
 
-  switch (match[1])
+  switch (messages[state])
   {
     case "idn-whitelist":
       gotIDNWhitelist = true;
@@ -138,6 +141,8 @@ function receiveMessage(evt)
       ok(false, "unreached");
       break;
   }
+
+  state++;
 }
 
 function run()

@@ -24,9 +24,7 @@ SimpleTest.waitForExplicitFinish();
 
 function receiveMessage(evt)
 {
-  is(evt.domain, "localhost", "wrong sender");
-  is(evt.uri, "http://localhost:8888/tests/dom/tests/mochitest/whatwg/test_postMessage_basehref.html",
-     "wrong sender");
+  is(evt.origin, "http://localhost:8888", "wrong sender");
   ok(evt.source === window, "wrong source");
 
   is(evt.data, "generate-event", "wrong data");

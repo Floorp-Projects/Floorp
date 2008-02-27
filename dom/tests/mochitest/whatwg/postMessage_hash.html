@@ -10,10 +10,8 @@ function receiveMessage(evt)
   if (window.location.href !== "http://localhost:8888/tests/dom/tests/mochitest/whatwg/postMessage_hash.html#hash")
     response += " kid-at-wrong-uri(" + window.location.href + ")";
 
-  if (evt.domain !== "localhost")
-    response += " wrong-domain(" + evt.domain + ")";
-  if (evt.uri !== "http://localhost:8888/tests/dom/tests/mochitest/whatwg/test_postMessage_hash.html")
-    response += " wrong-uri(" + evt.uri + ")";
+  if (evt.origin !== "http://localhost:8888")
+    response += " wrong-origin(" + evt.origin + ")";
   if (evt.source !== window.parent)
     response += " wrong-source";
   if (evt.data !== "from-parent")

@@ -21,7 +21,7 @@ SimpleTest.waitForExplicitFinish();
 
 function receiveMessage(evt)
 {
-  is(evt.domain, "127.0.0.1", "wrong sender");
+  is(evt.origin, "http://127.0.0.1:8888", "wrong sender");
   ok(evt.source === window.frames.child, "wrong sender");
 
   is(evt.data, "child-response", "got wrong response");

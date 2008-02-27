@@ -5106,9 +5106,9 @@ nsGlobalWindow::CallerInnerWindow()
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::PostMessageMoz(const nsAString& aMessage)
+nsGlobalWindow::PostMessageMoz(const nsAString& aMessage, const nsAString& aOrigin)
 {
-  FORWARD_TO_INNER_CREATE(PostMessageMoz, (aMessage));
+  FORWARD_TO_INNER_CREATE(PostMessageMoz, (aMessage, aOrigin));
 
   //
   // Window.postMessage is an intentional subversion of the same-origin policy.
@@ -5125,69 +5125,104 @@ nsGlobalWindow::PostMessageMoz(const nsAString& aMessage)
     return NS_OK;
   NS_ASSERTION(callerInnerWin->IsInnerWindow(), "should have gotten an inner window here");
 
-  // Obtain the caller's principal, from which we can usually extract a URI
-  // and domain for the event.
+  // Compute the caller's origin either from its principal or, in the case the
+  // principal doesn't carry a URI (e.g. the system principal), the caller's
+  // document.
   nsIPrincipal* callerPrin = callerInnerWin->GetPrincipal();
   if (!callerPrin)
     return NS_OK;
-  nsCOMPtr<nsIURI> docURI;
-  if (NS_FAILED(callerPrin->GetURI(getter_AddRefs(docURI))))
+  nsCOMPtr<nsIURI> callerURI;
+  if (NS_FAILED(callerPrin->GetURI(getter_AddRefs(callerURI))))
     return NS_OK;
-
-  // If we hit this, we're probably in chrome context and have the URI-less
-  // system principal, so get the URI off the caller's document.
-  if (!docURI) {
+  if (!callerURI) {
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(callerInnerWin->mDocument);
     if (!doc)
       return NS_OK;
+    callerURI = doc->GetDocumentURI();
+    if (!callerURI)
+      return NS_OK;
+  }
+  const nsCString& empty = EmptyCString();
+  nsCOMPtr<nsIURI> callerOrigin;
+  if (NS_FAILED(callerURI->Clone(getter_AddRefs(callerOrigin))) ||
+      NS_FAILED(callerOrigin->SetUserPass(empty)))
+    return NS_OK;
 
-    docURI = doc->GetDocumentURI();
-    if (!docURI)
+
+  // Calling postMessage on a closed window does nothing.
+  if (!mDocument)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMEventTarget> targetDoc = do_QueryInterface(mDocument);
+  nsCOMPtr<nsIDOMDocumentEvent> docEvent = do_QueryInterface(mDocument);
+
+
+  // Ensure that any origin which might have been provided is the origin of this
+  // window's document.
+  if (!aOrigin.IsVoid()) {
+    nsCOMPtr<nsIURI> providedOrigin;
+    if (NS_FAILED(NS_NewURI(getter_AddRefs(providedOrigin), aOrigin)))
+      return NS_ERROR_DOM_SYNTAX_ERR;
+    if (NS_FAILED(providedOrigin->SetUserPass(empty)) ||
+        NS_FAILED(providedOrigin->SetPath(empty)))
+      return NS_OK;
+
+    // Get the target's origin either from its principal or, in the case the
+    // principal doesn't carry a URI (e.g. the system principal), the target's
+    // document.
+    nsIPrincipal* targetPrin = GetPrincipal();
+    if (!targetPrin)
+      return NS_OK;
+    nsCOMPtr<nsIURI> targetURI;
+    if (NS_FAILED(targetPrin->GetURI(getter_AddRefs(targetURI))))
+      return NS_OK;
+    if (!targetURI) {
+      nsCOMPtr<nsIDocument> targetDoc = do_QueryInterface(mDocument);
+      if (!targetDoc)
+        return NS_OK;
+      targetURI = targetDoc->GetDocumentURI();
+      if (!targetURI)
+        return NS_OK;
+    }
+    nsCOMPtr<nsIURI> targetOrigin;
+    if (NS_FAILED(targetURI->Clone(getter_AddRefs(targetOrigin))) ||
+        NS_FAILED(targetOrigin->SetUserPass(empty)) ||
+        NS_FAILED(targetOrigin->SetPath(empty)))
+      return NS_OK;
+
+    PRBool equal = PR_FALSE;
+    if (NS_FAILED(targetOrigin->Equals(providedOrigin, &equal)) || !equal)
       return NS_OK;
   }
 
-  nsCAutoString domain, uri;
-  nsresult rv  = docURI->GetSpec(uri);
-  if (NS_FAILED(rv))
-    return NS_OK;
-
-  // This really shouldn't be necessary -- URLs which don't have a host should
-  // return the empty string -- but nsSimpleURI just errors instead of
-  // truncating domain.  We could just ignore the returned error, but in the
-  // interests of playing it safe in a sensitive API, we check and truncate if
-  // GetHost fails.  Empty hosts are valid for some URI schemes, and any code
-  // which expects a non-empty host should ignore the message we'll dispatch.
-  if (NS_FAILED(docURI->GetHost(domain)))
-    domain.Truncate();
 
   // Create the event
-  nsCOMPtr<nsIDOMDocumentEvent> docEvent = do_QueryInterface(mDocument);
-  if (!docEvent)
-    return NS_OK;
   nsCOMPtr<nsIDOMEvent> event;
   docEvent->CreateEvent(NS_LITERAL_STRING("MessageEvent"),
                         getter_AddRefs(event));
   if (!event)
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   
+  nsCAutoString origin;
+  if (NS_FAILED(callerOrigin->GetPrePath(origin)))
+    return NS_OK;
+
   nsCOMPtr<nsIDOMMessageEvent> message = do_QueryInterface(event);
-  rv = message->InitMessageEvent(NS_LITERAL_STRING("message"),
-                                 PR_TRUE /* bubbling */,
-                                 PR_TRUE /* cancelable */,
-                                 aMessage,
-                                 NS_ConvertUTF8toUTF16(domain),
-                                 NS_ConvertUTF8toUTF16(uri),
-                                 nsContentUtils::IsCallerChrome()
-                                 ? nsnull
-                                 : callerInnerWin->GetOuterWindowInternal());
+  nsresult rv = message->InitMessageEvent(NS_LITERAL_STRING("message"),
+                                          PR_TRUE /* bubbling */,
+                                          PR_TRUE /* cancelable */,
+                                          aMessage,
+                                          NS_ConvertUTF8toUTF16(origin),
+                                          nsContentUtils::IsCallerChrome()
+                                          ? nsnull
+                                          : callerInnerWin->GetOuterWindowInternal());
   if (NS_FAILED(rv))
-    return rv;
+    return NS_OK;
 
 
   // Finally, dispatch the event, ignoring the result to prevent an exception
   // from revealing anything about the document for this window.
   PRBool dummy;
-  nsCOMPtr<nsIDOMEventTarget> targetDoc = do_QueryInterface(mDocument);
   targetDoc->DispatchEvent(message, &dummy);
 
   // Cancel exceptions that might somehow be pending. XPConnect swallows these

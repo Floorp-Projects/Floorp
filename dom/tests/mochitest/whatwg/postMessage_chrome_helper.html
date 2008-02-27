@@ -3,9 +3,6 @@
 <head>
   <title>postMessage chrome message receiver</title>
   <script type="application/javascript">
-    var sourcePath = "chrome://mochikit/content/chrome/" +
-                     "dom/tests/mochitest/whatwg/test_postMessage_chrome.html";
-
     function receiveMessage(evt)
     {
       // Content cannot post to chrome without privileges
@@ -19,10 +16,8 @@
         msg += " unexpected-untrusted-event";
       if (evt.type !== "message")
         msg += " wrong-type(" + evt.type + ")";
-      if (evt.uri !== sourcePath)
-        msg += " wrong-uri(" + evt.uri + ")";
-      if (evt.domain !== "mochikit")
-        msg += " wrong-domain(" + evt.domain + ")";
+      if (evt.origin !== "chrome://mochikit")
+        msg += " wrong-origin(" + evt.origin + ")";
       if (evt.data !== "post-to-content")
         msg += " wrong-message(" + evt.data + ")";
 
