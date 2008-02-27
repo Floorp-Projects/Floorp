@@ -115,21 +115,26 @@ PRBool nsRect::UnionRect(const nsRect &aRect1, const nsRect &aRect2)
     // aRect2 is empty so set the result to aRect1
     *this = aRect1;
   } else {
-    nscoord xmost1 = aRect1.XMost();
-    nscoord xmost2 = aRect2.XMost();
-    nscoord ymost1 = aRect1.YMost();
-    nscoord ymost2 = aRect2.YMost();
-
-    // Compute the origin
-    x = PR_MIN(aRect1.x, aRect2.x);
-    y = PR_MIN(aRect1.y, aRect2.y);
-
-    // Compute the size
-    width = PR_MAX(xmost1, xmost2) - x;
-    height = PR_MAX(ymost1, ymost2) - y;
+    UnionRectIncludeEmpty(aRect1, aRect2);
   }
 
   return result;
+}
+
+void nsRect::UnionRectIncludeEmpty(const nsRect &aRect1, const nsRect &aRect2)
+{
+  nscoord xmost1 = aRect1.XMost();
+  nscoord xmost2 = aRect2.XMost();
+  nscoord ymost1 = aRect1.YMost();
+  nscoord ymost2 = aRect2.YMost();
+
+  // Compute the origin
+  x = PR_MIN(aRect1.x, aRect2.x);
+  y = PR_MIN(aRect1.y, aRect2.y);
+
+  // Compute the size
+  width = PR_MAX(xmost1, xmost2) - x;
+  height = PR_MAX(ymost1, ymost2) - y;
 }
 
 // Inflate the rect by the specified width and height
