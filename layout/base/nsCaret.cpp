@@ -646,8 +646,9 @@ FindContainingLine(nsIFrame* aFrame)
     nsBlockFrame* blockParent;
     if (NS_SUCCEEDED(parent->QueryInterface(kBlockFrameCID, (void**)&blockParent)))
     {
-      nsBlockFrame::line_iterator line = blockParent->FindLineFor(aFrame);
-      return line != blockParent->end_lines() ? line.get() : nsnull;
+      PRBool isValid;
+      nsBlockInFlowLineIterator iter(blockParent, aFrame, &isValid);
+      return isValid ? iter.GetLine().get() : nsnull;
     }
     aFrame = parent;
   }
