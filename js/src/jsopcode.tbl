@@ -263,8 +263,8 @@ OPDEF(JSOP_RETSUB,    115,"retsub",     NULL,         1,  0,  0,  0,  JOF_BYTE)
 /* More exception handling ops. */
 OPDEF(JSOP_EXCEPTION, 116,"exception",  NULL,         1,  0,  1,  0,  JOF_BYTE)
 
-/* Unused, formerly JSOP_GLOBALTHIS. */
-OPDEF(JSOP_UNUSED117, 117,"unused117",  NULL,         1,  0,  0,  0,  JOF_BYTE)
+/* Concatenate multiple values, coercing to string if necessary. */
+OPDEF(JSOP_CONCATN,   117,"concatn",    NULL,         3, -1,  1,  0,  JOF_UINT16)
 
 /*
  * ECMA-compliant switch statement ops.
