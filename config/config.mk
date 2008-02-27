@@ -520,6 +520,16 @@ ifndef MOZILLA_INTERNAL_API
 INCLUDES	+= -I$(LIBXUL_DIST)/sdk/include
 endif
 
+# The entire tree should be subject to static analysis using the XPCOM
+# script. Additional scripts may be added by specific subdirectories.
+
+DEHYDRA_SCRIPTS = $(topsrcdir)/xpcom/static-checking.js
+
+ifdef DEHYDRA_PATH
+DEHYDRA_FLAGS = -fplugin=$(DEHYDRA_PATH) $(foreach script,$(DEHYDRA_SCRIPTS),-fplugin-arg=$(script))
+OS_CXXFLAGS += $(DEHYDRA_FLAGS)
+endif
+
 CFLAGS		= $(OS_CFLAGS)
 CXXFLAGS	= $(OS_CXXFLAGS)
 LDFLAGS		= $(OS_LDFLAGS) $(MOZ_FIX_LINK_PATHS)
