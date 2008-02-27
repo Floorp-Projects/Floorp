@@ -62,8 +62,8 @@
 /* back button */
 
 #back-button {
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
-  -moz-image-region: rect(0px, 617px, 23px, 584px);
+  list-style-image: url("chrome://browser/skin/places/back-forward.png");
+  -moz-image-region: rect(0px, 27px, 23px, 0px);
   -moz-margin-end: 0;
   -moz-padding-end: 0;
   border-left: none;
@@ -71,13 +71,13 @@
 }
 
 #back-button[disabled="true"] {
- -moz-image-region: rect(23px, 617px, 46px, 584px) !important;
+ -moz-image-region: rect(23px, 27px, 46px, 0px) !important;
 }
 
 #back-button:hover:active,
 #back-button[buttondown="true"],
 #back-button[open="true"] {
-  -moz-image-region: rect(46px, 617px, 69px, 584px);
+  -moz-image-region: rect(46px, 27px, 69px, 0px);
 }
 
 #back-button > .toolbarbutton-text,
@@ -88,23 +88,23 @@
 /* forward button */
 
 #forward-button {
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
-  -moz-image-region: rect(0px, 651px, 23px, 617px);
+  list-style-image: url("chrome://browser/skin/places/back-forward.png");
+  -moz-image-region: rect(0px, 53px, 23px, 27px);
   -moz-margin-start: 0;
-  -moz-margin-end: 12px;
+  -moz-margin-end: 8px;
   -moz-padding-start: 0;
   border-left: none;
   border-right: none;
 }
 
 #forward-button[disabled="true"] {
- -moz-image-region: rect(23px, 651px, 46px, 617px);
+ -moz-image-region: rect(23px, 53px, 46px, 27px) !important;
 }
 
 #forward-button:hover:active,
 #forward-button[buttondown="true"],
 #forward-button[open="true"] {
-  -moz-image-region: rect(46px, 651px, 69px, 617px);
+  -moz-image-region: rect(46px, 53px, 69px, 27px);
 }
 
 #placesToolbar > toolbarbutton[type="menu"] {
