@@ -40,7 +40,6 @@
 #include "xptcprivate.h"
 
 #include <stdint.h>
-#include <iostream.h>
 
 // "This code is for IA64 only"
 
