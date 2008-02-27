@@ -600,6 +600,9 @@ pref("browser.safebrowsing.warning.infoURL", "http://%LOCALE%.www.mozilla.com/%L
 // Name of the about: page contributed by safebrowsing to handle display of error
 // pages on phishing/malware hits.  (bug 399233)
 pref("urlclassifier.alternate_error_page", "blocked");
+
+// The number of random entries to send with a gethash request.
+pref("urlclassifier.gethashnoise", 4);
 #endif
 
 // defaults to true
