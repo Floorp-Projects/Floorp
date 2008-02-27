@@ -377,6 +377,12 @@ var tests =
 
      wrongReturnOrigin: true
    },
+   // 55
+   {
+     args: ["NOT-RECEIVED", undefined],
+     source: "sameDomain",
+     code: DOMException.SYNTAX_ERR
+   },
   ];
 
 function allTests()
