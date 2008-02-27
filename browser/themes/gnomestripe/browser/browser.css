@@ -188,7 +188,7 @@ menuitem.bookmark-item {
 }
 
 .bookmark-item[container][livemark] { 
-  list-style-image: url("chrome://browser/skin/page-livemarks.png");
+  list-style-image: url("chrome://browser/skin/feeds/feedIcon16.png");
 }
 
 .bookmark-item[container][livemark] .bookmark-item {
