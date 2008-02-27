@@ -715,7 +715,7 @@ nsCanvasRenderingContextGLPrivate::DoDrawImageSecurityCheck(nsIURI* aURI, PRBool
     fprintf (stderr, "DoDrawImageSecuritycheck this 4: %p\n", this);
     nsCOMPtr<nsINode> elem = do_QueryInterface(mCanvasElement);
     if (elem) {
-        rv = elem->NodePrincipal()->CheckMayLoad(aURI);
+        rv = elem->NodePrincipal()->CheckMayLoad(aURI, PR_TRUE);
         if (NS_SUCCEEDED(rv)) {
             // Same origin
             return;
