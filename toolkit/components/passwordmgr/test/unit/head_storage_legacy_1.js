@@ -176,7 +176,8 @@ if (!profileDir) {
 }
 
 
-var OUTDIR = profileDir.path;
+var PROFDIR = profileDir;
+var OUTDIR = PROFDIR.path;
 var INDIR = do_get_file("toolkit/components/passwordmgr/test/unit/data/" +
                         "signons-00.txt").parent.path;
 
