@@ -556,6 +556,8 @@ nsUrlClassifierStore::Close()
   mPartialEntriesBeforeStatement = nsnull;
   mLastPartialEntriesStatement = nsnull;
 
+  mRandomStatement = nsnull;
+
   mConnection = nsnull;
 }
 
