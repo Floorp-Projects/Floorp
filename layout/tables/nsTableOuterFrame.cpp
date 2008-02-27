@@ -1094,19 +1094,13 @@ nsTableOuterFrame::IsNested(const nsHTMLReflowState& aReflowState) const
   return PR_FALSE;
 }
 
-nsresult
-nsTableOuterFrame::OuterReflowChild(nsPresContext*             aPresContext,
-                                    nsIFrame*                  aChildFrame,
-                                    const nsHTMLReflowState&   aOuterRS,
-                                    void*                      aChildRSSpace,
-                                    nsHTMLReflowMetrics&       aMetrics,
-                                    nscoord                    aAvailWidth, 
-                                    nsSize&                    aDesiredSize,
-                                    nsMargin&                  aMargin,
-                                    nsReflowStatus&            aStatus)
+void
+nsTableOuterFrame::OuterBeginReflowChild(nsPresContext*           aPresContext,
+                                         nsIFrame*                aChildFrame,
+                                         const nsHTMLReflowState& aOuterRS,
+                                         void*                    aChildRSSpace,
+                                         nscoord                  aAvailWidth)
 { 
-  aMargin = nsMargin(0,0,0,0);
-
   // work around pixel rounding errors, round down to ensure we don't exceed the avail height in
   nscoord availHeight = aOuterRS.availableHeight;
   if (NS_UNCONSTRAINEDSIZE != availHeight) {
@@ -1140,24 +1134,21 @@ nsTableOuterFrame::OuterReflowChild(nsPresContext*             aPresContext,
         ((NS_SIDE_TOP == captionSide) && (mInnerTableFrame == aChildFrame))) {
       childRS.mFlags.mIsTopOfPage = PR_FALSE;
     }
-    if ((mCaptionFrame == aChildFrame) && (NS_SIDE_LEFT  != captionSide) 
-                                       && (NS_SIDE_RIGHT != captionSide)) {
-      aAvailWidth = aOuterRS.availableWidth;
-    }
   }
+}
+
+nsresult
+nsTableOuterFrame::OuterDoReflowChild(nsPresContext*             aPresContext,
+                                      nsIFrame*                  aChildFrame,
+                                      const nsHTMLReflowState&   aChildRS,
+                                      nsHTMLReflowMetrics&       aMetrics,
+                                      nsReflowStatus&            aStatus)
+{ 
 
   // use the current position as a best guess for placement
   nsPoint childPt = aChildFrame->GetPosition();
-  nsresult rv = ReflowChild(aChildFrame, aPresContext, aMetrics, childRS,
-                            childPt.x, childPt.y, NS_FRAME_NO_MOVE_FRAME, aStatus);
-  if (NS_FAILED(rv)) return rv;
-  
-  aMargin = childRS.mComputedMargin;
-
-  aDesiredSize.width  = aMetrics.width;
-  aDesiredSize.height = aMetrics.height;
-
-  return rv;
+  return ReflowChild(aChildFrame, aPresContext, aMetrics, aChildRS,
+                     childPt.x, childPt.y, NS_FRAME_NO_MOVE_FRAME, aStatus);
 }
 
 void 
@@ -1222,13 +1213,18 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   #define LONGS_IN_HTMLRS \
     ((sizeof(nsHTMLReflowState) + sizeof(long) - 1) / sizeof(long))
   long captionRSSpace[LONGS_IN_HTMLRS];
+  nsHTMLReflowState *captionRS =
+    static_cast<nsHTMLReflowState*>((void*)captionRSSpace);
   if (reflowCaption) {
     nsReflowStatus capStatus; // don't let the caption cause incomplete
-    rv = OuterReflowChild(aPresContext, mCaptionFrame, aOuterRS,
-                          captionRSSpace, captionMet,
-                          aOuterRS.ComputedWidth(), captionSize,
-                          captionMargin, capStatus);
+    OuterBeginReflowChild(aPresContext, mCaptionFrame, aOuterRS,
+                          captionRSSpace, aOuterRS.ComputedWidth());
+    rv = OuterDoReflowChild(aPresContext, mCaptionFrame, *captionRS,
+                            captionMet, capStatus);
     if (NS_FAILED(rv)) return rv;
+    captionSize.width = captionMet.width;
+    captionSize.height = captionMet.height;
+    captionMargin = captionRS->mComputedMargin;
   } else if (mCaptionFrame) {
     captionSize = mCaptionFrame->GetSize();
     GetMargin(aPresContext, aOuterRS, mCaptionFrame, aOuterRS.ComputedWidth(),
@@ -1250,11 +1246,17 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   nsSize innerSize;
   nsMargin innerMargin;
   long innerRSSpace[LONGS_IN_HTMLRS];
+  nsHTMLReflowState *innerRS =
+    static_cast<nsHTMLReflowState*>((void*) innerRSSpace);
   if (reflowInner) {
-    rv = OuterReflowChild(aPresContext, mInnerTableFrame, aOuterRS,
-                          innerRSSpace, innerMet, innerAvailWidth,
-                          innerSize, innerMargin, aStatus);
+    OuterBeginReflowChild(aPresContext, mInnerTableFrame, aOuterRS,
+                          innerRSSpace, innerAvailWidth);
+    rv = OuterDoReflowChild(aPresContext, mInnerTableFrame, *innerRS,
+                            innerMet, aStatus);
     if (NS_FAILED(rv)) return rv;
+    innerSize.width = innerMet.width;
+    innerSize.height = innerMet.height;
+    innerMargin = innerRS->mComputedMargin;
   } else {
     innerSize = mInnerTableFrame->GetSize();
     GetMargin(aPresContext, aOuterRS, mInnerTableFrame,
@@ -1274,8 +1276,6 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
     GetCaptionOrigin(captionSide, containSize, innerSize, 
                      innerMargin, captionSize, captionMargin, captionOrigin);
     if (reflowCaption) {
-      nsHTMLReflowState *captionRS =
-        static_cast<nsHTMLReflowState*>((void*)captionRSSpace);
       FinishReflowChild(mCaptionFrame, aPresContext, captionRS, captionMet,
                         captionOrigin.x, captionOrigin.y, 0);
       captionRS->~nsHTMLReflowState();
@@ -1294,8 +1294,6 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   GetInnerOrigin(captionSide, containSize, captionSize, 
                  captionMargin, innerSize, innerMargin, innerOrigin);
   if (reflowInner) {
-    nsHTMLReflowState *innerRS =
-      static_cast<nsHTMLReflowState*>((void*) innerRSSpace);
     FinishReflowChild(mInnerTableFrame, aPresContext, innerRS, innerMet,
                       innerOrigin.x, innerOrigin.y, 0);
     innerRS->~nsHTMLReflowState();
