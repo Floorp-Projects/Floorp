@@ -50,6 +50,12 @@ treechildren::-moz-tree-image(title, query) {
   -moz-image-region: auto;
 }
 
+/* We want some queries to look like ordinary folders. This must come
+   after the (title, query) selector, or it would get overridden. */
+treechildren::-moz-tree-image(title, query, folder) {
+  list-style-image: url("moz-icon://stock/gtk-directory?size=menu");
+}
+
 treechildren::-moz-tree-row(session-start) {
   border-top:1px dotted ThreeDShadow;
   font-weight: bold;

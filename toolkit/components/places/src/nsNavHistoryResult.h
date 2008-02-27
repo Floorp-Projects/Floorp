@@ -98,7 +98,7 @@ private:
   NS_DECL_NSINAVBOOKMARKOBSERVER                                        \
   NS_IMETHOD OnVisit(nsIURI* aURI, PRInt64 aVisitId, PRTime aTime,      \
                      PRInt64 aSessionId, PRInt64 aReferringId,          \
-                     PRUint32 aTransitionType);                         \
+                     PRUint32 aTransitionType, PRUint32* aAdded);      \
   NS_IMETHOD OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle); \
   NS_IMETHOD OnDeleteURI(nsIURI *aURI);                                 \
   NS_IMETHOD OnClearHistory();                                          \
@@ -310,12 +310,10 @@ public:
   // would take a vtable slot for every one of (potentially very many) nodes.
   // Note that GetType() already has a vtable slot because its on the iface.
   PRBool IsTypeContainer(PRUint32 type) {
-    return (type == nsINavHistoryResultNode::RESULT_TYPE_HOST ||
-            type == nsINavHistoryResultNode::RESULT_TYPE_DYNAMIC_CONTAINER ||
+    return (type == nsINavHistoryResultNode::RESULT_TYPE_DYNAMIC_CONTAINER ||
             type == nsINavHistoryResultNode::RESULT_TYPE_QUERY ||
             type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER ||
-            type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER_SHORTCUT ||
-            type == nsINavHistoryResultNode::RESULT_TYPE_DAY);
+            type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER_SHORTCUT);
   }
   PRBool IsContainer() {
     PRUint32 type;
@@ -326,19 +324,6 @@ public:
     PRUint32 type;
     GetType(&type);
     return (type == nsINavHistoryResultNode::RESULT_TYPE_DYNAMIC_CONTAINER);
-  }
-  static PRBool IsTypeQuerySubcontainer(PRUint32 type) {
-    // Tests containers that are inside queries that really belong to the query
-    // itself, and is used when recursively updating a query. This currently
-    // includes only host containers, but may be extended to support things
-    // like days or other criteria. It doesn't include other queries and folders.
-    return (type == nsINavHistoryResultNode::RESULT_TYPE_HOST ||
-            type == nsINavHistoryResultNode::RESULT_TYPE_DAY);
-  }
-  PRBool IsQuerySubcontainer() {
-    PRUint32 type;
-    GetType(&type);
-    return IsTypeQuerySubcontainer(type);
   }
   static PRBool IsTypeURI(PRUint32 type) {
     return (type == nsINavHistoryResultNode::RESULT_TYPE_URI ||
@@ -534,6 +519,12 @@ public:
     const nsACString& aIconURI, PRUint32 aContainerType,
     PRBool aReadOnly, const nsACString& aDynamicContainerType,
     nsNavHistoryQueryOptions* aOptions);
+  nsNavHistoryContainerResultNode(
+    const nsACString& aURI, const nsACString& aTitle,
+    PRTime aTime,
+    const nsACString& aIconURI, PRUint32 aContainerType,
+    PRBool aReadOnly, const nsACString& aDynamicContainerType,
+    nsNavHistoryQueryOptions* aOptions);
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYCONTAINERRESULTNODE_IID)
 
@@ -562,7 +553,7 @@ public:
   // for every leaf node to the result.
   nsRefPtr<nsNavHistoryResult> mResult;
 
-  // for example, RESULT_TYPE_HOST. Query and Folder results override GetType
+  // for example, RESULT_TYPE_QUERY. Query and Folder results override GetType
   // so this is not used, but is still kept in sync.
   PRUint32 mContainerType;
 
@@ -592,7 +583,7 @@ public:
   virtual void RecursiveSort(const char* aData,
                              SortComparator aComparator);
   PRUint32 FindInsertionPoint(nsNavHistoryResultNode* aNode, SortComparator aComparator,
-                              const char* aData);
+                              const char* aData, PRBool* aItemExists);
   PRBool DoesChildNeedResorting(PRUint32 aIndex, SortComparator aComparator,
                                 const char* aData);
 
@@ -632,10 +623,6 @@ public:
       nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
   PR_STATIC_CALLBACK(int) SortComparison_LastModifiedGreater(
       nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
-  PR_STATIC_CALLBACK(int) SortComparison_CountLess(
-      nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
-  PR_STATIC_CALLBACK(int) SortComparison_CountGreater(
-      nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
   PR_STATIC_CALLBACK(int) SortComparison_TagsLess(
       nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
   PR_STATIC_CALLBACK(int) SortComparison_TagsGreater(
@@ -662,7 +649,8 @@ public:
   nsresult InsertChildAt(nsNavHistoryResultNode* aNode, PRInt32 aIndex,
                          PRBool aIsTemporary = PR_FALSE);
   nsresult InsertSortedChild(nsNavHistoryResultNode* aNode,
-                             PRBool aIsTemporary = PR_FALSE);
+                             PRBool aIsTemporary = PR_FALSE,
+                             PRBool aIgnoreDuplicates = PR_FALSE);
   PRBool EnsureItemPosition(PRUint32 aIndex);
   void MergeResults(nsCOMArray<nsNavHistoryResultNode>* aNodes);
   nsresult ReplaceChildURIAt(PRUint32 aIndex, nsNavHistoryResultNode* aNode);
@@ -698,6 +686,11 @@ public:
                               const nsACString& aIconURI);
   nsNavHistoryQueryResultNode(const nsACString& aTitle,
                               const nsACString& aIconURI,
+                              const nsCOMArray<nsNavHistoryQuery>& aQueries,
+                              nsNavHistoryQueryOptions* aOptions);
+  nsNavHistoryQueryResultNode(const nsACString& aTitle,
+                              const nsACString& aIconURI,
+                              PRTime aTime,
                               const nsCOMArray<nsNavHistoryQuery>& aQueries,
                               nsNavHistoryQueryOptions* aOptions);
 

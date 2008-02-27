@@ -413,6 +413,17 @@ PlacesController.prototype = {
       switch(nodeType) {
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY:
           nodeData["query"] = true;
+          if (node.parent) {
+            switch (asQuery(node.parent).queryOptions.resultType) {
+              case Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY:
+                nodeData["host"] = true;
+                break;
+              case Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY:
+              case Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY:
+                nodeData["day"] = true;
+                break;
+            }
+          }
           break;
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_DYNAMIC_CONTAINER:
           nodeData["dynamiccontainer"] = true;
@@ -420,9 +431,6 @@ PlacesController.prototype = {
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER:
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT:
           nodeData["folder"] = true;
-          break;
-        case Ci.nsINavHistoryResultNode.RESULT_TYPE_HOST:
-          nodeData["host"] = true;
           break;
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR:
           nodeData["separator"] = true;
@@ -442,8 +450,6 @@ PlacesController.prototype = {
               nodeData["livemarkChild"] = true;
           }
           break;
-        case Ci.nsINavHistoryResultNode.RESULT_TYPE_DAY:
-          nodeData["day"] = true;
       }
 
       // Mutability is whether or not a container can have selected items
@@ -903,14 +909,16 @@ PlacesController.prototype = {
         // day nodes have time property set to the last day in the interval
         var endDate = node.time;
 
-        // if this is not the last day container, then beginDate
-        // is the time property of the next day container
-        for (var j = 0; j < root.childCount-1 && !beginDate; ++j) {
-          if (root.getChild(j) != node)
-            continue;
-          var nextNode = root.getChild(j+1);
-          beginDate = nextNode.time
-        }
+        var nodeIdx = 0;
+        var cc = root.childCount;
+
+        // Find index of current day node
+        while (nodeIdx < cc && root.getChild(nodeIdx) != node)
+          ++nodeIdx;
+
+        // We have an older day
+        if (nodeIdx+1 < cc)
+          beginDate = root.getChild(nodeIdx+1).time;
 
         // we want to exclude beginDate from the removal
         bhist.removePagesByTimeframe(beginDate+1, endDate);
