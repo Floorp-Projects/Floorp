@@ -134,6 +134,18 @@ public:
   RemoveFrame(nsIAtom*        aListName,
               nsIFrame*       aOldFrame);
 
+  /**
+   * Both GetMinWidth and GetPrefWidth return whatever
+   * GetIntrinsicWidth returns.
+   */
+  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
+  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
+
+  /**
+   * Return the intrinsic width of the frame's content area.
+   */
+  virtual nscoord GetIntrinsicWidth(nsIRenderingContext *aRenderingContext);
+
   NS_IMETHOD
   Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,

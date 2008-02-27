@@ -613,11 +613,11 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
     NS_MATHML_OPERATOR_IS_INVISIBLE(mFlags);
 
   nsBoundingMetrics charSize;
+  nsBoundingMetrics container = aDesiredStretchSize.mBoundingMetrics;
+  PRBool isVertical = PR_FALSE;
   if (useMathMLChar) {
     nsBoundingMetrics initialSize = aDesiredStretchSize.mBoundingMetrics;
-    nsBoundingMetrics container = initialSize;
 
-    PRBool isVertical = PR_FALSE;
     PRUint32 stretchHint = NS_STRETCH_NORMAL;
 
     // see if it is okay to stretch, starting from what the Operator Dictionary said
@@ -756,35 +756,6 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
       mFlags &= ~NS_MATHML_OPERATOR_FORM;
       useMathMLChar = PR_FALSE;
     }
-    else {
-      // update our bounding metrics... it becomes that of our MathML char
-      mBoundingMetrics = charSize;
-
-      // if the returned direction is 'unsupported', the char didn't actually change. 
-      // So we do the centering only if necessary
-      if (mMathMLChar.GetStretchDirection() != NS_STRETCH_DIRECTION_UNSUPPORTED ||
-          NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
-
-        if (isVertical || NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
-          // the desired size returned by mMathMLChar maybe different
-          // from the size of the container.
-          // the mMathMLChar.mRect.y calculation is subtle, watch out!!!
-
-          height = mBoundingMetrics.ascent + mBoundingMetrics.descent;
-          if (NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags) ||
-              NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
-            // For symmetric and vertical operators, or for operators that are always
-            // centered ('+', '*', etc) we want to center about the axis of the container
-            mBoundingMetrics.descent = height/2 - axisHeight;
-          }
-          else {
-            // Otherwise, align the char with the bottom of the container
-            mBoundingMetrics.descent = container.descent;
-          }
-          mBoundingMetrics.ascent = height - mBoundingMetrics.descent;
-        }
-      }
-    }
   }
 
   // Place our children using the default method
@@ -793,6 +764,36 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
   if (NS_MATHML_HAS_ERROR(mPresentationData.flags) || NS_FAILED(rv)) {
     // Make sure the child frames get their DidReflow() calls.
     DidReflowChildren(mFrames.FirstChild());
+  }
+
+  if (useMathMLChar) {
+    // update our bounding metrics... it becomes that of our MathML char
+    mBoundingMetrics = charSize;
+
+    // if the returned direction is 'unsupported', the char didn't actually change. 
+    // So we do the centering only if necessary
+    if (mMathMLChar.GetStretchDirection() != NS_STRETCH_DIRECTION_UNSUPPORTED ||
+        NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
+
+      if (isVertical || NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
+        // the desired size returned by mMathMLChar maybe different
+        // from the size of the container.
+        // the mMathMLChar.mRect.y calculation is subtle, watch out!!!
+
+        height = mBoundingMetrics.ascent + mBoundingMetrics.descent;
+        if (NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags) ||
+            NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
+          // For symmetric and vertical operators, or for operators that are always
+          // centered ('+', '*', etc) we want to center about the axis of the container
+          mBoundingMetrics.descent = height/2 - axisHeight;
+        }
+        else {
+          // Otherwise, align the char with the bottom of the container
+          mBoundingMetrics.descent = container.descent;
+        }
+        mBoundingMetrics.ascent = height - mBoundingMetrics.descent;
+      }
+    }
   }
 
   // Fixup for the final height.
@@ -874,7 +875,7 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
       aDesiredStretchSize.mBoundingMetrics.rightBearing += leftSpace;
 
       if (useMathMLChar) {
-	nsRect rect;
+        nsRect rect;
         mMathMLChar.GetRect(rect);
         mMathMLChar.SetRect(nsRect(rect.x + leftSpace, rect.y, rect.width, rect.height));
       }
@@ -889,6 +890,8 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
     }
   }
 
+  // Finished with these:
+  ClearSavedChildMetrics();
   // Set our overflow area
   GatherAndStoreOverflow(&aDesiredStretchSize);
 
