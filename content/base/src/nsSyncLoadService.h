@@ -60,15 +60,15 @@ public:
      * Synchronously load the document from the specified URI.
      *
      * @param aURI URI to load the document from.
-     * @param aLoaderPrincipal Principal of loading document. For security
-     *                         checks and referrer header. May be null if no
-     *                         security checks should be done.
+     * @param aLoaderURI URI of loading document. For security checks and
+     *                   referrer header. May be null if no security checks
+     *                   should be done.
      * @param aLoadGroup The loadgroup to use for loading the document.
      * @param aForceToXML Whether to parse the document as XML, regardless of
      *                    content type.
      * @param aResult [out] The document loaded from the URI.
      */
-    static nsresult LoadDocument(nsIURI *aURI, nsIPrincipal *aLoaderPrincipal,
+    static nsresult LoadDocument(nsIURI *aURI, nsIURI *aLoaderURI,
                                  nsILoadGroup *aLoadGroup, PRBool aForceToXML,
                                  nsIDOMDocument** aResult);
 

@@ -44,8 +44,6 @@
 #include "nsIContentSink.h"
 #include "nsIXMLContentSink.h"
 #include "nsIExpatSink.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIChannelEventSink.h"
 
 class nsIURI;
 class nsIParser;
@@ -53,22 +51,19 @@ class nsIPrincipal;
 
 class nsCrossSiteListenerProxy : public nsIStreamListener,
                                  public nsIXMLContentSink,
-                                 public nsIExpatSink,
-                                 public nsIInterfaceRequestor,
-                                 public nsIChannelEventSink
+                                 public nsIExpatSink
 {
 public:
   nsCrossSiteListenerProxy(nsIStreamListener* aOuter,
-                           nsIPrincipal* aRequestingPrincipal,
-                           nsIChannel* aChannel,
-                           nsresult* aResult);
-
+                           nsIPrincipal* aRequestingPrincipal);
+  
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIEXPATSINK
-  NS_DECL_NSIINTERFACEREQUESTOR
-  NS_DECL_NSICHANNELEVENTSINK
+
+  static nsresult AddRequestHeaders(nsIChannel* aChannel,
+                                    nsIPrincipal* aRequestingPrincipal);
 
   // nsIContentSink
   NS_IMETHOD WillTokenize(void) { return NS_OK; }
@@ -82,21 +77,18 @@ public:
   virtual nsISupports *GetTarget() { return nsnull; }
 
 private:
-  nsresult UpdateChannel(nsIChannel* aChannel);
 
   nsresult ForwardRequest(PRBool aCallStop);
   PRBool MatchPatternList(const char*& aIter, const char* aEnd);
   void CheckHeader(const nsCString& aHeader);
   PRBool VerifyAndMatchDomainPattern(const nsACString& aDomainPattern);
 
-  nsCOMPtr<nsIStreamListener> mOuterListener;
+  nsCOMPtr<nsIStreamListener> mOuter;
   nsCOMPtr<nsIRequest> mOuterRequest;
   nsCOMPtr<nsISupports> mOuterContext;
   nsCOMPtr<nsIStreamListener> mParserListener;
   nsCOMPtr<nsIParser> mParser;
   nsCOMPtr<nsIURI> mRequestingURI;
-  nsCOMPtr<nsIPrincipal> mRequestingPrincipal;
-  nsCOMPtr<nsIInterfaceRequestor> mOuterNotificationCallbacks;
   nsTArray<nsCString> mReqSubdomains;
   nsCString mStoredData;
   enum {
@@ -105,5 +97,4 @@ private:
     eNotSet
   } mAcceptState;
   PRBool mHasForwardedRequest;
-  PRBool mHasBeenCrossSite;
 };
