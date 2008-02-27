@@ -40,6 +40,11 @@ if (!profileDir) {
 
 var iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
+// Disable hashcompleter noise for tests
+var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                 getService(Ci.nsIPrefBranch);
+prefBranch.setIntPref("urlclassifier.gethashnoise", 0);
+
 function cleanUp() {
   try {
     // Delete a previously created sqlite file
