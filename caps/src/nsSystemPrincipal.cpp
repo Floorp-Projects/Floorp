@@ -116,12 +116,6 @@ nsSystemPrincipal::Subsumes(nsIPrincipal *other, PRBool *result)
 }
 
 NS_IMETHODIMP
-nsSystemPrincipal::CheckMayLoad(nsIURI* uri, PRBool aReport)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSystemPrincipal::GetHashValue(PRUint32 *result)
 {
     *result = NS_PTR_TO_INT32(this);

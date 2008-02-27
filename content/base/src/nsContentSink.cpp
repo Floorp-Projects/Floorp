@@ -866,7 +866,8 @@ nsContentSink::ProcessOfflineManifest(nsIContent *aElement)
   }
 
   // Documents must list a manifest from the same origin
-  nsresult rv = mDocument->NodePrincipal()->CheckMayLoad(manifestURI, PR_TRUE);
+  nsresult rv = nsContentUtils::GetSecurityManager()->
+                   CheckSameOriginURI(manifestURI, mDocumentURI, PR_TRUE);
   if (NS_FAILED(rv)) {
     return;
   }

@@ -51,29 +51,18 @@
 #include "nsParserUtils.h"
 #include "nsGkAtoms.h"
 #include "nsWhitespaceTokenizer.h"
-#include "nsIChannelEventSink.h"
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
-NS_IMPL_ISUPPORTS7(nsCrossSiteListenerProxy, nsIStreamListener,
+NS_IMPL_ISUPPORTS5(nsCrossSiteListenerProxy, nsIStreamListener,
                    nsIRequestObserver, nsIContentSink, nsIXMLContentSink,
-                   nsIExpatSink, nsIChannelEventSink, nsIInterfaceRequestor)
+                   nsIExpatSink)
 
 nsCrossSiteListenerProxy::nsCrossSiteListenerProxy(nsIStreamListener* aOuter,
-                                                   nsIPrincipal* aRequestingPrincipal,
-                                                   nsIChannel* aChannel,
-                                                   nsresult* aResult)
-  : mOuterListener(aOuter),
-    mRequestingPrincipal(aRequestingPrincipal),
-    mAcceptState(eNotSet),
-    mHasForwardedRequest(PR_FALSE),
-    mHasBeenCrossSite(PR_FALSE)
+                                                   nsIPrincipal* aRequestingPrincipal)
+  : mOuter(aOuter), mAcceptState(eNotSet), mHasForwardedRequest(PR_FALSE)
 {
   aRequestingPrincipal->GetURI(getter_AddRefs(mRequestingURI));
-  aChannel->GetNotificationCallbacks(getter_AddRefs(mOuterNotificationCallbacks));
-  aChannel->SetNotificationCallbacks(this);
-
-  *aResult = UpdateChannel(aChannel);
 }
 
 nsresult
@@ -94,14 +83,13 @@ nsCrossSiteListenerProxy::ForwardRequest(PRBool aFromStop)
   if (mAcceptState != eAccept) {
     mAcceptState = eDeny;
     mOuterRequest->Cancel(NS_ERROR_DOM_BAD_URI);
-    mOuterListener->OnStartRequest(mOuterRequest, mOuterContext);
+    mOuter->OnStartRequest(mOuterRequest, mOuterContext);
 
     // Only call OnStopRequest here if we were called from OnStopRequest.
     // Otherwise the call to Cancel will make us get an OnStopRequest later
     // so we'll forward OnStopRequest then.
     if (aFromStop) {
-      mOuterListener->OnStopRequest(mOuterRequest, mOuterContext,
-                                    NS_ERROR_DOM_BAD_URI);
+      mOuter->OnStopRequest(mOuterRequest, mOuterContext, NS_ERROR_DOM_BAD_URI);
     }
 
     // Clear this data just in case since it should never be forwarded.
@@ -110,7 +98,7 @@ nsCrossSiteListenerProxy::ForwardRequest(PRBool aFromStop)
     return NS_ERROR_DOM_BAD_URI;
   }
 
-  nsresult rv = mOuterListener->OnStartRequest(mOuterRequest, mOuterContext);
+  nsresult rv = mOuter->OnStartRequest(mOuterRequest, mOuterContext);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!mStoredData.IsEmpty()) {
@@ -118,8 +106,8 @@ nsCrossSiteListenerProxy::ForwardRequest(PRBool aFromStop)
     rv = NS_NewCStringInputStream(getter_AddRefs(stream), mStoredData);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mOuterListener->OnDataAvailable(mOuterRequest, mOuterContext, stream,
-                                         0, mStoredData.Length());
+    rv = mOuter->OnDataAvailable(mOuterRequest, mOuterContext, stream, 0,
+                                 mStoredData.Length());
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -149,8 +137,9 @@ nsCrossSiteListenerProxy::OnStartRequest(nsIRequest* aRequest,
   }
   nsCOMPtr<nsIURI> finalURI;
   channel->GetURI(getter_AddRefs(finalURI));
-
-  if (!mHasBeenCrossSite) {
+  rv = nsContentUtils::GetSecurityManager()->
+    CheckSameOriginURI(mRequestingURI, finalURI, PR_FALSE);
+  if (NS_SUCCEEDED(rv)) {
     mAcceptState = eAccept;
     return ForwardRequest(PR_FALSE);
   }
@@ -258,7 +247,7 @@ nsCrossSiteListenerProxy::OnStopRequest(nsIRequest* aRequest,
                                         nsresult aStatusCode)
 {
   if (mHasForwardedRequest) {
-    return mOuterListener->OnStopRequest(aRequest, aContext, aStatusCode);
+    return mOuter->OnStopRequest(aRequest, aContext, aStatusCode);
   }
 
   mAcceptState = eDeny;
@@ -292,8 +281,8 @@ nsCrossSiteListenerProxy::OnDataAvailable(nsIRequest* aRequest,
     if (mAcceptState != eAccept) {
       return NS_ERROR_DOM_BAD_URI;
     }
-    return mOuterListener->OnDataAvailable(aRequest, aContext, aInputStream,
-                                           aOffset, aCount);
+    return mOuter->OnDataAvailable(aRequest, aContext, aInputStream, aOffset,
+                                   aCount);
   }
 
   NS_ASSERTION(mStoredData.Length() == aOffset,
@@ -877,87 +866,36 @@ nsCrossSiteListenerProxy::VerifyAndMatchDomainPattern(const nsACString& aPattern
          (!patternHasWild || reqPos >= 1);
 }
 
-NS_IMETHODIMP
-nsCrossSiteListenerProxy::GetInterface(const nsIID & aIID, void **aResult)
-{
-  if (aIID.Equals(NS_GET_IID(nsIChannelEventSink))) {
-    *aResult = static_cast<nsIChannelEventSink*>(this);
-    NS_ADDREF_THIS();
-
-    return NS_OK;
-  }
-
-  return mOuterNotificationCallbacks ?
-    mOuterNotificationCallbacks->GetInterface(aIID, aResult) :
-    NS_ERROR_NO_INTERFACE;
-}
-
-NS_IMETHODIMP
-nsCrossSiteListenerProxy::OnChannelRedirect(nsIChannel *aOldChannel,
-                                            nsIChannel *aNewChannel,
-                                            PRUint32    aFlags)
-{
-  nsresult rv;
-  nsCOMPtr<nsIChannelEventSink> outer =
-    do_GetInterface(mOuterNotificationCallbacks);
-  if (outer) {
-    rv = outer->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return UpdateChannel(aNewChannel);
-}
-
+/* static */
 nsresult
-nsCrossSiteListenerProxy::UpdateChannel(nsIChannel* aChannel)
+nsCrossSiteListenerProxy::AddRequestHeaders(nsIChannel* aChannel,
+                                            nsIPrincipal* aRequestingPrincipal)
 {
+  // Once bug 386823 is fixed this could just be an assertion.
+  NS_ENSURE_TRUE(aRequestingPrincipal, NS_ERROR_FAILURE);
+
+  // Work out the requesting URI
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
+  nsresult rv = aRequestingPrincipal->GetURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Check that the uri is ok to load
-  rv = nsContentUtils::GetSecurityManager()->
-    CheckLoadURIWithPrincipal(mRequestingPrincipal, uri,
-                              nsIScriptSecurityManager::STANDARD);
+  nsCString scheme, host;
+  rv = uri->GetScheme(scheme);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!mHasBeenCrossSite &&
-      NS_SUCCEEDED(mRequestingPrincipal->CheckMayLoad(uri, PR_FALSE))) {
-    return NS_OK;
-  }
-
-  nsCString userpass;
-  uri->GetUserPass(userpass);
-  NS_ENSURE_TRUE(userpass.IsEmpty(), NS_ERROR_DOM_BAD_URI);
-
-  // It's a cross site load
-  mHasBeenCrossSite = PR_TRUE;
-
-  // Work out the Referer-Root header
-  nsCString root, host;
-  rv = mRequestingURI->GetAsciiHost(host);
+  rv = uri->GetAsciiHost(host);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!host.IsEmpty()) {
-    nsCString scheme;
-    rv = mRequestingURI->GetScheme(scheme);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    root = scheme + NS_LITERAL_CSTRING("://") + host;
-
-    // If needed, append the port
-    PRInt32 port;
-    mRequestingURI->GetPort(&port);
-    if (port != -1) {
-      PRInt32 defaultPort = NS_GetDefaultPort(scheme.get());
-      if (port != defaultPort) {
-        root.Append(":");
-        root.AppendInt(port);
-      }
+  nsCString root = scheme + NS_LITERAL_CSTRING("://") + host;
+  // Append the port
+  PRInt32 port;
+  uri->GetPort(&port);
+  if (port != -1) {
+    PRInt32 defaultPort = NS_GetDefaultPort(scheme.get());
+    if (port != defaultPort) {
+      root.Append(":");
+      root.AppendInt(port);
     }
-  }
-  else {
-    root.AssignLiteral("null");
   }
 
   // Now add the access-control-origin header

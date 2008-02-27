@@ -395,18 +395,6 @@ public:
 
     JSContext* GetSafeJSContext();
 
-    /**
-     * Utility method for comparing two URIs.  For security purposes, two URIs
-     * are equivalent if their schemes, hosts, and ports (if any) match.  This
-     * method returns true if aSubjectURI and aObjectURI have the same origin,
-     * false otherwise.
-     */
-    static PRBool SecurityCompareURIs(nsIURI* aSourceURI, nsIURI* aTargetURI);
-
-    static nsresult 
-    ReportError(JSContext* cx, const nsAString& messageTag,
-                nsIURI* aSource, nsIURI* aTarget);
-
 private:
 
     // GetScriptSecurityManager is the only call that can make one
@@ -432,6 +420,10 @@ private:
     nsIPrincipal*
     doGetSubjectPrincipal(nsresult* rv);
     
+    static nsresult 
+    ReportError(JSContext* cx, const nsAString& messageTag,
+                nsIURI* aSource, nsIURI* aTarget);
+
     nsresult
     CheckPropertyAccessImpl(PRUint32 aAction,
                             nsAXPCNativeCallContext* aCallContext,
@@ -548,9 +540,16 @@ private:
                    nsISecurityPref* securityPref);
 
 
+    /**
+     * Utility method for comparing two URIs.  For security purposes, two URIs
+     * are equivalent if their schemes, hosts, and ports (if any) match.  This
+     * method returns true if aSubjectURI and aObjectURI have the same origin,
+     * false otherwise.
+     */
+    PRBool SecurityCompareURIs(nsIURI* aSourceURI, nsIURI* aTargetURI);
+
     /* encapsulate the file comparison rules */
-    static PRBool SecurityCompareFileURIs(nsIURI* aSourceURI,
-                                          nsIURI* aTargetURI);
+    PRBool SecurityCompareFileURIs(nsIURI* aSourceURI, nsIURI* aTargetURI);
 
 #ifdef XPC_IDISPATCH_SUPPORT
     // While this header is included outside of caps, this class isn't 
@@ -591,8 +590,7 @@ private:
     PRPackedBool mXPCDefaultGrantAll;
     static const char sXPCDefaultGrantAllName[];
 #endif
-
-    static PRInt32 sFileURIOriginPolicy;
+    PRInt32 mFileURIOriginPolicy;
 
     static nsIIOService    *sIOService;
     static nsIXPConnect    *sXPConnect;
