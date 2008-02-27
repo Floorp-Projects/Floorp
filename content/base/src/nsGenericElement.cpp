@@ -810,19 +810,16 @@ nsNSElementTearoff::GetElementsByClassName(const nsAString& aClasses,
   return nsDocument::GetElementsByClassNameHelper(mContent, aClasses, aReturn);
 }
 
-static nsPoint
-GetOffsetFromInitialContainingBlock(nsIFrame* aFrame)
+static nsIFrame*
+GetContainingBlockForClientRect(nsIFrame* aFrame)
 {
-  nsIFrame* refFrame = aFrame->GetParent();
-  if (!refFrame)
-    return nsPoint(0, 0);
-
   // get the nearest enclosing SVG foreign object frame or the root frame
-  while (refFrame->GetParent() &&
-         !refFrame->IsFrameOfType(nsIFrame::eSVGForeignObject))
-    refFrame = refFrame->GetParent();
+  while (aFrame->GetParent() &&
+         !aFrame->IsFrameOfType(nsIFrame::eSVGForeignObject)) {
+    aFrame = aFrame->GetParent();
+  }
 
-  return aFrame->GetOffsetTo(refFrame);
+  return aFrame;
 }
 
 static double
@@ -847,25 +844,6 @@ SetTextRectangle(const nsRect& aLayoutRect, nsPresContext* aPresContext,
                  RoundFloat(aLayoutRect.YMost()*t2pScaled)*scaleInv - y);
 }
 
-static PRBool
-TryGetSVGBoundingRect(nsIFrame* aFrame, nsRect* aRect)
-{
-#ifdef MOZ_SVG
-  nsRect r;
-  nsIFrame* outer = nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(aFrame, &r);
-  if (!outer)
-    return PR_FALSE;
-
-  // r is in pixels relative to 'outer', get it into twips
-  // relative to ICB origin
-  r.ScaleRoundOut(1.0/aFrame->PresContext()->AppUnitsPerDevPixel());
-  *aRect = r + GetOffsetFromInitialContainingBlock(outer);
-  return PR_TRUE;
-#else
-  return PR_FALSE;
-#endif
-}
-
 NS_IMETHODIMP
 nsNSElementTearoff::GetBoundingClientRect(nsIDOMTextRectangle** aResult)
 {
@@ -881,75 +859,44 @@ nsNSElementTearoff::GetBoundingClientRect(nsIDOMTextRectangle** aResult)
     // display:none, perhaps? Return the empty rect
     return NS_OK;
   }
+
   nsPresContext* presContext = frame->PresContext();
-  
-  nsRect r;
-  if (TryGetSVGBoundingRect(frame, &r)) {
-    // Currently SVG frames don't have continuations but I don't want things to
-    // break if that changes.
-    while ((frame = nsLayoutUtils::GetNextContinuationOrSpecialSibling(frame)) != nsnull) {
-      nsRect nextRect;
-#ifdef DEBUG
-      PRBool isSVG =
-#endif
-        TryGetSVGBoundingRect(frame, &nextRect);
-      NS_ASSERTION(isSVG, "SVG frames must have SVG continuations");
-      r.UnionRect(r, nextRect);
-    }
-  } else {
-    // The weird frame layout of tables requires this
-    if (frame->GetType() == nsGkAtoms::tableOuterFrame) {
-      nsIFrame* innerTable = frame->GetFirstChild(nsnull);
-      if (innerTable) {
-        r = nsLayoutUtils::GetAllInFlowBoundingRect(innerTable) + innerTable->GetPosition();
-      }
-      nsIFrame* caption = frame->GetFirstChild(nsGkAtoms::captionList);
-      if (caption) {
-        r.UnionRect(r, nsLayoutUtils::GetAllInFlowBoundingRect(caption) + caption->GetPosition());
-      }
-    } else {
-      r = nsLayoutUtils::GetAllInFlowBoundingRect(frame);
-    }
-    r += GetOffsetFromInitialContainingBlock(frame);
-  }
+  nsRect r = nsLayoutUtils::GetAllInFlowRectsUnion(frame,
+          GetContainingBlockForClientRect(frame));
   SetTextRectangle(r, presContext, rect);
   return NS_OK;
 }
 
-static nsresult
-AddRectanglesForFrames(nsTextRectangleList* aRectList, nsIFrame* aFrame)
-{
-  if (!aFrame)
-    return NS_OK;
+struct RectListBuilder : public nsLayoutUtils::RectCallback {
+  nsPresContext*       mPresContext;
+  nsTextRectangleList* mRectList;
+  nsresult             mRV;
 
-  nsPresContext* presContext = aFrame->PresContext();
-  for (nsIFrame* f = aFrame; f;
-       f = nsLayoutUtils::GetNextContinuationOrSpecialSibling(f)) {
+  RectListBuilder(nsPresContext* aPresContext, nsTextRectangleList* aList) 
+    : mPresContext(aPresContext), mRectList(aList),
+      mRV(NS_OK) {}
+
+  virtual void AddRect(const nsRect& aRect) {
     nsRefPtr<nsTextRectangle> rect = new nsTextRectangle();
-    if (!rect)
-      return NS_ERROR_OUT_OF_MEMORY;
-    
-    nsRect r;
-    if (!TryGetSVGBoundingRect(f, &r)) {
-      r = nsRect(GetOffsetFromInitialContainingBlock(f), f->GetSize());
+    if (!rect) {
+      mRV = NS_ERROR_OUT_OF_MEMORY;
+      return;
     }
-    SetTextRectangle(r, presContext, rect);
-    aRectList->Append(rect);
+    
+    SetTextRectangle(aRect, mPresContext, rect);
+    mRectList->Append(rect);
   }
-
-  return NS_OK;
-}
+};
 
 NS_IMETHODIMP
 nsNSElementTearoff::GetClientRects(nsIDOMTextRectangleList** aResult)
 {
   *aResult = nsnull;
 
-  // Weak ref, since we addref it below
   nsRefPtr<nsTextRectangleList> rectList = new nsTextRectangleList();
   if (!rectList)
     return NS_ERROR_OUT_OF_MEMORY;
-  
+
   nsIFrame* frame = mContent->GetPrimaryFrame(Flush_Layout);
   if (!frame) {
     // display:none, perhaps? Return an empty list
@@ -957,21 +904,11 @@ nsNSElementTearoff::GetClientRects(nsIDOMTextRectangleList** aResult)
     return NS_OK;
   }
 
-  if (frame->GetType() == nsGkAtoms::tableOuterFrame) {
-    // The weird frame layout of tables requires this
-    nsIFrame* innerTable = frame->GetFirstChild(nsnull);
-    nsresult rv = AddRectanglesForFrames(rectList, innerTable);
-    if (NS_FAILED(rv))
-      return rv;
-    nsIFrame* caption = frame->GetFirstChild(nsGkAtoms::captionList);
-    rv = AddRectanglesForFrames(rectList, caption);
-    if (NS_FAILED(rv))
-      return rv;
-  } else {
-    nsresult rv = AddRectanglesForFrames(rectList, frame);
-    if (NS_FAILED(rv))
-      return rv;
-  }
+  RectListBuilder builder(frame->PresContext(), rectList);
+  nsLayoutUtils::GetAllInFlowRects(frame,
+          GetContainingBlockForClientRect(frame), &builder);
+  if (NS_FAILED(builder.mRV))
+    return builder.mRV;
   *aResult = rectList.forget().get();
   return NS_OK;
 }

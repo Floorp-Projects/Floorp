@@ -512,8 +512,6 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
     parent = parent->GetParent();
   }
 
-  // Get the union of all rectangles in this and continuation frames.
-  nsRect rcFrame = nsLayoutUtils::GetAllInFlowBoundingRect(frame);
   nsIContent* docElement = GetCurrentDoc()->GetRootContent();
   nsIContent* content = frame->GetContent();
 
@@ -594,6 +592,12 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
   // Convert to pixels.
   aRect.x = nsPresContext::AppUnitsToIntCSSPixels(origin.x);
   aRect.y = nsPresContext::AppUnitsToIntCSSPixels(origin.y);
+
+  // Get the union of all rectangles in this and continuation frames.
+  // It doesn't really matter what we use as aRelativeTo here, since
+  // we only care about the size. Using 'parent' might make things
+  // a bit faster by speeding up the internal GetOffsetTo operations.
+  nsRect rcFrame = nsLayoutUtils::GetAllInFlowRectsUnion(frame, parent);
   aRect.width = nsPresContext::AppUnitsToIntCSSPixels(rcFrame.width);
   aRect.height = nsPresContext::AppUnitsToIntCSSPixels(rcFrame.height);
 }
