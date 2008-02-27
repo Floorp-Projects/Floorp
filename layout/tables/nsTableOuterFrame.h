@@ -218,7 +218,13 @@ protected:
   NS_IMETHOD VerifyTree() const;
 #endif
 
-  PRUint8 GetCaptionSide();
+  PRUint8 GetCaptionSide(); // NS_STYLE_CAPTION_SIDE_* or NO_SIDE
+
+  PRBool HasSideCaption() {
+    PRUint8 captionSide = GetCaptionSide();
+    return captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
+           captionSide == NS_STYLE_CAPTION_SIDE_RIGHT;
+  }
   
   PRUint8 GetCaptionVerticalAlign();
 
