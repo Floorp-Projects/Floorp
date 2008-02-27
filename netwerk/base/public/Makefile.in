@@ -71,6 +71,7 @@ XPIDLSRCS	= \
 		nsIBufferedStreams.idl \
 		nsICancelable.idl \
 		nsICryptoHash.idl \
+		nsICryptoHMAC.idl \
 		nsIDownloader.idl \
 		nsIEncodedChannel.idl \
 		nsIFileStreams.idl \
