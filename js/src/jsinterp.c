@@ -4453,10 +4453,10 @@ interrupt:
             if (JSVAL_IS_INT(rval)) {
                 if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
                     jsuint length;
-
+                    
                     length = ARRAY_DENSE_LENGTH(obj);
                     i = JSVAL_TO_INT(rval);
-                    if ((jsuint)i < length &&
+                    if ((jsuint)i < length && 
                         i < obj->fslots[JSSLOT_ARRAY_LENGTH]) {
                         rval = obj->dslots[i];
                         if (rval != JSVAL_HOLE)
@@ -6573,61 +6573,6 @@ interrupt:
 
 #undef FAST_LOCAL_INCREMENT_OP
 
-          BEGIN_CASE(JSOP_CONCATN)
-          {
-            jschar *buf;
-
-            SAVE_SP_AND_PC(fp);
-            argc = GET_ARGC(pc);
-            len = 0;
-            for (vp = sp - argc; vp < sp; vp++) {
-                lval = *vp;
-                if (JSVAL_IS_STRING(lval)) {
-                    len += JSSTRING_LENGTH(JSVAL_TO_STRING(lval));
-                } else {
-                    str = js_ValueToString(cx, lval);
-                    if (!str)
-                        goto error;
-                    *vp = STRING_TO_JSVAL(str);
-                    len += JSSTRING_LENGTH(str);
-                }
-
-                /*
-                 * Check early and often, since we may be concatenating up to
-                 * (2^16 - 1) strings each of maximum length (2^29 - 1).
-                 */
-                if ((size_t)len > JSSTRING_LENGTH_MASK) {
-                    JS_ReportOutOfMemory(cx);
-                    goto error;
-                }
-            }
-
-            buf = JS_malloc(cx, (len + 1) * sizeof(*buf));
-            if (!buf)
-                goto error;
-
-            len = 0;
-            for (vp = sp - argc; vp < sp; vp++) {
-                JS_ASSERT(JSVAL_IS_STRING(*vp));
-                lval = *vp;
-                str = JSVAL_TO_STRING(lval);
-                js_strncpy(buf + len, JSSTRING_CHARS(str),
-                           JSSTRING_LENGTH(str));
-                len += JSSTRING_LENGTH(str);
-            }
-            buf[len] = 0;
-
-            str = js_NewString(cx, buf, len);
-            if (!str) {
-                JS_free(cx, buf);
-                goto error;
-            }
-
-            sp -= argc - 1;
-            STORE_OPND(-1, STRING_TO_JSVAL(str));
-          }
-          END_CASE(JSOP_CONCATN)
-
           BEGIN_CASE(JSOP_ENDITER)
             /*
              * Decrease the stack pointer even when !ok, see comments in the
@@ -6744,6 +6689,8 @@ interrupt:
           L_JSOP_ANYNAME:
           L_JSOP_DEFXMLNS:
 # endif
+
+          L_JSOP_UNUSED117:
 
 #else /* !JS_THREADED_INTERP */
           default:

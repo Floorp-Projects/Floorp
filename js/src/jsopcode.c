@@ -3259,38 +3259,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 }
                 break;
 
-              case JSOP_CONCATN:
-                argc = GET_UINT16(pc);
-                argv = (char **)JS_malloc(cx, (size_t)argc * sizeof *argv);
-                if (!argv)
-                    return NULL;
-
-                ok = JS_TRUE;
-                for (i = argc - 1; i >= 0; i--) {
-                    argv[i] = JS_strdup(cx, POP_STR());
-                    if (!argv[i]) {
-                        ok = JS_FALSE;
-                        break;
-                    }
-                }
-
-                todo = Sprint(&ss->sprinter, "%s", argv[0]);
-                if (todo < 0)
-                    ok = JS_FALSE;
-                for (i = 1; i < argc; i++) {
-                    if (Sprint(&ss->sprinter, " + %s", argv[i]) < 0) {
-                        ok = JS_FALSE;
-                        break;
-                    }
-                }
-
-                for (i = 0; i < argc; i++)
-                    JS_free(cx, argv[i]);
-                JS_free(cx, argv);
-                if (!ok)
-                    return NULL;
-                break;
-
               case JSOP_NEW:
               case JSOP_CALL:
               case JSOP_EVAL:
@@ -3357,8 +3325,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 if (Sprint(&ss->sprinter, rval) < 0)
                     ok = JS_FALSE;
 
-                for (i = 0; i <= argc; i++)
-                    JS_free(cx, argv[i]);
+                for (i = 0; i <= argc; i++) {
+                    if (argv[i])
+                        JS_free(cx, argv[i]);
+                }
                 JS_free(cx, argv);
                 if (!ok)
                     return NULL;
@@ -5000,11 +4970,6 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
 
         if (op == JSOP_POPN) {
             pcdepth -= GET_UINT16(pc);
-            continue;
-        }
-
-        if (op == JSOP_CONCATN) {
-            pcdepth -= GET_UINT16(pc) - 1;
             continue;
         }
 
