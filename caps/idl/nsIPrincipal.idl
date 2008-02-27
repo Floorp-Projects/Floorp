@@ -51,7 +51,7 @@ interface nsIURI;
 [ptr] native JSContext(JSContext);
 [ptr] native JSPrincipals(JSPrincipals);
 
-[scriptable, uuid(635c413b-47c3-4ee1-87c8-e7919cc65f5a)]
+[scriptable, uuid(7292475e-2821-4602-9d00-228476696428)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -202,6 +202,29 @@ interface nsIPrincipal : nsISerializable
      * make some code (e.g. MaybeDowngradeToCodebase) clearer.
      */
     [noscript] boolean subsumes(in nsIPrincipal other);
+
+    /**
+     * Checks whether this principal is allowed to load the network resource
+     * located at the given URI under the same-origin policy. This means that
+     * codebase principals are only allowed to load resources from the same
+     * domain, the system principal is allowed to load anything, and null
+     * principals are not allowed to load anything.
+     *
+     * If the load is allowed this function does nothing. If the load is not
+     * allowed the function throws NS_ERROR_DOM_BAD_URI.
+     *
+     * NOTE: Other policies might override this, such as the Access-Control
+     *       specification.
+     * NOTE: The 'domain' attribute has no effect on the behaviour of this
+     *       function.
+     *
+     *
+     * @param uri    The URI about to be loaded.
+     * @param report If true, will report a warning to the console service
+     *               if the load is not allowed.
+     * @throws NS_ERROR_DOM_BAD_URI if the load is not allowed.
+     */
+    [noscript] void checkMayLoad(in nsIUri uri, in boolean report);
 
     /**
      * The subject name for the certificate.  This actually identifies the
