@@ -978,6 +978,22 @@ nsMathMLmoFrame::MarkIntrinsicWidthsDirty()
   nsMathMLContainerFrame::MarkIntrinsicWidthsDirty();
 }
 
+/* virtual */ nscoord
+nsMathMLmoFrame::GetIntrinsicWidth(nsIRenderingContext *aRenderingContext)
+{
+  ProcessOperatorData();
+  // TODO: need to ask mMathMLChar for its maximum width if useMathMLChar
+  // (Bug 363240)
+  nscoord width = nsMathMLTokenFrame::GetIntrinsicWidth(aRenderingContext);
+
+  // leftSpace and rightSpace are actually applied to the outermost
+  // embellished container but for determining total intrinsic width it should
+  // be safe to include it for the core here instead.
+  width += mEmbellishData.leftSpace + mEmbellishData.rightSpace;
+
+  return width;
+}
+
 NS_IMETHODIMP
 nsMathMLmoFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                   nsIAtom*        aAttribute,
