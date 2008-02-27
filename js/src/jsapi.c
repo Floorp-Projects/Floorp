@@ -2984,7 +2984,7 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
     scope = js_GetMutableScope(cx, obj);
     if (scope) {
         SCOPE_SET_SEALED(scope);
-        SCOPE_GENERATE_PCTYPE(cx, scope);
+        SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
     }
     JS_UNLOCK_OBJ(cx, obj);
     if (!scope)

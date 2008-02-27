@@ -2847,7 +2847,7 @@ ProcessSetSlotRequest(JSContext *cx, JSSetSlotRequest *ssr)
          */
         while (oldproto && OBJ_IS_NATIVE(oldproto)) {
             scope = OBJ_SCOPE(oldproto);
-            SCOPE_GENERATE_PCTYPE(cx, scope);
+            SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
             oldproto = STOBJ_GET_PROTO(scope->object);
         }
     }
