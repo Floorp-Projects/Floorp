@@ -173,6 +173,8 @@ protected:
                     PRBool aExplicit);
   void ProcessOfflineManifest(nsIContent *aElement);
 
+  // Tries to scroll to the URI's named anchor. Once we've successfully
+  // done that, further calls to this method will be ignored.
   void ScrollToRef();
   nsresult RefreshIfEnabled(nsIViewManager* vm);
 
@@ -209,8 +211,6 @@ protected:
   virtual void PostEvaluateScript(nsIScriptElement *aElement) {return;}
 
   virtual nsresult FlushTags() = 0;
-
-  void TryToScrollToRef();
 
   // Later on we might want to make this more involved somehow
   // (e.g. stop waiting after some timeout or whatnot).

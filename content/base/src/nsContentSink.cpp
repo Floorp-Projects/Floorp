@@ -293,7 +293,7 @@ nsContentSink::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
       }
 
       // Go ahead and try to scroll to our ref if we have one
-      TryToScrollToRef();
+      ScrollToRef();
     }
     
     mScriptLoader->RemoveExecuteBlocker();
@@ -885,7 +885,9 @@ nsContentSink::ScrollToRef()
     return;
   }
 
-  PRBool didScroll = PR_FALSE;
+  if (mScrolledToRefAlready) {
+    return;
+  }
 
   char* tmpstr = ToNewCString(mRef);
   if (!tmpstr) {
@@ -1040,20 +1042,6 @@ nsContentSink::StartLayout(PRBool aIgnorePendingSheets)
 }
 
 void
-nsContentSink::TryToScrollToRef()
-{
-  if (mRef.IsEmpty()) {
-    return;
-  }
-
-  if (mScrolledToRefAlready) {
-    return;
-  }
-
-  ScrollToRef();
-}
-
-void
 nsContentSink::NotifyAppend(nsIContent* aContainer, PRUint32 aStartIndex)
 {
   if (aContainer->GetCurrentDoc() != mDocument) {
@@ -1120,7 +1108,7 @@ nsContentSink::Notify(nsITimer *timer)
 
     // Now try and scroll to the reference
     // XXX Should we scroll unconditionally for history loads??
-    TryToScrollToRef();
+    ScrollToRef();
   }
 
   mNotificationTimer = nsnull;
@@ -1180,7 +1168,7 @@ nsContentSink::WillInterruptImpl()
                     "run out time; backoff count: %d", mBackoffCount));
         result = FlushTags();
         if (mDroppedTimer) {
-          TryToScrollToRef();
+          ScrollToRef();
           mDroppedTimer = PR_FALSE;
         }
       } else if (!mNotificationTimer) {
