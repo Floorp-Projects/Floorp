@@ -316,6 +316,9 @@ public:
     }
 
     static PRUint8 CharRangeBit(PRUint32 ch);
+    
+    // for a given font list pref name, set up a list of font names
+    static void GetPrefsFontList(const char *aPrefName, nsTArray<nsAutoString>& aFontList);
 
 };
 

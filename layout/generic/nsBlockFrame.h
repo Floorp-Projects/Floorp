@@ -273,10 +273,6 @@ public:
     */
   nsIFrame* GetTopBlockChild(nsPresContext *aPresContext);
 
-  // Returns the line containing aFrame, or end_lines() if the frame
-  // isn't in the block.
-  line_iterator FindLineFor(nsIFrame* aFrame);
-
   static nsresult GetCurrentLine(nsBlockReflowState *aState, nsLineBox **aOutCurrentLine);
 
   // Create a contination for aPlaceholder and its out of flow frame and
@@ -387,8 +383,8 @@ protected:
     * contains aPrevSibling and add aFrameList after aPrevSibling on that line.
     * new lines are created as necessary to handle block data in aFrameList.
     */
-  nsresult AddFrames(nsIFrame* aFrameList,
-                     nsIFrame* aPrevSibling);
+  virtual nsresult AddFrames(nsIFrame* aFrameList,
+                             nsIFrame* aPrevSibling);
 
 #ifdef IBMBIDI
   /**
@@ -570,12 +566,12 @@ protected:
   // reflow.
   PRBool RenumberLists(nsPresContext* aPresContext);
 
-  PRBool RenumberListsInBlock(nsPresContext* aPresContext,
-                              nsBlockFrame* aContainerFrame,
-                              PRInt32* aOrdinal,
-                              PRInt32 aDepth);
+  static PRBool RenumberListsInBlock(nsPresContext* aPresContext,
+                                     nsBlockFrame* aBlockFrame,
+                                     PRInt32* aOrdinal,
+                                     PRInt32 aDepth);
 
-  PRBool RenumberListsFor(nsPresContext* aPresContext, nsIFrame* aKid, PRInt32* aOrdinal, PRInt32 aDepth);
+  static PRBool RenumberListsFor(nsPresContext* aPresContext, nsIFrame* aKid, PRInt32* aOrdinal, PRInt32 aDepth);
 
   static PRBool FrameStartsCounterScope(nsIFrame* aFrame);
 
@@ -692,7 +688,20 @@ class nsBlockInFlowLineIterator {
 public:
   typedef nsBlockFrame::line_iterator line_iterator;
   nsBlockInFlowLineIterator(nsBlockFrame* aFrame, line_iterator aLine, PRBool aInOverflow);
-  
+  /**
+   * Set up the iterator to point to the first line found starting from
+   * aFrame. Sets aFoundValidLine to false if there is no such line.
+   */
+  nsBlockInFlowLineIterator(nsBlockFrame* aFrame, PRBool* aFoundValidLine);
+  /**
+   * Set up the iterator to point to the line that contains aFindFrame (either
+   * directly or indirectly).  If aFrame is out of flow, or contained in an
+   * out-of-flow, finds the line containing the out-of-flow's placeholder. If
+   * the frame is not found, sets aFoundValidLine to false.
+   */
+  nsBlockInFlowLineIterator(nsBlockFrame* aFrame, nsIFrame* aFindFrame,
+                            PRBool* aFoundValidLine);
+
   line_iterator GetLine() { return mLine; }
   PRBool IsLastLineInList();
   nsBlockFrame* GetContainer() { return mFrame; }
@@ -712,6 +721,12 @@ private:
   nsBlockFrame* mFrame;
   line_iterator mLine;
   nsLineList*   mInOverflowLines;
+
+  /**
+   * Moves iterator to next valid line reachable from the current block.
+   * Returns false if there are no valid lines.
+   */
+  PRBool FindValidLine();
 };
 
 #endif /* nsBlockFrame_h___ */

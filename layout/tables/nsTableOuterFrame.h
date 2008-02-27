@@ -218,7 +218,13 @@ protected:
   NS_IMETHOD VerifyTree() const;
 #endif
 
-  PRUint8 GetCaptionSide();
+  PRUint8 GetCaptionSide(); // NS_STYLE_CAPTION_SIDE_* or NO_SIDE
+
+  PRBool HasSideCaption() {
+    PRUint8 captionSide = GetCaptionSide();
+    return captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
+           captionSide == NS_STYLE_CAPTION_SIDE_RIGHT;
+  }
   
   PRUint8 GetCaptionVerticalAlign();
 
@@ -234,7 +240,7 @@ protected:
                                nscoord&        aInnerWidth,
                                nscoord&        aCaptionWidth);
 
-  NS_IMETHOD GetCaptionOrigin(PRUint32         aCaptionSide,
+  nsresult   GetCaptionOrigin(PRUint32         aCaptionSide,
                               const nsSize&    aContainBlockSize,
                               const nsSize&    aInnerSize, 
                               const nsMargin&  aInnerMargin,
@@ -242,7 +248,7 @@ protected:
                               nsMargin&        aCaptionMargin,
                               nsPoint&         aOrigin);
 
-  NS_IMETHOD GetInnerOrigin(PRUint32         aCaptionSide,
+  nsresult   GetInnerOrigin(PRUint32         aCaptionSide,
                             const nsSize&    aContainBlockSize,
                             const nsSize&    aCaptionSize, 
                             const nsMargin&  aCaptionMargin,
@@ -251,15 +257,17 @@ protected:
                             nsPoint&         aOrigin);
   
   // reflow the child (caption or innertable frame)
-  NS_IMETHOD OuterReflowChild(nsPresContext*            aPresContext,
-                              nsIFrame*                 aChildFrame,
-                              const nsHTMLReflowState&  aOuterRS,
-                              void*                     aChildRSSpace,
-                              nsHTMLReflowMetrics&      aMetrics,
-                              nscoord                   aAvailWidth,
-                              nsSize&                   aDesiredSize,
-                              nsMargin&                 aMargin,
-                              nsReflowStatus&           aStatus);
+  void OuterBeginReflowChild(nsPresContext*           aPresContext,
+                             nsIFrame*                aChildFrame,
+                             const nsHTMLReflowState& aOuterRS,
+                             void*                    aChildRSSpace,
+                             nscoord                  aAvailWidth);
+
+  nsresult OuterDoReflowChild(nsPresContext*           aPresContext,
+                              nsIFrame*                aChildFrame,
+                              const nsHTMLReflowState& aChildRS,
+                              nsHTMLReflowMetrics&     aMetrics,
+                              nsReflowStatus&          aStatus);
 
   // Set the reflow metrics
   void UpdateReflowMetrics(PRUint8              aCaptionSide,

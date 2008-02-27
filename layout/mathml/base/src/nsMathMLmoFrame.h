@@ -78,6 +78,9 @@ public:
 
   virtual void MarkIntrinsicWidthsDirty();
 
+  virtual nscoord
+  GetIntrinsicWidth(nsIRenderingContext *aRenderingContext);
+
   NS_IMETHOD
   AttributeChanged(PRInt32         aNameSpaceID,
                    nsIAtom*        aAttribute,

@@ -38,6 +38,8 @@
 <!DOCTYPE overlay [
     <!ENTITY % helpDTD SYSTEM "chrome://help/locale/help.dtd">
     %helpDTD;
+    <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+    %globalDTD;
 ]>
 <overlay id="contentAreaContextOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -50,11 +52,13 @@
                 label="&backButton.label;"
                 accesskey="&backButton.accesskey;"
                 observes="canGoBack"
+                chromedir="&locale.dir;"
                 oncommand="goBack()"/>
       <menuitem id="context-forward"
                 label="&forwardButton.label;"
                 accesskey="&forwardButton.accesskey;"
                 observes="canGoForward"
+                chromedir="&locale.dir;"
                 oncommand="goForward()"/>
       <menuseparator/>
       <menuitem id="context-copy"

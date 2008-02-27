@@ -94,7 +94,7 @@ public:
            const nsHTMLReflowState& aReflowState,
            nsHTMLReflowMetrics&     aDesiredSize,
            nsReflowStatus&          aStatus,
-           nsIFrame*                aForFrame,
+           nsMathMLContainerFrame*  aForFrame,
            nsMathMLChar*            aOpenChar,
            nsMathMLChar*            aCloseChar,
            nsMathMLChar*            aSeparatorsChar,

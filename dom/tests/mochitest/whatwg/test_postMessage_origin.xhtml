@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=417075
+-->
+<head>
+  <title>postMessage from about:blank, data URLs</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="browserFu.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=417075">Mozilla Bug 417075</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe src="http://localhost:8888/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
+        id="sameDomain"></iframe>
+<iframe src="http://example.com/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
+        id="otherDomain"></iframe>
+<iframe src="http://example.org:8000/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
+        id="otherDomainPort"></iframe>
+<iframe src="ftp://localhost:27534/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
+        id="localNoExist"></iframe>
+
+<iframe src="http://sub1.παράδειγμα.δοκιμή/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
+        id="idnKidWhitelist"></iframe>
+
+<iframe src="http://sub1.exämple.test/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
+        id="idnKidNoWhitelist"></iframe>
+
+
+<pre id="test">
+<script class="testbody" type="application/javascript"><![CDATA[
+/** Test for Bug 417075 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function errorCheck(i, called, errorCode, actualCode)
+{
+  ok(!called, "receiver should not have been called for test #" + i);
+  is(actualCode, errorCode, "wrong error thrown in test #" + i);
+}
+
+function errorCheckTodo(i, called, errorCode, actualCode)
+{
+  todo(!called, "receiver should not have been called for test #" + i);
+  todo_is(actualCode, errorCode, "wrong error thrown in test #" + i);
+}
+
+var ONE_PASS = ["PASS"];
+
+var tests =
+  [
+   // 0
+   {
+     args: ["NOT-RECEIVED", ""],
+     source: "sameDomain",
+     code: DOMException.SYNTAX_ERR
+   },
+   {
+     args: ["NOT-RECEIVED", "null"],
+     source: "sameDomain",
+     code: DOMException.SYNTAX_ERR
+   },
+   {
+     args: ["NOT-RECEIVED", "a"],
+     source: "sameDomain",
+     code: DOMException.SYNTAX_ERR
+   },
+   {
+     args: ["NOT-RECEIVED", "http :"],
+     source: "sameDomain",
+     code: DOMException.SYNTAX_ERR
+   },
+   {
+     args: ["NOT-RECEIVED", "http: //"],
+     source: "sameDomain",
+     code: DOMException.SYNTAX_ERR,
+
+     throwsNoException: true
+   },
+   // 5
+   {
+     args: ["NOT-RECEIVED", "http ://"],
+     source: "sameDomain",
+     code: DOMException.SYNTAX_ERR
+   },
+   {
+     args: ["TODO", " http://localhost:8888"],
+     source: "sameDomain",
+     code: DOMException.SYNTAX_ERR,
+
+     returnOrigin: "http://localhost:8888",
+     throwsNoException: true
+   },
+   {
+     args: ["NOT-RECEIVED", "hä"],
+     source: "sameDomain",
+     code: DOMException.SYNTAX_ERR
+   },
+   {
+     args: ["NOT-RECEIVED", "http://lo\0k.com"],
+     source: "sameDomain",
+     code: DOMException.SYNTAX_ERR
+   },
+   {
+     args: ["NOT-RECEIVED", "http: //localhost:8888"],
+     source: "sameDomain",
+     code: DOMException.SYNTAX_ERR,
+
+     throwsNoException: true
+   },
+   // 10
+   {
+     args: ["NOT-RECEIVED", "http://localhost :8888"],
+     source: "sameDomain",
+     code: DOMException.SYNTAX_ERR
+   },
+   {
+     args: ["NOT-RECEIVED", "http:// localhost:8888"],
+     source: "sameDomain",
+     code: DOMException.SYNTAX_ERR,
+
+     throwsNoException: true
+   },
+   {
+     args: ["TODO", "http://\nlocalhost:8888"],
+     source: "sameDomain",
+     code: DOMException.SYNTAX_ERR,
+
+     returnOrigin: "http://localhost:8888",
+     throwsNoException: true
+   },
+   {
+     args: ["TODO", "http://localhost:8888\0"],
+     source: "sameDomain",
+     code: DOMException.SYNTAX_ERR,
+
+     returnOrigin: "http://localhost:8888",
+     throwsNoException: true
+   },
+   {
+     args: ["TODO", "http://localhost:8888\n"],
+     source: "sameDomain",
+     code: DOMException.SYNTAX_ERR,
+
+     returnOrigin: "http://localhost:8888",
+     throwsNoException: true
+   },
+   // 15
+   {
+     args: ONE_PASS,
+     source: "sameDomain",
+     returnOrigin: "http://localhost:8888"
+   },
+   {
+     args: ["PASS", null],
+     source: "sameDomain",
+     returnOrigin: "http://localhost:8888"
+   },
+   {
+     args: ["PASS", "http://example.com"],
+     source: "otherDomain",
+     returnOrigin: "http://example.com"
+   },
+   {
+     args: ["PASS", "http://example.com/"],
+     source: "otherDomain",
+     returnOrigin: "http://example.com"
+   },
+   {
+     args: ["PASS", "http://example.com:80"],
+     source: "otherDomain",
+     returnOrigin: "http://example.com"
+   },
+   // 20
+   {
+     args: ["PASS", "http://example.com:80/"],
+     source: "otherDomain",
+     returnOrigin: "http://example.com"
+   },
+   {
+     args: ["PASS", "http://example.com:80/foobar"],
+     source: "otherDomain",
+     returnOrigin: "http://example.com"
+   },
+   {
+     args: ["PASS", "http://example.com/foobar"],
+     source: "otherDomain",
+     returnOrigin: "http://example.com"
+   },
+   {
+     args: ["PASS", "http://example.com:8000"],
+     source: "otherDomain",
+     expectNoCallback: true
+   },
+   {
+     args: ["PASS", "http://example.com:8000/"],
+     source: "otherDomain",
+     expectNoCallback: true
+   },
+   // 25
+   {
+     args: ["PASS", "http://example.org:8000"],
+     source: "otherDomainPort",
+     returnOrigin: "http://example.org:8000"
+   },
+   {
+     args: ["PASS", "http://example.org:8000/"],
+     source: "otherDomainPort",
+     returnOrigin: "http://example.org:8000"
+   },
+   {
+     args: ["PASS", "http://example.org:8000/tests/dom/test/mochitest/whatwg/postMessage_origin_helper.xhtml"],
+     source: "otherDomainPort",
+     returnOrigin: "http://example.org:8000"
+   },
+   {
+     args: ["PASS", "http://example.org:8000/tests/dom/test/mochitest/whatwg/this_file_does_not_exist.xhtml"],
+     source: "otherDomainPort",
+     returnOrigin: "http://example.org:8000"
+   },
+   {
+     args: ["PASS", "http://example.org"],
+     source: "otherDomainPort",
+     expectNoCallback: true
+   },
+   // 30
+   {
+     args: ["PASS", "http://example.org:80"],
+     source: "otherDomainPort",
+     expectNoCallback: true
+   },
+   {
+     args: ["PASS", "http://example.org/"],
+     source: "otherDomainPort",
+     expectNoCallback: true
+   },
+   {
+     args: ["PASS", "http://example.org"],
+     source: "otherDomain",
+     expectNoCallback: true
+   },
+   {
+     args: ["PASS", "ftp://localhost:8888"],
+     source: "sameDomain",
+     expectNoCallback: true
+   },
+   {
+     args: ["PASS", "http://localhost:8888"],
+     source: "sameDomain",
+     returnOrigin: "http://localhost:8888"
+   },
+   // 35
+   {
+     args: ["PASS", "http://localhost:27534"],
+     source: "sameDomain",
+     expectNoCallback: true
+   },
+   {
+     args: ["PASS", "http://sub1.παράδειγμα.δοκιμή"],
+     source: "idnKidWhitelist",
+     returnOrigin: "http://sub1.παράδειγμα.δοκιμή"
+   },
+   {
+     args: ["PASS", "http://sub1.παράδειγμα.δοκιμή:80"],
+     source: "idnKidWhitelist",
+     returnOrigin: "http://sub1.παράδειγμα.δοκιμή"
+   },
+   {
+     args: ["PASS", "http://sub1.παράδειγμα.δοκιμή:80/"],
+     source: "idnKidWhitelist",
+     returnOrigin: "http://sub1.παράδειγμα.δοκιμή"
+   },
+   {
+     args: ["PASS", "http://sub1.παράδειγμα.δοκιμή:80/foobar"],
+     source: "idnKidWhitelist",
+     returnOrigin: "http://sub1.παράδειγμα.δοκιμή"
+   },
+   // 40
+   {
+     args: ["PASS", "http://sub1.παράδειγμα.δοκιμή/foobar"],
+     source: "idnKidWhitelist",
+     returnOrigin: "http://sub1.παράδειγμα.δοκιμή"
+   },
+   {
+     args: ["PASS", "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp"],
+     source: "idnKidWhitelist",
+     returnOrigin: "http://sub1.παράδειγμα.δοκιμή"
+   },
+   {
+     args: ["PASS", "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp:80"],
+     source: "idnKidWhitelist",
+     returnOrigin: "http://sub1.παράδειγμα.δοκιμή"
+   },
+   {
+     args: ["PASS", "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp:80/"],
+     source: "idnKidWhitelist",
+     returnOrigin: "http://sub1.παράδειγμα.δοκιμή"
+   },
+   {
+     args: ["PASS", "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp:80/foo"],
+     source: "idnKidWhitelist",
+     returnOrigin: "http://sub1.παράδειγμα.δοκιμή"
+   },
+   // 45
+   {
+     args: ["PASS", "http://sub1.exämple.test"],
+     source: "idnKidNoWhitelist",
+     returnOrigin: "http://sub1.exämple.test",
+
+     wrongReturnOrigin: true
+   },
+   {
+     args: ["PASS", "http://sub1.exämple.test:80"],
+     source: "idnKidNoWhitelist",
+     returnOrigin: "http://sub1.exämple.test",
+
+     wrongReturnOrigin: true
+   },
+   {
+     args: ["PASS", "http://sub1.exämple.test:80/"],
+     source: "idnKidNoWhitelist",
+     returnOrigin: "http://sub1.exämple.test",
+
+     wrongReturnOrigin: true
+   },
+   {
+     args: ["PASS", "http://sub1.exämple.test/"],
+     source: "idnKidNoWhitelist",
+     returnOrigin: "http://sub1.exämple.test",
+
+     wrongReturnOrigin: true
+   },
+   {
+     args: ["PASS", "http://sub1.exämple.test/foobar"],
+     source: "idnKidNoWhitelist",
+     returnOrigin: "http://sub1.exämple.test",
+
+     wrongReturnOrigin: true
+   },
+   // 50
+   {
+     args: ["PASS", "http://sub1.xn--exmple-cua.test"],
+     source: "idnKidNoWhitelist",
+     returnOrigin: "http://sub1.exämple.test",
+
+     wrongReturnOrigin: true
+   },
+   {
+     args: ["PASS", "http://sub1.xn--exmple-cua.test:80"],
+     source: "idnKidNoWhitelist",
+     returnOrigin: "http://sub1.exämple.test",
+
+     wrongReturnOrigin: true
+   },
+   {
+     args: ["PASS", "http://sub1.xn--exmple-cua.test:80/"],
+     source: "idnKidNoWhitelist",
+     returnOrigin: "http://sub1.exämple.test",
+
+     wrongReturnOrigin: true
+   },
+   {
+     args: ["PASS", "http://sub1.xn--exmple-cua.test/"],
+     source: "idnKidNoWhitelist",
+     returnOrigin: "http://sub1.exämple.test",
+
+     wrongReturnOrigin: true
+   },
+   {
+     args: ["PASS", "http://sub1.xn--exmple-cua.test/foobar"],
+     source: "idnKidNoWhitelist",
+     returnOrigin: "http://sub1.exämple.test",
+
+     wrongReturnOrigin: true
+   },
+   // 55
+   {
+     args: ["NOT-RECEIVED", undefined],
+     source: "sameDomain",
+     code: DOMException.SYNTAX_ERR
+   },
+  ];
+
+function allTests()
+{
+  var test, target, called;
+
+  function receive(evt)
+  {
+    var originCheck = test.wrongReturnOrigin ? todo_is : is;
+    originCheck(evt.origin, test.returnOrigin, "wrong origin for #" + i);
+    if (test.args[0] == "TODO")
+      todo_is(evt.data, "PASS", "wrong data");
+    else
+      is(evt.data, "PASS", "wrong data");
+    ok(evt.source === target, "wrong source");
+    called = true;
+  }
+
+  function post(win, args, err)
+  {
+    called = false;
+    win.postMessage.apply(win, args);
+  }
+
+  document.addEventListener("message", receive, false);
+
+  for (var i = 0, sz = tests.length; i < sz; i++)
+  {
+    test = tests[i];
+
+    target = $(test.source).contentWindow;
+    try
+    {
+      called = false;
+      target.postMessage.apply(target, test.args);
+      if (test.throwsNoException)
+        todo(false, "should throw on test #" + i);
+      else if (test.expectNoCallback)
+        (test.checkCallback || ok)(!called, "shouldn't have been called #" + i);
+      else
+        (test.checkCallback || ok)(called, "should have been called #" + i);
+    }
+    catch (e)
+    {
+      (test.errorCheck || errorCheck)(i, called, e.code, test.code);
+    }
+  }
+
+  document.removeEventListener("message", receive, false);
+}
+
+function oddballTests()
+{
+  var called;
+  function receive(evt)
+  {
+    is(evt.origin, "http://localhost:8888", "wrong sender");
+    is(evt.data, "PASS", "wrong data");
+    ok(evt.source === window, "wrong source");
+    called = true;
+  }
+  document.addEventListener("message", receive, false);
+
+  try
+  {
+    called = false;
+    window.postMessage("PASS");
+    is(called, true, "should have been called");
+
+    called = false;
+    window.postMessage("PASS", null);
+    is(called, true, "should have been called");
+  }
+  finally
+  {
+    document.removeEventListener("message", receive, false);
+  }
+}
+
+function run()
+{
+  oddballTests();
+  allTests();
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", run, false);
+]]></script>
+</pre>
+</body>
+</html>

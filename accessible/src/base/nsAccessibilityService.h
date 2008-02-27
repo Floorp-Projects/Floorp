@@ -40,7 +40,10 @@
 #define __nsAccessibilityService_h__
 
 #include "nsIAccessibilityService.h"
+#include "nsCOMArray.h"
 #include "nsIObserver.h"
+#include "nsITimer.h"
+#include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 
@@ -135,6 +138,11 @@ private:
    * @return PR_TRUE if there is a universal ARIA property set on the node
    */
   PRBool HasUniversalAriaProperty(nsIContent *aContent, nsIWeakReference *aWeakShell);
+
+  static void StartLoadCallback(nsITimer *aTimer, void *aClosure);
+  static void EndLoadCallback(nsITimer *aTimer, void *aClosure);
+  static void FailedLoadCallback(nsITimer *aTimer, void *aClosure);
+  nsCOMArray<nsITimer> mLoadTimers;
 };
 
 /**

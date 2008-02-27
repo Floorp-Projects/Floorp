@@ -183,7 +183,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
                                                  JSVAL_TO_OBJECT(v))),
                             kshape);
 #endif
-                        SCOPE_GENERATE_PCTYPE(cx, scope);
+                        SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
                         SCOPE_SET_BRANDED(scope);
                         kshape = scope->shape;
                     }
@@ -329,7 +329,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
         --vcap;
     }
 
-    if (PCVCAP_PCTYPE(vcap) == OBJ_SCOPE(pobj)->shape) {
+    if (PCVCAP_SHAPE(vcap) == OBJ_SCOPE(pobj)->shape) {
 #ifdef DEBUG
         jsid id = ATOM_TO_JSID(atom);
 
@@ -404,10 +404,14 @@ js_FlushPropertyCache(JSContext *cx)
         P(tests);
         P(pchits);
         P(protopchits);
+        P(initests);
+        P(inipchits);
+        P(inipcmisses);
         P(settests);
         P(addpchits);
         P(setpchits);
         P(setpcmisses);
+        P(slotchanges);
         P(setmisses);
         P(idmisses);
         P(komisses);
@@ -416,11 +420,12 @@ js_FlushPropertyCache(JSContext *cx)
         P(flushes);
 # undef P
 
-        fprintf(fp, "hit rates: pc %g%% (proto %g%%), set %g%%, full %g%%\n",
+        fprintf(fp, "hit rates: pc %g%% (proto %g%%), set %g%%, ini %g%%, full %g%%\n",
                 (100. * cache->pchits) / cache->tests,
                 (100. * cache->protopchits) / cache->tests,
                 (100. * (cache->addpchits + cache->setpchits))
                 / cache->settests,
+                (100. * cache->inipchits) / cache->initests,
                 (100. * (cache->tests - cache->misses)) / cache->tests);
         fflush(fp);
     }
@@ -4290,16 +4295,16 @@ interrupt:
                                 }
                             } else {
                                 scope = js_GetMutableScope(cx, obj);
-                                if (!scope)
+                                if (!scope) {
+                                    JS_UNLOCK_OBJ(cx, obj);
                                     goto error;
+                                }
                             }
 
                             if (sprop->parent == scope->lastProp &&
                                 !SCOPE_HAD_MIDDLE_DELETE(scope) &&
-                                !scope->table &&
                                 SPROP_HAS_STUB_SETTER(sprop) &&
-                                (slot = sprop->slot) == scope->map.freeslot &&
-                                slot < STOBJ_NSLOTS(obj)) {
+                                (slot = sprop->slot) == scope->map.freeslot) {
                                 /*
                                  * Fast path: adding a plain old property that
                                  * was once at the frontier of the property
@@ -4316,15 +4321,62 @@ interrupt:
 
                                 PCMETER(cache->pchits++);
                                 PCMETER(cache->addpchits++);
-                                ++scope->map.freeslot;
-                                if (!scope->lastProp ||
-                                    scope->shape == scope->lastProp->shape) {
-                                    scope->shape = sprop->shape;
+
+                                /*
+                                 * Beware classes such as Function that use
+                                 * the reserveSlots hook to allocate a number
+                                 * of reserved slots that may vary with obj.
+                                 */
+                                if (slot < STOBJ_NSLOTS(obj) &&
+                                    !OBJ_GET_CLASS(cx, obj)->reserveSlots) {
+                                    ++scope->map.freeslot;
                                 } else {
-                                    SCOPE_GENERATE_PCTYPE(cx, scope);
+                                    if (!js_AllocSlot(cx, obj, &slot)) {
+                                        JS_UNLOCK_SCOPE(cx, scope);
+                                        goto error;
+                                    }
                                 }
-                                ++scope->entryCount;
-                                scope->lastProp = sprop;
+
+                                /*
+                                 * If this obj's number of reserved slots
+                                 * differed, or if something created a hash
+                                 * table for scope, we must pay the price of
+                                 * js_AddScopeProperty.
+                                 *
+                                 * If slot does not match the cached sprop's
+                                 * slot, update the cache entry in the hope
+                                 * that obj and other instances with the same
+                                 * number of reserved slots are now "hot".
+                                 */
+                                if (slot != sprop->slot || scope->table) {
+                                    JSScopeProperty *sprop2 =
+                                        js_AddScopeProperty(cx, scope,
+                                                            sprop->id,
+                                                            sprop->getter,
+                                                            sprop->setter,
+                                                            slot,
+                                                            sprop->attrs,
+                                                            sprop->flags,
+                                                            sprop->shortid);
+                                    if (!sprop2) {
+                                        js_FreeSlot(cx, obj, slot);
+                                        JS_UNLOCK_SCOPE(cx, scope);
+                                        goto error;
+                                    }
+                                    if (sprop2 != sprop) {
+                                        PCMETER(cache->slotchanges++);
+                                        JS_ASSERT(slot != sprop->slot &&
+                                                  slot == sprop2->slot &&
+                                                  sprop2->id == sprop->id);
+                                        entry->vword = SPROP_TO_PCVAL(sprop2);
+                                    }
+                                    sprop = sprop2;
+                                } else {
+                                    SCOPE_EXTEND_SHAPE(cx, scope, sprop);
+                                    ++scope->entryCount;
+                                    scope->lastProp = sprop;
+                                }
+
                                 GC_WRITE_BARRIER(cx, scope,
                                                  LOCKED_OBJ_GET_SLOT(obj, slot),
                                                  rval);
@@ -4381,7 +4433,45 @@ interrupt:
           END_CASE(JSOP_SETPROP)
 
           BEGIN_CASE(JSOP_GETELEM)
-            ELEMENT_OP(-1, OBJ_GET_PROPERTY(cx, obj, id, &rval));
+            /* Open-coded ELEMENT_OP optimized for strings and dense arrays. */
+            SAVE_SP_AND_PC(fp);
+            lval = FETCH_OPND(-2);
+            rval = FETCH_OPND(-1);
+            if (JSVAL_IS_STRING(lval) && JSVAL_IS_INT(rval)) {
+                str = JSVAL_TO_STRING(lval);
+                i = JSVAL_TO_INT(rval);
+                if ((size_t)i < JSSTRING_LENGTH(str)) {
+                    str = js_GetUnitString(cx, str, (size_t)i);
+                    if (!str)
+                        goto error;
+                    rval = STRING_TO_JSVAL(str);
+                    goto end_getelem;
+                }
+            }
+
+            VALUE_TO_OBJECT(cx, -2, lval, obj);
+            if (JSVAL_IS_INT(rval)) {
+                if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
+                    jsuint length;
+                    
+                    length = ARRAY_DENSE_LENGTH(obj);
+                    i = JSVAL_TO_INT(rval);
+                    if ((jsuint)i < length && 
+                        i < obj->fslots[JSSLOT_ARRAY_LENGTH]) {
+                        rval = obj->dslots[i];
+                        if (rval != JSVAL_HOLE)
+                            goto end_getelem;
+                    }
+                }
+                id = INT_JSVAL_TO_JSID(rval);
+            } else {
+                if (!InternNonIntElementId(cx, obj, rval, &id))
+                    goto error;
+            }
+
+            if (!OBJ_GET_PROPERTY(cx, obj, id, &rval))
+                goto error;
+          end_getelem:
             sp--;
             STORE_OPND(-1, rval);
           END_CASE(JSOP_GETELEM)
@@ -4398,7 +4488,27 @@ interrupt:
 
           BEGIN_CASE(JSOP_SETELEM)
             rval = FETCH_OPND(-1);
-            ELEMENT_OP(-2, OBJ_SET_PROPERTY(cx, obj, id, &rval));
+            SAVE_SP_AND_PC(fp);
+            FETCH_OBJECT(cx, -3, lval, obj);
+            FETCH_ELEMENT_ID(obj, -2, id);
+            if (OBJ_IS_DENSE_ARRAY(cx, obj) && JSID_IS_INT(id)) {
+                jsuint length;
+
+                length = ARRAY_DENSE_LENGTH(obj);
+                i = JSID_TO_INT(id);
+                if ((jsuint)i < length) {
+                    if (obj->dslots[i] == JSVAL_HOLE) {
+                        if (i >= obj->fslots[JSSLOT_ARRAY_LENGTH])
+                            obj->fslots[JSSLOT_ARRAY_LENGTH] = i + 1;
+                        obj->fslots[JSSLOT_ARRAY_COUNT]++;
+                    }
+                    obj->dslots[i] = rval;
+                    goto end_setelem;
+                }
+            }
+            if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
+                goto error;
+        end_setelem:
             sp -= 2;
             STORE_OPND(-1, rval);
           END_CASE(JSOP_SETELEM)
@@ -5788,28 +5898,127 @@ interrupt:
           END_CASE(JSOP_ENDINIT)
 
           BEGIN_CASE(JSOP_INITPROP)
-            /* Get the immediate property name into id. */
-            LOAD_ATOM(0);
-            id = ATOM_TO_JSID(atom);
-            /* Pop the property's value into rval. */
+            /* Load the property's initial value into rval. */
             JS_ASSERT(sp - fp->spbase >= 2);
             rval = FETCH_OPND(-1);
-            i = -1;
-            SAVE_SP_AND_PC(fp);
-            goto do_init;
+
+            /* Load the object being initialized into lval/obj. */
+            lval = FETCH_OPND(-2);
+            obj = JSVAL_TO_OBJECT(lval);
+            JS_ASSERT(OBJ_IS_NATIVE(obj));
+            JS_ASSERT(!OBJ_GET_CLASS(cx, obj)->reserveSlots);
+            JS_ASSERT(!(LOCKED_OBJ_GET_CLASS(obj)->flags &
+                        JSCLASS_SHARE_ALL_PROPERTIES));
+
+            do {
+                JSScope *scope;
+                uint32 kshape;
+                JSPropertyCache *cache;
+                JSPropCacheEntry *entry;
+
+                JS_LOCK_OBJ(cx, obj);
+                scope = OBJ_SCOPE(obj);
+                JS_ASSERT(!SCOPE_IS_SEALED(scope));
+                kshape = scope->shape;
+                cache = &JS_PROPERTY_CACHE(cx);
+                entry = &cache->table[PROPERTY_CACHE_HASH_PC(pc, kshape)];
+                PCMETER(cache->tests++);
+                PCMETER(cache->initests++);
+
+                if (entry->kpc == pc && entry->kshape == kshape) {
+                    PCMETER(cache->pchits++);
+                    PCMETER(cache->inipchits++);
+
+                    JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
+                    sprop = PCVAL_TO_SPROP(entry->vword);
+                    JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
+                    JS_ASSERT(SPROP_HAS_STUB_SETTER(sprop));
+                    JS_ASSERT(PCVCAP_MAKE(sprop->shape, 0, 0) == entry->vcap);
+
+                    if (scope->object != obj) {
+                        scope = js_GetMutableScope(cx, obj);
+                        if (!scope) {
+                            JS_UNLOCK_OBJ(cx, obj);
+                            goto error;
+                        }
+                    }
+
+                    JS_ASSERT(sprop->parent == scope->lastProp);
+                    JS_ASSERT(!SCOPE_HAD_MIDDLE_DELETE(scope));
+                    JS_ASSERT(!scope->table || !SCOPE_HAS_PROPERTY(scope, sprop));
+
+                    slot = sprop->slot;
+                    JS_ASSERT(slot == scope->map.freeslot);
+                    if (slot < STOBJ_NSLOTS(obj)) {
+                        ++scope->map.freeslot;
+                    } else {
+                        if (!js_AllocSlot(cx, obj, &slot)) {
+                            JS_UNLOCK_SCOPE(cx, scope);
+                            goto error;
+                        }
+                        JS_ASSERT(slot == sprop->slot);
+                    }
+
+                    JS_ASSERT(!scope->lastProp ||
+                              scope->shape == scope->lastProp->shape);
+                    if (scope->table) {
+                        JSScopeProperty *sprop2 =
+                            js_AddScopeProperty(cx, scope, sprop->id,
+                                                sprop->getter, sprop->setter,
+                                                slot, sprop->attrs,
+                                                sprop->flags, sprop->shortid);
+                        if (!sprop2) {
+                            js_FreeSlot(cx, obj, slot);
+                            JS_UNLOCK_SCOPE(cx, scope);
+                            goto error;
+                        }
+                        JS_ASSERT(sprop2 == sprop);
+                    } else {
+                        scope->shape = sprop->shape;
+                        ++scope->entryCount;
+                        scope->lastProp = sprop;
+                    }
+
+                    GC_WRITE_BARRIER(cx, scope,
+                                     LOCKED_OBJ_GET_SLOT(obj, slot),
+                                     rval);
+                    LOCKED_OBJ_SET_SLOT(obj, slot, rval);
+                    JS_UNLOCK_SCOPE(cx, scope);
+                    break;
+                }
+
+                PCMETER(cache->inipcmisses++);
+                JS_UNLOCK_SCOPE(cx, scope);
+
+                /* Get the immediate property name into id. */
+                LOAD_ATOM(0);
+                id = ATOM_TO_JSID(atom);
+                i = -1;
+                SAVE_SP_AND_PC(fp);
+
+                /* Set the property named by obj[id] to rval. */
+                if (!js_CheckRedeclaration(cx, obj, id, JSPROP_INITIALIZER,
+                                           NULL, NULL)) {
+                    goto error;
+                }
+                if (!js_SetPropertyHelper(cx, obj, id, &rval, &entry))
+                    goto error;
+            } while (0);
+
+            /* Common tail for property cache hit and miss cases. */
+            sp--;
+          END_CASE(JSOP_INITPROP);
 
           BEGIN_CASE(JSOP_INITELEM)
             /* Pop the element's value into rval. */
             JS_ASSERT(sp - fp->spbase >= 3);
             rval = FETCH_OPND(-1);
-            i = -2;
             SAVE_SP_AND_PC(fp);
             FETCH_ELEMENT_ID(obj, -2, id);
 
-          do_init:
             /* Find the object being initialized at top of stack. */
-            lval = FETCH_OPND(i-1);
-            JS_ASSERT(JSVAL_IS_OBJECT(lval));
+            lval = FETCH_OPND(-3);
+            JS_ASSERT(!JSVAL_IS_PRIMITIVE(lval));
             obj = JSVAL_TO_OBJECT(lval);
 
             /* Set the property named by obj[id] to rval. */
@@ -5819,9 +6028,8 @@ interrupt:
             }
             if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
                 goto error;
-            sp += i;
-            len = js_CodeSpec[op].length;
-            DO_NEXT_OP(len);
+            sp -= 2;
+          END_CASE(JSOP_INITELEM);
 
 #if JS_HAS_SHARP_VARS
           BEGIN_CASE(JSOP_DEFSHARP)

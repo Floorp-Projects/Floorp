@@ -18,8 +18,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Niels Provos <niels@google.com> (original author)d
-
+#   Niels Provos <niels@google.com> (original author)
 #   Fritz Schneider <fritz@google.com>
 #
 # Alternatively, the contents of this file may be used under the terms of

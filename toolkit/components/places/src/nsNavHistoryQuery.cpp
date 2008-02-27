@@ -167,7 +167,6 @@ static void SetOptionsKeyUint32(const nsCString& aValue,
 #define QUERYKEY_FORCE_ORIGINAL_TITLE "originalTitle"
 #define QUERYKEY_INCLUDE_HIDDEN "includeHidden"
 #define QUERYKEY_SHOW_SESSIONS "showSessions"
-#define QUERYKEY_APPLY_OPTIONS_TO_CONTAINERS "applyOptionsToContainers"
 #define QUERYKEY_MAX_RESULTS "maxResults"
 #define QUERYKEY_QUERY_TYPE "queryType"
 
@@ -417,15 +416,6 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     nsMemory::Free(folders);
   }
 
-  // grouping
-  PRUint32 groupCount;
-  const PRUint16* groups = options->GroupingMode(&groupCount);
-  for (PRUint32 i = 0; i < groupCount; i ++) {
-    AppendAmpersandIfNonempty(queryString);
-    queryString += NS_LITERAL_CSTRING(QUERYKEY_GROUP "=");
-    AppendInt16(queryString, groups[i]);
-  }
-
   // sorting
   if (options->SortingMode() != nsINavHistoryQueryOptions::SORT_BY_NONE) {
     AppendAmpersandIfNonempty(queryString);
@@ -501,12 +491,6 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     queryString += NS_LITERAL_CSTRING(QUERYKEY_SHOW_SESSIONS "=1");
   }
 
-  // apply options to containers
-  if (options->ApplyOptionsToContainers()) {
-    AppendAmpersandIfNonempty(queryString);
-    queryString += NS_LITERAL_CSTRING(QUERYKEY_APPLY_OPTIONS_TO_CONTAINERS "=1");
-  }
-
   // max results
   if (options->MaxResults()) {
     AppendAmpersandIfNonempty(queryString);
@@ -577,7 +561,6 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
   if (aTokens.Length() == 0)
     return NS_OK; // nothing to do
 
-  nsTArray<PRUint16> groups;
   nsTArray<PRInt64> folders;
 
   nsCOMPtr<nsNavHistoryQuery> query(new nsNavHistoryQuery());
@@ -695,15 +678,6 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
       if (! aQueries->AppendObject(query))
         return NS_ERROR_OUT_OF_MEMORY;
 
-    // grouping
-    } else if (kvp.key.EqualsLiteral(QUERYKEY_GROUP)) {
-      PRUint32 grouping = kvp.value.ToInteger((PRInt32*)&rv);
-      if (NS_SUCCEEDED(rv)) {
-        groups.AppendElement(grouping);
-      } else {
-        NS_WARNING("Bad number for grouping in query");
-      }
-
     // sorting mode
     } else if (kvp.key.EqualsLiteral(QUERYKEY_SORT)) {
       SetOptionsKeyUint16(kvp.value, aOptions,
@@ -754,10 +728,6 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
     } else if (kvp.key.EqualsLiteral(QUERYKEY_SHOW_SESSIONS)) {
       SetOptionsKeyBool(kvp.value, aOptions,
                         &nsINavHistoryQueryOptions::SetShowSessions);
-    // apply options to containers
-    } else if (kvp.key.EqualsLiteral(QUERYKEY_APPLY_OPTIONS_TO_CONTAINERS)) {
-      SetOptionsKeyBool(kvp.value, aOptions,
-                        &nsINavHistoryQueryOptions::SetApplyOptionsToContainers);
     // max results
     } else if (kvp.key.EqualsLiteral(QUERYKEY_MAX_RESULTS)) {
       SetOptionsKeyUint32(kvp.value, aOptions,
@@ -775,7 +745,6 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
 
   if (folders.Length() != 0)
     query->SetFolders(folders.Elements(), folders.Length());
-  aOptions->SetGroupingMode(groups.Elements(), groups.Length());
 
   return NS_OK;
 }
@@ -1097,54 +1066,6 @@ NS_IMETHODIMP nsNavHistoryQuery::Clone(nsINavHistoryQuery** _retval)
 // nsNavHistoryQueryOptions
 NS_IMPL_ISUPPORTS2(nsNavHistoryQueryOptions, nsNavHistoryQueryOptions, nsINavHistoryQueryOptions)
 
-NS_IMETHODIMP
-nsNavHistoryQueryOptions::GetGroupingMode(PRUint32 *aGroupCount,
-                                          PRUint16** aGroupingMode)
-{
-  if (mGroupCount == 0) {
-    *aGroupCount = 0;
-    *aGroupingMode = nsnull;
-    return NS_OK;
-  }
-  *aGroupingMode = static_cast<PRUint16*>
-                              (nsMemory::Alloc(sizeof(PRUint16) * mGroupCount));
-  if (! *aGroupingMode)
-    return NS_ERROR_OUT_OF_MEMORY;
-  for(PRUint32 i = 0; i < mGroupCount; i ++)
-    (*aGroupingMode)[i] = mGroupings[i];
-  *aGroupCount = mGroupCount;
-  return NS_OK;
-}
-NS_IMETHODIMP
-nsNavHistoryQueryOptions::SetGroupingMode(const PRUint16 *aGroupingMode,
-                                          PRUint32 aGroupCount)
-{
-  // check input
-  PRUint32 i;
-  for (i = 0; i < aGroupCount; i ++) {
-    if (aGroupingMode[i] > GROUP_BY_FOLDER)
-      return NS_ERROR_INVALID_ARG;
-  }
-
-  if (mGroupings) {
-    delete[] mGroupings;
-    mGroupings = nsnull;
-    mGroupCount = 0;
-  }
-  if (! aGroupCount)
-    return NS_OK;
-
-  mGroupings = new PRUint16[aGroupCount];
-  NS_ENSURE_TRUE(mGroupings, NS_ERROR_OUT_OF_MEMORY);
-
-  for (i = 0; i < aGroupCount; ++i) {
-    mGroupings[i] = aGroupingMode[i];
-  }
-
-  mGroupCount = aGroupCount;
-  return NS_OK;
-}
-
 // sortingMode
 NS_IMETHODIMP
 nsNavHistoryQueryOptions::GetSortingMode(PRUint16* aMode)
@@ -1184,7 +1105,7 @@ nsNavHistoryQueryOptions::GetResultType(PRUint16* aType)
 NS_IMETHODIMP
 nsNavHistoryQueryOptions::SetResultType(PRUint16 aType)
 {
-  if (aType > RESULTS_AS_FULL_VISIT)
+  if (aType > RESULTS_AS_TAG_QUERY)
     return NS_ERROR_INVALID_ARG;
   mResultType = aType;
   return NS_OK;
@@ -1287,20 +1208,6 @@ nsNavHistoryQueryOptions::SetShowSessions(PRBool aShowSessions)
   return NS_OK;
 }
 
-// applyOptionsToContainers
-NS_IMETHODIMP
-nsNavHistoryQueryOptions::GetApplyOptionsToContainers(PRBool* aApplyOptionsToContainers)
-{
-  *aApplyOptionsToContainers = mApplyOptionsToContainers;
-  return NS_OK;
-}
-NS_IMETHODIMP
-nsNavHistoryQueryOptions::SetApplyOptionsToContainers(PRBool aApplyOptionsToContainers)
-{
-  mApplyOptionsToContainers = aApplyOptionsToContainers;
-  return NS_OK;
-}
-
 // maxResults
 NS_IMETHODIMP
 nsNavHistoryQueryOptions::GetMaxResults(PRUint32* aMaxResults)
@@ -1349,21 +1256,9 @@ nsNavHistoryQueryOptions::Clone(nsNavHistoryQueryOptions **aResult)
   nsRefPtr<nsNavHistoryQueryOptions> resultHolder(result);
   result->mSort = mSort;
   result->mResultType = mResultType;
-  result->mGroupCount = mGroupCount;
-  if (mGroupCount) {
-    result->mGroupings = new PRUint16[mGroupCount];
-    if (! result->mGroupings) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    for (PRUint32 i = 0; i < mGroupCount; i ++)
-      result->mGroupings[i] = mGroupings[i];
-  } else {
-    result->mGroupCount = nsnull;
-  }
   result->mExcludeItems = mExcludeItems;
   result->mExcludeQueries = mExcludeQueries;
   result->mShowSessions = mShowSessions;
-  result->mApplyOptionsToContainers = mApplyOptionsToContainers;
   result->mExpandQueries = mExpandQueries;
   result->mMaxResults = mMaxResults;
   result->mQueryType = mQueryType;

@@ -498,9 +498,8 @@ WebContentConverterRegistrar.prototype = {
 
   /**
    * See nsIWebContentHandlerRegistrar
-   * This is the web front end into the registration system, so a prompt to 
-   * confirm the registration is provided, and the result is saved to 
-   * preferences.
+   * If a DOM window is provided, then the request came from content, so we
+   * prompt the user to confirm the registration.
    */
   registerContentHandler: 
   function WCCR_registerContentHandler(aContentType, aURIString, aTitle, aContentWindow) {
@@ -513,12 +512,16 @@ WebContentConverterRegistrar.prototype = {
     if (contentType != TYPE_MAYBE_FEED)
       return;
 
-    var uri = this._checkAndGetURI(aURIString, aContentWindow);
-
-    var browserWindow = this._getBrowserWindowForContentWindow(aContentWindow);
-    var browserElement = this._getBrowserForContentWindow(browserWindow, aContentWindow);
-    var notificationBox = browserWindow.getBrowser().getNotificationBox(browserElement);
-    this._appendFeedReaderNotification(uri, aTitle, notificationBox);
+    if (aContentWindow) {
+      var uri = this._checkAndGetURI(aURIString, aContentWindow);
+  
+      var browserWindow = this._getBrowserWindowForContentWindow(aContentWindow);
+      var browserElement = this._getBrowserForContentWindow(browserWindow, aContentWindow);
+      var notificationBox = browserWindow.getBrowser().getNotificationBox(browserElement);
+      this._appendFeedReaderNotification(uri, aTitle, notificationBox);
+    }
+    else
+      this._registerContentHandler(contentType, aURIString, aTitle);
   },
 
   /**
@@ -608,25 +611,8 @@ WebContentConverterRegistrar.prototype = {
           var outer = aButtonInfo._outer;
 
           // The reader could have been added from another window mean while
-          if (!outer.getWebContentHandlerByURI(TYPE_MAYBE_FEED, uri)) {
+          if (!outer.getWebContentHandlerByURI(TYPE_MAYBE_FEED, uri))
             outer._registerContentHandler(TYPE_MAYBE_FEED, uri, name);
-            outer._saveContentHandlerToPrefs(TYPE_MAYBE_FEED, uri, name);
-
-            // Make the new handler the last-selected reader in the preview page
-            // and make sure the preview page is shown the next time a feed is visited
-            var pb = Cc["@mozilla.org/preferences-service;1"].
-                     getService(Ci.nsIPrefService).getBranch(null);
-            pb.setCharPref(PREF_SELECTED_READER, "web");
-
-            var supportsString = 
-              Cc["@mozilla.org/supports-string;1"].
-              createInstance(Ci.nsISupportsString);
-              supportsString.data = uri;
-            pb.setComplexValue(PREF_SELECTED_WEB, Ci.nsISupportsString,
-                               supportsString);
-            pb.setCharPref(PREF_SELECTED_ACTION, "ask");
-            outer._setAutoHandler(TYPE_MAYBE_FEED, null);
-          }
 
           // avoid reference cycles
           aButtonInfo._outer = null;
@@ -727,6 +713,39 @@ WebContentConverterRegistrar.prototype = {
   },
   
   /**
+   * Register a web service handler for a content type.
+   * 
+   * @param   contentType
+   *          the content type being handled
+   * @param   uri
+   *          the URI of the web service
+   * @param   title
+   *          the human readable name of the web service
+   */
+  _registerContentHandler:
+  function WCCR__registerContentHandler(contentType, uri, title) {
+    this._updateContentTypeHandlerMap(contentType, uri, title);
+    this._saveContentHandlerToPrefs(contentType, uri, title);
+
+    if (contentType == TYPE_MAYBE_FEED) {
+      // Make the new handler the last-selected reader in the preview page
+      // and make sure the preview page is shown the next time a feed is visited
+      var pb = Cc["@mozilla.org/preferences-service;1"].
+               getService(Ci.nsIPrefService).getBranch(null);
+      pb.setCharPref(PREF_SELECTED_READER, "web");
+  
+      var supportsString = 
+        Cc["@mozilla.org/supports-string;1"].
+        createInstance(Ci.nsISupportsString);
+        supportsString.data = uri;
+      pb.setComplexValue(PREF_SELECTED_WEB, Ci.nsISupportsString,
+                         supportsString);
+      pb.setCharPref(PREF_SELECTED_ACTION, "ask");
+      this._setAutoHandler(TYPE_MAYBE_FEED, null);
+    }
+  },
+
+  /**
    * Update the content type -> handler map. This mapping is not persisted, use
    * registerContentHandler or _saveContentHandlerToPrefs for that purpose.
    * @param   contentType
@@ -736,8 +755,8 @@ WebContentConverterRegistrar.prototype = {
    * @param   title
    *          The human readable name of the web service
    */
-  _registerContentHandler: 
-  function WCCR__registerContentHandler(contentType, uri, title) {
+  _updateContentTypeHandlerMap: 
+  function WCCR__updateContentTypeHandlerMap(contentType, uri, title) {
     if (!(contentType in this._contentTypes))
       this._contentTypes[contentType] = [];
 
@@ -805,7 +824,7 @@ WebContentConverterRegistrar.prototype = {
       var uri = branch.getComplexValue("uri", Ci.nsIPrefLocalizedString).data;
       var title = branch.getComplexValue("title",
                                          Ci.nsIPrefLocalizedString).data;
-      this._registerContentHandler(type, uri, title);
+      this._updateContentTypeHandlerMap(type, uri, title);
     }
     catch(ex) {
       // do nothing, the next branch might have values

@@ -37,7 +37,7 @@
 # ***** END LICENSE BLOCK *****
 
 var SidebarUtils = {
-  handleClick: function SU_handleClick(aTree, aEvent, aGutterSelect) {
+  handleTreeClick: function SU_handleTreeClick(aTree, aEvent, aGutterSelect) {
     var tbo = aTree.treeBoxObject;
 
     var row = { }, col = { }, obj = { };
@@ -67,10 +67,15 @@ var SidebarUtils = {
       // do this *before* attempting to load the link since openURL uses
       // selection as an indication of which link to load. 
       tbo.view.selection.select(row.value);
-      aTree.controller.openSelectedNodeWithEvent(aEvent);
+      PlacesUtils.openNodeWithEvent(aTree.selectedNode, aEvent);
     }
   },
-  
+
+  handleTreeKeyPress: function SU_handleTreeKeyPress(aEvent) {
+    if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN)
+      PlacesUtils.openNodeWithEvent(aEvent.target.selectedNode, aEvent);
+  },
+
   /**
    * The following function displays the URL of a node that is being
    * hovered over.

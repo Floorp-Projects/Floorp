@@ -135,6 +135,14 @@ treechildren::-moz-tree-image(query) {
   list-style-image: url("chrome://browser/skin/places/query.png");
 }
 
+/* We want some queries to look like ordinary folders. This must come
+   after the (title, query) selector, or it would get overridden. */
+treechildren::-moz-tree-image(title, query, folder),
+treechildren::-moz-tree-image(title, query, folder, open) {
+  list-style-image: url("chrome://global/skin/tree/folder.png");
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
 /* FIXME this should make the date field invisible, but only does it for
          unselected items and maybe won't work for different color schemes. */
 treechildren::-moz-tree-cell-text(date, session-continue) {

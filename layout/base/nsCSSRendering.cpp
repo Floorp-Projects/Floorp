@@ -68,6 +68,7 @@
 #include "nsIHTMLDocument.h"
 #include "nsLayoutUtils.h"
 #include "nsINameSpaceManager.h"
+#include "nsBlockFrame.h"
 
 #include "gfxContext.h"
 
@@ -105,7 +106,7 @@ enum ePathTypes{
 struct InlineBackgroundData
 {
   InlineBackgroundData()
-      : mFrame(nsnull)
+      : mFrame(nsnull), mBlockFrame(nsnull)
   {
   }
 
@@ -116,18 +117,62 @@ struct InlineBackgroundData
   void Reset()
   {
     mBoundingBox.SetRect(0,0,0,0);
-    mContinuationPoint = mUnbrokenWidth = 0;
-    mFrame = nsnull;    
+    mContinuationPoint = mLineContinuationPoint = mUnbrokenWidth = 0;
+    mFrame = mBlockFrame = nsnull;
   }
 
   nsRect GetContinuousRect(nsIFrame* aFrame)
   {
     SetFrame(aFrame);
 
+    nscoord x;
+    if (mBidiEnabled) {
+      x = mLineContinuationPoint;
+
+      // Scan continuations on the same line as aFrame and accumulate the widths
+      // of frames that are to the left (if this is an LTR block) or right 
+      // (if it's RTL) of the current one.
+      PRBool isRtlBlock = (mBlockFrame->GetStyleVisibility()->mDirection ==
+                           NS_STYLE_DIRECTION_RTL);      
+      nscoord curOffset = aFrame->GetOffsetTo(mBlockFrame).x;
+
+      nsIFrame* inlineFrame = aFrame->GetPrevContinuation();
+      // If the continuation is fluid we know inlineFrame is not on the same line.
+      // If it's not fluid, we need to test furhter to be sure.
+      while (inlineFrame && !inlineFrame->GetNextInFlow() &&
+             AreOnSameLine(aFrame, inlineFrame)) {
+        nscoord frameXOffset = inlineFrame->GetOffsetTo(mBlockFrame).x;
+        if(isRtlBlock == (frameXOffset >= curOffset)) {
+          x += inlineFrame->GetSize().width;
+        }
+        inlineFrame = inlineFrame->GetPrevContinuation();
+      }
+
+      inlineFrame = aFrame->GetNextContinuation();
+      while (inlineFrame && !inlineFrame->GetPrevInFlow() &&
+             AreOnSameLine(aFrame, inlineFrame)) {
+        nscoord frameXOffset = inlineFrame->GetOffsetTo(mBlockFrame).x;
+        if(isRtlBlock == (frameXOffset >= curOffset)) {
+          x += inlineFrame->GetSize().width;
+        }
+        inlineFrame = inlineFrame->GetNextContinuation();
+      }
+      if (isRtlBlock) {
+        // aFrame itself is also to the right of its left edge, so add its width.
+        x += aFrame->GetSize().width;
+        // x is now the distance from the left edge of aFrame to the right edge
+        // of the unbroken content. Change it to indicate the distance from the
+        // left edge of the unbroken content to the left edge of aFrame.
+        x = mUnbrokenWidth - x;
+      }
+    } else {
+      x = mContinuationPoint;
+    }
+
     // Assume background-origin: border and return a rect with offsets
     // relative to (0,0).  If we have a different background-origin,
     // then our rect should be deflated appropriately by our caller.
-    return nsRect(-mContinuationPoint, 0, mUnbrokenWidth, mFrame->GetSize().height);
+    return nsRect(-x, 0, mUnbrokenWidth, mFrame->GetSize().height);
   }
 
   nsRect GetBoundingRect(nsIFrame* aFrame)
@@ -152,6 +197,10 @@ protected:
   nscoord       mUnbrokenWidth;
   nsRect        mBoundingBox;
 
+  PRBool        mBidiEnabled;
+  nsBlockFrame* mBlockFrame;
+  nscoord       mLineContinuationPoint;
+  
   void SetFrame(nsIFrame* aFrame)
   {
     NS_PRECONDITION(aFrame, "Need a frame");
@@ -169,6 +218,12 @@ protected:
     // point before we cache the new frame.
     mContinuationPoint += mFrame->GetSize().width;
 
+    // If this a new line, update mLineContinuationPoint.
+    if (mBidiEnabled &&
+        (aFrame->GetPrevInFlow() || !AreOnSameLine(mFrame, aFrame))) {
+       mLineContinuationPoint = mContinuationPoint;
+    }
+    
     mFrame = aFrame;
   }
 
@@ -197,6 +252,30 @@ protected:
     }
 
     mFrame = aFrame;
+
+    mBidiEnabled = aFrame->PresContext()->BidiEnabled();
+    if (mBidiEnabled) {
+      // Find the containing block frame
+      nsIFrame* frame = aFrame;
+      nsresult rv = NS_ERROR_FAILURE;
+      while (frame &&
+             frame->IsFrameOfType(nsIFrame::eLineParticipant) &&
+             NS_FAILED(rv)) {
+        frame = frame->GetParent();
+        rv = frame->QueryInterface(kBlockFrameCID, (void**)&mBlockFrame);
+      }
+      NS_ASSERTION(NS_SUCCEEDED(rv) && mBlockFrame, "Cannot find containing block.");
+
+      mLineContinuationPoint = mContinuationPoint;
+    }
+  }
+  
+  PRBool AreOnSameLine(nsIFrame* aFrame1, nsIFrame* aFrame2) {
+    // Assumes that aFrame1 and aFrame2 are both decsendants of mBlockFrame.
+    PRBool isValid1, isValid2;
+    nsBlockInFlowLineIterator it1(mBlockFrame, aFrame1, &isValid1);
+    nsBlockInFlowLineIterator it2(mBlockFrame, aFrame2, &isValid2);
+    return isValid1 && isValid2 && it1.GetLine() == it2.GetLine();
   }
 };
 

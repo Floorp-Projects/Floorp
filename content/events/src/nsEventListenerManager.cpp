@@ -1468,29 +1468,31 @@ nsEventListenerManager::PrepareToUseCaretPosition(nsIWidget* aEventWidget,
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
   NS_ENSURE_TRUE(node, PR_FALSE);
   nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-  for ( ; content; content = content->GetParent()) {
-    if (!content->IsNativeAnonymous()) {
-      // It seems like selCon->ScrollSelectionIntoView should be enough, but it's
-      // not. The problem is that scrolling the selection into view when it is
-      // below the current viewport will align the top line of the frame exactly
-      // with the bottom of the window. This is fine, BUT, the popup event causes
-      // the control to be re-focused which does this exact call to
-      // ScrollContentIntoView, which has a one-pixel disagreement of whether the
-      // frame is actually in view. The result is that the frame is aligned with
-      // the top of the window, but the menu is still at the bottom.
-      //
-      // Doing this call first forces the frame to be in view, eliminating the
-      // problem. The only difference in the result is that if your cursor is in
-      // an edit box below the current view, you'll get the edit box aligned with
-      // the top of the window. This is arguably better behavior anyway.
-      rv = aShell->ScrollContentIntoView(content,
-                                         NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,
-                                         NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
-      NS_ENSURE_SUCCESS(rv, PR_FALSE);
-      frame = aShell->GetPrimaryFrameFor(content);
-      NS_ASSERTION(frame, "No frame for focused content?");
-      break;
-    }
+  if (content) {
+    nsIContent* nonNative = content->FindFirstNonNativeAnonymous();
+    content = nonNative;
+  }
+
+  if (content) {
+    // It seems like selCon->ScrollSelectionIntoView should be enough, but it's
+    // not. The problem is that scrolling the selection into view when it is
+    // below the current viewport will align the top line of the frame exactly
+    // with the bottom of the window. This is fine, BUT, the popup event causes
+    // the control to be re-focused which does this exact call to
+    // ScrollContentIntoView, which has a one-pixel disagreement of whether the
+    // frame is actually in view. The result is that the frame is aligned with
+    // the top of the window, but the menu is still at the bottom.
+    //
+    // Doing this call first forces the frame to be in view, eliminating the
+    // problem. The only difference in the result is that if your cursor is in
+    // an edit box below the current view, you'll get the edit box aligned with
+    // the top of the window. This is arguably better behavior anyway.
+    rv = aShell->ScrollContentIntoView(content,
+                                       NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,
+                                       NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    frame = aShell->GetPrimaryFrameFor(content);
+    NS_WARN_IF_FALSE(frame, "No frame for focused content?");
   }
 
   // Actually scroll the selection (ie caret) into view. Note that this must

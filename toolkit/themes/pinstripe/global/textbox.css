@@ -125,9 +125,16 @@ textbox.plain {
   -moz-border-bottom-colors: #9F9F9F #EEE -moz-Field;
   -moz-border-right-colors: #7F7F7F #EEE -moz-Field;
   -moz-border-left-colors: #7F7F7F #EFEFEF -moz-Field;
-  -moz-border-radius: 11.5px;
+  -moz-border-radius: 11px;
   background: url("chrome://global/skin/icons/search-textbox.png") -moz-Field no-repeat 1px center;
   -moz-background-clip: padding !important;
   padding: 0 8px;
   -moz-padding-start: 17px;
 }
+
+#search-box[focused="true"] {
+  outline: 2px solid #4A8BC7;
+  outline-offset: -2px;
+  -moz-outline-radius: 11px;
+}
+

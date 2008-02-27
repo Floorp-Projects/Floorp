@@ -4186,7 +4186,7 @@ nsRuleNode::ComputeTableBorderData(void* aStartStruct,
     table->mCaptionSide = parentTable->mCaptionSide;
   }
   else if (eCSSUnit_Initial == tableData.mCaptionSide.GetUnit()) {
-    table->mCaptionSide = NS_SIDE_TOP;
+    table->mCaptionSide = NS_STYLE_CAPTION_SIDE_TOP;
   }
 
   // empty-cells: enum, inherit

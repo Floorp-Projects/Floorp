@@ -713,30 +713,16 @@ nsCanvasRenderingContextGLPrivate::DoDrawImageSecurityCheck(nsIURI* aURI, PRBool
     }
 
     fprintf (stderr, "DoDrawImageSecuritycheck this 4: %p\n", this);
-    nsCOMPtr<nsIScriptSecurityManager> ssm =
-        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-    if (!ssm) {
-        mCanvasElement->SetWriteOnly();
-        return;
-    }
-
-    fprintf (stderr, "DoDrawImageSecuritycheck this 5: %p\n", this);
     nsCOMPtr<nsINode> elem = do_QueryInterface(mCanvasElement);
-    if (elem && ssm) {
-        nsCOMPtr<nsIPrincipal> uriPrincipal;
-        ssm->GetCodebasePrincipal(aURI, getter_AddRefs(uriPrincipal));
-
-        if (uriPrincipal) {
-            nsresult rv = ssm->CheckSameOriginPrincipal(elem->NodePrincipal(),
-                                                        uriPrincipal);
-            if (NS_SUCCEEDED(rv)) {
-                // Same origin
-                return;
-            }
+    if (elem) {
+        rv = elem->NodePrincipal()->CheckMayLoad(aURI, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+            // Same origin
+            return;
         }
     }
 
-    fprintf (stderr, "DoDrawImageSecuritycheck this 6: %p\n", this); fflush(stderr);
+    fprintf (stderr, "DoDrawImageSecuritycheck this 5: %p\n", this); fflush(stderr);
     mCanvasElement->SetWriteOnly();
 #endif
 }

@@ -123,7 +123,7 @@ class nsCookie : public nsICookie2
     // setters
     inline void SetExpiry(PRInt64 aExpiry)        { mExpiry = aExpiry; }
     inline void SetLastAccessed(PRInt64 aTime)    { mLastAccessed = aTime; }
-    inline void SetIsSession(PRBool aIsSession)   { mIsSession = aIsSession; }
+    inline void SetIsSession(PRBool aIsSession)   { mIsSession = (PRPackedBool) aIsSession; }
     // set the creation id manually, overriding the monotonicity checks in Create().
     // use with caution!
     inline void SetCreationID(PRInt64 aID)        { mCreationID = aID; }

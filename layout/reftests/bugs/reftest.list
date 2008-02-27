@@ -96,7 +96,7 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 28811-2a.html 28811-2-ref.html # bug 38
 == 134706-4.html 134706-4-ref.html
 == 134706-5.html 134706-5-ref.html
 == 134706-6.html 134706-6-ref.html
-fails == 134706-6b.html 134706-6b-ref.html # bug 363248 (via bug 414193, anyway)
+== 134706-6b.html 134706-6b-ref.html
 == 134706-6c.html 134706-6c-ref.html
 == 134706-7.html 134706-7-ref.html
 == 139550-1a.html 139550-1-ref.html
@@ -128,22 +128,22 @@ fails == 134706-6b.html 134706-6b-ref.html # bug 363248 (via bug 414193, anyway)
 == 234686-1.html 234686-ref.html
 == 234686-2.html 234686-ref.html
 == 234686-3.html 234686-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-4.html 234686-ref.html # bug 371316 or other image scaling issue
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-5.html 234686-ref.html # bug 371316 or other image scaling issue
+== 234686-4.html 234686-ref.html
+== 234686-5.html 234686-ref.html
 == 234686-6.html 234686-ref.html
 == 234686-7.html 234686-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-8.html 234686-ref.html # bug 371316 or other image scaling issue
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-9.html 234686-ref.html # bug 371316 or other image scaling issue
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-10.html 234686-ref.html # bug 371316 or other image scaling issue
+== 234686-8.html 234686-ref.html
+== 234686-9.html 234686-ref.html
+== 234686-10.html 234686-ref.html
 == 234686-11.html 234686-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-12.html 234686-ref.html # bug 371316 or other image scaling issue
+== 234686-12.html 234686-ref.html
 == 234686-13.html 234686-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-14.html 234686-ref.html # bug 371316 or other image scaling issue
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-15.html 234686-ref.html # bug 371316 or other image scaling issue
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-16.html 234686-ref.html # bug 371316 or other image scaling issue
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-17.html 234686-ref.html # bug 371316 or other image scaling issue
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-18.html 234686-ref.html # bug 371316 or other image scaling issue
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 234686-19.html 234686-ref.html # bug 371316 or other image scaling issue
+== 234686-14.html 234686-ref.html
+== 234686-15.html 234686-ref.html
+== 234686-16.html 234686-ref.html
+== 234686-17.html 234686-ref.html
+== 234686-18.html 234686-ref.html
+== 234686-19.html 234686-ref.html
 == 234964-1.html 234964-1-ref.html
 == 234964-2.html 234964-2-ref.html
 == 235593-1.html 235593-1-ref.html
@@ -484,6 +484,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 368020-5.html 368020-5-ref.html # bug 3
 fails == 374927-1.html 374927-1-ref.html # Was broken by patch for bug 368600; fails until bug 400776 is fixed
 == 375716-1.html 375716-1-ref.html
 == 375827-1.html 375827-1-ref.html
+== 376375-1.html 376375-1-ref.html
 == 376484-1.html 376484-1-ref.html
 == 376532-1.html 376532-1-ref.html
 != 376532-2.html 376532-2-ref.html
@@ -687,6 +688,7 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 == 407016-1-b.html 407016-1-ref.html
 == 407016-2.html 407016-2-ref.html
 == 407078-1.html 407078-1-ref.html
+== 407095-1.html 407095-1-ref.html
 == 407111-1.html 407111-1-ref.html
 == 407227-1.html 407227-1-ref.html
 == 407937-1.html 407937-1-ref.html
@@ -731,3 +733,7 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 == 414123.xhtml 414123-ref.xhtml
 == 414851-1.html 414851-1-ref.html
 == 416106-1.xhtml 416106-1-ref.xhtml
+== 416752-1.html 416752-1-ref.html
+== 417676.html 417676-ref.html
+== 419060.html 419060-ref.html
+== 419531-1.html 419531-1-ref.html

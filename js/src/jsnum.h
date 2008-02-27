@@ -147,6 +147,9 @@ extern JSBool
 js_InitRuntimeNumberState(JSContext *cx);
 
 extern void
+js_TraceRuntimeNumberState(JSTracer *trc);
+
+extern void
 js_FinishRuntimeNumberState(JSContext *cx);
 
 /* Initialize the Number class, returning its prototype object. */
@@ -167,10 +170,7 @@ extern const char js_parseInt_str[];
 
 /* GC-allocate a new JS number. */
 extern jsdouble *
-js_NewDouble(JSContext *cx, jsdouble d, uintN gcflag);
-
-extern void
-js_FinalizeDouble(JSContext *cx, jsdouble *dp);
+js_NewDouble(JSContext *cx, jsdouble d);
 
 extern JSBool
 js_NewDoubleValue(JSContext *cx, jsdouble d, jsval *rval);

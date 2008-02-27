@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>postMessage's interaction with closed windows</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="browserFu.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=417075">Bug 417075</a></p>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<div id="holder"></div>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function receiveMessage(evt)
+{
+  is(evt.origin, "http://localhost:8888", "wrong origin");
+  ok(evt.source === openedWindow, "wrong source");
+
+  is(evt.data, "message", "wrong data");
+  if (evt.data !== "message")
+    return; // prevent recursion if bugs
+
+  evt.source.close();
+
+  function afterClose()
+  {
+    document.removeEventListener("message", receiveMessage, false);
+    evt.source.postMessage("NOT-RECEIVED");
+
+    var iframe = document.createElement("iframe");
+    iframe.id = "insertedIframe";
+    $("holder").appendChild(iframe);
+    iframe.addEventListener("load", iframeLoaded, false);
+    iframe.src = "postMessage_closed_helper.html?parent";
+  }
+
+  setTimeout(afterClose, 0);
+}
+
+document.addEventListener("message", receiveMessage, false);
+
+function iframeLoaded(evt)
+{
+  var iframe = $("insertedIframe");
+  iframe.removeEventListener("load", iframeLoaded, false);
+
+  var iframeWindow = iframe.contentWindow;
+  $("holder").removeChild($("insertedIframe"));
+  iframeWindow.postMessage("NOT-RECEIVED");
+
+  SimpleTest.finish();
+}
+
+var openedWindow;
+
+function run()
+{
+  openedWindow = window.open("postMessage_closed_helper.html?opener", "foobar");
+}
+
+window.addEventListener("load", run, false);
+</script>
+</pre>
+</body>
+</html>

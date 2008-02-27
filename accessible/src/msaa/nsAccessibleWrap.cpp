@@ -1394,6 +1394,9 @@ STDMETHODIMP
 nsAccessibleWrap::get_windowHandle(HWND *windowHandle)
 {
 __try {
+  *windowHandle = 0;
+  if (!mDOMNode)
+    return E_FAIL;
   void *handle = nsnull;
   nsresult rv = GetOwnerWindow(&handle);
   if (NS_FAILED(rv))

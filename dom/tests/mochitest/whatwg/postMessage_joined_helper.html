@@ -41,32 +41,17 @@ http://sub1.test1.example.org/tests/dom/tests/mochitest/whatwg/postMessage_joine
         response += " unexpected-trusted-event";
       }
 
-      var uri, domain;
+      var origin;
       if (data == "subframe-test-finished")
-      {
-        uri = "http://example.org/tests/dom/tests/mochitest/whatwg/postMessage_joined_helper2.html";
-        domain = "example.org";
-      }
+        origin = "http://example.org";
       else if (data === "start-test")
-      {
-        uri = "http://localhost:8888/tests/dom/tests/mochitest/whatwg/test_postMessage_joined.html";
-        domain = "localhost";
-      }
+        origin = "http://localhost:8888";
       else
-      {
-        uri = "unreached";
-        domain = "unreached";
-      }
+        origin = "unreached";
 
-      if (evt.uri !== uri)
+      if (evt.origin !== origin)
       {
-        response += " wrong-uri(" + evt.uri + ")";
-        response += " location(" + window.location.href + ")";
-      }
-
-      if (evt.domain !== domain)
-      {
-        response += " wrong-domain(" + evt.domain + ")";
+        response += " wrong-origin(" + evt.origin + ")";
         response += " location(" + window.location.href + ")";
       }
 

@@ -87,6 +87,56 @@ var tests =
       } catch (ex) { exh = true; }
       ise(exh, true, "removeNotification again");
       testtag_notificationbox_State(nb, "removeNotification again", null, 0);
+
+      return [1, null];
+    }
+  },
+  {
+    repeat: true,
+    test: function(nb, arr) {
+      var idx = arr[0];
+      var ntf = arr[1];
+      switch (idx) {
+        case 1:
+          // append a new notification
+          ntf = nb.appendNotification("Notification", "note", "happy.png",
+                            nb.PRIORITY_INFO_LOW, testtag_notificationbox_buttons);
+          ise(ntf && ntf.localName == "notification", true, "append notification");
+
+          // Test persistence
+          ntf.persistence++;
+
+          return [idx, ntf];
+        case 2:
+        case 3:
+          nb.removeTransientNotifications();
+
+          return [idx, ntf];
+      }
+    },
+    result: function(nb, arr) {
+      var idx = arr[0];
+      var ntf = arr[1];
+      switch (idx) {
+        case 1:
+          testtag_notificationbox_State(nb, "notification added", ntf, 1);
+          testtag_notification_State(nb, ntf, "append", "Notification", "note",
+                                     "happy.png", nb.PRIORITY_INFO_LOW);
+          ise(ntf.persistence, 1, "persistence is 1");
+
+          return [++idx, ntf];
+        case 2:
+          testtag_notificationbox_State(nb, "first removeTransientNotifications", ntf, 1);
+          testtag_notification_State(nb, ntf, "append", "Notification", "note",
+                                     "happy.png", nb.PRIORITY_INFO_LOW);
+          ise(ntf.persistence, 0, "persistence is now 0");
+
+          return [++idx, ntf];
+        case 3:
+          testtag_notificationbox_State(nb, "second removeTransientNotifications", null, 0);
+          
+          this.repeat = false;
+      }
     }
   },
   {
@@ -201,7 +251,7 @@ var tests =
       // check that the other priority types work properly
       runTimedTests(appendPriorityTests, -1, nb, nb.PRIORITY_WARNING_LOW);
     }
-  },
+  }
 ];
 
 var appendPriorityTests = [

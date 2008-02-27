@@ -41,3 +41,5 @@
 <!ENTITY name.label "Name">
 <!ENTITY nodeName.label "Knoten-Name">
 
+<!ENTITY evaluateJS.label "JavaScript evaluieren">
+

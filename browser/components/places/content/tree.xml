@@ -97,15 +97,6 @@
           var query = PlacesUtils.history.getNewQuery();
           query.searchTerms = filterString;
 
-          // Remove "group by folder" from the options list, because
-          // nsNavHistory::RecursiveGroup doesn't support it.
-          function isFolderGrouping(grouping, index, ary) {
-            return grouping != Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER;
-          }
-          var groupings = options.getGroupingMode({});
-          var folderGroupings = groupings.filter(isFolderGrouping);
-          options.setGroupingMode(folderGroupings, folderGroupings.length);
-
           if (folderRestrict) {
             query.setFolders(folderRestrict, folderRestrict.length);
             options.queryType = options.QUERY_TYPE_BOOKMARKS;
@@ -340,13 +331,6 @@
           return this.view.selection.count >= 1;
         ]]></getter>
       </property>
-
-      <!-- nsIPlacesView -->
-      <property name="hasSingleSelection">
-        <getter><![CDATA[
-          return this.view.selection.count == 1;
-        ]]></getter>
-      </property>
       
       <!-- nsIPlacesView -->
       <method name="getSelectionNodes">
@@ -419,22 +403,9 @@
       </method>
       
       <!-- nsIPlacesView -->
-      <method name="getCopyableSelection">
-        <body><![CDATA[ 
-          // XXXben implement me!
-          return this.getSelectionNodes();
-        ]]></body>
-      </method>
-
-      <!-- nsIPlacesView -->
       <method name="getDragableSelection">
         <body><![CDATA[
-          var nodes = this.getSelectionNodes();
-          for (var i = nodes.length - 1; i >= 0; i--) {
-            if (PlacesUtils.nodeIsReadOnly(nodes[i].parent))
-              nodes.splice(i, 1);
-          }
-          return nodes;
+          return this.getSelectionNodes();
         ]]></body>
       </method>
       
@@ -442,36 +413,16 @@
       <property name="selectedNode">
         <getter><![CDATA[
           var view = this.view;
-          var selection = view.selection;
-          var rc = selection.getRangeCount();
-          if (rc != 1) 
+          if (view.selection.count != 1)
             return null;
+
+          var selection = view.selection;
           var min = { }, max = { };
           selection.getRangeAt(0, min, max);
 
           return this.getResultView().nodeForTreeIndex(min.value);
         ]]></getter>
       </property>
-      
-      <!-- nsIPlacesView -->
-      <property name="selectedURINode">
-        <getter><![CDATA[
-          var view = this.view;
-          var selection = view.selection;
-          var rc = selection.getRangeCount();
-          if (rc != 1) 
-            return null;
-          var min = { }, max = { };
-          selection.getRangeAt(0, min, max);
-
-          // only URI nodes should be returned
-          var node = this.getResultView().nodeForTreeIndex(min.value);
-          if (PlacesUtils.nodeIsURI(node))
-            return node;
-          return null;
-        ]]></getter>
-      </property>
-
 
       <!-- nsIPlacesView -->
       <property name="insertionPoint">
@@ -526,7 +477,7 @@
           // into it even if it is not opened
           var itemId =
             PlacesUtils.getConcreteItemId(resultView.nodeForTreeIndex(max.value));
-          if (this.hasSingleSelection && resultView.isContainer(max.value) &&
+          if (selection.count == 1 && resultView.isContainer(max.value) &&
               (resultView.isContainerOpen(max.value) ||
                itemId == PlacesUtils.bookmarksMenuFolderId))
             orientation = Ci.nsITreeView.DROP_ON;

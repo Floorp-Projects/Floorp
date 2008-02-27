@@ -23,10 +23,8 @@
 
       if (evt.data !== "message-from-sibling")
         response += " wrong-data(" + evt.data + ")";
-      if (evt.uri !== "http://localhost:8888/tests/dom/tests/mochitest/whatwg/postMessage_onOther.html")
-        response += " failed-wrong-uri(" + evt.uri + ")";
-      if (evt.domain !== "localhost")
-        response += " failed-wrong-domain(" + evt.domain + ")";
+      if (evt.origin !== "http://localhost:8888")
+        response += " failed-wrong-origin(" + evt.origin + ")";
       if (evt.source !== window.parent.firstFrame)
         response += " failed-wrong-source";
 

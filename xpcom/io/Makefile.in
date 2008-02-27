@@ -57,7 +57,7 @@ MODULE_OPTIMIZE_FLAGS = -Os -fno-strict-aliasing
 endif
 endif
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 REQUIRES		+= macmorefiles
 endif
 
@@ -91,8 +91,8 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CPPSRCS		+= nsLocalFileOS2.cpp
 else
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-CPPSRCS		+= nsLocalFileOSX.cpp
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+CMMSRCS		= nsLocalFileOSX.mm
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS		+= nsLocalFileWin.cpp
@@ -120,7 +120,7 @@ EXPORTS		= \
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 EXPORTS		+= nsLocalFileOS2.h
 else
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 EXPORTS		+= nsLocalFileOSX.h
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
@@ -128,7 +128,7 @@ EXPORTS		+= nsLocalFileWin.h
 else
 EXPORTS		+= nsLocalFileUnix.h
 endif # windows
-endif # mac
+endif # cocoa
 endif # os2
 
 XPIDLSRCS	= \
@@ -161,9 +161,9 @@ XPIDLSRCS	= \
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 XPIDLSRCS	+= nsILocalFileOS2.idl
 else
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 XPIDLSRCS	+= nsILocalFileMac.idl
-endif # mac
+endif # cocoa
 endif # os2
 
 SDK_XPIDLSRCS   = \

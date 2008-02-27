@@ -336,8 +336,8 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
   }
 
   if (aAssumeVScroll != aState->mReflowedContentsWithVScrollbar ||
-      ((mInner.mScrolledFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT) &&
-       aAssumeHScroll != aState->mReflowedContentsWithHScrollbar)) {
+      (aAssumeHScroll != aState->mReflowedContentsWithHScrollbar &&
+       ScrolledContentDependsOnHeight(aState))) {
     nsresult rv = ReflowScrolledFrame(aState, aAssumeHScroll, aAssumeVScroll,
                                       aKidMetrics, PR_FALSE);
     if (NS_FAILED(rv)) {
@@ -354,7 +354,7 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
                         aAssumeVScroll ? &vScrollbarPrefSize : nsnull, PR_TRUE);
   }
   nscoord vScrollbarDesiredWidth = aAssumeVScroll ? vScrollbarPrefSize.width : 0;
-  nscoord vScrollbarDesiredHeight = aAssumeVScroll ? vScrollbarPrefSize.height : 0;
+  nscoord vScrollbarMinHeight = aAssumeVScroll ? vScrollbarMinSize.height : 0;
 
   nsSize hScrollbarMinSize(0, 0);
   nsSize hScrollbarPrefSize(0, 0);
@@ -364,15 +364,15 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
                         aAssumeHScroll ? &hScrollbarPrefSize : nsnull, PR_FALSE);
   }
   nscoord hScrollbarDesiredHeight = aAssumeHScroll ? hScrollbarPrefSize.height : 0;
-  nscoord hScrollbarDesiredWidth = aAssumeHScroll ? hScrollbarPrefSize.width : 0;
+  nscoord hScrollbarMinWidth = aAssumeHScroll ? hScrollbarMinSize.width : 0;
 
   // First, compute our inside-border size and scrollport size
   // XXXldb Can we depend more on ComputeSize here?
   nsSize desiredInsideBorderSize;
   desiredInsideBorderSize.width = vScrollbarDesiredWidth +
-    PR_MAX(aKidMetrics->width, hScrollbarDesiredWidth);
+    PR_MAX(aKidMetrics->width, hScrollbarMinWidth);
   desiredInsideBorderSize.height = hScrollbarDesiredHeight +
-    PR_MAX(aKidMetrics->height, vScrollbarDesiredHeight);
+    PR_MAX(aKidMetrics->height, vScrollbarMinHeight);
   aState->mInsideBorderSize =
     ComputeInsideBorderSize(aState, desiredInsideBorderSize);
   nsSize scrollPortSize = nsSize(PR_MAX(0, aState->mInsideBorderSize.width - vScrollbarDesiredWidth),
@@ -419,6 +419,17 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
   }
   aState->mScrollPortRect = nsRect(scrollPortOrigin, scrollPortSize);
   return PR_TRUE;
+}
+
+PRBool
+nsHTMLScrollFrame::ScrolledContentDependsOnHeight(ScrollReflowState* aState)
+{
+  // Return true if ReflowScrolledFrame is going to do something different
+  // based on the presence of a horizontal scrollbar.
+  return (mInner.mScrolledFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT) ||
+    aState->mReflowState.ComputedHeight() != NS_UNCONSTRAINEDSIZE ||
+    aState->mReflowState.mComputedMinHeight > 0 ||
+    aState->mReflowState.mComputedMaxHeight != NS_UNCONSTRAINEDSIZE;
 }
 
 nsresult
@@ -509,6 +520,16 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
 }
 
 PRBool
+nsHTMLScrollFrame::GuessHScrollbarNeeded(const ScrollReflowState& aState)
+{
+  if (aState.mStyles.mHorizontal != NS_STYLE_OVERFLOW_AUTO)
+    // no guessing required
+    return aState.mStyles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL;
+
+  return mInner.mHasHorizontalScrollbar;
+}
+
+PRBool
 nsHTMLScrollFrame::GuessVScrollbarNeeded(const ScrollReflowState& aState)
 {
   if (aState.mStyles.mVertical != NS_STYLE_OVERFLOW_AUTO)
@@ -565,7 +586,7 @@ nsHTMLScrollFrame::ReflowContents(ScrollReflowState* aState,
                                   const nsHTMLReflowMetrics& aDesiredSize)
 {
   nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.mFlags);
-  nsresult rv = ReflowScrolledFrame(aState, mInner.mHasHorizontalScrollbar,
+  nsresult rv = ReflowScrolledFrame(aState, GuessHScrollbarNeeded(*aState),
       GuessVScrollbarNeeded(*aState), &kidDesiredSize, PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -607,22 +628,17 @@ nsHTMLScrollFrame::ReflowContents(ScrollReflowState* aState,
   // Do this first because changing the vertical scrollbar setting is expensive,
   // forcing a reflow always.
 
-  // First try a layout without a horizontal scrollbar, then with, except that
-  // if RELATIVE_HEIGHT is set then for performance we should try the status quo
-  // first. If RELATIVE_HEIGHT is not set then trying no horizontal scrollbar
-  // first is almost free.
-  PRBool firstHScrollbarState =
-    (mInner.mScrolledFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT)
-        ? aState->mReflowedContentsWithHScrollbar : PR_FALSE;
-  if (TryLayout(aState, &kidDesiredSize, firstHScrollbarState,
+  // Try leaving the horizontal scrollbar unchanged first. This will be more
+  // efficient.
+  if (TryLayout(aState, &kidDesiredSize, aState->mReflowedContentsWithHScrollbar,
                 aState->mReflowedContentsWithVScrollbar, PR_FALSE, &rv))
     return NS_OK;
-  if (TryLayout(aState, &kidDesiredSize, !firstHScrollbarState,
+  if (TryLayout(aState, &kidDesiredSize, !aState->mReflowedContentsWithHScrollbar,
                 aState->mReflowedContentsWithVScrollbar, PR_FALSE, &rv))
     return NS_OK;
 
   // OK, now try toggling the vertical scrollbar. The performance advantage
-  // of trying the status-quo horizontal scrollbar state for RELATIVE_HEIGHT cases
+  // of trying the status-quo horizontal scrollbar state
   // does not exist here (we'll have to reflow due to the vertical scrollbar
   // change), so always try no horizontal scrollbar first.
   PRBool newVScrollbarState = !aState->mReflowedContentsWithVScrollbar;
@@ -657,8 +673,9 @@ nsHTMLScrollFrame::PlaceScrollArea(const ScrollReflowState& aState)
   scrolledFrame->SetPosition(scrolledView->GetOffsetTo(GetView()));
 
   nsRect scrolledArea;
-  scrolledArea.UnionRect(mInner.GetScrolledRect(aState.mScrollPortRect.Size()),
-                         nsRect(nsPoint(0,0), aState.mScrollPortRect.Size()));
+  // Preserve the width or height of empty rects
+  scrolledArea.UnionRectIncludeEmpty(mInner.GetScrolledRect(aState.mScrollPortRect.Size()),
+                                     nsRect(nsPoint(0,0), aState.mScrollPortRect.Size()));
 
   // Store the new overflow area. Note that this changes where an outline
   // of the scrolled frame would be painted, but scrolled frames can't have
@@ -1141,11 +1158,11 @@ nsXULScrollFrame::GetMaxSize(nsBoxLayoutState& aState)
   PropagateDebug(aState);
 #endif
 
-  nsSize max(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+  nsSize maxSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
 
-  AddBorderAndPadding(max);
-  nsIBox::AddCSSMaxSize(aState, this, max);
-  return max;
+  AddBorderAndPadding(maxSize);
+  nsIBox::AddCSSMaxSize(aState, this, maxSize);
+  return maxSize;
 }
 
 #if 0 // XXXldb I don't think this is even needed
@@ -2399,8 +2416,16 @@ nsGfxScrollFrameInner::ReflowFinished()
     nscoord curPosX, curPosY;
     scrollable->GetScrollPosition(curPosX, curPosY);
     if (vScroll) {
+      // We normally use (scrollArea.height - fontHeight) for height
+      // of page scrolling.  However, it is too small when
+      // fontHeight is very large. (If fontHeight is larger than
+      // scrollArea.height, direction of scrolling will be opposite).
+      // To avoid it, we use (float(scrollArea.height) * 0.8) as
+      // lower bound value of height of page scrolling. (bug 383267)
+      nscoord pageincrement = nscoord(scrollArea.height - fontHeight);
+      nscoord pageincrementMin = nscoord(float(scrollArea.height) * 0.8);
       FinishReflowForScrollbar(vScroll, minY, maxY, curPosY,
-                               nscoord(scrollArea.height - fontHeight),
+                               PR_MAX(pageincrement,pageincrementMin),
                                fontHeight);
     }
     if (hScroll) {

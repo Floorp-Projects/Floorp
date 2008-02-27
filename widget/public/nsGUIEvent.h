@@ -341,9 +341,6 @@ class nsHashKey;
 #define NS_COPY             (NS_CUTCOPYPASTE_EVENT_START)
 #define NS_CUT              (NS_CUTCOPYPASTE_EVENT_START + 1)
 #define NS_PASTE            (NS_CUTCOPYPASTE_EVENT_START + 2)
-#define NS_BEFORECOPY       (NS_CUTCOPYPASTE_EVENT_START + 3)
-#define NS_BEFORECUT        (NS_CUTCOPYPASTE_EVENT_START + 4)
-#define NS_BEFOREPASTE      (NS_CUTCOPYPASTE_EVENT_START + 5)
 
 // Query the content information
 #define NS_QUERY_CONTENT_EVENT_START    3200

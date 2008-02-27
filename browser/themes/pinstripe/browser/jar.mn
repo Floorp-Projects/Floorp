@@ -6,10 +6,13 @@ classic.jar:
   skin/classic/browser/bookmark-open-right.png
 * skin/classic/browser/browser.css                          (browser.css)
   skin/classic/browser/browser.xml
+  skin/classic/browser/contextDialogBackground.png
 * skin/classic/browser/engineManager.css                    (engineManager.css)
+  skin/classic/browser/expander-round.png 
   skin/classic/browser/find.png
   skin/classic/browser/find-bar-background.png
   skin/classic/browser/Go-arrow.png
+  skin/classic/browser/home.png
   skin/classic/browser/identity.png
   skin/classic/browser/Info.png
   skin/classic/browser/page-livemarks.png
@@ -54,6 +57,7 @@ classic.jar:
   skin/classic/browser/places/folderDropHoverArrow.png      (places/folderDropHoverArrow.png)
   skin/classic/browser/places/livemarkFolder.png            (places/livemarkFolder.png)
   skin/classic/browser/places/livemarkFolderHover.png       (places/livemarkFolderHover.png)
+  skin/classic/browser/places/back-forward.png              (places/back-forward.png)
   skin/classic/browser/places/bookmarkProperties.css        (places/bookmarkProperties.css)
   skin/classic/browser/places/contentSplitter-bg.gif        (places/contentSplitter-bg.gif)
   skin/classic/browser/places/editBookmarkOverlay.css       (places/editBookmarkOverlay.css)
@@ -78,14 +82,6 @@ classic.jar:
   skin/classic/browser/places/expander-closed.png           (bookmarks/expander-closed.png)
   skin/classic/browser/places/expander-open-active.png      (bookmarks/expander-open-active.png)
   skin/classic/browser/places/expander-open.png             (bookmarks/expander-open.png)
-#ifdef MOZ_SAFE_BROWSING
-  skin/classic/browser/safebrowsing/browser-protection.css  (safebrowsing/browser-protection.css)
-  skin/classic/browser/safebrowsing/close16x16.png          (safebrowsing/close16x16.png)
-  skin/classic/browser/safebrowsing/dim.png                 (safebrowsing/dim.png)
-  skin/classic/browser/safebrowsing/tail.png                (safebrowsing/tail.png)
-  skin/classic/browser/safebrowsing/warning16x16.png        (safebrowsing/warning16x16.png)
-  skin/classic/browser/safebrowsing/warning24x24.png        (safebrowsing/warning24x24.png)
-#endif
   skin/classic/browser/preferences/application.png          (preferences/application.png)
   skin/classic/browser/preferences/Options.png              (preferences/Options.png)
   skin/classic/browser/preferences/plugin.png               (preferences/plugin.png)
@@ -113,16 +109,25 @@ classic.jar:
   skin/classic/browser/tabbrowser/tab-right-hover.png                    (tabbrowser/tab-right-hover.png)
   skin/classic/browser/tabbrowser/tabs-bottom-bg.png                     (tabbrowser/tabs-bottom-bg.png)
   skin/classic/browser/urlbar/endcap.png                                 (urlbar/endcap.png)
-  skin/classic/browser/urlbar/endcap-secure.png                          (urlbar/endcap-secure.png)
+  skin/classic/browser/urlbar/endcap-focused.png                         (urlbar/endcap-focused.png)
   skin/classic/browser/urlbar/startcap.png                               (urlbar/startcap.png)
+  skin/classic/browser/urlbar/startcap-focused.png                       (urlbar/startcap-focused.png)
   skin/classic/browser/urlbar/startcap-secure-start.png                  (urlbar/startcap-secure-start.png)
   skin/classic/browser/urlbar/startcap-secure-mid.png                    (urlbar/startcap-secure-mid.png)
   skin/classic/browser/urlbar/startcap-secure-end.png                    (urlbar/startcap-secure-end.png)
+  skin/classic/browser/urlbar/startcap-secure-start-focused.png          (urlbar/startcap-secure-start-focused.png)
+  skin/classic/browser/urlbar/startcap-secure-mid-focused.png            (urlbar/startcap-secure-mid-focused.png)
+  skin/classic/browser/urlbar/startcap-secure-end-focused.png            (urlbar/startcap-secure-end-focused.png)
   skin/classic/browser/urlbar/startcap-verified-start.png                (urlbar/startcap-verified-start.png)
   skin/classic/browser/urlbar/startcap-verified-mid.png                  (urlbar/startcap-verified-mid.png)
   skin/classic/browser/urlbar/startcap-verified-end.png                  (urlbar/startcap-verified-end.png)
+  skin/classic/browser/urlbar/startcap-verified-start-focused.png        (urlbar/startcap-verified-start-focused.png)
+  skin/classic/browser/urlbar/startcap-verified-mid-focused.png          (urlbar/startcap-verified-mid-focused.png)
+  skin/classic/browser/urlbar/startcap-verified-end-focused.png          (urlbar/startcap-verified-end-focused.png)
   skin/classic/browser/urlbar/startcap-secure.png                        (urlbar/startcap-secure.png)
   skin/classic/browser/urlbar/startcap-active.png                        (urlbar/startcap-active.png)
   skin/classic/browser/urlbar/startcap-secure-active.png                 (urlbar/startcap-secure-active.png)
+  skin/classic/browser/urlbar/textfield-mid.png                          (urlbar/textfield-mid.png)
+  skin/classic/browser/urlbar/textfield-mid-focused.png                  (urlbar/textfield-mid-focused.png)
   icon.png
   preview.png

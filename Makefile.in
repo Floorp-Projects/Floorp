@@ -47,6 +47,8 @@ include $(topsrcdir)/config/config.mk
 default alldep all::
 	$(RM) -rf $(DIST)/sdk
 	$(RM) -rf $(DIST)/include
+	$(RM) -rf $(DIST)/private
+	$(RM) -rf $(DIST)/public
 	$(RM) -rf _tests
 
 TIERS += base
@@ -138,6 +140,9 @@ endif # WINNT
 ifeq ($(OS_ARCH),WINNT)
 # we want to copy PDB files on Windows
 MAKE_SYM_STORE_ARGS := -c
+ifdef PDBSTR_PATH
+MAKE_SYM_STORE_ARGS += -i
+endif
 ifeq (,$(CYGWIN_WRAPPER))
 # this doesn't work with Cygwin Python
 MAKE_SYM_STORE_ARGS += --vcs-info

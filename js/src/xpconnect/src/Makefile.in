@@ -151,7 +151,7 @@ endif
 # the windows ce compiler produces crap when compiling this
 # with any optimizations.  See bug 304714
 ifdef WINCE
-MOZ_OPTIMIZE_FLAGS=/Od
+MOZ_OPTIMIZE_FLAGS=-Od
 endif
 
 ifeq ($(OS_ARCH),WINNT)

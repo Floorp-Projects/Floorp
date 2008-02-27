@@ -169,7 +169,7 @@ public:
 #endif
 
     return sXPCNativeWrapperClass &&
-      ::JS_GetClass(cx, obj) == sXPCNativeWrapperClass;
+      ::JS_GET_CLASS(cx, obj) == sXPCNativeWrapperClass;
   }
 
   static nsresult PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper);
@@ -315,9 +315,6 @@ protected:
   static jsval sOncopy_id;
   static jsval sOncut_id;
   static jsval sOnpaste_id;
-  static jsval sOnbeforecopy_id;
-  static jsval sOnbeforecut_id;
-  static jsval sOnbeforepaste_id;
 #ifdef OJI
   static jsval sJava_id;
   static jsval sPackages_id;

@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Matt Crocker <matt@songbirdnest.com>
  *   Seth Spitzer <sspitzer@mozilla.org>
+ *   Edward Lee <edward.lee@engineering.uiuc.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -101,6 +102,7 @@ try {
 
 function ensure_tag_results(uris, searchTerm)
 {
+  print("Searching for '" + searchTerm + "'");
   var controller = Components.classes["@mozilla.org/autocomplete/controller;1"].
                    getService(Components.interfaces.nsIAutoCompleteController);  
   
@@ -122,12 +124,18 @@ function ensure_tag_results(uris, searchTerm)
   input.onSearchComplete = function() {
     do_check_eq(numSearchesStarted, 1);
     do_check_eq(controller.searchStatus, 
-                Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
+                uris.length ?
+                Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH :
+                Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
     do_check_eq(controller.matchCount, uris.length);
+    let vals = [];
     for (var i=0; i<controller.matchCount; i++) {
-      do_check_eq(controller.getValueAt(i), uris[i].spec);
+      // Keep the URL for later because order of tag results is undefined
+      vals.push(controller.getValueAt(i));
       do_check_eq(controller.getStyleAt(i), "tag");
     }
+    // Sort the results then check if we have the right items
+    vals.sort().forEach(function(val, i) do_check_eq(val, uris[i].spec))
    
     if (current_test < (tests.length - 1)) {
       current_test++;
@@ -140,21 +148,39 @@ function ensure_tag_results(uris, searchTerm)
   controller.startSearch(searchTerm);
 }
 
-var uri1 = uri("http://site.tld/1");
-var uri2 = uri("http://site.tld/2");
-var uri3 = uri("http://site.tld/3");
-var uri4 = uri("http://site.tld/4");
-var uri5 = uri("http://site.tld/5");
-var uri6 = uri("http://site.tld/6");
+var uri1 = uri("http://site.tld/1/aaa");
+var uri2 = uri("http://site.tld/2/bbb");
+var uri3 = uri("http://site.tld/3/aaa");
+var uri4 = uri("http://site.tld/4/bbb");
+var uri5 = uri("http://site.tld/5/aaa");
+var uri6 = uri("http://site.tld/6/bbb");
   
-var tests = [function() { ensure_tag_results([uri1], "foo"); }, 
-             function() { ensure_tag_results([uri2], "bar"); }, 
-             function() { ensure_tag_results([uri3], "cheese"); }, 
-             function() { ensure_tag_results([uri1, uri2, uri4], "foo bar"); }, 
-             function() { ensure_tag_results([uri1, uri2], "bar foo"); }, 
-             function() { ensure_tag_results([uri2, uri3, uri5], "bar cheese"); }, 
-             function() { ensure_tag_results([uri2, uri3], "cheese bar"); }, 
-             function() { ensure_tag_results([uri1, uri2, uri3, uri4, uri5, uri6], "foo bar cheese"); }];
+var tests = [
+  function() ensure_tag_results([uri1, uri4, uri6], "foo"), 
+  function() ensure_tag_results([uri1], "foo aaa"), 
+  function() ensure_tag_results([uri4, uri6], "foo bbb"), 
+  function() ensure_tag_results([uri2, uri4, uri5, uri6], "bar"), 
+  function() ensure_tag_results([uri5], "bar aaa"), 
+  function() ensure_tag_results([uri2, uri4, uri6], "bar bbb"), 
+  function() ensure_tag_results([uri3, uri5, uri6], "cheese"), 
+  function() ensure_tag_results([uri3, uri5], "chees aaa"), 
+  function() ensure_tag_results([uri6], "chees bbb"), 
+  function() ensure_tag_results([uri4, uri6], "fo bar"), 
+  function() ensure_tag_results([], "fo bar aaa"), 
+  function() ensure_tag_results([uri4, uri6], "fo bar bbb"), 
+  function() ensure_tag_results([uri4, uri6], "ba foo"), 
+  function() ensure_tag_results([], "ba foo aaa"), 
+  function() ensure_tag_results([uri4, uri6], "ba foo bbb"), 
+  function() ensure_tag_results([uri5, uri6], "ba chee"), 
+  function() ensure_tag_results([uri5], "ba chee aaa"), 
+  function() ensure_tag_results([uri6], "ba chee bbb"), 
+  function() ensure_tag_results([uri5, uri6], "eese bar"), 
+  function() ensure_tag_results([uri5], "heese bar aaa"), 
+  function() ensure_tag_results([uri6], "ees bar bbb"), 
+  function() ensure_tag_results([uri6], "cheese bar foo"),
+  function() ensure_tag_results([], "foo bar cheese aaa"),
+  function() ensure_tag_results([uri6], "foo bar cheese bbb"),
+];
 
 /** 
  * Test history autocomplete

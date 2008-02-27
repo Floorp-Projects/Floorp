@@ -427,6 +427,37 @@ nsIContent::UpdateEditableState()
   SetEditableFlag(parent && parent->HasFlag(NODE_IS_EDITABLE));
 }
 
+nsIContent*
+nsIContent::FindFirstNonNativeAnonymous() const
+{
+  // This handles also nested native anonymous content.
+  nsIContent* content = GetBindingParent();
+  nsIContent* possibleResult = 
+    !IsNativeAnonymous() ? const_cast<nsIContent*>(this) : nsnull;
+  while (content) {
+    if (content->IsNativeAnonymous()) {
+      content = possibleResult = content->GetParent();
+    } else {
+      content = content->GetBindingParent();
+    }
+  }
+
+  return possibleResult;
+}
+
+PRBool
+nsIContent::IsInNativeAnonymousSubtree() const
+{
+  nsIContent* content = GetBindingParent();
+  while (content) {
+    if (content->IsNativeAnonymous()) {
+      return PR_TRUE;
+    }
+    content = content->GetBindingParent();
+  }
+  return PR_FALSE;
+}
+
 //----------------------------------------------------------------------
 
 nsChildContentList::~nsChildContentList()
@@ -779,19 +810,16 @@ nsNSElementTearoff::GetElementsByClassName(const nsAString& aClasses,
   return nsDocument::GetElementsByClassNameHelper(mContent, aClasses, aReturn);
 }
 
-static nsPoint
-GetOffsetFromInitialContainingBlock(nsIFrame* aFrame)
+static nsIFrame*
+GetContainingBlockForClientRect(nsIFrame* aFrame)
 {
-  nsIFrame* refFrame = aFrame->GetParent();
-  if (!refFrame)
-    return nsPoint(0, 0);
-
   // get the nearest enclosing SVG foreign object frame or the root frame
-  while (refFrame->GetParent() &&
-         !refFrame->IsFrameOfType(nsIFrame::eSVGForeignObject))
-    refFrame = refFrame->GetParent();
+  while (aFrame->GetParent() &&
+         !aFrame->IsFrameOfType(nsIFrame::eSVGForeignObject)) {
+    aFrame = aFrame->GetParent();
+  }
 
-  return aFrame->GetOffsetTo(refFrame);
+  return aFrame;
 }
 
 static double
@@ -816,25 +844,6 @@ SetTextRectangle(const nsRect& aLayoutRect, nsPresContext* aPresContext,
                  RoundFloat(aLayoutRect.YMost()*t2pScaled)*scaleInv - y);
 }
 
-static PRBool
-TryGetSVGBoundingRect(nsIFrame* aFrame, nsRect* aRect)
-{
-#ifdef MOZ_SVG
-  nsRect r;
-  nsIFrame* outer = nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(aFrame, &r);
-  if (!outer)
-    return PR_FALSE;
-
-  // r is in pixels relative to 'outer', get it into twips
-  // relative to ICB origin
-  r.ScaleRoundOut(1.0/aFrame->PresContext()->AppUnitsPerDevPixel());
-  *aRect = r + GetOffsetFromInitialContainingBlock(outer);
-  return PR_TRUE;
-#else
-  return PR_FALSE;
-#endif
-}
-
 NS_IMETHODIMP
 nsNSElementTearoff::GetBoundingClientRect(nsIDOMTextRectangle** aResult)
 {
@@ -850,75 +859,44 @@ nsNSElementTearoff::GetBoundingClientRect(nsIDOMTextRectangle** aResult)
     // display:none, perhaps? Return the empty rect
     return NS_OK;
   }
+
   nsPresContext* presContext = frame->PresContext();
-  
-  nsRect r;
-  if (TryGetSVGBoundingRect(frame, &r)) {
-    // Currently SVG frames don't have continuations but I don't want things to
-    // break if that changes.
-    while ((frame = nsLayoutUtils::GetNextContinuationOrSpecialSibling(frame)) != nsnull) {
-      nsRect nextRect;
-#ifdef DEBUG
-      PRBool isSVG =
-#endif
-        TryGetSVGBoundingRect(frame, &nextRect);
-      NS_ASSERTION(isSVG, "SVG frames must have SVG continuations");
-      r.UnionRect(r, nextRect);
-    }
-  } else {
-    // The weird frame layout of tables requires this
-    if (frame->GetType() == nsGkAtoms::tableOuterFrame) {
-      nsIFrame* innerTable = frame->GetFirstChild(nsnull);
-      if (innerTable) {
-        r = nsLayoutUtils::GetAllInFlowBoundingRect(innerTable) + innerTable->GetPosition();
-      }
-      nsIFrame* caption = frame->GetFirstChild(nsGkAtoms::captionList);
-      if (caption) {
-        r.UnionRect(r, nsLayoutUtils::GetAllInFlowBoundingRect(caption) + caption->GetPosition());
-      }
-    } else {
-      r = nsLayoutUtils::GetAllInFlowBoundingRect(frame);
-    }
-    r += GetOffsetFromInitialContainingBlock(frame);
-  }
+  nsRect r = nsLayoutUtils::GetAllInFlowRectsUnion(frame,
+          GetContainingBlockForClientRect(frame));
   SetTextRectangle(r, presContext, rect);
   return NS_OK;
 }
 
-static nsresult
-AddRectanglesForFrames(nsTextRectangleList* aRectList, nsIFrame* aFrame)
-{
-  if (!aFrame)
-    return NS_OK;
+struct RectListBuilder : public nsLayoutUtils::RectCallback {
+  nsPresContext*       mPresContext;
+  nsTextRectangleList* mRectList;
+  nsresult             mRV;
 
-  nsPresContext* presContext = aFrame->PresContext();
-  for (nsIFrame* f = aFrame; f;
-       f = nsLayoutUtils::GetNextContinuationOrSpecialSibling(f)) {
+  RectListBuilder(nsPresContext* aPresContext, nsTextRectangleList* aList) 
+    : mPresContext(aPresContext), mRectList(aList),
+      mRV(NS_OK) {}
+
+  virtual void AddRect(const nsRect& aRect) {
     nsRefPtr<nsTextRectangle> rect = new nsTextRectangle();
-    if (!rect)
-      return NS_ERROR_OUT_OF_MEMORY;
-    
-    nsRect r;
-    if (!TryGetSVGBoundingRect(f, &r)) {
-      r = nsRect(GetOffsetFromInitialContainingBlock(f), f->GetSize());
+    if (!rect) {
+      mRV = NS_ERROR_OUT_OF_MEMORY;
+      return;
     }
-    SetTextRectangle(r, presContext, rect);
-    aRectList->Append(rect);
+    
+    SetTextRectangle(aRect, mPresContext, rect);
+    mRectList->Append(rect);
   }
-
-  return NS_OK;
-}
+};
 
 NS_IMETHODIMP
 nsNSElementTearoff::GetClientRects(nsIDOMTextRectangleList** aResult)
 {
   *aResult = nsnull;
 
-  // Weak ref, since we addref it below
   nsRefPtr<nsTextRectangleList> rectList = new nsTextRectangleList();
   if (!rectList)
     return NS_ERROR_OUT_OF_MEMORY;
-  
+
   nsIFrame* frame = mContent->GetPrimaryFrame(Flush_Layout);
   if (!frame) {
     // display:none, perhaps? Return an empty list
@@ -926,21 +904,11 @@ nsNSElementTearoff::GetClientRects(nsIDOMTextRectangleList** aResult)
     return NS_OK;
   }
 
-  if (frame->GetType() == nsGkAtoms::tableOuterFrame) {
-    // The weird frame layout of tables requires this
-    nsIFrame* innerTable = frame->GetFirstChild(nsnull);
-    nsresult rv = AddRectanglesForFrames(rectList, innerTable);
-    if (NS_FAILED(rv))
-      return rv;
-    nsIFrame* caption = frame->GetFirstChild(nsGkAtoms::captionList);
-    rv = AddRectanglesForFrames(rectList, caption);
-    if (NS_FAILED(rv))
-      return rv;
-  } else {
-    nsresult rv = AddRectanglesForFrames(rectList, frame);
-    if (NS_FAILED(rv))
-      return rv;
-  }
+  RectListBuilder builder(frame->PresContext(), rectList);
+  nsLayoutUtils::GetAllInFlowRects(frame,
+          GetContainingBlockForClientRect(frame), &builder);
+  if (NS_FAILED(builder.mRV))
+    return builder.mRV;
   *aResult = rectList.forget().get();
   return NS_OK;
 }
@@ -2073,11 +2041,11 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   NS_PRECONDITION(!aParent || !aDocument ||
                   !aParent->HasFlag(NODE_FORCE_XBL_BINDINGS),
                   "Parent in document but flagged as forcing XBL");
-  // XXXbz XUL's SetNativeAnonymous is all weird, so can't assert
-  // anything here
-  NS_PRECONDITION(IsNodeOfType(eXUL) ||
-                  aBindingParent != this || IsNativeAnonymous(),
+  NS_PRECONDITION(aBindingParent != this || IsNativeAnonymous(),
                   "Only native anonymous content should have itself as its "
+                  "own binding parent");
+  NS_PRECONDITION(!IsNativeAnonymous() || aBindingParent == this,
+                  "Native anonymous content must have itself as its "
                   "own binding parent");
   
   if (!aBindingParent && aParent) {
@@ -2272,24 +2240,6 @@ nsGenericElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   return nsGenericElement::doPreHandleEvent(this, aVisitor);
 }
 
-static nsIContent*
-FindFirstNonAnonContent(nsIContent* aContent)
-{
-  while (aContent && aContent->IsNativeAnonymous()) {
-    aContent = aContent->GetParent();
-  }
-  return aContent;
-}
-
-static PRBool
-IsInAnonContent(nsIContent* aContent)
-{
-  while (aContent && !aContent->IsNativeAnonymous()) {
-    aContent = aContent->GetParent();
-  }
-  return !!aContent;
-}
-
 nsresult
 nsGenericElement::doPreHandleEvent(nsIContent* aContent,
                                    nsEventChainPreVisitor& aVisitor)
@@ -2315,10 +2265,12 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
       // must be updated.
       if (isAnonForEvents || aVisitor.mRelatedTargetIsInAnon ||
           (aVisitor.mEvent->originalTarget == aContent &&
-           (aVisitor.mRelatedTargetIsInAnon = IsInAnonContent(relatedTarget)))) {
-        nsIContent* nonAnon = FindFirstNonAnonContent(aContent);
+           (aVisitor.mRelatedTargetIsInAnon =
+            relatedTarget->IsInNativeAnonymousSubtree()))) {
+        nsIContent* nonAnon = aContent->FindFirstNonNativeAnonymous();
         if (nonAnon) {
-          nsIContent* nonAnonRelated = FindFirstNonAnonContent(relatedTarget);
+          nsIContent* nonAnonRelated =
+            relatedTarget->FindFirstNonNativeAnonymous();
           if (nonAnonRelated) {
             if (nonAnon == nonAnonRelated ||
                 nsContentUtils::ContentIsDescendantOf(nonAnonRelated, nonAnon)) {

@@ -54,10 +54,13 @@ interface nsIUrlClassifierHashCompleterCallback : nsISupports
    *        The name of the table that this hash belongs to.
    * @param chunkId
    *        The database chunk that this hash belongs to.
+   * @param trusted
+   *        The completion was verified with a MAC and can be cached.
    */
   void completion(in ACString hash,
                   in ACString table,
-                  in PRUint32 chunkId);
+                  in PRUint32 chunkId,
+                  in PRBool trusted);
 
   /**
    * The completion is complete.  This method is called once per
@@ -77,7 +80,7 @@ interface nsIUrlClassifierHashCompleterCallback : nsISupports
  * an nsIUrlClassifierCompleter instance to asynchronously provide the
  * complete hash, along with some associated metadata.
  */
-[scriptable, uuid(1a3c19d9-ccd6-4d1a-a48a-1ab662e56e60)]
+[scriptable, uuid(ade9b72b-3562-44f5-aba6-e63246be53ae)]
 interface nsIUrlClassifierHashCompleter : nsISupports
 {
   /**
@@ -92,8 +95,12 @@ interface nsIUrlClassifierHashCompleter : nsISupports
                 in nsIUrlClassifierHashCompleterCallback callback);
 
   /**
+   * Set the client and wrapped key for verified updates.
+   */
+  void setKeys(in ACString clientKey, in ACString wrappedKey);
+
+  /**
    * The URL for the gethash request
    */
   attribute ACString gethashUrl;
 };
-

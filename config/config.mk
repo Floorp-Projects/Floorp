@@ -361,13 +361,6 @@ OS_LDFLAGS += $(PROFILE_GEN_LDFLAGS)
 ifeq (WINNT,$(OS_ARCH))
 AR_FLAGS += -LTCG
 endif
-else
-# We don't want to link internal tools with profiling,
-# but gcc needs to because xpidl will wind up linking with
-# libs that have been built with PROFILE_GEN_CFLAGS.
-ifdef GNU_CC
-OS_LDFLAGS += $(PROFILE_GEN_LDFLAGS)
-endif
 endif # INTERNAL_TOOLS
 endif # MOZ_PROFILE_GENERATE
 
@@ -602,10 +595,22 @@ endif # MOZ_DEBUG || NS_TRACE_MALLOC
 endif # USE_STATIC_LIBS
 endif # WINNT && !GNU_CC
 
+ifeq ($(OS_ARCH),Darwin)
+# Darwin doesn't cross-compile, so just set both types of flags here.
+HOST_CMFLAGS += -fobjc-exceptions
+HOST_CMMFLAGS += -fobjc-exceptions
+OS_COMPILE_CMFLAGS += -fobjc-exceptions
+OS_COMPILE_CMMFLAGS += -fobjc-exceptions
+endif
 
 COMPILE_CFLAGS	= $(VISIBILITY_FLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS) $(PROFILER_CFLAGS) $(DSO_CFLAGS) $(DSO_PIC_CFLAGS) $(CFLAGS) $(RTL_FLAGS) $(OS_COMPILE_CFLAGS)
 COMPILE_CXXFLAGS = $(VISIBILITY_FLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS) $(PROFILER_CFLAGS) $(DSO_CFLAGS) $(DSO_PIC_CFLAGS)  $(CXXFLAGS) $(RTL_FLAGS) $(OS_COMPILE_CXXFLAGS)
+COMPILE_CMFLAGS = $(OS_COMPILE_CMFLAGS)
+COMPILE_CMMFLAGS = $(OS_COMPILE_CMMFLAGS)
+
+ifndef CROSS_COMPILE
 HOST_CFLAGS += $(RTL_FLAGS)
+endif
 
 #
 # Name of the binary code directories

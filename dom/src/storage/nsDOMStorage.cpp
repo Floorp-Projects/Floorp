@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "prnetdb.h"
 #include "nsCOMPtr.h"
 #include "nsDOMError.h"
 #include "nsDOMClassInfo.h"
@@ -135,7 +136,7 @@ GetQuota(const nsAString &aDomain, PRInt32 *aQuota, PRInt32 *aWarnQuota)
         perm != nsIPermissionManager::DENY_ACTION) {
       // This is an offline app, give more space by default.
       *aQuota = ((PRInt32)nsContentUtils::GetIntPref(kOfflineAppQuota,
-                                                     DEFAULT_OFFLINE_WARN_QUOTA * 1024));
+                                                     DEFAULT_OFFLINE_APP_QUOTA) * 1024);
 
       if (perm == nsIOfflineCacheUpdateService::ALLOW_NO_WARN) {
         *aWarnQuota = -1;
@@ -1093,6 +1094,15 @@ PRBool
 nsDOMStorageList::CanAccessDomain(const nsAString& aRequestedDomain,
                                   const nsAString& aCurrentDomain)
 {
+  PRNetAddr address;
+  PRStatus status = PR_StringToNetAddr(NS_ConvertUTF16toUTF8(aCurrentDomain).get(), &address);
+
+  if (status == PR_SUCCESS) {
+    // An IP address must match exactly. IPv6: when location is e.g. "::1" and we require
+    // "0:0:0:0:0:1" then access will be denied.
+    return aRequestedDomain == aCurrentDomain;
+  }
+
   nsStringArray requestedDomainArray, currentDomainArray;
   PRBool ok = ConvertDomainToArray(aRequestedDomain, &requestedDomainArray);
   if (!ok)

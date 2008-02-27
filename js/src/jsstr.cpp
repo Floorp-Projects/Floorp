@@ -583,7 +583,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 
     slot = JSVAL_TO_INT(id);
     if ((size_t)slot < JSSTRING_LENGTH(str)) {
-        str1 = js_NewDependentString(cx, str, (size_t)slot, 1);
+        str1 = js_GetUnitString(cx, str, (size_t)slot);
         if (!str1)
             return JS_FALSE;
         if (!OBJ_DEFINE_PROPERTY(cx, obj, INT_TO_JSID(slot),
@@ -849,7 +849,6 @@ str_charAt(JSContext *cx, uintN argc, jsval *vp)
     jsval t, v;
     JSString *str;
     jsint i;
-    jschar c;
     jsdouble d;
 
     t = vp[1];
@@ -877,10 +876,7 @@ str_charAt(JSContext *cx, uintN argc, jsval *vp)
         i = (jsint) d;
     }
 
-    c = JSSTRING_CHARS(str)[i];
-    str = (c < UNIT_STRING_LIMIT)
-          ? js_GetUnitString(cx, c)
-          : js_NewDependentString(cx, str, i, 1);
+    str = js_GetUnitString(cx, str, (size_t)i);
     if (!str)
         return JS_FALSE;
     *vp = STRING_TO_JSVAL(str);
@@ -1961,7 +1957,6 @@ str_slice(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval t, v;
     JSString *str;
-    jschar c;
 
     t = vp[1];
     v = vp[2];
@@ -1976,9 +1971,8 @@ str_slice(JSContext *cx, uintN argc, jsval *vp)
             if (length == 0) {
                 str = cx->runtime->emptyString;
             } else {
-                str = (length == 1 &&
-                       (c = JSSTRING_CHARS(str)[begin]) < UNIT_STRING_LIMIT)
-                      ? js_GetUnitString(cx, c)
+                str = (length == 1)
+                      ? js_GetUnitString(cx, str, begin)
                       : js_NewDependentString(cx, str, begin, length);
                 if (!str)
                     return JS_FALSE;
@@ -2353,13 +2347,17 @@ js_InitDeflatedStringCache(JSRuntime *rt)
     IN_UNIT_STRING_SPACE((rt)->unitStrings, cp)
 
 JSString *
-js_GetUnitString(JSContext *cx, jschar c)
+js_GetUnitString(JSContext *cx, JSString *str, size_t index)
 {
+    jschar c, *cp, i;
     JSRuntime *rt;
-    JSString **sp, *str;
-    jschar *cp, i;
+    JSString **sp;
 
-    JS_ASSERT(c < UNIT_STRING_LIMIT);
+    JS_ASSERT(index < JSSTRING_LENGTH(str));
+    c = JSSTRING_CHARS(str)[index];
+    if (c >= UNIT_STRING_LIMIT)
+        return js_NewDependentString(cx, str, index, 1);
+
     rt = cx->runtime;
     if (!rt->unitStrings) {
         sp = (JSString **) calloc(UNIT_STRING_LIMIT * sizeof(JSString *) +

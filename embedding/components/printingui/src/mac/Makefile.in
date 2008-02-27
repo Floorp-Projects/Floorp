@@ -59,8 +59,9 @@ REQUIRES	= xpcom \
 
 DIRS      = printpde
 
+CMMSRCS = nsPrintingPromptServiceX.mm
+
 CPPSRCS		= \
-      nsPrintingPromptServiceX.cpp \
       nsPrintProgressParams.cpp \
       nsPrintProgress.cpp \
       $(NULL)

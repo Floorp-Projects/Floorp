@@ -180,8 +180,3 @@ LDFLAGS	+= \
 	-framework Cocoa \
 	-framework Foundation \
 	$(NULL)
-
-CXXFLAGS += \
-	-DUSE_COCOA \
-	-fobjc-exceptions \
-	$(NULL)

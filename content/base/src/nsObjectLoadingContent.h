@@ -339,6 +339,15 @@ class nsObjectLoadingContent : public nsImageLoadingContent
       GetPluginDisabledState(const nsCString& aContentType);
 
     /**
+     * When there is no usable plugin available this will send UI events and
+     * update the AutoFallback object appropriate to the reason for there being
+     * no plugin available.
+     */
+    static void
+      UpdateFallbackState(nsIContent* aContent, AutoFallback& fallback,
+                          const nsCString& aTypeHint);
+
+    /**
      * The final listener to ship the data to (imagelib, uriloader, etc)
      */
     nsCOMPtr<nsIStreamListener> mFinalListener;

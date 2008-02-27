@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
 #include "nsIMIMEInfo.idl"
+#include "nsIWebContentHandlerRegistrar.idl"
 
 interface nsIRequest;
 
@@ -64,8 +64,8 @@ interface nsIWebContentHandlerInfo : nsIHandlerApp
   AString getHandlerURI(in AString uri);
 };
 
-[scriptable, uuid(632b16a8-5c6b-4dc5-a8db-01771af7a79d)]
-interface nsIWebContentConverterService : nsISupports
+[scriptable, uuid(de7cc06e-e778-45cb-b7db-7a114e1e75b1)]
+interface nsIWebContentConverterService : nsIWebContentHandlerRegistrar
 {
   /**
    * Specifies the handler to be used to automatically handle all links of a
@@ -127,30 +127,6 @@ interface nsIWebContentConverterService : nsISupports
    *          The uri of the service handler to remove
    */
   void removeContentHandler(in AString contentType, in AString uri);
-
-  /**
-   * Registers a protocol handler for a web service
-   * @param   protocol
-   *          The protocol scheme to register a service handler for
-   * @param   uri
-   *          The uri of the service handler to register
-   * @param   title
-   *          The human readable title of the service
-   */
-  void registerProtocolHandler(in AString scheme, in AString uri, 
-                               in AString title);
-
-  /**
-   * Registers a content handler for a web service
-   * @param   contentType
-   *          The content type to register a service handler for
-   * @param   uri
-   *          The uri of the service handler to register
-   * @param   title
-   *          The human readable title of the service
-   */
-  void registerContentHandler(in AString contentType, in AString uri,
-                              in AString title);
 
   /**
    * Gets the list of content handlers for a particular type.

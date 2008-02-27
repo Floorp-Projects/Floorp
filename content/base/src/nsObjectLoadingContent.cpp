@@ -876,6 +876,24 @@ IsAboutBlank(nsIURI* aURI)
   return str.EqualsLiteral("about:blank");  
 }
 
+void
+nsObjectLoadingContent::UpdateFallbackState(nsIContent* aContent,
+                                            AutoFallback& fallback,
+                                            const nsCString& aTypeHint)
+{
+  PluginSupportState pluginState = GetPluginDisabledState(aTypeHint);
+  if (pluginState == ePluginUnsupported) {
+    // For unknown plugins notify the UI and allow the unknown plugin binding
+    // to attach.
+    FirePluginError(aContent, PR_FALSE);
+    fallback.TypeUnsupported();
+  }
+  else if (pluginState == ePluginBlocklisted) {
+    // For blocklisted plugins just send a notification to the UI.
+    FirePluginError(aContent, PR_TRUE);
+  }
+}
+
 nsresult
 nsObjectLoadingContent::LoadObject(nsIURI* aURI,
                                    PRBool aNotify,
@@ -1052,18 +1070,8 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
       case eType_Loading:
         NS_NOTREACHED("Should not have a loading type here!");
       case eType_Null:
-        // No need to load anything
-        PluginSupportState pluginState = GetPluginSupportState(thisContent,
-                                                               aTypeHint);
-        if (pluginState == ePluginUnsupported ||
-            pluginState == ePluginBlocklisted) {
-          FirePluginError(thisContent, pluginState == ePluginBlocklisted);
-        }
-        if (pluginState != ePluginDisabled &&
-            pluginState != ePluginBlocklisted) {
-          fallback.TypeUnsupported();
-        }
-
+        // No need to load anything, notify of the failure.
+        UpdateFallbackState(thisContent, fallback, aTypeHint);
         break;
     };
     return NS_OK;
@@ -1124,22 +1132,37 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
   }
 
   if (!aURI) {
-    // No URI and no type... nothing we can do.
+    // No URI and if we have got this far no enabled plugin supports the type
     LOG(("OBJLC [%p]: no URI\n", this));
     rv = NS_ERROR_NOT_AVAILABLE;
+
+    // We should only notify the UI if there is at least a type to go on for
+    // finding a plugin to use.
+    if (!aTypeHint.IsEmpty()) {
+      UpdateFallbackState(thisContent, fallback, aTypeHint);
+    }
+
     return NS_OK;
   }
 
+  // E.g. mms://
   if (!CanHandleURI(aURI)) {
     LOG(("OBJLC [%p]: can't handle URI\n", this));
     if (aTypeHint.IsEmpty()) {
       rv = NS_ERROR_NOT_AVAILABLE;
       return NS_OK;
     }
-    // E.g. mms://
-    mType = eType_Plugin;
 
-    rv = TryInstantiate(aTypeHint, aURI);
+    if (IsSupportedPlugin(aTypeHint)) {
+      mType = eType_Plugin;
+
+      rv = TryInstantiate(aTypeHint, aURI);
+    } else {
+      rv = NS_ERROR_NOT_AVAILABLE;
+      // No plugin to load, notify of the failure.
+      UpdateFallbackState(thisContent, fallback, aTypeHint);
+    }
+
     return NS_OK;
   }
 

@@ -232,20 +232,19 @@ var PlacesOrganizer = {
    *          The mouse event.
    */
   onTreeClick: function PO_onTreeClick(aEvent) {
-    var currentView = aEvent.currentTarget;
-    var controller = currentView.controller;
-
     if (aEvent.target.localName != "treechildren")
       return;
 
-    if (currentView.hasSingleSelection && aEvent.button == 1) {
-      if (PlacesUtils.nodeIsURI(currentView.selectedNode))
-        controller.openSelectedNodeWithEvent(aEvent);
-      else if (PlacesUtils.nodeIsContainer(currentView.selectedNode)) {
+    var currentView = aEvent.currentTarget;
+    var selectedNode = currentView.selectedNode;
+    if (selectedNode && aEvent.button == 1) {
+      if (PlacesUtils.nodeIsURI(selectedNode))
+        PlacesUtils.openNodeWithEvent(selectedNode, aEvent);
+      else if (PlacesUtils.nodeIsContainer(selectedNode)) {
         // The command execution function will take care of seeing the
         // selection is a folder/container and loading its contents in
         // tabs for us.
-        controller.openLinksInTabs();
+        PlacesUtils.openContainerNodeInTabs(selectedNode);
       }
     }
   },
@@ -258,7 +257,7 @@ var PlacesOrganizer = {
   },
 
   openSelectedNode: function PU_openSelectedNode(aEvent) {
-    this._content.controller.openSelectedNodeWithEvent(aEvent);
+    PlacesUtils.openNodeWithEvent(this._content.selectedNode, aEvent);
   },
 
   /**
@@ -525,23 +524,21 @@ var PlacesOrganizer = {
 
     var contentTree = document.getElementById("placeContent");
     var detailsDeck = document.getElementById("detailsDeck");
-    if (contentTree.hasSelection) {
-      detailsDeck.selectedIndex = 1;
-      if (contentTree.hasSingleSelection) {
-        var selectedNode = contentTree.selectedNode;
-        if (selectedNode.itemId != -1 &&
-            !PlacesUtils.nodeIsSeparator(selectedNode)) {
-          if (this._paneDisabled) {
-            this._setDetailsFieldsDisabledState(false);
-            this._paneDisabled = false;
-          }
-
-          gEditItemOverlay.initPanel(selectedNode.itemId,
-                                     { hiddenRows: ["folderPicker"] });
-
-          this._detectAndSetDetailsPaneMinimalState(selectedNode);
-          return;
+    detailsDeck.selectedIndex = 1;
+    var selectedNode = contentTree.selectedNode;
+    if (selectedNode) {
+      if (selectedNode.itemId != -1 &&
+          !PlacesUtils.nodeIsSeparator(selectedNode)) {
+        if (this._paneDisabled) {
+          this._setDetailsFieldsDisabledState(false);
+          this._paneDisabled = false;
         }
+
+        gEditItemOverlay.initPanel(selectedNode.itemId,
+                                   { hiddenRows: ["folderPicker"] });
+
+        this._detectAndSetDetailsPaneMinimalState(selectedNode);
+        return;
       }
     }
     else {
