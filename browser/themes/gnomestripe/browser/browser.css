@@ -211,13 +211,15 @@ menuitem:not([type]) {
 }
 
 menuitem[command="cmd_newNavigator"],
-#context-openlink {
+#context-openlink,
+#context-openframe {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 80px 16px 64px);
 }
 
 menuitem[command="cmd_newNavigatorTab"],
-#context-openlinkintab {
+#context-openlinkintab,
+#context-openframeintab {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 64px 16px 48px);
 }
@@ -233,7 +235,8 @@ menuitem[command="Browser:OpenFile"] {
 menuitem[command="Browser:SavePage"],
 #context-savelink,
 #context-saveimage,
-#context-savepage {
+#context-savepage,
+#context-saveframe {
   list-style-image: url("moz-icon://stock/gtk-save-as?size=menu");
 }
 
@@ -241,7 +244,8 @@ menuitem[command="cmd_printPreview"] {
   list-style-image: url("moz-icon://stock/gtk-print-preview?size=menu");
 }
 
-menuitem[command="cmd_print"] {
+menuitem[command="cmd_print"],
+#context-printframe {
   list-style-image: url("moz-icon://stock/gtk-print?size=menu");
 }
 
@@ -337,7 +341,8 @@ menuitem[command="Browser:Stop"][disabled],
 }
 
 menuitem[command="Browser:Reload"],
-#context-reload {
+#context-reload,
+#context-reloadframe {
   list-style-image: url("moz-icon://stock/gtk-refresh?size=menu");
 }
 
@@ -418,7 +423,8 @@ menuitem[command="Browser:ShowAllBookmarks"] {
 }
 
 menuitem[command="View:PageInfo"],
-#context-viewinfo {
+#context-viewinfo,
+#context-viewframeinfo {
   list-style-image: url("moz-icon://stock/gtk-info?size=menu");
 }
 
