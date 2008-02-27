@@ -1020,6 +1020,62 @@ nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
   return NS_OK;
 }
 
+/* virtual */ nscoord
+nsMathMLContainerFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+{
+  nscoord result;
+  DISPLAY_MIN_WIDTH(this, result);
+  result = GetIntrinsicWidth(aRenderingContext);
+  return result;
+}
+
+/* virtual */ nscoord
+nsMathMLContainerFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+{
+  nscoord result;
+  DISPLAY_MIN_WIDTH(this, result);
+  result = GetIntrinsicWidth(aRenderingContext);
+  return result;
+}
+
+/* virtual */ nscoord
+nsMathMLContainerFrame::GetIntrinsicWidth(nsIRenderingContext *aRenderingContext)
+{
+  // Get child widths
+  nsIFrame* childFrame = mFrames.FirstChild();
+  while (childFrame) {
+    // XXX This includes margin while Reflow currently doesn't consider
+    // margin, so we may end up with too much space, but, with stretchy
+    // characters, this is an approximation anyway.
+    nscoord width =
+      nsLayoutUtils::IntrinsicForContainer(aRenderingContext, childFrame,
+                                           nsLayoutUtils::PREF_WIDTH);
+
+    nsHTMLReflowMetrics childDesiredSize;
+    childDesiredSize.width = width;
+    childDesiredSize.mBoundingMetrics.width = width;
+    // TODO: we need nsIFrame::GetIntrinsicHBounds() for better values here.
+    childDesiredSize.mBoundingMetrics.leftBearing = 0;
+    childDesiredSize.mBoundingMetrics.rightBearing = width;
+
+    SaveReflowAndBoundingMetricsFor(childFrame, childDesiredSize,
+                                    childDesiredSize.mBoundingMetrics);
+
+    childFrame = childFrame->GetNextSibling();
+  }
+
+  // Measure
+  nsHTMLReflowMetrics desiredSize;
+  nsresult rv = Place(*aRenderingContext, PR_FALSE, desiredSize);
+  if (NS_FAILED(rv)) {
+    ReflowError(*aRenderingContext, desiredSize);
+  }
+
+  ClearSavedChildMetrics();
+
+  return desiredSize.width;
+}
+
 // see spacing table in Chapter 18, TeXBook (p.170)
 // Our table isn't quite identical to TeX because operators have 
 // built-in values for lspace & rspace in the Operator Dictionary.
