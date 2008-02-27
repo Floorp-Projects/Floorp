@@ -109,7 +109,7 @@ public:
     PRNetAddr   *addr;
     PRUint32     expiration; /* measured in minutes since epoch */
 
-    PRBool HasResult() const { return (addr_info || addr) != nsnull; }
+    PRBool HasResult() const { return addr_info || addr; }
 
 private:
     friend class nsHostResolver;
