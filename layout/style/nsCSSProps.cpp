@@ -382,11 +382,13 @@ const PRInt32 nsCSSProps::kBoxSizingKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kCaptionSideKTable[] = {
-  eCSSKeyword_top,    NS_SIDE_TOP,
-  eCSSKeyword_right,  NS_SIDE_RIGHT,
-  eCSSKeyword_bottom, NS_SIDE_BOTTOM,
-  eCSSKeyword_left,   NS_SIDE_LEFT,
-  eCSSKeyword_UNKNOWN,-1
+  eCSSKeyword_top,                  NS_STYLE_CAPTION_SIDE_TOP,
+  eCSSKeyword_right,                NS_STYLE_CAPTION_SIDE_RIGHT,
+  eCSSKeyword_bottom,               NS_STYLE_CAPTION_SIDE_BOTTOM,
+  eCSSKeyword_left,                 NS_STYLE_CAPTION_SIDE_LEFT,
+  eCSSKeyword_top_outside,          NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE,
+  eCSSKeyword_bottom_outside,       NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE,
+  eCSSKeyword_UNKNOWN,              -1
 };
 
 const PRInt32 nsCSSProps::kClearKTable[] = {

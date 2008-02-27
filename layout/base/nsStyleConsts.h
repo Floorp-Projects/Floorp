@@ -628,7 +628,12 @@
 #define NS_STYLE_TABLE_EMPTY_CELLS_SHOW            1
 #define NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND 2
 
-// CAPTION_SIDE uses NS_SIDE_*
+#define NS_STYLE_CAPTION_SIDE_TOP               0
+#define NS_STYLE_CAPTION_SIDE_RIGHT             1
+#define NS_STYLE_CAPTION_SIDE_BOTTOM            2
+#define NS_STYLE_CAPTION_SIDE_LEFT              3
+#define NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE       4
+#define NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE    5
 
 // constants for cell "scope" attribute
 #define NS_STYLE_CELL_SCOPE_ROW                 0
