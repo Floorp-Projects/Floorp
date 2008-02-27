@@ -80,6 +80,11 @@
     <span class="title">CEO</span>
   </div>
 
+  <div class="vevent" id="date_vcal">
+    <span class="description">Mozilla's Birthday</span>
+    <span class="dtstart">1998-01-22</span>
+  </div>
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -91,7 +96,7 @@ function test_Microformats() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   Components.utils.import("resource://gre/modules/Microformats.js");
-  
+
   ok(Microformats, "Check global access to Microformats");
   var hCards = Microformats.get("hCard", document.getElementById("test_1"), {showHidden: true});
   is(hCards.length, 1, "Check Microformats.get");
@@ -141,7 +146,12 @@ function test_Microformats() {
   is(nestCard2.title, "Executive Assistant", "nesting (title) 2");
   is(nestCard3.fn, "Bob Smith", "nesting (fn) 3");
   is(nestCard3.title, "Office Assistant", "nesting (title) 3");
-  is(nestCard1.agent[0].agent[0].fn, "Bob Smith", "nesting all"); 
+  is(nestCard1.agent[0].agent[0].fn, "Bob Smith", "nesting all");
+  
+  var dateCal = new hCalendar(document.getElementById("date_vcal"));
+  jsdate = Microformats.dateFromISO8601(dateCal.dtstart);
+  origdate = Microformats.iso8601FromDate(jsdate, true);
+  is(dateCal.dtstart, origdate, "date round trip");
 }
 
 function test_hCard() {
