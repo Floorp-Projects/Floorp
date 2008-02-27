@@ -5943,9 +5943,17 @@ interrupt:
                         }
                     }
 
-                    JS_ASSERT(sprop->parent == scope->lastProp);
+                    /*
+                     * Detect a repeated property name and force a miss to
+                     * share the strict warning code and cope with complexity
+                     * managed by js_AddScopeProperty.
+                     */
+                    if (sprop->parent != scope->lastProp)
+                        goto do_initprop_miss;
+
                     JS_ASSERT(!SCOPE_HAD_MIDDLE_DELETE(scope));
-                    JS_ASSERT(!scope->table || !SCOPE_HAS_PROPERTY(scope, sprop));
+                    JS_ASSERT(!scope->table ||
+                              !SCOPE_HAS_PROPERTY(scope, sprop));
 
                     slot = sprop->slot;
                     JS_ASSERT(slot == scope->map.freeslot);
@@ -5987,13 +5995,13 @@ interrupt:
                     break;
                 }
 
+              do_initprop_miss:
                 PCMETER(cache->inipcmisses++);
                 JS_UNLOCK_SCOPE(cx, scope);
 
                 /* Get the immediate property name into id. */
                 LOAD_ATOM(0);
                 id = ATOM_TO_JSID(atom);
-                i = -1;
                 SAVE_SP_AND_PC(fp);
 
                 /* Set the property named by obj[id] to rval. */
