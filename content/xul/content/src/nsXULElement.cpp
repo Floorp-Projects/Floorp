@@ -135,7 +135,7 @@
 #include "nsGkAtoms.h"
 #include "nsXULContentUtils.h"
 #include "nsNodeUtils.h"
-#include "nsFrameLoader.h"
+
 #include "prlog.h"
 #include "rdf.h"
 
@@ -215,32 +215,26 @@ PRUint32             nsXULPrototypeAttribute::gNumCacheSets;
 PRUint32             nsXULPrototypeAttribute::gNumCacheFills;
 #endif
 
-class nsXULElementTearoff : public nsIDOMElementCSSInlineStyle,
-                            public nsIFrameLoaderOwner
+class nsXULElementTearoff : public nsIDOMElementCSSInlineStyle
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULElementTearoff,
-                                           nsIDOMElementCSSInlineStyle)
+  NS_DECL_ISUPPORTS
 
   nsXULElementTearoff(nsXULElement *aElement)
     : mElement(aElement)
   {
   }
 
-  NS_FORWARD_NSIDOMELEMENTCSSINLINESTYLE(static_cast<nsXULElement*>(mElement.get())->)
-  NS_FORWARD_NSIFRAMELOADEROWNER(static_cast<nsXULElement*>(mElement.get())->);
+  NS_FORWARD_NSIDOMELEMENTCSSINLINESTYLE(mElement->)
+
 private:
-  nsCOMPtr<nsIDOMXULElement> mElement;
+  nsRefPtr<nsXULElement> mElement;
 };
 
-NS_IMPL_CYCLE_COLLECTION_1(nsXULElementTearoff, mElement)
+NS_IMPL_ADDREF(nsXULElementTearoff)
+NS_IMPL_RELEASE(nsXULElementTearoff)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXULElementTearoff)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXULElementTearoff)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULElementTearoff)
-  NS_INTERFACE_MAP_ENTRY(nsIFrameLoaderOwner)
+NS_INTERFACE_MAP_BEGIN(nsXULElementTearoff)
   NS_INTERFACE_MAP_ENTRY(nsIDOMElementCSSInlineStyle)
 NS_INTERFACE_MAP_END_AGGREGATED(mElement)
 
@@ -263,9 +257,6 @@ nsXULElement::nsXULSlots::nsXULSlots(PtrBits aFlags)
 nsXULElement::nsXULSlots::~nsXULSlots()
 {
     NS_IF_RELEASE(mControllers); // Forces release
-    if (mFrameLoader) {
-        mFrameLoader->Destroy();
-    }
 }
 
 nsINode::nsSlots*
@@ -413,9 +404,6 @@ nsXULElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
     } else if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
         inst = NS_GetDOMClassInfoInstance(eDOMClassInfo_XULElement_id);
-        NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-    } else if (aIID.Equals(NS_GET_IID(nsIFrameLoaderOwner))) {
-        inst = static_cast<nsIFrameLoaderOwner*>(new nsXULElementTearoff(this));
         NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
     } else {
         return PostQueryInterface(aIID, aInstancePtr);
@@ -824,29 +812,6 @@ nsXULElement::MaybeAddPopupListener(nsIAtom* aLocalName)
 // nsIContent interface
 //
 
-nsresult
-nsXULElement::BindToTree(nsIDocument* aDocument,
-                         nsIContent* aParent,
-                         nsIContent* aBindingParent,
-                         PRBool aCompileEventHandlers)
-{
-  nsresult rv = nsGenericElement::BindToTree(aDocument, aParent,
-                                             aBindingParent,
-                                             aCompileEventHandlers);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (aDocument) {
-      // We're in a document now.  Kick off the frame load.
-      nsCOMPtr<nsIFrameLoader> fl;
-      GetFrameLoader(getter_AddRefs(fl));
-      if (fl) {
-          fl->LoadFrame();
-      }
-  }
-
-  return rv;
-}
-
 void
 nsXULElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
@@ -861,18 +826,9 @@ nsXULElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     // mDocument in nsGlobalWindow::SetDocShell, but I'm not
     // sure whether that would fix all possible cycles through
     // mControllers.)
-    nsXULSlots* slots = static_cast<nsXULSlots*>(GetExistingDOMSlots());
+    nsDOMSlots* slots = GetExistingDOMSlots();
     if (slots) {
         NS_IF_RELEASE(slots->mControllers);
-        if (slots->mFrameLoader) {
-            // This element is being taken out of the document, destroy the
-            // possible frame loader.
-            // XXXbz we really want to only partially destroy the frame
-            // loader... we don't want to tear down the docshell.  Food for
-            // later bug.
-            slots->mFrameLoader->Destroy();
-            slots->mFrameLoader = nsnull;
-        }
     }
 
     nsGenericElement::UnbindFromTree(aDeep, aNullParent);
@@ -1108,14 +1064,6 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
             attrValue.GetColorValue(color);
 
             SetTitlebarColor(color);
-        }
-
-        if (aName == nsGkAtoms::src && document) {
-            nsCOMPtr<nsIFrameLoader> fl;
-            GetFrameLoader(getter_AddRefs(fl));
-            if (fl) {
-                fl->LoadFrame();
-            }
         }
 
         // XXX need to check if they're changing an event handler: if
@@ -1525,13 +1473,9 @@ nsXULElement::GetAttrCount() const
 void
 nsXULElement::DestroyContent()
 {
-    nsXULSlots* slots = static_cast<nsXULSlots*>(GetExistingDOMSlots());
+    nsDOMSlots* slots = GetExistingDOMSlots();
     if (slots) {
-        NS_IF_RELEASE(slots->mControllers);
-        if (slots->mFrameLoader) {
-            slots->mFrameLoader->Destroy();
-            slots->mFrameLoader = nsnull;
-        }
+      NS_IF_RELEASE(slots->mControllers);
     }
 
     nsGenericElement::DestroyContent();
@@ -2001,28 +1945,6 @@ nsXULElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 
     NS_IF_ADDREF(*aStyle = slots->mStyle);
 
-    return NS_OK;
-}
-
-nsresult
-nsXULElement::GetFrameLoader(nsIFrameLoader** aFrameLoader)
-{
-    *aFrameLoader = nsnull;
-    // Allow frame loader only on objects for which a container box object
-    // can be obtained.
-    nsIAtom* tag = Tag();
-    if (tag != nsGkAtoms::browser &&
-        tag != nsGkAtoms::editor &&
-        tag != nsGkAtoms::iframe) {
-        return NS_OK;
-    }
-    nsXULSlots* slots = static_cast<nsXULSlots*>(GetSlots());
-    NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
-    if (!slots->mFrameLoader && IsInDoc()) {
-        slots->mFrameLoader = new nsFrameLoader(this);
-        NS_ENSURE_TRUE(slots->mFrameLoader, NS_ERROR_OUT_OF_MEMORY);
-    }
-    NS_IF_ADDREF(*aFrameLoader = slots->mFrameLoader);
     return NS_OK;
 }
 
