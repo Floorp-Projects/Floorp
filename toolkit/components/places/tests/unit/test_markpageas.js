@@ -91,7 +91,8 @@ var observer = {
   },
   onEndUpdateBatch: function() {
   },
-  onVisit: function(aURI, aVisitID, aTime, aSessionID, aReferringID, aTransitionType) {
+  onVisit: function(aURI, aVisitID, aTime, aSessionID, 
+                    aReferringID, aTransitionType, aAdded) {
     do_check_eq(aURI.spec, gVisits[this._visitCount].url);
     do_check_eq(aTransitionType, gVisits[this._visitCount].transition);
     this._visitCount++;
@@ -110,7 +111,7 @@ var observer = {
   onPageExpired: function(aURI, aVisitTime, aWholeEntry) {
   },
   QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsINavBookmarkObserver) ||
+    if (iid.equals(Ci.nsINavHistoryObserver) ||
         iid.equals(Ci.nsISupports)) {
       return this;
     }

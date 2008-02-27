@@ -114,7 +114,6 @@ function searchHistory(aInput)
 
   const NHQO = Ci.nsINavHistoryQueryOptions;
   var sortingMode;
-  var groups = []; 
   var resultType;
 
   if (aInput) {
@@ -132,22 +131,20 @@ function searchHistory(aInput)
         resultType = NHQO.RESULTS_AS_URI;
         sortingMode = NHQO.SORT_BY_DATE_DESCENDING;
         break; 
-      case "dayandsite":  // fall through
-        groups.push(NHQO.GROUP_BY_DAY);
+      case "dayandsite":
+        resultType = NHQO.RESULTS_AS_DATE_SITE_QUERY;
+        break;
       case "site":
-        groups.push(NHQO.GROUP_BY_HOST);
-        resultType = NHQO.RESULTS_AS_VISIT;
+        resultType = NHQO.RESULTS_AS_SITE_QUERY;
         sortingMode = NHQO.SORT_BY_TITLE_ASCENDING;
         break;
+      case "day":
       default:
-        resultType = NHQO.RESULTS_AS_VISIT;
-        groups.push(NHQO.GROUP_BY_DAY);
-        sortingMode = NHQO.SORT_BY_TITLE_ASCENDING;
+        resultType = NHQO.RESULTS_AS_DATE_QUERY;
         break;
     }
   }
 
-  options.setGroupingMode(groups, groups.length);
   options.sortingMode = sortingMode;
   options.resultType = resultType;
 

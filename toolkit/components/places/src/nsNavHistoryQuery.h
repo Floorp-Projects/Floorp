@@ -118,14 +118,12 @@ class nsNavHistoryQueryOptions : public nsINavHistoryQueryOptions
 {
 public:
   nsNavHistoryQueryOptions() : mSort(0), mResultType(0),
-                               mGroupCount(0), mGroupings(nsnull),
                                mExcludeItems(PR_FALSE),
                                mExcludeQueries(PR_FALSE),
                                mExcludeReadOnlyFolders(PR_FALSE),
                                mExpandQueries(PR_TRUE),
                                mIncludeHidden(PR_FALSE),
                                mShowSessions(PR_FALSE),
-                               mApplyOptionsToContainers(PR_FALSE),
                                mMaxResults(0),
                                mQueryType(nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY)
   { }
@@ -141,16 +139,12 @@ public:
 
   PRUint16 SortingMode() const { return mSort; }
   PRUint16 ResultType() const { return mResultType; }
-  const PRUint16* GroupingMode(PRUint32 *count) const {
-    *count = mGroupCount; return mGroupings;
-  }
   PRBool ExcludeItems() const { return mExcludeItems; }
   PRBool ExcludeQueries() const { return mExcludeQueries; }
   PRBool ExcludeReadOnlyFolders() const { return mExcludeReadOnlyFolders; }
   PRBool ExpandQueries() const { return mExpandQueries; }
   PRBool IncludeHidden() const { return mIncludeHidden; }
   PRBool ShowSessions() const { return mShowSessions; }
-  PRBool ApplyOptionsToContainers() const { return mApplyOptionsToContainers; }
   PRUint32 MaxResults() const { return mMaxResults; }
   PRUint16 QueryType() const { return mQueryType; }
 
@@ -158,8 +152,6 @@ public:
 
 private:
   nsNavHistoryQueryOptions(const nsNavHistoryQueryOptions& other) {} // no copy
-
-  ~nsNavHistoryQueryOptions() { delete[] mGroupings; }
 
   // IF YOU ADD MORE ITEMS:
   //  * Add a new getter for C++ above if it makes sense
@@ -171,15 +163,12 @@ private:
   nsCString mSortingAnnotation;
   nsCString mParentAnnotationToExclude;
   PRUint16 mResultType;
-  PRUint32 mGroupCount;
-  PRUint16 *mGroupings;
   PRPackedBool mExcludeItems;
   PRPackedBool mExcludeQueries;
   PRPackedBool mExcludeReadOnlyFolders;
   PRPackedBool mExpandQueries;
   PRPackedBool mIncludeHidden;
   PRPackedBool mShowSessions;
-  PRPackedBool mApplyOptionsToContainers;
   PRUint32 mMaxResults;
   PRUint16 mQueryType;
 };

@@ -639,6 +639,10 @@ pref("browser.places.createdSmartBookmarks", false);
 // XXX to be removed after beta 2 (bug 391419)
 pref("browser.places.migratePostDataAnnotations", true);
 
+// If true, will update the Smart Bookmarks uri for
+// recent tags (bug 385245). Useful just for FX3 beta users.
+pref("browser.places.updateRecentTagsUri", true);
+
 // the (maximum) number of the recent visits to sample
 // when calculating frecency
 pref("places.frecency.numVisits", 10);

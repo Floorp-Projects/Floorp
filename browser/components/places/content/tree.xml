@@ -97,15 +97,6 @@
           var query = PlacesUtils.history.getNewQuery();
           query.searchTerms = filterString;
 
-          // Remove "group by folder" from the options list, because
-          // nsNavHistory::RecursiveGroup doesn't support it.
-          function isFolderGrouping(grouping, index, ary) {
-            return grouping != Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER;
-          }
-          var groupings = options.getGroupingMode({});
-          var folderGroupings = groupings.filter(isFolderGrouping);
-          options.setGroupingMode(folderGroupings, folderGroupings.length);
-
           if (folderRestrict) {
             query.setFolders(folderRestrict, folderRestrict.length);
             options.queryType = options.QUERY_TYPE_BOOKMARKS;

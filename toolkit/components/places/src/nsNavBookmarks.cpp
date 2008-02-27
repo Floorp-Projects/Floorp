@@ -2608,7 +2608,7 @@ nsNavBookmarks::OnEndUpdateBatch()
 NS_IMETHODIMP
 nsNavBookmarks::OnVisit(nsIURI *aURI, PRInt64 aVisitID, PRTime aTime,
                         PRInt64 aSessionID, PRInt64 aReferringID,
-                        PRUint32 aTransitionType)
+                        PRUint32 aTransitionType, PRUint32* aAdded)
 {
   // If the page is bookmarked, we need to notify observers
   PRBool bookmarked = PR_FALSE;
