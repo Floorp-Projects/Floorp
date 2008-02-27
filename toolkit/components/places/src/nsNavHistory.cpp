@@ -1049,15 +1049,16 @@ nsNavHistory::InitStatements()
     getter_AddRefs(mDBBookmarkToUrlResult));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // mDBURIHasTag
+  // mDBGetTags
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT b.id FROM moz_bookmarks b "
-      "JOIN moz_places p ON b.fk = p.id "
-      "WHERE p.url = ?1 "
-        "AND (SELECT b1.parent FROM moz_bookmarks b1 WHERE "
-        "b1.id = b.parent AND LOWER(b1.title) = LOWER(?2)) = ?3 "
-      "LIMIT 1"),
-    getter_AddRefs(mDBURIHasTag));
+      "SELECT GROUP_CONCAT(t.title, ' ') "
+      "FROM moz_places h "
+      "JOIN moz_bookmarks b ON b.type = ") +
+        nsPrintfCString("%d", nsINavBookmarksService::TYPE_BOOKMARK) +
+        NS_LITERAL_CSTRING(" AND b.fk = h.id "
+      "JOIN moz_bookmarks t ON t.parent = ?1 AND t.id = b.parent "
+      "WHERE h.url = ?2"),
+    getter_AddRefs(mDBGetTags));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // mFoldersWithAnnotationQuery
@@ -4952,109 +4953,6 @@ nsNavHistory::GetTagsFolder()
   return mTagsFolder;
 }
 
-
-PRBool
-nsNavHistory::URIHasTag(const nsACString& aURISpec, const nsAString& aTag)
-{
-  mozStorageStatementScoper scoper(mDBURIHasTag);
-
-  nsresult rv = mDBURIHasTag->BindUTF8StringParameter(0, aURISpec);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-  rv = mDBURIHasTag->BindStringParameter(1, aTag);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-  rv = mDBURIHasTag->BindInt64Parameter(2, GetTagsFolder());
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-  PRBool hasTag = PR_FALSE;
-  rv = mDBURIHasTag->ExecuteStep(&hasTag);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  return hasTag;
-}
-
-void
-nsNavHistory::CreateTermsFromTokens(const nsStringArray& aTagTokens, nsStringArray &aTerms)
-{
-  PRUint32 tagTokensCount = aTagTokens.Count();
-
-  // from our tokens, build up all possible tags
-  // for example:  ("a b c") -> ("a","b","c","a b","b c","a b c")
-  for (PRUint32 numCon = 1; numCon <= tagTokensCount; numCon++) {
-    for (PRUint32 i = 0; i < tagTokensCount; i++) {
-      if (i + numCon > tagTokensCount)
-        continue;
-
-      // after certain number of tokens (30 if SQLITE_MAX_EXPR_DEPTH is the default of 1000)
-      // we'll generate a query with an expression tree that is too large. 
-      // if we exceed this limit, CreateStatement() will fail.
-      // 30 tokens == 465 terms
-      if (aTerms.Count() == 465) {
-        NS_WARNING("hitting SQLITE_MAX_EXPR_DEPTH, not generating any more terms");
-        return;
-      }
-
-      nsAutoString currentValue;
-      for (PRUint32 j = i; j < i + numCon; j++) {
-        if (!currentValue.IsEmpty())
-          currentValue += NS_LITERAL_STRING(" ");
-        currentValue += *(aTagTokens.StringAt(j));
-      }
-
-      aTerms.AppendString(currentValue);
-    }
-  }
-}
-
-PRBool
-nsNavHistory::URIHasAnyTagFromTerms(const nsACString& aURISpec, const nsStringArray& aTerms)
-{
-  PRUint32 termsCount = aTerms.Count();
-
-  if (termsCount == 1)
-    return URIHasTag(aURISpec, *(aTerms.StringAt(0)));
-
-  nsCString tagQuery = NS_LITERAL_CSTRING(
-    "SELECT b.id FROM moz_bookmarks b "
-    "JOIN moz_places p ON b.fk = p.id "
-    "WHERE p.url = ?1 "
-      "AND (SELECT b1.parent FROM moz_bookmarks b1 WHERE "
-      "b1.id = b.parent AND (");
-
-  for (PRUint32 i=0; i<termsCount; i++) {
-    if (i)
-      tagQuery += NS_LITERAL_CSTRING(" OR");
- 
-    // +3 to skip over the "?2", which is the tag root parameter
-    tagQuery += NS_LITERAL_CSTRING(" LOWER(b1.title) = ") +
-                nsPrintfCString("LOWER(?%d)", i+3);
-  }
-
-  tagQuery += NS_LITERAL_CSTRING(")) = ?2 LIMIT 1");
-
-  nsCOMPtr<mozIStorageStatement> uriHasAnyTagQuery;
-
-  nsresult rv = mDBConn->CreateStatement(tagQuery, getter_AddRefs(uriHasAnyTagQuery));
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-  rv = uriHasAnyTagQuery->BindUTF8StringParameter(0, aURISpec);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-  rv = uriHasAnyTagQuery->BindInt64Parameter(1, GetTagsFolder());
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-  for (PRUint32 i=0; i<termsCount; i++) {
-    // +2 to skip over the "?2", which is the tag root parameter
-    rv = uriHasAnyTagQuery->BindStringParameter(i+2, *(aTerms.StringAt(i)));
-    NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  }
-
-  PRBool hasAnyTag = PR_FALSE;
-  rv = uriHasAnyTagQuery->ExecuteStep(&hasAnyTag);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  return hasAnyTag;
-}
-
 // nsNavHistory::FilterResultSet
 //
 // This does some post-query-execution filtering:
@@ -5196,30 +5094,41 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
         }
       }
 
-      nsStringArray tagTerms;
-      CreateTermsFromTokens(*terms[queryIndex], tagTerms);
+      // Load up the title, url, tags for the current node as UTF16 strings
+      NS_ConvertUTF8toUTF16 nodeTitle(aSet[nodeIndex]->mTitle);
+      // Unescape the URL for search term matching
+      nsCAutoString cNodeURL(aSet[nodeIndex]->mURI);
+      NS_ConvertUTF8toUTF16 nodeURL(NS_UnescapeURL(cNodeURL));
 
-      // search terms
-      // XXXmano/dietrich: when bug 331487 is fixed, bookmark queries can group
-      // by folder or not regardless of specified folders or search terms.
-      PRBool allTermsFound = PR_TRUE;
-      for (PRInt32 termIndex = 0; termIndex < terms[queryIndex]->Count() &&
-           allTermsFound; termIndex ++) {
-        // search terms should match title, url or tags
-        PRBool termFound = PR_FALSE;
-        // title and URL
-        if (CaseInsensitiveFindInReadable(*terms[queryIndex]->StringAt(termIndex),
-                                          NS_ConvertUTF8toUTF16(aSet[nodeIndex]->mTitle)) ||
-            (CaseInsensitiveFindInReadable(*terms[queryIndex]->StringAt(termIndex),
-                                            NS_ConvertUTF8toUTF16(aSet[nodeIndex]->mURI))))
-          termFound = PR_TRUE;
+      // Fetch the tags
+      mozStorageStatementScoper scoper(mDBGetTags);
+      rv = mDBGetTags->BindInt32Parameter(0, GetTagsFolder());
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = mDBGetTags->BindUTF8StringParameter(1, aSet[nodeIndex]->mURI);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-        if (!termFound)
-          allTermsFound = PR_FALSE;
+      nsAutoString nodeTags;
+      PRBool hasTag = PR_FALSE;
+      if (NS_SUCCEEDED(mDBGetTags->ExecuteStep(&hasTag)) && hasTag) {
+        rv = mDBGetTags->GetString(0, nodeTags);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      if (!allTermsFound && !URIHasAnyTagFromTerms(aSet[nodeIndex]->mURI, tagTerms))
-          continue;
+      // Determine if every search term matches anywhere in the title, url, tag
+      PRBool matchAll = PR_TRUE;
+      for (PRInt32 termIndex = terms[queryIndex]->Count(); --termIndex >= 0 &&
+           matchAll; ) {
+        const nsString *term = terms[queryIndex]->StringAt(termIndex);
+
+        // True if any of them match; false makes us quit the loop
+        matchAll = CaseInsensitiveFindInReadable(*term, nodeTitle) ||
+                   CaseInsensitiveFindInReadable(*term, nodeURL) ||
+                   CaseInsensitiveFindInReadable(*term, nodeTags);
+      }
+
+      // Skip if we don't match all terms in the title, url or tag
+      if (!matchAll)
+        continue;
 
       appendNode = PR_TRUE;
     }
