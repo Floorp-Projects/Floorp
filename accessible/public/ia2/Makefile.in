@@ -111,10 +111,23 @@ OS_LIBS = \
   oleaut32.lib \
   $(NULL)
 
-$(MIDL_GENERATED_FILES): $(addprefix $(IA2DIR)/,$(MIDL_INTERFACES) $(MIDL_ENUMS))
-	for idl in $^; do \
+# generate list of to-be-generated files that are missing
+# but ignore special file dlldata.c
+missing:=$(strip $(foreach onefile,$(strip $(subst dlldata.c,,$(MIDL_GENERATED_FILES))),$(if $(wildcard $(onefile)),,$(onefile))))
+
+missing_base:=$(sort $(basename $(subst _p.c,,$(subst _i.c,,$(missing)))))
+
+$(MIDL_GENERATED_FILES) : midl_done
+
+ifneq ("$(missing)","")
+midl_done : FORCE
+endif
+
+midl_done : $(addprefix $(IA2DIR)/,$(MIDL_INTERFACES) $(MIDL_ENUMS))
+	for idl in $(sort $(subst FORCE,,$?) $(addsuffix .idl,$(addprefix $(IA2DIR)/,$(missing_base)))); do \
 	  $(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -Oicf $$idl; \
 	done
+	touch $@
 
 # This marshall dll is also registered in the installer
 register::
