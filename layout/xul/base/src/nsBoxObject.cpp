@@ -173,9 +173,6 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
     // Get its origin
     nsPoint origin = frame->GetPositionIgnoringScrolling();
 
-    // Get the union of all rectangles in this and continuation frames
-    nsRect rcFrame = nsLayoutUtils::GetAllInFlowBoundingRect(frame);
-        
     // Find the frame parent whose content is the document element.
     nsIContent *docElement = mContent->GetCurrentDoc()->GetRootContent();
     nsIFrame* parent = frame->GetParent();
@@ -210,10 +207,16 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
 
     aRect.x = nsPresContext::AppUnitsToIntCSSPixels(origin.x);
     aRect.y = nsPresContext::AppUnitsToIntCSSPixels(origin.y);
+    
+    // Get the union of all rectangles in this and continuation frames.
+    // It doesn't really matter what we use as aRelativeTo here, since
+    // we only care about the size. Using 'parent' might make things
+    // a bit faster by speeding up the internal GetOffsetTo operations.
+    nsRect rcFrame = nsLayoutUtils::GetAllInFlowRectsUnion(frame, parent);
     aRect.width = nsPresContext::AppUnitsToIntCSSPixels(rcFrame.width);
     aRect.height = nsPresContext::AppUnitsToIntCSSPixels(rcFrame.height);
   }
- 
+
   return NS_OK;
 }
 

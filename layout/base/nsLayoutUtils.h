@@ -471,13 +471,27 @@ public:
                           PRInt32&   aIndex,
                           PRInt32&   aTextWidth);
 
+  class RectCallback {
+  public:
+    virtual void AddRect(const nsRect& aRect) = 0;
+  };
   /**
-   * Get the union of all rects in aFrame and its continuations, relative
-   * to aFrame's origin. Scrolling is taken into account, but this shouldn't
-   * matter because it should be impossible to have some continuations scrolled
-   * differently from others.
+   * Collect all CSS border-boxes associated with aFrame and its
+   * continuations, "drilling down" through outer table frames and
+   * some anonymous blocks since they're not real CSS boxes.
+   * The boxes are positioned relative to aRelativeTo (taking scrolling
+   * into account) and passed to the callback in frame-tree order.
+   * If aFrame is null, no boxes are returned.
+   * For SVG frames, returns one rectangle, the bounding box.
    */
-  static nsRect GetAllInFlowBoundingRect(nsIFrame* aFrame);
+  static void GetAllInFlowRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
+                                RectCallback* aCallback);
+
+  /**
+   * Computes the union of all rects returned by GetAllInFlowRects. If
+   * the union is empty, returns the first rect.
+   */
+  static nsRect GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo);
 
   /**
    * Get the font metrics corresponding to the frame's style data.
