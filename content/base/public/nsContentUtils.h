@@ -96,6 +96,7 @@ class nsVoidArray;
 struct JSRuntime;
 class nsICaseConversion;
 class nsIWidget;
+class nsPIDOMWindow;
 #ifdef MOZ_XTF
 class nsIXTFService;
 #endif
@@ -370,6 +371,10 @@ public:
 
   // Check if the (JS) caller can access aNode.
   static PRBool CanCallerAccess(nsIDOMNode *aNode);
+
+  // Check if the (JS) caller can access aWindow.
+  // aWindow can be either outer or inner window.
+  static PRBool CanCallerAccess(nsPIDOMWindow* aWindow);
 
   /**
    * Get the docshell through the JS context that's currently on the stack.
@@ -1187,6 +1192,9 @@ private:
   static nsresult HoldScriptObject(PRUint32 aLangID, void* aObject);
   PR_STATIC_CALLBACK(void) DropScriptObject(PRUint32 aLangID, void *aObject,
                                             void *aClosure);
+
+  static PRBool CanCallerAccess(nsIPrincipal* aSubjectPrincipal,
+                                nsIPrincipal* aPrincipal);
 
   static nsIDOMScriptObjectFactory *sDOMScriptObjectFactory;
 
