@@ -194,13 +194,14 @@ TaggingService.prototype = {
    *        the item-id of the tag element under the tags root
    */
   _removeTagIfEmpty: function TS__removeTagIfEmpty(aTagId) {
-    var options = this._history.getNewQueryOptions();
-    var query = this._history.getNewQuery();
-    query.setFolders([aTagId], 1);
-    var result = this._history.executeQuery(query, options);
-    var rootNode = result.root;
-    rootNode.containerOpen = true;
-    if (rootNode.childCount == 0)
+    var node = this._getTagNode(aTagId).QueryInterface(Ci.nsINavHistoryContainerResultNode);
+    var wasOpen = node.containerOpen;
+    if (!wasOpen)
+      node.containerOpen = true;
+    var cc = node.childCount;
+    if (wasOpen)
+      node.containerOpen = false;
+    if (cc == 0)
       this._bms.removeFolder(aTagId);
   },
 
