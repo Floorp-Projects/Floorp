@@ -899,7 +899,8 @@ nsNativeThemeGTK::GetWidgetPadding(nsIDeviceContext* aContext,
       aWidgetType == NS_THEME_TOOLBAR_BUTTON ||
       aWidgetType == NS_THEME_TOOLBAR_DUAL_BUTTON ||
       aWidgetType == NS_THEME_TAB_SCROLLARROW_BACK ||
-      aWidgetType == NS_THEME_TAB_SCROLLARROW_FORWARD) {
+      aWidgetType == NS_THEME_TAB_SCROLLARROW_FORWARD ||
+      aWidgetType == NS_THEME_DROPDOWN_BUTTON) {
     aResult->SizeTo(0, 0, 0, 0);
     return PR_TRUE;
   }
