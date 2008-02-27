@@ -460,8 +460,10 @@ SERVERPREFEND
   $pacURL   .= "{                                               ";
   $pacURL   .= "  var servers = [$quotedServers];               ";
   $pacURL   .= "  var regex =                                   ";
-  $pacURL   .= "    new RegExp('http://(.*?(:\\\\\\\\d+)?)/');  ";
+  $pacURL   .= "    new RegExp('http://(?:[^/@]*@)?(.*?(:\\\\\\\\d+)?)/');  ";
   $pacURL   .= "  var matches = regex.exec(url);                ";
+  $pacURL   .= "  if (!matches)                                 ";
+  $pacURL   .= "    return 'DIRECT';                            ";
   $pacURL   .= "  var hostport = matches[1], port = matches[2]; ";
   $pacURL   .= "  if (!port)                                    ";
   $pacURL   .= "    hostport += ':80';                          ";
