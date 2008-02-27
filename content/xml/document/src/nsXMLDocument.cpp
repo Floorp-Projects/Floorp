@@ -378,6 +378,9 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   // changing the principal of this document.
   nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
 
+  // Enforce same-origin even for chrome loaders to avoid someone accidentally
+  // using a document that content has a reference to and turn that into a
+  // chrome document.
   if (codebase) {
     rv = secMan->CheckSameOriginURI(codebase, uri, PR_FALSE);
 

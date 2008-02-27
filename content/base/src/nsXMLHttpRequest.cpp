@@ -1416,7 +1416,7 @@ nsXMLHttpRequest::CheckChannelForCrossSiteRequest()
   // The request is now cross-site, so update flag.
   mState |= XML_HTTP_REQUEST_USE_XSITE_AC;
 
-  // Remove dangerous headers and set XMLHttpRequest-Security-Check
+  // Remove dangerous headers
   nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(mChannel);
   if (http) {
     PRUint32 i;
@@ -1426,17 +1426,7 @@ nsXMLHttpRequest::CheckChannelForCrossSiteRequest()
     mExtraRequestHeaders.Clear();
   }
 
-  // Cancel if username/password is supplied to avoid brute-force password
-  // hacking
-  nsCOMPtr<nsIURI> channelURI;
-  nsresult rv = mChannel->GetURI(getter_AddRefs(channelURI));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCString userpass;
-  channelURI->GetUserPass(userpass);
-  NS_ENSURE_TRUE(userpass.IsEmpty(), NS_ERROR_DOM_BAD_URI);
-  
-  return nsCrossSiteListenerProxy::AddRequestHeaders(mChannel, mPrincipal);
+  return NS_OK;
 }
 
 /* noscript void openRequest (in AUTF8String method, in AUTF8String url, in boolean async, in AString user, in AString password); */
@@ -1589,8 +1579,6 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
       rv = NS_NewChannel(getter_AddRefs(mACGetChannel), uri, nsnull, loadGroup,
                          nsnull, loadFlags);
       NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = nsCrossSiteListenerProxy::AddRequestHeaders(mACGetChannel, mPrincipal);
 
       nsCOMPtr<nsIHttpChannel> acHttp = do_QueryInterface(mACGetChannel);
       NS_ASSERTION(acHttp, "Failed to QI to nsIHttpChannel!");
@@ -2290,8 +2278,10 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   if (!(mState & XML_HTTP_REQUEST_XSITEENABLED)) {
     // Always create a nsCrossSiteListenerProxy here even if it's
     // a same-origin request right now, since it could be redirected.
-    listener = new nsCrossSiteListenerProxy(listener, mPrincipal);
+    listener = new nsCrossSiteListenerProxy(listener, mPrincipal, mChannel,
+                                            &rv);
     NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Bypass the network cache in cases where it makes no sense:
@@ -2328,8 +2318,10 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
       new nsACProxyListener(mChannel, listener, nsnull, mPrincipal, method);
     NS_ENSURE_TRUE(acListener, NS_ERROR_OUT_OF_MEMORY);
 
-    listener = new nsCrossSiteListenerProxy(acListener, mPrincipal);
+    listener = new nsCrossSiteListenerProxy(acListener, mPrincipal,
+                                            mACGetChannel, &rv);
     NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     rv = mACGetChannel->AsyncOpen(listener, nsnull);
   }
