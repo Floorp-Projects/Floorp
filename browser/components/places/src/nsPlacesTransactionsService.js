@@ -37,18 +37,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-let Ci = Components.interfaces;
-let Cc = Components.classes;
-let Cr = Components.results;
-
 const loadInSidebarAnno = "bookmarkProperties/loadInSidebar";
 const descriptionAnno = "bookmarkProperties/description";
 const CLASS_ID = Components.ID("c0844a84-5a12-4808-80a8-809cb002bb4f");
 const CONTRACT_ID = "@mozilla.org/browser/placesTransactionsService;1";
 
+var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"].
+             getService(Components.interfaces.mozIJSSubScriptLoader);
+loader.loadSubScript("chrome://global/content/debug.js");
+loader.loadSubScript("chrome://browser/content/places/utils.js");
+
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/utils.js");
-Components.utils.import("resource://gre/modules/debug.js");
 
 // The minimum amount of transactions we should tell our observers to begin
 // batching (rather than letting them do incremental drawing).
