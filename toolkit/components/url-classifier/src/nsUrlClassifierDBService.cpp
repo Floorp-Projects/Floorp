@@ -49,6 +49,7 @@
 #include "nsAutoLock.h"
 #include "nsCRT.h"
 #include "nsICryptoHash.h"
+#include "nsICryptoHMAC.h"
 #include "nsIDirectoryService.h"
 #include "nsIObserverService.h"
 #include "nsIPrefBranch.h"
@@ -59,6 +60,7 @@
 #include "nsToolkitCompsCID.h"
 #include "nsIUrlClassifierUtils.h"
 #include "nsUrlClassifierDBService.h"
+#include "nsUrlClassifierUtils.h"
 #include "nsURILoader.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -1156,6 +1158,13 @@ private:
   PRBool mHaveCachedSubChunks;
   nsTArray<PRUint32> mCachedSubChunks;
 
+  // The client key with which the data from the server will be MAC'ed.
+  nsCString mUpdateClientKey;
+
+  // The MAC stated by the server.
+  nsCString mServerMAC;
+
+  nsCOMPtr<nsICryptoHMAC> mHMAC;
   // The number of noise entries to add to the set of lookup results.
   PRInt32 mGethashNoise;
 
@@ -2453,23 +2462,35 @@ nsUrlClassifierDBServiceWorker::ProcessResponseLines(PRBool* done)
 
     LOG(("Processing %s\n", PromiseFlatCString(line).get()));
 
-    if (StringBeginsWith(line, NS_LITERAL_CSTRING("n:"))) {
+    if (mHMAC && mServerMAC.IsEmpty()) {
+      // If we did not receive a server MAC during BeginStream(), we
+      // require the first line of the update to be either a MAC or
+      // a request to rekey.
+      if (StringBeginsWith(line, NS_LITERAL_CSTRING("m:"))) {
+        mServerMAC = Substring(line, 2);
+        nsUrlClassifierUtils::UnUrlsafeBase64(mServerMAC);
+
+        // The remainder of the pending update needs to be digested.
+        const nsCSubstring &toDigest = Substring(updateString, cur);
+        rv = mHMAC->Update(reinterpret_cast<const PRUint8*>(toDigest.BeginReading()),
+                           toDigest.Length());
+        NS_ENSURE_SUCCESS(rv, rv);
+      } else if (line.EqualsLiteral("e:pleaserekey")) {
+        mUpdateObserver->RekeyRequested();
+      } else {
+        LOG(("No MAC specified!"));
+        return NS_ERROR_FAILURE;
+      }
+    } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("n:"))) {
       if (PR_sscanf(PromiseFlatCString(line).get(), "n:%d",
                     &mUpdateWait) != 1) {
         LOG(("Error parsing n: field: %s", PromiseFlatCString(line).get()));
         mUpdateWait = 0;
       }
-    } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("k:"))) {
-      // XXX: pleaserekey
+    } else if (line.EqualsLiteral("e:pleaserekey")) {
+      mUpdateObserver->RekeyRequested();
     } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("i:"))) {
-      const nsCSubstring& data = Substring(line, 2);
-      PRInt32 comma;
-      if ((comma = data.FindChar(',')) == kNotFound) {
-        mUpdateTable = data;
-      } else {
-        mUpdateTable = Substring(data, 0, comma);
-        // The rest is the mac, which we don't support for now
-      }
+      mUpdateTable.Assign(Substring(line, 2));
       GetTableId(mUpdateTable, &mUpdateTableId);
       LOG(("update table: '%s' (%d)", mUpdateTable.get(), mUpdateTableId));
     } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("u:"))) {
@@ -2479,13 +2500,29 @@ nsUrlClassifierDBServiceWorker::ProcessResponseLines(PRBool* done)
       }
 
       const nsCSubstring& data = Substring(line, 2);
-      PRInt32 space;
-      if ((space = data.FindChar(' ')) == kNotFound) {
-        mUpdateObserver->UpdateUrlRequested(data, mUpdateTable);
+      if (mHMAC) {
+        // We're expecting MACs alongside any url forwards.
+        nsCSubstring::const_iterator begin, end, sepBegin, sepEnd;
+        data.BeginReading(begin);
+        sepBegin = begin;
+
+        data.EndReading(end);
+        sepEnd = end;
+
+        if (!RFindInReadable(NS_LITERAL_CSTRING(","), sepBegin, sepEnd)) {
+          NS_WARNING("No MAC specified for a redirect in a request that expects a MAC");
+          return NS_ERROR_FAILURE;
+        }
+
+        nsCString serverMAC(Substring(sepEnd, end));
+        nsUrlClassifierUtils::UnUrlsafeBase64(serverMAC);
+        mUpdateObserver->UpdateUrlRequested(Substring(begin, sepBegin),
+                                            mUpdateTable,
+                                            serverMAC);
       } else {
-        mUpdateObserver->UpdateUrlRequested(Substring(data, 0, space),
-                                            mUpdateTable);
-        // The rest is the mac, which we don't support for now
+        // We didn't ask for a MAC, none should have been specified.
+        mUpdateObserver->UpdateUrlRequested(data, mUpdateTable,
+                                            NS_LITERAL_CSTRING(""));
       }
     } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("a:")) ||
                StringBeginsWith(line, NS_LITERAL_CSTRING("s:"))) {
@@ -2563,6 +2600,8 @@ nsUrlClassifierDBServiceWorker::ResetStream()
   mPrimaryStream = PR_FALSE;
   mUpdateTable.Truncate();
   mPendingStreamUpdate.Truncate();
+  mServerMAC.Truncate();
+  mHMAC = nsnull;
 }
 
 void
@@ -2571,6 +2610,7 @@ nsUrlClassifierDBServiceWorker::ResetUpdate()
   mUpdateWait = 0;
   mUpdateStatus = NS_OK;
   mUpdateObserver = nsnull;
+  mUpdateClientKey.Truncate();
 }
 
 NS_IMETHODIMP
@@ -2581,7 +2621,8 @@ nsUrlClassifierDBServiceWorker::SetHashCompleter(const nsACString &tableName,
 }
 
 NS_IMETHODIMP
-nsUrlClassifierDBServiceWorker::BeginUpdate(nsIUrlClassifierUpdateObserver *observer)
+nsUrlClassifierDBServiceWorker::BeginUpdate(nsIUrlClassifierUpdateObserver *observer,
+                                            const nsACString &clientKey)
 {
   if (gShuttingDownThread)
     return NS_ERROR_NOT_INITIALIZED;
@@ -2615,6 +2656,11 @@ nsUrlClassifierDBServiceWorker::BeginUpdate(nsIUrlClassifierUpdateObserver *obse
 
   mUpdateObserver = observer;
 
+  if (!clientKey.IsEmpty()) {
+    rv = nsUrlClassifierUtils::DecodeClientKey(clientKey, mUpdateClientKey);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   // The first stream in an update is the only stream that may request
   // forwarded updates.
   mPrimaryStream = PR_TRUE;
@@ -2623,7 +2669,8 @@ nsUrlClassifierDBServiceWorker::BeginUpdate(nsIUrlClassifierUpdateObserver *obse
 }
 
 NS_IMETHODIMP
-nsUrlClassifierDBServiceWorker::BeginStream(const nsACString &table)
+nsUrlClassifierDBServiceWorker::BeginStream(const nsACString &table,
+                                            const nsACString &serverMAC)
 {
   if (gShuttingDownThread)
     return NS_ERROR_NOT_INITIALIZED;
@@ -2632,6 +2679,30 @@ nsUrlClassifierDBServiceWorker::BeginStream(const nsACString &table)
   NS_ENSURE_STATE(!mInStream);
 
   mInStream = PR_TRUE;
+
+  nsresult rv;
+
+  // If we're expecting a MAC, create the nsICryptoHMAC component now.
+  if (!mUpdateClientKey.IsEmpty()) {
+    mHMAC = do_CreateInstance(NS_CRYPTO_HMAC_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to create nsICryptoHMAC instance");
+      mUpdateStatus = rv;
+      return mUpdateStatus;
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mHMAC->Init(nsICryptoHMAC::SHA1,
+                     reinterpret_cast<const PRUint8*>(mUpdateClientKey.BeginReading()),
+                     mUpdateClientKey.Length());
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to initialize nsICryptoHMAC instance");
+      mUpdateStatus = rv;
+      return mUpdateStatus;
+    }
+  }
+
+  mServerMAC = serverMAC;
 
   if (!table.IsEmpty()) {
     mUpdateTable = table;
@@ -2695,6 +2766,15 @@ nsUrlClassifierDBServiceWorker::UpdateStream(const nsACString& chunk)
     return mUpdateStatus;
   }
 
+  if (mHMAC && !mServerMAC.IsEmpty()) {
+    rv = mHMAC->Update(reinterpret_cast<const PRUint8*>(chunk.BeginReading()),
+                       chunk.Length());
+    if (NS_FAILED(rv)) {
+      mUpdateStatus = rv;
+      return mUpdateStatus;
+    }
+  }
+
   LOG(("Got %s\n", PromiseFlatCString(chunk).get()));
 
   mPendingStreamUpdate.Append(chunk);
@@ -2723,6 +2803,18 @@ nsUrlClassifierDBServiceWorker::FinishStream()
 
   NS_ENSURE_STATE(mInStream);
   NS_ENSURE_STATE(mUpdateObserver);
+
+  if (NS_SUCCEEDED(mUpdateStatus) && mHMAC) {
+    nsCAutoString clientMAC;
+    mHMAC->Finish(PR_TRUE, clientMAC);
+
+    if (clientMAC != mServerMAC) {
+      NS_WARNING("Invalid update MAC!");
+      LOG(("Invalid update MAC: expected %s, got %s",
+           mServerMAC.get(), clientMAC.get()));
+      mUpdateStatus = NS_ERROR_FAILURE;
+    }
+  }
 
   mUpdateObserver->StreamFinished(mUpdateStatus);
 
@@ -3147,9 +3239,10 @@ nsUrlClassifierLookupCallback::CompletionFinished(nsresult status)
 NS_IMETHODIMP
 nsUrlClassifierLookupCallback::Completion(const nsACString& completeHash,
                                           const nsACString& tableName,
-                                          PRUint32 chunkId)
+                                          PRUint32 chunkId,
+                                          PRBool verified)
 {
-  LOG(("nsUrlClassifierLookupCallback::Completion [%p]", this));
+  LOG(("nsUrlClassifierLookupCallback::Completion [%p, %d]", this, verified));
   nsUrlClassifierCompleteHash hash;
   hash.Assign(completeHash);
 
@@ -3172,13 +3265,17 @@ nsUrlClassifierLookupCallback::Completion(const nsACString& completeHash,
       if (result.mLookupFragment == hash)
         result.mConfirmed = PR_TRUE;
 
-      if (!mCacheResults) {
-        mCacheResults = new nsTArray<nsUrlClassifierLookupResult>();
-        if (!mCacheResults)
-          return NS_ERROR_OUT_OF_MEMORY;
-      }
+      // If this result is guaranteed to come from our list provider,
+      // we can cache the results.
+      if (verified) {
+        if (!mCacheResults) {
+          mCacheResults = new nsTArray<nsUrlClassifierLookupResult>();
+          if (!mCacheResults)
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
 
-      mCacheResults->AppendElement(result);
+        mCacheResults->AppendElement(result);
+      }
     }
   }
 
@@ -3520,7 +3617,8 @@ nsUrlClassifierDBService::SetHashCompleter(const nsACString &tableName,
 }
 
 NS_IMETHODIMP
-nsUrlClassifierDBService::BeginUpdate(nsIUrlClassifierUpdateObserver *observer)
+nsUrlClassifierDBService::BeginUpdate(nsIUrlClassifierUpdateObserver *observer,
+                                      const nsACString &clientKey)
 {
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
@@ -3540,15 +3638,16 @@ nsUrlClassifierDBService::BeginUpdate(nsIUrlClassifierUpdateObserver *observer)
                             getter_AddRefs(proxyObserver));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return mWorkerProxy->BeginUpdate(proxyObserver);
+  return mWorkerProxy->BeginUpdate(proxyObserver, clientKey);
 }
 
 NS_IMETHODIMP
-nsUrlClassifierDBService::BeginStream(const nsACString &table)
+nsUrlClassifierDBService::BeginStream(const nsACString &table,
+                                      const nsACString &serverMAC)
 {
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
-  return mWorkerProxy->BeginStream(table);
+  return mWorkerProxy->BeginStream(table, serverMAC);
 }
 
 NS_IMETHODIMP
