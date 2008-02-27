@@ -65,16 +65,9 @@ nsDOMMessageEvent::GetData(nsAString& aData)
 }
 
 NS_IMETHODIMP
-nsDOMMessageEvent::GetDomain(nsAString& aDomain)
+nsDOMMessageEvent::GetOrigin(nsAString& aOrigin)
 {
-  aDomain = mDomain;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMMessageEvent::GetUri(nsAString& aURI)
-{
-  aURI = mURI;
+  aOrigin = mOrigin;
   return NS_OK;
 }
 
@@ -90,16 +83,14 @@ nsDOMMessageEvent::InitMessageEvent(const nsAString& aType,
                                     PRBool aCanBubble,
                                     PRBool aCancelable,
                                     const nsAString& aData,
-                                    const nsAString& aDomain,
-                                    const nsAString& aURI,
+                                    const nsAString& aOrigin,
                                     nsIDOMWindow* aSource)
 {
   nsresult rv = nsDOMEvent::InitEvent(aType, aCanBubble, aCancelable);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mData = aData;
-  mDomain = aDomain;
-  mURI = aURI;
+  mOrigin = aOrigin;
   mSource = aSource;
 
   return NS_OK;
@@ -111,8 +102,7 @@ nsDOMMessageEvent::InitMessageEventNS(const nsAString& aNamespaceURI,
                                       PRBool aCanBubble,
                                       PRBool aCancelable,
                                       const nsAString& aData,
-                                      const nsAString& aDomain,
-                                      const nsAString& aURI,
+                                      const nsAString& aOrigin,
                                       nsIDOMWindow* aSource)
 {
   return NS_ERROR_NOT_IMPLEMENTED;

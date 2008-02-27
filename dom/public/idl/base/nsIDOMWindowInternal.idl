@@ -214,5 +214,6 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
    * 
    * See the WHATWG HTML5 specification, section 6.4, for more details.
    */
-  [binaryname(PostMessageMoz)] void postMessage(in DOMString message);
+  [binaryname(PostMessageMoz)] void postMessage(in DOMString message,
+                                                [optional] in DOMString origin);
 };

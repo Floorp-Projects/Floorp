@@ -31,10 +31,8 @@ var finished = false;
 /** Receives MessageEvents to this window. */
 function messageReceiver(evt)
 {
-  var fromURI = "http://example.org:8000/tests/dom/tests/mochitest/whatwg/postMessage_onOther.html";
   ok(evt instanceof MessageEvent, "wrong event type");
-  is(evt.uri, fromURI, "unexpected URI");
-  is(evt.domain, "example.org", "unexpected domain");
+  is(evt.origin, "http://example.org:8000", "unexpected origin");
   is(evt.data, "response-to-sibling-sent-message",
      "unexpected data in message");
 

@@ -37,10 +37,8 @@ function receiveMessage(evt)
     ok(evt.isTrusted === false, "shouldn't have been a trusted event");
   }
 
-  is(evt.uri, "http://sub1.ält.example.org:8000/tests/dom/tests/mochitest/whatwg/postMessage_idn_helper.html",
-     "wrong URI -- IDN issue, perhaps?");
-  is(evt.domain, "sub1.ält.example.org",
-     "wrong domain -- IDN issue, perhaps?");
+  is(evt.origin, "http://sub1.ält.example.org:8000",
+     "wrong origin -- IDN issue, perhaps?");
 
   is(evt.data, "idn-response", "unexpected test result");
   ok(evt.source === idnWindow, "wrong source");

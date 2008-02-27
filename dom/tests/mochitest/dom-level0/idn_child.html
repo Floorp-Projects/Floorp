@@ -12,7 +12,7 @@ function run()
 
 function receiveMessage(evt)
 {
-  if (evt.domain !== "localhost")
+  if (evt.origin !== "http://localhost:8888")
     return;
 
   var message = evt.data + "-response";

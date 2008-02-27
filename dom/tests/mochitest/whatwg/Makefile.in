@@ -67,6 +67,12 @@ _TEST_FILES	= \
 		test_postMessage_basehref.html \
 		test_postMessage_hash.html \
 		postMessage_hash.html \
+		test_postMessage_userpass.html \
+		postMessage_userpass_helper.html \
+		test_postMessage_origin.xhtml \
+		postMessage_origin_helper.xhtml \
+		test_postMessage_closed.html \
+		postMessage_closed_helper.html \
 		$(NULL)
 
 _CHROME_FILES	= \

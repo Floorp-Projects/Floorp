@@ -68,8 +68,7 @@ public:
 
 private:
   nsString mData;
-  nsString mDomain;
-  nsString mURI;
+  nsString mOrigin;
   nsCOMPtr<nsIDOMWindow> mSource;
 };
 

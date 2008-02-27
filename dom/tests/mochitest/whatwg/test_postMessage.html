@@ -27,9 +27,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage
 
 SimpleTest.waitForExplicitFinish();
 
-var otherPath = "/tests/dom/tests/mochitest/whatwg/postMessage_helper.html";
-var path = "/tests/dom/tests/mochitest/whatwg/test_postMessage.html";
-
 var testsCompletedCount = 0;
 
 /** Variable for receivers to attempt to get. */
@@ -103,8 +100,7 @@ function messageReceiver(evt)
 
 function respondToSelf(evt)
 {
-  is(evt.domain, "localhost", "what domain are we on again?");
-  is(evt.uri, "http://localhost:8888" + path, "event has wrong URI");
+  is(evt.origin, "http://localhost:8888", "event has wrong origin");
   is(evt.source, window, "we posted this message!");
   
   evt.source.postMessage("post-to-self-response");
@@ -117,25 +113,22 @@ function respondToSelf(evt)
 
 function receiveSelf(evt)
 {
-  is(evt.domain, "localhost", "what domain are we on again?");
-  is(evt.uri, "http://localhost:8888" + path, "event has wrong URI");
+  is(evt.origin, "http://localhost:8888", "event has wrong origin");
   is(evt.source, window, "we posted this message!");
 }
 
 function receiveOtherSameDomain(evt)
 {
-  is(evt.domain, "localhost", "we should be same domain");
-  is(evt.uri, "http://localhost:8888" + otherPath,
-     "same-domain response event has wrong URI");
+  is(evt.origin, "http://localhost:8888",
+     "same-domain response event has wrong origin");
   is(evt.source, window.frames.otherSameDomain,
      "wrong source for same-domain message!");
 }
 
 function receiveOtherCrossDomain(evt)
 {
-  is(evt.domain, "example.org", "we should be same domain");
-  is(evt.uri, "http://example.org:8000" + otherPath,
-     "same-domain response event has wrong URI");
+  is(evt.origin, "http://example.org:8000",
+     "same-domain response event has wrong origin");
 
   // can't use |is| here, because ok tries to get properties on its arguments
   // for creating a formatted logging message
