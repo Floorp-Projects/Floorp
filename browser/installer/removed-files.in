@@ -575,6 +575,7 @@ components/necko_data.xpt
 components/nsKillAll.js
 components/passwordmgr.xpt
 components/progressDlg.xpt
+components/safebrowsing.xpt
 components/search.xpt
 components/websrvcs.xpt
 components/widget_mac.xpt
