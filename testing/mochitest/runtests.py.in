@@ -63,6 +63,12 @@ TESTS_URL = "http://" + TEST_SERVER_HOST + TEST_PATH
 CHROMETESTS_URL = "http://" + TEST_SERVER_HOST + CHROME_PATH
 A11YTESTS_URL = "http://" + TEST_SERVER_HOST + A11Y_PATH
 SERVER_SHUTDOWN_URL = "http://" + TEST_SERVER_HOST + "/server/shutdown"
+# main browser chrome URL, same as browser.chromeURL pref
+#ifdef MOZ_SUITE
+BROWSER_CHROME_URL = "chrome://navigator/content/navigator.xul"
+#else
+BROWSER_CHROME_URL = "chrome://browser/content/browser.xul"
+#endif
 
 # Max time in seconds to wait for server startup before tests will fail -- if
 # this seems big, it's mostly for debug machines where cold startup
@@ -423,7 +429,7 @@ toolbar#nav-bar {
   manifestFile = open(manifest, "w")
   manifestFile.write("content mochikit " + chrometestDir + "\n")
   if options.browserChrome:
-    overlayLine = "overlay chrome://browser/content/browser.xul " \
+    overlayLine = "overlay " + BROWSER_CHROME_URL + " " \
                   "chrome://mochikit/content/browser-test-overlay.xul\n"
     manifestFile.write(overlayLine)
   manifestFile.close()

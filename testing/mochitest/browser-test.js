@@ -1,9 +1,10 @@
+if (Cc === undefined) {
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+}
 window.addEventListener("load", testOnLoad, false);
 
 function testOnLoad() {
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
-
   // Make sure to launch the test harness for the first opened window only
   var prefs = Cc["@mozilla.org/preferences-service;1"].
               getService(Ci.nsIPrefBranch);
