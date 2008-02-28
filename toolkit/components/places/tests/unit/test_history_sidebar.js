@@ -252,7 +252,6 @@ function test_RESULTS_AS_SITE_QUERY() {
 
 // main
 function run_test() {
-  return;
 
   fill_history();
   test_RESULTS_AS_DATE_SITE_QUERY();
