@@ -203,13 +203,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex, PRUint32* args, P
     return result;
 }
 
-extern "C" int SharedStub(int);
-
-#define STUB_ENTRY(n)                \
-nsresult nsXPTCStubBase::Stub##n()   \
-{                                    \
-    return SharedStub(n);	     \
-}                                    \
+#define STUB_ENTRY(n)
 
 #define SENTINEL_ENTRY(n) \
 nsresult nsXPTCStubBase::Sentinel##n() \
