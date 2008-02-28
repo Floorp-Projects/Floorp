@@ -1499,6 +1499,9 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
 {
   PRUint32 length = mEventsToFire.Count();
   NS_ASSERTION(length, "How did we get here without events to fire?");
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  if (!presShell)
+    length = 0; // The doc is now shut down, don't fire events in it anymore
   PRUint32 index;
   for (index = 0; index < length; index ++) {
     nsCOMPtr<nsIAccessibleEvent> accessibleEvent(
@@ -1523,7 +1526,6 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
       // such as a:focus { overflow: scroll; }
       nsCOMPtr<nsIContent> focusContent(do_QueryInterface(domNode));
       if (focusContent) {
-        nsCOMPtr<nsIPresShell> presShell = GetPresShell();
         nsIFrame *focusFrame = presShell->GetRealPrimaryFrameFor(focusContent);
         nsIAtom *newFrameType =
           (focusFrame && focusFrame->GetStyleVisibility()->IsVisible()) ?
