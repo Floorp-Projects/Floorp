@@ -25,6 +25,7 @@
  *   Blake Ross <blaker@netscape.com>
  *   Seth Spitzer <sspitzer@mozilla.org>
  *   Dietrich Ayala <dietrich@mozilla.com>
+ *   Edward Lee <edward.lee@engineering.uiuc.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -150,6 +151,18 @@ nsNavHistory::CreateAutoCompleteQueries()
   NS_ENSURE_SUCCESS(rv, rv);
 
   sql = NS_LITERAL_CSTRING(
+    "SELECT h.url, h.title, f.url, ") + bookTag + NS_LITERAL_CSTRING(
+      "ROUND(MAX(((i.input = ?2) + (SUBSTR(i.input, 1, LENGTH(?2)) = ?2)) * "
+                "i.use_count), 1) rank "
+    "FROM moz_inputhistory i "
+    "JOIN moz_places h ON h.id = i.place_id "
+    "LEFT OUTER JOIN moz_favicons f ON f.id = h.favicon_id "
+    "GROUP BY i.place_id HAVING rank > 0 "
+    "ORDER BY rank DESC, h.frecency DESC");
+  rv = mDBConn->CreateStatement(sql, getter_AddRefs(mDBAdaptiveQuery));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  sql = NS_LITERAL_CSTRING(
     // Leverage the PRIMARY KEY (place_id, input) to insert/update entries
     "INSERT OR REPLACE INTO moz_inputhistory "
     // use_count will asymptotically approach the max of 10
@@ -203,6 +216,9 @@ nsNavHistory::PerformAutoComplete()
   nsresult rv;
   // Only do some extra searches on the first chunk
   if (!mCurrentChunkOffset) {
+    // Get adaptive results first
+    rv = AutoCompleteAdaptiveSearch();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   PRBool moreChunksToSearch = PR_FALSE;
@@ -360,6 +376,23 @@ nsNavHistory::AddSearchToken(nsAutoString &aToken)
   aToken.Trim("\r\n\t\b");
   if (!aToken.IsEmpty())
     mCurrentSearchTokens.AppendString(aToken);
+}
+
+nsresult
+nsNavHistory::AutoCompleteAdaptiveSearch()
+{
+  mozStorageStatementScoper scope(mDBAdaptiveQuery);
+
+  nsresult rv = mDBAdaptiveQuery->BindInt32Parameter(0, GetTagsFolder());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBAdaptiveQuery->BindStringParameter(1, mCurrentSearchString);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = AutoCompleteProcessSearch(mDBAdaptiveQuery, QUERY_ADAPTIVE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 // nsNavHistory::AutoCompleteFullHistorySearch
