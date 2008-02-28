@@ -46,6 +46,9 @@ do_check_eq(typeof PlacesUtils, "object");
 
 // main
 function run_test() {
+  // XXX test disabled due to backout of bug 384370
+  return;
+
   /*
     HTML+FEATURES SUMMARY:
     - import legacy bookmarks
