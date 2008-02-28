@@ -1059,7 +1059,7 @@ function placesMigrationTasks() {
     var newUriSpec = "place:type=" + 
                      Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY +
                      "&sort=" + 
-                     Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
+                     Ci.nsINavHistoryQueryOptions.SORT_BY_LASTMODIFIED_DESCENDING +
                      "&maxResults=" + maxResults;
                      
     var ios = Cc["@mozilla.org/network/io-service;1"].
