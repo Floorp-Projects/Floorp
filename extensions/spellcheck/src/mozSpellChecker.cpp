@@ -112,6 +112,9 @@ mozSpellChecker::NextMisspelledWord(nsAString &aWord, nsStringArray *aSuggestion
           if(isMisspelled){
             aWord = currWord;
             mTsDoc->SetSelection(begin, end-begin);
+            // After ScrollSelectionIntoView(), the pending notifications might
+            // be flushed and PresShell/PresContext/Frames may be dead.
+            // See bug 418470.
             mTsDoc->ScrollSelectionIntoView();
             return NS_OK;
           }
