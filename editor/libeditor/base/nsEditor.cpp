@@ -991,9 +991,6 @@ nsEditor::EndPlaceHolderTransaction()
     // time to turn off the batch
     EndUpdateViewBatch();
     // make sure selection is in view
-
-    // After ScrollSelectionIntoView(), the pending notifications might be
-    // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
     ScrollSelectionIntoView(PR_FALSE);
 
     // cached for frame offset are Not available now
@@ -2563,8 +2560,6 @@ NS_IMETHODIMP nsEditor::ScrollSelectionIntoView(PRBool aScrollToAnchor)
       syncScroll = !(flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask);
     }
 
-    // After ScrollSelectionIntoView(), the pending notifications might be
-    // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
     selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
                                     region, syncScroll);
   }

@@ -247,8 +247,6 @@ nsEditorSpellCheck::GetNextMisspelledWord(PRUnichar **aNextMisspelledWord)
   nsAutoString nextMisspelledWord;
   
   DeleteSuggestedWordList();
-  // Beware! This may flush notifications via synchronous
-  // ScrollSelectionIntoView.
   nsresult rv = mSpellChecker->NextMisspelledWord(nextMisspelledWord,
                                                   &mSuggestedWordList);
 
