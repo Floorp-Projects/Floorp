@@ -294,6 +294,12 @@ static const char* gAutoCompleteFeedback = "autocomplete-will-enter-text";
 // annotation names
 const char nsNavHistory::kAnnotationPreviousEncoding[] = "history/encoding";
 
+// code borrowed from mozilla/xpfe/components/history/src/nsGlobalHistory.cpp
+// pass in a pre-normalized now and a date, and we'll find
+// the difference since midnight on each of the days.
+//
+// USECS_PER_DAY == PR_USEC_PER_SEC * 60 * 60 * 24;
+static const PRInt64 USECS_PER_DAY = LL_INIT(20, 500654080);
 
 nsNavHistory *nsNavHistory::gHistoryService = nsnull;
 
@@ -2946,11 +2952,21 @@ PlacesSQLQueryBuilder::SelectAsDay()
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_STATE(history);
 
-  nsCAutoString dateName;
+  struct Midnight
+  {
+    Midnight() {
+      mNow = NormalizeTimeRelativeToday(PR_Now());  
+    }
+    PRTime Get(PRInt32 aDayOffset) {
+      PRTime result;
+      LL_MUL(result, aDayOffset, USECS_PER_DAY);
+      LL_ADD(result, result, mNow);
+      return result;
+    }
+    PRTime mNow;
+  } midnight;
 
-#define SQL_STR_FRAGMENT_DATE(sign) \
-  " CAST(strftime('%%s',CURRENT_DATE, 'LOCALTIME', '%d days') AS UNSIGNED)" \
-    "*1000000 "
+  nsCAutoString dateName;
 
   const PRInt32 MAX_DAYS = 6;
 
@@ -2979,14 +2995,18 @@ PlacesSQLQueryBuilder::SelectAsDay()
       "FROM (SELECT %d dayOrder, "
                   "'%d' dayRange, "
                   "'%s' dayTitle, "
-                  SQL_STR_FRAGMENT_DATE() " beginTime, "
-                  SQL_STR_FRAGMENT_DATE() " endTime "
+                  "%llu beginTime, "
+                  "%llu endTime "
       "FROM  moz_historyvisits "
-      "WHERE visit_date >= " SQL_STR_FRAGMENT_DATE()
-      "  AND visit_date <  " SQL_STR_FRAGMENT_DATE()
+      "WHERE visit_date >= %llu AND visit_date < %llu "
       "  AND visit_type NOT IN (0,4) "
-      "LIMIT 1) TUNION%d UNION ", i, i, dateName.get(), fromDayAgo, 
-      toDayAgo, fromDayAgo, toDayAgo, i);
+      "LIMIT 1) TUNION%d UNION ", 
+      i, i, dateName.get(), 
+      midnight.Get(fromDayAgo),
+      midnight.Get(toDayAgo), 
+      midnight.Get(fromDayAgo),
+      midnight.Get(toDayAgo),
+      i);
 
     mQueryString.Append( dayRange );
   }
@@ -3000,9 +3020,9 @@ PlacesSQLQueryBuilder::SelectAsDay()
                  "'%d+' dayRange, "
                  "'%s' dayTitle, "
                  "1 beginTime, "
-                 SQL_STR_FRAGMENT_DATE() " endTime "
+                 "%llu endTime "
           "FROM  moz_historyvisits "
-          "WHERE visit_date < " SQL_STR_FRAGMENT_DATE()
+          "WHERE visit_date < %llu "
           "  AND visit_type NOT IN (0,4) "
           "LIMIT 1) TUNIONLAST "
     ") TOUTER " // TOUTER END
@@ -3010,11 +3030,9 @@ PlacesSQLQueryBuilder::SelectAsDay()
     MAX_DAYS+1,
     MAX_DAYS+1,
     dateName.get(),
-    -MAX_DAYS,
-    -MAX_DAYS
+    midnight.Get(-MAX_DAYS),
+    midnight.Get(-MAX_DAYS)
     ));
-
-#undef SQL_STR_FRAGMENT_DATE
 
   return NS_OK;
 }
@@ -4894,12 +4912,6 @@ nsNavHistory::ResultsAsList(mozIStorageStatement* statement,
   return NS_OK;
 }
 
-// code borrowed from mozilla/xpfe/components/history/src/nsGlobalHistory.cpp
-// pass in a pre-normalized now and a date, and we'll find
-// the difference since midnight on each of the days.
-//
-// USECS_PER_DAY == PR_USEC_PER_SEC * 60 * 60 * 24;
-static const PRInt64 USECS_PER_DAY = LL_INIT(20, 500654080);
 static PRInt64
 GetAgeInDays(PRTime aNormalizedNow, PRTime aDate)
 {
