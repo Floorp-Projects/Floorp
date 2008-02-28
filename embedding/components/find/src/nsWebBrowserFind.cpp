@@ -151,9 +151,6 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
     }
 
     // next, look in the current frame. If found, return.
-
-    // Beware! This may flush notifications via synchronous
-    // ScrollSelectionIntoView.
     rv = SearchInFrame(searchFrame, PR_FALSE, outDidFind);
     if (NS_FAILED(rv)) return rv;
     if (*outDidFind)
@@ -202,8 +199,6 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
 
             OnStartSearchFrame(searchFrame);
 
-            // Beware! This may flush notifications via synchronous
-            // ScrollSelectionIntoView.
             rv = SearchInFrame(searchFrame, PR_FALSE, outDidFind);
             if (NS_FAILED(rv)) return rv;
             if (*outDidFind)
@@ -244,8 +239,6 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
 
         if (curItem.get() == startingItem.get())
         {
-            // Beware! This may flush notifications via synchronous
-            // ScrollSelectionIntoView.
             rv = SearchInFrame(searchFrame, PR_TRUE, outDidFind);
             if (NS_FAILED(rv)) return rv;
             if (*outDidFind)
@@ -258,8 +251,6 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
 
         OnStartSearchFrame(searchFrame);
 
-        // Beware! This may flush notifications via synchronous
-        // ScrollSelectionIntoView.
         rv = SearchInFrame(searchFrame, PR_FALSE, outDidFind);
         if (NS_FAILED(rv)) return rv;
         if (*outDidFind)
@@ -481,12 +472,9 @@ void nsWebBrowserFind::SetSelectionAndScroll(nsIDOMWindow* aWindow,
 
     // Scroll if necessary to make the selection visible:
     // Must be the last thing to do - bug 242056
-
-    // After ScrollSelectionIntoView(), the pending notifications might be
-    // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
     selCon->ScrollSelectionIntoView
       (nsISelectionController::SELECTION_NORMAL,
-       nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
+       nsISelectionController::SELECTION_FOCUS_REGION, PR_FALSE);
   }
 }
 
@@ -833,8 +821,6 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
     {
         *aDidFind = PR_TRUE;
         sel->RemoveAllRanges();
-        // Beware! This may flush notifications via synchronous
-        // ScrollSelectionIntoView.
         SetSelectionAndScroll(aWindow, foundRange);
     }
 
