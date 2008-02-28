@@ -50,6 +50,8 @@
 #include "nsToolkit.h"
 #include "nsCRT.h"
 #include "nsplugindefs.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 #include "nsIFontMetrics.h"
 #include "nsIDeviceContext.h"
@@ -3339,6 +3341,18 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   mGeckoChild->DispatchMouseEvent(geckoEvent);
   if (!mGeckoChild)
     return nil;
+
+  // If we're running in a browser that (unlike Camino) uses non-native
+  // context menus, we must call maybeInitContextMenuTracking.  This call was
+  // dropped with the patch for bug 396186, which caused at least one
+  // regression (bug 416455).
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs) {
+    PRBool useNativeContextMenus;
+    nsresult rv = prefs->GetBoolPref("ui.use_native_popup_windows", &useNativeContextMenus);
+    if (!NS_SUCCEEDED(rv) || !useNativeContextMenus)
+      [self maybeInitContextMenuTracking];
+  }
 
   // Go up our view chain to fetch the correct menu to return.
   return [self contextMenu];
