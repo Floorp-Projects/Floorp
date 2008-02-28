@@ -2792,6 +2792,7 @@ private:
 
   nsCString mQueryString;
   nsCString mGroupBy;
+  PRBool mHasDateColumns;
   PRBool mSkipOrderBy;
 };
 
@@ -2808,6 +2809,7 @@ PlacesSQLQueryBuilder::PlacesSQLQueryBuilder(
   mUseLimit(aUseLimit),
   mSkipOrderBy(PR_FALSE)
 {
+  mHasDateColumns = (mQueryType == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS);
 }
 
 nsresult
@@ -3099,9 +3101,13 @@ PlacesSQLQueryBuilder::SelectAsTag()
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_STATE(history);
 
+  // This allows sorting by date fields what is not possible with
+  // other history queries.
+  mHasDateColumns = PR_TRUE; 
+
   mQueryString = nsPrintfCString(2048,
     "SELECT null, 'place:type=%ld&queryType=%d&sort=%ld&folder=' || id, "
-      "title, title, null, null, null, null, null "
+      "title, null, null, null, null, null, null, dateAdded, lastModified "
     "FROM   moz_bookmarks "
     "WHERE  parent = %ld",
     nsINavHistoryQueryOptions::RESULTS_AS_URI,
@@ -3189,19 +3195,19 @@ PlacesSQLQueryBuilder::OrderBy()
       OrderByColumnIndexDesc(nsNavHistory::kGetInfoIndex_VisitCount);
       break;
     case nsINavHistoryQueryOptions::SORT_BY_DATEADDED_ASCENDING:
-      if (mQueryType == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS)
+      if (mHasDateColumns)
         OrderByColumnIndexAsc(nsNavHistory::kGetInfoIndex_ItemDateAdded);
       break;
     case nsINavHistoryQueryOptions::SORT_BY_DATEADDED_DESCENDING:
-      if (mQueryType == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS)
+      if (mHasDateColumns)
         OrderByColumnIndexDesc(nsNavHistory::kGetInfoIndex_ItemDateAdded);
       break;
     case nsINavHistoryQueryOptions::SORT_BY_LASTMODIFIED_ASCENDING:
-      if (mQueryType == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS)
+      if (mHasDateColumns)
         OrderByColumnIndexAsc(nsNavHistory::kGetInfoIndex_ItemLastModified);
       break;
     case nsINavHistoryQueryOptions::SORT_BY_LASTMODIFIED_DESCENDING:
-      if (mQueryType == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS)
+      if (mHasDateColumns)
         OrderByColumnIndexDesc(nsNavHistory::kGetInfoIndex_ItemLastModified);
       break;
     default:
