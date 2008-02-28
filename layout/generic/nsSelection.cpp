@@ -2558,8 +2558,10 @@ nsFrameSelection::ScrollSelectionIntoView(SelectionType   aType,
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
+  // After ScrollSelectionIntoView(), the pending notifications might be
+  // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
   return mDomSelections[index]->ScrollIntoView(aRegion, aIsSynchronous,
-                                               PR_FALSE);
+                                               PR_TRUE);
 }
 
 nsresult

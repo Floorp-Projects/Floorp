@@ -1480,8 +1480,10 @@ nsresult nsHyperTextAccessible::SetSelectionRange(PRInt32 aStartPos, PRInt32 aEn
   }
   
   if (selCon) {
+    // XXX I'm not sure this can do synchronous scrolling. If the last param is
+    // set to true, this calling might flush the pending reflow. See bug 418470.
     selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
-       nsISelectionController::SELECTION_FOCUS_REGION, PR_FALSE);
+      nsISelectionController::SELECTION_FOCUS_REGION, PR_FALSE);
   }
 
   return NS_OK;
