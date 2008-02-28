@@ -526,13 +526,30 @@ nsListControlFrame::CalcHeightOfARow()
 }
 
 nscoord
+nsListControlFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+{
+  nscoord result;
+  DISPLAY_PREF_WIDTH(this, result);
+
+  // Always add scrollbar widths to the pref-width of the scrolled
+  // content. Combobox frames depend on this happening in the dropdown,
+  // and standalone listboxes are overflow:scroll so they need it too.
+  result = GetScrolledFrame()->GetPrefWidth(aRenderingContext);
+  nsBoxLayoutState bls(PresContext(), aRenderingContext);
+  result = NSCoordSaturatingAdd(result, GetDesiredScrollbarSizes(&bls).LeftRight());
+
+  return result;
+}
+
+nscoord
 nsListControlFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 {
-  // Scrollframes typically have an intrinsic min width of 0, but
-  // that's not how we want to behave.
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
 
+  // Always add scrollbar widths to the min-width of the scrolled
+  // content. Combobox frames depend on this happening in the dropdown,
+  // and standalone listboxes are overflow:scroll so they need it too.
   result = GetScrolledFrame()->GetMinWidth(aRenderingContext);
   nsBoxLayoutState bls(PresContext(), aRenderingContext);
   result += GetDesiredScrollbarSizes(&bls).LeftRight();
