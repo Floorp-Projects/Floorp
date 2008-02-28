@@ -95,6 +95,12 @@ use constant A11Y_PATH => "/redirect-a11y.html";
 use constant TESTS_URL => "http://" . TEST_SERVER_HOST . TEST_PATH;
 use constant CHROMETESTS_URL => "http://" . TEST_SERVER_HOST . CHROME_PATH;
 use constant A11YTESTS_URL => "http://" . TEST_SERVER_HOST . A11Y_PATH;
+ # main browser chrome URL, same as browser.chromeURL pref
+#ifdef MOZ_SUITE
+use constant BROWSER_CHROME_URL => "chrome://navigator/content/navigator.xul";
+#else
+use constant BROWSER_CHROME_URL => "chrome://browser/content/browser.xul";
+#endif
 
  # Max time in seconds to wait for server startup before tests will fail -- if
  # this seems big, it's mostly for debug machines where cold startup
@@ -523,7 +529,7 @@ CHROMEEND
     die("Could not open manifest file $!");
   print MANIFEST ("content mochikit $chrometest_dir\n");
   if ($do_browser_tests) {
-    print MANIFEST ("overlay chrome://browser/content/browser.xul chrome://mochikit/content/browser-test-overlay.xul\n");
+    print MANIFEST ("overlay " . BROWSER_CHROME_URL . " chrome://mochikit/content/browser-test-overlay.xul\n");
   }
   close(MANIFEST);
 
