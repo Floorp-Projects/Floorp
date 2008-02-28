@@ -672,8 +672,6 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
 
   aMouseEvent->StopPropagation();
   aMouseEvent->PreventDefault();
-  // Beware! This may flush notifications via synchronous
-  // ScrollSelectionIntoView.
   return mEditor->InsertFromDrop(aMouseEvent);
 }
 
