@@ -594,15 +594,15 @@ chrome/icons/default/default.xpm
 #endif
 dictionaries/PL.dic
 dictionaries/PL.aff
-#ifdef MOZ_MEMORY
 #ifdef XP_WIN
+#ifdef MOZ_MEMORY
 Microsoft.VC80.CRT.manifest
 msvcm80.dll
 msvcp80.dll
 msvcr80.dll
+#else
+mozcrt19.dll
 #endif
-#endif
-#ifdef XP_WIN
 xpicleanup.exe
 #else
 xpicleanup
