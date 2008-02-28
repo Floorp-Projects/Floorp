@@ -5932,7 +5932,20 @@ interrupt:
                     JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
                     sprop = PCVAL_TO_SPROP(entry->vword);
                     JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
-                    JS_ASSERT(SPROP_HAS_STUB_SETTER(sprop));
+
+                    /*
+                     * If this property has a non-stub setter, it must be
+                     * __proto__, __parent__, or another "shared prototype"
+                     * built-in. Force a miss to save code size here and let
+                     * the standard code path take care of business.
+                     */
+                    if (!SPROP_HAS_STUB_SETTER(sprop))
+                        goto do_initprop_miss;
+
+                    /*
+                     * Otherwise this entry must be for a direct property of
+                     * obj, not a proto-property.
+                     */
                     JS_ASSERT(PCVCAP_MAKE(sprop->shape, 0, 0) == entry->vcap);
 
                     if (scope->object != obj) {
