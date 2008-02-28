@@ -102,6 +102,9 @@ interface nsISelectionController : nsISelectionDisplay
    * @param aIsSynchronous when true, scrolls the selection into view
    * before returning. If false, posts a request which is processed
    * at some point after the method returns.
+   *
+   * Note that if isSynchronous is true, then this might flush the pending
+   * reflow. It's dangerous for some objects. See bug 418470 comment 12.
    */
     void scrollSelectionIntoView(in short type, in short region, in boolean isSynchronous);
    /**
