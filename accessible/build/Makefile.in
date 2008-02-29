@@ -93,10 +93,6 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS)
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-EXTRA_DSO_LDOPTS += -framework Cocoa
-endif
-
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += oleaut32.lib
 endif
