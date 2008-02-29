@@ -46,6 +46,9 @@
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "prlink.h"
+#include "prclist.h"
+#include "npapi.h"
+#include "ns4xPluginInstance.h"
 
 #include "nsIPlugin.h"
 #include "nsIPluginTag.h"
@@ -64,6 +67,7 @@
 #include "nsPluginNativeWindow.h"
 #include "nsIPrefBranch.h"
 #include "nsWeakReference.h"
+#include "nsThreadUtils.h"
 
 // XXX this file really doesn't think this is possible, but ...
 #include "nsIFactory.h"
@@ -457,6 +461,42 @@ private:
   // We need to hold a global ptr to ourselves because we register for
   // two different CIDs for some reason...
   static nsPluginHostImpl* sInst;
+};
+
+class PluginDestructionGuard : protected PRCList
+{
+public:
+  PluginDestructionGuard(nsIPluginInstance *aInstance)
+    : mInstance(aInstance)
+  {
+    Init();
+  }
+
+  PluginDestructionGuard(NPP npp)
+    : mInstance(npp ? static_cast<ns4xPluginInstance*>(npp->ndata) : nsnull)
+  {
+    Init();
+  }
+
+  ~PluginDestructionGuard();
+
+  static PRBool DelayDestroy(nsIPluginInstance *aInstance);
+
+protected:
+  void Init()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Should be on the main thread");
+
+    mDelayedDestroy = PR_FALSE;
+
+    PR_INIT_CLIST(this);
+    PR_INSERT_BEFORE(this, &sListHead);
+  }
+
+  nsCOMPtr<nsIPluginInstance> mInstance;
+  PRBool mDelayedDestroy;
+
+  static PRCList sListHead;
 };
 
 #endif
