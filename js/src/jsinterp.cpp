@@ -2196,9 +2196,9 @@ UnwindScope(JSContext *cx, JSStackFrame *fp, jsint stackDepth,
  * are written to JS_OPMETER_HIST, defaulting to /tmp/ops.hist.
  */
 #ifndef JS_OPMETER
-# define METER_OP_INIT(op)      /* nothing */
-# define METER_OP_PAIR(op1,op2) /* nothing */
-# define METER_SLOT_OP(op,slot) /* nothing */
+# define METER_OP_INIT(op)      ((void)0)
+# define METER_OP_PAIR(op1,op2) ((void)0)
+# define METER_SLOT_OP(op,slot) ((void)0)
 #else
 
 # include <stdlib.h>
@@ -2264,12 +2264,12 @@ js_DumpOpMeters()
 
     graph = (Edge *) calloc(nedges, sizeof graph[0]);
     for (i = nedges = 0; i < JSOP_LIMIT; i++) {
-        from = js_CodeSpec[i].name;
+        from = js_CodeName[i];
         for (j = 0; j < JSOP_LIMIT; j++) {
             count = succeeds[i][j];
             if (count != 0 && SIGNIFICANT(count, total)) {
                 graph[nedges].from = from;
-                graph[nedges].to = js_CodeSpec[j].name;
+                graph[nedges].to = js_CodeName[j];
                 graph[nedges].count = count;
                 ++nedges;
             }
@@ -2315,7 +2315,7 @@ js_DumpOpMeters()
         for (j = 0; j < HIST_NSLOTS; j++) {
             if (slot_ops[i][j] != 0) {
                 /* Reuse j in the next loop, since we break after. */
-                fprintf(fp, "%-8.8s", js_CodeSpec[i].name);
+                fprintf(fp, "%-8.8s", js_CodeName[i]);
                 for (j = 0; j < HIST_NSLOTS; j++)
                     fprintf(fp, " %7lu", (unsigned long)slot_ops[i][j]);
                 putc('\n', fp);
@@ -5932,7 +5932,20 @@ interrupt:
                     JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
                     sprop = PCVAL_TO_SPROP(entry->vword);
                     JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
-                    JS_ASSERT(SPROP_HAS_STUB_SETTER(sprop));
+
+                    /*
+                     * If this property has a non-stub setter, it must be
+                     * __proto__, __parent__, or another "shared prototype"
+                     * built-in. Force a miss to save code size here and let
+                     * the standard code path take care of business.
+                     */
+                    if (!SPROP_HAS_STUB_SETTER(sprop))
+                        goto do_initprop_miss;
+
+                    /*
+                     * Otherwise this entry must be for a direct property of
+                     * obj, not a proto-property.
+                     */
                     JS_ASSERT(PCVCAP_MAKE(sprop->shape, 0, 0) == entry->vcap);
 
                     if (scope->object != obj) {
@@ -5943,9 +5956,17 @@ interrupt:
                         }
                     }
 
-                    JS_ASSERT(sprop->parent == scope->lastProp);
+                    /*
+                     * Detect a repeated property name and force a miss to
+                     * share the strict warning code and cope with complexity
+                     * managed by js_AddScopeProperty.
+                     */
+                    if (sprop->parent != scope->lastProp)
+                        goto do_initprop_miss;
+
                     JS_ASSERT(!SCOPE_HAD_MIDDLE_DELETE(scope));
-                    JS_ASSERT(!scope->table || !SCOPE_HAS_PROPERTY(scope, sprop));
+                    JS_ASSERT(!scope->table ||
+                              !SCOPE_HAS_PROPERTY(scope, sprop));
 
                     slot = sprop->slot;
                     JS_ASSERT(slot == scope->map.freeslot);
@@ -5987,13 +6008,13 @@ interrupt:
                     break;
                 }
 
+              do_initprop_miss:
                 PCMETER(cache->inipcmisses++);
                 JS_UNLOCK_SCOPE(cx, scope);
 
                 /* Get the immediate property name into id. */
                 LOAD_ATOM(0);
                 id = ATOM_TO_JSID(atom);
-                i = -1;
                 SAVE_SP_AND_PC(fp);
 
                 /* Set the property named by obj[id] to rval. */

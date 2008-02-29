@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Brett Wilson <brettw@gmail.com> (original author)
+ *   Edward Lee <edward.lee@engineering.uiuc.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -649,6 +650,7 @@ protected:
   static const PRInt32 kAutoCompleteIndex_BookmarkTitle;
   static const PRInt32 kAutoCompleteIndex_Tags;
   nsCOMPtr<mozIStorageStatement> mDBAutoCompleteQuery; //  kAutoCompleteIndex_* results
+  nsCOMPtr<mozIStorageStatement> mDBAdaptiveQuery; //  kAutoCompleteIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBFeedbackIncrease;
 
   nsresult InitAutoComplete();
@@ -681,12 +683,14 @@ protected:
   nsDataHashtable<nsStringHashKey, PRBool> mLivemarkFeedURIs;
 
   nsresult AutoCompleteFullHistorySearch(PRBool* aHasMoreResults);
+  nsresult AutoCompleteAdaptiveSearch();
 
   /**
    * Query type passed to AutoCompleteProcessSearch to determine what style to
    * use and if results should be filtered
    */
   enum QueryType {
+    QUERY_ADAPTIVE,
     QUERY_FULL
   };
   nsresult AutoCompleteProcessSearch(mozIStorageStatement* aQuery,

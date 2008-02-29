@@ -538,25 +538,25 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
 
     pat->SetMatrix(mat);
 
-    if (xscale != 1.0 || yscale != 1.0) {
 #if !defined(XP_MACOSX) && !defined(XP_WIN)
-        // See bug 324698.  This is a workaround.
-        //
-        // Set the filter to CAIRO_FILTER_FAST if we're scaling up -- otherwise,
-        // pixman's sampling will sample transparency for the outside edges and we'll
-        // get blurry edges.  CAIRO_EXTEND_PAD would also work here, if
-        // available
-        //
-        // This effectively disables smooth upscaling for images.
+    // See bug 324698.  This is a workaround.
+    //
+    // Set the filter to CAIRO_FILTER_FAST if we're scaling up -- otherwise,
+    // pixman's sampling will sample transparency for the outside edges and we'll
+    // get blurry edges.  CAIRO_EXTEND_PAD would also work here, if
+    // available
+    //
+    // This effectively disables smooth upscaling for images.
+    if (xscale > 1.0 || yscale > 1.0)
         pat->SetFilter(0);
 #endif
 
 #if defined(XP_WIN)
-        // turn on EXTEND_PAD only for win32, and only when scaling;
-        // it's not implemented correctly on linux in the X server.
+    // turn on EXTEND_PAD only for win32, and only when scaling;
+    // it's not implemented correctly on linux in the X server.
+    if (xscale != 1.0 || yscale != 1.0)
         pat->SetExtend(gfxPattern::EXTEND_PAD);
 #endif
-    }
 
     gfxContext::GraphicsOperator op = ctx->CurrentOperator();
     if (op == gfxContext::OPERATOR_OVER && mFormat == gfxASurface::ImageFormatRGB24)

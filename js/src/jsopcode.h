@@ -260,6 +260,7 @@ struct JSCodeSpec {
 
 extern const JSCodeSpec js_CodeSpec[];
 extern uintN            js_NumCodeSpecs;
+extern const char       *js_CodeName[];
 extern const char       js_EscapeMap[];
 
 /*

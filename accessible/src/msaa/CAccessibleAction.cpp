@@ -134,7 +134,7 @@ CAccessibleAction::get_keyBinding(long aActionIndex, long aNumMaxBinding,
 {
 __try {
   *aKeyBinding = NULL;
-  aNumBinding = 0;
+  *aNumBinding = 0;
 
   nsCOMPtr<nsIAccessible> acc(do_QueryInterface(this));
   if (!acc)
