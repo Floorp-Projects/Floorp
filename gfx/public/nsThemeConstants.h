@@ -231,3 +231,7 @@
 // For text on non-iconic menuitems only
 #define NS_THEME_MENUITEMTEXT                              220
 
+// Vista Rebars
+#define NS_THEME_COMMUNICATIONS_TOOLBOX                    221
+#define NS_THEME_MEDIA_TOOLBOX                             222
+#define NS_THEME_BROWSER_TAB_BAR_TOOLBOX                   223

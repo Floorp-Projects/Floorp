@@ -555,6 +555,9 @@ CSS_KEY(radio-container, radiocontainer)
 CSS_KEY(checkbox-label, checkboxlabel)
 CSS_KEY(radio-label, radiolabel)
 CSS_KEY(button-focus, buttonfocus)
+CSS_KEY(media-toolbox, media_toolbox)
+CSS_KEY(communications-toolbox, communications_toolbox)
+CSS_KEY(browsertabbar-toolbox, browsertabbar_toolbox)
 
 #ifdef MOZ_SVG
 //CSS_KEY(all, all)

@@ -136,6 +136,9 @@ private:
   HANDLE mTooltipTheme;
   HANDLE mToolbarTheme;
   HANDLE mRebarTheme;
+  HANDLE mMediaRebarTheme;
+  HANDLE mCommunicationsRebarTheme;
+  HANDLE mBrowserTabBarRebarTheme;
   HANDLE mProgressTheme;
   HANDLE mScrollbarTheme;
   HANDLE mScaleTheme;

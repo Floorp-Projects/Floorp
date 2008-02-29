@@ -213,6 +213,7 @@
 
 // Rebar constants
 #define RP_BAND              3
+#define RP_BACKGROUND        6
 
 // Constants only found in new (98+, 2K+, XP+, etc.) Windows.
 #ifdef DFCS_HOT
@@ -303,6 +304,9 @@ nsNativeThemeWin::nsNativeThemeWin() {
   mTooltipTheme = NULL;
   mToolbarTheme = NULL;
   mRebarTheme = NULL;
+  mMediaRebarTheme = NULL;
+  mCommunicationsRebarTheme = NULL;
+  mBrowserTabBarRebarTheme = NULL;
   mProgressTheme = NULL;
   mScrollbarTheme = NULL;
   mSpinTheme = NULL;
@@ -474,6 +478,21 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
       if (!mRebarTheme)
         mRebarTheme = openTheme(NULL, L"Rebar");
       return mRebarTheme;
+    }
+    case NS_THEME_MEDIA_TOOLBOX: {
+      if (!mMediaRebarTheme)
+        mMediaRebarTheme = openTheme(NULL, L"Media::Rebar");
+      return mMediaRebarTheme;
+    }
+    case NS_THEME_COMMUNICATIONS_TOOLBOX: {
+      if (!mCommunicationsRebarTheme)
+        mCommunicationsRebarTheme = openTheme(NULL, L"Communications::Rebar");
+      return mCommunicationsRebarTheme;
+    }
+    case NS_THEME_BROWSER_TAB_BAR_TOOLBOX: {
+      if (!mBrowserTabBarRebarTheme)
+        mBrowserTabBarRebarTheme = openTheme(NULL, L"BrowserTabBar::Rebar");
+      return mBrowserTabBarRebarTheme;
     }
     case NS_THEME_TOOLBAR:
     case NS_THEME_TOOLBAR_BUTTON:
@@ -889,11 +908,22 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       return NS_OK;    
     }
     case NS_THEME_TOOLBOX:
+    case NS_THEME_MEDIA_TOOLBOX:
+    case NS_THEME_COMMUNICATIONS_TOOLBOX:
+    case NS_THEME_BROWSER_TAB_BAR_TOOLBOX:
     case NS_THEME_STATUSBAR:
     case NS_THEME_SCROLLBAR:
     case NS_THEME_SCROLLBAR_SMALL: {
-      aPart = aState = 0;
-      return NS_OK; // These have no part or state.
+      aState = 0;
+      if (mIsVistaOrLater) {
+        // On vista, they have a part
+        aPart = RP_BACKGROUND;
+      } else {
+        // Otherwise, they don't.  (But I bet
+        // RP_BACKGROUND would work here, too);
+        aPart = 0;
+      }
+      return NS_OK;
     }
     case NS_THEME_TOOLBAR: {
       // Use -1 to indicate we don't wish to have the theme background drawn
@@ -1359,6 +1389,9 @@ nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext,
 
   if (!WidgetIsContainer(aWidgetType) ||
       aWidgetType == NS_THEME_TOOLBOX || 
+      aWidgetType == NS_THEME_MEDIA_TOOLBOX ||
+      aWidgetType == NS_THEME_COMMUNICATIONS_TOOLBOX ||
+      aWidgetType == NS_THEME_BROWSER_TAB_BAR_TOOLBOX ||
       aWidgetType == NS_THEME_STATUSBAR || 
       aWidgetType == NS_THEME_RESIZER || aWidgetType == NS_THEME_TAB_PANEL ||
       aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL ||
@@ -1563,7 +1596,11 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
   if (!theme)
     return ClassicGetMinimumWidgetSize(aContext, aFrame, aWidgetType, aResult, aIsOverridable);
 
-  if (aWidgetType == NS_THEME_TOOLBOX || aWidgetType == NS_THEME_TOOLBAR || 
+  if (aWidgetType == NS_THEME_TOOLBOX ||
+      aWidgetType == NS_THEME_MEDIA_TOOLBOX ||
+      aWidgetType == NS_THEME_COMMUNICATIONS_TOOLBOX ||
+      aWidgetType == NS_THEME_BROWSER_TAB_BAR_TOOLBOX ||
+      aWidgetType == NS_THEME_TOOLBAR || 
       aWidgetType == NS_THEME_STATUSBAR || aWidgetType == NS_THEME_PROGRESSBAR_CHUNK ||
       aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL ||
       aWidgetType == NS_THEME_TAB_PANELS || aWidgetType == NS_THEME_TAB_PANEL ||
@@ -1691,7 +1728,11 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
                                      nsIAtom* aAttribute, PRBool* aShouldRepaint)
 {
   // Some widget types just never change state.
-  if (aWidgetType == NS_THEME_TOOLBOX || aWidgetType == NS_THEME_TOOLBAR ||
+  if (aWidgetType == NS_THEME_TOOLBOX ||
+      aWidgetType == NS_THEME_MEDIA_TOOLBOX ||
+      aWidgetType == NS_THEME_COMMUNICATIONS_TOOLBOX ||
+      aWidgetType == NS_THEME_BROWSER_TAB_BAR_TOOLBOX ||
+      aWidgetType == NS_THEME_TOOLBAR ||
       aWidgetType == NS_THEME_STATUSBAR || aWidgetType == NS_THEME_STATUSBAR_PANEL ||
       aWidgetType == NS_THEME_STATUSBAR_RESIZER_PANEL ||
       aWidgetType == NS_THEME_PROGRESSBAR_CHUNK ||
@@ -1740,66 +1781,26 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
 void
 nsNativeThemeWin::CloseData()
 {
-  if (mToolbarTheme) {
-    closeTheme(mToolbarTheme);
-    mToolbarTheme = NULL;
-  }
-  if (mScrollbarTheme) {
-    closeTheme(mScrollbarTheme);
-    mScrollbarTheme = NULL;
-  }
-  if (mScaleTheme) {
-    closeTheme(mScaleTheme);
-    mScaleTheme = NULL;
-  }
-  if (mSpinTheme) {
-    closeTheme(mSpinTheme);
-    mSpinTheme = NULL;
-  }
-  if (mRebarTheme) {
-    closeTheme(mRebarTheme);
-    mRebarTheme = NULL;
-  }
-  if (mProgressTheme) {
-    closeTheme(mProgressTheme);
-    mProgressTheme = NULL;
-  }
-  if (mButtonTheme) {
-    closeTheme(mButtonTheme);
-    mButtonTheme = NULL;
-  }
-  if (mTextFieldTheme) {
-    closeTheme(mTextFieldTheme);
-    mTextFieldTheme = NULL;
-  }
-  if (mTooltipTheme) {
-    closeTheme(mTooltipTheme);
-    mTooltipTheme = NULL;
-  }
-  if (mStatusbarTheme) {
-    closeTheme(mStatusbarTheme);
-    mStatusbarTheme = NULL;
-  }
-  if (mTabTheme) {
-    closeTheme(mTabTheme);
-    mTabTheme = NULL;
-  }
-  if (mTreeViewTheme) {
-    closeTheme(mTreeViewTheme);
-    mTreeViewTheme = NULL;
-  }
-  if (mComboBoxTheme) {
-    closeTheme(mComboBoxTheme);
-    mComboBoxTheme = NULL;
-  }
-  if (mHeaderTheme) {
-    closeTheme(mHeaderTheme);
-    mHeaderTheme = NULL;
-  }
-  if (mMenuTheme) {
-    closeTheme(mMenuTheme);
-    mMenuTheme = NULL;
-  }
+#define CLOSE_THEME(_x)  if (_x) { closeTheme(_x); _x = NULL; }
+  CLOSE_THEME(mToolbarTheme);
+  CLOSE_THEME(mScrollbarTheme);
+  CLOSE_THEME(mScaleTheme);
+  CLOSE_THEME(mSpinTheme);
+  CLOSE_THEME(mRebarTheme);
+  CLOSE_THEME(mProgressTheme);
+  CLOSE_THEME(mButtonTheme);
+  CLOSE_THEME(mTextFieldTheme);
+  CLOSE_THEME(mToolbarTheme);
+  CLOSE_THEME(mStatusbarTheme);
+  CLOSE_THEME(mTabTheme);
+  CLOSE_THEME(mTreeViewTheme);
+  CLOSE_THEME(mComboBoxTheme);
+  CLOSE_THEME(mHeaderTheme);
+  CLOSE_THEME(mMenuTheme);
+  CLOSE_THEME(mCommunicationsRebarTheme);
+  CLOSE_THEME(mMediaRebarTheme);
+  CLOSE_THEME(mBrowserTabBarRebarTheme);
+#undef CLOSE_THEME
 }
 
 NS_IMETHODIMP
