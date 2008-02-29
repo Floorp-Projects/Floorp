@@ -265,6 +265,9 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_menuarrow,              NS_THEME_MENUARROW,
   eCSSKeyword_menuimage,              NS_THEME_MENUIMAGE,
   eCSSKeyword_menuitemtext,           NS_THEME_MENUITEMTEXT,
+  eCSSKeyword_media_toolbox,          NS_THEME_MEDIA_TOOLBOX,
+  eCSSKeyword_communications_toolbox, NS_THEME_COMMUNICATIONS_TOOLBOX,
+  eCSSKeyword_browsertabbar_toolbox,  NS_THEME_BROWSER_TAB_BAR_TOOLBOX,
   eCSSKeyword_UNKNOWN,-1
 };
 
