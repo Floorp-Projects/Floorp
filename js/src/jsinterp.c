@@ -2367,7 +2367,8 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     JSOp op, op2;
     jsatomid index;
     JSAtom *atom;
-    uintN argc, attrs, flags, slot;
+    uintN argc, attrs, flags;
+    uint32 slot;
     jsval *vp, lval, rval, ltmp, rtmp;
     jsid id;
     JSObject *iterobj;
