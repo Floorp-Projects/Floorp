@@ -41,7 +41,7 @@
 
 interface nsIAutoCompleteInput;
 
-[scriptable, uuid(b8883380-8cb3-444b-b929-0872b1cb7e73)]
+[scriptable, uuid(6F08D134-8536-4B28-B456-D150FBAA66A9)]
 interface nsIAutoCompleteController : nsISupports
 {
   /*
@@ -85,11 +85,14 @@ interface nsIAutoCompleteController : nsISupports
   void handleText(in boolean aIgnoreSelection);
 
   /*
-   * Notify the controller that the user wishes to enter the current text
+   * Notify the controller that the user wishes to enter the current text. If
+   * aIsPopupSelection is true, then a selection was made from the popup, so
+   * fill this value into the input field before continuing. If false, just
+   * use the current value of the input field.
    *
    * @return True if the controller wishes to prevent event propagation and default event
    */
-  boolean handleEnter();
+  boolean handleEnter(in boolean aIsPopupSelection);
 
   /*
    * Notify the controller that the user wishes to revert autocomplete

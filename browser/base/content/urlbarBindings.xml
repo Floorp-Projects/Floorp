@@ -281,7 +281,7 @@
           // Check for unmodified left-click, and use default behavior
           if (aEvent.button == 0 && !aEvent.shiftKey && !aEvent.ctrlKey &&
               !aEvent.altKey && !aEvent.metaKey) {
-            controller.handleEnter();
+            controller.handleEnter(true);
             return;
           }
 
@@ -358,7 +358,7 @@
           // Check for unmodified left-click, and use default behavior
           if (aEvent.button == 0 && !aEvent.shiftKey && !aEvent.ctrlKey &&
               !aEvent.altKey && !aEvent.metaKey) {
-            controller.handleEnter();
+            controller.handleEnter(true);
             return;
           }
 
