@@ -40,14 +40,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Arrgh.  Bitten by bug 154232 here.  
-// Need to undef DARWIN before including Cocoa & (by default) CoreFoundation
-// so we can use CFURLGetFSRef.
-
-#undef DARWIN
 #import <Cocoa/Cocoa.h>
-#define DARWIN  
 
+#include "nsFilePicker.h"
 #include "nsObjCExceptions.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
@@ -58,35 +53,25 @@
 #include "nsIURL.h"
 #include "nsArrayEnumerator.h"
 #include "nsIStringBundle.h"
-
-#include "nsFilePicker.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 const float kAccessoryViewPadding = 5;
 const int   kSaveTypeControlTag = 1;
+const char  kLastTypeIndexPref[] = "filepicker.lastTypeIndex";
 
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
-//-------------------------------------------------------------------------
-//
-// nsFilePicker constructor
-//
-//-------------------------------------------------------------------------
+
 nsFilePicker::nsFilePicker()
-: mAllFilesDisplayed(PR_TRUE)
-, mMode(0)
-, mSelectedType(0)
+: mMode(0)
+, mSelectedTypeIndex(0)
 {
 }
 
 
-//-------------------------------------------------------------------------
-//
-// nsFilePicker destructor
-//
-//-------------------------------------------------------------------------
 nsFilePicker::~nsFilePicker()
 {
-  // string arrays clean themselves up
 }
 
 
@@ -96,7 +81,16 @@ nsFilePicker::InitNative(nsIWidget *aParent, const nsAString& aTitle,
 {
   mTitle = aTitle;
   mMode = aMode;
+
+  // read in initial type index from prefs
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs) {
+    int prefIndex;
+    if (NS_SUCCEEDED(prefs->GetIntPref(kLastTypeIndexPref, &prefIndex)))
+      mSelectedTypeIndex = prefIndex;
+  }
 }
+
 
 NSView* nsFilePicker::GetAccessoryView()
 {
@@ -146,6 +140,8 @@ NSView* nsFilePicker::GetAccessoryView()
     [popupButton addItemWithTitle:titleString];
     [titleString release];
   }
+  if (mSelectedTypeIndex >= 0 && mSelectedTypeIndex < numMenuItems)
+    [popupButton selectItemAtIndex:mSelectedTypeIndex];
   [popupButton setTag:kSaveTypeControlTag];
   [popupButton sizeToFit]; // we have to do sizeToFit to get the height calculated for us
   // This is just a default width that works well, doesn't truncate the vast majority of
@@ -175,11 +171,8 @@ NSView* nsFilePicker::GetAccessoryView()
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-//-------------------------------------------------------------------------
-//
-// Show - Display the file dialog
-//
-//-------------------------------------------------------------------------
+
+// Display the file dialog
 NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 {
   NS_ENSURE_ARG_POINTER(retval);
@@ -232,13 +225,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 }
 
 
-//-------------------------------------------------------------------------
-//
-// GetLocalFiles
-//
 // Use OpenPanel to do a GetFile. Returns |returnOK| if the user presses OK in the dialog. 
-//
-//-------------------------------------------------------------------------
 PRInt16
 nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsCOMArray<nsILocalFile>& outFiles)
 {
@@ -296,16 +283,10 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsC
   return retVal;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
-} // GetFiles
+}
 
 
-//-------------------------------------------------------------------------
-//
-// GetLocalFolder
-//
 // Use OpenPanel to do a GetFolder. Returns |returnOK| if the user presses OK in the dialog.
-//
-//-------------------------------------------------------------------------
 PRInt16
 nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
 {
@@ -352,13 +333,10 @@ nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
   return retVal;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
-} // GetFolder
+}
 
-//-------------------------------------------------------------------------
-//
-// PutLocalFile. Returns |returnOK| if the user presses OK in the dialog.
-//
-//-------------------------------------------------------------------------
+
+// Returns |returnOK| if the user presses OK in the dialog.
 PRInt16
 nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultName, nsILocalFile** outFile)
 {
@@ -388,8 +366,13 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
 
   // get the save type
   NSPopUpButton* popupButton = [accessoryView viewWithTag:kSaveTypeControlTag];
-  if (popupButton)
-    mSelectedType = [popupButton indexOfSelectedItem];
+  if (popupButton) {
+    mSelectedTypeIndex = [popupButton indexOfSelectedItem];
+    // save out to prefs for initializing other file picker instances
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (prefs)
+      prefs->SetIntPref(kLastTypeIndexPref, mSelectedTypeIndex);
+  }
 
   NSURL* fileURL = [thePanel URL];
   if (fileURL) { 
@@ -413,16 +396,10 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 }
 
-//-------------------------------------------------------------------------
-//
-// GenerateFilterList
-//
+
 // Take the list of file types (in a nice win32-specific format) and fills up
 // an NSArray of them for the Open Panel.  Note: Will return nil if we should allow
 // all file types.
-//
-//-------------------------------------------------------------------------
-
 NSArray *
 nsFilePicker::GenerateFilterList()
 {
@@ -476,17 +453,11 @@ nsFilePicker::GenerateFilterList()
   return filterArray;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
-} // GenerateFilterList
+}
 
-//-------------------------------------------------------------------------
-//
-// SetDialogTitle
-// 
+
 // Sets the dialog title to whatever it should be.  If it fails, eh,
 // the OS will provide a sensible default.
-//
-//-------------------------------------------------------------------------
-
 void
 nsFilePicker::SetDialogTitle(const nsString& inTitle, id aPanel)
 {
@@ -497,14 +468,9 @@ nsFilePicker::SetDialogTitle(const nsString& inTitle, id aPanel)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 } 
 
-//-------------------------------------------------------------------------
-//
-// PanelDefaultDirectory
-//
+
 // Converts path from an nsILocalFile into a NSString path
 // If it fails, returns an empty string.
-//
-//-------------------------------------------------------------------------
 NSString *
 nsFilePicker::PanelDefaultDirectory()
 {
@@ -522,15 +488,13 @@ nsFilePicker::PanelDefaultDirectory()
 }
 
 
-//-------------------------------------------------------------------------
 NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
 {
   NS_ENSURE_ARG_POINTER(aFile);
   *aFile = nsnull;
   
   // just return the first file
-  if (mFiles.Count() > 0)
-  {
+  if (mFiles.Count() > 0) {
     *aFile = mFiles.ObjectAt(0);
     NS_IF_ADDREF(*aFile);
   }
@@ -538,7 +502,7 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
+
 NS_IMETHODIMP nsFilePicker::GetFileURL(nsIURI **aFileURL)
 {
   NS_ENSURE_ARG_POINTER(aFileURL);
@@ -550,17 +514,13 @@ NS_IMETHODIMP nsFilePicker::GetFileURL(nsIURI **aFileURL)
   return NS_NewFileURI(aFileURL, mFiles.ObjectAt(0));
 }
 
-//-------------------------------------------------------------------------
+
 NS_IMETHODIMP nsFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
 {
   return NS_NewArrayEnumerator(aFiles, mFiles);
 }
 
-//-------------------------------------------------------------------------
-//
-// Get the file + path
-//
-//-------------------------------------------------------------------------
+
 NS_IMETHODIMP nsFilePicker::SetDefaultString(const nsAString& aString)
 {
   mDefault = aString;
@@ -572,27 +532,22 @@ NS_IMETHODIMP nsFilePicker::GetDefaultString(nsAString& aString)
   return NS_ERROR_FAILURE;
 }
 
-//-------------------------------------------------------------------------
-//
+
 // The default extension to use for files
-//
-//-------------------------------------------------------------------------
 NS_IMETHODIMP nsFilePicker::GetDefaultExtension(nsAString& aExtension)
 {
   aExtension.Truncate();
   return NS_OK;
 }
 
+
 NS_IMETHODIMP nsFilePicker::SetDefaultExtension(const nsAString& aExtension)
 {
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-//
+
 // Append an entry to the filters array
-//
-//-------------------------------------------------------------------------
 NS_IMETHODIMP
 nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
 {
@@ -603,25 +558,17 @@ nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
 }
 
 
-//-------------------------------------------------------------------------
-//
 // Get the filter index - do we still need this?
-//
-//-------------------------------------------------------------------------
 NS_IMETHODIMP nsFilePicker::GetFilterIndex(PRInt32 *aFilterIndex)
 {
-  *aFilterIndex = mSelectedType;
+  *aFilterIndex = mSelectedTypeIndex;
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-//
+
 // Set the filter index - do we still need this?
-//
-//-------------------------------------------------------------------------
 NS_IMETHODIMP nsFilePicker::SetFilterIndex(PRInt32 aFilterIndex)
 {
-  mSelectedType = aFilterIndex;
+  mSelectedTypeIndex = aFilterIndex;
   return NS_OK;
 }
-

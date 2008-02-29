@@ -51,6 +51,15 @@
 NS_IMPL_CYCLE_COLLECTION_CLASS(XPCWrappedNative)
 
 NS_IMETHODIMP
+NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::RootAndUnlinkJSObjects(void *p)
+{
+    XPCWrappedNative *tmp = static_cast<XPCWrappedNative*>(p);
+    tmp->ExpireWrapper();
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
 NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(void *p,
                                                           nsCycleCollectionTraversalCallback &cb)
 {
@@ -655,8 +664,12 @@ XPCWrappedNative::~XPCWrappedNative()
         delete mScriptableInfo;
     }
 
-    Native2WrappedNativeMap* map = GetScope()->GetWrappedNativeMap();
-    {   // scoped lock
+    XPCWrappedNativeScope *scope = GetScope();
+    if(scope)
+    {
+        Native2WrappedNativeMap* map = scope->GetWrappedNativeMap();
+
+        // scoped lock
         XPCAutoLock lock(GetRuntime()->GetMapLock());
         map->Remove(this);
     }
@@ -1031,7 +1044,24 @@ XPCWrappedNative::FlatJSObjectFinalized(JSContext *cx)
 
     GetScope()->GetWrapperMap()->Remove(mFlatJSObject);
 
-    //This makes IsValid return false from now on...
+    if(IsWrapperExpired())
+    {
+        GetScope()->GetWrappedNativeMap()->Remove(this);
+
+        XPCWrappedNativeProto* proto = GetProto();
+
+        if(mScriptableInfo &&
+           (!HasProto() ||
+            (proto && proto->GetScriptableInfo() != mScriptableInfo)))
+        {
+            delete mScriptableInfo;
+            mScriptableInfo = nsnull;
+        }
+
+        mMaybeScope = nsnull;
+    }
+
+    // This makes IsValid return false from now on...
     mFlatJSObject = nsnull;
 
     NS_ASSERTION(mIdentity, "bad pointer!");
@@ -1218,7 +1248,7 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
             oldMap->Remove(wrapper);
 
             if(wrapper->HasProto())
-                wrapper->mMaybeProto = newProto;
+                wrapper->SetProto(newProto);
 
             // If the wrapper has no scriptable or it has a non-shared
             // scriptable, then we don't need to mess with it.
@@ -2662,7 +2692,7 @@ NS_IMETHODIMP XPCWrappedNative::RefreshPrototype()
     if(!JS_SetPrototype(ccx, GetFlatJSObject(), newProto->GetJSProtoObject()))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
-    mMaybeProto = newProto;
+    SetProto(newProto);
 
     if(mScriptableInfo == oldProto->GetScriptableInfo())
         mScriptableInfo = newProto->GetScriptableInfo();
@@ -2687,13 +2717,14 @@ NS_IMETHODIMP XPCWrappedNative::DebugDump(PRInt16 depth)
 
         if(HasProto())
         {
-            if(depth && mMaybeProto)
-                mMaybeProto->DebugDump(depth);
+            XPCWrappedNativeProto* proto = GetProto();
+            if(depth && proto)
+                proto->DebugDump(depth);
             else
-                XPC_LOG_ALWAYS(("mMaybeProto @ %x", mMaybeProto));
+                XPC_LOG_ALWAYS(("mMaybeProto @ %x", proto));
         }
         else
-            XPC_LOG_ALWAYS(("Scope @ %x", UnTagScope(mMaybeScope)));
+            XPC_LOG_ALWAYS(("Scope @ %x", GetScope()));
 
         if(depth && mSet)
             mSet->DebugDump(depth);

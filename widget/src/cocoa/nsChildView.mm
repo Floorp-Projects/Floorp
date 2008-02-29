@@ -1994,13 +1994,16 @@ NSEvent* gLastDragEvent = nil;
     mWindow = nil;
     mGeckoChild = inChild;
     mIsPluginView = NO;
+
     mCurKeyEvent = nil;
     mKeyDownHandled = PR_FALSE;
-    
+    mIgnoreDoCommand = NO;
+    mKeyPressSent = NO;
+
     // initialization for NSTextInput
     mMarkedRange.location = NSNotFound;
     mMarkedRange.length = 0;
-    mIgnoreDoCommand = NO;
+
     mLastMenuForEventEvent = nil;
     mDragService = nsnull;
   }
@@ -3842,7 +3845,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     outGeckoEvent->isChar = PR_TRUE; // this is not a special key
     
     outGeckoEvent->charCode = 0;
-    outGeckoEvent->keyCode  = 0;
+    outGeckoEvent->keyCode  = 0; // not set for key press events
     
     NSString* unmodifiedChars = [aKeyEvent charactersIgnoringModifiers];
     if ([unmodifiedChars length] > 0)
@@ -3983,6 +3986,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     }
 
     mGeckoChild->DispatchWindowEvent(geckoEvent);
+    mKeyPressSent = YES;
   }
   else {
     if (!nsTSMManager::IsComposing()) {
@@ -4339,9 +4343,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 }
 
 
-// Handle matching cocoa IME with gecko key events. Sends a key down and key press
-// event to gecko.
-- (void)keyDown:(NSEvent*)theEvent
+- (void)processKeyDownEvent:(NSEvent*)theEvent keyEquiv:(BOOL)isKeyEquiv
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -4351,7 +4353,6 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   nsAutoRetainView kungFuDeathGrip(self);
   mCurKeyEvent = theEvent;
 
-  PRBool dispatchedKeyPress = PR_FALSE;
   BOOL nonDeadKeyPress = [[theEvent characters] length] > 0;
   if (nonDeadKeyPress) {
     if (![theEvent isARepeat]) {
@@ -4364,6 +4365,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
       EventRecord macEvent;
       ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
+
       mKeyDownHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
       if (!mGeckoChild)
         return;
@@ -4380,15 +4382,15 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
     [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
 
-    if (mKeyDownHandled)
-      geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
-
     // if this is a non-letter keypress, or the control key is down,
     // dispatch the keydown to gecko, so that we trap delete,
     // control-letter combinations etc before Cocoa tries to use
     // them for keybindings.
     if ((!geckoEvent.isChar || geckoEvent.isControl) &&
         !nsTSMManager::IsComposing()) {
+      if (mKeyDownHandled)
+        geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+
       // create native EventRecord for use by plugins
       EventRecord macEvent;
       ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
@@ -4397,28 +4399,49 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
       mIgnoreDoCommand = mGeckoChild->DispatchWindowEvent(geckoEvent);
       if (!mGeckoChild)
         return;
-      dispatchedKeyPress = PR_TRUE;
+      mKeyPressSent = YES;
     }
   }
 
-  // We should send this event to the superclass if IME is enabled.
-  // Otherwise, we need to suppress IME composition. We can do it by
-  // not sending this event to the superclass. But in that case,
-  // we need to call insertText ourselves.
-  if (!dispatchedKeyPress) {
-    if (nsTSMManager::IsIMEEnabled())
-      [super interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
-    else if (nonDeadKeyPress)
-      [self insertText:[theEvent characters]];
+  // Let Cocoa interpret the key events, caching IsComposing first.
+  // We don't do it if this came from performKeyEquivalent because
+  // interpretKeyEvents isn't set up to handle those key combinations.
+  PRBool wasComposing = nsTSMManager::IsComposing();
+  if (!isKeyEquiv)
+    [super interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
+
+  if (!mGeckoChild)
+    return;
+
+  if (!mKeyPressSent && nonDeadKeyPress && !wasComposing && !nsTSMManager::IsComposing()) {
+    nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
+    [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
+    if (mKeyDownHandled)
+      geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+
+    // create native EventRecord for use by plugins
+    EventRecord macEvent;
+    ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
+    geckoEvent.nativeMsg = &macEvent;
+
+    mGeckoChild->DispatchWindowEvent(geckoEvent);    
   }
 
   // Note: mGeckoChild might have become null here. Don't count on it from here on.
 
+  // See note about nested event loops where these variables are declared in header.
   mIgnoreDoCommand = NO;
+  mKeyPressSent = NO;
   mCurKeyEvent = nil;
   mKeyDownHandled = PR_FALSE;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+
+- (void)keyDown:(NSEvent*)theEvent
+{
+  [self processKeyDownEvent:theEvent keyEquiv:NO];
 }
 
 
@@ -4451,6 +4474,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
       EventRecord macEvent;
       ConvertCocoaKeyEventToMacEvent(nativeKeyDownEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
+
       keyDownHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
       if (!mGeckoChild)
         return;
@@ -4512,11 +4536,15 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   if (modifierFlags & NSCommandKeyMask && [theEvent keyCode] == kTildeKeyCode)
     return NO;
 
-  // don't bother if we don't have a gecko widget
+  // don't do anything if we don't have a gecko widget
   if (!mGeckoChild)
-    return YES;
+    return NO;
 
-  // return 'NO' if we are in a transaction of IME.
+  // if we aren't the first responder, pass the event on
+  if ([[self window] firstResponder] != self)
+    return [super performKeyEquivalent:theEvent];
+
+  // don't process if we're composing, but don't consume the event
   if (nsTSMManager::IsComposing())
     return NO;
 
@@ -4551,16 +4579,8 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   if ((modifierFlags & NSFunctionKeyMask) || (modifierFlags & NSNumericPadKeyMask))
     return NO;
 
-  // handle the event ourselves
-  nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
-  [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
-
-  // create native EventRecord for use by plugins
-  EventRecord macEvent;
-  ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
-  geckoEvent.nativeMsg = &macEvent;
-
-  mGeckoChild->DispatchWindowEvent(geckoEvent);
+  if ([theEvent type] == NSKeyDown)
+    [self processKeyDownEvent:theEvent keyEquiv:YES];
 
   return YES;
 
