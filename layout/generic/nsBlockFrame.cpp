@@ -1923,7 +1923,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // to the result of nextLine->ShouldApplyTopMargin.
       if (line.next() != end_lines()) {
         PRBool maybeWasEmpty = oldY == line.next()->mBounds.y;
-        PRBool isEmpty = line->mBounds.height == 0 && line->CachedIsEmpty();
+        PRBool isEmpty = line->mBounds.width == 0 && line->CachedIsEmpty();
         if (maybeReflowingForFirstTime /*1*/ ||
             (isEmpty || maybeWasEmpty) /*2/3/4*/) {
           line.next()->MarkPreviousMarginDirty();
