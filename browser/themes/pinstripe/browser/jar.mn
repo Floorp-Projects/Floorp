@@ -51,7 +51,6 @@ classic.jar:
   skin/classic/browser/places/bookmarksMenu.png             (places/bookmarksMenu.png)
   skin/classic/browser/places/bookmarksToolbar.png          (places/bookmarksToolbar.png)
   skin/classic/browser/places/toolbarDropMarker.png         (places/toolbarDropMarker.png)
-  skin/classic/browser/places/folderDragOver.png            (places/folderDragOver.png)
   skin/classic/browser/places/folderDropArrow.png           (places/folderDropArrow.png)
   skin/classic/browser/places/infoPaneGrippy.png            (places/infoPaneGrippy.png)
   skin/classic/browser/places/folderDropHoverArrow.png      (places/folderDropHoverArrow.png)
