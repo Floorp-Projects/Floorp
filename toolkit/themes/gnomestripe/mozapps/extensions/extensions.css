@@ -42,6 +42,10 @@
   -moz-margin-end: 5px;
 }
 
+#checkUpdatesAllButton {
+  list-style-image: none;
+}
+
 #installFileButton, #installUpdatesAllButton {
   -moz-image-region: rect(0px, 84px, 21px, 63px);
 }
