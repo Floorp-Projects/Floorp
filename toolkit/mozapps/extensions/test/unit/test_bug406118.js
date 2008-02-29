@@ -1,4 +1,3 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Blocklist Service.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation
- * Portions created by the Initial Developer are Copyright (C) 2007
+ *      Dave Townsend <dtownsend@oxymoronical.com>.
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Michael Wu <flamingice@sourmilk.net>  (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,31 +33,23 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK ***** */
+ * ***** END LICENSE BLOCK *****
+ */
 
+function run_test() {
+  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
-#include "nsISupports.idl"
+  // We cannot force the blocklist to update so just copy our test list to the profile
+  var source = do_get_file("toolkit/mozapps/extensions/test/unit/data/test_bug393285.xml");
+  source.copyTo(gProfD, "blocklist.xml");
 
-[scriptable, uuid(0c3fe697-d50d-4f42-b747-0c5855cfc60e)]
-interface nsIBlocklistService : nsISupports
-{
-  /**
-   * Determine if an item is blocklisted
-   * @param   id
-   *          The GUID of the item.
-   * @param   version
-   *          The item's version.
-   * @param   appVersion
-   *          The version of the application we are checking in the blocklist.
-   *          If this parameter is null, the version of the running application
-   *          is used.
-   * @param   toolkitVersion
-   *          The version of the toolkit we are checking in the blocklist.
-   *          If this parameter is null, the version of the running toolkit
-   *          is used.
-   * @returns true if the item is compatible with this version of the
-   *          application or this version of the toolkit, false, otherwise.
-   */
-  boolean isAddonBlocklisted(in AString id, in AString version,
-                             in AString appVersion, in AString toolkitVersion);
-};
+  var blocklist = Components.classes["@mozilla.org/extensions/blocklist;1"]
+                            .getService(Components.interfaces.nsIBlocklistService);
+  
+  // All these should be blocklisted for the current app.
+  do_check_false(blocklist.isAddonBlocklisted("test_bug393285_1@tests.mozilla.org", "1", null, null));
+  do_check_true(blocklist.isAddonBlocklisted("test_bug393285_2@tests.mozilla.org", "1", null, null));
+  do_check_true(blocklist.isAddonBlocklisted("test_bug393285_3@tests.mozilla.org", "1", null, null));
+  do_check_true(blocklist.isAddonBlocklisted("test_bug393285_4@tests.mozilla.org", "1", null, null));
+
+}
