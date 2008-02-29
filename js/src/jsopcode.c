@@ -101,7 +101,7 @@ static const char *CodeToken[] = {
 /*
  * Array of JS bytecode names used by DEBUG-only js_Disassemble.
  */
-static const char *CodeName[] = {
+const char *js_CodeName[] = {
 #define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
     name,
 #include "jsopcode.tbl"
@@ -238,7 +238,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
     fprintf(fp, "%05u:", loc);
     if (lines)
         fprintf(fp, "%4u", JS_PCToLineNumber(cx, script, pc));
-    fprintf(fp, "  %s", CodeName[op]);
+    fprintf(fp, "  %s", js_CodeName[op]);
     type = JOF_TYPE(cs->format);
     switch (type) {
       case JOF_BYTE:
