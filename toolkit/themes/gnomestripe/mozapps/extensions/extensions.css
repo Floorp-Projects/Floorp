@@ -43,7 +43,7 @@
 }
 
 #checkUpdatesAllButton {
-  list-style-image: none;
+  list-style-image: none !important;
 }
 
 #installFileButton, #installUpdatesAllButton {
