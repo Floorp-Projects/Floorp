@@ -1723,7 +1723,7 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView, nsPoint aDelta,
 
   aUpdateRegion->MoveBy(-displayOffset);
 
-#ifdef MOZ_WIDGET_GTK2
+#if defined(MOZ_WIDGET_GTK2) || defined(XP_OS2)
   return aUpdateRegion->IsEmpty();
 #else
   return PR_TRUE;
