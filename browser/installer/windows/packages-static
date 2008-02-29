@@ -42,11 +42,14 @@ bin\xpcom_core.dll
 bin\components\xpinstal.dll
 bin\components\jar50.dll
 #endif
+#ifndef MOZ_MEMORY
 bin\Microsoft.VC80.CRT.manifest
 bin\msvcm80.dll
 bin\msvcp80.dll
 bin\msvcr80.dll
+#else
 bin\mozcrt19.dll
+#endif
 
 [browser]
 ; [Base Browser Files]
@@ -243,7 +246,6 @@ bin\modules\*
 
 ; Safe Browsing
 bin\components\nsSafebrowsingApplication.js
-bin\components\safebrowsing.xpt
 bin\components\nsUrlClassifierListManager.js
 bin\components\nsUrlClassifierLib.js
 bin\components\url-classifier.xpt

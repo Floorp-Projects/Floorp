@@ -5726,11 +5726,7 @@ MOZ_NATIVE_SQLITE= )
 if test -z "$MOZ_NATIVE_SQLITE"
 then
     SQLITE_CFLAGS=
-    if test -z "$GNU_CC" && test "$OS_ARCH" = "WINNT" -o "$OS_ARCH" = "WINCE" -o "$OS_ARCH" = "OS2"; then
-        SQLITE_LIBS='$(DIST)/lib/$(LIB_PREFIX)sqlite3.$(LIB_SUFFIX)'
-    else
-        SQLITE_LIBS='-lsqlite3'
-    fi
+    SQLITE_LIBS='$(call EXPAND_LIBNAME_PATH,sqlite3,$(DIST)/lib)'
 else
     PKG_CHECK_MODULES(SQLITE, sqlite3 >= $SQLITE_VERSION)
 fi

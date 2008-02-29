@@ -38,7 +38,7 @@
 # ***** END LICENSE BLOCK *****
 
 // Load DownloadUtils module for convertByteUnits
-Cu.import("resource://gre/modules/DownloadUtils.jsm");
+Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 
 var gAdvancedPane = {
   _inited: false,

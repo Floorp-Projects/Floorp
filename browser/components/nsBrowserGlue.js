@@ -575,7 +575,7 @@ BrowserGlue.prototype = {
         var recentTagsItem = bmsvc.insertBookmark(placesFolder,
           this._uri("place:"+
               "type=" + Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY +
-              "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
+              "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_LASTMODIFIED_DESCENDING +
               "&maxResults=" + maxResults),
           defaultIndex, recentTagsTitle);
       }

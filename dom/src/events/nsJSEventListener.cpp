@@ -105,7 +105,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSEventListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTarget)
   if (tmp->mContext) {
     if (tmp->mScopeObject) {
-      nsContentUtils::DropScriptObjects(tmp->mContext->GetScriptTypeID(), this,
+      nsContentUtils::DropScriptObjects(tmp->mContext->GetScriptTypeID(), tmp,
                                   &NS_CYCLE_COLLECTION_NAME(nsJSEventListener));
       tmp->mScopeObject = nsnull;
     }

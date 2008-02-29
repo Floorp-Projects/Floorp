@@ -294,6 +294,12 @@ static const char* gAutoCompleteFeedback = "autocomplete-will-enter-text";
 // annotation names
 const char nsNavHistory::kAnnotationPreviousEncoding[] = "history/encoding";
 
+// code borrowed from mozilla/xpfe/components/history/src/nsGlobalHistory.cpp
+// pass in a pre-normalized now and a date, and we'll find
+// the difference since midnight on each of the days.
+//
+// USECS_PER_DAY == PR_USEC_PER_SEC * 60 * 60 * 24;
+static const PRInt64 USECS_PER_DAY = LL_INIT(20, 500654080);
 
 nsNavHistory *nsNavHistory::gHistoryService = nsnull;
 
@@ -2792,6 +2798,7 @@ private:
 
   nsCString mQueryString;
   nsCString mGroupBy;
+  PRBool mHasDateColumns;
   PRBool mSkipOrderBy;
 };
 
@@ -2808,6 +2815,7 @@ PlacesSQLQueryBuilder::PlacesSQLQueryBuilder(
   mUseLimit(aUseLimit),
   mSkipOrderBy(PR_FALSE)
 {
+  mHasDateColumns = (mQueryType == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS);
 }
 
 nsresult
@@ -2944,11 +2952,21 @@ PlacesSQLQueryBuilder::SelectAsDay()
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_STATE(history);
 
-  nsCAutoString dateName;
+  struct Midnight
+  {
+    Midnight() {
+      mNow = NormalizeTimeRelativeToday(PR_Now());  
+    }
+    PRTime Get(PRInt32 aDayOffset) {
+      PRTime result;
+      LL_MUL(result, aDayOffset, USECS_PER_DAY);
+      LL_ADD(result, result, mNow);
+      return result;
+    }
+    PRTime mNow;
+  } midnight;
 
-#define SQL_STR_FRAGMENT_DATE(sign) \
-  " CAST(strftime('%%s',CURRENT_DATE, 'LOCALTIME', '%d days') AS UNSIGNED)" \
-    "*1000000 "
+  nsCAutoString dateName;
 
   const PRInt32 MAX_DAYS = 6;
 
@@ -2977,14 +2995,18 @@ PlacesSQLQueryBuilder::SelectAsDay()
       "FROM (SELECT %d dayOrder, "
                   "'%d' dayRange, "
                   "'%s' dayTitle, "
-                  SQL_STR_FRAGMENT_DATE() " beginTime, "
-                  SQL_STR_FRAGMENT_DATE() " endTime "
+                  "%llu beginTime, "
+                  "%llu endTime "
       "FROM  moz_historyvisits "
-      "WHERE visit_date >= " SQL_STR_FRAGMENT_DATE()
-      "  AND visit_date <  " SQL_STR_FRAGMENT_DATE()
+      "WHERE visit_date >= %llu AND visit_date < %llu "
       "  AND visit_type NOT IN (0,4) "
-      "LIMIT 1) TUNION%d UNION ", i, i, dateName.get(), fromDayAgo, 
-      toDayAgo, fromDayAgo, toDayAgo, i);
+      "LIMIT 1) TUNION%d UNION ", 
+      i, i, dateName.get(), 
+      midnight.Get(fromDayAgo),
+      midnight.Get(toDayAgo), 
+      midnight.Get(fromDayAgo),
+      midnight.Get(toDayAgo),
+      i);
 
     mQueryString.Append( dayRange );
   }
@@ -2998,9 +3020,9 @@ PlacesSQLQueryBuilder::SelectAsDay()
                  "'%d+' dayRange, "
                  "'%s' dayTitle, "
                  "1 beginTime, "
-                 SQL_STR_FRAGMENT_DATE() " endTime "
+                 "%llu endTime "
           "FROM  moz_historyvisits "
-          "WHERE visit_date < " SQL_STR_FRAGMENT_DATE()
+          "WHERE visit_date < %llu "
           "  AND visit_type NOT IN (0,4) "
           "LIMIT 1) TUNIONLAST "
     ") TOUTER " // TOUTER END
@@ -3008,11 +3030,9 @@ PlacesSQLQueryBuilder::SelectAsDay()
     MAX_DAYS+1,
     MAX_DAYS+1,
     dateName.get(),
-    -MAX_DAYS,
-    -MAX_DAYS
+    midnight.Get(-MAX_DAYS),
+    midnight.Get(-MAX_DAYS)
     ));
-
-#undef SQL_STR_FRAGMENT_DATE
 
   return NS_OK;
 }
@@ -3099,9 +3119,13 @@ PlacesSQLQueryBuilder::SelectAsTag()
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_STATE(history);
 
+  // This allows sorting by date fields what is not possible with
+  // other history queries.
+  mHasDateColumns = PR_TRUE; 
+
   mQueryString = nsPrintfCString(2048,
     "SELECT null, 'place:type=%ld&queryType=%d&sort=%ld&folder=' || id, "
-      "title, title, null, null, null, null, null "
+      "title, null, null, null, null, null, null, dateAdded, lastModified "
     "FROM   moz_bookmarks "
     "WHERE  parent = %ld",
     nsINavHistoryQueryOptions::RESULTS_AS_URI,
@@ -3189,19 +3213,19 @@ PlacesSQLQueryBuilder::OrderBy()
       OrderByColumnIndexDesc(nsNavHistory::kGetInfoIndex_VisitCount);
       break;
     case nsINavHistoryQueryOptions::SORT_BY_DATEADDED_ASCENDING:
-      if (mQueryType == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS)
+      if (mHasDateColumns)
         OrderByColumnIndexAsc(nsNavHistory::kGetInfoIndex_ItemDateAdded);
       break;
     case nsINavHistoryQueryOptions::SORT_BY_DATEADDED_DESCENDING:
-      if (mQueryType == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS)
+      if (mHasDateColumns)
         OrderByColumnIndexDesc(nsNavHistory::kGetInfoIndex_ItemDateAdded);
       break;
     case nsINavHistoryQueryOptions::SORT_BY_LASTMODIFIED_ASCENDING:
-      if (mQueryType == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS)
+      if (mHasDateColumns)
         OrderByColumnIndexAsc(nsNavHistory::kGetInfoIndex_ItemLastModified);
       break;
     case nsINavHistoryQueryOptions::SORT_BY_LASTMODIFIED_DESCENDING:
-      if (mQueryType == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS)
+      if (mHasDateColumns)
         OrderByColumnIndexDesc(nsNavHistory::kGetInfoIndex_ItemLastModified);
       break;
     default:
@@ -4888,12 +4912,6 @@ nsNavHistory::ResultsAsList(mozIStorageStatement* statement,
   return NS_OK;
 }
 
-// code borrowed from mozilla/xpfe/components/history/src/nsGlobalHistory.cpp
-// pass in a pre-normalized now and a date, and we'll find
-// the difference since midnight on each of the days.
-//
-// USECS_PER_DAY == PR_USEC_PER_SEC * 60 * 60 * 24;
-static const PRInt64 USECS_PER_DAY = LL_INIT(20, 500654080);
 static PRInt64
 GetAgeInDays(PRTime aNormalizedNow, PRTime aDate)
 {

@@ -65,9 +65,13 @@ close(OUTFILE);
 
 die "Can't open $def_name" if !open(OUTFILE, ">$def_name");
 
+## Disabled for bug 275004 - followup to fix is Bug 419604
+my $warn_inc_is_generated = 0;
+if ($warn_inc_is_generated) {
 print OUTFILE "/* generated file - DO NOT EDIT */\n\n";
 print OUTFILE "/* includes ",$entry_count," stub entries, and ",
               $sentinel_count," sentinel entries */\n\n";
+}
 
 for($i = 0; $i < $entry_count; $i++) {
     print OUTFILE "STUB_ENTRY(",$i+3,")\n";
