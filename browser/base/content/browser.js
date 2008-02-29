@@ -1614,15 +1614,21 @@ function BrowserCloseTabOrWindow()
   }
 #endif
 
-  if (gBrowser.tabContainer.childNodes.length > 1 ||
-      window.toolbar.visible && !gPrefService.getBoolPref("browser.tabs.autoHide")) {
-    // Just close the tab (and focus the address bar if it was the last one).
-    var isLastTab = gBrowser.tabContainer.childNodes.length == 1;
+  if (gBrowser.tabContainer.childNodes.length > 1) {
+    gBrowser.removeCurrentTab(); 
+    return;
+  }
+
+#ifndef XP_MACOSX
+  if (gBrowser.localName == "tabbrowser" && window.toolbar.visible &&
+      !gPrefService.getBoolPref("browser.tabs.autoHide")) {
+    // Replace the remaining tab with a blank one and focus the address bar
     gBrowser.removeCurrentTab();
-    if (isLastTab && gURLBar)
+    if (gURLBar)
       setTimeout(function() { gURLBar.focus(); }, 0);
     return;
   }
+#endif
 
   closeWindow(true);
 }
