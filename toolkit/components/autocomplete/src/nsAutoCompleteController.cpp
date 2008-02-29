@@ -65,7 +65,7 @@ NS_IMPL_ISUPPORTS4(nsAutoCompleteController, nsIAutoCompleteController,
                                              nsITreeView)
 
 nsAutoCompleteController::nsAutoCompleteController() :
-  mEnterAfterSearch(PR_FALSE),
+  mEnterAfterSearch(0),
   mDefaultIndexCompleted(PR_FALSE),
   mBackspaced(PR_FALSE),
   mPopupClosedByCompositionStart(PR_FALSE),
@@ -139,7 +139,7 @@ nsAutoCompleteController::SetInput(nsIAutoCompleteInput *aInput)
   
   // Reset all search state members to default values
   mSearchString = newValue;
-  mEnterAfterSearch = PR_FALSE;
+  mEnterAfterSearch = 0;
   mDefaultIndexCompleted = PR_FALSE;
   mBackspaced = PR_FALSE;
   mSearchStatus = nsIAutoCompleteController::STATUS_NONE;
@@ -270,7 +270,7 @@ nsAutoCompleteController::HandleText(PRBool aIgnoreSelection)
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::HandleEnter(PRBool *_retval)
+nsAutoCompleteController::HandleEnter(PRBool aIsPopupSelection, PRBool *_retval)
 {
   *_retval = PR_FALSE;
   if (!mInput)
@@ -295,7 +295,7 @@ nsAutoCompleteController::HandleEnter(PRBool *_retval)
   // but we need the search timer to fire to kick of that search 
   if (mSearchStatus != nsIAutoCompleteController::STATUS_SEARCHING)
     ClearSearchTimer();
-  EnterMatch();
+  EnterMatch(aIsPopupSelection);
   
   return NS_OK;
 }
@@ -386,7 +386,7 @@ NS_IMETHODIMP
 nsAutoCompleteController::HandleTab()
 {
   PRBool cancel;
-  return HandleEnter(&cancel);
+  return HandleEnter(PR_FALSE, &cancel);
 }
 
 NS_IMETHODIMP
@@ -1068,15 +1068,15 @@ nsAutoCompleteController::ClearSearchTimer()
 }
 
 nsresult
-nsAutoCompleteController::EnterMatch()
+nsAutoCompleteController::EnterMatch(PRBool aIsPopupSelection)
 {
   // If a search is still ongoing, bail out of this function
   // and let the search finish, and tell it to come back here when it's done
   if (mSearchStatus == nsIAutoCompleteController::STATUS_SEARCHING) {
-    mEnterAfterSearch = PR_TRUE;
+    mEnterAfterSearch = aIsPopupSelection ? 2 : 1;
     return NS_OK;
   }
-  mEnterAfterSearch = PR_FALSE;
+  mEnterAfterSearch = 0;
   
   nsCOMPtr<nsIAutoCompletePopup> popup;
   mInput->GetPopup(getter_AddRefs(popup));
@@ -1089,10 +1089,16 @@ nsAutoCompleteController::EnterMatch()
   nsAutoString value;
   popup->GetOverrideValue(value);
   if (value.IsEmpty()) {
-    // If a row is selected in the popup, enter it into the textbox
+    PRBool completeSelection;
+    mInput->GetCompleteSelectedIndex(&completeSelection);
+
+    // If completeselectedindex is false or a row was selected from the popup,
+    // enter it into the textbox. If completeselectedindex is true, or
+    // EnterMatch was called via other means, for instance pressing Enter,
+    // don't fill in the value as it will have already been filled in as needed.
     PRInt32 selectedIndex;
     popup->GetSelectedIndex(&selectedIndex);
-    if (selectedIndex >= 0)
+    if (selectedIndex >= 0 && (!completeSelection || aIsPopupSelection))
       GetResultValueAt(selectedIndex, PR_TRUE, value);
     
     if (forceComplete && value.IsEmpty()) {
@@ -1272,7 +1278,7 @@ nsAutoCompleteController::PostSearchCleanup()
   // if mEnterAfterSearch was set, then the user hit enter while the 
   // search was ongoing, so we need to enter a match now that the search is done
   if (mEnterAfterSearch)
-    EnterMatch();
+    EnterMatch(mEnterAfterSearch == 2);
 
   return NS_OK;
 }
