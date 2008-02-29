@@ -42,6 +42,7 @@
 #include "nsLocalFile.h"
 #include "nsDirectoryServiceDefs.h"
 
+#include "nsObjCExceptions.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsIDirectoryEnumerator.h"
@@ -61,6 +62,7 @@
 
 // Mac Includes
 #include <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
 
 // Unix Includes
 #include <unistd.h>
@@ -96,7 +98,11 @@ static void CopyUTF8toUTF16NFC(const nsACString& aSrc, nsAString& aResult);
 
 bool operator==(const FSRef& lhs, const FSRef& rhs)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   return (::FSCompareFSRefs(&lhs, &rhs) == noErr);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
 
 #pragma mark -
@@ -147,6 +153,8 @@ class nsDirEnumerator : public nsISimpleEnumerator,
 
         nsresult Init(nsILocalFileMac* parent) 
         {
+          NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
           NS_ENSURE_ARG(parent);
           
           OSErr err;
@@ -167,10 +175,14 @@ class nsDirEnumerator : public nsISimpleEnumerator,
             return MacErrorMapper(err);
                               
           return NS_OK;
+
+          NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
         }
 
         NS_IMETHOD HasMoreElements(PRBool *result) 
         {
+          NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
           if (mNext == nsnull) {
             if (mArrayIndex >= mArrayCnt) {
               ItemCount actualCnt;
@@ -204,6 +216,8 @@ class nsDirEnumerator : public nsISimpleEnumerator,
           if (!*result)
             Close();
           return NS_OK;
+
+          NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
         }
 
         NS_IMETHOD GetNext(nsISupports **result) 
@@ -238,6 +252,8 @@ class nsDirEnumerator : public nsISimpleEnumerator,
 
         NS_IMETHOD Close()
         {
+          NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
           if (mIterator) {
             ::FSCloseIterator(mIterator);
             mIterator = nsnull;
@@ -247,6 +263,8 @@ class nsDirEnumerator : public nsISimpleEnumerator,
             mFSRefsArray = nsnull;
           }
           return NS_OK;
+
+          NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
         }
 
     private:
@@ -285,7 +303,11 @@ public:
               
     ~StAEDesc()
     {
+      NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
       ::AEDisposeDesc(this);
+
+      NS_OBJC_END_TRY_ABORT_BLOCK;
     }
 };
 
@@ -323,19 +345,27 @@ nsLocalFile::nsLocalFile(const nsLocalFile& src) :
   mFollowLinks(src.mFollowLinks),
   mFollowLinksDirty(src.mFollowLinksDirty)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   // A CFURLRef is immutable so no need to copy, just retain.
   if (mBaseRef)
     ::CFRetain(mBaseRef);
   if (mTargetRef)
     ::CFRetain(mTargetRef);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 nsLocalFile::~nsLocalFile()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (mBaseRef)
     ::CFRelease(mBaseRef);
   if (mTargetRef)
     ::CFRelease(mTargetRef);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -351,7 +381,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsLocalFile,
                               nsIFile,
                               nsIHashable)
                               
-NS_METHOD nsLocalFile::nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
+NS_IMETHODIMP nsLocalFile::nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtr);
   NS_ENSURE_NO_AGGREGATION(outer);
@@ -385,6 +415,8 @@ NS_IMETHODIMP nsLocalFile::Append(const nsAString& aNode)
 /* [noscript] void appendNative (in ACString node); */
 NS_IMETHODIMP nsLocalFile::AppendNative(const nsACString& aNode)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // Check we are correctly initialized.
   CHECK_mBaseRef();
 
@@ -408,11 +440,15 @@ NS_IMETHODIMP nsLocalFile::AppendNative(const nsACString& aNode)
     }
   }
   return NS_ERROR_FAILURE;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* void normalize (); */
 NS_IMETHODIMP nsLocalFile::Normalize()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // Check we are correctly initialized.
   CHECK_mBaseRef();
 
@@ -455,11 +491,15 @@ NS_IMETHODIMP nsLocalFile::Normalize()
   }
 
   return rv;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* void create (in unsigned long type, in unsigned long permissions); */
 NS_IMETHODIMP nsLocalFile::Create(PRUint32 type, PRUint32 permissions)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if (type != NORMAL_FILE_TYPE && type != DIRECTORY_TYPE)
     return NS_ERROR_FILE_UNKNOWN_TYPE;
 
@@ -536,17 +576,23 @@ NS_IMETHODIMP nsLocalFile::Create(PRUint32 type, PRUint32 permissions)
   }
             
   return MacErrorMapper(err);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* attribute AString leafName; */
 NS_IMETHODIMP nsLocalFile::GetLeafName(nsAString& aLeafName)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsCAutoString nativeString;
   nsresult rv = GetNativeLeafName(nativeString);
   if (NS_FAILED(rv))
     return rv;
   CopyUTF8toUTF16NFC(nativeString, aLeafName);
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsLocalFile::SetLeafName(const nsAString& aLeafName)
@@ -557,6 +603,8 @@ NS_IMETHODIMP nsLocalFile::SetLeafName(const nsAString& aLeafName)
 /* [noscript] attribute ACString nativeLeafName; */
 NS_IMETHODIMP nsLocalFile::GetNativeLeafName(nsACString& aNativeLeafName)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // Check we are correctly initialized.
   CHECK_mBaseRef();
 
@@ -566,11 +614,15 @@ NS_IMETHODIMP nsLocalFile::GetNativeLeafName(nsACString& aNativeLeafName)
     rv = CFStringReftoUTF8(leafStrRef, aNativeLeafName);
     ::CFRelease(leafStrRef);
   }
-  return rv;                                  
+  return rv;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsLocalFile::SetNativeLeafName(const nsACString& aNativeLeafName)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // Check we are correctly initialized.
   CHECK_mBaseRef();
 
@@ -594,6 +646,8 @@ NS_IMETHODIMP nsLocalFile::SetNativeLeafName(const nsACString& aNativeLeafName)
     ::CFRelease(parentURLRef);
   }
   return rv;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* void copyTo (in nsIFile newParentDir, in AString newName); */
@@ -629,6 +683,8 @@ NS_IMETHODIMP nsLocalFile::MoveTo(nsIFile *newParentDir, const nsAString& newNam
 /* [noscript] void moveToNative (in nsIFile newParentDir, in ACString newName); */
 NS_IMETHODIMP nsLocalFile::MoveToNative(nsIFile *newParentDir, const nsACString& newName)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // Check we are correctly initialized.
   CHECK_mBaseRef();
 
@@ -708,11 +764,15 @@ NS_IMETHODIMP nsLocalFile::MoveToNative(nsIFile *newParentDir, const nsACString&
   ::CFRelease(newBaseRef);
 
   return rv;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* void remove (in boolean recursive); */
 NS_IMETHODIMP nsLocalFile::Remove(PRBool recursive)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // Check we are correctly initialized.
   CHECK_mBaseRef();
 
@@ -753,11 +813,15 @@ NS_IMETHODIMP nsLocalFile::Remove(PRBool recursive)
 
   mCachedFSRefValid = PR_FALSE;
   return rv;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* attribute unsigned long permissions; */
 NS_IMETHODIMP nsLocalFile::GetPermissions(PRUint32 *aPermissions)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG_POINTER(aPermissions);
   
   FSRef fsRef;
@@ -773,10 +837,14 @@ NS_IMETHODIMP nsLocalFile::GetPermissions(PRUint32 *aPermissions)
   FSPermissionInfo *permPtr = (FSPermissionInfo*)catalogInfo.permissions;
   *aPermissions = permPtr->mode;
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsLocalFile::SetPermissions(PRUint32 aPermissions)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   FSRef fsRef;
   nsresult rv = GetFSRefInternal(fsRef);
   if (NS_FAILED(rv))
@@ -791,6 +859,8 @@ NS_IMETHODIMP nsLocalFile::SetPermissions(PRUint32 aPermissions)
   permPtr->mode = (UInt16)aPermissions;
   err = ::FSSetCatalogInfo(&fsRef, kFSCatInfoPermissions, &catalogInfo);
   return MacErrorMapper(err);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* attribute unsigned long permissionsOfLink; */
@@ -809,6 +879,8 @@ NS_IMETHODIMP nsLocalFile::SetPermissionsOfLink(PRUint32 aPermissionsOfLink)
 /* attribute PRInt64 lastModifiedTime; */
 NS_IMETHODIMP nsLocalFile::GetLastModifiedTime(PRInt64 *aLastModifiedTime)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // Check we are correctly initialized.
   CHECK_mBaseRef();
 
@@ -826,10 +898,14 @@ NS_IMETHODIMP nsLocalFile::GetLastModifiedTime(PRInt64 *aLastModifiedTime)
     return MacErrorMapper(err);
   *aLastModifiedTime = HFSPlustoNSPRTime(catalogInfo.contentModDate);  
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsLocalFile::SetLastModifiedTime(PRInt64 aLastModifiedTime)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // Check we are correctly initialized.
   CHECK_mBaseRef();
 
@@ -865,6 +941,8 @@ NS_IMETHODIMP nsLocalFile::SetLastModifiedTime(PRInt64 aLastModifiedTime)
     return MacErrorMapper(err);
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* attribute PRInt64 lastModifiedTimeOfLink; */
@@ -882,6 +960,8 @@ NS_IMETHODIMP nsLocalFile::SetLastModifiedTimeOfLink(PRInt64 aLastModifiedTimeOf
 /* attribute PRInt64 fileSize; */
 NS_IMETHODIMP nsLocalFile::GetFileSize(PRInt64 *aFileSize)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG_POINTER(aFileSize);
   *aFileSize = 0;
   
@@ -901,10 +981,14 @@ NS_IMETHODIMP nsLocalFile::GetFileSize(PRInt64 *aFileSize)
   if ((catalogInfo.nodeFlags & kFSNodeIsDirectoryMask) == 0)
       *aFileSize = catalogInfo.dataLogicalSize;
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsLocalFile::SetFileSize(PRInt64 aFileSize)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // Check we are correctly initialized.
   CHECK_mBaseRef();
 
@@ -921,6 +1005,8 @@ NS_IMETHODIMP nsLocalFile::SetFileSize(PRInt64 aFileSize)
   ::FSCloseFork(refNum);  
   
   return MacErrorMapper(err);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* readonly attribute PRInt64 fileSizeOfLink; */
@@ -949,6 +1035,8 @@ NS_IMETHODIMP nsLocalFile::GetTarget(nsAString& aTarget)
 /* [noscript] readonly attribute ACString nativeTarget; */
 NS_IMETHODIMP nsLocalFile::GetNativeTarget(nsACString& aNativeTarget)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if (!mTargetRef)
     return NS_ERROR_NOT_INITIALIZED;
   nsresult rv = NS_ERROR_FAILURE;
@@ -958,6 +1046,8 @@ NS_IMETHODIMP nsLocalFile::GetNativeTarget(nsACString& aNativeTarget)
     ::CFRelease(pathStrRef);
   }
   return rv;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* readonly attribute AString path; */
@@ -974,6 +1064,8 @@ NS_IMETHODIMP nsLocalFile::GetPath(nsAString& aPath)
 /* [noscript] readonly attribute ACString nativePath; */
 NS_IMETHODIMP nsLocalFile::GetNativePath(nsACString& aNativePath)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // Check we are correctly initialized.
   CHECK_mBaseRef();
 
@@ -984,6 +1076,8 @@ NS_IMETHODIMP nsLocalFile::GetNativePath(nsACString& aNativePath)
     ::CFRelease(pathStrRef);
   }
   return rv;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* boolean exists (); */
@@ -1006,6 +1100,8 @@ NS_IMETHODIMP nsLocalFile::Exists(PRBool *_retval)
 /* boolean isWritable (); */
 NS_IMETHODIMP nsLocalFile::IsWritable(PRBool *_retval)
 {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
     // Check we are correctly initialized.
     CHECK_mBaseRef();
 
@@ -1024,6 +1120,8 @@ NS_IMETHODIMP nsLocalFile::IsWritable(PRBool *_retval)
       *_retval = ((permissions & S_IWUSR) != 0);
     }
     return NS_OK;
+
+    NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* boolean isReadable (); */
@@ -1046,6 +1144,8 @@ NS_IMETHODIMP nsLocalFile::IsReadable(PRBool *_retval)
 /* boolean isExecutable (); */
 NS_IMETHODIMP nsLocalFile::IsExecutable(PRBool *_retval)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // Check we are correctly initialized.
   CHECK_mBaseRef();
 
@@ -1064,11 +1164,15 @@ NS_IMETHODIMP nsLocalFile::IsExecutable(PRBool *_retval)
     *_retval = PR_TRUE;
   }
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* boolean isHidden (); */
 NS_IMETHODIMP nsLocalFile::IsHidden(PRBool *_retval)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
   
@@ -1094,11 +1198,15 @@ NS_IMETHODIMP nsLocalFile::IsHidden(PRBool *_retval)
       *_retval = PR_TRUE;
   }
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* boolean isDirectory (); */
 NS_IMETHODIMP nsLocalFile::IsDirectory(PRBool *_retval)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
   
@@ -1114,11 +1222,15 @@ NS_IMETHODIMP nsLocalFile::IsDirectory(PRBool *_retval)
     return MacErrorMapper(err);
   *_retval = ((catalogInfo.nodeFlags & kFSNodeIsDirectoryMask) != 0);
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* boolean isFile (); */
 NS_IMETHODIMP nsLocalFile::IsFile(PRBool *_retval)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
   
@@ -1134,11 +1246,15 @@ NS_IMETHODIMP nsLocalFile::IsFile(PRBool *_retval)
     return MacErrorMapper(err);
   *_retval = ((catalogInfo.nodeFlags & kFSNodeIsDirectoryMask) == 0);
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* boolean isSymlink (); */
 NS_IMETHODIMP nsLocalFile::IsSymlink(PRBool *_retval)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // Check we are correctly initialized.
   CHECK_mBaseRef();
 
@@ -1155,6 +1271,8 @@ NS_IMETHODIMP nsLocalFile::IsSymlink(PRBool *_retval)
         *_retval = isAlias;
   }
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* boolean isSpecial (); */
@@ -1252,6 +1370,8 @@ NS_IMETHODIMP nsLocalFile::Contains(nsIFile *inFile, PRBool recur, PRBool *_retv
 /* readonly attribute nsIFile parent; */
 NS_IMETHODIMP nsLocalFile::GetParent(nsIFile * *aParent)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG_POINTER(aParent);
   *aParent = nsnull;
 
@@ -1286,6 +1406,8 @@ NS_IMETHODIMP nsLocalFile::GetParent(nsIFile * *aParent)
     ::CFRelease(parentURLRef);
   }
   return rv;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* readonly attribute nsISimpleEnumerator directoryEntries; */
@@ -1332,6 +1454,8 @@ NS_IMETHODIMP nsLocalFile::InitWithPath(const nsAString& filePath)
 /* [noscript] void initWithNativePath (in ACString filePath); */
 NS_IMETHODIMP nsLocalFile::InitWithNativePath(const nsACString& filePath)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsCAutoString fixedPath;
   if (Substring(filePath, 0, 2).EqualsLiteral("~/")) {
     nsCOMPtr<nsIFile> homeDir;
@@ -1374,11 +1498,15 @@ NS_IMETHODIMP nsLocalFile::InitWithNativePath(const nsACString& filePath)
   ::CFRelease(pathAsCFURL);
   ::CFRelease(pathAsCFString);
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* void initWithFile (in nsILocalFile aFile); */
 NS_IMETHODIMP nsLocalFile::InitWithFile(nsILocalFile *aFile)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG(aFile);
   
   nsCOMPtr<nsILocalFileMac> aFileMac(do_QueryInterface(aFile));
@@ -1391,6 +1519,8 @@ NS_IMETHODIMP nsLocalFile::InitWithFile(nsILocalFile *aFile)
   rv = InitWithCFURL(urlRef);
   ::CFRelease(urlRef);
   return rv;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* attribute PRBool followLinks; */
@@ -1482,6 +1612,8 @@ NS_IMETHODIMP nsLocalFile::Load(PRLibrary **_retval)
 /* readonly attribute PRInt64 diskSpaceAvailable; */
 NS_IMETHODIMP nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // Check we are correctly initialized.
   CHECK_mBaseRef();
 
@@ -1507,6 +1639,8 @@ NS_IMETHODIMP nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
     
   *aDiskSpaceAvailable = volumeInfo.freeBytes;
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* void appendRelativePath (in AString relativeFilePath); */
@@ -1545,6 +1679,8 @@ NS_IMETHODIMP nsLocalFile::AppendRelativeNativePath(const nsACString& relativeFi
 /* attribute ACString persistentDescriptor; */
 NS_IMETHODIMP nsLocalFile::GetPersistentDescriptor(nsACString& aPersistentDescriptor)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   FSRef fsRef;
   nsresult rv = GetFSRefInternal(fsRef);
   if (NS_FAILED(rv))
@@ -1566,10 +1702,14 @@ NS_IMETHODIMP nsLocalFile::GetPersistentDescriptor(nsACString& aPersistentDescri
    PR_Free(buf);
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsLocalFile::SetPersistentDescriptor(const nsACString& aPersistentDescriptor)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if (aPersistentDescriptor.IsEmpty())
     return NS_ERROR_INVALID_ARG;
 
@@ -1616,11 +1756,15 @@ NS_IMETHODIMP nsLocalFile::SetPersistentDescriptor(const nsACString& aPersistent
     return rv;
  
   return InitWithFSRef(&resolvedFSRef);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* void reveal (); */
 NS_IMETHODIMP nsLocalFile::Reveal()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   FSRef             fsRefToReveal;
   AppleEvent        aeEvent = {0, nil};
   AppleEvent        aeReply = {0, nil};
@@ -1662,11 +1806,15 @@ NS_IMETHODIMP nsLocalFile::Reveal()
   }
     
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* void launch (); */
 NS_IMETHODIMP nsLocalFile::Launch()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   FSRef fsRef;
   nsresult rv = GetFSRefInternal(fsRef);
   if (NS_FAILED(rv))
@@ -1674,6 +1822,8 @@ NS_IMETHODIMP nsLocalFile::Launch()
 
   OSErr err = ::LSOpenFSRef(&fsRef, NULL);
   return MacErrorMapper(err);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -1695,6 +1845,8 @@ NS_IMETHODIMP nsLocalFile::InitWithCFURL(CFURLRef aCFURL)
 /* void initWithFSRef ([const] in FSRefPtr aFSRef); */
 NS_IMETHODIMP nsLocalFile::InitWithFSRef(const FSRef *aFSRef)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG(aFSRef);
   nsresult rv = NS_ERROR_FAILURE;
   
@@ -1705,11 +1857,15 @@ NS_IMETHODIMP nsLocalFile::InitWithFSRef(const FSRef *aFSRef)
     rv = NS_OK;
   }
   return rv;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* void initWithFSSpec ([const] in FSSpecPtr aFileSpec); */
 NS_IMETHODIMP nsLocalFile::InitWithFSSpec(const FSSpec *aFileSpec)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG(aFileSpec);
   
   FSRef fsRef;
@@ -1745,27 +1901,37 @@ NS_IMETHODIMP nsLocalFile::InitWithFSSpec(const FSSpec *aFileSpec)
     return Append(nsDependentString(unicodeName.unicode, unicodeName.length));  
   }
   return MacErrorMapper(err);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* void initToAppWithCreatorCode (in OSType aAppCreator); */
 NS_IMETHODIMP nsLocalFile::InitToAppWithCreatorCode(OSType aAppCreator)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   FSRef fsRef;
   OSErr err = ::LSFindApplicationForInfo(aAppCreator, nsnull, nsnull, &fsRef, nsnull);
   if (err != noErr)
     return MacErrorMapper(err);
   return InitWithFSRef(&fsRef);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* CFURLRef getCFURL (); */
 NS_IMETHODIMP nsLocalFile::GetCFURL(CFURLRef *_retval)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG_POINTER(_retval);
   CFURLRef whichURLRef = mFollowLinks ? mTargetRef : mBaseRef;
   if (whichURLRef)
     ::CFRetain(whichURLRef);
   *_retval = whichURLRef;
   return whichURLRef ? NS_OK : NS_ERROR_FAILURE;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* FSRef getFSRef (); */
@@ -1777,7 +1943,9 @@ NS_IMETHODIMP nsLocalFile::GetFSRef(FSRef *_retval)
 
 /* FSSpec getFSSpec (); */
 NS_IMETHODIMP nsLocalFile::GetFSSpec(FSSpec *_retval)
-{
+{  
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG_POINTER(_retval);
 
   // Check we are correctly initialized.
@@ -1820,11 +1988,15 @@ NS_IMETHODIMP nsLocalFile::GetFSSpec(FSSpec *_retval)
     rv = MacErrorMapper(err);
   }
   return rv;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* readonly attribute PRInt64 fileSizeWithResFork; */
 NS_IMETHODIMP nsLocalFile::GetFileSizeWithResFork(PRInt64 *aFileSizeWithResFork)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG_POINTER(aFileSizeWithResFork);
   
   FSRef fsRef;
@@ -1840,11 +2012,15 @@ NS_IMETHODIMP nsLocalFile::GetFileSizeWithResFork(PRInt64 *aFileSizeWithResFork)
     
   *aFileSizeWithResFork = catalogInfo.dataLogicalSize + catalogInfo.rsrcLogicalSize;
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* attribute OSType fileType; */
 NS_IMETHODIMP nsLocalFile::GetFileType(OSType *aFileType)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG_POINTER(aFileType);
   
   FSRef fsRef;
@@ -1858,10 +2034,14 @@ NS_IMETHODIMP nsLocalFile::GetFileType(OSType *aFileType)
     return MacErrorMapper(err);
   *aFileType = fInfo.file.fileType;
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsLocalFile::SetFileType(OSType aFileType)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   FSRef fsRef;
   nsresult rv = GetFSRefInternal(fsRef);
   if (NS_FAILED(rv))
@@ -1869,11 +2049,15 @@ NS_IMETHODIMP nsLocalFile::SetFileType(OSType aFileType)
     
   OSErr err = ::FSChangeCreatorType(&fsRef, 0, aFileType);
   return MacErrorMapper(err);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* attribute OSType fileCreator; */
 NS_IMETHODIMP nsLocalFile::GetFileCreator(OSType *aFileCreator)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG_POINTER(aFileCreator);
   
   FSRef fsRef;
@@ -1887,10 +2071,14 @@ NS_IMETHODIMP nsLocalFile::GetFileCreator(OSType *aFileCreator)
     return MacErrorMapper(err);
   *aFileCreator = fInfo.file.fileCreator;
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsLocalFile::SetFileCreator(OSType aFileCreator)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   FSRef fsRef;
   nsresult rv = GetFSRefInternal(fsRef);
   if (NS_FAILED(rv))
@@ -1898,6 +2086,8 @@ NS_IMETHODIMP nsLocalFile::SetFileCreator(OSType aFileCreator)
     
   OSErr err = ::FSChangeCreatorType(&fsRef, aFileCreator, 0);
   return MacErrorMapper(err);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* void setFileTypeAndCreatorFromMIMEType (in string aMIMEType); */
@@ -1919,6 +2109,8 @@ NS_IMETHODIMP nsLocalFile::SetFileTypeAndCreatorFromExtension(const char *aExten
 /* void launchWithDoc (in nsILocalFile aDocToLoad, in boolean aLaunchInBackground); */
 NS_IMETHODIMP nsLocalFile::LaunchWithDoc(nsILocalFile *aDocToLoad, PRBool aLaunchInBackground)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   PRBool isExecutable;
   nsresult rv = IsExecutable(&isExecutable);
   if (NS_FAILED(rv))
@@ -1957,11 +2149,15 @@ NS_IMETHODIMP nsLocalFile::LaunchWithDoc(nsILocalFile *aDocToLoad, PRBool aLaunc
     return MacErrorMapper(err);
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* void openDocWithApp (in nsILocalFile aAppToOpenWith, in boolean aLaunchInBackground); */
 NS_IMETHODIMP nsLocalFile::OpenDocWithApp(nsILocalFile *aAppToOpenWith, PRBool aLaunchInBackground)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsresult rv;
   OSErr err;
 
@@ -2014,11 +2210,15 @@ NS_IMETHODIMP nsLocalFile::OpenDocWithApp(nsILocalFile *aAppToOpenWith, PRBool a
     return MacErrorMapper(err);
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* boolean isPackage (); */
 NS_IMETHODIMP nsLocalFile::IsPackage(PRBool *_retval)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG(_retval);
   *_retval = PR_FALSE;
   
@@ -2051,6 +2251,8 @@ NS_IMETHODIMP nsLocalFile::IsPackage(PRBool *_retval)
     }
   }
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP
@@ -2080,6 +2282,8 @@ nsLocalFile::GetBundleDisplayName(nsAString& outBundleName)
 NS_IMETHODIMP
 nsLocalFile::GetBundleIdentifier(nsACString& outBundleIdentifier)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsresult rv = NS_ERROR_FAILURE;
 
   CFURLRef urlRef;
@@ -2096,6 +2300,8 @@ nsLocalFile::GetBundleIdentifier(nsACString& outBundleIdentifier)
   }
 
   return rv;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -2107,6 +2313,8 @@ nsLocalFile::GetBundleIdentifier(nsACString& outBundleIdentifier)
 
 nsresult nsLocalFile::SetBaseRef(CFURLRef aCFURLRef)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG(aCFURLRef);
   
   ::CFRetain(aCFURLRef);
@@ -2118,10 +2326,14 @@ nsresult nsLocalFile::SetBaseRef(CFURLRef aCFURLRef)
   UpdateTargetRef();
   mCachedFSRefValid = PR_FALSE;
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 nsresult nsLocalFile::UpdateTargetRef()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // Check we are correctly initialized.
   CHECK_mBaseRef();
   
@@ -2149,10 +2361,14 @@ nsresult nsLocalFile::UpdateTargetRef()
     }
   }
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 nsresult nsLocalFile::GetFSRefInternal(FSRef& aFSRef, PRBool bForceUpdateCache)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if (bForceUpdateCache || !mCachedFSRefValid) {
     mCachedFSRefValid = PR_FALSE;
     CFURLRef whichURLRef = mFollowLinks ? mTargetRef : mBaseRef;
@@ -2168,10 +2384,14 @@ nsresult nsLocalFile::GetFSRefInternal(FSRef& aFSRef, PRBool bForceUpdateCache)
   // so we have to assume what the error was. This is
   // the only probable cause.
   return NS_ERROR_FILE_NOT_FOUND;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 nsresult nsLocalFile::GetPathInternal(nsACString& path)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsresult rv = NS_ERROR_FAILURE;
   
   CFURLRef whichURLRef = mFollowLinks ? mTargetRef : mBaseRef;
@@ -2183,12 +2403,16 @@ nsresult nsLocalFile::GetPathInternal(nsACString& path)
     ::CFRelease(pathStrRef);
   }
   return rv;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 nsresult nsLocalFile::CopyInternal(nsIFile* aParentDir,
                                    const nsAString& newName,
                                    PRBool followLinks)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // Check we are correctly initialized.
   CHECK_mBaseRef();
 
@@ -2237,6 +2461,8 @@ nsresult nsLocalFile::CopyInternal(nsIFile* aParentDir,
                   0, kFSCatInfoNone, false, false, NULL, NULL, &newFSRef);
 
   return MacErrorMapper(err);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 const PRInt64 kMillisecsPerSec = 1000LL;
@@ -2267,6 +2493,8 @@ void nsLocalFile::NSPRtoHFSPlusTime(PRInt64 nsprTime, UTCDateTime& utcTime)
 
 nsresult nsLocalFile::CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutStr)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsresult rv = NS_ERROR_FAILURE;
   CFIndex usedBufLen, inStrLen = ::CFStringGetLength(aInStrRef);
   CFIndex charsConverted = ::CFStringGetBytes(aInStrRef, CFRangeMake(0, inStrLen),
@@ -2282,6 +2510,8 @@ nsresult nsLocalFile::CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutS
     rv = NS_OK;
   }
   return rv;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 // nsIHashable
@@ -2295,12 +2525,16 @@ nsLocalFile::Equals(nsIHashable* aOther, PRBool *aResult)
 NS_IMETHODIMP
 nsLocalFile::GetHashCode(PRUint32 *aResult)
 {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
     CFStringRef pathStrRef = ::CFURLCopyFileSystemPath(mBaseRef, kCFURLPOSIXPathStyle);
     nsCAutoString path;
     CFStringReftoUTF8(pathStrRef, path);
     ::CFRelease(pathStrRef);
     *aResult = HashString(path);
     return NS_OK;
+
+    NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 //*****************************************************************************
@@ -2435,6 +2669,8 @@ static nsresult MacErrorMapper(OSErr inErr)
 
 static OSErr FindRunningAppBySignature(OSType aAppSig, ProcessSerialNumber& outPsn)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   ProcessInfoRec info;
   OSErr err = noErr;
   
@@ -2459,6 +2695,8 @@ static OSErr FindRunningAppBySignature(OSType aAppSig, ProcessSerialNumber& outP
       return noErr;
   }
   return procNotFound;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(procNotFound);
 }
 
 // Convert a UTF-8 string to a UTF-16 string while normalizing to
@@ -2469,6 +2707,8 @@ static OSErr FindRunningAppBySignature(OSType aAppSig, ProcessSerialNumber& outP
 typedef void (*UnicodeNormalizer) (CFMutableStringRef, CFStringNormalizationForm);
 static void CopyUTF8toUTF16NFC(const nsACString& aSrc, nsAString& aResult)
 {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
     static PRBool sChecked = PR_FALSE;
     static UnicodeNormalizer sUnicodeNormalizer = NULL;
 
@@ -2519,4 +2759,6 @@ static void CopyUTF8toUTF16NFC(const nsACString& aSrc, nsAString& aResult)
         }
     }
     CFRelease(inStr);
+
+    NS_OBJC_END_TRY_ABORT_BLOCK;
 }

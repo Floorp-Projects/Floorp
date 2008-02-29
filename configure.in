@@ -1617,6 +1617,7 @@ case "$target" in
     _PLATFORM_DEFAULT_TOOLKIT='cairo-cocoa'
     MOZ_ENABLE_POSTSCRIPT=
     TARGET_NSPR_MDCPUCFG='\"md/_darwin.cfg\"'
+    LDFLAGS="$LDFLAGS -framework Cocoa"
     # set MACOSX to generate lib/mac/MoreFiles/Makefile
     MACOSX=1
 
