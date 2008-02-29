@@ -594,6 +594,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     rv = helperAppService->DoContent(mContentType,
                                      request,
                                      m_originalContext,
+                                     PR_FALSE,
                                      getter_AddRefs(m_targetStreamListener));
     if (NS_FAILED(rv)) {
       request->SetLoadFlags(loadFlags);
