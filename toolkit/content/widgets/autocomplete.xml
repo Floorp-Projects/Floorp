@@ -455,7 +455,7 @@
               break;
             case KeyEvent.DOM_VK_RETURN:
               this.mEnterEvent = aEvent;
-              cancel = this.mController.handleEnter();
+              cancel = this.mController.handleEnter(false);
               break;
             case KeyEvent.DOM_VK_DELETE:
 #ifdef XP_MACOSX
@@ -837,7 +837,7 @@
         <parameter name="aEvent"/>
         <body><![CDATA[
           var controller = this.view.QueryInterface(Components.interfaces.nsIAutoCompleteController);
-          controller.handleEnter();
+          controller.handleEnter(true);
         ]]></body>
       </method>
     </implementation>
