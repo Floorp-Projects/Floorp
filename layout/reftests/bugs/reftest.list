@@ -373,6 +373,7 @@ skip-if(MOZ_WIDGET_TOOLKIT=="windows") == 347496-1.xhtml 347496-1-ref.xhtml # Bu
 == 363329-1.html 363329-1-ref.html
 == 363329-2.html 363329-2-ref.html
 == 363370-1.html 363370-1-ref.html
+== 363402-1.html 363402-1-ref.html
 == 363637-1.html 363637-1-ref.html
 == 363858-1.html 363858-1-ref.html
 == 363858-2.html 363858-2-ref.html
@@ -681,6 +682,7 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 == 405517-1.xhtml 405517-1-ref.xhtml
 == 405577-1.html 405577-1-ref.html
 == 405584-1.html 405584-1-ref.html
+# == 405952-1.html 405952-1-ref.html
 == 406073-1.html 406073-1-ref.html
 == 406484-1.html 406484-1-ref.html
 == 406568-1.html 406568-1-ref.html
@@ -707,6 +709,7 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 == 409659-1d.html 409659-1-ref.html
 == 411334-1.xml 411334-1-ref.xml
 == 411792-1.html 411792-1-ref.html
+== 412093-1.html 412093-1-ref.html
 == 412607-1a.html 412607-1-ref.html
 == 412607-1b.html 412607-1-ref.html
 == 412679-1.html 412679-1-ref.html

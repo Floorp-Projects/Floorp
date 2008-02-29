@@ -43,6 +43,9 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# FIXME: bug 419893
+NO_PROFILE_GUIDED_OPTIMIZE = 1
+
 MODULE = places
 LIBRARY_NAME  = places
 LIBXUL_LIBRARY = 1

@@ -280,17 +280,20 @@ sub BumpVerifyConfig {
     my @origFile = <FILE>;
     close(FILE) or die ("Could not close file $configFile: $!");
 
+    my @strippedFile = ();
     if ($origFile[0] =~ $oldVersion) {
             $this->Log('msg' => "verifyConfig $configFile already bumped");
-            return;
-    }
-
-    # remove "from" and "to" vars from @origFile
-    my @strippedFile = ();
-    for(my $i=0; $i < scalar(@origFile); $i++) {
-        my $line = $origFile[$i];
-        $line =~ s/from.*$//;
-        $strippedFile[$i] = $line;
+            $this->Log('msg' => "removing previous config..");
+            # remove top two lines; the comment and the version config
+            splice(@origFile, 0, 2);
+            @strippedFile = @origFile;
+    } else {
+        # remove "from" and "to" vars from @origFile
+        for(my $i=0; $i < scalar(@origFile); $i++) {
+            my $line = $origFile[$i];
+            $line =~ s/from.*$//;
+            $strippedFile[$i] = $line;
+        }
     }
 
     my $localeFileTag = uc($product).'_'.$oldVersion.'_RELEASE';

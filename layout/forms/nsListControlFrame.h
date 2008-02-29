@@ -91,7 +91,7 @@ public:
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
-  // Our min width is our pref width
+  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
 
   NS_IMETHOD Reflow(nsPresContext*          aCX,

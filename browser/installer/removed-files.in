@@ -87,8 +87,7 @@ extensions/reporter@mozilla.org/install.rdf
 extensions/reporter@mozilla.org/chrome.manifest
 extensions/reporter@mozilla.org/chrome/reporter.jar
 extensions/reporter@mozilla.org/defaults/preferences/reporter.js
-#Remove Inspector (present from upgrades from Fx2/Fx3b1)
-components/inspector.xpt
+#Remove Inspector (present from upgrades from Fx2/Fx3b3)
 extensions/inspector@mozilla.org/install.rdf
 extensions/inspector@mozilla.org/components/inspector-cmdline.js
 extensions/inspector@mozilla.org/chrome.manifest
@@ -575,6 +574,7 @@ components/necko_data.xpt
 components/nsKillAll.js
 components/passwordmgr.xpt
 components/progressDlg.xpt
+components/safebrowsing.xpt
 components/search.xpt
 components/websrvcs.xpt
 components/widget_mac.xpt
@@ -593,15 +593,15 @@ chrome/icons/default/default.xpm
 #endif
 dictionaries/PL.dic
 dictionaries/PL.aff
-#ifdef MOZ_MEMORY
 #ifdef XP_WIN
+#ifdef MOZ_MEMORY
 Microsoft.VC80.CRT.manifest
 msvcm80.dll
 msvcp80.dll
 msvcr80.dll
+#else
+mozcrt19.dll
 #endif
-#endif
-#ifdef XP_WIN
 xpicleanup.exe
 #else
 xpicleanup
