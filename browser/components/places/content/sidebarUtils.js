@@ -67,13 +67,13 @@ var SidebarUtils = {
       // do this *before* attempting to load the link since openURL uses
       // selection as an indication of which link to load. 
       tbo.view.selection.select(row.value);
-      PlacesUIUtils.openNodeWithEvent(aTree.selectedNode, aEvent);
+      PlacesUtils.openNodeWithEvent(aTree.selectedNode, aEvent);
     }
   },
 
   handleTreeKeyPress: function SU_handleTreeKeyPress(aEvent) {
     if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN)
-      PlacesUIUtils.openNodeWithEvent(aEvent.target.selectedNode, aEvent);
+      PlacesUtils.openNodeWithEvent(aEvent.target.selectedNode, aEvent);
   },
 
   /**
