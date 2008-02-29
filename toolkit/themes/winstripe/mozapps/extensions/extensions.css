@@ -50,11 +50,8 @@
   -moz-image-region: rect(21px, 84px, 42px, 63px);
 }
 
-#checkUpdatesAllButton, #showUpdateInfoButton, #hideUpdateInfoButton {
+#showUpdateInfoButton, #hideUpdateInfoButton {
   -moz-image-region: rect(0px, 63px, 21px, 42px);
-}
-#checkUpdatesAllButton[disabled="true"] {
-  -moz-image-region: rect(21px, 63px, 42px, 42px);
 }
 
 #restartAppButton {
