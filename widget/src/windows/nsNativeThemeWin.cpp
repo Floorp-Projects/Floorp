@@ -99,6 +99,7 @@
 
 // Textfield constants
 #define TFP_TEXTFIELD 1
+#define TFP_EDITBORDER_NOSCROLL 6
 #define TFS_READONLY  6
 
 // Treeview/listbox constants
@@ -146,6 +147,10 @@
 
 // Dropdown constants
 #define CBP_DROPMARKER       1
+#define CBP_DROPBORDER       4
+/* This is actually the 'READONLY' style */
+#define CBP_DROPFRAME        5
+#define CBP_DROPMARKER_VISTA 6
 
 // Menu Constants
 #define MENU_BARBACKGROUND 7
@@ -208,6 +213,7 @@
 
 // Rebar constants
 #define RP_BAND              3
+#define RP_BACKGROUND        6
 
 // Constants only found in new (98+, 2K+, XP+, etc.) Windows.
 #ifdef DFCS_HOT
@@ -285,6 +291,12 @@ static inline bool IsRadioWidgetType(PRUint8 aWidgetType)
   return (aWidgetType == NS_THEME_RADIO || aWidgetType == NS_THEME_RADIO_SMALL);
 }
 
+static inline bool IsHTMLContent(nsIFrame *frame)
+{
+  nsIContent* content = frame->GetContent();
+  return content && content->IsNodeOfType(nsINode::eHTML);
+}
+
 nsNativeThemeWin::nsNativeThemeWin() {
   mThemeDLL = NULL;
   mButtonTheme = NULL;
@@ -292,6 +304,9 @@ nsNativeThemeWin::nsNativeThemeWin() {
   mTooltipTheme = NULL;
   mToolbarTheme = NULL;
   mRebarTheme = NULL;
+  mMediaRebarTheme = NULL;
+  mCommunicationsRebarTheme = NULL;
+  mBrowserTabBarRebarTheme = NULL;
   mProgressTheme = NULL;
   mScrollbarTheme = NULL;
   mSpinTheme = NULL;
@@ -317,6 +332,8 @@ nsNativeThemeWin::nsNativeThemeWin() {
   }
   mOsVersion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
   GetVersionEx(&mOsVersion);
+
+  mIsVistaOrLater = (mOsVersion.dwMajorVersion >= 6);
 
   UpdateConfig();
 
@@ -447,8 +464,7 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
       return mButtonTheme;
     }
     case NS_THEME_TEXTFIELD:
-    case NS_THEME_TEXTFIELD_MULTILINE:
-    case NS_THEME_DROPDOWN: {
+    case NS_THEME_TEXTFIELD_MULTILINE: {
       if (!mTextFieldTheme)
         mTextFieldTheme = openTheme(NULL, L"Edit");
       return mTextFieldTheme;
@@ -462,6 +478,21 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
       if (!mRebarTheme)
         mRebarTheme = openTheme(NULL, L"Rebar");
       return mRebarTheme;
+    }
+    case NS_THEME_MEDIA_TOOLBOX: {
+      if (!mMediaRebarTheme)
+        mMediaRebarTheme = openTheme(NULL, L"Media::Rebar");
+      return mMediaRebarTheme;
+    }
+    case NS_THEME_COMMUNICATIONS_TOOLBOX: {
+      if (!mCommunicationsRebarTheme)
+        mCommunicationsRebarTheme = openTheme(NULL, L"Communications::Rebar");
+      return mCommunicationsRebarTheme;
+    }
+    case NS_THEME_BROWSER_TAB_BAR_TOOLBOX: {
+      if (!mBrowserTabBarRebarTheme)
+        mBrowserTabBarRebarTheme = openTheme(NULL, L"BrowserTabBar::Rebar");
+      return mBrowserTabBarRebarTheme;
     }
     case NS_THEME_TOOLBAR:
     case NS_THEME_TOOLBAR_BUTTON:
@@ -529,6 +560,7 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
         mStatusbarTheme = openTheme(NULL, L"Status");
       return mStatusbarTheme;
     }
+    case NS_THEME_DROPDOWN:
     case NS_THEME_DROPDOWN_BUTTON: {
       if (!mComboBoxTheme)
         mComboBoxTheme = openTheme(NULL, L"Combobox");
@@ -567,6 +599,28 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
   return NULL;
 }
 
+PRInt32
+nsNativeThemeWin::StandardGetState(nsIFrame* aFrame, PRUint8 aWidgetType,
+                                   PRBool wantFocused)
+{
+  PRInt32 eventState = GetContentState(aFrame, aWidgetType);
+  if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
+    return TS_ACTIVE;
+  if (wantFocused && eventState & NS_EVENT_STATE_FOCUS)
+    return TS_FOCUSED;
+  if (eventState & NS_EVENT_STATE_HOVER)
+    return TS_HOVER;
+
+  return TS_NORMAL;
+}
+
+PRBool
+nsNativeThemeWin::IsMenuActiveOrHover(nsIFrame *aFrame, PRUint8 aWidgetType)
+{
+  return CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive) ||
+    (GetContentState(aFrame, aWidgetType) & NS_EVENT_STATE_HOVER) != 0;
+}
+
 nsresult 
 nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType, 
                                        PRInt32& aPart, PRInt32& aState)
@@ -583,15 +637,8 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         aState = TS_DISABLED;
         return NS_OK;
       }
-      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
-      if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
-        aState = TS_ACTIVE;
-      else if (eventState & NS_EVENT_STATE_FOCUS)
-        aState = TS_FOCUSED;
-      else if (eventState & NS_EVENT_STATE_HOVER)
-        aState = TS_HOVER;
-      else 
-        aState = TS_NORMAL;
+
+      aState = StandardGetState(aFrame, aWidgetType, PR_TRUE);
       
       // Check for default dialog buttons.  These buttons should always look
       // focused.
@@ -635,13 +682,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         if (IsDisabled(isXULCheckboxRadio ? aFrame->GetParent(): aFrame))
           aState = TS_DISABLED;
         else {
-          PRInt32 eventState = GetContentState(aFrame, aWidgetType);
-          if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
-            aState = TS_ACTIVE;
-          else if (eventState & NS_EVENT_STATE_HOVER)
-            aState = TS_HOVER;
-          else 
-            aState = TS_NORMAL;
+          aState = StandardGetState(aFrame, aState, PR_FALSE);
         }
       }
 
@@ -654,9 +695,20 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       return NS_OK;
     }
     case NS_THEME_TEXTFIELD:
-    case NS_THEME_TEXTFIELD_MULTILINE:
-    case NS_THEME_DROPDOWN: {
+    case NS_THEME_TEXTFIELD_MULTILINE: {
       aPart = TFP_TEXTFIELD;
+      if (mIsVistaOrLater) {
+        /* Note: the NOSCROLL type has a rounded corner in each
+         * corner.  The more specific HSCROLL, VSCROLL, HVSCROLL types
+         * have side and/or top/bottom edges rendered as straight
+         * horizontal lines with sharp corners to accomodate a
+         * scrollbar.  However, the scrollbar gets rendered on top of
+         * this for us, so we don't care, and can just use NOSCROLL
+         * here.
+         */
+        aPart = TFP_EDITBORDER_NOSCROLL;
+      }
+
       if (!aFrame) {
         aState = TS_NORMAL;
         return NS_OK;
@@ -672,15 +724,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         return NS_OK;
       }
 
-      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
-      if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
-        aState = TS_ACTIVE;
-      else if (eventState & NS_EVENT_STATE_FOCUS)
-        aState = TS_FOCUSED;
-      else if (eventState & NS_EVENT_STATE_HOVER)
-        aState = TS_HOVER;
-      else 
-        aState = TS_NORMAL;
+      aState = StandardGetState(aFrame, aWidgetType, PR_TRUE);
       
       return NS_OK;
     }
@@ -761,7 +805,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
           aState += TS_ACTIVE;
         else if (eventState & NS_EVENT_STATE_HOVER)
           aState += TS_HOVER;
-        else if (GetWindowsVersion() >= VISTA_VERSION && parentState & NS_EVENT_STATE_HOVER)
+        else if (mIsVistaOrLater && parentState & NS_EVENT_STATE_HOVER)
           aState = (aWidgetType - NS_THEME_SCROLLBAR_BUTTON_UP) + SP_BUTTON_IMPLICIT_HOVER_BASE;
         else
           aState += TS_NORMAL;
@@ -857,26 +901,29 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
               SPNP_UP : SPNP_DOWN;
       if (!aFrame)
         aState = TS_NORMAL;
-      else if (IsDisabled(aFrame)) {
+      else if (IsDisabled(aFrame))
         aState = TS_DISABLED;
-      }
-      else {
-        PRInt32 eventState = GetContentState(aFrame, aWidgetType);
-        if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
-          aState = TS_ACTIVE;
-        else if (eventState & NS_EVENT_STATE_HOVER)
-          aState = TS_HOVER;
-        else
-          aState = TS_NORMAL;
-      }
+      else
+        aState = StandardGetState(aFrame, aWidgetType, PR_FALSE);
       return NS_OK;    
     }
     case NS_THEME_TOOLBOX:
+    case NS_THEME_MEDIA_TOOLBOX:
+    case NS_THEME_COMMUNICATIONS_TOOLBOX:
+    case NS_THEME_BROWSER_TAB_BAR_TOOLBOX:
     case NS_THEME_STATUSBAR:
     case NS_THEME_SCROLLBAR:
     case NS_THEME_SCROLLBAR_SMALL: {
-      aPart = aState = 0;
-      return NS_OK; // These have no part or state.
+      aState = 0;
+      if (mIsVistaOrLater) {
+        // On vista, they have a part
+        aPart = RP_BACKGROUND;
+      } else {
+        // Otherwise, they don't.  (But I bet
+        // RP_BACKGROUND would work here, too);
+        aPart = 0;
+      }
+      return NS_OK;
     }
     case NS_THEME_TOOLBAR: {
       // Use -1 to indicate we don't wish to have the theme background drawn
@@ -935,17 +982,8 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         aPart = TABP_TAB_SELECTED;
         aState = TS_ACTIVE; // The selected tab is always "pressed".
       }
-      else {
-        PRInt32 eventState = GetContentState(aFrame, aWidgetType);
-        if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
-          aState = TS_ACTIVE;
-        else if (eventState & NS_EVENT_STATE_FOCUS)
-          aState = TS_FOCUSED;
-        else if (eventState & NS_EVENT_STATE_HOVER)
-          aState = TS_HOVER;
-        else 
-          aState = TS_NORMAL;
-      }
+      else
+        aState = StandardGetState(aFrame, aWidgetType, PR_TRUE);
       
       return NS_OK;
     }
@@ -962,39 +1000,59 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         return NS_OK;
       }
       
+      aState = StandardGetState(aFrame, aWidgetType, PR_TRUE);
+      
+      return NS_OK;
+    }
+    case NS_THEME_DROPDOWN: {
+      nsIContent* content = aFrame->GetContent();
+      if (content && content->IsNodeOfType(nsINode::eHTML))
+        aPart = CBP_DROPBORDER;
+      else
+        aPart = CBP_DROPFRAME;
+
+      PRBool isOpen = CheckBooleanAttr(aFrame, nsWidgetAtoms::open);
+      if (isOpen) {
+        aState = TS_ACTIVE;
+        return NS_OK;
+      }
+
       PRInt32 eventState = GetContentState(aFrame, aWidgetType);
       if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
         aState = TS_ACTIVE;
-      else if (eventState & NS_EVENT_STATE_FOCUS)
-        aState = TS_FOCUSED;
       else if (eventState & NS_EVENT_STATE_HOVER)
         aState = TS_HOVER;
       else 
         aState = TS_NORMAL;
-      
+
       return NS_OK;
     }
     case NS_THEME_DROPDOWN_BUTTON: {
-      aPart = CBP_DROPMARKER;
-
-      nsIContent* content = aFrame->GetContent();
-
+      PRBool isHTML = IsHTMLContent(aFrame);
       nsIFrame* parentFrame = aFrame->GetParent();
-      if (parentFrame->GetType() == nsWidgetAtoms::menuFrame ||
-          (content && content->IsNodeOfType(nsINode::eHTML)))
-         // XUL menu lists and HTML selects get state from parent         
-         aFrame = parentFrame;
+      if ((parentFrame && parentFrame->GetType() == nsWidgetAtoms::menuFrame) || isHTML)
+        // XUL menu lists and HTML selects get state from parent
+        aFrame = parentFrame;
 
-      if (IsDisabled(aFrame))
-        aState = TS_DISABLED;
-      else {     
-        PRInt32 eventState = GetContentState(aFrame, aWidgetType);
-        if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
-          aState = TS_ACTIVE;
-        else if (eventState & NS_EVENT_STATE_HOVER)
-          aState = TS_HOVER;
-        else 
+      if (mIsVistaOrLater) {
+        /* On vista, in HTML, we use CBP_DROPBORDER instead of DROPFRAME for HTML content.
+         * For that, we want to draw the normal DROPMARKER.  But if we're not in HTML,
+         * we want to use DROPMARKER_VISTA, which will just draw the arrow (since we've already
+         * drawn the background).
+         */
+        aPart = CBP_DROPMARKER_VISTA;
+        if (IsDisabled(aFrame))
+          aState = TS_DISABLED;
+        else if (isHTML)
+          aState = StandardGetState(aFrame, aWidgetType, PR_FALSE);
+        else
           aState = TS_NORMAL;
+      } else {
+        aPart = CBP_DROPMARKER;
+        if (IsDisabled(aFrame))
+          aState = TS_DISABLED;
+        else
+          aState = StandardGetState(aFrame, aWidgetType, PR_FALSE);
       }
 
       return NS_OK;
@@ -1017,7 +1075,8 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
 
       if (menuFrame)
         isOpen = menuFrame->IsOpen();
-      isHover = CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive);
+
+      isHover = IsMenuActiveOrHover(aFrame, aWidgetType);
 
       if (isTopLevel) {
         aPart = MENU_BARITEM;
@@ -1101,7 +1160,7 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
     return ClassicDrawWidgetBackground(aContext, aFrame, aWidgetType, aRect, aClipRect); 
 
 #ifndef WINCE
-  if (aWidgetType == NS_THEME_TOOLTIP && mOsVersion.dwMajorVersion < 6) {
+  if (aWidgetType == NS_THEME_TOOLTIP && !mIsVistaOrLater) {
     // BUG #161600: When rendering a non-classic tooltip, check
     // for Windows prior to Vista, and if so, force a classic rendering
     return ClassicDrawWidgetBackground(aContext, aFrame, aWidgetType, aRect, aClipRect);
@@ -1126,6 +1185,21 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
 
   tr.ScaleInverse(p2a);
   cr.ScaleInverse(p2a);
+
+  if (mIsVistaOrLater) {
+    /* See GetWidgetOverflow */
+    if (aWidgetType == NS_THEME_DROPDOWN_BUTTON &&
+        IsHTMLContent(aFrame))
+    {
+      tr.pos.y -= 1.0;
+      tr.size.width += 1.0;
+      tr.size.height += 2.0;
+
+      cr.pos.y -= 1.0;
+      cr.size.width += 1.0;
+      cr.size.height += 2.0;
+    }
+  }
 
   nsRefPtr<gfxContext> ctx = aContext->ThebesContext();
 
@@ -1315,6 +1389,9 @@ nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext,
 
   if (!WidgetIsContainer(aWidgetType) ||
       aWidgetType == NS_THEME_TOOLBOX || 
+      aWidgetType == NS_THEME_MEDIA_TOOLBOX ||
+      aWidgetType == NS_THEME_COMMUNICATIONS_TOOLBOX ||
+      aWidgetType == NS_THEME_BROWSER_TAB_BAR_TOOLBOX ||
       aWidgetType == NS_THEME_STATUSBAR || 
       aWidgetType == NS_THEME_RESIZER || aWidgetType == NS_THEME_TAB_PANEL ||
       aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL ||
@@ -1399,6 +1476,35 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
     return PR_TRUE;
   }
 
+  if (mIsVistaOrLater) {
+    /* textfields need an extra pixel on all sides, otherwise they
+     * wrap their content too tightly.  The actual border is drawn 1px
+     * inside the specified rectangle, so Gecko will end up making the
+     * contents look too small.  Instead, we add 1px padding for the
+     * contents and fix this.
+     */
+    if (aWidgetType == NS_THEME_TEXTFIELD || aWidgetType == NS_THEME_TEXTFIELD_MULTILINE) {
+      aResult->top = aResult->bottom = 1;
+      aResult->left = aResult->right = 1;
+      return PR_TRUE;
+    }
+
+    // Some things only apply to widgets in HTML content, since
+    // they're drawn differently
+    if (IsHTMLContent(aFrame)) {
+      if (aWidgetType == NS_THEME_DROPDOWN) {
+        /* For content menulist controls, we need an extra pixel so
+         * that we have room to draw our focus rectangle stuff.
+         * Otherwise, the focus rect will overlap the control's
+         * border.
+         */
+        aResult->top = aResult->bottom = 1;
+        aResult->left = aResult->right = 1;
+        return PR_TRUE;
+      }
+    }
+  }
+
   PRInt32 right, left, top, bottom;
   right = left = top = bottom = 0;
   switch (aWidgetType)
@@ -1451,6 +1557,33 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
   return PR_TRUE;
 }
 
+PRBool
+nsNativeThemeWin::GetWidgetOverflow(nsIDeviceContext* aContext, 
+                                    nsIFrame* aFrame,
+                                    PRUint8 aWidgetType,
+                                    nsRect* aResult)
+{
+  if (mIsVistaOrLater) {
+    /* We explicitly draw dropdown buttons in HTML content 1px bigger
+     * up, right, and bottom so that they overlap the dropdown's border
+     * like they're supposed to.
+     */
+    if (aWidgetType == NS_THEME_DROPDOWN_BUTTON &&
+        IsHTMLContent(aFrame))
+    {
+      PRInt32 p2a = aContext->AppUnitsPerDevPixel();
+      /* Note: no overflow on the left */
+      nsMargin m(0, p2a, p2a, p2a);
+      nsRect r(nsPoint(0, 0), aFrame->GetSize());
+      r.Inflate (m);
+      *aResult = r;
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP
 nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                        PRUint8 aWidgetType,
@@ -1463,7 +1596,11 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
   if (!theme)
     return ClassicGetMinimumWidgetSize(aContext, aFrame, aWidgetType, aResult, aIsOverridable);
 
-  if (aWidgetType == NS_THEME_TOOLBOX || aWidgetType == NS_THEME_TOOLBAR || 
+  if (aWidgetType == NS_THEME_TOOLBOX ||
+      aWidgetType == NS_THEME_MEDIA_TOOLBOX ||
+      aWidgetType == NS_THEME_COMMUNICATIONS_TOOLBOX ||
+      aWidgetType == NS_THEME_BROWSER_TAB_BAR_TOOLBOX ||
+      aWidgetType == NS_THEME_TOOLBAR || 
       aWidgetType == NS_THEME_STATUSBAR || aWidgetType == NS_THEME_PROGRESSBAR_CHUNK ||
       aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL ||
       aWidgetType == NS_THEME_TAB_PANELS || aWidgetType == NS_THEME_TAB_PANEL ||
@@ -1488,7 +1625,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
     case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
-    case NS_THEME_DROPDOWN_BUTTON: 
+    case NS_THEME_DROPDOWN_BUTTON:
       return ClassicGetMinimumWidgetSize(aContext, aFrame, aWidgetType, aResult, aIsOverridable);
     case NS_THEME_MENUITEM:
     case NS_THEME_CHECKMENUITEM:
@@ -1524,7 +1661,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
     *aIsOverridable = PR_FALSE;
     // on Vista, GetThemePartAndState returns odd values for
     // scale thumbs, so use a hardcoded size instead.
-    if (GetWindowsVersion() >= VISTA_VERSION) {
+    if (mIsVistaOrLater) {
       if (aWidgetType == NS_THEME_SCALE_THUMB_HORIZONTAL) {
         aResult->width = 12;
         aResult->height = 20;
@@ -1591,7 +1728,11 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
                                      nsIAtom* aAttribute, PRBool* aShouldRepaint)
 {
   // Some widget types just never change state.
-  if (aWidgetType == NS_THEME_TOOLBOX || aWidgetType == NS_THEME_TOOLBAR ||
+  if (aWidgetType == NS_THEME_TOOLBOX ||
+      aWidgetType == NS_THEME_MEDIA_TOOLBOX ||
+      aWidgetType == NS_THEME_COMMUNICATIONS_TOOLBOX ||
+      aWidgetType == NS_THEME_BROWSER_TAB_BAR_TOOLBOX ||
+      aWidgetType == NS_THEME_TOOLBAR ||
       aWidgetType == NS_THEME_STATUSBAR || aWidgetType == NS_THEME_STATUSBAR_PANEL ||
       aWidgetType == NS_THEME_STATUSBAR_RESIZER_PANEL ||
       aWidgetType == NS_THEME_PROGRESSBAR_CHUNK ||
@@ -1607,7 +1748,7 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
   }
 
   // On Vista, the scrollbar buttons need to change state when the track has/doesn't have hover
-  if (GetWindowsVersion() < VISTA_VERSION &&
+  if (!mIsVistaOrLater &&
       (aWidgetType == NS_THEME_SCROLLBAR_TRACK_VERTICAL || 
       aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL)) {
     *aShouldRepaint = PR_FALSE;
@@ -1629,6 +1770,7 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
         aAttribute == nsWidgetAtoms::checked ||
         aAttribute == nsWidgetAtoms::selected ||
         aAttribute == nsWidgetAtoms::readonly ||
+        aAttribute == nsWidgetAtoms::open ||
         aAttribute == nsWidgetAtoms::mozmenuactive)
       *aShouldRepaint = PR_TRUE;
   }
@@ -1639,66 +1781,26 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
 void
 nsNativeThemeWin::CloseData()
 {
-  if (mToolbarTheme) {
-    closeTheme(mToolbarTheme);
-    mToolbarTheme = NULL;
-  }
-  if (mScrollbarTheme) {
-    closeTheme(mScrollbarTheme);
-    mScrollbarTheme = NULL;
-  }
-  if (mScaleTheme) {
-    closeTheme(mScaleTheme);
-    mScaleTheme = NULL;
-  }
-  if (mSpinTheme) {
-    closeTheme(mSpinTheme);
-    mSpinTheme = NULL;
-  }
-  if (mRebarTheme) {
-    closeTheme(mRebarTheme);
-    mRebarTheme = NULL;
-  }
-  if (mProgressTheme) {
-    closeTheme(mProgressTheme);
-    mProgressTheme = NULL;
-  }
-  if (mButtonTheme) {
-    closeTheme(mButtonTheme);
-    mButtonTheme = NULL;
-  }
-  if (mTextFieldTheme) {
-    closeTheme(mTextFieldTheme);
-    mTextFieldTheme = NULL;
-  }
-  if (mTooltipTheme) {
-    closeTheme(mTooltipTheme);
-    mTooltipTheme = NULL;
-  }
-  if (mStatusbarTheme) {
-    closeTheme(mStatusbarTheme);
-    mStatusbarTheme = NULL;
-  }
-  if (mTabTheme) {
-    closeTheme(mTabTheme);
-    mTabTheme = NULL;
-  }
-  if (mTreeViewTheme) {
-    closeTheme(mTreeViewTheme);
-    mTreeViewTheme = NULL;
-  }
-  if (mComboBoxTheme) {
-    closeTheme(mComboBoxTheme);
-    mComboBoxTheme = NULL;
-  }
-  if (mHeaderTheme) {
-    closeTheme(mHeaderTheme);
-    mHeaderTheme = NULL;
-  }
-  if (mMenuTheme) {
-    closeTheme(mMenuTheme);
-    mMenuTheme = NULL;
-  }
+#define CLOSE_THEME(_x)  if (_x) { closeTheme(_x); _x = NULL; }
+  CLOSE_THEME(mToolbarTheme);
+  CLOSE_THEME(mScrollbarTheme);
+  CLOSE_THEME(mScaleTheme);
+  CLOSE_THEME(mSpinTheme);
+  CLOSE_THEME(mRebarTheme);
+  CLOSE_THEME(mProgressTheme);
+  CLOSE_THEME(mButtonTheme);
+  CLOSE_THEME(mTextFieldTheme);
+  CLOSE_THEME(mToolbarTheme);
+  CLOSE_THEME(mStatusbarTheme);
+  CLOSE_THEME(mTabTheme);
+  CLOSE_THEME(mTreeViewTheme);
+  CLOSE_THEME(mComboBoxTheme);
+  CLOSE_THEME(mHeaderTheme);
+  CLOSE_THEME(mMenuTheme);
+  CLOSE_THEME(mCommunicationsRebarTheme);
+  CLOSE_THEME(mMediaRebarTheme);
+  CLOSE_THEME(mBrowserTabBarRebarTheme);
+#undef CLOSE_THEME
 }
 
 NS_IMETHODIMP
@@ -2136,19 +2238,20 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
           aState |= DFCS_PUSHED;
       }
 
-      if (CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive))
+      if (IsMenuActiveOrHover(aFrame, aWidgetType))
         aState |= DFCS_HOT;
 
       return NS_OK;
     }
     case NS_THEME_MENUCHECKBOX:
     case NS_THEME_MENURADIO:
-    case NS_THEME_MENUARROW:
+    case NS_THEME_MENUARROW: {
       aState = 0;
       if (IsDisabled(aFrame))
         aState |= DFCS_INACTIVE;
-      if (CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive))
+      if (IsMenuActiveOrHover(aFrame, aWidgetType))
         aState |= DFCS_HOT;
+
       if (aWidgetType == NS_THEME_MENUCHECKBOX || aWidgetType == NS_THEME_MENURADIO) {
         if (IsCheckedButton(aFrame))
           aState |= DFCS_CHECKED;
@@ -2157,6 +2260,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
           aState |= DFCS_RTL;
       }
       return NS_OK;
+    }
     case NS_THEME_LISTBOX:
     case NS_THEME_TREEVIEW:
     case NS_THEME_TEXTFIELD:

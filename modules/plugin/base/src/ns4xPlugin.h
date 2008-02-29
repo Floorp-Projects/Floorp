@@ -280,11 +280,22 @@ protected:
   static NPP sCurrentNPP;
 };
 
-class NPPAutoPusher : public NPPStack
+// XXXjst: The NPPAutoPusher stack is a bit redundant now that
+// PluginDestructionGuard exists, and could thus be replaced by code
+// that uses the PluginDestructionGuard list of plugins on the
+// stack. But they're not identical, and to minimize code changes
+// we're keeping both for the moment, and making NPPAutoPusher inherit
+// the PluginDestructionGuard class to avoid having to keep two
+// separate objects on the stack since we always want a
+// PluginDestructionGuard where we use an NPPAutoPusher.
+
+class NPPAutoPusher : public NPPStack,
+                      protected PluginDestructionGuard
 {
 public:
   NPPAutoPusher(NPP npp)
-    : mOldNPP(sCurrentNPP)
+    : PluginDestructionGuard(npp),
+      mOldNPP(sCurrentNPP)
   {
     NS_ASSERTION(npp, "Uh, null npp passed to NPPAutoPusher!");
 

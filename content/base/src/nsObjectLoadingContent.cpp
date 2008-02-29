@@ -524,8 +524,23 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
         mInstantiating = PR_FALSE;
         return NS_BINDING_ABORTED;
       }
-      rv = frame->Instantiate(chan, getter_AddRefs(mFinalListener));
-      mInstantiating = PR_FALSE;
+
+      {
+        nsIFrame *nsiframe;
+        CallQueryInterface(frame, &nsiframe);
+
+        nsWeakFrame weakFrame(nsiframe);
+
+        rv = frame->Instantiate(chan, getter_AddRefs(mFinalListener));
+
+        mInstantiating = PR_FALSE;
+
+        if (!weakFrame.IsAlive()) {
+          // The frame was destroyed while instantiating. Abort the load.
+          return NS_BINDING_ABORTED;
+        }
+      }
+
       break;
     case eType_Loading:
       NS_NOTREACHED("Should not have a loading type here!");
@@ -699,11 +714,15 @@ nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
     }
   }
 
+  nsIFrame *nsiframe;
+  CallQueryInterface(frame, &nsiframe);
+  nsWeakFrame weakFrame(nsiframe);
+
   // We may have a plugin instance already; if so, do nothing
   nsresult rv = frame->GetPluginInstance(*aInstance);
-  if (!*aInstance) {
+  if (!*aInstance && weakFrame.IsAlive()) {
     rv = Instantiate(frame, mContentType, mURI);
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv) && weakFrame.IsAlive()) {
       rv = frame->GetPluginInstance(*aInstance);
     } else {
       Fallback(PR_TRUE);

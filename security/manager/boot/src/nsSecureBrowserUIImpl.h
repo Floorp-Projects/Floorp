@@ -93,7 +93,7 @@ public:
   
 protected:
   
-  nsCOMPtr<nsIDOMWindow> mWindow;
+  nsWeakPtr mWindow;
   nsCOMPtr<nsIStringBundle> mStringBundle;
   nsCOMPtr<nsIURI> mCurrentURI;
   nsCOMPtr<nsISecurityEventSink> mToplevelEventSink;

@@ -1088,8 +1088,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
 
-  // Unlink any associated preserved wrapper.
-  tmp->RemoveReference(tmp);
+  // Drop the content hash.
+  delete tmp->mContentWrapperHash;
+  tmp->mContentWrapperHash = nsnull;
 
   tmp->mParentDocument = nsnull;
 

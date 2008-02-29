@@ -51,10 +51,8 @@ function reset() {
 function check(aHadCharset, aCharset, aCharsetStart, aCharsetEnd) {
   do_check_eq(aHadCharset, hadCharset);
   do_check_eq(aCharset, charset.value);
-  if (hadCharset) {
-    do_check_eq(aCharsetStart, charsetStart.value);
-    do_check_eq(aCharsetEnd, charsetEnd.value);
-  }
+  do_check_eq(aCharsetStart, charsetStart.value);
+  do_check_eq(aCharsetEnd, charsetEnd.value);
 }
 
 function run_test() {
@@ -63,36 +61,37 @@ function run_test() {
   hadCharset =
     netutil.extractCharsetFromContentType("text/html", charset, charsetStart,
 					  charsetEnd);
-  check(false, "");
+  check(false, "", 9, 9);
 
   hadCharset =
     netutil.extractCharsetFromContentType("TEXT/HTML", charset, charsetStart,
 					  charsetEnd);
-  check(false, "");
+  check(false, "", 9, 9);
 
   hadCharset =
     netutil.extractCharsetFromContentType("text/html, text/html", charset,
 					  charsetStart, charsetEnd);
-  check(false, "");
+  check(false, "", 9, 9);
 
   hadCharset =
     netutil.extractCharsetFromContentType("text/html, text/plain",
 					  charset, charsetStart, charsetEnd);
-  check(false, "");
+  check(false, "", 21, 21);
 
   hadCharset =
     netutil.extractCharsetFromContentType('text/html, ', charset, charsetStart,
 					  charsetEnd);
-  check(false, "");
+  check(false, "", 9, 9);
 
   hadCharset =
     netutil.extractCharsetFromContentType('text/html, */*', charset,
 					  charsetStart, charsetEnd);
-  check(false, "");
+  check(false, "", 9, 9);
 
   hadCharset =
     netutil.extractCharsetFromContentType('text/html, foo', charset,
 					  charsetStart, charsetEnd);
+  check(false, "", 9, 9);
 
   hadCharset =
     netutil.extractCharsetFromContentType("text/html; charset=ISO-8859-1",
@@ -142,7 +141,7 @@ function run_test() {
   hadCharset =
     netutil.extractCharsetFromContentType("text/html; charset=ISO-8859-1, TEXT/plain",
 					  charset, charsetStart, charsetEnd);
-  check(false, "");
+  check(false, "", 41, 41);
 
   hadCharset =
     netutil.extractCharsetFromContentType("text/plain, TEXT/HTML; charset='ISO-8859-1', text/html, TEXT/HTML",
@@ -162,35 +161,35 @@ function run_test() {
   hadCharset =
     netutil.extractCharsetFromContentType("text/plain; param= , text/html",
 					  charset, charsetStart, charsetEnd);
-  check(false, "");
+  check(false, "", 30, 30);
 
   hadCharset =
     netutil.extractCharsetFromContentType('text/plain; param=", text/html"',
 					  charset, charsetStart, charsetEnd);
-  check(false, "");
+  check(false, "", 10, 10);
 
   hadCharset =
     netutil.extractCharsetFromContentType('text/plain; param=", \\" , text/html"',
 					  charset, charsetStart, charsetEnd);
-  check(false, "");
+  check(false, "", 10, 10);
 
   hadCharset =
     netutil.extractCharsetFromContentType('text/plain; param=", \\" , text/html , "',
 					  charset, charsetStart, charsetEnd);
-  check(false, "");
+  check(false, "", 10, 10);
 
   hadCharset =
     netutil.extractCharsetFromContentType('text/plain param=", \\" , text/html , "',
 					  charset, charsetStart, charsetEnd);
-  check(false, "");
+  check(false, "", 38, 38);
 
   hadCharset =
     netutil.extractCharsetFromContentType('text/plain charset=UTF8',
 					  charset, charsetStart, charsetEnd);
-  check(false, "");
+  check(false, "", 23, 23);
 
   hadCharset =
     netutil.extractCharsetFromContentType('text/plain, TEXT/HTML; param="charset=UTF8"; ; param2="charset=UTF16", text/html, TEXT/HTML',
 					  charset, charsetStart, charsetEnd);
-  check(false, "");
+  check(false, "", 21, 21);
 }
