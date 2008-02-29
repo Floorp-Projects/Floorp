@@ -126,7 +126,7 @@ static const PRLogModuleInfo *gUrlClassifierDbServiceLog = nsnull;
 // want to change schema, or to recover from updating bugs.  When an
 // implementation version change is detected, the database is scrapped
 // and we start over.
-#define IMPLEMENTATION_VERSION 2
+#define IMPLEMENTATION_VERSION 3
 
 #define MAX_HOST_COMPONENTS 5
 #define MAX_PATH_COMPONENTS 4
