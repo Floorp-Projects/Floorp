@@ -654,7 +654,7 @@ const gXPInstallObserver = {
         var notificationBox = gBrowser.getNotificationBox(browser);
         if (!notificationBox.getNotificationWithValue(notificationName)) {
           const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
-          const iconURL = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
+          const iconURL = "chrome://mozapps/skin/update/update.png";
           notificationBox.appendNotification(messageString, notificationName,
                                              iconURL, priority, buttons);
         }
