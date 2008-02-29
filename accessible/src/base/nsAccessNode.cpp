@@ -86,6 +86,7 @@ nsIStringBundle *nsAccessNode::gKeyStringBundle = 0;
 nsITimer *nsAccessNode::gDoCommandTimer = 0;
 nsIDOMNode *nsAccessNode::gLastFocusedNode = 0;
 PRBool nsAccessNode::gIsAccessibilityActive = PR_FALSE;
+PRBool nsAccessNode::gIsShuttingDownApp = PR_FALSE;
 PRBool nsAccessNode::gIsCacheDisabled = PR_FALSE;
 PRBool nsAccessNode::gIsFormFillEnabled = PR_FALSE;
 nsAccessNodeHashtable nsAccessNode::gGlobalDocAccessibleCache;
@@ -313,6 +314,8 @@ void nsAccessNode::ShutdownXPAccessibility()
   if (!gIsAccessibilityActive) {
     return;
   }
+  gIsShuttingDownApp = PR_TRUE;
+
   NS_IF_RELEASE(gStringBundle);
   NS_IF_RELEASE(gKeyStringBundle);
   NS_IF_RELEASE(gDoCommandTimer);
@@ -320,7 +323,7 @@ void nsAccessNode::ShutdownXPAccessibility()
   NS_IF_RELEASE(sAccService);
 
   nsApplicationAccessibleWrap::Unload();
-  gGlobalDocAccessibleCache.Enumerate(ClearDocCacheEntry, nsnull);
+  ClearCache(gGlobalDocAccessibleCache);
 
   // Release gApplicationAccessible after everything else is shutdown
   // so we don't accidently create it again while tearing down root accessibles
@@ -794,14 +797,6 @@ PLDHashOperator nsAccessNode::ClearCacheEntry(const void* aKey, nsCOMPtr<nsIAcce
   privateAccessNode->Shutdown();
 
   return PL_DHASH_REMOVE;
-}
-
-PLDHashOperator nsAccessNode::ClearDocCacheEntry(const void* aKey, nsCOMPtr<nsIAccessNode>& aAccessNode, void* aUserArg)
-{
-  nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(aAccessNode));
-  privateAccessNode->Shutdown();
-
-  return PL_DHASH_NEXT; // nsDocAccessible::Shutdown() removes the doc from doc cache
 }
 
 void
