@@ -709,7 +709,7 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
     cancel = PR_FALSE;
     break;
   case nsIDOMKeyEvent::DOM_VK_RETURN:
-    mController->HandleEnter(&cancel);
+    mController->HandleEnter(PR_FALSE, &cancel);
     break;
   }
   

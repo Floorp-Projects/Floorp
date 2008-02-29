@@ -2079,7 +2079,16 @@ public:
     // Root/Unroot methods, to avoid root/unrooting the JS objects from
     // addrefing/releasing the XPCWrappedNative during unlinking, which would
     // make the JS objects uncollectable to the JS GC.
-    NS_DECL_CYCLE_COLLECTION_CLASS_NO_UNLINK(XPCWrappedNative)
+    class NS_CYCLE_COLLECTION_INNERCLASS
+     : public nsXPCOMCycleCollectionParticipant
+    {
+      NS_DECL_CYCLE_COLLECTION_CLASS_BODY_NO_UNLINK(XPCWrappedNative,
+                                                    XPCWrappedNative)
+      NS_IMETHOD RootAndUnlinkJSObjects(void *p);
+      NS_IMETHOD Unlink(void *p) { return NS_OK; }
+      NS_IMETHOD Unroot(void *p) { return NS_OK; }
+    };
+    NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
     NS_DECL_CYCLE_COLLECTION_UNMARK_PURPLE_STUB(XPCWrappedNative)
 
 #ifndef XPCONNECT_STANDALONE
@@ -2089,8 +2098,10 @@ public:
     JSBool
     IsValid() const {return nsnull != mFlatJSObject;}
 
-#define XPC_SCOPE_TAG     ((jsword)0x1)
-#define XPC_SCOPE_WORD(s) ((jsword)(s))
+#define XPC_SCOPE_WORD(s)   ((jsword)(s))
+#define XPC_SCOPE_MASK      ((jsword)0x3)
+#define XPC_SCOPE_TAG       ((jsword)0x1)
+#define XPC_WRAPPER_EXPIRED ((jsword)0x2)
 
     static inline JSBool
     IsTaggedScope(XPCWrappedNativeScope* s)
@@ -2105,25 +2116,39 @@ public:
     UnTagScope(XPCWrappedNativeScope* s)
         {return (XPCWrappedNativeScope*)(XPC_SCOPE_WORD(s) & ~XPC_SCOPE_TAG);}
 
+    inline JSBool
+    IsWrapperExpired() const
+        {return XPC_SCOPE_WORD(mMaybeScope) & XPC_WRAPPER_EXPIRED;}
+
     JSBool
     HasProto() const {return !IsTaggedScope(mMaybeScope);}
 
     XPCWrappedNativeProto*
-    GetProto() const {return HasProto() ? mMaybeProto : nsnull;}
+    GetProto() const
+        {return HasProto() ?
+         (XPCWrappedNativeProto*)
+         (XPC_SCOPE_WORD(mMaybeProto) & ~XPC_SCOPE_MASK) : nsnull;}
+
+    void
+    SetProto(XPCWrappedNativeProto* p)
+        {NS_ASSERTION(!IsWrapperExpired(), "bad ptr!");
+         mMaybeProto = p;}
 
     XPCWrappedNativeScope*
-    GetScope() const {return HasProto() ?
-                           mMaybeProto->GetScope() : UnTagScope(mMaybeScope);}
+    GetScope() const
+        {return GetProto() ? GetProto()->GetScope() :
+         (XPCWrappedNativeScope*)
+         (XPC_SCOPE_WORD(mMaybeScope) & ~XPC_SCOPE_MASK);}
 
     nsISupports*
     GetIdentityObject() const {return mIdentity;}
 
     JSObject*
-    GetFlatJSObject()   const {return mFlatJSObject;}
+    GetFlatJSObject() const {return mFlatJSObject;}
 
     XPCLock*
     GetLock() const {return IsValid() && HasProto() ?
-                                mMaybeProto->GetLock() : nsnull;}
+                                GetProto()->GetLock() : nsnull;}
 
     XPCNativeSet*
     GetSet() const {XPCAutoLock al(GetLock()); return mSet;}
@@ -2131,6 +2156,12 @@ public:
 private:
     void
     SetSet(XPCNativeSet* set) {XPCAutoLock al(GetLock()); mSet = set;}
+
+    inline void
+    ExpireWrapper()
+        {mMaybeScope = (XPCWrappedNativeScope*)
+                       (XPC_SCOPE_WORD(mMaybeScope) | XPC_WRAPPER_EXPIRED);}
+
 public:
 
     XPCNativeScriptableInfo*
@@ -2141,20 +2172,20 @@ public:
 
     void**
     GetSecurityInfoAddr() {return HasProto() ?
-                                   mMaybeProto->GetSecurityInfoAddr() : nsnull;}
+                                   GetProto()->GetSecurityInfoAddr() : nsnull;}
 
     nsIClassInfo*
     GetClassInfo() const {return IsValid() && HasProto() ?
-                            mMaybeProto->GetClassInfo() : nsnull;}
+                            GetProto()->GetClassInfo() : nsnull;}
 
     JSBool
     HasSharedProto() const {return IsValid() && HasProto() &&
-                            mMaybeProto->IsShared();}
+                            GetProto()->IsShared();}
 
     JSBool
     HasMutatedSet() const {return IsValid() &&
                                   (!HasProto() ||
-                                   GetSet() != mMaybeProto->GetSet());}
+                                   GetSet() != GetProto()->GetSet());}
 
     XPCJSRuntime*
     GetRuntime() const {XPCWrappedNativeScope* scope = GetScope();
@@ -2240,7 +2271,7 @@ public:
     {
         mSet->Mark();
         if(mScriptableInfo) mScriptableInfo->Mark();
-        if(HasProto()) mMaybeProto->Mark();
+        if(HasProto()) GetProto()->Mark();
     }
 
     // Yes, we *do* need to mark the mScriptableInfo in both cases.
@@ -2248,7 +2279,7 @@ public:
     {
         if(mScriptableInfo && JS_IsGCMarkingTracer(trc))
             mScriptableInfo->Mark();
-        if(HasProto()) mMaybeProto->TraceJS(trc);
+        if(HasProto()) GetProto()->TraceJS(trc);
         if(mWrapper)
             JS_CALL_OBJECT_TRACER(trc, mWrapper, "XPCWrappedNative::mWrapper");
         TraceOtherWrapper(trc);
@@ -2271,7 +2302,7 @@ public:
 #ifdef DEBUG
     void ASSERT_SetsNotMarked() const
         {mSet->ASSERT_NotMarked();
-         if(HasProto()){mMaybeProto->ASSERT_SetNotMarked();}}
+         if(HasProto()){GetProto()->ASSERT_SetNotMarked();}}
 
     int DEBUG_CountOfTearoffChunks() const
         {int i = 0; const XPCWrappedNativeTearOffChunk* to;

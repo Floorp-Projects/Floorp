@@ -75,7 +75,7 @@ menuitem[cmd="cmd_cut"] {
   list-style-image: url("moz-icon://stock/gtk-cut?size=menu");
 }
 
-menuitem[command="cmd_cut"][disabled]
+menuitem[command="cmd_cut"][disabled],
 menuitem[cmd="cmd_cut"][disabled] {
   list-style-image: url("moz-icon://stock/gtk-cut?size=menu&state=disabled");
 }
@@ -85,7 +85,7 @@ menuitem[cmd="cmd_copy"] {
   list-style-image: url("moz-icon://stock/gtk-copy?size=menu");
 }
 
-menuitem[command="cmd_copy"][disabled]
+menuitem[command="cmd_copy"][disabled],
 menuitem[cmd="cmd_copy"][disabled] {
   list-style-image: url("moz-icon://stock/gtk-copy?size=menu&state=disabled");
 }

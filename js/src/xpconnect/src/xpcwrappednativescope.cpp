@@ -355,7 +355,7 @@ WrappedNativeJSGCThingTracer(JSDHashTable *table, JSDHashEntryHdr *hdr,
                              uint32 number, void *arg)
 {
     XPCWrappedNative* wrapper = ((Native2WrappedNativeMap::Entry*)hdr)->value;
-    if(wrapper->HasExternalReference())
+    if(wrapper->HasExternalReference() && !wrapper->IsWrapperExpired())
     {
         JSTracer* trc = (JSTracer *)arg;
         JS_CALL_OBJECT_TRACER(trc, wrapper->GetFlatJSObject(),

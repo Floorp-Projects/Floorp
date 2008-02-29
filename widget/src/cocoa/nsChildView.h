@@ -91,12 +91,21 @@ union nsPluginPort;
   // Whether we're a plugin view.
   BOOL mIsPluginView;
 
-  NSEvent* mCurKeyEvent;   // only valid during a keyDown
+  // The following variables are only valid during key down event processing.
+  // Their current usage needs to be fixed to avoid problems with nested event
+  // loops that can confuse them. Once a variable is set during key down event
+  // processing, if an event spawns a nested event loop the previously set value
+  // will be wiped out.
+  NSEvent* mCurKeyEvent;
   PRBool mKeyDownHandled;
-  
+  BOOL mIgnoreDoCommand;
+  // While we process key down events we need to keep track of whether or not
+  // we sent a key press event. This helps us make sure we do send one
+  // eventually.
+  BOOL mKeyPressSent;
+
   // needed for NSTextInput implementation
   NSRange mMarkedRange;
-  BOOL mIgnoreDoCommand;
 
   BOOL mInHandScroll; // true for as long as we are hand scrolling
   // hand scroll locations

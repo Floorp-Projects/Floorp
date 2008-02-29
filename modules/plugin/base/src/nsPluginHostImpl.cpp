@@ -205,11 +205,8 @@ static const char *kPluginRegistryVersion = "0.08";
 ////////////////////////////////////////////////////////////////////////
 // CID's && IID's
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
-static NS_DEFINE_IID(kIPluginInstancePeerIID, NS_IPLUGININSTANCEPEER_IID);
-static NS_DEFINE_IID(kIPluginStreamInfoIID, NS_IPLUGINSTREAMINFO_IID);
 static NS_DEFINE_CID(kPluginCID, NS_PLUGIN_CID);
 static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static const char kDirectoryServiceContractID[] = "@mozilla.org/file/directory_service;1";
 // for the dialog
 static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID); // needed for NS_TRY_SAFE_CALL
@@ -6165,6 +6162,10 @@ nsPluginHostImpl::AddHeadersToChannel(const char *aHeadersData,
 NS_IMETHODIMP
 nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
 {
+  if (PluginDestructionGuard::DelayDestroy(aInstance)) {
+    return NS_OK;
+  }
+
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("nsPluginHostImpl::StopPluginInstance called instance=%p\n",aInstance));
 
@@ -7182,4 +7183,125 @@ nsPluginStreamInfo::SetStreamComplete(const PRBool complete)
 
     SetRequest(nsnull);
   }
+}
+
+// Runnable that does an async destroy of a plugin.
+
+class nsPluginDestroyRunnable : public nsRunnable,
+                                public PRCList
+{
+public:
+  nsPluginDestroyRunnable(nsIPluginInstance *aInstance)
+    : mInstance(aInstance)
+  {
+    PR_INIT_CLIST(this);
+    PR_APPEND_LINK(this, &sRunnableListHead);
+  }
+
+  virtual ~nsPluginDestroyRunnable()
+  {
+    PR_REMOVE_LINK(this);
+  }
+
+  NS_IMETHOD Run()
+  {
+    nsCOMPtr<nsIPluginInstance> instance;
+
+    // Null out mInstance to make sure this code in another runnable
+    // will do the right thing even if someone was holding on to this
+    // runnable longer than we expect.
+    instance.swap(mInstance);
+
+    if (PluginDestructionGuard::DelayDestroy(instance)) {
+      // It's still not safe to destroy the plugin, it's now up to the
+      // outermost guard on the stack to take care of the destruction.
+
+      return NS_OK;
+    }
+
+    nsPluginDestroyRunnable *r =
+      static_cast<nsPluginDestroyRunnable*>(PR_NEXT_LINK(&sRunnableListHead));
+
+    while (r != &sRunnableListHead) {
+      if (r != this && r->mInstance == instance) {
+        // There's another runnable scheduled to tear down
+        // instance. Let it do the job.
+ 
+        return NS_OK;
+      }
+
+      r = static_cast<nsPluginDestroyRunnable*>
+        (PR_NEXT_LINK(&sRunnableListHead));
+    }
+
+    PLUGIN_LOG(PLUGIN_LOG_NORMAL,
+               ("Doing delayed destroy of instance %p\n", instance.get()));
+
+    instance->Stop();
+
+    nsRefPtr<nsPluginHostImpl> host = nsPluginHostImpl::GetInst();
+
+    if (host) {
+      host->StopPluginInstance(instance);
+    }
+
+    PLUGIN_LOG(PLUGIN_LOG_NORMAL,
+               ("Done with delayed destroy of instance %p\n", instance.get()));
+
+    return NS_OK;
+  }
+
+protected:
+  nsCOMPtr<nsIPluginInstance> mInstance;
+
+  static PRCList sRunnableListHead;
+};
+
+PRCList nsPluginDestroyRunnable::sRunnableListHead =
+  PR_INIT_STATIC_CLIST(&nsPluginDestroyRunnable::sRunnableListHead);
+
+PRCList PluginDestructionGuard::sListHead =
+  PR_INIT_STATIC_CLIST(&PluginDestructionGuard::sListHead);
+
+PluginDestructionGuard::~PluginDestructionGuard()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on the main thread");
+
+  PR_REMOVE_LINK(this);
+
+  if (mDelayedDestroy) {
+    // We've attempted to destroy the plugin instance we're holding on
+    // to while we were guarding it. Do the actual destroy now, off of
+    // a runnable.
+    nsRefPtr<nsPluginDestroyRunnable> evt =
+      new nsPluginDestroyRunnable(mInstance);
+
+    NS_DispatchToMainThread(evt);
+  }
+}
+
+// static
+PRBool
+PluginDestructionGuard::DelayDestroy(nsIPluginInstance *aInstance)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on the main thread");
+  NS_ASSERTION(aInstance, "Uh, I need an instance!");
+
+  // Find the first guard on the stack and make it do a delayed
+  // destroy upon destruction.
+
+  PluginDestructionGuard *g =
+    static_cast<PluginDestructionGuard*>(PR_LIST_HEAD(&sListHead));
+
+  while (g != &sListHead) {
+    if (g->mInstance == aInstance) {
+      g->mDelayedDestroy = PR_TRUE;
+
+      return PR_TRUE;
+    }
+
+    g = static_cast<PluginDestructionGuard*>(PR_NEXT_LINK(g));    
+  }
+
+  return PR_FALSE;
 }
