@@ -170,13 +170,18 @@ NS_IMPL_ISUPPORTS6(nsSecureBrowserUIImpl,
 
 
 NS_IMETHODIMP
-nsSecureBrowserUIImpl::Init(nsIDOMWindow *window)
+nsSecureBrowserUIImpl::Init(nsIDOMWindow *aWindow)
 {
-  PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-         ("SecureUI:%p: Init: mWindow: %p, window: %p\n", this, mWindow.get(),
-          window));
 
-  if (!window) {
+#ifdef PR_LOGGING
+  nsCOMPtr<nsIDOMWindow> window(do_QueryReferent(mWindow));
+
+  PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+         ("SecureUI:%p: Init: mWindow: %p, aWindow: %p\n", this,
+          window.get(), aWindow));
+#endif
+
+  if (!aWindow) {
     NS_WARNING("Null window passed to nsSecureBrowserUIImpl::Init()");
     return NS_ERROR_INVALID_ARG;
   }
@@ -185,9 +190,10 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window)
     NS_WARNING("Trying to init an nsSecureBrowserUIImpl twice");
     return NS_ERROR_ALREADY_INITIALIZED;
   }
-  
-  nsresult rv = NS_OK;
-  mWindow = window;
+
+  nsresult rv;
+  mWindow = do_GetWeakReference(aWindow, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIStringBundleService> service(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
@@ -206,7 +212,7 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window)
     rv = svc->AddObserver(this, NS_FORMSUBMIT_SUBJECT, PR_TRUE);
   }
   
-  nsCOMPtr<nsPIDOMWindow> piwindow(do_QueryInterface(mWindow));
+  nsCOMPtr<nsPIDOMWindow> piwindow(do_QueryInterface(aWindow));
   if (!piwindow) return NS_ERROR_FAILURE;
 
   nsIDocShell *docShell = piwindow->GetDocShell();
@@ -353,12 +359,12 @@ static PRUint32 GetSecurityStateFromChannel(nsIChannel* aChannel)
 
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::Notify(nsIDOMHTMLFormElement* aDOMForm,
-                              nsIDOMWindowInternal* window, nsIURI* actionURL,
+                              nsIDOMWindowInternal* aWindow, nsIURI* actionURL,
                               PRBool* cancelSubmit)
 {
   // Return NS_OK unless we want to prevent this form from submitting.
   *cancelSubmit = PR_FALSE;
-  if (!window || !actionURL || !aDOMForm)
+  if (!aWindow || !actionURL || !aDOMForm)
     return NS_OK;
   
   nsCOMPtr<nsIContent> formNode = do_QueryInterface(aDOMForm);
@@ -391,8 +397,11 @@ nsSecureBrowserUIImpl::Notify(nsIDOMHTMLFormElement* aDOMForm,
     return NS_OK;
   }
 
+  nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ASSERTION(window, "Window has gone away?!");
+
   PRBool isChild;
-  IsChildOfDomWindow(mWindow, postingWindow, &isChild);
+  IsChildOfDomWindow(window, postingWindow, &isChild);
   
   // This notify call is not for our window, ignore it.
   if (!isChild)
@@ -616,7 +625,10 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   nsCOMPtr<nsIDOMWindow> windowForProgress;
   aWebProgress->GetDOMWindow(getter_AddRefs(windowForProgress));
 
-  const PRBool isToplevelProgress = (windowForProgress.get() == mWindow.get());
+  nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ASSERTION(window, "Window has gone away?!");
+
+  const PRBool isToplevelProgress = (windowForProgress == window);
   
 #ifdef PR_LOGGING
   if (windowForProgress)
@@ -1211,7 +1223,10 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
   nsCOMPtr<nsIDOMWindow> windowForProgress;
   aWebProgress->GetDOMWindow(getter_AddRefs(windowForProgress));
 
-  if (windowForProgress.get() == mWindow.get()) {
+  nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ASSERTION(window, "Window has gone away?!");
+
+  if (windowForProgress == window) {
     // For toplevel channels, update the security state right away.
     return EvaluateAndUpdateSecurityState(aRequest);
   }
@@ -1395,6 +1410,7 @@ nsUIContext::~nsUIContext()
 /* void getInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
 NS_IMETHODIMP nsUIContext::GetInterface(const nsIID & uuid, void * *result)
 {
+  NS_ENSURE_TRUE(mWindow, NS_ERROR_FAILURE);
   nsresult rv;
 
   if (uuid.Equals(NS_GET_IID(nsIPrompt))) {
@@ -1446,7 +1462,10 @@ ConfirmEnteringSecure()
   GetNSSDialogs(getter_AddRefs(dialogs));
   if (!dialogs) return PR_FALSE;  // Should this allow PR_TRUE for unimplemented?
 
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(mWindow);
+  nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ASSERTION(window, "Window has gone away?!");
+
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(window);
 
   PRBool confirms;
   dialogs->ConfirmEnteringSecure(ctx, &confirms);
@@ -1462,7 +1481,10 @@ ConfirmEnteringWeak()
   GetNSSDialogs(getter_AddRefs(dialogs));
   if (!dialogs) return PR_FALSE;  // Should this allow PR_TRUE for unimplemented?
 
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(mWindow);
+  nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ASSERTION(window, "Window has gone away?!");
+
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(window);
 
   PRBool confirms;
   dialogs->ConfirmEnteringWeak(ctx, &confirms);
@@ -1478,7 +1500,10 @@ ConfirmLeavingSecure()
   GetNSSDialogs(getter_AddRefs(dialogs));
   if (!dialogs) return PR_FALSE;  // Should this allow PR_TRUE for unimplemented?
 
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(mWindow);
+  nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ASSERTION(window, "Window has gone away?!");
+
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(window);
 
   PRBool confirms;
   dialogs->ConfirmLeavingSecure(ctx, &confirms);
@@ -1494,7 +1519,10 @@ ConfirmMixedMode()
   GetNSSDialogs(getter_AddRefs(dialogs));
   if (!dialogs) return PR_FALSE;  // Should this allow PR_TRUE for unimplemented?
 
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(mWindow);
+  nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ASSERTION(window, "Window has gone away?!");
+
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(window);
 
   PRBool confirms;
   dialogs->ConfirmMixedMode(ctx, &confirms);
@@ -1517,7 +1545,10 @@ ConfirmPostToInsecure()
   GetNSSDialogs(getter_AddRefs(dialogs));
   if (!dialogs) return PR_FALSE;  // Should this allow PR_TRUE for unimplemented?
 
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(mWindow);
+  nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ASSERTION(window, "Window has gone away?!");
+
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(window);
 
   PRBool result;
 
@@ -1542,7 +1573,10 @@ ConfirmPostToInsecureFromSecure()
   GetNSSDialogs(getter_AddRefs(dialogs));
   if (!dialogs) return PR_FALSE;  // Should this allow PR_TRUE for unimplemented?
 
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(mWindow);
+  nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ASSERTION(window, "Window has gone away?!");
+
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(window);
 
   PRBool result;
 
