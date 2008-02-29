@@ -2218,12 +2218,8 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
         if (NS_FAILED(rv)) {
           contentType.AssignLiteral("application/xml");
           specifiedCharset.Truncate();
-          haveCharset = PR_FALSE;
-        }
-
-        if (!haveCharset) {
           charsetStart = charsetEnd = contentType.Length();
-        } 
+        }
 
         // If the content-type the page set already has a charset parameter,
         // and it's the same charset, up to case, as |charset|, just send the

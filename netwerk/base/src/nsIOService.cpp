@@ -977,7 +977,7 @@ nsIOService::ExtractCharsetFromContentType(const nsACString &aTypeHeader,
     nsCAutoString ignored;
     net_ParseContentType(aTypeHeader, ignored, aCharset, aHadCharset,
                          aCharsetStart, aCharsetEnd);
-    if (*aHadCharset && *aCharsetStart == -1) {
+    if (*aHadCharset && *aCharsetStart == *aCharsetEnd) {
         *aHadCharset = PR_FALSE;
     }
     return NS_OK;

@@ -830,16 +830,25 @@ net_ParseMediaType(const nsACString &aMediaTypeStr,
             aContentType.Assign(type, typeEnd - type);
             ToLowerCase(aContentType);
         }
+
         if ((!eq && *aHadCharset) || typeHasCharset) {
             *aHadCharset = PR_TRUE;
             aContentCharset.Assign(charset, charsetEnd - charset);
             if (typeHasCharset) {
                 *aCharsetStart = charsetParamStart + aOffset;
                 *aCharsetEnd = charsetParamEnd + aOffset;
-            } else {
-                *aCharsetStart = -1;
-                *aCharsetEnd = -1;
             }
+        }
+        // Only set a new charset position if this is a different type
+        // from the last one we had and it doesn't already have a
+        // charset param.  If this is the same type, we probably want
+        // to leave the charset position on its first occurrence.
+        if (!eq && !typeHasCharset) {
+            PRInt32 charsetStart = PRInt32(paramStart);
+            if (charsetStart == kNotFound)
+                charsetStart =  flatStr.Length();
+
+            *aCharsetEnd = *aCharsetStart = charsetStart + aOffset;
         }
     }
 }
