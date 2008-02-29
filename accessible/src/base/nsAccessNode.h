@@ -98,7 +98,6 @@ class nsAccessNode: public nsIAccessNode, public nsPIAccessNode
     static void ClearCache(nsAccessNodeHashtable& aCache);
 
     static PLDHashOperator PR_CALLBACK ClearCacheEntry(const void* aKey, nsCOMPtr<nsIAccessNode>& aAccessNode, void* aUserArg);
-    static PLDHashOperator PR_CALLBACK ClearDocCacheEntry(const void* aKey, nsCOMPtr<nsIAccessNode>& aAccessNode, void* aUserArg);
 
     // Static cache methods for global document cache
     static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsIDocument *aDocument);
@@ -148,6 +147,7 @@ protected:
     static nsIStringBundle *gKeyStringBundle;
     static nsITimer *gDoCommandTimer;
     static PRBool gIsAccessibilityActive;
+    static PRBool gIsShuttingDownApp;
     static PRBool gIsCacheDisabled;
     static PRBool gIsFormFillEnabled;
 

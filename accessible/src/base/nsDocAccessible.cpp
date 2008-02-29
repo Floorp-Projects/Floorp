@@ -551,7 +551,9 @@ NS_IMETHODIMP nsDocAccessible::Shutdown()
 
   // Remove from the cache after other parts of Shutdown(), so that Shutdown() procedures
   // can find the doc or root accessible in the cache if they need it.
-  gGlobalDocAccessibleCache.Remove(static_cast<void*>(kungFuDeathGripDoc));
+  // We don't do this during ShutdownAccessibility() because that is already clearing the cache
+  if (!gIsShuttingDownApp)
+    gGlobalDocAccessibleCache.Remove(static_cast<void*>(kungFuDeathGripDoc));
 
   return NS_OK;
 }
