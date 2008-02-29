@@ -524,6 +524,7 @@ nsExternalHelperAppService::~nsExternalHelperAppService()
 NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeContentType,
                                                     nsIRequest *aRequest,
                                                     nsIInterfaceRequestor *aWindowContext,
+                                                    PRBool aForceSave,
                                                     nsIStreamListener ** aStreamListener)
 {
   nsAutoString fileName;
@@ -640,7 +641,8 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
                                                             buf,
                                                             aWindowContext,
                                                             fileName,
-                                                            reason);
+                                                            reason,
+                                                            aForceSave);
   if (!handler)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aStreamListener = handler);
@@ -991,11 +993,12 @@ nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
                                            const nsCSubstring& aTempFileExtension,
                                            nsIInterfaceRequestor* aWindowContext,
                                            const nsAString& aSuggestedFilename,
-                                           PRUint32 aReason)
+                                           PRUint32 aReason, PRBool aForceSave)
 : mMimeInfo(aMIMEInfo)
 , mWindowContext(aWindowContext)
 , mWindowToClose(nsnull)
 , mSuggestedFileName(aSuggestedFilename)
+, mForceSave(aForceSave)
 , mCanceled(PR_FALSE)
 , mShouldCloseWindow(PR_FALSE)
 , mReceivedDispositionInfo(PR_FALSE)
@@ -1470,6 +1473,13 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     alwaysAsk = (action != nsIMIMEInfo::saveToDisk);
   }
 
+  // if we were told that we _must_ save to disk without asking, all the stuff
+  // before this is irrelevant; override it
+  if (mForceSave) {
+    alwaysAsk = PR_FALSE;
+    action = nsIMIMEInfo::saveToDisk;
+  }
+  
   if (alwaysAsk)
   {
     // do this first! make sure we don't try to take an action until the user tells us what they want to do
