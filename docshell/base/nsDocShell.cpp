@@ -6880,6 +6880,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             OnNewURI(aURI, nsnull, mLoadType, PR_TRUE);
             nsCOMPtr<nsIInputStream> postData;
             PRUint32 pageIdent = PR_UINT32_MAX;
+            nsCOMPtr<nsISupports> cacheKey;
             
             if (mOSHE) {
                 /* save current position of scroller(s) (bug 59774) */
@@ -6893,6 +6894,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                 if (aLoadType & LOAD_CMD_NORMAL) {
                     mOSHE->GetPostData(getter_AddRefs(postData));
                     mOSHE->GetPageIdentifier(&pageIdent);
+                    mOSHE->GetCacheKey(getter_AddRefs(cacheKey));
                 }
             }
             
@@ -6907,6 +6909,11 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                 // page will restore the appropriate postData.
                 if (postData)
                     mOSHE->SetPostData(postData);
+
+                // Make sure we won't just repost without hitting the
+                // cache first
+                if (cacheKey)
+                    mOSHE->SetCacheKey(cacheKey);
                 
                 // Propagate our page ident to the new mOSHE so that
                 // we'll know it just differed by a scroll on the page.

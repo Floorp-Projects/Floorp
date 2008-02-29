@@ -63,6 +63,9 @@ _TEST_FILES = \
 		test_bug387979.html \
 		test_bug404548.html \
 		bug404548-subframe.html \
+		test_bug413310.html \
+		bug413310-subframe.html \
+		bug413310-post.sjs \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
