@@ -149,7 +149,7 @@ protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
-  nsObjectFrame(nsStyleContext* aContext) : nsObjectFrameSuper(aContext) {}
+  nsObjectFrame(nsStyleContext* aContext);
   virtual ~nsObjectFrame();
 
   // NOTE:  This frame class does not inherit from |nsLeafFrame|, so
@@ -190,7 +190,7 @@ protected:
 
   friend class nsPluginInstanceOwner;
 private:
-  nsPluginInstanceOwner *mInstanceOwner;
+  nsRefPtr<nsPluginInstanceOwner> mInstanceOwner;
   nsRect                mWindowlessRect;
 
   // For assertions that make it easier to determine if a crash is due
