@@ -96,7 +96,6 @@ protected:
   NSString *PanelDefaultDirectory();
   NSView* GetAccessoryView();
                                                 
-  PRBool                 mAllFilesDisplayed;
   nsString               mTitle;
   PRInt16                mMode;
   nsCOMArray<nsILocalFile> mFiles;
@@ -104,10 +103,8 @@ protected:
 
   nsStringArray          mFilters; 
   nsStringArray          mTitles;
-  
-  PRInt32                mSelectedType;  //this is in some NS_IMETHODIMP, but otherwise unsed.
-  static OSType          sCurrentProcessSignature;
 
+  PRInt32                mSelectedTypeIndex;
 };
 
 #endif // nsFilePicker_h_
