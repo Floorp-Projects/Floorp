@@ -86,8 +86,10 @@ js_UnlockGlobal(void *id)
 /* Exclude Alpha NT. */
 #if defined(_WIN32) && defined(_M_IX86)
 #pragma warning( disable : 4035 )
+JS_BEGIN_EXTERN_C
 extern long __cdecl
 _InterlockedCompareExchange(long *volatile dest, long exchange, long comp);
+JS_END_EXTERN_C
 #pragma intrinsic(_InterlockedCompareExchange)
 
 static JS_INLINE int
