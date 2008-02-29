@@ -495,7 +495,7 @@ nsPythonContext::CompileEventHandler(nsIAtom *aName,
     PyList_SET_ITEM(argNames, i, PyString_FromString(aArgNames[i]));
   }
   PyObject *ret = PyObject_CallMethod(mDelegate, "CompileEventHandler",
-                                      "sNNsi",
+                                      "sNNsii",
                                       AtomToEventHandlerName(aName),
                                       argNames,
                                       PyObject_FromNSString(aBody),
