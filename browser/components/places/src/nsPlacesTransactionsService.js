@@ -37,15 +37,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+let Ci = Components.interfaces;
+let Cc = Components.classes;
+let Cr = Components.results;
+
 const loadInSidebarAnno = "bookmarkProperties/loadInSidebar";
 const descriptionAnno = "bookmarkProperties/description";
 const CLASS_ID = Components.ID("c0844a84-5a12-4808-80a8-809cb002bb4f");
 const CONTRACT_ID = "@mozilla.org/browser/placesTransactionsService;1";
-
-var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"].
-             getService(Components.interfaces.mozIJSSubScriptLoader);
-loader.loadSubScript("chrome://global/content/debug.js");
-loader.loadSubScript("chrome://browser/content/places/utils.js");
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -56,6 +55,7 @@ const MIN_TRANSACTIONS_FOR_BATCH = 5;
 function placesTransactionsService() {
   this.mTransactionManager = Cc["@mozilla.org/transactionmanager;1"].
                              createInstance(Ci.nsITransactionManager);
+  Components.utils.import("resource://gre/modules/utils.js");
 }
 
 placesTransactionsService.prototype = {
@@ -442,6 +442,7 @@ placesCreateLivemarkTransactions.prototype = {
 };
 
 function placesMoveItemTransactions(aItemId, aNewContainer, aNewIndex) {
+  Components.utils.import("resource://gre/modules/debug.js");
   NS_ASSERT(aNewIndex >= -1, "invalid insertion index");
   this._id = aItemId;
   this._oldContainer = PlacesUtils.bookmarks.getFolderIdForItem(this._id);
