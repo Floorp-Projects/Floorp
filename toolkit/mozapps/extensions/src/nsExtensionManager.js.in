@@ -4088,7 +4088,7 @@ ExtensionManager.prototype = {
       gBlocklist = Cc["@mozilla.org/extensions/blocklist;1"].
                    getService(Ci.nsIBlocklistService);
     if (gBlocklist.isAddonBlocklisted(installData.id, installData.version,
-                                      undefined, undefined))
+                                      null, null))
       installData.error = INSTALLERROR_BLOCKLISTED;
 
     return installData;
@@ -6048,7 +6048,7 @@ ExtensionItemUpdater.prototype = {
       gBlocklist = Cc["@mozilla.org/extensions/blocklist;1"].
                    getService(Ci.nsIBlocklistService);
     if (gBlocklist.isAddonBlocklisted(aLocalItem.id, aRemoteItem.version,
-                                      undefined, undefined))
+                                      null, null))
       return false;
 
     return true;
@@ -8146,8 +8146,7 @@ ExtensionsDataSource.prototype = {
     if (!gBlocklist)
       gBlocklist = Cc["@mozilla.org/extensions/blocklist;1"].
                    getService(Ci.nsIBlocklistService);
-    if (gBlocklist.isAddonBlocklisted(id, version,
-                                      undefined, undefined))
+    if (gBlocklist.isAddonBlocklisted(id, version, null, null))
       return EM_L("true");
 
     return EM_L("false");
