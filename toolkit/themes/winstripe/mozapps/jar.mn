@@ -1,7 +1,6 @@
 classic.jar:
 % skin mozapps classic/1.0 %skin/classic/luna/mozapps/
 % skin mozapps classic/1.0 %skin/classic/aero/mozapps/ os=WINNT osversion>=6
-#ifndef MINIMO
         skin/classic/luna/mozapps/downloads/buttons.png                    (downloads/buttons.png)
         skin/classic/aero/mozapps/downloads/buttons.png                    (downloads/buttons-aero.png)
         skin/classic/luna/mozapps/downloads/downloadIcon.png               (downloads/downloadIcon.png)
@@ -27,23 +26,23 @@ classic.jar:
         skin/classic/luna/mozapps/extensions/update.css                    (extensions/update.css)
         skin/classic/aero/mozapps/extensions/update.css                    (extensions/update.css)
         skin/classic/luna/mozapps/extensions/themeGeneric.png              (extensions/themeGeneric.png)
-        skin/classic/aero/mozapps/extensions/themeGeneric.png              (extensions/themeGeneric.png)
+        skin/classic/aero/mozapps/extensions/themeGeneric.png              (extensions/themeGeneric-aero.png)
         skin/classic/luna/mozapps/extensions/viewButtons.png               (extensions/viewButtons.png)
-        skin/classic/aero/mozapps/extensions/viewButtons.png               (extensions/viewButtons.png)
+        skin/classic/aero/mozapps/extensions/viewButtons.png               (extensions/viewButtons-aero.png)
         skin/classic/luna/mozapps/extensions/ratings.png                   (extensions/ratings.png)
-        skin/classic/aero/mozapps/extensions/ratings.png                   (extensions/ratings.png)
+        skin/classic/aero/mozapps/extensions/ratings.png                   (extensions/ratings-aero.png)
         skin/classic/luna/mozapps/extensions/extensionIcons.png            (extensions/extensionIcons.png)
-        skin/classic/aero/mozapps/extensions/extensionIcons.png            (extensions/extensionIcons.png)
+        skin/classic/aero/mozapps/extensions/extensionIcons.png            (extensions/extensionIcons-aero.png)
         skin/classic/luna/mozapps/extensions/searchIcons.png               (extensions/searchIcons.png)
         skin/classic/aero/mozapps/extensions/searchIcons.png               (extensions/searchIcons.png)
         skin/classic/luna/mozapps/extensions/eula.css                      (extensions/eula.css)
         skin/classic/aero/mozapps/extensions/eula.css                      (extensions/eula.css)
         skin/classic/luna/mozapps/passwordmgr/key.png                      (passwordmgr/key.png)
-        skin/classic/aero/mozapps/passwordmgr/key.png                      (passwordmgr/key.png)
+        skin/classic/aero/mozapps/passwordmgr/key.png                      (passwordmgr/key-aero.png)
         skin/classic/luna/mozapps/plugins/missingPlugin.css                (plugins/missingPlugin.css)
         skin/classic/aero/mozapps/plugins/missingPlugin.css                (plugins/missingPlugin.css)
         skin/classic/luna/mozapps/plugins/pluginGeneric.png                (plugins/pluginGeneric.png)
-        skin/classic/aero/mozapps/plugins/pluginGeneric.png                (plugins/pluginGeneric.png)
+        skin/classic/aero/mozapps/plugins/pluginGeneric.png                (plugins/pluginGeneric-aero.png)
         skin/classic/luna/mozapps/plugins/pluginInstallerWizard.css        (plugins/pluginInstallerWizard.css)
         skin/classic/aero/mozapps/plugins/pluginInstallerWizard.css        (plugins/pluginInstallerWizard.css)
         skin/classic/luna/mozapps/profile/profileicon.png                  (profile/profileicon.png)
@@ -71,7 +70,7 @@ classic.jar:
         skin/classic/luna/mozapps/xpinstall/xpinstallConfirm.css           (xpinstall/xpinstallConfirm.css)
         skin/classic/aero/mozapps/xpinstall/xpinstallConfirm.css           (xpinstall/xpinstallConfirm.css)
         skin/classic/luna/mozapps/xpinstall/xpinstallItemGeneric.png       (xpinstall/xpinstallItemGeneric.png)
-        skin/classic/aero/mozapps/xpinstall/xpinstallItemGeneric.png       (xpinstall/xpinstallItemGeneric.png)
+        skin/classic/aero/mozapps/xpinstall/xpinstallItemGeneric.png       (xpinstall/xpinstallItemGeneric-aero.png)
 #ifdef MOZ_PLACES
         skin/classic/luna/mozapps/places/defaultFavicon.png                (places/defaultFavicon.png)
         skin/classic/aero/mozapps/places/defaultFavicon.png                (places/defaultFavicon.png)
@@ -80,4 +79,3 @@ classic.jar:
 #endif
         skin/classic/luna/mozapps/handling/handling.css                    (handling/handling.css)
         skin/classic/aero/mozapps/handling/handling.css                    (handling/handling.css)
-#endif

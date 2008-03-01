@@ -140,9 +140,9 @@ classic.jar:
         skin/classic/luna/global/icons/autoscroll.png                    (icons/autoscroll.png)
         skin/classic/aero/global/icons/autoscroll.png                    (icons/autoscroll.png)
         skin/classic/luna/global/icons/blacklist_favicon.png             (icons/blacklist_favicon.png)
-        skin/classic/aero/global/icons/blacklist_favicon.png             (icons/blacklist_favicon.png)
+        skin/classic/aero/global/icons/blacklist_favicon.png             (icons/blacklist_favicon-aero.png)
         skin/classic/luna/global/icons/blacklist_large.png               (icons/blacklist_large.png)
-        skin/classic/aero/global/icons/blacklist_large.png               (icons/blacklist_large.png)
+        skin/classic/aero/global/icons/blacklist_large.png               (icons/blacklist_large-aero.png)
         skin/classic/luna/global/icons/Close.gif                         (icons/Close.gif)
         skin/classic/aero/global/icons/Close.gif                         (icons/Close.gif)
         skin/classic/luna/global/icons/close.png                         (icons/close.png)
@@ -209,7 +209,6 @@ classic.jar:
         skin/classic/aero/global/throbber/Throbber-small.gif             (throbber/Throbber-small.gif)
         skin/classic/luna/global/throbber/Throbber-small.png             (throbber/Throbber-small.png)
         skin/classic/aero/global/throbber/Throbber-small.png             (throbber/Throbber-small.png)
-#ifndef MINIMO
         skin/classic/luna/global/customizeToolbar.css
         skin/classic/aero/global/customizeToolbar.css
         skin/classic/luna/global/preferences.css
@@ -236,4 +235,3 @@ classic.jar:
         skin/classic/aero/global/console/console-error-caret.gif         (console/console-error-caret.gif)
         skin/classic/luna/global/console/console-error-dash.gif          (console/console-error-dash.gif)
         skin/classic/aero/global/console/console-error-dash.gif          (console/console-error-dash.gif)
-#endif
