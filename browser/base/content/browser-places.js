@@ -818,6 +818,21 @@ var PlacesMenuDNDController = {
   },
   
   /**
+   * When the user drags out of the Bookmarks Menu or Toolbar, set a timer to 
+   * manually close the popup chain that was dragged out of. We need to do this
+   * since the global popup dismissal listener does not handle multiple extant
+   * popup chains well. See bug 332845 for more information.
+   */
+  onDragExit: function PMDC_onDragExit(event) {
+    // Ensure that we don't set multiple timers if there's one already set.
+    if ("closeTime" in this._timers)
+      return;
+      
+    this._setDragTimer("closeTime", this._closePopups, 
+                       this._springLoadDelay, [event.target]);
+  },
+  
+  /**
    * Creates a timer that will fire during a drag and drop operation.
    * @param   id
    *          The identifier of the timer being set
