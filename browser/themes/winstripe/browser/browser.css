@@ -161,31 +161,9 @@ menuitem.bookmark-item {
   -moz-image-region: rect(16px, 32px, 32px, 16px);
 }
 
-/* livemarks have the same layout as folder-item, but in the browser-only livemark-item.png */
-/* only the folder icon has any effect for now, item icon is unused */
 .bookmark-item[container][livemark] { 
   list-style-image: url("chrome://browser/skin/livemark-folder.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
-}
-
-.bookmark-item[container][livemark][chromedir="rtl"] { 
-  list-style-image: url("chrome://browser/skin/livemark-folder-rtl.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
-}
-
-.bookmark-item[container][livemark][open],
-.bookmark-item[container][livemark][open][chromedir="rtl"] { 
-  -moz-image-region: rect(16px, 16px, 32px, 0px);
-}
-
-.bookmark-item[type="menu"][livemark],
-.bookmark-item[type="menu"][livemark][chromedir="rtl"] { 
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-
-.bookmark-item[type="menu"][livemark][open],
-.bookmark-item[type="menu"][livemark][open][chromedir="rtl"] { 
-  -moz-image-region: rect(16px, 32px, 32px, 16px);
+  -moz-image-region: auto;
 }
 
 .bookmark-item[container][tagContainer] {
@@ -611,11 +589,6 @@ toolbar[iconsize="small"] .toolbarbutton-1 {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
 }
 
-.unified-nav-back[_moz-menuactive] ,
-.unified-nav-forward[_moz-menuactive] {
-  list-style-image: url("chrome://browser/skin/Toolbar-small.png") !important;
-}
-
 toolbar[iconsize="small"] .toolbarbutton-1 .toolbarbutton-icon {
   -moz-margin-end: 0px;
 }
@@ -633,8 +606,7 @@ toolbar[iconsize="small"] #back-button {
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 toolbar[iconsize="small"] #back-button:not([disabled="true"]):hover,
-toolbar[iconsize="small"] #back-button[buttonover="true"] ,
-.unified-nav-back[_moz-menuactive] {
+toolbar[iconsize="small"] #back-button[buttonover="true"] {
   -moz-image-region: rect(16px 16px 32px 0px);
 }
 toolbar[iconsize="small"] #back-button[disabled="true"] {
@@ -648,8 +620,7 @@ toolbar[iconsize="small"] #back-button[chromedir="rtl"] {
   -moz-image-region: rect(0px 32px 16px 16px);
 }
 toolbar[iconsize="small"] #back-button[chromedir="rtl"]:not([disabled="true"]):hover,
-toolbar[iconsize="small"] #back-button[chromedir="rtl"][buttonover="true"] ,
-menupopup[chromedir="rtl"] > .unified-nav-back[_moz-menuactive] {
+toolbar[iconsize="small"] #back-button[chromedir="rtl"][buttonover="true"] {
   -moz-image-region: rect(16px 32px 32px 16px);
 }
 toolbar[iconsize="small"] #back-button[chromedir="rtl"][disabled="true"] {
@@ -657,6 +628,10 @@ toolbar[iconsize="small"] #back-button[chromedir="rtl"][disabled="true"] {
 }
 toolbar[iconsize="small"] #back-button[chromedir="rtl"]:not([disabled="true"]):hover:active {
   -moz-image-region: rect(64px 32px 80px 16px);
+}
+.unified-nav-back[_moz-menuactive],
+menupopup[chromedir="rtl"] > .unified-nav-forward[_moz-menuactive] {
+  list-style-image: url("chrome://browser/skin/menu-back.png");
 }
 
 /* forward button */
@@ -668,8 +643,7 @@ toolbar[iconsize="small"] #forward-button {
   -moz-image-region: rect(0px 32px 16px 16px);
 }
 toolbar[iconsize="small"] #forward-button:not([disabled="true"]):hover,
-toolbar[iconsize="small"] #forward-button[buttonover="true"] ,
-.unified-nav-forward[_moz-menuactive] {
+toolbar[iconsize="small"] #forward-button[buttonover="true"] {
   -moz-image-region: rect(16px 32px 32px 16px);
 }
 toolbar[iconsize="small"] #forward-button[disabled="true"] {
@@ -683,8 +657,7 @@ toolbar[iconsize="small"] #forward-button[chromedir="rtl"] {
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 toolbar[iconsize="small"] #forward-button[chromedir="rtl"]:not([disabled="true"]):hover,
-toolbar[iconsize="small"] #forward-button[chromedir="rtl"][buttonover="true"] ,
-menupopup[chromedir="rtl"] > .unified-nav-forward[_moz-menuactive] {
+toolbar[iconsize="small"] #forward-button[chromedir="rtl"][buttonover="true"] {
   -moz-image-region: rect(16px 16px 32px 0px);
 }
 toolbar[iconsize="small"] #forward-button[chromedir="rtl"][disabled="true"] {
@@ -692,6 +665,10 @@ toolbar[iconsize="small"] #forward-button[chromedir="rtl"][disabled="true"] {
 }
 toolbar[iconsize="small"] #forward-button[chromedir="rtl"]:not([disabled="true"]):hover:active {
   -moz-image-region: rect(64px 16px 80px 0px);
+}
+.unified-nav-forward[_moz-menuactive],
+menupopup[chromedir="rtl"] > .unified-nav-back[_moz-menuactive] {
+  list-style-image: url("chrome://browser/skin/menu-forward.png");
 }
 
 /* stop button */
@@ -1088,7 +1065,7 @@ statusbarpanel#statusbar-display {
 #go-button {
   padding: 3px 2px 2px 2px;
   list-style-image: url("chrome://browser/skin/Go-arrow.png");
-  -moz-image-region: rect(0px 11px 13px 0px);
+  -moz-image-region: rect(0px 16px 16px 0px);
 }
 
 #go-button[chromedir="rtl"] {
@@ -1096,15 +1073,7 @@ statusbarpanel#statusbar-display {
 }
 
 #go-button:hover {
-  -moz-image-region: rect(0px 22px 13px 11px);
-}
-
-#go-button:hover:active {
-  -moz-image-region: rect(0px 44px 13px 33px);
-}
-
-#go-button[disabled="true"] {
-  -moz-image-region: rect(0px 33px 13px 22px);
+  -moz-image-region: rect(16px 16px 32px 0px);
 }
 
 /* star button */
@@ -1153,21 +1122,14 @@ statusbarpanel#statusbar-display {
   display: none;
 }
 
-#security-button[level="high"] {
-  list-style-image: url("chrome://browser/skin/Secure.png");
-  -moz-image-region: rect(36px, 18px, 54px, 0px);
-  display: -moz-box;
-}
-
+#security-button[level="high"],
 #security-button[level="low"] {
   list-style-image: url("chrome://browser/skin/Secure.png");
-  -moz-image-region: rect(36px, 18px, 54px, 0px);
   display: -moz-box;
 }
 
 #security-button[level="broken"] {
   list-style-image: url("chrome://browser/skin/Security-broken.png");
-  -moz-image-region: rect(36px, 18px, 54px, 0px);
   display: -moz-box;
 }
 
@@ -1628,27 +1590,6 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 }
 
 #feed-button[feeds] {
-  -moz-image-region: rect(0px, 36px, 18px, 18px);
-  list-style-image: url("chrome://browser/skin/livemark-item.png");
-}
-#feed-button[chromedir="rtl"][feeds] {
-  -moz-image-region: rect(0px, 36px, 18px, 18px);
-  list-style-image: url("chrome://browser/skin/livemark-item.png");
-}
-#feed-button[feeds]:hover {
-  -moz-image-region: rect(18px, 36px, 36px, 18px);
-  list-style-image: url("chrome://browser/skin/livemark-item.png");
-}
-#feed-button[chromedir="rtl"][feeds]:hover {
-  -moz-image-region: rect(18px, 36px, 36px, 18px);
-  list-style-image: url("chrome://browser/skin/livemark-item.png");
-}
-#feed-button[feeds]:active {
-  -moz-image-region: rect(54px, 36px, 72px, 18px);
-  list-style-image: url("chrome://browser/skin/livemark-item.png");
-}
-#feed-button[chromedir="rtl"][feeds]:active {
-  -moz-image-region: rect(54px, 36px, 72px, 18px);
   list-style-image: url("chrome://browser/skin/livemark-item.png");
 }
 
@@ -1820,8 +1761,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 .verifiedIdentity > #identity-popup-encryption > * > #identity-popup-encryption-icon,
 .verifiedDomain > #identity-popup-encryption > * >#identity-popup-encryption-icon {
-  list-style-image: url("chrome://browser/skin/Secure.png");
-  -moz-image-region: rect(0px, 18px, 18px, 0px);
+  list-style-image: url("chrome://browser/skin/Secure24.png");
 }
 
 /* Popup Bounding Box */
