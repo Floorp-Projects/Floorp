@@ -1124,6 +1124,8 @@ private:
 
   PRInt32 mUpdateWait;
 
+  PRBool mResetRequested;
+
   enum {
     STATE_LINE,
     STATE_CHUNK
@@ -1187,6 +1189,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsUrlClassifierDBServiceWorker,
 
 nsUrlClassifierDBServiceWorker::nsUrlClassifierDBServiceWorker()
   : mUpdateWait(0)
+  , mResetRequested(PR_FALSE)
   , mState(STATE_LINE)
   , mChunkType(CHUNK_ADD)
   , mChunkNum(0)
@@ -2487,6 +2490,8 @@ nsUrlClassifierDBServiceWorker::ProcessResponseLines(PRBool* done)
         LOG(("Error parsing n: field: %s", PromiseFlatCString(line).get()));
         mUpdateWait = 0;
       }
+    } else if (line.EqualsLiteral("r:pleasereset")) {
+      mResetRequested = PR_TRUE;
     } else if (line.EqualsLiteral("e:pleaserekey")) {
       mUpdateObserver->RekeyRequested();
     } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("i:"))) {
@@ -2611,6 +2616,7 @@ nsUrlClassifierDBServiceWorker::ResetUpdate()
   mUpdateStatus = NS_OK;
   mUpdateObserver = nsnull;
   mUpdateClientKey.Truncate();
+  mResetRequested = PR_FALSE;
 }
 
 NS_IMETHODIMP
@@ -2849,7 +2855,17 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
     mUpdateObserver->UpdateError(mUpdateStatus);
   }
 
+  // ResetUpdate() clears mResetRequested...
+  PRBool resetRequested = mResetRequested;
+
   ResetUpdate();
+
+  // It's important that we only reset the database if the update was
+  // successful, otherwise unauthenticated updates could cause a
+  // database reset.
+  if (NS_SUCCEEDED(mUpdateStatus) && resetRequested) {
+    ResetDatabase();
+  }
 
   return NS_OK;
 }
@@ -2857,6 +2873,7 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
 NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::ResetDatabase()
 {
+  LOG(("nsUrlClassifierDBServiceWorker::ResetDatabase [%p]", this));
   ClearCachedChunkLists();
 
   nsresult rv = CloseDb();
