@@ -4202,10 +4202,13 @@ interrupt:
                     : !OBJ_GET_PROPERTY(cx, obj, id, &rval)) {
                     goto error;
                 }
+
+                /* Assert that we can avoid calling ComputeThis. */
+                JS_ASSERT(OBJ_GET_CLASS(cx, obj) != &js_CallClass);
+                JS_ASSERT(!obj->map->ops->thisObject);
+
                 STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
                 STORE_OPND(-2, rval);
-                if (!ComputeThis(cx, JS_FALSE, sp))
-                    goto error;
             } else {
                 JS_ASSERT(obj->map->ops->getProperty == js_GetProperty);
                 if (!js_GetPropertyHelper(cx, obj, id, &rval, &entry))
@@ -4888,12 +4891,8 @@ interrupt:
 
           do_push_rval:
             PUSH_OPND(rval);
-            if (op == JSOP_CALLNAME) {
+            if (op == JSOP_CALLNAME)
                 PUSH_OPND(OBJECT_TO_JSVAL(obj));
-                SAVE_SP(fp);
-                if (!ComputeThis(cx, JS_FALSE, sp))
-                    goto error;
-            }
           }
           END_CASE(JSOP_NAME)
 
@@ -5086,6 +5085,12 @@ interrupt:
             obj = fp->thisp;
             if (!obj) {
                 obj = ComputeGlobalThis(cx, JS_TRUE, fp->argv);
+                if (!obj)
+                    goto error;
+                fp->thisp = obj;
+            } else {
+                /* |this| must be an outer object by definition. */
+                OBJ_TO_OUTER_OBJECT(cx, obj);
                 if (!obj)
                     goto error;
                 fp->thisp = obj;
@@ -6316,10 +6321,8 @@ interrupt:
                 goto error;
             STORE_OPND(-1, rval);
             if (op == JSOP_CALLXMLNAME) {
+                JS_ASSERT(OBJECT_IS_XML(cx, obj));
                 PUSH_OPND(OBJECT_TO_JSVAL(obj));
-                SAVE_SP(fp);
-                if (!ComputeThis(cx, JS_FALSE, sp))
-                    goto error;
             }
           END_CASE(JSOP_XMLNAME)
 
