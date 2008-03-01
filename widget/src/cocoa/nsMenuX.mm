@@ -110,6 +110,7 @@ nsMenuX::~nsMenuX()
 
   RemoveAll();
 
+  [mMacMenu setDelegate:nil];
   [mMacMenu release];
   [mMenuDelegate release];
   [mNativeMenuItem release];
