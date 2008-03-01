@@ -1,122 +1,239 @@
 classic.jar:
-% skin global classic/1.0 %skin/classic/global/
-        skin/classic/global/about.css
-        skin/classic/global/appPicker.css
-        skin/classic/global/arrow.css
-*       skin/classic/global/autocomplete.css
-        skin/classic/global/button.css
-        skin/classic/global/checkbox.css
-        skin/classic/global/colorpicker.css
-        skin/classic/global/config.css
-        skin/classic/global/dialog.css
-        skin/classic/global/expander.css
-        skin/classic/global/filepicker.css
-        skin/classic/global/findBar.css
-        skin/classic/global/formatting.css
-*       skin/classic/global/global.css
-        skin/classic/global/globalBindings.xml
-        skin/classic/global/groupbox.css
-        skin/classic/global/linkTree.css
-        skin/classic/global/listbox.css
-        skin/classic/global/menu.css
-        skin/classic/global/menulist.css
-        skin/classic/global/netError.css
-        skin/classic/global/dropmarker.css
-        skin/classic/global/numberbox.css
-        skin/classic/global/notification.css
-        skin/classic/global/passwordmgr.css
-        skin/classic/global/popup.css
-        skin/classic/global/progressmeter.css
-        skin/classic/global/radio.css
-        skin/classic/global/richlistbox.css
+% skin global classic/1.0 %skin/classic/luna/global/
+% skin global classic/1.0 %skin/classic/aero/global/ os=WINNT osversion>=6
+        skin/classic/luna/global/about.css
+        skin/classic/aero/global/about.css
+        skin/classic/luna/global/appPicker.css
+        skin/classic/aero/global/appPicker.css
+        skin/classic/luna/global/arrow.css
+        skin/classic/aero/global/arrow.css
+*       skin/classic/luna/global/autocomplete.css
+*       skin/classic/aero/global/autocomplete.css
+        skin/classic/luna/global/button.css
+        skin/classic/aero/global/button.css
+        skin/classic/luna/global/checkbox.css
+        skin/classic/aero/global/checkbox.css
+        skin/classic/luna/global/colorpicker.css
+        skin/classic/aero/global/colorpicker.css
+        skin/classic/luna/global/config.css
+        skin/classic/aero/global/config.css
+        skin/classic/luna/global/dialog.css
+        skin/classic/aero/global/dialog.css
+        skin/classic/luna/global/expander.css
+        skin/classic/aero/global/expander.css
+        skin/classic/luna/global/filepicker.css
+        skin/classic/aero/global/filepicker.css
+        skin/classic/luna/global/findBar.css
+        skin/classic/aero/global/findBar.css
+        skin/classic/luna/global/formatting.css
+        skin/classic/aero/global/formatting.css
+*       skin/classic/luna/global/global.css
+*       skin/classic/aero/global/global.css
+        skin/classic/luna/global/globalBindings.xml
+        skin/classic/aero/global/globalBindings.xml
+        skin/classic/luna/global/groupbox.css
+        skin/classic/aero/global/groupbox.css
+        skin/classic/luna/global/linkTree.css
+        skin/classic/aero/global/linkTree.css
+        skin/classic/luna/global/listbox.css
+        skin/classic/aero/global/listbox.css
+        skin/classic/luna/global/menu.css
+        skin/classic/aero/global/menu.css
+        skin/classic/luna/global/menulist.css
+        skin/classic/aero/global/menulist.css
+        skin/classic/luna/global/netError.css
+        skin/classic/aero/global/netError.css
+        skin/classic/luna/global/dropmarker.css
+        skin/classic/aero/global/dropmarker.css
+        skin/classic/luna/global/numberbox.css
+        skin/classic/aero/global/numberbox.css
+        skin/classic/luna/global/notification.css
+        skin/classic/aero/global/notification.css
+        skin/classic/luna/global/passwordmgr.css
+        skin/classic/aero/global/passwordmgr.css
+        skin/classic/luna/global/popup.css
+        skin/classic/aero/global/popup.css
+        skin/classic/luna/global/progressmeter.css
+        skin/classic/aero/global/progressmeter.css
+        skin/classic/luna/global/radio.css
+        skin/classic/aero/global/radio.css
+        skin/classic/luna/global/richlistbox.css
+        skin/classic/aero/global/richlistbox.css
 # chrome://global/skin/nativescrollbars.css is used on Mac
-        skin/classic/global/nativescrollbars.css                    (../../pinstripe/global/nativescrollbars.css)
+        skin/classic/luna/global/nativescrollbars.css                    (../../pinstripe/global/nativescrollbars.css)
+        skin/classic/aero/global/nativescrollbars.css                    (../../pinstripe/global/nativescrollbars.css)
 # chrome://global/skin/xulscrollbars.css is used on non-Mac platforms
-        skin/classic/global/xulscrollbars.css
-        skin/classic/global/scrollbox.css
-        skin/classic/global/spinbuttons.css
-        skin/classic/global/splitter.css
-        skin/classic/global/tabbox.css
-        skin/classic/global/textbox.css
-        skin/classic/global/datetimepicker.css
-        skin/classic/global/toolbar.css
-        skin/classic/global/toolbarbutton.css
-        skin/classic/global/tree.css
-        skin/classic/global/wizard.css
-        skin/classic/global/arrow/arrow-dn.gif                      (arrow/arrow-dn.gif)
-        skin/classic/global/arrow/arrow-dn-dis.gif                  (arrow/arrow-dn-dis.gif)
-        skin/classic/global/arrow/arrow-dn-hov.gif                  (arrow/arrow-dn-hov.gif)
-        skin/classic/global/arrow/arrow-dn-sharp.gif                (arrow/arrow-dn-sharp.gif)
-        skin/classic/global/arrow/arrow-down.png                    (arrow/arrow-down.png)
-        skin/classic/global/arrow/arrow-lft.gif                     (arrow/arrow-lft.gif)
-        skin/classic/global/arrow/arrow-lft-dis.gif                 (arrow/arrow-lft-dis.gif)
-        skin/classic/global/arrow/arrow-lft-hov.gif                 (arrow/arrow-lft-hov.gif)
-        skin/classic/global/arrow/arrow-lft-sharp.gif               (arrow/arrow-lft-sharp.gif)
-        skin/classic/global/arrow/arrow-lft-sharp-end.gif           (arrow/arrow-lft-sharp-end.gif)
-        skin/classic/global/arrow/arrow-rit.gif                     (arrow/arrow-rit.gif) 
-        skin/classic/global/arrow/arrow-rit-dis.gif                 (arrow/arrow-rit-dis.gif)
-        skin/classic/global/arrow/arrow-rit-hov.gif                 (arrow/arrow-rit-hov.gif)
-        skin/classic/global/arrow/arrow-rit-sharp.gif               (arrow/arrow-rit-sharp.gif)
-        skin/classic/global/arrow/arrow-rit-sharp-end.gif           (arrow/arrow-rit-sharp-end.gif)
-        skin/classic/global/arrow/arrow-up.gif                      (arrow/arrow-up.gif)
-        skin/classic/global/arrow/arrow-up-dis.gif                  (arrow/arrow-up-dis.gif)
-        skin/classic/global/arrow/arrow-up-hov.gif                  (arrow/arrow-up-hov.gif)
-        skin/classic/global/arrow/arrow-up-sharp.gif                (arrow/arrow-up-sharp.gif)
-        skin/classic/global/checkbox/cbox-check.gif                 (checkbox/cbox-check.gif)
-        skin/classic/global/checkbox/cbox-check-dis.gif             (checkbox/cbox-check-dis.gif)
-*       skin/classic/global/dirListing/dirListing.css               (dirListing/dirListing.css)
-        skin/classic/global/dirListing/local.png                    (dirListing/local.png)
-        skin/classic/global/dirListing/remote.png                   (dirListing/remote.png)
-        skin/classic/global/dirListing/up.png                       (dirListing/up.png)
-        skin/classic/global/Filepicker.png                          (filepicker/Filepicker.png)
-        skin/classic/global/icons/autoscroll.png                    (icons/autoscroll.png)
-        skin/classic/global/icons/blacklist_favicon.png             (icons/blacklist_favicon.png)
-        skin/classic/global/icons/blacklist_large.png               (icons/blacklist_large.png)
-        skin/classic/global/icons/Close.gif                         (icons/Close.gif)
-        skin/classic/global/icons/close.png                         (icons/close.png)
-        skin/classic/global/icons/Error.png                         (icons/Error.png)
-        skin/classic/global/icons/find.png                          (icons/find.png)
-        skin/classic/global/icons/folder-item.png                   (icons/folder-item.png)
-        skin/classic/global/icons/Minimize.gif                      (icons/Minimize.gif)
-        skin/classic/global/icons/notfound.png                      (icons/notfound.png)
-        skin/classic/global/icons/Print-preview.png                 (icons/Print-preview.png)
-        skin/classic/global/icons/Portrait.png                      (icons/Portrait.png)
-        skin/classic/global/icons/Landscape.png                     (icons/Landscape.png)
-        skin/classic/global/icons/Question.png                      (icons/Question.png)        
-        skin/classic/global/icons/Restore.gif                       (icons/Restore.gif)
-        skin/classic/global/icons/Warning.png                       (icons/Warning.png)
-        skin/classic/global/icons/warning-large.png                 (icons/warning-large.png)
-        skin/classic/global/icons/wrap.png                          (icons/wrap.png)
-        skin/classic/global/radio/radio-check.gif                   (radio/radio-check.gif)
-        skin/classic/global/radio/radio-check-dis.gif               (radio/radio-check-dis.gif)
-        skin/classic/global/scrollbar/slider.gif                    (scrollbar/slider.gif)
-        skin/classic/global/splitter/grip-hrz-after.gif             (splitter/grip-hrz-after.gif)
-        skin/classic/global/splitter/grip-hrz-before.gif            (splitter/grip-hrz-before.gif)
-        skin/classic/global/splitter/grip-vrt-after.gif             (splitter/grip-vrt-after.gif)
-        skin/classic/global/splitter/grip-vrt-before.gif            (splitter/grip-vrt-before.gif)
-        skin/classic/global/toolbar/chevron.gif                     (toolbar/chevron.gif)
-        skin/classic/global/toolbar/chevron-rtl.gif                 (toolbar/chevron-rtl.gif)
-        skin/classic/global/toolbar/Lighten.png                     (toolbar/Lighten.png)
-        skin/classic/global/toolbar/spring.gif                      (toolbar/spring.gif)
-        skin/classic/global/tree/columnpicker.gif                   (tree/columnpicker.gif)
-        skin/classic/global/tree/sort-asc.gif                       (tree/sort-asc.gif)
-        skin/classic/global/tree/sort-dsc.gif                       (tree/sort-dsc.gif)
-        skin/classic/global/tree/twisty-clsd.png                    (tree/twisty-clsd.png)
-        skin/classic/global/tree/twisty-open.png                    (tree/twisty-open.png)
-        skin/classic/global/throbber/Throbber-small.gif             (throbber/Throbber-small.gif)
-        skin/classic/global/throbber/Throbber-small.png             (throbber/Throbber-small.png)
+        skin/classic/luna/global/xulscrollbars.css
+        skin/classic/aero/global/xulscrollbars.css
+        skin/classic/luna/global/scrollbox.css
+        skin/classic/aero/global/scrollbox.css
+        skin/classic/luna/global/spinbuttons.css
+        skin/classic/aero/global/spinbuttons.css
+        skin/classic/luna/global/splitter.css
+        skin/classic/aero/global/splitter.css
+        skin/classic/luna/global/tabbox.css
+        skin/classic/aero/global/tabbox.css
+        skin/classic/luna/global/textbox.css
+        skin/classic/aero/global/textbox.css
+        skin/classic/luna/global/datetimepicker.css
+        skin/classic/aero/global/datetimepicker.css
+        skin/classic/luna/global/toolbar.css
+        skin/classic/aero/global/toolbar.css
+        skin/classic/luna/global/toolbarbutton.css
+        skin/classic/aero/global/toolbarbutton.css
+        skin/classic/luna/global/tree.css
+        skin/classic/aero/global/tree.css
+        skin/classic/luna/global/wizard.css
+        skin/classic/aero/global/wizard.css
+        skin/classic/luna/global/arrow/arrow-dn.gif                      (arrow/arrow-dn.gif)
+        skin/classic/aero/global/arrow/arrow-dn.gif                      (arrow/arrow-dn.gif)
+        skin/classic/luna/global/arrow/arrow-dn-dis.gif                  (arrow/arrow-dn-dis.gif)
+        skin/classic/aero/global/arrow/arrow-dn-dis.gif                  (arrow/arrow-dn-dis.gif)
+        skin/classic/luna/global/arrow/arrow-dn-hov.gif                  (arrow/arrow-dn-hov.gif)
+        skin/classic/aero/global/arrow/arrow-dn-hov.gif                  (arrow/arrow-dn-hov.gif)
+        skin/classic/luna/global/arrow/arrow-dn-sharp.gif                (arrow/arrow-dn-sharp.gif)
+        skin/classic/aero/global/arrow/arrow-dn-sharp.gif                (arrow/arrow-dn-sharp.gif)
+        skin/classic/luna/global/arrow/arrow-down.png                    (arrow/arrow-down.png)
+        skin/classic/aero/global/arrow/arrow-down.png                    (arrow/arrow-down.png)
+        skin/classic/luna/global/arrow/arrow-lft.gif                     (arrow/arrow-lft.gif)
+        skin/classic/aero/global/arrow/arrow-lft.gif                     (arrow/arrow-lft.gif)
+        skin/classic/luna/global/arrow/arrow-lft-dis.gif                 (arrow/arrow-lft-dis.gif)
+        skin/classic/aero/global/arrow/arrow-lft-dis.gif                 (arrow/arrow-lft-dis.gif)
+        skin/classic/luna/global/arrow/arrow-lft-hov.gif                 (arrow/arrow-lft-hov.gif)
+        skin/classic/aero/global/arrow/arrow-lft-hov.gif                 (arrow/arrow-lft-hov.gif)
+        skin/classic/luna/global/arrow/arrow-lft-sharp.gif               (arrow/arrow-lft-sharp.gif)
+        skin/classic/aero/global/arrow/arrow-lft-sharp.gif               (arrow/arrow-lft-sharp.gif)
+        skin/classic/luna/global/arrow/arrow-lft-sharp-end.gif           (arrow/arrow-lft-sharp-end.gif)
+        skin/classic/aero/global/arrow/arrow-lft-sharp-end.gif           (arrow/arrow-lft-sharp-end.gif)
+        skin/classic/luna/global/arrow/arrow-rit.gif                     (arrow/arrow-rit.gif) 
+        skin/classic/aero/global/arrow/arrow-rit.gif                     (arrow/arrow-rit.gif) 
+        skin/classic/luna/global/arrow/arrow-rit-dis.gif                 (arrow/arrow-rit-dis.gif)
+        skin/classic/aero/global/arrow/arrow-rit-dis.gif                 (arrow/arrow-rit-dis.gif)
+        skin/classic/luna/global/arrow/arrow-rit-hov.gif                 (arrow/arrow-rit-hov.gif)
+        skin/classic/aero/global/arrow/arrow-rit-hov.gif                 (arrow/arrow-rit-hov.gif)
+        skin/classic/luna/global/arrow/arrow-rit-sharp.gif               (arrow/arrow-rit-sharp.gif)
+        skin/classic/aero/global/arrow/arrow-rit-sharp.gif               (arrow/arrow-rit-sharp.gif)
+        skin/classic/luna/global/arrow/arrow-rit-sharp-end.gif           (arrow/arrow-rit-sharp-end.gif)
+        skin/classic/aero/global/arrow/arrow-rit-sharp-end.gif           (arrow/arrow-rit-sharp-end.gif)
+        skin/classic/luna/global/arrow/arrow-up.gif                      (arrow/arrow-up.gif)
+        skin/classic/aero/global/arrow/arrow-up.gif                      (arrow/arrow-up.gif)
+        skin/classic/luna/global/arrow/arrow-up-dis.gif                  (arrow/arrow-up-dis.gif)
+        skin/classic/aero/global/arrow/arrow-up-dis.gif                  (arrow/arrow-up-dis.gif)
+        skin/classic/luna/global/arrow/arrow-up-hov.gif                  (arrow/arrow-up-hov.gif)
+        skin/classic/aero/global/arrow/arrow-up-hov.gif                  (arrow/arrow-up-hov.gif)
+        skin/classic/luna/global/arrow/arrow-up-sharp.gif                (arrow/arrow-up-sharp.gif)
+        skin/classic/aero/global/arrow/arrow-up-sharp.gif                (arrow/arrow-up-sharp.gif)
+        skin/classic/luna/global/checkbox/cbox-check.gif                 (checkbox/cbox-check.gif)
+        skin/classic/aero/global/checkbox/cbox-check.gif                 (checkbox/cbox-check.gif)
+        skin/classic/luna/global/checkbox/cbox-check-dis.gif             (checkbox/cbox-check-dis.gif)
+        skin/classic/aero/global/checkbox/cbox-check-dis.gif             (checkbox/cbox-check-dis.gif)
+*       skin/classic/luna/global/dirListing/dirListing.css               (dirListing/dirListing.css)
+*       skin/classic/aero/global/dirListing/dirListing.css               (dirListing/dirListing.css)
+        skin/classic/luna/global/dirListing/local.png                    (dirListing/local.png)
+        skin/classic/aero/global/dirListing/local.png                    (dirListing/local.png)
+        skin/classic/luna/global/dirListing/remote.png                   (dirListing/remote.png)
+        skin/classic/aero/global/dirListing/remote.png                   (dirListing/remote.png)
+        skin/classic/luna/global/dirListing/up.png                       (dirListing/up.png)
+        skin/classic/aero/global/dirListing/up.png                       (dirListing/up.png)
+        skin/classic/luna/global/Filepicker.png                          (filepicker/Filepicker.png)
+        skin/classic/aero/global/Filepicker.png                          (filepicker/Filepicker.png)
+        skin/classic/luna/global/icons/autoscroll.png                    (icons/autoscroll.png)
+        skin/classic/aero/global/icons/autoscroll.png                    (icons/autoscroll.png)
+        skin/classic/luna/global/icons/blacklist_favicon.png             (icons/blacklist_favicon.png)
+        skin/classic/aero/global/icons/blacklist_favicon.png             (icons/blacklist_favicon.png)
+        skin/classic/luna/global/icons/blacklist_large.png               (icons/blacklist_large.png)
+        skin/classic/aero/global/icons/blacklist_large.png               (icons/blacklist_large.png)
+        skin/classic/luna/global/icons/Close.gif                         (icons/Close.gif)
+        skin/classic/aero/global/icons/Close.gif                         (icons/Close.gif)
+        skin/classic/luna/global/icons/close.png                         (icons/close.png)
+        skin/classic/aero/global/icons/close.png                         (icons/close.png)
+        skin/classic/luna/global/icons/Error.png                         (icons/Error.png)
+        skin/classic/aero/global/icons/Error.png                         (icons/Error.png)
+        skin/classic/luna/global/icons/find.png                          (icons/find.png)
+        skin/classic/aero/global/icons/find.png                          (icons/find-aero.png)
+        skin/classic/luna/global/icons/folder-item.png                   (icons/folder-item.png)
+        skin/classic/aero/global/icons/folder-item.png                   (icons/folder-item.png)
+        skin/classic/luna/global/icons/Minimize.gif                      (icons/Minimize.gif)
+        skin/classic/aero/global/icons/Minimize.gif                      (icons/Minimize.gif)
+        skin/classic/luna/global/icons/notfound.png                      (icons/notfound.png)
+        skin/classic/aero/global/icons/notfound.png                      (icons/notfound.png)
+        skin/classic/luna/global/icons/Print-preview.png                 (icons/Print-preview.png)
+        skin/classic/aero/global/icons/Print-preview.png                 (icons/Print-preview.png)
+        skin/classic/luna/global/icons/Portrait.png                      (icons/Portrait.png)
+        skin/classic/aero/global/icons/Portrait.png                      (icons/Portrait.png)
+        skin/classic/luna/global/icons/Landscape.png                     (icons/Landscape.png)
+        skin/classic/aero/global/icons/Landscape.png                     (icons/Landscape.png)
+        skin/classic/luna/global/icons/Question.png                      (icons/Question.png)        
+        skin/classic/aero/global/icons/Question.png                      (icons/Question.png)        
+        skin/classic/luna/global/icons/Restore.gif                       (icons/Restore.gif)
+        skin/classic/aero/global/icons/Restore.gif                       (icons/Restore.gif)
+        skin/classic/luna/global/icons/Warning.png                       (icons/Warning.png)
+        skin/classic/aero/global/icons/Warning.png                       (icons/Warning.png)
+        skin/classic/luna/global/icons/warning-large.png                 (icons/warning-large.png)
+        skin/classic/aero/global/icons/warning-large.png                 (icons/warning-large.png)
+        skin/classic/luna/global/icons/wrap.png                          (icons/wrap.png)
+        skin/classic/aero/global/icons/wrap.png                          (icons/wrap-aero.png)
+        skin/classic/luna/global/radio/radio-check.gif                   (radio/radio-check.gif)
+        skin/classic/aero/global/radio/radio-check.gif                   (radio/radio-check.gif)
+        skin/classic/luna/global/radio/radio-check-dis.gif               (radio/radio-check-dis.gif)
+        skin/classic/aero/global/radio/radio-check-dis.gif               (radio/radio-check-dis.gif)
+        skin/classic/luna/global/scrollbar/slider.gif                    (scrollbar/slider.gif)
+        skin/classic/aero/global/scrollbar/slider.gif                    (scrollbar/slider.gif)
+        skin/classic/luna/global/splitter/grip-hrz-after.gif             (splitter/grip-hrz-after.gif)
+        skin/classic/aero/global/splitter/grip-hrz-after.gif             (splitter/grip-hrz-after.gif)
+        skin/classic/luna/global/splitter/grip-hrz-before.gif            (splitter/grip-hrz-before.gif)
+        skin/classic/aero/global/splitter/grip-hrz-before.gif            (splitter/grip-hrz-before.gif)
+        skin/classic/luna/global/splitter/grip-vrt-after.gif             (splitter/grip-vrt-after.gif)
+        skin/classic/aero/global/splitter/grip-vrt-after.gif             (splitter/grip-vrt-after.gif)
+        skin/classic/luna/global/splitter/grip-vrt-before.gif            (splitter/grip-vrt-before.gif)
+        skin/classic/aero/global/splitter/grip-vrt-before.gif            (splitter/grip-vrt-before.gif)
+        skin/classic/luna/global/toolbar/chevron.gif                     (toolbar/chevron.gif)
+        skin/classic/aero/global/toolbar/chevron.gif                     (toolbar/chevron.gif)
+        skin/classic/luna/global/toolbar/chevron-rtl.gif                 (toolbar/chevron-rtl.gif)
+        skin/classic/aero/global/toolbar/chevron-rtl.gif                 (toolbar/chevron-rtl.gif)
+        skin/classic/luna/global/toolbar/Lighten.png                     (toolbar/Lighten.png)
+        skin/classic/aero/global/toolbar/Lighten.png                     (toolbar/Lighten.png)
+        skin/classic/luna/global/toolbar/spring.gif                      (toolbar/spring.gif)
+        skin/classic/aero/global/toolbar/spring.gif                      (toolbar/spring.gif)
+        skin/classic/luna/global/tree/columnpicker.gif                   (tree/columnpicker.gif)
+        skin/classic/aero/global/tree/columnpicker.gif                   (tree/columnpicker.gif)
+        skin/classic/luna/global/tree/sort-asc.gif                       (tree/sort-asc.gif)
+        skin/classic/aero/global/tree/sort-asc.gif                       (tree/sort-asc.gif)
+        skin/classic/luna/global/tree/sort-dsc.gif                       (tree/sort-dsc.gif)
+        skin/classic/aero/global/tree/sort-dsc.gif                       (tree/sort-dsc.gif)
+        skin/classic/luna/global/tree/twisty-clsd.png                    (tree/twisty-clsd.png)
+        skin/classic/aero/global/tree/twisty-clsd.png                    (tree/twisty-clsd.png)
+        skin/classic/luna/global/tree/twisty-open.png                    (tree/twisty-open.png)
+        skin/classic/aero/global/tree/twisty-open.png                    (tree/twisty-open.png)
+        skin/classic/luna/global/throbber/Throbber-small.gif             (throbber/Throbber-small.gif)
+        skin/classic/aero/global/throbber/Throbber-small.gif             (throbber/Throbber-small.gif)
+        skin/classic/luna/global/throbber/Throbber-small.png             (throbber/Throbber-small.png)
+        skin/classic/aero/global/throbber/Throbber-small.png             (throbber/Throbber-small.png)
 #ifndef MINIMO
-        skin/classic/global/customizeToolbar.css
-        skin/classic/global/preferences.css
-        skin/classic/global/printPageSetup.css
-*       skin/classic/global/scale.css
-        skin/classic/global/printPreview.css
-        skin/classic/global/alerts/alert.css                        (alerts/alert.css)
-        skin/classic/global/console/console.css                     (console/console.css)
-        skin/classic/global/console/console-toolbar.png             (console/console-toolbar.png)        
-        skin/classic/global/console/bullet-question.png             (console/bullet-question.png)
-        skin/classic/global/console/bullet-warning.png              (console/bullet-warning.png)
-        skin/classic/global/console/bullet-error.png                (console/bullet-error.png)
-        skin/classic/global/console/console-error-caret.gif         (console/console-error-caret.gif)
-        skin/classic/global/console/console-error-dash.gif          (console/console-error-dash.gif)
+        skin/classic/luna/global/customizeToolbar.css
+        skin/classic/aero/global/customizeToolbar.css
+        skin/classic/luna/global/preferences.css
+        skin/classic/aero/global/preferences.css
+        skin/classic/luna/global/printPageSetup.css
+        skin/classic/aero/global/printPageSetup.css
+*       skin/classic/luna/global/scale.css
+*       skin/classic/aero/global/scale.css
+        skin/classic/luna/global/printPreview.css
+        skin/classic/aero/global/printPreview.css
+        skin/classic/luna/global/alerts/alert.css                        (alerts/alert.css)
+        skin/classic/aero/global/alerts/alert.css                        (alerts/alert.css)
+        skin/classic/luna/global/console/console.css                     (console/console.css)
+        skin/classic/aero/global/console/console.css                     (console/console.css)
+        skin/classic/luna/global/console/console-toolbar.png             (console/console-toolbar.png)        
+        skin/classic/aero/global/console/console-toolbar.png             (console/console-toolbar.png)        
+        skin/classic/luna/global/console/bullet-question.png             (console/bullet-question.png)
+        skin/classic/aero/global/console/bullet-question.png             (console/bullet-question.png)
+        skin/classic/luna/global/console/bullet-warning.png              (console/bullet-warning.png)
+        skin/classic/aero/global/console/bullet-warning.png              (console/bullet-warning.png)
+        skin/classic/luna/global/console/bullet-error.png                (console/bullet-error.png)
+        skin/classic/aero/global/console/bullet-error.png                (console/bullet-error.png)
+        skin/classic/luna/global/console/console-error-caret.gif         (console/console-error-caret.gif)
+        skin/classic/aero/global/console/console-error-caret.gif         (console/console-error-caret.gif)
+        skin/classic/luna/global/console/console-error-dash.gif          (console/console-error-dash.gif)
+        skin/classic/aero/global/console/console-error-dash.gif          (console/console-error-dash.gif)
 #endif

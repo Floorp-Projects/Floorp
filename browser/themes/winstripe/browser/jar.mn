@@ -1,69 +1,135 @@
 classic.jar:
-% skin browser classic/1.0 %skin/classic/browser/
-*       skin/classic/browser/browser.css                        (browser.css)
-        skin/classic/browser/browser.xml
-*       skin/classic/browser/engineManager.css                  (engineManager.css)
-        skin/classic/browser/Info.png
-        skin/classic/browser/identity.png
-        skin/classic/browser/pageInfo.css
-        skin/classic/browser/pageInfo.png
-        skin/classic/browser/page-livemarks.png
-        skin/classic/browser/livemark-item.png
-        skin/classic/browser/livemark-item-rtl.png
-        skin/classic/browser/livemark-folder.png
-        skin/classic/browser/livemark-folder-rtl.png
-        skin/classic/browser/Secure.png
-        skin/classic/browser/Security-broken.png
-        skin/classic/browser/Throbber.gif
-        skin/classic/browser/Throbber.png
-        skin/classic/browser/Throbber-small.png
-        skin/classic/browser/Toolbar.png
-        skin/classic/browser/Toolbar-small.png
-        skin/classic/browser/Go-arrow.png
-        skin/classic/browser/Go-arrow-rtl.png
-*       skin/classic/browser/searchbar.css                      (searchbar.css)
-        skin/classic/browser/Search-glass.png
-        skin/classic/browser/Search-glass-rtl.png
-        skin/classic/browser/Search-addengines.png
-        skin/classic/browser/setDesktopBackground.css
-        skin/classic/browser/monitor.png
-        skin/classic/browser/monitor_16-10.png
-        skin/classic/browser/wrench.png
-        skin/classic/browser/feeds/feedIcon.png                 (feeds/feedIcon.png)
-        skin/classic/browser/feeds/feedIcon16.png               (feeds/feedIcon16.png)
-        skin/classic/browser/feeds/videoFeedIcon.png            (feeds/videoFeedIcon.png)
-        skin/classic/browser/feeds/videoFeedIcon16.png          (feeds/videoFeedIcon16.png)
-        skin/classic/browser/feeds/audioFeedIcon.png            (feeds/audioFeedIcon.png)
-        skin/classic/browser/feeds/audioFeedIcon16.png          (feeds/audioFeedIcon16.png)
-        skin/classic/browser/feeds/subscribe.css                (feeds/subscribe.css)
-        skin/classic/browser/places/places.css                  (places/places.css)
-        skin/classic/browser/places/organizer.css               (places/organizer.css)
-        skin/classic/browser/places/query.png                   (places/query.png)
-        skin/classic/browser/places/bookmarksMenu.png           (places/bookmarksMenu.png)
-        skin/classic/browser/places/bookmarksToolbar.png        (places/bookmarksToolbar.png)
-        skin/classic/browser/places/toolbarDropMarker.png       (places/toolbarDropMarker.png)
-        skin/classic/browser/places/editBookmarkOverlay.css     (places/editBookmarkOverlay.css)
-        skin/classic/browser/places/starPage.png                (places/starPage.png)
-        skin/classic/browser/places/pageStarred.png             (places/pageStarred.png)
-        skin/classic/browser/places/starred48.png               (places/starred48.png)
-        skin/classic/browser/places/unstarred48.png             (places/unstarred48.png)
-        skin/classic/browser/places/tag.png                     (places/tag.png)
-        skin/classic/browser/places/bookmarkProperties.css      (places/bookmarkProperties.css)
-        skin/classic/browser/places/organizer-toolbar.png       (bookmarks/Bookmarks-toolbar.png)
-        skin/classic/browser/preferences/alwaysAsk.png          (preferences/alwaysAsk.png)
-        skin/classic/browser/preferences/application.png        (preferences/application.png)
-        skin/classic/browser/preferences/Options.png            (preferences/Options.png)
-        skin/classic/browser/preferences/plugin.png             (preferences/plugin.png)
-        skin/classic/browser/preferences/preferences.css        (preferences/preferences.css)
-        skin/classic/browser/preferences/applications.css       (preferences/applications.css)
-        skin/classic/browser/tabbrowser/alltabs-box-overflow-end-bkgnd-animate.png   (tabbrowser/alltabs-box-overflow-end-bkgnd-animate.png)
-        skin/classic/browser/tabbrowser/alltabs-box-overflow-start-bkgnd-animate.png (tabbrowser/alltabs-box-overflow-start-bkgnd-animate.png)
-        skin/classic/browser/tabbrowser/tab-arrow-end.png                  (tabbrowser/tab-arrow-end.png)
-        skin/classic/browser/tabbrowser/tab-arrow-start.png                (tabbrowser/tab-arrow-start.png)
-        skin/classic/browser/tabbrowser/tabbrowser-tabs-bkgnd.png          (tabbrowser/tabbrowser-tabs-bkgnd.png)
-        skin/classic/browser/tabbrowser/tabDragIndicator.png               (tabbrowser/tabDragIndicator.png)
-        skin/classic/browser/tabbrowser/tab-bkgnd.png                      (tabbrowser/tab-bkgnd.png)
-        skin/classic/browser/tabbrowser/tab-active-bkgnd.png               (tabbrowser/tab-active-bkgnd.png)
-        skin/classic/browser/tabbrowser/tabstrip-bottom.png                (tabbrowser/tabstrip-bottom.png)
+% skin browser classic/1.0 %skin/classic/luna/browser/
+% skin browser classic/1.0 %skin/classic/aero/browser/ os=WINNT osversion>=6
+*       skin/classic/luna/browser/browser.css                        (browser.css)
+*       skin/classic/aero/browser/browser.css                        (browser.css)
+        skin/classic/luna/browser/browser.xml
+        skin/classic/aero/browser/browser.xml
+*       skin/classic/luna/browser/engineManager.css                  (engineManager.css)
+*       skin/classic/aero/browser/engineManager.css                  (engineManager.css)
+        skin/classic/luna/browser/Info.png
+        skin/classic/aero/browser/Info.png
+        skin/classic/luna/browser/identity.png
+        skin/classic/aero/browser/identity.png                       (identity-aero.png)
+        skin/classic/luna/browser/pageInfo.css
+        skin/classic/aero/browser/pageInfo.css
+        skin/classic/luna/browser/pageInfo.png
+        skin/classic/aero/browser/pageInfo.png
+        skin/classic/luna/browser/page-livemarks.png
+        skin/classic/aero/browser/page-livemarks.png                 (page-livemarks-aero.png)
+        skin/classic/luna/browser/livemark-item.png
+        skin/classic/aero/browser/livemark-item.png
+        skin/classic/luna/browser/livemark-item-rtl.png
+        skin/classic/aero/browser/livemark-item-rtl.png
+        skin/classic/luna/browser/livemark-folder.png
+        skin/classic/aero/browser/livemark-folder.png
+        skin/classic/luna/browser/livemark-folder-rtl.png
+        skin/classic/aero/browser/livemark-folder-rtl.png
+        skin/classic/luna/browser/Secure.png
+        skin/classic/aero/browser/Secure.png
+        skin/classic/luna/browser/Security-broken.png
+        skin/classic/aero/browser/Security-broken.png
+        skin/classic/luna/browser/Throbber.gif
+        skin/classic/aero/browser/Throbber.gif
+        skin/classic/luna/browser/Throbber.png
+        skin/classic/aero/browser/Throbber.png
+        skin/classic/luna/browser/Throbber-small.png
+        skin/classic/aero/browser/Throbber-small.png
+        skin/classic/luna/browser/Toolbar.png
+        skin/classic/aero/browser/Toolbar.png                        (Toolbar-aero.png)
+        skin/classic/luna/browser/Toolbar-small.png
+        skin/classic/aero/browser/Toolbar-small.png
+        skin/classic/luna/browser/Go-arrow.png
+        skin/classic/aero/browser/Go-arrow.png
+        skin/classic/luna/browser/Go-arrow-rtl.png
+        skin/classic/aero/browser/Go-arrow-rtl.png
+*       skin/classic/luna/browser/searchbar.css                      (searchbar.css)
+*       skin/classic/aero/browser/searchbar.css                      (searchbar.css)
+        skin/classic/luna/browser/Search-glass.png
+        skin/classic/aero/browser/Search-glass.png
+        skin/classic/luna/browser/Search-glass-rtl.png
+        skin/classic/aero/browser/Search-glass-rtl.png
+        skin/classic/luna/browser/Search-addengines.png
+        skin/classic/aero/browser/Search-addengines.png
+        skin/classic/luna/browser/setDesktopBackground.css
+        skin/classic/aero/browser/setDesktopBackground.css
+        skin/classic/luna/browser/monitor.png
+        skin/classic/aero/browser/monitor.png
+        skin/classic/luna/browser/monitor_16-10.png
+        skin/classic/aero/browser/monitor_16-10.png
+        skin/classic/luna/browser/wrench.png
+        skin/classic/aero/browser/wrench.png
+        skin/classic/luna/browser/feeds/feedIcon.png                 (feeds/feedIcon.png)
+        skin/classic/aero/browser/feeds/feedIcon.png                 (feeds/feedIcon-aero.png)
+        skin/classic/luna/browser/feeds/feedIcon16.png               (feeds/feedIcon16.png)
+        skin/classic/aero/browser/feeds/feedIcon16.png               (feeds/feedIcon16-aero.png)
+        skin/classic/luna/browser/feeds/videoFeedIcon.png            (feeds/videoFeedIcon.png)
+        skin/classic/aero/browser/feeds/videoFeedIcon.png            (feeds/videoFeedIcon-aero.png)
+        skin/classic/luna/browser/feeds/videoFeedIcon16.png          (feeds/videoFeedIcon16.png)
+        skin/classic/aero/browser/feeds/videoFeedIcon16.png          (feeds/videoFeedIcon16-aero.png)
+        skin/classic/luna/browser/feeds/audioFeedIcon.png            (feeds/audioFeedIcon.png)
+        skin/classic/aero/browser/feeds/audioFeedIcon.png            (feeds/audioFeedIcon-aero.png)
+        skin/classic/luna/browser/feeds/audioFeedIcon16.png          (feeds/audioFeedIcon16.png)
+        skin/classic/aero/browser/feeds/audioFeedIcon16.png          (feeds/audioFeedIcon16-aero.png)
+        skin/classic/luna/browser/feeds/subscribe.css                (feeds/subscribe.css)
+        skin/classic/aero/browser/feeds/subscribe.css                (feeds/subscribe.css)
+        skin/classic/luna/browser/places/places.css                  (places/places.css)
+        skin/classic/aero/browser/places/places.css                  (places/places.css)
+        skin/classic/luna/browser/places/organizer.css               (places/organizer.css)
+        skin/classic/aero/browser/places/organizer.css               (places/organizer.css)
+        skin/classic/luna/browser/places/query.png                   (places/query.png)
+        skin/classic/aero/browser/places/query.png                   (places/query.png)
+        skin/classic/luna/browser/places/bookmarksMenu.png           (places/bookmarksMenu.png)
+        skin/classic/aero/browser/places/bookmarksMenu.png           (places/bookmarksMenu.png)
+        skin/classic/luna/browser/places/bookmarksToolbar.png        (places/bookmarksToolbar.png)
+        skin/classic/aero/browser/places/bookmarksToolbar.png        (places/bookmarksToolbar.png)
+        skin/classic/luna/browser/places/toolbarDropMarker.png       (places/toolbarDropMarker.png)
+        skin/classic/aero/browser/places/toolbarDropMarker.png       (places/toolbarDropMarker.png)
+        skin/classic/luna/browser/places/editBookmarkOverlay.css     (places/editBookmarkOverlay.css)
+        skin/classic/aero/browser/places/editBookmarkOverlay.css     (places/editBookmarkOverlay.css)
+        skin/classic/luna/browser/places/starPage.png                (places/starPage.png)
+        skin/classic/aero/browser/places/starPage.png                (places/starPage-aero.png)
+        skin/classic/luna/browser/places/pageStarred.png             (places/pageStarred.png)
+        skin/classic/aero/browser/places/pageStarred.png             (places/pageStarred-aero.png)
+        skin/classic/luna/browser/places/starred48.png               (places/starred48.png)
+        skin/classic/aero/browser/places/starred48.png               (places/starred48.png)
+        skin/classic/luna/browser/places/unstarred48.png             (places/unstarred48.png)
+        skin/classic/aero/browser/places/unstarred48.png             (places/unstarred48.png)
+        skin/classic/luna/browser/places/tag.png                     (places/tag.png)
+        skin/classic/aero/browser/places/tag.png                     (places/tag-aero.png)
+        skin/classic/luna/browser/places/bookmarkProperties.css      (places/bookmarkProperties.css)
+        skin/classic/aero/browser/places/bookmarkProperties.css      (places/bookmarkProperties.css)
+        skin/classic/luna/browser/places/organizer-toolbar.png       (bookmarks/Bookmarks-toolbar.png)
+        skin/classic/aero/browser/places/organizer-toolbar.png       (bookmarks/Bookmarks-toolbar.png)
+        skin/classic/luna/browser/preferences/alwaysAsk.png          (preferences/alwaysAsk.png)
+        skin/classic/aero/browser/preferences/alwaysAsk.png          (preferences/alwaysAsk-aero.png)
+        skin/classic/luna/browser/preferences/application.png        (preferences/application.png)
+        skin/classic/aero/browser/preferences/application.png        (preferences/application.png)
+        skin/classic/luna/browser/preferences/Options.png            (preferences/Options.png)
+        skin/classic/aero/browser/preferences/Options.png            (preferences/Options-aero.png)
+        skin/classic/luna/browser/preferences/plugin.png             (preferences/plugin.png)
+        skin/classic/aero/browser/preferences/plugin.png             (preferences/plugin-aero.png)
+        skin/classic/luna/browser/preferences/preferences.css        (preferences/preferences.css)
+        skin/classic/aero/browser/preferences/preferences.css        (preferences/preferences.css)
+        skin/classic/luna/browser/preferences/applications.css       (preferences/applications.css)
+        skin/classic/aero/browser/preferences/applications.css       (preferences/applications.css)
+        skin/classic/luna/browser/tabbrowser/alltabs-box-overflow-end-bkgnd-animate.png   (tabbrowser/alltabs-box-overflow-end-bkgnd-animate.png)
+        skin/classic/aero/browser/tabbrowser/alltabs-box-overflow-end-bkgnd-animate.png   (tabbrowser/alltabs-box-overflow-end-bkgnd-animate.png)
+        skin/classic/luna/browser/tabbrowser/alltabs-box-overflow-start-bkgnd-animate.png (tabbrowser/alltabs-box-overflow-start-bkgnd-animate.png)
+        skin/classic/aero/browser/tabbrowser/alltabs-box-overflow-start-bkgnd-animate.png (tabbrowser/alltabs-box-overflow-start-bkgnd-animate.png)
+        skin/classic/luna/browser/tabbrowser/tab-arrow-end.png                  (tabbrowser/tab-arrow-end.png)
+        skin/classic/aero/browser/tabbrowser/tab-arrow-end.png                  (tabbrowser/tab-arrow-end-aero.png)
+        skin/classic/luna/browser/tabbrowser/tab-arrow-start.png                (tabbrowser/tab-arrow-start.png)
+        skin/classic/aero/browser/tabbrowser/tab-arrow-start.png                (tabbrowser/tab-arrow-start-aero.png)
+        skin/classic/luna/browser/tabbrowser/tabbrowser-tabs-bkgnd.png          (tabbrowser/tabbrowser-tabs-bkgnd.png)
+        skin/classic/aero/browser/tabbrowser/tabbrowser-tabs-bkgnd.png          (tabbrowser/tabbrowser-tabs-bkgnd.png)
+        skin/classic/luna/browser/tabbrowser/tabDragIndicator.png               (tabbrowser/tabDragIndicator.png)
+        skin/classic/aero/browser/tabbrowser/tabDragIndicator.png               (tabbrowser/tabDragIndicator-aero.png)
+        skin/classic/luna/browser/tabbrowser/tab-bkgnd.png                      (tabbrowser/tab-bkgnd.png)
+        skin/classic/aero/browser/tabbrowser/tab-bkgnd.png                      (tabbrowser/tab-bkgnd.png)
+        skin/classic/luna/browser/tabbrowser/tab-active-bkgnd.png               (tabbrowser/tab-active-bkgnd.png)
+        skin/classic/aero/browser/tabbrowser/tab-active-bkgnd.png               (tabbrowser/tab-active-bkgnd.png)
+        skin/classic/luna/browser/tabbrowser/tabstrip-bottom.png                (tabbrowser/tabstrip-bottom.png)
+        skin/classic/aero/browser/tabbrowser/tabstrip-bottom.png                (tabbrowser/tabstrip-bottom.png)
         icon.png
         preview.png
