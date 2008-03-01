@@ -5943,12 +5943,6 @@ interrupt:
                     if (!SPROP_HAS_STUB_SETTER(sprop))
                         goto do_initprop_miss;
 
-                    /*
-                     * Otherwise this entry must be for a direct property of
-                     * obj, not a proto-property.
-                     */
-                    JS_ASSERT(PCVCAP_MAKE(sprop->shape, 0, 0) == entry->vcap);
-
                     if (scope->object != obj) {
                         scope = js_GetMutableScope(cx, obj);
                         if (!scope) {
@@ -5965,6 +5959,12 @@ interrupt:
                     if (sprop->parent != scope->lastProp)
                         goto do_initprop_miss;
 
+                    /*
+                     * Otherwise this entry must be for a direct property of
+                     * obj, not a proto-property, and there cannot have been
+                     * any deletions of prior properties.
+                     */
+                    JS_ASSERT(PCVCAP_MAKE(sprop->shape, 0, 0) == entry->vcap);
                     JS_ASSERT(!SCOPE_HAD_MIDDLE_DELETE(scope));
                     JS_ASSERT(!scope->table ||
                               !SCOPE_HAS_PROPERTY(scope, sprop));
