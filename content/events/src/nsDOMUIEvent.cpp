@@ -154,7 +154,7 @@ nsPoint nsDOMUIEvent::GetClientPoint() {
   }
 
   nsPoint pt(0, 0);
-  nsIPresShell* shell = mPresContext->PresShell();
+  nsIPresShell* shell = mPresContext->GetPresShell();
   if (!shell) {
     return pt;
   }
@@ -200,7 +200,7 @@ nsDOMUIEvent::GetPagePoint()
   if (((nsGUIEvent*)mEvent)->widget) {
     // Native event; calculate using presentation
     nsPoint pt(0, 0);
-    nsIPresShell* shell = mPresContext->PresShell();
+    nsIPresShell* shell = mPresContext->GetPresShell();
     if (!shell) {
       return pt;
     }
