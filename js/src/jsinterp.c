@@ -898,7 +898,6 @@ static JSObject *
 ComputeGlobalThis(JSContext *cx, JSBool lazy, jsval *argv)
 {
     JSObject *thisp;
-    JSClass *clasp;
 
     if (JSVAL_IS_PRIMITIVE(argv[-2]) ||
         !OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(argv[-2]))) {
