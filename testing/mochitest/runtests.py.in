@@ -77,7 +77,7 @@ SERVER_STARTUP_TIMEOUT = 45
 
 PROFILE_DIRECTORY = os.path.abspath("./mochitesttestingprofile")
 
-LEAK_REPORT_FILE = "leaks-report.log"
+LEAK_REPORT_FILE = PROFILE_DIRECTORY + "/" + "leaks-report.log"
 
 #######################
 # COMMANDLINE OPTIONS #
@@ -327,7 +327,9 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
 
   server.stop()
 
-  if options.leakThreshold >= 0:
+  if not os.path.exists(LEAK_REPORT_FILE) and options.leakThreshold >= 0:
+    print "WARNING refcount logging is off, so leak detection has been disabled"
+  elif options.leakThreshold >= 0:
     leaks = open(LEAK_REPORT_FILE, "r")
     for line in leaks:
       print line,
@@ -335,18 +337,49 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
 
     threshold = options.leakThreshold
     leaks = open(LEAK_REPORT_FILE, "r")
+    #                  Per-Inst  Leaked      Total  Rem ...
+    #   0 TOTAL              17     192  419115886    2 ...
+    # 833 nsTimerImpl        60     120      24726    2 ...
+    lineRe = re.compile(r"^\s*\d+\s+(?P<name>\S+)\s+"
+                        r"(?P<size>\d+)\s+(?P<bytesLeaked>\d+)\s+"
+                        r"\d+\s+(?P<numLeaked>\d+)")
+    thresholdExceeded = False
+    seenTotal = False
     for line in leaks:
-      if "0 TOTAL" in line:
-        matches = re.match(r"^\s+0\s+TOTAL\s+\d+\s+(\d+)", line)
-        if matches:
-          bytesLeaked = int(matches.group(1))
-          if bytesLeaked > threshold:
-            print ("ERROR FAIL leaked %(actual)d bytes during test "
-                   "execution (should have leaked no more than "
-                   "%(expect)d bytes)") % {"actual": bytesLeaked,
-                                           "expect": threshold}
-        break
-    else:
+      matches = lineRe.match(line)
+      if not matches:
+        continue
+      name = matches.group("name")
+      if "TOTAL" == name:
+        seenTotal = True
+        bytesLeaked = int(matches.group("bytesLeaked"))
+        if bytesLeaked > threshold:
+          thresholdExceeded = True
+          print ("ERROR FAIL leaked %(actual)d bytes during test "
+                 "execution (should have leaked no more than "
+                 "%(expect)d bytes)") % { "actual": bytesLeaked,
+                                          "expect": threshold }
+        elif bytesLeaked > 0:
+          print "WARNING leaked %d bytes during test execution" % bytesLeaked
+      else:
+        numLeaked = int(matches.group("numLeaked"))
+        if numLeaked != 0:
+          prefix = thresholdExceeded and "ERROR FAIL" or "WARNING"
+          if numLeaked > 1:
+            instance = "instances"
+            rest = " each (%s bytes total)" % matches.group("bytesLeaked")
+          else:
+            instance = "instance"
+            rest = ""
+          vars = { "prefix": prefix,
+                   "numLeaked": numLeaked,
+                   "instance": instance,
+                   "name": name,
+                   "size": matches.group("size"),
+                   "rest": rest }
+          print ("%(prefix)s leaked %(numLeaked)d %(instance)s of %(name)s "
+                 "with size %(size)s bytes%(rest)s") % vars
+    if not seenTotal:
       print "ERROR FAIL missing output line for total leaks!"
     leaks.close()
 
