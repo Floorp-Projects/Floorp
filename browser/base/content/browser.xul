@@ -380,6 +380,7 @@
                onclick="BookmarksEventHandler.onClick(event);"
                oncommand="BookmarksEventHandler.onCommand(event);"
                onpopupshowing="BookmarksEventHandler.onPopupShowing(event);"
+               ondragexit="PlacesMenuDNDController.onDragExit(event);"
                tooltip="btTooltip"/>
       </toolbaritem>
 
