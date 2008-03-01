@@ -4540,6 +4540,8 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   if (!mGeckoChild)
     return NO;
 
+  nsAutoRetainView kungFuDeathGrip(self);
+
   // if we aren't the first responder, pass the event on
   if ([[self window] firstResponder] != self)
     return [super performKeyEquivalent:theEvent];
