@@ -329,6 +329,8 @@ nsPlacesImportExportService::~nsPlacesImportExportService()
 class BookmarkContentSink : public nsIHTMLContentSink
 {
 public:
+  BookmarkContentSink();
+
   nsresult Init(PRBool aAllowRootChanges,
                 nsINavBookmarksService* bookmarkService,
                 PRInt64 aFolder,
@@ -435,6 +437,10 @@ protected:
   }
 #endif
 };
+
+BookmarkContentSink::BookmarkContentSink() : mFrames(16)
+{
+}
 
 // BookmarkContentSink::Init
 //
@@ -1222,9 +1228,11 @@ BookmarkContentSink::NewFrame()
     // don't clear last-modified, in case there's a description
   }
 
+  frame.mPreviousId = ourID;
+
   if (!mFrames.AppendElement(BookmarkImportFrame(ourID)))
     return NS_ERROR_OUT_OF_MEMORY;
-  frame.mPreviousId = ourID;
+
   return NS_OK;
 }
 
