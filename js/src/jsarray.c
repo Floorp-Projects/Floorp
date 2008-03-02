@@ -45,17 +45,17 @@
  * access over a vector of slots (obj->dslots) with high load factor.  Array
  * methods optimize for denseness by testing that the object's class is
  * &js_ArrayClass, and can then directly manipulate the slots for efficiency.
- * 
+ *
  * We track these pieces of metadata for arrays in dense mode:
  *  - the array's length property as a uint32, in JSSLOT_ARRAY_LENGTH,
  *  - the number of indices that are filled (non-holes), in JSSLOT_ARRAY_COUNT,
  *  - the net number of slots starting at dslots (DENSELEN), in dslots[-1] if
  *    dslots is non-NULL.
- * 
+ *
  * In dense mode, holes in the array are represented by JSVAL_HOLE.  The final
  * slot in fslots (JSSLOT_ARRAY_LOOKUP_HOLDER) is used to store the single jsid
  * "in use" by a lookupProperty caller.
- * 
+ *
  * Arrays are converted to use js_SlowArrayClass when any of these conditions
  * are met:
  *  - the load factor (COUNT / DENSELEN) is less than 0.25, and there are
@@ -68,9 +68,9 @@
  * which necessitates use of a structure that keeps track of property creation
  * order.  (ES4, due to expectations baked into web script, requires that
  * enumeration order be the order in which properties were created.)
- * 
+ *
  * An alternative in the latter case (out-of-order index set) would be to
- * maintain the scope to track property enumeration order, but still use 
+ * maintain the scope to track property enumeration order, but still use
  * the fast slot access.  That would have the same memory cost as just using
  * a js_SlowArrayClass, but have the same performance characteristics as
  * a dense array for slot accesses, at some cost in code complexity.
@@ -224,7 +224,7 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
     jsid id;
     JSBool ok;
     jsint i;
-    
+
     if (OBJ_IS_ARRAY(cx, obj)) {
         *lengthp = obj->fslots[JSSLOT_ARRAY_LENGTH];
         return JS_TRUE;
@@ -257,6 +257,21 @@ IndexToValue(JSContext *cx, jsuint index, jsval *vp)
         return JS_TRUE;
     }
     return js_NewDoubleValue(cx, (jsdouble)index, vp);
+}
+
+static JSBool
+IndexToId(JSContext *cx, jsuint index, jsid *idp)
+{
+    JSString *str;
+
+    if (index <= JSVAL_INT_MAX) {
+        *idp = INT_TO_JSID(index);
+        return JS_TRUE;
+    }
+    str = js_NumberToString(cx, index);
+    if (!str)
+        return JS_FALSE;
+    return js_ValueToStringId(cx, STRING_TO_JSVAL(str), idp);
 }
 
 static JSBool
@@ -308,14 +323,14 @@ static JSBool
 ResizeSlots(JSContext *cx, JSObject *obj, uint32 oldlen, uint32 len)
 {
     jsval *slots, *newslots;
-    
+
     if (len == 0) {
         if (obj->dslots) {
             JS_free(cx, obj->dslots - 1);
             obj->dslots = NULL;
         }
         return JS_TRUE;
-    } 
+    }
 
     if (len > ~(uint32)0 / sizeof(jsval)) {
         JS_ReportOutOfMemory(cx);
@@ -326,17 +341,17 @@ ResizeSlots(JSContext *cx, JSObject *obj, uint32 oldlen, uint32 len)
     newslots = (jsval *) JS_realloc(cx, slots, sizeof (jsval) * (len + 1));
     if (!newslots)
         return JS_FALSE;
-    
+
     obj->dslots = newslots + 1;
     ARRAY_SET_DENSE_LENGTH(obj, len);
 
     for (slots = obj->dslots + oldlen; slots < obj->dslots + len; slots++)
         *slots = JSVAL_HOLE;
-    
+
     return JS_TRUE;
 }
 
-#define ARRAY_GROWBY 8 
+#define ARRAY_GROWBY 8
 
 static JSBool
 EnsureLength(JSContext *cx, JSObject *obj, uint32 len)
@@ -573,7 +588,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     if (oldlen == newlen)
         return JS_TRUE;
-    
+
     if (!IndexToValue(cx, newlen, vp))
         return JS_FALSE;
 
@@ -604,7 +619,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         iter = JS_NewPropertyIterator(cx, obj);
         if (!iter)
             return JS_FALSE;
-        
+
         /* Protect iter against GC in OBJ_DELETE_PROPERTY. */
         JS_PUSH_TEMP_ROOT_OBJECT(cx, iter, &tvr);
         gap = oldlen - newlen;
@@ -639,7 +654,7 @@ array_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     if (!OBJ_IS_DENSE_ARRAY(cx, obj))
         return js_LookupProperty(cx, obj, id, objp, propp);
 
-    /* 
+    /*
      * We have only indexed properties up to DENSELEN (excepting holes), plus
      * the length property. For all else, we delegate to the prototype.
      */
@@ -715,7 +730,7 @@ static JSBool
 slowarray_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     jsuint index, length;
-    
+
     if (!js_IdIsIndex(id, &index))
         return JS_TRUE;
     length = obj->fslots[JSSLOT_ARRAY_LENGTH];
@@ -786,7 +801,7 @@ array_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))
         return JS_TRUE;
 
-    if (!js_IdIsIndex(ID_TO_VALUE(id), &i) || attrs != JSPROP_ENUMERATE) { 
+    if (!js_IdIsIndex(ID_TO_VALUE(id), &i) || attrs != JSPROP_ENUMERATE) {
         if (!ENSURE_SLOW_ARRAY(cx, obj))
             return JS_FALSE;
         return js_DefineProperty(cx, obj, id, value, getter, setter, attrs,
@@ -818,7 +833,7 @@ static JSBool
 array_deleteProperty(JSContext *cx, JSObject *obj, jsval id, jsval *rval)
 {
     uint32 i;
-    
+
     if (!OBJ_IS_DENSE_ARRAY(cx, obj))
         return js_DeleteProperty(cx, obj, id, rval);
 
@@ -837,88 +852,168 @@ array_deleteProperty(JSContext *cx, JSObject *obj, jsval id, jsval *rval)
     return JS_TRUE;
 }
 
-static JSBool
-slowarray_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
-                    jsval *statep, jsid *idp)
-{
-    /* Are we continuing an enumeration that started when we were dense? */
-    if (enum_op != JSENUMERATE_INIT && JSVAL_IS_BOOLEAN(*statep)) {
-        jsid lastIndex = INT_TO_JSID(JSVAL_TO_BOOLEAN(*statep));
-
-        /* Replace our enumeration state with a native one. */
-        if (!js_Enumerate(cx, obj, JSENUMERATE_INIT, statep, idp))
-            return JS_FALSE;
-
-        /* Advance the native enumeration state to the previous index. */
-        do {
-            if (!js_Enumerate(cx, obj, JSENUMERATE_NEXT, statep, idp))
-                return JS_FALSE;
-            if (*statep == JSVAL_NULL)
-                return JS_TRUE;
-        } while (*idp != lastIndex);
-
-        /* Now fall through to our usual js_Enumerate pass-through. */
-    }
-    return js_Enumerate(cx, obj, enum_op, statep, idp);
-}
-
 /*
- * array_enumerate stores its index state as a pseudo-boolean, so that it can be
- * distinguished from the tagged private used by js_Enumerate.  To detect and
- * handle faulting to slowness during an enumeration, slowarray_enumerate must
- * be able to tell whether it's being called with js_Enumerate's state or
- * array_enumerate's.  This encoding limits dense arrays to 2^29-1 enumerable
- * elements, but since that would require a contiguous allocation of 2^31 bytes
- * for the dslots vector, it is unlikely to be a serious limitation for real
- * applications.
+ * JSObjectOps.enumerate implementation.
+ *
+ * For a fast array, JSENUMERATE_INIT captures in the enumeration state both
+ * the length of the array and the bitmap indicating the positions of holes in
+ * the array. This ensures that adding or deleting array elements does not
+ * affect the sequence of indexes JSENUMERATE_NEXT returns.
+ *
+ * For a common case of an array without holes, to represent the state we pack
+ * the (nextEnumerationIndex, arrayLength) pair as a pseudo-boolean jsval.
+ * This is possible when length <= PACKED_UINT_PAIR_BITS. For arrays with
+ * greater length or holes we allocate the JSIndexIterState structure and
+ * store it as an int-tagged private pointer jsval. For a slow array we
+ * delegate the enumeration implementation to js_Enumerate in
+ * slowarray_enumerate.
+ *
+ * Array mutations can turn a fast array into a slow one after the enumeration
+ * starts. When this happens, slowarray_enumerate receives a state created
+ * when the array was fast. To distinguish such fast state from a slow state,
+ * which is an int-tagged pointer that js_Enumerate creates, we set not one
+ * but two lowest bits when tagging a JSIndexIterState pointer -- see
+ * INDEX_ITER_TAG usage below. Thus, when slowarray_enumerate receives a state
+ * tagged with JSVAL_BOOLEAN or with two lowest bits set, it knows that this
+ * is a fast state so it calls array_enumerate to continue enumerating the
+ * indexes present in the original fast array.
  */
+
+#define PACKED_UINT_PAIR_BITS           14
+#define PACKED_UINT_PAIR_MASK           JS_BITMASK(PACKED_UINT_PAIR_BITS)
+
+#define UINT_PAIR_TO_BOOLEAN_JSVAL(i,j)                                       \
+    (JS_ASSERT((uint32) (i) <= PACKED_UINT_PAIR_MASK),                        \
+     JS_ASSERT((uint32) (j) <= PACKED_UINT_PAIR_MASK),                        \
+     ((jsval) (i) << (PACKED_UINT_PAIR_BITS + JSVAL_TAGBITS)) |               \
+     ((jsval) (j) << (JSVAL_TAGBITS)) |                                       \
+     (jsval) JSVAL_BOOLEAN)
+
+#define BOOLEAN_JSVAL_TO_UINT_PAIR(v,i,j)                                     \
+    (JS_ASSERT(JSVAL_TAG(v) == JSVAL_BOOLEAN),                                \
+     (i) = (uint32) ((v) >> (PACKED_UINT_PAIR_BITS + JSVAL_TAGBITS)),         \
+     (j) = (uint32) ((v) >> JSVAL_TAGBITS) & PACKED_UINT_PAIR_MASK,           \
+     JS_ASSERT((i) <= PACKED_UINT_PAIR_MASK))
+
+JS_STATIC_ASSERT(PACKED_UINT_PAIR_BITS * 2 + JSVAL_TAGBITS <= JS_BITS_PER_WORD);
+
+typedef struct JSIndexIterState {
+    uint32          index;
+    uint32          length;
+    JSBool          hasHoles;
+
+    /*
+     * Variable-length bitmap representing array's holes. It must not be
+     * accessed when hasHoles is false.
+     */
+    jsbitmap        holes[1];
+} JSIndexIterState;
+
+#define INDEX_ITER_TAG      3
+
+JS_STATIC_ASSERT(JSVAL_INT == 1);
+
 static JSBool
 array_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                 jsval *statep, jsid *idp)
 {
-    uint32 i, length;
+    uint32 length, i;
+    JSIndexIterState *ii;
 
-    JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj));
-
-    if (enum_op == JSENUMERATE_DESTROY)
-        return JS_TRUE;
-
-    if (enum_op == JSENUMERATE_INIT) {
-        *statep = OBJECT_TO_JSVAL(obj);
-        if (idp)
-            *idp = INT_TO_JSID(0);
-        return JS_TRUE;
-    }
-
-    length = ARRAY_DENSE_LENGTH(obj);
-    if (*statep == OBJECT_TO_JSVAL(obj)) {
-        if (length == 0) {
-            *statep = JSVAL_NULL;
-            return JS_TRUE;
+    switch (enum_op) {
+      case JSENUMERATE_INIT:
+        JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj));
+        length = ARRAY_DENSE_LENGTH(obj);
+        if (idp && !IndexToId(cx, length, idp))
+            return JS_FALSE;
+        ii = NULL;
+        for (i = 0; i != length; ++i) {
+            if (obj->dslots[i] == JSVAL_HOLE) {
+                if (!ii) {
+                    ii = (JSIndexIterState *)
+                         JS_malloc(cx, offsetof(JSIndexIterState, holes) +
+                                   JS_BITMAP_SIZE(length));
+                    if (!ii)
+                        return JS_FALSE;
+                    ii->hasHoles = JS_TRUE;
+                    memset(ii->holes, 0, JS_BITMAP_SIZE(length));
+                }
+                JS_SET_BIT(ii->holes, i);
+            }
         }
-
-        if (obj->dslots[0] != JSVAL_HOLE) {
-            *statep = BOOLEAN_TO_JSVAL(0);
-            *idp = INT_TO_JSID(0);
-            return JS_TRUE;
+        if (!ii) {
+            /* Array has no holes. */
+            if (length <= PACKED_UINT_PAIR_MASK) {
+                *statep = UINT_PAIR_TO_BOOLEAN_JSVAL(0, length);
+                break;
+            }
+            ii = (JSIndexIterState *)
+                 JS_malloc(cx, offsetof(JSIndexIterState, holes));
+            if (!ii)
+                return JS_FALSE;
+            ii->hasHoles = JS_FALSE;
         }
-        i = 0;
-    } else {
-        i = JSVAL_TO_BOOLEAN(*statep);
-    }
+        ii->index = 0;
+        ii->length = length;
+        *statep = (jsval) ii | INDEX_ITER_TAG;
+        JS_ASSERT(*statep & JSVAL_INT);
+        break;
 
-    do {
-        i++;
-    } while (i < length && obj->dslots[i] == JSVAL_HOLE);
+      case JSENUMERATE_NEXT:
+        if (JSVAL_TAG(*statep) == JSVAL_BOOLEAN) {
+            BOOLEAN_JSVAL_TO_UINT_PAIR(*statep, i, length);
+            if (i != length) {
+                *idp = INT_TO_JSID(i);
+                *statep = UINT_PAIR_TO_BOOLEAN_JSVAL(i + 1, length);
+                break;
+            }
+        } else {
+            JS_ASSERT((*statep & INDEX_ITER_TAG) == INDEX_ITER_TAG);
+            ii = (JSIndexIterState *) (*statep & ~INDEX_ITER_TAG);
+            i = ii->index;
+            if (i != ii->length) {
+                /* Skip holes if any. */
+                if (ii->hasHoles) {
+                    while (JS_TEST_BIT(ii->holes, i) && ++i != ii->length)
+                        continue;
+                }
+                if (i != ii->length) {
+                    ii->index = i + 1;
+                    return IndexToId(cx, i, idp);
+                }
+            }
+        }
+        // FALL THROUGH
 
-    if (i == length) {
+      case JSENUMERATE_DESTROY:
+        if (JSVAL_TAG(*statep) != JSVAL_BOOLEAN) {
+            JS_ASSERT((*statep & INDEX_ITER_TAG) == INDEX_ITER_TAG);
+            ii = (JSIndexIterState *) (*statep & ~INDEX_ITER_TAG);
+            JS_free(cx, ii);
+        }
         *statep = JSVAL_NULL;
-        return JS_TRUE;
+        break;
     }
-
-    *idp = INT_TO_JSID(i);
-    *statep = BOOLEAN_TO_JSVAL(i);
     return JS_TRUE;
+}
+
+static JSBool
+slowarray_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
+                    jsval *statep, jsid *idp)
+{
+    JSBool ok;
+
+    /* Are we continuing an enumeration that started when we were dense? */
+    if (enum_op != JSENUMERATE_INIT) {
+        if (JSVAL_TAG(*statep) == JSVAL_BOOLEAN ||
+            (*statep & INDEX_ITER_TAG) == INDEX_ITER_TAG) {
+            return array_enumerate(cx, obj, enum_op, statep, idp);
+        }
+        JS_ASSERT((*statep & INDEX_ITER_TAG) == JSVAL_INT);
+    }
+    ok = js_Enumerate(cx, obj, enum_op, statep, idp);
+    JS_ASSERT(*statep == JSVAL_NULL || (*statep & INDEX_ITER_TAG) == JSVAL_INT);
+    return ok;
 }
 
 static void
@@ -1074,14 +1169,14 @@ MakeArraySlow(JSContext *cx, JSObject *obj)
     /* Make sure we preserve any flags borrowing bits in JSSLOT_CLASS. */
     obj->fslots[JSSLOT_CLASS] ^= (jsval) &js_ArrayClass;
     obj->fslots[JSSLOT_CLASS] |= (jsval) &js_SlowArrayClass;
-    
+
     /* Swap in our new map. */
     oldmap = obj->map;
     obj->map = map;
     array_destroyObjectMap(cx, oldmap);
 
     return JS_TRUE;
-    
+
 out_bad:
     js_DestroyObjectMap(cx, map);
     return JS_FALSE;
@@ -2011,7 +2106,7 @@ array_pop(JSContext *cx, uintN argc, jsval *vp)
             }
             obj->fslots[JSSLOT_ARRAY_COUNT]--;
         }
-            
+
         obj->fslots[JSSLOT_ARRAY_LENGTH] = index;
         return JS_TRUE;
     }
@@ -2872,7 +2967,7 @@ js_ArrayInfo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     for (i = 0; i < argc; i++) {
         char *bytes;
-        
+
         bytes = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, argv[i],
                                            NULL);
         if (!bytes)
