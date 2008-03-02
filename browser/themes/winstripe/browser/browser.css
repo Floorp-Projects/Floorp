@@ -166,6 +166,11 @@ menuitem.bookmark-item {
   -moz-image-region: auto;
 }
 
+.bookmark-item[container][livemark] .bookmark-item {
+  list-style-image: url("chrome://browser/skin/livemark-item.png");
+  -moz-image-region: auto;
+}
+
 .bookmark-item[container][tagContainer] {
   list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");
   -moz-image-region: auto;
@@ -631,7 +636,7 @@ toolbar[iconsize="small"] #back-button[chromedir="rtl"]:not([disabled="true"]):h
 }
 .unified-nav-back[_moz-menuactive],
 menupopup[chromedir="rtl"] > .unified-nav-forward[_moz-menuactive] {
-  list-style-image: url("chrome://browser/skin/menu-back.png");
+  list-style-image: url("chrome://browser/skin/menu-back.png") !important;
 }
 
 /* forward button */
@@ -668,7 +673,7 @@ toolbar[iconsize="small"] #forward-button[chromedir="rtl"]:not([disabled="true"]
 }
 .unified-nav-forward[_moz-menuactive],
 menupopup[chromedir="rtl"] > .unified-nav-back[_moz-menuactive] {
-  list-style-image: url("chrome://browser/skin/menu-forward.png");
+  list-style-image: url("chrome://browser/skin/menu-forward.png") !important;
 }
 
 /* stop button */
@@ -1590,7 +1595,7 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 }
 
 #feed-button[feeds] {
-  list-style-image: url("chrome://browser/skin/livemark-item.png");
+  list-style-image: url("chrome://browser/skin/feeds/feedIcon16.png");
 }
 
 /* ::::: About Popup Blocking dialog ::::: */
