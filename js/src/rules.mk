@@ -184,9 +184,6 @@ clobber:
 	rm -rf $(OBJS) $(TARGETS) $(DEPENDENCIES)
 	@cd fdlibm; $(MAKE) -f Makefile.ref clobber
 
-depend:
-	gcc -MM $(CFLAGS) $(LIB_CFILES)
-
 tar:
 	tar cvf $(TARNAME) $(TARFILES)
 	gzip $(TARNAME)
