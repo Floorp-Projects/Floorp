@@ -72,6 +72,7 @@ clean_stage: clean_logs
 	rm -rf /builds/release/logs/*
 	rm -rf /builds/updates/*
 	rm -rf /builds/verify/*
+	rm -rf /builds/symbols/*
 	rm -rf /data/cltbld/${PRODUCT}-*/
 	rm -rf /data/symbols/*
 	rm -rf /home/ftp/pub/${PRODUCT}/*
