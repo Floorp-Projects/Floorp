@@ -178,7 +178,7 @@ posix_memalign(void **memptr, size_t alignment, size_t size);
  * for doubles the flag area becomes a bitmap.
  *
  * JS_GC_USE_MMAP macro governs the choice of the aligned arena allocator.
- * When it is is true, a platform-dependant function like mmap is used to get
+ * When it is true, a platform-dependent function like mmap is used to get
  * memory aligned on CPU page boundaries. If the macro is false or undefined,
  * posix_memalign is used when available. Otherwise the code uses malloc to
  * over-allocate a chunk with js_gcArenasPerChunk aligned arenas. The
