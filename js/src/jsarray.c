@@ -983,7 +983,7 @@ array_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                 }
             }
         }
-        // FALL THROUGH
+        /* FALL THROUGH */
 
       case JSENUMERATE_DESTROY:
         if (JSVAL_TAG(*statep) != JSVAL_BOOLEAN) {
