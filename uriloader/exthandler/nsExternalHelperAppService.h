@@ -251,7 +251,7 @@ public:
   nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo, const nsCSubstring& aFileExtension,
                        nsIInterfaceRequestor * aWindowContext,
                        const nsAString& aFilename,
-                       PRUint32 aReason, PRBool aForceSave);
+                       PRUint32 aReason);
 
   ~nsExternalAppHandler();
 
@@ -280,13 +280,6 @@ protected:
    */
   nsString mSuggestedFileName;
 
-  /**
-   * If set, this handler should forcibly save the file to disk regardless of
-   * MIME info settings or anything else, without ever popping up the 
-   * unknown content type handling dialog.
-   */
-  PRPackedBool mForceSave;
-  
   /**
    * The canceled flag is set if the user canceled the launching of this
    * application before we finished saving the data to a temp file.

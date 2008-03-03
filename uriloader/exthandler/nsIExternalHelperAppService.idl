@@ -51,7 +51,7 @@ interface nsIInterfaceRequestor;
  * The external helper app service is used for finding and launching
  * platform specific external applications for a given mime content type.
  */
-[scriptable, uuid(9e456297-ba3e-42b1-92bd-b7db014268cb)]
+[scriptable, uuid(0ea90cf3-2dd9-470f-8f76-f141743c5678)]
 interface nsIExternalHelperAppService : nsISupports
 {
   /**
@@ -64,13 +64,10 @@ interface nsIExternalHelperAppService : nsISupports
    * @param aWindowContext Use GetInterface to retrieve properties like the
    *                       dom window or parent window...
    *                       The service might need this in order to bring up dialogs.
-   * @param aForceSave True to always save this content to disk, regardless of
-   *                   nsIMIMEInfo and other such influences.
    * @return A nsIStreamListener which the caller should pump the data into.
    */
   nsIStreamListener doContent (in ACString aMimeContentType, in nsIRequest aRequest,
-                               in nsIInterfaceRequestor aWindowContext,
-                               in boolean aForceSave); 
+                               in nsIInterfaceRequestor aWindowContext); 
 
   /**
    * Returns true if data from a URL with this extension combination
