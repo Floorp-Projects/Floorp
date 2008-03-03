@@ -5,7 +5,19 @@ function url(spec) {
 }
 
 var gTestPage = null;
+var gBrowserHandler;
+
+function setHandlerFunc(aResultFunc) {
+  DOMLinkHandler.handleEvent = function (event) {
+    gBrowserHandler.call(DOMLinkHandler, event);
+    aResultFunc();
+  }
+}
+
 function test() {
+  gBrowserHandler = DOMLinkHandler.handleEvent;
+  ok(gBrowserHandler, "found browser handler");
+
   waitForExplicitFinish();
   var activeWin = Application.activeWindow;
   gTestPage = activeWin.open(url("chrome://mochikit/content/browser/browser/base/content/test/autodiscovery.html"));
@@ -35,10 +47,11 @@ function runIconDiscoveryTest() {
 
   head.removeChild(head.getElementsByTagName('link')[0]);
   iconDiscoveryTests.shift();
-  setTimeout(iconDiscovery, 0) // Run the next test.
+  iconDiscovery(); // Run the next test.
 }
 
 function iconDiscovery() {
+  setHandlerFunc(runIconDiscoveryTest);
   if (iconDiscoveryTests.length) {
     gProxyFavIcon.removeAttribute("src");
 
@@ -56,8 +69,6 @@ function iconDiscovery() {
     link.href = href;
     link.type = type;
     head.appendChild(link);
-
-    setTimeout(runIconDiscoveryTest, 0);
   } else {
     searchDiscovery();
   }
@@ -94,10 +105,17 @@ function runSearchDiscoveryTest() {
     ok(!test.pass, test.text);
 
   searchDiscoveryTests.shift();
-  setTimeout(searchDiscovery, 0) // Run the next test.
+  searchDiscovery(); // Run the next test.
 }
 
+// This handler is called twice, once for each added link element.
+// Only want to check once the second link element has been added.
+var ranOnce = false;
 function runMultipleEnginesTestAndFinalize() {
+  if (!ranOnce) {
+    ranOnce = true;
+    return;
+  }
   var browser = gBrowser.getBrowserForDocument(gTestPage.document);
   ok(browser.engines, "has engines");
   is(browser.engines.length, 1, "only one engine");
@@ -112,6 +130,7 @@ function searchDiscovery() {
   var browser = gBrowser.getBrowserForDocument(gTestPage.document);
 
   if (searchDiscoveryTests.length) {
+    setHandlerFunc(runSearchDiscoveryTest);
     var test = searchDiscoveryTests[0];
     var link = gTestPage.document.createElement("link");
 
@@ -127,9 +146,8 @@ function searchDiscovery() {
     link.type = type;
     link.title = title;
     head.appendChild(link);
-
-    setTimeout(runSearchDiscoveryTest, 0);
   } else {
+    setHandlerFunc(runMultipleEnginesTestAndFinalize);
     // Test multiple engines with the same title
     var link = gTestPage.document.createElement("link");
     link.rel = "search";
@@ -141,7 +159,5 @@ function searchDiscovery() {
 
     head.appendChild(link);
     head.appendChild(link2);
-
-    setTimeout(runMultipleEnginesTestAndFinalize, 0);
   }
 }
