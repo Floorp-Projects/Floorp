@@ -715,7 +715,8 @@ public:
    *   @param aDestRect         Where to draw the image (app units).
    *   @param aDirtyRect        Draw only within this region (rounded to the
    *                            nearest pixel); the intersection of
-   *                            invalidation and clipping.
+   *                            invalidation and clipping (this is the
+   *                            destination clip)
    *   @param aSourceRect       If null, draw the entire image so it fits in
    *                            aDestRect.  If non-null, the subregion of the
    *                            image that should be drawn (in app units, such
