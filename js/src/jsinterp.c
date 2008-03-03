@@ -1601,6 +1601,8 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         frame.callee = down->callee;
         frame.fun = down->fun;
         frame.thisp = down->thisp;
+        if (down->flags & JSFRAME_COMPUTED_THIS)
+            flags |= JSFRAME_COMPUTED_THIS;
         frame.argc = down->argc;
         frame.argv = down->argv;
         frame.nvars = down->nvars;
@@ -1618,11 +1620,6 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         frame.callee = NULL;
         frame.fun = NULL;
         frame.thisp = chain;
-        OBJ_TO_OUTER_OBJECT(cx, frame.thisp);
-        if (!frame.thisp) {
-            ok = JS_FALSE;
-            goto out;
-        }
         frame.argc = 0;
         frame.argv = NULL;
         frame.nvars = script->ngvars;
@@ -1648,7 +1645,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     frame.sp = NULL;
     frame.spbase = NULL;
     frame.sharpDepth = 0;
-    frame.flags = flags | JSFRAME_COMPUTED_THIS;
+    frame.flags = flags;
     frame.dormantNext = NULL;
     frame.xmlNamespace = NULL;
     frame.blockChain = NULL;
