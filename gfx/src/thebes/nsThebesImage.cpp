@@ -412,7 +412,6 @@ nsThebesImage::UnlockImagePixels(PRBool aMaskPixels)
 NS_IMETHODIMP
 nsThebesImage::Draw(nsIRenderingContext &aContext,
                     const gfxRect &aSourceRect,
-                    const gfxRect &aSubimageRect,
                     const gfxRect &aDestRect)
 {
     if (NS_UNLIKELY(aDestRect.IsEmpty())) {
@@ -453,14 +452,11 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
     gfxFloat yscale = aDestRect.size.height / aSourceRect.size.height;
 
     gfxRect srcRect(aSourceRect);
-    gfxRect subimageRect(aSubimageRect);
     gfxRect destRect(aDestRect);
 
     if (!GetIsImageComplete()) {
-      gfxRect decoded = gfxRect(mDecoded.x, mDecoded.y,
-                                mDecoded.width, mDecoded.height);
-      srcRect = srcRect.Intersect(decoded);
-      subimageRect = subimageRect.Intersect(decoded);
+      srcRect = srcRect.Intersect(gfxRect(mDecoded.x, mDecoded.y,
+                                          mDecoded.width, mDecoded.height));
 
       // This happens when mDecoded.width or height is zero. bug 368427.
       if (NS_UNLIKELY(srcRect.size.width == 0 || srcRect.size.height == 0))
@@ -482,34 +478,6 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
         return NS_ERROR_FAILURE;
 
     nsRefPtr<gfxPattern> pat;
-    if ((xscale == 1.0 && yscale == 1.0 &&
-         !ctx->CurrentMatrix().HasNonTranslation()) ||
-        subimageRect == gfxRect(0, 0, mWidth, mHeight)) {
-        // No need to worry about sampling outside the subimage rectangle,
-        // so no need for a temporary
-        // XXX should we also check for situations where the source rect
-        // is well inside the subimage so we can't sample outside?
-        pat = new gfxPattern(ThebesSurface());
-    } else {
-        gfxIntSize size(NSToIntCeil(subimageRect.Width()),
-                        NSToIntCeil(subimageRect.Height()));
-        nsRefPtr<gfxASurface> temp =
-            gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, mFormat);
-        if (!temp || temp->CairoStatus() != 0)
-            return NS_ERROR_FAILURE;
-
-        gfxContext tempctx(temp);
-        tempctx.SetSource(ThebesSurface(), -subimageRect.pos);
-        tempctx.SetOperator(gfxContext::OPERATOR_SOURCE);
-        // Use Fill instead of Paint because we want to sample exactly
-        // the subimageRect here and the subimage size might
-        // be non-integer...
-        tempctx.Rectangle(gfxRect(gfxPoint(0, 0), subimageRect.size));
-        tempctx.Fill();
-
-        pat = new gfxPattern(temp);
-        srcRect.MoveBy(-subimageRect.pos);
-    }
 
     /* See bug 364968 to understand the necessity of this goop; we basically
      * have to pre-downscale any image that would fall outside of a scaled 16-bit
@@ -532,12 +500,13 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
 
         gfxContext tempctx(temp);
 
+        gfxPattern srcpat(ThebesSurface());
         gfxMatrix mat;
         mat.Translate(srcRect.pos);
         mat.Scale(1.0 / xscale, 1.0 / yscale);
-        pat->SetMatrix(mat);
+        srcpat.SetMatrix(mat);
 
-        tempctx.SetPattern(pat);
+        tempctx.SetPattern(&srcpat);
         tempctx.SetOperator(gfxContext::OPERATOR_SOURCE);
         tempctx.NewPath();
         tempctx.Rectangle(gfxRect(0.0, 0.0, dim.width, dim.height));
@@ -552,6 +521,10 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
 
         xscale = 1.0;
         yscale = 1.0;
+    }
+
+    if (!pat) {
+        pat = new gfxPattern(ThebesSurface());
     }
 
     gfxMatrix mat;

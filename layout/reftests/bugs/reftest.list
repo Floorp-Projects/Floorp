@@ -647,7 +647,6 @@ skip-if(MOZ_WIDGET_TOOLKIT!="windows") == 391045.html 391045-ref.html # windows-
 == 403129-3.html 403129-3-ref.html
 == 403129-4.html 403129-4-ref.html
 random == 403134-1.html 403134-1-ref.html # bug 405377
-== 403181-1.xml 403181-1-ref.xml
 == 403249-1a.html 403249-1-ref.html
 == 403249-1b.html 403249-1-ref.html
 == 403249-2a.html 403249-2-ref.html
