@@ -1287,7 +1287,7 @@ have_fun:
          * JS_THIS or JS_THIS_OBJECT, and scripted functions will go through
          * the appropriate this-computing bytecode, e.g., JSOP_THIS.
          */
-        if (native && fun && !(fun->flags & JSFUN_FAST_NATIVE)) {
+        if (native && (!fun || !(fun->flags & JSFUN_FAST_NATIVE))) {
             if (!js_ComputeThis(cx, JS_FALSE, vp + 2)) {
                 ok = JS_FALSE;
                 goto out2;
