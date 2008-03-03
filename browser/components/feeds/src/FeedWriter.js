@@ -43,8 +43,9 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
+const Cu = Components.utils;
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function LOG(str) {
   var prefB = Cc["@mozilla.org/preferences-service;1"].
@@ -84,6 +85,7 @@ const TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
 const TYPE_MAYBE_AUDIO_FEED = "application/vnd.mozilla.maybe.audio.feed";
 const TYPE_MAYBE_VIDEO_FEED = "application/vnd.mozilla.maybe.video.feed";
 const URI_BUNDLE = "chrome://browser/locale/feeds/subscribe.properties";
+const SUBSCRIBE_PAGE_URI = "chrome://browser/content/feeds/subscribe.xhtml";
 
 const PREF_SELECTED_APP = "browser.feeds.handlers.application";
 const PREF_SELECTED_WEB = "browser.feeds.handlers.webservice";
@@ -234,6 +236,19 @@ FeedWriter.prototype = {
     }
   },
 
+  /**
+   * Calls doCommand for a the given XUL element within the context of the
+   * content document.
+   *
+   * @param aElement
+   *        the XUL element to call doCommand() on.
+   */
+  _safeDoCommand: function FW___safeDoCommand(aElement) {
+    var sandbox = new Cu.Sandbox(this._window);
+    sandbox.element = aElement;
+    Cu.evalInSandbox("element.doCommand();", sandbox);
+  },
+
   __faviconService: null,
   get _faviconService() {
     if (!this.__faviconService)
@@ -283,9 +298,13 @@ FeedWriter.prototype = {
       aCheckbox.removeAttribute('checked');
 
     if (change) {
-      var event = this._document.createEvent('Events');
-      event.initEvent('CheckboxStateChange', true, true);
-      aCheckbox.dispatchEvent(event);
+      var sandbox = new Cu.Sandbox(this._window);
+      sandbox.document = this._document;
+      sandbox.checkbox = aCheckbox;
+      var codeStr = "var event = document.createEvent('Events'); " +
+                    "event.initEvent('CheckboxStateChange', true, true);" +
+                    "checkbox.dispatchEvent(event);"
+      Cu.evalInSandbox(codeStr, sandbox);
     }
   },
 
@@ -726,7 +745,7 @@ FeedWriter.prototype = {
 
             // Show and select the selected application menuitem
             selectedAppMenuItem.hidden = false;
-            selectedAppMenuItem.doCommand();
+            this._safeDoCommand(selectedAppMenuItem);
             return true;
           }
         }
@@ -859,7 +878,7 @@ FeedWriter.prototype = {
             return;
           }
 
-          handlers[0].doCommand();
+          this._safeDoCommand(handlers[0]);
         }
         break;
       }
@@ -874,7 +893,7 @@ FeedWriter.prototype = {
           if (selectedApp) {
             this._initMenuItemWithFile(selectedAppMenuItem, selectedApp);
             selectedAppMenuItem.hidden = false;
-            selectedAppMenuItem.doCommand();
+            this._safeDoCommand(selectedAppMenuItem);
 
             // Only show the default reader menuitem if the default reader
             // isn't the selected application
@@ -891,7 +910,7 @@ FeedWriter.prototype = {
       default: {
         var liveBookmarksMenuItem = this._document.getElementById("liveBookmarksMenuItem");
         if (liveBookmarksMenuItem)
-          liveBookmarksMenuItem.doCommand();
+          this._safeDoCommand(liveBookmarksMenuItem);
       } 
     }
   },
@@ -1078,7 +1097,6 @@ FeedWriter.prototype = {
                getInterface(Ci.nsIWebNavigation).
                QueryInterface(Ci.nsIDocShell).currentDocumentChannel;
 
-    const SUBSCRIBE_PAGE_URI = "chrome://browser/content/feeds/subscribe.xhtml";
     var uri = makeURI(SUBSCRIBE_PAGE_URI);
     var resolvedURI = Cc["@mozilla.org/chrome/chrome-registry;1"].
                       getService(Ci.nsIChromeRegistry).
@@ -1182,7 +1200,7 @@ FeedWriter.prototype = {
     this.__bundle = null;
     this._selectedApplicationItemWrapped = null;
     this._defaultSystemReaderItemWrapped = null;
-    this._FeedURI = null;
+    this._feedURI = null;
     var historySvc = Cc["@mozilla.org/browser/nav-history-service;1"].
                      getService(Ci.nsINavHistoryService);
     historySvc.removeObserver(this);
