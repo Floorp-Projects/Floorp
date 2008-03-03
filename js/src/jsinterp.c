@@ -1618,6 +1618,11 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         frame.callee = NULL;
         frame.fun = NULL;
         frame.thisp = chain;
+        OBJ_TO_OUTER_OBJECT(cx, frame.thisp);
+        if (!frame.thisp) {
+            ok = JS_FALSE;
+            goto out;
+        }
         frame.argc = 0;
         frame.argv = NULL;
         frame.nvars = script->ngvars;
