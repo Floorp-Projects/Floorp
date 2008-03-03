@@ -3953,6 +3953,11 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   bufPtr[len] = PRUnichar('\0');
 
   if (len == 1 && !nsTSMManager::IsComposing()) {
+    // don't let the same event be fired twice when hitting
+    // enter/return! (Bug 420502)
+    if (mKeyPressSent)
+      return;
+
     // dispatch keypress event with char instead of textEvent
     nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, mGeckoChild);
     geckoEvent.time      = PR_IntervalNow();
