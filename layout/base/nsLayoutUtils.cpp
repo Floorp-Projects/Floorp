@@ -2314,7 +2314,6 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
     pxSrc.size.width = gfxFloat(w);
     pxSrc.size.height = gfxFloat(h);
   }
-  gfxRect pxSubimage = pxSrc;
 
   nsCOMPtr<nsIDeviceContext> dc;
   aRenderingContext->GetDeviceContext(*getter_AddRefs(dc));
@@ -2376,9 +2375,7 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   imgFrame->GetRect(pxImgFrameRect);
 
   if (pxImgFrameRect.x > 0) {
-    gfxFloat fx(pxImgFrameRect.x);
-    pxSubimage.pos.x -= fx;
-    pxSrc.pos.x -= fx;
+    pxSrc.pos.x -= gfxFloat(pxImgFrameRect.x);
 
     gfxFloat scaled_x = pxSrc.pos.x;
     if (pxDirty.size.width != pxSrc.size.width) {
@@ -2399,9 +2396,7 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   }
 
   if (pxImgFrameRect.y > 0) {
-    gfxFloat fy(pxImgFrameRect.y);
-    pxSubimage.pos.y -= fy;
-    pxSrc.pos.y -= fy;
+    pxSrc.pos.y -= gfxFloat(pxImgFrameRect.y);
 
     gfxFloat scaled_y = pxSrc.pos.y;
     if (pxDirty.size.height != pxSrc.size.height) {
@@ -2421,7 +2416,7 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
     return NS_OK;
   }
 
-  return img->Draw(*aRenderingContext, pxSrc, pxSubimage, pxDirty);
+  return img->Draw(*aRenderingContext, pxSrc, pxDirty);
 }
 
 void
