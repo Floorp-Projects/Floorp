@@ -566,7 +566,7 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
 
   gfxRect inRect = gfxRect(srcRect.x, srcRect.y, srcRect.width, srcRect.height);
   gfxRect outRect = gfxRect(destRect.x, destRect.y, destRect.width, destRect.height);
-  return img->Draw(*rc, inRect, outRect);
+  return img->Draw(*rc, inRect, inRect, outRect);
 }
 
 void
