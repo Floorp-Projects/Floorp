@@ -11,6 +11,7 @@ toolkit.jar:
 *  content/global/about.xhtml                 (about.xhtml)
    content/global/plugins.html
    content/global/plugins.css
+*  content/global/debug.js                    (debug.js)
 +  content/global/buildconfig.html            (buildconfig.html)
 +  content/global/charsetOverlay.js           (charsetOverlay.js)
 +  content/global/charsetOverlay.xul          (charsetOverlay.xul)
