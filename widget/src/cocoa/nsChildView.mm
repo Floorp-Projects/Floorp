@@ -4030,25 +4030,20 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
 - (void)insertNewline:(id)sender
 {
-  // dummy impl, does nothing other than stop the beeping when hitting return
+  [self insertText:@"\n"];
 }
 
 
 - (void) doCommandBySelector:(SEL)aSelector
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
 #if DEBUG_IME 
   NSLog(@"**** in doCommandBySelector %s (ignore %d)", aSelector, mIgnoreDoCommand);
 #endif
-  if (mIgnoreDoCommand)
-    return;
 
-  if (aSelector == @selector(insertNewline:)) {
-    [self insertText:@"\n"];
-    return;
-  }
-
-  [super doCommandBySelector:aSelector];
+  if (!mIgnoreDoCommand)
+    [super doCommandBySelector:aSelector];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
