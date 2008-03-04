@@ -137,6 +137,9 @@ nsAutoCompleteController::SetInput(nsIAutoCompleteInput *aInput)
   nsAutoString newValue;
   mInput->GetTextValue(newValue);
   
+  // Clear out this reference in case the new input's popup has no tree
+  mTree = nsnull;
+  
   // Reset all search state members to default values
   mSearchString = newValue;
   mEnterAfterSearch = 0;
