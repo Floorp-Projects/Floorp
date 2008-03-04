@@ -125,38 +125,9 @@
 #define SetWindowLongA             SetWindowLongW
 #define GetMonitorInfoW           GetMonitorInfo
 
-#if 0
-#define GetProp                   GetPropA
-#define SetProp                   SetPropA
-#define RemoveProp                RemovePropA
-
-
-#define SetWorldTransform         SetWorldTransform
-#define GetWorldTransform         GetWorldTransform
-#define SetGraphicsMode           SetGraphicsMode
-
-#define ScriptFreeCache           ScriptFreeCache
-
-#undef GetProcAddress
+#undef  GetProcAddress
 #define GetProcAddress            GetProcAddressA
 
-
-
-// OutlineTextMetrics are tricky. It is a pain to convert W->A text metrics,
-// and we have no A functions. Because we do not define UNICODE, headers specify A function versions
-// We can override the function defines here, but can't override the typedefs (typedef TEXTMETRICW TEXTMETRIC)
-// A define is a hack around this, but it might fail elsewhere.
-// dougt code review
-#undef GetOutlineTextMetrics
-#define GetOutlineTextMetrics     GetOutlineTextMetricsW
-#undef GetTextMetrics
-#define GetTextMetrics            GetTextMetricsW
-#define OUTLINETEXTMETRIC         OUTLINETEXTMETRICW
-#define TEXTMETRIC                TEXTMETRICW
-#undef wsprintf
-#define wsprintf                wsprintfW
-
-#endif  //if 0
 
 //still need these
 #define GetCurrentDirectory       GetCurrentDirectoryW
@@ -211,6 +182,9 @@ extern "C" {
   MOZCE_SHUNT_API int stat(const char *inPath, struct stat * outStat);
 
   // From stdio.cpp
+
+  MOZCE_SHUNT_API int _waccess(const wchar_t *path, int mode);
+
   MOZCE_SHUNT_API int access(const char *path, int mode);
   MOZCE_SHUNT_API void rewind(FILE* inStream);
   MOZCE_SHUNT_API FILE* fdopen(int inFD, const char* inMode);
@@ -306,6 +280,8 @@ extern "C" {
   MOZCE_SHUNT_API DWORD GetEnvironmentVariableW(LPCWSTR lpName, LPWSTR lpBuffer, DWORD nSize);
   MOZCE_SHUNT_API void GetSystemTimeAsFileTime(LPFILETIME lpSystemTimeAsFileTime);
 
+
+  MOZCE_SHUNT_API DWORD GetLongPathNameW(LPCWSTR lpszShortPath, LPCWSTR lpszLongPath, DWORD cchBuffer);
 
   #define GetFullPathNameW GetFullPathName
   MOZCE_SHUNT_API DWORD GetFullPathName(const char* lpFileName, DWORD nBufferLength, const char* lpBuffer, const char** lpFilePart);
