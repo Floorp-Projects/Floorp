@@ -2713,6 +2713,15 @@ NSEvent* gLastDragEvent = nil;
 
   if (!gRollupWidget)
     return;
+
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs) {
+    PRBool useNativeContextMenus;
+    nsresult rv = prefs->GetBoolPref("ui.use_native_popup_windows", &useNativeContextMenus);
+    if (NS_SUCCEEDED(rv) && useNativeContextMenus)
+      return;
+  }
+
   NSWindow *popupWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
   if (!popupWindow || ![popupWindow isKindOfClass:[PopupWindow class]])
     return;
@@ -3345,17 +3354,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   if (!mGeckoChild)
     return nil;
 
-  // If we're running in a browser that (unlike Camino) uses non-native
-  // context menus, we must call maybeInitContextMenuTracking.  This call was
-  // dropped with the patch for bug 396186, which caused at least one
-  // regression (bug 416455).
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs) {
-    PRBool useNativeContextMenus;
-    nsresult rv = prefs->GetBoolPref("ui.use_native_popup_windows", &useNativeContextMenus);
-    if (!NS_SUCCEEDED(rv) || !useNativeContextMenus)
-      [self maybeInitContextMenuTracking];
-  }
+  [self maybeInitContextMenuTracking];
 
   // Go up our view chain to fetch the correct menu to return.
   return [self contextMenu];
@@ -4382,6 +4381,19 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
         mKeyDownHandled = PR_FALSE;
         return;
       }
+    }
+
+    // If this is the context menu key command, send a context menu key event.
+    unsigned int modifierFlags = [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
+    if (modifierFlags == NSControlKeyMask && [[theEvent charactersIgnoringModifiers] isEqualToString:@" "]) {
+      nsMouseEvent contextMenuEvent(PR_TRUE, NS_CONTEXTMENU, [self widget], nsMouseEvent::eReal, nsMouseEvent::eContextMenuKey);
+      contextMenuEvent.isShift = contextMenuEvent.isControl = contextMenuEvent.isAlt = contextMenuEvent.isMeta = PR_FALSE;
+      mGeckoChild->DispatchWindowEvent(contextMenuEvent);
+      [self maybeInitContextMenuTracking];
+      // Bail, there is nothing else to do here.
+      mCurKeyEvent = nil;
+      mKeyDownHandled = PR_FALSE;
+      return;
     }
 
     nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
