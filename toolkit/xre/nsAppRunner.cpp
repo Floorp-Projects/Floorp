@@ -2687,7 +2687,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   }
 
 #ifdef XP_MACOSX
-  if (GetCurrentKeyModifiers() & optionKey)
+  if (GetCurrentEventKeyModifiers() & optionKey)
     gSafeMode = PR_TRUE;
 #endif
 
