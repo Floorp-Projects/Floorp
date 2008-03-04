@@ -188,6 +188,7 @@ user_pref("signed.applets.codebase_principal_support", true);
 user_pref("security.warn_submit_insecure", false);
 user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("browser.warnOnQuit", false);
+user_pref("accessibility.typeaheadfind.autostart", false);
 """
   prefs.append(part)
 
