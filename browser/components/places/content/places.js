@@ -616,6 +616,8 @@ var PlacesOrganizer = {
     var queries = [];
     var options = this.getCurrentOptions();
     options.excludeQueries = true;
+    // unset expandQueries=false, which is set by the left pane
+    options.expandQueries = true;
     var searchUI = document.getElementById("searchModifiers");
     if (!searchUI.hidden)
       queries = PlacesQueryBuilder.queries;
