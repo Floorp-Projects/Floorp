@@ -242,7 +242,7 @@ nsNativeThemeCocoa::DrawCellWithScaling(NSCell *cell,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NSRect drawRect = NSRectFromCGRect(destRect);
+  NSRect drawRect = NSMakeRect(destRect.origin.x, destRect.origin.y, destRect.size.width, destRect.size.height);
 
   CGAffineTransform savedCTM;
 
