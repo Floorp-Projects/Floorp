@@ -322,8 +322,6 @@ vbox[typeName="status"][type="header-recommended"] {
 }
 
 #searchbox {
-  list-style-image: url(chrome://mozapps/skin/extensions/searchIcons.png);
-  -moz-image-region: rect(0px 19px 19px 0px);
   padding: 0;
 }
 
