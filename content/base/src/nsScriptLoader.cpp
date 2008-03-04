@@ -427,7 +427,8 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
   if (scriptURI) {
     // Check that the containing page is allowed to load this URI.
     rv = nsContentUtils::GetSecurityManager()->
-      CheckLoadURIWithPrincipal(mDocument->NodePrincipal(), scriptURI, 0);
+      CheckLoadURIWithPrincipal(mDocument->NodePrincipal(), scriptURI,
+                                nsIScriptSecurityManager::ALLOW_CHROME);
 
     NS_ENSURE_SUCCESS(rv, rv);
 

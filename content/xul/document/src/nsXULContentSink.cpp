@@ -1158,7 +1158,8 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
                   if (NS_SUCCEEDED(rv)) {
                       rv = mSecMan->
                           CheckLoadURIWithPrincipal(doc->NodePrincipal(),
-                                                    script->mSrcURI, 0);
+                                                    script->mSrcURI,
+                                                    nsIScriptSecurityManager::ALLOW_CHROME);
                   }
               }
           }
