@@ -105,7 +105,7 @@ var StarUI = {
           this._itemId = -1;
           this._uri = null;
           if (this._batching) {
-            PlacesUtils.ptm.endBatch();
+            PlacesUIUtils.ptm.endBatch();
             this._batching = false;
           }
         }
@@ -188,11 +188,11 @@ var StarUI = {
     // Otherwise, if no changes were done in the edit-item panel, the last
     // transaction on the undo stack may be the initial createItem transaction,
     // or worse, the batched editing of some other item.
-    PlacesUtils.ptm.doTransaction({ doTransaction: function() { },
-                                    undoTransaction: function() { },
-                                    redoTransaction: function() { },
-                                    isTransient: false,
-                                    merge: function() { return false; } });
+    PlacesUIUtils.ptm.doTransaction({ doTransaction: function() { },
+                                      undoTransaction: function() { },
+                                      redoTransaction: function() { },
+                                      isTransient: false,
+                                      merge: function() { return false; } });
 
     if (this.panel.state == "closed") {
       // Consume dismiss clicks, see bug 400924
@@ -271,7 +271,7 @@ var StarUI = {
 
   cancelButtonOnCommand: function SU_cancelButtonOnCommand() {
     this.endBatch();
-    PlacesUtils.ptm.undoTransaction();
+    PlacesUIUtils.ptm.undoTransaction();
     this.panel.hidePopup();
   },
 
@@ -282,8 +282,8 @@ var StarUI = {
     // a "Bookmark Removed" notification along with an Undo button is
     // shown
     if (this._batching) {
-      PlacesUtils.ptm.endBatch();
-      PlacesUtils.ptm.beginBatch(); // allow undo from within the notification
+      PlacesUIUtils.ptm.endBatch();
+      PlacesUIUtils.ptm.beginBatch(); // allow undo from within the notification
       var bundle = this._element("bundle_browser");
 
       // "Bookmark Removed" title (the description field is already empty in
@@ -308,8 +308,8 @@ var StarUI = {
     // the tags for the url
     var itemIds = PlacesUtils.getBookmarksForURI(this._uri);
     for (var i=0; i < itemIds.length; i++) {
-      var txn = PlacesUtils.ptm.removeItem(itemIds[i]);
-      PlacesUtils.ptm.doTransaction(txn);
+      var txn = PlacesUIUtils.ptm.removeItem(itemIds[i]);
+      PlacesUIUtils.ptm.doTransaction(txn);
     }
 
 #ifdef ADVANCED_STARRING_UI
@@ -324,21 +324,21 @@ var StarUI = {
     // restore the bookmark by undoing the last transaction and go back
     // to the edit state
     this.endBatch();
-    PlacesUtils.ptm.undoTransaction();
+    PlacesUIUtils.ptm.undoTransaction();
     this._itemId = PlacesUtils.getMostRecentBookmarkForURI(this._uri);
     this.showEditBookmarkPopup();
   },
 
   beginBatch: function SU_beginBatch() {
     if (!this._batching) {
-      PlacesUtils.ptm.beginBatch();
+      PlacesUIUtils.ptm.beginBatch();
       this._batching = true;
     }
   },
 
   endBatch: function SU_endBatch() {
     if (this._batching) {
-      PlacesUtils.ptm.endBatch();
+      PlacesUIUtils.ptm.endBatch();
       this._batching = false;
     }
   }
@@ -372,7 +372,7 @@ var PlacesCommandHook = {
       var description;
       try {
         title = webNav.document.title || url.spec;
-        description = PlacesUtils.getDescriptionFromDocument(webNav.document);
+        description = PlacesUIUtils.getDescriptionFromDocument(webNav.document);
       }
       catch (e) { }
 
@@ -386,9 +386,9 @@ var PlacesCommandHook = {
       var parent = aParent != undefined ?
                    aParent : PlacesUtils.unfiledBookmarksFolderId;
       var descAnno = { name: DESCRIPTION_ANNO, value: description };
-      var txn = PlacesUtils.ptm.createItem(uri, parent, -1,
-                                           title, null, [descAnno]);
-      PlacesUtils.ptm.doTransaction(txn);
+      var txn = PlacesUIUtils.ptm.createItem(uri, parent, -1,
+                                             title, null, [descAnno]);
+      PlacesUIUtils.ptm.doTransaction(txn);
       itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
     }
 
@@ -432,8 +432,8 @@ var PlacesCommandHook = {
     var itemId = PlacesUtils.getMostRecentBookmarkForURI(linkURI);
     if (itemId == -1) {
       StarUI.beginBatch();
-      var txn = PlacesUtils.ptm.createItem(linkURI, aParent, -1, aTitle);
-      PlacesUtils.ptm.doTransaction(txn);
+      var txn = PlacesUIUtils.ptm.createItem(linkURI, aParent, -1, aTitle);
+      PlacesUIUtils.ptm.doTransaction(txn);
       itemId = PlacesUtils.getMostRecentBookmarkForURI(linkURI);
     }
 
@@ -474,7 +474,7 @@ var PlacesCommandHook = {
    */
   bookmarkCurrentPages: function PCH_bookmarkCurrentPages() {
     var tabURIs = this._getUniqueTabInfo();
-    PlacesUtils.showMinimalAddMultiBookmarkUI(tabURIs);
+    PlacesUIUtils.showMinimalAddMultiBookmarkUI(tabURIs);
   },
 
   
@@ -500,12 +500,12 @@ var PlacesCommandHook = {
     if (arguments.length > 2)
       description = feedSubtitle;
     else
-      description = PlacesUtils.getDescriptionFromDocument(doc);
+      description = PlacesUIUtils.getDescriptionFromDocument(doc);
 
     var toolbarIP =
       new InsertionPoint(PlacesUtils.bookmarks.toolbarFolder, -1);
-    PlacesUtils.showMinimalAddLivemarkUI(feedURI, gBrowser.currentURI,
-                                         title, description, toolbarIP, true);
+    PlacesUIUtils.showMinimalAddLivemarkUI(feedURI, gBrowser.currentURI,
+                                           title, description, toolbarIP, true);
   },
 
   /**
@@ -581,7 +581,7 @@ var BookmarksEventHandler = {
       return;
 
     var target = aEvent.originalTarget;
-    var view = PlacesUtils.getViewForNode(target);
+    var view = PlacesUIUtils.getViewForNode(target);
     if (target.node && PlacesUtils.nodeIsFolder(target.node)) {
       // Don't open the root folder in tabs when the empty area on the toolbar
       // is middle-clicked or when a non-bookmark item except for Open in Tabs)
@@ -625,7 +625,7 @@ var BookmarksEventHandler = {
   onCommand: function BM_onCommand(aEvent) {
     var target = aEvent.originalTarget;
     if (target.node)
-      PlacesUtils.openNodeWithEvent(target.node, aEvent);
+      PlacesUIUtils.openNodeWithEvent(target.node, aEvent);
   },
 
   /**
@@ -685,7 +685,7 @@ var BookmarksEventHandler = {
           openHomePage.setAttribute("onclick",
               "checkForMiddleClick(this, event); event.stopPropagation();");
           openHomePage.setAttribute("label",
-              PlacesUtils.getFormattedString("menuOpenLivemarkOrigin.label",
+              PlacesUIUtils.getFormattedString("menuOpenLivemarkOrigin.label",
               [target.parentNode.getAttribute("label")]));
           target.appendChild(openHomePage);
         }
@@ -694,7 +694,7 @@ var BookmarksEventHandler = {
           var openInTabs = document.createElement("menuitem");
           openInTabs.setAttribute("openInTabs", "true");
           openInTabs.setAttribute("oncommand",
-                                  "PlacesUtils.openContainerNodeInTabs(this.parentNode._resultNode, event);");
+                                  "PlacesUIUtils.openContainerNodeInTabs(this.parentNode._resultNode, event);");
           openInTabs.setAttribute("label",
                      gNavigatorBundle.getString("menuOpenAllInTabs.label"));
           target.appendChild(openInTabs);
@@ -755,7 +755,7 @@ var BookmarksMenuDropHandler = {
   getSupportedFlavours: function BMDH_getSupportedFlavours() {
     var flavorSet = new FlavourSet();
     var view = document.getElementById("bookmarksMenuPopup");
-    var types = PlacesUtils.GENERIC_VIEW_DROP_TYPES
+    var types = PlacesUIUtils.GENERIC_VIEW_DROP_TYPES
     for (var i = 0; i < types.length; ++i)
       flavorSet.appendFlavour(types[i]);
     return flavorSet;
