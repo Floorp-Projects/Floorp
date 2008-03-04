@@ -136,6 +136,10 @@ nsXULTooltipListener::MouseUp(nsIDOMEvent* aMouseEvent)
 NS_IMETHODIMP
 nsXULTooltipListener::MouseOut(nsIDOMEvent* aMouseEvent)
 {
+  // Clear the cached mouse event as it might hold a window alive too long, see
+  // bug 420803.
+  mCachedMouseEvent = nsnull;
+
   // if the timer is running and no tooltip is shown, we
   // have to cancel the timer here so that it doesn't 
   // show the tooltip if we move the mouse out of the window
