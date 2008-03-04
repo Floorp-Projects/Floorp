@@ -318,32 +318,6 @@ function testMixedSizesDifferentDomains() {
   doTest([update1, update2], assertions);
 }
 
-function testMixedSizesNoCompleter() {
-  var add1Urls = [ "foo.com/a" ];
-  var add2Urls = [ "foo.com/b" ];
-
-  var update1 = buildPhishingUpdate(
-    [
-      { "chunkNum" : 1,
-        "urls" : add1Urls }],
-    4);
-  var update2 = buildPhishingUpdate(
-    [
-      { "chunkNum" : 2,
-        "urls" : add2Urls }],
-    32);
-
-  var assertions = {
-    "tableData" : "test-phish-simple;a:1-2",
-    // add1Urls shouldn't work, because there is no completer.
-    "urlsDontExist" : add1Urls,
-    // but add2Urls were complete, they should work.
-    "urlsExist" : add2Urls
-  };
-
-  doTest([update1, update2], assertions);
-}
-
 function testInvalidHashSize()
 {
   var addUrls = [ "foo.com/a", "foo.com/b", "bar.com/c" ];
@@ -530,7 +504,6 @@ function run_test()
     testCompleterFailure,
     testMixedSizesSameDomain,
     testMixedSizesDifferentDomains,
-    testMixedSizesNoCompleter,
     testInvalidHashSize,
     testCachedResults,
     testCachedResultsWithSub,

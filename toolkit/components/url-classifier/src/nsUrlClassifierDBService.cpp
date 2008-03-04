@@ -3720,6 +3720,18 @@ nsUrlClassifierDBService::CacheCompletions(nsTArray<nsUrlClassifierLookupResult>
   return mWorkerProxy->CacheCompletions(results);
 }
 
+PRBool
+nsUrlClassifierDBService::GetCompleter(const nsACString &tableName,
+                                       nsIUrlClassifierHashCompleter **completer)
+{
+  if (mCompleters.Get(tableName, completer)) {
+    return PR_TRUE;
+  }
+
+  return NS_SUCCEEDED(CallGetService(NS_URLCLASSIFIERHASHCOMPLETER_CONTRACTID,
+                                     completer));
+}
+
 NS_IMETHODIMP
 nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
                                   const PRUnichar *aData)

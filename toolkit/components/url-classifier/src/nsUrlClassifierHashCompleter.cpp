@@ -530,8 +530,12 @@ nsUrlClassifierHashCompleter::Complete(const nsACString &partialHash,
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    // Schedule ourselves to start this request on the main loop.
-    NS_DispatchToCurrentThread(this);
+    // If we don't have a gethash url yet, don't bother scheduling
+    // the request until we have one.
+    if (!mGethashUrl.IsEmpty()) {
+      // Schedule ourselves to start this request on the main loop.
+      NS_DispatchToCurrentThread(this);
+    }
   }
 
   return mRequest->Add(partialHash, c);
@@ -541,6 +545,12 @@ NS_IMETHODIMP
 nsUrlClassifierHashCompleter::SetGethashUrl(const nsACString &url)
 {
   mGethashUrl = url;
+
+  if (mRequest) {
+    // Schedule any pending request.
+    NS_DispatchToCurrentThread(this);
+  }
+
   return NS_OK;
 }
 
