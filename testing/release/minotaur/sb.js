@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Dave Liebreich <davel@mozilla.com>
+ *  Clint Talbert <ctalbert@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -90,40 +91,6 @@ function escape(s) {
 function closeOutputFile() {
   output("\n</testrun>\n");
   gConvStream.close();
-}
-
-// Print out the profile directory so that it can be deleted later
-function outputProfileDir() {
-  // We don't want failing to write the profile stop the test, so try...catch it
-  try {
-    var dirServices = Cc["@mozilla.org/file/directory_service;1"]
-                      .createInstance(Ci.nsIProperties);
-    var file = dirServices.get("CurWorkD", Components.interfaces.nsIFile);
-    file.append("profile.txt");
-    if (file.exists()) {
-      file.remove(false);
-    }
-
-    var outFile = Cc["@mozilla.org/network/file-output-stream;1"]
-               .createInstance(Ci.nsIFileOutputStream);
-    const MODE_WRONLY = 0x02;
-    const MODE_CREATE = 0x08;
-    const MODE_TRUNCATE = 0x20;
-    const MODE_APPEND = 0x10;
-    outFile.init(file, MODE_WRONLY | MODE_CREATE | MODE_APPEND | MODE_TRUNCATE,
-                  0600, 0);
-    // Need to create the converterStream
-    var convStream = Cc["@mozilla.org/intl/converter-output-stream;1"]
-                  .createInstance(Ci.nsIConverterOutputStream);
-    convStream.init(outFile, "UTF-8", 0, 0x0000);
-
-    // Get the profile directory
-    var profD = dirServices.get("ProfD", Ci.nsIFile);
-    convStream.writeString(profD.path);
-    convStream.close();
-  } catch (ex) {
-    dump("Could not write profile directory path to profiles.txt");
-  }
 }
 
 function listEngines() {
@@ -301,7 +268,6 @@ function listUpdates() {
   prompter.checkForUpdates();
 }
 
-outputProfileDir();
 createOutputFile();
 listEngines();
 listPrefs();
