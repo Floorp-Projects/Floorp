@@ -767,7 +767,8 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
     // Do security check
     nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
     rv = secMan->
-      CheckLoadURIWithPrincipal(mDocument->NodePrincipal(), url, 0);
+      CheckLoadURIWithPrincipal(mDocument->NodePrincipal(), url,
+                                nsIScriptSecurityManager::ALLOW_CHROME);
     NS_ENSURE_SUCCESS(rv, NS_OK);
 
     // Do content policy check
