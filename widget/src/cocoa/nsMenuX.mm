@@ -1046,7 +1046,10 @@ nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aContent, n
         menuParent->GetNativeData(&clientData);
       if (clientData) {
         NSMenu* parentMenu = reinterpret_cast<NSMenu*>(clientData);
-        [parentMenu removeItem:mNativeMenuItem];
+        // An exception will get thrown if we try to remove an item that isn't
+        // in the menu.
+        if ([parentMenu indexOfItem:mNativeMenuItem] != -1)
+          [parentMenu removeItem:mNativeMenuItem];
         mVisible = PR_FALSE;
       }
     }
