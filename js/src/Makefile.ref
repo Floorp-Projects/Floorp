@@ -221,6 +221,7 @@ JS_CFILES =		\
 	jsgc.c		\
 	jshash.c	\
 	jsinterp.c	\
+	jsinvoke.c	\
 	jsiter.c	\
 	jslock.c	\
 	jslog2.c	\
@@ -342,6 +343,15 @@ endif
 
 # Automatic make dependencies files
 DEPENDENCIES    = $(CFILES:%.c=$(OBJDIR)/%.d)
+
+#
+# Hardwire dependencies for jsinvoke.c
+#
+ifdef USE_MSVC
+$(OBJDIR)/jsinvoke.obj : jsinterp.h jsinterp.c
+else
+$(OBJDIR)/jsinvoke.o : jsinterp.h jsinterp.c
+endif
 
 -include $(DEPENDENCIES)
 

@@ -332,6 +332,12 @@ js_AllocStack(JSContext *cx, uintN nslots, void **markp);
 extern JS_FRIEND_API(void)
 js_FreeStack(JSContext *cx, void *mark);
 
+extern jsval *
+js_AllocRawStack(JSContext *cx, uintN nslots, void **markp);
+
+extern void
+js_FreeRawStack(JSContext *cx, void *mark);
+
 /*
  * Refresh and return fp->scopeChain.  It may be stale if block scopes are
  * active but not yet reflected by objects in the scope chain.  If a block
@@ -363,6 +369,31 @@ js_GetPrimitiveThis(JSContext *cx, jsval *vp, JSClass *clasp, jsval *thisvp);
  */
 extern JSObject *
 js_ComputeThis(JSContext *cx, JSBool lazy, jsval *argv);
+
+/*
+ * ECMA requires "the global object", but in embeddings such as the browser,
+ * which have multiple top-level objects (windows, frames, etc. in the DOM),
+ * we prefer fun's parent.  An example that causes this code to run:
+ *
+ *   // in window w1
+ *   function f() { return this }
+ *   function g() { return f }
+ *
+ *   // in window w2
+ *   var h = w1.g()
+ *   alert(h() == w1)
+ *
+ * The alert should display "true".
+ */
+JSObject *
+js_ComputeGlobalThis(JSContext *cx, JSBool lazy, jsval *argv);
+
+extern const uint16 js_PrimitiveTestFlags[];
+
+#define PRIMITIVE_THIS_TEST(fun,thisv)                                        \
+    (JS_ASSERT(thisv != JSVAL_VOID),                                          \
+     JSFUN_THISP_TEST(JSFUN_THISP_FLAGS((fun)->flags),                        \
+                      js_PrimitiveTestFlags[JSVAL_TAG(thisv) - 1]))
 
 /*
  * NB: js_Invoke requires that cx is currently running JS (i.e., that cx->fp
@@ -421,6 +452,14 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
            JSStackFrame *down, uintN flags, jsval *result);
 
 extern JSBool
+js_InvokeConstructor(JSContext *cx, jsval *vp, uintN argc);
+
+extern JSBool
+js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result);
+
+#define JSPROP_INITIALIZER 0x100   /* NB: Not a valid property attribute. */
+
+extern JSBool
 js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
                       JSObject **objp, JSProperty **propp);
 
@@ -428,10 +467,39 @@ extern JSBool
 js_StrictlyEqual(JSContext *cx, jsval lval, jsval rval);
 
 extern JSBool
-js_InvokeConstructor(JSContext *cx, jsval *vp, uintN argc);
+js_EnterWith(JSContext *cx, jsint stackIndex);
+
+extern void
+js_LeaveWith(JSContext *cx);
+
+extern JSClass *
+js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth);
+
+extern jsint
+js_CountWithBlocks(JSContext *cx, JSStackFrame *fp);
+
+/*
+ * Unwind block and scope chains to match the given depth. The function sets
+ * fp->sp on return to stackDepth.
+ */
+extern JSBool
+js_UnwindScope(JSContext *cx, JSStackFrame *fp, jsint stackDepth,
+               JSBool normalUnwind);
 
 extern JSBool
-js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result);
+js_InternNonIntElementId(JSContext *cx, JSObject *obj, jsval idval, jsid *idp);
+
+extern JSBool
+js_ImportProperty(JSContext *cx, JSObject *obj, jsid id);
+
+/*
+ * JS_OPMETER helper functions.
+ */
+extern void
+js_MeterOpcodePair(JSOp op1, JSOp op2);
+
+extern void
+js_MeterSlotOpcode(JSOp op, uint32 slot);
 
 JS_END_EXTERN_C
 
