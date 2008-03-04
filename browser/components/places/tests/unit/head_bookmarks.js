@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+version(170);
+
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
 var Ci = Components.interfaces;
 var Cc = Components.classes;

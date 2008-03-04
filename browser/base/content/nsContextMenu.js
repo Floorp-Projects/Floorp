@@ -1191,13 +1191,13 @@ nsContextMenu.prototype = {
     var itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
     if (itemId == -1) {
       var title = doc.title;
-      var description = PlacesUtils.getDescriptionFromDocument(doc);
+      var description = PlacesUIUtils.getDescriptionFromDocument(doc);
 
       var descAnno = { name: DESCRIPTION_ANNO, value: description };
-      var txn = PlacesUtils.ptm.createItem(uri, 
+      var txn = PlacesUIUtils.ptm.createItem(uri, 
                                            PlacesUtils.bookmarksMenuFolderId,
                                            -1, title, null, [descAnno]);
-      PlacesUtils.ptm.doTransaction(txn);
+      PlacesUIUtils.ptm.doTransaction(txn);
       itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
       StarUI.beginBatch();
     }
