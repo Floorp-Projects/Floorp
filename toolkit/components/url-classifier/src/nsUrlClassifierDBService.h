@@ -87,10 +87,7 @@ public:
   NS_DECL_NSIOBSERVER
 
   PRBool GetCompleter(const nsACString& tableName,
-                      nsIUrlClassifierHashCompleter** completer) {
-    return mCompleters.Get(tableName, completer);
-  }
-
+                      nsIUrlClassifierHashCompleter** completer);
   nsresult CacheCompletions(nsTArray<nsUrlClassifierLookupResult> *results);
 
 private:
