@@ -3268,12 +3268,7 @@ nsUrlClassifierLookupCallback::Completion(const nsACString& completeHash,
 
     if (!result.mEntry.mHaveComplete &&
         hash.StartsWith(result.mEntry.mPartialHash) &&
-        // XXX: We really want to be comparing the table name to make
-        // sure it matches.  Due to a short-lived server bug, they
-        // won't just yet.  This should be fixed as soon as the server is.
-#if 0
         result.mTableName == tableName &&
-#endif
         result.mEntry.mChunkId == chunkId) {
       // We have a completion for this entry.  Fill it in...
       result.mEntry.SetHash(hash);
@@ -3293,6 +3288,20 @@ nsUrlClassifierLookupCallback::Completion(const nsACString& completeHash,
 
         mCacheResults->AppendElement(result);
       }
+    } else if (result.mLookupFragment == hash) {
+      // The hash we got for this completion matches the hash we
+      // looked up, but doesn't match the table/chunk id.  This could
+      // happen in rare cases where a given URL was moved between
+      // lists or added/removed/re-added to the list in the time since
+      // we've updated.
+      //
+      // Update the lookup result, but don't update the entry or try
+      // caching the results of this completion, as it might confuse
+      // things.
+      result.mConfirmed = PR_TRUE;
+      result.mTableName = tableName;
+
+      NS_WARNING("Accepting a gethash with an invalid table name or chunk id");
     }
   }
 
