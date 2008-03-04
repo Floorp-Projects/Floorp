@@ -1488,20 +1488,20 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
       aResult->left = aResult->right = 1;
       return PR_TRUE;
     }
+  }
 
-    // Some things only apply to widgets in HTML content, since
-    // they're drawn differently
-    if (IsHTMLContent(aFrame)) {
-      if (aWidgetType == NS_THEME_DROPDOWN) {
-        /* For content menulist controls, we need an extra pixel so
-         * that we have room to draw our focus rectangle stuff.
-         * Otherwise, the focus rect will overlap the control's
-         * border.
-         */
-        aResult->top = aResult->bottom = 1;
-        aResult->left = aResult->right = 1;
-        return PR_TRUE;
-      }
+  // Some things only apply to widgets in HTML content, since
+  // they're drawn differently
+  if (IsHTMLContent(aFrame)) {
+    if (aWidgetType == NS_THEME_DROPDOWN) {
+      /* For content menulist controls, we need an extra pixel so
+       * that we have room to draw our focus rectangle stuff.
+       * Otherwise, the focus rect might overlap the control's
+       * border.
+       */
+      aResult->top = aResult->bottom = 1;
+      aResult->left = aResult->right = 1;
+      return PR_TRUE;
     }
   }
 
