@@ -42,6 +42,8 @@
 # This file contains functions that are useful for debugging purposes from
 # within JavaScript code.
 
+var EXPORTED_SYMBOLS = ["NS_ASSERT"];
+
 var gTraceOnAssert = true;
 
 /**
