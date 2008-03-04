@@ -3316,7 +3316,7 @@ nsJSContext::SetGCOnDestruction(PRBool aGCOnDestruction)
 NS_IMETHODIMP
 nsJSContext::ScriptExecuted()
 {
-  ScriptEvaluated(PR_FALSE);
+  ScriptEvaluated(!::JS_IsRunning(mContext));
 
   return NS_OK;
 }
