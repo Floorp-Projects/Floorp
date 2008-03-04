@@ -105,8 +105,4 @@ EXTRA_PP_COMPONENTS = nsLivemarkService.js \
                       nsTaggingService.js \
                       $(NULL)
 
-EXTRA_JS_MODULES = utils.js
-
-EXTRA_PP_JS_MODULES = utils.js
-
 include $(topsrcdir)/config/rules.mk
