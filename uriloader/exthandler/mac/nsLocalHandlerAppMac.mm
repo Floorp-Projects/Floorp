@@ -35,8 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <LaunchServices.h>
+#import <Carbon/Carbon.h>
 
+#include "nsObjCExceptions.h"
 #include "nsLocalHandlerAppMac.h"
 #include "nsILocalFileMac.h"
 #include "nsIURI.h"
@@ -50,6 +51,8 @@ NS_IMETHODIMP
 nsLocalHandlerAppMac::LaunchWithURI(nsIURI *aURI,
                                     nsIInterfaceRequestor *aWindowContext)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsresult rv;
   nsCOMPtr<nsILocalFileMac> lfm(do_QueryInterface(mExecutable, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -92,4 +95,6 @@ nsLocalHandlerAppMac::LaunchWithURI(nsIURI *aURI,
   ::CFRelease(appURL);
   
   return err != noErr ? NS_ERROR_FAILURE : NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }

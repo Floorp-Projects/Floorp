@@ -40,6 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsOSHelperAppService.h"
+#include "nsObjCExceptions.h"
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -53,10 +54,10 @@
 #include "nsMemory.h"
 #include "nsCRT.h"
 #include "nsMIMEInfoMac.h"
-
 #include "nsIInternetConfigService.h"
 #include "nsEmbedCID.h"
-#include <LaunchServices.h>
+
+#import <Carbon/Carbon.h>
 
 // chrome URL's
 #define HELPERAPPLAUNCHER_BUNDLE_URL "chrome://global/locale/helperAppLauncher.properties"
@@ -105,6 +106,8 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolSch
 
 NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& aScheme, nsAString& _retval)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsresult rv = NS_ERROR_NOT_AVAILABLE;
 
   CFStringRef schemeCFString = 
@@ -146,10 +149,14 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& 
   }
 
   return rv;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * aPlatformAppPath, nsIFile ** aFile)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsresult rv;
   nsCOMPtr<nsILocalFileMac> localFile (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv,rv);
@@ -200,6 +207,8 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * aPlatformAp
   NS_IF_ADDREF(*aFile);
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 ///////////////////////////
 // method overrides --> use internet config information for mime type lookup.
@@ -221,6 +230,8 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
                                         const nsACString& aFileExt,
                                         PRBool * aFound)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSNULL;
+
   nsIMIMEInfo* mimeInfo = nsnull;
   *aFound = PR_TRUE;
 
@@ -316,6 +327,8 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
   }
   
   return mimeInfo;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL;
 }
 
 NS_IMETHODIMP
