@@ -150,6 +150,13 @@
             return;
           }
 
+          this._smoothScrollByPixels(amountToScroll);
+        ]]></body>
+      </method>
+
+      <method name="_smoothScrollByPixels">
+        <parameter name="amountToScroll"/>
+        <body><![CDATA[
           this._stopSmoothScroll();
 
           // Positive amountToScroll makes us scroll right (elements fly left), negative scrolls left.
