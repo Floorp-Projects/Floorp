@@ -93,12 +93,20 @@ _getnewfd()
 }
 
 
+MOZCE_SHUNT_API int _waccess(const wchar_t *path, int mode)
+{
+#ifdef API_LOGGING
+    mozce_printf("-- _waccess called\n");
+#endif
+    
+    return 0;
+}
 
 
 MOZCE_SHUNT_API int access(const char *path, int mode)
 {
 #ifdef API_LOGGING
-        mozce_printf("-- access called\n");
+    mozce_printf("-- access called\n");
 #endif
     
     return 0;

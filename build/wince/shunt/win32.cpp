@@ -552,14 +552,14 @@ MOZCE_SHUNT_API void GetSystemTimeAsFileTime(LPFILETIME lpSystemTimeAsFileTime)
     SystemTimeToFileTime(&st,lpSystemTimeAsFileTime);
 }
 
-#ifndef MIN
-#define MIN(a,b) (((a)<(b)) ? (a) : (b))
+MOZCE_SHUNT_API DWORD GetLongPathNameW(LPCWSTR lpszShortPath, LPCWSTR lpszLongPath, DWORD cchBuffer)
+{
+#ifdef API_LOGGING
+    mozce_printf("GetLongPathNameW called\n");
 #endif
 
-
-#ifndef MAX
-#define MAX(a,b) (((a)>(b)) ? (a) : (b))
-#endif
+    return 0;
+}
 
 MOZCE_SHUNT_API DWORD GetFullPathName(const char* lpFileName,
                                       DWORD nBufferLength,
