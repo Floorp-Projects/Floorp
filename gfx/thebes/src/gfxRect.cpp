@@ -89,6 +89,21 @@ gfxRect::Round()
     size.height = y1 - y0;
 }
 
+void
+gfxRect::RoundOut()
+{
+    gfxFloat x0 = NS_floor(X());
+    gfxFloat y0 = NS_floor(Y());
+    gfxFloat x1 = NS_ceil(XMost());
+    gfxFloat y1 = NS_ceil(YMost());
+
+    pos.x = x0;
+    pos.y = y0;
+
+    size.width = x1 - x0;
+    size.height = y1 - y0;
+}
+
 /* Clamp r to CAIRO_COORD_MIN .. CAIRO_COORD_MAX
  * these are to be device coordinates.
  */
