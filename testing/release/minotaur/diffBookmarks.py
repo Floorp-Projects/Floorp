@@ -33,9 +33,16 @@
 # ***** END LICENSE BLOCK *****
 
 from optparse import OptionParser
+import difflib
 from checkBookmarks import bookmarkParser
 from logAppender import LogAppender, stderrCatcher
 import sys
+
+DIFFBKMK_DBG = False
+
+def debug(s):
+  if DIFFBKMK_DBG:
+    print s
 
 # The Main function
 def main(left, right, log):
@@ -45,28 +52,40 @@ def main(left, right, log):
   sys.stderr = stderrCatcher(lw)
 
   # Parse the left hand file
-  leftParser = bookmarkParser()
+  leftParser = bookmarkParser(isDebug=DIFFBKMK_DBG)
   leftParser.parseFile(left)
 
   # Parse the right hand file
-  rightParser = bookmarkParser()
+  rightParser = bookmarkParser(isDebug=DIFFBKMK_DBG)
   rightParser.parseFile(right)
 
   # Now we compare the lists generated from the parsing and they should be
-  # identical
+  # identical, and they are sorted by <folder> and then by <link title>
   leftList = leftParser.getList()
   rightList = rightParser.getList()
 
-  if len(leftList) <> len(rightList):
-    lw.writeLog("Bookmarks lists are not the same length!")
-    raise SystemExit("Bookmark lists not same length, test fails")
+  # Handle the case where we are missing a file
+  if len(leftList) == 0:
+    lw.writeLog("**** BOOKMARKS REFERENCE FILE IS MISSING ****")
+    raise SystemExit("**** BOOKMARKS REFERENCE FILE IS MISSING ****")
+  elif len(rightList) == 0:
+    lw.writeLog("**** BOOKMARKS DATA FOR BUILD UNDER TEST IS MISSING ****")
+    raise SystemExit("**** BOOKMARKS DATA FOR BUILD UNDER TEST IS MISSING ****")
 
-  for lentry, rentry in zip(leftList, rightList):
-    if lentry <> rentry:
-      lw.writeLog("Error found entries that do not match")
-      lw.writeLog("Left side: " + lentry[0] + lentry[1])
-      lw.writeLog("Right side: " + rentry[0] + rentry[1])
-      raise SystemExit("Bookmark entries do not match, test fails")
+  leftlines = []
+  for lentry in leftList:
+    leftlines.append(lentry[0] + lentry[1] + lentry[2] + lentry[3] + lentry[4] + "\n")
+
+  rightlines = []
+  for rentry in rightList:
+    rightlines.append(rentry[0] + rentry[1] + rentry[2] + rentry[3] + rentry[4] + "\n")
+  
+  # Create the diff.  Here's how it works.  These are flattened sorted lists of
+  # bookmarks.  For ease of viewing, in their diffs, they look like this:
+  # folder=<bookmark folder> title=<link title> url=<link href> feedurl=<feedurl (if present)> icon=<icon>
+  # The diff takes the two sets of lines and does a unified diff on them.
+  diff = difflib.unified_diff(leftlines, rightlines)
+  lw.writelines(diff)
 
 if __name__ == "__main__":
   parser = OptionParser()
@@ -77,7 +96,13 @@ if __name__ == "__main__":
   parser.add_option("-f", "--LogFile", dest="log",
                     help="The file where the log output should go",
                     metavar="LOGFILE")
+  parser.add_option("-d", "--Debug", dest="isDebug", default=False,
+                    help="Turn on debug output by specifying -d true")
+
   (options, args) = parser.parse_args()
+
+  if options.isDebug:
+    DIFFBKMK_DBG = True
 
   # Call Main
   main(options.left, options.right, options.log)
