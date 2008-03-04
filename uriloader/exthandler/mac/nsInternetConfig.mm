@@ -34,8 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
+
 #include "nsInternetConfig.h"
+#include "nsObjCExceptions.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsDebug.h"
@@ -49,6 +50,8 @@ PRInt32  nsInternetConfig::sRefCount = 0;
 
 static OSType GetAppCreatorCode()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   ProcessSerialNumber psn = { 0, kCurrentProcess } ;
   ProcessInfoRec      procInfo;
   
@@ -57,13 +60,17 @@ static OSType GetAppCreatorCode()
   procInfo.processAppSpec = nsnull;
   
   GetProcessInformation(&psn, &procInfo);
-  return procInfo.processSignature;  
+  return procInfo.processSignature;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0x0);
 }
 
 
 
 ICInstance nsInternetConfig::GetInstance()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
 	if ( !sInstance )
 	{
 		OSStatus err;
@@ -83,10 +90,14 @@ ICInstance nsInternetConfig::GetInstance()
 		}
 	}
 	return sInstance;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NULL);
 }
 
 PRBool nsInternetConfig::HasSeedChanged()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
 	ICInstance instance = nsInternetConfig::GetInstance();
 	if ( instance )
 	{
@@ -99,6 +110,8 @@ PRBool nsInternetConfig::HasSeedChanged()
 		}
 	}
 	return PR_FALSE;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_FALSE);
 }
 
 nsInternetConfig::nsInternetConfig()
@@ -108,11 +121,15 @@ nsInternetConfig::nsInternetConfig()
 
 nsInternetConfig::~nsInternetConfig()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
 	sRefCount--;
 	if ( sRefCount == 0 && sInstance)
 	{
 		::ICStop( sInstance );
 		sInstance = NULL;
 	}
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
