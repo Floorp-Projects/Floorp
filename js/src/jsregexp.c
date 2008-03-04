@@ -62,6 +62,7 @@
 #include "jsopcode.h"
 #include "jsregexp.h"
 #include "jsscan.h"
+#include "jsscope.h"
 #include "jsstr.h"
 
 typedef enum REOp {

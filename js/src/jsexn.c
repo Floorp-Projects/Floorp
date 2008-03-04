@@ -57,7 +57,9 @@
 #include "jsfun.h"
 #include "jsinterp.h"
 #include "jsnum.h"
+#include "jsobj.h"
 #include "jsopcode.h"
+#include "jsscope.h"
 #include "jsscript.h"
 
 /* Forward declarations for js_ErrorClass's initializer. */

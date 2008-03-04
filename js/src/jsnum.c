@@ -63,6 +63,7 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsprf.h"
+#include "jsscope.h"
 #include "jsstr.h"
 
 static JSBool
