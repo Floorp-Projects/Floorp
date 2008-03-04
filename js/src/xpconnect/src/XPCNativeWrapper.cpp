@@ -40,8 +40,9 @@
 
 #include "xpcprivate.h"
 #include "XPCNativeWrapper.h"
-#include "jsdbgapi.h"
 #include "XPCWrapper.h"
+#include "jsdbgapi.h"
+#include "jsscope.h"
 
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
