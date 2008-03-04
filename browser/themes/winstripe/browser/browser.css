@@ -1557,20 +1557,21 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 
 #urlbar > .autocomplete-history-dropmarker:hover ,
 #urlbar > .autocomplete-history-dropmarker[open="true"] {
-  background-color: -moz-dialog !important;
-  -moz-appearance: toolbox;
-  outline: 1px solid ThreeDShadow;
-  -moz-margin-start: 1px;
+  background: ButtonFace url(chrome://browser/skin/tabbrowser/tab-active-bkgnd.png) repeat-x !important;
 }
 
 #urlbar > .autocomplete-history-dropmarker > .dropmarker-icon {
-  -moz-margin-start: 6px;
-  -moz-margin-end: 5px;
+  margin: 0 5px;
 }
 
-#urlbar > .autocomplete-history-dropmarker:hover > .dropmarker-icon ,
-#urlbar > .autocomplete-history-dropmarker[open="true"] > .dropmarker-icon {
-  -moz-margin-start: 5px;
+#urlbar[chromedir="ltr"] > .autocomplete-history-dropmarker {
+  border-left: 1px solid;
+  -moz-border-left-colors: transparent;
+}
+
+#urlbar[chromedir="ltr"] > .autocomplete-history-dropmarker:hover ,
+#urlbar[chromedir="ltr"] > .autocomplete-history-dropmarker[open="true"] {
+  -moz-border-left-colors: ButtonShadow;
 }
 
 /* Feed icon */
@@ -1657,27 +1658,64 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 /* ::::: Identity Indicator Styling ::::: */
 /* Location bar visuals*/
 
-#urlbar .autocomplete-textbox-container {
+#urlbar[chromedir="ltr"] {
+  -moz-margin-start: 4px;
+  /*-moz-margin-start: 6px;*/
+}
+
+#urlbar > .autocomplete-textbox-container {
   -moz-box-align: stretch;
 }
 
-#identity-box {
-  background-color: -moz-dialog;
+#identity-box {  
+  overflow: -moz-hidden-unscrollable;
+}
+
+#urlbar[chromedir="ltr"] > #identity-box {
+  -moz-margin-start: -4px;
+  /*-moz-margin-start: -6px;*/
+}
+
+#identity-box > hbox {
+  background: ButtonFace url(chrome://browser/skin/tabbrowser/tab-active-bkgnd.png) repeat-x;
   color: -moz-dialogtext;
-  -moz-appearance: toolbox;
-  outline: 1px solid ThreeDShadow;
-  -moz-margin-start: -1px;
-  /* currently, the identity box is always LTR */
-  -moz-outline-radius-topleft: 2px;
-  -moz-outline-radius-bottomleft: 2px;
+}
+
+#urlbar[chromedir="rtl"] > #identity-box > hbox {
+  border-right: 1px solid ButtonShadow;
+  border-left: 1px solid ButtonShadow;
+  padding: 0 3px;
+}
+
+#urlbar[chromedir="ltr"] > #identity-box > hbox {
+  border: 1px solid ButtonShadow;
+  border-right-style: none;
+  margin: -11px -10px -11px 0;
+  padding: 10px 12px 10px 4px;
+  background-position: 0 10px;
+  -moz-border-radius-topleft: 21px;
+  -moz-border-radius-bottomleft: 21px;
+  /*margin: -4px 0;
+  padding: 3px 2px 3px 4px;
+  background-position: 0 3px;
+  -moz-border-radius-topleft: 14px;
+  -moz-border-radius-bottomleft: 14px;*/
+}
+
+#urlbar[chromedir="ltr"] > .autocomplete-textbox-container > .textbox-input-box {
+  border-left: 1px solid ButtonShadow;
+  margin-left: 0;
+  padding-left: 3px;
+}
+
+#identity-box.verifiedIdentity > hbox {
+  background-color: #7c8;
+  color: #000;
 }
 
 #identity-box:focus {
   outline: 1px dotted -moz-DialogText;
-}
-
-#identity-box:hover {
-  outline-color: ThreeDDarkShadow;
+  outline-offset: -3px;
 }
 
 #identity-icon-label {
@@ -1686,95 +1724,77 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 #identity-icon-label[value=""] {
-    display: none;
-}
-
-#identity-box.verifiedIdentity > hbox {
-  background-color: rgba(0, 255, 0, 0.25);
+  display: none;
 }
 
 /* Popup Icons */
 #identity-popup-icon {
-    height: 64px;
-    width: 64px;
-    padding: 0;
-    list-style-image: url("chrome://browser/skin/identity.png");
-    -moz-image-region: rect(0px, 64px, 64px, 0px);
+  height: 64px;
+  width: 64px;
+  padding: 0;
+  list-style-image: url("chrome://browser/skin/identity.png");
+  -moz-image-region: rect(0px, 64px, 64px, 0px);
 }
 
-.verifiedDomain > #identity-popup-container > #identity-popup-icon {
-    -moz-image-region: rect(64px, 64px, 128px, 0px);
+#identity-popup.verifiedDomain > #identity-popup-container > #identity-popup-icon {
+  -moz-image-region: rect(64px, 64px, 128px, 0px);
 }
 
-.verifiedIdentity > #identity-popup-container > #identity-popup-icon {
-    -moz-image-region: rect(128px, 64px, 192px, 0px);
+#identity-popup.verifiedIdentity > #identity-popup-container > #identity-popup-icon {
+  -moz-image-region: rect(128px, 64px, 192px, 0px);
 }
 
 /* Popup Body Text */
-.unknownIdentity > #identity-popup-connectedToLabel,
-.unknownIdentity > #identity-popup-runByLabel,
-.unknownIdentity > #identity-popup-content-host,
-.unknownIdentity > #identity-popup-content-owner {
-    display: none;
-}
-
-.verifiedIdentity > #identity-popup-connectedToLabel2,
-.verifiedDomain > #identity-popup-connectedToLabel2 {
-    display: none;
-}
-
 #identity-popup-content-box > description,
 #identity-popup-encryption-label {
-    white-space: -moz-pre-wrap;
-    color: black;
-    padding-left: 15px;
-    margin: 2px 0 4px;
+  white-space: pre-wrap;
+  color: black;
+  padding-left: 15px;
+  margin: 2px 0 4px;
 }
 
 #identity-popup-content-box > label {
-    white-space: -moz-pre-wrap;
-    padding-left: 15px;
-    margin: 0;
+  white-space: pre-wrap;
+  padding-left: 15px;
+  margin: 0;
 }
 
-#identity-popup-content-host {
-   font-weight: bold;
-   max-width: 300px;
+#identity-popup-content-host ,
+#identity-popup-content-owner {
+  font-weight: bold;
+  max-width: 300px;
+}
+
+#identity-popup-content-host ,
+#identity-popup-content-box.verifiedIdentity > #identity-popup-content-owner {
+  font-size: 140%;
 }
 
 #identity-popup-content-owner {
-   font-weight: bold;
-   max-width: 300px;
-   margin-bottom: 0 !important;
-}
-
-.verifiedIdentity > #identity-popup-content-owner,
-.verifiedIdentity > #identity-popup-content-host,
-.verifiedDomain > #identity-popup-content-host {
-   font-size: 140%;
+  margin-bottom: 0 !important;
 }
 
 #identity-popup-content-verifier {
   margin: 4px 0 2px;
 }
 
-.verifiedIdentity > #identity-popup-encryption,
-.verifiedDomain > #identity-popup-encryption {
+#identity-popup-content-box.verifiedIdentity > #identity-popup-encryption ,
+#identity-popup-content-box.verifiedDomain > #identity-popup-encryption {
   margin-top: 10px;
   margin-left: -18px;
 }
 
-.verifiedIdentity > #identity-popup-encryption > * > #identity-popup-encryption-icon,
-.verifiedDomain > #identity-popup-encryption > * >#identity-popup-encryption-icon {
+#identity-popup-content-box.verifiedIdentity > #identity-popup-encryption > vbox > #identity-popup-encryption-icon ,
+#identity-popup-content-box.verifiedDomain > #identity-popup-encryption > vbox > #identity-popup-encryption-icon {
   list-style-image: url("chrome://browser/skin/Secure24.png");
 }
 
 /* Popup Bounding Box */
 #identity-popup-container {
-    background-image: none;
-    background-color: white;
-    min-width: 280px;
-    padding: 10px;
+  background-image: none;
+  background-color: white;
+  min-width: 280px;
+  padding: 10px;
 }
 
 #download-monitor {
