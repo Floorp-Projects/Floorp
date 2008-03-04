@@ -129,24 +129,6 @@ struct JSTitle {
 #define JS_NOTIFY_CONDVAR(cv)       PR_NotifyCondVar(cv)
 #define JS_NOTIFY_ALL_CONDVAR(cv)   PR_NotifyAllCondVar(cv)
 
-/*
- * Include jsscope.h so JS_LOCK_OBJ macro callers don't have to include it.
- * Since there is a JSThinLock member in JSScope, we can't nest this include
- * much earlier (see JSThinLock's typedef, above).  Yes, that means there is
- * an #include cycle between jslock.h and jsscope.h: moderate-sized XXX here,
- * to be fixed by moving JS_LOCK_SCOPE to jsscope.h, JS_LOCK_OBJ to jsobj.h,
- * and so on.
- *
- * We also need jsscope.h #ifdef JS_DEBUG_TITLE_LOCKS for SET_OBJ_INFO and
- * SET_SCOPE_INFO, but we do not want any nested includes that depend on DEBUG.
- * Those lead to build bustage when someone makes a change that depends in a
- * subtle way on jsscope.h being included directly or indirectly, but does not
- * test by building optimized as well as DEBUG.
-  */
-JS_END_EXTERN_C
-#include "jsscope.h"
-JS_BEGIN_EXTERN_C
-
 #ifdef JS_DEBUG_TITLE_LOCKS
 
 #define SET_OBJ_INFO(obj_, file_, line_)                                       \
