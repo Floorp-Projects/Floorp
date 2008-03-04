@@ -471,13 +471,11 @@ MacOSFamilyEntry::FindFontWeight(MacOSFontEntry* aFontsForWeights[], const gfxFo
         // substitute 400 and 500 for each other (example: Futura family that ships with Mac OS X)
         if (baseWeight == 4 && aFontsForWeights[5]) {
             baseMatch = 5;
-        } else if (baseWeight == 5 && aFontsForWeights[4]) {
-            baseMatch = 4;
         } else {
         
             // otherwise, use explicit CSS rules
-            // weights above 400 ==> look up in weights, then down, otherwise look down, then up
-            direction = (baseWeight > 4 ? 1 : -1);
+            // weights above 500 ==> look up in weights, then down, otherwise look down, then up
+            direction = (baseWeight > 5 ? 1 : -1);
             
             // search in one direction
             for (w = baseWeight + direction; w >= 1 && w <= 9; w += direction) {
