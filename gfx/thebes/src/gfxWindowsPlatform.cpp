@@ -304,6 +304,7 @@ gfxWindowsPlatform::UpdateFontList()
     mNonExistingFonts.Clear();
     mFontSubstitutes.Clear();
     mPrefFonts.Clear();
+    mCodepointsWithNoFonts.reset();
 
     LOGFONTW logFont;
     logFont.lfCharSet = DEFAULT_CHARSET;
@@ -358,6 +359,10 @@ gfxWindowsPlatform::UpdateFontList()
         else
             mNonExistingFonts.AppendString(substituteName);
     }
+
+    // initialize ranges of characters for which system-wide font search should be skipped
+    mCodepointsWithNoFonts.SetRange(0,0x1f);     // C0 controls
+    mCodepointsWithNoFonts.SetRange(0x7f,0x9f);  // C1 controls
 
     return NS_OK;
 }
@@ -460,18 +465,17 @@ gfxWindowsPlatform::FontResolveProc(const ENUMLOGFONTEXW *lpelfe,
 }
 
 struct FontSearch {
-    FontSearch(const PRUnichar *aString, PRUint32 aLength, gfxWindowsFont *aFont) :
-        string(aString), length(aLength), fontToMatch(aFont), matchRank(0) {
+    FontSearch(PRUint32 aCh, gfxWindowsFont *aFont) :
+        ch(aCh), fontToMatch(aFont), matchRank(0) {
     }
-    const PRUnichar *string;
-    const PRUint32 length;
+    PRUint32 ch;
     nsRefPtr<gfxWindowsFont> fontToMatch;
     PRInt32 matchRank;
     nsRefPtr<FontEntry> bestMatch;
 };
 
 PLDHashOperator PR_CALLBACK
-gfxWindowsPlatform::FindFontForStringProc(nsStringHashKey::KeyType aKey,
+gfxWindowsPlatform::FindFontForCharProc(nsStringHashKey::KeyType aKey,
                                           nsRefPtr<FontEntry>& aFontEntry,
                                           void* userArg)
 {
@@ -483,22 +487,15 @@ gfxWindowsPlatform::FindFontForStringProc(nsStringHashKey::KeyType aKey,
 
     PRInt32 rank = 0;
 
-    for (PRUint32 i = 0; i < data->length; ++i) {
-        PRUint32 ch = data->string[i];
+    PRUint32 ch = data->ch;
 
-        if ((i+1 < data->length) && NS_IS_HIGH_SURROGATE(ch) && NS_IS_LOW_SURROGATE(data->string[i+1])) {
-            i++;
-            ch = SURROGATE_TO_UCS4(ch, data->string[i]);
-        }
+    if (aFontEntry->mCharacterMap.test(ch)) {
+        rank += 20;
 
-        if (aFontEntry->mCharacterMap.test(ch)) {
-            rank += 20;
-
-            // fonts that claim to support the range are more
-            // likely to be "better fonts" than ones that don't... (in theory)
-            if (aFontEntry->SupportsRange(gfxFontUtils::CharRangeBit(ch)))
-                rank += 1;
-        }
+        // fonts that claim to support the range are more
+        // likely to be "better fonts" than ones that don't... (in theory)
+        if (aFontEntry->SupportsRange(gfxFontUtils::CharRangeBit(ch)))
+            rank += 1;
     }
 
     // if we didn't match any characters don't bother wasting more time.
@@ -532,13 +529,23 @@ gfxWindowsPlatform::FindFontForStringProc(nsStringHashKey::KeyType aKey,
 
 
 FontEntry *
-gfxWindowsPlatform::FindFontForString(const PRUnichar *aString, PRUint32 aLength, gfxWindowsFont *aFont)
+gfxWindowsPlatform::FindFontForChar(PRUint32 aCh, gfxWindowsFont *aFont)
 {
-    FontSearch data(aString, aLength, aFont);
+    // is codepoint with no matching font? return null immediately
+    if (mCodepointsWithNoFonts.test(aCh)) {
+        return nsnull;
+    }
+
+    FontSearch data(aCh, aFont);
 
     // find fonts that support the character
-    mFonts.Enumerate(gfxWindowsPlatform::FindFontForStringProc, &data);
+    mFonts.Enumerate(gfxWindowsPlatform::FindFontForCharProc, &data);
 
+    // no match? add to set of non-matching codepoints
+    if (!data.bestMatch) {
+        mCodepointsWithNoFonts.set(aCh);
+    }
+    
     return data.bestMatch;
 }
 
