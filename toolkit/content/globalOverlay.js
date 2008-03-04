@@ -196,4 +196,4 @@ function FillInTooltip ( tipElement )
   return retVal;
 }
 
-#include debug.js
+Components.utils.import("resource://gre/modules/debug.js");

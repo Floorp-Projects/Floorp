@@ -107,7 +107,7 @@
     <command id="OrganizerCommand_backup"
              oncommand="PlacesOrganizer.backupBookmarks();"/>
     <command id="OrganizerCommand_restoreFromFile"
-             oncommand="PlacesOrganizer.restoreFromFile();"/>
+             oncommand="PlacesOrganizer.onRestoreBookmarksFromFile();"/>
     <command id="OrganizerCommand_search:save"
              oncommand="PlacesOrganizer.saveSearch();"/>
     <command id="OrganizerCommand_search:moreCriteria"
