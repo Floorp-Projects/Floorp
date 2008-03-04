@@ -381,10 +381,10 @@ protected:
   // importing bookmarks.html files.
   PRBool mAllowRootChanges;
 
-  // if set, this is an import of initial bookmarks.html content,
+  // If set, this is an import of initial bookmarks.html content,
   // so we don't want to kick off HTTP traffic
   // and we want the imported personal toolbar folder
-  // to be set as the personal toolbar folder.  (if not set
+  // to be set as the personal toolbar folder. (If not set
   // we will treat it as a normal folder.)
   PRBool mIsImportDefaults;
 
@@ -2440,9 +2440,7 @@ nsPlacesImportExportService::ExportHTMLToFile(nsILocalFile* aBookmarksFile)
   return rv;
 }
 
-#define BROWSER_BOOKMARKS_OVERWRITE_PREF    "browser.bookmarks.overwrite"
 #define BROWSER_BOOKMARKS_MAX_BACKUPS_PREF  "browser.bookmarks.max_backups"
-#define POSTPLACES_BOOKMARKS_FILE           "bookmarks.postplaces.html"
 
 NS_IMETHODIMP
 nsPlacesImportExportService::BackupBookmarksFile()
@@ -2457,15 +2455,6 @@ nsPlacesImportExportService::BackupBookmarksFile()
   nsCOMPtr<nsIFile> bookmarksFileDir;
   rv = NS_GetSpecialDirectory(NS_APP_BOOKMARKS_50_FILE,
                               getter_AddRefs(bookmarksFileDir));
-
-  PRBool overwriteBookmarks;
-  rv = prefs->GetBoolPref(BROWSER_BOOKMARKS_OVERWRITE_PREF, &overwriteBookmarks);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!overwriteBookmarks) {
-    rv = bookmarksFileDir->SetLeafName(NS_LITERAL_STRING(POSTPLACES_BOOKMARKS_FILE));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
 
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsILocalFile> bookmarksFile(do_QueryInterface(bookmarksFileDir));
@@ -2483,17 +2472,6 @@ nsPlacesImportExportService::BackupBookmarksFile()
   rv = ExportHTMLToFile(bookmarksFile);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // archive if needed
-  PRInt32 numberOfBackups;
-  rv = prefs->GetIntPref(BROWSER_BOOKMARKS_MAX_BACKUPS_PREF, &numberOfBackups);
-  if (NS_FAILED(rv))
-    numberOfBackups = 5;
-
-  if (numberOfBackups > 0) {
-    rv = ArchiveBookmarksFile(numberOfBackups, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   return NS_OK;
 }
 
@@ -2509,7 +2487,7 @@ nsPlacesImportExportService::BackupBookmarksFile()
  */
 nsresult
 nsPlacesImportExportService::ArchiveBookmarksFile(PRInt32 numberOfBackups,
-                                         PRBool forceArchive)
+                                                  PRBool forceArchive)
 {
   nsCOMPtr<nsIFile> bookmarksBackupDir;
   nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
@@ -2530,7 +2508,7 @@ nsPlacesImportExportService::ArchiveBookmarksFile(PRInt32 numberOfBackups,
   }
 
   // construct the new leafname
-  PRTime          now64 = PR_Now();
+  PRTime now64 = PR_Now();
   PRExplodedTime  nowInfo;
   PR_ExplodeTime(now64, PR_LocalTimeParameters, &nowInfo);
   PR_NormalizeTime(&nowInfo, PR_LocalTimeParameters);
@@ -2541,8 +2519,6 @@ nsPlacesImportExportService::ArchiveBookmarksFile(PRInt32 numberOfBackups,
   // and makes the alphabetical order of multiple backup files more useful.
   PR_FormatTime(timeString, 128, "bookmarks-%Y-%m-%d.html", &nowInfo);
 
-  //nsCAutoString backupFilenameCString(timeString);
-  //nsAutoString backupFilenameString = NS_ConvertUTF8toUTF16(backupFilenameCString);
   nsAutoString backupFilenameString = NS_ConvertUTF8toUTF16((timeString));
 
   nsCOMPtr<nsIFile> backupFile;
@@ -2609,18 +2585,6 @@ nsPlacesImportExportService::ArchiveBookmarksFile(PRInt32 numberOfBackups,
                               getter_AddRefs(bookmarksFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool overwriteBookmarks;
-  rv = prefs->GetBoolPref(BROWSER_BOOKMARKS_OVERWRITE_PREF, &overwriteBookmarks);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!overwriteBookmarks) {
-    rv = bookmarksFile->SetLeafName(NS_LITERAL_STRING(POSTPLACES_BOOKMARKS_FILE));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  
   rv = bookmarksFile->CopyTo(bookmarksBackupDir, backupFilenameString);
   // at least dump something out in case this fails in a debug build
   NS_ENSURE_SUCCESS(rv, rv);
