@@ -1313,17 +1313,7 @@ public:
 
             nsRefPtr<gfxWindowsFont> refFont = mGroup->GetFontAt(0);
             gfxWindowsPlatform *platform = gfxWindowsPlatform::GetPlatform();
-            PRUnichar str[2];
-            PRUint32 len;
-            if (ch > 0xFFFF) {
-                str[0] = H_SURROGATE(ch);
-                str[1] = L_SURROGATE(ch);
-                len = 2;
-            } else {
-                str[0] = ch;
-                len = 1;
-            }
-            selectedFont = platform->FindFontForString(str, len, refFont);
+            selectedFont = platform->FindFontForChar(ch, refFont);
         }
 
         return selectedFont;
