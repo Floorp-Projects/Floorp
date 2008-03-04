@@ -343,12 +343,23 @@ BrowserGlue.prototype = {
       importBookmarks = prefBranch.getBoolPref("browser.places.importBookmarksHTML");
     } catch(ex) {}
 
+    /**
+     * These prefs are set by the backend services upon creation (or recreation)
+     * of the Places db:
+     * - browser.places.importBookmarksHTML
+     *   Set to false by the history service to indicate we need to re-import.
+     * - browser.places.createdSmartBookmarks
+     *   Set during HTML import to indicate that the queries were created.
+     */
     if (!importBookmarks) {
       // Call it here for Fx3 profiles created before the Places folder
       // has been added, otherwise it's called during import.
       this.ensurePlacesDefaultQueriesInitialized();
       return;
     }
+
+    // ensurePlacesDefaultQueriesInitialized() is called by import.
+    prefBranch.setBoolPref("browser.places.createdSmartBookmarks", false);
 
     var dirService = Cc["@mozilla.org/file/directory_service;1"].
                      getService(Ci.nsIProperties);
