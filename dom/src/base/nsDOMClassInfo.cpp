@@ -6175,8 +6175,69 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 #endif
   }
 
-  return nsEventReceiverSH::NewResolve(wrapper, cx, obj, id, flags, objp,
-                                       _retval);
+  JSObject *oldobj = *objp;
+  rv = nsEventReceiverSH::NewResolve(wrapper, cx, obj, id, flags, objp,
+                                     _retval);
+
+  if (NS_FAILED(rv) || *objp != oldobj) {
+    // Something went wrong, or the property got resolved. Return.
+    return rv;
+  }
+
+  // Make a fast expando if we're assigning to (not declaring) a new
+  // undefined property that's not already defined on our prototype
+  // chain. This way we can access this expando w/o ever getting back
+  // into XPConnect.
+  if ((flags & (JSRESOLVE_ASSIGNING)) && win->IsInnerWindow()) {
+    JSObject *realObj;
+    wrapper->GetJSObject(&realObj);
+
+    if (obj == realObj) {
+      JSObject *proto = STOBJ_GET_PROTO(obj);
+      if (proto) {
+        jsid interned_id;
+        JSProperty *prop = nsnull;
+
+        if (!::JS_ValueToId(cx, id, &interned_id) ||
+            !OBJ_LOOKUP_PROPERTY(cx, proto, interned_id, objp, &prop)) {
+          *_retval = JS_FALSE;
+
+          return NS_OK;
+        }
+
+        if (prop) {
+          // A property was found on the prototype chain, and *objp is
+          // already set to point to the prototype where the property
+          // was found.
+          OBJ_DROP_PROPERTY(cx, proto, prop);
+
+          return NS_OK;
+        }
+      }
+
+      // Define a fast expando, the key here is to use JS_PropertyStub
+      // as the getter/setter, which makes us stay out of XPConnect
+      // when using this property.
+      //
+      // We don't need to worry about property attributes here as we
+      // know here we're dealing with an undefined property set, so
+      // we're not declaring readonly or permanent properties.
+
+      JSString *str = JSVAL_TO_STRING(id);
+      if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                                 ::JS_GetStringLength(str), JSVAL_VOID,
+                                 JS_PropertyStub, JS_PropertyStub,
+                                 JSPROP_ENUMERATE)) {
+        *_retval = JS_FALSE;
+
+        return NS_OK;
+      }
+
+      *objp = obj;
+    }
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
