@@ -4763,21 +4763,34 @@ js_DecompileFunction(JSPrinter *jp)
     return JS_TRUE;
 }
 
-#undef LOCAL_ASSERT_RV
+/*
+ * Find the depth of the operand stack when the interpreter reaches the given
+ * pc in script. When pcstack is not null, it must be an array with space for
+ * at least script->depth elements. On return the array will contain pointers
+ * to opcodes that populated the interpreter's current operand stack.
+ *
+ * This function cannot raise an exception or error. However, due to a risk of
+ * potential bugs when modeling the stack, the function returns -1 if it
+ * detects an inconsistency in the model. Such an inconsistency triggers an
+ * assert in a debug build.
+ */
+static intN
+ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
+                   jsbytecode **pcstack);
 
 char *
 js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
                            JSString *fallback)
 {
-    JSStackFrame *fp, *down;
+    JSStackFrame *fp;
     jsbytecode *pc, *begin, *end;
-    jsval *sp, *spbase, *base, *limit;
-    intN depth, pcdepth;
     JSScript *script;
     JSOp op;
     const JSCodeSpec *cs;
     jssrcnote *sn;
-    ptrdiff_t len, oplen;
+    ptrdiff_t len;
+    intN pcdepth;
+    jsval *sp;
     JSPrinter *jp;
     char *name;
 
@@ -4790,113 +4803,73 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
     if (!fp)
         goto do_fallback;
 
-    /* Try to find sp's generating pc depth slots under it on the stack. */
     pc = fp->pc;
-    sp = fp->sp;
-    spbase = fp->spbase;
-    if ((uintN)(sp - spbase) > fp->script->depth) {
-        /*
-         * Preparing to make an internal invocation, using an argv stack
-         * segment pushed just above fp's operand stack space.  Such an argv
-         * stack has no generating pc "basement", so we must fall back.
-         */
+    if (!pc)
+        goto do_fallback;
+    script = fp->script;
+    if (pc < script->main || script->code + script->length <= pc) {
+        JS_NOT_REACHED("bug");
         goto do_fallback;
     }
 
-    if (spindex == JSDVG_SEARCH_STACK) {
-        if (!pc) {
-            /*
-             * Current frame is native: look under it for a scripted call
-             * in which a decompilable bytecode string that generated the
-             * value as an actual argument might exist.
-             */
-            JS_ASSERT(!fp->script && !(fp->fun && FUN_INTERPRETED(fp->fun)));
-            down = fp->down;
-            if (!down)
-                goto do_fallback;
-            script = down->script;
-            spbase = down->spbase;
-            base = fp->argv;
-            limit = base + fp->argc;
+    if (spindex != JSDVG_IGNORE_STACK) {
+        jsbytecode **pcstack;
+
+        /*
+         * Prepare computing pcstack containing pointers to opcodes that
+         * populated interpreter's stack with its current content.
+         */
+        pcstack = (jsbytecode **)
+                  JS_malloc(cx, script->depth * sizeof *pcstack);
+        if (!pcstack)
+            return NULL;
+        pcdepth = ReconstructPCStack(cx, script, fp->pc, pcstack);
+        if (pcdepth < 0)
+            goto release_pcstack;
+
+        if (spindex != JSDVG_SEARCH_STACK) {
+            JS_ASSERT(spindex < 0);
+            pcdepth += spindex;
+            if (pcdepth < 0)
+                goto release_pcstack;
+            pc = pcstack[pcdepth];
         } else {
             /*
-             * This should be a script activation, either a top-level
-             * script or a scripted function.  But be paranoid about calls
-             * to js_DecompileValueGenerator from code that hasn't fully
-             * initialized a (default-all-zeroes) frame.
+             * We search from fp->sp to base to find the most recently
+             * calculated value matching v under assumption that it is
+             * it that caused exception, see bug 328664.
              */
-            script = fp->script;
-            spbase = base = fp->spbase;
-            limit = fp->sp;
-        }
+            JS_ASSERT((size_t) (fp->sp - fp->spbase) <= fp->script->depth);
+            sp = fp->sp;
+            do {
+                if (sp == fp->spbase) {
+                    pcdepth = -1;
+                    goto release_pcstack;
+                }
+            } while (*--sp != v);
 
-        /*
-         * Pure paranoia about default-zeroed frames being active while
-         * js_DecompileValueGenerator is called.  It can't hurt much now;
-         * error reporting performance is not an issue.
-         */
-        if (!script || !base || !limit)
-            goto do_fallback;
-
-        /*
-         * Try to find operand-generating pc depth slots below sp.
-         *
-         * In the native case, we know the arguments have generating pc's
-         * under them, on account of fp->down->script being non-null: all
-         * compiled scripts get depth slots for generating pc's allocated
-         * upon activation, at the top of js_Interpret.
-         *
-         * In the script or scripted function case, the same reasoning
-         * applies to fp rather than to fp->down.
-         *
-         * We search from limit to base to find the most recently calculated
-         * value matching v under assumption that it is it that caused
-         * exception, see bug 328664.
-         */
-        for (sp = limit;;) {
-            if (sp <= base)
-                goto do_fallback;
-            --sp;
-            if (*sp == v) {
-                depth = (intN)script->depth;
-                sp -= depth;
-                pc = (jsbytecode *) *sp;
-                break;
+            if (sp >= fp->spbase + pcdepth) {
+                /*
+                 * This happens when the value comes from a temporary slot
+                 * that the interpreter uses for GC roots. Assume that it is
+                 * fp->pc that caused the exception.
+                 */
+                pc = fp->pc;
+            } else {
+                pc = pcstack[sp - fp->spbase];
             }
         }
-    } else {
-        /*
-         * At this point, pc may or may not be null, i.e., we could be in
-         * a script activation, or we could be in a native frame that was
-         * called by another native function.  Check pc and script.
-         */
-        if (!pc)
-            goto do_fallback;
-        script = fp->script;
-        if (!script)
-            goto do_fallback;
 
-        if (spindex != JSDVG_IGNORE_STACK) {
-            JS_ASSERT(spindex < 0);
-            depth = (intN)script->depth;
-#if !JS_HAS_NO_SUCH_METHOD
-            JS_ASSERT(-depth <= spindex);
-#endif
-            sp = fp->sp + spindex;
-            if ((jsuword) (sp - fp->spbase) < (jsuword) depth)
-                pc = (jsbytecode *) *(sp - depth);
-        }
+      release_pcstack:
+        JS_free(cx, pcstack);
+        if (pcdepth < 0)
+            goto do_fallback;
     }
 
     /*
-     * Again, be paranoid, this time about possibly loading an invalid pc
-     * from fp->sp[spindex - script->depth)].
+     * We know the address of the opcode that triggered the diagnostic. Find
+     * the decompilation limits for the opcode and its stack depth.
      */
-    if (JS_UPTRDIFF(pc, script->code) >= (jsuword)script->length) {
-        pc = fp->pc;
-        if (!pc)
-            goto do_fallback;
-    }
     op = (JSOp) *pc;
     if (op == JSOP_TRAP)
         op = JS_GetTrapOpcode(cx, script, pc);
@@ -4952,16 +4925,57 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
     if (len <= 0)
         goto do_fallback;
 
+    pcdepth = ReconstructPCStack(cx, script, begin, NULL);
+    if (pcdepth < 0)
+         goto do_fallback;
+
+    name = NULL;
+    jp = JS_NEW_PRINTER(cx, "js_DecompileValueGenerator", fp->fun, 0, JS_FALSE);
+    if (jp) {
+        jp->dvgfence = end;
+        if (js_DecompileCode(jp, script, begin, (uintN)len, (uintN)pcdepth)) {
+            name = (jp->sprinter.base) ? jp->sprinter.base : (char *) "";
+            name = JS_strdup(cx, name);
+        }
+        js_DestroyPrinter(jp);
+    }
+    return name;
+
+  do_fallback:
+    if (!fallback) {
+        fallback = js_ValueToSource(cx, v);
+        if (!fallback)
+            return NULL;
+    }
+    return js_DeflateString(cx, JSSTRING_CHARS(fallback),
+                            JSSTRING_LENGTH(fallback));
+}
+
+static intN
+ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
+                   jsbytecode **pcstack)
+{
+    intN pcdepth, nuses, ndefs;
+    jsbytecode *begin;
+    JSOp op;
+    const JSCodeSpec *cs;
+    ptrdiff_t oplen;
+    jssrcnote *sn;
+    uint32 type;
+
+#define LOCAL_ASSERT(expr)      LOCAL_ASSERT_RV(expr, -1);
+
     /*
-     * Walk forward from script->main and compute starting stack depth.
+     * Walk forward from script->main and compute the stack depth and stack of
+     * operand-generating opcode PCs in pcstack.
+     *
      * FIXME: Code to compute oplen copied from js_Disassemble1 and reduced.
      * FIXME: Optimize to use last empty-stack sequence point.
      */
+    LOCAL_ASSERT(script->main <= pc && pc < script->code + script->length);
     pcdepth = 0;
+    begin = pc;
     for (pc = script->main; pc < begin; pc += oplen) {
-        uint32 type;
-        intN nuses, ndefs;
-
         op = (JSOp) *pc;
         if (op == JSOP_TRAP)
             op = JS_GetTrapOpcode(cx, script, pc);
@@ -4970,6 +4984,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
 
         if (op == JSOP_POPN) {
             pcdepth -= GET_UINT16(pc);
+            LOCAL_ASSERT(pcdepth >= 0);
             continue;
         }
 
@@ -5002,6 +5017,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
                  * since we have moved beyond the IFEQ now.
                  */
                 --pcdepth;
+                LOCAL_ASSERT(pcdepth >= 0);
             }
         }
 
@@ -5068,7 +5084,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
             nuses = GET_UINT16(pc);
         }
         pcdepth -= nuses;
-        JS_ASSERT(pcdepth >= 0);
+        LOCAL_ASSERT(pcdepth >= 0);
 
         ndefs = cs->ndefs;
         if (op == JSOP_FINALLY) {
@@ -5083,27 +5099,65 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
             JS_ASSERT(OBJ_BLOCK_DEPTH(cx, obj) == pcdepth);
             ndefs = OBJ_BLOCK_COUNT(cx, obj);
         }
+
+        LOCAL_ASSERT(pcdepth + ndefs <= script->depth);
+        if (pcstack) {
+            intN i;
+            jsbytecode *pc2;
+
+            /*
+             * Fill the slots that the opcode defines withs its pc unless it
+             * just reshuffle the stack. In the latter case we want to
+             * preserve the opcode that generated the original value.
+             */
+            switch (op) {
+              default:
+                for (i = 0; i != ndefs; ++i)
+                    pcstack[pcdepth + i] = pc;
+                break;
+
+              case JSOP_CASE:
+              case JSOP_CASEX:
+                /* Keep the switch value. */
+                JS_ASSERT(ndefs == 1);
+                break;
+
+              case JSOP_DUP:
+                JS_ASSERT(ndefs == 2);
+                pcstack[pcdepth + 1] = pcstack[pcdepth];
+                break;
+
+              case JSOP_DUP2:
+                JS_ASSERT(ndefs == 4);
+                pcstack[pcdepth + 2] = pcstack[pcdepth];
+                pcstack[pcdepth + 3] = pcstack[pcdepth + 1];
+                break;
+
+              case JSOP_SWAP:
+                JS_ASSERT(ndefs == 2);
+                pc2 = pcstack[pcdepth];
+                pcstack[pcdepth] = pcstack[pcdepth + 1];
+                pcstack[pcdepth + 1] = pc2;
+                break;
+
+              case JSOP_LEAVEBLOCKEXPR:
+                /*
+                 * The decompiler wants [leaveblockexpr], not [enterblock], to
+                 * be left on pcstack after a simulated let expression.
+                 */
+                JS_ASSERT(ndefs == 0);
+                LOCAL_ASSERT(pcdepth >= 1);
+                LOCAL_ASSERT(*pcstack[pcdepth - 1] == JSOP_ENTERBLOCK);
+                pcstack[pcdepth - 1] = pc;
+                break;
+            }
+        }
         pcdepth += ndefs;
     }
+    LOCAL_ASSERT(pc == begin);
+    return pcdepth;
 
-    name = NULL;
-    jp = JS_NEW_PRINTER(cx, "js_DecompileValueGenerator", fp->fun, 0, JS_FALSE);
-    if (jp) {
-        jp->dvgfence = end;
-        if (js_DecompileCode(jp, script, begin, (uintN)len, (uintN)pcdepth)) {
-            name = (jp->sprinter.base) ? jp->sprinter.base : (char *) "";
-            name = JS_strdup(cx, name);
-        }
-        js_DestroyPrinter(jp);
-    }
-    return name;
-
-  do_fallback:
-    if (!fallback) {
-        fallback = js_ValueToSource(cx, v);
-        if (!fallback)
-            return NULL;
-    }
-    return js_DeflateString(cx, JSSTRING_CHARS(fallback),
-                            JSSTRING_LENGTH(fallback));
+#undef LOCAL_ASSERT
 }
+
+#undef LOCAL_ASSERT_RV

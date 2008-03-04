@@ -60,6 +60,9 @@ JS_BEGIN_EXTERN_C
  * with well-known slots, if possible.
  */
 struct JSStackFrame {
+    jsval           *sp;            /* stack pointer */
+    jsbytecode      *pc;            /* program counter */
+    jsval           *spbase;        /* operand stack base */
     JSObject        *callobj;       /* lazily created Call object */
     JSObject        *argsobj;       /* lazily created arguments object */
     JSObject        *varobj;        /* variables object, where vars go */
@@ -75,9 +78,6 @@ struct JSStackFrame {
     JSStackFrame    *down;          /* previous frame */
     void            *annotation;    /* used by Java security */
     JSObject        *scopeChain;    /* scope chain */
-    jsbytecode      *pc;            /* program counter */
-    jsval           *sp;            /* stack pointer */
-    jsval           *spbase;        /* operand stack base */
     uintN           sharpDepth;     /* array/object initializer depth */
     JSObject        *sharpArray;    /* scope for #n= initializer vars */
     uint32          flags;          /* frame flags -- see below */
@@ -491,6 +491,9 @@ js_InternNonIntElementId(JSContext *cx, JSObject *obj, jsval idval, jsid *idp);
 
 extern JSBool
 js_ImportProperty(JSContext *cx, JSObject *obj, jsid id);
+
+extern JSBool
+js_OnUnknownMethod(JSContext *cx, jsval *vp);
 
 /*
  * JS_OPMETER helper functions.
