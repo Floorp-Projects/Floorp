@@ -867,7 +867,6 @@
     </resources>
 
     <content align="center">
-      <xul:image class="searchbox-image" xbl:inherits="src=image"/>
       <xul:textbox class="plain"
                    xbl:inherits="emptytext,onfocus,onblur,spellcheck,value,maxlength,disabled,size,readonly,tabindex,accesskey"/>
       <xul:button class="searchbox-search" xbl:inherits="disabled" oncommand="this.parentNode.startSearch()"/>
@@ -876,7 +875,7 @@
 
     <implementation>
       <field name="textbox">
-        document.getAnonymousNodes(this)[1];
+        document.getAnonymousNodes(this)[0];
       </field>
 
       <field name="_searchButton">
