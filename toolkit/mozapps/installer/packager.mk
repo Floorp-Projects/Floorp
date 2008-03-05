@@ -340,7 +340,11 @@ ifeq ($(MOZ_PKG_FORMAT),DMG)
 # If UNIVERSAL_BINARY, the package will be made from an already-prepared
 # STAGEPATH
 ifndef UNIVERSAL_BINARY
+ifndef STAGE_SDK
 	@cd $(DIST) && rsync -auv --copy-unsafe-links $(_APPNAME) $(MOZ_PKG_APPNAME)
+else
+	@cd $(DIST)/bin && tar $(TAR_CREATE_FLAGS) - * | (cd ../$(MOZ_PKG_APPNAME); tar -xf -)
+endif
 endif
 else
 	@cd $(DIST)/bin && tar $(TAR_CREATE_FLAGS) - * | (cd ../$(MOZ_PKG_APPNAME); tar -xf -)
@@ -434,11 +438,12 @@ ifdef INSTALL_SDK # Here comes the hard part
 	ln -s $(idldir)/unstable $(DESTDIR)$(sdkdir)/idl
 endif # INSTALL_SDK
 
-make-sdk:: stage-package
+make-sdk:
+	$(MAKE) stage-package STAGE_SDK=1 MOZ_PKG_APPNAME=sdk-stage
 	@echo "Packaging SDK..."
 	$(RM) -rf $(DIST)/$(MOZ_APP_NAME)-sdk
 	$(NSINSTALL) -D $(DIST)/$(MOZ_APP_NAME)-sdk/bin
-	(cd $(DIST)/$(MOZ_PKG_APPNAME) && tar $(TAR_CREATE_FLAGS) - .) | \
+	(cd $(DIST)/sdk-stage && tar $(TAR_CREATE_FLAGS) - .) | \
 	  (cd $(DIST)/$(MOZ_APP_NAME)-sdk/bin && tar -xf -)
 	$(NSINSTALL) -D $(DIST)/$(MOZ_APP_NAME)-sdk/sdk
 	(cd $(DIST)/sdk && tar $(TAR_CREATE_FLAGS) - .) | \
