@@ -631,6 +631,12 @@ pref("browser.sessionstore.max_tab_back_history", 10);
 // allow META refresh by default
 pref("accessibility.blockautorefresh", false);
 
+// import bookmarks.html into Places bookmarks
+pref("browser.places.importBookmarksHTML", true);
+
+// if false, will add the "Smart Bookmarks" folder to the personal toolbar
+pref("browser.places.createdSmartBookmarks", false);
+
 // If true, will migrate uri post-data annotations to
 // bookmark post-data annotations (bug 398914)
 // XXX to be removed after beta 2 (bug 391419)
