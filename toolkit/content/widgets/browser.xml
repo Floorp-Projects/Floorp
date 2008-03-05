@@ -181,7 +181,6 @@
               catch (e) {
               }
             }
-            this.mIconURL = null;
             try {
               this.userTypedClear++;
               this.webNavigation.loadURI(aURI, aFlags, aReferrerURI, aPostData, null);
