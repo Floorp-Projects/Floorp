@@ -17,6 +17,26 @@ diff -re crt/src/crt0.c crt-sp1/src/crt0.c
 101a
 extern BOOL malloc_init_hard(void);
 .
+diff -re crt/src/_sample_.rc crt-sp1/src/_sample_.rc
+41c
+            VALUE "ProductName", "Mozilla Custom C Runtime"
+.
+39c
+            VALUE "OriginalFilename", "MOZCRT19.DLL"
+.
+37c
+            VALUE "OriginalFilename", "MOZCRT19D.DLL"
+.
+33c
+            VALUE "InternalName", "MOZCRT19.DLL"
+.
+31c
+            VALUE "InternalName", "MOZCRT19D.DLL"
+.
+27c
+            VALUE "CompanyName", "Mozilla Foundation"
+.
+
 diff -re crt/src/crt0dat.c crt-sp1/src/crt0dat.c
 789d
 778d
