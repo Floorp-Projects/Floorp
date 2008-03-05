@@ -57,23 +57,77 @@ let Utils = {
     if (!a || !b)
       return false;
 
+    // if neither is an object, just use ==
     if (typeof(a) != "object" && typeof(b) != "object")
       return a == b;
+
+    // check if only one of them is an object
     if (typeof(a) != "object" || typeof(b) != "object")
       return false;
 
-    for (let key in a) {
-      if (typeof(a[key]) == "object") {
-        if (!typeof(b[key]) == "object")
+    if (a instanceof Array)
+      dump("a is an array\n");
+    if (b instanceof Array)
+      dump("b is an array\n");
+
+    if (a instanceof Array && b instanceof Array) {
+      if (a.length != b.length)
+        return false;
+
+      for (let i = 0; i < a.length; i++) {
+        if (!Utils.deepEquals(a[i], b[i]))
           return false;
+      }
+
+    } else {
+      // check if only one of them is an array
+      if (a instanceof Array || b instanceof Array)
+        return false;
+
+      for (let key in a) {
         if (!Utils.deepEquals(a[key], b[key]))
-          return false;
-      } else {
-        if (a[key] != b[key])
           return false;
       }
     }
+
     return true;
+  },
+
+  deepCopy: function Weave_deepCopy(thing) {
+    if (typeof(thing) != "object" || thing == null)
+      return thing;
+    let ret;
+
+    if (thing instanceof Array) {
+      dump("making a cipy of an array!\n\n");
+      ret = [];
+      for (let i = 0; i < thing.length; i++)
+        ret.push(Utils.deepCopy(thing[i]));
+
+    } else {
+      ret = {};
+      for (let key in thing)
+        ret[key] = Utils.deepCopy(thing[key]);
+    }
+
+    return ret;
+  },
+
+  checkStatus: function Weave_checkStatus(code, msg, ranges) {
+    if (!ranges)
+      ranges = [[200,300]];
+
+    for (let i = 0; i < ranges.length; i++) {
+      rng = ranges[i];
+      if (typeof(rng) == "object" && code >= rng[0] && code < rng[1])
+        return;
+      else if (typeof(rng) == "integer" && code == rng)
+        return;
+    }
+
+    let log = Log4Moz.Service.getLogger("Service.Util");
+    log.error(msg + " Error code: " + code);
+    throw 'checkStatus failed';
   },
 
   makeURI: function Weave_makeURI(URIString) {
@@ -224,21 +278,28 @@ let Utils = {
       let fis = Cc["@mozilla.org/network/file-input-stream;1"].
         createInstance(Ci.nsIFileInputStream);
       fis.init(file, MODE_RDONLY, perms, 0);
-      stream = Cc["@mozilla.org/scriptableinputstream;1"].
-        createInstance(Ci.nsIScriptableInputStream);
-      stream.init(fis);
+      stream = Cc["@mozilla.org/intl/converter-input-stream;1"].
+        createInstance(Ci.nsIConverterInputStream);
+      stream.init(fis, "UTF-8", 4096,
+                  Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
     } break;
 
     case ">": {
-      stream = Cc["@mozilla.org/network/file-output-stream;1"].
+      let fos = Cc["@mozilla.org/network/file-output-stream;1"].
         createInstance(Ci.nsIFileOutputStream);
-      stream.init(file, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, perms, 0);
+      fos.init(file, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, perms, 0);
+      stream = Cc["@mozilla.org/intl/converter-output-stream;1"]
+        .createInstance(Ci.nsIConverterOutputStream);
+      stream.init(fos, "UTF-8", 4096, 0x0000);
     } break;
 
     case ">>": {
-      stream = Cc["@mozilla.org/network/file-output-stream;1"].
+      let fos = Cc["@mozilla.org/network/file-output-stream;1"].
         createInstance(Ci.nsIFileOutputStream);
-      stream.init(file, MODE_WRONLY | MODE_CREATE | MODE_APPEND, perms, 0);
+      fos.init(file, MODE_WRONLY | MODE_CREATE | MODE_APPEND, perms, 0);
+      stream = Cc["@mozilla.org/intl/converter-output-stream;1"]
+        .createInstance(Ci.nsIConverterOutputStream);
+      stream.init(fos, "UTF-8", 4096, 0x0000);
     } break;
 
     default:
@@ -248,13 +309,11 @@ let Utils = {
     return [stream, file];
   },
 
-  // assumes an nsIScriptableInputStream
+  // assumes an nsIConverterInputStream
   readStream: function Weave_readStream(is) {
-    let ret = "";
-    let chunk = is.read(4096);
-    while (chunk.length > 0) {
-      ret += chunk;
-      chunk = is.read(4096);
+    let ret = "", str = {};
+    while (is.readString(4096, str) != 0) {
+      ret += str.value;
     }
     return ret;
   },

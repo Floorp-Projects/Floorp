@@ -129,13 +129,13 @@ WeaveCrypto.prototype = {
   _opensslPBE: function Crypto__openssl(op, algorithm, input, password) {
     let inputFile = Utils.getTmp("input");
     let [inputFOS] = Utils.open(inputFile, ">");
-    inputFOS.write(input, input.length);
+    inputFOS.writeString(input);
     inputFOS.close();
 
     // nsIProcess doesn't support stdin, so we write a file instead
     let passFile = Utils.getTmp("pass");
     let [passFOS] = Utils.open(passFile, ">", PERMS_PASSFILE);
-    passFOS.write(password, password.length);
+    passFOS.writeString(password);
     passFOS.close();
 
     try {
@@ -205,7 +205,7 @@ WeaveCrypto.prototype = {
     // nsIProcess doesn't support stdin, so we write a file instead
     let passFile = Utils.getTmp("pass");
     let [passFOS] = Utils.open(passFile, ">", PERMS_PASSFILE);
-    passFOS.write(password, password.length);
+    passFOS.writeString(password);
     passFOS.close();
 
     try {
@@ -237,12 +237,12 @@ WeaveCrypto.prototype = {
   _opensslRSAEncrypt: function Crypto__opensslRSAEncrypt(input, pubkey) {
     let inputFile = Utils.getTmp("input");
     let [inputFOS] = Utils.open(inputFile, ">");
-    inputFOS.write(input, input.length);
+    inputFOS.writeString(input);
     inputFOS.close();
 
     let keyFile = Utils.getTmp("key");
     let [keyFOS] = Utils.open(keyFile, ">");
-    keyFOS.write(pubkey, pubkey.length);
+    keyFOS.writeString(pubkey);
     keyFOS.close();
 
     let outputFile = Utils.getTmp("output");
@@ -264,12 +264,12 @@ WeaveCrypto.prototype = {
   _opensslRSADecrypt: function Crypto__opensslRSADecrypt(input, privkey, password) {
     let inputFile = Utils.getTmp("input");
     let [inputFOS] = Utils.open(inputFile, ">");
-    inputFOS.write(input, input.length);
+    inputFOS.writeString(input);
     inputFOS.close();
 
     let keyFile = Utils.getTmp("key");
     let [keyFOS] = Utils.open(keyFile, ">");
-    keyFOS.write(privkey, privkey.length);
+    keyFOS.writeString(privkey);
     keyFOS.close();
 
     let outputFile = Utils.getTmp("output");
@@ -279,7 +279,7 @@ WeaveCrypto.prototype = {
     // nsIProcess doesn't support stdin, so we write a file instead
     let passFile = Utils.getTmp("pass");
     let [passFOS] = Utils.open(passFile, ">", PERMS_PASSFILE);
-    passFOS.write(password, password.length);
+    passFOS.writeString(password);
     passFOS.close();
 
     try {

@@ -388,7 +388,8 @@ BookmarksSyncCore.prototype = {
         return true;
       return false;
     default:
-      this._log.error("commandLike: Unknown item type: " + uneval(a));
+      let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+      this._log.error("commandLike: Unknown item type: " + json.encode(a));
       return false;
     }
   }
