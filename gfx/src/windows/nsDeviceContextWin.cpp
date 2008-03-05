@@ -310,7 +310,7 @@ NS_IMETHODIMP nsDeviceContextWin :: SetCanonicalPixelScale(float aScale)
 
 
 nsresult nsDeviceContextWin::CopyLogFontToNSFont(HDC* aHDC, const LOGFONT* ptrLogFont,
-                                                 nsFont* aFont, PRBool aIsWide) const
+                                                 nsFont* aFont) const
 {
   PRUnichar name[LF_FACESIZE];
   name[0] = 0;

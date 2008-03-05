@@ -372,7 +372,7 @@ nsScriptablePeer::ConvertVariants(VARIANT *aIn, nsIVariant **aOut)
     {
         // do_CreateInstance macro is broken so load the component manager by
         // hand and get it to create the component.
-        HMODULE hlib = ::LoadLibrary("xpcom.dll");
+        HMODULE hlib = ::LoadLibraryW(L"xpcom.dll");
         if (hlib)
         {
             nsIComponentManager *pManager = nsnull; // A frozen interface, even in 1.0.x

@@ -150,7 +150,7 @@
 #include "prprf.h"
 #include "prmem.h"
 
-static const char kMozHeapDumpMessageString[] = "MOZ_HeapDump";
+static const PRUnichar kMozHeapDumpMessageString[] = L"MOZ_HeapDump";
 
 #define kWindowPositionSlop 20
 
@@ -699,7 +699,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 
     // Heap dump
 #ifndef WINCE
-    nsWindow::uWM_HEAP_DUMP = ::RegisterWindowMessage(kMozHeapDumpMessageString);
+    nsWindow::uWM_HEAP_DUMP = ::RegisterWindowMessageW(kMozHeapDumpMessageString);
 #endif
   }
 
@@ -1119,26 +1119,26 @@ nsWindow::EventIsInsideWindow(UINT Msg, nsWindow* aWindow)
   return (PRBool) PtInRect(&r, mp);
 }
 
-static char sPropName[40] = "";
-static char* GetNSWindowPropName() {
+static PRUnichar sPropName[40] = L"";
+static PRUnichar* GetNSWindowPropName() {
   if (!*sPropName)
   {
-    _snprintf(sPropName, 39, "MozillansIWidgetPtr%p", _getpid());
+    _snwprintf(sPropName, 39, L"MozillansIWidgetPtr%p", _getpid());
     sPropName[39] = '\0';
   }
   return sPropName;
 }
 
 nsWindow * nsWindow::GetNSWindowPtr(HWND aWnd) {
-  return (nsWindow *) ::GetPropA(aWnd, GetNSWindowPropName());
+  return (nsWindow *) ::GetPropW(aWnd, GetNSWindowPropName());
 }
 
 BOOL nsWindow::SetNSWindowPtr(HWND aWnd, nsWindow * ptr) {
   if (ptr == NULL) {
-    ::RemovePropA(aWnd, GetNSWindowPropName());
+    ::RemovePropW(aWnd, GetNSWindowPropName());
     return TRUE;
   } else {
-    return ::SetPropA(aWnd, GetNSWindowPropName(), (HANDLE)ptr);
+    return ::SetPropW(aWnd, GetNSWindowPropName(), (HANDLE)ptr);
   }
 }
 
@@ -1788,7 +1788,7 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
 
           // Play the minimize sound while we're here, since that is also
           // forgotten when we use SW_SHOWMINIMIZED.
-          ::PlaySound("Minimize", nsnull, SND_ALIAS | SND_NODEFAULT | SND_ASYNC);
+          ::PlaySoundW(L"Minimize", nsnull, SND_ALIAS | SND_NODEFAULT | SND_ASYNC);
         }
 #endif
         break;
@@ -5192,7 +5192,7 @@ LPCWSTR nsWindow::WindowPopupClassW()
   return className;
 }
 
-LPCSTR nsWindow::WindowClass()
+LPCTSTR nsWindow::WindowClass()
 {
   // Call into the wide version to make sure things get
   // registered properly.
@@ -5200,7 +5200,9 @@ LPCSTR nsWindow::WindowClass()
 
   // XXX: The class name used here must be kept in sync with
   //      the classname used in WindowClassW();
-
+#ifdef UNICODE
+	return classNameW;
+#else
   if (classNameW == kWClassNameHidden) {
     return kClassNameHidden;
   }
@@ -5217,17 +5219,21 @@ LPCSTR nsWindow::WindowClass()
     return kClassNameContentFrame;
   }
   return kClassNameGeneral;
+#endif
 }
 
-LPCSTR nsWindow::WindowPopupClass()
+LPCTSTR nsWindow::WindowPopupClass()
 {
   // Call into the wide version to make sure things get
   // registered properly.
-  WindowPopupClassW();
+#ifdef UNICODE
+  return WindowPopupClassW();
+#else
 
   // XXX: The class name used here must be kept in sync with
   //      the classname used in WindowPopupClassW();
   return "MozillaDropShadowWindowClass";
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -7718,7 +7724,7 @@ STDMETHODIMP_(LRESULT) nsWindow::LresultFromObject(REFIID riid, WPARAM wParam, L
 {
   // open the dll dynamically
   if (!gmAccLib)
-    gmAccLib =::LoadLibrary("OLEACC.DLL");
+    gmAccLib =::LoadLibraryW(L"OLEACC.DLL");
 
   if (gmAccLib) {
     if (!gmLresultFromObject)
