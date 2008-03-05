@@ -804,7 +804,7 @@ nsExpatDriver::OpenInputStreamFromExternalDTD(const PRUnichar* aFPIStr,
   if (sink)
     doc = do_QueryInterface(sink->GetTarget());
   PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
-  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OTHER,
+  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_DTD,
                                 uri,
                                 (doc ? doc->NodePrincipal() : nsnull),
                                 doc,
