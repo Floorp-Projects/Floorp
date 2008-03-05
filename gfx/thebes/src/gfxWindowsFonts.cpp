@@ -340,13 +340,13 @@ gfxWindowsFont::ComputeMetrics()
 
     // Cache the width of a single space.
     SIZE size;
-    GetTextExtentPoint32(dc, " ", 1, &size);
+    GetTextExtentPoint32W(dc, L" ", 1, &size);
     mMetrics->spaceWidth = ROUND(size.cx);
 
     mSpaceGlyph = 0;
     if (metrics.tmPitchAndFamily & TMPF_TRUETYPE) {
         WORD glyph;
-        DWORD ret = GetGlyphIndicesA(dc, " ", 1, &glyph,
+        DWORD ret = GetGlyphIndicesW(dc, L" ", 1, &glyph,
                                      GGI_MARK_NONEXISTING_GLYPHS);
         if (ret != GDI_ERROR && glyph != 0xFFFF) {
             mSpaceGlyph = glyph;

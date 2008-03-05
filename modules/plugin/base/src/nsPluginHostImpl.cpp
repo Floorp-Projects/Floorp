@@ -4017,18 +4017,18 @@ nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
 #ifdef XP_WIN
       static BOOL firstJavaPlugin = FALSE;
       BOOL restoreOrigDir = FALSE;
-      char origDir[_MAX_PATH];
+      PRUnichar origDir[_MAX_PATH];
       if (isJavaPlugin && !firstJavaPlugin) {
-        DWORD dw = ::GetCurrentDirectory(_MAX_PATH, origDir);
+        DWORD dw = ::GetCurrentDirectoryW(_MAX_PATH, origDir);
         NS_ASSERTION(dw <= _MAX_PATH, "Falied to obtain the current directory, which may leads to incorrect class laoding");
         nsCOMPtr<nsIFile> binDirectory;
         result = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
                                         getter_AddRefs(binDirectory));
 
         if (NS_SUCCEEDED(result)) {
-          nsCAutoString path;
-          binDirectory->GetNativePath(path);
-          restoreOrigDir = ::SetCurrentDirectory(path.get());
+          nsAutoString path;
+          binDirectory->GetPath(path);
+          restoreOrigDir = ::SetCurrentDirectoryW(path.get());
         }
       }
 #endif
@@ -4036,7 +4036,7 @@ nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
 
 #ifdef XP_WIN
       if (!firstJavaPlugin && restoreOrigDir) {
-        BOOL bCheck = ::SetCurrentDirectory(origDir);
+        BOOL bCheck = ::SetCurrentDirectoryW(origDir);
         NS_ASSERTION(bCheck, " Error restoring driectoy");
         firstJavaPlugin = TRUE;
       }

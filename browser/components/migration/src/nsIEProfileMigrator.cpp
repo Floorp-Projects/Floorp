@@ -867,7 +867,7 @@ nsIEProfileMigrator::CopyPasswords(PRBool aReplace)
   nsresult rv;
   nsVoidArray signonsFound;
 
-  HMODULE pstoreDLL = ::LoadLibrary("pstorec.dll");
+  HMODULE pstoreDLL = ::LoadLibraryW(L"pstorec.dll");
   if (!pstoreDLL) {
     // XXXben TODO
     // Need to figure out what to do here on Windows 98 etc... it may be that the key is universal read
@@ -1177,7 +1177,7 @@ nsIEProfileMigrator::CopyFormData(PRBool aReplace)
 {
   HRESULT hr;
 
-  HMODULE pstoreDLL = ::LoadLibrary("pstorec.dll");
+  HMODULE pstoreDLL = ::LoadLibraryW(L"pstorec.dll");
   if (!pstoreDLL) {
     // XXXben TODO
     // Need to figure out what to do here on Windows 98 etc... it may be that the key is universal read
@@ -1410,20 +1410,19 @@ nsIEProfileMigrator::ResolveShortcut(const nsString &aFileName, char** aOutURL)
 {
   HRESULT result;
 
-  IUniformResourceLocator* urlLink = nsnull;
+  IUniformResourceLocatorW* urlLink = nsnull;
   result = ::CoCreateInstance(CLSID_InternetShortcut, NULL, CLSCTX_INPROC_SERVER,
-                              IID_IUniformResourceLocator, (void**)&urlLink);
+                              IID_IUniformResourceLocatorW, (void**)&urlLink);
   if (SUCCEEDED(result) && urlLink) {
     IPersistFile* urlFile = nsnull;
     result = urlLink->QueryInterface(IID_IPersistFile, (void**)&urlFile);
     if (SUCCEEDED(result) && urlFile) {
       result = urlFile->Load(aFileName.get(), STGM_READ);
       if (SUCCEEDED(result) ) {
-        LPSTR lpTemp = nsnull;
+        LPWSTR lpTemp = nsnull;
         result = urlLink->GetURL(&lpTemp);
         if (SUCCEEDED(result) && lpTemp) {
-          *aOutURL = PL_strdup(lpTemp);
-
+          *aOutURL = *aOutURL = (char*)ToNewUTF8String(nsDependentString(lpTemp));
           // free the string that GetURL alloc'd
           ::CoTaskMemFree(lpTemp);
         }

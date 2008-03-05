@@ -928,14 +928,15 @@ FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
 #if defined (XP_WIN) && !defined (WINCE)
 
     PRInt32         driveType;
-    char            drive[32];
+    PRUnichar       drive[32];
     PRInt32         volNum;
     char            *url;
 
     for (volNum = 0; volNum < 26; volNum++)
     {
-        sprintf(drive, "%c:\\", volNum + 'A');
-        driveType = GetDriveType(drive);
+        swprintf( drive, L"%c:\\", volNum + (PRUnichar)'A');
+
+        driveType = GetDriveTypeW(drive);
         if (driveType != DRIVE_UNKNOWN && driveType != DRIVE_NO_ROOT_DIR)
         {
             if (nsnull != (url = PR_smprintf("file:///%c|/", volNum + 'A')))

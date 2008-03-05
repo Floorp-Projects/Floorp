@@ -40,7 +40,7 @@
 #include "nscore.h"
 #include "plstr.h"
 #include <stdio.h>
-
+#include "nsString.h"
 #include <windows.h>
 
 // mmsystem.h is needed to build with WIN32_LEAN_AND_MEAN
@@ -125,7 +125,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
       flags |= SND_ASYNC;
     }
 
-    ::PlaySound(reinterpret_cast<const char*>(data), 0, flags);
+    ::PlaySoundA(reinterpret_cast<const char*>(data), 0, flags);
   }
 
   return NS_OK;
@@ -166,12 +166,10 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
   PurgeLastSound();
 
   if (aSoundAlias.EqualsLiteral("_moz_mailbeep")) {
-    ::PlaySound("MailBeep", nsnull, SND_ALIAS | SND_ASYNC);
+    ::PlaySoundW(L"MailBeep", nsnull, SND_ALIAS | SND_ASYNC);
   }
   else {
-    nsCAutoString nativeSoundAlias;
-    NS_CopyUnicodeToNative(aSoundAlias, nativeSoundAlias);
-    ::PlaySound(nativeSoundAlias.get(), nsnull, SND_ALIAS | SND_ASYNC);
+    ::PlaySoundW(PromiseFlatString(aSoundAlias).get(), nsnull, SND_ALIAS | SND_ASYNC);
   }
 
   return NS_OK;

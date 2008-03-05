@@ -303,8 +303,7 @@ ShowError(MozAxPluginErrors errorCode, const CLSID &clsid)
             LPOLESTR szClsid;
             StringFromCLSID(clsid, &szClsid);
             _sntprintf(szBuffer, kBufSize - 1,
-                _T("Could not create the control %s. Check that it has been installed on your computer "
-                   "and that this page correctly references it."), OLE2T(szClsid));
+                _T("Could not create the control %s. Check that it has been installed on your computer and that this page correctly references it."), OLE2T(szClsid));
             CoTaskMemFree(szClsid);
             szMsg = szBuffer;
         }

@@ -101,8 +101,7 @@ protected:
   void ComputeFullAreaUsingScreen ( nsRect* outRect ) ;
   nsresult GetSysFontInfo(HDC aHDC, nsSystemFontID anID, nsFont* aFont) const;
 
-  nsresult CopyLogFontToNSFont(HDC* aHDC, const LOGFONT* ptrLogFont, nsFont* aFont,
-                               PRBool aIsWide = PR_FALSE) const;
+  nsresult CopyLogFontToNSFont(HDC* aHDC, const LOGFONT* ptrLogFont, nsFont* aFont) const;
   
   PRBool mCachedClientRect;
   PRBool mCachedFullRect;
