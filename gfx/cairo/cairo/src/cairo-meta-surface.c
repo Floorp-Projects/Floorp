@@ -662,7 +662,6 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
     cairo_bool_t has_device_transform = _cairo_surface_has_device_transform (target);
     cairo_matrix_t *device_transform = &target->device_transform;
     cairo_path_fixed_t path_copy, *dev_path;
-    double tolerance_multiplier = _cairo_matrix_transformed_circle_major_axis (device_transform, 1.0);
 
     if (surface->status)
 	return surface->status;
@@ -735,7 +734,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 					    &command->stroke.style,
 					    &dev_ctm,
 					    &dev_ctm_inverse,
-					    command->stroke.tolerance * tolerance_multiplier,
+					    command->stroke.tolerance,
 					    command->stroke.antialias);
 	    break;
 	}
@@ -772,7 +771,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 						     command->fill.op,
 						     &command->fill.source.base,
 						     command->fill.fill_rule,
-						     command->fill.tolerance * tolerance_multiplier,
+						     command->fill.tolerance,
 						     command->fill.antialias,
 						     dev_path,
 						     stroke_command->stroke.op,
@@ -780,7 +779,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 						     &stroke_command->stroke.style,
 						     &dev_ctm,
 						     &dev_ctm_inverse,
-						     stroke_command->stroke.tolerance * tolerance_multiplier,
+						     stroke_command->stroke.tolerance,
 						     stroke_command->stroke.antialias);
 		i++;
 		if (type == CAIRO_META_CREATE_REGIONS) {
@@ -797,7 +796,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 					      &command->fill.source.base,
 					      dev_path,
 					      command->fill.fill_rule,
-					      command->fill.tolerance * tolerance_multiplier,
+					      command->fill.tolerance,
 					      command->fill.antialias);
 	    break;
 	}
@@ -840,7 +839,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 	    else
 		status = _cairo_clip_clip (&clip, dev_path,
 					   command->intersect_clip_path.fill_rule,
-					   command->intersect_clip_path.tolerance * tolerance_multiplier,
+					   command->intersect_clip_path.tolerance,
 					   command->intersect_clip_path.antialias,
 					   target);
             assert (status == 0);

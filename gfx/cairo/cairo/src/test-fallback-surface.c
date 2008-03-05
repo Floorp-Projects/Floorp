@@ -37,8 +37,8 @@
  * test suite to test a mythical backend that uses nothing but
  * fallbacks.
  *
- * The defining feature of this backend is that it has as many NULL
- * backend function entries as possible. The ones that aren't NULL are
+ * The defining feature of this backend is that it has as many %NULL
+ * backend function entries as possible. The ones that aren't %NULL are
  * simply those that must be implemented to have working fallbacks.
  * (Except for create_similar---fallbacks would work fine without
  * that---I implemented it here in order to create as many surfaces as

@@ -94,13 +94,6 @@ _cairo_win32_tmpfile (void);
 #define M_PI 3.14159265358979323846
 #endif
 
-#ifndef NDEBUG
-#undef assert
-#define assert(expr) \
-    do { if (!(expr)) fprintf(stderr, "Assertion failed at %s:%d: %s\n", \
-          __FILE__, __LINE__, #expr); } while (0)
-#endif
-
 #ifndef M_SQRT2
 #define M_SQRT2 1.41421356237309504880
 #endif
@@ -847,7 +840,7 @@ typedef struct _cairo_traps {
 #define CAIRO_FONT_WEIGHT_DEFAULT  CAIRO_FONT_WEIGHT_NORMAL
 
 #define CAIRO_WIN32_FONT_FAMILY_DEFAULT "Arial"
-#define CAIRO_ATSUI_FONT_FAMILY_DEFAULT  "Monaco"
+#define CAIRO_ATSUI_FONT_FAMILY_DEFAULT  "Helvetica"
 #define CAIRO_FT_FONT_FAMILY_DEFAULT     ""
 
 #if   CAIRO_HAS_WIN32_FONT
@@ -1034,7 +1027,7 @@ _cairo_gstate_backend_to_user_rectangle (cairo_gstate_t *gstate,
                                          double *x2, double *y2,
                                          cairo_bool_t *is_tight);
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_gstate_path_extents (cairo_gstate_t     *gstate,
 			    cairo_path_fixed_t *path,
 			    double *x1, double *y1,
@@ -1389,7 +1382,7 @@ _cairo_path_fixed_interpret_flat (cairo_path_fixed_t	  *path,
 		       void				  *closure,
 		       double				  tolerance);
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_path_fixed_bounds (cairo_path_fixed_t *path,
 			  double *x1, double *y1,
 			  double *x2, double *y2,
@@ -1398,6 +1391,17 @@ _cairo_path_fixed_bounds (cairo_path_fixed_t *path,
 cairo_private void
 _cairo_path_fixed_device_transform (cairo_path_fixed_t	*path,
 				    cairo_matrix_t	*device_transform);
+
+cairo_private cairo_bool_t
+_cairo_path_fixed_is_empty (cairo_path_fixed_t *path);
+
+cairo_private cairo_bool_t
+_cairo_path_fixed_is_box (cairo_path_fixed_t *path,
+                          cairo_box_t *box);
+
+cairo_private cairo_bool_t
+_cairo_path_fixed_is_rectangle (cairo_path_fixed_t *path,
+				cairo_box_t        *box);
 
 /* cairo_path_fill.c */
 cairo_private cairo_status_t
@@ -2092,12 +2096,6 @@ _cairo_slope_init (cairo_slope_t *slope, cairo_point_t *a, cairo_point_t *b);
 
 cairo_private int
 _cairo_slope_compare (cairo_slope_t *a, cairo_slope_t *b);
-
-cairo_private int
-_cairo_slope_clockwise (cairo_slope_t *a, cairo_slope_t *b);
-
-cairo_private int
-_cairo_slope_counter_clockwise (cairo_slope_t *a, cairo_slope_t *b);
 
 /* cairo_pattern.c */
 
