@@ -6186,11 +6186,12 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return rv;
   }
 
-  // Make a fast expando if we're assigning to (not declaring) a new
-  // undefined property that's not already defined on our prototype
-  // chain. This way we can access this expando w/o ever getting back
-  // into XPConnect.
-  if ((flags & (JSRESOLVE_ASSIGNING)) && win->IsInnerWindow()) {
+  // Make a fast expando if we're assigning to (not declaring or
+  // binding a name) a new undefined property that's not already
+  // defined on our prototype chain. This way we can access this
+  // expando w/o ever getting back into XPConnect.
+  if ((flags & (JSRESOLVE_ASSIGNING)) && (JSOp)*cx->fp->pc != JSOP_BINDNAME &&
+      win->IsInnerWindow()) {
     JSObject *realObj;
     wrapper->GetJSObject(&realObj);
 
