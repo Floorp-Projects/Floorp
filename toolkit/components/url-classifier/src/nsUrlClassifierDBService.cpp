@@ -1124,6 +1124,8 @@ private:
 
   PRInt32 mUpdateWait;
 
+  PRBool mResetRequested;
+
   enum {
     STATE_LINE,
     STATE_CHUNK
@@ -1187,6 +1189,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsUrlClassifierDBServiceWorker,
 
 nsUrlClassifierDBServiceWorker::nsUrlClassifierDBServiceWorker()
   : mUpdateWait(0)
+  , mResetRequested(PR_FALSE)
   , mState(STATE_LINE)
   , mChunkType(CHUNK_ADD)
   , mChunkNum(0)
@@ -2487,6 +2490,8 @@ nsUrlClassifierDBServiceWorker::ProcessResponseLines(PRBool* done)
         LOG(("Error parsing n: field: %s", PromiseFlatCString(line).get()));
         mUpdateWait = 0;
       }
+    } else if (line.EqualsLiteral("r:pleasereset")) {
+      mResetRequested = PR_TRUE;
     } else if (line.EqualsLiteral("e:pleaserekey")) {
       mUpdateObserver->RekeyRequested();
     } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("i:"))) {
@@ -2611,6 +2616,7 @@ nsUrlClassifierDBServiceWorker::ResetUpdate()
   mUpdateStatus = NS_OK;
   mUpdateObserver = nsnull;
   mUpdateClientKey.Truncate();
+  mResetRequested = PR_FALSE;
 }
 
 NS_IMETHODIMP
@@ -2849,7 +2855,17 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
     mUpdateObserver->UpdateError(mUpdateStatus);
   }
 
+  // ResetUpdate() clears mResetRequested...
+  PRBool resetRequested = mResetRequested;
+
   ResetUpdate();
+
+  // It's important that we only reset the database if the update was
+  // successful, otherwise unauthenticated updates could cause a
+  // database reset.
+  if (NS_SUCCEEDED(mUpdateStatus) && resetRequested) {
+    ResetDatabase();
+  }
 
   return NS_OK;
 }
@@ -2857,6 +2873,7 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
 NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::ResetDatabase()
 {
+  LOG(("nsUrlClassifierDBServiceWorker::ResetDatabase [%p]", this));
   ClearCachedChunkLists();
 
   nsresult rv = CloseDb();
@@ -3251,12 +3268,7 @@ nsUrlClassifierLookupCallback::Completion(const nsACString& completeHash,
 
     if (!result.mEntry.mHaveComplete &&
         hash.StartsWith(result.mEntry.mPartialHash) &&
-        // XXX: We really want to be comparing the table name to make
-        // sure it matches.  Due to a short-lived server bug, they
-        // won't just yet.  This should be fixed as soon as the server is.
-#if 0
         result.mTableName == tableName &&
-#endif
         result.mEntry.mChunkId == chunkId) {
       // We have a completion for this entry.  Fill it in...
       result.mEntry.SetHash(hash);
@@ -3276,6 +3288,20 @@ nsUrlClassifierLookupCallback::Completion(const nsACString& completeHash,
 
         mCacheResults->AppendElement(result);
       }
+    } else if (result.mLookupFragment == hash) {
+      // The hash we got for this completion matches the hash we
+      // looked up, but doesn't match the table/chunk id.  This could
+      // happen in rare cases where a given URL was moved between
+      // lists or added/removed/re-added to the list in the time since
+      // we've updated.
+      //
+      // Update the lookup result, but don't update the entry or try
+      // caching the results of this completion, as it might confuse
+      // things.
+      result.mConfirmed = PR_TRUE;
+      result.mTableName = tableName;
+
+      NS_WARNING("Accepting a gethash with an invalid table name or chunk id");
     }
   }
 
@@ -3701,6 +3727,18 @@ nsUrlClassifierDBService::CacheCompletions(nsTArray<nsUrlClassifierLookupResult>
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
   return mWorkerProxy->CacheCompletions(results);
+}
+
+PRBool
+nsUrlClassifierDBService::GetCompleter(const nsACString &tableName,
+                                       nsIUrlClassifierHashCompleter **completer)
+{
+  if (mCompleters.Get(tableName, completer)) {
+    return PR_TRUE;
+  }
+
+  return NS_SUCCEEDED(CallGetService(NS_URLCLASSIFIERHASHCOMPLETER_CONTRACTID,
+                                     completer));
 }
 
 NS_IMETHODIMP

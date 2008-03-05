@@ -178,9 +178,6 @@ OBJDIR          = $(OS_CONFIG)$(OBJDIR_TAG).OBJ
 endif
 VPATH           = $(OBJDIR)
 
-# Automatic make dependencies file
-DEPENDENCIES    = $(OBJDIR)/.md
-
 LCJAR = js15lc30.jar
 
 # Library name

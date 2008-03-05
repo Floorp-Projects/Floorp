@@ -56,5 +56,8 @@ class LogAppender:
   def writeLog(self, str):
     self.logFile.write(str + "\n")
     return str
+  def writelines(self, str):
+    self.logFile.writelines(str)
+    self.logFile.write("\n")
   def closeFile(self):
       self.logFile.write("\n---Normal Close---\n")

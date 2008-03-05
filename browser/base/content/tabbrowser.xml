@@ -2815,22 +2815,36 @@
           var ctboStart = ctbo.screenX;
           var ctboEnd = ctboStart + ctbo.width;
 
-          // only start the flash timer if the new tab (which was loaded in
-          // the background) is not completely visible
-          if (tsboStart > ctboStart || ctboEnd > tsboEnd) {
-            this._animateStep = 0;
+          // Is the new tab already completely visible?
+          if (tsboStart <= ctboStart && ctboEnd <= tsboEnd)
+            return;
 
-            if (!this._animateTimer) 
-              this._animateTimer =
-                Components.classes["@mozilla.org/timer;1"]
-                          .createInstance(Components.interfaces.nsITimer);
-            else
-               this._animateTimer.cancel();
+          if (this.mTabstrip.smoothScroll) {
+            var selStart = this.selectedItem.boxObject.screenX;
+            var selEnd = selStart + this.selectedItem.boxObject.width;
 
-            this._animateTimer.initWithCallback(this,
-                         this._animateDelay,
-                         Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
+            // Can we make both the new tab and the selected tab completely visible?
+            if (Math.max(ctboEnd - selStart, selEnd - ctboStart) <= tsbo.width) {
+              this.mTabstrip.ensureElementIsVisible(aTab);
+              return;
+            }
+
+            this.mTabstrip._smoothScrollByPixels(this.mTabstrip._isLTRScrollbox ?
+                                                 selStart - tsboStart : selEnd - tsboEnd);
           }
+
+          // start the flash timer
+          this._animateStep = 0;
+
+          if (!this._animateTimer) 
+            this._animateTimer =
+              Components.classes["@mozilla.org/timer;1"]
+                        .createInstance(Components.interfaces.nsITimer);
+          else
+             this._animateTimer.cancel();
+
+          this._animateTimer.initWithCallback(this, this._animateDelay,
+                                              this._animateTimer.TYPE_REPEATING_SLACK);
         ]]></body>
       </method>
       

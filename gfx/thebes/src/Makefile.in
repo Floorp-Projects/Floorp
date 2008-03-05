@@ -98,8 +98,7 @@ CPPSRCS +=	nsUnicodeRange.cpp
 EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(CAIRO_FT_LIBS) -lfontconfig -lpangocairo-1.0
 endif
 
-
-ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),mac cocoa))
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CPPSRCS	+= \
 	gfxQuartzSurface.cpp \
 	gfxQuartzImageSurface.cpp \
@@ -114,7 +113,7 @@ CPPSRCS +=      gfxQuartzNativeDrawing.cpp
 CMMSRCS = gfxQuartzFontCache.mm
 
 # Always link with OpenGL/AGL
-EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework Cocoa -framework QuickTime
+EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework QuickTime
 endif
 
 ifdef MOZ_ENABLE_GLITZ
@@ -134,7 +133,7 @@ REQUIRES +=	glitzglx
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitzglx.$(LIB_SUFFIX)
 endif
 
-ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),mac cocoa))
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 REQUIRES +=	glitzagl
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitzagl.$(LIB_SUFFIX)
 endif

@@ -302,13 +302,15 @@ _cairo_pen_compute_slopes (cairo_pen_t *pen)
 /*
  * Find active pen vertex for clockwise edge of stroke at the given slope.
  *
- * Note: The behavior of this function is sensitive to the sense of
- * the inequality within _cairo_slope_clockwise/_cairo_slope_counter_clockwise.
+ * The strictness of the inequalities here is delicate. The issue is
+ * that the slope_ccw member of one pen vertex will be equivalent to
+ * the slope_cw member of the next pen vertex in a counterclockwise
+ * order. However, for this function, we care strongly about which
+ * vertex is returned.
  *
- * The issue is that the slope_ccw member of one pen vertex will be
- * equivalent to the slope_cw member of the next pen vertex in a
- * counterclockwise order. However, for this function, we care
- * strongly about which vertex is returned.
+ * [I think the "care strongly" above has to do with ensuring that the
+ * pen's "extra points" from the spline's initial and final slopes are
+ * properly found when beginning the spline stroking.]
  */
 void
 _cairo_pen_find_active_cw_vertex_index (cairo_pen_t *pen,
@@ -318,8 +320,8 @@ _cairo_pen_find_active_cw_vertex_index (cairo_pen_t *pen,
     int i;
 
     for (i=0; i < pen->num_vertices; i++) {
-	if (_cairo_slope_clockwise (slope, &pen->vertices[i].slope_ccw)
-	    && _cairo_slope_counter_clockwise (slope, &pen->vertices[i].slope_cw))
+	if ((_cairo_slope_compare (slope, &pen->vertices[i].slope_ccw) < 0) &&
+	    (_cairo_slope_compare (slope, &pen->vertices[i].slope_cw) >= 0))
 	    break;
     }
 
@@ -336,8 +338,8 @@ _cairo_pen_find_active_cw_vertex_index (cairo_pen_t *pen,
 
 /* Find active pen vertex for counterclockwise edge of stroke at the given slope.
  *
- * Note: The behavior of this function is sensitive to the sense of
- * the inequality within _cairo_slope_clockwise/_cairo_slope_counter_clockwise.
+ * Note: See the comments for _cairo_pen_find_active_cw_vertex_index
+ * for some details about the strictness of the inequalities here.
  */
 void
 _cairo_pen_find_active_ccw_vertex_index (cairo_pen_t *pen,
@@ -352,8 +354,8 @@ _cairo_pen_find_active_ccw_vertex_index (cairo_pen_t *pen,
     slope_reverse.dy = -slope_reverse.dy;
 
     for (i=pen->num_vertices-1; i >= 0; i--) {
-	if (_cairo_slope_counter_clockwise (&pen->vertices[i].slope_ccw, &slope_reverse)
-	    && _cairo_slope_clockwise (&pen->vertices[i].slope_cw, &slope_reverse))
+	if ((_cairo_slope_compare (&pen->vertices[i].slope_ccw, &slope_reverse) >= 0) &&
+	    (_cairo_slope_compare (&pen->vertices[i].slope_cw, &slope_reverse) < 0))
 	    break;
     }
 
@@ -415,10 +417,21 @@ _cairo_pen_stroke_spline_half (cairo_pen_t *pen,
 	    slope = final_slope;
 	else
 	    _cairo_slope_init (&slope, &point[i], &point[i+step]);
-	if (_cairo_slope_counter_clockwise (&slope, &pen->vertices[active].slope_ccw)) {
+
+	/* The strict inequalities here ensure that if a spline slope
+	 * compares identically with either of the slopes of the
+	 * active vertex, then it remains the active vertex. This is
+	 * very important since otherwise we can trigger an infinite
+	 * loop in the case of a degenerate pen, (a line), where
+	 * neither vertex considers itself active for the slope---one
+	 * will consider it as equal and reject, and the other will
+	 * consider it unequal and reject. This is due to the inherent
+	 * ambiguity when comparing slopes that differ by exactly
+	 * pi. */
+	if (_cairo_slope_compare (&slope, &pen->vertices[active].slope_ccw) > 0) {
 	    if (++active == pen->num_vertices)
 		active = 0;
-	} else if (_cairo_slope_clockwise (&slope, &pen->vertices[active].slope_cw)) {
+	} else if (_cairo_slope_compare (&slope, &pen->vertices[active].slope_cw) < 0) {
 	    if (--active == -1)
 		active = pen->num_vertices - 1;
 	} else {

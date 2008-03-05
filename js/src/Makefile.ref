@@ -221,6 +221,7 @@ JS_CPPFILES =		\
 	jsgc.cpp	\
 	jshash.cpp	\
 	jsinterp.cpp	\
+	jsinvoke.cpp    \
 	jsiter.cpp	\
 	jslock.cpp	\
 	jslog2.cpp	\
@@ -340,10 +341,17 @@ TARGETS += $(OBJDIR)/jsautocfg.h $(OBJDIR)/jscpucfg \
 	$(OBJDIR)/jscpucfg.o
 endif
 
+# Automatic make dependencies files
+DEPENDENCIES    = $(CFILES:%.c=$(OBJDIR)/%.d)
+
 #
-# Hardwire dependencies on jsopcode.tbl
+# Hardwire dependencies for jsinvoke.c
 #
-jsopcode.h jsopcode.cpp: jsopcode.tbl
+ifdef USE_MSVC
+$(OBJDIR)/jsinvoke.obj : jsinterp.h jsinterp.cpp
+else
+$(OBJDIR)/jsinvoke.o : jsinterp.h jsinterp.cpp
+endif
 
 -include $(DEPENDENCIES)
 

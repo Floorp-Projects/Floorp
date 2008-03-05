@@ -63,6 +63,7 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsprf.h"
+#include "jsscope.h"
 #include "jsstr.h"
 
 static JSBool
@@ -391,7 +392,7 @@ num_valueOf(JSContext *cx, uintN argc, jsval *vp)
         *vp = v;
         return JS_TRUE;
     }
-    obj = JSVAL_TO_OBJECT(v);
+    obj = JS_THIS_OBJECT(cx, vp);
     if (!JS_InstanceOf(cx, obj, &js_NumberClass, vp + 2))
         return JS_FALSE;
     *vp = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);

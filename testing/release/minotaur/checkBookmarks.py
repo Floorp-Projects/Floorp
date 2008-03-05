@@ -40,10 +40,6 @@ import re
 
 Not_White_Space = re.compile('\S')
 
-def debug(s):
-  if (0):
-    print s
-
 # This class parses the bookmark file, making a listing of each
 # anchor's title, address, and containing folder (if any). It does this by
 # making use of the fact that the bookmarks.html file has this basic structure
@@ -58,7 +54,7 @@ def debug(s):
 # call us back when it encounters a starting tag, ending tag, or enclosed data
 class bookmarkParser(sgmllib.SGMLParser):
 
-  def __init__(self, verbose=0):
+  def __init__(self, isDebug=0, verbose=0):
 
     self.marker, self.IN_H3, self.IN_A = range(3)
 
@@ -66,7 +62,16 @@ class bookmarkParser(sgmllib.SGMLParser):
     self.isToolbar = False
     self.currentFolder = ""
     self.currentAnchor = ""
+    self.currentFeedURL = ""
+    self.currentIcon = ""
     self.bookmarkList = []
+    self.previousFolders = []
+    # If dbg is True, then we turn on debug output, false, then we don't
+    self.isDebug = isDebug
+
+  def debug(self, s):
+    if self.isDebug:
+      print s
 
   def parseFile(self, fileName):
     bkmkFile = open(fileName, "r")
@@ -76,6 +81,10 @@ class bookmarkParser(sgmllib.SGMLParser):
 
   # This is called when we hit an H3 tag
   def start_h3(self, attributes):
+    # If we are nested, save the info about our containing folder
+    if self.currentFolder:
+      self.debug("Adding to previous folders: " + self.currentFolder)
+      self.previousFolders.append((self.currentFolder, self.isToolbar))
     self.marker = self.IN_H3
     self.isToolbar = False
 
@@ -83,40 +92,50 @@ class bookmarkParser(sgmllib.SGMLParser):
       # Check that we are in the personal toolbar folder
       if (attr[0] == 'personal_toolbar_folder' and attr[1] == 'true'):
         self.isToolbar = True
+        self.currentFolder = "toolbar"
+        self.debug("Found Toolbar")
 
- # Called when an anchor tag is hit
+  # Called when an anchor tag is hit
   def start_a(self, attributes):
     self.marker = self.IN_A
     for attr in attributes:
       if (attr[0] == "href"):
-        debug("Found anchor link: " + attr[1])
+        self.debug("Found anchor link: " + attr[1])
         self.currentAnchor = attr[1]
+      elif attr[0] == "icon":
+        self.currentIcon = attr[1]
+      elif attr[0] == "feedurl":
+        self.currentFeedURL = attr[1]
 
   # Called when an anchor end tag is hit to reset the current anchor
   def end_a(self):
-    debug("End A reset")
+    self.debug("End A reset")
     self.currentAnchor = ""
+    self.currentIcon = ""
+    self.currentFeedURL = ""
 
   # Called when text data is encountered
   def handle_data(self, data):
     if (Not_White_Space.match(data)):
-      debug("in non-whitespace data")
+      self.debug("in non-whitespace data checking folder name")
       # If we are inside an H3 link we are getting the folder name
       if self.marker == self.IN_H3:
         if self.isToolbar:
-          debug("data:h3 is toolbar")
+          self.debug("data:h3 is toolbar")
           self.currentFolder = "toolbar"
         else:
-          debug("data:h3:not toolbar")
+          self.debug("data:h3:not toolbar, currentFolder: " + data)
           self.currentFolder = data
 
       elif self.marker == self.IN_A:
         # Then we are inside an anchor tag - we now have the folder,
         # link and data
-        debug("data:isA adding following: " + self.currentFolder + "," +
+        self.debug("data:iN_A: adding following: " + self.currentFolder + "," +
         self.currentAnchor + "," + data)
-        self.bookmarkList.append( (self.currentFolder, self.currentAnchor,
-                                   data) )
+
+        self.bookmarkList.append( (" folder=" + self.currentFolder, " title=" + data,
+                                   " url=" + self.currentAnchor, " feedURL=" + self.currentFeedURL,
+                                   " icon=" + self.currentIcon) )
 
   # We have to include a "start" handler or the end handler won't be called
   # we really aren't interested in doing anything here
@@ -125,54 +144,24 @@ class bookmarkParser(sgmllib.SGMLParser):
 
   # Called when we hit an end DL tag to reset the folder selections
   def end_dl(self):
-    debug("End DL reset")
-    self.isToolbar = False
-    self.currentFolder = ""
+    self.debug("End DL reset")
+    # if ending a DL we need to move back up to our containing folder.
+    if len(self.previousFolders) > 0:
+      item = self.previousFolders.pop()
+      self.debug("Resetting to previous folder: " + item[0])
+      self.currentFolder = item[0]
+      self.isToolbar = item[1]
+    else:
+      # We have no containing folder
+      self.isToolbar = False
+      self.currentFolder = ""
+
+    # Always reset the anchor
     self.currentAnchor = ""
 
   def getList(self):
+    # Ensure our list is sorted before we return it - the default sort on a list
+    # will sort by element[0] (folder) first, then element [1] (link title) next,
+    # and so on.  This works for our purposes.
+    self.bookmarkList.sort()
     return self.bookmarkList
-
-# This just does a linear search, but we have a sorted list because it's easier
-# to create a sub list that way (compared to binary search)
-# TODO: If it ever becomes a problem, change to binary search
-def getFolderList(folderName, sortedList):
-  fldrList = []
-  fldrSet = False
-  for s in sortedList:
-    if s[0] == folderName:
-      fldrList.append(s)
-      fldrSet = True
-    else:
-      if fldrSet:
-        # Then we know that we have completed reading all folders with
-        # "folderName" so we can quit
-          break
-      else:
-        # Then we have not yet begun to create our sublist, keep
-        # walking sortedList
-        continue
-  return fldrList
-
-def checkBookmarks(loc, bkmkFile, verifier, log):
-  rtn = True
-  parser = bookmarkParser()
-  parser.parseFile(bkmkFile)
-
-  # Verify the bookmarks now
-  bkmkList = parser.getList()
-  bkmkList.sort(lambda x,y: cmp(x[0], y[0]))
-
-  verifiedBkmks = verifier.getElementList("bookmarks")
-
-  # Now we compare the parsed list with the verified list
-  for vElem in verifiedBkmks:
-    fldrList = getFolderList(vElem.getAttribute("folder"), bkmkList)
-    for f in fldrList:
-      if (vElem.getAttribute("link") == f[1] and
-          vElem.getAttribute("title") == f[2]):
-        log.writeLog("\n" + vElem.getAttribute("title") + " bookmark PASSES")
-      else:
-        log.writeLog("\n" + vElem.getAttribute("title") + " bookmark FAILS")
-        rtn = False
-  return rtn

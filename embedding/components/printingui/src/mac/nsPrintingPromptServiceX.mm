@@ -40,6 +40,7 @@
 #include "nsPrintingPromptService.h"
 
 #include "nsCOMPtr.h"
+#include "nsObjCExceptions.h"
 
 #include "nsIPrintingPromptService.h"
 #include "nsIFactory.h"
@@ -62,9 +63,7 @@
 #include "nsPrintProgressParams.h"
 #include "nsIWebProgressListener.h"
 
-// OS includes
-#include <PMApplication.h>
-#include <CFPlugIn.h>
+#import <Carbon/Carbon.h>
 
 //-----------------------------------------------------------------------------
 // Static Helpers
@@ -72,6 +71,8 @@
 
 static nsresult LoadPDEPlugIn()
 {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
     static CFPlugInRef gPDEPlugIn = nsnull;
 
     if (!gPDEPlugIn) {
@@ -90,11 +91,15 @@ static nsresult LoadPDEPlugIn()
         }
     }
     return gPDEPlugIn ? NS_OK : NS_ERROR_FAILURE;
+
+    NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 static CFDictionaryRef ExtractCustomSettingsDict(PMPrintSettings nativePrintSettings)
 {
-    CFDictionaryRef resultDict = nsnull;
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+    CFDictionaryRef resultDict = NULL;
     UInt32 bytesNeeded;
     
     OSStatus status = ::PMGetPrintSettingsExtendedData(nativePrintSettings, kAppPrintDialogAppOnlyKey, &bytesNeeded, NULL);
@@ -117,11 +122,15 @@ static CFDictionaryRef ExtractCustomSettingsDict(PMPrintSettings nativePrintSett
     }
     NS_ASSERTION(resultDict, "Failed to get custom print settings dict");
     return resultDict;
+
+    NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NULL);
 }
 
 static PRBool
 GetDictionaryStringValue(CFDictionaryRef aDictionary, CFStringRef aKey, nsAString& aResult)
 {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
     aResult.Truncate();
     CFTypeRef dictValue;
     if ((dictValue = CFDictionaryGetValue(aDictionary, aKey)) &&
@@ -137,12 +146,16 @@ GetDictionaryStringValue(CFDictionaryRef aDictionary, CFStringRef aKey, nsAStrin
         }
     }
     return PR_FALSE;
+
+    NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_FALSE);
 }
 
 // returns success or failure (not the read value)
 static PRBool
 GetDictionaryBooleanValue(CFDictionaryRef aDictionary, CFStringRef aKey, PRBool& aResult)
 {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
     aResult = PR_FALSE;
     CFTypeRef dictValue;
     if ((dictValue = CFDictionaryGetValue(aDictionary, aKey)) &&
@@ -152,22 +165,32 @@ GetDictionaryBooleanValue(CFDictionaryRef aDictionary, CFStringRef aKey, PRBool&
       return PR_TRUE;
     }
     return PR_FALSE;
+
+    NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_FALSE);
 }
 
 static void
 SetDictionaryStringValue(CFMutableDictionaryRef aDictionary, CFStringRef aKey, const nsXPIDLString& aValue)
 {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
     CFStringRef cfString = CFStringCreateWithCharacters(NULL, aValue.get(), aValue.Length());
     if (cfString) {
         CFDictionaryAddValue(aDictionary, aKey, cfString);
         CFRelease(cfString);
     }
+
+    NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 static void
 SetDictionaryBooleanvalue(CFMutableDictionaryRef aDictionary, CFStringRef aKey, PRBool aValue)
 {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
     CFDictionaryAddValue(aDictionary, aKey, aValue ? kCFBooleanTrue : kCFBooleanFalse);
+
+    NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 //*****************************************************************************
@@ -197,6 +220,8 @@ nsresult nsPrintingPromptService::Init()
 NS_IMETHODIMP 
 nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrint *webBrowserPrint, nsIPrintSettings *printSettings)
 {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
     nsresult rv;
     OSStatus status;
       
@@ -412,6 +437,8 @@ nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrin
         return NS_ERROR_FAILURE;
 
     return NS_OK;
+
+    NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP 
@@ -430,6 +457,8 @@ nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent,
 NS_IMETHODIMP 
 nsPrintingPromptService::ShowPageSetup(nsIDOMWindow *parent, nsIPrintSettings *printSettings, nsIObserver *aObs)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsCOMPtr<nsIPrintSettingsX> printSettingsX(do_QueryInterface(printSettings));
   if (!printSettingsX)
     return NS_ERROR_NO_INTERFACE;
@@ -465,6 +494,8 @@ nsPrintingPromptService::ShowPageSetup(nsIDOMWindow *parent, nsIPrintSettings *p
     return NS_ERROR_ABORT;
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP 

@@ -95,16 +95,19 @@ then
     usage
 fi
 
-# Get our OS and Executable name
+# Get our OS and Executable and profile directory names
 OS=$(python getOsInfo.py)
 FFX_EXE=$(python getOsInfo.py -o $OS -f)
+profileName=minotaur-"`uuidgen`"
 
-cp ${minotaurdir}/tests.manifest $fxdir/chrome/.
+cp ${minotaurdir}/tests.manifest $fxdir/chrome/tests.manifest
 
-# Use the default profile location because Ffx 3 can't hack non-default profiles
-$fxdir/$FFX_EXE -CreateProfile minotaurTestProfile
+profileDir=`$fxdir/$FFX_EXE -CreateProfile $profileName 2>&1 | sed -e "s/.*at '\(.*\)[\/|\\]prefs\.js.*/\1/"`
 
-$fxdir/$FFX_EXE -P minotaurTestProfile -chrome chrome://minotaur/content/quit.xul
+# Seed that profile with our preferences
+cp ${minotaurdir}/user.js "$profileDir"/user.js
+
+$fxdir/$FFX_EXE -no-remote -P $profileName -chrome chrome://minotaur/content/quit.xul
 sleep 10
 
 # create verification repository
@@ -123,7 +126,7 @@ if [ -f $resultsdir/http.log ]; then
 fi
 
 #run the extraction
-$fxdir/$FFX_EXE -P minotaurTestProfile -chrome chrome://minotaur/content
+$fxdir/$FFX_EXE -P $profileName -chrome chrome://minotaur/content
 
 cp ./test-output.xml $resultsdir/test-output.xml
 cp ./test-bookmarks.html $resultsdir/test-bookmarks.html
@@ -137,10 +140,10 @@ else
   rm $fxname/$fxver/$locale/results.log
 
   #Perform the output.xml diff
-  diff $resultsdir/test-output.xml $outputVerify >> $resultsdir/results.log
+  diff -u $outputVerify $resultsdir/test-output.xml >> $resultsdir/results.log
 
   # Check the Bookmarks file
-  python diffBookmarks.py -l $resultsdir/test-bookmarks.html -r $bookmarksVerify -f $resultsdir/results.log
+  python diffBookmarks.py -l $bookmarksVerify -r $resultsdir/test-bookmarks.html -f $resultsdir/results.log
 
   # Check the Http Debug Log to catch the release channel
   python checkReleaseChannel.py -d $resultsdir/http.log -r $releaseVerify -l $resultsdir/results.log
@@ -162,7 +165,6 @@ rm $fxdir/chrome/tests.manifest
 if [ -f ${minotaurdir}/EULA.txt ]; then
   rm ${minotaurdir}/EULA.txt
 fi
-if [ -f ${minotaurdir}/profile.txt ]; then
-  python mozInstall.py -o d -d "`cat profile.txt`"
-  rm profile.txt
-fi
+
+# Delete the profile directory
+python mozInstall.py -o d -d "$profileDir"

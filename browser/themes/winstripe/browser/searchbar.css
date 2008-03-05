@@ -24,22 +24,20 @@
   min-width: 0;
   margin: 0;
   -moz-margin-end: 3px;
-  padding: 2px 0;
-  border: 0;
+  padding: 0;
+  height: 1.23em;
+  min-height: 20px;
   -moz-box-align: center;
-  background-color: -moz-dialog;
-  -moz-appearance: toolbox;
-  outline: 1px solid ThreeDShadow;
-  -moz-margin-start: -1px;
-  -moz-outline-radius-topleft: 2px;
-  -moz-outline-radius-bottomleft: 2px;
+  background: ButtonFace url(chrome://browser/skin/tabbrowser/tab-active-bkgnd.png) repeat-x;
+  border: 0 solid;
+  border-right-width: 1px;
+  -moz-border-right-colors: ButtonShadow;
 }
 
 .searchbar-engine-button[chromedir="rtl"] {
-  -moz-outline-radius-topleft: 0;
-  -moz-outline-radius-bottomleft: 0;
-  -moz-outline-radius-topright: 2px;
-  -moz-outline-radius-bottomright: 2px;
+  border-right-width: 0;
+  border-left-width: 1px;
+  -moz-border-left-colors: ButtonShadow;
 }
 
 .searchbar-engine-button:hover {
@@ -57,7 +55,7 @@
   background: transparent url(chrome://browser/skin/Search-addengines.png) no-repeat right center;
 }
 
-.searchbar-engine-button[addengines="true"][chromedir="rtl"] {
+.searchbar-engine-button[addengines="true"][chromedir="rtl"] > .button-box {
   background-position: left center;
 }
 

@@ -123,14 +123,14 @@ PlacesTreeView.prototype = {
   SESSION_STATUS_START: 1,
   SESSION_STATUS_CONTINUE: 2,
   _getRowSessionStatus: function PTV__getRowSessionStatus(aRow) {
-    var node = this._visibleElements[aRow];
+    var node = this._visibleElements[aRow].node;
     if (!PlacesUtils.nodeIsVisit(node) || asVisit(node).sessionId == 0)
       return this.SESSION_STATUS_NONE;
 
     if (aRow == 0)
       return this.SESSION_STATUS_START;
 
-    var previousNode = this._visibleElements[aRow - 1];
+    var previousNode = this._visibleElements[aRow - 1].node;
     if (!PlacesUtils.nodeIsVisit(previousNode) ||
         node.sessionId != asVisit(previousNode).sessionId)
       return this.SESSION_STATUS_START;
@@ -147,7 +147,7 @@ PlacesTreeView.prototype = {
     if (this._result) {
       // Any current visible elements need to be marked as invisible.
       for (var i = 0; i < this._visibleElements.length; i++) {
-        this._visibleElements[i].viewIndex = -1;
+        this._visibleElements[i].node.viewIndex = -1;
       }
     }
 
@@ -158,7 +158,8 @@ PlacesTreeView.prototype = {
       asContainer(rootNode);
       if (this._showRoot) {
         // List the root node
-        this._visibleElements.push(this._result.root);
+        this._visibleElements.push(
+          { node: this._result.root, properties: null });
         this._tree.rowCountChanged(0, 1);
         this._result.root.viewIndex = 0;
       }
@@ -210,7 +211,7 @@ PlacesTreeView.prototype = {
 
       // add item
       curChild.viewIndex = aVisibleStartIndex + aVisible.length;
-      aVisible.push(curChild);
+      aVisible.push({ node: curChild, properties: null });
 
       // recursively do containers
       if (!this._flatList && PlacesUtils.containerTypes.indexOf(curChildType) != -1) {
@@ -242,7 +243,7 @@ PlacesTreeView.prototype = {
     NS_ASSERT(viewIndex >= 0, "Item is not visible, no rows to count");
     var outerLevel = aNode.indentLevel;
     for (var i = viewIndex + 1; i < this._visibleElements.length; i++) {
-      if (this._visibleElements[i].indentLevel <= outerLevel)
+      if (this._visibleElements[i].node.indentLevel <= outerLevel)
         return i - viewIndex;
     }
     // this node plus its children occupy the bottom of the list
@@ -270,7 +271,7 @@ PlacesTreeView.prototype = {
           aContainer.viewIndex > this._visibleElements.length)
         throw "Trying to expand a node that is not visible";
 
-      NS_ASSERT(this._visibleElements[aContainer.viewIndex] == aContainer,
+      NS_ASSERT(this._visibleElements[aContainer.viewIndex].node == aContainer,
                 "Visible index is out of sync!");
     }
 
@@ -296,13 +297,13 @@ PlacesTreeView.prototype = {
         continue;
 
       for (var nodeIndex = min.value; nodeIndex <= lastIndex; nodeIndex++)
-        previouslySelectedNodes.push({ node: this._visibleElements[nodeIndex],
-                                       oldIndex: nodeIndex });
+        previouslySelectedNodes.push(
+          { node: this._visibleElements[nodeIndex].node, oldIndex: nodeIndex });
     }
 
     // Mark the removes as invisible
     for (var i = 0; i < replaceCount; i++)
-      this._visibleElements[startReplacement + i].viewIndex = -1;
+      this._visibleElements[startReplacement + i].node.viewIndex = -1;
 
     // Building the new list will set the new elements' visible indices.
     var newElements = [];
@@ -320,7 +321,7 @@ PlacesTreeView.prototype = {
     if (replaceCount != newElements.length) {
       for (i = startReplacement + newElements.length;
            i < this._visibleElements.length; i ++) {
-        this._visibleElements[i].viewIndex = i;
+        this._visibleElements[i].node.viewIndex = i;
       }
     }
 
@@ -556,10 +557,11 @@ PlacesTreeView.prototype = {
     }
 
     aItem.viewIndex = newViewIndex;
-    this._visibleElements.splice(newViewIndex, 0, aItem);
+    this._visibleElements.splice(newViewIndex, 0, 
+                                 { node: aItem, properties: null });
     for (var i = newViewIndex + 1;
          i < this._visibleElements.length; i ++) {
-      this._visibleElements[i].viewIndex = i;
+      this._visibleElements[i].node.viewIndex = i;
     }
     this._tree.rowCountChanged(newViewIndex, 1);
 
@@ -590,7 +592,7 @@ PlacesTreeView.prototype = {
 
     this._visibleElements.splice(oldViewIndex, count);
     for (var i = oldViewIndex; i < this._visibleElements.length; i++)
-      this._visibleElements[i].viewIndex = i;
+      this._visibleElements[i].node.viewIndex = i;
 
     this._tree.rowCountChanged(oldViewIndex, -count);
 
@@ -676,7 +678,7 @@ PlacesTreeView.prototype = {
         continue;
 
       for (var nodeIndex = min.value; nodeIndex <= lastIndex; nodeIndex++)
-        nodesToSelect.push(this._visibleElements[nodeIndex]);
+        nodesToSelect.push(this._visibleElements[nodeIndex].node);
     }
     if (nodesToSelect.length > 0)
       selection.selectEventsSuppressed = true;
@@ -714,8 +716,10 @@ PlacesTreeView.prototype = {
     var viewIndex = aOldItem.viewIndex;
     aNewItem.viewIndex = viewIndex;
     if (viewIndex >= 0 &&
-        viewIndex < this._visibleElements.length)
-      this._visibleElements[viewIndex] = aNewItem;
+        viewIndex < this._visibleElements.length) {
+      this._visibleElements[viewIndex].node = aNewItem;
+      this._visibleElements[viewIndex].properties = null;
+    }
     aOldItem.viewIndex = -1;
     this._tree.invalidateRow(viewIndex);
   },
@@ -812,7 +816,7 @@ PlacesTreeView.prototype = {
     if (aIndex > this._visibleElements.length)
       throw Cr.NS_ERROR_INVALID_ARG;
 
-    return this._visibleElements[aIndex];
+    return this._visibleElements[aIndex].node;
   },
 
   treeIndexForNode: function PTV_treeNodeForIndex(aNode) {
@@ -820,7 +824,7 @@ PlacesTreeView.prototype = {
     if (viewIndex < 0)
       return Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE;
 
-    NS_ASSERT(this._visibleElements[viewIndex] == aNode,
+    NS_ASSERT(this._visibleElements[viewIndex].node == aNode,
               "Node's visible index and array out of sync");
     return viewIndex;
   },
@@ -878,26 +882,35 @@ PlacesTreeView.prototype = {
     if (columnType != "title")
       return;
 
-    var node = this._visibleElements[aRow];
+    var node = this._visibleElements[aRow].node;
+    var properties = this._visibleElements[aRow].properties;
 
-    var nodeType = node.type;
-    if (PlacesUtils.containerTypes.indexOf(nodeType) != -1) {
-      if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY) {
-        aProperties.AppendElement(this._getAtomFor("query"));
-        if (this._showQueryAsFolder)
-          aProperties.AppendElement(this._getAtomFor("folder"));
-      } else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER ||
+    if (!properties) {
+      properties = new Array();
+      var nodeType = node.type;
+      if (PlacesUtils.containerTypes.indexOf(nodeType) != -1) {
+        if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY) {
+          properties.push(this._getAtomFor("query"));
+          if (this._showQueryAsFolder)
+            properties.push(this._getAtomFor("folder"));
+        } 
+        else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER ||
                  nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT) {
-        if (PlacesUtils.annotations.itemHasAnnotation(node.itemId,
-                                                      LMANNO_FEEDURI))
-          aProperties.AppendElement(this._getAtomFor("livemark"));
-        else if (PlacesUtils.bookmarks.getFolderIdForItem(node.itemId) ==
-                 PlacesUtils.tagsFolderId)
-          aProperties.AppendElement(this._getAtomFor("tagContainer"));
+          if (PlacesUtils.annotations.itemHasAnnotation(node.itemId,
+                                                        LMANNO_FEEDURI))
+            properties.push(this._getAtomFor("livemark"));
+          else if (PlacesUtils.bookmarks.getFolderIdForItem(node.itemId) ==
+                   PlacesUtils.tagsFolderId)
+            properties.push(this._getAtomFor("tagContainer"));
+        }
       }
+      else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR)
+        properties.push(this._getAtomFor("separator"));
+
+      this._visibleElements[aRow].properties = properties;
     }
-    else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR)
-      aProperties.AppendElement(this._getAtomFor("separator"));
+    for (var i = 0; i < properties.length; i++)
+      aProperties.AppendElement(properties[i]);
   },
 
   getColumnProperties: function(aColumn, aProperties) { },
@@ -905,7 +918,7 @@ PlacesTreeView.prototype = {
   isContainer: function PTV_isContainer(aRow) {
     this._ensureValidRow(aRow);
 
-    var node = this._visibleElements[aRow];
+    var node = this._visibleElements[aRow].node;
     if (PlacesUtils.nodeIsContainer(node)) {
       // the root node is always expandable
       if (!node.parent)
@@ -926,10 +939,10 @@ PlacesTreeView.prototype = {
       return false;
 
     this._ensureValidRow(aRow);
-    if (!PlacesUtils.nodeIsContainer(this._visibleElements[aRow]))
+    if (!PlacesUtils.nodeIsContainer(this._visibleElements[aRow].node))
       throw Cr.NS_ERROR_INVALID_ARG;
 
-    return this._visibleElements[aRow].containerOpen;
+    return this._visibleElements[aRow].node.containerOpen;
   },
 
   isContainerEmpty: function PTV_isContainerEmpty(aRow) {
@@ -938,15 +951,15 @@ PlacesTreeView.prototype = {
 
     this._ensureValidRow(aRow);
 
-    if (!PlacesUtils.nodeIsContainer(this._visibleElements[aRow]))
+    if (!PlacesUtils.nodeIsContainer(this._visibleElements[aRow].node))
       throw Cr.NS_ERROR_INVALID_ARG;
 
-    return !this._visibleElements[aRow].hasChildren;
+    return !this._visibleElements[aRow].node.hasChildren;
   },
 
   isSeparator: function PTV_isSeparator(aRow) {
     this._ensureValidRow(aRow);
-    return PlacesUtils.nodeIsSeparator(this._visibleElements[aRow]);
+    return PlacesUtils.nodeIsSeparator(this._visibleElements[aRow].node);
   },
 
   isSorted: function PTV_isSorted() {
@@ -1040,7 +1053,7 @@ PlacesTreeView.prototype = {
 
   getParentIndex: function PTV_getParentIndex(aRow) {
     this._ensureValidRow(aRow);
-    var parent = this._visibleElements[aRow].parent;
+    var parent = this._visibleElements[aRow].node.parent;
     if (!parent || parent.viewIndex < 0)
       return -1;
 
@@ -1054,9 +1067,9 @@ PlacesTreeView.prototype = {
       return false;
     }
 
-    var thisLevel = this._visibleElements[aRow].indentLevel;
+    var thisLevel = this._visibleElements[aRow].node.indentLevel;
     for (var i = aAfterIndex + 1; i < this._visibleElements.length; ++i) {
-      var nextLevel = this._visibleElements[i].indentLevel;
+      var nextLevel = this._visibleElements[i].node.indentLevel;
       if (nextLevel == thisLevel)
         return true;
       if (nextLevel < thisLevel)
@@ -1074,9 +1087,9 @@ PlacesTreeView.prototype = {
     // That is because nsNavHistoryResult uses -1 as the indent level for the
     // root node regardless of our internal showRoot state.
     if (this._showRoot)
-      return this._visibleElements[aRow].indentLevel + 1;
+      return this._visibleElements[aRow].node.indentLevel + 1;
 
-    return this._visibleElements[aRow].indentLevel;
+    return this._visibleElements[aRow].node.indentLevel;
   },
 
   getImageSrc: function PTV_getImageSrc(aRow, aColumn) {
@@ -1086,7 +1099,7 @@ PlacesTreeView.prototype = {
     if (aColumn.index != 0)
       return "";
 
-    var node = this._visibleElements[aRow];
+    var node = this._visibleElements[aRow].node;
 
     // Containers may or may not have favicons. If not, we will return
     // nothing as the image, and the style rule should pick up the
@@ -1107,7 +1120,7 @@ PlacesTreeView.prototype = {
   getCellText: function PTV_getCellText(aRow, aColumn) {
     this._ensureValidRow(aRow);
 
-    var node = this._visibleElements[aRow];
+    var node = this._visibleElements[aRow].node;
     var columnType = this._getColumnType(aColumn);
     switch (columnType) {
       case this.COLUMN_TYPE_TITLE:
@@ -1180,7 +1193,7 @@ PlacesTreeView.prototype = {
       throw Cr.NS_ERROR_UNEXPECTED;
     this._ensureValidRow(aRow);
 
-    var node = this._visibleElements[aRow];
+    var node = this._visibleElements[aRow].node;
     if (!PlacesUtils.nodeIsContainer(node))
       return; // not a container, nothing to do
 

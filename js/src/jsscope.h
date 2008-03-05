@@ -365,8 +365,6 @@ js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
 extern void
 js_DestroyScope(JSContext *cx, JSScope *scope);
 
-#define ID_TO_VALUE(id) ((jsval)(id))
-
 extern JS_FRIEND_API(JSScopeProperty **)
 js_SearchScope(JSScope *scope, jsid id, JSBool adding);
 

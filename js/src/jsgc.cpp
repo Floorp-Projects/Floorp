@@ -79,34 +79,52 @@
 #endif
 
 /*
- * Deduce if mmap or similar is available.
+ * Check if posix_memalign is available.
  */
-#ifndef JS_GC_USE_MMAP
+#if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600 || MOZ_MEMORY
+# define HAS_POSIX_MEMALIGN 1
+#else
+# define HAS_POSIX_MEMALIGN 0
+#endif
+
+/*
+ * jemalloc provides posix_memalign but the function has to be explicitly
+ * declared on Windows.
+ */
+#if HAS_POSIX_MEMALIGN && MOZ_MEMORY_WINDOWS
+extern int
+posix_memalign(void **memptr, size_t alignment, size_t size);
+#endif
+
+/*
+ * Include the headers for mmap unless we have posix_memalign and do not
+ * insist on mmap.
+ */
+#if JS_GC_USE_MMAP || (!defined JS_GC_USE_MMAP && !HAS_POSIX_MEMALIGN)
 # if defined(XP_WIN)
-#  define JS_GC_USE_MMAP 1
-# elif defined(XP_UNIX) || defined(XP_BEOS)
-#  include <unistd.h>
-#  if defined(_POSIX_MAPPED_FILES) && _POSIX_MAPPED_FILES > 0
+#  ifndef JS_GC_USE_MMAP
 #   define JS_GC_USE_MMAP 1
 #  endif
-# endif
-#endif
-
-#ifndef JS_GC_USE_MMAP
-# define JS_GC_USE_MMAP 0
-#endif
-
-#if JS_GC_USE_MMAP
-# if defined(XP_WIN)
 #  include <windows.h>
-# elif defined(XP_UNIX) || defined(XP_BEOS)
-#  include <sys/mman.h>
+# else
+#  if defined(XP_UNIX) || defined(XP_BEOS)
+#   include <unistd.h>
+#  endif
+#  if _POSIX_MAPPED_FILES > 0
+#   ifndef JS_GC_USE_MMAP
+#    define JS_GC_USE_MMAP 1
+#   endif
+#   include <sys/mman.h>
 
 /* On Mac OS X MAP_ANONYMOUS is not defined. */
-#  if !defined(MAP_ANONYMOUS) && defined(MAP_ANON)
-#   define MAP_ANONYMOUS MAP_ANON
+#   if !defined(MAP_ANONYMOUS) && defined(MAP_ANON)
+#    define MAP_ANONYMOUS MAP_ANON
+#   endif
+#  else
+#   if JS_GC_USE_MMAP
+#    error "JS_GC_USE_MMAP is set when mmap is not available"
+#   endif
 #  endif
-
 # endif
 #endif
 
@@ -159,34 +177,65 @@
  * marking phase of the GC. The locking is implemented via a hash table. Thus
  * for doubles the flag area becomes a bitmap.
  *
- * JS_GC_USE_MMAP macros governs the allocation of aligned arenas. When the
- * macro is true, a platform specific allocation code like POSIX mmap is used
- * with no extra overhead. If the macro is false, the code uses malloc to
- * allocate a chunk of
+ * JS_GC_USE_MMAP macro governs the choice of the aligned arena allocator.
+ * When it is true, a platform-dependent function like mmap is used to get
+ * memory aligned on CPU page boundaries. If the macro is false or undefined,
+ * posix_memalign is used when available. Otherwise the code uses malloc to
+ * over-allocate a chunk with js_gcArenasPerChunk aligned arenas. The
+ * approximate space overhead of this is 1/js_gcArenasPerChunk. For details,
+ * see NewGCChunk/DestroyGCChunk below.
  *
- *   GC_ARENA_SIZE * (js_gcArenasPerChunk + 1)
- *
- * bytes. The chunk contains at least js_gcArenasPerChunk aligned arenas so
- * the overhead of this schema is approximately 1/js_gcArenasPerChunk. See
- * NewGCChunk/DestroyGCChunk below for details.
- *
- * Note that even when JS_GC_USE_MMAP is true the code still allocates arenas
- * in chunks to minimize the overhead of mmap/munmap.
- */
-
-/*
- * When mmap is available, use the minimal known CPU page size as the size of
- * GC arena. Otherwise use 1K arenas to minimize the overhead of the aligned
- * allocation.
+ * The code also allocates arenas in chunks when JS_GC_USE_MMAP is 1 to
+ * minimize the overhead of mmap/munmap. In this case js_gcArenasPerChunk can
+ * not be a compile-time constant as the system page size is not known until
+ * runtime.
  */
 #if JS_GC_USE_MMAP
-# define GC_ARENA_SHIFT              12
+static uint32 js_gcArenasPerChunk = 0;
+static JSBool js_gcUseMmap = JS_FALSE;
+#elif HAS_POSIX_MEMALIGN
+# define js_gcArenasPerChunk 1
 #else
-# define GC_ARENA_SHIFT              10
+# define js_gcArenasPerChunk 7
 #endif
 
+#if defined(js_gcArenasPerChunk) && js_gcArenasPerChunk == 1
+# define CHUNKED_ARENA_ALLOCATION 0
+#else
+# define CHUNKED_ARENA_ALLOCATION 1
+#endif
+
+#define GC_ARENA_SHIFT              12
 #define GC_ARENA_MASK               ((jsuword) JS_BITMASK(GC_ARENA_SHIFT))
 #define GC_ARENA_SIZE               JS_BIT(GC_ARENA_SHIFT)
+
+/*
+ * JS_GC_ARENA_PAD defines the number of bytes to pad JSGCArenaInfo structure.
+ * It is used to improve allocation efficiency when using posix_memalign. If
+ * malloc's implementation uses internal headers, then calling
+ *
+ *   posix_memalign(&p, GC_ARENA_SIZE, GC_ARENA_SIZE * js_gcArenasPerChunk)
+ *
+ * in a sequence leaves holes between allocations of the size GC_ARENA_SIZE
+ * due to the need to fit headers. JS_GC_ARENA_PAD mitigates that so the code
+ * calls
+ *
+ *     posix_memalign(&p, GC_ARENA_SIZE,
+ *                    GC_ARENA_SIZE * js_gcArenasPerChunk - JS_GC_ARENA_PAD)
+ *
+ * When JS_GC_ARENA_PAD is equal or greater than the number of words in the
+ * system header, the system can pack all allocations together without holes.
+ *
+ * With JS_GC_USE_MEMALIGN we want at least 2 word pad unless posix_memalign
+ * comes from jemalloc that does not use any headers/trailers.
+ */
+#ifndef JS_GC_ARENA_PAD
+# if HAS_POSIX_MEMALIGN && !MOZ_MEMORY
+#  define JS_GC_ARENA_PAD (2 * JS_BYTES_PER_WORD)
+# else
+#  define JS_GC_ARENA_PAD 0
+# endif
+#endif
 
 struct JSGCArenaInfo {
     /*
@@ -202,6 +251,9 @@ struct JSGCArenaInfo {
      */
     JSGCArenaInfo   *prev;
 
+#if !CHUNKED_ARENA_ALLOCATION
+    jsuword         prevUntracedPage;
+#else
     /*
      * A link field for the list of arenas with marked but not yet traced
      * things. The field is encoded as arena's page to share the space with
@@ -221,12 +273,17 @@ struct JSGCArenaInfo {
 
     /* Flag indicating if the arena is the first in the chunk. */
     jsuword         firstArena :        1;
+#endif
 
     union {
         jsuword     untracedThings;     /* bitset for fast search of marked
                                            but not yet traced things */
         JSBool      hasMarkedDoubles;   /* the arena has marked doubles */
     } u;
+
+#if JS_GC_ARENA_PAD != 0
+    uint8           pad[JS_GC_ARENA_PAD];
+#endif
 };
 
 /*
@@ -235,39 +292,7 @@ struct JSGCArenaInfo {
  * platform this does not compile, then, as a workaround, comment the assert
  * out and submit a bug report.
  */
-JS_STATIC_ASSERT(sizeof(JSGCArenaInfo) == 4 * sizeof(jsuword));
-
-#define NO_FREE_ARENAS              JS_BITMASK(GC_ARENA_SHIFT - 1)
-
-/*
- * All chunks that have at least one free arena are put on the doubly-linked
- * list with the head stored in JSRuntime.gcChunkList. JSGCChunkInfo contains
- * the head of the chunk's free arena list together with the link fields for
- * gcChunkList.
- *
- * The structure is stored in one of chunk's free arenas. GET_CHUNK_INFO_INDEX
- * macro gives the index of this arena. When all arenas in the chunk are used,
- * it is removed from the list and the index is set to NO_FREE_ARENAS
- * indicating that the chunk is not on gcChunkList and has no JSGCChunkInfo
- * available.
- */
-struct JSGCChunkInfo {
-    JSGCChunkInfo   **prevp;
-    JSGCChunkInfo   *next;
-    JSGCArenaInfo   *lastFreeArena;
-    uint32          numFreeArenas;
-};
-
-/*
- * Even when mmap is available, its overhead may be too big so the final
- * decision to use it is done at runtime.
- */
-#if JS_GC_USE_MMAP
-static uint32 js_gcArenasPerChunk = 0;
-static JSBool js_gcUseMmap = JS_FALSE;
-#else
-# define js_gcArenasPerChunk 31
-#endif
+JS_STATIC_ASSERT(offsetof(JSGCArenaInfo, u) == 3 * sizeof(jsuword));
 
 /*
  * Macros to convert between JSGCArenaInfo, the start address of the arena and
@@ -299,9 +324,35 @@ static JSBool js_gcUseMmap = JS_FALSE;
     (JS_ASSERT((index) < js_gcArenasPerChunk),                                \
      ARENA_START_TO_INFO(chunk + ((index) << GC_ARENA_SHIFT)))
 
+#if CHUNKED_ARENA_ALLOCATION
 /*
- * Macros to access/modify information about the chunk of GC arenas.
+ * Definitions for allocating arenas in chunks.
+ *
+ * All chunks that have at least one free arena are put on the doubly-linked
+ * list with the head stored in JSRuntime.gcChunkList. JSGCChunkInfo contains
+ * the head of the chunk's free arena list together with the link fields for
+ * gcChunkList.
+ *
+ * Structure stored in one of chunk's free arenas. GET_CHUNK_INFO_INDEX gives
+ * the index of this arena. When all arenas in the chunk are used, it is
+ * removed from the list and the index is set to NO_FREE_ARENAS indicating
+ * that the chunk is not on gcChunkList and has no JSGCChunkInfo available.
  */
+
+struct JSGCChunkInfo {
+    JSGCChunkInfo   **prevp;
+    JSGCChunkInfo   *next;
+    JSGCArenaInfo   *lastFreeArena;
+    uint32          numFreeArenas;
+};
+
+#define NO_FREE_ARENAS              JS_BITMASK(GC_ARENA_SHIFT - 1)
+
+#ifdef js_gcArenasPerChunk
+JS_STATIC_ASSERT(1 <= js_gcArenasPerChunk &&
+                 js_gcArenasPerChunk <= NO_FREE_ARENAS);
+#endif
+
 #define GET_ARENA_CHUNK(arena, index)                                         \
     (JS_ASSERT(GET_ARENA_INDEX(arena) == index),                              \
      ARENA_INFO_TO_START(arena) - ((index) << GC_ARENA_SHIFT))
@@ -323,6 +374,8 @@ static JSBool js_gcUseMmap = JS_FALSE;
 
 #define CHUNK_INFO_TO_INDEX(ci)                                               \
     GET_ARENA_INDEX(ARENA_START_TO_INFO((jsuword)ci))
+
+#endif
 
 /*
  * Macros for GC-thing operations.
@@ -698,6 +751,8 @@ ShrinkPtrTable(JSPtrTable *table, const JSPtrTableInfo *info,
 #define METER_UPDATE_MAX(maxLval, rval)                                       \
     METER_IF((maxLval) < (rval), (maxLval) = (rval))
 
+#if JS_GC_USE_MMAP || !HAS_POSIX_MEMALIGN
+
 /*
  * For chunks allocated via over-sized malloc, get a pointer to store the gap
  * between the malloc's result and the first arena in the chunk.
@@ -711,11 +766,12 @@ GetMallocedChunkGapPtr(jsuword chunk)
     return (uint32 *) (chunk + (js_gcArenasPerChunk << GC_ARENA_SHIFT));
 }
 
+#endif
+
 static jsuword
-NewGCChunk()
+NewGCChunk(void)
 {
     void *p;
-    jsuword chunk;
 
 #if JS_GC_USE_MMAP
     if (js_gcUseMmap) {
@@ -723,35 +779,50 @@ NewGCChunk()
         p = VirtualAlloc(NULL, js_gcArenasPerChunk << GC_ARENA_SHIFT,
                          MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
         return (jsuword) p;
-# elif defined(XP_UNIX) || defined(XP_BEOS)
+# else
         p = mmap(NULL, js_gcArenasPerChunk << GC_ARENA_SHIFT,
                  PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
         return (p == MAP_FAILED) ? 0 : (jsuword) p;
-# else
-#  error "Not implemented"
 # endif
     }
 #endif
 
+#if HAS_POSIX_MEMALIGN
+    if (0 != posix_memalign(&p, GC_ARENA_SIZE,
+                            GC_ARENA_SIZE * js_gcArenasPerChunk -
+                            JS_GC_ARENA_PAD)) {
+        return 0;
+    }
+    return (jsuword) p;
+#else
     /*
-     * Implement the chunk allocation using over sized malloc if mmap cannot
-     * be used. FIXME bug 396007: the code should use posix_memalign when it
-     * is available.
+     * Implement chunk allocation using oversized malloc if mmap and
+     * posix_memalign are not available.
      *
      * Since malloc allocates pointers aligned on the word boundary, to get
      * js_gcArenasPerChunk aligned arenas, we need to malloc only
+     *
      *   ((js_gcArenasPerChunk + 1) << GC_ARENA_SHIFT) - sizeof(size_t)
+     *
      * bytes. But since we stores the gap between the malloced pointer and the
      * first arena in the chunk after the chunk, we need to ask for
+     *
      *   ((js_gcArenasPerChunk + 1) << GC_ARENA_SHIFT)
+     *
      * bytes to ensure that we always have room to store the gap.
      */
     p = malloc((js_gcArenasPerChunk + 1) << GC_ARENA_SHIFT);
     if (!p)
         return 0;
-    chunk = ((jsuword) p + GC_ARENA_MASK) & ~GC_ARENA_MASK;
-    *GetMallocedChunkGapPtr(chunk) = (uint32) (chunk - (jsuword) p);
-    return chunk;
+
+    {
+        jsuword chunk;
+
+        chunk = ((jsuword) p + GC_ARENA_MASK) & ~GC_ARENA_MASK;
+        *GetMallocedChunkGapPtr(chunk) = (uint32) (chunk - (jsuword) p);
+        return chunk;
+    }
+#endif
 }
 
 static void
@@ -762,19 +833,23 @@ DestroyGCChunk(jsuword chunk)
     if (js_gcUseMmap) {
 # if defined(XP_WIN)
         VirtualFree((void *) chunk, 0, MEM_RELEASE);
-# elif defined(XP_UNIX) || defined(XP_BEOS)
-        munmap((void *) chunk, js_gcArenasPerChunk << GC_ARENA_SHIFT);
 # else
-#  error "Not implemented"
+        munmap((void *) chunk, js_gcArenasPerChunk << GC_ARENA_SHIFT);
 # endif
         return;
     }
 #endif
 
+#if HAS_POSIX_MEMALIGN
+    free((void *) chunk);
+#else
     /* See comments in NewGCChunk. */
     JS_ASSERT(*GetMallocedChunkGapPtr(chunk) < GC_ARENA_SIZE);
     free((void *) (chunk - *GetMallocedChunkGapPtr(chunk)));
+#endif
 }
+
+#if CHUNKED_ARENA_ALLOCATION
 
 static void
 AddChunkToList(JSRuntime *rt, JSGCChunkInfo *ci)
@@ -798,23 +873,30 @@ RemoveChunkFromList(JSRuntime *rt, JSGCChunkInfo *ci)
     }
 }
 
+#endif
+
 static JSGCArenaInfo *
 NewGCArena(JSRuntime *rt)
 {
     jsuword chunk;
-    JSGCChunkInfo *ci;
-    uint32 i;
-    JSGCArenaInfo *a, *aprev;
+    JSGCArenaInfo *a;
 
     if (rt->gcBytes >= rt->gcMaxBytes)
         return NULL;
 
+#if CHUNKED_ARENA_ALLOCATION
     if (js_gcArenasPerChunk == 1) {
+#endif
         chunk = NewGCChunk();
         if (chunk == 0)
             return NULL;
         a = ARENA_START_TO_INFO(chunk);
+#if CHUNKED_ARENA_ALLOCATION
     } else {
+        JSGCChunkInfo *ci;
+        uint32 i;
+        JSGCArenaInfo *aprev;
+
         ci = rt->gcChunkList;
         if (!ci) {
             chunk = NewGCChunk();
@@ -856,6 +938,7 @@ NewGCArena(JSRuntime *rt)
             }
         }
     }
+#endif
 
     rt->gcBytes += GC_ARENA_SIZE;
     a->prevUntracedPage = 0;
@@ -868,10 +951,6 @@ static void
 DestroyGCArenas(JSRuntime *rt, JSGCArenaInfo *last)
 {
     JSGCArenaInfo *a;
-    uint32 arenaIndex;
-    jsuword chunk;
-    uint32 chunkInfoIndex;
-    JSGCChunkInfo *ci;
 
     while (last) {
         a = last;
@@ -881,19 +960,26 @@ DestroyGCArenas(JSRuntime *rt, JSGCArenaInfo *last)
         JS_ASSERT(rt->gcBytes >= GC_ARENA_SIZE);
         rt->gcBytes -= GC_ARENA_SIZE;
 
+#if CHUNKED_ARENA_ALLOCATION
         if (js_gcArenasPerChunk == 1) {
+#endif
             DestroyGCChunk(ARENA_INFO_TO_START(a));
+#if CHUNKED_ARENA_ALLOCATION
         } else {
-#ifdef DEBUG
+            uint32 arenaIndex;
+            jsuword chunk;
+            uint32 chunkInfoIndex;
+            JSGCChunkInfo *ci;
+# ifdef DEBUG
             jsuword firstArena;
 
             firstArena = a->firstArena;
             arenaIndex = a->arenaIndex;
             memset((void *) ARENA_INFO_TO_START(a), JS_FREE_PATTERN,
-                   GC_ARENA_SIZE);
+                   GC_ARENA_SIZE - JS_GC_ARENA_PAD);
             a->firstArena = firstArena;
             a->arenaIndex = arenaIndex;
-#endif
+# endif
             arenaIndex = GET_ARENA_INDEX(a);
             chunk = GET_ARENA_CHUNK(a, arenaIndex);
             chunkInfoIndex = GET_CHUNK_INFO_INDEX(chunk);
@@ -921,6 +1007,7 @@ DestroyGCArenas(JSRuntime *rt, JSGCArenaInfo *last)
                 }
             }
         }
+# endif
     }
 }
 
@@ -1075,13 +1162,17 @@ typedef struct JSGCRootHashEntry {
 /* Initial size of the gcRootsHash table (SWAG, small enough to amortize). */
 #define GC_ROOTS_SIZE   256
 
+#if CHUNKED_ARENA_ALLOCATION
+
 /*
  * For a CPU with extremely large pages using them for GC things wastes
  * too much memory.
  */
-#define GC_ARENAS_PER_CPU_PAGE_LIMIT JS_BIT(18 - GC_ARENA_SHIFT)
+# define GC_ARENAS_PER_CPU_PAGE_LIMIT JS_BIT(18 - GC_ARENA_SHIFT)
 
 JS_STATIC_ASSERT(GC_ARENAS_PER_CPU_PAGE_LIMIT <= NO_FREE_ARENAS);
+
+#endif
 
 JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes)
@@ -1123,9 +1214,9 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
             js_gcArenasPerChunk = 7;
         }
     }
-#endif
     JS_ASSERT(1 <= js_gcArenasPerChunk &&
               js_gcArenasPerChunk <= NO_FREE_ARENAS);
+#endif
 
     InitGCArenaLists(rt);
     if (!JS_DHashTableInit(&rt->gcRootsHash, JS_DHashGetStubOps(), NULL,

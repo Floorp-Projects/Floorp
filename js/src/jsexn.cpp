@@ -57,7 +57,9 @@
 #include "jsfun.h"
 #include "jsinterp.h"
 #include "jsnum.h"
+#include "jsobj.h"
 #include "jsopcode.h"
+#include "jsscope.h"
 #include "jsscript.h"
 
 /* Forward declarations for js_ErrorClass's initializer. */
@@ -1353,7 +1355,11 @@ js_ReportUncaughtException(JSContext *cx)
     } else {
         /* Flag the error as an exception. */
         reportp->flags |= JSREPORT_EXCEPTION;
+
+        /* Pass the exception object. */
+        JS_SetPendingException(cx, exn);
         js_ReportErrorAgain(cx, bytes, reportp);
+        JS_ClearPendingException(cx);
     }
 
 out:

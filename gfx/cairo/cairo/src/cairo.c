@@ -1898,6 +1898,8 @@ void
 cairo_path_extents (cairo_t *cr,
 		    double *x1, double *y1, double *x2, double *y2)
 {
+    cairo_status_t status;
+
     if (cr->status) {
 	if (x1)
 	    *x1 = 0.0;
@@ -1911,9 +1913,11 @@ cairo_path_extents (cairo_t *cr,
 	return;
     }
 
-    _cairo_gstate_path_extents (cr->gstate,
-				cr->path,
-				x1, y1, x2, y2);
+    status = _cairo_gstate_path_extents (cr->gstate,
+				         cr->path,
+					 x1, y1, x2, y2);
+    if (status)
+	_cairo_set_error (cr, status);
 }
 slim_hidden_def (cairo_path_extents);
 

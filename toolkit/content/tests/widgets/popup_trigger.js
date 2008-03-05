@@ -5,6 +5,10 @@ var gScreenX = -1, gScreenY = -1;
 
 function runTests()
 {
+  if (screen.height < 768) {
+    ok(false, "popup tests are likely to fail for screen heights less than 768 pixels");
+  }
+
   gMenuPopup = document.getElementById("thepopup");
   gTrigger = document.getElementById("trigger");
 

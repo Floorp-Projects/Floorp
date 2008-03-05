@@ -214,71 +214,9 @@ static cairo_int_status_t
 _cairo_path_fixed_fill_rectangle (cairo_path_fixed_t	*path,
 				  cairo_traps_t		*traps)
 {
-    cairo_path_buf_t *buf = &path->buf_head.base;
-    int final;
-
-    /* Ensure the path has the operators we expect for a rectangular path.
-     */
-    if (buf == NULL || buf->num_ops < 5)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    if (buf->op[0] != CAIRO_PATH_OP_MOVE_TO ||
-	buf->op[1] != CAIRO_PATH_OP_LINE_TO ||
-	buf->op[2] != CAIRO_PATH_OP_LINE_TO ||
-	buf->op[3] != CAIRO_PATH_OP_LINE_TO)
-    {
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
-
-    /* Now, there are choices. The rectangle might end with a LINE_TO
-     * (to the original point), but this isn't required. If it
-     * doesn't, then it must end with a CLOSE_PATH. */
-    if (buf->op[4] == CAIRO_PATH_OP_LINE_TO) {
-	if (buf->points[4].x != buf->points[0].x ||
-	    buf->points[4].y != buf->points[0].y)
-	{
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-	}
-    } else if (buf->op[4] != CAIRO_PATH_OP_CLOSE_PATH) {
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
-
-    /* Finally, a trailing CLOSE_PATH or MOVE_TO after the rectangle
-     * is fine. But anything more than that means we must return
-     * unsupported. */
-    final = 5;
-    if (final < buf->num_ops &&
-	buf->op[final] == CAIRO_PATH_OP_CLOSE_PATH)
-    {
-	final++;
-    }
-    if (final < buf->num_ops &&
-	buf->op[final] == CAIRO_PATH_OP_MOVE_TO)
-    {
-	final++;
-    }
-    if (final < buf->num_ops)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    /* Now that we've verified the operators, we must ensure that the
-     * path coordinates are consistent with a rectangle. There are two
-     * choices here. */
-    if (buf->points[0].y == buf->points[1].y &&
-	buf->points[1].x == buf->points[2].x &&
-	buf->points[2].y == buf->points[3].y &&
-	buf->points[3].x == buf->points[0].x)
-    {
+    if (_cairo_path_fixed_is_box (path, NULL)) {
 	return _cairo_traps_tessellate_convex_quad (traps,
-						    buf->points);
-    }
-
-    if (buf->points[0].x == buf->points[1].x &&
-	buf->points[1].y == buf->points[2].y &&
-	buf->points[2].x == buf->points[3].x &&
-	buf->points[3].y == buf->points[0].y)
-    {
-	return _cairo_traps_tessellate_convex_quad (traps,
-						    buf->points);
+                                                    path->buf_head.base.points);
     }
 
     return CAIRO_INT_STATUS_UNSUPPORTED;

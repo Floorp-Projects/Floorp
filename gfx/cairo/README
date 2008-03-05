@@ -7,7 +7,7 @@ http://www.cairographics.org/.
 
 VERSIONS:
 
-  cairo (1.5.x - 1.5.8-87-g21049a9)
+  cairo (1.5.x - 1.5.12-14-gd89edde)
   pixman (0.9.x - pixman-0.9.6-37-g8d79c48)
   glitz 0.5.2 (cvs - 2006-01-10)
 
@@ -25,13 +25,9 @@ win32-logical-font-scale.patch: set CAIRO_WIN32_LOGICAL_FONT_SCALE to 1
 
 nonfatal-assertions.patch: Make assertions non-fatal
 
-endian.patch: include cairo-platform.h for endian macros
-
-fixed-24-8.patch: Switch fixed point mode from 16.16 to 24.8
-
-quartz-get-image-surface.patch: Add cairo_quartz_get_image_surface API analogous to the win32 one
-
 buggy-repeat.patch: Unconditionally turn on buggy-repeat handling to bandaid bug 413583.
 
-windows-8bit.patch: Initial important bits to get something drawing on 8bpp win32
+==== pixman patches ====
+
+endian.patch: include cairo-platform.h for endian macros
 

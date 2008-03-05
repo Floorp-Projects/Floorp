@@ -71,11 +71,28 @@ _cairo_analysis_surface_analyze_meta_surface_pattern (cairo_analysis_surface_t *
     cairo_status_t status;
     cairo_bool_t old_has_ctm;
     cairo_matrix_t old_ctm, p2d;
+    cairo_rectangle_int_t old_clip;
+    cairo_rectangle_int_t meta_extents;
+    int old_width;
+    int old_height;
 
     assert (pattern->type == CAIRO_PATTERN_TYPE_SURFACE);
     surface_pattern = (cairo_surface_pattern_t *) pattern;
     assert (_cairo_surface_is_meta (surface_pattern->surface));
 
+    old_width = surface->width;
+    old_height = surface->height;
+    old_clip = surface->current_clip;
+    status = _cairo_surface_get_extents (surface_pattern->surface, &meta_extents);
+    if (status)
+	return status;
+
+    surface->width = meta_extents.width;
+    surface->height = meta_extents.height;
+    surface->current_clip.x = 0;
+    surface->current_clip.y = 0;
+    surface->current_clip.width = surface->width;
+    surface->current_clip.height = surface->height;
     old_ctm = surface->ctm;
     old_has_ctm = surface->has_ctm;
     p2d = pattern->matrix;
@@ -93,6 +110,9 @@ _cairo_analysis_surface_analyze_meta_surface_pattern (cairo_analysis_surface_t *
 
     surface->ctm = old_ctm;
     surface->has_ctm = old_has_ctm;
+    surface->current_clip = old_clip;
+    surface->width = old_width;
+    surface->height = old_height;
 
     return status;
 }
@@ -228,7 +248,11 @@ _cairo_analysis_surface_intersect_clip_path (void		*abstract_surface,
 	surface->current_clip.width  = surface->width;
 	surface->current_clip.height = surface->height;
     } else {
-	_cairo_path_fixed_bounds (path, &x1, &y1, &x2, &y2, tolerance);
+	cairo_status_t status;
+
+	status = _cairo_path_fixed_bounds (path, &x1, &y1, &x2, &y2, tolerance);
+	if (status)
+	    return status;
 
 	extent.x = floor (x1);
 	extent.y = floor (y1);
@@ -242,7 +266,7 @@ _cairo_analysis_surface_intersect_clip_path (void		*abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_analysis_surface_get_extents (void	 		*abstract_surface,
+_cairo_analysis_surface_get_extents (void			*abstract_surface,
 				     cairo_rectangle_int_t	*rectangle)
 {
     cairo_analysis_surface_t *surface = abstract_surface;

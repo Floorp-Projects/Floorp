@@ -191,8 +191,8 @@ static void DEBUG_TrackNewWrapper(XPCWrappedNative* wrapper)
 static void DEBUG_TrackDeleteWrapper(XPCWrappedNative* wrapper)
 {
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
-    if(wrapper->GetRuntime())
-        wrapper->GetRuntime()->DEBUG_RemoveWrappedNative(wrapper);
+    if(nsXPConnect::GetRuntime())
+        nsXPConnect::GetRuntime()->DEBUG_RemoveWrappedNative(wrapper);
     else
         NS_ERROR("failed to remove wrapper");
 #endif

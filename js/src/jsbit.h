@@ -50,12 +50,15 @@ JS_BEGIN_EXTERN_C
 typedef JSUword     jsbitmap_t;     /* NSPR name, a la Unix system types */
 typedef jsbitmap_t  jsbitmap;       /* JS-style scalar typedef name */
 
-#define JS_TEST_BIT(_map,_bit) \
-    ((_map)[(_bit)>>JS_BITS_PER_WORD_LOG2] & (1L << ((_bit) & (JS_BITS_PER_WORD-1))))
-#define JS_SET_BIT(_map,_bit) \
-    ((_map)[(_bit)>>JS_BITS_PER_WORD_LOG2] |= (1L << ((_bit) & (JS_BITS_PER_WORD-1))))
-#define JS_CLEAR_BIT(_map,_bit) \
-    ((_map)[(_bit)>>JS_BITS_PER_WORD_LOG2] &= ~(1L << ((_bit) & (JS_BITS_PER_WORD-1))))
+#define JS_BITMAP_SIZE(bits)    (JS_HOWMANY(bits, JS_BITS_PER_WORD) *         \
+                                 sizeof(jsbitmap))
+
+#define JS_TEST_BIT(_map,_bit)  ((_map)[(_bit)>>JS_BITS_PER_WORD_LOG2] &      \
+                                 (1UL << ((_bit) & (JS_BITS_PER_WORD-1))))
+#define JS_SET_BIT(_map,_bit)   ((_map)[(_bit)>>JS_BITS_PER_WORD_LOG2] |=     \
+                                 (1UL << ((_bit) & (JS_BITS_PER_WORD-1))))
+#define JS_CLEAR_BIT(_map,_bit) ((_map)[(_bit)>>JS_BITS_PER_WORD_LOG2] &=     \
+                                 ~(1UL << ((_bit) & (JS_BITS_PER_WORD-1))))
 
 /*
 ** Compute the log of the least power of 2 greater than or equal to n

@@ -2532,13 +2532,12 @@ Sleep(JSContext *cx, uintN argc, jsval *vp)
 
 typedef struct ScatterThreadData ScatterThreadData;
 typedef struct ScatterData ScatterData;
-typedef enum ScatterStatus ScatterStatus;
 
-enum ScatterStatus {
+typedef enum ScatterStatus {
     SCATTER_WAIT,
     SCATTER_GO,
     SCATTER_CANCEL
-};
+} ScatterStatus;
 
 struct ScatterData {
     ScatterThreadData   *threads;
