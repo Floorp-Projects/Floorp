@@ -4596,7 +4596,7 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
                                               const PRUint8 aStyle)
 {
   gfxRect r;
-  r.pos.x = NS_round(aPt.x);
+  r.pos.x = NS_floor(aPt.x + 0.5);
   r.size.width = NS_round(aLineSize.width);
 
   gfxFloat basesize = NS_round(aLineSize.height);
@@ -4610,24 +4610,24 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
     r.size.height = basesize;
   }
 
-  gfxFloat baseline = NS_round(aPt.y + aAscent);
+  gfxFloat baseline = NS_floor(aPt.y + aAscent + 0.5);
   gfxFloat offset = 0;
   switch (aDecoration) {
     case NS_STYLE_TEXT_DECORATION_UNDERLINE:
-      offset = NS_round(aOffset);
+      offset = aOffset;
       break;
     case NS_STYLE_TEXT_DECORATION_OVERLINE:
-      offset = NS_round(aOffset - basesize + r.Height());
+      offset = aOffset - basesize + r.Height();
       break;
     case NS_STYLE_TEXT_DECORATION_LINE_THROUGH: {
-      gfxFloat extra = NS_round(r.Height() / 2.0);
+      gfxFloat extra = NS_floor(r.Height() / 2.0 + 0.5);
       extra = PR_MAX(extra, basesize);
-      offset = NS_round(aOffset - basesize + extra);
+      offset = aOffset - basesize + extra;
       break;
     }
     default:
       NS_ERROR("Invalid decoration value!");
   }
-  r.pos.y = baseline - NS_round(offset);
+  r.pos.y = baseline - NS_floor(offset + 0.5);
   return r;
 }
