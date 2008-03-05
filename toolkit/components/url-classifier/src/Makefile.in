@@ -18,6 +18,7 @@ REQUIRES = docshell \
            string \
            uriloader \
            xpcom \
+           pipnss \
            $(ZLIB_REQUIRES) \
            $(NULL)
 
