@@ -884,8 +884,8 @@ JSBool
 js_OnUnknownMethod(JSContext *cx, jsval *vp)
 {
     JSObject *obj;
-    JSTempValueRooter tvr;
     jsid id;
+    JSTempValueRooter tvr;
     JSBool ok;
 
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[1]));
@@ -915,6 +915,16 @@ js_OnUnknownMethod(JSContext *cx, jsval *vp)
     if (JSVAL_IS_PRIMITIVE(tvr.u.value)) {
         vp[0] = tvr.u.value;
     } else {
+#if JS_HAS_XML_SUPPORT
+        /* Extract the function name from function::name qname. */
+        if (!JSVAL_IS_PRIMITIVE(vp[0])) {
+            obj = JSVAL_TO_OBJECT(vp[0]);
+            if (!js_IsFunctionQName(cx, obj, &id))
+                return JS_FALSE;
+            if (id != 0)
+                vp[0] = ID_TO_VALUE(id);
+        }
+#endif
         obj = js_NewObject(cx, &js_NoSuchMethodClass, NULL, NULL);
         if (!obj) {
             ok = JS_FALSE;
