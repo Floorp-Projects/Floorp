@@ -128,6 +128,11 @@ num_parseInt(JSContext *cx, uintN argc, jsval *vp)
         return JS_TRUE;
     }
 
+    if (JSVAL_IS_INT(vp[2]) && (radix == 0 || radix == 10)) {
+        *vp = vp[2];
+        return JS_TRUE;
+    }
+
     str = js_ValueToString(cx, vp[2]);
     if (!str)
         return JS_FALSE;
