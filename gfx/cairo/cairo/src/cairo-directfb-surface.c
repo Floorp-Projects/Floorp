@@ -675,7 +675,7 @@ _cairo_directfb_surface_clone_similar (void             *abstract_surface,
             }
             
             for (i = 0; i < height; i++) {
-                direct_memcpy (dst+src_x, src+src_x, len);
+                direct_memcpy (dst, src, len);
                 dst += pitch;
                 src += image_src->stride;
             }

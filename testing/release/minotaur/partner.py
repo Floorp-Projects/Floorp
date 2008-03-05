@@ -39,6 +39,7 @@ from optparse import OptionParser
 import platform
 import subprocess
 import re
+import sys
 
 from mozDownload import MozDownloader
 from mozInstall import MozInstaller, MozUninstaller
@@ -244,10 +245,18 @@ if __name__ == "__main__":
   parser.add_option("-a", "--AusParameter", dest="aus",
                     help="The AUS parameter for the AUS URI (-cck param)",
                     metavar="AUS_PARAM")
-  parser.add_option("-l", "--L10NFile", dest="l10nFile", help="A text file\
-                    containing the language codes for this build, separated\
-                    by LF", metavar="L10N_FILE")
+  # Can't wrap the next line or else it looks wierd in parser.print_help() output
+  parser.add_option("-l", "--L10NFile", dest="l10nFile", help="A text file containing the language codes for this build, separated by LF",
+                    metavar="L10N_FILE")
   (options, args) = parser.parse_args()
+
+  # Print Help if no args passed
+  if not options.branch or not options.version or not options.url or \
+     not options.l10nFile or not options.partner or not options.minDir:
+    print "Required Items Not Specified. Must specify partner name, minotaur dir,",
+    print "locale file, branch, url, and version"
+    parser.print_help()
+    sys.exit(1)
 
   # Call Main
   main(options.branch, options.version, options.url, options.partner,

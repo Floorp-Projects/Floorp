@@ -276,9 +276,9 @@ Blocklist.prototype = {
   isAddonBlocklisted: function(id, version, appVersion, toolkitVersion) {
     if (!this._addonEntries)
       this._loadBlocklistFromFile(getFile(KEY_PROFILEDIR, [FILE_BLOCKLIST]));
-    if (appVersion === undefined)
+    if (!appVersion)
       appVersion = gApp.version;
-    if (toolkitVersion === undefined)
+    if (!toolkitVersion)
       toolkitVersion = gApp.platformVersion;
 
     var blItem = this._addonEntries[id];

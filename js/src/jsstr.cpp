@@ -68,6 +68,7 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsregexp.h"
+#include "jsscope.h"
 #include "jsstr.h"
 #include "jsbit.h"
 

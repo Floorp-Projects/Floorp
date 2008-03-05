@@ -169,6 +169,8 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 				 "/l { lineto } bind def\n"
 				 "/c { curveto } bind def\n"
 				 "/h { closepath } bind def\n"
+				 "/re { exch dup neg 3 1 roll 5 3 roll moveto 0 rlineto\n"
+				 "      0 exch rlineto 0 rlineto closepath } bind def\n"
 				 "/S { stroke } bind def\n"
 				 "/f { fill } bind def\n"
 				 "/f* { eofill } bind def\n"
@@ -1323,7 +1325,7 @@ static void
 _cairo_ps_surface_end_page (cairo_ps_surface_t *surface)
 {
     _cairo_output_stream_printf (surface->stream,
-				 "grestore\n");
+				 "Q\n");
 }
 
 static cairo_int_status_t
@@ -1626,15 +1628,15 @@ _string_array_stream_write (cairo_output_stream_t *base,
 		stream->column++;
 		stream->string_size++;
 		break;
-		/* Have to also be careful to never split the final ~> sequence. */
-	    case '~':
-		_cairo_output_stream_write (stream->output, &c, 1);
-		stream->column++;
-		stream->string_size++;
-		length--;
-		c = *data++;
-		break;
 	    }
+	}
+	/* Have to be careful to never split the final ~> sequence. */
+        if (c == '~') {
+	    _cairo_output_stream_write (stream->output, &c, 1);
+	    stream->column++;
+	    stream->string_size++;
+	    length--;
+	    c = *data++;
 	}
 	_cairo_output_stream_write (stream->output, &c, 1);
 	stream->column++;
@@ -2080,7 +2082,7 @@ _cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
     _cairo_pdf_operators_set_cairo_to_pdf_matrix (&surface->pdf_operators,
 						  &surface->cairo_to_ps);
     _cairo_output_stream_printf (surface->stream,
-				 "  gsave\n"
+				 "  q\n"
 				 "  0 0 %f %f rectclip\n",
 				 surface->width,
 				 surface->height);
@@ -2100,7 +2102,7 @@ _cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
 	return status;
 
     _cairo_output_stream_printf (surface->stream,
-				 "  grestore\n");
+				 "  Q\n");
     surface->content = old_content;
     surface->width = old_width;
     surface->height = old_height;
@@ -2259,7 +2261,7 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
     int pattern_height = 0; /* squelch bogus compiler warning */
     double xstep, ystep;
     cairo_matrix_t cairo_p2d, ps_p2d;
-    cairo_rectangle_int16_t surface_extents;
+    cairo_rectangle_int_t surface_extents;
     cairo_bool_t old_use_string_datasource;
 
     cairo_p2d = pattern->base.matrix;
@@ -2958,7 +2960,7 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
     assert (_cairo_ps_surface_operation_supported (surface, op, source));
 
 #if DEBUG_PS
-    _cairo_output_stream_printf (stream,
+    _cairo_output_stream_printf (surface->stream,
 				 "%% _cairo_ps_surface_stroke\n");
 #endif
 
@@ -2991,7 +2993,7 @@ _cairo_ps_surface_fill (void		*abstract_surface,
     assert (_cairo_ps_surface_operation_supported (surface, op, source));
 
 #if DEBUG_PS
-    _cairo_output_stream_printf (stream,
+    _cairo_output_stream_printf (surface->stream,
 				 "%% _cairo_ps_surface_fill\n");
 #endif
 
@@ -3046,7 +3048,7 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     assert (_cairo_ps_surface_operation_supported (surface, op, source));
 
 #if DEBUG_PS
-    _cairo_output_stream_printf (stream,
+    _cairo_output_stream_printf (surface->stream,
 				 "%% _cairo_ps_surface_show_glyphs\n");
 #endif
 
@@ -3120,7 +3122,7 @@ _cairo_ps_surface_set_bounding_box (void		*abstract_surface,
 
     _cairo_output_stream_printf (surface->stream,
                                  "%%%%EndPageSetup\n"
-				 "gsave\n");
+				 "q\n");
 
     if (surface->num_pages == 1) {
 	surface->bbox_x1 = x1;

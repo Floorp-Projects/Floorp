@@ -7230,8 +7230,7 @@ public:
         return NS_OK;
       }
 
-      r = static_cast<nsPluginDestroyRunnable*>
-        (PR_NEXT_LINK(&sRunnableListHead));
+      r = static_cast<nsPluginDestroyRunnable*>(PR_NEXT_LINK(r));
     }
 
     PLUGIN_LOG(PLUGIN_LOG_NORMAL,

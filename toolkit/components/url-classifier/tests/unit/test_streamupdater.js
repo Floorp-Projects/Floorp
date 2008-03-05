@@ -386,6 +386,34 @@ function testRekey() {
   doTest([update], assertions, true, gClientKey);
 }
 
+// Tests a database reset request.
+function testReset() {
+  var addUrls1 = [ "foo.com/a", "foo.com/b" ];
+  var update1 = buildPhishingUpdate(
+    [
+      { "chunkNum" : 1,
+        "urls" : addUrls1
+      }]);
+
+  var update2 = "n:1000\nr:pleasereset\n";
+
+  var addUrls3 = [ "bar.com/a", "bar.com/b" ];
+  var update3 = buildPhishingUpdate(
+    [
+      { "chunkNum" : 3,
+        "urls" : addUrls3
+      }]);
+
+  var assertions = {
+    "tableData" : "test-phish-simple;a:3",
+    "urlsExist" : addUrls3,
+    "urlsDontExist" : addUrls1
+  };
+
+  doTest([update1, update2, update3], assertions, false);
+}
+
+
 function run_test()
 {
   runTests([
@@ -401,6 +429,7 @@ function run_test()
     testInvalidForwardMAC,
     testNoForwardMAC,
     testRekey,
+    testReset,
   ]);
 }
 

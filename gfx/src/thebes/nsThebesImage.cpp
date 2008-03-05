@@ -538,7 +538,7 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
 
     pat->SetMatrix(mat);
 
-#if !defined(XP_MACOSX) && !defined(XP_WIN)
+#if !defined(XP_MACOSX) && !defined(XP_WIN) && !defined(XP_OS2)
     // See bug 324698.  This is a workaround.
     //
     // Set the filter to CAIRO_FILTER_FAST if we're scaling up -- otherwise,
@@ -551,7 +551,7 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
         pat->SetFilter(0);
 #endif
 
-#if defined(XP_WIN)
+#if defined(XP_WIN) || defined(XP_OS2)
     // turn on EXTEND_PAD only for win32, and only when scaling;
     // it's not implemented correctly on linux in the X server.
     if (xscale != 1.0 || yscale != 1.0)

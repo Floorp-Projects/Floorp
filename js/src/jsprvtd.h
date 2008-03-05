@@ -74,6 +74,8 @@
 #define OBJECT_TO_JSID(obj)         ((jsid)OBJECT_TO_JSVAL(obj))
 #define OBJECT_JSVAL_TO_JSID(v)     ((jsid)v)
 
+#define ID_TO_VALUE(id)             ((jsval)(id))
+
 /*
  * Convenience constants.
  */

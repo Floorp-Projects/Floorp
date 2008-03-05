@@ -79,7 +79,7 @@ public:
      * code points they support as well as looking at things like the font
      * family, style, weight, etc.
      */
-    FontEntry *FindFontForString(const PRUnichar *aString, PRUint32 aLength, gfxWindowsFont *aFont);
+    FontEntry *FindFontForChar(PRUint32 aCh, gfxWindowsFont *aFont);
 
     /* Find a FontEntry object that represents a font on your system given a name */
     FontEntry *FindFontEntry(const nsAString& aName);
@@ -106,7 +106,7 @@ private:
                                                     nsRefPtr<FontEntry>& aData,
                                                     void* userArg);
 
-    static PLDHashOperator PR_CALLBACK FindFontForStringProc(nsStringHashKey::KeyType aKey,
+    static PLDHashOperator PR_CALLBACK FindFontForCharProc(nsStringHashKey::KeyType aKey,
                                                              nsRefPtr<FontEntry>& aFontEntry,
                                                              void* userArg);
 
@@ -119,6 +119,9 @@ private:
     nsDataHashtable<nsStringHashKey, nsRefPtr<FontEntry> > mFontSubstitutes;
     nsStringArray mNonExistingFonts;
 
+    // when system-wide font lookup fails for a character, cache it to skip future searches
+    gfxSparseBitSet mCodepointsWithNoFonts;
+    
     nsDataHashtable<nsCStringHashKey, nsTArray<nsRefPtr<FontEntry> > > mPrefFonts;
 };
 

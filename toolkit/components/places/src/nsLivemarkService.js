@@ -236,7 +236,7 @@ LivemarkService.prototype = {
   _updateLivemarkChildren:
   function LS__updateLivemarkChildren(index, forceUpdate) {
     if (this._livemarks[index].locked)
-      return;
+      return false;
 
     var livemark = this._livemarks[index];
     livemark.locked = true;
@@ -250,7 +250,7 @@ LivemarkService.prototype = {
       if (!forceUpdate && exprTime > Date.now()) {
         // no need to refresh
         livemark.locked = false;
-        return;
+        return false;
       }
 
       // Check the user idle time. If the user isn't using their computer, don't
@@ -263,7 +263,7 @@ LivemarkService.prototype = {
       if (idleTime > IDLE_TIMELIMIT)
       {
         livemark.locked = false;
-        return;
+        return false;
       }
     }
     catch (ex) {
@@ -297,10 +297,10 @@ LivemarkService.prototype = {
       }
       MarkLivemarkLoadFailed(livemark.folderId);
       livemark.locked = false;
-      LOG("exception: " + ex);
-      throw ex;
+      return false;
     }
     livemark.loadGroup = loadgroup;
+    return true;
   },
 
   createLivemark: function LS_createLivemark(folder, name, siteURI,

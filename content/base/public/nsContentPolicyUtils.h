@@ -139,6 +139,7 @@ NS_CP_ContentTypeName(PRUint32 contentType)
     CASE_RETURN( TYPE_PING              );
     CASE_RETURN( TYPE_XMLHTTPREQUEST    );
     CASE_RETURN( TYPE_OBJECT_SUBREQUEST );
+    CASE_RETURN( TYPE_DTD               );
    default:
     return "<Unknown Type>";
   }

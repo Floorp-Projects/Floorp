@@ -3375,7 +3375,7 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         if (!OBJ_IS_NATIVE(proto)) {
             if (!OBJ_LOOKUP_PROPERTY(cx, proto, id, objp, propp))
                 return -1;
-            return protoIndex;
+            return protoIndex + 1;
         }
         obj = proto;
     }

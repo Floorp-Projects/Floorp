@@ -38,6 +38,7 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cr = Components.results;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -76,10 +77,15 @@ LoginManagerPromptFactory.prototype = {
 /*
  * LoginManagerPrompter
  *
- * Implements nsIAuthPrompt2 and nsILoginManagerPrompter.
- * nsIAuthPrompt2 usage is invoked by a channel for protocol-based
- * authentication (eg HTTP Authenticate, FTP login). nsILoginManagerPrompter
- * is invoked by Login Manager for saving/changing a login.
+ * Implements interfaces for prompting the user to enter/save/change auth info.
+ *
+ * nsIAuthPrompt: Used by SeaMonkey, Thunderbird, but not Firefox.
+ *
+ * nsIAuthPrompt2: Is invoked by a channel for protocol-based authentication
+ * (eg HTTP Authenticate, FTP login).
+ *
+ * nsILoginManagerPrompter: Used by Login Manager for saving/changing logins
+ * found in HTML forms.
  */
 function LoginManagerPrompter() {}
 
@@ -88,8 +94,9 @@ LoginManagerPrompter.prototype = {
     classDescription : "LoginManagerPrompter",
     contractID : "@mozilla.org/login-manager/prompter;1",
     classID : Components.ID("{8aa66d77-1bbb-45a6-991e-b8f47751c291}"),
-    QueryInterface : XPCOMUtils.generateQI(
-                        [Ci.nsIAuthPrompt2, Ci.nsILoginManagerPrompter]),
+    QueryInterface : XPCOMUtils.generateQI([Ci.nsIAuthPrompt,
+                                            Ci.nsIAuthPrompt2,
+                                            Ci.nsILoginManagerPrompter]),
 
     _window        : null,
     _debug         : false, // mirrors signon.debug
@@ -150,6 +157,15 @@ LoginManagerPrompter.prototype = {
     },
 
 
+    __ioService: null, // IO service for string -> nsIURI conversion
+    get _ioService() {
+        if (!this.__ioService)
+            this.__ioService = Cc["@mozilla.org/network/io-service;1"].
+                               getService(Ci.nsIIOService);
+        return this.__ioService;
+    },
+
+
     /*
      * log
      *
@@ -161,6 +177,178 @@ LoginManagerPrompter.prototype = {
 
         dump("Pwmgr Prompter: " + message + "\n");
         this._logService.logStringMessage("Pwmgr Prompter: " + message);
+    },
+
+
+
+
+    /* ---------- nsIAuthPrompt prompts ---------- */
+
+
+    /*
+     * prompt
+     *
+     * Wrapper around the prompt service prompt. Saving random fields here
+     * doesn't really make sense and therefore isn't implemented.
+     */
+    prompt : function (aDialogTitle, aText, aPasswordRealm,
+                       aSavePassword, aDefaultText, aResult) {
+        if (aSavePassword != Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER)
+            throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+
+        this.log("===== prompt() called =====");
+
+        if (aDefaultText) {
+            aResult.value = aDefaultText;
+        }
+
+        return this._promptService.prompt(this._window,
+               aDialogTitle, aText, aResult, null, {});
+    },
+
+
+    /*
+     * promptUsernameAndPassword
+     *
+     * Looks up a username and password in the database. Will prompt the user
+     * with a dialog, even if a username and password are found.
+     */
+    promptUsernameAndPassword : function (aDialogTitle, aText, aPasswordRealm,
+                                         aSavePassword, aUsername, aPassword) {
+        if (aSavePassword == Ci.nsIAuthPrompt.SAVE_PASSWORD_FOR_SESSION)
+            throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+
+        var selectedLogin = null;
+        var foundLogins;
+        var checkBox = { value : false };
+        var checkBoxLabel = null;
+        var hostname = this._getFormattedHostname(aPasswordRealm);
+
+        this.log("===== promptUsernameAndPassword() called =====");
+
+        var canRememberLogin = (aSavePassword ==
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY) &&
+                               this._pwmgr.getLoginSavingEnabled(hostname);
+
+        // if checkBoxLabel is null, the checkbox won't be shown at all.
+        if (canRememberLogin)
+            checkBoxLabel = this._getLocalizedString("rememberPassword");
+
+        if (!aUsername.value && !aPassword.value) {
+            // Look for existing logins.
+            foundLogins = this._pwmgr.findLogins({}, hostname, null,
+                                                 aPasswordRealm);
+
+            // XXX Like the original code, we can't deal with multiple
+            // account selection. (bug 227632)
+            if (foundLogins.length > 0) {
+                selectedLogin = foundLogins[0];
+                // We've got a login, but don't return straight away because
+                // the old wallet code didn't either.
+                aUsername.value = foundLogins[0].username;
+                aPassword.value = foundLogins[0].password;
+            }
+        }
+
+        var ok = this._promptService.promptUsernameAndPassword(this._window,
+                    aDialogTitle, aText, aUsername, aPassword,
+                    checkBoxLabel, checkBox);
+
+        if (ok && checkBox.value) {
+            var newLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                           createInstance(Ci.nsILoginInfo);
+            newLogin.init(hostname, null, aPasswordRealm,
+                          aUsername.value, aPassword.value,
+                          "", "");
+
+            // If we didn't find an existing login, or if the username
+            // changed, save as a new login.
+            if (!selectedLogin || username != selectedLogin.username) {
+                // add as new
+                this.log("New login seen for " + aPasswordRealm);
+
+                this._pwmgr.addLogin(newLogin);
+            } else if (selectedLogin &&
+                       password != selectedLogin.password) {
+                // update password
+                this.log("Updating password for  " + aPasswordRealm);
+                this._pwmgr.modifyLogin(foundLogins[0], newLogin);
+            } else {
+                this.log("Login unchanged, no further action needed.");
+                return ok;
+            }
+        }
+
+        return ok;
+    },
+
+
+    /*
+     * promptPassword
+     *
+     * If a password is found in the database for the password realm, it is
+     * returned straight away without displaying a dialog.
+     *
+     * If a password is not found in the database, the user will be prompted
+     * with a dialog with a text field and ok/cancel buttons. If the user
+     * allows it, then the password will be saved in the database.
+     */
+    promptPassword : function (aDialogTitle, aText, aPasswordRealm,
+                                         aSavePassword, aPassword) {
+        if (aSavePassword == Ci.nsIAuthPrompt.SAVE_PASSWORD_FOR_SESSION)
+            throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+
+        var checkBox = { value : false };
+        var checkBoxLabel = null;
+        var [hostname, username, pathname] = this._decomposeURI(aPasswordRealm);
+        var newRealm = hostname + pathname;
+
+        this.log("===== promptPassword called() =====");
+
+        var canRememberLogin = (aSavePassword ==
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY) &&
+                               this._pwmgr.getLoginSavingEnabled(hostname);
+
+        // if checkBoxLabel is null, the checkbox won't be shown at all.
+        if (canRememberLogin)
+            checkBoxLabel = this._getLocalizedString("rememberPassword");
+
+        if (!aPassword.value) {
+            // Look for existing logins.
+            var foundLogins = this._pwmgr.findLogins({}, hostname, null,
+
+                                                     newRealm);
+
+            var i;
+            // XXX Like the original code, we can't deal with multiple
+            // account selection (bug 227632). We can deal with finding the
+            // account based on the supplied username - but in this case we'll
+            // just return the first match.
+            for (i = 0; i < foundLogins.length; ++i) {
+                if (foundLogins[i].username == username) {
+                    aPassword.value = foundLogins[i].password;
+                    // wallet returned straight away, so this mimics that code
+                    return true;
+                }
+            }
+        }
+
+        var ok = this._promptService.promptPassword(this._window, aDialogTitle,
+                                                    aText, aPassword,
+                                                    checkBoxLabel, checkBox);
+
+        if (ok && checkBox.value) {
+            var newLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                           createInstance(Ci.nsILoginInfo);
+            newLogin.init(hostname, null, newRealm, username,
+                          aPassword.value, "", "");
+
+            this.log("New login seen for " + newRealm);
+
+            this._pwmgr.addLogin(newLogin);
+        }
+
+        return ok;
     },
 
 
@@ -736,21 +924,27 @@ LoginManagerPrompter.prototype = {
     /*
      * _getFormattedHostname
      *
+     * The aURI parameter may either be a string uri, or an nsIURI instance.
+     *
      * Returns the hostname to use in a nsILoginInfo object (for example,
      * "http://example.com").
      */
     _getFormattedHostname : function (aURI) {
-        var scheme = aURI.scheme;
+        var uri;
+        if (aURI instanceof Ci.nsIURI) {
+            uri = aURI;
+        } else {
+            uri = this._ioService.newURI(aURI, null, null);
+        }
+        var scheme = uri.scheme;
 
-        var hostname = scheme + "://" + aURI.host;
+        var hostname = scheme + "://" + uri.host;
 
         // If the URI explicitly specified a port, only include it when
         // it's not the default. (We never want "http://foo.com:80")
-        port = aURI.port;
+        port = uri.port;
         if (port != -1) {
-            var ioService = Cc["@mozilla.org/network/io-service;1"].
-                            getService(Ci.nsIIOService);
-            var handler = ioService.getProtocolHandler(scheme);
+            var handler = this._ioService.getProtocolHandler(scheme);
             if (port != handler.defaultPort)
                 hostname += ":" + port;
         }
@@ -758,6 +952,19 @@ LoginManagerPrompter.prototype = {
         return hostname;
     },
 
+    /**
+     * Extracts a hostname, username and a pathname from a string based URI
+     * via a standard URI implementation.
+     */
+    _decomposeURI: function (aURIString) {
+        var uri = this._ioService.newURI(aURIString, null, null);
+        var pathname = "";
+
+        if (uri.path != "/")
+            pathname = uri.path;
+
+        return [this._getFormattedHostname(uri), uri.username, pathname];
+    },
 
     /*
      * _getAuthTarget

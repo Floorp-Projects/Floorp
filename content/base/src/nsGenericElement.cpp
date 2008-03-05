@@ -3748,11 +3748,14 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (document) {
-    nsRefPtr<nsXBLBinding> binding =
-      document->BindingManager()->GetBinding(this);
-    if (binding) {
-      binding->AttributeChanged(aName, aNamespaceID, PR_FALSE, aNotify);
+  if (document || HasFlag(NODE_FORCE_XBL_BINDINGS)) {
+    nsIDocument* ownerDoc = GetOwnerDoc();
+    if (ownerDoc) {
+      nsRefPtr<nsXBLBinding> binding =
+        ownerDoc->BindingManager()->GetBinding(this);
+      if (binding) {
+        binding->AttributeChanged(aName, aNamespaceID, PR_FALSE, aNotify);
+      }
     }
   }
 
@@ -3998,11 +4001,15 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   rv = mAttrsAndChildren.RemoveAttrAt(index, oldValue);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (document) {
-    nsRefPtr<nsXBLBinding> binding =
-      document->BindingManager()->GetBinding(this);
-    if (binding)
-      binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE, aNotify);
+  if (document || HasFlag(NODE_FORCE_XBL_BINDINGS)) {
+    nsIDocument* ownerDoc = GetOwnerDoc();
+    if (ownerDoc) {
+      nsRefPtr<nsXBLBinding> binding =
+        ownerDoc->BindingManager()->GetBinding(this);
+      if (binding) {
+        binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE, aNotify);
+      }
+    }
   }
 
   if (aNotify) {

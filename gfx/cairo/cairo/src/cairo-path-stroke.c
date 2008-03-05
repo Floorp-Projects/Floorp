@@ -235,7 +235,7 @@ _cairo_stroker_face_clockwise (cairo_stroke_face_t *in, cairo_stroke_face_t *out
     _cairo_slope_init (&in_slope, &in->point, &in->cw);
     _cairo_slope_init (&out_slope, &out->point, &out->cw);
 
-    return _cairo_slope_clockwise (&in_slope, &out_slope);
+    return _cairo_slope_compare (&in_slope, &out_slope) < 0;
 }
 
 /**

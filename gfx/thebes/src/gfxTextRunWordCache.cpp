@@ -405,7 +405,7 @@ TextRunWordCache::FinishTextRun(gfxTextRun *aTextRun, gfxTextRun *aNewRun,
                     // need to find out what the platform would do
                     // if the marks were at the start of the text.
                     tmpTextRun = aNewRun->GetFontGroup()->MakeTextRun(
-                        aTextRun->GetTextUnicode(), length, aParams,
+                        aTextRun->GetTextUnicode() + sourceOffset, length, aParams,
                         aNewRun->GetFlags());
                     source = tmpTextRun;
                     sourceOffset = 0;

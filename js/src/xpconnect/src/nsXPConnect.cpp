@@ -851,10 +851,11 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
             else if(clazz == &js_FunctionClass)
             {
                 JSFunction* fun = (JSFunction*) xpc_GetJSPrivate(obj);
-                if(fun->atom && ATOM_IS_STRING(fun->atom))
+                JSString* str = JS_GetFunctionId(fun);
+                if(str)
                 {
                     NS_ConvertUTF16toUTF8
-                        fname(JS_GetStringChars(ATOM_TO_STRING(fun->atom)));
+                        fname(JS_GetStringChars(str));
                     JS_snprintf(name, sizeof(name), "JS Object (Function - %s)",
                                 fname.get());
                 }

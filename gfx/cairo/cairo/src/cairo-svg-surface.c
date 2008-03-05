@@ -743,31 +743,46 @@ _cairo_svg_document_emit_font_subsets (cairo_svg_document_t *document)
 static cairo_bool_t cairo_svg_force_fallbacks = FALSE;
 
 static cairo_int_status_t
-_cairo_svg_surface_operation_supported (cairo_svg_surface_t	*surface,
-					cairo_operator_t	 op,
-					const cairo_pattern_t	*pattern)
+_cairo_svg_surface_analyze_operation (cairo_svg_surface_t   *surface,
+				      cairo_operator_t	     op,
+				      const cairo_pattern_t *pattern)
 {
     cairo_svg_document_t *document = surface->document;
 
     if (cairo_svg_force_fallbacks)
 	return FALSE;
 
-    if (document->svg_version < CAIRO_SVG_VERSION_1_2)
-	if (op != CAIRO_OPERATOR_OVER)
-	    return FALSE;
+    /* SVG doesn't support extend reflect for image pattern */
+    if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE &&
+	pattern->extend == CAIRO_EXTEND_REFLECT)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    return TRUE;
+    if (document->svg_version >= CAIRO_SVG_VERSION_1_2)
+	return CAIRO_STATUS_SUCCESS;
+
+    if (op == CAIRO_OPERATOR_OVER)
+	return CAIRO_STATUS_SUCCESS;
+
+    /* The SOURCE operator is only supported if there is nothing
+     * painted underneath. */
+    if (op == CAIRO_OPERATOR_SOURCE)
+	return CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY;
+
+    return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
 static cairo_int_status_t
-_cairo_svg_surface_analyze_operation (cairo_svg_surface_t   *surface,
-				      cairo_operator_t	     op,
-				      const cairo_pattern_t *pattern)
+_cairo_svg_surface_operation_supported (cairo_svg_surface_t	*surface,
+					cairo_operator_t	 op,
+					const cairo_pattern_t	*pattern)
 {
-    if (_cairo_svg_surface_operation_supported (surface, op, pattern))
-	return CAIRO_STATUS_SUCCESS;
-    else
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+    if (_cairo_svg_surface_analyze_operation (surface, op, pattern)
+	!= CAIRO_INT_STATUS_UNSUPPORTED)
+    {
+	return TRUE;
+    } else {
+	return FALSE;
+    }
 }
 
 static cairo_surface_t *
@@ -1993,13 +2008,22 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
     cairo_svg_document_t *document = surface->document;
     cairo_output_stream_t *mask_stream;
     char buffer[64];
+    cairo_bool_t discard_filter = FALSE;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _cairo_svg_surface_analyze_operation (surface, op, source);
 
     assert (_cairo_svg_surface_operation_supported (surface, op, source));
 
-    _cairo_svg_surface_emit_alpha_filter (document);
+    if (cairo_pattern_get_type (mask) == CAIRO_PATTERN_TYPE_SURFACE) {
+	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t*) mask;
+	cairo_content_t content = cairo_surface_get_content (surface_pattern->surface);
+	if (content == CAIRO_CONTENT_ALPHA)
+	    discard_filter = TRUE;
+    }
+
+    if (!discard_filter)
+	_cairo_svg_surface_emit_alpha_filter (document);
 
     /* _cairo_svg_surface_emit_paint() will output a pattern definition to
      * document->xml_node_defs so we need to write the mask element to
@@ -2010,8 +2034,9 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
 
     _cairo_output_stream_printf (mask_stream,
 				 "<mask id=\"mask%d\">\n"
-				 "  <g filter=\"url(#alpha)\">\n",
-				 document->mask_id);
+				 "%s",
+				 document->mask_id,
+				 discard_filter ? "" : "  <g filter=\"url(#alpha)\">\n");
     status = _cairo_svg_surface_emit_paint (mask_stream, surface, op, mask, NULL);
     if (status) {
 	cairo_status_t ignore = _cairo_output_stream_destroy (mask_stream);
@@ -2020,8 +2045,9 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
     }
 
     _cairo_output_stream_printf (mask_stream,
-				 "  </g>\n"
-				 "</mask>\n");
+				 "%s"
+				 "</mask>\n",
+				 discard_filter ? "" : "  </g>\n");
     _cairo_memory_stream_copy (mask_stream, document->xml_node_defs);
 
     status = _cairo_output_stream_destroy (mask_stream);

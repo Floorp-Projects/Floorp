@@ -64,6 +64,8 @@ typedef struct cairo_quartz_surface {
 
     CGShadingRef sourceShading;
     CGPatternRef sourcePattern;
+
+    CGInterpolationQuality oldInterpolationQuality;
 } cairo_quartz_surface_t;
 
 typedef struct cairo_quartz_image_surface {

@@ -1488,20 +1488,20 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
       aResult->left = aResult->right = 1;
       return PR_TRUE;
     }
+  }
 
-    // Some things only apply to widgets in HTML content, since
-    // they're drawn differently
-    if (IsHTMLContent(aFrame)) {
-      if (aWidgetType == NS_THEME_DROPDOWN) {
-        /* For content menulist controls, we need an extra pixel so
-         * that we have room to draw our focus rectangle stuff.
-         * Otherwise, the focus rect will overlap the control's
-         * border.
-         */
-        aResult->top = aResult->bottom = 1;
-        aResult->left = aResult->right = 1;
-        return PR_TRUE;
-      }
+  // Some things only apply to widgets in HTML content, since
+  // they're drawn differently
+  if (IsHTMLContent(aFrame)) {
+    if (aWidgetType == NS_THEME_DROPDOWN) {
+      /* For content menulist controls, we need an extra pixel so
+       * that we have room to draw our focus rectangle stuff.
+       * Otherwise, the focus rect might overlap the control's
+       * border.
+       */
+      aResult->top = aResult->bottom = 1;
+      aResult->left = aResult->right = 1;
+      return PR_TRUE;
     }
   }
 
@@ -1563,6 +1563,14 @@ nsNativeThemeWin::GetWidgetOverflow(nsIDeviceContext* aContext,
                                     PRUint8 aWidgetType,
                                     nsRect* aResult)
 {
+  /* This is disabled for now, because it causes invalidation problems --
+   * see bug 402381.  The effect of not updating the overflow area is that
+   * for dropdown buttons in content areas, there is a 1px border on 3 sides
+   * where, if invalidated, the dropdown control probably won't be repainted.
+   * This is fairly minor, as by default there is nothing in that area, and
+   * a border only shows up if the widget is being hovered.
+   */
+#if 0
   if (mIsVistaOrLater) {
     /* We explicitly draw dropdown buttons in HTML content 1px bigger
      * up, right, and bottom so that they overlap the dropdown's border
@@ -1580,6 +1588,7 @@ nsNativeThemeWin::GetWidgetOverflow(nsIDeviceContext* aContext,
       return PR_TRUE;
     }
   }
+#endif
 
   return PR_FALSE;
 }
