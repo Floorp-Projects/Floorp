@@ -2029,6 +2029,35 @@ js_UnwindScope(JSContext *cx, JSStackFrame *fp, jsint stackDepth,
     return normalUnwind;
 }
 
+JSBool
+js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, jsval *vp, jsval *vp2)
+{
+    jsval v;
+    jsdouble d;
+
+    v = *vp;
+    if (JSVAL_IS_DOUBLE(v)) {
+        d = *JSVAL_TO_DOUBLE(v);
+    } else if (JSVAL_IS_INT(v)) {
+        d = JSVAL_TO_INT(v);
+    } else {
+        if (!js_ValueToNumber(cx, v, &d))
+            return JS_FALSE;
+
+        /* Store the result of v conversion back in vp for post increments. */
+        if ((cs->format & JOF_POST) && !js_NewNumberValue(cx, d, vp))
+            return JS_FALSE;
+    }
+
+    (cs->format & JOF_INC) ? d++ : d--;
+    if (!js_NewNumberValue(cx, d, vp2))
+        return JS_FALSE;
+
+    if (!(cs->format & JOF_POST))
+        *vp = *vp2;
+    return JS_TRUE;
+}
+
 #ifdef JS_OPMETER
 
 # include <stdlib.h>
@@ -2341,6 +2370,20 @@ js_DumpOpMeters()
             goto error;                                                       \
         v = sp[n];                                                            \
     JS_END_MACRO
+
+/*
+ * Quickly test if v is an int from the [-2**29, 2**29) range, that is, when
+ * the lowest bit of v is 1 and the bits 30 and 31 are both either 0 or 1. For
+ * such v we can do increment or decrement via adding or subtracting two
+ * without checking that the result overflows JSVAL_INT_MIN or JSVAL_INT_MAX.
+ */
+#define CAN_DO_FAST_INC_DEC(v)     (((((v) << 1) ^ v) & 0x80000001) == 1)
+
+JS_STATIC_ASSERT(JSVAL_INT == 1);
+JS_STATIC_ASSERT(JSVAL_INT & JSVAL_VOID);
+JS_STATIC_ASSERT(!CAN_DO_FAST_INC_DEC(JSVAL_VOID));
+JS_STATIC_ASSERT(!CAN_DO_FAST_INC_DEC(INT_TO_JSVAL(JSVAL_INT_MIN)));
+JS_STATIC_ASSERT(!CAN_DO_FAST_INC_DEC(INT_TO_JSVAL(JSVAL_INT_MAX)));
 
 /*
  * Conditional assert to detect failure to clear a pending exception that is
@@ -3023,6 +3066,7 @@ interrupt:
         } else {                                                              \
             if (!js_InternNonIntElementId(cx, obj, idval_, &id))              \
                 goto error;                                                   \
+            sp[n] = ID_TO_VALUE(id);                                          \
         }                                                                     \
     JS_END_MACRO
 
@@ -3874,187 +3918,192 @@ interrupt:
                 goto error;
             if (!prop)
                 goto atom_not_defined;
-
             OBJ_DROP_PROPERTY(cx, obj2, prop);
-            lval = OBJECT_TO_JSVAL(obj);
-            i = 0;
 
           do_incop:
           {
             const JSCodeSpec *cs;
+            jsval v;
 
-            /* The operand must contain a number. */
-            if (!OBJ_GET_PROPERTY(cx, obj, id, &rval))
+            /*
+             * We need a root to store the value to leave on the stack until
+             * we have done with OBJ_SET_PROPERTY.
+             */
+            PUSH_OPND(JSVAL_NULL);
+            SAVE_SP(fp);
+            if (!OBJ_GET_PROPERTY(cx, obj, id, &sp[-1]))
                 goto error;
 
-            /* Preload for use in the if/else immediately below. */
             cs = &js_CodeSpec[op];
+            JS_ASSERT(cs->ndefs == 1);
+            JS_ASSERT((cs->format & JOF_TMPSLOT_MASK) == JOF_TMPSLOT2);
+            v = sp[-1];
+            if (JS_LIKELY(CAN_DO_FAST_INC_DEC(v))) {
+                jsval incr;
 
-            /* The expression result goes in rtmp, the updated value in rval. */
-            if (JSVAL_IS_INT(rval) &&
-                rval != INT_TO_JSVAL(JSVAL_INT_MIN) &&
-                rval != INT_TO_JSVAL(JSVAL_INT_MAX)) {
+                incr = (cs->format & JOF_INC) ? 2 : -2;
                 if (cs->format & JOF_POST) {
-                    rtmp = rval;
-                    (cs->format & JOF_INC) ? (rval += 2) : (rval -= 2);
+                    sp[-1] = v + incr;
                 } else {
-                    (cs->format & JOF_INC) ? (rval += 2) : (rval -= 2);
-                    rtmp = rval;
+                    v += incr;
+                    sp[-1] = v;
                 }
+                fp->flags |= JSFRAME_ASSIGNING;
+                ok = OBJ_SET_PROPERTY(cx, obj, id, &sp[-1]);
+                fp->flags &= ~JSFRAME_ASSIGNING;
+                if (!ok)
+                    goto error;
+
+                /*
+                 * We must set sp[-1] to v for both post and pre increments
+                 * as the setter overwrites sp[-1].
+                 */
+                sp[-1] = v;
             } else {
-
-/*
- * Initially, rval contains the value to increment or decrement, which is not
- * yet converted.  As above, the expression result goes in rtmp, the updated
- * value goes in rval.  Our caller must set vp to point at a GC-rooted jsval
- * in which we home rtmp, to protect it from GC in case the unconverted rval
- * is not a number.
- */
-#define NONINT_INCREMENT_OP_MIDDLE()                                          \
-    JS_BEGIN_MACRO                                                            \
-        VALUE_TO_NUMBER(cx, rval, d);                                         \
-        if (cs->format & JOF_POST) {                                          \
-            rtmp = rval;                                                      \
-            if (!JSVAL_IS_NUMBER(rtmp) && !js_NewNumberValue(cx, d, &rtmp))   \
-                goto error;                                                   \
-            *vp = rtmp;                                                       \
-            (cs->format & JOF_INC) ? d++ : d--;                               \
-            if (!js_NewNumberValue(cx, d, &rval))                             \
-                goto error;                                                   \
-        } else {                                                              \
-            (cs->format & JOF_INC) ? ++d : --d;                               \
-            if (!js_NewNumberValue(cx, d, &rval))                             \
-                goto error;                                                   \
-            rtmp = rval;                                                      \
-        }                                                                     \
-    JS_END_MACRO
-
-                if (cs->format & JOF_POST) {
-                    /*
-                     * We must push early to protect the postfix increment
-                     * or decrement result, if converted to a jsdouble from
-                     * a non-number value, from GC nesting in the setter.
-                     */
-                    vp = sp;
-                    PUSH(JSVAL_VOID);
-                    SAVE_SP(fp);
-                    --i;
-                }
-#ifdef __GNUC__
-                else vp = NULL; /* suppress bogus gcc warnings */
-#endif
-
-                NONINT_INCREMENT_OP_MIDDLE();
+                /* We need an extra root for the result. */
+                PUSH_OPND(JSVAL_NULL);
+                SAVE_SP(fp);
+                if (!js_DoIncDec(cx, cs, &sp[-2], &sp[-1]))
+                    goto error;
+                fp->flags |= JSFRAME_ASSIGNING;
+                ok = OBJ_SET_PROPERTY(cx, obj, id, &sp[-1]);
+                fp->flags &= ~JSFRAME_ASSIGNING;
+                if (!ok)
+                    goto error;
+                sp--;
             }
 
-            fp->flags |= JSFRAME_ASSIGNING;
-            ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
-            fp->flags &= ~JSFRAME_ASSIGNING;
-            if (!ok)
-                goto error;
-            sp += i;
-            PUSH_OPND(rtmp);
-            len = js_CodeSpec[op].length;
-            DO_NEXT_OP(len);
-          }
-
-/* NB: This macro doesn't use JS_BEGIN_MACRO/JS_END_MACRO around its body. */
-#define FAST_INCREMENT_OP(SLOT,COUNT,BASE,PRE,OPEQ,MINMAX)                    \
-    slot = SLOT;                                                              \
-    JS_ASSERT(slot < fp->fun->COUNT);                                         \
-    METER_SLOT_OP(op, slot);                                                  \
-    vp = fp->BASE + slot;                                                     \
-    rval = *vp;                                                               \
-    if (!JSVAL_IS_INT(rval) || rval == INT_TO_JSVAL(JSVAL_INT_##MINMAX))      \
-        goto do_nonint_fast_incop;                                            \
-    PRE = rval;                                                               \
-    rval OPEQ 2;                                                              \
-    *vp = rval;                                                               \
-    PUSH_OPND(PRE);                                                           \
-    goto end_nonint_fast_incop
-
-          BEGIN_CASE(JSOP_INCARG)
-            FAST_INCREMENT_OP(GET_ARGNO(pc), nargs, argv, rval, +=, MAX);
-          BEGIN_CASE(JSOP_DECARG)
-            FAST_INCREMENT_OP(GET_ARGNO(pc), nargs, argv, rval, -=, MIN);
-          BEGIN_CASE(JSOP_ARGINC)
-            FAST_INCREMENT_OP(GET_ARGNO(pc), nargs, argv, rtmp, +=, MAX);
-          BEGIN_CASE(JSOP_ARGDEC)
-            FAST_INCREMENT_OP(GET_ARGNO(pc), nargs, argv, rtmp, -=, MIN);
-
-          BEGIN_CASE(JSOP_INCVAR)
-            FAST_INCREMENT_OP(GET_VARNO(pc), u.i.nvars, vars, rval, +=, MAX);
-          BEGIN_CASE(JSOP_DECVAR)
-            FAST_INCREMENT_OP(GET_VARNO(pc), u.i.nvars, vars, rval, -=, MIN);
-          BEGIN_CASE(JSOP_VARINC)
-            FAST_INCREMENT_OP(GET_VARNO(pc), u.i.nvars, vars, rtmp, +=, MAX);
-          BEGIN_CASE(JSOP_VARDEC)
-            FAST_INCREMENT_OP(GET_VARNO(pc), u.i.nvars, vars, rtmp, -=, MIN);
-
-          end_nonint_fast_incop:
-            len = JSOP_INCARG_LENGTH;   /* all fast incops are same length */
-            DO_NEXT_OP(len);
-
-#undef FAST_INCREMENT_OP
-
-          do_nonint_fast_incop:
-          {
-            const JSCodeSpec *cs = &js_CodeSpec[op];
-
-            NONINT_INCREMENT_OP_MIDDLE();
-            *vp = rval;
-            PUSH_OPND(rtmp);
+            if (cs->nuses == 0) {
+                /* sp[-1] already contains the result of name increment. */
+            } else {
+                rtmp = sp[-1];
+                sp -= cs->nuses;
+                sp[-1] = rtmp;
+            }
             len = cs->length;
             DO_NEXT_OP(len);
           }
 
-/* NB: This macro doesn't use JS_BEGIN_MACRO/JS_END_MACRO around its body. */
-#define FAST_GLOBAL_INCREMENT_OP(SLOWOP,PRE,OPEQ,MINMAX)                      \
-    slot = GET_VARNO(pc);                                                     \
-    JS_ASSERT(slot < fp->nvars);                                              \
-    METER_SLOT_OP(op, slot);                                                  \
-    lval = fp->vars[slot];                                                    \
-    if (JSVAL_IS_NULL(lval)) {                                                \
-        op = SLOWOP;                                                          \
-        DO_OP();                                                              \
-    }                                                                         \
-    slot = JSVAL_TO_INT(lval);                                                \
-    obj = fp->varobj;                                                         \
-    rval = OBJ_GET_SLOT(cx, obj, slot);                                       \
-    if (!JSVAL_IS_INT(rval) || rval == INT_TO_JSVAL(JSVAL_INT_##MINMAX))      \
-        goto do_nonint_fast_global_incop;                                     \
-    PRE = rval;                                                               \
-    rval OPEQ 2;                                                              \
-    OBJ_SET_SLOT(cx, obj, slot, rval);                                        \
-    PUSH_OPND(PRE);                                                           \
-    goto end_nonint_fast_global_incop
+          {
+            jsval incr, incr2;
 
-          BEGIN_CASE(JSOP_INCGVAR)
-            FAST_GLOBAL_INCREMENT_OP(JSOP_INCNAME, rval, +=, MAX);
-          BEGIN_CASE(JSOP_DECGVAR)
-            FAST_GLOBAL_INCREMENT_OP(JSOP_DECNAME, rval, -=, MIN);
-          BEGIN_CASE(JSOP_GVARINC)
-            FAST_GLOBAL_INCREMENT_OP(JSOP_NAMEINC, rtmp, +=, MAX);
-          BEGIN_CASE(JSOP_GVARDEC)
-            FAST_GLOBAL_INCREMENT_OP(JSOP_NAMEDEC, rtmp, -=, MIN);
+            /* Position cases so the most frequent i++ does not need a jump. */
+          BEGIN_CASE(JSOP_DECARG)
+            incr = -2; incr2 = -2; goto do_arg_incop;
+          BEGIN_CASE(JSOP_ARGDEC)
+            incr = -2; incr2 =  0; goto do_arg_incop;
+          BEGIN_CASE(JSOP_INCARG)
+            incr =  2; incr2 =  2; goto do_arg_incop;
+          BEGIN_CASE(JSOP_ARGINC)
+            incr =  2; incr2 =  0;
 
-          end_nonint_fast_global_incop:
-            len = JSOP_INCGVAR_LENGTH;  /* all gvar incops are same length */
+          do_arg_incop:
+            slot = GET_ARGNO(pc);
+            JS_ASSERT(slot < fp->fun->nargs);
+            METER_SLOT_OP(op, slot);
+            vp = fp->argv + slot;
+            goto do_int_fast_incop;
+
+          BEGIN_CASE(JSOP_DECLOCAL)
+            incr = -2; incr2 = -2; goto do_local_incop;
+          BEGIN_CASE(JSOP_LOCALDEC)
+            incr = -2; incr2 =  0; goto do_local_incop;
+          BEGIN_CASE(JSOP_INCLOCAL)
+            incr =  2; incr2 =  2; goto do_local_incop;
+          BEGIN_CASE(JSOP_LOCALINC)
+            incr =  2; incr2 =  0;
+
+          do_local_incop:
+            slot = GET_UINT16(pc);
+            JS_ASSERT(slot < script->depth);
+            vp = fp->spbase + slot;
+            goto do_int_fast_incop;
+
+          BEGIN_CASE(JSOP_DECVAR)
+            incr = -2; incr2 = -2; goto do_var_incop;
+          BEGIN_CASE(JSOP_VARDEC)
+            incr = -2; incr2 =  0; goto do_var_incop;
+          BEGIN_CASE(JSOP_INCVAR)
+            incr =  2; incr2 =  2; goto do_var_incop;
+          BEGIN_CASE(JSOP_VARINC)
+            incr =  2; incr2 =  0;
+
+          /*
+           * do_var_incop comes right before do_int_fast_incop as we want to
+           * avoid an extra jump for variable cases as var++ is more frequent
+           * than arg++ or local++;
+           */
+          do_var_incop:
+            slot = GET_VARNO(pc);
+            JS_ASSERT(slot < fp->fun->u.i.nvars);
+            METER_SLOT_OP(op, slot);
+            vp = fp->vars + slot;
+
+          do_int_fast_incop:
+            rval = *vp;
+            if (JS_LIKELY(CAN_DO_FAST_INC_DEC(rval))) {
+                *vp = rval + incr;
+                PUSH_OPND(rval + incr2);
+            } else {
+                PUSH_OPND(rval);
+                SAVE_SP_AND_PC(fp);
+                if (!js_DoIncDec(cx, &js_CodeSpec[op], &sp[-1], vp))
+                    goto error;
+            }
+            len = JSOP_INCARG_LENGTH;
             JS_ASSERT(len == js_CodeSpec[op].length);
             DO_NEXT_OP(len);
+          }
+
+/* NB: This macro doesn't use JS_BEGIN_MACRO/JS_END_MACRO around its body. */
+#define FAST_GLOBAL_INCREMENT_OP(SLOWOP,INCR,INCR2)                           \
+    op2 = SLOWOP;                                                             \
+    incr = INCR;                                                              \
+    incr2 = INCR2;                                                            \
+    goto do_global_incop
+
+          {
+            jsval incr, incr2;
+
+          BEGIN_CASE(JSOP_DECGVAR)
+            FAST_GLOBAL_INCREMENT_OP(JSOP_DECNAME, -2, -2);
+          BEGIN_CASE(JSOP_GVARDEC)
+            FAST_GLOBAL_INCREMENT_OP(JSOP_NAMEDEC, -2,  0);
+          BEGIN_CASE(JSOP_INCGVAR)
+              FAST_GLOBAL_INCREMENT_OP(JSOP_INCNAME,  2,  2);
+          BEGIN_CASE(JSOP_GVARINC)
+            FAST_GLOBAL_INCREMENT_OP(JSOP_NAMEINC,  2,  0);
 
 #undef FAST_GLOBAL_INCREMENT_OP
 
-          do_nonint_fast_global_incop:
-          {
-            const JSCodeSpec *cs = &js_CodeSpec[op];
-
-            vp = sp++;
-            SAVE_SP(fp);
-            NONINT_INCREMENT_OP_MIDDLE();
-            OBJ_SET_SLOT(cx, obj, slot, rval);
-            STORE_OPND(-1, rtmp);
-            len = cs->length;
+          do_global_incop:
+            JS_ASSERT((js_CodeSpec[op].format & JOF_TMPSLOT_MASK) ==
+                      JOF_TMPSLOT2);
+            slot = GET_VARNO(pc);
+            JS_ASSERT(slot < fp->nvars);
+            METER_SLOT_OP(op, slot);
+            lval = fp->vars[slot];
+            if (JSVAL_IS_NULL(lval)) {
+                op = op2;
+                DO_OP();
+            }
+            slot = JSVAL_TO_INT(lval);
+            rval = OBJ_GET_SLOT(cx, fp->varobj, slot);
+            if (JS_LIKELY(CAN_DO_FAST_INC_DEC(rval))) {
+                PUSH_OPND(rval + incr2);
+                rval += incr;
+            } else {
+                PUSH_OPND(rval);
+                PUSH_OPND(JSVAL_NULL);  /* Extra root */
+                SAVE_SP_AND_PC(fp);
+                if (!js_DoIncDec(cx, &js_CodeSpec[op], &sp[-2], &sp[-1]))
+                    goto error;
+                rval = sp[-1];
+                --sp;
+            }
+            OBJ_SET_SLOT(cx, fp->varobj, slot, rval);
+            len = JSOP_INCGVAR_LENGTH;  /* all gvar incops are same length */
+            JS_ASSERT(len == js_CodeSpec[op].length);
             DO_NEXT_OP(len);
           }
 
@@ -6615,37 +6664,6 @@ interrupt:
             GC_POKE(cx, *vp);
             *vp = FETCH_OPND(-1);
           END_CASE(JSOP_SETLOCAL)
-
-/* NB: This macro doesn't use JS_BEGIN_MACRO/JS_END_MACRO around its body. */
-#define FAST_LOCAL_INCREMENT_OP(PRE,OPEQ,MINMAX)                              \
-    slot = GET_UINT16(pc);                                                    \
-    JS_ASSERT(slot < script->depth);                                          \
-    vp = fp->spbase + slot;                                                   \
-    rval = *vp;                                                               \
-    if (!JSVAL_IS_INT(rval) || rval == INT_TO_JSVAL(JSVAL_INT_##MINMAX))      \
-        goto do_nonint_fast_incop;                                            \
-    PRE = rval;                                                               \
-    rval OPEQ 2;                                                              \
-    *vp = rval;                                                               \
-    PUSH_OPND(PRE)
-
-          BEGIN_CASE(JSOP_INCLOCAL)
-            FAST_LOCAL_INCREMENT_OP(rval, +=, MAX);
-          END_CASE(JSOP_INCLOCAL)
-
-          BEGIN_CASE(JSOP_DECLOCAL)
-            FAST_LOCAL_INCREMENT_OP(rval, -=, MIN);
-          END_CASE(JSOP_DECLOCAL)
-
-          BEGIN_CASE(JSOP_LOCALINC)
-            FAST_LOCAL_INCREMENT_OP(rtmp, +=, MAX);
-          END_CASE(JSOP_LOCALINC)
-
-          BEGIN_CASE(JSOP_LOCALDEC)
-            FAST_LOCAL_INCREMENT_OP(rtmp, -=, MIN);
-          END_CASE(JSOP_LOCALDEC)
-
-#undef FAST_LOCAL_INCREMENT_OP
 
           BEGIN_CASE(JSOP_ENDITER)
             /*
