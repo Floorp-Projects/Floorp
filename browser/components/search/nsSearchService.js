@@ -2754,6 +2754,12 @@ SearchService.prototype = {
       engineToRemove.hidden = true;
       engineToRemove.alias = null;
     } else {
+      // Cancel the lazy serialization timer if it's running
+      if (engineToRemove._serializeTimer) {
+        engineToRemove._serializeTimer.cancel();
+        engineToRemove._serializeTimer = null;
+      }
+
       // Remove the engine file from disk (this might throw)
       engineToRemove._remove();
       engineToRemove._file = null;
