@@ -79,6 +79,14 @@ Engine.prototype = {
     return this.__os;
   },
 
+  __json: null,
+  get _json() {
+    if (!this.__json)
+      this.__json = Cc["@mozilla.org/dom/json;1"].
+        createInstance(Ci.nsIJSON);
+    return this.__json;
+  },
+
   // _core, and _store need to be overridden in subclasses
   __core: null,
   get _core() {
@@ -104,7 +112,7 @@ Engine.prototype = {
     this.__snapshot = value;
   },
 
-  _init: function BmkEngine__init(davCollection, cryptoId) {
+  _init: function Engine__init(davCollection, cryptoId) {
     this._dav = davCollection;
     this._cryptoId = cryptoId;
     this._log = Log4Moz.Service.getLogger("Service." + this.logName);
@@ -112,13 +120,16 @@ Engine.prototype = {
     this._snapshot.load();
   },
 
-  _checkStatus: function BmkEngine__checkStatus(code, msg, ok404) {
-    if (code >= 200 && code < 300)
-      return;
-    if (ok404 && code == 404)
-      return;
-    this._log.error(msg + " Error code: " + code);
-    throw 'checkStatus failed';
+  _serializeCommands: function Engine__serializeCommands(commands) {
+    let json = this._json.encode(commands);
+    //json = json.replace(/ {action/g, "\n {action");
+    return json;
+  },
+  
+  _serializeConflicts: function Engine__serializeConflicts(conflicts) {
+    let json = this._json.encode(conflicts);
+    //json = json.replace(/ {action/g, "\n {action");
+    return json;
   },
 
   _resetServer: function Engine__resetServer(onComplete) {
@@ -149,12 +160,12 @@ Engine.prototype = {
       this._dav.unlock.async(this._dav, cont);
       let unlocked = yield;
 
-      this._checkStatus(statusResp.status,
-                        "Could not delete status file.", true);
-      this._checkStatus(snapshotResp.status,
-                        "Could not delete snapshot file.", true);
-      this._checkStatus(deltasResp.status,
-                        "Could not delete deltas file.", true);
+      Utils.checkStatus(statusResp.status,
+                        "Could not delete status file.", [[200,300],404]);
+      Utils.checkStatus(snapshotResp.status,
+                        "Could not delete snapshot file.", [[200,300],404]);
+      Utils.checkStatus(deltasResp.status,
+                        "Could not delete deltas file.", [[200,300],404]);
 
       this._log.debug("Server files deleted");
       done = true;
@@ -255,7 +266,7 @@ Engine.prototype = {
       // Before we get started, make sure we have a remote directory to play in
       this._dav.MKCOL(this.serverPrefix, cont);
       let ret = yield;
-      this._checkStatus(ret.status, "Could not create remote folder.");
+      Utils.checkStatus(ret.status, "Could not create remote folder.");
 
       // 1) Fetch server deltas
       this._getServerData.async(this, cont);
@@ -279,9 +290,9 @@ Engine.prototype = {
       this._core.detectUpdates(cont, this._snapshot.data, localJson.data);
       let localUpdates = yield;
 
-      this._log.debug("local json:\n" + localJson.serialize());
-      this._log.debug("Local updates: " + serializeCommands(localUpdates));
-      this._log.debug("Server updates: " + serializeCommands(server.updates));
+      this._log.trace("local json:\n" + localJson.serialize());
+      this._log.trace("Local updates: " + this._serializeCommands(localUpdates));
+      this._log.trace("Server updates: " + this._serializeCommands(server.updates));
 
       if (server.updates.length == 0 && localUpdates.length == 0) {
         this._snapshot.version = server.maxVersion;
@@ -305,10 +316,10 @@ Engine.prototype = {
       this._log.info("Predicted changes for server: " + serverChanges.length);
       this._log.info("Client conflicts: " + clientConflicts.length);
       this._log.info("Server conflicts: " + serverConflicts.length);
-      this._log.debug("Changes for client: " + serializeCommands(clientChanges));
-      this._log.debug("Predicted changes for server: " + serializeCommands(serverChanges));
-      this._log.debug("Client conflicts: " + serializeConflicts(clientConflicts));
-      this._log.debug("Server conflicts: " + serializeConflicts(serverConflicts));
+      this._log.trace("Changes for client: " + this._serializeCommands(clientChanges));
+      this._log.trace("Predicted changes for server: " + this._serializeCommands(serverChanges));
+      this._log.trace("Client conflicts: " + this._serializeConflicts(clientConflicts));
+      this._log.trace("Server conflicts: " + this._serializeConflicts(serverConflicts));
 
       if (!(clientChanges.length || serverChanges.length ||
             clientConflicts.length || serverConflicts.length)) {
@@ -324,7 +335,7 @@ Engine.prototype = {
         this._log.warn("Conflicts found!  Discarding server changes");
       }
 
-      let savedSnap = eval(uneval(this._snapshot.data));
+      let savedSnap = Utils.deepCopy(this._snapshot.data);
       let savedVersion = this._snapshot.version;
       let newSnapshot;
 
@@ -346,9 +357,9 @@ Engine.prototype = {
           this._log.warn("Commands did not apply correctly");
           this._log.debug("Diff from snapshot+commands -> " +
                           "new snapshot after commands:\n" +
-                          serializeCommands(diff));
+                          this._serializeCommands(diff));
           // FIXME: do we really want to revert the snapshot here?
-          this._snapshot.data = eval(uneval(savedSnap));
+          this._snapshot.data = Utils.deepCopy(savedSnap);
           this._snapshot.version = savedVersion;
         }
         this._snapshot.save();
@@ -372,7 +383,7 @@ Engine.prototype = {
 
       this._log.info("Actual changes for server: " + serverDelta.length);
       this._log.debug("Actual changes for server: " +
-                      serializeCommands(serverDelta));
+                      this._serializeCommands(serverDelta));
 
       if (serverDelta.length) {
         this._log.info("Uploading changes to server");
@@ -391,7 +402,7 @@ Engine.prototype = {
 
         } else {
 	  Crypto.PBEencrypt.async(Crypto, cont,
-                                  serializeCommands(server.deltas),
+                                  this._serializeCommands(server.deltas),
 				  this._cryptoId);
           let data = yield;
           this._dav.PUT(this.deltasFile, data, cont);
@@ -402,13 +413,14 @@ Engine.prototype = {
             c++;
 
           this._dav.PUT(this.statusFile,
-                        uneval({GUID: this._snapshot.GUID,
-                                formatVersion: STORAGE_FORMAT_VERSION,
-                                snapVersion: server.snapVersion,
-                                maxVersion: this._snapshot.version,
-                                snapEncryption: server.snapEncryption,
-                                deltasEncryption: Crypto.defaultAlgorithm,
-                                itemCount: c}), cont);
+                        this._json.encode(
+                          {GUID: this._snapshot.GUID,
+                           formatVersion: STORAGE_FORMAT_VERSION,
+                           snapVersion: server.snapVersion,
+                           maxVersion: this._snapshot.version,
+                           snapEncryption: server.snapEncryption,
+                           deltasEncryption: Crypto.defaultAlgorithm,
+                           itemCount: c}), cont);
           let statusPut = yield;
 
           if (deltasPut.status >= 200 && deltasPut.status < 300 &&
@@ -488,7 +500,7 @@ Engine.prototype = {
       case 200: {
         this._log.info("Got status file from server");
   
-        let status = eval(resp.responseText);
+        let status = this._json.decode(resp.responseText);
         let deltas, allDeltas;
 	let snap = new SnapshotStore();
   
@@ -523,56 +535,56 @@ Engine.prototype = {
           this._log.info("Downloading server snapshot");
           this._dav.GET(this.snapshotFile, cont);
           resp = yield;
-          this._checkStatus(resp.status, "Could not download snapshot.");
+          Utils.checkStatus(resp.status, "Could not download snapshot.");
           Crypto.PBEdecrypt.async(Crypto, cont,
                                   resp.responseText,
 				  this._cryptoId,
 				  status.snapEncryption);
           let data = yield;
-          snap.data = eval(data);
+          snap.data = this._json.decode(data);
 
           this._log.info("Downloading server deltas");
           this._dav.GET(this.deltasFile, cont);
           resp = yield;
-          this._checkStatus(resp.status, "Could not download deltas.");
+          Utils.checkStatus(resp.status, "Could not download deltas.");
           Crypto.PBEdecrypt.async(Crypto, cont,
                                   resp.responseText,
 				  this._cryptoId,
 				  status.deltasEncryption);
           data = yield;
-          allDeltas = eval(data);
-          deltas = eval(data);
+          allDeltas = this._json.decode(data);
+          deltas = this._json.decode(data);
   
         } else if (this._snapshot.version >= status.snapVersion &&
                    this._snapshot.version < status.maxVersion) {
-          snap.data = eval(uneval(this._snapshot.data));
+          snap.data = Utils.deepCopy(this._snapshot.data);
   
           this._log.info("Downloading server deltas");
           this._dav.GET(this.deltasFile, cont);
           resp = yield;
-          this._checkStatus(resp.status, "Could not download deltas.");
+          Utils.checkStatus(resp.status, "Could not download deltas.");
           Crypto.PBEdecrypt.async(Crypto, cont,
                                   resp.responseText,
 				  this._cryptoId,
 				  status.deltasEncryption);
           let data = yield;
-          allDeltas = eval(data);
+          allDeltas = this._json.decode(data);
           deltas = allDeltas.slice(this._snapshot.version - status.snapVersion);
   
         } else if (this._snapshot.version == status.maxVersion) {
-          snap.data = eval(uneval(this._snapshot.data));
-  
+          snap.data = Utils.deepCopy(this._snapshot.data);
+
           // FIXME: could optimize this case by caching deltas file
           this._log.info("Downloading server deltas");
           this._dav.GET(this.deltasFile, cont);
           resp = yield;
-          this._checkStatus(resp.status, "Could not download deltas.");
+          Utils.checkStatus(resp.status, "Could not download deltas.");
           Crypto.PBEdecrypt.async(Crypto, cont,
                                   resp.responseText,
 				  this._cryptoId,
 				  status.deltasEncryption);
           let data = yield;
-          allDeltas = eval(data);
+          allDeltas = this._json.decode(data);
           deltas = [];
   
         } else { // this._snapshot.version > status.maxVersion
@@ -617,7 +629,7 @@ Engine.prototype = {
         ret.snapVersion = this._snapshot.version;
         ret.snapEncryption = Crypto.defaultAlgorithm;
         ret.deltasEncryption = Crypto.defaultAlgorithm;
-        ret.snapshot = eval(uneval(this._snapshot.data));
+        ret.snapshot = Utils.deepCopy(this._snapshot.data);
         ret.deltas = [];
         ret.updates = [];
       } break;
@@ -651,26 +663,27 @@ Engine.prototype = {
       let data = yield;
       this._dav.PUT(this.snapshotFile, data, cont);
       resp = yield;
-      this._checkStatus(resp.status, "Could not upload snapshot.");
+      Utils.checkStatus(resp.status, "Could not upload snapshot.");
 
-      this._dav.PUT(this.deltasFile, uneval([]), cont);
+      this._dav.PUT(this.deltasFile, "[]", cont);
       resp = yield;
-      this._checkStatus(resp.status, "Could not upload deltas.");
+      Utils.checkStatus(resp.status, "Could not upload deltas.");
 
       let c = 0;
       for (GUID in this._snapshot.data)
         c++;
 
       this._dav.PUT(this.statusFile,
-                    uneval({GUID: this._snapshot.GUID,
-                            formatVersion: STORAGE_FORMAT_VERSION,
-                            snapVersion: this._snapshot.version,
-                            maxVersion: this._snapshot.version,
-                            snapEncryption: Crypto.defaultAlgorithm,
-                            deltasEncryption: "none",
-                            itemCount: c}), cont);
+                    this._json.encode(
+                      {GUID: this._snapshot.GUID,
+                       formatVersion: STORAGE_FORMAT_VERSION,
+                       snapVersion: this._snapshot.version,
+                       maxVersion: this._snapshot.version,
+                       snapEncryption: Crypto.defaultAlgorithm,
+                       deltasEncryption: "none",
+                       itemCount: c}), cont);
       resp = yield;
-      this._checkStatus(resp.status, "Could not upload status file.");
+      Utils.checkStatus(resp.status, "Could not upload status file.");
 
       this._log.info("Full upload to server successful");
       ret = true;
@@ -746,15 +759,3 @@ HistoryEngine.prototype = {
   }
 };
 HistoryEngine.prototype.__proto__ = new Engine();
-
-serializeCommands: function serializeCommands(commands) {
-  let json = uneval(commands);
-  json = json.replace(/ {action/g, "\n {action");
-  return json;
-}
-
-serializeConflicts: function serializeConflicts(conflicts) {
-  let json = uneval(conflicts);
-  json = json.replace(/ {action/g, "\n {action");
-  return json;
-}

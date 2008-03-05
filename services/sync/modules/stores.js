@@ -58,6 +58,14 @@ function Store() {
 Store.prototype = {
   _logName: "Store",
 
+  __json: null,
+  get _json() {
+    if (!this.__json)
+      this.__json = Cc["@mozilla.org/dom/json;1"].
+        createInstance(Ci.nsIJSON);
+    return this.__json;
+  },
+
   _init: function Store__init() {
     this._log = Log4Moz.Service.getLogger("Service." + this._logName);
   },
@@ -65,7 +73,7 @@ Store.prototype = {
   applyCommands: function Store_applyCommands(commandList) {
     for (var i = 0; i < commandList.length; i++) {
       var command = commandList[i];
-      this._log.debug("Processing command: " + uneval(command));
+      this._log.debug("Processing command: " + this._json.encode(command));
       switch (command["action"]) {
       case "create":
         this._createCommand(command);
@@ -143,7 +151,7 @@ SnapshotStore.prototype = {
   },
 
   _createCommand: function SStore__createCommand(command) {
-    this._data[command.GUID] = eval(uneval(command.data));
+    this._data[command.GUID] = Utils.deepCopy(command.data);
   },
 
   _removeCommand: function SStore__removeCommand(command) {
@@ -178,27 +186,18 @@ SnapshotStore.prototype = {
     file.QueryInterface(Ci.nsILocalFile);
 
     file.append("weave");
-    if (!file.exists())
-      file.create(file.DIRECTORY_TYPE, PERMS_DIRECTORY);
-
     file.append("snapshots");
-    if (!file.exists())
-      file.create(file.DIRECTORY_TYPE, PERMS_DIRECTORY);
-
     file.append(this.filename);
     if (!file.exists())
       file.create(file.NORMAL_FILE_TYPE, PERMS_FILE);
 
-    let fos = Cc["@mozilla.org/network/file-output-stream;1"].
-      createInstance(Ci.nsIFileOutputStream);
-    let flags = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
-    fos.init(file, flags, PERMS_FILE, 0);
-
     let out = {version: this.version,
                GUID: this.GUID,
                snapshot: this.data};
-    out = uneval(out);
-    fos.write(out, out.length);
+    out = this._json.encode(out);
+
+    let [fos] = Utils.open(file, ">");
+    fos.writeString(out);
     fos.close();
   },
 
@@ -211,19 +210,10 @@ SnapshotStore.prototype = {
     if (!file.exists())
       return;
 
-    let fis = Cc["@mozilla.org/network/file-input-stream;1"].
-      createInstance(Ci.nsIFileInputStream);
-    fis.init(file, MODE_RDONLY, PERMS_FILE, 0);
-    fis.QueryInterface(Ci.nsILineInputStream);
-
-    let json = "";
-    while (fis.available()) {
-      let ret = {};
-      fis.readLine(ret);
-      json += ret.value;
-    }
-    fis.close();
-    json = eval(json);
+    let [is] = Utils.open(file, "<");
+    let json = Utils.readStream(is);
+    is.close();
+    json = this._json.decode(json);
 
     if (json && 'snapshot' in json && 'version' in json && 'GUID' in json) {
       this._log.info("Read saved snapshot from disk");
@@ -234,7 +224,7 @@ SnapshotStore.prototype = {
   },
 
   serialize: function SStore_serialize() {
-    let json = uneval(this.data);
+    let json = this._json.encode(this.data);
     json = json.replace(/:{type/g, ":\n\t{type");
     json = json.replace(/}, /g, "},\n  ");
     json = json.replace(/, parentGUID/g, ",\n\t parentGUID");

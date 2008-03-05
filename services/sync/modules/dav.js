@@ -114,7 +114,7 @@ DAVCollection.prototype = {
   
       this._authProvider._authFailed = false;
       request.channel.notificationCallbacks = this._authProvider;
-  
+
       request.send(data);
       let event = yield;
       ret = event.target;
