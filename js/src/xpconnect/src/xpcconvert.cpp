@@ -1108,6 +1108,7 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
             *pErr = rv;
         if(NS_SUCCEEDED(rv) && wrapper)
         {
+            uint32 flags = 0;
             if (allowNativeWrapper && wrapper->GetScope() != xpcscope)
             {
                 // Cross scope access detected. Check if chrome code
@@ -1153,10 +1154,11 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                 // else don't create XPCNativeWrappers, since we have
                 // no idea what's calling what here.
 
-                uint32 flags = script ? JS_GetScriptFilenameFlags(script) : 0;
+                flags = script ? JS_GetScriptFilenameFlags(script) : 0;
                 NS_ASSERTION(flags != JSFILENAME_NULL, "null script filename");
+                JSObject *flat = wrapper->GetFlatJSObject();
 
-                if(!JS_IsSystemObject(ccx, wrapper->GetFlatJSObject()))
+                if(!JS_IsSystemObject(ccx, flat))
                 {
                     if(flags & JSFILENAME_PROTECTED)
                     {
@@ -1217,30 +1219,30 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                         *dest = objHolder;
                         return JS_TRUE;
                     }
-
-                    JSObject *flat = wrapper->GetFlatJSObject();
-                    const char *name = STOBJ_GET_CLASS(flat)->name;
-                    if(allowNativeWrapper &&
-                       !(flags & JSFILENAME_SYSTEM) &&
-                       XPC_XOW_ClassNeedsXOW(name))
-                    {
-                        jsval v = OBJECT_TO_JSVAL(flat);
-                        XPCJSObjectHolder *objHolder = nsnull;
-                        if (!XPC_XOW_WrapObject(ccx, scope, &v) ||
-                            !(objHolder = XPCJSObjectHolder::newHolder(ccx, JSVAL_TO_OBJECT(v))))
-                        {
-                            NS_RELEASE(wrapper);
-                            return JS_FALSE;
-                        }
-
-                        NS_ADDREF(objHolder);
-                        NS_RELEASE(wrapper);
-                        *dest = objHolder;
-                        return JS_TRUE;
-                    }
                 }
             }
 
+            JSObject *flat = wrapper->GetFlatJSObject();
+            const char *name = STOBJ_GET_CLASS(flat)->name;
+            if(allowNativeWrapper &&
+               !(flags & JSFILENAME_SYSTEM) &&
+               !JS_IsSystemObject(ccx, flat) &&
+               XPC_XOW_ClassNeedsXOW(name))
+            {
+                jsval v = OBJECT_TO_JSVAL(flat);
+                XPCJSObjectHolder *objHolder = nsnull;
+                if (!XPC_XOW_WrapObject(ccx, scope, &v) ||
+                    !(objHolder = XPCJSObjectHolder::newHolder(ccx, JSVAL_TO_OBJECT(v))))
+                {
+                    NS_RELEASE(wrapper);
+                    return JS_FALSE;
+                }
+
+                NS_ADDREF(objHolder);
+                NS_RELEASE(wrapper);
+                *dest = objHolder;
+                return JS_TRUE;
+            }
 
             *dest = static_cast<nsIXPConnectJSObjectHolder*>(wrapper);
             return JS_TRUE;
