@@ -146,7 +146,7 @@ _cairo_quartz_is_cgcontext_bitmap_context (CGContextRef cgc) {
     }
 
     /* This will cause a (harmless) warning to be printed if called on a non-bitmap context */
-    return CGBitmapContextGetBitsPerPixel(surface->cgContext) != 0;
+    return CGBitmapContextGetBitsPerPixel(cgc) != 0;
 }
 
 /* CoreGraphics limitation with flipped CTM surfaces: height must be less than signed 16-bit max */
