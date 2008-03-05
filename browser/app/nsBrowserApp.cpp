@@ -64,9 +64,11 @@ static void Output(const char *fmt, ... )
   va_start(ap, fmt);
 
 #if defined(XP_WIN) && !MOZ_WINCONSOLE
-  PRUnichar msg[2048];
-  _vsnwprintf(msg, sizeof(msg), NS_ConvertUTF8toUTF16(fmt).get(), ap);
-  MessageBoxW(NULL, msg, L"XULRunner", MB_OK | MB_ICONERROR);
+  char msg[2048];
+
+  _vsnprintf(msg, sizeof(msg), fmt, ap);
+
+  MessageBox(NULL, msg, "XULRunner", MB_OK | MB_ICONERROR);
 #else
   vfprintf(stderr, fmt, ap);
 #endif

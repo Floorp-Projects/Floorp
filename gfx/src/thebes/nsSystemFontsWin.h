@@ -51,7 +51,8 @@ public:
                            gfxFontStyle *aFontStyle) const;
 private:
     nsresult CopyLogFontToNSFont(HDC* aHDC, const LOGFONT* ptrLogFont,
-                                 nsString *aFontName, gfxFontStyle *aFontStyle) const;
+                                 nsString *aFontName, gfxFontStyle *aFontStyle,
+				 PRBool aIsWide = PR_FALSE) const;
     nsresult GetSysFontInfo(HDC aHDC, nsSystemFontID anID,
                             nsString *aFontName,
                             gfxFontStyle *aFontStyle) const;

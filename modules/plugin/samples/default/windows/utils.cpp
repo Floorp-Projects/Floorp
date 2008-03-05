@@ -45,8 +45,8 @@ HKEY openRegistry()
 {
   HKEY phkResult;
 
-  if(RegCreateKeyW(HKEY_CURRENT_USER, REGISTRY_PLACE, &phkResult) != ERROR_SUCCESS)
-    MessageBoxW(0, L"Error creating Default Plugin registry key", L"Default Plugin", MB_OK);
+  if(RegCreateKey(HKEY_CURRENT_USER, REGISTRY_PLACE, &phkResult) != ERROR_SUCCESS)
+    MessageBox(0, "Error creating Default Plugin registry key", "Default Plugin", MB_OK);
 
   return phkResult;
 }
@@ -56,37 +56,30 @@ BOOL IsNewMimeType(LPSTR mime)
 {
   HKEY hkey = openRegistry();
   DWORD dwType, keysize = 512;
-  wchar_t keybuf[512];
-  wchar_t wideMime[64];
+  char keybuf[512];
 
-  MultiByteToWideChar(CP_ACP, 0, 
-                      mime,
-                      strlen(mime) + 1, 
-                      wideMime, 
-                      64);
-  
-  if(RegQueryValueExW(hkey, wideMime, 0, &dwType, (LPBYTE) &keybuf, &keysize) == ERROR_SUCCESS)
+  if(RegQueryValueEx(hkey, mime, 0, &dwType, (LPBYTE) &keybuf, &keysize) == ERROR_SUCCESS)
   {
     // key exists, must have already been here...
     return FALSE;
   }
   else 
   {
-    if(RegSetValueExW(hkey, wideMime, 0,  REG_SZ, (LPBYTE) L"(none)", 7) != ERROR_SUCCESS)
-      MessageBoxW(0, L"Error adding MIME type value", L"Default Plugin", MB_OK);
+    if(RegSetValueEx(hkey, mime, 0,  REG_SZ, (LPBYTE) "(none)", 7) != ERROR_SUCCESS)
+      MessageBox(0, "Error adding MIME type value", "Default Plugin", MB_OK);
 
     return TRUE;
   }
 }
 
 // string length in pixels for the specific window (selected font)
-static int getWindowStringLength(HWND hWnd, wchar_t* lpsz)
+static int getWindowStringLength(HWND hWnd, LPSTR lpsz)
 {
   SIZE sz;
   HDC hDC = GetDC(hWnd);
   HFONT hWindowFont = GetWindowFont(hWnd);
   HFONT hFontOld = SelectFont(hDC, hWindowFont);
-  GetTextExtentPoint32W(hDC, lpsz, wcslen(lpsz), &sz);
+  GetTextExtentPoint32(hDC, lpsz, lstrlen(lpsz), &sz);
   POINT pt;
   pt.x = sz.cx;
   pt.y = sz.cy;
@@ -96,20 +89,20 @@ static int getWindowStringLength(HWND hWnd, wchar_t* lpsz)
   return (int)pt.x;
 }
 
-/*******************************************************************/
-/*                                                                 */
-/* void SetDlgItemTextWrapped(HWND hWnd, int iID, wchar_t* szText) */
-/*                                                                 */
-/* helper to wrap long lines in a static control, which do not     */
-/* wrap automatically if they do not have space characters         */
-/*                                                                 */
-/*******************************************************************/
-void SetDlgItemTextWrapped(HWND hWnd, int iID, wchar_t* szText)
+/****************************************************************/
+/*                                                              */
+/* void SetDlgItemTextWrapped(HWND hWnd, int iID, LPSTR szText) */
+/*                                                              */
+/* helper to wrap long lines in a static control, which do not  */
+/* wrap automatically if they do not have space characters      */
+/*                                                              */
+/****************************************************************/
+void SetDlgItemTextWrapped(HWND hWnd, int iID, LPSTR szText)
 {
   HWND hWndStatic = GetDlgItem(hWnd, iID);
-  if((szText == NULL) || (wcslen(szText) == 0))
+  if((szText == NULL) || (lstrlen(szText) == 0))
   {
-    SetDlgItemTextW(hWnd, iID, L"");
+    SetDlgItemText(hWnd, iID, "");
     return;
   }
 
@@ -121,7 +114,7 @@ void SetDlgItemTextWrapped(HWND hWnd, int iID, wchar_t* szText)
 
   if(iStringLength <= iStaticLength)
   {
-    SetDlgItemTextW(hWnd, iID, szText);
+    SetDlgItemText(hWnd, iID, szText);
     return;
   }
 
@@ -129,19 +122,19 @@ void SetDlgItemTextWrapped(HWND hWnd, int iID, wchar_t* szText)
   if(iBreaks <= 0)
     return;
 
-  wchar_t * pBuf = new wchar_t[iStringLength + iBreaks + 1];
+  char * pBuf = new char[iStringLength + iBreaks + 1];
   if(pBuf == NULL)
     return;
 
-  wcscpy(pBuf, L"");
+  lstrcpy(pBuf, "");
 
   int iStart = 0;
   int iLines = 0;
   for(int i = 0; i < iStringLength; i++)
   {
-    wchar_t* sz = &szText[iStart];
+    char * sz = &szText[iStart];
     int iIndex = i - iStart;
-    wchar_t ch = sz[iIndex + 1];
+    char ch = sz[iIndex + 1];
 
     sz[iIndex + 1] = '\0';
 
@@ -152,7 +145,7 @@ void SetDlgItemTextWrapped(HWND hWnd, int iID, wchar_t* szText)
       sz[iIndex + 1] = ch;
       if(iLines == iBreaks)
       {
-        wcscat(pBuf, sz);
+        lstrcat(pBuf, sz);
         break;
       }
       continue;
@@ -164,15 +157,15 @@ void SetDlgItemTextWrapped(HWND hWnd, int iID, wchar_t* szText)
     ch = sz[iIndex];
     sz[iIndex] = '\0';    // terminate string one char shorter
 
-    wcscat(pBuf, sz);     // append the string
-    wcscat(pBuf, L" ");   // append space character for successful wrapping
+    lstrcat(pBuf, sz);    // append the string
+    lstrcat(pBuf, " ");   // append space character for successful wrapping
 
-    iStart += wcslen(sz); // shift new start position
+    iStart += lstrlen(sz);// shift new start position
     sz[iIndex] = ch;      // restore zeroed element
     iLines++;             // count lines
   }
 
-  SetDlgItemTextW(hWnd, iID, pBuf);
+  SetDlgItemText(hWnd, iID, pBuf);
 
   delete [] pBuf;
 }

@@ -108,8 +108,8 @@ private:
      * HasMoreElements reads mLetter.
      * GetNext advances mLetter.
      */
-    nsString mDrives;
-    const PRUnichar *mLetter;
+    nsCString mDrives;
+    const char *mLetter;
 };
 
 //----------------------------------------------------------------------------
@@ -2952,7 +2952,7 @@ nsresult nsDriveEnumerator::Init()
     /* The string is null terminated */
     if (!EnsureStringLength(mDrives, length+1))
         return NS_ERROR_OUT_OF_MEMORY;
-    if (!GetLogicalDriveStringsW(length, mDrives.BeginWriting()))
+    if (!GetLogicalDriveStrings(length, mDrives.BeginWriting()))
         return NS_ERROR_FAILURE;
     mLetter = mDrives.get();
     return NS_OK;
@@ -2982,9 +2982,8 @@ NS_IMETHODIMP nsDriveEnumerator::GetNext(nsISupports **aNext)
         *aNext = nsnull;
         return NS_OK;
     }
-    nsString drive(mDrives);
+    NS_ConvertASCIItoUTF16 drive(mLetter);
     mLetter += drive.Length() + 1;
-
     nsILocalFile *file;
     nsresult rv = 
         NS_NewLocalFile(drive, PR_FALSE, &file);
