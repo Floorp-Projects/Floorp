@@ -2762,6 +2762,7 @@ nsXULDocument::ResumeWalk()
     // <html:script src="..." />) can be properly re-loaded if the
     // cached copy of the document becomes stale.
     nsresult rv;
+    nsCOMPtr<nsIURI> overlayURI = mCurrentPrototype->GetURI();
 
     while (1) {
         // Begin (or resume) walking the current prototype.
@@ -2950,8 +2951,6 @@ nsXULDocument::ResumeWalk()
 
                     const PRUnichar* params[] = { piProto->mTarget.get() };
 
-                    nsCOMPtr<nsIURI> overlayURI = mCurrentPrototype->GetURI();
-
                     nsContentUtils::ReportToConsole(
                                         nsContentUtils::eXUL_PROPERTIES,
                                         "PINotInProlog",
@@ -3006,8 +3005,21 @@ nsXULDocument::ResumeWalk()
             continue;
         if (NS_FAILED(rv))
             return rv;
+        if (mOverlayLoadObservers.IsInitialized()) {
+            nsIObserver *obs = mOverlayLoadObservers.GetWeak(overlayURI);
+            if (obs) {
+                // This overlay has an unloaded overlay, so it will never
+                // notify. The best we can do is to notify for the unloaded
+                // overlay instead, assuming nobody is already notifiable
+                // for it. Note that this will confuse the observer.
+                if (!mOverlayLoadObservers.GetWeak(uri))
+                    mOverlayLoadObservers.Put(uri, obs);
+                mOverlayLoadObservers.Remove(overlayURI);
+            }
+        }
         if (shouldReturn)
             return NS_OK;
+        overlayURI.swap(uri);
     }
 
     // If we get here, there is nothing left for us to walk. The content
