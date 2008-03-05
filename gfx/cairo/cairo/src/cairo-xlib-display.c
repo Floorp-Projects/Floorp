@@ -302,9 +302,6 @@ _cairo_xlib_display_get (Display *dpy)
 	    display->buggy_repeat = TRUE;
     }
 
-    /* XXX workaround; see https://bugzilla.mozilla.org/show_bug.cgi?id=413583 */
-    display->buggy_repeat = TRUE;
-
     display->next = _cairo_xlib_display_list;
     _cairo_xlib_display_list = display;
 

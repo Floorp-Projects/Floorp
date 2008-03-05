@@ -1,3 +1,4 @@
+/* -*- Mode: c; tab-width: 8; c-basic-offset: 4; indent-tabs-mode: t; -*- */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
@@ -183,50 +184,44 @@ typedef struct _cairo_trapezoid {
     cairo_line_t left, right;
 } cairo_trapezoid_t;
 
-typedef struct _cairo_rectangle_int16 {
+struct _cairo_rectangle_int16 {
     int16_t x, y;
     uint16_t width, height;
-} cairo_rectangle_int16_t, cairo_glyph_size_t;
+};
 
-typedef struct _cairo_rectangle_int32 {
+struct _cairo_rectangle_int32 {
     int32_t x, y;
     uint32_t width, height;
-} cairo_rectangle_int32_t;
+};
 
-typedef struct _cairo_point_int16 {
+typedef struct _cairo_rectangle_int16 cairo_glyph_size_t;
+
+struct _cairo_point_int16 {
     int16_t x, y;
-} cairo_point_int16_t;
+};
 
-typedef struct _cairo_point_int32 {
+struct _cairo_point_int32 {
     int32_t x, y;
-} cairo_point_int32_t;
-
-typedef struct _cairo_box_int16 {
-    cairo_point_int16_t p1;
-    cairo_point_int16_t p2;
-} cairo_box_int16_t;
-
-typedef struct _cairo_box_int32 {
-    cairo_point_int32_t p1;
-    cairo_point_int32_t p2;
-} cairo_box_int32_t;
-
+};
 
 #if CAIRO_FIXED_BITS == 32 && CAIRO_FIXED_FRAC_BITS >= 16
-typedef cairo_rectangle_int16_t cairo_rectangle_int_t;
-typedef cairo_point_int16_t cairo_point_int_t;
-typedef cairo_box_int16_t cairo_box_int_t;
+typedef struct _cairo_rectangle_int16 cairo_rectangle_int_t;
+typedef struct _cairo_point_int16 cairo_point_int_t;
 #define CAIRO_RECT_INT_MIN INT16_MIN
 #define CAIRO_RECT_INT_MAX INT16_MAX
 #elif CAIRO_FIXED_BITS == 32
-typedef cairo_rectangle_int32_t cairo_rectangle_int_t;
-typedef cairo_point_int32_t cairo_point_int_t;
-typedef cairo_box_int32_t cairo_box_int_t;
+typedef struct _cairo_rectangle_int32 cairo_rectangle_int_t;
+typedef struct _cairo_point_int32 cairo_point_int_t;
 #define CAIRO_RECT_INT_MIN INT32_MIN
 #define CAIRO_RECT_INT_MAX INT32_MAX
 #else
-#error Not sure how to pick a cairo_rectangle_int_t for your CAIRO_FIXED_BITS!
+#error Not sure how to pick a cairo_rectangle_int_t and cairo_point_int_t for your CAIRO_FIXED_BITS!
 #endif
+
+typedef struct _cairo_box_int {
+    cairo_point_int_t p1;
+    cairo_point_int_t p2;
+} cairo_box_int_t;
 
 typedef enum _cairo_direction {
     CAIRO_DIRECTION_FORWARD,

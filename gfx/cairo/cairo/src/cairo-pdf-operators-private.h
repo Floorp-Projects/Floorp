@@ -97,7 +97,7 @@ _cairo_pdf_operators_fill (cairo_pdf_operators_t 	*pdf_operators,
 			   cairo_path_fixed_t		*path,
 			   cairo_fill_rule_t	 	fill_rule);
 
-cairo_int_status_t
+cairo_private cairo_int_status_t
 _cairo_pdf_operators_fill_stroke (cairo_pdf_operators_t 	*pdf_operators,
 				  cairo_path_fixed_t		*path,
 				  cairo_fill_rule_t	 	 fill_rule,

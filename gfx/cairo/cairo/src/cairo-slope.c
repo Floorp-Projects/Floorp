@@ -47,8 +47,15 @@ _cairo_slope_init (cairo_slope_t *slope, cairo_point_t *a, cairo_point_t *b)
    positive X axis and increase in the direction of the positive Y
    axis.
 
-   WARNING: This function only gives correct results if the angular
-   difference between a and b is less than PI.
+   This function always compares the slope vectors based on the
+   smaller angular difference between them, (that is based on an
+   angular difference that is strictly less than pi). To break ties
+   when comparing slope vectors with an angular difference of exactly
+   pi, the vector with a positive dx (or positive dy if dx's are zero)
+   is considered to be more positive than the other.
+
+   Also, all slope vectors with both dx==0 and dy==0 are considered
+   equal and more positive than any non-zero vector.
 
    <  0 => a less positive than b
    == 0 => a equal to b
@@ -78,28 +85,24 @@ _cairo_slope_compare (cairo_slope_t *a, cairo_slope_t *b)
     if (b->dx == 0 && b->dy ==0)
 	return -1;
 
+    /* Finally, we're looking at two vectors that are either equal or
+     * that differ by exactly pi. We can identify the "differ by pi"
+     * case by looking for a change in sign in either dx or dy between
+     * a and b.
+     *
+     * And in these cases, we eliminate the ambiguity by reducing the angle
+     * of b by an infinitesimally small amount, (that is, 'a' will
+     * always be considered less than 'b').
+     */
+    if (((a->dx > 0) != (b->dx > 0)) ||
+	((a->dy > 0) != (b->dy > 0)))
+    {
+	if (a->dx > 0 || (a->dx == 0 && a->dy > 0))
+	    return +1;
+	else
+	    return -1;
+    }
+
+    /* Finally, for identical slopes, we obviously return 0. */
     return 0;
-}
-
-/* XXX: It might be cleaner to move away from usage of
-   _cairo_slope_clockwise/_cairo_slope_counter_clockwise in favor of
-   directly using _cairo_slope_compare.
-*/
-
-/* Is a clockwise of b?
- *
- * Note: The strict equality here is not significant in and of itself,
- * but there are functions up above that are sensitive to it,
- * (cf. _cairo_pen_find_active_cw_vertex_index).
- */
-int
-_cairo_slope_clockwise (cairo_slope_t *a, cairo_slope_t *b)
-{
-    return _cairo_slope_compare (a, b) < 0;
-}
-
-int
-_cairo_slope_counter_clockwise (cairo_slope_t *a, cairo_slope_t *b)
-{
-    return ! _cairo_slope_clockwise (a, b);
 }
