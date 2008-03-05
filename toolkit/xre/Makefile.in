@@ -92,7 +92,7 @@ XPIDLSRCS = \
 	nsIXULRuntime.idl \
 	$(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
+ifneq (,$(filter WINCE WINNT,$(OS_ARCH)))
 XPIDLSRCS += nsIWinAppHelper.idl
 endif
 
@@ -126,7 +126,11 @@ DEFINES += -DMOZ_UPDATER
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+ifdef WINCE
+CPPSRCS += nsNativeAppSupportDefault.cpp
+else
 CPPSRCS += nsNativeAppSupportWin.cpp
+endif
 DEFINES += -DWIN32_LEAN_AND_MEAN -DUNICODE -D_UNICODE
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
@@ -164,7 +168,7 @@ SHAREDCPPSRCS	  += nsSigHandlers.cpp
 endif
 
 GARBAGE += $(SHAREDCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
-ifeq ($(OS_ARCH),WINNT)
+ifneq (,$(filter WINCE WINNT,$(OS_ARCH)))
 GARBAGE	+= $(addprefix $(srcdir)/,$(SHAREDCPPSRCS))
 endif
 

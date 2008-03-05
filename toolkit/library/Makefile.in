@@ -74,6 +74,10 @@ ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 CPPSRCS += dlldeps-xul.cpp
 endif
 
+ifeq ($(OS_ARCH),WINCE)
+CPPSRCS += dlldeps-xul.cpp
+endif
+
 ifeq ($(OS_ARCH),OS2)
 CPPSRCS += dlldeps-xul.cpp
 endif
@@ -228,6 +232,10 @@ ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
 EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,imagehlp)
 endif
 endif # WINNT
+ifeq ($(OS_ARCH),WINCE)
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, aygshell cellcore uuid ole32 oleaut32 )
+endif
+
 
 ifdef MOZ_JPROF
 EXTRA_DSO_LDOPTS += -ljprof
