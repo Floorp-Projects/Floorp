@@ -119,6 +119,10 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
   nsCAutoString uriSpec;
   aBindingDocURI->GetSpec(uriSpec);
   
+  JSContext* cx = (JSContext*) aContext->GetNativeContext();
+  NS_ASSERTION(!::JS_IsExceptionPending(cx),
+               "Shouldn't get here when an exception is pending!");
+  
   // compile the literal string
   // XXX Could we produce a better principal here?  Should be able
   // to, really!
@@ -133,13 +137,19 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
   if (NS_FAILED(rv))
     return rv;
 
+  // If EvaluateStringWithValue() threw an exception, just report it now.
+  // Failure to evaluate a field should stop neither the get of the field value
+  // nor an enumeration attempt.
+  if (::JS_IsExceptionPending(cx)) {
+    ::JS_ReportPendingException(cx);
+  }
+
   if (undefined) {
     result = JSVAL_VOID;
   }
 
   // Define the evaluated result as a JS property
   nsDependentString name(mName);
-  JSContext* cx = (JSContext*) aContext->GetNativeContext();
   JSAutoRequest ar(cx);
   if (!::JS_DefineUCProperty(cx, aBoundNode,
                              reinterpret_cast<const jschar*>(mName), 
