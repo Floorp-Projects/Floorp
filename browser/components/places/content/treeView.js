@@ -297,8 +297,8 @@ PlacesTreeView.prototype = {
         continue;
 
       for (var nodeIndex = min.value; nodeIndex <= lastIndex; nodeIndex++)
-        previouslySelectedNodes.push({ node: this._visibleElements[nodeIndex],
-                                       oldIndex: nodeIndex });
+        previouslySelectedNodes.push(
+          { node: this._visibleElements[nodeIndex].node, oldIndex: nodeIndex });
     }
 
     // Mark the removes as invisible
@@ -557,7 +557,8 @@ PlacesTreeView.prototype = {
     }
 
     aItem.viewIndex = newViewIndex;
-    this._visibleElements.splice(newViewIndex, 0, aItem);
+    this._visibleElements.splice(newViewIndex, 0, 
+                                 { node: aItem, properties: null });
     for (var i = newViewIndex + 1;
          i < this._visibleElements.length; i ++) {
       this._visibleElements[i].node.viewIndex = i;
