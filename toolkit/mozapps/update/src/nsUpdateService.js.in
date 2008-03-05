@@ -1022,24 +1022,16 @@ function UpdateService() {
     LOG("UpdateService", "XPCOM ABI unknown: updates are not possible.");
   }
 
-  var osVersion;
-  var sysInfo = Components.classes["@mozilla.org/system-info;1"]
-                          .getService(Components.interfaces.nsIPropertyBag2);
   try {
-    osVersion = sysInfo.getProperty("name") + " " + sysInfo.getProperty("version");
+    var sysInfo =
+      Components.classes["@mozilla.org/system-info;1"]
+                .getService(Components.interfaces.nsIPropertyBag2);
+
+    gOSVersion = encodeURIComponent(sysInfo.getProperty("name") + " " +
+                                    sysInfo.getProperty("version"));
   }
   catch (e) {
     LOG("UpdateService", "OS Version unknown: updates are not possible.");
-  }
-
-  if (osVersion) {
-    try {
-      osVersion += " (" + sysInfo.getProperty("secondaryLibrary") + ")";
-    }
-    catch (e) {
-      // Not all platforms have a secondary widget library, so an error is nothing to worry about.
-    }
-    gOSVersion = encodeURIComponent(osVersion);
   }
 
 #ifdef XP_MACOSX
