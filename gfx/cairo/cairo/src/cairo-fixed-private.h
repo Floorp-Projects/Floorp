@@ -186,7 +186,7 @@ _cairo_fixed_to_16_16 (cairo_fixed_t f)
 #else
     cairo_fixed_16_16_t x;
 
-    /* Handle overflow/underflow by claping to the lowest/highest
+    /* Handle overflow/underflow by clamping to the lowest/highest
      * value representable as 16.16
      */
     if ((f >> CAIRO_FIXED_FRAC_BITS) < INT16_MIN) {

@@ -818,21 +818,6 @@ var PlacesMenuDNDController = {
   },
   
   /**
-   * When the user drags out of the Bookmarks Menu or Toolbar, set a timer to 
-   * manually close the popup chain that was dragged out of. We need to do this
-   * since the global popup dismissal listener does not handle multiple extant
-   * popup chains well. See bug 332845 for more information.
-   */
-  onDragExit: function PMDC_onDragExit(event) {
-    // Ensure that we don't set multiple timers if there's one already set.
-    if ("closeTime" in this._timers)
-      return;
-      
-    this._setDragTimer("closeTime", this._closePopups, 
-                       this._springLoadDelay, [event.target]);
-  },
-  
-  /**
    * Creates a timer that will fire during a drag and drop operation.
    * @param   id
    *          The identifier of the timer being set
@@ -880,38 +865,6 @@ var PlacesMenuDNDController = {
   _isContainer: function PMDC__isContainer(node) {
     return node.localName == "menu" || 
            node.localName == "toolbarbutton" && node.getAttribute("type") == "menu";
-  },
-  
-  /**
-   * Close all pieces of toplevel menu UI in the browser window. Called in 
-   * circumstances where there may be multiple chains of menupopups, e.g. 
-   * during drag and drop operations between menus, and in context menu-on-
-   * menu situations.
-   */
-  _closePopups: function PMDC__closePopups(target) {
-    if (PlacesControllerDragHelper.draggingOverChildNode(target))
-      return;
-
-    if ("closeTime" in this._timers)
-      delete this._timers.closeTime;
-    
-    // Close the bookmarks menu
-    var bookmarksMenu = document.getElementById("bookmarksMenu");
-    bookmarksMenu.firstChild.hidePopup();
-
-    var bookmarksBar = document.getElementById("bookmarksBarContent");
-    if (bookmarksBar) {
-      // Close the overflow chevron menu and all its children
-      bookmarksBar._chevron.firstChild.hidePopup();
-
-      // Close all popups on the bookmarks toolbar
-      var toolbarItems = bookmarksBar.childNodes;
-      for (var i = 0; i < toolbarItems.length; ++i) {
-        var item = toolbarItems[i]
-        if (this._isContainer(item))
-          item.firstChild.hidePopup();
-      }
-    }
   },
   
   /**

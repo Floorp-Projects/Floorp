@@ -48,6 +48,8 @@
 #include "nsIDeviceContext.h"
 #include "nsNativeTheme.h"
 
+#include "gfxASurface.h"
+
 class nsNativeThemeCocoa : private nsNativeTheme,
                            public nsITheme
 {
@@ -130,6 +132,15 @@ protected:
   void GetScrollbarDrawInfo (HIThemeTrackDrawInfo& aTdi, nsIFrame *aFrame, 
                              const HIRect& aRect, PRBool aShouldGetButtonStates);
   nsIFrame* GetParentScrollbarFrame(nsIFrame *aFrame);
+
+  void DrawCellWithScaling(NSCell *cell,
+                           CGContextRef cgContext,
+                           const HIRect& destRect,
+                           NSControlSize controlSize,
+                           float naturalWidth, float naturalHeight,
+                           float minWidth, float minHeight,
+                           const float marginSet[][3][4],
+                           PRBool doSaveCTM);
 
 private:
   NSButtonCell* mPushButtonCell;

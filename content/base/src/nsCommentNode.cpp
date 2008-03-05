@@ -178,7 +178,7 @@ nsCommentNode::List(FILE* out, PRInt32 aIndent) const
   PRInt32 indx;
   for (indx = aIndent; --indx >= 0; ) fputs("  ", out);
 
-  fprintf(out, "Comment@%p refcount=%d<!--", this, mRefCnt.get());
+  fprintf(out, "Comment@%p refcount=%d<!--", (void*)this, mRefCnt.get());
 
   nsAutoString tmp;
   ToCString(tmp, 0, mText.GetLength());

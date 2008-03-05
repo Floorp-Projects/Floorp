@@ -678,9 +678,7 @@ JS_GetGlobalForObject(JSContext *cx, JSObject *obj);
  */
 #define JS_CALLEE(cx,vp)        ((vp)[0])
 #define JS_ARGV_CALLEE(argv)    ((argv)[-2])
-#define JS_THIS(cx,vp)          (JSVAL_IS_NULL((vp)[1])                       \
-                                 ? JS_ComputeThis(cx, vp)                     \
-                                 : (vp)[1])
+#define JS_THIS(cx,vp)          JS_ComputeThis(cx, vp)
 #define JS_THIS_OBJECT(cx,vp)   ((JSObject *) JS_THIS(cx,vp))
 #define JS_ARGV(cx,vp)          ((vp) + 2)
 #define JS_RVAL(cx,vp)          (*(vp))

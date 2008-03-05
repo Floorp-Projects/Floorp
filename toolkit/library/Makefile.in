@@ -53,7 +53,7 @@ FORCE_USE_PIC = 1
 FORCE_SHARED_LIB = 1
 MOZILLA_INTERNAL_API = 1
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 # This is going to be a framework named "XUL", not an ordinary library named
 # "libxul.dylib"
 LIBRARY_NAME=XUL
@@ -108,7 +108,7 @@ ifeq ($(OS_ARCH),OS2)
 CPPSRCS += dlldeps-javaxpcom.cpp
 LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/os2
 else
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 EXTRA_DSO_LDOPTS += -framework JavaVM
 else
 LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/linux
@@ -199,10 +199,9 @@ DEFINES += -DIMPL_XREAPI
 
 EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CXXFLAGS	+= $(TK_CFLAGS)
 EXTRA_DSO_LDOPTS += \
-	-framework Cocoa \
 	-framework QuickTime \
 	-framework IOKit \
 	-lcrypto \

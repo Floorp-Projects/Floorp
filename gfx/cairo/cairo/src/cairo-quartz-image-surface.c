@@ -77,11 +77,12 @@ _cairo_quartz_create_cgimage (cairo_format_t format,
 	case CAIRO_FORMAT_RGB24:
 	    if (colorSpace == NULL)
 		colorSpace = CGColorSpaceCreateDeviceRGB();
-	    bitinfo = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host;
+	    bitinfo = kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Host;
 	    bitsPerComponent = 8;
 	    bitsPerPixel = 32;
 	    break;
 
+	/* XXX -- should use CGImageMaskCreate! */
 	case CAIRO_FORMAT_A8:
 	    if (colorSpace == NULL)
 		colorSpace = CGColorSpaceCreateDeviceGray();
@@ -90,6 +91,7 @@ _cairo_quartz_create_cgimage (cairo_format_t format,
 	    bitsPerPixel = 8;
 	    break;
 
+	case CAIRO_FORMAT_A1:
 	default:
 	    return NULL;
     }
@@ -269,15 +271,12 @@ static const cairo_surface_backend_t cairo_quartz_image_surface_backend = {
  * cairo_quartz_image_surface_create
  * @surface: a cairo image surface to wrap with a quartz image surface
  *
- * Creates a Quartz surface backed by a CGImageRef that references
- * the given image surface.
- *
- * Data is to be loaded into this surface by calling
- * cairo_quartz_image_surface_get_image, and performing operations on the
- * resulting image surface.
- *
- * The resulting surface can be rendered quickly when used as a source
- * when rendering to a cairo_quartz_surface.
+ * Creates a Quartz surface backed by a CGImageRef that references the
+ * given image surface. The resulting surface can be rendered quickly
+ * when used as a source when rendering to a #cairo_quartz_surface.  If
+ * the data in the image surface is ever updated, cairo_surface_flush()
+ * must be called on the #cairo_quartz_image_surface to ensure that the
+ * CGImageRef refers to the updated data.
  *
  * Return value: the newly created surface.
  *
@@ -324,8 +323,10 @@ cairo_quartz_image_surface_create (cairo_surface_t *surface)
 
     memset (qisurf, 0, sizeof(cairo_quartz_image_surface_t));
 
-    // ref this here; in case the create_cgimage fails, it will
-    // be released by the callback.
+    /* In case the create_cgimage fails, this ref will
+     * be released via the callback (which will be called in
+     * case of failure.)
+     */
     cairo_surface_reference (surface);
 
     image = _cairo_quartz_create_cgimage (format,

@@ -92,6 +92,7 @@ CPPSRCS		= \
 		jsgc.cpp \
 		jshash.cpp \
 		jsinterp.cpp \
+		jsinvoke.cpp \
 		jsiter.cpp \
 		jslock.cpp \
 		jslog2.cpp \

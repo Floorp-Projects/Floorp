@@ -96,10 +96,3 @@ include $(topsrcdir)/config/rules.mk
 LOCAL_INCLUDES += \
 	-I$(topsrcdir)/xpcom/io \
 	$(NULL)
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-LDFLAGS	+= \
-	-framework Cocoa \
-	-framework Foundation \
-	$(NULL)
-endif

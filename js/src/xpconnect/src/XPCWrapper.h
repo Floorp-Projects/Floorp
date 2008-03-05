@@ -92,6 +92,7 @@ XPC_XOW_ClassNeedsXOW(const char *name)
 }
 
 extern JSExtendedClass sXPC_XOW_JSClass;
+extern JSExtendedClass sXPC_SJOW_JSClass;
 
 // This class wraps some common functionality between the three existing
 // wrappers. Its main purpose is to allow XPCCrossOriginWrapper to act both

@@ -791,4 +791,15 @@ typedef struct
 #endif
 
 #define SHGetSpecialFolderPathW SHGetSpecialFolderPath
+
+// On Windows CE, there are some functions that are wide, but there
+// isn't a function named "functionW".
+
+#define SHGetPathFromIDListW SHGetPathFromIDList 
+#define GetUserNameW         GetUserName
+#define RemovePropW          RemoveProp
+#define GetPropW             GetProp
+#define SetPropW             SetProp
+#define FONTENUMPROCW        FONTENUMPROC
+#define GetLongPathNameW     GetLongPathName
 #endif // _MOZCE_DEFS

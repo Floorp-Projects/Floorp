@@ -40,8 +40,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <LaunchServices.h>
+#import <Carbon/Carbon.h>
 
+#include "nsObjCExceptions.h"
 #include "nsMIMEInfoMac.h"
 #include "nsILocalFileMac.h"
 #include "nsIFileURL.h"
@@ -50,6 +51,8 @@
 NS_IMETHODIMP
 nsMIMEInfoMac::LaunchWithFile(nsIFile *aFile)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsCOMPtr<nsIFile> application;
   nsresult rv;
 
@@ -97,7 +100,9 @@ nsMIMEInfoMac::LaunchWithFile(nsIFile *aFile)
     }
   }
   nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(aFile);
-  return app->LaunchWithDoc(localFile, PR_FALSE); 
+  return app->LaunchWithDoc(localFile, PR_FALSE);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 nsresult 

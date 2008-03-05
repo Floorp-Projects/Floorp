@@ -50,12 +50,12 @@ interface nsIBlocklistService : nsISupports
    *          The item's version.
    * @param   appVersion
    *          The version of the application we are checking in the blocklist.
-   *          If this parameter is undefined, the version of the running
-   *          application is used.
+   *          If this parameter is null, the version of the running application
+   *          is used.
    * @param   toolkitVersion
    *          The version of the toolkit we are checking in the blocklist.
-   *          If this parameter is undefined, the version of the running
-   *          toolkit is used.
+   *          If this parameter is null, the version of the running toolkit
+   *          is used.
    * @returns true if the item is compatible with this version of the
    *          application or this version of the toolkit, false, otherwise.
    */

@@ -105,7 +105,7 @@ function PROT_ListManager() {
                    .getService(Ci.nsIUrlClassifierDBService);
 
   this.hashCompleter_ = Cc["@mozilla.org/url-classifier/hashcompleter;1"]
-                        .createInstance(Ci.nsIUrlClassifierHashCompleter);
+                        .getService(Ci.nsIUrlClassifierHashCompleter);
 }
 
 /**
@@ -178,7 +178,6 @@ PROT_ListManager.prototype.registerTable = function(tableName,
                                                     opt_requireMac) {
   this.tablesData[tableName] = {};
   this.tablesData[tableName].needsUpdate = false;
-  this.dbService_.setHashCompleter(tableName, this.hashCompleter_);
 
   return true;
 }
