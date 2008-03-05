@@ -77,7 +77,7 @@ protected:
   nsCOMPtr<nsIInputStreamPump> mPump;
   nsCOMPtr<nsIStreamListener>  mListener;
 
-  nsresult ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, nsCString &aContentType, nsCString &aFileExtension);
+  nsresult ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, nsACString &aContentType, nsACString &aFileExtension);
   nsresult MakeInputStream(nsIInputStream** _retval, PRBool nonBlocking);
 };
 

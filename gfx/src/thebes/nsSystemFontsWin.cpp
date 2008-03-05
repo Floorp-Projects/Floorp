@@ -44,12 +44,18 @@
 
 
 nsresult nsSystemFontsWin::CopyLogFontToNSFont(HDC* aHDC, const LOGFONT* ptrLogFont,
-                                               nsString *aFontName,
-                                               gfxFontStyle *aFontStyle) const
+					       nsString *aFontName,
+                                               gfxFontStyle *aFontStyle,
+                                               PRBool aIsWide) const
 {
   PRUnichar name[LF_FACESIZE];
   name[0] = 0;
+  if (aIsWide)
     memcpy(name, ptrLogFont->lfFaceName, LF_FACESIZE*2);
+  else {
+    MultiByteToWideChar(CP_ACP, 0, ptrLogFont->lfFaceName,
+      strlen(ptrLogFont->lfFaceName) + 1, name, sizeof(name)/sizeof(name[0]));
+  }
   *aFontName = name;
 
   // Do Style

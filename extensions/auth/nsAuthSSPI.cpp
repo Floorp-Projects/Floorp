@@ -52,8 +52,6 @@
 #include "nsNetCID.h"
 #include "nsCOMPtr.h"
 
-#include <windows.h>
-
 #define SEC_SUCCESS(Status) ((Status) >= 0)
 
 #ifndef KERB_WRAP_NO_ENCRYPT
@@ -105,25 +103,25 @@ static const char *MapErrorCode(int rc)
 //-----------------------------------------------------------------------------
 
 static HINSTANCE                 sspi_lib; 
-static PSecurityFunctionTableW    sspi;
+static PSecurityFunctionTable    sspi;
 
 static nsresult
 InitSSPI()
 {
-    PSecurityFunctionTableW (*initFun)(void);
+    PSecurityFunctionTable (*initFun)(void);
 
     LOG(("  InitSSPI\n"));
 
-    sspi_lib = LoadLibraryW(L"secur32.dll");
+    sspi_lib = LoadLibrary("secur32.dll");
     if (!sspi_lib) {
-      sspi_lib = LoadLibraryW(L"security.dll");
+        sspi_lib = LoadLibrary("security.dll");
         if (!sspi_lib) {
             LOG(("SSPI library not found"));
             return NS_ERROR_UNEXPECTED;
         }
     }
 
-    initFun = (PSecurityFunctionTableW (*)(void))
+    initFun = (PSecurityFunctionTable (*)(void))
             GetProcAddress(sspi_lib, "InitSecurityInterfaceA");
     if (!initFun) {
         LOG(("InitSecurityInterfaceA not found"));
@@ -244,9 +242,11 @@ nsAuthSSPI::Init(const char *serviceName,
         if (NS_FAILED(rv))
             return rv;
     }
-    SEC_WCHAR *package;
 
-    package = (SEC_WCHAR *) pTypeName[(int)mPackage];
+    SEC_CHAR *package;
+
+    package = (SEC_CHAR *) pTypeName[(int)mPackage];
+
     if (mPackage != PACKAGE_TYPE_NTLM)
     {
         rv = MakeSN(serviceName, mServiceName);
@@ -257,8 +257,8 @@ nsAuthSSPI::Init(const char *serviceName,
 
     SECURITY_STATUS rc;
 
-    PSecPkgInfoW pinfo;
-    rc = (sspi->QuerySecurityPackageInfoW)(package, &pinfo);
+    PSecPkgInfo pinfo;
+    rc = (sspi->QuerySecurityPackageInfo)(package, &pinfo);
     if (rc != SEC_E_OK) {
         LOG(("%s package not found\n", package));
         return NS_ERROR_UNEXPECTED;
@@ -268,7 +268,7 @@ nsAuthSSPI::Init(const char *serviceName,
 
     TimeStamp useBefore;
 
-    rc = (sspi->AcquireCredentialsHandleW)(NULL,
+    rc = (sspi->AcquireCredentialsHandle)(NULL,
                                           package,
                                           SECPKG_CRED_OUTBOUND,
                                           NULL,
@@ -336,13 +336,15 @@ nsAuthSSPI::GetNextToken(const void *inToken,
     if (!ob.pvBuffer)
         return NS_ERROR_OUT_OF_MEMORY;
     memset(ob.pvBuffer, 0, ob.cbBuffer);
-    SEC_WCHAR *sn;
+
+    SEC_CHAR *sn;
+
     if (mPackage == PACKAGE_TYPE_NTLM)
         sn = NULL;
     else
-        sn = (SEC_WCHAR *) mServiceName.get();
+        sn = (SEC_CHAR *) mServiceName.get();
 
-    rc = (sspi->InitializeSecurityContextW)(&mCred,
+    rc = (sspi->InitializeSecurityContext)(&mCred,
                                            ctxIn,
                                            sn,
                                            ctxReq,
@@ -459,7 +461,7 @@ nsAuthSSPI::Wrap(const void *inToken,
     secBuffers bufs;
     SecPkgContext_Sizes sizes;
 
-    rc = (sspi->QueryContextAttributesW)(
+    rc = (sspi->QueryContextAttributes)(
          &mCtxt,
          SECPKG_ATTR_SIZES,
          &sizes);

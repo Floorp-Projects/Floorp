@@ -70,7 +70,7 @@
 
 
 // oddly, this isn't in the MSVC headers anywhere.
-UINT nsClipboard::CF_HTML = ::RegisterClipboardFormatW(L"HTML Format");
+UINT nsClipboard::CF_HTML = ::RegisterClipboardFormat("HTML Format");
 
 
 //-------------------------------------------------------------------------
@@ -111,9 +111,7 @@ UINT nsClipboard::GetFormat(const char* aMimeStr)
   else if (strcmp(aMimeStr, kNativeHTMLMime) == 0)
     format = CF_HTML;
   else
-    format = ::RegisterClipboardFormatW(NS_ConvertASCIItoUTF16(aMimeStr).get());
-
-
+    format = ::RegisterClipboardFormat(aMimeStr);
 
   return format;
 }
@@ -318,7 +316,7 @@ nsresult nsClipboard::GetGlobalData(HGLOBAL aHGBL, void ** aData, PRUint32 * aLe
     );
 
     // Display the string.
-    MessageBoxW( NULL, (LPCWSTR)lpMsgBuf, L"GetLastError", MB_OK|MB_ICONINFORMATION );
+    MessageBox( NULL, (const char *)lpMsgBuf, "GetLastError", MB_OK|MB_ICONINFORMATION );
 
     // Free the buffer.
     LocalFree( lpMsgBuf );    
