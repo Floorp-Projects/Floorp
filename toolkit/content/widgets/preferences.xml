@@ -396,7 +396,8 @@
             else
               element.setAttribute(attribute, value);
           }
-          if (aElement.localName == "checkbox")
+          if (aElement.localName == "checkbox" ||
+              aElement.localName == "listitem")
             setValue(aElement, "checked", val);
           else if (aElement.localName == "colorpicker")
             setValue(aElement, "color", val);
@@ -444,7 +445,8 @@
               return element[attribute];
             return element.getAttribute(attribute);
           }
-          if (aElement.localName == "checkbox")
+          if (aElement.localName == "checkbox" ||
+              aElement.localName == "listitem")
             var value = getValue(aElement, "checked");
           else if (aElement.localName == "colorpicker")
             value = getValue(aElement, "color");
