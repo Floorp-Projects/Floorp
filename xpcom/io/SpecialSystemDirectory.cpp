@@ -127,7 +127,7 @@ NS_COM void StartupSpecialSystemDirectory()
 #if defined (XP_WIN) && !defined (WINCE)
     // SHGetKnownFolderPath is only available on Windows Vista
     // so that we need to use GetProcAddress to get the pointer.
-    gShell32DLLInst = LoadLibraryW(L"Shell32.dll");
+    gShell32DLLInst = LoadLibrary("Shell32.dll");
     if(gShell32DLLInst)
     {
         gGetKnownFolderPath = (nsGetKnownFolderPath) 

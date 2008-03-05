@@ -396,8 +396,8 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   rv = appHelper->AppendNative(NS_LITERAL_CSTRING("helper.exe"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoString appHelperPath;
-  rv = appHelper->GetPath(appHelperPath);
+  nsCAutoString appHelperPath;
+  rv = appHelper->GetNativePath(appHelperPath);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aForAllUsers) {
@@ -406,10 +406,10 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
     appHelperPath.AppendLiteral(" /SetAsDefaultAppUser");
   }
 
-  STARTUPINFOW si = {sizeof(si), 0};
+  STARTUPINFO si = {sizeof(si), 0};
   PROCESS_INFORMATION pi = {0};
 
-  BOOL ok = CreateProcessW(NULL, (LPWSTR)appHelperPath.get(), NULL, NULL,
+  BOOL ok = CreateProcess(NULL, (LPSTR)appHelperPath.get(), NULL, NULL,
                           FALSE, 0, NULL, NULL, &si, &pi);
 
   if (!ok)
