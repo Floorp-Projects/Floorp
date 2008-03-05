@@ -5100,7 +5100,7 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
             ndefs = OBJ_BLOCK_COUNT(cx, obj);
         }
 
-        LOCAL_ASSERT(pcdepth + ndefs <= script->depth);
+        LOCAL_ASSERT((uintN)(pcdepth + ndefs) <= script->depth);
         if (pcstack) {
             intN i;
             jsbytecode *pc2;
