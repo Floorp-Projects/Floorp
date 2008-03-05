@@ -143,10 +143,13 @@ FORCE_STATIC_LIB = 1
 FORCE_USE_PIC	= 1
 
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-CXXFLAGS         += $(MOZ_GTK2_CFLAGS)
 EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS)
 endif
 
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_COM
+
+ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
+CXXFLAGS        += $(MOZ_GTK2_CFLAGS)
+endif
