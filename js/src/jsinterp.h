@@ -496,6 +496,15 @@ extern JSBool
 js_OnUnknownMethod(JSContext *cx, jsval *vp);
 
 /*
+ * Find the results of incrementing or decrementing *vp. For pre-increments,
+ * both *vp and *vp2 will contain the result on return. For post-increments,
+ * vp will contain the original value converted to a number and vp2 will get
+ * the result. Both vp and vp2 must be roots.
+ */
+extern JSBool
+js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, jsval *vp, jsval *vp2);
+
+/*
  * JS_OPMETER helper functions.
  */
 extern void
