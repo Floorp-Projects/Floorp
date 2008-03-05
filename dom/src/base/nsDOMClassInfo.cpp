@@ -62,9 +62,11 @@
 
 // JavaScript includes
 #include "jsapi.h"
-#include "jsnum.h"
-#include "jsdbgapi.h"
+#include "jsprvtd.h"    // we are using private JS typedefs...
 #include "jscntxt.h"
+#include "jsdbgapi.h"
+#include "jsnum.h"
+#include "jsscope.h"
 
 // General helper includes
 #include "nsGlobalWindow.h"
