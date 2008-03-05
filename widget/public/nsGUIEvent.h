@@ -1244,7 +1244,7 @@ enum nsDragDropEventStatus {
 #define NS_TEXTRANGE_CONVERTEDTEXT				0x04
 #define NS_TEXTRANGE_SELECTEDCONVERTEDTEXT		0x05
 
-static PRBool NS_TargetUnfocusedEventToLastFocusedContent(nsEvent* aEvent)
+inline PRBool NS_TargetUnfocusedEventToLastFocusedContent(nsEvent* aEvent)
 {
 #if defined(MOZ_X11) || defined(XP_MACOSX)
   // bug 52416 (MOZ_X11)
