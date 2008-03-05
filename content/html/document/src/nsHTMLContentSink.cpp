@@ -1570,11 +1570,6 @@ HTMLContentSink::~HTMLContentSink()
   NS_IF_RELEASE(mBody);
   NS_IF_RELEASE(mRoot);
 
-  if (mDocument) {
-    // Remove ourselves just to be safe, though we really should have
-    // been removed in DidBuildModel if everything worked right.
-    mDocument->RemoveObserver(this);
-  }
   NS_IF_RELEASE(mHTMLDocument);
 
   if (mNotificationTimer) {
@@ -1615,22 +1610,16 @@ HTMLContentSink::~HTMLContentSink()
 }
 
 #if DEBUG
-NS_IMPL_ISUPPORTS_INHERITED6(HTMLContentSink,
+NS_IMPL_ISUPPORTS_INHERITED3(HTMLContentSink,
                              nsContentSink,
                              nsIContentSink,
                              nsIHTMLContentSink,
-                             nsITimerCallback,
-                             nsIDocumentObserver,
-                             nsIMutationObserver,
                              nsIDebugDumpContent)
 #else
-NS_IMPL_ISUPPORTS_INHERITED5(HTMLContentSink,
+NS_IMPL_ISUPPORTS_INHERITED2(HTMLContentSink,
                              nsContentSink,
                              nsIContentSink,
-                             nsIHTMLContentSink,
-                             nsITimerCallback,
-                             nsIDocumentObserver,
-                             nsIMutationObserver)
+                             nsIHTMLContentSink)
 #endif
 
 static PRBool
