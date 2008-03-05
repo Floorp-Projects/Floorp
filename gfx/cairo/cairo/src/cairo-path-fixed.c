@@ -721,3 +721,108 @@ _cairo_path_fixed_interpret_flat (cairo_path_fixed_t			*path,
 					_cpf_close_path,
 					&flattener);
 }
+
+cairo_bool_t
+_cairo_path_fixed_is_empty (cairo_path_fixed_t *path)
+{
+    if (path->buf_head.base.num_ops == 0)
+	return TRUE;
+
+    return FALSE;
+}
+
+/**
+ * Check whether the given path contains a single rectangle.
+ */
+cairo_bool_t
+_cairo_path_fixed_is_box (cairo_path_fixed_t *path,
+			  cairo_box_t *box)
+{
+    cairo_path_buf_t *buf = &path->buf_head.base;
+
+    /* We can't have more than one buf for this check */
+    if (buf->next != NULL)
+	return FALSE;
+
+    /* Do we have the right number of ops? */
+    if (buf->num_ops != 5 && buf->num_ops != 6)
+	return FALSE;
+
+    /* Check whether the ops are those that would be used for a rectangle */
+    if (buf->op[0] != CAIRO_PATH_OP_MOVE_TO ||
+	buf->op[1] != CAIRO_PATH_OP_LINE_TO ||
+	buf->op[2] != CAIRO_PATH_OP_LINE_TO ||
+	buf->op[3] != CAIRO_PATH_OP_LINE_TO)
+    {
+	return FALSE;
+    }
+
+    /* Now, there are choices. The rectangle might end with a LINE_TO
+     * (to the original point), but this isn't required. If it
+     * doesn't, then it must end with a CLOSE_PATH. */
+    if (buf->op[4] == CAIRO_PATH_OP_LINE_TO) {
+	if (buf->points[4].x != buf->points[0].x ||
+	    buf->points[4].y != buf->points[0].y)
+	    return FALSE;
+    } else if (buf->op[4] != CAIRO_PATH_OP_CLOSE_PATH) {
+	return FALSE;
+    }
+
+    if (buf->num_ops == 6) {
+	/* A trailing CLOSE_PATH or MOVE_TO is ok */
+	if (buf->op[5] != CAIRO_PATH_OP_MOVE_TO &&
+	    buf->op[5] != CAIRO_PATH_OP_CLOSE_PATH)
+	    return FALSE;
+    }
+
+    /* Ok, we may have a box, if the points line up */
+    if (buf->points[0].y == buf->points[1].y &&
+	buf->points[1].x == buf->points[2].x &&
+	buf->points[2].y == buf->points[3].y &&
+	buf->points[3].x == buf->points[0].x)
+    {
+	if (box) {
+	    box->p1 = buf->points[0];
+	    box->p2 = buf->points[2];
+	}
+	return TRUE;
+    }
+
+    if (buf->points[0].x == buf->points[1].x &&
+	buf->points[1].y == buf->points[2].y &&
+	buf->points[2].x == buf->points[3].x &&
+	buf->points[3].y == buf->points[0].y)
+    {
+	if (box) {
+	    box->p1 = buf->points[0];
+	    box->p2 = buf->points[2];
+	}
+	return TRUE;
+    }
+
+    return FALSE;
+}
+
+/**
+ * Check whether the given path contains a single rectangle
+ * that is logically equivalent to:
+ *   cairo_move_to (cr, x, y);
+ *   cairo_rel_line_to (cr, width, 0);
+ *   cairo_rel_line_to (cr, 0, height);
+ *   cairo_rel_line_to (cr, -width, 0);
+ *   cairo_close_path (cr);
+ */
+cairo_bool_t
+_cairo_path_fixed_is_rectangle (cairo_path_fixed_t *path,
+				cairo_box_t        *box)
+{
+    cairo_path_buf_t *buf = &path->buf_head.base;
+
+    if (!_cairo_path_fixed_is_box (path, box))
+	return FALSE;
+
+    if (buf->points[0].y == buf->points[1].y)
+	return TRUE;
+
+    return FALSE;
+}

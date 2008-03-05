@@ -1049,7 +1049,7 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 	}
 
 	/* "Ink" extents should skip "invisible" glyphs */
-	if (scaled_glyph->metrics.width == 0 && scaled_glyph->metrics.height == 0)
+	if (scaled_glyph->metrics.width == 0 || scaled_glyph->metrics.height == 0)
 	    continue;
 
 	left = scaled_glyph->metrics.x_bearing + glyphs[i].x;
@@ -1089,7 +1089,7 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 	x0 = glyphs[0].x;
 	y0 = glyphs[0].y;
 
-	/* scaled_glyphs contains the glyph for num_glyphs - 1 already. */
+	/* scaled_glyph contains the glyph for num_glyphs - 1 already. */
 	x1 = glyphs[num_glyphs - 1].x + scaled_glyph->metrics.x_advance;
 	y1 = glyphs[num_glyphs - 1].y + scaled_glyph->metrics.y_advance;
 
