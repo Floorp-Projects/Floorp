@@ -94,6 +94,13 @@ _cairo_win32_tmpfile (void);
 #define M_PI 3.14159265358979323846
 #endif
 
+#ifndef NDEBUG
+#undef assert
+#define assert(expr) \
+    do { if (!(expr)) fprintf(stderr, "Assertion failed at %s:%d: %s\n", \
+          __FILE__, __LINE__, #expr); } while (0)
+#endif
+
 #ifndef M_SQRT2
 #define M_SQRT2 1.41421356237309504880
 #endif

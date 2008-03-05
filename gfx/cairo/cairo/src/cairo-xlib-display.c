@@ -64,6 +64,8 @@ struct _cairo_xlib_job {
 
 static cairo_xlib_display_t *_cairo_xlib_display_list;
 
+static int buggy_repeat_force = -1;
+
 static void
 _cairo_xlib_call_close_display_hooks (cairo_xlib_display_t *display)
 {
@@ -301,6 +303,17 @@ _cairo_xlib_display_get (Display *dpy)
 	if (VendorRelease (dpy) <= 40500000)
 	    display->buggy_repeat = TRUE;
     }
+
+    /* XXX workaround; see https://bugzilla.mozilla.org/show_bug.cgi?id=413583 */
+    if (buggy_repeat_force == -1) {
+        if (getenv("MOZ_CAIRO_NO_BUGGY_REPEAT"))
+            buggy_repeat_force = 0;
+        else
+            buggy_repeat_force = 1;
+    }
+
+    if (buggy_repeat_force)
+        display->buggy_repeat = TRUE;
 
     display->next = _cairo_xlib_display_list;
     _cairo_xlib_display_list = display;
