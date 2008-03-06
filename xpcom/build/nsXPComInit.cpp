@@ -136,6 +136,7 @@ NS_DECL_CLASSINFO(nsStringInputStream)
 #endif
 
 #include "nsSystemInfo.h"
+#include "nsMemoryReporterManager.h"
 
 #include <locale.h>
 
@@ -228,6 +229,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacUtilsImpl)
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSystemInfo, Init)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMemoryReporterManager)
 
 static NS_METHOD
 nsThreadManagerGetSingleton(nsISupports* outer,
@@ -444,6 +447,8 @@ static const nsModuleComponentInfo components[] = {
 #endif
 
     COMPONENT(SYSTEMINFO, nsSystemInfoConstructor),
+#define NS_MEMORY_REPORTER_MANAGER_CLASSNAME "Memory Reporter Manager"
+    COMPONENT(MEMORY_REPORTER_MANAGER, nsMemoryReporterManagerConstructor),
 };
 
 #undef COMPONENT
