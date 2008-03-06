@@ -72,6 +72,7 @@
 #include "nsIFrame.h"
 #include "nsIViewManager.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIScrollableFrame.h"
 
 #include "nsXPIDLString.h"
 #include "nsUnicharUtils.h"
@@ -2670,6 +2671,21 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
         // This is an ARIA tree that doesn't use owns, so we need to get the parent the hard way
         nsAccUtils::GetARIATreeItemParent(this, content, aRelated);
         return NS_OK;
+      }
+      // If accessible is in its own Window then we should provide NODE_CHILD_OF relation
+      // so that MSAA clients can easily get to true parent instead of getting to oleacc's
+      // ROLE_WINDOW accessible which will prevent us from going up further (because it is
+      // system generated and has no idea about the hierarchy above it).
+      nsIFrame *frame = GetFrame();
+      if (frame) {
+        nsIView *view = frame->GetViewExternal();
+        if (view) {
+          nsIScrollableFrame *scrollFrame = nsnull;
+          CallQueryInterface(frame, &scrollFrame);
+          if (scrollFrame || view->GetWidget()) {
+            return GetParent(aRelated);
+          }
+        }
       }
       break;
     }
