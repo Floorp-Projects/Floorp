@@ -442,7 +442,7 @@ protected:
       FINISH:
         if (perDevPixel)
             *perDevPixel = devPixel;
-        if (cssPixel)
+        if (perCSSPixel)
             *perCSSPixel = cssPixel;
     }
 };
