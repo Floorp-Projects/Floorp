@@ -66,6 +66,7 @@ CPPSRCS		= \
 		nsSystemInfo.cpp \
 		nsCycleCollector.cpp \
 		nsStackWalk.cpp \
+		nsMemoryReporterManager.cpp \
 		$(NULL)
 
 ifdef GC_LEAK_DETECTOR
@@ -107,7 +108,7 @@ SDK_XPIDLSRCS   = \
 		nsISupports.idl		   \
 		nsITraceRefcnt.idl         \
 		nsIWeakReference.idl	   \
-		nsrootidl.idl		   \
+		nsrootidl.idl
 
 SDK_HEADERS     = \
 		nsError.h \
@@ -126,6 +127,7 @@ XPIDLSRCS	= \
 		nsIVersionComparator.idl \
 		nsIUUIDGenerator.idl \
 		nsIMutable.idl \
+		nsIMemoryReporter.idl \
 		$(NULL)
 
 ifdef GC_LEAK_DETECTOR
