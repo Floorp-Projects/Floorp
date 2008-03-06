@@ -69,6 +69,7 @@ class nsSVGSVGElement;
 class nsAttrValue;
 class gfxContext;
 class gfxASurface;
+class gfxPattern;
 class nsIRenderingContext;
 class gfxImageSurface;
 struct gfxRect;
@@ -409,6 +410,10 @@ public:
   static void CompositeSurfaceMatrix(gfxContext *aContext,
                                      gfxASurface *aSurface,
                                      nsIDOMSVGMatrix *aCTM, float aOpacity);
+
+  static void CompositePatternMatrix(gfxContext *aContext,
+                                     gfxPattern *aPattern,
+                                     nsIDOMSVGMatrix *aCTM, float aWidth, float aHeight, float aOpacity);
 
   static void SetClipRect(gfxContext *aContext,
                           nsIDOMSVGMatrix *aCTM, float aX, float aY,

@@ -259,13 +259,6 @@ nsThebesImage::Optimize(nsIDeviceContext* aContext)
 
                 mSinglePixel = PR_TRUE;
 
-                // XXX we can't do this until we either teach anyone
-                // who calls GetSurface() about single-color stuff,
-                // or until we make GetSurface() create a new temporary
-                // surface to return (and that callers understand that
-                // modifying that surface won't modify the image).
-                // Current users are drag & drop and clipboard.
-#if 0
                 // blow away the older surfaces, to release data
 
                 mImageSurface = nsnull;
@@ -275,7 +268,6 @@ nsThebesImage::Optimize(nsIDeviceContext* aContext)
 #endif
 #ifdef XP_MACOSX
                 mQuartzSurface = nsnull;
-#endif
 #endif
                 return NS_OK;
             }
@@ -391,7 +383,15 @@ nsThebesImage::LockImagePixels(PRBool aMaskPixels)
         else
             context.SetSource(mOptSurface);
         context.Paint();
+
+#ifdef XP_WIN
+        mWinSurface = nsnull;
+#endif
+#ifdef XP_MACOSX
+        mQuartzSurface = nsnull;
+#endif
     }
+
     return NS_OK;
 }
 
