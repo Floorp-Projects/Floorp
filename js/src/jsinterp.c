@@ -1769,26 +1769,11 @@ js_StrictlyEqual(JSContext *cx, jsval lval, jsval rval)
             !JSVAL_IS_NULL(lval) &&
             !JSVAL_IS_NULL(rval)) {
             JSObject *lobj, *robj;
-            JSClass *lclasp, *rclasp;
 
-            lobj = JSVAL_TO_OBJECT(lval);
-            robj = JSVAL_TO_OBJECT(rval);
-            lclasp = OBJ_GET_CLASS(cx, lobj);
-            rclasp = OBJ_GET_CLASS(cx, robj);
-            if (lclasp->flags & JSCLASS_IS_EXTENDED) {
-                JSExtendedClass *xclasp = (JSExtendedClass *) lclasp;
-                if (xclasp->wrappedObject &&
-                    (lobj = xclasp->wrappedObject(cx, lobj))) {
-                    lval = OBJECT_TO_JSVAL(lobj);
-                }
-            }
-            if (rclasp->flags & JSCLASS_IS_EXTENDED) {
-                JSExtendedClass *xclasp = (JSExtendedClass *) rclasp;
-                if (xclasp->wrappedObject &&
-                    (robj = xclasp->wrappedObject(cx, robj))) {
-                    rval = OBJECT_TO_JSVAL(robj);
-                }
-            }
+            lobj = js_GetWrappedObject(cx, JSVAL_TO_OBJECT(lval));
+            robj = js_GetWrappedObject(cx, JSVAL_TO_OBJECT(rval));
+            lval = OBJECT_TO_JSVAL(lobj);
+            rval = OBJECT_TO_JSVAL(robj);
         }
         return lval == rval;
     }

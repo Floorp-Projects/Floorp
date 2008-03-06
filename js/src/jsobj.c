@@ -1010,25 +1010,14 @@ obj_toString(JSContext *cx, uintN argc, jsval *vp)
     JSObject *obj;
     jschar *chars;
     size_t nchars;
-    JSClass *clasp;
     const char *clazz, *prefix;
     JSString *str;
 
     obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
         return JS_FALSE;
-    clasp = OBJ_GET_CLASS(cx, obj);
-    if (clasp->flags & JSCLASS_IS_EXTENDED) {
-        JSExtendedClass *xclasp;
-        JSObject *obj2;
-
-        if ((xclasp = (JSExtendedClass *)clasp)->wrappedObject &&
-            (obj2 = xclasp->wrappedObject(cx, obj))) {
-            obj = obj2;
-            clasp = OBJ_GET_CLASS(cx, obj);
-        }
-    }
-    clazz = clasp->name;
+    obj = js_GetWrappedObject(cx, obj);
+    clazz = OBJ_GET_CLASS(cx, obj)->name;
     nchars = 9 + strlen(clazz);         /* 9 for "[object ]" */
     chars = (jschar *) JS_malloc(cx, (nchars + 1) * sizeof(jschar));
     if (!chars)
@@ -1174,16 +1163,10 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * the former indirect case.
      */
     scopeobj = OBJ_GET_PARENT(cx, obj);
-    if (scopeobj &&
-        ((clasp = OBJ_GET_CLASS(cx, obj))->flags & JSCLASS_IS_EXTENDED)) {
-        JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
-        if (xclasp->wrappedObject) {
-            JSObject *wrapped = xclasp->wrappedObject(cx, obj);
-            if (wrapped)
-                scopeobj = OBJ_GET_PARENT(cx, wrapped);
-        }
+    if (scopeobj) {
+        scopeobj = js_GetWrappedObject(cx, obj);
+        scopeobj = OBJ_GET_PARENT(cx, scopeobj);
     }
-
     if (indirectCall || scopeobj) {
         uintN flags = scopeobj
                       ? JSREPORT_ERROR
@@ -5118,6 +5101,23 @@ js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     STOBJ_SET_SLOT(obj, slot, v);
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_TRUE;
+}
+
+JSObject *
+js_GetWrappedObject(JSContext *cx, JSObject *obj)
+{
+    JSClass *clasp;
+
+    clasp = OBJ_GET_CLASS(cx, obj);
+    if (clasp->flags & JSCLASS_IS_EXTENDED) {
+        JSExtendedClass *xclasp;
+        JSObject *obj2;
+
+        xclasp = (JSExtendedClass *)clasp;
+        if (xclasp->wrappedObject && (obj2 = xclasp->wrappedObject(cx, obj)))
+            return obj2;
+    }
+    return obj;
 }
 
 #ifdef DEBUG
