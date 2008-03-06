@@ -3434,7 +3434,7 @@ DeepCopyInLRS(JSContext *cx, JSXML *xml, uintN flags)
     /* Our caller must be protecting newborn objects. */
     JS_ASSERT(cx->localRootStack);
 
-    JS_CHECK_RECURSION(cx, return JS_FALSE);
+    JS_CHECK_RECURSION(cx, return NULL);
 
     copy = js_NewXML(cx, (JSXMLClass) xml->xml_class);
     if (!copy)

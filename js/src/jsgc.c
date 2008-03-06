@@ -1022,8 +1022,8 @@ InitGCArenaLists(JSRuntime *rt)
         thingSize = GC_FREELIST_NBYTES(i);
         JS_ASSERT((size_t)(uint16)thingSize == thingSize);
         arenaList->last = NULL;
-        arenaList->lastCount = THINGS_PER_ARENA(thingSize);
-        arenaList->thingSize = (uint16)thingSize;
+        arenaList->lastCount = (uint16) THINGS_PER_ARENA(thingSize);
+        arenaList->thingSize = (uint16) thingSize;
         arenaList->freeList = NULL;
     }
     rt->gcDoubleArenaList.first = NULL;
@@ -3346,7 +3346,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
                  */
                 freeList = arenaList->freeList;
                 if (a == arenaList->last)
-                    arenaList->lastCount = indexLimit;
+                    arenaList->lastCount = (uint16) indexLimit;
                 *ap = a->prev;
                 a->prev = emptyArenas;
                 emptyArenas = a;
