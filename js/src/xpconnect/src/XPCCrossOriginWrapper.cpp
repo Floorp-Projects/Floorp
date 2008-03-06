@@ -381,13 +381,6 @@ WrapSameOriginProp(JSContext *cx, JSObject *outerObj, jsval *vp)
     return XPC_XOW_WrapObject(cx, STOBJ_GET_PARENT(outerObj), vp);
   }
 
-  if (JS_ObjectIsFunction(cx, wrappedObj) &&
-      JS_GetFunctionNative(cx, reinterpret_cast<JSFunction *>
-                                               (xpc_GetJSPrivate(wrappedObj))) ==
-      XPCWrapper::sEvalNative) {
-    return XPC_XOW_WrapFunction(cx, outerObj, wrappedObj, vp);
-  }
-
   return JS_TRUE;
 }
 
