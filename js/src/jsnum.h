@@ -197,16 +197,15 @@ char *
 js_NumberToCString(JSContext *cx, jsdouble d, char *buf, size_t bufSize);
 
 /*
- * Convert a value to a number, returning false after reporting any error,
- * otherwise returning true with *dp set.
+ * Convert a value to a number. On exit JSVAL_IS_NULL(*vp) iff there was an
+ * error.
  */
-extern JSBool
-js_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp);
+extern jsdouble
+js_ValueToNumber(JSContext *cx, jsval* vp);
 
 /*
  * Convert a value to an int32 or uint32, according to the ECMA rules for
- * ToInt32 and ToUint32. On failure the functions sets *vp to JSVAL_NULL. Any
- * other value in *vp on exit indicates a success.
+ * ToInt32 and ToUint32. On exit JSVAL_IS_NULL(*vp) iff there was an error.
  */
 extern int32
 js_ValueToECMAInt32(JSContext *cx, jsval *vp);
@@ -224,24 +223,19 @@ extern uint32
 js_DoubleToECMAUint32(jsdouble d);
 
 /*
- * Convert a value or a double to a uint32, according to the ECMA rules
- * for ToUint32.
- */
-
-/*
  * Convert a value to a number, then to an int32 if it fits by rounding to
  * nearest; but failing with an error report if the double is out of range
- * or unordered.
+ * or unordered. On exit JSVAL_IS_NULL(*vp) iff there was an error.
  */
-extern JSBool
-js_ValueToInt32(JSContext *cx, jsval v, int32 *ip);
+extern int32
+js_ValueToInt32(JSContext *cx, jsval *vp);
 
 /*
  * Convert a value to a number, then to a uint16 according to the ECMA rules
- * for ToUint16.
+ * for ToUint16. On exit JSVAL_IS_NULL(*vp) iff there was an error.
  */
-extern JSBool
-js_ValueToUint16(JSContext *cx, jsval v, uint16 *ip);
+extern uint16
+js_ValueToUint16(JSContext *cx, jsval *vp);
 
 /*
  * Convert a jsdouble to an integral number, stored in a jsdouble.

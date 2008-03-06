@@ -5482,7 +5482,7 @@ xml_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
                 } else if (JSVAL_IS_STRING(v)) {
                     *bp = js_EqualStrings(str, JSVAL_TO_STRING(v));
                 } else {
-                    ok = js_ValueToNumber(cx, STRING_TO_JSVAL(str), &d);
+                    ok = JS_ValueToNumber(cx, STRING_TO_JSVAL(str), &d);
                     if (ok) {
                         d2 = JSVAL_IS_INT(v) ? JSVAL_TO_INT(v)
                                              : *JSVAL_TO_DOUBLE(v);

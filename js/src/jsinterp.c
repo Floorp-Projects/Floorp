@@ -2022,7 +2022,8 @@ js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, jsval *vp, jsval *vp2)
     } else if (JSVAL_IS_INT(v)) {
         d = JSVAL_TO_INT(v);
     } else {
-        if (!js_ValueToNumber(cx, v, &d))
+        d = js_ValueToNumber(cx, vp);
+        if (JSVAL_IS_NULL(*vp))
             return JS_FALSE;
 
         /* Store the result of v conversion back in vp for post increments. */
@@ -2255,7 +2256,7 @@ js_DumpOpMeters()
         jsval v_;                                                             \
                                                                               \
         v_ = FETCH_OPND(n);                                                   \
-        VALUE_TO_NUMBER(cx, v_, d);                                           \
+        VALUE_TO_NUMBER(cx, n, v_, d);                                        \
     JS_END_MACRO
 
 #define FETCH_INT(cx, n, i)                                                   \
@@ -2268,7 +2269,7 @@ js_DumpOpMeters()
         } else {                                                              \
             SAVE_SP_AND_PC(fp);                                               \
             i = js_ValueToECMAInt32(cx, &sp[n]);                              \
-            if (sp[n] == JSVAL_NULL)                                          \
+            if (JSVAL_IS_NULL(sp[n]))                                         \
                 goto error;                                                   \
         }                                                                     \
     JS_END_MACRO
@@ -2283,7 +2284,7 @@ js_DumpOpMeters()
         } else {                                                              \
             SAVE_SP_AND_PC(fp);                                               \
             ui = js_ValueToECMAUint32(cx, &sp[n]);                            \
-            if (sp[n] == JSVAL_NULL)                                          \
+            if (JSVAL_IS_NULL(sp[n]))                                         \
                 goto error;                                                   \
         }                                                                     \
     JS_END_MACRO
@@ -2292,15 +2293,17 @@ js_DumpOpMeters()
  * Optimized conversion macros that test for the desired type in v before
  * homing sp and calling a conversion function.
  */
-#define VALUE_TO_NUMBER(cx, v, d)                                             \
+#define VALUE_TO_NUMBER(cx, n, v, d)                                          \
     JS_BEGIN_MACRO                                                            \
+        JS_ASSERT(v == sp[n]);                                                \
         if (JSVAL_IS_INT(v)) {                                                \
             d = (jsdouble)JSVAL_TO_INT(v);                                    \
         } else if (JSVAL_IS_DOUBLE(v)) {                                      \
             d = *JSVAL_TO_DOUBLE(v);                                          \
         } else {                                                              \
             SAVE_SP_AND_PC(fp);                                               \
-            if (!js_ValueToNumber(cx, v, &d))                                 \
+            d = js_ValueToNumber(cx, &sp[n]);                                 \
+            if (JSVAL_IS_NULL(sp[n]))                                         \
                 goto error;                                                   \
         }                                                                     \
     JS_END_MACRO
@@ -3448,8 +3451,8 @@ interrupt:
                 str2 = JSVAL_TO_STRING(rval);                                 \
                 cond = js_CompareStrings(str, str2) OP 0;                     \
             } else {                                                          \
-                VALUE_TO_NUMBER(cx, lval, d);                                 \
-                VALUE_TO_NUMBER(cx, rval, d2);                                \
+                VALUE_TO_NUMBER(cx, -2, lval, d);                             \
+                VALUE_TO_NUMBER(cx, -1, rval, d2);                            \
                 cond = JSDOUBLE_COMPARE(d, OP, d2, JS_FALSE);                 \
             }                                                                 \
         }                                                                     \
@@ -3537,8 +3540,8 @@ interrupt:
                     str2 = JSVAL_TO_STRING(rval);                             \
                     cond = js_EqualStrings(str, str2) OP JS_TRUE;             \
                 } else {                                                      \
-                    VALUE_TO_NUMBER(cx, lval, d);                             \
-                    VALUE_TO_NUMBER(cx, rval, d2);                            \
+                    VALUE_TO_NUMBER(cx, -2, lval, d);                         \
+                    VALUE_TO_NUMBER(cx, -1, rval, d2);                        \
                     cond = JSDOUBLE_COMPARE(d, OP, d2, IFNAN);                \
                 }                                                             \
             }                                                                 \
@@ -3628,7 +3631,7 @@ interrupt:
         } else {                                                              \
             SAVE_SP_AND_PC(fp);                                               \
             shift = js_ValueToECMAInt32(cx, &sp[-1]);                         \
-            if (sp[-1] == JSVAL_NULL)                                         \
+            if (JSVAL_IS_NULL(sp[-1]))                                        \
                 goto error;                                                   \
         }                                                                     \
         shift &= 31;                                                          \
@@ -3709,8 +3712,8 @@ interrupt:
                     sp--;
                     STORE_OPND(-1, STRING_TO_JSVAL(str));
                 } else {
-                    VALUE_TO_NUMBER(cx, lval, d);
-                    VALUE_TO_NUMBER(cx, rval, d2);
+                    VALUE_TO_NUMBER(cx, -2, lval, d);
+                    VALUE_TO_NUMBER(cx, -1, rval, d2);
                     d += d2;
                     sp--;
                     STORE_NUMBER(cx, -1, d);
@@ -3797,12 +3800,16 @@ interrupt:
                 i = -i;
                 JS_ASSERT(INT_FITS_IN_JSVAL(i));
                 rval = INT_TO_JSVAL(i);
+                STORE_OPND(-1, rval);
             } else {
                 SAVE_SP_AND_PC(fp);
-                if (JSVAL_IS_DOUBLE(rval))
+                if (JSVAL_IS_DOUBLE(rval)) {
                     d = *JSVAL_TO_DOUBLE(rval);
-                else if (!js_ValueToNumber(cx, rval, &d))
-                    goto error;
+                } else {
+                    d = js_ValueToNumber(cx, &sp[-1]);
+                    if (JSVAL_IS_NULL(sp[-1]))
+                        goto error;
+                }
 #ifdef HPUX
                 /*
                  * Negation of a zero doesn't produce a negative
@@ -3813,21 +3820,20 @@ interrupt:
 #else
                 d = -d;
 #endif
-                if (!js_NewNumberValue(cx, d, &rval))
+                if (!js_NewNumberValue(cx, d, &sp[-1]))
                     goto error;
             }
-            STORE_OPND(-1, rval);
           END_CASE(JSOP_NEG)
 
           BEGIN_CASE(JSOP_POS)
             rval = FETCH_OPND(-1);
             if (!JSVAL_IS_NUMBER(rval)) {
                 SAVE_SP_AND_PC(fp);
-                if (!js_ValueToNumber(cx, rval, &d))
+                d = js_ValueToNumber(cx, &sp[-1]);
+                if (JSVAL_IS_NULL(sp[-1]))
                     goto error;
-                if (!js_NewNumberValue(cx, d, &rval))
+                if (!js_NewNumberValue(cx, d, &sp[-1]))
                     goto error;
-                sp[-1] = rval;
             }
           END_CASE(JSOP_POS)
 

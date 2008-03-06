@@ -573,7 +573,8 @@ date_msecFromArgs(JSContext *cx, uintN argc, jsval *argv, jsdouble *rval)
 
     for (loop = 0; loop < MAXARGS; loop++) {
         if (loop < argc) {
-            if (!js_ValueToNumber(cx, argv[loop], &d))
+            d = js_ValueToNumber(cx, &argv[loop]);
+            if (JSVAL_IS_NULL(argv[loop]))
                 return JS_FALSE;
             /* return NaN if any arg is not finite */
             if (!JSDOUBLE_IS_FINITE(d)) {
@@ -1262,7 +1263,8 @@ date_setTime(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble result;
 
-    if (!js_ValueToNumber(cx, vp[2], &result))
+    result = js_ValueToNumber(cx, &vp[2]);
+    if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
 
     result = TIMECLIP(result);
@@ -1311,7 +1313,8 @@ date_makeTime(JSContext *cx, uintN maxargs, JSBool local, uintN argc, jsval *vp)
 
     argv = vp + 2;
     for (i = 0; i < argc; i++) {
-        if (!js_ValueToNumber(cx, argv[i], &args[i]))
+        args[i] = js_ValueToNumber(cx, &argv[i]);
+        if (JSVAL_IS_NULL(argv[i]))
             return JS_FALSE;
         if (!JSDOUBLE_IS_FINITE(args[i])) {
             if (!SetUTCTimePtr(cx, obj, NULL, cx->runtime->jsNaN))
@@ -1438,7 +1441,8 @@ date_makeDate(JSContext *cx, uintN maxargs, JSBool local, uintN argc, jsval *vp)
 
     argv = vp + 2;
     for (i = 0; i < argc; i++) {
-        if (!js_ValueToNumber(cx, argv[i], &args[i]))
+        args[i] = js_ValueToNumber(cx, &argv[i]);
+        if (JSVAL_IS_NULL(argv[i]))
             return JS_FALSE;
         if (!JSDOUBLE_IS_FINITE(args[i])) {
             if (!SetUTCTimePtr(cx, obj, NULL, cx->runtime->jsNaN))
@@ -1538,7 +1542,8 @@ date_setYear(JSContext *cx, uintN argc, jsval *vp)
     if (!GetUTCTime(cx, obj, vp, &result))
         return JS_FALSE;
 
-    if (!js_ValueToNumber(cx, vp[2], &year))
+    year = js_ValueToNumber(cx, &vp[2]);
+    if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
     if (!JSDOUBLE_IS_FINITE(year)) {
         if (!SetUTCTimePtr(cx, obj, NULL, cx->runtime->jsNaN))
@@ -2071,7 +2076,8 @@ Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     } else if (argc == 1) {
         if (!JSVAL_IS_STRING(argv[0])) {
             /* the argument is a millisecond number */
-            if (!js_ValueToNumber(cx, argv[0], &d))
+            d = js_ValueToNumber(cx, &argv[0]);
+            if (JSVAL_IS_NULL(argv[0]))
                 return JS_FALSE;
             date = date_constructor(cx, obj);
             if (!date)

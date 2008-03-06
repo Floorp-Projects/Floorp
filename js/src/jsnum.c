@@ -71,7 +71,8 @@ num_isNaN(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x;
 
-    if (!js_ValueToNumber(cx, vp[2], &x))
+    x = js_ValueToNumber(cx, &vp[2]);
+    if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
     *vp = BOOLEAN_TO_JSVAL(JSDOUBLE_IS_NaN(x));
     return JS_TRUE;
@@ -82,7 +83,8 @@ num_isFinite(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x;
 
-    if (!js_ValueToNumber(cx, vp[2], &x))
+    x = js_ValueToNumber(cx, &vp[2]);
+    if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
     *vp = BOOLEAN_TO_JSVAL(JSDOUBLE_IS_FINITE(x));
     return JS_TRUE;
@@ -119,7 +121,7 @@ num_parseInt(JSContext *cx, uintN argc, jsval *vp)
 
     if (argc > 1) {
         radix = js_ValueToECMAInt32(cx, &vp[3]);
-        if (vp[3] == JSVAL_NULL)
+        if (JSVAL_IS_NULL(vp[3]))
             return JS_FALSE;
     } else {
         radix = 0;
@@ -177,7 +179,8 @@ Number(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsval v;
 
     if (argc != 0) {
-        if (!js_ValueToNumber(cx, argv[0], &d))
+        d = js_ValueToNumber(cx, &argv[0]);
+        if (JSVAL_IS_NULL(argv[0]))
             return JS_FALSE;
     } else {
         d = 0.0;
@@ -264,7 +267,7 @@ num_toString(JSContext *cx, uintN argc, jsval *vp)
     base = 10;
     if (argc != 0 && !JSVAL_IS_VOID(vp[2])) {
         base = js_ValueToECMAInt32(cx, &vp[2]);
-        if (vp[2] == JSVAL_NULL)
+        if (JSVAL_IS_NULL(vp[2]))
             return JS_FALSE;
         if (base < 2 || base > 36) {
             char numBuf[12];
@@ -431,7 +434,8 @@ num_to(JSContext *cx, JSDToStrMode zeroArgMode, JSDToStrMode oneArgMode,
         precision = 0.0;
         oneArgMode = zeroArgMode;
     } else {
-        if (!js_ValueToNumber(cx, vp[2], &precision))
+        precision = js_ValueToNumber(cx, &vp[2]);
+        if (JSVAL_IS_NULL(vp[2]))
             return JS_FALSE;
         precision = js_DoubleToInteger(precision);
         if (precision < precisionMin || precision > precisionMax) {
@@ -728,49 +732,73 @@ js_NumberToString(JSContext *cx, jsdouble d)
     return JS_NewStringCopyZ(cx, numStr);
 }
 
-JSBool
-js_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
+jsdouble
+js_ValueToNumber(JSContext *cx, jsval *vp)
 {
-    JSObject *obj;
+    jsval v;
     JSString *str;
     const jschar *bp, *end, *ep;
+    jsdouble d;
+    JSObject *obj;
+    JSTempValueRooter tvr;
 
-    if (JSVAL_IS_OBJECT(v)) {
-        obj = JSVAL_TO_OBJECT(v);
-        if (!obj) {
-            *dp = 0;
-            return JS_TRUE;
+    v = *vp;
+    for (;;) {
+        if (JSVAL_IS_INT(v))
+            return (jsdouble) JSVAL_TO_INT(v);
+        if (JSVAL_IS_DOUBLE(v))
+            return *JSVAL_TO_DOUBLE(v);
+        if (JSVAL_IS_STRING(v)) {
+            str = JSVAL_TO_STRING(v);
+
+            /*
+             * Note that ECMA doesn't treat a string beginning with a '0' as
+             * an octal number here. This works because all such numbers will
+             * be interpreted as decimal by js_strtod and will never get
+             * passed to js_strtointeger (which would interpret them as
+             * octal).
+             */
+            JSSTRING_CHARS_AND_END(str, bp, end);
+            if ((!js_strtod(cx, bp, end, &ep, &d) ||
+                 js_SkipWhiteSpace(ep, end) != end) &&
+                (!js_strtointeger(cx, bp, end, &ep, 0, &d) ||
+              js_SkipWhiteSpace(ep, end) != end)) {
+                break;
+            }
+            return d;
         }
-        if (!OBJ_DEFAULT_VALUE(cx, obj, JSTYPE_NUMBER, &v))
-            return JS_FALSE;
-    }
-    if (JSVAL_IS_INT(v)) {
-        *dp = (jsdouble)JSVAL_TO_INT(v);
-    } else if (JSVAL_IS_DOUBLE(v)) {
-        *dp = *JSVAL_TO_DOUBLE(v);
-    } else if (JSVAL_IS_STRING(v)) {
-        str = JSVAL_TO_STRING(v);
+        if (JSVAL_IS_BOOLEAN(v))
+            return JSVAL_TO_BOOLEAN(v) ? 1.0 : 0.0;
+        if (JSVAL_IS_NULL(v)) {
+            *vp = JSVAL_ZERO;
+            return 0.0;
+        }
+        if (JSVAL_IS_VOID(v))
+            break;
+
+        JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
+        obj = JSVAL_TO_OBJECT(v);
 
         /*
-         * Note that ECMA doesn't treat a string beginning with a '0' as an
-         * octal number here.  This works because all such numbers will be
-         * interpreted as decimal by js_strtod and will never get passed to
-         * js_strtointeger (which would interpret them as octal).
+         * vp roots obj so we cannot use it as an extra root for
+         * OBJ_DEFAULT_VALUE result when calling the hook.
          */
-        JSSTRING_CHARS_AND_END(str, bp, end);
-        if ((!js_strtod(cx, bp, end, &ep, dp) ||
-             js_SkipWhiteSpace(ep, end) != end) &&
-             (!js_strtointeger(cx, bp, end, &ep, 0, dp) ||
-              js_SkipWhiteSpace(ep, end) != end)) {
-            goto badstr;
+        JS_PUSH_SINGLE_TEMP_ROOT(cx, v, &tvr);
+        if (!OBJ_DEFAULT_VALUE(cx, obj, JSTYPE_NUMBER, &tvr.u.value))
+            obj = NULL;
+        else
+            v = *vp = tvr.u.value;
+        JS_POP_TEMP_ROOT(cx, &tvr);
+        if (!obj) {
+            *vp = JSVAL_NULL;
+            return 0.0;
         }
-    } else if (JSVAL_IS_BOOLEAN(v)) {
-        *dp = JSVAL_TO_BOOLEAN(v) ? 1 : 0;
-    } else {
-badstr:
-        *dp = *cx->runtime->jsNaN;
+        if (!JSVAL_IS_PRIMITIVE(v))
+            break;
     }
-    return JS_TRUE;
+
+    JS_ASSERT(!JSVAL_IS_NULL(*vp));
+    return *cx->runtime->jsNaN;
 }
 
 int32
@@ -785,11 +813,9 @@ js_ValueToECMAInt32(JSContext *cx, jsval *vp)
     if (JSVAL_IS_DOUBLE(v)) {
         d = *JSVAL_TO_DOUBLE(v);
     } else {
-        if (!js_ValueToNumber(cx, v, &d)) {
-            *vp = JSVAL_NULL;
+        d = js_ValueToNumber(cx, vp);
+        if (JSVAL_IS_NULL(*vp))
             return 0;
-        }
-        *vp = JSVAL_ZERO;
     }
     return js_DoubleToECMAInt32(d);
 }
@@ -826,11 +852,9 @@ js_ValueToECMAUint32(JSContext *cx, jsval *vp)
     if (JSVAL_IS_DOUBLE(v)) {
         d = *JSVAL_TO_DOUBLE(v);
     } else {
-        if (!js_ValueToNumber(cx, v, &d)) {
-            *vp = JSVAL_NULL;
+        d = js_ValueToNumber(cx, vp);
+        if (JSVAL_IS_NULL(*vp))
             return 0;
-        }
-        *vp = JSVAL_ZERO;
     }
     return js_DoubleToECMAUint32(d);
 }
@@ -864,53 +888,50 @@ js_DoubleToECMAUint32(jsdouble d)
     return (uint32) (d >= 0 ? d : d + two32);
 }
 
-JSBool
-js_ValueToInt32(JSContext *cx, jsval v, int32 *ip)
+int32
+js_ValueToInt32(JSContext *cx, jsval *vp)
 {
+    jsval v;
     jsdouble d;
 
-    if (JSVAL_IS_INT(v)) {
-        *ip = JSVAL_TO_INT(v);
-        return JS_TRUE;
-    }
-    if (!js_ValueToNumber(cx, v, &d))
-        return JS_FALSE;
+    v = *vp;
+    if (JSVAL_IS_INT(v))
+        return JSVAL_TO_INT(v);
+    d = js_ValueToNumber(cx, vp);
+    if (JSVAL_IS_NULL(*vp))
+        return 0;
     if (JSDOUBLE_IS_NaN(d) || d <= -2147483649.0 || 2147483648.0 <= d) {
         js_ReportValueError(cx, JSMSG_CANT_CONVERT,
                             JSDVG_SEARCH_STACK, v, NULL);
-        return JS_FALSE;
+        *vp = JSVAL_NULL;
+        return 0;
     }
-    *ip = (int32)floor(d + 0.5);     /* Round to nearest */
-    return JS_TRUE;
+    return (int32) floor(d + 0.5);  /* Round to nearest */
 }
 
-JSBool
-js_ValueToUint16(JSContext *cx, jsval v, uint16 *ip)
+uint16
+js_ValueToUint16(JSContext *cx, jsval *vp)
 {
     jsdouble d;
     jsuint i, m;
     JSBool neg;
 
-    if (!js_ValueToNumber(cx, v, &d))
-        return JS_FALSE;
-    if (d == 0 || !JSDOUBLE_IS_FINITE(d)) {
-        *ip = 0;
-        return JS_TRUE;
-    }
-    i = (jsuint)d;
-    if ((jsdouble)i == d) {
-        *ip = (uint16)i;
-        return JS_TRUE;
-    }
+    d = js_ValueToNumber(cx, vp);
+    if (JSVAL_IS_NULL(*vp))
+        return 0;
+    if (d == 0 || !JSDOUBLE_IS_FINITE(d))
+        return 0;
+    i = (jsuint) d;
+    if ((jsdouble) i == d)
+        return (uint16) i;
     neg = (d < 0);
     d = floor(neg ? -d : d);
     d = neg ? -d : d;
     m = JS_BIT(16);
-    d = fmod(d, (double)m);
+    d = fmod(d, (double) m);
     if (d < 0)
         d += m;
-    *ip = (uint16) d;
-    return JS_TRUE;
+    return (uint16) d;
 }
 
 jsdouble

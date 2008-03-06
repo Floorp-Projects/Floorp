@@ -1456,7 +1456,7 @@ fun_toStringHelper(JSContext *cx, uint32 indent, uintN argc, jsval *vp)
     obj = JSVAL_TO_OBJECT(fval);
     if (argc != 0) {
         indent = js_ValueToECMAUint32(cx, &vp[2]);
-        if (vp[2] == JSVAL_NULL)
+        if (JSVAL_IS_NULL(vp[2]))
             return JS_FALSE;
     }
 
