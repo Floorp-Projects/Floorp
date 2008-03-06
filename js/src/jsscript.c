@@ -112,7 +112,7 @@ script_toSource(JSContext *cx, uintN argc, jsval *vp)
     indent = 0;
     if (argc != 0) {
         indent = js_ValueToECMAUint32(cx, &vp[2]);
-        if (vp[2] == JSVAL_NULL)
+        if (JSVAL_IS_NULL(vp[2]))
             return JS_FALSE;
     }
 
@@ -171,7 +171,7 @@ script_toString(JSContext *cx, uintN argc, jsval *vp)
     indent = 0;
     if (argc != 0) {
         indent = js_ValueToECMAUint32(cx, &vp[2]);
-        if (vp[2] == JSVAL_NULL)
+        if (JSVAL_IS_NULL(vp[2]))
             return JS_FALSE;
     }
 

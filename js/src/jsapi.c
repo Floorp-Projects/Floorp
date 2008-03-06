@@ -203,7 +203,7 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
             *va_arg(ap, JSBool *) = js_ValueToBoolean(*sp);
             break;
           case 'c':
-            if (!js_ValueToUint16(cx, *sp, va_arg(ap, uint16 *)))
+            if (!JS_ValueToUint16(cx, *sp, va_arg(ap, uint16 *)))
                 return JS_FALSE;
             break;
           case 'i':
@@ -215,15 +215,15 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
                 return JS_FALSE;
             break;
           case 'j':
-            if (!js_ValueToInt32(cx, *sp, va_arg(ap, int32 *)))
+            if (!JS_ValueToInt32(cx, *sp, va_arg(ap, int32 *)))
                 return JS_FALSE;
             break;
           case 'd':
-            if (!js_ValueToNumber(cx, *sp, va_arg(ap, jsdouble *)))
+            if (!JS_ValueToNumber(cx, *sp, va_arg(ap, jsdouble *)))
                 return JS_FALSE;
             break;
           case 'I':
-            if (!js_ValueToNumber(cx, *sp, &d))
+            if (!JS_ValueToNumber(cx, *sp, &d))
                 return JS_FALSE;
             *va_arg(ap, jsdouble *) = js_DoubleToInteger(d);
             break;
@@ -487,7 +487,7 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
             *vp = STRING_TO_JSVAL(str);
         break;
       case JSTYPE_NUMBER:
-        ok = js_ValueToNumber(cx, v, &d);
+        ok = JS_ValueToNumber(cx, v, &d);
         if (ok) {
             dp = js_NewDouble(cx, d);
             ok = (dp != NULL);
@@ -541,8 +541,13 @@ JS_ValueToString(JSContext *cx, jsval v)
 JS_PUBLIC_API(JSBool)
 JS_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
 {
+    JSTempValueRooter tvr;
+
     CHECK_REQUEST(cx);
-    return js_ValueToNumber(cx, v, dp);
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, v, &tvr);
+    *dp = js_ValueToNumber(cx, &tvr.u.value);
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    return !JSVAL_IS_NULL(tvr.u.value);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -554,7 +559,7 @@ JS_ValueToECMAInt32(JSContext *cx, jsval v, int32 *ip)
     JS_PUSH_SINGLE_TEMP_ROOT(cx, v, &tvr);
     *ip = js_ValueToECMAInt32(cx, &tvr.u.value);
     JS_POP_TEMP_ROOT(cx, &tvr);
-    return tvr.u.value != JSVAL_NULL;
+    return !JSVAL_IS_NULL(tvr.u.value);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -566,21 +571,31 @@ JS_ValueToECMAUint32(JSContext *cx, jsval v, uint32 *ip)
     JS_PUSH_SINGLE_TEMP_ROOT(cx, v, &tvr);
     *ip = js_ValueToECMAUint32(cx, &tvr.u.value);
     JS_POP_TEMP_ROOT(cx, &tvr);
-    return tvr.u.value != JSVAL_NULL;
+    return !JSVAL_IS_NULL(tvr.u.value);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_ValueToInt32(JSContext *cx, jsval v, int32 *ip)
 {
+    JSTempValueRooter tvr;
+
     CHECK_REQUEST(cx);
-    return js_ValueToInt32(cx, v, ip);
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, v, &tvr);
+    *ip = js_ValueToInt32(cx, &tvr.u.value);
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    return !JSVAL_IS_NULL(tvr.u.value);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_ValueToUint16(JSContext *cx, jsval v, uint16 *ip)
 {
+    JSTempValueRooter tvr;
+
     CHECK_REQUEST(cx);
-    return js_ValueToUint16(cx, v, ip);
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, v, &tvr);
+    *ip = js_ValueToUint16(cx, &tvr.u.value);
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    return !JSVAL_IS_NULL(tvr.u.value);
 }
 
 JS_PUBLIC_API(JSBool)
