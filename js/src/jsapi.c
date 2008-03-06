@@ -207,11 +207,11 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
                 return JS_FALSE;
             break;
           case 'i':
-            if (!js_ValueToECMAInt32(cx, *sp, va_arg(ap, int32 *)))
+            if (!JS_ValueToECMAInt32(cx, *sp, va_arg(ap, int32 *)))
                 return JS_FALSE;
             break;
           case 'u':
-            if (!js_ValueToECMAUint32(cx, *sp, va_arg(ap, uint32 *)))
+            if (!JS_ValueToECMAUint32(cx, *sp, va_arg(ap, uint32 *)))
                 return JS_FALSE;
             break;
           case 'j':
@@ -548,15 +548,25 @@ JS_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
 JS_PUBLIC_API(JSBool)
 JS_ValueToECMAInt32(JSContext *cx, jsval v, int32 *ip)
 {
+    JSTempValueRooter tvr;
+
     CHECK_REQUEST(cx);
-    return js_ValueToECMAInt32(cx, v, ip);
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, v, &tvr);
+    *ip = js_ValueToECMAInt32(cx, &tvr.u.value);
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    return tvr.u.value != JSVAL_NULL;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_ValueToECMAUint32(JSContext *cx, jsval v, uint32 *ip)
 {
+    JSTempValueRooter tvr;
+
     CHECK_REQUEST(cx);
-    return js_ValueToECMAUint32(cx, v, ip);
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, v, &tvr);
+    *ip = js_ValueToECMAUint32(cx, &tvr.u.value);
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    return tvr.u.value != JSVAL_NULL;
 }
 
 JS_PUBLIC_API(JSBool)

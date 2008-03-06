@@ -2222,44 +2222,36 @@ js_DumpOpMeters()
 #define STORE_NUMBER(cx, n, d)                                                \
     JS_BEGIN_MACRO                                                            \
         jsint i_;                                                             \
-        jsval v_;                                                             \
                                                                               \
         if (JSDOUBLE_IS_INT(d, i_) && INT_FITS_IN_JSVAL(i_)) {                \
-            v_ = INT_TO_JSVAL(i_);                                            \
+            sp[n] = INT_TO_JSVAL(i_);                                         \
         } else {                                                              \
             SAVE_SP_AND_PC(fp);                                               \
-            if (!js_NewDoubleValue(cx, d, &v_))                               \
+            if (!js_NewDoubleValue(cx, d, &sp[n]))                            \
                 goto error;                                                   \
         }                                                                     \
-        STORE_OPND(n, v_);                                                    \
     JS_END_MACRO
 
 #define STORE_INT(cx, n, i)                                                   \
     JS_BEGIN_MACRO                                                            \
-        jsval v_;                                                             \
-                                                                              \
         if (INT_FITS_IN_JSVAL(i)) {                                           \
-            v_ = INT_TO_JSVAL(i);                                             \
+            sp[n] = INT_TO_JSVAL(i);                                          \
         } else {                                                              \
             SAVE_SP_AND_PC(fp);                                               \
-            if (!js_NewDoubleValue(cx, (jsdouble)(i), &v_))                   \
+            if (!js_NewDoubleValue(cx, (jsdouble)(i), &sp[n]))                \
                 goto error;                                                   \
         }                                                                     \
-        STORE_OPND(n, v_);                                                    \
     JS_END_MACRO
 
 #define STORE_UINT(cx, n, u)                                                  \
     JS_BEGIN_MACRO                                                            \
-        jsval v_;                                                             \
-                                                                              \
         if ((u) <= JSVAL_INT_MAX) {                                           \
-            v_ = INT_TO_JSVAL(u);                                             \
+            sp[n] = INT_TO_JSVAL(u);                                          \
         } else {                                                              \
             SAVE_SP_AND_PC(fp);                                               \
-            if (!js_NewDoubleValue(cx, (jsdouble)(u), &v_))                   \
+            if (!js_NewDoubleValue(cx, (jsdouble)(u), &sp[n]))                \
                 goto error;                                                   \
         }                                                                     \
-        STORE_OPND(n, v_);                                                    \
     JS_END_MACRO
 
 #define FETCH_NUMBER(cx, n, d)                                                \
@@ -2272,25 +2264,30 @@ js_DumpOpMeters()
 
 #define FETCH_INT(cx, n, i)                                                   \
     JS_BEGIN_MACRO                                                            \
-        jsval v_ = FETCH_OPND(n);                                             \
+        jsval v_;                                                             \
+                                                                              \
+        v_= FETCH_OPND(n);                                                    \
         if (JSVAL_IS_INT(v_)) {                                               \
             i = JSVAL_TO_INT(v_);                                             \
         } else {                                                              \
             SAVE_SP_AND_PC(fp);                                               \
-            if (!js_ValueToECMAInt32(cx, v_, &i))                             \
+            i = js_ValueToECMAInt32(cx, &sp[n]);                              \
+            if (sp[n] == JSVAL_NULL)                                          \
                 goto error;                                                   \
         }                                                                     \
     JS_END_MACRO
 
 #define FETCH_UINT(cx, n, ui)                                                 \
     JS_BEGIN_MACRO                                                            \
-        jsval v_ = FETCH_OPND(n);                                             \
-        jsint i_;                                                             \
-        if (JSVAL_IS_INT(v_) && (i_ = JSVAL_TO_INT(v_)) >= 0) {               \
-            ui = (uint32) i_;                                                 \
+        jsval v_;                                                             \
+                                                                              \
+        v_= FETCH_OPND(n);                                                    \
+        if (JSVAL_IS_INT(v_)) {                                               \
+            ui = (uint32) JSVAL_TO_INT(v_);                                   \
         } else {                                                              \
             SAVE_SP_AND_PC(fp);                                               \
-            if (!js_ValueToECMAUint32(cx, v_, &ui))                           \
+            ui = js_ValueToECMAUint32(cx, &sp[n]);                            \
+            if (sp[n] == JSVAL_NULL)                                          \
                 goto error;                                                   \
         }                                                                     \
     JS_END_MACRO
@@ -2448,6 +2445,10 @@ JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETPROP_LENGTH);
 
 /* Ensure we can share deffun and closure code. */
 JS_STATIC_ASSERT(JSOP_DEFFUN_LENGTH == JSOP_CLOSURE_LENGTH);
+
+
+/* See comments in FETCH_SHIFT macro. */
+JS_STATIC_ASSERT((JSVAL_TO_INT(JSVAL_VOID) & 31) == 0);
 
 JSBool
 js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
@@ -3403,18 +3404,14 @@ interrupt:
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
           END_CASE(JSOP_BINDNAME)
 
-#define INTEGER_OP(OP, EXTRA_CODE)                                            \
+#define BITWISE_OP(OP)                                                        \
     JS_BEGIN_MACRO                                                            \
         FETCH_INT(cx, -2, i);                                                 \
         FETCH_INT(cx, -1, j);                                                 \
-        EXTRA_CODE                                                            \
         i = i OP j;                                                           \
         sp--;                                                                 \
         STORE_INT(cx, -1, i);                                                 \
     JS_END_MACRO
-
-#define BITWISE_OP(OP)          INTEGER_OP(OP, (void) 0;)
-#define SIGNED_SHIFT_OP(OP)     INTEGER_OP(OP, j &= 31;)
 
           BEGIN_CASE(JSOP_BITOR)
             BITWISE_OP(|);
@@ -3618,6 +3615,36 @@ interrupt:
 #undef EQUALITY_OP
 #undef RELATIONAL_OP
 
+/*
+ * We do not check for JSVAL_VOID here since ToInt32(undefined) == 0
+ * and (JSVAL_TO_INT(JSVAL_VOID) & 31) == 0. The static assert before
+ * js_Interpret ensures this.
+ */
+#define FETCH_SHIFT(shift)                                                    \
+    JS_BEGIN_MACRO                                                            \
+        jsval v_;                                                             \
+                                                                              \
+        v_ = FETCH_OPND(-1);                                                  \
+        if (v_ & JSVAL_INT) {                                                 \
+            shift = JSVAL_TO_INT(v_);                                         \
+        } else {                                                              \
+            SAVE_SP_AND_PC(fp);                                               \
+            shift = js_ValueToECMAInt32(cx, &sp[-1]);                         \
+            if (sp[-1] == JSVAL_NULL)                                         \
+                goto error;                                                   \
+        }                                                                     \
+        shift &= 31;                                                          \
+    JS_END_MACRO
+
+#define SIGNED_SHIFT_OP(OP)                                                   \
+    JS_BEGIN_MACRO                                                            \
+        FETCH_INT(cx, -2, i);                                                 \
+        FETCH_SHIFT(j);                                                       \
+        i = i OP j;                                                           \
+        sp--;                                                                 \
+        STORE_INT(cx, -1, i);                                                 \
+    JS_END_MACRO
+
           BEGIN_CASE(JSOP_LSH)
             SIGNED_SHIFT_OP(<<);
           END_CASE(JSOP_LSH)
@@ -3631,14 +3658,13 @@ interrupt:
             uint32 u;
 
             FETCH_UINT(cx, -2, u);
-            FETCH_INT(cx, -1, j);
-            u >>= j & 31;
+            FETCH_SHIFT(j);
+            u >>= j;
             sp--;
             STORE_UINT(cx, -1, u);
           }
           END_CASE(JSOP_URSH)
 
-#undef INTEGER_OP
 #undef BITWISE_OP
 #undef SIGNED_SHIFT_OP
 

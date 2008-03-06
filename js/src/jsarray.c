@@ -234,15 +234,12 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
     id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
     ok = OBJ_GET_PROPERTY(cx, obj, id, &tvr.u.value);
     if (ok) {
-        /*
-         * Short-circuit, because js_ValueToECMAUint32 fails when called
-         * during init time.
-         */
         if (JSVAL_IS_INT(tvr.u.value)) {
             i = JSVAL_TO_INT(tvr.u.value);
             *lengthp = (jsuint)i;       /* jsuint cast does ToUint32 */
         } else {
-            ok = js_ValueToECMAUint32(cx, tvr.u.value, (uint32 *)lengthp);
+            *lengthp = js_ValueToECMAUint32(cx, &tvr.u.value);
+            ok = (tvr.u.value != JSVAL_NULL);
         }
     }
     JS_POP_TEMP_ROOT(cx, &tvr);
