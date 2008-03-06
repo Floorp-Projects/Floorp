@@ -258,7 +258,8 @@ public:
   /**
    * Called for the common part of adding a property to obj.
    */
-  static JSBool AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+  static JSBool AddProperty(JSContext *cx, JSObject *wrapperObj,
+                            JSObject *innerObj, jsval id, jsval *vp);
 
   /**
    * Called for the common part of deleting a property from obj.

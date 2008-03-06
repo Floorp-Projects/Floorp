@@ -496,7 +496,7 @@ XPC_SJOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_FALSE;
   }
 
-  return XPCWrapper::AddProperty(cx, unsafeObj, id, vp);
+  return XPCWrapper::AddProperty(cx, obj, unsafeObj, id, vp);
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
