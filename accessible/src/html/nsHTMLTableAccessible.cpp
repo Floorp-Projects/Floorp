@@ -58,6 +58,7 @@
 #include "nsIServiceManager.h"
 #include "nsITableLayout.h"
 #include "nsITableCellLayout.h"
+#include "nsLayoutErrors.h"
 
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTableCellAccessible, nsHyperTextAccessible)
@@ -662,11 +663,15 @@ nsHTMLTableAccessible::IsRowSelected(PRInt32 aRow, PRBool *_retval)
 
 NS_IMETHODIMP
 nsHTMLTableAccessible::IsCellSelected(PRInt32 aRow, PRInt32 aColumn,
-                                      PRBool *_retval)
+                                      PRBool *aIsSelected)
 {
-  NS_ENSURE_TRUE(IsValidRow(aRow) && IsValidColumn(aColumn), NS_ERROR_INVALID_ARG);
+  NS_ENSURE_ARG_POINTER(aIsSelected);
+  *aIsSelected = PR_FALSE;
 
-  nsITableLayout *tableLayout;
+  NS_ENSURE_TRUE(IsValidRow(aRow) && IsValidColumn(aColumn),
+                 NS_ERROR_INVALID_ARG);
+
+  nsITableLayout *tableLayout = nsnull;
   nsresult rv = GetTableLayout(&tableLayout);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -674,11 +679,14 @@ nsHTMLTableAccessible::IsCellSelected(PRInt32 aRow, PRInt32 aColumn,
   PRInt32 startRowIndex = 0, startColIndex = 0,
           rowSpan, colSpan, actualRowSpan, actualColSpan;
 
-  return tableLayout->GetCellDataAt(aRow, aColumn,
-                                    *getter_AddRefs(domElement),
-                                    startRowIndex, startColIndex, rowSpan,
-                                    colSpan, actualRowSpan, actualColSpan,
-                                    *_retval);
+  rv = tableLayout->GetCellDataAt(aRow, aColumn, *getter_AddRefs(domElement),
+                                  startRowIndex, startColIndex,
+                                  rowSpan, colSpan,
+                                  actualRowSpan, actualColSpan, *aIsSelected);
+
+  if (rv == NS_TABLELAYOUT_CELL_NOT_FOUND)
+    return NS_ERROR_INVALID_ARG;
+  return rv;
 }
 
 PRBool
@@ -867,15 +875,18 @@ nsHTMLTableAccessible::GetCellAt(PRInt32        aRowIndex,
           rowSpan, colSpan, actualRowSpan, actualColSpan;
   PRBool isSelected;
 
-  nsITableLayout *tableLayout;
+  nsITableLayout *tableLayout = nsnull;
   nsresult rv = GetTableLayout(&tableLayout);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return tableLayout->GetCellDataAt(aRowIndex, aColIndex, aCell,
-                                    startRowIndex, startColIndex,
-                                    rowSpan, colSpan,
-                                    actualRowSpan, actualColSpan,
-                                    isSelected);
+  rv = tableLayout->GetCellDataAt(aRowIndex, aColIndex, aCell,
+                                  startRowIndex, startColIndex,
+                                  rowSpan, colSpan,
+                                  actualRowSpan, actualColSpan, isSelected);
+
+  if (rv == NS_TABLELAYOUT_CELL_NOT_FOUND)
+    return NS_ERROR_INVALID_ARG;
+  return rv;
 }
 
 NS_IMETHODIMP nsHTMLTableAccessible::GetDescription(nsAString& aDescription)
@@ -1030,7 +1041,9 @@ NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForL
   // Check to see if there are visible borders on the cells
   // XXX currently, we just check the first cell -- do we really need to do more?
   nsCOMPtr<nsIDOMElement> cellElement;
-  GetCellAt(0, 0, *getter_AddRefs(cellElement));
+  nsresult rv = GetCellAt(0, 0, *getter_AddRefs(cellElement));
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
   nsCOMPtr<nsIContent> cellContent(do_QueryInterface(cellElement));
   NS_ENSURE_TRUE(cellContent, NS_ERROR_FAILURE);
   nsCOMPtr<nsIPresShell> shell(GetPresShell());
