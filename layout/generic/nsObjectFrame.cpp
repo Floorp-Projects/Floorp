@@ -1132,23 +1132,16 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   pi->GetValue(nsPluginInstanceVariable_WindowlessBool, (void *)&windowless);
   window.type  =  windowless ? nsPluginWindowType_Drawable : nsPluginWindowType_Window;
 
-  // Get the offset of the DC
-  nsTransform2D* rcTransform;
-  aRenderingContext.GetCurrentTransform(rcTransform);
-  nsPoint origin;
-  rcTransform->GetTranslationCoord(&origin.x, &origin.y);
-
-  // set it all up
-  // XXX is windowless different?
-  window.x = presContext->AppUnitsToDevPixels(origin.x);
-  window.y = presContext->AppUnitsToDevPixels(origin.y);
-  window.width = presContext->AppUnitsToDevPixels(mRect.width);
-  window.height= presContext->AppUnitsToDevPixels(mRect.height);
   window.clipRect.bottom = 0; window.clipRect.top = 0;
   window.clipRect.left = 0; window.clipRect.right = 0;
   
 // XXX platform specific printing code
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
+
+  /* XXX this just flat-out doesn't work in a thebes world --
+   * RenderEPS is a no-op.  So don't bother to do any work here.
+   */
+#if 0
     /* UNIX does things completely differently:
    * We call the plugin and it sends generated PostScript data into a
    * file handle we provide. If the plugin returns with success we embed
@@ -1188,6 +1181,7 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   fclose(plugintmpfile);
 
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("plugin printing done, return code is %lx\n", (long)rv));
+#endif
 
 #elif defined(XP_WIN)
 
@@ -1206,15 +1200,30 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
    * meta surface.
    */
 
+  /* we'll already be translated into the right spot by gfxWindowsNativeDrawing */
+  window.x = 0;
+  window.y = 0;
+  window.width = presContext->AppUnitsToDevPixels(mRect.width);
+  window.height = presContext->AppUnitsToDevPixels(mRect.height);
+
   gfxContext *ctx = aRenderingContext.ThebesContext();
 
   ctx->Save();
 
+  /* Make sure plugins don't do any damage outside of where they're supposed to */
   ctx->NewPath();
   ctx->Rectangle(gfxRect(window.x, window.y,
                          window.width, window.height));
   ctx->Clip();
-  ctx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+
+  /* If we're windowless, we need to do COLOR_ALPHA, and do alpha recovery.
+   * XXX - we could have some sort of flag here that would indicate whether
+   * the plugin knows how to render to an ARGB DIB
+   */
+  if (windowless)
+    ctx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+  else
+    ctx->PushGroup(gfxASurface::CONTENT_COLOR);
 
   gfxWindowsNativeDrawing nativeDraw(ctx,
                                      gfxRect(window.x, window.y,
@@ -1239,6 +1248,19 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   ctx->Restore();
 
 #else
+
+  // Get the offset of the DC
+  nsTransform2D* rcTransform;
+  aRenderingContext.GetCurrentTransform(rcTransform);
+  nsPoint origin;
+  rcTransform->GetTranslationCoord(&origin.x, &origin.y);
+
+  // set it all up
+  // XXX is windowless different?
+  window.x = presContext->AppUnitsToDevPixels(origin.x);
+  window.y = presContext->AppUnitsToDevPixels(origin.y);
+  window.width = presContext->AppUnitsToDevPixels(mRect.width);
+  window.height= presContext->AppUnitsToDevPixels(mRect.height);
 
   // we need the native printer device context to pass to plugin
   // NATIVE_WINDOWS_DC is a misnomer, it's whatever the native platform
