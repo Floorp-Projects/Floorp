@@ -142,8 +142,8 @@ public:
 #endif
 
   static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
-  static PRUint32 State(nsIAccessible *aAcc) { PRUint32 state; aAcc->GetFinalState(&state, nsnull); return state; }
-  static PRUint32 Role(nsIAccessible *aAcc) { PRUint32 role; aAcc->GetFinalRole(&role); return role; }
+  static PRUint32 State(nsIAccessible *aAcc) { PRUint32 state = 0; if (aAcc) aAcc->GetFinalState(&state, nsnull); return state; }
+  static PRUint32 Role(nsIAccessible *aAcc) { PRUint32 role = nsIAccessibleRole::ROLE_NOTHING; if (aAcc) aAcc->GetFinalRole(&role); return role; }
   static PRBool IsText(nsIAccessible *aAcc) { PRUint32 role = Role(aAcc); return role == nsIAccessibleRole::ROLE_TEXT_LEAF || role == nsIAccessibleRole::ROLE_STATICTEXT; }
   static PRBool IsEmbeddedObject(nsIAccessible *aAcc) { PRUint32 role = Role(aAcc); return role != nsIAccessibleRole::ROLE_TEXT_LEAF && role != nsIAccessibleRole::ROLE_WHITESPACE && role != nsIAccessibleRole::ROLE_STATICTEXT; }
   static PRInt32 TextLength(nsIAccessible *aAccessible); // Returns -1 on failure
