@@ -1794,8 +1794,9 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
                                   nsIDOMDocumentFragment** aReturn)
 {
   nsCOMPtr<nsIDOMNode> start = do_QueryInterface(mStartParent);
-  return
-    mIsPositioned
-    ? nsContentUtils::CreateContextualFragment(start, aFragment, aReturn)
-    : NS_ERROR_FAILURE;
+  if (mIsPositioned) {
+    return nsContentUtils::CreateContextualFragment(start, aFragment, PR_TRUE,
+                                                    aReturn);
+  }
+  return NS_ERROR_FAILURE;
 }
