@@ -186,16 +186,12 @@ nsStackLayout::AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSize& aSize
   PRBool offsetSpecified = PR_FALSE;
   const nsStylePosition* pos = aChild->GetStylePosition();
   if (eStyleUnit_Coord == pos->mOffset.GetLeftUnit()) {
-     nsStyleCoord left = 0;
-     pos->mOffset.GetLeft(left);
-     offset.width = left.GetCoordValue();
+     offset.width = pos->mOffset.GetLeft().GetCoordValue();
      offsetSpecified = PR_TRUE;
   }
 
   if (eStyleUnit_Coord == pos->mOffset.GetTopUnit()) {
-     nsStyleCoord top = 0;
-     pos->mOffset.GetTop(top);
-     offset.height = top.GetCoordValue();
+     offset.height = pos->mOffset.GetTop().GetCoordValue();
      offsetSpecified = PR_TRUE;
   }
 

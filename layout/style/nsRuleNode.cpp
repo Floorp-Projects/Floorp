@@ -3599,7 +3599,6 @@ nsRuleNode::ComputeMarginData(void* aStartStruct,
 
   // margin: length, percent, auto, inherit
   nsStyleCoord  coord;
-  nsStyleCoord  parentCoord;
   nsCSSRect ourMargin(marginData.mMargin);
   AdjustLogicalBoxProp(aContext,
                        marginData.mMarginLeftLTRSource,
@@ -3612,7 +3611,7 @@ nsRuleNode::ComputeMarginData(void* aStartStruct,
                        marginData.mMarginEnd, marginData.mMarginStart,
                        NS_SIDE_RIGHT, ourMargin, inherited);
   NS_FOR_CSS_SIDES(side) {
-    parentMargin->mMargin.Get(side, parentCoord);
+    nsStyleCoord parentCoord = parentMargin->mMargin.Get(side);
     if (SetCoord(ourMargin.*(nsCSSRect::sides[side]),
                  coord, parentCoord, SETCOORD_LPAH | SETCOORD_INITIAL_ZERO,
                  aContext, mPresContext, inherited)) {
@@ -3636,7 +3635,6 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
 
   // border-width, border-*-width: length, enum, inherit
   nsStyleCoord  coord;
-  nsStyleCoord  parentCoord;
   nsCSSRect ourBorderWidth(marginData.mBorderWidth);
   AdjustLogicalBoxProp(aContext,
                        marginData.mBorderLeftWidthLTRSource,
@@ -3669,8 +3667,9 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
         border->SetBorderWidth(side,
                                (mPresContext->GetBorderWidthTable())[value.GetIntValue()]);
       }
-      else if (SetCoord(value, coord, parentCoord, SETCOORD_LENGTH, aContext,
-                        mPresContext, inherited)) {
+      // OK to pass bad aParentCoord since we're not passing SETCOORD_INHERIT
+      else if (SetCoord(value, coord, nsStyleCoord(), SETCOORD_LENGTH,
+                        aContext, mPresContext, inherited)) {
         if (coord.GetUnit() == eStyleUnit_Coord) {
           border->SetBorderWidth(side, coord.GetCoordValue());
         }
@@ -3807,7 +3806,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
   // -moz-border-radius: length, percent, inherit
   { // scope for compilers with broken |for| loop scoping
     NS_FOR_CSS_SIDES(side) {
-      parentBorder->mBorderRadius.Get(side, parentCoord);
+      nsStyleCoord parentCoord = parentBorder->mBorderRadius.Get(side);
       if (SetCoord(marginData.mBorderRadius.*(nsCSSRect::sides[side]), coord,
                    parentCoord, SETCOORD_LPH | SETCOORD_INITIAL_ZERO,
                    aContext, mPresContext, inherited))
@@ -3840,7 +3839,6 @@ nsRuleNode::ComputePaddingData(void* aStartStruct,
 
   // padding: length, percent, inherit
   nsStyleCoord  coord;
-  nsStyleCoord  parentCoord;
   nsCSSRect ourPadding(marginData.mPadding);
   AdjustLogicalBoxProp(aContext,
                        marginData.mPaddingLeftLTRSource,
@@ -3853,7 +3851,7 @@ nsRuleNode::ComputePaddingData(void* aStartStruct,
                        marginData.mPaddingEnd, marginData.mPaddingStart,
                        NS_SIDE_RIGHT, ourPadding, inherited);
   NS_FOR_CSS_SIDES(side) {
-    parentPadding->mPadding.Get(side, parentCoord);
+    nsStyleCoord parentCoord = parentPadding->mPadding.Get(side);
     if (SetCoord(ourPadding.*(nsCSSRect::sides[side]),
                  coord, parentCoord, SETCOORD_LPH | SETCOORD_INITIAL_ZERO,
                  aContext, mPresContext, inherited)) {
@@ -3925,10 +3923,9 @@ nsRuleNode::ComputeOutlineData(void* aStartStruct,
 
   // -moz-outline-radius: length, percent, inherit
   nsStyleCoord  coord;
-  nsStyleCoord  parentCoord;
   { // scope for compilers with broken |for| loop scoping
     NS_FOR_CSS_SIDES(side) {
-      parentOutline->mOutlineRadius.Get(side, parentCoord);
+      nsStyleCoord parentCoord = parentOutline->mOutlineRadius.Get(side);
       if (SetCoord(marginData.mOutlineRadius.*(nsCSSRect::sides[side]), coord,
                    parentCoord, SETCOORD_LPH | SETCOORD_INITIAL_ZERO,
                    aContext, mPresContext, inherited))
@@ -4049,9 +4046,8 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
 
   // box offsets: length, percent, auto, inherit
   nsStyleCoord  coord;
-  nsStyleCoord  parentCoord;
   NS_FOR_CSS_SIDES(side) {
-    parentPos->mOffset.Get(side, parentCoord);
+    nsStyleCoord parentCoord = parentPos->mOffset.Get(side);
     if (SetCoord(posData.mOffset.*(nsCSSRect::sides[side]),
                  coord, parentCoord, SETCOORD_LPAH | SETCOORD_INITIAL_AUTO,
                  aContext, mPresContext, inherited)) {

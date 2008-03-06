@@ -1551,8 +1551,7 @@ nsComputedDOMStyle::GetOutlineRadiusFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  nsStyleCoord coord;
-  SetValueToCoord(val, GetStyleOutline()->mOutlineRadius.Get(aSide, coord),
+  SetValueToCoord(val, GetStyleOutline()->mOutlineRadius.Get(aSide),
                   &nsComputedDOMStyle::GetFrameBorderRectWidth);
 
   return CallQueryInterface(val, aValue);
@@ -2696,9 +2695,8 @@ nsComputedDOMStyle::GetRelativeOffset(PRUint8 aSide, nsIDOMCSSValue** aValue)
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   const nsStylePosition* positionData = GetStylePosition();
-  nsStyleCoord coord;
   PRInt32 sign = 1;
-  positionData->mOffset.Get(aSide, coord);
+  nsStyleCoord coord = positionData->mOffset.Get(aSide);
 
   NS_ASSERTION(coord.GetUnit() == eStyleUnit_Coord ||
                coord.GetUnit() == eStyleUnit_Percent ||
@@ -2707,7 +2705,7 @@ nsComputedDOMStyle::GetRelativeOffset(PRUint8 aSide, nsIDOMCSSValue** aValue)
                "Unexpected unit");
   
   if (coord.GetUnit() == eStyleUnit_Auto) {
-    positionData->mOffset.Get(NS_OPPOSITE_SIDE(aSide), coord);
+    coord = positionData->mOffset.Get(NS_OPPOSITE_SIDE(aSide));
     sign = -1;
   }
   PercentageBaseGetter baseGetter;
@@ -2729,8 +2727,7 @@ nsComputedDOMStyle::GetStaticOffset(PRUint8 aSide, nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  nsStyleCoord coord;
-  SetValueToCoord(val, GetStylePosition()->mOffset.Get(aSide, coord));
+  SetValueToCoord(val, GetStylePosition()->mOffset.Get(aSide));
   
   return CallQueryInterface(val, aValue);
 }
@@ -2752,8 +2749,7 @@ nsComputedDOMStyle::GetPaddingWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   if (!mInnerFrame) {
-    nsStyleCoord c;
-    SetValueToCoord(val, GetStylePadding()->mPadding.Get(aSide, c));
+    SetValueToCoord(val, GetStylePadding()->mPadding.Get(aSide));
   } else {
     FlushPendingReflows();
   
@@ -2848,8 +2844,7 @@ nsComputedDOMStyle::GetBorderRadiusFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  nsStyleCoord coord;
-  SetValueToCoord(val, GetStyleBorder()->mBorderRadius.Get(aSide, coord),
+  SetValueToCoord(val, GetStyleBorder()->mBorderRadius.Get(aSide),
                   &nsComputedDOMStyle::GetFrameBorderRectWidth);
 
   return CallQueryInterface(val, aValue);
@@ -2909,8 +2904,7 @@ nsComputedDOMStyle::GetMarginWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   if (!mInnerFrame) {
-    nsStyleCoord c;
-    SetValueToCoord(val, GetStyleMargin()->mMargin.Get(aSide, c));
+    SetValueToCoord(val, GetStyleMargin()->mMargin.Get(aSide));
   } else {
     FlushPendingReflows();
 
