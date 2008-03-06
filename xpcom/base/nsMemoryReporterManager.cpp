@@ -32,7 +32,7 @@ nsMemoryReporterManager::UnregisterReporter(nsIMemoryReporter *reporter)
     return NS_OK;
 }
 
-nsresult
+NS_COM nsresult
 NS_RegisterMemoryReporter (nsIMemoryReporter *reporter)
 {
     nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
@@ -41,7 +41,7 @@ NS_RegisterMemoryReporter (nsIMemoryReporter *reporter)
     return mgr->RegisterReporter(reporter);
 }
 
-nsresult
+NS_COM nsresult
 NS_UnregisterMemoryReporter (nsIMemoryReporter *reporter)
 {
     nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
