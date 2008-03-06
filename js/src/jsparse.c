@@ -5897,7 +5897,7 @@ FoldType(JSContext *cx, JSParseNode *pn, JSTokenType type)
           case TOK_NUMBER:
             if (pn->pn_type == TOK_STRING) {
                 jsdouble d;
-                if (!js_ValueToNumber(cx, ATOM_KEY(pn->pn_atom), &d))
+                if (!JS_ValueToNumber(cx, ATOM_KEY(pn->pn_atom), &d))
                     return JS_FALSE;
                 pn->pn_dval = d;
                 pn->pn_type = TOK_NUMBER;
