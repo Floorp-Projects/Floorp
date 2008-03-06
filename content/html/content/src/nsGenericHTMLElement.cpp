@@ -746,6 +746,7 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
   nsCOMPtr<nsIDOMNode> thisNode(do_QueryInterface(static_cast<nsIContent *>
                                                              (this)));
   nsresult rv = nsContentUtils::CreateContextualFragment(thisNode, aInnerHTML,
+                                                         PR_FALSE,
                                                          getter_AddRefs(df));
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIDOMNode> tmpNode;

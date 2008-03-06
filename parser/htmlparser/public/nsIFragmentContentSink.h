@@ -43,8 +43,8 @@ class nsIDOMDocumentFragment;
 class nsIDocument;
 
 #define NS_I_FRAGMENT_CONTENT_SINK_IID \
-  { 0x2cec7263, 0x9dd0, 0x4413, \
-    { 0xb6, 0x68, 0x6f, 0xf0, 0xa1, 0x40, 0xc1, 0xbe } }
+  { 0x1ecdb30d, 0x1f10, 0x45d2, \
+    { 0xa4, 0xf4, 0xec, 0xbc, 0x03, 0x52, 0x9a, 0x7e } }
 
 /**
  * The fragment sink allows a client to parse a fragment of sink, possibly
@@ -60,8 +60,11 @@ public:
    * a fragment content sink. The value returned will be null
    * if the content sink hasn't yet received parser notifications.
    *
+   * If aWillOwnFragment is PR_TRUE then the sink should drop its
+   * ownership of the fragment.
    */
-  NS_IMETHOD GetFragment(nsIDOMDocumentFragment** aFragment) = 0;
+  NS_IMETHOD GetFragment(PRBool aWillOwnFragment,
+                         nsIDOMDocumentFragment** aFragment) = 0;
 
   /**
    * This method is used to set the target document for this fragment
