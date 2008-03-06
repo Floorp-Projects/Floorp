@@ -1139,7 +1139,6 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSStackFrame *fp, *caller;
     JSBool indirectCall;
     JSObject *scopeobj;
-    JSClass *clasp;
     JSString *str;
     const char *file;
     uintN line;
