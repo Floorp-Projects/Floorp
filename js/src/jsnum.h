@@ -204,24 +204,29 @@ extern JSBool
 js_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp);
 
 /*
- * Convert a value or a double to an int32, according to the ECMA rules
- * for ToInt32.
+ * Convert a value to an int32 or uint32, according to the ECMA rules for
+ * ToInt32 and ToUint32. On failure the functions sets *vp to JSVAL_NULL. Any
+ * other value in *vp on exit indicates a success.
  */
-extern JSBool
-js_ValueToECMAInt32(JSContext *cx, jsval v, int32 *ip);
+extern int32
+js_ValueToECMAInt32(JSContext *cx, jsval *vp);
 
+extern uint32
+js_ValueToECMAUint32(JSContext *cx, jsval *vp);
+
+/*
+ * Specialized ToInt32 and ToUint32 converters for doubles.
+ */
 extern int32
 js_DoubleToECMAInt32(jsdouble d);
+
+extern uint32
+js_DoubleToECMAUint32(jsdouble d);
 
 /*
  * Convert a value or a double to a uint32, according to the ECMA rules
  * for ToUint32.
  */
-extern JSBool
-js_ValueToECMAUint32(JSContext *cx, jsval v, uint32 *ip);
-
-extern uint32
-js_DoubleToECMAUint32(jsdouble d);
 
 /*
  * Convert a value to a number, then to an int32 if it fits by rounding to

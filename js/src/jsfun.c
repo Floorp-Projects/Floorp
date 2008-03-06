@@ -1454,8 +1454,11 @@ fun_toStringHelper(JSContext *cx, uint32 indent, uintN argc, jsval *vp)
     }
 
     obj = JSVAL_TO_OBJECT(fval);
-    if (argc != 0 && !js_ValueToECMAUint32(cx, vp[2], &indent))
-        return JS_FALSE;
+    if (argc != 0) {
+        indent = js_ValueToECMAUint32(cx, &vp[2]);
+        if (vp[2] == JSVAL_NULL)
+            return JS_FALSE;
+    }
 
     JS_ASSERT(JS_ObjectIsFunction(cx, obj));
     fun = GET_FUNCTION_PRIVATE(cx, obj);
