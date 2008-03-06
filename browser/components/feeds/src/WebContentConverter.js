@@ -169,16 +169,12 @@ ServiceInfo.prototype = {
 function WebContentConverterRegistrar() {}
 
 WebContentConverterRegistrar.prototype = {
-  _stringBundle: null,
-
   get stringBundle() {
-    if (!this._stringBundle) {
-      this._stringBundle = Cc["@mozilla.org/intl/stringbundle;1"].
-                            getService(Ci.nsIStringBundleService).
-                            createBundle(STRING_BUNDLE_URI);
-    }
-
-    return this._stringBundle;
+    var sb = Cc["@mozilla.org/intl/stringbundle;1"].
+              getService(Ci.nsIStringBundleService).
+              createBundle(STRING_BUNDLE_URI);
+    delete WebContentConverterRegistrar.prototype.stringBundle;
+    return WebContentConverterRegistrar.prototype.stringBundle = sb;
   },
 
   _getFormattedString: function WCCR__getFormattedString(key, params) {
