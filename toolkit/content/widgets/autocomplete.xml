@@ -537,9 +537,6 @@
 
       <handler event="blur" phase="capturing"
                action="if (!this._dontBlur) this.detachController();"/>
-
-      <handler event="contextmenu" phase="capturing"
-               action="this.closePopup();"/>
     </handlers>
   </binding>
 
@@ -873,8 +870,11 @@
         this._normalMaxRows = -1;
         // If the list was being navigated and then closed, make sure
         // we fire accessible focus event back to textbox
-        if (isListActive)
+        if (isListActive) {
+          this.mInput.mIgnoreFocus = true;
           this.mInput._focus();
+          this.mInput.mIgnoreFocus = false;
+        }
       ]]></handler>
     </handlers>
   </binding>
