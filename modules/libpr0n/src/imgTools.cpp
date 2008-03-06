@@ -319,9 +319,8 @@ NS_IMETHODIMP imgTools::EncodeScaledImage(imgIContainer *aContainer,
     // Prepare to draw a scaled version of the image to a temporary surface...
 
     // Get the source image surface
-    nsRefPtr<gfxASurface> gfxsurf;
-    rv = img->GetSurface(getter_AddRefs(gfxsurf));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsRefPtr<gfxPattern> gfxpat;
+    img->GetPattern(getter_AddRefs(gfxpat));
 
     // Create a temporary image surface
     dest = new gfxImageSurface(gfxIntSize(aScaledWidth, aScaledHeight),
@@ -338,7 +337,7 @@ NS_IMETHODIMP imgTools::EncodeScaledImage(imgIContainer *aContainer,
 
     // Paint a scaled image
     ctx.SetOperator(gfxContext::OPERATOR_SOURCE);
-    ctx.SetSource(gfxsurf);
+    ctx.SetPattern(gfxpat);
     ctx.Paint();
 
     bitmapData = dest->Data();
