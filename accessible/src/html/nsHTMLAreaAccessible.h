@@ -48,7 +48,12 @@ class nsHTMLAreaAccessible : public nsLinkableAccessible
 {
 
 public:
-  nsHTMLAreaAccessible(nsIDOMNode *domNode, nsIAccessible *accParent, nsIWeakReference* aShell);
+  nsHTMLAreaAccessible(nsIDOMNode *domNode, nsIAccessible *accParent,
+                       nsIWeakReference* aShell);
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIAccessible
   NS_IMETHOD GetName(nsAString & _retval); 
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetFirstChild(nsIAccessible **_retval);
