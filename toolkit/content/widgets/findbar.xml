@@ -910,12 +910,16 @@
         -
         - @param aMimeType
         -        The MIME type to check.
+        -
+        - if adding types to this function, please see the similar function
+        - in browser/base/content/browser.js
         -->
       <method name="_mimeTypeIsTextBased">
         <parameter name="aMimeType"/>
         <body><![CDATA[
           return /^text\/|\+xml$/.test(aMimeType) ||
                  aMimeType == "application/x-javascript" ||
+                 aMimeType == "application/javascript" ||
                  aMimeType == "application/xml";
         ]]></body>
       </method>
