@@ -241,9 +241,8 @@ script_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             fp->scopeChain = scopeobj;  /* for the compiler's benefit */
         }
 
-        file = caller->script->filename;
-        line = js_PCToLineNumber(cx, caller->script, caller->pc);
         principals = JS_EvalFramePrincipals(cx, fp, caller);
+        file = js_ComputeFilename(cx, caller, principals, &line);
     } else {
         file = NULL;
         line = 0;

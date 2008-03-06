@@ -254,17 +254,12 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, PRBool *aIsInterval,
     mExpr = expr;
 
     nsIPrincipal *prin = aWindow->GetPrincipal();
-    JSPrincipals *jsprins;
-    rv = prin->GetJSPrincipals(cx, &jsprins);
-    NS_ENSURE_SUCCESS(rv, rv);
 
     // Get the calling location.
     const char *filename;
-    if (nsJSUtils::GetCallingLocation(cx, &filename, &mLineNo, jsprins)) {
+    if (nsJSUtils::GetCallingLocation(cx, &filename, &mLineNo, prin)) {
       mFileName.Assign(filename);
     }
-
-    JSPRINCIPALS_DROP(cx, jsprins);
   } else if (funobj) {
     rv = NS_HOLD_JS_OBJECTS(this, nsJSScriptTimeoutHandler);
     NS_ENSURE_SUCCESS(rv, rv);
