@@ -2451,6 +2451,7 @@ NS_IMETHODIMP DocumentViewerImpl::GetCopyable(PRBool *aCopyable)
   NS_ENSURE_ARG_POINTER(aCopyable);
   *aCopyable = PR_FALSE;
 
+  NS_ENSURE_STATE(mPresShell);
   nsCOMPtr<nsISelection> selection;
   nsresult rv = mPresShell->GetSelectionForCopy(getter_AddRefs(selection));
   if (NS_FAILED(rv))
