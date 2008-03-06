@@ -660,7 +660,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 #ifdef DEBUG
   printf("++DOMWINDOW == %d (%p) [serial = %d] [Outer = %p]\n", gRefCnt,
          static_cast<void*>(static_cast<nsIScriptGlobalObject*>(this)),
-         ++gSerialCounter, aOuterWindow);
+         ++gSerialCounter, static_cast<void*>(aOuterWindow));
   mSerial = gSerialCounter;
 #endif
 
@@ -682,7 +682,7 @@ nsGlobalWindow::~nsGlobalWindow()
 #ifdef DEBUG
   printf("--DOMWINDOW == %d (%p) [serial = %d] [Outer = %p]\n",
          gRefCnt, static_cast<void*>(static_cast<nsIScriptGlobalObject*>(this)),
-         mSerial, mOuterWindow);
+         mSerial, static_cast<void*>(mOuterWindow));
 #endif
 
 #ifdef PR_LOGGING
