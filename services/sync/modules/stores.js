@@ -210,16 +210,21 @@ SnapshotStore.prototype = {
     if (!file.exists())
       return;
 
-    let [is] = Utils.open(file, "<");
-    let json = Utils.readStream(is);
-    is.close();
-    json = this._json.decode(json);
+    try {
+      let [is] = Utils.open(file, "<");
+      let json = Utils.readStream(is);
+      is.close();
+      json = this._json.decode(json);
 
-    if (json && 'snapshot' in json && 'version' in json && 'GUID' in json) {
-      this._log.info("Read saved snapshot from disk");
-      this.data = json.snapshot;
-      this.version = json.version;
-      this.GUID = json.GUID;
+      if (json && 'snapshot' in json && 'version' in json && 'GUID' in json) {
+        this._log.info("Read saved snapshot from disk");
+        this.data = json.snapshot;
+        this.version = json.version;
+        this.GUID = json.GUID;
+      }
+    } catch (e) {
+      this._log.warn("Could not parse saved snapshot; reverting to initial-sync state");
+      this._log.debug("Exception: " + e);
     }
   },
 
