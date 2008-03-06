@@ -420,6 +420,31 @@ protected:
                                      PRInt32 *widthOut, PRInt32 *heightOut,
                                      nsIPrincipal **prinOut,
                                      PRBool *forceWriteOnlyOut);
+
+    // other helpers
+    void GetAppUnitsValues(PRUint32 *perDevPixel, PRUint32 *perCSSPixel) {
+        // If we don't have a canvas element, we just return something generic.
+        PRUint32 devPixel = 60;
+        PRUint32 cssPixel = 60;
+
+        nsCOMPtr<nsINode> elem = do_QueryInterface(mCanvasElement);
+        if (elem) {
+            nsIDocument *doc = elem->GetOwnerDoc();
+            if (!doc) goto FINISH;
+            nsIPresShell *ps = doc->GetPrimaryShell();
+            if (!ps) goto FINISH;
+            nsPresContext *pc = ps->GetPresContext();
+            if (!pc) goto FINISH;
+            devPixel = pc->AppUnitsPerDevPixel();
+            cssPixel = pc->AppUnitsPerCSSPixel();
+        }
+
+      FINISH:
+        if (perDevPixel)
+            *perDevPixel = devPixel;
+        if (cssPixel)
+            *perCSSPixel = cssPixel;
+    }
 };
 
 NS_IMPL_ADDREF(nsCanvasRenderingContext2D)
@@ -570,7 +595,13 @@ nsCanvasRenderingContext2D::DoDrawImageSecurityCheck(nsIPrincipal* aPrincipal,
                                                      PRBool forceWriteOnly)
 {
     NS_PRECONDITION(aPrincipal, "Must have a principal here");
-    
+
+    // Callers should ensure that mCanvasElement is non-null before calling this
+    if (!mCanvasElement) {
+        NS_WARNING("DoDrawImageSecurityCheck called without canvas element!");
+        return;
+    }
+
     if (mCanvasElement->IsWriteOnly())
         return;
 
@@ -610,6 +641,9 @@ nsCanvasRenderingContext2D::ApplyStyle(PRInt32 aWhichStyle)
 
     nsCanvasPattern* pattern = CurrentState().patternStyles[aWhichStyle];
     if (pattern) {
+        if (!mCanvasElement)
+            return;
+
         DoDrawImageSecurityCheck(pattern->Principal(),
                                  pattern->GetForceWriteOnly());
         pattern->Apply(mCairo);
@@ -1432,21 +1466,28 @@ nsCanvasRenderingContext2D::SetMozTextStyle(const nsAString& textStyle)
     if(mTextStyle.Equals(textStyle)) return NS_OK;
 
     nsCOMPtr<nsINode> elem = do_QueryInterface(mCanvasElement);
-    NS_ASSERTION(elem, "Canvas element must be a dom node");
+    if (!elem) {
+        NS_WARNING("Canvas element must be an nsINode and non-null");
+        return NS_ERROR_FAILURE;
+    }
 
-    nsCOMPtr<nsIPrincipal> elemPrincipal;
-    nsCOMPtr<nsIDocument> elemDocument;
+    nsIPrincipal* elemPrincipal = elem->NodePrincipal();
+    nsIDocument* elemDocument = elem->GetOwnerDoc();
 
-    elemPrincipal = elem->NodePrincipal();
-    elemDocument = elem->GetOwnerDoc();
+    if (!elemDocument || !elemPrincipal) {
+        NS_WARNING("Element is missing document or principal");
+        return NS_ERROR_FAILURE;
+    }
 
-    NS_ASSERTION(elemDocument && elemPrincipal, "Element is missing document or principal");
+    nsIPresShell* presShell = elemDocument->GetPrimaryShell();
+    if (!presShell)
+        return NS_ERROR_FAILURE;
 
     nsIURI *docURL = elemDocument->GetDocumentURI();
     nsIURI *baseURL = elemDocument->GetBaseURI();
 
     nsCString langGroup;
-    elemDocument->GetPrimaryShell()->GetPresContext()->GetLangGroup()->ToUTF8String(langGroup);
+    presShell->GetPresContext()->GetLangGroup()->ToUTF8String(langGroup);
 
     nsCOMArray<nsIStyleRule> rules;
     PRBool changed;
@@ -1469,14 +1510,14 @@ nsCanvasRenderingContext2D::SetMozTextStyle(const nsAString& textStyle)
 
     rules.AppendObject(rule);
 
-    nsStyleSet *styleSet = elemDocument->GetPrimaryShell()->StyleSet();
+    nsStyleSet *styleSet = presShell->StyleSet();
 
     nsRefPtr<nsStyleContext> sc = styleSet->ResolveStyleForRules(nsnull,rules);
     const nsStyleFont *fontStyle = sc->GetStyleFont();
 
     NS_ASSERTION(fontStyle, "Could not obtain font style");
 
-    PRUint32 aupdp = elemDocument->GetPrimaryShell()->GetPresContext()->AppUnitsPerDevPixel();
+    PRUint32 aupdp = presShell->GetPresContext()->AppUnitsPerDevPixel();
 
     gfxFontStyle style(fontStyle->mFont.style,
                        fontStyle->mFont.weight,
@@ -1514,16 +1555,13 @@ gfxFontGroup *nsCanvasRenderingContext2D::GetCurrentFontStyle()
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::MozDrawText(const nsAString& textToDraw)
 {
-    nsCOMPtr<nsINode> elem = do_QueryInterface(mCanvasElement);
-    NS_ASSERTION(elem, "Canvas element must be an nsINode");
-
-    nsCOMPtr<nsIDocument> elemDocument(elem->GetOwnerDoc());
-
     const PRUnichar* textdata;
     textToDraw.GetData(&textdata);
 
     PRUint32 textrunflags = 0;
-    PRUint32 aupdp = elemDocument->GetPrimaryShell()->GetPresContext()->AppUnitsPerDevPixel();
+
+    PRUint32 aupdp;
+    GetAppUnitsValues(&aupdp, NULL);
 
     gfxTextRunCache::AutoTextRun textRun;
     textRun = gfxTextRunCache::MakeTextRun(textdata,
@@ -1554,16 +1592,12 @@ nsCanvasRenderingContext2D::MozDrawText(const nsAString& textToDraw)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::MozMeasureText(const nsAString& textToMeasure, float *retVal)
 {
-    nsCOMPtr<nsINode> elem = do_QueryInterface(mCanvasElement);
-    NS_ASSERTION(elem, "Canvas element must be an nsINode");
-
-    nsCOMPtr<nsIDocument> elemDocument(elem->GetOwnerDoc());
-
     const PRUnichar* textdata;
     textToMeasure.GetData(&textdata);
 
     PRUint32 textrunflags = 0;
-    PRUint32 aupdp = elemDocument->GetPrimaryShell()->GetPresContext()->AppUnitsPerDevPixel();
+    PRUint32 aupdp, aupcp;
+    GetAppUnitsValues(&aupdp, &aupcp);
 
     gfxTextRunCache::AutoTextRun textRun;
     textRun = gfxTextRunCache::MakeTextRun(textdata,
@@ -1580,23 +1614,20 @@ nsCanvasRenderingContext2D::MozMeasureText(const nsAString& textToMeasure, float
     gfxTextRun::Metrics metrics = textRun->MeasureText(/* offset = */ 0, textToMeasure.Length(),
                                                        tightBoundingBox, mThebesContext,
                                                        nsnull);
-    *retVal = float(metrics.mAdvanceWidth/gfxFloat(elemDocument->GetPrimaryShell()->GetPresContext()->AppUnitsPerCSSPixel()));
+    *retVal = float(metrics.mAdvanceWidth/gfxFloat(aupcp));
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::MozPathText(const nsAString& textToPath)
 {
-    nsCOMPtr<nsINode> elem = do_QueryInterface(mCanvasElement);
-    NS_ASSERTION(elem, "Canvas element must be an nsINode");
-
-    nsCOMPtr<nsIDocument> elemDocument(elem->GetOwnerDoc());
-
     const PRUnichar* textdata;
     textToPath.GetData(&textdata);
 
     PRUint32 textrunflags = 0;
-    PRUint32 aupdp = elemDocument->GetPrimaryShell()->GetPresContext()->AppUnitsPerDevPixel();
+
+    PRUint32 aupdp;
+    GetAppUnitsValues(&aupdp, NULL);
 
     gfxTextRunCache::AutoTextRun textRun;
     textRun = gfxTextRunCache::MakeTextRun(textdata,
@@ -1626,16 +1657,13 @@ nsCanvasRenderingContext2D::MozTextAlongPath(const nsAString& textToDraw, PRBool
     // Most of this code is copied from its svg equivalent
     nsRefPtr<gfxFlattenedPath> path(mThebesContext->GetFlattenedPath());
 
-    nsCOMPtr<nsINode> elem = do_QueryInterface(mCanvasElement);
-    NS_ASSERTION(elem, "Canvas element must be an nsINode");
-
-    nsCOMPtr<nsIDocument> elemDocument(elem->GetOwnerDoc());
-
     const PRUnichar* textdata;
     textToDraw.GetData(&textdata);
 
     PRUint32 textrunflags = 0;
-    PRUint32 aupdp = elemDocument->GetPrimaryShell()->GetPresContext()->AppUnitsPerDevPixel();
+
+    PRUint32 aupdp;
+    GetAppUnitsValues(&aupdp, NULL);
 
     gfxTextRunCache::AutoTextRun textRun;
     textRun = gfxTextRunCache::MakeTextRun(textdata,
@@ -1709,7 +1737,7 @@ nsCanvasRenderingContext2D::MozTextAlongPath(const nsAString& textToDraw, PRBool
         mThebesContext->SetMatrix(matrix);
     }
 
-    delete[] cp;
+    delete [] cp;
 
     return NS_OK;
 }
@@ -1850,6 +1878,11 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::DrawImage()
 {
     nsresult rv;
+
+    // we can't do a security check without a canvas element, so
+    // just skip this entirely
+    if (!mCanvasElement)
+        return NS_ERROR_FAILURE;
 
     nsAXPCNativeCallContext *ncc = nsnull;
     rv = nsContentUtils::XPConnect()->
@@ -2360,7 +2393,7 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::GetImageData()
 {
-    if (!mValid)
+    if (!mValid || !mCanvasElement)
         return NS_ERROR_FAILURE;
 
     if (mCanvasElement->IsWriteOnly() && !nsContentUtils::IsCallerTrustedForRead()) {
