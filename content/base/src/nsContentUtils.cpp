@@ -3354,6 +3354,7 @@ nsContentUtils::IsValidNodeName(nsIAtom *aLocalName, nsIAtom *aPrefix,
 nsresult
 nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
                                          const nsAString& aFragment,
+                                         PRBool aWillOwnFragment,
                                          nsIDOMDocumentFragment** aReturn)
 {
   NS_ENSURE_ARG(aContextNode);
@@ -3499,7 +3500,7 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
   rv = parser->ParseFragment(aFragment, nsnull, tagStack,
                              !bHTML, contentType, mode);
   if (NS_SUCCEEDED(rv)) {
-    rv = sink->GetFragment(aReturn);
+    rv = sink->GetFragment(aWillOwnFragment, aReturn);
   }
 
   document->SetFragmentParser(parser);
