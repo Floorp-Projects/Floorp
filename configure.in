@@ -6550,6 +6550,15 @@ dnl Test for profiling options
 dnl Under gcc 3.3, use -fprofile-arcs/-fbranch-probabilities
 dnl Under gcc 3.4+, use -fprofile-generate/-fprofile-use
 
+dnl Provide a switch to disable PGO even when called via profiledbuild.
+MOZ_ARG_DISABLE_BOOL(profile-guided-optimization,
+[  --disable-profile-guided-optimization
+                           Don't build with PGO even if called via make profiledbuild],
+MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE=1,
+MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE=)
+
+AC_SUBST(MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE)
+
 _SAVE_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS -fprofile-generate"
 
