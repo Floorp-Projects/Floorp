@@ -115,13 +115,7 @@ FindPrincipals(JSContext *cx, JSObject *obj, nsIPrincipal **objectPrincipal,
   nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
 
   if (subjectPrincipal) {
-    nsCOMPtr<nsIPrincipal> tmp = ssm->GetCxSubjectPrincipal(cx);
-
-    if (!tmp) {
-      return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
-    }
-
-    tmp.swap(*subjectPrincipal);
+    NS_IF_ADDREF(*subjectPrincipal = ssm->GetCxSubjectPrincipal(cx));
   }
 
   ssm->GetObjectPrincipal(cx, obj, objectPrincipal);
@@ -143,6 +137,11 @@ CanCallerAccess(JSContext *cx, JSObject *unsafeObj)
                                getter_AddRefs(ssm));
   if (NS_FAILED(rv)) {
     return ThrowException(rv, cx);
+  }
+
+  // Assume that we're trusted if there's no running code.
+  if (!subjPrincipal) {
+    return PR_TRUE;
   }
 
   PRBool subsumes;
@@ -305,7 +304,7 @@ WrapJSValue(JSContext *cx, JSObject *obj, jsval val, jsval *rval)
 
       // If the subject can access both the source and object principals, then
       // don't bother forcing the principal below.
-      if (!subsumes) {
+      if (!subsumes && subjPrincipal) {
         PRBool subjSubsumes = PR_FALSE;
         rv = subjPrincipal->Subsumes(srcObjPrincipal, &subjSubsumes);
         if (NS_SUCCEEDED(rv) && subjSubsumes) {
