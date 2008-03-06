@@ -2390,8 +2390,11 @@ array_concat(JSContext *cx, uintN argc, jsval *vp)
             goto out;
         v = argv[i];
         if (JSVAL_IS_OBJECT(v)) {
+            JSObject *wobj;
+
             aobj = JSVAL_TO_OBJECT(v);
-            if (aobj && OBJ_IS_ARRAY(cx, aobj)) {
+            wobj = js_GetWrappedObject(cx, aobj);
+            if (aobj && OBJ_IS_ARRAY(cx, wobj)) {
                 ok = OBJ_GET_PROPERTY(cx, aobj,
                                       ATOM_TO_JSID(cx->runtime->atomState
                                                    .lengthAtom),

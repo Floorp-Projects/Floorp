@@ -2874,17 +2874,7 @@ ProcessSetSlotRequest(JSContext *cx, JSSetSlotRequest *ssr)
     slot = ssr->slot;
 
     while (pobj) {
-        JSClass *clasp = STOBJ_GET_CLASS(pobj);
-        if (clasp->flags & JSCLASS_IS_EXTENDED) {
-            JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
-            if (xclasp->wrappedObject) {
-                /* If there is no wrapped object, use the wrapper. */
-                JSObject *wrapped = xclasp->wrappedObject(cx, pobj);
-                if (wrapped)
-                    pobj = wrapped;
-            }
-        }
-
+        pobj = js_GetWrappedObject(cx, pobj);
         if (pobj == obj) {
             ssr->errnum = JSMSG_CYCLIC_VALUE;
             return;
