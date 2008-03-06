@@ -303,6 +303,7 @@
                                          aCurTotalProgress, aMaxTotalProgress);
                     } catch (e) {
                       // don't inhibit other listeners or following code
+                      Components.utils.reportError(e);
                     }
                 }
               }
@@ -411,6 +412,7 @@
                         p.onUpdateCurrentBrowser(aStateFlags, aStatus, "", 0);
                     } catch (e) {
                       // don't inhibit other listeners or following code
+                      Components.utils.reportError(e);
                     }
                 }
               }
@@ -446,6 +448,7 @@
                       p.onLocationChange(aWebProgress, aRequest, aLocation);
                     } catch (e) {
                       // don't inhibit other listeners
+                      Components.utils.reportError(e);
                     }
                 }
               }
@@ -464,6 +467,7 @@
                       p.onStatusChange(aWebProgress, aRequest, aStatus, aMessage);
                     } catch (e) {
                       // don't inhibit other listeners or following code
+                      Components.utils.reportError(e);
                     }
                 }
               }
@@ -481,6 +485,7 @@
                       p.onSecurityChange(aWebProgress, aRequest, aState);
                     } catch (e) {
                       // don't inhibit other listeners
+                      Components.utils.reportError(e);
                     }
                 }
               }
@@ -497,6 +502,7 @@
                        allowRefresh = false;
                     } catch (e) {
                       // don't inhibit other listeners or following code
+                      Components.utils.reportError(e);
                     }
                  }
                }
@@ -544,6 +550,7 @@
                   p.onLinkIconAvailable(browser);
                 } catch (e) {
                   // don't inhibit other listeners
+                  Components.utils.reportError(e);
                 }
             }
           ]]>
@@ -781,6 +788,7 @@
                   }
                 } catch (e) {
                   // don't inhibit other listeners or following code
+                  Components.utils.reportError(e);
                 }
             }
 
@@ -802,6 +810,7 @@
                     p.onStateChange(webProgress, null, nsIWebProgressListener.STATE_START | nsIWebProgressListener.STATE_IS_NETWORK, 0);
                   } catch (e) {
                     // don't inhibit other listeners or following code
+                    Components.utils.reportError(e);
                   }
               }
             }
@@ -818,6 +827,7 @@
                     p.onStateChange(webProgress, null, nsIWebProgressListener.STATE_STOP | nsIWebProgressListener.STATE_IS_NETWORK, 0);
                   } catch (e) {
                     // don't inhibit other listeners or following code
+                    Components.utils.reportError(e);
                   }
               }
             }
