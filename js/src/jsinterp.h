@@ -455,7 +455,7 @@ extern JSBool
 js_InvokeConstructor(JSContext *cx, jsval *vp, uintN argc);
 
 extern JSBool
-js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result);
+js_Interpret(JSContext *cx);
 
 #define JSPROP_INITIALIZER 0x100   /* NB: Not a valid property attribute. */
 
