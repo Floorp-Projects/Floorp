@@ -2917,18 +2917,17 @@ AddCoord(const nsStyleCoord& aStyle,
 nsFrame::IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext)
 {
   IntrinsicWidthOffsetData result;
-  nsStyleCoord tmp;
 
   const nsStyleMargin *styleMargin = GetStyleMargin();
-  AddCoord(styleMargin->mMargin.GetLeft(tmp), aRenderingContext, this,
+  AddCoord(styleMargin->mMargin.GetLeft(), aRenderingContext, this,
            &result.hMargin, &result.hPctMargin);
-  AddCoord(styleMargin->mMargin.GetRight(tmp), aRenderingContext, this,
+  AddCoord(styleMargin->mMargin.GetRight(), aRenderingContext, this,
            &result.hMargin, &result.hPctMargin);
 
   const nsStylePadding *stylePadding = GetStylePadding();
-  AddCoord(stylePadding->mPadding.GetLeft(tmp), aRenderingContext, this,
+  AddCoord(stylePadding->mPadding.GetLeft(), aRenderingContext, this,
            &result.hPadding, &result.hPctPadding);
-  AddCoord(stylePadding->mPadding.GetRight(tmp), aRenderingContext, this,
+  AddCoord(stylePadding->mPadding.GetRight(), aRenderingContext, this,
            &result.hPadding, &result.hPctPadding);
 
   const nsStyleBorder *styleBorder = GetStyleBorder();

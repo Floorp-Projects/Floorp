@@ -2724,10 +2724,10 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   }
 
   // get the radius for our border
-  aBorderStyle.mBorderRadius.GetTop(bordStyleRadius[0]);      //topleft
-  aBorderStyle.mBorderRadius.GetRight(bordStyleRadius[1]);    //topright
-  aBorderStyle.mBorderRadius.GetBottom(bordStyleRadius[2]);   //bottomright
-  aBorderStyle.mBorderRadius.GetLeft(bordStyleRadius[3]);     //bottomleft
+  bordStyleRadius[0] = aBorderStyle.mBorderRadius.GetTop();    //topleft
+  bordStyleRadius[1] = aBorderStyle.mBorderRadius.GetRight();  //topright
+  bordStyleRadius[2] = aBorderStyle.mBorderRadius.GetBottom(); //bottomright
+  bordStyleRadius[3] = aBorderStyle.mBorderRadius.GetLeft();   //bottomleft
 
   // convert percentage values
   for(int i = 0; i < 4; i++) {
@@ -2890,10 +2890,10 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
     (aStyleContext, PR_FALSE);
 
   // get the radius for our outline
-  aOutlineStyle.mOutlineRadius.GetTop(bordStyleRadius[0]);      //topleft
-  aOutlineStyle.mOutlineRadius.GetRight(bordStyleRadius[1]);    //topright
-  aOutlineStyle.mOutlineRadius.GetBottom(bordStyleRadius[2]);   //bottomright
-  aOutlineStyle.mOutlineRadius.GetLeft(bordStyleRadius[3]);     //bottomleft
+  bordStyleRadius[0] = aOutlineStyle.mOutlineRadius.GetTop();    //topleft
+  bordStyleRadius[1] = aOutlineStyle.mOutlineRadius.GetRight();  //topright
+  bordStyleRadius[2] = aOutlineStyle.mOutlineRadius.GetBottom(); //bottomright
+  bordStyleRadius[3] = aOutlineStyle.mOutlineRadius.GetLeft();   //bottomleft
 
   // convert percentage values
   for (int i = 0; i < 4; i++) {
@@ -3737,10 +3737,10 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   nscoord borderRadii[4];
 
   // get the radius for our border
-  aBorder.mBorderRadius.GetTop(bordStyleRadius[NS_SIDE_TOP]);       // topleft
-  aBorder.mBorderRadius.GetRight(bordStyleRadius[NS_SIDE_RIGHT]);   // topright
-  aBorder.mBorderRadius.GetBottom(bordStyleRadius[NS_SIDE_BOTTOM]); // bottomright
-  aBorder.mBorderRadius.GetLeft(bordStyleRadius[NS_SIDE_LEFT]);     // bottomleft
+  bordStyleRadius[NS_SIDE_TOP] = aBorder.mBorderRadius.GetTop();       // topleft
+  bordStyleRadius[NS_SIDE_RIGHT] = aBorder.mBorderRadius.GetRight();   // topright
+  bordStyleRadius[NS_SIDE_BOTTOM] = aBorder.mBorderRadius.GetBottom(); // bottomright
+  bordStyleRadius[NS_SIDE_LEFT] = aBorder.mBorderRadius.GetLeft();     // bottomleft
 
   PRBool haveRadius = PR_FALSE;
   PRUint8 side = 0;
@@ -3951,10 +3951,10 @@ nsCSSRendering::PaintBackgroundColor(nsPresContext* aPresContext,
   nsRect bgClipArea(aBgClipArea);
 
   // get the radius for our border
-  aBorder.mBorderRadius.GetTop(bordStyleRadius[NS_SIDE_TOP]);       // topleft
-  aBorder.mBorderRadius.GetRight(bordStyleRadius[NS_SIDE_RIGHT]);   // topright
-  aBorder.mBorderRadius.GetBottom(bordStyleRadius[NS_SIDE_BOTTOM]); // bottomright
-  aBorder.mBorderRadius.GetLeft(bordStyleRadius[NS_SIDE_LEFT]);     // bottomleft
+  bordStyleRadius[NS_SIDE_TOP] = aBorder.mBorderRadius.GetTop();       // topleft
+  bordStyleRadius[NS_SIDE_RIGHT] = aBorder.mBorderRadius.GetRight();   // topright
+  bordStyleRadius[NS_SIDE_BOTTOM] = aBorder.mBorderRadius.GetBottom(); // bottomright
+  bordStyleRadius[NS_SIDE_LEFT] = aBorder.mBorderRadius.GetLeft();     // bottomleft
 
   PRUint8 side = 0;
   for (; side < 4; ++side) {

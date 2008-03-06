@@ -2458,16 +2458,10 @@ static PRBool NonZeroStyleCoord(const nsStyleCoord& aCoord)
 /* static */ PRBool
 nsLayoutUtils::HasNonZeroSide(const nsStyleSides& aSides)
 {
-  nsStyleCoord coord;
-  aSides.GetTop(coord);
-  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
-  aSides.GetRight(coord);
-  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
-  aSides.GetBottom(coord);
-  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
-  aSides.GetLeft(coord);
-  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
-  return PR_FALSE;
+  return NonZeroStyleCoord(aSides.GetTop()) ||
+         NonZeroStyleCoord(aSides.GetRight()) ||
+         NonZeroStyleCoord(aSides.GetBottom()) ||
+         NonZeroStyleCoord(aSides.GetLeft());
 }
 
 /* static */ PRBool
