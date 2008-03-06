@@ -53,6 +53,10 @@ nsLinkableAccessible(aDomNode, aShell)
 { 
 }
 
+// Expose nsIAccessibleHyperLink unconditionally
+NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLAreaAccessible, nsLinkableAccessible,
+                             nsIAccessibleHyperLink)
+
 /* wstring getName (); */
 NS_IMETHODIMP nsHTMLAreaAccessible::GetName(nsAString & aName)
 {
