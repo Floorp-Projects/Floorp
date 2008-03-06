@@ -1620,10 +1620,15 @@ static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
     }
     if (SelectorMatches(*data, selector, 0, nsnull)) {
       // to avoid greedy matching, we need to recur if this is a
-      // descendant combinator and the next combinator is not
+      // descendant or general sibling combinator and the next
+      // combinator is different, but we can make an exception for
+      // sibling, then parent, since a sibling's parent is always the
+      // same.
       if ((NS_IS_GREEDY_OPERATOR(selector->mOperator)) &&
           (selector->mNext) &&
-          (!NS_IS_GREEDY_OPERATOR(selector->mNext->mOperator))) {
+          (selector->mNext->mOperator != selector->mOperator) &&
+          !(selector->mOperator == '~' &&
+            selector->mNext->mOperator == PRUnichar(0))) {
 
         // pretend the selector didn't match, and step through content
         // while testing the same selector
