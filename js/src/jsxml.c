@@ -1932,7 +1932,7 @@ GetUint32XMLSetting(JSContext *cx, const char *name, uint32 *uip)
 {
     jsval v;
 
-    return GetXMLSetting(cx, name, &v) && js_ValueToECMAUint32(cx, v, uip);
+    return GetXMLSetting(cx, name, &v) && JS_ValueToECMAUint32(cx, v, uip);
 }
 
 static JSBool

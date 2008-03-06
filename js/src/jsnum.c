@@ -118,7 +118,8 @@ num_parseInt(JSContext *cx, uintN argc, jsval *vp)
     const jschar *bp, *end, *ep;
 
     if (argc > 1) {
-        if (!js_ValueToECMAInt32(cx, vp[3], &radix))
+        radix = js_ValueToECMAInt32(cx, &vp[3]);
+        if (vp[3] == JSVAL_NULL)
             return JS_FALSE;
     } else {
         radix = 0;
@@ -262,7 +263,8 @@ num_toString(JSContext *cx, uintN argc, jsval *vp)
     d = JSVAL_IS_INT(v) ? (jsdouble)JSVAL_TO_INT(v) : *JSVAL_TO_DOUBLE(v);
     base = 10;
     if (argc != 0 && !JSVAL_IS_VOID(vp[2])) {
-        if (!js_ValueToECMAInt32(cx, vp[2], &base))
+        base = js_ValueToECMAInt32(cx, &vp[2]);
+        if (vp[2] == JSVAL_NULL)
             return JS_FALSE;
         if (base < 2 || base > 36) {
             char numBuf[12];
@@ -771,55 +773,92 @@ badstr:
     return JS_TRUE;
 }
 
-JSBool
-js_ValueToECMAInt32(JSContext *cx, jsval v, int32 *ip)
+int32
+js_ValueToECMAInt32(JSContext *cx, jsval *vp)
 {
+    jsval v;
     jsdouble d;
 
-    if (!js_ValueToNumber(cx, v, &d))
-        return JS_FALSE;
-    *ip = js_DoubleToECMAInt32(d);
-    return JS_TRUE;
+    v = *vp;
+    if (JSVAL_IS_INT(v))
+        return JSVAL_TO_INT(v);
+    if (JSVAL_IS_DOUBLE(v)) {
+        d = *JSVAL_TO_DOUBLE(v);
+    } else {
+        if (!js_ValueToNumber(cx, v, &d)) {
+            *vp = JSVAL_NULL;
+            return 0;
+        }
+        *vp = JSVAL_ZERO;
+    }
+    return js_DoubleToECMAInt32(d);
 }
 
 int32
 js_DoubleToECMAInt32(jsdouble d)
 {
-    jsdouble two32 = 4294967296.0;
-    jsdouble two31 = 2147483648.0;
+    int32 i;
+    jsdouble two32, two31;
 
-    if (!JSDOUBLE_IS_FINITE(d) || d == 0)
+    if (!JSDOUBLE_IS_FINITE(d))
         return 0;
 
+    i = (int32) d;
+    if ((jsdouble) i == d)
+        return i;
+
+    two32 = 4294967296.0;
+    two31 = 2147483648.0;
     d = fmod(d, two32);
     d = (d >= 0) ? floor(d) : ceil(d) + two32;
     return (int32) (d >= two31 ? d - two32 : d);
 }
 
-JSBool
-js_ValueToECMAUint32(JSContext *cx, jsval v, uint32 *ip)
+uint32
+js_ValueToECMAUint32(JSContext *cx, jsval *vp)
 {
+    jsval v;
     jsdouble d;
 
-    if (!js_ValueToNumber(cx, v, &d))
-        return JS_FALSE;
-    *ip = js_DoubleToECMAUint32(d);
-    return JS_TRUE;
+    v = *vp;
+    if (JSVAL_IS_INT(v))
+        return (uint32) JSVAL_TO_INT(v);
+    if (JSVAL_IS_DOUBLE(v)) {
+        d = *JSVAL_TO_DOUBLE(v);
+    } else {
+        if (!js_ValueToNumber(cx, v, &d)) {
+            *vp = JSVAL_NULL;
+            return 0;
+        }
+        *vp = JSVAL_ZERO;
+    }
+    return js_DoubleToECMAUint32(d);
 }
 
 uint32
 js_DoubleToECMAUint32(jsdouble d)
 {
+    int32 i;
     JSBool neg;
-    jsdouble two32 = 4294967296.0;
+    jsdouble two32;
 
-    if (!JSDOUBLE_IS_FINITE(d) || d == 0)
+    if (!JSDOUBLE_IS_FINITE(d))
         return 0;
+
+    /*
+     * We check whether d fits int32, not uint32, as all but the ">>>" bit
+     * manipulation bytecode stores the result as int, not uint. When the
+     * result does not fit int jsval, it will be stored as a negative double.
+     */
+    i = (int32) d;
+    if ((jsdouble) i == d)
+        return (int32)i;
 
     neg = (d < 0);
     d = floor(neg ? -d : d);
     d = neg ? -d : d;
 
+    two32 = 4294967296.0;
     d = fmod(d, two32);
 
     return (uint32) (d >= 0 ? d : d + two32);
