@@ -352,19 +352,17 @@ nsFieldSetFrame::GetLegendPrefWidth(nsIRenderingContext* aRenderingContext)
   // because legends ignore their CSS-specified width.
   nscoord result = mLegendFrame->GetPrefWidth(aRenderingContext);
 
-  nsStyleCoord tmp;
-
   const nsStylePadding *stylePadding = mLegendFrame->GetStylePadding();
-  result += GetCoord(stylePadding->mPadding.GetLeft(tmp), 0);
-  result += GetCoord(stylePadding->mPadding.GetRight(tmp), 0);
+  result += GetCoord(stylePadding->mPadding.GetLeft(), 0);
+  result += GetCoord(stylePadding->mPadding.GetRight(), 0);
 
   const nsStyleBorder *styleBorder = mLegendFrame->GetStyleBorder();
   result += styleBorder->GetBorderWidth(NS_SIDE_LEFT);
   result += styleBorder->GetBorderWidth(NS_SIDE_RIGHT);
 
   const nsStyleMargin *styleMargin = mLegendFrame->GetStyleMargin();
-  result += GetCoord(styleMargin->mMargin.GetLeft(tmp), 0);
-  result += GetCoord(styleMargin->mMargin.GetRight(tmp), 0);
+  result += GetCoord(styleMargin->mMargin.GetLeft(), 0);
+  result += GetCoord(styleMargin->mMargin.GetRight(), 0);
 
   return result;
 }

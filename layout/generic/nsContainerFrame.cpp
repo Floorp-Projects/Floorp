@@ -655,16 +655,15 @@ nsContainerFrame::DoInlineIntrinsicWidth(nsIRenderingContext *aRenderingContext,
   const nsStylePadding *stylePadding = GetStylePadding();
   const nsStyleBorder *styleBorder = GetStyleBorder();
   const nsStyleMargin *styleMargin = GetStyleMargin();
-  nsStyleCoord marginCoord, paddingCoord;
 
   // This goes at the beginning no matter how things are broken and how
   // messy the bidi situations are, since per CSS2.1 section 8.6
   // (implemented in bug 328168), the startSide border is always on the
   // first line.
   aData->currentLine +=
-    GetCoord(stylePadding->mPadding.Get(startSide, paddingCoord), 0) +
+    GetCoord(stylePadding->mPadding.Get(startSide), 0) +
     styleBorder->GetBorderWidth(startSide) +
-    GetCoord(styleMargin->mMargin.Get(startSide, marginCoord), 0);
+    GetCoord(styleMargin->mMargin.Get(startSide), 0);
 
   const nsLineList_iterator* savedLine = aData->line;
 
@@ -692,9 +691,9 @@ nsContainerFrame::DoInlineIntrinsicWidth(nsIRenderingContext *aRenderingContext,
   // (implemented in bug 328168), the endSide border is always on the
   // last line.
   aData->currentLine +=
-    GetCoord(stylePadding->mPadding.Get(endSide, paddingCoord), 0) +
+    GetCoord(stylePadding->mPadding.Get(endSide), 0) +
     styleBorder->GetBorderWidth(endSide) +
-    GetCoord(styleMargin->mMargin.Get(endSide, marginCoord), 0);
+    GetCoord(styleMargin->mMargin.Get(endSide), 0);
 }
 
 /* virtual */ nsSize
