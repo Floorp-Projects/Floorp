@@ -346,6 +346,10 @@ class Dumper:
     def SourceServerIndexing(self, debug_file, guid, sourceFileStream):
         return ""
 
+    # subclasses override this if they want to support this
+    def CopyDebug(self, file, debug_file, guid):
+        pass
+
     def Process(self, file_or_dir):
         "Process a file or all the (valid) files in a directory."
         if os.path.isdir(file_or_dir):
@@ -416,13 +420,7 @@ class Dumper:
                     # was generated
                     print rel_path
                     if self.copy_debug:
-                        rel_path = os.path.join(debug_file,
-                                                guid,
-                                                debug_file).replace("\\", "/")
-                        print rel_path
-                        full_path = os.path.normpath(os.path.join(self.symbol_path,
-                                                                  rel_path))
-                        shutil.copyfile(file, full_path)
+                        self.CopyDebug(file, debug_file, guid)
                     if self.srcsrv:
                         # Call on SourceServerIndexing
                         result = self.SourceServerIndexing(debug_file, guid, sourceFileStream)
@@ -471,6 +469,16 @@ class Dumper_Win32(Dumper):
         # Cache the corrected version to avoid future filesystem hits.
         self.fixedFilenameCaseCache[file] = result
         return result
+
+    def CopyDebug(self, file, debug_file, guid):
+        rel_path = os.path.join(debug_file,
+                                guid,
+                                debug_file).replace("\\", "/")
+        print rel_path
+        full_path = os.path.normpath(os.path.join(self.symbol_path,
+                                                  rel_path))
+        shutil.copyfile(file, full_path)
+        pass
         
     def SourceServerIndexing(self, debug_file, guid, sourceFileStream):
         # Creates a .pdb.stream file in the mozilla\objdir to be used for source indexing
@@ -501,6 +509,24 @@ class Dumper_Linux(Dumper):
         if file.endswith(".so") or os.access(file, os.X_OK):
             return self.RunFileCommand(file).startswith("ELF")
         return False
+
+    def CopyDebug(self, file, debug_file, guid):
+        # We want to strip out the debug info, and add a
+        # .gnu_debuglink section to the object, so the debugger can
+        # actually load our debug info later.
+        file_dbg = file + ".dbg"
+        os.system("objcopy --only-keep-debug %s %s" % (file, file_dbg))
+        os.system("objcopy --add-gnu-debuglink=%s %s" % (file_dbg, file))
+        
+        rel_path = os.path.join(debug_file,
+                                guid,
+                                debug_file + ".dbg")
+        full_path = os.path.normpath(os.path.join(self.symbol_path,
+                                                  rel_path))
+        shutil.copyfile(file_dbg, full_path)
+        # gzip the shipped debug files
+        os.system("gzip %s" % full_path)
+        print rel_path + ".gz"
 
 class Dumper_Mac(Dumper):
     def ShouldProcess(self, file):
