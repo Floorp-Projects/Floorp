@@ -73,7 +73,7 @@ class nsTDependentString_CharT : public nsTString_CharT
          */
 
       nsTDependentString_CharT( const char_type* start, const char_type* end )
-        : string_type(const_cast<char_type*>(start), end - start, F_TERMINATED)
+        : string_type(const_cast<char_type*>(start), PRUint32(end - start), F_TERMINATED)
         {
           AssertValid();
         }
@@ -86,7 +86,7 @@ class nsTDependentString_CharT : public nsTString_CharT
 
       explicit
       nsTDependentString_CharT( const char_type* data )
-        : string_type(const_cast<char_type*>(data), char_traits::length(data), F_TERMINATED)
+        : string_type(const_cast<char_type*>(data), PRUint32(char_traits::length(data)), F_TERMINATED)
         {
           AssertValid();
         }
@@ -114,14 +114,14 @@ class nsTDependentString_CharT : public nsTString_CharT
 
       void Rebind( const char_type* data )
         {
-          Rebind(data, char_traits::length(data));
+          Rebind(data, PRUint32(char_traits::length(data)));
         }
 
       NS_COM void Rebind( const char_type* data, size_type length );
 
       void Rebind( const char_type* start, const char_type* end )
         {
-          Rebind(start, end - start);
+          Rebind(start, PRUint32(end - start));
         }
 
     private:
