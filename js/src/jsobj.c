@@ -1010,13 +1010,25 @@ obj_toString(JSContext *cx, uintN argc, jsval *vp)
     JSObject *obj;
     jschar *chars;
     size_t nchars;
+    JSClass *clasp;
     const char *clazz, *prefix;
     JSString *str;
 
     obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
         return JS_FALSE;
-    clazz = OBJ_GET_CLASS(cx, obj)->name;
+    clasp = OBJ_GET_CLASS(cx, obj);
+    if (clasp->flags & JSCLASS_IS_EXTENDED) {
+        JSExtendedClass *xclasp;
+        JSObject *obj2;
+
+        if ((xclasp = (JSExtendedClass *)clasp)->wrappedObject &&
+            (obj2 = xclasp->wrappedObject(cx, obj))) {
+            obj = obj2;
+            clasp = OBJ_GET_CLASS(cx, obj);
+        }
+    }
+    clazz = clasp->name;
     nchars = 9 + strlen(clazz);         /* 9 for "[object ]" */
     chars = (jschar *) JS_malloc(cx, (nchars + 1) * sizeof(jschar));
     if (!chars)
