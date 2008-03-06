@@ -623,10 +623,9 @@ nsNativeThemeWin::StandardGetState(nsIFrame* aFrame, PRUint8 aWidgetType,
 }
 
 PRBool
-nsNativeThemeWin::IsMenuActiveOrHover(nsIFrame *aFrame, PRUint8 aWidgetType)
+nsNativeThemeWin::IsMenuActive(nsIFrame *aFrame, PRUint8 aWidgetType)
 {
-  return CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive) ||
-    (GetContentState(aFrame, aWidgetType) & NS_EVENT_STATE_HOVER) != 0;
+  return CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive);
 }
 
 nsresult 
@@ -1112,7 +1111,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       if (menuFrame)
         isOpen = menuFrame->IsOpen();
 
-      isHover = IsMenuActiveOrHover(aFrame, aWidgetType);
+      isHover = IsMenuActive(aFrame, aWidgetType);
 
       if (isTopLevel) {
         aPart = MENU_BARITEM;
@@ -2294,7 +2293,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
           aState |= DFCS_PUSHED;
       }
 
-      if (IsMenuActiveOrHover(aFrame, aWidgetType))
+      if (IsMenuActive(aFrame, aWidgetType))
         aState |= DFCS_HOT;
 
       return NS_OK;
@@ -2305,7 +2304,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       aState = 0;
       if (IsDisabled(aFrame))
         aState |= DFCS_INACTIVE;
-      if (IsMenuActiveOrHover(aFrame, aWidgetType))
+      if (IsMenuActive(aFrame, aWidgetType))
         aState |= DFCS_HOT;
 
       if (aWidgetType == NS_THEME_MENUCHECKBOX || aWidgetType == NS_THEME_MENURADIO) {
