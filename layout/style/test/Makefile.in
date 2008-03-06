@@ -102,6 +102,7 @@ _TEST_FILES =	test_bug73586.html \
 		test_parse_rule.html \
 		test_property_database.html \
 		test_property_syntax_errors.html \
+		test_selectors.html \
 		test_style_struct_copy_constructors.html \
 		test_value_storage.html \
 		test_value_computation.html \
