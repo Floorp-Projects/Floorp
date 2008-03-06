@@ -198,7 +198,7 @@ nsScriptableUnescapeHTML::ParseFragment(const nsAString &aFragment,
       rv = parser->ParseFragment(aFragment, nsnull, tagStack,
                                  aIsXML, contentType, mode);
       if (NS_SUCCEEDED(rv))
-        rv = sink->GetFragment(aReturn);
+        rv = sink->GetFragment(PR_TRUE, aReturn);
 
     } else {
       rv = NS_ERROR_FAILURE;
