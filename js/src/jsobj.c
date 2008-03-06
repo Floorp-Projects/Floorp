@@ -1133,6 +1133,23 @@ bad:
     return NULL;
 }
 
+const char *
+js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
+                   JSPrincipals *principals, uintN *linenop)
+{
+    uint32 flags;
+
+    flags = JS_GetScriptFilenameFlags(caller->script);
+    if ((flags & JSFILENAME_PROTECTED) &&
+        strcmp(principals->codebase, "[System Principal]")) {
+        *linenop = 0;
+        return principals->codebase;
+    }
+
+    *linenop = js_PCToLineNumber(cx, caller->script, caller->pc);
+    return caller->script->filename;
+}
+
 static JSBool
 obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -1271,13 +1288,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     str = JSVAL_TO_STRING(argv[0]);
     if (caller) {
         principals = JS_EvalFramePrincipals(cx, fp, caller);
-        if (principals == caller->script->principals) {
-            file = caller->script->filename;
-            line = js_PCToLineNumber(cx, caller->script, caller->pc);
-        } else {
-            file = principals->codebase;
-            line = 0;
-        }
+        file = js_ComputeFilename(cx, caller, principals, &line);
     } else {
         file = NULL;
         line = 0;
