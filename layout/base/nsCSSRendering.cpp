@@ -1103,9 +1103,6 @@ GetBorderCornerDimensions(const gfxRect& oRect,
                           const gfxFloat *radii,
                           gfxSize *oDims)
 {
-  gfxFloat halfWidth = oRect.size.width / 2.0;
-  gfxFloat halfHeight = oRect.size.height / 2.0;
-
   gfxFloat topWidth = iRect.pos.y - oRect.pos.y;
   gfxFloat leftWidth = iRect.pos.x - oRect.pos.x;
   gfxFloat rightWidth = oRect.size.width - iRect.size.width - leftWidth;
@@ -1118,16 +1115,10 @@ GetBorderCornerDimensions(const gfxRect& oRect,
     bottomWidth = PR_MAX(bottomWidth, PR_MAX(radii[C_BR], radii[C_BL]));
   }
 
-  // Make sure that the computed corner size doesn't ever go beyond
-  // half of the full border width/height
-  oDims[C_TL] = gfxSize(PR_MIN(halfWidth, leftWidth * CORNER_FACTOR),
-                        PR_MIN(halfHeight, topWidth * CORNER_FACTOR));
-  oDims[C_TR] = gfxSize(PR_MIN(halfWidth, rightWidth * CORNER_FACTOR),
-                        PR_MIN(halfHeight, topWidth * CORNER_FACTOR));
-  oDims[C_BL] = gfxSize(PR_MIN(halfWidth, leftWidth * CORNER_FACTOR),
-                        PR_MIN(halfHeight, bottomWidth * CORNER_FACTOR));
-  oDims[C_BR] = gfxSize(PR_MIN(halfWidth, rightWidth * CORNER_FACTOR),
-                        PR_MIN(halfHeight, bottomWidth * CORNER_FACTOR));
+  oDims[C_TL] = gfxSize(leftWidth, topWidth);
+  oDims[C_TR] = gfxSize(rightWidth, topWidth);
+  oDims[C_BL] = gfxSize(leftWidth, bottomWidth);
+  oDims[C_BR] = gfxSize(rightWidth, bottomWidth);
 }
 
 /* Set up a path for rendering just the corners of the path.  Executed
