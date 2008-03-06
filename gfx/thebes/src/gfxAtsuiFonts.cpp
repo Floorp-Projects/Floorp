@@ -747,7 +747,7 @@ gfxAtsuiFontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
                 mLastPrefFamily = family;
                 mLastPrefFont = prefFont;
                 mLastPrefLang = charLang;
-                mLastPrefFirstFont == (i == 0);
+                mLastPrefFirstFont = (i == 0);
                 return prefFont.forget();
             }
 
