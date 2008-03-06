@@ -3360,11 +3360,15 @@ var FullScreen =
  *
  * @param aMimeType
  *        The MIME type to check.
+ *
+ * If adding types to this function, please also check the similar 
+ * function in findbar.xml
  */
 function mimeTypeIsTextBased(aMimeType)
 {
   return /^text\/|\+xml$/.test(aMimeType) ||
          aMimeType == "application/x-javascript" ||
+         aMimeType == "application/javascript" ||
          aMimeType == "application/xml" ||
          aMimeType == "mozilla.application/cached-xul";
 }
