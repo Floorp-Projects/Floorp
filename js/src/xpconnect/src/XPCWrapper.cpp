@@ -188,23 +188,56 @@ XPCWrapper::CreateIteratorObj(JSContext *cx, JSObject *tempWrapper,
 
 // static
 JSBool
-XPCWrapper::AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+XPCWrapper::AddProperty(JSContext *cx, JSObject *wrapperObj,
+                        JSObject *innerObj, jsval id, jsval *vp)
 {
-  if (JSVAL_IS_STRING(id)) {
-    JSString *str = JSVAL_TO_STRING(id);
-    jschar *chars = ::JS_GetStringChars(str);
-    size_t length = ::JS_GetStringLength(str);
-
-    return ::JS_DefineUCProperty(cx, obj, chars, length, *vp, nsnull,
-                                 nsnull, JSPROP_ENUMERATE);
+  jsid interned_id;
+  if (!::JS_ValueToId(cx, id, &interned_id)) {
+    return JS_FALSE;
   }
 
-  if (!JSVAL_IS_INT(id)) {
-    return ThrowException(NS_ERROR_NOT_IMPLEMENTED, cx);
+  JSProperty *prop;
+  JSObject *wrapperObjp;
+  if (!OBJ_LOOKUP_PROPERTY(cx, wrapperObj, interned_id, &wrapperObjp, &prop)) {
+    return JS_FALSE;
   }
 
-  return ::JS_DefineElement(cx, obj, JSVAL_TO_INT(id), *vp, nsnull,
-                            nsnull, JSPROP_ENUMERATE);
+  NS_ASSERTION(prop && OBJ_IS_NATIVE(wrapperObjp),
+               "What weird wrapper are we using?");
+
+  JSBool isXOW = (STOBJ_GET_CLASS(wrapperObj) == &sXPC_XOW_JSClass.base);
+  uintN attrs = JSPROP_ENUMERATE;
+  JSPropertyOp getter = nsnull;
+  JSPropertyOp setter = nsnull;
+  jsval v;
+  if (isXOW) {
+    JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(prop);
+
+    attrs = sprop->attrs;
+    if (attrs & JSPROP_GETTER) {
+      getter =  sprop->getter;
+    }
+    if (attrs & JSPROP_SETTER) {
+      setter = sprop->setter;
+    }
+
+    if (SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(wrapperObjp))) {
+      v = OBJ_GET_SLOT(cx, wrapperObjp, sprop->slot);
+    }
+  }
+
+  OBJ_DROP_PROPERTY(cx, wrapperObjp, prop);
+
+  const uintN interesting_attrs = isXOW
+                                  ? (JSPROP_ENUMERATE |
+                                     JSPROP_READONLY  |
+                                     JSPROP_PERMANENT |
+                                     JSPROP_SHARED    |
+                                     JSPROP_GETTER    |
+                                     JSPROP_SETTER)
+                                  : JSPROP_ENUMERATE;
+  return OBJ_DEFINE_PROPERTY(cx, innerObj, interned_id, v, getter,
+                             setter, (attrs & interesting_attrs), nsnull);
 }
 
 // static
@@ -313,8 +346,7 @@ XPCWrapper::NewResolve(JSContext *cx, JSObject *wrapperObj,
       setter = sprop->setter;
     }
 
-    if ((preserveVal || isXOW) &&
-        SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(innerObjp))) {
+    if (preserveVal && SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(innerObjp))) {
       v = OBJ_GET_SLOT(cx, innerObjp, sprop->slot);
     }
   }
