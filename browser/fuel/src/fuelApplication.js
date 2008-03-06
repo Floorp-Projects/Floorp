@@ -302,7 +302,7 @@ Preference.prototype = {
 
   get type() {
     var value = "";
-    var type = this._prefs.getPrefType(name);
+    var type = this.branch._prefs.getPrefType(this._name);
 
     switch (type) {
       case Ci.nsIPrefBranch2.PREF_STRING:
