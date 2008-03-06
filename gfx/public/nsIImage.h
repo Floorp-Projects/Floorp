@@ -44,6 +44,7 @@
 #include "gfxRect.h"
 
 class gfxASurface;
+class gfxPattern;
 
 class nsIDeviceContext;
 
@@ -213,7 +214,11 @@ public:
   /**
    * LockImagePixels
    * Lock the image pixels so that we can access them directly,
-   * with safely. May be a noop on some platforms.
+   * with safety. May be a noop on some platforms.
+   *
+   * If you want to be able to call GetSurface(), wrap the call in
+   * LockImagePixels()/UnlockImagePixels(). This also allows you to write to
+   * the surface returned by GetSurface().
    *
    * aMaskPixels = PR_TRUE for the mask, PR_FALSE for the image
    *
@@ -239,12 +244,23 @@ public:
 
   /**
    * GetSurface
-   * Return the Thebes gfxASurface in aSurface.
+   * Return the Thebes gfxASurface in aSurface, if there is one. Should be
+   * wrapped by LockImagePixels()/UnlockImagePixels().
    *
    * aSurface will be AddRef'd (as with most getters), so
    * getter_AddRefs should be used.
    */
   NS_IMETHOD GetSurface(gfxASurface **aSurface) = 0;
+
+  /**
+   * GetSurface
+   * Return the Thebes gfxPattern in aPattern. It is always possible to get a
+   * gfxPattern (unlike the gfxASurface from GetSurface()).
+   *
+   * aPattern will be AddRef'd (as with most getters), so
+   * getter_AddRefs should be used.
+   */
+  NS_IMETHOD GetPattern(gfxPattern **aPattern) = 0;
 
   /**
    * SetHasNoAlpha

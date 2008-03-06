@@ -1039,12 +1039,15 @@ void imgContainer::ClearFrame(gfxIImageFrame *aFrame)
 
   nsCOMPtr<nsIImage> img(do_GetInterface(aFrame));
   nsRefPtr<gfxASurface> surf;
+
+  img->LockImagePixels(0);
   img->GetSurface(getter_AddRefs(surf));
 
   // Erase the surface to transparent
   gfxContext ctx(surf);
   ctx.SetOperator(gfxContext::OPERATOR_CLEAR);
   ctx.Paint();
+  img->UnlockImagePixels(0);
 }
 
 //******************************************************************************
@@ -1056,6 +1059,8 @@ void imgContainer::ClearFrame(gfxIImageFrame *aFrame, nsIntRect &aRect)
 
   nsCOMPtr<nsIImage> img(do_GetInterface(aFrame));
   nsRefPtr<gfxASurface> surf;
+
+  img->LockImagePixels(0);
   img->GetSurface(getter_AddRefs(surf));
 
   // Erase the destination rectangle to transparent
@@ -1063,6 +1068,7 @@ void imgContainer::ClearFrame(gfxIImageFrame *aFrame, nsIntRect &aRect)
   ctx.SetOperator(gfxContext::OPERATOR_CLEAR);
   ctx.Rectangle(gfxRect(aRect.x, aRect.y, aRect.width, aRect.height));
   ctx.Fill();
+  img->UnlockImagePixels(0);
 }
 
 
@@ -1184,11 +1190,13 @@ nsresult imgContainer::DrawFrameTo(gfxIImageFrame *aSrc,
   }
 
   nsCOMPtr<nsIImage> srcImg(do_GetInterface(aSrc));
-  nsRefPtr<gfxASurface> srcSurf;
-  srcImg->GetSurface(getter_AddRefs(srcSurf));
+  nsRefPtr<gfxPattern> srcPatt;
+  srcImg->GetPattern(getter_AddRefs(srcPatt));
 
   nsCOMPtr<nsIImage> dstImg(do_GetInterface(aDst));
   nsRefPtr<gfxASurface> dstSurf;
+  // Note: dstImage has LockImageData() called on it above, so it's safe to get
+  // the surface.
   dstImg->GetSurface(getter_AddRefs(dstSurf));
 
   gfxContext dst(dstSurf);
@@ -1204,7 +1212,7 @@ nsresult imgContainer::DrawFrameTo(gfxIImageFrame *aSrc,
     dst.Fill();
     dst.SetOperator(defaultOperator);
   }
-  dst.SetSource(srcSurf);
+  dst.SetPattern(srcPatt);
   dst.Paint();
 
   return NS_OK;

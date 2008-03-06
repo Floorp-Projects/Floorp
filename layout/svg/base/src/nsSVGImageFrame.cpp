@@ -47,7 +47,7 @@
 #include "nsSVGMatrix.h"
 #include "gfxContext.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsThebesImage.h"
+#include "nsIImage.h"
 
 class nsSVGImageFrame;
 
@@ -257,19 +257,14 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
   if (mImageContainer)
     mImageContainer->GetCurrentFrame(getter_AddRefs(currentFrame));
 
-  gfxASurface *thebesSurface = nsnull;
+  nsRefPtr<gfxPattern> thebesPattern = nsnull;
   if (currentFrame) {
     nsCOMPtr<nsIImage> img(do_GetInterface(currentFrame));
 
-    nsThebesImage *thebesImage = nsnull;
-    if (img)
-      thebesImage = static_cast<nsThebesImage*>(img.get());
-
-    if (thebesImage)
-      thebesSurface = thebesImage->ThebesSurface();
+    img->GetPattern(getter_AddRefs(thebesPattern));
   }
 
-  if (thebesSurface) {
+  if (thebesPattern) {
     gfxContext *gfx = aContext->GetGfxContext();
 
     if (GetStyleDisplay()->IsScrollableOverflow()) {
@@ -293,7 +288,7 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
       opacity = GetStyleDisplay()->mOpacity;
     }
 
-    nsSVGUtils::CompositeSurfaceMatrix(gfx, thebesSurface, fini, opacity);
+    nsSVGUtils::CompositePatternMatrix(gfx, thebesPattern, fini, width, height, opacity);
 
     if (GetStyleDisplay()->IsScrollableOverflow())
       gfx->Restore();

@@ -2220,9 +2220,18 @@ nsCanvasRenderingContext2D::CairoSurfaceFromElement(nsIDOMElement *imgElt,
     if (heightOut)
         *heightOut = imgHeight;
 
-    nsRefPtr<gfxASurface> gfxsurf;
-    rv = img->GetSurface(getter_AddRefs(gfxsurf));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsRefPtr<gfxPattern> gfxpattern;
+    img->GetPattern(getter_AddRefs(gfxpattern));
+    nsRefPtr<gfxASurface> gfxsurf = gfxpattern->GetSurface();
+
+    if (!gfxsurf) {
+        gfxsurf = new gfxImageSurface (gfxIntSize(imgWidth, imgHeight), gfxASurface::ImageFormatARGB32);
+        nsRefPtr<gfxContext> ctx = new gfxContext(gfxsurf);
+
+        ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+        ctx->SetPattern(gfxpattern);
+        ctx->Paint();
+    }
 
     *aCairoSurface = gfxsurf->CairoSurface();
     cairo_surface_reference (*aCairoSurface);
