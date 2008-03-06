@@ -266,12 +266,8 @@ WeaveSyncService.prototype = {
 
     let brief = this._dirSvc.get("ProfD", Ci.nsIFile);
     brief.QueryInterface(Ci.nsILocalFile);
-
     brief.append("weave");
     brief.append("logs");
-    if (!brief.exists())
-      brief.create(brief.DIRECTORY_TYPE, PERMS_DIRECTORY);
-
     brief.append("brief-log.txt");
     if (!brief.exists())
       brief.create(brief.NORMAL_FILE_TYPE, PERMS_FILE);
@@ -405,10 +401,14 @@ WeaveSyncService.prototype = {
 
       this._os.notifyObservers(null, "weave:service:sync:start", "");
 
-      this._bmkEngine.sync(cont);
-      yield;
-      this._histEngine.sync(cont);
-      yield;
+      if (this._prefs.getBoolPref("bookmarks")) {
+        this._bmkEngine.sync(cont);
+        yield;
+      }
+      if (this._prefs.getBoolPref("history")) {
+        this._histEngine.sync(cont);
+        yield;
+      }
 
       success = true;
       this._unlock();
