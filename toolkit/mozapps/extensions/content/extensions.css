@@ -205,8 +205,13 @@ richlistitem[action] .addonInstallButton {
   display: none;
 }
 
-.searchResultInstalling, .searchResultFailed, .searchResultInstalled {
+.searchResultInstalling, .searchResultFailed,
+.searchResultInstalled, .searchResultConnecting {
   display: none;
+}
+
+richlistitem[action="connecting"] .searchResultConnecting {
+  display: -moz-box;
 }
 
 richlistitem[action="installing"] .searchResultInstalling {
