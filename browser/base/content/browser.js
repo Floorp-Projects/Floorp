@@ -6193,7 +6193,7 @@ IdentityHandler.prototype = {
         // Fail back to the full domain.
         host = this._lastHost;
       }
-      var owner = this._stringBundle.getString("identity.ownerUnknown");
+      var owner = this._stringBundle.getString("identity.ownerUnknown2");
       verifier = this._identityBox.tooltipText;
       supplemental = "";
     }

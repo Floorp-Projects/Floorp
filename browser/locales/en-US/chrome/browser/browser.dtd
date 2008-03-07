@@ -362,7 +362,7 @@
 <!ENTITY editBookmark.edit.label                     "Edit…">
 <!ENTITY editBookmark.edit.accessKey                 "E">
 
-<!ENTITY identity.unverifiedsite "You are connected to an unverified site.">
+<!ENTITY identity.unverifiedsite2 "This web site does not supply identity information.">
 <!ENTITY identity.connectedTo "You are connected to">
 <!-- Localization note (identity.runBy) : This string appears between a
 domain name (above) and an organization name (below). E.g.
