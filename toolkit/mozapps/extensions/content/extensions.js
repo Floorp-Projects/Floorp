@@ -2140,8 +2140,11 @@ function installUpdatesAll() {
   if (!isXPInstallEnabled())
     return;
 
-  if (gUpdatesOnly)
-    document.getElementById("addonsMsg").removeCurrentNotification();
+  if (gUpdatesOnly) {
+    var notifications = document.getElementById("addonsMsg");
+    if (notifications.currentNotification)
+      notifications.removeCurrentNotification();
+  }
 
   var items = [];
   var children = gExtensionsView.children;
