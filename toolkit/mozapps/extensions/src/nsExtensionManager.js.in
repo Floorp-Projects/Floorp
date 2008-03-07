@@ -2737,7 +2737,7 @@ ExtensionManager.prototype = {
     if (!getPref("getBoolPref", PREF_EM_UPDATE_ENABLED, true))
       return;
 
-    var items = this.getItemList(Ci.nsIUpdateItem.TYPE_ADDON, { });
+    var items = this.getItemList(Ci.nsIUpdateItem.TYPE_ANY, { });
 
     var updater = new ExtensionItemUpdater(this);
     updater.checkForUpdates(items, items.length,
@@ -3871,8 +3871,8 @@ ExtensionManager.prototype = {
     //
     // To do this we obtain a list of active extensions and themes and write
     // these to the extensions.ini file in the profile directory.
-    var validExtensions = this._getActiveItems(Ci.nsIUpdateItem.TYPE_EXTENSION +
-                                               Ci.nsIUpdateItem.TYPE_LOCALE);
+    var validExtensions = this._getActiveItems(Ci.nsIUpdateItem.TYPE_ANY -
+                                               Ci.nsIUpdateItem.TYPE_THEME);
     var validThemes     = this._getActiveItems(Ci.nsIUpdateItem.TYPE_THEME);
 
     var extensionsLocationsFile = getFile(KEY_PROFILEDIR, [FILE_EXTENSION_MANIFEST]);
@@ -4594,7 +4594,7 @@ ExtensionManager.prototype = {
         needsRestart = internalName == gPref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
       return needsRestart;
     }
-    return ((type & Ci.nsIUpdateItem.TYPE_ANY) > 0);
+    return ((type & Ci.nsIUpdateItem.TYPE_ADDON) > 0);
   },
 
   /**
@@ -5263,7 +5263,7 @@ ExtensionManager.prototype = {
     }
 
     if (items.length == 0)
-      items = this.getItemList(Ci.nsIUpdateItem.TYPE_ADDON, { });
+      items = this.getItemList(Ci.nsIUpdateItem.TYPE_ANY, { });
 
     var updater = new ExtensionItemUpdater(this);
     updater.checkForUpdates(items, items.length, updateCheckType, listener);
@@ -5281,7 +5281,7 @@ ExtensionManager.prototype = {
    */
   checkForBlocklistChanges: function() {
     var ds = this.datasource;
-    var items = this.getItemList(Ci.nsIUpdateItem.TYPE_ADDON, { });
+    var items = this.getItemList(Ci.nsIUpdateItem.TYPE_ANY, { });
     for (var i = 0; i < items.length; ++i) {
       var id = items[i].id;
       ds.updateProperty(id, "blocklisted");
@@ -5289,7 +5289,7 @@ ExtensionManager.prototype = {
         this._appEnableItem(id);
     }
 
-    items = ds.getBlocklistedItemList(null, null, Ci.nsIUpdateItem.TYPE_ADDON,
+    items = ds.getBlocklistedItemList(null, null, Ci.nsIUpdateItem.TYPE_ANY,
                                       false);
     for (i = 0; i < items.length; ++i)
       this._appDisableItem(items[i].id);
