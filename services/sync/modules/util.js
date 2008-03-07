@@ -138,8 +138,9 @@ let Utils = {
       rng = ranges[i];
       if (typeof(rng) == "object" && code >= rng[0] && code < rng[1])
         return true;
-      else if (typeof(rng) == "integer" && code == rng)
+      else if (typeof(rng) == "number" && code == rng) {
         return true;
+      }
     }
 
     let log = Log4Moz.Service.getLogger("Service.Util");
