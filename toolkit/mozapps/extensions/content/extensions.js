@@ -1031,7 +1031,7 @@ function Startup()
   } catch(e) { }
 
   // Sort on startup and anytime an add-on is installed or upgraded.
-  gExtensionManager.sortTypeByProperty(nsIUpdateItem.TYPE_ADDON, "name", true);
+  gExtensionManager.sortTypeByProperty(nsIUpdateItem.TYPE_ANY, "name", true);
   // Extension Command Updating is handled by a command controller.
   gExtensionsView.controllers.appendController(gExtensionsViewController);
   gExtensionsView.addEventListener("select", onAddonSelect, false);
@@ -1283,7 +1283,7 @@ XPInstallDownloadManager.prototype = {
         break;
       case nsIXPIProgressDialog.DIALOG_CLOSE:
         // Sort on startup and anytime an add-on is installed or upgraded.
-        gExtensionManager.sortTypeByProperty(nsIUpdateItem.TYPE_ADDON, "name", true);
+        gExtensionManager.sortTypeByProperty(nsIUpdateItem.TYPE_ANY, "name", true);
         // XXXrstrong - installs may be made compatible after this notification
         // see bug 351819
         // For updates on startup always enable the continue button after the
