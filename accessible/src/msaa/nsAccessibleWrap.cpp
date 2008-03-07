@@ -1381,7 +1381,7 @@ STDMETHODIMP
 nsAccessibleWrap::get_uniqueID(long *uniqueID)
 {
 __try {
-  void *id;
+  void *id = nsnull;
   if (NS_SUCCEEDED(GetUniqueID(&id))) {
     *uniqueID = - reinterpret_cast<long>(id);
     return S_OK;
@@ -1470,8 +1470,6 @@ nsAccessibleWrap::get_attributes(BSTR *aAttributes)
   // The format is name:value;name:value; with \ for escaping these
   // characters ":;=,\".
 __try {
-  *aAttributes = NULL;
-
   nsCOMPtr<nsIPersistentProperties> attributes;
   if (NS_FAILED(GetAttributes(getter_AddRefs(attributes))))
     return E_FAIL;
@@ -1523,7 +1521,11 @@ __try {
     strAttrs.Append(';');
   }
 
-  *aAttributes = ::SysAllocString(strAttrs.get());
+  INT res = ::SysReAllocStringLen(aAttributes, strAttrs.get(),
+                                  strAttrs.Length());
+  if (!res)
+    return E_OUTOFMEMORY;
+
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return S_OK;
 }
@@ -1672,7 +1674,7 @@ PRInt32 nsAccessibleWrap::GetChildIDFor(nsIAccessible* aAccessible)
   // so that the 3rd party application can call back and get the IAccessible
   // the event occured on.
 
-  void *uniqueID;
+  void *uniqueID = nsnull;
   nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(aAccessible));
   if (!accessNode) {
     return 0;
@@ -1741,7 +1743,7 @@ IDispatch *nsAccessibleWrap::NativeAccessible(nsIAccessible *aXPAccessible)
 
   nsCOMPtr<nsIAccessibleWin32Object> accObject(do_QueryInterface(aXPAccessible));
   if (accObject) {
-    void* hwnd;
+    void* hwnd = nsnull;
     accObject->GetHwnd(&hwnd);
     if (hwnd) {
       IDispatch *retval = nsnull;
