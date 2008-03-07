@@ -136,16 +136,28 @@ PROT_Application.prototype.getReportURL = function(name) {
 PROT_Application.prototype.newChannel = function(uri) {
   var ioService = Cc["@mozilla.org/network/io-service;1"]
                  .getService(Ci.nsIIOService);
+  var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
+              .getService(Ci.nsIScriptSecurityManager);
+
   var childURI = ioService.newURI("chrome://browser/content/safebrowsing/blockedSite.xhtml",
                                   null, null);
   var channel = ioService.newChannelFromURI(childURI);
   channel.originalURI = uri;
+  
+  // Drop chrome privilege
+  var principal = secMan.getCodebasePrincipal(uri);
+  channel.owner = principal;
 
   return channel;
 }
 
 PROT_Application.prototype.getURIFlags = function(uri) {
-  return Ci.nsIAboutModule.ALLOW_SCRIPT;
+  // We don't particularly *want* people linking to this from
+  // untrusted content, but given that bad sites can cause this page
+  // to appear (e.g. by having an iframe pointing to known malware),
+  // we should code as though this is explicitly possible.
+  return Ci.nsIAboutModule.ALLOW_SCRIPT |
+         Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT;
 }
 
 PROT_Application.prototype.QueryInterface = function(iid) {

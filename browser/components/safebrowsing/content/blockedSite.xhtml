@@ -95,32 +95,11 @@
        */
       function getHostString()
       {
-        var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                            .getService(Components.interfaces.nsIIOService);
-        var url = getURL();
-        try {
-          return ios.newURI(url, null, null).host;
-        } catch (e) {
-          return url;
-        }
+        return document.location.hostname;
       }
-      
-      // Elements that tend to need content set
-      var errorTitleText, errorShortDescText, errorLongDesc, errorLongDescText;
-
-      // The string bundles managing strings for various blocked page scenarios
-      var sb = srGetStrBundle("chrome://browser/locale/safebrowsing/blockedSite.properties");
-      var brandBundle = srGetStrBundle("chrome://branding/locale/brand.properties");
-      var brandShortName = brandBundle.GetStringFromName("brandShortName");
       
       function initPage()
       {
-        // Set up the cached elements
-        errorTitleText = document.getElementById("errorTitleText");
-        errorShortDescText = document.getElementById("errorShortDescText");
-        errorLongDesc = document.getElementById("errorLongDesc");
-        errorLongDescText = document.getElementById("errorLongDescText");
-        
         // Handoff to the appropriate initializer, based on error code
         switch(getErrorCode()) {
           case "malwareBlocked" :
@@ -137,11 +116,20 @@
        */
       function initPage_malware()
       {
-        document.title = sb.GetStringFromName("malware.title2");
-        errorTitleText.textContent = document.title;
-        errorShortDescText.textContent = sb.formatStringFromName("malware.shortDesc",
-                                                                 [getHostString()], 1);
-        errorLongDesc.innerHTML = sb.GetStringFromName("malware.longDesc2");
+        // Remove phishing strings
+        var el = document.getElementById("errorTitleText_phishing");
+        el.parentNode.removeChild(el);
+
+        el = document.getElementById("errorShortDescText_phishing");
+        el.parentNode.removeChild(el);
+
+        el = document.getElementById("errorLongDescText_phishing");
+        el.parentNode.removeChild(el);
+
+        // Set sitename
+        document.getElementById("malware_sitename").textContent = getHostString();
+        document.title = document.getElementById("errorTitleText_malware")
+                                 .innerHTML;
       }
       
       /**
@@ -149,11 +137,20 @@
        */
       function initPage_phishing()
       {
-        document.title = sb.GetStringFromName("phishing.title2");
-        errorTitleText.textContent = document.title;
-        errorShortDescText.textContent = sb.formatStringFromName("phishing.shortDesc2",
-                                                                 [getHostString()], 1);
-        errorLongDesc.innerHTML = sb.GetStringFromName("phishing.longDesc2");
+        // Remove malware strings
+        var el = document.getElementById("errorTitleText_malware");
+        el.parentNode.removeChild(el);
+
+        el = document.getElementById("errorShortDescText_malware");
+        el.parentNode.removeChild(el);
+
+        el = document.getElementById("errorLongDescText_malware");
+        el.parentNode.removeChild(el);
+
+        // Set sitename
+        document.getElementById("phishing_sitename").textContent = getHostString();
+        document.title = document.getElementById("errorTitleText_phishing")
+                                 .innerHTML;
       }
     ]]></script>
   </head>
@@ -163,19 +160,22 @@
     
       <!-- Error Title -->
       <div id="errorTitle">
-        <h1 id="errorTitleText" />
+        <h1 id="errorTitleText_phishing">&safeb.blocked.phishing.title;</h1>
+        <h1 id="errorTitleText_malware">&safeb.blocked.malware.title;</h1>
       </div>
       
       <div id="errorLongContent">
       
         <!-- Short Description -->
         <div id="errorShortDesc">
-          <p id="errorShortDescText" />
+          <p id="errorShortDescText_phishing">&safeb.blocked.phishing.shortDesc;</p>
+          <p id="errorShortDescText_malware">&safeb.blocked.malware.shortDesc;</p>
         </div>
 
         <!-- Long Description -->
         <div id="errorLongDesc">
-          <p id="errorLongDescText" />
+          <p id="errorLongDescText_phishing">&safeb.blocked.phishing.longDesc;</p>
+          <p id="errorLongDescText_malware">&safeb.blocked.malware.longDesc;</p>
         </div>
         
         <!-- Action buttons -->
