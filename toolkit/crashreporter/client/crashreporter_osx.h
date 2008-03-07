@@ -85,6 +85,7 @@
             sendURL:(const std::string&)sendURL;
 - (void)showErrorUI:(const std::string&)dumpfile;
 - (void)showReportInfo;
+- (void)maybeSubmitReport;
 
 - (IBAction)submitReportClicked:(id)sender;
 - (IBAction)viewReportClicked:(id)sender;

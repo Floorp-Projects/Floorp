@@ -217,6 +217,25 @@ static bool RestartApplication()
   [extra release];
 }
 
+- (void)maybeSubmitReport
+{
+  if ([mSubmitReportButton state] == NSOnState) {
+    [self setStringFitVertically:mProgressText
+                          string:Str(ST_REPORTDURINGSUBMIT)
+                    resizeWindow:YES];
+    // disable all the controls
+    [self enableControls:NO];
+    [mSubmitReportButton setEnabled:NO];
+    [mRestartButton setEnabled:NO];
+    [mCloseButton setEnabled:NO];
+    [mProgressIndicator startAnimation:self];
+    gDidTrySend = true;
+    [self sendReport];
+  } else {
+    [NSApp terminate:self];
+  }
+}
+
 -(IBAction)submitReportClicked:(id)sender
 {
   [self updateSubmit];
@@ -237,28 +256,13 @@ static bool RestartApplication()
 
 -(IBAction)closeClicked:(id)sender
 {
-  [NSApp terminate: self];
+  [self maybeSubmitReport];
 }
 
 -(IBAction)restartClicked:(id)sender
 {
   RestartApplication();
-
-  if ([mSubmitReportButton state] == NSOnState) {
-    [self setStringFitVertically:mProgressText
-                          string:Str(ST_REPORTDURINGSUBMIT)
-                    resizeWindow:YES];
-    // disable all the controls
-    [self enableControls:NO];
-    [mSubmitReportButton setEnabled:NO];
-    [mRestartButton setEnabled:NO];
-    [mCloseButton setEnabled:NO];
-    [mProgressIndicator startAnimation:self];
-    gDidTrySend = true;
-    [self sendReport];
-  } else {
-    [NSApp terminate:self];
-  }
+  [self maybeSubmitReport];
 }
 
 - (IBAction)includeURLClicked:(id)sender
