@@ -70,7 +70,7 @@
       </hbox>
   </groupbox>
 
-  <groupbox id="qa-prefs-notify" flex="1">
+  <groupbox id="qa-prefs-notify" flex="1" hidden="true">
     <caption label="&qa.preferences.notification.title;" />
     <description>&qa.preferences.notification.header;</description>
     <checkbox id="qa-prefs-notify-testday"
