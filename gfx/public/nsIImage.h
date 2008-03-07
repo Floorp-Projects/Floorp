@@ -72,10 +72,10 @@ typedef enum {
 #define  nsImageUpdateFlags_kBitsChanged     0x2
 
 // IID for the nsIImage interface
-// fd31e1f2-bd46-47f1-b8b6-b94ce954f9ce
+// 96d9d7ce-e575-4265-8507-35555112a430
 #define NS_IIMAGE_IID \
-{ 0xfd31e1f2, 0xbd46, 0x47f1, \
-  { 0xb8, 0xb6, 0xb9, 0x4c, 0xe9, 0x54, 0xf9, 0xce } }
+{ 0x96d9d7ce, 0xe575, 0x4265, \
+  { 0x85, 0x07, 0x35, 0x55, 0x51, 0x12, 0xa4, 0x30 } }
 
 // Interface to Images
 class nsIImage : public nsISupports
@@ -190,10 +190,14 @@ public:
   /**
    * BitBlit the nsIImage to a device, the source and dest can be scaled
    * @param aSourceRect  source rectangle, in image pixels
+   * @param aSubimageRect the subimage that we're extracting the contents from.
+   * It must contain aSourceRect. Pixels outside this rectangle must not
+   * be sampled.
    * @param aDestRect  destination rectangle, in device pixels
    */
   NS_IMETHOD Draw(nsIRenderingContext &aContext,
                   const gfxRect &aSourceRect,
+                  const gfxRect &aSubimageRect,
                   const gfxRect &aDestRect) = 0;
 
   /**

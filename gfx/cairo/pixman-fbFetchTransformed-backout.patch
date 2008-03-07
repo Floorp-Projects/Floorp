@@ -1,0 +1,32 @@
+diff -NrpU12 mozilla-trunk.c81ad22ccb3f/gfx/cairo/libpixman/src/pixman-compose.c mozilla-trunk/gfx/cairo/libpixman/src/pixman-compose.c
+--- mozilla-trunk.c81ad22ccb3f/gfx/cairo/libpixman/src/pixman-compose.c	2008-03-07 16:22:34.000000000 +1300
++++ mozilla-trunk/gfx/cairo/libpixman/src/pixman-compose.c	2008-03-07 16:22:35.000000000 +1300
+@@ -4183,26 +4183,26 @@ static void
+ fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
+ {
+     uint32_t     *bits;
+     int32_t    stride;
+     pixman_vector_t v;
+     pixman_vector_t unit;
+     pixman_bool_t affine = TRUE;
+ 
+     bits = pict->bits;
+     stride = pict->rowstride;
+ 
+     /* reference point is the center of the pixel */
+-    v.vector[0] = pixman_int_to_fixed(x) + pixman_fixed_1 / 2 - 1;
+-    v.vector[1] = pixman_int_to_fixed(y) + pixman_fixed_1 / 2 - 1;
++    v.vector[0] = pixman_int_to_fixed(x) + pixman_fixed_1 / 2;
++    v.vector[1] = pixman_int_to_fixed(y) + pixman_fixed_1 / 2;
+     v.vector[2] = pixman_fixed_1;
+ 
+     /* when using convolution filters one might get here without a transform */
+     if (pict->common.transform)
+     {
+         if (!pixman_transform_point_3d (pict->common.transform, &v))
+         {
+             fbFinishAccess (pict->pDrawable);
+             return;
+         }
+         unit.vector[0] = pict->common.transform->matrix[0][0];
+         unit.vector[1] = pict->common.transform->matrix[1][0];
