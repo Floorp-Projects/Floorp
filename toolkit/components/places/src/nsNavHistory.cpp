@@ -2002,6 +2002,10 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
       domainBasedItems = PR_TRUE;
   }
 
+  if (aOptions->ResultType() ==
+      nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY)
+    return QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
+
   // Whenever there is a maximum number of results, 
   // and we are not a bookmark query we must requery. This
   // is because we can't generally know if any given addition/change causes
