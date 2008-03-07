@@ -412,7 +412,6 @@ nsThebesImage::UnlockImagePixels(PRBool aMaskPixels)
 NS_IMETHODIMP
 nsThebesImage::Draw(nsIRenderingContext &aContext,
                     const gfxRect &aSourceRect,
-                    const gfxRect &aSubimageRect,
                     const gfxRect &aDestRect)
 {
     if (NS_UNLIKELY(aDestRect.IsEmpty())) {
@@ -453,24 +452,21 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
     gfxFloat yscale = aDestRect.size.height / aSourceRect.size.height;
 
     gfxRect srcRect(aSourceRect);
-    gfxRect subimageRect(aSubimageRect);
     gfxRect destRect(aDestRect);
 
     if (!GetIsImageComplete()) {
-        gfxRect decoded = gfxRect(mDecoded.x, mDecoded.y,
-                                  mDecoded.width, mDecoded.height);
-        srcRect = srcRect.Intersect(decoded);
-        subimageRect = subimageRect.Intersect(decoded);
+      srcRect = srcRect.Intersect(gfxRect(mDecoded.x, mDecoded.y,
+                                          mDecoded.width, mDecoded.height));
 
-        // This happens when mDecoded.width or height is zero. bug 368427.
-        if (NS_UNLIKELY(srcRect.size.width == 0 || srcRect.size.height == 0))
-            return NS_OK;
+      // This happens when mDecoded.width or height is zero. bug 368427.
+      if (NS_UNLIKELY(srcRect.size.width == 0 || srcRect.size.height == 0))
+          return NS_OK;
 
-        destRect.pos.x += (srcRect.pos.x - aSourceRect.pos.x)*xscale;
-        destRect.pos.y += (srcRect.pos.y - aSourceRect.pos.y)*yscale;
+      destRect.pos.x += (srcRect.pos.x - aSourceRect.pos.x)*xscale;
+      destRect.pos.y += (srcRect.pos.y - aSourceRect.pos.y)*yscale;
 
-        destRect.size.width  = srcRect.size.width * xscale;
-        destRect.size.height = srcRect.size.height * yscale;
+      destRect.size.width  = srcRect.size.width * xscale;
+      destRect.size.height = srcRect.size.height * yscale;
     }
 
     // if either rectangle is empty now (possibly after the image complete check)
@@ -481,39 +477,7 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
     if (!AllowedImageSize(destRect.size.width + 1, destRect.size.height + 1))
         return NS_ERROR_FAILURE;
 
-    // Expand the subimageRect to place its edges on integer coordinates.
-    // Basically, if we're allowed to sample part of a pixel we can
-    // sample the whole pixel.
-    subimageRect.RoundOut();
-
     nsRefPtr<gfxPattern> pat;
-    PRBool ctxHasNonTranslation = ctx->CurrentMatrix().HasNonTranslation();
-    if ((xscale == 1.0 && yscale == 1.0 && !ctxHasNonTranslation) ||
-        subimageRect == gfxRect(0, 0, mWidth, mHeight))
-    {
-        // No need to worry about sampling outside the subimage rectangle,
-        // so no need for a temporary
-        // XXX should we also check for situations where the source rect
-        // is well inside the subimage so we can't sample outside?
-        pat = new gfxPattern(ThebesSurface());
-    } else {
-        // Because of the RoundOut above, the subimageRect has
-        // integer width and height.
-        gfxIntSize size(PRInt32(subimageRect.Width()),
-                        PRInt32(subimageRect.Height()));
-        nsRefPtr<gfxASurface> temp =
-            gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, mFormat);
-        if (!temp || temp->CairoStatus() != 0)
-            return NS_ERROR_FAILURE;
-
-        gfxContext tempctx(temp);
-        tempctx.SetSource(ThebesSurface(), -subimageRect.pos);
-        tempctx.SetOperator(gfxContext::OPERATOR_SOURCE);
-        tempctx.Paint();
-
-        pat = new gfxPattern(temp);
-        srcRect.MoveBy(-subimageRect.pos);
-    }
 
     /* See bug 364968 to understand the necessity of this goop; we basically
      * have to pre-downscale any image that would fall outside of a scaled 16-bit
@@ -536,12 +500,13 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
 
         gfxContext tempctx(temp);
 
+        gfxPattern srcpat(ThebesSurface());
         gfxMatrix mat;
         mat.Translate(srcRect.pos);
         mat.Scale(1.0 / xscale, 1.0 / yscale);
-        pat->SetMatrix(mat);
+        srcpat.SetMatrix(mat);
 
-        tempctx.SetPattern(pat);
+        tempctx.SetPattern(&srcpat);
         tempctx.SetOperator(gfxContext::OPERATOR_SOURCE);
         tempctx.NewPath();
         tempctx.Rectangle(gfxRect(0.0, 0.0, dim.width, dim.height));
@@ -558,6 +523,10 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
         yscale = 1.0;
     }
 
+    if (!pat) {
+        pat = new gfxPattern(ThebesSurface());
+    }
+
     gfxMatrix mat;
     mat.Translate(srcRect.pos);
     mat.Scale(1.0/xscale, 1.0/yscale);
@@ -569,36 +538,25 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
 
     pat->SetMatrix(mat);
 
-    nsRefPtr<gfxASurface> target = ctx->CurrentSurface();
-    switch (target->GetType()) {
-    case gfxASurface::SurfaceTypeXlib:
-    case gfxASurface::SurfaceTypeXcb:
-        // See bug 324698.  This is a workaround for EXTEND_PAD not being
-        // implemented correctly on linux in the X server.
-        //
-        // Set the filter to CAIRO_FILTER_FAST if we're scaling up -- otherwise,
-        // pixman's sampling will sample transparency for the outside edges and we'll
-        // get blurry edges.  CAIRO_EXTEND_PAD would also work here, if
-        // available
-        //
-        // This effectively disables smooth upscaling for images.
-        if (xscale > 1.0 || yscale > 1.0 || ctxHasNonTranslation)
-            pat->SetFilter(0);
-        break;
+#if !defined(XP_MACOSX) && !defined(XP_WIN) && !defined(XP_OS2)
+    // See bug 324698.  This is a workaround.
+    //
+    // Set the filter to CAIRO_FILTER_FAST if we're scaling up -- otherwise,
+    // pixman's sampling will sample transparency for the outside edges and we'll
+    // get blurry edges.  CAIRO_EXTEND_PAD would also work here, if
+    // available
+    //
+    // This effectively disables smooth upscaling for images.
+    if (xscale > 1.0 || yscale > 1.0)
+        pat->SetFilter(0);
+#endif
 
-    case gfxASurface::SurfaceTypeQuartz:
-    case gfxASurface::SurfaceTypeQuartzImage:
-        // Do nothing, Mac seems to be OK. Really?
-        break;
-
-    default:
-        // turn on EXTEND_PAD.
-        // This is what we really want for all surface types, if the
-        // implementation was universally good.
-        if (xscale != 1.0 || yscale != 1.0 || ctxHasNonTranslation)
-            pat->SetExtend(gfxPattern::EXTEND_PAD);
-        break;
-    }
+#if defined(XP_WIN) || defined(XP_OS2)
+    // turn on EXTEND_PAD only for win32, and only when scaling;
+    // it's not implemented correctly on linux in the X server.
+    if (xscale != 1.0 || yscale != 1.0)
+        pat->SetExtend(gfxPattern::EXTEND_PAD);
+#endif
 
     gfxContext::GraphicsOperator op = ctx->CurrentOperator();
     if (op == gfxContext::OPERATOR_OVER && mFormat == gfxASurface::ImageFormatRGB24)

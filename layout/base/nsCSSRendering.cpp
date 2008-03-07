@@ -3907,14 +3907,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     if (sourceRect.XMost() <= tileWidth && sourceRect.YMost() <= tileHeight) {
       // The entire drawRect is contained inside a single tile; just
       // draw the corresponding part of the image once.
-      // Pass in the subimage rectangle that we expect to be sampled.
-      // This is the tile rectangle, clipped to the bgClipArea, and then
-      // passed in relative to the image top-left.
-      nsRect destRect; // The rectangle we would draw ignoring dirty-rect
-      destRect.IntersectRect(absTileRect, bgClipArea);
-      nsRect subimageRect = destRect - aBorderArea.TopLeft() - tileRect.TopLeft();
-      nsLayoutUtils::DrawImage(&aRenderingContext, image,
-              destRect, drawRect, &subimageRect);
+      nsLayoutUtils::DrawImage(&aRenderingContext, image, absTileRect, drawRect);
     } else {
       aRenderingContext.DrawTile(image, absTileRect.x, absTileRect.y, &drawRect);
     }
