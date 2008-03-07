@@ -758,15 +758,12 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
     }
   }
 
-  // Child frames of invisble operators are not reflowed
-  if (!NS_MATHML_OPERATOR_IS_INVISIBLE(mFlags)) {
-    // Place our children using the default method
-    // This will allow our child text frame to get its DidReflow()
-    nsresult rv = Place(aRenderingContext, PR_TRUE, aDesiredStretchSize);
-    if (NS_MATHML_HAS_ERROR(mPresentationData.flags) || NS_FAILED(rv)) {
-      // Make sure the child frames get their DidReflow() calls.
-      DidReflowChildren(mFrames.FirstChild());
-    }
+  // Place our children using the default method
+  // This will allow our child text frame to get its DidReflow()
+  nsresult rv = Place(aRenderingContext, PR_TRUE, aDesiredStretchSize);
+  if (NS_MATHML_HAS_ERROR(mPresentationData.flags) || NS_FAILED(rv)) {
+    // Make sure the child frames get their DidReflow() calls.
+    DidReflowChildren(mFrames.FirstChild());
   }
 
   if (useMathMLChar) {
