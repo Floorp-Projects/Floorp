@@ -1522,8 +1522,14 @@ nsresult nsObjectFrame::GetPluginInstance(nsIPluginInstance*& aPluginInstance)
 nsresult
 nsObjectFrame::PrepareInstanceOwner()
 {
+  nsWeakFrame weakFrame(this);
+
   // First, have to stop any possibly running plugins.
   StopPluginInternal(PR_FALSE);
+
+  if (!weakFrame.IsAlive()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   NS_ASSERTION(!mInstanceOwner, "Must not have an instance owner here");
 
@@ -1715,44 +1721,63 @@ nsObjectFrame::StopPlugin()
 void
 nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
 {
-  if (mInstanceOwner == nsnull) {
+  if (!mInstanceOwner) {
     return;
   }
 
-  mInstanceOwner->PrepareToStop(aDelayedStop);
+  // Transfer the reference to the instance owner onto the stack so
+  // that if we do end up re-entering this code, or if we unwind back
+  // here witha deleted frame (this), we can still continue to stop
+  // the plugin. Note that due to that, the ordering of the code in
+  // this function is extremely important.
+
+  nsRefPtr<nsPluginInstanceOwner> owner;
+  owner.swap(mInstanceOwner);
+
+  // Make sure that our windowless rect has been zeroed out, so if we
+  // get reinstantiated we'll send the right messages to the plug-in.
+  mWindowlessRect.Empty();
+
+  // Grab the view while we still know it's safe to do so.
+
+  nsIView *view = GetView();
+
+#ifdef XP_WIN
+  if (aDelayedStop) {
+    // If we're asked to do a delayed stop it means we're stopping the
+    // plugin because we're destroying the frame. In that case, tell
+    // the view to disown the widget (i.e. leave it up to us to
+    // destroy it).
+
+    nsIView *view = GetView();
+    if (view) {
+      view->DisownWidget();
+    }
+  }
+#endif
+
+  // From this point on, |this| could have been deleted, so don't
+  // touch it!
+  owner->PrepareToStop(aDelayedStop);
 
 #ifdef XP_WIN
   // We only deal with delayed stopping of plugins on Win32 for now,
   // as that's the only platform where we need to (AFAIK) and it's
   // unclear how safe widget parenting is on other platforms.
   if (aDelayedStop) {
-    // nsStopPluginRunnable will hold a strong reference to
-    // mInstanceOwner, and thus keep it alive as long as it needs it.
-    nsCOMPtr<nsIRunnable> evt = new nsStopPluginRunnable(mInstanceOwner);
+    // nsStopPluginRunnable will hold a strong reference to owner
+    // (mInstanceOwner), and thus keep it alive as long as it needs
+    // it.
+    nsCOMPtr<nsIRunnable> evt = new nsStopPluginRunnable(owner);
     NS_DispatchToCurrentThread(evt);
-
-    // If we're asked to do a delayed stop it means we're stopping the
-    // plugin because we're destroying the frame. In that case, tell
-    // the view to disown the widget (i.e. leave it up to us to
-    // destroy it).
-    nsIView *view = GetView();
-    if (view) {
-      view->DisownWidget();
-    }
   } else
 #endif
   {
-    DoStopPlugin(mInstanceOwner);
+    DoStopPlugin(owner);
   }
 
   // Break relationship between frame and plugin instance owner
-  mInstanceOwner->SetOwner(nsnull);
-
-  mInstanceOwner = nsnull;
-
-  // Make sure that our windowless rect has been zeroed out, so if we
-  // get reinstantiated we'll send the right messages to the plug-in.
-  mWindowlessRect.Empty();
+  owner->SetOwner(nsnull);
 }
 
 void
