@@ -138,6 +138,7 @@
 <!ENTITY searchResultHomepage.value       "Learn More">
 <!ENTITY searchBox.label                  "Search All Add-ons">
 <!ENTITY recommendedResults.label         "See All Recommended Add-ons">
+<!ENTITY searchResultConnecting.label     "Connecting…">
 <!ENTITY searchResultInstalling.label     "Installing…">
 <!ENTITY searchResultFailed.label         "Install Failed">
 <!ENTITY searchResultInstalled.label      "Install Complete">

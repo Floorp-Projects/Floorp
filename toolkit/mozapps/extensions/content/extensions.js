@@ -73,7 +73,7 @@ var gShowGetAddonsPane = false;
 var gRetrievedResults = false;
 var gRecommendedAddons = null;
 var gRDF              = null;
-var gPendingInstalls  = [];
+var gPendingInstalls  = {};
 
 const PREF_EM_CHECK_COMPATIBILITY           = "extensions.checkCompatibility";
 const PREF_EM_CHECK_UPDATE_SECURITY         = "extensions.checkUpdateSecurity";
@@ -1222,11 +1222,17 @@ XPInstallDownloadManager.prototype = {
       var certName = aParams.GetString(i++);
 
       // Check whether the install was triggered from the Get Add-ons pane.
-      var pos = gPendingInstalls.indexOf(url);
-      if (pos >= 0)
-        gPendingInstalls.splice(pos, 1);
-      else
+      if (url in gPendingInstalls) {
+        // Update the installation status
+        gSearchDS.Assert(gRDF.GetResource(gPendingInstalls[url]),
+                         gRDF.GetResource(PREFIX_NS_EM + "action"),
+                         gRDF.GetLiteral("installing"),
+                         true);
+        delete gPendingInstalls[url];
+      }
+      else {
         switchPane = true;
+      }
     }
 
     gExtensionManager.addDownloads(items, items.length, aManager);
@@ -2217,31 +2223,33 @@ function confirmOperation(aName, aTitle, aQueryMsg, aAcceptBtn, aCancelBtn,
 
 function installCallback(item, status) {
   var resultNode = gRDF.GetResource(item.id);
+  var actionArc = gRDF.GetResource(PREFIX_NS_EM + "action");
 
   // Strip out old status
-  gSearchDS.Unassert(resultNode,
-                     gRDF.GetResource(PREFIX_NS_EM + "action"),
-                     gRDF.GetLiteral("installing"),
-                     true);
+  var targets = gSearchDS.GetTargets(resultNode, actionArc, true);
+  while (targets.hasMoreElements()) {
+    var value = targets.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+    if (value)
+      gSearchDS.Unassert(resultNode, actionArc, value);
+  }
 
   if (status == -210) {
     // User cancelled
-    var pos = gPendingInstalls.indexOf(item.getAttribute("xpiURL"));
-    if (pos >= 0)
-      gPendingInstalls.splice(pos, 1);
+    if (item.getAttribute("xpiURL") in gPendingInstalls)
+      delete gPendingInstalls[item.getAttribute("xpiURL")];
     return;
   }
   if (status < 0) {
     // Some other failure
     gSearchDS.Assert(resultNode,
-                     gRDF.GetResource(PREFIX_NS_EM + "action"),
+                     actionArc,
                      gRDF.GetLiteral("failed"),
                      true);
   }
   else {
     // Success
     gSearchDS.Assert(resultNode,
-                     gRDF.GetResource(PREFIX_NS_EM + "action"),
+                     actionArc,
                      gRDF.GetLiteral("installed"),
                      true);
   }
@@ -2385,10 +2393,10 @@ var gExtensionsViewController = {
 
       gSearchDS.Assert(gRDF.GetResource(aSelectedItem.id),
                        gRDF.GetResource(PREFIX_NS_EM + "action"),
-                       gRDF.GetLiteral("installing"),
+                       gRDF.GetLiteral("connecting"),
                        true);
-      // Remember that we don't want to change panes for this install
-      gPendingInstalls.push(details.URL);
+      // Remember this install so we can update the status when install starts
+      gPendingInstalls[details.URL] = aSelectedItem.id;
       InstallTrigger.install(params, function(url, status) { installCallback(aSelectedItem, status); });
     },
 
