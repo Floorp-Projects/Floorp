@@ -2600,7 +2600,21 @@ var gExtensionsViewController = {
       if (!result)
         return;
 
-      gExtensionManager.cancelInstallItem(getIDFromResourceURI(aSelectedItem.id));
+      var id = getIDFromResourceURI(aSelectedItem.id);
+      gExtensionManager.cancelInstallItem(id);
+      if (gSearchDS) {
+        // Check for a search result for this entry
+        var searchResult = gSearchDS.GetSource(gRDF.GetResource(PREFIX_NS_EM + "addonID"),
+                                               gRDF.GetLiteral(id),
+                                               true);
+        if (searchResult) {
+          // Remove the installed status
+          gSearchDS.Unassert(searchResult,
+                             gRDF.GetResource(PREFIX_NS_EM + "action"),
+                             gRDF.GetLiteral("installed"),
+                             true);
+        }
+      }
       gExtensionsViewController.onCommandUpdate();
       gExtensionsView.selectedItem.focus();
       updateOptionalViews();
