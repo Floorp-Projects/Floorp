@@ -685,6 +685,27 @@ GetExtraSizeForWidget(PRUint8 aWidgetType, nsIntMargin* aExtra)
   case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
     aExtra->left = aExtra->right = 1;
     return PR_TRUE;
+
+  // Include the indicator spacing (the padding around the control).
+  case NS_THEME_CHECKBOX:
+  case NS_THEME_CHECKBOX_SMALL:
+  case NS_THEME_RADIO:
+  case NS_THEME_RADIO_SMALL:
+    {
+      gint indicator_size, indicator_spacing;
+
+      if (IsCheckboxWidgetType(aWidgetType)) {
+        moz_gtk_checkbox_get_metrics(&indicator_size, &indicator_spacing);
+      } else {
+        moz_gtk_radio_get_metrics(&indicator_size, &indicator_spacing);
+      }
+
+      aExtra->top = indicator_spacing;
+      aExtra->right = indicator_spacing;
+      aExtra->bottom = indicator_spacing;
+      aExtra->left = indicator_spacing;
+      return PR_TRUE;
+    }
   default:
     return PR_FALSE;
   }
@@ -777,7 +798,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   // need to draw outside this rect if you don't feel like it!"
   GdkRectangle gdk_rect, gdk_clip;
   gfxRect gfx_rect = ConvertToGfxRect(aRect - drawingRect.TopLeft(), p2a);
-  gfxRect gfx_clip = ConvertToGfxRect(aClipRect - drawingRect.TopLeft(), p2a);
+  gfxRect gfx_clip = ConvertToGfxRect(drawingRect - drawingRect.TopLeft(), p2a);
   if (ctx->UserToDevicePixelSnapped(gfx_rect) &&
       ctx->UserToDevicePixelSnapped(gfx_clip)) {
     gfxPoint currentTranslation = current.GetTranslation();
@@ -786,7 +807,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   }
   else {
     gdk_rect = ConvertToGdkRect(aRect - drawingRect.TopLeft(), p2a);
-    gdk_clip = ConvertToGdkRect(aClipRect - drawingRect.TopLeft(), p2a);
+    gdk_clip = ConvertToGdkRect(drawingRect - drawingRect.TopLeft(), p2a);
   }
   ThemeRenderer renderer(state, gtkWidgetType, flags, direction, gdk_rect, gdk_clip);
 
@@ -1088,8 +1109,8 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       }
 
       // Include space for the indicator and the padding around it.
-      aResult->width = indicator_size + 2 * indicator_spacing;
-      aResult->height = indicator_size + 2 * indicator_spacing;
+      aResult->width = indicator_size;
+      aResult->height = indicator_size;
       *aIsOverridable = PR_FALSE;
     }
     break;
