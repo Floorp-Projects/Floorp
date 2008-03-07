@@ -4422,6 +4422,17 @@ nsNavHistory::OnIdle()
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
+    // Remove dangling livemark annotations
+    // we have moved expiration pageAnnotations to itemAnnotations
+    // we must remove pageAnnotations to allow expire do the cleanup
+    // see bug 388716
+    // XXX REMOVE ME AFTER FINAL
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "DELETE FROM moz_annos WHERE id IN (SELECT a.id FROM moz_annos a "
+        "JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id "
+        "WHERE n.name = 'livemark/expiration')"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
 #if 0
     // Currently commented out because vacuum is very slow
     // see bug #390244 for more details.
