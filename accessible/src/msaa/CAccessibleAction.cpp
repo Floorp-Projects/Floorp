@@ -177,8 +177,6 @@ STDMETHODIMP
 CAccessibleAction::get_name(long aActionIndex, BSTR *aName)
 {
 __try {
-  *aName = NULL;
-
   nsCOMPtr<nsIAccessible> acc(do_QueryInterface(this));
   if (!acc)
     return E_FAIL;
@@ -188,11 +186,10 @@ __try {
   if (NS_FAILED(acc->GetActionName(index, name)))
     return E_FAIL;
 
-  if (!name.IsVoid()) {
-    INT result = ::SysReAllocStringLen(aName, name.get(), name.Length());
-    if (!result)
-      return E_OUTOFMEMORY;
-  }
+  INT result = ::SysReAllocStringLen(aName, name.get(), name.Length());
+  if (!result)
+    return E_OUTOFMEMORY;
+
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
@@ -201,6 +198,7 @@ __try {
 STDMETHODIMP
 CAccessibleAction::get_localizedName(long aActionIndex, BSTR *aLocalizedName)
 {
+  ::SysFreeString(*aLocalizedName);
   return E_NOTIMPL;
 }
 
