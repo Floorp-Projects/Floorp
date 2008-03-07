@@ -478,7 +478,7 @@ Log4MozService.prototype = {
       return new FileAppender(file, formatter);
     case "rotating":
       // FIXME: hardcoded constants
-      return new RotatingFileAppender(file, formatter, ONE_MEGABYTE * 5, 0);
+      return new RotatingFileAppender(file, formatter, ONE_MEGABYTE * 2, 0);
     default:
       dump("log4moz: unknown appender kind: " + kind);
       return;

@@ -49,9 +49,10 @@ Cu.import("resource://weave/crypto.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/dav.js");
 Cu.import("resource://weave/identity.js");
+Cu.import("resource://weave/async.js");
 
-
-Function.prototype.async = Utils.generatorAsync;
+Function.prototype.async = Async.sugar;
+let Crypto = new WeaveCrypto();
 
 /*
  * Service singleton
@@ -303,79 +304,103 @@ WeaveSyncService.prototype = {
     this._os.notifyObservers(null, "weave:service-unlock:success", "");
   },
 
-  _login: function WeaveSync__login(onComplete) {
-    let [self, cont] = yield;
-    let success = false;
+  _login: function WeaveSync__login() {
+    let self = yield;
 
     try {
       this._log.debug("Logging in");
       this._os.notifyObservers(null, "weave:service-login:start", "");
 
-      if (!this.username) {
-        this._log.warn("No username set, login failed");
-	return;
-      }
-      if (!this.password) {
-        this._log.warn("No password given or found in password manager");
-	return;
-      }
+      if (!this.username)
+        throw "No username set, login failed";
+      if (!this.password)
+        throw "No password given or found in password manager";
 
       let serverURL = this._prefs.getCharPref("serverURL");
       this._dav.baseURL = serverURL + "user/" + this.userPath + "/";
       this._log.info("Using server URL: " + this._dav.baseURL);
 
-      this._dav.login.async(this._dav, cont, this.username, this.password);
-      success = yield;
+      this._dav.login.async(this._dav, self.cb, this.username, this.password);
+      let success = yield;
 
       // FIXME: we want to limit this to when we get a 404!
       if (!success) {
         this._log.debug("Attempting to create user directory");
 
         this._dav.baseURL = serverURL;
-        this._dav.MKCOL("user/" + this.userPath, cont);
+        this._dav.MKCOL("user/" + this.userPath, self.cb);
         let ret = yield;
+        if (!ret)
+          throw "Could not create user directory.  Got status: " + ret.status;
 
-        if (ret.status == 201) {
-          this._log.debug("Successfully created user directory.  Re-attempting login.");
-          this._dav.baseURL = serverURL + "user/" + this.userPath + "/";
-          this._dav.login.async(this._dav, cont, this.username, this.password);
-          success = yield;
-        } else {
-          this._log.debug("Could not create user directory.  Got status: " + ret.status);
-        }
+        this._log.debug("Successfully created user directory.  Re-attempting login.");
+        this._dav.baseURL = serverURL + "user/" + this.userPath + "/";
+        this._dav.login.async(this._dav, self.cb, this.username, this.password);
+        success = yield;
+        if (!success)
+          throw "Created user directory, but login still failed.  Aborting.";
       }
+
+      this._dav.GET("private/privkey", self.cb);
+      let keyResp = yield;
+      Utils.ensureStatus(keyResp.status,
+                         "Could not get private key from server", [[200,300],404]);
+
+      if (keyResp.status != 404) {
+        this._cryptoId.key = keyResp.responseText;
+
+      } else {
+        // generate a new key
+        this._log.debug("Generating new RSA key");
+        Crypto.RSAkeygen.async(Crypto, self.cb, this._cryptoId.password);
+        let [privkey, pubkey] = yield;
+
+        this._cryptoId.key = privkey;
+
+        this._dav.MKCOL("private/", self.cb);
+        ret = yield;
+        if (!ret)
+          throw "Could not create private key directory";
+
+        this._dav.MKCOL("public/", self.cb);
+        ret = yield;
+        if (!ret)
+          throw "Could not create public key directory";
+
+        this._dav.PUT("private/privkey", privkey, self.cb);
+        ret = yield;
+        Utils.ensureStatus(ret.status, "Could not upload private key");
+
+        this._dav.PUT("public/pubkey", pubkey, self.cb);
+        ret = yield;
+        Utils.ensureStatus(ret.status, "Could not upload public key");
+      }
+
+      this._passphrase = null;
+      this._os.notifyObservers(null, "weave:service-login:success", "");
+      self.done(true);
 
     } catch (e) {
-      this._log.error("Exception caught: " + e.message);
-
-    } finally {
-      this._passphrase = null;
-      if (success) {
-        //this._log.debug("Login successful"); // chrome prints this too, hm
-        this._os.notifyObservers(null, "weave:service-login:success", "");
-      } else {
-        //this._log.debug("Login error");
-        this._os.notifyObservers(null, "weave:service-login:error", "");
-      }
-      Utils.generatorDone(this, self, onComplete, success);
-      yield; // onComplete is responsible for closing the generator
+      this._log.warn(Async.exceptionStr(self, e));
+      this._log.trace(e.trace);
+      this._os.notifyObservers(null, "weave:service-login:error", "");
+      self.done(false);
     }
-    this._log.warn("generator not properly closed");
   },
 
-  _resetLock: function WeaveSync__resetLock(onComplete) {
-    let [self, cont] = yield;
+  _resetLock: function WeaveSync__resetLock() {
+    let self = yield;
     let success = false;
 
     try {
       this._log.debug("Resetting server lock");
       this._os.notifyObservers(null, "weave:server-lock-reset:start", "");
 
-      this._dav.forceUnlock.async(this._dav, cont);
+      this._dav.forceUnlock.async(this._dav, self.cb);
       success = yield;
 
     } catch (e) {
-      this._log.error("Exception caught: " + (e.message? e.message : e));
+      throw e;
 
     } finally {
       if (success) {
@@ -385,14 +410,12 @@ WeaveSyncService.prototype = {
         this._log.debug("Server lock reset failed");
         this._os.notifyObservers(null, "weave:server-lock-reset:error", "");
       }
-      Utils.generatorDone(this, self, onComplete, success);
-      yield; // generatorDone is responsible for closing the generator
+      self.done(success);
     }
-    this._log.warn("generator not properly closed");
   },
 
   _sync: function WeaveSync__sync() {
-    let [self, cont] = yield;
+    let self = yield;
     let success = false;
 
     try {
@@ -402,11 +425,11 @@ WeaveSyncService.prototype = {
       this._os.notifyObservers(null, "weave:service:sync:start", "");
 
       if (this._prefs.getBoolPref("bookmarks")) {
-        this._bmkEngine.sync(cont);
+        this._bmkEngine.sync(self.cb);
         yield;
       }
       if (this._prefs.getBoolPref("history")) {
-        this._histEngine.sync(cont);
+        this._histEngine.sync(self.cb);
         yield;
       }
 
@@ -414,61 +437,41 @@ WeaveSyncService.prototype = {
       this._unlock();
 
     } catch (e) {
-      this._log.error("Exception caught: " + (e.message? e.message : e));
+      throw e;
 
     } finally {
       if (success)
         this._os.notifyObservers(null, "weave:service:sync:success", "");
       else
         this._os.notifyObservers(null, "weave:service:sync:error", "");
-      Utils.generatorDone(this, self);
-      yield; // generatorDone is responsible for closing the generator
+      self.done();
     }
-    this._log.warn("generator not properly closed");
   },
 
   _resetServer: function WeaveSync__resetServer() {
-    let [self, cont] = yield;
+    let self = yield;
 
-    try {
-      if (!this._lock())
-	return;
+    if (!this._lock())
+      return;
 
-      this._bmkEngine.resetServer(cont);
-      this._histEngine.resetServer(cont);
+    this._bmkEngine.resetServer(self.cb);
+    this._histEngine.resetServer(self.cb);
 
-      this._unlock();
-
-    } catch (e) {
-      this._log.error("Exception caught: " + (e.message? e.message : e));
-
-    } finally {
-      Utils.generatorDone(this, self);
-      yield; // generatorDone is responsible for closing the generator
-    }
-    this._log.warn("generator not properly closed");
+    this._unlock();
+    self.done();
   },
 
   _resetClient: function WeaveSync__resetClient() {
-    let [self, cont] = yield;
+    let self = yield;
 
-    try {
-      if (!this._lock())
-	return;
+    if (!this._lock())
+      return;
 
-      this._bmkEngine.resetClient(cont);
-      this._histEngine.resetClient(cont);
+    this._bmkEngine.resetClient(self.cb);
+    this._histEngine.resetClient(self.cb);
 
-      this._unlock();
-
-    } catch (e) {
-      this._log.error("Exception caught: " + (e.message? e.message : e));
-
-    } finally {
-      Utils.generatorDone(this, self);
-      yield; // generatorDone is responsible for closing the generator
-    }
-    this._log.warn("generator not properly closed");
+    this._unlock();
+    self.done();
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupports]),

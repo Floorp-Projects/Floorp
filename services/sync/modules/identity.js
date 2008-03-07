@@ -66,6 +66,10 @@ Identity.prototype = {
   get username() { return this._username; },
   set username(value) { this._username = value; },
 
+  _key: null,
+  get key() { return this._key; },
+  set key(value) { this._key = value; },
+
   _password: null,
   get password() {
     if (this._password === null)
