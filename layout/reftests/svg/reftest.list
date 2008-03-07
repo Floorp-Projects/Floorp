@@ -49,6 +49,7 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == opacity-and-gradient-01.svg pass.svg # 
 == rootElement-null-01.svg pass.svg
 == stroke-width-percentage-01.svg pass.svg
 fails == style-property-not-on-script-element-01.svg pass.svg
+== style-without-type-attribute.svg pass.svg
 == svg-in-foreignObject-01.xhtml svg-in-foreignObject-01-ref.xhtml
 == svg-in-foreignObject-02.xhtml svg-in-foreignObject-01-ref.xhtml # reuse -01-ref.xhtml
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 386713
