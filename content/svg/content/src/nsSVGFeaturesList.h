@@ -57,7 +57,7 @@ SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#Gradient")
 SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#Pattern")
 SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#Clip")
 SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#Mask")
-SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#Filter")
+SVG_UNSUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#Filter")
 
 // Basic features
 SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#BasicStructure")
@@ -65,7 +65,7 @@ SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#BasicText")
 SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#BasicPaintAttribute")
 SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#BasicGraphicsAttribute")
 SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#BasicClip")
-SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#BasicFilter")
+SVG_UNSUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#BasicFilter")
 
 // Animation feature
 SVG_UNSUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#Animation")
