@@ -77,6 +77,7 @@ public:
 
     NS_IMETHOD Draw(nsIRenderingContext &aContext,
                     const gfxRect &aSourceRect,
+                    const gfxRect &aSubimageRect,
                     const gfxRect &aDestRect);
 
     nsresult ThebesDrawTile(gfxContext *thebesContext,
