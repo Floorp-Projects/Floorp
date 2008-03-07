@@ -22,6 +22,9 @@
 <!ENTITY  acceptCookies.label           "Accept cookies from sites">
 <!ENTITY  acceptCookies.accesskey       "c">
 
+<!ENTITY  acceptThirdParty.label        "Accept third-party cookies">
+<!ENTITY  acceptThirdParty.accesskey    "p">
+
 <!ENTITY  keepUntil.label               "Keep until:">
 <!ENTITY  keepUntil.accesskey           "K">
 
