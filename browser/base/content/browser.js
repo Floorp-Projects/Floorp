@@ -2785,8 +2785,10 @@ const DOMLinkHandler = {
             // Verify that the load of this icon is legal.
             // error pages can load their favicon, to be on the safe side,
             // only allow chrome:// favicons
-            const aboutNeterr = "about:neterror?";
-            if (targetDoc.documentURI.substr(0, aboutNeterr.length) != aboutNeterr ||
+            const aboutNeterr = /^about:neterror\?/;
+            const aboutBlocked = /^about:blocked\?/;
+            if (!(aboutNeterr.test(targetDoc.documentURI) ||
+                  aboutBlocked.test(targetDoc.documentURI)) ||
                 !uri.schemeIs("chrome")) {
               var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].
                         getService(Ci.nsIScriptSecurityManager);
