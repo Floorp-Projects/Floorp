@@ -2409,8 +2409,6 @@ function ExtensionManager() {
     InstallLocations.put(systemLocation);
   }
 
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
   // Register App-System-Shared Install Location
   try {
     var appSystemSExtensions = getDirNoCreate("XRESysSExtPD", [gApp.ID]);
@@ -2438,8 +2436,6 @@ function ExtensionManager() {
                                                       priority, true);
     InstallLocations.put(systemLocation);
   }
-#endif
-#endif
 
 #ifdef XP_WIN
   // Register HKEY_LOCAL_MACHINE Install Location
