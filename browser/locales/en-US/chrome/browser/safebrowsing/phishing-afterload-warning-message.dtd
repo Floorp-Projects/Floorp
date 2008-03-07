@@ -13,5 +13,6 @@
 <!ENTITY safeb.palm.decline.label "Ignore this warning">
 <!ENTITY safeb.palm.decline.statustext "Close warning" >
 <!ENTITY safeb.palm.notforgery.label2 "This isn't a web forgery…">
+<!ENTITY safeb.palm.report.label "Why was this site blocked?">
 
 <!ENTITY safeb.urlbaricon.tooltip "This page might be dangerous; click for details.">

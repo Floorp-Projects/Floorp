@@ -137,11 +137,11 @@
        */
       function initPage_malware()
       {
-        document.title = sb.GetStringFromName("malware.title");
+        document.title = sb.GetStringFromName("malware.title2");
         errorTitleText.textContent = document.title;
         errorShortDescText.textContent = sb.formatStringFromName("malware.shortDesc",
                                                                  [getHostString()], 1);
-        errorLongDesc.innerHTML = sb.GetStringFromName("malware.longDesc");
+        errorLongDesc.innerHTML = sb.GetStringFromName("malware.longDesc2");
       }
       
       /**
@@ -149,26 +149,11 @@
        */
       function initPage_phishing()
       {
-        document.title = sb.GetStringFromName("phishing.title");
+        document.title = sb.GetStringFromName("phishing.title2");
         errorTitleText.textContent = document.title;
-        errorShortDescText.textContent = sb.formatStringFromName("phishing.shortDesc",
+        errorShortDescText.textContent = sb.formatStringFromName("phishing.shortDesc2",
                                                                  [getHostString()], 1);
-        
-        var longDesc = sb.GetStringFromName("phishing.longDesc");
-
-        // If we have a more-info link for the phishing information, add it in,
-        // otherwise just use the generic text
-        var faqURL = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
-                               .getService(Components.interfaces.nsIURLFormatter)
-                               .formatURLPref("browser.safebrowsing.warning.infoURL");
-        if(faqURL && faqURL != "about:blank") {
-          longDesc += sb.formatStringFromName("phishing.learnMoreLink",
-                                              [brandShortName], 1);
-          errorLongDesc.innerHTML = longDesc;          
-          document.getElementById("faqLink").setAttribute("href", faqURL);
-        }
-        else 
-          errorLongDesc.innerHTML = longDesc;
+        errorLongDesc.innerHTML = sb.GetStringFromName("phishing.longDesc2");
       }
     ]]></script>
   </head>
@@ -195,8 +180,11 @@
         
         <!-- Action buttons -->
         <div id="buttons">
+          <!-- Commands handled in browser.js -->
           <xul:button xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                      id="getMeOutButton" label="&safeb.palm.accept.label;" oncommand="window.home();" />
+                      id="getMeOutButton" label="&safeb.palm.accept.label;"/>
+          <xul:button xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                      id="reportButton" label="&safeb.palm.report.label;"/>
         </div>
       </div>
     </div>
