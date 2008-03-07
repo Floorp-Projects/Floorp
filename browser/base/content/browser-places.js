@@ -753,13 +753,9 @@ var BookmarksMenuDropHandler = {
    * @returns a FlavourSet object per nsDragAndDrop parlance.
    */
   getSupportedFlavours: function BMDH_getSupportedFlavours() {
-    var flavorSet = new FlavourSet();
     var view = document.getElementById("bookmarksMenuPopup");
-    var types = PlacesUtils.GENERIC_VIEW_DROP_TYPES
-    for (var i = 0; i < types.length; ++i)
-      flavorSet.appendFlavour(types[i]);
-    return flavorSet;
-  }, 
+    return view.getSupportedFlavours();
+  },
 
   /**
    * Determine whether or not the user can drop on the Bookmarks Menu.
@@ -784,11 +780,9 @@ var BookmarksMenuDropHandler = {
    *          The active DragSession
    */
   onDrop: function BMDH_onDrop(event, data, session) {
-    var view = document.getElementById("bookmarksMenuPopup");
     // Put the item at the end of bookmark menu
     var ip = new InsertionPoint(PlacesUtils.bookmarksMenuFolderId, -1);
     PlacesControllerDragHelper.onDrop(ip);
-    view._rebuild();
   }
 };
 
