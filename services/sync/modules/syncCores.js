@@ -45,8 +45,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
+Cu.import("resource://weave/async.js");
 
-Function.prototype.async = Utils.generatorAsync;
+Function.prototype.async = Async.sugar;
 
 /*
  * SyncCore objects
@@ -89,9 +90,9 @@ SyncCore.prototype = {
     return this._nodeParentsInt(tree[GUID].parentGUID, tree, parents);
   },
 
-  _detectUpdates: function SC__detectUpdates(onComplete, a, b) {
-    let [self, cont] = yield;
-    let listener = new Utils.EventListener(cont);
+  _detectUpdates: function SC__detectUpdates(a, b) {
+    let self = yield;
+    let listener = new Utils.EventListener(self.cb);
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
     let cmds = [];
@@ -116,6 +117,7 @@ SyncCore.prototype = {
                      depth: parents.length, parents: parents});
         }
       }
+
       for (let GUID in b) {
 
         timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
@@ -141,14 +143,12 @@ SyncCore.prototype = {
       });
 
     } catch (e) {
-      this._log.error("Exception caught: " + (e.message? e.message : e));
+      throw e;
 
     } finally {
       timer = null;
-      Utils.generatorDone(this, self, onComplete, cmds);
-      yield; // onComplete is responsible for closing the generator
+      self.done(cmds);
     }
-    this._log.warn("generator not properly closed");
   },
 
   _commandLike: function SC__commandLike(a, b) {
@@ -216,9 +216,9 @@ SyncCore.prototype = {
     return false;
   },
 
-  _reconcile: function SC__reconcile(onComplete, listA, listB) {
-    let [self, cont] = yield;
-    let listener = new Utils.EventListener(cont);
+  _reconcile: function SC__reconcile(listA, listB) {
+    let self = yield;
+    let listener = new Utils.EventListener(self.cb);
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
     let propagations = [[], []];
@@ -297,14 +297,13 @@ SyncCore.prototype = {
       ret = {propagations: propagations, conflicts: conflicts};
 
     } catch (e) {
-      this._log.error("Exception caught: " + (e.message? e.message : e));
+      this._log.error("Exception caught: " + (e.message? e.message : e) +
+                      " - " + (e.location? e.location : "_reconcile"));
 
     } finally {
       timer = null;
-      Utils.generatorDone(this, self, onComplete, ret);
-      yield; // onComplete is responsible for closing the generator
+      self.done(ret);
     }
-    this._log.warn("generator not properly closed");
   },
 
   // Public methods

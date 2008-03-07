@@ -45,8 +45,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
+Cu.import("resource://weave/async.js");
 
-Function.prototype.async = Utils.generatorAsync;
+Function.prototype.async = Async.sugar;
 
 function WeaveCrypto() {
   this._init();
@@ -210,7 +211,7 @@ WeaveCrypto.prototype = {
 
     try {
       this._openssl("pkcs8", "-in", "privkey.pem", "-out", "enckey.pem",
-                    "-topk8", "-v2", algorithm, "-pass", "file:pass");
+                    "-topk8", "-v2", algorithm, "-passout", "file:pass");
 
     } catch (e) {
       throw e;
@@ -223,7 +224,7 @@ WeaveCrypto.prototype = {
     let [cryptedKeyFIS] = Utils.open(cryptedKeyF, "<");
     let cryptedKey = Utils.readStream(cryptedKeyFIS);
     cryptedKeyFIS.close();
-    cryptedKey.remove(false);
+    cryptedKeyF.remove(false);
 
     let [pubKeyFIS] = Utils.open(pubKeyF, "<");
     let pubKey = Utils.readStream(pubKeyFIS);
@@ -234,7 +235,7 @@ WeaveCrypto.prototype = {
   },
 
   // returns 'input' encrypted with the 'pubkey' public RSA key
-  _opensslRSAEncrypt: function Crypto__opensslRSAEncrypt(input, pubkey) {
+  _opensslRSAencrypt: function Crypto__opensslRSAencrypt(input, pubkey) {
     let inputFile = Utils.getTmp("input");
     let [inputFOS] = Utils.open(inputFile, ">");
     inputFOS.writeString(input);
@@ -261,7 +262,7 @@ WeaveCrypto.prototype = {
   },
 
   // returns 'input' decrypted with the 'privkey' private RSA key and password
-  _opensslRSADecrypt: function Crypto__opensslRSADecrypt(input, privkey, password) {
+  _opensslRSAdecrypt: function Crypto__opensslRSAdecrypt(input, privkey, password) {
     let inputFile = Utils.getTmp("input");
     let [inputFOS] = Utils.open(inputFile, ">");
     inputFOS.writeString(input);
@@ -338,131 +339,127 @@ WeaveCrypto.prototype = {
 
   // Crypto
 
-  PBEencrypt: function Crypto_PBEencrypt(onComplete, data, identity, algorithm) {
-    let [self, cont] = yield;
-    let listener = new Utils.EventListener(cont);
-    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  PBEencrypt: function Crypto_PBEencrypt(data, identity, algorithm) {
+    let self = yield;
     let ret;
 
-    try {
-      if (!algorithm)
-        algorithm = this.defaultAlgorithm;
+    if (!algorithm)
+      algorithm = this.defaultAlgorithm;
 
-      if (algorithm != "none")
-        this._log.debug("Encrypting data");
+    if (algorithm != "none")
+      this._log.debug("Encrypting data");
 
-      switch (algorithm) {
-      case "none":
-        ret = data;
-        break;
+    switch (algorithm) {
+    case "none":
+      ret = data;
+      break;
 
-      case "XXXTEA": // Weave 0.1.12.10 and below had this typo
-      case "XXTEA": {
-        let gen = this._xxtea.encrypt(data, identity.password);
-        ret = gen.next();
+    case "XXXTEA": // Weave 0.1.12.10 and below had this typo
+    case "XXTEA": {
+      let gen = this._xxtea.encrypt(data, identity.password);
+      ret = gen.next();
+      let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      try {
         while (typeof(ret) == "object") {
-          timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
+          timer.initWithCallback(self.listener, 0, timer.TYPE_ONE_SHOT);
           yield; // Yield to main loop
           ret = gen.next();
         }
         gen.close();
-      } break;
-
-      case "aes-128-cbc":
-      case "aes-192-cbc":
-      case "aes-256-cbc":
-      case "bf-cbc":
-      case "des-ede3-cbc":
-        ret = this._opensslPBE("-e", algorithm, data, identity.password);
-        break;
-
-      default:
-        throw "Unknown encryption algorithm: " + algorithm;
+      } finally {
+        timer = null;
       }
+    } break;
 
-      if (algorithm != "none")
-        this._log.debug("Done encrypting data");
+    case "aes-128-cbc":
+    case "aes-192-cbc":
+    case "aes-256-cbc":
+    case "bf-cbc":
+    case "des-ede3-cbc":
+      ret = this._opensslPBE("-e", algorithm, data, identity.password);
+      break;
 
-    } catch (e) {
-      this._log.error("Exception caught: " + (e.message? e.message : e));
-
-    } finally {
-      timer = null;
-      Utils.generatorDone(this, self, onComplete, ret);
-      yield; // onComplete is responsible for closing the generator
+    default:
+      throw "Unknown encryption algorithm: " + algorithm;
     }
-    this._log.warn("generator not properly closed");
+
+    if (algorithm != "none")
+      this._log.debug("Done encrypting data");
+
+    self.done(ret);
   },
 
-  PBEdecrypt: function Crypto_PBEdecrypt(onComplete, data, identity, algorithm) {
-    let [self, cont] = yield;
-    let listener = new Utils.EventListener(cont);
-    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  PBEdecrypt: function Crypto_PBEdecrypt(data, identity, algorithm) {
+    let self = yield;
     let ret;
 
-    try {
-      if (!algorithm)
-        algorithm = this.defaultAlgorithm;
+    if (!algorithm)
+      algorithm = this.defaultAlgorithm;
 
-      if (algorithm != "none")
-        this._log.debug("Decrypting data");
+    if (algorithm != "none")
+      this._log.debug("Decrypting data");
 
-      switch (algorithm) {
-      case "none":
-        ret = data;
-        break;
+    switch (algorithm) {
+    case "none":
+      ret = data;
+      break;
 
-      case "XXXTEA": // Weave 0.1.12.10 and below had this typo
-      case "XXTEA": {
-        let gen = this._xxtea.decrypt(data, identity.password);
-        ret = gen.next();
+    case "XXXTEA": // Weave 0.1.12.10 and below had this typo
+    case "XXTEA": {
+      let gen = this._xxtea.decrypt(data, identity.password);
+      ret = gen.next();
+      let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      try {
         while (typeof(ret) == "object") {
-          timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
+          timer.initWithCallback(self.listener, 0, timer.TYPE_ONE_SHOT);
           yield; // Yield to main loop
           ret = gen.next();
         }
         gen.close();
-      } break;
-
-      case "aes-128-cbc":
-      case "aes-192-cbc":
-      case "aes-256-cbc":
-      case "bf-cbc":
-      case "des-ede3-cbc":
-        ret = this._opensslPBE("-d", algorithm, data, identity.password);
-        break;
-
-      default:
-        throw "Unknown encryption algorithm: " + algorithm;
+      } finally {
+        timer = null;
       }
+    } break;
 
-      if (algorithm != "none")
-        this._log.debug("Done decrypting data");
+    case "aes-128-cbc":
+    case "aes-192-cbc":
+    case "aes-256-cbc":
+    case "bf-cbc":
+    case "des-ede3-cbc":
+      ret = this._opensslPBE("-d", algorithm, data, identity.password);
+      break;
 
-    } catch (e) {
-      this._log.error("Exception caught: " + (e.message? e.message : e));
-
-    } finally {
-      timer = null;
-      Utils.generatorDone(this, self, onComplete, ret);
-      yield; // onComplete is responsible for closing the generator
+    default:
+      throw "Unknown encryption algorithm: " + algorithm;
     }
-    this._log.warn("generator not properly closed");
+
+    if (algorithm != "none")
+      this._log.debug("Done decrypting data");
+
+    self.done(ret);
   },
 
   PBEkeygen: function Crypto_PBEkeygen() {
-    return this._opensslRand();
+    let self = yield;
+    let ret = this._opensslRand();
+    self.done(ret);
   },
 
   RSAkeygen: function Crypto_RSAkeygen(password) {
-    return this._opensslRSAKeyGen(password);
+    let self = yield;
+    let ret = this._opensslRSAKeyGen(password);
+    self.done(ret);
   },
 
   RSAencrypt: function Crypto_RSAencrypt(data, key) {
-    return this._opensslRSAEncrypt(data, key);
+    let self = yield;
+    let ret = this._opensslRSAencrypt(data, key);
+    self.done(ret);
   },
 
   RSAdecrypt: function Crypto_RSAdecrypt(data, key, password) {
-    return this._opensslRSADecrypt(data, key, password);
+    let self = yield;
+    let ret = this._opensslRSAdecrypt(data, key, password);
+    self.done(ret);
   }
 };
