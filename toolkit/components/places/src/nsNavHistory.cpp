@@ -1045,7 +1045,8 @@ nsNavHistory::InitStatements()
 
   // mDBBookmarkToUrlResult, should match kGetInfoIndex_*
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT b.fk, h.url, b.title, h.rev_host, h.visit_count, "
+      "SELECT b.fk, h.url, COALESCE(b.title, h.title), "
+        "h.rev_host, h.visit_count, "
         SQL_STR_FRAGMENT_MAX_VISIT_DATE( "b.fk" )
         ", f.url, null, null, b.dateAdded, b.lastModified "
       "FROM moz_bookmarks b "
@@ -3124,13 +3125,12 @@ PlacesSQLQueryBuilder::SelectAsTag()
   mHasDateColumns = PR_TRUE; 
 
   mQueryString = nsPrintfCString(2048,
-    "SELECT null, 'place:type=%ld&queryType=%d&sort=%ld&folder=' || id, "
+    "SELECT null, 'place:type=%ld&queryType=%d&folder=' || id, "
       "title, null, null, null, null, null, null, dateAdded, lastModified "
     "FROM   moz_bookmarks "
     "WHERE  parent = %ld",
     nsINavHistoryQueryOptions::RESULTS_AS_URI,
     nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS,
-    nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING,
     history->GetTagsFolder());
 
   return NS_OK;
