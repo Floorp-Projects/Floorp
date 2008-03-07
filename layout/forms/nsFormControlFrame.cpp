@@ -94,6 +94,17 @@ nsFormControlFrame::GetIntrinsicHeight()
   return nsPresContext::CSSPixelsToAppUnits(13 - 2 * 2);
 }
 
+nscoord
+nsFormControlFrame::GetBaseline() const
+{
+  NS_ASSERTION(!NS_SUBTREE_DIRTY(this),
+               "frame must not be dirty");
+  // Treat radio buttons and checkboxes as having an intrinsic baseline
+  // at the bottom of the control (use the bottom content edge rather
+  // than the bottom margin edge).
+  return mRect.height - GetUsedBorderAndPadding().bottom;
+}
+
 NS_METHOD
 nsFormControlFrame::Reflow(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
