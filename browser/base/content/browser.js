@@ -3874,7 +3874,7 @@ nsBrowserStatusHandler.prototype =
       this.securityButton.removeAttribute("label");
 
     this.securityButton.setAttribute("tooltiptext", this._tooltipText);
-    getIdentityHandler().checkIdentity(this._state, this._host);
+    getIdentityHandler().checkIdentity(this._state, gBrowser.contentWindow.location);
   },
 
   // simulate all change notifications after switching tabs
@@ -5984,9 +5984,9 @@ IdentityHandler.prototype = {
   IDENTITY_MODE_DOMAIN_VERIFIED  : "verifiedDomain",   // Minimal SSL CA-signed domain verification
   IDENTITY_MODE_UNKNOWN          : "unknownIdentity",  // No trusted identity information
 
-  // Cache the most recently seen SSLStatus and URI to prevent unnecessary updates
+  // Cache the most recent SSLStatus and Location seen in checkIdentity
   _lastStatus : null,
-  _lastHost : null,
+  _lastLocation : null,
 
   /**
    * Build out a cache of the elements that we need frequently.
@@ -6051,14 +6051,14 @@ IdentityHandler.prototype = {
    * be called by onSecurityChange
    * 
    * @param PRUint32 state
-   * @param AUTF8String host
+   * @param Location location
    */
-  checkIdentity : function(state, host) {
+  checkIdentity : function(state, location) {
     var currentStatus = gBrowser.securityUI
                                 .QueryInterface(Components.interfaces.nsISSLStatusProvider)
                                 .SSLStatus;
     this._lastStatus = currentStatus;
-    this._lastHost = host;
+    this._lastLocation = location;
     
     if (state & Components.interfaces.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
       this.setMode(this.IDENTITY_MODE_IDENTIFIED);
@@ -6066,6 +6066,23 @@ IdentityHandler.prototype = {
       this.setMode(this.IDENTITY_MODE_DOMAIN_VERIFIED);
     else
       this.setMode(this.IDENTITY_MODE_UNKNOWN);
+  },
+  
+  /**
+   * Return the eTLD+1 version of the current hostname
+   */
+  getEffectiveHost : function() {
+    // Cache the eTLDService if this is our first time through
+    if (!this._eTLDService)
+      this._eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"]
+                         .getService(Ci.nsIEffectiveTLDService);
+    try {
+      return this._eTLDService.getBaseDomainFromHost(this._lastLocation.hostname);
+    } catch (e) {
+      // If something goes wrong (e.g. hostname is an IP address) just fail back
+      // to the full domain.
+      return this._lastLocation.hostname;
+    }
   },
   
   /**
@@ -6106,24 +6123,15 @@ IdentityHandler.prototype = {
       var icon_label = "";
       switch (gPrefService.getIntPref("browser.identity.ssl_domain_display")) {
         case 2 : // Show full domain
-          icon_label = this._lastHost;
+          icon_label = this._lastLocation.hostname;
           break;
-        case 1 : // Show eTLD.  Cache eTLD service the first time we need it.
-          if (!this._eTLDService)
-            this._eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"]
-                                .getService(Ci.nsIEffectiveTLDService);
-          try {
-            icon_label = this._eTLDService.getBaseDomainFromHost(this._lastHost);
-          } catch (e) {
-            // If something goes wrong (e.g. _lastHost is an IP address) just fail back
-            // to the full domain.
-            icon_label = this._lastHost;
-          }
+        case 1 : // Show eTLD.
+          icon_label = this.getEffectiveHost();
       }
       
       // We need a port number for all lookups.  If one hasn't been specified, use
       // the https default
-      var lookupHost = this._lastHost;
+      var lookupHost = this._lastLocation.host;
       if (lookupHost.indexOf(':') < 0)
         lookupHost += ":443";
 
@@ -6178,21 +6186,10 @@ IdentityHandler.prototype = {
     // Initialize the optional strings to empty values
     var supplemental = "";
     var verifier = "";
-      
-    // Cache eTLD service if we haven't yet
-    if (!this._eTLDService)
-      this._eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"]
-                          .getService(Ci.nsIEffectiveTLDService);
     
     if (newMode == this.IDENTITY_MODE_DOMAIN_VERIFIED) {
       var iData = this.getIdentityData();
-
-      try {
-        var host = this._eTLDService.getBaseDomainFromHost(this._lastHost);
-      } catch (e) {
-        // Fail back to the full domain.
-        host = this._lastHost;
-      }
+      var host = this.getEffectiveHost();
       var owner = this._stringBundle.getString("identity.ownerUnknown2");
       verifier = this._identityBox.tooltipText;
       supplemental = "";
@@ -6200,13 +6197,7 @@ IdentityHandler.prototype = {
     else if (newMode == this.IDENTITY_MODE_IDENTIFIED) {
       // If it's identified, then we can populate the dialog with credentials
       iData = this.getIdentityData();
-
-      try {
-        host = this._eTLDService.getBaseDomainFromHost(this._lastHost);
-      } catch (e) {
-        // Fail back to the full domain.
-        host = this._lastHost;
-      }
+      host = this.getEffectiveHost();
       owner = iData.subjectOrg; 
       verifier = this._identityBox.tooltipText;
 
