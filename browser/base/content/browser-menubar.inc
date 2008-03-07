@@ -366,7 +366,7 @@
                           oncommand="BrowserGoHome(event);"
                           onclick="checkForMiddleClick(this, event);"
                           key="goHome"/>
-                <menuitem label="&showAllHistoryCmd.label;"
+                <menuitem label="&showAllHistoryCmd.label2;"
 #ifndef XP_MACOSX
                           key="showAllHistoryKb"
 #endif
@@ -409,7 +409,7 @@
       </menu>
       <menuitem label="&addCurPagesCmd.label;" 
                 command="Browser:BookmarkAllTabs" key="bookmarkAllTabsKb"/>
-      <menuitem label="&showAllBookmarksCmd.label;" 
+      <menuitem label="&showAllBookmarksCmd.label2;" 
                 command="Browser:ShowAllBookmarks" key="manBookmarkKb"/>
       <menuseparator builder="start"/>
     </menupopup>
