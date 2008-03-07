@@ -339,7 +339,8 @@
                          type="places"
                          onpopupshowing="HistoryMenu.onPopupShowing(this);"
                          place="place:type=0&amp;sort=4&amp;maxResults=10">
-                <menuitem label="&backCmd.label;"
+                <menuitem id="historyMenuBack"
+                          label="&backCmd.label;"
 #ifdef XP_MACOSX
                           key="goBackKb2"
 #else
@@ -350,7 +351,8 @@
                           onclick="checkForMiddleClick(this, event);">
                   <observes element="Browser:Back" attribute="disabled" />
                 </menuitem>
-                <menuitem label="&forwardCmd.label;" 
+                <menuitem id="historyMenuForward"
+                          label="&forwardCmd.label;"
 #ifdef XP_MACOSX
                           key="goForwardKb2"
 #else
