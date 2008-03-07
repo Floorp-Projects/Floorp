@@ -64,6 +64,8 @@
 %editMenuOverlayDTD;
 <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
 %globalDTD;
+<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+%browserDTD;
 ]>
 
 <window id="places"
@@ -133,6 +135,37 @@
          command="OrganizerCommand_find:current" 
          key="&cmd.find.key;"
          modifiers="accel,shift"/>
+
+    <!-- Back/Forward Keys Support -->
+#ifndef XP_MACOSX
+    <key id="placesKey_goBackKb"
+         keycode="VK_LEFT"
+         command="OrganizerCommand:Back"
+         modifiers="alt"/>
+    <key id="placesKey_goForwardKb"
+         keycode="VK_RIGHT"
+         command="OrganizerCommand:Forward"
+         modifiers="alt"/>
+#else
+    <key id="placesKey_goBackKb"
+         keycode="VK_LEFT"
+         command="OrganizerCommand:Back"
+         modifiers="accel"/>
+    <key id="placesKey_goForwardKb"
+         keycode="VK_RIGHT"
+         command="OrganizerCommand:Forward"
+         modifiers="accel"/>
+#endif
+#ifdef XP_UNIX
+    <key id="placesKey_goBackKb2"
+         key="&goBackCmd.commandKey;"
+         command="OrganizerCommand:Back"
+         modifiers="accel"/>
+    <key id="placesKey_goForwardKb2"
+         key="&goForwardCmd.commandKey;"
+         command="OrganizerCommand:Forward"
+         modifiers="accel"/>
+#endif
   </keyset>
 
   <keyset id="editMenuKeys">
