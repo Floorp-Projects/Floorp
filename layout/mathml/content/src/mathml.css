@@ -409,6 +409,7 @@ semantics > :not(:first-child) {
 *|*::-moz-mathml-anonymous-block {
   display: inline-block !important;
   position: static !important;
+  text-indent: 0;
 }
 
 /*****************************************/
