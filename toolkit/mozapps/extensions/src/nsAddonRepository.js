@@ -51,6 +51,8 @@ const PREF_GETADDONS_GETSEARCHRESULTS    = "extensions.getAddons.search.url";
 
 const XMLURI_PARSE_ERROR  = "http://www.mozilla.org/newlayout/xml/parsererror.xml";
 
+const API_VERSION = "1";
+
 function AddonSearchResult() {
 }
 
@@ -140,10 +142,14 @@ AddonRepository.prototype = {
     this._recommended = true;
     this._maxResults = aMaxResults;
 
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefBranch);
     var urlf = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
                          .getService(Components.interfaces.nsIURLFormatter);
 
-    var uri = urlf.formatURLPref(PREF_GETADDONS_GETRECOMMENDED);
+    var uri = prefs.getCharPref(PREF_GETADDONS_GETRECOMMENDED);
+    uri = uri.replace(/%API_VERSION%/g, API_VERSION);
+    uri = urlf.formatURL(uri);
     this._loadList(uri);
   },
 
@@ -163,6 +169,7 @@ AddonRepository.prototype = {
                          .getService(Components.interfaces.nsIURLFormatter);
 
     var uri = prefs.getCharPref(PREF_GETADDONS_GETSEARCHRESULTS);
+    uri = uri.replace(/%API_VERSION%/g, API_VERSION);
     uri = uri.replace(/%TERMS%/g, encodeURIComponent(aSearchTerms));
     uri = urlf.formatURL(uri);
     this._loadList(uri);
@@ -211,18 +218,22 @@ AddonRepository.prototype = {
       return;
 
     // Ignore add-ons not compatible with this OS
-    var compatible = false;
     var os = element.getElementsByTagName("compatible_os");
-    var i = 0;
-    while (i < os.length && !compatible) {
-      if (os[i].textContent == "ALL" || os[i].textContent == app.OS) {
-        compatible = true;
-        break;
+    // Only the version 0 schema included compatible_os if it isn't there then
+    // we will see os compatibility on the install elements.
+    if (os.length > 0) {
+      var compatible = false;
+      var i = 0;
+      while (i < os.length && !compatible) {
+        if (os[i].textContent == "ALL" || os[i].textContent == app.OS) {
+          compatible = true;
+          break;
+        }
+        i++;
       }
-      i++;
+      if (!compatible)
+        return;
     }
-    if (!compatible)
-      return;
 
     // Ignore add-ons not compatible with this Application
     compatible = false;
@@ -284,6 +295,13 @@ AddonRepository.prototype = {
               addon.type = Ci.nsIUpdateItem.TYPE_EXTENSION;
             break;
           case "install":
+            // No os attribute means the xpi is compatible with any os
+            if (node.hasAttribute("os")) {
+              var os = node.getAttribute("os").toLowerCase();
+              // If the os is not ALL and not the current OS then ignore this xpi
+              if (os != "all" && os != app.OS.toLowerCase())
+                break;
+            }
             addon.xpiURL = node.textContent;
             if (node.hasAttribute("hash"))
               addon.xpiHash = node.getAttribute("hash");
@@ -293,7 +311,9 @@ AddonRepository.prototype = {
       node = node.nextSibling;
     }
 
-    this._addons.push(addon);
+    // Add only if there was an xpi compatible with this os
+    if (addon.xpiURL)
+      this._addons.push(addon);
   },
 
   // Called when a single request has completed, parses out any add-ons and
@@ -318,7 +338,11 @@ AddonRepository.prototype = {
         return;
       }
     }
-    this._reportSuccess(elements.length);
+
+    if (responseXML.documentElement.hasAttribute("total_results"))
+      this._reportSuccess(responseXML.documentElement.getAttribute("total_results"));
+    else
+      this._reportSuccess(elements.length);
   },
 
   // Performs a new request for results
