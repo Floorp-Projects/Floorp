@@ -553,21 +553,65 @@ nsXULElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
 PRBool
 nsXULElement::IsFocusable(PRInt32 *aTabIndex)
 {
-  // Use incoming tabindex as default value
-  PRInt32 tabIndex = aTabIndex? *aTabIndex : -1;
-  PRBool disabled = tabIndex < 0;
+  /* 
+   * Returns true if an element may be focused, and false otherwise. The inout
+   * argument aTabIndex will be set to the tab order index to be used; -1 for
+   * elements that should not be part of the tab order and a greater value to
+   * indicate its tab order.
+   *
+   * Confusingly, the supplied value for the aTabIndex argument may indicate
+   * whether the element may be focused as a result of the -moz-user-focus
+   * property.
+   *
+   * For controls, the element cannot be focused and is not part of the tab
+   * order if it is disabled.
+   *
+   * Controls (those that implement nsIDOMXULControlElement):
+   *  *aTabIndex = -1  no tabindex     Not focusable or tabbable
+   *  *aTabIndex = -1  tabindex="-1"   Not focusable or tabbable
+   *  *aTabIndex = -1  tabindex=">=0"  Focusable and tabbable
+   *  *aTabIndex >= 0  no tabindex     Focusable and tabbable
+   *  *aTabIndex >= 0  tabindex="-1"   Focusable but not tabbable
+   *  *aTabIndex >= 0  tabindex=">=0"  Focusable and tabbable
+   * Non-controls:
+   *  *aTabIndex = -1                  Not focusable or tabbable
+   *  *aTabIndex >= 0                  Focusable and tabbable
+   *
+   * If aTabIndex is null, then the tabindex is not computed, and
+   * true is returned for non-disabled controls and false otherwise.
+   */
+
+  // elements are not focusable by default
+  PRBool shouldFocus = PR_FALSE;
+
   nsCOMPtr<nsIDOMXULControlElement> xulControl = 
     do_QueryInterface(static_cast<nsIContent*>(this));
   if (xulControl) {
+    // a disabled element cannot be focused and is not part of the tab order
+    PRBool disabled;
     xulControl->GetDisabled(&disabled);
     if (disabled) {
-      tabIndex = -1;  // Can't tab to disabled elements
+      if (aTabIndex)
+        *aTabIndex = -1;
+      return PR_FALSE;
     }
-    else if (HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)) {
-      // If attribute not set, will use default value passed in
+    shouldFocus = PR_TRUE;
+  }
+
+  if (aTabIndex) {
+    if (xulControl && HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)) {
+      // if either the aTabIndex argument or a specified tabindex is non-negative,
+      // the element becomes focusable.
+      PRInt32 tabIndex = 0;
       xulControl->GetTabIndex(&tabIndex);
+      shouldFocus = *aTabIndex >= 0 || tabIndex >= 0;
+      *aTabIndex = tabIndex;
     }
-    if (tabIndex != -1 && sTabFocusModelAppliesToXUL &&
+    else {
+      shouldFocus = *aTabIndex >= 0;
+    }
+
+    if (shouldFocus && sTabFocusModelAppliesToXUL &&
         !(sTabFocusModel & eTabFocus_formElementsMask)) {
       // By default, the tab focus model doesn't apply to xul element on any system but OS X.
       // on OS X we're following it for UI elements (XUL) as sTabFocusModel is based on
@@ -575,15 +619,11 @@ nsXULElement::IsFocusable(PRInt32 *aTabIndex)
       // both textboxes and list elements (i.e. trees and list) should always be focusable
       // (textboxes are handled as html:input)
       if (!mNodeInfo->Equals(nsGkAtoms::tree) && !mNodeInfo->Equals(nsGkAtoms::listbox))
-        tabIndex = -1; 
+        *aTabIndex = -1; 
     }
   }
 
-  if (aTabIndex) {
-    *aTabIndex = tabIndex;
-  }
-
-  return tabIndex >= 0 || (!disabled && HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex));
+  return shouldFocus;
 }
 
 void
