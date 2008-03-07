@@ -137,7 +137,6 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsCCUncollectableMarker.h"
-#include "nsCycleCollector.h"
 
 #ifdef MOZ_SVG
 PRBool NS_SVG_TestFeature(const nsAString &fstr);
@@ -1200,9 +1199,6 @@ nsGenericElement::~nsGenericElement()
 {
   NS_PRECONDITION(!IsInDoc(),
                   "Please remove this from the document properly");
-#ifdef DEBUG
-  nsCycleCollector_DEBUG_wasFreed(static_cast<nsINode*>(this));
-#endif
 }
 
 NS_IMETHODIMP
@@ -2229,9 +2225,6 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   }
 
   nsNodeUtils::ParentChainChanged(this);
-#ifdef DEBUG
-  nsCycleCollector_DEBUG_shouldBeFreed(static_cast<nsINode*>(this));
-#endif
 }
 
 nsresult
