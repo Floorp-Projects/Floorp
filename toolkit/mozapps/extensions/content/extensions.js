@@ -642,6 +642,7 @@ function displaySearchThrobber(aKey) {
 function resetSearch() {
   var searchbox = document.getElementById("searchbox");
   searchbox.value = "";
+  searchbox.focus();
   retrieveRepositoryAddons("");
 }
 

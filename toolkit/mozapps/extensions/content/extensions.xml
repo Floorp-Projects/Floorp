@@ -921,6 +921,7 @@
           this.setAttribute("value", "");
           this._cancelButton.hidden = true;
           this._searchButton.hidden = false;
+          this.focus();
         </body>
       </method>
 
@@ -936,6 +937,11 @@
     </implementation>
     
     <handlers>
+      <handler event="focus" phase="capturing">
+        if (event.originalTarget == this)
+          this.textbox.focus(); // Forward focus to actual textbox
+      </handler>
+
       <handler event="keypress" keycode="VK_ENTER">
         if (event.originalTarget == this.textbox.inputField) {
           this.startSearch();
