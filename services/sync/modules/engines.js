@@ -659,11 +659,10 @@ Engine.prototype = {
     let self = yield;
     let ret = false;
 
-    let gen = Crypto.PBEencrypt.async(Crypto, self.cb,
-                                      this._snapshot.serialize(),
-      		                this._cryptoId);
+    Crypto.PBEencrypt.async(Crypto, self.cb,
+                            this._snapshot.serialize(),
+      		            this._cryptoId);
     let data = yield;
-    if (gen.failed) throw "Encryption failed.";
       
     this._dav.PUT(this.snapshotFile, data, self.cb);
     resp = yield;
