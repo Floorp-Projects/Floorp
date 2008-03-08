@@ -75,3 +75,14 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 #identity-popup-content-box.verifiedDomain > #identity-popup-connectedToLabel2 {
   display: none;
 }
+
+/* ::::: Fullscreen pseudo-toolbar ::::: */
+#fullscr-toggler {
+  display: none;
+  min-height: 5px;
+  height: 5px;
+}
+
+#navigator-toolbox[inFullscreen="true"] #fullscr-toggler {
+  display: -moz-box;
+}

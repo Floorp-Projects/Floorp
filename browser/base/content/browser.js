@@ -1531,6 +1531,9 @@ function focusAndSelectUrlBar()
 
 function openLocation()
 {
+  if (window.fullScreen)
+    FullScreen.mouseoverToggle(true);
+
   if (focusAndSelectUrlBar())
     return;
 #ifdef XP_MACOSX
@@ -1635,8 +1638,24 @@ function BrowserCloseTabOrWindow()
 
 function BrowserTryToCloseWindow()
 {
-  if (WindowIsClosing())
+  if (WindowIsClosing()) {
+    if (window.fullScreen) {
+      gBrowser.mPanelContainer.removeEventListener("mousemove",
+                                                   FullScreen._collapseCallback, false);
+      document.removeEventListener("keypress", FullScreen._keyToggleCallback, false);
+      document.removeEventListener("popupshown", FullScreen._setPopupOpen, false);
+      document.removeEventListener("popuphidden", FullScreen._setPopupOpen, false);
+      gPrefService.removeObserver("browser.fullscreen", FullScreen);
+
+      var fullScrToggler = document.getElementById("fullscr-toggler");
+      if (fullScrToggler) {
+        fullScrToggler.removeEventListener("mouseover", FullScreen._expandCallback, false);
+        fullScrToggler.removeEventListener("dragenter", FullScreen._expandCallback, false);
+      }
+    }
+
     window.close();     // WindowIsClosing does all the necessary checks
+  }
 }
 
 function loadURI(uri, referrer, postData, allowThirdPartyFixup)
@@ -2930,6 +2949,9 @@ const BrowserSearch = {
       return;
     }
 #endif
+    if (window.fullScreen)
+      FullScreen.mouseoverToggle(true);
+
     var searchBar = this.searchBar;
     if (isElementVisible(searchBar)) {
       searchBar.select();
@@ -3322,18 +3344,235 @@ function updateEditUIVisibility()
 
 var FullScreen =
 {
+  _XULNS: "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
   toggle: function()
   {
     // show/hide all menubars, toolbars, and statusbars (except the full screen toolbar)
     this.showXULChrome("toolbar", window.fullScreen);
     this.showXULChrome("statusbar", window.fullScreen);
     document.getElementById("fullScreenItem").setAttribute("checked", !window.fullScreen);
+
+    var fullScrToggler = document.getElementById("fullscr-toggler");
+    if (!window.fullScreen) {
+      // Add a tiny toolbar to receive mouseover and dragenter events, and provide affordance.
+      // This will help simulate the "collapse" metaphor while also requiring less code and
+      // events than raw listening of mouse coords.
+      if (!fullScrToggler) {
+        fullScrToggler = document.createElement("toolbar");
+        fullScrToggler.id = "fullscr-toggler";
+        fullScrToggler.setAttribute("customizable", "false");
+        fullScrToggler.setAttribute("moz-collapsed", "true");
+        var navBar = document.getElementById("nav-bar");
+        navBar.parentNode.insertBefore(fullScrToggler, navBar);
+      }
+      fullScrToggler.addEventListener("mouseover", this._expandCallback, false);
+      fullScrToggler.addEventListener("dragenter", this._expandCallback, false);
+
+      if (gPrefService.getBoolPref("browser.fullscreen.autohide"))
+        gBrowser.mPanelContainer.addEventListener("mousemove",
+                                                  this._collapseCallback, false);
+
+      document.addEventListener("keypress", this._keyToggleCallback, false);
+      document.addEventListener("popupshown", this._setPopupOpen, false);
+      document.addEventListener("popuphidden", this._setPopupOpen, false);
+      this._shouldAnimate = true;
+      this.mouseoverToggle(false);
+
+      // Autohide prefs
+      gPrefService.addObserver("browser.fullscreen", this, false);
+    }
+    else {
+      document.removeEventListener("keypress", this._keyToggleCallback, false);
+      document.removeEventListener("popupshown", this._setPopupOpen, false);
+      document.removeEventListener("popuphidden", this._setPopupOpen, false);
+      gPrefService.removeObserver("browser.fullscreen", this);
+
+      if (fullScrToggler) {
+        fullScrToggler.removeEventListener("mouseover", this._expandCallback, false);
+        fullScrToggler.removeEventListener("dragenter", this._expandCallback, false);
+      }
+
+      // The user may quit fullscreen during an animation
+      clearInterval(this._animationInterval);
+      getNavToolbox().style.marginTop = "0px";
+      if (this._isChromeCollapsed)
+        this.mouseoverToggle(true);
+      this._isAnimating = false;
+      // This is needed if they use the context menu to quit fullscreen
+      this._isPopupOpen = false;
+
+      gBrowser.mPanelContainer.removeEventListener("mousemove",
+                                                   this._collapseCallback, false);
+    }
+  },
+
+  observe: function(aSubject, aTopic, aData)
+  {
+    if (aData == "browser.fullscreen.autohide") {
+      if (gPrefService.getBoolPref("browser.fullscreen.autohide")) {
+        gBrowser.mPanelContainer.addEventListener("mousemove",
+                                                  this._collapseCallback, false);
+      }
+      else {
+        gBrowser.mPanelContainer.removeEventListener("mousemove",
+                                                     this._collapseCallback, false);
+      }
+    }
+  },
+
+  // Event callbacks
+  _expandCallback: function()
+  {
+    FullScreen.mouseoverToggle(true);
+  },
+  _collapseCallback: function()
+  {
+    FullScreen.mouseoverToggle(false);
+  },
+  _keyToggleCallback: function(aEvent)
+  {
+    // if we can use the keyboard (eg Ctrl+L or Ctrl+E) to open the toolbars, we
+    // should provide a way to collapse them too.
+    if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
+      FullScreen._shouldAnimate = false;
+      FullScreen.mouseoverToggle(false, true);
+    }
+    // F6 is another shortcut to the address bar, but its not covered in OpenLocation()
+    else if (aEvent.keyCode == aEvent.DOM_VK_F6)
+      FullScreen.mouseoverToggle(true);
+  },
+
+  // Checks whether we are allowed to collapse the chrome
+  _isPopupOpen: false,
+  _isChromeCollapsed: false,
+  _safeToCollapse: function(forceHide)
+  {
+    if (!gPrefService.getBoolPref("browser.fullscreen.autohide"))
+      return false;
+
+    // a popup menu is open in chrome: don't collapse chrome
+    if (!forceHide && this._isPopupOpen)
+      return false;
+
+    // a textbox in chrome is focused (location bar anyone?): don't collapse chrome
+    if (document.commandDispatcher.focusedElement &&
+        document.commandDispatcher.focusedElement.ownerDocument == document &&
+        document.commandDispatcher.focusedElement.localName == "input") {
+      if (forceHide)
+        // hidden textboxes that still have focus are bad bad bad
+        document.commandDispatcher.focusedElement.blur();
+      else
+        return false;
+    }
+    return true;
+  },
+
+  _setPopupOpen: function(aEvent)
+  {
+    // Popups should only veto chrome collapsing if they were opened when the chrome was not collapsed.
+    // Otherwise, they would not affect chrome and the user would expect the chrome to go away.
+    // e.g. we wouldn't want the autoscroll icon firing this event, so when the user
+    // toggles chrome when moving mouse to the top, it doesn't go away again.
+    if (aEvent.type == "popupshown" && !FullScreen._isChromeCollapsed &&
+        aEvent.target.localName != "tooltip" && aEvent.target.localName != "window")
+      FullScreen._isPopupOpen = true;
+    else if (aEvent.type == "popuphidden" && aEvent.target.localName != "tooltip" &&
+             aEvent.target.localName != "window")
+      FullScreen._isPopupOpen = false;
+  },
+
+  // Autohide helpers for the context menu item
+  getAutohide: function(aItem)
+  {
+    aItem.setAttribute("checked", gPrefService.getBoolPref("browser.fullscreen.autohide"));
+  },
+  setAutohide: function()
+  {
+    gPrefService.setBoolPref("browser.fullscreen.autohide", !gPrefService.getBoolPref("browser.fullscreen.autohide"));
+  },
+
+  // Animate the toolbars disappearing
+  _shouldAnimate: true,
+  _isAnimating: false,
+  _animationInterval: null,
+  _animateUp: function()
+  {
+    // check again, the user may have done something before the animation was due to start
+    if (!window.fullScreen || !FullScreen._safeToCollapse(false)) {
+      FullScreen._isAnimating = false;
+      FullScreen._shouldAnimate = true;
+      return;
+    }
+
+    var navToolbox = getNavToolbox();
+    var animateFrameAmount = 2;
+    function animateUpFrame() {
+      animateFrameAmount *= 2;
+      if (animateFrameAmount >=
+          (navToolbox.boxObject.height + gBrowser.mStrip.boxObject.height)) {
+        // We've animated enough
+        clearInterval(FullScreen._animationInterval);
+        navToolbox.style.marginTop = "0px";
+        FullScreen._isAnimating = false;
+        FullScreen._shouldAnimate = false; // Just to make sure
+        FullScreen.mouseoverToggle(false);
+        return;
+      }
+      navToolbox.style.marginTop = (animateFrameAmount * -1) + "px";
+    }
+
+    FullScreen._animationInterval = setInterval(animateUpFrame, 70);
+  },
+
+  mouseoverToggle: function(aShow, forceHide)
+  {
+    // Don't do anything if:
+    // a) we're already in the state we want,
+    // b) we're animating and will become collapsed soon, or
+    // c) we can't collapse because it would be undesirable right now
+    if (aShow != this._isChromeCollapsed || (!aShow && this._isAnimating) ||
+        (!aShow && !this._safeToCollapse(forceHide)))
+      return;
+
+    // browser.fullscreen.animateUp
+    // 0 - never animate up
+    // 1 - animate only for first collapse after entering fullscreen (default for perf's sake)
+    // 2 - animate every time it collapses
+    if (gPrefService.getIntPref("browser.fullscreen.animateUp") == 0)
+      this._shouldAnimate = false;
+
+    if (!aShow && this._shouldAnimate) {
+      this._isAnimating = true;
+      this._shouldAnimate = false;
+      setTimeout(this._animateUp, 800);
+      return;
+    }
+
+    // The chrome is collapsed so don't spam needless mousemove events
+    if (aShow) {
+      gBrowser.mPanelContainer.addEventListener("mousemove",
+                                                this._collapseCallback, false);
+    }
+    else {
+      gBrowser.mPanelContainer.removeEventListener("mousemove",
+                                                   this._collapseCallback, false);
+    }
+
+    gBrowser.mStrip.setAttribute("moz-collapsed", !aShow);
+    var allFSToolbars = document.getElementsByTagNameNS(this._XULNS, "toolbar");
+    for (var i = 0; i < allFSToolbars.length; i++) {
+      if (allFSToolbars[i].getAttribute("fullscreentoolbar") == "true")
+        allFSToolbars[i].setAttribute("moz-collapsed", !aShow);
+    }
+    document.getElementById("fullscr-toggler").setAttribute("moz-collapsed", aShow);
+    this._isChromeCollapsed = !aShow;
+    if (gPrefService.getIntPref("browser.fullscreen.animateUp") == 2)
+      this._shouldAnimate = true;
   },
 
   showXULChrome: function(aTag, aShow)
   {
-    var XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-    var els = document.getElementsByTagNameNS(XULNS, aTag);
+    var els = document.getElementsByTagNameNS(this._XULNS, aTag);
 
     for (var i = 0; i < els.length; ++i) {
       // XXX don't interfere with previously collapsed toolbars
@@ -3349,12 +3588,14 @@ var FullScreen =
             els[i].setAttribute("iconsize", "small");
           }
 
-          // XXX See bug 202978: we disable the context menu
-          // to prevent customization while in fullscreen, which
-          // causes menu breakage.
+          // Give the main nav bar the fullscreen context menu, otherwise remove it
+          // to prevent breakage
           els[i].setAttribute("saved-context",
                               els[i].getAttribute("context"));
-          els[i].removeAttribute("context");
+          if (els[i].id == "nav-bar")
+            els[i].setAttribute("context", "autohide-context");
+          else
+            els[i].removeAttribute("context");
 
           // Set the inFullscreen attribute to allow specific styling
           // in fullscreen mode
@@ -3364,15 +3605,14 @@ var FullScreen =
           function restoreAttr(attrName) {
             var savedAttr = "saved-" + attrName;
             if (els[i].hasAttribute(savedAttr)) {
-              var savedValue = els[i].getAttribute(savedAttr);
-              els[i].setAttribute(attrName, savedValue);
+              els[i].setAttribute(attrName, els[i].getAttribute(savedAttr));
               els[i].removeAttribute(savedAttr);
             }
           }
 
           restoreAttr("mode");
           restoreAttr("iconsize");
-          restoreAttr("context"); // XXX see above
+          restoreAttr("context");
 
           els[i].removeAttribute("inFullscreen");
         }
