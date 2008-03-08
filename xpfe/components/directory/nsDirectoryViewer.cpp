@@ -115,14 +115,20 @@ static const char               kGopherProtocol[] = "gopher://";
 //
 
 #ifdef MOZ_RDF
-NS_IMPL_THREADSAFE_ISUPPORTS7(nsHTTPIndex,
-                              nsIHTTPIndex,
-                              nsIRDFDataSource,
-                              nsIStreamListener,
-                              nsIDirIndexListener,
-                              nsIRequestObserver,
-                              nsIInterfaceRequestor,
-                              nsIFTPEventSink)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsHTTPIndex)
+    NS_INTERFACE_MAP_ENTRY(nsIHTTPIndex)
+    NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
+    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+    NS_INTERFACE_MAP_ENTRY(nsIDirIndexListener)
+    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+    NS_INTERFACE_MAP_ENTRY(nsIFTPEventSink)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIHTTPIndex)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_1(nsHTTPIndex, mInner)
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsHTTPIndex, nsIHttpIndex)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsHTTPIndex, nsIHttpIndex)
 
 NS_IMETHODIMP
 nsHTTPIndex::GetInterface(const nsIID &anIID, void **aResult ) 
