@@ -74,6 +74,7 @@ var gRetrievedResults = false;
 var gRecommendedAddons = null;
 var gRDF              = null;
 var gPendingInstalls  = {};
+var gNewAddons        = [];
 
 const PREF_EM_CHECK_COMPATIBILITY           = "extensions.checkCompatibility";
 const PREF_EM_CHECK_UPDATE_SECURITY         = "extensions.checkUpdateSecurity";
@@ -106,6 +107,7 @@ const OP_NEEDS_UNINSTALL              = "needs-uninstall";
 const OP_NEEDS_ENABLE                 = "needs-enable";
 const OP_NEEDS_DISABLE                = "needs-disable";
 
+Components.utils.import("resource://gre/modules/PluralForm.jsm");
 Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -483,15 +485,8 @@ function showView(aView) {
   else
     document.getElementById("continueDialogButton").removeAttribute("default");
 
-  if (isThemes) {
-    if (gPref.getBoolPref(PREF_EXTENSIONS_DSS_SWITCHPENDING)) {
-      var item = getItemForInternalName(gCurrentTheme);
-      if (item)
-        setRestartMessage(item);
-    }
-
+  if (isThemes)
     onAddonSelect();
-  }
   updateGlobalCommands();
 }
 
@@ -1097,6 +1092,8 @@ function Startup()
                 null, null, true, null);
   }
 
+  gExtensionsView.builder.addListener(TemplateBuilderListener);
+
   if ("arguments" in window) {
     try {
       var params = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
@@ -1118,6 +1115,36 @@ function Startup()
                     getExtensionString("newUpdatesAvailableMsg"),
                     null, null, true, null);
         document.title = getExtensionString("newUpdateWindowTitle", [getBrandShortName()]);
+      }
+      else if (window.arguments.length == 2) {
+        gNewAddons = window.arguments[1].split(",");
+        var addonsTerm = PluralForm.get(gNewAddons.length, getExtensionString("addonsPlural"));
+        showMessage("chrome://mozapps/skin/extensions/question.png",
+                    getExtensionString("newAddonsNotificationMsg", [gNewAddons.length, addonsTerm]),
+                    null, null, true, null);
+        var extensionCount = 0;
+        var themeCount = 0;
+        var localeCount = 0;
+        for (var i = 0; i < gNewAddons.length; i++) {
+          var item = gExtensionManager.getItemForID(gNewAddons[i]);
+          switch (item.type) {
+            case Ci.nsIUpdateItem.TYPE_EXTENSION:
+              extensionCount++;
+              break;
+            case Ci.nsIUpdateItem.TYPE_THEME:
+              themeCount++;
+              break;
+            case Ci.nsIUpdateItem.TYPE_LOCALE:
+              localeCount++;
+              break;
+          }
+        }
+        if (themeCount > extensionCount && themeCount > localeCount)
+          showView("themes");
+        else if (localeCount > extensionCount && localeCount > themeCount)
+          showView("locales");
+        else
+          showView("extensions");
       }
       else
         showView(window.arguments[0]);
@@ -1141,6 +1168,8 @@ function Startup()
 
 function Shutdown()
 {
+  gExtensionsView.builder.removeListener(TemplateBuilderListener);
+
   gPref.removeObserver(PREF_DSS_SKIN_TO_SELECT, gPrefObserver);
   gPref.removeObserver(PREF_GENERAL_SKINS_SELECTEDSKIN, gPrefObserver);
   if (gAddonRepository && gAddonRepository.isSearching)
@@ -1162,6 +1191,38 @@ function Shutdown()
   if (currentNotification && currentNotification.value == "addons-no-updates")
     window.removeEventListener("select", noUpdatesDismiss, true);
 }
+
+var TemplateBuilderListener = {
+  willRebuild: function(aBuilder) {
+  },
+
+  didRebuild: function(aBuilder) {
+    // Display has been rebuilt, update necessary attributes
+    if (gView == "extensions" || gView == "themes" || gView == "locales") {
+      for (var i = 0; i < gNewAddons.length; i++) {
+        var item = document.getElementById(PREFIX_ITEM_URI + gNewAddons[i]);
+        if (item)
+          item.setAttribute("newAddon", "true");
+      }
+    }
+
+    if (gView == "themes") {
+      if (gPref.getBoolPref(PREF_EXTENSIONS_DSS_SWITCHPENDING)) {
+        var item = getItemForInternalName(gCurrentTheme);
+        if (item)
+          setRestartMessage(item);
+      }
+    }
+  },
+
+  QueryInterface: function (aIID)
+  {
+    if (!aIID.equals(Components.interfaces.nsIXULBuilderListener) &&
+        !aIID.equals(Components.interfaces.nsISupports))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
+  }
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 //

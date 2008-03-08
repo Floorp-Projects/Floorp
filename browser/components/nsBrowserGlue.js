@@ -45,6 +45,8 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/distribution.js");
 
+const PREF_EM_NEW_ADDONS_LIST = "extensions.newAddons";
+
 // Factory object
 const BrowserGlueServiceFactory = {
   _instance: null,
@@ -89,6 +91,9 @@ BrowserGlue.prototype = {
       case "final-ui-startup":
         this._onProfileStartup();
         break;
+      case "sessionstore-windows-restored":
+        this._onBrowserStartup();
+        break;
       case "browser:purge-session-history":
         // reset the console service's error buffer
         const cs = Cc["@mozilla.org/consoleservice;1"].
@@ -122,6 +127,7 @@ BrowserGlue.prototype = {
     osvr.addObserver(this, "xpcom-shutdown", false);
     osvr.addObserver(this, "prefservice:after-app-defaults", false);
     osvr.addObserver(this, "final-ui-startup", false);
+    osvr.addObserver(this, "sessionstore-windows-restored", false);
     osvr.addObserver(this, "browser:purge-session-history", false);
     osvr.addObserver(this, "quit-application-requested", false);
     osvr.addObserver(this, "quit-application-granted", false);
@@ -138,6 +144,7 @@ BrowserGlue.prototype = {
     osvr.removeObserver(this, "xpcom-shutdown");
     osvr.removeObserver(this, "prefservice:after-app-defaults");
     osvr.removeObserver(this, "final-ui-startup");
+    osvr.removeObserver(this, "sessionstore-windows-restored");
     osvr.removeObserver(this, "browser:purge-session-history");
     osvr.removeObserver(this, "quit-application-requested");
     osvr.removeObserver(this, "quit-application-granted");
@@ -200,6 +207,32 @@ BrowserGlue.prototype = {
   {
     this._shutdownPlaces();
     this.Sanitizer.onShutdown();
+  },
+
+  // Browser startup complete. All initial windows have opened.
+  _onBrowserStartup: function()
+  {
+    var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                     getService(Ci.nsIPrefBranch);
+    // If new add-ons were installed during startup open the add-ons manager.
+    if (prefBranch.prefHasUserValue(PREF_EM_NEW_ADDONS_LIST)) {
+      var args = Cc["@mozilla.org/supports-array;1"].
+                 createInstance(Ci.nsISupportsArray);
+      var str = Cc["@mozilla.org/supports-string;1"].
+                createInstance(Ci.nsISupportsString);
+      str.data = "";
+      args.AppendElement(str);
+      var str = Cc["@mozilla.org/supports-string;1"].
+                createInstance(Ci.nsISupportsString);
+      str.data = prefBranch.getCharPref(PREF_EM_NEW_ADDONS_LIST);
+      args.AppendElement(str);
+      const EMURL = "chrome://mozapps/content/extensions/extensions.xul";
+      const EMFEATURES = "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable";
+      var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+               getService(Ci.nsIWindowWatcher);
+      ww.openWindow(null, EMURL, "_blank", EMFEATURES, args);
+      prefBranch.clearUserPref(PREF_EM_NEW_ADDONS_LIST);
+    }
   },
 
   _onQuitRequest: function(aCancelQuit, aQuitType)
