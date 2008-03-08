@@ -53,6 +53,7 @@ XPIDLSRCS = \
 EXTRA_PP_COMPONENTS = \
 	nsBrowserContentHandler.js \
 	nsBrowserGlue.js \
+	aboutRobots.js \
 	$(NULL)
 
 EXTRA_JS_MODULES = distribution.js
