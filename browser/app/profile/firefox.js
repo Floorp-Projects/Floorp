@@ -198,6 +198,8 @@ pref("browser.chrome.favicons", true);
 pref("browser.formfill.enable", true);
 pref("browser.warnOnQuit", true);
 pref("browser.warnOnRestart", true);
+pref("browser.fullscreen.autohide", true);
+pref("browser.fullscreen.animateUp", 1);
 
 #ifdef UNIX_BUT_NOT_MAC
 pref("browser.urlbar.clickSelectsAll", false);
