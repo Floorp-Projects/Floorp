@@ -232,7 +232,7 @@
                        label="&clearCacheNow.label;" accesskey="&clearCacheNow.accesskey;"
                        oncommand="gAdvancedPane.clearCache();"/>
              </hbox>
-	     <hbox>
+	     <hbox align="center">
 	       <checkbox id="offlineNotify" flex="1"
 			 label="&offlineNotify.label;" accesskey="&offlineNotify.accesskey;"
 			 preference="browser.offline-apps.notify"
