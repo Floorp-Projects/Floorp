@@ -1128,13 +1128,13 @@ function Startup()
         for (var i = 0; i < gNewAddons.length; i++) {
           var item = gExtensionManager.getItemForID(gNewAddons[i]);
           switch (item.type) {
-            case Ci.nsIUpdateItem.TYPE_EXTENSION:
+            case Components.interfaces.nsIUpdateItem.TYPE_EXTENSION:
               extensionCount++;
               break;
-            case Ci.nsIUpdateItem.TYPE_THEME:
+            case Components.interfaces.nsIUpdateItem.TYPE_THEME:
               themeCount++;
               break;
-            case Ci.nsIUpdateItem.TYPE_LOCALE:
+            case Components.interfaces.nsIUpdateItem.TYPE_LOCALE:
               localeCount++;
               break;
           }
