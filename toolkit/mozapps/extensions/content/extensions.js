@@ -1118,9 +1118,9 @@ function Startup()
       }
       else if (window.arguments.length == 2) {
         gNewAddons = window.arguments[1].split(",");
-        var addonsTerm = PluralForm.get(gNewAddons.length, getExtensionString("addonsPlural"));
-        showMessage("chrome://mozapps/skin/extensions/question.png",
-                    getExtensionString("newAddonsNotificationMsg", [gNewAddons.length, addonsTerm]),
+        var installMsg = PluralForm.get(gNewAddons.length, getExtensionString("newAddonsNotificationMsg2"));
+        installMsg = installMsg.replace("%S", gNewAddons.length);
+        showMessage("chrome://mozapps/skin/extensions/question.png", installMsg,
                     null, null, true, null);
         var extensionCount = 0;
         var themeCount = 0;
