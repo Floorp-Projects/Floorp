@@ -1743,10 +1743,6 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
   // get reinstantiated we'll send the right messages to the plug-in.
   mWindowlessRect.Empty();
 
-  // Grab the view while we still know it's safe to do so.
-
-  nsIView *view = GetView();
-
 #ifdef XP_WIN
   if (aDelayedStop) {
     // If we're asked to do a delayed stop it means we're stopping the
@@ -1754,6 +1750,7 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
     // the view to disown the widget (i.e. leave it up to us to
     // destroy it).
 
+    // Disown the view while we still know it's safe to do so.
     nsIView *view = GetView();
     if (view) {
       view->DisownWidget();
