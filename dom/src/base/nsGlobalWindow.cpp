@@ -9028,6 +9028,16 @@ nsNavigator::GetPlatform(nsAString& aPlatform)
 NS_IMETHODIMP
 nsNavigator::GetOscpu(nsAString& aOSCPU)
 {
+  if (!nsContentUtils::IsCallerTrustedForRead()) {
+    const nsAdoptingCString& override =
+      nsContentUtils::GetCharPref("general.oscpu.override");
+
+    if (override) {
+      CopyUTF8toUTF16(override, aOSCPU);
+      return NS_OK;
+    }
+  }
+
   nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler>
     service(do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv));
@@ -9089,6 +9099,25 @@ nsNavigator::GetProduct(nsAString& aProduct)
 NS_IMETHODIMP
 nsNavigator::GetProductSub(nsAString& aProductSub)
 {
+  if (!nsContentUtils::IsCallerTrustedForRead()) {
+    const nsAdoptingCString& override =
+      nsContentUtils::GetCharPref("general.productSub.override");
+
+    if (override) {
+      CopyUTF8toUTF16(override, aProductSub);
+      return NS_OK;
+    } else {
+      // 'general.useragent.productSub' backwards compatible with 1.8 branch.
+      const nsAdoptingCString& override2 =
+        nsContentUtils::GetCharPref("general.useragent.productSub");
+
+      if (override2) {
+        CopyUTF8toUTF16(override2, aProductSub);
+        return NS_OK;
+      }
+    }
+  }
+
   nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler>
     service(do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv));
@@ -9164,6 +9193,16 @@ nsNavigator::GetOnLine(PRBool* aOnline)
 NS_IMETHODIMP
 nsNavigator::GetBuildID(nsAString& aBuildID)
 {
+  if (!nsContentUtils::IsCallerTrustedForRead()) {
+    const nsAdoptingCString& override =
+      nsContentUtils::GetCharPref("general.buildID.override");
+
+    if (override) {
+      CopyUTF8toUTF16(override, aBuildID);
+      return NS_OK;
+    }
+  }
+
   nsCOMPtr<nsIXULAppInfo> appInfo =
     do_GetService("@mozilla.org/xre/app-info;1");
   if (!appInfo)
