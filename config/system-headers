@@ -971,3 +971,6 @@ libsn/sn-util.h
 #if MOZ_NATIVE_HUNSPELL==1
 hunspell.hxx
 #endif
+#if MOZ_NATIVE_BZ2==1
+bzlib.h
+#endif
