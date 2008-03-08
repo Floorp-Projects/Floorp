@@ -810,12 +810,27 @@ nsCookieService::RemoveAll()
   return NS_OK;
 }
 
+// helper struct for passing arguments into hash enumeration callback.
+struct nsGetEnumeratorData
+{
+  nsGetEnumeratorData(nsCOMArray<nsICookie> *aArray, PRInt64 aTime)
+   : array(aArray)
+   , currentTime(aTime) {}
+
+  nsCOMArray<nsICookie> *array;
+  PRInt64 currentTime;
+};
+
 PR_STATIC_CALLBACK(PLDHashOperator)
 COMArrayCallback(nsCookieEntry *aEntry,
                  void          *aArg)
 {
+  nsGetEnumeratorData *data = static_cast<nsGetEnumeratorData *>(aArg);
+
   for (nsCookie *cookie = aEntry->Head(); cookie; cookie = cookie->Next()) {
-    static_cast<nsCOMArray<nsICookie>*>(aArg)->AppendObject(cookie);
+    // only append non-expired cookies
+    if (cookie->Expiry() > data->currentTime)
+      data->array->AppendObject(cookie);
   }
   return PL_DHASH_NEXT;
 }
@@ -823,10 +838,10 @@ COMArrayCallback(nsCookieEntry *aEntry,
 NS_IMETHODIMP
 nsCookieService::GetEnumerator(nsISimpleEnumerator **aEnumerator)
 {
-  RemoveExpiredCookies(PR_Now() / PR_USEC_PER_SEC);
-
   nsCOMArray<nsICookie> cookieList(mCookieCount);
-  mHostTable.EnumerateEntries(COMArrayCallback, &cookieList);
+  nsGetEnumeratorData data(&cookieList, PR_Now() / PR_USEC_PER_SEC);
+
+  mHostTable.EnumerateEntries(COMArrayCallback, &data);
 
   return NS_NewArrayEnumerator(aEnumerator, cookieList);
 }
