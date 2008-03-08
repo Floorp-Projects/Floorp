@@ -26,6 +26,7 @@
 #   Dean Tessman   (dean_tessman@hotmail.com)
 #   Masayuki Nakano (masayuki@d-toybox.com)
 #   Pamela Greene (pamg.bugs@gmail.com)
+#   Edward Lee (edward.lee@engineering.uiuc.edu)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1029,25 +1030,12 @@
             item.setAttribute("type", controller.getStyleAt(this._currentIndex));
             item.setAttribute("text", trimmedSearchString);
         
-            var width = this.getAttribute("width");
-
             if (this._currentIndex < existingItemsCount) {
               // re-use the existing item
               item._adjustAcItem();
               item.collapsed = false;
-
-              var current_width = item.getAttribute("current_width");
-
-              if (width && current_width != width) {
-                item.setAttribute("current_width", width);
-                item._adjustWidth();
-              }
             }
             else {
-              // created a new item
-              if (width)
-                item.setAttribute("current_width", width);
-
               // set the class at the end so we can use the attributes 
               // in the xbl constructor
               item.className = "autocomplete-richlistitem";
@@ -1100,7 +1088,8 @@
     <content>
       <xul:hbox align="center">
         <xul:image xbl:inherits="src=image" class="ac-site-icon"/>
-        <xul:hbox anonid="title-box" class="ac-title">
+        <xul:hbox anonid="title-box" class="ac-title" flex="1"
+                  onunderflow="_doUnderflow('_title');">
 # note, we rely on the newlines here so that we have
 # a textNode before and after the span.  see _setUpDescription()
 # for more details
@@ -1109,12 +1098,13 @@
           </xul:description>
         </xul:hbox>
         <xul:label anonid="title-overflow-ellipsis" xbl:inherits="selected"
-                   class="ac-ellipsis-after ac-comment"/>
+                   class="ac-ellipsis-after ac-comment" hidden="true"/>
         <xul:image anonid="type-image" class="ac-type-icon"/>
       </xul:hbox>
       <xul:hbox align="center">
         <xul:spacer class="ac-site-icon"/>
-        <xul:hbox anonid="url-box" class="ac-url">
+        <xul:hbox anonid="url-box" class="ac-url" flex="1"
+                  onunderflow="_doUnderflow('_url');">
 # note, we rely on the newlines here so that we have
 # a textNode before and after the span.  see _setUpDescription()
 # for more details
@@ -1123,15 +1113,28 @@
           </xul:description>
         </xul:hbox>
         <xul:label anonid="url-overflow-ellipsis" xbl:inherits="selected" 
-                   class="ac-ellipsis-after ac-url-text"/>
+                   class="ac-ellipsis-after ac-url-text" hidden="true"/>
         <xul:spacer class="ac-type-icon"/>
       </xul:hbox>
     </content>
     <implementation implements="nsIDOMXULSelectControlItemElement">
       <constructor>
         <![CDATA[
+            let ellipsis = "\u2026";
+            try {
+              ellipsis = Components.classes["@mozilla.org/preferences-service;1"].
+                getService(Components.interfaces.nsIPrefBranch).
+                getComplexValue("intl.ellipsis",
+                  Components.interfaces.nsIPrefLocalizedString).data;
+            } catch (ex) {
+              // Do nothing.. we already have a default
+            }
+
             this._urlOverflowEllipsis = document.getAnonymousElementByAttribute(this, "anonid", "url-overflow-ellipsis");  
             this._titleOverflowEllipsis = document.getAnonymousElementByAttribute(this, "anonid", "title-overflow-ellipsis");
+
+            this._urlOverflowEllipsis.value = ellipsis;
+            this._titleOverflowEllipsis.value = ellipsis;
 
             this._typeImage = document.getAnonymousElementByAttribute(this, "anonid", "type-image");
 
@@ -1140,18 +1143,6 @@
 
             this._titleBox = document.getAnonymousElementByAttribute(this, "anonid", "title-box");
             this._title = document.getAnonymousElementByAttribute(this, "anonid", "title");
-
-            // XXX hack
-            // for the first richlistitem, when we call _adjustWidth()
-            // from the xbl constructor, these elements don't have widths
-            // but we rely on those widths to properly set the widths 
-            // of the scrollboxes.  if we don't have the widths
-            // try again on a timeout.
-            if (!this._urlOverflowEllipsis.boxObject.width ||
-                !this._titleOverflowEllipsis.boxObject.width)
-              setTimeout(function(self) { self._adjustWidth(); }, 0, this);
-            else
-              this._adjustWidth();
 
             this._adjustAcItem();
           ]]>
@@ -1176,31 +1167,9 @@
         </getter>
       </property>
 
-      <field name="_ellipsis">null</field>
-
-      <property name="ellipsis" readonly="true">
-        <getter>
-          <![CDATA[
-            if (!this._ellipsis) {
-              try {
-                var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                                     .getService(Components.interfaces.nsIPrefBranch);
-                this._ellipsis = pref.getComplexValue("intl.ellipsis",
-                                                 Components.interfaces.nsIPrefLocalizedString).data;
-              } catch (ex) {
-                this._ellipsis = "\u2026";
-              }
-            }
-            return this._ellipsis; 
-          ]]>
-        </getter>
-      </property>
-
       <method name="_setUpDescription">
         <parameter name="aDescriptionElement"/>
         <parameter name="aText"/>
-        <parameter name="aBoxObject"/>
-        <parameter name="aEllipsis"/>
         <parameter name="aMatchIndex"/>
         <parameter name="aMatchLength"/>
         <body>
@@ -1226,11 +1195,6 @@
             if (oldValues[i] != newValues[i])
               aDescriptionElement.childNodes[i].textContent = newValues[i];
           }
-
-          // need to set up the ellipsis on a time out, 
-          // because the width of the description element may still be 0
-          // even though the aText length is non-zero
-          setTimeout(function(self) { self._setUpEllipsis(aBoxObject, aDescriptionElement, aEllipsis); }, 0, this);
           ]]>
         </body>
       </method>
@@ -1243,74 +1207,74 @@
           var title = this.getAttribute("title");
           var type = this.getAttribute("type");
 
-          this._typeImage.className = type ? ("ac-result-type-" + type) : "";
-
-          // if we aren't matching any text 
-          // (the user has clicked on the history drop down
-          // or this result is a "tag" match, don't bold any matching text
-          if (text == "" || type == "tag") {
-            this._setUpDescription(this._url, url, this._urlBox.boxObject, this._urlOverflowEllipsis, -1, -1);
-            this._setUpDescription(this._title, title, this._titleBox.boxObject, this._titleOverflowEllipsis, -1, -1); 
-            return;
-          }
+          // Give the image the icon style and a special one for the type
+          this._typeImage.className = "ac-type-icon" +
+            (type ? " ac-result-type-" + type : "");
 
           // emphasize the matching text in both the title and the url
           var needle = text.toLowerCase();
 
-          var hay = title.toLowerCase();
-          var index = hay.indexOf(needle);
-          this._setUpDescription(this._title, title, this._titleBox.boxObject, this._titleOverflowEllipsis, index, text.length); 
-          
-          hay = url.toLowerCase();
-          index = hay.indexOf(needle);
-          this._setUpDescription(this._url, url, this._urlBox.boxObject, this._urlOverflowEllipsis, index, text.length);
+          // Find the match and emphasize it
+          let index = title.toLowerCase().indexOf(needle);
+          this._setUpDescription(this._title, title, index, text.length);
+          index = url.toLowerCase().indexOf(needle);
+          this._setUpDescription(this._url, url, index, text.length);
+
+          // Set up overflow on a timeout because the contents of the box
+          // might not have a width yet even though we just changed them
+          setTimeout(this._setUpOverflow, 0, this._titleBox, this._titleOverflowEllipsis);
+          setTimeout(this._setUpOverflow, 0, this._urlBox, this._urlOverflowEllipsis);
           ]]>
         </body>
       </method>
 
-      <method name="_adjustWidth">
-        <body>
-          <![CDATA[
-          // XXX hack
-          // see bug #399664 comment #39 for some details
-          // add 16px for the site image, 8 for the margin right of the site icon,
-          // 16px for the type image, and 24px for scroll bar
-          var pixelsUsedForNonText = 16 + 8 + 16 + 24;
-
-          var current_url_width = 
-            Math.floor(this.getAttribute("current_width") - 
-                       pixelsUsedForNonText -
-                       this._urlOverflowEllipsis.boxObject.width);
-
-          var current_title_width = 
-            Math.floor(this.getAttribute("current_width") - 
-                       pixelsUsedForNonText -
-                       this._titleOverflowEllipsis.boxObject.width);
-
-          this._urlBox.minWidth = current_url_width;
-          this._urlBox.maxWidth = current_url_width;
-
-          this._titleBox.minWidth = current_title_width;
-          this._titleBox.maxWidth = current_title_width;
-        ]]>
-        </body>
-      </method>
-
-      <method name="_setUpEllipsis">
-        <parameter name="aBoxObject"/>
-        <parameter name="aDescriptionElement"/>
+      <method name="_setUpOverflow">
+        <parameter name="aParentBox"/>
         <parameter name="aEllipsis"/>
         <body>
           <![CDATA[
-          // determine if we need to show the ellipsis
-          if (aBoxObject.width >= aDescriptionElement.boxObject.width) {
-            aEllipsis.value = "";
-            aDescriptionElement.tooltipText = "";
+          // Hide the ellipsis incase there's just enough to not underflow
+          aEllipsis.hidden = true;
+
+          // Start with the parent's width and subtract off its children
+          let tooltip = [];
+          let children = aParentBox.childNodes;
+          let widthDiff = aParentBox.boxObject.width;
+
+          for (let i = 0; i < children.length; i++) {
+            // Only consider a child if it actually takes up space
+            let childWidth = children[i].boxObject.width;
+            if (childWidth > 0) {
+              // Subtract a little less to account for subpixel rounding
+              widthDiff -= childWidth - .5;
+
+              // Add to the tooltip if it's not hidden and has text
+              let childText = children[i].textContent;
+              if (childText)
+                tooltip.push(childText);
+            }
           }
-          else {
-            aEllipsis.value = this.ellipsis;
-            aDescriptionElement.tooltipText = aDescriptionElement.textContent;
+
+          // If the children take up more space than the parent.. overflow!
+          if (widthDiff < 0) {
+            // Re-show the ellipsis now that we know it's needed
+            aEllipsis.hidden = false;
+
+            // Separate text components with a ndash --
+            aParentBox.tooltipText = tooltip.join(" \u2013 ");
           }
+          ]]>
+        </body>
+      </method>
+
+      <method name="_doUnderflow">
+        <parameter name="aName"/>
+        <body>
+          <![CDATA[
+          // Hide the ellipsis right when we know we're underflowing instead of
+          // waiting for the timeout to trigger the _setUpOverflow calculations
+          this[aName + "Box"].tooltipText = "";
+          this[aName + "OverflowEllipsis"].hidden = true;
           ]]>
         </body>
       </method>
