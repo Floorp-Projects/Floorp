@@ -499,9 +499,9 @@ nsNavBookmarks::InitDefaults()
   rv = SetItemTitle(mToolbarFolder, NS_ConvertUTF16toUTF8(toolbarTitle));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Unfiled Bookmarks
+  // Unsorted Bookmarks
   nsXPIDLString unfiledTitle;
-  rv = mBundle->GetStringFromName(NS_LITERAL_STRING("UnfiledBookmarksFolderTitle").get(),
+  rv = mBundle->GetStringFromName(NS_LITERAL_STRING("UnsortedBookmarksFolderTitle").get(),
                                   getter_Copies(unfiledTitle));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = SetItemTitle(mUnfiledRoot, NS_ConvertUTF16toUTF8(unfiledTitle));
