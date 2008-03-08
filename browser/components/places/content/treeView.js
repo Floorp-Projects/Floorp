@@ -438,7 +438,8 @@ PlacesTreeView.prototype = {
   COLUMN_TYPE_TAGS: 9,
 
   _getColumnType: function PTV__getColumnType(aColumn) {
-    var columnType = aColumn.id || aColumn.element.getAttribute("anonid");
+    var columnType = aColumn.element.getAttribute("anonid") || aColumn.id;
+
     switch (columnType) {
       case "title":
         return this.COLUMN_TYPE_TITLE;
@@ -1095,8 +1096,8 @@ PlacesTreeView.prototype = {
   getImageSrc: function PTV_getImageSrc(aRow, aColumn) {
     this._ensureValidRow(aRow);
 
-    // only the first column has an image
-    if (aColumn.index != 0)
+    // only the title column has an image
+    if (this._getColumnType(aColumn) != this.COLUMN_TYPE_TITLE)
       return "";
 
     var node = this._visibleElements[aRow].node;
