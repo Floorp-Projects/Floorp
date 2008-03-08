@@ -101,8 +101,7 @@
     <script type="application/x-javascript" src="chrome://browser/content/preferences/privacy.js"/>
 
     <!-- History -->
-    <groupbox id="historyGroup"
-              xmlns:aaa="http://www.w3.org/2005/07/aaa">
+    <groupbox id="historyGroup">
       <caption label="&history.label;"/>
 
       <hbox align="center">
@@ -110,9 +109,9 @@
                   label="&rememberDaysBefore.label;"
                   accesskey="&rememberDaysBefore.accesskey;"
                   oncommand="gPrivacyPane.onchangeHistoryDaysCheck();"
-                  aaa:labelledby="rememberHistoryDays historyDays rememberAfter"/>
+                  aria-labelledby="rememberHistoryDays historyDays rememberAfter"/>
         <textbox id="historyDays" type="number" size="3"
-                 aaa:labelledby="rememberHistoryDays historyDays rememberAfter"
+                 aria-labelledby="rememberHistoryDays historyDays rememberAfter"
                  onkeyup="gPrivacyPane.onkeyupHistoryDaysText();"
                  preference="browser.history_expire_days_min"/>
         <label id="rememberAfter"> &rememberDaysAfter.label;</label>

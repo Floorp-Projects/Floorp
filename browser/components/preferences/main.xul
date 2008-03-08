@@ -158,8 +158,7 @@
           <radio id="saveTo" value="true"
                  label="&saveTo.label;"
                  accesskey="&saveTo.accesskey;"
-                 xmlns:aaa="http://www.w3.org/2005/07/aaa"
-                 aaa:labelledby="saveTo downloadFolder"/>
+                 aria-labelledby="saveTo downloadFolder"/>
           <filefield id="downloadFolder" flex="1"
                      preference="browser.download.folderList"
                      preference-editable="true"
