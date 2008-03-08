@@ -921,6 +921,8 @@ MOZ_JPEG_CFLAGS=
 MOZ_JPEG_LIBS='$(call EXPAND_LIBNAME_PATH,mozjpeg,$(DEPTH)/jpeg)'
 MOZ_ZLIB_CFLAGS=
 MOZ_ZLIB_LIBS='$(call EXPAND_LIBNAME_PATH,mozz,$(DEPTH)/modules/zlib/src)'
+MOZ_BZ2_CFLAGS=
+MOZ_BZ2_LIBS='$(call EXPAND_LIBNAME_PATH,bz2,$(DEPTH)/modules/libbz2/src)'
 MOZ_PNG_CFLAGS=
 MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,mozpng,$(DEPTH)/modules/libimg/png)'
 
@@ -4058,6 +4060,35 @@ LIBS=$_SAVE_LIBS
 if test "${ZLIB_DIR}" -a -d "${ZLIB_DIR}" -a "$SYSTEM_ZLIB" = 1; then
     ZLIB_CFLAGS="-I${ZLIB_DIR}/include"
     ZLIB_LIBS="-L${ZLIB_DIR}/lib ${ZLIB_LIBS}"
+fi
+
+dnl system BZIP2 Support
+dnl ========================================================
+MOZ_ARG_WITH_STRING(system-bz2,
+[  --with-system-bz2[=PFX]
+                          Use system libbz2 [installed at prefix PFX]],
+    BZ2_DIR=$withval)
+
+_SAVE_CFLAGS=$CFLAGS
+_SAVE_LDFLAGS=$LDFLAGS
+_SAVE_LIBS=$LIBS
+if test -n "${BZ2_DIR}" -a "${BZ2_DIR}" != "yes"; then
+    CFLAGS="-I${BZ2_DIR}/include $CFLAGS"
+    LDFLAGS="-L${BZ2_DIR}/lib $LDFLAGS"
+fi
+if test -z "$BZ2_DIR" -o "$BZ2_DIR" = no; then
+    SYSTEM_BZ2=
+else
+    AC_CHECK_LIB(bz2, BZ2_bzread, [SYSTEM_BZ2=1 BZ2_LIBS="-lbz2"],
+	[SYSTEM_BZ2= BZ2_CFLAGS= BZ2_LIBS=], $BZ2_LIBS)
+fi
+CFLAGS=$_SAVE_CFLAGS
+LDFLAGS=$_SAVE_LDFLAGS
+LIBS=$_SAVE_LIBS
+
+if test "${BZ2_DIR}" -a -d "${BZ2_DIR}" -a "$SYSTEM_BZ2" = 1; then
+    BZ2_CFLAGS="-I${BZ2_DIR}/include"
+    BZ2_LIBS="-L${BZ2_DIR}/lib ${MOZ_BZ2_LIBS}"
 fi
 
 dnl system PNG Support
@@ -7684,11 +7715,14 @@ AC_SUBST(SYSTEM_MAKEDEPEND)
 AC_SUBST(SYSTEM_JPEG)
 AC_SUBST(SYSTEM_PNG)
 AC_SUBST(SYSTEM_ZLIB)
+AC_SUBST(SYSTEM_BZ2)
 
 AC_SUBST(JPEG_CFLAGS)
 AC_SUBST(JPEG_LIBS)
 AC_SUBST(ZLIB_CFLAGS)
 AC_SUBST(ZLIB_LIBS)
+AC_SUBST(BZ2_CFLAGS)
+AC_SUBST(BZ2_LIBS)
 AC_SUBST(PNG_CFLAGS)
 AC_SUBST(PNG_LIBS)
 
@@ -7696,6 +7730,8 @@ AC_SUBST(MOZ_JPEG_CFLAGS)
 AC_SUBST(MOZ_JPEG_LIBS)
 AC_SUBST(MOZ_ZLIB_CFLAGS)
 AC_SUBST(MOZ_ZLIB_LIBS)
+AC_SUBST(MOZ_BZ2_CFLAGS)
+AC_SUBST(MOZ_BZ2_LIBS)
 AC_SUBST(MOZ_PNG_CFLAGS)
 AC_SUBST(MOZ_PNG_LIBS)
 
