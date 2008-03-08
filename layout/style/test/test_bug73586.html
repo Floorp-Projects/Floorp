@@ -51,7 +51,7 @@ function check_children() {
     elt = 0;
     for (i = 0; i < len; ++i) {
         child = p.childNodes[i];
-        if (child.NodeType != Node.ELEMENT_NODE)
+        if (child.nodeType != Node.ELEMENT_NODE)
             continue;
         is(cs(child).backgroundColor, (elt == 0) ? LIME : WHITE,
            "child " + i + " should " + ((elt == 0) ? "" : "NOT ") +
@@ -66,7 +66,7 @@ function check_children() {
         is(cs(child).textDecoration, (i == 0) ? "underline" : "none",
            "child " + i + " should " + ((i == 0) ? "" : "NOT ") +
            " match :-moz-first-node");
-        is(cs(child).visibilty, (i == len - 1) ? "hidden" : "visible",
+        is(cs(child).visibility, (i == len - 1) ? "hidden" : "visible",
            "child " + i + " should " + ((i == len - 1) ? "" : "NOT ") +
            " match :-moz-last-node");
 
