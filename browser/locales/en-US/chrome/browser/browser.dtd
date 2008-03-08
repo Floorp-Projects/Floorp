@@ -64,7 +64,7 @@
 <!ENTITY subscribeToPageMenupopup.label "Subscribe to This Page">
 <!ENTITY subscribeToPageMenuitem.label "Subscribe to This Page…">
 <!ENTITY addCurPagesCmd.label "Bookmark All Tabs…">
-<!ENTITY showAllBookmarksCmd.label2 "Organize Bookmarks">
+<!ENTITY showAllBookmarksCmd2.label "Organize Bookmarks">
 <!ENTITY bookmarkAllCmd.label "Bookmark All Tabs…">
 
 <!ENTITY backCmd.label                "Back">
@@ -176,7 +176,7 @@
 <!ENTITY historyUndoMenu.label "Recently Closed Tabs">
 
 <!ENTITY historyHomeCmd.label "Home">
-<!ENTITY showAllHistoryCmd.label2 "Show All History">
+<!ENTITY showAllHistoryCmd2.label "Show All History">
 <!ENTITY showAllHistoryCmd.commandkey "H">
 
 <!ENTITY openCmd.commandkey           "l">
