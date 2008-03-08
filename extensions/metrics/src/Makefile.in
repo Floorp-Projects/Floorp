@@ -57,7 +57,7 @@ REQUIRES	= xpcom \
 		  docshell \
 		  layout \
 		  widget \
-		  $(BZ2_REQUIRES) \
+		  libbz2 \
 		  xulapp \
 		  extensions \
 		  rdf \

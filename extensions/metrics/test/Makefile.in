@@ -67,7 +67,7 @@ LOCAL_INCLUDES	= \
 
 LIBS		= \
 		../src/$(LIB_PREFIX)metrics_s.$(LIB_SUFFIX) \
-		$(BZ2_LIBS) \
+		$(DEPTH)/modules/libbz2/src/$(LIB_PREFIX)bz2.$(LIB_SUFFIX) \
 		$(XPCOM_GLUE_LDOPTS) \
 		$(NSPR_LIBS) \
 		$(NULL)
@@ -75,8 +75,6 @@ LIBS		= \
 XPCSHELL_TESTS = unit
 
 include $(topsrcdir)/config/rules.mk
-
-CXXFLAGS += $(BZ2_CFLAGS)
 
 # Give the unit tests absolute paths to the data and temp directories.
 # For cygwin, we need to convert the paths to native Windows paths.

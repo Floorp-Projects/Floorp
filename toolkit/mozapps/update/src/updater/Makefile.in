@@ -54,12 +54,12 @@ PROGRAM = updater$(BIN_SUFFIX)
 
 REQUIRES	= \
 		libmar \
-		$(BZ2_REQUIRES) \
+		libbz2 \
 		$(NULL)
 
 LIBS += \
 	$(DEPTH)/modules/libmar/src/$(LIB_PREFIX)mar.$(LIB_SUFFIX) \
-	$(BZ2_LIBS) \
+	$(DEPTH)/modules/libbz2/src/$(LIB_PREFIX)bz2.$(LIB_SUFFIX) \
 	$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
@@ -130,5 +130,3 @@ ifeq ($(OS_ARCH),WINNT)
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 REQUIRES += string
 endif
-
-CXXFLAGS += $(BZ2_CFLAGS)

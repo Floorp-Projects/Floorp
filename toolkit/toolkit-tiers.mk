@@ -64,9 +64,7 @@ tier_external_dirs	+= modules/zlib/standalone
 endif
 
 ifdef MOZ_UPDATER
-ifndef MOZ_NATIVE_BZ2
 tier_external_dirs += modules/libbz2
-endif
 tier_external_dirs += modules/libmar
 endif
 
