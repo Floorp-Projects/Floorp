@@ -45,7 +45,7 @@
   -moz-user-focus: normal;
   -moz-user-select: text;
   cursor: text !important;
-  white-space: -moz-pre-wrap;
+  white-space: pre-wrap;
 }
 
 #loginLabel, #password1Label, #password2Label {

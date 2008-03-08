@@ -209,7 +209,7 @@ td > ol:-moz-only-whitespace:-moz-last-node, th > ol:-moz-only-whitespace:-moz-l
 /* Quirk: support the ways of making PRE have wrapping */
 
 pre[wrap], pre[cols], pre[width] {
-  white-space: -moz-pre-wrap;
+  white-space: pre-wrap;
 }
 
 
