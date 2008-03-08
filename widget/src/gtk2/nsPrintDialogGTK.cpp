@@ -60,8 +60,10 @@ static const char header_footer_tags[][4] =  {"", "&T", "&U", "&D", "&P", "&PT"}
 static void
 ShowCustomDialog(GtkComboBox *changed_box, gpointer user_data)
 {
-  if (gtk_combo_box_get_active(changed_box) != CUSTOM_VALUE_INDEX)
+  if (gtk_combo_box_get_active(changed_box) != CUSTOM_VALUE_INDEX) {
+    g_object_set_data(G_OBJECT(changed_box), "previous-active", GINT_TO_POINTER(gtk_combo_box_get_active(changed_box)));
     return;
+  }
 
   nsCOMPtr<nsIStringBundleService> bundleSvc =
        do_GetService(NS_STRINGBUNDLE_CONTRACTID);
@@ -106,10 +108,11 @@ ShowCustomDialog(GtkComboBox *changed_box, gpointer user_data)
   if (diag_response == GTK_RESPONSE_ACCEPT) {
     const gchar* response_text = gtk_entry_get_text(GTK_ENTRY(custom_entry));
     g_object_set_data_full(G_OBJECT(changed_box), "custom-text", strdup(response_text), (GDestroyNotify) free);
+    g_object_set_data(G_OBJECT(changed_box), "previous-active", GINT_TO_POINTER(CUSTOM_VALUE_INDEX));
   } else {
-    // XXX I wish there was a way to be smarter than this... but at least we were smarter than before
-    // where the dropdown stayed on Custom... even after clicking Cancel.
-    gtk_combo_box_set_active(changed_box, 0);
+    // Go back to the previous index
+    gint previous_active = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(changed_box), "previous-active"));
+    gtk_combo_box_set_active(changed_box, previous_active);
   }
 
   gtk_widget_destroy(prompt_dialog);
@@ -458,6 +461,7 @@ nsPrintDialogWidgetGTK::ConstructHeaderFooterDropdown(const PRUnichar *currentSt
   for (unsigned int i = 0; i < NS_ARRAY_LENGTH(header_footer_tags); i++) {
     if (!strcmp(currentStringUTF8.get(), header_footer_tags[i])) {
       gtk_combo_box_set_active(GTK_COMBO_BOX(dropdown), i);
+      g_object_set_data(G_OBJECT(dropdown), "previous-active", GINT_TO_POINTER(i));
       shouldBeCustom = PR_FALSE;
       break;
     }
@@ -465,6 +469,7 @@ nsPrintDialogWidgetGTK::ConstructHeaderFooterDropdown(const PRUnichar *currentSt
 
   if (shouldBeCustom) {
     gtk_combo_box_set_active(GTK_COMBO_BOX(dropdown), CUSTOM_VALUE_INDEX);
+    g_object_set_data(G_OBJECT(dropdown), "previous-active", GINT_TO_POINTER(CUSTOM_VALUE_INDEX));
     char* custom_string = strdup(currentStringUTF8.get());
     g_object_set_data_full(G_OBJECT(dropdown), "custom-text", custom_string, (GDestroyNotify) free);
   }
