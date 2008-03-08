@@ -224,7 +224,7 @@ interface nsIPrincipal : nsISerializable
      *               if the load is not allowed.
      * @throws NS_ERROR_DOM_BAD_URI if the load is not allowed.
      */
-    [noscript] void checkMayLoad(in nsIUri uri, in boolean report);
+    [noscript] void checkMayLoad(in nsIURI uri, in boolean report);
 
     /**
      * The subject name for the certificate.  This actually identifies the
