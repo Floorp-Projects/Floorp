@@ -57,6 +57,10 @@ richlistitem[isDisabled="true"] {
   color: GrayText;
 }
 
+richlistitem[newAddon="true"] {
+  background-color: #fdf2ab;
+}
+
 richlistitem[selected="true"] {
   background-color: Highlight;
   color: HighlightText;
