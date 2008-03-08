@@ -161,8 +161,8 @@ interface nsITransferable : nsISupports
     * will maintain its own copy the data, so it is not necessary to do that beforehand.
     *
     * @param  aFlavor the flavor of data that is being set
-    * @param  aData the data, some variant of class in nsISupportsPrimitives.idl,
-    *         or an nsIFlavorDataProvider (see above)
+    * @param  aData the data, either some variant of class in nsISupportsPrimitives.idl,
+    *         an nsIFile, or an nsIFlavorDataProvider (see above)
     * @param  aDataLen the length of the data, or 0 if passing a nsIFlavorDataProvider
     */
   void setTransferData ( in string aFlavor, in nsISupports aData, in unsigned long aDataLen ) ;
