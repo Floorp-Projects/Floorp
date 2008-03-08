@@ -41,6 +41,7 @@
 
 var gPrintSettingsAreGlobal = false;
 var gSavePrintSettings = false;
+var gFocusedElement = null;
 
 var PrintUtils = {
 
@@ -215,6 +216,8 @@ var PrintUtils = {
 
   enterPrintPreview: function (aWindow)
   {
+    gFocusedElement = document.commandDispatcher.focusedElement;
+
     var webBrowserPrint = this.getWebBrowserPrint(aWindow);
     var printSettings   = this.getPrintSettings();
     try {
@@ -284,6 +287,21 @@ var PrintUtils = {
 
     var contentWindow = aWindow || window.content;
     contentWindow.focus();
+
+    var cmdDispatcher = document.commandDispatcher;
+    cmdDispatcher.suppressFocusScroll = true;
+    if (gFocusedElement instanceof HTMLElement ||
+        gFocusedElement instanceof XULElement ||
+        gFocusedElement instanceof Window) {
+      gFocusedElement.focus();
+    }
+    else if (gFocusedElement instanceof Node) {
+      var content = window.content;
+      if (content instanceof Components.interfaces.nsIInterfaceRequestor)
+        content.getInterface(Components.interfaces.nsIDOMWindowUtils).focus(gFocusedElement);
+      }
+    gFocusedElement = null;
+    cmdDispatcher.suppressFocusScroll = false;
 
     // on Exit PP Call back
     if (this._onExitPP) {
