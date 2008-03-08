@@ -138,11 +138,7 @@ void LaunchChild(int argc, char **argv);
 
 // This variable lives in libbz2.  It's declared in bzlib_private.h, so we just
 // declare it here to avoid including that entire header file.
-#if (__GNUC__ >= 4) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)
-extern "C"  __attribute__((visibility("default"))) unsigned int BZ2_crc32Table[256];
-#else
 extern "C" unsigned int BZ2_crc32Table[256];
-#endif
 
 static unsigned int
 crc32(const unsigned char *buf, unsigned int len)
