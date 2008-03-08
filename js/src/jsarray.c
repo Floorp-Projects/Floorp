@@ -375,20 +375,9 @@ GetArrayElement(JSContext *cx, JSObject *obj, jsuint index, JSBool *hole,
     JSObject *obj2;
     JSProperty *prop;
 
-    if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
-        if (index >= ARRAY_DENSE_LENGTH(obj)) {
-            *vp = JSVAL_VOID;
-            *hole = JS_TRUE;
-            return JS_TRUE;
-        }
-
-        *vp = obj->dslots[index];
-        if (*vp == JSVAL_HOLE) {
-            *vp = JSVAL_VOID;
-            *hole = JS_TRUE;
-        } else {
-            *hole = JS_FALSE;
-        }
+    if (OBJ_IS_DENSE_ARRAY(cx, obj) && index < ARRAY_DENSE_LENGTH(obj) &&
+        (*vp = obj->dslots[index]) != JSVAL_HOLE) {
+        *hole = JS_FALSE;
         return JS_TRUE;
     }
 
@@ -1289,16 +1278,10 @@ array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
 
     /* Use rval to locally root each element value as we loop and convert. */
     for (index = 0; index < length; index++) {
-        if (OBJ_IS_DENSE_ARRAY(cx, obj) && index < ARRAY_DENSE_LENGTH(obj)) {
-            *rval = obj->dslots[index];
-            hole = (*rval == JSVAL_HOLE);
-            ok = JS_TRUE;
-        } else {
-            ok = (JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) &&
-                  GetArrayElement(cx, obj, index, &hole, rval));
-            if (!ok)
-                goto done;
-        }
+        ok = (JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) &&
+              GetArrayElement(cx, obj, index, &hole, rval));
+        if (!ok)
+            goto done;
         if (hole ||
             (op != TO_SOURCE &&
              (JSVAL_IS_VOID(*rval) || JSVAL_IS_NULL(*rval)))) {
