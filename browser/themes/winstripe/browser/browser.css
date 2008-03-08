@@ -1192,8 +1192,7 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
 /* Tabstrip */
 .tabbrowser-tabs {
   padding-top: 0px;
-  background: -moz-dialog url("chrome://browser/skin/tabbrowser/tabbrowser-tabs-bkgnd.png");
-  background-repeat: repeat-x;
+  background: -moz-dialog url("chrome://browser/skin/tabbrowser/tabbrowser-tabs-bkgnd.png") repeat-x;
 }
 
 .tabs-container:not([overflow="true"]) {
@@ -1229,13 +1228,14 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
 .tabbrowser-tab:not([selected="true"]):hover {
   margin: 2px 0px 4px;
   padding: 2px 1px 1px;
-  background: url("chrome://browser/skin/tabbrowser/tab-active-bkgnd.png") repeat-x;
+  background-image: url("chrome://browser/skin/tabbrowser/tab-hover-bkgnd.png");
 }
 
 .tabbrowser-tab[selected="true"] {
   margin: 2px 0px 3px;
   padding: 1px;
-  background: -moz-dialog url("chrome://browser/skin/tabbrowser/tab-active-bkgnd.png") repeat-x;
+  background-image: url("chrome://browser/skin/tabbrowser/tab-active-bkgnd.png");
+  background-color: -moz-dialog;
   font-weight: bold;
 }
 
@@ -1342,8 +1342,7 @@ tabpanels {
   -moz-border-top-colors: ThreeDShadow rgba(255,255,255,.3);
   -moz-border-right-colors: ThreeDShadow;
   -moz-border-left-colors: ThreeDShadow rgba(255,255,255,.3);
-  background: url("chrome://browser/skin/tabbrowser/tab-bkgnd.png");
-  background-repeat: repeat-x;
+  background: url("chrome://browser/skin/tabbrowser/tab-bkgnd.png") repeat-x;
   -moz-image-region: rect(0, 11px, 14px, 0);
 }
 
@@ -1355,8 +1354,7 @@ tabpanels {
   -moz-border-top-colors: ThreeDShadow;
   -moz-border-right-colors: ThreeDShadow;
   -moz-border-left-colors: ThreeDShadow transparent;
-  background: url("chrome://browser/skin/tabbrowser/tab-active-bkgnd.png");
-  background-repeat: repeat-x;
+  background-image: url("chrome://browser/skin/tabbrowser/tab-hover-bkgnd.png");
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled="true"]):hover,
@@ -1484,8 +1482,7 @@ stack[chromedir="rtl"] > hbox > .tabs-alltabs-box-animate {
 .tabs-container > .tabs-closebutton {
   margin: 3px 0px 3px;
   padding: 4px 2px 2px;
-  background: -moz-dialog url("chrome://browser/skin/tabbrowser/tab-active-bkgnd.png");
-  background-repeat: repeat-x;
+  background: -moz-dialog url("chrome://browser/skin/tabbrowser/tab-active-bkgnd.png") repeat-x;
   border-left: 1px solid threedshadow;
   border-top: 1px solid threedshadow;
   -moz-border-radius-topleft: 2px;
