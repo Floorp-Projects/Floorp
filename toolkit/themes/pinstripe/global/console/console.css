@@ -76,7 +76,7 @@
 }
 
 .console-msg-text {
-  white-space: -moz-pre-wrap !important;
+  white-space: pre-wrap !important;
 }
 .console-icon {
   list-style-image: inherit;

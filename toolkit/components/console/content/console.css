@@ -19,7 +19,7 @@
 
 .console-msg-text,
 .console-error-msg {
-  white-space: -moz-pre-wrap;
+  white-space: pre-wrap;
 }
 
 .console-error-source {
