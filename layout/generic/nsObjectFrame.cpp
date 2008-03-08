@@ -1358,14 +1358,6 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       // the offset of the DC
       nsPoint origin;
 
-      // check if we need to update hdc
-      HDC hdc = (HDC)aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
-
-      if (reinterpret_cast<HDC>(window->window) != hdc) {
-        window->window = reinterpret_cast<nsPluginPort*>(hdc);
-        doupdatewindow = PR_TRUE;
-      }
-
       /*
        * Layout now has an optimized way of painting. Now we always get
        * a new drawing surface, sized to be just what's needed. Windowless
@@ -1391,14 +1383,27 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       origin.x = NSToIntRound(float(ctxMatrix.GetTranslation().x));
       origin.y = NSToIntRound(float(ctxMatrix.GetTranslation().y));
 
-      SaveDC(hdc);
-
       /* Need to force the clip to be set */
       ctx->UpdateSurfaceClip();
 
       /* Set the device offsets as appropriate, for whatever our current group offsets might be */
       gfxFloat xoff, yoff;
       nsRefPtr<gfxASurface> surf = ctx->CurrentSurface(&xoff, &yoff);
+
+      if (surf->CairoStatus() != 0) {
+        NS_WARNING("Plugin is being asked to render to a surface that's in error!");
+        return;
+      }
+
+      // check if we need to update hdc
+      HDC hdc = (HDC)aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
+
+      if (reinterpret_cast<HDC>(window->window) != hdc) {
+        window->window = reinterpret_cast<nsPluginPort*>(hdc);
+        doupdatewindow = PR_TRUE;
+      }
+
+      SaveDC(hdc);
 
       POINT origViewportOrigin;
       GetViewportOrgEx(hdc, &origViewportOrigin);
