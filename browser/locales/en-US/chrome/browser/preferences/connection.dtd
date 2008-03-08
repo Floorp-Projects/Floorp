@@ -4,8 +4,8 @@
 <!ENTITY  window.macWidth               "39em">
 
 <!ENTITY  proxyTitle.label              "Configure Proxies to Access the Internet">
-<!ENTITY  directTypeRadio.label         "Direct connection to the Internet">
-<!ENTITY  directTypeRadio.accesskey     "d">
+<!ENTITY  noProxyTypeRadio.label        "No proxy">
+<!ENTITY  noProxyTypeRadio.accesskey    "x">
 <!ENTITY  systemTypeRadio.label         "Use system proxy settings">
 <!ENTITY  systemTypeRadio.accesskey     "u">
 <!ENTITY  WPADTypeRadio.label           "Auto-detect proxy settings for this network">
