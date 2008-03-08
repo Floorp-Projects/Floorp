@@ -635,7 +635,7 @@ nsBlockReflowState::CanPlaceFloat(const nsSize& aFloatSize,
   // At this point we know that there is enough horizontal space for
   // the float (somewhere). Lets see if there is enough vertical
   // space.
-  if (mAvailSpaceRect.height < aFloatSize.height) {
+  if (NSCoordGreaterThan(aFloatSize.height, mAvailSpaceRect.height)) {
     // The available height is too short. However, its possible that
     // there is enough open space below which is not impacted by a
     // float.

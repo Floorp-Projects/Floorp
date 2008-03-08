@@ -220,6 +220,29 @@ NSCoordSaturatingSubtract(nscoord a, nscoord b,
   }
 #endif
 }
+/** compare against a nscoord "b", which might be unconstrained
+  * "a" must not be unconstrained.
+  * Every number is smaller than a unconstrained one
+  */
+inline PRBool
+NSCoordLessThan(nscoord a,nscoord b)
+{
+  NS_ASSERTION(a != nscoord_MAX, 
+               "This coordinate should be constrained");
+  return ((a < b) || (b == nscoord_MAX));
+}
+
+/** compare against a nscoord "b", which might be unconstrained
+  * "a" must not be unconstrained
+  * No number is larger than a unconstrained one.
+  */
+inline PRBool
+NSCoordGreaterThan(nscoord a,nscoord b)
+{
+  NS_ASSERTION(a != nscoord_MAX, 
+               "This coordinate should be constrained");
+  return ((a > b) && (b != nscoord_MAX));
+}
 
 /**
  * Convert an nscoord to a PRInt32. This *does not* do rounding because
