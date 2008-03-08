@@ -451,6 +451,7 @@ BrowserGlue.prototype = {
       var collapsed = this._rdf.GetResource("collapsed");
       var target;
       var moveHome;
+      var homePattern = /(?:^|,)home-button(?:$|,)/;
 
       // get an nsIRDFResource for the PersonalToolbar item
       var personalBar = this._rdf.GetResource("chrome://browser/content/browser.xul#PersonalToolbar");
@@ -460,15 +461,19 @@ BrowserGlue.prototype = {
       var navBar = this._rdf.GetResource("chrome://browser/content/browser.xul#nav-bar");
       target = this._getPersist(navBar, currentSet);
       if (target) {
+        let originalTarget = target;
+
         // move Home if we find it in the nav-bar and the personal toolbar isn't collapsed
-        moveHome = !personalBarCollapsed && (target.indexOf("home-button") != -1);
-        if (moveHome)
-          target = target.replace("home-button", "");
+        if (!personalBarCollapsed)
+          target = target.replace(homePattern, ",");
+        moveHome = (target != originalTarget);
 
         // add the new combined back and forward button
-        target = "unified-back-forward-button," + target;
+        if (!/(?:^|,)unified-back-forward-button(?:$|,)/.test(target))
+          target = "unified-back-forward-button," + target;
 
-        this._setPersist(navBar, currentSet, target);
+        if (target != originalTarget)
+          this._setPersist(navBar, currentSet, target);
       } else {
         // nav-bar doesn't have a currentset, so the defaultset will be used,
         // which means Home will be moved
@@ -479,7 +484,7 @@ BrowserGlue.prototype = {
         // If the personal toolbar has a currentset, add Home. The defaultset will be
         // used otherwise.
         target = this._getPersist(personalBar, currentSet);
-        if (target && target.indexOf("home-button") == -1)
+        if (target && !homePattern.test(target))
           this._setPersist(personalBar, currentSet, "home-button," + target);
 
         // uncollapse the personal toolbar
