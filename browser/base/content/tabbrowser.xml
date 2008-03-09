@@ -3168,9 +3168,18 @@
              * double click on the tabbar. (bug 378344)
              * In both cases, it is most likely that the close button area has
              * been accidentally clicked, therefore we do not close the tab.
+             *
+             * We don't want to ignore processing of more than one click event,
+             * though, since the user might actually be repeatedly clicking to
+             * close many tabs at once.
              */
-            if (event.detail > 1)
+            if (event.detail > 1 && !this._ignoredClick) {
+              this._ignoredClick = true;
               return;
+            }
+
+            // Reset the "ignored click" flag
+            this._ignoredClick = false;
 
             tabbedBrowser.removeTab(bindingParent);
             tabbedBrowser._blockDblClick = true;
