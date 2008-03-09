@@ -2588,41 +2588,38 @@
           <xul:spacer flex="1"/>
           <xul:hbox class="tabs-bottom" align="center"/>
         </xul:vbox>
-        <xul:vbox>
-          <xul:hbox xbl:inherits="overflow" class="tabs-container">
+        <xul:hbox xbl:inherits="overflow" class="tabs-container">
 #ifdef XP_MACOSX
-            <xul:stack>
-              <xul:spacer class="tabs-left"/>
-            </xul:stack>
+          <xul:stack>
+            <xul:spacer class="tabs-left"/>
+          </xul:stack>
 #endif
-            <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1"
-                                style="min-width: 1px;" chromedir="&locale.dir;"
+          <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1"
+                              style="min-width: 1px;" chromedir="&locale.dir;"
 #ifndef XP_MACOSX
-                                clicktoscroll="true"
+                              clicktoscroll="true"
 #endif
-                                class="tabbrowser-arrowscrollbox">
-              <children/>
-            </xul:arrowscrollbox>
-            <xul:stack align="center" pack="end" chromedir="&locale.dir;">
-              <xul:hbox flex="1" class="tabs-alltabs-box" anonid="alltabs-box"/>
-              <xul:hbox flex="1" class="tabs-alltabs-box-animate" anonid="alltabs-box-animate"/>
-              <xul:toolbarbutton class="tabs-alltabs-button" type="menu" anonid="alltabs-button"
-                                 tooltipstring="&listAllTabs.label;">
-                <xul:menupopup class="tabs-alltabs-popup" anonid="alltabs-popup"
-                               position="after_end"/>
-              </xul:toolbarbutton>
-            </xul:stack>
+                              class="tabbrowser-arrowscrollbox">
+            <children/>
+          </xul:arrowscrollbox>
+          <xul:stack align="center" pack="end" chromedir="&locale.dir;">
+            <xul:hbox flex="1" class="tabs-alltabs-box" anonid="alltabs-box"/>
+            <xul:hbox flex="1" class="tabs-alltabs-box-animate" anonid="alltabs-box-animate"/>
+            <xul:toolbarbutton class="tabs-alltabs-button" type="menu" anonid="alltabs-button"
+                               tooltipstring="&listAllTabs.label;">
+              <xul:menupopup class="tabs-alltabs-popup" anonid="alltabs-popup"
+                             position="after_end"/>
+            </xul:toolbarbutton>
+          </xul:stack>
 #ifdef XP_MACOSX
-            <xul:hbox anonid="tabstrip-closebutton" class="tabs-closebutton-box" align="center" pack="end" chromedir="&locale.dir;">
+          <xul:hbox anonid="tabstrip-closebutton" class="tabs-closebutton-box" align="center" pack="end" chromedir="&locale.dir;">
 #endif
-            <xul:toolbarbutton anonid="tabs-closebutton"
-                               class="close-button tabs-closebutton" chromedir="&locale.dir;"/>
+          <xul:toolbarbutton anonid="tabs-closebutton"
+                             class="close-button tabs-closebutton" chromedir="&locale.dir;"/>
 #ifdef XP_MACOSX
-            </xul:hbox>
-#endif
           </xul:hbox>
-          <xul:spacer class="tabs-bottom-spacer"/>
-        </xul:vbox>
+#endif
+        </xul:hbox>
       </xul:stack>
     </content>
     <implementation implements="nsITimerCallback, nsIDOMEventListener">
