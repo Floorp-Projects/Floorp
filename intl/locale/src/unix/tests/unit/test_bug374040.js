@@ -10,7 +10,7 @@ function test_full() {
 
     var dateStrJs = date.toLocaleString();
 
-    return (dateStrXpcom == dateStrJs);
+    do_check_eq(dateStrXpcom, dateStrJs);
 
 }
 
@@ -26,12 +26,12 @@ function test_kTimeFormatSeconds() {
 
     var dateStrJs = date.toLocaleDateString()
 
-    return (dateStrXpcom == dateStrJs);
+    do_check_eq(dateStrXpcom, dateStrJs);
 
 }
 
 function run_test()
 {
-    do_check_true(test_full());
-    do_check_true(test_kTimeFormatSeconds());
+    test_full();
+    test_kTimeFormatSeconds();
 }
