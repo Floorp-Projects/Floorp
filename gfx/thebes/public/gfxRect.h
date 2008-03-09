@@ -115,7 +115,9 @@ struct THEBES_API gfxRect {
         Outset(sides[0], sides[1], sides[2], sides[3]);
     }
 
-    // Round the rectangle to integer coordinates.
+    // Round the rectangle edges to integer coordinates, such that the rounded
+    // rectangle has the same set of pixel centers as the original rectangle.
+    // Edges at offset 0.5 round up.
     // Suitable for most places where integral device coordinates
     // are needed, but note that any translation should be applied first to
     // avoid pixel rounding errors.
@@ -125,6 +127,10 @@ struct THEBES_API gfxRect {
     // If you need similar method which is using NS_round(), you should create
     // new |RoundAwayFromZero()| method.
     void Round();
+    
+    // Snap the rectangle edges to integer coordinates, such that the
+    // resulting rectangle contains the original rectangle.
+    void RoundOut();
 
     // grabbing specific points
     gfxPoint TopLeft() const { return gfxPoint(pos); }
