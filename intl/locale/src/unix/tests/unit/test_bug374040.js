@@ -32,6 +32,8 @@ function test_kTimeFormatSeconds() {
 
 function run_test()
 {
+    // XXX test disabled due to bug 421790
+    return;
     test_full();
     test_kTimeFormatSeconds();
 }
