@@ -700,7 +700,7 @@ LoginManagerPrompter.prototype = {
      * Shows the Change Password notification bar.
      *
      */
-    _showChangeLoginNotification : function (notifyBox, aOldLogin, aNewLogin) {
+    _showChangeLoginNotification : function (aNotifyBox, aOldLogin, aNewLogin) {
         var notificationText;
         if (aOldLogin.username)
             notificationText  = this._getLocalizedString(
