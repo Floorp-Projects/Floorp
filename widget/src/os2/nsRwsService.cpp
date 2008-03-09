@@ -55,6 +55,7 @@
 #include "rwserr.h"
 #include "nsOS2Uni.h"
 
+#include "prenv.h"
 #include <stdio.h>
 
 //------------------------------------------------------------------------
@@ -1119,6 +1120,10 @@ static nsresult nsRwsServiceInit(nsRwsService **aClass)
 
   sInit = TRUE;
   *aClass = 0;
+
+  // don't load RWS if "MOZ_NO_RWS" is found in the environment
+  if (PR_GetEnv("MOZ_NO_RWS"))
+    return NS_ERROR_NOT_AVAILABLE;
 
   char      errBuf[16];
   HMODULE   hmod;
