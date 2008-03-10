@@ -68,7 +68,7 @@ public:
   nsGIFDecoder2();
   ~nsGIFDecoder2();
   
-  nsresult ProcessData(const char *data, PRUint32 count, PRUint32 *_retval);
+  nsresult ProcessData(unsigned char *data, PRUint32 count, PRUint32 *_retval);
 
 private:
   /* These functions will be called when the decoder has a decoded row,
