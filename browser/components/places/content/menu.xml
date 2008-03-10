@@ -215,7 +215,7 @@
       <method name="getSupportedFlavours">
         <body><![CDATA[
           var flavourSet = new FlavourSet();
-          var acceptedDropFlavours = PlacesUIUtils.GENERIC_VIEW_DROP_TYPES;
+          var acceptedDropFlavours = PlacesUtils.GENERIC_VIEW_DROP_TYPES;
           acceptedDropFlavours.forEach(flavourSet.appendFlavour, flavourSet);
           return flavourSet;
         ]]></body>
@@ -601,7 +601,7 @@
         <parameter name="aBefore"/>
         <body><![CDATA[
           var element =
-            PlacesUIUtils.createMenuItemForNode(aChild, this._containerNodesMap);
+            PlacesUtils.createMenuItemForNode(aChild, this._containerNodesMap);
 
           if (aBefore)
             aParentPopup.insertBefore(element, aBefore);
@@ -626,7 +626,7 @@
             return;
           }
 
-          var label = PlacesUIUtils.getString("bookmarksMenuEmptyFolder");
+          var label = PlacesUtils.getString("bookmarksMenuEmptyFolder");
           aPopup._emptyMenuItem = document.createElement("menuitem");
           aPopup._emptyMenuItem.setAttribute("label", label);
           aPopup._emptyMenuItem.setAttribute("disabled", true);
