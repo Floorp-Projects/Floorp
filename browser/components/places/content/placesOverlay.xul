@@ -52,6 +52,9 @@
           src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/x-javascript" 
           src="chrome://browser/content/places/utils.js"/>
+  <script>
+  dump("placesOverlay UTILS: " + PlacesUIUtils + "\n");
+  </script>
   <script type="application/x-javascript"
           src="chrome://browser/content/places/controller.js"/>
   <script type="application/x-javascript"
@@ -94,7 +97,7 @@
   </commandset>
 
   <popup id="placesContext"
-         onpopupshowing="this._view = PlacesUtils.getViewForNode(document.popupNode);
+         onpopupshowing="this._view = PlacesUIUtils.getViewForNode(document.popupNode);
                          return this._view.buildContextMenu(this);"
          onpopuphiding="this._view.destroyContextMenu();">
     <menuitem id="placesContext_open"
@@ -117,7 +120,7 @@
               selectiontype="single"
               selection="link"/>
     <menuitem id="placesContext_openContainer:tabs"
-              oncommand="var view = PlacesUtils.getViewForNode(document.popupNode);
+              oncommand="var view = PlacesUIUtils.getViewForNode(document.popupNode);
                          view.controller.openSelectionInTabs(event);"
               onclick="checkForMiddleClick(this, event);"
               label="&cmd.open_all_in_tabs.label;"
@@ -125,7 +128,7 @@
               selectiontype="single"
               selection="folder|host|query"/>
     <menuitem id="placesContext_openLinks:tabs"
-              oncommand="var view = PlacesUtils.getViewForNode(document.popupNode);
+              oncommand="var view = PlacesUIUtils.getViewForNode(document.popupNode);
                          view.controller.openSelectionInTabs(event);"
               onclick="checkForMiddleClick(this, event);"
               label="&cmd.open_all_in_tabs.label;"
