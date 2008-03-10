@@ -353,6 +353,20 @@ XPCWrapper::NewResolve(JSContext *cx, JSObject *wrapperObj,
 
   OBJ_DROP_PROPERTY(cx, innerObjp, prop);
 
+  // Hack alert: we only do this for same-origin calls on XOWs: we want
+  // to preserve 'eval' function wrapper on the wrapper object itself
+  // to preserve eval's identity.
+  if (!preserveVal && isXOW && !JSVAL_IS_PRIMITIVE(v)) {
+    JSObject *obj = JSVAL_TO_OBJECT(v);
+    if (JS_ObjectIsFunction(cx, obj)) {
+      JSFunction *fun = reinterpret_cast<JSFunction *>(xpc_GetJSPrivate(obj));
+      if (JS_GetFunctionNative(cx, fun) == sEvalNative &&
+          !WrapFunction(cx, wrapperObj, obj, &v, JS_FALSE)) {
+        return JS_FALSE;
+      }
+    }
+  }
+
   jsval oldSlotVal;
   if (!::JS_GetReservedSlot(cx, wrapperObj, sResolvingSlot, &oldSlotVal) ||
       !::JS_SetReservedSlot(cx, wrapperObj, sResolvingSlot, JSVAL_TRUE)) {
