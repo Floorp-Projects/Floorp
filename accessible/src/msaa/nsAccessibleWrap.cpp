@@ -1470,6 +1470,8 @@ nsAccessibleWrap::get_attributes(BSTR *aAttributes)
   // The format is name:value;name:value; with \ for escaping these
   // characters ":;=,\".
 __try {
+  *aAttributes = NULL;
+
   nsCOMPtr<nsIPersistentProperties> attributes;
   if (NS_FAILED(GetAttributes(getter_AddRefs(attributes))))
     return E_FAIL;
@@ -1521,9 +1523,8 @@ __try {
     strAttrs.Append(';');
   }
 
-  INT res = ::SysReAllocStringLen(aAttributes, strAttrs.get(),
-                                  strAttrs.Length());
-  if (!res)
+  *aAttributes = ::SysAllocString(strAttrs.get()); 
+  if (!*aAttributes)
     return E_OUTOFMEMORY;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
