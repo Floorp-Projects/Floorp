@@ -134,7 +134,7 @@
       <hbox id="showPasswordsBox">
         <spacer flex="1"/>
         <button id="showPasswords"
-                label="&showPasswords.label;" accesskey="&showPasswords.accesskey;"
+                label="&savedPasswords.label;" accesskey="&savedPasswords.accesskey;"
                 oncommand="gSecurityPane.showPasswords();"
                 preference="pref.privacy.disable_button.view_passwords"/>
       </hbox>

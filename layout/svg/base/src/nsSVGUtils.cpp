@@ -1600,6 +1600,27 @@ nsSVGUtils::CompositeSurfaceMatrix(gfxContext *aContext,
 }
 
 void
+nsSVGUtils::CompositePatternMatrix(gfxContext *aContext,
+                                   gfxPattern *aPattern,
+                                   nsIDOMSVGMatrix *aCTM, float aWidth, float aHeight, float aOpacity)
+{
+  gfxMatrix matrix = ConvertSVGMatrixToThebes(aCTM);
+  if (matrix.IsSingular())
+    return;
+
+  aContext->Save();
+
+  SetClipRect(aContext, aCTM, 0, 0, aWidth, aHeight);
+
+  aContext->Multiply(matrix);
+
+  aContext->SetPattern(aPattern);
+  aContext->Paint(aOpacity);
+
+  aContext->Restore();
+}
+
+void
 nsSVGUtils::SetClipRect(gfxContext *aContext,
                         nsIDOMSVGMatrix *aCTM, float aX, float aY,
                         float aWidth, float aHeight)

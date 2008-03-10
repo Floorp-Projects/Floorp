@@ -151,14 +151,17 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
     jsbytecode *pc;
     JSOp op;
     const JSCodeSpec *cs;
+    uintN depth;
     intN nuses;
 
     pc = CG_CODE(cg, target);
     op = (JSOp) *pc;
     cs = &js_CodeSpec[op];
-    if ((cs->format & JOF_TMPSLOT) &&
-        (uintN)cg->stackDepth >= cg->maxStackDepth) {
-        cg->maxStackDepth = cg->stackDepth + 1;
+    if (cs->format & JOF_TMPSLOT_MASK) {
+        depth = (uintN) cg->stackDepth +
+                ((cs->format & JOF_TMPSLOT_MASK) >> JOF_TMPSLOT_SHIFT);
+        if (depth > cg->maxStackDepth)
+            cg->maxStackDepth = depth;
     }
     nuses = cs->nuses;
     if (nuses < 0) {
@@ -5672,7 +5675,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         JS_ASSERT(pn2->pn_type != TOK_RP);
         op = PN_OP(pn);
         switch (pn2->pn_type) {
-          case TOK_NAME:
+          default:
+            JS_ASSERT(pn2->pn_type == TOK_NAME);
             pn2->pn_op = op;
             if (!BindNameToSlot(cx, cg, pn2, 0))
                 return JS_FALSE;
@@ -5722,20 +5726,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
             break;
 #endif
-          default:
-            JS_ASSERT(0);
         }
-
-        /*
-         * Post-increments require an extra slot for GC protection in case
-         * the initial value being post-incremented or -decremented is not a
-         * number, but converts to a jsdouble.  In the TOK_NAME cases, op has
-         * 0 operand uses and 1 definition, so we don't need an extra stack
-         * slot -- we can use the one allocated for the def.
-         */
-        JS_ASSERT(((js_CodeSpec[op].format >> JOF_TMPSLOT_SHIFT) & 1) ==
-                  ((js_CodeSpec[op].format & JOF_POST) &&
-                   pn2->pn_type != TOK_NAME));
         break;
 
       case TOK_DELETE:

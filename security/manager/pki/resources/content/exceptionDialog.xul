@@ -69,9 +69,9 @@
       <!-- Note that because of the styling, there must be no whitespace within
       the description tags -->
       <description id="warningText"
-                   style="white-space: -moz-pre-wrap"/>
+                   style="white-space: pre-wrap"/>
       <description id="warningSupplemental"
-                   style="font-weight: bold; white-space: -moz-pre-wrap;"
+                   style="font-weight: bold; white-space: pre-wrap;"
                    >&exceptionMgr.supplementalWarning;</description>
     </vbox>
   </hbox>
@@ -92,7 +92,7 @@
     <caption label="&exceptionMgr.certstatus.caption;"/>
     <vbox  style="overflow: auto;" flex="1">
       <hbox>
-        <description id="headerDescription" style="white-space: -moz-pre-wrap;"
+        <description id="headerDescription" style="white-space: pre-wrap;"
                      flex="1"/>
         <vbox>
           <button id="viewCertButton" label="&exceptionMgr.certstatus.viewCert;"
@@ -102,13 +102,13 @@
       </hbox>      
       <description id="statusDescription"
                    style="font-weight: bold; padding-bottom: 1em;"/>
-      <description id="statusLongDescription" style="white-space: -moz-pre-wrap;"/>
+      <description id="statusLongDescription" style="white-space: pre-wrap;"/>
       <description id="status2Description"
                    style="font-weight: bold; padding-bottom: 1em;"/>
-      <description id="status2LongDescription" style="white-space: -moz-pre-wrap;"/>
+      <description id="status2LongDescription" style="white-space: pre-wrap;"/>
       <description id="status3Description" 
                    style="font-weight: bold; padding-bottom: 1em;"/>
-      <description id="status3LongDescription" style="white-space: -moz-pre-wrap;"/>
+      <description id="status3LongDescription" style="white-space: pre-wrap;"/>
       <spacer flex="1"/>
     </vbox>
     <checkbox id="permanent" checked="true" disabled="true"

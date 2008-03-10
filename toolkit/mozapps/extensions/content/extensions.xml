@@ -506,6 +506,10 @@
                   <xul:label value="&addonTypeTheme.label;"/>
                 </xul:hbox>
                 <xul:spacer flex="1"/>
+                <xul:hbox align="center" class="searchResultConnecting">
+                  <xul:image class="addonThrobber"/>
+                  <xul:label value="&searchResultConnecting.label;"/>
+                </xul:hbox>
                 <xul:hbox align="center" class="searchResultInstalling">
                   <xul:image class="addonThrobber"/>
                   <xul:label value="&searchResultInstalling.label;"/>
@@ -921,6 +925,7 @@
           this.setAttribute("value", "");
           this._cancelButton.hidden = true;
           this._searchButton.hidden = false;
+          this.focus();
         </body>
       </method>
 
@@ -936,6 +941,11 @@
     </implementation>
     
     <handlers>
+      <handler event="focus" phase="capturing">
+        if (event.originalTarget == this)
+          this.textbox.focus(); // Forward focus to actual textbox
+      </handler>
+
       <handler event="keypress" keycode="VK_ENTER">
         if (event.originalTarget == this.textbox.inputField) {
           this.startSearch();

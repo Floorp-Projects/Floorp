@@ -53,8 +53,11 @@ interface nsIEffectiveTLDService : nsISupports
      *
      * The public suffix will be returned encoded in ASCII/ACE and will be normalized
      * according to RFC 3454, i.e. the same encoding returned by nsIURI::GetAsciiHost().
+     * If consumers wish to compare the result of this method against the host from
+     * another nsIURI, the host should be obtained using nsIURI::GetAsciiHost().
+     * In the case of nested URIs, the innermost URI will be used.
      *
-     * @param   aURI               The URI to be analyzed
+     * @param   aURI   The URI to be analyzed
      *
      * @returns the public suffix
      *
@@ -85,6 +88,9 @@ interface nsIEffectiveTLDService : nsISupports
      *
      * The base domain will be returned encoded in ASCII/ACE and will be normalized
      * according to RFC 3454, i.e. the same encoding returned by nsIURI::GetAsciiHost().
+     * If consumers wish to compare the result of this method against the host from
+     * another nsIURI, the host should be obtained using nsIURI::GetAsciiHost().
+     * In the case of nested URIs, the innermost URI will be used.
      *
      * @param   aURI               The URI to be analyzed
      * @param   aAdditionalParts   Number of domain name parts to be
@@ -107,14 +113,30 @@ interface nsIEffectiveTLDService : nsISupports
     ACString getBaseDomain(in nsIURI aURI, [optional] in PRUint32 aAdditionalParts);
 
     /**
+     * NOTE: It is strongly recommended to use getPublicSuffix() above if a suitable
+     * nsIURI is available. Only use this method if this is not the case.
+     *
      * Returns the public suffix of a host string. Otherwise identical to getPublicSuffix().
+     *
+     * @param   aHost   The host to be analyzed. Any additional parts (e.g. scheme,
+     *                  port, or path) will cause this method to throw. ASCII/ACE and
+     *                  UTF8 encodings are acceptable as input; normalization will
+     *                  be performed as specified in getBaseDomain().
      *
      * @see     getPublicSuffix()
      */
     ACString getPublicSuffixFromHost(in AUTF8String aHost);
 
     /**
+     * NOTE: It is strongly recommended to use getBaseDomain() above if a suitable
+     * nsIURI is available. Only use this method if this is not the case.
+     *
      * Returns the base domain of a host string. Otherwise identical to getBaseDomain().
+     *
+     * @param   aHost   The host to be analyzed. Any additional parts (e.g. scheme,
+     *                  port, or path) will cause this method to throw. ASCII/ACE and
+     *                  UTF8 encodings are acceptable as input; normalization will
+     *                  be performed as specified in getBaseDomain().
      *
      * @see     getBaseDomain()
      */

@@ -38,13 +38,13 @@ var safebrowsing = {
   appContext: null,
 
   startup: function() {
-    setTimeout(safebrowsing.deferredStartup, 2000);
+    setTimeout(function() {
+      safebrowsing.deferredStartup();
+    }, 2000);
     window.removeEventListener("load", safebrowsing.startup, false);
   },
 
   deferredStartup: function() {
-    this.appContext = Cc["@mozilla.org/safebrowsing/application;1"].
-                      getService().wrappedJSObject;
     this.appContext.initialize();
   },
 
@@ -55,6 +55,15 @@ var safebrowsing = {
       broadcaster.removeAttribute("disabled");
     else
       broadcaster.disabled = true;
+  },
+  
+  /**
+   * Lazy init getter for appContext
+   */
+  get appContext() {
+    delete this.appContext;
+    return this.appContext = Cc["@mozilla.org/safebrowsing/application;1"]
+                            .getService().wrappedJSObject;
   },
 
   /**

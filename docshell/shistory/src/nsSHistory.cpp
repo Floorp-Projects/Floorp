@@ -787,6 +787,11 @@ nsSHistory::EvictWindowContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex)
   if (aFromIndex < 0 || aToIndex < 0) {
     return;
   }
+  NS_ASSERTION(aFromIndex < mLength, "aFromIndex is out of range");
+  NS_ASSERTION(aToIndex < mLength, "aToIndex is out of range");
+  if (aFromIndex >= mLength || aToIndex >= mLength) {
+    return;
+  }
 
   // These indices give the range of SHEntries whose content viewers will be
   // evicted

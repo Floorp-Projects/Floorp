@@ -421,6 +421,10 @@ void RewriteStrings(StringTable& queryParameters)
               product.c_str());
   gStrings[ST_RESTART] = buf;
 
+  UI_SNPRINTF(buf, sizeof(buf),
+              gStrings[ST_QUIT].c_str(),
+              product.c_str());
+  gStrings[ST_QUIT] = buf;
 
   UI_SNPRINTF(buf, sizeof(buf),
               gStrings[ST_ERROR_ENDOFLIFE].c_str(),

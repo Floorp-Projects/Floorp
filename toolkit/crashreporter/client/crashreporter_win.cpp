@@ -879,7 +879,7 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
         UpdateEmail(hwndDlg);
         break;
       case IDC_CLOSEBUTTON:
-        EndCrashReporterDialog(hwndDlg, 0);
+        MaybeSendReport(hwndDlg);
         break;
       case IDC_RESTARTBUTTON:
         RestartApplication();

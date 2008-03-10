@@ -301,20 +301,12 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
       return mAppProvider->GetFile(NS_APP_PROFILE_DIR_STARTUP, aPersistent,
                                    aFile);
   }
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
+#if defined(XP_UNIX) || defined(XP_MACOSX)
   else if (!strcmp(aProperty, XRE_SYS_LOCAL_EXTENSION_PARENT_DIR)) {
-
-    static const char *const sysSExtDir = 
-#ifdef HAVE_USR_LIB64_DIR
-      "/usr/lib64/mozilla/extensions"
-#else
-      "/usr/lib/mozilla/extensions"
-#endif
-    ;
-
-    return NS_NewNativeLocalFile(nsDependentCString(sysSExtDir),
-                                 PR_FALSE, (nsILocalFile**)(nsIFile**) aFile);
+    return GetSystemExtensionsDirectory((nsILocalFile**)(nsIFile**) aFile);
   }
+#endif
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
   else if (!strcmp(aProperty, XRE_SYS_SHARE_EXTENSION_PARENT_DIR)) {
     static const char *const sysLExtDir = "/usr/share/mozilla/extensions";
     return NS_NewNativeLocalFile(nsDependentCString(sysLExtDir),
@@ -1108,6 +1100,56 @@ nsXREDirProvider::GetSysUserExtensionsDirectory(nsILocalFile** aFile)
   NS_ADDREF(*aFile = localDir);
   return NS_OK;
 }
+
+#if defined(XP_UNIX) || defined(XP_MACOSX)
+nsresult
+nsXREDirProvider::GetSystemExtensionsDirectory(nsILocalFile** aFile)
+{
+  nsresult rv;
+  nsCOMPtr<nsILocalFile> localDir;
+#if defined(XP_MACOSX)
+  FSRef fsRef;
+  OSErr err = ::FSFindFolder(kOnSystemDisk, kApplicationSupportFolderType, kCreateFolder, &fsRef);
+  NS_ENSURE_FALSE(err, NS_ERROR_FAILURE);
+
+  rv = NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(localDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsILocalFileMac> dirFileMac = do_QueryInterface(localDir);
+  NS_ENSURE_TRUE(dirFileMac, NS_ERROR_UNEXPECTED);
+
+  rv = dirFileMac->InitWithFSRef(&fsRef);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  localDir = do_QueryInterface(dirFileMac, &rv);
+
+  static const char* const sXR = "Mozilla";
+  rv = localDir->AppendNative(nsDependentCString(sXR));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  static const char* const sExtensions = "Extensions";
+  rv = localDir->AppendNative(nsDependentCString(sExtensions));
+  NS_ENSURE_SUCCESS(rv, rv);
+#elif defined(XP_UNIX)
+  static const char *const sysSExtDir = 
+#ifdef HAVE_USR_LIB64_DIR
+    "/usr/lib64/mozilla/extensions";
+#else
+    "/usr/lib/mozilla/extensions";
+#endif
+
+  rv = NS_NewNativeLocalFile(nsDependentCString(sysSExtDir), PR_FALSE,
+                             getter_AddRefs(localDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+#endif
+
+  rv = EnsureDirectoryExists(localDir);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ADDREF(*aFile = localDir);
+  return NS_OK;
+}
+#endif
 
 nsresult
 nsXREDirProvider::GetUserDataDirectory(nsILocalFile** aFile, PRBool aLocal)

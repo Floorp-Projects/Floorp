@@ -127,7 +127,7 @@ protected:
 
   PRInt32 StandardGetState(nsIFrame* aFrame, PRUint8 aWidgetType, PRBool wantFocused);
 
-  PRBool IsMenuActiveOrHover(nsIFrame* aFrame, PRUint8 aWidgetType);
+  PRBool IsMenuActive(nsIFrame* aFrame, PRUint8 aWidgetType);
 
 private:
   HMODULE mThemeDLL;

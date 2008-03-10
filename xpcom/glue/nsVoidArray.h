@@ -406,7 +406,7 @@ private:
 
   PRBool HasSingle() const
   {
-    return reinterpret_cast<PRWord>(mImpl) & 0x1;
+    return !!(reinterpret_cast<PRWord>(mImpl) & 0x1);
   }
   void* GetSingle() const
   {

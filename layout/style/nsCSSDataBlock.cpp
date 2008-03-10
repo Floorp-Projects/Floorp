@@ -220,9 +220,13 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                                  iProp == eCSSProperty_background_color ||
                                  iProp == eCSSProperty_background_image ||
                                  iProp == eCSSProperty_border_top_color ||
-                                 iProp == eCSSProperty_border_right_color ||
+                                 iProp == eCSSProperty_border_right_color_value ||
+                                 iProp == eCSSProperty_border_right_color_ltr_source ||
+                                 iProp == eCSSProperty_border_right_color_rtl_source ||
                                  iProp == eCSSProperty_border_bottom_color ||
-                                 iProp == eCSSProperty_border_left_color ||
+                                 iProp == eCSSProperty_border_left_color_value ||
+                                 iProp == eCSSProperty_border_left_color_ltr_source ||
+                                 iProp == eCSSProperty_border_left_color_rtl_source ||
                                  iProp == eCSSProperty_outline_color) {
                             if (ShouldIgnoreColors(aRuleData)) {
                                 if (iProp == eCSSProperty_background_color) {

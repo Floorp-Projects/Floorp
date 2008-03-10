@@ -143,25 +143,12 @@ function messageReceiver(evt)
     }
     else if (evt.data === "data-response")
     {
-      // Again, HTML5 hasn't yet defined this, but we're going to do the same
-      // thing as with about:blank -- for a data: URL opened from page A, the
-      // uri and domain properties correspond to those of page A.  This happens
-      // to fall out naturally from using the window's security principal to
-      // determine these two properties.
-      //
-      // Mozilla currently gives data: URLs the principal of the opener/parent
-      // window, and at least for now we'll test for that behavior.  If we ever
-      // change how data: URLs are given principals, we can update this test
-      // then.
-      if (isMozilla)
-      {
-        is(evt.origin, "http://localhost:8888",
-           "wrong origin for event from data URL (but note that this URI is " +
-           "the result of Mozilla's current policy that data: URLs inherit " +
-           "the principal of their opener/parent, a policy not currently " +
-           "specified by any standards)");
-      }
-
+      // HTML5 defines the origin of a data: URI as the origin of the window or
+      // script that opened the data: URI.
+      is(evt.origin, "http://localhost:8888",
+         "wrong origin for event from data URL (should be the origin of the " +
+         "window/script that opened the URL, in this case the origin of this " +
+         "file)");
       is(evt.source, dataWindow, "wrong source");
       dataResponseReceived = true;
     }

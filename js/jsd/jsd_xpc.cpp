@@ -476,14 +476,20 @@ jsds_NotifyPendingDeadScripts (JSContext *cx)
     nsCOMPtr<jsdIScriptHook> hook = 0;   
     gJsds->GetScriptHook (getter_AddRefs(hook));
 
-    DeadScript *ds;
 #ifdef CAUTIOUS_SCRIPTHOOK
     JSRuntime *rt = JS_GetRuntime(cx);
 #endif
     gJsds->Pause(nsnull);
-    while (gDeadScripts) {
-        ds = gDeadScripts;
-        
+    DeadScript *deadScripts = gDeadScripts;
+    gDeadScripts = nsnull;
+    while (deadScripts) {
+        DeadScript *ds = deadScripts;
+        /* get next deleted script */
+        deadScripts = reinterpret_cast<DeadScript *>
+                                       (PR_NEXT_LINK(&ds->links));
+        if (deadScripts == ds)
+            deadScripts = nsnull;
+
         if (hook)
         {
             /* tell the user this script has been destroyed */
@@ -495,16 +501,10 @@ jsds_NotifyPendingDeadScripts (JSContext *cx)
             JS_KEEP_ATOMS(rt);
 #endif
         }
-        /* get next deleted script */
-        gDeadScripts = reinterpret_cast<DeadScript *>
-                                       (PR_NEXT_LINK(&ds->links));
-        if (gDeadScripts == ds) {
-            /* last script in the list */
-            gDeadScripts = nsnull;
-        }
-        
-        /* take ourselves out of the circular list */
+
+        /* take it out of the circular list */
         PR_REMOVE_LINK(&ds->links);
+
         /* addref came from the FromPtr call in jsds_ScriptHookProc */
         NS_RELEASE(ds->script);
         /* free the struct! */
@@ -517,13 +517,17 @@ jsds_NotifyPendingDeadScripts (JSContext *cx)
 JS_STATIC_DLL_CALLBACK (JSBool)
 jsds_GCCallbackProc (JSContext *cx, JSGCStatus status)
 {
-    gGCStatus = status;
 #ifdef DEBUG_verbose
     printf ("new gc status is %i\n", status);
 #endif
-    if (status == JSGC_END && gDeadScripts)
-        jsds_NotifyPendingDeadScripts (cx);
-    
+    if (status == JSGC_END) {
+        /* just to guard against reentering. */
+        gGCStatus = JSGC_BEGIN;
+        while (gDeadScripts)
+            jsds_NotifyPendingDeadScripts (cx);
+    }
+
+    gGCStatus = status;
     if (gLastGCProc)
         return gLastGCProc (cx, status);
     

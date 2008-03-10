@@ -118,6 +118,9 @@ protected:
   static nsresult GetUserDataDirectory(nsILocalFile* *aFile, PRBool aLocal);
   static nsresult GetUserDataDirectoryHome(nsILocalFile* *aFile, PRBool aLocal);
   static nsresult GetSysUserExtensionsDirectory(nsILocalFile* *aFile);
+#if defined(XP_UNIX) || defined(XP_MACOSX)
+  static nsresult GetSystemExtensionsDirectory(nsILocalFile** aFile);
+#endif
   static nsresult EnsureDirectoryExists(nsIFile* aDirectory);
   void EnsureProfileFileExists(nsIFile* aFile);
 

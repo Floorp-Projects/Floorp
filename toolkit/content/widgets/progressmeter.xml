@@ -74,7 +74,19 @@
           var position = isLTR ? 4 : -1;
           var interval = setInterval(function nextStep() {
             try {
-              var width = stack.boxObject.width >> 2;
+              var width = stack.boxObject.width;
+              if (!width) {
+                // Maybe we've been removed from the document.
+                var currentNode = stack;
+                while (currentNode && currentNode != stack.ownerDocument) {
+                  currentNode = currentNode.parentNode;
+                }
+                if (!currentNode) {
+                  clearInterval(interval);
+                  return;
+                }
+              }
+              width = width >> 2;
               spacer.height = stack.boxObject.height;
               spacer.width = width;
               spacer.left = width * position;

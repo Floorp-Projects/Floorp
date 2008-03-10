@@ -67,7 +67,7 @@ body[dir="rtl"] #errorPageContainer {
   border-bottom: 1px solid ThreeDLightShadow;
   padding-bottom: 1em;
   font-size: 130%;
-  white-space: -moz-pre-wrap;
+  white-space: pre-wrap;
 }
 
 #errorLongDesc {
@@ -109,7 +109,8 @@ body[dir="rtl"] #brand {
 }
 
 #securityOverrideContent {
-  background-color: #FFF090; /* Pale yellow */
+  background-color: InfoBackground;
+  color: InfoText;
   padding: 10px;
   -moz-border-radius: 10px;
 }

@@ -51,6 +51,10 @@ richlistitem[isDisabled="true"] {
   color: GrayText;
 }
 
+richlistitem[newAddon="true"] {
+  background-color: InfoBackground;
+}
+
 richlistitem[selected="true"] {
   background-color: -moz-cellhighlight;
   color: -moz-cellhighlighttext;

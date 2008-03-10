@@ -81,6 +81,7 @@ REQUIRES = 	\
 		xuldoc \
 		feeds \
 		storage \
+		pipnss \
 		$(NULL)
 
 ifdef ALERTS_SERVICE

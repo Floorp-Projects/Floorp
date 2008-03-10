@@ -159,6 +159,17 @@
       <menuseparator observes="blockedPopupsSeparator"/>
     </popup>
 
+    <menupopup id="autohide-context"
+           onpopupshowing="FullScreen.getAutohide(this.firstChild);">
+      <menuitem type="checkbox" label="&fullScreenAutohide.label;"
+                accesskey="&fullScreenAutohide.accesskey;"
+                oncommand="FullScreen.setAutohide();"/>
+      <menuseparator/>
+      <menuitem label="&fullScreenExit.label;"
+                accesskey="&fullScreenExit.accesskey;"
+                oncommand="BrowserFullScreen();"/>
+    </menupopup>
+
     <popup id="contentAreaContextMenu"
            onpopupshowing="if (event.target != this) return true; updateEditUIVisibility(); gContextMenu = new nsContextMenu(this, window.getBrowser()); return gContextMenu.shouldDisplay;"
            onpopuphiding="if (event.target == this) { gContextMenu = null; updateEditUIVisibility(); }">
@@ -176,7 +187,7 @@
         <vbox id="identity-popup-content-box">
           <label id="identity-popup-connectedToLabel" value="&identity.connectedTo;"/>
           <label id="identity-popup-connectedToLabel2"
-                 value="&identity.unverifiedsite;"/>
+                 value="&identity.unverifiedsite2;"/>
           <description id="identity-popup-content-host"/>
           <label id="identity-popup-runByLabel" value="&identity.runBy;"/>
           <description id="identity-popup-content-owner"/>

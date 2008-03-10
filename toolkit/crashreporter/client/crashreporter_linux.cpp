@@ -265,11 +265,21 @@ static gboolean WindowDeleted(GtkWidget* window,
   return TRUE;
 }
 
+static void MaybeSubmitReport()
+{
+  if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gSubmitReportCheck))) {
+    gDidTrySend = true;
+    SendReport();
+  } else {
+    gtk_main_quit();
+  }
+}
+
 static void CloseClicked(GtkButton* button,
                          gpointer userData)
 {
   SaveSettings();
-  gtk_main_quit();
+  MaybeSubmitReport();
 }
 
 static void RestartClicked(GtkButton* button,
@@ -277,13 +287,7 @@ static void RestartClicked(GtkButton* button,
 {
   SaveSettings();
   RestartApplication();
-
-  if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gSubmitReportCheck))) {
-    gDidTrySend = true;
-    SendReport();
-  } else {
-    gtk_main_quit();
-  }
+  MaybeSubmitReport();
 }
 
 static void UpdateSubmit()

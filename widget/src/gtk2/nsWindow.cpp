@@ -3106,16 +3106,22 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
             }
         }
         else if (mWindowType == eWindowType_popup) {
-            // treat popups with a parent as top level windows
-            if (mParent) {
-                mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-                gtk_window_set_wmclass(GTK_WINDOW(mShell), "Toplevel", cBrand.get());
-                gtk_window_set_decorated(GTK_WINDOW(mShell), FALSE);
+            mShell = gtk_window_new(GTK_WINDOW_POPUP);
+            gtk_window_set_wmclass(GTK_WINDOW(mShell), "Popup", cBrand.get());
+
+            GdkWindowTypeHint gtkTypeHint;
+            switch (aInitData->mPopupHint) {
+                case ePopupTypeMenu:
+                    gtkTypeHint = GDK_WINDOW_TYPE_HINT_POPUP_MENU;
+                    break;
+                case ePopupTypeTooltip:
+                    gtkTypeHint = GDK_WINDOW_TYPE_HINT_TOOLTIP;
+                    break;
+                default:
+                    gtkTypeHint = GDK_WINDOW_TYPE_HINT_UTILITY;
+                    break;
             }
-            else {
-                mShell = gtk_window_new(GTK_WINDOW_POPUP);
-                gtk_window_set_wmclass(GTK_WINDOW(mShell), "Popup", cBrand.get());
-            }
+            gtk_window_set_type_hint(GTK_WINDOW(mShell), gtkTypeHint);
 
             if (topLevelParent) {
                 gtk_window_set_transient_for(GTK_WINDOW(mShell),
