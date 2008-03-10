@@ -322,10 +322,9 @@ pref("browser.tabs.selectOwnerOnClose", true);
 pref("browser.bookmarks.sort.direction", "descending");
 pref("browser.bookmarks.sort.resource", "rdf:http://home.netscape.com/NC-rdf#Name");
 
-// By default, do not export HTML at shutdown.
-// If true, at shutdown the bookmarks in your menu and toolbar will
-// be exported as HTML to the bookmarks.html file.
-pref("browser.bookmarks.autoExportHTML",          false);
+// By default, do not overwrite bookmarks.html in the profile directory
+// See bug #381216 for details
+pref("browser.bookmarks.overwrite",               false);
 
 // Scripts & Windows prefs
 pref("dom.disable_open_during_load",              true);
