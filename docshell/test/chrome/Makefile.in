@@ -46,6 +46,8 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES =	\
 		test_bug364461.xul \
 		bug364461_window.xul \
+		test_bug396519.xul \
+		bug396519_window.xul \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

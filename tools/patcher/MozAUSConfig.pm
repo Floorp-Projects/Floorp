@@ -535,6 +535,7 @@ sub CreateUpdateGraph
                      locale => $l,
                      build_id => $rlp_config->{$p}->{'build_id'},
                      version => $rl_config->{'version'},
+                     prettyVersion => $rl_config->{'prettyVersion'},
                      extensionVersion => $rl_config->{'extension-version'},
                      schemaVersion => $rl_config->{'schema'} );
                 }
@@ -556,6 +557,7 @@ sub GatherCompleteData
     my $release = $args{'release'};
     my $build_id = $args{'build_id'};
     my $version = $args{'version'};
+    my $prettyVersion = $args{'prettyVersion'};
     my $extensionVersion = $args{'extensionVersion'};
     my $schemaVersion = $args{'schemaVersion'};
 
@@ -599,6 +601,12 @@ sub GatherCompleteData
     my $numericVersion = $version;
     $numericVersion =~ s/\-.*$//;
     $node->{'appv'} = $numericVersion;
+
+    # appv is used for directory creation and possibly other things.
+    # patcher will use prettyAppv in the snippets it creates, and appv for any
+    # other weird things it chooses to use it for
+    $node->{'prettyAppv'} = defined($prettyVersion) ?
+     $prettyVersion : $numericVersion;
 
     # Most of the time, the extv should be the same as the appv; sometimes,
     # however, this won't be the case. This adds support to allow you to specify

@@ -1454,8 +1454,11 @@ fun_toStringHelper(JSContext *cx, uint32 indent, uintN argc, jsval *vp)
     }
 
     obj = JSVAL_TO_OBJECT(fval);
-    if (argc != 0 && !js_ValueToECMAUint32(cx, vp[2], &indent))
-        return JS_FALSE;
+    if (argc != 0) {
+        indent = js_ValueToECMAUint32(cx, &vp[2]);
+        if (JSVAL_IS_NULL(vp[2]))
+            return JS_FALSE;
+    }
 
     JS_ASSERT(JS_ObjectIsFunction(cx, obj));
     fun = GET_FUNCTION_PRIVATE(cx, obj);
@@ -1755,13 +1758,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     caller = JS_GetScriptedCaller(cx, fp);
     if (caller) {
         principals = JS_EvalFramePrincipals(cx, fp, caller);
-        if (principals == caller->script->principals) {
-            filename = caller->script->filename;
-            lineno = js_PCToLineNumber(cx, caller->script, caller->pc);
-        } else {
-            filename = principals->codebase;
-            lineno = 0;
-        }
+        filename = js_ComputeFilename(cx, caller, principals, &lineno);
     } else {
         filename = NULL;
         lineno = 0;

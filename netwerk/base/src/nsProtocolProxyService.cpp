@@ -485,17 +485,17 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
         if (mProxyConfig == eProxyConfig_PAC) {
             prefBranch->GetCharPref(PROXY_PREF("autoconfig_url"),
                                     getter_Copies(tempString));
-        } else {
+        } else if (mProxyConfig == eProxyConfig_WPAD) {
             // We diverge from the WPAD spec here in that we don't walk the
             // hosts's FQDN, stripping components until we hit a TLD.  Doing so
             // is dangerous in the face of an incomplete list of TLDs, and TLDs
             // get added over time.  We could consider doing only a single
             // substitution of the first component, if that proves to help
             // compatibility.
-            if (mSystemProxySettings)
-                mSystemProxySettings->GetPACURI(tempString);
-            else
-                tempString.AssignLiteral(WPAD_URL);
+            tempString.AssignLiteral(WPAD_URL);
+        } else if (mSystemProxySettings) {
+            // Get System Proxy settings if available
+            mSystemProxySettings->GetPACURI(tempString);
         }
         if (!tempString.IsEmpty())
             ConfigureFromPAC(tempString);

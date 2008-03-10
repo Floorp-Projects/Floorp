@@ -47,6 +47,7 @@
 #include <gdk/gdkprivate.h>
 #include <string.h>
 #include "gtkdrawing.h"
+#include "nsDebug.h"
 
 #include <math.h>
 
@@ -797,6 +798,7 @@ moz_gtk_toggle_paint(GdkDrawable* drawable, GdkRectangle* rect,
     GtkShadowType shadow_type = (selected)?GTK_SHADOW_IN:GTK_SHADOW_OUT;
     gint indicator_size, indicator_spacing;
     gint x, y, width, height;
+    gint focus_x, focus_y, focus_width, focus_height;
     GtkWidget *w;
     GtkStyle *style;
 
@@ -808,11 +810,18 @@ moz_gtk_toggle_paint(GdkDrawable* drawable, GdkRectangle* rect,
         w = gCheckboxWidget;
     }
 
-    /* offset by indicator_spacing, and centered vertically within the rect */
-    x = rect->x + indicator_spacing;
-    y = rect->y + (rect->height - indicator_size) / 2;
+    NS_ASSERTION(rect->height == indicator_size &&
+                 rect->width == indicator_size,
+                 "GetMinimumWidgetSize was ignored");
+    x = rect->x;
+    y = rect->y;
     width = indicator_size;
     height = indicator_size;
+
+    focus_x = x - indicator_spacing;
+    focus_y = y - indicator_spacing;
+    focus_width = width + 2 * indicator_spacing;
+    focus_height = height + 2 * indicator_spacing;
   
     style = w->style;
     TSOffsetStyleGCs(style, x, y);
@@ -827,8 +836,8 @@ moz_gtk_toggle_paint(GdkDrawable* drawable, GdkRectangle* rect,
                          width, height);
         if (state->focused) {
             gtk_paint_focus(style, drawable, GTK_STATE_ACTIVE, cliprect,
-                            gRadiobuttonWidget, "radiobutton", rect->x, rect->y,
-                            rect->width, rect->height);
+                            gRadiobuttonWidget, "radiobutton", focus_x, focus_y,
+                            focus_width, focus_height);
         }
     }
     else {
@@ -836,8 +845,8 @@ moz_gtk_toggle_paint(GdkDrawable* drawable, GdkRectangle* rect,
                         gCheckboxWidget, "checkbutton", x, y, width, height);
         if (state->focused) {
             gtk_paint_focus(style, drawable, GTK_STATE_ACTIVE, cliprect,
-                            gCheckboxWidget, "checkbutton", rect->x, rect->y,
-                            rect->width, rect->height);
+                            gCheckboxWidget, "checkbutton", focus_x, focus_y,
+                            focus_width, focus_height);
         }
     }
 

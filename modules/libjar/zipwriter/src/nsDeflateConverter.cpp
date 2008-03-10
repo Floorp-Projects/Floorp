@@ -85,6 +85,10 @@ nsresult nsDeflateConverter::Init()
     mZstream.next_out = mWriteBuffer;
     mZstream.avail_out = sizeof(mWriteBuffer);
 
+    // mark the input buffer as empty.
+    mZstream.avail_in = 0;
+    mZstream.next_in = Z_NULL;
+
     return NS_OK;
 }
 

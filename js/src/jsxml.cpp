@@ -1932,7 +1932,7 @@ GetUint32XMLSetting(JSContext *cx, const char *name, uint32 *uip)
 {
     jsval v;
 
-    return GetXMLSetting(cx, name, &v) && js_ValueToECMAUint32(cx, v, uip);
+    return GetXMLSetting(cx, name, &v) && JS_ValueToECMAUint32(cx, v, uip);
 }
 
 static JSBool
@@ -3434,7 +3434,7 @@ DeepCopyInLRS(JSContext *cx, JSXML *xml, uintN flags)
     /* Our caller must be protecting newborn objects. */
     JS_ASSERT(cx->localRootStack);
 
-    JS_CHECK_RECURSION(cx, return JS_FALSE);
+    JS_CHECK_RECURSION(cx, return NULL);
 
     copy = js_NewXML(cx, (JSXMLClass) xml->xml_class);
     if (!copy)
@@ -5482,7 +5482,7 @@ xml_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
                 } else if (JSVAL_IS_STRING(v)) {
                     *bp = js_EqualStrings(str, JSVAL_TO_STRING(v));
                 } else {
-                    ok = js_ValueToNumber(cx, STRING_TO_JSVAL(str), &d);
+                    ok = JS_ValueToNumber(cx, STRING_TO_JSVAL(str), &d);
                     if (ok) {
                         d2 = JSVAL_IS_INT(v) ? JSVAL_TO_INT(v)
                                              : *JSVAL_TO_DOUBLE(v);
@@ -5844,7 +5844,7 @@ xml_childIndex(JSContext *cx, uintN argc, jsval *vp)
             break;
     }
     JS_ASSERT(i < n);
-    return js_NewNumberValue(cx, i, vp);
+    return js_NewNumberInRootedValue(cx, i, vp);
 }
 
 /* XML and XMLList */
@@ -6334,7 +6334,7 @@ xml_length(JSContext *cx, uintN argc, jsval *vp)
     if (xml->xml_class != JSXML_CLASS_LIST) {
         *vp = JSVAL_ONE;
     } else {
-        if (!js_NewNumberValue(cx, xml->xml_kids.length, vp))
+        if (!js_NewNumberInRootedValue(cx, xml->xml_kids.length, vp))
             return JS_FALSE;
     }
     return JS_TRUE;

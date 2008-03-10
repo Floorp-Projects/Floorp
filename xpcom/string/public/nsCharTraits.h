@@ -671,7 +671,7 @@ struct nsCharSourceTraits
     readable_distance( const InputIterator& first, const InputIterator& last )
       {
         // assumes single fragment
-        return last.get() - first.get();
+        return PRUint32(last.get() - first.get());
       }
 
     static

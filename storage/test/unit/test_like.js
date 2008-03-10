@@ -104,7 +104,8 @@ function test_count()
 
 function test_like_1()
 {
-  var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE 'abc';");
+  var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?;");
+  stmt.bindStringParameter(0, 'abc');
   var solutions = ["abc", "ABC"];
   do_check_true(stmt.executeStep());
   do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
@@ -117,7 +118,8 @@ function test_like_1()
 
 function test_like_2()
 {
-  var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE 'ABC';");
+  var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?;");
+  stmt.bindStringParameter(0, 'ABC');
   var solutions = ["abc", "ABC"];
   do_check_true(stmt.executeStep());
   do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
@@ -130,7 +132,8 @@ function test_like_2()
     
 function test_like_3()
 {
-  var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE 'aBc';");
+  var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?;");
+  stmt.bindStringParameter(0, 'aBc');
   var solutions = ["abc", "ABC"];
   do_check_true(stmt.executeStep());
   do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
@@ -143,7 +146,8 @@ function test_like_3()
    
 function test_like_4()
 {
-  var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE 'abc%';");
+  var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?;");
+  stmt.bindStringParameter(0, 'abc%');
   var solutions = ["abc", "abcd", "ABC", "ABC abc xyz"];
   do_check_true(stmt.executeStep());
   do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
@@ -160,7 +164,8 @@ function test_like_4()
 
 function test_like_5()
 {
-  var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE 'a_c';");
+  var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?;");
+  stmt.bindStringParameter(0, 'a_c');
   var solutions = ["abc", "ABC"];
   do_check_true(stmt.executeStep());
   do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
@@ -173,7 +178,8 @@ function test_like_5()
 
 function test_like_6()
 {
-  var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE 'ab%d';");
+  var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?;");
+  stmt.bindStringParameter(0, 'ab%d');
   var solutions = ["abcd", "abd"];
   do_check_true(stmt.executeStep());
   do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
@@ -186,7 +192,8 @@ function test_like_6()
     
 function test_like_7()
 {
-  var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE 'a_c%';");
+  var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?;");
+  stmt.bindStringParameter(0, 'a_c%');
   var solutions = ["abc", "abcd", "ABC", "ABC abc xyz"];
   do_check_true(stmt.executeStep());
   do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
@@ -203,7 +210,8 @@ function test_like_7()
 
 function test_like_8()
 {
-  var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE '%bcd';");
+  var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?;");
+  stmt.bindStringParameter(0, '%bcd');
   var solutions = ["abcd", "bcd"];
   do_check_true(stmt.executeStep());
   do_check_true(solutions.indexOf(stmt.getString(0)) != -1);

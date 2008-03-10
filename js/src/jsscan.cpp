@@ -1211,16 +1211,19 @@ retry:
     hadUnicodeEscape = JS_FALSE;
     if (JS_ISIDSTART(c) ||
         (c == '\\' &&
-         (c = GetUnicodeEscape(ts),
-          hadUnicodeEscape = JS_ISIDSTART(c)))) {
+         (qc = GetUnicodeEscape(ts),
+          hadUnicodeEscape = JS_ISIDSTART(qc)))) {
+        if (hadUnicodeEscape)
+            c = qc;
         INIT_TOKENBUF();
         for (;;) {
             ADD_TO_TOKENBUF(c);
             c = GetChar(ts);
             if (c == '\\') {
-                c = GetUnicodeEscape(ts);
-                if (!JS_ISIDENT(c))
+                qc = GetUnicodeEscape(ts);
+                if (!JS_ISIDENT(qc))
                     break;
+                c = qc;
                 hadUnicodeEscape = JS_TRUE;
             } else {
                 if (!JS_ISIDENT(c))

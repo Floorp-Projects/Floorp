@@ -2314,6 +2314,7 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
     pxSrc.size.width = gfxFloat(w);
     pxSrc.size.height = gfxFloat(h);
   }
+  gfxRect pxSubimage = pxSrc;
 
   nsCOMPtr<nsIDeviceContext> dc;
   aRenderingContext->GetDeviceContext(*getter_AddRefs(dc));
@@ -2375,7 +2376,9 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   imgFrame->GetRect(pxImgFrameRect);
 
   if (pxImgFrameRect.x > 0) {
-    pxSrc.pos.x -= gfxFloat(pxImgFrameRect.x);
+    gfxFloat fx(pxImgFrameRect.x);
+    pxSubimage.pos.x -= fx;
+    pxSrc.pos.x -= fx;
 
     gfxFloat scaled_x = pxSrc.pos.x;
     if (pxDirty.size.width != pxSrc.size.width) {
@@ -2396,7 +2399,9 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   }
 
   if (pxImgFrameRect.y > 0) {
-    pxSrc.pos.y -= gfxFloat(pxImgFrameRect.y);
+    gfxFloat fy(pxImgFrameRect.y);
+    pxSubimage.pos.y -= fy;
+    pxSrc.pos.y -= fy;
 
     gfxFloat scaled_y = pxSrc.pos.y;
     if (pxDirty.size.height != pxSrc.size.height) {
@@ -2416,7 +2421,7 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
     return NS_OK;
   }
 
-  return img->Draw(*aRenderingContext, pxSrc, pxDirty);
+  return img->Draw(*aRenderingContext, pxSrc, pxSubimage, pxDirty);
 }
 
 void
@@ -2458,16 +2463,10 @@ static PRBool NonZeroStyleCoord(const nsStyleCoord& aCoord)
 /* static */ PRBool
 nsLayoutUtils::HasNonZeroSide(const nsStyleSides& aSides)
 {
-  nsStyleCoord coord;
-  aSides.GetTop(coord);
-  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
-  aSides.GetRight(coord);
-  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
-  aSides.GetBottom(coord);
-  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
-  aSides.GetLeft(coord);
-  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
-  return PR_FALSE;
+  return NonZeroStyleCoord(aSides.GetTop()) ||
+         NonZeroStyleCoord(aSides.GetRight()) ||
+         NonZeroStyleCoord(aSides.GetBottom()) ||
+         NonZeroStyleCoord(aSides.GetLeft());
 }
 
 /* static */ PRBool

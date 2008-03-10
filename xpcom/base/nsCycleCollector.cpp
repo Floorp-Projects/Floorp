@@ -1573,11 +1573,6 @@ nsCycleCollector::RootWhite()
 
     mWhiteNodes->SetCapacity(mWhiteNodeCount);
 
-#if defined(DEBUG_CC) && !defined(__MINGW32__) && defined(WIN32)
-    struct _CrtMemState ms1, ms2;
-    _CrtMemCheckpoint(&ms1);
-#endif
-
     NodePool::Enumerator etor(mGraph.mNodes);
     while (!etor.IsDone())
     {
@@ -1596,6 +1591,12 @@ PRBool
 nsCycleCollector::CollectWhite()
 {
     nsresult rv;
+
+#if defined(DEBUG_CC) && !defined(__MINGW32__) && defined(WIN32)
+    struct _CrtMemState ms1, ms2;
+    _CrtMemCheckpoint(&ms1);
+#endif
+
     PRUint32 i, count = mWhiteNodes->Length();
     for (i = 0; i < count; ++i) {
         PtrInfo *pinfo = mWhiteNodes->ElementAt(i);

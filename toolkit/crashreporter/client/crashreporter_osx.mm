@@ -217,6 +217,30 @@ static bool RestartApplication()
   [extra release];
 }
 
+- (void)maybeSubmitReport
+{
+  if ([mSubmitReportButton state] == NSOnState) {
+    [self setStringFitVertically:mProgressText
+                          string:Str(ST_REPORTDURINGSUBMIT)
+                    resizeWindow:YES];
+    // disable all the controls
+    [self enableControls:NO];
+    [mSubmitReportButton setEnabled:NO];
+    [mRestartButton setEnabled:NO];
+    [mCloseButton setEnabled:NO];
+    [mProgressIndicator startAnimation:self];
+    gDidTrySend = true;
+    [self sendReport];
+  } else {
+    [NSApp terminate:self];
+  }
+}
+
+-(void)closeMeDown
+{
+  [NSApp terminate:self];
+}
+
 -(IBAction)submitReportClicked:(id)sender
 {
   [self updateSubmit];
@@ -237,28 +261,13 @@ static bool RestartApplication()
 
 -(IBAction)closeClicked:(id)sender
 {
-  [NSApp terminate: self];
+  [self maybeSubmitReport];
 }
 
 -(IBAction)restartClicked:(id)sender
 {
   RestartApplication();
-
-  if ([mSubmitReportButton state] == NSOnState) {
-    [self setStringFitVertically:mProgressText
-                          string:Str(ST_REPORTDURINGSUBMIT)
-                    resizeWindow:YES];
-    // disable all the controls
-    [self enableControls:NO];
-    [mSubmitReportButton setEnabled:NO];
-    [mRestartButton setEnabled:NO];
-    [mCloseButton setEnabled:NO];
-    [mProgressIndicator startAnimation:self];
-    gDidTrySend = true;
-    [self sendReport];
-  } else {
-    [NSApp terminate:self];
-  }
+  [self maybeSubmitReport];
 }
 
 - (IBAction)includeURLClicked:(id)sender
@@ -488,7 +497,7 @@ static bool RestartApplication()
                           string:Str(ST_SUBMITFAILED)
                     resizeWindow:YES];
    // quit after 5 seconds
-   [self performSelector:@selector(closeClicked:) withObject:self
+   [self performSelector:@selector(closeMeDown:) withObject:nil
     afterDelay:5.0];
   }
 
@@ -573,7 +582,7 @@ static bool RestartApplication()
                     resizeWindow:YES];
   }
   // quit after 5 seconds
-  [self performSelector:@selector(closeClicked:) withObject:self
+  [self performSelector:@selector(closeMeDown:) withObject:nil
    afterDelay:5.0];
 }
 

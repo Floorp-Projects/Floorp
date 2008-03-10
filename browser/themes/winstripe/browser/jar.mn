@@ -144,6 +144,8 @@ classic.jar:
         skin/classic/aero/browser/tabbrowser/tab-bkgnd.png                      (tabbrowser/tab-bkgnd.png)
         skin/classic/browser/tabbrowser/tab-active-bkgnd.png                    (tabbrowser/tab-active-bkgnd.png)
         skin/classic/aero/browser/tabbrowser/tab-active-bkgnd.png               (tabbrowser/tab-active-bkgnd.png)
+        skin/classic/browser/tabbrowser/tab-hover-bkgnd.png                     (tabbrowser/tab-hover-bkgnd.png)
+        skin/classic/aero/browser/tabbrowser/tab-hover-bkgnd.png                (tabbrowser/tab-hover-bkgnd.png)
         skin/classic/browser/tabbrowser/tabstrip-bottom.png                     (tabbrowser/tabstrip-bottom.png)
         skin/classic/aero/browser/tabbrowser/tabstrip-bottom.png                (tabbrowser/tabstrip-bottom.png)
         icon.png

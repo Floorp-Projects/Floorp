@@ -597,7 +597,7 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
     // Try to figure out here whether we have a
     // preformatted style attribute.
     //
-    // Trigger on the presence of a "-moz-pre-wrap" in the
+    // Trigger on the presence of a "pre-wrap" in the
     // style attribute. That's a very simplistic way to do
     // it, but better than nothing.
     // Also set mWrapColumn to the value given there

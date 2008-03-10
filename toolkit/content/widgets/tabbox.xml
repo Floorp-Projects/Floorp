@@ -552,7 +552,7 @@
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
     <implementation>
 
-      <field name="_selectedPanel">null</field>
+      <field name="_selectedPanel">this.childNodes.item(this.selectedIndex)</field>
 
       <property name="selectedIndex">
         <getter>

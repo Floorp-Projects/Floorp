@@ -121,8 +121,12 @@ typedef enum JSOpLength {
                                      parenthesized statement head */
 #define JOF_INVOKE       (1U<<22) /* JSOP_CALL, JSOP_NEW, JSOP_EVAL */
 #define JOF_TMPSLOT      (1U<<23) /* interpreter uses extra temporary slot
-                                     to root intermediate objects */
+                                     to root intermediate objects besides
+                                     the slots opcode uses */
+#define JOF_TMPSLOT2     (2U<<23) /* interpreter uses extra 2 temporary slot
+                                     besides the slots opcode uses */
 #define JOF_TMPSLOT_SHIFT 23
+#define JOF_TMPSLOT_MASK  (JS_BITMASK(2) << JOF_TMPSLOT_SHIFT)
 
 /* Shorthands for type from format and type from opcode. */
 #define JOF_TYPE(fmt)   ((fmt) & JOF_TYPEMASK)

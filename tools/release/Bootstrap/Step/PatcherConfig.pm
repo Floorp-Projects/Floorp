@@ -86,6 +86,7 @@ sub BumpPatcherConfig {
     my $product = $config->Get(var => 'product');
     my $configBumpDir = $config->Get(var => 'configBumpDir');
     my $version = $config->GetVersion(longName => 0);
+    my $prettyVersion = $config->GetVersion(longName => 1);
     my $oldVersion = $config->GetOldVersion(longName => 0);
     my $rc = $config->Get(var => 'rc');
     my $oldRc = $config->Get(var => 'oldRc');
@@ -220,12 +221,8 @@ sub BumpPatcherConfig {
     $appObj->{'release'}->{$version} = $releaseObj = {};
 
     $releaseObj->{'schema'} = '1';
-    if ($config->Exists(var => 'prettyAusVersion')) {
-        $releaseObj->{'version'} = $config->Get(var => 'prettyAusVersion');
-    } else {
-        $releaseObj->{'version'} = $version;
-    }
-    $releaseObj->{'extension-version'} = $version;
+    $releaseObj->{'version'} = $releaseObj->{'extension-version'} = $version;
+    $releaseObj->{'prettyVersion'} = $prettyVersion;
 
     my $linBuildId;
     my $winBuildId;

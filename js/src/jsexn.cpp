@@ -793,7 +793,8 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* Set the 'lineNumber' property. */
     if (argc > 2) {
-        if (!js_ValueToECMAUint32(cx, argv[2], &lineno))
+        lineno = js_ValueToECMAUint32(cx, &argv[2]);
+        if (JSVAL_IS_NULL(argv[2]))
             return JS_FALSE;
     } else {
         if (!fp)
@@ -909,8 +910,11 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
         goto out;
     localroots[1] = STRING_TO_JSVAL(filename);
 
-    ok = JS_GetProperty(cx, obj, js_lineNumber_str, &localroots[2]) &&
-         js_ValueToECMAUint32 (cx, localroots[2], &lineno);
+    ok = JS_GetProperty(cx, obj, js_lineNumber_str, &localroots[2]);
+    if (!ok)
+        goto out;
+    lineno = js_ValueToECMAUint32 (cx, &localroots[2]);
+    ok = !JSVAL_IS_NULL(localroots[2]);
     if (!ok)
         goto out;
 
@@ -1339,7 +1343,8 @@ js_ReportUncaughtException(JSContext *cx)
         ok = JS_GetProperty(cx, exnObject, js_lineNumber_str, &roots[4]);
         if (!ok)
             goto out;
-        ok = js_ValueToECMAUint32 (cx, roots[4], &lineno);
+        lineno = js_ValueToECMAUint32 (cx, &roots[4]);
+        ok = !JSVAL_IS_NULL(roots[4]);
         if (!ok)
             goto out;
 

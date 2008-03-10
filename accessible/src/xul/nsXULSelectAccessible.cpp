@@ -42,8 +42,8 @@
 #include "nsIContent.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULPopupElement.h"
+#include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
-#include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULTextboxElement.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
@@ -258,7 +258,7 @@ nsXULListboxAccessible::GetCaption(nsIAccessible **aCaption)
   NS_ENSURE_ARG_POINTER(aCaption);
   *aCaption = nsnull;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -266,7 +266,7 @@ nsXULListboxAccessible::GetSummary(nsAString &aSummary)
 {
   aSummary.Truncate();
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -287,7 +287,7 @@ nsXULListboxAccessible::GetColumns(PRInt32 *aNumColumns)
     nsCOMPtr<nsIContent> childContent(content->GetChildAt(index));
     NS_ENSURE_STATE(childContent);
 
-    if (childContent->NodeInfo()->Equals(nsAccessibilityAtoms::listhead,
+    if (childContent->NodeInfo()->Equals(nsAccessibilityAtoms::listcols,
                                          kNameSpaceID_XUL)) {
       headContent = childContent;
     }
@@ -303,7 +303,7 @@ nsXULListboxAccessible::GetColumns(PRInt32 *aNumColumns)
     nsCOMPtr<nsIContent> childContent(headContent->GetChildAt(index));
     NS_ENSURE_STATE(childContent);
 
-    if (childContent->NodeInfo()->Equals(nsAccessibilityAtoms::listheader,
+    if (childContent->NodeInfo()->Equals(nsAccessibilityAtoms::listcol,
                                          kNameSpaceID_XUL)) {
       columnCount++;
     }
@@ -452,71 +452,214 @@ NS_IMETHODIMP
 nsXULListboxAccessible::GetColumnDescription(PRInt32 aColumn,
                                              nsAString& aDescription)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aDescription.Truncate();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULListboxAccessible::GetRowDescription(PRInt32 aRow, nsAString& aDescription)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aDescription.Truncate();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULListboxAccessible::IsColumnSelected(PRInt32 aColumn, PRBool *aIsSelected)
 {
   NS_ENSURE_ARG_POINTER(aIsSelected);
+  *aIsSelected = PR_FALSE;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
+    do_QueryInterface(mDOMNode);
+  NS_ASSERTION(control,
+               "Doesn't implement nsIDOMXULMultiSelectControlElement.");
+
+  PRInt32 selectedRowsCount = 0;
+  nsresult rv = control->GetSelectedCount(&selectedRowsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 rowsCount = 0;
+  rv = GetRows(&rowsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aIsSelected = (selectedRowsCount == rowsCount);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULListboxAccessible::IsRowSelected(PRInt32 aRow, PRBool *aIsSelected)
 {
   NS_ENSURE_ARG_POINTER(aIsSelected);
+  *aIsSelected = PR_FALSE;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMXULSelectControlElement> control =
+    do_QueryInterface(mDOMNode);
+  NS_ASSERTION(control,
+               "Doesn't implement nsIDOMXULSelectControlElement.");
+  
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
+  control->GetItemAtIndex(aRow, getter_AddRefs(item));
+  NS_ENSURE_TRUE(item, NS_ERROR_INVALID_ARG);
+
+  return item->GetSelected(aIsSelected);
 }
 
 NS_IMETHODIMP
 nsXULListboxAccessible::IsCellSelected(PRInt32 aRow, PRInt32 aColumn,
                                        PRBool *aIsSelected)
 {
-  NS_ENSURE_ARG_POINTER(aIsSelected);
-
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return IsRowSelected(aRow, aIsSelected);
 }
 
 NS_IMETHODIMP
 nsXULListboxAccessible::GetSelectedCellsCount(PRUint32* aCount)
 {
   NS_ENSURE_ARG_POINTER(aCount);
+  *aCount = 0;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
+    do_QueryInterface(mDOMNode);
+  NS_ASSERTION(control,
+               "Doesn't implement nsIDOMXULMultiSelectControlElement.");
+
+  nsCOMPtr<nsIDOMNodeList> selectedItems;
+  control->GetSelectedItems(getter_AddRefs(selectedItems));
+  if (!selectedItems)
+    return NS_OK;
+
+  PRUint32 selectedItemsCount = 0;
+  nsresult rv = selectedItems->GetLength(&selectedItemsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!selectedItemsCount)
+    return NS_OK;
+
+  PRInt32 columnsCount = 0;
+  rv = GetColumns(&columnsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aCount = selectedItemsCount * columnsCount;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULListboxAccessible::GetSelectedColumnsCount(PRUint32* aCount)
 {
   NS_ENSURE_ARG_POINTER(aCount);
+  *aCount = 0;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
+  do_QueryInterface(mDOMNode);
+  NS_ASSERTION(control,
+               "Doesn't implement nsIDOMXULMultiSelectControlElement.");
+
+  PRInt32 selectedRowsCount = 0;
+  nsresult rv = control->GetSelectedCount(&selectedRowsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 rowsCount = 0;
+  rv = GetRows(&rowsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (selectedRowsCount != rowsCount)
+    return NS_OK;
+
+  PRInt32 columnsCount = 0;
+  rv = GetColumns(&columnsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aCount = columnsCount;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULListboxAccessible::GetSelectedRowsCount(PRUint32* aCount)
 {
   NS_ENSURE_ARG_POINTER(aCount);
+  *aCount = 0;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
+    do_QueryInterface(mDOMNode);
+  NS_ASSERTION(control,
+               "Doesn't implement nsIDOMXULMultiSelectControlElement.");
+
+  PRInt32 selectedRowsCount = 0;
+  nsresult rv = control->GetSelectedCount(&selectedRowsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aCount = selectedRowsCount;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULListboxAccessible::GetSelectedCells(PRUint32 *aNumCells, PRInt32 **aCells)
 {
   NS_ENSURE_ARG_POINTER(aNumCells);
+  *aNumCells = 0;
   NS_ENSURE_ARG_POINTER(aCells);
+  *aCells = nsnull;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
+    do_QueryInterface(mDOMNode);
+  NS_ASSERTION(control,
+               "Doesn't implement nsIDOMXULMultiSelectControlElement.");
+
+  nsCOMPtr<nsIDOMNodeList> selectedItems;
+  control->GetSelectedItems(getter_AddRefs(selectedItems));
+  if (!selectedItems)
+    return NS_OK;
+
+  PRUint32 selectedItemsCount = 0;
+  nsresult rv = selectedItems->GetLength(&selectedItemsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 columnsCount = 0;
+  rv = GetColumns(&columnsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 cellsCount = selectedItemsCount * columnsCount;
+
+  PRInt32 *cellsIdxArray =
+    static_cast<PRInt32*>(nsMemory::Alloc((cellsCount) * sizeof(PRInt32)));
+  NS_ENSURE_TRUE(cellsIdxArray, NS_ERROR_OUT_OF_MEMORY);
+
+  PRUint32 index = 0, cellsIdx = 0;
+  for (; index < selectedItemsCount; index++) {
+    nsCOMPtr<nsIDOMNode> itemNode;
+    selectedItems->Item(index, getter_AddRefs(itemNode));
+    nsCOMPtr<nsIDOMXULSelectControlItemElement> item =
+      do_QueryInterface(itemNode);
+
+    if (item) {
+      PRInt32 itemIdx = -1;
+      control->GetIndexOfItem(item, &itemIdx);
+      if (itemIdx != -1) {
+        PRInt32 colIdx = 0;
+        for (; colIdx < columnsCount; colIdx++)
+          cellsIdxArray[cellsIdx++] = itemIdx * columnsCount + colIdx;
+      }
+    }
+  }
+
+  *aNumCells = cellsCount;
+  *aCells = cellsIdxArray;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -524,42 +667,135 @@ nsXULListboxAccessible::GetSelectedColumns(PRUint32 *aNumColumns,
                                            PRInt32 **aColumns)
 {
   NS_ENSURE_ARG_POINTER(aNumColumns);
+  *aNumColumns = 0;
   NS_ENSURE_ARG_POINTER(aColumns);
+  *aColumns = nsnull;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  PRUint32 columnsCount = 0;
+  nsresult rv = GetSelectedColumnsCount(&columnsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!columnsCount)
+    return NS_OK;
+
+  PRInt32 *colsIdxArray =
+    static_cast<PRInt32*>(nsMemory::Alloc((columnsCount) * sizeof(PRInt32)));
+  NS_ENSURE_TRUE(colsIdxArray, NS_ERROR_OUT_OF_MEMORY);
+
+  PRUint32 colIdx = 0;
+  for (; colIdx < columnsCount; colIdx++)
+    colsIdxArray[colIdx] = colIdx;
+
+  *aNumColumns = columnsCount;
+  *aColumns = colsIdxArray;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULListboxAccessible::GetSelectedRows(PRUint32 *aNumRows, PRInt32 **aRows)
 {
   NS_ENSURE_ARG_POINTER(aNumRows);
+  *aNumRows = 0;
   NS_ENSURE_ARG_POINTER(aRows);
+  *aRows = nsnull;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
+    do_QueryInterface(mDOMNode);
+  NS_ASSERTION(control,
+               "Doesn't implement nsIDOMXULMultiSelectControlElement.");
+  
+  nsCOMPtr<nsIDOMNodeList> selectedItems;
+  control->GetSelectedItems(getter_AddRefs(selectedItems));
+  if (!selectedItems)
+    return NS_OK;
+  
+  PRUint32 selectedItemsCount = 0;
+  nsresult rv = selectedItems->GetLength(&selectedItemsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!selectedItemsCount)
+    return NS_OK;
+
+  PRInt32 *rowsIdxArray =
+    static_cast<PRInt32*>(nsMemory::Alloc((selectedItemsCount) * sizeof(PRInt32)));
+  NS_ENSURE_TRUE(rowsIdxArray, NS_ERROR_OUT_OF_MEMORY);
+
+  PRUint32 index = 0;
+  for (; index < selectedItemsCount; index++) {
+    nsCOMPtr<nsIDOMNode> itemNode;
+    selectedItems->Item(index, getter_AddRefs(itemNode));
+    nsCOMPtr<nsIDOMXULSelectControlItemElement> item =
+      do_QueryInterface(itemNode);
+    
+    if (item) {
+      PRInt32 itemIdx = -1;
+      control->GetIndexOfItem(item, &itemIdx);
+      if (itemIdx != -1)
+        rowsIdxArray[index] = itemIdx;
+    }
+  }
+
+  *aNumRows = selectedItemsCount;
+  *aRows = rowsIdxArray;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULListboxAccessible::SelectRow(PRInt32 aRow)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
+  do_QueryInterface(mDOMNode);
+  NS_ASSERTION(control,
+               "Doesn't implement nsIDOMXULMultiSelectControlElement.");
+
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
+  control->GetItemAtIndex(aRow, getter_AddRefs(item));
+  NS_ENSURE_TRUE(item, NS_ERROR_INVALID_ARG);
+
+  return control->SelectItem(item);
 }
 
 NS_IMETHODIMP
 nsXULListboxAccessible::SelectColumn(PRInt32 aColumn)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // xul:listbox and xul:richlistbox support row selection only.
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULListboxAccessible::UnselectRow(PRInt32 aRow)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
+    do_QueryInterface(mDOMNode);
+  NS_ASSERTION(control,
+               "Doesn't implement nsIDOMXULMultiSelectControlElement.");
+
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
+  control->GetItemAtIndex(aRow, getter_AddRefs(item));
+  NS_ENSURE_TRUE(item, NS_ERROR_INVALID_ARG);
+
+  return control->RemoveItemFromSelection(item);
 }
 
 NS_IMETHODIMP
 nsXULListboxAccessible::UnselectColumn(PRInt32 aColumn)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // xul:listbox and xul:richlistbox support row selection only.
+  return NS_OK;
 }
 
 NS_IMETHODIMP

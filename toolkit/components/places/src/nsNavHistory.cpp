@@ -1045,7 +1045,8 @@ nsNavHistory::InitStatements()
 
   // mDBBookmarkToUrlResult, should match kGetInfoIndex_*
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT b.fk, h.url, b.title, h.rev_host, h.visit_count, "
+      "SELECT b.fk, h.url, COALESCE(b.title, h.title), "
+        "h.rev_host, h.visit_count, "
         SQL_STR_FRAGMENT_MAX_VISIT_DATE( "b.fk" )
         ", f.url, null, null, b.dateAdded, b.lastModified "
       "FROM moz_bookmarks b "
@@ -2000,6 +2001,10 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
     if (! query->Domain().IsVoid())
       domainBasedItems = PR_TRUE;
   }
+
+  if (aOptions->ResultType() ==
+      nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY)
+    return QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
 
   // Whenever there is a maximum number of results, 
   // and we are not a bookmark query we must requery. This
@@ -3059,7 +3064,7 @@ PlacesSQLQueryBuilder::SelectAsSite()
       "WHERE EXISTS(SELECT '*' "
                    "FROM moz_places "
                    "WHERE hidden <> 1 AND rev_host = '.' "
-                     "AND url LIKE 'file://%%') "
+                     "AND url BETWEEN 'file://' AND 'file:/~') "
       "UNION ALL "
       "SELECT DISTINCT null, "
              "'place:type=%ld&sort=%ld&domain='||host||'&domainIsHost=true', "
@@ -3087,7 +3092,7 @@ PlacesSQLQueryBuilder::SelectAsSite()
                    "FROM moz_places h  "
                         "JOIN moz_historyvisits v ON h.id = v.place_id "
                    "WHERE h.hidden <> 1 AND h.rev_host = '.' "
-                     "AND h.url LIKE 'file://%%' "
+                     "AND h.url BETWEEN 'file://' AND 'file:/~' "
                      "AND v.visit_type NOT IN (0,4) {ADDITIONAL_CONDITIONS} ) "
       "UNION ALL "
       "SELECT DISTINCT null, "
@@ -3124,13 +3129,12 @@ PlacesSQLQueryBuilder::SelectAsTag()
   mHasDateColumns = PR_TRUE; 
 
   mQueryString = nsPrintfCString(2048,
-    "SELECT null, 'place:type=%ld&queryType=%d&sort=%ld&folder=' || id, "
+    "SELECT null, 'place:type=%ld&queryType=%d&folder=' || id, "
       "title, null, null, null, null, null, null, dateAdded, lastModified "
     "FROM   moz_bookmarks "
     "WHERE  parent = %ld",
     nsINavHistoryQueryOptions::RESULTS_AS_URI,
     nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS,
-    nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING,
     history->GetTagsFolder());
 
   return NS_OK;
@@ -4421,6 +4425,17 @@ nsNavHistory::OnIdle()
           "ON moz_places (visit_count)"));
       NS_ENSURE_SUCCESS(rv, rv);
     }
+
+    // Remove dangling livemark annotations
+    // we have moved expiration pageAnnotations to itemAnnotations
+    // we must remove pageAnnotations to allow expire do the cleanup
+    // see bug 388716
+    // XXX REMOVE ME AFTER FINAL
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "DELETE FROM moz_annos WHERE id IN (SELECT a.id FROM moz_annos a "
+        "JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id "
+        "WHERE n.name = 'livemark/expiration')"));
+    NS_ENSURE_SUCCESS(rv, rv);
 
 #if 0
     // Currently commented out because vacuum is very slow

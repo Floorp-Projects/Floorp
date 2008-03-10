@@ -455,7 +455,7 @@ menuitem[key="key_openHelp"] {
   list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
 
-.toolbarbutton-1 .toolbarbutton-icon {
+.toolbarbutton-1 > .toolbarbutton-icon {
   -moz-margin-end: 0px;
 }
 
@@ -599,10 +599,6 @@ toolbar[iconsize="small"] .toolbarbutton-1 {
   -moz-box-orient: vertical;
   min-width: 0;
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
-}
-
-toolbar[iconsize="small"] .toolbarbutton-1 .toolbarbutton-icon {
-  -moz-margin-end: 0px;
 }
 
 toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"] {

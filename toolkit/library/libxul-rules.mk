@@ -74,7 +74,9 @@ DEFINES += \
 	$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-OS_LIBS += $(call EXPAND_LIBNAME,usp10)
+ifneq ($(OS_ARCH),WINCE)
+OS_LIBS += $(call EXPAND_LIBNAME,usp10 oleaut32)
+endif
 endif
 ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),mac cocoa))
 EXTRA_DSO_LDOPTS += -lcups

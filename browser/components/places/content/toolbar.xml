@@ -830,16 +830,21 @@
         onDragOver: function TBV_DO_onDragOver(event, flavor, session) {
           PlacesControllerDragHelper.currentDropTarget = event.target;
           var dropPoint = this._getDropPoint(event);
+
           var ib = this._self._dropIndicatorBar;
           if (this._ibTimer) {
             this._ibTimer.cancel();
             this._ibTimer = null;
           }
-          if (dropPoint.folderNode) {
-            // Dropping over a menubutton, set styles and timer to open folder.
-            if (this._overFolder.node != dropPoint.folderNode) {
+
+          if (dropPoint.folderNode ||
+              event.originalTarget == this._self._chevron) {
+            // Dropping over a menubutton or chevron button
+            // set styles and timer to open relative menupopup
+            var overNode = dropPoint.folderNode || this._self._chevron;
+            if (this._overFolder.node != overNode) {
               this._clearOverFolder();
-              this._overFolder.node = dropPoint.folderNode;
+              this._overFolder.node = overNode;
               this._overFolder.openTimer = this._setTimer(this._overFolder.hoverTime);
             }
             if (!this._overFolder.node.hasAttribute("dragover"))

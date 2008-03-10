@@ -1132,23 +1132,16 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   pi->GetValue(nsPluginInstanceVariable_WindowlessBool, (void *)&windowless);
   window.type  =  windowless ? nsPluginWindowType_Drawable : nsPluginWindowType_Window;
 
-  // Get the offset of the DC
-  nsTransform2D* rcTransform;
-  aRenderingContext.GetCurrentTransform(rcTransform);
-  nsPoint origin;
-  rcTransform->GetTranslationCoord(&origin.x, &origin.y);
-
-  // set it all up
-  // XXX is windowless different?
-  window.x = presContext->AppUnitsToDevPixels(origin.x);
-  window.y = presContext->AppUnitsToDevPixels(origin.y);
-  window.width = presContext->AppUnitsToDevPixels(mRect.width);
-  window.height= presContext->AppUnitsToDevPixels(mRect.height);
   window.clipRect.bottom = 0; window.clipRect.top = 0;
   window.clipRect.left = 0; window.clipRect.right = 0;
   
 // XXX platform specific printing code
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
+
+  /* XXX this just flat-out doesn't work in a thebes world --
+   * RenderEPS is a no-op.  So don't bother to do any work here.
+   */
+#if 0
     /* UNIX does things completely differently:
    * We call the plugin and it sends generated PostScript data into a
    * file handle we provide. If the plugin returns with success we embed
@@ -1188,6 +1181,7 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   fclose(plugintmpfile);
 
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("plugin printing done, return code is %lx\n", (long)rv));
+#endif
 
 #elif defined(XP_WIN)
 
@@ -1206,15 +1200,30 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
    * meta surface.
    */
 
+  /* we'll already be translated into the right spot by gfxWindowsNativeDrawing */
+  window.x = 0;
+  window.y = 0;
+  window.width = presContext->AppUnitsToDevPixels(mRect.width);
+  window.height = presContext->AppUnitsToDevPixels(mRect.height);
+
   gfxContext *ctx = aRenderingContext.ThebesContext();
 
   ctx->Save();
 
+  /* Make sure plugins don't do any damage outside of where they're supposed to */
   ctx->NewPath();
   ctx->Rectangle(gfxRect(window.x, window.y,
                          window.width, window.height));
   ctx->Clip();
-  ctx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+
+  /* If we're windowless, we need to do COLOR_ALPHA, and do alpha recovery.
+   * XXX - we could have some sort of flag here that would indicate whether
+   * the plugin knows how to render to an ARGB DIB
+   */
+  if (windowless)
+    ctx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+  else
+    ctx->PushGroup(gfxASurface::CONTENT_COLOR);
 
   gfxWindowsNativeDrawing nativeDraw(ctx,
                                      gfxRect(window.x, window.y,
@@ -1239,6 +1248,19 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   ctx->Restore();
 
 #else
+
+  // Get the offset of the DC
+  nsTransform2D* rcTransform;
+  aRenderingContext.GetCurrentTransform(rcTransform);
+  nsPoint origin;
+  rcTransform->GetTranslationCoord(&origin.x, &origin.y);
+
+  // set it all up
+  // XXX is windowless different?
+  window.x = presContext->AppUnitsToDevPixels(origin.x);
+  window.y = presContext->AppUnitsToDevPixels(origin.y);
+  window.width = presContext->AppUnitsToDevPixels(mRect.width);
+  window.height= presContext->AppUnitsToDevPixels(mRect.height);
 
   // we need the native printer device context to pass to plugin
   // NATIVE_WINDOWS_DC is a misnomer, it's whatever the native platform
@@ -1336,14 +1358,6 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       // the offset of the DC
       nsPoint origin;
 
-      // check if we need to update hdc
-      HDC hdc = (HDC)aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
-
-      if (reinterpret_cast<HDC>(window->window) != hdc) {
-        window->window = reinterpret_cast<nsPluginPort*>(hdc);
-        doupdatewindow = PR_TRUE;
-      }
-
       /*
        * Layout now has an optimized way of painting. Now we always get
        * a new drawing surface, sized to be just what's needed. Windowless
@@ -1369,14 +1383,27 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       origin.x = NSToIntRound(float(ctxMatrix.GetTranslation().x));
       origin.y = NSToIntRound(float(ctxMatrix.GetTranslation().y));
 
-      SaveDC(hdc);
-
       /* Need to force the clip to be set */
       ctx->UpdateSurfaceClip();
 
       /* Set the device offsets as appropriate, for whatever our current group offsets might be */
       gfxFloat xoff, yoff;
       nsRefPtr<gfxASurface> surf = ctx->CurrentSurface(&xoff, &yoff);
+
+      if (surf->CairoStatus() != 0) {
+        NS_WARNING("Plugin is being asked to render to a surface that's in error!");
+        return;
+      }
+
+      // check if we need to update hdc
+      HDC hdc = (HDC)aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
+
+      if (reinterpret_cast<HDC>(window->window) != hdc) {
+        window->window = reinterpret_cast<nsPluginPort*>(hdc);
+        doupdatewindow = PR_TRUE;
+      }
+
+      SaveDC(hdc);
 
       POINT origViewportOrigin;
       GetViewportOrgEx(hdc, &origViewportOrigin);
@@ -1500,8 +1527,14 @@ nsresult nsObjectFrame::GetPluginInstance(nsIPluginInstance*& aPluginInstance)
 nsresult
 nsObjectFrame::PrepareInstanceOwner()
 {
+  nsWeakFrame weakFrame(this);
+
   // First, have to stop any possibly running plugins.
   StopPluginInternal(PR_FALSE);
+
+  if (!weakFrame.IsAlive()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   NS_ASSERTION(!mInstanceOwner, "Must not have an instance owner here");
 
@@ -1693,44 +1726,60 @@ nsObjectFrame::StopPlugin()
 void
 nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
 {
-  if (mInstanceOwner == nsnull) {
+  if (!mInstanceOwner) {
     return;
   }
 
-  mInstanceOwner->PrepareToStop(aDelayedStop);
+  // Transfer the reference to the instance owner onto the stack so
+  // that if we do end up re-entering this code, or if we unwind back
+  // here witha deleted frame (this), we can still continue to stop
+  // the plugin. Note that due to that, the ordering of the code in
+  // this function is extremely important.
+
+  nsRefPtr<nsPluginInstanceOwner> owner;
+  owner.swap(mInstanceOwner);
+
+  // Make sure that our windowless rect has been zeroed out, so if we
+  // get reinstantiated we'll send the right messages to the plug-in.
+  mWindowlessRect.Empty();
+
+#ifdef XP_WIN
+  if (aDelayedStop) {
+    // If we're asked to do a delayed stop it means we're stopping the
+    // plugin because we're destroying the frame. In that case, tell
+    // the view to disown the widget (i.e. leave it up to us to
+    // destroy it).
+
+    // Disown the view while we still know it's safe to do so.
+    nsIView *view = GetView();
+    if (view) {
+      view->DisownWidget();
+    }
+  }
+#endif
+
+  // From this point on, |this| could have been deleted, so don't
+  // touch it!
+  owner->PrepareToStop(aDelayedStop);
 
 #ifdef XP_WIN
   // We only deal with delayed stopping of plugins on Win32 for now,
   // as that's the only platform where we need to (AFAIK) and it's
   // unclear how safe widget parenting is on other platforms.
   if (aDelayedStop) {
-    // nsStopPluginRunnable will hold a strong reference to
-    // mInstanceOwner, and thus keep it alive as long as it needs it.
-    nsCOMPtr<nsIRunnable> evt = new nsStopPluginRunnable(mInstanceOwner);
+    // nsStopPluginRunnable will hold a strong reference to owner
+    // (mInstanceOwner), and thus keep it alive as long as it needs
+    // it.
+    nsCOMPtr<nsIRunnable> evt = new nsStopPluginRunnable(owner);
     NS_DispatchToCurrentThread(evt);
-
-    // If we're asked to do a delayed stop it means we're stopping the
-    // plugin because we're destroying the frame. In that case, tell
-    // the view to disown the widget (i.e. leave it up to us to
-    // destroy it).
-    nsIView *view = GetView();
-    if (view) {
-      view->DisownWidget();
-    }
   } else
 #endif
   {
-    DoStopPlugin(mInstanceOwner);
+    DoStopPlugin(owner);
   }
 
   // Break relationship between frame and plugin instance owner
-  mInstanceOwner->SetOwner(nsnull);
-
-  mInstanceOwner = nsnull;
-
-  // Make sure that our windowless rect has been zeroed out, so if we
-  // get reinstantiated we'll send the right messages to the plug-in.
-  mWindowlessRect.Empty();
+  owner->SetOwner(nsnull);
 }
 
 void

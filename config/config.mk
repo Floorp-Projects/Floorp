@@ -351,6 +351,11 @@ DSO_PIC_CFLAGS=
 endif
 endif
 
+# This comes from configure
+ifdef MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE
+NO_PROFILE_GUIDED_OPTIMIZE = 1
+endif
+
 # Enable profile-based feedback
 ifndef NO_PROFILE_GUIDED_OPTIMIZE
 ifdef MOZ_PROFILE_GENERATE

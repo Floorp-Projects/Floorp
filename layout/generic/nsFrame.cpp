@@ -2859,7 +2859,8 @@ nsIFrame::InlinePrefWidthData::ForceBreak(nsIRenderingContext *aRenderingContext
       if (floatDisp->mBreakType == NS_STYLE_CLEAR_LEFT ||
           floatDisp->mBreakType == NS_STYLE_CLEAR_RIGHT ||
           floatDisp->mBreakType == NS_STYLE_CLEAR_LEFT_AND_RIGHT) {
-        nscoord floats_cur = floats_cur_left + floats_cur_right;
+        nscoord floats_cur = NSCoordSaturatingAdd(floats_cur_left,
+                                                  floats_cur_right);
         if (floats_cur > floats_done)
           floats_done = floats_cur;
         if (floatDisp->mBreakType != NS_STYLE_CLEAR_RIGHT)
@@ -2870,12 +2871,15 @@ nsIFrame::InlinePrefWidthData::ForceBreak(nsIRenderingContext *aRenderingContext
 
       nscoord &floats_cur = floatDisp->mFloats == NS_STYLE_FLOAT_LEFT
                               ? floats_cur_left : floats_cur_right;
-      floats_cur +=
-        nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
-                      floatFrame, nsLayoutUtils::PREF_WIDTH);
+      floats_cur =
+        NSCoordSaturatingAdd(floats_cur,
+          nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
+                                               floatFrame,
+                                               nsLayoutUtils::PREF_WIDTH));
     }
 
-    nscoord floats_cur = floats_cur_left + floats_cur_right;
+    nscoord floats_cur =
+      NSCoordSaturatingAdd(floats_cur_left, floats_cur_right);
     if (floats_cur > floats_done)
       floats_done = floats_cur;
 
@@ -2884,7 +2888,8 @@ nsIFrame::InlinePrefWidthData::ForceBreak(nsIRenderingContext *aRenderingContext
     floats.Clear();
   }
 
-  currentLine = NSCoordSaturatingSubtract(currentLine, trailingWhitespace, nscoord_MAX);
+  currentLine =
+    NSCoordSaturatingSubtract(currentLine, trailingWhitespace, nscoord_MAX);
   prevLines = PR_MAX(prevLines, currentLine);
   currentLine = trailingWhitespace = 0;
   skipWhitespace = PR_TRUE;
@@ -2917,18 +2922,17 @@ AddCoord(const nsStyleCoord& aStyle,
 nsFrame::IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext)
 {
   IntrinsicWidthOffsetData result;
-  nsStyleCoord tmp;
 
   const nsStyleMargin *styleMargin = GetStyleMargin();
-  AddCoord(styleMargin->mMargin.GetLeft(tmp), aRenderingContext, this,
+  AddCoord(styleMargin->mMargin.GetLeft(), aRenderingContext, this,
            &result.hMargin, &result.hPctMargin);
-  AddCoord(styleMargin->mMargin.GetRight(tmp), aRenderingContext, this,
+  AddCoord(styleMargin->mMargin.GetRight(), aRenderingContext, this,
            &result.hMargin, &result.hPctMargin);
 
   const nsStylePadding *stylePadding = GetStylePadding();
-  AddCoord(stylePadding->mPadding.GetLeft(tmp), aRenderingContext, this,
+  AddCoord(stylePadding->mPadding.GetLeft(), aRenderingContext, this,
            &result.hPadding, &result.hPctPadding);
-  AddCoord(stylePadding->mPadding.GetRight(tmp), aRenderingContext, this,
+  AddCoord(stylePadding->mPadding.GetRight(), aRenderingContext, this,
            &result.hPadding, &result.hPctPadding);
 
   const nsStyleBorder *styleBorder = GetStyleBorder();

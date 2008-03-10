@@ -30,8 +30,8 @@
 <!ENTITY  changeMasterPassword.label     "Change Master Password…">
 <!ENTITY  changeMasterPassword.accesskey "M">
 
-<!ENTITY  showPasswords.label            "Show Passwords…">
-<!ENTITY  showPasswords.accesskey        "P">
+<!ENTITY  savedPasswords.label            "Saved Passwords…">
+<!ENTITY  savedPasswords.accesskey        "P">
 
 
 <!ENTITY  warnings.label                "Warning Messages">

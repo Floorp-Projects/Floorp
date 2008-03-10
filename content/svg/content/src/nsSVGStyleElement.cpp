@@ -341,6 +341,9 @@ nsSVGStyleElement::GetStyleSheetInfo(nsAString& aTitle,
   ToLowerCase(aMedia);
 
   GetAttr(kNameSpaceID_None, nsGkAtoms::type, aType);
+  if (aType.IsEmpty()) {
+    aType.AssignLiteral("text/css");
+  }
 
   return;
 }

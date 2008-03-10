@@ -399,7 +399,6 @@ input[type="checkbox"] {
   height: 13px;
   margin: 3px 3px 3px 4px;
   padding: 0 !important;
-  vertical-align: text-bottom;
   cursor: default;
   -moz-binding: none;
 

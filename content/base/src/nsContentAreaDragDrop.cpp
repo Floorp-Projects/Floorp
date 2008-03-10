@@ -1714,7 +1714,7 @@ nsTransferableFactory::SerializeNodeOrSelection(nsIDOMWindow* inWindow,
   NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
 
   PRUint32 flags = nsIDocumentEncoder::OutputAbsoluteLinks |
-                   nsIDocumentEncoder::OutputEncodeW3CEntities;
+                   nsIDocumentEncoder::OutputEncodeHTMLEntities;
   nsCOMPtr<nsIDOMRange> range;
   nsCOMPtr<nsISelection> selection;
   if (inNode) {

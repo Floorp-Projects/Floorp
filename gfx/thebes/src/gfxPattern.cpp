@@ -168,6 +168,17 @@ gfxPattern::GetSurface()
     if (cairo_pattern_get_surface (mPattern, &surf) != CAIRO_STATUS_SUCCESS)
         return nsnull;
 
-
     return gfxASurface::Wrap(surf);
+}
+
+gfxPattern::GraphicsPatternType
+gfxPattern::GetType() const
+{
+    return (GraphicsPatternType) cairo_pattern_get_type(mPattern);
+}
+
+int
+gfxPattern::CairoStatus()
+{
+    return cairo_pattern_status(mPattern);
 }

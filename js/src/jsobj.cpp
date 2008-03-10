@@ -1016,6 +1016,7 @@ obj_toString(JSContext *cx, uintN argc, jsval *vp)
     obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
         return JS_FALSE;
+    obj = js_GetWrappedObject(cx, obj);
     clazz = OBJ_GET_CLASS(cx, obj)->name;
     nchars = 9 + strlen(clazz);         /* 9 for "[object ]" */
     chars = (jschar *) JS_malloc(cx, (nchars + 1) * sizeof(jschar));
@@ -1132,13 +1133,29 @@ bad:
     return NULL;
 }
 
+const char *
+js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
+                   JSPrincipals *principals, uintN *linenop)
+{
+    uint32 flags;
+
+    flags = JS_GetScriptFilenameFlags(caller->script);
+    if ((flags & JSFILENAME_PROTECTED) &&
+        strcmp(principals->codebase, "[System Principal]")) {
+        *linenop = 0;
+        return principals->codebase;
+    }
+
+    *linenop = js_PCToLineNumber(cx, caller->script, caller->pc);
+    return caller->script->filename;
+}
+
 static JSBool
 obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSStackFrame *fp, *caller;
     JSBool indirectCall;
     JSObject *scopeobj;
-    JSClass *clasp;
     JSString *str;
     const char *file;
     uintN line;
@@ -1162,16 +1179,10 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * the former indirect case.
      */
     scopeobj = OBJ_GET_PARENT(cx, obj);
-    if (scopeobj &&
-        ((clasp = OBJ_GET_CLASS(cx, obj))->flags & JSCLASS_IS_EXTENDED)) {
-        JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
-        if (xclasp->wrappedObject) {
-            JSObject *wrapped = xclasp->wrappedObject(cx, obj);
-            if (wrapped)
-                scopeobj = OBJ_GET_PARENT(cx, wrapped);
-        }
+    if (scopeobj) {
+        scopeobj = js_GetWrappedObject(cx, obj);
+        scopeobj = OBJ_GET_PARENT(cx, scopeobj);
     }
-
     if (indirectCall || scopeobj) {
         uintN flags = scopeobj
                       ? JSREPORT_ERROR
@@ -1277,13 +1288,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     str = JSVAL_TO_STRING(argv[0]);
     if (caller) {
         principals = JS_EvalFramePrincipals(cx, fp, caller);
-        if (principals == caller->script->principals) {
-            file = caller->script->filename;
-            line = js_PCToLineNumber(cx, caller->script, caller->pc);
-        } else {
-            file = principals->codebase;
-            line = 0;
-        }
+        file = js_ComputeFilename(cx, caller, principals, &line);
     } else {
         file = NULL;
         line = 0;
@@ -5106,6 +5111,23 @@ js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     STOBJ_SET_SLOT(obj, slot, v);
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_TRUE;
+}
+
+JSObject *
+js_GetWrappedObject(JSContext *cx, JSObject *obj)
+{
+    JSClass *clasp;
+
+    clasp = OBJ_GET_CLASS(cx, obj);
+    if (clasp->flags & JSCLASS_IS_EXTENDED) {
+        JSExtendedClass *xclasp;
+        JSObject *obj2;
+
+        xclasp = (JSExtendedClass *)clasp;
+        if (xclasp->wrappedObject && (obj2 = xclasp->wrappedObject(cx, obj)))
+            return obj2;
+    }
+    return obj;
 }
 
 #ifdef DEBUG

@@ -60,6 +60,7 @@ const PREF_EM_LAST_APP_VERSION        = "extensions.lastAppVersion";
 const PREF_EM_ENABLED_ITEMS           = "extensions.enabledItems";
 const PREF_UPDATE_COUNT               = "extensions.update.count";
 const PREF_UPDATE_DEFAULT_URL         = "extensions.update.url";
+const PREF_EM_NEW_ADDONS_LIST         = "extensions.newAddons";
 const PREF_EM_IGNOREMTIMECHANGES      = "extensions.ignoreMTimeChanges";
 const PREF_EM_DISABLEDOBSOLETE        = "extensions.disabledObsolete";
 const PREF_EM_EXTENSION_FORMAT        = "extensions.%UUID%.";
@@ -173,6 +174,7 @@ var gLoggingEnabled       = null;
 var gCheckCompatibility   = true;
 var gCheckUpdateSecurity  = true;
 var gLocale               = "en-US";
+var gFirstRun             = false;
 
 /**
  * Valid GUIDs fit this pattern.
@@ -1716,7 +1718,7 @@ Installer.prototype = {
       // contents.rdf file at the location specified, malformed contents.rdf,
       // etc. Set the pending op to be OP_NEEDS_UNINSTALL so that the
       // extension is uninstalled properly during the subsequent uninstall
-      // pass in |ExtensionManager::_finalizeOperations|
+      // pass in |ExtensionManager::_finishOperations|
       ERROR("upgradeThemeChrome: failed for theme " + this._id + " - why " +
             "not convert to the new chrome.manifest format while you're at it? " +
             "Failure exception: " + e);
@@ -1806,7 +1808,7 @@ Installer.prototype = {
       // contents.rdf file at the location specified, malformed contents.rdf,
       // etc. Set the pending op to be OP_NEEDS_UNINSTALL so that the
       // extension is uninstalled properly during the subsequent uninstall
-      // pass in |ExtensionManager::_finalizeOperations|
+      // pass in |ExtensionManager::_finishOperations|
       ERROR("upgradeExtensionChrome: failed for extension " + this._id + " - why " +
             "not convert to the new chrome.manifest format while you're at it? " +
             "Failure exception: " + e);
@@ -2281,6 +2283,7 @@ var StartupCache = {
       // There is no change manifest for some reason, either we're in an initial
       // state or something went wrong with one of the other files and the
       // change manifest was removed. Return an empty dataset and rebuild.
+      gFirstRun = true;
       return;
     }
     var fis = Cc["@mozilla.org/network/file-input-stream;1"].
@@ -2409,8 +2412,6 @@ function ExtensionManager() {
     InstallLocations.put(systemLocation);
   }
 
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
   // Register App-System-Shared Install Location
   try {
     var appSystemSExtensions = getDirNoCreate("XRESysSExtPD", [gApp.ID]);
@@ -2438,8 +2439,6 @@ function ExtensionManager() {
                                                       priority, true);
     InstallLocations.put(systemLocation);
   }
-#endif
-#endif
 
 #ifdef XP_WIN
   // Register HKEY_LOCAL_MACHINE Install Location
@@ -2741,7 +2740,7 @@ ExtensionManager.prototype = {
     if (!getPref("getBoolPref", PREF_EM_UPDATE_ENABLED, true))
       return;
 
-    var items = this.getItemList(Ci.nsIUpdateItem.TYPE_ADDON, { });
+    var items = this.getItemList(Ci.nsIUpdateItem.TYPE_ANY, { });
 
     var updater = new ExtensionItemUpdater(this);
     updater.checkForUpdates(items, items.length,
@@ -3369,6 +3368,11 @@ ExtensionManager.prototype = {
       var updatedTargetAppInfos = [];
 
       var needsRestart = false;
+      var upgrades = [];
+      var newAddons = [];
+      var addons = getPref("getCharPref", PREF_EM_NEW_ADDONS_LIST, "");
+      if (addons != "")
+        newAddons = addons.split(",");
       do {
         // Enable and disable during startup so items that are changed in the
         // ui can be reset to a no-op.
@@ -3406,6 +3410,7 @@ ExtensionManager.prototype = {
           if (newTargetAppInfo)
             updatedTargetAppInfos.push(newTargetAppInfo);
           this._finalizeUpgrade(id, newLocation);
+          upgrades.push(id);
         }
         PendingOperations.clearItems(OP_NEEDS_UPGRADE);
 
@@ -3419,6 +3424,8 @@ ExtensionManager.prototype = {
           if (newTargetAppInfo)
             updatedTargetAppInfos.push(newTargetAppInfo);
           this._finalizeInstall(id, null);
+          if (upgrades.indexOf(id) < 0 && newAddons.indexOf(id) < 0)
+            newAddons.push(id);
         }
         PendingOperations.clearItems(OP_NEEDS_INSTALL);
 
@@ -3431,6 +3438,9 @@ ExtensionManager.prototype = {
           this._finalizeUninstall(id);
           this._checkForUncoveredItem(id);
           needsRestart = true;
+          var pos = newAddons.indexOf(id);
+          if (pos >= 0)
+            newAddons.splice(pos, 1);
         }
         PendingOperations.clearItems(OP_NEEDS_UNINSTALL);
 
@@ -3483,6 +3493,10 @@ ExtensionManager.prototype = {
       // not to do any extra startup checking next time round.
       this._updateManifests(needsRestart);
 
+      // Remember the list of add-ons that were installed this time around
+      // unless this was a new profile.
+      if (!gFirstRun && newAddons.length > 0)
+        gPref.setCharPref(PREF_EM_NEW_ADDONS_LIST, newAddons.join(","));
     }
     catch (e) {
       ERROR("ExtensionManager:_finishOperations - failure, catching exception - lineno: " +
@@ -3875,8 +3889,8 @@ ExtensionManager.prototype = {
     //
     // To do this we obtain a list of active extensions and themes and write
     // these to the extensions.ini file in the profile directory.
-    var validExtensions = this._getActiveItems(Ci.nsIUpdateItem.TYPE_EXTENSION +
-                                               Ci.nsIUpdateItem.TYPE_LOCALE);
+    var validExtensions = this._getActiveItems(Ci.nsIUpdateItem.TYPE_ANY -
+                                               Ci.nsIUpdateItem.TYPE_THEME);
     var validThemes     = this._getActiveItems(Ci.nsIUpdateItem.TYPE_THEME);
 
     var extensionsLocationsFile = getFile(KEY_PROFILEDIR, [FILE_EXTENSION_MANIFEST]);
@@ -4598,7 +4612,7 @@ ExtensionManager.prototype = {
         needsRestart = internalName == gPref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
       return needsRestart;
     }
-    return ((type & Ci.nsIUpdateItem.TYPE_ANY) > 0);
+    return ((type & Ci.nsIUpdateItem.TYPE_ADDON) > 0);
   },
 
   /**
@@ -5267,7 +5281,7 @@ ExtensionManager.prototype = {
     }
 
     if (items.length == 0)
-      items = this.getItemList(Ci.nsIUpdateItem.TYPE_ADDON, { });
+      items = this.getItemList(Ci.nsIUpdateItem.TYPE_ANY, { });
 
     var updater = new ExtensionItemUpdater(this);
     updater.checkForUpdates(items, items.length, updateCheckType, listener);
@@ -5285,7 +5299,7 @@ ExtensionManager.prototype = {
    */
   checkForBlocklistChanges: function() {
     var ds = this.datasource;
-    var items = this.getItemList(Ci.nsIUpdateItem.TYPE_ADDON, { });
+    var items = this.getItemList(Ci.nsIUpdateItem.TYPE_ANY, { });
     for (var i = 0; i < items.length; ++i) {
       var id = items[i].id;
       ds.updateProperty(id, "blocklisted");
@@ -5293,7 +5307,7 @@ ExtensionManager.prototype = {
         this._appEnableItem(id);
     }
 
-    items = ds.getBlocklistedItemList(null, null, Ci.nsIUpdateItem.TYPE_ADDON,
+    items = ds.getBlocklistedItemList(null, null, Ci.nsIUpdateItem.TYPE_ANY,
                                       false);
     for (i = 0; i < items.length; ++i)
       this._appDisableItem(items[i].id);

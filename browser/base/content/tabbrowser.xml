@@ -297,9 +297,14 @@
                 for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
                   var p = this.mTabBrowser.mProgressListeners[i];
                   if (p)
-                    p.onProgressChange(aWebProgress, aRequest,
-                                       aCurSelfProgress, aMaxSelfProgress,
-                                       aCurTotalProgress, aMaxTotalProgress);
+                    try {
+                      p.onProgressChange(aWebProgress, aRequest,
+                                         aCurSelfProgress, aMaxSelfProgress,
+                                         aCurTotalProgress, aMaxTotalProgress);
+                    } catch (e) {
+                      // don't inhibit other listeners or following code
+                      Components.utils.reportError(e);
+                    }
                 }
               }
 
@@ -398,11 +403,17 @@
               if (this.mTabBrowser.mCurrentTab == this.mTab) {
                 for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
                   var p = this.mTabBrowser.mProgressListeners[i];
-                  if (p && !oldBlank)
-                    p.onStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
-                  // make sure that the visible status of new blank tabs is correctly set
-                  else if (p && "onUpdateCurrentBrowser" in p)
-                    p.onUpdateCurrentBrowser(aStateFlags, aStatus, "", 0);
+                  if (p)
+                    try {
+                      if (!oldBlank)
+                        p.onStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
+                      // make sure that the visible status of new blank tabs is correctly set
+                      else if ("onUpdateCurrentBrowser" in p)
+                        p.onUpdateCurrentBrowser(aStateFlags, aStatus, "", 0);
+                    } catch (e) {
+                      // don't inhibit other listeners or following code
+                      Components.utils.reportError(e);
+                    }
                 }
               }
 
@@ -433,7 +444,12 @@
                 for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
                   var p = this.mTabBrowser.mProgressListeners[i];
                   if (p)
-                    p.onLocationChange(aWebProgress, aRequest, aLocation);
+                    try {
+                      p.onLocationChange(aWebProgress, aRequest, aLocation);
+                    } catch (e) {
+                      // don't inhibit other listeners
+                      Components.utils.reportError(e);
+                    }
                 }
               }
             },
@@ -447,7 +463,12 @@
                 for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
                   var p = this.mTabBrowser.mProgressListeners[i];
                   if (p)
-                    p.onStatusChange(aWebProgress, aRequest, aStatus, aMessage);
+                    try {
+                      p.onStatusChange(aWebProgress, aRequest, aStatus, aMessage);
+                    } catch (e) {
+                      // don't inhibit other listeners or following code
+                      Components.utils.reportError(e);
+                    }
                 }
               }
 
@@ -460,7 +481,12 @@
                 for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
                   var p = this.mTabBrowser.mProgressListeners[i];
                   if (p)
-                    p.onSecurityChange(aWebProgress, aRequest, aState);
+                    try {
+                      p.onSecurityChange(aWebProgress, aRequest, aState);
+                    } catch (e) {
+                      // don't inhibit other listeners
+                      Components.utils.reportError(e);
+                    }
                 }
               }
             },
@@ -471,8 +497,13 @@
                for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
                  var p = this.mTabBrowser.mProgressListeners[i];
                  if (p && "onRefreshAttempted" in p) {
-                   if (!p.onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI))
-                     allowRefresh = false;
+                   try {
+                     if (!p.onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI))
+                       allowRefresh = false;
+                    } catch (e) {
+                      // don't inhibit other listeners or following code
+                      Components.utils.reportError(e);
+                    }
                  }
                }
                return allowRefresh;
@@ -515,7 +546,12 @@
             for (var i = 0; i < this.mProgressListeners.length; i++) {
               var p = this.mProgressListeners[i];
               if ('onLinkIconAvailable' in p)
-                p.onLinkIconAvailable(browser);
+                try {
+                  p.onLinkIconAvailable(browser);
+                } catch (e) {
+                  // don't inhibit other listeners
+                  Components.utils.reportError(e);
+                }
             }
           ]]>
         </body>
@@ -737,19 +773,23 @@
             var i, p;
             for (i = 0; i < this.mProgressListeners.length; i++) {
               p = this.mProgressListeners[i];
-              if (p) {
-                p.onLocationChange(webProgress, null, loc);
-                if (securityUI)
-                  p.onSecurityChange(webProgress, null, securityUI.state);
+              if (p)
+                try {
+                  p.onLocationChange(webProgress, null, loc);
+                  if (securityUI)
+                    p.onSecurityChange(webProgress, null, securityUI.state);
 
-                // make sure that all status indicators are properly updated
-                if ("onUpdateCurrentBrowser" in p) {
-                  var listener = this.mTabListeners[this.mTabContainer.selectedIndex] || null;
-                  if (listener && listener.mStateFlags)
-                    p.onUpdateCurrentBrowser(listener.mStateFlags, listener.mStatus,
-                                             listener.mMessage, listener.mTotalProgress);
+                  // make sure that all status indicators are properly updated
+                  if ("onUpdateCurrentBrowser" in p) {
+                    var listener = this.mTabListeners[this.mTabContainer.selectedIndex] || null;
+                    if (listener && listener.mStateFlags)
+                      p.onUpdateCurrentBrowser(listener.mStateFlags, listener.mStatus,
+                                               listener.mMessage, listener.mTotalProgress);
+                  }
+                } catch (e) {
+                  // don't inhibit other listeners or following code
+                  Components.utils.reportError(e);
                 }
-              }
             }
 
             this._fastFind.setDocShell(this.mCurrentBrowser.docShell);
@@ -766,7 +806,12 @@
               for (i = 0; i < this.mProgressListeners.length; i++) {
                 p = this.mProgressListeners[i];
                 if (p)
-                  p.onStateChange(webProgress, null, nsIWebProgressListener.STATE_START | nsIWebProgressListener.STATE_IS_NETWORK, 0);
+                  try {
+                    p.onStateChange(webProgress, null, nsIWebProgressListener.STATE_START | nsIWebProgressListener.STATE_IS_NETWORK, 0);
+                  } catch (e) {
+                    // don't inhibit other listeners or following code
+                    Components.utils.reportError(e);
+                  }
               }
             }
 
@@ -778,7 +823,12 @@
               for (i = 0; i < this.mProgressListeners.length; i++) {
                 p = this.mProgressListeners[i];
                 if (p)
-                  p.onStateChange(webProgress, null, nsIWebProgressListener.STATE_STOP | nsIWebProgressListener.STATE_IS_NETWORK, 0);
+                  try {
+                    p.onStateChange(webProgress, null, nsIWebProgressListener.STATE_STOP | nsIWebProgressListener.STATE_IS_NETWORK, 0);
+                  } catch (e) {
+                    // don't inhibit other listeners or following code
+                    Components.utils.reportError(e);
+                  }
               }
             }
 
@@ -2538,41 +2588,38 @@
           <xul:spacer flex="1"/>
           <xul:hbox class="tabs-bottom" align="center"/>
         </xul:vbox>
-        <xul:vbox>
-          <xul:hbox xbl:inherits="overflow" class="tabs-container">
+        <xul:hbox xbl:inherits="overflow" class="tabs-container">
 #ifdef XP_MACOSX
-            <xul:stack>
-              <xul:spacer class="tabs-left"/>
-            </xul:stack>
+          <xul:stack>
+            <xul:spacer class="tabs-left"/>
+          </xul:stack>
 #endif
-            <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1"
-                                style="min-width: 1px;" chromedir="&locale.dir;"
+          <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1"
+                              style="min-width: 1px;" chromedir="&locale.dir;"
 #ifndef XP_MACOSX
-                                clicktoscroll="true"
+                              clicktoscroll="true"
 #endif
-                                class="tabbrowser-arrowscrollbox">
-              <children/>
-            </xul:arrowscrollbox>
-            <xul:stack align="center" pack="end" chromedir="&locale.dir;">
-              <xul:hbox flex="1" class="tabs-alltabs-box" anonid="alltabs-box"/>
-              <xul:hbox flex="1" class="tabs-alltabs-box-animate" anonid="alltabs-box-animate"/>
-              <xul:toolbarbutton class="tabs-alltabs-button" type="menu" anonid="alltabs-button"
-                                 tooltipstring="&listAllTabs.label;">
-                <xul:menupopup class="tabs-alltabs-popup" anonid="alltabs-popup"
-                               position="after_end"/>
-              </xul:toolbarbutton>
-            </xul:stack>
+                              class="tabbrowser-arrowscrollbox">
+            <children/>
+          </xul:arrowscrollbox>
+          <xul:stack align="center" pack="end" chromedir="&locale.dir;">
+            <xul:hbox flex="1" class="tabs-alltabs-box" anonid="alltabs-box"/>
+            <xul:hbox flex="1" class="tabs-alltabs-box-animate" anonid="alltabs-box-animate"/>
+            <xul:toolbarbutton class="tabs-alltabs-button" type="menu" anonid="alltabs-button"
+                               tooltipstring="&listAllTabs.label;">
+              <xul:menupopup class="tabs-alltabs-popup" anonid="alltabs-popup"
+                             position="after_end"/>
+            </xul:toolbarbutton>
+          </xul:stack>
 #ifdef XP_MACOSX
-            <xul:hbox anonid="tabstrip-closebutton" class="tabs-closebutton-box" align="center" pack="end" chromedir="&locale.dir;">
+          <xul:hbox anonid="tabstrip-closebutton" class="tabs-closebutton-box" align="center" pack="end" chromedir="&locale.dir;">
 #endif
-            <xul:toolbarbutton anonid="tabs-closebutton"
-                               class="close-button tabs-closebutton" chromedir="&locale.dir;"/>
+          <xul:toolbarbutton anonid="tabs-closebutton"
+                             class="close-button tabs-closebutton" chromedir="&locale.dir;"/>
 #ifdef XP_MACOSX
-            </xul:hbox>
-#endif
           </xul:hbox>
-          <xul:spacer class="tabs-bottom-spacer"/>
-        </xul:vbox>
+#endif
+        </xul:hbox>
       </xul:stack>
     </content>
     <implementation implements="nsITimerCallback, nsIDOMEventListener">
@@ -3118,9 +3165,18 @@
              * double click on the tabbar. (bug 378344)
              * In both cases, it is most likely that the close button area has
              * been accidentally clicked, therefore we do not close the tab.
+             *
+             * We don't want to ignore processing of more than one click event,
+             * though, since the user might actually be repeatedly clicking to
+             * close many tabs at once.
              */
-            if (event.detail > 1)
+            if (event.detail > 1 && !this._ignoredClick) {
+              this._ignoredClick = true;
               return;
+            }
+
+            // Reset the "ignored click" flag
+            this._ignoredClick = false;
 
             tabbedBrowser.removeTab(bindingParent);
             tabbedBrowser._blockDblClick = true;

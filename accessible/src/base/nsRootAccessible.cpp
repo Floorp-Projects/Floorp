@@ -463,19 +463,23 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
       if (!finalFocusNode) {
         return PR_FALSE;
       }
-      GetAccService()->GetAccessibleFor(finalFocusNode, getter_AddRefs(finalFocusAccessible));      
-      // For activedescendant, the ARIA spec does not require that the user agent
-      // checks whether finalFocusNode is actually a descendant of the element with
-      // the activedescendant attribute.
-      if (!finalFocusAccessible) {
-        return PR_FALSE;
-      }
+      finalFocusAccessible = nsnull;
     }
   }
 
   // Fire focus only if it changes, but always fire focus events when aForceEvent == PR_TRUE
   if (gLastFocusedNode == finalFocusNode && !aForceEvent) {
     return PR_FALSE;
+  }
+
+  if (!finalFocusAccessible) {
+    GetAccService()->GetAccessibleFor(finalFocusNode, getter_AddRefs(finalFocusAccessible));      
+    // For activedescendant, the ARIA spec does not require that the user agent
+    // checks whether finalFocusNode is actually a descendant of the element with
+    // the activedescendant attribute.
+    if (!finalFocusAccessible) {
+      return PR_FALSE;
+    }
   }
 
   gLastFocusedAccessiblesState = State(finalFocusAccessible);

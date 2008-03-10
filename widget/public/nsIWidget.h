@@ -128,6 +128,13 @@ enum nsWindowType {     // Don't alter previously encoded enum values - 3rd part
   eWindowType_sheet
 };
 
+enum nsPopupType {
+  ePopupTypePanel,
+  ePopupTypeMenu,
+  ePopupTypeTooltip,
+  ePopupTypeAny = 0xF000 // used only to pass to nsXULPopupManager::GetTopPopup
+};
+
 enum nsBorderStyle
 {
   // no border, titlebar, etc.. opposite of all
@@ -238,7 +245,8 @@ struct nsWidgetInitData {
       mWindowType(eWindowType_child),
       mBorderStyle(eBorderStyle_default),
       mContentType(eContentTypeInherit),
-      mUnicode(PR_TRUE)
+      mUnicode(PR_TRUE),
+      mPopupHint(ePopupTypePanel)
   {
   }
 
@@ -249,6 +257,7 @@ struct nsWidgetInitData {
   nsBorderStyle mBorderStyle;
   nsContentType mContentType;  // Exposed so screen readers know what's UI
   PRPackedBool mUnicode;
+  nsPopupType mPopupHint;
 };
 
 /**

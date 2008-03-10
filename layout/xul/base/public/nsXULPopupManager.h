@@ -77,13 +77,6 @@ class nsIMenuParent;
 class nsIDOMKeyEvent;
 class nsIDocShellTreeItem;
 
-enum nsPopupType {
-  ePopupTypePanel,
-  ePopupTypeMenu,
-  ePopupTypeTooltip,
-  ePopupTypeAny = 0xF000 // used only to pass to GetTopPopup
-};
-
 // when a menu command is executed, the closemenu attribute may be used
 // to define how the menu should be closed up
 enum CloseMenuMode {

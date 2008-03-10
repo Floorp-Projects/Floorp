@@ -49,7 +49,9 @@ const PREF_GETADDONS_GETRECOMMENDED      = "extensions.getAddons.recommended.url
 const PREF_GETADDONS_BROWSESEARCHRESULTS = "extensions.getAddons.search.browseURL";
 const PREF_GETADDONS_GETSEARCHRESULTS    = "extensions.getAddons.search.url";
 
-const XMLURI_PARSE_ERROR  = "http://www.mozilla.org/newlayout/xml/parsererror.xml"
+const XMLURI_PARSE_ERROR  = "http://www.mozilla.org/newlayout/xml/parsererror.xml";
+
+const API_VERSION = "1";
 
 function AddonSearchResult() {
 }
@@ -88,15 +90,8 @@ AddonRepository.prototype = {
   // XHR associated with the current request
   _request: null,
 
-  // How many times in succession has a search yielded no new results. Stops
-  // us trying to find more results indefinately
-  _emptyCount: null,
-
   // Callback object to notify on completion
   _callback: null,
-
-  // The uri to pull results from
-  _retrieveURI: null,
 
   // Maximum number of results to return
   _maxResults: null,
@@ -145,14 +140,17 @@ AddonRepository.prototype = {
     this._addons = [];
     this._callback = aCallback;
     this._recommended = true;
-    this._emptyCount = 0;
     this._maxResults = aMaxResults;
 
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefBranch);
     var urlf = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
                          .getService(Components.interfaces.nsIURLFormatter);
 
-    this._retrieveURI = urlf.formatURLPref(PREF_GETADDONS_GETRECOMMENDED);
-    this._loadList();
+    var uri = prefs.getCharPref(PREF_GETADDONS_GETRECOMMENDED);
+    uri = uri.replace(/%API_VERSION%/g, API_VERSION);
+    uri = urlf.formatURL(uri);
+    this._loadList(uri);
   },
 
   searchAddons: function(aSearchTerms, aMaxResults, aCallback) {
@@ -163,7 +161,6 @@ AddonRepository.prototype = {
     this._addons = [];
     this._callback = aCallback;
     this._recommended = false;
-    this._emptyCount = 0;
     this._maxResults = aMaxResults;
 
     var prefs = Components.classes["@mozilla.org/preferences-service;1"]
@@ -171,10 +168,11 @@ AddonRepository.prototype = {
     var urlf = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
                          .getService(Components.interfaces.nsIURLFormatter);
 
-    this._retrieveURI = prefs.getCharPref(PREF_GETADDONS_GETSEARCHRESULTS);
-    this._retrieveURI = this._retrieveURI.replace(/%TERMS%/g, encodeURIComponent(aSearchTerms));
-    this._retrieveURI = urlf.formatURL(this._retrieveURI);
-    this._loadList();
+    var uri = prefs.getCharPref(PREF_GETADDONS_GETSEARCHRESULTS);
+    uri = uri.replace(/%API_VERSION%/g, API_VERSION);
+    uri = uri.replace(/%TERMS%/g, encodeURIComponent(aSearchTerms));
+    uri = urlf.formatURL(uri);
+    this._loadList(uri);
   },
 
   // Posts results to the callback
@@ -220,18 +218,22 @@ AddonRepository.prototype = {
       return;
 
     // Ignore add-ons not compatible with this OS
-    var compatible = false;
     var os = element.getElementsByTagName("compatible_os");
-    var i = 0;
-    while (i < os.length && !compatible) {
-      if (os[i].textContent == "ALL" || os[i].textContent == app.OS) {
-        compatible = true;
-        break;
+    // Only the version 0 schema included compatible_os if it isn't there then
+    // we will see os compatibility on the install elements.
+    if (os.length > 0) {
+      var compatible = false;
+      var i = 0;
+      while (i < os.length && !compatible) {
+        if (os[i].textContent == "ALL" || os[i].textContent == app.OS) {
+          compatible = true;
+          break;
+        }
+        i++;
       }
-      i++;
+      if (!compatible)
+        return;
     }
-    if (!compatible)
-      return;
 
     // Ignore add-ons not compatible with this Application
     compatible = false;
@@ -293,6 +295,13 @@ AddonRepository.prototype = {
               addon.type = Ci.nsIUpdateItem.TYPE_EXTENSION;
             break;
           case "install":
+            // No os attribute means the xpi is compatible with any os
+            if (node.hasAttribute("os")) {
+              var os = node.getAttribute("os").toLowerCase();
+              // If the os is not ALL and not the current OS then ignore this xpi
+              if (os != "all" && os != app.OS.toLowerCase())
+                break;
+            }
             addon.xpiURL = node.textContent;
             if (node.hasAttribute("hash"))
               addon.xpiHash = node.getAttribute("hash");
@@ -302,7 +311,9 @@ AddonRepository.prototype = {
       node = node.nextSibling;
     }
 
-    this._addons.push(addon);
+    // Add only if there was an xpi compatible with this os
+    if (addon.xpiURL)
+      this._addons.push(addon);
   },
 
   // Called when a single request has completed, parses out any add-ons and
@@ -317,7 +328,6 @@ AddonRepository.prototype = {
       return;
     }
     var elements = responseXML.documentElement.getElementsByTagName("addon");
-    var oldcount = this._addons.length;
     for (var i = 0; i < elements.length; i++) {
       this._parseAddon(elements[i]);
 
@@ -329,25 +339,17 @@ AddonRepository.prototype = {
       }
     }
 
-    // We didn't find any new add-ons this pass
-    if (oldcount == this._addons.length)
-      this._emptyCount++;
-    else
-      this._emptyCount = 0;
-
-    /* We should keep trying to find new recommended add-ons, but bail if we
-       don't get a new result for a few passes. */
-    if (this._recommended && this._emptyCount < 5)
-      this._loadList();
+    if (responseXML.documentElement.hasAttribute("total_results"))
+      this._reportSuccess(responseXML.documentElement.getAttribute("total_results"));
     else
       this._reportSuccess(elements.length);
   },
 
   // Performs a new request for results
-  _loadList: function() {
+  _loadList: function(aURI) {
     this._request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
                     createInstance(Ci.nsIXMLHttpRequest);
-    this._request.open("GET", this._retrieveURI, true);
+    this._request.open("GET", aURI, true);
     this._request.overrideMimeType("text/xml");
 
     var self = this;

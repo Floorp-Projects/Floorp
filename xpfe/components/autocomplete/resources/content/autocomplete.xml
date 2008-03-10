@@ -1295,7 +1295,11 @@
             return null; // XXX equivalent to falling off the end?
           },
 
-          handleEnter: function() {
+          //////////////////////////////////////////////////////////
+          // nsIAutoCompleteController interface
+
+          // this is the only method required by the treebody mouseup handler
+          handleEnter: function(aIsPopupSelection) {
             this.mTextbox.onResultClick();
           },
 
@@ -1629,7 +1633,7 @@
         var rc = this.parentNode.treeBoxObject.getRowAt(event.clientX, event.clientY);
         if (rc != -1) {
           this.resultsPopup.selectedIndex = rc;
-          this.resultsPopup.view.handleEnter();
+          this.resultsPopup.view.handleEnter(true);
         }
       ]]></handler>
 

@@ -240,6 +240,7 @@ bin\components\nsContentPrefService.js
 bin\components\nsContentDispatchChooser.js
 bin\components\nsHandlerService.js
 bin\components\nsWebHandlerApp.js
+bin\components\aboutRobots.js
 
 ; Modules
 bin\modules\*

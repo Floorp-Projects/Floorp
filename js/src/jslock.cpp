@@ -44,6 +44,7 @@
  */
 #include "jsstddef.h"
 #include <stdlib.h>
+#include <string.h>
 #include "jspubtd.h"
 #include "jsutil.h" /* Added by JSIFY */
 #include "jstypes.h"
