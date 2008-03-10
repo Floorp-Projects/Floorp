@@ -44,7 +44,6 @@
 //#define FORCE_PR_LOG /* Allow logging in the release build */
 
 #include "nsITimer.h"
-#include "nsVoidArray.h"
 #include "nsIThread.h"
 #include "nsIObserver.h"
 
@@ -96,7 +95,7 @@ public:
   friend class TimerThread;
 
   void Fire();
-  void PostTimerEvent();
+  nsresult PostTimerEvent();
   void SetDelayInternal(PRUint32 aDelay);
 
   NS_DECL_ISUPPORTS
