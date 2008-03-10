@@ -44,10 +44,6 @@
   xmlns:html="http://www.w3.org/1999/xhtml">
 <tabpanel id="qa-tab-bugzilla">
 <vbox flex="1">
-  <label href="http://bugzilla.mozilla.org"
-         value="Help us by filing and confirming bugs in Bugzilla"
-         class="text-link" />
-
   <groupbox>
     <caption label="Bug Search" />
     <radiogroup id = "qa-bugzilla-input-radiogroup"
