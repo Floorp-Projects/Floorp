@@ -145,6 +145,9 @@ MakeCommandLine(int argc, PRUnichar **argv)
 static BOOL
 LaunchAsNormalUser(const PRUnichar *exePath, PRUnichar *cl)
 {
+#ifdef WINCE
+  return PR_FALSE;
+#else
   if (!pCreateProcessWithTokenW) {
     // IsUserAnAdmin is not present on Win9x and not exported by name on Win2k
     *(FARPROC *)&pIsUserAnAdmin =
@@ -218,8 +221,8 @@ LaunchAsNormalUser(const PRUnichar *exePath, PRUnichar *cl)
   CloseHandle(pi.hThread);
 
   return TRUE;
+#endif
 }
-
 /**
  * Convert UTF8 to UTF16 without using the normal XPCOM goop, which we
  * can't link to updater.exe.

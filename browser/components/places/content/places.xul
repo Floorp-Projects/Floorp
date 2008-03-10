@@ -64,6 +64,8 @@
 %editMenuOverlayDTD;
 <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
 %globalDTD;
+<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+%browserDTD;
 ]>
 
 <window id="places"
@@ -133,6 +135,37 @@
          command="OrganizerCommand_find:current" 
          key="&cmd.find.key;"
          modifiers="accel,shift"/>
+
+    <!-- Back/Forward Keys Support -->
+#ifndef XP_MACOSX
+    <key id="placesKey_goBackKb"
+         keycode="VK_LEFT"
+         command="OrganizerCommand:Back"
+         modifiers="alt"/>
+    <key id="placesKey_goForwardKb"
+         keycode="VK_RIGHT"
+         command="OrganizerCommand:Forward"
+         modifiers="alt"/>
+#else
+    <key id="placesKey_goBackKb"
+         keycode="VK_LEFT"
+         command="OrganizerCommand:Back"
+         modifiers="accel"/>
+    <key id="placesKey_goForwardKb"
+         keycode="VK_RIGHT"
+         command="OrganizerCommand:Forward"
+         modifiers="accel"/>
+#endif
+#ifdef XP_UNIX
+    <key id="placesKey_goBackKb2"
+         key="&goBackCmd.commandKey;"
+         command="OrganizerCommand:Back"
+         modifiers="accel"/>
+    <key id="placesKey_goForwardKb2"
+         key="&goForwardCmd.commandKey;"
+         command="OrganizerCommand:Forward"
+         modifiers="accel"/>
+#endif
   </keyset>
 
   <keyset id="editMenuKeys">
@@ -418,37 +451,38 @@
             <tree id="placeContent" class="placesTree" context="placesContext" 
                   flex="1" type="places"
                   flatList="true"
+                  enableColumnDrag="true"
                   onkeypress="if (event.keyCode == KeyEvent.DOM_VK_RETURN) PlacesOrganizer.openSelectedNode(event);"
                   ondblclick="PlacesOrganizer.openSelectedNode(event);"
                   onopenflatcontainer="PlacesOrganizer.openFlatContainer(aContainer);"
                   onselect="PlacesOrganizer.onContentTreeSelect();"
                   onclick="PlacesOrganizer.onTreeClick(event);">
               <treecols id="placeContentColumns">
-                <treecol label="&col.name.label;" anonid="title" flex="5" primary="true" 
+                <treecol label="&col.name.label;" id="placesContentTitle" anonid="title" flex="5" primary="true" ordinal="1" 
                          persist="width hidden ordinal sortActive sortDirection"/>
                 <splitter class="tree-splitter"/>
-                <treecol label="&col.tags.label;" anonid="tags" flex="2"
+                <treecol label="&col.tags.label;" id="placesContentTags" anonid="tags" flex="2"
                          persist="width hidden ordinal sortActive sortDirection"/>
                 <splitter class="tree-splitter"/>
-                <treecol label="&col.url.label;" anonid="url" flex="5" 
+                <treecol label="&col.url.label;" id="placesContentUrl" anonid="url" flex="5"
                          persist="width hidden ordinal sortActive sortDirection"/>
                 <splitter class="tree-splitter"/>
-                <treecol label="&col.lastvisit.label;" anonid="date" flex="1" hidden="true"
+                <treecol label="&col.lastvisit.label;" id="placesContentDate" anonid="date" flex="1" hidden="true"
                          persist="width hidden ordinal sortActive sortDirection"/>
                 <splitter class="tree-splitter"/>
-                <treecol label="&col.visitcount.label;" anonid="visitCount" flex="1" hidden="true"
+                <treecol label="&col.visitcount.label;" id="placesContentVisitCount" anonid="visitCount" flex="1" hidden="true"
                          persist="width hidden ordinal sortActive sortDirection"/>
                 <splitter class="tree-splitter"/>
-                <treecol label="&col.keyword.label;" anonid="keyword" flex="1" hidden="true"
+                <treecol label="&col.keyword.label;" id="placesContentKeyword" anonid="keyword" flex="1" hidden="true"
                          persist="width hidden ordinal sortActive sortDirection"/>
                 <splitter class="tree-splitter"/>
-                <treecol label="&col.description.label;" anonid="description" flex="1" hidden="true"
+                <treecol label="&col.description.label;" id="placesContentDescription" anonid="description" flex="1" hidden="true"
                          persist="width hidden ordinal sortActive sortDirection"/>
                 <splitter class="tree-splitter"/>
-                <treecol label="&col.dateadded.label;" anonid="dateAdded" flex="1" hidden="true"
+                <treecol label="&col.dateadded.label;" id="placesContentDateAdded" anonid="dateAdded" flex="1" hidden="true"
                          persist="width hidden ordinal sortActive sortDirection"/>
                 <splitter class="tree-splitter"/>
-                <treecol label="&col.lastmodified.label;" anonid="lastModified" flex="1" hidden="true"
+                <treecol label="&col.lastmodified.label;" id="placesContentLastModified" anonid="lastModified" flex="1" hidden="true"
                          persist="width hidden ordinal sortActive sortDirection"/>
               </treecols>
               <treechildren flex="1"/>

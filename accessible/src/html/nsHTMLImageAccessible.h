@@ -66,6 +66,11 @@ public:
   NS_IMETHOD GetRole(PRUint32 *_retval);
   NS_IMETHOD DoAction(PRUint8 index);
 
+  // nsIAccessibleHyperLink
+  NS_IMETHOD GetAnchors(PRInt32 *aAnchors);
+  NS_IMETHOD GetURI(PRInt32 aIndex, nsIURI **aURI);
+  NS_IMETHOD GetObject(PRInt32 aIndex, nsIAccessible **aAccessible);
+
   // nsPIAccessNode
   NS_IMETHOD Shutdown();
 
@@ -73,8 +78,14 @@ public:
   NS_DECL_NSIACCESSIBLEIMAGE
 
 protected:
+  // nsAccessible
   virtual void CacheChildren();
-  already_AddRefed<nsIAccessible> GetAreaAccessible(PRInt32 aAreaNum);
+
+  already_AddRefed<nsIDOMHTMLCollection> GetAreaCollection();
+  already_AddRefed<nsIAccessible>
+    GetAreaAccessible(nsIDOMHTMLCollection* aAreaNodes, PRInt32 aAreaNum);
+
+  // Reference on linked map element if any.
   nsCOMPtr<nsIDOMHTMLMapElement> mMapElement;
 
   // Cache of area accessibles. We do not use common cache because images can

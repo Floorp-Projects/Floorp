@@ -51,17 +51,17 @@ GRE_MODULE	= 1
 SDK_XPIDLSRCS = \
     nsIASN1Object.idl \
     nsIASN1Sequence.idl \
-    nsIBadCertListener2.idl \
-    nsISSLErrorListener.idl \
     nsICertificateDialogs.idl \
     nsICRLInfo.idl \
     nsIX509Cert.idl \
     nsIX509CertDB.idl \
     nsIX509CertValidity.idl \
-    nsIIdentityInfo.idl \
     $(NULL)
 
 XPIDLSRCS = \
+    nsIBadCertListener2.idl \
+    nsISSLErrorListener.idl \
+    nsIIdentityInfo.idl \
     nsICertOverrideService.idl \
     nsIRecentBadCertsService.idl \
     nsIFormSigningDialog.idl \

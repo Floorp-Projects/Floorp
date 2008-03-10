@@ -73,74 +73,64 @@ struct nsMyTrustedEVInfo
   const char *oid_name; // Set this to null to signal an invalid structure,
                         // (We can't have an empty list, so we'll use a dummy entry)
   SECOidTag oid_tag;
-  const char *ev_root_subject;
-  const char *ev_root_issuer;
   const char *ev_root_sha1_fingerprint;
 };
 
 static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
   {
+    // OU=Go Daddy Class 2 Certification Authority,O=\"The Go Daddy Group, Inc.\",C=US
     "2.16.840.1.114413.1.7.23.3",
     "Go Daddy EV OID a",
     SEC_OID_UNKNOWN,
-    "OU=Go Daddy Class 2 Certification Authority,O=\"The Go Daddy Group, Inc.\",C=US",
-    "OU=Go Daddy Class 2 Certification Authority,O=\"The Go Daddy Group, Inc.\",C=US",
     "27:96:BA:E6:3F:18:01:E2:77:26:1B:A0:D7:77:70:02:8F:20:EE:E4",
   },
   {
+    // E=info@valicert.com,CN=http://www.valicert.com/,OU=ValiCert Class 2 Policy Validation Authority,O=\"ValiCert, Inc.\",L=ValiCert Validation Network
     "2.16.840.1.114413.1.7.23.3",
     "Go Daddy EV OID a",
     SEC_OID_UNKNOWN,
-    "E=info@valicert.com,CN=http://www.valicert.com/,OU=ValiCert Class 2 Policy Validation Authority,O=\"ValiCert, Inc.\",L=ValiCert Validation Network",
-    "E=info@valicert.com,CN=http://www.valicert.com/,OU=ValiCert Class 2 Policy Validation Authority,O=\"ValiCert, Inc.\",L=ValiCert Validation Network",
     "31:7A:2A:D0:7F:2B:33:5E:F5:A1:C3:4E:4B:57:E8:B7:D8:F1:FC:A6",
   },
   {
+    // E=info@valicert.com,CN=http://www.valicert.com/,OU=ValiCert Class 2 Policy Validation Authority,O=\"ValiCert, Inc.\",L=ValiCert Validation Network
     "2.16.840.1.114414.1.7.23.3",
     "Go Daddy EV OID b",
     SEC_OID_UNKNOWN,
-    "E=info@valicert.com,CN=http://www.valicert.com/,OU=ValiCert Class 2 Policy Validation Authority,O=\"ValiCert, Inc.\",L=ValiCert Validation Network",
-    "E=info@valicert.com,CN=http://www.valicert.com/,OU=ValiCert Class 2 Policy Validation Authority,O=\"ValiCert, Inc.\",L=ValiCert Validation Network",
     "31:7A:2A:D0:7F:2B:33:5E:F5:A1:C3:4E:4B:57:E8:B7:D8:F1:FC:A6",
   },
   {
+    // OU=Starfield Class 2 Certification Authority,O=\"Starfield Technologies, Inc.\",C=US
     "2.16.840.1.114414.1.7.23.3",
     "Go Daddy EV OID b",
     SEC_OID_UNKNOWN,
-    "OU=Starfield Class 2 Certification Authority,O=\"Starfield Technologies, Inc.\",C=US",
-    "OU=Starfield Class 2 Certification Authority,O=\"Starfield Technologies, Inc.\",C=US",
     "AD:7E:1C:28:B0:64:EF:8F:60:03:40:20:14:C3:D0:E3:37:0E:B5:8A",
   },
   {
+    // CN=DigiCert High Assurance EV Root CA,OU=www.digicert.com,O=DigiCert Inc,C=US
     "2.16.840.1.114412.2.1",
     "DigiCert EV OID",
     SEC_OID_UNKNOWN,
-    "CN=DigiCert High Assurance EV Root CA,OU=www.digicert.com,O=DigiCert Inc,C=US",
-    "CN=DigiCert High Assurance EV Root CA,OU=www.digicert.com,O=DigiCert Inc,C=US",
     "5F:B7:EE:06:33:E2:59:DB:AD:0C:4C:9A:E6:D3:8F:1A:61:C7:DC:25"
   },
   {
+    // CN=QuoVadis Root CA 2,O=QuoVadis Limited,C=BM
     "1.3.6.1.4.1.8024.0.2.100.1.2",
     "Quo Vadis EV OID",
     SEC_OID_UNKNOWN,
-    "CN=QuoVadis Root CA 2,O=QuoVadis Limited,C=BM",
-    "CN=QuoVadis Root CA 2,O=QuoVadis Limited,C=BM",
     "CA:3A:FB:CF:12:40:36:4B:44:B2:16:20:88:80:48:39:19:93:7C:F7"
   },
   {
+    // OU=Class 3 Public Primary Certification Authority,O=\"VeriSign, Inc.\",C=US
     "2.16.840.1.113733.1.7.23.6",
     "Verisign EV OID",
     SEC_OID_UNKNOWN,
-    "OU=Class 3 Public Primary Certification Authority,O=\"VeriSign, Inc.\",C=US",
-    "OU=Class 3 Public Primary Certification Authority,O=\"VeriSign, Inc.\",C=US",
     "74:2C:31:92:E6:07:E4:24:EB:45:49:54:2B:E1:BB:C5:3E:61:74:E2"
   },
   {
+    // OU=Sample Certification Authority,O=\"Sample, Inc.\",C=US
     "0.0.0.0",
     0, // for real entries use a string like "Sample INVALID EV OID"
     SEC_OID_UNKNOWN,
-    "OU=Sample Certification Authority,O=\"Sample, Inc.\",C=US",
-    "OU=Sample Certification Authority,O=\"Sample, Inc.\",C=US",
     "00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33"
   }
 };
@@ -174,8 +164,6 @@ nsMyTrustedEVInfoClass::nsMyTrustedEVInfoClass()
   dotted_oid = nsnull;
   oid_name = nsnull;
   oid_tag = SEC_OID_UNKNOWN;
-  ev_root_subject = nsnull;
-  ev_root_issuer = nsnull;
   ev_root_sha1_fingerprint = nsnull;
 }
 
@@ -183,8 +171,6 @@ nsMyTrustedEVInfoClass::~nsMyTrustedEVInfoClass()
 {
   delete dotted_oid;
   delete oid_name;
-  delete ev_root_subject;
-  delete ev_root_issuer;
   delete ev_root_sha1_fingerprint;
 }
 
@@ -200,25 +186,9 @@ static PRBool isEVMatch(SECOidTag policyOIDTag,
   if (!rootCert)
     return PR_FALSE;
 
-  NS_ConvertUTF8toUTF16 info_subject(info.ev_root_subject);
-  NS_ConvertUTF8toUTF16 info_issuer(info.ev_root_issuer);
   NS_ConvertASCIItoUTF16 info_sha1(info.ev_root_sha1_fingerprint);
 
   nsNSSCertificate c(rootCert);
-
-  nsAutoString subjectName;
-  if (NS_FAILED(c.GetSubjectName(subjectName)))
-    return PR_FALSE;
-
-  if (subjectName != info_subject)
-    return PR_FALSE;
-
-  nsAutoString issuerName;
-  if (NS_FAILED(c.GetIssuerName(issuerName)))
-    return PR_FALSE;
-
-  if (issuerName != info_issuer)
-    return PR_FALSE;
 
   nsAutoString fingerprint;
   if (NS_FAILED(c.GetSha1Fingerprint(fingerprint)))
@@ -276,10 +246,8 @@ loadTestEVInfos()
    * each record consists of multiple lines
    * each line consists of a descriptor, a single space, and the data
    * the descriptors are:
-   *   1_subject
-   *   2_issuer
-   *   3_fingerprint (in format XX:XX:XX:...)
-   *   4_readable_oid (treated as a comment)
+   *   1_fingerprint (in format XX:XX:XX:...)
+   *   2_readable_oid (treated as a comment)
    * the input file must strictly follow this order
    * the input file may contain 0, 1 or many records
    * completely empty lines are ignored
@@ -290,10 +258,10 @@ loadTestEVInfos()
   PRBool found_error = PR_FALSE;
 
   enum { 
-    pos_subject, pos_issuer, pos_fingerprint, pos_readable_oid
-  } reader_position = pos_subject;
+    pos_fingerprint, pos_readable_oid
+  } reader_position = pos_fingerprint;
 
-  nsCString subject, issuer, fingerprint, readable_oid;
+  nsCString fingerprint, readable_oid;
 
   while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(buffer, &isMore))) {
     ++line_counter;
@@ -312,28 +280,16 @@ loadTestEVInfos()
             Substring(buffer, seperatorIndex + 1, 
                       buffer.Length() - seperatorIndex + 1);
 
-    if (reader_position == pos_subject &&
-        descriptor.EqualsLiteral(("1_subject"))) {
-      subject = data;
-      reader_position = pos_issuer;
-      continue;
-    }
-    else if (reader_position == pos_issuer &&
-        descriptor.EqualsLiteral(("2_issuer"))) {
-      issuer = data;
-      reader_position = pos_fingerprint;
-      continue;
-    }
-    else if (reader_position == pos_fingerprint &&
-        descriptor.EqualsLiteral(("3_fingerprint"))) {
+    if (reader_position == pos_fingerprint &&
+        descriptor.EqualsLiteral(("1_fingerprint"))) {
       fingerprint = data;
       reader_position = pos_readable_oid;
       continue;
     }
     else if (reader_position == pos_readable_oid &&
-        descriptor.EqualsLiteral(("4_readable_oid"))) {
+        descriptor.EqualsLiteral(("2_readable_oid"))) {
       readable_oid = data;
-      reader_position = pos_subject;
+      reader_position = pos_fingerprint;
     }
     else {
       found_error = PR_TRUE;
@@ -344,8 +300,6 @@ loadTestEVInfos()
     if (!temp_ev)
       return;
 
-    temp_ev->ev_root_subject = strdup(subject.get());
-    temp_ev->ev_root_issuer = strdup(issuer.get());
     temp_ev->ev_root_sha1_fingerprint = strdup(fingerprint.get());
     temp_ev->oid_name = strdup(readable_oid.get());
     temp_ev->dotted_oid = strdup(readable_oid.get());

@@ -343,9 +343,21 @@ x { content:"</style" } "
 | <!DOCTYPE HTML>
 | <html>
 |   <head>
+|   <frameset>
+|     rows="*"
+|     <frame>
+
+#data
+<!DOCTYPE html><html><head></head><form><input type="text"></form><frameset rows="*"><frame></frameset></html>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
 |   <body>
 |     <form>
 |       <input>
+|         type="text"
 
 #data
 <!DOCTYPE html><html><head></head><form><input type="hidden"></form><frameset rows="*"><frame></frameset></html>

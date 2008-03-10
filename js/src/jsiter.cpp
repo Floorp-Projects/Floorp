@@ -832,10 +832,9 @@ typedef enum JSGeneratorOp {
  */
 static JSBool
 SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
-                JSGenerator *gen, jsval arg, jsval *rval)
+                JSGenerator *gen, jsval arg)
 {
     JSStackFrame *fp;
-    jsval junk;
     JSArena *arena;
     JSBool ok;
 
@@ -883,7 +882,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
     fp = cx->fp;
     cx->fp = &gen->frame;
     gen->frame.down = fp;
-    ok = js_Interpret(cx, gen->frame.pc, &junk);
+    ok = js_Interpret(cx);
     cx->fp = fp;
     gen->frame.down = NULL;
 
@@ -902,18 +901,15 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
         JS_ASSERT(op != JSGENOP_CLOSE);
         gen->frame.flags &= ~JSFRAME_YIELDING;
         gen->state = JSGEN_OPEN;
-        *rval = gen->frame.rval;
         return JS_TRUE;
     }
 
+    gen->frame.rval = JSVAL_VOID;
     gen->state = JSGEN_CLOSED;
-
     if (ok) {
         /* Returned, explicitly or by falling off the end. */
-        if (op == JSGENOP_CLOSE) {
-            *rval = JSVAL_VOID;
+        if (op == JSGENOP_CLOSE)
             return JS_TRUE;
-        }
         return js_ThrowStopIteration(cx);
     }
 
@@ -928,7 +924,6 @@ static JSBool
 CloseGenerator(JSContext *cx, JSObject *obj)
 {
     JSGenerator *gen;
-    jsval junk;
 
     JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_GeneratorClass);
     gen = (JSGenerator *) JS_GetPrivate(cx, obj);
@@ -940,8 +935,7 @@ CloseGenerator(JSContext *cx, JSObject *obj)
     if (gen->state == JSGEN_CLOSED)
         return JS_TRUE;
 
-    /* SendToGenerator always sets *rval to JSVAL_VOID for JSGENOP_CLOSE. */
-    return SendToGenerator(cx, JSGENOP_CLOSE, obj, gen, JSVAL_VOID, &junk);
+    return SendToGenerator(cx, JSGENOP_CLOSE, obj, gen, JSVAL_VOID);
 }
 
 /*
@@ -1001,8 +995,9 @@ generator_op(JSContext *cx, JSGeneratorOp op, jsval *vp)
     arg = (op == JSGENOP_SEND || op == JSGENOP_THROW)
           ? vp[2]
           : JSVAL_VOID;
-    if (!SendToGenerator(cx, op, obj, gen, arg, vp))
+    if (!SendToGenerator(cx, op, obj, gen, arg))
         return JS_FALSE;
+    *vp = gen->frame.rval;
     return JS_TRUE;
 }
 

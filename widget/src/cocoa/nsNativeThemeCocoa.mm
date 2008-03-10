@@ -1319,9 +1319,17 @@ nsNativeThemeCocoa::GetWidgetPadding(nsIDeviceContext* aContext,
 {
   // We don't want CSS padding being used for certain widgets.
   // See bug 381639 for an example of why.
-  if (aWidgetType == NS_THEME_BUTTON) {
-    aResult->SizeTo(0, 0, 0, 0);
-    return PR_TRUE;
+  switch (aWidgetType) {
+    case NS_THEME_BUTTON:
+    // Radios and checkboxes return a fixed size in GetMinimumWidgetSize
+    // and have a meaningful baseline, so they can't have
+    // author-specified padding.
+    case NS_THEME_CHECKBOX:
+    case NS_THEME_CHECKBOX_SMALL:
+    case NS_THEME_RADIO:
+    case NS_THEME_RADIO_SMALL:
+      aResult->SizeTo(0, 0, 0, 0);
+      return PR_TRUE;
   }
   return PR_FALSE;
 }

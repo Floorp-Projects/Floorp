@@ -12,17 +12,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=73586
 
   span { background: white; color: black; border: medium solid black; }
 
-  span:first-child { background: lime; }
-  span:last-child { color: green; }
-  span:only-child { border: medium solid green; }
-  span:-moz-first-node { text-decoration: underline; }
-  span:-moz-last-node { visibility: hidden; }
-
   </style>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=73586">Mozilla Bug 73586</a>
-<p id="display">x<span></span><span></span></p>
+<div id="display"></div>
+
 <div id="content" style="display: none">
   
 </div>
@@ -36,10 +31,9 @@ const LIME = "rgb(0, 255, 0)";
 const BLACK = "rgb(0, 0, 0)";
 const WHITE = "rgb(255, 255, 255)";
 
-var p = document.getElementById("display");
 function cs(elt) { return getComputedStyle(elt, ""); }
 
-function check_children() {
+function check_children(p, check_cb) {
     var len = p.childNodes.length;
     var elts = 0;
     var i, elt, child;
@@ -51,50 +45,88 @@ function check_children() {
     elt = 0;
     for (i = 0; i < len; ++i) {
         child = p.childNodes[i];
-        if (child.NodeType != Node.ELEMENT_NODE)
+        if (child.nodeType != Node.ELEMENT_NODE)
             continue;
-        is(cs(child).backgroundColor, (elt == 0) ? LIME : WHITE,
-           "child " + i + " should " + ((elt == 0) ? "" : "NOT ") +
-           " match :first-child");
-        is(cs(child).color, (elt == elts - 1) ? GREEN : BLACK,
-           "child " + i + " should " + ((elt == elts - 1) ? "" : "NOT ") +
-           " match :last-child");
-        is(cs(child).borderTopColor, (elts == 1) ? GREEN : BLACK,
-           "child " + i + " should " + ((elts == 1) ? "" : "NOT ") +
-           " match :only-child");
-
-        is(cs(child).textDecoration, (i == 0) ? "underline" : "none",
-           "child " + i + " should " + ((i == 0) ? "" : "NOT ") +
-           " match :-moz-first-node");
-        is(cs(child).visibilty, (i == len - 1) ? "hidden" : "visible",
-           "child " + i + " should " + ((i == len - 1) ? "" : "NOT ") +
-           " match :-moz-last-node");
-
+        check_cb(child, elt, elts, i, len);
         ++elt;
     }
 }
 
-check_children();
-var text = p.removeChild(p.childNodes[0]);
-check_children();
-var span = p.removeChild(p.childNodes[0]);
-check_children();
-p.appendChild(span);
-check_children();
-p.removeChild(span);
-check_children();
-p.insertBefore(span, p.childNodes[0]);
-check_children();
-p.removeChild(span);
-check_children();
-p.insertBefore(span, null);
-check_children();
-p.appendChild(document.createElement("span"));
-check_children();
-p.insertBefore(document.createElement("span"), p.childNodes[2]);
-check_children();
-p.appendChild(text);
-check_children();
+var display = document.getElementById("display");
+
+function run_series(check_cb) {
+    var display = document.getElementById("display");
+    // Use a new parent node every time since the optimizations cause
+    // bits to be set (permanently) on the parent.
+    var p = document.createElement("p");
+    display.appendChild(p);
+    p.innerHTML = "x<span></span><span></span>";
+
+    check_children(p, check_cb);
+    var text = p.removeChild(p.childNodes[0]);
+    check_children(p, check_cb);
+    var span = p.removeChild(p.childNodes[0]);
+    check_children(p, check_cb);
+    p.appendChild(span);
+    check_children(p, check_cb);
+    p.removeChild(span);
+    check_children(p, check_cb);
+    p.insertBefore(span, p.childNodes[0]);
+    check_children(p, check_cb);
+    p.removeChild(span);
+    check_children(p, check_cb);
+    p.insertBefore(span, null);
+    check_children(p, check_cb);
+    p.appendChild(document.createElement("span"));
+    check_children(p, check_cb);
+    p.insertBefore(document.createElement("span"), p.childNodes[2]);
+    check_children(p, check_cb);
+    p.appendChild(text);
+    check_children(p, check_cb);
+
+    display.removeChild(p);
+}
+
+var style = document.createElement("style");
+style.setAttribute("type", "text/css");
+var styleText = document.createTextNode("");
+style.appendChild(styleText);
+document.getElementsByTagName("head")[0].appendChild(style);
+
+styleText.data = "span:first-child { background: lime; }";
+run_series(function(child, elt, elts, node, nodes) {
+        is(cs(child).backgroundColor, (elt == 0) ? LIME : WHITE,
+           "child " + node + " should " + ((elt == 0) ? "" : "NOT ") +
+           " match :first-child");
+    });
+
+styleText.data = "span:last-child { color: green; }";
+run_series(function(child, elt, elts, node, nodes) {
+        is(cs(child).color, (elt == elts - 1) ? GREEN : BLACK,
+           "child " + node + " should " + ((elt == elts - 1) ? "" : "NOT ") +
+           " match :last-child");
+    });
+
+styleText.data = "span:only-child { border: medium solid green; }";
+run_series(function(child, elt, elts, node, nodes) {
+        is(cs(child).borderTopColor, (elts == 1) ? GREEN : BLACK,
+           "child " + node + " should " + ((elts == 1) ? "" : "NOT ") +
+           " match :only-child");
+    });
+
+styleText.data = "span:-moz-first-node { text-decoration: underline; }";
+run_series(function(child, elt, elts, node, nodes) {
+        is(cs(child).textDecoration, (node == 0) ? "underline" : "none",
+           "child " + node + " should " + ((node == 0) ? "" : "NOT ") +
+           " match :-moz-first-node");
+    });
+
+styleText.data = "span:-moz-last-node { visibility: hidden; }";
+run_series(function(child, elt, elts, node, nodes) {
+        is(cs(child).visibility, (node == nodes - 1) ? "hidden" : "visible",
+           "child " + node + " should " + ((node == nodes - 1) ? "" : "NOT ") +
+           " match :-moz-last-node");
+    });
 
 </script>
 </pre>

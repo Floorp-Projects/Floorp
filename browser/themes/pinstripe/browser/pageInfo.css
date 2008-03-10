@@ -147,7 +147,7 @@ groupbox.treebox .groupbox-body {
 }
 
 #general-security-identity {
-  white-space: -moz-pre-wrap;
+  white-space: pre-wrap;
   line-height: 2em;
 }
 

@@ -189,7 +189,7 @@ menuitem.bookmark-item {
   list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
 
-.toolbarbutton-1 .toolbarbutton-icon {
+.toolbarbutton-1 > .toolbarbutton-icon {
   -moz-margin-end: 0px;
 }
 
@@ -198,7 +198,8 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
   min-width: 57px;
 }
 
-.toolbarbutton-1, .toolbarbutton-menubutton-button {
+.toolbarbutton-1,
+.toolbarbutton-menubutton-button {
   padding: 5px;
 }
 
@@ -208,19 +209,14 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
 
 /* ::::: unified back and forward buttons ::::: */
 
-/* wrapper containing back, forward, and dropmarker, when unified with keyhole icons */
-
-toolbar[iconsize="large"][mode="icons"] #unified-back-forward-button > .toolbarbutton-1 {
-  -moz-appearance: none;
-  border: none;
-  padding: 0;
-}
-
 /* unified back button with keyhole icons */
 
 toolbar[iconsize="large"][mode="icons"] #back-button {
+  -moz-appearance: none;
   -moz-image-region: rect(0px 398px 34px 360px);
+  padding: 0;
   -moz-padding-start: 2px;
+  border: none;
 }
 toolbar[iconsize="large"][mode="icons"] #back-button:not([disabled="true"]):hover {
   -moz-image-region: rect(34px 398px 68px 360px);
@@ -250,7 +246,10 @@ toolbar[iconsize="large"][mode="icons"] #back-button[chromedir="rtl"]:not([disab
 /* unified forward button with keyhole icons */
 
 toolbar[iconsize="large"][mode="icons"] #forward-button {
+  -moz-appearance: none;
   -moz-image-region: rect(3px 424px 31px 398px);
+  padding: 0;
+  border: none;
 }
 toolbar[iconsize="large"][mode="icons"] #forward-button:not([disabled="true"]):hover {
   -moz-image-region: rect(37px 424px 65px 398px);
@@ -291,7 +290,6 @@ toolbar[iconsize="large"][mode="icons"] #back-forward-dropmarker {
 toolbar[iconsize="large"][mode="icons"] #back-forward-dropmarker > image {
   display: -moz-box;
   margin: 0;
-  padding-top: 1px;
 }
 
 toolbar[iconsize="large"][mode="icons"] #back-forward-dropmarker > dropmarker {
@@ -329,10 +327,6 @@ toolbar[iconsize="large"][mode="icons"] #back-forward-dropmarker[chromedir="rtl"
 }
 
 /* ::::: 24px primary toolbar buttons ::::: */
-
-toolbar:not([iconsize="small"]) .toolbarbutton-1 .toolbarbutton-icon {
-  padding-top: 1px;
-}
 
 /* back button */
 
@@ -507,7 +501,7 @@ toolbar:not([iconsize="small"]) .toolbarbutton-1 .toolbarbutton-icon {
 
 /* new tab button */
 
-toolbar:not([iconsize="small"]) #new-tab-button .toolbarbutton-icon {
+toolbar:not([iconsize="small"]) #new-tab-button > .toolbarbutton-icon {
   padding-left: 1px;
 }
 #new-tab-button {
@@ -525,7 +519,7 @@ toolbar:not([iconsize="small"]) #new-tab-button .toolbarbutton-icon {
 
 /* new window button */
 
-toolbar:not([iconsize="small"]) #new-window-button .toolbarbutton-icon {
+toolbar:not([iconsize="small"]) #new-window-button > .toolbarbutton-icon {
   padding-left: 1px;
 }
 #new-window-button {
@@ -594,17 +588,13 @@ toolbar[iconsize="small"] .toolbarbutton-1 {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
 }
 
-toolbar[iconsize="small"] .toolbarbutton-1 .toolbarbutton-icon {
-  -moz-margin-end: 0px;
-}
-
 toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"] {
   border: 0 !important;
 }
 
 /* back button */
 
-toolbar[iconsize="small"] #back-button .toolbarbutton-icon {
+toolbar[iconsize="small"] #back-button > .toolbarbutton-icon {
   padding-right: 1px;
 }
 toolbar[iconsize="small"] #back-button {
@@ -641,7 +631,7 @@ menupopup[chromedir="rtl"] > .unified-nav-forward[_moz-menuactive] {
 
 /* forward button */
 
-toolbar[iconsize="small"] #forward-button .toolbarbutton-icon {
+toolbar[iconsize="small"] #forward-button > .toolbarbutton-icon {
   padding-right: 1px;
 }
 toolbar[iconsize="small"] #forward-button {
@@ -678,7 +668,7 @@ menupopup[chromedir="rtl"] > .unified-nav-back[_moz-menuactive] {
 
 /* stop button */
 
-toolbar[iconsize="small"] #stop-button .toolbarbutton-icon {
+toolbar[iconsize="small"] #stop-button > .toolbarbutton-icon {
   padding-left: 1px;
 }
 toolbar[iconsize="small"] #stop-button {
@@ -696,7 +686,7 @@ toolbar[iconsize="small"] #stop-button:not([disabled="true"]):hover:active {
 
 /* reload button */
 
-toolbar[iconsize="small"] #reload-button .toolbarbutton-icon {
+toolbar[iconsize="small"] #reload-button > .toolbarbutton-icon {
   padding-left: 1px;
 }
 toolbar[iconsize="small"] #reload-button {
@@ -714,7 +704,7 @@ toolbar[iconsize="small"] #reload-button:not([disabled="true"]):hover:active {
 
 /* home button */
 
-toolbar[iconsize="small"] #home-button.toolbarbutton-1 .toolbarbutton-icon {
+toolbar[iconsize="small"] #home-button.toolbarbutton-1 > .toolbarbutton-icon {
   padding-left: 1px;
 }
 #home-button.bookmark-item {
@@ -739,7 +729,7 @@ toolbar[iconsize="small"] #home-button:not([disabled="true"]):hover:active ,
 
 /* download manager button */
 
-toolbar[iconsize="small"] #downloads-button .toolbarbutton-icon {
+toolbar[iconsize="small"] #downloads-button > .toolbarbutton-icon {
   padding-left: 1px;
 }
 toolbar[iconsize="small"] #downloads-button {
@@ -757,7 +747,7 @@ toolbar[iconsize="small"] #downloads-button:not([disabled="true"]):hover:active 
 
 /* history sidebar button */
 
-toolbar[iconsize="small"] #history-button .toolbarbutton-icon {
+toolbar[iconsize="small"] #history-button > .toolbarbutton-icon {
   padding-left: 1px;
 }
 toolbar[iconsize="small"] #history-button {
@@ -778,7 +768,7 @@ toolbar[iconsize="small"] #history-button:not([disabled="true"]):not([checked="t
 
 /* bookmark sidebar button */
 
-toolbar[iconsize="small"] #bookmarks-button .toolbarbutton-icon {
+toolbar[iconsize="small"] #bookmarks-button > .toolbarbutton-icon {
   padding-left: 2px;
 }
 toolbar[iconsize="small"] #bookmarks-button {
@@ -799,7 +789,7 @@ toolbar[iconsize="small"] #bookmarks-button:not([disabled="true"]):not([checked=
 
 /* print button */
 
-toolbar[iconsize="small"] #print-button .toolbarbutton-icon {
+toolbar[iconsize="small"] #print-button > .toolbarbutton-icon {
   padding-left: 1px;
 }
 toolbar[iconsize="small"] #print-button {
@@ -817,7 +807,7 @@ toolbar[iconsize="small"] #print-button:not([disabled="true"]):hover:active {
 
 /* new tab button */
 
-toolbar[iconsize="small"] #new-tab-button .toolbarbutton-icon {
+toolbar[iconsize="small"] #new-tab-button > .toolbarbutton-icon {
   padding-left: 1px;
 }
 toolbar[iconsize="small"] #new-tab-button {
@@ -850,7 +840,7 @@ toolbar[iconsize="small"] #new-window-button:not([disabled="true"]):hover:active
 
 /* cut button */
 
-toolbar[iconsize="small"] #cut-button .toolbarbutton-icon {
+toolbar[iconsize="small"] #cut-button > .toolbarbutton-icon {
   padding-right: 1px;
 }
 toolbar[iconsize="small"] #cut-button {
@@ -868,7 +858,7 @@ toolbar[iconsize="small"] #cut-button:not([disabled="true"]):hover:active {
 
 /* copy button */
 
-toolbar[iconsize="small"] #copy-button .toolbarbutton-icon {
+toolbar[iconsize="small"] #copy-button > .toolbarbutton-icon {
   padding-left: 1px;
 }
 toolbar[iconsize="small"] #copy-button {
@@ -886,7 +876,7 @@ toolbar[iconsize="small"] #copy-button:not([disabled="true"]):hover:active {
 
 /* paste button */
 
-toolbar[iconsize="small"] #paste-button .toolbarbutton-icon {
+toolbar[iconsize="small"] #paste-button > .toolbarbutton-icon {
   padding-left: 1px;
 }
 toolbar[iconsize="small"] #paste-button {
@@ -1192,8 +1182,7 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
 /* Tabstrip */
 .tabbrowser-tabs {
   padding-top: 0px;
-  background: -moz-dialog url("chrome://browser/skin/tabbrowser/tabbrowser-tabs-bkgnd.png");
-  background-repeat: repeat-x;
+  background: -moz-dialog url("chrome://browser/skin/tabbrowser/tabbrowser-tabs-bkgnd.png") repeat-x;
 }
 
 .tabs-container:not([overflow="true"]) {
@@ -1229,13 +1218,14 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
 .tabbrowser-tab:not([selected="true"]):hover {
   margin: 2px 0px 4px;
   padding: 2px 1px 1px;
-  background: url("chrome://browser/skin/tabbrowser/tab-active-bkgnd.png") repeat-x;
+  background-image: url("chrome://browser/skin/tabbrowser/tab-hover-bkgnd.png");
 }
 
 .tabbrowser-tab[selected="true"] {
   margin: 2px 0px 3px;
   padding: 1px;
-  background: -moz-dialog url("chrome://browser/skin/tabbrowser/tab-active-bkgnd.png") repeat-x;
+  background-image: url("chrome://browser/skin/tabbrowser/tab-active-bkgnd.png");
+  background-color: -moz-dialog;
   font-weight: bold;
 }
 
@@ -1342,8 +1332,7 @@ tabpanels {
   -moz-border-top-colors: ThreeDShadow rgba(255,255,255,.3);
   -moz-border-right-colors: ThreeDShadow;
   -moz-border-left-colors: ThreeDShadow rgba(255,255,255,.3);
-  background: url("chrome://browser/skin/tabbrowser/tab-bkgnd.png");
-  background-repeat: repeat-x;
+  background: url("chrome://browser/skin/tabbrowser/tab-bkgnd.png") repeat-x;
   -moz-image-region: rect(0, 11px, 14px, 0);
 }
 
@@ -1355,8 +1344,7 @@ tabpanels {
   -moz-border-top-colors: ThreeDShadow;
   -moz-border-right-colors: ThreeDShadow;
   -moz-border-left-colors: ThreeDShadow transparent;
-  background: url("chrome://browser/skin/tabbrowser/tab-active-bkgnd.png");
-  background-repeat: repeat-x;
+  background-image: url("chrome://browser/skin/tabbrowser/tab-hover-bkgnd.png");
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled="true"]):hover,
@@ -1484,8 +1472,7 @@ stack[chromedir="rtl"] > hbox > .tabs-alltabs-box-animate {
 .tabs-container > .tabs-closebutton {
   margin: 3px 0px 3px;
   padding: 4px 2px 2px;
-  background: -moz-dialog url("chrome://browser/skin/tabbrowser/tab-active-bkgnd.png");
-  background-repeat: repeat-x;
+  background: -moz-dialog url("chrome://browser/skin/tabbrowser/tab-active-bkgnd.png") repeat-x;
   border-left: 1px solid threedshadow;
   border-top: 1px solid threedshadow;
   -moz-border-radius-topleft: 2px;

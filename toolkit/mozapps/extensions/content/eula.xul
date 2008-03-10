@@ -61,8 +61,6 @@
 
   <label id="heading"/>
 
-  <vbox id="scrollbox" flex="1">
-    <description id="eula"/>
-  </vbox>
+  <textbox id="eula" multiline="true" readonly="true" flex="1"/>
 
 </dialog>

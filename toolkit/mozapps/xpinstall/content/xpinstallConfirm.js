@@ -80,7 +80,7 @@ XPInstallConfirm.init = function ()
     if (cert)
       installItem.cert = bundle.getFormattedString("signed", [cert]);
     else
-      installItem.cert = bundle.getString("unsigned");
+      installItem.cert = bundle.getString("unverified");
     installItem.signed = cert ? "true" : "false";
   }
   

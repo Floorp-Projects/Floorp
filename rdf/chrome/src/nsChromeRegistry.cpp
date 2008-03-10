@@ -389,16 +389,34 @@ SplitURL(nsIURI *aChromeURI, nsCString& aPackage, nsCString& aProvider, nsCStrin
   } else {
     // Protect against URIs containing .. that reach up out of the
     // chrome directory to grant chrome privileges to non-chrome files.
-    PRInt32 origLen = aFile.Length();
-    PRInt32 newLen = nsUnescapeCount(aFile.BeginWriting());
-    if (origLen != newLen) {
-        aFile.SetLength(newLen);
-        nofile = PR_TRUE; // let caller know path is modified
+    // XXX: If we find %-escaped dot or % in a chrome URI we assume
+    // someone is trying to trick us.
+    const char* pos = aFile.BeginReading();
+    const char* end = aFile.EndReading();
+    while (pos < end) {
+      switch (*pos) {
+        case ':':
+          return NS_ERROR_FAILURE;
+        case '.':
+          if (pos[1] == '.')
+            return NS_ERROR_FAILURE;
+          break;
+        case '%':
+          // chrome: URIs with escaped dots are trying to trick us.
+          // Double-escapes (%25) doubly so
+          if (pos[1] == '2' &&
+               ( pos[2] == 'e' || pos[2] == 'E' || 
+                 pos[2] == '5' ))
+            return NS_ERROR_FAILURE;
+          break;
+        case '?':
+        case '#':
+          // leave any query or ref section alone
+          pos = end;
+          continue;
+      }
+      ++pos;
     }
-
-    if (aFile.Find(NS_LITERAL_CSTRING("..")) != kNotFound ||
-        aFile.FindChar(':') != kNotFound)
-      return NS_ERROR_FAILURE;
   }
   if (aModified)
     *aModified = nofile;

@@ -708,10 +708,13 @@ sub CreateCompletePatchinfo {
                      config => $config->GetCurrentUpdate(), channel => $c);
 
                     my $snippetToAppVersion = $to->{'appv'};
+                    my $prettySnippetToAppVersion = $to->{'prettyAppv'};
                     foreach my $channel (keys(%{$currentUpdateRcInfo})) {
                         if ($c eq $channel) {
                             $snippetToAppVersion = $to->{'appv'} . 'rc' .
                              $currentUpdateRcInfo->{$channel};
+                            $prettySnippetToAppVersion = $to->{'prettyAppv'} .
+                             'rc' . $currentUpdateRcInfo->{$channel};
                             last;
                         }
                     }
@@ -756,7 +759,7 @@ sub CreateCompletePatchinfo {
                     $complete_patch->{'hash_value'} =~ s/^(\S+)\s+.*$/$1/g;
 
                     $complete_patch->{'build_id'} = $to->{'build_id'};
-                    $complete_patch->{'appv'} = $snippetToAppVersion;
+                    $complete_patch->{'appv'} = $prettySnippetToAppVersion;
                     $complete_patch->{'extv'} = $to->{'extv'};
                     $complete_patch->{'size'} = (stat($to_path))[$ST_SIZE];
 
@@ -797,11 +800,15 @@ sub CreateCompletePatchinfo {
                          $u_config->{$u}->{'testchannel'})) {
                     
                             $snippetToAppVersion = $to->{'appv'};
+                            $prettySnippetToAppVersion = $to->{'prettyAppv'};
                             foreach my $channel 
                              (keys(%{$currentUpdateRcInfo})) {
                                 if ($testChan eq $channel) {
                                     $snippetToAppVersion = $to->{'appv'} . 'rc' 
                                     . $currentUpdateRcInfo->{$channel};
+                                    $prettySnippetToAppVersion =
+                                     $to->{'prettyAppv'} . 'rc' .
+                                     $currentUpdateRcInfo->{$channel};
                                     last;
                                 }
                             }
@@ -812,7 +819,7 @@ sub CreateCompletePatchinfo {
                             # want the snippet to have the rc value for its
                             # appv, but not for any of the other places where
                             # we use version.
-                            $testPatch->{'appv'} = $snippetToAppVersion;
+                            $testPatch->{'appv'} = $prettySnippetToAppVersion;
 
                             my $snippetDir = GetSnippetDirFromChannel(
                              config => $u_config->{$u}, channel => $testChan);
@@ -970,10 +977,15 @@ sub CreatePastReleasePatchinfo {
                      $config->GetCurrentUpdate(), channel => $channel);
                   
                     my $snippetToAppVersion = $patchLocaleNode->{'appv'};
+                    my $prettySnippetToAppVersion =
+                     $patchLocaleNode->{'prettyAppv'};
                     foreach my $rcChan (keys(%{$currentReleaseRcInfo})) {
                         if ($rcChan eq $channel) {
                             $snippetToAppVersion = $patchLocaleNode->{'appv'} .
                              'rc' . $currentReleaseRcInfo->{$channel};
+                            $prettySnippetToAppVersion =
+                             $patchLocaleNode->{'prettyAppv'} . 'rc' .
+                             $currentReleaseRcInfo->{$channel};
                             last;
                         }
                     }
@@ -1009,7 +1021,7 @@ sub CreatePastReleasePatchinfo {
                                                       file => $to_path,
                                                       type => $hash_type);
                     $completePatch->{'build_id'} = $patchLocaleNode->{'build_id'};
-                    $completePatch->{'appv'} = $snippetToAppVersion;
+                    $completePatch->{'appv'} = $prettySnippetToAppVersion;
                     $completePatch->{'extv'} = $patchLocaleNode->{'extv'};
                     $completePatch->{'size'} = (stat($to_path))[$ST_SIZE];
 
@@ -1190,10 +1202,13 @@ sub CreatePartialPatchinfo {
                      $u_config->{$u}, channel => $c);
 
                     my $snippetToAppVersion = $to->{'appv'};
+                    my $prettySnippetToAppVersion = $to->{'prettyAppv'};
                     foreach my $channel (keys(%{$currentUpdateRcInfo})) {
                         if ($c eq $channel) {
                             $snippetToAppVersion = $to->{'appv'} . 'rc' .
                              $currentUpdateRcInfo->{$channel};
+                            $prettySnippetToAppVersion = $to->{'prettyAppv'} .
+                             'rc' . $currentUpdateRcInfo->{$channel};
 
                             $serveCompleteUpdateToRcs =
                              (!$disableCompleteJumpForRcs) &&
@@ -1241,7 +1256,7 @@ sub CreatePartialPatchinfo {
                     $partial_patch->{'hash_value'} = $serveCompleteUpdateToRcs ?
                      $completePatchHash : $partialPatchHash;
                     $partial_patch->{'build_id'} = $to->{'build_id'};
-                    $partial_patch->{'appv'} = $snippetToAppVersion;
+                    $partial_patch->{'appv'} = $prettySnippetToAppVersion;
                     $partial_patch->{'extv'} = $to->{'extv'};
                     $partial_patch->{'size'} = $serveCompleteUpdateToRcs ?
                      $completePatchSize : $partialPatchSize;
@@ -1302,11 +1317,15 @@ sub CreatePartialPatchinfo {
                             $testPatch->{'hash_value'} = $testPatchHash;
 
                             $snippetToAppVersion = $to->{'appv'};
+                            $prettySnippetToAppVersion = $to->{'prettyAppv'};
                             foreach my $channel 
                              (keys(%{$currentUpdateRcInfo})) {
                                 if ($testChan eq $channel) {
                                     $snippetToAppVersion = $to->{'appv'} . 'rc'
                                      . $currentUpdateRcInfo->{$channel};
+                                    $prettySnippetToAppVersion =
+                                     $to->{'prettyAppv'} . 'rc' .
+                                     $currentUpdateRcInfo->{$channel};
                                     last;
                                 }
                             }
@@ -1317,7 +1336,7 @@ sub CreatePartialPatchinfo {
                             # want the snippet to have the rc value for its
                             # appv, but not for any of the other places where
                             # we use version.
-                            $testPatch->{'appv'} = $snippetToAppVersion;
+                            $testPatch->{'appv'} = $prettySnippetToAppVersion;
 
                             my $snippetDir = GetSnippetDirFromChannel(config =>
                              $u_config->{$u}, channel => $testChan);

@@ -5,6 +5,7 @@
 
 <!--
   Bug 368835 - fire TreeViewChanged/TreeRowCountChanged events.
+  Bug 308564 - no accessibility events when data in a tree row changes.
 -->
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -65,6 +66,9 @@
     function TreeViewChangedHandler(aEvent)
     {
       gTreeViewChanged = true;
+
+      // Tree view has been setted. We can continue tests for the tree.
+      window.setTimeout(doTest2, 0);
     }
 
     var gTreeRowCountChanged = false;
@@ -83,14 +87,11 @@
     function TreeInvalidatedHandler(aEvent)
     {
       gTreeInvalidatedCount++;
-      switch (gTreeInvalidatedCount) {
-        case 2:
-          TreeColumnInvalidatedHandler(aEvent);
-          break;
-        case 3:
-          TreeRowInvalidatedHandler(aEvent);
-          break;
-      }
+
+      if (gTreeInvalidatedCount == 2)
+        TreeColumnInvalidatedHandler(aEvent);
+      else if (gTreeInvalidatedCount == 5)
+        TreeRowInvalidatedHandler(aEvent);
     }
 
     var gTreeColumnInvalidated = false;
@@ -98,19 +99,19 @@
     {
       var startRow = aEvent.getData("startrow");
       is(startRow, null,
-         "Wrong 'startrow' of 'treeInvalidated' event on InvalidateColumn().");
+         "Wrong 'startrow' of 'treeInvalidated' event on InvalidateRow().");
 
       var endRow = aEvent.getData("endrow");
       is(endRow, null,
-         "Wrong 'endrow' of 'treeInvalidated' event on InvalidateColumn().");
+         "Wrong 'endrow' of 'treeInvalidated' event on InvalidateRow().");
 
       var startCol = aEvent.getData("startcolumn");
       is(startCol, 0,
-         "Wrong 'startcolumn' of 'treeInvalidated' event on InvalidateColumn().");
+         "Wrong 'startcolumn' of 'treeInvalidated' event on InvalidateRow().");
 
       var endCol = aEvent.getData("endcolumn");
       is(endCol, 0,
-         "Wrong 'endcolumn' of 'treeInvalidated' event on InvalidateColumn().");
+         "Wrong 'endcolumn' of 'treeInvalidated' event on InvalidateRow().");
 
       gTreeColumnInvalidated = true;
     }
@@ -137,11 +138,44 @@
       gTreeRowInvalidated = true;
     }
 
+    var gNameChangedOnTreeRowInvalidated = false;
+    var gNameChangedOnTreeColumnInvalidated = false;
+
+    var gA11yEventObserver = {
+      observe: function observe(aSubject, aTopic, aData)
+      {
+        if (aTopic != "accessible-event")
+          return;
+
+        const nsIAccessibleEvent = Components.interfaces.nsIAccessibleEvent;
+        var event = aSubject.QueryInterface(nsIAccessibleEvent);
+
+        if (event.eventType != nsIAccessibleEvent.EVENT_NAME_CHANGE)
+          return;
+
+        ++this.mCount;
+
+        if (this.mCount == 6) {
+          gNameChangedOnTreeColumnInvalidated = true;
+
+          // Make sure 'name change' events have been fired on
+          // InvalidateColumn() before continue the test.
+          window.setTimeout(doTest3, 0);
+        }
+        else if (this.mCount == 7)
+          gNameChangedOnTreeRowInvalidated = true;
+      },
+
+      mCount: 0,
+      mType: ""
+    };
+
     function CheckEvents()
     {
       // If these fail then it doesn't mean actually events are not fired,
-      // possibly setTimeout was executed earlier than events have beenS fired.
+      // possibly setTimeout was executed earlier than events have been fired.
 
+      // DOM events
       ok(gTreeViewChanged,
          "TreeViewChanged event should have been fired.");
       ok(gTreeRowCountChanged,
@@ -151,6 +185,13 @@
       ok(gTreeRowInvalidated,
          "TreeInvalidated event should have been fired for InvalidateRow().");
 
+      // A11y events
+      ok(gNameChangedOnTreeRowInvalidated,
+         "Wrong NameChanged events number on tree row invalidation.");
+      ok(gNameChangedOnTreeColumnInvalidated,
+         "Wrong NameChanged events number on tree column invalidation.");
+
+      // Remove DOM event listeners
       document.removeEventListener("TreeViewChanged",
                                    TreeViewChangedHandler, true);
 
@@ -160,24 +201,32 @@
       document.removeEventListener("TreeInvalidated",
                                    TreeInvalidatedHandler, true);
 
+      // Remove a11y events listener
+      gObserverService.removeObserver(gA11yEventObserver, "accessible-event");
+
       SimpleTest.finish();
     }
 
     var gAccService = null;
+    var gObserverService = null;
+
+    var gTree = null;
+    var gTreeBox = null;
+    var gTreeView = null;
 
     function doTest()
     {
-      // Check whether accessibility support is enabled.
-      if (!("@mozilla.org/accessibleRetrieval;1" in Components.classes)) {
-        SimpleTest.finish();
-        return;
-      }
-
       // Activate accessibility, otherwise events aren't fired.
       gAccService = Components.classes["@mozilla.org/accessibleRetrieval;1"].
                     getService(Components.interfaces.nsIAccessibleRetrieval);
 
-      // Add event listeners
+      // Add accessibility event listeners
+      gObserverService = Components.classes["@mozilla.org/observer-service;1"].
+                         getService(Components.interfaces.nsIObserverService);
+      gObserverService.addObserver(gA11yEventObserver, "accessible-event",
+                                   false);
+
+      // Add DOM event listeners
       document.addEventListener("TreeViewChanged",
                                 TreeViewChangedHandler, true);
       document.addEventListener("TreeRowCountChanged",
@@ -186,43 +235,53 @@
                                 TreeInvalidatedHandler, true);
 
       // Initialize the tree
-      var tree = document.getElementById("tree");
-      var treeBox = tree.treeBoxObject;
+      gTree = document.getElementById("tree");
+      gTreeBox = gTree.treeBoxObject;
 
-      var view = new inTreeView();
-      view.mRowCount = 5;
+      gView = new inTreeView();
+      gView.mRowCount = 5;
 
       // Fire 'TreeViewChanged' event
-      treeBox.view = view;
+      gTreeBox.view = gView;
 
       // Fire 'TreeRowCountChanged' changed
-      ++view.mRowCount;
-      treeBox.rowCountChanged(0, 1);
-
-      // Fire 'TreeInvalidated' event by InvalidateColumn()
-      var firstCol = treeBox.columns.getFirstColumn();
-      for (var i = 0; i < view.mRowCount; i++) {
-        var key = String(i) + firstCol.id;
-        view.mData[key] = key + "_col";
-      }
-
-      treeBox.invalidateColumn(firstCol);
-
-      // Fire 'TreeInvalidated' event by InvalidateRow()
-      var colCount = tree.columns.count;
-      for (var i = 0; i < colCount; i++) {
-        var key = "1" + tree.columns.getColumnAt(i).id;
-        view.mData[key] = key + "_row";
-      }
-
-      treeBox.invalidateRow(1);
+      ++gView.mRowCount;
+      gTreeBox.rowCountChanged(0, 1);
 
       // Wait for events.
-      if (gTreeViewChanged && gTreeRowCountChanged &&
-          gTreeColumnInvalidated)
-        CheckEvents();
-      else
-        window.setTimeout(CheckEvents, 1000);
+      window.setTimeout(CheckEvents, 1000);
+    }
+
+    function doTest2()
+    {
+      // Make sure accessibles for the tree is created because it makes
+      // sure accessible events will be fired.
+      var treeAcc = gAccService.getAccessibleFor(gTree);
+
+      // Makes sure tree children accessibles are created otherwise they won't
+      // be a couse of name changed events.
+      var children = treeAcc.children;
+
+      // Fire 'TreeInvalidated' event by InvalidateColumn()
+      var firstCol = gTree.columns.getFirstColumn();
+      for (var i = 0; i < gView.mRowCount; i++) {
+        var key = String(i) + firstCol.id;
+        gView.mData[key] = key + "_col";
+      }
+
+      gTreeBox.invalidateColumn(firstCol);
+    }
+
+    function doTest3()
+    {
+      // Fire 'TreeInvalidated' event by InvalidateRow()
+      var colCount = gTree.columns.count;
+      for (var i = 0; i < colCount; i++) {
+        var key = "1" + gTree.columns.getColumnAt(i).id;
+        gView.mData[key] = key + "_row";
+      }
+
+      gTreeBox.invalidateRow(1);
     }
 
     SimpleTest.waitForExplicitFinish();
@@ -230,24 +289,33 @@
   ]]>
   </script>
 
-  <body xmlns="http://www.w3.org/1999/xhtml">
-    <a target="_blank"
-       href="https://bugzilla.mozilla.org/show_bug.cgi?id=368835">
-      Mozilla Bug 368835
-    </a>
-    <p id="display"></p>
-    <div id="content" style="display: none">
-    </div>
-    <pre id="test">
-    </pre>
-  </body>
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=368835"
+         title="Fire TreeViewChanged/TreeRowCountChanged events.">
+        Mozilla Bug 368835
+      </a><br/>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=308564"
+         title="No accessibility events when data in a tree row changes.">
+        Mozilla Bug 308564
+      </a>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
 
-  <tree id="tree" flex="1">
-    <treecols>
-      <treecol id="col" flex="1" primary="true" label="column"/>
-      <treecol id="scol" flex="1" label="column 2"/>
-    </treecols>
-    <treechildren id="treechildren"/>
-  </tree>
+    <tree id="tree" flex="1">
+      <treecols>
+        <treecol id="col" flex="1" primary="true" label="column"/>
+        <treecol id="scol" flex="1" label="column 2"/>
+      </treecols>
+      <treechildren id="treechildren"/>
+    </tree>
+  </hbox>
+
 </window>
 

@@ -3153,7 +3153,7 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
   // Enter and backspace are always handled here to avoid for example the
   // confusion between ctrl-enter and ctrl-J.
   if (DOMKeyCode == NS_VK_RETURN || DOMKeyCode == NS_VK_BACK ||
-      ((mIsControlDown || mIsAltDown) &&
+      ((mIsControlDown || mIsAltDown) && !gKbdLayout.IsDeadKey() &&
        KeyboardLayout::IsPrintableCharKey(aVirtualKeyCode)))
   {
     // Remove a possible WM_CHAR or WM_SYSCHAR messages from the message queue.

@@ -76,13 +76,15 @@
 #else
 #ifdef XP_MACOSX
         label="&quitApplicationCmdMac.label;"
-        key="key_quitApplicationCmdMac"
 #else
         label="&quitApplicationCmd.label;"
         accesskey="&quitApplicationCmd.accesskey;"
 #endif
+#ifdef XP_UNIX
+        key="key_quitApplication"
 #endif
-        oncommand="goQuitApplication();"/>
+#endif
+        command="cmd_quitApplication"/>
               </menupopup>
             </menu>
   
@@ -337,7 +339,8 @@
                          type="places"
                          onpopupshowing="HistoryMenu.onPopupShowing(this);"
                          place="place:type=0&amp;sort=4&amp;maxResults=10">
-                <menuitem label="&backCmd.label;"
+                <menuitem id="historyMenuBack"
+                          label="&backCmd.label;"
 #ifdef XP_MACOSX
                           key="goBackKb2"
 #else
@@ -348,7 +351,8 @@
                           onclick="checkForMiddleClick(this, event);">
                   <observes element="Browser:Back" attribute="disabled" />
                 </menuitem>
-                <menuitem label="&forwardCmd.label;" 
+                <menuitem id="historyMenuForward"
+                          label="&forwardCmd.label;"
 #ifdef XP_MACOSX
                           key="goForwardKb2"
 #else
@@ -364,7 +368,7 @@
                           oncommand="BrowserGoHome(event);"
                           onclick="checkForMiddleClick(this, event);"
                           key="goHome"/>
-                <menuitem label="&showAllHistoryCmd.label;"
+                <menuitem label="&showAllHistoryCmd2.label;"
 #ifndef XP_MACOSX
                           key="showAllHistoryKb"
 #endif
@@ -407,7 +411,7 @@
       </menu>
       <menuitem label="&addCurPagesCmd.label;" 
                 command="Browser:BookmarkAllTabs" key="bookmarkAllTabsKb"/>
-      <menuitem label="&showAllBookmarksCmd.label;" 
+      <menuitem label="&showAllBookmarksCmd2.label;" 
                 command="Browser:ShowAllBookmarks" key="manBookmarkKb"/>
       <menuseparator builder="start"/>
     </menupopup>

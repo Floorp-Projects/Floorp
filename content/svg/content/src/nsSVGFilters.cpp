@@ -63,7 +63,7 @@
 #include "nsImageLoadingContent.h"
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
-#include "nsThebesImage.h"
+#include "nsIImage.h"
 #include "nsSVGAnimatedPreserveAspectRatio.h"
 #include "nsSVGPreserveAspectRatio.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -5582,19 +5582,14 @@ nsSVGFEImageElement::Filter(nsSVGFilterInstance *instance)
   if (imageContainer)
     imageContainer->GetCurrentFrame(getter_AddRefs(currentFrame));
 
-  gfxASurface *thebesSurface = nsnull;
+  nsRefPtr<gfxPattern> thebesPattern = nsnull;
   if (currentFrame) {
     nsCOMPtr<nsIImage> img(do_GetInterface(currentFrame));
 
-    nsThebesImage *thebesImage = nsnull;
-    if (img)
-      thebesImage = static_cast<nsThebesImage*>(img.get());
-
-    if (thebesImage)
-      thebesSurface = thebesImage->ThebesSurface();
+    img->GetPattern(getter_AddRefs(thebesPattern));
   }
 
-  if (thebesSurface) {
+  if (thebesPattern) {
     PRInt32 x, y, nativeWidth, nativeHeight;
     currentFrame->GetX(&x);
     currentFrame->GetY(&y);
@@ -5611,7 +5606,7 @@ nsSVGFEImageElement::Filter(nsSVGFilterInstance *instance)
     xy->Multiply(trans, getter_AddRefs(fini));
 
     gfxContext ctx(targetSurface);
-    nsSVGUtils::CompositeSurfaceMatrix(&ctx, thebesSurface, fini, 1.0);
+    nsSVGUtils::CompositePatternMatrix(&ctx, thebesPattern, fini, nativeWidth, nativeHeight, 1.0);
   }
 
   return NS_OK;

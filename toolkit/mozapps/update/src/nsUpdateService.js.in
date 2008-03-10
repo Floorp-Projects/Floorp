@@ -3156,7 +3156,7 @@ function isCompatible(update) {
       Components.classes["@mozilla.org/extensions/manager;1"].
       getService(nsIExtensionManager);
   var items = em.getIncompatibleItemList("", update.extensionVersion,
-    update.platformVersion, nsIUpdateItem.TYPE_ADDON, false, { });
+    update.platformVersion, nsIUpdateItem.TYPE_ANY, false, { });
   return items.length == 0;
 #else
   return true;
@@ -3280,7 +3280,7 @@ function showPromptIfNoIncompatibilities(update) {
         Components.classes["@mozilla.org/extensions/manager;1"].
         getService(nsIExtensionManager);
     var items = em.getIncompatibleItemList("", update.extensionVersion,
-      update.platformVersion, nsIUpdateItem.TYPE_ADDON, false, { });
+      update.platformVersion, nsIUpdateItem.TYPE_ANY, false, { });
     var listener = new Listener(items);
     // See documentation on |mode| above.
     var mode = getPref("getIntPref", PREF_APP_UPDATE_INCOMPATIBLE_MODE,

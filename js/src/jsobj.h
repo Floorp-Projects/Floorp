@@ -695,6 +695,14 @@ extern JSBool
 js_CheckPrincipalsAccess(JSContext *cx, JSObject *scopeobj,
                          JSPrincipals *principals, JSAtom *caller);
 
+/* Infallible -- returns its argument if there is no wrapped object. */
+extern JSObject *
+js_GetWrappedObject(JSContext *cx, JSObject *obj);
+
+/* NB: Infallible. */
+extern const char *
+js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
+                   JSPrincipals *principals, uintN *linenop);
 JS_END_EXTERN_C
 
 #endif /* jsobj_h___ */

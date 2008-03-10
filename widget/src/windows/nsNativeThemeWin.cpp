@@ -59,6 +59,7 @@
 #include "nsWidgetAtoms.h"
 #include <malloc.h>
 #include "nsWindow.h"
+#include "nsIComboboxControlFrame.h"
 
 #include "gfxPlatform.h"
 #include "gfxContext.h"
@@ -98,9 +99,16 @@
 #define BP_CHECKBOX  3
 
 // Textfield constants
+/* This is the EP_EDITTEXT part */
 #define TFP_TEXTFIELD 1
 #define TFP_EDITBORDER_NOSCROLL 6
 #define TFS_READONLY  6
+
+/* These are the state constants for the EDITBORDER parts */
+#define TFS_EDITBORDER_NORMAL 1
+#define TFS_EDITBORDER_HOVER 2
+#define TFS_EDITBORDER_FOCUSED 3
+#define TFS_EDITBORDER_DISABLED 4
 
 // Treeview/listbox constants
 #define TREEVIEW_BODY 1
@@ -615,10 +623,9 @@ nsNativeThemeWin::StandardGetState(nsIFrame* aFrame, PRUint8 aWidgetType,
 }
 
 PRBool
-nsNativeThemeWin::IsMenuActiveOrHover(nsIFrame *aFrame, PRUint8 aWidgetType)
+nsNativeThemeWin::IsMenuActive(nsIFrame *aFrame, PRUint8 aWidgetType)
 {
-  return CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive) ||
-    (GetContentState(aFrame, aWidgetType) & NS_EVENT_STATE_HOVER) != 0;
+  return CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive);
 }
 
 nsresult 
@@ -696,7 +703,6 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
     }
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE: {
-      aPart = TFP_TEXTFIELD;
       if (mIsVistaOrLater) {
         /* Note: the NOSCROLL type has a rounded corner in each
          * corner.  The more specific HSCROLL, VSCROLL, HVSCROLL types
@@ -707,25 +713,43 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
          * here.
          */
         aPart = TFP_EDITBORDER_NOSCROLL;
+
+        if (!aFrame) {
+          aState = TFS_EDITBORDER_NORMAL;
+        } else if (IsDisabled(aFrame)) {
+          aState = TFS_EDITBORDER_DISABLED;
+        } else if (IsReadOnly(aFrame)) {
+          /* no special read-only state */
+          aState = TFS_EDITBORDER_NORMAL;
+        } else {
+          PRInt32 eventState = GetContentState(aFrame, aWidgetType);
+          nsIContent* content = aFrame->GetContent();
+
+          /* XUL textboxes don't get focused themselves, because they have child
+           * html:input.. but we can check the XUL focused attributes on them
+           */
+          if (content && content->IsNodeOfType(nsINode::eXUL) && IsFocused(aFrame))
+            aState = TFS_EDITBORDER_FOCUSED;
+          else if (eventState & NS_EVENT_STATE_ACTIVE || eventState & NS_EVENT_STATE_FOCUS)
+            aState = TFS_EDITBORDER_FOCUSED;
+          else if (eventState & NS_EVENT_STATE_HOVER)
+            aState = TFS_EDITBORDER_HOVER;
+          else
+            aState = TFS_EDITBORDER_NORMAL;
+        }
+      } else {
+        aPart = TFP_TEXTFIELD;
+        
+        if (!aFrame)
+          aState = TS_NORMAL;
+        else if (IsDisabled(aFrame))
+          aState = TS_DISABLED;
+        else if (IsReadOnly(aFrame))
+          aState = TFS_READONLY;
+        else
+          aState = StandardGetState(aFrame, aWidgetType, PR_TRUE);
       }
 
-      if (!aFrame) {
-        aState = TS_NORMAL;
-        return NS_OK;
-      }
-
-      if (IsDisabled(aFrame)) {
-        aState = TS_DISABLED;
-        return NS_OK;
-      }
-
-      if (IsReadOnly(aFrame)) {
-        aState = TFS_READONLY;
-        return NS_OK;
-      }
-
-      aState = StandardGetState(aFrame, aWidgetType, PR_TRUE);
-      
       return NS_OK;
     }
     case NS_THEME_TOOLTIP: {
@@ -1006,7 +1030,12 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
     }
     case NS_THEME_DROPDOWN: {
       nsIContent* content = aFrame->GetContent();
-      if (content && content->IsNodeOfType(nsINode::eHTML))
+      PRBool isHTML = content && content->IsNodeOfType(nsINode::eHTML);
+
+      /* On vista, in HTML, we use CBP_DROPBORDER instead of DROPFRAME for HTML content;
+       * this gives us the thin outline in HTML content, instead of the gradient-filled
+       * background */
+      if (isHTML)
         aPart = CBP_DROPBORDER;
       else
         aPart = CBP_DROPFRAME;
@@ -1014,46 +1043,52 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       PRBool isOpen = CheckBooleanAttr(aFrame, nsWidgetAtoms::open);
       if (isOpen) {
         aState = TS_ACTIVE;
-        return NS_OK;
+      } else {
+        PRInt32 eventState = GetContentState(aFrame, aWidgetType);
+        if (isHTML && eventState & NS_EVENT_STATE_FOCUS)
+          aState = TS_ACTIVE;
+        else if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
+          aState = TS_ACTIVE;
+        else if (eventState & NS_EVENT_STATE_HOVER)
+          aState = TS_HOVER;
+        else
+          aState = TS_NORMAL;
       }
-
-      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
-      if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
-        aState = TS_ACTIVE;
-      else if (eventState & NS_EVENT_STATE_HOVER)
-        aState = TS_HOVER;
-      else 
-        aState = TS_NORMAL;
 
       return NS_OK;
     }
     case NS_THEME_DROPDOWN_BUTTON: {
       PRBool isHTML = IsHTMLContent(aFrame);
+      nsIFrame* origFrame = aFrame;
       nsIFrame* parentFrame = aFrame->GetParent();
       if ((parentFrame && parentFrame->GetType() == nsWidgetAtoms::menuFrame) || isHTML)
         // XUL menu lists and HTML selects get state from parent
         aFrame = parentFrame;
 
-      if (mIsVistaOrLater) {
-        /* On vista, in HTML, we use CBP_DROPBORDER instead of DROPFRAME for HTML content.
-         * For that, we want to draw the normal DROPMARKER.  But if we're not in HTML,
-         * we want to use DROPMARKER_VISTA, which will just draw the arrow (since we've already
-         * drawn the background).
-         */
-        aPart = CBP_DROPMARKER_VISTA;
-        if (IsDisabled(aFrame))
-          aState = TS_DISABLED;
-        else if (isHTML)
-          aState = StandardGetState(aFrame, aWidgetType, PR_FALSE);
-        else
-          aState = TS_NORMAL;
-      } else {
-        aPart = CBP_DROPMARKER;
-        if (IsDisabled(aFrame))
-          aState = TS_DISABLED;
-        else
-          aState = StandardGetState(aFrame, aWidgetType, PR_FALSE);
+      aPart = mIsVistaOrLater ? CBP_DROPMARKER_VISTA : CBP_DROPMARKER;
+
+      if (IsDisabled(aFrame)) {
+        aState = TS_DISABLED;
+        return NS_OK;
       }
+
+      if (mIsVistaOrLater && isHTML) {
+        nsIComboboxControlFrame* ccf = nsnull;
+        CallQueryInterface(aFrame, &ccf);
+        if (ccf && ccf->IsDroppedDown()) {
+          /* Hover is propagated, but we need to know whether we're
+           * hovering just the combobox frame, not the dropdown frame.
+           * But, we can't get that information, since hover is on the
+           * content node, and they share the same content node.  So,
+           * instead, we cheat -- if the dropdown is open, we always
+           * show the hover state.  This looks fine in practice.
+           */
+          aState = TS_HOVER;
+          return NS_OK;
+        }
+      }
+
+      aState = StandardGetState(aFrame, aWidgetType, PR_FALSE);
 
       return NS_OK;
     }
@@ -1076,7 +1111,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       if (menuFrame)
         isOpen = menuFrame->IsOpen();
 
-      isHover = IsMenuActiveOrHover(aFrame, aWidgetType);
+      isHover = IsMenuActive(aFrame, aWidgetType);
 
       if (isTopLevel) {
         aPart = MENU_BARITEM;
@@ -1463,6 +1498,18 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
                                    PRUint8 aWidgetType,
                                    nsMargin* aResult)
 {
+  switch (aWidgetType) {
+    // Radios and checkboxes return a fixed size in GetMinimumWidgetSize
+    // and have a meaningful baseline, so they can't have
+    // author-specified padding.
+    case NS_THEME_CHECKBOX:
+    case NS_THEME_CHECKBOX_SMALL:
+    case NS_THEME_RADIO:
+    case NS_THEME_RADIO_SMALL:
+      aResult->SizeTo(0, 0, 0, 0);
+      return PR_TRUE;
+  }
+
   HANDLE theme = GetTheme(aWidgetType);
   if (!theme && aWidgetType != NS_THEME_MENUITEMTEXT)
     return PR_FALSE;
@@ -1764,6 +1811,16 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
     return NS_OK;
   }
 
+  // We need to repaint the dropdown arrow in vista HTML combobox controls when
+  // the control is closed to get rid of the hover effect.
+  if (mIsVistaOrLater &&
+      (aWidgetType == NS_THEME_DROPDOWN || aWidgetType == NS_THEME_DROPDOWN_BUTTON) &&
+      IsHTMLContent(aFrame))
+  {
+    *aShouldRepaint = PR_TRUE;
+    return NS_OK;
+  }
+
   // XXXdwh Not sure what can really be done here.  Can at least guess for
   // specific widgets that they're highly unlikely to have certain states.
   // For example, a toolbar doesn't care about any states.
@@ -1780,7 +1837,8 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
         aAttribute == nsWidgetAtoms::selected ||
         aAttribute == nsWidgetAtoms::readonly ||
         aAttribute == nsWidgetAtoms::open ||
-        aAttribute == nsWidgetAtoms::mozmenuactive)
+        aAttribute == nsWidgetAtoms::mozmenuactive ||
+        aAttribute == nsWidgetAtoms::focused)
       *aShouldRepaint = PR_TRUE;
   }
 
@@ -2247,7 +2305,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
           aState |= DFCS_PUSHED;
       }
 
-      if (IsMenuActiveOrHover(aFrame, aWidgetType))
+      if (IsMenuActive(aFrame, aWidgetType))
         aState |= DFCS_HOT;
 
       return NS_OK;
@@ -2258,7 +2316,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       aState = 0;
       if (IsDisabled(aFrame))
         aState |= DFCS_INACTIVE;
-      if (IsMenuActiveOrHover(aFrame, aWidgetType))
+      if (IsMenuActive(aFrame, aWidgetType))
         aState |= DFCS_HOT;
 
       if (aWidgetType == NS_THEME_MENUCHECKBOX || aWidgetType == NS_THEME_MENURADIO) {

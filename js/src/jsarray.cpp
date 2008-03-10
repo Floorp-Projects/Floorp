@@ -184,37 +184,36 @@ js_IdIsIndex(jsval id, jsuint *indexp)
     return JS_FALSE;
 }
 
-static JSBool
-ValueIsLength(JSContext *cx, jsval v, jsuint *lengthp)
+static jsuint
+ValueIsLength(JSContext *cx, jsval* vp)
 {
     jsint i;
     jsdouble d;
+    jsuint length;
 
-    if (JSVAL_IS_INT(v)) {
-        i = JSVAL_TO_INT(v);
-        if (i < 0) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_BAD_ARRAY_LENGTH);
-            return JS_FALSE;
-        }
-        *lengthp = (jsuint) i;
-        return JS_TRUE;
+    if (JSVAL_IS_INT(*vp)) {
+        i = JSVAL_TO_INT(*vp);
+        if (i < 0)
+            goto error;
+        return (jsuint) i;
     }
 
-    if (!js_ValueToNumber(cx, v, &d)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BAD_ARRAY_LENGTH);
-        return JS_FALSE;
-    }
+    d = js_ValueToNumber(cx, vp);
+    if (JSVAL_IS_NULL(*vp))
+        goto error;
 
-    *lengthp = js_DoubleToECMAUint32(d);
+    if (JSDOUBLE_IS_NaN(d))
+        goto error;
+    length = (jsuint) d;
+    if (d != (jsdouble) length)
+        goto error;
+    return length;
 
-    if (JSDOUBLE_IS_NaN(d) || d != *lengthp) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BAD_ARRAY_LENGTH);
-        return JS_FALSE;
-    }
-    return JS_TRUE;
+  error:
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                         JSMSG_BAD_ARRAY_LENGTH);
+    *vp = JSVAL_NULL;
+    return 0;
 }
 
 JSBool
@@ -234,15 +233,12 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
     id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
     ok = OBJ_GET_PROPERTY(cx, obj, id, &tvr.u.value);
     if (ok) {
-        /*
-         * Short-circuit, because js_ValueToECMAUint32 fails when called
-         * during init time.
-         */
         if (JSVAL_IS_INT(tvr.u.value)) {
             i = JSVAL_TO_INT(tvr.u.value);
             *lengthp = (jsuint)i;       /* jsuint cast does ToUint32 */
         } else {
-            ok = js_ValueToECMAUint32(cx, tvr.u.value, (uint32 *)lengthp);
+            *lengthp = js_ValueToECMAUint32(cx, &tvr.u.value);
+            ok = !JSVAL_IS_NULL(tvr.u.value);
         }
     }
     JS_POP_TEMP_ROOT(cx, &tvr);
@@ -256,7 +252,7 @@ IndexToValue(JSContext *cx, jsuint index, jsval *vp)
         *vp = INT_TO_JSVAL(index);
         return JS_TRUE;
     }
-    return js_NewDoubleValue(cx, (jsdouble)index, vp);
+    return JS_NewDoubleValue(cx, (jsdouble)index, vp);
 }
 
 static JSBool
@@ -379,20 +375,9 @@ GetArrayElement(JSContext *cx, JSObject *obj, jsuint index, JSBool *hole,
     JSObject *obj2;
     JSProperty *prop;
 
-    if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
-        if (index >= ARRAY_DENSE_LENGTH(obj)) {
-            *vp = JSVAL_VOID;
-            *hole = JS_TRUE;
-            return JS_TRUE;
-        }
-
-        *vp = obj->dslots[index];
-        if (*vp == JSVAL_HOLE) {
-            *vp = JSVAL_VOID;
-            *hole = JS_TRUE;
-        } else {
-            *hole = JS_FALSE;
-        }
+    if (OBJ_IS_DENSE_ARRAY(cx, obj) && index < ARRAY_DENSE_LENGTH(obj) &&
+        (*vp = obj->dslots[index]) != JSVAL_HOLE) {
+        *hole = JS_FALSE;
         return JS_TRUE;
     }
 
@@ -523,8 +508,10 @@ js_HasLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
     id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
     ok = OBJ_GET_PROPERTY(cx, obj, id, &tvr.u.value);
     JS_SetErrorReporter(cx, older);
-    if (ok)
-        ok = ValueIsLength(cx, tvr.u.value, lengthp);
+    if (ok) {
+        *lengthp = ValueIsLength(cx, &tvr.u.value);
+        ok = !JSVAL_IS_NULL(tvr.u.value);
+    }
     JS_POP_TEMP_ROOT(cx, &tvr);
     return ok;
 }
@@ -582,7 +569,8 @@ array_length_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                                    JSPROP_ENUMERATE, NULL);
     }
 
-    if (!ValueIsLength(cx, *vp, &newlen))
+    newlen = ValueIsLength(cx, vp);
+    if (JSVAL_IS_NULL(*vp))
         return JS_FALSE;
     oldlen = obj->fslots[JSSLOT_ARRAY_LENGTH];
 
@@ -1290,16 +1278,10 @@ array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
 
     /* Use rval to locally root each element value as we loop and convert. */
     for (index = 0; index < length; index++) {
-        if (OBJ_IS_DENSE_ARRAY(cx, obj) && index < ARRAY_DENSE_LENGTH(obj)) {
-            *rval = obj->dslots[index];
-            hole = (*rval == JSVAL_HOLE);
-            ok = JS_TRUE;
-        } else {
-            ok = (JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) &&
-                  GetArrayElement(cx, obj, index, &hole, rval));
-            if (!ok)
-                goto done;
-        }
+        ok = (JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) &&
+              GetArrayElement(cx, obj, index, &hole, rval));
+        if (!ok)
+            goto done;
         if (hole ||
             (op != TO_SOURCE &&
              (JSVAL_IS_VOID(*rval) || JSVAL_IS_NULL(*rval)))) {
@@ -1728,10 +1710,12 @@ sort_compare(void *arg, const void *a, const void *b, int *result)
     *sp++ = av;
     *sp++ = bv;
 
-    if (!js_Invoke(cx, 2, invokevp, JSINVOKE_INTERNAL) ||
-        !js_ValueToNumber(cx, *invokevp, &cmp)) {
+    if (!js_Invoke(cx, 2, invokevp, JSINVOKE_INTERNAL))
         return JS_FALSE;
-    }
+
+    cmp = js_ValueToNumber(cx, invokevp);
+    if (JSVAL_IS_NULL(*invokevp))
+        return JS_FALSE;
 
     /* Clamp cmp to -1, 0, 1. */
     *result = 0;
@@ -2234,7 +2218,8 @@ array_splice(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
 
     /* Convert the first argument into a starting index. */
-    if (!js_ValueToNumber(cx, *argv, &d))
+    d = js_ValueToNumber(cx, argv);
+    if (JSVAL_IS_NULL(*argv))
         return JS_FALSE;
     d = js_DoubleToInteger(d);
     if (d < 0) {
@@ -2254,7 +2239,8 @@ array_splice(JSContext *cx, uintN argc, jsval *vp)
         count = delta;
         end = length;
     } else {
-        if (!js_ValueToNumber(cx, *argv, &d))
+        d = js_ValueToNumber(cx, argv);
+        if (JSVAL_IS_NULL(*argv))
             return JS_FALSE;
         d = js_DoubleToInteger(d);
         if (d < 0)
@@ -2390,15 +2376,19 @@ array_concat(JSContext *cx, uintN argc, jsval *vp)
             goto out;
         v = argv[i];
         if (JSVAL_IS_OBJECT(v)) {
+            JSObject *wobj;
+
             aobj = JSVAL_TO_OBJECT(v);
-            if (aobj && OBJ_IS_ARRAY(cx, aobj)) {
+            wobj = js_GetWrappedObject(cx, aobj);
+            if (aobj && OBJ_IS_ARRAY(cx, wobj)) {
                 ok = OBJ_GET_PROPERTY(cx, aobj,
                                       ATOM_TO_JSID(cx->runtime->atomState
                                                    .lengthAtom),
                                       &tvr.u.value);
                 if (!ok)
                     goto out;
-                ok = ValueIsLength(cx, tvr.u.value, &alength);
+                alength = ValueIsLength(cx, &tvr.u.value);
+                ok = !JSVAL_IS_NULL(tvr.u.value);
                 if (!ok)
                     goto out;
                 for (slot = 0; slot < alength; slot++) {
@@ -2456,7 +2446,8 @@ array_slice(JSContext *cx, uintN argc, jsval *vp)
     end = length;
 
     if (argc > 0) {
-        if (!js_ValueToNumber(cx, argv[0], &d))
+        d = js_ValueToNumber(cx, &argv[0]);
+        if (JSVAL_IS_NULL(argv[0]))
             return JS_FALSE;
         d = js_DoubleToInteger(d);
         if (d < 0) {
@@ -2469,7 +2460,8 @@ array_slice(JSContext *cx, uintN argc, jsval *vp)
         begin = (jsuint)d;
 
         if (argc > 1) {
-            if (!js_ValueToNumber(cx, argv[1], &d))
+            d = js_ValueToNumber(cx, &argv[1]);
+            if (JSVAL_IS_NULL(argv[1]))
                 return JS_FALSE;
             d = js_DoubleToInteger(d);
             if (d < 0) {
@@ -2542,7 +2534,8 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, jsval *vp)
     } else {
         jsdouble start;
 
-        if (!js_ValueToNumber(cx, vp[3], &start))
+        start = js_ValueToNumber(cx, &vp[3]);
+        if (JSVAL_IS_NULL(vp[3]))
             return JS_FALSE;
         start = js_DoubleToInteger(start);
         if (start < 0) {
@@ -2577,7 +2570,7 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, jsval *vp)
             return JS_FALSE;
         }
         if (!hole && js_StrictlyEqual(cx, *vp, vp[2]))
-            return js_NewNumberValue(cx, i, vp);
+            return js_NewNumberInRootedValue(cx, i, vp);
         if (i == stop)
             goto not_found;
         i += direction;
@@ -2902,7 +2895,8 @@ Array(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         length = 1;
         vector = argv;
     } else {
-        if (!ValueIsLength(cx, argv[0], &length))
+        length = ValueIsLength(cx, &argv[0]);
+        if (JSVAL_IS_NULL(argv[0]))
             return JS_FALSE;
         vector = NULL;
     }

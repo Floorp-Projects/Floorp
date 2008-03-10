@@ -207,6 +207,7 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
   widgetData.mWindowType = eWindowType_popup;
   widgetData.mBorderStyle = eBorderStyle_default;
   widgetData.clipSiblings = PR_TRUE;
+  widgetData.mPopupHint = mPopupType;
 
   PRBool viewHasTransparentContent = !mInContentShell &&
                                      nsLayoutUtils::FrameHasTransparency(this);

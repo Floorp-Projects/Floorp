@@ -479,6 +479,52 @@ CNavDTD::GetType()
   return NS_IPARSER_FLAG_HTML; 
 }
 
+/**
+ * Text and some tags require a body when they're added, this function returns
+ * true for those tags.
+ *
+ * @param aToken The current token that we care about.
+ * @param aTokenizer A tokenizer that we can get the tags attributes off of.
+ * @return PR_TRUE if aToken does indeed force the body to open.
+ */
+static PRBool
+DoesRequireBody(CToken* aToken, nsITokenizer* aTokenizer)
+{
+  PRBool result = PR_FALSE;
+
+  if (aToken) {
+    eHTMLTags theTag = (eHTMLTags)aToken->GetTypeID();
+    if (gHTMLElements[theTag].HasSpecialProperty(kRequiresBody)) {
+      if (theTag == eHTMLTag_input) {
+        // IE & Nav4x opens up a body for type=text - Bug 66985
+        // XXXbz but we don't want to open one for <input> with no
+        // type attribute?  That's pretty whack.
+        PRInt32 ac = aToken->GetAttributeCount();
+        for(PRInt32 i = 0; i < ac; ++i) {
+          CAttributeToken* attr = static_cast<CAttributeToken*>
+                                             (aTokenizer->GetTokenAt(i));
+          const nsSubstring& name = attr->GetKey();
+          const nsAString& value = attr->GetValue();
+          // XXXbz note that this stupid case-sensitive comparison is
+          // actually depended on by sites...
+          if ((name.EqualsLiteral("type") || 
+               name.EqualsLiteral("TYPE"))    
+              && 
+              !(value.EqualsLiteral("hidden") || 
+              value.EqualsLiteral("HIDDEN"))) {
+            result = PR_TRUE; 
+            break;
+          }
+        }
+      } else {
+        result = PR_TRUE;
+      }
+    }
+  }
+ 
+  return result;
+}
+
 static PRBool
 ValueIsHidden(const nsAString& aValue)
 {
@@ -690,10 +736,7 @@ CNavDTD::HandleToken(CToken* aToken, nsIParser* aParser)
               // end tag.
             }
 
-            if (gHTMLElements[theTag].HasSpecialProperty(kRequiresBody) &&
-                (theTag != eHTMLTag_input ||
-                 theType != eToken_start ||
-                 !IsHiddenInput(aToken, mTokenizer))) {
+            if (DoesRequireBody(aToken, mTokenizer)) {
               CToken* theBodyToken =
                 mTokenAllocator->CreateTokenOfType(eToken_start,
                                                    eHTMLTag_body,

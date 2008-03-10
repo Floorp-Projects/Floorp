@@ -561,7 +561,7 @@ XPC_XOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   // Same origin, pass this request along.
-  return XPCWrapper::AddProperty(cx, wrappedObj, id, vp);
+  return XPCWrapper::AddProperty(cx, obj, wrappedObj, id, vp);
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)

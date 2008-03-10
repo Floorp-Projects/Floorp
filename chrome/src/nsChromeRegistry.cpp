@@ -700,6 +700,7 @@ nsChromeRegistry::Canonify(nsIURL* aChromeURL)
             return NS_ERROR_DOM_BAD_URI;
           break;
         case '?':
+        case '#':
           pos = end;
           continue;
       }

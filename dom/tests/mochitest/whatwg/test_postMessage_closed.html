@@ -64,6 +64,11 @@ var openedWindow;
 function run()
 {
   openedWindow = window.open("postMessage_closed_helper.html?opener", "foobar");
+  if (!openedWindow)
+  {
+    ok(false, "this test must be run with popup blocking disabled");
+    SimpleTest.finish();
+  }
 }
 
 window.addEventListener("load", run, false);

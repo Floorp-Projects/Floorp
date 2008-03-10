@@ -160,8 +160,6 @@ STDMETHODIMP
 CAccessibleTable::get_columnDescription(long aColumn, BSTR *aDescription)
 {
 __try {
-  *aDescription = NULL;
-
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryInterface(this));
   NS_ASSERTION(tableAcc, CANT_QUERY_ASSERTION_MSG);
   if (!tableAcc)
@@ -174,6 +172,7 @@ __try {
 
   if (!::SysReAllocStringLen(aDescription, descr.get(), descr.Length()))
     return E_OUTOFMEMORY;
+
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return S_OK;
 }
@@ -371,8 +370,6 @@ STDMETHODIMP
 CAccessibleTable::get_rowDescription(long aRow, BSTR *aDescription)
 {
 __try {
-  *aDescription = NULL;
-
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryInterface(this));
   NS_ASSERTION(tableAcc, CANT_QUERY_ASSERTION_MSG);
   if (!tableAcc)
@@ -385,6 +382,7 @@ __try {
 
   if (!::SysReAllocStringLen(aDescription, descr.get(), descr.Length()))
     return E_OUTOFMEMORY;
+
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return S_OK;
 }
@@ -736,8 +734,12 @@ CAccessibleTable::GetSelectedItems(long aMaxItems, long **aItems,
   if (size == 0 || !items)
     return S_OK;
 
-  PRUint32 maxSize = size < (PRUint32)aMaxItems ? size : aMaxItems;
+  PRUint32 maxSize = size < static_cast<PRUint32>(aMaxItems) ? size : aMaxItems;
   *aItemsCount = maxSize;
+
+  *aItems = static_cast<long*>(nsMemory::Alloc((maxSize) * sizeof(long)));
+  if (!*aItems)
+    return E_OUTOFMEMORY;
 
   for (PRUint32 index = 0; index < maxSize; ++index)
     (*aItems)[index] = items[index];

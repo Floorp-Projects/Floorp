@@ -69,6 +69,7 @@
       window.opener.wrappedJSObject.SimpleTest.ok(condition, message);
     }
     function finish() {
+      window.controllers.removeController(gShouldNotBeReachedController);
       window.close();
       window.opener.wrappedJSObject.SimpleTest.finish();
     }

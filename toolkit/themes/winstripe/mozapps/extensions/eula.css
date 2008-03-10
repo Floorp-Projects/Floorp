@@ -2,15 +2,16 @@
   font-size: 120%;
 }
 
-#scrollbox {
-  overflow-y: auto;
+#eula {
+  -moz-appearance: none;
+  font-family: monospace;
+  color: -moz-dialogtext;
   background-color: window;
-  border: 1px solid ActiveBorder;
   margin: 1em 0 1em 0;
-  padding: 5px;
+  border: 1px solid;
+  -moz-border-top-colors: ActiveBorder;
+  -moz-border-right-colors: ActiveBorder;
+  -moz-border-bottom-colors: ActiveBorder;
+  -moz-border-left-colors: ActiveBorder;
 }
 
-#eula {
-  font-family: monospace;
-  white-space: -moz-pre-wrap;
-}

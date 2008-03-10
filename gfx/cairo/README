@@ -31,3 +31,4 @@ buggy-repeat.patch: Unconditionally turn on buggy-repeat handling to bandaid bug
 
 endian.patch: include cairo-platform.h for endian macros
 
+pixman-fbFetchTransformed-backout.patch: back out bad pixman commit, see http://lists.cairographics.org/archives/cairo/2008-March/013294.html

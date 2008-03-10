@@ -12,10 +12,11 @@ function doTest()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-  var table = document.getElementById("table");
   var accService = Components.classes["@mozilla.org/accessibleRetrieval;1"].
                    getService(Components.interfaces.nsIAccessibleRetrieval);
 
+  // bug 410052
+  var table = document.getElementById("table");
   var accTable = accService.getAccessibleFor(table).
                  QueryInterface(Components.interfaces.nsIAccessibleTable);
 
@@ -29,7 +30,32 @@ function doTest()
   is(accTable.getRowExtentAt(2,7), 4,"rowspan wrong");
   is(accTable.getColumnExtentAt(2,3), 1, "colspan wrong");
   is(accTable.cellRefAt(2,1).firstChild.name, "c1", "wrong cell");
+
+  // bug 417912
+  var table2 = document.getElementById("table2");
+  var accTable2 = accService.getAccessibleFor(table2).
+                  QueryInterface(Components.interfaces.nsIAccessibleTable);
+  testCellAt(accTable2, 0, 0, true);
+  testCellAt(accTable2, 0, 1, true);
+  testCellAt(accTable2, 0, 2, true);
+  testCellAt(accTable2, 1, 0, true);
+  testCellAt(accTable2, 1, 1, false);
+  testCellAt(accTable2, 1, 2, true);
+  testCellAt(accTable2, 2, 0, true);
+  testCellAt(accTable2, 2, 1, true);
+  testCellAt(accTable2, 2, 2, true);
+
   SimpleTest.finish();
+}
+
+function testCellAt(aTable, aRow, aColumn, aSucceeded)
+{
+  try {
+    aTable.cellRefAt(aRow, aColumn);
+    ok(aSucceeded, "cell is available at (" + aRow + ", " + aColumn + ").");
+  } catch (e) {
+    ok(!aSucceeded, "cell is not available at (" + aRow + ", " + aColumn + ").");
+  }
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -38,6 +64,11 @@ addLoadEvent(doTest);
  </head>
  <body>
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=410052">Mozilla Bug 410052</a>
+  <br>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=417912"
+                     title="GetCellDataAt callers that expect an error if no cell is found are wrong">
+    Mozilla Bug 417912
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -82,6 +113,15 @@ addLoadEvent(doTest);
      </tr>
     </tbody>
    </table>
+  </center>
+
+  <br><br><b>Testing Table 2:</b><br><br>
+  <center>
+    <table cellpadding="2" cellspacing="2" border="1" width="50%" id="table2">
+      <tr><td>1</td><td>2</td><td rowspan=3>3</td>
+      <tr><td>4</td>
+      <tr><td>5</td><td>6</td>
+    </table>
   </center>
  </body>
 </html>

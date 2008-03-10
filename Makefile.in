@@ -218,7 +218,12 @@ endif
 #XXX: this is a hack, since we don't want to clobber for MSVC
 # PGO support, but we can't do this test in client.mk
 ifneq ($(OS_ARCH)_$(GNU_CC), WINNT_)
+# No point in clobbering if PGO has been explicitly disabled.
+ifndef NO_PROFILE_GUIDED_OPTIMIZE
 maybe_clobber_profiledbuild: clobber_all
+else
+maybe_clobber_profiledbuild:
+endif
 else
 maybe_clobber_profiledbuild:
 endif

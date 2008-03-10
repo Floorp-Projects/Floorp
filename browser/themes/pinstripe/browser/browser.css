@@ -298,13 +298,6 @@ toolbar[mode="icons"] #forward-button .toolbarbutton-text-box,
   display: none;
 }
 
-toolbar[mode="icons"] #back-button .toolbarbutton-text-box,
-toolbar[mode="icons"] #forward-button .toolbarbutton-text-box,
-#back-button .toolbarbutton-menubutton-dropmarker,
-#forward-button .toolbarbutton-menubutton-dropmarker {
-  display: none;
-}
-
 /* ----- DEFAULT PRIMARY TOOLBAR BUTTONS ----- */	
 
 .toolbarbutton-text-shadow,

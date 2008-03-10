@@ -3646,10 +3646,10 @@ regexp_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         return ok;
     slot = JSVAL_TO_INT(id);
     if (slot == REGEXP_LAST_INDEX) {
-        if (!js_ValueToNumber(cx, *vp, &lastIndex))
+        if (!JS_ValueToNumber(cx, *vp, &lastIndex))
             return JS_FALSE;
         lastIndex = js_DoubleToInteger(lastIndex);
-        ok = js_NewNumberValue(cx, lastIndex, vp) &&
+        ok = JS_NewNumberValue(cx, lastIndex, vp) &&
              JS_SetReservedSlot(cx, obj, 0, *vp);
     }
     return ok;
@@ -4321,7 +4321,7 @@ js_GetLastIndex(JSContext *cx, JSObject *obj, jsdouble *lastIndex)
     jsval v;
 
     return JS_GetReservedSlot(cx, obj, 0, &v) &&
-           js_ValueToNumber(cx, v, lastIndex);
+           JS_ValueToNumber(cx, v, lastIndex);
 }
 
 JSBool
@@ -4329,7 +4329,7 @@ js_SetLastIndex(JSContext *cx, JSObject *obj, jsdouble lastIndex)
 {
     jsval v;
 
-    return js_NewNumberValue(cx, lastIndex, &v) &&
+    return JS_NewNumberValue(cx, lastIndex, &v) &&
            JS_SetReservedSlot(cx, obj, 0, v);
 }
 

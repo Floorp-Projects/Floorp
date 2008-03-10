@@ -2643,7 +2643,7 @@ nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr,
     parser->ParseFragment(aFragStr, 0, aTagStack, PR_FALSE, NS_LITERAL_CSTRING("text/html"), eDTDMode_quirks);
   // get the fragment node
   nsCOMPtr<nsIDOMDocumentFragment> contextfrag;
-  res = fragSink->GetFragment(getter_AddRefs(contextfrag));
+  res = fragSink->GetFragment(PR_TRUE, getter_AddRefs(contextfrag));
   NS_ENSURE_SUCCESS(res, res);
   *outNode = do_QueryInterface(contextfrag);
   
