@@ -183,7 +183,10 @@ possible, but please check the settings below and make any necessary changes.
 
 <!ENTITY qa.chat.title "Chat">
 <!ENTITY qa.chat.introtitle "What is IRC?">
-<!ENTITY qa.chat.intro "Internet Relay Chat (IRC) is the living room of the Mozilla QA Community. IRC is a place to ask questions, learn how you can help with the next versions of Firefox and Thunderbird, and meet other members of the community. Many of the regular QA events happen over IRC, such as Test Days and Bug Days. Come join us on IRC!">
+<!ENTITY qa.chat.intro "Internet Relay Chat (IRC) is the living room of the Mozilla QA Community.
+IRC is a place to ask questions, learn how you can help with the next versions of Firefox and Thunderbird,
+and meet other members of the community. Many of the regular QA events happen over IRC,
+such as Test Days and Bug Days. Come join us on IRC!">
 <!ENTITY qa.chat.intro2 "If you have a favorite IRC client, you can connect to <html:em>irc.mozilla.org</html:em>, channel #qa, but the easist way to get on IRC right now is through your web browser. Just click the button below.">
 <!ENTITY qa.chat.howdoItitle "How do I get on IRC?">
 <!ENTITY qa.chat.howdoI.imo "Learn more about irc.mozilla.org">
@@ -193,5 +196,22 @@ possible, but please check the settings below and make any necessary changes.
 <!ENTITY qa.chat.howdoI.joinnow "Join IRC Now">
 
 <!ENTITY qa.help.title "Help">
+<!ENTITY qa.help.helptitle "Mozilla QA Help">
+<!ENTITY qa.help.intro "
+Visit <html:a href='http://quality.mozilla.org/' style='color: #0067ac;' target='_blank'>
+QMO</html:a>, the home of Mozilla QA, for more information about what's happening with the community.  Here are a few useful links:<html:br></html:br><html:br></html:br>
+<html:ul>
+<html:li><html:a href='http://quality.mozilla.org/qac' style='color: #0067ac;' target='_blank'>QA Companion Home</html:a></html:li>
+<html:li><html:a href='http://quality.mozilla.org/events' style='color: #0067ac;' target='_blank'>Community Events</html:a></html:li>
+<html:li><html:a href='http://quality.mozilla.org/forums' style='color: #0067ac;' target='_blank'>Discussion Forums</html:a></html:li>
+</html:ul>
+<html:h4>Litmus</html:h4>
+The Litmus tab is great for running a few quick tests, but visit <html:a href='http://litmus.mozilla.org/' style='color: #0067ac;'
+target='_blank'>Litmus</html:a> for detailed information about test cases and community activity through the Web interface.  Make sure to read
+the <html:a href='http://quality.mozilla.org/litmus' style='color: #0067ac;' target='_blank'>Litmus Tutorial</html:a>.
+<html:h4>Bugzilla</html:h4>
+The Bugzilla tab allows you to run a few basic searches, but visit <html:a href='http://bugzilla.mozilla.org/' style='color: #0067ac;'
+target='_blank'>Bugzilla</html:a> to learn more about how we handle bugs, run advanced searches or work with bugs directly.
+">
 
 <!ENTITY qa.notification.inprogress "Come Join! Event in Progress Now!">
