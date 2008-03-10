@@ -2548,6 +2548,9 @@ nsCanvasRenderingContext2D::PutImageData()
     if (!JS_ConvertArguments (ctx, argc, argv, "ojj", &dataObject, &x, &y))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
+    if (!dataObject)
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     int32 w, h;
     JSObject *dataArray;
     jsval v;
