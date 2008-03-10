@@ -236,6 +236,11 @@ static bool RestartApplication()
   }
 }
 
+-(void)closeMeDown
+{
+  [NSApp terminate:self];
+}
+
 -(IBAction)submitReportClicked:(id)sender
 {
   [self updateSubmit];
@@ -492,7 +497,7 @@ static bool RestartApplication()
                           string:Str(ST_SUBMITFAILED)
                     resizeWindow:YES];
    // quit after 5 seconds
-   [self performSelector:@selector(closeClicked:) withObject:self
+   [self performSelector:@selector(closeMeDown:) withObject:nil
     afterDelay:5.0];
   }
 
@@ -577,7 +582,7 @@ static bool RestartApplication()
                     resizeWindow:YES];
   }
   // quit after 5 seconds
-  [self performSelector:@selector(closeClicked:) withObject:self
+  [self performSelector:@selector(closeMeDown:) withObject:nil
    afterDelay:5.0];
 }
 
