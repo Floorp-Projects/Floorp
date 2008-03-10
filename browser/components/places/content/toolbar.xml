@@ -907,7 +907,7 @@
 
         getSupportedFlavours: function TBV_DO_getSupportedFlavours() {
           var flavorSet = new FlavourSet();
-          var types = PlacesUtils.GENERIC_VIEW_DROP_TYPES;
+          var types = PlacesUIUtils.GENERIC_VIEW_DROP_TYPES;
           for (var i = 0; i < types.length; ++i)
             flavorSet.appendFlavour(types[i]);
           return flavorSet;
@@ -966,7 +966,7 @@
             return;
           }
 
-          var label = PlacesUtils.getString("bookmarksMenuEmptyFolder");
+          var label = PlacesUIUtils.getString("bookmarksMenuEmptyFolder");
           aPopup._emptyMenuItem = document.createElement("menuitem");
           aPopup._emptyMenuItem.setAttribute("label", label);
           aPopup._emptyMenuItem.setAttribute("disabled", true);
@@ -980,7 +980,7 @@
         <parameter name="aBefore"/>
         <body><![CDATA[
           var element =
-            PlacesUtils.createMenuItemForNode(aChild, this._containerNodesMap);
+            PlacesUIUtils.createMenuItemForNode(aChild, this._containerNodesMap);
           if (aBefore)
             aParentPopup.insertBefore(element, aBefore);
           else
