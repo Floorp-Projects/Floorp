@@ -50,6 +50,7 @@ function run() {
         if (should_match.length + should_not_match.length == 0) {
             ok(false, "nothing to check");
         }
+
         for (var i = 0; i < should_match.length; ++i) {
             var e = should_match[i];
             is(ifwin.getComputedStyle(e, "").zIndex, zi,
@@ -60,6 +61,33 @@ function run() {
             is(ifwin.getComputedStyle(e, "").zIndex, "auto",
                "element in " + body_contents + " did not match " + selector);
         }
+
+        // Now, since we're here, may as well make sure serialization
+        // works correctly.  It need not produce the exact same text,
+        // but it should produce a selector that matches the same
+        // elements.
+        zi = ++gCounter;
+        var ser1 = style_text.parentNode.sheet.cssRules[0].selectorText;
+        style_text.data = ser1 + "{ z-index: " + zi + " }";
+        for (var i = 0; i < should_match.length; ++i) {
+            var e = should_match[i];
+            is(ifwin.getComputedStyle(e, "").zIndex, zi,
+               "element in " + body_contents + " matched " + ser1 +
+               " which is the reserialization of " + selector);
+        }
+        for (var i = 0; i < should_not_match.length; ++i) {
+            var e = should_not_match[i];
+            is(ifwin.getComputedStyle(e, "").zIndex, "auto",
+               "element in " + body_contents + " did not match " + ser1 +
+               " which is the reserialization of " + selector);
+        }
+
+        // But when we serialize the serialized result, we should get
+        // the same text.
+        var ser2 = style_text.parentNode.sheet.cssRules[0].selectorText;
+        is(ser2, ser1, "parse+serialize of selector \"" + selector +
+                       "\" is idempotent");
+
         ifdoc.body.innerHTML = "";
         style_text.data = "";
     }
