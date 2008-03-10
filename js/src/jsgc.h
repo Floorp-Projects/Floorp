@@ -204,12 +204,18 @@ extern void *
 js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes);
 
 /*
- * Return a pointer to a new GC-allocated and weakly rooted jsdouble number
- * or null when the allocation fails. The caller must initialize the returned
- * double.
+ * Allocate a new double jsval and store the result in *vp. vp must be a root.
+ * The function does not copy the result into any weak root.
+ */
+extern JSBool
+js_NewDoubleInRootedValue(JSContext *cx, jsdouble d, jsval *vp);
+
+/*
+ * Return a pointer to a new GC-allocated and weakly-rooted jsdouble number,
+ * or null when the allocation fails.
  */
 extern jsdouble *
-js_NewDoubleGCThing(JSContext *cx);
+js_NewWeaklyRootedDouble(JSContext *cx, jsdouble d);
 
 extern JSBool
 js_LockGCThingRT(JSRuntime *rt, void *thing);

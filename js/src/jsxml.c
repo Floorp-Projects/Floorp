@@ -5844,7 +5844,7 @@ xml_childIndex(JSContext *cx, uintN argc, jsval *vp)
             break;
     }
     JS_ASSERT(i < n);
-    return js_NewNumberValue(cx, i, vp);
+    return js_NewNumberInRootedValue(cx, i, vp);
 }
 
 /* XML and XMLList */
@@ -6334,7 +6334,7 @@ xml_length(JSContext *cx, uintN argc, jsval *vp)
     if (xml->xml_class != JSXML_CLASS_LIST) {
         *vp = JSVAL_ONE;
     } else {
-        if (!js_NewNumberValue(cx, xml->xml_kids.length, vp))
+        if (!js_NewNumberInRootedValue(cx, xml->xml_kids.length, vp))
             return JS_FALSE;
     }
     return JS_TRUE;

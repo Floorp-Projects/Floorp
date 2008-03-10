@@ -107,7 +107,7 @@ num_parseFloat(JSContext *cx, uintN argc, jsval *vp)
         *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
         return JS_TRUE;
     }
-    return js_NewNumberValue(cx, d, vp);
+    return js_NewNumberInRootedValue(cx, d, vp);
 }
 
 /* See ECMA 15.1.2.2. */
@@ -146,7 +146,7 @@ num_parseInt(JSContext *cx, uintN argc, jsval *vp)
         *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
         return JS_TRUE;
     }
-    return js_NewNumberValue(cx, d, vp);
+    return js_NewNumberInRootedValue(cx, d, vp);
 }
 
 const char js_Infinity_str[]   = "Infinity";
@@ -175,18 +175,24 @@ JSClass js_NumberClass = {
 static JSBool
 Number(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    jsdouble d;
     jsval v;
+    jsdouble d;
 
     if (argc != 0) {
         d = js_ValueToNumber(cx, &argv[0]);
-        if (JSVAL_IS_NULL(argv[0]))
+        v = argv[0];
+        if (JSVAL_IS_NULL(v))
             return JS_FALSE;
+        if (v != JSVAL_TRUE) {
+            JS_ASSERT(JSVAL_IS_INT(v) || JSVAL_IS_DOUBLE(v));
+        } else {
+            if (!js_NewNumberInRootedValue(cx, d, &argv[0]))
+                return JS_FALSE;
+            v = argv[0];
+        }
     } else {
-        d = 0.0;
+        v = JSVAL_ZERO;
     }
-    if (!js_NewNumberValue(cx, d, &v))
-        return JS_FALSE;
     if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
         *rval = v;
         return JS_TRUE;
@@ -560,21 +566,21 @@ js_InitRuntimeNumberState(JSContext *cx)
     u.s.hi = JSDOUBLE_HI32_EXPMASK | JSDOUBLE_HI32_MANTMASK;
     u.s.lo = 0xffffffff;
     number_constants[NC_NaN].dval = NaN = u.d;
-    rt->jsNaN = js_NewDouble(cx, NaN);
+    rt->jsNaN = js_NewWeaklyRootedDouble(cx, NaN);
     if (!rt->jsNaN)
         return JS_FALSE;
 
     u.s.hi = JSDOUBLE_HI32_EXPMASK;
     u.s.lo = 0x00000000;
     number_constants[NC_POSITIVE_INFINITY].dval = u.d;
-    rt->jsPositiveInfinity = js_NewDouble(cx, u.d);
+    rt->jsPositiveInfinity = js_NewWeaklyRootedDouble(cx, u.d);
     if (!rt->jsPositiveInfinity)
         return JS_FALSE;
 
     u.s.hi = JSDOUBLE_HI32_SIGNBIT | JSDOUBLE_HI32_EXPMASK;
     u.s.lo = 0x00000000;
     number_constants[NC_NEGATIVE_INFINITY].dval = u.d;
-    rt->jsNegativeInfinity = js_NewDouble(cx, u.d);
+    rt->jsNegativeInfinity = js_NewWeaklyRootedDouble(cx, u.d);
     if (!rt->jsNegativeInfinity)
         return JS_FALSE;
 
@@ -662,43 +668,16 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
     return proto;
 }
 
-jsdouble *
-js_NewDouble(JSContext *cx, jsdouble d)
-{
-    jsdouble *dp;
-
-    dp = js_NewDoubleGCThing(cx);
-    if (!dp)
-        return NULL;
-    *dp = d;
-    return dp;
-}
-
 JSBool
-js_NewDoubleValue(JSContext *cx, jsdouble d, jsval *rval)
-{
-    jsdouble *dp;
-
-    dp = js_NewDoubleGCThing(cx);
-    if (!dp)
-        return JS_FALSE;
-    *dp = d;
-    *rval = DOUBLE_TO_JSVAL(dp);
-    return JS_TRUE;
-}
-
-JSBool
-js_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval)
+js_NewNumberInRootedValue(JSContext *cx, jsdouble d, jsval *vp)
 {
     jsint i;
 
     if (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i)) {
-        *rval = INT_TO_JSVAL(i);
-    } else {
-        if (!js_NewDoubleValue(cx, d, rval))
-            return JS_FALSE;
+        *vp = INT_TO_JSVAL(i);
+        return JS_TRUE;
     }
-    return JS_TRUE;
+    return js_NewDoubleInRootedValue(cx, d, vp);
 }
 
 char *
@@ -738,7 +717,7 @@ js_ValueToNumber(JSContext *cx, jsval *vp)
     jsval v;
     JSString *str;
     const jschar *bp, *end, *ep;
-    jsdouble d;
+    jsdouble d, *dp;
     JSObject *obj;
     JSTempValueRooter tvr;
 
@@ -765,10 +744,23 @@ js_ValueToNumber(JSContext *cx, jsval *vp)
               js_SkipWhiteSpace(ep, end) != end)) {
                 break;
             }
+
+            /*
+             * JSVAL_TRUE indicates that double jsval was never constructed
+             * for the result.
+             */
+            *vp = JSVAL_TRUE;
             return d;
         }
-        if (JSVAL_IS_BOOLEAN(v))
-            return JSVAL_TO_BOOLEAN(v) ? 1.0 : 0.0;
+        if (JSVAL_IS_BOOLEAN(v)) {
+            if (JSVAL_TO_BOOLEAN(v)) {
+                *vp = JSVAL_ONE;
+                return 1.0;
+            } else {
+                *vp = JSVAL_ZERO;
+                return 0.0;
+            }
+        }
         if (JSVAL_IS_NULL(v)) {
             *vp = JSVAL_ZERO;
             return 0.0;
@@ -797,8 +789,9 @@ js_ValueToNumber(JSContext *cx, jsval *vp)
             break;
     }
 
-    JS_ASSERT(!JSVAL_IS_NULL(*vp));
-    return *cx->runtime->jsNaN;
+    dp = cx->runtime->jsNaN;
+    *vp = DOUBLE_TO_JSVAL(dp);
+    return *dp;
 }
 
 int32
@@ -812,10 +805,12 @@ js_ValueToECMAInt32(JSContext *cx, jsval *vp)
         return JSVAL_TO_INT(v);
     if (JSVAL_IS_DOUBLE(v)) {
         d = *JSVAL_TO_DOUBLE(v);
+        *vp = JSVAL_TRUE;
     } else {
         d = js_ValueToNumber(cx, vp);
         if (JSVAL_IS_NULL(*vp))
             return 0;
+        *vp = JSVAL_TRUE;
     }
     return js_DoubleToECMAInt32(d);
 }
@@ -844,17 +839,24 @@ uint32
 js_ValueToECMAUint32(JSContext *cx, jsval *vp)
 {
     jsval v;
+    jsint i;
     jsdouble d;
 
     v = *vp;
-    if (JSVAL_IS_INT(v))
-        return (uint32) JSVAL_TO_INT(v);
+    if (JSVAL_IS_INT(v)) {
+        i = JSVAL_TO_INT(v);
+        if (i < 0)
+            *vp = JSVAL_TRUE;
+        return (uint32) i;
+    }
     if (JSVAL_IS_DOUBLE(v)) {
         d = *JSVAL_TO_DOUBLE(v);
+        *vp = JSVAL_TRUE;
     } else {
         d = js_ValueToNumber(cx, vp);
         if (JSVAL_IS_NULL(*vp))
             return 0;
+        *vp = JSVAL_TRUE;
     }
     return js_DoubleToECMAUint32(d);
 }
@@ -900,6 +902,10 @@ js_ValueToInt32(JSContext *cx, jsval *vp)
     d = js_ValueToNumber(cx, vp);
     if (JSVAL_IS_NULL(*vp))
         return 0;
+    if (JSVAL_IS_INT(*vp))
+        return JSVAL_TO_INT(*vp);
+
+    *vp = JSVAL_TRUE;
     if (JSDOUBLE_IS_NaN(d) || d <= -2147483649.0 || 2147483648.0 <= d) {
         js_ReportValueError(cx, JSMSG_CANT_CONVERT,
                             JSDVG_SEARCH_STACK, v, NULL);
@@ -913,25 +919,33 @@ uint16
 js_ValueToUint16(JSContext *cx, jsval *vp)
 {
     jsdouble d;
-    jsuint i, m;
+    uint16 u;
+    jsuint m;
     JSBool neg;
 
     d = js_ValueToNumber(cx, vp);
     if (JSVAL_IS_NULL(*vp))
         return 0;
-    if (d == 0 || !JSDOUBLE_IS_FINITE(d))
-        return 0;
-    i = (jsuint) d;
-    if ((jsdouble) i == d)
-        return (uint16) i;
-    neg = (d < 0);
-    d = floor(neg ? -d : d);
-    d = neg ? -d : d;
-    m = JS_BIT(16);
-    d = fmod(d, (double) m);
-    if (d < 0)
-        d += m;
-    return (uint16) d;
+
+    if (JSVAL_IS_INT(*vp)) {
+        u = (uint16) JSVAL_TO_INT(*vp);
+    } else if (d == 0 || !JSDOUBLE_IS_FINITE(d)) {
+        u = (uint16) 0;
+    } else {
+        u = (uint16) d;
+        if ((jsdouble) u != d) {
+            neg = (d < 0);
+            d = floor(neg ? -d : d);
+            d = neg ? -d : d;
+            m = JS_BIT(16);
+            d = fmod(d, (double) m);
+            if (d < 0)
+                d += m;
+            u = (uint16) d;
+        }
+    }
+    *vp = INT_TO_JSVAL(u);
+    return u;
 }
 
 jsdouble
@@ -950,7 +964,6 @@ js_DoubleToInteger(jsdouble d)
     d = floor(neg ? -d : d);
     return neg ? -d : d;
 }
-
 
 JSBool
 js_strtod(JSContext *cx, const jschar *s, const jschar *send,

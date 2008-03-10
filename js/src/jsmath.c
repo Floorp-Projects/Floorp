@@ -109,7 +109,7 @@ math_abs(JSContext *cx, uintN argc, jsval *vp)
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
     z = fd_fabs(x);
-    return js_NewNumberValue(cx, z, vp);
+    return js_NewNumberInRootedValue(cx, z, vp);
 }
 
 static JSBool
@@ -121,7 +121,7 @@ math_acos(JSContext *cx, uintN argc, jsval *vp)
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
     z = fd_acos(x);
-    return js_NewNumberValue(cx, z, vp);
+    return js_NewNumberInRootedValue(cx, z, vp);
 }
 
 static JSBool
@@ -133,7 +133,7 @@ math_asin(JSContext *cx, uintN argc, jsval *vp)
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
     z = fd_asin(x);
-    return js_NewNumberValue(cx, z, vp);
+    return js_NewNumberInRootedValue(cx, z, vp);
 }
 
 static JSBool
@@ -145,7 +145,7 @@ math_atan(JSContext *cx, uintN argc, jsval *vp)
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
     z = fd_atan(x);
-    return js_NewNumberValue(cx, z, vp);
+    return js_NewNumberInRootedValue(cx, z, vp);
 }
 
 static JSBool
@@ -171,11 +171,11 @@ math_atan2(JSContext *cx, uintN argc, jsval *vp)
         z = fd_copysign(M_PI / 4, x);
         if (y < 0)
             z *= 3;
-        return js_NewDoubleValue(cx, z, vp);
+        return js_NewDoubleInRootedValue(cx, z, vp);
     }
 #endif
     z = fd_atan2(x, y);
-    return js_NewNumberValue(cx, z, vp);
+    return js_NewNumberInRootedValue(cx, z, vp);
 }
 
 static JSBool
@@ -187,7 +187,7 @@ math_ceil(JSContext *cx, uintN argc, jsval *vp)
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
     z = fd_ceil(x);
-    return js_NewNumberValue(cx, z, vp);
+    return js_NewNumberInRootedValue(cx, z, vp);
 }
 
 static JSBool
@@ -199,7 +199,7 @@ math_cos(JSContext *cx, uintN argc, jsval *vp)
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
     z = fd_cos(x);
-    return js_NewNumberValue(cx, z, vp);
+    return js_NewNumberInRootedValue(cx, z, vp);
 }
 
 static JSBool
@@ -223,7 +223,7 @@ math_exp(JSContext *cx, uintN argc, jsval *vp)
     }
 #endif
     z = fd_exp(x);
-    return js_NewNumberValue(cx, z, vp);
+    return js_NewNumberInRootedValue(cx, z, vp);
 }
 
 static JSBool
@@ -235,7 +235,7 @@ math_floor(JSContext *cx, uintN argc, jsval *vp)
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
     z = fd_floor(x);
-    return js_NewNumberValue(cx, z, vp);
+    return js_NewNumberInRootedValue(cx, z, vp);
 }
 
 static JSBool
@@ -247,7 +247,7 @@ math_log(JSContext *cx, uintN argc, jsval *vp)
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
     z = fd_log(x);
-    return js_NewNumberValue(cx, z, vp);
+    return js_NewNumberInRootedValue(cx, z, vp);
 }
 
 static JSBool
@@ -275,7 +275,7 @@ math_max(JSContext *cx, uintN argc, jsval *vp)
         else
             z = (x > z) ? x : z;
     }
-    return js_NewNumberValue(cx, z, vp);
+    return js_NewNumberInRootedValue(cx, z, vp);
 }
 
 static JSBool
@@ -303,7 +303,7 @@ math_min(JSContext *cx, uintN argc, jsval *vp)
         else
             z = (x < z) ? x : z;
     }
-    return js_NewNumberValue(cx, z, vp);
+    return js_NewNumberInRootedValue(cx, z, vp);
 }
 
 static JSBool
@@ -333,7 +333,7 @@ math_pow(JSContext *cx, uintN argc, jsval *vp)
     }
 #endif
     z = fd_pow(x, y);
-    return js_NewNumberValue(cx, z, vp);
+    return js_NewNumberInRootedValue(cx, z, vp);
 }
 
 /*
@@ -420,7 +420,7 @@ math_random(JSContext *cx, uintN argc, jsval *vp)
     random_init(rt);
     z = random_nextDouble(rt);
     JS_UNLOCK_RUNTIME(rt);
-    return js_NewNumberValue(cx, z, vp);
+    return js_NewNumberInRootedValue(cx, z, vp);
 }
 
 #if defined _WIN32 && !defined WINCE && _MSC_VER < 1400
@@ -447,7 +447,7 @@ math_round(JSContext *cx, uintN argc, jsval *vp)
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
     z = fd_copysign(fd_floor(x + 0.5), x);
-    return js_NewNumberValue(cx, z, vp);
+    return js_NewNumberInRootedValue(cx, z, vp);
 }
 
 static JSBool
@@ -459,7 +459,7 @@ math_sin(JSContext *cx, uintN argc, jsval *vp)
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
     z = fd_sin(x);
-    return js_NewNumberValue(cx, z, vp);
+    return js_NewNumberInRootedValue(cx, z, vp);
 }
 
 static JSBool
@@ -471,7 +471,7 @@ math_sqrt(JSContext *cx, uintN argc, jsval *vp)
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
     z = fd_sqrt(x);
-    return js_NewNumberValue(cx, z, vp);
+    return js_NewNumberInRootedValue(cx, z, vp);
 }
 
 static JSBool
@@ -483,7 +483,7 @@ math_tan(JSContext *cx, uintN argc, jsval *vp)
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
     z = fd_tan(x);
-    return js_NewNumberValue(cx, z, vp);
+    return js_NewNumberInRootedValue(cx, z, vp);
 }
 
 #if JS_HAS_TOSOURCE

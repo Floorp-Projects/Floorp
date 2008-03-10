@@ -2025,14 +2025,18 @@ js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, jsval *vp, jsval *vp2)
         d = js_ValueToNumber(cx, vp);
         if (JSVAL_IS_NULL(*vp))
             return JS_FALSE;
+        JS_ASSERT(JSVAL_IS_NUMBER(*vp) || *vp == JSVAL_TRUE);
 
         /* Store the result of v conversion back in vp for post increments. */
-        if ((cs->format & JOF_POST) && !js_NewNumberValue(cx, d, vp))
+        if ((cs->format & JOF_POST) &&
+            *vp == JSVAL_TRUE
+            && !js_NewNumberInRootedValue(cx, d, vp)) {
             return JS_FALSE;
+        }
     }
 
     (cs->format & JOF_INC) ? d++ : d--;
-    if (!js_NewNumberValue(cx, d, vp2))
+    if (!js_NewNumberInRootedValue(cx, d, vp2))
         return JS_FALSE;
 
     if (!(cs->format & JOF_POST))
@@ -2224,7 +2228,7 @@ js_DumpOpMeters()
             sp[n] = INT_TO_JSVAL(i_);                                         \
         } else {                                                              \
             SAVE_SP_AND_PC(fp);                                               \
-            if (!js_NewDoubleValue(cx, d, &sp[n]))                            \
+            if (!js_NewDoubleInRootedValue(cx, d, &sp[n]))                    \
                 goto error;                                                   \
         }                                                                     \
     JS_END_MACRO
@@ -2235,7 +2239,7 @@ js_DumpOpMeters()
             sp[n] = INT_TO_JSVAL(i);                                          \
         } else {                                                              \
             SAVE_SP_AND_PC(fp);                                               \
-            if (!js_NewDoubleValue(cx, (jsdouble)(i), &sp[n]))                \
+            if (!js_NewDoubleInRootedValue(cx, (jsdouble)(i), &sp[n]))        \
                 goto error;                                                   \
         }                                                                     \
     JS_END_MACRO
@@ -2246,7 +2250,7 @@ js_DumpOpMeters()
             sp[n] = INT_TO_JSVAL(u);                                          \
         } else {                                                              \
             SAVE_SP_AND_PC(fp);                                               \
-            if (!js_NewDoubleValue(cx, (jsdouble)(u), &sp[n]))                \
+            if (!js_NewDoubleInRootedValue(cx, (jsdouble)(u), &sp[n]))        \
                 goto error;                                                   \
         }                                                                     \
     JS_END_MACRO
@@ -2305,6 +2309,7 @@ js_DumpOpMeters()
             d = js_ValueToNumber(cx, &sp[n]);                                 \
             if (JSVAL_IS_NULL(sp[n]))                                         \
                 goto error;                                                   \
+            JS_ASSERT(JSVAL_IS_NUMBER(sp[n]) || sp[n] == JSVAL_TRUE);         \
         }                                                                     \
     JS_END_MACRO
 
@@ -3799,8 +3804,7 @@ interrupt:
             if (JSVAL_IS_INT(rval) && (i = JSVAL_TO_INT(rval)) != 0) {
                 i = -i;
                 JS_ASSERT(INT_FITS_IN_JSVAL(i));
-                rval = INT_TO_JSVAL(i);
-                STORE_OPND(-1, rval);
+                sp[-1] = INT_TO_JSVAL(i);
             } else {
                 SAVE_SP_AND_PC(fp);
                 if (JSVAL_IS_DOUBLE(rval)) {
@@ -3809,6 +3813,7 @@ interrupt:
                     d = js_ValueToNumber(cx, &sp[-1]);
                     if (JSVAL_IS_NULL(sp[-1]))
                         goto error;
+                    JS_ASSERT(JSVAL_IS_NUMBER(sp[-1]) || sp[-1] == JSVAL_TRUE);
                 }
 #ifdef HPUX
                 /*
@@ -3820,7 +3825,7 @@ interrupt:
 #else
                 d = -d;
 #endif
-                if (!js_NewNumberValue(cx, d, &sp[-1]))
+                if (!js_NewNumberInRootedValue(cx, d, &sp[-1]))
                     goto error;
             }
           END_CASE(JSOP_NEG)
@@ -3830,10 +3835,15 @@ interrupt:
             if (!JSVAL_IS_NUMBER(rval)) {
                 SAVE_SP_AND_PC(fp);
                 d = js_ValueToNumber(cx, &sp[-1]);
-                if (JSVAL_IS_NULL(sp[-1]))
+                rval = sp[-1];
+                if (JSVAL_IS_NULL(rval))
                     goto error;
-                if (!js_NewNumberValue(cx, d, &sp[-1]))
-                    goto error;
+                if (rval == JSVAL_TRUE) {
+                    if (!js_NewNumberInRootedValue(cx, d, &sp[-1]))
+                        goto error;
+                } else {
+                    JS_ASSERT(JSVAL_IS_NUMBER(rval));
+                }
             }
           END_CASE(JSOP_POS)
 
@@ -4201,6 +4211,7 @@ interrupt:
                         } else {
                             JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
                             sprop = PCVAL_TO_SPROP(entry->vword);
+                            SAVE_SP_AND_PC(fp);
                             NATIVE_GET(cx, obj, obj2, sprop, &rval);
                         }
                         JS_UNLOCK_OBJ(cx, obj2);
@@ -4229,10 +4240,9 @@ interrupt:
             lval = FETCH_OPND(-1);
             if (JSVAL_IS_STRING(lval)) {
                 str = JSVAL_TO_STRING(lval);
-                rval = INT_TO_JSVAL(JSSTRING_LENGTH(str));
+                sp[-1] = INT_TO_JSVAL(JSSTRING_LENGTH(str));
             } else if (!JSVAL_IS_PRIMITIVE(lval) &&
                        (obj = JSVAL_TO_OBJECT(lval), OBJ_IS_ARRAY(cx, obj))) {
-
                 jsuint length;
 
                 /*
@@ -4242,9 +4252,11 @@ interrupt:
                  */
                 length = obj->fslots[JSSLOT_ARRAY_LENGTH];
                 if (length <= JSVAL_INT_MAX) {
-                    rval = INT_TO_JSVAL(length);
+                    sp[-1] = INT_TO_JSVAL(length);
                 } else {
-                    if (!js_NewDoubleValue(cx, (jsdouble)length, &rval))
+                    SAVE_SP_AND_PC(fp);
+                    if (!js_NewDoubleInRootedValue(cx, (jsdouble) length,
+                                                   &sp[-1]))
                         goto error;
                 }
             } else {
@@ -4252,7 +4264,6 @@ interrupt:
                 len = JSOP_LENGTH_LENGTH;
                 goto do_getprop_with_lval;
             }
-            STORE_OPND(-1, rval);
           END_CASE(JSOP_LENGTH)
 
           BEGIN_CASE(JSOP_CALLPROP)
