@@ -3649,7 +3649,7 @@ regexp_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (!JS_ValueToNumber(cx, *vp, &lastIndex))
             return JS_FALSE;
         lastIndex = js_DoubleToInteger(lastIndex);
-        ok = js_NewNumberValue(cx, lastIndex, vp) &&
+        ok = JS_NewNumberValue(cx, lastIndex, vp) &&
              JS_SetReservedSlot(cx, obj, 0, *vp);
     }
     return ok;
@@ -4329,7 +4329,7 @@ js_SetLastIndex(JSContext *cx, JSObject *obj, jsdouble lastIndex)
 {
     jsval v;
 
-    return js_NewNumberValue(cx, lastIndex, &v) &&
+    return JS_NewNumberValue(cx, lastIndex, &v) &&
            JS_SetReservedSlot(cx, obj, 0, v);
 }
 

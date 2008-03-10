@@ -2032,20 +2032,19 @@ RefillDoubleFreeList(JSContext *cx)
     JS_COUNT_OPERATION(cx, JSOW_ALLOCATION * JS_BITS_PER_BYTE);
 
     /*
-     * We delegate assigning cx->doubleFreeList to js_NewDoubleGCThing as
+     * We delegate assigning cx->doubleFreeList to js_NewDoubleInRootedValue as
      * it immediately consumes the head of the list.
      */
     return list;
 }
 
-jsdouble *
-js_NewDoubleGCThing(JSContext *cx)
+JSBool
+js_NewDoubleInRootedValue(JSContext *cx, jsdouble d, jsval *vp)
 {
-    JSGCDoubleCell *cell;
-    jsdouble *dp;
 #ifdef JS_GCMETER
     JSGCArenaStats *astats;
 #endif
+    JSGCDoubleCell *cell;
 
     /* Updates of metering counters here are not thread-safe. */
     METER(astats = &cx->runtime->gcStats.doubleArenaStats);
@@ -2055,29 +2054,32 @@ js_NewDoubleGCThing(JSContext *cx)
         cell = RefillDoubleFreeList(cx);
         if (!cell) {
             METER(astats->fail++);
-            return NULL;
+            return JS_FALSE;
         }
     } else {
         METER(astats->localalloc++);
     }
     cx->doubleFreeList = cell->link;
-    dp = &cell->number;
+    cell->number = d;
+    *vp = DOUBLE_TO_JSVAL(&cell->number);
+    return JS_TRUE;
+}
 
+jsdouble *
+js_NewWeaklyRootedDouble(JSContext *cx, jsdouble d)
+{
+    jsval v;
+    jsdouble *dp;
+
+    if (!js_NewDoubleInRootedValue(cx, d, &v))
+        return NULL;
+
+    JS_ASSERT(JSVAL_IS_DOUBLE(v));
+    dp = JSVAL_TO_DOUBLE(v);
     if (cx->localRootStack) {
-        /*
-         * If we're in a local root scope, don't set newborn[type] at all, to
-         * avoid entraining garbage from it for an unbounded amount of time
-         * on this context.  A caller will leave the local root scope and pop
-         * this reference, allowing thing to be GC'd if it has no other refs.
-         * See JS_EnterLocalRootScope and related APIs.
-         */
-        if (js_PushLocalRoot(cx, cx->localRootStack, DOUBLE_TO_JSVAL(dp)) < 0)
+        if (js_PushLocalRoot(cx, cx->localRootStack, v) < 0)
             return NULL;
     } else {
-        /*
-         * No local root scope, so we're stuck with the old, fragile model of
-         * depending on a pigeon-hole newborn per type per context.
-         */
         cx->weakRoots.newborn[GCX_DOUBLE] = dp;
     }
     return dp;
