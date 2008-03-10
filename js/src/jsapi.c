@@ -331,16 +331,21 @@ JS_PushArgumentsVA(JSContext *cx, void **markp, const char *format, va_list ap)
             break;
           case 'i':
           case 'j':
-            if (!js_NewNumberValue(cx, (jsdouble) va_arg(ap, int32), sp))
+            /*
+             * Use JS_New{Double,Number}Value here and in the next two cases,
+             * not js_New{Double,Number}InRootedValue, as sp may point to an
+             * unrooted location.
+             */
+            if (!JS_NewNumberValue(cx, (jsdouble) va_arg(ap, int32), sp))
                 goto bad;
             break;
           case 'u':
-            if (!js_NewNumberValue(cx, (jsdouble) va_arg(ap, uint32), sp))
+            if (!JS_NewNumberValue(cx, (jsdouble) va_arg(ap, uint32), sp))
                 goto bad;
             break;
           case 'd':
           case 'I':
-            if (!js_NewDoubleValue(cx, va_arg(ap, jsdouble), sp))
+            if (!JS_NewDoubleValue(cx, va_arg(ap, jsdouble), sp))
                 goto bad;
             break;
           case 's':
@@ -489,7 +494,7 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
       case JSTYPE_NUMBER:
         ok = JS_ValueToNumber(cx, v, &d);
         if (ok) {
-            dp = js_NewDouble(cx, d);
+            dp = js_NewWeaklyRootedDouble(cx, d);
             ok = (dp != NULL);
             if (ok)
                 *vp = DOUBLE_TO_JSVAL(dp);
@@ -1793,21 +1798,33 @@ JS_PUBLIC_API(jsdouble *)
 JS_NewDouble(JSContext *cx, jsdouble d)
 {
     CHECK_REQUEST(cx);
-    return js_NewDouble(cx, d);
+    return js_NewWeaklyRootedDouble(cx, d);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_NewDoubleValue(JSContext *cx, jsdouble d, jsval *rval)
 {
+    jsdouble *dp;
+
     CHECK_REQUEST(cx);
-    return js_NewDoubleValue(cx, d, rval);
+    dp = js_NewWeaklyRootedDouble(cx, d);
+    if (!dp)
+        return JS_FALSE;
+    *rval = DOUBLE_TO_JSVAL(dp);
+    return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval)
 {
+    jsint i;
+
     CHECK_REQUEST(cx);
-    return js_NewNumberValue(cx, d, rval);
+    if (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i)) {
+        *rval = INT_TO_JSVAL(i);
+        return JS_TRUE;
+    }
+    return JS_NewDoubleValue(cx, d, rval);
 }
 
 #undef JS_AddRoot
@@ -3128,7 +3145,7 @@ JS_DefineConstDoubles(JSContext *cx, JSObject *obj, JSConstDoubleSpec *cds)
 
     CHECK_REQUEST(cx);
     for (ok = JS_TRUE; cds->name; cds++) {
-        ok = js_NewNumberValue(cx, cds->dval, &value);
+        ok = js_NewNumberInRootedValue(cx, cds->dval, &value);
         if (!ok)
             break;
         flags = cds->flags;

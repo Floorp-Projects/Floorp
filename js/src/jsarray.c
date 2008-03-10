@@ -252,7 +252,7 @@ IndexToValue(JSContext *cx, jsuint index, jsval *vp)
         *vp = INT_TO_JSVAL(index);
         return JS_TRUE;
     }
-    return js_NewDoubleValue(cx, (jsdouble)index, vp);
+    return JS_NewDoubleValue(cx, (jsdouble)index, vp);
 }
 
 static JSBool
@@ -2570,7 +2570,7 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, jsval *vp)
             return JS_FALSE;
         }
         if (!hole && js_StrictlyEqual(cx, *vp, vp[2]))
-            return js_NewNumberValue(cx, i, vp);
+            return js_NewNumberInRootedValue(cx, i, vp);
         if (i == stop)
             goto not_found;
         i += direction;
