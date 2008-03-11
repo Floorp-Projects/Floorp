@@ -101,6 +101,9 @@ public:
                          
   void PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt,
                    const nsRect& aDirtyRect);
+  
+  virtual PRBool IsEmpty();
+  virtual PRBool IsSelfEmpty();
 
 protected:
   void GetDesiredSize(nsPresContext* aPresContext,
