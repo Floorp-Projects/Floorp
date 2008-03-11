@@ -192,6 +192,14 @@ var PlacesUtils = {
                            getService(Ci.nsIURIFixup);
   },
 
+  get ellipsis() {
+    delete this.ellipsis;
+    var pref = Cc["@mozilla.org/preferences-service;1"].
+               getService(Ci.nsIPrefBranch);
+    return this.ellipsis = pref.getComplexValue("intl.ellipsis",
+                                                Ci.nsIPrefLocalizedString).data;
+  },
+
   /**
    * Makes a URI from a spec.
    * @param   aSpec
@@ -1877,7 +1885,8 @@ var PlacesUtils = {
       else
         throw "Unexpected node";
 
-      element.setAttribute("label", aNode.title);
+      element.setAttribute("label", this.getBestTitle(aNode));
+
       if (iconURISpec)
         element.setAttribute("image", iconURISpec);
     }
@@ -1885,6 +1894,31 @@ var PlacesUtils = {
     element.node.viewIndex = 0;
 
     return element;
+  },
+
+  getBestTitle: function PU_getBestTitle(aNode) {
+    var title;
+    if (!aNode.title && this.uriTypes.indexOf(aNode.type) != -1) {
+      // if node title is empty, try to set the label using host and filename
+      // this._uri() will throw if aNode.uri is not a valid URI
+      try {
+        var uri = this._uri(aNode.uri);
+        var host = uri.host;
+        var fileName = uri.QueryInterface(Ci.nsIURL).fileName;
+        // if fileName is empty, use path to distinguish labels
+        title = host + (fileName ?
+                        (host ? "/" + this.ellipsis + "/" : "") + fileName :
+                        uri.path);
+      }
+      catch (e) {
+        // Use (no title) for non-standard URIs (data:, javascript:, ...)
+        title = "";
+      }
+    }
+    else
+      title = aNode.title;
+
+    return title || PlacesUtils.getString("noTitle");
   },
 
   get leftPaneQueries() {    
