@@ -136,7 +136,7 @@ include $(topsrcdir)/config/config.mk
 ifdef _MSC_VER
 # Always enter a Windows program through wmain, whether or not we're
 # a console application.
-WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
+WIN32_EXE_LDFLAGS += -ENTRY:mainWCRTStartup
 endif
 
 ifdef NS_TRACE_MALLOC
