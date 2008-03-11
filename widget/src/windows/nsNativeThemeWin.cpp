@@ -287,7 +287,7 @@ static GetThemeSysFontPtr getThemeSysFont = NULL;
 static GetThemeColorPtr getThemeColor = NULL;
 static GetThemeMarginsPtr getThemeMargins = NULL;
 
-static const PRUnichar kThemeLibraryName[] = L"uxtheme.dll";
+static const char kThemeLibraryName[] = "uxtheme.dll";
 
 static inline bool IsCheckboxWidgetType(PRUint8 aWidgetType)
 {
@@ -326,7 +326,7 @@ nsNativeThemeWin::nsNativeThemeWin() {
   mHeaderTheme = NULL;
   mMenuTheme = NULL;
 
-  mThemeDLL = ::LoadLibraryW(kThemeLibraryName);
+  mThemeDLL = ::LoadLibrary(kThemeLibraryName);
   if (mThemeDLL) {
     openTheme = (OpenThemeDataPtr)GetProcAddress(mThemeDLL, "OpenThemeData");
     closeTheme = (CloseThemeDataPtr)GetProcAddress(mThemeDLL, "CloseThemeData");

@@ -309,13 +309,13 @@ NS_IMETHODIMP nsDeviceContextWin :: SetCanonicalPixelScale(float aScale)
 }
 
 
-nsresult nsDeviceContextWin::CopyLogFontToNSFont(HDC* aHDC, const LOGFONTW* ptrLogFont,
-                                                 nsFont* aFont) const
+nsresult nsDeviceContextWin::CopyLogFontToNSFont(HDC* aHDC, const LOGFONT* ptrLogFont,
+                                                 nsFont* aFont, PRBool aIsWide) const
 {
   PRUnichar name[LF_FACESIZE];
   name[0] = 0;
   if (aIsWide)
-    memcpy(name, ptrLogFont->lfFaceName, LF_FACESIZE*sizeof(PRUnichar));
+    memcpy(name, ptrLogFont->lfFaceName, LF_FACESIZE*2);
   else {
     MultiByteToWideChar(CP_ACP, 0, ptrLogFont->lfFaceName,
       strlen(ptrLogFont->lfFaceName) + 1, name, sizeof(name)/sizeof(name[0]));
@@ -360,7 +360,7 @@ nsresult nsDeviceContextWin::CopyLogFontToNSFont(HDC* aHDC, const LOGFONTW* ptrL
   // round, but take into account whether it is negative
   float pixelHeight = -ptrLogFont->lfHeight;
   if (pixelHeight < 0) {
-    HFONT hFont = ::CreateFontIndirectW(ptrLogFont);
+    HFONT hFont = ::CreateFontIndirect(ptrLogFont);
     if (!hFont)
       return NS_ERROR_OUT_OF_MEMORY;
     HGDIOBJ hObject = ::SelectObject(*aHDC, hFont);
@@ -388,32 +388,32 @@ nsresult nsDeviceContextWin :: GetSysFontInfo(HDC aHDC, nsSystemFontID anID, nsF
 {
   HGDIOBJ hGDI;
 
-  LOGFONTW logFont;
-  LOGFONTW* ptrLogFont = NULL;
+  LOGFONT logFont;
+  LOGFONT* ptrLogFont = NULL;
 
 #ifdef WINCE
   hGDI = ::GetStockObject(SYSTEM_FONT);
   if (hGDI == NULL)
     return NS_ERROR_UNEXPECTED;
   
-  if (::GetObjectW(hGDI, sizeof(logFont), &logFont) > 0)
+  if (::GetObject(hGDI, sizeof(logFont), &logFont) > 0)
     ptrLogFont = &logFont;
 #else
 
-  NONCLIENTMETRICSW ncm;
+  NONCLIENTMETRICS ncm;
 
   BOOL status;
   if (anID == eSystemFont_Icon) 
   {
-    status = ::SystemParametersInfoW(SPI_GETICONTITLELOGFONT,
-                                     sizeof(logFont),
-                                     (PVOID)&logFont,
-                                     0);
+    status = ::SystemParametersInfo(SPI_GETICONTITLELOGFONT,
+                                  sizeof(logFont),
+                                  (PVOID)&logFont,
+                                  0);
   }
   else
   {
-    ncm.cbSize = sizeof(NONCLIENTMETRICSW);
-    status = ::SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 
+    ncm.cbSize = sizeof(NONCLIENTMETRICS);
+    status = ::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 
                                      sizeof(ncm),  
                                      (PVOID)&ncm, 
                                      0);
@@ -468,7 +468,7 @@ nsresult nsDeviceContextWin :: GetSysFontInfo(HDC aHDC, nsSystemFontID anID, nsF
       hGDI = ::GetStockObject(DEFAULT_GUI_FONT);
       if (hGDI != NULL)
       {
-        if (::GetObjectW(hGDI, sizeof(logFont), &logFont) > 0)
+        if (::GetObject(hGDI, sizeof(logFont), &logFont) > 0)
         { 
           ptrLogFont = &logFont;
         }

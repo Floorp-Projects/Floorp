@@ -51,7 +51,7 @@ private:
   HICON     m_hIcon;
   char*     m_szURLString;
 
-  wchar_t*  m_szCommandMessage;
+  char*     m_szCommandMessage;
   BOOL      m_bWaitingStreamFromPFS;
   NPStream* m_PFSStream;
 
@@ -118,7 +118,7 @@ public:
 #define JVM_SMARTUPDATE_URL "http://java.com/download"
 
 #ifdef WIN32
-#define REGISTRY_PLACE L"Software\\Netscape\\Netscape Navigator\\Default Plugin"
+#define REGISTRY_PLACE "Software\\Netscape\\Netscape Navigator\\Default Plugin"
 #else
 #define GWL_USERDATA        0
 #define COLOR_3DSHADOW      COLOR_BTNFACE
@@ -126,7 +126,7 @@ public:
 #define COLOR_3DDKSHADOW    COLOR_BTNSHADOW
 #endif
 
-#define CLASS_NULL_PLUGIN L"NullPluginClass"
+#define CLASS_NULL_PLUGIN "NullPluginClass"
  
 BOOL RegisterNullPluginWindowClass();
 void UnregisterNullPluginWindowClass();

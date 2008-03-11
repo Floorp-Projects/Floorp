@@ -266,7 +266,7 @@ nsMIMEInfoWin::LoadUriInternal(nsIURI * aURL)
     SFGAOF sfgao;
     
     // Bug 394974
-    HMODULE hDll = ::LoadLibraryW(L"shell32.dll");
+    HMODULE hDll = ::LoadLibrary("shell32.dll");
     MySHParseDisplayName pMySHParseDisplayName = NULL;
     // Version 6.0 and higher
     if (pMySHParseDisplayName = 
@@ -274,19 +274,19 @@ nsMIMEInfoWin::LoadUriInternal(nsIURI * aURL)
                                                  "SHParseDisplayName")) {
       if (SUCCEEDED(pMySHParseDisplayName(NS_ConvertUTF8toUTF16(urlSpec).get(),
                                           NULL, &pidl, 0, &sfgao))) {
-        static const PRUnichar cmdVerb[] = L"open";
-        SHELLEXECUTEINFOW sinfo;
+        static const char cmdVerb[] = "open";
+        SHELLEXECUTEINFO sinfo;
         memset(&sinfo, 0, sizeof(SHELLEXECUTEINFO));
         sinfo.cbSize   = sizeof(SHELLEXECUTEINFO);
         sinfo.fMask    = SEE_MASK_FLAG_DDEWAIT |
                          SEE_MASK_FLAG_NO_UI |
                          SEE_MASK_INVOKEIDLIST;
         sinfo.hwnd     = NULL;
-        sinfo.lpVerb   = (LPWSTR)&cmdVerb;
+        sinfo.lpVerb   = (LPCSTR)&cmdVerb;
         sinfo.nShow    = SW_SHOWNORMAL;
         sinfo.lpIDList = pidl;
         
-        BOOL result = ShellExecuteExW(&sinfo);
+        BOOL result = ShellExecuteEx(&sinfo);
 
         CoTaskMemFree(pidl);
 
@@ -295,9 +295,7 @@ nsMIMEInfoWin::LoadUriInternal(nsIURI * aURL)
       }
     } else {
       // Version of shell32.dll < 6.0
-      LONG r = (LONG) ::ShellExecuteW(NULL, L"open", 
-                                     NS_ConvertUTF8toUTF16(urlSpec).get(),
-                                     NULL, NULL, 
+      LONG r = (LONG) ::ShellExecute(NULL, "open", urlSpec.get(), NULL, NULL, 
                                      SW_SHOWNORMAL);
       if (r < 32) 
         rv = NS_ERROR_FAILURE;
