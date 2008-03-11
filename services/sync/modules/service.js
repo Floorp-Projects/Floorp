@@ -112,6 +112,13 @@ WeaveSyncService.prototype = {
     return this.__histEngine;
   },
 
+  __cookieEngine: null,
+  get _cookieEngine() {
+    if (!this.__cookieEngine)
+      this.__cookieEngine = new CookieEngine(this._dav, this._cryptoId);
+    return this.__cookieEngine;
+  },
+
   // Logger object
   _log: null,
 
@@ -436,7 +443,10 @@ WeaveSyncService.prototype = {
         this._histEngine.sync(self.cb);
         yield;
       }
-
+      if (this._prefs.getBoolPref("cookies")) {
+        this._cookieEngine.sync(self.cb);
+        yield;
+      }
       success = true;
       this._unlock();
 
