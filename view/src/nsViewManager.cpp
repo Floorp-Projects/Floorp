@@ -61,7 +61,6 @@
 #include "nsHashtable.h"
 #include "nsCOMArray.h"
 #include "nsThreadUtils.h"
-#include "nsContentUtils.h"
 
 #include "gfxContext.h"
 
@@ -453,51 +452,47 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
     RootViewManager()->mRecursiveRefreshPending = PR_TRUE;
     return;
   }  
+  SetPainting(PR_TRUE);
 
-  {
-    nsAutoScriptBlocker scriptBlocker;
-    SetPainting(PR_TRUE);
+  nsCOMPtr<nsIRenderingContext> localcx;
+  NS_ASSERTION(aView->GetWidget(),
+               "Must have a widget to calculate coordinates correctly");
+  if (nsnull == aContext)
+    {
+      localcx = CreateRenderingContext(*aView);
 
-    nsCOMPtr<nsIRenderingContext> localcx;
-    NS_ASSERTION(aView->GetWidget(),
-                 "Must have a widget to calculate coordinates correctly");
-    if (nsnull == aContext)
-      {
-        localcx = CreateRenderingContext(*aView);
-
-        //couldn't get rendering context. this is ok at init time atleast
-        if (nsnull == localcx) {
-          SetPainting(PR_FALSE);
-          return;
-        }
-      } else {
-        // plain assignment grabs another reference.
-        localcx = aContext;
+      //couldn't get rendering context. this is ok at init time atleast
+      if (nsnull == localcx) {
+        SetPainting(PR_FALSE);
+        return;
       }
+    } else {
+      // plain assignment grabs another reference.
+      localcx = aContext;
+    }
 
-    PRInt32 p2a = mContext->AppUnitsPerDevPixel();
+  PRInt32 p2a = mContext->AppUnitsPerDevPixel();
 
-    nsRefPtr<gfxContext> ctx = localcx->ThebesContext();
+  nsRefPtr<gfxContext> ctx = localcx->ThebesContext();
 
-    ctx->Save();
+  ctx->Save();
 
-    nsPoint vtowoffset = aView->ViewToWidgetOffset();
-    ctx->Translate(gfxPoint(gfxFloat(vtowoffset.x) / p2a,
-                            gfxFloat(vtowoffset.y) / p2a));
+  nsPoint vtowoffset = aView->ViewToWidgetOffset();
+  ctx->Translate(gfxPoint(gfxFloat(vtowoffset.x) / p2a,
+                          gfxFloat(vtowoffset.y) / p2a));
 
-    ctx->Translate(gfxPoint(-gfxFloat(viewRect.x) / p2a,
-                            -gfxFloat(viewRect.y) / p2a));
+  ctx->Translate(gfxPoint(-gfxFloat(viewRect.x) / p2a,
+                          -gfxFloat(viewRect.y) / p2a));
 
-    nsRegion opaqueRegion;
-    AddCoveringWidgetsToOpaqueRegion(opaqueRegion, mContext, aView);
-    damageRegion.Sub(damageRegion, opaqueRegion);
+  nsRegion opaqueRegion;
+  AddCoveringWidgetsToOpaqueRegion(opaqueRegion, mContext, aView);
+  damageRegion.Sub(damageRegion, opaqueRegion);
 
-    RenderViews(aView, *localcx, damageRegion);
+  RenderViews(aView, *localcx, damageRegion);
 
-    ctx->Restore();
+  ctx->Restore();
 
-    SetPainting(PR_FALSE);
-  }
+  SetPainting(PR_FALSE);
 
   if (RootViewManager()->mRecursiveRefreshPending) {
     // Unset this flag first, since if aUpdateFlags includes NS_VMREFRESH_IMMEDIATE
