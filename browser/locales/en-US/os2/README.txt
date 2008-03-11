@@ -31,7 +31,7 @@ Official Milestone builds of Firefox are published on the release page at
 
 OS/2 releases are not created by Mozilla.org staff and may appear on the page
 http://www.mozilla.org/ports/os2 before the releases page. Be sure to read the
-Firefox release notes linked on the releases page for information on known 
+Firefox release notes linked on the releases page for information on known
 problems and installation issues with Firefox.
 
 
@@ -41,29 +41,28 @@ problems and installation issues with Firefox.
 
 ================================================================================
 
-- This release requires the C runtime DLLs (libc-0.6.1) from
-  ftp://ftp.netlabs.org/pub/gcc/libc-0.6.1-csd1.zip
+- This release requires the C runtime DLLs (libc-0.6.3) from
+  ftp://ftp.netlabs.org/pub/gcc/libc-0.6.3-csd3.zip
   in order to run.  You can unpack them in the same directory as the
   Firefox executable or somewhere else in your LIBPATH.
 
 - Minimum hardware requirements
-  + Pentium class processor
-  + 64 MiB RAM plus 64 MiB free swap space
-  + 35 MiB free harddisk space for installation
+  + 400 MHz Pentium class processor
+  + 128 MiB RAM plus 128 MiB free swap space
+  + 40 MiB free harddisk space for installation
     plus storage space for disk cache
+  + Graphics card and driver capable of displaying more than 256 colors
 
 - Recommended hardware for acceptable performance
-  + 500 MHz processor
-  + 256 MiB RAM plus 64 MiB free swap space
+  + 1.0 GHz processor
+  + 512 MiB RAM plus 128 MiB free swap space
     NOTE: Firefox's performance and stability increases the more physical
-    RAM is available. Especially for long sessions 512 MiB of memory is
-    recommended.
-  + Graphics card and driver capable of displaying more than 256 colors
+    RAM is available.
 
 - Software requirements
   + Installation on a file system supporting long file names
     (i.e. HPFS or JFS but not FAT)
-  + OS/2 Warp 4 with Fixpack 15 or later
+  + OS/2 Warp 4 with Fixpack 15 or later (Warp 3 may work but is unsupported)
   + MPTS version 5.3
   + TCP/IP version 4.1
   + INETVER: SOCKETS.SYS=5.3007, AFOS2.SYS=5.3001, AFINET.SYS=5.3006
@@ -75,6 +74,10 @@ problems and installation issues with Firefox.
   + Convenience Pack 2 or eComStation 1.0 or later meet these requirements
     out of the box.
 
+- Useful optional software
+  The following packages enable additional features in Firefox. Download
+  locations are listed below with a detailed description of the features.
+  + Doodle's Screen Saver (DSSaver), version 1.8 or later
 
 ================================================================================
 
@@ -98,7 +101,7 @@ OS/2 Installation Instructions
    download the .zip file and follow these steps:
 
      1. Click the "Zip" link on the site you're downloading Firefox from
-     to download the ZIP package to your machine. This file is typically called 
+     to download the ZIP package to your machine. This file is typically called
      firefox-x.x.x.en-US.os2.zip where the "x.x.x" is replaced by the Firefox
      version.
 
@@ -107,13 +110,13 @@ OS/2 Installation Instructions
 
      3. Keep in mind that the unzip process creates a directory "firefox"
      below the location you point it to, e.g.
-        unzip firefox-1.0.1.en-US.os2.zip -d c:\firefox-1.0.1
-     will unpack Firefox into c:\firefox-1.0.1\firefox.
+        unzip firefox-3.0.en-US.os2.zip -d c:\firefox-3.0
+     will unpack Firefox into c:\firefox-3.0\firefox.
 
      4. Make sure that you are _not_ unpacking over an old installation. This is
      known to cause problems.
 
-     5. To start Firefox, navigate to the directory you extracted 
+     5. To start Firefox, navigate to the directory you extracted
      Firefox to, make sure that the C library DLLs are copied to the
      installation directory or installed in the LIBPATH, and then double-click
      the Firefox.exe object.
@@ -122,7 +125,7 @@ OS/2 Installation Instructions
 Running multiple versions concurrently
 --------------------------------------
 
-Because various members of the Mozilla family (i.e. Mozilla, Firefox, 
+Because various members of the Mozilla family (i.e. Mozilla, Firefox,
 Thunderbird, IBM Web Browser) may use different, incompatible versions of the
 same DLL, some extra steps may be required to run them concurrently.
 
@@ -162,7 +165,7 @@ Separating profiles from installation directory
 
 To separate the locations of the user profile(s) (containing the bookmarks and
 all customizations) from the installation directory to keep your preferences in
-the case of an update even when using ZIP packages, set the variable 
+the case of an update even when using ZIP packages, set the variable
 MOZILLA_HOME to a directory of your choice. You can do this either in Config.sys
 or in a script or using a program object as listed above. If you add
 
@@ -192,6 +195,36 @@ behavior of Firefox on OS/2:
 
 Find more information on this topic and other tips on
    http://www.os2bbs.com/os2news/Warpzilla.html
+
+
+Idle timer for internal cleanups
+--------------------------------
+
+If Doodle's Screen Saver (DSSaver) v1.8 or later is installed, Firefox can
+determine how long the user has been inactive. If the user has been inactive
+for a while, cleanup operations are performed (e.g. on the browsing history)
+and reloads of "Live Bookmarks" are suspended.
+
+DSSaver can be downloaded from
+   ftp://ftp.netlabs.org/pub/dssaver/dssaver_v18.zip
+
+
+Setting the OS/2 default browser
+--------------------------------
+
+The default web browser can be set using WPS URL objects.  The properties
+notebook of every URL object contains a "Browser" tab where the browser
+executable can be selected. Any changes to these settings will be stored and
+reflected in all URL objects once the user presses the "Set Default" button.
+
+Two small applications make this change a bit easier and provide options to also
+set default programs for mail and news as well as internet chat services:
+
+- ConfigApps
+     http://hobbes.nmsu.edu/cgi-bin/h-search?key=configapps&sort=date
+
+- Internet Application Integration
+     http://7cities.net/~mckinnis/os2/
 
 
 Known Problems of the OS/2 version
