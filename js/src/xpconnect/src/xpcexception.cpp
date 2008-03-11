@@ -42,6 +42,7 @@
 /* An implementaion of nsIException. */
 
 #include "xpcprivate.h"
+#include "nsNetError.h"
 
 /***************************************************************************/
 /* Quick and dirty mapping of well known result codes to strings. We only
