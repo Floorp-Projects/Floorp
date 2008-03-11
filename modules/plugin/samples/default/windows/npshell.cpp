@@ -86,18 +86,18 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
 
   for(int i = 0; i < argc; i++)
   {
-    if(strcmpi(argn[i],"pluginspage") == 0 && argv[i] != NULL)
+    if(lstrcmpi(argn[i],"pluginspage") == 0 && argv[i] != NULL)
       szPageURL = (char *)argv[i];
-    else if(strcmpi(argn[i],"codebase") == 0 && argv[i] != NULL)
+    else if(lstrcmpi(argn[i],"codebase") == 0 && argv[i] != NULL)
       szPageURL = (char *)argv[i];
-    else if(strcmpi(argn[i],"pluginurl") == 0 && argv[i] != NULL)
+    else if(lstrcmpi(argn[i],"pluginurl") == 0 && argv[i] != NULL)
       szFileURL = (char *)argv[i];
-    else if(strcmpi(argn[i],"classid") == 0 && argv[i] != NULL)
+    else if(lstrcmpi(argn[i],"classid") == 0 && argv[i] != NULL)
       szFileURL = (char *)argv[i];
-    else if(strcmpi(argn[i],"SRC") == 0 && argv[i] != NULL)
+    else if(lstrcmpi(argn[i],"SRC") == 0 && argv[i] != NULL)
       buf = (char *)argv[i];
-    else if(strcmpi(argn[i],"HIDDEN") == 0 && argv[i] != NULL)
-      bHidden = (strcmp((char *)argv[i], "TRUE") == 0);
+    else if(lstrcmpi(argn[i],"HIDDEN") == 0 && argv[i] != NULL)
+      bHidden = (lstrcmp((char *)argv[i], "TRUE") == 0);
   }
 
   /* some post-processing on the filename to attempt to extract the extension:  */

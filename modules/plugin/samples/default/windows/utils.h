@@ -40,6 +40,6 @@
 
 HKEY openRegistry();
 BOOL IsNewMimeType(LPSTR szMimeType);
-void SetDlgItemTextWrapped(HWND hWnd, int iID, wchar_t* szText);
+void SetDlgItemTextWrapped(HWND hWnd, int iID, LPSTR szText);
 
 #endif // __UTILS_H__

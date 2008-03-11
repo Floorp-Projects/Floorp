@@ -168,11 +168,27 @@ gfxWindowsSurface::OptimizeToDDB(HDC dc, const gfxIntSize& size, gfxImageFormat 
     return raw;
 }
 
+static char*
+GetACPString(const nsAString& aStr)
+{
+    int acplen = aStr.Length() * 2 + 1;
+    char * acp = new char[acplen];
+    if(acp) {
+        int outlen = ::WideCharToMultiByte(CP_ACP, 0, 
+                                           PromiseFlatString(aStr).get(),
+                                           aStr.Length(),
+                                           acp, acplen, NULL, NULL);
+        if (outlen > 0)
+            acp[outlen] = '\0';  // null terminate
+    }
+    return acp;
+}
+
 nsresult gfxWindowsSurface::BeginPrinting(const nsAString& aTitle,
                                           const nsAString& aPrintToFileName)
 {
 #define DOC_TITLE_LENGTH 30
-    DOCINFOW docinfo;
+    DOCINFO docinfo;
 
     nsString titleStr;
     titleStr = aTitle;
@@ -180,21 +196,23 @@ nsresult gfxWindowsSurface::BeginPrinting(const nsAString& aTitle,
         titleStr.SetLength(DOC_TITLE_LENGTH-3);
         titleStr.AppendLiteral("...");
     }
-    nsPromiseFlatString flatTitleStr(titleStr);
-    const PRUnichar *title = (const PRUnichar*)(flatTitleStr.get());
-    const PRUnichar *docName = nsnull;
-    nsPromiseFlatString printToFileNameStr(aPrintToFileName);
+    char *title = GetACPString(titleStr);
+
+    char *docName = nsnull;
     if (!aPrintToFileName.IsEmpty()) {
-        docName = (const PRUnichar*)(printToFileNameStr.get());
+        docName = ToNewCString(aPrintToFileName);
     }
+
     docinfo.cbSize = sizeof(docinfo);
-    docinfo.lpszDocName = title ? title : L"Mozilla Document";
+    docinfo.lpszDocName = title ? title : "Mozilla Document";
     docinfo.lpszOutput = docName;
     docinfo.lpszDatatype = NULL;
     docinfo.fwType = 0;
 
-    ::StartDocW(mDC, &docinfo);
+    ::StartDoc(mDC, &docinfo);
         
+    delete [] title;
+    if (docName != nsnull) nsMemory::Free(docName);
 
     return NS_OK;
 }

@@ -1915,7 +1915,7 @@ END_COM_MAP()
                 NS_SUCCEEDED(baseURI->GetSpec(spec)))
             {
                 USES_CONVERSION;
-                if (FAILED(CreateURLMoniker(NULL, A2CW(spec.get()), &baseURLMoniker)))
+                if (FAILED(CreateURLMoniker(NULL, T2CW(spec.get()), &baseURLMoniker)))
                     return E_UNEXPECTED;
             }
         }

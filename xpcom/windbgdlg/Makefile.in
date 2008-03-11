@@ -42,8 +42,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-OS_LIBS		+= shell32.lib
-
 SIMPLE_PROGRAMS	= windbgdlg$(BIN_SUFFIX)
 
 CPPSRCS		= windbgdlg.cpp
