@@ -660,13 +660,19 @@ nsContainerFrame::DoInlineIntrinsicWidth(nsIRenderingContext *aRenderingContext,
   // messy the bidi situations are, since per CSS2.1 section 8.6
   // (implemented in bug 328168), the startSide border is always on the
   // first line.
-  aData->currentLine +=
-    GetCoord(stylePadding->mPadding.Get(startSide), 0) +
-    styleBorder->GetBorderWidth(startSide) +
-    GetCoord(styleMargin->mMargin.Get(startSide), 0);
+  // This frame is a first-in-flow, but it might have a previous bidi
+  // continuation, in which case that continuation should handle the startSide 
+  // border.
+  if (!GetPrevContinuation()) {
+    aData->currentLine +=
+      GetCoord(stylePadding->mPadding.Get(startSide), 0) +
+      styleBorder->GetBorderWidth(startSide) +
+      GetCoord(styleMargin->mMargin.Get(startSide), 0);
+  }
 
   const nsLineList_iterator* savedLine = aData->line;
 
+  nsContainerFrame *lastInFlow;
   for (nsContainerFrame *nif = this; nif;
        nif = (nsContainerFrame*) nif->GetNextInFlow()) {
     for (nsIFrame *kid = nif->mFrames.FirstChild(); kid;
@@ -682,6 +688,7 @@ nsContainerFrame::DoInlineIntrinsicWidth(nsIRenderingContext *aRenderingContext,
     // After we advance to our next-in-flow, the stored line may not
     // longer be the correct line. Just forget it.
     aData->line = nsnull;
+    lastInFlow = nif;
   }
   
   aData->line = savedLine;
@@ -690,10 +697,15 @@ nsContainerFrame::DoInlineIntrinsicWidth(nsIRenderingContext *aRenderingContext,
   // messy the bidi situations are, since per CSS2.1 section 8.6
   // (implemented in bug 328168), the endSide border is always on the
   // last line.
-  aData->currentLine +=
-    GetCoord(stylePadding->mPadding.Get(endSide), 0) +
-    styleBorder->GetBorderWidth(endSide) +
-    GetCoord(styleMargin->mMargin.Get(endSide), 0);
+  // We reached the last-in-flow, but it might have a next bidi
+  // continuation, in which case that continuation should handle 
+  // the endSide border.
+  if (!lastInFlow->GetNextContinuation()) {
+    aData->currentLine +=
+      GetCoord(stylePadding->mPadding.Get(endSide), 0) +
+      styleBorder->GetBorderWidth(endSide) +
+      GetCoord(styleMargin->mMargin.Get(endSide), 0);
+  }
 }
 
 /* virtual */ nsSize
