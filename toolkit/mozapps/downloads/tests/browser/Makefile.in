@@ -52,6 +52,7 @@ _BROWSER_FILES = \
   browser_bug_410289.js \
   browser_bug_411172.js \
   browser_bug_412360.js \
+  browser_bug_413093.js \
   browser_bug_413985.js \
   browser_bug_416303.js \
   $(NULL)
