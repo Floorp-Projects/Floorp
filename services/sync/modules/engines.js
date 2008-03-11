@@ -753,3 +753,29 @@ HistoryEngine.prototype = {
   }
 };
 HistoryEngine.prototype.__proto__ = new Engine();
+
+
+// Jono: the following is copy-and-paste code
+function CookieEngine(davCollection, cryptoId) {
+  this._init(davCollection, cryptoId);
+}
+CookieEngine.prototype = {
+  get name() { return "cookie-engine"; },
+  get logName() { return "CookieEngine"; },
+  get serverPrefix() { return "user-data/cookies/"; },
+
+  __core: null,
+  get _core() {
+    if (!this.__core)
+      this.__core = new CookieSyncCore();
+    return this.__core;
+  },
+
+  __store: null,
+  get _store() {
+    if (!this.__store)
+      this.__store = new CookieStore();
+    return this.__store;
+  }
+};
+CookieEngine.prototype.__proto__ = new Engine();

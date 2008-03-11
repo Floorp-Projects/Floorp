@@ -11,6 +11,7 @@ pref("extensions.weave.autoconnect", true);
 pref("extensions.weave.enabled", true);
 pref("extensions.weave.bookmarks", true);
 pref("extensions.weave.history", true);
+pref("extensions.weave.cookies", false );
 pref("extensions.weave.schedule", 1);
 
 

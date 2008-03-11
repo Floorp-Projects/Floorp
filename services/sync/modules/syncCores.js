@@ -415,3 +415,57 @@ HistorySyncCore.prototype = {
   }
 };
 HistorySyncCore.prototype.__proto__ = new SyncCore();
+
+
+
+
+function CookiesSyncCore() {
+  this._init();
+}
+CookiesSyncCore.prototype = {
+  _logName: "CookieSync",
+
+  __cookieManager: null,
+  get _cookieManager() {
+    if (!this.__cookieManager)
+      this.__cookieManager = Cc["@mozilla.org/cookiemanager;1"].
+                             getService(Ci.nsICookieManager2);
+    // need the 2nd revision of the ICookieManager interface
+    // because it supports add() and the 1st one doesn't.
+    return this.__cookieManager
+  },
+
+
+  _itemExists: function CSC__itemExists(GUID) {
+        // true if a cookie with the given GUID exists.
+	// The GUID that we are passed should correspond to the keys
+	// that we define in the JSON returned by CookieStore.wrap()
+	// That is, it will be a string of the form
+	// "host:path:name".
+
+	// TODO verify that colons can't normally appear in any of
+	// the fields -- if they did it then we can't rely on .split(":")
+	// to parse correctly.
+
+        let unused = 0; // for outparam from findMatchingCookie
+	let cookieArray = GUID.split( ":" );
+        // create a generic object to represent the cookie -- just has
+	// to implement nsICookie2 interface.
+	cookie = Object();
+	cookie.host = cookieArray[0]
+	cookie.path = cookieArray[1]
+	cookie.name = cookieArray[2];
+    	return this.__cookieManager.findMatchingCookie( cookie, unused );
+  },
+
+  _commandLike: function CSC_commandLike(a, b) {
+        // Method required to be overridden.
+        // a and b each have a .data and a .GUID
+	// If this function returns true, an editCommand will be
+	// generated to try to resolve the thing.
+	// but are a and b objects of the type in the Store or
+	// are they "commands"??
+        return false;
+  }
+};
+CookiesSyncCore.prototype.__proto__ = new SyncCore();
