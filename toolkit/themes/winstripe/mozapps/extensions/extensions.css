@@ -53,6 +53,7 @@ richlistitem[isDisabled="true"] {
 
 richlistitem[newAddon="true"] {
   background-color: InfoBackground;
+  color: InfoText;
 }
 
 richlistitem[selected="true"] {
