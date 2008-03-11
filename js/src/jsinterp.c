@@ -6837,7 +6837,7 @@ interrupt:
              * op may be invalid here when a catch or finally handler jumps to
              * advance_pc.
              */
-            op = pc[-len];
+            op = (JSOp) pc[-len];
             ndefs = js_CodeSpec[op].ndefs;
             if (ndefs) {
                 SAVE_SP_AND_PC(fp);
