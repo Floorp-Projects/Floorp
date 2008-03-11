@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+<channel>
+<title>sadfasdfasdfasfasdf</title>
+<link>http://www.example.com</link>
+<description>asdfasdfasdf.example.com</description>
+<language>de</language>
+<copyright>asdfasdfasdfasdf</copyright>
+<lastBuildDate>Tue, 11 Mar 2008 18:52:52 +0100</lastBuildDate>
+<docs>http://blogs.law.harvard.edu/tech/rss</docs>
+<ttl>10</ttl>
+<item>
+<title>The First Title</title>
+<link>http://www.example.com/index.html</link>
+<pubDate>Tue, 11 Mar 2008 18:24:43 +0100</pubDate>
+<content:encoded>
+<![CDATA[
+<p>
+askdlfjas;dfkjas;fkdj
+</p>
+]]>
+</content:encoded>
+<description>aklsjdhfasdjfahasdfhj</description>
+<guid>http://foo.example.com/asdfasdf</guid>
+</item>
+</channel>
+</rss>
