@@ -920,8 +920,9 @@ nsNativeThemeGTK::GetWidgetPadding(nsIDeviceContext* aContext,
     case NS_THEME_BUTTON_FOCUS:
     case NS_THEME_TOOLBAR_BUTTON:
     case NS_THEME_TOOLBAR_DUAL_BUTTON:
-    case NS_THEME_TAB_SCROLLARROW_BACK :
+    case NS_THEME_TAB_SCROLLARROW_BACK:
     case NS_THEME_TAB_SCROLLARROW_FORWARD:
+    case NS_THEME_DROPDOWN_BUTTON:
     // Radios and checkboxes return a fixed size in GetMinimumWidgetSize
     // and have a meaningful baseline, so they can't have
     // author-specified padding.
