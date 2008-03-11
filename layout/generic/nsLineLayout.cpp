@@ -868,10 +868,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // the float. At the same time, check if the frame has any non-collapsed-away
   // content.
   PRBool placedFloat = PR_FALSE;
-  PRBool hasNoncollapsedContent = PR_TRUE;
+  PRBool isEmpty;
   if (frameType) {
     if (nsGkAtoms::placeholderFrame == frameType) {
-      hasNoncollapsedContent = PR_FALSE;
+      isEmpty = PR_TRUE;
       pfd->SetFlag(PFD_SKIPWHENTRIMMINGWHITESPACE, PR_TRUE);
       nsIFrame* outOfFlowFrame = nsLayoutUtils::GetFloatFromPlaceholder(aFrame);
       if (outOfFlowFrame) {
@@ -893,9 +893,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       // Note non-empty text-frames for inline frame compatibility hackery
       pfd->SetFlag(PFD_ISTEXTFRAME, PR_TRUE);
       nsTextFrame* textFrame = static_cast<nsTextFrame*>(pfd->mFrame);
-      if (!textFrame->HasNoncollapsedCharacters()) {
-        hasNoncollapsedContent = PR_FALSE;
-      } else {
+      isEmpty = !textFrame->HasNoncollapsedCharacters();
+      if (!isEmpty) {
         pfd->SetFlag(PFD_ISNONEMPTYTEXTFRAME, PR_TRUE);
         nsIContent* content = textFrame->GetContent();
 
@@ -924,13 +923,15 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     }
     else if (nsGkAtoms::brFrame == frameType) {
       pfd->SetFlag(PFD_SKIPWHENTRIMMINGWHITESPACE, PR_TRUE);
+      isEmpty = PR_FALSE;
     } else {
       if (nsGkAtoms::letterFrame==frameType) {
         pfd->SetFlag(PFD_ISLETTERFRAME, PR_TRUE);
       }
-      if (pfd->mSpan &&
-          !pfd->mSpan->mHasNonemptyContent && pfd->mFrame->IsSelfEmpty()) {
-        hasNoncollapsedContent = PR_FALSE;
+      if (pfd->mSpan) {
+        isEmpty = !pfd->mSpan->mHasNonemptyContent && pfd->mFrame->IsSelfEmpty();
+      } else {
+        isEmpty = pfd->mFrame->IsEmpty();
       }
     }
   }
@@ -1012,7 +1013,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     if (CanPlaceFrame(pfd, reflowState, notSafeToBreak, continuingTextRun,
                       savedOptionalBreakContent != nsnull, metrics,
                       aReflowStatus, &optionalBreakAfterFits)) {
-      if (hasNoncollapsedContent) {
+      if (!isEmpty) {
         psd->mHasNonemptyContent = PR_TRUE;
       }
 
