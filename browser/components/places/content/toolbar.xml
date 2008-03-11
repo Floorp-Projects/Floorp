@@ -543,6 +543,8 @@
                 break;
               }
             }
+            // Don't replace title on toolbarbuttons
+            var title = aNode.title;
           }
           else {
             var popup = this._getPopupForContainer(parentNode);
@@ -555,7 +557,8 @@
                 element = children[i];
                 break;
               }
-            }            
+            }
+            var title = PlacesUtils.getBestTitle(aNode);
           }
 
           if (PlacesUtils.nodeIsSeparator(aNode)) {
@@ -572,7 +575,6 @@
           else
             element.removeAttribute("image");
 
-          var title = aNode.title;
           if (element.getAttribute("label") != title) {
             element.setAttribute("label", title);
             if (onToolbar)

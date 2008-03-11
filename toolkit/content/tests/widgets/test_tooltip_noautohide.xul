@@ -3,7 +3,8 @@
 <?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
 
 <window title="Tooltip Noautohide Tests"
-  onfocus="setTimeout(runTests, 0);"
+  onload="window.focus();"
+  onfocus="if (!gDone) { gDone = true; setTimeout(runTests, 0); }"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
@@ -21,6 +22,7 @@
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
+var gDone = false;
 var gChecked = false;
 
 SimpleTest.waitForExplicitFinish();

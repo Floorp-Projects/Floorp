@@ -488,24 +488,13 @@ nsCacheEntryHashTable::RemoveEntry( nsCacheEntry *cacheEntry)
 
 
 void
-nsCacheEntryHashTable::VisitEntries( nsCacheEntryHashTable::Visitor *visitor)
+nsCacheEntryHashTable::VisitEntries( PLDHashEnumerator etor, void *arg)
 {
     NS_ASSERTION(initialized, "nsCacheEntryHashTable not initialized");
     if (!initialized)  return; // NS_ERROR_NOT_INITIALIZED
-    PL_DHashTableEnumerate(&table, VisitEntry, visitor);
+    PL_DHashTableEnumerate(&table, etor, arg);
 }
 
-
-PLDHashOperator PR_CALLBACK
-nsCacheEntryHashTable::VisitEntry(PLDHashTable *table,
-                                  PLDHashEntryHdr *hashEntry,
-                                  PRUint32 number,
-                                  void *arg)
-{
-    nsCacheEntry *cacheEntry = ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry;
-    nsCacheEntryHashTable::Visitor *visitor = (nsCacheEntryHashTable::Visitor*) arg;
-    return (visitor->VisitEntry(cacheEntry) ? PL_DHASH_NEXT : PL_DHASH_STOP);
-}
 
 /**
  *  hash table operation callback functions

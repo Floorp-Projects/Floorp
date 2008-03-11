@@ -720,6 +720,14 @@ nsThebesRenderingContext::GetNativeGraphicData(GraphicDataType aType)
         return static_cast<gfxWindowsSurface*>(static_cast<gfxASurface*>(surf.get()))->GetDC();
     }
 #endif
+#ifdef XP_OS2
+    if (aType == NATIVE_OS2_PS) {
+        nsRefPtr<gfxASurface> surf(mThebes->CurrentSurface());
+        if (!surf || surf->CairoStatus())
+            return nsnull;
+        return (void*)(static_cast<gfxOS2Surface*>(static_cast<gfxASurface*>(surf.get()))->GetPS());
+    }
+#endif
 
     return nsnull;
 }

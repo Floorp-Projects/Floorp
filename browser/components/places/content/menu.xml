@@ -777,7 +777,7 @@
           else
             menuitem.removeAttribute("image");
 
-          var title = aNode.title;
+          var title = PlacesUtils.getBestTitle(aNode);
           if (menuitem.getAttribute("label") != title)
             menuitem.setAttribute("label", title);
 

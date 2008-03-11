@@ -481,7 +481,7 @@ nsDOMAttributeMap::RemoveNamedItemNS(const nsAString& aNamespaceURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!*aReturn) {
-    return NS_OK;
+    return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
 
   nsCOMPtr<nsIAttribute> attr = do_QueryInterface(*aReturn);

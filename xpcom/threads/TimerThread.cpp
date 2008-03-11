@@ -277,7 +277,23 @@ NS_IMETHODIMP TimerThread::Run()
           // We are going to let the call to PostTimerEvent here handle the
           // release of the timer so that we don't end up releasing the timer
           // on the TimerThread instead of on the thread it targets.
-          timer->PostTimerEvent();
+          if (NS_FAILED(timer->PostTimerEvent())) {
+            nsrefcnt rc;
+            NS_RELEASE2(timer, rc);
+            
+            // The nsITimer interface requires that its users keep a reference
+            // to the timers they use while those timers are initialized but
+            // have not yet fired.  If this ever happens, it is a bug in the
+            // code that created and used the timer.
+            //
+            // Further, note that this should never happen even with a
+            // misbehaving user, because nsTimerImpl::Release checks for a
+            // refcount of 1 with an armed timer (a timer whose only reference
+            // is from the timer thread) and when it hits this will remove the
+            // timer from the timer thread and thus destroy the last reference,
+            // preventing this situation from occurring.
+            NS_ASSERTION(rc != 0, "destroyed timer off its target thread!");
+          }
           timer = nsnull;
 
           lock.lock();
@@ -329,7 +345,7 @@ nsresult TimerThread::AddTimer(nsTimerImpl *aTimer)
   // Add the timer to our list.
   PRInt32 i = AddTimerInternal(aTimer);
   if (i < 0)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // Awaken the timer thread.
   if (mCondVar && mWaiting && i == 0)

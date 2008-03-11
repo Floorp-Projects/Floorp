@@ -1,6 +1,16 @@
 #extensionsBox {
-  margin: 10px 10px 0px 10px;
+  margin: 10px 8px 0 8px;
   min-width:1px;
+}
+
+/* Addons notification */
+notification {
+  background-color: transparent;
+}
+.notification-inner {
+  background-color: infobackground;
+  border-color: ThreeDShadow;
+  margin: 9px 8px 0 8px;
 }
 
 #extensionsView {
@@ -54,6 +64,7 @@ richlistitem[isDisabled="true"] {
 
 richlistitem[newAddon="true"] {
   background-color: InfoBackground;
+  color: InfoText;
 }
 
 richlistitem[selected="true"] {

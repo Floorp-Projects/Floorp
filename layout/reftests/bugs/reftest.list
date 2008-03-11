@@ -698,6 +698,7 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 == 407095-1.html 407095-1-ref.html
 == 407111-1.html 407111-1-ref.html
 == 407227-1.html 407227-1-ref.html
+== 407243-1.html 407243-1-ref.html
 == 407937-1.html 407937-1-ref.html
 == 408493-1.html about:blank
 == 408493-2.html 408493-2-ref.html
@@ -719,6 +720,7 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 == 412607-1b.html 412607-1-ref.html
 == 412679-1.html 412679-1-ref.html
 == 412679-2.html 412679-2-ref.html
+# == 413027-1.html 413027-1-ref.html
 == 413286-1a.html 413286-1-ref.html
 == 413286-1b.html 413286-1-ref.html
 == 413286-1c.html 413286-1-ref.html
@@ -750,3 +752,5 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 == 419531-1.html 419531-1-ref.html
 == 420069-1.html 420069-1-ref.html
 == 420069-2.html 420069-2-ref.html
+# == 420351-1.html 420351-1-ref.html
+

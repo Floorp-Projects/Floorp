@@ -113,13 +113,6 @@ JSBool gQuitting = JS_FALSE;
 FILE *gErrFile = NULL;
 FILE *gOutFile = NULL;
 
-#ifdef JSDEBUGGER
-static JSDContext *_jsdc;
-#ifdef JSDEBUGGER_JAVA_UI
-static JSDJContext *_jsdjc;
-#endif /* JSDEBUGGER_JAVA_UI */
-#endif /* JSDEBUGGER */
-
 static JSBool reportWarnings = JS_TRUE;
 static JSBool compileOnly = JS_FALSE;
 
@@ -3804,12 +3797,16 @@ main(int argc, char **argv, char **envp)
 #ifdef LIVECONNECT
     JavaVM *java_vm = NULL;
 #endif
+#ifdef JSDEBUGGER
+    JSDContext *jsdc;
 #ifdef JSDEBUGGER_JAVA_UI
     JNIEnv *java_env;
+    JSDJContext *jsdjc;
 #endif
 #ifdef JSDEBUGGER_C_UI
     JSBool jsdbc;
 #endif /* JSDEBUGGER_C_UI */
+#endif /* JSDEBUGGER */
 
     CheckHelpMessages();
     setlocale(LC_ALL, "");
@@ -3866,19 +3863,19 @@ main(int argc, char **argv, char **envp)
     /*
     * XXX A command line option to enable debugging (or not) would be good
     */
-    _jsdc = JSD_DebuggerOnForUser(rt, NULL, NULL);
-    if (!_jsdc)
+    jsdc = JSD_DebuggerOnForUser(rt, NULL, NULL);
+    if (!jsdc)
         return 1;
-    JSD_JSContextInUse(_jsdc, cx);
+    JSD_JSContextInUse(jsdc, cx);
 #ifdef JSD_LOWLEVEL_SOURCE
-    JS_SetSourceHandler(rt, SendSourceToJSDebugger, _jsdc);
+    JS_SetSourceHandler(rt, SendSourceToJSDebugger, jsdc);
 #endif /* JSD_LOWLEVEL_SOURCE */
 #ifdef JSDEBUGGER_JAVA_UI
-    _jsdjc = JSDJ_CreateContext();
-    if (! _jsdjc)
+    jsdjc = JSDJ_CreateContext();
+    if (! jsdjc)
         return 1;
-    JSDJ_SetJSDContext(_jsdjc, _jsdc);
-    java_env = JSDJ_CreateJavaVMAndStartDebugger(_jsdjc);
+    JSDJ_SetJSDContext(jsdjc, jsdc);
+    java_env = JSDJ_CreateJavaVMAndStartDebugger(jsdjc);
 #ifdef LIVECONNECT
     if (java_env)
         (*java_env)->GetJavaVM(java_env, &java_vm);
@@ -3890,7 +3887,7 @@ main(int argc, char **argv, char **envp)
     */
 #endif /* JSDEBUGGER_JAVA_UI */
 #ifdef JSDEBUGGER_C_UI
-    jsdbc = JSDB_InitDebugger(rt, _jsdc, 0);
+    jsdbc = JSDB_InitDebugger(rt, jsdc, 0);
 #endif /* JSDEBUGGER_C_UI */
 #endif /* JSDEBUGGER */
 
@@ -3928,12 +3925,12 @@ main(int argc, char **argv, char **envp)
     result = ProcessArgs(cx, glob, argv, argc);
 
 #ifdef JSDEBUGGER
-    if (_jsdc) {
+    if (jsdc) {
 #ifdef JSDEBUGGER_C_UI
         if (jsdbc)
-            JSDB_TermDebugger(_jsdc);
+            JSDB_TermDebugger(jsdc);
 #endif /* JSDEBUGGER_C_UI */
-        JSD_DebuggerOff(_jsdc);
+        JSD_DebuggerOff(jsdc);
     }
 #endif  /* JSDEBUGGER */
 
