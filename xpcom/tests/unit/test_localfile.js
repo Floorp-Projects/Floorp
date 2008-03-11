@@ -44,6 +44,7 @@ var LocalFile = CC("@mozilla.org/file/local;1", "nsILocalFile", "initWithPath");
 function run_test()
 {
   test_toplevel_parent_is_null();
+  test_normalize_crash_if_media_missing();
 }
 
 function test_toplevel_parent_is_null()
@@ -64,3 +65,20 @@ function test_toplevel_parent_is_null()
     do_check_eq(e.result, Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH);
   }
 }
+
+function test_normalize_crash_if_media_missing()
+{
+  const a="a".charCodeAt(0);
+  const z="z".charCodeAt(0);
+  for (i = a; i <= z; ++i)
+  {
+    try
+    {
+      LocalFile(String.fromCharCode(i)+":.\\test").normalize();
+    }
+    catch (e)
+    {
+    }
+  }
+}
+
