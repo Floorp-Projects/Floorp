@@ -58,9 +58,9 @@ protected:
 
   PRPackedBool mInitialized;
   PRPackedBool mHaveBidiKeyboards;
-  char mLTRKeyboard[KL_NAMELENGTH];
-  char mRTLKeyboard[KL_NAMELENGTH];
-  char mCurrentLocaleName[KL_NAMELENGTH];
+  PRUnichar  mLTRKeyboard[KL_NAMELENGTH];
+  PRUnichar  mRTLKeyboard[KL_NAMELENGTH];
+  PRUnichar  mCurrentLocaleName[KL_NAMELENGTH];
 };
 
 

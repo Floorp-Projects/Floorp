@@ -82,10 +82,10 @@ IAsyncOperation : public IUnknown
  * See http://msdn.microsoft.com/library/default.asp?url=/library/en-us/shellcc/platform/shell/programmersguide/shell_basics/shell_basics_programming/transferring/clipboard.asp
  */
 #ifndef CFSTR_INETURLA
-#define CFSTR_INETURLA    "UniformResourceLocator"
+#define CFSTR_INETURLA    L"UniformResourceLocator"
 #endif
 #ifndef CFSTR_INETURLW
-#define CFSTR_INETURLW    "UniformResourceLocatorW"
+#define CFSTR_INETURLW    L"UniformResourceLocatorW"
 #endif
 
 // For support of MinGW w32api v2.4. 
@@ -93,10 +93,10 @@ IAsyncOperation : public IUnknown
 // http://sources.redhat.com/cgi-bin/cvsweb.cgi/src/winsup/w32api/include/shlobj.h?cvsroot=src
 // then that can be made the base required version and this code should be removed.
 #ifndef CFSTR_FILEDESCRIPTORA
-# define CFSTR_FILEDESCRIPTORA   "FileGroupDescriptor"
+# define CFSTR_FILEDESCRIPTORA   L"FileGroupDescriptor"
 #endif
 #ifndef CFSTR_FILEDESCRIPTORW
-# define CFSTR_FILEDESCRIPTORW   "FileGroupDescriptorW"
+# define CFSTR_FILEDESCRIPTORW   L"FileGroupDescriptorW"
 #endif
 
 #ifdef __MINGW32__

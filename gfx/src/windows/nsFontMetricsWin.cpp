@@ -2121,40 +2121,9 @@ nsGlyphAgent::GetGlyphMetrics(HDC           aDC,
                               GLYPHMETRICS* aGlyphMetrics)
 {
   memset(aGlyphMetrics, 0, sizeof(GLYPHMETRICS)); // UMR: bug 46438
-  if (eGlyphAgent_UNKNOWN == mState) { // first time we have been in this function
-    // see if this platform implements GetGlyphOutlineW()
-    DWORD len = GetGlyphOutlineW(aDC, aChar, GGO_METRICS, aGlyphMetrics, 0, nsnull, &mMat);
-    if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED) {
-      // next time, we won't bother trying GetGlyphOutlineW()
-      mState = eGlyphAgent_ANSI;
-    }
-    else {
-      // all is well with GetGlyphOutlineW(), we will be using it from now on
-      mState = eGlyphAgent_UNICODE;
-      return len;
-    }
-  }
+  mState = eGlyphAgent_UNICODE;
+  return GetGlyphOutlineW(aDC, aChar, GGO_METRICS, aGlyphMetrics, 0, nsnull, &mMat);
 
-  if (eGlyphAgent_UNICODE == mState) {
-    return GetGlyphOutlineW(aDC, aChar, GGO_METRICS, aGlyphMetrics, 0, nsnull, &mMat);
-  }
-
-  // Otherwise, we are on a platform that doesn't implement GetGlyphOutlineW()
-  // (see Q241358: The GetGlyphOutlineW Function Fails on Windows 95 & 98
-  // http://support.microsoft.com/support/kb/articles/Q241/3/58.ASP)
-  // we will use glyph indices as a work around.
-  if (0 == aGlyphIndex) { // caller doesn't know the glyph index, so find it
-    nsAutoChar16Buffer buf;
-    if (NS_SUCCEEDED(GetGlyphIndices(aDC, nsnull, &aChar, 1, buf)))
-      aGlyphIndex = *(buf.Elements());
-  }
-  if (0 < aGlyphIndex) {
-    return GetGlyphOutlineA(aDC, aGlyphIndex, GGO_METRICS | GGO_GLYPH_INDEX, aGlyphMetrics, 0, nsnull, &mMat);
-  }
-
-  // if we ever reach here, something went wrong in GetGlyphIndices() above
-  // because the current font in aDC wasn't a Unicode font
-  return GDI_ERROR;
 }
 
 // the global glyph agent that we will be using

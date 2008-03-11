@@ -59,7 +59,7 @@ private:
   void PurgeLastSound();
 
 private:
-  PRUint8* mLastSound;
+  PRUnichar* mLastSound;
 };
 
 #endif /* __nsSound_h__ */

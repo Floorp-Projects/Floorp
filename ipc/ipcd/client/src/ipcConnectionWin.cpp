@@ -112,7 +112,7 @@ ipcThreadWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             cd.dwData = GetCurrentProcessId();
             cd.cbData = (DWORD) msg->MsgLen();
             cd.lpData = (PVOID) msg->MsgBuf();
-            SendMessageA(ipcDaemonHwnd, WM_COPYDATA, (WPARAM) hWnd, (LPARAM) &cd);
+            SendMessage(ipcDaemonHwnd, WM_COPYDATA, (WPARAM) hWnd, (LPARAM) &cd);
             LOG(("  done.\n"));
             delete msg;
         }
