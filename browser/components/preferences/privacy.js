@@ -161,7 +161,7 @@ var gPrivacyPane = {
    * network.cookie.cookieBehavior
    * - determines how the browser should handle cookies:
    *     0   means enable all cookies
-   *     1   means allow cookies from the "originating" server only; see
+   *     1   means reject third party cookies; see
    *         netwerk/cookie/src/nsCookieService.cpp for a hairier definition
    *     2   means disable all cookies
    * network.cookie.lifetimePolicy
@@ -173,21 +173,28 @@ var gPrivacyPane = {
 
   /**
    * Reads the network.cookie.cookieBehavior preference value and
-   * enables/disables the "Keep until:" UI accordingly, returning true
+   * enables/disables the rest of the cookie UI accordingly, returning true
    * if cookies are enabled.
    */
   readAcceptCookies: function ()
   {
     var pref = document.getElementById("network.cookie.cookieBehavior");
+    var acceptThirdParty = document.getElementById("acceptThirdParty");
     var keepUntil = document.getElementById("keepUntil");
     var menu = document.getElementById("keepCookiesUntil");
 
-    // anything other than "disable all cookies" maps to "accept cookies"
+    // enable the rest of the UI for anything other than "disable all cookies"
     var acceptCookies = (pref.value != 2);
 
-    keepUntil.disabled = menu.disabled = !acceptCookies;
+    keepUntil.disabled = menu.disabled = acceptThirdParty.disabled = !acceptCookies;
     
     return acceptCookies;
+  },
+
+  readAcceptThirdPartyCookies: function ()
+  {
+    var pref = document.getElementById("network.cookie.cookieBehavior");
+    return pref.value == 0;
   },
 
   /**
@@ -196,8 +203,21 @@ var gPrivacyPane = {
    */
   writeAcceptCookies: function ()
   {
-    var checkbox = document.getElementById("acceptCookies");
-    return checkbox.checked ? 0 : 2;
+    var accept = document.getElementById("acceptCookies");
+    var acceptThirdParty = document.getElementById("acceptThirdParty");
+
+    // if we're enabling cookies, automatically check 'accept third party'
+    if (accept.checked)
+      acceptThirdParty.checked = true;
+
+    return accept.checked ? (acceptThirdParty.checked ? 0 : 1) : 2;
+  },
+
+  writeAcceptThirdPartyCookies: function ()
+  {
+    var accept = document.getElementById("acceptCookies");
+    var acceptThirdParty = document.getElementById("acceptThirdParty");
+    return accept.checked ? (acceptThirdParty.checked ? 0 : 1) : 2;
   },
 
   /**
