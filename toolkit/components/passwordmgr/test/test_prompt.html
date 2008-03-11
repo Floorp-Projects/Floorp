@@ -1,0 +1,622 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Login Manager</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Login Manager test: username/password prompts
+<p id="display"></p>
+
+<div id="content" style="display: none">
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Login Manager: username / password prompts. **/
+
+var pwmgr, login1, login2A, login2B;
+
+function initLogins() {
+  pwmgr = Cc["@mozilla.org/login-manager;1"].
+          getService(Ci.nsILoginManager);
+
+  login1  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+            createInstance(Ci.nsILoginInfo);
+  login2A = Cc["@mozilla.org/login-manager/loginInfo;1"].
+            createInstance(Ci.nsILoginInfo);
+  login2B = Cc["@mozilla.org/login-manager/loginInfo;1"].
+            createInstance(Ci.nsILoginInfo);
+
+  login1.init("http://example.com", null, "http://example.com",
+              "", "examplepass", "", "");
+  login2A.init("http://example2.com", null, "http://example2.com",
+               "user1name", "user1pass", "", "");
+  login2B.init("http://example2.com", null, "http://example2.com",
+               "user2name", "user2pass", "", "");
+
+  pwmgr.addLogin(login1);
+  pwmgr.addLogin(login2A);
+  pwmgr.addLogin(login2B);
+}
+
+function cleanupLogins() {
+  pwmgr.removeLogin(login1);
+  pwmgr.removeLogin(login2A);
+  pwmgr.removeLogin(login2B);
+}
+
+
+function getDialogDoc() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  // Find the <browser> which contains notifyWindow, by looking
+  // through all the open windows and all the <browsers> in each.
+  var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+           getService(Ci.nsIWindowMediator);
+  //var enumerator = wm.getEnumerator("navigator:browser");
+  var enumerator = wm.getXULWindowEnumerator(null);
+  var promptDoc = null;
+
+  while (!promptDoc && enumerator.hasMoreElements()) {
+    var win = enumerator.getNext();
+    var windowDocShell = win.QueryInterface(Ci.nsIXULWindow).docShell;
+
+    var containedDocShells = windowDocShell.getDocShellEnumerator(
+                                      Ci.nsIDocShellTreeItem.typeChrome,
+                                      Ci.nsIDocShell.ENUMERATE_FORWARDS);
+    while (!promptDoc && containedDocShells.hasMoreElements()) {
+        // Get the corresponding document for this docshell
+        var childDoc = containedDocShells.getNext()
+                                         .QueryInterface(Ci.nsIDocShell)
+                                         .contentViewer
+                                         .DOMDocument;
+
+        //ok(true, "Got window: " + childDoc.location.href);
+        if (childDoc.location.href == "chrome://global/content/commonDialog.xul")
+            promptDoc = childDoc;
+    }
+  }
+
+  return promptDoc;
+}
+
+
+function handleDialog(doc, testNum) {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  ok(true, "handleDialog running for test " + testNum);
+
+  var clickOK = true;
+  var userfield = doc.getElementById("loginTextbox");
+  var passfield = doc.getElementById("password1Textbox");
+  var username = userfield.getAttribute("value");
+  var password = passfield.getAttribute("value");
+  var dialog    = doc.getElementById("commonDialog");
+
+  switch(testNum) {
+    case 1:
+        is(username, "abc", "Checking provided username");
+        userfield.setAttribute("value", "xyz");
+        break;
+
+    case 2:
+        clickOK = false;
+        break;
+
+    case 10:
+        is(password, "inputpw", "Checking provided password");
+        passfield.setAttribute("value", "secret");
+        break;
+
+    case 11:
+        is(password, "inputpw", "Checking provided password");
+        clickOK = false;
+        break;
+
+    case 12:
+        is(password, "", "Checking provided password");
+        passfield.setAttribute("value", "secret");
+        break;
+
+    case 14:
+        is(password, "", "Checking provided password");
+        passfield.setAttribute("value", "secret");
+        break;
+
+    case 100:
+        is(username, "inuser", "Checking provided username");
+        is(password, "inpass", "Checking provided password");
+        userfield.setAttribute("value", "outuser");
+        passfield.setAttribute("value", "outpass");
+        break;
+
+    case 101:
+        clickOK = false;
+        break;
+
+    case 102:
+        is(username, "", "Checking provided username");
+        is(password, "examplepass", "Checking provided password");
+        break;
+
+    case 103:
+        ok(username == "user1name" || username == "user2name", "Checking filled username");
+        ok(password == "user1pass" || password == "user2pass", "Checking filled password");
+        break;
+
+    case 104:
+        is(username, "user1name", "Checking filled username");
+        is(password, "user1pass", "Checking filled password");
+        break;
+
+    case 105:
+        is(username, "user2name", "Checking filled username");
+        is(password, "user2pass", "Checking filled password");
+        break;
+
+    case 106:
+        is(username, "user2name", "Checking filled username");
+        is(password, "user2pass", "Checking filled password");
+        passfield.setAttribute("value", "NEWuser2pass");
+        break;
+
+    case 107:
+        is(username, "user2name", "Checking filled username");
+        is(password, "NEWuser2pass", "Checking filled password");
+        passfield.setAttribute("value", "user2pass");
+        break;
+
+    case 500:
+        is(username, "inuser", "Checking unfilled username");
+        is(password, "inpass", "Checking unfilled password");
+        userfield.setAttribute("value", "outuser");
+        passfield.setAttribute("value", "outpass");
+        break;
+
+    case 501:
+        clickOK = false;
+        break;
+
+    case 502:
+        is(username, "", "Checking filled username");
+        is(password, "examplepass", "Checking filled password");
+        break;
+
+    case 503:
+        // either of the two logins might have been filled in
+        ok(username == "user1name" || username == "user2name", "Checking filled username");
+        ok(password == "user1pass" || password == "user2pass", "Checking filled password");
+        break;
+
+    case 504:
+        // either of the two logins might have been filled in
+        ok(username == "user1name" || username == "user2name", "Checking filled username");
+        ok(password == "user1pass" || password == "user2pass", "Checking filled password");
+        // enter one of the known logins, test 504+505 exercise the two possible states.
+        userfield.setAttribute("value", "user1name");
+        passfield.setAttribute("value", "user1pass");
+        break;
+
+    case 505:
+        // either of the two logins might have been filled in
+        ok(username == "user1name" || username == "user2name", "Checking filled username");
+        ok(password == "user1pass" || password == "user2pass", "Checking filled password");
+        // enter one of the known logins, test 504+505 exercise the two possible states.
+        userfield.setAttribute("value", "user2name");
+        passfield.setAttribute("value", "user2pass");
+        break;
+
+    case 506:
+        // either of the two logins might have been filled in
+        ok(username == "user1name" || username == "user2name", "Checking filled username");
+        ok(password == "user1pass" || password == "user2pass", "Checking filled password");
+        // force to user2, and change the password
+        userfield.setAttribute("value", "user2name");
+        passfield.setAttribute("value", "NEWuser2pass");
+        break;
+
+    case 507:
+        // either of the two logins might have been filled in
+        ok(username == "user1name" || username == "user2name", "Checking filled username");
+        ok(password == "user1pass" || password == "user2pass", "Checking filled password");
+        // force to user2, and change the password back
+        userfield.setAttribute("value", "user2name");
+        passfield.setAttribute("value", "user2pass");
+        break;
+
+    default:
+        ok(false, "Uhh, unhandled switch for testNum #" + testNum);
+        break;
+  }
+
+  if (clickOK)
+    dialog.acceptDialog();
+  else
+    dialog.cancelDialog();
+
+  ok(true, "handleDialog done");
+}
+
+
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+const Ci = Components.interfaces;
+ok(Ci != null, "Access Ci");
+const Cc = Components.classes;
+ok(Cc != null, "Access Cc");
+
+initLogins();
+
+const Cc_promptFac= Cc["@mozilla.org/passwordmanager/authpromptfactory;1"];
+ok(Cc_promptFac != null, "Access Cc[@mozilla.org/passwordmanager/authpromptfactory;1]");
+
+const Ci_promptFac = Ci.nsIPromptFactory;
+ok(Ci_promptFac != null, "Access Ci.nsIPromptFactory");
+
+const promptFac = Cc_promptFac.getService(Ci_promptFac);
+ok(promptFac != null, "promptFac getService()");
+
+
+var timer; // keep in outer scope so it's not GC'd before firing
+function startCallbackTimer() {
+    // Delay before the callback twiddles the prompt.
+    const dialogDelay = 300;
+
+    // Use a timer to invoke a callback to twiddle the authentication dialog
+    timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    timer.init(observer, dialogDelay, Ci.nsITimer.TYPE_ONE_SHOT);
+}
+
+
+var observer = {
+    QueryInterface : function (iid) {
+        const interfaces = [Ci.nsIObserver,
+                            Ci.nsISupports, Ci.nsISupportsWeakReference];
+
+        if (!interfaces.some( function(v) { return iid.equals(v) } ))
+            throw Components.results.NS_ERROR_NO_INTERFACE;
+        return this;
+    },
+
+    observe : function (subject, topic, data) {
+        ok(true, "timer fired for test " + testNum);
+        var doc = getDialogDoc();
+        ok(doc, "Got commonDialog.xul document");
+        if (doc)
+            handleDialog(doc, testNum);
+    }
+};
+
+
+var authinfo = {
+    // QueryInterface : ... ?
+    username : "",
+    password : "",
+    domain   : "",
+
+    flags : Ci.nsIAuthInformation.AUTH_HOST,
+    authenticationScheme : "basic",
+    realm : ""
+};
+
+
+
+var prompter1 = promptFac.getPrompt(window, Ci.nsIAuthPrompt);
+var prompter2 = promptFac.getPrompt(window, Ci.nsIAuthPrompt2);
+
+function dialogTitle() { return "nsILoginManagerPrompter test #" + testNum; }
+var dialogText  = "This dialog should be modified and dismissed by the test.";
+var uname  = { value : null };
+var pword  = { value : null };
+var result = { value : null };
+var isOk;
+
+
+// ===== test 1 ===== 
+var testNum = 1;
+startCallbackTimer();
+isOk = prompter1.prompt(dialogTitle(), dialogText, "http://example.com",
+                        Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, "abc", result);
+
+ok(isOk, "Checking dialog return value (accept)");
+is(result.value, "xyz", "Checking prompt() returned value");
+
+
+// ===== test 2 =====
+testNum++;
+startCallbackTimer();
+isOk = prompter1.prompt(dialogTitle(), dialogText, "http://example.com",
+                        Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, "abc", result);
+ok(!isOk, "Checking dialog return value (cancel)");
+
+
+// ===== test 10 =====
+// Default password provided, existing logins are ignored.
+testNum = 10;
+pword.value = "inputpw";
+startCallbackTimer();
+isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://example.com",
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+ok(isOk, "Checking dialog return value (accept)");
+is(pword.value, "secret", "Checking returned password");
+
+// ===== test 11 =====
+// Default password provided, existing logins are ignored.
+testNum++;
+pword.value = "inputpw";
+startCallbackTimer();
+isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://example.com",
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+ok(!isOk, "Checking dialog return value (cancel)");
+
+// ===== test 12 =====
+// No default password provided, realm does not match existing login.
+testNum++;
+pword.value = null;
+startCallbackTimer();
+isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://nonexample.com",
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+ok(isOk, "Checking dialog return value (accept)");
+is(pword.value, "secret", "Checking returned password");
+
+// ===== test 13 =====
+// No default password provided, matching login is returned w/o prompting.
+testNum++;
+pword.value = null;
+isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://example.com",
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+ok(isOk, "Checking dialog return value (accept)");
+is(pword.value, "examplepass", "Checking returned password");
+
+// ===== test 14 =====
+// No default password provided, none of the logins from this host are
+// password-only so the user is prompted.
+testNum++;
+pword.value = null;
+startCallbackTimer();
+isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://example2.com",
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+ok(isOk, "Checking dialog return value (accept)");
+is(pword.value, "secret", "Checking returned password");
+
+// ===== test 15 =====
+// No default password provided, matching login is returned w/o prompting.
+testNum++;
+pword.value = null;
+isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://user1name@example2.com",
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+ok(isOk, "Checking dialog return value (accept)");
+is(pword.value, "user1pass", "Checking returned password");
+
+// ===== test 16 =====
+// No default password provided, matching login is returned w/o prompting.
+testNum++;
+pword.value = null;
+isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://user2name@example2.com",
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+ok(isOk, "Checking dialog return value (accept)");
+is(pword.value, "user2pass", "Checking returned password");
+
+// XXX test saving a password with  Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY
+
+
+// ===== test 100 =====
+testNum = 100;
+uname.value = "inuser";
+pword.value = "inpass";
+startCallbackTimer();
+isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://nonexample.com",
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
+ok(isOk, "Checking dialog return value (accept)");
+is(uname.value, "outuser", "Checking returned username");
+is(pword.value, "outpass", "Checking returned password");
+
+// ===== test 101 =====
+testNum++;
+uname.value = "inuser";
+pword.value = "inpass";
+startCallbackTimer();
+isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://nonexample.com",
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
+ok(!isOk, "Checking dialog return value (cancel)");
+
+// ===== test 102 =====
+// test filling in existing password-only login
+testNum++;
+uname.value = null;
+pword.value = null;
+startCallbackTimer();
+isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example.com",
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+ok(isOk, "Checking dialog return value (accept)");
+is(uname.value, "", "Checking returned username");
+is(pword.value, "examplepass", "Checking returned password");
+
+// ===== test 103 =====
+// test filling in existing login (undetermined from multiple selection)
+testNum++;
+uname.value = null;
+pword.value = null;
+startCallbackTimer();
+isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example2.com",
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+ok(isOk, "Checking dialog return value (accept)");
+ok(uname.value == "user1name" || uname.value == "user2name", "Checking returned username");
+ok(pword.value == "user1pass" || uname.value == "user2pass", "Checking returned password");
+
+// ===== test 104 =====
+// test filling in existing login (user1 from multiple selection)
+testNum++;
+uname.value = "user1name";
+pword.value = null;
+startCallbackTimer();
+isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example2.com",
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+ok(isOk, "Checking dialog return value (accept)");
+is(uname.value, "user1name", "Checking returned username");
+is(pword.value, "user1pass", "Checking returned password");
+
+// ===== test 105 =====
+// test filling in existing login (user2 from multiple selection)
+testNum++;
+uname.value = "user2name";
+pword.value = null;
+startCallbackTimer();
+isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example2.com",
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+ok(isOk, "Checking dialog return value (accept)");
+is(uname.value, "user2name", "Checking returned username");
+is(pword.value, "user2pass", "Checking returned password");
+
+// ===== test 106 =====
+// test changing password
+testNum++;
+uname.value = "user2name";
+pword.value = null;
+startCallbackTimer();
+isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example2.com",
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+ok(isOk, "Checking dialog return value (accept)");
+is(uname.value, "user2name", "Checking returned username");
+is(pword.value, "NEWuser2pass", "Checking returned password");
+
+// ===== test 107 =====
+// test changing password (back to original value)
+testNum++;
+uname.value = "user2name";
+pword.value = null;
+startCallbackTimer();
+isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example2.com",
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+ok(isOk, "Checking dialog return value (accept)");
+is(uname.value, "user2name", "Checking returned username");
+is(pword.value, "user2pass", "Checking returned password");
+
+
+
+var channel1 = Cc["@mozilla.org/network/io-service;1"].
+              getService(Ci.nsIIOService).
+              newChannel("http://example.com", null, null);
+var channel2 = Cc["@mozilla.org/network/io-service;1"].
+              getService(Ci.nsIIOService).
+              newChannel("http://example2.com", null, null);
+var level = Ci.nsIAuthPrompt2.LEVEL_NONE;
+
+
+// ===== test 500 =====
+testNum = 500;
+authinfo.username = "inuser";
+authinfo.password = "inpass";
+authinfo.realm    = "some realm";
+
+startCallbackTimer();
+isOk = prompter2.promptAuth(channel1, level, authinfo);
+
+ok(isOk, "Checking dialog return value (accept)");
+is(authinfo.username, "outuser", "Checking returned username");
+is(authinfo.password, "outpass", "Checking returned password");
+
+// ===== test 501 =====
+testNum++;
+startCallbackTimer();
+isOk = prompter2.promptAuth(channel1, level, authinfo);
+ok(!isOk, "Checking dialog return value (cancel)");
+
+// ===== test 502 =====
+// test filling in password-only login
+testNum++;
+authinfo.username = "";
+authinfo.password = "";
+authinfo.realm    = "http://example.com";
+
+startCallbackTimer();
+isOk = prompter2.promptAuth(channel1, level, authinfo);
+
+ok(isOk, "Checking dialog return value (accept)");
+is(authinfo.username, "", "Checking returned username");
+is(authinfo.password, "examplepass", "Checking returned password");
+
+// ===== test 503 =====
+// test filling in existing login (undetermined from multiple selection)
+testNum++;
+authinfo.username = "";
+authinfo.password = "";
+authinfo.realm    = "http://example2.com";
+
+startCallbackTimer();
+isOk = prompter2.promptAuth(channel2, level, authinfo);
+
+ok(isOk, "Checking dialog return value (accept)");
+ok(authinfo.username == "user1name" || authinfo.username == "user2name", "Checking returned username");
+ok(authinfo.password == "user1pass" || authinfo.password == "user2pass", "Checking returned password");
+
+// ===== test 504 =====
+// test filling in existing login (undetermined --> user1)
+testNum++;
+authinfo.username = "";
+authinfo.password = "";
+authinfo.realm    = "http://example2.com";
+
+startCallbackTimer();
+isOk = prompter2.promptAuth(channel2, level, authinfo);
+
+ok(isOk, "Checking dialog return value (accept)");
+is(authinfo.username, "user1name", "Checking returned username");
+is(authinfo.password, "user1pass", "Checking returned password");
+
+// ===== test 505 =====
+// test filling in existing login (undetermined --> user2)
+testNum++;
+authinfo.username = "";
+authinfo.password = "";
+authinfo.realm    = "http://example2.com";
+
+startCallbackTimer();
+isOk = prompter2.promptAuth(channel2, level, authinfo);
+
+ok(isOk, "Checking dialog return value (accept)");
+is(authinfo.username, "user2name", "Checking returned username");
+is(authinfo.password, "user2pass", "Checking returned password");
+
+// ===== test 506 =====
+// test changing a password (undetermined --> user2 w/ newpass)
+testNum++;
+authinfo.username = "";
+authinfo.password = "";
+authinfo.realm    = "http://example2.com";
+
+startCallbackTimer();
+isOk = prompter2.promptAuth(channel2, level, authinfo);
+
+ok(isOk, "Checking dialog return value (accept)");
+is(authinfo.username, "user2name", "Checking returned username");
+is(authinfo.password, "NEWuser2pass", "Checking returned password");
+
+// ===== test 507 =====
+// test changing a password (undetermined --> user2 w/ origpass)
+testNum++;
+authinfo.username = "";
+authinfo.password = "";
+authinfo.realm    = "http://example2.com";
+
+startCallbackTimer();
+isOk = prompter2.promptAuth(channel2, level, authinfo);
+
+ok(isOk, "Checking dialog return value (accept)");
+is(authinfo.username, "user2name", "Checking returned username");
+is(authinfo.password, "user2pass", "Checking returned password");
+
+
+// XXX check for and kill notification bar??
+// XXX check for checkbox / checkstate on old prompts?
+// XXX check NTLM domain stuff
+
+cleanupLogins();
+</script>
+</pre>
+</body>
+</html>

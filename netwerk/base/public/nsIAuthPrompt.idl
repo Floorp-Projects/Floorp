@@ -42,7 +42,7 @@ interface nsIPrompt;
 /**
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(310fae75-191c-412d-be7f-6190df509e3c)]
+[scriptable, uuid(358089f9-ee4b-4711-82fd-bcd07fc62061)]
 interface nsIAuthPrompt : nsISupports
 {         
     const PRUint32 SAVE_PASSWORD_NEVER             = 0;
@@ -87,7 +87,7 @@ interface nsIAuthPrompt : nsISupports
                                       in wstring text,
                                       in wstring passwordRealm,
                                       in PRUint32 savePassword,
-                                      out wstring user, 
+                                      inout wstring user, 
                                       inout wstring pwd);
 
     /**
@@ -95,7 +95,11 @@ interface nsIAuthPrompt : nsISupports
      * @param  dialogText    The title for the dialog.
      * @param  text          The text to display in the dialog.
      * @param  passwordRealm The "realm" the password belongs to: e.g.
-     *                       ldap://localhost/dc=test
+     *                       ldap://localhost/dc=test. If a username is
+     *                       specified (http://user@site.com) it will be used
+     *                       when matching existing logins or saving new ones.
+     *                       If no username is specified, only password-only
+     *                       logins will be matched or saved.
      * @param  savePassword  One of the SAVE_PASSWORD_* options above.
      * @param  pwd           The password entered by the user if OK was
      *                       selected.
