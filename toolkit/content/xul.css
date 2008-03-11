@@ -3,7 +3,7 @@
 	For example style definitions for navigator can be found in navigator.css
 
    THIS FILE IS LOCKED DOWN.  YOU ARE NOT ALLOWED TO MODIFY IT WITHOUT FIRST HAVING YOUR
-   CHANGES REVIEWED BY mconnor@steelgryphon.com
+   CHANGES REVIEWED BY enndeakin@sympatico.ca
 **/
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
@@ -53,8 +53,7 @@ window[chromehidden~="toolbar"] .chromeclass-toolbar-additional
    :: or URI elements
    ::::: */
 
-textbox.uri-element,
-menulist.uri-element
+.uri-element
 {
   direction: ltr !important;
 }
