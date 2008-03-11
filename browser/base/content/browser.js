@@ -769,6 +769,12 @@ function BrowserStartup()
     document.documentElement.setAttribute("height", defaultHeight);
   }
 
+  if (gURLBar && document.documentElement.getAttribute("chromehidden").indexOf("toolbar") != -1) {
+
+    gURLBar.setAttribute("readonly", "true");
+    gURLBar.setAttribute("enablehistory", "false");
+  }
+
   setTimeout(delayedStartup, 0);
 }
 
@@ -895,11 +901,6 @@ function delayedStartup()
                              .getService(Components.interfaces.nsIPrefBranch2);
   BrowserOffline.init();
   OfflineApps.init();
-
-  if (gURLBar && document.documentElement.getAttribute("chromehidden").indexOf("toolbar") != -1) {
-    gURLBar.setAttribute("readonly", "true");
-    gURLBar.setAttribute("enablehistory", "false");
-  }
 
   gBrowser.addEventListener("pageshow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
 
