@@ -5,7 +5,7 @@
 
 <!ENTITY  proxyTitle.label              "Configure Proxies to Access the Internet">
 <!ENTITY  noProxyTypeRadio.label        "No proxy">
-<!ENTITY  noProxyTypeRadio.accesskey    "x">
+<!ENTITY  noProxyTypeRadio.accesskey    "y">
 <!ENTITY  systemTypeRadio.label         "Use system proxy settings">
 <!ENTITY  systemTypeRadio.accesskey     "u">
 <!ENTITY  WPADTypeRadio.label           "Auto-detect proxy settings for this network">
@@ -21,7 +21,7 @@
 <!ENTITY  gopher.label                  "Gopher Proxy:">
 <!ENTITY  gopher.accesskey              "G">
 <!ENTITY  http.label                    "HTTP Proxy:">
-<!ENTITY  http.accesskey                "y">
+<!ENTITY  http.accesskey                "H">
 <!ENTITY  ssl.label                     "SSL Proxy:">
 <!ENTITY  ssl.accesskey                 "S">
 <!ENTITY  socks.label                   "SOCKS Host:">

@@ -260,15 +260,17 @@ function BookmarkThisTab()
 }
 
 /**
- * Initialize the bookmarks toolbar
+ * Initialize the bookmarks toolbar and the menuitem for it.
  */
 function initBookmarksToolbar() {
+  var place = PlacesUtils.getQueryStringForFolder(PlacesUtils.bookmarks.toolbarFolder);
   var bt = document.getElementById("bookmarksBarContent");
-  if (!bt)
-    return;
+  if (bt)
+    bt.place = place;
 
-  bt.place =
-    PlacesUtils.getQueryStringForFolder(PlacesUtils.bookmarks.toolbarFolder);
+  document.getElementById("bookmarksToolbarFolderPopup").place = place;
+  document.getElementById("bookmarksToolbarFolderMenu").label =
+    PlacesUtils.bookmarks.getItemTitle(PlacesUtils.bookmarks.toolbarFolder);
 }
 
 const gSessionHistoryObserver = {
@@ -767,6 +769,12 @@ function BrowserStartup()
     document.documentElement.setAttribute("height", defaultHeight);
   }
 
+  if (gURLBar && document.documentElement.getAttribute("chromehidden").indexOf("toolbar") != -1) {
+
+    gURLBar.setAttribute("readonly", "true");
+    gURLBar.setAttribute("enablehistory", "false");
+  }
+
   setTimeout(delayedStartup, 0);
 }
 
@@ -893,11 +901,6 @@ function delayedStartup()
                              .getService(Components.interfaces.nsIPrefBranch2);
   BrowserOffline.init();
   OfflineApps.init();
-
-  if (gURLBar && document.documentElement.getAttribute("chromehidden").indexOf("toolbar") != -1) {
-    gURLBar.setAttribute("readonly", "true");
-    gURLBar.setAttribute("enablehistory", "false");
-  }
 
   gBrowser.addEventListener("pageshow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
 

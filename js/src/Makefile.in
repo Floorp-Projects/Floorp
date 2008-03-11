@@ -49,7 +49,7 @@ LIBRARY_NAME	= mozjs
 GRE_MODULE	= 1
 
 ifdef GNU_CC
-MODULE_OPTIMIZE_FLAGS = -Os
+MODULE_OPTIMIZE_FLAGS = -Os -fstrict-aliasing
 else
 ifeq ($(OS_ARCH),SunOS)
 MODULE_OPTIMIZE_FLAGS = -O

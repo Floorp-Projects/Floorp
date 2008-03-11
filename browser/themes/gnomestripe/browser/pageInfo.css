@@ -78,6 +78,11 @@
   -moz-image-region: rect(0px, 160px, 32px, 128px)
 }
 
+#mainDeck {
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
 deck {
   padding: 10px 10px 10px 10px;
 }
@@ -118,6 +123,14 @@ textbox[disabled] {
 }
 
 /* General Tab */
+#generalPanel > #titletext {
+  -moz-margin-start: 5px;
+}
+#metaTags > .groupbox-body {
+  -moz-margin-start: 5px;
+  -moz-margin-end: 1px;
+}
+
 groupbox.collapsable caption .caption-icon { 
   width: 9px;
   height: 9px;
@@ -157,6 +170,7 @@ groupbox.treebox .groupbox-body {
 /* Media Tab */
 #imagetree {
   min-height: 10em;
+  margin-top: 2px;
 }
 
 #mediaGrid {
@@ -176,7 +190,17 @@ treechildren::-moz-tree-cell-text(broken) {
   color: graytext;
 }
 
+#mediaPreviewBox .inset {
+  -moz-appearance: listbox;
+  margin-bottom: 0;  
+}
+
 /* Feeds Tab */
+#feedPanel {
+  margin-left: 2px;
+  margin-right: 2px;
+}
+
 #feedtree {
   margin-bottom: 0px;
 }
@@ -196,6 +220,7 @@ treechildren::-moz-tree-cell-text(broken) {
 }
 
 #feedListbox {
+  margin-bottom: 0;
   border: 2px solid;
   -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
   -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
@@ -208,6 +233,11 @@ treechildren::-moz-tree-cell-text(broken) {
 }
 
 /* Permissions Tab */
+#permPanel {
+  margin-left: 6px;
+  margin-right: 6px;
+}
+
 #permList {
   -moz-appearance: listbox;
   margin-top: .5em;
