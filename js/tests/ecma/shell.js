@@ -159,11 +159,15 @@ function DayNumber( t ) {
   return ( Math.floor( t / msPerDay ) );
 }
 function TimeWithinDay( t ) {
-  if ( t < 0 ) {
-    return ( (t % msPerDay) + msPerDay );
-  } else {
-    return ( t % msPerDay );
+
+  var r = t % msPerDay;
+
+  if (r < 0)
+  {
+    r += msPerDay;
   }
+  return r;
+
 }
 function YearNumber( t ) {
 }
