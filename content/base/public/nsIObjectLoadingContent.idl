@@ -43,7 +43,7 @@ interface nsIPluginInstance;
 /**
  * This interface represents a content node that loads objects.
  */
-[scriptable, uuid(90ab443e-3e99-405e-88c9-9c42adaa3217)]
+[scriptable, uuid(42f9358e-300f-4a44-afd7-7830b750e955)]
 interface nsIObjectLoadingContent : nsISupports
 {
   const unsigned long TYPE_LOADING  = 0;
@@ -70,13 +70,6 @@ interface nsIObjectLoadingContent : nsISupports
    * TYPE_NULL will be returned.
    */
   unsigned long getContentTypeForMIMEType(in AUTF8String aMimeType);
-
-  /**
-   * Returns the plugin instance if it has already been instantiated. This
-   * will never instantiate the plugin and so is safe to call even when
-   * content script must not execute.
-   */
-  [noscript] readonly attribute nsIPluginInstance pluginInstance;
 
 
   /**

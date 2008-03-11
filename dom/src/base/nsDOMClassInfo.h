@@ -977,8 +977,8 @@ protected:
   {
   }
 
-  static nsresult GetPluginInstanceIfSafe(nsIXPConnectWrappedNative *aWrapper,
-                                          nsIPluginInstance **aResult);
+  nsresult GetPluginInstance(nsIXPConnectWrappedNative *aWrapper,
+                             nsIPluginInstance **aResult);
 
   static nsresult GetPluginJSObject(JSContext *cx, JSObject *obj,
                                     nsIPluginInstance *plugin_inst,
@@ -1003,10 +1003,6 @@ public:
   NS_IMETHOD Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                   JSObject *obj, PRUint32 argc, jsval *argv, jsval *vp,
                   PRBool *_retval);
-
-
-  static nsresult SetupProtoChain(nsIXPConnectWrappedNative *wrapper,
-                                  JSContext *cx, JSObject *obj);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {

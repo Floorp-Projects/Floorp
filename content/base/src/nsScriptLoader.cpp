@@ -159,7 +159,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS0(nsScriptLoadRequest)
 nsScriptLoader::nsScriptLoader(nsIDocument *aDocument)
   : mDocument(aDocument),
     mBlockerCount(0),
-    mEnabled(PR_TRUE)
+    mEnabled(PR_TRUE),
+    mHadPendingScripts(PR_FALSE)
 {
 }
 
@@ -490,8 +491,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 
     // If we've got existing pending requests, add ourselves
     // to this list.
-    if (mPendingRequests.Count() == 0 && ReadyToExecuteScripts() &&
-        nsContentUtils::IsSafeToRunScript()) {
+    if (mPendingRequests.Count() == 0 && ReadyToExecuteScripts()) {
       return ProcessRequest(request);
     }
   }
@@ -500,14 +500,6 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
   NS_ENSURE_TRUE(mPendingRequests.AppendObject(request),
                  NS_ERROR_OUT_OF_MEMORY);
 
-  // If there weren't any pending requests before, and this one is
-  // ready to execute, do that as soon as it's safe.
-  if (mPendingRequests.Count() == 1 && !request->mLoading &&
-      ReadyToExecuteScripts()) {
-    nsContentUtils::AddScriptRunner(new nsRunnableMethod<nsScriptLoader>(this,
-      &nsScriptLoader::ProcessPendingRequests));
-  }
-
   // Added as pending request, now we can send blocking back
   return NS_ERROR_HTMLPARSER_BLOCK;
 }
@@ -515,7 +507,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 nsresult
 nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
 {
-  NS_ASSERTION(ReadyToExecuteScripts() && nsContentUtils::IsSafeToRunScript(),
+  NS_ASSERTION(ReadyToExecuteScripts(),
                "Caller forgot to check ReadyToExecuteScripts()");
 
   NS_ENSURE_ARG(aRequest);
