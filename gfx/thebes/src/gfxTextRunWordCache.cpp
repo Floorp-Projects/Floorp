@@ -405,7 +405,7 @@ TextRunWordCache::FinishTextRun(gfxTextRun *aTextRun, gfxTextRun *aNewRun,
                     // need to find out what the platform would do
                     // if the marks were at the start of the text.
                     tmpTextRun = aNewRun->GetFontGroup()->MakeTextRun(
-                        aTextRun->GetTextUnicode() + sourceOffset, length, aParams,
+                        source->GetTextUnicode() + sourceOffset, length, aParams,
                         aNewRun->GetFlags());
                     source = tmpTextRun;
                     sourceOffset = 0;
@@ -739,7 +739,7 @@ TextRunWordCache::CacheDumpEntry(CacheHashEntry* aEntry, void* userArg)
         fprintf(output, "<EMPTY>\n");
         return PL_DHASH_NEXT;
     }
-    fprintf(output, "Word at %x:%d => ", aEntry->mTextRun, aEntry->mWordOffset);
+    fprintf(output, "Word at %p:%d => ", static_cast<void*>(aEntry->mTextRun), aEntry->mWordOffset);
     aEntry->mTextRun->Dump(output);
     fprintf(output, " (hashed by %s)\n", aEntry->mHashedByFont ? "font" : "fontgroup");
     return PL_DHASH_NEXT;
