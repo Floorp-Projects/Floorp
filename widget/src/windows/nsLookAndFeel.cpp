@@ -56,7 +56,7 @@ static CloseThemeDataPtr closeTheme = NULL;
 static GetThemeColorPtr getThemeColor = NULL;
 static IsAppThemedPtr isAppThemed = NULL;
 
-static const char kThemeLibraryName[] = "uxtheme.dll";
+static const PRUnichar kThemeLibraryName[] = L"uxtheme.dll";
 static HINSTANCE gThemeDLLInst = NULL;
 static HANDLE gMenuTheme = NULL;
 
@@ -105,13 +105,13 @@ static PRInt32 GetSystemParam(long flag, PRInt32 def)
 nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 {
 #ifndef WINCE
-  gShell32DLLInst = LoadLibrary("Shell32.dll");
+  gShell32DLLInst = LoadLibraryW(L"shell32.dll");
   if (gShell32DLLInst)
   {
       gSHAppBarMessage = (SHAppBarMessagePtr) GetProcAddress(gShell32DLLInst,
                                                              "SHAppBarMessage");
   }
-  gThemeDLLInst = LoadLibrary(kThemeLibraryName);
+  gThemeDLLInst = LoadLibraryW(kThemeLibraryName);
   if(gThemeDLLInst)
   {
     openTheme = (OpenThemeDataPtr)GetProcAddress(gThemeDLLInst, "OpenThemeData");
@@ -504,7 +504,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         if (gSHAppBarMessage)
         {
           // Get task bar window handle
-          HWND shellWindow = FindWindow("Shell_TrayWnd", NULL);
+          HWND shellWindow = FindWindowW(L"Shell_TrayWnd", NULL);
 
           if (shellWindow != NULL)
           {

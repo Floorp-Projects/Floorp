@@ -79,17 +79,18 @@ static BOOL onInitDialog(HWND hWnd, HWND hWndFocus, LPARAM lParam)
 
   pPlugin->m_hWndDialog = hWnd;
   
-  char szString[512];
-  LoadString(hInst, IDS_TITLE, szString, sizeof(szString));
-  SetWindowText(hWnd, szString);
+  wchar_t szString[512];
+  LoadStringW(hInst, IDS_TITLE, szString, sizeof(szString));
+  SetWindowTextW(hWnd, szString);
 
-  LoadString(hInst, IDS_INFO, szString, sizeof(szString));
-  SetDlgItemText(hWnd, IDC_STATIC_INFO, szString);
+  LoadStringW(hInst, IDS_INFO, szString, sizeof(szString));
+  SetDlgItemTextW(hWnd, IDC_STATIC_INFO, szString);
 
-  SetDlgItemText(hWnd, IDC_STATIC_INFOTYPE, (LPSTR)pPlugin->m_pNPMIMEType);
+  // convert m_pNPMIMEType dougt
+  SetDlgItemTextA(hWnd, IDC_STATIC_INFOTYPE, pPlugin->m_pNPMIMEType);
 
-  LoadString(hInst, IDS_LOCATION, szString, sizeof(szString));
-  SetDlgItemText(hWnd, IDC_STATIC_LOCATION, szString);
+  LoadStringW(hInst, IDS_LOCATION, szString, sizeof(szString));
+  SetDlgItemTextW(hWnd, IDC_STATIC_LOCATION, szString);
 
   char contentTypeIsJava = 0;
 
@@ -99,30 +100,36 @@ static BOOL onInitDialog(HWND hWnd, HWND hWndFocus, LPARAM lParam)
   }
   
   if(pPlugin->m_szPageURL == NULL || contentTypeIsJava)
-    LoadString(hInst, IDS_FINDER_PAGE, szString, sizeof(szString));
+    LoadStringW(hInst, IDS_FINDER_PAGE, szString, sizeof(szString));
   else
-    strncpy(szString, pPlugin->m_szPageURL,511); // defect #362738
-  
+  {
+    MultiByteToWideChar( CP_ACP, 0,
+                         pPlugin->m_szPageURL,
+                         strlen(pPlugin->m_szPageURL)+1,
+                         szString,   
+                         511 ); // defect #362738
+  }
+
   SetDlgItemTextWrapped(hWnd, IDC_STATIC_URL, szString);
 
-  LoadString(hInst, IDS_QUESTION, szString, sizeof(szString));
-  SetDlgItemText(hWnd, IDC_STATIC_QUESTION, szString);
+  LoadStringW(hInst, IDS_QUESTION, szString, sizeof(szString));
+  SetDlgItemTextW(hWnd, IDC_STATIC_QUESTION, szString);
 
-  SetDlgItemText(hWnd, IDC_STATIC_WARNING, "");
+  SetDlgItemTextW(hWnd, IDC_STATIC_WARNING, L"");
 
   if(!pPlugin->m_bOnline)
   {
     EnableWindow(GetDlgItem(hWnd, IDC_GET_PLUGIN), FALSE);
-    LoadString(hInst, IDS_WARNING_OFFLINE, szString, sizeof(szString));
-    SetDlgItemText(hWnd, IDC_STATIC_WARNING, szString);
-    SetDlgItemText(hWnd, IDC_STATIC_QUESTION, "");
+    LoadStringW(hInst, IDS_WARNING_OFFLINE, szString, sizeof(szString));
+    SetDlgItemTextW(hWnd, IDC_STATIC_WARNING, szString);
+    SetDlgItemTextW(hWnd, IDC_STATIC_QUESTION, L"");
     return TRUE;
   }
 
   if((!pPlugin->m_bJava) || (!pPlugin->m_bJavaScript) || (!pPlugin->m_bSmartUpdate))
   {
-    LoadString(hInst, IDS_WARNING_JS, szString, sizeof(szString));
-    SetDlgItemText(hWnd, IDC_STATIC_WARNING, szString);
+    LoadStringW(hInst, IDS_WARNING_JS, szString, sizeof(szString));
+    SetDlgItemTextW(hWnd, IDC_STATIC_WARNING, szString);
     return TRUE;
   }
 

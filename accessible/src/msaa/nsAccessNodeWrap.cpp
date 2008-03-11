@@ -576,7 +576,7 @@ void nsAccessNodeWrap::InitAccessibility()
   }
 
   if (!gmUserLib) {
-    gmUserLib =::LoadLibrary("USER32.DLL");
+    gmUserLib =::LoadLibraryW(L"USER32.DLL");
   }
 
   if (gmUserLib) {

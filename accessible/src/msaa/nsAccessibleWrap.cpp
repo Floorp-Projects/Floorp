@@ -156,7 +156,7 @@ STDMETHODIMP nsAccessibleWrap::AccessibleObjectFromWindow(HWND hwnd,
 {
   // open the dll dynamically
   if (!gmAccLib)
-    gmAccLib =::LoadLibrary("OLEACC.DLL");
+    gmAccLib =::LoadLibraryW(L"OLEACC.DLL");
 
   if (gmAccLib) {
     if (!gmAccessibleObjectFromWindow)

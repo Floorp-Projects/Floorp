@@ -62,7 +62,7 @@
 
 static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID); // needed for NS_TRY_SAFE_CALL
 
-#define NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION "MozillaPluginWindowPropertyAssociation"
+#define NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION L"MozillaPluginWindowPropertyAssociation"
 
 typedef nsTWeakRef<class nsPluginNativeWindowWin> PluginWindowWeakRef;
 
@@ -203,7 +203,7 @@ NS_IMETHODIMP nsDelayedPopupsEnabledEvent::Run()
  */
 static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-  nsPluginNativeWindowWin * win = (nsPluginNativeWindowWin *)::GetProp(hWnd, NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION);
+  nsPluginNativeWindowWin * win = (nsPluginNativeWindowWin *)::GetPropW(hWnd, NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION);
   if (!win)
     return TRUE;
 
@@ -526,10 +526,10 @@ nsresult nsPluginNativeWindowWin::SubclassAndAssociateWindow()
   if (!mPluginWinProc)
     return NS_ERROR_FAILURE;
 
-  nsPluginNativeWindowWin * win = (nsPluginNativeWindowWin *)::GetProp(hWnd, NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION);
+  nsPluginNativeWindowWin * win = (nsPluginNativeWindowWin *)::GetPropW(hWnd, NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION);
   NS_ASSERTION(!win || (win == this), "plugin window already has property and this is not us");
   
-  if (!::SetProp(hWnd, NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION, (HANDLE)this))
+  if (!::SetPropW(hWnd, NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION, (HANDLE)this))
     return NS_ERROR_FAILURE;
 
   return NS_OK;
@@ -543,7 +543,7 @@ nsresult nsPluginNativeWindowWin::UndoSubclassAndAssociateWindow()
   // remove window property
   HWND hWnd = (HWND)window;
   if (IsWindow(hWnd))
-    ::RemoveProp(hWnd, NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION);
+    ::RemovePropW(hWnd, NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION);
 
   // restore the original win proc
   // but only do this if this were us last time
