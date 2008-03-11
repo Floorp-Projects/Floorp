@@ -541,7 +541,8 @@ public:
     NATIVE_GDK_DRAWABLE = 2,
     NATIVE_WINDOWS_DC = 3,
     NATIVE_MAC_THING = 4,
-    NATIVE_THEBES_CONTEXT = 5
+    NATIVE_THEBES_CONTEXT = 5,
+    NATIVE_OS2_PS = 6
   };
   /**
    * Retrieve the native graphic data given by aType. Return
