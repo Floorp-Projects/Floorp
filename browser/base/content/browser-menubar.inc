@@ -387,7 +387,7 @@
         ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDropHandler);"
         ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDropHandler);">
     <menupopup id="bookmarksMenuPopup"
-               type="places" asyncinit="true"
+               type="places"
                place="place:folder=2&amp;expandQueries=1"
                context="placesContext"
                openInTabs="children"
@@ -411,12 +411,23 @@
       </menu>
       <menuitem label="&addCurPagesCmd.label;" 
                 command="Browser:BookmarkAllTabs" key="bookmarkAllTabsKb"/>
+      <menuseparator id="organizeBookmarksSeparator"/>
       <menuitem label="&showAllBookmarksCmd2.label;" 
                 command="Browser:ShowAllBookmarks" key="manBookmarkKb"/>
+      <menu id="bookmarksToolbarFolderMenu"
+            class="menu-iconic bookmark-item"
+            container="true">
+        <menupopup id="bookmarksToolbarFolderPopup"
+                   type="places"
+                   context="placesContext"
+                   oncommand="BookmarksEventHandler.onCommand(event);"
+                   onclick="BookmarksEventHandler.onClick(event);"
+                   onpopupshowing="BookmarksEventHandler.onPopupShowing(event);"/>
+      </menu>
       <menuseparator builder="start"/>
     </menupopup>
   </menu>
-        
+
             <menu id="tools-menu" label="&toolsMenu.label;" accesskey="&toolsMenu.accesskey;">
               <menupopup id="menu_ToolsPopup">
               <menuitem label="&search.label;" accesskey="&search.accesskey;" 

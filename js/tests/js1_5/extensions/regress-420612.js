@@ -44,6 +44,18 @@ var expect = 'No Crash';
 
 printBugNumber(BUGNUMBER);
 printStatus (summary);
-this.__proto__ = []; 
-this.unwatch("x");
+try
+{
+  this.__proto__ = []; 
+  this.unwatch("x");
+}
+catch(ex)
+{
+  print(ex + '');
+  if (typeof window != 'undefined')
+  {
+    expect = 'Error: invalid __proto__ value (can only be set to null)';
+  }
+  actual = ex + '';
+}
 reportCompare(expect, actual, summary);

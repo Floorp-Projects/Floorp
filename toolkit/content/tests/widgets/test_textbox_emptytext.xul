@@ -5,6 +5,7 @@
   XUL Widget Test for textbox with emptyText
   -->
 <window title="Textbox with emptyText test" width="500" height="600"
+        onload="window.focus();"
         onfocus="if (!gDone) { gDone = true; doTests(); }"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript" src="/MochiKit/packed.js"></script>

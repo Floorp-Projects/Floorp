@@ -361,6 +361,8 @@ public:
 #elif defined(MOZ_X11)
   void Paint(nsIRenderingContext& aRenderingContext,
              const nsRect& aDirtyRect);
+#elif defined(XP_OS2)
+  void Paint(const nsRect& aDirtyRect, HPS aHPS);
 #endif
 
   // nsITimerCallback interface
@@ -445,7 +447,7 @@ private:
 
 };
 
-#if defined(XP_WIN) || (defined(DO_DIRTY_INTERSECT) && defined(XP_MACOSX)) || defined(MOZ_X11)
+#if defined(XP_WIN) || (defined(DO_DIRTY_INTERSECT) && defined(XP_MACOSX)) || defined(MOZ_X11) || defined(XP_OS2)
 static void ConvertAppUnitsToPixels(const nsPresContext& aPresContext, const nsRect& aTwipsRect, nsIntRect& aPixelRect);
 #endif
 
@@ -1183,6 +1185,15 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("plugin printing done, return code is %lx\n", (long)rv));
 #endif
 
+#elif defined(XP_OS2)
+  void *hps = aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_OS2_PS);
+  if (!hps)
+    return;
+
+  npprint.print.embedPrint.platformPrint = hps;
+  npprint.print.embedPrint.window = window;
+  // send off print info to plugin
+  rv = pi->Print(&npprint);
 #elif defined(XP_WIN)
 
   /* On Windows, we use the win32 printing surface to print.  This, in
@@ -1342,9 +1353,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       if (window->type == nsPluginWindowType_Drawable)
         mInstanceOwner->Paint(aRenderingContext, aDirtyRect);
     }
-#elif defined (XP_WIN) // || defined(XP_OS2)
-  // XXX for OS/2 we need to overhaul this for Cairo builds
-  //     for now just ignore plugin stuff
+#elif defined (XP_WIN) || defined(XP_OS2)
   nsCOMPtr<nsIPluginInstance> inst;
   GetPluginInstance(*getter_AddRefs(inst));
   if (inst) {
@@ -1395,6 +1404,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
         return;
       }
 
+#ifdef XP_WIN
       // check if we need to update hdc
       HDC hdc = (HDC)aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
 
@@ -1408,6 +1418,25 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       POINT origViewportOrigin;
       GetViewportOrgEx(hdc, &origViewportOrigin);
       SetViewportOrgEx(hdc, origViewportOrigin.x + (int) xoff, origViewportOrigin.y + (int) yoff, NULL);
+#else // do something similar on OS/2
+      // check if we need to update the PS
+      HPS hps = (HPS)aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_OS2_PS);
+      if (reinterpret_cast<HPS>(window->window) != hps) {
+        window->window = reinterpret_cast<nsPluginPort*>(hps);
+        doupdatewindow = PR_TRUE;
+      }
+      LONG lPSid = GpiSavePS(hps);
+      RECTL rclViewport;
+      if (GpiQueryDevice(hps) != NULLHANDLE) { // ensure that we have an associated HDC
+        if (GpiQueryPageViewport(hps, &rclViewport)) {
+          rclViewport.xLeft += (LONG)xoff;
+          rclViewport.xRight += (LONG)xoff;
+          rclViewport.yBottom += (LONG)yoff;
+          rclViewport.yTop += (LONG)yoff;
+          GpiSetPageViewport(hps, &rclViewport);
+        }
+      }
+#endif
 
       if ((window->x != origin.x) || (window->y != origin.y)) {
         window->x = origin.x;
@@ -1460,6 +1489,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
         inst->SetWindow(window);        
       }
 
+#ifdef XP_WIN
       // FIXME - Bug 385435:
       // This expects a dirty rect relative to the plugin's rect
       // XXX I wonder if this breaks if we give the frame a border so the
@@ -1467,6 +1497,12 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       mInstanceOwner->Paint(aDirtyRect, hdc);
 
       RestoreDC(hdc, -1);
+#else // do something similar on OS/2
+      mInstanceOwner->Paint(aDirtyRect, hps);
+      if (lPSid >= 1) {
+        GpiRestorePS(hps, lPSid);
+      }
+#endif
       surf->MarkDirty();
     }
   }
@@ -3826,6 +3862,36 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, HDC ndc)
 }
 #endif
 
+#ifdef XP_OS2
+void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, HPS aHPS)
+{
+  if (!mInstance || !mOwner)
+    return;
+
+  nsPluginWindow * window;
+  GetWindow(window);
+  nsRect relDirtyRect = nsRect(aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  nsIntRect relDirtyRectInPixels;
+  ConvertAppUnitsToPixels(*mOwner->PresContext(), relDirtyRect,
+                          relDirtyRectInPixels);
+
+  // we got dirty rectangle in relative window coordinates, but we
+  // need it in absolute units and in the (left, top, right, bottom) form
+  RECTL rectl;
+  rectl.xLeft   = relDirtyRectInPixels.x + window->x;
+  rectl.yBottom = relDirtyRectInPixels.y + window->y;
+  rectl.xRight  = rectl.xLeft + relDirtyRectInPixels.width;
+  rectl.yTop    = rectl.yBottom + relDirtyRectInPixels.height;
+
+  nsPluginEvent pluginEvent;
+  pluginEvent.event = WM_PAINT;
+  pluginEvent.wParam = (uint32)aHPS;
+  pluginEvent.lParam = (uint32)&rectl;
+  PRBool eventHandled = PR_FALSE;
+  mInstance->HandleEvent(&pluginEvent, &eventHandled);
+}
+#endif
+
 #ifdef MOZ_X11
 void nsPluginInstanceOwner::Paint(nsIRenderingContext& aRenderingContext,
                                   const nsRect& aDirtyRect)
@@ -4184,7 +4250,7 @@ void nsPluginInstanceOwner::SetPluginHost(nsIPluginHost* aHost)
   mPluginHost = aHost;
 }
 
-#if defined(XP_WIN) || (defined(DO_DIRTY_INTERSECT) && defined(XP_MACOSX)) || defined(MOZ_X11)
+#if defined(XP_WIN) || (defined(DO_DIRTY_INTERSECT) && defined(XP_MACOSX)) || defined(MOZ_X11) || defined(XP_OS2)
 // convert frame coordinates from twips to pixels
 static void ConvertAppUnitsToPixels(const nsPresContext& aPresContext, const nsRect& aTwipsRect, nsIntRect& aPixelRect)
 {

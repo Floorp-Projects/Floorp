@@ -464,22 +464,18 @@ jsds_FilterHook (JSDContext *jsdc, JSDThreadState *state)
 JS_STATIC_DLL_CALLBACK (void)
 jsds_NotifyPendingDeadScripts (JSContext *cx)
 {
-    /* Bug 411249, we can't drop the script hook.
-     * Even if we could drop the script hook, jsds_GCCallbackProc
-     * is never cleared, so it would call us anyway.
-     *
-     * If there's no gJsds, then we can't do anything.
-     */
-    if (!gJsds)
-        return;
-
-    nsCOMPtr<jsdIScriptHook> hook = 0;   
-    gJsds->GetScriptHook (getter_AddRefs(hook));
-
 #ifdef CAUTIOUS_SCRIPTHOOK
     JSRuntime *rt = JS_GetRuntime(cx);
 #endif
-    gJsds->Pause(nsnull);
+    jsdService *jsds = gJsds;
+
+    nsCOMPtr<jsdIScriptHook> hook;
+    if (jsds) {
+        NS_ADDREF(jsds);
+        jsds->GetScriptHook (getter_AddRefs(hook));
+        jsds->Pause(nsnull);
+    }
+
     DeadScript *deadScripts = gDeadScripts;
     gDeadScripts = nsnull;
     while (deadScripts) {
@@ -511,7 +507,10 @@ jsds_NotifyPendingDeadScripts (JSContext *cx)
         PR_Free(ds);
     }
 
-    gJsds->UnPause(nsnull);
+    if (jsds) {
+        jsds->UnPause(nsnull);
+        NS_RELEASE(jsds);
+    }
 }
 
 JS_STATIC_DLL_CALLBACK (JSBool)
@@ -2562,13 +2561,11 @@ jsdService::Off (void)
         return NS_ERROR_NOT_INITIALIZED;
     
     if (gDeadScripts) {
-        if (gGCStatus == JSGC_END)
-        {
-            JSContext *cx = JSD_GetDefaultJSContext(mCx);
-            jsds_NotifyPendingDeadScripts(cx);
-        }
-        else
+        if (gGCStatus != JSGC_END)
             return NS_ERROR_NOT_AVAILABLE;
+
+        JSContext *cx = JSD_GetDefaultJSContext(mCx);
+        jsds_NotifyPendingDeadScripts(cx);
     }
 
     /*
@@ -2583,6 +2580,7 @@ jsdService::Off (void)
     ClearAllBreakpoints();
 
     JSD_SetErrorReporter (mCx, NULL, NULL);
+    JSD_SetScriptHook (mCx, NULL, NULL);
     JSD_ClearThrowHook (mCx);
     JSD_ClearInterruptHook (mCx);
     JSD_ClearDebuggerHook (mCx);
@@ -3278,6 +3276,16 @@ jsdService::GetFunctionHook (jsdICallHook **aHook)
 jsdService::~jsdService()
 {
     ClearFilters();
+    mErrorHook = nsnull;
+    mBreakpointHook = nsnull;
+    mDebugHook = nsnull;
+    mDebuggerHook = nsnull;
+    mInterruptHook = nsnull;
+    mScriptHook = nsnull;
+    mThrowHook = nsnull;
+    mTopLevelHook = nsnull;
+    mFunctionHook = nsnull;
+    gGCStatus = JSGC_END;
     Off();
     gJsds = nsnull;
 }

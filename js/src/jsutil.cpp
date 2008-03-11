@@ -89,7 +89,7 @@ BinToVal(uintN logscale, uintN bin)
     if (logscale == 2)
         return JS_BIT(bin);
     JS_ASSERT(logscale == 10);
-    return (uint32) pow(10, bin);
+    return (uint32) pow(10, (double) bin);
 }
 
 static uintN
@@ -100,7 +100,7 @@ ValToBin(uintN logscale, uint32 val)
     if (val <= 1)
         return val;
     bin = (logscale == 10)
-          ? (uintN) ceil(log10(val))
+          ? (uintN) ceil(log10((double) val))
           : (logscale == 2)
           ? (uintN) JS_CeilingLog2(val)
           : val;
@@ -198,7 +198,7 @@ JS_DumpHistogram(JSBasicStats *bs, FILE *fp)
         fprintf(fp, "%s %8u ", (bin == 10) ? "+" : ":", cnt);
         if (cnt != 0) {
             if (max > 1e6 && mean > 1e3)
-                cnt = (uint32) ceil(log10(cnt));
+                cnt = (uint32) ceil(log10((double) cnt));
             else if (max > 16 && mean > 8)
                 cnt = JS_CeilingLog2(cnt);
             for (i = 0; i < cnt; i++)

@@ -1131,7 +1131,7 @@ PlacesTreeView.prototype = {
         // if they go through the "result" API.
         if (PlacesUtils.nodeIsSeparator(node))
           return "";
-        return node.title || PlacesUtils.getString("noTitle");
+        return PlacesUtils.getBestTitle(node);
       case this.COLUMN_TYPE_TAGS:
         return node.tags;
       case this.COLUMN_TYPE_URI:

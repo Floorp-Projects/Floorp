@@ -150,6 +150,25 @@ filefield[disabled="true"] .fileFieldIcon {
   list-style-image: url("moz-icon://stock/gtk-file?size=menu");
 }
 
+#paneApplications {
+  margin-left: 4px;
+  margin-right: 4px; 
+  padding-left: 0;
+  padding-right: 0; 
+}
+
+#linksOpenInBox {
+  margin-top: 5px;
+}
+
+#paneAdvanced {
+  padding-bottom: 10px;
+}
+#advancedPrefs {
+  margin-left: 0;
+  margin-right: 0; 
+}
+
 #cookiesChildren::-moz-tree-image(domainCol, container) {
   list-style-image: url("moz-icon://stock/gtk-directory?size=menu");
 }

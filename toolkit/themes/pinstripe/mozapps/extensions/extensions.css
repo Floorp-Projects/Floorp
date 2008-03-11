@@ -59,6 +59,7 @@ richlistitem[isDisabled="true"] {
 
 richlistitem[newAddon="true"] {
   background-color: #fdf2ab;
+  color: #585620;
 }
 
 richlistitem[selected="true"] {

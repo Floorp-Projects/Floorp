@@ -47,9 +47,8 @@
 <tabpanel id="qa-tab-help">
 <vbox flex="1">
   <groupbox>
-    <caption label="Mozilla QA Help" />
-    <div xmlns="http://www.w3.org/1999/xhtml" id="qa-help-info" flex="1">
-    </div>
+    <caption label="&qa.help.helptitle;" />
+    <description>&qa.help.intro;</description>
   </groupbox>
   
 </vbox>
