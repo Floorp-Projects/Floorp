@@ -236,7 +236,7 @@ static bool RestartApplication()
   }
 }
 
--(void)closeMeDown
+- (void)closeMeDown:(id)unused
 {
   [NSApp terminate:self];
 }
