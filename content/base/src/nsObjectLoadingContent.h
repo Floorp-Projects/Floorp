@@ -270,14 +270,27 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      */
     void GetObjectBaseURI(nsIContent* thisContent, nsIURI** aURI);
 
+
     /**
      * Gets the frame that's associated with this content node in
-     * presentation 0.  If aFlushLayout is true, this function will
-     * flush layout before trying to get the frame.  This is needed
-     * in some cases by plug-ins to ensure that NPP_SetWindow() gets
-     * called (from nsObjectFrame::DidReflow).
+     * presentation 0. Always returns null if the node doesn't currently
+     * have a frame.
+     *
+     * @param aFlush When eFlushContent will flush content notifications
+     *               before returning a non-null value.
+     *               When eFlushLayout will flush layout and content
+     *               notifications before returning a non-null value.
+     *               When eDontFlush will never flush.
+     *         
+     *   eFlushLayout is needed in some cases by plug-ins to ensure
+     *   that NPP_SetWindow() gets called (from nsObjectFrame::DidReflow).
      */
-    nsIObjectFrame* GetFrame(PRBool aFlushLayout);
+    enum FlushType {
+      eFlushContent,
+      eFlushLayout,
+      eDontFlush
+    };
+    nsIObjectFrame* GetExistingFrame(FlushType aFlushType);
 
     /**
      * Handle being blocked by a content policy.  aStatus is the nsresult
@@ -395,7 +408,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // Whether we fell back because of an unsupported type
     PRBool                      mTypeUnsupported:1;
 
-    friend struct nsAsyncInstantiateEvent;
+    friend class nsAsyncInstantiateEvent;
 };
 
 

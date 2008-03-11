@@ -108,6 +108,7 @@
 #include "nsDisplayList.h"
 #include "nsAttrName.h"
 #include "nsDataHashtable.h"
+#include "nsDOMClassInfo.h"
 
 // headers for plugin scriptability
 #include "nsIScriptGlobalObject.h"
@@ -1842,22 +1843,8 @@ nsObjectFrame::NotifyContentObjectWrapper()
                                    getter_AddRefs(wrapper));
 
   if (!wrapper) {
-    // Nothing to do here if there's no wrapper for mContent
-    return;
-  }
-
-  nsCOMPtr<nsIClassInfo> ci(do_QueryInterface(mContent));
-  if (!ci)
-    return;
-
-  nsCOMPtr<nsISupports> s;
-  ci->GetHelperForLanguage(nsIProgrammingLanguage::JAVASCRIPT,
-                           getter_AddRefs(s));
-
-  nsCOMPtr<nsIXPCScriptable> helper(do_QueryInterface(s));
-
-  if (!helper) {
-    // There's nothing we can do if there's no helper
+    // Nothing to do here if there's no wrapper for mContent. The proto
+    // chain will be fixed appropriately when the wrapper is created.
     return;
   }
 
@@ -1866,13 +1853,7 @@ nsObjectFrame::NotifyContentObjectWrapper()
   if (NS_FAILED(rv))
     return;
 
-  nsCxPusher cxPusher;
-  if (cxPusher.Push(mContent)) {
-    // Abuse the scriptable helper to trigger prototype setup for the
-    // wrapper for mContent so that this plugin becomes part of the DOM
-    // object.
-    helper->PostCreate(wrapper, cx, obj);
-  }
+  nsHTMLPluginObjElementSH::SetupProtoChain(wrapper, cx, obj);
 }
 
 // static
