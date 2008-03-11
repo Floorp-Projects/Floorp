@@ -145,11 +145,11 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolSch
   if (aProtocolScheme && *aProtocolScheme)
   {
      HKEY hKey;
-     LONG err = ::RegOpenKeyExA(HKEY_CLASSES_ROOT, aProtocolScheme, 0,
+     LONG err = ::RegOpenKeyEx(HKEY_CLASSES_ROOT, aProtocolScheme, 0,
                                KEY_QUERY_VALUE, &hKey);
      if (err == ERROR_SUCCESS)
      {
-       err = ::RegQueryValueExW(hKey, L"URL Protocol", NULL, NULL, NULL, NULL);
+       err = ::RegQueryValueEx(hKey, "URL Protocol", NULL, NULL, NULL, NULL);
        *aHandlerExists = (err == ERROR_SUCCESS);
        // close the key
        ::RegCloseKey(hKey);

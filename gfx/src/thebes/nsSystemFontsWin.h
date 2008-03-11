@@ -50,8 +50,9 @@ public:
     nsresult GetSystemFont(nsSystemFontID anID, nsString *aFontName,
                            gfxFontStyle *aFontStyle) const;
 private:
-    nsresult CopyLogFontToNSFont(HDC* aHDC, const LOGFONTW* ptrLogFont,
-                                 nsString *aFontName, gfxFontStyle *aFontStyle) const;
+    nsresult CopyLogFontToNSFont(HDC* aHDC, const LOGFONT* ptrLogFont,
+                                 nsString *aFontName, gfxFontStyle *aFontStyle,
+				 PRBool aIsWide = PR_FALSE) const;
     nsresult GetSysFontInfo(HDC aHDC, nsSystemFontID anID,
                             nsString *aFontName,
                             gfxFontStyle *aFontStyle) const;

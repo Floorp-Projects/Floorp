@@ -106,11 +106,10 @@ nsProcess::Init(nsIFile* executable)
 
 
 #if defined(XP_WIN)
-static int assembleCmdLine(char *const *argv, PRUnichar **cmdLine)
+static int assembleCmdLine(char *const *argv, char **cmdLine)
 {
     char *const *arg;
-    PRUnichar *p;
-    char *q;
+    char *p, *q;
     int cmdLineSize;
     int numBackslashes;
     int i;
@@ -132,7 +131,7 @@ static int assembleCmdLine(char *const *argv, PRUnichar **cmdLine)
                 + 2                      /* we quote every argument */
                 + 1;                     /* space in between, or final null */
     }
-    p = *cmdLine = (PRUnichar *) PR_MALLOC(cmdLineSize*sizeof(PRUnichar));
+    p = *cmdLine = (char *) PR_MALLOC(cmdLineSize);
     if (p == NULL) {
         return -1;
     }
@@ -238,10 +237,10 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
     my_argv[count+1] = NULL;
 
 #if defined(XP_WIN) && !defined (WINCE) /* wince uses nspr */
-    STARTUPINFOW startupInfo;
+    STARTUPINFO startupInfo;
     PROCESS_INFORMATION procInfo;
     BOOL retVal;
-    PRUnichar *cmdLine;
+    char *cmdLine;
 
     if (assembleCmdLine(my_argv, &cmdLine) == -1) {
         nsMemory::Free(my_argv);
@@ -251,20 +250,20 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
     ZeroMemory(&startupInfo, sizeof(startupInfo));
     startupInfo.cb = sizeof(startupInfo);
 
-    retVal = CreateProcessW(NULL,
-                            // const_cast<char*>(mTargetPath.get()),
-                            cmdLine,
-                            NULL,  /* security attributes for the new
-                                    * process */
-                            NULL,  /* security attributes for the primary
-                                    * thread in the new process */
-                            FALSE,  /* inherit handles */
-                            0,     /* creation flags */
-                            NULL,  /* env */
-                            NULL,  /* current drive and directory */
-                            &startupInfo,
-                            &procInfo
-                           );
+    retVal = CreateProcess(NULL,
+                           // const_cast<char*>(mTargetPath.get()),
+                           cmdLine,
+                           NULL,  /* security attributes for the new
+                                   * process */
+                           NULL,  /* security attributes for the primary
+                                   * thread in the new process */
+                           FALSE,  /* inherit handles */
+                           0,     /* creation flags */
+                           NULL,  /* env */
+                           NULL,  /* current drive and directory */
+                           &startupInfo,
+                           &procInfo
+                          );
     PR_Free( cmdLine );
     if (blocking) {
  

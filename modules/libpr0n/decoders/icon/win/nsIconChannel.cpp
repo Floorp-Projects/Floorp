@@ -63,7 +63,6 @@
 #include <windows.h>
 #include <shellapi.h>
 #include <shlobj.h>
-#include <wchar.h>
 
 struct ICONFILEHEADER {
   PRUint16 ifhReserved;
@@ -190,7 +189,7 @@ nsIconChannel::Open(nsIInputStream **_retval)
   return MakeInputStream(_retval, PR_FALSE);
 }
 
-nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, nsCString &aContentType, nsCString &aFileExtension)
+nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, nsACString &aContentType, nsACString &aFileExtension)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMozIconURI> iconURI (do_QueryInterface(mUrl, &rv));
@@ -237,28 +236,29 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
   return rv;
 }
 
-static DWORD GetSpecialFolderIcon(nsIFile* aFile, int aFolder, SHFILEINFOW* aSFI, UINT aInfoFlags)
+static DWORD GetSpecialFolderIcon(nsIFile* aFile, int aFolder, SHFILEINFO* aSFI, UINT aInfoFlags)
 {
   DWORD shellResult = 0;
 
   if (!aFile)
     return shellResult;
 
-  PRUnichar fileNativePath[MAX_PATH];
-  nsAutoString fileNativePathStr;
-  aFile->GetPath(fileNativePathStr);
-  ::GetShortPathNameW(fileNativePathStr.get(), fileNativePath, sizeof(fileNativePath));
+  char fileNativePath[MAX_PATH];
+  nsCAutoString fileNativePathStr;
+  aFile->GetNativePath(fileNativePathStr);
+  ::GetShortPathName(fileNativePathStr.get(), fileNativePath, sizeof(fileNativePath));
 
   LPITEMIDLIST idList;
   HRESULT hr = ::SHGetSpecialFolderLocation(NULL, aFolder, &idList);
   if (SUCCEEDED(hr)) {
-      PRUnichar specialNativePath[MAX_PATH];
-      ::SHGetPathFromIDListW(idList, specialNativePath);
-      ::GetShortPathNameW(specialNativePath, specialNativePath, sizeof(specialNativePath));
-      if (!wcsicmp(fileNativePath,specialNativePath)) {
+    char specialNativePath[MAX_PATH];
+    ::SHGetPathFromIDList(idList, specialNativePath);
+    ::GetShortPathName(specialNativePath, specialNativePath, sizeof(specialNativePath));
+  
+    if (nsDependentCString(fileNativePath).EqualsIgnoreCase(specialNativePath)) {
       aInfoFlags |= (SHGFI_PIDL | SHGFI_SYSICONINDEX);
-      shellResult = ::SHGetFileInfoW((LPCWSTR)(LPCITEMIDLIST)idList, 0, aSFI, 
-                                    sizeof(SHFILEINFOW), aInfoFlags);
+      shellResult = ::SHGetFileInfo((LPCTSTR)(LPCITEMIDLIST)idList, 0, aSFI, 
+                                    sizeof(SHFILEINFO), aInfoFlags);
       IMalloc* pMalloc;
       hr = ::SHGetMalloc(&pMalloc);
       if (SUCCEEDED(hr)) {
@@ -273,14 +273,14 @@ static DWORD GetSpecialFolderIcon(nsIFile* aFile, int aFolder, SHFILEINFOW* aSFI
 nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBlocking)
 {
   nsXPIDLCString contentType;
-  nsCString filePath;
+  nsCAutoString filePath;
   nsCOMPtr<nsIFile> localFile; // file we want an icon for
   PRUint32 desiredImageSize;
   nsresult rv = ExtractIconInfoFromUrl(getter_AddRefs(localFile), &desiredImageSize, contentType, filePath);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // if the file exists, we are going to use it's real attributes...otherwise we only want to use it for it's extension...
-  SHFILEINFOW      sfi;
+  SHFILEINFO      sfi;
   UINT infoFlags = SHGFI_ICON;
   
   PRBool fileExists = PR_FALSE;
@@ -342,8 +342,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
 
   // Not a special folder, or something else failed above.
   if (!shellResult)
-    shellResult = ::SHGetFileInfoW(NS_ConvertUTF8toUTF16(filePath).get(),
-                                   FILE_ATTRIBUTE_ARCHIVE, &sfi, sizeof(sfi), infoFlags);
+    shellResult = ::SHGetFileInfo(filePath.get(), FILE_ATTRIBUTE_ARCHIVE, &sfi, sizeof(sfi), infoFlags);
 
   if (shellResult && sfi.hIcon)
   {

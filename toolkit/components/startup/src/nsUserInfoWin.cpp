@@ -58,13 +58,14 @@ nsUserInfo::GetUsername(char **aUsername)
 {
     *aUsername = nsnull;
 
-    PRUnichar username[256];
+    TCHAR username[256];
     DWORD size = 256;
 
-    if (!GetUserNameW(username, &size))
+    if (!GetUserName(username, &size))
         return NS_ERROR_FAILURE;
-
-    *aUsername = ToNewUTF8String(nsDependentString(username));
+    
+    *aUsername = nsCRT::strdup(username);
+    
     if (*aUsername) return NS_OK;
 
     return NS_ERROR_FAILURE;
