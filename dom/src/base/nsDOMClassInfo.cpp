@@ -113,8 +113,8 @@
 #include "nsIDOMMediaList.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMConstructor.h"
-#include "nsIDOMTextRectangle.h"
-#include "nsIDOMTextRectangleList.h"
+#include "nsIDOMClientRect.h"
+#include "nsIDOMClientRectList.h"
 
 // DOM core includes
 #include "nsDOMError.h"
@@ -1185,9 +1185,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(XMLHttpRequest, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(TextRectangle, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(ClientRect, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(TextRectangleList, nsTextRectangleListSH,
+  NS_DEFINE_CLASSINFO_DATA(ClientRectList, nsClientRectListSH,
                            ARRAY_SCRIPTABLE_FLAGS)
 
   // Define MOZ_SVG_FOREIGNOBJECT here so that when it gets switched on,
@@ -3327,12 +3327,12 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(TextRectangle, nsIDOMTextRectangle)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMTextRectangle)
+  DOM_CLASSINFO_MAP_BEGIN(ClientRect, nsIDOMClientRect)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMClientRect)
    DOM_CLASSINFO_MAP_END
  
-  DOM_CLASSINFO_MAP_BEGIN(TextRectangleList, nsIDOMTextRectangleList)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMTextRectangleList)
+  DOM_CLASSINFO_MAP_BEGIN(ClientRectList, nsIDOMClientRectList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMClientRectList)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(FileList, nsIDOMFileList)
@@ -9753,16 +9753,16 @@ nsCSSRuleListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
   return rv;
 }
 
-// TextRectangleList scriptable helper
+// ClientRectList scriptable helper
 
 nsresult
-nsTextRectangleListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                                 nsISupports **aResult)
+nsClientRectListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
+                              nsISupports **aResult)
 {
-  nsCOMPtr<nsIDOMTextRectangleList> list(do_QueryInterface(aNative));
+  nsCOMPtr<nsIDOMClientRectList> list(do_QueryInterface(aNative));
   NS_ENSURE_TRUE(list, NS_ERROR_UNEXPECTED);
 
-  nsIDOMTextRectangle *rule = nsnull; // Weak, transfer the ownership over to aResult
+  nsIDOMClientRect *rule = nsnull; // Weak, transfer the ownership over to aResult
   nsresult rv = list->Item(aIndex, &rule);
 
   *aResult = rule;

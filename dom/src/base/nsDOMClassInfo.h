@@ -1331,16 +1331,16 @@ public:
   }
 };
 
-// TextRectangleList helper
+// ClientRectList helper
 
-class nsTextRectangleListSH : public nsArraySH
+class nsClientRectListSH : public nsArraySH
 {
 protected:
-  nsTextRectangleListSH(nsDOMClassInfoData* aData) : nsArraySH(aData)
+  nsClientRectListSH(nsDOMClassInfoData* aData) : nsArraySH(aData)
   {
   }
 
-  virtual ~nsTextRectangleListSH()
+  virtual ~nsClientRectListSH()
   {
   }
 
@@ -1352,7 +1352,7 @@ protected:
 public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsTextRectangleListSH(aData);
+    return new nsClientRectListSH(aData);
   }
 };
 
