@@ -103,6 +103,32 @@ nsGnomeVFSMimeApp::GetExpectsURIs(PRInt32* aExpects)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsGnomeVFSMimeApp::Launch(const nsACString &aUri)
+{
+  char *uri = gnome_vfs_make_uri_from_input(PromiseFlatCString(aUri).get());
+
+  if (! uri)
+    return NS_ERROR_FAILURE;
+
+  GList *uris = g_list_append(NULL, uri);
+
+  if (! uris) {
+    g_free(uri);
+    return NS_ERROR_FAILURE;
+  }
+
+  GnomeVFSResult result = gnome_vfs_mime_application_launch(mApp, uris);
+
+  g_free(uri);
+  g_list_free(uris);
+
+  if (result != GNOME_VFS_OK)
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
 class UTF8StringEnumerator : public nsIUTF8StringEnumerator
 {
 public:

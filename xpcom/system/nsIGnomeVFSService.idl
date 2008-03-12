@@ -44,7 +44,7 @@ interface nsIURI;
 /* nsIGnomeVFSMimeApp holds information about an application that is looked up
    with nsIGnomeVFSService::GetAppForMimeType. */
 
-[scriptable, uuid(57b1ef41-35cd-48e9-a248-2030c8365067)]
+[scriptable, uuid(66009894-9877-405b-9321-bf30420e34e6)]
 interface nsIGnomeVFSMimeApp : nsISupports
 {
   const long EXPECTS_URIS  = 0;
@@ -58,6 +58,8 @@ interface nsIGnomeVFSMimeApp : nsISupports
   readonly attribute long                expectsURIs;  // see constants above
   readonly attribute nsIUTF8StringEnumerator supportedURISchemes;
   readonly attribute boolean             requiresTerminal;
+
+  void launch(in AUTF8String uri);
 };
 
 /*
@@ -72,7 +74,7 @@ interface nsIGnomeVFSMimeApp : nsISupports
  * id of the application selected to handle each MIME type.
  */
 
-[scriptable, uuid(4d6b9f23-8682-41b3-bbff-937a958e6496)]
+[scriptable, uuid(dea20bf0-4e4d-48c5-b932-dc3e116dc64b)]
 interface nsIGnomeVFSService : nsISupports
 {
   /*** Application registry methods ***/
