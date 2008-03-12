@@ -1,4 +1,3 @@
-version(180);
 /* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
@@ -147,8 +146,8 @@ function run_test() {
     // test that we found the entry we added
     do_check_eq(controller.matchCount, 1);
 
-    // Make sure the url is decoded
-    do_check_eq(controller.getValueAt(0), decoded);
+    // Make sure the url is the same according to spec, so it can be deleted
+    do_check_eq(controller.getValueAt(0), url.spec);
 
     do_test_finished();
   };
