@@ -1853,7 +1853,6 @@ var PlacesUtils = {
 
       if (this.uriTypes.indexOf(type) != -1) {
         element = document.createElement("menuitem");
-        element.setAttribute("statustext", aNode.uri);
         element.className = "menuitem-iconic bookmark-item";
       }
       else if (this.containerTypes.indexOf(type) != -1) {
