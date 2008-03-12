@@ -243,7 +243,8 @@ interface nsIExtensionManager : nsISupports
    * Gets the Install Location for an item
    * @param   id
    *          The GUID of the item
-   * @returns The Install Location where the item is installed.
+   * @returns The Install Location where the item is installed or null if the
+   *          location cannot be obtained (e.g. an invalid id).
    */
   nsIInstallLocation getInstallLocation(in AString id);
 
