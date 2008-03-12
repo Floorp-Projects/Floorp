@@ -32,6 +32,8 @@ include moz-only/reftest.list
 == foreignObject-overflow-01.svg pass.svg
 == getElementById-a-element-01.svg pass.svg
 fails == inline-in-xul-basic-01.xul pass.svg
+== image-scaling-01.svg pass.svg
+== image-scaling-02.svg pass.svg
 == linearGradient-basic-01.svg pass.svg
 == linearGradient-basic-02.svg pass.svg
 == nested-viewBox-01.svg pass.svg
