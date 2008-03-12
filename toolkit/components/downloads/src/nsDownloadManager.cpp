@@ -1123,7 +1123,7 @@ nsDownloadManager::GetDefaultDownloadsDirectory(nsILocalFile **aResult)
   // XP/2K:
   // Desktop/Downloads
   // Linux:
-  // Home/Downloads
+  // XDG user dir spec, with a fallback to Home/Downloads
 
   nsXPIDLString folderName;
   mBundle->GetStringFromName(NS_LITERAL_STRING("downloadsFolder").get(),
@@ -1164,6 +1164,19 @@ nsDownloadManager::GetDefaultDownloadsDirectory(nsILocalFile **aResult)
   NS_NAMED_LITERAL_STRING(osVersion, "version");
   rv = infoService->GetPropertyAsInt32(osVersion, &version);
   if (version < 6) { // XP/2K
+    rv = downloadDir->Append(folderName);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+#elif defined(XP_UNIX)
+  rv = dirService->Get(NS_UNIX_DEFAULT_DOWNLOAD_DIR,
+                       NS_GET_IID(nsILocalFile),
+                       getter_AddRefs(downloadDir));
+  // fallback to Home/Downloads
+  if (NS_FAILED(rv)) {
+    rv = dirService->Get(NS_UNIX_HOME_DIR,
+                         NS_GET_IID(nsILocalFile),
+                         getter_AddRefs(downloadDir));
+    NS_ENSURE_SUCCESS(rv, rv);
     rv = downloadDir->Append(folderName);
     NS_ENSURE_SUCCESS(rv, rv);
   }
