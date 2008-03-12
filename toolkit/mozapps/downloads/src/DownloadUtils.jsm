@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-EXPORTED_SYMBOLS = [ "DownloadUtils" ];
+var EXPORTED_SYMBOLS = [ "DownloadUtils" ];
 
 /**
  * This module provides the DownloadUtils object which contains useful methods
