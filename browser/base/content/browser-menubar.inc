@@ -41,14 +41,26 @@
             <menu id="file-menu" label="&fileMenu.label;"
                   accesskey="&fileMenu.accesskey;">
               <menupopup id="menu_FilePopup" onpopupshowing="getContentAreaFrameCount();">
-                <menuitem label="&newNavigatorCmd.label;"
+                <menuitem id="menu_newNavigator"
+                          label="&newNavigatorCmd.label;"
                           accesskey="&newNavigatorCmd.accesskey;"
                           key="key_newNavigator"
                           command="cmd_newNavigator"/>
-                <menuitem command="cmd_newNavigatorTab" key="key_newNavigatorTab"
-                          label="&tabCmd.label;" accesskey="&tabCmd.accesskey;"/>
-                <menuitem label="&openLocationCmd.label;" accesskey="&openLocationCmd.accesskey;" key="focusURLBar" command="Browser:OpenLocation"/>
-                <menuitem label="&openFileCmd.label;" accesskey="&openFileCmd.accesskey;" key="openFileKb" command="Browser:OpenFile"/>
+                <menuitem id="menu_newNavigatorTab"
+                          label="&tabCmd.label;"
+                          command="cmd_newNavigatorTab"
+                          key="key_newNavigatorTab"
+                          accesskey="&tabCmd.accesskey;"/>
+                <menuitem id="menu_openLocation"
+                          label="&openLocationCmd.label;"
+                          command="Browser:OpenLocation"
+                          key="focusURLBar"
+                          accesskey="&openLocationCmd.accesskey;"/>
+                <menuitem id="menu_openFile"
+                          label="&openFileCmd.label;"
+                          command="Browser:OpenFile"
+                          key="openFileKb"
+                          accesskey="&openFileCmd.accesskey;"/>
                 <menuitem id="menu_closeWindow" hidden="true" command="cmd_closeWindow" key="key_closeWindow" label="&closeWindow.label;" accesskey="&closeWindow.accesskey;"/>
                 <menuitem id="menu_close" label="&closeCmd.label;" key="key_close" accesskey="&closeCmd.accesskey;" command="cmd_close"/>
                 <menuseparator/>
@@ -412,8 +424,10 @@
       <menuitem label="&addCurPagesCmd.label;" 
                 command="Browser:BookmarkAllTabs" key="bookmarkAllTabsKb"/>
       <menuseparator id="organizeBookmarksSeparator"/>
-      <menuitem label="&showAllBookmarksCmd2.label;" 
-                command="Browser:ShowAllBookmarks" key="manBookmarkKb"/>
+      <menuitem id="bookmarksShowAll"
+                label="&showAllBookmarksCmd2.label;"
+                command="Browser:ShowAllBookmarks"
+                key="manBookmarkKb"/>
       <menu id="bookmarksToolbarFolderMenu"
             class="menu-iconic bookmark-item"
             container="true">
@@ -432,7 +446,7 @@
               <menupopup id="menu_ToolsPopup">
               <menuitem label="&search.label;" accesskey="&search.accesskey;" 
                         key="key_search" command="Tools:Search"/>
-              <menuseparator/>
+              <menuseparator id="browserToolsSeparator"/>
               <menuitem id="menu_openDownloads" label="&downloads.label;"
                         accesskey="&downloads.accesskey;"
                         key="key_openDownloads" command="Tools:Downloads"/>
