@@ -700,7 +700,7 @@ LoginManagerStorage_legacy.prototype = {
         var log = this.log;
 
         function cleanupURL(aURL) {
-            var newURL, username = null;
+            var newURL, username = null, pathname = "";
 
             try {
                 var uri = ioService.newURI(aURL, null, null);
@@ -720,23 +720,31 @@ LoginManagerStorage_legacy.prototype = {
                 // Could be a channel login with a username. 
                 if (scheme != "http" && scheme != "https" && uri.username)
                     username = uri.username;
-                
+
+                if (uri.path != "/")
+                    pathname = uri.path;
+
             } catch (e) {
-                log("Can't cleanup URL: " + aURL);
+                log("Can't cleanup URL: " + aURL + " e: " + e);
                 newURL = aURL;
             }
 
             if (newURL != aURL)
                 log("2E upgrade: " + aURL + " ---> " + newURL);
 
-            return [newURL, username];
+            return [newURL, username, pathname];
         }
 
+        const isMailNews = /^(ldaps?|smtp|imap|news|mailbox):\/\//;
+
+        // Old mailnews logins were protocol logins with a username/password
+        // field name set.
         var isFormLogin = (aLogin.formSubmitURL ||
                            aLogin.usernameField ||
-                           aLogin.passwordField);
+                           aLogin.passwordField) &&
+                          !isMailNews.test(aLogin.hostname);
 
-        var [hostname, username] = cleanupURL(aLogin.hostname);
+        var [hostname, username, pathname] = cleanupURL(aLogin.hostname);
         aLogin.hostname = hostname;
 
         // If a non-HTTP URL contained a username, it wasn't stored in the
@@ -750,7 +758,7 @@ LoginManagerStorage_legacy.prototype = {
 
 
         if (aLogin.formSubmitURL) {
-            [hostname, username] = cleanupURL(aLogin.formSubmitURL);
+            [hostname, username, pathname] = cleanupURL(aLogin.formSubmitURL);
             aLogin.formSubmitURL = hostname;
             // username, if any, ignored.
         }
@@ -766,15 +774,25 @@ LoginManagerStorage_legacy.prototype = {
          * Form logins have field names, so only update the realm if there are
          * no field names set. [Any login with a http[s]:// hostname is always
          * a form login, so explicitly ignore those just to be safe.]
-         *
-         * Bug 403790: mail entries (imap://, ldaps://, mailbox:// smtp:// have
-         * fieldnames set to "\=username=\" and "\=password=\" (non-escaping
-         * backslash). More work is needed to upgrade these properly.
          */
         const isHTTP = /^https?:\/\//;
+        const isLDAP = /^ldaps?:\/\//;
         if (!isHTTP.test(aLogin.hostname) && !isFormLogin) {
-            aLogin.httpRealm = aLogin.hostname;
+            // LDAP logins need to keep the path.
+            if (isLDAP.test(aLogin.hostname))
+                aLogin.httpRealm = aLogin.hostname + pathname;
+            else
+                aLogin.httpRealm = aLogin.hostname;
+
             aLogin.formSubmitURL = null;
+
+            // Null out the form items because mailnews will no longer treat
+            // or expect these as form logins
+            if (isMailNews.test(aLogin.hostname)) {
+                aLogin.usernameField = "";
+                aLogin.passwordField = "";
+            }
+
             this.log("2E upgrade: set empty realm to " + aLogin.httpRealm);
         }
 

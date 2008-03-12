@@ -1,0 +1,14 @@
+#2c
+.
+mailbox://bugzilla@localhost
+\=username=\
+~
+*\=password=\
+~dGVzdHBhc3Mx
+.
+ldap://localhost1:389/dc=test
+\=username=\
+~
+*\=password=\
+~dGVzdHBhc3My
+.
