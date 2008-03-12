@@ -600,7 +600,10 @@ nsHttpChannel::SetupTransaction()
                             mUploadStream, mUploadStreamHasHeaders,
                             NS_GetCurrentThread(), callbacks, this,
                             getter_AddRefs(responseStream));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(mTransaction);
+        return rv;
+    }
 
     rv = nsInputStreamPump::Create(getter_AddRefs(mTransactionPump),
                                    responseStream);
