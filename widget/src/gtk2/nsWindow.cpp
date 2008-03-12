@@ -1920,6 +1920,20 @@ nsWindow::OnEnterNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
     DispatchEvent(&event, status);
 }
 
+static PRBool
+is_top_level_mouse_exit(GdkWindow* aWindow, GdkEventCrossing *aEvent)
+{
+    gint x = gint(aEvent->x_root);
+    gint y = gint(aEvent->y_root);
+    GdkDisplay* display = gdk_drawable_get_display(aWindow);
+    GdkWindow* winAtPt = gdk_display_get_window_at_pointer(display, &x, &y);
+    if (!winAtPt)
+        return PR_TRUE;
+    GdkWindow* topLevelAtPt = gdk_window_get_toplevel(winAtPt);
+    GdkWindow* topLevelWidget = gdk_window_get_toplevel(aWindow);
+    return topLevelAtPt != topLevelWidget;
+}
+
 void
 nsWindow::OnLeaveNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
 {
@@ -1933,6 +1947,9 @@ nsWindow::OnLeaveNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
     event.refPoint.y = nscoord(aEvent->y);
 
     event.time = aEvent->time;
+
+    event.exit = is_top_level_mouse_exit(mDrawingarea->inner_window, aEvent)
+        ? nsMouseEvent::eTopLevel : nsMouseEvent::eChild;
 
     LOG(("OnLeaveNotify: %p\n", (void *)this));
 
