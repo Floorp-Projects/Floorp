@@ -242,6 +242,34 @@
           }
         ]]></body>
       </method>
+
+      <property name="textValue"
+                onget="return this.value;">
+        <setter>
+          <![CDATA[
+          // Force load the value into the urlbar to get it unescaped
+          try {
+            let uri = Cc["@mozilla.org/network/io-service;1"].
+                      getService(Ci.nsIIOService).
+                      newURI(val, null, null);
+            URLBarSetURI(uri, true);
+          } catch (ex) {
+            // Incase the value isn't actually a URI
+            this.value = val;
+          }
+
+          // Completing a result should simulate the user typing the result, so
+          // fire an input event.
+          let evt = document.createEvent("UIEvents");
+          evt.initUIEvent("input", true, false, window, 0);
+          this.mIgnoreInput = true;
+          this.dispatchEvent(evt);
+          this.mIgnoreInput = false;
+
+          return this.value;
+          ]]>
+        </setter>
+      </property>
     </implementation>
 
     <handlers>

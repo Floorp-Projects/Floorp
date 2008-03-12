@@ -1013,6 +1013,11 @@
             // trim the leading/trailing whitespace
             var trimmedSearchString = controller.searchString.replace(/^\s+/, "").replace(/\s+$/, "");  
 
+            // Unescape the URI spec for showing as an entry in the popup
+            let url = Components.classes["@mozilla.org/intl/texttosuburi;1"].
+              getService(Components.interfaces.nsITextToSubURI).
+              unEscapeURIForUI("UTF-8", controller.getValueAt(this._currentIndex));
+
             if (this._currentIndex < existingItemsCount) {
               // re-use the existing item
               item = this.richlistbox.childNodes[this._currentIndex];
@@ -1025,7 +1030,7 @@
             // set these attributes before we set the class 
             // so that we can use them from the contructor         
             item.setAttribute("image", controller.getImageAt(this._currentIndex));
-            item.setAttribute("url", controller.getValueAt(this._currentIndex));
+            item.setAttribute("url", url);
             item.setAttribute("title", controller.getCommentAt(this._currentIndex));
             item.setAttribute("type", controller.getStyleAt(this._currentIndex));
             item.setAttribute("text", trimmedSearchString);
