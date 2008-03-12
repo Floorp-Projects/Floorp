@@ -741,7 +741,7 @@ js_ValueToNumber(JSContext *cx, jsval *vp)
             if ((!js_strtod(cx, bp, end, &ep, &d) ||
                  js_SkipWhiteSpace(ep, end) != end) &&
                 (!js_strtointeger(cx, bp, end, &ep, 0, &d) ||
-              js_SkipWhiteSpace(ep, end) != end)) {
+                 js_SkipWhiteSpace(ep, end) != end)) {
                 break;
             }
 
