@@ -394,9 +394,7 @@ nsThebesDeviceContext::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
     }
 
     nsString fontName;
-    gfxFontStyle fontStyle(NS_FONT_STYLE_NORMAL, FONT_WEIGHT_NORMAL, 16.0f,
-                           NS_LITERAL_CSTRING(""), 0.0f, PR_TRUE,
-                           PR_FALSE);
+    gfxFontStyle fontStyle;
     nsresult rv = gSystemFonts->GetSystemFont(aID, &fontName, &fontStyle);
     NS_ENSURE_SUCCESS(rv, rv);
 
