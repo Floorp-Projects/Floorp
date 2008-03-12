@@ -2233,6 +2233,15 @@ nsGenericElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   return nsGenericElement::doPreHandleEvent(this, aVisitor);
 }
 
+static nsIContent*
+FindFirstNonNativeAnonymousAncestor(nsIContent* aContent)
+{
+  while (aContent && aContent->IsNativeAnonymous()) {
+    aContent = aContent->GetParent();
+  }
+  return aContent;
+}
+
 nsresult
 nsGenericElement::doPreHandleEvent(nsIContent* aContent,
                                    nsEventChainPreVisitor& aVisitor)
@@ -2260,10 +2269,10 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
           (aVisitor.mEvent->originalTarget == aContent &&
            (aVisitor.mRelatedTargetIsInAnon =
             relatedTarget->IsInNativeAnonymousSubtree()))) {
-        nsIContent* nonAnon = aContent->FindFirstNonNativeAnonymous();
+        nsIContent* nonAnon = FindFirstNonNativeAnonymousAncestor(aContent);
         if (nonAnon) {
           nsIContent* nonAnonRelated =
-            relatedTarget->FindFirstNonNativeAnonymous();
+            FindFirstNonNativeAnonymousAncestor(relatedTarget);
           if (nonAnonRelated) {
             if (nonAnon == nonAnonRelated ||
                 nsContentUtils::ContentIsDescendantOf(nonAnonRelated, nonAnon)) {
