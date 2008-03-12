@@ -4555,7 +4555,10 @@ function sidebarOnLoad(event) {
 
 /**
  * Fire a "SidebarFocused" event on the sidebar's |window| to give the sidebar
- * a chance to adjust focus as needed. */
+ * a chance to adjust focus as needed. An additional event is needed, because
+ * we don't want to focus the sidebar when it's opened on startup or in a new
+ * window, only when the user opens the sidebar.
+ */
 function fireSidebarFocusedEvent() {
   var sidebar = document.getElementById("sidebar");
   var event = document.createEvent("Events");
