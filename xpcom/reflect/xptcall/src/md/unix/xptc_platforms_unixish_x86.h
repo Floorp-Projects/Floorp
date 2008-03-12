@@ -67,7 +67,7 @@
 *
 */
 
-#if defined(LINUX)
+#if defined(LINUX) || (defined(__GLIBC__) && defined(__FreeBSD_kernel__))
 
 #if (__GNUC__ == 2) && (__GNUC_MINOR__ <= 7)
 /* Old gcc 2.7.x.x.  What does gcc 2.8.x do?? */

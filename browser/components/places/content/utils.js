@@ -1853,7 +1853,6 @@ var PlacesUtils = {
 
       if (this.uriTypes.indexOf(type) != -1) {
         element = document.createElement("menuitem");
-        element.setAttribute("statustext", aNode.uri);
         element.className = "menuitem-iconic bookmark-item";
       }
       else if (this.containerTypes.indexOf(type) != -1) {
@@ -1894,6 +1893,54 @@ var PlacesUtils = {
     element.node.viewIndex = 0;
 
     return element;
+  },
+
+  cleanPlacesPopup: function PU_cleanPlacesPopup(aPopup) {
+    // Find static menuitems at the start and at the end of the menupopup,
+    // marked by builder="start" and builder="end" attributes, and set
+    // markers to keep track of their indices.
+    var items = [];
+    aPopup._startMarker = -1;
+    aPopup._endMarker = -1;
+    for (var i = 0; i < aPopup.childNodes.length; ++i) {
+      var item = aPopup.childNodes[i];
+      if (item.getAttribute("builder") == "start") {
+        aPopup._startMarker = i;
+        continue;
+      }
+      if (item.getAttribute("builder") == "end") {
+        aPopup._endMarker = i;
+        continue;
+      }
+      if ((aPopup._startMarker != -1) && (aPopup._endMarker == -1))
+        items.push(item);
+    }
+
+    // If static items at the beginning were found, remove all items between
+    // them and the static content at the end.
+    for (var i = 0; i < items.length; ++i) {
+      // skip the empty menu item
+      if (aPopup._emptyMenuItem != items[i]) {
+        aPopup.removeChild(items[i]);
+        if (this._endMarker > 0)
+          --this._endMarker;
+      }
+    }
+
+    // If no static items were found at the beginning, remove all items before
+    // the static items at the end.
+    if (aPopup._startMarker == -1) {
+      var end = aPopup._endMarker == -1 ?
+                aPopup.childNodes.length - 1 : aPopup._endMarker - 1;
+      for (var i = end; i >= 0; i--) {
+        // skip the empty menu item
+        if (aPopup._emptyMenuItem != aPopup.childNodes[i]) {
+          aPopup.removeChild(aPopup.childNodes[i]);
+          if (aPopup._endMarker > 0)
+            --aPopup._endMarker;
+        }
+      }
+    }
   },
 
   getBestTitle: function PU_getBestTitle(aNode) {

@@ -288,7 +288,11 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
       opacity = GetStyleDisplay()->mOpacity;
     }
 
-    nsSVGUtils::CompositePatternMatrix(gfx, thebesPattern, fini, width, height, opacity);
+    PRInt32 nativeWidth, nativeHeight;
+    currentFrame->GetWidth(&nativeWidth);
+    currentFrame->GetHeight(&nativeHeight);
+
+    nsSVGUtils::CompositePatternMatrix(gfx, thebesPattern, fini, nativeWidth, nativeHeight, opacity);
 
     if (GetStyleDisplay()->IsScrollableOverflow())
       gfx->Restore();

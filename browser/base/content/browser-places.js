@@ -637,69 +637,86 @@ var BookmarksEventHandler = {
    */
   onPopupShowing: function BM_onPopupShowing(event) {
     var target = event.originalTarget;
-    if (target.localName == "menupopup" &&
-        target.id != "bookmarksMenuPopup" &&
-        target.getAttribute("anonid") != "chevronPopup") {
-      // Add the "Open All in Tabs" menuitem if there are
-      // at least two menuitems with places result nodes.
-      // Add the "Open (Feed Name)" menuitem if it's a livemark with a siteURI.
-      var numNodes = 0;
-      var hasMultipleEntries = false;
-      var currentChild = target.firstChild;
-      while (currentChild) {
-        if (currentChild.localName == "menuitem" && currentChild.node)
-          numNodes++;
+    if (!target.hasAttribute("placespopup"))
+      return;
 
-        // If the menuitem already exists, do nothing.
-        if (currentChild.getAttribute("openInTabs") == "true")
-          return;
-        if (currentChild.hasAttribute("siteURI"))
-          return;
-
-        currentChild = currentChild.nextSibling;
-      }
-      if (numNodes > 1)
-        hasMultipleEntries = true;
-
-      var itemId = target._resultNode.itemId;
-      var siteURIString = "";
-      if (itemId != -1 && PlacesUtils.livemarks.isLivemark(itemId)) {
-        var siteURI = PlacesUtils.livemarks.getSiteURI(itemId);
-        if (siteURI)
-          siteURIString = siteURI.spec;
-      }
-
-      if (hasMultipleEntries || siteURIString) {
-        var separator = document.createElement("menuseparator");
-        target.appendChild(separator);
-
-        if (siteURIString) {
-          var openHomePage = document.createElement("menuitem");
-          openHomePage.setAttribute("siteURI", siteURIString);
-          openHomePage.setAttribute("oncommand",
-              "openUILink(this.getAttribute('siteURI'), event);");
-          // If a user middle-clicks this item we serve the oncommand event
-          // We are using checkForMiddleClick because of Bug 246720
-          // Note: stopPropagation is needed to avoid serving middle-click 
-          // with BT_onClick that would open all items in tabs
-          openHomePage.setAttribute("onclick",
-              "checkForMiddleClick(this, event); event.stopPropagation();");
-          openHomePage.setAttribute("label",
-              PlacesUtils.getFormattedString("menuOpenLivemarkOrigin.label",
-              [target.parentNode.getAttribute("label")]));
-          target.appendChild(openHomePage);
-        }
-
-        if (hasMultipleEntries) {
-          var openInTabs = document.createElement("menuitem");
-          openInTabs.setAttribute("openInTabs", "true");
-          openInTabs.setAttribute("oncommand",
-                                  "PlacesUtils.openContainerNodeInTabs(this.parentNode._resultNode, event);");
-          openInTabs.setAttribute("label",
-                     gNavigatorBundle.getString("menuOpenAllInTabs.label"));
-          target.appendChild(openInTabs);
+    // Check if the popup contains at least 2 menuitems with places nodes
+    var numNodes = 0;
+    var hasMultipleURIs = false;
+    var currentChild = target.firstChild;
+    while (currentChild) {
+      if (currentChild.localName == "menuitem" && currentChild.node) {
+        if (++numNodes == 2) {
+          hasMultipleURIs = true;
+          break;
         }
       }
+      currentChild = currentChild.nextSibling;
+    }
+
+    var itemId = target._resultNode.itemId;
+    var siteURIString = "";
+    if (itemId != -1 && PlacesUtils.livemarks.isLivemark(itemId)) {
+      var siteURI = PlacesUtils.livemarks.getSiteURI(itemId);
+      if (siteURI)
+        siteURIString = siteURI.spec;
+    }
+
+    if (!siteURIString && target._endOptOpenSiteURI) {
+        target.removeChild(target._endOptOpenSiteURI);
+        target._endOptOpenSiteURI = null;
+    }
+
+    if (!hasMultipleURIs && target._endOptOpenAllInTabs) {
+      target.removeChild(target._endOptOpenAllInTabs);
+      target._endOptOpenAllInTabs = null;
+    }
+
+    if (!(hasMultipleURIs || siteURIString)) {
+      // we don't have to show any option
+      if (target._endOptSeparator) {
+        target.removeChild(target._endOptSeparator);
+        target._endOptSeparator = null;
+        target._endMarker = -1;
+      }
+      return;
+    }
+
+    if (!target._endOptSeparator) {
+      // create a separator before options
+      target._endOptSeparator = document.createElement("menuseparator");
+      target._endOptSeparator.setAttribute("builder", "end");
+      target._endMarker = target.childNodes.length;
+      target.appendChild(target._endOptSeparator);
+    }
+
+    if (siteURIString && !target._endOptOpenSiteURI) {
+      // Add "Open (Feed Name)" menuitem if it's a livemark with a siteURI
+      target._endOptOpenSiteURI = document.createElement("menuitem");
+      target._endOptOpenSiteURI.setAttribute("siteURI", siteURIString);
+      target._endOptOpenSiteURI.setAttribute("oncommand",
+          "openUILink(this.getAttribute('siteURI'), event);");
+      // If a user middle-clicks this item we serve the oncommand event
+      // We are using checkForMiddleClick because of Bug 246720
+      // Note: stopPropagation is needed to avoid serving middle-click 
+      // with BT_onClick that would open all items in tabs
+      target._endOptOpenSiteURI.setAttribute("onclick",
+          "checkForMiddleClick(this, event); event.stopPropagation();");
+      target._endOptOpenSiteURI.setAttribute("label",
+          PlacesUtils.getFormattedString("menuOpenLivemarkOrigin.label",
+          [target.parentNode.getAttribute("label")]));
+      target.appendChild(target._endOptOpenSiteURI);
+    }
+
+    if (hasMultipleURIs && !target._endOptOpenAllInTabs) {
+        // Add the "Open All in Tabs" menuitem if there are
+        // at least two menuitems with places result nodes.
+        target._endOptOpenAllInTabs = document.createElement("menuitem");
+        target._endOptOpenAllInTabs.setAttribute("oncommand",
+            "PlacesUtils.openContainerNodeInTabs(this.parentNode._resultNode, event);");
+        target._endOptOpenAllInTabs.setAttribute("label",
+            gNavigatorBundle.getString("menuOpenAllInTabs.label"));
+        target.appendChild(target._endOptOpenAllInTabs);
     }
   },
 

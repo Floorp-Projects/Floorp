@@ -77,6 +77,7 @@ problems and installation issues with Firefox.
 - Useful optional software
   The following packages enable additional features in Firefox. Download
   locations are listed below with a detailed description of the features.
+  + Remote Workplace Server (RWS), version 0.8
   + Doodle's Screen Saver (DSSaver), version 1.8 or later
 
 ================================================================================
@@ -193,8 +194,31 @@ behavior of Firefox on OS/2:
   Use this to run two instances of Firefox simultaneously (like e.g. debug
   and optimized version).
 
+- set MOZ_NO_RWS=1
+  Use this to disable Remote Workplace Server support (see below).
+
 Find more information on this topic and other tips on
    http://www.os2bbs.com/os2news/Warpzilla.html
+
+
+Support for WPS objects in the browser
+--------------------------------------
+
+Firefox can make use of Rich Walsh's Remote Workplace Server (RWS) library to
+access Workplace Shell objects from the browser. This allows helper applications
+for downloaded files to be selected based on their default WPS association. In
+addition, the WPS icons of files will be displayed in the download dialog and in
+directory views.
+
+To enable this functionality, Firefox has to find the RWS DLLs. They have to be
+located in a directory on the LIBPATH, in the Firefox directory, or already be
+registered as a WPS class. For eComStation 2 this is already the case. If RWS
+is not yet available on your system, download it from
+   http://hobbes.nmsu.edu/cgi-bin/h-search?key=rws08dll
+
+If RWS is found on the system, it is used by Firefox automatically. In case you
+need to disable RWS support, create an environment variable MOZ_NO_RWS and set
+it to 1.
 
 
 Idle timer for internal cleanups

@@ -203,8 +203,9 @@ void
 InitPrefs(nsIPrefBranch *aPrefBranch)
 {
     // init some relevant prefs, so the tests don't go awry.
-    // we use the most restrictive set of prefs we can.
-    aPrefBranch->SetIntPref(kCookiesPermissions, 1); // 'reject foreign'
+    // we use the most restrictive set of prefs we can;
+    // however, we don't test third party blocking here.
+    aPrefBranch->SetIntPref(kCookiesPermissions, 0); // accept all
     aPrefBranch->SetBoolPref(kCookiesDisabledForMailNews, PR_TRUE);
     aPrefBranch->SetBoolPref(kCookiesLifetimeEnabled, PR_TRUE);
     aPrefBranch->SetIntPref(kCookiesLifetimeCurrentSession, 0);
@@ -512,76 +513,6 @@ main(PRInt32 argc, char *argv[])
       allTestsPassed = PrintResult(rv, 9) && allTestsPassed;
 
 
-      // *** foreign cookie tests
-      printf("*** Beginning foreign cookie tests...\n");
-
-      // test the blocking of foreign cookies, under various circumstances.
-      // order of URI arguments is hostURI, firstURI
-      SetACookie(cookieService, "http://yahoo.com/", "http://yahoo.com/", "test=foreign; domain=.yahoo.com", nsnull);
-      GetACookie(cookieService, "http://yahoo.com/", "http://yahoo.com/", getter_Copies(cookie));
-      rv[0] = CheckResult(cookie.get(), MUST_EQUAL, "test=foreign");
-      SetACookie(cookieService, "http://weather.yahoo.com/", "http://yahoo.com/", "test=foreign; domain=.yahoo.com", nsnull);
-      GetACookie(cookieService, "http://notweather.yahoo.com/", "http://sport.yahoo.com/", getter_Copies(cookie));
-      rv[1] = CheckResult(cookie.get(), MUST_EQUAL, "test=foreign");
-      SetACookie(cookieService, "http://moose.yahoo.com/", "http://canada.yahoo.com/", "test=foreign; domain=.yahoo.com", nsnull);
-      GetACookie(cookieService, "http://yahoo.com/", "http://sport.yahoo.com/", getter_Copies(cookie));
-      rv[2] = CheckResult(cookie.get(), MUST_EQUAL, "test=foreign");
-      GetACookie(cookieService, "http://sport.yahoo.com/", "http://yahoo.com/", getter_Copies(cookie));
-      rv[3] = CheckResult(cookie.get(), MUST_EQUAL, "test=foreign");
-      SetACookie(cookieService, "http://jack.yahoo.com/", "http://jill.yahoo.com/", "test=foreign; domain=.yahoo.com; max-age=0", nsnull);
-      GetACookie(cookieService, "http://jane.yahoo.com/", "http://yahoo.com/", getter_Copies(cookie));
-      rv[4] = CheckResult(cookie.get(), MUST_BE_NULL);
-
-      SetACookie(cookieService, "http://moose.yahoo.com/", "http://foo.moose.yahoo.com/", "test=foreign; domain=.yahoo.com", nsnull);
-      GetACookie(cookieService, "http://yahoo.com/", "http://yahoo.com/", getter_Copies(cookie));
-      rv[5] = CheckResult(cookie.get(), MUST_EQUAL, "test=foreign");
-      SetACookie(cookieService, "http://foo.bar.yahoo.com/", "http://yahoo.com/", "test=foreign; domain=.yahoo.com", nsnull);
-      GetACookie(cookieService, "http://yahoo.com/", "http://yahoo.com/", getter_Copies(cookie));
-      rv[6] = CheckResult(cookie.get(), MUST_EQUAL, "test=foreign");
-      SetACookie(cookieService, "http://foo.bar.yahoo.com/", "http://yahoo.com/", "test=foreign; domain=.yahoo.com; max-age=0", nsnull);
-      GetACookie(cookieService, "http://yahoo.com/", "http://yahoo.com/", getter_Copies(cookie));
-      rv[7] = CheckResult(cookie.get(), MUST_BE_NULL);
-
-      // test handling of IP addresses by the foreign blocking algo
-      SetACookie(cookieService, "http://192.168.54.33/", "http://192.168.54.33/", "test=foreign; domain=192.168.54.33", nsnull);
-      GetACookie(cookieService, "http://192.168.54.33/", "http://192.168.54.33/", getter_Copies(cookie));
-      rv[8] = CheckResult(cookie.get(), MUST_EQUAL, "test=foreign");
-      GetACookie(cookieService, "http://192.168.54.33./", "http://.192.168.54.33../", getter_Copies(cookie));
-      rv[9] = CheckResult(cookie.get(), MUST_EQUAL, "test=foreign");
-      GetACookie(cookieService, "http://192.168.54.33/", nsnull, getter_Copies(cookie));
-      rv[10] = CheckResult(cookie.get(), MUST_EQUAL, "test=foreign");
-      GetACookie(cookieService, "http://192.168.54.33/", "http://148.168.54.33", getter_Copies(cookie));
-      rv[11] = CheckResult(cookie.get(), MUST_BE_NULL);
-      SetACookie(cookieService, "http://192.168.54.33/", "http://192.168.54.33/", "test=foreign; domain=192.168.54.33; max-age=0", nsnull);
-      GetACookie(cookieService, "http://192.168.54.33/", "http://192.168.54.33/", getter_Copies(cookie));
-      rv[12] = CheckResult(cookie.get(), MUST_BE_NULL);
-      SetACookie(cookieService, "http://192.168.54.33/", "http://148.168.54.33/", "test=foreign; domain=192.168.54.33", nsnull);
-      GetACookie(cookieService, "http://192.168.54.33/", "http://192.168.54.33/", getter_Copies(cookie));
-      rv[13] = CheckResult(cookie.get(), MUST_BE_NULL);
-
-      // test the case where the host is an eTLD, e.g. http://co.tv/ (a legitimate site)
-      SetACookie(cookieService, "http://co.uk/", "http://co.uk/", "test=foreign; domain=.co.uk", nsnull);
-      GetACookie(cookieService, "http://co.uk/", "http://co.uk/", getter_Copies(cookie));
-      // should be rejected, can't set a domain cookie for .co.uk
-      rv[14] = CheckResult(cookie.get(), MUST_BE_NULL);
-      SetACookie(cookieService, "http://co.uk/", "http://co.uk/", "test=foreign", nsnull);
-      GetACookie(cookieService, "http://co.uk/", "http://co.uk/", getter_Copies(cookie));
-      // should be allowed, hostURI == firstURI and it's not a domain cookie
-      rv[15] = CheckResult(cookie.get(), MUST_EQUAL, "test=foreign");
-      GetACookie(cookieService, "http://oblivious.co.uk/", nsnull, getter_Copies(cookie));
-      rv[16] = CheckResult(cookie.get(), MUST_BE_NULL);
-      // remove cookie
-      SetACookie(cookieService, "http://co.uk/", "http://co.uk/", "test=foreign; max-age=0", nsnull);
-      GetACookie(cookieService, "http://co.uk/", "http://co.uk/", getter_Copies(cookie));
-      rv[17] = CheckResult(cookie.get(), MUST_BE_NULL);
-      SetACookie(cookieService, "http://co.uk/", "http://evil.co.uk/", "test=foreign", nsnull);
-      GetACookie(cookieService, "http://co.uk/", "http://co.uk/", getter_Copies(cookie));
-      // should be rejected, hostURI != firstURI and hostURI is an eTLD
-      rv[18] = CheckResult(cookie.get(), MUST_BE_NULL);
-
-      allTestsPassed = PrintResult(rv, 19) && allTestsPassed;
-
-
       // *** parser tests
       printf("*** Beginning parser tests...\n");
 
@@ -639,15 +570,7 @@ main(PRInt32 argc, char *argv[])
       GetACookie(cookieService, "http://mail.co.uk/", nsnull, getter_Copies(cookie));
       rv[4] = CheckResult(cookie.get(), MUST_BE_NULL);
 
-      // test non-null firstURI's, i) from mailnews ii) not from mailnews
-      SetACookie(cookieService, "mailbox://mail.co.uk/", "http://mail.co.uk/", "test=mailnews", nsnull);
-      GetACookie(cookieService, "http://mail.co.uk/", nsnull, getter_Copies(cookie));
-      rv[5] = CheckResult(cookie.get(), MUST_BE_NULL);
-      SetACookie(cookieService, "http://mail.co.uk/", "mailbox://mail.co.uk/", "test=mailnews", nsnull);
-      GetACookie(cookieService, "http://mail.co.uk/", nsnull, getter_Copies(cookie));
-      rv[6] = CheckResult(cookie.get(), MUST_BE_NULL);
-
-      allTestsPassed = PrintResult(rv, 7) && allTestsPassed;
+      allTestsPassed = PrintResult(rv, 5) && allTestsPassed;
 
 
       // *** path ordering tests
