@@ -1,4 +1,3 @@
-version(180);
 /* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
@@ -41,6 +40,8 @@ version(180);
 /*
 
 Test autocomplete for non-English URLs that match the tag bug 416214
+Also test bug 417441 by making sure escaped ascii characters like "+" remain
+escaped.
 
 - add a visit for a page with a non-English URL
 - add a tag for the page
@@ -73,7 +74,7 @@ function add_visit(aURI, aVisitDate, aVisitType) {
 // create test data
 var searchTerm = "ユニコード";
 var theTag = "superTag";
-var decoded = "http://www.foobar.com/" + searchTerm + "/";
+var decoded = "http://www.foobar.com/" + searchTerm + "/blocking-firefox3%2B";
 var url = uri(decoded);
 add_visit(url, Date.now(), Ci.nsINavHistoryService.TRANSITION_LINK);
 tagssvc.tagURI(url, [theTag]);
@@ -158,8 +159,8 @@ function run_test() {
     // test that we found the entry we added
     do_check_eq(controller.matchCount, 1);
 
-    // Make sure the url is decoded
-    do_check_eq(controller.getValueAt(0), decoded);
+    // Make sure the url is the one with the decoded search string
+    do_check_eq(controller.getValueAt(0), url.spec);
 
     do_test_finished();
   };
