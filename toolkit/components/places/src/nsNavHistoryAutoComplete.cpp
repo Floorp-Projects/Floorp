@@ -561,7 +561,7 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
       NS_ConvertUTF8toUTF16 faviconURI(faviconSpec);
 
       // New item: append to our results and put it in our hash table
-      rv = mCurrentResult->AppendMatch(entryURL, title, faviconURI, style);
+      rv = mCurrentResult->AppendMatch(escapedEntryURL, title, faviconURI, style);
       NS_ENSURE_SUCCESS(rv, rv);
       mCurrentResultURLs.Put(escapedEntryURL, PR_TRUE);
 
