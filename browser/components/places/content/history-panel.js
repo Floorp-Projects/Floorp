@@ -65,8 +65,6 @@ function HistorySidebarInit()
   initContextMenu();
   
   searchHistory("");
-
-  gSearchBox.focus();
 }
 
 function initContextMenu() {
@@ -153,3 +151,8 @@ function searchHistory(aInput)
   // otherwise, we will end up calling load() twice
   gHistoryTree.load([query], options);
 }
+
+window.addEventListener("SidebarFocused",
+                        function()
+                          gSearchBox.focus(),
+                        false);
