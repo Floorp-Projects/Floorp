@@ -58,6 +58,7 @@
 static GtkWidget* gProtoWindow;
 static GtkWidget* gButtonWidget;
 static GtkWidget* gToggleButtonWidget;
+static GtkWidget* gButtonArrowWidget;
 static GtkWidget* gCheckboxWidget;
 static GtkWidget* gRadiobuttonWidget;
 static GtkWidget* gHorizScrollbarWidget;
@@ -66,11 +67,11 @@ static GtkWidget* gSpinWidget;
 static GtkWidget* gHScaleWidget;
 static GtkWidget* gVScaleWidget;
 static GtkWidget* gEntryWidget;
-static GtkWidget* gArrowWidget;
 static GtkWidget* gOptionMenuWidget;
 static GtkWidget* gComboBoxEntryWidget;
-static GtkWidget* gDropdownEntryWidget;
-static GtkWidget* gDropdownButtonWidget;
+static GtkWidget* gComboBoxEntryTextareaWidget;
+static GtkWidget* gComboBoxEntryButtonWidget;
+static GtkWidget* gComboBoxEntryArrowWidget;
 static GtkWidget* gHandleBoxWidget;
 static GtkWidget* gToolbarWidget;
 static GtkWidget* gFrameWidget;
@@ -177,6 +178,19 @@ ensure_toggle_button_widget()
 }
 
 static gint
+ensure_button_arrow_widget()
+{
+    if (!gButtonArrowWidget) {
+        ensure_toggle_button_widget();
+
+        gButtonArrowWidget = gtk_arrow_new(GTK_ARROW_DOWN, GTK_SHADOW_OUT);
+        gtk_container_add(GTK_CONTAINER(gToggleButtonWidget), gButtonArrowWidget);
+        gtk_widget_realize(gButtonArrowWidget);
+    }
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
 ensure_checkbox_widget()
 {
     if (!gCheckboxWidget) {
@@ -270,13 +284,13 @@ moz_gtk_get_combo_box_entry_inner_widgets(GtkWidget *widget,
                                           gpointer client_data)
 {
     if (GTK_IS_TOGGLE_BUTTON(widget)) {
-        gDropdownButtonWidget = widget;
+        gComboBoxEntryButtonWidget = widget;
         g_object_add_weak_pointer(G_OBJECT(widget),
-                                  (gpointer) &gDropdownButtonWidget);
+                                  (gpointer) &gComboBoxEntryButtonWidget);
     } else if (GTK_IS_ENTRY(widget)) {
-        gDropdownEntryWidget = widget;
+        gComboBoxEntryTextareaWidget = widget;
         g_object_add_weak_pointer(G_OBJECT(widget),
-                                  (gpointer) &gDropdownEntryWidget);
+                                  (gpointer) &gComboBoxEntryTextareaWidget);
     } else
         return;
     gtk_widget_realize(widget);
@@ -286,9 +300,9 @@ static void
 moz_gtk_get_combo_box_entry_arrow(GtkWidget *widget, gpointer client_data)
 {
     if (GTK_IS_ARROW(widget)) {
-        gArrowWidget = widget;
+        gComboBoxEntryArrowWidget = widget;
         g_object_add_weak_pointer(G_OBJECT(widget),
-                                  (gpointer) &gArrowWidget);
+                                  (gpointer) &gComboBoxEntryArrowWidget);
         gtk_widget_realize(widget);
     }
 }
@@ -296,9 +310,9 @@ moz_gtk_get_combo_box_entry_arrow(GtkWidget *widget, gpointer client_data)
 static gint
 ensure_combo_box_entry_widgets()
 {
-    if (!gDropdownEntryWidget ||
-        !gDropdownButtonWidget ||
-        !gArrowWidget) {
+    if (!gComboBoxEntryTextareaWidget ||
+        !gComboBoxEntryButtonWidget ||
+        !gComboBoxEntryArrowWidget) {
         GtkWidget* buttonChild;
 
         /* Create a ComboBoxEntry if needed */
@@ -312,14 +326,14 @@ ensure_combo_box_entry_widgets()
                              moz_gtk_get_combo_box_entry_inner_widgets,
                              NULL);
 
-        if (!gDropdownEntryWidget) {
+        if (!gComboBoxEntryTextareaWidget) {
             ensure_entry_widget();
-            gDropdownEntryWidget = gEntryWidget;
+            gComboBoxEntryTextareaWidget = gEntryWidget;
         }
 
-        if (gDropdownButtonWidget) {
+        if (gComboBoxEntryButtonWidget) {
             /* Get the Arrow inside the Button */
-            buttonChild = GTK_BIN(gDropdownButtonWidget)->child;
+            buttonChild = GTK_BIN(gComboBoxEntryButtonWidget)->child;
             if (GTK_IS_HBOX(buttonChild)) {
                 /* appears-as-list = FALSE, cell-view = TRUE; the button
                  * contains an hbox. This hbox is there because ComboBoxEntry
@@ -334,39 +348,30 @@ ensure_combo_box_entry_widgets()
             } else if(GTK_IS_ARROW(buttonChild)) {
                 /* appears-as-list = TRUE, or cell-view = FALSE;
                  * the button only contains an arrow */
-                gArrowWidget = buttonChild;
-                g_object_add_weak_pointer(G_OBJECT(buttonChild),
-                                          (gpointer) &gArrowWidget);
-                gtk_widget_realize(gArrowWidget);
+                gComboBoxEntryArrowWidget = buttonChild;
+                g_object_add_weak_pointer(G_OBJECT(buttonChild), (gpointer)
+                                          &gComboBoxEntryArrowWidget);
+                gtk_widget_realize(gComboBoxEntryArrowWidget);
             }
         } else {
             /* Shouldn't be reached with current internal gtk implementation;
              * we use a generic toggle button as last resort fallback to avoid
              * crashing. */
             ensure_toggle_button_widget();
-            gDropdownButtonWidget = gToggleButtonWidget;
+            gComboBoxEntryButtonWidget = gToggleButtonWidget;
         }
 
-        if (!gArrowWidget) {
+        if (!gComboBoxEntryArrowWidget) {
             /* Shouldn't be reached with current internal gtk implementation;
-             * we use a generic down arrow as last resort fallback to avoid
+             * we gButtonArrowWidget as last resort fallback to avoid
              * crashing. */
-            gArrowWidget = gtk_arrow_new(GTK_ARROW_DOWN, GTK_SHADOW_NONE);
-            setup_widget_prototype(gArrowWidget);
+            ensure_button_arrow_widget();
+            gComboBoxEntryArrowWidget = gButtonArrowWidget;
         }
     }
     return MOZ_GTK_SUCCESS;
 }
 
-/* Will go away when bug 416003 lands (Use different arrow widgets for
- * arrows in different context) */
-static gint
-ensure_arrow_widget()
-{
-    if (!gArrowWidget)
-        ensure_combo_box_entry_widgets();
-    return MOZ_GTK_SUCCESS;
-}
 
 static gint
 ensure_handlebox_widget()
@@ -923,18 +928,18 @@ moz_gtk_toggle_paint(GdkDrawable* drawable, GdkRectangle* rect,
 }
 
 static gint
-calculate_arrow_dimensions(GdkRectangle* rect, GdkRectangle* arrow_rect,
-                           GtkTextDirection direction)
+calculate_arrow_rect(GtkWidget* arrow, GdkRectangle* rect,
+                     GdkRectangle* arrow_rect, GtkTextDirection direction)
 {
     /* defined in gtkarrow.c */
     gfloat arrow_scaling = 0.7;
     gfloat xalign, xpad;
     gint extent;
-    GtkMisc* misc = GTK_MISC(gArrowWidget);
+    GtkMisc* misc = GTK_MISC(arrow);
 
     if (have_arrow_scaling)
-        gtk_widget_style_get(gArrowWidget,
-                             "arrow_scaling", &arrow_scaling, NULL);
+        gtk_widget_style_get(arrow, "arrow_scaling", &arrow_scaling, NULL);
+
     extent = MIN((rect->width - misc->xpad * 2),
                  (rect->height - misc->ypad * 2)) * arrow_scaling;
 
@@ -1641,8 +1646,8 @@ moz_gtk_downarrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
     GtkShadowType shadow_type = state->active ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
     GdkRectangle arrow_rect;
 
-    ensure_arrow_widget();
-    style = gArrowWidget->style;
+    ensure_button_arrow_widget();
+    style = gButtonArrowWidget->style;
 
     arrow_rect.x = rect->x + 1 + XTHICKNESS(style);
     arrow_rect.y = rect->y + 1 + YTHICKNESS(style);
@@ -1651,16 +1656,18 @@ moz_gtk_downarrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
 
     TSOffsetStyleGCs(style, arrow_rect.x, arrow_rect.y);
     gtk_paint_arrow(style, drawable, state_type, shadow_type, cliprect,
-                    gArrowWidget, "arrow",  GTK_ARROW_DOWN, TRUE,
+                    gButtonArrowWidget, "arrow",  GTK_ARROW_DOWN, TRUE,
                     arrow_rect.x, arrow_rect.y, arrow_rect.width, arrow_rect.height);
 
     return MOZ_GTK_SUCCESS;
 }
 
 static gint
-moz_gtk_dropdown_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
-                             GdkRectangle* cliprect, GtkWidgetState* state,
-                             gboolean input_focus, GtkTextDirection direction)
+moz_gtk_combo_box_entry_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                                     GdkRectangle* cliprect,
+                                     GtkWidgetState* state,
+                                     gboolean input_focus,
+                                     GtkTextDirection direction)
 {
     GtkBorder inner_border;
     gboolean interior_focus;
@@ -1676,20 +1683,20 @@ moz_gtk_dropdown_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
     if (input_focus) {
         /* Some themes draw a complementary focus ring for the dropdown button
          * when the dropdown entry has focus */
-        GTK_WIDGET_SET_FLAGS(gDropdownEntryWidget, GTK_HAS_FOCUS);
+        GTK_WIDGET_SET_FLAGS(gComboBoxEntryTextareaWidget, GTK_HAS_FOCUS);
     }
 
     moz_gtk_button_paint(drawable, rect, cliprect, state, GTK_RELIEF_NORMAL,
-                         gDropdownButtonWidget, direction);
+                         gComboBoxEntryButtonWidget, direction);
 
     if (input_focus)
-        GTK_WIDGET_UNSET_FLAGS(gDropdownEntryWidget, GTK_HAS_FOCUS);
+        GTK_WIDGET_UNSET_FLAGS(gComboBoxEntryTextareaWidget, GTK_HAS_FOCUS);
 
     /* This mirrors gtkbutton's child positioning */
-    style = gDropdownButtonWidget->style;
+    style = gComboBoxEntryButtonWidget->style;
 
-    moz_gtk_button_get_inner_border(gDropdownButtonWidget, &inner_border);
-    moz_gtk_widget_get_focus(gDropdownButtonWidget, &interior_focus,
+    moz_gtk_button_get_inner_border(gComboBoxEntryButtonWidget, &inner_border);
+    moz_gtk_widget_get_focus(gComboBoxEntryButtonWidget, &interior_focus,
                              &focus_width, &focus_pad);
 
     arrow_rect.x = rect->x + XTHICKNESS(style) + focus_width + focus_pad;
@@ -1703,7 +1710,7 @@ moz_gtk_dropdown_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
        inner_border.bottom - (YTHICKNESS(style) + focus_pad + focus_width) * 2);
 
     if (state_type == GTK_STATE_ACTIVE) {
-        gtk_widget_style_get(gDropdownButtonWidget,
+        gtk_widget_style_get(gComboBoxEntryButtonWidget,
                              "child-displacement-x", &x_displacement,
                              "child-displacement-y", &y_displacement,
                              NULL);
@@ -1711,13 +1718,14 @@ moz_gtk_dropdown_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
         arrow_rect.y += y_displacement;
     }
 
-    calculate_arrow_dimensions(&arrow_rect, &real_arrow_rect, direction);
+    calculate_arrow_dimensions(gComboBoxEntryArrowWidget,
+                               &arrow_rect, &real_arrow_rect, direction);
 
-    style = gArrowWidget->style;
+    style = gComboBoxEntryArrowWidget->style;
     TSOffsetStyleGCs(style, real_arrow_rect.x, real_arrow_rect.y);
 
     gtk_paint_arrow(style, drawable, state_type, shadow_type, cliprect,
-                    gArrowWidget, "arrow",  GTK_ARROW_DOWN, TRUE,
+                    gComboBoxEntryArrowWidget, "arrow",  GTK_ARROW_DOWN, TRUE,
                     real_arrow_rect.x, real_arrow_rect.y,
                     real_arrow_rect.width, real_arrow_rect.height);
 
@@ -2500,11 +2508,11 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
         break;
     case MOZ_GTK_DROPDOWN_ENTRY:
         ensure_combo_box_entry_widgets();
-        w = gDropdownEntryWidget;
+        w = gComboBoxEntryTextareaWidget;
         break;
     case MOZ_GTK_DROPDOWN_ARROW:
         ensure_combo_box_entry_widgets();
-        w = gDropdownButtonWidget;
+        w = gComboBoxEntryButtonWidget;
         break;
     case MOZ_GTK_DROPDOWN:
         {
@@ -2670,7 +2678,7 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
 }
 
 gint
-moz_gtk_get_dropdown_arrow_size(gint* width, gint* height)
+moz_gtk_get_combo_box_entry_button_size(gint* width, gint* height)
 {
     /*
      * We get the requisition of the drop down button, which includes
@@ -2680,7 +2688,7 @@ moz_gtk_get_dropdown_arrow_size(gint* width, gint* height)
     GtkRequisition requisition;
     ensure_combo_box_entry_widgets();
 
-    gtk_widget_size_request(gDropdownButtonWidget, &requisition);
+    gtk_widget_size_request(gComboBoxEntryButtonWidget, &requisition);
     *width = requisition.width;
     *height = requisition.height;
 
@@ -2916,13 +2924,13 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
                                          direction);
         break;
     case MOZ_GTK_DROPDOWN_ARROW:
-        return moz_gtk_dropdown_arrow_paint(drawable, rect, cliprect, state,
-                                            flags, direction);
+        return moz_gtk_combo_box_entry_button_paint(drawable, rect, cliprect,
+                                                    state, flags, direction);
         break;
     case MOZ_GTK_DROPDOWN_ENTRY:
         ensure_combo_box_entry_widgets();
         return moz_gtk_entry_paint(drawable, rect, cliprect, state,
-                                   gDropdownEntryWidget, direction);
+                                   gComboBoxEntryTextareaWidget, direction);
         break;
     case MOZ_GTK_CHECKBUTTON_CONTAINER:
     case MOZ_GTK_RADIOBUTTON_CONTAINER:
@@ -3035,6 +3043,7 @@ moz_gtk_shutdown()
     gProtoWindow = NULL;
     gButtonWidget = NULL;
     gToggleButtonWidget = NULL;
+    gButtonArrowWidget = NULL;
     gCheckboxWidget = NULL;
     gRadiobuttonWidget = NULL;
     gHorizScrollbarWidget = NULL;
@@ -3043,11 +3052,11 @@ moz_gtk_shutdown()
     gHScaleWidget = NULL;
     gVScaleWidget = NULL;
     gEntryWidget = NULL;
-    gArrowWidget = NULL;
     gOptionMenuWidget = NULL;
-    gDropdownButtonWidget = NULL;
-    gDropdownEntryWidget = NULL;
     gComboBoxEntryWidget = NULL;
+    gComboBoxEntryButtonWidget = NULL;
+    gComboBoxEntryArrowWidget = NULL;
+    gComboBoxEntryTextareaWidget = NULL;
     gHandleBoxWidget = NULL;
     gToolbarWidget = NULL;
     gStatusbarWidget = NULL;
