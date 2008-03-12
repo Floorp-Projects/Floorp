@@ -4419,7 +4419,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   // We don't do it if this came from performKeyEquivalent because
   // interpretKeyEvents isn't set up to handle those key combinations.
   PRBool wasComposing = nsTSMManager::IsComposing();
-  if (!isKeyEquiv)
+  if (!isKeyEquiv && nsTSMManager::IsIMEEnabled())
     [super interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
 
   if (!mGeckoChild)
