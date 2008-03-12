@@ -352,13 +352,13 @@ js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
          * most 5 on each iteration.
          */
         if (newlength < length) {
-            JS_ReportOutOfMemory(cx);
+            js_ReportAllocationOverflow(cx);
             return JS_FALSE;
         }
     }
 
     if (newlength >= ~(size_t)0 / sizeof(jschar)) {
-        JS_ReportOutOfMemory(cx);
+        js_ReportAllocationOverflow(cx);
         return JS_FALSE;
     }
 
@@ -2068,7 +2068,7 @@ tagify(JSContext *cx, const char *begin, JSString *param, const char *end,
     taglen += JSSTRING_LENGTH(str) + 2 + endlen + 1;    /* 'str</end>' */
 
     if (taglen >= ~(size_t)0 / sizeof(jschar)) {
-        JS_ReportOutOfMemory(cx);
+        js_ReportAllocationOverflow(cx);
         return JS_FALSE;
     }
 
@@ -2461,7 +2461,7 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
     JSString *str;
 
     if (length > JSSTRING_LENGTH_MASK) {
-        JS_ReportOutOfMemory(cx);
+        js_ReportAllocationOverflow(cx);
         return NULL;
     }
 

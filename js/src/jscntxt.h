@@ -993,6 +993,9 @@ js_ReportOutOfScriptQuota(JSContext *cx);
 extern void
 js_ReportOverRecursed(JSContext *cx);
 
+extern void
+js_ReportAllocationOverflow(JSContext *cx);
+
 #define JS_CHECK_RECURSION(cx, onerror)                                       \
     JS_BEGIN_MACRO                                                            \
         int stackDummy_;                                                      \

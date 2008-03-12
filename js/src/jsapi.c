@@ -5524,6 +5524,12 @@ JS_ReportOutOfMemory(JSContext *cx)
     js_ReportOutOfMemory(cx);
 }
 
+JS_PUBLIC_API(void)
+JS_ReportAllocationOverflow(JSContext *cx)
+{
+    js_ReportAllocationOverflow(cx);
+}
+
 JS_PUBLIC_API(JSErrorReporter)
 JS_SetErrorReporter(JSContext *cx, JSErrorReporter er)
 {

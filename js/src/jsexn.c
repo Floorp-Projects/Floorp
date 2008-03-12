@@ -296,7 +296,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     overflow |= (valueCount > ((size_t)-1 - size) / sizeof(jsval));
     size += valueCount * sizeof(jsval);
     if (overflow) {
-        JS_ReportOutOfMemory(cx);
+        js_ReportAllocationOverflow(cx);
         return JS_FALSE;
     }
     priv = (JSExnPrivate *)JS_malloc(cx, size);

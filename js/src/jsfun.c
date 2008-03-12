@@ -1801,7 +1801,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             old_args_length = args_length;
             args_length = old_args_length + JSSTRING_LENGTH(arg);
             if (args_length < old_args_length) {
-                JS_ReportOutOfMemory(cx);
+                js_ReportAllocationOverflow(cx);
                 return JS_FALSE;
             }
         }
@@ -1811,7 +1811,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         args_length = old_args_length + n - 1;
         if (args_length < old_args_length ||
             args_length >= ~(size_t)0 / sizeof(jschar)) {
-            JS_ReportOutOfMemory(cx);
+            js_ReportAllocationOverflow(cx);
             return JS_FALSE;
         }
 
