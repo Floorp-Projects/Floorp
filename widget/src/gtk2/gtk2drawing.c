@@ -1707,8 +1707,8 @@ moz_gtk_combo_box_entry_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
         arrow_rect.y += y_displacement;
     }
 
-    calculate_arrow_dimensions(gComboBoxEntryArrowWidget,
-                               &arrow_rect, &real_arrow_rect, direction);
+    calculate_arrow_rect(gComboBoxEntryArrowWidget,
+                         &arrow_rect, &real_arrow_rect, direction);
 
     style = gComboBoxEntryArrowWidget->style;
     TSOffsetStyleGCs(style, real_arrow_rect.x, real_arrow_rect.y);
