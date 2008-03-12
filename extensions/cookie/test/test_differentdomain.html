@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Cross domain access to properties</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="setupTest('http://example.com/tests/extensions/cookie/test/file_domain_inner.html', 3, 2)">
+<p id="display"></p>
+<pre id="test">
+<script class="testbody" type="text/javascript" src="file_testcommon.js">
+</script>
+</pre>
+</body>
+</html>
