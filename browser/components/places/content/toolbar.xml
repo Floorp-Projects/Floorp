@@ -983,10 +983,20 @@
         <body><![CDATA[
           var element =
             PlacesUtils.createMenuItemForNode(aChild, this._containerNodesMap);
+
           if (aBefore)
             aParentPopup.insertBefore(element, aBefore);
-          else
-            aParentPopup.appendChild(element);
+          else {
+            // Add the new element to the menu.  If there is static content at
+            // the end of the menu, add the element before that.  Otherwise,
+            // just add to the end.
+            if (aParentPopup._endMarker != -1) {
+              aParentPopup.insertBefore(element,
+                                        aParentPopup.childNodes[aParentPopup._endMarker++]);
+            }
+            else
+              aParentPopup.appendChild(element);
+          }
         ]]></body>
       </method>
 
@@ -996,12 +1006,7 @@
           if (aPopup._built)
             return;
 
-          // remove previous menu items
-          while (aPopup.hasChildNodes())
-            aPopup.removeChild(aPopup.firstChild);
-          // restore the empty-menu item if has been created already
-          if (aPopup._emptyMenuItem)
-            aPopup.appendChild(aPopup._emptyMenuItem);
+          PlacesUtils.cleanPlacesPopup(aPopup);
 
           var resultNode = aPopup._resultNode;
           if (!resultNode.containerOpen)
@@ -1018,8 +1023,10 @@
             }
           }
           else {
-            // add element to show it is empty.
-            this._showEmptyMenuItem(aPopup);
+            // This menu is empty.  If there is no static content, add
+            // an element to show it is empty.
+            if (aPopup._startMarker == -1 && aPopup._endMarker == -1)
+              this._showEmptyMenuItem(aPopup);
           }
           aPopup._built = true;
         ]]></body>
