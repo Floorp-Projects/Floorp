@@ -1082,7 +1082,8 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       break;
   case NS_THEME_DROPDOWN_BUTTON:
     {
-      moz_gtk_get_dropdown_arrow_size(&aResult->width, &aResult->height);
+      moz_gtk_get_combo_box_entry_button_size(&aResult->width,
+                                              &aResult->height);
       *aIsOverridable = PR_FALSE;
     }
     break;
