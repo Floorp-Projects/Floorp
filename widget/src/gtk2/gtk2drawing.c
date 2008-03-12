@@ -95,11 +95,7 @@ static GtkWidget* gHPanedWidget;
 static GtkWidget* gVPanedWidget;
 static GtkWidget* gScrolledWindowWidget;
 
-static GtkShadowType gMenuBarShadowType;
-static GtkShadowType gToolbarShadowType;
-
 static style_prop_t style_prop_func;
-static gboolean have_menu_shadow_type;
 static gboolean have_arrow_scaling;
 static gboolean is_initialized;
 
@@ -391,8 +387,6 @@ ensure_toolbar_widget()
         gToolbarWidget = gtk_toolbar_new();
         gtk_container_add(GTK_CONTAINER(gHandleBoxWidget), gToolbarWidget);
         gtk_widget_realize(gToolbarWidget);
-        gtk_widget_style_get(gToolbarWidget, "shadow_type", &gToolbarShadowType,
-                             NULL);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -466,8 +460,6 @@ ensure_menu_bar_widget()
     if (!gMenuBarWidget) {
         gMenuBarWidget = gtk_menu_bar_new();
         setup_widget_prototype(gMenuBarWidget);
-       gtk_widget_style_get(gMenuBarWidget, "shadow_type", &gMenuBarShadowType,
-                            NULL);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -744,9 +736,6 @@ gint
 moz_gtk_init()
 {
     is_initialized = TRUE;
-    have_menu_shadow_type =
-        (gtk_major_version > 2 ||
-         (gtk_major_version == 2 && gtk_minor_version >= 1));
     have_arrow_scaling = (gtk_major_version > 2 ||
                           (gtk_major_version == 2 && gtk_minor_version >= 12));
 
@@ -1839,7 +1828,9 @@ moz_gtk_toolbar_paint(GdkDrawable* drawable, GdkRectangle* rect,
                                        cliprect, rect->x, rect->y,
                                        rect->width, rect->height);
 
-    gtk_paint_box (style, drawable, GTK_STATE_NORMAL, gToolbarShadowType,
+    gtk_widget_style_get(gToolbarWidget, "shadow-type", &shadow_type, NULL);
+
+    gtk_paint_box (style, drawable, GTK_STATE_NORMAL, shadow_type,
                    cliprect, gToolbarWidget, "toolbar",
                    rect->x, rect->y, rect->width, rect->height);
 
@@ -2218,13 +2209,16 @@ moz_gtk_menu_bar_paint(GdkDrawable* drawable, GdkRectangle* rect,
     ensure_menu_bar_widget();
     gtk_widget_set_direction(gMenuBarWidget, direction);
 
+    gtk_widget_style_get(gMenuBarWidget, "shadow-type", &shadow_type, NULL);
+
     style = gMenuBarWidget->style;
 
     TSOffsetStyleGCs(style, rect->x, rect->y);
     gtk_style_apply_default_background(style, drawable, TRUE, GTK_STATE_NORMAL,
                                        cliprect, rect->x, rect->y,
                                        rect->width, rect->height);
-    gtk_paint_box(style, drawable, GTK_STATE_NORMAL, gMenuBarShadowType,
+
+    gtk_paint_box(style, drawable, GTK_STATE_NORMAL, shadow_type,
                   cliprect, gMenuBarWidget, "menubar", rect->x, rect->y,
                   rect->width, rect->height);
     return MOZ_GTK_SUCCESS;
@@ -2322,12 +2316,9 @@ moz_gtk_menu_item_paint(GdkDrawable* drawable, GdkRectangle* rect,
         
         style = item_widget->style;
         TSOffsetStyleGCs(style, rect->x, rect->y);
-        if (have_menu_shadow_type) {
-            gtk_widget_style_get(item_widget, "selected_shadow_type",
-                                 &shadow_type, NULL);
-        } else {
-            shadow_type = GTK_SHADOW_OUT;
-        }
+
+        gtk_widget_style_get(item_widget, "selected-shadow-type",
+                             &shadow_type, NULL);
 
         gtk_paint_box(style, drawable, GTK_STATE_PRELIGHT, shadow_type,
                       cliprect, item_widget, "menuitem", rect->x, rect->y,
