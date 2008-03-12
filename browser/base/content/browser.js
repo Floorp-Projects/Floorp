@@ -700,6 +700,7 @@ function BrowserStartup()
       gFindBar.open();
 
     var openerSidebarBox = window.opener.document.getElementById("sidebar-box");
+    // If the opener had a sidebar, open the same sidebar in our window.
     // The opener can be the hidden window too, if we're coming from the state
     // where no windows are open, and the hidden window has no sidebar box.
     if (openerSidebarBox && !openerSidebarBox.hidden) {
@@ -709,8 +710,12 @@ function BrowserStartup()
       sidebarBox.setAttribute("width", openerSidebarBox.boxObject.width);
       var sidebarCmd = openerSidebarBox.getAttribute("sidebarcommand");
       sidebarBox.setAttribute("sidebarcommand", sidebarCmd);
+      // Note: we're setting 'src' on sidebarBox, which is a <vbox>, not on the
+      // <browser id="sidebar">. This lets us delay the actual load until
+      // delayedStartup().
       sidebarBox.setAttribute("src", window.opener.document.getElementById("sidebar").getAttribute("src"));
       gMustLoadSidebar = true;
+
       sidebarBox.hidden = false;
       sidebarSplitter = document.getElementById("sidebar-splitter");
       sidebarSplitter.hidden = false;
@@ -4493,6 +4498,8 @@ function toggleSidebar(commandID, forceOpen) {
       sidebarBox.hidden = true;
       sidebarSplitter.hidden = true;
       content.focus();
+    } else {
+      fireSidebarFocusedEvent();
     }
     return;
   }
@@ -4520,13 +4527,40 @@ function toggleSidebar(commandID, forceOpen) {
   var title = sidebarBroadcaster.getAttribute("sidebartitle");
   if (!title)
     title = sidebarBroadcaster.getAttribute("label");
-  sidebar.setAttribute("src", url);
+  sidebar.setAttribute("src", url); // kick off async load
   sidebarBox.setAttribute("sidebarcommand", sidebarBroadcaster.id);
   sidebarTitle.value = title;
 
-  // This is used because we want to delay sidebar load a bit
-  // when a browser window opens. See delayedStartup()
+  // We set this attribute here in addition to setting it on the <browser>
+  // element itself, because the code in BrowserShutdown persists this
+  // attribute, not the "src" of the <browser id="sidebar">. The reason it
+  // does that is that we want to delay sidebar load a bit when a browser
+  // window opens. See delayedStartup().
   sidebarBox.setAttribute("src", url);
+
+  if (sidebar.contentDocument.location.href != url)
+    sidebar.addEventListener("load", sidebarOnLoad, true);
+  else // older code handled this case, so we do it too
+    fireSidebarFocusedEvent();
+}
+
+function sidebarOnLoad(event) {
+  var sidebar = document.getElementById("sidebar");
+  sidebar.removeEventListener("load", sidebarOnLoad, true);
+  // We're handling the 'load' event before it bubbles up to the usual
+  // (non-capturing) event handlers. Let it bubble up before firing the
+  // SidebarFocused event.
+  setTimeout(fireSidebarFocusedEvent, 0);
+}
+
+/**
+ * Fire a "SidebarFocused" event on the sidebar's |window| to give the sidebar
+ * a chance to adjust focus as needed. */
+function fireSidebarFocusedEvent() {
+  var sidebar = document.getElementById("sidebar");
+  var event = document.createEvent("Events");
+  event.initEvent("SidebarFocused", true, false);
+  sidebar.contentWindow.dispatchEvent(event);
 }
 
 var gHomeButton = {
