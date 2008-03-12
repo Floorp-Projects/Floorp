@@ -22,7 +22,7 @@ sub new {
 # GetBuildID - attempts to find build ID in a tinderbox log file
 #
 # Searches for a string of the form:
-#  Got Build ID: 2007030311
+#  buildid: 2007030311
 # Only the buildID, '2007030311', is to be returned.
 #
 ##
@@ -34,7 +34,7 @@ sub GetBuildID {
     my $log = $this->GetLogFileName();
 
     my $buildID = undef;
-    my $searchString = "Got build ID ";
+    my $searchString = "buildid: ";
 
     open (FILE, "< $log") or die("Cannot open file $log: $!");
     while (<FILE>) {
