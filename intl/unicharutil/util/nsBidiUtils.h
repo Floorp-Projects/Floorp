@@ -203,6 +203,12 @@ typedef enum nsCharType nsCharType;
    */
   PRBool IsBidiControl(PRUint32 aChar);
 
+  /**
+   * Give an nsString.
+   * @return PR_TRUE if the string contains right-to-left characters
+   */
+  PRBool HasRTLChars(nsAString& aString);
+
 // --------------------------------------------------
 // IBMBIDI 
 // --------------------------------------------------
