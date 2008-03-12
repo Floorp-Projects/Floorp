@@ -2367,7 +2367,7 @@ EscapeElementValue(JSContext *cx, JSStringBuffer *sb, JSString *str)
             newlength += 4;
 
         if (newlength < length) {
-            JS_ReportOutOfMemory(cx);
+            js_ReportAllocationOverflow(cx);
             return NULL;
         }
     }
@@ -2424,7 +2424,7 @@ EscapeAttributeValue(JSContext *cx, JSStringBuffer *sb, JSString *str,
             newlength += 4;
 
         if (newlength < length) {
-            JS_ReportOutOfMemory(cx);
+            js_ReportAllocationOverflow(cx);
             return NULL;
         }
     }

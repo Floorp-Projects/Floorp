@@ -329,7 +329,7 @@ ResizeSlots(JSContext *cx, JSObject *obj, uint32 oldlen, uint32 len)
     }
 
     if (len > ~(uint32)0 / sizeof(jsval)) {
-        JS_ReportOutOfMemory(cx);
+        js_ReportAllocationOverflow(cx);
         return JS_FALSE;
     }
 
@@ -1798,7 +1798,7 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
      */
 #if JS_BITS_PER_WORD == 32
     if ((size_t)len > ~(size_t)0 / (2 * sizeof(jsval))) {
-        JS_ReportOutOfMemory(cx);
+        js_ReportAllocationOverflow(cx);
         return JS_FALSE;
     }
 #endif
@@ -1902,7 +1902,7 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
              */
 #if JS_BITS_PER_WORD == 32
             if ((size_t)newlen > ~(size_t)0 / (4 * sizeof(jsval))) {
-                JS_ReportOutOfMemory(cx);
+                js_ReportAllocationOverflow(cx);
                 ok = JS_FALSE;
                 goto out;
             }
