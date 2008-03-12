@@ -186,6 +186,14 @@
     #define NS_UNIX_LOCAL_DIR                   "Locl"
     #define NS_UNIX_LIB_DIR                     "LibD"
     #define NS_UNIX_HOME_DIR                    NS_OS_HOME_DIR
+    #define NS_UNIX_XDG_DESKTOP_DIR             "XDGDesk"
+    #define NS_UNIX_XDG_DOCUMENTS_DIR           "XDGDocs"
+    #define NS_UNIX_XDG_DOWNLOAD_DIR            "XDGDwnld"
+    #define NS_UNIX_XDG_MUSIC_DIR               "XDGMusic"
+    #define NS_UNIX_XDG_PICTURES_DIR            "XDGPict"
+    #define NS_UNIX_XDG_PUBLIC_SHARE_DIR        "XDGPubSh"
+    #define NS_UNIX_XDG_TEMPLATES_DIR           "XDGTempl"
+    #define NS_UNIX_XDG_VIDEOS_DIR              "XDGVids"
 #elif defined (XP_OS2)
     #define NS_OS2_DIR                          "OS2Dir"
     #define NS_OS2_HOME_DIR                     NS_OS_HOME_DIR

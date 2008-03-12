@@ -358,6 +358,15 @@ nsIAtom*  nsDirectoryService::sDefaultDownloadDirectory = nsnull;
 #elif defined (XP_UNIX)
 nsIAtom*  nsDirectoryService::sLocalDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sLibDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sDefaultDownloadDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sXDGDesktop = nsnull;
+nsIAtom*  nsDirectoryService::sXDGDocuments = nsnull;
+nsIAtom*  nsDirectoryService::sXDGDownload = nsnull;
+nsIAtom*  nsDirectoryService::sXDGMusic = nsnull;
+nsIAtom*  nsDirectoryService::sXDGPictures = nsnull;
+nsIAtom*  nsDirectoryService::sXDGPublicShare = nsnull;
+nsIAtom*  nsDirectoryService::sXDGTemplates = nsnull;
+nsIAtom*  nsDirectoryService::sXDGVideos = nsnull;
 #elif defined (XP_OS2)
 nsIAtom*  nsDirectoryService::sSystemDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sOS2Directory = nsnull;
@@ -465,6 +474,15 @@ static const nsStaticAtom directory_atoms[] = {
 #elif defined (XP_UNIX)
     { NS_UNIX_LOCAL_DIR,           &nsDirectoryService::sLocalDirectory },
     { NS_UNIX_LIB_DIR,             &nsDirectoryService::sLibDirectory },
+    { NS_UNIX_DEFAULT_DOWNLOAD_DIR, &nsDirectoryService::sDefaultDownloadDirectory },
+    { NS_UNIX_XDG_DESKTOP_DIR,     &nsDirectoryService::sXDGDesktop },
+    { NS_UNIX_XDG_DOCUMENTS_DIR,   &nsDirectoryService::sXDGDocuments },
+    { NS_UNIX_XDG_DOWNLOAD_DIR,    &nsDirectoryService::sXDGDownload },
+    { NS_UNIX_XDG_MUSIC_DIR,       &nsDirectoryService::sXDGMusic },
+    { NS_UNIX_XDG_PICTURES_DIR,    &nsDirectoryService::sXDGPictures },
+    { NS_UNIX_XDG_PUBLIC_SHARE_DIR, &nsDirectoryService::sXDGPublicShare },
+    { NS_UNIX_XDG_TEMPLATES_DIR,   &nsDirectoryService::sXDGTemplates },
+    { NS_UNIX_XDG_VIDEOS_DIR,      &nsDirectoryService::sXDGVideos },
 #elif defined (XP_OS2)
     { NS_OS_SYSTEM_DIR,            &nsDirectoryService::sSystemDirectory },
     { NS_OS2_DIR,                  &nsDirectoryService::sOS2Directory },
@@ -1150,9 +1168,47 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
     {
         rv = GetSpecialSystemDirectory(Unix_HomeDirectory, getter_AddRefs(localFile)); 
     }
-    else if (inAtom == nsDirectoryService::sOS_DesktopDirectory)
+    else if (inAtom == nsDirectoryService::sXDGDesktop ||
+             inAtom == nsDirectoryService::sOS_DesktopDirectory)
     {
-        rv = GetSpecialSystemDirectory(Unix_DesktopDirectory, getter_AddRefs(localFile)); 
+        rv = GetSpecialSystemDirectory(Unix_XDG_Desktop, getter_AddRefs(localFile));
+        *persistent = PR_FALSE;
+    }
+    else if (inAtom == nsDirectoryService::sXDGDocuments)
+    {
+        rv = GetSpecialSystemDirectory(Unix_XDG_Documents, getter_AddRefs(localFile));
+        *persistent = PR_FALSE;
+    }
+    else if (inAtom == nsDirectoryService::sXDGDownload ||
+             inAtom == nsDirectoryService::sDefaultDownloadDirectory)
+    {
+        rv = GetSpecialSystemDirectory(Unix_XDG_Download, getter_AddRefs(localFile));
+        *persistent = PR_FALSE;
+    }
+    else if (inAtom == nsDirectoryService::sXDGMusic)
+    {
+        rv = GetSpecialSystemDirectory(Unix_XDG_Music, getter_AddRefs(localFile));
+        *persistent = PR_FALSE;
+    }
+    else if (inAtom == nsDirectoryService::sXDGPictures)
+    {
+        rv = GetSpecialSystemDirectory(Unix_XDG_Pictures, getter_AddRefs(localFile));
+        *persistent = PR_FALSE;
+    }
+    else if (inAtom == nsDirectoryService::sXDGPublicShare)
+    {
+        rv = GetSpecialSystemDirectory(Unix_XDG_PublicShare, getter_AddRefs(localFile));
+        *persistent = PR_FALSE;
+    }
+    else if (inAtom == nsDirectoryService::sXDGTemplates)
+    {
+        rv = GetSpecialSystemDirectory(Unix_XDG_Templates, getter_AddRefs(localFile));
+        *persistent = PR_FALSE;
+    }
+    else if (inAtom == nsDirectoryService::sXDGVideos)
+    {
+        rv = GetSpecialSystemDirectory(Unix_XDG_Videos, getter_AddRefs(localFile));
+        *persistent = PR_FALSE;
     }
 #elif defined (XP_OS2)
     else if (inAtom == nsDirectoryService::sSystemDirectory)
