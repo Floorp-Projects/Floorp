@@ -169,10 +169,13 @@ function ensure_results(aSearch, aExpected)
 
 // Get history services
 try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
+  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+                getService(Ci.nsINavHistoryService);
   var bhist = histsvc.QueryInterface(Ci.nsIBrowserHistory);
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
-  var iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+              getService(Ci.nsINavBookmarksService);
+  var iosvc = Cc["@mozilla.org/network/io-service;1"].
+              getService(Ci.nsIIOService);
 } catch(ex) {
   do_throw("Could not get services\n");
 } 
@@ -207,9 +210,8 @@ function addPageBook(aURI, aTitle, aBook)
 
   print("Adding page/book: " + [aURI, aTitle, aBook, kURIs[aURI], title].join(", "));
   // Add the page and a visit for good measure
-  histsvc.setPageDetails(uri, title, 1, false, true);
-  histsvc.addVisit(uri, gDate, null, histsvc.TRANSITION_TYPED, false, 0);
-  
+  bhist.addPageWithDetails(uri, title, gDate);
+
   // Add a bookmark if we need to
   if (aBook != undefined) {
     let book = kTitles[aBook];
