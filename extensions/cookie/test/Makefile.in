@@ -15,15 +15,15 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2007
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,61 +35,59 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir  = extensions/cookie/test
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= cookie
-LIBRARY_NAME	= cookie
-EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
-MODULE_NAME	= nsCookieModule
-GRE_MODULE	= 1
-LIBXUL_LIBRARY = 1
+MODULE          = test_cookies
 
-PACKAGE_FILE = cookie.pkg
+_TEST_FILES = \
+  test_samedomain.html \
+  file_testcommon.js \
+  file_domain_inner.html \
+  file_domain_inner_inner.html \
+  test_differentdomain.html \
+  test_image.html \
+  file_image_inner.html \
+  file_image_inner_inner.html \
+  image1.png \
+  image1.png^headers^ \
+  image2.png \
+  image2.png^headers^ \
+  test1.css \
+  test1.css^headers^ \
+  test2.css \
+  test2.css^headers^ \
+  test_loadflags.html \
+  file_testloadflags.js \
+  file_loadflags_inner.html \
+  test_same_base_domain.html \
+  file_subdomain_inner.html \
+  test_same_base_domain_2.html \
+  test_same_base_domain_3.html \
+  test_same_base_domain_4.html \
+  file_localhost_inner.html \
+  test_same_base_domain_5.html \
+  test_same_base_domain_6.html \
+  file_loopback_inner.html \
+  test_same_base_domain_7.html \
+	$(NULL)
 
-REQUIRES	= xpcom \
-		  string \
-		  necko \
-		  dom \
-		  content \
-		  widget \
-		  pref \
-		  windowwatcher \
-		  docshell \
-		  appshell \
-		  caps \
-		  storage \
-		  $(NULL)
+_BROWSER_TEST_FILES = \
+  browser_test_favicon.js \
+  $(NULL)
 
-CPPSRCS		= \
-		nsCookieModule.cpp \
-		nsPermission.cpp \
-		nsPermissionManager.cpp \
-		nsPopupWindowManager.cpp \
-		nsCookiePromptService.cpp \
-		nsCookiePermission.cpp \
-		$(NULL)
+libs:: $(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 
-XPIDLSRCS	= \
-		nsICookieAcceptDialog.idl \
-		nsICookiePromptService.idl \
-		$(NULL)
+libs:: $(_BROWSER_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
 
-EXTRA_DSO_LDOPTS = \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
-
-ifdef MOZ_MAIL_NEWS
-DEFINES += -DMOZ_MAIL_NEWS
-endif
-
-ifdef ENABLE_TESTS
-TOOL_DIRS		+= test
-endif
+XPCSHELL_TESTS = unit
 
 include $(topsrcdir)/config/rules.mk
+
