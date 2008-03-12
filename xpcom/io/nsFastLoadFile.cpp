@@ -1400,8 +1400,8 @@ nsFastLoadFileWriter::StartMuxedDocument(nsISupports* aURI,
         saveGeneration = mDocumentMap.generation;
     }
 
-    NS_ASSERTION(docMapEntry->mString == nsnull,
-                 "redundant multiplexed document?");
+    NS_WARN_IF_FALSE(docMapEntry->mString == nsnull,
+                     "redundant multiplexed document?");
     if (docMapEntry->mString)
         return NS_ERROR_UNEXPECTED;
 
