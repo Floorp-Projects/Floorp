@@ -72,6 +72,7 @@ class gfxFontGroup;
 #define FONT_MAX_SIZE                  2000.0
 
 struct THEBES_API gfxFontStyle {
+    gfxFontStyle();
     gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, gfxFloat aSize,
                  const nsACString& aLangGroup,
                  float aSizeAdjust, PRPackedBool aSystemFont,
