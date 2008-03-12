@@ -21,7 +21,48 @@
 #include "jpeglib.h"
 
 #ifdef HAVE_MMX_INTEL_MNEMONICS
+#if _MSC_VER >= 1400
 #include "intrin.h"
+#else
+/* no __cpuid intrinsic, use a manually rewritten replacement */
+void __stdcall __cpuid( int CPUInfo[4], int InfoType )
+{
+  int my_eax = 0, my_ebx = 0, my_ecx = 0, my_edx = 0;
+  __asm {
+    /* check eflags bit 21 to see if cpuid is supported */
+    pushfd             /* save eflags to stack */
+    pop eax            /* and put it in eax */
+    mov ecx, eax       /* save a copy in ecx to compare against */
+    xor eax, 0x200000  /* toggle ID bit (bit 21) in eflags */
+    push eax           /* save modified eflags to stack */
+    popfd              /* set eflags register with modified value */
+    pushfd             /* read eflags back out */
+    pop eax
+    xor eax, ecx       /* check for modified eflags */
+    jz NOT_SUPPORTED   /* cpuid not supported */
+
+    /* check to see if the requested cpuid type is supported */
+    xor eax, eax       /* set eax to zero */
+    cpuid
+    cmp eax, InfoType
+    jl NOT_SUPPORTED   /* the requested cpuid type is not supported */
+
+    /* actually make the cpuid call */
+    mov eax, InfoType
+    cpuid
+    mov my_eax, eax
+    mov my_ebx, ebx
+    mov my_ecx, ecx
+    mov my_edx, edx
+NOT_SUPPORTED:
+  }
+  CPUInfo[0] = my_eax;
+  CPUInfo[1] = my_ebx;
+  CPUInfo[2] = my_ecx;
+  CPUInfo[3] = my_edx;
+}
+#endif /* _MSC_VER >= 1400 */
+
 int MMXAvailable;
 static int mmxsupport();
 #endif
