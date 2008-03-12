@@ -194,6 +194,7 @@
     #define NS_UNIX_XDG_PUBLIC_SHARE_DIR        "XDGPubSh"
     #define NS_UNIX_XDG_TEMPLATES_DIR           "XDGTempl"
     #define NS_UNIX_XDG_VIDEOS_DIR              "XDGVids"
+    #define NS_UNIX_DEFAULT_DOWNLOAD_DIR        "DfltDwnld"
 #elif defined (XP_OS2)
     #define NS_OS2_DIR                          "OS2Dir"
     #define NS_OS2_HOME_DIR                     NS_OS_HOME_DIR
