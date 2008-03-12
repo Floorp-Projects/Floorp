@@ -2342,56 +2342,6 @@ nsNavHistory::CanAddURI(nsIURI* aURI, PRBool* canAdd)
   return NS_OK;
 }
 
-
-// nsNavHistory::SetPageDetails
-
-NS_IMETHODIMP
-nsNavHistory::SetPageDetails(nsIURI* aURI, const nsAString& aTitle,
-                             PRUint32 aVisitCount, PRBool aHidden,
-                             PRBool aTyped)
-{
-  // look up the page ID, creating a new one if necessary
-  PRInt64 pageID;
-  nsresult rv = GetUrlIdFor(aURI, &pageID, PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<mozIStorageStatement> statement;
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_places "
-      "SET title = ?2, "
-          "visit_count = ?4, "
-          "hidden = ?5, "
-          "typed = ?6 "
-       "WHERE id = ?1"),
-    getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt64Parameter(0, pageID);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // XXX should we be calculating / setting frecency here?
-
-  // for the titles, be careful to interpret isVoid as NULL SQL command so that
-  // we can tell the difference between "set to empty" and "unset"
-  if (aTitle.IsVoid())
-    rv = statement->BindNullParameter(1);
-  else
-    rv = statement->BindStringParameter(1, StringHead(aTitle, HISTORY_TITLE_LENGTH_MAX));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = statement->BindInt32Parameter(3, aVisitCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt32Parameter(4, aHidden ? 1 : 0);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt32Parameter(5, aTyped ? 1 : 0);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = statement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-
 // nsNavHistory::AddVisit
 //
 //    Adds or updates a page with the given URI. The ID of the new visit will

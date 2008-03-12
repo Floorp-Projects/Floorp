@@ -1045,7 +1045,7 @@ interface nsINavHistoryQueryOptions : nsISupports
   nsINavHistoryQueryOptions clone();
 };
 
-[scriptable, uuid(a9bea2db-0a3e-4895-9ccc-24bac41a0674)]
+[scriptable, uuid(1972ac40-d270-40ee-995a-c97d02849596)]
 interface nsINavHistoryService : nsISupports
 {
   /**
@@ -1122,25 +1122,6 @@ interface nsINavHistoryService : nsISupports
    * annotations).
    */
   boolean canAddURI(in nsIURI aURI);
-
-  /**
-   * Call to set the full information for a given page. If the page does not
-   * exist, it will be added to the database. If it does, the existing values
-   * WILL BE OVERWRITTEN. This is an updated version of addPageWithDetails
-   * for backup/restore type operations.
-   *
-   * @param aURI        Page to add/change.
-   * @param aTitle      Title as specified by the page.
-   * @param aVisitCount Number of times this page has been visited. Setting this
-   *                    to 0 may make the page invisible in some views.
-   * @param aHidden     Whether the page is hidden. If the page has only
-   *                    TRANSITION_EMBED visits, this will be true, otherwise
-   *                    false.
-   * @param aTyped      True if this URI has ever been typed.
-   */
-  void setPageDetails(in nsIURI aURI, in AString aTitle, 
-                      in unsigned long aVisitCount, in boolean aHidden,
-                      in boolean aTyped);
 
   /**
    * Call to manually add a visit for a specific page. This will probably not
