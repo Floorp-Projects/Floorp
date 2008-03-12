@@ -52,7 +52,6 @@
 #include "nsTextFormatter.h" // for page number localization formatting
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
-#include "nsBidiPresUtils.h"
 #endif
 #include "nsIFontMetrics.h"
 #include "nsIPrintSettings.h"
@@ -369,6 +368,8 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
     } else { 
       return; // bail if couldn't find the correct length
     }
+    
+    PresContext()->SetBidiEnabled(HasRTLChars(str));
 
     // cacl the x and y positions of the text
     nscoord x = GetXPosition(aRenderingContext, aRect, aJust, str);
