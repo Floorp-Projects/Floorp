@@ -1558,7 +1558,7 @@ nsXULPopupManager::HandleKeyboardNavigation(PRUint32 aKeyCode)
       mActiveMenuBar->ChangeMenuItem(nextItem, PR_TRUE);
       return PR_TRUE;
     }
-    else if NS_DIRECTION_IS_BLOCK(theDirection) {
+    else if (NS_DIRECTION_IS_BLOCK(theDirection)) {
       // Open the menu and select its first item.
       if (currentMenu) {
         nsCOMPtr<nsIContent> content = currentMenu->GetContent();
