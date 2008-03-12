@@ -2478,7 +2478,7 @@ array_slice(JSContext *cx, uintN argc, jsval *vp)
     if (begin > end)
         begin = end;
 
-    if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
+    if (OBJ_IS_DENSE_ARRAY(cx, obj) && end <= ARRAY_DENSE_LENGTH(obj)) {
         nobj = js_NewArrayObject(cx, end - begin, obj->dslots + begin);
         if (!nobj)
             return JS_FALSE;
