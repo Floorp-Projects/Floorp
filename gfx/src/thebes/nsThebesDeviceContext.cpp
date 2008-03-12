@@ -186,6 +186,7 @@ nsThebesDeviceContext::SetDPI()
 
             dpi = 144;
             mPrintingScale = float(OSVal)/dpi;
+            dotsArePixels = PR_FALSE;
         } else {
             dc = GetDC((HWND)nsnull);
 
