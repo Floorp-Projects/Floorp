@@ -649,12 +649,13 @@ public:
   enum buttonType  { eLeftButton = 0, eMiddleButton = 1, eRightButton = 2 };
   enum reasonType  { eReal, eSynthesized };
   enum contextType { eNormal, eContextMenuKey };
+  enum exitType    { eChild, eTopLevel };
 
   nsMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w,
                reasonType aReason, contextType aContext = eNormal)
     : nsMouseEvent_base(isTrusted, msg, w, NS_MOUSE_EVENT),
       acceptActivation(PR_FALSE), reason(aReason), context(aContext),
-      clickCount(0)
+      exit(eChild), clickCount(0)
   {
     if (msg == NS_MOUSE_MOVE) {
       flags |= NS_EVENT_FLAG_CANT_CANCEL;
@@ -676,6 +677,7 @@ public:
   PRPackedBool acceptActivation;
   reasonType   reason : 4;
   contextType  context : 4;
+  exitType     exit;
 
   /// The number of mouse clicks
   PRUint32     clickCount;
