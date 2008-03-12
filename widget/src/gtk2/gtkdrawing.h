@@ -341,7 +341,7 @@ moz_gtk_get_scrollbar_metrics(MozGtkScrollbarMetrics* metrics);
  *
  * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
-gint moz_gtk_get_dropdown_arrow_size(gint* width, gint* height);
+gint moz_gtk_get_combo_box_entry_button_size(gint* width, gint* height);
 
 /**
  * Get the desired size of a scroll arrow widget
@@ -351,6 +351,15 @@ gint moz_gtk_get_dropdown_arrow_size(gint* width, gint* height);
  * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
 gint moz_gtk_get_tab_scroll_arrow_size(gint* width, gint* height);
+
+/**
+ * Get the desired size of a toolbar button dropdown arrow
+ * width:   [OUT] the desired width
+ * height:  [OUT] the desired height
+ *
+ * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
+ */
+gint moz_gtk_get_downarrow_size(gint* width, gint* height);
 
 /**
  * Get the desired size of a toolbar separator

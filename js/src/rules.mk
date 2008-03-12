@@ -77,6 +77,9 @@ $(OBJDIR)/%.o: %.cpp %.h
 	@$(MAKE_OBJDIR)
 	$(CXX) -o $@ -c $(CFLAGS) $*.cpp
 
+$(OBJDIR)/jsinterp.o: jsinterp.c jsinterp.h
+	@$(MAKE_OBJDIR)
+	$(CC) -o $@ -c $(INTERP_CFLAGS) jsinterp.c
 
 $(OBJDIR)/%.o: %.cpp
 	@$(MAKE_OBJDIR)
@@ -90,6 +93,10 @@ $(OBJDIR)/%.o: %.s
 $(OBJDIR)/%.obj: %.cpp %.h
 	@$(MAKE_OBJDIR)
 	$(CXX) -Fo$(OBJDIR)/ -c $(CFLAGS) $(JSDLL_CFLAGS) $*.cpp
+
+$(OBJDIR)/jsinterp.obj: jsinterp.cpp jsinterp.h
+	@$(MAKE_OBJDIR)
+	$(CXX) -Fo$(OBJDIR)/ -c $(INTERP_CFLAGS) $(JSDLL_CFLAGS) jsinterp.c
 
 $(OBJDIR)/%.obj: %.cpp
 	@$(MAKE_OBJDIR)

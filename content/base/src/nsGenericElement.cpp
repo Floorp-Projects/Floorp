@@ -96,7 +96,7 @@
 #include "nsPIBoxObject.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMNSElement.h"
-#include "nsTextRectangle.h"
+#include "nsClientRect.h"
 #ifdef MOZ_SVG
 #include "nsSVGUtils.h"
 #endif
@@ -828,8 +828,8 @@ RoundFloat(double aValue)
 }
 
 static void
-SetTextRectangle(const nsRect& aLayoutRect, nsPresContext* aPresContext,
-                 nsTextRectangle* aRect)
+SetClientRect(const nsRect& aLayoutRect, nsPresContext* aPresContext,
+              nsClientRect* aRect)
 {
   double scale = 65536.0;
   // Round to the nearest 1/scale units. We choose scale so it can be represented
@@ -844,10 +844,10 @@ SetTextRectangle(const nsRect& aLayoutRect, nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsNSElementTearoff::GetBoundingClientRect(nsIDOMTextRectangle** aResult)
+nsNSElementTearoff::GetBoundingClientRect(nsIDOMClientRect** aResult)
 {
   // Weak ref, since we addref it below
-  nsTextRectangle* rect = new nsTextRectangle();
+  nsClientRect* rect = new nsClientRect();
   if (!rect)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -862,37 +862,37 @@ nsNSElementTearoff::GetBoundingClientRect(nsIDOMTextRectangle** aResult)
   nsPresContext* presContext = frame->PresContext();
   nsRect r = nsLayoutUtils::GetAllInFlowRectsUnion(frame,
           GetContainingBlockForClientRect(frame));
-  SetTextRectangle(r, presContext, rect);
+  SetClientRect(r, presContext, rect);
   return NS_OK;
 }
 
 struct RectListBuilder : public nsLayoutUtils::RectCallback {
-  nsPresContext*       mPresContext;
-  nsTextRectangleList* mRectList;
-  nsresult             mRV;
+  nsPresContext*    mPresContext;
+  nsClientRectList* mRectList;
+  nsresult          mRV;
 
-  RectListBuilder(nsPresContext* aPresContext, nsTextRectangleList* aList) 
+  RectListBuilder(nsPresContext* aPresContext, nsClientRectList* aList) 
     : mPresContext(aPresContext), mRectList(aList),
       mRV(NS_OK) {}
 
   virtual void AddRect(const nsRect& aRect) {
-    nsRefPtr<nsTextRectangle> rect = new nsTextRectangle();
+    nsRefPtr<nsClientRect> rect = new nsClientRect();
     if (!rect) {
       mRV = NS_ERROR_OUT_OF_MEMORY;
       return;
     }
     
-    SetTextRectangle(aRect, mPresContext, rect);
+    SetClientRect(aRect, mPresContext, rect);
     mRectList->Append(rect);
   }
 };
 
 NS_IMETHODIMP
-nsNSElementTearoff::GetClientRects(nsIDOMTextRectangleList** aResult)
+nsNSElementTearoff::GetClientRects(nsIDOMClientRectList** aResult)
 {
   *aResult = nsnull;
 
-  nsRefPtr<nsTextRectangleList> rectList = new nsTextRectangleList();
+  nsRefPtr<nsClientRectList> rectList = new nsClientRectList();
   if (!rectList)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2233,6 +2233,15 @@ nsGenericElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   return nsGenericElement::doPreHandleEvent(this, aVisitor);
 }
 
+static nsIContent*
+FindFirstNonNativeAnonymousAncestor(nsIContent* aContent)
+{
+  while (aContent && aContent->IsNativeAnonymous()) {
+    aContent = aContent->GetParent();
+  }
+  return aContent;
+}
+
 nsresult
 nsGenericElement::doPreHandleEvent(nsIContent* aContent,
                                    nsEventChainPreVisitor& aVisitor)
@@ -2260,10 +2269,10 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
           (aVisitor.mEvent->originalTarget == aContent &&
            (aVisitor.mRelatedTargetIsInAnon =
             relatedTarget->IsInNativeAnonymousSubtree()))) {
-        nsIContent* nonAnon = aContent->FindFirstNonNativeAnonymous();
+        nsIContent* nonAnon = FindFirstNonNativeAnonymousAncestor(aContent);
         if (nonAnon) {
           nsIContent* nonAnonRelated =
-            relatedTarget->FindFirstNonNativeAnonymous();
+            FindFirstNonNativeAnonymousAncestor(relatedTarget);
           if (nonAnonRelated) {
             if (nonAnon == nonAnonRelated ||
                 nsContentUtils::ContentIsDescendantOf(nonAnonRelated, nonAnon)) {

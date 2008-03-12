@@ -78,6 +78,8 @@
       <!-- This is the view that manage the popup -->
       <field name="_rootView">PlacesUtils.getViewForNode(this);</field>
 
+      <field name="_built">false</field>
+
       <method name="onDragOver">
         <parameter name="aEvent"/>
         <parameter name="aFlavour"/>
@@ -231,14 +233,14 @@
           // draw the drop indicator outside of them
           var betweenMarkers = true;
           if (this._startMarker != -1 &&
-              target.boxObject.y < this.childNodes[this._startMarker].boxObject.y)
+              target.boxObject.y <= this.childNodes[this._startMarker].boxObject.y)
             betweenMarkers = false;
           if (this._endMarker != -1 &&
-              target.boxObject.y > this.childNodes[this._endMarker].boxObject.y)
+              target.boxObject.y >= this.childNodes[this._endMarker].boxObject.y)
             betweenMarkers = false;
 
           // hide the dropmarker if current node is not a places bookmark item
-          return !(target && betweenMarkers && this.canDrop());
+          return !(target && target.node && betweenMarkers && this.canDrop());
         ]]></body>
       </method>
 
@@ -452,6 +454,36 @@
     </implementation>
 
     <handlers>
+      <handler event="DOMMenuItemActive"><![CDATA[
+        var node = event.target;
+        if (node.parentNode != this)
+          return;
+
+#ifdef XP_MACOSX
+        // XXXschonfeld: The following check is a temporary hack
+        // until bug 420033 is resolved.
+        while (node) {
+          if (node.id == "bookmarksMenuPopup" || node.id == "goPopup")
+            return;
+
+          node = node.parentNode;
+        }
+#endif
+
+        if (window.XULBrowserWindow) {
+          var nodeItem = event.target.node;
+          if (nodeItem && PlacesUtils.nodeIsURI(nodeItem))
+            window.XULBrowserWindow.setOverLink(nodeItem.uri, null);
+        }
+      ]]></handler>
+      <handler event="DOMMenuItemInactive"><![CDATA[
+        var node = event.target;
+        if (node.parentNode != this)
+          return;
+
+        if (window.XULBrowserWindow)
+          window.XULBrowserWindow.setOverLink("", null);
+      ]]></handler>
       <handler event="draggesture" action="if (event.target.node) nsDragAndDrop.startDrag(event, this);"/>
       <handler event="dragdrop" action="nsDragAndDrop.drop(event, this);"/>
       <handler event="dragover" action="nsDragAndDrop.dragOver(event, this);"/>
@@ -494,14 +526,13 @@
                 readonly="true"
                 onget="return this._controller;"/>
 
-      <field name="_built">false</field>
-
       <method name="onPopupShowing">
         <parameter name="aEvent"/>
         <body><![CDATA[
           var popup = aEvent.target;
           var resultNode = popup._resultNode;
-          resultNode.containerOpen = true;
+          if (!resultNode.containerOpen)
+            resultNode.containerOpen = true;
           if (!popup._built)
             this._rebuild(popup);
         ]]></body>
@@ -519,58 +550,6 @@
         <body><![CDATA[
           this._ensureInitialized();
           return this._resultNode;
-        ]]></body>
-      </method>
-
-      <method name="_cleanMenu">
-        <parameter name="aPopup"/>
-        <body><![CDATA[
-          // Find static menuitems that should go at the start
-          // and end of the menu, marked by builder="start" and
-          // builder="end" attributes, and keep track of their indices.
-          // All of the items between the start and end should be removed.
-          var items = [];
-          aPopup._startMarker = -1;
-          aPopup._endMarker = -1;
-          for (var i = 0; i < aPopup.childNodes.length; ++i) {
-            var item = aPopup.childNodes[i];
-            if (item.getAttribute("builder") == "start") {
-              aPopup._startMarker = i;
-              continue;
-            }
-            if (item.getAttribute("builder") == "end") {
-              aPopup._endMarker = i;
-              continue;
-            }
-            if ((aPopup._startMarker != -1) && (aPopup._endMarker == -1))
-              items.push(item);
-          }
-
-          // If static items at the beginning were found, remove all items between
-          // them and the static content at the end.
-          for (var i = 0; i < items.length; ++i) { 
-            // skip the empty menu item
-            if (aPopup._emptyMenuItem != items[i]) {
-              aPopup.removeChild(items[i]);
-              if (this._endMarker > 0)
-                --this._endMarker;
-            }
-          }
-
-          // If no static items were found at the beginning, remove all items before
-          // the static items at the end.
-          if (aPopup._startMarker == -1) {
-            var end = aPopup._endMarker == -1 ?
-                      aPopup.childNodes.length - 1 : aPopup._endMarker - 1;
-            for (var i = end; i >=0; i--) {
-              // skip the empty menu item
-              if (aPopup._emptyMenuItem != aPopup.childNodes[i]) {
-                aPopup.removeChild(aPopup.childNodes[i]);
-                if (aPopup._endMarker > 0)
-                  --aPopup._endMarker;
-              }
-            }
-          }
         ]]></body>
       </method>
 
@@ -637,7 +616,7 @@
       <method name="_rebuild">
         <parameter name="aPopup"/>
         <body><![CDATA[
-          this._cleanMenu(aPopup);
+          PlacesUtils.cleanPlacesPopup(aPopup);
 
           var cc = aPopup._resultNode.childCount;
           if (cc > 0) {

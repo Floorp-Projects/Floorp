@@ -64,7 +64,9 @@ xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   function test(ptFunc, id, message) {
     var pt = ptFunc($(id));
-    is(document.elementFromPoint(pt.x, pt.y).id, id, message);
+    var e = document.elementFromPoint(pt.x, pt.y);
+    ok(e != null, message + " (returned null)");
+    is(e.id, id, message);
   }
   
   function do_test() {

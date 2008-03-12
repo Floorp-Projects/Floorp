@@ -245,6 +245,26 @@
 #endif
 
 /**
+ * Deprecated declarations.
+ */
+#if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1))
+# define NS_DEPRECATED __attribute__((deprecated))
+#elif defined(_MSC_VER) && (_MSC_VER >= 1300)
+# define NS_DEPRECATED __declspec(deprecated)
+#else
+# define NS_DEPRECATED
+#endif
+
+/**
+ * Attributes defined to help Dehydra GCC analysis.	
+ */
+#ifdef DEHYDRA_GCC
+# define NS_SCRIPTABLE __attribute__((user("script")))
+#else
+# define NS_SCRIPTABLE
+#endif
+
+/**
  * Generic API modifiers which return the standard XPCOM nsresult type
  */
 #define NS_IMETHOD          NS_IMETHOD_(nsresult)
