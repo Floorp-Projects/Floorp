@@ -1137,7 +1137,8 @@ moz_gtk_scrollbar_thumb_paint(GtkThemeWidgetType widget,
 
     style = GTK_WIDGET(scrollbar)->style;
     
-    gtk_widget_style_get(scrollbar, "activate-slider", &activate_slider, NULL);
+    gtk_widget_style_get(GTK_WIDGET(scrollbar), "activate-slider",
+                         &activate_slider, NULL);
     
     if (activate_slider && state->active) {
         shadow_type = GTK_SHADOW_IN;
