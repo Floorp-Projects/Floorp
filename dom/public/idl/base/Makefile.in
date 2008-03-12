@@ -77,8 +77,8 @@ XPIDLSRCS =					\
 	nsIDOMModalContentWindow.idl		\
 	nsIDOMChromeWindow.idl			\
 	nsIDOMNSFeatureFactory.idl		\
-        nsIDOMTextRectangle.idl			\
-        nsIDOMTextRectangleList.idl		\
+        nsIDOMClientRect.idl			\
+        nsIDOMClientRectList.idl		\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
