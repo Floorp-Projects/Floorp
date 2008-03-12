@@ -1116,7 +1116,12 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       *aIsOverridable = PR_FALSE;
     }
     break;
-
+  case NS_THEME_TOOLBAR_BUTTON_DROPDOWN:
+    {
+        moz_gtk_get_downarrow_size(&aResult->width, &aResult->height);
+        *aIsOverridable = PR_FALSE;
+    }
+    break;
   case NS_THEME_CHECKBOX_CONTAINER:
   case NS_THEME_RADIO_CONTAINER:
   case NS_THEME_CHECKBOX_LABEL:
