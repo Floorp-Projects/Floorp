@@ -146,7 +146,7 @@ interface(TreeState *state)
     char *classNameImpl = NULL;
     char *cp;
     gboolean ok = TRUE;
-    gboolean keepvtable;
+    gboolean keepvtable, scriptable, deprecated;
     const char *iid;
     const char *name_space;
     struct nsID id;
@@ -233,11 +233,20 @@ interface(TreeState *state)
         if (IDL_NODE_TYPE(data) == IDLN_CODEFRAG)
             keepvtable = TRUE;
     }
-    
+   
+    scriptable = deprecated = FALSE;
+    if (IDL_tree_property_get(IDL_INTERFACE(iface).ident, "scriptable"))
+        scriptable = TRUE;
+    if (IDL_tree_property_get(IDL_INTERFACE(iface).ident, "deprecated"))
+        deprecated = TRUE;
+
     /* The interface declaration itself. */
     fprintf(state->file,
-            "class %s%s",
-            (keepvtable ? "" : "NS_NO_VTABLE "), className);
+            "class %s%s%s%s",
+            (keepvtable ? "" : "NS_NO_VTABLE "),
+            (scriptable ? "NS_SCRIPTABLE " : ""),
+            (deprecated ? "NS_DEPRECATED " : ""),
+            className);
     
     if ((iter = IDL_INTERFACE(iface).inheritance_spec)) {
         fputs(" : ", state->file);
@@ -746,8 +755,14 @@ write_attr_accessor(IDL_tree attr_tree, FILE * outfile,
 {
     char *attrname = ATTR_IDENT(attr_tree).str;
     const char *binaryname;
+    IDL_tree ident = IDL_LIST(IDL_ATTR_DCL(attr_tree).simple_declarations).data;
 
     if (mode == AS_DECL) {
+        if (IDL_tree_property_get(ident, "deprecated"))
+            fputs("NS_DEPRECATED ", outfile);
+        if (is_method_scriptable(attr_tree, ident))
+            fputs("NS_SCRIPTABLE ", outfile);
+
         fputs("NS_IMETHOD ", outfile);
     } else if (mode == AS_IMPL) {
         fprintf(outfile, "NS_IMETHODIMP %s::", className);
@@ -1023,6 +1038,11 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, int mode,
     IDL_tree iter;
 
     if (mode == AS_DECL) {
+        if (IDL_tree_property_get(op->ident, "deprecated"))
+            fputs("NS_DEPRECATED ", outfile);
+        if (is_method_scriptable(method_tree, op->ident))
+            fputs("NS_SCRIPTABLE ", outfile);
+
         if (op_notxpcom) {
             fputs("NS_IMETHOD_(", outfile);
             if (!write_type(op->op_type_spec, FALSE, outfile))
