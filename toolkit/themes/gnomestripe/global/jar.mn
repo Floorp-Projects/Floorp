@@ -7,6 +7,7 @@ classic.jar:
 +  skin/classic/global/tabbox.css
 +  skin/classic/global/toolbar.css
 +  skin/classic/global/toolbarbutton.css
++  skin/classic/global/dropmarker.css
 +  skin/classic/global/button.css
 +  skin/classic/global/checkbox.css
 +  skin/classic/global/splitter.css
