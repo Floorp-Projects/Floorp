@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Darin Fisher <darin@meer.net>
+ *   Daniel Witte <dwitte@stanford.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,11 +50,12 @@
 #include "nsIPrefBranch2.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsILoadGroup.h"
+#include "nsIWebNavigation.h"
+#include "nsINode.h"
 #include "nsIChannel.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMDocument.h"
+#include "nsIPrincipal.h"
 #include "nsString.h"
 #include "nsCRT.h"
 
@@ -199,7 +201,6 @@ nsCookiePermission::SetAccess(nsIURI         *aURI,
 
 NS_IMETHODIMP
 nsCookiePermission::CanAccess(nsIURI         *aURI,
-                              nsIURI         *aFirstURI,
                               nsIChannel     *aChannel,
                               nsCookieAccess *aResult)
 {
@@ -235,7 +236,6 @@ nsCookiePermission::CanAccess(nsIURI         *aURI,
       }
     }
     if ((appType == nsIDocShell::APP_TYPE_MAIL) ||
-        (aFirstURI && IsFromMailNews(aFirstURI)) ||
         IsFromMailNews(aURI)) {
       *aResult = ACCESS_DENY;
       return NS_OK;
@@ -418,6 +418,94 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
     }
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsCookiePermission::GetOriginatingURI(nsIChannel  *aChannel,
+                                      nsIURI     **aURI)
+{
+  /* to find the originating URI, we use the loadgroup of the channel to obtain
+   * the docshell owning the load, and from there, we find the root content
+   * docshell and its URI. there are several possible cases:
+   *
+   * 1) no channel. this will occur for plugins using the nsICookieStorage
+   *    interface, since they have none to provide. other consumers should
+   *    have a channel.
+   *
+   * 2) a channel, but no docshell. this can occur when the consumer kicking
+   *    off the load doesn't provide one to the channel, and should be limited
+   *    to loads of certain types of resources (e.g. favicons).
+   *
+   * 3) a non-content docshell. this occurs for loads kicked off from chrome,
+   *    where no content docshell exists (favicons can also fall into this
+   *    category).
+   *
+   * 4) a content docshell equal to the root content docshell, with channel
+   *    loadflags LOAD_DOCUMENT_URI. this covers the case of a freshly kicked-
+   *    off load (e.g. the user typing something in the location bar, or
+   *    clicking on a bookmark), where the currentURI hasn't yet been set,
+   *    and will be bogus. we return the channel URI in this case. note that
+   *    we could also allow non-content docshells here, but that goes against
+   *    the philosophy of having an audit trail back to a URI the user typed
+   *    or clicked on.
+   *
+   * 5) a root content docshell. this covers most cases for an ordinary page
+   *    load from the location bar, and will catch nested frames within
+   *    a page, image loads, etc. we return the URI of the docshell's principal
+   *    in this case.
+   *
+   */
+
+  *aURI = nsnull;
+
+  // case 1)
+  if (!aChannel)
+    return NS_ERROR_NULL_POINTER;
+
+  // find the docshell and its root
+  nsCOMPtr<nsIDocShellTreeItem> docshell, root;
+  NS_QueryNotificationCallbacks(aChannel, docshell);
+  if (docshell)
+    docshell->GetSameTypeRootTreeItem(getter_AddRefs(root));
+
+  PRInt32 type;
+  if (root)
+    root->GetItemType(&type);
+
+  // cases 2) and 3)
+  if (!root || type != nsIDocShellTreeItem::typeContent)
+    return NS_ERROR_INVALID_ARG;
+
+  // case 4)
+  if (docshell == root) {
+    nsLoadFlags flags;
+    aChannel->GetLoadFlags(&flags);
+
+    if (flags & nsIChannel::LOAD_DOCUMENT_URI) {
+      // get the channel URI - the docshell's will be bogus
+      aChannel->GetURI(aURI);
+      if (!*aURI)
+        return NS_ERROR_NULL_POINTER;
+
+      return NS_OK;
+    }
+  }
+
+  // case 5) - get the originating URI from the docshell's principal
+  nsCOMPtr<nsIWebNavigation> webnav = do_QueryInterface(root);
+  if (webnav) {
+    nsCOMPtr<nsIDOMDocument> doc;
+    webnav->GetDocument(getter_AddRefs(doc));
+    nsCOMPtr<nsINode> node = do_QueryInterface(doc);
+    if (node)
+      node->NodePrincipal()->GetURI(aURI);
+  }
+
+  if (!*aURI)
+    return NS_ERROR_NULL_POINTER;
+
+  // all done!
   return NS_OK;
 }
 

@@ -38,4 +38,5 @@
 
 add_makefiles "
   extensions/cookie/Makefile
+  extensions/cookie/test/Makefile
 "
