@@ -1040,8 +1040,11 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       else
         aPart = CBP_DROPFRAME;
 
-      PRBool isOpen = CheckBooleanAttr(aFrame, nsWidgetAtoms::open);
-      if (isOpen) {
+      if (IsDisabled(aFrame)) {
+        aState = TS_DISABLED;
+      } else if (IsReadOnly(aFrame)) {
+        aState = TS_NORMAL;
+      } else if (CheckBooleanAttr(aFrame, nsWidgetAtoms::open)) {
         aState = TS_ACTIVE;
       } else {
         PRInt32 eventState = GetContentState(aFrame, aWidgetType);

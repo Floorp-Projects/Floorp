@@ -45,21 +45,10 @@
 #include "nsIDeviceContext.h"
 #include "nsSystemFontsBeOS.h"
 
-#define DEFAULT_PIXEL_FONT_SIZE 16.0f
-
 nsSystemFontsBeOS::nsSystemFontsBeOS()
   : mDefaultFontName(NS_LITERAL_STRING("sans-serif"))
   , mMenuFontName(NS_LITERAL_STRING("sans-serif"))
   , mCaptionFontName(NS_LITERAL_STRING("sans-serif"))
-  , mDefaultFontStyle(FONT_STYLE_NORMAL, FONT_WEIGHT_NORMAL,
-                 DEFAULT_PIXEL_FONT_SIZE, NS_LITERAL_CSTRING(""),
-                 0.0f, PR_TRUE, PR_FALSE)
-  , mMenuFontStyle(FONT_STYLE_NORMAL, FONT_WEIGHT_NORMAL,
-               DEFAULT_PIXEL_FONT_SIZE, NS_LITERAL_CSTRING(""),
-               0.0f, PR_TRUE, PR_FALSE)
-  , mCaptionFontStyle(FONT_STYLE_NORMAL, FONT_WEIGHT_NORMAL,
-               DEFAULT_PIXEL_FONT_SIZE, NS_LITERAL_CSTRING(""),
-               0.0f, PR_TRUE, PR_FALSE)
 {
   menu_info info;
   get_menu_info(&info);

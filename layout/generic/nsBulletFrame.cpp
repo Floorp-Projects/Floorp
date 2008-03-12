@@ -120,6 +120,18 @@ nsBulletFrame::GetType() const
   return nsGkAtoms::bulletFrame;
 }
 
+PRBool
+nsBulletFrame::IsEmpty()
+{
+  return IsSelfEmpty();
+}
+
+PRBool
+nsBulletFrame::IsSelfEmpty() 
+{
+  return GetStyleList()->mListStyleType == NS_STYLE_LIST_STYLE_NONE;
+}
+
 NS_IMETHODIMP
 nsBulletFrame::DidSetStyleContext()
 {

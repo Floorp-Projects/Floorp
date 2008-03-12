@@ -1421,6 +1421,9 @@ FeedProcessor.prototype = {
   // The XMLReader will throw sensible exceptions if these get called
   // out of order.
   onStartRequest: function FP_onStartRequest(request, context) {
+    var channel = request.QueryInterface(Ci.nsIChannel);
+    if (channel)
+      channel.contentType = "application/xml";
     this._reader.onStartRequest(request, context);
   },
 

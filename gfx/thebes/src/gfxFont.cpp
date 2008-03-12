@@ -873,6 +873,15 @@ gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, PRUint32 aFlags)
     return textRun.forget();
 }
 
+#define DEFAULT_PIXEL_FONT_SIZE 16.0f
+
+gfxFontStyle::gfxFontStyle() :
+    style(FONT_STYLE_NORMAL), systemFont(PR_TRUE), familyNameQuirks(PR_FALSE),
+    weight(FONT_WEIGHT_NORMAL), size(DEFAULT_PIXEL_FONT_SIZE),
+    langGroup(NS_LITERAL_CSTRING("x-western")), sizeAdjust(0.0f)
+{
+}
+
 gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, gfxFloat aSize,
                            const nsACString& aLangGroup,
                            float aSizeAdjust, PRPackedBool aSystemFont,

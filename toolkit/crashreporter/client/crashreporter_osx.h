@@ -86,7 +86,7 @@
 - (void)showErrorUI:(const std::string&)dumpfile;
 - (void)showReportInfo;
 - (void)maybeSubmitReport;
-- (void)closeMeDown;
+- (void)closeMeDown:(id)unused;
 
 - (IBAction)submitReportClicked:(id)sender;
 - (IBAction)viewReportClicked:(id)sender;

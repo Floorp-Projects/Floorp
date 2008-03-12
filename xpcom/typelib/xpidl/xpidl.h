@@ -275,4 +275,7 @@ check_native(TreeState *state);
 void
 printlist(FILE *outfile, GSList *slist);
 
+gboolean
+is_method_scriptable(IDL_tree method_tree, IDL_tree ident);
+
 #endif /* __xpidl_h */
