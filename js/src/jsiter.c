@@ -720,7 +720,7 @@ JSObject *
 js_NewGenerator(JSContext *cx, JSStackFrame *fp)
 {
     JSObject *obj;
-    uintN argc, nargs, nvars, depth, nslots;
+    uintN argc, nargs, nvars, nslots;
     JSGenerator *gen;
     jsval *newsp;
 
@@ -733,8 +733,7 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     argc = fp->argc;
     nargs = JS_MAX(argc, fp->fun->nargs);
     nvars = fp->nvars;
-    depth = fp->script->depth;
-    nslots = 2 + nargs + nvars + 2 * depth;
+    nslots = 2 + nargs + nvars + fp->script->depth;
 
     /* Allocate obj's private data struct. */
     gen = (JSGenerator *)
@@ -795,7 +794,7 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     gen->frame.pc = fp->pc;
 
     /* Allocate generating pc and operand stack space. */
-    gen->frame.spbase = gen->frame.sp = newsp + depth;
+    gen->frame.spbase = gen->frame.sp = newsp;
 
     /* Copy remaining state (XXX sharp* and xml* should be local vars). */
     gen->frame.sharpDepth = 0;
