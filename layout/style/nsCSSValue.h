@@ -138,7 +138,7 @@ public:
   explicit nsCSSValue(nsCSSUnit aUnit = eCSSUnit_Null)
     : mUnit(aUnit)
   {
-    NS_ASSERTION(aUnit <= eCSSUnit_System_Font, "not a valueless unit");
+    NS_ASSERTION(aUnit <= eCSSUnit_Dummy, "not a valueless unit");
   }
 
   nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit) NS_HIDDEN;
