@@ -2321,6 +2321,22 @@ function BrowserOnCommand(event) {
           }
         }
       }
+      else if (ot == errorDoc.getElementById('ignoreWarningButton')) {
+        // Allow users to override and continue through to the site,
+        // but add a notify bar as a reminder, so that they don't lose
+        // track after, e.g., tab switching.
+        gBrowser.loadURIWithFlags(content.location.href,
+                                  nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER,
+                                  null, null, null);
+        var notificationBox = gBrowser.getNotificationBox();
+        notificationBox.appendNotification(
+          errorDoc.title, /* Re-use the error page's title, e.g. "Reported Web Forgery!" */
+          "blocked-badware-page",
+          "chrome://global/skin/icons/blacklist_favicon.png",
+          notificationBox.PRIORITY_CRITICAL_HIGH,
+          null
+        );
+      }
     }
 }
 
