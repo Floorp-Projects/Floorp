@@ -146,6 +146,11 @@ NS_IMETHODIMP
 nsCommonWidget::DispatchEvent(nsGUIEvent *aEvent,
                               nsEventStatus &aStatus)
 {
+#ifdef DEBUG
+    debug_DumpEvent(stdout, aEvent->widget, aEvent,
+                    nsCAutoString("something"), 0);
+#endif
+
     aStatus = nsEventStatus_eIgnore;
 
     // send it to the standard callback
