@@ -454,6 +454,36 @@
     </implementation>
 
     <handlers>
+      <handler event="DOMMenuItemActive"><![CDATA[
+        var node = event.target;
+        if (node.parentNode != this)
+          return;
+
+#ifdef XP_MACOSX
+        // XXXschonfeld: The following check is a temporary hack
+        // until bug 420033 is resolved.
+        while (node) {
+          if (node.id == "bookmarksMenuPopup" || node.id == "goPopup")
+            return;
+
+          node = node.parentNode;
+        }
+#endif
+
+        if (window.XULBrowserWindow) {
+          var nodeItem = event.target.node;
+          if (nodeItem && PlacesUtils.nodeIsURI(nodeItem))
+            window.XULBrowserWindow.setOverLink(nodeItem.uri, null);
+        }
+      ]]></handler>
+      <handler event="DOMMenuItemInactive"><![CDATA[
+        var node = event.target;
+        if (node.parentNode != this)
+          return;
+
+        if (window.XULBrowserWindow)
+          window.XULBrowserWindow.setOverLink("", null);
+      ]]></handler>
       <handler event="draggesture" action="if (event.target.node) nsDragAndDrop.startDrag(event, this);"/>
       <handler event="dragdrop" action="nsDragAndDrop.drop(event, this);"/>
       <handler event="dragover" action="nsDragAndDrop.dragOver(event, this);"/>
