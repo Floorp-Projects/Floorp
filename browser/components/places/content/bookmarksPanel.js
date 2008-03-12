@@ -38,7 +38,6 @@
 function init() {
   document.getElementById("bookmarks-view").place =
     "place:queryType=1&folder=" + window.top.PlacesUtils.allBookmarksFolderId;
-  document.getElementById("search-box").focus();
 }
 
 function searchBookmarks(aSearchString) {
@@ -51,3 +50,8 @@ function searchBookmarks(aSearchString) {
                       PlacesUtils.unfiledBookmarksFolderId,
                       PlacesUtils.toolbarFolderId]);
 }
+
+window.addEventListener("SidebarFocused",
+                        function()
+                          document.getElementById("search-box").focus(),
+                        false);
