@@ -748,13 +748,9 @@ MAKEFILES_accessible="
   accessible/src/mac/Makefile
   accessible/build/Makefile
 "
+
 MAKEFILES_zlib="
   modules/zlib/standalone/Makefile
-"
-
-MAKEFILES_libbz2="
-  modules/libbz2/Makefile
-  modules/libbz2/src/Makefile
 "
 
 MAKEFILES_libmar="
@@ -805,7 +801,6 @@ add_makefiles "
   $MAKEFILES_libpr0n
   $MAKEFILES_accessible
   $MAKEFILES_zlib
-  $MAKEFILES_libbz2
   $MAKEFILES_libmar
 "
 
@@ -976,6 +971,13 @@ if [ ! "$SYSTEM_ZLIB" ]; then
   add_makefiles "
     modules/zlib/Makefile
     modules/zlib/src/Makefile
+  "
+fi
+
+if [ ! "$SYSTEM_BZ2" ]; then
+  add_makefiles "
+    modules/libbz2/Makefile
+    modules/libbz2/src/Makefile
   "
 fi
 
