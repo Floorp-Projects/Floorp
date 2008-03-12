@@ -1638,8 +1638,10 @@ moz_gtk_downarrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
     ensure_button_arrow_widget();
     style = gButtonArrowWidget->style;
 
-    calculate_arrow_rect(gButtonArrowWidget, rect, &arrow_rect,
-                         GTK_TEXT_DIR_LTR);
+    arrow_rect.x = rect->x + 1 + XTHICKNESS(style);
+    arrow_rect.y = rect->y + 1 + YTHICKNESS(style);
+    arrow_rect.width = MAX(1, rect->width - (arrow_rect.x - rect->x) * 2);
+    arrow_rect.height = MAX(1, rect->height - (arrow_rect.y - rect->y) * 2);
 
     TSOffsetStyleGCs(style, arrow_rect.x, arrow_rect.y);
     gtk_paint_arrow(style, drawable, state_type, shadow_type, cliprect,
@@ -2695,19 +2697,6 @@ moz_gtk_get_tab_scroll_arrow_size(gint* width, gint* height)
                          NULL);
 
     *height = *width = arrow_size;
-
-    return MOZ_GTK_SUCCESS;
-}
-
-gint
-moz_gtk_get_downarrow_size(gint* width, gint* height)
-{
-    GtkRequisition requisition;
-    ensure_button_arrow_widget();
-
-    gtk_widget_size_request(gButtonArrowWidget, &requisition);
-    *width = requisition.width;
-    *height = requisition.height;
 
     return MOZ_GTK_SUCCESS;
 }
