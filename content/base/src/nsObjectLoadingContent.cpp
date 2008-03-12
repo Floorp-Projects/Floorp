@@ -359,6 +359,9 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
     return NS_BINDING_ABORTED;
   }
 
+  // We're done with the classifier
+  mClassifier = nsnull;
+
   AutoNotifier notifier(this, PR_TRUE);
 
   if (!IsSuccessfulRequest(aRequest)) {
@@ -804,6 +807,10 @@ nsObjectLoadingContent::OnChannelRedirect(nsIChannel *aOldChannel,
     return NS_BINDING_ABORTED;
   }
 
+  if (mClassifier) {
+    mClassifier->OnRedirect(aOldChannel, aNewChannel);
+  }
+
   mChannel = aNewChannel;
   return NS_OK;
 }
@@ -964,6 +971,12 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
   // possibly-loading channel should be aborted.
   if (mChannel) {
     LOG(("OBJLC [%p]: Cancelling existing load\n", this));
+
+    if (mClassifier) {
+      mClassifier->Cancel();
+      mClassifier = nsnull;
+    }
+
     // These three statements are carefully ordered:
     // - onStopRequest should get a channel whose status is the same as the
     //   status argument
@@ -1224,6 +1237,13 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
   rv = chan->AsyncOpen(this, nsnull);
   if (NS_SUCCEEDED(rv)) {
     LOG(("OBJLC [%p]: Channel opened.\n", this));
+
+    rv = CheckClassifier(chan);
+    if (NS_FAILED(rv)) {
+      chan->Cancel(rv);
+      return rv;
+    }
+
     mChannel = chan;
     mType = eType_Loading;
   }
@@ -1633,6 +1653,26 @@ nsObjectLoadingContent::Instantiate(nsIObjectFrame* aFrame,
   LOG(("OBJLC [%p]: Calling [%p]->Instantiate(<%s>, %p)\n", this, aFrame,
        typeToUse.get(), aURI));
   return aFrame->Instantiate(typeToUse.get(), aURI);
+}
+
+nsresult
+nsObjectLoadingContent::CheckClassifier(nsIChannel *aChannel)
+{
+  nsresult rv;
+  nsCOMPtr<nsIChannelClassifier> classifier =
+    do_CreateInstance(NS_CHANNELCLASSIFIER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = classifier->Start(aChannel);
+  if (rv == NS_ERROR_FACTORY_NOT_REGISTERED) {
+    // no URI classifier, ignore this
+    return NS_OK;
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mClassifier = classifier;
+
+  return NS_OK;
 }
 
 /* static */ PRBool

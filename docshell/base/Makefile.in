@@ -114,6 +114,7 @@ XPIDLSRCS	= \
 		nsIEditorDocShell.idl		\
 		nsIWebPageDescriptor.idl	\
 		nsIURIClassifier.idl		\
+		nsIChannelClassifier.idl	\
 		nsIDownloadHistory.idl \
 		$(NULL)
 
