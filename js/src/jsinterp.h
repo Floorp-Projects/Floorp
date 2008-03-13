@@ -49,11 +49,6 @@
 
 JS_BEGIN_EXTERN_C
 
-typedef struct JSFrameRegs {
-    jsbytecode      *pc;            /* program counter */
-    jsval           *sp;            /* stack pointer */
-} JSFrameRegs;
-
 /*
  * JS stack frame, may be allocated on the C stack by native callers.  Always
  * allocated on cx->stackPool for calls from the interpreter to an interpreted
@@ -65,7 +60,8 @@ typedef struct JSFrameRegs {
  * with well-known slots, if possible.
  */
 struct JSStackFrame {
-    JSFrameRegs     *regs;
+    jsval           *sp;            /* stack pointer */
+    jsbytecode      *pc;            /* program counter */
     jsval           *spbase;        /* operand stack base */
     JSObject        *callobj;       /* lazily created Call object */
     JSObject        *argsobj;       /* lazily created arguments object */
@@ -95,7 +91,7 @@ struct JSStackFrame {
 
 typedef struct JSInlineFrame {
     JSStackFrame    frame;          /* base struct */
-    JSFrameRegs     callerRegs;     /* parent's frame registers */
+    jsval           *rvp;           /* ptr to caller's return value slot */
     void            *mark;          /* mark before inline frame */
     void            *hookData;      /* debugger call hook data */
     JSVersion       callerVersion;  /* dynamic version of calling script */
