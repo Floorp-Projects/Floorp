@@ -87,6 +87,7 @@
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
 #include "nsWhitespaceTokenizer.h"
+#include "nsAttrName.h"
 
 #ifdef NS_DEBUG
 #include "nsIFrameDebug.h"
@@ -1966,10 +1967,16 @@ NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
     }
     else if (*aRole == nsIAccessibleRole::ROLE_LISTBOX) {
       // A listbox inside of a combo box needs a special role because of ATK mapping to menu
-      nsCOMPtr<nsIAccessible> parent;
-      GetParent(getter_AddRefs(parent));
-      if (parent && Role(parent) == nsIAccessibleRole::ROLE_COMBOBOX) {
+      nsCOMPtr<nsIAccessible> possibleCombo;
+      GetParent(getter_AddRefs(possibleCombo));
+      if (possibleCombo && Role(possibleCombo) == nsIAccessibleRole::ROLE_COMBOBOX) {
         *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
+      }
+      else {   // Check to see if combo owns the listbox instead
+        GetAccessibleRelated(nsIAccessibleRelation::RELATION_NODE_CHILD_OF, getter_AddRefs(possibleCombo));
+        if (possibleCombo && Role(possibleCombo) == nsIAccessibleRole::ROLE_COMBOBOX) {
+          *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
+        }
       }
     }
     else if (*aRole == nsIAccessibleRole::ROLE_OPTION) {
@@ -2018,26 +2025,14 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
   if (nsAccUtils::GetID(content, id)) {
     attributes->SetStringProperty(NS_LITERAL_CSTRING("id"), id, oldValueUnused);
   }
+  
+  nsAutoString _class;
+  if (content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::_class, _class))
+    nsAccUtils::SetAccAttr(attributes, nsAccessibilityAtoms::_class, _class);
 
   nsAutoString xmlRoles;
   if (content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::role, xmlRoles)) {
     attributes->SetStringProperty(NS_LITERAL_CSTRING("xml-roles"),  xmlRoles, oldValueUnused);          
-  }
-
-  // Make sure to keep these two arrays in sync
-  char *ariaPropertyString[] = { "live", "channel", "atomic", "relevant", "datatype", "level",
-                             "posinset", "setsize", "sort", "grab", "dropeffect"};
-  nsIAtom *ariaPropertyEnum[] = { nsAccessibilityAtoms::aria_live, nsAccessibilityAtoms::aria_channel, nsAccessibilityAtoms::aria_atomic, nsAccessibilityAtoms::aria_relevant,
-                                     nsAccessibilityAtoms::aria_datatype, nsAccessibilityAtoms::aria_level, nsAccessibilityAtoms::aria_posinset, nsAccessibilityAtoms::aria_setsize,
-                                     nsAccessibilityAtoms::aria_sort, nsAccessibilityAtoms::aria_grab, nsAccessibilityAtoms::aria_dropeffect};
-  NS_ASSERTION(NS_ARRAY_LENGTH(ariaPropertyString) == NS_ARRAY_LENGTH(ariaPropertyEnum),
-               "ARIA attributes and object property name arrays out of sync");
-  for (PRUint32 index = 0; index < NS_ARRAY_LENGTH(ariaPropertyString); index ++) {
-    nsAutoString value;
-    if (content->GetAttr(kNameSpaceID_None, ariaPropertyEnum[index], value)) {
-      ToLowerCase(value);
-      attributes->SetStringProperty(nsDependentCString(ariaPropertyString[index]), value, oldValueUnused);    
-    }
   }
 
   nsCOMPtr<nsIAccessibleValue> supportsValue = do_QueryInterface(static_cast<nsIAccessible*>(this));
@@ -2054,25 +2049,44 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
   // Get container-foo computed live region properties based on the closest container with
   // the live region attribute
   nsAutoString atomic, live, relevant, channel, busy;
-  while (content) {
+  nsIContent *ancestor = content;
+  while (ancestor) {
     if (relevant.IsEmpty() &&
-        content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_relevant, relevant))
+        ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_relevant, relevant))
       attributes->SetStringProperty(NS_LITERAL_CSTRING("container-relevant"), relevant, oldValueUnused);
     if (live.IsEmpty() &&
-        content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_live, live))
+        ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_live, live))
       attributes->SetStringProperty(NS_LITERAL_CSTRING("container-live"), live, oldValueUnused);
     if (channel.IsEmpty() &&
-        content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_channel, channel))
+        ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_channel, channel))
       attributes->SetStringProperty(NS_LITERAL_CSTRING("container-channel"), channel, oldValueUnused);
     if (atomic.IsEmpty() &&
-        content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_atomic, atomic))
+        ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_atomic, atomic))
       attributes->SetStringProperty(NS_LITERAL_CSTRING("container-atomic"), atomic, oldValueUnused);
     if (busy.IsEmpty() &&
-        content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_busy, busy))
+        ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_busy, busy))
       attributes->SetStringProperty(NS_LITERAL_CSTRING("container-busy"), busy, oldValueUnused);
-    content = content->GetParent();
+    ancestor = ancestor->GetParent();
   }
 
+  PRUint32 role = Role(this);
+  if (role == nsIAccessibleRole::ROLE_CHECKBUTTON ||
+      role == nsIAccessibleRole::ROLE_PUSHBUTTON ||
+      role == nsIAccessibleRole::ROLE_MENUITEM ||
+      role == nsIAccessibleRole::ROLE_LISTITEM ||
+      role == nsIAccessibleRole::ROLE_OUTLINEITEM ||
+      content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_checked)) {
+    // Might be checkable -- checking role & ARIA attribute first is faster than getting state
+    PRUint32 state = 0;
+    GetFinalState(&state, nsnull);
+    if (state & nsIAccessibleStates::STATE_CHECKABLE) {
+      // No official state for checkable, so use object attribute to expose that
+      attributes->SetStringProperty(NS_LITERAL_CSTRING("checkable"), NS_LITERAL_STRING("true"),
+                                    oldValueUnused);
+    }
+  }
+
+  // Level/setsize/posinset
   if (!nsAccUtils::HasAccGroupAttrs(attributes)) {
     // The role of an accessible can be pointed by ARIA attribute but ARIA
     // posinset, level, setsize may be skipped. Therefore we calculate here
@@ -2080,7 +2094,6 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
 
     // If accessible is invisible we don't want to calculate group ARIA
     // attributes for it.
-    PRUint32 role = Role(this);
     if ((role == nsIAccessibleRole::ROLE_LISTITEM ||
         role == nsIAccessibleRole::ROLE_MENUITEM ||
         role == nsIAccessibleRole::ROLE_RADIOBUTTON ||
@@ -2133,6 +2146,25 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
 
       nsAccUtils::SetAccGroupAttrs(attributes, groupLevel, positionInGroup,
                                    setSize);
+    }
+  }
+
+  // Expose all ARIA attributes
+  PRUint32 numAttrs = content->GetAttrCount();
+  for (PRUint32 count = 0; count < numAttrs; count ++) {
+    const nsAttrName *attr = content->GetAttrNameAt(count);
+    if (attr && attr->NamespaceEquals(kNameSpaceID_None)) {
+      nsIAtom *attrAtom = attr->Atom();
+      const char *attrStr;
+      attrAtom->GetUTF8String(&attrStr);
+      if (PL_strncmp(attrStr, "aria-", 5)) 
+        continue; // Not ARIA
+      if (!nsAccUtils::IsARIAPropForObjectAttr(attrAtom))
+        continue; // No need to expose obj attribute -- will be exposed some other way
+      nsAutoString value;
+      if (content->GetAttr(kNameSpaceID_None, attrAtom, value)) {
+        attributes->SetStringProperty(nsDependentCString(attrStr + 5), value, oldValueUnused);
+      }
     }
   }
 
@@ -2308,7 +2340,6 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (role == nsIAccessibleRole::ROLE_ENTRY ||
-      role == nsIAccessibleRole::ROLE_PASSWORD_TEXT ||
       role == nsIAccessibleRole::ROLE_COMBOBOX) {
 
     nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
@@ -2327,6 +2358,10 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
       PRBool isMultiLine = content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::aria_multiline,
                                                 nsAccessibilityAtoms::_true, eCaseMatters);
       *aExtraState |= isMultiLine ? nsIAccessibleStates::EXT_STATE_MULTI_LINE : nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
+      if (0 == (*aState & nsIAccessibleStates::STATE_READONLY))
+        *aExtraState |= nsIAccessibleStates::EXT_STATE_EDITABLE; // Not readonly
+      else  // We're readonly: make sure editable state wasn't set by impl class
+        *aExtraState &= ~nsIAccessibleStates::EXT_STATE_EDITABLE;
     }
   }
 
@@ -2386,13 +2421,6 @@ nsAccessible::GetARIAState()
       MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap6) &&
       MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap7)) {
     MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap8);
-  }
-
-  if (ariaState & nsIAccessibleStates::STATE_UNAVAILABLE) {
-    // Disabled elements are not selectable or focusable, even if disabled
-    // via DHTML accessibility disabled property
-    ariaState &= ~(nsIAccessibleStates::STATE_SELECTABLE |
-                   nsIAccessibleStates::STATE_FOCUSABLE);
   }
 
   return ariaState;

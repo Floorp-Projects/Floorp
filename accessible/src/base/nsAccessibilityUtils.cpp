@@ -907,3 +907,29 @@ nsAccUtils::GetRoleMapEntry(nsIDOMNode *aNode)
   return &nsARIAMap::gLandmarkRoleMap;
 }
 
+PRBool
+nsAccUtils::IsARIAPropForObjectAttr(nsIAtom *aAtom)
+{
+  return aAtom != nsAccessibilityAtoms::aria_activedescendant &&
+         aAtom != nsAccessibilityAtoms::aria_checked &&
+         aAtom != nsAccessibilityAtoms::aria_controls &&
+         aAtom != nsAccessibilityAtoms::aria_describedby &&
+         aAtom != nsAccessibilityAtoms::aria_disabled &&
+         aAtom != nsAccessibilityAtoms::aria_expanded &&
+         aAtom != nsAccessibilityAtoms::aria_flowto &&
+         aAtom != nsAccessibilityAtoms::aria_invalid &&
+         aAtom != nsAccessibilityAtoms::aria_haspopup &&
+         aAtom != nsAccessibilityAtoms::aria_labelledby &&
+         aAtom != nsAccessibilityAtoms::aria_multiline &&
+         aAtom != nsAccessibilityAtoms::aria_multiselectable &&
+         aAtom != nsAccessibilityAtoms::aria_owns &&
+         aAtom != nsAccessibilityAtoms::aria_pressed &&
+         aAtom != nsAccessibilityAtoms::aria_readonly &&
+         aAtom != nsAccessibilityAtoms::aria_relevant &&
+         aAtom != nsAccessibilityAtoms::aria_required &&
+         aAtom != nsAccessibilityAtoms::aria_selected &&
+         aAtom != nsAccessibilityAtoms::aria_valuemax &&
+         aAtom != nsAccessibilityAtoms::aria_valuemin &&
+         aAtom != nsAccessibilityAtoms::aria_valuenow &&
+         aAtom != nsAccessibilityAtoms::aria_valuetext;
+}
