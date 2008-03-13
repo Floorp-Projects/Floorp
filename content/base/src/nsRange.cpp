@@ -345,11 +345,10 @@ void
 nsRange::ParentChainChanged(nsIContent *aContent)
 {
   NS_ASSERTION(mRoot == aContent, "Wrong ParentChainChanged notification?");
-  nsINode* newRoot = mRoot;
-  nsINode* tmp;
-  while ((tmp = newRoot->GetNodeParent())) {
-    newRoot = tmp;
-  }
+  nsINode* newRoot = IsValidBoundary(mStartParent);
+  NS_ASSERTION(newRoot, "No valid boundary or root found!");
+  NS_ASSERTION(newRoot == IsValidBoundary(mEndParent),
+               "Start parent and end parent give different root!");
   DoSetRange(mStartParent, mStartOffset, mEndParent, mEndOffset, newRoot);
 }
 
