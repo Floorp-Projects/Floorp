@@ -1522,3 +1522,8 @@ GK_ATOM(Chinese, "zh-CN")
 GK_ATOM(Taiwanese, "zh-TW")
 GK_ATOM(HongKongChinese, "zh-HK")
 GK_ATOM(Unicode, "x-unicode")
+
+// Names for editor transactions
+GK_ATOM(TypingTxnName, "Typing")
+GK_ATOM(IMETxnName, "IME")
+GK_ATOM(DeleteTxnName, "Deleting")
