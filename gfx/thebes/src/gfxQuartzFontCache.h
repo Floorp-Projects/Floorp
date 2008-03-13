@@ -72,9 +72,11 @@ class MacOSFontEntry
 public:
     THEBES_INLINE_DECL_REFCOUNTING(MacOSFontEntry)
 
+    friend class gfxQuartzFontCache;
+
     // initialize with Apple-type weight [1..14]
     MacOSFontEntry(const nsAString& aPostscriptName, PRInt32 aAppleWeight, PRUint32 aTraits, 
-                    MacOSFamilyEntry *aFamily);  
+                    MacOSFamilyEntry *aFamily);
 
     const nsString& Name() { return mPostscriptName; }
     const nsString& FamilyName();
@@ -85,13 +87,14 @@ public:
     PRBool IsItalicStyle();
     PRBool IsBold();
 
-    ATSUFontID GetFontID();                   
+    ATSUFontID GetFontID();
     nsresult ReadCMAP();
     inline PRBool TestCharacterMap(PRUint32 aCh) {
         if ( !mCmapInitialized ) ReadCMAP();
         return mCharacterMap.test(aCh);
     }
-        
+
+    MacOSFamilyEntry* FamilyEntry() { return mFamily; }
 protected:
     nsString mPostscriptName;
     PRInt32 mWeight; // CSS-type value: [1..9] which map to 100, 200, ..., 900
@@ -115,8 +118,11 @@ class MacOSFamilyEntry
 public:
     THEBES_INLINE_DECL_REFCOUNTING(MacOSFamilyEntry)
 
+    friend class gfxQuartzFontCache;
+
     MacOSFamilyEntry(nsString &aName) :
-        mName(aName), mOtherFamilyNamesInitialized(PR_FALSE), mHasOtherFamilyNames(PR_FALSE)
+        mName(aName), mOtherFamilyNamesInitialized(PR_FALSE), mHasOtherFamilyNames(PR_FALSE),
+        mIsBadUnderlineFontFamily(PR_FALSE)
     {}
   
     virtual ~MacOSFamilyEntry() {}
@@ -144,7 +150,10 @@ public:
     
     // search for a specific face using the Postscript name
     MacOSFontEntry* FindFont(const nsString& aPostscriptName);
-    
+
+    // whether this font family is in "bad" underline offset blacklist.
+    PRBool IsBadUnderlineFontFamily() { return mIsBadUnderlineFontFamily != 0; }
+
 protected:
     
     // add font entries into array that match specified traits, returned in array listed by weight
@@ -160,6 +169,7 @@ protected:
     nsTArray<nsRefPtr<MacOSFontEntry> >  mAvailableFonts;
     PRPackedBool mOtherFamilyNamesInitialized;
     PRPackedBool mHasOtherFamilyNames;
+    PRPackedBool mIsBadUnderlineFontFamily;
 };
 
 // special-case situation where specific faces need to be treated as separate font family
@@ -242,7 +252,10 @@ private:
     
     // commonly used fonts for which the name table should be loaded at startup
     void PreloadNamesList();
-    
+
+    // initialize the MacOSFamilyEntry::mIsBadUnderlineFontFamily from pref.
+    void InitBadUnderlineList();
+
     // eliminate faces which have the same ATSUI id
     void EliminateDuplicateFaces(const nsAString& aFamilyName);
                                                              

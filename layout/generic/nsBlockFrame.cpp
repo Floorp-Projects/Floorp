@@ -5884,12 +5884,12 @@ nsBlockFrame::IsVisibleInSelection(nsISelection* aSelection)
 
 /* virtual */ void
 nsBlockFrame::PaintTextDecorationLine(nsIRenderingContext& aRenderingContext, 
-                                      nsPoint aPt,
+                                      const nsPoint& aPt,
                                       nsLineBox* aLine,
                                       nscolor aColor, 
-                                      nscoord aOffset, 
-                                      nscoord aAscent, 
-                                      nscoord aSize,
+                                      gfxFloat aOffset, 
+                                      gfxFloat aAscent, 
+                                      gfxFloat aSize,
                                       const PRUint8 aDecoration) 
 {
   NS_ASSERTION(!aLine->IsBlock(), "Why did we ask for decorations on a block?");
@@ -5929,13 +5929,11 @@ nsBlockFrame::PaintTextDecorationLine(nsIRenderingContext& aRenderingContext,
     nsRefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
     gfxPoint pt(PresContext()->AppUnitsToGfxUnits(start + aPt.x),
                 PresContext()->AppUnitsToGfxUnits(aLine->mBounds.y + aPt.y));
-    gfxSize size(PresContext()->AppUnitsToGfxUnits(width),
-                 PresContext()->AppUnitsToGfxUnits(aSize));
+    gfxSize size(PresContext()->AppUnitsToGfxUnits(width), aSize);
     nsCSSRendering::PaintDecorationLine(
       ctx, aColor, pt, size,
       PresContext()->AppUnitsToGfxUnits(aLine->GetAscent()),
-      PresContext()->AppUnitsToGfxUnits(aOffset),
-      aDecoration, NS_STYLE_BORDER_STYLE_SOLID, isRTL);
+      aOffset, aDecoration, NS_STYLE_BORDER_STYLE_SOLID, isRTL);
   }
 }
 
