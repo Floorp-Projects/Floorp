@@ -1275,8 +1275,8 @@ if test "$GNU_CC"; then
     # -Wconversion - complained when char's or short's were used a function args
     # -Wshadow - removed because it generates more noise than help --pete
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -W -Wno-unused -Wpointer-arith"
-    if test "$CPU_ARCH" != "ia64"; then
-        # only use -Wcast-align for non-ia64, it's noisy on that platform
+    if test "$CPU_ARCH" != "ia64" && test "$CPU_ARCH" != "sparc"; then
+        # don't use -Wcast-align on ia64 or sparc, it's noisy on those platforms
         _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wcast-align"
     fi
 
@@ -1306,8 +1306,8 @@ if test "$GNU_CXX"; then
     CXXFLAGS="$CXXFLAGS -fno-strict-aliasing"
     # Turn on GNU specific features
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wconversion -Wpointer-arith -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor"
-    if test "$CPU_ARCH" != "ia64"; then
-        # only use -Wcast-align for non-ia64, it's noisy on that platform
+    if test "$CPU_ARCH" != "ia64" && test "$CPU_ARCH" != "sparc"; then
+        # don't use -Wcast-align on ia64 or sparc, it's noisy on those platforms
         _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wcast-align"
     fi
 
