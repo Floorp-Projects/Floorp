@@ -1006,7 +1006,7 @@
           if (aPopup._built)
             return;
 
-          PlacesUtils.cleanPlacesPopup(aPopup);
+          PlacesUIUtils.cleanPlacesPopup(aPopup);
 
           var resultNode = aPopup._resultNode;
           if (!resultNode.containerOpen)
