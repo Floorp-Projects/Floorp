@@ -5854,32 +5854,7 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
       Redraw(aState, &newRect);
     }
 
-    metrics->mBlockMinSize.height = 0;
-    // ok we need the max ascent of the items on the line. So to do this
-    // ask the block for its line iterator. Get the max ascent.
-    nsCOMPtr<nsILineIterator> lines = do_QueryInterface(static_cast<nsIFrame*>(this));
-    if (lines) 
-    {
-      metrics->mBlockMinSize.height = 0;
-      int count = 0;
-      nsIFrame* firstFrame = nsnull;
-      PRInt32 framesOnLine;
-      nsRect lineBounds;
-      PRUint32 lineFlags;
-
-      do {
-         lines->GetLine(count, &firstFrame, &framesOnLine, lineBounds, &lineFlags);
-
-         if (lineBounds.height > metrics->mBlockMinSize.height)
-           metrics->mBlockMinSize.height = lineBounds.height;
-
-         count++;
-      } while(firstFrame);
-    } else {
-      metrics->mBlockMinSize.height = desiredSize.height;
-    }
-
-    metrics->mBlockPrefSize.height = metrics->mBlockMinSize.height;
+    metrics->mBlockMinSize.height = metrics->mBlockPrefSize.height = newRect.height;
 
     if (desiredSize.ascent == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
       if (!nsLayoutUtils::GetFirstLineBaseline(this, &metrics->mBlockAscent))

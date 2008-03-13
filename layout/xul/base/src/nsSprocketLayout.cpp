@@ -230,6 +230,8 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
   // we have 150 pixels left over.  |clientRect| is going to hold a width of 150 and
   // is going to be adjusted based off the value of the PACK property.  If flexible
   // objects are in the box, then the two rects will match.
+  // XXX this should really be called "frameBounds" or something, and we
+  // really only need the size
   nsRect originalClientRect(clientRect);
 
   // The frame state contains cached knowledge about our box, such as our orientation
@@ -285,6 +287,11 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
     }
   }
 
+  // Grow the frame size now if necessary
+  NS_ASSERTION(clientRect.TopLeft() == originalClientRect.TopLeft(),
+               "clientRect moved??");
+  originalClientRect.UnionRectIncludeEmpty(originalClientRect, clientRect);
+
   // With the sizes computed, now it's time to lay out our children.
   PRBool needsRedraw = PR_FALSE;
   PRBool finished;
@@ -298,10 +305,6 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
   nscoord y = 0;
   nscoord origX = 0;
   nscoord origY = 0;
-
-  // |childResized| lets us know if a child changed its size after we attempted to lay it out at
-  // the specified size.  If this happens, we usually have to do another pass.
-  PRBool childResized = PR_FALSE;
 
   // |passes| stores our number of passes.  If for any reason we end up doing more than, say, 10
   // passes, we assert to indicate that something is seriously screwed up.
@@ -549,9 +552,6 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
                      flexes,
                      finished);
 
-        // We note that a child changed size, which means that another pass will be required.
-        childResized = PR_TRUE;
-
         // Now that a child resized, it's entirely possible that OUR rect is too small.  Now we
         // ensure that |originalClientRect| is grown to accommodate the size of |clientRect|.
         if (clientRect.width > originalClientRect.width || clientRect.height > originalClientRect.height) {
@@ -644,25 +644,23 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
     delete toDelete;
   }
 
-  if (childResized) {
-    // See if one of our children forced us to get bigger
-    nsRect tmpClientRect(originalClientRect);
-    nsMargin bp(0,0,0,0);
-    aBox->GetBorderAndPadding(bp);
-    tmpClientRect.Inflate(bp);
+  // See if one of our children forced us to get bigger
+  nsRect tmpClientRect(originalClientRect);
+  nsMargin bp(0,0,0,0);
+  aBox->GetBorderAndPadding(bp);
+  tmpClientRect.Inflate(bp);
 
-    if (tmpClientRect.width > originalSize.width || tmpClientRect.height > originalSize.height)
-    {
-      // if it did reset our bounds.
-      nsRect bounds(aBox->GetRect());
-      if (tmpClientRect.width > originalSize.width)
-        bounds.width = tmpClientRect.width;
+  if (tmpClientRect.width > originalSize.width || tmpClientRect.height > originalSize.height)
+  {
+    // if it did reset our bounds.
+    nsRect bounds(aBox->GetRect());
+    if (tmpClientRect.width > originalSize.width)
+      bounds.width = tmpClientRect.width;
 
-      if (tmpClientRect.height > originalSize.height)
-        bounds.height = tmpClientRect.height;
+    if (tmpClientRect.height > originalSize.height)
+      bounds.height = tmpClientRect.height;
 
-      aBox->SetBounds(aState, bounds);
-    }
+    aBox->SetBounds(aState, bounds);
   }
 
   // Because our size grew, we now have to readjust because of box packing.  Repack
