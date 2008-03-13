@@ -62,6 +62,8 @@ var gEditItemOverlay = {
       this._hiddenRows = aInfo.hiddenRows;
     else
       this._hiddenRows.splice(0);
+    // force-read-only
+    this._readOnly = aInfo && aInfo.forceReadOnly;
   },
 
   _showHideRows: function EIO__showHideRows() {
@@ -89,6 +91,17 @@ var gEditItemOverlay = {
 
   /**
    * Initialize the panel
+   * @param aItemId
+   *        a places-itemId of a bookmark, folder or a live bookmark.
+   * @param [optional] aInfo
+   *        JS object which stores additional info for the panel
+   *        initialization. The following properties may bet set:
+   *        * hiddenRows (Strings array): list of rows to be hidden regardless
+   *          of the item edited. Possible values: "title", "location",
+   *          "description", "keyword", "loadInSidebar", "feedLocation",
+   *          "siteLocation", folderPicker"
+   *        * forceReadOnly - set this flag to initialize the panel to its
+   *          read-only (view) mode even if the given item is editable.
    */
   initPanel: function EIO_initPanel(aItemId, aInfo) {
     const bms = PlacesUtils.bookmarks;
@@ -103,10 +116,8 @@ var gEditItemOverlay = {
     if (this._itemType == Ci.nsINavBookmarksService.TYPE_BOOKMARK) {
       this._uri = bms.getBookmarkURI(this._itemId);
       this._isLivemark = false;
-      if (PlacesUtils.livemarks.isLivemark(container))
-        this._readOnly = true;
-      else
-        this._readOnly = false;
+      if (!this._readOnly) // If readOnly wasn't forced through aInfo
+        this._readOnly = PlacesUtils.livemarks.isLivemark(container);
 
       this._initTextField("locationField", this._uri.spec);
       this._initTextField("tagsField",
@@ -126,7 +137,8 @@ var gEditItemOverlay = {
                                                   LOAD_IN_SIDEBAR_ANNO);
     }
     else {
-      this._readOnly = false;
+      if (!this._readOnly) // If readOnly wasn't forced through aInfo
+        this._readOnly = false;
       this._isLivemark = PlacesUtils.livemarks.isLivemark(this._itemId);
       if (this._isLivemark) {
         var feedURI = PlacesUtils.livemarks.getFeedURI(this._itemId);

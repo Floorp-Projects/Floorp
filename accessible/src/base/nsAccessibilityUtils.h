@@ -363,6 +363,9 @@ public:
                                                     PRUint32 aAttrNum = 1,
                                                     nsIContent *aExcludeContent = nsnull,
                                                     nsIAtom *aTagType = nsAccessibilityAtoms::label);
+  
+  // Return PR_TRUE if the ARIA property should always be exposed as an object attribute
+  static PRBool IsARIAPropForObjectAttr(nsIAtom *aAtom);
 };
 
 #endif
