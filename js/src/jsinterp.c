@@ -2877,9 +2877,11 @@ interrupt:
                         js_SetVersion(cx, currentVersion);
                 }
 
-                /* Store the return value in the caller's operand frame. */
+                /* Restore caller's registers. */
                 regs = ifp->callerRegs;
-                regs.sp += 1 - 2 - ifp->frame.argc;
+
+                /* Store the return value in the caller's operand frame. */
+                regs.sp -= (ptrdiff_t) (1 + ifp->frame.argc);
                 regs.sp[-1] = fp->rval;
 
                 /* Restore cx->fp and release the inline frame's space. */
