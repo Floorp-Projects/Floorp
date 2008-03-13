@@ -3662,7 +3662,7 @@ nsTextFrame::UnionTextDecorationOverflow(
     decorations.mDecorations |= NS_STYLE_TEXT_DECORATION_UNDERLINE;
   }
   nsLineLayout::CombineTextDecorations(aPresContext, decorations.mDecorations,
-                  this, *aOverflowRect, nscoord(NS_round(aTextMetrics.mAscent)),
+                  this, *aOverflowRect, NSToCoordRound(aTextMetrics.mAscent),
                   ratio);
 }
 
@@ -3678,7 +3678,10 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
   if (!decorations.HasDecorationlines())
     return;
 
-  gfxFont::Metrics fontMetrics = GetFontMetrics(aProvider.GetFontGroup());
+  gfxFont* firstFont = aProvider.GetFontGroup()->GetFontAt(0);
+  if (!firstFont)
+    return; // OOM
+  const gfxFont::Metrics& fontMetrics = firstFont->GetMetrics();
   gfxFloat app = aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
 
   // XXX aFramePt is in AppUnits, shouldn't it be nsFloatPoint?
@@ -3695,7 +3698,7 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
   }
   if (decorations.HasUnderline()) {
     size.height = fontMetrics.underlineSize;
-    gfxFloat offset = fontMetrics.underlineOffset;
+    gfxFloat offset = aProvider.GetFontGroup()->GetUnderlineOffset();
     nsCSSRendering::PaintDecorationLine(
       aCtx, decorations.mUnderColor, pt, size, ascent, offset,
       NS_STYLE_TEXT_DECORATION_UNDERLINE, NS_STYLE_BORDER_STYLE_SOLID,
@@ -4050,7 +4053,12 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
     sdptr = sdptr->mNext;
   }
 
-  gfxFont::Metrics decorationMetrics = GetFontMetrics(aProvider.GetFontGroup());
+  gfxFont* firstFont = aProvider.GetFontGroup()->GetFontAt(0);
+  if (!firstFont)
+    return; // OOM
+  gfxFont::Metrics decorationMetrics(firstFont->GetMetrics());
+  decorationMetrics.underlineOffset =
+    aProvider.GetFontGroup()->GetUnderlineOffset();
 
   SelectionIterator iterator(selectedChars, contentOffset, contentLength,
                              aProvider, mTextRun);
@@ -4378,7 +4386,7 @@ nsTextFrame::SetSelected(nsPresContext* aPresContext,
     found = PR_TRUE;
   }
 
- nsFrameState oldState = mState;
+  nsFrameState oldState = mState;
   if ( aSelected )
     AddStateBits(NS_FRAME_SELECTED_CONTENT);
   else

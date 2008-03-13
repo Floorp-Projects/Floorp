@@ -186,7 +186,7 @@ var gContentPane = {
     const kFontSizeFmtVariable      = "font.size.variable.%LANG%";
 
     var prefs = [{ format   : aIsSerif ? kFontNameFmtSerif : kFontNameFmtSansSerif,
-                   type     : "unichar",
+                   type     : "fontname",
                    element  : "defaultFont",
                    fonttype : aIsSerif ? "serif" : "sans-serif" },
                  { format   : aIsSerif ? kFontNameListFmtSerif : kFontNameListFmtSansSerif,

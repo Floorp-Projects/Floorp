@@ -293,6 +293,11 @@
               return this._branch
                          .getComplexValue(this.name, Components.interfaces.nsISupportsString)
                          .data;
+            case "fontname":
+              var family = this._branch
+                               .getComplexValue(this.name, Components.interfaces.nsISupportsString)
+                               .data;
+              return FontBuilder.enumerator.getStandardFamilyName(family);
             case "file":
               var f = this._branch
                           .getComplexValue(this.name, Components.interfaces.nsILocalFile);
@@ -327,6 +332,7 @@
             break;
           case "string":
           case "unichar":
+          case "fontname":
             var iss = Components.classes["@mozilla.org/supports-string;1"]
                                 .createInstance(Components.interfaces.nsISupportsString);
             iss.data = val;

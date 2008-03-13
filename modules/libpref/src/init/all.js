@@ -835,6 +835,10 @@ pref("font.language.group",                 "chrome://global/locale/intl.propert
 
 pref("font.mathfont-family", "STIXNonUnicode, STIXSize1, STIXGeneral, Cambria Math, Standard Symbols L, DejaVu Sans");
 
+// Some CJK fonts have bad underline offset, their CJK character glyphs are overlapped (or adjoined)  to its underline.
+// These fonts are ignored the underline offset, instead of it, the underline is lowered to bottom of its em descent.
+pref("font.blacklist.underline_offset", "FangSong,Gulim,GulimChe,MingLiU,MingLiU-ExtB,MingLiU_HKSCS,MingLiU-HKSCS-ExtB,MS Gothic,MS Mincho,MS PGothic,MS PMincho,MS UI Gothic,PMingLiU,PMingLiU-ExtB,SimHei,SimSun,SimSun-ExtB,Hei,Kai,Apple LiGothic,Apple LiSung,Osaka");
+
 pref("images.dither", "auto");
 pref("security.directory",              "");
 
@@ -2390,6 +2394,6 @@ pref("signon.debug",                        false); // logs to Error Console
 
 // Zoom prefs
 pref("browser.zoom.full", false);
-pref("zoom.minPercent", 50);
+pref("zoom.minPercent", 30);
 pref("zoom.maxPercent", 300);
-pref("toolkit.zoomManager.zoomValues", ".5,.75,1,1.25,1.5,2,3");
+pref("toolkit.zoomManager.zoomValues", ".3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2,2.4,3");

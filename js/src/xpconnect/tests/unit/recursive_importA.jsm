@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-EXPORTED_SYMBOLS = ["foo", "bar"]
+var EXPORTED_SYMBOLS = ["foo", "bar"];
 
 function foo() {
   return "foo";

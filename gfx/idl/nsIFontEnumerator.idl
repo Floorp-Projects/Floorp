@@ -39,7 +39,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(a6cf9114-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(924d98d9-3518-4cb4-8708-c74fe8e3ec3c)]
 interface nsIFontEnumerator : nsISupports
 {
   /**
@@ -83,4 +83,12 @@ interface nsIFontEnumerator : nsISupports
    * return true if font list is changed
    */
   boolean updateFontList();
+
+  /**
+   * get the standard family name on the system from given family
+   * @param  aName family name which may be alias
+   * @return the standard family name on the system, if given name does not
+   *         exist, returns empty string
+   */
+  wstring getStandardFamilyName(in wstring aName);
 };

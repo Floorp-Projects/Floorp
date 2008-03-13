@@ -331,8 +331,7 @@
                onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
             <hbox align="center">
               <stack id="page-proxy-stack"
-                     onclick="PageProxyClickHandler(event);"
-                     tooltiptext="&proxyIcon.tooltip;">
+                     onclick="PageProxyClickHandler(event);">
                 <image id="urlbar-throbber" busy="false"/>
                 <image id="page-proxy-favicon" validate="never"
                        ondraggesture="PageProxyDragGesture(event);"

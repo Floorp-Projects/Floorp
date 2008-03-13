@@ -122,9 +122,12 @@ gfxWindowsPlatform::FontEnumProc(const ENUMLOGFONTEXW *lpelfe,
 
     nsRefPtr<FontEntry> fe;
     if (!thisp->mFonts.Get(name, &fe)) {
-        fe = new FontEntry(nsDependentString(logFont.lfFaceName), (PRUint16)fontType);
+        fe = new FontEntry(nsDependentString(logFont.lfFaceName));
         thisp->mFonts.Put(name, fe);
     }
+
+    if (metrics.ntmFlags & NTM_TYPE1)
+        fe->mIsType1 = PR_TRUE;
 
     // mark the charset bit
     fe->mCharset[metrics.tmCharSet] = 1;
@@ -134,11 +137,6 @@ gfxWindowsPlatform::FontEnumProc(const ENUMLOGFONTEXW *lpelfe,
 
     // store the default font weight
     fe->mDefaultWeight = metrics.tmWeight;
-
-    if (metrics.ntmFlags & NTM_TYPE1) {
-        fe->mSymbolFont = PR_TRUE;
-        fe->mUnicodeFont = PR_FALSE;
-    }
 
     fe->mFamily = logFont.lfPitchAndFamily & 0xF0;
     fe->mPitch = logFont.lfPitchAndFamily & 0x0F;
@@ -213,8 +211,10 @@ gfxWindowsPlatform::FontGetCMapDataProc(nsStringHashKey::KeyType aKey,
         nsresult rv = ReadCMAP(hdc, aFontEntry);
 
         if (NS_FAILED(rv)) {
+            if (aFontEntry->mIsType1)
+                aFontEntry->mSymbolFont = PR_TRUE;
             aFontEntry->mUnicodeFont = PR_FALSE;
-            //printf("%s failed to get cmap\n", NS_ConvertUTF16toUTF8(aFontEntry->mName).get());
+            //printf("%d, %s failed to get cmap\n", aFontEntry->mIsType1, NS_ConvertUTF16toUTF8(aFontEntry->mName).get());
         }
 
         SelectObject(hdc, oldFont);
@@ -364,7 +364,43 @@ gfxWindowsPlatform::UpdateFontList()
     mCodepointsWithNoFonts.SetRange(0,0x1f);     // C0 controls
     mCodepointsWithNoFonts.SetRange(0x7f,0x9f);  // C1 controls
 
+    InitBadUnderlineList();
+
     return NS_OK;
+}
+
+static PRBool SimpleResolverCallback(const nsAString& aName, void* aClosure)
+{
+    nsString* result = static_cast<nsString*>(aClosure);
+    result->Assign(aName);
+    return PR_FALSE;
+}
+
+void
+gfxWindowsPlatform::InitBadUnderlineList()
+{
+    nsAutoTArray<nsAutoString, 10> blacklist;
+    gfxFontUtils::GetPrefsFontList("font.blacklist.underline_offset", blacklist);
+    PRUint32 numFonts = blacklist.Length();
+    for (PRUint32 i = 0; i < numFonts; i++) {
+        PRBool aborted;
+        nsAutoString resolved;
+        ResolveFontName(blacklist[i], SimpleResolverCallback, &resolved, aborted);
+        if (resolved.IsEmpty())
+            continue;
+        FontEntry* fe = FindFontEntry(resolved);
+        if (!fe)
+            continue;
+        fe->mIsBadUnderlineFont = 1;
+    }
+}
+
+nsresult
+gfxWindowsPlatform::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName)
+{
+    aFamilyName.Truncate();
+    PRBool aborted;
+    return ResolveFontName(aFontName, SimpleResolverCallback, &aFamilyName, aborted);
 }
 
 struct ResolveData {

@@ -51,12 +51,19 @@ Autocomplete Frecency Tests
 
 */
 
-var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-              getService(Ci.nsINavHistoryService);
-var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-            getService(Ci.nsINavBookmarksService);
-var prefs = Cc["@mozilla.org/preferences-service;1"].
-            getService(Ci.nsIPrefBranch);
+try {
+  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+                getService(Ci.nsINavHistoryService);
+  var bhist = histsvc.QueryInterface(Ci.nsIBrowserHistory);
+  var ghist = Cc["@mozilla.org/browser/global-history;2"].
+              getService(Ci.nsIGlobalHistory2);
+  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+              getService(Ci.nsINavBookmarksService);
+  var prefs = Cc["@mozilla.org/preferences-service;1"].
+              getService(Ci.nsIPrefBranch);
+} catch(ex) {
+  do_throw("Could not get services\n");
+}
 
 function add_visit(aURI, aVisitDate, aVisitType) {
   var isRedirect = aVisitType == histsvc.TRANSITION_REDIRECT_PERMANENT ||
@@ -132,7 +139,8 @@ bucketPrefs.every(function(bucket) {
         }
         else {
           matchTitle = searchTerm + "UnvisitedTyped";
-          histsvc.setPageDetails(calculatedURI, matchTitle, 1, false, true);
+          ghist.setPageTitle(calculatedURI, matchTitle);
+          bhist.markPageAsTyped(calculatedURI);
         }
       }
     }

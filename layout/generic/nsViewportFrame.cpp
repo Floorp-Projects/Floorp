@@ -262,7 +262,7 @@ ViewportFrame::Reflow(nsPresContext*          aPresContext,
   // Reflow the main content first so that the placeholders of the
   // fixed-position frames will be in the right places on an initial
   // reflow.
-  nsRect kidRect(0,0,aReflowState.availableWidth,aReflowState.availableHeight);
+  nscoord kidHeight = 0;
 
   nsresult rv = NS_OK;
   
@@ -284,10 +284,11 @@ ViewportFrame::Reflow(nsPresContext*          aPresContext,
       kidReflowState.SetComputedHeight(aReflowState.availableHeight);
       rv = ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
                        0, 0, 0, aStatus);
-      kidRect.width = kidDesiredSize.width;
-      kidRect.height = kidDesiredSize.height;
+      kidHeight = kidDesiredSize.height;
 
       FinishReflowChild(kidFrame, aPresContext, nsnull, kidDesiredSize, 0, 0, 0);
+    } else {
+      kidHeight = mFrames.FirstChild()->GetSize().height;
     }
   }
 
@@ -300,7 +301,7 @@ ViewportFrame::Reflow(nsPresContext*          aPresContext,
   // return our child's intrinsic size.
   aDesiredSize.height = aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE
                           ? aReflowState.availableHeight
-                          : kidRect.height;
+                          : kidHeight;
 
   // Make a copy of the reflow state and change the computed width and height
   // to reflect the available space for the fixed items

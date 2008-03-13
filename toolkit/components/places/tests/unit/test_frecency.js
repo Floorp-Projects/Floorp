@@ -143,7 +143,8 @@ function ensure_results(uris, searchTerm)
 
 // Get history service
 try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
+  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+                getService(Ci.nsINavHistoryService);
   var bhist = histsvc.QueryInterface(Ci.nsIBrowserHistory);
   var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
                 getService(Ci.nsITaggingService);
@@ -153,8 +154,6 @@ try {
 
 function setCountDate(aURI, aCount, aDate)
 {
-  // Set the visit count and date for a uri
-  histsvc.setPageDetails(aURI, aURI, aCount, false, true);
   // We need visits so that frecency can be computed over multiple visits
   for (let i = 0; i < aCount; i++)
     histsvc.addVisit(aURI, aDate, null, histsvc.TRANSITION_TYPED, false, 0);

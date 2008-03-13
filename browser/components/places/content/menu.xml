@@ -590,7 +590,7 @@
             // just add to the end.
             if (aParentPopup._endMarker != -1)
               aParentPopup.insertBefore(element,
-                                        aParentPopup.childNodes[this._endMarker++]);
+                                        aParentPopup.childNodes[aParentPopup._endMarker++]);
             else
               aParentPopup.appendChild(element);
           }

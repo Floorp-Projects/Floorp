@@ -75,6 +75,8 @@ public:
                              gfxPlatform::FontResolverCallback aCallback,
                              void *aClosure, PRBool& aAborted);
 
+    nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
+
 protected:
     static gfxFontconfigUtils* sUtils;
 

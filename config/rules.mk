@@ -1325,6 +1325,9 @@ $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.m Makefile Makefile.in
 %.i: %.c
 	$(CC) -C -E $(COMPILE_CFLAGS) $(_VPATH_SRCS) > $*.i
 
+%.i: %.mm
+	$(CCC) -C -E $(COMPILE_CXXFLAGS) $(COMPILE_CMMFLAGS) $(_VPATH_SRCS) > $*.i
+
 %.res: %.rc
 	@echo Creating Resource file: $@
 ifeq ($(OS_ARCH),OS2)

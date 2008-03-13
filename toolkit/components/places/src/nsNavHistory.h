@@ -343,7 +343,7 @@ public:
                                    nsCOMArray<nsNavHistoryQuery>* aQueries,
                                    nsNavHistoryQueryOptions** aOptions);
 
-  // Import-friendly version of SetPageDetails + AddVisit.
+  // Import-friendly version of AddVisit.
   // This method adds a page to history along with a single last visit.
   // It is an error to call this method if aURI might already be in history.
   // The given aVisitCount should include the given last-visit date.

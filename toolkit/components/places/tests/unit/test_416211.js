@@ -54,6 +54,7 @@ Test showing bookmark title when matching the tag for bug 416211
 try {
   var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
                 getService(Ci.nsINavHistoryService);
+  var bhist = histsvc.QueryInterface(Ci.nsIBrowserHistory);
   var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
               getService(Ci.nsINavBookmarksService);
   var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
@@ -75,8 +76,8 @@ function add_visit(aURI, aVisitDate, aVisitType) {
 var theTag = "superTag";
 var url = uri("http://www.foobar.com/");
 var title = "Cool Title";
-histsvc.setPageDetails(url, theTag, 1, false, true);
-add_visit(url, Date.now(), Ci.nsINavHistoryService.TRANSITION_LINK);
+bhist.addPageWithDetails(url, theTag, Date.now());
+
 tagssvc.tagURI(url, [theTag]);
 bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder, url, bmsvc.DEFAULT_INDEX, title);
 
