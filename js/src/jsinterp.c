@@ -3252,10 +3252,10 @@ interrupt:
         JSScopeProperty *sprop_;                                              \
         uint32 sample_ = rt->gcNumber;                                        \
         if (pcoff >= 0)                                                       \
-            GET_ATOM_FROM_BYTECODE(script, pc, pcoff, atom_);                 \
+            GET_ATOM_FROM_BYTECODE(script, regs.pc, pcoff, atom_);            \
         else                                                                  \
             atom_ = rt->atomState.lengthAtom;                                 \
-        if (JOF_OPMODE(*pc) == JOF_NAME) {                                    \
+        if (JOF_OPMODE(*regs.pc) == JOF_NAME) {                               \
             ok = js_FindProperty(cx, ATOM_TO_JSID(atom_), &obj_, &pobj_,      \
                                  &prop_);                                     \
         } else {                                                              \
