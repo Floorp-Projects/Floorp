@@ -157,6 +157,7 @@ ACCESSIBILITY_ATOM(anonid, "anonid") // Used for ID's in XBL
 ACCESSIBILITY_ATOM(contenteditable, "contenteditable")
 ACCESSIBILITY_ATOM(control, "control")
 ACCESSIBILITY_ATOM(disabled, "disabled")
+ACCESSIBILITY_ATOM(_class, "class")
 ACCESSIBILITY_ATOM(cycles, "cycles") // used for XUL cycler attribute
 ACCESSIBILITY_ATOM(curpos, "curpos") // XUL
 ACCESSIBILITY_ATOM(data, "data")
