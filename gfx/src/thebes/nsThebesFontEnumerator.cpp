@@ -128,3 +128,27 @@ nsThebesFontEnumerator::UpdateFontList(PRBool *_retval)
     *_retval = PR_FALSE; // always return false for now
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsThebesFontEnumerator::GetStandardFamilyName(const PRUnichar *aName,
+                                              PRUnichar **aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+    NS_ENSURE_ARG_POINTER(aName);
+
+    nsAutoString name(aName);
+    if (name.IsEmpty()) {
+        *aResult = nsnull;
+        return NS_OK;
+    }
+
+    nsAutoString family;
+    nsresult rv = gfxPlatform::GetPlatform()->
+        GetStandardFamilyName(nsDependentString(aName), family);
+    if (NS_FAILED(rv) || family.IsEmpty()) {
+        *aResult = nsnull;
+        return NS_OK;
+    }
+    *aResult = ToNewUnicode(family);
+    return NS_OK;
+}
