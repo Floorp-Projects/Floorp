@@ -85,12 +85,14 @@ _TEST_FILES =	\
 		test_bug386575.xhtml \
 		test_bug388019.html \
 		test_bug394057.html \
-		test_bug396024.html \
 		test_bug399284.html \
 		test_bug399951.html \
 		test_bug404209.xhtml \
 		test_bug416896.html \
 		$(NULL)
+# test_bug396024.html is currently disabled because it interacts badly with
+# the "You can't print-preview while the page is loading" dialog.
+# (See bug 407080)
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
