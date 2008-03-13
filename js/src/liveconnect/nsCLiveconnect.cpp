@@ -187,7 +187,6 @@ AutoPushJSContext::AutoPushJSContext(nsISupports* aSecuritySupports,
             {
                 mFrame.fun = fun;
                 mFrame.script = JS_GetFunctionScript(cx, fun);
-                mFrame.pc = mFrame.script->code;
                 mFrame.callee = JS_GetFunctionObject(fun);
                 mFrame.scopeChain = JS_GetParent(cx, mFrame.callee);
                 mFrame.down = cx->fp;

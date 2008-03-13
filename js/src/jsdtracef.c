@@ -74,8 +74,8 @@ jsdtrace_linenumber(JSContext *cx, JSStackFrame *fp)
 {
     while (fp && fp->script == NULL)
         fp = fp->down;
-    return (fp && fp->script && fp->pc)
-           ? js_PCToLineNumber(cx, fp->script, fp->pc)
+    return (fp && fp->regs)
+           ? js_PCToLineNumber(cx, fp->script, fp->regs->pc)
            : -1;
 }
 
@@ -131,6 +131,7 @@ jsdtrace_function_name(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
 {
     JSAtom *atom;
     JSScript *script;
+    JSFrameRegs *regs;
     jsbytecode *pc;
     char *name;
 
@@ -140,8 +141,8 @@ jsdtrace_function_name(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
             return dempty;
 
         script = fp->down->script;
-        pc = fp->down->pc;
-        if (!script || !pc)
+        regs = fp->down->regs;
+        if (!regs)
             return dempty;
 
         /*
@@ -150,10 +151,11 @@ jsdtrace_function_name(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
          * anonymous function was invoked. First handle call ops by recovering
          * the generating pc for the callee expression at argv[-2].
          */
+        pc = regs->pc;
         switch ((JSOp) *pc) {
           case JSOP_CALL:
           case JSOP_EVAL:
-            JS_ASSERT(fp->argv == fp->down->sp - (int)GET_ARGC(pc));
+            JS_ASSERT(fp->argv == fp->down->regs->sp - (int)GET_ARGC(pc));
 
             pc = (jsbytecode *) fp->argv[-2 - (int)script->depth];
 
