@@ -231,7 +231,7 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
     mMetrics.spaceWidth = GetCharWidth(' ', &glyphID);
     mSpaceGlyph = glyphID;
 
-    SanitizeMetrics(&mMetrics);
+    SanitizeMetrics(&mMetrics, mFontEntry->FamilyEntry()->IsBadUnderlineFontFamily());
 
 #if 0
     fprintf (stderr, "Font: %p size: %f (fixed: %d)", this, size, gfxQuartzFontCache::SharedFontCache()->IsFixedPitch(aFontID));
@@ -376,6 +376,12 @@ PRBool gfxAtsuiFont::TestCharacterMap(PRUint32 aCh) {
     return mFontEntry->TestCharacterMap(aCh);
 }
 
+MacOSFontEntry*
+gfxAtsuiFont::GetFontEntry()
+{
+    return mFontEntry.get();
+}
+
 /**
  * Look up the font in the gfxFont cache. If we don't find it, create one.
  * In either case, add a ref and return it ---
@@ -425,8 +431,18 @@ gfxAtsuiFontGroup::gfxAtsuiFontGroup(const nsAString& families,
             mFonts.AppendElement(font);
         }
     }
-    
+
     mPageLang = gfxPlatform::GetFontPrefLangFor(mStyle.langGroup.get());
+
+    for (PRUint32 i = 0; i < mFonts.Length(); ++i) {
+        gfxAtsuiFont* font = static_cast<gfxAtsuiFont*>(mFonts[i].get());
+        if (font->GetFontEntry()->FamilyEntry()->IsBadUnderlineFontFamily()) {
+            gfxFloat first = mFonts[0]->GetMetrics().underlineOffset;
+            gfxFloat bad = font->GetMetrics().underlineOffset;
+            mUnderlineOffset = PR_MIN(first, bad);
+            break;
+        }
+    }
 }
 
 PRBool

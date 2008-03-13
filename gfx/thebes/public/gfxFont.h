@@ -550,7 +550,8 @@ protected:
     nsAutoTArray<gfxGlyphExtents*,1> mGlyphExtentsArray;
 
     // some fonts have bad metrics, this method sanitize them.
-    void SanitizeMetrics(gfxFont::Metrics *aMetrics);
+    // if this font has bad underline offset, aIsBadUnderlineFont should be true.
+    void SanitizeMetrics(gfxFont::Metrics *aMetrics, PRBool aIsBadUnderlineFont);
 };
 
 class THEBES_API gfxTextRunFactory {
@@ -1453,10 +1454,27 @@ public:
 
     const nsString& GetFamilies() { return mFamilies; }
 
+    // This returns the preferred underline for this font group.
+    // Some CJK fonts have wrong underline offset in its metrics.
+    // If this group has such "bad" font, each platform's gfxFontGroup initialized mUnderlineOffset.
+    // The value should be lower value of first font's metrics and the bad font's metrics.
+    // Otherwise, this returns from first font's metrics.
+    gfxFloat GetUnderlineOffset() {
+        if (mUnderlineOffset == 0)
+            mUnderlineOffset = GetFontAt(0)->GetMetrics().underlineOffset;
+        return mUnderlineOffset;
+    }
+
 protected:
     nsString mFamilies;
     gfxFontStyle mStyle;
     nsTArray< nsRefPtr<gfxFont> > mFonts;
+    gfxFloat mUnderlineOffset;
+
+    // Init this font group's font metrics. If there no bad fonts, you don't need to call this.
+    // But if there are one or more bad fonts which have bad underline offset,
+    // you should call this with the *first* bad font.
+    void InitMetricsForBadFont(gfxFont* aBadFont);
 
     /* If aResolveGeneric is true, then CSS/Gecko generic family names are
      * replaced with preferred fonts.

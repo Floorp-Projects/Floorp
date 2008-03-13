@@ -90,6 +90,8 @@ public:
 private:
     void Init();
 
+    void InitBadUnderlineList();
+
     static int CALLBACK FontEnumProc(const ENUMLOGFONTEXW *lpelfe,
                                      const NEWTEXTMETRICEXW *metrics,
                                      DWORD fontType, LPARAM data);

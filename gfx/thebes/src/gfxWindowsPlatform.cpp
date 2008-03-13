@@ -364,7 +364,35 @@ gfxWindowsPlatform::UpdateFontList()
     mCodepointsWithNoFonts.SetRange(0,0x1f);     // C0 controls
     mCodepointsWithNoFonts.SetRange(0x7f,0x9f);  // C1 controls
 
+    InitBadUnderlineList();
+
     return NS_OK;
+}
+
+static PRBool SimpleResolverCallback(const nsAString& aName, void* aClosure)
+{
+    nsString* result = static_cast<nsString*>(aClosure);
+    result->Assign(aName);
+    return PR_FALSE;
+}
+
+void
+gfxWindowsPlatform::InitBadUnderlineList()
+{
+    nsAutoTArray<nsAutoString, 10> blacklist;
+    gfxFontUtils::GetPrefsFontList("font.blacklist.underline_offset", blacklist);
+    PRUint32 numFonts = blacklist.Length();
+    for (PRUint32 i = 0; i < numFonts; i++) {
+        PRBool aborted;
+        nsAutoString resolved;
+        ResolveFontName(blacklist[i], SimpleResolverCallback, &resolved, aborted);
+        if (resolved.IsEmpty())
+            continue;
+        FontEntry* fe = FindFontEntry(resolved);
+        if (!fe)
+            continue;
+        fe->mIsBadUnderlineFont = 1;
+    }
 }
 
 struct ResolveData {
