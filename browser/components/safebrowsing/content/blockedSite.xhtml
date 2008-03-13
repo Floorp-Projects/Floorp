@@ -147,12 +147,40 @@
         el = document.getElementById("errorLongDescText_malware");
         el.parentNode.removeChild(el);
 
+        // Unhide clickthrough button
+        el = document.getElementById("ignoreWarningButton");
+        el.style.display = "-moz-box";
+        
         // Set sitename
         document.getElementById("phishing_sitename").textContent = getHostString();
         document.title = document.getElementById("errorTitleText_phishing")
                                  .innerHTML;
       }
     ]]></script>
+    <style type="text/css">
+      /* Style warning button to look like a small text link in the
+         bottom right. This is preferable to just using a text link
+         since there is already a mechanism in browser.js for trapping
+         oncommand events from unprivileged chrome pages (BrowserOnCommand).*/
+      #ignoreWarningButton {
+        -moz-appearance: none;
+        background: transparent;
+        border: none;
+        color: white;  /* Hard coded because netError.css forces this page's background to dark red */
+        text-decoration: underline;
+        margin: 0;
+        padding: 0;
+        position: relative;
+        top: 23px;
+        left: 20px;
+        font-size: smaller;
+        display: none; /* Hide the button by default */
+      }
+      
+      #ignoreWarning {
+        text-align: right;
+      }
+    </style>
   </head>
 
   <body dir="&locale.dir;">
@@ -186,6 +214,10 @@
           <xul:button xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                       id="reportButton" label="&safeb.palm.report.label;"/>
         </div>
+      </div>
+      <div id="ignoreWarning">
+        <xul:button xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                    id="ignoreWarningButton" label="&safeb.palm.decline.label;"/>
       </div>
     </div>
     <!--

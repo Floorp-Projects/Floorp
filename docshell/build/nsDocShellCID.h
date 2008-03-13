@@ -67,6 +67,15 @@
 #define NS_URICLASSIFIERSERVICE_CONTRACTID "@mozilla.org/uriclassifierservice"
 
 /**
+ * Class and contract ID for an nsIChannelClassifier implementation for
+ * checking a channel load against the URI classifier service.
+ */
+#define NS_CHANNELCLASSIFIER_CID \
+ { 0xce02d538, 0x0217, 0x47a3,{0xa5, 0x89, 0xb5, 0x17, 0x90, 0xfd, 0xd8, 0xce}}
+
+#define NS_CHANNELCLASSIFIER_CONTRACTID "@mozilla.org/channelclassifier"
+
+/**
  * An observer service topic that can be listened to to catch creation
  * of content browsing areas (both toplevel ones and subframes).  The
  * subject of the notification will be the nsIWebNavigation being

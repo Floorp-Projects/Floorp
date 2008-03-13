@@ -256,7 +256,7 @@ public:
     gfxQuartzFontCache *mFontCache;
 };
 
-void MacOSFamilyEntry::LocalizedName(nsString& aLocalizedName)
+void MacOSFamilyEntry::LocalizedName(nsAString& aLocalizedName)
 {
     // no other names ==> only one name, just return it
     if (!HasOtherFamilyNames()) {
@@ -656,7 +656,7 @@ MacOSFamilyEntry::ReadOtherFamilyNames(AddOtherFamilyNameFunctor& aOtherFamilyFu
 /* SingleFaceFamily */
 #pragma mark-
 
-void SingleFaceFamily::LocalizedName(nsString& aLocalizedName)
+void SingleFaceFamily::LocalizedName(nsAString& aLocalizedName)
 {
     MacOSFontEntry *fontEntry;
     
@@ -794,7 +794,8 @@ gfxQuartzFontCache::InitFontList()
     mCodepointsWithNoFonts.SetRange(0,0x1f);     // C0 controls
     mCodepointsWithNoFonts.SetRange(0x7f,0x9f);  // C1 controls
     mCodepointsWithNoFonts.set(0xfffd);          // unknown
-       
+
+    InitBadUnderlineList();
 }
 
 void 
@@ -857,12 +858,13 @@ gfxQuartzFontCache::InitSingleFaceList()
                     GenerateFontListKey(displayName, key);
 
                     // add only if doesn't exist already
-                    if (!mFontFamilies.GetWeak(key, &found)) {
+                    if (!(familyEntry = mFontFamilies.GetWeak(key, &found))) {
                         familyEntry = new SingleFaceFamily(displayName);
                         familyEntry->AddFontEntry(fontEntry);
                         mFontFamilies.Put(key, familyEntry);
                         PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontinit-singleface) family: %s, psname: %s\n", [display UTF8String], [faceName UTF8String]));
                     }
+                    fontEntry->mFamily = familyEntry;
                 }
             }
         }
@@ -943,6 +945,23 @@ gfxQuartzFontCache::EliminateDuplicateFaces(const nsAString& aFamilyName)
     }
 }
 
+void
+gfxQuartzFontCache::InitBadUnderlineList()
+{
+    nsAutoTArray<nsAutoString, 10> blacklist;
+    gfxFontUtils::GetPrefsFontList("font.blacklist.underline_offset", blacklist);
+    PRUint32 numFonts = blacklist.Length();
+    for (PRUint32 i = 0; i < numFonts; i++) {
+        PRBool found;
+        nsAutoString key;
+        GenerateFontListKey(blacklist[i], key);
+
+        MacOSFamilyEntry *familyEntry = mFontFamilies.GetWeak(key, &found);
+        if (familyEntry)
+            familyEntry->mIsBadUnderlineFontFamily = 1;
+    }
+}
+
 PRBool 
 gfxQuartzFontCache::ResolveFontName(const nsAString& aFontName, nsAString& aResolvedFontName)
 {
@@ -951,6 +970,57 @@ gfxQuartzFontCache::ResolveFontName(const nsAString& aFontName, nsAString& aReso
         aResolvedFontName = family->Name();
         return PR_TRUE;
     }
+    return PR_FALSE;
+}
+
+PRBool
+gfxQuartzFontCache::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName)
+{
+    MacOSFamilyEntry *family = FindFamily(aFontName);
+    if (family) {
+        family->LocalizedName(aFamilyName);
+        return PR_TRUE;
+    }
+
+    // Gecko 1.8 used Quickdraw font api's which produce a slightly different set of "family"
+    // names.  Try to resolve based on these names, in case this is stored in an old profile
+    // 1.8: "Futura", "Futura Condensed" ==> 1.9: "Futura
+    FMFont fmFont;
+
+    // convert of a NSString
+    NSString *fontName = GetNSStringForString(aFontName);
+
+    // name ==> family id ==> old-style FMFont
+    ATSFontFamilyRef fmFontFamily = ATSFontFamilyFindFromName((CFStringRef)fontName, kATSOptionFlagsDefault);
+    OSStatus err = FMGetFontFromFontFamilyInstance(fmFontFamily, 0, &fmFont, nsnull);
+    if (err != noErr || fmFont == kInvalidFont)
+        return PR_FALSE;
+
+    ATSFontRef atsFont = FMGetATSFontRefFromFont(fmFont);
+    if (!atsFont)
+        return PR_FALSE;
+
+    NSString *psname;
+
+    // now lookup the Postscript name
+    err = ATSFontGetPostScriptName(atsFont, kATSOptionFlagsDefault, (CFStringRef*) (&psname));
+    if (err != noErr)
+        return PR_FALSE;
+
+    // given an NSFont instance, Cocoa api's return the canonical family name
+    NSString *canonicalfamily = [[NSFont fontWithName:psname size:0.0] familyName];
+    [psname release];
+
+    nsAutoString familyName;
+
+    // lookup again using the canonical family name
+    GetStringForNSString(canonicalfamily, familyName);
+    family = FindFamily(familyName);
+    if (family) {
+        family->LocalizedName(aFamilyName);
+        return PR_TRUE;
+    }
+
     return PR_FALSE;
 }
 

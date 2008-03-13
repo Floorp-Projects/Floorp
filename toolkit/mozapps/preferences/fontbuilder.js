@@ -116,5 +116,18 @@ var FontBuilder = {
       }
     }
     aMenuList.appendChild(popup);    
+  },
+
+  getStandardFamilyName: function (aName) 
+  {
+    // XXX should return empty string on failure?
+    try {
+      var family = this.enumerator.getStandardFamilyName(aName);
+      if (!family)
+        return aName;
+      return family;
+    } catch (e) {
+      return aName;
+    }
   }
 };

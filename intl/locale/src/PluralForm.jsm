@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-EXPORTED_SYMBOLS = [ "PluralForm" ];
+var EXPORTED_SYMBOLS = [ "PluralForm" ];
 
 /**
  * This module provides the PluralForm object which contains a method to figure

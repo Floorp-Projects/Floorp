@@ -71,7 +71,7 @@ nsMIMEInfoUnix::LaunchDefaultWithFile(nsIFile *aFile)
   if (vfs) {
     nsCOMPtr<nsIGnomeVFSMimeApp> app;
     if (NS_SUCCEEDED(vfs->GetAppForMimeType(mType, getter_AddRefs(app))) && app)
-      return vfs->ShowURIForInput(nativePath);
+      return app->Launch(nativePath);
   }
 
   if (!mDefaultApplication)

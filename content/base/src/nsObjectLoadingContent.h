@@ -52,6 +52,7 @@
 #include "nsIChannelEventSink.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsIRunnable.h"
+#include "nsIChannelClassifier.h"
 
 struct nsAsyncInstantiateEvent;
 class  AutoNotifier;
@@ -304,6 +305,13 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     nsresult Instantiate(nsIObjectFrame* aFrame, const nsACString& aMIMEType, nsIURI* aURI);
 
     /**
+     * Check the channel load against the URI classifier service (if it
+     * exists).  The channel will be suspended until the classification is
+     * complete.
+     */
+    nsresult CheckClassifier(nsIChannel *aChannel);
+
+    /**
      * Whether to treat this content as a plugin, even though we can't handle
      * the type. This function impl should match the checks in the plugin host.
      * aContentType is the MIME type we ended up with.
@@ -378,6 +386,11 @@ class nsObjectLoadingContent : public nsImageLoadingContent
 
     // The data we were last asked to load
     nsCOMPtr<nsIURI>            mURI;
+
+    /**
+     * Suspends/resumes channels based on the URI classifier.
+     */
+    nsCOMPtr<nsIChannelClassifier> mClassifier;
 
     /**
      * Type of the currently-loaded content.

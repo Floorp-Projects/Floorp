@@ -654,7 +654,7 @@ gfxPangoFont::GetMetrics()
         mMetrics.subscriptOffset = mMetrics.xHeight;
     }
 
-    SanitizeMetrics(&mMetrics);
+    SanitizeMetrics(&mMetrics, PR_FALSE);
 
 #if 0
     //    printf("font name: %s %f %f\n", NS_ConvertUTF16toUTF8(mName).get(), GetStyle()->size, mAdjustedSize);

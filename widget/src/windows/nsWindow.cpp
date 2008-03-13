@@ -4346,16 +4346,15 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #ifndef WINCE
     case WM_MOUSELEAVE:
     {
-      // We use MINLONG | MINSHORT as the mouse position to make sure
-      // EventStateManager doesn't convert this EXIT message to
-      // a MOVE message (besides, WM_MOUSELEAVE doesn't have the position
-      // in lParam). 
-      // We also need to check mouse button states and put them in for
+      // We need to check mouse button states and put them in for
       // wParam.
       WPARAM mouseState = (GetKeyState(VK_LBUTTON) ? MK_LBUTTON : 0)
         | (GetKeyState(VK_MBUTTON) ? MK_MBUTTON : 0)
         | (GetKeyState(VK_RBUTTON) ? MK_RBUTTON : 0);
-      DispatchMouseEvent(NS_MOUSE_EXIT, mouseState, MINLONG | MINSHORT);
+      // Synthesize an event position because we don't get one from
+      // WM_MOUSELEAVE.
+      LPARAM pos = lParamToClient(::GetMessagePos());
+      DispatchMouseEvent(NS_MOUSE_EXIT, mouseState, pos);
     }
     break;
 #endif
@@ -5658,6 +5657,16 @@ PRBool nsWindow::OnResize(nsRect &aWindowRect)
   return PR_FALSE;
 }
 
+static PRBool IsTopLevelMouseExit(HWND aWnd)
+{
+  DWORD pos = ::GetMessagePos();
+  POINT mp;
+  mp.x = GET_X_LPARAM(pos);
+  mp.y = GET_Y_LPARAM(pos);
+  HWND mouseTopLevel = nsWindow::GetTopLevelHWND(::WindowFromPoint(mp));
+  return nsWindow::GetTopLevelHWND(aWnd) != mouseTopLevel;
+}
+
 //-------------------------------------------------------------------------
 //
 // Deal with all sort of mouse event
@@ -5762,6 +5771,9 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
   }
   else if (aEventType == NS_MOUSE_MOVE && !insideMovementThreshold) {
     gLastClickCount = 0;
+  }
+  else if (aEventType == NS_MOUSE_EXIT) {
+    event.exit = IsTopLevelMouseExit(mWnd) ? nsMouseEvent::eTopLevel : nsMouseEvent::eChild;
   }
   event.clickCount = gLastClickCount;
 

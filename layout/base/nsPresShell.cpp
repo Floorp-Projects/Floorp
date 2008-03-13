@@ -2489,14 +2489,17 @@ NS_IMETHODIMP
 PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 {
   NS_PRECONDITION(!mIsReflowing, "Shouldn't be in reflow here!");
+  NS_PRECONDITION(aWidth != NS_UNCONSTRAINEDSIZE,
+                  "shouldn't use unconstrained widths anymore");
   
   // If we don't have a root frame yet, that means we haven't had our initial
   // reflow... If that's the case, and aWidth or aHeight is unconstrained,
   // ignore them altogether.
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
 
-  if (!rootFrame &&
-      (aWidth == NS_UNCONSTRAINEDSIZE || aHeight == NS_UNCONSTRAINEDSIZE)) {
+  if (!rootFrame && aHeight == NS_UNCONSTRAINEDSIZE) {
+    // We can't do the work needed for SizeToContent without a root
+    // frame, and we want to return before setting the visible area.
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -2540,6 +2543,11 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     }
 
     batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+  }
+
+  if (aHeight == NS_UNCONSTRAINEDSIZE) {
+    mPresContext->SetVisibleArea(
+      nsRect(0, 0, aWidth, rootFrame->GetRect().height));
   }
 
   if (!mIsDestroying) {
