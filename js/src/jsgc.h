@@ -326,7 +326,7 @@ JS_STATIC_ASSERT(sizeof(JSGCDoubleCell) == sizeof(double));
 
 typedef struct JSGCDoubleArenaList {
     JSGCArenaInfo   *first;             /* first allocated GC arena */
-    uint8           *nextDoubleFlags;   /* bitmask with flags to check for free
+    jsbitmap        *nextDoubleFlags;   /* bitmask with flags to check for free
                                            things */
 } JSGCDoubleArenaList;
 
