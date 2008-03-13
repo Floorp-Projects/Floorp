@@ -912,9 +912,9 @@ public:
      * S_OK - things succeeded
      * GDI_ERROR - things failed to shape.  Might want to try again after calling DisableShaping()
      */
-    HRESULT Shape() {
-        HRESULT rv;
 
+    HRESULT ShapeUniscribe() {
+        HRESULT rv;
         HDC shapeDC = nsnull;
 
         const PRUnichar *str = mAlternativeString ? mAlternativeString : mRangeString;
@@ -960,18 +960,32 @@ public:
                 shapeDC = mDC;
                 continue;
             }
-#ifdef DEBUG_pavlov
-            if (rv == USP_E_SCRIPT_NOT_IN_FONT) {
-                ScriptGetCMap(mDC, mCurrentFont->ScriptCache(), str, mRangeString, 0, mGlyphs.Elements());
-                PRUnichar foo[LF_FACESIZE+1];
-                GetTextFaceW(mDC, LF_FACESIZE, foo);
-                printf("bah\n");
-            }
-            else if (FAILED(rv))
-                printf("%d\n", rv);
-#endif
+
             return rv;
         }
+    }
+
+    HRESULT ShapeGDI() {
+        SelectFont();
+
+        mGlyphs.SetLength(mRangeLength);
+        mNumGlyphs = mRangeLength;
+        GetGlyphIndicesW(mDC, mRangeString, mRangeLength,
+                         (WORD*) mGlyphs.Elements(),
+                         GGI_MARK_NONEXISTING_GLYPHS);
+
+        for (PRUint32 i = 0; i < mItemLength; ++i)
+            mClusters[i] = i;
+
+        return S_OK;
+    }
+
+    HRESULT Shape() {
+        /* Type1 fonts don't like Uniscribe */
+        if (mCurrentFont->GetFontEntry()->mIsType1)
+            return ShapeGDI();
+
+        return ShapeUniscribe();
     }
 
     PRBool ShapingEnabled() {
@@ -1053,16 +1067,21 @@ public:
         mAdvances.SetLength(mNumGlyphs);
 
         PRBool allCJK = PR_TRUE;
-        for (PRUint32 i = 0; i < mRangeLength; i++) {
-            const PRUnichar ch = mRangeString[i];
-            if (ch == ' ' || FindCharUnicodeRange(ch) == kRangeSetCJK)
-                continue;
 
-            allCJK = PR_FALSE;
-            break;
+        /* Type1 fonts need to use GDI to be rendered so only do this
+         * check if we're not a type1 font */
+        if (!mCurrentFont->GetFontEntry()->mIsType1) {
+            for (PRUint32 i = 0; i < mRangeLength; i++) {
+                const PRUnichar ch = mRangeString[i];
+                if (ch == ' ' || FindCharUnicodeRange(ch) == kRangeSetCJK)
+                    continue;
+
+                allCJK = PR_FALSE;
+                break;
+            }
         }
 
-        if (allCJK)
+        if (allCJK || mCurrentFont->GetFontEntry()->mIsType1)
             return PlaceGDI();
 
         return PlaceUniscribe();
