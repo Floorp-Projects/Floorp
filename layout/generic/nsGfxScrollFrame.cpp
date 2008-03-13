@@ -1335,8 +1335,12 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsIFrame* kid = mOuter->GetFirstChild(nsnull);
   // Put each child's background directly onto the content list
   nsDisplayListSet scrollbarSet(aLists, aLists.Content());
+  nsMargin scrollbarSizes = GetActualScrollbarSizes();
   while (kid) {
-    if (kid != mScrolledFrame) {
+    if ((kid == mHScrollbarBox && scrollbarSizes.TopBottom() > 0) ||
+        (kid == mVScrollbarBox && scrollbarSizes.LeftRight() > 0) ||
+        (kid == mScrollCornerBox && scrollbarSizes.TopBottom() > 0 &&
+         scrollbarSizes.LeftRight() > 0)) {
       rv = mOuter->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, scrollbarSet,
                                             nsIFrame::DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -2485,7 +2489,12 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
 {
   NS_ASSERTION(!mSupppressScrollbarUpdate,
                "This should have been suppressed");
-    
+
+  // This code may try to set the scrollbar size to zero. That doesn't
+  // really work since XUL boxes will refuse to shrink below their
+  // minimum size. We compensate for that by refusing to paint or handle
+  // events for hidden scrollbars in our BuildDisplayList.
+
   if (mVScrollbarBox) {
     NS_PRECONDITION(mVScrollbarBox->IsBoxFrame(), "Must be a box frame!");
     nsRect vRect(aScrollArea);
