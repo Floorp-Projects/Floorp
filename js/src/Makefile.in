@@ -51,6 +51,8 @@ GRE_MODULE	= 1
 
 ifdef GNU_CC
 MODULE_OPTIMIZE_FLAGS = -Os -fstrict-aliasing
+# Special optimization flags for jsinterp.c
+INTERP_OPTIMIZER = -O3 -fstrict-aliasing
 else
 ifeq ($(OS_ARCH),SunOS)
 MODULE_OPTIMIZE_FLAGS = -O
@@ -335,6 +337,11 @@ LDFLAGS		+= -ldl -lnsl
 else
 LDFLAGS		+= -lposix4 -ldl -lnsl -lsocket
 endif
+endif
+
+# Allow building jsinterp.c with special optimization flags
+ifdef INTERP_OPTIMIZER
+jsinterp.$(OBJ_SUFFIX): MODULE_OPTIMIZE_FLAGS=$(INTERP_OPTIMIZER)
 endif
 
 ifeq ($(OS_ARCH),IRIX)
