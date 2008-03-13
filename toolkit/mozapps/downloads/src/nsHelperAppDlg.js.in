@@ -436,18 +436,13 @@ nsUnknownContentTypeDialog.prototype = {
                                     mimeType == "application/x-msdownload" ||
                                     this.mLauncher.targetFileIsExecutable);
       if (shouldntRememberChoice && !this.openWithDefaultOK()) {
-        let acceptButton = this.mDialog.document.getButton("accept");
-        // change the accept button icon to a save one
-        acceptButton.setAttribute("icon", "save");
-        // change button labels
-        acceptButton.label =
-            this.dialogElement("strings").getString("unknownAccept.label");
-        this.mDialog.document.documentElement.getButton("cancel").label =
-            this.dialogElement("strings").getString("unknownCancel.label");
         // hide featured choice 
         this.mDialog.document.getElementById("normalBox").collapsed = "true";
         // show basic choice 
         this.mDialog.document.getElementById("basicBox").collapsed = "false";
+        // change button labels
+        this.mDialog.document.documentElement.getButton("accept").label = this.dialogElement("strings").getString("unknownAccept.label");
+        this.mDialog.document.documentElement.getButton("cancel").label = this.dialogElement("strings").getString("unknownCancel.label");
         // hide other handler
         this.mDialog.document.getElementById("openHandler").collapsed = "true";
         // set save as the selected option
