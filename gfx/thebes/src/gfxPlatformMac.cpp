@@ -180,6 +180,13 @@ gfxPlatformMac::ResolveFontName(const nsAString& aFontName,
     return NS_OK;
 }
 
+nsresult
+gfxPlatformMac::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName)
+{
+    gfxQuartzFontCache::SharedFontCache()->GetStandardFamilyName(aFontName, aFamilyName);
+    return NS_OK;
+}
+
 gfxFontGroup *
 gfxPlatformMac::CreateFontGroup(const nsAString &aFamilies,
                                 const gfxFontStyle *aStyle)

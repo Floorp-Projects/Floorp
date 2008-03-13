@@ -369,6 +369,115 @@ gfxFontconfigUtils::GetResolvedFonts(const nsACString& aName,
 }
 
 nsresult
+gfxFontconfigUtils::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName)
+{
+    aFamilyName.Truncate();
+
+    // The fontconfig has generic family names in the font list.
+    if (aFontName.EqualsLiteral("serif") ||
+        aFontName.EqualsLiteral("sans-serif") ||
+        aFontName.EqualsLiteral("monospace")) {
+        aFamilyName.Assign(aFontName);
+        return NS_OK;
+    }
+
+    NS_ConvertUTF16toUTF8 fontname(aFontName);
+
+    if (mFonts.IndexOf(fontname) >= 0) {
+        aFamilyName.Assign(aFontName);
+        return NS_OK;
+    }
+
+    if (mNonExistingFonts.IndexOf(fontname) >= 0)
+        return NS_OK;
+
+    FcPattern *pat = NULL;
+    FcObjectSet *os = NULL;
+    FcFontSet *givenFS = NULL;
+    nsCStringArray candidates;
+    FcFontSet *candidateFS = NULL;
+    nsresult rv = NS_ERROR_FAILURE;
+
+    pat = FcPatternCreate();
+    if (!pat)
+        goto end;
+
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)fontname.get());
+
+    os = FcObjectSetBuild(FC_FAMILY, FC_FILE, FC_INDEX, NULL);
+    if (!os)
+        goto end;
+
+    givenFS = FcFontList(NULL, pat, os);
+    if (!givenFS)
+        goto end;
+
+    // The first value associated with a FC_FAMILY property is the family
+    // returned by GetFontList(), so use this value if appropriate.
+
+    // See if there is a font face with first family equal to the given family.
+    for (int i = 0; i < givenFS->nfont; ++i) {
+        char *firstFamily;
+        if (FcPatternGetString(givenFS->fonts[i], FC_FAMILY, 0,
+                               (FcChar8 **) &firstFamily) != FcResultMatch)
+            continue;
+
+        nsDependentCString first(firstFamily);
+        if (candidates.IndexOf(first) < 0) {
+            candidates.AppendCString(first);
+
+            if (fontname.Equals(first)) {
+                aFamilyName.Assign(aFontName);
+                rv = NS_OK;
+                goto end;
+            }
+        }
+    }
+
+    // See if any of the first family names represent the same set of font
+    // faces as the given family.
+    for (PRInt32 j = 0; j < candidates.Count(); ++j) {
+        FcPatternDel(pat, FC_FAMILY);
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)candidates[j]->get());
+
+        candidateFS = FcFontList(NULL, pat, os);
+        if (!candidateFS)
+            goto end;
+
+        if (candidateFS->nfont != givenFS->nfont)
+            continue;
+
+        PRBool equal = PR_TRUE;
+        for (int i = 0; i < givenFS->nfont; ++i) {
+            if (!FcPatternEqual(candidateFS->fonts[i], givenFS->fonts[i])) {
+                equal = PR_FALSE;
+                break;
+            }
+        }
+        if (equal) {
+            AppendUTF8toUTF16(*candidates[j], aFamilyName);
+            rv = NS_OK;
+            goto end;
+        }
+    }
+
+    // No match found; return empty string.
+    rv = NS_OK;
+
+  end:
+    if (pat)
+        FcPatternDestroy(pat);
+    if (os)
+        FcObjectSetDestroy(os);
+    if (givenFS)
+        FcFontSetDestroy(givenFS);
+    if (candidateFS)
+        FcFontSetDestroy(candidateFS);
+
+    return rv;
+}
+
+nsresult
 gfxFontconfigUtils::ResolveFontName(const nsAString& aFontName,
                                     gfxPlatform::FontResolverCallback aCallback,
                                     void *aClosure,

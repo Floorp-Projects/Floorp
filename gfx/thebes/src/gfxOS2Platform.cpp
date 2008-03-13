@@ -147,6 +147,12 @@ gfxOS2Platform::ResolveFontName(const nsAString& aFontName,
     //return NS_OK;
 }
 
+nsresult
+gfxOS2Platform::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName)
+{
+    return sFontconfigUtils->GetStandardFamilyName(aFontName, aFamilyName);
+}
+
 gfxFontGroup *
 gfxOS2Platform::CreateFontGroup(const nsAString &aFamilies,
 				const gfxFontStyle *aStyle)

@@ -128,7 +128,7 @@ public:
     virtual ~MacOSFamilyEntry() {}
         
     const nsString& Name() { return mName; }
-    virtual void LocalizedName(nsString& aLocalizedName);
+    virtual void LocalizedName(nsAString& aLocalizedName);
     virtual PRBool HasOtherFamilyNames();
     
     nsTArray<nsRefPtr<MacOSFontEntry> >& GetFontList() { return mAvailableFonts; }
@@ -182,7 +182,7 @@ public:
     
     virtual ~SingleFaceFamily() {}
     
-    virtual void LocalizedName(nsString& aLocalizedName);
+    virtual void LocalizedName(nsAString& aLocalizedName);
     
     // read in other family names, if any, and use functor to add each into cache
     virtual void ReadOtherFamilyNames(AddOtherFamilyNameFunctor& aOtherFamilyFunctor);
@@ -213,6 +213,7 @@ public:
                       nsStringArray& aListOfFonts);
     PRBool ResolveFontName(const nsAString& aFontName,
                            nsAString& aResolvedFontName);
+    PRBool GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
     void UpdateFontList() { InitFontList(); }
 
 
