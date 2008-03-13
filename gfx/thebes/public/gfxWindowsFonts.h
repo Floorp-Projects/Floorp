@@ -62,16 +62,16 @@ class FontEntry
 public:
     THEBES_INLINE_DECL_REFCOUNTING(FontEntry)
 
-    FontEntry(const nsAString& aName, PRUint16 aFontType) : 
-        mName(aName), mFontType(aFontType), mDefaultWeight(0),
-        mUnicodeFont(PR_FALSE), mSymbolFont(PR_FALSE), mIsBadUnderlineFont(PR_FALSE),
-        mCharset(0), mUnicodeRanges(0)
+    FontEntry(const nsAString& aName) : 
+        mName(aName), mDefaultWeight(0),
+        mUnicodeFont(PR_FALSE), mSymbolFont(PR_FALSE), mIsType1(PR_FALSE),
+        mIsBadUnderlineFont(PR_FALSE), mCharset(0), mUnicodeRanges(0)
     {
     }
 
     PRBool IsCrappyFont() const {
-        /* return if it is a bitmap, old school font or not a unicode font */
-        return (!mUnicodeFont || mSymbolFont || mFontType != TRUETYPE_FONTTYPE);
+        /* return if it is a bitmap not a unicode font */
+        return (!mUnicodeFont || mSymbolFont);
     }
 
     PRBool MatchesGenericFamily(const nsACString& aGeneric) const {
@@ -185,14 +185,18 @@ public:
     // The family name of the font
     nsString mName;
 
-    PRUint16 mFontType;
     PRUint16 mDefaultWeight;
 
     PRUint8 mFamily;
     PRUint8 mPitch;
+
     PRPackedBool mUnicodeFont;
     PRPackedBool mSymbolFont;
+<<<<<<< gfxWindowsFonts.h
+    PRPackedBool mIsType1;
+=======
     PRPackedBool mIsBadUnderlineFont;
+>>>>>>> 1.68
 
     std::bitset<256> mCharset;
     std::bitset<128> mUnicodeRanges;
