@@ -558,6 +558,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 jsval smallv[5];
                 jsval *argv;
                 JSStackFrame frame;
+                JSFrameRegs regs;
 
                 closure = (JSObject *) wp->closure;
                 clasp = OBJ_GET_CLASS(cx, closure);
@@ -600,10 +601,13 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
                     memset(&frame, 0, sizeof(frame));
                     frame.script = script;
+                    frame.regs = NULL;
                     if (script) {
                         JS_ASSERT(script->length >= JSOP_STOP_LENGTH);
-                        frame.pc = script->code + script->length
-                                   - JSOP_STOP_LENGTH;
+                        regs.pc = script->code + script->length
+                                  - JSOP_STOP_LENGTH;
+                        regs.sp = NULL;
+                        frame.regs = &regs;
                     }
                     frame.callee = closure;
                     frame.fun = fun;
@@ -956,7 +960,7 @@ JS_GetFrameScript(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(jsbytecode *)
 JS_GetFramePC(JSContext *cx, JSStackFrame *fp)
 {
-    return fp->pc;
+    return fp->regs ? fp->regs->pc : NULL;
 }
 
 JS_PUBLIC_API(JSStackFrame *)
