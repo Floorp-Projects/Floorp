@@ -993,7 +993,7 @@ nsresult nsPluginTag::EnsureMembersAreUTF8()
     NS_ENSURE_SUCCESS(rv, rv);
 
     ConvertToUTF8(decoder, mDescription);
-    for (PRInt32 i = 0; i < mMimeDescriptionArray.Length(); ++i) {
+    for (PRUint32 i = 0; i < mMimeDescriptionArray.Length(); ++i) {
       ConvertToUTF8(decoder, mMimeDescriptionArray[i]);
     }
   }
@@ -5869,7 +5869,7 @@ nsPluginHostImpl::ReadPluginInfo()
         tag->UnMark(NS_PLUGIN_FLAG_ENABLED);
     }
     PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
-      ("LoadCachedPluginsInfo : Loading Cached plugininfo for %s\n", tag->mFileName));
+      ("LoadCachedPluginsInfo : Loading Cached plugininfo for %s\n", tag->mFileName.get()));
     tag->mNext = mCachedPlugins;
     mCachedPlugins = tag;
 
