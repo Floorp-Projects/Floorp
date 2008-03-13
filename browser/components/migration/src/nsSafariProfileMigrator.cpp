@@ -74,6 +74,7 @@
 #define SAFARI_COOKIES_FILE_NAME          NS_LITERAL_STRING("Cookies.plist")
 #define SAFARI_COOKIE_BEHAVIOR_FILE_NAME  NS_LITERAL_STRING("com.apple.WebFoundation.plist")
 #define SAFARI_DATE_OFFSET                978307200
+#define SAFARI_HOME_PAGE_PREF             "HomePage"
 #define MIGRATION_BUNDLE                  "chrome://browser/locale/migration/migration.properties"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -204,33 +205,6 @@ NS_IMETHODIMP
 nsSafariProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
 {
   *aResult = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSafariProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
-{
-  aResult.Truncate();
-
-  ICInstance internetConfig;
-  OSStatus error = ::ICStart(&internetConfig, 'FRFX');
-  if (error != noErr)
-    return NS_ERROR_FAILURE;
-
-  ICAttr dummy;
-  Str255 homePagePValue;
-  long prefSize = sizeof(homePagePValue);
-  error = ::ICGetPref(internetConfig, kICWWWHomePage, &dummy,
-                      homePagePValue, &prefSize);
-  if (error != noErr)
-    return NS_ERROR_FAILURE;
-
-  char homePageValue[256] = "";
-  CopyPascalStringToC((ConstStr255Param)homePagePValue, homePageValue);
-  aResult.Assign(homePageValue);
-
-  ::ICStop(internetConfig);
-
   return NS_OK;
 }
 
@@ -1206,5 +1180,45 @@ nsSafariProfileMigrator::CopyOtherData(PRBool aReplace)
 
     stylesheetFile->CopyTo(userChromeDir, NS_LITERAL_STRING("userContent.css"));
   }
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsSafariProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
+{
+  aResult.Truncate();
+
+  // Let's first check if there's a home page key in the com.apple.safari file...
+  CFDictionaryRef safariPrefs = CopySafariPrefs();
+  if (GetDictionaryCStringValue(safariPrefs,
+                                CFSTR(SAFARI_HOME_PAGE_PREF),
+                                aResult, kCFStringEncodingUTF8)) {
+    ::CFRelease(safariPrefs);
+    return NS_OK;
+  }
+
+  ::CFRelease(safariPrefs);
+
+  // Couldn't find the home page in com.apple.safai, time to check
+  // com.apple.internetconfig for this key!
+  ICInstance internetConfig;
+  OSStatus error = ::ICStart(&internetConfig, 'FRFX');
+  if (error != noErr)
+    return NS_ERROR_FAILURE;
+
+  ICAttr dummy;
+  Str255 homePagePValue;
+  long prefSize = sizeof(homePagePValue);
+  error = ::ICGetPref(internetConfig, kICWWWHomePage, &dummy,
+                      homePagePValue, &prefSize);
+  if (error != noErr)
+    return NS_ERROR_FAILURE;
+
+  char homePageValue[256] = "";
+  CopyPascalStringToC((ConstStr255Param)homePagePValue, homePageValue);
+  aResult.Assign(homePageValue);
+  ::ICStop(internetConfig);
+
   return NS_OK;
 }
