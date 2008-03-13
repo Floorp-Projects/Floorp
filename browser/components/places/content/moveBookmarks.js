@@ -52,7 +52,7 @@ var gMoveBookmarksDialog = {
 
     this.foldersTree.place =
       "place:excludeItems=1&excludeQueries=1&excludeReadOnlyFolders=1&folder=" +
-      PlacesUtils.allBookmarksFolderId;
+      PlacesUIUtils.allBookmarksFolderId;
   },
 
   onOK: function MBD_onOK(aEvent) {
@@ -68,12 +68,12 @@ var gMoveBookmarksDialog = {
         continue;
 
       transactions.push(new
-        PlacesUtils.ptm.moveItem(this._nodes[i].itemId, selectedFolderID, -1));
+        PlacesUIUtils.ptm.moveItem(this._nodes[i].itemId, selectedFolderID, -1));
     }
 
     if (transactions.length != 0) {
-      var txn = PlacesUtils.ptm.aggregateTransactions("Move Items", transactions);
-      PlacesUtils.ptm.doTransaction(txn);
+      var txn = PlacesUIUtils.ptm.aggregateTransactions("Move Items", transactions);
+      PlacesUIUtils.ptm.doTransaction(txn);
     }
   },
 

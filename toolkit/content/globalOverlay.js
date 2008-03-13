@@ -196,4 +196,9 @@ function FillInTooltip ( tipElement )
   return retVal;
 }
 
-#include debug.js
+__defineGetter__("NS_ASSERT", function() {
+  delete this.NS_ASSERT;
+  var tmpScope = {};
+  Components.utils.import("resource://gre/modules/debug.js", tmpScope);
+  return this.NS_ASSERT = tmpScope.NS_ASSERT;
+});

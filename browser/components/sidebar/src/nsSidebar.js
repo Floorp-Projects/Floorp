@@ -129,7 +129,7 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
     }
     catch(ex) { return; }
 
-    win.PlacesUtils.showMinimalAddBookmarkUI(uri, aTitle, null, null, true, true);
+    win.PlacesUIUtils.showMinimalAddBookmarkUI(uri, aTitle, null, null, true, true);
 }
 
 nsSidebar.prototype.validateSearchEngine =

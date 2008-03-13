@@ -2640,7 +2640,7 @@ var bookmarksButtonObserver = {
     var split = aXferData.data.split("\n");
     var url = split[0];
     if (url != aXferData.data)  // do nothing if it's not a valid URL
-      PlacesUtils.showMinimalAddBookmarkUI(makeURI(url), split[1]);
+      PlacesUIUtils.showMinimalAddBookmarkUI(makeURI(url), split[1]);
   },
 
   onDragOver: function (aEvent, aFlavour, aDragSession)
@@ -3115,7 +3115,7 @@ function addToUrlbarHistory(aUrlToAdd)
 
    try {
      if (aUrlToAdd.indexOf(" ") == -1) {
-       PlacesUtils.markPageAsTyped(aUrlToAdd);
+       PlacesUIUtils.markPageAsTyped(aUrlToAdd);
      }
    }
    catch(ex) {
@@ -4780,9 +4780,9 @@ function asyncOpenWebPanel(event)
          // This is the Opera convention for a special link that - when clicked - allows
          // you to add a sidebar panel.  We support the Opera convention here.  The link's
          // title attribute contains the title that should be used for the sidebar panel.
-         PlacesUtils.showMinimalAddBookmarkUI(makeURI(wrapper.href),
-                                              wrapper.getAttribute("title"),
-                                              null, null, true, true);
+         PlacesUIUtils.showMinimalAddBookmarkUI(makeURI(wrapper.href),
+                                                wrapper.getAttribute("title"),
+                                                null, null, true, true);
          event.preventDefault();
          return false;
        }
@@ -5746,9 +5746,9 @@ function AddKeywordForSearchField()
   else
     spec += "?" + formData.join("&");
 
-  var description = PlacesUtils.getDescriptionFromDocument(node.ownerDocument);
-  PlacesUtils.showMinimalAddBookmarkUI(makeURI(spec), "", description, null,
-                                       null, null, "", postData);
+  var description = PlacesUIUtils.getDescriptionFromDocument(node.ownerDocument);
+  PlacesUIUtils.showMinimalAddBookmarkUI(makeURI(spec), "", description, null,
+                                         null, null, "", postData);
 }
 
 function SwitchDocumentDirection(aWindow) {

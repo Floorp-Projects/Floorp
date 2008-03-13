@@ -76,7 +76,7 @@
       <field name="_endMarker">-1</field>
 
       <!-- This is the view that manage the popup -->
-      <field name="_rootView">PlacesUtils.getViewForNode(this);</field>
+      <field name="_rootView">PlacesUIUtils.getViewForNode(this);</field>
 
       <field name="_built">false</field>
 
@@ -217,7 +217,7 @@
       <method name="getSupportedFlavours">
         <body><![CDATA[
           var flavourSet = new FlavourSet();
-          var acceptedDropFlavours = PlacesUtils.GENERIC_VIEW_DROP_TYPES;
+          var acceptedDropFlavours = PlacesUIUtils.GENERIC_VIEW_DROP_TYPES;
           acceptedDropFlavours.forEach(flavourSet.appendFlavour, flavourSet);
           return flavourSet;
         ]]></body>
@@ -580,7 +580,7 @@
         <parameter name="aBefore"/>
         <body><![CDATA[
           var element =
-            PlacesUtils.createMenuItemForNode(aChild, this._containerNodesMap);
+            PlacesUIUtils.createMenuItemForNode(aChild, this._containerNodesMap);
 
           if (aBefore)
             aParentPopup.insertBefore(element, aBefore);
@@ -605,7 +605,7 @@
             return;
           }
 
-          var label = PlacesUtils.getString("bookmarksMenuEmptyFolder");
+          var label = PlacesUIUtils.getString("bookmarksMenuEmptyFolder");
           aPopup._emptyMenuItem = document.createElement("menuitem");
           aPopup._emptyMenuItem.setAttribute("label", label);
           aPopup._emptyMenuItem.setAttribute("disabled", true);
@@ -616,7 +616,7 @@
       <method name="_rebuild">
         <parameter name="aPopup"/>
         <body><![CDATA[
-          PlacesUtils.cleanPlacesPopup(aPopup);
+          PlacesUIUtils.cleanPlacesPopup(aPopup);
 
           var cc = aPopup._resultNode.childCount;
           if (cc > 0) {
@@ -756,7 +756,7 @@
           else
             menuitem.removeAttribute("image");
 
-          var title = PlacesUtils.getBestTitle(aNode);
+          var title = PlacesUIUtils.getBestTitle(aNode);
           if (menuitem.getAttribute("label") != title)
             menuitem.setAttribute("label", title);
 
