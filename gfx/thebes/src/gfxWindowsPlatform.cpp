@@ -395,6 +395,14 @@ gfxWindowsPlatform::InitBadUnderlineList()
     }
 }
 
+nsresult
+gfxWindowsPlatform::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName)
+{
+    aFamilyName.Truncate();
+    PRBool aborted;
+    return ResolveFontName(aFontName, SimpleResolverCallback, &aFamilyName, aborted);
+}
+
 struct ResolveData {
     ResolveData(gfxPlatform::FontResolverCallback aCallback,
                 gfxWindowsPlatform *aCaller, const nsAString *aFontName,

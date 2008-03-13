@@ -109,3 +109,9 @@ gfxBeOSPlatform::ResolveFontName(const nsAString& aFontName,
     return sFontconfigUtils->ResolveFontName(aFontName, aCallback,
                                              aClosure, aAborted);
 }
+
+nsresult
+gfxBeOSPlatform::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName)
+{
+    return sFontconfigUtils->GetStandardFamilyName(aFontName, aFamilyName);
+}

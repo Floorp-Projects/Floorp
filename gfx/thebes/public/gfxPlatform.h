@@ -170,6 +170,12 @@ public:
                                      PRBool& aAborted) = 0;
 
     /**
+     * Resolving a font name to family name. The result MUST be in the result of GetFontList().
+     * If the name doesn't in the system, aFamilyName will be empty string, but not failed.
+     */
+    virtual nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName) = 0;
+
+    /**
      * Create the appropriate platform font group
      */
     virtual gfxFontGroup *CreateFontGroup(const nsAString& aFamilies,

@@ -69,6 +69,8 @@ public:
                              FontResolverCallback aCallback,
                              void *aClosure, PRBool& aAborted);
 
+    nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
+
     gfxFontGroup *CreateFontGroup(const nsAString &aFamilies,
                                   const gfxFontStyle *aStyle);
 
