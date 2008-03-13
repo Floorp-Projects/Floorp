@@ -2394,6 +2394,6 @@ pref("signon.debug",                        false); // logs to Error Console
 
 // Zoom prefs
 pref("browser.zoom.full", false);
-pref("zoom.minPercent", 50);
+pref("zoom.minPercent", 30);
 pref("zoom.maxPercent", 300);
-pref("toolkit.zoomManager.zoomValues", ".5,.75,1,1.25,1.5,2,3");
+pref("toolkit.zoomManager.zoomValues", ".3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2,2.4,3");
