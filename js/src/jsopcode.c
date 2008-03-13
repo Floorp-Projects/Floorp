@@ -1787,7 +1787,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
             for (fp = cx->fp; fp && !fp->script; fp = fp->down)
                 continue;
             format = cs->format;
-            if (((fp && fp->regs && pc == fp->regs->pc) ||
+            if (((fp && pc == fp->pc) ||
                  (pc == startpc && cs->nuses != 0)) &&
                 format & (JOF_SET|JOF_DEL|JOF_INCDEC|JOF_IMPORT|JOF_FOR|
                           JOF_VARPROP)) {
@@ -4785,7 +4785,6 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
     JSStackFrame *fp;
     jsbytecode *pc;
     JSScript *script;
-    JSFrameRegs *regs;
     intN pcdepth;
     jsval *sp;
     char *name;
@@ -4796,12 +4795,13 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
 
     for (fp = cx->fp; fp && !fp->script; fp = fp->down)
         continue;
-    if (!fp || !fp->regs)
+    if (!fp)
         goto do_fallback;
 
+    pc = fp->pc;
+    if (!pc)
+        goto do_fallback;
     script = fp->script;
-    regs = fp->regs;
-    pc = regs->pc;
     if (pc < script->main || script->code + script->length <= pc) {
         JS_NOT_REACHED("bug");
         goto do_fallback;
@@ -4818,7 +4818,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
                   JS_malloc(cx, script->depth * sizeof *pcstack);
         if (!pcstack)
             return NULL;
-        pcdepth = ReconstructPCStack(cx, script, regs->pc, pcstack);
+        pcdepth = ReconstructPCStack(cx, script, fp->pc, pcstack);
         if (pcdepth < 0)
             goto release_pcstack;
 
@@ -4834,8 +4834,8 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
              * calculated value matching v under assumption that it is
              * it that caused exception, see bug 328664.
              */
-            JS_ASSERT((size_t) (regs->sp - fp->spbase) <= script->depth);
-            sp = regs->sp;
+            JS_ASSERT((size_t) (fp->sp - fp->spbase) <= fp->script->depth);
+            sp = fp->sp;
             do {
                 if (sp == fp->spbase) {
                     pcdepth = -1;
@@ -4849,7 +4849,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
                  * that the interpreter uses for GC roots. Assume that it is
                  * fp->pc that caused the exception.
                  */
-                pc = regs->pc;
+                pc = fp->pc;
             } else {
                 pc = pcstack[sp - fp->spbase];
             }
