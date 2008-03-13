@@ -1922,8 +1922,8 @@ var PlacesUtils = {
       // skip the empty menu item
       if (aPopup._emptyMenuItem != items[i]) {
         aPopup.removeChild(items[i]);
-        if (this._endMarker > 0)
-          --this._endMarker;
+        if (aPopup._endMarker > 0)
+          --aPopup._endMarker;
       }
     }
 
