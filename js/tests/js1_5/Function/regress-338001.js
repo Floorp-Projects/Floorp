@@ -50,16 +50,25 @@ expectExitCode(5);
 
 var fe="f";
 
-for (i=0; i<25; i++)
-  fe += fe;
+try
+{
+  for (i=0; i<25; i++)
+    fe += fe;
 
-var fu=new Function(
-  fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe,
-  fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe,
-  fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe,
-  fe, fe, fe, fe, fe, fe, fe, fe, fe, fe,
-  "done"
-  );
+  var fu=new Function(
+    fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe,
+    fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe,
+    fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe,
+    fe, fe, fe, fe, fe, fe, fe, fe, fe, fe,
+    "done"
+    );
+}
+catch(ex)
+{
+  // handle changed 1.9 branch behavior. see bug 422348
+  expect = 'InternalError: allocation size overflow';
+  actual = ex + '';
+}
  
 print('Done');
 

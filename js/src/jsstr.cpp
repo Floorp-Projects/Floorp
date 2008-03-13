@@ -1211,16 +1211,15 @@ match_or_replace(JSContext *cx,
             JSStackFrame *fp;
 
             /* Skip Function.prototype.call and .apply frames. */
-            for (fp = cx->fp; fp && !fp->regs; fp = fp->down)
+            for (fp = cx->fp; fp && !fp->pc; fp = fp->down)
                 JS_ASSERT(!fp->script);
 
             /* Assume a full array result is required, then prove otherwise. */
             test = JS_FALSE;
             if (fp) {
-                JS_ASSERT(*fp->regs->pc == JSOP_CALL ||
-                          *fp->regs->pc == JSOP_NEW);
-                JS_ASSERT(js_CodeSpec[*fp->regs->pc].length == 3);
-                switch (fp->regs->pc[3]) {
+                JS_ASSERT(*fp->pc == JSOP_CALL || *fp->pc == JSOP_NEW);
+                JS_ASSERT(js_CodeSpec[*fp->pc].length == 3);
+                switch (fp->pc[3]) {
                   case JSOP_POP:
                   case JSOP_IFEQ:
                   case JSOP_IFNE:

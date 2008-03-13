@@ -2002,15 +2002,15 @@ ParseXMLSource(JSContext *cx, JSString *src)
     chars [offset + dstlen] = 0;
 
     xml = NULL;
-    for (fp = cx->fp; fp && !fp->regs; fp = fp->down)
+    for (fp = cx->fp; fp && !fp->pc; fp = fp->down)
         JS_ASSERT(!fp->script);
     filename = NULL;
     lineno = 1;
     if (fp) {
-        op = (JSOp) *fp->regs->pc;
+        op = (JSOp) *fp->pc;
         if (op == JSOP_TOXML || op == JSOP_TOXMLLIST) {
             filename = fp->script->filename;
-            lineno = js_PCToLineNumber(cx, fp->script, fp->regs->pc);
+            lineno = js_PCToLineNumber(cx, fp->script, fp->pc);
             for (endp = srcp + srclen; srcp < endp; srcp++) {
                 if (*srcp == '\n')
                     --lineno;
@@ -8281,7 +8281,7 @@ js_StepXMLListFilter(JSContext *cx, JSBool initialized)
     JSXML *xml, *list;
     JSXMLFilter *filter;
 
-    sp = cx->fp->regs->sp;
+    sp = cx->fp->sp;
     if (!initialized) {
         /*
          * We haven't iterated yet, so initialize the filter based on the

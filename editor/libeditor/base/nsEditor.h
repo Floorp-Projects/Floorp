@@ -581,13 +581,6 @@ public:
   // Fast non-refcounting editor root element accessor
   nsIDOMElement *GetRoot();
 
-public:
-  // Argh!  These transaction names are used by PlaceholderTxn and
-  // nsPlaintextEditor.  They should be localized to those classes.
-  static nsIAtom *gTypingTxnName;
-  static nsIAtom *gIMETxnName;
-  static nsIAtom *gDeleteTxnName;
-
 protected:
 
   PRUint32        mModCount;		// number of modifications (for undo/redo stack)
