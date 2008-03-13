@@ -192,11 +192,8 @@ public:
 
     PRPackedBool mUnicodeFont;
     PRPackedBool mSymbolFont;
-<<<<<<< gfxWindowsFonts.h
     PRPackedBool mIsType1;
-=======
     PRPackedBool mIsBadUnderlineFont;
->>>>>>> 1.68
 
     std::bitset<256> mCharset;
     std::bitset<128> mUnicodeRanges;
