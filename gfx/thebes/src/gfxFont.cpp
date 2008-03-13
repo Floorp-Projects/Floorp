@@ -527,7 +527,7 @@ gfxFont::SetupGlyphExtents(gfxContext *aContext, PRUint32 aGlyphID, PRBool aNeed
 }
 
 void
-gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics)
+gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, PRBool aIsBadUnderlineFont)
 {
     // MS (P)Gothic and MS (P)Mincho are not having suitable values in their super script offset.
     // If the values are not suitable, we should use x-height instead of them.
@@ -547,12 +547,35 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics)
 
     aMetrics->underlineOffset = PR_MIN(aMetrics->underlineOffset, -1.0);
 
-    // XXX we need to adjust the underline offset for "bad" CJK fonts, here.
+    /**
+     * Some CJK fonts have bad underline offset. Therefore, if this is such font,
+     * we need to lower the underline offset to bottom of *em* descent.
+     * However, if this is system font, we should not do this for the rendering compatibility with
+     * another application's UI on the platform.
+     */
+    if (!mStyle.systemFont && aIsBadUnderlineFont) {
+        // First, we need 2 pixels between baseline and underline at least. Because many CJK characters
+        // put their glyphs on the baseline, so, 1 pixel is too close for CJK characters.
+        aMetrics->underlineOffset = PR_MIN(aMetrics->underlineOffset, -2.0);
 
+        // Next, we put the underline to bottom of below of the descent space.
+        // Note that the underline might overlap to next line when the line height is 1em.
+        // However, in CJK text, such case is very rare, so, we don't need to worry about such case.
+        // Becasue most CJK glyphs use top of the em square. Therefore, for readability, CJK text needs
+        // larger line gap than Western text, generally.
+        if (aMetrics->internalLeading + aMetrics->externalLeading > aMetrics->underlineSize) {
+            aMetrics->underlineOffset = PR_MIN(aMetrics->underlineOffset, -aMetrics->emDescent);
+        } else {
+            aMetrics->underlineOffset = PR_MIN(aMetrics->underlineOffset,
+                                               aMetrics->underlineSize - aMetrics->emDescent);
+        }
+    }
     // If underline positioned is too far from the text, descent position is preferred so that underline
     // will stay within the boundary.
-    if (aMetrics->underlineSize - aMetrics->underlineOffset > aMetrics->maxDescent)
+    else if (aMetrics->underlineSize - aMetrics->underlineOffset > aMetrics->maxDescent) {
         aMetrics->underlineOffset = aMetrics->underlineSize - aMetrics->maxDescent;
+        aMetrics->underlineOffset = PR_MIN(aMetrics->underlineOffset, -1.0);
+    }
 }
 
 gfxGlyphExtents::~gfxGlyphExtents()
@@ -669,7 +692,7 @@ gfxGlyphExtents::SetTightGlyphExtents(PRUint32 aGlyphID, const gfxRect& aExtents
 }
 
 gfxFontGroup::gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle)
-    : mFamilies(aFamilies), mStyle(*aStyle)
+    : mFamilies(aFamilies), mStyle(*aStyle), mUnderlineOffset(0)
 {
 
 }

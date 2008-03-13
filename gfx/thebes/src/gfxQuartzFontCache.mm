@@ -794,7 +794,8 @@ gfxQuartzFontCache::InitFontList()
     mCodepointsWithNoFonts.SetRange(0,0x1f);     // C0 controls
     mCodepointsWithNoFonts.SetRange(0x7f,0x9f);  // C1 controls
     mCodepointsWithNoFonts.set(0xfffd);          // unknown
-       
+
+    InitBadUnderlineList();
 }
 
 void 
@@ -857,12 +858,13 @@ gfxQuartzFontCache::InitSingleFaceList()
                     GenerateFontListKey(displayName, key);
 
                     // add only if doesn't exist already
-                    if (!mFontFamilies.GetWeak(key, &found)) {
+                    if (!(familyEntry = mFontFamilies.GetWeak(key, &found))) {
                         familyEntry = new SingleFaceFamily(displayName);
                         familyEntry->AddFontEntry(fontEntry);
                         mFontFamilies.Put(key, familyEntry);
                         PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontinit-singleface) family: %s, psname: %s\n", [display UTF8String], [faceName UTF8String]));
                     }
+                    fontEntry->mFamily = familyEntry;
                 }
             }
         }
@@ -940,6 +942,23 @@ gfxQuartzFontCache::EliminateDuplicateFaces(const nsAString& aFamilyName)
                 fontlist.RemoveElementAt(italicIndex);
             }
         }
+    }
+}
+
+void
+gfxQuartzFontCache::InitBadUnderlineList()
+{
+    nsAutoTArray<nsAutoString, 10> blacklist;
+    gfxFontUtils::GetPrefsFontList("font.blacklist.underline_offset", blacklist);
+    PRUint32 numFonts = blacklist.Length();
+    for (PRUint32 i = 0; i < numFonts; i++) {
+        PRBool found;
+        nsAutoString key;
+        GenerateFontListKey(blacklist[i], key);
+
+        MacOSFamilyEntry *familyEntry = mFontFamilies.GetWeak(key, &found);
+        if (familyEntry)
+            familyEntry->mIsBadUnderlineFontFamily = 1;
     }
 }
 

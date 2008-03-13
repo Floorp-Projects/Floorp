@@ -76,13 +76,15 @@ public:
     virtual nsString GetUniqueName();
 
     virtual PRUint32 GetSpaceGlyph() { return mSpaceGlyph; }
-    
+
     PRBool HasMirroringInfo();
 
     virtual void SetupGlyphExtents(gfxContext *aContext, PRUint32 aGlyphID,
             PRBool aNeedTight, gfxGlyphExtents *aExtents);
 
     PRBool TestCharacterMap(PRUint32 aCh);
+
+    MacOSFontEntry* GetFontEntry();
 
 protected:
     const gfxFontStyle *mFontStyle;
