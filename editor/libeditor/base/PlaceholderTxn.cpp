@@ -39,6 +39,7 @@
 #include "PlaceholderTxn.h"
 #include "nsEditor.h"
 #include "IMETextTxn.h"
+#include "nsGkAtoms.h"
 
 PlaceholderTxn::PlaceholderTxn() :  EditAggregateTxn(), 
                                     mAbsorb(PR_TRUE), 
@@ -170,9 +171,9 @@ NS_IMETHODIMP PlaceholderTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMe
   }
   else
   { // merge typing or IME or deletion transactions if the selection matches
-    if (((mName.get() == nsEditor::gTypingTxnName) ||
-         (mName.get() == nsEditor::gIMETxnName)    ||
-         (mName.get() == nsEditor::gDeleteTxnName)) 
+    if (((mName.get() == nsGkAtoms::TypingTxnName) ||
+         (mName.get() == nsGkAtoms::IMETxnName)    ||
+         (mName.get() == nsGkAtoms::DeleteTxnName)) 
          && !mCommitted ) 
     {
       nsCOMPtr<nsIAbsorbingTransaction> plcTxn;// = do_QueryInterface(editTxn);

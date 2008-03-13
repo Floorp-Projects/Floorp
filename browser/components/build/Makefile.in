@@ -13,8 +13,10 @@ MODULE_NAME = nsBrowserCompsModule
 FORCE_SHARED_LIB = 1
 
 # Because we are an application component, link against the CRT statically
-# (on Windows)
+# (on Windows, but only if we're not building our own CRT for jemalloc)
+ifndef MOZ_MEMORY
 USE_STATIC_LIBS = 1
+endif
 
 REQUIRES = \
 	xpcom \

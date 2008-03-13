@@ -125,6 +125,7 @@
 #include "nsEditorUtils.h"
 #include "nsWSRunObject.h"
 #include "nsHTMLObjectResizer.h"
+#include "nsGkAtoms.h"
 
 #include "nsIFrame.h"
 #include "nsIView.h"
@@ -1345,7 +1346,7 @@ NS_IMETHODIMP nsHTMLEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
 NS_IMETHODIMP nsHTMLEditor::TypedText(const nsAString& aString,
                                       PRInt32 aAction)
 {
-  nsAutoPlaceHolderBatch batch(this, gTypingTxnName);
+  nsAutoPlaceHolderBatch batch(this, nsGkAtoms::TypingTxnName);
 
   switch (aAction)
   {
