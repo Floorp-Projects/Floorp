@@ -3974,6 +3974,9 @@ DocumentViewerImpl::ReturnToGalleyPresentation()
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
   ResetFocusState(docShell);
 
+  if (mPresContext)
+    mPresContext->RestoreImageAnimationMode();
+
   SetTextZoom(mTextZoom);
   SetFullZoom(mPageZoom);
   Show();
@@ -4052,6 +4055,8 @@ DocumentViewerImpl::OnDonePrinting()
       mClosingWhilePrinting = PR_FALSE;
       NS_RELEASE_THIS();
     }
+    if (mPresContext)
+      mPresContext->RestoreImageAnimationMode();
   }
 #endif // NS_PRINTING && NS_PRINT_PREVIEW
 }
