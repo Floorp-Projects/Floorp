@@ -49,7 +49,12 @@ var Ci = Components.interfaces;
 var Cc = Components.classes;
 var Cr = Components.results;
 
-Components.utils.import("resource://gre/modules/debug.js");
+__defineGetter__("NS_ASSERT", function() {
+  delete this.NS_ASSERT;
+  var tmpScope = {};
+  Components.utils.import("resource://gre/modules/debug.js", tmpScope);
+  return this.NS_ASSERT = tmpScope.NS_ASSERT;
+});
 
 const POST_DATA_ANNO = "bookmarkProperties/POSTData";
 const LMANNO_FEEDURI = "livemark/feedURI";
@@ -1320,9 +1325,22 @@ var PlacesUtils = {
       return; // XXX
 
     // init stream
-    var stream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
+    var stream = Cc["@mozilla.org/network/file-output-stream;1"].
                  createInstance(Ci.nsIFileOutputStream);
     stream.init(aFile, 0x02 | 0x08 | 0x20, 0600, 0);
+
+    // utf-8 converter stream
+    var converter = Cc["@mozilla.org/intl/converter-output-stream;1"].
+                 createInstance(Ci.nsIConverterOutputStream);
+    converter.init(stream, "UTF-8", 0, 0x0000);
+
+    // weep over stream interface variance
+    var streamProxy = {
+      converter: converter,
+      write: function(aData, aLen) {
+        this.converter.writeString(aData);
+      }
+    };
 
     // query places root
     var options = this.history.getNewQueryOptions();
@@ -1332,14 +1350,12 @@ var PlacesUtils = {
     var result = this.history.executeQuery(query, options);
     result.root.containerOpen = true;
     // serialize as JSON, write to stream
-    this.serializeNodeAsJSONToOutputStream(result.root, stream);
+    this.serializeNodeAsJSONToOutputStream(result.root, streamProxy);
     result.root.containerOpen = false;
 
-    // close stream
-    if (stream instanceof Ci.nsISafeOutputStream)
-      stream.finish();
-    else
-      stream.close();
+    // close converter and stream
+    converter.close();
+    stream.close();
   },
 
   /**

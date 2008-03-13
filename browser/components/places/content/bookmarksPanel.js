@@ -37,7 +37,7 @@
 
 function init() {
   document.getElementById("bookmarks-view").place =
-    "place:queryType=1&folder=" + window.top.PlacesUtils.allBookmarksFolderId;
+    "place:queryType=1&folder=" + window.top.PlacesUIUtils.allBookmarksFolderId;
 }
 
 function searchBookmarks(aSearchString) {
