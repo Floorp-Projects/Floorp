@@ -5118,12 +5118,13 @@ JS_FRIEND_API(JSBool)
 JS_IsAssigning(JSContext *cx)
 {
     JSStackFrame *fp;
+    jsbytecode *pc;
 
     for (fp = cx->fp; fp && !fp->script; fp = fp->down)
         continue;
-    if (!fp || !fp->regs)
+    if (!fp || !(pc = fp->pc))
         return JS_FALSE;
-    return (js_CodeSpec[*fp->regs->pc].format & JOF_ASSIGNING) != 0;
+    return (js_CodeSpec[*pc].format & JOF_ASSIGNING) != 0;
 }
 
 JS_PUBLIC_API(void)
