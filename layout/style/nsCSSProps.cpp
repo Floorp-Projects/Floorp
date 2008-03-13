@@ -247,6 +247,7 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_scalethumbstart,        NS_THEME_SCALE_THUMB_START,
   eCSSKeyword_scalethumbend,          NS_THEME_SCALE_THUMB_END,
   eCSSKeyword_scalethumbtick,         NS_THEME_SCALE_TICK,
+  eCSSKeyword_groupbox,               NS_THEME_GROUPBOX,
   eCSSKeyword_checkboxcontainer,      NS_THEME_CHECKBOX_CONTAINER,
   eCSSKeyword_radiocontainer,         NS_THEME_RADIO_CONTAINER,
   eCSSKeyword_checkboxlabel,          NS_THEME_CHECKBOX_LABEL,
