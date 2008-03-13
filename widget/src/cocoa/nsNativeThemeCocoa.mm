@@ -1038,6 +1038,12 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
                   kThemeAdornmentArrowDownArrow, eventState);
       break;
 
+    case NS_THEME_GROUPBOX: {
+      HIThemeGroupBoxDrawInfo gdi = { 0, kThemeStateActive, kHIThemeGroupBoxKindPrimary };
+      HIThemeDrawGroupBox(&macRect, &gdi, cgContext, HITHEME_ORIENTATION);
+      break;
+    }
+
     case NS_THEME_TEXTFIELD:
       // HIThemeSetFill is not available on 10.3
       CGContextSetRGBFillColor(cgContext, 1.0, 1.0, 1.0, 1.0);
@@ -1628,6 +1634,7 @@ nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
     case NS_THEME_TAB_PANEL:
     case NS_THEME_DIALOG:
     case NS_THEME_MENUPOPUP:
+    case NS_THEME_GROUPBOX:
       *aShouldRepaint = PR_FALSE;
       return NS_OK;
   }
@@ -1695,6 +1702,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_RADIO:
     case NS_THEME_RADIO_SMALL:
     case NS_THEME_RADIO_CONTAINER:
+    case NS_THEME_GROUPBOX:
     case NS_THEME_BUTTON:
     case NS_THEME_BUTTON_BEVEL:
     case NS_THEME_SPINNER:
