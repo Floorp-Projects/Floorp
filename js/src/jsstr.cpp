@@ -352,13 +352,13 @@ js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
          * most 5 on each iteration.
          */
         if (newlength < length) {
-            JS_ReportOutOfMemory(cx);
+            js_ReportAllocationOverflow(cx);
             return JS_FALSE;
         }
     }
 
     if (newlength >= ~(size_t)0 / sizeof(jschar)) {
-        JS_ReportOutOfMemory(cx);
+        js_ReportAllocationOverflow(cx);
         return JS_FALSE;
     }
 
@@ -1211,15 +1211,16 @@ match_or_replace(JSContext *cx,
             JSStackFrame *fp;
 
             /* Skip Function.prototype.call and .apply frames. */
-            for (fp = cx->fp; fp && !fp->pc; fp = fp->down)
+            for (fp = cx->fp; fp && !fp->regs; fp = fp->down)
                 JS_ASSERT(!fp->script);
 
             /* Assume a full array result is required, then prove otherwise. */
             test = JS_FALSE;
             if (fp) {
-                JS_ASSERT(*fp->pc == JSOP_CALL || *fp->pc == JSOP_NEW);
-                JS_ASSERT(js_CodeSpec[*fp->pc].length == 3);
-                switch (fp->pc[3]) {
+                JS_ASSERT(*fp->regs->pc == JSOP_CALL ||
+                          *fp->regs->pc == JSOP_NEW);
+                JS_ASSERT(js_CodeSpec[*fp->regs->pc].length == 3);
+                switch (fp->regs->pc[3]) {
                   case JSOP_POP:
                   case JSOP_IFEQ:
                   case JSOP_IFNE:
@@ -2068,7 +2069,7 @@ tagify(JSContext *cx, const char *begin, JSString *param, const char *end,
     taglen += JSSTRING_LENGTH(str) + 2 + endlen + 1;    /* 'str</end>' */
 
     if (taglen >= ~(size_t)0 / sizeof(jschar)) {
-        JS_ReportOutOfMemory(cx);
+        js_ReportAllocationOverflow(cx);
         return JS_FALSE;
     }
 
@@ -2461,7 +2462,7 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
     JSString *str;
 
     if (length > JSSTRING_LENGTH_MASK) {
-        JS_ReportOutOfMemory(cx);
+        js_ReportAllocationOverflow(cx);
         return NULL;
     }
 

@@ -250,6 +250,12 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
     ZeroMemory(&startupInfo, sizeof(startupInfo));
     startupInfo.cb = sizeof(startupInfo);
 
+    /* The CREATE_NO_WINDOW flag is important to prevent console
+     * windows from appearing.  This makes behavior the same on all
+     * platforms.  This won't work on win9x, however.  The flag will
+     * not have any effect on non-console applications.
+     */
+
     retVal = CreateProcess(NULL,
                            // const_cast<char*>(mTargetPath.get()),
                            cmdLine,
@@ -258,7 +264,7 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
                            NULL,  /* security attributes for the primary
                                    * thread in the new process */
                            FALSE,  /* inherit handles */
-                           0,     /* creation flags */
+                           CREATE_NO_WINDOW, /* creation flags */
                            NULL,  /* env */
                            NULL,  /* current drive and directory */
                            &startupInfo,

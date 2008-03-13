@@ -1359,7 +1359,7 @@ nsSVGGlyphFrame::nsSVGAutoGlyphHelperContext::nsSVGAutoGlyphHelperContext(
   Init(aSource, aText);
 
   nsresult rv = aSource->GetCharacterPosition(mCT, aText, cp);
-  if NS_FAILED(rv) {
+  if (NS_FAILED(rv)) {
     NS_WARNING("failed to get character position data");
   }
 }

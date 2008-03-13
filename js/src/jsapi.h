@@ -2467,6 +2467,12 @@ JS_ReportErrorFlagsAndNumberUC(JSContext *cx, uintN flags,
 extern JS_PUBLIC_API(void)
 JS_ReportOutOfMemory(JSContext *cx);
 
+/*
+ * Complain when an allocation size overflows the maximum supported limit.
+ */
+extern JS_PUBLIC_API(void)
+JS_ReportAllocationOverflow(JSContext *cx);
+
 struct JSErrorReport {
     const char      *filename;      /* source file name, URL, etc., or null */
     uintN           lineno;         /* source line number */

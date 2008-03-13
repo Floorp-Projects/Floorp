@@ -51,7 +51,7 @@
  *       JSON.fromString aren't instanceof Object/Array.
  */
 
-EXPORTED_SYMBOLS = ["JSON"];
+var EXPORTED_SYMBOLS = ["JSON"];
 
 // The following code is a loose adaption of Douglas Crockford's code
 // from http://www.json.org/json.js (public domain'd)

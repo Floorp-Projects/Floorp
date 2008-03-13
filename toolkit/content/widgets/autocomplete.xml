@@ -938,7 +938,7 @@
             var width = rect.right - rect.left;
             this.setAttribute("width", width > 100 ? width : 100);
             // invalidate() depends on the width attribute
-            this.invalidate();
+            this._invalidate();
 
             this.openPopup(aElement, "after_start", 0, 0, false, false);
             this.popupBoxObject.setConsumeRollupEvent(this.mInput.consumeRollupEvent);
@@ -948,6 +948,18 @@
       </method>
 
       <method name="invalidate">
+        <body>
+          <![CDATA[
+          // Don't bother doing work if we're not even showing
+          if (!this.mPopupOpen)
+            return;
+
+          this._invalidate();
+          ]]>
+        </body>
+      </method>
+
+      <method name="_invalidate">
         <body>
           <![CDATA[
           // collapsed if no matches
@@ -1013,9 +1025,22 @@
             // trim the leading/trailing whitespace
             var trimmedSearchString = controller.searchString.replace(/^\s+/, "").replace(/\s+$/, "");  
 
+            // Unescape the URI spec for showing as an entry in the popup
+            let url = Components.classes["@mozilla.org/intl/texttosuburi;1"].
+              getService(Components.interfaces.nsITextToSubURI).
+              unEscapeURIForUI("UTF-8", controller.getValueAt(this._currentIndex));
+
             if (this._currentIndex < existingItemsCount) {
               // re-use the existing item
               item = this.richlistbox.childNodes[this._currentIndex];
+
+              // Completely re-use the existing richlistitem if it's the same
+              if (item.getAttribute("text") == trimmedSearchString &&
+                  item.getAttribute("url") == url) {
+                item.collapsed = false;
+                this._currentIndex++;
+                continue;
+              }
             }
             else {
               // need to create a new item
@@ -1025,7 +1050,7 @@
             // set these attributes before we set the class 
             // so that we can use them from the contructor         
             item.setAttribute("image", controller.getImageAt(this._currentIndex));
-            item.setAttribute("url", controller.getValueAt(this._currentIndex));
+            item.setAttribute("url", url);
             item.setAttribute("title", controller.getCommentAt(this._currentIndex));
             item.setAttribute("type", controller.getStyleAt(this._currentIndex));
             item.setAttribute("text", trimmedSearchString);

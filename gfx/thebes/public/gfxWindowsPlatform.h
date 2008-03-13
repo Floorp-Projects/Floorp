@@ -69,6 +69,8 @@ public:
                              FontResolverCallback aCallback,
                              void *aClosure, PRBool& aAborted);
 
+    nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
+
     gfxFontGroup *CreateFontGroup(const nsAString &aFamilies,
                                   const gfxFontStyle *aStyle);
 
@@ -89,6 +91,8 @@ public:
 
 private:
     void Init();
+
+    void InitBadUnderlineList();
 
     static int CALLBACK FontEnumProc(const ENUMLOGFONTEXW *lpelfe,
                                      const NEWTEXTMETRICEXW *metrics,

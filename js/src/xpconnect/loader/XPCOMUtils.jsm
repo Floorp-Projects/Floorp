@@ -99,7 +99,7 @@
  */
 
 
-EXPORTED_SYMBOLS = [ "XPCOMUtils" ];
+var EXPORTED_SYMBOLS = [ "XPCOMUtils" ];
 
 const Ci = Components.interfaces;
 const Cr = Components.results;

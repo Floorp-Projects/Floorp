@@ -2528,7 +2528,7 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, PRInt64 aVisitId,
 
       PRBool hasDomain;
       queryHost->GetHasDomain(&hasDomain);
-      if (!hasDomain || !queryHost->DomainIsHost())
+      if (!hasDomain)
         return NS_OK;
 
       nsCAutoString host;

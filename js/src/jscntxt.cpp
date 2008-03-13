@@ -890,9 +890,9 @@ js_ReportOutOfMemory(JSContext *cx)
      * rather than a native frame.
      */
     for (fp = cx->fp; fp; fp = fp->down) {
-        if (fp->script && fp->pc) {
+        if (fp->regs) {
             report.filename = fp->script->filename;
-            report.lineno = js_PCToLineNumber(cx, fp->script, fp->pc);
+            report.lineno = js_PCToLineNumber(cx, fp->script, fp->regs->pc);
             break;
         }
     }
@@ -929,6 +929,12 @@ js_ReportOverRecursed(JSContext *cx)
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
 }
 
+void
+js_ReportAllocationOverflow(JSContext *cx)
+{
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_ALLOC_OVERFLOW);
+}
+
 JSBool
 js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
 {
@@ -954,9 +960,9 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
 
     /* Find the top-most active script frame, for best line number blame. */
     for (fp = cx->fp; fp; fp = fp->down) {
-        if (fp->script && fp->pc) {
+        if (fp->regs) {
             report.filename = fp->script->filename;
-            report.lineno = js_PCToLineNumber(cx, fp->script, fp->pc);
+            report.lineno = js_PCToLineNumber(cx, fp->script, fp->regs->pc);
             break;
         }
     }
@@ -1166,9 +1172,9 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
      * see if the next frame has a script/pc combo we can use.
      */
     for (fp = cx->fp; fp; fp = fp->down) {
-        if (fp->script && fp->pc) {
+        if (fp->regs) {
             report.filename = fp->script->filename;
-            report.lineno = js_PCToLineNumber(cx, fp->script, fp->pc);
+            report.lineno = js_PCToLineNumber(cx, fp->script, fp->regs->pc);
             break;
         }
     }

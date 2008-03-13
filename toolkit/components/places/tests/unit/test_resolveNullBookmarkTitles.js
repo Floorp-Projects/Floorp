@@ -42,8 +42,9 @@
 try {
   var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
                 getService(Ci.nsINavHistoryService);
+  var bhist = histsvc.QueryInterface(Ci.nsIBrowserHistory);
 } catch(ex) {
-  do_throw("Could not get history service\n");
+  do_throw("Could not get history services\n");
 }
 
 // Get bookmark service
@@ -71,10 +72,9 @@ function run_test() {
   tagssvc.tagURI(uri1, ["tag 1"]);
   tagssvc.tagURI(uri2, ["tag 2"]);
 
-  histsvc.addVisit(uri1, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
-  histsvc.setPageDetails(uri1, "foo title", 0, false, true);
-  histsvc.addVisit(uri2, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
-  histsvc.setPageDetails(uri2, "bar title", 0, false, true);
+  bhist.addPageWithDetails(uri1, "foo title", Date.now() * 1000);
+
+  bhist.addPageWithDetails(uri2, "bar title", Date.now() * 1000);
 
   var options = histsvc.getNewQueryOptions();
   options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
@@ -84,7 +84,7 @@ function run_test() {
   options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
   options.maxResults = 2;
 
-  query = histsvc.getNewQuery();
+  var query = histsvc.getNewQuery();
   query.setFolders([bmsvc.tagsFolder], 1);
   var result = histsvc.executeQuery(query, options);
   var root = result.root;

@@ -1,4 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: ft=cpp tw=78 sw=4 et ts=4 sts=4 cin
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -11,14 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is module loader tests.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
+ * Mozilla Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Dave Camp <dcamp@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,12 +37,47 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var EXPORTED_SYMBOLS = ["baz", "qux"];
+#include "nsISupports.idl"
 
-function baz() {
-  return "baz";
-}
+interface nsIChannel;
 
-var qux = {}
-Components.utils.import("resource://test/recursive_importA.jsm", qux);
+/**
+ * An nsIChannelClassifier object checks a channel's URI against the
+ * URI classifier service, and cancels the channel before OnStartRequest
+ * if it is found on a blacklist.
+ */
+[scriptable, uuid(d17f8f74-d403-4dea-b124-3ace5dbe44dc)]
+interface nsIChannelClassifier : nsISupports
+{
+  /**
+   * Checks a channel against the URI classifier service (if it exists).
+   *
+   * The channel will be suspended while the classifier is checked.  The
+   * channel may be cancelled with an error code determined by the classifier
+   * before it is resumed.
+   *
+   * If there is no URI classifier service, NS_ERROR_FACTORY_NOT_REGISTERED
+   * will be returned.
+   *
+   * @param aChannel
+   *        The channel to suspend.
+   */
+  void start(in nsIChannel aChannel);
 
+  /**
+   * Notify the classifier that the channel was redirected.  The new channel
+   * will be suspended pending a new classifier lookup.
+   *
+   * @param aOldChannel
+   *        The channel that's being redirected.
+   * @param aNewChannel
+   *        The new channel. This channel is not opened yet.
+   */
+  void onRedirect(in nsIChannel aOldChannel, in nsIChannel aNewChannel);
+
+  /**
+   * Cancel an existing query.  If a channel has been suspended, it will
+   * be resumed.
+   */
+  void cancel();
+};

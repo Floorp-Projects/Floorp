@@ -92,8 +92,10 @@
  * declared on Windows.
  */
 #if HAS_POSIX_MEMALIGN && MOZ_MEMORY_WINDOWS
+JS_BEGIN_EXTERN_C
 extern int
 posix_memalign(void **memptr, size_t alignment, size_t size);
+JS_END_EXTERN_C
 #endif
 
 /*
@@ -2658,9 +2660,11 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
          * Don't mark what has not been pushed yet, or what has been
          * popped already.
          */
-        nslots = (uintN) (fp->sp - fp->spbase);
-        JS_ASSERT(nslots <= fp->script->depth);
-        TRACE_JSVALS(trc, nslots, fp->spbase, "operand");
+        if (fp->regs) {
+            nslots = (uintN) (fp->regs->sp - fp->spbase);
+            JS_ASSERT(nslots <= fp->script->depth);
+            TRACE_JSVALS(trc, nslots, fp->spbase, "operand");
+        }
     }
 
     /* Allow for primitive this parameter due to JSFUN_THISP_* flags. */

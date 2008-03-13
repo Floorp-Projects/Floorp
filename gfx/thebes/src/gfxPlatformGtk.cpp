@@ -253,6 +253,12 @@ gfxPlatformGtk::ResolveFontName(const nsAString& aFontName,
                                              aClosure, aAborted);
 }
 
+nsresult
+gfxPlatformGtk::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName)
+{
+    return sFontconfigUtils->GetStandardFamilyName(aFontName, aFamilyName);
+}
+
 gfxFontGroup *
 gfxPlatformGtk::CreateFontGroup(const nsAString &aFamilies,
                                 const gfxFontStyle *aStyle)
