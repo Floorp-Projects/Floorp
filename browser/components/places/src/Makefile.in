@@ -48,7 +48,9 @@ MODULE = browserplaces
 LIBRARY_NAME  = browserplaces_s
 FORCE_STATIC_LIB = 1
 FORCE_USE_PIC = 1
+ifndef MOZ_MEMORY
 USE_STATIC_LIBS = 1
+endif
 
 REQUIRES	= \
 		  xpcom \
