@@ -332,8 +332,8 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
         elem->filename = NULL;
         if (fp->script) {
             elem->filename = fp->script->filename;
-            if (fp->regs)
-                elem->ulineno = js_PCToLineNumber(cx, fp->script, fp->regs->pc);
+            if (fp->pc)
+                elem->ulineno = js_PCToLineNumber(cx, fp->script, fp->pc);
         }
         ++elem;
     }
@@ -799,9 +799,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     } else {
         if (!fp)
             fp = JS_GetScriptedCaller(cx, NULL);
-        lineno = (fp && fp->regs)
-                 ? js_PCToLineNumber(cx, fp->script, fp->regs->pc)
-                 : 0;
+        lineno = (fp && fp->pc) ? js_PCToLineNumber(cx, fp->script, fp->pc) : 0;
     }
 
     return (OBJ_GET_CLASS(cx, obj) != &js_ErrorClass) ||
