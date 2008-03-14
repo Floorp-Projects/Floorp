@@ -99,7 +99,6 @@ MAKEFILES_gfx="
   gfx/src/beos/Makefile
   gfx/src/psshared/Makefile
   gfx/src/photon/Makefile
-  gfx/src/mac/Makefile
   gfx/src/windows/Makefile
   gfx/src/thebes/Makefile
   gfx/tests/Makefile
