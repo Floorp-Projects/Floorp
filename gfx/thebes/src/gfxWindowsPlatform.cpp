@@ -211,9 +211,13 @@ gfxWindowsPlatform::FontGetCMapDataProc(nsStringHashKey::KeyType aKey,
         nsresult rv = ReadCMAP(hdc, aFontEntry);
 
         if (NS_FAILED(rv)) {
+            // Type1 fonts aren't necessarily Unicode but
+            // this is the best guess we can make here
             if (aFontEntry->mIsType1)
-                aFontEntry->mSymbolFont = PR_TRUE;
-            aFontEntry->mUnicodeFont = PR_FALSE;
+                aFontEntry->mUnicodeFont = PR_TRUE;
+            else
+                aFontEntry->mUnicodeFont = PR_FALSE;
+
             //printf("%d, %s failed to get cmap\n", aFontEntry->mIsType1, NS_ConvertUTF16toUTF8(aFontEntry->mName).get());
         }
 
