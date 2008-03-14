@@ -5431,8 +5431,15 @@ nsEventStateManager::ResetBrowseWithCaret()
   if (itemType == nsIDocShellTreeItem::typeChrome)
     return;  // Never browse with caret in chrome
 
+  PRPackedBool browseWithCaret =
+    nsContentUtils::GetBoolPref("accessibility.browsewithcaret");
+  mBrowseWithCaret = browseWithCaret;
+
   nsIPresShell *presShell = mPresContext->GetPresShell();
 
+  // If we're in an editable document which isn't contentEditable, or we're
+  // in a contentEditable document which whose focus is contentEditable,
+  // return, so that we don't mess with caret visibility.
   nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(shellItem));
   if (editorDocShell) {
     PRBool isEditable;
@@ -5440,29 +5447,24 @@ nsEventStateManager::ResetBrowseWithCaret()
     if (presShell && isEditable) {
       nsCOMPtr<nsIHTMLDocument> doc =
         do_QueryInterface(presShell->GetDocument());
-      if (!doc || doc->GetEditingState() != nsIHTMLDocument::eContentEditable) {
-        return;  // Reset caret visibility only if browsing, not editing except
-                 // for contentEditable
-      }
+
+      PRBool isContentEditableDoc =
+        doc && doc->GetEditingState() == nsIHTMLDocument::eContentEditable;
+
+      PRBool isFocusEditable =
+        mCurrentFocus && mCurrentFocus->HasFlag(NODE_IS_EDITABLE);
+
+      if (!isContentEditableDoc || isFocusEditable)
+        return;
     }
   }
-
-  PRPackedBool browseWithCaret =
-    nsContentUtils::GetBoolPref("accessibility.browsewithcaret");
-
-  mBrowseWithCaret = browseWithCaret;
 
   // Make caret visible or not, depending on what's appropriate.
   // Set caret visibility for focused document only,
   // others will be set when they get focused again
   if (presShell && gLastFocusedDocument && gLastFocusedDocument == mDocument) {
 
-    // Contenteditable nodes should always have a caret.
-    PRBool isFocusEditable =
-      (mCurrentFocus) ? mCurrentFocus->HasFlag(NODE_IS_EDITABLE) : PR_FALSE;
-
-    PRBool caretShouldBeVisible = isFocusEditable ||
-                                  browseWithCaret ||
+    PRBool caretShouldBeVisible = browseWithCaret ||
                                   GetWindowShowCaret(mDocument);
 
     SetContentCaretVisible(presShell, mCurrentFocus, caretShouldBeVisible);
