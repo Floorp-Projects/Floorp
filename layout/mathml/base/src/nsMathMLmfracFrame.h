@@ -112,6 +112,9 @@ public:
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
 
+  virtual nscoord
+  GetIntrinsicWidth(nsIRenderingContext* aRenderingContext);
+
   NS_IMETHOD
   Place(nsIRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
