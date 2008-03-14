@@ -701,7 +701,9 @@ protected:
   nsresult PerformAutoComplete();
   nsresult StartAutoCompleteTimer(PRUint32 aMilliseconds);
   static void AutoCompleteTimerCallback(nsITimer* aTimer, void* aClosure);
-  void DoneSearching();
+
+  PRBool mAutoCompleteFinishedSearch;
+  void DoneSearching(PRBool aFinished);
 
   PRInt32 mExpireDaysMin;
   PRInt32 mExpireDaysMax;
