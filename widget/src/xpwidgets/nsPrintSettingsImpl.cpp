@@ -954,16 +954,6 @@ nsPrintSettings::SetEdgeInTwips(nsMargin& aEdge)
   return NS_OK;
 }
 
-// NOTE: Any subclass implementation of this function should make sure
-// to check for negative margin values in aUnwriteableMargin (which 
-// would indicate that we should use the system default unwriteable margin.)
-NS_IMETHODIMP 
-nsPrintSettings::SetUnwriteableMarginInTwips(nsMargin& aUnwriteableMargin)
-{
-  // Default implementation does nothing
-  return NS_OK;
-}
-
 /** ---------------------------------------------------
  *  See documentation in nsPrintOptionsImpl.h
  *	@update 6/21/00 dwc
@@ -979,14 +969,6 @@ NS_IMETHODIMP
 nsPrintSettings::GetEdgeInTwips(nsMargin& aEdge)
 {
   aEdge = mEdge;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsPrintSettings::GetUnwriteableMarginInTwips(nsMargin& aUnwriteableMargin)
-{
-  // Default implementation just returns 0
-  aUnwriteableMargin.SizeTo(0,0,0,0);
   return NS_OK;
 }
 

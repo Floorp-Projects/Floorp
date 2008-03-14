@@ -418,8 +418,8 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
   double width, height;
   mPrintSettings->GetEffectivePageSize(&width, &height);
   // convert twips to points
-  width  /= TWIPS_PER_POINT_FLOAT;
-  height /= TWIPS_PER_POINT_FLOAT;
+  width /= 20;
+  height /= 20;
 
   DO_PR_DEBUG_LOG(("\"%s\", %f, %f\n", path, width, height));
   nsresult rv;

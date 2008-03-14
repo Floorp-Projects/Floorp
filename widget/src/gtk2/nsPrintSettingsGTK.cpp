@@ -506,6 +506,66 @@ nsPrintSettingsGTK::SetNumCopies(PRInt32 aNumCopies)
   return NS_OK;
 }
 
+/* attribute double edgeTop; */
+NS_IMETHODIMP
+nsPrintSettingsGTK::GetEdgeTop(double *aEdgeTop)
+{
+  NS_ENSURE_ARG_POINTER(aEdgeTop);
+  *aEdgeTop = gtk_page_setup_get_top_margin(mPageSetup, GTK_UNIT_INCH);
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsPrintSettingsGTK::SetEdgeTop(double aEdgeTop)
+{
+  gtk_page_setup_set_top_margin(mPageSetup, aEdgeTop, GTK_UNIT_INCH);
+  return NS_OK;
+}
+
+/* attribute double edgeLeft; */
+NS_IMETHODIMP
+nsPrintSettingsGTK::GetEdgeLeft(double *aEdgeLeft)
+{
+  NS_ENSURE_ARG_POINTER(aEdgeLeft);
+  *aEdgeLeft = gtk_page_setup_get_left_margin(mPageSetup, GTK_UNIT_INCH);
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsPrintSettingsGTK::SetEdgeLeft(double aEdgeLeft)
+{
+  gtk_page_setup_set_left_margin(mPageSetup, aEdgeLeft, GTK_UNIT_INCH);
+  return NS_OK;
+}
+
+/* attribute double edgeBottom; */
+NS_IMETHODIMP
+nsPrintSettingsGTK::GetEdgeBottom(double *aEdgeBottom)
+{
+  NS_ENSURE_ARG_POINTER(aEdgeBottom);
+  *aEdgeBottom = gtk_page_setup_get_bottom_margin(mPageSetup, GTK_UNIT_INCH);
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsPrintSettingsGTK::SetEdgeBottom(double aEdgeBottom)
+{
+  gtk_page_setup_set_bottom_margin(mPageSetup, aEdgeBottom, GTK_UNIT_INCH);
+  return NS_OK;
+}
+
+/* attribute double edgeRight; */
+NS_IMETHODIMP
+nsPrintSettingsGTK::GetEdgeRight(double *aEdgeRight)
+{
+  NS_ENSURE_ARG_POINTER(aEdgeRight);
+  *aEdgeRight = gtk_page_setup_get_right_margin(mPageSetup, GTK_UNIT_INCH);
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsPrintSettingsGTK::SetEdgeRight(double aEdgeRight)
+{
+  gtk_page_setup_set_right_margin(mPageSetup, aEdgeRight, GTK_UNIT_INCH);
+  return NS_OK;
+}
+
 /* attribute double scaling; */
 NS_IMETHODIMP
 nsPrintSettingsGTK::GetScaling(double *aScaling)
@@ -573,43 +633,6 @@ nsPrintSettingsGTK::SaveNewPageSize()
   gtk_page_setup_set_paper_size(mPageSetup, mPaperSize);
 }
 
-NS_IMETHODIMP 
-nsPrintSettingsGTK::GetUnwriteableMarginInTwips(nsMargin& aUnwriteableMargin)
-{
-  aUnwriteableMargin.SizeTo(
-   NS_INCHES_TO_TWIPS(gtk_page_setup_get_left_margin(mPageSetup, GTK_UNIT_INCH)),
-   NS_INCHES_TO_TWIPS(gtk_page_setup_get_top_margin(mPageSetup, GTK_UNIT_INCH)),
-   NS_INCHES_TO_TWIPS(gtk_page_setup_get_right_margin(mPageSetup, GTK_UNIT_INCH)),
-   NS_INCHES_TO_TWIPS(gtk_page_setup_get_bottom_margin(mPageSetup, GTK_UNIT_INCH))
-  );
-
-  return NS_OK;
-}
-
-// Note that margin values less than 0 are treated as "use system default"
-// (i.e. we'll keep whatever's in mPageSetup)
-NS_IMETHODIMP 
-nsPrintSettingsGTK::SetUnwriteableMarginInTwips(nsMargin& aUnwriteableMargin)
-{
-  if (aUnwriteableMargin.left >= 0) {
-    gtk_page_setup_set_left_margin(mPageSetup,
-        NS_TWIPS_TO_INCHES(aUnwriteableMargin.left), GTK_UNIT_INCH);
-  }
-  if (aUnwriteableMargin.top >= 0) {
-    gtk_page_setup_set_top_margin(mPageSetup,
-        NS_TWIPS_TO_INCHES(aUnwriteableMargin.top), GTK_UNIT_INCH);
-  }
-  if (aUnwriteableMargin.right >= 0) {
-    gtk_page_setup_set_right_margin(mPageSetup,
-        NS_TWIPS_TO_INCHES(aUnwriteableMargin.right), GTK_UNIT_INCH);
-  }
-  if (aUnwriteableMargin.bottom >= 0) {
-    gtk_page_setup_set_bottom_margin(mPageSetup,
-        NS_TWIPS_TO_INCHES(aUnwriteableMargin.bottom), GTK_UNIT_INCH);
-  }
-  return NS_OK;
-}
-
 /* attribute double paperWidth; */
 NS_IMETHODIMP
 nsPrintSettingsGTK::GetPaperWidth(double *aPaperWidth)
@@ -660,6 +683,27 @@ nsPrintSettingsGTK::SetPaperSizeUnit(PRInt16 aPaperSizeUnit)
   SaveNewPageSize();
 
   mPaperSizeUnit = aPaperSizeUnit;
+  return NS_OK;
+}
+
+// Get/Set our margins as an nsMargin
+NS_IMETHODIMP
+nsPrintSettingsGTK::SetEdgeInTwips(nsMargin& aEdge)
+{
+  gtk_page_setup_set_top_margin(mPageSetup, NS_TWIPS_TO_INCHES(aEdge.top), GTK_UNIT_INCH);
+  gtk_page_setup_set_left_margin(mPageSetup, NS_TWIPS_TO_INCHES(aEdge.left), GTK_UNIT_INCH);
+  gtk_page_setup_set_bottom_margin(mPageSetup, NS_TWIPS_TO_INCHES(aEdge.bottom), GTK_UNIT_INCH);
+  gtk_page_setup_set_right_margin(mPageSetup, NS_TWIPS_TO_INCHES(aEdge.right), GTK_UNIT_INCH);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrintSettingsGTK::GetEdgeInTwips(nsMargin& aEdge)
+{
+  aEdge.SizeTo(NS_INCHES_TO_TWIPS(gtk_page_setup_get_left_margin(mPageSetup, GTK_UNIT_INCH)),
+               NS_INCHES_TO_TWIPS(gtk_page_setup_get_top_margin(mPageSetup, GTK_UNIT_INCH)),
+               NS_INCHES_TO_TWIPS(gtk_page_setup_get_right_margin(mPageSetup, GTK_UNIT_INCH)),
+               NS_INCHES_TO_TWIPS(gtk_page_setup_get_bottom_margin(mPageSetup, GTK_UNIT_INCH)));
   return NS_OK;
 }
 
