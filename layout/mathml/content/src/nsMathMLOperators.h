@@ -40,45 +40,49 @@
 
 #include "nsCoord.h"
 
+enum nsStretchDirection {
+  NS_STRETCH_DIRECTION_UNSUPPORTED = -1,
+  NS_STRETCH_DIRECTION_DEFAULT     =  0,
+  NS_STRETCH_DIRECTION_HORIZONTAL  =  1,
+  NS_STRETCH_DIRECTION_VERTICAL    =  2
+};
+
 typedef PRUint32 nsOperatorFlags;
-typedef PRInt32 nsStretchDirection;
+enum {
+  // define the bits used to handle the operator
+  NS_MATHML_OPERATOR_MUTABLE            = 1<<30,
+  NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR = 1<<29,
+  NS_MATHML_OPERATOR_EMBELLISH_ISOLATED = 1<<28,
+  NS_MATHML_OPERATOR_CENTERED           = 1<<27,
+  NS_MATHML_OPERATOR_INVISIBLE          = 1<<26,
 
-#define NS_STRETCH_DIRECTION_UNSUPPORTED  -1
-#define NS_STRETCH_DIRECTION_DEFAULT       0
-#define NS_STRETCH_DIRECTION_HORIZONTAL    1
-#define NS_STRETCH_DIRECTION_VERTICAL      2
+  // define the bits used in the Operator Dictionary
 
-// define the bits used to handle the operator
+  // the very last two bits tell us the form
+  NS_MATHML_OPERATOR_FORM               = 0x3,
+  NS_MATHML_OPERATOR_FORM_INFIX           = 1,
+  NS_MATHML_OPERATOR_FORM_PREFIX          = 2,
+  NS_MATHML_OPERATOR_FORM_POSTFIX         = 3,
+  // the next 2 bits tell us the stretchiness
+  NS_MATHML_OPERATOR_STRETCHY           = 0xC,
+  NS_MATHML_OPERATOR_STRETCHY_VERT        = 1<<2,
+  NS_MATHML_OPERATOR_STRETCHY_HORIZ       = 1<<3,
+  // other bits used in the Operator Dictionary
+  NS_MATHML_OPERATOR_FENCE              = 1<<4,
+  NS_MATHML_OPERATOR_ACCENT             = 1<<5,
+  NS_MATHML_OPERATOR_LARGEOP            = 1<<6,
+  NS_MATHML_OPERATOR_SEPARATOR          = 1<<7,
+  NS_MATHML_OPERATOR_MOVABLELIMITS      = 1<<8,
+  NS_MATHML_OPERATOR_SYMMETRIC          = 1<<9,
 
-#define NS_MATHML_OPERATOR_MUTABLE            (1<<31)
-#define NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR (1<<30)
-#define NS_MATHML_OPERATOR_EMBELLISH_ISOLATED (1<<29)
-#define NS_MATHML_OPERATOR_CENTERED           (1<<28)
-#define NS_MATHML_OPERATOR_INVISIBLE          (1<<27)
+  // Additional bits not stored in the dictionary
+  NS_MATHML_OPERATOR_MINSIZE_ABSOLUTE   = 1<<10,
+  NS_MATHML_OPERATOR_MAXSIZE_ABSOLUTE   = 1<<11,
+  NS_MATHML_OPERATOR_LEFTSPACE_ATTR     = 1<<12,
+  NS_MATHML_OPERATOR_RIGHTSPACE_ATTR    = 1<<13
+};
 
-// define the bits used in the Operator Dictionary
-
-#define NS_MATHML_OPERATOR_FORM  0x3 // the very last two bits tell us the form
-#define     NS_MATHML_OPERATOR_FORM_INFIX      1
-#define     NS_MATHML_OPERATOR_FORM_PREFIX     2
-#define     NS_MATHML_OPERATOR_FORM_POSTFIX    3
-#define NS_MATHML_OPERATOR_STRETCHY 0xC // the 2 penultimate last bits are used
-#define     NS_MATHML_OPERATOR_STRETCHY_VERT  (1<<2)
-#define     NS_MATHML_OPERATOR_STRETCHY_HORIZ (1<<3)
-#define NS_MATHML_OPERATOR_FENCE              (1<<4)
-#define NS_MATHML_OPERATOR_ACCENT             (1<<5)
-#define NS_MATHML_OPERATOR_LARGEOP            (1<<6)
-#define NS_MATHML_OPERATOR_SEPARATOR          (1<<7)
-#define NS_MATHML_OPERATOR_MOVABLELIMITS      (1<<8)
-#define NS_MATHML_OPERATOR_SYMMETRIC          (1<<9)
-
-// Additional bits not stored in the dictionary
-
-#define NS_MATHML_OPERATOR_MINSIZE_EXPLICIT   (1<<10)
-#define NS_MATHML_OPERATOR_MAXSIZE_EXPLICIT   (1<<11)
-#define NS_MATHML_OPERATOR_LEFTSPACE_ATTR     (1<<12)
-#define NS_MATHML_OPERATOR_RIGHTSPACE_ATTR    (1<<13)
-
+#define NS_MATHML_OPERATOR_SIZE_INFINITY NS_IEEEPositiveInfinity()
 
 class nsMathMLOperators {
 public:
@@ -210,11 +214,11 @@ public:
 #define NS_MATHML_OPERATOR_IS_SYMMETRIC(_flags) \
   (NS_MATHML_OPERATOR_SYMMETRIC == ((_flags) & NS_MATHML_OPERATOR_SYMMETRIC))
 
-#define NS_MATHML_OPERATOR_MINSIZE_IS_EXPLICIT(_flags) \
-  (NS_MATHML_OPERATOR_MINSIZE_EXPLICIT == ((_flags) & NS_MATHML_OPERATOR_MINSIZE_EXPLICIT))
+#define NS_MATHML_OPERATOR_MINSIZE_IS_ABSOLUTE(_flags) \
+  (NS_MATHML_OPERATOR_MINSIZE_ABSOLUTE == ((_flags) & NS_MATHML_OPERATOR_MINSIZE_ABSOLUTE))
 
-#define NS_MATHML_OPERATOR_MAXSIZE_IS_EXPLICIT(_flags) \
-  (NS_MATHML_OPERATOR_MAXSIZE_EXPLICIT == ((_flags) & NS_MATHML_OPERATOR_MAXSIZE_EXPLICIT))
+#define NS_MATHML_OPERATOR_MAXSIZE_IS_ABSOLUTE(_flags) \
+  (NS_MATHML_OPERATOR_MAXSIZE_ABSOLUTE == ((_flags) & NS_MATHML_OPERATOR_MAXSIZE_ABSOLUTE))
 
 #define NS_MATHML_OPERATOR_HAS_LEFTSPACE_ATTR(_flags) \
   (NS_MATHML_OPERATOR_LEFTSPACE_ATTR == ((_flags) & NS_MATHML_OPERATOR_LEFTSPACE_ATTR))
