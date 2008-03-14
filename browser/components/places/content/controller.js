@@ -1239,17 +1239,49 @@ var PlacesControllerDragHelper = {
   /**
    * Determines whether or not the data currently being dragged can be dropped
    * on a places view.
+   * @param ip
+   *        The insertion point where the items should be dropped
    */
-  canDrop: function PCDH_canDrop() {
+  canDrop: function PCDH_canDrop(ip) {
     var session = this.getSession();
-    if (session) {
-      var types = PlacesUIUtils.GENERIC_VIEW_DROP_TYPES;
-      for (var i = 0; i < types.length; ++i) {
-        if (session.isDataFlavorSupported(types[i]))
-          return true;
+    if (!session)
+      return false;
+
+    var types = PlacesUIUtils.GENERIC_VIEW_DROP_TYPES;
+    var foundType = false;
+    for (var i = 0; i < types.length && !foundType; ++i) {
+      if (session.isDataFlavorSupported(types[i]))
+        foundType = true;
+    }
+
+    if (!foundType)
+      return false;
+
+    // Check every dragged item
+    var xferable = this._initTransferable(session);
+    var dropCount = session.numDropItems;
+    for (i = 0; i < dropCount; i++) {
+      // Get the information of the dragged item
+      session.getData(xferable, i);
+      var data = { }, flavor = { };
+      xferable.getAnyTransferData(flavor, data, { });
+      data.value.QueryInterface(Ci.nsISupportsString);
+      var dragged = PlacesUtils.unwrapNodes(data.value.data, flavor.value)[0];
+    
+      // The following loop disallows the dropping of a folder on itself or
+      // on any of its descendants.
+      if (dragged.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER ||
+          /^place:/.test(dragged.uri)) {
+        var parentId = ip.itemId;
+        while (parentId != PlacesUtils.placesRootId) {
+          if (dragged.concreteId == parentId || dragged.id == parentId)
+            return false;
+          parentId = PlacesUtils.bookmarks.getFolderIdForItem(parentId);
+        }
       }
     }
-    return false;
+
+    return true;
   },
 
   /** 
