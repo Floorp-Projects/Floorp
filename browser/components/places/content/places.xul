@@ -432,6 +432,9 @@
                              oncommand="PlacesQueryBuilder.onScopeSelected(this);"
                              label="&search.scopeHistory.label;"/>
               <spacer flex="1"/>
+              <button id="saveSearch" class="small" 
+                       label="&saveSearch.label;" accesskey="&saveSearch.accesskey;"
+                       command="OrganizerCommand_search:save"/>
               <button id="organizerScopeBarExpander"
                       class="expander-down"
                       tooltiptext="&search.scopeBarExpanderDown.tooltip;"
@@ -439,13 +442,7 @@
                       tooltiptextup="&search.scopeBarExpanderUp.tooltip;"
                       oncommand="PlacesQueryBuilder.toggleVisibility();"/>
             </toolbar>
-#include advancedSearch.inc          
-            <hbox id="searchActions" align="center">
-              <spacer flex="1"/>
-               <button id="saveSearch" class="small" 
-                       label="&saveSearch.label;" accesskey="&saveSearch.accesskey;"
-                       command="OrganizerCommand_search:save"/>
-            </hbox>
+#include advancedSearch.inc
           </vbox>
           <vbox flex="1">
             <tree id="placeContent" class="placesTree" context="placesContext" 
