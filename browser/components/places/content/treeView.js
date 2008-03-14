@@ -986,7 +986,9 @@ PlacesTreeView.prototype = {
       if (node.parent && PlacesUtils.nodeIsReadOnly(node.parent))
         return false;
     }
-    return PlacesControllerDragHelper.canDrop();
+  
+    var ip = this._getInsertionPoint(aRow, aOrientation);
+    return ip && PlacesControllerDragHelper.canDrop(ip);
   },
 
   // XXXmano: these two are copied over from tree.xml, to fix this we need to

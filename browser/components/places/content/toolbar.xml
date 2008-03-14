@@ -825,7 +825,8 @@
         },
 
         canDrop: function TBV_DO_canDrop(event, session) {
-          return PlacesControllerDragHelper.canDrop();
+          var ip = this.insertionPoint;
+          return ip && PlacesControllerDragHelper.canDrop(ip);
         },
 
         onDragOver: function TBV_DO_onDragOver(event, flavor, session) {

@@ -1202,6 +1202,7 @@ var PlacesUtils = {
           self.bookmarks.getItemType(aJSNode.id) == self.bookmarks.TYPE_BOOKMARK) {
         aJSNode.type = self.TYPE_X_MOZ_PLACE;
         aJSNode.uri = aPlacesNode.uri;
+        aJSNode.concreteId = PlacesUtils.getConcreteItemId(aPlacesNode);
         return;
       }
       else if (aJSNode.id != -1) { // bookmark folder
