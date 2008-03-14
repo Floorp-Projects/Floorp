@@ -259,6 +259,23 @@ nsresult nsPrintSettingsX::Init()
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+NS_IMETHODIMP nsPrintSettingsX::GetUnwriteableMarginInTwips(nsMargin& aUnwriteableMargin)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  PMPaper paper;
+  PMPaperMargins margins;
+  ::PMGetPageFormatPaper(mPageFormat, &paper);
+  ::PMPaperGetMargins(paper, &margins);
+  aUnwriteableMargin.top    = NS_POINTS_TO_TWIPS(margins.top);
+  aUnwriteableMargin.left   = NS_POINTS_TO_TWIPS(margins.left);
+  aUnwriteableMargin.bottom = NS_POINTS_TO_TWIPS(margins.bottom);
+  aUnwriteableMargin.right  = NS_POINTS_TO_TWIPS(margins.right);
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;  
+}
+
 /** ---------------------------------------------------
  */
 NS_IMETHODIMP nsPrintSettingsX::GetNativePrintSession(PMPrintSession *aNativePrintSession)
@@ -493,8 +510,8 @@ OSStatus nsPrintSettingsX::CreateDefaultPageFormat(PMPrintSession aSession, PMPa
   
   outFormat = kPMNoPageFormat;
   status = ::PMCreatePageFormat(&pageFormat);
-    if (status == noErr && pageFormat != kPMNoPageFormat) {
-      status = ::PMSessionDefaultPageFormat(aSession, pageFormat);
+  if (status == noErr && pageFormat != kPMNoPageFormat) {
+    status = ::PMSessionDefaultPageFormat(aSession, pageFormat);
     if (status == noErr) {
       outFormat = pageFormat;
       return NS_OK;
