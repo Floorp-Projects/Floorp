@@ -582,20 +582,24 @@ var BookmarksEventHandler = {
   /**
    * Handler for click event for an item in the bookmarks toolbar or menu.
    * Menus and submenus from the folder buttons bubble up to this handler.
-   * Only handle middle-click; left-click is handled in the onCommand function.
-   * When items are middle-clicked, open them in tabs.
+   * Left-click is handled in the onCommand function.
+   * When items are middle-clicked (or clicked with modifier), open in tabs.
    * If the click came through a menu, close the menu.
    * @param aEvent
    *        DOMEvent for the click
    */
   onClick: function BT_onClick(aEvent) {
-    // Only handle middle-clicks.
-    if (aEvent.button != 1)
+    // Only handle middle-click or left-click with modifiers.
+#ifdef XP_MACOSX
+    var modifKey = aEvent.metaKey || aEvent.shiftKey;
+#else
+    var modifKey = aEvent.ctrlKey || aEvent.shiftKey;
+#endif
+    if (aEvent.button == 2 || (aEvent.button == 0 && !modifKey))
       return;
 
     var target = aEvent.originalTarget;
-    var view = PlacesUIUtils.getViewForNode(target);
-    if (target.node && PlacesUtils.nodeIsFolder(target.node)) {
+    if (target.node && PlacesUtils.nodeIsContainer(target.node)) {
       // Don't open the root folder in tabs when the empty area on the toolbar
       // is middle-clicked or when a non-bookmark item except for Open in Tabs)
       // in a bookmarks menupopup is middle-clicked.
@@ -605,27 +609,15 @@ var BookmarksEventHandler = {
     else
       this.onCommand(aEvent);
 
-    // If this event bubbled up from a menu or menuitem,
-    // close the menus.
-    if (target.localName == "menu" ||
-        target.localName == "menuitem") {
-      var node = target.parentNode;
-      while (node && 
-             (node.localName == "menu" || 
-              node.localName == "menupopup")) {
+    // If this event bubbled up from a menu or menuitem, close the menus.
+    if (target.localName == "menu" || target.localName == "menuitem") {
+      for (node = target.parentNode; node; node = node.parentNode) {
         if (node.localName == "menupopup")
           node.hidePopup();
-
-        node = node.parentNode;
+        else if (node.localName != "menu")
+          break;
       }
     }
-    // The event target we get if someone middle clicks on a bookmark in the
-    // bookmarks toolbar overflow menu is different from if they click on a
-    // bookmark in a folder or in the bookmarks menu; handle this case
-    // separately.
-    var bookmarksBar = document.getElementById("bookmarksBarContent");
-    if (bookmarksBar._chevron.getAttribute("open") == "true")
-      bookmarksBar._chevron.firstChild.hidePopup();
   },
 
   /**
@@ -727,6 +719,8 @@ var BookmarksEventHandler = {
         target._endOptOpenAllInTabs = document.createElement("menuitem");
         target._endOptOpenAllInTabs.setAttribute("oncommand",
             "PlacesUIUtils.openContainerNodeInTabs(this.parentNode._resultNode, event);");
+        target._endOptOpenAllInTabs.setAttribute("onclick",
+            "checkForMiddleClick(this, event); event.stopPropagation();");
         target._endOptOpenAllInTabs.setAttribute("label",
             gNavigatorBundle.getString("menuOpenAllInTabs.label"));
         target.appendChild(target._endOptOpenAllInTabs);

@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   Dan Mills <thunder@mozilla.com> (Ported from history-panel.js)
+#   Marco Bonardo <mak77@supereva.it>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,8 +39,11 @@
 
 var SidebarUtils = {
   handleTreeClick: function SU_handleTreeClick(aTree, aEvent, aGutterSelect) {
-    var tbo = aTree.treeBoxObject;
+    // right-clicks are not handled here
+    if (aEvent.button == 2)
+      return;
 
+    var tbo = aTree.treeBoxObject;
     var row = { }, col = { }, obj = { };
     tbo.getCellAt(aEvent.clientX, aEvent.clientY, row, col, obj);
 
@@ -53,19 +57,33 @@ var SidebarUtils = {
                                x, y, w, h);
       mouseInGutter = aEvent.clientX < x.value;
     }
-    
-    var modifKey = aEvent.shiftKey || aEvent.ctrlKey || aEvent.altKey || 
-                   aEvent.metaKey  || (aEvent.button != 0);
-    if (!modifKey && tbo.view.isContainer(row.value)) {
+
+#ifdef XP_MACOSX
+    var modifKey = aEvent.metaKey || aEvent.shiftKey;
+#else
+    var modifKey = aEvent.ctrlKey || aEvent.shiftKey;
+#endif
+
+    var isContainer = tbo.view.isContainer(row.value);
+    var openInTabs = isContainer &&
+                     (aEvent.button == 1 ||
+                      (aEvent.button == 0 && modifKey)) &&
+                     PlacesUtils.hasChildURIs(tbo.view.nodeForTreeIndex(row.value));
+
+    if (aEvent.button == 0 && isContainer && !openInTabs) {
       tbo.view.toggleOpenState(row.value);
       return;
     }
-    if (!mouseInGutter && 
-        aEvent.originalTarget.localName == "treechildren" && 
-        (aEvent.button == 0 || aEvent.button == 1)) {
+    else if (!mouseInGutter && openInTabs &&
+            aEvent.originalTarget.localName == "treechildren") {
+      tbo.view.selection.select(row.value);
+      PlacesUIUtils.openContainerNodeInTabs(aTree.selectedNode, aEvent);
+    }
+    else if (!mouseInGutter && !isContainer &&
+             aEvent.originalTarget.localName == "treechildren") {
       // Clear all other selection since we're loading a link now. We must
       // do this *before* attempting to load the link since openURL uses
-      // selection as an indication of which link to load. 
+      // selection as an indication of which link to load.
       tbo.view.selection.select(row.value);
       PlacesUIUtils.openNodeWithEvent(aTree.selectedNode, aEvent);
     }
