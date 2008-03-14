@@ -121,7 +121,7 @@
         context="placesContext"
         hidecolumnpicker="true"
         onkeypress="SidebarUtils.handleTreeKeyPress(event);"
-        onclick="SidebarUtils.handleTreeClick(this, event);"
+        onclick="SidebarUtils.handleTreeClick(this, event, true);"
         onmousemove="SidebarUtils.handleTreeMouseMove(event);"
         onmouseout="SidebarUtils.clearURLFromStatusBar();">
     <treecols>

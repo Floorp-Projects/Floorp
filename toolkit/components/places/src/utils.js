@@ -871,11 +871,44 @@ var PlacesUtils = {
     return -1;
   },
 
+  // Returns true if a container has uris in its first level
+  // Has better performances than checking getURLsForContainerNode(node).length
+  hasChildURIs: function PU_hasChildURIs(aNode) {
+    if (!this.nodeIsContainer(aNode))
+      return false;
+
+    // in the Library left pane we use excludeItems
+    if (this.nodeIsFolder(aNode) && asQuery(aNode).queryOptions.excludeItems) {
+      var itemId = PlacesUtils.getConcreteItemId(aNode);
+      var contents = this.getFolderContents(itemId, false, false).root;
+      for (var i = 0; i < contents.childCount; ++i) {
+        var child = contents.getChild(i);
+        if (this.nodeIsURI(child))
+          return true;
+      }
+      return false;
+    }
+
+    var wasOpen = aNode.containerOpen;
+    if (!wasOpen)
+      aNode.containerOpen = true;
+    var found = false;
+    for (var i = 0; i < aNode.childCount && !found; i++) {
+      var child = aNode.getChild(i);
+      if (this.nodeIsURI(child))
+        found = true;
+    }
+    if (!wasOpen)
+      aNode.containerOpen = false;
+    return found;
+  },
+
   getURLsForContainerNode: function PU_getURLsForContainerNode(aNode) {
     let urls = [];
     if (this.nodeIsFolder(aNode) && asQuery(aNode).queryOptions.excludeItems) {
       // grab manually
-      let contents = this.getFolderContents(aNode.itemId, false, false).root;
+      var itemId = this.getConcreteItemId(aNode);
+      let contents = this.getFolderContents(itemId, false, false).root;
       for (let i = 0; i < contents.childCount; ++i) {
         let child = contents.getChild(i);
         if (this.nodeIsURI(child))
