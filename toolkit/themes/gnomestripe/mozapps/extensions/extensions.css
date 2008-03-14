@@ -134,18 +134,17 @@ richlistitem[selected="true"]:not([opType]) .descriptionCrop {
 .notifyBadge {
   width: 16px;
   height: 16px;
-  margin-bottom: -3px;
-  list-style-image: url("chrome://mozapps/skin/extensions/notifyBadges.png");
+  margin-bottom: -3px; 
 }
 
 .updateBadge {
   -moz-margin-end: -2px;
-  -moz-image-region: rect(0px 16px 16px 0px);
+  list-style-image: url("chrome://mozapps/skin/extensions/notifyBadges.png");
 }
 
 .notifyBadge {
   -moz-margin-start: -2px;
-  -moz-image-region: rect(0px 48px 16px 32px);
+  list-style-image: url("moz-icon://stock/gtk-dialog-error?size=menu");
 }
 
 .updateBadge,
@@ -259,8 +258,7 @@ richlistitem[opType="needs-uninstall"] .notifyBadge {
 .addonFailure {
   width: 16px;
   height: 16px;
-  list-style-image: url("chrome://mozapps/skin/extensions/notifyBadges.png");
-  -moz-image-region: rect(0px 48px 16px 32px);
+  list-style-image: url("moz-icon://stock/gtk-dialog-error?size=menu");
 }
 
 .addonRating {
