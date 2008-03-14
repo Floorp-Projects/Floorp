@@ -590,6 +590,8 @@ sub CreatePartialPatches {
          my $args = ['-u', $fastIncrementalUpdateBinary, '-f', 
           $config->{'mPartialPatchlistFile'}];
 
+         $ENV{'PATH'} = catfile($config->GetToolsDir(), 
+          'mozilla', 'dist', 'host', 'bin') . ':' . $ENV{'PATH'};
          run_shell_command(cmd => 'python',
                            cmdArgs => $args,
                            timeout => 10800);
