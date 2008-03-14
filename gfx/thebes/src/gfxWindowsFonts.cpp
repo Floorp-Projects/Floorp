@@ -203,41 +203,68 @@ gfxWindowsFont::MakeHFONT()
 
     PRUint8 direction = (weightDistance >= 0) ? 1 : -1;
 
-    for (PRUint8 i = baseWeight, k = 0; i < 10 && i >= 1; i+=direction) {
-        if (mFontEntry->mWeightTable.HasWeight(i)) {
-            k++;
-            chosenWeight = i * 100;
-        } else if (mFontEntry->mWeightTable.TriedWeight(i)) {
-            continue;
-        } else {
-            const PRUint32 tryWeight = i * 100;
-
+    /* Special case 500 and adjust it to 400 if we don't have it so that
+       we don't pick a bolder font */
+    if (baseWeight == 5 && weightDistance == 0) {
+        if (!mFontEntry->mWeightTable.TriedWeight(5)) {
             if (!dc)
                 dc = GetDC((HWND)nsnull);
 
-            FillLogFont(GetStyle()->size, tryWeight);
+            FillLogFont(GetStyle()->size, 500);
             mFont = CreateFontIndirectW(&mLogFont);
             HGDIOBJ oldFont = SelectObject(dc, mFont);
             TEXTMETRIC metrics;
             GetTextMetrics(dc, &metrics);
 
-            PRBool hasWeight = (metrics.tmWeight == tryWeight);
-            mFontEntry->mWeightTable.SetWeight(i, hasWeight);
-            if (hasWeight) {
-                chosenWeight = i * 100;
-                k++;
-            }
+            PRBool hasWeight = (metrics.tmWeight == 500);
+            mFontEntry->mWeightTable.SetWeight(5, hasWeight);
+            if (hasWeight)
+                chosenWeight = 500;
 
             SelectObject(dc, oldFont);
-            if (k <= abs(weightDistance)) {
-                DeleteObject(mFont);
-                mFont = nsnull;
-            }
         }
+        if (!mFontEntry->mWeightTable.HasWeight(5)) {
+            baseWeight--; /* move the base weight to 400 */
+        }
+    }
 
-        if (k > abs(weightDistance)) {
-            chosenWeight = i * 100;
-            break;
+    if (chosenWeight == 0) {
+        for (PRUint8 i = baseWeight, k = 0; i < 10 && i >= 1; i+=direction) {
+            if (mFontEntry->mWeightTable.HasWeight(i)) {
+                k++;
+                chosenWeight = i * 100;
+            } else if (mFontEntry->mWeightTable.TriedWeight(i)) {
+                continue;
+            } else {
+                const PRUint32 tryWeight = i * 100;
+
+                if (!dc)
+                    dc = GetDC((HWND)nsnull);
+
+                FillLogFont(GetStyle()->size, tryWeight);
+                mFont = CreateFontIndirectW(&mLogFont);
+                HGDIOBJ oldFont = SelectObject(dc, mFont);
+                TEXTMETRIC metrics;
+                GetTextMetrics(dc, &metrics);
+
+                PRBool hasWeight = (metrics.tmWeight == tryWeight);
+                mFontEntry->mWeightTable.SetWeight(i, hasWeight);
+                if (hasWeight) {
+                    chosenWeight = i * 100;
+                    k++;
+                }
+
+                SelectObject(dc, oldFont);
+                if (k <= abs(weightDistance)) {
+                    DeleteObject(mFont);
+                    mFont = nsnull;
+                }
+            }
+
+            if (k > abs(weightDistance)) {
+                chosenWeight = i * 100;
+                break;
+            }
         }
     }
 
