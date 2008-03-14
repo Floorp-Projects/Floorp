@@ -315,12 +315,8 @@
 
       <method name="canDrop">
         <body><![CDATA[
-          // Can't drop if the menu isn't a folder
-          var resultNode = this._rootView.getResultNode();
-          if (!PlacesUtils.nodeIsFolder(resultNode))
-            return false;
-
-          return PlacesControllerDragHelper.canDrop();
+          var ip = this.insertionPoint;
+          return ip && PlacesControllerDragHelper.canDrop(ip);
         ]]></body>
       </method>
 
