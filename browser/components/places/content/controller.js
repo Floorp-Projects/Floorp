@@ -598,8 +598,7 @@ PlacesController.prototype = {
       if (!openContainerInTabsItem.hidden && this._view.selectedNode &&
           PlacesUtils.nodeIsContainer(this._view.selectedNode)) {
         openContainerInTabsItem.disabled =
-          PlacesUtils.getURLsForContainerNode(this._view.selectedNode)
-                     .length == 0;
+          !PlacesUtils.hasChildURIs(this._view.selectedNode);
       }
       else {
         // see selectiontype rule in the overlay
