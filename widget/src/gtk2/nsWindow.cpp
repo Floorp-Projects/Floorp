@@ -6118,9 +6118,17 @@ nsWindow::GetThebesSurface()
     mThebesSurface = nsnull;
 
     if (!mThebesSurface) {
-        GdkDrawable* d = GDK_DRAWABLE(mDrawingarea->inner_window);
+        GdkDrawable* d;
+        gint x_offset, y_offset;
+        gdk_window_get_internal_paint_info(mDrawingarea->inner_window,
+                &d, &x_offset, &y_offset);
+
         gint width, height;
         gdk_drawable_get_size(d, &width, &height);
+        // Owen Taylor says this is the right thing to do!
+        width = PR_MIN(32767, width);
+        height = PR_MIN(32767, height);
+
         if (!gfxPlatform::UseGlitz()) {
             mThebesSurface = new gfxXlibSurface
                 (GDK_WINDOW_XDISPLAY(d),
@@ -6168,6 +6176,10 @@ nsWindow::GetThebesSurface()
             //fprintf (stderr, "## nsThebesDrawingSurface::Init Glitz DRAWABLE %p (DC: %p)\n", aWidget, aDC);
             mThebesSurface = new gfxGlitzSurface (gdraw, gsurf, PR_TRUE);
 #endif
+        }
+
+        if (mThebesSurface) {
+            mThebesSurface->SetDeviceOffset(gfxPoint(-x_offset, -y_offset));
         }
     }
 
