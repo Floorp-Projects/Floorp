@@ -1035,9 +1035,16 @@ public:
     }
 
     PRBool IsGlyphMissing(SCRIPT_FONTPROPERTIES *aSFP, PRUint32 aGlyphIndex) {
-        if (mGlyphs[aGlyphIndex] == aSFP->wgDefault)
-            return PR_TRUE;
-        return PR_FALSE;
+        PRBool missing = PR_FALSE;
+        if (GetCurrentFont()->GetFontEntry()->mIsType1) {
+            // Missing glyphs for type1 fonts will be marked as 0xFFFF. So
+            // just look for that.  aSFP->wgDefault isn't reliable for them.
+            if (mGlyphs[aGlyphIndex] == 0xFFFF)
+                missing = PR_TRUE;
+        } else if (mGlyphs[aGlyphIndex] == aSFP->wgDefault) {
+            missing = PR_TRUE;
+        }
+        return missing;
     }
 
 
@@ -1286,10 +1293,39 @@ public:
         mRangeLength = mRanges[i].Length();
     }
 
-    static inline FontEntry *WhichFontSupportsChar(const nsTArray<nsRefPtr<FontEntry> >& fonts, PRUint32 ch) {
+    PRBool HasCharacter(FontEntry *aFontEntry, PRUint32 ch) {
+        if (aFontEntry->mCharacterMap.test(ch))
+            return PR_TRUE;
+
+        if (aFontEntry->mIsType1) {
+            if (ch > 0xFFFF)
+                return PR_FALSE;
+
+            nsRefPtr<gfxWindowsFont> font = GetOrMakeFont(aFontEntry, mGroup->GetStyle());
+
+            HDC dc = GetDC((HWND)nsnull);
+            HFONT hfont = font->GetHFONT();
+            SelectObject(dc, hfont);
+
+            PRUnichar str[1] = { (PRUnichar)ch };
+            WORD glyph[1];
+
+            DWORD ret = GetGlyphIndicesW(dc, str, 1, glyph, GGI_MARK_NONEXISTING_GLYPHS);
+
+            ReleaseDC(NULL, dc);
+            if (ret != GDI_ERROR && glyph[0] != 0xFFFF) {
+                aFontEntry->mCharacterMap.set(ch);
+                return PR_TRUE;
+            }
+        }
+
+        return PR_FALSE;
+    }
+
+    inline FontEntry *WhichFontSupportsChar(const nsTArray<nsRefPtr<FontEntry> >& fonts, PRUint32 ch) {
         for (PRUint32 i = 0; i < fonts.Length(); i++) {
             nsRefPtr<FontEntry> fe = fonts[i];
-            if (fe->mCharacterMap.test(ch))
+            if (HasCharacter(fe, ch))
                 return fe;
         }
         return nsnull;
@@ -1308,7 +1344,7 @@ public:
         // if this character or the next one is a joiner use the
         // same font as the previous range if we can
         if (IsJoiner(ch) || IsJoiner(prevCh) || IsJoiner(nextCh)) {
-            if (aFont && aFont->mCharacterMap.test(ch))
+            if (aFont && HasCharacter(aFont, ch))
                 return aFont;
         }
 
@@ -1359,7 +1395,7 @@ public:
         }
 
         // before searching for something else check the font used for the previous character
-        if (!selectedFont && aFont && aFont->mCharacterMap.test(ch))
+        if (!selectedFont && aFont && HasCharacter(aFont, ch))
             selectedFont = aFont;
 
         // otherwise look for other stuff
