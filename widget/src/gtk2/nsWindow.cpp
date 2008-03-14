@@ -3123,8 +3123,16 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
             }
         }
         else if (mWindowType == eWindowType_popup) {
-            mShell = gtk_window_new(GTK_WINDOW_POPUP);
-            gtk_window_set_wmclass(GTK_WINDOW(mShell), "Popup", cBrand.get());
+            // treat popups with a parent as top level windows
+            if (mParent) {
+                mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+                gtk_window_set_wmclass(GTK_WINDOW(mShell), "Toplevel", cBrand.get());
+                gtk_window_set_decorated(GTK_WINDOW(mShell), FALSE);
+            }
+            else {
+                mShell = gtk_window_new(GTK_WINDOW_POPUP);
+                gtk_window_set_wmclass(GTK_WINDOW(mShell), "Popup", cBrand.get());
+            }
 
             GdkWindowTypeHint gtkTypeHint;
             switch (aInitData->mPopupHint) {
