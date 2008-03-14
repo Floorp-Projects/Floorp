@@ -24,7 +24,7 @@
 #  Benjamin Smedberg <benjamin@smedbergs.us>
 #  Jens Bannmann <jens.b@web.de>
 #  Robert Strong <robert.bugzilla@gmail.com>
-#  Dave Townsend <dave.townsend@blueprintit.co.uk>
+#  Dave Townsend <dtownsend@oxymoronical.com>
 #  Daniel Veditz <dveditz@mozilla.com>
 #  Alexander J. Vincent <ajvincent@gmail.com>
 #
@@ -150,6 +150,8 @@ const INSTALLERROR_PHONED_HOME           = -4;
 const INSTALLERROR_INCOMPATIBLE_PLATFORM = -5;
 const INSTALLERROR_BLOCKLISTED           = -6;
 const INSTALLERROR_INSECURE_UPDATE       = -7;
+const INSTALLERROR_INVALID_MANIFEST      = -8;
+const INSTALLERROR_RESTRICTED            = -9;
 
 const MODE_RDONLY   = 0x01;
 const MODE_WRONLY   = 0x02;
@@ -4120,6 +4122,13 @@ ExtensionManager.prototype = {
    */
   installItemFromFile: function(xpiFile, installLocationKey) {
     this.installItemFromFileInternal(xpiFile, installLocationKey, null);
+
+    // If there are no compatibility checks running and no downloads in
+    // progress then the install operations are complete.
+    if (this._compatibilityCheckCount == 0 && this._transactions.length == 0) {
+      for (var i = 0; i < this._installListeners.length; ++i)
+        this._installListeners[i].onInstallsCompleted();
+    }
   },
 
   /**
@@ -4301,43 +4310,30 @@ ExtensionManager.prototype = {
      */
     function IncompatibleObserver() {}
     IncompatibleObserver.prototype = {
-      _id: null,
-      _type: Ci.nsIUpdateItem.TYPE_ANY,
       _xpi: null,
       _installManifest: null,
-      _installRDF: null,
 
       /**
        * Ask the Extension Update System if there are any version updates for
        * this item that will allow it to be compatible with this version of
        * the Application.
+       * @param   item
+       *          An nsIUpdateItem representing the item being installed.
        * @param   installManifest
        *          The Install Manifest datasource for the item.
-       * @param   installData
-       *          The Install Data object for the item.
        * @param   xpiFile
        *          The staged source XPI file that contains the item. Cleaned
        *          up by this process.
+       * @param   installRDF
+       *          The install.rdf file that was extracted from the xpi.
        */
-      checkForUpdates: function(installManifest, installData, xpiFile, installRDF) {
-        this._id              = installData.id;
-        this._type            = installData.type;
+      checkForUpdates: function(item, installManifest, xpiFile) {
         this._xpi             = xpiFile;
         this._installManifest = installManifest;
-        this._installRDF      = installRDF;
 
-        var item = makeItem(installData.id, installData.version,
-                            aInstallLocationKey,
-                            installData.currentApp.minVersion,
-                            installData.currentApp.maxVersion,
-                            installData.name,
-                            "", /* XPI Update URL */
-                            "", /* XPI Update Hash */
-                            "", /* Icon URL */
-                            installData.updateURL || "",
-                            installData.updateKey || "",
-                            installData.type,
-                            installData.currentApp.id);
+        for (var i = 0; i < em._installListeners.length; ++i)
+          em._installListeners[i].onCompatibilityCheckStarted(item);
+        em._compatibilityCheckCount++;
         em.update([item], 1, Ci.nsIExtensionManager.UPDATE_CHECK_COMPATIBILITY, this);
       },
 
@@ -4353,8 +4349,6 @@ ExtensionManager.prototype = {
        */
       onUpdateEnded: function() {
         LOG("Phone Home Listener: Update Ended");
-        // We are responsible for cleaning up this file!
-        this._installRDF.remove(false);
       },
 
       /**
@@ -4379,6 +4373,10 @@ ExtensionManager.prototype = {
         LOG("Phone Home Listener: Update For " + addon.id + " ended, status = " + status);
         em.datasource.removeDownload(this._xpi.path);
         LOG("Version Check Phone Home Completed");
+
+        for (var i = 0; i < em._installListeners.length; ++i)
+          em._installListeners[i].onCompatibilityCheckEnded(addon, status);
+
         // Only compatibility updates (e.g. STATUS_VERSIONINFO) are currently
         // supported
         if (status == Ci.nsIAddonUpdateCheckListener.STATUS_VERSIONINFO) {
@@ -4388,7 +4386,8 @@ ExtensionManager.prototype = {
                                                  addon.maxAppVersion,
                                                  this._installManifest);
 
-          // Try and install again, but use the updated compatibility DB
+          // Try and install again, but use the updated compatibility DB.
+          // This will send out an apropriate onInstallEnded notification for us.
           em.installItemFromFileInternal(this._xpi, aInstallLocationKey,
                                          this._installManifest);
 
@@ -4417,30 +4416,55 @@ ExtensionManager.prototype = {
         else {
           em.datasource.removeDownload(this._xpi.path);
           showIncompatibleError(installData);
-          LOG("Add-on " + installData.id + " is incompatible with " +
+          LOG("Add-on " + addon.id + " is incompatible with " +
               BundleManager.appName + " " + gApp.version + ", Toolkit " +
               gApp.platformVersion + ". Remote compatibility check did not " +
               "resolve this.");
+          
+          for (var i = 0; i < em._installListeners.length; ++i)
+            em._installListeners[i].onInstallEnded(addon, INSTALLERROR_INCOMPATIBLE_VERSION);
+
           // We are responsible for cleaning up this file!
           InstallLocations.get(aInstallLocationKey).removeFile(this._xpi);
+        }
+
+        em._compatibilityCheckCount--;
+        // If there are no more compatibility checks running and no downloads in
+        // progress then the install operations are complete.
+        if (em._compatibilityCheckCount == 0 && em._transactions.length == 0) {
+          for (var i = 0; i < em._installListeners.length; ++i)
+            em._installListeners[i].onInstallsCompleted();
         }
       },
 
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIAddonUpdateCheckListener])
     }
 
-    var installManifestFile = extractRDFFileToTempDir(aXPIFile, FILE_INSTALL_MANIFEST, true);
     var shouldPhoneHomeIfNecessary = false;
     if (!aInstallManifest) {
       // If we were not called with an Install Manifest, we were called from
       // some other path than the Phone Home system, so we do want to phone
-      // home if the version is incompatible.
+      // home if the version is incompatible. As this is the first point in the
+      // install process we must notify observers here.
+
+      var addon = makeItem(getURIFromFile(aXPIFile).spec, "",
+                           aInstallLocationKey, "", "", "",
+                           getURIFromFile(aXPIFile).spec,
+                           "", "", "", "", 0, gApp.id);
+      for (var i = 0; i < this._installListeners.length; ++i)
+        this._installListeners[i].onInstallStarted(addon);
+
       shouldPhoneHomeIfNecessary = true;
+      var installManifestFile = extractRDFFileToTempDir(aXPIFile,
+                                                        FILE_INSTALL_MANIFEST,
+                                                        true);
       var installManifest = getInstallManifest(installManifestFile);
+      installManifestFile.remove(false);
       if (!installManifest) {
         LOG("The Install Manifest supplied by this item is not well-formed. " +
             "Installation will not proceed.");
-        installManifestFile.remove(false);
+        for (var i = 0; i < this._installListeners.length; ++i)
+          this._installListeners[i].onInstallEnded(addon, INSTALLERROR_INVALID_MANIFEST);
         return;
       }
     }
@@ -4448,6 +4472,20 @@ ExtensionManager.prototype = {
       installManifest = aInstallManifest;
 
     var installData = this._getInstallData(installManifest);
+    // Recreate the add-on item with the full detail from the install manifest
+    addon = makeItem(installData.id, installData.version,
+                     aInstallLocationKey,
+                     installData.currentApp.minVersion,
+                     installData.currentApp.maxVersion,
+                     installData.name,
+                     getURIFromFile(aXPIFile).spec,
+                     "", /* XPI Update Hash */
+                     "", /* Icon URL */
+                     installData.updateURL || "",
+                     installData.updateKey || "",
+                     installData.type,
+                     installData.currentApp.id);
+
     switch (installData.error) {
     case INSTALLERROR_INCOMPATIBLE_VERSION:
       // Since the caller cleans up |aXPIFile|, and we're not yet sure whether or
@@ -4456,14 +4494,11 @@ ExtensionManager.prototype = {
       // later ourselves.
       if (shouldPhoneHomeIfNecessary && installData.currentApp) {
         var installLocation = getInstallLocation(installData.id, aInstallLocationKey);
-        if (!installLocation) {
-          installManifestFile.remove(false);
+        if (!installLocation)
           return;
-        }
         var stagedFile = installLocation.stageFile(aXPIFile, installData.id);
-        (new IncompatibleObserver(this)).checkForUpdates(installManifest,
-                                                         installData, stagedFile,
-                                                         installManifestFile);
+        (new IncompatibleObserver(this)).checkForUpdates(addon, installManifest,
+                                                         stagedFile);
         // Return early to prevent deletion of the install manifest file.
         return;
       }
@@ -4492,7 +4527,8 @@ ExtensionManager.prototype = {
         // this function, BEFORE staging takes place... technically speaking
         // a location could become readonly during the phone home process,
         // but that's an edge case I don't care about.
-        installManifestFile.remove(false);
+        for (var i = 0; i < this._installListeners.length; ++i)
+          this._installListeners[i].onInstallEnded(addon, INSTALLERROR_RESTRICTED);
         return;
       }
 
@@ -4587,7 +4623,9 @@ ExtensionManager.prototype = {
     // stage the the XPI file in the location specified by those applications.
     stageXPIForOtherApps(aXPIFile, installData);
 
-    installManifestFile.remove(false);
+    // The install of this item is complete, notify observers
+    for (var i = 0; i < this._installListeners.length; ++i)
+      this._installListeners[i].onInstallEnded(addon, installData.error);
   },
 
   /**
@@ -5413,6 +5451,7 @@ ExtensionManager.prototype = {
   // Downloads
   _transactions: [],
   _downloadCount: 0,
+  _compatibilityCheckCount: 0,
 
   /**
    * Ask the user if they really want to quit the application, since this will
@@ -5593,14 +5632,18 @@ ExtensionManager.prototype = {
    *          ???
    */
   onStateChange: function(transaction, addon, state, value) {
-    for (var i = 0; i < this._updateListeners.length; ++i)
-      this._updateListeners[i].onStateChange(addon, state, value);
     var ds = this.datasource;
     var id = addon.id != addon.xpiURL ? PREFIX_ITEM_URI + addon.id : addon.xpiURL;
     const nsIXPIProgressDialog = Ci.nsIXPIProgressDialog;
     switch (state) {
     case nsIXPIProgressDialog.DOWNLOAD_START:
       ds.updateDownloadState(id, "downloading");
+      for (var i = 0; i < this._installListeners.length; ++i)
+        this._installListeners[i].onDownloadStarted(addon);
+      break;
+    case nsIXPIProgressDialog.DOWNLOAD_DONE:
+      for (var i = 0; i < this._installListeners.length; ++i)
+        this._installListeners[i].onDownloadEnded(addon);
       break;
     case nsIXPIProgressDialog.INSTALL_START:
       ds.updateDownloadState(id, "finishing");
@@ -5610,13 +5653,17 @@ ExtensionManager.prototype = {
       --this._downloadCount;
       // From nsInstall.h
       // SUCCESS        = 0
-      // REBOOT_NEEDED  = 999
       // USER_CANCELLED = -210
-      if (value != 0 && value != 999 && value != -210 && id != addon.xpiURL) {
+      if (value != 0 && value != -210 && id != addon.xpiURL) {
         ds.updateDownloadState(id, "failure");
         ds.updateDownloadProgress(id, null);
       }
       transaction.removeDownload(addon.xpiURL);
+      // A successful install will be passing notifications via installItemFromFile
+      if (value != 0) {
+        for (var i = 0; i < this._installListeners.length; ++i)
+          this._installListeners[i].onInstallEnded(addon, value);
+      }
       break;
     case nsIXPIProgressDialog.DIALOG_CLOSE:
       for (var i = 0; i < this._transactions.length; ++i) {
@@ -5626,6 +5673,13 @@ ExtensionManager.prototype = {
           if (this._transactions.length == 0) {
             gOS.removeObserver(this, "offline-requested");
             gOS.removeObserver(this, "quit-application-requested");
+
+            // If there are no compatibility checks running then the install
+            // operations are complete.
+            if (this._compatibilityCheckCount == 0) {
+              for (var i = 0; i < this._installListeners.length; ++i)
+                this._installListeners[i].onInstallsCompleted();
+            }
           }
           break;
         }
@@ -5637,26 +5691,26 @@ ExtensionManager.prototype = {
   },
 
   onProgress: function(addon, value, maxValue) {
-    for (var i = 0; i < this._updateListeners.length; ++i)
-      this._updateListeners[i].onProgress(addon, value, maxValue);
+    for (var i = 0; i < this._installListeners.length; ++i)
+      this._installListeners[i].onDownloadProgress(addon, value, maxValue);
 
     var id = addon.id != addon.xpiURL ? PREFIX_ITEM_URI + addon.id : addon.xpiURL;
     var progress = Math.round((value / maxValue) * 100);
     this.datasource.updateDownloadProgress(id, progress);
   },
 
-  _updateListeners: [],
-  addUpdateListener: function(listener) {
-    for (var i = 0; i < this._updateListeners.length; ++i) {
-      if (this._updateListeners[i] == listener)
+  _installListeners: [],
+  addInstallListener: function(listener) {
+    for (var i = 0; i < this._installListeners.length; ++i) {
+      if (this._installListeners[i] == listener)
         return i;
     }
-    this._updateListeners.push(listener);
-    return this._updateListeners.length - 1;
+    this._installListeners.push(listener);
+    return this._installListeners.length - 1;
   },
 
-  removeUpdateListenerAt: function(index) {
-    this._updateListeners.splice(index, 1);
+  removeInstallListenerAt: function(index) {
+    this._installListeners.splice(index, 1);
   },
 
   /**

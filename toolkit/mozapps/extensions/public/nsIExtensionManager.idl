@@ -43,7 +43,7 @@
 interface nsIFile;
 interface nsIRDFDataSource;
 interface nsIUpdateItem;
-interface nsIAddonUpdateListener;
+interface nsIAddonInstallListener;
 interface nsIAddonUpdateCheckListener;
 interface nsICommandLine;
 interface nsISimpleEnumerator;
@@ -199,7 +199,7 @@ interface nsIInstallLocation : nsISupports
  * XXXben - Some of this stuff should go into a management-ey interface,
  *          some into an app-startup-ey interface.
  */
-[scriptable, uuid(6dd1c051-6322-40e7-8e70-1020a61a5f89)]
+[scriptable, uuid(cc58fd12-0a61-4336-876b-617c330e157e)]
 interface nsIExtensionManager : nsISupports
 {
   /**
@@ -395,20 +395,20 @@ interface nsIExtensionManager : nsISupports
   void removeDownload(in AString url);
 
   /**
-   * Adds a download progress listener so the front end can listen to download
+   * Adds an install listener so the front end can listen to download
    * and install progress.
    * @param   listener
    *          The listener to add
    * @returns the index of the added listen in the listener list.
    */
-  long addUpdateListener(in nsIAddonUpdateListener listener);
+  long addInstallListener(in nsIAddonInstallListener listener);
 
   /**
-   * Removes a download progress listener.
+   * Removes an install progress listener.
    * @param   index
    *          The index of the listener to remove.
    */
-  void removeUpdateListenerAt(in long index);
+  void removeInstallListenerAt(in long index);
 
   /**
    * Move an Item to the index of another item in its container.
@@ -585,33 +585,83 @@ interface nsIUpdateItem : nsISupports
 
 /**
  * Interface for handling download and install progress notifications for
- * addons.
+ * add-ons.
  */
-[scriptable, uuid(bb86037c-98c1-4c22-8e03-1e4c9fc89a8e)]
-interface nsIAddonUpdateListener : nsISupports
+[scriptable, uuid(2333b04c-f371-4dea-a2f1-d8fdb0c82866)]
+interface nsIAddonInstallListener : nsISupports
 {
   /**
-   * Install/Download state has changed
+   * Called when an add-on download starts. This will be called for every add-on
+   * downloaded including those started by an add-on update.
    * @param   addon
-   *          The addon that state changed for
-   * @param   state
-   *          The new state. States are defined in nsIXPIProgressDialog
-   * @param   value
-   *          Some data about the new state
+   *          The add-on that is being downloaded
    */
-  void onStateChange(in nsIUpdateItem addon, in short state, in long value);
+  void onDownloadStarted(in nsIUpdateItem addon);
 
   /**
-   * Progress occurred in the download/install operation
+   * Progress occurred in the download operation. This will be called multiple
+   * times during the download of an add-on.
    * @param   addon
-   *          The addon that progress occurred for
+   *          The add-on that progress occurred for
    * @param   value
    *          The value of the current progress
    * @param   maxValue
    *          The maximum value |value| can reach
    */
-  void onProgress(in nsIUpdateItem addon, in unsigned long value,
-                  in unsigned long maxValue);
+  void onDownloadProgress(in nsIUpdateItem addon, in unsigned long value,
+                          in unsigned long maxValue);
+
+  /**
+   * Called when an add-on download is complete. This will be called for every
+   * add-on downloaded.
+   * @param   addon
+   *          The add-on that finished downloading
+   */
+  void onDownloadEnded(in nsIUpdateItem addon);
+
+  /**
+   * Called when the extension manager starts to install an add-on either
+   * through a call to installItemFromFile or from a webpage triggered install.
+   * @param   addon
+   *          The add-on being installed
+   */
+  void onInstallStarted(in nsIUpdateItem addon);
+
+  /**
+   * Called when an add-on compatibility check starts. This will be called 
+   * during an install if an add-on is incompatible according to it's
+   * install.rdf.
+   * @param   addon
+   *          The add-on that the compatibility check will be for
+   */
+  void onCompatibilityCheckStarted(in nsIUpdateItem addon);
+
+  /**
+   * Called at the end of an add-on compatibility check. The status will be one
+   * of the results from nsIAddonUpdateCheckListener to indicate whether new
+   * information was found or not.
+   * @param   addon
+   *          The add-on that is having its compatibility checked
+   * @param   status
+   *          The status code from nsIAddonUpdateCheckListener for the update
+   *          operation
+   */
+  void onCompatibilityCheckEnded(in nsIUpdateItem addon, in long status);
+
+  /**
+   * Called when an add-on install completes. The status will be 0 on success.
+   * any other value constitutes a failed install.
+   * @param   addon
+   *          The add-on that finished installing
+   * @param   status
+   *          The status of the installation from nsInstall.h
+   */
+  void onInstallEnded(in nsIUpdateItem addon, in long status);
+
+  /**
+   * Called when there are no more add-on downloads or installs in progress.
+   */
+  void onInstallsCompleted();
 };
 
 /**

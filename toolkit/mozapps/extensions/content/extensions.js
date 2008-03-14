@@ -63,7 +63,7 @@ var gUpdatesOnly      = false;
 var gAppID            = "";
 var gPref             = null;
 var gPriorityCount    = 0;
-var gInstallCount     = 0;
+var gInstalling       = false;
 var gPendingActions   = false;
 var gPlugins          = null;
 var gPluginsDS        = null;
@@ -1058,7 +1058,7 @@ function Startup()
   os.addObserver(gAddonsMsgObserver, "addons-message-notification", false);
   os.addObserver(gPluginObserver, "plugins-list-updated", false);
 
-  gObserverIndex = gExtensionManager.addUpdateListener(gDownloadManager);
+  gObserverIndex = gExtensionManager.addInstallListener(gDownloadManager);
 
   if (!gCheckCompat) {
     var msgText = getExtensionString("disabledCompatMsg");
@@ -1180,7 +1180,7 @@ function Shutdown()
   gExtensionsView.removeEventListener("select", onAddonSelect, false);
   gExtensionsView.database.RemoveDataSource(gExtensionManager.datasource);
 
-  gExtensionManager.removeUpdateListenerAt(gObserverIndex);
+  gExtensionManager.removeInstallListenerAt(gObserverIndex);
 
   var os = Components.classes["@mozilla.org/observer-service;1"]
                      .getService(Components.interfaces.nsIObserverService);
@@ -1297,6 +1297,7 @@ XPInstallDownloadManager.prototype = {
     }
 
     gExtensionManager.addDownloads(items, items.length, aManager);
+    gInstalling = true;
     updateOptionalViews();
     updateGlobalCommands();
     // Only switch to the installs pane if there was an not started by the
@@ -1314,62 +1315,67 @@ XPInstallDownloadManager.prototype = {
   },
 
   /////////////////////////////////////////////////////////////////////////////
-  // nsIAddonUpdateListener
-  onStateChange: function (aAddon, aState, aValue)
+  // nsIAddonInstallListener
+  onDownloadStarted: function(aAddon)
   {
-    const nsIXPIProgressDialog = Components.interfaces.nsIXPIProgressDialog;
-    switch (aState) {
-      case nsIXPIProgressDialog.DOWNLOAD_START:
-      case nsIXPIProgressDialog.DOWNLOAD_DONE:
-      case nsIXPIProgressDialog.INSTALL_START:
-        break;
-      case nsIXPIProgressDialog.INSTALL_DONE:
-        gInstallCount--;
-        if (gInstallCount == 0)
-          updateGlobalCommands();
+  },
 
-        // From nsInstall.h
-        // SUCCESS        = 0
-        // REBOOT_NEEDED  = 999
-        // USER_CANCELLED = -210
-        if (aValue == 0 || aValue == 999 || aValue == -210)
-          break;
+  onDownloadEnded: function(aAddon)
+  {
+  },
 
-        var xpinstallStrings = document.getElementById("xpinstallStrings");
-        try {
-          var msg = xpinstallStrings.getString("error" + aValue);
-        }
-        catch (e) {
-          msg = xpinstallStrings.getFormattedString("unknown.error", [aValue]);
-        }
-        var title = getExtensionString("errorInstallTitle");
-        var message = getExtensionString("errorInstallMsg", [getBrandShortName(),
-                                                             aAddon.xpiURL, msg]);
-        var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                           .getService(Components.interfaces.nsIPromptService);
-        ps.alert(window, title, message + "\n" + aValue);
-        break;
-      case nsIXPIProgressDialog.DIALOG_CLOSE:
-        // Sort on startup and anytime an add-on is installed or upgraded.
-        gExtensionManager.sortTypeByProperty(nsIUpdateItem.TYPE_ANY, "name", true);
-        // XXXrstrong - installs may be made compatible after this notification
-        // see bug 351819
-        // For updates on startup always enable the continue button after the
-        // update has completed.
-        if (gUpdatesOnly) {
-          setElementDisabledByID("cmd_continue", false);
-          document.getElementById("continueDialogButton").focus();
-        }
-        else {
-          updateOptionalViews();
-          updateGlobalCommands();
-        }
-        break;
+  onInstallStarted: function(aAddon)
+  {
+  },
+  
+  onCompatibilityCheckStarted: function(aAddon)
+  {
+  },
+  
+  onCompatibilityCheckEnded: function(aAddon, aStatus)
+  {
+  },
+
+  onInstallEnded: function(aAddon, aStatus)
+  {
+    // From nsInstall.h
+    // USER_CANCELLED = -210
+    // All other xpinstall errors are <= -200
+    // Any errors from the EM will have been displayed directly by the EM
+    if (aStatus > -200 || aStatus == -210)
+      return;
+
+    var xpinstallStrings = document.getElementById("xpinstallStrings");
+    try {
+      var msg = xpinstallStrings.getString("error" + aStatus);
+    }
+    catch (e) {
+      msg = xpinstallStrings.getFormattedString("unknown.error", [aStatus]);
+    }
+    var title = getExtensionString("errorInstallTitle");
+    var message = getExtensionString("errorInstallMsg", [getBrandShortName(),
+                                                         aAddon.xpiURL, msg]);
+    var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                       .getService(Components.interfaces.nsIPromptService);
+    ps.alert(window, title, message + "\n" + aStatus);
+  },
+
+  onInstallsCompleted: function()
+  {
+    gInstalling = false;
+    gExtensionManager.sortTypeByProperty(nsIUpdateItem.TYPE_ANY, "name", true);
+    if (gUpdatesOnly) {
+      setElementDisabledByID("cmd_continue", false);
+      document.getElementById("continueDialogButton").focus();
+    }
+    else {
+      updateOptionalViews();
+      updateGlobalCommands();
     }
   },
 
   _urls: { },
-  onProgress: function (aAddon, aValue, aMaxValue)
+  onDownloadProgress: function (aAddon, aValue, aMaxValue)
   {
     var element = this.getElementForAddon(aAddon);
     if (!element)
@@ -1388,7 +1394,7 @@ XPInstallDownloadManager.prototype = {
   // nsISupports
   QueryInterface: function (aIID)
   {
-    if (!aIID.equals(Components.interfaces.nsIAddonUpdateListener) &&
+    if (!aIID.equals(Components.interfaces.nsIAddonInstallListener) &&
         !aIID.equals(Components.interfaces.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;
@@ -2061,25 +2067,22 @@ function disableRestartButton() {
 
 function updateOptionalViews() {
   var ds = gExtensionsView.database;
-  var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                   .getService(Components.interfaces.nsIRDFService);
   var ctr = Components.classes["@mozilla.org/rdf/container;1"]
                       .createInstance(Components.interfaces.nsIRDFContainer);
-  ctr.Init(ds, rdfs.GetResource(RDFURI_ITEM_ROOT));
+  ctr.Init(ds, gRDF.GetResource(RDFURI_ITEM_ROOT));
   var elements = ctr.GetElements();
   var showLocales = false;
   var showUpdates = false;
-  var showInstalls = false;
-  gInstallCount = 0;
+  var showInstalls = gInstalling;
   gPendingActions = false;
 
-  var stateArc = rdfs.GetResource(PREFIX_NS_EM + "state");
-  var opTypeArc = rdfs.GetResource(PREFIX_NS_EM + "opType");
+  var stateArc = gRDF.GetResource(PREFIX_NS_EM + "state");
+  var opTypeArc = gRDF.GetResource(PREFIX_NS_EM + "opType");
 
   while (elements.hasMoreElements()) {
     var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
     if (!showLocales) {
-      var typeArc = rdfs.GetResource(PREFIX_NS_EM + "type");
+      var typeArc = gRDF.GetResource(PREFIX_NS_EM + "type");
       var type = ds.GetTarget(e, typeArc, true);
       if (type && type instanceof Components.interfaces.nsIRDFInt) {
         if (type.Value & nsIUpdateItem.TYPE_LOCALE)
@@ -2087,12 +2090,14 @@ function updateOptionalViews() {
       }
     }
 
-    var state = ds.GetTarget(e, stateArc, true);
-    if (state) {
-      showInstalls = true;
-      if (state instanceof Components.interfaces.nsIRDFLiteral &&
-          state.Value != "success" && state.Value != "failure")
-        gInstallCount++;
+    if (!gInstalling || !showInstalls) {
+      var state = ds.GetTarget(e, stateArc, true);
+      if (state) {
+        showInstalls = true;
+        if (state instanceof Components.interfaces.nsIRDFLiteral &&
+            state.Value != "success" && state.Value != "failure")
+          gInstalling = true;
+      }
     }
 
     if (!gPendingActions) {
@@ -2105,10 +2110,10 @@ function updateOptionalViews() {
     }
 
     if (!showUpdates) {
-      var updateURLArc = rdfs.GetResource(PREFIX_NS_EM + "availableUpdateURL");
+      var updateURLArc = gRDF.GetResource(PREFIX_NS_EM + "availableUpdateURL");
       var updateURL = ds.GetTarget(e, updateURLArc, true);
       if (updateURL) {
-        var updateableArc = rdfs.GetResource(PREFIX_NS_EM + "updateable");
+        var updateableArc = gRDF.GetResource(PREFIX_NS_EM + "updateable");
         var updateable = ds.GetTarget(e, updateableArc, true);
         updateable = updateable.QueryInterface(Components.interfaces.nsIRDFLiteral);
         if (updateable.Value == "true")
@@ -2143,7 +2148,7 @@ function updateGlobalCommands() {
       }
     }
 
-    if (gInstallCount == 0 &&
+    if (!gInstalling &&
         (gPendingActions || gPref.getBoolPref(PREF_EXTENSIONS_DSS_SWITCHPENDING)))
       enableRestartButton();
     else
@@ -2223,6 +2228,7 @@ function installUpdatesAll() {
   }
   if (items.length > 0) {
     gExtensionManager.addDownloads(items, items.length, null);
+    gInstalling = true;
     showView("installs");
     // Remove the updates view if there are no add-ons left to update
     updateOptionalViews();
@@ -2575,6 +2581,7 @@ var gExtensionsViewController = {
       showView("installs");
       var item = gExtensionManager.getItemForID(getIDFromResourceURI(aSelectedItem.id));
       gExtensionManager.addDownloads([item], 1, null);
+      gInstalling = true;
       // Remove the updates view if there are no add-ons left to update
       updateOptionalViews();
       updateGlobalCommands();
