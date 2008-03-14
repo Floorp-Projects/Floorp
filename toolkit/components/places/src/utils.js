@@ -49,13 +49,6 @@ var Ci = Components.interfaces;
 var Cc = Components.classes;
 var Cr = Components.results;
 
-__defineGetter__("NS_ASSERT", function() {
-  delete this.NS_ASSERT;
-  var tmpScope = {};
-  Components.utils.import("resource://gre/modules/debug.js", tmpScope);
-  return this.NS_ASSERT = tmpScope.NS_ASSERT;
-});
-
 const POST_DATA_ANNO = "bookmarkProperties/POSTData";
 const LMANNO_FEEDURI = "livemark/feedURI";
 const LMANNO_SITEURI = "livemark/siteURI";
@@ -76,7 +69,6 @@ function QI_node(aNode, aIID) {
   }
   catch (e) {
   }
-  NS_ASSERT(result, "Node QI Failed");
   return result;
 }
 function asVisit(aNode)    { return QI_node(aNode, Ci.nsINavHistoryVisitResultNode);    }
@@ -159,7 +151,6 @@ var PlacesUtils = {
    * @returns A URI object for the spec.
    */
   _uri: function PU__uri(aSpec) {
-    NS_ASSERT(aSpec, "empty URL spec");
     return Cc["@mozilla.org/network/io-service;1"].
            getService(Ci.nsIIOService).
            newURI(aSpec, null, null);
@@ -192,7 +183,6 @@ var PlacesUtils = {
    * @returns true if the node is a Bookmark folder, false otherwise
    */
   nodeIsFolder: function PU_nodeIsFolder(aNode) {
-    NS_ASSERT(aNode, "null node");
     return (aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER ||
             aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT);
   },
@@ -204,7 +194,6 @@ var PlacesUtils = {
    * @returns true if the node represents a bookmarked URI, false otherwise
    */
   nodeIsBookmark: function PU_nodeIsBookmark(aNode) {
-    NS_ASSERT(aNode, "null node");
     return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_URI &&
            aNode.itemId != -1;
   },
@@ -216,7 +205,6 @@ var PlacesUtils = {
    * @returns true if the node is a Bookmark separator, false otherwise
    */
   nodeIsSeparator: function PU_nodeIsSeparator(aNode) {
-    NS_ASSERT(aNode, "null node");
 
     return (aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR);
   },
@@ -228,8 +216,6 @@ var PlacesUtils = {
    * @returns true if the node is a visit item, false otherwise
    */
   nodeIsVisit: function PU_nodeIsVisit(aNode) {
-    NS_ASSERT(aNode, "null node");
-
     const NHRN = Ci.nsINavHistoryResultNode;
     var type = aNode.type;
     return type == NHRN.RESULT_TYPE_VISIT ||
@@ -246,7 +232,6 @@ var PlacesUtils = {
              Ci.nsINavHistoryResultNode.RESULT_TYPE_VISIT,
              Ci.nsINavHistoryResultNode.RESULT_TYPE_FULL_VISIT],
   nodeIsURI: function PU_nodeIsURI(aNode) {
-    NS_ASSERT(aNode, "null node");
     return this.uriTypes.indexOf(aNode.type) != -1;
   },
 
@@ -257,7 +242,6 @@ var PlacesUtils = {
    * @returns true if the node is a Query item, false otherwise
    */
   nodeIsQuery: function PU_nodeIsQuery(aNode) {
-    NS_ASSERT(aNode, "null node");
     return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY;
   },
 
@@ -269,8 +253,6 @@ var PlacesUtils = {
    * @returns true if the node is readonly, false otherwise
    */
   nodeIsReadOnly: function PU_nodeIsReadOnly(aNode) {
-    NS_ASSERT(aNode, "null node");
-
     if (this.nodeIsFolder(aNode))
       return this.bookmarks.getFolderReadonly(asQuery(aNode).folderItemId);
     if (this.nodeIsQuery(aNode))
@@ -285,7 +267,6 @@ var PlacesUtils = {
    * @returns true if the node is a host container, false otherwise
    */
   nodeIsHost: function PU_nodeIsHost(aNode) {
-    NS_ASSERT(aNode, "null node");
     return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY &&
            aNode.parent &&
            asQuery(aNode.parent).queryOptions.resultType ==
@@ -299,7 +280,6 @@ var PlacesUtils = {
    * @returns true if the node is a day container, false otherwise
    */
   nodeIsDay: function PU_nodeIsDay(aNode) {
-    NS_ASSERT(aNode, "null node");
     var resultType;
     return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY &&
            aNode.parent &&
@@ -319,7 +299,6 @@ var PlacesUtils = {
                    Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY,
                    Ci.nsINavHistoryResultNode.RESULT_TYPE_DYNAMIC_CONTAINER],
   nodeIsContainer: function PU_nodeIsContainer(aNode) {
-    NS_ASSERT(aNode, "null node");
     return this.containerTypes.indexOf(aNode.type) != -1;
   },
 
@@ -333,7 +312,6 @@ var PlacesUtils = {
    * @returns true if the node is a dynamic container item, false otherwise
    */
   nodeIsDynamicContainer: function PU_nodeIsDynamicContainer(aNode) {
-    NS_ASSERT(aNode, "null node");
     if (aNode.type == NHRN.RESULT_TYPE_DYNAMIC_CONTAINER)
       return true;
     return false;
@@ -370,8 +348,6 @@ var PlacesUtils = {
    * @returns true if the node is a readonly folder.
   */
   isReadonlyFolder: function(aNode) {
-    NS_ASSERT(aNode, "null node");
-
     return this.nodeIsFolder(aNode) &&
            this.bookmarks.getFolderReadonly(asQuery(aNode).folderItemId);
   },
@@ -394,8 +370,6 @@ var PlacesUtils = {
    *          node was not found or the node specified has no parent.
    */
   getIndexOfNode: function PU_getIndexOfNode(aNode) {
-    NS_ASSERT(aNode, "null node");
-
     var parent = aNode.parent;
     if (!parent)
       return -1;
