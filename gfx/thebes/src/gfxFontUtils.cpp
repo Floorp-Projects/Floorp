@@ -335,6 +335,10 @@ gfxFontUtils::ReadCMAPTableFormat4(PRUint8 *aBuf, PRInt32 aLength, gfxSparseBitS
     #define isSymbol(p,e)               ((e) == EncodingIDSymbol)
 #endif
 
+#define acceptableUCS4Encoding(p, e) \
+    ((platformID == PlatformIDMicrosoft && encodingID == EncodingIDUCS4ForMicrosoftPlatform) || \
+     (platformID == PlatformIDUnicode   && encodingID == EncodingIDUCS4ForUnicodePlatform))
+
 nsresult
 gfxFontUtils::ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCharacterMap, std::bitset<128>& aUnicodeRanges, 
     PRPackedBool& aUnicodeFont, PRPackedBool& aSymbolFont)
@@ -358,7 +362,8 @@ gfxFontUtils::ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCha
     enum {
         EncodingIDSymbol = 0,
         EncodingIDMicrosoft = 1,
-        EncodingIDUCS4 = 10
+        EncodingIDUCS4ForUnicodePlatform = 3,
+        EncodingIDUCS4ForMicrosoftPlatform = 10
     };
 
     PRUint16 version = ReadShortAt(aBuf, OffsetVersion);
@@ -392,7 +397,7 @@ gfxFontUtils::ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCha
         } else if (format == 4 && acceptableFormat4(platformID, encodingID, keepFormat)) {
             keepFormat = format;
             keepOffset = offset;
-        } else if (format == 12 && encodingID == EncodingIDUCS4) {
+        } else if (format == 12 && acceptableUCS4Encoding(platformID, encodingID)) {
             keepFormat = format;
             keepOffset = offset;
             break; // we don't want to try anything else when this format is available.
