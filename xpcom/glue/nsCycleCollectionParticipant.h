@@ -604,8 +604,7 @@ NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
 
 #define NS_IMPL_CYCLE_COLLECTION_0(_class)                                     \
  NS_IMPL_CYCLE_COLLECTION_CLASS(_class)                                        \
- NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(_class)                                 \
- NS_IMPL_CYCLE_COLLECTION_UNLINK_END                                           \
+ NS_IMPL_CYCLE_COLLECTION_UNLINK_0(_class)                                     \
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(_class)                               \
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
