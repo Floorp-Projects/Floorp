@@ -272,3 +272,23 @@ STDMETHODIMP nsDocAccessibleWrap::put_alternateViewMediaTypes( /* [in] */ BSTR _
   return E_NOTIMPL;
 }
 
+STDMETHODIMP nsDocAccessibleWrap::get_accValue(
+      /* [optional][in] */ VARIANT varChild,
+      /* [retval][out] */ BSTR __RPC_FAR *pszValue)
+{
+  // For backwards-compat, we still support old MSAA hack to provide URL in accValue
+  *pszValue = NULL;
+  // Check for real value first
+  HRESULT hr = nsAccessibleWrap::get_accValue(varChild, pszValue);
+  if (FAILED(hr) || *pszValue || varChild.lVal != CHILDID_SELF)
+    return hr;
+  // If document is being used to create a widget, don't use the URL hack
+  PRUint32 role = Role(this);
+  if (role != nsIAccessibleRole::ROLE_DOCUMENT &&
+      role != nsIAccessibleRole::ROLE_APPLICATION &&
+      role != nsIAccessibleRole::ROLE_DIALOG &&
+      role != nsIAccessibleRole::ROLE_ALERT)
+    return hr;
+
+  return get_URL(pszValue);
+}
