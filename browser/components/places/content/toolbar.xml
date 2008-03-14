@@ -751,7 +751,6 @@
             var xulNode = this._self.childNodes[i];
             if (PlacesUtils.nodeIsFolder(xulNode.node) &&
                 !PlacesUtils.nodeIsReadOnly(xulNode.node)) {
-              NS_ASSERT(xulNode.getAttribute("type") == "menu");
               // This is a folder. If the mouse is in the left 25% of the
               // node, drop to the left of the folder.  If it's in the middle
               // 50%, drop into the folder.  If it's past that, drop to the right.
@@ -779,8 +778,8 @@
               if (event.clientX < xulNode.boxObject.x + (xulNode.boxObject.width / 2)) {
                 // Drop to the left of this bookmark.
                 dropPoint.ip =
-	        new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
-	                           i, -1);
+	                new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
+	                                   i, -1);
                 dropPoint.beforeIndex = i;
                 return dropPoint;
               }
@@ -788,8 +787,8 @@
           }
           // Should drop to the right of the last node.
           dropPoint.ip =
-	  new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
-	                     -1, 1);
+        	  new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
+	                             -1, 1);
           dropPoint.beforeIndex = -1;
           return dropPoint;
         },

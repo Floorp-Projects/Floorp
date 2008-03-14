@@ -71,14 +71,7 @@ const NEWLINE = "\r\n";
 #endif
 
 function QI_node(aNode, aIID) {
-  var result = null;
-  try {
-    result = aNode.QueryInterface(aIID);
-  }
-  catch (e) {
-  }
-  NS_ASSERT(result, "Node QI Failed");
-  return result;
+  return aNode.QueryInterface(aIID);
 }
 function asVisit(aNode)    { return QI_node(aNode, Ci.nsINavHistoryVisitResultNode);    }
 function asFullVisit(aNode){ return QI_node(aNode, Ci.nsINavHistoryFullVisitResultNode);}
