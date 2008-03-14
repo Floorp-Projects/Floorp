@@ -1682,7 +1682,7 @@ private:
 };
 
 static void
-DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner)
+DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner, PRBool aIsDelayedAlready)
 {
   nsCOMPtr<nsIPluginInstance> inst;
   aInstanceOwner->GetInstance(*getter_AddRefs(inst));
@@ -1719,6 +1719,13 @@ DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner)
         else 
           inst->SetWindow(nsnull);
 
+        if (!aIsDelayedAlready) {
+          nsCOMPtr<nsIRunnable> evt = new nsStopPluginRunnable(aInstanceOwner);
+          NS_DispatchToCurrentThread(evt);
+
+          return;
+        }
+
         inst->Stop();
         inst->Destroy();
       }
@@ -1728,6 +1735,13 @@ DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner)
         window->CallSetWindow(nullinst);
       else 
         inst->SetWindow(nsnull);
+
+      if (!aIsDelayedAlready) {
+        nsCOMPtr<nsIRunnable> evt = new nsStopPluginRunnable(aInstanceOwner);
+        NS_DispatchToCurrentThread(evt);
+
+        return;
+      }
 
       inst->Stop();
     }
@@ -1748,7 +1762,7 @@ DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner)
 NS_IMETHODIMP
 nsStopPluginRunnable::Run()
 {
-  DoStopPlugin(mInstanceOwner);
+  DoStopPlugin(mInstanceOwner, PR_TRUE);
 
   return NS_OK;
 }
@@ -1811,7 +1825,7 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
   } else
 #endif
   {
-    DoStopPlugin(owner);
+    DoStopPlugin(owner, PR_FALSE);
   }
 
   // Break relationship between frame and plugin instance owner
@@ -4300,7 +4314,7 @@ static void ConvertRelativeToWindowAbsolute(nsIFrame*   aFrame,
 
 WindowRef nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
 {
-  if (!mWidget || !mPluginWindow || !mInstance)
+  if (!mWidget || !mPluginWindow || !mInstance || !mOwner)
     return nsnull;
 
   nsPluginPort* pluginPort = GetPluginPort(); 
