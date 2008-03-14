@@ -58,6 +58,9 @@ public:
   
   nsresult Init();
 
+  // Page format's unwriteable margin
+  nsresult GetUnwriteableMarginInTwips(nsMargin& aUnwriteableMargin);
+
 protected:
   nsPrintSettingsX(const nsPrintSettingsX& src);
   nsPrintSettingsX& operator=(const nsPrintSettingsX& rhs);
