@@ -932,6 +932,9 @@ CNavDTD::HandleDefaultStartToken(CToken* aToken, eHTMLTags aChildTag,
 
     do {
       eHTMLTags theParentTag = mBodyContext->TagAt(--theIndex);
+      if (theParentTag == eHTMLTag_userdefined) {
+        continue;
+      }
 
       // Figure out whether this is a hidden input inside a
       // table/tbody/thead/tfoot/tr
