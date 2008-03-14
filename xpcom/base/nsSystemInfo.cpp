@@ -39,6 +39,11 @@
 #include "nsSystemInfo.h"
 #include "prsystem.h"
 #include "nsString.h"
+#include "prprf.h"
+
+#ifdef MOZ_WIDGET_GTK2
+#include <gtk/gtk.h>
+#endif
 
 nsSystemInfo::nsSystemInfo()
 {
@@ -74,6 +79,17 @@ nsSystemInfo::Init()
       else
         NS_WARNING("PR_GetSystemInfo failed");
     }
+
+#ifdef MOZ_WIDGET_GTK2
+    // This must be done here because NSPR can only separate OS's when compiled, not libraries.
+    char* gtkver = PR_smprintf("GTK %u.%u.%u", gtk_major_version, gtk_minor_version, gtk_micro_version);
+    if (gtkver) {
+      rv = SetPropertyAsACString(NS_ConvertASCIItoUTF16("secondaryLibrary"),
+                                 nsDependentCString(gtkver));
+      PR_smprintf_free(gtkver);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+#endif
    
     return NS_OK;
 }
