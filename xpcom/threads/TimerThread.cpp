@@ -154,6 +154,7 @@ nsresult TimerThread::Shutdown()
   if (!mThread)
     return NS_ERROR_NOT_INITIALIZED;
 
+  nsVoidArray timers;
   {   // lock scope
     nsAutoLock lock(mLock);
 
@@ -163,12 +164,22 @@ nsresult TimerThread::Shutdown()
     if (mCondVar && mWaiting)
       PR_NotifyCondVar(mCondVar);
 
-    nsTimerImpl *timer;
-    for (PRInt32 i = mTimers.Count() - 1; i >= 0; i--) {
-      timer = static_cast<nsTimerImpl*>(mTimers[i]);
-      timer->ReleaseCallback();
-      RemoveTimerInternal(timer);
-    }
+    // Need to copy content of mTimers array to a local array
+    // because call to timers' ReleaseCallback() (and release its self)
+    // must not be done under the lock. Destructor of a callback
+    // might potentially call some code reentering the same lock
+    // that leads to unexpected behavior or deadlock.
+    // See bug 422472.
+    PRBool rv = timers.AppendElements(mTimers);
+    NS_ASSERTION(rv, "Could not copy timers array, remaining timers will not be released");
+    mTimers.Clear();
+  }
+
+  PRInt32 timersCount = timers.Count();
+  for (PRInt32 i = 0; i < timersCount; i++) {
+    nsTimerImpl *timer = static_cast<nsTimerImpl*>(timers[i]);
+    timer->ReleaseCallback();
+    ReleaseTimerInternal(timer);
   }
 
   mThread->Shutdown();    // wait for the thread to die
@@ -434,10 +445,15 @@ PRBool TimerThread::RemoveTimerInternal(nsTimerImpl *aTimer)
   if (!mTimers.RemoveElement(aTimer))
     return PR_FALSE;
 
+  ReleaseTimerInternal(aTimer);
+  return PR_TRUE;
+}
+
+void TimerThread::ReleaseTimerInternal(nsTimerImpl *aTimer)
+{
   // Order is crucial here -- see nsTimerImpl::Release.
   aTimer->mArmed = PR_FALSE;
   NS_RELEASE(aTimer);
-  return PR_TRUE;
 }
 
 void TimerThread::DoBeforeSleep()
