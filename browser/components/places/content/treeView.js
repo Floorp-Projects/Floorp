@@ -1342,11 +1342,33 @@ PlacesTreeView.prototype = {
     this._result.sortingMode = newSort;
   },
 
+  isEditable: function PTV_isEditable(aRow, aColumn) {
+    // At this point we only support editing the title field.
+    if (aColumn.index != 0)
+      return false;
+
+    var node = this.nodeForTreeIndex(aRow);
+    if (!PlacesUtils.nodeIsReadOnly(node) &&
+        (PlacesUtils.nodeIsFolder(node) ||
+         (PlacesUtils.nodeIsBookmark(node) &&
+          !PlacesUtils.nodeIsLivemarkItem(node))))
+      return true;
+
+    return false;
+  },
+
+  setCellText: function PTV_setCellText(aRow, aColumn, aText) {
+    // we may only get here if the cell is editable
+    var node = this.nodeForTreeIndex(aRow);
+    if (node.title != aText) {
+      var txn = PlacesUIUtils.ptm.editItemTitle(node.itemId, aText);
+      PlacesUtils.ptm.doTransaction(txn);
+    }
+  },
+
   selectionChanged: function() { },
   cycleCell: function PTV_cycleCell(aRow, aColumn) { },
-  isEditable: function(aRow, aColumn) { return false; },
   isSelectable: function(aRow, aColumn) { return false; },
-  setCellText: function(aRow, aColumn) { },
   performAction: function(aAction) { },
   performActionOnRow: function(aAction, aRow) { },
   performActionOnCell: function(aAction, aRow, aColumn) { }
