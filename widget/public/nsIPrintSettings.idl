@@ -58,7 +58,7 @@ interface nsIPrintSession;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(5af07661-6477-4235-8814-4a45215855b8)]
+[scriptable, uuid(3e097aba-c1d6-425d-9c52-b371d5da964a)]
 
 interface nsIPrintSettings : nsISupports
 {
@@ -79,7 +79,7 @@ interface nsIPrintSettings : nsISupports
   /* Flag 0x00000800 is unused */
   /* Flag 0x00001000 is unused */
   const unsigned long kInitSavePaperData      = 0x00002000;
-  const unsigned long kInitSaveUnwriteableMargins = 0x00004000;
+  /* Flag 0x00004000 is unused */
   const unsigned long kInitSaveEdges          = 0x00008000;
 
   const unsigned long kInitSaveReversed       = 0x00010000;
@@ -311,16 +311,4 @@ interface nsIPrintSettings : nsISupports
    * before printing, otherwise printing can fail on some platforms.
    */
   [noscript] void SetupSilentPrinting();
-
-  /**
-   * Sets/Gets the "unwriteable margin" for the page format.  This defines
-   * the boundary from which we'll measure the EdgeInTwips and MarginInTwips 
-   * attributes, to place the headers and content, respectively.
-   *
-   * Note: Implementations of SetUnwriteableMarginInTwips should handle
-   * negative margin values by falling back on the system default for
-   * that margin.
-   */
-  [noscript] void SetUnwriteableMarginInTwips(in nsNativeMarginRef aEdge);
-  [noscript] void GetUnwriteableMarginInTwips(in nsNativeMarginRef aEdge);
 };
