@@ -2,7 +2,7 @@ classic.jar:
 +  skin/classic/global/popup.css
 +  skin/classic/global/menu.css
 +  skin/classic/global/toolbar.css
-+  skin/classic/global/xulscrollbars.css
++  skin/classic/global/scrollbars.css                          (xulscrollbars.css)
 +  skin/classic/global/menu/Menu-arrow.png                     (menu/Menu-arrow.png)
 +  skin/classic/global/menu/menu-check.gif                     (menu/menu-check.gif)
 +  skin/classic/global/arrow/arrow-up.gif                      (arrow/arrow-up.gif)
