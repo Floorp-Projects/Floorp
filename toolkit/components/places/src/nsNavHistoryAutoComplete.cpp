@@ -79,6 +79,18 @@
 #define NS_AUTOCOMPLETESIMPLERESULT_CONTRACTID \
   "@mozilla.org/autocomplete/simple-result;1"
 
+////////////////////////////////////////////////////////////////////////////////
+//// nsNavHistoryAutoComplete Helper Functions
+
+/**
+ * Returns true if the string starts with javascript:
+ */
+inline PRBool
+StartsWithJS(const nsAString &aString)
+{
+  return StringBeginsWith(aString, NS_LITERAL_STRING("javascript:"));
+}
+
 // nsNavHistory::InitAutoComplete
 nsresult
 nsNavHistory::InitAutoComplete()
@@ -256,14 +268,15 @@ nsNavHistory::PerformAutoComplete()
     rv = StartAutoCompleteTimer(mAutoCompleteSearchTimeout);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    DoneSearching();
+    DoneSearching(PR_TRUE);
   }
   return NS_OK;
 }
 
 void
-nsNavHistory::DoneSearching()
+nsNavHistory::DoneSearching(PRBool aFinished)
 {
+  mAutoCompleteFinishedSearch = aFinished;
   mCurrentResult = nsnull;
   mCurrentListener = nsnull;
 }
@@ -283,6 +296,10 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
 
   NS_ENSURE_ARG_POINTER(aListener);
 
+  // Keep track of the previous search results to try optimizing
+  PRUint32 prevMatchCount = mCurrentResultURLs.Count();
+  nsAutoString prevSearchString(mCurrentSearchString);
+
   // Copy the input search string for case-insensitive search
   ToLowerCase(aSearchString, mCurrentSearchString);
   // remove whitespace, see bug #392141 for details
@@ -294,6 +311,36 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
   mCurrentResult = do_CreateInstance(NS_AUTOCOMPLETESIMPLERESULT_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // We can optimize by reusing the last search if it finished and has strictly
+  // less than maxResults number of results as well as making sure the new
+  // search begins with the old one and both aren't empty. Without these
+  // checks, could cause problems mixing up old and new results. (bug 412730)
+  // Also, only reuse the search if the previous and new search both start with
+  // javascript: or both don't. (bug 417798)
+  if (mAutoCompleteFinishedSearch &&
+      prevMatchCount < (PRUint32)mAutoCompleteMaxResults &&
+      !prevSearchString.IsEmpty() &&
+      StringBeginsWith(mCurrentSearchString, prevSearchString) &&
+      (StartsWithJS(prevSearchString) == StartsWithJS(mCurrentSearchString))) {
+
+    // Got nothing before? We won't get anything new, so stop now
+    if (prevMatchCount == 0) {
+      // Set up the result to let the listener know that there's nothing
+      mCurrentResult->SetSearchString(mCurrentSearchString);
+      mCurrentResult->SetSearchResult(nsIAutoCompleteResult::RESULT_NOMATCH);
+      mCurrentResult->SetDefaultIndex(-1);
+
+      rv = mCurrentResult->SetListener(this);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      (void)mCurrentListener->OnSearchResult(this, mCurrentResult);
+      DoneSearching(PR_TRUE);
+
+      return NS_OK;
+    }
+  }
+
+  mAutoCompleteFinishedSearch = PR_FALSE;
   mCurrentChunkOffset = 0;
   mCurrentResultURLs.Clear();
   mCurrentSearchTokens.Clear();
@@ -342,7 +389,7 @@ nsNavHistory::StopSearch()
     mAutoCompleteTimer->Cancel();
 
   mCurrentSearchString.Truncate();
-  DoneSearching();
+  DoneSearching(PR_FALSE);
 
   return NS_OK;
 }
@@ -437,9 +484,8 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
   NS_ENSURE_TRUE(faviconService, NS_ERROR_OUT_OF_MEMORY);
 
   // We want to filter javascript: URIs if the search doesn't start with it
-  const nsString &javascriptColon = NS_LITERAL_STRING("javascript:");
   PRBool filterJavascript = mAutoCompleteFilterJavascript &&
-    mCurrentSearchString.Find(javascriptColon) != 0;
+    !StartsWithJS(mCurrentSearchString);
 
   PRBool hasMore = PR_FALSE;
   // Determine the result of the search
@@ -449,7 +495,7 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // If we need to filter and have a javascript URI.. skip!
-    if (filterJavascript && escapedEntryURL.Find(javascriptColon) == 0)
+    if (filterJavascript && StartsWithJS(escapedEntryURL))
       continue;
 
     // Prevent duplicates that might appear from previous searches such as tag
