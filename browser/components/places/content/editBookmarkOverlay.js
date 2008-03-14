@@ -591,7 +591,8 @@ var gEditItemOverlay = {
       expander.className = "expander-down";
       expander.setAttribute("tooltiptext",
                             expander.getAttribute("tooltiptextdown"));
-      this._folderTree.collapsed = true;
+      this._folderTree.collapsed =
+        this._element("newFolderBox").collapsed = true;
       this._element("chooseFolderSeparator").hidden =
         this._element("chooseFolderMenuItem").hidden = false;
     }
@@ -599,13 +600,16 @@ var gEditItemOverlay = {
       expander.className = "expander-up"
       expander.setAttribute("tooltiptext",
                             expander.getAttribute("tooltiptextup"));
-      this._folderTree.collapsed = false;
-      if (!this._folderTree.place) {
-        const FOLDER_TREE_PLACE_URI =
-          "place:excludeItems=1&excludeQueries=1&excludeReadOnlyFolders=1&folder=" +
-          window.top.PlacesUIUtils.allBookmarksFolderId;
-        this._folderTree.place = FOLDER_TREE_PLACE_URI;
-      }
+      this._folderTree.collapsed =
+        this._element("newFolderBox").collapsed = false;
+
+      // XXXmano: Ideally we would only do this once, but for some odd reason,
+      // the editable mode set on this tree, together with its collapsed state
+      // breaks the view.
+      const FOLDER_TREE_PLACE_URI =
+        "place:excludeItems=1&excludeQueries=1&excludeReadOnlyFolders=1&folder=" +
+        window.top.PlacesUIUtils.allBookmarksFolderId;
+      this._folderTree.place = FOLDER_TREE_PLACE_URI;
 
       this._element("chooseFolderSeparator").hidden =
         this._element("chooseFolderMenuItem").hidden = true;
@@ -766,6 +770,26 @@ var gEditItemOverlay = {
     return tags;
   },
 
+  newFolder: function EIO_newFolder() {
+    var ip = this._folderTree.insertionPoint;
+
+    // default to the bookmarks menu folder
+    if (ip.itemId == PlacesUIUtils.allBookmarksFolderId ||
+        ip.itemId == PlacesUIUtils.unfiledBookmarksFolderId) {
+      ip.itemId = PlacesUtils.bookmarksMenuFolderId;
+      ip.index = -1;
+    }
+
+    // XXXmano: add a separate "New Folder" string at some point...
+    var defaultLabel = this._element("newFolderButton").label;
+    var txn = PlacesUIUtils.ptm.createFolder(defaultLabel, ip.itemId, ip.index);
+    PlacesUtils.ptm.doTransaction(txn);
+    this._folderTree.focus();
+    this._folderTree.selectItems([this._lastNewItem]);
+    this._folderTree.startEditing(this._folderTree.view.selection.currentIndex,
+                                  this._folderTree.columns.getFirstColumn());
+  },
+
   // nsIDOMEventListener
   handleEvent: function EIO_nsIDOMEventListener(aEvent) {
     switch (aEvent.type) {
@@ -869,9 +893,12 @@ var gEditItemOverlay = {
     this._folderMenuList.selectedItem = folderItem;
   },
 
+  onItemAdded: function EIO_onItemAdded(aItemId, aFolder, aIndex) {
+    this._lastNewItem = aItemId;
+  },
+
   onBeginUpdateBatch: function() { },
   onEndUpdateBatch: function() { },
-  onItemAdded: function() { },
   onItemRemoved: function() { },
   onItemVisited: function() { },
 };
