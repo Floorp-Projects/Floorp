@@ -72,8 +72,9 @@ interface nsIDOMNSDocument : nsISupports
   nsIDOMNodeList getElementsByClassName(in DOMString classes);
 
   /**
-  * Returns the element visible at the given point, relative to the
-  * upper-left-most visible point in the document.
+  * Returns the element from the caller's document at the given point,
+  * relative to the upper-left-most point in the (possibly scrolled)
+  * window or frame.
   *
   * If the element at the given point belongs to another document (such as
   * an iframe's subdocument), the element in the calling document's DOM
@@ -81,8 +82,8 @@ interface nsIDOMNSDocument : nsISupports
   * anonymous or XBL generated content, such as a textbox's scrollbars, then
   * the first non-anonymous parent element (that is, the textbox) is returned.
   *
-  * If the specified point is outside the visible portion of the document,
-  * or either coordinate is negative, this method returns null.
+  * This method returns null if either coordinate is negative, or if the
+  * specified point lies outside the visible bounds of the document.
   *
   * Callers from XUL documents should wait until the onload event has fired
   * before calling this method.
