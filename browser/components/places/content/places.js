@@ -251,7 +251,7 @@ var PlacesOrganizer = {
         // The command execution function will take care of seeing the
         // selection is a folder/container and loading its contents in
         // tabs for us.
-        PlacesUtils.openContainerNodeInTabs(selectedNode);
+        PlacesUIUtils.openContainerNodeInTabs(selectedNode);
       }
     }
   },
