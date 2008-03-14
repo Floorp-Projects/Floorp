@@ -69,11 +69,11 @@ NSSCleanupAutoPtrClass_WithParam(SECItem, SECITEM_FreeItem, TrueParam, PR_TRUE)
 
 struct nsMyTrustedEVInfo
 {
-  const char *dotted_oid;
-  const char *oid_name; // Set this to null to signal an invalid structure,
-                        // (We can't have an empty list, so we'll use a dummy entry)
+  char *dotted_oid;
+  char *oid_name; // Set this to null to signal an invalid structure,
+                  // (We can't have an empty list, so we'll use a dummy entry)
   SECOidTag oid_tag;
-  const char *ev_root_sha1_fingerprint;
+  char *ev_root_sha1_fingerprint;
 };
 
 static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
@@ -169,9 +169,9 @@ nsMyTrustedEVInfoClass::nsMyTrustedEVInfoClass()
 
 nsMyTrustedEVInfoClass::~nsMyTrustedEVInfoClass()
 {
-  delete dotted_oid;
-  delete oid_name;
-  delete ev_root_sha1_fingerprint;
+  free(dotted_oid);
+  free(oid_name);
+  free(ev_root_sha1_fingerprint);
 }
 
 typedef nsTArray< nsMyTrustedEVInfoClass* > testEVArray; 
