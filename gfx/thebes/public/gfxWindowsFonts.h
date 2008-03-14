@@ -71,7 +71,7 @@ public:
 
     PRBool IsCrappyFont() const {
         /* return if it is a bitmap not a unicode font */
-        return (!mUnicodeFont || mSymbolFont);
+        return (!mUnicodeFont || mSymbolFont || mIsType1);
     }
 
     PRBool MatchesGenericFamily(const nsACString& aGeneric) const {
