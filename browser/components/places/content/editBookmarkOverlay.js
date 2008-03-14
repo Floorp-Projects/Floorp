@@ -783,7 +783,7 @@ var gEditItemOverlay = {
     // XXXmano: add a separate "New Folder" string at some point...
     var defaultLabel = this._element("newFolderButton").label;
     var txn = PlacesUIUtils.ptm.createFolder(defaultLabel, ip.itemId, ip.index);
-    PlacesUtils.ptm.doTransaction(txn);
+    PlacesUIUtils.ptm.doTransaction(txn);
     this._folderTree.focus();
     this._folderTree.selectItems([this._lastNewItem]);
     this._folderTree.startEditing(this._folderTree.view.selection.currentIndex,

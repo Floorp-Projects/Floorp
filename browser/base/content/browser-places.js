@@ -600,7 +600,7 @@ var BookmarksEventHandler = {
       // is middle-clicked or when a non-bookmark item except for Open in Tabs)
       // in a bookmarks menupopup is middle-clicked.
       if (target.localName == "menu" || target.localName == "toolbarbutton")
-        PlacesUtils.openContainerNodeInTabs(target.node, aEvent);
+        PlacesUIUtils.openContainerNodeInTabs(target.node, aEvent);
     }
     else
       this.onCommand(aEvent);
