@@ -99,19 +99,12 @@ public:
     }
 
     NS_IMETHOD GetPattern(gfxPattern **aPattern) {
-        *aPattern = ThebesPattern();
+        if (mSinglePixel)
+            *aPattern = new gfxPattern(mSinglePixelColor);
+        else
+            *aPattern = new gfxPattern(ThebesSurface());
         NS_ADDREF(*aPattern);
         return NS_OK;
-    }
-
-    gfxPattern* ThebesPattern() {
-        gfxPattern *pattern;
-        if (mSinglePixel)
-            pattern = new gfxPattern(mSinglePixelColor);
-        else
-            pattern = new gfxPattern(ThebesSurface());
-
-        return pattern;
     }
 
     gfxASurface* ThebesSurface() {
