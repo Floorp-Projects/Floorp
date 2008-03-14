@@ -964,7 +964,7 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
       scanner.ScanFrame(child);
       child = child->GetNextSibling();
     }
-    if (forwardIterator.GetContainer() == aLineContainer && line == startLine) {
+    if (line.get() == startLine.get()) {
       seenStartLine = PR_TRUE;
     }
     if (seenStartLine) {
