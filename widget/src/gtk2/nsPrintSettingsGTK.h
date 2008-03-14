@@ -114,9 +114,17 @@ public:
   NS_IMETHOD GetNumCopies(PRInt32 *aNumCopies);
   NS_IMETHOD SetNumCopies(PRInt32 aNumCopies);
 
-  // Page format's unwriteable margin
-  NS_IMETHOD GetUnwriteableMarginInTwips(nsMargin& aUnwriteableMargin);
-  NS_IMETHOD SetUnwriteableMarginInTwips(nsMargin& aUnwriteableMargin);
+  NS_IMETHOD GetEdgeTop(double *aEdgeTop);
+  NS_IMETHOD SetEdgeTop(double aEdgeTop);
+
+  NS_IMETHOD GetEdgeLeft(double *aEdgeLeft);
+  NS_IMETHOD SetEdgeLeft(double aEdgeLeft);
+
+  NS_IMETHOD GetEdgeBottom(double *aEdgeBottom);
+  NS_IMETHOD SetEdgeBottom(double aEdgeBottom);
+
+  NS_IMETHOD GetEdgeRight(double *aEdgeRight);
+  NS_IMETHOD SetEdgeRight(double aEdgeRight);
 
   NS_IMETHOD GetScaling(double *aScaling);
   NS_IMETHOD SetScaling(double aScaling);
@@ -132,6 +140,9 @@ public:
   NS_IMETHOD SetPaperHeight(double aPaperHeight);
 
   NS_IMETHOD SetPaperSizeUnit(PRInt16 aPaperSizeUnit);
+
+  NS_IMETHOD SetEdgeInTwips(nsMargin& aEdge);
+  NS_IMETHOD GetEdgeInTwips(nsMargin& aEdge);
 
   NS_IMETHOD GetEffectivePageSize(double *aWidth, double *aHeight);
 

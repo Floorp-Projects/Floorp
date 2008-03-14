@@ -519,13 +519,6 @@ public:
   { return NSToCoordRound(NS_TWIPS_TO_INCHES(aTwips) *
                           mDeviceContext->AppUnitsPerInch()); }
 
-  // Margin-specific version, since they often need TwipsToAppUnits
-  nsMargin TwipsToAppUnits(const nsMargin &marginInTwips) const
-  { return nsMargin(TwipsToAppUnits(marginInTwips.left), 
-                    TwipsToAppUnits(marginInTwips.top),
-                    TwipsToAppUnits(marginInTwips.right),
-                    TwipsToAppUnits(marginInTwips.bottom)); }
-
   PRInt32 AppUnitsToTwips(nscoord aTwips) const
   { return NS_INCHES_TO_TWIPS((float)aTwips /
                               mDeviceContext->AppUnitsPerInch()); }

@@ -185,15 +185,31 @@ NS_IMETHODIMP nsDeviceContextSpecX::EndPage()
     NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-void nsDeviceContextSpecX::GetPaperRect(double* aTop, double* aLeft, double* aBottom, double* aRight)
+void nsDeviceContextSpecX::GetPageRect(double* aTop, double* aLeft, double* aBottom, double* aRight)
 {
     NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-    PMRect paperRect;
-    ::PMGetAdjustedPaperRect(mPageFormat, &paperRect);
+    PMRect pageRect;
+    ::PMGetAdjustedPageRect(mPageFormat, &pageRect);
+    *aTop = pageRect.top, *aLeft = pageRect.left;
+    *aBottom = pageRect.bottom, *aRight = pageRect.right;
 
-    *aTop = paperRect.top, *aLeft = paperRect.left;
-    *aBottom = paperRect.bottom, *aRight = paperRect.right;
+    NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+void nsDeviceContextSpecX::GetPageMargins(double *aTopMargin, double* aLeftMargin,
+                                          double* aBottomMargin, double *aRightMargin)
+{
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+    PMPaper paper;
+    PMPaperMargins margins;
+    ::PMGetPageFormatPaper(mPageFormat, &paper);
+    ::PMPaperGetMargins(paper, &margins);
+    *aTopMargin    = margins.top;
+    *aLeftMargin   = margins.left;
+    *aBottomMargin = margins.bottom;
+    *aRightMargin  = margins.right;
 
     NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -203,7 +219,10 @@ NS_IMETHODIMP nsDeviceContextSpecX::GetSurfaceForPrinter(gfxASurface **surface)
     NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
     double top, left, bottom, right;
-    GetPaperRect(&top, &left, &bottom, &right);
+    double topMargin, leftMargin, bottomMargin, rightMargin;
+    GetPageRect(&top, &left, &bottom, &right);
+    GetPageMargins(&topMargin, &leftMargin, &bottomMargin, &rightMargin);
+
     const double width = right - left;
     const double height = bottom - top;
 
@@ -214,8 +233,8 @@ NS_IMETHODIMP nsDeviceContextSpecX::GetSurfaceForPrinter(gfxASurface **surface)
 
     if (context) {
         // Initially, origin is at bottom-left corner of the paper.
-        // Here, we translate it to top-left corner of the paper.
-        CGContextTranslateCTM(context, 0, height);
+        // Here, we translate it to top-left corner of the printable area.
+        CGContextTranslateCTM(context, leftMargin, bottomMargin + height);
         CGContextScaleCTM(context, 1.0, -1.0);
         newSurface = new gfxQuartzSurface(context, gfxSize(width, height), PR_TRUE);
     } else {
