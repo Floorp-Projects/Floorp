@@ -81,11 +81,18 @@ libs:: $(WIN32_CUSTOM_CRT_DIR)/mozcrt19.dll
 endif
 
 else
-# for other platforms, just build jemalloc as a shared lib
 
 MODULE_OPTIMIZE_FLAGS = -O2
 LIBRARY_NAME	= jemalloc
+
+ifeq (Darwin,$(OS_TARGET))
+# Build jemalloc as a shared lib, so that the library init function is executed.
 FORCE_SHARED_LIB= 1
+else
+# Make jemalloc part of libxul, in order to reduce dynamic loading overhead.
+MODULE		= jemalloc
+LIBXUL_LIBRARY	= 1
+endif
 
 CSRCS		= \
 		jemalloc.c \

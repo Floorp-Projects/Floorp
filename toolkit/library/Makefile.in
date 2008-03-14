@@ -249,3 +249,11 @@ endif
 ifneq (,$(filter layout-debug,$(MOZ_EXTENSIONS)))
 DEFINES += -DMOZ_ENABLE_EXTENSION_LAYOUT_DEBUG
 endif
+
+ifdef MOZ_MEMORY
+ifneq ($(OS_ARCH),WINNT)
+ifneq ($(OS_ARCH),Darwin)
+EXTRA_DSO_LDOPTS += $(DEPTH)/memory/jemalloc/$(LIB_PREFIX)jemalloc.$(LIB_SUFFIX)
+endif
+endif
+endif
