@@ -112,17 +112,22 @@ nsMathMLmoFrame::IsFrameInSelection(nsIFrame* aFrame)
   return PR_TRUE;
 }
 
+PRBool
+nsMathMLmoFrame::UseMathMLChar()
+{
+  return (NS_MATHML_OPERATOR_GET_FORM(mFlags) &&
+          NS_MATHML_OPERATOR_IS_MUTABLE(mFlags)) ||
+    NS_MATHML_OPERATOR_IS_CENTERED(mFlags) ||
+    NS_MATHML_OPERATOR_IS_INVISIBLE(mFlags);
+}
+
 NS_IMETHODIMP
 nsMathMLmoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
 {
   nsresult rv = NS_OK;
-  PRBool useMathMLChar =
-    (NS_MATHML_OPERATOR_GET_FORM(mFlags) &&
-     NS_MATHML_OPERATOR_IS_MUTABLE(mFlags)) ||
-    NS_MATHML_OPERATOR_IS_CENTERED(mFlags) ||
-    NS_MATHML_OPERATOR_IS_INVISIBLE(mFlags);
+  PRBool useMathMLChar = UseMathMLChar();
 
   if (!useMathMLChar) {
     // let the base class do everything
@@ -503,7 +508,7 @@ nsMathMLmoFrame::ProcessOperatorData()
     mFlags |= NS_MATHML_OPERATOR_SYMMETRIC;
 
   // minsize = number [ v-unit | h-unit ] | namedspace
-  mMinSize = float(NS_UNCONSTRAINEDSIZE);
+  mMinSize = 0.0;
   GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::minsize_,
                value);
   if (!value.IsEmpty()) {
@@ -518,7 +523,7 @@ nsMathMLmoFrame::ProcessOperatorData()
         mMinSize = cssValue.GetPercentValue();
       else if (eCSSUnit_Null != unit) {
         mMinSize = float(CalcLength(presContext, mStyleContext, cssValue));
-        mFlags |= NS_MATHML_OPERATOR_MINSIZE_EXPLICIT;
+        mFlags |= NS_MATHML_OPERATOR_MINSIZE_ABSOLUTE;
       }
 
       if ((eCSSUnit_Number == unit) || (eCSSUnit_Percent == unit)) {
@@ -529,7 +534,7 @@ nsMathMLmoFrame::ProcessOperatorData()
           if (ParseNumericValue(value, cssValue)) {
             if (cssValue.IsLengthUnit()) {
               mMinSize *= float(CalcLength(presContext, mStyleContext, cssValue));
-              mFlags |= NS_MATHML_OPERATOR_MINSIZE_EXPLICIT;
+              mFlags |= NS_MATHML_OPERATOR_MINSIZE_ABSOLUTE;
             }
           }
         }
@@ -538,7 +543,7 @@ nsMathMLmoFrame::ProcessOperatorData()
   }
 
   // maxsize = number [ v-unit | h-unit ] | namedspace | infinity
-  mMaxSize = float(NS_UNCONSTRAINEDSIZE);
+  mMaxSize = NS_MATHML_OPERATOR_SIZE_INFINITY;
   GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::maxsize_,
                value);
   if (!value.IsEmpty()) {
@@ -553,7 +558,7 @@ nsMathMLmoFrame::ProcessOperatorData()
         mMaxSize = cssValue.GetPercentValue();
       else if (eCSSUnit_Null != unit) {
         mMaxSize = float(CalcLength(presContext, mStyleContext, cssValue));
-        mFlags |= NS_MATHML_OPERATOR_MAXSIZE_EXPLICIT;
+        mFlags |= NS_MATHML_OPERATOR_MAXSIZE_ABSOLUTE;
       }
 
       if ((eCSSUnit_Number == unit) || (eCSSUnit_Percent == unit)) {
@@ -564,13 +569,48 @@ nsMathMLmoFrame::ProcessOperatorData()
           if (ParseNumericValue(value, cssValue)) {
             if (cssValue.IsLengthUnit()) {
               mMaxSize *= float(CalcLength(presContext, mStyleContext, cssValue));
-              mFlags |= NS_MATHML_OPERATOR_MAXSIZE_EXPLICIT;
+              mFlags |= NS_MATHML_OPERATOR_MAXSIZE_ABSOLUTE;
             }
           }
         }
       }
     }
   }
+}
+
+static PRUint32
+GetStretchHint(nsOperatorFlags aFlags, nsPresentationData aPresentationData,
+               PRBool aIsVertical)
+{
+  PRUint32 stretchHint = NS_STRETCH_NONE;
+  // See if it is okay to stretch,
+  // starting from what the Operator Dictionary said
+  if (NS_MATHML_OPERATOR_IS_MUTABLE(aFlags)) {
+    // set the largeop or largeopOnly flags to suitably cover all the
+    // 8 possible cases depending on whether displaystyle, largeop,
+    // stretchy are true or false (see bug 69325).
+    // . largeopOnly is taken if largeop=true and stretchy=false
+    // . largeop is taken if largeop=true and stretchy=true
+    if (NS_MATHML_IS_DISPLAYSTYLE(aPresentationData.flags) &&
+        NS_MATHML_OPERATOR_IS_LARGEOP(aFlags)) {
+      stretchHint = NS_STRETCH_LARGEOP; // (largeopOnly, not mask!)
+      if (NS_MATHML_OPERATOR_IS_STRETCHY(aFlags)) {
+        stretchHint |= NS_STRETCH_NEARER | NS_STRETCH_LARGER;
+      }
+    }
+    else if(NS_MATHML_OPERATOR_IS_STRETCHY(aFlags)) {
+      if (aIsVertical) {
+        // TeX hint. Can impact some sloppy markups missing <mrow></mrow>
+        stretchHint = NS_STRETCH_NEARER;
+      }
+      else {
+        stretchHint = NS_STRETCH_NORMAL;
+      }
+    }
+    // else if the stretchy and largeop attributes have been disabled,
+    // the operator is not mutable
+  }
+  return stretchHint;
 }
 
 // NOTE: aDesiredStretchSize is an IN/OUT parameter
@@ -606,11 +646,7 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
   // Operators that are stretchy, or those that are to be centered
   // to cater for fonts that are not math-aware, are handled by the MathMLChar
   // ('form' is reset if stretch fails -- i.e., we don't bother to stretch next time)
-  PRBool useMathMLChar =
-    (NS_MATHML_OPERATOR_GET_FORM(mFlags) &&
-     NS_MATHML_OPERATOR_IS_MUTABLE(mFlags)) ||
-    NS_MATHML_OPERATOR_IS_CENTERED(mFlags) ||
-    NS_MATHML_OPERATOR_IS_INVISIBLE(mFlags);
+  PRBool useMathMLChar = UseMathMLChar();
 
   nsBoundingMetrics charSize;
   nsBoundingMetrics container = aDesiredStretchSize.mBoundingMetrics;
@@ -618,43 +654,18 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
   if (useMathMLChar) {
     nsBoundingMetrics initialSize = aDesiredStretchSize.mBoundingMetrics;
 
-    PRUint32 stretchHint = NS_STRETCH_NORMAL;
+    if (((aStretchDirection == NS_STRETCH_DIRECTION_VERTICAL) ||
+         (aStretchDirection == NS_STRETCH_DIRECTION_DEFAULT))  &&
+        (mEmbellishData.direction == NS_STRETCH_DIRECTION_VERTICAL)) {
+      isVertical = PR_TRUE;
+    }
 
-    // see if it is okay to stretch, starting from what the Operator Dictionary said
-    PRBool isMutable = NS_MATHML_OPERATOR_IS_MUTABLE(mFlags);
-    // if the stretchy and largeop attributes have been disabled,
-    // the operator is not mutable
-    if (!NS_MATHML_OPERATOR_IS_STRETCHY(mFlags) &&
-        !NS_MATHML_OPERATOR_IS_LARGEOP(mFlags))
-      isMutable = PR_FALSE;
+    PRUint32 stretchHint =
+      GetStretchHint(mFlags, mPresentationData, isVertical);
 
-    if (isMutable) {
+    if (stretchHint != NS_STRETCH_NONE) {
 
       container = aContainerSize;
-
-      if (((aStretchDirection == NS_STRETCH_DIRECTION_VERTICAL) ||
-           (aStretchDirection == NS_STRETCH_DIRECTION_DEFAULT))  &&
-          (mEmbellishData.direction == NS_STRETCH_DIRECTION_VERTICAL))
-      {
-        isVertical = PR_TRUE;
-      }
-
-      // set the largeop or largeopOnly flags to suitably cover all the
-      // 8 possible cases depending on whether displaystyle, largeop,
-      // stretchy are true or false (see bug 69325).
-      // . largeopOnly is taken if largeop=true and stretchy=false
-      // . largeop is taken if largeop=true and stretchy=true
-      if (NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags) &&
-          NS_MATHML_OPERATOR_IS_LARGEOP(mFlags)) {
-        stretchHint = NS_STRETCH_LARGEOP; // (largeopOnly, not mask!)
-        if (NS_MATHML_OPERATOR_IS_STRETCHY(mFlags)) {
-          stretchHint |= NS_STRETCH_NEARER | NS_STRETCH_LARGER;
-        }
-      }
-      else if (isVertical) {
-        // TeX hint. Can impact some sloppy markups missing <mrow></mrow>
-        stretchHint = NS_STRETCH_NEARER;
-      }
 
       // some adjustments if the operator is symmetric and vertical
 
@@ -674,10 +685,10 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
 
       // check for user-desired min-max size
 
-      if (mMaxSize != float(NS_UNCONSTRAINEDSIZE) && mMaxSize > 0.0f) {
+      if (mMaxSize != NS_MATHML_OPERATOR_SIZE_INFINITY && mMaxSize > 0.0f) {
         // if we are here, there is a user defined maxsize ...
         //XXX Set stretchHint = NS_STRETCH_NORMAL? to honor the maxsize as close as possible?
-        if (NS_MATHML_OPERATOR_MAXSIZE_IS_EXPLICIT(mFlags)) {
+        if (NS_MATHML_OPERATOR_MAXSIZE_IS_ABSOLUTE(mFlags)) {
           // there is an explicit value like maxsize="20pt"
           // try to maintain the aspect ratio of the char
           float aspect = mMaxSize / float(initialSize.ascent + initialSize.descent);
@@ -707,7 +718,7 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
         }
       }
 
-      if (mMinSize != float(NS_UNCONSTRAINEDSIZE) && mMinSize > 0.0f) {
+      if (mMinSize > 0.0f) {
         // if we are here, there is a user defined minsize ...
         // always allow the char to stretch in its natural direction,
         // even if it is different from the caller's direction 
@@ -718,7 +729,7 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
           // we should not use the caller's container size either
           container = initialSize;
         }
-        if (NS_MATHML_OPERATOR_MINSIZE_IS_EXPLICIT(mFlags)) {
+        if (NS_MATHML_OPERATOR_MINSIZE_IS_ABSOLUTE(mFlags)) {
           // there is an explicit value like minsize="20pt"
           // try to maintain the aspect ratio of the char
           float aspect = mMinSize / float(initialSize.ascent + initialSize.descent);
@@ -985,9 +996,17 @@ nsMathMLmoFrame::MarkIntrinsicWidthsDirty()
 nsMathMLmoFrame::GetIntrinsicWidth(nsIRenderingContext *aRenderingContext)
 {
   ProcessOperatorData();
-  // TODO: need to ask mMathMLChar for its maximum width if useMathMLChar
-  // (Bug 363240)
-  nscoord width = nsMathMLTokenFrame::GetIntrinsicWidth(aRenderingContext);
+  nscoord width;
+  if (UseMathMLChar()) {
+    PRUint32 stretchHint = GetStretchHint(mFlags, mPresentationData, PR_TRUE);
+    width = mMathMLChar.
+      GetMaxWidth(PresContext(), *aRenderingContext,
+                  stretchHint, mMaxSize,
+                  NS_MATHML_OPERATOR_MAXSIZE_IS_ABSOLUTE(mFlags));
+  }
+  else {
+    width = nsMathMLTokenFrame::GetIntrinsicWidth(aRenderingContext);
+  }
 
   // leftSpace and rightSpace are actually applied to the outermost
   // embellished container but for determining total intrinsic width it should
