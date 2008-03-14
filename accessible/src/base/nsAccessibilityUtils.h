@@ -366,6 +366,16 @@ public:
   
   // Return PR_TRUE if the ARIA property should always be exposed as an object attribute
   static PRBool IsARIAPropForObjectAttr(nsIAtom *aAtom);
+
+
+  /**
+   * Get container-foo live region attributes for the given node
+   * @param aAttributes     Where to store the attributes
+   * @param aStartContent   Node to start from
+   * @param aTopContent     Node to end at
+   */
+  static void GetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
+                                         nsIContent *aStartContent, nsIContent *aTopContent);
 };
 
 #endif

@@ -453,6 +453,10 @@ nsAccessibilityService::CreateRootAccessible(nsIPresShell *aShell,
 
   nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(*aRootAcc));
   privateAccessNode->Init();
+  nsRoleMapEntry *roleMapEntry = nsAccUtils::GetRoleMapEntry(rootNode);
+  nsCOMPtr<nsPIAccessible> privateAccessible =
+    do_QueryInterface(privateAccessNode);
+  privateAccessible->SetRoleMapEntry(roleMapEntry);
 
   NS_ADDREF(*aRootAcc);
 

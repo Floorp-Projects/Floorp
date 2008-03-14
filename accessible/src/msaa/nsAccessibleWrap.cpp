@@ -318,7 +318,7 @@ __try {
   GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
   if (xpAccessible) {
     nsAutoString value;
-    if (NS_FAILED(xpAccessible->GetValue(value)))
+    if (NS_FAILED(xpAccessible->GetValue(value)) || value.IsEmpty())
       return S_FALSE;
 
     *pszValue = ::SysAllocString(value.get());

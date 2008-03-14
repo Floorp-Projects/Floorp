@@ -489,10 +489,9 @@ NS_IMETHODIMP nsAccessible::SetNextSibling(nsIAccessible *aNextSibling)
 nsIContent *nsAccessible::GetRoleContent(nsIDOMNode *aDOMNode)
 {
   // Given the DOM node for an acessible, return content node that
-  // we should look at role string from
+  // we should look for ARIA properties on.
   // For non-document accessibles, this is the associated content node.
-  // For doc accessibles, first try the <body> if it's HTML and there is
-  // a role attribute used there.
+  // For doc accessibles, use the <body>/<frameset> if it's HTML.
   // For any other doc accessible , this is the document element.
   nsCOMPtr<nsIContent> content(do_QueryInterface(aDOMNode));
   if (!content) {
@@ -504,7 +503,7 @@ nsIContent *nsAccessible::GetRoleContent(nsIDOMNode *aDOMNode)
         htmlDoc->GetBody(getter_AddRefs(bodyElement));
         content = do_QueryInterface(bodyElement);
       }
-      if (!content) {
+      else {
         nsCOMPtr<nsIDOMElement> docElement;
         domDoc->GetDocumentElement(getter_AddRefs(docElement));
         content = do_QueryInterface(docElement);
@@ -2003,19 +2002,20 @@ NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
 NS_IMETHODIMP
 nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
 {
-  NS_ENSURE_ARG_POINTER(aAttributes);
-  *aAttributes = nsnull;
-
+  NS_ENSURE_ARG_POINTER(aAttributes);  // In/out param. Created if necessary.
+  
   nsCOMPtr<nsIContent> content = GetRoleContent(mDOMNode);
   if (!content) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIPersistentProperties> attributes =
-     do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
-  NS_ENSURE_TRUE(attributes, NS_ERROR_OUT_OF_MEMORY);
-
-  nsAccEvent::GetLastEventAttributes(mDOMNode, attributes);
+  nsCOMPtr<nsIPersistentProperties> attributes = *aAttributes;
+  if (!attributes) {
+    // Create only if an array wasn't already passed in
+    attributes = do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
+    NS_ENSURE_TRUE(attributes, NS_ERROR_OUT_OF_MEMORY);
+    NS_ADDREF(*aAttributes = attributes);
+  }
  
   nsresult rv = GetAttributesInternal(attributes);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2023,13 +2023,11 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
   nsAutoString id;
   nsAutoString oldValueUnused;
   if (nsAccUtils::GetID(content, id)) {
+    // Expose ID. If an <iframe id> exists override the one on the <body> of the source doc,
+    // because the specific instance is what makes the ID useful for scripts
     attributes->SetStringProperty(NS_LITERAL_CSTRING("id"), id, oldValueUnused);
   }
   
-  nsAutoString _class;
-  if (content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::_class, _class))
-    nsAccUtils::SetAccAttr(attributes, nsAccessibilityAtoms::_class, _class);
-
   nsAutoString xmlRoles;
   if (content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::role, xmlRoles)) {
     attributes->SetStringProperty(NS_LITERAL_CSTRING("xml-roles"),  xmlRoles, oldValueUnused);          
@@ -2045,29 +2043,6 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
     attributes->SetStringProperty(NS_LITERAL_CSTRING("valuetext"), valuetext, oldValueUnused);
   }
 
-
-  // Get container-foo computed live region properties based on the closest container with
-  // the live region attribute
-  nsAutoString atomic, live, relevant, channel, busy;
-  nsIContent *ancestor = content;
-  while (ancestor) {
-    if (relevant.IsEmpty() &&
-        ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_relevant, relevant))
-      attributes->SetStringProperty(NS_LITERAL_CSTRING("container-relevant"), relevant, oldValueUnused);
-    if (live.IsEmpty() &&
-        ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_live, live))
-      attributes->SetStringProperty(NS_LITERAL_CSTRING("container-live"), live, oldValueUnused);
-    if (channel.IsEmpty() &&
-        ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_channel, channel))
-      attributes->SetStringProperty(NS_LITERAL_CSTRING("container-channel"), channel, oldValueUnused);
-    if (atomic.IsEmpty() &&
-        ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_atomic, atomic))
-      attributes->SetStringProperty(NS_LITERAL_CSTRING("container-atomic"), atomic, oldValueUnused);
-    if (busy.IsEmpty() &&
-        ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_busy, busy))
-      attributes->SetStringProperty(NS_LITERAL_CSTRING("container-busy"), busy, oldValueUnused);
-    ancestor = ancestor->GetParent();
-  }
 
   PRUint32 role = Role(this);
   if (role == nsIAccessibleRole::ROLE_CHECKBUTTON ||
@@ -2168,15 +2143,16 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
     }
   }
 
-  attributes.swap(*aAttributes);
-
   return NS_OK;
 }
 
 nsresult
 nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 {
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(GetRoleContent(mDOMNode)));
+  // Attributes set by this method will not be used to override attributes on a sub-document accessible
+  // when there is a <frame>/<iframe> element that spawned the sub-document
+  nsIContent *content = GetRoleContent(mDOMNode);
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(content));
   NS_ENSURE_TRUE(element, NS_ERROR_UNEXPECTED);
 
   nsAutoString tagName;
@@ -2185,6 +2161,43 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
     nsAutoString oldValueUnused;
     aAttributes->SetStringProperty(NS_LITERAL_CSTRING("tag"), tagName,
                                    oldValueUnused);
+  }
+
+  nsAccEvent::GetLastEventAttributes(mDOMNode, aAttributes);
+ 
+  // Expose class because it may have useful microformat information
+  // Let the class from an iframe's document be exposed, don't override from <iframe class>
+  nsAutoString _class;
+  if (content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::_class, _class))
+    nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::_class, _class);
+
+  // Get container-foo computed live region properties based on the closest container with
+  // the live region attribute. 
+  // Inner nodes override outer nodes within the same document --
+  //   The inner nodes can be used to override live region behavior on more general outer nodes
+  // However, nodes in outer documents override nodes in inner documents:
+  //   Outer doc author may want to override properties on a widget they used in an iframe
+  nsCOMPtr<nsIDOMNode> startNode = mDOMNode;
+  nsIContent *startContent = content;
+  while (PR_TRUE) {
+    NS_ENSURE_STATE(startContent);
+    nsIDocument *doc = startContent->GetDocument();
+    nsCOMPtr<nsIDOMNode> docNode = do_QueryInterface(doc);
+    NS_ENSURE_STATE(docNode);
+    nsIContent *topContent = GetRoleContent(docNode);
+    NS_ENSURE_STATE(topContent);
+    nsAccUtils::GetLiveContainerAttributes(aAttributes, startContent, topContent);
+    // Allow ARIA live region markup from outer documents to override
+    nsCOMPtr<nsISupports> container = doc->GetContainer();
+    nsIDocShellTreeItem *docShellTreeItem = nsnull;
+    if (container)
+      CallQueryInterface(container, &docShellTreeItem);
+    nsIDocShellTreeItem *sameTypeParent = nsnull;
+    docShellTreeItem->GetSameTypeParent(&sameTypeParent);
+    if (!sameTypeParent || sameTypeParent == docShellTreeItem)
+      break;
+    nsIDocument *parentDoc = doc->GetParentDocument();
+    startContent = parentDoc->FindContentForSubDocument(doc);      
   }
 
   return NS_OK;
@@ -2266,7 +2279,7 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Apply ARIA states to be sure accessible states will be overriden.
-  *aState |= GetARIAState();
+  GetARIAState(aState);
 
   if (mRoleMapEntry && mRoleMapEntry->role == nsIAccessibleRole::ROLE_PAGETAB) {
     if (*aState & nsIAccessibleStates::STATE_FOCUSED) {
@@ -2391,39 +2404,39 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
-PRUint32
-nsAccessible::GetARIAState()
+nsresult
+nsAccessible::GetARIAState(PRUint32 *aState)
 {
   // Test for universal states first
   nsIContent *content = GetRoleContent(mDOMNode);
   if (!content) {
-    return 0;
+    return NS_OK;
   }
 
   PRUint32 ariaState = 0;
   PRUint32 index = 0;
-  while (MappedAttrState(content, &ariaState, &nsARIAMap::gWAIUnivStateMap[index])) {
+  while (MappedAttrState(content, aState, &nsARIAMap::gWAIUnivStateMap[index])) {
     ++ index;
   }
 
   if (!mRoleMapEntry)
-    return ariaState;
+    return NS_OK;
 
   // Once DHTML role is used, we're only readonly if DHTML readonly used
   ariaState &= ~nsIAccessibleStates::STATE_READONLY;
 
   ariaState |= mRoleMapEntry->state;
-  if (MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap1) &&
-      MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap2) &&
-      MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap3) &&
-      MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap4) &&
-      MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap5) &&
-      MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap6) &&
-      MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap7)) {
-    MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap8);
+  if (MappedAttrState(content, aState, &mRoleMapEntry->attributeMap1) &&
+      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap2) &&
+      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap3) &&
+      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap4) &&
+      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap5) &&
+      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap6) &&
+      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap7)) {
+    MappedAttrState(content, aState, &mRoleMapEntry->attributeMap8);
   }
 
-  return ariaState;
+  return NS_OK;
 }
 
 // Not implemented by this class
