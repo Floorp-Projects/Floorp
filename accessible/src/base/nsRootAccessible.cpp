@@ -448,12 +448,15 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
   // Check for aria-activedescendant, which changes which element has focus
   nsCOMPtr<nsIDOMNode> finalFocusNode = aNode;
   nsCOMPtr<nsIAccessible> finalFocusAccessible = aAccessible;
-  nsCOMPtr<nsIContent> finalFocusContent  = do_QueryInterface(aNode);
+  nsCOMPtr<nsIContent> finalFocusContent = GetRoleContent(finalFocusNode);
   if (finalFocusContent) {
     nsAutoString id;
     if (finalFocusContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_activedescendant, id)) {
       nsCOMPtr<nsIDOMDocument> domDoc;
       aNode->GetOwnerDocument(getter_AddRefs(domDoc));
+      if (!domDoc) {  // Maybe the passed-in node actually is a doc
+        domDoc = do_QueryInterface(aNode);
+      }
       if (!domDoc) {
         return PR_FALSE;
       }

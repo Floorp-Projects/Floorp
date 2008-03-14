@@ -933,3 +933,33 @@ nsAccUtils::IsARIAPropForObjectAttr(nsIAtom *aAtom)
          aAtom != nsAccessibilityAtoms::aria_valuenow &&
          aAtom != nsAccessibilityAtoms::aria_valuetext;
 }
+
+void nsAccUtils::GetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
+                                                nsIContent *aStartContent, nsIContent *aTopContent)
+{
+  nsAutoString atomic, live, relevant, channel, busy;
+  nsIContent *ancestor = aStartContent;
+  while (ancestor) {
+    if (relevant.IsEmpty() &&
+        ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_relevant, relevant))
+      SetAccAttr(aAttributes, nsAccessibilityAtoms::containerRelevant, relevant);
+    if (live.IsEmpty() &&
+        ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_live, live))
+      SetAccAttr(aAttributes, nsAccessibilityAtoms::containerLive, live);
+    if (channel.IsEmpty() &&
+        ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_channel, channel))
+      SetAccAttr(aAttributes, nsAccessibilityAtoms::containerChannel, channel);
+    if (atomic.IsEmpty() &&
+        ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_atomic, atomic))
+      SetAccAttr(aAttributes, nsAccessibilityAtoms::containerAtomic, atomic);
+    if (busy.IsEmpty() &&
+        ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_busy, busy))
+      SetAccAttr(aAttributes, nsAccessibilityAtoms::containerBusy, busy);
+    if (ancestor == aTopContent)
+      break;
+    ancestor = ancestor->GetParent();
+    if (!ancestor) {
+      ancestor = aTopContent; // Use <body>/<frameset>
+    }
+  }
+}
