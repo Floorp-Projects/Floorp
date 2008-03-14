@@ -100,7 +100,7 @@ var StarUI = {
       case "popuphidden":
         if (aEvent.originalTarget == this.panel) {
           if (!this._element("editBookmarkPanelContent").hidden)
-            gEditItemOverlay.uninitPanel(true);
+            this.quitEditMode();
           this._restoreCommandsState();
           this._itemId = -1;
           this._uri = null;
@@ -112,14 +112,20 @@ var StarUI = {
         break;
       case "keypress":
         if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE) {
-          // In edit mode, the ESC key is mapped to the cancel button
-          if (!this._element("editBookmarkPanelContent").hidden)
-            this.cancelButtonOnCommand();
-          else // otherwise we just hide the panel
+          // In edit mode, if we're not editing a folder, the ESC key is mapped
+          // to the cancel button
+          if (!this._element("editBookmarkPanelContent").hidden) {
+            var elt = aEvent.target;
+            if (elt.localName != "tree" ||
+                (elt.localName == "tree" && !elt.hasAttribute("editing")))
+              this.cancelButtonOnCommand();
+          }
+        }
+        else if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN) {
+          // hide the panel unless the folder tree is focused
+          if (aEvent.target.localName != "tree")
             this.panel.hidePopup();
         }
-        else if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN)
-          this.panel.hidePopup(); // hide the panel
         break;
     }
   },
@@ -241,10 +247,6 @@ var StarUI = {
       bundle.getFormattedString("editBookmarkPanel.pageBookmarkedDescription",
                                 [brandShortName]);
 
-    // hide the edit panel and the buttons below to it (Cancel, Done)
-    this._element("editBookmarkPanelContent").hidden = true;
-    this._element("editBookmarkPanelBottomButtons").hidden = true;
-
     // show the "Edit.." button and the Remove Bookmark button, hide the
     // undo-remove-bookmark button.
     this._element("editBookmarkPanelEditButton").hidden = false;
@@ -265,14 +267,23 @@ var StarUI = {
       this.panel.focus();
   },
 
+  quitEditMode: function SU_quitEditMode() {
+    this._element("editBookmarkPanelContent").hidden = true;
+    this._element("editBookmarkPanelBottomButtons").hidden = true;
+    gEditItemOverlay.uninitPanel(true);
+  },
+
   editButtonCommand: function SU_editButtonCommand() {
     this.showEditBookmarkPopup();
   },
 
   cancelButtonOnCommand: function SU_cancelButtonOnCommand() {
+    // The order here is important! We have to hide the panel first, otherwise
+    // changes done as part of Undo may change the panel contents and by
+    // that force it to commit more transactions
+    this.panel.hidePopup();
     this.endBatch();
     PlacesUIUtils.ptm.undoTransaction();
-    this.panel.hidePopup();
   },
 
   removeBookmarkButtonCommand: function SU_removeBookmarkButtonCommand() {
@@ -290,10 +301,12 @@ var StarUI = {
       // this mode)
       this._element("editBookmarkPanelTitle").value =
         bundle.getString("editBookmarkPanel.bookmarkedRemovedTitle");
-      // hide the edit fields, the buttons below to and the remove bookmark
-      // button. Show the undo-remove-bookmark button.
-      this._element("editBookmarkPanelContent").hidden = true;
-      this._element("editBookmarkPanelBottomButtons").hidden = true;
+
+      // hide the edit panel
+      this.quitEditMode();
+
+      // Hide the remove bookmark button, show the undo-remove-bookmark
+      // button.
       this._element("editBookmarkPanelUndoRemoveButton").hidden = false;
       this._element("editBookmarkPanelRemoveButton").hidden = true;
       this._element("editBookmarkPanelStarIcon").setAttribute("unstarred", "true");
