@@ -563,6 +563,13 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
   // Tell the binding to build the anonymous content.
   newBinding->GenerateAnonymousContent();
 
+  // Tell the binding to install event handlers
+  newBinding->InstallEventHandlers();
+
+  // Set up our properties
+  rv = newBinding->InstallImplementation();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Figure out if we have any scoped sheets.  If so, we do a second resolve.
   *aResolveStyle = newBinding->HasStyleSheets();
   

@@ -1393,6 +1393,8 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
           mutation.mPrevAttrValue = do_GetAtom(oldValue);
         mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
 
+        mozAutoDocUpdateContentUnnest updateUnnest(doc);
+
         mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
         nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
                                     nsnull, &mutation);

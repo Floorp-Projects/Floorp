@@ -57,6 +57,9 @@ REQUIRES	= xpcom \
 		  pref \
 		  thebes \
 		  cairo \
+		  content \
+		  js \
+		  layout \
 		  $(NULL)
 
 EXTRA_DSO_LIBS = gkgfx
