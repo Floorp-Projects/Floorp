@@ -105,6 +105,8 @@ protected:
   float            mMinSize;
   float            mMaxSize;
 
+  PRBool UseMathMLChar();
+
   // overload the base method so that we can setup our nsMathMLChar
   virtual void ProcessTextData();
 

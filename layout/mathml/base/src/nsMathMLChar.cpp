@@ -1170,25 +1170,74 @@ SetFontFamily(nsIRenderingContext& aRenderingContext,
   }
 }
 
+class nsMathMLChar::StretchEnumContext {
+public:
+  StretchEnumContext(nsMathMLChar*        aChar,
+                     nsPresContext*       aPresContext,
+                     nsIRenderingContext& aRenderingContext,
+                     nsStretchDirection   aStretchDirection,
+                     nscoord              aTargetSize,
+                     PRUint32             aStretchHint,
+                     nsBoundingMetrics&   aStretchedMetrics,
+                     const nsAString&     aFamilies)
+    : mChar(aChar),
+      mPresContext(aPresContext),
+      mRenderingContext(aRenderingContext),
+      mDirection(aStretchDirection),
+      mTargetSize(aTargetSize),
+      mStretchHint(aStretchHint),
+      mBoundingMetrics(aStretchedMetrics),
+      mFamilies(aFamilies),
+      mTryVariants(PR_TRUE),
+      mTryParts(PR_TRUE) {}
+
+  static PRBool
+  EnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData);
+
+private:
+  static PRBool
+  ResolverCallback (const nsAString& aFamily, void *aData);
+
+  PRBool TryVariants(nsGlyphTable* aGlyphTable, const nsAString& aFamily);
+  PRBool TryParts(nsGlyphTable* aGlyphTable, const nsAString& aFamily);
+
+  nsMathMLChar* mChar;
+  nsPresContext* mPresContext;
+  nsIRenderingContext& mRenderingContext;
+  const nsStretchDirection mDirection;
+  const nscoord mTargetSize;
+  const PRUint32 mStretchHint;
+  nsBoundingMetrics& mBoundingMetrics;
+  // Font families to search
+  const nsAString& mFamilies;
+
+public:
+  PRPackedBool mTryVariants;
+  PRPackedBool mTryParts;
+
+private:
+  nsAutoTArray<nsGlyphTable*,16> mTablesTried;
+  nsGlyphTable* mGlyphTable; // for this callback
+};
+
+
 // 2. See if there are any glyphs of the appropriate size.
 // Returns PR_TRUE if the size is OK, PR_FALSE to keep searching.
 // Always updates the char if a better match is found.
 PRBool
-nsMathMLChar::TryVariants(nsPresContext*       aPresContext,
-                          nsIRenderingContext& aRenderingContext,
-                          nsGlyphTable*        aGlyphTable,
-                          nscoord              aTargetSize,
-                          PRUint32             aStretchHint,
-                          const nsAString&     aFamily)
+nsMathMLChar::StretchEnumContext::TryVariants(nsGlyphTable*    aGlyphTable,
+                                              const nsAString& aFamily)
 {
   // Use our stretchy style context now that stretching is in progress
-  nsFont font = mStyleContext->GetStyleFont()->mFont;
-  // Ensure aRenderingContext.SetFont will be called:
+  nsFont font = mChar->mStyleContext->GetStyleFont()->mFont;
+  // Ensure mRenderingContext.SetFont will be called:
   font.name.Truncate();
 
   PRBool isVertical = (mDirection == NS_STRETCH_DIRECTION_VERTICAL);
-  PRBool largeop = (NS_STRETCH_LARGEOP & aStretchHint) != 0;
-  PRBool largeopOnly = (NS_STRETCH_LARGEOP == aStretchHint); // (==, not mask!)
+  PRBool largeop = (NS_STRETCH_LARGEOP & mStretchHint) != 0;
+  PRBool largeopOnly =
+    largeop && (NS_STRETCH_VARIABLE_MASK & mStretchHint) == 0;
+  PRBool maxWidth = (NS_STRETCH_MAXWIDTH & mStretchHint) != 0;
 
   nscoord bestSize =
     isVertical ? mBoundingMetrics.ascent + mBoundingMetrics.descent
@@ -1197,7 +1246,7 @@ nsMathMLChar::TryVariants(nsPresContext*       aPresContext,
 
   // figure out the starting size : if this is a largeop, start at 2 else 1
   PRInt32 size = 1; // size=0 is the char at its normal size
-  if (largeop && aGlyphTable->BigOf(aPresContext, this, 2).Exists()) {
+  if (largeop && aGlyphTable->BigOf(mPresContext, mChar, 2).Exists()) {
     size = 2;
   }
 #ifdef NOISY_SEARCH
@@ -1206,28 +1255,43 @@ nsMathMLChar::TryVariants(nsPresContext*       aPresContext,
 #endif
 
   nsGlyphCode ch;
-  while ((ch = aGlyphTable->BigOf(aPresContext, this, size)).Exists()) {
+  while ((ch = aGlyphTable->BigOf(mPresContext, mChar, size)).Exists()) {
 
-    SetFontFamily(aRenderingContext, font, aGlyphTable, ch, aFamily);
+    SetFontFamily(mRenderingContext, font, aGlyphTable, ch, aFamily);
 
-    NS_ASSERTION(ch.code != mGlyph.code || ! font.name.Equals(mFamily),
+    NS_ASSERTION(maxWidth || ch.code != mChar->mGlyph.code ||
+                 !font.name.Equals(mChar->mFamily),
                  "glyph table incorrectly set -- duplicate found");
 
     nsBoundingMetrics bm;
-    nsresult rv = aRenderingContext.GetBoundingMetrics(&ch.code, 1, bm);
+    nsresult rv = mRenderingContext.GetBoundingMetrics(&ch.code, 1, bm);
     if (NS_SUCCEEDED(rv)) {
       nscoord charSize =
         isVertical ? bm.ascent + bm.descent
                    : bm.rightBearing - bm.leftBearing;
 
       if (largeopOnly ||
-          IsSizeBetter(charSize, bestSize, aTargetSize, aStretchHint)) {
-        haveBetter = PR_TRUE;
-        bestSize = charSize;
-        mGlyphTable = aGlyphTable;
-        mGlyph = ch;
-        mBoundingMetrics = bm;
-        mFamily = font.name;
+          IsSizeBetter(charSize, bestSize, mTargetSize, mStretchHint)) {
+        if (maxWidth) {
+          // IsSizeBetter() checked that charSize < maxsize;
+          // Leave ascent, descent, and bestsize as these contain maxsize.
+          if (mBoundingMetrics.width < bm.width)
+            mBoundingMetrics.width = bm.width;
+          if (mBoundingMetrics.leftBearing > bm.leftBearing)
+            mBoundingMetrics.leftBearing = bm.leftBearing;
+          if (mBoundingMetrics.rightBearing < bm.rightBearing)
+            mBoundingMetrics.rightBearing = bm.rightBearing;
+          // Continue to check other sizes unless largeopOnly
+          haveBetter = largeopOnly;
+        }
+        else {
+          mBoundingMetrics = bm;
+          haveBetter = PR_TRUE;
+          bestSize = charSize;
+          mChar->mGlyphTable = aGlyphTable;
+          mChar->mGlyph = ch;
+          mChar->mFamily = font.name;
+        }
 #ifdef NOISY_SEARCH
         printf("    size:%d Current best\n", size);
 #endif
@@ -1247,32 +1311,29 @@ nsMathMLChar::TryVariants(nsPresContext*       aPresContext,
   }
 
   return haveBetter &&
-    (largeopOnly || IsSizeOK(aPresContext, bestSize, aTargetSize, aStretchHint));
+    (largeopOnly || IsSizeOK(mPresContext, bestSize, mTargetSize, mStretchHint));
 }
 
 // 3. Build by parts.
 // Returns PR_TRUE if the size is OK, PR_FALSE to keep searching.
 // Always updates the char if a better match is found.
 PRBool
-nsMathMLChar::TryParts(nsPresContext*       aPresContext,
-                       nsIRenderingContext& aRenderingContext,
-                       nsGlyphTable*        aGlyphTable,
-                       nscoord              aTargetSize,
-                       PRUint32             aStretchHint,
-                       const nsAString&     aFamily)
+nsMathMLChar::StretchEnumContext::TryParts(nsGlyphTable*    aGlyphTable,
+                                           const nsAString& aFamily)
 {
-  if (!aGlyphTable->HasPartsOf(aPresContext, this))
+  if (!aGlyphTable->HasPartsOf(mPresContext, mChar))
     return PR_FALSE; // to next table
 
   // See if this is a composite character /////////////////////////////////////
-  if (aGlyphTable->IsComposite(aPresContext, this)) {
+  if (aGlyphTable->IsComposite(mPresContext, mChar)) {
     // let the child chars do the job
     nsBoundingMetrics compositeSize;
-    nsresult rv = ComposeChildren(aPresContext, aRenderingContext, aGlyphTable,
-                                  aTargetSize, compositeSize, aStretchHint);
+    nsresult rv =
+      mChar->ComposeChildren(mPresContext, mRenderingContext, aGlyphTable,
+                             mTargetSize, compositeSize, mStretchHint);
 #ifdef NOISY_SEARCH
     printf("    Composing %d chars in font %s %s!\n",
-           aGlyphTable->ChildCountOf(aPresContext, this),
+           aGlyphTable->ChildCountOf(mPresContext, mChar),
            NS_LossyConvertUTF16toASCII(fontName).get(),
            NS_SUCCEEDED(rv)? "OK" : "Rejected");
 #endif
@@ -1280,8 +1341,8 @@ nsMathMLChar::TryParts(nsPresContext*       aPresContext,
       return PR_FALSE; // to next table
 
     // all went well, painting will be delegated from now on to children
-    mGlyph = kNullGlyph; // this will tell paint to build by parts
-    mGlyphTable = aGlyphTable;
+    mChar->mGlyph = kNullGlyph; // this will tell paint to build by parts
+    mChar->mGlyphTable = aGlyphTable;
     mBoundingMetrics = compositeSize;
     return PR_TRUE; // no more searching
   }
@@ -1289,26 +1350,26 @@ nsMathMLChar::TryParts(nsPresContext*       aPresContext,
   // See if the parts of this table fit in the desired space //////////////////
 
   // Use our stretchy style context now that stretching is in progress
-  nsFont font = mStyleContext->GetStyleFont()->mFont;
-  // Ensure aRenderingContext.SetFont will be called:
+  nsFont font = mChar->mStyleContext->GetStyleFont()->mFont;
+  // Ensure mRenderingContext.SetFont will be called:
   font.name.Truncate();
 
   // Compute the bounding metrics of all partial glyphs
-  PRInt32 i;
   nsGlyphCode chdata[4];
   nsBoundingMetrics bmdata[4];
   nscoord sizedata[4];
-  nsGlyphCode glue = aGlyphTable->GlueOf(aPresContext, this);
+  nsGlyphCode glue = aGlyphTable->GlueOf(mPresContext, mChar);
 
   PRBool isVertical = (mDirection == NS_STRETCH_DIRECTION_VERTICAL);
+  PRBool maxWidth = (NS_STRETCH_MAXWIDTH & mStretchHint) != 0;
 
-  for (i = 0; i < 4; i++) {
+  for (PRInt32 i = 0; i < 4; i++) {
     nsGlyphCode ch;
     switch (i) {
-    case 0: ch = aGlyphTable->TopOf(aPresContext, this);    break;
-    case 1: ch = aGlyphTable->MiddleOf(aPresContext, this); break;
-    case 2: ch = aGlyphTable->BottomOf(aPresContext, this); break;
-    case 3: ch = glue;                                     break;
+    case 0: ch = aGlyphTable->TopOf(mPresContext, mChar);    break;
+    case 1: ch = aGlyphTable->MiddleOf(mPresContext, mChar); break;
+    case 2: ch = aGlyphTable->BottomOf(mPresContext, mChar); break;
+    case 3: ch = glue;                                       break;
     }
     // empty slots are filled with the glue if it is not null
     if (!ch.Exists()) ch = glue;
@@ -1317,11 +1378,11 @@ nsMathMLChar::TryParts(nsPresContext*       aPresContext,
     if (!ch.Exists()) {
       // Null glue indicates that a rule will be drawn, which can stretch to
       // fill any space.  Leave bounding metrics at 0.
-      sizedata[i] = aTargetSize;
+      sizedata[i] = mTargetSize;
     }
     else {
-      SetFontFamily(aRenderingContext, font, aGlyphTable, ch, aFamily);
-      nsresult rv = aRenderingContext.GetBoundingMetrics(&ch.code, 1, bm);
+      SetFontFamily(mRenderingContext, font, aGlyphTable, ch, aFamily);
+      nsresult rv = mRenderingContext.GetBoundingMetrics(&ch.code, 1, bm);
       if (NS_FAILED(rv)) {
         // stop if we failed to compute the bounding metrics of a part.
         NS_WARNING("GetBoundingMetrics failed");
@@ -1339,14 +1400,14 @@ nsMathMLChar::TryParts(nsPresContext*       aPresContext,
 
   // Build by parts if we have successfully computed the
   // bounding metrics of all parts.
-  nscoord computedSize = ComputeSizeFromParts(aPresContext, chdata, sizedata,
-                                              aTargetSize, aStretchHint);
+  nscoord computedSize = ComputeSizeFromParts(mPresContext, chdata, sizedata,
+                                              mTargetSize, mStretchHint);
 
   nscoord currentSize =
     isVertical ? mBoundingMetrics.ascent + mBoundingMetrics.descent
                : mBoundingMetrics.rightBearing - mBoundingMetrics.leftBearing;
 
-  if (!IsSizeBetter(computedSize, currentSize, aTargetSize, aStretchHint)) {
+  if (!IsSizeBetter(computedSize, currentSize, mTargetSize, mStretchHint)) {
 #ifdef NOISY_SEARCH
     printf("    Font %s Rejected!\n",
            NS_LossyConvertUTF16toASCII(fontName).get());
@@ -1362,16 +1423,32 @@ nsMathMLChar::TryParts(nsPresContext*       aPresContext,
   // The computed size is the best we have found so far...
   // now is the time to compute and cache our bounding metrics
   if (isVertical) {
-    nscoord lbearing = bmdata[0].leftBearing;
-    nscoord rbearing = bmdata[0].rightBearing;
-    nscoord width = bmdata[0].width;
-    for (i = 1; i < 4; i++) {
+    PRInt32 i;
+    nscoord lbearing;
+    nscoord rbearing;
+    nscoord width;
+    if (maxWidth) {
+      lbearing = mBoundingMetrics.leftBearing;
+      rbearing = mBoundingMetrics.rightBearing;
+      width = mBoundingMetrics.width;
+      i = 0;
+    }
+    else {
+      lbearing = bmdata[0].leftBearing;
+      rbearing = bmdata[0].rightBearing;
+      width = bmdata[0].width;
+      i = 1;
+    }
+    for (; i < 4; i++) {
       const nsBoundingMetrics& bm = bmdata[i];
       if (width < bm.width) width = bm.width;
       if (lbearing > bm.leftBearing) lbearing = bm.leftBearing;
       if (rbearing < bm.rightBearing) rbearing = bm.rightBearing;
     }
     mBoundingMetrics.width = width;
+    // When maxWidth, updating ascent and descent indicates that no characters
+    // larger than this character's minimum size need to be checked as they
+    // will not be used.
     mBoundingMetrics.ascent = bmdata[0].ascent; // not used except with descent for height
     mBoundingMetrics.descent = computedSize - mBoundingMetrics.ascent;
     mBoundingMetrics.leftBearing = lbearing;
@@ -1380,7 +1457,7 @@ nsMathMLChar::TryParts(nsPresContext*       aPresContext,
   else {
     nscoord ascent = bmdata[0].ascent;
     nscoord descent = bmdata[0].descent;
-    for (i = 1; i < 4; i++) {
+    for (PRInt32 i = 1; i < 4; i++) {
       const nsBoundingMetrics& bm = bmdata[i];
       if (ascent < bm.ascent) ascent = bm.ascent;
       if (descent < bm.descent) descent = bm.descent;
@@ -1391,52 +1468,22 @@ nsMathMLChar::TryParts(nsPresContext*       aPresContext,
     mBoundingMetrics.leftBearing = 0;
     mBoundingMetrics.rightBearing = computedSize;
   }
+  if (maxWidth)
+    return PR_FALSE; // Continue to check other sizes
+
   // reset
-  mGlyph = kNullGlyph; // this will tell paint to build by parts
-  mGlyphTable = aGlyphTable;
-  mFamily = aFamily;
+  mChar->mGlyph = kNullGlyph; // this will tell paint to build by parts
+  mChar->mGlyphTable = aGlyphTable;
+  mChar->mFamily = aFamily;
 
-  return IsSizeOK(aPresContext, computedSize, aTargetSize, aStretchHint);
+  return IsSizeOK(mPresContext, computedSize, mTargetSize, mStretchHint);
 }
-
-struct StretchEnumContext {
-  StretchEnumContext(nsMathMLChar*        aChar,
-                     nsPresContext*       aPresContext,
-                     nsIRenderingContext& aRenderingContext,
-                     nscoord              aTargetSize,
-                     PRUint32             aStretchHint,
-                     const nsAString&     aFamilies) :
-    mChar(aChar),
-    mPresContext(aPresContext),
-    mRenderingContext(aRenderingContext),
-    mTargetSize(aTargetSize),
-    mStretchHint(aStretchHint),
-    mFamilies(aFamilies),
-    mTryVariants(PR_TRUE),
-    mTryParts(PR_TRUE)
-  {
-  }
-
-  nsMathMLChar*        mChar;
-  nsPresContext*       mPresContext;
-  nsIRenderingContext& mRenderingContext;
-  const nscoord        mTargetSize;
-  const PRUint32       mStretchHint;
-  // Font families to search
-  const nsAString& mFamilies;
-
-  PRBool         mTryVariants;
-  PRBool         mTryParts;
-
-  nsAutoTArray<nsGlyphTable*,16> mTablesTried;
-  nsGlyphTable*  mGlyphTable; // for this callback
-};
-
 
 // This is only called for glyph table corresponding to a family that exists.
 // See if the table has a glyph that matches the container
 PRBool
-nsMathMLChar::StretchResolverCallback (const nsAString& aFamily, void *aData)
+nsMathMLChar::StretchEnumContext::ResolverCallback (const nsAString& aFamily,
+                                                    void *aData)
 {
   StretchEnumContext* context = static_cast<StretchEnumContext*>(aData);
   nsGlyphTable* glyphTable = context->mGlyphTable;
@@ -1451,19 +1498,13 @@ nsMathMLChar::StretchResolverCallback (const nsAString& aFamily, void *aData)
     context->mFamilies : aFamily;
 
   if(context->mTryVariants) {
-    PRBool isOK = context->mChar->
-      TryVariants(context->mPresContext, context->mRenderingContext,
-                  glyphTable, context->mTargetSize, context->mStretchHint,
-                  family);
+    PRBool isOK = context->TryVariants(glyphTable, family);
     if (isOK)
       return PR_FALSE; // no need to continue
   }
 
   if(context->mTryParts) {
-    PRBool isOK = context->mChar->
-      TryParts(context->mPresContext, context->mRenderingContext,
-               glyphTable, context->mTargetSize, context->mStretchHint,
-               family);
+    PRBool isOK = context->TryParts(glyphTable, family);
     if (isOK)
       return PR_FALSE; // no need to continue
   }
@@ -1472,8 +1513,8 @@ nsMathMLChar::StretchResolverCallback (const nsAString& aFamily, void *aData)
 
 // This is called for each family, whether it exists or not
 PRBool
-nsMathMLChar::StretchEnumCallback(const nsString& aFamily, PRBool aGeneric,
-                                  void *aData)
+nsMathMLChar::StretchEnumContext::EnumCallback(const nsString& aFamily,
+                                               PRBool aGeneric, void *aData)
 {
   StretchEnumContext* context = static_cast<StretchEnumContext*>(aData);
 
@@ -1488,37 +1529,34 @@ nsMathMLChar::StretchEnumCallback(const nsString& aFamily, PRBool aGeneric,
   context->mGlyphTable = glyphTable;
 
   if (aGeneric)
-    return StretchResolverCallback(aFamily, aData);
+    return ResolverCallback(aFamily, aData);
 
   PRBool aborted;
   gfxPlatform *pf = gfxPlatform::GetPlatform();
   nsresult rv =
-    pf->ResolveFontName(aFamily, StretchResolverCallback, aData, aborted);
+    pf->ResolveFontName(aFamily, ResolverCallback, aData, aborted);
   return NS_SUCCEEDED(rv) && !aborted; // true means continue
 }
 
 nsresult
-nsMathMLChar::Stretch(nsPresContext*      aPresContext,
-                      nsIRenderingContext& aRenderingContext,
-                      nsStretchDirection   aStretchDirection,
-                      nsBoundingMetrics&   aContainerSize,
-                      nsBoundingMetrics&   aDesiredStretchSize,
-                      PRUint32             aStretchHint)
+nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
+                              nsIRenderingContext&     aRenderingContext,
+                              nsStretchDirection&      aStretchDirection,
+                              const nsBoundingMetrics& aContainerSize,
+                              nsBoundingMetrics&       aDesiredStretchSize,
+                              PRUint32                 aStretchHint,
+                              // These are currently only used when
+                              // aStretchHint & NS_STRETCH_MAXWIDTH:
+                              float                    aMaxSize,
+                              PRBool                   aMaxSizeIsAbsolute)
 {
-  nsresult rv = NS_OK;
-  nsStretchDirection direction = aStretchDirection;
-
   // if we have been called before, and we didn't actually stretch, our
   // direction may have been set to NS_STRETCH_DIRECTION_UNSUPPORTED.
   // So first set our direction back to its instrinsic value
+  nsStretchDirection direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
   if (mOperator >= 0) {
     // mOperator is initialized in SetData() and remains unchanged
-    mDirection = nsMathMLOperators::GetStretchyDirectionAt(mOperator);
-  }
-
-  // if no specified direction, attempt to stretch in our preferred direction
-  if (direction == NS_STRETCH_DIRECTION_DEFAULT) {
-    direction = mDirection;
+    direction = nsMathMLOperators::GetStretchyDirectionAt(mOperator);
   }
 
   // Set default font and get the default bounding metrics
@@ -1530,66 +1568,104 @@ nsMathMLChar::Stretch(nsPresContext*      aPresContext,
   // Override with specific fonts if applicable for this character
   nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
   nsAutoString families;
-  if (GetFontExtensionPref(prefBranch, mData[0], eExtension_base,
-                           families)) {
+  if (GetFontExtensionPref(prefBranch, mData[0], eExtension_base, families)) {
     font.name = families;
+  }
+
+  // Don't modify this nsMathMLChar when doing GetMaxWidth()
+  PRBool maxWidth = (NS_STRETCH_MAXWIDTH & aStretchHint) != 0;
+  if (!maxWidth) {
+    // Record the families in case there is no stretch.  But don't bother
+    // storing families when they are just those from the StyleContext.
     mFamily = families;
-  }
-  else {
-    // Don't bother storing families when they are just those from the
-    // StyleContext.
-    mFamily.Truncate();
-  }
+  }    
 
   aRenderingContext.SetFont(font, nsnull);
-  rv = aRenderingContext.GetBoundingMetrics(mData.get(),
-                                            PRUint32(mData.Length()),
-                                            mBoundingMetrics);
+  nsresult rv =
+    aRenderingContext.GetBoundingMetrics(mData.get(), PRUint32(mData.Length()),
+                                         aDesiredStretchSize);
   if (NS_FAILED(rv)) {
     NS_WARNING("GetBoundingMetrics failed");
-    // ensure that the char later behaves like a normal char
-    // (will be reset back to its intrinsic value in case of dynamic updates)
-    mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
     return rv;
   }
-
-  // set the default desired metrics in case stretching doesn't happen
-  aDesiredStretchSize = mBoundingMetrics;
-
-  // quick return if there is nothing special about this char
-  if (!mGlyphTable || (mDirection != direction)) {
-    // ensure that the char later behaves like a normal char
-    // (will be reset back to its intrinsic value in case of dynamic updates)
-    mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
-    return NS_OK;
-  }
-
-  // see if this is a particular largeop or largeopOnly request
-  PRBool largeop = (NS_STRETCH_LARGEOP & aStretchHint) != 0;
-  PRBool largeopOnly = (NS_STRETCH_LARGEOP == aStretchHint); // (==, not mask!)
 
   ////////////////////////////////////////////////////////////////////////////////////
   // 1. Check the common situations where stretching is not actually needed
   ////////////////////////////////////////////////////////////////////////////////////
 
-  nscoord targetSize, charSize;
-  PRBool isVertical = (direction == NS_STRETCH_DIRECTION_VERTICAL);
-  if (isVertical) {
-    charSize = aDesiredStretchSize.ascent + aDesiredStretchSize.descent;
-    targetSize = aContainerSize.ascent + aContainerSize.descent;
-  }
-  else {
-    charSize = aDesiredStretchSize.width;
-    targetSize = aContainerSize.width;
-  }
-  // if we are not a largeop in display mode, return if size fits
-  if ((targetSize <= 0) || 
-      (!largeop && ((isVertical && charSize >= targetSize) ||
-                     IsSizeOK(aPresContext, charSize, targetSize, aStretchHint)))) {
-    // ensure that the char later behaves like a normal char
-    // (will be reset back to its intrinsic value in case of dynamic updates)
-    mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
+  // quick return if there is nothing special about this char
+  if (!mGlyphTable ||
+      (aStretchDirection != direction &&
+       aStretchDirection != NS_STRETCH_DIRECTION_DEFAULT) ||
+      (aStretchHint & ~NS_STRETCH_MAXWIDTH) == NS_STRETCH_NONE) {
     return NS_OK;
+  }
+
+  // if no specified direction, attempt to stretch in our preferred direction
+  if (aStretchDirection == NS_STRETCH_DIRECTION_DEFAULT) {
+    aStretchDirection = direction;
+  }
+
+  // see if this is a particular largeop or largeopOnly request
+  PRBool largeop = (NS_STRETCH_LARGEOP & aStretchHint) != 0;
+  PRBool stretchy = (NS_STRETCH_VARIABLE_MASK & aStretchHint) != 0;
+  PRBool largeopOnly = largeop && !stretchy;
+
+  PRBool isVertical = (direction == NS_STRETCH_DIRECTION_VERTICAL);
+
+  nscoord targetSize =
+    isVertical ? aContainerSize.ascent + aContainerSize.descent
+    : aContainerSize.rightBearing - aContainerSize.leftBearing;
+
+  if (maxWidth) {
+    // See if it is only necessary to consider glyphs up to some maximum size.
+    // Set the current height to the maximum size, and set aStretchHint to
+    // NS_STRETCH_SMALLER if the size is variable, so that only smaller sizes
+    // are considered.  targetSize from GetMaxWidth() is 0.
+    if (stretchy) {
+      // variable size stretch - consider all sizes < maxsize
+      aStretchHint =
+        (aStretchHint & ~NS_STRETCH_VARIABLE_MASK) | NS_STRETCH_SMALLER;
+    }
+
+    // Use NS_MATHML_DELIMITER_FACTOR to allow some slightly larger glyphs as
+    // maxsize is not enforced exactly.
+    if (aMaxSize == NS_MATHML_OPERATOR_SIZE_INFINITY) {
+      aDesiredStretchSize.ascent = nscoord_MAX;
+      aDesiredStretchSize.descent = 0;
+    }
+    else {
+      nscoord height = aDesiredStretchSize.ascent + aDesiredStretchSize.descent;
+      if (height == 0) {
+        if (aMaxSizeIsAbsolute) {
+          aDesiredStretchSize.ascent =
+            NSToCoordRound(aMaxSize / NS_MATHML_DELIMITER_FACTOR);
+          aDesiredStretchSize.descent = 0;
+        }
+        // else: leave height as 0
+      }
+      else {
+        float scale = aMaxSizeIsAbsolute ? aMaxSize / height : aMaxSize;
+        scale /= NS_MATHML_DELIMITER_FACTOR;
+        aDesiredStretchSize.ascent =
+          NSToCoordRound(scale * aDesiredStretchSize.ascent);
+        aDesiredStretchSize.descent =
+          NSToCoordRound(scale * aDesiredStretchSize.descent);
+      }
+    }
+  }
+
+  if (!maxWidth && !largeop) {
+    // Doing Stretch() not GetMaxWidth(),
+    // and not a largeop in display mode; return if size fits
+    nscoord charSize =
+      isVertical ? aDesiredStretchSize.ascent + aDesiredStretchSize.descent
+      : aDesiredStretchSize.rightBearing - aDesiredStretchSize.leftBearing;
+
+    if ((targetSize <= 0) || 
+        ((isVertical && charSize >= targetSize) ||
+         IsSizeOK(aPresContext, charSize, targetSize, aStretchHint)))
+      return NS_OK;
   }
 
   ////////////////////////////////////////////////////////////////////////////////////
@@ -1600,7 +1676,6 @@ nsMathMLChar::Stretch(nsPresContext*      aPresContext,
   nsAutoString cssFamilies;
   cssFamilies = font.name;
 
-  mGlyph.font = -1; // will be updated if a better match is found
   PRBool done = PR_FALSE;
 
   // See if there are preferred fonts for the variants of this char
@@ -1609,10 +1684,11 @@ nsMathMLChar::Stretch(nsPresContext*      aPresContext,
     font.name = families;
 
     StretchEnumContext enumData(this, aPresContext, aRenderingContext,
-                                targetSize, aStretchHint, font.name);
+                                aStretchDirection, targetSize, aStretchHint,
+                                aDesiredStretchSize, font.name);
     enumData.mTryParts = PR_FALSE;
 
-    done = ! font.EnumerateFamilies(StretchEnumCallback, &enumData);
+    done = !font.EnumerateFamilies(StretchEnumContext::EnumCallback, &enumData);
   }
 
   // See if there are preferred fonts for the parts of this char
@@ -1622,10 +1698,11 @@ nsMathMLChar::Stretch(nsPresContext*      aPresContext,
     font.name = families;
 
     StretchEnumContext enumData(this, aPresContext, aRenderingContext,
-                                targetSize, aStretchHint, font.name);
+                                aStretchDirection, targetSize, aStretchHint,
+                                aDesiredStretchSize, font.name);
     enumData.mTryVariants = PR_FALSE;
 
-    done = ! font.EnumerateFamilies(StretchEnumCallback, &enumData);
+    done = !font.EnumerateFamilies(StretchEnumContext::EnumCallback, &enumData);
   }
 
   if (!done) { // normal case
@@ -1642,22 +1719,74 @@ nsMathMLChar::Stretch(nsPresContext*      aPresContext,
            font.name, mData[0], mData[0]&0x00FF);
 #endif
     StretchEnumContext enumData(this, aPresContext, aRenderingContext,
-                                targetSize, aStretchHint, font.name);
-    enumData.mTryParts = ! largeopOnly;
+                                aStretchDirection, targetSize, aStretchHint,
+                                aDesiredStretchSize, font.name);
+    enumData.mTryParts = !largeopOnly;
 
-    font.EnumerateFamilies(StretchEnumCallback, &enumData);
+    font.EnumerateFamilies(StretchEnumContext::EnumCallback, &enumData);
   }
 
-  if (mGlyph.font == -1) { // nothing happened
-    // ensure that the char behaves like a normal char
+  return NS_OK;
+}
+
+nsresult
+nsMathMLChar::Stretch(nsPresContext*           aPresContext,
+                      nsIRenderingContext&     aRenderingContext,
+                      nsStretchDirection       aStretchDirection,
+                      const nsBoundingMetrics& aContainerSize,
+                      nsBoundingMetrics&       aDesiredStretchSize,
+                      PRUint32                 aStretchHint)
+{
+  NS_ASSERTION(!(aStretchHint &
+                 ~(NS_STRETCH_VARIABLE_MASK | NS_STRETCH_LARGEOP)),
+               "Unexpected stretch flags");
+
+  // This will be updated if a better match than the base character is found
+  mGlyph.font = -1;
+
+  mDirection = aStretchDirection;
+  nsresult rv =
+    StretchInternal(aPresContext, aRenderingContext, mDirection,
+                    aContainerSize, aDesiredStretchSize, aStretchHint);
+
+  if (mGlyph.font == -1) { // no stretch happened
+    // ensure that the char later behaves like a normal char
     // (will be reset back to its intrinsic value in case of dynamic updates)
     mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
   }
-  else {
-    // will stretch
-    aDesiredStretchSize = mBoundingMetrics;
-  }
-  return NS_OK;
+
+  // Record the metrics
+  mBoundingMetrics = aDesiredStretchSize;
+
+  return rv;
+}
+
+// What happens here is that the StretchInternal algorithm is used but
+// modified by passing the NS_STRETCH_MAXWIDTH stretch hint.  That causes
+// StretchInternal to return horizontal bounding metrics that are the maximum
+// that might be returned from a Stretch.
+//
+// In order to avoid considering widths of some characters in fonts that will
+// not be used for any stretch size, StretchInternal sets the initial height
+// to infinity and looks for any characters smaller than this height.  When a
+// character built from parts is considered, (it will be used by Stretch for
+// any characters greater than its minimum size, so) the height is set to its
+// minimum size, so that only widths of smaller subsequent characters are
+// considered.
+nscoord
+nsMathMLChar::GetMaxWidth(nsPresContext* aPresContext,
+                          nsIRenderingContext& aRenderingContext,
+                          PRUint32 aStretchHint,
+                          float aMaxSize, PRBool aMaxSizeIsAbsolute)
+{
+  nsBoundingMetrics bm;
+  nsStretchDirection direction = NS_STRETCH_DIRECTION_VERTICAL;
+  const nsBoundingMetrics container; // zero target size
+
+  StretchInternal(aPresContext, aRenderingContext, direction, container,
+                  bm, aStretchHint | NS_STRETCH_MAXWIDTH);
+
+  return PR_MAX(bm.width, bm.rightBearing) - PR_MIN(0, bm.leftBearing);
 }
 
 nsresult
