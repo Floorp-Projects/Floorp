@@ -25,7 +25,6 @@
 
   <tree id="bookmarks" flex="1" type="places" 
         style="height: 15em;" 
-        place="place:folder=2&amp;excludeQueries=1"
         hidecolumnpicker="true"
         seltype="single"
         ondblclick="SelectBookmarkDialog.onItemDblClick();"
