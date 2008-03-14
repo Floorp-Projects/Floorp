@@ -5884,7 +5884,7 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
   *aRetVal = nsnull;
 
   nsCOMPtr<nsIDOMWindow> dlgWin;
-  nsAutoString options(NS_LITERAL_STRING("modal=1,status=1"));
+  nsAutoString options(NS_LITERAL_STRING("-moz-internal-modal=1,status=1"));
 
   ConvertDialogOptions(aOptions, options);
 
