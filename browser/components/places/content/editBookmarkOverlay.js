@@ -312,7 +312,10 @@ var gEditItemOverlay = {
     const annos = PlacesUtils.annotations;
     if (annos.itemHasAnnotation(this._itemId, STATIC_TITLE_ANNO))
       return annos.getItemAnnotation(this._itemId, STATIC_TITLE_ANNO);
-    return PlacesUtils.bookmarks.getItemTitle(this._itemId);
+    var title = PlacesUtils.bookmarks.getItemTitle(this._itemId);
+    if (title === null)
+      return PlacesUtils.history.getPageTitle(this._uri);
+    return title;
   },
 
   _initNamePicker: function EIO_initNamePicker() {
