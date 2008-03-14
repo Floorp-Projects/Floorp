@@ -64,7 +64,6 @@
 
 #include "nsplugindefs.h"
 
-#undef DARWIN
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
 
@@ -98,11 +97,12 @@ union nsPluginPort;
   // will be wiped out.
   NSEvent* mCurKeyEvent;
   PRBool mKeyDownHandled;
-  BOOL mIgnoreDoCommand;
   // While we process key down events we need to keep track of whether or not
   // we sent a key press event. This helps us make sure we do send one
   // eventually.
   BOOL mKeyPressSent;
+  // Valid when mKeyPressSent is true.
+  PRBool mKeyPressHandled;
 
   // needed for NSTextInput implementation
   NSRange mMarkedRange;
