@@ -52,37 +52,37 @@ function cleanupLogins() {
 
 
 function getDialogDoc() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   // Find the <browser> which contains notifyWindow, by looking
   // through all the open windows and all the <browsers> in each.
   var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
            getService(Ci.nsIWindowMediator);
   //var enumerator = wm.getEnumerator("navigator:browser");
   var enumerator = wm.getXULWindowEnumerator(null);
-  var promptDoc = null;
 
-  while (!promptDoc && enumerator.hasMoreElements()) {
+  while (enumerator.hasMoreElements()) {
     var win = enumerator.getNext();
     var windowDocShell = win.QueryInterface(Ci.nsIXULWindow).docShell;
 
     var containedDocShells = windowDocShell.getDocShellEnumerator(
                                       Ci.nsIDocShellTreeItem.typeChrome,
                                       Ci.nsIDocShell.ENUMERATE_FORWARDS);
-    while (!promptDoc && containedDocShells.hasMoreElements()) {
+    while (containedDocShells.hasMoreElements()) {
         // Get the corresponding document for this docshell
-        var childDoc = containedDocShells.getNext()
-                                         .QueryInterface(Ci.nsIDocShell)
-                                         .contentViewer
-                                         .DOMDocument;
+        var childDocShell = containedDocShells.getNext();
+        // We don't want it if it's not done loading.
+        if (childDocShell.busyFlags != Ci.nsIDocShell.BUSY_FLAGS_NONE)
+          continue;
+        var childDoc = childDocShell.QueryInterface(Ci.nsIDocShell)
+                                    .contentViewer
+                                    .DOMDocument;
 
         //ok(true, "Got window: " + childDoc.location.href);
         if (childDoc.location.href == "chrome://global/content/commonDialog.xul")
-            promptDoc = childDoc;
+          return childDoc;
     }
   }
 
-  return promptDoc;
+  return null;
 }
 
 
@@ -264,7 +264,7 @@ ok(promptFac != null, "promptFac getService()");
 var timer; // keep in outer scope so it's not GC'd before firing
 function startCallbackTimer() {
     // Delay before the callback twiddles the prompt.
-    const dialogDelay = 300;
+    const dialogDelay = 10;
 
     // Use a timer to invoke a callback to twiddle the authentication dialog
     timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -283,11 +283,15 @@ var observer = {
     },
 
     observe : function (subject, topic, data) {
+        netscape.security.PrivilegeManager
+                         .enablePrivilege('UniversalXPConnect');
+
         ok(true, "timer fired for test " + testNum);
         var doc = getDialogDoc();
-        ok(doc, "Got commonDialog.xul document");
         if (doc)
             handleDialog(doc, testNum);
+        else
+            startCallbackTimer(); // try again in a bit
     }
 };
 
@@ -525,11 +529,7 @@ testNum++;
 startCallbackTimer();
 isOk = prompter2.promptAuth(channel1, level, authinfo);
 
-// XXX for some reason |!isOk == false| on the OS X tinderbox, although it's
-// not when run locally (and clicking cancel does work, which is what this
-// is testing). Not sure why.
-// ok(!isOk, "Checking dialog return value (cancel)");
-ok(true, "XXX dialog returned " + isOk);
+ok(!isOk, "Checking dialog return value (cancel)");
 
 // ===== test 502 =====
 // test filling in password-only login
