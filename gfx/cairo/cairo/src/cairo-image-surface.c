@@ -131,6 +131,7 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
     surface->data = (unsigned char *) pixman_image_get_data (pixman_image);
     surface->owns_data = FALSE;
     surface->has_clip = FALSE;
+    surface->transparency = CAIRO_IMAGE_UNKNOWN;
 
     surface->width = pixman_image_get_width (pixman_image);
     surface->height = pixman_image_get_height (pixman_image);
@@ -418,7 +419,8 @@ _cairo_image_surface_create_with_content (cairo_content_t	content,
  * </programlisting></informalexample>
  *
  * Return value: the appropriate stride to use given the desired
- * format and width.
+ * format and width, or -1 if either the format is invalid or the width
+ * too large.
  *
  * Since: 1.6
  **/
@@ -426,10 +428,20 @@ int
 cairo_format_stride_for_width (cairo_format_t	format,
 			       int		width)
 {
-    int bpp = _cairo_format_bits_per_pixel (format);
+    int bpp;
+
+    if (! CAIRO_FORMAT_VALID (format)) {
+	_cairo_error_throw (CAIRO_STATUS_INVALID_FORMAT);
+	return -1;
+    }
+
+    bpp = _cairo_format_bits_per_pixel (format);
+    if ((unsigned) (width) >= (INT32_MAX - 7) / (unsigned) (bpp))
+	return -1;
 
     return ((bpp*width+7)/8 + STRIDE_ALIGNMENT-1) & ~(STRIDE_ALIGNMENT-1);
 }
+slim_hidden_def (cairo_format_stride_for_width);
 
 /**
  * cairo_image_surface_create_for_data:
@@ -1310,6 +1322,7 @@ _cairo_image_surface_clone (cairo_image_surface_t	*surface,
 
     cairo_surface_get_device_offset (&surface->base, &x, &y);
     cairo_surface_set_device_offset (&clone->base, x, y);
+    clone->transparency = CAIRO_IMAGE_UNKNOWN;
 
     /* XXX Use _cairo_surface_composite directly */
     cr = cairo_create (&clone->base);
@@ -1325,4 +1338,40 @@ _cairo_image_surface_clone (cairo_image_surface_t	*surface,
     }
 
     return clone;
+}
+
+cairo_image_transparency_t
+_cairo_image_analyze_transparency (cairo_image_surface_t      *image)
+{
+    int x, y;
+
+    if (image->transparency != CAIRO_IMAGE_UNKNOWN)
+	return image->transparency;
+
+    if (image->format == CAIRO_FORMAT_RGB24) {
+	image->transparency = CAIRO_IMAGE_IS_OPAQUE;
+	return CAIRO_IMAGE_IS_OPAQUE;
+    }
+
+    if (image->format != CAIRO_FORMAT_ARGB32) {
+	image->transparency = CAIRO_IMAGE_HAS_ALPHA;
+	return CAIRO_IMAGE_HAS_ALPHA;
+    }
+
+    image->transparency = CAIRO_IMAGE_IS_OPAQUE;
+    for (y = 0; y < image->height; y++) {
+	uint32_t *pixel = (uint32_t *) (image->data + y * image->stride);
+
+	for (x = 0; x < image->width; x++, pixel++) {
+	    int a = (*pixel & 0xff000000) >> 24;
+	    if (a > 0 && a < 255) {
+		image->transparency = CAIRO_IMAGE_HAS_ALPHA;
+		return CAIRO_IMAGE_HAS_ALPHA;
+	    } else if (a == 0) {
+		image->transparency = CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
+	    }
+	}
+    }
+
+    return image->transparency;
 }

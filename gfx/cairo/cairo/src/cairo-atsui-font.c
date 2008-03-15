@@ -320,7 +320,7 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
 	if (font) {
 	    if (font->style)
 		ATSUDisposeStyle(font->style);
-	    _cairo_scaled_font_fini(font);
+	    _cairo_scaled_font_fini(&font->base);
 	    free (font);
 	}
 

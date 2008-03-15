@@ -34,6 +34,7 @@
  *	Adrian Johnson <ajohnson@redneon.com>
  */
 
+#define _BSD_SOURCE /* for snprintf(), strdup() */
 #include "cairoint.h"
 
 #include "cairo-scaled-font-subsets-private.h"
@@ -224,7 +225,7 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
         record = &(name->records[i]);
         if ((be16_to_cpu (record->platform) == 1) &&
             (be16_to_cpu (record->encoding) == 0) &&
-            (be16_to_cpu (record->name) == 4)) { 
+            (be16_to_cpu (record->name) == 4)) {
             font->base.base_font = malloc (be16_to_cpu(record->length) + 1);
             if (font->base.base_font) {
                 strncpy(font->base.base_font,
@@ -291,7 +292,7 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     if (name)
 	free (name);
 
-    return _cairo_error (status);
+    return status;
 }
 
 static void
@@ -1120,9 +1121,6 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
     free (truetype_subset->base_font);
  fail1:
     cairo_truetype_font_destroy (font);
-
-    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	status = _cairo_error (status);
 
     return status;
 }

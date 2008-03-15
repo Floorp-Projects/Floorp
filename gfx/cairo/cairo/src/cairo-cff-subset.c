@@ -34,6 +34,7 @@
  *      Eugeniy Meshcheryakov <eugen@debian.org>
  */
 
+#define _BSD_SOURCE /* for snprintf(), strdup() */
 #include "cairoint.h"
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-truetype-subset-private.h"
@@ -444,31 +445,31 @@ _cairo_dict_init_key (cff_dict_operator_t *key, int operator)
     key->operator = operator;
 }
 
-static cff_dict_operator_t *
+static cairo_status_t
 cff_dict_create_operator (int            operator,
                           unsigned char *operand,
-                          int            operand_length)
+                          int            operand_length,
+			  cff_dict_operator_t **out)
 {
     cff_dict_operator_t *op;
 
     op = malloc (sizeof (cff_dict_operator_t));
-    if (op == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-        return NULL;
-    }
+    if (op == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     _cairo_dict_init_key (op, operator);
     op->operand = malloc (operand_length);
     if (op->operand == NULL) {
         free (op);
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-        return NULL;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
+
     memcpy (op->operand, operand, operand_length);
     op->operand_length = operand_length;
     op->operand_offset = -1;
 
-    return op;
+    *out = op;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -489,19 +490,21 @@ cff_dict_read (cairo_hash_table_t *dict, unsigned char *p, int dict_size)
             status = _cairo_array_append_multiple (&operands, p, size);
             if (status)
                 goto fail;
+
             p += size;
         } else {
             p = decode_operator (p, &operator);
-            op = cff_dict_create_operator (operator,
-                                           _cairo_array_index (&operands, 0),
-                                           _cairo_array_num_elements (&operands));
-            if (op == NULL) {
-                status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+            status = cff_dict_create_operator (operator,
+                                          _cairo_array_index (&operands, 0),
+                                          _cairo_array_num_elements (&operands),
+					  &op);
+            if (status)
                 goto fail;
-            }
+
             status = _cairo_hash_table_insert (dict, &op->base);
             if (status)
                 goto fail;
+
             _cairo_array_truncate (&operands, 0);
         }
     }
@@ -568,9 +571,9 @@ cff_dict_set_operands (cairo_hash_table_t *dict,
     }
     else
     {
-        op = cff_dict_create_operator (operator, operand, size);
-        if (op == NULL)
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+        status = cff_dict_create_operator (operator, operand, size, &op);
+        if (status)
+	    return status;
 
 	status = _cairo_hash_table_insert (dict, &op->base);
 	if (status)
@@ -838,6 +841,7 @@ cairo_cff_font_read_cid_fontdict (cairo_cff_font_t *font, unsigned char *ptr)
                                                    size);
         if (status)
             goto fail;
+
         /* Set integer operand to max value to use max size encoding to reserve
          * space for any value later */
         end_buf = encode_integer_max (buf, 0);
@@ -852,7 +856,7 @@ cairo_cff_font_read_cid_fontdict (cairo_cff_font_t *font, unsigned char *ptr)
 fail:
     cff_index_fini (&index);
 
-    return _cairo_error (status);
+    return status;
 }
 
 static cairo_int_status_t
@@ -1891,7 +1895,7 @@ fail2:
     free (font);
 fail1:
     free (name);
-    return _cairo_error (status);
+    return status;
 }
 
 static void
@@ -2011,7 +2015,7 @@ _cairo_cff_subset_init (cairo_cff_subset_t          *cff_subset,
  fail1:
     cairo_cff_font_destroy (font);
 
-    return _cairo_error (status);
+    return status;
 }
 
 void
@@ -2108,7 +2112,7 @@ fail2:
 fail1:
     _cairo_array_fini (&font->output);
     free (font);
-    return _cairo_error (status);
+    return status;
 }
 
 static cairo_int_status_t
