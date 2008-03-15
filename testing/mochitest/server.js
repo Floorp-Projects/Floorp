@@ -240,7 +240,7 @@ function list(requestPath, directory, recurse)
   
   // The SimpleTest directory is hidden
   var files = [file for (file in dirIter(dir))
-               if (file.path.indexOf("SimpleTest") == -1)];
+               if (file.exists() && file.path.indexOf("SimpleTest") == -1)];
   
   // Sort files by name, so that tests can be run in a pre-defined order inside
   // a given directory (see bug 384823)
