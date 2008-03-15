@@ -1142,6 +1142,7 @@ var PlacesUIUtils = {
         // XXX: Downloads
 
         // Tags Query
+        uri = self._uri("place:folder=TAGS");
         uri = PlacesUtils._uri("place:folder=" + PlacesUtils.tagsFolderId);
         itemId = PlacesUtils.bookmarks.insertBookmark(leftPaneRoot, uri, -1, null);
         PlacesUtils.annotations.setItemAnnotation(itemId, ORGANIZER_QUERY_ANNO,
@@ -1157,21 +1158,21 @@ var PlacesUIUtils = {
         self.leftPaneQueries["AllBookmarks"] = itemId;
 
         // All Bookmarks->Bookmarks Toolbar Query
-        uri = PlacesUtils._uri("place:folder=" + PlacesUtils.toolbarFolderId);
+        uri = self._uri("place:folder=TOOLBAR");
         itemId = PlacesUtils.bookmarks.insertBookmark(allBookmarksId, uri, -1, null);
         PlacesUtils.annotations.setItemAnnotation(itemId, ORGANIZER_QUERY_ANNO,
                                                   "BookmarksToolbar", 0, EXPIRE_NEVER);
         self.leftPaneQueries["BookmarksToolbar"] = itemId;
 
         // All Bookmarks->Bookmarks Menu Query
-        uri = PlacesUtils._uri("place:folder=" + PlacesUtils.bookmarksMenuFolderId);
+        uri = self._uri("place:folder=BOOKMARKS_MENU");
         itemId = PlacesUtils.bookmarks.insertBookmark(allBookmarksId, uri, -1, null);
         PlacesUtils.annotations.setItemAnnotation(itemId, ORGANIZER_QUERY_ANNO,
                                                   "BookmarksMenu", 0, EXPIRE_NEVER);
         self.leftPaneQueries["BookmarksMenu"] = itemId;
 
         // All Bookmarks->Unfiled bookmarks
-        uri = PlacesUtils._uri("place:folder=" + PlacesUtils.unfiledBookmarksFolderId);
+        uri = self._uri("place:folder=UNFILED_BOOKMARKS");
         itemId = PlacesUtils.bookmarks.insertBookmark(allBookmarksId, uri, -1, null);
         PlacesUtils.annotations.setItemAnnotation(itemId, ORGANIZER_QUERY_ANNO,
                                                   "UnfiledBookmarks", 0,

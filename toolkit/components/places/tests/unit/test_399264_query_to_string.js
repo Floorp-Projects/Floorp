@@ -13,14 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Bug 376798 unit test code.
+ * The Original Code is Places unit test code.
  *
- * The Initial Developer of the Original Code is Mozilla Corporation
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * The Initial Developer of the Original Code is
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Asaf Romano <mano@mozilla.com>
+ *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,39 +37,50 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * Obtains the id of the folder obtained from the query.
+ *
+ * @param aFolderID
+ *        The id of the folder we want to generate a query for.
+ * @returns the string representation of the query for the given folder.
+ */
+function query_string(aFolderID)
+{
+  var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+           getService(Ci.nsINavHistoryService);
 
-// Get history service
-try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
-} catch(ex) {
-  do_throw("Could not get history service\n");
-} 
+  var query = hs.getNewQuery();
+  query.setFolders([aFolderID], 1);
+  var options = hs.getNewQueryOptions();
+  return hs.queriesToQueryString([query], 1, options);
+}
 
-// main
-function run_test() {
-  // XXX Full testing coverage for QueriesToQueryString and
-  // QueryStringToQueries
-
+function run_test()
+{
+  var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+           getService(Ci.nsINavHistoryService);
   var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
            getService(Ci.nsINavBookmarksService);
-  const NHQO = Ci.nsINavHistoryQueryOptions;
-  // Bug 376798
-  var query = histsvc.getNewQuery();
-  query.setFolders([bs.placesRoot], 1);
-  do_check_eq(histsvc.queriesToQueryString([query], 1, histsvc.getNewQueryOptions()),
-              "place:folder=PLACES_ROOT");
 
-  // Bug 378828
-  var options = histsvc.getNewQueryOptions();
-  options.sortingAnnotation = "test anno";
-  options.sortingMode = NHQO.SORT_BY_ANNOTATION_DESCENDING;
-  var placeURI =
-    "place:folder=PLACES_ROOT&sort=" + NHQO.SORT_BY_ANNOTATION_DESCENDING +
-    "&sortingAnnotation=test%20anno";
-  do_check_eq(histsvc.queriesToQueryString([query], 1, options),
-              placeURI);
-  var options = {};
-  histsvc.queryStringToQueries(placeURI, { }, {}, options);
-  do_check_eq(options.value.sortingAnnotation, "test anno");
-  do_check_eq(options.value.sortingMode, NHQO.SORT_BY_ANNOTATION_DESCENDING);
+  const QUERIES = [
+      "folder=PLACES_ROOT"
+    , "folder=BOOKMARKS_MENU"
+    , "folder=TAGS"
+    , "folder=UNFILED_BOOKMARKS"
+    , "folder=TOOLBAR"
+  ];
+  const FOLDER_IDS = [
+      bs.placesRoot
+    , bs.bookmarksMenuFolder
+    , bs.tagsFolder
+    , bs.unfiledBookmarksFolder
+    , bs.toolbarFolder
+  ];
+
+
+  for (var i = 0; i < QUERIES.length; i++) {
+    var result = query_string(FOLDER_IDS[i]);
+    dump("Looking for '" + QUERIES[i] + "' in '" + result + "'\n");
+    do_check_neq(-1, result.indexOf(QUERIES[i]));
+  }
 }

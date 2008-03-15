@@ -629,9 +629,6 @@ BrowserGlue.prototype = {
         var recentTagsTitle =
           this._placesBundle.GetStringFromName("recentTagsTitle");
 
-        var bookmarksMenuFolder = bmsvc.bookmarksMenuFolder;
-        var unfiledBookmarksFolder = bmsvc.unfiledBookmarksFolder;
-        var toolbarFolder = bmsvc.toolbarFolder;
         var defaultIndex = bmsvc.DEFAULT_INDEX;
 
         // index = 0, make it the first folder
@@ -652,9 +649,9 @@ BrowserGlue.prototype = {
         // excludeQueries=1 so that user created "saved searches" 
         // and these queries (added automatically) are excluded
         var recentlyBookmarkedItem = bmsvc.insertBookmark(placesFolder,
-          this._uri("place:folder=" + bookmarksMenuFolder + 
-              "&folder=" + unfiledBookmarksFolder +
-              "&folder=" + toolbarFolder +
+          this._uri("place:folder=BOOKMARKS_MENU" + 
+              "&folder=UNFILED_BOOKMARKS" +
+              "&folder=TOOLBAR" +
               "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
               "&sort=" +
               Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
