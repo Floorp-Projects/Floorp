@@ -8880,8 +8880,7 @@ PRBool NotifyListBoxBody(nsPresContext*    aPresContext,
   }
 
   PRInt32 namespaceID;
-  nsIAtom* tag =
-    aDocument->BindingManager()->ResolveTag(aContainer, &namespaceID);
+  aDocument->BindingManager()->ResolveTag(aContainer, &namespaceID);
 
   // XBL form control cruft... should that really be testing that the
   // namespace is XUL?  Seems odd...
