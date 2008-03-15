@@ -60,6 +60,7 @@ nsBaseAppShell::nsBaseAppShell()
   , mEventloopNestingState(eEventloopNone)
   , mRunWasCalled(PR_FALSE)
   , mExiting(PR_FALSE)
+  , mBlockNativeEvent(PR_FALSE)
 {
 }
 
@@ -102,10 +103,22 @@ nsBaseAppShell::NativeEventCallback()
   // nsBaseAppShell::Run is not being used to pump events, so this may be
   // our only opportunity to process pending gecko events.
 
-  EventloopNestingState prevVal = mEventloopNestingState;
   nsIThread *thread = NS_GetCurrentThread();
+  PRBool prevBlockNativeEvent = mBlockNativeEvent;
+  if (mEventloopNestingState == eEventloopOther) {
+    if (!NS_HasPendingEvents(thread))
+      return;
+    // We're in a nested native event loop and have some gecko events to
+    // process.  While doing that we block processing native events from the
+    // appshell - instead, we want to get back to the nested native event
+    // loop ASAP (bug 420148).
+    mBlockNativeEvent = PR_TRUE;
+  }
+
+  EventloopNestingState prevVal = mEventloopNestingState;
   NS_ProcessPendingEvents(thread, THREAD_EVENT_STARVATION_LIMIT);
   mEventloopNestingState = prevVal;
+  mBlockNativeEvent = prevBlockNativeEvent;
 
   // Continue processing pending events later (we don't want to starve the
   // embedders event loop).
@@ -197,6 +210,9 @@ nsBaseAppShell::ResumeNative(void)
 NS_IMETHODIMP
 nsBaseAppShell::OnDispatchedEvent(nsIThreadInternal *thr)
 {
+  if (mBlockNativeEvent)
+    return NS_OK;
+
   PRInt32 lastVal = PR_AtomicSet(&mNativeEventPending, 1);
   if (lastVal == 1)
     return NS_OK;
@@ -210,6 +226,18 @@ NS_IMETHODIMP
 nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, PRBool mayWait,
                                    PRUint32 recursionDepth)
 {
+  if (mBlockNativeEvent) {
+    if (!mayWait)
+      return NS_OK;
+    // Hmm, we're in a nested native event loop and would like to get
+    // back to it ASAP, but it seems a gecko event has caused us to
+    // spin up a nested XPCOM event loop (eg. modal window), so we
+    // really must start processing native events here again.
+    mBlockNativeEvent = PR_FALSE;
+    if (NS_HasPendingEvents(thr))
+      OnDispatchedEvent(thr); // in case we blocked it earlier
+  }
+
   PRIntervalTime start = PR_IntervalNow();
   PRIntervalTime limit = THREAD_EVENT_STARVATION_LIMIT;
 
