@@ -57,9 +57,10 @@ typedef struct cairo_quartz_surface {
     /* These are stored while drawing operations are in place, set up
      * by quartz_setup_source() and quartz_finish_source()
      */
+    CGAffineTransform sourceTransform;
+
     CGImageRef sourceImage;
     cairo_surface_t *sourceImageSurface;
-    CGAffineTransform sourceImageTransform;
     CGRect sourceImageRect;
 
     CGShadingRef sourceShading;

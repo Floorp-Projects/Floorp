@@ -1162,7 +1162,7 @@ _cairo_win32_printing_surface_stroke (void                 *abstract_surface,
 	pen_style |= PS_SOLID;
     }
 
-    SetMiterLimit (surface->dc, (FLOAT) (scale * style->miter_limit), NULL);
+    SetMiterLimit (surface->dc, (FLOAT) (style->miter_limit), NULL);
     if (source->type == CAIRO_PATTERN_TYPE_SOLID) {
 	cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *) source;
 

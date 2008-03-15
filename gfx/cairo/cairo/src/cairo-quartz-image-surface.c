@@ -36,17 +36,14 @@
 
 #include "cairoint.h"
 
+#ifdef CAIRO_HAS_QUARTZ_IMAGE_SURFACE
+#include "cairo-quartz-image.h"
+#endif
+
 #include "cairo-quartz-private.h"
 
 #define SURFACE_ERROR_NO_MEMORY (_cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_NO_MEMORY)))
 #define SURFACE_ERROR_INVALID_FORMAT (_cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_INVALID_FORMAT)))
-
-static void
-DataProviderReleaseCallback (void *info, const void *data, size_t size)
-{
-    cairo_surface_t *surface = (cairo_surface_t *) info;
-    cairo_surface_destroy (surface);
-}
 
 CGImageRef
 _cairo_quartz_create_cgimage (cairo_format_t format,
@@ -129,6 +126,14 @@ FINISH:
     return image;
 }
 
+#ifdef CAIRO_HAS_QUARTZ_IMAGE_SURFACE
+
+static void
+DataProviderReleaseCallback (void *info, const void *data, size_t size)
+{
+    cairo_surface_t *surface = (cairo_surface_t *) info;
+    cairo_surface_destroy (surface);
+}
 
 static cairo_surface_t *
 _cairo_quartz_image_surface_create_similar (void *asurface,
@@ -220,7 +225,7 @@ _cairo_quartz_image_surface_flush (void *asurface)
 					     surface->imageSurface->height,
 					     surface->imageSurface->stride,
 					     surface->imageSurface->data,
-					     FALSE,
+					     TRUE,
 					     NULL,
 					     DataProviderReleaseCallback,
 					     surface->imageSurface);
@@ -289,10 +294,6 @@ cairo_quartz_image_surface_create (cairo_surface_t *surface)
 
     CGImageRef image;
 
-    CGContextRef cgContext;
-    CGColorSpaceRef cgColorspace;
-    CGBitmapInfo bitinfo;
-
     cairo_image_surface_t *image_surface;
     int width, height, stride;
     cairo_format_t format;
@@ -333,7 +334,7 @@ cairo_quartz_image_surface_create (cairo_surface_t *surface)
 					  width, height,
 					  stride,
 					  data,
-					  FALSE,
+					  TRUE,
 					  NULL,
 					  DataProviderReleaseCallback,
 					  surface);
@@ -368,3 +369,5 @@ cairo_quartz_image_surface_get_image (cairo_surface_t *asurface)
 
     return (cairo_surface_t*) surface->imageSurface;
 }
+
+#endif /* CAIRO_HAS_QUARTZ_IMAGE_SURFACE */
