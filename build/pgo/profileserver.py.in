@@ -74,4 +74,5 @@ if __name__ == '__main__':
     browserEnv["MOZILLA_FIVE_HOME"] = os.path.join(SCRIPT_DIR, automation.DIST_BIN)
 
   automation.runApp("http://localhost:%d/index.html" % PORT, browserEnv,
-                    os.path.join(SCRIPT_DIR, automation.DEFAULT_APP), PROFILE_DIRECTORY)
+                    os.path.join(SCRIPT_DIR, automation.DEFAULT_APP),
+                    PROFILE_DIRECTORY, ())

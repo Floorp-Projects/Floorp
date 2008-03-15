@@ -162,7 +162,7 @@ class MochitestOptions(optparse.OptionParser):
                            "refcounted objects (or bytes in classes with "
                            "MOZ_COUNT_CTOR and MOZ_COUNT_DTOR) is greater "
                            "than the given number")
-    defaults["leakThreshold"] = -1
+    defaults["leakThreshold"] = 0
 
     # -h, --help are automatically handled by OptionParser
 
@@ -326,7 +326,8 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   if options.leakThreshold >= 0:
     browserEnv["XPCOM_MEM_BLOAT_LOG"] = LEAK_REPORT_FILE
 
-  start = automation.runApp(testURL, browserEnv, options.app, PROFILE_DIRECTORY)
+  start = automation.runApp(testURL, browserEnv, options.app, PROFILE_DIRECTORY,
+                            options.browserArgs)
 
   server.stop()
 
