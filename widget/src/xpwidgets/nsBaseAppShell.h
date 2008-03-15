@@ -120,6 +120,16 @@ private:
   EventloopNestingState mEventloopNestingState;
   PRPackedBool mRunWasCalled;
   PRPackedBool mExiting;
+  /**
+   * mBlockNativeEvent blocks the appshell from processing native events.
+   * It is set to PR_TRUE while a nested native event loop (eEventloopOther)
+   * is processing gecko events in NativeEventCallback(), thus queuing up
+   * native events until we return to that loop (bug 420148).
+   * We force mBlockNativeEvent to PR_FALSE in case handling one of the gecko
+   * events spins up a nested XPCOM event loop (eg. modal window) which would
+   * otherwise lead to a "deadlock" where native events aren't processed at all.
+   */
+  PRPackedBool mBlockNativeEvent;
 };
 
 #endif // nsBaseAppShell_h__
