@@ -92,6 +92,7 @@ else
 # Make jemalloc part of libxul, in order to reduce dynamic loading overhead.
 MODULE		= jemalloc
 LIBXUL_LIBRARY	= 1
+FORCE_STATIC_LIB = 1
 endif
 
 CSRCS		= \
