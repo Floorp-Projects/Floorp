@@ -44,8 +44,10 @@ typedef struct cairo_hull
     int id;
 } cairo_hull_t;
 
-static cairo_hull_t *
-_cairo_hull_create (cairo_pen_vertex_t *vertices, int num_vertices)
+static cairo_status_t
+_cairo_hull_create (cairo_pen_vertex_t	     *vertices,
+	            int			      num_vertices,
+		    cairo_hull_t	    **out)
 {
     int i;
     cairo_hull_t *hull;
@@ -63,10 +65,8 @@ _cairo_hull_create (cairo_pen_vertex_t *vertices, int num_vertices)
     vertices[0].point = tmp;
 
     hull = _cairo_malloc_ab (num_vertices, sizeof (cairo_hull_t));
-    if (hull == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return NULL;
-    }
+    if (hull == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     for (i = 0; i < num_vertices; i++) {
 	hull[i].point = vertices[i].point;
@@ -83,7 +83,8 @@ _cairo_hull_create (cairo_pen_vertex_t *vertices, int num_vertices)
 	    hull[i].discard = 1;
     }
 
-    return hull;
+    *out = hull;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static int
@@ -190,12 +191,13 @@ _cairo_hull_to_pen (cairo_hull_t *hull, cairo_pen_vertex_t *vertices, int *num_v
 cairo_status_t
 _cairo_hull_compute (cairo_pen_vertex_t *vertices, int *num_vertices)
 {
+    cairo_status_t status;
     cairo_hull_t *hull;
     int num_hull = *num_vertices;
 
-    hull = _cairo_hull_create (vertices, num_hull);
-    if (hull == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+    status = _cairo_hull_create (vertices, num_hull, &hull);
+    if (status)
+	return status;
 
     qsort (hull + 1, num_hull - 1,
 	   sizeof (cairo_hull_t), _cairo_hull_vertex_compare);

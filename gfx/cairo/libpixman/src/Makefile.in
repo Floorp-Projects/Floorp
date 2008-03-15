@@ -65,6 +65,20 @@ MODULE_OPTIMIZE_FLAGS = -O2
 endif
 endif
 
+# Build MMX code either with VC or with gcc-on-x86
+ifdef _MSC_VER
+USE_MMX=1
+MMX_CFLAGS=
+endif
+
+ifdef GNU_CC
+ifeq (86,$(findstring 86,$(OS_TEST)))
+USE_MMX=1
+MMX_CFLAGS=-mmmx -msse -Winline --param inline-unit-growth=10000 --param large-function-growth=10000
+endif
+endif
+
+
 CSRCS	= \
 	pixman-compose.c \
 	pixman-compose-accessors.c \
@@ -78,14 +92,9 @@ CSRCS	= \
 	pixman-utils.c \
 	$(NULL)
 
-ifdef MOZ_X11
-#CSRCS   += pixman-mmx.c
-#DEFINES += -DUSE_MMX
-endif
-
-ifdef _MSC_VER
-#CSRCS   += pixman-mmx.c
-#DEFINES += -DUSE_MMX
+ifdef USE_MMX
+CSRCS += pixman-mmx.c
+DEFINES += -DUSE_MMX
 endif
 
 EXPORTS		= pixman.h pixman-remap.h
@@ -100,7 +109,8 @@ include $(topsrcdir)/config/rules.mk
 
 CFLAGS += -DPACKAGE="mozpixman" -D_USE_MATH_DEFINES
 
-ifdef MOZ_X11
-#CFLAGS  += -mmmx -msse -Winline --param inline-unit-growth=10000 --param large-function-growth=10000
-endif
-
+# special rule for pixman-mmx to get the right cflags
+pixman-mmx.$(OBJ_SUFFIX): pixman-mmx.c Makefile Makefile.in
+	$(REPORT_BUILD)
+	@$(MAKE_DEPS_AUTO_CC)
+	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(MMX_CFLAGS) $(_VPATH_SRCS)

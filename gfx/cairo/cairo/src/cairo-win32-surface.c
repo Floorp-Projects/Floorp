@@ -386,9 +386,19 @@ _cairo_win32_surface_create_similar_internal (void	    *abstract_src,
     cairo_format_t format = _cairo_format_from_content (content);
     cairo_win32_surface_t *new_surf;
 
-    /* if the parent is a DIB or if we need alpha, then
-     * we have to create a dib */
-    if (force_dib || src->is_dib || (content & CAIRO_CONTENT_ALPHA)) {
+    /* We force a DIB always if:
+     * - we need alpha; or
+     * - the parent is a DIB; or
+     * - the parent is for printing (because we don't care about the bit depth at that point)
+     */
+    if (src->is_dib ||
+	(content & CAIRO_CONTENT_ALPHA) ||
+	src->base.backend->type == CAIRO_SURFACE_TYPE_WIN32_PRINTING)
+    {
+	force_dib = TRUE;
+    }
+
+    if (force_dib) {
 	new_surf = (cairo_win32_surface_t*)
 	    _cairo_win32_surface_create_for_dc (src->dc, format, width, height);
     } else {
@@ -1678,7 +1688,7 @@ _cairo_win32_surface_show_glyphs (void			*surface,
  * Creates a cairo surface that targets the given DC.  The DC will be
  * queried for its initial clip extents, and this will be used as the
  * size of the cairo surface.  The resulting surface will always be of
- * format CAIRO_FORMAT_RGB24; should you need another surface format,
+ * format %CAIRO_FORMAT_RGB24; should you need another surface format,
  * you will need to create one through
  * cairo_win32_surface_create_with_dib().
  *

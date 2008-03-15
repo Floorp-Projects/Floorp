@@ -39,6 +39,7 @@
  *	Adrian Johnson <ajohnson@redneon.com>
  */
 
+#define _BSD_SOURCE /* for snprintf() */
 #include "cairoint.h"
 #include "cairo-pdf.h"
 #include "cairo-pdf-surface-private.h"
@@ -4021,6 +4022,35 @@ _cairo_pdf_surface_write_page (cairo_pdf_surface_t *surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_int_status_t
+_cairo_pdf_surface_analyze_surface_pattern_transparency (cairo_pdf_surface_t      *surface,
+							 cairo_surface_pattern_t *pattern)
+{
+    cairo_image_surface_t  *image;
+    void		   *image_extra;
+    cairo_int_status_t      status;
+    cairo_image_transparency_t transparency;
+
+    status = _cairo_surface_acquire_source_image (pattern->surface,
+						  &image,
+						  &image_extra);
+    if (status)
+	return status;
+
+    if (image->base.status)
+	return image->base.status;
+
+    transparency = _cairo_image_analyze_transparency (image);
+    if (transparency == CAIRO_IMAGE_IS_OPAQUE)
+	status = CAIRO_STATUS_SUCCESS;
+    else
+	status = CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY;
+
+    _cairo_surface_release_source_image (pattern->surface, image, image_extra);
+
+    return status;
+}
+
 static cairo_bool_t
 _surface_pattern_supported (cairo_surface_pattern_t *pattern)
 {
@@ -4129,9 +4159,16 @@ _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t  *surface,
     if (op == CAIRO_OPERATOR_OVER)
 	return CAIRO_STATUS_SUCCESS;
 
-    /* The SOURCE operator supported if the pattern is opaque or if
+    /* The SOURCE operator is supported if the pattern is opaque or if
      * there is nothing painted underneath. */
     if (op == CAIRO_OPERATOR_SOURCE) {
+	if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	    cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
+
+	    return _cairo_pdf_surface_analyze_surface_pattern_transparency (surface,
+									    surface_pattern);
+	}
+
 	if (_cairo_pattern_is_opaque (pattern))
 	    return CAIRO_STATUS_SUCCESS;
 	else

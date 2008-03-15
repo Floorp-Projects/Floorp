@@ -38,6 +38,7 @@
 #include "gfxQuartzImageSurface.h"
 
 #include "cairo-quartz.h"
+#include "cairo-quartz-image.h"
 
 gfxQuartzImageSurface::gfxQuartzImageSurface(gfxImageSurface *imageSurface)
 {

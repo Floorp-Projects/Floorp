@@ -33,6 +33,7 @@
  *	Kristian Høgsberg <krh@redhat.com>
  */
 
+#define _BSD_SOURCE /* for snprintf() */
 #include "cairoint.h"
 
 #include "cairo-output-stream-private.h"
