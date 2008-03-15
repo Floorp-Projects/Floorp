@@ -1656,6 +1656,18 @@ NS_TraceMallocLogTimestamp(const char *caption)
     TM_EXIT_LOCK_AND_UNSUPPRESS_TRACING(t);
 }
 
+static void
+print_stack(FILE *ofp, callsite *site)
+{
+    while (site) {
+        if (site->name || site->parent) {
+            fprintf(ofp, "%s[%s +0x%X]\n",
+                    site->name, site->library, site->offset);
+        }
+        site = site->parent;
+    }
+}
+
 static PRIntn
 allocation_enumerator(PLHashEntry *he, PRIntn i, void *arg)
 {
@@ -1677,13 +1689,7 @@ allocation_enumerator(PLHashEntry *he, PRIntn i, void *arg)
         fprintf(ofp, "\t0x%08lX\n", *p);
     }
 
-    while (site) {
-        if (site->name || site->parent) {
-            fprintf(ofp, "%s[%s +0x%X]\n",
-                    site->name, site->library, site->offset);
-        }
-        site = site->parent;
-    }
+    print_stack(ofp, site);
     fputc('\n', ofp);
     return HT_ENUMERATE_NEXT;
 }
@@ -1956,6 +1962,22 @@ FreeCallback(void * ptr, PRUint32 start, PRUint32 end, tm_thread *t)
         }
     }
     TM_EXIT_LOCK_AND_UNSUPPRESS_TRACING(t);
+}
+
+PR_IMPLEMENT(nsTMStackTraceID)
+NS_TraceMallocGetStackTrace(void)
+{
+    callsite *site;
+    tm_thread *t = tm_get_thread();
+
+    site = backtrace(t, 2);
+    return (nsTMStackTraceID) site;
+}
+
+PR_IMPLEMENT(void)
+NS_TraceMallocPrintStackTrace(FILE *ofp, nsTMStackTraceID id)
+{
+    print_stack(ofp, (callsite *)id);
 }
 
 #endif /* NS_TRACE_MALLOC */
