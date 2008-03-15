@@ -2188,7 +2188,10 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
           }
         } else {
           // Always propagate when not dropped down (even if focused).
-          passToParent = PR_TRUE;
+          if (!passToParent) {
+            passToParent = PR_TRUE;
+            nsMouseWheelTransaction::EndTransaction();
+          }
         }
       }
     }
