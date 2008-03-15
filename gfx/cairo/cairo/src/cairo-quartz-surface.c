@@ -1844,7 +1844,7 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
     CGFontRef cgfref = NULL;
 
     cairo_bool_t isClipping = FALSE;
-    cairo_bool_t didForceFontSmoothing = TRUE;
+    cairo_bool_t didForceFontSmoothing = FALSE;
 
     if (IS_EMPTY(surface))
 	return CAIRO_STATUS_SUCCESS;
