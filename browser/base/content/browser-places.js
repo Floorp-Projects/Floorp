@@ -1022,9 +1022,7 @@ function placesMigrationTasks() {
   }
 
   if (gPrefService.getBoolPref("browser.places.updateRecentTagsUri")) {
-    var bmsvc = PlacesUtils.bookmarks;
-    var tagsFolder = bmsvc.tagsFolder;
-    var oldUriSpec = "place:folder=" + tagsFolder + "&group=3&queryType=1"+
+    var oldUriSpec = "place:folder=TAGS&group=3&queryType=1" +
                      "&applyOptionsToContainers=1&sort=12&maxResults=10";
 
     var maxResults = 10;
@@ -1040,6 +1038,7 @@ function placesMigrationTasks() {
     var oldUri = ios.newURI(oldUriSpec, null, null);
     var newUri = ios.newURI(newUriSpec, null, null);
 
+    let bmsvc = PlacesUtils.bookmarks;
     let bookmarks = bmsvc.getBookmarkIdsForURI( oldUri, {});
     for (let i = 0; i < bookmarks.length; i++) {
       bmsvc.changeBookmarkURI( bookmarks[i], newUri);

@@ -400,7 +400,7 @@
         ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDropHandler);">
     <menupopup id="bookmarksMenuPopup"
                type="places"
-               place="place:folder=2&amp;expandQueries=1"
+               place="place:folder=BOOKMARKS_MENU&amp;expandQueries=1"
                context="placesContext"
                openInTabs="children"
                oncommand="BookmarksEventHandler.onCommand(event);"
