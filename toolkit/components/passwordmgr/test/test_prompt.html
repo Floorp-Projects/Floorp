@@ -286,7 +286,6 @@ var observer = {
         netscape.security.PrivilegeManager
                          .enablePrivilege('UniversalXPConnect');
 
-        ok(true, "timer fired for test " + testNum);
         var doc = getDialogDoc();
         if (doc)
             handleDialog(doc, testNum);
