@@ -158,7 +158,7 @@ var MigrationWizard = {
       if(newSource == "fromfile")
         window.opener.fromFile = true;
       document.documentElement.cancel();
-      return;
+      return false;
     }
     
     if (!this._migrator || (newSource != this._source)) {
