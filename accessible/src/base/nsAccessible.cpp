@@ -2566,20 +2566,52 @@ NS_IMETHODIMP nsAccessible::GetRole(PRUint32 *aRole)
 }
 
 /* PRUint8 getAccNumActions (); */
-NS_IMETHODIMP nsAccessible::GetNumActions(PRUint8 *aNumActions)
+NS_IMETHODIMP
+nsAccessible::GetNumActions(PRUint8 *aNumActions)
 {
+  NS_ENSURE_ARG_POINTER(aNumActions);
   *aNumActions = 0;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  PRBool isOnclick = nsAccUtils::HasListener(content,
+                                             NS_LITERAL_STRING("click"));
+
+  if (isOnclick)
+    *aNumActions = 1;
+  
   return NS_OK;
 }
 
 /* DOMString getAccActionName (in PRUint8 index); */
-NS_IMETHODIMP nsAccessible::GetActionName(PRUint8 index, nsAString& aName)
+NS_IMETHODIMP
+nsAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
-  return NS_ERROR_FAILURE;
+  aName.Truncate();
+
+  if (aIndex != 0)
+    return NS_ERROR_INVALID_ARG;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  PRBool isOnclick = nsAccUtils::HasListener(content,
+                                             NS_LITERAL_STRING("click"));
+  
+  if (isOnclick) {
+    aName.AssignLiteral("click");
+    return NS_OK;
+  }
+
+  return NS_ERROR_INVALID_ARG;
 }
 
 /* DOMString getActionDescription (in PRUint8 index); */
-NS_IMETHODIMP nsAccessible::GetActionDescription(PRUint8 aIndex, nsAString& aDescription)
+NS_IMETHODIMP
+nsAccessible::GetActionDescription(PRUint8 aIndex, nsAString& aDescription)
 {
   // default to localized action name.
   nsAutoString name;
@@ -2590,9 +2622,23 @@ NS_IMETHODIMP nsAccessible::GetActionDescription(PRUint8 aIndex, nsAString& aDes
 }
 
 /* void doAction (in PRUint8 index); */
-NS_IMETHODIMP nsAccessible::DoAction(PRUint8 index)
+NS_IMETHODIMP
+nsAccessible::DoAction(PRUint8 aIndex)
 {
-  return NS_ERROR_FAILURE;
+  if (aIndex != 0)
+    return NS_ERROR_INVALID_ARG;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  PRBool isOnclick = nsAccUtils::HasListener(content,
+                                             NS_LITERAL_STRING("click"));
+  
+  if (isOnclick)
+    return DoCommand(content);
+
+  return NS_ERROR_INVALID_ARG;
 }
 
 /* DOMString getHelp (); */
