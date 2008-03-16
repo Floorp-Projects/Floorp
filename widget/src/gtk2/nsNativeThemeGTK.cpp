@@ -1127,6 +1127,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
   case NS_THEME_CHECKBOX_LABEL:
   case NS_THEME_RADIO_LABEL:
   case NS_THEME_BUTTON:
+  case NS_THEME_DROPDOWN:
   case NS_THEME_TOOLBAR_BUTTON:
   case NS_THEME_TREEVIEW_HEADER_CELL:
     {
