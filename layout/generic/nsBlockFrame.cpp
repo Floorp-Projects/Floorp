@@ -2242,6 +2242,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
     // of much confusion and bugs. Thus the following hack considers *both*
     // overflowArea and bounds. This should be considered a temporary hack
     // until we decide how it's really supposed to work.
+    // Note that we have a similar hack in nsTableFrame::InvalidateFrame.
     nsRect lineCombinedArea(aLine->GetCombinedArea());
     if (oldCombinedArea.TopLeft() != lineCombinedArea.TopLeft() ||
         oldBounds.TopLeft() != newBounds.TopLeft()) {
