@@ -74,7 +74,6 @@ _TEST_FILES = \
   test_same_base_domain_5.html \
   test_same_base_domain_6.html \
   file_loopback_inner.html \
-#  test_same_base_domain_7.html \
 	$(NULL)
 
 _BROWSER_TEST_FILES = \
