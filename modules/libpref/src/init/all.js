@@ -1617,11 +1617,11 @@ pref("font.name-list.cursive.x-western", "Apple Chancery");
 pref("font.name-list.fantasy.x-western", "Papyrus");
 
 pref("font.name.serif.zh-CN", "华文宋体");
-pref("font.name.sans-serif.zh-CN", "Hei");
-pref("font.name.monospace.zh-CN", "Hei");
+pref("font.name.sans-serif.zh-CN", "STHeiti");
+pref("font.name.monospace.zh-CN", "STHeiti");
 pref("font.name-list.serif.zh-CN", "华文宋体");
-pref("font.name-list.sans-serif.zh-CN", "Hei");
-pref("font.name-list.monospace.zh-CN", "Hei");
+pref("font.name-list.sans-serif.zh-CN", "STHeiti");
+pref("font.name-list.monospace.zh-CN", "STHeiti");
 
 pref("font.name.serif.zh-TW", "Apple LiSung"); 
 pref("font.name.sans-serif.zh-TW", "Apple LiGothic");  
