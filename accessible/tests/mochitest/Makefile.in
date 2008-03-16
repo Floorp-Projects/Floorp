@@ -47,6 +47,7 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =\
 		test_bug368835.xul \
+		test_bug420863.html \
 		test_groupattrs.xul \
 		test_table_indexes.html \
 		test_nsIAccessibleTable_1.html \
