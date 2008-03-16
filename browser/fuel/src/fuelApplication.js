@@ -959,9 +959,6 @@ Bookmark.prototype = {
 // BookmarkFolder implementation
 function BookmarkFolder(aId, aParent) {
   this._id = aId;
-  if (this._id == null)
-    this._id = Utilities.bookmarks.bookmarksMenuFolder;
-
   this._parent = aParent;
 
   this._annotations = new Annotations(this._id);
@@ -1120,6 +1117,53 @@ BookmarkFolder.prototype = {
 
   QueryInterface : XPCOMUtils.generateQI([Ci.fuelIBookmarkFolder, Ci.nsINavBookmarkObserver])
 };
+
+//=================================================
+// BookmarkRoots implementation
+function BookmarkRoots() {
+  var self = this;
+  gShutdown.push(function() { self._shutdown(); });
+}
+
+BookmarkRoots.prototype = {
+  _shutdown : function bmr_shutdown() {
+    this._menu = null;
+    this._toolbar = null;
+    this._tags = null;
+    this._unfiled = null;
+  },
+
+  get menu() {
+    if (!this._menu)
+      this._menu = new BookmarkFolder(Utilities.bookmarks.bookmarksMenuFolder, null);
+
+    return this._menu;
+  },
+
+  get toolbar() {
+    if (!this._toolbar)
+      this._toolbar = new BookmarkFolder(Utilities.bookmarks.toolbarFolder, null);
+
+    return this._toolbar;
+  },
+
+  get tags() {
+    if (!this._tags)
+      this._tags = new BookmarkFolder(Utilities.bookmarks.tagsFolder, null);
+
+    return this._tags;
+  },
+
+  get unfiled() {
+    if (!this._unfiled)
+      this._unfiled = new BookmarkFolder(Utilities.bookmarks.unfiledBookmarksFolder, null);
+
+    return this._unfiled;
+  },
+
+  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIBookmarkRoots])
+};
+
 
 //=================================================
 // Factory - Treat Application as a singleton
@@ -1285,7 +1329,7 @@ Application.prototype = {
 
   get bookmarks() {
     if (this._bookmarks == null)
-      this._bookmarks = new BookmarkFolder(null, null);
+      this._bookmarks = new BookmarkRoots();
 
     return this._bookmarks;
   },
