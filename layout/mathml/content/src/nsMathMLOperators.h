@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,6 +21,7 @@
  *
  * Contributor(s):
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
+ *   Karl Tomlinson <karlt+@karlt.net>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -84,6 +86,26 @@ enum {
 
 #define NS_MATHML_OPERATOR_SIZE_INFINITY NS_IEEEPositiveInfinity()
 
+// Style invariant chararacters (chars have their own intrinsic predefined style)
+enum eMATHVARIANT {
+  eMATHVARIANT_NONE = -1,
+  eMATHVARIANT_normal = 0,
+  eMATHVARIANT_bold,
+  eMATHVARIANT_italic,
+  eMATHVARIANT_bold_italic,
+  eMATHVARIANT_sans_serif,
+  eMATHVARIANT_bold_sans_serif,
+  eMATHVARIANT_sans_serif_italic,
+  eMATHVARIANT_sans_serif_bold_italic,
+  eMATHVARIANT_monospace,
+  eMATHVARIANT_script,
+  eMATHVARIANT_bold_script,
+  eMATHVARIANT_fraktur,
+  eMATHVARIANT_bold_fraktur,
+  eMATHVARIANT_double_struck,
+  eMATHVARIANT_COUNT
+};
+
 class nsMathMLOperators {
 public:
   static void AddRefTable(void);
@@ -129,28 +151,18 @@ public:
   static nsStretchDirection GetStretchyDirectionAt(PRInt32 aIndex);
   static void DisableStretchyOperatorAt(PRInt32 aIndex);
 
+  // Return the variant type of one Unicode Mathematical Alphanumeric Symbol
+  // character (which may be represented by a surrogate pair), or return
+  // eMATHVARIANT_NONE if aChar is not such a character.
+  static eMATHVARIANT LookupInvariantChar(const nsAString& aChar);
 
-  // Style invariant chararacters (chars have their own intrinsic predefined style)
-  enum eMATHVARIANT {
-    eMATHVARIANT_NONE = -1,
-    eMATHVARIANT_normal = 0,
-    eMATHVARIANT_bold,
-    eMATHVARIANT_italic,
-    eMATHVARIANT_bold_italic,
-    eMATHVARIANT_sans_serif,
-    eMATHVARIANT_bold_sans_serif,
-    eMATHVARIANT_sans_serif_italic,
-    eMATHVARIANT_sans_serif_bold_italic,
-    eMATHVARIANT_monospace,
-    eMATHVARIANT_script,
-    eMATHVARIANT_bold_script,
-    eMATHVARIANT_fraktur,
-    eMATHVARIANT_bold_fraktur,
-    eMATHVARIANT_double_struck,
-    eMATHVARIANT_COUNT
-  };
-  static PRBool LookupInvariantChar(PRUnichar     aChar,
-                                    eMATHVARIANT* aType = nsnull);
+  // Return the styled Mathematical Alphanumeric Symbol character
+  // corresponding to a BMP character and a mathvariant value, or return aChar
+  // if there is no such corresponding character.
+  // Note the result may be dependent on aChar, and should be considered a
+  // temporary.
+  static const nsDependentSubstring
+  TransformVariantChar(const PRUnichar& aChar, eMATHVARIANT aVariant);
 };
 
 
