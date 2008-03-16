@@ -106,8 +106,6 @@ MAKEFILES_gfx="
 
 MAKEFILES_htmlparser="
   parser/htmlparser/Makefile
-  parser/htmlparser/robot/Makefile
-  parser/htmlparser/robot/test/Makefile
   parser/htmlparser/public/Makefile
   parser/htmlparser/src/Makefile
   parser/htmlparser/tests/Makefile
