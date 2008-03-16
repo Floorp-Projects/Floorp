@@ -1747,8 +1747,8 @@ case "$target" in
     if test "$GNU_CC"; then
         GCC_VERSION=`$CC -v 2>&1 | awk '/version/ { print $3 }'`
         case $GCC_VERSION in
-        4.1.*)
-            # -Os is broken on gcc 4.1.x, we need to tweak it to get good results.
+        4.1.*|4.2.*)
+            # -Os is broken on gcc 4.1.x and 4.2.x, we need to tweak it to get good results.
             MOZ_OPTIMIZE_SIZE_TWEAK="-finline-limit=50"
         esac
     fi
