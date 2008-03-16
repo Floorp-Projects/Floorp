@@ -56,7 +56,7 @@
 
   <wizardpage id="importSource" pageid="importSource" next="selectProfile"
               label="&importSource.title;"
-              onpageadvanced="MigrationWizard.onImportSourcePageAdvanced();">
+              onpageadvanced="return MigrationWizard.onImportSourcePageAdvanced();">
 #ifdef XP_WIN
     <description id="importAll" control="importSourceGroup">&importFrom.label;</description>
 #else
