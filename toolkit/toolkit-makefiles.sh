@@ -244,7 +244,6 @@ MAKEFILES_layout="
   layout/html/tests/Makefile
   layout/style/Makefile
   layout/printing/Makefile
-  layout/tools/Makefile
   layout/xul/Makefile
   layout/xul/base/Makefile
   layout/xul/base/public/Makefile
