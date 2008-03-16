@@ -111,10 +111,6 @@
 #define M_PI_2		1.57079632679489661923
 #endif
 
-/* Maximum depth of save() which has style information saved */
-#define STYLE_STACK_DEPTH 50
-#define STYLE_CURRENT_STACK ((mSaveCount<STYLE_STACK_DEPTH)?mSaveCount:STYLE_STACK_DEPTH-1)
-
 static PRBool CheckSaneSubrectSize (PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, PRInt32 realWidth, PRInt32 realHeight);
 
 /* Float validation stuff */
