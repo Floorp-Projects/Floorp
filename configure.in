@@ -1744,8 +1744,17 @@ case "$target" in
     ;;
 
 *-*linux*)
+    if test "$GNU_CC"; then
+        GCC_VERSION=`$CC -v 2>&1 | awk '/version/ { print $3 }'`
+        case $GCC_VERSION in
+        4.1.*)
+            # -Os is broken on gcc 4.1.x, we need to tweak it to get good results.
+            MOZ_OPTIMIZE_SIZE_TWEAK="-finline-limit=50"
+        esac
+    fi
+
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
-    MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions"
+    MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions $MOZ_OPTIMIZE_SIZE_TWEAK"
     MOZ_DEBUG_FLAGS="-g -fno-inline"  # most people on linux use gcc/gdb,
                                       # and that combo is not yet good at
                                       # debugging inlined functions (even
@@ -5986,6 +5995,7 @@ fi # COMPILE_ENVIRONMENT
 AC_SUBST(MOZ_OPTIMIZE)
 AC_SUBST(MOZ_OPTIMIZE_FLAGS)
 AC_SUBST(MOZ_OPTIMIZE_LDFLAGS)
+AC_SUBST(MOZ_OPTIMIZE_SIZE_TWEAK)
 
 dnl ========================================================
 dnl = Enable/disable debug for specific modules only
