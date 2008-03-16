@@ -51,7 +51,7 @@ interface fuelIEventItem : nsISupports
    * Cancels the event if it is cancelable.
    */
   void preventDefault();
-}; 
+};
 
 
 /**
@@ -61,14 +61,14 @@ interface fuelIEventItem : nsISupports
 interface fuelIEventListener : nsISupports
 {
   /**
-   * This method is called whenever an event occurs of the type for which 
+   * This method is called whenever an event occurs of the type for which
    * the fuelIEventListener interface was registered.
    *
    * @param   aEvent
    *          The fuelIEventItem associated with the event.
    */
   void handleEvent(in fuelIEventItem aEvent);
-}; 
+};
 
 
 /**
@@ -101,7 +101,7 @@ interface fuelIEvents : nsISupports
    *          The reference to a listener
    */
   void removeListener(in AString aEvent, in fuelIEventListener aListener);
-}; 
+};
 
 
 /**
@@ -119,18 +119,18 @@ interface fuelIPreferenceBranch : nsISupports
    * The name of the branch root.
    */
   readonly attribute AString root;
-  
+
   /**
    * Array of fuelIPreference listing all preferences in this branch.
    */
   readonly attribute nsIVariant all;
-  
+
   /**
    * The events object for the preferences
    * supports: "change"
    */
   readonly attribute fuelIEvents events;
-  
+
   /**
    * Check to see if a preference exists.
    * @param   aName
@@ -138,7 +138,7 @@ interface fuelIPreferenceBranch : nsISupports
    * @returns true if the preference exists, false if not
    */
   boolean has(in AString aName);
-  
+
   /**
    * Gets an object representing a preference
    * @param   aName
@@ -146,7 +146,7 @@ interface fuelIPreferenceBranch : nsISupports
    * @returns a preference object, or null if the preference does not exist
    */
   fuelIPreference get(in AString aName);
-  
+
   /**
    * Gets the value of a preference. Returns a default value if
    * the preference does not exist.
@@ -185,38 +185,38 @@ interface fuelIPreference : nsISupports
    * The name of the preference.
    */
   readonly attribute AString name;
-  
+
   /**
    * A string representing the type of preference (String, Boolean, or Number).
    */
   readonly attribute AString type;
-  
+
   /**
    * Get/Set the value of the preference.
    */
   attribute nsIVariant value;
-  
+
   /**
    * Get the locked state of the preference. Set to a boolean value to (un)lock it.
    */
   attribute boolean locked;
-  
+
   /**
    * Check if a preference has been modified by the user, or not.
    */
   readonly attribute boolean modified;
-  
+
   /**
    * The preference branch that contains this preference.
    */
   readonly attribute fuelIPreferenceBranch branch;
-  
+
   /**
    * The events object for this preference.
    * supports: "change"
    */
   readonly attribute fuelIEvents events;
-  
+
   /**
    * Resets a preference back to its default values.
    */
@@ -265,7 +265,7 @@ interface fuelISessionStorage : nsISupports
    *          exists with the given name.
    */
   nsIVariant get(in AString aName, in nsIVariant aDefaultValue);
-}; 
+};
 
 
 /**
@@ -283,12 +283,12 @@ interface fuelIExtension : nsISupports
    * The name of the extension.
    */
   readonly attribute AString name;
-  
+
   /**
    * Check if the extension is currently enabled, or not.
    */
   readonly attribute boolean enabled;
-  
+
   /**
    * The version number of the extension.
    */
@@ -315,7 +315,7 @@ interface fuelIExtension : nsISupports
    * supports: "uninstall"
    */
   readonly attribute fuelIEvents events;
-}; 
+};
 
 
 /**
@@ -346,7 +346,7 @@ interface fuelIExtensions : nsISupports
    *          with the given id.
    */
   fuelIExtension get(in AString aId);
-}; 
+};
 
 
 /**
@@ -459,7 +459,7 @@ interface fuelIBookmark : nsISupports
    * delete a bookmark or separator
    */
   void remove();
-}; 
+};
 
 
 /**
@@ -541,6 +541,35 @@ interface fuelIBookmarkFolder : nsISupports
 
 
 /**
+ * Interface representing a container for bookmark roots. Roots
+ * are the top level parents for the various types of bookmarks in the system.
+ */
+[scriptable, uuid(c9a80870-eb3c-11dc-95ff-0800200c9a66)]
+interface fuelIBookmarkRoots : nsISupports
+{
+  /**
+   * The folder for the 'bookmarks menu' root.
+   */
+  readonly attribute fuelIBookmarkFolder menu;
+
+  /**
+   * The folder for the 'personal toolbar' root.
+   */
+  readonly attribute fuelIBookmarkFolder toolbar;
+
+  /**
+   * The folder for the 'tags' root.
+   */
+  readonly attribute fuelIBookmarkFolder tags;
+
+  /**
+   * The folder for the 'unfiled bookmarks' root.
+   */
+  readonly attribute fuelIBookmarkFolder unfiled;
+};
+
+
+/**
  * Interface representing a browser window.
  */
 [scriptable, uuid(207edb28-eb5e-424e-a862-b0e97C8de866)]
@@ -550,19 +579,19 @@ interface fuelIWindow : nsISupports
    * A collection of browser tabs within the browser window.
    */
   readonly attribute nsIVariant tabs;
-  
+
   /**
    * The currently-active tab within the browser window.
    */
   readonly attribute fuelIBrowserTab activeTab;
-  
+
   /**
    * Open a new browser tab, pointing to the specified URI.
    * @param   aURI
    *          The uri to open the browser tab to
    */
   fuelIBrowserTab open(in nsIURI aURI);
-  
+
   /**
    * The events object for the browser window.
    * supports: "TabOpen", "TabClose", "TabMove", "TabSelect"
@@ -580,7 +609,7 @@ interface fuelIBrowserTab : nsISupports
    * The current uri of this tab.
    */
   readonly attribute nsIURI uri;
-  
+
   /**
    * The current index of this tab in the browser window.
    */
@@ -590,7 +619,7 @@ interface fuelIBrowserTab : nsISupports
    * The browser window that is holding the tab.
    */
   readonly attribute fuelIWindow window;
-  
+
   /**
    * The content document of the browser tab.
    */
@@ -601,7 +630,7 @@ interface fuelIBrowserTab : nsISupports
    * supports: "load"
    */
   readonly attribute fuelIEvents events;
-  
+
   /**
    * Load a new URI into this browser tab.
    * @param   aURI
@@ -613,20 +642,20 @@ interface fuelIBrowserTab : nsISupports
    * Give focus to this browser tab, and bring it to the front.
    */
   void focus();
-  
+
   /**
    * Close the browser tab. This may not actually close the tab
    * as script may abort the close operation.
    */
   void close();
-  
+
   /**
    * Moves this browser tab before another browser tab within the window.
    * @param   aBefore
    *          The tab before which the target tab will be moved
    */
   void moveBefore(in fuelIBrowserTab aBefore);
-  
+
   /**
    * Move this browser tab to the last tab within the window.
    */
@@ -649,12 +678,12 @@ interface fuelIApplication : nsISupports
    * The name of the application.
    */
   readonly attribute AString name;
-  
+
   /**
    * The version number of the application.
    */
   readonly attribute AString version;
-  
+
   /**
    * The console object for the application.
    */
@@ -685,16 +714,17 @@ interface fuelIApplication : nsISupports
 
   /**
    * The root bookmarks object for the application.
+   * Contains all the bookmark roots in the system.
    */
-  readonly attribute fuelIBookmarkFolder bookmarks;
-  
+  readonly attribute fuelIBookmarkRoots bookmarks;
+
   /**
    * An array of browser windows within the application.
    */
   readonly attribute nsIVariant windows;
-  
+
   /**
    * The currently active browser window.
    */
   readonly attribute fuelIWindow activeWindow;
-}; 
+};

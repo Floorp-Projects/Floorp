@@ -10,7 +10,40 @@ function url(spec) {
 }
 
 function test() {
-  var root = Application.bookmarks;
+  // Some very basic tests on the tags root
+  var tags = Application.bookmarks.tags;
+  ok(tags, "Check access to bookmark tags root");
+  ok(!tags.parent, "Check tags parent (should be null)");
+
+  //----------------------------------------------
+
+  // Some very basic tests on the unfiled root
+  var unfiled = Application.bookmarks.unfiled;
+  ok(unfiled, "Check access to bookmark unfiled root");
+  ok(!unfiled.parent, "Check unfiled parent (should be null)");
+
+  //----------------------------------------------
+
+  // Some basic tests on the toolbar root
+  var toolbar = Application.bookmarks.toolbar;
+  ok(toolbar, "Check access to bookmark toolbar root");
+  ok(!toolbar.parent, "Check toolbar parent (should be null)");
+
+  var toolbarKidCount = toolbar.children.length;
+
+  // test adding folders
+  var testFolderToolbar = toolbar.addFolder("FUEL in Toolbar");
+  ok(testFolderToolbar, "Check folder creation");
+  is(testFolderToolbar.type, "folder", "Check 'folder.type' after creation");
+  ok(testFolderToolbar.parent, "Check parent after folder creation");
+
+  toolbarKidCount++;
+  is(toolbar.children.length, toolbarKidCount, "Check toolbar folder child count after adding a child folder");
+
+  //----------------------------------------------
+
+  // Main testing is done on the bookmarks menu root
+  var root = Application.bookmarks.menu;
   ok(root, "Check access to bookmark root");
   ok(!root.parent, "Check root parent (should be null)");
 
