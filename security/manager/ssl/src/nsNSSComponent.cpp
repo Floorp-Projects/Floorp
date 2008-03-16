@@ -1684,6 +1684,7 @@ nsNSSComponent::ShutdownNSS()
     ShutdownSmartCardThreads();
     SSL_ClearSessionCache();
     UnloadLoadableRoots();
+    CleanupIdentityInfo();
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("evaporating psm resources\n"));
     mShutdownObjectList->evaporateAllNSSResources();
     if (SECSuccess != ::NSS_Shutdown()) {
@@ -1693,8 +1694,6 @@ nsNSSComponent::ShutdownNSS()
     else {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS shutdown =====>> OK <<=====\n"));
     }
-
-    CleanupIdentityInfo();
   }
 
   return rv;
