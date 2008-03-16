@@ -531,7 +531,13 @@ __try {
 
   nsAutoString innerHTML;
   domNSElement->GetInnerHTML(innerHTML);
-  *aInnerHTML = ::SysAllocString(innerHTML.get());
+  if (innerHTML.IsEmpty())
+    return S_FALSE;
+
+  *aInnerHTML = ::SysAllocStringLen(innerHTML.get(), innerHTML.Length());
+  if (!*aInnerHTML)
+    return E_OUTOFMEMORY;
+
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
@@ -541,13 +547,20 @@ STDMETHODIMP
 nsAccessNodeWrap::get_language(BSTR __RPC_FAR *aLanguage)
 {
 __try {
-  *aLanguage = nsnull;
+  *aLanguage = NULL;
 
   nsAutoString language;
   if (NS_FAILED(GetLanguage(language))) {
     return E_FAIL;
   }
-  *aLanguage = ::SysAllocString(language.get());
+
+  if (language.IsEmpty())
+    return S_FALSE;
+
+  *aLanguage = ::SysAllocStringLen(language.get(), language.Length());
+  if (!*aLanguage)
+    return E_OUTOFMEMORY;
+
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;

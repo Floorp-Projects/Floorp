@@ -139,8 +139,11 @@ __try {
   AppendUTF8toUTF16(path, stringURI);
 
   aAnchorTarget->vt = VT_BSTR;
-  if (!::SysReAllocStringLen(&aAnchorTarget->bstrVal, stringURI.get(), stringURI.Length()))
+  aAnchorTarget->bstrVal = ::SysAllocStringLen(stringURI.get(),
+                                               stringURI.Length());
+  if (!aAnchorTarget->bstrVal)
     return E_OUTOFMEMORY;
+
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
