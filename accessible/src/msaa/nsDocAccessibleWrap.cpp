@@ -204,7 +204,7 @@ __try {
   *aURL = NULL;
 
   nsAutoString URL;
-  nsresult rv = GetURL(URL));
+  nsresult rv = GetURL(URL);
   if (NS_FAILED(rv))
     return E_FAIL;
 
@@ -224,7 +224,7 @@ __try {
   *aTitle = NULL;
 
   nsAutoString title;
-  nsresult rv = GetTitle(title));
+  nsresult rv = GetTitle(title);
   if (NS_FAILED(rv))
     return E_FAIL;
 
@@ -244,7 +244,7 @@ __try {
   *aMimeType = NULL;
 
   nsAutoString mimeType;
-  nsresult rv = GetMimeType(mimeType));
+  nsresult rv = GetMimeType(mimeType);
   if (NS_FAILED(rv))
     return E_FAIL;
 
@@ -264,7 +264,7 @@ __try {
   *aDocType = NULL;
 
   nsAutoString docType;
-  nsresult rv = GetDocType(docType));
+  nsresult rv = GetDocType(docType);
   if (NS_FAILED(rv))
     return E_FAIL;
 
@@ -288,7 +288,7 @@ __try {
     return E_INVALIDARG;  // -1 is kNameSpaceID_Unknown
 
   nsAutoString nameSpaceURI;
-  nsresult rv = GetNameSpaceURIForID(aNameSpaceID, nameSpaceURI));
+  nsresult rv = GetNameSpaceURIForID(aNameSpaceID, nameSpaceURI);
   if (NS_FAILED(rv))
     return E_FAIL;
 
