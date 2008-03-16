@@ -294,10 +294,15 @@ __try {
   if (xpAccessible) {
     nsAutoString name;
     if (NS_FAILED(xpAccessible->GetName(name)))
+      return E_FAIL;
+
+    if (name.IsEmpty())
       return S_FALSE;
-    if (!name.IsVoid()) {
-      *pszName = ::SysAllocString(name.get());
-    }
+
+    *pszName = ::SysAllocStringLen(name.get(), name.Length());
+    if (!*pszName)
+      return E_OUTOFMEMORY;
+
 #ifdef DEBUG_A11Y
     NS_ASSERTION(mIsInitialized, "Access node was not initialized");
 #endif
@@ -318,10 +323,15 @@ __try {
   GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
   if (xpAccessible) {
     nsAutoString value;
-    if (NS_FAILED(xpAccessible->GetValue(value)) || value.IsEmpty())
+    if (NS_FAILED(xpAccessible->GetValue(value)))
+      return E_FAIL;
+
+    if (value.IsEmpty())
       return S_FALSE;
 
-    *pszValue = ::SysAllocString(value.get());
+    *pszValue = ::SysAllocStringLen(value.get(), value.Length());
+    if (!*pszValue)
+      return E_OUTOFMEMORY;
   }
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return S_OK;
@@ -415,8 +425,9 @@ __try {
   }
 
   if (!description.IsEmpty()) {
-    *pszDescription = ::SysAllocString(description.get());
-    return S_OK;
+    *pszDescription = ::SysAllocStringLen(description.get(),
+                                          description.Length());
+    return *pszDescription ? S_OK : E_OUTOFMEMORY;
   }
 
   xpAccessible->GetDescription(description);
@@ -428,9 +439,15 @@ __try {
     description = NS_LITERAL_STRING("Description: ") + description;
   }
 
-  *pszDescription = ::SysAllocString(description.get());
+  if (description.IsEmpty())
+    return S_FALSE;
+
+  *pszDescription = ::SysAllocStringLen(description.get(),
+                                        description.Length());
+  return *pszDescription ? S_OK : E_OUTOFMEMORY;
+
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return S_OK;
+  return E_FAIL;
 }
 
 STDMETHODIMP nsAccessibleWrap::get_accRole(
@@ -565,13 +582,17 @@ __try {
     nsAutoString shortcut;
     nsresult rv = xpAccessible->GetKeyboardShortcut(shortcut);
     if (NS_FAILED(rv))
+      return E_FAIL;
+
+    if (shortcut.IsEmpty())
       return S_FALSE;
 
-    *pszKeyboardShortcut = ::SysAllocString(shortcut.get());
-    return S_OK;
+    *pszKeyboardShortcut = ::SysAllocStringLen(shortcut.get(),
+                                               shortcut.Length());
+    return *pszKeyboardShortcut ? S_OK : E_OUTOFMEMORY;
   }
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return S_FALSE;
+  return E_FAIL;
 }
 
 STDMETHODIMP nsAccessibleWrap::get_accFocus(
@@ -795,13 +816,18 @@ __try {
   if (xpAccessible) {
     nsAutoString defaultAction;
     if (NS_FAILED(xpAccessible->GetActionName(0, defaultAction)))
+      return E_FAIL;
+
+    if (defaultAction.IsEmpty())
       return S_FALSE;
 
-    *pszDefaultAction = ::SysAllocString(defaultAction.get());
+    *pszDefaultAction = ::SysAllocStringLen(defaultAction.get(),
+                                            defaultAction.Length());
+    return *pszDefaultAction ? S_OK : E_OUTOFMEMORY;
   }
 
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return S_OK;
+  return E_FAIL;
 }
 
 STDMETHODIMP nsAccessibleWrap::accSelect(
@@ -1341,39 +1367,58 @@ __try {
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_extendedRole(BSTR *extendedRole)
+nsAccessibleWrap::get_extendedRole(BSTR *aExtendedRole)
 {
+__try {
+  *aExtendedRole = NULL;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
   return E_NOTIMPL;
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_localizedExtendedRole(BSTR *localizedExtendedRole)
+nsAccessibleWrap::get_localizedExtendedRole(BSTR *aLocalizedExtendedRole)
 {
+__try {
+  *aLocalizedExtendedRole = NULL;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  
   return E_NOTIMPL;
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_nExtendedStates(long *nExtendedStates)
+nsAccessibleWrap::get_nExtendedStates(long *aNExtendedStates)
 {
-  *nExtendedStates = 0;
+__try {
+  *aNExtendedStates = 0;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
   return E_NOTIMPL;
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_extendedStates(long maxExtendedStates,
-                                     BSTR **extendedStates,
-                                     long *nExtendedStates)
+nsAccessibleWrap::get_extendedStates(long aMaxExtendedStates,
+                                     BSTR **aExtendedStates,
+                                     long *aNExtendedStates)
 {
-  *nExtendedStates = 0;
+__try {
+  *aExtendedStates = NULL;
+  *aNExtendedStates = 0;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
   return E_NOTIMPL;
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_localizedExtendedStates(long maxLocalizedExtendedStates,
-                                              BSTR **localizedExtendedStates,
-                                              long *nLocalizedExtendedStates)
+nsAccessibleWrap::get_localizedExtendedStates(long aMaxLocalizedExtendedStates,
+                                              BSTR **aLocalizedExtendedStates,
+                                              long *aNLocalizedExtendedStates)
 {
-  *nLocalizedExtendedStates = 0;
+__try {
+  *aLocalizedExtendedStates = NULL;
+  *aNLocalizedExtendedStates = 0;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
   return E_NOTIMPL;
 }
 
@@ -1523,7 +1568,7 @@ __try {
     strAttrs.Append(';');
   }
 
-  *aAttributes = ::SysAllocString(strAttrs.get()); 
+  *aAttributes = ::SysAllocStringLen(strAttrs.get(), strAttrs.Length()); 
   if (!*aAttributes)
     return E_OUTOFMEMORY;
 

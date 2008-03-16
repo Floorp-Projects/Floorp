@@ -202,11 +202,18 @@ STDMETHODIMP nsDocAccessibleWrap::get_URL(/* [out] */ BSTR __RPC_FAR *aURL)
 {
 __try {
   *aURL = NULL;
+
   nsAutoString URL;
-  if (NS_SUCCEEDED(GetURL(URL))) {
-    *aURL= ::SysAllocString(URL.get());
-    return S_OK;
-  }
+  nsresult rv = GetURL(URL));
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  if (URL.IsEmpty())
+    return S_FALSE;
+
+  *aURL = ::SysAllocStringLen(URL.get(), URL.Length());
+  return *aURL ? S_OK : E_OUTOFMEMORY;
+
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
@@ -215,11 +222,18 @@ STDMETHODIMP nsDocAccessibleWrap::get_title( /* [out] */ BSTR __RPC_FAR *aTitle)
 {
 __try {
   *aTitle = NULL;
+
   nsAutoString title;
-  if (NS_SUCCEEDED(GetTitle(title))) { // getter_Copies(pszTitle)))) {
-    *aTitle= ::SysAllocString(title.get());
-    return S_OK;
-  }
+  nsresult rv = GetTitle(title));
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  if (title.IsEmpty())
+    return S_FALSE;
+
+  *aTitle = ::SysAllocStringLen(title.get(), title.Length());
+  return *aTitle ? S_OK : E_OUTOFMEMORY;
+
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
@@ -228,11 +242,18 @@ STDMETHODIMP nsDocAccessibleWrap::get_mimeType(/* [out] */ BSTR __RPC_FAR *aMime
 {
 __try {
   *aMimeType = NULL;
+
   nsAutoString mimeType;
-  if (NS_SUCCEEDED(GetMimeType(mimeType))) {
-    *aMimeType= ::SysAllocString(mimeType.get());
-    return S_OK;
-  }
+  nsresult rv = GetMimeType(mimeType));
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  if (mimeType.IsEmpty())
+    return S_FALSE;
+
+  *aMimeType = ::SysAllocStringLen(mimeType.get(), mimeType.Length());
+  return *aMimeType ? S_OK : E_OUTOFMEMORY;
+
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
@@ -241,11 +262,18 @@ STDMETHODIMP nsDocAccessibleWrap::get_docType(/* [out] */ BSTR __RPC_FAR *aDocTy
 {
 __try {
   *aDocType = NULL;
+
   nsAutoString docType;
-  if (NS_SUCCEEDED(GetDocType(docType))) {
-    *aDocType= ::SysAllocString(docType.get());
-    return S_OK;
-  }
+  nsresult rv = GetDocType(docType));
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  if (docType.IsEmpty())
+    return S_FALSE;
+
+  *aDocType = ::SysAllocStringLen(docType.get(), docType.Length());
+  return *aDocType ? S_OK : E_OUTOFMEMORY;
+
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
@@ -254,21 +282,35 @@ STDMETHODIMP nsDocAccessibleWrap::get_nameSpaceURIForID(/* [in] */  short aNameS
   /* [out] */ BSTR __RPC_FAR *aNameSpaceURI)
 {
 __try {
-  if (aNameSpaceID < 0) {
-    return E_FAIL;  // -1 is kNameSpaceID_Unknown
-  }
   *aNameSpaceURI = NULL;
+
+  if (aNameSpaceID < 0)
+    return E_INVALIDARG;  // -1 is kNameSpaceID_Unknown
+
   nsAutoString nameSpaceURI;
-  if (NS_SUCCEEDED(GetNameSpaceURIForID(aNameSpaceID, nameSpaceURI))) {
-    *aNameSpaceURI = ::SysAllocString(nameSpaceURI.get());
-    return S_OK;
-  }
+  nsresult rv = GetNameSpaceURIForID(aNameSpaceID, nameSpaceURI));
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  if (nameSpaceURI.IsEmpty())
+    return S_FALSE;
+
+  *aNameSpaceURI = ::SysAllocStringLen(nameSpaceURI.get(),
+                                       nameSpaceURI.Length());
+
+  return *aNameSpaceURI ? S_OK : E_OUTOFMEMORY;
+
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
 
-STDMETHODIMP nsDocAccessibleWrap::put_alternateViewMediaTypes( /* [in] */ BSTR __RPC_FAR *commaSeparatedMediaTypes)
+STDMETHODIMP
+nsDocAccessibleWrap::put_alternateViewMediaTypes( /* [in] */ BSTR __RPC_FAR *aCommaSeparatedMediaTypes)
 {
+__try {
+  *aCommaSeparatedMediaTypes = NULL;
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
   return E_NOTIMPL;
 }
 

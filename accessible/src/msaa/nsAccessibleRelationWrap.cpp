@@ -86,6 +86,8 @@ STDMETHODIMP
 nsAccessibleRelationWrap::get_relationType(BSTR *aRelationType)
 {
 __try {
+  *aRelationType = NULL;
+
   PRUint32 type = 0;
   nsresult rv = GetRelationType(&type);
   if (NS_FAILED(rv))
@@ -94,49 +96,49 @@ __try {
   INT res;
   switch (type) {
     case RELATION_CONTROLLED_BY:
-      res = ::SysReAllocString(aRelationType, IA2_RELATION_CONTROLLED_BY);
+      *aRelationType = ::SysAllocString(IA2_RELATION_CONTROLLED_BY);
       break;
     case RELATION_CONTROLLER_FOR:
-      res = ::SysReAllocString(aRelationType, IA2_RELATION_CONTROLLER_FOR);
+      *aRelationType = ::SysAllocString(IA2_RELATION_CONTROLLER_FOR);
       break;
     case RELATION_DESCRIBED_BY:
-      res = ::SysReAllocString(aRelationType, IA2_RELATION_DESCRIBED_BY);
+      *aRelationType = ::SysAllocString(IA2_RELATION_DESCRIBED_BY);
       break;
     case RELATION_DESCRIPTION_FOR:
-      res = ::SysReAllocString(aRelationType, IA2_RELATION_DESCRIPTION_FOR);
+      *aRelationType = ::SysAllocString(IA2_RELATION_DESCRIPTION_FOR);
       break;
     case RELATION_EMBEDDED_BY:
-      res = ::SysReAllocString(aRelationType, IA2_RELATION_EMBEDDED_BY);
+      *aRelationType = ::SysAllocString(IA2_RELATION_EMBEDDED_BY);
       break;
     case RELATION_EMBEDS:
-      res = ::SysReAllocString(aRelationType, IA2_RELATION_EMBEDS);
+      *aRelationType = ::SysAllocString(IA2_RELATION_EMBEDS);
       break;
     case RELATION_FLOWS_FROM:
-      res = ::SysReAllocString(aRelationType, IA2_RELATION_FLOWS_FROM);
+      *aRelationType = ::SysAllocString(IA2_RELATION_FLOWS_FROM);
       break;
     case RELATION_FLOWS_TO:
-      res = ::SysReAllocString(aRelationType, IA2_RELATION_FLOWS_TO);
+      *aRelationType = ::SysAllocString(IA2_RELATION_FLOWS_TO);
       break;
     case RELATION_LABEL_FOR:
-      res = ::SysReAllocString(aRelationType, IA2_RELATION_LABEL_FOR);
+      *aRelationType = ::SysAllocString(IA2_RELATION_LABEL_FOR);
       break;
     case RELATION_LABELLED_BY:
-      res = ::SysReAllocString(aRelationType, IA2_RELATION_LABELED_BY);
+      *aRelationType = ::SysAllocString(IA2_RELATION_LABELED_BY);
       break;
     case RELATION_MEMBER_OF:
-      res = ::SysReAllocString(aRelationType, IA2_RELATION_MEMBER_OF);
+      *aRelationType = ::SysAllocString(IA2_RELATION_MEMBER_OF);
       break;
     case RELATION_NODE_CHILD_OF:
-      res = ::SysReAllocString(aRelationType, IA2_RELATION_NODE_CHILD_OF);
+      *aRelationType = ::SysAllocString(IA2_RELATION_NODE_CHILD_OF);
       break;
     case RELATION_PARENT_WINDOW_OF:
-      res = ::SysReAllocString(aRelationType, IA2_RELATION_PARENT_WINDOW_OF);
+      *aRelationType = ::SysAllocString(IA2_RELATION_PARENT_WINDOW_OF);
       break;
     case RELATION_POPUP_FOR:
-      res = ::SysReAllocString(aRelationType, IA2_RELATION_POPUP_FOR);
+      *aRelationType = ::SysAllocString(IA2_RELATION_POPUP_FOR);
       break;
     case RELATION_SUBWINDOW_OF:
-      res = ::SysReAllocString(aRelationType, IA2_RELATION_SUBWINDOW_OF);
+      *aRelationType = ::SysAllocString(IA2_RELATION_SUBWINDOW_OF);
       break;
     default:
       return E_FAIL;
