@@ -72,7 +72,7 @@ var testData = [
    new keywordResult(null, null)],
   [new bmKeywordData("bmpost-noparam", "http://bmpost-noparam/", "not_a=param", "foo8"),
    new keywordResult(null, null)],
-  
+
   // Test escaping (%s = escaped, %S = raw)
   // UTF-8 default
   [new bmKeywordData("bmget-escaping", "http://bmget/?esc=%s&raw=%S", null, "foé"),
@@ -108,7 +108,7 @@ var gAddedEngines = [];
 function setupKeywords() {
   var searchService = Cc["@mozilla.org/browser/search-service;1"].
                       getService(Ci.nsIBrowserSearchService);
-  gBMFolder = Application.bookmarks.addFolder("keyword-test");
+  gBMFolder = Application.bookmarks.menu.addFolder("keyword-test");
   for each (var item in testData) {
     var data = item[0];
     if (data instanceof bmKeywordData) {
@@ -117,7 +117,7 @@ function setupKeywords() {
       if (data.postData)
         bm.annotations.set("bookmarkProperties/POSTData", data.postData, Ci.nsIAnnotationService.EXPIRE_SESSION);
     }
-    
+
     if (data instanceof searchKeywordData) {
       searchService.addEngineWithDetails(data.keyword, "", data.keyword, "", data.method, data.uri.spec);
       var addedEngine = searchService.getEngineByName(data.keyword);
