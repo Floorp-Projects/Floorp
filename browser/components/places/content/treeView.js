@@ -1364,7 +1364,7 @@ PlacesTreeView.prototype = {
     var node = this.nodeForTreeIndex(aRow);
     if (node.title != aText) {
       var txn = PlacesUIUtils.ptm.editItemTitle(node.itemId, aText);
-      PlacesUtils.ptm.doTransaction(txn);
+      PlacesUIUtils.ptm.doTransaction(txn);
     }
   },
 
