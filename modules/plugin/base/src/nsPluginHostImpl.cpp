@@ -992,6 +992,7 @@ nsresult nsPluginTag::EnsureMembersAreUTF8()
     rv = ccm->GetUnicodeDecoderRaw(charset.get(), getter_AddRefs(decoder));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    ConvertToUTF8(decoder, mName);
     ConvertToUTF8(decoder, mDescription);
     for (PRUint32 i = 0; i < mMimeDescriptionArray.Length(); ++i) {
       ConvertToUTF8(decoder, mMimeDescriptionArray[i]);
