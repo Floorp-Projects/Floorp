@@ -449,6 +449,7 @@ mozStorageConnection::CreateTable(/*const nsID& aID,*/
                                   const char *aTableName,
                                   const char *aTableSchema)
 {
+    if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
     int srv;
     char *buf;
 
