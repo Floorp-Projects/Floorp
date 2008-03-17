@@ -950,7 +950,7 @@
       <handler event="popupshowing" phase="capturing"><![CDATA[
         this._ensureInitialized();
         var popup = event.target;
-        // We should avoid to handle events of inner views
+        // Avoid handling popupshowing of inner views
         if (!popup._resultNode || PlacesUIUtils.getViewForNode(popup) != this)
           return;
 
