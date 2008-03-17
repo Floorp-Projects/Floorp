@@ -149,13 +149,18 @@ GetScriptContext(JSContext *cx)
 inline void SetPendingException(JSContext *cx, const char *aMsg)
 {
     JSAutoRequest ar(cx);
-    JS_ReportError(cx, "%s", aMsg);
+    JSString *str = JS_NewStringCopyZ(cx, aMsg);
+    if (str)
+        JS_SetPendingException(cx, STRING_TO_JSVAL(str));
 }
 
 inline void SetPendingException(JSContext *cx, const PRUnichar *aMsg)
 {
     JSAutoRequest ar(cx);
-    JS_ReportError(cx, "%hs", aMsg);
+    JSString *str = JS_NewUCStringCopyZ(cx,
+                        reinterpret_cast<const jschar*>(aMsg));
+    if (str)
+        JS_SetPendingException(cx, STRING_TO_JSVAL(str));
 }
 
 // DomainPolicy members
@@ -700,7 +705,7 @@ nsScriptSecurityManager::CheckSameOrigin(JSContext* cx,
     if (!SecurityCompareURIs(sourceURI, aTargetURI))
     {
          ReportError(cx, NS_LITERAL_STRING("CheckSameOriginError"), sourceURI, aTargetURI);
-         return NS_OK;
+         return NS_ERROR_DOM_BAD_URI;
     }
     return NS_OK;
 }
@@ -715,7 +720,6 @@ nsScriptSecurityManager::CheckSameOriginURI(nsIURI* aSourceURI,
          if (reportError) {
             ReportError(nsnull, NS_LITERAL_STRING("CheckSameOriginError"),
                      aSourceURI, aTargetURI);
-            return NS_OK;
          }
          return NS_ERROR_DOM_BAD_URI;
     }
@@ -1283,7 +1287,7 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
     if (NS_FAILED(aURI->GetAsciiSpec(spec)))
         return NS_ERROR_FAILURE;
     JS_ReportError(cx, "Access to '%s' from script denied", spec.get());
-    return NS_OK;
+    return NS_ERROR_DOM_BAD_URI;
 }
 
 NS_IMETHODIMP
