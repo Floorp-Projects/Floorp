@@ -1392,7 +1392,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 #identity-icon-label {
   margin: 0;
   color: black;
-  padding: 3px 6px;
+  padding: 2px 6px 3px;
   -moz-padding-end: 14px;
   background: url("chrome://browser/skin/urlbar/startcap-secure-end.png") no-repeat center right;
 }
