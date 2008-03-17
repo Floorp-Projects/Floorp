@@ -1124,14 +1124,20 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   NS_ASSERTION(mIsPluginView, "StartDrawPlugin must only be called on a plugin widget");
   if (!mIsPluginView) return NS_ERROR_FAILURE;
 
-  // nothing to do if this is a CoreGraphics plugin
-  if (mPluginIsCG)
-    return NS_OK;
-
-  // prevent reentrant drawing
+  // Prevent reentrant "drawing" (or in fact reentrant handling of any plugin
+  // event).  Doing this for both CoreGraphics and QuickDraw plugins restores
+  // the 1.8-branch behavior wrt reentrancy, and fixes (or works around) bugs
+  // caused by plugins depending on the old behavior -- e.g. bmo bug 409615.
   if (mPluginDrawing)
     return NS_ERROR_FAILURE;
-  
+
+  // If this is a CoreGraphics plugin, nothing to do but prevent being
+  // reentered.
+  if (mPluginIsCG) {
+    mPluginDrawing = PR_TRUE;
+    return NS_OK;
+  }
+
   NSWindow* window = [mView nativeWindow];
   if (!window)
     return NS_ERROR_FAILURE;
