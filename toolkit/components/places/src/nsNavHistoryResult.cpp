@@ -3321,7 +3321,6 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
     NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
     rv = history->BookmarkIdToResultNode(aItemId, mOptions, getter_AddRefs(node));
     NS_ENSURE_SUCCESS(rv, rv);
-    node->mItemId = aItemId;
   }
   else if (itemType == nsINavBookmarksService::TYPE_FOLDER) {
     rv = bookmarks->ResultNodeForContainer(aItemId, mOptions, getter_AddRefs(node));
@@ -3411,9 +3410,9 @@ nsNavHistoryResultNode::OnItemChanged(PRInt64 aItemId,
   else if (aProperty.EqualsLiteral("tags")) {
     mTags.SetIsVoid(PR_TRUE);
   }
-  else if (!aProperty.EqualsLiteral("keyword") && !aIsAnnotationProperty) {
-    // XXX: expose a keyword getter on bookmarks nodes?
-
+  else if (!aProperty.EqualsLiteral("keyword") &&
+           !aProperty.EqualsLiteral("dateAdded") &&
+           !aProperty.EqualsLiteral("lastModified") && !aIsAnnotationProperty) {
     NS_NOTREACHED("Unknown bookmark property changing.");
   }
 
