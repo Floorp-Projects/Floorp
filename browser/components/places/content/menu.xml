@@ -949,13 +949,18 @@
     <handlers>
       <handler event="popupshowing" phase="capturing"><![CDATA[
         this._ensureInitialized();
-        if (event.target._resultNode)
-          this.onPopupShowing(event);
+        var popup = event.target;
+        // We should avoid to handle events of inner views
+        if (!popup._resultNode || PlacesUIUtils.getViewForNode(popup) != this)
+          return;
+
+        this.onPopupShowing(event);
       ]]></handler>
 
       <handler event="popuphidden"><![CDATA[
         var popup = event.target;
-        if (!popup._resultNode)
+        // We should avoid to handle events of inner views
+        if (!popup._resultNode || PlacesUIUtils.getViewForNode(popup) != this)
           return;
 
         // UI performance: folder queries are cheap, keep the resultnode open
