@@ -4590,7 +4590,7 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len,
     ss.top = pcdepth;
     if (pcdepth != 0) {
         for (i = 0; i < pcdepth; i++) {
-            ss.offsets[i] = -2 - i;
+            ss.offsets[i] = -2 - (ptrdiff_t)i;
             ss.opcodes[i] = *jp->pcstack[i];
         }
     }
