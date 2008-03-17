@@ -434,8 +434,6 @@
         <menupopup id="bookmarksToolbarFolderPopup"
                    type="places"
                    context="placesContext"
-                   oncommand="BookmarksEventHandler.onCommand(event);"
-                   onclick="BookmarksEventHandler.onClick(event);"
                    onpopupshowing="BookmarksEventHandler.onPopupShowing(event);"/>
       </menu>
       <menuseparator builder="start"/>
