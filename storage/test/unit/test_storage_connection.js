@@ -232,7 +232,8 @@ function test_createTable(){
     if (temp.exists()) try {
       temp.remove(false);
     } catch (e2) {}
-    do_check_eq(e.result, Cr.NS_ERROR_NOT_INITIALIZED);
+    do_check_true(e.result==Cr.NS_ERROR_NOT_INITIALIZED ||
+                  e.result==Cr.NS_ERROR_FAILURE);
   }
 }
 
