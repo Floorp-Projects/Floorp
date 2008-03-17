@@ -939,7 +939,7 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder, nsIURI *aItem, PRInt32 aIndex,
   rv = History()->UpdateFrecency(childID, isBookmark);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = SetItemLastModified(aFolder, PR_Now());
+  rv = SetItemDateInternal(mDBSetItemLastModified, aFolder, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
@@ -1024,7 +1024,7 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = SetItemLastModified(folderId, PR_Now());
+  rv = SetItemDateInternal(mDBSetItemLastModified, folderId, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
@@ -1193,7 +1193,7 @@ nsNavBookmarks::CreateContainerWithID(PRInt64 aItemId, PRInt64 aParent,
   rv = dbConn->GetLastInsertRowID(&id);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = SetItemLastModified(aParent, PR_Now());
+  rv = SetItemDateInternal(mDBSetItemLastModified, aParent, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
@@ -1252,7 +1252,7 @@ nsNavBookmarks::InsertSeparator(PRInt64 aParent, PRInt32 aIndex,
   NS_ENSURE_SUCCESS(rv, rv);
   *aNewItemId = rowId;
 
-  rv = SetItemLastModified(aParent, PR_Now());
+  rv = SetItemDateInternal(mDBSetItemLastModified, aParent, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
@@ -1449,7 +1449,7 @@ nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
   rv = AdjustIndices(parent, index + 1, PR_INT32_MAX, -1);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = SetItemLastModified(parent, PR_Now());
+  rv = SetItemDateInternal(mDBSetItemLastModified, parent, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
@@ -1674,9 +1674,9 @@ nsNavBookmarks::MoveItem(PRInt64 aItemId, PRInt64 aNewParent, PRInt32 aIndex)
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRTime now = PR_Now();
-  rv = SetItemLastModified(oldParent, now);
+  rv = SetItemDateInternal(mDBSetItemLastModified, oldParent, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = SetItemLastModified(aNewParent, now);
+  rv = SetItemDateInternal(mDBSetItemLastModified, aNewParent, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
@@ -1734,27 +1734,33 @@ nsNavBookmarks::GetChildFolder(PRInt64 aFolder, const nsAString& aSubFolder,
   return statement->GetInt64(0, _result);
 }
 
-NS_IMETHODIMP
-nsNavBookmarks::SetItemDateAdded(PRInt64 aItemId, PRTime aDateAdded)
+nsresult
+nsNavBookmarks::SetItemDateInternal(mozIStorageStatement* aStatement, PRInt64 aItemId, PRTime aValue)
 {
-  mozIStorageConnection *dbConn = DBConn();
-  mozStorageTransaction transaction(dbConn, PR_FALSE);
-
-  mozStorageStatementScoper scope(mDBSetItemDateAdded);
-  nsresult rv = mDBSetItemDateAdded->BindInt64Parameter(0, aDateAdded);
+  mozStorageStatementScoper scope(aStatement);
+  nsresult rv = aStatement->BindInt64Parameter(0, aValue);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBSetItemDateAdded->BindInt64Parameter(1, aItemId);
+  rv = aStatement->BindInt64Parameter(1, aItemId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mDBSetItemDateAdded->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = transaction.Commit();
+  rv = aStatement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // note, we are not notifying the observers
   // that the item has changed.
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavBookmarks::SetItemDateAdded(PRInt64 aItemId, PRTime aDateAdded)
+{
+  nsresult rv = SetItemDateInternal(mDBSetItemDateAdded, aItemId, aDateAdded);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                      OnItemChanged(aItemId, NS_LITERAL_CSTRING("dateAdded"),
+                                    PR_FALSE, nsPrintfCString(16, "%lld", aDateAdded)));
   return NS_OK;
 }
 
@@ -1780,24 +1786,12 @@ nsNavBookmarks::GetItemDateAdded(PRInt64 aItemId, PRTime *aDateAdded)
 NS_IMETHODIMP
 nsNavBookmarks::SetItemLastModified(PRInt64 aItemId, PRTime aLastModified)
 {
-  mozIStorageConnection *dbConn = DBConn();
-  mozStorageTransaction transaction(dbConn, PR_FALSE);
-
-  mozStorageStatementScoper scope(mDBSetItemLastModified);
-  nsresult rv = mDBSetItemLastModified->BindInt64Parameter(0, aLastModified);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBSetItemLastModified->BindInt64Parameter(1, aItemId);
+  nsresult rv = SetItemDateInternal(mDBSetItemLastModified, aItemId, aLastModified);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mDBSetItemLastModified->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = transaction.Commit();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // note, we are not notifying the observers
-  // that the item has changed.
-
+  ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                      OnItemChanged(aItemId, NS_LITERAL_CSTRING("lastModified"),
+                                    PR_FALSE, nsPrintfCString(16, "%lld", aLastModified)));
   return NS_OK;
 }
 
@@ -1889,7 +1883,7 @@ nsNavBookmarks::SetItemTitle(PRInt64 aItemId, const nsACString &aTitle)
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = SetItemLastModified(aItemId, PR_Now());
+  rv = SetItemDateInternal(mDBSetItemLastModified, aItemId, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
@@ -2226,7 +2220,7 @@ nsNavBookmarks::ChangeBookmarkURI(PRInt64 aBookmarkId, nsIURI *aNewURI)
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = SetItemLastModified(aBookmarkId, PR_Now());
+  rv = SetItemDateInternal(mDBSetItemLastModified, aBookmarkId, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
@@ -2444,7 +2438,7 @@ nsNavBookmarks::SetKeywordForBookmark(PRInt64 aBookmarkId, const nsAString& aKey
   rv = updateKeywordStmnt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = SetItemLastModified(aBookmarkId, PR_Now());
+  rv = SetItemDateInternal(mDBSetItemLastModified, aBookmarkId, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
 
   transaction.Commit();
@@ -2733,7 +2727,7 @@ nsNavBookmarks::OnPageAnnotationSet(nsIURI* aPage, const nsACString& aName)
 NS_IMETHODIMP
 nsNavBookmarks::OnItemAnnotationSet(PRInt64 aItemId, const nsACString& aName)
 {
-  nsresult rv = SetItemLastModified(aItemId, PR_Now());
+  nsresult rv = SetItemDateInternal(mDBSetItemLastModified, aItemId, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
 
   ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
@@ -2752,7 +2746,7 @@ nsNavBookmarks::OnPageAnnotationRemoved(nsIURI* aPage, const nsACString& aName)
 NS_IMETHODIMP
 nsNavBookmarks::OnItemAnnotationRemoved(PRInt64 aItemId, const nsACString& aName)
 {  
-  nsresult rv = SetItemLastModified(aItemId, PR_Now());
+  nsresult rv = SetItemDateInternal(mDBSetItemLastModified, aItemId, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
 
   ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
