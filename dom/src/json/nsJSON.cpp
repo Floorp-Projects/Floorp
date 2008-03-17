@@ -417,7 +417,7 @@ nsJSON::ToJSON(JSContext *cx, jsval *vp)
 {
   // Now we check to see whether the return value implements toJSON()
   JSBool ok = JS_TRUE;
-  char *toJSON = "toJSON";
+  const char *toJSON = "toJSON";
 
   if (!JSVAL_IS_PRIMITIVE(*vp)) {
     JSObject *obj = JSVAL_TO_OBJECT(*vp);
@@ -537,8 +537,13 @@ nsJSONWriter::Write(const PRUnichar *aBuffer, PRUint32 aLength)
     mBufferCount = 0;
   }
 
-  memcpy(&mBuffer[mBufferCount], aBuffer, aLength * sizeof(PRUnichar));
-  mBufferCount += aLength;
+  if (JSON_PARSER_BUFSIZE <= aLength) {
+    // we know mBufferCount is 0 because we know we hit the if above
+    mOutputString.Append(aBuffer, aLength);
+  } else {
+    memcpy(&mBuffer[mBufferCount], aBuffer, aLength * sizeof(PRUnichar));
+    mBufferCount += aLength;
+  }
 
   return NS_OK;
 }
