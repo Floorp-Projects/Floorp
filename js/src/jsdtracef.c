@@ -74,8 +74,8 @@ jsdtrace_linenumber(JSContext *cx, JSStackFrame *fp)
 {
     while (fp && fp->script == NULL)
         fp = fp->down;
-    return (fp && fp->script && fp->pc)
-           ? js_PCToLineNumber(cx, fp->script, fp->pc)
+    return (fp && fp->regs)
+           ? js_PCToLineNumber(cx, fp->script, fp->regs->pc)
            : -1;
 }
 
@@ -130,6 +130,7 @@ char *
 jsdtrace_function_name(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
 {
     JSAtom *atom;
+    JSFrameRegs *regs;
     JSScript *script;
     jsbytecode *pc;
     char *name;
@@ -139,30 +140,26 @@ jsdtrace_function_name(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
         if (fp->fun != fun || !fp->down)
             return dempty;
 
-        script = fp->down->script;
-        pc = fp->down->pc;
-        if (!script || !pc)
+        regs = fp->down->regs;
+        if (!regs)
             return dempty;
 
         /*
          * An anonymous function called from an active script or interpreted
          * function: try to fetch the variable or property name by which the
-         * anonymous function was invoked. First handle call ops by recovering
-         * the generating pc for the callee expression at argv[-2].
+         * anonymous function was invoked.
          */
+        pc = regs->pc;
+        script = fp->down->script;
         switch ((JSOp) *pc) {
           case JSOP_CALL:
           case JSOP_EVAL:
-            JS_ASSERT(fp->argv == fp->down->sp - (int)GET_ARGC(pc));
-
-            pc = (jsbytecode *) fp->argv[-2 - (int)script->depth];
+            JS_ASSERT(fp->argv == regs->sp - (int)GET_ARGC(pc));
 
             /*
-             * Be paranoid about bugs to-do with generating pc storage when
-             * attempting to descend into the operand stack basement.
+             * FIXME bug 422864: update this code to use the pc stack from the
+             * decompiler.
              */
-            if ((uintptr_t)(pc - script->code) >= script->length)
-                return dempty;
             break;
         }
 
