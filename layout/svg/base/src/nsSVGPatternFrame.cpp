@@ -862,7 +862,7 @@ nsSVGPatternFrame::SetupPaintServer(gfxContext *aContext,
 
   nsRefPtr<gfxPattern> pattern = new gfxPattern(surface);
 
-  if (!pattern)
+  if (!pattern || pattern->CairoStatus())
     return PR_FALSE;
 
   pattern->SetMatrix(pMatrix);
