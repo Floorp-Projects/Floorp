@@ -222,18 +222,43 @@ function test_backup_new_folder()
   parentDir.remove(true);
 }
 
-var tests = [test_connectionReady_open, test_connectionReady_closed,
-             test_databaseFile,
-             test_tableExists_not_created, test_indexExists_not_created,
-             test_createTable_not_created, test_indexExists_created,
-             test_createTable_already_created, test_lastInsertRowID,
-             test_transactionInProgress_no, test_transactionInProgress_yes,
-             test_commitTransaction_no_transaction,
-             test_rollbackTransaction_no_transaction,
-             test_get_schemaVersion_not_set, test_set_schemaVersion,
-             test_set_schemaVersion_same, test_set_schemaVersion_negative,
-             test_backup_not_new_filename, test_backup_new_filename,
-             test_backup_new_folder];
+function test_createTable(){
+  var temp = getTestDB().parent;
+  temp.append("test_db_table");
+  try {
+    var con = getService().openDatabase(temp);
+    con.createTable("a","");
+  } catch (e) {
+    if (temp.exists()) try {
+      temp.remove(false);
+    } catch (e2) {}
+    do_check_eq(e.result, Cr.NS_ERROR_NOT_INITIALIZED);
+  }
+}
+
+var tests = [
+  test_connectionReady_open,
+  test_connectionReady_closed,
+  test_databaseFile,
+  test_tableExists_not_created,
+  test_indexExists_not_created,
+  test_createTable_not_created,
+  test_indexExists_created,
+  test_createTable_already_created,
+  test_lastInsertRowID,
+  test_transactionInProgress_no,
+  test_transactionInProgress_yes,
+  test_commitTransaction_no_transaction,
+  test_rollbackTransaction_no_transaction,
+  test_get_schemaVersion_not_set,
+  test_set_schemaVersion,
+  test_set_schemaVersion_same,
+  test_set_schemaVersion_negative,
+  test_backup_not_new_filename,
+  test_backup_new_filename,
+  test_backup_new_folder,
+  test_createTable,
+];
 
 function run_test()
 {
@@ -242,4 +267,3 @@ function run_test()
     
   cleanup();
 }
-
