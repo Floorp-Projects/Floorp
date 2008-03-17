@@ -228,9 +228,6 @@ __try {
   if (NS_FAILED(rv))
     return E_FAIL;
 
-  if (title.IsEmpty())
-    return S_FALSE;
-
   *aTitle = ::SysAllocStringLen(title.get(), title.Length());
   return *aTitle ? S_OK : E_OUTOFMEMORY;
 
