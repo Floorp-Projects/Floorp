@@ -2460,7 +2460,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXULPrototypeNode)
         PRUint32 i;
         for (i = 0; i < elem->mNumChildren; ++i) {
             NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(elem->mChildren[i],
-                                                         nsXULPrototypeNode)
+                                                         nsXULPrototypeNode,
+                                                         "mChildren[i]")
         }
     }
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS

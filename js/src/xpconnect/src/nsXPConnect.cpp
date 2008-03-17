@@ -725,6 +725,23 @@ NoteJSChild(JSTracer *trc, void *thing, uint32 kind)
     if(ADD_TO_CC(kind))
     {
         TraversalTracer *tracer = static_cast<TraversalTracer*>(trc);
+#if defined(DEBUG) && defined(DEBUG_CC)
+        // based on DumpNotify in jsapi.c
+        if (tracer->debugPrinter) {
+            char buffer[200];
+            tracer->debugPrinter(trc, buffer, sizeof(buffer));
+            tracer->cb.NoteNextEdgeName(buffer);
+        } else if (tracer->debugPrintIndex != (size_t)-1) {
+            char buffer[200];
+            JS_snprintf(buffer, sizeof(buffer), "%s[%lu]",
+                        static_cast<const char *>(tracer->debugPrintArg),
+                        tracer->debugPrintIndex);
+            tracer->cb.NoteNextEdgeName(buffer);
+        } else {
+            tracer->cb.NoteNextEdgeName(
+              static_cast<const char*>(tracer->debugPrintArg));
+        }
+#endif
         tracer->cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, thing);
     }
     else if(kind != JSTRACE_DOUBLE && kind != JSTRACE_STRING)
@@ -999,6 +1016,7 @@ public:
 #ifdef DEBUG_CC
         cb.DescribeNode(RefCounted, refCount, sizeof(JSContext),
                         "JSContext");
+        cb.NoteNextEdgeName("[global object]");
 #else
         cb.DescribeNode(RefCounted, refCount);
 #endif
