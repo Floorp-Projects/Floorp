@@ -487,6 +487,8 @@ placesRemoveItemTransaction.prototype = {
     this._oldIndex = PlacesUtils.bookmarks.getItemIndex(this._id);
     this._title = PlacesUtils.bookmarks.getItemTitle(this._id);
     this._annotations = PlacesUtils.getAnnotationsForItem(this._id);
+    this._dateAdded = PlacesUtils.bookmarks.getItemDateAdded(this._id);
+    this._lastModified = PlacesUtils.bookmarks.getItemLastModified(this._id);
 
     if (this._itemType == Ci.nsINavBookmarksService.TYPE_FOLDER) {
       this._saveFolderContents();
@@ -534,6 +536,9 @@ placesRemoveItemTransaction.prototype = {
 
     if (this._annotations.length > 0)
       PlacesUtils.setAnnotationsForItem(this._id, this._annotations);
+
+    PlacesUtils.bookmarks.setItemDateAdded(this._id, this._dateAdded);
+    PlacesUtils.bookmarks.setItemLastModified(this._id, this._lastModified);
   },
 
   /**
