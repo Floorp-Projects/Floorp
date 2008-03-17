@@ -458,6 +458,10 @@ void nsHTMLSelectListAccessible::CacheChildren()
     return;
   }
 
+  if (mAccChildCount != eChildCountUninitialized) {
+    return;
+  }
+
   mAccChildCount = 0; // Avoid reentry
   PRInt32 childCount = 0;
   nsCOMPtr<nsIAccessible> lastGoodAccessible =

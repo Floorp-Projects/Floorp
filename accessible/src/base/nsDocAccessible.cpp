@@ -1064,7 +1064,7 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
   if (aAttribute == nsAccessibilityAtoms::alt ||
       aAttribute == nsAccessibilityAtoms::title) {
     FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE,
-                            targetNode, eRemoveDupes);
+                            targetNode);
     return;
   }
 
@@ -1086,7 +1086,8 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
       multiSelectAccessNode->GetDOMNode(getter_AddRefs(multiSelectDOMNode));
       NS_ASSERTION(multiSelectDOMNode, "A new accessible without a DOM node!");
       FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
-                              multiSelectDOMNode, eAllowDupes);
+                              multiSelectDOMNode,
+                              nsAccEvent::eAllowDupes);
 
       static nsIContent::AttrValuesArray strings[] =
         {&nsAccessibilityAtoms::_empty, &nsAccessibilityAtoms::_false, nsnull};
@@ -1437,93 +1438,29 @@ nsDocAccessible::CreateTextChangeEventForNode(nsIAccessible *aContainerAccessibl
   
 nsresult nsDocAccessible::FireDelayedToolkitEvent(PRUint32 aEvent,
                                                   nsIDOMNode *aDOMNode,
-                                                  EDupeEventRule aAllowDupes,
+                                                  nsAccEvent::EEventRule aAllowDupes,
                                                   PRBool aIsAsynch)
 {
   nsCOMPtr<nsIAccessibleEvent> event =
-    new nsAccEvent(aEvent, aDOMNode, aIsAsynch);
+    new nsAccEvent(aEvent, aDOMNode, aIsAsynch, aAllowDupes);
   NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
-  return FireDelayedAccessibleEvent(event, aAllowDupes);
+  return FireDelayedAccessibleEvent(event);
 }
 
 nsresult
-nsDocAccessible::FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent,
-                                            EDupeEventRule aAllowDupes)
+nsDocAccessible::FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent)
 {
   NS_ENSURE_TRUE(aEvent, NS_ERROR_FAILURE);
 
-  PRBool isTimerStarted = PR_TRUE;
-  PRInt32 numQueuedEvents = mEventsToFire.Count();
   if (!mFireEventTimer) {
     // Do not yet have a timer going for firing another event.
     mFireEventTimer = do_CreateInstance("@mozilla.org/timer;1");
     NS_ENSURE_TRUE(mFireEventTimer, NS_ERROR_OUT_OF_MEMORY);
   }
 
-  PRUint32 newEventType;
-  aEvent->GetEventType(&newEventType);
-
-  nsCOMPtr<nsIDOMNode> newEventDOMNode;
-  aEvent->GetDOMNode(getter_AddRefs(newEventDOMNode));
-
-  if (numQueuedEvents == 0) {
-    isTimerStarted = PR_FALSE;
-  } else if (aAllowDupes == eCoalesceFromSameSubtree) {
-    // Especially for mutation events, we will define a duplicate event
-    // as one on the same node or on a descendant node.
-    // This prevents a flood of events when a subtree is changed.
-    for (PRInt32 index = 0; index < numQueuedEvents; index ++) {
-      nsIAccessibleEvent *accessibleEvent = mEventsToFire[index];
-      NS_ASSERTION(accessibleEvent, "Array item is not an accessible event");
-      if (!accessibleEvent) {
-        continue;
-      }
-      PRUint32 eventType;
-      accessibleEvent->GetEventType(&eventType);
-      if (eventType == newEventType) {
-        nsCOMPtr<nsIDOMNode> domNode;
-        accessibleEvent->GetDOMNode(getter_AddRefs(domNode));
-        if (newEventDOMNode == domNode || nsAccUtils::IsAncestorOf(newEventDOMNode, domNode)) {
-          mEventsToFire.RemoveObjectAt(index);
-          // The other event is the same type, but in a descendant of this
-          // event, so remove that one. The umbrella event in the ancestor
-          // is already enough
-          -- index;
-          -- numQueuedEvents;
-        }
-        else if (nsAccUtils::IsAncestorOf(domNode, newEventDOMNode)) {
-          // There is a better SHOW/HIDE event (it's in an ancestor)
-          return NS_OK;
-        }
-      }    
-    }
-  } else if (aAllowDupes == eRemoveDupes) {
-    // Check for repeat events. If a redundant event exists remove
-    // original and put the new event at the end of the queue
-    // so it is fired after the others
-    for (PRInt32 index = 0; index < numQueuedEvents; index ++) {
-      nsIAccessibleEvent *accessibleEvent = mEventsToFire[index];
-      NS_ASSERTION(accessibleEvent, "Array item is not an accessible event");
-      if (!accessibleEvent) {
-        continue;
-      }
-      PRUint32 eventType;
-      accessibleEvent->GetEventType(&eventType);
-      if (eventType == newEventType) {
-        nsCOMPtr<nsIDOMNode> domNode;
-        accessibleEvent->GetDOMNode(getter_AddRefs(domNode));
-        if (domNode == newEventDOMNode) {
-          mEventsToFire.RemoveObjectAt(index);
-          -- index;
-          -- numQueuedEvents;
-        }
-      }
-    }
-  }
-
   mEventsToFire.AppendObject(aEvent);
-  if (!isTimerStarted) {
+  if (mEventsToFire.Count() == 1) {
     // This is be the first delayed event in queue, start timer
     // so that event gets fired via FlushEventsCallback
     NS_ADDREF_THIS(); // Kung fu death grip to prevent crash in callback
@@ -1542,20 +1479,22 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   if (!presShell)
     length = 0; // The doc is now shut down, don't fire events in it anymore
-  PRUint32 index;
-  for (index = 0; index < length; index ++) {
+  else
+    nsAccEvent::ApplyEventRules(mEventsToFire);
+  
+  for (PRUint32 index = 0; index < length; index ++) {
     nsCOMPtr<nsIAccessibleEvent> accessibleEvent(
       do_QueryInterface(mEventsToFire[index]));
-    NS_ASSERTION(accessibleEvent, "Array item is not an accessible event");
+
+    if (nsAccEvent::EventRule(accessibleEvent) == nsAccEvent::eDoNotEmit)
+      continue;
 
     nsCOMPtr<nsIAccessible> accessible;
     accessibleEvent->GetAccessible(getter_AddRefs(accessible));
     nsCOMPtr<nsIDOMNode> domNode;
     accessibleEvent->GetDOMNode(getter_AddRefs(domNode));
-    PRUint32 eventType;
-    accessibleEvent->GetEventType(&eventType);
-    PRBool isFromUserInput;
-    accessibleEvent->GetIsFromUserInput(&isFromUserInput);
+    PRUint32 eventType = nsAccEvent::EventType(accessibleEvent);
+    PRBool isFromUserInput = nsAccEvent::IsFromUserInput(accessibleEvent);
 
     if (domNode == gLastFocusedNode &&
         eventType == nsIAccessibleEvent::EVENT_ASYNCH_HIDE || 
@@ -1978,14 +1917,16 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     PRUint32 additionEvent = isAsynch ? nsIAccessibleEvent::EVENT_ASYNCH_SHOW :
                                         nsIAccessibleEvent::EVENT_DOM_CREATE;
     FireDelayedToolkitEvent(additionEvent, childNode,
-                            eCoalesceFromSameSubtree, isAsynch);
+                            nsAccEvent::eCoalesceFromSameSubtree,
+                            isAsynch);
 
     // Check to see change occured in an ARIA menu, and fire
     // an EVENT_MENUPOPUP_START if it did.
     nsRoleMapEntry *roleMapEntry = nsAccUtils::GetRoleMapEntry(childNode);
     if (roleMapEntry && roleMapEntry->role == nsIAccessibleRole::ROLE_MENUPOPUP) {
       FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_START,
-                              childNode, eRemoveDupes, isAsynch);
+                              childNode, nsAccEvent::eRemoveDupes,
+                              isAsynch);
     }
 
     // Check to see if change occured inside an alert, and fire an EVENT_ALERT if it did
@@ -1994,7 +1935,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
       if (roleMapEntry && roleMapEntry->role == nsIAccessibleRole::ROLE_ALERT) {
         nsCOMPtr<nsIDOMNode> alertNode(do_QueryInterface(ancestor));
         FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_ALERT, alertNode,
-                                eRemoveDupes, isAsynch);
+                                nsAccEvent::eRemoveDupes, isAsynch);
         break;
       }
       ancestor = ancestor->GetParent();
@@ -2012,9 +1953,10 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     // from SHOW and HIDE so that they don't fetch extra objects
     if (childAccessible) {
       nsCOMPtr<nsIAccessibleEvent> reorderEvent =
-        new nsAccEvent(nsIAccessibleEvent::EVENT_REORDER, containerAccessible, isAsynch);
+        new nsAccEvent(nsIAccessibleEvent::EVENT_REORDER, containerAccessible,
+                       isAsynch, nsAccEvent::eCoalesceFromSameSubtree);
       NS_ENSURE_TRUE(reorderEvent, NS_ERROR_OUT_OF_MEMORY);
-      FireDelayedAccessibleEvent(reorderEvent, eCoalesceFromSameSubtree);
+      FireDelayedAccessibleEvent(reorderEvent);
     }
   }
 
@@ -2090,13 +2032,14 @@ nsDocAccessible::FireShowHideEvents(nsIDOMNode *aDOMNode, PRBool aAvoidOnThisNod
                       aEventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW;
 
     nsCOMPtr<nsIAccessibleEvent> event =
-      new nsAccEvent(aEventType, accessible, isAsynch);
+      new nsAccEvent(aEventType, accessible, isAsynch,
+                     nsAccEvent::eCoalesceFromSameSubtree);
     NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
     if (aForceIsFromUserInput) {
       nsAccEvent::PrepareForEvent(event, aForceIsFromUserInput);
     }
     if (aDelay) {
-      return FireDelayedAccessibleEvent(event, eCoalesceFromSameSubtree);
+      return FireDelayedAccessibleEvent(event);
     }
     return FireAccessibleEvent(event);
   }

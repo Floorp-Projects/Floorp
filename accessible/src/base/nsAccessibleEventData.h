@@ -41,7 +41,9 @@
 #ifndef _nsAccessibleEventData_H_
 #define _nsAccessibleEventData_H_
 
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
+#include "nsCOMArray.h"
 #include "nsIAccessibleEvent.h"
 #include "nsIAccessible.h"
 #include "nsIAccessibleDocument.h"
@@ -50,13 +52,45 @@
 
 class nsIPresShell;
 
+#define NS_ACCEVENT_IMPL_CID                            \
+{  /* 55b89892-a83d-4252-ba78-cbdf53a86936 */           \
+  0x55b89892,                                           \
+  0xa83d,                                               \
+  0x4252,                                               \
+  { 0xba, 0x78, 0xcb, 0xdf, 0x53, 0xa8, 0x69, 0x36 }    \
+}
+
 class nsAccEvent: public nsIAccessibleEvent
 {
 public:
+
+  // Rule for accessible events.
+  // The rule will be applied when flushing pending events.
+  enum EEventRule {
+     // eAllowDupes : More than one event of the same type is allowed.
+     //    This event will always be emitted.
+     eAllowDupes,
+     // eCoalesceFromSameSubtree : For events of the same type from the same
+     //    subtree or the same node, only the umbrelle event on the ancestor
+     //    will be emitted.
+     eCoalesceFromSameSubtree,
+     // eRemoveDupes : For repeat events, only the newest event in queue
+     //    will be emitted.
+     eRemoveDupes,
+     // eDoNotEmit : This event is confirmed as a duplicate, do not emit it.
+     eDoNotEmit
+   };
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ACCEVENT_IMPL_CID)
+
   // Initialize with an nsIAccessible
-  nsAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible, PRBool aIsAsynch = PR_FALSE);
+  nsAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
+             PRBool aIsAsynch = PR_FALSE,
+             EEventRule aEventRule = eRemoveDupes);
   // Initialize with an nsIDOMNode
-  nsAccEvent(PRUint32 aEventType, nsIDOMNode *aDOMNode, PRBool aIsAsynch = PR_FALSE);
+  nsAccEvent(PRUint32 aEventType, nsIDOMNode *aDOMNode,
+             PRBool aIsAsynch = PR_FALSE,
+             EEventRule aEventRule = eRemoveDupes);
   virtual ~nsAccEvent() {}
 
   NS_DECL_ISUPPORTS
@@ -73,6 +107,7 @@ protected:
 
 private:
   PRUint32 mEventType;
+  EEventRule mEventRule;
   nsCOMPtr<nsIAccessible> mAccessible;
   nsCOMPtr<nsIDOMNode> mDOMNode;
   nsCOMPtr<nsIAccessibleDocument> mDocAccessible;
@@ -81,6 +116,21 @@ private:
   static nsIDOMNode* gLastEventNodeWeak;
 
 public:
+  static PRUint32 EventType(nsIAccessibleEvent *aAccEvent) {
+    PRUint32 eventType;
+    aAccEvent->GetEventType(&eventType);
+    return eventType;
+  }
+  static EEventRule EventRule(nsIAccessibleEvent *aAccEvent) {
+    nsRefPtr<nsAccEvent> accEvent = GetAccEventPtr(aAccEvent);
+    return accEvent->mEventRule;
+  }
+  static PRBool IsFromUserInput(nsIAccessibleEvent *aAccEvent) {
+    PRBool isFromUserInput;
+    aAccEvent->GetIsFromUserInput(&isFromUserInput);
+    return isFromUserInput;
+  }
+
   static void ResetLastInputState()
    {gLastEventFromUserInput = PR_FALSE; gLastEventNodeWeak = nsnull; }
 
@@ -103,7 +153,40 @@ public:
    */
   static void PrepareForEvent(nsIAccessibleEvent *aEvent,
                               PRBool aForceIsFromUserInput = PR_FALSE);
+
+  /**
+   * Apply event rules to pending events, this method is called in
+   * FlushingPendingEvents().
+   * Result of this method:
+   *   Event rule of filtered events will be set to eDoNotEmit.
+   *   Events with other event rule are good to emit.
+   */
+  static void ApplyEventRules(nsCOMArray<nsIAccessibleEvent> &aEventsToFire);
+
+private:
+  static already_AddRefed<nsAccEvent> GetAccEventPtr(nsIAccessibleEvent *aAccEvent) {
+    nsAccEvent* accEvent = nsnull;
+    aAccEvent->QueryInterface(NS_GET_IID(nsAccEvent), (void**)&accEvent);
+    return accEvent;
+  }
+
+  /**
+   * Apply aEventRule to same type event that from sibling nodes of aDOMNode.
+   * @param aEventsToFire    array of pending events
+   * @param aStart           start index of pending events to be scanned
+   * @param aEnd             end index to be scanned (not included)
+   * @param aEventType       target event type
+   * @param aDOMNode         target are siblings of this node
+   * @param aEventRule       the event rule to be applied
+   *                         (should be eDoNotEmit or eAllowDupes)
+   */
+  static void ApplyToSiblings(nsCOMArray<nsIAccessibleEvent> &aEventsToFire,
+                              PRUint32 aStart, PRUint32 aEnd,
+                              PRUint32 aEventType, nsIDOMNode* aDOMNode,
+                              EEventRule aEventRule);
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsAccEvent, NS_ACCEVENT_IMPL_CID)
 
 class nsAccStateChangeEvent: public nsAccEvent,
                              public nsIAccessibleStateChangeEvent
