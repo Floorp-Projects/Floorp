@@ -162,7 +162,7 @@ class MochitestOptions(optparse.OptionParser):
                            "refcounted objects (or bytes in classes with "
                            "MOZ_COUNT_CTOR and MOZ_COUNT_DTOR) is greater "
                            "than the given number")
-    defaults["leakThreshold"] = float("Inf")
+    defaults["leakThreshold"] = 1.0e3000
 
     # -h, --help are automatically handled by OptionParser
 
