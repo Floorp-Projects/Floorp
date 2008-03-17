@@ -90,7 +90,9 @@ callconv.h
 Carbon/Carbon.h
 CarbonEvents.h
 Carbon.h
+cassert
 c_asm.h
+cctype
 cderr.h
 cerrno
 cert.h
@@ -137,6 +139,7 @@ crypt.h
 cstdio
 cstdlib
 cstring
+ctime
 ctype.h
 curl/curl.h
 curl/easy.h
