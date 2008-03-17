@@ -6804,7 +6804,7 @@ nsTableFrame::InvalidateFrame(nsIFrame* aFrame,
 
   // The part that looks at both the rect and the overflow rect is a
   // bit of a hack.  See nsBlockFrame::ReflowLine for an eloquent
-  // descriptiong of its hackishness.
+  // description of its hackishness.
   nsRect overflowRect = aFrame->GetOverflowRect();
   if (aIsFirstReflow ||
       aOrigRect.TopLeft() != aFrame->GetPosition() ||
