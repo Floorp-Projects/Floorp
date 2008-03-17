@@ -394,9 +394,6 @@ var authinfo = {
 };
 
 
-var iframe = document.getElementById("iframe");
-iframe.onload = handleLoad;
-
 var prompter1 = promptFac.getPrompt(window, Ci.nsIAuthPrompt);
 var prompter2 = promptFac.getPrompt(window, Ci.nsIAuthPrompt2);
 
@@ -707,6 +704,10 @@ is(authinfo.password, "user2pass", "Checking returned password");
 // XXX check for and kill notification bar??
 // XXX check for checkbox / checkstate on old prompts?
 // XXX check NTLM domain stuff
+
+
+var iframe = document.getElementById("iframe");
+iframe.onload = handleLoad;
 
 
 // ===== test 1000 =====
