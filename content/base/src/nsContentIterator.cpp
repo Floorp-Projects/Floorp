@@ -56,64 +56,6 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 // couple of utility static functs
 
 ///////////////////////////////////////////////////////////////////////////
-// GetNumChildren: returns the number of things inside aNode. 
-//
-static PRUint32
-GetNumChildren(nsIDOMNode *aNode) 
-{
-  if (!aNode)
-    return 0;
-
-  PRUint32 numChildren = 0;
-  PRBool hasChildNodes;
-  aNode->HasChildNodes(&hasChildNodes);
-  if (hasChildNodes)
-  {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-
-    if (content)
-      return content->GetChildCount();
-
-    nsCOMPtr<nsIDOMNodeList>nodeList;
-    aNode->GetChildNodes(getter_AddRefs(nodeList));
-    if (nodeList) 
-      nodeList->GetLength(&numChildren);
-  }
-
-  return numChildren;
-}
-
-///////////////////////////////////////////////////////////////////////////
-// GetChildAt: returns the node at this position index in the parent
-//
-static nsCOMPtr<nsIDOMNode> 
-GetChildAt(nsIDOMNode *aParent, PRInt32 aOffset)
-{
-  nsCOMPtr<nsIDOMNode> resultNode;
-
-  if (!aParent) 
-    return resultNode;
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aParent));
-
-  if (content) {
-    resultNode = do_QueryInterface(content->GetChildAt(aOffset));
-  } else if (aParent) {
-    PRBool hasChildNodes;
-    aParent->HasChildNodes(&hasChildNodes);
-    if (hasChildNodes)
-    {
-      nsCOMPtr<nsIDOMNodeList>nodeList;
-      aParent->GetChildNodes(getter_AddRefs(nodeList));
-      if (nodeList) 
-        nodeList->Item(aOffset, getter_AddRefs(resultNode));
-    }
-  }
-  
-  return resultNode;
-}
-  
-///////////////////////////////////////////////////////////////////////////
 // ContentHasChildren: returns true if the node has children
 //
 static inline PRBool
@@ -126,21 +68,18 @@ NodeHasChildren(nsINode *aNode)
 // ContentToParentOffset: returns the content node's parent and offset.
 //
 
-static void
-ContentToParentOffset(nsIContent *aContent, nsIDOMNode **aParent,
-                      PRInt32 *aOffset)
+static nsIContent*
+ContentToParentOffset(nsIContent *aContent, PRInt32 *aOffset)
 {
-  *aParent = nsnull;
   *aOffset  = 0;
 
   nsIContent* parent = aContent->GetParent();
 
-  if (!parent)
-    return;
-
-  *aOffset = parent->IndexOf(aContent);
-
-  CallQueryInterface(parent, aParent);
+  if (parent) {
+    *aOffset = parent->IndexOf(aContent);
+  }
+  
+  return parent;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1061,8 +1000,8 @@ nsContentIterator::PositionAt(nsIContent* aCurNode)
 
   // Check to see if the node falls within the traversal range.
 
-  nsCOMPtr<nsIDOMNode> firstNode(do_QueryInterface(mFirst));
-  nsCOMPtr<nsIDOMNode> lastNode(do_QueryInterface(mLast));
+  nsIContent* firstNode = mFirst;
+  nsIContent* lastNode = mLast;
   PRInt32 firstOffset=0, lastOffset=0;
 
   if (firstNode && lastNode)
@@ -1071,35 +1010,31 @@ nsContentIterator::PositionAt(nsIContent* aCurNode)
 
     if (mPre)
     {
-      ContentToParentOffset(mFirst, getter_AddRefs(firstNode), &firstOffset);
+      firstNode = ContentToParentOffset(mFirst, &firstOffset);
 
-      numChildren = GetNumChildren(lastNode);
-
-      if (numChildren)
+      if (lastNode->GetChildCount())
         lastOffset = 0;
       else
       {
-        ContentToParentOffset(mLast, getter_AddRefs(lastNode), &lastOffset);
+        lastNode = ContentToParentOffset(mLast, &lastOffset);
         ++lastOffset;
       }
     }
     else
     {
-      numChildren = GetNumChildren(firstNode);
-
-      if (numChildren)
+      if (firstNode->GetChildCount())
         firstOffset = numChildren;
       else
-        ContentToParentOffset(mFirst, getter_AddRefs(firstNode), &firstOffset);
+        firstNode = ContentToParentOffset(mFirst, &firstOffset);
 
-      ContentToParentOffset(mLast, getter_AddRefs(lastNode), &lastOffset);
+      lastNode = ContentToParentOffset(mLast, &lastOffset);
       ++lastOffset;
     }
   }
 
   if (!firstNode || !lastNode ||
-      !ContentIsInTraversalRange(mCurNode, mPre, mFirst, firstOffset,
-                                 mLast, lastOffset))
+      !ContentIsInTraversalRange(mCurNode, mPre, firstNode, firstOffset,
+                                 lastNode, lastOffset))
   {
     mIsDone = PR_TRUE;
     return NS_ERROR_FAILURE;
@@ -1315,10 +1250,7 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   nsCOMPtr<nsIContent> cN;
   nsIContent *firstCandidate = nsnull;
   nsIContent *lastCandidate = nsnull;
-  nsCOMPtr<nsIDOMNode> dChild;
-  nsCOMPtr<nsIContent> cChild;
   PRInt32 indx, startIndx, endIndx;
-  PRInt32 numChildren;
 
   // get common content parent
   if (NS_FAILED(aRange->GetCommonAncestorContainer(getter_AddRefs(commonParent))) || !commonParent)
@@ -1347,7 +1279,7 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   // short circuit when start node == end node
   if (startParent == endParent)
   {
-    cChild = cStartP->GetChildAt(0);
+    nsIContent* cChild = cStartP->GetChildAt(0);
   
     if (!cChild) // no children, must be a text node or empty container
     {
@@ -1375,16 +1307,14 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
 
   // find first node in range
   aRange->GetStartOffset(&indx);
-  numChildren = GetNumChildren(startParent);
-  
-  if (!numChildren) // no children, must be a text node
+
+  if (!cStartP->GetChildCount()) // no children, start at the node itself
   {
     cN = cStartP; 
   }
   else
   {
-    dChild = GetChildAt(startParent, indx);
-    cChild = do_QueryInterface(dChild);
+    nsIContent* cChild = cStartP->GetChildAt(indx);
     if (!cChild)  // offset after last child
     {
       cN = cStartP;
@@ -1432,7 +1362,7 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
 
   // now to find the last node
   aRange->GetEndOffset(&indx);
-  numChildren = GetNumChildren(endParent);
+  PRInt32 numChildren = cEndP->GetChildCount();
 
   if (indx > numChildren) indx = numChildren;
   if (!indx)
@@ -1447,17 +1377,9 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
     }
     else
     {
-      dChild = GetChildAt(endParent, --indx);
-      cChild = do_QueryInterface(dChild);
-      if (!cChild)  // shouldn't happen
-      {
-        NS_ASSERTION(0,"tree traversal trouble in nsContentSubtreeIterator::Init");
-        return NS_ERROR_FAILURE;
-      }
-      else
-      {
-        lastCandidate = cChild;
-      }
+      lastCandidate = cEndP->GetChildAt(--indx);
+      NS_ASSERTION(lastCandidate,
+                   "tree traversal trouble in nsContentSubtreeIterator::Init");
     }
   }
   
