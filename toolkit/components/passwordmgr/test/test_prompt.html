@@ -12,6 +12,7 @@ Login Manager test: username/password prompts
 <p id="display"></p>
 
 <div id="content" style="display: none">
+  <iframe id="iframe"></iframe>
 </div>
 
 <pre id="test">
@@ -19,7 +20,7 @@ Login Manager test: username/password prompts
 
 /** Test for Login Manager: username / password prompts. **/
 
-var pwmgr, login1, login2A, login2B;
+var pwmgr, login1, login2A, login2B, login3A, login3B;
 
 function initLogins() {
   pwmgr = Cc["@mozilla.org/login-manager;1"].
@@ -31,6 +32,10 @@ function initLogins() {
             createInstance(Ci.nsILoginInfo);
   login2B = Cc["@mozilla.org/login-manager/loginInfo;1"].
             createInstance(Ci.nsILoginInfo);
+  login3A = Cc["@mozilla.org/login-manager/loginInfo;1"].
+            createInstance(Ci.nsILoginInfo);
+  login3B = Cc["@mozilla.org/login-manager/loginInfo;1"].
+            createInstance(Ci.nsILoginInfo);
 
   login1.init("http://example.com", null, "http://example.com",
               "", "examplepass", "", "");
@@ -39,15 +44,27 @@ function initLogins() {
   login2B.init("http://example2.com", null, "http://example2.com",
                "user2name", "user2pass", "", "");
 
+  login3A.init("http://localhost:8888", null, "mochitest",
+               "mochiuser1", "mochipass1", "", "");
+  login3B.init("http://localhost:8888", null, "mochitest2",
+               "mochiuser2", "mochipass2", "", "");
+
   pwmgr.addLogin(login1);
   pwmgr.addLogin(login2A);
   pwmgr.addLogin(login2B);
+  pwmgr.addLogin(login3A);
+  pwmgr.addLogin(login3B);
 }
 
-function cleanupLogins() {
+function finishTest() {
+  ok(true, "finishTest removing testing logins...");
   pwmgr.removeLogin(login1);
   pwmgr.removeLogin(login2A);
   pwmgr.removeLogin(login2B);
+  pwmgr.removeLogin(login3A);
+  pwmgr.removeLogin(login3B);
+
+  SimpleTest.finish();
 }
 
 
@@ -86,6 +103,7 @@ function getDialogDoc() {
 }
 
 
+var didDialog;
 function handleDialog(doc, testNum) {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   ok(true, "handleDialog running for test " + testNum);
@@ -228,6 +246,16 @@ function handleDialog(doc, testNum) {
         passfield.setAttribute("value", "user2pass");
         break;
 
+    case 1000:
+        is(username, "mochiuser1", "Checking filled username");
+        is(password, "mochipass1", "Checking filled password");
+        break;
+
+    case 1001:
+        is(username, "mochiuser2", "Checking filled username");
+        is(password, "mochipass2", "Checking filled password");
+        break;
+
     default:
         ok(false, "Uhh, unhandled switch for testNum #" + testNum);
         break;
@@ -239,6 +267,63 @@ function handleDialog(doc, testNum) {
     dialog.cancelDialog();
 
   ok(true, "handleDialog done");
+  didDialog = true;
+}
+
+
+function handleLoad() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  ok(true, "handleLoad running for test " + testNum);
+
+  if (testNum != 1002)
+    ok(didDialog, "handleDialog was invoked");
+
+  // The server echos back the user/pass it received.
+  var username = iframe.contentDocument.getElementById("user").textContent;
+  var password = iframe.contentDocument.getElementById("pass").textContent;
+  var authok = iframe.contentDocument.getElementById("ok").textContent;
+
+  switch(testNum) {
+    case 1000:
+        testNum++;
+        is(authok, "PASS", "Checking for successful authentication");
+        is(username, "mochiuser1", "Checking for echoed username");
+        is(password, "mochipass1", "Checking for echoed password");
+        startCallbackTimer();
+        // We've already authenticated to this host:port. For this next
+        // request, the existing auth should be sent, we'll get a 401 reply,
+        // and we should prompt for new auth.
+        iframe.src = "authenticate.sjs?user=mochiuser2&pass=mochipass2&realm=mochitest2";
+        break;
+
+    case 1001:
+        testNum++;
+        is(authok, "PASS", "Checking for successful authentication");
+        is(username, "mochiuser2", "Checking for echoed username");
+        is(password, "mochipass2", "Checking for echoed password");
+        // Now make a load that requests the realm from test 1000. It was
+        // already provided there, so auth will *not* be prompted for -- the
+        // networking layer already knows it!
+        didDialog = false; // [normally reset by startCallbackTimer()]
+        iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
+        break;
+
+
+    case 1002:
+        testNum++;
+        ok(!didDialog, "handleDialog was NOT invoked");
+        is(authok, "PASS", "Checking for successful authentication");
+        is(username, "mochiuser1", "Checking for echoed username");
+        is(password, "mochipass1", "Checking for echoed password");
+
+        finishTest();
+        break;
+
+    default:
+        ok(false, "Uhh, unhandled switch for testNum #" + testNum);
+        break;
+  }
+
 }
 
 
@@ -263,6 +348,8 @@ ok(promptFac != null, "promptFac getService()");
 
 var timer; // keep in outer scope so it's not GC'd before firing
 function startCallbackTimer() {
+    didDialog = false;
+
     // Delay before the callback twiddles the prompt.
     const dialogDelay = 10;
 
@@ -307,6 +394,8 @@ var authinfo = {
 };
 
 
+var iframe = document.getElementById("iframe");
+iframe.onload = handleLoad;
 
 var prompter1 = promptFac.getPrompt(window, Ci.nsIAuthPrompt);
 var prompter2 = promptFac.getPrompt(window, Ci.nsIAuthPrompt2);
@@ -619,7 +708,14 @@ is(authinfo.password, "user2pass", "Checking returned password");
 // XXX check for checkbox / checkstate on old prompts?
 // XXX check NTLM domain stuff
 
-cleanupLogins();
+
+// ===== test 1000 =====
+testNum = 1000;
+startCallbackTimer();
+iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
+
+// ...remaining tests are drived by handleLoad()...
+SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 </body>

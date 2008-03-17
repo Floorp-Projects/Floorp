@@ -46,9 +46,8 @@ include $(DEPTH)/config/autoconf.mk
 # Module name for xpcshell tests.
 MODULE		= test_passwordmgr
 
-# Test files for Mochitest
+# Mochitest tests
 MOCHI_TESTS = \
-		pwmgr_common.js \
 		test_0init.html \
 		test_basic_form.html \
 		test_basic_form_0pw.html \
@@ -67,6 +66,11 @@ MOCHI_TESTS = \
 		test_zzz_finish.html \
 		$(NULL)
 
+MOCHI_CONTENT = \
+		pwmgr_common.js \
+		authenticate.sjs \
+		$(NULL)
+
 XPCSHELL_TESTS  = unit
 
 # This test doesn't pass because we can't ensure a cross-platform
@@ -78,5 +82,5 @@ include $(topsrcdir)/config/rules.mk
 # Note: Invoke any additional (non-xpcshell) test programs here.
 check::
 
-libs:: $(MOCHI_TESTS)
+libs:: $(MOCHI_TESTS) $(MOCHI_CONTENT)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
