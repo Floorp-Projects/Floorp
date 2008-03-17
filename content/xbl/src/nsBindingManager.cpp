@@ -1483,28 +1483,38 @@ nsBindingManager::Traverse(nsIContent *aContent,
 
   nsXBLBinding *binding = GetBinding(aContent);
   if (binding) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mBindingTable key");
     cb.NoteXPCOMChild(aContent);
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(binding, nsXBLBinding)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(binding, nsXBLBinding,
+                                  "[via binding manager] mBindingTable value")
   }
   nsISupports *value;
   if (mContentListTable.ops &&
       (value = LookupObject(mContentListTable, aContent))) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mContentListTable key");
     cb.NoteXPCOMChild(aContent);
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mContentListTable value");
     cb.NoteXPCOMChild(value);
   }
   if (mAnonymousNodesTable.ops &&
       (value = LookupObject(mAnonymousNodesTable, aContent))) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mAnonymousNodesTable key");
     cb.NoteXPCOMChild(aContent);
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mAnonymousNodesTable value");
     cb.NoteXPCOMChild(value);
   }
   if (mInsertionParentTable.ops &&
       (value = LookupObject(mInsertionParentTable, aContent))) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mInsertionParentTable key");
     cb.NoteXPCOMChild(aContent);
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mInsertionParentTable value");
     cb.NoteXPCOMChild(value);
   }
   if (mWrapperTable.ops &&
       (value = LookupObject(mWrapperTable, aContent))) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mWrapperTable key");
     cb.NoteXPCOMChild(aContent);
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mWrapperTable value");
     cb.NoteXPCOMChild(value);
   }
 }

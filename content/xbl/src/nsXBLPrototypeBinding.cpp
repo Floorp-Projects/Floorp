@@ -338,7 +338,8 @@ TraverseInsertionPoint(nsHashKey* aKey, void* aData, void* aClosure)
   nsXBLInsertionPointEntry* entry =
     static_cast<nsXBLInsertionPointEntry*>(aData);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(entry,
-                                               nsXBLInsertionPointEntry)
+                                               nsXBLInsertionPointEntry,
+                                               "[insertion point table] value")
   return kHashEnumerateNext;
 }
 
