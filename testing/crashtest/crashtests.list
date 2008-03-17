@@ -43,6 +43,8 @@ include ../../layout/xul/base/src/tree/src/crashtests/crashtests.list
 include ../../gfx/src/thebes/crashtests/crashtests.list
 include ../../gfx/thebes/crashtests/crashtests.list
 
+include ../../parser/htmlparser/tests/crashtests/crashtests.list
+
 include ../../security/manager/ssl/crashtests/crashtests.list
 
 include ../../view/crashtests/crashtests.list
