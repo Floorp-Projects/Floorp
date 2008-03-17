@@ -221,9 +221,10 @@ private:
      * Attempt forward and/or backward propagation for the given child within
      * the current context vector stack. And actually open the required tags.
      *
+     * @param   aParent The tag we're trying to open this element inside of.
      * @param   aChild Type of child to be propagated.
      */
-    void CreateContextStackFor(eHTMLTags aChild);
+    void CreateContextStackFor(eHTMLTags aParent, eHTMLTags aChild);
 
     /**
      * Ask if a given container is open anywhere on its stack
