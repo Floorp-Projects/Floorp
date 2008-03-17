@@ -762,7 +762,6 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, PRBool &validEV)
     | CERT_REV_M_ALLOW_NETWORK_FETCHING
     | CERT_REV_M_ALLOW_IMPLICIT_DEFAULT_SOURCE
     | CERT_REV_M_REQUIRE_INFO_ON_MISSING_SOURCE
-    | CERT_REV_M_FAIL_ON_MISSING_FRESH_INFO
     | CERT_REV_M_STOP_TESTING_ON_FRESH_INFO;
 
   PRUint64 revMethodIndependentFlags = 
@@ -783,7 +782,7 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, PRBool &validEV)
     revMethodIndependentFlags;
 
   rev.chainTests.number_of_defined_methods = cert_revocation_method_ocsp +1;
-  rev.leafTests.cert_rev_flags_per_method = methodFlags;
+  rev.chainTests.cert_rev_flags_per_method = methodFlags;
   rev.chainTests.number_of_preferred_methods = 1;
   rev.chainTests.preferred_methods = preferedRevMethods;
   rev.chainTests.cert_rev_method_independent_flags =
