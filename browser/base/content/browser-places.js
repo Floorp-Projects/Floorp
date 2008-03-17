@@ -599,17 +599,8 @@ var BookmarksEventHandler = {
       return;
 
     var target = aEvent.originalTarget;
-    if (target.node && PlacesUtils.nodeIsContainer(target.node)) {
-      // Don't open the root folder in tabs when the empty area on the toolbar
-      // is middle-clicked or when a non-bookmark item except for Open in Tabs)
-      // in a bookmarks menupopup is middle-clicked.
-      if (target.localName == "menu" || target.localName == "toolbarbutton")
-        PlacesUIUtils.openContainerNodeInTabs(target.node, aEvent);
-    }
-    else
-      this.onCommand(aEvent);
-
     // If this event bubbled up from a menu or menuitem, close the menus.
+    // Do this before opening tabs, to avoid hiding the open tabs confirm.
     if (target.localName == "menu" || target.localName == "menuitem") {
       for (node = target.parentNode; node; node = node.parentNode) {
         if (node.localName == "menupopup")
@@ -617,6 +608,18 @@ var BookmarksEventHandler = {
         else if (node.localName != "menu")
           break;
       }
+    }
+
+    if (target.node && PlacesUtils.nodeIsContainer(target.node)) {
+      // Don't open the root folder in tabs when the empty area on the toolbar
+      // is middle-clicked or when a non-bookmark item except for Open in Tabs)
+      // in a bookmarks menupopup is middle-clicked.
+      if (target.localName == "menu" || target.localName == "toolbarbutton")
+        PlacesUIUtils.openContainerNodeInTabs(target.node, aEvent);
+    }
+    else if (aEvent.button == 1) {
+      // left-clicks with modifier are already served by onCommand
+      this.onCommand(aEvent);
     }
   },
 
