@@ -300,11 +300,9 @@ nsSVGClipPathProperty::DoUpdate()
   if (!svgChildFrame)
     return;
 
-  if (svgChildFrame->HasValidCoveredRect()) {
-    nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(mFrame);
-    if (outerSVGFrame)
-      outerSVGFrame->InvalidateRect(mFrame->GetRect());
-  }
+  nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(mFrame);
+  if (outerSVGFrame)
+    outerSVGFrame->InvalidateRect(svgChildFrame->GetCoveredRegion());
 }
 
 void
@@ -359,11 +357,9 @@ nsSVGMaskProperty::DoUpdate()
   if (!svgChildFrame)
     return;
 
-  if (svgChildFrame->HasValidCoveredRect()) {
-    nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(mFrame);
-    if (outerSVGFrame)
-      outerSVGFrame->InvalidateRect(mFrame->GetRect());
-  }
+  nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(mFrame);
+  if (outerSVGFrame)
+    outerSVGFrame->InvalidateRect(svgChildFrame->GetCoveredRegion());
 }
 
 void
