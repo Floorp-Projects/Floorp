@@ -377,19 +377,6 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
       rv |= file->AppendNative(NS_LITERAL_CSTRING(PREF_OVERRIDE_DIRNAME));
       rv |= EnsureDirectoryExists(file);
     }
-    // XXXbsmedberg move these defines into application-specific providers.
-    else if (!strcmp(aProperty, NS_APP_MAIL_50_DIR)) {
-      rv = file->AppendNative(NS_LITERAL_CSTRING("Mail"));
-    }
-    else if (!strcmp(aProperty, NS_APP_IMAP_MAIL_50_DIR)) {
-      rv = file->AppendNative(NS_LITERAL_CSTRING("ImapMail"));
-    }
-    else if (!strcmp(aProperty, NS_APP_NEWS_50_DIR)) {
-      rv = file->AppendNative(NS_LITERAL_CSTRING("News"));
-    }
-    else if (!strcmp(aProperty, NS_APP_MESSENGER_FOLDER_CACHE_50_DIR)) {
-      rv = file->AppendNative(NS_LITERAL_CSTRING("panacea.dat"));
-    }
   }
   if (NS_FAILED(rv) || !file)
     return NS_ERROR_FAILURE;

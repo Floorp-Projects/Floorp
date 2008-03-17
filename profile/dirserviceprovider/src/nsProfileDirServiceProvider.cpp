@@ -62,10 +62,6 @@
 #define BOOKMARKS_FILE_50_NAME       NS_LITERAL_CSTRING("bookmarks.html")
 #define DOWNLOADS_FILE_50_NAME       NS_LITERAL_CSTRING("downloads.rdf")
 #define SEARCH_FILE_50_NAME          NS_LITERAL_CSTRING("search.rdf" )
-#define MAIL_DIR_50_NAME             NS_LITERAL_CSTRING("Mail")
-#define IMAP_MAIL_DIR_50_NAME        NS_LITERAL_CSTRING("ImapMail")
-#define NEWS_DIR_50_NAME             NS_LITERAL_CSTRING("News")
-#define MSG_FOLDER_CACHE_DIR_50_NAME NS_LITERAL_CSTRING("panacea.dat")
 #define STORAGE_FILE_50_NAME         NS_LITERAL_CSTRING("storage.sdb")
 
 //*****************************************************************************
@@ -301,26 +297,6 @@ nsProfileDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFi
         rv = EnsureProfileFileExists(localFile, domainDir);
     }
   }
-  else if (strcmp(prop, NS_APP_MAIL_50_DIR) == 0) {
-    rv = domainDir->Clone(getter_AddRefs(localFile));
-    if (NS_SUCCEEDED(rv))
-      rv = localFile->AppendNative(MAIL_DIR_50_NAME);
-  }
-  else if (strcmp(prop, NS_APP_IMAP_MAIL_50_DIR) == 0) {
-    rv = domainDir->Clone(getter_AddRefs(localFile));
-    if (NS_SUCCEEDED(rv))
-      rv = localFile->AppendNative(IMAP_MAIL_DIR_50_NAME);
-  }
-  else if (strcmp(prop, NS_APP_NEWS_50_DIR) == 0) {
-    rv = domainDir->Clone(getter_AddRefs(localFile));
-    if (NS_SUCCEEDED(rv))
-      rv = localFile->AppendNative(NEWS_DIR_50_NAME);
-  }
-  else if (strcmp(prop, NS_APP_MESSENGER_FOLDER_CACHE_50_DIR) == 0) {
-    rv = domainDir->Clone(getter_AddRefs(localFile));
-    if (NS_SUCCEEDED(rv))
-      rv = localFile->AppendNative(MSG_FOLDER_CACHE_DIR_50_NAME);
-  }
   else if (strcmp(prop, NS_APP_STORAGE_50_FILE) == 0) {
     rv = domainDir->Clone(getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv))
@@ -513,10 +489,6 @@ nsProfileDirServiceProvider::UndefineFileLocations()
   (void) directoryService->Undefine(NS_APP_BOOKMARKS_50_FILE);
   (void) directoryService->Undefine(NS_APP_DOWNLOADS_50_FILE);
   (void) directoryService->Undefine(NS_APP_SEARCH_50_FILE);
-  (void) directoryService->Undefine(NS_APP_MAIL_50_DIR);
-  (void) directoryService->Undefine(NS_APP_IMAP_MAIL_50_DIR);
-  (void) directoryService->Undefine(NS_APP_NEWS_50_DIR);
-  (void) directoryService->Undefine(NS_APP_MESSENGER_FOLDER_CACHE_50_DIR);
 
   return NS_OK;
 }
