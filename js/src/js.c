@@ -758,7 +758,10 @@ Print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         fprintf(gOutFile, "%s%s", i ? " " : "", bytes);
         JS_free(cx, bytes);
     }
+
     fputc('\n', gOutFile);
+    fflush(gOutFile);
+
     return JS_TRUE;
 }
 
