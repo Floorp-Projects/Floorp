@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-       <menubar id="main-menubar" statusbar="statusbar-display"
+       <menubar id="main-menubar"
                 style="border:0px;padding:0px;margin:0px;-moz-appearance:none">
             <menu id="file-menu" label="&fileMenu.label;"
                   accesskey="&fileMenu.accesskey;">
