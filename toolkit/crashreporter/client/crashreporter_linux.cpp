@@ -52,6 +52,7 @@
 
 #include <gtk/gtk.h>
 #include <glib.h>
+#include <string.h>
 
 #include "common/linux/http_upload.h"
 
