@@ -825,7 +825,7 @@
         },
 
         canDrop: function TBV_DO_canDrop(event, session) {
-          var ip = this.insertionPoint;
+          var ip = this._self.insertionPoint;
           return ip && PlacesControllerDragHelper.canDrop(ip);
         },
 

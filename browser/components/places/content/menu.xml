@@ -315,7 +315,7 @@
 
       <method name="canDrop">
         <body><![CDATA[
-          var ip = this.insertionPoint;
+          var ip = this._rootView.insertionPoint;
           return ip && PlacesControllerDragHelper.canDrop(ip);
         ]]></body>
       </method>
