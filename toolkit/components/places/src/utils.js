@@ -1178,7 +1178,7 @@ var PlacesUtils = {
     var self = this;
     
     function addGenericProperties(aPlacesNode, aJSNode) {
-      aJSNode.title = unescape(encodeURIComponent(aPlacesNode.title));
+      aJSNode.title = aPlacesNode.title;
       var id = aPlacesNode.itemId;
       if (id != -1) {
         aJSNode.id = id;
