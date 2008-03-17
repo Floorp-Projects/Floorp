@@ -356,7 +356,7 @@ static void CommentChanged(GtkTextBuffer* buffer, gpointer userData)
   gtk_text_buffer_get_start_iter(buffer, &start);
   gtk_text_buffer_get_end_iter(buffer, &end);
   const char* comment = gtk_text_buffer_get_text(buffer, &start, &end, TRUE);
-  if (comment[0] == '\0')
+  if (comment[0] == '\0' || gCommentFieldHint)
     gQueryParameters.erase("Comments");
   else
     gQueryParameters["Comments"] = comment;
@@ -447,13 +447,17 @@ static void UpdateURL()
 
 static void UpdateEmail()
 {
+  const char* email = gtk_entry_get_text(GTK_ENTRY(gEmailEntry));
   if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gEmailMeCheck))) {
-    gQueryParameters["Email"] = gtk_entry_get_text(GTK_ENTRY(gEmailEntry));
     gtk_widget_set_sensitive(gEmailEntry, TRUE);
   } else {
-    gQueryParameters.erase("Email");
+    email = "";
     gtk_widget_set_sensitive(gEmailEntry, FALSE);
   }
+  if (email[0] == '\0' || gEmailFieldHint)
+    gQueryParameters.erase("Email");
+  else
+    gQueryParameters["Email"] = email;
 }
 
 static void IncludeURLClicked(GtkButton* sender, gpointer userData)
