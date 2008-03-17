@@ -632,7 +632,7 @@ BrowserGlue.prototype = {
         var defaultIndex = bmsvc.DEFAULT_INDEX;
 
         // index = 0, make it the first folder
-        var placesFolder = bmsvc.createFolder(toolbarFolder, smartBookmarksFolderTitle,
+        var placesFolder = bmsvc.createFolder(bmsvc.toolbarFolder, smartBookmarksFolderTitle,
                                               0);
 
         // XXX should this be a pref?  see bug #399268
