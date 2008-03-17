@@ -149,6 +149,13 @@ public:
                               nsIDOMNode *aPossibleDescendantNode);
 
   /**
+   * Are the first node and the second siblings?
+   * @return PR_TRUE if aDOMNode1 and aDOMNode2 have same parent
+   */
+   static PRBool AreSiblings(nsIDOMNode *aDOMNode1,
+                             nsIDOMNode *aDOMNode2);
+
+  /**
     * If an ancestor in this document exists with the given role, return it
     * @param aDescendant Descendant to start search with
     * @param aRole Role to find matching ancestor for

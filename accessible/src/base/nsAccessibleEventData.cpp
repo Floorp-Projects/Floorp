@@ -57,18 +57,18 @@
 PRBool nsAccEvent::gLastEventFromUserInput = PR_FALSE;
 nsIDOMNode* nsAccEvent::gLastEventNodeWeak = 0;
 
-NS_IMPL_ISUPPORTS1(nsAccEvent, nsIAccessibleEvent)
+NS_IMPL_ISUPPORTS2(nsAccEvent, nsAccEvent, nsIAccessibleEvent)
 
 nsAccEvent::nsAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
-                       PRBool aIsAsynch):
-  mEventType(aEventType), mAccessible(aAccessible)
+                       PRBool aIsAsynch, EEventRule aEventRule):
+  mEventType(aEventType), mAccessible(aAccessible), mEventRule(aEventRule)
 {
   CaptureIsFromUserInput(aIsAsynch);
 }
 
 nsAccEvent::nsAccEvent(PRUint32 aEventType, nsIDOMNode *aDOMNode,
-                       PRBool aIsAsynch):
-  mEventType(aEventType), mDOMNode(aDOMNode)
+                       PRBool aIsAsynch, EEventRule aEventRule):
+  mEventType(aEventType), mDOMNode(aDOMNode), mEventRule(aEventRule)
 {
   CaptureIsFromUserInput(aIsAsynch);
 }
@@ -282,6 +282,94 @@ nsAccEvent::GetAccessibleByNode()
   return accessible;
 }
 
+/* static */
+void
+nsAccEvent::ApplyEventRules(nsCOMArray<nsIAccessibleEvent> &aEventsToFire)
+{
+  PRUint32 numQueuedEvents = aEventsToFire.Count();
+  for (PRInt32 tail = numQueuedEvents - 1; tail >= 0; tail --) {
+    nsRefPtr<nsAccEvent> tailEvent = GetAccEventPtr(aEventsToFire[tail]);
+    switch(tailEvent->mEventRule) {
+      case nsAccEvent::eCoalesceFromSameSubtree:
+      {
+        for (PRInt32 index = 0; index < tail; index ++) {
+          nsRefPtr<nsAccEvent> thisEvent = GetAccEventPtr(aEventsToFire[index]);
+          if (thisEvent->mEventType != tailEvent->mEventType)
+            continue; // Different type
+
+          if (thisEvent->mEventRule == nsAccEvent::eAllowDupes ||
+              thisEvent->mEventRule == nsAccEvent::eDoNotEmit)
+            continue; //  Do not need to check
+
+          if (thisEvent->mDOMNode == tailEvent->mDOMNode) {
+            // Dupe
+            thisEvent->mEventRule = nsAccEvent::eDoNotEmit;
+            continue;
+          }
+          if (nsAccUtils::IsAncestorOf(tailEvent->mDOMNode,
+                                       thisEvent->mDOMNode)) {
+            // thisDOMNode is a descendant of tailDOMNode
+            // Do not emit thisEvent, also apply this result to sibling
+            // nodes of thisDOMNode.
+            thisEvent->mEventRule = nsAccEvent::eDoNotEmit;
+            ApplyToSiblings(aEventsToFire, 0, index, thisEvent->mEventType,
+                            thisEvent->mDOMNode, nsAccEvent::eDoNotEmit);
+            continue;
+          }
+          if (nsAccUtils::IsAncestorOf(thisEvent->mDOMNode,
+                                       tailEvent->mDOMNode)) {
+            // tailDOMNode is a descendant of thisDOMNode
+            // Do not emit tailEvent, also apply this result to sibling
+            // nodes of tailDOMNode.
+            tailEvent->mEventRule = nsAccEvent::eDoNotEmit;
+            ApplyToSiblings(aEventsToFire, 0, tail, tailEvent->mEventType,
+                            tailEvent->mDOMNode, nsAccEvent::eDoNotEmit);
+            break;
+          }
+        } // for (index)
+
+        if (tailEvent->mEventRule != nsAccEvent::eDoNotEmit) {
+          // Not in another event node's subtree, and no other event is in
+          // this event node's subtree.
+          // This event should be emitted
+          // Apply this result to sibling nodes of tailDOMNode
+          ApplyToSiblings(aEventsToFire, 0, tail, tailEvent->mEventType,
+                          tailEvent->mDOMNode, nsAccEvent::eAllowDupes);
+        }
+      } break; // case eCoalesceFromSameSubtree
+
+      case nsAccEvent::eRemoveDupes:
+      {
+        // Check for repeat events.
+        for (PRInt32 index = 0; index < tail; index ++) {
+          nsRefPtr<nsAccEvent> accEvent = GetAccEventPtr(aEventsToFire[index]);
+          if (accEvent->mEventType == tailEvent->mEventType &&
+              accEvent->mEventRule == tailEvent->mEventRule &&
+              accEvent->mDOMNode == tailEvent->mDOMNode) {
+            accEvent->mEventRule = nsAccEvent::eDoNotEmit;
+          }
+        }
+      } break; // case eRemoveDupes
+    } // switch
+  } // for (tail)
+}
+
+/* static */
+void
+nsAccEvent::ApplyToSiblings(nsCOMArray<nsIAccessibleEvent> &aEventsToFire,
+                            PRUint32 aStart, PRUint32 aEnd,
+                             PRUint32 aEventType, nsIDOMNode* aDOMNode,
+                             EEventRule aEventRule)
+{
+  for (PRUint32 index = aStart; index < aEnd; index ++) {
+    nsRefPtr<nsAccEvent> accEvent = GetAccEventPtr(aEventsToFire[index]);
+    if (accEvent->mEventType == aEventType &&
+        accEvent->mEventRule != nsAccEvent::eDoNotEmit &&
+        nsAccUtils::AreSiblings(accEvent->mDOMNode, aDOMNode)) {
+      accEvent->mEventRule = aEventRule;
+    }
+  }
+}
 
 // nsAccStateChangeEvent
 NS_IMPL_ISUPPORTS_INHERITED1(nsAccStateChangeEvent, nsAccEvent,

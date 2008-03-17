@@ -244,7 +244,7 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
     new nsAccCaretMoveEvent(focusNode);
   NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
-  return mRootAccessible->FireDelayedAccessibleEvent(event, nsDocAccessible::eRemoveDupes);
+  return mRootAccessible->FireDelayedAccessibleEvent(event);
 }
 
 nsRect
