@@ -390,6 +390,7 @@ NoteUserData(void *aObject, nsIAtom *aKey, void *aXPCOMChild, void *aData)
 {
   nsCycleCollectionTraversalCallback* cb =
     static_cast<nsCycleCollectionTraversalCallback*>(aData);
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "[user data (or handler)]");
   cb->NoteXPCOMChild(static_cast<nsISupports*>(aXPCOMChild));
 }
 

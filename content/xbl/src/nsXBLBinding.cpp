@@ -293,9 +293,11 @@ TraverseKey(nsISupports* aKey, nsInsertionPointList* aData, void* aClosure)
   nsCycleCollectionTraversalCallback &cb = 
     *static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
 
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mInsertionPointTable key");
   cb.NoteXPCOMChild(aKey);
   if (aData) {
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY(*aData, nsXBLInsertionPoint)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY(*aData, nsXBLInsertionPoint,
+                                               "mInsertionPointTable value")
   }
   return PL_DHASH_NEXT;
 }

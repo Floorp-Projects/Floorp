@@ -843,6 +843,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIContent, NS_ICONTENT_IID)
     nsISupports *preservedWrapper = nsnull;                      \
     if (tmp->GetOwnerDoc())                                      \
       preservedWrapper = tmp->GetOwnerDoc()->GetReference(tmp);  \
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[preserved wrapper]");\
     cb.NoteXPCOMChild(preservedWrapper);                         \
   }
 

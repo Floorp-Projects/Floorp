@@ -960,7 +960,9 @@ SubDocTraverser(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
   nsCycleCollectionTraversalCallback *cb = 
     static_cast<nsCycleCollectionTraversalCallback*>(arg);
 
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mSubDocuments entry->mKey");
   cb->NoteXPCOMChild(entry->mKey);
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mSubDocuments entry->mSubDocument");
   cb->NoteXPCOMChild(entry->mSubDocument);
 
   return PL_DHASH_NEXT;
@@ -972,10 +974,14 @@ RadioGroupsTraverser(const nsAString& aKey, nsAutoPtr<nsRadioGroupStruct>& aData
   nsCycleCollectionTraversalCallback *cb = 
     static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
 
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
+                                   "mRadioGroups entry->mSelectedRadioButton");
   cb->NoteXPCOMChild(aData->mSelectedRadioButton);
 
   PRUint32 i, count = aData->mRadioButtons.Count();
   for (i = 0; i < count; ++i) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
+                                       "mRadioGroups entry->mRadioButtons[i]");
     cb->NoteXPCOMChild(aData->mRadioButtons[i]);
   }
 
@@ -988,6 +994,7 @@ BoxObjectTraverser(const void* key, nsPIBoxObject* boxObject, void* userArg)
   nsCycleCollectionTraversalCallback *cb = 
     static_cast<nsCycleCollectionTraversalCallback*>(userArg);
  
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mBoxObjectTable entry");
   cb->NoteXPCOMChild(boxObject);
 
   return PL_DHASH_NEXT;
@@ -1008,6 +1015,7 @@ LinkMapTraverser(nsUint32ToContentHashEntry* aEntry, void* userArg)
 {
   LinkMapTraversalVisitor visitor;
   visitor.mCb = static_cast<nsCycleCollectionTraversalCallback*>(userArg);
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*visitor.mCb, "mLinkMap entry");
   aEntry->VisitContent(&visitor);
   return PL_DHASH_NEXT;
 }
@@ -1019,6 +1027,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
 
   // Traverse the mChildren nsAttrAndChildArray.
   for (PRInt32 indx = PRInt32(tmp->mChildren.ChildCount()); indx > 0; --indx) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mChildren[i]");
     cb.NoteXPCOMChild(tmp->mChildren.ChildAt(indx - 1));
   }
 
@@ -1063,6 +1072,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mVisitednessChangedURIs)
 
   // Traverse any associated preserved wrapper.
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[preserved wrapper]");
   cb.NoteXPCOMChild(tmp->GetReference(tmp));
 
   if (tmp->mSubDocuments && tmp->mSubDocuments->ops) {
