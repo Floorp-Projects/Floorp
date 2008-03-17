@@ -600,7 +600,7 @@ var BookmarksEventHandler = {
 
     var target = aEvent.originalTarget;
     // If this event bubbled up from a menu or menuitem, close the menus.
-    // Do this before opening tabs, to avoid hiding the open tabs confirm.
+    // Do this before opening tabs, to avoid hiding the open tabs confirm-dialog.
     if (target.localName == "menu" || target.localName == "menuitem") {
       for (node = target.parentNode; node; node = node.parentNode) {
         if (node.localName == "menupopup")
