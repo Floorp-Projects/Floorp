@@ -319,8 +319,7 @@ PRBool
 nsAccUtils::IsAncestorOf(nsIDOMNode *aPossibleAncestorNode,
                          nsIDOMNode *aPossibleDescendantNode)
 {
-  NS_ENSURE_TRUE(aPossibleAncestorNode, PR_FALSE);
-  NS_ENSURE_TRUE(aPossibleDescendantNode, PR_FALSE);
+  NS_ENSURE_TRUE(aPossibleAncestorNode && aPossibleDescendantNode, PR_FALSE);
 
   nsCOMPtr<nsIDOMNode> loopNode = aPossibleDescendantNode;
   nsCOMPtr<nsIDOMNode> parentNode;
@@ -330,6 +329,21 @@ nsAccUtils::IsAncestorOf(nsIDOMNode *aPossibleAncestorNode,
       return PR_TRUE;
     }
     loopNode.swap(parentNode);
+  }
+  return PR_FALSE;
+}
+
+PRBool
+nsAccUtils::AreSiblings(nsIDOMNode *aDOMNode1,
+                       nsIDOMNode *aDOMNode2)
+{
+  NS_ENSURE_TRUE(aDOMNode1 && aDOMNode2, PR_FALSE);
+
+  nsCOMPtr<nsIDOMNode> parentNode1, parentNode2;
+  if (NS_SUCCEEDED(aDOMNode1->GetParentNode(getter_AddRefs(parentNode1))) &&
+      NS_SUCCEEDED(aDOMNode2->GetParentNode(getter_AddRefs(parentNode2))) &&
+      parentNode1 == parentNode2) {
+    return PR_TRUE;
   }
   return PR_FALSE;
 }

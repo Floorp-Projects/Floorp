@@ -103,8 +103,6 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
     // nsIAccessibleText
     NS_IMETHOD GetAssociatedEditor(nsIEditor **aEditor);
 
-    enum EDupeEventRule { eAllowDupes, eCoalesceFromSameSubtree, eRemoveDupes };
-
     /**
       * Non-virtual method to fire a delayed event after a 0 length timeout
       *
@@ -120,19 +118,15 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
       *                    synchronous with a DOM event
       */
     nsresult FireDelayedToolkitEvent(PRUint32 aEvent, nsIDOMNode *aDOMNode,
-                                     EDupeEventRule aAllowDupes = eRemoveDupes,
+                                     nsAccEvent::EEventRule aAllowDupes = nsAccEvent::eRemoveDupes,
                                      PRBool aIsAsynch = PR_FALSE);
 
     /**
      * Fire accessible event in timeout.
      *
      * @param aEvent - the event to fire
-     * @param aAllowDupes - if false then delayed events of the same type and
-     *                      for the same DOM node in the event queue won't
-     *                      be fired.
      */
-    nsresult FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent,
-                                        EDupeEventRule aAllowDupes = eRemoveDupes);
+    nsresult FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent);
 
     void ShutdownChildDocuments(nsIDocShellTreeItem *aStart);
 
