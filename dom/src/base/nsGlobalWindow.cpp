@@ -9225,14 +9225,6 @@ nsNavigator::JavaEnabled(PRBool *aReturn)
   *aReturn = PR_FALSE;
 
 #ifdef OJI
-  // determine whether user has enabled java.
-  // if pref doesn't exist, map result to false.
-  *aReturn = nsContentUtils::GetBoolPref("security.enable_java");
-
-  // if Java is not enabled, result is false and return reight away
-  if (!*aReturn)
-    return NS_OK;
-
   // Ask the nsIJVMManager if Java is enabled
   nsCOMPtr<nsIJVMManager> jvmService = do_GetService(kJVMServiceCID);
   if (jvmService) {
