@@ -74,15 +74,6 @@ NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContex
 // nsIFrame methods
 
 NS_IMETHODIMP
-nsSVGTextFrame::SetInitialChildList(nsIAtom*  aListName,
-                                    nsIFrame* aChildList)
-{
-  nsresult rv = nsSVGTextFrameBase::SetInitialChildList(aListName, aChildList);
-  NotifyGlyphMetricsChange();
-  return rv;
-}
-
-NS_IMETHODIMP
 nsSVGTextFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                  nsIAtom*        aAttribute,
                                  PRInt32         aModType)
@@ -127,7 +118,7 @@ nsSVGTextFrame::GetType() const
 NS_IMETHODIMP
 nsSVGTextFrame::GetNumberOfChars(PRInt32 *_retval)
 {
-  UpdateGlyphPositioning();
+  UpdateGlyphPositioning(PR_FALSE);
 
   return nsSVGTextFrameBase::GetNumberOfChars(_retval);
 }
@@ -135,7 +126,7 @@ nsSVGTextFrame::GetNumberOfChars(PRInt32 *_retval)
 NS_IMETHODIMP
 nsSVGTextFrame::GetComputedTextLength(float *_retval)
 {
-  UpdateGlyphPositioning();
+  UpdateGlyphPositioning(PR_FALSE);
 
   return nsSVGTextFrameBase::GetComputedTextLength(_retval);
 }
@@ -143,7 +134,7 @@ nsSVGTextFrame::GetComputedTextLength(float *_retval)
 NS_IMETHODIMP
 nsSVGTextFrame::GetSubStringLength(PRUint32 charnum, PRUint32 nchars, float *_retval)
 {
-  UpdateGlyphPositioning();
+  UpdateGlyphPositioning(PR_FALSE);
 
   return nsSVGTextFrameBase::GetSubStringLength(charnum, nchars, _retval);
 }
@@ -151,7 +142,7 @@ nsSVGTextFrame::GetSubStringLength(PRUint32 charnum, PRUint32 nchars, float *_re
 NS_IMETHODIMP
 nsSVGTextFrame::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
 {
-  UpdateGlyphPositioning();
+  UpdateGlyphPositioning(PR_FALSE);
 
   return nsSVGTextFrameBase::GetStartPositionOfChar(charnum,  _retval);
 }
@@ -159,7 +150,7 @@ nsSVGTextFrame::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retva
 NS_IMETHODIMP
 nsSVGTextFrame::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
 {
-  UpdateGlyphPositioning();
+  UpdateGlyphPositioning(PR_FALSE);
 
   return nsSVGTextFrameBase::GetEndPositionOfChar(charnum,  _retval);
 }
@@ -167,7 +158,7 @@ nsSVGTextFrame::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
 NS_IMETHODIMP
 nsSVGTextFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 {
-  UpdateGlyphPositioning();
+  UpdateGlyphPositioning(PR_FALSE);
 
   return nsSVGTextFrameBase::GetExtentOfChar(charnum,  _retval);
 }
@@ -175,7 +166,7 @@ nsSVGTextFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 NS_IMETHODIMP
 nsSVGTextFrame::GetRotationOfChar(PRUint32 charnum, float *_retval)
 {
-  UpdateGlyphPositioning();
+  UpdateGlyphPositioning(PR_FALSE);
 
   return nsSVGTextFrameBase::GetRotationOfChar(charnum,  _retval);
 }
@@ -183,7 +174,7 @@ nsSVGTextFrame::GetRotationOfChar(PRUint32 charnum, float *_retval)
 NS_IMETHODIMP
 nsSVGTextFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval)
 {
-  UpdateGlyphPositioning();
+  UpdateGlyphPositioning(PR_FALSE);
 
   return nsSVGTextFrameBase::GetCharNumAtPosition(point,  _retval);
 }
@@ -225,7 +216,6 @@ NS_IMETHODIMP
 nsSVGTextFrame::NotifyRedrawUnsuspended()
 {
   mMetricsState = unsuspended;
-  UpdateGlyphPositioning();
 
   return nsSVGTextFrameBase::NotifyRedrawUnsuspended();
 }
@@ -253,9 +243,33 @@ nsSVGTextFrame::GetOverrideCTM()
 }
 
 NS_IMETHODIMP
+nsSVGTextFrame::PaintSVG(nsSVGRenderState* aContext, nsRect *aDirtyRect)
+{
+  UpdateGlyphPositioning(PR_TRUE);
+  
+  return nsSVGTextFrameBase::PaintSVG(aContext, aDirtyRect);
+}
+
+NS_IMETHODIMP
+nsSVGTextFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
+{
+  UpdateGlyphPositioning(PR_TRUE);
+  
+  return nsSVGTextFrameBase::GetFrameForPointSVG(x, y, hit);
+}
+
+NS_IMETHODIMP
+nsSVGTextFrame::UpdateCoveredRegion()
+{
+  UpdateGlyphPositioning(PR_TRUE);
+  
+  return nsSVGTextFrameBase::UpdateCoveredRegion();
+}
+
+NS_IMETHODIMP
 nsSVGTextFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
-  UpdateGlyphPositioning();
+  UpdateGlyphPositioning(PR_TRUE);
 
   return nsSVGTextFrameBase::GetBBox(_retval);
 }
@@ -308,7 +322,6 @@ void
 nsSVGTextFrame::NotifyGlyphMetricsChange()
 {
   mPositioningDirty = PR_TRUE;
-  UpdateGlyphPositioning();
 }
 
 static void
@@ -332,7 +345,7 @@ GetSingleValue(nsISVGGlyphFragmentLeaf *fragment,
 }
 
 void
-nsSVGTextFrame::UpdateGlyphPositioning()
+nsSVGTextFrame::UpdateGlyphPositioning(PRBool aForceGlobalTransform)
 {
   if (mMetricsState == suspended || !mPositioningDirty)
     return;
@@ -425,7 +438,7 @@ nsSVGTextFrame::UpdateGlyphPositioning()
         float dx = 0.0f;
         nsCOMPtr<nsIDOMSVGLengthList> list = fragment->GetDx();
         GetSingleValue(fragment, list, &dx);
-        chunkLength += dx + fragment->GetAdvance();
+        chunkLength += dx + fragment->GetAdvance(aForceGlobalTransform);
         fragment = fragment->GetNextGlyphFragment();
         if (fragment && fragment->IsAbsolutelyPositioned())
           break;
@@ -452,10 +465,11 @@ nsSVGTextFrame::UpdateGlyphPositioning()
         GetSingleValue(fragment, list, &dy);
       }
 
-      float baseline_offset = fragment->GetBaselineOffset(baseline);
+      float baseline_offset =
+        fragment->GetBaselineOffset(baseline, aForceGlobalTransform);
       fragment->SetGlyphPosition(x + dx, y + dy - baseline_offset);
 
-      x += dx + fragment->GetAdvance();
+      x += dx + fragment->GetAdvance(aForceGlobalTransform);
       y += dy;
       fragment = fragment->GetNextGlyphFragment();
       if (fragment && fragment->IsAbsolutelyPositioned())
