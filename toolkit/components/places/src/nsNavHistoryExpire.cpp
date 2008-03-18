@@ -245,10 +245,10 @@ nsNavHistoryExpire::ClearHistory()
   mozIStorageConnection* connection = mHistory->GetStorageConnection();
   NS_ENSURE_TRUE(connection, NS_ERROR_OUT_OF_MEMORY);
 
-  PRBool keepGoing;
-  nsresult rv = ExpireItems(0, &keepGoing);
-  if (NS_FAILED(rv))
-    NS_WARNING("ExpireItems failed.");
+  // expire visits, then let the paranoid functions do the cleanup for us
+  nsresult rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "DELETE FROM moz_historyvisits"));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = ExpireHistoryParanoid(connection, -1);
   if (NS_FAILED(rv))
@@ -352,7 +352,7 @@ nsNavHistoryExpire::ExpireItems(PRUint32 aNumToExpire, PRBool* aKeepGoing)
     // special case: erase all history
     expireTime = 0;
   } else {
-    expireTime = PR_Now() - GetExpirationTimeAgo();
+    expireTime = PR_Now() - GetExpirationTimeAgo(mHistory->mExpireDaysMax);
   }
 
   // find some visits to expire
@@ -440,13 +440,12 @@ nsNavHistoryExpireRecord::nsNavHistoryExpireRecord(
 //
 //    Find visits to expire, meeting the following criteria:
 //
-//    * With a visit date greater than (now - browser.history_expire_days_min)
-//    * With a visit date less than (now - browser.history_expire_days)
-//    * With a visit date greater than the minimum, and less than the maximum,
-//      and over the visit cap of browser.history_expire_sites.
+//    * With a visit date older than browser.history_expire_days ago.
+//    * With a visit date older than browser.history_expire_days_min ago
+//      if we have more than browser.history_expire_sites unique urls.
 //
 //    aExpireThreshold is the time at which we will delete visits before.
-//    If it is zero, we will not use a threshold and will match everything.
+//    If it is zero, we will match everything.
 //
 //    aNumToExpire is the maximum number of visits to find. If it is 0, then
 //    we will get all matching visits.
@@ -456,34 +455,26 @@ nsNavHistoryExpire::FindVisits(PRTime aExpireThreshold, PRUint32 aNumToExpire,
                                mozIStorageConnection* aConnection,
                                nsTArray<nsNavHistoryExpireRecord>& aRecords)
 {
-  // Select moz_places records, including whether visited and whether the URI
-  // is bookmarked or not.
-  nsCAutoString sqlBase;
-  sqlBase.AssignLiteral(
-    "SELECT v.id, v.place_id, v.visit_date, h.url, h.favicon_id, h.hidden, "
-    "(SELECT fk FROM moz_bookmarks WHERE fk = h.id) "
-    "FROM moz_places h JOIN moz_historyvisits v ON h.id = v.place_id ");
-
-  // 1. Expire records older than the max-age cap
-  nsCAutoString sqlMaxAge;
-  sqlMaxAge.Assign(sqlBase);
-
-  if (aNumToExpire) {
-    // Select records older than the max-age cap
-    sqlMaxAge.AppendLiteral("WHERE v.visit_date < ?1 "
-                            "ORDER BY v.visit_date ASC LIMIT ?2");
-  }
-
+  // Select a limited number of visits older than a time
   nsCOMPtr<mozIStorageStatement> selectStatement;
-  nsresult rv = aConnection->CreateStatement(sqlMaxAge, getter_AddRefs(selectStatement));
+  nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT v.id, v.place_id, v.visit_date, h.url, h.favicon_id, h.hidden, "
+        "(SELECT fk FROM moz_bookmarks WHERE fk = h.id) "
+      "FROM moz_places h JOIN moz_historyvisits v ON h.id = v.place_id "
+      "WHERE v.visit_date < ?1 "
+      "ORDER BY v.visit_date ASC LIMIT ?2"),
+    getter_AddRefs(selectStatement));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+  // browser.history_expire_days || match all visits
+  PRTime expireMaxTime = aExpireThreshold ? aExpireThreshold : LL_MAXINT;
+  rv = selectStatement->BindInt64Parameter(0, expireMaxTime);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aNumToExpire) {
-    rv = selectStatement->BindInt64Parameter(0, aExpireThreshold);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = selectStatement->BindInt64Parameter(1, aNumToExpire);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  // use LIMIT -1 to not limit
+  PRInt32 numToExpire = aNumToExpire ? aNumToExpire : -1;
+  rv = selectStatement->BindInt64Parameter(1, numToExpire);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasMore = PR_FALSE;
   while (NS_SUCCEEDED(selectStatement->ExecuteStep(&hasMore)) && hasMore) {
@@ -491,33 +482,44 @@ nsNavHistoryExpire::FindVisits(PRTime aExpireThreshold, PRUint32 aNumToExpire,
     aRecords.AppendElement(record);
   }
 
-  // 2. if no over-max-age records are found, select records older than the min-age cap AND over the sites cap.
-  if (!aRecords.Length()) {
-    nsCAutoString sqlMinAge;
-    sqlMinAge.Assign(sqlBase);
-
-    // Select records older than the max-age cap
-    // Setting the visit cap as the OFFSET value selects the next aNumToExpire
-    // records above the cap.
-    sqlMinAge.AppendLiteral("WHERE v.visit_date < ?1 "
-                            "ORDER BY v.visit_date DESC LIMIT ?2 OFFSET ?3");
-
-    nsCOMPtr<mozIStorageStatement> selectMinStatement;
-    nsresult rv = aConnection->CreateStatement(sqlMinAge, getter_AddRefs(selectMinStatement));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRInt64 minDaysAgo = mHistory->mExpireDaysMin * 86400 * PR_USEC_PER_SEC;
-    PRTime minThreshold = PR_Now() - minDaysAgo;
-    rv = selectMinStatement->BindInt64Parameter(0, minThreshold);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = selectMinStatement->BindInt64Parameter(1, aNumToExpire);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = selectMinStatement->BindInt32Parameter(2, mHistory->mExpireSites);
+  // If we have found less than aNumToExpire over-max-age records, and we are
+  // over the unique urls cap, select records older than the min-age cap .
+  if (aRecords.Length() < aNumToExpire) {
+    // check the number of visited unique urls in the db.
+    nsCOMPtr<mozIStorageStatement> countStatement;
+    rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+        "SELECT count(*) FROM moz_places WHERE visit_count > 0"),
+      getter_AddRefs(countStatement));
     NS_ENSURE_SUCCESS(rv, rv);
 
     hasMore = PR_FALSE;
-    while (NS_SUCCEEDED(selectMinStatement->ExecuteStep(&hasMore)) && hasMore) {
-      nsNavHistoryExpireRecord record(selectMinStatement);
+    // initialize to mExpiresites to avoid expiring if something goes wrong
+    PRInt32 pageCount = mHistory->mExpireSites;
+    if (NS_SUCCEEDED(countStatement->ExecuteStep(&hasMore)) && hasMore) {
+      rv = countStatement->GetInt32(0, &pageCount);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // Don't find any more pages to expire if we have not reached the urls cap
+    if (pageCount <= mHistory->mExpireSites)
+        return NS_OK;
+
+    rv = selectStatement->Reset();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // browser.history_expire_days_min
+    PRTime expireMinTime = PR_Now() -
+                           GetExpirationTimeAgo(mHistory->mExpireDaysMin);
+    rv = selectStatement->BindInt64Parameter(0, expireMinTime);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    numToExpire = aNumToExpire - aRecords.Length();
+    rv = selectStatement->BindInt64Parameter(1, numToExpire);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    hasMore = PR_FALSE;
+    while (NS_SUCCEEDED(selectStatement->ExecuteStep(&hasMore)) && hasMore) {
+      nsNavHistoryExpireRecord record(selectStatement);
       aRecords.AppendElement(record);
     }
   }
@@ -1025,7 +1027,7 @@ nsNavHistoryExpire::ComputeNextExpirationTime(
             // again next time
 
   PRTime minTime = statement->AsInt64(0);
-  mNextExpirationTime = minTime + GetExpirationTimeAgo();
+  mNextExpirationTime = minTime + GetExpirationTimeAgo(mHistory->mExpireDaysMax);
 }
 
 
@@ -1059,19 +1061,15 @@ nsNavHistoryExpire::TimerCallback(nsITimer* aTimer, void* aClosure)
 // nsNavHistoryExpire::GetExpirationTimeAgo
 
 PRTime
-nsNavHistoryExpire::GetExpirationTimeAgo()
+nsNavHistoryExpire::GetExpirationTimeAgo(PRInt32 aExpireDays)
 {
-  PRInt64 expireDays = mHistory->mExpireDaysMax;
-
   // Prevent Int64 overflow for people that type in huge numbers.
   // This number is 2^63 / 24 / 60 / 60 / 1000000 (reversing the math below)
-  const PRInt64 maxDays = 106751991;
-  if (expireDays > maxDays)
-    expireDays = maxDays;
+  const PRInt32 maxDays = 106751991;
+  if (aExpireDays > maxDays)
+    aExpireDays = maxDays;
 
   // compute how long ago to expire from
-  const PRInt64 secsPerDay = 24*60*60;
-  const PRInt64 usecsPerSec = 1000000;
-  const PRInt64 usecsPerDay = secsPerDay * usecsPerSec;
-  return expireDays * usecsPerDay;
+  // seconds per day = 86400 = 24*60*60
+  return (PRTime)aExpireDays * 86400 * PR_USEC_PER_SEC;
 }

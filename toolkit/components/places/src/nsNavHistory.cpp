@@ -1787,6 +1787,9 @@ nsNavHistory::LoadPrefs(PRBool aInitializing)
 
   mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX, &mExpireDaysMax);
   mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MIN, &mExpireDaysMin);
+  // Cap max days to min days to prevent expiring pages younger than min
+  if (mExpireDaysMax < mExpireDaysMin)
+    mExpireDaysMax = mExpireDaysMin;
   if (NS_FAILED(mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_SITES,
                                         &mExpireSites)))
     mExpireSites = EXPIRATION_CAP_SITES;
