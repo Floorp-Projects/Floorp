@@ -1109,15 +1109,14 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn* aCol, const n
   *aWidth = 0;
   *aHeight = 0;
 
-  nscoord currX = mInnerBox.x;
+  nscoord currX = mInnerBox.x - mHorzPosition;
 
   // The Rect for the requested item. 
   nsRect theRect;
 
   nsPresContext* presContext = PresContext();
 
-  for (nsTreeColumn* currCol = mColumns->GetFirstColumn(); currCol && currX < mInnerBox.x + mInnerBox.width;
-       currCol = currCol->GetNext()) {
+  for (nsTreeColumn* currCol = mColumns->GetFirstColumn(); currCol; currCol = currCol->GetNext()) {
 
     // The Rect for the current cell.
     nscoord colWidth;
@@ -1133,7 +1132,6 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn* aCol, const n
       currX += cellRect.width;
       continue;
     }
-
     // Now obtain the properties for our cell.
     PrefillPropertyArray(aRow, currCol);
     mView->GetCellProperties(aRow, currCol, mScratchArray);
@@ -3848,9 +3846,6 @@ NS_IMETHODIMP nsTreeBodyFrame::EnsureCellIsVisible(PRInt32 aRow, nsITreeColumn* 
   nscoord columnWidth;
   rv = col->GetWidthInTwips(this, &columnWidth);
   if(NS_FAILED(rv)) return rv;
-
-  if (col->IsLastVisible(this))
-    columnWidth -= mAdjustWidth; // this is one case we don't want to adjust
 
   // If the start of the column is before the
   // start of the horizontal view, then scroll
