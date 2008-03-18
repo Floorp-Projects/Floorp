@@ -7317,6 +7317,8 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c python` -ne 0; then
         dnl - Fixes to the above by Python/*nix knowledgable people welcome!
         if test -f "$MOZ_PYTHON_PREFIX/lib/libpython$MOZ_PYTHON_VER_DOTTED.so.1.0"; then
             MOZ_PYTHON_LIBS="-L$MOZ_PYTHON_PREFIX/lib -lpython$MOZ_PYTHON_VER_DOTTED"
+        elif test -f "$MOZ_PYTHON_PREFIX/lib64/libpython$MOZ_PYTHON_VER_DOTTED.so.1.0"; then
+            MOZ_PYTHON_LIBS="-L$MOZ_PYTHON_PREFIX/lib64 -lpython$MOZ_PYTHON_VER_DOTTED"
         elif test -f "$MOZ_PYTHON_PREFIX/lib/libpython$MOZ_PYTHON_VER_DOTTED.so"; then
             MOZ_PYTHON_LIBS="-L$MOZ_PYTHON_PREFIX/lib -lpython$MOZ_PYTHON_VER_DOTTED"
         elif test -f "$MOZ_PYTHON_PREFIX/libpython$MOZ_PYTHON_VER_DOTTED.so"; then
