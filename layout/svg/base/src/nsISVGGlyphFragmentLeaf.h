@@ -46,11 +46,9 @@ class nsIDOMSVGPoint;
 class nsIDOMSVGRect;
 class nsSVGTextPathFrame;
 
-
-// {ec9a9965-3ff2-4bb5-b0e2-dd8830e9f41a}
+// {2C466AED-CF7B-4479-A807-98151215A645}
 #define NS_ISVGGLYPHFRAGMENTLEAF_IID \
-  { 0xec9a9965, 0x3ff2, 0x4bb5, \
-    { 0xb0, 0xe2, 0xdd, 0x88, 0x30, 0xe9, 0xf4, 0x1a } }
+{ 0x2c466aed, 0xcf7b, 0x4479, { 0xa8, 0x7, 0x98, 0x15, 0x12, 0x15, 0xa6, 0x45 } }
 
 class nsISVGGlyphFragmentLeaf : public nsISVGGlyphFragmentNode
 {
@@ -72,9 +70,8 @@ public:
   enum { BASELINE_TEXT_BEFORE_EDGE = 6U };
   enum { BASELINE_TEXT_AFTER_EDGE = 7U };
 
-  NS_IMETHOD_(float) GetBaselineOffset(PRUint16 baselineIdentifier,
-                                       PRBool aForceGlobalTransform)=0;
-  NS_IMETHOD_(float) GetAdvance(PRBool aForceGlobalTransform)=0;
+  NS_IMETHOD_(float) GetBaselineOffset(PRUint16 baselineIdentifier)=0;
+  NS_IMETHOD_(float) GetAdvance()=0;
 
   NS_IMETHOD_(void) SetGlyphPosition(float x, float y)=0;
   NS_IMETHOD_(nsSVGTextPathFrame*) FindTextPathParent()=0;

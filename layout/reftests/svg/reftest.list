@@ -56,7 +56,6 @@ fails == style-property-not-on-script-element-01.svg pass.svg
 == svg-in-foreignObject-02.xhtml svg-in-foreignObject-01-ref.xhtml # reuse -01-ref.xhtml
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 386713
 == text-in-link-01.svg text-in-link-01-ref.svg
-== text-scale-01.svg text-scale-01-ref.svg
 == text-style-01a.svg text-style-01-ref.svg
 == text-style-01b.svg text-style-01-ref.svg
 == text-style-01c.svg text-style-01-ref.svg
