@@ -1044,6 +1044,23 @@ XPC_XOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 JS_STATIC_DLL_CALLBACK(JSObject *)
 XPC_XOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
 {
+  JSObject *wrappedObj = GetWrappedObject(cx, obj);
+  if (!wrappedObj) {
+    ThrowException(NS_ERROR_INVALID_ARG, cx);
+    return nsnull;
+  }
+  nsresult rv = IsWrapperSameOrigin(cx, wrappedObj);
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_DOM_PROP_ACCESS_DENIED) {
+      // Can't create iterators for foreign objects.
+      ThrowException(rv, cx);
+      return nsnull;
+    }
+
+    ThrowException(NS_ERROR_FAILURE, cx);
+    return nsnull;
+  }
+
   JSObject *wrapperIter = JS_NewObject(cx, &sXPC_XOW_JSClass.base, nsnull,
                                        JS_GetGlobalForObject(cx, obj));
   if (!wrapperIter) {
@@ -1053,13 +1070,7 @@ XPC_XOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
   JSAutoTempValueRooter tvr(cx, OBJECT_TO_JSVAL(wrapperIter));
 
   // Initialize our XOW.
-  JSObject *innerObj = GetWrappedObject(cx, obj);
-  if (!innerObj) {
-    ThrowException(NS_ERROR_INVALID_ARG, cx);
-    return nsnull;
-  }
-
-  jsval v = OBJECT_TO_JSVAL(innerObj);
+  jsval v = OBJECT_TO_JSVAL(wrappedObj);
   if (!JS_SetReservedSlot(cx, wrapperIter, XPCWrapper::sWrappedObjSlot, v) ||
       !JS_SetReservedSlot(cx, wrapperIter, XPCWrapper::sResolvingSlot,
                           JSVAL_FALSE) ||
@@ -1068,7 +1079,7 @@ XPC_XOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
     return nsnull;
   }
 
-  return XPCWrapper::CreateIteratorObj(cx, wrapperIter, obj, innerObj,
+  return XPCWrapper::CreateIteratorObj(cx, wrapperIter, obj, wrappedObj,
                                        keysonly);
 }
 
