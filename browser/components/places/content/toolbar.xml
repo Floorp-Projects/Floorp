@@ -1031,23 +1031,6 @@
           aPopup._built = true;
         ]]></body>
       </method>
-
-      <method name="_isChevronChild">
-        <parameter name="aChild"/>
-        <body><![CDATA[
-          if (!this._chevron.firstChild.hasAttribute("type"))
-            return false;
-
-          var parent = aChild.parentNode;
-          while (parent != this) {
-            if (parent == this._chevron)
-              return true;
-
-            parent = parent.parentNode;
-          }
-          return false;
-        ]]></body>
-      </method>
     </implementation>
 
     <handlers>
@@ -1078,36 +1061,30 @@
           nsDragAndDrop.dragExit(event, this._DNDObserver);
       ]]></handler>
       <handler event="popupshowing" phase="capturing"><![CDATA[
-        var target = event.originalTarget;
+        var popup = event.originalTarget;
 
-        // the chevron has its own view
-        if (this._isChevronChild(target))
-          return;
+        // Avoid handling popupshowing of inner views
+        if (popup._resultNode && PlacesUIUtils.getViewForNode(popup) == this)
+          this._containerPopupShowing(popup);
 
-        if (target._resultNode)
-          this._containerPopupShowing(target);
-
-        var targetParent = target.parentNode;
-        if (targetParent.localName == "toolbarbutton" &&
+        var parent = popup.parentNode;
+        if (parent.localName == "toolbarbutton" &&
             !PlacesControllerDragHelper.getSession())
-          this._openedMenuButton = targetParent;
+          this._openedMenuButton = parent;
       ]]></handler>
       <handler event="popuphidden"><![CDATA[
-        var target = event.originalTarget;
-        if (!target._resultNode)
-          return;
+        var popup = event.originalTarget;
 
-        // the chevron has its own view
-        if (this._isChevronChild(target))
-          return;
+        // Avoid handling popupshowing of inner views
+        if (popup._resultNode && PlacesUIUtils.getViewForNode(popup) == this) {
+          // UI performance: folder queries are cheap, keep the resultnode open
+          // so we don't rebuild its contents whenever the popup is reopened.
+          if (!PlacesUtils.nodeIsFolder(popup._resultNode))
+            popup._resultNode.containerOpen = false;
+        }
 
-        // UI performance: folder queries are cheap, keep the resultnode open
-        // so we don't rebuild its contents whenever the popup is reopened.
-        if (!PlacesUtils.nodeIsFolder(target._resultNode))
-          target._resultNode.containerOpen = false;
-
-        var targetParent = target.parentNode;
-        if (targetParent.localName == "toolbarbutton" &&
+        var parent = popup.parentNode;
+        if (parent.localName == "toolbarbutton" &&
             !PlacesControllerDragHelper.getSession())
           this._openedMenuButton = null;
       ]]></handler>
