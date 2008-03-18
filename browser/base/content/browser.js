@@ -3418,6 +3418,7 @@ var FullScreen =
 
       // The user may quit fullscreen during an animation
       clearInterval(this._animationInterval);
+      clearTimeout(this._animationTimeout);
       getNavToolbox().style.marginTop = "0px";
       if (this._isChromeCollapsed)
         this.mouseoverToggle(true);
@@ -3518,6 +3519,7 @@ var FullScreen =
   // Animate the toolbars disappearing
   _shouldAnimate: true,
   _isAnimating: false,
+  _animationTimeout: null,
   _animationInterval: null,
   _animateUp: function()
   {
@@ -3568,7 +3570,7 @@ var FullScreen =
     if (!aShow && this._shouldAnimate) {
       this._isAnimating = true;
       this._shouldAnimate = false;
-      setTimeout(this._animateUp, 800);
+      this._animationTimeout = setTimeout(this._animateUp, 800);
       return;
     }
 
