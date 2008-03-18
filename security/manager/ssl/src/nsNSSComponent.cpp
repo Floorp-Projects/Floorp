@@ -103,7 +103,7 @@
 #include "nsICRLManager.h"
 #include "nsNSSShutDown.h"
 #include "nsSmartCardEvent.h"
-#include "nsICryptoHash.h"
+#include "nsIKeyModule.h"
 
 #include "nss.h"
 #include "pk11func.h"
@@ -2556,8 +2556,8 @@ nsCryptoHMAC::~nsCryptoHMAC()
     PK11_DestroyContext(mHMACContext, PR_TRUE);
 }
 
-/* void init (in unsigned long aAlgorithm, in octet aKeyData, in long aKeyLength); */
-NS_IMETHODIMP nsCryptoHMAC::Init(PRUint32 aAlgorithm, const PRUint8 *aKeyData, PRUint32 aKeyLen)
+/* void init (in unsigned long aAlgorithm, in nsIKeyObject aKeyObject); */
+NS_IMETHODIMP nsCryptoHMAC::Init(PRUint32 aAlgorithm, nsIKeyObject *aKeyObject)
 {
   if (mHMACContext)
   {
@@ -2584,25 +2584,26 @@ NS_IMETHODIMP nsCryptoHMAC::Init(PRUint32 aAlgorithm, const PRUint8 *aKeyData, P
     return NS_ERROR_INVALID_ARG;
   }
 
-  PK11SlotInfo *slot = PK11_GetBestSlot(HMACMechType, nsnull);
-  NS_ENSURE_TRUE(slot, NS_ERROR_FAILURE);
+  NS_ENSURE_ARG_POINTER(aKeyObject);
+
+  nsresult rv;
+
+  PRInt16 keyType;
+  rv = aKeyObject->GetType(&keyType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ENSURE_TRUE(keyType == nsIKeyObject::SYM_KEY, NS_ERROR_INVALID_ARG);
+
+  PK11SymKey* key;
+  // GetKeyObj doesn't addref the key
+  rv = aKeyObject->GetKeyObj((void**)&key);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   SECItem rawData;
-  rawData.data = const_cast<unsigned char*>(aKeyData);
-  rawData.len = aKeyLen;
-
-  PK11SymKey* key = PK11_ImportSymKey(
-      slot, HMACMechType, PK11_OriginUnwrap, CKA_SIGN, &rawData, nsnull);
-  PK11_FreeSlot(slot);
-
-  NS_ENSURE_TRUE(key, NS_ERROR_FAILURE);
-
   rawData.data = 0;
   rawData.len = 0;
   mHMACContext = PK11_CreateContextBySymKey(
       HMACMechType, CKA_SIGN, key, &rawData);
-  PK11_FreeSymKey(key);
-
   NS_ENSURE_TRUE(mHMACContext, NS_ERROR_FAILURE);
 
   SECStatus ss = PK11_DigestBegin(mHMACContext);

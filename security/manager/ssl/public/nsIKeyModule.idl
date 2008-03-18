@@ -48,6 +48,7 @@ interface nsIKeyObject : nsISupports
   // Algorithm types
   const short RC4 = 1;
   const short AES_CBC = 2;
+  const short HMAC = 257;
 
   // aAlgorithm is an algorithm type
   // aKey is either a PK11SymKey, SECKEYPublicKey, or a SECKEYPrivateKey.
