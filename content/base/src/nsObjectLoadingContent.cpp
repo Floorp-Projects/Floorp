@@ -387,15 +387,25 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
     channelType = APPLICATION_OCTET_STREAM;
     chan->SetContentType(channelType);
   }
-  
-  if (mContentType.IsEmpty() ||
-      !channelType.EqualsASCII(APPLICATION_OCTET_STREAM)) {
-    mContentType = channelType;
-  } else {
+
+  // We want to use the channel type unless one of the following is
+  // true:
+  //
+  // 1) The channel type is application/octet-stream and we have a
+  //    type hint
+  // 2) Our type hint is a type that we support with a plugin.
+
+  if ((channelType.EqualsASCII(APPLICATION_OCTET_STREAM) && 
+       !mContentType.IsEmpty()) ||
+      (IsSupportedPlugin(mContentType) && 
+       GetTypeOfContent(mContentType) == eType_Plugin)) {
     // Set the type we'll use for dispatch on the channel.  Otherwise we could
     // end up trying to dispatch to a nsFrameLoader, which will complain that
     // it couldn't find a way to handle application/octet-stream
+
     chan->SetContentType(mContentType);
+  } else {
+    mContentType = channelType;
   }
 
   // Now find out what type the content is
