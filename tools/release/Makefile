@@ -46,10 +46,10 @@ cvsmirror_main:
 	chmod -R g+rw /builds/cvsmirror.clean/cvsroot /builds/cvsmirror.clean/l10n
 	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d ${PRODUCT_TAG}_RELEASE mozilla
 	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d ${PRODUCT_TAG}_RELEASE_l10n mozilla/tools/tinderbox-configs/
+	cvs -d /builds/cvsmirror.clean/l10n rtag -d ${PRODUCT_TAG}_RELEASE l10n
 	for ((rc=1; rc <= ${PRODUCT_RC}; rc++)); do \
 		cvs -d /builds/cvsmirror.clean/cvsroot rtag -d ${PRODUCT_TAG}_RC$$rc mozilla;\
 		cvs -d /builds/cvsmirror.clean/cvsroot rtag -d ${PRODUCT_TAG}_RC$$rc_l10n mozilla/tools/tinderbox-configs/;\
-		cvs -d /builds/cvsmirror.clean/l10n rtag -d ${PRODUCT_TAG}_RC$$rc l10n;\
 		cvs -d /builds/cvsmirror.clean/l10n rtag -d ${PRODUCT_TAG}_RC$$rc l10n;\
 	done
 
