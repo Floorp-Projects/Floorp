@@ -79,27 +79,7 @@
                  xbl:inherits="value=label,accesskey,crop,toolbarmode,buttonstyle"/>
       </xul:stack>
     </content>
-   </binding> 
-  <binding id="statusbarpanel-text-shadow" extends="chrome://global/content/bindings/general.xml#statusbarpanel">
-   <content>
-        <xul:stack class="statusbarpanel-text-stack" crop="right" flex="1">
-         <xul:label class="statusbarpanel-text-shadow" crop="right" flex="1"
-                 xbl:inherits="value=label,accesskey,crop"/>
-         <xul:label class="statusbarpanel-text" crop="right" flex="1"
-                 xbl:inherits="value=label,accesskey,crop"/>
-      </xul:stack>
-   </content>    
-  </binding>
-  <binding id="statusbarpanel-iconic-text-shadow" extends="chrome://global/content/bindings/general.xml#statusbarpanel-iconic-text">
-   <content>
-   		<xul:image class="statusbarpanel-icon" xbl:inherits="validate,src=image"/>
-        <xul:stack class="statusbarpanel-text-stack" crop="right" flex="1">
-         <xul:label class="statusbarpanel-text-shadow" crop="right" flex="1"
-                 xbl:inherits="value=label,accesskey,crop"/>
-         <xul:label class="statusbarpanel-text" crop="right" flex="1"
-                 xbl:inherits="value=label,accesskey,crop"/>
-      </xul:stack>
-   </content>    
+   </binding>
   </binding>
   
   <binding id="tabbrowser-tab" extends="chrome://browser/content/tabbrowser.xml#tabbrowser-tab">

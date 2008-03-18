@@ -306,8 +306,7 @@ toolbar[mode="icons"] #forward-button .toolbarbutton-text-box,
 /* ----- DEFAULT PRIMARY TOOLBAR BUTTONS ----- */	
 
 .toolbarbutton-text-shadow,
-.tab-text-shadow,
-.statusbarpanel-text-shadow {
+.tab-text-shadow {
   color: #f0f0f0;
   padding-top: 1px;
   opacity: 0.5;
@@ -764,15 +763,9 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker[open="true"] {
 
 statusbarpanel#statusbar-display {
   padding-left: 0;
-  -moz-binding: url("chrome://browser/skin/browser.xml#statusbarpanel-text-shadow") !important;
 }
 
-.statusbarpanel-iconic-text {
-  -moz-binding: url("chrome://browser/skin/browser.xml#statusbarpanel-iconic-text-shadow") !important;
-}
-
-.statusbarpanel-text,
-.statusbarpanel-text-shadow {
+.statusbarpanel-text {
   margin-top: 2px;
   margin-bottom: 0;
 }
