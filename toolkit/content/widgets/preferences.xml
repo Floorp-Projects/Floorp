@@ -297,7 +297,9 @@
               var family = this._branch
                                .getComplexValue(this.name, Components.interfaces.nsISupportsString)
                                .data;
-              return FontBuilder.enumerator.getStandardFamilyName(family);
+              var fontEnumerator = Components.classes["@mozilla.org/gfx/fontenumerator;1"]
+                                             .createInstance(Components.interfaces.nsIFontEnumerator);
+              return fontEnumerator.getStandardFamilyName(family);
             case "file":
               var f = this._branch
                           .getComplexValue(this.name, Components.interfaces.nsILocalFile);
