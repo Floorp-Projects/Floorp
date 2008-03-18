@@ -46,7 +46,6 @@
 
 #include "nsIPrefService.h"
 #include "nsIPrefLocalizedString.h"
-#include "nsIPlatformCharset.h"
 #include "nsILocalFile.h"
 
 #include "nsIURIFixup.h"
@@ -232,17 +231,6 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, PRUint32 aFixupF
 #endif
     }
 
-    // For these protocols, use system charset instead of the default UTF-8,
-    // if the URI is non ASCII.
-    PRBool bAsciiURI = IsASCII(uriString);
-    PRBool bUseNonDefaultCharsetForURI =
-                        !bAsciiURI &&
-                        (scheme.IsEmpty() ||
-                         scheme.LowerCaseEqualsLiteral("http") ||
-                         scheme.LowerCaseEqualsLiteral("https") ||
-                         scheme.LowerCaseEqualsLiteral("ftp") ||
-                         scheme.LowerCaseEqualsLiteral("file"));
-
     // Now we need to check whether "scheme" is something we don't
     // really know about.
     nsCOMPtr<nsIProtocolHandler> ourHandler, extHandler;
@@ -252,8 +240,7 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, PRUint32 aFixupF
     
     if (ourHandler != extHandler || !PossiblyHostPortUrl(uriString)) {
         // Just try to create an URL out of it
-        rv = NS_NewURI(aURI, uriString,
-                       bUseNonDefaultCharsetForURI ? GetCharsetForUrlBar() : nsnull);
+        rv = NS_NewURI(aURI, uriString, nsnull);
 
         if (!*aURI && rv != NS_ERROR_MALFORMED_URI) {
             return rv;
@@ -323,13 +310,9 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, PRUint32 aFixupF
             uriString.Assign(NS_LITERAL_CSTRING("ftp://") + uriString);
         else 
             uriString.Assign(NS_LITERAL_CSTRING("http://") + uriString);
-
-        // For ftp & http, we want to use system charset.
-        if (!bAsciiURI)
-          bUseNonDefaultCharsetForURI = PR_TRUE;
     } // end if checkprotocol
 
-    rv = NS_NewURI(aURI, uriString, bUseNonDefaultCharsetForURI ? GetCharsetForUrlBar() : nsnull);
+    rv = NS_NewURI(aURI, uriString, nsnull);
 
     // Did the caller want us to try an alternative URI?
     // If so, attempt to fixup http://foo into http://www.foo.com
@@ -754,41 +737,6 @@ PRBool nsDefaultURIFixup::PossiblyByteExpandedFileName(const nsAString& aIn)
         ++iter;
     }
     return PR_FALSE;
-}
-
-const char * nsDefaultURIFixup::GetFileSystemCharset()
-{
-  if (mFsCharset.IsEmpty())
-  {
-    nsresult rv;
-    nsCAutoString charset;
-    nsCOMPtr<nsIPlatformCharset> plat(do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv))
-      rv = plat->GetCharset(kPlatformCharsetSel_FileName, charset);
-
-    if (charset.IsEmpty())
-      mFsCharset.AssignLiteral("ISO-8859-1");
-    else
-      mFsCharset.Assign(charset);
-  }
-
-  return mFsCharset.get();
-}
-
-const char * nsDefaultURIFixup::GetCharsetForUrlBar()
-{
-  const char *charset = GetFileSystemCharset();
-#ifdef XP_MAC
-  // check for "x-mac-" prefix
-  if ((strlen(charset) >= 6) && charset[0] == 'x' && charset[2] == 'm')
-  {
-    if (!strcmp("x-mac-roman", charset))
-      return "ISO-8859-1";
-    // we can do more x-mac-xxxx mapping here
-    // or somewhere in intl code like nsIPlatformCharset.
-  }
-#endif
-  return charset;
 }
 
 nsresult nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString, 
