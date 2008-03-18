@@ -223,4 +223,16 @@ function run_test() {
   do_check_false(uri_in_db(referrerURI));
   add_visit(uri("http://mozilla.com"), referrerURI);
   do_check_true(uri_in_db(referrerURI));
+
+  // test to ensure history.dat gets deleted if all history is being cleared
+  var file = do_get_file("toolkit/components/places/tests/unit/history.dat");
+  var histFile = dirSvc.get("ProfD", Ci.nsIFile);
+  file.copyTo(histFile, "history.dat");
+  histFile.append("history.dat");
+  do_check_true(histFile.exists());
+
+  var globalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
+                                .getService(Components.interfaces.nsIBrowserHistory);
+  globalHistory.removeAllPages();
+  do_check_false(histFile.exists());
 }
