@@ -83,9 +83,7 @@
 #include "nsIStringBundle.h"
 
 #include "nsIObserver.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefBranch2.h"
-#include "nsIPrefService.h"
+#include "nsIObserverService.h"
 #include "lcglue.h"
 
 #include "nspr.h"
@@ -94,6 +92,7 @@
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISignatureVerifier.h"
+#include "nsSupportsPrimitives.h"
 
 
 extern "C" int XP_PROGRESS_STARTING_JAVA;
@@ -384,26 +383,37 @@ nsJVMManager::PostEvent(PRThread* prthread, nsIRunnable* runnable, PRBool async)
 }
 
 nsJVMManager::nsJVMManager(nsISupports* outer)
-    : fJVM(NULL), fStatus(nsJVMStatus_Enabled),
+    : fJVM(NULL), fStatus(nsJVMStatus_Disabled),
       fDebugManager(NULL), fJSJavaVM(NULL),
       fClassPathAdditions(new nsVoidArray()), fClassPathAdditionsString(NULL),
       fStartupMessagePosted(PR_FALSE)
 {
     NS_INIT_AGGREGATED(outer);
 
-    nsCOMPtr<nsIPrefBranch2> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (branch) {
-        branch->AddObserver("security.enable_java", this, PR_FALSE);
-        PRBool prefBool = PR_TRUE;
-        nsresult rv = branch->GetBoolPref("security.enable_java", &prefBool);
-        if (NS_SUCCEEDED(rv)) {
-            SetJVMEnabled(prefBool);
+    nsCOMPtr<nsIPluginHost> host = do_GetService(kPluginManagerCID);
+    if (host) {
+        if (NS_SUCCEEDED(host->IsPluginEnabledForType(NS_JVM_MIME_TYPE))) {
+            SetJVMEnabled(PR_TRUE);
         }
+    }
+
+    nsCOMPtr<nsIObserverService>
+        obsService(do_GetService("@mozilla.org/observer-service;1"));
+    if (obsService) {
+        obsService->AddObserver(this, NS_XPCOM_CATEGORY_ENTRY_ADDED_OBSERVER_ID, PR_FALSE);
+        obsService->AddObserver(this, NS_XPCOM_CATEGORY_ENTRY_REMOVED_OBSERVER_ID, PR_FALSE);
     }
 }
 
 nsJVMManager::~nsJVMManager()
 {
+    nsCOMPtr<nsIObserverService>
+        obsService(do_GetService("@mozilla.org/observer-service;1"));
+    if (obsService) {
+        obsService->RemoveObserver(this, NS_XPCOM_CATEGORY_ENTRY_ADDED_OBSERVER_ID);
+        obsService->RemoveObserver(this, NS_XPCOM_CATEGORY_ENTRY_REMOVED_OBSERVER_ID);
+    }
+
     int count = fClassPathAdditions->Count();
     for (int i = 0; i < count; i++) {
         PR_Free((*fClassPathAdditions)[i]);
@@ -844,17 +854,21 @@ nsJVMManager::Observe(nsISupports*     subject,
                       const char*      topic,
                       const PRUnichar* data_unicode)
 {
-    nsresult rv;
-    nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(subject, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    PRBool prefBool = PR_TRUE;
-    rv = branch->GetBoolPref("security.enable_java", &prefBool);
-    if (NS_SUCCEEDED(rv)) {
-        SetJVMEnabled(prefBool);
+    if (nsDependentString(data_unicode).Equals(NS_LITERAL_STRING("Gecko-Content-Viewers"))) {
+        nsCString mimeType;
+        nsCOMPtr<nsISupportsCString> type = do_QueryInterface(subject);
+        nsresult rv = type->GetData(mimeType);
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (mimeType.Equals(NS_JVM_MIME_TYPE)) {
+            if (strcmp(topic, NS_XPCOM_CATEGORY_ENTRY_ADDED_OBSERVER_ID) == 0) {
+                SetJVMEnabled(PR_TRUE);
+            }
+            else if (strcmp(topic, NS_XPCOM_CATEGORY_ENTRY_REMOVED_OBSERVER_ID) == 0) {
+                SetJVMEnabled(PR_FALSE);
+            }
+        }
     }
-
-    return rv;
+    return NS_OK;
 }
 
 nsJVMStatus

@@ -951,7 +951,8 @@ function rebuildPluginsDS()
                           true);
       gPluginsDS.Assert(pluginNode,
                         gRDF.GetResource(PREFIX_NS_EM + "isDisabled"),
-                        gRDF.GetLiteral(plugin.disabled ? "true" : "false"),
+                        gRDF.GetLiteral((plugin.disabled ||
+                                         plugin.blocklisted) ? "true" : "false"),
                         true);
       gPluginsDS.Assert(pluginNode,
                         gRDF.GetResource(PREFIX_NS_EM + "blocklisted"),
@@ -977,10 +978,11 @@ function togglePluginDisabled(aName, aDesc)
   plugin.disabled = !plugin.disabled;
   for (var i = 0; i < plugin.plugins.length; ++i)
     plugin.plugins[i].disabled = plugin.disabled;
+  var isDisabled = plugin.disabled || plugin.blocklisted;
   gPluginsDS.Change(gRDF.GetResource(PREFIX_ITEM_URI + plugin.filename),
                     gRDF.GetResource(PREFIX_NS_EM + "isDisabled"),
-                    gRDF.GetLiteral(plugin.disabled ? "false" : "true"),
-                    gRDF.GetLiteral(plugin.disabled ? "true" : "false"));
+                    gRDF.GetLiteral(isDisabled ? "false" : "true"),
+                    gRDF.GetLiteral(isDisabled ? "true" : "false"));
   gExtensionsViewController.onCommandUpdate();
   gExtensionsView.selectedItem.focus();
 }
