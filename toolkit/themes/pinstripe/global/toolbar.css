@@ -55,8 +55,9 @@ toolbarpalette {
   min-width: 1px;
   min-height: 20px !important;
   color: #000000;
+  border-top: 1px solid #C7C7C7;
   border-bottom: 1px solid #404040;
-  background-color: #C4C4C4;
+  background-color: #A1A1A1;
 }
 
 menubar {
