@@ -118,6 +118,17 @@ function run_test() {
   do_check_eq(handlerInfo.defaultDescription, "");
 
   // test some default protocol info properties
+  var haveDefaultHandlersVersion = false;
+  try { 
+    // If we have a defaultHandlersVersion pref, then assume that we're in the
+    // firefox tree and that we'll also have default handlers.
+    // Bug 395131 has been filed to make this test work more generically
+    // by providing our own prefs for this test rather than this icky
+    // special casing.
+    rootPrefBranch.getCharPref("gecko.handlerService.defaultHandlersVersion");
+    haveDefaultHandlersVersion = true;
+  } catch (ex) {}
+
   const kExternalWarningDefault = 
     "network.protocol-handler.warn-external-default";
   prefSvc.setBoolPref(kExternalWarningDefault, true);
@@ -150,27 +161,38 @@ function run_test() {
   // OS default exists, injected default exists, explicit warning pref: false
   prefSvc.setBoolPref(kExternalWarningPrefPrefix + "mailto", false);
   protoInfo = protoSvc.getProtocolHandlerInfo("mailto");
-  do_check_eq(1, protoInfo.possibleApplicationHandlers.length);
+  if (haveDefaultHandlersVersion)
+    do_check_eq(1, protoInfo.possibleApplicationHandlers.length);
+  else
+    do_check_eq(0, protoInfo.possibleApplicationHandlers.length);
   do_check_false(protoInfo.alwaysAskBeforeHandling);
 
   // OS default exists, injected default exists, explicit warning pref: true
   prefSvc.setBoolPref(kExternalWarningPrefPrefix + "mailto", true);
   protoInfo = protoSvc.getProtocolHandlerInfo("mailto");
-  do_check_eq(1, protoInfo.possibleApplicationHandlers.length);
-  // alwaysAskBeforeHandling is expected to be false here, because although
-  // the pref is true, the value in RDF is false. The injected mailto handler
-  // carried over the default pref value, and so when we set the pref above to
-  // true it's ignored.
-  do_check_false(protoInfo.alwaysAskBeforeHandling);
-  // Now set the value stored in RDF to true, and the pref to false, to make
-  // sure we still get the right value. (Basically, same thing as above but
-  // with the values reversed.)
-  prefSvc.setBoolPref(kExternalWarningPrefPrefix + "mailto", false);
-  protoInfo.alwaysAskBeforeHandling = true;
-  handlerSvc.store(protoInfo);
-  protoInfo = protoSvc.getProtocolHandlerInfo("mailto");
-  do_check_eq(1, protoInfo.possibleApplicationHandlers.length);
-  do_check_true(protoInfo.alwaysAskBeforeHandling);
+  if (haveDefaultHandlersVersion) {
+    do_check_eq(1, protoInfo.possibleApplicationHandlers.length);
+    // alwaysAskBeforeHandling is expected to be false here, because although
+    // the pref is true, the value in RDF is false. The injected mailto handler
+    // carried over the default pref value, and so when we set the pref above
+    // to true it's ignored.
+    do_check_false(protoInfo.alwaysAskBeforeHandling);
+  } else {
+    do_check_eq(0, protoInfo.possibleApplicationHandlers.length);
+    do_check_true(protoInfo.alwaysAskBeforeHandling);
+  }
+
+  if (haveDefaultHandlersVersion) {
+    // Now set the value stored in RDF to true, and the pref to false, to make
+    // sure we still get the right value. (Basically, same thing as above but
+    // with the values reversed.)
+    prefSvc.setBoolPref(kExternalWarningPrefPrefix + "mailto", false);
+    protoInfo.alwaysAskBeforeHandling = true;
+    handlerSvc.store(protoInfo);
+    protoInfo = protoSvc.getProtocolHandlerInfo("mailto");
+    do_check_eq(1, protoInfo.possibleApplicationHandlers.length);
+    do_check_true(protoInfo.alwaysAskBeforeHandling);
+  }
 
 
   //**************************************************************************//
@@ -205,16 +227,10 @@ function run_test() {
   var handlerInfo2 = mimeSvc.getFromTypeAndExtension("nonexistent/type2", null);
   handlerSvc.store(handlerInfo2);
   var handlerTypes = ["nonexistent/type", "nonexistent/type2"];
-  try { 
-    // If we have a defaultHandlersVersion pref, then assume that we're in the
-    // firefox tree and that we'll also have default handlers.
-    // Bug 395131 has been filed to make this test work more generically
-    // by providing our own prefs for this test rather than this icky
-    // special casing.
-    rootPrefBranch.getCharPref("gecko.handlerService.defaultHandlersVersion");
+  if (haveDefaultHandlersVersion) {
     handlerTypes.push("webcal");
     handlerTypes.push("mailto");
-  } catch (ex) {}   
+  }
   var handlers = handlerSvc.enumerate();
   while (handlers.hasMoreElements()) {
     var handler = handlers.getNext().QueryInterface(Ci.nsIHandlerInfo);
