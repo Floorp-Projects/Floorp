@@ -79,7 +79,6 @@
                  xbl:inherits="value=label,accesskey,crop,toolbarmode,buttonstyle"/>
       </xul:stack>
     </content>
-   </binding>
   </binding>
   
   <binding id="tabbrowser-tab" extends="chrome://browser/content/tabbrowser.xml#tabbrowser-tab">
