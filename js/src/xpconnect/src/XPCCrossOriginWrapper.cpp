@@ -1049,7 +1049,7 @@ XPC_XOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
     ThrowException(NS_ERROR_INVALID_ARG, cx);
     return nsnull;
   }
-  nsresult rv = IsWrapperSameOrigin(cx, wrappedObj);
+  nsresult rv = CanAccessWrapper(cx, wrappedObj);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_DOM_PROP_ACCESS_DENIED) {
       // Can't create iterators for foreign objects.
