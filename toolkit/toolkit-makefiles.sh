@@ -194,6 +194,8 @@ MAKEFILES_content="
   content/base/Makefile
   content/base/public/Makefile
   content/base/src/Makefile
+  content/base/test/Makefile
+  content/base/test/chrome/Makefile
   content/canvas/Makefile
   content/canvas/public/Makefile
   content/canvas/src/Makefile
