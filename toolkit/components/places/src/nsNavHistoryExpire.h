@@ -110,5 +110,5 @@ protected:
   nsresult StartTimer(PRUint32 aMilleseconds);
   static void TimerCallback(nsITimer* aTimer, void* aClosure);
 
-  PRTime GetExpirationTimeAgo();
+  PRTime GetExpirationTimeAgo(PRInt32 aExpireDays);
 };
