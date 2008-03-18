@@ -63,11 +63,14 @@ MOCHI_TESTS = \
 		test_bug_360493_2.html \
 		test_bug_391514.html \
 		test_prompt.html \
+		test_xhr.html \
+		test_xml_load.html \
 		test_zzz_finish.html \
 		$(NULL)
 
 MOCHI_CONTENT = \
 		pwmgr_common.js \
+		prompt_common.js \
 		authenticate.sjs \
 		$(NULL)
 

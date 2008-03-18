@@ -68,8 +68,6 @@
 #include "nsVariant.h"
 #include "nsIParser.h"
 #include "nsLoadListenerProxy.h"
-#include "nsIWindowWatcher.h"
-#include "nsIAuthPrompt.h"
 #include "nsStringStream.h"
 #include "nsIStreamConverterService.h"
 #include "nsICachingChannel.h"
@@ -2737,33 +2735,13 @@ nsXMLHttpRequest::GetInterface(const nsIID & aIID, void **aResult)
   }
 
   // Now give mNotificationCallbacks (if non-null) a chance to return the
-  // desired interface.  Note that this means that it can override our
-  // nsIAuthPrompt impl, but that's fine, if it has a better auth prompt idea.
+  // desired interface.
   if (mNotificationCallbacks) {
     nsresult rv = mNotificationCallbacks->GetInterface(aIID, aResult);
     if (NS_SUCCEEDED(rv)) {
       NS_ASSERTION(*aResult, "Lying nsIInterfaceRequestor implementation!");
       return rv;
     }
-  }
-  
-  if (aIID.Equals(NS_GET_IID(nsIAuthPrompt))) {    
-    *aResult = nsnull;
-
-    nsresult rv;
-    nsCOMPtr<nsIWindowWatcher> ww(do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
-    if (NS_FAILED(rv))
-      return rv;
-
-    nsCOMPtr<nsIAuthPrompt> prompt;
-    rv = ww->GetNewAuthPrompter(nsnull, getter_AddRefs(prompt));
-    if (NS_FAILED(rv))
-      return rv;
-
-    nsIAuthPrompt *p = prompt.get();
-    NS_ADDREF(p);
-    *aResult = p;
-    return NS_OK;
   }
 
   return QueryInterface(aIID, aResult);
