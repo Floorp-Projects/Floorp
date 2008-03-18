@@ -67,7 +67,7 @@ interface nsIAddonSearchResult : nsISupports
   readonly attribute AString description;
 
   /**
-   * The rating of the add-on, 0-10 or -1 if unrated.
+   * The rating of the add-on, 0-5 or -1 if unrated.
    */
   readonly attribute long rating;
 
