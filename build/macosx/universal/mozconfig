@@ -52,6 +52,7 @@ ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.4u.sdk
 # problem, because the variables it affects only need to be set for
 # configure.
 if test -n "$MOZ_BUILD_APP" ; then
+if test "$MOZ_BUILD_APP" = "i386" -o  "$MOZ_BUILD_APP" = "ppc"; then
   TARGET_CPU=$MOZ_BUILD_APP
   GCC_VERSION=4.0
 
@@ -88,4 +89,5 @@ if test -n "$MOZ_BUILD_APP" ; then
   # universal binary will be produced.  The exception is packager.mk, which
   # needs to know to look for universal bits when building the .dmg.
   UNIVERSAL_BINARY=1
+fi
 fi
