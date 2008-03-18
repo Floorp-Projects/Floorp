@@ -156,6 +156,9 @@ static void quartz_ensure_symbols(void)
 
 static inline cairo_bool_t
 _cairo_quartz_is_cgcontext_bitmap_context (CGContextRef cgc) {
+    if (cgc == NULL)
+	return FALSE;
+
     if (CGContextGetTypePtr) {
 	/* 4 is the type value of a bitmap context */
 	if (CGContextGetTypePtr(cgc) == 4)
@@ -685,53 +688,65 @@ CreateRepeatingGradientFunction (cairo_quartz_surface_t *surface,
 
 /* Obtain a CGImageRef from a #cairo_surface_t * */
 
-static CGImageRef
+static cairo_status_t
 _cairo_surface_to_cgimage (cairo_surface_t *target,
-			   cairo_surface_t *source)
+			   cairo_surface_t *source,
+			   CGImageRef *image_out)
 {
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_surface_type_t stype = cairo_surface_get_type (source);
     cairo_image_surface_t *isurf;
-    CGImageRef image, image2;
+    CGImageRef image;
     void *image_extra;
 
     if (stype == CAIRO_SURFACE_TYPE_QUARTZ_IMAGE) {
 	cairo_quartz_image_surface_t *surface = (cairo_quartz_image_surface_t *) source;
-	return CGImageRetain (surface->image);
+	*image_out = CGImageRetain (surface->image);
+	return CAIRO_STATUS_SUCCESS;
     }
 
     if (stype == CAIRO_SURFACE_TYPE_QUARTZ) {
 	cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) source;
+	if (IS_EMPTY(surface)) {
+	    *image_out = NULL;
+	    return CAIRO_STATUS_SUCCESS;
+	}
+
 	if (_cairo_quartz_is_cgcontext_bitmap_context (surface->cgContext)) {
-	    image = CGBitmapContextCreateImage (surface->cgContext);
-	    if (image)
-		return image;
+	    *image_out = CGBitmapContextCreateImage (surface->cgContext);
+	    if (*image_out)
+		return CAIRO_STATUS_SUCCESS;
 	}
     }
 
     if (stype != CAIRO_SURFACE_TYPE_IMAGE) {
-	cairo_status_t status =
-	    _cairo_surface_acquire_source_image (source, &isurf, &image_extra);
+	status = _cairo_surface_acquire_source_image (source, &isurf, &image_extra);
 	if (status)
-	    return NULL;
+	    return status;
     } else {
 	isurf = (cairo_image_surface_t *) source;
     }
 
-    image2 = _cairo_quartz_create_cgimage (isurf->format,
-					   isurf->width,
-					   isurf->height,
-					   isurf->stride,
-					   isurf->data,
-					   TRUE,
-					   NULL, NULL, NULL);
+    if (isurf->width == 0 || isurf->height == 0) {
+	*image_out = NULL;
+    } else {
+	image = _cairo_quartz_create_cgimage (isurf->format,
+					      isurf->width,
+					      isurf->height,
+					      isurf->stride,
+					      isurf->data,
+					      TRUE,
+					      NULL, NULL, NULL);
 
-    image = CGImageCreateCopy (image2);
-    CGImageRelease (image2);
+	/* Create a copy to ensure that the CGImageRef doesn't depend on the image surface's backing store */
+	*image_out = CGImageCreateCopy (image);
+	CGImageRelease (image);
+    }
 
     if ((cairo_surface_t*) isurf != source)
 	_cairo_surface_release_source_image (source, isurf, image_extra);
 
-    return image;
+    return status;
 }
 
 /* Generic #cairo_pattern_t -> CGPattern function */
@@ -817,9 +832,12 @@ _cairo_quartz_cairo_repeating_surface_pattern_to_quartz (cairo_quartz_surface_t 
     if (status)
 	return status;
 
-    image = _cairo_surface_to_cgimage ((cairo_surface_t*) dest, pat_surf);
-    if (image == NULL)
+    status = _cairo_surface_to_cgimage ((cairo_surface_t*) dest, pat_surf, &image);
+    if (status != CAIRO_STATUS_SUCCESS)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (image == NULL)
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
 
     info = malloc(sizeof(SurfacePatternDrawInfo));
     if (!info)
@@ -903,6 +921,8 @@ _cairo_quartz_setup_fallback_source (cairo_quartz_surface_t *surface,
     cairo_t *fallback_cr;
     CGImageRef img;
 
+    cairo_status_t status;
+
     if (clipBox.size.width == 0.0f ||
 	clipBox.size.height == 0.0f)
 	return DO_NOTHING;
@@ -932,7 +952,11 @@ _cairo_quartz_setup_fallback_source (cairo_quartz_surface_t *surface,
     cairo_paint (fallback_cr);
     cairo_destroy (fallback_cr);
 
-    img = _cairo_surface_to_cgimage ((cairo_surface_t*) surface, fallback);
+    status = _cairo_surface_to_cgimage ((cairo_surface_t*) surface, fallback, &img);
+    if (status == CAIRO_STATUS_SUCCESS && img == NULL)
+	return DO_NOTHING;
+    if (status)
+	return DO_UNSUPPORTED;
 
     surface->sourceImageRect = CGRectMake (0.0, 0.0, w, h);
     surface->sourceImage = img;
@@ -1103,8 +1127,10 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
 	CGRect srcRect;
 	cairo_fixed_t fw, fh;
 
-	img = _cairo_surface_to_cgimage ((cairo_surface_t *) surface, pat_surf);
-	if (!img)
+	status = _cairo_surface_to_cgimage ((cairo_surface_t *) surface, pat_surf, &img);
+	if (status == CAIRO_STATUS_SUCCESS && img == NULL)
+	    return DO_NOTHING;
+	if (status)
 	    return DO_UNSUPPORTED;
 
 	surface->sourceImage = img;
@@ -1165,6 +1191,8 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
 	cairo_int_status_t status;
 
 	status = _cairo_quartz_cairo_repeating_surface_pattern_to_quartz (surface, source, &pattern);
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    return DO_NOTHING;
 	if (status)
 	    return DO_UNSUPPORTED;
 
@@ -1454,6 +1482,7 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
     cairo_quartz_surface_t *new_surface = NULL;
     cairo_format_t new_format;
     CGImageRef quartz_image = NULL;
+    cairo_status_t status;
 
     *clone_out = NULL;
 
@@ -1480,8 +1509,8 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
 	}
     }
 
-    quartz_image = _cairo_surface_to_cgimage ((cairo_surface_t*) abstract_surface, src);
-    if (!quartz_image)
+    status = _cairo_surface_to_cgimage ((cairo_surface_t*) abstract_surface, src, &quartz_image);
+    if (status)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     new_format = CAIRO_FORMAT_ARGB32;  /* assumed */
@@ -1491,6 +1520,10 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
 
     new_surface = (cairo_quartz_surface_t *)
 	cairo_quartz_surface_create (new_format, width, height);
+
+    if (quartz_image == NULL)
+	goto FINISH;
+
     if (!new_surface || new_surface->base.status) {
 	CGImageRelease (quartz_image);
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1509,7 +1542,8 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
     CGContextRestoreGState (new_surface->cgContext);
 
     CGImageRelease (quartz_image);
-    
+
+FINISH:    
     *clone_out = (cairo_surface_t*) new_surface;
 
     return CAIRO_STATUS_SUCCESS;
@@ -2047,13 +2081,13 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
 
     // everything would be masked out, so do nothing
     if (extents.width == 0 || extents.height == 0)
-	goto BAIL;
+	return CAIRO_STATUS_SUCCESS;
 
-    img = _cairo_surface_to_cgimage ((cairo_surface_t *) surface, pat_surf);
-    if (!img) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto BAIL;
-    }
+    status = _cairo_surface_to_cgimage ((cairo_surface_t *) surface, pat_surf, &img);
+    if (status == CAIRO_STATUS_SUCCESS && img == NULL)
+	return CAIRO_STATUS_SUCCESS;
+    if (status)
+	return status;
 
     rect = CGRectMake (0.0f, 0.0f, extents.width, extents.height);
 
@@ -2085,7 +2119,7 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
     }
 
     CGImageRelease (img);
-  BAIL:
+
     return status;
 }
 
