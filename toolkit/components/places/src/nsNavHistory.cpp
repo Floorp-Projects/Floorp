@@ -3799,6 +3799,19 @@ nsNavHistory::RemoveAllPages()
   nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM"));
   NS_ENSURE_SUCCESS(rv, rv);
 #endif
+
+  // privacy cleanup, if there's an old history.dat around, just delete it
+  nsCOMPtr<nsIFile> oldHistoryFile;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_HISTORY_50_FILE,
+                                       getter_AddRefs(oldHistoryFile));
+  if (NS_FAILED(rv)) return rv;
+
+  PRBool fileExists;
+  if (NS_SUCCEEDED(oldHistoryFile->Exists(&fileExists)) && fileExists) {
+    rv = oldHistoryFile->Remove(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   return NS_OK;
 }
 

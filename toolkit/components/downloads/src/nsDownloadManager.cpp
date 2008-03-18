@@ -1551,6 +1551,19 @@ nsDownloadManager::CleanUp()
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // privacy cleanup, if there's an old downloads.rdf around, just delete it
+  nsCOMPtr<nsIFile> oldDownloadsFile;
+  rv = NS_GetSpecialDirectory(NS_APP_DOWNLOADS_50_FILE,
+                              getter_AddRefs(oldDownloadsFile));
+
+  if (NS_FAILED(rv)) return rv;
+
+  PRBool fileExists;
+  if (NS_SUCCEEDED(oldDownloadsFile->Exists(&fileExists)) && fileExists) {
+    rv = oldDownloadsFile->Remove(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   // Notify the UI with the topic and null subject to indicate "remove all"
   return mObserverService->NotifyObservers(nsnull,
                                            "download-manager-remove-download",
