@@ -741,7 +741,6 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker[open="true"] {
 
 #page-proxy-stack {
   -moz-margin-start: 11px;
-  margin-bottom: 1px;
   opacity: 1.0;
 }
 
