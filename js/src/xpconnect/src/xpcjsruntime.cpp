@@ -238,13 +238,11 @@ ContextCallback(JSContext *cx, uintN operation)
     {
         if (operation == JSCONTEXT_NEW)
         {
-            // Set the limits on the native and script stack space.
             XPCPerThreadData* tls = XPCPerThreadData::GetData(cx);
             if(tls)
             {
                 JS_SetThreadStackLimit(cx, tls->GetStackLimit());
             }
-            JS_SetScriptStackQuota(cx, 100*1024*1024);
         }
     }
 
