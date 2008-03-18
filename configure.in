@@ -375,6 +375,20 @@ if test "$GNU_CC"; then
     fi
 fi
 
+INTEL_CC=
+INTEL_CXX=
+if test "$GCC" = yes; then
+   if test "`$CC -help 2>&1 | grep -c 'Intel(R) C Compiler'`" != "0"; then
+     INTEL_CC=1
+   fi
+fi
+
+if test "$GXX" = yes; then
+   if test "`$CXX -help 2>&1 | grep -c 'Intel(R) C++ Compiler'`" != "0"; then
+     INTEL_CXX=1
+   fi
+fi
+
 dnl Special win32 checks
 dnl ========================================================
 case "$target" in
@@ -610,6 +624,8 @@ AC_SUBST(GNU_AS)
 AC_SUBST(GNU_LD)
 AC_SUBST(GNU_CC)
 AC_SUBST(GNU_CXX)
+AC_SUBST(INTEL_CC)
+AC_SUBST(INTEL_CXX)
 
 dnl ========================================================
 dnl Checks for programs.
@@ -743,6 +759,7 @@ case "$target" in
     if test -n "$_MACOSX_DEPLOYMENT_TARGET" ; then
         dnl Use the specified value
         export MACOSX_DEPLOYMENT_TARGET=$_MACOSX_DEPLOYMENT_TARGET
+        AC_DEFINE_UNQUOTED(__ENVIRONMENT_MAC_OS_X_VERION_MIN_REQUIRED__,$_MACOSX_DEPLOYMENT_TARGET)
     elif test -z "$MACOSX_DEPLOYMENT_TARGET" ; then
         dnl No value specified on the command line or in the environment,
         dnl use the lesser of the application's minimum or the architecture's
@@ -1275,14 +1292,23 @@ if test "$GNU_CC"; then
     # -Wconversion - complained when char's or short's were used a function args
     # -Wshadow - removed because it generates more noise than help --pete
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -W -Wno-unused -Wpointer-arith"
-    if test "$CPU_ARCH" != "ia64" && test "$CPU_ARCH" != "sparc"; then
+    if test "$CPU_ARCH" != "ia64" && test "$CPU_ARCH" != "sparc" \
+       && test -z "$INTEL_CC"; then
         # don't use -Wcast-align on ia64 or sparc, it's noisy on those platforms
+        # icc doesn't support this flag.
         _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wcast-align"
     fi
 
     dnl Turn pedantic on but disable the warnings for long long
     _PEDANTIC=1
-    _IGNORE_LONG_LONG_WARNINGS=1
+
+    if test -z "$INTEL_CC"; then
+      _IGNORE_LONG_LONG_WARNINGS=1
+      _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -W"
+    else
+      _IGNORE_LONG_LONG_WARNINGS=
+    fi
+
 
     _DEFINES_CFLAGS='-include $(DEPTH)/mozilla-config.h -DMOZILLA_CLIENT'
     _USE_CPP_INCLUDE_FLAG=1
@@ -1306,8 +1332,10 @@ if test "$GNU_CXX"; then
     CXXFLAGS="$CXXFLAGS -fno-strict-aliasing"
     # Turn on GNU specific features
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wconversion -Wpointer-arith -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor"
-    if test "$CPU_ARCH" != "ia64" && test "$CPU_ARCH" != "sparc"; then
+    if test "$CPU_ARCH" != "ia64" && test "$CPU_ARCH" != "sparc" \
+       && test -z "$INTEL_CC"; then
         # don't use -Wcast-align on ia64 or sparc, it's noisy on those platforms
+        # icc doesn't support this flag.
         _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wcast-align"
     fi
 
@@ -6638,6 +6666,13 @@ else
 fi
 
 CFLAGS="$_SAVE_CFLAGS"
+
+if test -n $INTEL_CC; then
+  PROFILE_GEN_CFLAGS="-prof-gen -prof-dir ."
+  PROFILE_GEN_LDFLAGS=
+  PROFILE_USE_CFLAGS="-prof-use -prof-dir ."
+  PROFILE_USE_LDFLAGS=
+fi
 
 AC_SUBST(PROFILE_GEN_CFLAGS)
 AC_SUBST(PROFILE_GEN_LDFLAGS)
