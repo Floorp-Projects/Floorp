@@ -12,14 +12,15 @@
   <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/TestRunner.js"/>
   <script type="text/javascript"
-   src="chrome://mochikit/content/tests/SimpleTest/MozillaFileLogger.js"/>
+          src="chrome://mochikit/content/tests/SimpleTest/MozillaFileLogger.js"/>
   <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/quit.js" />
-  <script type="text/javascript" 
+  <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/setup.js" />
   <script type="application/javascript;version=1.7"><![CDATA[
-    function loadTests(aDir)
+    function loadTests()
     {
+      var dir = document.documentElement.getAttribute('directory');
       // Find our chrome dir
       var ios = Cc["@mozilla.org/network/io-service;1"].
                   getService(Ci.nsIIOService);
@@ -32,7 +33,7 @@
                           getService(Ci.nsIFileProtocolHandler);
       var chromeDir = fileHandler.getFileFromURLSpec(resolvedURI.spec);
       chromeDir = chromeDir.parent.QueryInterface(Ci.nsILocalFile);
-      chromeDir.appendRelativePath(aDir);
+      chromeDir.appendRelativePath(dir);
 
       // load server.js in so we can share template functions
       var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
@@ -43,7 +44,7 @@
 
       // generate our test list
       srvScope.makeTags();
-      var url = "chrome://mochikit/content/" + aDir + "/";
+      var url = "chrome://mochikit/content/" + dir + "/";
       var [links, count] = srvScope.list(url, chromeDir, true);
       var listContent = srvScope.linksToListItems(links);
       var tableContent = srvScope.linksToTableRows(links);
@@ -54,11 +55,14 @@
         $("wrapper").innerHTML += " "; // redraw the table
       }
       gTestList = eval(srvScope.jsonArrayOfTestFiles(links));
-      connect(window, 'onload', populate);
-      connect(window, 'onload', hookup);
-    }
+      populate();
+      hookup();
 
-    loadTests(gDir);
+      // if we got passed a test path, just run that single test
+      if ("testPath" in params && params.testPath)
+        window.location.href = url + params.testPath;
+    }
+    window.addEventListener("load", loadTests, false)
   ]]>
   </script>
 
