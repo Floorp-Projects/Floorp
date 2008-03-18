@@ -88,6 +88,7 @@
 #include "nsWhitespaceTokenizer.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIScriptObjectPrincipal.h"
+#include "nsIStorageStream.h"
 
 #define LOAD_STR "load"
 #define ERROR_STR "error"
@@ -2134,10 +2135,12 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
 
           // Serialize to a stream so that the encoding used will
           // match the document's.
-          nsCOMPtr<nsIInputStream> input;
+          nsCOMPtr<nsIStorageStream> storStream;
+          rv = NS_NewStorageStream(4096, PR_UINT32_MAX, getter_AddRefs(storStream));
+          NS_ENSURE_SUCCESS(rv, rv);
+
           nsCOMPtr<nsIOutputStream> output;
-          rv = NS_NewPipe(getter_AddRefs(input), getter_AddRefs(output),
-                          0, PR_UINT32_MAX);
+          rv = storStream->GetOutputStream(0, getter_AddRefs(output));
           NS_ENSURE_SUCCESS(rv, rv);
 
           // Empty string for encoding means to use document's current
@@ -2146,7 +2149,8 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
           NS_ENSURE_SUCCESS(rv, rv);
 
           output->Close();
-          postDataStream = input;
+          rv = storStream->NewInputStream(0, getter_AddRefs(postDataStream));
+          NS_ENSURE_SUCCESS(rv, rv);
         } else {
           // nsISupportsString?
           nsCOMPtr<nsISupportsString> wstr(do_QueryInterface(supports));
