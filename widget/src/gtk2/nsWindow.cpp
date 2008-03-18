@@ -2107,7 +2107,28 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     case 3:
         domButton = nsMouseEvent::eRightButton;
         break;
-        // Map buttons 8-9 to back/forward
+    // These are mapped to horizontal scroll
+    case 6:
+    case 7:
+        {
+            nsMouseScrollEvent event(PR_TRUE, NS_MOUSE_SCROLL, this);
+            event.scrollFlags = nsMouseScrollEvent::kIsHorizontal;
+            event.refPoint.x = nscoord(aEvent->x);
+            event.refPoint.y = nscoord(aEvent->y);
+            event.delta = (aEvent->button == 6) ? -2 : 2;
+
+            event.isShift   = (aEvent->state & GDK_SHIFT_MASK) != 0;
+            event.isControl = (aEvent->state & GDK_CONTROL_MASK) != 0;
+            event.isAlt     = (aEvent->state & GDK_MOD1_MASK) != 0;
+            event.isMeta    = (aEvent->state & GDK_MOD4_MASK) != 0;
+
+            event.time = aEvent->time;
+
+            nsEventStatus status;
+            DispatchEvent(&event, status);
+            return;
+        }
+    // Map buttons 8-9 to back/forward
     case 8:
         DispatchCommandEvent(nsWidgetAtoms::Back);
         return;
