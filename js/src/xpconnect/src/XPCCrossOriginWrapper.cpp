@@ -250,14 +250,14 @@ IsValFrame(JSObject *obj, jsval v, XPCWrappedNative *wn)
   return domwin != nsnull;
 }
 
-// Returns whether the currently executing code has the same origin as the
-// wrapper. Uses nsIScriptSecurityManager::CheckSameOriginPrincipal.
+// Returns whether the currently executing code is allowed to access
+// the wrapper.  Uses nsIPrincipal::Subsumes.
 // |cx| must be the top context on the context stack.
-// If the two principals have the same origin, returns NS_OK. If they differ,
+// If the subject is allowed to access the object returns NS_OK. If not,
 // returns NS_ERROR_DOM_PROP_ACCESS_DENIED, returns another error code on
 // failure.
 nsresult
-IsWrapperSameOrigin(JSContext *cx, JSObject *wrappedObj)
+CanAccessWrapper(JSContext *cx, JSObject *wrappedObj)
 {
   // Get the subject principal from the execution stack.
   nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
@@ -279,6 +279,8 @@ IsWrapperSameOrigin(JSContext *cx, JSObject *wrappedObj)
 
   // If we somehow end up being called from chrome, just allow full access.
   // This can happen from components with xpcnativewrappers=no.
+  // Note that this is just an optimization to avoid getting the
+  // object principal in this case, since Subsumes() would return true.
   if (isSystem) {
     return NS_OK;
   }
@@ -296,7 +298,12 @@ IsWrapperSameOrigin(JSContext *cx, JSObject *wrappedObj)
   }
 
   // Now, we have our two principals, compare them!
-  return ssm->CheckSameOriginPrincipal(subjectPrin, objectPrin);
+  PRBool subsumes;
+  rv = subjectPrin->Subsumes(objectPrin, &subsumes);
+  if (NS_SUCCEEDED(rv) && !subsumes) {
+    rv = NS_ERROR_DOM_PROP_ACCESS_DENIED;
+  }
+  return rv;
 }
 
 static JSBool
@@ -333,7 +340,7 @@ XPC_XOW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return ThrowException(NS_ERROR_ILLEGAL_VALUE, cx);
   }
 
-  nsresult rv = IsWrapperSameOrigin(cx, JSVAL_TO_OBJECT(funToCall));
+  nsresult rv = CanAccessWrapper(cx, JSVAL_TO_OBJECT(funToCall));
   if (NS_FAILED(rv) && rv != NS_ERROR_DOM_PROP_ACCESS_DENIED) {
     return ThrowException(rv, cx);
   }
@@ -551,7 +558,7 @@ XPC_XOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (!wrappedObj) {
     return ThrowException(NS_ERROR_ILLEGAL_VALUE, cx);
   }
-  nsresult rv = IsWrapperSameOrigin(cx, wrappedObj);
+  nsresult rv = CanAccessWrapper(cx, wrappedObj);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_DOM_PROP_ACCESS_DENIED) {
       // Can't override properties on foreign objects.
@@ -571,7 +578,7 @@ XPC_XOW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (!wrappedObj) {
     return ThrowException(NS_ERROR_ILLEGAL_VALUE, cx);
   }
-  nsresult rv = IsWrapperSameOrigin(cx, wrappedObj);
+  nsresult rv = CanAccessWrapper(cx, wrappedObj);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_DOM_PROP_ACCESS_DENIED) {
       // Can't delete properties on foreign objects.
@@ -620,7 +627,7 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   if (!wrappedObj) {
     return ThrowException(NS_ERROR_ILLEGAL_VALUE, cx);
   }
-  nsresult rv = IsWrapperSameOrigin(cx, wrappedObj);
+  nsresult rv = CanAccessWrapper(cx, wrappedObj);
   if (NS_FAILED(rv)) {
     if (rv != NS_ERROR_DOM_PROP_ACCESS_DENIED) {
       return JS_FALSE;
@@ -734,7 +741,7 @@ XPC_XOW_Enumerate(JSContext *cx, JSObject *obj)
     // Nothing to enumerate.
     return JS_TRUE;
   }
-  nsresult rv = IsWrapperSameOrigin(cx, wrappedObj);
+  nsresult rv = CanAccessWrapper(cx, wrappedObj);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_DOM_PROP_ACCESS_DENIED) {
       // Can't enumerate on foreign objects.
@@ -760,7 +767,7 @@ XPC_XOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     return JS_TRUE;
   }
 
-  nsresult rv = IsWrapperSameOrigin(cx, wrappedObj);
+  nsresult rv = CanAccessWrapper(cx, wrappedObj);
   if (NS_FAILED(rv)) {
     if (rv != NS_ERROR_DOM_PROP_ACCESS_DENIED) {
       return JS_FALSE;
@@ -840,7 +847,7 @@ XPC_XOW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
   }
 
   // Note: JSTYPE_VOID and JSTYPE_STRING are equivalent.
-  nsresult rv = IsWrapperSameOrigin(cx, wrappedObj);
+  nsresult rv = CanAccessWrapper(cx, wrappedObj);
   if (NS_FAILED(rv) &&
       (rv != NS_ERROR_DOM_PROP_ACCESS_DENIED ||
        (type != JSTYPE_STRING && type != JSTYPE_VOID))) {
@@ -908,7 +915,7 @@ XPC_XOW_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     // Nothing to call.
     return JS_TRUE;
   }
-  nsresult rv = IsWrapperSameOrigin(cx, wrappedObj);
+  nsresult rv = CanAccessWrapper(cx, wrappedObj);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_DOM_PROP_ACCESS_DENIED) {
       // Can't call.
@@ -939,7 +946,7 @@ XPC_XOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     // Nothing to construct.
     return JS_TRUE;
   }
-  nsresult rv = IsWrapperSameOrigin(cx, wrappedObj);
+  nsresult rv = CanAccessWrapper(cx, wrappedObj);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_DOM_PROP_ACCESS_DENIED) {
       // Can't construct.
@@ -963,7 +970,7 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_XOW_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
   JSObject *iface = GetWrappedObject(cx, obj);
-  nsresult rv = IsWrapperSameOrigin(cx, iface);
+  nsresult rv = CanAccessWrapper(cx, iface);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_DOM_PROP_ACCESS_DENIED) {
       // Don't do this test across origins.
@@ -1093,7 +1100,7 @@ XPC_XOW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_TRUE;
   }
 
-  nsresult rv = IsWrapperSameOrigin(cx, wrappedObj);
+  nsresult rv = CanAccessWrapper(cx, wrappedObj);
   if (rv == NS_ERROR_DOM_PROP_ACCESS_DENIED) {
     nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
     if (!ssm) {

@@ -42,7 +42,7 @@ interface nsIURI;
 interface nsIChannel;
 
 
-[scriptable, uuid(ce216cf7-3bcb-48ab-9ff8-d03a24f19ca5)]
+[scriptable, uuid(3fffd8e8-3fea-442e-a0ed-2ba81ae197d5)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -290,13 +290,6 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     void checkSameOriginURI(in nsIURI aSourceURI,
                             in nsIURI aTargetURI,
                             in boolean reportError);
-
-    /**
-     * Returns OK if aSourcePrincipal and aTargetPrincipal
-     * have the same "origin" (scheme, host, and port).
-     */
-    void checkSameOriginPrincipal(in nsIPrincipal aSourcePrincipal,
-                                  in nsIPrincipal aTargetPrincipal);
 
     /**
      * Returns the principal of the global object of the given context, or null
