@@ -145,6 +145,12 @@ function handleDialog(doc, testNum) {
         passfield.setAttribute("value", "secret");
         break;
 
+    case 30:
+    case 31:
+        is(password, "", "Checking provided password");
+        passfield.setAttribute("value", "fill2pass");
+        break;
+
     case 100:
         is(username, "inuser", "Checking provided username");
         is(password, "inpass", "Checking provided password");
@@ -186,6 +192,14 @@ function handleDialog(doc, testNum) {
         is(username, "user2name", "Checking filled username");
         is(password, "NEWuser2pass", "Checking filled password");
         passfield.setAttribute("value", "user2pass");
+        break;
+
+    case 120:
+    case 121:
+        is(username, "", "Checking filled username");
+        is(password, "", "Checking filled password");
+        userfield.setAttribute("value", "fill2user");
+        passfield.setAttribute("value", "fill2pass");
         break;
 
     case 500:
@@ -493,6 +507,27 @@ is(pword.value, "user2pass", "Checking returned password");
 // XXX test saving a password with  Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY
 
 
+// ===== test 30 =====
+// We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
+testNum = 30;
+pword.value = null;
+startCallbackTimer();
+isOk = prompter1.promptPassword(dialogTitle(), dialogText, "example2.com:80 (somerealm)",
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+ok(isOk, "Checking dialog return value (accept)");
+is(pword.value, "fill2pass", "Checking returned password");
+
+// ===== test 31 =====
+// We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
+testNum++;
+pword.value = null;
+startCallbackTimer();
+isOk = prompter1.promptPassword(dialogTitle(), dialogText, "example2.com:80 (somerealm)",
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, pword);
+ok(isOk, "Checking dialog return value (accept)");
+is(pword.value, "fill2pass", "Checking returned password");
+
+
 // ===== test 100 =====
 testNum = 100;
 uname.value = "inuser";
@@ -585,6 +620,29 @@ ok(isOk, "Checking dialog return value (accept)");
 is(uname.value, "user2name", "Checking returned username");
 is(pword.value, "user2pass", "Checking returned password");
 
+// ===== test 120 =====
+// We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
+testNum = 120;
+uname.value = null;
+pword.value = null;
+startCallbackTimer();
+isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "example2.com:80 (somerealm)",
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
+ok(isOk, "Checking dialog return value (accept)");
+is(uname.value, "fill2user", "Checking returned username");
+is(pword.value, "fill2pass", "Checking returned password");
+
+// ===== test 121 =====
+// We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
+testNum++;
+uname.value = null;
+pword.value = null;
+startCallbackTimer();
+isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "example2.com:80 (somerealm)",
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+ok(isOk, "Checking dialog return value (accept)");
+is(uname.value, "fill2user", "Checking returned username");
+is(pword.value, "fill2pass", "Checking returned password");
 
 
 var channel1 = Cc["@mozilla.org/network/io-service;1"].
