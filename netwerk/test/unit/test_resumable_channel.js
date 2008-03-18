@@ -258,13 +258,13 @@ function rangeHandler(metadata, response) {
     var to = (matches[2] === undefined) ? rangeBody.length - 1 : matches[2];
     if (from >= rangeBody.length) {
       response.setStatusLine(metadata.httpVersion, 416, "Start pos too high");
-      response.setHeader("Content-Range", "*/" + rangeBody.length);
+      response.setHeader("Content-Range", "*/" + rangeBody.length, false);
       return;
     }
     body = body.substring(from, to + 1);
     // always respond to successful range requests with 206
     response.setStatusLine(metadata.httpVersion, 206, "Partial Content");
-    response.setHeader("Content-Range", from + "-" + to + "/" + rangeBody.length);
+    response.setHeader("Content-Range", from + "-" + to + "/" + rangeBody.length, false);
   }
 
   response.bodyOutputStream.write(body, body.length);
@@ -274,7 +274,7 @@ function rangeHandler(metadata, response) {
 function redirHandler(metadata, response) {
   response.setStatusLine(metadata.httpVersion, 302, "Found");
   response.setHeader("Content-Type", "text/html", false);
-  response.setHeader("Location", metadata.getHeader("X-Redir-To"));
+  response.setHeader("Location", metadata.getHeader("X-Redir-To"), false);
   var body = "redirect\r\n";
   response.bodyOutputStream.write(body, body.length);
 }
