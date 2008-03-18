@@ -2350,8 +2350,16 @@ dnl the qsort routine under solaris is faulty
        NS_USE_NATIVE=1
        MOZ_FIX_LINK_PATHS='-R $(LIBXUL_DIST)/bin'
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-       CFLAGS="$CFLAGS -xstrconst -xbuiltin=%all"
-       CXXFLAGS="$CXXFLAGS -xbuiltin=%all -features=tmplife -norunpath"
+
+       if test "$CPU_ARCH" != "sparc"; then
+          CFLAGS="$CFLAGS -xstrconst -xbuiltin=%all"
+          CXXFLAGS="$CXXFLAGS -xbuiltin=%all -features=tmplife -norunpath"
+       else
+          # Do not use -xbuiltin on SPARC to get around a bug of compiler
+          CFLAGS="$CFLAGS -xstrconst -xbuiltin=%none"
+          CXXFLAGS="$CXXFLAGS -xbuiltin=%none -features=tmplife -norunpath"
+       fi
+
        LDFLAGS="-xildoff -z lazyload -z combreloc $LDFLAGS"
        if test -z "$CROSS_COMPILE" && test -f /usr/lib/ld/map.noexstk; then
            _SAVE_LDFLAGS=$LDFLAGS
