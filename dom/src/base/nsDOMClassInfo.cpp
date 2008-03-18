@@ -5792,8 +5792,12 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   JSAutoRequest ar(my_cx);
 
-  // Don't resolve standard classes on XPCNativeWrapper.
-  JSBool ok = !ObjectIsNativeWrapper(cx, obj) ?
+  JSObject *realObj;
+  wrapper->GetJSObject(&realObj);
+
+  // Don't resolve standard classes on XPCNativeWrapper etc, only
+  // resolve them if we're resolving on the real global object.
+  JSBool ok = obj == realObj ?
               ::JS_ResolveStandardClass(my_cx, obj, id, &did_resolve) :
               JS_TRUE;
 
