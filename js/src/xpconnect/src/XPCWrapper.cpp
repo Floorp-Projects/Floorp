@@ -340,7 +340,7 @@ XPCWrapper::NewResolve(JSContext *cx, JSObject *wrapperObj,
 
     attrs = sprop->attrs;
     if (attrs & JSPROP_GETTER) {
-      getter =  sprop->getter;
+      getter = sprop->getter;
     }
     if (attrs & JSPROP_SETTER) {
       setter = sprop->setter;

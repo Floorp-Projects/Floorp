@@ -618,6 +618,12 @@ XPC_SJOW_Enumerate(JSContext *cx, JSObject *obj)
     return JS_TRUE;
   }
 
+  // Check that the caller can access the unsafe object.
+  if (!CanCallerAccess(cx, unsafeObj)) {
+    // CanCallerAccess() already threw for us.
+    return JS_FALSE;
+  }
+
   // Since we enumerate using JS_Enumerate() on the unsafe object here
   // we don't need to do a security check since JS_Enumerate() will
   // look up unsafeObj.__iterator__ and if we don't have permission to
@@ -973,15 +979,26 @@ XPC_SJOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 JS_STATIC_DLL_CALLBACK(JSObject *)
 XPC_SJOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
 {
-  JSObject *innerObj = GetUnsafeObject(obj);
-  if (!innerObj) {
+  obj = FindSafeObject(obj);
+  NS_ASSERTION(obj != nsnull, "FindSafeObject() returned null in class hook!");
+
+  JSObject *unsafeObj = GetUnsafeObject(obj);
+  if (!unsafeObj) {
     ThrowException(NS_ERROR_INVALID_ARG, cx);
+
+    return nsnull;
+  }
+
+  // Check that the caller can access the unsafe object.
+  if (!CanCallerAccess(cx, unsafeObj)) {
+    // CanCallerAccess() already threw for us.
     return nsnull;
   }
 
   // Create our dummy SJOW.
   JSObject *wrapperIter =
-    ::JS_NewObjectWithGivenProto(cx, &sXPC_SJOW_JSClass.base, nsnull, innerObj);
+    ::JS_NewObjectWithGivenProto(cx, &sXPC_SJOW_JSClass.base, nsnull,
+                                 unsafeObj);
   if (!wrapperIter) {
     return nsnull;
   }
@@ -994,7 +1011,7 @@ XPC_SJOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
   JSAutoTempValueRooter tvr(cx, OBJECT_TO_JSVAL(wrapperIter));
 
   // Initialize the wrapper.
-  return XPCWrapper::CreateIteratorObj(cx, wrapperIter, obj, innerObj,
+  return XPCWrapper::CreateIteratorObj(cx, wrapperIter, obj, unsafeObj,
                                        keysonly);
 }
 
