@@ -278,7 +278,7 @@ nsMathMLmfracFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
   return gap;
 }
 
-NS_IMETHODIMP
+/* virtual */ nsresult
 nsMathMLmfracFrame::Place(nsIRenderingContext& aRenderingContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)

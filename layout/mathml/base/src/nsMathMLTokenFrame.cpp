@@ -192,7 +192,7 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
 // For token elements, mBoundingMetrics is computed at the ReflowToken
 // pass, it is not computed here because our children may be text frames
 // that do not implement the GetBoundingMetrics() interface.
-nsresult
+/* virtual */ nsresult
 nsMathMLTokenFrame::Place(nsIRenderingContext& aRenderingContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
