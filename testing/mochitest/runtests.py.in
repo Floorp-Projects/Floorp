@@ -299,17 +299,21 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   # <http://mochikit.com/doc/html/MochiKit/Logging.html>
 
   testURL = TESTS_URL + options.testPath
+  urlOpts = []
   if options.chrome:
-    testURL = CHROMETESTS_URL + options.testPath
+    testURL = CHROMETESTS_URL
+    if options.testPath:
+      urlOpts.append("testPath=" + encodeURIComponent(options.testPath))
   elif options.a11y:
-    testURL = A11YTESTS_URL + options.testPath
+    testURL = A11YTESTS_URL
+    if options.testPath:
+      urlOpts.append("testPath=" + encodeURIComponent(options.testPath))
   elif options.browserChrome:
     testURL = "about:blank"
 
   if options.browserChrome:
     makeTestConfig(options)
   else:
-    urlOpts = []
     if options.autorun:
       urlOpts.append("autorun=1")
     if options.closeWhenDone:
