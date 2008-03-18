@@ -39,27 +39,26 @@
 #ifndef _nsHTMLAreaAccessible_H_
 #define _nsHTMLAreaAccessible_H_
 
-#include "nsBaseWidgetAccessible.h"
+#include "nsHTMLLinkAccessible.h"
 
 /* Accessible for image map areas - must be child of image
  */
 
-class nsHTMLAreaAccessible : public nsLinkableAccessible
+class nsHTMLAreaAccessible : public nsHTMLLinkAccessible
 {
 
 public:
   nsHTMLAreaAccessible(nsIDOMNode *domNode, nsIAccessible *accParent,
                        nsIWeakReference* aShell);
 
-  NS_DECL_ISUPPORTS_INHERITED
-
   // nsIAccessible
-  NS_IMETHOD GetName(nsAString & _retval); 
-  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetName(nsAString & aName);
+  NS_IMETHOD GetDescription(nsAString& aDescription);
+
   NS_IMETHOD GetFirstChild(nsIAccessible **_retval);
   NS_IMETHOD GetLastChild(nsIAccessible **_retval);
   NS_IMETHOD GetChildCount(PRInt32 *_retval);
-  NS_IMETHOD GetDescription(nsAString& _retval);
+
   NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
   NS_IMETHOD GetChildAtPoint(PRInt32 aX, PRInt32 aY, nsIAccessible **aAccessible)
     { NS_ENSURE_ARG_POINTER(aAccessible); NS_ADDREF(*aAccessible = this); return NS_OK; } // Don't walk into these
