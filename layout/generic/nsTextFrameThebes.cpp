@@ -2296,8 +2296,12 @@ PropertyProvider::GetTabWidths(PRUint32 aStart, PRUint32 aLength)
     if (!mTabWidths->AppendElements(aStart + aLength - tabsEnd))
       return nsnull;
     
-    gfxFloat tabWidth = NS_round(8*mTextRun->GetAppUnitsPerDevUnit()*
-      GetFontMetrics(GetFontGroupForFrame(mLineContainer)).spaceWidth);
+    // Round the space width when converting to appunits the same way
+    // textruns do
+    gfxFloat spaceWidthAppUnits =
+      NS_roundf(GetFontMetrics(GetFontGroupForFrame(mLineContainer)).spaceWidth*
+                mTextRun->GetAppUnitsPerDevUnit());
+    gfxFloat tabWidth = 8*spaceWidthAppUnits;
     for (PRUint32 i = tabsEnd; i < aStart + aLength; ++i) {
       Spacing spacing;
       GetSpacingInternal(i, 1, &spacing, PR_TRUE);
@@ -2315,14 +2319,11 @@ PropertyProvider::GetTabWidths(PRUint32 aStart, PRUint32 aLength)
             mTextRun->GetAdvanceWidth(i, clusterEnd - i, nsnull);
         }
       } else {
-        // Advance mOffsetFromBlockOriginForTabs to the next multiple of tabWidth
-        // Ensure that if it's just epsilon less than a multiple of tabWidth, we still
-        // advance by tabWidth.
-        static const double EPSILON = 0.000001;
-        double nextTab = NS_ceil(mOffsetFromBlockOriginForTabs/tabWidth)*tabWidth;
-        if (nextTab < mOffsetFromBlockOriginForTabs + EPSILON) {
-          nextTab += tabWidth;
-        }
+        // Advance mOffsetFromBlockOriginForTabs to the next multiple of
+        // tabWidth. We must advance by at least 1 appunit.
+        // XXX should we make this 1 CSS pixel?
+        double nextTab =
+          NS_ceil((mOffsetFromBlockOriginForTabs + 1)/tabWidth)*tabWidth;
         (*mTabWidths)[i - startOffset] = nextTab - mOffsetFromBlockOriginForTabs;
         mOffsetFromBlockOriginForTabs = nextTab;
       }
