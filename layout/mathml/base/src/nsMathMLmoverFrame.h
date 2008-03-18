@@ -52,7 +52,7 @@ class nsMathMLmoverFrame : public nsMathMLContainerFrame {
 public:
   friend nsIFrame* NS_NewMathMLmoverFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  NS_IMETHOD
+  virtual nsresult
   Place(nsIRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);

@@ -163,7 +163,7 @@ nsMathMLmsqrtFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   return rv;
 }
 
-NS_IMETHODIMP
+/* virtual */ nsresult
 nsMathMLmsqrtFrame::Place(nsIRenderingContext& aRenderingContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)

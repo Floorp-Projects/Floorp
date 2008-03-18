@@ -298,7 +298,7 @@ nsMathMLmactionFrame::Reflow(nsPresContext*          aPresContext,
 }
 
 // Only place the selected child ...
-NS_IMETHODIMP
+/* virtual */ nsresult
 nsMathMLmactionFrame::Place(nsIRenderingContext& aRenderingContext,
                             PRBool               aPlaceOrigin,
                             nsHTMLReflowMetrics& aDesiredSize)

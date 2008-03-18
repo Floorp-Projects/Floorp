@@ -87,7 +87,7 @@ public:
        nsIFrame*   aParent,
        nsIFrame*   aPrevInFlow);
 
-  NS_IMETHOD
+  virtual nsresult
   Place(nsIRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
