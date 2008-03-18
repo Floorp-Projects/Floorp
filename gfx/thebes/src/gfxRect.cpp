@@ -106,10 +106,13 @@ gfxRect::RoundOut()
 
 /* Clamp r to CAIRO_COORD_MIN .. CAIRO_COORD_MAX
  * these are to be device coordinates.
+ *
+ * Cairo is currently using 24.8 fixed point,
+ * so -2^24 .. 2^24-1 is our valid
  */
 
-#define CAIRO_COORD_MAX (16382.0)
-#define CAIRO_COORD_MIN (-16383.0)
+#define CAIRO_COORD_MAX (16777215.0)
+#define CAIRO_COORD_MIN (-16777216.0)
 
 void
 gfxRect::Condition()
