@@ -191,7 +191,7 @@ function runServer()
 function serverShutdown(metadata, response)
 {
   response.setStatusLine("1.1", 200, "OK");
-  response.setHeader("Content-type", "text/plain");
+  response.setHeader("Content-type", "text/plain", false);
 
   var body = "Server shut down.";
   response.bodyOutputStream.write(body, body.length);
@@ -203,7 +203,7 @@ function serverShutdown(metadata, response)
 function redirect(metadata, response)
 {
   response.setStatusLine("1.1", 301, "Moved Permanently");
-  response.setHeader("Location", metadata.queryString);
+  response.setHeader("Location", metadata.queryString, false);
 }
 
 //
@@ -475,7 +475,7 @@ function testListing(metadata, response)
 function defaultDirHandler(metadata, response)
 {
   response.setStatusLine("1.1", 200, "OK");
-  response.setHeader("Content-type", "text/html");
+  response.setHeader("Content-type", "text/html", false);
   try {
     if (metadata.path.indexOf("/tests") != 0) {
       regularListing(metadata, response);

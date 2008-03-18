@@ -50,8 +50,8 @@ const IMAGE_DATA =
 
 function handleRequest(request, response)
 {
-  response.setHeader("Content-Type", "text/plain");
-  response.setHeader("Cache-Control", "no-cache");
+  response.setHeader("Content-Type", "text/plain", false);
+  response.setHeader("Cache-Control", "no-cache", false);
 
   var accept = request.hasHeader("Accept")
              ? request.getHeader("Accept")
