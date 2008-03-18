@@ -308,11 +308,11 @@ var PlacesUIUtils = {
     var siteURI = null;
     aData.annos = aData.annos.filter(function(aAnno) {
       if (aAnno.name == LMANNO_FEEDURI) {
-        feedURI = this._uri(aAnno.value);
+        feedURI = PlacesUtils._uri(aAnno.value);
         return false;
       }
       else if (aAnno.name == LMANNO_SITEURI) {
-        siteURI = this._uri(aAnno.value);
+        siteURI = PlacesUtils._uri(aAnno.value);
         return false;
       }
       return true;
@@ -1073,7 +1073,7 @@ var PlacesUIUtils = {
     var title;
     if (!aNode.title && PlacesUtils.uriTypes.indexOf(aNode.type) != -1) {
       // if node title is empty, try to set the label using host and filename
-      // this._uri() will throw if aNode.uri is not a valid URI
+      // PlacesUtils._uri() will throw if aNode.uri is not a valid URI
       try {
         var uri = PlacesUtils._uri(aNode.uri);
         var host = uri.host;
