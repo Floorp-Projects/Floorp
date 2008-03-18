@@ -444,6 +444,13 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     aGtkWidgetType = MOZ_GTK_TREEVIEW;
     break;
   case NS_THEME_TREEVIEW_HEADER_CELL:
+    if (aWidgetFlags) {
+      // In this case, the flag denotes whether the header is the sorted one or not
+      if (GetTreeSortDirection(aFrame) == eTreeSortDirection_Natural)
+        *aWidgetFlags = PR_FALSE;
+      else
+        *aWidgetFlags = PR_TRUE;
+    }
     aGtkWidgetType = MOZ_GTK_TREE_HEADER_CELL;
     break;
   case NS_THEME_TREEVIEW_HEADER_SORTARROW:
