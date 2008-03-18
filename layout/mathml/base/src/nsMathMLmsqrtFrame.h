@@ -92,6 +92,9 @@ public:
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 
+  virtual nscoord
+  GetIntrinsicWidth(nsIRenderingContext* aRenderingContext);
+
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
@@ -114,6 +117,10 @@ protected:
   virtual ~nsMathMLmsqrtFrame();
   
   virtual PRIntn GetSkipSides() const { return 0; }
+
+  virtual nsresult
+  MeasureChildFrames(nsIRenderingContext& aRenderingContext,
+                     nsHTMLReflowMetrics& aDesiredSize);
 
   nsMathMLChar mSqrChar;
   nsRect       mBarRect;

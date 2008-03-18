@@ -282,6 +282,26 @@ nsMathMLmsqrtFrame::Place(nsIRenderingContext& aRenderingContext,
   return NS_OK;
 }
 
+/* virtual */ nscoord
+nsMathMLmsqrtFrame::GetIntrinsicWidth(nsIRenderingContext* aRenderingContext)
+{
+  // The child frames form an mrow
+  nscoord width = nsMathMLContainerFrame::GetIntrinsicWidth(aRenderingContext);
+  // Add the width of the radical symbol
+  width += mSqrChar.GetMaxWidth(PresContext(), *aRenderingContext);
+
+  return width;
+}
+
+/* virtual */ nsresult
+nsMathMLmsqrtFrame::MeasureChildFrames(nsIRenderingContext& aRenderingContext,
+                                       nsHTMLReflowMetrics& aDesiredSize)
+{
+  return nsMathMLContainerFrame::Place(aRenderingContext, PR_FALSE,
+                                       aDesiredSize);
+}
+
+
 nscoord
 nsMathMLmsqrtFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
 {

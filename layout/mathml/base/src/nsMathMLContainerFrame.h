@@ -228,6 +228,19 @@ protected:
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 
+  // MeasureChildFrames:
+  //
+  // A method used by nsMathMLContainerFrame::GetIntrinsicWidth to get the
+  // width that a particular Place method desires.  For most frames, this will
+  // just call the object's Place method.  However <msqrt> uses
+  // nsMathMLContainerFrame::GetIntrinsicWidth to measure the child frames as
+  // if in an <mrow>, and so <msqrt> frames implement MeasureChildFrames to
+  // use nsMathMLContainerFrame::Place.
+  virtual nsresult
+  MeasureChildFrames(nsIRenderingContext& aRenderingContext,
+                     nsHTMLReflowMetrics& aDesiredSize);
+
+
   // helper to re-sync the automatic data in our children and notify our parent to
   // reflow us when changes (e.g., append/insert/remove) happen in our child list
   virtual nsresult
