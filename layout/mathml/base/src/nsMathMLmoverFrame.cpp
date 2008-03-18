@@ -243,7 +243,7 @@ i.e.:
  }
 */
 
-NS_IMETHODIMP
+/* virtual */ nsresult
 nsMathMLmoverFrame::Place(nsIRenderingContext& aRenderingContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
