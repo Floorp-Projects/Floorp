@@ -51,6 +51,7 @@
 #include "nsICryptoHash.h"
 #include "nsICryptoHMAC.h"
 #include "nsIDirectoryService.h"
+#include "nsIKeyModule.h"
 #include "nsIObserverService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
@@ -2690,17 +2691,31 @@ nsUrlClassifierDBServiceWorker::BeginStream(const nsACString &table,
 
   // If we're expecting a MAC, create the nsICryptoHMAC component now.
   if (!mUpdateClientKey.IsEmpty()) {
+    nsCOMPtr<nsIKeyObjectFactory> keyObjectFactory(do_GetService(
+        "@mozilla.org/security/keyobjectfactory;1", &rv));
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to get nsIKeyObjectFactory service");
+      mUpdateStatus = rv;
+      return mUpdateStatus;
+    }
+
+    nsCOMPtr<nsIKeyObject> keyObject;
+    rv = keyObjectFactory->KeyFromString(nsIKeyObject::HMAC, mUpdateClientKey, 
+        getter_AddRefs(keyObject));
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to create key object, maybe not FIPS compliant?");
+      mUpdateStatus = rv;
+      return mUpdateStatus;
+    }
+
     mHMAC = do_CreateInstance(NS_CRYPTO_HMAC_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to create nsICryptoHMAC instance");
       mUpdateStatus = rv;
       return mUpdateStatus;
     }
-    NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mHMAC->Init(nsICryptoHMAC::SHA1,
-                     reinterpret_cast<const PRUint8*>(mUpdateClientKey.BeginReading()),
-                     mUpdateClientKey.Length());
+    rv = mHMAC->Init(nsICryptoHMAC::SHA1, keyObject);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to initialize nsICryptoHMAC instance");
       mUpdateStatus = rv;

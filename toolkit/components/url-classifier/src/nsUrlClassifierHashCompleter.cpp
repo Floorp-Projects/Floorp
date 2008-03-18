@@ -40,6 +40,7 @@
 #include "nsIChannel.h"
 #include "nsICryptoHMAC.h"
 #include "nsIHttpChannel.h"
+#include "nsIKeyModule.h"
 #include "nsIObserverService.h"
 #include "nsIUploadChannel.h"
 #include "nsNetUtil.h"
@@ -224,13 +225,21 @@ nsUrlClassifierHashCompleterRequest::HandleMAC(nsACString::const_iterator& begin
   nsUrlClassifierUtils::UnUrlsafeBase64(serverMAC);
 
   nsresult rv;
+
+  nsCOMPtr<nsIKeyObjectFactory> keyObjectFactory(
+    do_GetService("@mozilla.org/security/keyobjectfactory;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIKeyObject> keyObject;
+  rv = keyObjectFactory->KeyFromString(nsIKeyObject::HMAC, mClientKey,
+      getter_AddRefs(keyObject));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsICryptoHMAC> hmac =
     do_CreateInstance(NS_CRYPTO_HMAC_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = hmac->Init(nsICryptoHMAC::SHA1,
-                  reinterpret_cast<const PRUint8*>(mClientKey.BeginReading()),
-                  mClientKey.Length());
+  rv = hmac->Init(nsICryptoHMAC::SHA1, keyObject);
   NS_ENSURE_SUCCESS(rv, rv);
 
   const nsCSubstring &remaining = Substring(begin, end);
