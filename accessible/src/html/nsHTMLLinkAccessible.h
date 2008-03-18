@@ -20,7 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Author: Aaron Leventhal (aaronl@netscape.com)
+ *   Aaron Leventhal <aleventh@us.ibm.com> (original author)
+ *   Alexander Surkov <surkov.alexander@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,19 +40,30 @@
 #ifndef _nsHTMLLinkAccessible_H_
 #define _nsHTMLLinkAccessible_H_
 
-#include "nsBaseWidgetAccessible.h"
+#include "nsHyperTextAccessibleWrap.h"
 
-class nsHTMLLinkAccessible : public nsLinkableAccessible
+class nsHTMLLinkAccessible : public nsHyperTextAccessibleWrap
 {
-  NS_DECL_ISUPPORTS_INHERITED
-
 public:
   nsHTMLLinkAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  
+ 
+  NS_DECL_ISUPPORTS_INHERITED
+
   // nsIAccessible
-  NS_IMETHOD GetName(nsAString& _retval); 
-  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetName(nsAString& aName);
+  NS_IMETHOD GetRole(PRUint32 *aRole); 
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
+  NS_IMETHOD GetValue(nsAString& aValue);
+
+  NS_IMETHOD GetNumActions(PRUint8 *aNumActions);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
+  NS_IMETHOD DoAction(PRUint8 aIndex);
+
+  // nsIAccessibleHyperLink
+  NS_IMETHOD GetURI(PRInt32 aIndex, nsIURI **aURI);
+
+protected:
+  enum { eAction_Jump = 0 };
 };
 
 #endif  
