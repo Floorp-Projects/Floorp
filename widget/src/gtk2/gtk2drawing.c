@@ -397,65 +397,67 @@ moz_gtk_get_combo_box_entry_arrow(GtkWidget *widget, gpointer client_data)
 static gint
 ensure_combo_box_entry_widgets()
 {
-    if (!gComboBoxEntryTextareaWidget ||
-        !gComboBoxEntryButtonWidget ||
-        !gComboBoxEntryArrowWidget) {
-        GtkWidget* buttonChild;
+    if (gComboBoxEntryTextareaWidget &&
+            gComboBoxEntryButtonWidget &&
+            gComboBoxEntryArrowWidget)
+        return MOZ_GTK_SUCCESS;
 
-        /* Create a ComboBoxEntry if needed */
-        if (!gComboBoxEntryWidget) {
-            gComboBoxEntryWidget = gtk_combo_box_entry_new();
-            setup_widget_prototype(gComboBoxEntryWidget);
-        }
+    GtkWidget* buttonChild;
 
-        /* Get its inner Entry and Button */
-        gtk_container_forall(GTK_CONTAINER(gComboBoxEntryWidget),
-                             moz_gtk_get_combo_box_entry_inner_widgets,
-                             NULL);
-
-        if (!gComboBoxEntryTextareaWidget) {
-            ensure_entry_widget();
-            gComboBoxEntryTextareaWidget = gEntryWidget;
-        }
-
-        if (gComboBoxEntryButtonWidget) {
-            /* Get the Arrow inside the Button */
-            buttonChild = GTK_BIN(gComboBoxEntryButtonWidget)->child;
-            if (GTK_IS_HBOX(buttonChild)) {
-                /* appears-as-list = FALSE, cell-view = TRUE; the button
-                 * contains an hbox. This hbox is there because ComboBoxEntry
-                 * inherits from ComboBox which needs to place a cell renderer,
-                 * a separator, and an arrow in the button when appears-as-list
-                 * is FALSE. Here the hbox should only contain an arrow, since
-                 * a ComboBoxEntry doesn't need all those widgets in the
-                 * button. */
-                gtk_container_forall(GTK_CONTAINER(buttonChild),
-                                     moz_gtk_get_combo_box_entry_arrow,
-                                     NULL);
-            } else if(GTK_IS_ARROW(buttonChild)) {
-                /* appears-as-list = TRUE, or cell-view = FALSE;
-                 * the button only contains an arrow */
-                gComboBoxEntryArrowWidget = buttonChild;
-                g_object_add_weak_pointer(G_OBJECT(buttonChild), (gpointer)
-                                          &gComboBoxEntryArrowWidget);
-                gtk_widget_realize(gComboBoxEntryArrowWidget);
-            }
-        } else {
-            /* Shouldn't be reached with current internal gtk implementation;
-             * we use a generic toggle button as last resort fallback to avoid
-             * crashing. */
-            ensure_toggle_button_widget();
-            gComboBoxEntryButtonWidget = gToggleButtonWidget;
-        }
-
-        if (!gComboBoxEntryArrowWidget) {
-            /* Shouldn't be reached with current internal gtk implementation;
-             * we gButtonArrowWidget as last resort fallback to avoid
-             * crashing. */
-            ensure_button_arrow_widget();
-            gComboBoxEntryArrowWidget = gButtonArrowWidget;
-        }
+    /* Create a ComboBoxEntry if needed */
+    if (!gComboBoxEntryWidget) {
+        gComboBoxEntryWidget = gtk_combo_box_entry_new();
+        setup_widget_prototype(gComboBoxEntryWidget);
     }
+
+    /* Get its inner Entry and Button */
+    gtk_container_forall(GTK_CONTAINER(gComboBoxEntryWidget),
+                         moz_gtk_get_combo_box_entry_inner_widgets,
+                         NULL);
+
+    if (!gComboBoxEntryTextareaWidget) {
+        ensure_entry_widget();
+        gComboBoxEntryTextareaWidget = gEntryWidget;
+    }
+
+    if (gComboBoxEntryButtonWidget) {
+        /* Get the Arrow inside the Button */
+        buttonChild = GTK_BIN(gComboBoxEntryButtonWidget)->child;
+        if (GTK_IS_HBOX(buttonChild)) {
+            /* appears-as-list = FALSE, cell-view = TRUE; the button
+             * contains an hbox. This hbox is there because ComboBoxEntry
+             * inherits from ComboBox which needs to place a cell renderer,
+             * a separator, and an arrow in the button when appears-as-list
+             * is FALSE. Here the hbox should only contain an arrow, since
+             * a ComboBoxEntry doesn't need all those widgets in the
+             * button. */
+            gtk_container_forall(GTK_CONTAINER(buttonChild),
+                                 moz_gtk_get_combo_box_entry_arrow,
+                                 NULL);
+        } else if(GTK_IS_ARROW(buttonChild)) {
+            /* appears-as-list = TRUE, or cell-view = FALSE;
+             * the button only contains an arrow */
+            gComboBoxEntryArrowWidget = buttonChild;
+            g_object_add_weak_pointer(G_OBJECT(buttonChild), (gpointer)
+                                      &gComboBoxEntryArrowWidget);
+            gtk_widget_realize(gComboBoxEntryArrowWidget);
+        }
+    } else {
+        /* Shouldn't be reached with current internal gtk implementation;
+         * we use a generic toggle button as last resort fallback to avoid
+         * crashing. */
+        ensure_toggle_button_widget();
+        gComboBoxEntryButtonWidget = gToggleButtonWidget;
+    }
+
+    if (!gComboBoxEntryArrowWidget) {
+        /* Shouldn't be reached with current internal gtk implementation;
+         * we gButtonArrowWidget as last resort fallback to avoid
+         * crashing. */
+        ensure_button_arrow_widget();
+        gComboBoxEntryArrowWidget = gButtonArrowWidget;
+    }
+
     return MOZ_GTK_SUCCESS;
 }
 
