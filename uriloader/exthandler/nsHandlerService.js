@@ -355,14 +355,28 @@ HandlerService.prototype = {
                                aHandlerInfo.possibleApplicationHandlers,
                                aHandlerInfo.preferredApplicationHandler);
 
-    // Retrieve the "always ask" flag.
-    // Note: we only set the flag to false if we are absolutely sure the user
-    // does not want to be asked.  Any sort of bogus data should mean we ask.
-    // So there must be an "alwaysAsk" property in the datastore for the handler
-    // info object, and it must be set to "false", in order for us not to ask.
-    aHandlerInfo.alwaysAskBeforeHandling =
-      !this._hasValue(infoID, NC_ALWAYS_ASK) ||
-      this._getValue(infoID, NC_ALWAYS_ASK) != "false";
+    // If we have an "always ask" flag stored in the RDF, always use its
+    // value. Otherwise, use the default value stored in the pref service.
+    var alwaysAsk;
+    if (this._hasValue(infoID, NC_ALWAYS_ASK)) {
+      alwaysAsk = (this._getValue(infoID, NC_ALWAYS_ASK) != "false");
+    } else {
+      var prefSvc = Cc["@mozilla.org/preferences-service;1"].
+                    getService(Ci.nsIPrefService);
+      var prefBranch = prefSvc.getBranch("network.protocol-handler.");
+      try {
+        alwaysAsk = prefBranch.getBoolPref("warn-external." + type);
+      } catch (e) {
+        // will throw if pref didn't exist.
+        try {
+          alwaysAsk = prefBranch.getBoolPref("warn-external-default");
+        } catch (e) {
+          // Nothing to tell us what to do, so be paranoid and prompt.
+          alwaysAsk = true;
+        }
+      }
+    }
+    aHandlerInfo.alwaysAskBeforeHandling = alwaysAsk;
 
     // If the object represents a MIME type handler, then also retrieve
     // any file extensions.

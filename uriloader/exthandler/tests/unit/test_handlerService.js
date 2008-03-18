@@ -129,17 +129,50 @@ function run_test() {
   do_check_eq(protoInfo.preferredAction, protoInfo.alwaysAsk);
   do_check_true(protoInfo.alwaysAskBeforeHandling);
   
-  // OS default exists, explicit warning pref: false
+  // OS default exists, injected default does not exist, 
+  // explicit warning pref: false
   const kExternalWarningPrefPrefix = "network.protocol-handler.warn-external.";
-  prefSvc.setBoolPref(kExternalWarningPrefPrefix + "mailto", false)
-  protoInfo = protoSvc.getProtocolHandlerInfo("mailto");
+  prefSvc.setBoolPref(kExternalWarningPrefPrefix + "http", false);
+  protoInfo = protoSvc.getProtocolHandlerInfo("http");
+  do_check_eq(0, protoInfo.possibleApplicationHandlers.length);
   do_check_false(protoInfo.alwaysAskBeforeHandling);
   
-  // OS default exists, explicit warning pref: true
-  prefSvc.setBoolPref(kExternalWarningPrefPrefix + "mailto", true)
-  protoInfo = protoSvc.getProtocolHandlerInfo("mailto");
+  // OS default exists, injected default does not exist, 
+  // explicit warning pref: true
+  prefSvc.setBoolPref(kExternalWarningPrefPrefix + "http", true);
+  protoInfo = protoSvc.getProtocolHandlerInfo("http");
+  // OS handler isn't included in possibleApplicationHandlers, so length is 0
+  // Once they become instances of nsILocalHandlerApp, this number will need
+  // to change.
+  do_check_eq(0, protoInfo.possibleApplicationHandlers.length);
   do_check_true(protoInfo.alwaysAskBeforeHandling);
-  
+
+  // OS default exists, injected default exists, explicit warning pref: false
+  prefSvc.setBoolPref(kExternalWarningPrefPrefix + "mailto", false);
+  protoInfo = protoSvc.getProtocolHandlerInfo("mailto");
+  do_check_eq(1, protoInfo.possibleApplicationHandlers.length);
+  do_check_false(protoInfo.alwaysAskBeforeHandling);
+
+  // OS default exists, injected default exists, explicit warning pref: true
+  prefSvc.setBoolPref(kExternalWarningPrefPrefix + "mailto", true);
+  protoInfo = protoSvc.getProtocolHandlerInfo("mailto");
+  do_check_eq(1, protoInfo.possibleApplicationHandlers.length);
+  // alwaysAskBeforeHandling is expected to be false here, because although
+  // the pref is true, the value in RDF is false. The injected mailto handler
+  // carried over the default pref value, and so when we set the pref above to
+  // true it's ignored.
+  do_check_false(protoInfo.alwaysAskBeforeHandling);
+  // Now set the value stored in RDF to true, and the pref to false, to make
+  // sure we still get the right value. (Basically, same thing as above but
+  // with the values reversed.)
+  prefSvc.setBoolPref(kExternalWarningPrefPrefix + "mailto", false);
+  protoInfo.alwaysAskBeforeHandling = true;
+  handlerSvc.store(protoInfo);
+  protoInfo = protoSvc.getProtocolHandlerInfo("mailto");
+  do_check_eq(1, protoInfo.possibleApplicationHandlers.length);
+  do_check_true(protoInfo.alwaysAskBeforeHandling);
+
+
   //**************************************************************************//
   // Test Round-Trip Data Integrity
 
@@ -174,12 +207,13 @@ function run_test() {
   var handlerTypes = ["nonexistent/type", "nonexistent/type2"];
   try { 
     // If we have a defaultHandlersVersion pref, then assume that we're in the
-    // firefox tree and that we'll also have an added webcal handler.
+    // firefox tree and that we'll also have default handlers.
     // Bug 395131 has been filed to make this test work more generically
     // by providing our own prefs for this test rather than this icky
     // special casing.
     rootPrefBranch.getCharPref("gecko.handlerService.defaultHandlersVersion");
     handlerTypes.push("webcal");
+    handlerTypes.push("mailto");
   } catch (ex) {}   
   var handlers = handlerSvc.enumerate();
   while (handlers.hasMoreElements()) {
