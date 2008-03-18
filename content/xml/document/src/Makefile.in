@@ -66,7 +66,6 @@ REQUIRES	= xpcom \
 		  exthandler \
 		  mimetype \
 		  unicharutil \
-		  windowwatcher \
 		  locale \
 		  util \
 		  $(NULL)

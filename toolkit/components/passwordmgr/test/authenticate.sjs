@@ -70,11 +70,13 @@ function reallyHandleRequest(request, response) {
     response.setStatusLine("1.0", 200, "OK");
   }
 
-  response.setHeader("Content-Type", "text/html", false);
-  response.write("Login: <span id='ok'>" + (requestAuth ? "FAIL" : "PASS") + "</span><br>\n");
-  response.write("Auth: <span id='auth'>" + authHeader + "</span><br>\n");
-  response.write("User: <span id='user'>" + actual_user + "</span><br>\n");
-  response.write("Pass: <span id='pass'>" + actual_pass + "</span><br>\n");
+  response.setHeader("Content-Type", "application/xhtml+xml", false);
+  response.write("<html xmlns='http://www.w3.org/1999/xhtml'>");
+  response.write("<p>Login: <span id='ok'>" + (requestAuth ? "FAIL" : "PASS") + "</span></p>\n");
+  response.write("<p>Auth: <span id='auth'>" + authHeader + "</span></p>\n");
+  response.write("<p>User: <span id='user'>" + actual_user + "</span></p>\n");
+  response.write("<p>Pass: <span id='pass'>" + actual_pass + "</span></p>\n");
+  response.write("</html>");
 }
 
 
