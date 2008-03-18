@@ -6667,7 +6667,7 @@ fi
 
 CFLAGS="$_SAVE_CFLAGS"
 
-if test -n $INTEL_CC; then
+if test -n "$INTEL_CC"; then
   PROFILE_GEN_CFLAGS="-prof-gen -prof-dir ."
   PROFILE_GEN_LDFLAGS=
   PROFILE_USE_CFLAGS="-prof-use -prof-dir ."
