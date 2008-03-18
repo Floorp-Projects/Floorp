@@ -89,6 +89,7 @@ static GtkWidget* gMenuItemWidget;
 static GtkWidget* gImageMenuItemWidget;
 static GtkWidget* gCheckMenuItemWidget;
 static GtkWidget* gTreeViewWidget;
+static GtkWidget* gMiddleTreeViewColumn;
 static GtkWidget* gTreeHeaderCellWidget;
 static GtkWidget* gTreeHeaderSortArrowWidget;
 static GtkWidget* gExpanderWidget;
@@ -663,7 +664,6 @@ ensure_tree_header_cell_widget()
          */
 
         GtkTreeViewColumn* firstTreeViewColumn;
-        GtkTreeViewColumn* middleTreeViewColumn;
         GtkTreeViewColumn* lastTreeViewColumn;
 
         ensure_tree_view_widget();
@@ -673,18 +673,18 @@ ensure_tree_header_cell_widget()
         gtk_tree_view_column_set_title(firstTreeViewColumn, "M");
         gtk_tree_view_append_column(GTK_TREE_VIEW(gTreeViewWidget), firstTreeViewColumn);
 
-        middleTreeViewColumn = gtk_tree_view_column_new();
-        gtk_tree_view_column_set_title(middleTreeViewColumn, "M");
-        gtk_tree_view_append_column(GTK_TREE_VIEW(gTreeViewWidget), middleTreeViewColumn);
+        gMiddleTreeViewColumn = gtk_tree_view_column_new();
+        gtk_tree_view_column_set_title(GTK_TREE_VIEW_COLUMN(gMiddleTreeViewColumn), "M");
+        gtk_tree_view_append_column(GTK_TREE_VIEW(gTreeViewWidget),
+                                    GTK_TREE_VIEW_COLUMN(gMiddleTreeViewColumn));
 
         lastTreeViewColumn = gtk_tree_view_column_new();
         gtk_tree_view_column_set_title(lastTreeViewColumn, "M");
         gtk_tree_view_append_column(GTK_TREE_VIEW(gTreeViewWidget), lastTreeViewColumn);
 
         /* Use the middle column's header for our button */
-        gTreeHeaderCellWidget = middleTreeViewColumn->button;
-        gtk_tree_view_column_set_sort_indicator(middleTreeViewColumn, TRUE);
-        gTreeHeaderSortArrowWidget = middleTreeViewColumn->arrow;
+        gTreeHeaderCellWidget = GTK_TREE_VIEW_COLUMN(gMiddleTreeViewColumn)->button;
+        gTreeHeaderSortArrowWidget = GTK_TREE_VIEW_COLUMN(gMiddleTreeViewColumn)->arrow;
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -1558,8 +1558,11 @@ moz_gtk_treeview_paint(GdkDrawable* drawable, GdkRectangle* rect,
 static gint
 moz_gtk_tree_header_cell_paint(GdkDrawable* drawable, GdkRectangle* rect,
                                GdkRectangle* cliprect, GtkWidgetState* state,
-                               GtkTextDirection direction)
+                               gboolean isSorted, GtkTextDirection direction)
 {
+    gtk_tree_view_column_set_sort_indicator(GTK_TREE_VIEW_COLUMN(gMiddleTreeViewColumn),
+                                            isSorted);
+
     moz_gtk_button_paint(drawable, rect, cliprect, state, GTK_RELIEF_NORMAL,
                          gTreeHeaderCellWidget, direction);
     return MOZ_GTK_SUCCESS;
@@ -3000,7 +3003,7 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
         break;
     case MOZ_GTK_TREE_HEADER_CELL:
         return moz_gtk_tree_header_cell_paint(drawable, rect, cliprect, state,
-                                              direction);
+                                              flags, direction);
         break;
     case MOZ_GTK_TREE_HEADER_SORTARROW:
         return moz_gtk_tree_header_sort_arrow_paint(drawable, rect, cliprect,
@@ -3176,6 +3179,7 @@ moz_gtk_shutdown()
     gImageMenuItemWidget = NULL;
     gCheckMenuItemWidget = NULL;
     gTreeViewWidget = NULL;
+    gMiddleTreeViewColumn = NULL;
     gTreeHeaderCellWidget = NULL;
     gTreeHeaderSortArrowWidget = NULL;
     gExpanderWidget = NULL;
