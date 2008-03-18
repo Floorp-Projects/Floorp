@@ -59,7 +59,7 @@
 .paneSelector {
   list-style-image: url("chrome://browser/skin/preferences/Options.png");
   padding: 0 5px 2px 5px;
-  background-color: #969696;
+  background-color: #999;
   border-bottom: 1px solid #404040;
   background-image: url("chrome://global/skin/toolbar/toolbar-background-tall.gif");
   background-repeat: repeat-x;
