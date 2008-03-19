@@ -363,6 +363,9 @@ libs::
 libs:: $(srcdir)/profile/prefs.js
 	$(INSTALL) $^ $(DIST)/bin/defaults/profile
 
+libs:: $(srcdir)/blocklist.xml
+	$(INSTALL) $^ $(DIST)/bin
+
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 
 APP_NAME = $(MOZ_APP_DISPLAYNAME)
