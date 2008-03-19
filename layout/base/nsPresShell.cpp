@@ -5563,19 +5563,21 @@ PresShell::HandleEvent(nsIView         *aView,
 {
   NS_ASSERTION(aView, "null view");
 
-  NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
-               "How did we get here if it's not safe to run scripts?");
-
-  if (mIsDestroying || mIsReflowing || mChangeNestCount ||
-      !nsContentUtils::IsSafeToRunScript()) {
+  if (mIsDestroying || mIsReflowing || mChangeNestCount) {
     return NS_OK;
   }
 
 #ifdef ACCESSIBILITY
   if (aEvent->eventStructType == NS_ACCESSIBLE_EVENT) {
+    // Accessibility events come through OS requests and not from scripts,
+    // so it is safe to handle here
     return HandleEventInternal(aEvent, aView, aEventStatus);
   }
 #endif
+  if (!nsContentUtils::IsSafeToRunScript()) {
+    NS_ERROR("How did we get here if it's not safe to run scripts?");
+    return NS_OK;
+  }
 
   // Check for a theme change up front, since the frame type is irrelevant
   if (aEvent->message == NS_THEMECHANGED && mPresContext) {
