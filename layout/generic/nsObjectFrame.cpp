@@ -1898,10 +1898,7 @@ nsPluginDOMContextMenuListener::~nsPluginDOMContextMenuListener()
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsPluginDOMContextMenuListener,
-                   nsIDOMContextMenuListener,
-                   nsIDOMEventListener,
-                   nsIEventListener)
+NS_IMPL_ISUPPORTS2(nsPluginDOMContextMenuListener, nsIDOMContextMenuListener, nsIEventListener)
 
 NS_IMETHODIMP
 nsPluginDOMContextMenuListener::ContextMenu(nsIDOMEvent* aContextMenuEvent)
