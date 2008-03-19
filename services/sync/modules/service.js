@@ -62,17 +62,6 @@ let Crypto = new WeaveCrypto();
 function WeaveSyncService() { this._init(); }
 WeaveSyncService.prototype = {
 
-  __prefs: null,
-  get _prefs() {
-    if (!this.__prefs) {
-      this.__prefs = Cc["@mozilla.org/preferences-service;1"]
-        .getService(Ci.nsIPrefService);
-      this.__prefs = this.__prefs.getBranch(PREFS_BRANCH);
-      this.__prefs.QueryInterface(Ci.nsIPrefBranch2);
-    }
-    return this.__prefs;
-  },
-
   __os: null,
   get _os() {
     if (!this.__os)
@@ -134,13 +123,13 @@ WeaveSyncService.prototype = {
   },
 
   get username() {
-    return this._prefs.getCharPref("username");
+    return Utils.prefs.getCharPref("username");
   },
   set username(value) {
     if (value)
-      this._prefs.setCharPref("username", value);
+      Utils.prefs.setCharPref("username", value);
     else
-      this._prefs.clearUserPref("username");
+      Utils.prefs.clearUserPref("username");
 
     // fixme - need to loop over all Identity objects - needs some rethinking...
     this._mozId.username = value;
@@ -153,30 +142,7 @@ WeaveSyncService.prototype = {
   get passphrase() { return this._cryptoId.password; },
   set passphrase(value) { this._cryptoId.password = value; },
 
-  get userPath() {
-    this._log.info("Hashing username " + this.username);
-
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-      createInstance(Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-
-    let hasher = Cc["@mozilla.org/security/hash;1"]
-      .createInstance(Ci.nsICryptoHash);
-    hasher.init(hasher.SHA1);
-
-    let data = converter.convertToByteArray(this.username, {});
-    hasher.update(data, data.length);
-    let rawHash = hasher.finish(false);
-
-    // return the two-digit hexadecimal code for a byte
-    function toHexString(charCode) {
-      return ("0" + charCode.toString(16)).slice(-2);
-    }
-
-    let hash = [toHexString(rawHash.charCodeAt(i)) for (i in rawHash)].join("");
-    this._log.debug("Username hashes to " + hash);
-    return hash;
-  },
+  get userPath() { return this._mozId.userHash; },
 
   get currentUser() {
     if (this._dav.loggedIn)
@@ -185,20 +151,20 @@ WeaveSyncService.prototype = {
   },
 
   get enabled() {
-    return this._prefs.getBoolPref("enabled");
+    return Utils.prefs.getBoolPref("enabled");
   },
 
   get schedule() {
     if (!this.enabled)
       return 0; // manual/off
-    return this._prefs.getIntPref("schedule");
+    return Utils.prefs.getIntPref("schedule");
   },
 
   _init: function WeaveSync__init() {
     this._initLogs();
     this._log.info("Weave Sync Service Initializing");
 
-    this._prefs.addObserver("", this, false);
+    Utils.prefs.addObserver("", this, false);
 
     if (!this.enabled) {
       this._log.info("Weave Sync disabled");
@@ -252,17 +218,19 @@ WeaveSyncService.prototype = {
 
   _initLogs: function WeaveSync__initLogs() {
     this._log = Log4Moz.Service.getLogger("Service.Main");
+    this._log.level =
+      Log4Moz.Level[Utils.prefs.getCharPref("log.logger.service.main")];
 
     let formatter = Log4Moz.Service.newFormatter("basic");
     let root = Log4Moz.Service.rootLogger;
-    root.level = Log4Moz.Level[this._prefs.getCharPref("log.rootLogger")];
+    root.level = Log4Moz.Level[Utils.prefs.getCharPref("log.rootLogger")];
 
     let capp = Log4Moz.Service.newAppender("console", formatter);
-    capp.level = Log4Moz.Level[this._prefs.getCharPref("log.appender.console")];
+    capp.level = Log4Moz.Level[Utils.prefs.getCharPref("log.appender.console")];
     root.addAppender(capp);
 
     let dapp = Log4Moz.Service.newAppender("dump", formatter);
-    dapp.level = Log4Moz.Level[this._prefs.getCharPref("log.appender.dump")];
+    dapp.level = Log4Moz.Level[Utils.prefs.getCharPref("log.appender.dump")];
     root.addAppender(dapp);
 
     let brief = this._dirSvc.get("ProfD", Ci.nsIFile);
@@ -279,35 +247,62 @@ WeaveSyncService.prototype = {
       verbose.create(verbose.NORMAL_FILE_TYPE, PERMS_FILE);
 
     let fapp = Log4Moz.Service.newFileAppender("rotating", brief, formatter);
-    fapp.level = Log4Moz.Level[this._prefs.getCharPref("log.appender.briefLog")];
+    fapp.level = Log4Moz.Level[Utils.prefs.getCharPref("log.appender.briefLog")];
     root.addAppender(fapp);
     let vapp = Log4Moz.Service.newFileAppender("rotating", verbose, formatter);
-    vapp.level = Log4Moz.Level[this._prefs.getCharPref("log.appender.debugLog")];
+    vapp.level = Log4Moz.Level[Utils.prefs.getCharPref("log.appender.debugLog")];
     root.addAppender(vapp);
   },
 
   _lock: function weaveSync__lock() {
-    if (this._locked) {
+    let self = yield;
+
+    this._dav.lock.async(this._dav, self.cb);
+    let locked = yield;
+
+    if (!locked) {
       this._log.warn("Service lock failed: already locked");
       this._os.notifyObservers(null, "weave:service-lock:error", "");
-      return false;
+      self.done(false);
+      return;
     }
-    this._locked = true;
+
     this._log.debug("Service lock acquired");
     this._os.notifyObservers(null, "weave:service-lock:success", "");
-    return true;
+    self.done(true);
   },
 
   _unlock: function WeaveSync__unlock() {
-    this._locked = false;
+    let self = yield;
+
+    this._dav.unlock.async(this._dav, self.cb);
+    let unlocked = yield;
+
+    if (!unlocked) {
+      this._log.error("Service unlock failed");
+      this._os.notifyObservers(null, "weave:service-unlock:error", "");
+      self.done(false);
+      return;
+    }
+
     this._log.debug("Service lock released");
     this._os.notifyObservers(null, "weave:service-unlock:success", "");
+    self.done(true);
   },
 
-  _login: function WeaveSync__login() {
+  _login: function WeaveSync__login(password, passphrase) {
     let self = yield;
 
     try {
+      if (this._dav.locked)
+        throw "Could not login: could not acquire lock";
+      this._dav.allowLock = false;
+  
+      // cache password & passphrase
+      // if null, we'll try to get them from the pw manager below
+      this._mozId.setTempPassword(password);
+      this._cryptoId.setTempPassword(passphrase);
+
       this._log.debug("Logging in");
       this._os.notifyObservers(null, "weave:service-login:start", "");
 
@@ -316,7 +311,7 @@ WeaveSyncService.prototype = {
       if (!this.password)
         throw "No password given or found in password manager";
 
-      let serverURL = this._prefs.getCharPref("serverURL");
+      let serverURL = Utils.prefs.getCharPref("serverURL");
       this._dav.baseURL = serverURL + "user/" + this.userPath + "/";
       this._log.info("Using server URL: " + this._dav.baseURL);
 
@@ -354,7 +349,9 @@ WeaveSyncService.prototype = {
                          "Could not get private key from server", [[200,300],404]);
 
       if (keyResp.status != 404) {
-        this._cryptoId.key = keyResp.responseText;
+        this._cryptoId.privkey = keyResp.responseText;
+        Crypto.RSAkeydecrypt.async(Crypto, self.cb, this._cryptoId);
+        this._cryptoId.pubkey = yield;
 
       } else {
         // FIXME: hack to wipe everyone's server data... needs to be removed at some point
@@ -363,10 +360,11 @@ WeaveSyncService.prototype = {
         
         // generate a new key
         this._log.debug("Generating new RSA key");
-        Crypto.RSAkeygen.async(Crypto, self.cb, this._cryptoId.password);
+        Crypto.RSAkeygen.async(Crypto, self.cb, this._cryptoId);
         let [privkey, pubkey] = yield;
 
-        this._cryptoId.key = privkey;
+        this._cryptoId.privkey = privkey;
+        this._cryptoId.pubkey = pubkey;
 
         this._dav.MKCOL("private/", self.cb);
         ret = yield;
@@ -388,17 +386,34 @@ WeaveSyncService.prototype = {
       }
 
       this._passphrase = null;
+      this._dav.allowLock = true;
       this._os.notifyObservers(null, "weave:service-login:success", "");
       self.done(true);
 
     } catch (e) {
-      this._log.warn(Async.exceptionStr(self, e));
-      this._log.trace(e.trace);
+      this._dav.allowLock = true;
       this._os.notifyObservers(null, "weave:service-login:error", "");
-      self.done(false);
+      throw e;
     }
   },
 
+  // NOTE: doesn't lock because it's called from _login() which already holds the lock
+  _serverWipe: function WeaveSync__serverWipe() {
+    let self = yield;
+
+    this._dav.listFiles.async(this._dav, self.cb);
+    let names = yield;
+
+    for (let i = 0; i < names.length; i++) {
+      this._dav.DELETE(names[i], self.cb);
+      let resp = yield;
+      this._log.debug(resp.status);
+    }
+
+    self.done();
+  },
+
+  // NOTE: can't lock because it assumes the lock is being held ;)
   _resetLock: function WeaveSync__resetLock() {
     let self = yield;
     let success = false;
@@ -425,76 +440,104 @@ WeaveSyncService.prototype = {
     }
   },
 
+  _syncEngine: function WeaveSync__syncEngine(eng) {
+    let self = yield;
+
+    this._os.notifyObservers(null, "weave:" + eng.name + ":sync:start", "");
+
+    let ret;
+    try {
+      eng.sync(self.cb);
+      ret = yield;
+    } catch (e) {
+      this._log.warn("Engine failed with error: " + Utils.exceptionStr(e));
+      if (e.trace)
+        this._log.debug("Engine stack trace: " + Utils.stackTrace(e.trace));
+    }
+
+    if (ret)
+      this._os.notifyObservers(null, "weave:" + eng.name + ":sync:success", "");
+    else
+      this._os.notifyObservers(null, "weave:" + eng.name + ":sync:error", "");
+
+    self.done();
+  },
+
   _sync: function WeaveSync__sync() {
     let self = yield;
-    let success = false;
 
     try {
-      if (!this._lock())
-	return;
+      this._lock.async(this, self.cb)
+      let locked = yield;
+      if (!locked)
+        return;
 
       this._os.notifyObservers(null, "weave:service:sync:start", "");
 
-      if (this._prefs.getBoolPref("bookmarks")) {
-        this._bmkEngine.sync(self.cb);
+      if (Utils.prefs.getBoolPref("bookmarks")) {
+        this._syncEngine.async(this, self.cb, this._bmkEngine);
         yield;
       }
-      if (this._prefs.getBoolPref("history")) {
-        this._histEngine.sync(self.cb);
+      if (Utils.prefs.getBoolPref("history")) {
+        this._syncEngine.async(this, self.cb, this._histEngine);
         yield;
       }
 
-      success = true;
-      this._unlock();
+      this._unlock.async(this, self.cb)
+      yield;
+      this._os.notifyObservers(null, "weave:service:sync:success", "");
 
     } catch (e) {
+      this._unlock.async(this, self.cb)
+      yield;
+      this._os.notifyObservers(null, "weave:service:sync:error", "");
       throw e;
-
-    } finally {
-      if (success)
-        this._os.notifyObservers(null, "weave:service:sync:success", "");
-      else
-        this._os.notifyObservers(null, "weave:service:sync:error", "");
-      self.done();
     }
+
+    self.done();
   },
 
   _resetServer: function WeaveSync__resetServer() {
     let self = yield;
 
-    if (!this._lock())
-      throw "Could not acrquire lock";
+    this._lock.async(this, self.cb)
+    let locked = yield;
+    if (!locked)
+      return;
 
-    this._bmkEngine.resetServer(self.cb);
-    this._histEngine.resetServer(self.cb);
+    try {
+      this._bmkEngine.resetServer(self.cb);
+      this._histEngine.resetServer(self.cb);
 
-    this._unlock();
+    } catch (e) {
+      throw e;
+
+    } finally {
+      this._unlock.async(this, self.cb)
+      yield;
+    }
+
     self.done();
   },
 
   _resetClient: function WeaveSync__resetClient() {
     let self = yield;
 
-    if (!this._lock())
-      throw "Could not acrquire lock";
+    this._lock.async(this, self.cb)
+    let locked = yield;
+    if (!locked)
+      return;
 
-    this._bmkEngine.resetClient(self.cb);
-    this._histEngine.resetClient(self.cb);
+    try {
+      this._bmkEngine.resetClient(self.cb);
+      this._histEngine.resetClient(self.cb);
 
-    this._unlock();
-    self.done();
-  },
+    } catch (e) {
+      throw e;
 
-  _serverWipe: function WeaveSync__serverWipe() {
-    let self = yield;
-
-    this._dav.listFiles.async(this._dav, self.cb);
-    let names = yield;
-
-    for (let i = 0; i < names.length; i++) {
-      this._dav.DELETE(names[i], self.cb);
-      let resp = yield;
-      this._log.debug(resp.status);
+    } finally {
+      this._unlock.async(this, self.cb)
+      yield;
     }
 
     self.done();
@@ -519,14 +562,7 @@ WeaveSyncService.prototype = {
   // These are global (for all engines)
 
   login: function WeaveSync_login(password, passphrase) {
-    if (!this._lock())
-      return;
-    // cache password & passphrase
-    // if null, _login() will try to get them from the pw manager
-    this._mozId.setTempPassword(password);
-    this._cryptoId.setTempPassword(passphrase);
-    let self = this;
-    this._login.async(this, function() {self._unlock()});
+    this._login.async(this, null, password, passphrase);
   },
 
   logout: function WeaveSync_logout() {
@@ -537,12 +573,7 @@ WeaveSyncService.prototype = {
     this._os.notifyObservers(null, "weave:service-logout:success", "");
   },
 
-  resetLock: function WeaveSync_resetLock() {
-    if (!this._lock())
-      return;
-    let self = this;
-    this._resetLock.async(this, function() {self._unlock()});
-  },
+  resetLock: function WeaveSync_resetLock() { this._resetLock.async(this); },
 
   // These are per-engine
 
