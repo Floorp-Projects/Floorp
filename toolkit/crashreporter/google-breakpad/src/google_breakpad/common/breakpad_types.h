@@ -43,6 +43,10 @@
 #ifndef _WIN32
 
 #include <sys/types.h>
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS
+#endif  /* __STDC_FORMAT_MACROS */
+#include <inttypes.h>
 
 #if defined(__SUNPRO_CC) || (defined(__GNUC__) && defined(__sun__))
 typedef uint8_t u_int8_t;
@@ -68,5 +72,12 @@ typedef struct {
 } u_int128_t;
 
 typedef u_int64_t breakpad_time_t;
+
+/* Try to get PRIx64 from inttypes.h, but if it's not defined, fall back to
+ * llx, which is the format string for "long long" - this is a 64-bit
+ * integral type on many systems. */
+#ifndef PRIx64
+#define PRIx64 "llx"
+#endif  /* !PRIx64 */
 
 #endif  /* GOOGLE_BREAKPAD_COMMON_BREAKPAD_TYPES_H__ */

@@ -80,7 +80,7 @@ std::string HexString(u_int32_t number) {
 
 std::string HexString(u_int64_t number) {
   char buffer[19];
-  snprintf(buffer, sizeof(buffer), "0x%llx", number);
+  snprintf(buffer, sizeof(buffer), "0x%" PRIx64, number);
   return std::string(buffer);
 }
 

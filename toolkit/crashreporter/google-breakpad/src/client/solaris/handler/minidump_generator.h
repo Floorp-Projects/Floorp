@@ -32,13 +32,7 @@
 #ifndef CLIENT_SOLARIS_HANDLER_MINIDUMP_GENERATOR_H__
 #define CLIENT_SOLARIS_HANDLER_MINIDUMP_GENERATOR_H__
 
-#if defined(sparc) || defined(__sparc__)
-#define TARGET_CPU_SPARC 1
-#elif defined(i386) || defined(__i386__)
-#define TARGET_CPU_X86 1
-#else
-#error "cannot determine cpu type"
-#endif
+#include <ucontext.h>
 
 #include "client/minidump_file_writer.h"
 #include "client/solaris/handler/solaris_lwp.h"
@@ -66,59 +60,9 @@ class MinidumpGenerator {
 
   // Write minidump.
   bool WriteMinidumpToFile(const char *file_pathname,
-                           int signo);
-
- private:
-  // Helpers
-  bool WriteCVRecord(MDRawModule *module, const char *module_path);
-
-  // Write the lwp stack information to dump file.
-  bool WriteLwpStack(uintptr_t last_esp, UntypedMDRVA *memory,
-                     MDMemoryDescriptor *loc);
-
-  // Write CPU context based on provided registers.
-#if TARGET_CPU_SPARC
-  bool WriteContext(MDRawContextSPARC *context, prgregset_t regs,
-                    prfpregset_t *fp_regs);
-#elif TARGET_CPU_X86
-  bool WriteContext(MDRawContextX86 *context, prgregset_t regs,
-                    prfpregset_t *fp_regs);
-#endif /* TARGET_CPU_XXX */
-
-  // Write information about a lwp.
-  // Only processes lwp running normally at the crash.
-  bool WriteLwpStream(lwpstatus_t *lsp, MDRawThread *lwp);
-
-  // Write the CPU information to the dump file.
-  bool WriteCPUInformation(MDRawSystemInfo *sys_info);
-
-  //Write the OS information to the dump file.
-  bool WriteOSInformation(MDRawSystemInfo *sys_info);
-
-  typedef bool (MinidumpGenerator::*WriteStreamFN)(MDRawDirectory *);
-
-  // Write all the information to the dump file.
-  void *Write();
-
-  // Stream writers
-  bool WriteLwpListStream(MDRawDirectory *dir);
-  bool WriteModuleListStream(MDRawDirectory *dir);
-  bool WriteSystemInfoStream(MDRawDirectory *dir);
-  bool WriteExceptionStream(MDRawDirectory *dir);
-  bool WriteMiscInfoStream(MDRawDirectory *dir);
-  bool WriteBreakpadInfoStream(MDRawDirectory *dir);
-
- private:
-  MinidumpFileWriter writer_;
-
-  // Pid of the lwp who called WriteMinidumpToFile
-  int requester_pid_;
-
-  // Signal number when crash happed. Can be 0 if this is a requested dump.
-  int signo_;
-
-  // Used to get information about the lwps.
-  SolarisLwp *lwp_lister_;
+                           int signo,
+                           uintptr_t sighandler_ebp,
+                           ucontext_t **sig_ctx) const;
 };
 
 }  // namespace google_breakpad
