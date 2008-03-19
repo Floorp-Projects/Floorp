@@ -253,7 +253,10 @@ nsDragService::InvokeDragSession(nsIDOMNode* aDOMNode, nsISupportsArray* aTransf
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  nsBaseDragService::InvokeDragSession(aDOMNode, aTransferableArray, aDragRgn, aActionType);
+  nsresult rv = nsBaseDragService::InvokeDragSession(aDOMNode,
+                                                     aTransferableArray,
+                                                     aDragRgn, aActionType);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   mDataItems = aTransferableArray;
 
