@@ -499,17 +499,97 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
     bdi.adornment |= kThemeAdornmentDefault;
 
   HIRect drawFrame = inBoxRect;
+  PRBool needsScaling = PR_FALSE;
+  int drawWidth = 0, drawHeight = 0;
+
   if (inKind == kThemePopupButton) {
-    // popup buttons draw outside their frame by 1 pixel on each side and two on the bottom
-    drawFrame.size.width -= 2;
-    drawFrame.origin.x += 1;
-    drawFrame.size.height -= 2;
+    /* popup buttons draw outside their frame by 1 pixel on each side and
+     * two on the bottom but of the bottom two pixels one is a 'shadow'
+     * and not the frame itself.  That extra pixel should be handled
+     * by GetWidgetOverflow, but we already extend each widget's overflow
+     * by 4px to handle a potential focus ring.
+     */
+
+    if (nsToolkit::OnLeopardOrLater()) {
+      /* Leopard will happily scale up for buttons that are sized 20px or higher,
+       * drawing 1px below the actual requested area.  (So 20px == 21px.)
+       * but anything below that will be clamped:
+       *  requested: 20 actual: 21 (handled above)
+       *  requested: 19 actual: 18 <- note that there is no way to draw a dropdown that's exactly 20 px in size
+       *  requested: 18 actual: 18
+       *  requested: 17 actual: 18
+       *  requested: 16 actual: 15 (min size)
+       * For those, draw to a buffer and scale
+       */
+      if (drawFrame.size.height != 18 && drawFrame.size.height != 15) {
+        if (drawFrame.size.height > 20) {
+          drawFrame.size.width -= 2;
+          drawFrame.origin.x += 1;
+          drawFrame.size.height -= 1;
+        }
+        else {
+          // pick which native height to use for the small scale
+          float nativeHeight = 15.0f;
+          if (drawFrame.size.height > 16)
+            nativeHeight = 18.0f;
+
+          drawWidth = (int) drawFrame.size.width;
+          drawHeight = (int) nativeHeight;
+
+          needsScaling = PR_TRUE;
+        }
+      }
+    }
+    else {
+      // leave things alone on Tiger
+      drawFrame.size.height -= 1;
+    }
   }
 
-  HIThemeDrawButton(&drawFrame, &bdi, cgContext, kHIThemeOrientationNormal, NULL);
+  if (!needsScaling) {
+    HIThemeDrawButton(&drawFrame, &bdi, cgContext, kHIThemeOrientationNormal, NULL);
+  } else {
+    int w = drawWidth + MAX_FOCUS_RING_WIDTH*2;
+    int h = drawHeight + MAX_FOCUS_RING_WIDTH*2;
+
+    CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
+    CGContextRef ctx = CGBitmapContextCreate(NULL, w, h, 8, w * 4,
+                                             rgb, kCGImageAlphaPremultipliedFirst);
+    CGColorSpaceRelease(rgb);
+
+    // Flip the context
+    CGContextTranslateCTM(ctx, 0.0f, h);
+    CGContextScaleCTM(ctx, 1.0f, -1.0f);
+
+    // then draw the button (offset by the focus ring size
+    CGRect tmpFrame = CGRectMake(MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH, drawWidth, drawHeight);
+    HIThemeDrawButton(&tmpFrame, &bdi, ctx, kHIThemeOrientationNormal, NULL);
+
+    CGImageRef img = CGBitmapContextCreateImage(ctx);
+    CGRect imgRect = CGRectMake(drawFrame.origin.x - MAX_FOCUS_RING_WIDTH,
+                                drawFrame.origin.y - MAX_FOCUS_RING_WIDTH,
+                                drawFrame.size.width + MAX_FOCUS_RING_WIDTH * 2.0,
+                                drawFrame.size.height + MAX_FOCUS_RING_WIDTH * 2.0);
+
+    // And then flip the main context here so that the image gets drawn right-side up
+    CGAffineTransform ctm = CGContextGetCTM (cgContext);
+
+    CGContextTranslateCTM (cgContext, imgRect.origin.x, imgRect.origin.y + imgRect.size.height);
+    CGContextScaleCTM (cgContext, 1.0, -1.0);
+
+    imgRect.origin.x = imgRect.origin.y = 0.0f;
+
+    // See comment about why we don't scale MAX_FOCUS_RING in DrawCellWithScaling
+    CGContextDrawImage(cgContext, imgRect, img);
+
+    CGContextSetCTM (cgContext, ctm);
+
+    CGImageRelease(img);
+    CGContextRelease(ctx);
+  }
 
 #if DRAW_IN_FRAME_DEBUG
-  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.8);
+  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
   CGContextFillRect(cgContext, inBoxRect);
 #endif
 
