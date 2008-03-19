@@ -722,9 +722,20 @@ var Microformats = {
           xpathResult.singleNodeValue.microformat = mfname;
           parentnode = xpathResult.singleNodeValue;
         }
-        /* If the propnode is not a child of the microformat, remove it*/
+        /* If the propnode is not a child of the microformat, and */
+        /* the property belongs to the parent microformat as well, */
+        /* remove it. */
         if (parentnode != mfnode) {
-          propnodes.splice(i,1);
+          var mfNameString = Microformats.getNamesFromNode(parentnode);
+          var mfNames = mfNameString.split(" ");
+          var j;
+          for (j=0; j < mfNames.length; j++) {
+            /* If this property is in the parent microformat, remove the node  */
+            if (Microformats[mfNames[j]].properties[propname]) {
+              propnodes.splice(i,1);;
+              break;
+            }
+          }
         }
       }
       if (propnodes.length > 0) {
