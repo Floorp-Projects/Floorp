@@ -146,6 +146,8 @@ protected:
   // supplied so the screen position is not known
   PRInt32 mScreenX;
   PRInt32 mScreenY;
+
+  PRUint32 mSuppressLevel;
 };
 
 #endif // nsBaseDragService_h__

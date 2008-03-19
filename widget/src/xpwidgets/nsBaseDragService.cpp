@@ -79,7 +79,7 @@
 nsBaseDragService::nsBaseDragService()
   : mCanDrop(PR_FALSE), mDoingDrag(PR_FALSE), mHasImage(PR_FALSE),
     mDragAction(DRAGDROP_ACTION_NONE), mTargetSize(0,0),
-    mImageX(0), mImageY(0), mScreenX(-1), mScreenY(-1)
+    mImageX(0), mImageY(0), mScreenX(-1), mScreenY(-1), mSuppressLevel(0)
 {
 }
 
@@ -203,6 +203,7 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
                                      PRUint32 aActionType)
 {
   NS_ENSURE_TRUE(aDOMNode, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
 
   // stash the document of the dom node
   aDOMNode->GetOwnerDocument(getter_AddRefs(mSourceDocument));
@@ -241,6 +242,7 @@ nsBaseDragService::InvokeDragSessionWithImage(nsIDOMNode* aDOMNode,
                                               nsIDOMMouseEvent* aDragEvent)
 {
   NS_ENSURE_TRUE(aDragEvent, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
 
   mSelection = nsnull;
   mHasImage = PR_TRUE;
@@ -262,6 +264,7 @@ nsBaseDragService::InvokeDragSessionWithSelection(nsISelection* aSelection,
 {
   NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(aDragEvent, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
 
   mSelection = aSelection;
   mHasImage = PR_TRUE;
@@ -288,7 +291,7 @@ nsBaseDragService::GetCurrentSession(nsIDragSession ** aSession)
 
   // "this" also implements a drag session, so say we are one but only
   // if there is currently a drag going on.
-  if (mDoingDrag) {
+  if (!mSuppressLevel && mDoingDrag) {
     *aSession = this;
     NS_ADDREF(*aSession);      // addRef because we're a "getter"
   }
@@ -317,7 +320,7 @@ nsBaseDragService::EndDragSession(PRBool aDoneDrag)
     return NS_ERROR_FAILURE;
   }
 
-  if (aDoneDrag)
+  if (aDoneDrag && !mSuppressLevel)
     FireDragEventAtSource(NS_DRAGDROP_END);
 
   mDoingDrag = PR_FALSE;
@@ -339,7 +342,7 @@ nsBaseDragService::EndDragSession(PRBool aDoneDrag)
 NS_IMETHODIMP
 nsBaseDragService::FireDragEventAtSource(PRUint32 aMsg)
 {
-  if (mSourceNode) {
+  if (mSourceNode && !mSuppressLevel) {
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(mSourceDocument);
     if (doc) {
       nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
@@ -578,3 +581,17 @@ nsBaseDragService::ConvertToUnscaledDevPixels(nsPresContext* aPresContext,
   *aScreenY = nsPresContext::CSSPixelsToAppUnits(*aScreenY) / adj;
 }
 
+NS_IMETHODIMP
+nsBaseDragService::Suppress()
+{
+  EndDragSession(PR_FALSE);
+  ++mSuppressLevel;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseDragService::Unsuppress()
+{
+  --mSuppressLevel;
+  return NS_OK;
+}
