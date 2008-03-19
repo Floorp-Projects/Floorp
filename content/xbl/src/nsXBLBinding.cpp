@@ -770,7 +770,9 @@ nsXBLBinding::GenerateAnonymousContent()
   const nsAttrName* attrName;
   for (PRUint32 i = 0; (attrName = content->GetAttrNameAt(i)); ++i) {
     PRInt32 namespaceID = attrName->NamespaceID();
-    nsIAtom* name = attrName->LocalName();
+    // Hold a strong reference here so that the atom doesn't go away during
+    // UnsetAttr.
+    nsCOMPtr<nsIAtom> name = attrName->LocalName();
 
     if (name != nsGkAtoms::includes) {
       if (!nsContentUtils::HasNonEmptyAttr(mBoundElement, namespaceID, name)) {

@@ -2224,7 +2224,10 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     // Remove all attributes from the root element
     while (count-- > 0) {
       const nsAttrName* name = root->GetAttrNameAt(count);
-      root->UnsetAttr(name->NamespaceID(), name->LocalName(), PR_FALSE);
+      // Hold a strong reference here so that the atom doesn't go away during
+      // UnsetAttr.
+      nsCOMPtr<nsIAtom> localName = name->LocalName();
+      root->UnsetAttr(name->NamespaceID(), localName, PR_FALSE);
     }
 
     // Remove the root from the childlist
