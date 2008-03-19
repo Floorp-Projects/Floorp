@@ -574,11 +574,10 @@ nsDisplayTableRowBackground::Paint(nsDisplayListBuilder* aBuilder,
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(mFrame);
 
   nsPoint pt = aBuilder->ToReferenceFrame(mFrame);
-  nsIRenderingContext::AutoPushTranslation translate(aCtx, pt.x, pt.y);
   TableBackgroundPainter painter(tableFrame,
                                  TableBackgroundPainter::eOrigin_TableRow,
                                  mFrame->PresContext(), *aCtx,
-                                 aDirtyRect - pt);
+                                 aDirtyRect, pt);
   painter.PaintRow(static_cast<nsTableRowFrame*>(mFrame));
 }
 
