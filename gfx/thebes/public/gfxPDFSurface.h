@@ -47,7 +47,7 @@
 
 class THEBES_API gfxPDFSurface : public gfxASurface {
 public:
-    gfxPDFSurface(nsIOutputStream *aStream, const gfxSize& aSizeInPonits);
+    gfxPDFSurface(nsIOutputStream *aStream, const gfxSize& aSizeInPoints);
     virtual ~gfxPDFSurface();
 
     virtual nsresult BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName);

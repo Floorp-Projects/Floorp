@@ -2194,10 +2194,7 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
             mPrt->mPrintSettings->SetEndPageRange(endPageNum);
             nsMargin marginTwips(0,0,0,0);
             mPrt->mPrintSettings->GetMarginInTwips(marginTwips);
-            nsMargin margin(poPresContext->TwipsToAppUnits(marginTwips.left),
-                            poPresContext->TwipsToAppUnits(marginTwips.top),
-                            poPresContext->TwipsToAppUnits(marginTwips.right),
-                            poPresContext->TwipsToAppUnits(marginTwips.bottom));
+            nsMargin margin = poPresContext->TwipsToAppUnits(marginTwips);
 
             if (startPageNum == endPageNum) {
               {

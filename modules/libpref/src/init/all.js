@@ -245,12 +245,26 @@ pref("print.whileInPrintPreview", true);
 // Cache old Presentation when going into Print Preview
 pref("print.always_cache_old_pres", false);
 
-// Enables you to specify the gap from the edge of the paper to the margin
-// this is used by both Printing and Print Preview
-pref("print.print_edge_top", 0); // 1/100 of an inch
-pref("print.print_edge_left", 0); // 1/100 of an inch
-pref("print.print_edge_right", 0); // 1/100 of an inch
-pref("print.print_edge_bottom", 0); // 1/100 of an inch
+// Enables you to specify the amount of the paper that is to be treated
+// as unwriteable.  The print_edge_XXX and print_margin_XXX preferences
+// are treated as offsets that are added to this pref.
+// Default is "-1", which means "use the system default".  (If there is
+// no system default, then the -1 is treated as if it were 0.)
+// This is used by both Printing and Print Preview.
+// Units are in 1/100ths of an inch.
+pref("print.print_unwriteable_margin_top",    -1);
+pref("print.print_unwriteable_margin_left",   -1);
+pref("print.print_unwriteable_margin_right",  -1);
+pref("print.print_unwriteable_margin_bottom", -1);
+
+// Enables you to specify the gap from the edge of the paper's 
+// unwriteable area to the margin.
+// This is used by both Printing and Print Preview
+// Units are in 1/100ths of an inch.
+pref("print.print_edge_top", 0);
+pref("print.print_edge_left", 0);
+pref("print.print_edge_right", 0);
+pref("print.print_edge_bottom", 0);
 
 // Pref used by the spellchecker extension to control the 
 // maximum number of misspelled words that will be underlined
@@ -2113,13 +2127,6 @@ pref("print.print_reversed", false);
 pref("print.print_color", true);
 pref("print.print_landscape", false);
 pref("print.print_paper_size", 0);
-
-// Enables you to specify the gap from the edge of the paper to the margin
-// this is used by both Printing and Print Preview
-pref("print.print_edge_top", 4); // 1/100 of an inch
-pref("print.print_edge_left", 4); // 1/100 of an inch
-pref("print.print_edge_right", 4); // 1/100 of an inch
-pref("print.print_edge_bottom", 4); // 1/100 of an inch
 
 // print_extra_margin enables platforms to specify an extra gap or margin
 // around the content of the page for Print Preview only

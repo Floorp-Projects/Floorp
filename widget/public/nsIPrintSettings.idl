@@ -58,7 +58,7 @@ interface nsIPrintSession;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(3e097aba-c1d6-425d-9c52-b371d5da964a)]
+[scriptable, uuid(5af07661-6477-4235-8814-4a45215855b8)]
 
 interface nsIPrintSettings : nsISupports
 {
@@ -79,7 +79,7 @@ interface nsIPrintSettings : nsISupports
   /* Flag 0x00000800 is unused */
   /* Flag 0x00001000 is unused */
   const unsigned long kInitSavePaperData      = 0x00002000;
-  /* Flag 0x00004000 is unused */
+  const unsigned long kInitSaveUnwriteableMargins = 0x00004000;
   const unsigned long kInitSaveEdges          = 0x00008000;
 
   const unsigned long kInitSaveReversed       = 0x00010000;
@@ -202,9 +202,9 @@ interface nsIPrintSettings : nsISupports
   attribute long    endPageRange;    
 
   /**
-   * The edge defines the area at the border of the paper
-   * outside of which the printer cannot print. The headers and footers
-   * will be placed inside.
+   * The edge measurements define the positioning of the headers
+   * and footers on the page. They're measured as an offset from
+   * the "unwriteable margin" (described below).
    */
   attribute double  edgeTop;     /*  these are in inches */
   attribute double  edgeLeft;
@@ -212,14 +212,22 @@ interface nsIPrintSettings : nsISupports
   attribute double  edgeRight;
 
   /**
-   * The margins define the area of the paper to print the content to.
-   * The headers and footers are placed outside, but still inside the border
-   * defined by the edge attributes above.
+   * The margins define the positioning of the content on the page.
+   * They're treated as an offset from the "unwriteable margin"
+   * (described below).
    */
   attribute double  marginTop;     /*  these are in inches */
   attribute double  marginLeft;
   attribute double  marginBottom;
   attribute double  marginRight;
+  /**
+   * The unwriteable margin defines the printable region of the paper, creating
+   * an invisible border from which the edge and margin attributes are measured.
+   */
+  attribute double  unwriteableMarginTop;     /*  these are in inches */
+  attribute double  unwriteableMarginLeft;
+  attribute double  unwriteableMarginBottom;
+  attribute double  unwriteableMarginRight;
 
   attribute double  scaling;      /* values 0.0 - 1.0 */
   attribute boolean printBGColors; /* Print Background Colors */
@@ -311,4 +319,16 @@ interface nsIPrintSettings : nsISupports
    * before printing, otherwise printing can fail on some platforms.
    */
   [noscript] void SetupSilentPrinting();
+
+  /**
+   * Sets/Gets the "unwriteable margin" for the page format.  This defines
+   * the boundary from which we'll measure the EdgeInTwips and MarginInTwips 
+   * attributes, to place the headers and content, respectively.
+   *
+   * Note: Implementations of SetUnwriteableMarginInTwips should handle
+   * negative margin values by falling back on the system default for
+   * that margin.
+   */
+  [noscript] void SetUnwriteableMarginInTwips(in nsNativeMarginRef aEdge);
+  [noscript] void GetUnwriteableMarginInTwips(in nsNativeMarginRef aEdge);
 };
