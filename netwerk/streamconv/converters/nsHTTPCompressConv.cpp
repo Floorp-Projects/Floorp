@@ -50,7 +50,10 @@
 #include "nsComponentManagerUtils.h"
 
 // nsISupports implementation
-NS_IMPL_ISUPPORTS2(nsHTTPCompressConv, nsIStreamConverter, nsIStreamListener)
+NS_IMPL_ISUPPORTS3(nsHTTPCompressConv,
+                   nsIStreamConverter,
+                   nsIStreamListener,
+                   nsIRequestObserver)
 
 // nsFTPDirListingConv methods
 nsHTTPCompressConv::nsHTTPCompressConv()
