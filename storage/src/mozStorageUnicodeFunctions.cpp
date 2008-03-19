@@ -195,7 +195,7 @@ StorageUnicodeFunctions::likeFunction(sqlite3_context *p,
   nsDependentString B(static_cast<const PRUnichar *>(sqlite3_value_text16(aArgv[0])));
   NS_ASSERTION(!B.IsEmpty(), "LIKE string must not be null!");
 
-  PRUnichar E;
+  PRUnichar E = 0;
   if (3 == aArgc)
     E = static_cast<const PRUnichar *>(sqlite3_value_text16(aArgv[2]))[0];
 
