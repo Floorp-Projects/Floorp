@@ -149,10 +149,7 @@ nsExceptionManager *nsExceptionService::firstThread = nsnull;
 PRInt32 nsExceptionService::totalInstances = 0;
 #endif
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsExceptionService,
-                              nsIExceptionService,
-                              nsIExceptionManager,
-                              nsIObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsExceptionService, nsIExceptionService, nsIObserver)
 
 nsExceptionService::nsExceptionService()
   : mProviders(4, PR_TRUE) /* small, thread-safe hashtable */

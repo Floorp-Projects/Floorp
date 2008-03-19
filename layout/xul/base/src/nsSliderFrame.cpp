@@ -1145,6 +1145,4 @@ void nsSliderFrame::Notify(void)
     }
 }
 
-NS_IMPL_ISUPPORTS2(nsSliderMediator,
-                   nsIDOMMouseListener,
-                   nsIDOMEventListener)
+NS_IMPL_ISUPPORTS1(nsSliderMediator, nsIDOMMouseListener)

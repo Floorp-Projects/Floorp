@@ -69,10 +69,7 @@
 
 #define MAX_BYTES 512
 
-NS_IMPL_ISUPPORTS3(nsFeedSniffer,
-                   nsIContentSniffer,
-                   nsIStreamListener,
-                   nsIRequestObserver)
+NS_IMPL_ISUPPORTS2(nsFeedSniffer, nsIContentSniffer, nsIStreamListener)
 
 nsresult
 nsFeedSniffer::ConvertEncodedData(nsIRequest* request,

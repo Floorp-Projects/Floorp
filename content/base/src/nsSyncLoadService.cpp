@@ -155,9 +155,8 @@ nsSyncLoader::~nsSyncLoader()
     }
 }
 
-NS_IMPL_ISUPPORTS5(nsSyncLoader,
+NS_IMPL_ISUPPORTS4(nsSyncLoader,
                    nsIDOMLoadListener,
-                   nsIDOMEventListener,
                    nsIChannelEventSink,
                    nsIInterfaceRequestor,
                    nsISupportsWeakReference)

@@ -80,10 +80,7 @@ NS_IMETHODIMP xpctestOther::Method3(PRInt16 i, PRInt16 j, PRInt16 k)
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED2(xpctestChild,
-                             xpctestOther,
-                             nsIXPCTestChild,
-                             nsIXPCTestParent)
+NS_IMPL_ISUPPORTS_INHERITED1(xpctestChild, xpctestOther, nsIXPCTestChild)
 
 xpctestChild::xpctestChild()
 {

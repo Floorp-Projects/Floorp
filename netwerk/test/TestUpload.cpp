@@ -82,9 +82,7 @@ InputTestConsumer::~InputTestConsumer()
 {
 }
 
-NS_IMPL_ISUPPORTS2(InputTestConsumer,
-                   nsIStreamListener,
-                   nsIRequestObserver)
+NS_IMPL_ISUPPORTS1(InputTestConsumer, nsIStreamListener)
 
 NS_IMETHODIMP
 InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)
