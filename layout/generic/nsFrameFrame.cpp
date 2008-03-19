@@ -143,6 +143,7 @@ public:
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
 
+  virtual IntrinsicSize GetIntrinsicSize();
   virtual nsSize  GetIntrinsicRatio();
 
   virtual nsSize ComputeAutoSize(nsIRenderingContext *aRenderingContext,
@@ -441,6 +442,16 @@ nsSubDocumentFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   }
 
   return result;
+}
+
+/* virtual */ nsIFrame::IntrinsicSize
+nsSubDocumentFrame::GetIntrinsicSize()
+{
+  nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame();
+  if (subDocRoot) {
+    return subDocRoot->GetIntrinsicSize();
+  }
+  return nsLeafFrame::GetIntrinsicSize();
 }
 
 /* virtual */ nsSize
