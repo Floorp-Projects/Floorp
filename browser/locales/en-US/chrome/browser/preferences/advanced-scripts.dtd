@@ -42,7 +42,6 @@
 
 <!ENTITY moveResizeWindows.label        "Move or resize existing windows">
 <!ENTITY moveResizeWindows.accesskey    "M">
-<!ENTITY moveResizeNotAllowed.label      "Scripts may not move or resize existing windows">
 <!ENTITY raiseLowerWindows.label        "Raise or lower windows">
 <!ENTITY raiseLowerWindows.accesskey    "R">
 <!ENTITY disableContextMenus.label      "Disable or replace context menus">
