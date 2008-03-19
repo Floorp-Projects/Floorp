@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!DOCTYPE window>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="XUL Grid Test">
+  <grid>
+    <columns>
+      <column>
+        <hbox />
+        <hbox />
+      </column>
+      <column>
+        <label value="Upper right" />
+        <hbox />
+      </column>
+    </columns>
+    <rows>
+      <row>
+        <hbox />
+        <hbox />
+      </row>
+      <row>
+        <textbox value="Lower left" />
+        <hbox />
+      </row>
+    </rows>
+  </grid>
+</window>
