@@ -119,6 +119,7 @@
 #define XML_HTTP_REQUEST_USE_XSITE_AC   (1 << 13) // Internal
 #define XML_HTTP_REQUEST_NON_GET        (1 << 14) // Internal
 #define XML_HTTP_REQUEST_GOT_FINAL_STOP (1 << 15) // Internal
+#define XML_HTTP_REQUEST_BACKGROUND     (1 << 16) // Internal
 
 #define XML_HTTP_REQUEST_LOADSTATES         \
   (XML_HTTP_REQUEST_UNINITIALIZED |         \
@@ -131,6 +132,9 @@
 
 #define ACCESS_CONTROL_CACHE_SIZE 100
 
+#define NS_BADCERTHANDLER_CONTRACTID \
+  "@mozilla.org/content/xmlhttprequest-bad-cert-handler;1"
+
 // This helper function adds the given load flags to the request's existing
 // load flags.
 static void AddLoadFlags(nsIRequest *request, nsLoadFlags newFlags)
@@ -139,6 +143,15 @@ static void AddLoadFlags(nsIRequest *request, nsLoadFlags newFlags)
   request->GetLoadFlags(&flags);
   flags |= newFlags;
   request->SetLoadFlags(flags);
+}
+
+static nsresult IsCapabilityEnabled(const char *capability, PRBool *enabled)
+{
+  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+  if (!secMan)
+    return NS_ERROR_FAILURE;
+
+  return secMan->IsCapabilityEnabled(capability, enabled);
 }
 
 // Helper proxy class to be used when expecting an
@@ -1223,6 +1236,10 @@ nsXMLHttpRequest::GetLoadGroup(nsILoadGroup **aLoadGroup)
 {
   NS_ENSURE_ARG_POINTER(aLoadGroup);
   *aLoadGroup = nsnull;
+
+  if (mState & XML_HTTP_REQUEST_BACKGROUND) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
   if (doc) {
@@ -2391,13 +2408,8 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
   // Prevent modification to certain HTTP headers (see bug 302263), unless
   // the executing script has UniversalBrowserWrite permission.
 
-  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
-  if (!secMan) {
-    return NS_ERROR_FAILURE;
-  }
-
   PRBool privileged;
-  rv = secMan->IsCapabilityEnabled("UniversalBrowserWrite", &privileged);
+  rv = IsCapabilityEnabled("UniversalBrowserWrite", &privileged);
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
@@ -2503,6 +2515,41 @@ nsXMLHttpRequest::SetMultipart(PRBool aMultipart)
     mState |= XML_HTTP_REQUEST_MULTIPART;
   } else {
     mState &= ~XML_HTTP_REQUEST_MULTIPART;
+  }
+
+  return NS_OK;
+}
+
+/* attribute boolean mozBackgroundRequest; */
+NS_IMETHODIMP
+nsXMLHttpRequest::GetMozBackgroundRequest(PRBool *_retval)
+{
+  *_retval = !!(mState & XML_HTTP_REQUEST_BACKGROUND);
+
+  return NS_OK;
+}
+
+/* attribute boolean mozBackgroundRequest; */
+NS_IMETHODIMP
+nsXMLHttpRequest::SetMozBackgroundRequest(PRBool aMozBackgroundRequest)
+{
+  PRBool privileged;
+
+  nsresult rv = IsCapabilityEnabled("UniversalXPConnect", &privileged);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!privileged)
+    return NS_ERROR_DOM_SECURITY_ERR;
+
+  if (!(mState & XML_HTTP_REQUEST_UNINITIALIZED)) {
+    // Can't change this while we're in the middle of something.
+    return NS_ERROR_IN_PROGRESS;
+  }
+
+  if (aMozBackgroundRequest) {
+    mState |= XML_HTTP_REQUEST_BACKGROUND;
+  } else {
+    mState &= ~XML_HTTP_REQUEST_BACKGROUND;
   }
 
   return NS_OK;
@@ -2745,6 +2792,19 @@ nsXMLHttpRequest::GetInterface(const nsIID & aIID, void **aResult)
     if (NS_SUCCEEDED(rv)) {
       NS_ASSERTION(*aResult, "Lying nsIInterfaceRequestor implementation!");
       return rv;
+    }
+  }
+
+  if (mState & XML_HTTP_REQUEST_BACKGROUND) {
+    nsresult rv;
+    nsCOMPtr<nsIInterfaceRequestor> badCertHandler(do_CreateInstance(NS_BADCERTHANDLER_CONTRACTID, &rv));
+
+    // Ignore failure to get component, we may not have all its dependencies
+    // available
+    if (NS_SUCCEEDED(rv)) {
+      rv = badCertHandler->GetInterface(aIID, aResult);
+      if (NS_SUCCEEDED(rv))
+        return rv;
     }
   }
 
