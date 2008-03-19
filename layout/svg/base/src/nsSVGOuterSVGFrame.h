@@ -130,8 +130,9 @@ public:
 
   // nsSVGOuterSVGFrame methods:
 
+  void InvalidateCoveredRegion(nsIFrame *aFrame);
   /* Invalidate takes a nsRect in screen pixel coordinates */
-  nsresult InvalidateRect(nsRect aRect);
+  void InvalidateRect(nsRect aRect);
   PRBool IsRedrawSuspended();
 
   // nsISVGSVGFrame interface:

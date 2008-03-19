@@ -634,13 +634,29 @@ nsSVGOuterSVGFrame::GetType() const
 //----------------------------------------------------------------------
 // nsSVGOuterSVGFrame methods:
 
-nsresult
+void
+nsSVGOuterSVGFrame::InvalidateCoveredRegion(nsIFrame *aFrame)
+{
+  nsISVGChildFrame *svgFrame = nsnull;
+  CallQueryInterface(aFrame, &svgFrame);
+  if (!svgFrame)
+    return;
+
+  nsRect rect = nsSVGUtils::FindFilterInvalidation(aFrame);
+  if (rect.IsEmpty()) {
+    rect = svgFrame->GetCoveredRegion();
+  }
+
+  InvalidateRect(rect);
+}
+
+void
 nsSVGOuterSVGFrame::InvalidateRect(nsRect aRect)
 {
-  aRect.ScaleRoundOut(PresContext()->AppUnitsPerDevPixel());
-  Invalidate(aRect);
-
-  return NS_OK;
+  if (!aRect.IsEmpty()) {
+    aRect.ScaleRoundOut(PresContext()->AppUnitsPerDevPixel());
+    Invalidate(aRect);
+  }
 }
 
 PRBool

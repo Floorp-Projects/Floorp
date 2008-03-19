@@ -261,7 +261,7 @@ nsSVGPathGeometryFrame::DidSetStyleContext()
   nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (outerSVGFrame) {
     // invalidate here while we still have the filter information
-    outerSVGFrame->InvalidateRect(nsSVGUtils::FindFilterInvalidation(this));
+    outerSVGFrame->InvalidateCoveredRegion(this);
   }
 
   RemovePathProperties();
@@ -757,13 +757,14 @@ nsSVGPathGeometryFrame::UpdateGraphic(PRBool suppressInvalidation)
     if (suppressInvalidation)
       return NS_OK;
 
-    outerSVGFrame->InvalidateRect(nsSVGUtils::FindFilterInvalidation(this));
+    outerSVGFrame->InvalidateCoveredRegion(this);
 
     UpdateMarkerProperty();
     UpdateCoveredRegion();
     nsSVGUtils::UpdateFilterRegion(this);
 
-    outerSVGFrame->InvalidateRect(nsSVGUtils::FindFilterInvalidation(this));
+    outerSVGFrame->InvalidateCoveredRegion(this);
+    nsSVGUtils::NotifyAncestorsOfFilterRegionChange(this);
   }
 
   return NS_OK;
