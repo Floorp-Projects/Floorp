@@ -551,20 +551,14 @@
 !define RemoveDeprecatedKeys "!insertmacro RemoveDeprecatedKeys"
 
 ; The files to check if they are in use during (un)install so the restart is
-; required message is displayed.
+; required message is displayed. All files must be located in the $INSTDIR
+; directory.
 !macro PushFilesToCheck
   ; The first string to be pushed onto the stack MUST be "end" to indicate
-  ; that there are no more relative file paths to check and the last string
+  ; that there are no more files to check in $INSTDIR and the last string
   ; should be ${FileMainEXE} so if it is in use the CheckForFilesInUse macro
   ; returns after the first check.
   Push "end"
-  Push "chrome\browser.jar"
-  Push "chrome\classic.jar"
-  Push "chrome\comm.jar"
-  Push "chrome\${AB_CD}.jar"
-  Push "chrome\pippki.jar"
-  Push "chrome\reporter.jar"
-  Push "chrome\toolkit.jar"
   Push "AccessibleMarshal.dll"
   Push "freebl3.dll"
   Push "nssckbi.dll"
