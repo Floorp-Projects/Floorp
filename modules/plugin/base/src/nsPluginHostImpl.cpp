@@ -1652,10 +1652,7 @@ nsPluginCacheListener::~nsPluginCacheListener()
 
 
 ////////////////////////////////////////////////////////////////////////
-NS_IMPL_ISUPPORTS2(nsPluginCacheListener,
-                   nsIStreamListener,
-                   nsIRequestObserver)
-
+NS_IMPL_ISUPPORTS1(nsPluginCacheListener, nsIStreamListener)
 ////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
 nsPluginCacheListener::OnStartRequest(nsIRequest *request, nsISupports* ctxt)
@@ -2710,11 +2707,10 @@ nsPluginHostImpl::~nsPluginHostImpl()
 }
 
 ////////////////////////////////////////////////////////////////////////
-NS_IMPL_ISUPPORTS9(nsPluginHostImpl,
+NS_IMPL_ISUPPORTS8(nsPluginHostImpl,
                    nsIPluginManager,
                    nsIPluginManager2,
                    nsIPluginHost,
-                   nsIFactory,
                    nsIFileUtilities,
                    nsICookieStorage,
                    nsIObserver,
@@ -7082,10 +7078,7 @@ nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
 }
 
 //////////////////////////////////////////////////////////////////////
-NS_IMPL_ISUPPORTS2(nsPluginByteRangeStreamListener,
-                   nsIStreamListener,
-                   nsIRequestObserver)
-
+NS_IMPL_ISUPPORTS1(nsPluginByteRangeStreamListener, nsIStreamListener)
 nsPluginByteRangeStreamListener::nsPluginByteRangeStreamListener(nsIWeakReference* aWeakPtr)
 {
   mWeakPtrPluginStreamListenerPeer = aWeakPtr;

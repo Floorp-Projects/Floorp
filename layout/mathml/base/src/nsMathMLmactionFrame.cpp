@@ -76,10 +76,7 @@
 
 NS_IMPL_ADDREF_INHERITED(nsMathMLmactionFrame, nsMathMLContainerFrame)
 NS_IMPL_RELEASE_INHERITED(nsMathMLmactionFrame, nsMathMLContainerFrame)
-NS_IMPL_QUERY_INTERFACE_INHERITED2(nsMathMLmactionFrame,
-                                   nsMathMLContainerFrame,
-                                   nsIDOMMouseListener,
-                                   nsIDOMEventListener)
+NS_IMPL_QUERY_INTERFACE_INHERITED1(nsMathMLmactionFrame, nsMathMLContainerFrame, nsIDOMMouseListener)
 
 nsIFrame*
 NS_NewMathMLmactionFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
