@@ -1026,6 +1026,9 @@ nsDocShell::FirePageHideNotification(PRBool aIsUnload)
 // This routine answers: 'Is origin's document from same domain as
 // target's document?'
 //
+// file: uris are considered the same domain for the purpose of
+// frame navigation regardless of script accessibility (bug 420425)
+//
 /* static */
 PRBool
 nsDocShell::ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
@@ -1066,10 +1069,32 @@ nsDocShell::ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
     NS_ENSURE_TRUE(targetDocument, PR_FALSE);
 
     PRBool equal;
-    return
-        NS_SUCCEEDED(originDocument->NodePrincipal()->
-                       Equals(targetDocument->NodePrincipal(), &equal)) &&
-        equal;
+    rv = originDocument->NodePrincipal()->
+            Equals(targetDocument->NodePrincipal(), &equal);
+    if (NS_SUCCEEDED(rv) && equal) {
+        return PR_TRUE;
+    }
+
+    // Not strictly equal, special case if both are file: uris
+    PRBool originIsFile = PR_FALSE;
+    PRBool targetIsFile = PR_FALSE;
+    nsCOMPtr<nsIURI> originURI;
+    nsCOMPtr<nsIURI> targetURI;
+    nsCOMPtr<nsIURI> innerOriginURI;
+    nsCOMPtr<nsIURI> innerTargetURI;
+
+    rv = originDocument->NodePrincipal()->GetURI(getter_AddRefs(originURI));
+    if (NS_SUCCEEDED(rv))
+        innerOriginURI = NS_GetInnermostURI(originURI);
+
+    rv = targetDocument->NodePrincipal()->GetURI(getter_AddRefs(targetURI));
+    if (NS_SUCCEEDED(rv))
+        innerTargetURI = NS_GetInnermostURI(targetURI);
+
+    return innerOriginURI && innerTargetURI &&
+        NS_SUCCEEDED(originURI->SchemeIs("file", &originIsFile)) &&
+        NS_SUCCEEDED(targetURI->SchemeIs("file", &targetIsFile)) &&
+        originIsFile && targetIsFile;
 }
 
 NS_IMETHODIMP
@@ -1915,6 +1940,7 @@ nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
     // Bug 13871:  Prevent frameset spoofing
     // Bug 103638: Targets with same name in different windows open in wrong
     //             window with javascript
+    // Bug 408052: Adopt "ancestor" frame navigation policy
 
     // Now do a security check
     //
