@@ -69,9 +69,17 @@ var Microformats = {
     for (let i = 0; i < microformatNodes.length; i++) {
       /* If showHidden undefined or false, don't add microformats to the list that aren't visible */
       if (!options || !options.hasOwnProperty("showHidden") || !options.showHidden) {
-        var box = (microformatNodes[i].ownerDocument || microformatNodes[i]).getBoxObjectFor(microformatNodes[i]);
-        if ((box.height == 0) || (box.width == 0)) {
-          continue;
+        if (microformatNodes[i].ownerDocument) {
+          if (microformatNodes[i].getBoundingClientRect) {
+            var box = microformatNodes[i].getBoundingClientRect();
+            box.width = box.right - box.left;
+            box.height = box.bottom - box.top;
+          } else {
+            var box = microformatNodes[i].ownerDocument.getBoxObjectFor(microformatNodes[i]);
+          }
+          if ((box.height == 0) || (box.width == 0)) {
+            continue;
+          }
         }
       }
       try {
