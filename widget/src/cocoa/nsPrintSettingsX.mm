@@ -203,10 +203,14 @@ nsPrintSettingsX& nsPrintSettingsX::operator=(const nsPrintSettingsX& rhs)
     status = ::PMCreatePageFormat(&pageFormat);
     if (status == noErr) {
       status = ::PMCopyPageFormat(rhs.mPageFormat, pageFormat);
-      if (status == noErr)
+      if (status == noErr) {
         mPageFormat = pageFormat;
-      else
+        // NOTE: No need to re-initialize mUnwriteableMargin here (even
+        // though mPageFormat is changing). It'll be copied correctly by
+        // nsPrintSettings::operator=.
+      } else {
         ::PMRelease(pageFormat);
+      }
     }
   }
   
@@ -245,6 +249,7 @@ nsresult nsPrintSettingsX::Init()
   if (status == noErr) {
     // First, create a default page format
     status = CreateDefaultPageFormat(printSession, mPageFormat);
+    InitUnwriteableMargin();
 
     // Then, if no error, create the default print settings
     if (status == noErr) {
@@ -257,6 +262,29 @@ nsresult nsPrintSettingsX::Init()
   return (status == noErr) ? NS_OK : NS_ERROR_FAILURE;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+// Should be called whenever mPageFormat changes.
+NS_IMETHODIMP nsPrintSettingsX::InitUnwriteableMargin()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  if (mPageFormat == kPMNoPageFormat) {
+    return NS_OK;
+  }
+
+  PMPaper paper;
+  PMPaperMargins paperMargin;
+  ::PMGetPageFormatPaper(mPageFormat, &paper);
+  ::PMPaperGetMargins(paper, &paperMargin);
+  mUnwriteableMargin.top    = NS_POINTS_TO_TWIPS(paperMargin.top);
+  mUnwriteableMargin.left   = NS_POINTS_TO_TWIPS(paperMargin.left);
+  mUnwriteableMargin.bottom = NS_POINTS_TO_TWIPS(paperMargin.bottom);
+  mUnwriteableMargin.right  = NS_POINTS_TO_TWIPS(paperMargin.right);
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;  
 }
 
 /** ---------------------------------------------------
@@ -304,6 +332,7 @@ NS_IMETHODIMP nsPrintSettingsX::SetPMPageFormat(PMPageFormat aPMPageFormat)
     if (mPageFormat)
       status = ::PMRelease(mPageFormat);
     mPageFormat = aPMPageFormat;
+    InitUnwriteableMargin();
   }        
   return (status == noErr) ? NS_OK : NS_ERROR_FAILURE;
 
@@ -399,6 +428,7 @@ NS_IMETHODIMP nsPrintSettingsX::ReadPageFormatFromPrefs()
       if (mPageFormat)
         status = ::PMRelease(mPageFormat);
       mPageFormat = newPageFormat; // PMCreatePageFormat returned it with a refcnt of 1
+      InitUnwriteableMargin();
     }
   }
   return (status == noErr) ? NS_OK : NS_ERROR_FAILURE;
@@ -493,8 +523,8 @@ OSStatus nsPrintSettingsX::CreateDefaultPageFormat(PMPrintSession aSession, PMPa
   
   outFormat = kPMNoPageFormat;
   status = ::PMCreatePageFormat(&pageFormat);
-    if (status == noErr && pageFormat != kPMNoPageFormat) {
-      status = ::PMSessionDefaultPageFormat(aSession, pageFormat);
+  if (status == noErr && pageFormat != kPMNoPageFormat) {
+    status = ::PMSessionDefaultPageFormat(aSession, pageFormat);
     if (status == noErr) {
       outFormat = pageFormat;
       return NS_OK;

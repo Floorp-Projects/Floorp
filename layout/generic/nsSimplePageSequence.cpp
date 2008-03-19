@@ -198,12 +198,16 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
   // now get out margins & edges
   if (mPageData->mPrintSettings) {
+    nsMargin unwriteableTwips;
+    mPageData->mPrintSettings->GetUnwriteableMarginInTwips(unwriteableTwips);
+    NS_ASSERTION(unwriteableTwips.left  >= 0 && unwriteableTwips.top >= 0 &&
+                 unwriteableTwips.right >= 0 && unwriteableTwips.bottom >= 0,
+                 "Unwriteable twips should be non-negative");
+
     nsMargin marginTwips;
     mPageData->mPrintSettings->GetMarginInTwips(marginTwips);
-    mMargin = nsMargin(aPresContext->TwipsToAppUnits(marginTwips.left),
-                       aPresContext->TwipsToAppUnits(marginTwips.top),
-                       aPresContext->TwipsToAppUnits(marginTwips.right),
-                       aPresContext->TwipsToAppUnits(marginTwips.bottom));
+    mMargin = aPresContext->TwipsToAppUnits(marginTwips + unwriteableTwips);
+
     PRInt16 printType;
     mPageData->mPrintSettings->GetPrintRange(&printType);
     mPrintRangeType = printType;
@@ -219,10 +223,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
     edgeTwips.right = PR_MIN(PR_MAX(edgeTwips.right, 0), inchInTwips);
 
     mPageData->mEdgePaperMargin =
-      nsMargin(aPresContext->TwipsToAppUnits(edgeTwips.left),
-               aPresContext->TwipsToAppUnits(edgeTwips.top),
-               aPresContext->TwipsToAppUnits(edgeTwips.right),
-               aPresContext->TwipsToAppUnits(edgeTwips.bottom));
+      aPresContext->TwipsToAppUnits(edgeTwips + unwriteableTwips);
   }
 
   // *** Special Override ***
