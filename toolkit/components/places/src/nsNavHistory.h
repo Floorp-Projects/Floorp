@@ -369,6 +369,8 @@ public:
   // sets the schema version in the database to match SCHEMA_VERSION
   nsresult UpdateSchemaVersion();
 
+  typedef nsDataHashtable<nsCStringHashKey, nsCString> StringHash;
+
  private:
   ~nsNavHistory();
 
@@ -566,20 +568,19 @@ protected:
 #endif
 
   nsresult ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries, 
-                                nsNavHistoryQueryOptions *aOptions,
+                                nsNavHistoryQueryOptions* aOptions,
                                 nsCString& queryString,
-                                PRBool& aParamsPresent);
+                                PRBool& aParamsPresent,
+                                StringHash& aAddParams);
 
   nsresult QueryToSelectClause(nsNavHistoryQuery* aQuery,
                                nsNavHistoryQueryOptions* aOptions,
-                               PRInt32 aStartParameter,
-                               nsCString* aClause,
-                               PRInt32* aParamCount);
+                               PRInt32 aQueryIndex,
+                               nsCString* aClause);
   nsresult BindQueryClauseParameters(mozIStorageStatement* statement,
-                                     PRInt32 aStartParameter,
+                                     PRInt32 aQueryIndex,
                                      nsNavHistoryQuery* aQuery,
-                                     nsNavHistoryQueryOptions* aOptions,
-                                     PRInt32* aParamCount);
+                                     nsNavHistoryQueryOptions* aOptions);
 
   nsresult ResultsAsList(mozIStorageStatement* statement,
                          nsNavHistoryQueryOptions* aOptions,
