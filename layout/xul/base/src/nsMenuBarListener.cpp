@@ -68,7 +68,11 @@
 
 NS_IMPL_ADDREF(nsMenuBarListener)
 NS_IMPL_RELEASE(nsMenuBarListener)
-NS_IMPL_QUERY_INTERFACE3(nsMenuBarListener, nsIDOMKeyListener, nsIDOMFocusListener, nsIDOMMouseListener)
+NS_IMPL_QUERY_INTERFACE4(nsMenuBarListener,
+                         nsIDOMKeyListener,
+                         nsIDOMFocusListener,
+                         nsIDOMEventListener,
+                         nsIDOMMouseListener)
 
 #define MODIFIER_SHIFT    1
 #define MODIFIER_CONTROL  2

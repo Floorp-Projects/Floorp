@@ -73,8 +73,11 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 };
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsGenConImageContent, nsXMLElement,
-                             nsIImageLoadingContent, imgIDecoderObserver)
+NS_IMPL_ISUPPORTS_INHERITED3(nsGenConImageContent,
+                             nsXMLElement,
+                             nsIImageLoadingContent,
+                             imgIContainerObserver,
+                             imgIDecoderObserver)
 
 nsresult
 NS_NewGenConImageContent(nsIContent** aResult, nsINodeInfo* aNodeInfo,
