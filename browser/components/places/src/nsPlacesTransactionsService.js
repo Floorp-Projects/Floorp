@@ -912,7 +912,7 @@ placesTagURITransaction.prototype = {
   doTransaction: function PTU_doTransaction() {
     if (PlacesUtils.getBookmarksForURI(this._uri).length == 0) {
       // Force an unfiled bookmark first
-      this.__unfiledItemId =
+      this._unfiledItemId =
         PlacesUtils.bookmarks
                    .insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                    this._uri, -1,
@@ -922,9 +922,9 @@ placesTagURITransaction.prototype = {
   },
 
   undoTransaction: function PTU_undoTransaction() {
-    if (this.__unfiledItemId != -1) {
-      PlacesUtils.bookmarks.removeItem(this.__unfiledItemId);
-      this.__unfiledItemId = -1;
+    if (this._unfiledItemId != -1) {
+      PlacesUtils.bookmarks.removeItem(this._unfiledItemId);
+      this._unfiledItemId = -1;
     }
     PlacesUtils.tagging.untagURI(this._uri, this._tags);
   }
