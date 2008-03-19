@@ -42,11 +42,8 @@
 #include "common/solaris/guid_creator.h"
 #include "common/solaris/message_output.h"
 #include "google_breakpad/common/minidump_format.h"
-#include "processor/scoped_ptr.h"
 
 namespace google_breakpad {
-
-static const int kStackSize = 1024 * 1024;
 
 // Signals that we are interested.
 static const int kSigTable[] = {
@@ -68,29 +65,15 @@ ExceptionHandler::ExceptionHandler(const string &dump_path,
                                    void *callback_context,
                                    bool install_handler)
     : filter_(filter),
-      handler_thread_(0),
-      handler_return_value_(false),
       callback_(callback),
       callback_context_(callback_context),
+      dump_path_(),
       installed_handler_(install_handler) {
   set_dump_path(dump_path);
 
   if (install_handler) {
     SetupHandler();
   }
-
-  sem_init(&handler_start_semaphore_, 0, 0);
-  sem_init(&handler_finish_semaphore_, 0, 0);
-  pthread_attr_t attr;
-  scoped_array<char> thread_stack;
-
-  pthread_attr_init(&attr);
-  thread_stack.reset(new char[kStackSize]);
-  pthread_attr_setstackaddr(&attr, thread_stack.get());
-  pthread_attr_setstacksize(&attr, kStackSize);
-  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-  pthread_create(&handler_thread_, &attr, ExceptionHandlerThreadMain, this);
-  pthread_attr_destroy(&attr);
 
   if (install_handler) {
     pthread_mutex_lock(&handler_stack_mutex_);
@@ -125,34 +108,11 @@ ExceptionHandler::~ExceptionHandler() {
     delete handler_stack_;
     handler_stack_ = NULL;
   }
-  pthread_exit((void *)handler_thread_);
-  sem_destroy(&handler_start_semaphore_);
-  sem_destroy(&handler_finish_semaphore_);
   pthread_mutex_unlock(&handler_stack_mutex_);
 }
 
-// static
-void* ExceptionHandler::ExceptionHandlerThreadMain(void *lpParameter) {
-  ExceptionHandler *self = reinterpret_cast<ExceptionHandler *>(lpParameter);
-  assert(self);
-
-  while (true) {
-    if (!sem_wait(&(self->handler_start_semaphore_))) {
-      // Perform the requested action.
-      self->handler_return_value_ = self->InternalWriteMinidump();
-
-      // Allow the requesting thread to proceed.
-      sem_post(&(self->handler_finish_semaphore_));
-    }
-  }
-
-  // Not reached.  This thread will be terminated by ExceptionHandler's
-  // destructor.
-  return 0;
-}
-
 bool ExceptionHandler::WriteMinidump() {
-  return WriteMinidumpOnHandlerThread(0);
+  return InternalWriteMinidump(0, 0, NULL);
 }
 
 // static
@@ -161,7 +121,7 @@ bool ExceptionHandler::WriteMinidump(const string &dump_path,
                                      void *callback_context) {
   ExceptionHandler handler(dump_path, NULL, callback,
                            callback_context, false);
-  return handler.WriteMinidumpOnHandlerThread(0);
+  return handler.InternalWriteMinidump(0, 0, NULL);
 }
 
 void ExceptionHandler::SetupHandler() {
@@ -204,22 +164,22 @@ void ExceptionHandler::TeardownAllHandlers() {
   }
 }
 
-bool ExceptionHandler::WriteMinidumpOnHandlerThread(int signo) {
-  // Set up data to be passed in to the handler thread.
-  signo_ = signo;
-
-  // This causes the handler thread to call InternalWriteMinidump.
-  sem_post(&handler_start_semaphore_);
-
-  // Wait until InternalWriteMinidump is done and collect its return value.
-  sem_wait(&handler_finish_semaphore_);
-  bool status = handler_return_value_;
-
-  return status;
-}
-
 // static
 void ExceptionHandler::HandleException(int signo) {
+//void ExceptionHandler::HandleException(int signo, siginfo_t *sip, ucontext_t *sig_ctx) {
+  // The context information about the signal is put on the stack of
+  // the signal handler frame as value parameter. For some reasons, the
+  // prototype of the handler doesn't declare this information as parameter, we
+  // will do it by hand. The stack layout for a signal handler frame is here:
+  // http://src.opensolaris.org/source/xref/onnv/onnv-gate/usr/src/lib/libproc/common/Pstack.c#81
+  //
+  // However, if we are being called by another signal handler passing the
+  // signal up the chain, then we may not have this random extra parameter,
+  // so we may have to walk the stack to find it.  We do the actual work
+  // on another thread, where it's a little safer, but we want the ebp
+  // from this frame to find it.
+  uintptr_t current_ebp = (uintptr_t)_getfp();
+
   pthread_mutex_lock(&handler_stack_mutex_);
   ExceptionHandler *current_handler =
     handler_stack_->at(handler_stack_->size() - ++handler_stack_index_);
@@ -227,7 +187,10 @@ void ExceptionHandler::HandleException(int signo) {
 
   // Restore original handler.
   current_handler->TeardownHandler(signo);
-  if (current_handler->WriteMinidumpOnHandlerThread(signo)) {
+
+  ucontext_t *sig_ctx = NULL;
+  if (current_handler->InternalWriteMinidump(signo, current_ebp, &sig_ctx)) {
+//  if (current_handler->InternalWriteMinidump(signo, &sig_ctx)) {
     // Fully handled this exception, safe to exit.
     exit(EXIT_FAILURE);
   } else {
@@ -253,7 +216,9 @@ void ExceptionHandler::HandleException(int signo) {
   pthread_mutex_unlock(&handler_stack_mutex_);
 }
 
-bool ExceptionHandler::InternalWriteMinidump() {
+bool ExceptionHandler::InternalWriteMinidump(int signo,
+                                             uintptr_t sighandler_ebp,
+                                             ucontext_t **sig_ctx) {
   if (filter_ && !filter_(callback_context_))
     return false;
 
@@ -277,7 +242,8 @@ bool ExceptionHandler::InternalWriteMinidump() {
       print_message1(2, "HandleException: failed to block signals.\n");
     }
 
-    success = minidump_generator_.WriteMinidumpToFile(minidump_path, signo_);
+    success = minidump_generator_.WriteMinidumpToFile(
+                       minidump_path, signo, sighandler_ebp, sig_ctx);
 
     // Unblock the signals.
     if (blocked)
