@@ -1006,8 +1006,6 @@ nsContentIterator::PositionAt(nsIContent* aCurNode)
 
   if (firstNode && lastNode)
   {
-    PRUint32 numChildren;
-
     if (mPre)
     {
       firstNode = ContentToParentOffset(mFirst, &firstOffset);
@@ -1022,7 +1020,9 @@ nsContentIterator::PositionAt(nsIContent* aCurNode)
     }
     else
     {
-      if (firstNode->GetChildCount())
+      PRUint32 numChildren = firstNode->GetChildCount();
+
+      if (numChildren)
         firstOffset = numChildren;
       else
         firstNode = ContentToParentOffset(mFirst, &firstOffset);
