@@ -135,7 +135,7 @@ nsAutoCompleteController::SetInput(nsIAutoCompleteInput *aInput)
     return NS_OK;
 
   nsAutoString newValue;
-  mInput->GetTextValue(newValue);
+  aInput->GetTextValue(newValue);
   
   // Clear out this reference in case the new input's popup has no tree
   mTree = nsnull;
@@ -151,7 +151,7 @@ nsAutoCompleteController::SetInput(nsIAutoCompleteInput *aInput)
   
   // Initialize our list of search objects
   PRUint32 searchCount;
-  mInput->GetSearchCount(&searchCount);
+  aInput->GetSearchCount(&searchCount);
   mResults->SizeTo(searchCount);
   mSearches->SizeTo(searchCount);
   mMatchCounts.SetLength(searchCount);
@@ -161,7 +161,7 @@ nsAutoCompleteController::SetInput(nsIAutoCompleteInput *aInput)
   for (PRUint32 i = 0; i < searchCount; ++i) {
     // Use the search name to create the contract id string for the search service
     nsCAutoString searchName;
-    mInput->GetSearchAt(i, searchName);
+    aInput->GetSearchAt(i, searchName);
     nsCAutoString cid(searchCID);
     cid.Append(searchName);
     
@@ -196,7 +196,8 @@ nsAutoCompleteController::HandleText(PRBool aIgnoreSelection)
   }
 
   nsAutoString newValue;
-  mInput->GetTextValue(newValue);
+  nsCOMPtr<nsIAutoCompleteInput> input(mInput);
+  input->GetTextValue(newValue);
 
   // Note: the events occur in the following order when IME is used.
   // 1. composition start event(HandleStartComposition)
@@ -225,7 +226,7 @@ nsAutoCompleteController::HandleText(PRBool aIgnoreSelection)
   }
 
   PRBool disabled;
-  mInput->GetDisableAutoComplete(&disabled);
+  input->GetDisableAutoComplete(&disabled);
   NS_ENSURE_TRUE(!disabled, NS_OK);
 
   // Don't search again if the new string is the same as the last search
@@ -261,9 +262,9 @@ nsAutoCompleteController::HandleText(PRBool aIgnoreSelection)
   } else {
     // Kick off the search only if the cursor is at the end of the textbox
   PRInt32 selectionStart;
-  mInput->GetSelectionStart(&selectionStart);
+  input->GetSelectionStart(&selectionStart);
   PRInt32 selectionEnd;
-  mInput->GetSelectionEnd(&selectionEnd);
+  input->GetSelectionEnd(&selectionEnd);
 
   if (selectionStart == selectionEnd && selectionStart == (PRInt32) mSearchString.Length())
     StartSearchTimer();
@@ -333,23 +334,17 @@ nsAutoCompleteController::HandleStartComposition()
   if (!mInput)
     return NS_OK;
 
+  nsCOMPtr<nsIAutoCompleteInput> input(mInput);
   PRBool disabled;
-  mInput->GetDisableAutoComplete(&disabled);
+  input->GetDisableAutoComplete(&disabled);
   if (disabled)
     return NS_OK;
 
   // Stop all searches in case they are async.
   StopSearch();
 
-  if (!mInput) {
-    // StopSearch() can call PostSearchCleanup() which might result
-    // in a blur event, which could null out mInput, so we need to check it
-    // again.  See bug #408463 for more details
-    return NS_OK;
-  }
-
   PRBool isOpen;
-  mInput->GetPopupOpen(&isOpen);
+  input->GetPopupOpen(&isOpen);
   if (isOpen)
     ClosePopup();
   mPopupClosedByCompositionStart = isOpen;
@@ -406,12 +401,13 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint32 aKey, PRBool *_retval)
     return NS_OK;
   }
 
+  nsCOMPtr<nsIAutoCompleteInput> input(mInput);
   nsCOMPtr<nsIAutoCompletePopup> popup;
-  mInput->GetPopup(getter_AddRefs(popup));
+  input->GetPopup(getter_AddRefs(popup));
   NS_ENSURE_TRUE(popup != nsnull, NS_ERROR_FAILURE);
 
   PRBool disabled;
-  mInput->GetDisableAutoComplete(&disabled);
+  input->GetDisableAutoComplete(&disabled);
   NS_ENSURE_TRUE(!disabled, NS_OK);
 
   if (aKey == nsIDOMKeyEvent::DOM_VK_UP ||
@@ -424,7 +420,7 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint32 aKey, PRBool *_retval)
     *_retval = PR_TRUE;
     
     PRBool isOpen;
-    mInput->GetPopupOpen(&isOpen);
+    input->GetPopupOpen(&isOpen);
     if (isOpen) {
       PRBool reverse = aKey == nsIDOMKeyEvent::DOM_VK_UP ||
                       aKey == nsIDOMKeyEvent::DOM_VK_PAGE_UP ? PR_TRUE : PR_FALSE;
@@ -433,9 +429,9 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint32 aKey, PRBool *_retval)
       
       // Fill in the value of the textbox with whatever is selected in the popup
       // if the completeSelectedIndex attribute is set.  We check this before
-      // calling SelectBy since that can null out mInput in some cases.
+      // calling SelectBy of an earlier attempt to avoid crashing.
       PRBool completeSelection;
-      mInput->GetCompleteSelectedIndex(&completeSelection);
+      input->GetCompleteSelectedIndex(&completeSelection);
 
       // Instruct the result view to scroll by the given amount and direction
       popup->SelectBy(reverse, page);
@@ -448,13 +444,13 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint32 aKey, PRBool *_retval)
           //  A result is selected, so fill in its value
           nsAutoString value;
           if (NS_SUCCEEDED(GetResultValueAt(selectedIndex, PR_TRUE, value))) {
-            mInput->SetTextValue(value);
-            mInput->SelectTextRange(value.Length(), value.Length());
+            input->SetTextValue(value);
+            input->SelectTextRange(value.Length(), value.Length());
           }
         } else {
           // Nothing is selected, so fill in the last typed value
-          mInput->SetTextValue(mSearchString);
-          mInput->SelectTextRange(mSearchString.Length(), mSearchString.Length());
+          input->SetTextValue(mSearchString);
+          input->SelectTextRange(mSearchString.Length(), mSearchString.Length());
         }
       }
     } else {
@@ -477,7 +473,7 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint32 aKey, PRBool *_retval)
   {
     // The user hit a text-navigation key.
     PRBool isOpen;
-    mInput->GetPopupOpen(&isOpen);
+    input->GetPopupOpen(&isOpen);
     if (isOpen) {
       PRInt32 selectedIndex;
       popup->GetSelectedIndex(&selectedIndex);
@@ -485,27 +481,20 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint32 aKey, PRBool *_retval)
         // The pop-up is open and has a selection, take its value
         nsAutoString value;
         if (NS_SUCCEEDED(GetResultValueAt(selectedIndex, PR_TRUE, value))) {
-          mInput->SetTextValue(value);
-          mInput->SelectTextRange(value.Length(), value.Length());
+          input->SetTextValue(value);
+          input->SelectTextRange(value.Length(), value.Length());
         }
       }
       // Close the pop-up even if nothing was selected
       ClearSearchTimer();
       ClosePopup();
     }
-
-    // mInput may be null, see bug #408463 and bug #409902
-    if (mInput) {
-      // Update last-searched string to the current input, since the input may
-      // have changed.  Without this, subsequent backspaces look like text
-      // additions, not text deletions.
-      nsAutoString value;
-
-      mInput->GetTextValue(value);
-      mSearchString = value;
-    }
-    else
-      NS_WARNING("unexpected, please comment in bug #409902");
+    // Update last-searched string to the current input, since the input may
+    // have changed.  Without this, subsequent backspaces look like text
+    // additions, not text deletions.
+    nsAutoString value;
+    input->GetTextValue(value);
+    mSearchString = value;
   }
   
   return NS_OK;
@@ -518,8 +507,9 @@ nsAutoCompleteController::HandleDelete(PRBool *_retval)
   if (!mInput)
     return NS_OK;
 
+  nsCOMPtr<nsIAutoCompleteInput> input(mInput);
   PRBool isOpen = PR_FALSE;
-  mInput->GetPopupOpen(&isOpen);
+  input->GetPopupOpen(&isOpen);
   if (!isOpen || mRowCount <= 0) {
     // Nothing left to delete, proceed as normal
     HandleText(PR_FALSE);
@@ -527,7 +517,7 @@ nsAutoCompleteController::HandleDelete(PRBool *_retval)
   }
   
   nsCOMPtr<nsIAutoCompletePopup> popup;
-  mInput->GetPopup(getter_AddRefs(popup));
+  input->GetPopup(getter_AddRefs(popup));
 
   PRInt32 index, searchIndex, rowIndex;
   popup->GetSelectedIndex(&index);
@@ -539,7 +529,7 @@ nsAutoCompleteController::HandleDelete(PRBool *_retval)
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
 
   nsAutoString search;
-  mInput->GetSearchParam(search);
+  input->GetSearchParam(search);
 
   // Clear the row in our result and in the DB.
   result->RemoveValueAt(rowIndex, PR_TRUE);
@@ -973,6 +963,7 @@ nsresult
 nsAutoCompleteController::StartSearch()
 {
   NS_ENSURE_STATE(mInput);
+  nsCOMPtr<nsIAutoCompleteInput> input(mInput);
   mSearchStatus = nsIAutoCompleteController::STATUS_SEARCHING;
   mDefaultIndexCompleted = PR_FALSE;
   
@@ -982,7 +973,7 @@ nsAutoCompleteController::StartSearch()
   mFirstSearchResult = PR_TRUE;
 
   // notify the input that the search is beginning
-  mInput->OnSearchBegin();
+  input->OnSearchBegin();
   
   PRUint32 searchesFailed = 0;
   for (PRUint32 i = 0; i < count; ++i) {
@@ -1000,9 +991,7 @@ nsAutoCompleteController::StartSearch()
     }
     
     nsAutoString searchParam;
-    // XXXben - can yank this when we discover what's causing this to 
-    // fail & crash. 
-    nsresult rv = mInput->GetSearchParam(searchParam);
+    nsresult rv = input->GetSearchParam(searchParam);
     if (NS_FAILED(rv))
         return rv;
     
@@ -1055,9 +1044,15 @@ nsAutoCompleteController::StartSearchTimer()
   PRUint32 timeout;
   mInput->GetTimeout(&timeout);
 
-  mTimer = do_CreateInstance("@mozilla.org/timer;1");
-  mTimer->InitWithCallback(this, timeout, nsITimer::TYPE_ONE_SHOT);
-  return NS_OK;
+  nsresult rv;
+  mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+  if (NS_FAILED(rv))
+      return rv;
+  rv = mTimer->InitWithCallback(this, timeout, nsITimer::TYPE_ONE_SHOT);
+  if (NS_FAILED(rv))
+      mTimer = nsnull;
+  
+  return rv;
 }
 
 nsresult
@@ -1081,19 +1076,20 @@ nsAutoCompleteController::EnterMatch(PRBool aIsPopupSelection)
   }
   mEnterAfterSearch = 0;
   
+  nsCOMPtr<nsIAutoCompleteInput> input(mInput);
   nsCOMPtr<nsIAutoCompletePopup> popup;
-  mInput->GetPopup(getter_AddRefs(popup));
+  input->GetPopup(getter_AddRefs(popup));
   NS_ENSURE_TRUE(popup != nsnull, NS_ERROR_FAILURE);
   
   PRBool forceComplete;
-  mInput->GetForceComplete(&forceComplete);
+  input->GetForceComplete(&forceComplete);
   
   // Ask the popup if it wants to enter a special value into the textbox
   nsAutoString value;
   popup->GetOverrideValue(value);
   if (value.IsEmpty()) {
     PRBool completeSelection;
-    mInput->GetCompleteSelectedIndex(&completeSelection);
+    input->GetCompleteSelectedIndex(&completeSelection);
 
     // If completeselectedindex is false or a row was selected from the popup,
     // enter it into the textbox. If completeselectedindex is true, or
@@ -1128,19 +1124,19 @@ nsAutoCompleteController::EnterMatch(PRBool aIsPopupSelection)
   nsCOMPtr<nsIObserverService> obsSvc =
     do_GetService("@mozilla.org/observer-service;1");
   NS_ENSURE_STATE(obsSvc);
-  obsSvc->NotifyObservers(mInput, "autocomplete-will-enter-text", nsnull);
+  obsSvc->NotifyObservers(input, "autocomplete-will-enter-text", nsnull);
 
   if (!value.IsEmpty()) {
-    mInput->SetTextValue(value);
-    mInput->SelectTextRange(value.Length(), value.Length());
+    input->SetTextValue(value);
+    input->SelectTextRange(value.Length(), value.Length());
     mSearchString = value;
   }
   
-  obsSvc->NotifyObservers(mInput, "autocomplete-did-enter-text", nsnull);
+  obsSvc->NotifyObservers(input, "autocomplete-did-enter-text", nsnull);
   ClosePopup();
   
   PRBool cancel;
-  mInput->OnTextEntered(&cancel);
+  input->OnTextEntered(&cancel);
   
   return NS_OK;
 }
@@ -1155,19 +1151,20 @@ nsAutoCompleteController::RevertTextValue()
     return NS_OK;
 
   nsAutoString oldValue(mSearchString);
+  nsCOMPtr<nsIAutoCompleteInput> input(mInput);
   
   PRBool cancel = PR_FALSE;
-  mInput->OnTextReverted(&cancel);  
+  input->OnTextReverted(&cancel);  
 
   if (!cancel) {
     nsCOMPtr<nsIObserverService> obsSvc =
       do_GetService("@mozilla.org/observer-service;1");
     NS_ENSURE_STATE(obsSvc);
-    obsSvc->NotifyObservers(mInput, "autocomplete-will-revert-text", nsnull);
+    obsSvc->NotifyObservers(input, "autocomplete-will-revert-text", nsnull);
 
-    mInput->SetTextValue(oldValue);
+    input->SetTextValue(oldValue);
 
-    obsSvc->NotifyObservers(mInput, "autocomplete-did-revert-text", nsnull);
+    obsSvc->NotifyObservers(input, "autocomplete-did-revert-text", nsnull);
   }
 
   return NS_OK;
@@ -1177,6 +1174,7 @@ nsresult
 nsAutoCompleteController::ProcessResult(PRInt32 aSearchIndex, nsIAutoCompleteResult *aResult)
 {
   NS_ENSURE_STATE(mInput);
+  nsCOMPtr<nsIAutoCompleteInput> input(mInput);
 
   // If this is the first search result we are processing
   // we should clear out the previously cached results
@@ -1238,7 +1236,7 @@ nsAutoCompleteController::ProcessResult(PRInt32 aSearchIndex, nsIAutoCompleteRes
 
   // Refresh the popup view to display the new search results
   nsCOMPtr<nsIAutoCompletePopup> popup;
-  mInput->GetPopup(getter_AddRefs(popup));
+  input->GetPopup(getter_AddRefs(popup));
   NS_ENSURE_TRUE(popup != nsnull, NS_ERROR_FAILURE);
   popup->Invalidate();
   
@@ -1267,6 +1265,7 @@ nsresult
 nsAutoCompleteController::PostSearchCleanup()
 {  
   NS_ENSURE_STATE(mInput);
+  nsCOMPtr<nsIAutoCompleteInput> input(mInput);
   if (mRowCount) {
     OpenPopup();
     mSearchStatus = nsIAutoCompleteController::STATUS_COMPLETE_MATCH;
@@ -1276,7 +1275,7 @@ nsAutoCompleteController::PostSearchCleanup()
   }
   
   // notify the input that the search is complete
-  mInput->OnSearchComplete();
+  input->OnSearchComplete();
   
   // if mEnterAfterSearch was set, then the user hit enter while the 
   // search was ongoing, so we need to enter a match now that the search is done
