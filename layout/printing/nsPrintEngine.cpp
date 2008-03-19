@@ -1727,7 +1727,7 @@ nsPrintEngine::SetupToPrintContent()
     rv = mPrt->mPrintDC->BeginDocument(docTitleStr, fileName, startPage, endPage);
   } 
 
-  if (mIsDoingPrintPreview) {
+  if (mIsCreatingPrintPreview) {
     // Print Preview -- Pass ownership of docTitleStr and docURLStr
     // to the pageSequenceFrame, to be displayed in the header
     nsIPageSequenceFrame *seqFrame = nsnull;
