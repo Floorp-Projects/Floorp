@@ -180,10 +180,7 @@ public:
 };
 
 
-NS_IMPL_ISUPPORTS3(nsSplitterFrameInner,
-                   nsIDOMMouseListener,
-                   nsIDOMEventListener,
-                   nsIDOMMouseMotionListener)
+NS_IMPL_ISUPPORTS2(nsSplitterFrameInner, nsIDOMMouseListener, nsIDOMMouseMotionListener)
 
 nsSplitterFrameInner::ResizeType
 nsSplitterFrameInner::GetResizeBefore()
