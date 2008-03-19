@@ -655,14 +655,16 @@
 # Macros for handling files in use
 
 /**
- * Checks for files in use.
+ * Checks for files in use in the $INSTDIR directory. To check files in
+ * sub-directories this macro would need to be rewritten to create
+ * sub-directories in the temporary directory used to backup the files that are
+ * checked.
  *
  * Example usage:
  *
  *  ; The first string to be pushed onto the stack MUST be "end" to indicate
- *  ; that there are no more relative file paths to check.
+ *  ; that there are no more files in the $INSTDIR directory to check.
  *  Push "end"
- *  Push "chrome\toolkit.jar"
  *  Push "freebl3.dll"
  *  ; The last file pushed should be the app's main exe so if it is in use this
  *  ; macro will return after the first check.
@@ -676,9 +678,9 @@
  *          false if all of the files popped from the stack are not in use.
  *          True if any of the files popped from the stack are in use.
  * $R7 = Temporary backup directory where the files will be copied to.
- * $R8 = value popped from the stack. This will either be a relative file path
- *       from the $INSTDIR or "end" to indicate that there are no additional
- *       files to check.
+ * $R8 = value popped from the stack. This will either be a file name for a file
+ *       in the $INSTDIR directory or "end" to indicate that there are no
+ *       additional files to check.
  * $R9 = _RESULT
  */
 !macro CheckForFilesInUse
@@ -713,6 +715,7 @@
       SetOutPath "$INSTDIR"
       CopyFiles /SILENT "$R7\*" "$INSTDIR\"
       RmDir /r "$R7"
+      SetOutPath "$EXEDIR"
       ClearErrors
 
       Push $R9
