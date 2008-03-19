@@ -194,6 +194,7 @@
 #include "nsIPopupWindowManager.h"
 
 #include "nsIPermissionManager.h"
+#include "nsIDragService.h"
 
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
@@ -212,6 +213,8 @@ static PRInt32              gRefCnt                    = 0;
 static PRInt32              gOpenPopupSpamCount        = 0;
 static PopupControlState    gPopupControlState         = openAbused;
 static PRInt32              gRunningTimeoutDepth       = 0;
+static PRBool               gMouseDown                 = PR_FALSE;
+static PRBool               gDragServiceDisabled       = PR_FALSE;
 
 #ifdef DEBUG
 static PRUint32             gSerialCounter             = 0;
@@ -2181,6 +2184,20 @@ nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     }
   } else if (msg == NS_RESIZE_EVENT) {
     mIsHandlingResizeEvent = PR_TRUE;
+  } else if (msg == NS_MOUSE_BUTTON_DOWN &&
+             NS_IS_TRUSTED_EVENT(aVisitor.mEvent)) {
+    gMouseDown = PR_TRUE;
+  } else if (msg == NS_MOUSE_BUTTON_UP &&
+             NS_IS_TRUSTED_EVENT(aVisitor.mEvent)) {
+    gMouseDown = PR_FALSE;
+    if (gDragServiceDisabled) {
+      nsCOMPtr<nsIDragService> ds =
+        do_GetService("@mozilla.org/widget/dragservice;1");
+      if (ds) {
+        gDragServiceDisabled = PR_FALSE;
+        ds->Unsuppress();
+      }
+    }
   }
 
   aVisitor.mParentTarget = mChromeEventHandler;
@@ -3947,8 +3964,19 @@ nsGlobalWindow::CanMoveResizeWindows()
   PRUint32 testResult;
   rv = pm->TestPermission(uri, "moveresize", &testResult);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  
-  return testResult == nsIPermissionManager::ALLOW_ACTION;
+
+  if (testResult == nsIPermissionManager::ALLOW_ACTION) {
+    if (gMouseDown && !gDragServiceDisabled) {
+      nsCOMPtr<nsIDragService> ds =
+        do_GetService("@mozilla.org/widget/dragservice;1");
+      if (ds) {
+        gDragServiceDisabled = PR_TRUE;
+        ds->Suppress();
+      }
+    }
+    return PR_TRUE;
+  }
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP
