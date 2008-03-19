@@ -1012,11 +1012,7 @@ mozTXTToHTMLConv::~mozTXTToHTMLConv()
 {
 }
 
-NS_IMPL_ISUPPORTS4(mozTXTToHTMLConv,
-                   mozITXTToHTMLConv,
-                   nsIStreamConverter,
-                   nsIStreamListener,
-                   nsIRequestObserver)
+NS_IMPL_ISUPPORTS1(mozTXTToHTMLConv, mozITXTToHTMLConv)
 
 PRInt32
 mozTXTToHTMLConv::CiteLevelTXT(const PRUnichar *line,
