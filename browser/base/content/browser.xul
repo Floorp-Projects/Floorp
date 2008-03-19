@@ -291,7 +291,7 @@
                      command="Browser:Stop"
                      tooltiptext="&stopButton.tooltip;"/>
 
-      <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+      <toolbarbutton id="home-button" class="bookmark-item chromeclass-toolbar-additional"
                      persist="class"
                      label="&homeButton.label;"
                      ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
@@ -451,9 +451,9 @@
              fullscreentoolbar="true" mode="icons" iconsize="large"
              customizable="true"
 #ifdef XP_MACOSX
-             defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,search-container,throbber-box"
+             defaultset="unified-back-forward-button,reload-button,stop-button,urlbar-container,search-container,throbber-box"
 #else
-             defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,search-container,fullscreenflex,window-controls"
+             defaultset="unified-back-forward-button,reload-button,stop-button,urlbar-container,search-container,fullscreenflex,window-controls"
 #endif
              context="toolbar-context-menu">
 #ifndef XP_MACOSX
@@ -480,7 +480,7 @@
              mode="icons" iconsize="small" defaulticonsize="small"
              class="chromeclass-directories"
              context="toolbar-context-menu"
-             defaultset="personal-bookmarks"
+             defaultset="home-button,personal-bookmarks"
              toolbarname="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;"
              customizable="true"/>
   </toolbox>
