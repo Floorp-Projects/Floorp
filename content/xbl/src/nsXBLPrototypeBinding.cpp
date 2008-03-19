@@ -570,7 +570,9 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
                                                       element);
 
     if (realElement) {
-      nsIAtom* dstAttr = xblAttr->GetDstAttribute();
+      // Hold a strong reference here so that the atom doesn't go away during
+      // UnsetAttr.
+      nsCOMPtr<nsIAtom> dstAttr = xblAttr->GetDstAttribute();
       PRInt32 dstNs = xblAttr->GetDstNameSpace();
 
       if (aRemoveFlag)

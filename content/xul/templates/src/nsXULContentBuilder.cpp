@@ -898,7 +898,9 @@ nsXULContentBuilder::CopyAttributesToElement(nsIContent* aTemplateNode,
     for (PRUint32 attr = 0; attr < numAttribs; attr++) {
         const nsAttrName* name = aTemplateNode->GetAttrNameAt(attr);
         PRInt32 attribNameSpaceID = name->NamespaceID();
-        nsIAtom* attribName = name->LocalName();
+        // Hold a strong reference here so that the atom doesn't go away
+        // during UnsetAttr.
+        nsCOMPtr<nsIAtom> attribName = name->LocalName();
 
         // XXXndeakin ignore namespaces until bug 321182 is fixed
         if (attribName != nsGkAtoms::id && attribName != nsGkAtoms::uri) {
