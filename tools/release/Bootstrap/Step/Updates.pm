@@ -408,6 +408,14 @@ sub Push {
 
     SyncToStaging();
 
+    # Backup test channels
+    $this->Shell(
+      cmd => 'ssh', 
+      cmdArgs => ['-i ' . catfile($ENV{'HOME'},'.ssh','aus'),
+                  $ausUser . '@' . $ausServer,
+                  '/home/cltbld/bin/backupsnip', $pushDir . '-test'],
+      logFile => $pushLog,
+    );
     # Push test channels live
     $this->Shell(
       cmd => 'ssh', 
