@@ -85,6 +85,15 @@
     <span class="dtstart">1998-01-22</span>
   </div>
 
+  <div class="vevent" id="vcal_vcard">
+    <div class="vcard">
+      <span class="description">
+        <span class="fn org">Mozilla</span>'s Birthday
+      </span>
+    </div>
+    <span class="dtstart">1998-01-22</span>
+  </div>
+  
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -152,6 +161,9 @@ function test_Microformats() {
   jsdate = Microformats.dateFromISO8601(dateCal.dtstart);
   origdate = Microformats.iso8601FromDate(jsdate, true);
   is(dateCal.dtstart, origdate, "date round trip");
+
+  var dateCal = new hCalendar(document.getElementById("vcal_vcard"));
+  is(dateCal.description, "Mozilla's Birthday", "vcard in vcal");
 }
 
 function test_hCard() {
