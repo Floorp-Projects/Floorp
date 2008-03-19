@@ -567,8 +567,6 @@ protected:
 
   static void MakeScriptDialogTitle(nsAString &aOutTitle);
 
-  static PRBool CanMoveResizeWindows();
-
   // Helper for window.find()
   nsresult FindInternal(const nsAString& aStr, PRBool caseSensitive,
                        PRBool backwards, PRBool wrapAround, PRBool wholeWord, 

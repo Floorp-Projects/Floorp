@@ -3075,11 +3075,11 @@ nsGlobalWindow::SetInnerWidth(PRInt32 aInnerWidth)
   NS_ENSURE_STATE(mDocShell);
 
   /*
-   * If caller is not chrome and the user has not explicitly exempted the site,
+   * If caller is not chrome and dom.disable_window_move_resize is true,
    * prevent setting window.innerWidth by exiting early
    */
 
-  if (!CanMoveResizeWindows() || IsFrame()) {
+  if (!CanSetProperty("dom.disable_window_move_resize") || IsFrame()) {
     return NS_OK;
   }
 
@@ -3148,11 +3148,11 @@ nsGlobalWindow::SetInnerHeight(PRInt32 aInnerHeight)
   NS_ENSURE_STATE(mDocShell);
 
   /*
-   * If caller is not chrome and the user has not explicitly exempted the site,
+   * If caller is not chrome and dom.disable_window_move_resize is true,
    * prevent setting window.innerHeight by exiting early
    */
 
-  if (!CanMoveResizeWindows() || IsFrame()) {
+  if (!CanSetProperty("dom.disable_window_move_resize") || IsFrame()) {
     return NS_OK;
   }
 
@@ -3212,11 +3212,11 @@ nsGlobalWindow::SetOuterWidth(PRInt32 aOuterWidth)
   FORWARD_TO_OUTER(SetOuterWidth, (aOuterWidth), NS_ERROR_NOT_INITIALIZED);
 
   /*
-   * If caller is not chrome and the user has not explicitly exempted the site,
+   * If caller is not chrome and dom.disable_window_move_resize is true,
    * prevent setting window.outerWidth by exiting early
    */
 
-  if (!CanMoveResizeWindows()) {
+  if (!CanSetProperty("dom.disable_window_move_resize")) {
     return NS_OK;
   }
 
@@ -3264,11 +3264,11 @@ nsGlobalWindow::SetOuterHeight(PRInt32 aOuterHeight)
   FORWARD_TO_OUTER(SetOuterHeight, (aOuterHeight), NS_ERROR_NOT_INITIALIZED);
 
   /*
-   * If caller is not chrome and the user has not explicitly exempted the site,
+   * If caller is not chrome and dom.disable_window_move_resize is true,
    * prevent setting window.outerHeight by exiting early
    */
 
-  if (!CanMoveResizeWindows()) {
+  if (!CanSetProperty("dom.disable_window_move_resize")) {
     return NS_OK;
   }
 
@@ -3311,11 +3311,11 @@ nsGlobalWindow::SetScreenX(PRInt32 aScreenX)
   FORWARD_TO_OUTER(SetScreenX, (aScreenX), NS_ERROR_NOT_INITIALIZED);
 
   /*
-   * If caller is not chrome and the user has not explicitly exempted the site,
+   * If caller is not chrome and dom.disable_window_move_resize is true,
    * prevent setting window.screenX by exiting early
    */
 
-  if (!CanMoveResizeWindows()) {
+  if (!CanSetProperty("dom.disable_window_move_resize")) {
     return NS_OK;
   }
 
@@ -3359,11 +3359,11 @@ nsGlobalWindow::SetScreenY(PRInt32 aScreenY)
   FORWARD_TO_OUTER(SetScreenY, (aScreenY), NS_ERROR_NOT_INITIALIZED);
 
   /*
-   * If caller is not chrome and the user has not explicitly exempted the site,
+   * If caller is not chrome and dom.disable_window_move_resize is true,
    * prevent setting window.screenY by exiting early
    */
 
-  if (!CanMoveResizeWindows()) {
+  if (!CanSetProperty("dom.disable_window_move_resize")) {
     return NS_OK;
   }
 
@@ -4415,11 +4415,11 @@ nsGlobalWindow::MoveTo(PRInt32 aXPos, PRInt32 aYPos)
   FORWARD_TO_OUTER(MoveTo, (aXPos, aYPos), NS_ERROR_NOT_INITIALIZED);
 
   /*
-   * If caller is not chrome and the user has not explicitly exempted the site,
+   * If caller is not chrome and dom.disable_window_move_resize is true,
    * prevent window.moveTo() by exiting early
    */
 
-  if (!CanMoveResizeWindows() || IsFrame()) {
+  if (!CanSetProperty("dom.disable_window_move_resize") || IsFrame()) {
     return NS_OK;
   }
 
@@ -4442,11 +4442,11 @@ nsGlobalWindow::MoveBy(PRInt32 aXDif, PRInt32 aYDif)
   FORWARD_TO_OUTER(MoveBy, (aXDif, aYDif), NS_ERROR_NOT_INITIALIZED);
 
   /*
-   * If caller is not chrome and the user has not explicitly exempted the site,
+   * If caller is not chrome and dom.disable_window_move_resize is true,
    * prevent window.moveBy() by exiting early
    */
 
-  if (!CanMoveResizeWindows() || IsFrame()) {
+  if (!CanSetProperty("dom.disable_window_move_resize") || IsFrame()) {
     return NS_OK;
   }
 
@@ -4473,11 +4473,11 @@ nsGlobalWindow::ResizeTo(PRInt32 aWidth, PRInt32 aHeight)
   FORWARD_TO_OUTER(ResizeTo, (aWidth, aHeight), NS_ERROR_NOT_INITIALIZED);
 
   /*
-   * If caller is not chrome and the user has not explicitly exempted the site,
+   * If caller is not chrome and dom.disable_window_move_resize is true,
    * prevent window.resizeTo() by exiting early
    */
 
-  if (!CanMoveResizeWindows() || IsFrame()) {
+  if (!CanSetProperty("dom.disable_window_move_resize") || IsFrame()) {
     return NS_OK;
   }
 
@@ -4500,11 +4500,11 @@ nsGlobalWindow::ResizeBy(PRInt32 aWidthDif, PRInt32 aHeightDif)
   FORWARD_TO_OUTER(ResizeBy, (aWidthDif, aHeightDif), NS_ERROR_NOT_INITIALIZED);
 
   /*
-   * If caller is not chrome and the user has not explicitly exempted the site,
+   * If caller is not chrome and dom.disable_window_move_resize is true,
    * prevent window.resizeBy() by exiting early
    */
 
-  if (!CanMoveResizeWindows() || IsFrame()) {
+  if (!CanSetProperty("dom.disable_window_move_resize") || IsFrame()) {
     return NS_OK;
   }
 
@@ -4536,11 +4536,11 @@ nsGlobalWindow::SizeToContent()
   }
 
   /*
-   * If caller is not chrome and the user has not explicitly exempted the site,
-   * prevent window.sizeToContent() by exiting early
+   * If caller is not chrome and dom.disable_window_move_resize is true,
+   * block window.SizeToContent() by exiting
    */
 
-  if (!CanMoveResizeWindows() || IsFrame()) {
+  if (!CanSetProperty("dom.disable_window_move_resize") || IsFrame()) {
     return NS_OK;
   }
 
