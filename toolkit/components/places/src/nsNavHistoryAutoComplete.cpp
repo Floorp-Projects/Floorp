@@ -91,6 +91,93 @@ StartsWithJS(const nsAString &aString)
   return StringBeginsWith(aString, NS_LITERAL_STRING("javascript:"));
 }
 
+/**
+ * Returns true if the unicode character is a word boundary. I.e., anything
+ * that *isn't* used to build up a word from a string of characters. We are
+ * conservative here because anything that we don't list will be treated as
+ * word boundary. This means searching for that not-actually-a-word-boundary
+ * character can still be matched in the middle of a word.
+ */
+inline PRBool
+IsWordBoundary(const PRUnichar &aChar)
+{
+  // Lower-case alphabetic, so upper-case matches CamelCase. Because
+  // upper-case is treated as a word boundary, matches will also happen
+  // _after_ an upper-case character.
+  return !(PRUnichar('a') <= aChar && aChar <= PRUnichar('z'));
+}
+
+/**
+ * Returns true if the token matches the target on a word boundary
+ *
+ * @param aToken
+ *        Token to search for that must match on a word boundary
+ * @param aTarget
+ *        Target string to search against
+ */
+PRBool
+FindOnBoundary(const nsAString &aToken, const nsAString &aTarget)
+{
+  // Define a const instance of this class so it is created once
+  const nsCaseInsensitiveStringComparator caseInsensitiveCompare;
+
+  // Can't match anything if there's nothing to match
+  if (aTarget.IsEmpty())
+    return PR_FALSE;
+
+  nsAString::const_iterator tokenStart, tokenEnd;
+  aToken.BeginReading(tokenStart);
+  aToken.EndReading(tokenEnd);
+
+  nsAString::const_iterator targetStart, targetEnd;
+  aTarget.BeginReading(targetStart);
+  aTarget.EndReading(targetEnd);
+
+  // Go straight into checking the token at the beginning of the target because
+  // the beginning is considered a word boundary
+  do {
+    // We're on a word boundary, so prepare to match by copying the iterators
+    nsAString::const_iterator testToken(tokenStart);
+    nsAString::const_iterator testTarget(targetStart);
+
+    // Keep trying to match the token one by one until it doesn't match
+    while (!caseInsensitiveCompare(*testToken, *testTarget)) {
+      // We matched something, so move down one
+      testToken++;
+      testTarget++;
+
+      // Matched the token! We're done!
+      if (testToken == tokenEnd)
+        return PR_TRUE;
+
+      // If we ran into the end while matching the token, we won't find it
+      if (testTarget == targetEnd)
+        return PR_FALSE;
+    }
+
+    // Unconditionally move past the current position in the target, but if
+    // we're not currently on a word boundary, eat up as many non-word boundary
+    // characters as possible -- don't kill characters if we're currently on a
+    // word boundary so that we can match tokens that start on a word boundary.
+    if (!IsWordBoundary(*targetStart++))
+      while (targetStart != targetEnd && !IsWordBoundary(*targetStart))
+        targetStart++;
+
+    // If we hit the end eating up non-boundaries then boundaries, we're done
+  } while (targetStart != targetEnd);
+
+  return PR_FALSE;
+}
+
+/**
+ * A local wrapper to CaseInsensitiveFindInReadable that isn't overloaded
+ */
+inline PRBool
+FindAnywhere(const nsAString &aToken, const nsAString &aTarget)
+{
+  return CaseInsensitiveFindInReadable(aToken, aTarget);
+}
+
 // nsNavHistory::InitAutoComplete
 nsresult
 nsNavHistory::InitAutoComplete()
@@ -487,6 +574,10 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
   PRBool filterJavascript = mAutoCompleteFilterJavascript &&
     !StartsWithJS(mCurrentSearchString);
 
+  // Determine what type of search to try matching tokens against targets
+  PRBool (*tokenMatchesTarget)(const nsAString &, const nsAString &) =
+    mAutoCompleteOnWordBoundary ? FindOnBoundary : FindAnywhere;
+
   PRBool hasMore = PR_FALSE;
   // Determine the result of the search
   while (NS_SUCCEEDED(aQuery->ExecuteStep(&hasMore)) && hasMore) {
@@ -547,19 +638,19 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
 
             // Check if the current token matches the bookmark
             PRBool bookmarkMatch = parentId &&
-              CaseInsensitiveFindInReadable(*token, entryBookmarkTitle);
+              (*tokenMatchesTarget)(*token, entryBookmarkTitle);
             // If any part of the search string is in the bookmark title, show
             // that in the result instead of the page title
             useBookmark |= bookmarkMatch;
 
             // If the token is in any of the tags, remember to show tags
-            PRBool tagsMatch = CaseInsensitiveFindInReadable(*token, entryTags);
+            PRBool tagsMatch = (*tokenMatchesTarget)(*token, entryTags);
             showTags |= tagsMatch;
 
             // True if any of them match; false makes us quit the loop
             matchAll = bookmarkMatch || tagsMatch ||
-              CaseInsensitiveFindInReadable(*token, entryTitle) ||
-              CaseInsensitiveFindInReadable(*token, entryURL);
+              (*tokenMatchesTarget)(*token, entryTitle) ||
+              (*tokenMatchesTarget)(*token, entryURL);
           }
 
           // Skip if we don't match all terms in the bookmark, tag, title or url
