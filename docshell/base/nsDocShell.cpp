@@ -1092,8 +1092,8 @@ nsDocShell::ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
         innerTargetURI = NS_GetInnermostURI(targetURI);
 
     return innerOriginURI && innerTargetURI &&
-        NS_SUCCEEDED(originURI->SchemeIs("file", &originIsFile)) &&
-        NS_SUCCEEDED(targetURI->SchemeIs("file", &targetIsFile)) &&
+        NS_SUCCEEDED(innerOriginURI->SchemeIs("file", &originIsFile)) &&
+        NS_SUCCEEDED(innerTargetURI->SchemeIs("file", &targetIsFile)) &&
         originIsFile && targetIsFile;
 }
 
