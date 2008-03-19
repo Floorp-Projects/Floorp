@@ -367,8 +367,8 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::GetSurfaceForPrinter(gfxASurface **surface
     double width, height;
     mPrintSettings->GetEffectivePageSize(&width, &height);
     // convert twips to points
-    width /= 20;
-    height /= 20;
+    width  /= TWIPS_PER_POINT_FLOAT;
+    height /= TWIPS_PER_POINT_FLOAT;
 
     nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
     rv = file->InitWithPath(filename);
