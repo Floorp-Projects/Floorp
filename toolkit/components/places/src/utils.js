@@ -1411,19 +1411,30 @@ var PlacesUtils = {
         }
       }
 
-      if (aNumberOfBackups > 0 && backupFileNames.length >= aNumberOfBackups) {
-        var numberOfBackupsToDelete = backupFileNames.length - aNumberOfBackups;
+      var numberOfBackupsToDelete = 0;
+      if (aNumberOfBackups > -1)
+        numberOfBackupsToDelete = backupFileNames.length - aNumberOfBackups;
+
+      if (numberOfBackupsToDelete > 0) {
+        // If we don't have today's backup, remove one more so that
+        // the total backups after this operation does not exceed the
+        // number specified in the pref.
+        if (!backupFile)
+          numberOfBackupsToDelete++;
+
         backupFileNames.sort();
         while (numberOfBackupsToDelete--) {
-          backupFile = bookmarksBackupDir.clone();
+          let backupFile = bookmarksBackupDir.clone();
           backupFile.append(backupFileNames[0]);
           backupFile.remove(false);
           backupFileNames.shift();
         }
       }
 
-      if (backupFile)
-        return; // already have today's backup, job done
+      // do nothing if we either have today's backup already
+      // or the user has set the pref to zero.
+      if (backupFile || aNumberOfBackups == 0)
+        return;
     }
 
     backupFile = bookmarksBackupDir.clone();
