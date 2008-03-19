@@ -3541,13 +3541,27 @@
       StrCmp $R1 "File:" +1 end
       StrCpy $R9 "$R9" "" 6
       IfFileExists "$INSTDIR$R9" +1 end
+
       ClearErrors
-      Delete "$INSTDIR$R9"
-      IfErrors +1 +3
-      ${LogMsg} "** ERROR Deleting File: $INSTDIR$R9 **"
+      ${DeleteFile} "$INSTDIR$R9"
+      IfErrors +3 +1
+      ${LogMsg} "Deleted File: $INSTDIR$R9"
       GoTo end
 
-      ${LogMsg} "Deleted File: $INSTDIR$R9"
+      ClearErrors
+      Rename "$INSTDIR$R9" "$INSTDIR$R9.moz-delete"
+      IfErrors +1 reboot_delete
+
+      ; Original file will be deleted on reboot
+      Delete /REBOOTOK "$INSTDIR$R9"
+      ${LogMsg} "Delayed Delete File (Reboot Required): $INSTDIR$R9"
+      GoTo end
+
+      ; Renamed file will be deleted on reboot
+      reboot_delete:
+      Delete /REBOOTOK "$INSTDIR$R9.moz-delete"
+      ${LogMsg} "Delayed Delete File (Reboot Required): $INSTDIR$R9.moz-delete"
+      GoTo end
 
       end:
       ClearErrors
