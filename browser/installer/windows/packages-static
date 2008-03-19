@@ -60,6 +60,7 @@ bin\plugins\npnul32.dll
 bin\LICENSE
 bin\README.txt
 bin\sqlite3.dll
+bin\blocklist.xml
 
 ; [Components]
 bin\components\alerts.xpt
