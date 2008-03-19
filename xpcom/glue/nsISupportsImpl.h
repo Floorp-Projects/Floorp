@@ -916,6 +916,21 @@ NS_IMETHODIMP_(nsrefcnt) Class::Release(void)                                 \
     NS_INTERFACE_TABLE_ENTRY(Class, i9)                                       \
   NS_INTERFACE_TABLE_END
 
+#define NS_INTERFACE_TABLE_INHERITED10(Class, i1, i2, i3, i4, i5, i6, i7,     \
+                                       i8, i9, i10)                           \
+  NS_INTERFACE_TABLE_BEGIN                                                    \
+    NS_INTERFACE_TABLE_ENTRY(Class, i1)                                       \
+    NS_INTERFACE_TABLE_ENTRY(Class, i2)                                       \
+    NS_INTERFACE_TABLE_ENTRY(Class, i3)                                       \
+    NS_INTERFACE_TABLE_ENTRY(Class, i4)                                       \
+    NS_INTERFACE_TABLE_ENTRY(Class, i5)                                       \
+    NS_INTERFACE_TABLE_ENTRY(Class, i6)                                       \
+    NS_INTERFACE_TABLE_ENTRY(Class, i7)                                       \
+    NS_INTERFACE_TABLE_ENTRY(Class, i8)                                       \
+    NS_INTERFACE_TABLE_ENTRY(Class, i9)                                       \
+    NS_INTERFACE_TABLE_ENTRY(Class, i10)                                      \
+  NS_INTERFACE_TABLE_END
+
 #define NS_IMPL_QUERY_INTERFACE_INHERITED0(Class, Super)                      \
   NS_INTERFACE_TABLE_HEAD(Class)                                              \
   NS_INTERFACE_TABLE_INHERITED0(Class)                                        \
