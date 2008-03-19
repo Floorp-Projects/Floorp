@@ -2908,9 +2908,10 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
     NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
 
     nsAutoString error;
-    const PRUint32 kMaxFormatStrArgs = 2;
+    const PRUint32 kMaxFormatStrArgs = 3;
     nsAutoString formatStrs[kMaxFormatStrArgs];
     PRUint32 formatStrCount = 0;
+    PRBool addHostPort = PR_FALSE;
     nsresult rv = NS_OK;
     nsAutoString messageStr;
     nsCAutoString cssClass;
@@ -2930,29 +2931,6 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
     }
     else if (NS_ERROR_FILE_NOT_FOUND == aError) {
         NS_ENSURE_ARG_POINTER(aURI);
-        nsCAutoString spec;
-        // displaying "file://" is aesthetically unpleasing and could even be
-        // confusing to the user
-        PRBool isFileURI = PR_FALSE;
-        rv = aURI->SchemeIs("file", &isFileURI);
-        if (NS_FAILED(rv))
-            return rv;
-        if (isFileURI)
-            aURI->GetPath(spec);
-        else
-            aURI->GetSpec(spec);
-        nsCAutoString charset;
-        // unescape and convert from origin charset
-        aURI->GetOriginCharset(charset);
-        nsCOMPtr<nsITextToSubURI> textToSubURI(
-                do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv));
-        if (NS_SUCCEEDED(rv))
-            // UnEscapeURIForUI always succeeds 
-            textToSubURI->UnEscapeURIForUI(charset, spec, formatStrs[0]);
-        else 
-            CopyUTF8toUTF16(spec, formatStrs[0]);
-        rv = NS_OK;
-        formatStrCount = 1;
         error.AssignLiteral("fileNotFound");
     }
     else if (NS_ERROR_UNKNOWN_HOST == aError) {
@@ -2967,20 +2945,12 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
     }
     else if(NS_ERROR_CONNECTION_REFUSED == aError) {
         NS_ENSURE_ARG_POINTER(aURI);
-        // Build up the host:port string.
-        nsCAutoString hostport;
-        aURI->GetHostPort(hostport);
-        CopyUTF8toUTF16(hostport, formatStrs[0]);
-        formatStrCount = 1;
+        addHostPort = PR_TRUE;
         error.AssignLiteral("connectionFailure");
     }
     else if(NS_ERROR_NET_INTERRUPT == aError) {
         NS_ENSURE_ARG_POINTER(aURI);
-        // Build up the host:port string.
-        nsCAutoString hostport;
-        aURI->GetHostPort(hostport);
-        CopyUTF8toUTF16(hostport, formatStrs[0]);
-        formatStrCount = 1;
+        addHostPort = PR_TRUE;
         error.AssignLiteral("netInterrupt");
     }
     else if (NS_ERROR_NET_TIMEOUT == aError) {
@@ -3065,7 +3035,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
             error.AssignLiteral("netReset");
             break;
         case NS_ERROR_DOCUMENT_NOT_CACHED:
-            // Doc falied to load because we are offline and the cache does not
+            // Doc failed to load because we are offline and the cache does not
             // contain a copy of the document.
             error.AssignLiteral("netOffline");
             break;
@@ -3075,6 +3045,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
             break;
         case NS_ERROR_PORT_ACCESS_NOT_ALLOWED:
             // Port blocked for security reasons
+            addHostPort = PR_TRUE;
             error.AssignLiteral("deniedPortAccess");
             break;
         case NS_ERROR_UNKNOWN_PROXY_HOST:
@@ -3105,7 +3076,46 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
     if (!messageStr.IsEmpty()) {
         // already obtained message
     }
-    else if (formatStrCount > 0) {
+    else {
+        if (addHostPort) {
+            // Build up the host:port string.
+            nsCAutoString hostport;
+            if (aURI) {
+                aURI->GetHostPort(hostport);
+            } else {
+                hostport.AssignLiteral("?");
+            }
+            CopyUTF8toUTF16(hostport, formatStrs[formatStrCount++]);
+        }
+
+        nsCAutoString spec;
+        rv = NS_ERROR_NOT_AVAILABLE;
+        if (aURI) {
+            // displaying "file://" is aesthetically unpleasing and could even be
+            // confusing to the user
+            PRBool isFileURI = PR_FALSE;
+            rv = aURI->SchemeIs("file", &isFileURI);
+            if (NS_SUCCEEDED(rv) && isFileURI)
+                aURI->GetPath(spec);
+            else
+                aURI->GetSpec(spec);
+
+            nsCAutoString charset;
+            // unescape and convert from origin charset
+            aURI->GetOriginCharset(charset);
+            nsCOMPtr<nsITextToSubURI> textToSubURI(
+                do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv));
+            if (NS_SUCCEEDED(rv)) {
+                rv = textToSubURI->UnEscapeURIForUI(charset, spec, formatStrs[formatStrCount]);
+            }
+        } else {
+            spec.AssignLiteral("?");
+        }
+        if (NS_FAILED(rv))
+            CopyUTF8toUTF16(spec, formatStrs[formatStrCount]);
+        rv = NS_OK;
+        ++formatStrCount;
+
         const PRUnichar *strs[kMaxFormatStrArgs];
         for (PRUint32 i = 0; i < formatStrCount; i++) {
             strs[i] = formatStrs[i].get();
@@ -3114,15 +3124,6 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
         rv = stringBundle->FormatStringFromName(
             error.get(),
             strs, formatStrCount, getter_Copies(str));
-        NS_ENSURE_SUCCESS(rv, rv);
-        messageStr.Assign(str.get());
-    }
-    else
-    {
-        nsXPIDLString str;
-        rv = stringBundle->GetStringFromName(
-                error.get(),
-                getter_Copies(str));
         NS_ENSURE_SUCCESS(rv, rv);
         messageStr.Assign(str.get());
     }
