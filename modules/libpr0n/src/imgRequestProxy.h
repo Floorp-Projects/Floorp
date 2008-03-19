@@ -102,6 +102,9 @@ protected:
   inline PRBool HasObserver() const {
     return mListener != nsnull;
   }
+
+  /* Do the proper refcount management to null out mListener */
+  void NullOutListener();
   
 private:
   friend class imgCacheValidator;
@@ -114,10 +117,14 @@ private:
   // means that imgRequest::mObservers will not have any stale pointers in it.
   nsRefPtr<imgRequest> mOwner;
 
-  imgIDecoderObserver* mListener;  // Weak ref; see imgILoader.idl
+  // mListener is only promised to be a weak ref (see imgILoader.idl),
+  // but we actually keep a strong ref to it until we've seen our
+  // first OnStopRequest.
+  imgIDecoderObserver* mListener;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   nsLoadFlags mLoadFlags;
   PRPackedBool mCanceled;
   PRPackedBool mIsInLoadGroup;
+  PRPackedBool mListenerIsStrongRef;
 };

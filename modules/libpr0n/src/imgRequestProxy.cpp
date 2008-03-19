@@ -63,7 +63,8 @@ imgRequestProxy::imgRequestProxy() :
   mListener(nsnull),
   mLoadFlags(nsIRequest::LOAD_NORMAL),
   mCanceled(PR_FALSE),
-  mIsInLoadGroup(PR_FALSE)
+  mIsInLoadGroup(PR_FALSE),
+  mListenerIsStrongRef(PR_FALSE)
 {
   /* member initializers and constructor code */
 
@@ -75,8 +76,9 @@ imgRequestProxy::~imgRequestProxy()
   NS_PRECONDITION(!mListener, "Someone forgot to properly cancel this request!");
   // Explicitly set mListener to null to ensure that the RemoveProxy
   // call below can't send |this| to an arbitrary listener while |this|
-  // is being destroyed.
-  mListener = nsnull;
+  // is being destroyed.  This is all belt-and-suspenders in view of the
+  // above assert.
+  NullOutListener();
 
   if (mOwner) {
     if (!mCanceled) {
@@ -108,6 +110,13 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
 
   mOwner = request;
   mListener = aObserver;
+  // Make sure to addref mListener before the AddProxy call below, since
+  // that call might well want to release it if the imgRequest has
+  // already seen OnStopRequest.
+  if (mListener) {
+    mListenerIsStrongRef = PR_TRUE;
+    NS_ADDREF(mListener);
+  }
   mLoadGroup = aLoadGroup;
 
   // Note: AddProxy won't send all the On* notifications immediatly
@@ -210,7 +219,7 @@ NS_IMETHODIMP imgRequestProxy::Cancel(nsresult status)
   // OnStopRequest, if needed.
   mOwner->RemoveProxy(this, status, PR_FALSE);
 
-  mListener = nsnull;
+  NullOutListener();
 
   return NS_OK;
 }
@@ -511,5 +520,26 @@ void imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
       AddToLoadGroup();
     }
   }
+
+  if (mListenerIsStrongRef) {
+    NS_PRECONDITION(mListener, "How did that happen?");
+    // Drop our strong ref to the listener now that we're done with
+    // everything.  Note that this can cancel us and other fun things
+    // like that.  Don't add anything in this method after this point.
+    imgIDecoderObserver* obs = mListener;
+    mListenerIsStrongRef = PR_FALSE;
+    NS_RELEASE(obs);
+  }
 }
 
+void imgRequestProxy::NullOutListener()
+{
+  if (mListenerIsStrongRef) {
+    // Releasing could do weird reentery stuff, so just play it super-safe
+    nsCOMPtr<imgIDecoderObserver> obs;
+    obs.swap(mListener);
+    mListenerIsStrongRef = PR_FALSE;
+  } else {
+    mListener = nsnull;
+  }
+}
