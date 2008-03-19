@@ -32,9 +32,18 @@
 #ifndef CLIENT_SOLARIS_HANDLER_SOLARIS_LWP_H__
 #define CLIENT_SOLARIS_HANDLER_SOLARIS_LWP_H__
 
+#if defined(sparc) || defined(__sparc)
+#define TARGET_CPU_SPARC 1
+#elif defined(i386) || defined(__i386)
+#define TARGET_CPU_X86 1
+#else
+#error "cannot determine cpu type"
+#endif
+
 #include <signal.h>
 #include <stdint.h>
 #include <sys/user.h>
+#include <ucontext.h>
 
 #ifndef _KERNEL
 #define _KERNEL
@@ -133,6 +142,13 @@ class SolarisLwp {
 
   // Get the bottom of the stack from esp.
   uintptr_t GetLwpStackBottom(uintptr_t current_esp) const;
+
+  // Finds a signal context on the stack given the ebp of our signal handler.
+  bool FindSigContext(uintptr_t sighandler_ebp, ucontext_t **sig_ctx);
+
+ private:
+  // Check if the address is a valid virtual address.
+  bool IsAddressMapped(uintptr_t address) const;
 
  private:
   // The pid of the process we are listing lwps.

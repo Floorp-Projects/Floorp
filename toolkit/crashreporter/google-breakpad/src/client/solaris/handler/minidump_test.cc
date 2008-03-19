@@ -48,7 +48,7 @@ static void *Reporter(void *) {
   snprintf(buffer, sizeof(buffer), "./minidump_test.out");
   fprintf(stdout, "Writing %s\n", buffer);
 
-  md.WriteMinidumpToFile(buffer, 0);
+  md.WriteMinidumpToFile(buffer, 0, 0, NULL);
   doneWritingReport = true;
 
   return NULL;

@@ -850,7 +850,7 @@ void MinidumpContext::Print() {
       for (unsigned int fpr_index = 0;
            fpr_index < MD_FLOATINGSAVEAREA_PPC_FPR_COUNT;
            ++fpr_index) {
-        printf("  float_save.fpregs[%2d]    = 0x%llx\n",
+        printf("  float_save.fpregs[%2d]    = 0x%" PRIx64 "\n",
                fpr_index, context_ppc->float_save.fpregs[fpr_index]);
       }
       printf("  float_save.fpscr         = 0x%x\n",
@@ -858,7 +858,7 @@ void MinidumpContext::Print() {
       // TODO(mmentovai): print the 128-bit quantities in
       // context_ppc->vector_save.  This isn't done yet because printf
       // doesn't support 128-bit quantities, and printing them using
-      // %llx as two 64-bit quantities requires knowledge of the CPU's
+      // PRIx64 as two 64-bit quantities requires knowledge of the CPU's
       // byte ordering.
       printf("  vector_save.save_vrvalid = 0x%x\n",
              context_ppc->vector_save.save_vrvalid);
@@ -870,17 +870,17 @@ void MinidumpContext::Print() {
     case MD_CONTEXT_AMD64: {
       const MDRawContextAMD64* context_amd64 = GetContextAMD64();
       printf("MDRawContextAMD64\n");
-      printf("  p1_home       = 0x%llx\n",
+      printf("  p1_home       = 0x%" PRIx64 "\n",
              context_amd64->p1_home);
-      printf("  p2_home       = 0x%llx\n",
+      printf("  p2_home       = 0x%" PRIx64 "\n",
              context_amd64->p2_home);
-      printf("  p3_home       = 0x%llx\n",
+      printf("  p3_home       = 0x%" PRIx64 "\n",
              context_amd64->p3_home);
-      printf("  p4_home       = 0x%llx\n",
+      printf("  p4_home       = 0x%" PRIx64 "\n",
              context_amd64->p4_home);
-      printf("  p5_home       = 0x%llx\n",
+      printf("  p5_home       = 0x%" PRIx64 "\n",
              context_amd64->p5_home);
-      printf("  p6_home       = 0x%llx\n",
+      printf("  p6_home       = 0x%" PRIx64 "\n",
              context_amd64->p6_home);
       printf("  context_flags = 0x%x\n",
              context_amd64->context_flags);
@@ -893,29 +893,29 @@ void MinidumpContext::Print() {
       printf("  gs            = 0x%x\n", context_amd64->gs);
       printf("  ss            = 0x%x\n", context_amd64->ss);
       printf("  eflags        = 0x%x\n", context_amd64->eflags);
-      printf("  dr0           = 0x%llx\n", context_amd64->dr0);
-      printf("  dr1           = 0x%llx\n", context_amd64->dr1);
-      printf("  dr2           = 0x%llx\n", context_amd64->dr2);
-      printf("  dr3           = 0x%llx\n", context_amd64->dr3);
-      printf("  dr6           = 0x%llx\n", context_amd64->dr6);
-      printf("  dr7           = 0x%llx\n", context_amd64->dr7);
-      printf("  rax           = 0x%llx\n", context_amd64->rax);
-      printf("  rcx           = 0x%llx\n", context_amd64->rcx);
-      printf("  rdx           = 0x%llx\n", context_amd64->rdx);
-      printf("  rbx           = 0x%llx\n", context_amd64->rbx);
-      printf("  rsp           = 0x%llx\n", context_amd64->rsp);
-      printf("  rbp           = 0x%llx\n", context_amd64->rbp);
-      printf("  rsi           = 0x%llx\n", context_amd64->rsi);
-      printf("  rdi           = 0x%llx\n", context_amd64->rdi);
-      printf("  r8            = 0x%llx\n", context_amd64->r8);
-      printf("  r9            = 0x%llx\n", context_amd64->r9);
-      printf("  r10           = 0x%llx\n", context_amd64->r10);
-      printf("  r11           = 0x%llx\n", context_amd64->r11);
-      printf("  r12           = 0x%llx\n", context_amd64->r12);
-      printf("  r13           = 0x%llx\n", context_amd64->r13);
-      printf("  r14           = 0x%llx\n", context_amd64->r14);
-      printf("  r15           = 0x%llx\n", context_amd64->r15);
-      printf("  rip           = 0x%llx\n", context_amd64->rip);
+      printf("  dr0           = 0x%" PRIx64 "\n", context_amd64->dr0);
+      printf("  dr1           = 0x%" PRIx64 "\n", context_amd64->dr1);
+      printf("  dr2           = 0x%" PRIx64 "\n", context_amd64->dr2);
+      printf("  dr3           = 0x%" PRIx64 "\n", context_amd64->dr3);
+      printf("  dr6           = 0x%" PRIx64 "\n", context_amd64->dr6);
+      printf("  dr7           = 0x%" PRIx64 "\n", context_amd64->dr7);
+      printf("  rax           = 0x%" PRIx64 "\n", context_amd64->rax);
+      printf("  rcx           = 0x%" PRIx64 "\n", context_amd64->rcx);
+      printf("  rdx           = 0x%" PRIx64 "\n", context_amd64->rdx);
+      printf("  rbx           = 0x%" PRIx64 "\n", context_amd64->rbx);
+      printf("  rsp           = 0x%" PRIx64 "\n", context_amd64->rsp);
+      printf("  rbp           = 0x%" PRIx64 "\n", context_amd64->rbp);
+      printf("  rsi           = 0x%" PRIx64 "\n", context_amd64->rsi);
+      printf("  rdi           = 0x%" PRIx64 "\n", context_amd64->rdi);
+      printf("  r8            = 0x%" PRIx64 "\n", context_amd64->r8);
+      printf("  r9            = 0x%" PRIx64 "\n", context_amd64->r9);
+      printf("  r10           = 0x%" PRIx64 "\n", context_amd64->r10);
+      printf("  r11           = 0x%" PRIx64 "\n", context_amd64->r11);
+      printf("  r12           = 0x%" PRIx64 "\n", context_amd64->r12);
+      printf("  r13           = 0x%" PRIx64 "\n", context_amd64->r13);
+      printf("  r14           = 0x%" PRIx64 "\n", context_amd64->r14);
+      printf("  r15           = 0x%" PRIx64 "\n", context_amd64->r15);
+      printf("  rip           = 0x%" PRIx64 "\n", context_amd64->rip);
       //TODO: print xmm, vector, debug registers
       printf("\n");
       break;
@@ -929,25 +929,25 @@ void MinidumpContext::Print() {
       for (unsigned int g_r_index = 0;
            g_r_index < MD_CONTEXT_SPARC_GPR_COUNT;
            ++g_r_index) {
-        printf("  g_r[%2d]             = 0x%llx\n",
+        printf("  g_r[%2d]             = 0x%" PRIx64 "\n",
                g_r_index, context_sparc->g_r[g_r_index]);
       }
-      printf("  ccr                 = 0x%llx\n", context_sparc->ccr);
-      printf("  pc                  = 0x%llx\n", context_sparc->pc);
-      printf("  npc                 = 0x%llx\n", context_sparc->npc);
-      printf("  y                   = 0x%llx\n", context_sparc->y);
-      printf("  asi                 = 0x%llx\n", context_sparc->asi);
-      printf("  fprs                = 0x%llx\n", context_sparc->fprs);
+      printf("  ccr                 = 0x%" PRIx64 "\n", context_sparc->ccr);
+      printf("  pc                  = 0x%" PRIx64 "\n", context_sparc->pc);
+      printf("  npc                 = 0x%" PRIx64 "\n", context_sparc->npc);
+      printf("  y                   = 0x%" PRIx64 "\n", context_sparc->y);
+      printf("  asi                 = 0x%" PRIx64 "\n", context_sparc->asi);
+      printf("  fprs                = 0x%" PRIx64 "\n", context_sparc->fprs);
 
       for (unsigned int fpr_index = 0;
            fpr_index < MD_FLOATINGSAVEAREA_SPARC_FPR_COUNT;
            ++fpr_index) {
-        printf("  float_save.regs[%2d] = 0x%llx\n",
+        printf("  float_save.regs[%2d] = 0x%" PRIx64 "\n",
                fpr_index, context_sparc->float_save.regs[fpr_index]);
       }
-      printf("  float_save.filler   = 0x%llx\n",
+      printf("  float_save.filler   = 0x%" PRIx64 "\n",
              context_sparc->float_save.filler);
-      printf("  float_save.fsr      = 0x%llx\n",
+      printf("  float_save.fsr      = 0x%" PRIx64 "\n",
              context_sparc->float_save.fsr);
       break;
     }
@@ -1265,8 +1265,8 @@ void MinidumpThread::Print() {
   printf("  suspend_count               = %d\n",     thread_.suspend_count);
   printf("  priority_class              = 0x%x\n",   thread_.priority_class);
   printf("  priority                    = 0x%x\n",   thread_.priority);
-  printf("  teb                         = 0x%llx\n", thread_.teb);
-  printf("  stack.start_of_memory_range = 0x%llx\n",
+  printf("  teb                         = 0x%" PRIx64 "\n", thread_.teb);
+  printf("  stack.start_of_memory_range = 0x%" PRIx64 "\n",
          thread_.stack.start_of_memory_range);
   printf("  stack.memory.data_size      = 0x%x\n",
          thread_.stack.memory.data_size);
@@ -2050,7 +2050,7 @@ void MinidumpModule::Print() {
   }
 
   printf("MDRawModule\n");
-  printf("  base_of_image                   = 0x%llx\n",
+  printf("  base_of_image                   = 0x%" PRIx64 "\n",
          module_.base_of_image);
   printf("  size_of_image                   = 0x%x\n",
          module_.size_of_image);
@@ -2602,7 +2602,7 @@ void MinidumpMemoryList::Print() {
     MDMemoryDescriptor* descriptor = &(*descriptors_)[region_index];
     printf("region[%d]\n", region_index);
     printf("MDMemoryDescriptor\n");
-    printf("  start_of_memory_range = 0x%llx\n",
+    printf("  start_of_memory_range = 0x%" PRIx64 "\n",
            descriptor->start_of_memory_range);
     printf("  memory.data_size      = 0x%x\n", descriptor->memory.data_size);
     printf("  memory.rva            = 0x%x\n", descriptor->memory.rva);
@@ -2732,16 +2732,16 @@ void MinidumpException::Print() {
          exception_.exception_record.exception_code);
   printf("  exception_record.exception_flags           = 0x%x\n",
          exception_.exception_record.exception_flags);
-  printf("  exception_record.exception_record          = 0x%llx\n",
+  printf("  exception_record.exception_record          = 0x%" PRIx64 "\n",
          exception_.exception_record.exception_record);
-  printf("  exception_record.exception_address         = 0x%llx\n",
+  printf("  exception_record.exception_address         = 0x%" PRIx64 "\n",
          exception_.exception_record.exception_address);
   printf("  exception_record.number_parameters         = %d\n",
          exception_.exception_record.number_parameters);
   for (unsigned int parameterIndex = 0;
        parameterIndex < exception_.exception_record.number_parameters;
        ++parameterIndex) {
-    printf("  exception_record.exception_information[%2d] = 0x%llx\n",
+    printf("  exception_record.exception_information[%2d] = 0x%" PRIx64 "\n",
            parameterIndex,
            exception_.exception_record.exception_information[parameterIndex]);
   }
@@ -2883,6 +2883,10 @@ string MinidumpSystemInfo::GetCPU() {
 
     case MD_CPU_ARCHITECTURE_PPC:
       cpu = "ppc";
+      break;
+
+    case MD_CPU_ARCHITECTURE_SPARC:
+      cpu = "sparc";
       break;
 
     default:
@@ -3439,7 +3443,7 @@ void Minidump::Print() {
   strftime(timestr, 20, "%Y-%m-%d %H:%M:%S", &timestruct);
   printf("  time_date_stamp      = 0x%x %s\n", header_.time_date_stamp,
                                                timestr);
-  printf("  flags                = 0x%llx\n",  header_.flags);
+  printf("  flags                = 0x%" PRIx64 "\n",  header_.flags);
   printf("\n");
 
   for (unsigned int stream_index = 0;
