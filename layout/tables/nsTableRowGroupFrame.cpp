@@ -193,11 +193,10 @@ PaintRowGroupBackground(nsIFrame* aFrame, nsIRenderingContext* aCtx,
 {
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(aFrame);
 
-  nsIRenderingContext::AutoPushTranslation translate(aCtx, aPt.x, aPt.y);
   TableBackgroundPainter painter(tableFrame,
                                  TableBackgroundPainter::eOrigin_TableRowGroup,
                                  aFrame->PresContext(), *aCtx,
-                                 aDirtyRect - aPt);
+                                 aDirtyRect, aPt);
   painter.PaintRowGroup(static_cast<nsTableRowGroupFrame*>(aFrame));
 }
 
