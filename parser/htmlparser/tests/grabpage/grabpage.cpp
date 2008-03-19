@@ -97,9 +97,7 @@ StreamToFile::StreamToFile(FILE* fp)
   mFile = fp;
 }
 
-NS_IMPL_ISUPPORTS2(StreamToFile,
-                   nsIStreamListener,
-                   nsIRequestObserver)
+NS_IMPL_ISUPPORTS1(StreamToFile, nsIStreamListener)
 
 StreamToFile::~StreamToFile()
 {
