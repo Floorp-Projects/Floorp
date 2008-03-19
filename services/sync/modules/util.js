@@ -278,6 +278,17 @@ let Utils = {
     return function innerBind() { return method.apply(object, arguments); }
   },
 
+  _prefs: null,
+  get prefs() {
+    if (!this.__prefs) {
+      this.__prefs = Cc["@mozilla.org/preferences-service;1"]
+        .getService(Ci.nsIPrefService);
+      this.__prefs = this.__prefs.getBranch(PREFS_BRANCH);
+      this.__prefs.QueryInterface(Ci.nsIPrefBranch2);
+    }
+    return this.__prefs;
+  },
+
   /*
    * Event listener object
    * Used to handle XMLHttpRequest and nsITimer callbacks
@@ -286,7 +297,9 @@ let Utils = {
   EventListener: function Weave_EventListener(handler, eventName) {
     this._handler = handler;
     this._eventName = eventName;
-    this._log = Log4Moz.Service.getLogger("Service.EventHandler");
+    this._log = Log4Moz.Service.getLogger("Async.EventHandler");
+    this._log.level =
+      Log4Moz.Level[Utils.prefs.getCharPref("log.logger.async")];
   }
 };
 

@@ -45,6 +45,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/async.js");
+Cu.import("resource://weave/constants.js");
 
 Function.prototype.async = Async.sugar;
 
@@ -57,8 +58,11 @@ function DAVCollection(baseURL) {
   this._baseURL = baseURL;
   this._authProvider = new DummyAuthProvider();
   this._log = Log4Moz.Service.getLogger("Service.DAV");
+  this._log.level =
+    Log4Moz.Level[Utils.prefs.getCharPref("log.logger.service.dav")];
 }
 DAVCollection.prototype = {
+
   __dp: null,
   get _dp() {
     if (!this.__dp)
@@ -81,11 +85,23 @@ DAVCollection.prototype = {
     return this._loggedIn;
   },
 
+  get locked() {
+    return !this._lockAllowed || this._token != null;
+  },
+
+  _lockAllowed: true,
+  get allowLock() {
+    return this._lockAllowed;
+  },
+  set allowLock(value) {
+    this._lockAllowed = value;
+  },
+
   _makeRequest: function DC__makeRequest(op, path, headers, data) {
     let self = yield;
     let ret;
 
-    this._log.debug("Creating " + op + " request for " + this._baseURL + path);
+    this._log.debug(op + " request for " + path);
 
     let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
     request = request.QueryInterface(Ci.nsIDOMEventTarget);
@@ -106,9 +122,9 @@ DAVCollection.prototype = {
     let key;
     for (key in headers) {
       if (key == 'Authorization')
-        this._log.debug("HTTP Header " + key + ": ***** (suppressed)");
+        this._log.trace("HTTP Header " + key + ": ***** (suppressed)");
       else
-        this._log.debug("HTTP Header " + key + ": " + headers[key]);
+        this._log.trace("HTTP Header " + key + ": " + headers[key]);
       request.setRequestHeader(key, headers[key]);
     }
 
@@ -155,7 +171,7 @@ DAVCollection.prototype = {
         this._makeRequest.async(this, self.cb, "GET", path2 + "/", this._defaultHeaders);
         let ret = yield;
         if (!(ret.status == 404 || ret.status == 500)) { // FIXME: 500 is a services.m.c oddity
-          this._log.debug("Skipping creation of path " + path2 +
+          this._log.trace("Skipping creation of path " + path2 +
         		  " (got status " + ret.status + ")");
         } else {
           this._log.debug("Creating path: " + path2);
@@ -211,6 +227,9 @@ DAVCollection.prototype = {
   },
 
   LOCK: function DC_LOCK(path, data, onComplete) {
+    if (!this._lockAllowed)
+      throw "Cannot acquire lock (internal lock)";
+
     let headers = {'Content-type': 'text/xml; charset="utf-8"',
                    'Depth': 'infinity',
                    'Timeout': 'Second-600'};
@@ -326,7 +345,7 @@ DAVCollection.prototype = {
     let self = yield;
     this._token = null;
 
-    this._log.info("Acquiring lock");
+    this._log.trace("Acquiring lock");
 
     if (this._token) {
       this._log.debug("Lock called, but we already hold a token");
@@ -354,7 +373,7 @@ DAVCollection.prototype = {
       this._token = token.textContent;
 
     if (this._token)
-      this._log.debug("Lock acquired");
+      this._log.trace("Lock acquired");
     else
       this._log.warn("Could not acquire lock");
 
@@ -364,9 +383,9 @@ DAVCollection.prototype = {
   unlock: function DC_unlock() {
     let self = yield;
 
-    this._log.info("Releasing lock");
+    this._log.trace("Releasing lock");
 
-    if (this._token === null) {
+    if (!this.locked) {
       this._log.debug("Unlock called, but we don't hold a token right now");
       self.done(true);
       yield;
@@ -384,9 +403,9 @@ DAVCollection.prototype = {
     this._token = null;
 
     if (this._token)
-      this._log.info("Could not release lock");
+      this._log.trace("Could not release lock");
     else
-      this._log.info("Lock released (or we didn't have one)");
+      this._log.trace("Lock released (or we didn't have one)");
 
     self.done(!this._token);
   },

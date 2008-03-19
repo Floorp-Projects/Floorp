@@ -43,6 +43,7 @@ const Cu = Components.utils;
 
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/util.js");
+Cu.import("resource://weave/constants.js");
 
 /*
  * Asynchronous generator helpers
@@ -74,6 +75,8 @@ AsyncException.prototype = {
 
 function Generator(object, method, onComplete, args) {
   this._log = Log4Moz.Service.getLogger("Async.Generator");
+  this._log.level =
+    Log4Moz.Level[Utils.prefs.getCharPref("log.logger.async")];
   this._object = object;
   this._method = method;
   this.onComplete = onComplete;
@@ -121,7 +124,9 @@ Generator.prototype = {
   get onComplete() {
     if (this._onComplete)
       return this._onComplete;
-    return function() { this._log.trace("Generator " + this.name + " has no onComplete"); };
+    return function() {
+      //this._log.trace("Generator " + this.name + " has no onComplete");
+    };
   },
   set onComplete(value) {
     if (value && typeof value != "function")
@@ -164,7 +169,7 @@ Generator.prototype = {
 
     } else {
       this._log.error(Async.exceptionStr(this, e));
-      this._log.trace("Stack trace:\n" + this.trace +
+      this._log.debug("Stack trace:\n" + this.trace +
                       (e.trace? "\n" + e.trace : ""));
     }
 
@@ -213,6 +218,11 @@ Generator.prototype = {
   },
 
   _done: function AsyncGen__done(retval) {
+    if (!this._generator) {
+      this._log.error("Generator '" + this.name + "' called 'done' after it's finalized");
+      this._log.trace("Initial stack trace:\n" + this.trace);
+      return;
+    }
     this._generator.close();
     this._generator = null;
     this._timer = null;

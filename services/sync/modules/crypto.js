@@ -88,6 +88,8 @@ WeaveCrypto.prototype = {
 
   _init: function Crypto__init() {
     this._log = Log4Moz.Service.getLogger("Service." + this._logName);
+    this._log.level =
+      Log4Moz.Level[Utils.prefs.getCharPref("log.logger.service.crypto")];
     let branch = Cc["@mozilla.org/preferences-service;1"]
       .getService(Ci.nsIPrefBranch2);
     branch.addObserver("extensions.weave.encryption", this, false);
@@ -163,7 +165,7 @@ WeaveCrypto.prototype = {
   // generates a random string that can be used as a passphrase
   _opensslRand: function Crypto__opensslRand(length) {
     if (!length)
-      length = 256;
+      length = 128;
 
     let outputFile = Utils.getTmp("output");
     if (outputFile.exists())
@@ -180,7 +182,7 @@ WeaveCrypto.prototype = {
   },
 
   // generates an rsa public/private key pair, with the private key encrypted
-  _opensslRSAKeyGen: function Crypto__opensslRSAKeyGen(password, algorithm, bits) {
+  _opensslRSAKeyGen: function Crypto__opensslRSAKeyGen(identity, algorithm, bits) {
     if (!algorithm)
       algorithm = "aes-256-cbc";
     if (!bits)
@@ -206,7 +208,7 @@ WeaveCrypto.prototype = {
     // nsIProcess doesn't support stdin, so we write a file instead
     let passFile = Utils.getTmp("pass");
     let [passFOS] = Utils.open(passFile, ">", PERMS_PASSFILE);
-    passFOS.writeString(password);
+    passFOS.writeString(identity.password);
     passFOS.close();
 
     try {
@@ -235,7 +237,7 @@ WeaveCrypto.prototype = {
   },
 
   // returns 'input' encrypted with the 'pubkey' public RSA key
-  _opensslRSAencrypt: function Crypto__opensslRSAencrypt(input, pubkey) {
+  _opensslRSAencrypt: function Crypto__opensslRSAencrypt(input, identity) {
     let inputFile = Utils.getTmp("input");
     let [inputFOS] = Utils.open(inputFile, ">");
     inputFOS.writeString(input);
@@ -243,18 +245,23 @@ WeaveCrypto.prototype = {
 
     let keyFile = Utils.getTmp("key");
     let [keyFOS] = Utils.open(keyFile, ">");
-    keyFOS.writeString(pubkey);
+    keyFOS.writeString(identity.pubkey);
     keyFOS.close();
+
+    let tmpFile = Utils.getTmp("tmp-output");
+    if (tmpFile.exists())
+      tmpFile.remove(false);
 
     let outputFile = Utils.getTmp("output");
     if (outputFile.exists())
       outputFile.remove(false);
 
     this._openssl("rsautl", "-encrypt", "-pubin", "-inkey", "key",
-                  "-in", "input", "-out", "output");
+                  "-in", "input", "-out", "tmp-output");
+    this._openssl("base64", "-in", "tmp-output", "-out", "output");
 
     let [outputFIS] = Utils.open(outputFile, "<");
-    let output = Utils.readStream(outpusFIS);
+    let output = Utils.readStream(outputFIS);
     outputFIS.close();
     outputFile.remove(false);
 
@@ -262,7 +269,7 @@ WeaveCrypto.prototype = {
   },
 
   // returns 'input' decrypted with the 'privkey' private RSA key and password
-  _opensslRSAdecrypt: function Crypto__opensslRSAdecrypt(input, privkey, password) {
+  _opensslRSAdecrypt: function Crypto__opensslRSAdecrypt(input, identity) {
     let inputFile = Utils.getTmp("input");
     let [inputFOS] = Utils.open(inputFile, ">");
     inputFOS.writeString(input);
@@ -270,8 +277,12 @@ WeaveCrypto.prototype = {
 
     let keyFile = Utils.getTmp("key");
     let [keyFOS] = Utils.open(keyFile, ">");
-    keyFOS.writeString(privkey);
+    keyFOS.writeString(identity.privkey);
     keyFOS.close();
+
+    let tmpFile = Utils.getTmp("tmp-output");
+    if (tmpFile.exists())
+      tmpFile.remove(false);
 
     let outputFile = Utils.getTmp("output");
     if (outputFile.exists())
@@ -280,12 +291,13 @@ WeaveCrypto.prototype = {
     // nsIProcess doesn't support stdin, so we write a file instead
     let passFile = Utils.getTmp("pass");
     let [passFOS] = Utils.open(passFile, ">", PERMS_PASSFILE);
-    passFOS.writeString(password);
+    passFOS.writeString(identity.password);
     passFOS.close();
 
     try {
-      this._openssl("rsautl", "-decrypt", "-inkey", "key", "-pass",
-                    "file:pass", "-in", "input", "-out", "output");
+      this._openssl("base64", "-d", "-in", "input", "-out", "tmp-output");
+      this._openssl("rsautl", "-decrypt", "-inkey", "key", "-passin",
+                    "file:pass", "-in", "tmp-output", "-out", "output");
 
     } catch(e) {
       throw e;
@@ -295,7 +307,43 @@ WeaveCrypto.prototype = {
     }
 
     let [outputFIS] = Utils.open(outputFile, "<");
-    let output = Utils.readStream(outpusFIS);
+    let output = Utils.readStream(outputFIS);
+    outputFIS.close();
+    outputFile.remove(false);
+
+    return output;
+  },
+
+  // returns the public key from the private key
+  _opensslRSAkeydecrypt: function Crypto__opensslRSAkeydecrypt(identity) {
+    let keyFile = Utils.getTmp("key");
+    let [keyFOS] = Utils.open(keyFile, ">");
+    keyFOS.writeString(identity.privkey);
+    keyFOS.close();
+
+    let outputFile = Utils.getTmp("output");
+    if (outputFile.exists())
+      outputFile.remove(false);
+
+    // nsIProcess doesn't support stdin, so we write a file instead
+    let passFile = Utils.getTmp("pass");
+    let [passFOS] = Utils.open(passFile, ">", PERMS_PASSFILE);
+    passFOS.writeString(identity.password);
+    passFOS.close();
+
+    try {
+      this._openssl("rsa", "-in", "key", "-pubout", "-out", "output",
+                    "-passin", "file:pass");
+
+    } catch(e) {
+      throw e;
+
+    } finally {
+      passFile.remove(false);
+    }
+
+    let [outputFIS] = Utils.open(outputFile, "<");
+    let output = Utils.readStream(outputFIS);
     outputFIS.close();
     outputFile.remove(false);
 
@@ -445,21 +493,27 @@ WeaveCrypto.prototype = {
     self.done(ret);
   },
 
-  RSAkeygen: function Crypto_RSAkeygen(password) {
+  RSAkeygen: function Crypto_RSAkeygen(identity) {
     let self = yield;
-    let ret = this._opensslRSAKeyGen(password);
+    let ret = this._opensslRSAKeyGen(identity);
     self.done(ret);
   },
 
-  RSAencrypt: function Crypto_RSAencrypt(data, key) {
+  RSAencrypt: function Crypto_RSAencrypt(data, identity) {
     let self = yield;
-    let ret = this._opensslRSAencrypt(data, key);
+    let ret = this._opensslRSAencrypt(data, identity);
     self.done(ret);
   },
 
-  RSAdecrypt: function Crypto_RSAdecrypt(data, key, password) {
+  RSAdecrypt: function Crypto_RSAdecrypt(data, identity) {
     let self = yield;
-    let ret = this._opensslRSAdecrypt(data, key, password);
+    let ret = this._opensslRSAdecrypt(data, identity);
+    self.done(ret);
+  },
+
+  RSAkeydecrypt: function Crypto_RSAkeydecrypt(identity) {
+    let self = yield;
+    let ret = this._opensslRSAkeydecrypt(identity);
     self.done(ret);
   }
 };
