@@ -67,6 +67,7 @@ extern PRInt32             gXULModalLevel;
 
 // Present in all versions of OS X from (at least) 10.2.8 through 10.5.
 - (BOOL)_isRunningModal;
+- (BOOL)_isRunningAppModal;
 
 @end
 
@@ -419,7 +420,14 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
   NSString* currentMode = nil;
 
   if (mTerminated)
-    return moreEvents;
+    return PR_FALSE;
+  // We don't want any native events to be processed here (via Gecko) while
+  // Cocoa is displaying an app-modal dialog (as opposed to a doc-modal or
+  // window-modal "sheet").  Otherwise event-processing loops (Cocoa ones)
+  // may be "interrupted", or inappropriate events may get through to the
+  // browser window(s) underneath.  This resolves bmo bugs 419668 and 420967.
+  if ([NSApp _isRunningAppModal])
+    return PR_FALSE;
 
   PRBool wasRunningEventLoop = mRunningEventLoop;
   mRunningEventLoop = aMayWait;
