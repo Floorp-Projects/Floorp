@@ -193,7 +193,6 @@
 // belonging to the back-end like nsIContentPolicy
 #include "nsIPopupWindowManager.h"
 
-#include "nsIPermissionManager.h"
 #include "nsIDragService.h"
 
 #ifdef MOZ_LOGGING
@@ -3936,47 +3935,18 @@ nsGlobalWindow::MakeScriptDialogTitle(nsAString &aOutTitle)
 PRBool
 nsGlobalWindow::CanMoveResizeWindows()
 {
-  // Chrome can do anything it wants.
-  if (nsContentUtils::IsCallerTrustedForWrite())
-    return PR_TRUE;
-
-  nsCOMPtr<nsIPrincipal> principal;
-  nsresult rv = nsContentUtils::GetSecurityManager()->
-    GetSubjectPrincipal(getter_AddRefs(principal));
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-  // We can't do anything without a principal past this point, just say no.
-  if (!principal)
+  if (!CanSetProperty("dom.disable_window_move_resize"))
     return PR_FALSE;
 
-  nsCOMPtr<nsIURI> uri;
-  rv = principal->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-  // Can't do anything without a URI...
-  if (!uri)
-    return PR_FALSE;
-
-  nsCOMPtr<nsIPermissionManager> pm =
-    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  
-  PRUint32 testResult;
-  rv = pm->TestPermission(uri, "moveresize", &testResult);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-  if (testResult == nsIPermissionManager::ALLOW_ACTION) {
-    if (gMouseDown && !gDragServiceDisabled) {
-      nsCOMPtr<nsIDragService> ds =
-        do_GetService("@mozilla.org/widget/dragservice;1");
-      if (ds) {
-        gDragServiceDisabled = PR_TRUE;
-        ds->Suppress();
-      }
+  if (gMouseDown && !gDragServiceDisabled) {
+    nsCOMPtr<nsIDragService> ds =
+      do_GetService("@mozilla.org/widget/dragservice;1");
+    if (ds) {
+      gDragServiceDisabled = PR_TRUE;
+      ds->Suppress();
     }
-    return PR_TRUE;
   }
-  return PR_FALSE;
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP
