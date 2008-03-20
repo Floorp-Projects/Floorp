@@ -290,6 +290,101 @@ WeaveSyncService.prototype = {
     self.done(true);
   },
 
+  _createUserDir: function WeaveSync__createUserDir(serverURL) {
+    let self = yield;
+
+    this._log.debug("Attempting to create user directory");
+
+    this._dav.baseURL = serverURL;
+    this._dav.MKCOL("user/" + this.userPath, self.cb);
+    let ret = yield;
+    if (!ret)
+      throw "Could not create user directory";
+
+    this._log.debug("Successfully created user directory.  Re-attempting login.");
+    this._dav.baseURL = serverURL + "user/" + this.userPath + "/";
+    this._dav.login.async(this._dav, self.cb, this.username, this.password);
+    let success = yield;
+    if (!success)
+      throw "Created user directory, but login still failed.  Aborting.";
+
+    self.done();
+  },
+
+  _uploadVersion: function WeaveSync__uploadVersion() {
+    let self = yield;
+
+    this._dav.MKCOL("meta", self.cb);
+    let ret = yield;
+    if (!ret)
+      throw "Could not create meta information directory";
+
+    this._dav.PUT("meta/version", STORAGE_FORMAT_VERSION, self.cb);
+    ret = yield;
+    Utils.ensureStatus(ret.status, "Could not upload server version file");
+
+    self.done();
+  },
+
+  // force a server wipe when the version is lower than ours (or there is none)
+  _versionCheck: function WeaveSync__versionCheck() {
+    let self = yield;
+
+    this._dav.GET("meta/version", self.cb);
+    let ret = yield;
+
+    if (!Utils.checkStatus(ret.status)) {
+      this._log.info("Server has no version file.  Wiping server data.");
+      this._serverWipe.async(this, self.cb);
+      yield;
+      this._uploadVersion.async(this, self.cb);
+      yield;
+
+    } else if (ret.responseText < STORAGE_FORMAT_VERSION) {
+      this._log.info("Server version too low.  Wiping server data.");
+      this._serverWipe.async(this, self.cb);
+      yield;
+      this._uploadVersion.async(this, self.cb);
+      yield;
+
+    } else if (ret.responseText > STORAGE_FORMAT_VERSION) {
+      // FIXME: should we do something here?
+    }
+
+    self.done();
+  },
+
+  _generateKeys: function WeaveSync__generateKeys() {
+    let self = yield;
+
+    this._log.debug("Generating new RSA key");
+    Crypto.RSAkeygen.async(Crypto, self.cb, this._cryptoId);
+    let [privkey, pubkey] = yield;
+
+    this._cryptoId.privkey = privkey;
+    this._cryptoId.pubkey = pubkey;
+
+    this._dav.MKCOL("private/", self.cb);
+    let ret = yield;
+    if (!ret)
+      throw "Could not create private key directory";
+
+    this._dav.MKCOL("public/", self.cb);
+    ret = yield;
+    if (!ret)
+      throw "Could not create public key directory";
+
+    this._dav.PUT("private/privkey", privkey, self.cb);
+    ret = yield;
+    Utils.ensureStatus(ret.status, "Could not upload private key");
+
+    this._dav.PUT("public/pubkey", pubkey, self.cb);
+    ret = yield;
+    Utils.ensureStatus(ret.status, "Could not upload public key");
+
+    self.done();
+  },
+
   _login: function WeaveSync__login(password, passphrase) {
     let self = yield;
 
@@ -318,30 +413,14 @@ WeaveSyncService.prototype = {
       this._dav.login.async(this._dav, self.cb, this.username, this.password);
       let success = yield;
 
-      // FIXME: we want to limit this to when we get a 404!
       if (!success) {
-        this._log.debug("Attempting to create user directory");
-
-        this._dav.baseURL = serverURL;
-        this._dav.MKCOL("user/" + this.userPath, self.cb);
-        let ret = yield;
-        if (!ret)
-          throw "Could not create user directory.  Got status: " + ret.status;
-
-        this._log.debug("Successfully created user directory.  Re-attempting login.");
-        this._dav.baseURL = serverURL + "user/" + this.userPath + "/";
-        this._dav.login.async(this._dav, self.cb, this.username, this.password);
-        success = yield;
-        if (!success)
-          throw "Created user directory, but login still failed.  Aborting.";
+        // FIXME: we should actually limit this to when we get a 404
+        this._createUserDir.async(this, self.cb, serverURL);
+        yield;
       }
 
-      // FIXME: remove this after services.m.c gets fixed to not
-      // return 500 from a GET when parent dirs don't exist
-      this._dav.MKCOL("private/", self.cb);
-      ret = yield;
-      if (!ret)
-        throw "Could not create private key directory";
+      this._versionCheck.async(this, self.cb);
+      yield;
 
       this._dav.GET("private/privkey", self.cb);
       let keyResp = yield;
@@ -354,35 +433,8 @@ WeaveSyncService.prototype = {
         this._cryptoId.pubkey = yield;
 
       } else {
-        // FIXME: hack to wipe everyone's server data... needs to be removed at some point
-        this._serverWipe.async(this, self.cb);
+        this._generateKeys.async(this, self.cb);
         yield;
-        
-        // generate a new key
-        this._log.debug("Generating new RSA key");
-        Crypto.RSAkeygen.async(Crypto, self.cb, this._cryptoId);
-        let [privkey, pubkey] = yield;
-
-        this._cryptoId.privkey = privkey;
-        this._cryptoId.pubkey = pubkey;
-
-        this._dav.MKCOL("private/", self.cb);
-        ret = yield;
-        if (!ret)
-          throw "Could not create private key directory";
-
-        this._dav.MKCOL("public/", self.cb);
-        ret = yield;
-        if (!ret)
-          throw "Could not create public key directory";
-
-        this._dav.PUT("private/privkey", privkey, self.cb);
-        ret = yield;
-        Utils.ensureStatus(ret.status, "Could not upload private key");
-
-        this._dav.PUT("public/pubkey", pubkey, self.cb);
-        ret = yield;
-        Utils.ensureStatus(ret.status, "Could not upload public key");
       }
 
       this._passphrase = null;

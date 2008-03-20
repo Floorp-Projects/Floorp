@@ -143,8 +143,11 @@ let Utils = {
       }
     }
 
-    let log = Log4Moz.Service.getLogger("Service.Util");
-    log.error(msg + " Error code: " + code);
+    if (msg) {
+      let log = Log4Moz.Service.getLogger("Service.Util");
+      log.error(msg + " Error code: " + code);
+    }
+
     return false;
   },
 
