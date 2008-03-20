@@ -162,10 +162,17 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   padding: 0;
 }
 
-html|*.ac-emphasize-text {
+.ac-normal-text > html|span {
   margin: 0 !important;
   padding: 0;
+}
+
+html|span.ac-emphasize-text {
   font-weight: bold;
+  text-decoration: underline;
+}
+
+html|span.ac-emphasize-alt {
   text-decoration: underline;
 }
 
