@@ -1,5 +1,4 @@
-#! gmake
-# 
+#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -16,12 +15,11 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2000
+# Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Stuart Parmenter <pavlov@netscape.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,55 +35,19 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH   = ../../../..
+
+DEPTH     = ../../..
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
-VPATH   = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE    = downloads
-LIBRARY_NAME  = download_s
-FORCE_STATIC_LIB = 1
-LIBXUL_LIBRARY = 1
+DIRS = public
 
-REQUIRES  = xpcom \
-            string \
-            rdf \
-            uriloader \
-            mimetype \
-            necko \
-            pref \
-            intl \
-            windowwatcher \
-            webbrowserpersist \
-            appshell \
-            dom \
-            embed_base \
-            alerts \
-            parentalcontrols \
-            storage \
-            exthandler \
-            docshell \
-            toolkitcomps \
-            $(NULL)
-
-CPPSRCS   = \
-    nsDownloadManager.cpp \
-    $(NULL)
-
-ifndef GNU_CXX
-ifeq ($(OS_ARCH),WINNT)
-CPPSRCS += nsDownloadScanner.cpp
-REQUIRES += xulapp
+ifeq (WINNT,$(OS_ARCH))
+DIRS += src
 endif
-endif
-
-EXTRA_COMPONENTS = \
-  nsDownloadManagerUI.js \
-  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 
