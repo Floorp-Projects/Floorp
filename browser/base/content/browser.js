@@ -4610,6 +4610,7 @@ var gHomeButton = {
 
   updatePersonalToolbarStyle: function (homeButton)
   {
+return; // xxxmpc temp hack for perf testing
     if (!homeButton)
       homeButton = document.getElementById("home-button");
     if (homeButton)
