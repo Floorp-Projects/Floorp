@@ -213,6 +213,8 @@ public:
   virtual nsresult HoldScriptObject(void *object);
   virtual nsresult DropScriptObject(void *object);
 
+  virtual void ReportPendingException();
+
   NS_DECL_NSITIMERCALLBACK
   
   PyObject *PyObject_FromInterface(nsISupports *target,
