@@ -115,14 +115,12 @@ struct DCFromContext {
  *
  **********************************************************************/
 
-gfxWindowsFont::gfxWindowsFont(const nsAString& aName, const gfxFontStyle *aFontStyle)
+gfxWindowsFont::gfxWindowsFont(const nsAString& aName, const gfxFontStyle *aFontStyle, FontEntry *aFontEntry)
     : gfxFont(aName, aFontStyle),
       mFont(nsnull), mAdjustedSize(0.0), mScriptCache(nsnull),
       mFontFace(nsnull), mScaledFont(nsnull),
-      mMetrics(nsnull)
+      mMetrics(nsnull), mFontEntry(aFontEntry)
 {
-    // XXX we should work to get this passed in rather than having to find it again.
-    mFontEntry = gfxWindowsPlatform::GetPlatform()->FindFontEntry(aName, aFontStyle);
     NS_ASSERTION(mFontEntry, "Unable to find font entry for font.  Something is whack.");
 
     mFont = MakeHFONT(); // create the HFONT, compute metrics, etc
@@ -419,7 +417,7 @@ GetOrMakeFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle)
 {
     nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aFontEntry->GetName(), aStyle);
     if (!font) {
-        font = new gfxWindowsFont(aFontEntry->GetName(), aStyle);
+        font = new gfxWindowsFont(aFontEntry->GetName(), aStyle, aFontEntry);
         if (!font)
             return nsnull;
         gfxFontCache::GetCache()->AddNew(font);
@@ -621,9 +619,7 @@ SetupDCFont(HDC dc, gfxWindowsFont *aFont)
 
     /* GetGlyphIndices is buggy for bitmap and vector fonts,
        so send them to uniscribe */
-    TEXTMETRIC metrics;
-    GetTextMetrics(dc, &metrics);
-    if ((metrics.tmPitchAndFamily & (TMPF_TRUETYPE)) == 0)
+    if (!aFont->GetFontEntry()->mTrueType)
         return PR_FALSE;
 
     return PR_TRUE;

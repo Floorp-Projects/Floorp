@@ -210,7 +210,7 @@ public:
 
 class gfxWindowsFont : public gfxFont {
 public:
-    gfxWindowsFont(const nsAString& aName, const gfxFontStyle *aFontStyle);
+    gfxWindowsFont(const nsAString& aName, const gfxFontStyle *aFontStyle, FontEntry *aFontEntry);
     virtual ~gfxWindowsFont();
 
     virtual const gfxFont::Metrics& GetMetrics();
