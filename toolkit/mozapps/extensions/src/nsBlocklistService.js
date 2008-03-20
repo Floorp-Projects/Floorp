@@ -404,14 +404,19 @@ Blocklist.prototype = {
    * load it or does nothing if neither exist.
    */
   _loadBlocklist: function() {
+    this._addonEntries = { };
+    this._pluginEntries = { };
     var profFile = getFile(KEY_PROFILEDIR, [FILE_BLOCKLIST]);
     if (profFile.exists()) {
       this._loadBlocklistFromFile(profFile);
       return;
     }
     var appFile = getFile(KEY_APPDIR, [FILE_BLOCKLIST]);
-    if (appFile.exists())
+    if (appFile.exists()) {
       this._loadBlocklistFromFile(appFile);
+      return;
+    }
+    LOG("Blocklist::_loadBlocklist: no XML File found");
   },
 
   /**
@@ -467,8 +472,6 @@ Blocklist.prototype = {
    */
 
   _loadBlocklistFromFile: function(file) {
-    this._addonEntries = { };
-    this._pluginEntries = { };
     if (getPref("getBoolPref", PREF_BLOCKLIST_ENABLED, true) == false) {
       LOG("Blocklist::_loadBlocklistFromFile: blocklist is disabled");
       return;
