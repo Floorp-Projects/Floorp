@@ -109,6 +109,7 @@ EXPORTS		= \
 		nsIReflowCallback.h \
 		nsLayoutErrors.h \
 		nsLayoutUtils.h \
+		nsIFocusEventSuppressor.h \
 		nsPresContext.h \
 		nsPresState.h \
 		nsStyleChangeList.h \
@@ -122,7 +123,7 @@ CPPSRCS		= \
 		nsCaret.cpp \
 		nsChildIterator.cpp \
 		nsCounterManager.cpp \
-                nsDisplayList.cpp \
+		nsDisplayList.cpp \
 		nsDocumentViewer.cpp \
 		nsFrameManager.cpp \
 		nsFrameTraversal.cpp \
@@ -137,6 +138,7 @@ CPPSRCS		= \
 		nsQuoteList.cpp \
 		nsStyleChangeList.cpp \
 		nsStyleSheetService.cpp \
+		nsFocusEventSuppressor.cpp \
 		$(NULL)
 
 ifndef MOZ_XUL

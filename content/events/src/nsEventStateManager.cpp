@@ -868,6 +868,9 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     break;
   case NS_GOTFOCUS:
     {
+#ifdef DEBUG_smaug
+      printf("nsEventStateManager::PreHandleEvent, NS_GOTFOCUS \n");
+#endif
       // This is called when a child widget has received focus.
       // We need to take care of sending a blur event for the previously
       // focused content and document, then dispatching a focus
@@ -1031,6 +1034,9 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
   case NS_LOSTFOCUS:
     {
+#ifdef DEBUG_smaug
+      printf("nsEventStateManager::PreHandleEvent, NS_LOSTFOCUS \n");
+#endif
       // Hide the caret if it's visible.
       if (mPresContext) {
         nsIPresShell *presShell = mPresContext->GetPresShell();
@@ -1052,7 +1058,10 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       // This allows "-moz-user-focus: ignore" to work.
 
 #if defined(XP_WIN) || defined(XP_OS2)
-      if (!static_cast<nsFocusEvent*>(aEvent)->isMozWindowTakingFocus) {
+      //XXXsmaug Change all the NS_LOSTFOCUS/GOTFOCUS events to use
+      //         the same event struct type!
+      if (aEvent->eventStructType == NS_FOCUS_EVENT &&
+          !static_cast<nsFocusEvent*>(aEvent)->isMozWindowTakingFocus) {
 
         // This situation occurs when focus goes to a non-gecko child window
         // in an embedding application.  In this case we do fire a blur
@@ -1124,6 +1133,9 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
  case NS_ACTIVATE:
     {
+#ifdef DEBUG_smaug
+      printf("nsEventStateManager::PreHandleEvent, NS_ACTIVATE \n");
+#endif
       // If we have a focus controller, and if it has a focused window and a
       // focused element in its focus memory, then restore the focus to those
       // objects.
@@ -1211,6 +1223,9 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
  case NS_DEACTIVATE:
     {
+#ifdef DEBUG_smaug
+      printf("nsEventStateManager::PreHandleEvent, NS_DEACTIVATE \n");
+#endif
       EnsureDocument(aPresContext);
 
       nsIMEStateManager::OnDeactivate(aPresContext);
