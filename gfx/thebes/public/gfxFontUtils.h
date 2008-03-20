@@ -62,13 +62,24 @@ private:
     enum { BLOCK_SIZE = 32 };   // ==> 256 codepoints per block
     enum { BLOCK_SIZE_BITS = BLOCK_SIZE * 8 };
     enum { BLOCK_INDEX_SHIFT = 8 };
-    
+
     struct Block {
+        Block(const Block& aBlock) { memcpy(mBits, aBlock.mBits, sizeof(mBits)); }
         Block(unsigned char memsetValue = 0) { memset(mBits, memsetValue, BLOCK_SIZE); }
         PRUint8 mBits[BLOCK_SIZE];
     };
 
 public:
+    gfxSparseBitSet() { }
+    gfxSparseBitSet(const gfxSparseBitSet& aBitset) {
+        PRUint32 len = aBitset.mBlocks.Length();
+        mBlocks.AppendElements(len);
+        for (PRUint32 i = 0; i < len; ++i) {
+            Block *block = aBitset.mBlocks[i];
+            if (block)
+                mBlocks[i] = new Block(*block);
+        }
+    }
     PRBool test(PRUint32 aIndex) {
         PRUint32 blockIndex = aIndex/BLOCK_SIZE_BITS;
         if (blockIndex >= mBlocks.Length())
