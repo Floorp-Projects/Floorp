@@ -238,6 +238,7 @@ pref("browser.download.manager.flashCount", 2);
 pref("browser.download.manager.addToRecentDocs", true);
 pref("browser.download.manager.quitBehavior", 0);
 pref("browser.download.manager.scanWhenDone", true);
+pref("browser.download.manager.resumeOnWakeDelay", 10000);
 
 // search engines URL
 pref("browser.search.searchEnginesURL",      "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/firefox/%VERSION%/search-engines/");
