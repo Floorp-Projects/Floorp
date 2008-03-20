@@ -268,6 +268,33 @@ gfxWindowsPlatform::FontGetStylesProc(nsStringHashKey::KeyType aKey,
 
     ReleaseDC(nsnull, hdc);
 
+    // Look for font families without bold variations and add a FontEntry
+    // with synthetic bold (weight 600) for them.
+    nsRefPtr<FontEntry> darkestItalic;
+    nsRefPtr<FontEntry> darkestNonItalic;
+    PRUint8 highestItalic = 0, highestNonItalic = 0;
+    for (PRUint32 i = 0; i < aFontFamily->mVariations.Length(); i++) {
+        nsRefPtr<FontEntry> fe = aFontFamily->mVariations[i];
+        if (fe->mItalic) {
+            if (!darkestItalic || fe->mWeight > darkestItalic->mWeight)
+                darkestItalic = fe;
+        } else {
+            if (!darkestNonItalic || fe->mWeight > darkestNonItalic->mWeight)
+                darkestNonItalic = fe;
+        }
+    }
+
+    if (darkestItalic && darkestItalic->mWeight < 600) {
+        nsRefPtr<FontEntry> newEntry = new FontEntry(*darkestItalic.get());
+        newEntry->mWeight = 600;
+        aFontFamily->mVariations.AppendElement(newEntry);
+    }
+    if (darkestNonItalic && darkestNonItalic->mWeight < 600) {
+        nsRefPtr<FontEntry> newEntry = new FontEntry(*darkestNonItalic.get());
+        newEntry->mWeight = 600;
+        aFontFamily->mVariations.AppendElement(newEntry);
+    }
+
     return PL_DHASH_NEXT;
 }
 
