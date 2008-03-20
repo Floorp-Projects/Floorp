@@ -338,14 +338,11 @@ nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIM
     NSURLFileTypeMappings *map = [NSURLFileTypeMappings sharedMappings];
     NSString *mimeStr = [NSString stringWithCString:mimetype.get() encoding:NSASCIIStringEncoding];
     NSString *realExtension = map ? [map preferredExtensionForMIMEType:mimeStr] : NULL;
-    [mimeStr release];
 
     if (realExtension) {
       temp.Assign([realExtension cStringUsingEncoding:NSASCIIStringEncoding]);
 
       info->AppendExtension(temp);
-
-      [realExtension release];
     } else {
       // convert entry.extension which is a Str255 
       // don't forget to remove the '.' in front of the file extension....
