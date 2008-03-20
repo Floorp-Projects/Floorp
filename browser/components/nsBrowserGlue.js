@@ -214,7 +214,7 @@ BrowserGlue.prototype = {
     distro.applyCustomizations();
 
     // handle any UI migration
-    this._migrateUI();
+    // this._migrateUI();
   },
 
   // profile shutdown handler (contains profile cleanup routines)
