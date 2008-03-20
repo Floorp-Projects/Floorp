@@ -190,6 +190,7 @@ typedef struct JSPropertyCache {
     uint32              modfills;       /* fill that rehashed to a new entry */
     uint32              brandfills;     /* scope brandings to type structural
                                            method fills */
+    uint32              noprotos;       /* resolve-returned non-proto pobj */
     uint32              longchains;     /* overlong scope and/or proto chain */
     uint32              recycles;       /* cache entries recycled by fills */
     uint32              pcrecycles;     /* pc-keyed entries recycled by atom-
