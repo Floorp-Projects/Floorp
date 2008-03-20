@@ -990,13 +990,13 @@ calculate_button_inner_rect(GtkWidget* button, GdkRectangle* rect,
     moz_gtk_widget_get_focus(button, &interior_focus,
                              &focus_width, &focus_pad);
 
-    inner_rect->x = rect->x + XTHICKNESS(style) + focus_width + focus_pad;
+    inner_rect->x = rect->x + XTHICKNESS(style);
     inner_rect->x += direction == GTK_TEXT_DIR_LTR ?
                         inner_border.left : inner_border.right;
     inner_rect->y = rect->y + inner_border.top + YTHICKNESS(style) +
                     focus_width + focus_pad;
     inner_rect->width = MAX(1, rect->width - inner_border.left -
-       inner_border.right - (XTHICKNESS(style) + focus_pad + focus_width) * 2);
+       inner_border.right - XTHICKNESS(style) * 2);
     inner_rect->height = MAX(1, rect->height - inner_border.top -
        inner_border.bottom - (YTHICKNESS(style) + focus_pad + focus_width) * 2);
 
@@ -2589,21 +2589,14 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
             /* We need to account for the arrow on the dropdown, so text
              * doesn't come too close to the arrow, or in some cases spill
              * into the arrow. */
-            gboolean ignored_interior_focus, wide_separators;
-            gint focus_width, focus_pad, separator_width;
+            gboolean wide_separators;
+            gint separator_width;
             GtkRequisition arrow_req;
 
             ensure_combo_box_widgets();
 
-            moz_gtk_widget_get_focus(gComboBoxButtonWidget,
-                                     &ignored_interior_focus,
-                                     &focus_width, &focus_pad);
-            *left = *top = focus_width + focus_pad +
-                           GTK_CONTAINER(gComboBoxButtonWidget)->border_width;
-            *left += gComboBoxButtonWidget->style->xthickness;
-            *top += gComboBoxButtonWidget->style->ythickness;
-
-            *right = *left; *bottom = *top;
+            *left = *right = gComboBoxButtonWidget->style->xthickness;
+            *top = *bottom = gComboBoxButtonWidget->style->ythickness;
 
             /* If there is no separator, don't try to count its width. */
             separator_width = 0;
