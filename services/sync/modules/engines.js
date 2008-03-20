@@ -386,7 +386,7 @@ Engine.prototype = {
 
       server.deltas.push(serverDelta);
 
-      if (server.formatVersion != STORAGE_FORMAT_VERSION ||
+      if (server.formatVersion != ENGINE_STORAGE_FORMAT_VERSION ||
           this._encryptionChanged) {
         this._fullUpload.async(this, self.cb);
         let status = yield;
@@ -408,7 +408,7 @@ Engine.prototype = {
         this._dav.PUT(this.statusFile,
                       this._json.encode(
                         {GUID: this._snapshot.GUID,
-                         formatVersion: STORAGE_FORMAT_VERSION,
+                         formatVersion: ENGINE_STORAGE_FORMAT_VERSION,
                          snapVersion: server.snapVersion,
                          maxVersion: this._snapshot.version,
                          snapEncryption: server.snapEncryption,
@@ -477,9 +477,9 @@ Engine.prototype = {
       let snap = new SnapshotStore();
 
       // Bail out if the server has a newer format version than we can parse
-      if (status.formatVersion > STORAGE_FORMAT_VERSION) {
+      if (status.formatVersion > ENGINE_STORAGE_FORMAT_VERSION) {
         this._log.error("Server uses storage format v" + status.formatVersion +
-                  ", this client understands up to v" + STORAGE_FORMAT_VERSION);
+                  ", this client understands up to v" + ENGINE_STORAGE_FORMAT_VERSION);
         break;
       }
 
@@ -602,7 +602,7 @@ Engine.prototype = {
       this._snapshot.save();
 
       ret.status = 0;
-      ret.formatVersion = STORAGE_FORMAT_VERSION;
+      ret.formatVersion = ENGINE_STORAGE_FORMAT_VERSION;
       ret.maxVersion = this._snapshot.version;
       ret.snapVersion = this._snapshot.version;
       ret.snapEncryption = Crypto.defaultAlgorithm;
@@ -663,7 +663,7 @@ Engine.prototype = {
     this._dav.PUT(this.statusFile,
                   this._json.encode(
                     {GUID: this._snapshot.GUID,
-                     formatVersion: STORAGE_FORMAT_VERSION,
+                     formatVersion: ENGINE_STORAGE_FORMAT_VERSION,
                      snapVersion: this._snapshot.version,
                      maxVersion: this._snapshot.version,
                      snapEncryption: Crypto.defaultAlgorithm,
