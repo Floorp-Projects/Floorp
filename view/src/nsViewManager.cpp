@@ -62,8 +62,9 @@
 #include "nsCOMArray.h"
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
-
 #include "gfxContext.h"
+#define NS_STATIC_FOCUS_SUPPRESSOR
+#include "nsIFocusEventSuppressor.h"
 
 static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
@@ -91,6 +92,10 @@ static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 
 #ifdef NS_VM_PERF_METRICS
 #include "nsITimeRecorder.h"
+#endif
+
+#ifdef DEBUG_smaug
+#define DEBUG_FOCUS_SUPPRESSION
 #endif
 
 //-------------- Begin Invalidate Event Definition ------------------------
@@ -169,7 +174,9 @@ nsViewManager::nsViewManager()
 
   gViewManagers->AppendElement(this);
 
-  mVMCount++;
+  if (++mVMCount == 1) {
+    NS_AddFocusSuppressorCallback(&nsViewManager::SuppressFocusEvents);
+  }
   // NOTE:  we use a zeroing operator new, so all data members are
   // assumed to be cleared here.
   mDefaultBackgroundColor = NS_RGBA(0, 0, 0, 0);
@@ -942,24 +949,20 @@ void nsViewManager::UpdateViews(nsView *aView, PRUint32 aUpdateFlags)
 
 nsView *nsViewManager::sCurrentlyFocusView = nsnull;
 nsView *nsViewManager::sViewFocusedBeforeSuppression = nsnull;
-PRInt32 nsViewManager::sSuppressCount = 0;
+PRBool nsViewManager::sFocusSuppressed = PR_FALSE;
 
-void nsViewManager::SuppressFocusEvents()
+void nsViewManager::SuppressFocusEvents(PRBool aSuppress)
 {
-  sSuppressCount++;
-  if (sSuppressCount == 1) {
-    // We're turning on focus/blur suppression, remember what had
-    // the focus.
+  if (aSuppress) {
+    sFocusSuppressed = PR_TRUE;
     SetViewFocusedBeforeSuppression(GetCurrentlyFocusedView());
-  }  
-}
+    return;
+  }
 
-void nsViewManager::UnsuppressFocusEvents()
-{
-  sSuppressCount--;
-  if (sSuppressCount > 0 ||
-      GetCurrentlyFocusedView() == GetViewFocusedBeforeSuppression())
-  return;
+  sFocusSuppressed = PR_FALSE;
+  if (GetCurrentlyFocusedView() == GetViewFocusedBeforeSuppression()) {
+    return;
+  }
   
   // We're turning off suppression, synthesize LOSTFOCUS/GOTFOCUS.
   nsIWidget *widget = nsnull;
