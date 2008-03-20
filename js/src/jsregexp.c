@@ -1062,15 +1062,19 @@ lexHex:
             c = JS_MAX(uc, dc);
             if (c > localMax)
                 localMax = c;
-        }
-        if (inRange) {
-            if (rangeStart > localMax) {
+        } else {
+            /* Throw a SyntaxError here, per ECMA-262, 15.10.2.15. */
+            if (inRange && rangeStart > localMax) {
                 JS_ReportErrorNumber(state->context,
                                      js_GetErrorMessage, NULL,
                                      JSMSG_BAD_CLASS_RANGE);
                 return JS_FALSE;
             }
+        }
+
+        if (inRange) {
             inRange = JS_FALSE;
+            localMax = JS_MAX(localMax, rangeStart);
         } else {
             if (canStartRange && src < end - 1) {
                 if (*src == '-') {
@@ -2237,12 +2241,19 @@ AddCharacterToCharSet(RECharSet *cs, jschar c)
 static void
 AddCharacterRangeToCharSet(RECharSet *cs, uintN c1, uintN c2)
 {
-    uintN i;
+    uintN tmp, i;
 
     uintN byteIndex1 = c1 >> 3;
     uintN byteIndex2 = c2 >> 3;
 
-    JS_ASSERT((c2 <= cs->length) && (c1 <= c2));
+    JS_ASSERT(c2 <= cs->length);
+
+    /* Swap, if c1 > c2. */
+    if (c1 > c2) {
+        tmp = c1;
+        c1 = c2;
+        c2 = tmp;
+    }
 
     c1 &= 0x7;
     c2 &= 0x7;
