@@ -1285,28 +1285,30 @@ nsXULTreeColumnsAccessible::
 NS_IMETHODIMP
 nsXULTreeColumnsAccessible::GetNextSibling(nsIAccessible **aNextSibling)
 {
-  nsresult ret = nsXULColumnsAccessible::GetNextSibling(aNextSibling);
+  NS_ENSURE_ARG_POINTER(aNextSibling);
+  *aNextSibling = nsnull;
 
-  if (*aNextSibling == nsnull) { // if there is not other sibling, use the first row as its sibling
-    nsCOMPtr<nsITreeBoxObject> tree;
-    nsCOMPtr<nsITreeView> treeView;
+  nsCOMPtr<nsITreeBoxObject> tree;
+  nsCOMPtr<nsITreeView> treeView;
 
-    nsXULTreeAccessible::GetTreeBoxObject(mDOMNode, getter_AddRefs(tree));
-    if (tree) {
-      tree->GetView(getter_AddRefs(treeView));
-      if (treeView) {
-        PRInt32 rowCount;
-        treeView->GetRowCount(&rowCount);
-        if (rowCount > 0) {
-          nsCOMPtr<nsITreeColumn> column = nsXULTreeAccessible::GetFirstVisibleColumn(tree);
-          nsCOMPtr<nsIAccessibleTreeCache> treeCache(do_QueryInterface(mParent));
-          NS_ENSURE_TRUE(treeCache, NS_ERROR_FAILURE);
-          ret = treeCache->GetCachedTreeitemAccessible(0, column, aNextSibling);
-        }
+  nsXULTreeAccessible::GetTreeBoxObject(mDOMNode, getter_AddRefs(tree));
+  if (tree) {
+    tree->GetView(getter_AddRefs(treeView));
+    if (treeView) {
+      PRInt32 rowCount;
+      treeView->GetRowCount(&rowCount);
+      if (rowCount > 0) {
+        nsCOMPtr<nsITreeColumn> column =
+          nsXULTreeAccessible::GetFirstVisibleColumn(tree);
+
+        nsCOMPtr<nsIAccessibleTreeCache> treeCache(do_QueryInterface(mParent));
+        NS_ENSURE_TRUE(treeCache, NS_ERROR_FAILURE);
+
+        return treeCache->GetCachedTreeitemAccessible(0, column, aNextSibling);
       }
     }
   }
 
-  return ret;
+  return NS_OK;
 }
 
