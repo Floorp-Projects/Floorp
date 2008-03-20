@@ -130,13 +130,6 @@ public:
    */
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 
-  /**
-   * Maps ARIA state attributes to state of accessible. Note the given state
-   * argument should hold states for accessible before you pass it into this
-   * method.
-   */
-  PRUint32 GetARIAState();
-
 #ifdef DEBUG_A11Y
   static PRBool IsTextInterfaceSupportCorrect(nsIAccessible *aAccessible);
 #endif

@@ -85,7 +85,7 @@ STDMETHODIMP nsTextAccessibleWrap::get_domText(
     /* [retval][out] */ BSTR __RPC_FAR *aDomText)
 {
 __try {
-  *aDomText = nsnull;
+  *aDomText = NULL;
 
   if (!mDOMNode) {
     return E_FAIL; // Node already shut down
@@ -93,7 +93,13 @@ __try {
   nsAutoString nodeValue;
 
   mDOMNode->GetNodeValue(nodeValue);
-  *aDomText = ::SysAllocString(nodeValue.get());
+  if (nodeValue.IsEmpty())
+    return S_FALSE;
+
+  *aDomText = ::SysAllocStringLen(nodeValue.get(), nodeValue.Length());
+  if (!*aDomText)
+    return E_OUTOFMEMORY;
+
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
@@ -240,7 +246,7 @@ STDMETHODIMP nsTextAccessibleWrap::get_fontFamily(
     /* [retval][out] */ BSTR __RPC_FAR *aFontFamily)
 {
 __try {
-  *aFontFamily = nsnull;
+  *aFontFamily = NULL;
 
   nsIFrame *frame = GetFrame();
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
@@ -276,8 +282,13 @@ __try {
 
   nsAutoString fontFamily;
   deviceContext->FirstExistingFont(fm->Font(), fontFamily);
-  
-  *aFontFamily = ::SysAllocString(fontFamily.get());
+  if (fontFamily.IsEmpty())
+    return S_FALSE;
+
+  *aFontFamily = ::SysAllocStringLen(fontFamily.get(), fontFamily.Length());
+  if (!*aFontFamily)
+    return E_OUTOFMEMORY;
+
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;

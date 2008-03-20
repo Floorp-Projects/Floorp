@@ -91,6 +91,7 @@ private:
   // list, or -1 if it failed.
   PRInt32 AddTimerInternal(nsTimerImpl *aTimer);
   PRBool  RemoveTimerInternal(nsTimerImpl *aTimer);
+  void    ReleaseTimerInternal(nsTimerImpl *aTimer);
 
   nsCOMPtr<nsIThread> mThread;
   PRLock *mLock;

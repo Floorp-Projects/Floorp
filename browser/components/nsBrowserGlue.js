@@ -47,6 +47,13 @@ Cu.import("resource:///modules/distribution.js");
 
 const PREF_EM_NEW_ADDONS_LIST = "extensions.newAddons";
 
+// Check to see if bookmarks need backing up once per
+// day on 1 hour idle.
+const BOOKMARKS_ARCHIVE_IDLE_TIME = 60 * 60;
+
+// Backup bookmarks once every 24 hours.
+const BOOKMARKS_ARCHIVE_INTERVAL = 86400 * 1000;
+
 // Factory object
 const BrowserGlueServiceFactory = {
   _instance: null,
@@ -108,15 +115,23 @@ BrowserGlue.prototype = {
         if (this._saveSession) {
           this._setPrefToSaveSession();
         }
+        this._shutdownPlaces();
+        this.idleService.removeIdleObserver(this, BOOKMARKS_ARCHIVE_IDLE_TIME);
         break;
       case "session-save":
         this._setPrefToSaveSession();
         subject.QueryInterface(Ci.nsISupportsPRBool);
         subject.data = true;
         break;
+      case "idle":
+        if (this.idleService.idleTime > BOOKMARKS_ARCHIVE_IDLE_TIME * 1000) {
+          // Back up bookmarks.
+          this._archiveBookmarks();
+        }
+        break;
     }
-  }
-, 
+  }, 
+
   // initialization (called on application startup) 
   _init: function() 
   {
@@ -199,7 +214,7 @@ BrowserGlue.prototype = {
     distro.applyCustomizations();
 
     // handle any UI migration
-    this._migrateUI();
+    // this._migrateUI();
   },
 
   // profile shutdown handler (contains profile cleanup routines)
@@ -357,6 +372,14 @@ BrowserGlue.prototype = {
     return Sanitizer;
   },
 
+  _idleService: null,
+  get idleService() {
+    if (!this._idleService)
+      this._idleService = Cc["@mozilla.org/widget/idleservice;1"].
+                          getService(Ci.nsIIdleService);
+    return this._idleService;
+  },
+
   /**
    * Initialize Places
    * - imports the bookmarks html file if bookmarks datastore is empty
@@ -369,10 +392,11 @@ BrowserGlue.prototype = {
     var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
                   getService(Ci.nsINavHistoryService);
 
+    var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                     getService(Ci.nsIPrefBranch);
+
     var importBookmarks = false;
     try {
-      var prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                       getService(Ci.nsIPrefBranch);
       importBookmarks = prefBranch.getBoolPref("browser.places.importBookmarksHTML");
     } catch(ex) {}
 
@@ -380,55 +404,86 @@ BrowserGlue.prototype = {
       // Call it here for Fx3 profiles created before the Places folder
       // has been added, otherwise it's called during import.
       this.ensurePlacesDefaultQueriesInitialized();
-      return;
     }
+    else {
+      // get latest backup
+      Cu.import("resource://gre/modules/utils.js");
+      var bookmarksFile = PlacesUtils.getMostRecentBackup();
 
-    var dirService = Cc["@mozilla.org/file/directory_service;1"].
-                     getService(Ci.nsIProperties);
-
-    var bookmarksFile = dirService.get("BMarks", Ci.nsILocalFile);
-
-    if (bookmarksFile.exists()) {
-      // import the file
-      try {
-        var importer = 
-          Cc["@mozilla.org/browser/places/import-export-service;1"].
-          getService(Ci.nsIPlacesImportExportService);
-        importer.importHTMLFromFile(bookmarksFile, true);
-      } catch(ex) {
-      } finally {
-        prefBranch.setBoolPref("browser.places.importBookmarksHTML", false);
+      if (bookmarksFile && bookmarksFile.leafName.match("\.json$")) {
+        // restore a JSON backup
+        PlacesUtils.restoreBookmarksFromJSONFile(bookmarksFile);
       }
+      else {
+        // if there's no json backup use bookmarks.html
 
-      // only back up pre-places bookmarks.html if we plan on overwriting it
-      if (prefBranch.getBoolPref("browser.bookmarks.overwrite")) {
-        // backup pre-places bookmarks.html
-        // XXXtodo remove this before betas, after import/export is solid
-        var profDir = dirService.get("ProfD", Ci.nsILocalFile);
-        var bookmarksBackup = profDir.clone();
-        bookmarksBackup.append("bookmarks.preplaces.html");
-        if (!bookmarksBackup.exists()) {
-          // save old bookmarks.html file as bookmarks.preplaces.html
-          try {
-            bookmarksFile.copyTo(profDir, "bookmarks.preplaces.html");
-          } catch(ex) {
-            dump("nsBrowserGlue::_initPlaces(): copy of bookmarks.html to bookmarks.preplaces.html failed: " + ex + "\n");
-          }
+        var dirService = Cc["@mozilla.org/file/directory_service;1"].
+                         getService(Ci.nsIProperties);
+        var bookmarksFile = dirService.get("BMarks", Ci.nsILocalFile);
+
+        // import the file
+        try {
+          var importer = Cc["@mozilla.org/browser/places/import-export-service;1"].
+                         getService(Ci.nsIPlacesImportExportService);
+          importer.importHTMLFromFile(bookmarksFile, true /* overwrite existing */);
+        } finally {
+          prefBranch.setBoolPref("browser.places.importBookmarksHTML", false);
         }
       }
     }
+
+    // Initialize bookmark archiving on idle.
+    // Once a day, either on idle or shutdown, bookmarks are backed up.
+    this.idleService.addIdleObserver(this, BOOKMARKS_ARCHIVE_IDLE_TIME);
   },
 
   /**
    * Places shut-down tasks
    * - back up and archive bookmarks
+   * - export bookmarks as HTML, if so configured
+   *
+   * Note: quit-application-granted notification is received twice
+   *       so replace this method with a no-op when first called.
    */
   _shutdownPlaces: function bg__shutdownPlaces() {
-    // backup bookmarks to bookmarks.html
-    var importer =
+    // Backup and archive Places bookmarks.
+    this._archiveBookmarks();
+
+    // Backup bookmarks to bookmarks.html to support apps that depend
+    // on the legacy format.
+    var autoExportHTML = false;
+    try {
+      autoExportHTML = prefs.getIntPref("browser.bookmarks.autoExportHTML");
+    } catch(ex) {}
+
+    if (autoExportHTML) {
       Cc["@mozilla.org/browser/places/import-export-service;1"].
-      getService(Ci.nsIPlacesImportExportService);
-    importer.backupBookmarksFile();
+        getService(Ci.nsIPlacesImportExportService).
+        backupBookmarksFile();
+    }
+  },
+
+  /**
+   * Back up and archive bookmarks
+   */
+  _archiveBookmarks: function nsBrowserGlue__archiveBookmarks() {
+    Cu.import("resource://gre/modules/utils.js");
+
+    var lastBackup = PlacesUtils.getMostRecentBackup();
+
+    // Backup bookmarks if there aren't any backups or 
+    // they haven't been backed up in the last 24 hrs.
+    if (!lastBackup ||
+        Date.now() - lastBackup.lastModifiedTime > BOOKMARKS_ARCHIVE_INTERVAL) {
+      var maxBackups = 5;
+      var prefs = Cc["@mozilla.org/preferences-service;1"].
+                  getService(Ci.nsIPrefBranch);
+      try {
+        maxBackups = prefs.getIntPref("browser.bookmarks.max_backups");
+      } catch(ex) {}
+
+      PlacesUtils.archiveBookmarksFile(maxBackups, false /* don't force */);
+    }
   },
 
   _migrateUI: function bg__migrateUI() {
@@ -448,49 +503,12 @@ BrowserGlue.prototype = {
       this._dirty = false;
 
       var currentSet = this._rdf.GetResource("currentset");
-      var collapsed = this._rdf.GetResource("collapsed");
-      var target;
-      var moveHome;
-      var homePattern = /(?:^|,)home-button(?:$|,)/;
-
-      // get an nsIRDFResource for the PersonalToolbar item
-      var personalBar = this._rdf.GetResource("chrome://browser/content/browser.xul#PersonalToolbar");
-      var personalBarCollapsed = this._getPersist(personalBar, collapsed) == "true";
 
       // get an nsIRDFResource for the nav-bar item
       var navBar = this._rdf.GetResource("chrome://browser/content/browser.xul#nav-bar");
-      target = this._getPersist(navBar, currentSet);
-      if (target) {
-        let originalTarget = target;
-
-        // move Home if we find it in the nav-bar and the personal toolbar isn't collapsed
-        if (!personalBarCollapsed)
-          target = target.replace(homePattern, ",");
-        moveHome = (target != originalTarget);
-
-        // add the new combined back and forward button
-        if (!/(?:^|,)unified-back-forward-button(?:$|,)/.test(target))
-          target = "unified-back-forward-button," + target;
-
-        if (target != originalTarget)
-          this._setPersist(navBar, currentSet, target);
-      } else {
-        // nav-bar doesn't have a currentset, so the defaultset will be used,
-        // which means Home will be moved
-        moveHome = true;
-      }
-
-      if (moveHome) {
-        // If the personal toolbar has a currentset, add Home. The defaultset will be
-        // used otherwise.
-        target = this._getPersist(personalBar, currentSet);
-        if (target && !homePattern.test(target))
-          this._setPersist(personalBar, currentSet, "home-button," + target);
-
-        // uncollapse the personal toolbar
-        if (personalBarCollapsed)
-          this._setPersist(personalBar, collapsed, "false");
-      }
+      var target = this._getPersist(navBar, currentSet);
+      if (target && !/(?:^|,)unified-back-forward-button(?:$|,)/.test(target))
+        this._setPersist(navBar, currentSet, "unified-back-forward-button," + target);
 
       // force the RDF to be saved
       if (this._dirty)
@@ -574,13 +592,10 @@ BrowserGlue.prototype = {
         var recentTagsTitle =
           this._placesBundle.GetStringFromName("recentTagsTitle");
 
-        var bookmarksMenuFolder = bmsvc.bookmarksMenuFolder;
-        var unfiledBookmarksFolder = bmsvc.unfiledBookmarksFolder;
-        var toolbarFolder = bmsvc.toolbarFolder;
         var defaultIndex = bmsvc.DEFAULT_INDEX;
 
         // index = 0, make it the first folder
-        var placesFolder = bmsvc.createFolder(toolbarFolder, smartBookmarksFolderTitle,
+        var placesFolder = bmsvc.createFolder(bmsvc.toolbarFolder, smartBookmarksFolderTitle,
                                               0);
 
         // XXX should this be a pref?  see bug #399268
@@ -597,9 +612,9 @@ BrowserGlue.prototype = {
         // excludeQueries=1 so that user created "saved searches" 
         // and these queries (added automatically) are excluded
         var recentlyBookmarkedItem = bmsvc.insertBookmark(placesFolder,
-          this._uri("place:folder=" + bookmarksMenuFolder + 
-              "&folder=" + unfiledBookmarksFolder +
-              "&folder=" + toolbarFolder +
+          this._uri("place:folder=BOOKMARKS_MENU" + 
+              "&folder=UNFILED_BOOKMARKS" +
+              "&folder=TOOLBAR" +
               "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
               "&sort=" +
               Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +

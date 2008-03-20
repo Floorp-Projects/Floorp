@@ -176,9 +176,13 @@ _TEST_FILES_B = \
 	test_2d.composite.transparent.copy.html \
 	test_2d.composite.transparent.lighter.html \
 	test_2d.composite.image.source-over.html \
-	test_2d.composite.image.destination-over.html \
-	test_2d.composite.image.destination-out.html \
+	test_2d.composite.image.source-in.html \
+	test_2d.composite.image.source-out.html \
 	test_2d.composite.image.source-atop.html \
+	test_2d.composite.image.destination-over.html \
+	test_2d.composite.image.destination-in.html \
+	test_2d.composite.image.destination-out.html \
+	test_2d.composite.image.destination-atop.html \
 	test_2d.composite.image.xor.html \
 	test_2d.composite.image.copy.html \
 	test_2d.composite.image.lighter.html \
@@ -259,7 +263,6 @@ _TEST_FILES_C = \
 	test_2d.gradient.radial.invalid.html \
 	test_2d.gradient.radial.inside1.html \
 	test_2d.gradient.radial.inside2.html \
-	test_2d.gradient.radial.inside3.html \
 	test_2d.gradient.radial.outside1.html \
 	test_2d.gradient.radial.cone.front.html \
 	test_2d.gradient.radial.cone.bottom.html \
@@ -318,10 +321,11 @@ _TEST_FILES_C = \
 	test_2d.line.join.closed.html \
 	test_2d.line.join.zeroline.join.html \
 	test_2d.line.cap.open.html \
-	test_2d.line.cap.closed.html \
 	test_2d.line.cap.zeroline.round.html \
 	test_2d.line.cap.zeroline.square.html \
 	test_2d.line.miter.exceeded.html \
+	test_2d.line.miter.rightangle.html \
+	test_2d.line.miter.lineedge.html \
 	test_2d.line.cross.html \
 	test_2d.line.union.html \
 	test_2d.clearRect.basic.html \
@@ -518,33 +522,28 @@ ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 #	test_2d.line.miter.within.html \
 #	$(NULL)
 
+# This is an issue with Quartz's handling of radial gradients and some numeric
+# imprecision that results in errors here.
+_TEST_FILES_D += test_2d.gradient.radial.inside3.html
+
+# This is another Quartz bug -- closed paths that don't lie fully within the
+# destination bounds seem to have problems with the BEVEL/SQUARE join/cap combo.
+# The joins are rendered as if with MITER; the correct behaviour is also seen
+# if BUTT is used instead of SQUARE.
+_TEST_FILES_D += test_2d.line.cap.closed.html
+
 # test_2d.line.cap.zerobezier.round.html disabled for now, from above
-
-# These are failing due to different quartz implementations of these operators when
-# images are in play.  Bug 413026.
-_TEST_FILES_E += \
-	test_2d.composite.image.destination-in.html \
-	test_2d.composite.image.destination-atop.html \
-	test_2d.composite.image.source-in.html \
-	test_2d.composite.image.source-out.html \
-	$(NULL)
-endif
-
-# Tests that fail on non-Mac (bug 401791)
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-_TEST_FILES_E += \
-	test_2d.line.miter.rightangle.html \
-	test_2d.line.miter.lineedge.html \
-	$(NULL)
 endif
 
 # Tests that fail on non-Mac (bug 407107)
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 _TEST_FILES_E += \
 	test_2d.path.rect.selfintersect.html \
-	test_2d.path.rect.zero.6.html \
 	$(NULL)
 endif
+
+# This test is bogus according to the spec; see bug 407107
+# test_2d.path.rect.zero.6.html
 
 # split up into groups to work around command-line length limits
 libs:: $(_TEST_FILES_A)

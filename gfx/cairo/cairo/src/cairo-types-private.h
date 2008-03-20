@@ -313,4 +313,11 @@ typedef enum {
     CAIRO_STOCK_TRANSPARENT
 } cairo_stock_t;
 
+typedef enum _cairo_image_transparency {
+    CAIRO_IMAGE_IS_OPAQUE,
+    CAIRO_IMAGE_HAS_BILEVEL_ALPHA,
+    CAIRO_IMAGE_HAS_ALPHA,
+    CAIRO_IMAGE_UNKNOWN
+} cairo_image_transparency_t;
+
 #endif /* CAIRO_TYPES_PRIVATE_H */

@@ -121,6 +121,8 @@ interface nsINavBookmarkObserver : nsISupports
    * property = "uri": value = new uri spec.
    * property = "tags: (tags set for the bookmarked uri have changed)
    *             value = empty string.
+   * property = "dateAdded": value = PRTime when the item was first added
+   * property = "lastModified": value = PRTime when the item was last modified
    * aIsAnnotationProperty = true: value = empty string.
    */
   void onItemChanged(in long long aBookmarkId, in ACString aProperty,

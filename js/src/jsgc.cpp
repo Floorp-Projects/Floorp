@@ -427,10 +427,11 @@ JS_STATIC_ASSERT(1 <= js_gcArenasPerChunk &&
  *
  * where "/" denotes normal real division,
  *       ceil(r) gives the least integer not smaller than the number r,
- *       s is thing's size in bytes,
- *       B is number of bits per byte or JS_BITS_PER_BYTE,
- *       M is the size of the available space in the arena in bytes or
- *       M == GC_ARENA_SIZE - sizeof(JSGCArenaInfo) or ARENA_INFO_OFFSET.
+ *       s is the number of words in jsdouble,
+ *       B is number of bits per word or B == JS_BITS_PER_WORD
+ *       M is the number of words in the arena before JSGCArenaInfo or
+ *       M == (GC_ARENA_SIZE - sizeof(JSGCArenaInfo)) / sizeof(jsuword).
+ *       M == ARENA_INFO_OFFSET / sizeof(jsuword)
  *
  * We rewrite the inequality as
  *
@@ -472,37 +473,51 @@ JS_STATIC_ASSERT(1 <= js_gcArenasPerChunk &&
  *   ceil(floor(M/X)*X) <= ceil(M) == M.
  *
  * Thus the value of (4) gives the maximum n satisfying (1).
+ *
+ * For the final result we observe that in (4)
+ *
+ *    M*B == ARENA_INFO_OFFSET / sizeof(jsuword) * JS_BITS_PER_WORD
+ *        == ARENA_INFO_OFFSET * JS_BITS_PER_BYTE
+ *
+ *  and
+ *
+ *    B*s == JS_BITS_PER_WORD * sizeof(jsdouble) / sizeof(jsuword)
+ *        == JS_BITS_PER_DOUBLE.
  */
-JS_STATIC_ASSERT(sizeof(JSGCArenaInfo) % sizeof(jsuword) == 0);
-
 #define DOUBLES_PER_ARENA                                                     \
     ((ARENA_INFO_OFFSET * JS_BITS_PER_BYTE) / (JS_BITS_PER_DOUBLE + 1))
 
-#define DOUBLES_ARENA_BITMAP_SIZE                                             \
-    JS_HOWMANY(DOUBLES_PER_ARENA, JS_BITS_PER_BYTE)
-
 /*
- * Check that DOUBLES_PER_ARENA has the correct value.
+ * Check that  ARENA_INFO_OFFSET and sizeof(jsdouble) divides sizeof(jsuword).
  */
+JS_STATIC_ASSERT(ARENA_INFO_OFFSET % sizeof(jsuword) == 0);
+JS_STATIC_ASSERT(sizeof(jsdouble) % sizeof(jsuword) == 0);
+JS_STATIC_ASSERT(sizeof(jsbitmap) == sizeof(jsuword));
+
+#define DOUBLES_ARENA_BITMAP_WORDS                                            \
+    (JS_HOWMANY(DOUBLES_PER_ARENA, JS_BITS_PER_WORD))
+
+/* Check that DOUBLES_PER_ARENA indeed maximises (1). */
 JS_STATIC_ASSERT(DOUBLES_PER_ARENA * sizeof(jsdouble) +
-                 DOUBLES_ARENA_BITMAP_SIZE <=
+                 DOUBLES_ARENA_BITMAP_WORDS * sizeof(jsuword) <=
                  ARENA_INFO_OFFSET);
 
 JS_STATIC_ASSERT((DOUBLES_PER_ARENA + 1) * sizeof(jsdouble) +
-                 JS_HOWMANY((DOUBLES_PER_ARENA + 1), JS_BITS_PER_BYTE) >
+                 sizeof(jsuword) *
+                 JS_HOWMANY((DOUBLES_PER_ARENA + 1), JS_BITS_PER_WORD) >
                  ARENA_INFO_OFFSET);
 
 /*
- * When DOUBLES_PER_ARENA % JS_BITS_PER_BYTE != 0, some bits in the last byte
- * of the occupation bitmap are unused.
+ * When DOUBLES_PER_ARENA % BITS_PER_DOUBLE_FLAG_UNIT != 0, some bits in the
+ * last byte of the occupation bitmap are unused.
  */
 #define UNUSED_DOUBLE_BITMAP_BITS                                             \
-    (DOUBLES_ARENA_BITMAP_SIZE * JS_BITS_PER_BYTE - DOUBLES_PER_ARENA)
+    (DOUBLES_ARENA_BITMAP_WORDS * JS_BITS_PER_WORD - DOUBLES_PER_ARENA)
 
-JS_STATIC_ASSERT(UNUSED_DOUBLE_BITMAP_BITS < JS_BITS_PER_BYTE);
+JS_STATIC_ASSERT(UNUSED_DOUBLE_BITMAP_BITS < JS_BITS_PER_WORD);
 
 #define DOUBLES_ARENA_BITMAP_OFFSET                                           \
-    (ARENA_INFO_OFFSET - DOUBLES_ARENA_BITMAP_SIZE)
+    (ARENA_INFO_OFFSET - DOUBLES_ARENA_BITMAP_WORDS * sizeof(jsuword))
 
 #define CHECK_DOUBLE_ARENA_INFO(arenaInfo)                                    \
     (JS_ASSERT(IS_ARENA_INFO_ADDRESS(arenaInfo)),                             \
@@ -512,17 +527,17 @@ JS_STATIC_ASSERT(UNUSED_DOUBLE_BITMAP_BITS < JS_BITS_PER_BYTE);
  * Get the start of the bitmap area containing double mark flags in the arena.
  * To access the flag the code uses
  *
- *   bitmapStart[index / JS_BITS_PER_BYTE] & JS_BIT(index % JS_BITS_PER_BYTE)
+ *   JS_TEST_BIT(bitmapStart, index)
  *
  * That is, compared with the case of arenas with non-double things, we count
  * flags from the start of the bitmap area, not from the end.
  */
-#define DOUBLE_ARENA_BITMAP(arenaInfo)                                         \
-    (CHECK_DOUBLE_ARENA_INFO(arenaInfo),                                       \
-     (uint8 *) arenaInfo - DOUBLES_ARENA_BITMAP_SIZE)
+#define DOUBLE_ARENA_BITMAP(arenaInfo)                                        \
+    (CHECK_DOUBLE_ARENA_INFO(arenaInfo),                                      \
+     (jsbitmap *) arenaInfo - DOUBLES_ARENA_BITMAP_WORDS)
 
 #define DOUBLE_THING_TO_INDEX(thing)                                          \
-    (CHECK_DOUBLE_ARENA_INFO(THING_TO_ARENA(thing)),                    \
+    (CHECK_DOUBLE_ARENA_INFO(THING_TO_ARENA(thing)),                          \
      JS_ASSERT(((jsuword) (thing) & GC_ARENA_MASK) <                          \
                DOUBLES_ARENA_BITMAP_OFFSET),                                  \
      ((uint32) (((jsuword) (thing) & GC_ARENA_MASK) / sizeof(jsdouble))))
@@ -530,8 +545,8 @@ JS_STATIC_ASSERT(UNUSED_DOUBLE_BITMAP_BITS < JS_BITS_PER_BYTE);
 static void
 ClearDoubleArenaFlags(JSGCArenaInfo *a)
 {
-    uint8 *bitmap;
-    uintN mask, nused;
+    jsbitmap *bitmap, mask;
+    uintN nused;
 
     /*
      * When some high bits in the last byte of the double occupation bitmap
@@ -542,20 +557,20 @@ ClearDoubleArenaFlags(JSGCArenaInfo *a)
      * Note that the code works correctly with UNUSED_DOUBLE_BITMAP_BITS == 0.
      */
     bitmap = DOUBLE_ARENA_BITMAP(a);
-    memset(bitmap, 0, DOUBLES_ARENA_BITMAP_SIZE - 1);
-    mask = JS_BITMASK(UNUSED_DOUBLE_BITMAP_BITS);
-    nused = JS_BITS_PER_BYTE - UNUSED_DOUBLE_BITMAP_BITS;
-    bitmap[DOUBLES_ARENA_BITMAP_SIZE - 1] = (uint8) (mask << nused);
+    memset(bitmap, 0, (DOUBLES_ARENA_BITMAP_WORDS - 1) * sizeof *bitmap);
+    mask = ((jsbitmap) 1 << UNUSED_DOUBLE_BITMAP_BITS) - 1;
+    nused = JS_BITS_PER_WORD - UNUSED_DOUBLE_BITMAP_BITS;
+    bitmap[DOUBLES_ARENA_BITMAP_WORDS - 1] = mask << nused;
 }
 
 static JS_INLINE JSBool
 IsMarkedDouble(JSGCArenaInfo *a, uint32 index)
 {
-    uint8 *bitmap;
+    jsbitmap *bitmap;
 
     JS_ASSERT(a->u.hasMarkedDoubles);
-    bitmap = DOUBLE_ARENA_BITMAP(a) + (index >> JS_BITS_PER_BYTE_LOG2);
-    return *bitmap & JS_BIT(index & (JS_BITS_PER_BYTE - 1));
+    bitmap = DOUBLE_ARENA_BITMAP(a);
+    return JS_TEST_BIT(bitmap, index);
 }
 
 /*
@@ -568,13 +583,13 @@ IsMarkedDouble(JSGCArenaInfo *a, uint32 index)
  *   3. Or to a special sentinel value indicating that there are no arenas
  *      to check for unmarked doubles.
  *
- * We set the sentinel to (uint8 *) ARENA_INFO_OFFSET so the single check
+ * We set the sentinel to ARENA_INFO_OFFSET so the single check
  *
  *   ((jsuword) nextDoubleFlags & GC_ARENA_MASK) == ARENA_INFO_OFFSET
  *
  * will cover both the second and the third cases.
  */
-#define DOUBLE_BITMAP_SENTINEL  ((uint8 *) ARENA_INFO_OFFSET)
+#define DOUBLE_BITMAP_SENTINEL  ((jsbitmap *) ARENA_INFO_OFFSET)
 
 #ifdef JS_THREADSAFE
 /*
@@ -1904,10 +1919,10 @@ static JSGCDoubleCell *
 RefillDoubleFreeList(JSContext *cx)
 {
     JSRuntime *rt;
-    uint8 *doubleFlags;
+    jsbitmap *doubleFlags, usedBits;
     JSBool doGC;
     JSGCArenaInfo *a;
-    uintN usedBits, bit, index;
+    uintN bit, index;
     JSGCDoubleCell *cell, *list, *lastcell;
 
     JS_ASSERT(!cx->doubleFreeList);
@@ -1973,25 +1988,25 @@ RefillDoubleFreeList(JSContext *cx)
         }
 
         /*
-         * When doubleFlags points the last bitmap's byte in the arena, its
+         * When doubleFlags points the last bitmap's word in the arena, its
          * high bits corresponds to non-existing cells. ClearDoubleArenaFlags
-         * sets such bits to 1. Thus even for this last byte *doubleFlags its
-         * bits is unset only when the corresponding cell exists and free.
+         * sets such bits to 1. Thus even for this last word its bit is unset
+         * iff the corresponding cell exists and free.
          */
-        if (*doubleFlags != JS_BITMASK(JS_BITS_PER_BYTE))
+        if (*doubleFlags != (jsbitmap) -1)
             break;
         ++doubleFlags;
     }
 
     rt->gcDoubleArenaList.nextDoubleFlags = doubleFlags + 1;
     usedBits = *doubleFlags;
-    JS_ASSERT(usedBits != JS_BITMASK(JS_BITS_PER_BYTE));
-    *doubleFlags = (uint8) JS_BITMASK(JS_BITS_PER_BYTE);
+    JS_ASSERT(usedBits != (jsbitmap) -1);
+    *doubleFlags = (jsbitmap) -1;
     JS_UNLOCK_GC(rt);
 
     /*
      * Find the index corresponding to the first bit in *doubleFlags. The last
-     * bit will have "index + JS_BITS_PER_BYTE - 1".
+     * bit will have "index + JS_BITS_PER_WORD - 1".
      */
     index = ((uintN) ((jsuword) doubleFlags & GC_ARENA_MASK) -
              DOUBLES_ARENA_BITMAP_OFFSET) * JS_BITS_PER_BYTE;
@@ -1999,9 +2014,9 @@ RefillDoubleFreeList(JSContext *cx)
 
     if (usedBits == 0) {
         /* The common case when all doubles from *doubleFlags are free. */
-        JS_ASSERT(index + JS_BITS_PER_BYTE <= DOUBLES_PER_ARENA);
+        JS_ASSERT(index + JS_BITS_PER_WORD <= DOUBLES_PER_ARENA);
         list = cell;
-        for (lastcell = cell + JS_BITS_PER_BYTE - 1; cell != lastcell; ++cell)
+        for (lastcell = cell + JS_BITS_PER_WORD - 1; cell != lastcell; ++cell)
             cell->link = cell + 1;
         lastcell->link = NULL;
     } else {
@@ -2014,15 +2029,15 @@ RefillDoubleFreeList(JSContext *cx)
          * when bit is one of the unused bits. We do not check for such bits
          * explicitly as they must be set and the "if" check filters them out.
          */
-        JS_ASSERT(index + JS_BITS_PER_BYTE <=
+        JS_ASSERT(index + JS_BITS_PER_WORD <=
                   DOUBLES_PER_ARENA + UNUSED_DOUBLE_BITMAP_BITS);
-        bit = JS_BITS_PER_BYTE;
+        bit = JS_BITS_PER_WORD;
         cell += bit;
         list = NULL;
         do {
             --bit;
             --cell;
-            if (!(JS_BIT(bit) & usedBits)) {
+            if (!(((jsbitmap) 1 << bit) & usedBits)) {
                 JS_ASSERT(index + bit < DOUBLES_PER_ARENA);
                 JS_ASSERT_IF(index + bit == DOUBLES_PER_ARENA - 1, !list);
                 cell->link = list;
@@ -2031,7 +2046,7 @@ RefillDoubleFreeList(JSContext *cx)
         } while (bit != 0);
     }
     JS_ASSERT(list);
-    JS_COUNT_OPERATION(cx, JSOW_ALLOCATION * JS_BITS_PER_BYTE);
+    JS_COUNT_OPERATION(cx, JSOW_ALLOCATION * JS_BITS_PER_WORD);
 
     /*
      * We delegate assigning cx->doubleFreeList to js_NewDoubleInRootedValue as
@@ -2457,8 +2472,7 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
             a->u.hasMarkedDoubles = JS_TRUE;
         }
         index = DOUBLE_THING_TO_INDEX(thing);
-        DOUBLE_ARENA_BITMAP(a)[index >> JS_BITS_PER_BYTE_LOG2] |=
-            (uint8) JS_BIT(index & (JS_BITS_PER_BYTE - 1));
+        JS_SET_BIT(DOUBLE_ARENA_BITMAP(a), index);
         goto out;
 
       case JSTRACE_STRING:
@@ -2660,9 +2674,11 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
          * Don't mark what has not been pushed yet, or what has been
          * popped already.
          */
-        nslots = (uintN) (fp->sp - fp->spbase);
-        JS_ASSERT(nslots <= fp->script->depth);
-        TRACE_JSVALS(trc, nslots, fp->spbase, "operand");
+        if (fp->regs) {
+            nslots = (uintN) (fp->regs->sp - fp->spbase);
+            JS_ASSERT(nslots <= fp->script->depth);
+            TRACE_JSVALS(trc, nslots, fp->spbase, "operand");
+        }
     }
 
     /* Allow for primitive this parameter due to JSFUN_THISP_* flags. */

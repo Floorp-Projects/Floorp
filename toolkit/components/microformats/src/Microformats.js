@@ -69,9 +69,17 @@ var Microformats = {
     for (let i = 0; i < microformatNodes.length; i++) {
       /* If showHidden undefined or false, don't add microformats to the list that aren't visible */
       if (!options || !options.hasOwnProperty("showHidden") || !options.showHidden) {
-        var box = (microformatNodes[i].ownerDocument || microformatNodes[i]).getBoxObjectFor(microformatNodes[i]);
-        if ((box.height == 0) || (box.width == 0)) {
-          continue;
+        if (microformatNodes[i].ownerDocument) {
+          if (microformatNodes[i].getBoundingClientRect) {
+            var box = microformatNodes[i].getBoundingClientRect();
+            box.width = box.right - box.left;
+            box.height = box.bottom - box.top;
+          } else {
+            var box = microformatNodes[i].ownerDocument.getBoxObjectFor(microformatNodes[i]);
+          }
+          if ((box.height == 0) || (box.width == 0)) {
+            continue;
+          }
         }
       }
       try {
@@ -516,7 +524,10 @@ var Microformats = {
           result = Microformats.parser.HTMLGetter(node, parentnode);
           break;
         case "float":
-          result = parseFloat(Microformats.parser.textGetter(node, parentnode));
+          var asText = Microformats.parser.textGetter(node, parentnode);
+          if (!isNaN(asText)) {
+            result = parseFloat(asText);
+          }
           break;
         case "custom":
           result = prop.customGetter(node, parentnode);
@@ -714,9 +725,20 @@ var Microformats = {
           xpathResult.singleNodeValue.microformat = mfname;
           parentnode = xpathResult.singleNodeValue;
         }
-        /* If the propnode is not a child of the microformat, remove it*/
+        /* If the propnode is not a child of the microformat, and */
+        /* the property belongs to the parent microformat as well, */
+        /* remove it. */
         if (parentnode != mfnode) {
-          propnodes.splice(i,1);
+          var mfNameString = Microformats.getNamesFromNode(parentnode);
+          var mfNames = mfNameString.split(" ");
+          var j;
+          for (j=0; j < mfNames.length; j++) {
+            /* If this property is in the parent microformat, remove the node  */
+            if (Microformats[mfNames[j]].properties[propname]) {
+              propnodes.splice(i,1);;
+              break;
+            }
+          }
         }
       }
       if (propnodes.length > 0) {
@@ -1553,11 +1575,20 @@ function geo(node, validate) {
   }
 }
 geo.prototype.toString = function() {
-  if (this.latitude && this.longitude) {
+  if (this.latitude != undefined) {
+    if (!isFinite(this.latitude) || (this.latitude > 360) || (this.latitude < -360)) {
+      return;
+    }
+  }
+  if (this.longitude != undefined) {
+    if (!isFinite(this.longitude) || (this.longitude > 360) || (this.longitude < -360)) {
+      return;
+    }
+  }
+
+  if ((this.latitude != undefined) && (this.longitude != undefined)) {
     var s;
-    if ((this.node.localName.toLowerCase() != "abbr") && (this.node.localName.toLowerCase() != "html:abbr")) {
-      s = Microformats.parser.textGetter(this.node);
-    } else {
+    if ((this.node.localName.toLowerCase() == "abbr") || (this.node.localName.toLowerCase() == "html:abbr")) {
       s = this.node.textContent;
     }
 
@@ -1607,7 +1638,9 @@ var geo_definition = {
         if (value.match(';')) {
           latlong = value.split(';');
           if (latlong[0]) {
-            return parseFloat(latlong[0]);
+            if (!isNaN(latlong[0])) {
+              return parseFloat(latlong[0]);
+            }
           }
         }
       }
@@ -1622,11 +1655,32 @@ var geo_definition = {
         if (value.match(';')) {
           latlong = value.split(';');
           if (latlong[1]) {
-            return parseFloat(latlong[1]);
+            if (!isNaN(latlong[1])) {
+              return parseFloat(latlong[1]);
+            }
           }
         }
       }
     }
+  },
+  validate: function(node) {
+    var latitude = Microformats.parser.getMicroformatProperty(node, "geo", "latitude");
+    var longitude = Microformats.parser.getMicroformatProperty(node, "geo", "longitude");
+    if (latitude != undefined) {
+      if (!isFinite(latitude) || (latitude > 360) || (latitude < -360)) {
+        throw("Invalid latitude");
+      }
+    } else {
+      throw("No latitude specified");
+    }
+    if (longitude != undefined) {
+      if (!isFinite(longitude) || (longitude > 360) || (longitude < -360)) {
+        throw("Invalid longitude");
+      }
+    } else {
+      throw("No longitude specified");
+    }
+    return true;
   }
 };
 

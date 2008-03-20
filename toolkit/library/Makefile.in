@@ -226,6 +226,10 @@ ifeq ($(OS_ARCH),BeOS)
 EXTRA_DSO_LDOPTS += -lbe -ltracker
 endif
 
+ifeq ($(OS_ARCH),SunOS)
+EXTRA_DSO_LDOPTS += -lelf -ldemangle -lCstd
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,shell32 ole32 uuid version winspool comdlg32 imm32 winmm wsock32 msimg32)
 ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
@@ -248,4 +252,12 @@ endif
 
 ifneq (,$(filter layout-debug,$(MOZ_EXTENSIONS)))
 DEFINES += -DMOZ_ENABLE_EXTENSION_LAYOUT_DEBUG
+endif
+
+ifdef MOZ_MEMORY
+ifneq ($(OS_ARCH),WINNT)
+ifneq ($(OS_ARCH),Darwin)
+EXTRA_DSO_LDOPTS += $(DEPTH)/memory/jemalloc/$(LIB_PREFIX)jemalloc.$(LIB_SUFFIX)
+endif
+endif
 endif

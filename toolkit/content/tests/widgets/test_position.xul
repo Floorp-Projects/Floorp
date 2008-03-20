@@ -23,8 +23,9 @@
                style="overflow: scroll; margin: 1px; padding: 0;">
       <vbox id="innerscroll" width="200" align="start">
         <button id="button1" label="1" width="90" maxwidth="100"
-                height="35" maxheight="50"
-                style="margin: 5px; border: 4px; padding: 7px; -moz-appearance: none;"/>
+                minheight="25" height="35" maxheight="50"
+                style="min-width: 80px; margin: 5px; border: 4px; padding: 7px;
+                       -moz-appearance: none;"/>
         <menu id="menu">
           <menupopup id="popup" style="-moz-appearance: none; margin:0; border: 0; padding: 0;"
                                 onpopupshown="menuOpened()"

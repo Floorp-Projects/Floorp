@@ -26,6 +26,7 @@
   height: 16px;
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
   -moz-margin-start: 2px;
+  margin-top: 1px;
 }
 
 .searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box {

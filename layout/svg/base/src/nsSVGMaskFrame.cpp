@@ -166,10 +166,13 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
   gfx->Restore();
 
   nsRefPtr<gfxPattern> pattern = gfx->PopGroup();
-  if (!pattern)
+  if (!pattern || pattern->CairoStatus())
     return nsnull;
 
   nsRefPtr<gfxASurface> surface = pattern->GetSurface();
+  if (!surface || surface->CairoStatus())
+    return nsnull;
+
   surface->SetDeviceOffset(gfxPoint(0,0));
 
   gfxRect clipExtents = gfx->GetClipExtents();
@@ -210,8 +213,8 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
   nsSVGUtils::UnPremultiplyImageDataAlpha(data, stride, rect);
   nsSVGUtils::ConvertImageDataToLinearRGB(data, stride, rect);
 
-  for (PRUint32 y = 0; y < surfaceSize.height; y++)
-    for (PRUint32 x = 0; x < surfaceSize.width; x++) {
+  for (PRInt32 y = 0; y < surfaceSize.height; y++)
+    for (PRInt32 x = 0; x < surfaceSize.width; x++) {
       PRUint8 *pixel = data + stride * y + 4 * x;
 
       /* linearRGB -> intensity */

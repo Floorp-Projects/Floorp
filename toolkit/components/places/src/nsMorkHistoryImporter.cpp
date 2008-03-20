@@ -158,7 +158,12 @@ AddToHistoryCB(const nsCSubstring &aRowID,
       : (PRInt32) nsINavHistoryService::TRANSITION_LINK;
     nsNavHistory *history = data->history;
 
-    history->AddPageWithVisit(uri, nsDependentString(title, titleLength),
+    nsAutoString titleStr;
+    if (titleLength)
+      titleStr = nsDependentString(title, titleLength);
+    else
+      titleStr.SetIsVoid(PR_TRUE);
+    history->AddPageWithVisit(uri, titleStr,
                               PR_FALSE, isTyped, count, transition, date);
   }
   return PL_DHASH_NEXT;

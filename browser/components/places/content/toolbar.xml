@@ -558,7 +558,7 @@
                 break;
               }
             }
-            var title = PlacesUtils.getBestTitle(aNode);
+            var title = PlacesUIUtils.getBestTitle(aNode);
           }
 
           if (PlacesUtils.nodeIsSeparator(aNode)) {
@@ -751,7 +751,6 @@
             var xulNode = this._self.childNodes[i];
             if (PlacesUtils.nodeIsFolder(xulNode.node) &&
                 !PlacesUtils.nodeIsReadOnly(xulNode.node)) {
-              NS_ASSERT(xulNode.getAttribute("type") == "menu");
               // This is a folder. If the mouse is in the left 25% of the
               // node, drop to the left of the folder.  If it's in the middle
               // 50%, drop into the folder.  If it's past that, drop to the right.
@@ -779,8 +778,8 @@
               if (event.clientX < xulNode.boxObject.x + (xulNode.boxObject.width / 2)) {
                 // Drop to the left of this bookmark.
                 dropPoint.ip =
-	        new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
-	                           i, -1);
+	                new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
+	                                   i, -1);
                 dropPoint.beforeIndex = i;
                 return dropPoint;
               }
@@ -788,8 +787,8 @@
           }
           // Should drop to the right of the last node.
           dropPoint.ip =
-	  new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
-	                     -1, 1);
+        	  new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
+	                             -1, 1);
           dropPoint.beforeIndex = -1;
           return dropPoint;
         },
@@ -826,7 +825,8 @@
         },
 
         canDrop: function TBV_DO_canDrop(event, session) {
-          return PlacesControllerDragHelper.canDrop();
+          var ip = this._self.insertionPoint;
+          return ip && PlacesControllerDragHelper.canDrop(ip);
         },
 
         onDragOver: function TBV_DO_onDragOver(event, flavor, session) {
@@ -909,7 +909,7 @@
 
         getSupportedFlavours: function TBV_DO_getSupportedFlavours() {
           var flavorSet = new FlavourSet();
-          var types = PlacesUtils.GENERIC_VIEW_DROP_TYPES;
+          var types = PlacesUIUtils.GENERIC_VIEW_DROP_TYPES;
           for (var i = 0; i < types.length; ++i)
             flavorSet.appendFlavour(types[i]);
           return flavorSet;
@@ -968,7 +968,7 @@
             return;
           }
 
-          var label = PlacesUtils.getString("bookmarksMenuEmptyFolder");
+          var label = PlacesUIUtils.getString("bookmarksMenuEmptyFolder");
           aPopup._emptyMenuItem = document.createElement("menuitem");
           aPopup._emptyMenuItem.setAttribute("label", label);
           aPopup._emptyMenuItem.setAttribute("disabled", true);
@@ -982,7 +982,7 @@
         <parameter name="aBefore"/>
         <body><![CDATA[
           var element =
-            PlacesUtils.createMenuItemForNode(aChild, this._containerNodesMap);
+            PlacesUIUtils.createMenuItemForNode(aChild, this._containerNodesMap);
 
           if (aBefore)
             aParentPopup.insertBefore(element, aBefore);
@@ -1006,7 +1006,7 @@
           if (aPopup._built)
             return;
 
-          PlacesUtils.cleanPlacesPopup(aPopup);
+          PlacesUIUtils.cleanPlacesPopup(aPopup);
 
           var resultNode = aPopup._resultNode;
           if (!resultNode.containerOpen)
@@ -1029,23 +1029,6 @@
               this._showEmptyMenuItem(aPopup);
           }
           aPopup._built = true;
-        ]]></body>
-      </method>
-
-      <method name="_isChevronChild">
-        <parameter name="aChild"/>
-        <body><![CDATA[
-          if (!this._chevron.firstChild.hasAttribute("type"))
-            return false;
-
-          var parent = aChild.parentNode;
-          while (parent != this) {
-            if (parent == this._chevron)
-              return true;
-
-            parent = parent.parentNode;
-          }
-          return false;
         ]]></body>
       </method>
     </implementation>
@@ -1078,36 +1061,30 @@
           nsDragAndDrop.dragExit(event, this._DNDObserver);
       ]]></handler>
       <handler event="popupshowing" phase="capturing"><![CDATA[
-        var target = event.originalTarget;
+        var popup = event.originalTarget;
 
-        // the chevron has its own view
-        if (this._isChevronChild(target))
-          return;
+        // Avoid handling popupshowing of inner views
+        if (popup._resultNode && PlacesUIUtils.getViewForNode(popup) == this)
+          this._containerPopupShowing(popup);
 
-        if (target._resultNode)
-          this._containerPopupShowing(target);
-
-        var targetParent = target.parentNode;
-        if (targetParent.localName == "toolbarbutton" &&
+        var parent = popup.parentNode;
+        if (parent.localName == "toolbarbutton" &&
             !PlacesControllerDragHelper.getSession())
-          this._openedMenuButton = targetParent;
+          this._openedMenuButton = parent;
       ]]></handler>
       <handler event="popuphidden"><![CDATA[
-        var target = event.originalTarget;
-        if (!target._resultNode)
-          return;
+        var popup = event.originalTarget;
 
-        // the chevron has its own view
-        if (this._isChevronChild(target))
-          return;
+        // Avoid handling popupshowing of inner views
+        if (popup._resultNode && PlacesUIUtils.getViewForNode(popup) == this) {
+          // UI performance: folder queries are cheap, keep the resultnode open
+          // so we don't rebuild its contents whenever the popup is reopened.
+          if (!PlacesUtils.nodeIsFolder(popup._resultNode))
+            popup._resultNode.containerOpen = false;
+        }
 
-        // UI performance: folder queries are cheap, keep the resultnode open
-        // so we don't rebuild its contents whenever the popup is reopened.
-        if (!PlacesUtils.nodeIsFolder(target._resultNode))
-          target._resultNode.containerOpen = false;
-
-        var targetParent = target.parentNode;
-        if (targetParent.localName == "toolbarbutton" &&
+        var parent = popup.parentNode;
+        if (parent.localName == "toolbarbutton" &&
             !PlacesControllerDragHelper.getSession())
           this._openedMenuButton = null;
       ]]></handler>

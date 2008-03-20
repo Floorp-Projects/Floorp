@@ -456,7 +456,7 @@ var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch
 var ghist = Cc["@mozilla.org/browser/global-history;2"].getService(Ci.nsIGlobalHistory2);
 
 /*
-test 1: NO EXPIRATION CRITERIA MET
+test 1: NO EXPIRATION CRITERIA MET (INSIDE SITES CAP)
 
 1. zero visits > {browser.history_expire_days}
 2. zero visits > {browser.history_expire_days_min}
@@ -486,7 +486,7 @@ function startExpireNeither() {
   histsvc.addVisit(testURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WITH_HISTORY);
 
-  // set visit cap to 2
+  // set sites cap to 2
   prefs.setIntPref("browser.history_expire_sites", 2);
   // set date minimum to 2
   prefs.setIntPref("browser.history_expire_days_min", 2);
@@ -546,7 +546,7 @@ function startExpireDaysOnly() {
   // add un-expirable visit
   histsvc.addVisit(uri("http://unexpirable.com"), (Date.now() - (86400 * 1000)) * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
 
-  // set visit cap to 2
+  // set sites cap to 2
   prefs.setIntPref("browser.history_expire_sites", 2);
   // set date minimum to 2
   prefs.setIntPref("browser.history_expire_days_min", 2);
@@ -582,16 +582,16 @@ test 3: MIN-AGE+VISIT-CAP CRITERIA MET
 steps:
   - clear history
   - reset observer
-  - add a visit, 2 days old
-  - add a visit, 2 days old
+  - add a visit to an url, 2 days old
+  - add a visit to another url, today
   - set browser.history_expire_days to 3
   - set browser.history_expire_days_min to 1
   - set browser.history_expire_sites to 1
   - kick off incremental expiration
 
 confirmation:
-  - check onPageExpired, confirm our visit was expired
-  - query for the visit, confirm it's not there
+  - check onPageExpired, confirm our oldest visit was expired
+  - query for the oldest visit, confirm it's not there
 */
 function startExpireBoth() {
   // setup
@@ -604,10 +604,9 @@ function startExpireBoth() {
   var age = (Date.now() - (86400 * 2 * 1000)) * 1000;
   dump("AGE: " + age + "\n");
   histsvc.addVisit(testURI, age, null, histsvc.TRANSITION_TYPED, false, 0);
-  histsvc.addVisit(testURI, age, null, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WITH_HISTORY);
 
-  // set visit cap to 1
+  // set sites cap to 1
   prefs.setIntPref("browser.history_expire_sites", 1);
   // set date max to 3
   prefs.setIntPref("browser.history_expire_days", 3);
@@ -615,7 +614,8 @@ function startExpireBoth() {
   prefs.setIntPref("browser.history_expire_days_min", 1);
 
   // trigger expiration
-  ghist.addURI(triggerURI, false, true, null);
+  histsvc.addVisit(triggerURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
+  annosvc.setPageAnnotation(triggerURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WITH_HISTORY);
 
   // setup confirmation
   do_timeout(3600, "checkExpireBoth();"); // incremental expiration timer is 3500
@@ -625,7 +625,164 @@ function checkExpireBoth() {
   try {
     do_check_eq(observer.expiredURI, testURI.spec);
     do_check_eq(annosvc.getPageAnnotationNames(testURI, {}).length, 0);
+    do_check_eq(annosvc.getPageAnnotationNames(triggerURI, {}).length, 1);
   } catch(ex) {}
   dump("done expiration test 3\n");
+  startExpireNeitherOver()
+}
+
+/*
+test 4: NO EXPIRATION CRITERIA MET (OVER SITES CAP)
+
+1. zero visits > {browser.history_expire_days}
+2. zero visits > {browser.history_expire_days_min}
+   AND total visited site count > {browser.history_expire_sites}
+
+steps:
+  - clear history
+  - reset observer
+  - add a visit to an url, w/ current date
+  - add a visit to another url, w/ current date
+  - set browser.history_expire_days to 3
+  - set browser.history_expire_days_min to 2
+  - set browser.history_expire_sites to 1
+  - kick off incremental expiration
+
+confirmation:
+  - check onPageExpired, confirm nothing was expired
+  - query for the visit, confirm it's there
+
+*/
+function startExpireNeitherOver() {
+  dump("startExpireNeitherOver()\n");
+  // setup
+  histsvc.removeAllPages();
+  observer.expiredURI = null;
+
+  // add data
+  histsvc.addVisit(testURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
+  annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WITH_HISTORY);
+
+  // set sites cap to 1
+  prefs.setIntPref("browser.history_expire_sites", 1);
+  // set date minimum to 2
+  prefs.setIntPref("browser.history_expire_days_min", 2);
+  // set date maximum to 3
+  prefs.setIntPref("browser.history_expire_days", 3);
+
+  // trigger expiration
+  histsvc.addVisit(triggerURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
+  annosvc.setPageAnnotation(triggerURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WITH_HISTORY);
+
+  // setup confirmation
+  do_timeout(3600, "checkExpireNeitherOver();"); // incremental expiration timer is 3500
+}
+
+function checkExpireNeitherOver() {
+  dump("checkExpireNeitherOver()\n");
+  try {
+    do_check_eq(observer.expiredURI, null);
+    do_check_eq(annosvc.getPageAnnotationNames(testURI, {}).length, 1);
+    do_check_eq(annosvc.getPageAnnotationNames(triggerURI, {}).length, 1);
+  } catch(ex) {
+    do_throw(ex);
+  }
+  dump("done incremental expiration test 4\n");
+  startExpireHistoryDisabled();
+}
+
+/*
+test 5: HISTORY DISABLED (HISTORY_EXPIRE_DAYS = 0), EXPIRE EVERYTHING
+
+1. special case when history is disabled, expire all visits
+
+steps:
+  - clear history
+  - reset observer
+  - add a visit to an url, w/ current date
+  - set browser.history_expire_days to 0
+  - kick off incremental expiration
+
+confirmation:
+  - check onPageExpired, confirm visit was expired
+  - query for the visit, confirm it's not there
+
+*/
+function startExpireHistoryDisabled() {
+  dump("startExpireHistoryDisabled()\n");
+  // setup
+  histsvc.removeAllPages();
+  observer.expiredURI = null;
+
+  // add data
+  histsvc.addVisit(testURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
+  annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WITH_HISTORY);
+
+  // set date maximum to 0
+  prefs.setIntPref("browser.history_expire_days", 0);
+
+  // setup confirmation
+  do_timeout(3600, "checkExpireHistoryDisabled();"); // incremental expiration timer is 3500
+}
+
+function checkExpireHistoryDisabled() {
+  dump("checkExpireHistoryDisabled()\n");
+  try {
+    do_check_eq(observer.expiredURI, testURI.spec);
+    do_check_eq(annosvc.getPageAnnotationNames(testURI, {}).length, 0);
+  } catch(ex) {
+    do_throw(ex);
+  }
+  dump("done incremental expiration test 5\n");
+  startExpireBadPrefs();
+}
+
+/*
+test 6: BAD EXPIRATION PREFS (MAX < MIN)
+
+1. if max < min we force max = min to avoid deleting wrong visits
+
+steps:
+  - clear history
+  - reset observer
+  - add a visit to an url, 10 days ago
+  - set browser.history_expire_days to 1
+  - set browser.history_expire_days_min to 20
+  - kick off incremental expiration
+
+confirmation:
+  - check onPageExpired, confirm nothing was expired
+  - query for the visit, confirm it's there
+
+*/
+function startExpireBadPrefs() {
+  dump("startExpireBadPrefs()\n");
+  // setup
+  histsvc.removeAllPages();
+  observer.expiredURI = null;
+
+  // add data
+  var age = (Date.now() - (86400 * 10 * 1000)) * 1000;
+  histsvc.addVisit(testURI, age, null, histsvc.TRANSITION_TYPED, false, 0);
+  annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WITH_HISTORY);
+
+  // set date minimum to 20
+  prefs.setIntPref("browser.history_expire_days_min", 20);
+  // set date maximum to 1
+  prefs.setIntPref("browser.history_expire_days", 1);
+
+  // setup confirmation
+  do_timeout(3600, "checkExpireBadPrefs();"); // incremental expiration timer is 3500
+}
+
+function checkExpireBadPrefs() {
+  dump("checkExpireBadPrefs()\n");
+  try {
+    do_check_eq(observer.expiredURI, null);
+    do_check_eq(annosvc.getPageAnnotationNames(testURI, {}).length, 1);
+  } catch(ex) {
+    do_throw(ex);
+  }
+  dump("done incremental expiration test 6\n");
   do_test_finished();
 }

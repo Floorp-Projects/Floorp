@@ -467,6 +467,9 @@ PROT_ListManager.prototype.updateSuccess_ = function(waitForUpdate) {
     if (delay >= (5 * 60) && this.updateChecker_)
       this.updateChecker_.setDelay(delay * 1000);
   }
+
+  // Let the backoff object know that we completed successfully.
+  this.requestBackoff_.noteServerResponse(200);
 }
 
 /**
@@ -492,9 +495,11 @@ PROT_ListManager.prototype.downloadError_ = function(status) {
   status = parseInt(status, 10);
   this.requestBackoff_.noteServerResponse(status);
 
-  // Try again in a minute
-  this.currentUpdateChecker_ =
-    new G_Alarm(BindToObject(this.checkForUpdates, this), 60000);
+  if (this.requestBackoff_.isErrorStatus(status)) {
+    // Try again in a minute
+    this.currentUpdateChecker_ =
+      new G_Alarm(BindToObject(this.checkForUpdates, this), 60000);
+  }
 }
 
 /**

@@ -76,6 +76,8 @@ STDMETHODIMP
 CAccessibleImage::get_description(BSTR *aDescription)
 {
 __try {
+  *aDescription = NULL;
+
   nsCOMPtr<nsIAccessible> acc(do_QueryInterface(this));
   if (!acc)
     return E_FAIL;
@@ -85,8 +87,13 @@ __try {
   if (NS_FAILED(rv))
     return E_FAIL;
 
-  if (!::SysReAllocStringLen(aDescription, description.get(), description.Length()))
+  if (description.IsEmpty())
+    return S_FALSE;
+
+  *aDescription = ::SysAllocStringLen(description.get(), description.Length());
+  if (!*aDescription)
     return E_OUTOFMEMORY;
+
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;

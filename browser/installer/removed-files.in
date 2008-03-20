@@ -589,6 +589,7 @@ res/bloatcycle.html
 #ifndef XP_MACOSX
 readme.txt
 chrome/icons/default/default.xpm
+libjemalloc.so
 #endif
 #endif
 dictionaries/PL.dic

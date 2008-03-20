@@ -80,6 +80,7 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 28811-2a.html 28811-2-ref.html # bug 38
 == 120834-2i.html 120834-2-ref.html
 == 120834-2j.html 120834-2-ref.html
 == 124903-1.html 124903-1-ref.html
+== 128896.html 128896-ref.html
 == 130767-1.html 130767-1-ref.html
 == 134706-1-left-scrollframe.html 134706-1-left-scrollframe-ref.html
 == 134706-1-left-table.html 134706-1-left-table-ref.html
@@ -184,6 +185,11 @@ fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP == 289480.html#top 289480-ref.html # 
 == 307102-4.html 307102-4-ref.html
 == 308406-1.html 308406-1-ref.html
 == 308406-2.html 308406-2-ref.html
+== 311366-unknown-inline-1.html 311366-unknown-inline-1-ref.html
+== 311366-unknown-block-1.html 311366-unknown-block-1-ref.html
+!= 311366-unknown-block-3.html 311366-unknown-block-3-ref.html
+== 311366-unknown-block-2.html 311366-unknown-block-2-ref.html
+== 311366-unknown-inline-2.html 311366-unknown-inline-2-ref.html
 == 311822-1.html 311822-1-ref-a.html
 == 311822-1.html 311822-1-ref-b.html
 == 315620-1a.html 315620-1-ref.html
@@ -293,6 +299,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 333970-1.html 333970-1-ref.html # bug 3
 == 345267-1b.html 345267-1-ref.html
 == 345267-1c.html 345267-1-ref.html
 == 345267-1d.html 345267-1-ref.html
+!= 345563-sub.xhtml 345563-sup.xhtml 
 == 346774-1a.html 346774-1-ref.html
 == 346774-1b.html 346774-1-ref.html
 == 346774-1c.html 346774-1-ref.html
@@ -673,6 +680,9 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 == 404030-1.html 404030-1-ref.html
 != 404030-1-notref.html 404030-1.html
 != 404030-1-notref2.html 404030-1.html
+== 404123-1.html 404123-1-ref.html
+== 404123-2.html 404123-2-ref.html
+== 404123-3.html 404123-3-ref.html
 == 404180-1.html 404180-1-ref.html
 == 404301-1.html 404301-1-ref.html
 == 404309-1a.html 404309-1-ref.html
@@ -720,7 +730,9 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 == 412607-1b.html 412607-1-ref.html
 == 412679-1.html 412679-1-ref.html
 == 412679-2.html 412679-2-ref.html
-# == 413027-1.html 413027-1-ref.html
+fails == 413027-1.html 413027-1-ref.html
+fails == 413027-2.html 413027-2-ref.html
+fails == 413027-3.html 413027-3-ref.html
 == 413286-1a.html 413286-1-ref.html
 == 413286-1b.html 413286-1-ref.html
 == 413286-1c.html 413286-1-ref.html
@@ -755,3 +767,5 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 == 420351-1.html 420351-1-ref.html
 == 421234-1.html 421234-1-ref.html
 == 421419-1.html 421419-1-ref.html
+== 422394-1.html 422394-1-ref.html
+

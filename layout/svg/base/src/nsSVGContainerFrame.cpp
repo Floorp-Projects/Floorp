@@ -149,21 +149,18 @@ NS_IMETHODIMP
 nsSVGDisplayContainerFrame::RemoveFrame(nsIAtom* aListName,
                                         nsIFrame* aOldFrame)
 {
-  nsRect dirtyRect;
-  
-  nsISVGChildFrame* SVGFrame = nsnull;
-  CallQueryInterface(aOldFrame, &SVGFrame);
-
-  if (SVGFrame && !(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
-    dirtyRect = nsSVGUtils::FindFilterInvalidation(aOldFrame);
+  if (!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+    nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
+    NS_ASSERTION(outerSVGFrame, "no outer svg frame");
+    if (outerSVGFrame)
+      outerSVGFrame->InvalidateCoveredRegion(aOldFrame);
   }
 
   nsresult rv = nsSVGContainerFrame::RemoveFrame(aListName, aOldFrame);
 
-  nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-  NS_ASSERTION(outerSVGFrame, "no outer svg frame");
-  if (outerSVGFrame)
-    outerSVGFrame->InvalidateRect(dirtyRect);
+  if (!GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) {
+    nsSVGUtils::NotifyAncestorsOfFilterRegionChange(this);
+  }
 
   return rv;
 }

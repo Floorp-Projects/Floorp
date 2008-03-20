@@ -68,11 +68,8 @@ private:
     PRBool PossiblyHostPortUrl(const nsACString& aUrl);
     PRBool MakeAlternateURI(nsIURI *aURI);
     PRBool IsLikelyFTP(const nsCString& aHostSpec);
-    const char * GetFileSystemCharset();
-    const char * GetCharsetForUrlBar();
 
     nsCOMPtr<nsIPrefBranch> mPrefBranch;
-    nsCAutoString mFsCharset;
 };
 
 #endif

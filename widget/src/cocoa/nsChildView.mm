@@ -1124,14 +1124,20 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   NS_ASSERTION(mIsPluginView, "StartDrawPlugin must only be called on a plugin widget");
   if (!mIsPluginView) return NS_ERROR_FAILURE;
 
-  // nothing to do if this is a CoreGraphics plugin
-  if (mPluginIsCG)
-    return NS_OK;
-
-  // prevent reentrant drawing
+  // Prevent reentrant "drawing" (or in fact reentrant handling of any plugin
+  // event).  Doing this for both CoreGraphics and QuickDraw plugins restores
+  // the 1.8-branch behavior wrt reentrancy, and fixes (or works around) bugs
+  // caused by plugins depending on the old behavior -- e.g. bmo bug 409615.
   if (mPluginDrawing)
     return NS_ERROR_FAILURE;
-  
+
+  // If this is a CoreGraphics plugin, nothing to do but prevent being
+  // reentered.
+  if (mPluginIsCG) {
+    mPluginDrawing = PR_TRUE;
+    return NS_OK;
+  }
+
   NSWindow* window = [mView nativeWindow];
   if (!window)
     return NS_ERROR_FAILURE;
@@ -2001,7 +2007,7 @@ NSEvent* gLastDragEvent = nil;
 
     mCurKeyEvent = nil;
     mKeyDownHandled = PR_FALSE;
-    mIgnoreDoCommand = NO;
+    mKeyPressHandled = NO;
     mKeyPressSent = NO;
 
     // initialization for NSTextInput
@@ -4000,7 +4006,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
       }
     }
 
-    mGeckoChild->DispatchWindowEvent(geckoEvent);
+    mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
     mKeyPressSent = YES;
   }
   else {
@@ -4050,10 +4056,10 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
 #if DEBUG_IME 
-  NSLog(@"**** in doCommandBySelector %s (ignore %d)", aSelector, mIgnoreDoCommand);
+  NSLog(@"**** in doCommandBySelector %s (ignore %d)", aSelector, mKeyPressHandled);
 #endif
 
-  if (!mIgnoreDoCommand)
+  if (!mKeyPressHandled)
     [super doCommandBySelector:aSelector];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -4353,12 +4359,13 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 }
 
 
-- (void)processKeyDownEvent:(NSEvent*)theEvent keyEquiv:(BOOL)isKeyEquiv
+// Returns PR_TRUE if Gecko claims to have handled the event, PR_FALSE otherwise.
+- (PRBool)processKeyDownEvent:(NSEvent*)theEvent keyEquiv:(BOOL)isKeyEquiv
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   if (!mGeckoChild)
-    return;
+    return NO;
 
   nsAutoRetainView kungFuDeathGrip(self);
   mCurKeyEvent = theEvent;
@@ -4378,14 +4385,15 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
       mKeyDownHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
       if (!mGeckoChild)
-        return;
+        return mKeyDownHandled;
 
       // The key down event may have shifted the focus, in which
       // case we should not fire the key press.
       if (firstResponder != [[self window] firstResponder]) {
+        PRBool handled = mKeyDownHandled;
         mCurKeyEvent = nil;
         mKeyDownHandled = PR_FALSE;
-        return;
+        return handled;
       }
     }
 
@@ -4394,12 +4402,13 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     if (modifierFlags == NSControlKeyMask && [[theEvent charactersIgnoringModifiers] isEqualToString:@" "]) {
       nsMouseEvent contextMenuEvent(PR_TRUE, NS_CONTEXTMENU, [self widget], nsMouseEvent::eReal, nsMouseEvent::eContextMenuKey);
       contextMenuEvent.isShift = contextMenuEvent.isControl = contextMenuEvent.isAlt = contextMenuEvent.isMeta = PR_FALSE;
-      mGeckoChild->DispatchWindowEvent(contextMenuEvent);
+      PRBool cmEventHandled = mGeckoChild->DispatchWindowEvent(contextMenuEvent);
       [self maybeInitContextMenuTracking];
       // Bail, there is nothing else to do here.
+      PRBool handled = (cmEventHandled || mKeyDownHandled);
       mCurKeyEvent = nil;
       mKeyDownHandled = PR_FALSE;
-      return;
+      return handled;
     }
 
     nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
@@ -4419,10 +4428,10 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
       ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
 
-      mIgnoreDoCommand = mGeckoChild->DispatchWindowEvent(geckoEvent);
-      if (!mGeckoChild)
-        return;
+      mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
       mKeyPressSent = YES;
+      if (!mGeckoChild)
+        return (mKeyDownHandled || mKeyPressHandled);
     }
   }
 
@@ -4434,7 +4443,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     [super interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
 
   if (!mGeckoChild)
-    return;
+    return (mKeyDownHandled || mKeyPressHandled);;
 
   if (!mKeyPressSent && nonDeadKeyPress && !wasComposing && !nsTSMManager::IsComposing()) {
     nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
@@ -4447,18 +4456,22 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
     geckoEvent.nativeMsg = &macEvent;
 
-    mGeckoChild->DispatchWindowEvent(geckoEvent);    
+    mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
   }
 
   // Note: mGeckoChild might have become null here. Don't count on it from here on.
 
+  PRBool handled = (mKeyDownHandled || mKeyPressHandled);
+
   // See note about nested event loops where these variables are declared in header.
-  mIgnoreDoCommand = NO;
+  mKeyPressHandled = NO;
   mKeyPressSent = NO;
   mCurKeyEvent = nil;
   mKeyDownHandled = PR_FALSE;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  return handled;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
 
@@ -4551,14 +4564,6 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  // First we need to ignore certain system commands. If we don't we'll have
-  // to duplicate their functionality in Gecko, which as of this time we haven't.
-  // The only thing we ignore now is command-tilde, because NSApp handles that for us
-  // and we need the event to propagate to there.
-  unsigned int modifierFlags = [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
-  if (modifierFlags & NSCommandKeyMask && [theEvent keyCode] == kTildeKeyCode)
-    return NO;
-
   // don't do anything if we don't have a gecko widget
   if (!mGeckoChild)
     return NO;
@@ -4572,6 +4577,8 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   // don't process if we're composing, but don't consume the event
   if (nsTSMManager::IsComposing())
     return NO;
+
+  unsigned int modifierFlags = [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
 
   // see if the menu system will handle the event
   if ([[NSApp mainMenu] performKeyEquivalent:theEvent]) {
@@ -4604,8 +4611,13 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   if ((modifierFlags & NSFunctionKeyMask) || (modifierFlags & NSNumericPadKeyMask))
     return NO;
 
-  if ([theEvent type] == NSKeyDown)
-    [self processKeyDownEvent:theEvent keyEquiv:YES];
+  if ([theEvent type] == NSKeyDown) {
+    // We trust the Gecko handled status for cmd key events. See bug 417466 for more info.
+    if (modifierFlags & NSCommandKeyMask)
+      return [self processKeyDownEvent:theEvent keyEquiv:YES];
+    else
+      [self processKeyDownEvent:theEvent keyEquiv:YES];
+  }
 
   return YES;
 

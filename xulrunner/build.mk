@@ -87,3 +87,6 @@ install:
 
 sdk:
 	@$(MAKE) -C xulrunner/installer make-sdk
+
+distclean::
+	@$(MAKE) -C xulrunner/installer distclean

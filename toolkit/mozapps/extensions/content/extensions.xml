@@ -407,11 +407,15 @@
 
     <implementation extends="nsIAccessibleProvider">
       <constructor>
-        if (!this.hasAttribute("thumbnailURL"))
-          return this._hideImage();
+        if (!this.hasAttribute("thumbnailURL")) {
+          this._hideImage();
+          return;
+        }
 
-        if (this.hasAttribute("thumbwidth"))
-          return this._displayImage();
+        if (this.hasAttribute("thumbwidth")) {
+          this._displayImage();
+          return;
+        }
 
         var image = new Image();
         var id = this.id;

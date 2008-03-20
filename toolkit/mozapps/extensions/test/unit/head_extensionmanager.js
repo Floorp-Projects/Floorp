@@ -282,6 +282,7 @@ gTestRoot = gTestRoot.parent.parent;
 gTestRoot.append("_tests");
 gTestRoot.append("xpcshell-simple");
 gTestRoot.append("test_extensionmanager");
+gTestRoot.normalize();
 
 // Need to create and register a profile folder.
 var gProfD = gTestRoot.clone();

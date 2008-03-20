@@ -71,13 +71,18 @@ function test_urlSecurityCheck() {
     do_throw("urlSecurityCheck failed to handle the http URI as a string (uri spec)");
   }
 
+  let shouldThrow = true;
   try {
     urlSecurityCheck(CHROME_URI, nullPrincipal,
                      DISALLOW_INHERIT_PRINCIPAL);
-    do_throw("urlSecurityCheck should throw when linking to a chrome uri with a null principal");
   }
-  catch(ex) { }
+  catch(ex) { 
+    shouldThrow = false;
+  }
+  if (shouldThrow)
+    do_throw("urlSecurityCheck should throw when linking to a chrome uri with a null principal");
 }
+
 
 function run_test()
 {

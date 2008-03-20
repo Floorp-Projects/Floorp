@@ -49,6 +49,11 @@
 
 JS_BEGIN_EXTERN_C
 
+typedef struct JSFrameRegs {
+    jsbytecode      *pc;            /* program counter */
+    jsval           *sp;            /* stack pointer */
+} JSFrameRegs;
+
 /*
  * JS stack frame, may be allocated on the C stack by native callers.  Always
  * allocated on cx->stackPool for calls from the interpreter to an interpreted
@@ -60,8 +65,7 @@ JS_BEGIN_EXTERN_C
  * with well-known slots, if possible.
  */
 struct JSStackFrame {
-    jsval           *sp;            /* stack pointer */
-    jsbytecode      *pc;            /* program counter */
+    JSFrameRegs     *regs;
     jsval           *spbase;        /* operand stack base */
     JSObject        *callobj;       /* lazily created Call object */
     JSObject        *argsobj;       /* lazily created arguments object */
@@ -91,7 +95,7 @@ struct JSStackFrame {
 
 typedef struct JSInlineFrame {
     JSStackFrame    frame;          /* base struct */
-    jsval           *rvp;           /* ptr to caller's return value slot */
+    JSFrameRegs     callerRegs;     /* parent's frame registers */
     void            *mark;          /* mark before inline frame */
     void            *hookData;      /* debugger call hook data */
     JSVersion       callerVersion;  /* dynamic version of calling script */
@@ -186,6 +190,7 @@ typedef struct JSPropertyCache {
     uint32              modfills;       /* fill that rehashed to a new entry */
     uint32              brandfills;     /* scope brandings to type structural
                                            method fills */
+    uint32              noprotos;       /* resolve-returned non-proto pobj */
     uint32              longchains;     /* overlong scope and/or proto chain */
     uint32              recycles;       /* cache entries recycled by fills */
     uint32              pcrecycles;     /* pc-keyed entries recycled by atom-

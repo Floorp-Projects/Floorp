@@ -43,6 +43,10 @@ relativesrcdir  = content/base/test
 
 include $(DEPTH)/config/autoconf.mk
 
+DIRS += \
+  chrome \
+  $(NULL)
+
 CPP_UNIT_TESTS += TestNativeXMLHttpRequest.cpp TestPlainTextSerializer.cpp
 
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/tests
@@ -116,6 +120,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug375314.html \
 		test_bug378969.html \
 		test_bug382113.html \
+		test_bug383430.html \
 		test_bug390219.html \
 		test_bug390735.html \
 		test_bug392318.html \
@@ -177,6 +182,8 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug419527.xhtml \
 		test_bug420609.xhtml \
 		test_bug420700.html \
+		test_bug421602.html \
+		test_bug422537.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

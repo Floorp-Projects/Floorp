@@ -631,7 +631,9 @@ _compute_normalized_device_slope (double *dx, double *dy, cairo_matrix_t *ctm_in
 }
 
 static void
-_compute_face (cairo_point_t *point, double slope_dx, double slope_dy, cairo_stroker_t *stroker, cairo_stroke_face_t *face);
+_compute_face (cairo_point_t *point, cairo_slope_t *dev_slope,
+	       double slope_dx, double slope_dy,
+	       cairo_stroker_t *stroker, cairo_stroke_face_t *face);
 
 static cairo_status_t
 _cairo_stroker_add_caps (cairo_stroker_t *stroker)
@@ -645,13 +647,14 @@ _cairo_stroker_add_caps (cairo_stroker_t *stroker)
     {
 	/* pick an arbitrary slope to use */
 	double dx = 1.0, dy = 0.0;
+	cairo_slope_t slope = { CAIRO_FIXED_ONE, 0 };
 	cairo_stroke_face_t face;
 
 	_compute_normalized_device_slope (&dx, &dy, stroker->ctm_inverse, NULL);
 
 	/* arbitrarily choose first_point
 	 * first_point and current_point should be the same */
-	_compute_face (&stroker->first_point, dx, dy, stroker, &face);
+	_compute_face (&stroker->first_point, &slope, dx, dy, stroker, &face);
 
 	status = _cairo_stroker_add_leading_cap (stroker, &face);
 	if (status)
@@ -677,7 +680,9 @@ _cairo_stroker_add_caps (cairo_stroker_t *stroker)
 }
 
 static void
-_compute_face (cairo_point_t *point, double slope_dx, double slope_dy, cairo_stroker_t *stroker, cairo_stroke_face_t *face)
+_compute_face (cairo_point_t *point, cairo_slope_t *dev_slope,
+	       double slope_dx, double slope_dy,
+	       cairo_stroker_t *stroker, cairo_stroke_face_t *face)
 {
     double face_dx, face_dy;
     cairo_point_t offset_ccw, offset_cw;
@@ -719,23 +724,22 @@ _compute_face (cairo_point_t *point, double slope_dx, double slope_dy, cairo_str
     face->usr_vector.x = slope_dx;
     face->usr_vector.y = slope_dy;
 
-    face->dev_vector.dx = _cairo_fixed_from_double (slope_dx);
-    face->dev_vector.dy = _cairo_fixed_from_double (slope_dy);
+    face->dev_vector = *dev_slope;
 }
 
 static cairo_status_t
 _cairo_stroker_add_sub_edge (cairo_stroker_t *stroker, cairo_point_t *p1, cairo_point_t *p2,
-			     double slope_dx, double slope_dy, cairo_stroke_face_t *start,
-			     cairo_stroke_face_t *end)
+			     cairo_slope_t *dev_slope, double slope_dx, double slope_dy,
+			     cairo_stroke_face_t *start, cairo_stroke_face_t *end)
 {
     cairo_point_t rectangle[4];
 
-    _compute_face (p1, slope_dx, slope_dy, stroker, start);
+    _compute_face (p1, dev_slope, slope_dx, slope_dy, stroker, start);
 
     /* XXX: This could be optimized slightly by not calling
        _compute_face again but rather  translating the relevant
        fields from start. */
-    _compute_face (p2, slope_dx, slope_dy, stroker, end);
+    _compute_face (p2, dev_slope, slope_dx, slope_dy, stroker, end);
 
     if (p1->x == p2->x && p1->y == p2->y)
 	return CAIRO_STATUS_SUCCESS;
@@ -787,6 +791,7 @@ _cairo_stroker_line_to (void *closure, cairo_point_t *point)
     cairo_stroke_face_t start, end;
     cairo_point_t *p1 = &stroker->current_point;
     cairo_point_t *p2 = point;
+    cairo_slope_t dev_slope;
     double slope_dx, slope_dy;
 
     stroker->has_initial_sub_path = TRUE;
@@ -794,11 +799,12 @@ _cairo_stroker_line_to (void *closure, cairo_point_t *point)
     if (p1->x == p2->x && p1->y == p2->y)
 	return CAIRO_STATUS_SUCCESS;
 
+    _cairo_slope_init (&dev_slope, p1, p2);
     slope_dx = _cairo_fixed_to_double (p2->x - p1->x);
     slope_dy = _cairo_fixed_to_double (p2->y - p1->y);
     _compute_normalized_device_slope (&slope_dx, &slope_dy, stroker->ctm_inverse, NULL);
 
-    status = _cairo_stroker_add_sub_edge (stroker, p1, p2, slope_dx, slope_dy, &start, &end);
+    status = _cairo_stroker_add_sub_edge (stroker, p1, p2, &dev_slope, slope_dx, slope_dy, &start, &end);
     if (status)
 	return status;
 
@@ -834,6 +840,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
     cairo_stroke_face_t sub_start, sub_end;
     cairo_point_t *p1 = &stroker->current_point;
     cairo_point_t *p2 = point;
+    cairo_slope_t dev_slope;
     cairo_bool_t fully_in_bounds = TRUE;
     cairo_line_t segment;
 
@@ -848,6 +855,8 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
     {
 	fully_in_bounds = FALSE;
     }
+
+    _cairo_slope_init (&dev_slope, p1, p2);
 
     slope_dx = _cairo_fixed_to_double (p2->x - p1->x);
     slope_dy = _cairo_fixed_to_double (p2->y - p1->y);
@@ -870,7 +879,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 	    _cairo_box_intersects_line_segment (&stroker->bounds, &segment))
 	{
 	    if (stroker->dash_on) {
-		status = _cairo_stroker_add_sub_edge (stroker, &segment.p1, &segment.p2, slope_dx, slope_dy, &sub_start, &sub_end);
+		status = _cairo_stroker_add_sub_edge (stroker, &segment.p1, &segment.p2, &dev_slope, slope_dx, slope_dy, &sub_start, &sub_end);
 		if (status)
 		    return status;
 
@@ -923,7 +932,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 	 * in the path. Whether this behaviour is desirable or not is debatable.
 	 * On one side these degnerate caps can not be reproduced with regular path stroking.
 	 * On the other side Acroread 7 also produces the degenerate caps. */
-	_compute_face (point, slope_dx, slope_dy, stroker, &stroker->current_face);
+	_compute_face (point, &dev_slope, slope_dx, slope_dy, stroker, &stroker->current_face);
 	stroker->has_current_face = TRUE;
 	status = _cairo_stroker_add_leading_cap (stroker, &stroker->current_face);
 	if (status)
@@ -965,10 +974,10 @@ _cairo_stroker_curve_to (void *closure,
     final_slope_dy = _cairo_fixed_to_double (spline.final_slope.dy);
 
     if (_compute_normalized_device_slope (&initial_slope_dx, &initial_slope_dy, stroker->ctm_inverse, NULL))
-	_compute_face (a, initial_slope_dx, initial_slope_dy, stroker, &start);
+	_compute_face (a, &spline.initial_slope, initial_slope_dx, initial_slope_dy, stroker, &start);
 
     if (_compute_normalized_device_slope (&final_slope_dx, &final_slope_dy, stroker->ctm_inverse, NULL))
-	_compute_face (d, final_slope_dx, final_slope_dy, stroker, &end);
+	_compute_face (d, &spline.final_slope, final_slope_dx, final_slope_dy, stroker, &end);
 
     if (stroker->has_current_face) {
 	status = _cairo_stroker_join (stroker, &stroker->current_face, &start);

@@ -83,6 +83,18 @@ DIRS += \
   $(NULL)
 endif
 
+ifeq ($(OS_ARCH),SunOS)
+# there's no define for this normally
+DEFINES += -DXP_SOLARIS
+DIRS += \
+  google-breakpad/src/common \
+  google-breakpad/src/common/solaris \
+  google-breakpad/src/client \
+  google-breakpad/src/client/solaris/handler \
+  google-breakpad/src/tools/solaris/dump_syms \
+  $(NULL)
+endif
+
 DIRS += client
 
 LOCAL_INCLUDES = -I$(srcdir)/google-breakpad/src

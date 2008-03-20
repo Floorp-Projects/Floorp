@@ -128,9 +128,9 @@ struct StackFrameSPARC : public StackFrame {
   // to be confirmed
   enum ContextValidity {
     CONTEXT_VALID_NONE = 0,
-    CONTEXT_VALID_PC   = 0 << 0,
-    CONTEXT_VALID_SP   = 0 << 1,
-    CONTEXT_VALID_FP   = 0 << 2,
+    CONTEXT_VALID_PC   = 1 << 0,
+    CONTEXT_VALID_SP   = 1 << 1,
+    CONTEXT_VALID_FP   = 1 << 2,
     CONTEXT_VALID_ALL  = -1
   };
 

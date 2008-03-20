@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist">
+  <emItems>
+    <emItem id="fdm_ffext@freedownloadmanager.org">
+      <versionRange minVersion="1.0" maxVersion="1.3.1">
+        <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+           <versionRange minVersion="3.0a1" maxVersion="*"/>
+        </targetApplication>
+      </versionRange>
+    </emItem>
+    <emItem id="mozilla_cc@internetdownloadmanager.com">
+      <versionRange minVersion="2.1" maxVersion="3.3">
+        <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+           <versionRange minVersion="3.0a1" maxVersion="*"/>
+        </targetApplication>
+      </versionRange>
+    </emItem>
+  </emItems>
+</blocklist>

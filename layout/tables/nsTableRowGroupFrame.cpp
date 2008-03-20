@@ -295,7 +295,8 @@ nsTableRowGroupFrame::PlaceChild(nsPresContext*        aPresContext,
                                  nsRowGroupReflowState& aReflowState,
                                  nsIFrame*              aKidFrame,
                                  nsHTMLReflowMetrics&   aDesiredSize,
-                                 const nsRect&          aOriginalKidRect)
+                                 const nsRect&          aOriginalKidRect,
+                                 const nsRect&          aOriginalKidOverflowRect)
 {
   PRBool isFirstReflow =
     (aKidFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
@@ -304,7 +305,8 @@ nsTableRowGroupFrame::PlaceChild(nsPresContext*        aPresContext,
   FinishReflowChild(aKidFrame, aPresContext, nsnull, aDesiredSize, 0,
                     aReflowState.y, 0);
 
-  nsTableFrame::InvalidateFrame(aKidFrame, aOriginalKidRect, isFirstReflow);
+  nsTableFrame::InvalidateFrame(aKidFrame, aOriginalKidRect,
+                                aOriginalKidOverflowRect, isFirstReflow);
 
   // Adjust the running y-offset
   aReflowState.y += aDesiredSize.height;
@@ -392,6 +394,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*        aPresContext,
          (isPaginated || (kidFrame->GetStateBits() &
                           NS_FRAME_CONTAINS_RELATIVE_HEIGHT)))) {
       nsRect oldKidRect = kidFrame->GetRect();
+      nsRect oldKidOverflowRect = kidFrame->GetOverflowRect();
 
       // XXXldb We used to only pass aDesiredSize.mFlags through for the
       // incremental reflow codepath.
@@ -422,7 +425,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*        aPresContext,
 
       // Place the child
       PlaceChild(aPresContext, aReflowState, kidFrame, desiredSize,
-                 oldKidRect);
+                 oldKidRect, oldKidOverflowRect);
       aReflowState.y += cellSpacingY;
 
       if (!reflowAllKids) {
@@ -801,7 +804,8 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
   nscoord yOrigin = startRowGroupHeight;
   // update the rows with their (potentially) new heights
   for (rowFrame = startRowFrame, rowIndex = 0; rowFrame; rowFrame = rowFrame->GetNextRow(), rowIndex++) {
-    nsRect rowBounds = rowFrame->GetRect(); 
+    nsRect rowBounds = rowFrame->GetRect();
+    nsRect rowOverflowRect = rowFrame->GetOverflowRect();
 
     PRBool movedFrame = (rowBounds.y != yOrigin);  
     nscoord rowHeight = (rowInfo[rowIndex].height > 0) ? rowInfo[rowIndex].height : 0;
@@ -815,7 +819,8 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
       rowFrame->SetRect(nsRect(rowBounds.x, yOrigin, rowBounds.width,
                                rowHeight));
 
-      nsTableFrame::InvalidateFrame(rowFrame, rowBounds, PR_FALSE);
+      nsTableFrame::InvalidateFrame(rowFrame, rowBounds, rowOverflowRect,
+                                    PR_FALSE);
     }
     if (movedFrame) {
       nsTableFrame::RePositionViews(rowFrame);
@@ -861,6 +866,7 @@ nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aYTotalOffset,
 
   nsRect groupRect = GetRect();
   nsRect oldGroupRect = groupRect;
+  nsRect oldGroupOverflowRect = GetOverflowRect();
   
   groupRect.height -= yGroupOffset;
   if (didCollapse) {
@@ -881,7 +887,8 @@ nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aYTotalOffset,
   FinishAndStoreOverflow(&overflowArea, nsSize(groupRect.width,
                                               groupRect.height));
   nsTableFrame::RePositionViews(this);
-  nsTableFrame::InvalidateFrame(this, oldGroupRect, PR_FALSE);
+  nsTableFrame::InvalidateFrame(this, oldGroupRect, oldGroupOverflowRect,
+                                PR_FALSE);
 
   return yGroupOffset;
 }
@@ -1107,6 +1114,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*          aPresContext,
 
         // Get the old size before we reflow.
         nsRect oldRowRect = rowFrame->GetRect();
+        nsRect oldRowOverflowRect = rowFrame->GetOverflowRect();
 
         // Reflow the cell with the constrained height. A cell with rowspan >1 will get this
         // reflow later during SplitSpanningCells.
@@ -1117,7 +1125,8 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*          aPresContext,
         rowFrame->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
         rowFrame->DidResize();
 
-        nsTableFrame::InvalidateFrame(rowFrame, oldRowRect, PR_FALSE);
+        nsTableFrame::InvalidateFrame(rowFrame, oldRowRect, oldRowOverflowRect,
+                                      PR_FALSE);
 
         if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
           // The row frame is incomplete and all of the rowspan 1 cells' block frames split
@@ -1345,7 +1354,14 @@ nsTableRowGroupFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.width = aReflowState.availableWidth;
 
   aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, nsRect(0, 0, aDesiredSize.width,
-	                                                                      aDesiredSize.height)); 
+	                                                                      aDesiredSize.height));
+
+  // If our parent is in initial reflow, it'll handle invalidating our
+  // entire overflow rect.
+  if (!GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
+    CheckInvalidateSizeChange(aPresContext, aDesiredSize, aReflowState);
+  }
+  
   FinishAndStoreOverflow(&aDesiredSize);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return rv;

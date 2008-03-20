@@ -69,20 +69,36 @@ math[display="inline"] {
 }
 
 /**************************************************************************/
-/* style switching during frame construction 
-   these rules need to be here so that the other rules listed with
-   fontstyle, mathsize, etc, can override them
+/* Style switching during frame construction depending on the context of <mi>:
+   These rules are not used when mathvariant or fontstyle is specified
+   explicitly. 
 /**************************************************************************/
 
-/* change of style depending on the context of <mi> */
+/* If the textual content of an <mi> consists of a single character
+   with a corresponding mathematical italic alphanumeric character,
+   then try to emulate that character */
 [-moz-math-font-style="italic"] {
-  font-style: italic; /* if the textual content consists of a single character */
+  font-style: italic;
+  font-weight: normal;
 }
+/* If the textual content consists of multiple characters, then the default is
+   mathvariant=normal.  It seems that mathvariant=normal should be interpreted
+   to mean non-slanted:
+
+   http://www.w3.org/TR/2003/REC-MathML2-20031021/chapter3.html#presm.commatt
+
+   "In particular, inheritance of the mathvariant attribute does not follow
+    the CSS model. The default value for this attribute is "normal"
+    (non-slanted) for all tokens except mi. ... (The deprecated fontslant
+    attribute also behaves this way.)"   
+ */
 [-moz-math-font-style="normal"] {
-  font-style: normal; /* if the textual content consists of multiple characters */
+  font-style: normal;
 }
+/* A style-invariant character preserves its own style */
 [-moz-math-font-style="invariant"] {
-  font-style: normal; /* a non-stylable character preserves its own style */
+  font-style: normal;
+  font-weight: normal;
 }
 
 /**************************************************************************/
@@ -119,13 +135,19 @@ math[display="inline"] {
      bold-script | fraktur | sans-serif | bold-sans-serif | sans-serif-italic |
      sans-serif-bold-italic | monospace
 
-   Note1: These are handled with additional back-end code:
+   Note1: Back-end code for these is not yet written (bug 114365):
           double-struck, script, fraktur, bold-fraktur, bold-script
 
    Note2: Don't use the 'font' shorthand because it resets the font-size and this
           breaks the propagation of the scriptlevel size.
 
    XXX bugs 46622 & 114365: need -moz-math-serif, etc, to only lookup math fonts
+
+   The meaning of mathvariant=normal is unclear as there is no interpretation
+   that "corresponds to SMP Math Alphanumeric Symbol characters"
+   (http://www.w3.org/TR/2003/REC-MathML2-20031021/chapter3.html#presm.commatt),
+   but let's assume an explicit mathvariant=normal is an attempt to reset all
+   style.
 */
 [mathvariant] { /* shared and same as [mathvariant="normal"] */
   /* reset all font properties except those that affect the size */

@@ -37,17 +37,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+let Ci = Components.interfaces;
+let Cc = Components.classes;
+let Cr = Components.results;
+
 const loadInSidebarAnno = "bookmarkProperties/loadInSidebar";
 const descriptionAnno = "bookmarkProperties/description";
 const CLASS_ID = Components.ID("c0844a84-5a12-4808-80a8-809cb002bb4f");
 const CONTRACT_ID = "@mozilla.org/browser/placesTransactionsService;1";
 
-var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"].
-             getService(Components.interfaces.mozIJSSubScriptLoader);
-loader.loadSubScript("chrome://global/content/debug.js");
-loader.loadSubScript("chrome://browser/content/places/utils.js");
-
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+__defineGetter__("PlacesUtils", function() {
+  delete this.PlacesUtils
+  var tmpScope = {};
+  Components.utils.import("resource://gre/modules/utils.js", tmpScope);
+  return this.PlacesUtils = tmpScope.PlacesUtils;
+});
 
 // The minimum amount of transactions we should tell our observers to begin
 // batching (rather than letting them do incremental drawing).
@@ -442,11 +448,9 @@ placesCreateLivemarkTransactions.prototype = {
 };
 
 function placesMoveItemTransactions(aItemId, aNewContainer, aNewIndex) {
-  NS_ASSERT(aNewIndex >= -1, "invalid insertion index");
   this._id = aItemId;
   this._oldContainer = PlacesUtils.bookmarks.getFolderIdForItem(this._id);
   this._oldIndex = PlacesUtils.bookmarks.getItemIndex(this._id);
-  NS_ASSERT(this._oldContainer > 0 && this._oldIndex >= 0, "invalid item");
   this._newContainer = aNewContainer;
   this._newIndex = aNewIndex;
   this.redoTransaction = this.doTransaction;
@@ -483,6 +487,8 @@ placesRemoveItemTransaction.prototype = {
     this._oldIndex = PlacesUtils.bookmarks.getItemIndex(this._id);
     this._title = PlacesUtils.bookmarks.getItemTitle(this._id);
     this._annotations = PlacesUtils.getAnnotationsForItem(this._id);
+    this._dateAdded = PlacesUtils.bookmarks.getItemDateAdded(this._id);
+    this._lastModified = PlacesUtils.bookmarks.getItemLastModified(this._id);
 
     if (this._itemType == Ci.nsINavBookmarksService.TYPE_FOLDER) {
       this._saveFolderContents();
@@ -530,6 +536,9 @@ placesRemoveItemTransaction.prototype = {
 
     if (this._annotations.length > 0)
       PlacesUtils.setAnnotationsForItem(this._id, this._annotations);
+
+    PlacesUtils.bookmarks.setItemDateAdded(this._id, this._dateAdded);
+    PlacesUtils.bookmarks.setItemLastModified(this._id, this._lastModified);
   },
 
   /**
@@ -903,7 +912,7 @@ placesTagURITransaction.prototype = {
   doTransaction: function PTU_doTransaction() {
     if (PlacesUtils.getBookmarksForURI(this._uri).length == 0) {
       // Force an unfiled bookmark first
-      this.__unfiledItemId =
+      this._unfiledItemId =
         PlacesUtils.bookmarks
                    .insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                    this._uri, -1,
@@ -913,9 +922,9 @@ placesTagURITransaction.prototype = {
   },
 
   undoTransaction: function PTU_undoTransaction() {
-    if (this.__unfiledItemId != -1) {
-      PlacesUtils.bookmarks.removeItem(this.__unfiledItemId);
-      this.__unfiledItemId = -1;
+    if (this._unfiledItemId != -1) {
+      PlacesUtils.bookmarks.removeItem(this._unfiledItemId);
+      this._unfiledItemId = -1;
     }
     PlacesUtils.tagging.untagURI(this._uri, this._tags);
   }

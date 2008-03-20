@@ -7,8 +7,8 @@ http://www.cairographics.org/.
 
 VERSIONS:
 
-  cairo (1.5.x - 1.5.12-14-gd89edde)
-  pixman (0.9.x - pixman-0.9.6-37-g8d79c48)
+  cairo (1.5.x - 1.5.12-56-ga33351f)
+  pixman (0.9.x - pixman-0.9.6-43-gddfb69a)
   glitz 0.5.2 (cvs - 2006-01-10)
 
 ***** NOTE FOR VISUAL C++ 6.0 *****
@@ -31,4 +31,3 @@ buggy-repeat.patch: Unconditionally turn on buggy-repeat handling to bandaid bug
 
 endian.patch: include cairo-platform.h for endian macros
 
-pixman-fbFetchTransformed-backout.patch: back out bad pixman commit, see http://lists.cairographics.org/archives/cairo/2008-March/013294.html

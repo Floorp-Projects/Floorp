@@ -97,6 +97,7 @@ struct JSGenerator {
     JSObject            *obj;
     JSGeneratorState    state;
     JSStackFrame        frame;
+    JSFrameRegs         savedRegs;
     JSArena             arena;
     jsval               stack[1];
 };

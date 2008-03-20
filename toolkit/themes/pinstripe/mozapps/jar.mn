@@ -34,6 +34,7 @@ classic.jar:
   skin/classic/mozapps/update/warning.gif                         (update/warning.gif)
   skin/classic/mozapps/update/updates.css                         (update/updates.css)
   skin/classic/mozapps/update/update.png                          (update/update.png)
+  skin/classic/mozapps/viewsource/viewsource.css                  (viewsource/viewsource.css)
   skin/classic/mozapps/xpinstall/xpinstallItemGeneric.png         (xpinstall/xpinstallItemGeneric.png)
   skin/classic/mozapps/xpinstall/xpinstallConfirm.css             (xpinstall/xpinstallConfirm.css)
 #ifdef MOZ_PLACES

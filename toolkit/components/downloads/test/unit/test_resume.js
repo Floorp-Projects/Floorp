@@ -76,13 +76,13 @@ function run_test()
       var to = (matches[2] === undefined) ? data.length - 1 : matches[2];
       if (from >= data.length) {
         resp.setStatusLine(meta.httpVersion, 416, "Start pos too high");
-        resp.setHeader("Content-Range", "*/" + data.length);
+        resp.setHeader("Content-Range", "*/" + data.length, false);
         return;
       }
       body = body.substring(from, to + 1);
       // always respond to successful range requests with 206
       resp.setStatusLine(meta.httpVersion, 206, "Partial Content");
-      resp.setHeader("Content-Range", from + "-" + to + "/" + data.length);
+      resp.setHeader("Content-Range", from + "-" + to + "/" + data.length, false);
     }
     resp.bodyOutputStream.write(body, body.length);
   });

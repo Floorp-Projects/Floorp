@@ -35,7 +35,8 @@ classic.jar:
         skin/classic/mozapps/update/update.png                     (update/update.png)
         skin/classic/mozapps/update/warning.gif                    (update/warning.gif)
         skin/classic/mozapps/update/updates.css                    (update/updates.css)
-        skin/classic/mozapps/xpinstall/xpinstallConfirm.css        (xpinstall/xpinstallConfirm.css)
+        skin/classic/mozapps/viewsource/viewsource.css             (viewsource/viewsource.css)
+*       skin/classic/mozapps/xpinstall/xpinstallConfirm.css        (xpinstall/xpinstallConfirm.css)
         skin/classic/mozapps/xpinstall/xpinstallItemGeneric.png    (xpinstall/xpinstallItemGeneric.png)
 #ifdef MOZ_PLACES
         skin/classic/mozapps/places/defaultFavicon.png             (places/defaultFavicon.png)
@@ -78,7 +79,8 @@ classic.jar:
         skin/classic/aero/mozapps/update/update.png                        (update/update.png)
         skin/classic/aero/mozapps/update/warning.gif                       (update/warning.gif)
         skin/classic/aero/mozapps/update/updates.css                       (update/updates.css)
-        skin/classic/aero/mozapps/xpinstall/xpinstallConfirm.css           (xpinstall/xpinstallConfirm.css)
+        skin/classic/aero/mozapps/viewsource/viewsource.css                (viewsource/viewsource.css)
+*       skin/classic/aero/mozapps/xpinstall/xpinstallConfirm.css           (xpinstall/xpinstallConfirm.css)
         skin/classic/aero/mozapps/xpinstall/xpinstallItemGeneric.png       (xpinstall/xpinstallItemGeneric-aero.png)
 #ifdef MOZ_PLACES
         skin/classic/aero/mozapps/places/defaultFavicon.png                (places/defaultFavicon.png)

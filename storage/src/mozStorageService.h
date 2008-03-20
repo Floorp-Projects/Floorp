@@ -46,6 +46,7 @@
 #include "nsIFile.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+#include "prlock.h"
 
 #include "mozIStorageService.h"
 
@@ -69,6 +70,12 @@ public:
 
 private:
     virtual ~mozStorageService();
+
+    /**
+     * Used for locking around calls when initializing connections so that we
+     * can ensure that the state of sqlite3_enable_shared_cache is sane.
+     */
+    PRLock *mLock;
 protected:
     nsCOMPtr<nsIFile> mProfileStorageFile;
 

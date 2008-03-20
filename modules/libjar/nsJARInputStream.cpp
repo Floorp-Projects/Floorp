@@ -219,15 +219,21 @@ nsJARInputStream::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aBytesRead)
         } else {
             PRInt32 bytesRead = 0;
             aCount = PR_MIN(aCount, mInSize - mCurPos);
-            if (aCount) {        
+            if (aCount) {
                 bytesRead = PR_Read(mFd, aBuffer, aCount);
                 if (bytesRead < 0)
                     return NS_ERROR_FILE_CORRUPTED;
                 mCurPos += bytesRead;
+                if (bytesRead != aCount) {
+                    // file is truncated or was lying about size, we're done
+                    PR_Close(mFd);
+                    mFd = nsnull;
+                    return NS_ERROR_FILE_CORRUPTED;
+                }
             }
             *aBytesRead = bytesRead;
         }
-        
+
         // be aggressive about closing!
         // note that sometimes, we will close mFd before we've finished
         // deflating - this is because zlib buffers the input

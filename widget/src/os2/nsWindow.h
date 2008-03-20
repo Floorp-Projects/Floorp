@@ -151,6 +151,7 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD IsVisible( PRBool &aState);
    NS_IMETHOD PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
                           nsIWidget *aWidget, PRBool aActivate);
+   NS_IMETHOD SetZIndex(PRInt32 aZIndex);
 
    NS_IMETHOD CaptureMouse(PRBool aCapture);
 

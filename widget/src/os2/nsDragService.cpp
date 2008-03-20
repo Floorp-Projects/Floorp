@@ -142,8 +142,10 @@ NS_IMETHODIMP nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
   if (mDoingDrag)
     return NS_ERROR_UNEXPECTED;
 
-  nsBaseDragService::InvokeDragSession ( aDOMNode, aTransferables,
-                                         aRegion, aActionType );
+  nsresult rv = nsBaseDragService::InvokeDragSession(aDOMNode, aTransferables,
+                                                     aRegion, aActionType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   mSourceDataItems = aTransferables;
   WinSetCapture(HWND_DESKTOP, NULLHANDLE);
 
@@ -166,7 +168,7 @@ NS_IMETHODIMP nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
   dragitem.hstrContainerName   = NULLHANDLE;
   dragitem.hstrSourceName      = NULLHANDLE;
 
-  nsresult rv = NS_ERROR_FAILURE;
+  rv = NS_ERROR_FAILURE;
   ULONG idIcon = 0;
 
     // bracket this to reduce our footprint before the drag begins

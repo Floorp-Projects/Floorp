@@ -58,6 +58,7 @@ class nsOuterDocAccessible : public nsAccessibleWrap
     NS_IMETHOD GetChildAtPoint(PRInt32 aX, PRInt32 aY,
                                nsIAccessible **aAccessible);
     void CacheChildren();
+    nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 };
 
 #endif  

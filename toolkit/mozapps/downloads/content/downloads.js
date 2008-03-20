@@ -690,7 +690,22 @@ var gDownloadViewController = {
       copySourceLocation(aSelectedItem);
     },
     cmd_clearList: function() {
-      gDownloadManager.cleanUp();
+      // Clear the whole list if there's no search
+      if (gSearchTerms == "") {
+        gDownloadManager.cleanUp();
+      }
+      else {
+        // Remove each download starting from the end until we hit a download
+        // that is in progress
+        let item;
+        while ((item = gDownloadsView.lastChild) && !item.inProgress)
+          removeDownload(item);
+
+        // Clear the input as if the user did it and move focus to the list
+        gSearchBox.value = "";
+        gSearchBox.doCommand();
+        gDownloadsView.focus();
+      }
     }
   }
 };
@@ -1014,7 +1029,7 @@ function getReferrerOrSource(aDownload)
 function buildDownloadList(aForceBuild)
 {
   // Stringify the previous search
-  let prevSearch = gSearchTerms ? gSearchTerms.join(" ") : null;
+  let prevSearch = gSearchTerms.join(" ");
 
   // Array of space-separated lower-case search terms
   gSearchTerms = gSearchBox.value.replace(/^\s+|\s+$/g, "").

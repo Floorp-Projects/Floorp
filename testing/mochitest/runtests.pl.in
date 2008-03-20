@@ -217,13 +217,13 @@ sub main {
 
   my $url;
   if ($do_chrome) {
-   $url = CHROMETESTS_URL . ($test_path ? $test_path : "") . "?";
+   $url = CHROMETESTS_URL . "?" . ($test_path ? "testPath=" . $test_path : "");
   } elsif ($do_browser_chrome) {
    # Tests will run from an overlay, no need to load any URL.  We'll include
    # the test path in the config file so the browser chrome harness can use it.
    $url = "about:blank";
   } elsif ($do_a11y) {
-   $url = A11YTESTS_URL . ($test_path ? $test_path : "") . "?";
+   $url = A11YTESTS_URL . "?" . ($test_path ? "testPath=" . $test_path : "");
   } else {
    $url = TESTS_URL . ($test_path ? $test_path : "") . "?";
   }

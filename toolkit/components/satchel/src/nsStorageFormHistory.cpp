@@ -315,6 +315,21 @@ nsFormHistory::RemoveAllEntries()
                                          getter_AddRefs(dbDeleteAll));
   NS_ENSURE_SUCCESS(rv,rv);
 
+  // privacy cleanup, if there's an old mork formhistory around, just delete it
+  nsCOMPtr<nsIFile> oldFormHistoryFile;
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                              getter_AddRefs(oldFormHistoryFile));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = oldFormHistoryFile->Append(NS_LITERAL_STRING("formhistory.dat"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool fileExists;
+  if (NS_SUCCEEDED(oldFormHistoryFile->Exists(&fileExists)) && fileExists) {
+    rv = oldFormHistoryFile->Remove(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   return dbDeleteAll->Execute();
 }
 

@@ -143,8 +143,10 @@
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsTPtrArray.h"
+#include "nsVoidArray.h" // for nsCStringArray
 
 #include <stdio.h>
+#include <string.h>
 #ifdef WIN32
 #include <io.h>
 #include <process.h>
@@ -431,6 +433,7 @@ public:
 
 struct ReversedEdge {
     PtrInfo *mTarget;
+    nsCString *mEdgeName;
     ReversedEdge *mNext;
 };
 
@@ -466,6 +469,9 @@ struct PtrInfo
     // expected to be garbage are black).
     ReversedEdge* mReversedEdges; // linked list
     PtrInfo* mShortestPathToExpectedGarbage;
+    nsCString* mShortestPathToExpectedGarbageEdgeName;
+
+    nsCStringArray mEdgeNames;
 #endif
 
     PtrInfo(void *aPointer, nsCycleCollectionParticipant *aParticipant
@@ -484,13 +490,23 @@ struct PtrInfo
           mLangID(aLangID),
           mSCCIndex(0),
           mReversedEdges(nsnull),
-          mShortestPathToExpectedGarbage(nsnull)
+          mShortestPathToExpectedGarbage(nsnull),
+          mShortestPathToExpectedGarbageEdgeName(nsnull)
 #endif
     {
     }
 
-    // Allow uninitialized values in large arrays.
-    PtrInfo() {}
+#ifdef DEBUG_CC
+    void Destroy() {
+        PL_strfree(mName);
+        mEdgeNames.~nsCStringArray();
+    }
+#endif
+
+    // Allow NodePool::Block's constructor to compile.
+    PtrInfo() {
+        NS_NOTREACHED("should never be called");
+    }
 };
 
 /**
@@ -503,10 +519,14 @@ private:
     enum { BlockSize = 32 * 1024 }; // could be int template parameter
 
     struct Block {
+        // We create and destroy Block using NS_Alloc/NS_Free rather
+        // than new and delete to avoid calling its constructor and
+        // destructor.
+        Block() { NS_NOTREACHED("should never be called"); }
+        ~Block() { NS_NOTREACHED("should never be called"); }
+
         Block* mNext;
         PtrInfo mEntries[BlockSize];
-
-        Block() : mNext(nsnull) {}
     };
 
 public:
@@ -527,14 +547,14 @@ public:
         {
             Enumerator queue(*this);
             while (!queue.IsDone()) {
-                PL_strfree(queue.GetNext()->mName);
+                queue.GetNext()->Destroy();
             }
         }
 #endif
         Block *b = mBlocks;
         while (b) {
             Block *n = b->mNext;
-            delete b;
+            NS_Free(b);
             b = n;
         }
 
@@ -560,10 +580,12 @@ public:
         {
             if (mNext == mBlockEnd) {
                 Block *block;
-                if (!(*mNextBlock = block = new Block()))
+                if (!(*mNextBlock = block =
+                        static_cast<Block*>(NS_Alloc(sizeof(Block)))))
                     return nsnull;
                 mNext = block->mEntries;
                 mBlockEnd = block->mEntries + BlockSize;
+                block->mNext = nsnull;
                 mNextBlock = &block->mNext;
             }
             return new (mNext++) PtrInfo(aPointer, aParticipant
@@ -1193,6 +1215,9 @@ private:
     PLDHashTable mPtrToNodeMap;
     PtrInfo *mCurrPi;
     nsCycleCollectionLanguageRuntime **mRuntimes; // weak, from nsCycleCollector
+#ifdef DEBUG_CC
+    nsCString mNextEdgeName;
+#endif
 
 public:
     GCGraphBuilder(GCGraph &aGraph,
@@ -1230,6 +1255,9 @@ private:
     NS_IMETHOD_(void) NoteNativeChild(void *child,
                                      nsCycleCollectionParticipant *participant);
     NS_IMETHOD_(void) NoteScriptChild(PRUint32 langID, void *child);
+#ifdef DEBUG_CC
+    NS_IMETHOD_(void) NoteNextEdgeName(const char* name);
+#endif
 };
 
 GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
@@ -1359,6 +1387,10 @@ GCGraphBuilder::DescribeNode(CCNodeType type, nsrefcnt refCount)
 NS_IMETHODIMP_(void)
 GCGraphBuilder::NoteXPCOMChild(nsISupports *child) 
 {
+#ifdef DEBUG_CC
+    nsCString edgeName(mNextEdgeName);
+    mNextEdgeName.Truncate();
+#endif
     if (!child || !(child = canonicalize(child)))
         return; 
 
@@ -1374,6 +1406,9 @@ GCGraphBuilder::NoteXPCOMChild(nsISupports *child)
         if (!childPi)
             return;
         mEdgeBuilder.Add(childPi);
+#ifdef DEBUG_CC
+        mCurrPi->mEdgeNames.AppendCString(edgeName);
+#endif
         ++childPi->mInternalRefs;
     }
 }
@@ -1382,6 +1417,10 @@ NS_IMETHODIMP_(void)
 GCGraphBuilder::NoteNativeChild(void *child,
                                 nsCycleCollectionParticipant *participant)
 {
+#ifdef DEBUG_CC
+    nsCString edgeName(mNextEdgeName);
+    mNextEdgeName.Truncate();
+#endif
     if (!child)
         return;
 
@@ -1391,12 +1430,19 @@ GCGraphBuilder::NoteNativeChild(void *child,
     if (!childPi)
         return;
     mEdgeBuilder.Add(childPi);
+#ifdef DEBUG_CC
+    mCurrPi->mEdgeNames.AppendCString(edgeName);
+#endif
     ++childPi->mInternalRefs;
 }
 
 NS_IMETHODIMP_(void)
 GCGraphBuilder::NoteScriptChild(PRUint32 langID, void *child) 
 {
+#ifdef DEBUG_CC
+    nsCString edgeName(mNextEdgeName);
+    mNextEdgeName.Truncate();
+#endif
     if (!child)
         return;
 
@@ -1413,8 +1459,19 @@ GCGraphBuilder::NoteScriptChild(PRUint32 langID, void *child)
     if (!childPi)
         return;
     mEdgeBuilder.Add(childPi);
+#ifdef DEBUG_CC
+    mCurrPi->mEdgeNames.AppendCString(edgeName);
+#endif
     ++childPi->mInternalRefs;
 }
+
+#ifdef DEBUG_CC
+NS_IMETHODIMP_(void)
+GCGraphBuilder::NoteNextEdgeName(const char* name)
+{
+    mNextEdgeName = name;
+}
+#endif
 
 static PRBool
 AddPurpleRoot(GCGraphBuilder &builder, nsISupports *root)
@@ -2021,6 +2078,7 @@ public:
     NS_IMETHOD_(void) NoteScriptChild(PRUint32 langID, void *child) {}
     NS_IMETHOD_(void) NoteNativeChild(void *child,
                                      nsCycleCollectionParticipant *participant) {}
+    NS_IMETHOD_(void) NoteNextEdgeName(const char* name) {}
 };
 
 char *Suppressor::sSuppressionList = nsnull;
@@ -2544,8 +2602,11 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                     if (e->mTarget->mSCCIndex == INDEX_UNREACHED) {
                         e->mTarget->mSCCIndex = INDEX_REACHED;
                         PtrInfo *target = e->mTarget;
-                        if (!target->mShortestPathToExpectedGarbage)
+                        if (!target->mShortestPathToExpectedGarbage) {
                             target->mShortestPathToExpectedGarbage = pi;
+                            target->mShortestPathToExpectedGarbageEdgeName =
+                                e->mEdgeName;
+                        }
                         queue.Push(target);
                     }
                 }
@@ -2571,8 +2632,16 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                            "reached from it by the path:\n");
                     for (PtrInfo *path = pi, *prev = nsnull; prev != path;
                          prev = path,
-                         path = path->mShortestPathToExpectedGarbage)
+                         path = path->mShortestPathToExpectedGarbage) {
+                        if (prev) {
+                            nsCString *edgeName = prev
+                                ->mShortestPathToExpectedGarbageEdgeName;
+                            printf("        via %s\n",
+                                   edgeName->IsEmpty() ? "<unknown edge>"
+                                                       : edgeName->get());
+                        }
                         printf("    %s %p\n", path->mName, path->mPointer);
+                    }
 
                     if (pi->mRefCount == PR_UINT32_MAX) {
                         printf("  The known references to it were from:\n");
@@ -2583,8 +2652,12 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                     }
                     for (ReversedEdge *e = pi->mReversedEdges;
                          e; e = e->mNext) {
-                        printf("    %s %p\n",
+                        printf("    %s %p",
                                e->mTarget->mName, e->mTarget->mPointer);
+                        if (!e->mEdgeName->IsEmpty()) {
+                            printf(" via %s", e->mEdgeName->get());
+                        }
+                        printf("\n");
                     }
                     mRuntimes[pi->mLangID]->PrintAllReferencesTo(pi->mPointer);
                 }
@@ -2733,12 +2806,15 @@ nsCycleCollector::CreateReversedEdges()
     NodePool::Enumerator buildQueue(mGraph.mNodes);
     while (!buildQueue.IsDone()) {
         PtrInfo *pi = buildQueue.GetNext();
+        PRInt32 i = 0;
         for (EdgePool::Iterator e = pi->mFirstChild, e_end = pi->mLastChild;
              e != e_end; ++e) {
             current->mTarget = pi;
+            current->mEdgeName = pi->mEdgeNames.CStringAt(i);
             current->mNext = (*e)->mReversedEdges;
             (*e)->mReversedEdges = current;
             ++current;
+            ++i;
         }
     }
     NS_ASSERTION(current - mGraph.mReversedEdges == ptrdiff_t(edgeCount),
