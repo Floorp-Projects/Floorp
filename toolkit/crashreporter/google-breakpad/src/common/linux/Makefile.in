@@ -47,8 +47,6 @@ HOST_LIBRARY_NAME = host_breakpad_linux_common_s
 
 LOCAL_INCLUDES 	= -I$(srcdir)/../..
 
-CXXFLAGS := $(filter-out -pedantic,$(CXXFLAGS))
-
 # not compiling http_upload.cc currently
 # since it depends on libcurl
 CPPSRCS	= \

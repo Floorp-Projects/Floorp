@@ -162,7 +162,7 @@ MAKE_SYM_STORE_PATH := $(DIST)/bin
 endif
 DUMP_SYMS_BIN ?= $(DIST)/host/bin/dump_syms
 endif
-ifeq ($(OS_ARCH),Linux)
+ifeq (,$(filter-out Linux SunOS,$(OS_ARCH)))
 MAKE_SYM_STORE_ARGS := --vcs-info
 DUMP_SYMS_BIN ?= $(DIST)/host/bin/dump_syms
 MAKE_SYM_STORE_PATH := $(DIST)/bin

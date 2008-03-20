@@ -57,13 +57,14 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <unistd.h>
+#elif defined(XP_SOLARIS)
+#include "client/solaris/handler/exception_handler.h"
+#include <fcntl.h>
+#include <sys/types.h>
+#include <unistd.h>
 #else
 #error "Not yet implemented for this platform"
 #endif // defined(XP_WIN32)
-
-#ifndef HAVE_CPP_2BYTE_WCHAR_T
-#error "This code expects a 2 byte wchar_t.  You should --disable-crashreporter."
-#endif
 
 #include <stdlib.h>
 #include <time.h>

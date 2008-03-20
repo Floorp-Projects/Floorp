@@ -89,6 +89,18 @@ CPPSRCS += http_upload.cc
 FORCE_USE_PIC=1
 endif
 
+ifeq ($(OS_ARCH),SunOS)
+CPPSRCS += crashreporter_linux.cpp
+LIBS += \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/solaris/$(LIB_PREFIX)breakpad_solaris_common_s.$(LIB_SUFFIX) \
+  $(NULL)
+LOCAL_INCLUDES += -I$(srcdir)
+OS_CXXFLAGS += $(MOZ_GTK2_CFLAGS) $(MOZ_GTHREAD_CFLAGS)
+OS_LIBS += $(MOZ_GTK2_LIBS) $(MOZ_GTHREAD_LIBS)
+CPPSRCS += http_upload.cc
+FORCE_USE_PIC=1
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),Darwin)
@@ -102,7 +114,7 @@ libs::
 	rm -f $(DIST)/bin/crashreporter
 endif
 
-ifeq ($(OS_ARCH),Linux)
+ifeq (,$(filter-out Linux SunOS,$(OS_ARCH)))
 export:: $(srcdir)/../google-breakpad/src/common/linux/http_upload.cc
 	$(INSTALL) $^ .
 

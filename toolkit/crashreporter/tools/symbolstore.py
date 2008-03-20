@@ -278,6 +278,7 @@ def GetPlatformSpecificDumper(**kwargs):
     return {'win32': Dumper_Win32,
             'cygwin': Dumper_Win32,
             'linux2': Dumper_Linux,
+            'sunos5': Dumper_Solaris,
             'darwin': Dumper_Mac}[sys.platform](**kwargs)
 
 def SourceIndex(fileStream, outputPath):
@@ -402,6 +403,11 @@ class Dumper:
                         if line.startswith("FILE"):
                             # FILE index filename
                             (x, index, filename) = line.split(None, 2)
+                            if sys.platform == "sunos5":
+                                start = filename.find(self.srcdir)
+                                if start == -1:
+                                    start = 0
+                                filename = filename[start:]
                             filename = self.FixFilenameCase(filename.rstrip())
                             sourcepath = filename
                             if self.vcsinfo:
@@ -527,6 +533,24 @@ class Dumper_Linux(Dumper):
         # gzip the shipped debug files
         os.system("gzip %s" % full_path)
         print rel_path + ".gz"
+
+class Dumper_Solaris(Dumper):
+    def RunFileCommand(self, file):
+        """Utility function, returns the output of file(1)"""
+        try:
+            output = os.popen("file " + file).read()
+            return output.split('\t')[1];
+        except:
+            return ""
+
+    def ShouldProcess(self, file):
+        """This function will allow processing of files that are
+        executable, or end with the .so extension, and additionally
+        file(1) reports as being ELF files.  It expects to find the file
+        command in PATH."""
+        if file.endswith(".so") or os.access(file, os.X_OK):
+            return self.RunFileCommand(file).startswith("ELF")
+        return False
 
 class Dumper_Mac(Dumper):
     def ShouldProcess(self, file):
