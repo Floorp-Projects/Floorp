@@ -1015,7 +1015,7 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 }
 
 .ac-comment {
-  font-size: larger;
+  font-size: 1.15em;
 }
 
 .ac-url-text {
