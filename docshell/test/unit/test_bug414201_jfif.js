@@ -45,14 +45,16 @@ function run_test()
 
     /* Test a few common image types to make sure that they get the right extension */
     var types = {
-        "image/jpeg": "jpg",
-        "image/gif": "gif",
-        "image/png": "png"
+        "image/jpeg": ["jpg", "jpeg"], /* accept either */
+        "image/gif": ["gif"],
+        "image/png": ["png"]
     };
 
     /* Check whether the primary extension is what we'd expect */
     for (var mimetype in types) {
-        var ext = types[mimetype];
-        do_check_true (ms.getFromTypeAndExtension(mimetype, null).primaryExtension.toLowerCase() == ext);
+        var exts = types[mimetype];
+        var primary = ms.getFromTypeAndExtension(mimetype, null).primaryExtension.toLowerCase();
+
+        do_check_true (exts.indexOf(primary) != -1);
     }
 }
