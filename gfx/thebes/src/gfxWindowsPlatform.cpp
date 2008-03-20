@@ -686,69 +686,79 @@ FontEntry *
 gfxWindowsPlatform::FindFontEntry(FontFamily *aFontFamily, const gfxFontStyle *aFontStyle)
 {
     PRUint8 bestMatch = 0;
-    nsRefPtr<FontEntry> matchFE;
-    const PRBool italic = (aFontStyle->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) ? PR_TRUE : PR_FALSE;
+    PRBool italic = (aFontStyle->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0;
 
-    // build up an array of weights that match the italicness we're looking for
     nsAutoTArray<nsRefPtr<FontEntry>, 10> weightList;
     weightList.AppendElements(10);
-    for (PRInt32 i = 0; i < aFontFamily->mVariations.Length(); i++) {
-        nsRefPtr<FontEntry> fe = aFontFamily->mVariations[i];
-        const PRUint8 weight = (fe->mWeight / 100) - 1;
-        if (fe->mItalic == italic)
-            weightList[weight] = fe;
+    for (PRUint32 j = 0; j < 2; j++) {
+        PRBool matchesSomething = PR_FALSE;
+        // build up an array of weights that match the italicness we're looking for
+        for (PRInt32 i = 0; i < aFontFamily->mVariations.Length(); i++) {
+            nsRefPtr<FontEntry> fe = aFontFamily->mVariations[i];
+            const PRUint8 weight = (fe->mWeight / 100);
+            if (fe->mItalic == italic) {
+                weightList[weight] = fe;
+                matchesSomething = PR_TRUE;
+            }
+        }
+        if (matchesSomething)
+            break;
+        italic = !italic;
     }
 
     PRInt8 baseWeight, weightDistance;
     aFontStyle->ComputeWeightAndOffset(&baseWeight, &weightDistance);
 
-    PRUint32 chosenWeight = 0;
-    PRUint8 direction = (weightDistance >= 0) ? 1 : -1;
+    // 500 isn't quite bold so we want to treat it as 400 if we don't
+    // have a 500 weight
+    if (baseWeight == 5 && weightDistance == 0) {
+        // If we have a 500 weight then use it
+        if (weightList[5])
+            return weightList[5];
 
- WEIGHT_SELECTION:
-    for (PRUint8 i = baseWeight, k = 0; i < 10 && i >= 1; i+=direction) {
-        if (weightList[i - 1]) {
-            k++;
-            chosenWeight = i * 100;
-        }
-        if (k > abs(weightDistance)) {
-            chosenWeight = i * 100;
+        // Otherwise treat as 400
+        baseWeight = 4;
+    }
+
+
+    PRInt8 matchBaseWeight = 0;
+    PRInt8 direction = (baseWeight > 5) ? 1 : -1;
+    for (PRInt8 i = baseWeight; ; i += direction) {
+        if (weightList[i]) {
+            matchBaseWeight = i;
             break;
         }
+
+        // if we've reached one side without finding a font,
+        // go the other direction until we find a match
+        if (i == 1 || i == 9)
+            direction = -direction;
     }
 
-    // 500 isn't quite bold, so if we don't have a 500 weight
-    // lets pretend to be 400 and look again
-    if (baseWeight == 5 && weightDistance == 0 && chosenWeight > 500) {
-        baseWeight = 4;
-        goto WEIGHT_SELECTION;
-    }
-
-    // If we still don't have a chosen weight, just pick one
-    if (chosenWeight == 0)
-        chosenWeight = baseWeight * 100;
-
-    // If we end up with something like 900 here but only have 600,
-    // search backwards until we find a match
-    const PRUint32 index = (chosenWeight / 100) - 1;
-    for (PRInt32 j = index; j >= 0; --j) {
-        if (matchFE = weightList[j])
+    nsRefPtr<FontEntry> matchFE;
+    const PRInt8 absDistance = abs(weightDistance);
+    direction = (weightDistance >= 0) ? 1 : -1;
+    for (PRInt8 i = matchBaseWeight, k = 0; i < 10 && i > 0; i += direction) {
+        if (weightList[i]) {
+            matchFE = weightList[i];
+            k++;
+        }
+        if (k > absDistance)
             break;
     }
 
     if (!matchFE) {
-        // Not having a match can occur in 2 ways:
-        // The font only has an italic face and we're looking for a normal one.
-        // The font has no italic face and we're looking for italic.
-        // So search for the opposite of what we're looking for
-        gfxFontStyle style(*aFontStyle);
-        if (aFontStyle->style == FONT_STYLE_NORMAL)
-            style.style = FONT_STYLE_ITALIC;
-        else
-            style.style = FONT_STYLE_NORMAL;
-
-        matchFE = FindFontEntry(aFontFamily, &style);
+        /* if we still don't have a match, grab the closest thing in the other direction */
+        direction = -direction;
+        for (PRInt8 i = matchBaseWeight; i < 10 && i > 0; i += direction) {
+            if (weightList[i]) {
+                matchFE = weightList[i];
+            }
+        }
     }
+
+
+    NS_ASSERTION(matchFE, "we should always be able to return something here");
     return matchFE;
 }
 
