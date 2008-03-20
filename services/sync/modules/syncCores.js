@@ -359,14 +359,18 @@ BookmarksSyncCore.prototype = {
     // Items with the same GUID do not qualify for 'likeness' because
     // we already consider them to be the same object, and therefore
     // we need to process any edits.
+    // Remove commands don't qualify for likeness either, since two
+    // remove commands for different GUIDs are guaranteed to refer to
+    // two different items
     // The parent GUID check works because reconcile() fixes up the
     // parent GUIDs as it runs, and the command list is sorted by
     // depth
     if (!a || !b ||
-       a.action != b.action ||
-       a.data.type != b.data.type ||
-       a.data.parentGUID != b.data.parentGUID ||
-       a.GUID == b.GUID)
+        a.action != b.action ||
+        a.action == "remove" ||
+        a.data.type != b.data.type ||
+        a.data.parentGUID != b.data.parentGUID ||
+        a.GUID == b.GUID)
       return false;
 
     // Bookmarks are allowed to be in a different index as long as
