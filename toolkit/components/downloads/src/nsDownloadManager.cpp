@@ -96,6 +96,7 @@
 #define PREF_BDM_QUITBEHAVIOR "browser.download.manager.quitBehavior"
 #define PREF_BDM_ADDTORECENTDOCS "browser.download.manager.addToRecentDocs"
 #define PREF_BDM_SCANWHENDONE "browser.download.manager.scanWhenDone"
+#define PREF_BDM_RESUMEONWAKEDELAY "browser.download.manager.resumeOnWakeDelay"
 #define PREF_BH_DELETETEMPFILEONEXIT "browser.helperApps.deleteTempFileOnExit"
 
 static const PRInt64 gUpdateInterval = 400 * PR_USEC_PER_MSEC;
@@ -227,6 +228,14 @@ nsDownloadManager::RemoveAllDownloads()
   }
 
   return rv;
+}
+
+void // static
+nsDownloadManager::ResumeOnWakeCallback(nsITimer *aTimer, void *aClosure)
+{
+  // Resume the downloads that were set to autoResume
+  nsDownloadManager *dlMgr = static_cast<nsDownloadManager *>(aClosure);
+  (void)dlMgr->ResumeAllDownloads(PR_FALSE);
 }
 
 nsresult
@@ -909,6 +918,8 @@ nsDownloadManager::Init()
   mObserverService->AddObserver(this, "quit-application", PR_FALSE);
   mObserverService->AddObserver(this, "quit-application-requested", PR_FALSE);
   mObserverService->AddObserver(this, "offline-requested", PR_FALSE);
+  mObserverService->AddObserver(this, "sleep_notification", PR_FALSE);
+  mObserverService->AddObserver(this, "wake_notification", PR_FALSE);
 
   return NS_OK;
 }
@@ -1761,6 +1772,22 @@ nsDownloadManager::Observe(nsISupports *aSubject,
       do_GetService("@mozilla.org/download-manager-ui;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     return dmui->Show(nsnull, 0);
+  } else if (strcmp(aTopic, "sleep_notification") == 0) {
+    // Pause downloads if we're sleeping, and mark the downloads as auto-resume
+    (void)PauseAllDownloads(PR_TRUE);
+  } else if (strcmp(aTopic, "wake_notification") == 0) {
+    PRInt32 resumeOnWakeDelay = 10000;
+    nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (pref)
+      (void)pref->GetIntPref(PREF_BDM_RESUMEONWAKEDELAY, &resumeOnWakeDelay);
+
+    // Wait a little bit before trying to resume to avoid resuming when network
+    // connections haven't restarted yet
+    mResumeOnWakeTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (resumeOnWakeDelay >= 0 && mResumeOnWakeTimer) {
+      (void)mResumeOnWakeTimer->InitWithFuncCallback(ResumeOnWakeCallback,
+        this, resumeOnWakeDelay, nsITimer::TYPE_ONE_SHOT);
+    }
   }
 
   return NS_OK;
