@@ -41,7 +41,7 @@
   <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/viewers/accessibleTreeEvalJSDialog.dtd"> %dtd1;
 ]>
 
-<?xml-stylesheet href="chrome://communicator/skin"?>
+<?xml-stylesheet href="chrome://inspector/skin"?>
 
 <dialog id="winEvalJS"
         title="&evaluateDialog.title;"
