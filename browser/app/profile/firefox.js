@@ -305,7 +305,6 @@ pref("browser.tabs.loadBookmarksInBackground", false);
 pref("browser.tabs.tabMinWidth", 100);
 pref("browser.tabs.tabMaxWidth", 250);
 pref("browser.tabs.tabClipWidth", 140);
-pref("browser.tabs.closingAnimation", true);
 
 // Where to show tab close buttons:
 // 0  on active tab only

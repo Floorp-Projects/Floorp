@@ -30,7 +30,6 @@
    -   Simon Bünzli <zeniko@gmail.com>
    -   Michael Ventnor <ventnor.bugzilla@yahoo.com.au>
    -   Mark Pilgrim <pilgrim@gmail.com>
-   -   Dão Gottwald <dao@mozilla.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -109,7 +108,7 @@
             <xul:menuseparator/>
             <xul:menuitem id="context_closeTab" label="&closeTab.label;" accesskey="&closeTab.accesskey;"
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
-                                     tabbrowser.removeTab(tabbrowser.mContextTab, true);"/>
+                                     tabbrowser.removeTab(tabbrowser.mContextTab);"/>
           </xul:menupopup>
 
           <xul:tabs class="tabbrowser-tabs" flex="1"
@@ -903,7 +902,7 @@
             if (event.button != 1 || event.target.localName != 'tab')
               return;
 
-            this.removeTab(event.target, true);
+            this.removeTab(event.target);
             event.stopPropagation();
           ]]>
         </body>
@@ -1355,7 +1354,7 @@
 
               for (var i = childNodes.length - 1; i >= 0; --i) {
                 if (childNodes[i] != aTab)
-                  this.removeTab(childNodes[i], true);
+                  this.removeTab(childNodes[i]);
               }
             }
           ]]>
@@ -1365,7 +1364,7 @@
       <method name="removeCurrentTab">
         <body>
           <![CDATA[
-            return this.removeTab(this.mCurrentTab, true);
+            return this.removeTab(this.mCurrentTab);
           ]]>
         </body>
       </method>
@@ -1386,34 +1385,36 @@
 
       <method name="removeTab">
         <parameter name="aTab"/>
-        <parameter name="aUseAnimation"/>
         <body>
           <![CDATA[
-            if (aTab == null || aTab.localName != "tab" || aTab.control != this.mTabContainer)
+            this._browsers = null; // invalidate cache
+            if (aTab.localName != "tab")
               aTab = this.mCurrentTab;
+
+            var l = this.mTabContainer.childNodes.length;
+            if (l == 1 && this.mPrefs.getBoolPref("browser.tabs.autoHide")) {
+              // hide the tab bar
+              this.mPrefs.setBoolPref("browser.tabs.forceHide", true);
+              this.setStripVisibilityTo(false);
+              return;
+            }
 
             var ds = this.getBrowserForTab(aTab).docShell;
             if (ds.contentViewer && !ds.contentViewer.permitUnload())
               return;
 
-            if (this._removingTabs) {
-              if (this._removingTabs.indexOf(aTab) > -1)
-                return;
-            } else {
-              this._removingTabs = [];
+            // see notes in addTab
+            var _delayedUpdate = function(aTabContainer) {
+              aTabContainer.adjustTabstrip();
+              aTabContainer.mTabstrip._updateScrollButtonsDisabledState();
             }
+            setTimeout(_delayedUpdate, 0, this.mTabContainer);
 
-            var l = this.mTabContainer.childNodes.length - this._removingTabs.length;
             if (l == 1) {
-              if (this.mPrefs.getBoolPref("browser.tabs.autoHide")) {
-                // hide the tab bar
-                this.mPrefs.setBoolPref("browser.tabs.forceHide", true);
-                this.setStripVisibilityTo(false);
-                return;
-              }
               // add a new blank tab to replace the one we're about to close
               // (this ensures that the remaining tab is as good as new)
               this.addTab("about:blank");
+              l++;
             }
             else if (l == 2) {
               var autohide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
@@ -1422,69 +1423,6 @@
                 this.setStripVisibilityTo(false);
             }
 
-            if (l == 1 ||
-                !aUseAnimation ||
-                this._removingTabs.length > 2 ||
-                !this.mPrefs.getBoolPref("browser.tabs.closingAnimation")) {
-               this._destroyTab(aTab);
-               return;
-            }
-
-            this._removingTabs.push(aTab);
-            this._blurTab(aTab);
-
-            aTab.width = aTab.boxObject.width;
-            aTab.minWidth = "";
-            aTab.flex = "";
-
-            function processFrame(tab, tabbrowser, animation) {
-              if (animation.opacities.length) {
-                tab.style.setProperty("opacity", animation.opacity * animation.opacities.shift(), "important");
-                tab.width = animation.width * animation.widths.shift();
-                tabbrowser._fillTrailingGap();
-              } else {
-                clearInterval(animation.id);
-                tabbrowser._removingTabs.splice(tabbrowser._removingTabs.indexOf(tab), 1);
-                tabbrowser._destroyTab(tab);
-              }
-            }
-
-            var animation = {
-              opacity: parseFloat(document.defaultView.getComputedStyle(aTab, null).opacity),
-              width: aTab.width,
-              opacities: [.5, .25],
-              widths: [.85, .6]
-            };
-            animation.id = setInterval(processFrame, 40, aTab, this, animation);
-            processFrame(aTab, this, animation);
-          ]]>
-        </body>
-      </method>
-
-      <method name="_blurTab">
-        <parameter name="aTab"/>
-        <body>
-          <![CDATA[
-            if (this.mCurrentTab == aTab) {
-              var newIndex = -1;
-              if ("owner" in aTab && aTab.owner &&
-                  this.mPrefs.getBoolPref("browser.tabs.selectOwnerOnClose"))
-                newIndex = aTab.owner._tPos;
-              if (newIndex == -1)
-                newIndex = (aTab == this.mTabContainer.lastChild) ? aTab._tPos - 1 : aTab._tPos + 1;
-              this.mTabContainer.selectedIndex = newIndex;
-
-              // clean up the before/afterselected attributes
-              aTab._selected = false;
-            }
-          ]]>
-        </body>
-      </method>
-
-      <method name="_destroyTab">
-        <parameter name="aTab"/>
-        <body>
-          <![CDATA[
             // We're committed to closing the tab now.  
             // Dispatch a notification.
             // We dispatch it before any teardown so that event listeners can
@@ -1493,19 +1431,19 @@
             evt.initEvent("TabClose", true, false);
             aTab.dispatchEvent(evt);
 
-            this._blurTab(aTab);
-
-            // Remove this tab as the owner of any other tabs, since it's going away.
-            Array.forEach(this.mTabContainer.childNodes, function (tab) {
-              if ("owner" in tab && tab.owner == aTab)
-                // |tab| is a child of the tab we're removing, make it an orphan
-                tab.owner = null;
-            });
+            var index = -1;
+            if (this.mCurrentTab == aTab)
+              index = this.mTabContainer.selectedIndex;
+            else {
+              // Find and locate the tab in our list.
+              for (var i = 0; i < l; i++)
+                if (this.mTabContainer.childNodes[i] == aTab)
+                  index = i;
+            }
 
             // Remove the tab's filter and progress listener.
-            var index = aTab._tPos;
             const filter = this.mTabFilters[index];
-            var oldBrowser = this.getBrowserForTab(aTab);
+            var oldBrowser = this.getBrowserAtIndex(index);
             oldBrowser.webProgress.removeProgressListener(filter);
             filter.removeProgressListener(this.mTabListeners[index]);
             this.mTabFilters.splice(index, 1);
@@ -1517,11 +1455,21 @@
             // We are no longer the primary content area.
             oldBrowser.setAttribute("type", "content-targetable");
 
-            // see notes in addTab
-            setTimeout(function delayedUpdate(aTabContainer) {
-              aTabContainer.adjustTabstrip();
-              aTabContainer.mTabstrip._updateScrollButtonsDisabledState();
-            }, 0, this.mTabContainer);
+            // Get the index of the tab we're removing before unselecting it
+            var currentIndex = this.mTabContainer.selectedIndex;
+
+            var oldTab = aTab;
+
+            // clean up the before/afterselected attributes before removing the tab
+            oldTab._selected = false;
+
+            // Remove this tab as the owner of any other tabs, since it's going away.
+            for (i = 0; i < this.mTabContainer.childNodes.length; ++i) {
+              var tab = this.mTabContainer.childNodes[i];
+              if ("owner" in tab && tab.owner == oldTab)
+                // |tab| is a child of the tab we're removing, make it an orphan
+                tab.owner = null;
+            }
 
             // Because of the way XBL works (fields just set JS
             // properties on the element) and the code we have in place
@@ -1538,45 +1486,69 @@
             if (oldBrowser == this.mCurrentBrowser)
               this.mCurrentBrowser = null;
 
-            this._browsers = null; // invalidate cache
-
             // Remove the tab
-            this.mTabContainer.removeChild(aTab);
+            this.mTabContainer.removeChild(oldTab);
+            // invalidate cache, because mTabContainer is about to change
+            this._browsers = null; 
             this.mPanelContainer.removeChild(oldBrowser.parentNode);
-            this._fillTrailingGap();
 
-            for (var i = aTab._tPos; i < this.mTabContainer.childNodes.length; i++)
+            try {
+              // if we're at the right side (and not the logical end,
+              // which is why this works for both LTR and RTL)
+              // of the tabstrip, we need to ensure that we stay 
+              // completely scrolled to the right side
+              var tabStrip = this.mTabContainer.mTabstrip;
+              var scrollPos = {};
+              tabStrip.scrollBoxObject.getPosition(scrollPos, {});
+              var scrolledSize = {};
+              tabStrip.scrollBoxObject.getScrolledSize(scrolledSize, {});
+
+              if (scrollPos.value + tabStrip.boxObject.width >= 
+                  scrolledSize.value) {
+                tabStrip.scrollByPixels(-1 * this.mTabContainer.firstChild
+                                                 .boxObject.width);
+              }
+            }
+            catch (ex) {
+            }
+
+            // Find the tab to select
+            var newIndex = -1;
+            if (currentIndex > index)
+              newIndex = currentIndex-1;
+            else if (currentIndex < index)
+              newIndex = currentIndex;
+            else {
+              if ("owner" in oldTab && oldTab.owner &&
+                  this.mPrefs.getBoolPref("browser.tabs.selectOwnerOnClose")) {
+                for (i = 0; i < this.mTabContainer.childNodes.length; ++i) {
+                  tab = this.mTabContainer.childNodes[i];
+                  if (tab == oldTab.owner) {
+                    newIndex = i;
+                    break;
+                  }
+                }
+              }
+              if (newIndex == -1)
+                newIndex = (index == l - 1) ? index - 1 : index;
+            }
+
+            // Select the new tab
+            this.selectedTab = this.mTabContainer.childNodes[newIndex];
+
+            for (i = oldTab._tPos; i < this.mTabContainer.childNodes.length; i++) {
               this.mTabContainer.childNodes[i]._tPos = i;
-
+            }
             this.mTabBox.selectedPanel = this.getBrowserForTab(this.mCurrentTab).parentNode;
+            this.mCurrentTab._selected = true;
+
             this.updateCurrentBrowser();
 
-            // see comment about destroy above
+            // see comment above destroy above
             oldBrowser.focusedWindow = null;
             oldBrowser.focusedElement = null;
           ]]>
         </body>
-      </method>
-
-      <method name="_fillTrailingGap">
-        <body><![CDATA[
-          try {
-            // if we're at the right side (and not the logical end,
-            // which is why this works for both LTR and RTL)
-            // of the tabstrip, we need to ensure that we stay 
-            // completely scrolled to the right side
-            var tabStrip = this.mTabContainer.mTabstrip;
-            var scrollPos = {};
-            tabStrip.scrollBoxObject.getPosition(scrollPos, {});
-            var scrolledSize = {};
-            tabStrip.scrollBoxObject.getScrolledSize(scrolledSize, {});
-
-            if (scrollPos.value + tabStrip.boxObject.width >= 
-                scrolledSize.value) {
-              tabStrip.scrollByPixels(-1);
-            }
-          } catch (e) {}
-        ]]></body>
       </method>
 
       <method name="reloadAllTabs">
@@ -1912,7 +1884,7 @@
               
               var remoteBrowser = draggedTab.ownerDocument.defaultView.getBrowser();
               var tabCount = remoteBrowser.tabContainer.childNodes.length;
-              remoteBrowser.removeTab(draggedTab, false);
+              remoteBrowser.removeTab(draggedTab);
               // close the other window if this was its last tab
               if (tabCount == 1)
                 draggedTab.ownerDocument.defaultView.close();
@@ -2489,7 +2461,7 @@
           var i = 0;
           for (; i < browsers.length; ++i) {
             if (this.getBrowserAtIndex(i).contentWindow == event.target) {
-              this.removeTab(this.mTabContainer.childNodes[i], false);
+              this.removeTab(this.mTabContainer.childNodes[i]);
               event.preventDefault();
 
               break;
@@ -2783,7 +2755,7 @@
           this.mTabstripClosebutton.collapsed = this.mCloseButtons != 3;
         ]]></body>
       </method>
-
+        
       <field name="_mPrefs">null</field>
       <property name="mPrefs" readonly="true">
         <getter>
@@ -2797,7 +2769,7 @@
         ]]>
         </getter>
       </property>
-
+        
       <method name="_handleTabSelect">
         <body><![CDATA[
           this.mTabstrip.ensureElementIsVisible(this.selectedItem);
@@ -2820,7 +2792,8 @@
               var width = this.mTabstrip.boxObject.width;
               if (width != this.mTabstripWidth) {
                 this.adjustTabstrip();
-                this._fillTrailingGap();
+                // XXX without this line the tab bar won't budge
+                this.mTabstrip.scrollByPixels(1);
                 this._handleTabSelect();
                 this.mTabstripWidth = width;
               }
@@ -3205,7 +3178,7 @@
             // Reset the "ignored click" flag
             this._ignoredClick = false;
 
-            tabbedBrowser.removeTab(bindingParent, true);
+            tabbedBrowser.removeTab(bindingParent);
             tabbedBrowser._blockDblClick = true;
 
             /* XXXmano hack (see bug 343628):
