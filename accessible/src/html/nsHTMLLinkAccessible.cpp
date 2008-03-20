@@ -97,12 +97,18 @@ nsHTMLLinkAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     *aState |= nsIAccessibleStates::STATE_SELECTABLE;
   }
 
-  *aState |= nsIAccessibleStates::STATE_LINKED;
   nsCOMPtr<nsILink> link = do_QueryInterface(mDOMNode);
   NS_ENSURE_STATE(link);
 
   nsLinkState linkState;
   link->GetLinkState(linkState);
+  if (linkState == eLinkState_NotLink) {
+    // This is a named anchor, not a link with also a name attribute. bail out.
+    return NS_OK;
+  }
+
+  *aState |= nsIAccessibleStates::STATE_LINKED;
+
   if (linkState == eLinkState_Visited)
     *aState |= nsIAccessibleStates::STATE_TRAVERSED;
 

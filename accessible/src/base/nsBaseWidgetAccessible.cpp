@@ -272,7 +272,8 @@ nsLinkableAccessible::CacheActionContent()
     GetAccService()->GetAccessibleInWeakShell(walkUpNode, mWeakShell,
                                               getter_AddRefs(walkUpAcc));
 
-    if (walkUpAcc && Role(walkUpAcc) == nsIAccessibleRole::ROLE_LINK) {
+    if (walkUpAcc && Role(walkUpAcc) == nsIAccessibleRole::ROLE_LINK &&
+        (State(walkUpAcc) & nsIAccessibleStates::STATE_LINKED)) {
       mIsLink = PR_TRUE;
       mActionContent = walkUpContent;
       return;
