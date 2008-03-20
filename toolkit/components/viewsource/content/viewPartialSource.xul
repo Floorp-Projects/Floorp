@@ -44,6 +44,7 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://global/content/viewSource.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://mozapps/skin/viewsource/viewsource.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
 <!DOCTYPE window [
@@ -122,18 +123,18 @@
 
       <menu id="file_menu" label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
         <menupopup id="filemenu-popup">
-          <menuitem key="key_savePage" command="cmd_savePage"
+          <menuitem key="key_savePage" command="cmd_savePage" id="menu_savePage"
                     label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;"/>
-          <menuitem command="cmd_pagesetup"
+          <menuitem command="cmd_pagesetup" id="menu_pageSetup"
                     label="&pageSetupCmd.label;" accesskey="&pageSetupCmd.accesskey;"/>
 #ifndef XP_MACOSX
-          <menuitem command="cmd_printpreview"
+          <menuitem command="cmd_printpreview" id="menu_printPreview"
                     label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;"/>
 #endif
-          <menuitem key="key_print" command="cmd_print"
+          <menuitem key="key_print" command="cmd_print" id="menu_print"
                     label="&printCmd.label;" accesskey="&printCmd.accesskey;"/>
           <menuseparator/>
-          <menuitem key="key_close" command="cmd_close"
+          <menuitem key="key_close" command="cmd_close" id="menu_close"
                     label="&closeCmd.label;" accesskey="&closeCmd.accesskey;"/>
         </menupopup>
       </menu>
