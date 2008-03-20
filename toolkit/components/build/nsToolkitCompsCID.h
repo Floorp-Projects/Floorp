@@ -74,9 +74,6 @@
 #define NS_TYPEAHEADFIND_CONTRACTID \
     "@mozilla.org/typeaheadfind;1"
 
-#define NS_PARENTALCONTROLSSERVICE_CONTRACTID \
-    "@mozilla.org/parental-controls-service;1"
-
 #define NS_URLCLASSIFIERDBSERVICE_CONTRACTID \
     "@mozilla.org/url-classifier/dbservice;1"
 
@@ -145,10 +142,6 @@
 // {59648a91-5a60-4122-8ff2-54b839c84aed}
 #define NS_GLOBALHISTORY_CID \
 { 0x59648a91, 0x5a60, 0x4122, { 0x8f, 0xf2, 0x54, 0xb8, 0x39, 0xc8, 0x4a, 0xed} }
-
-// {59648a91-5a60-4122-8ff2-54b839c84aed}
-#define NS_PARENTALCONTROLSSERVICE_CID \
-{ 0x580530e5, 0x118c, 0x4bc7, { 0xab, 0x88, 0xbc, 0x2c, 0xd2, 0xb9, 0x72, 0x23 } }
 
 // {e7f70966-9a37-48d7-8aeb-35998f31090e}
 #define NS_TYPEAHEADFIND_CID \

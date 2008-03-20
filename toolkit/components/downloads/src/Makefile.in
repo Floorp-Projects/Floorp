@@ -63,11 +63,9 @@ REQUIRES  = xpcom \
             dom \
             embed_base \
             alerts \
-            parentalcontrols \
             storage \
             exthandler \
             docshell \
-            toolkitcomps \
             $(NULL)
 
 CPPSRCS   = \
