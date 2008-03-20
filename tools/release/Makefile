@@ -1,6 +1,7 @@
 PRODUCT = $(shell grep "^product[ \t]" bootstrap.cfg | sed -e 's/[^=]*= *//')
 VERSION = $(shell grep "^version[ \t]" bootstrap.cfg | sed -e 's/[^=]*= *//')
 OLD_VERSION = $(shell grep "^oldVersion[ \t]" bootstrap.cfg | sed -e 's/[^=]*= *//')
+OLD_RC = $(shell grep "^oldRc[ \t]" bootstrap.cfg | sed -e 's/[^=]*= *//')
 PRODUCT_TAG = $(shell grep "^productTag[ \t]" bootstrap.cfg | sed -e 's/[^=]*= *//')
 # extract the numeric rc value from the config file
 PRODUCT_RC = $(shell grep "^rc[ \t]" bootstrap.cfg | sed -e 's/[^0-9]*\([0-9]*\).*/\1/')
@@ -32,7 +33,7 @@ stage:
 	# staging environment
 	mkdir -p /data/cltbld/${PRODUCT}-${VERSION}/batch1/stage
 	# download old builds, for l10n verify
-	cd /data && wget -nv --cut-dirs=3 -np -r ftp://ftp.mozilla.org/pub/mozilla.org/${PRODUCT}/nightly/${OLD_VERSION}-candidates/rc1/* && mv ftp.mozilla.org/nightly/* /home/ftp/pub/${PRODUCT}/nightly/ && rm -rfv ftp.mozilla.org
+	cd /data && wget -nv --cut-dirs=3 -np -r ftp://ftp.mozilla.org/pub/mozilla.org/${PRODUCT}/nightly/${OLD_VERSION}-candidates/rc${OLD_RC}/* && mv ftp.mozilla.org/nightly/* /home/ftp/pub/${PRODUCT}/nightly/ && rm -rfv ftp.mozilla.org
 	# download old release, for update verify
 	cd /data && wget -nv --cut-dirs=3 -np -r -e robots=off http://releases.mozilla.org/pub/mozilla.org/${PRODUCT}/releases/${OLD_VERSION}/ && mv releases.mozilla.org/releases/* /home/ftp/pub/${PRODUCT}/releases/ && rm -rfv releases.mozilla.org
 
