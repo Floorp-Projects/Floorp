@@ -41,7 +41,7 @@
 
 #include "nsComplexBreaker.h"
 
-#include <Usp10.h>
+#include <usp10.h>
 #include "nsUTF8Utils.h"
 #include "nsString.h"
 #include "nsTArray.h"

@@ -113,6 +113,7 @@
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX    "history_expire_days"
 #define PREF_BROWSER_HISTORY_EXPIRE_SITES       "history_expire_sites"
 #define PREF_AUTOCOMPLETE_ONLY_TYPED            "urlbar.matchOnlyTyped"
+#define PREF_AUTOCOMPLETE_ON_WORD_BOUNDARY      "urlbar.matchOnWordBoundary"
 #define PREF_AUTOCOMPLETE_FILTER_JAVASCRIPT     "urlbar.filter.javascript"
 #define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
 #define PREF_AUTOCOMPLETE_MAX_RICH_RESULTS      "urlbar.maxRichResults"
@@ -240,11 +241,6 @@ inline void ReverseString(const nsString& aInput, nsAString& aReversed)
   for (PRInt32 i = aInput.Length() - 1; i >= 0; i --)
     aReversed.Append(aInput[i]);
 }
-inline void parameterString(PRInt32 paramIndex, nsACString& aParamString)
-{
-  aParamString = nsPrintfCString("?%d", paramIndex + 1);
-}
-
 
 // UpdateBatchScoper
 //
@@ -329,9 +325,11 @@ nsNavHistory::nsNavHistory() : mBatchLevel(0),
                                mExpireNowTimer(nsnull),
                                mExpire(this),
                                mAutoCompleteOnlyTyped(PR_FALSE),
+                               mAutoCompleteOnWordBoundary(PR_TRUE),
                                mAutoCompleteMaxResults(25),
                                mAutoCompleteSearchChunkSize(100),
                                mAutoCompleteSearchTimeout(100),
+                               mAutoCompleteFinishedSearch(PR_FALSE),
                                mExpireDaysMin(0),
                                mExpireDaysMax(0),
                                mExpireSites(0),
@@ -471,6 +469,7 @@ nsNavHistory::Init()
   nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(mPrefBranch);
   if (pbi) {
     pbi->AddObserver(PREF_AUTOCOMPLETE_ONLY_TYPED, this, PR_FALSE);
+    pbi->AddObserver(PREF_AUTOCOMPLETE_ON_WORD_BOUNDARY, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_FILTER_JAVASCRIPT, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_MAX_RICH_RESULTS, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_SEARCH_CHUNK_SIZE, this, PR_FALSE);
@@ -1048,7 +1047,7 @@ nsNavHistory::InitStatements()
       "SELECT b.fk, h.url, COALESCE(b.title, h.title), "
         "h.rev_host, h.visit_count, "
         SQL_STR_FRAGMENT_MAX_VISIT_DATE( "b.fk" )
-        ", f.url, null, null, b.dateAdded, b.lastModified "
+        ", f.url, null, b.id, b.dateAdded, b.lastModified "
       "FROM moz_bookmarks b "
       "JOIN moz_places h ON b.fk = h.id "
       "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
@@ -1786,6 +1785,10 @@ nsNavHistory::LoadPrefs(PRBool aInitializing)
 
   mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX, &mExpireDaysMax);
   mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MIN, &mExpireDaysMin);
+  // Cap max days to min days to prevent expiring pages younger than min
+  // NOTE: if history is disabled in preferences, then mExpireDaysMax == 0
+  if (mExpireDaysMax && mExpireDaysMax < mExpireDaysMin)
+    mExpireDaysMax = mExpireDaysMin;
   if (NS_FAILED(mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_SITES,
                                         &mExpireSites)))
     mExpireSites = EXPIRATION_CAP_SITES;
@@ -1794,6 +1797,8 @@ nsNavHistory::LoadPrefs(PRBool aInitializing)
   PRBool oldCompleteOnlyTyped = mAutoCompleteOnlyTyped;
   mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED,
                            &mAutoCompleteOnlyTyped);
+  mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ON_WORD_BOUNDARY,
+                           &mAutoCompleteOnWordBoundary);
   mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_FILTER_JAVASCRIPT,
                            &mAutoCompleteFilterJavascript);
   mPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_MAX_RICH_RESULTS,
@@ -2716,12 +2721,15 @@ PRBool NeedToFilterResultSet(const nsCOMArray<nsNavHistoryQuery>& aQueries,
 
 // ** Helper class for ConstructQueryString **/
 
+static const PRInt32 MAX_HISTORY_DAYS = 6;
+
 class PlacesSQLQueryBuilder
 {
 public:
   PlacesSQLQueryBuilder(const nsCString& aConditions,
                         nsNavHistoryQueryOptions* aOptions,
-                        PRBool aUseLimit);
+                        PRBool aUseLimit,
+                        nsNavHistory::StringHash& aAddParams);
 
   nsresult GetQueryString(nsCString& aQueryString);
 
@@ -2755,12 +2763,14 @@ private:
   nsCString mGroupBy;
   PRBool mHasDateColumns;
   PRBool mSkipOrderBy;
+  nsNavHistory::StringHash& mAddParams;
 };
 
 PlacesSQLQueryBuilder::PlacesSQLQueryBuilder(
     const nsCString& aConditions, 
     nsNavHistoryQueryOptions* aOptions, 
-    PRBool aUseLimit) :
+    PRBool aUseLimit,
+    nsNavHistory::StringHash& aAddParams) :
   mConditions(aConditions),
   mResultType(aOptions->ResultType()),
   mQueryType(aOptions->QueryType()),
@@ -2768,7 +2778,8 @@ PlacesSQLQueryBuilder::PlacesSQLQueryBuilder(
   mSortingMode(aOptions->SortingMode()),
   mMaxResults(aOptions->MaxResults()),
   mUseLimit(aUseLimit),
-  mSkipOrderBy(PR_FALSE)
+  mSkipOrderBy(PR_FALSE),
+  mAddParams(aAddParams)
 {
   mHasDateColumns = (mQueryType == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS);
 }
@@ -2921,11 +2932,11 @@ PlacesSQLQueryBuilder::SelectAsDay()
     PRTime mNow;
   } midnight;
 
+  nsCAutoString dateParam;
   nsCAutoString dateName;
 
-  const PRInt32 MAX_DAYS = 6;
-
-  for (PRInt32 i = 0; i <= MAX_DAYS; i++) {
+  for (PRInt32 i = 0; i <= MAX_HISTORY_DAYS; i++) {
+    dateParam = nsPrintfCString(":dayTitle%d", i);
     switch (i)
     {
       case 0:
@@ -2942,6 +2953,8 @@ PlacesSQLQueryBuilder::SelectAsDay()
         break;
     }
 
+    mAddParams.Put(dateParam, dateName);
+
     PRInt32 fromDayAgo = -i;
     PRInt32 toDayAgo = -i + 1;
 
@@ -2949,14 +2962,14 @@ PlacesSQLQueryBuilder::SelectAsDay()
       "SELECT * "
       "FROM (SELECT %d dayOrder, "
                   "'%d' dayRange, "
-                  "'%s' dayTitle, "
+                  "%s dayTitle, " // This will be bound
                   "%llu beginTime, "
                   "%llu endTime "
       "FROM  moz_historyvisits "
       "WHERE visit_date >= %llu AND visit_date < %llu "
       "  AND visit_type NOT IN (0,4) "
       "LIMIT 1) TUNION%d UNION ", 
-      i, i, dateName.get(), 
+      i, i, dateParam.get(), 
       midnight.Get(fromDayAgo),
       midnight.Get(toDayAgo), 
       midnight.Get(fromDayAgo),
@@ -2966,14 +2979,17 @@ PlacesSQLQueryBuilder::SelectAsDay()
     mQueryString.Append( dayRange );
   }
 
-  history->GetAgeInDaysString(MAX_DAYS, 
+  dateParam = nsPrintfCString(":dayTitle%d", MAX_HISTORY_DAYS+1);
+  history->GetAgeInDaysString(MAX_HISTORY_DAYS, 
     NS_LITERAL_STRING("finduri-AgeInDays-isgreater").get(), dateName);
+
+  mAddParams.Put(dateParam, dateName);
 
   mQueryString.Append(nsPrintfCString(1024,
     "SELECT * "
     "FROM (SELECT %d dayOrder, "
                  "'%d+' dayRange, "
-                 "'%s' dayTitle, "
+                 "%s dayTitle, " // This will be bound
                  "1 beginTime, "
                  "%llu endTime "
           "FROM  moz_historyvisits "
@@ -2982,11 +2998,11 @@ PlacesSQLQueryBuilder::SelectAsDay()
           "LIMIT 1) TUNIONLAST "
     ") TOUTER " // TOUTER END
     "ORDER BY dayOrder ASC",
-    MAX_DAYS+1,
-    MAX_DAYS+1,
-    dateName.get(),
-    midnight.Get(-MAX_DAYS),
-    midnight.Get(-MAX_DAYS)
+    MAX_HISTORY_DAYS+1,
+    MAX_HISTORY_DAYS+1,
+    dateParam.get(),
+    midnight.Get(-MAX_HISTORY_DAYS),
+    midnight.Get(-MAX_HISTORY_DAYS)
     ));
 
   return NS_OK;
@@ -3001,6 +3017,7 @@ PlacesSQLQueryBuilder::SelectAsSite()
   NS_ENSURE_STATE(history);
 
   history->GetStringFromName(NS_LITERAL_STRING("localhost").get(), localFiles);
+  mAddParams.Put(NS_LITERAL_CSTRING(":localhost"), localFiles);
 
   // We want just sites, but from whole database - we omit join with visits, 
   // it could happen, that we get later empty host, when we click on it, but 
@@ -3010,7 +3027,7 @@ PlacesSQLQueryBuilder::SelectAsSite()
     mQueryString = nsPrintfCString(2048,
       "SELECT DISTINCT null, "
              "'place:type=%ld&sort=%ld&domain=&domainIsHost=true', "
-             "'%s', '%s', null, null, null, null, null "
+             ":localhost, :localhost, null, null, null, null, null "
       "WHERE EXISTS(SELECT '*' "
                    "FROM moz_places "
                    "WHERE hidden <> 1 AND rev_host = '.' "
@@ -3026,8 +3043,6 @@ PlacesSQLQueryBuilder::SelectAsSite()
             "ORDER BY 1 ASC) inner1",
       nsINavHistoryQueryOptions::RESULTS_AS_URI,
       nsINavHistoryQueryOptions::SORT_BY_TITLE_ASCENDING,
-      localFiles.get(),
-      localFiles.get(),
       nsINavHistoryQueryOptions::RESULTS_AS_URI,
       nsINavHistoryQueryOptions::SORT_BY_TITLE_ASCENDING);
   // Now we need to use the filters - we need them all
@@ -3036,8 +3051,8 @@ PlacesSQLQueryBuilder::SelectAsSite()
     mQueryString = nsPrintfCString(4096,
       "SELECT DISTINCT null, "
              "'place:type=%ld&sort=%ld&domain=&domainIsHost=true"
-               "&beginTime='||?1||'&endTime='||?2, "
-             "'%s', '%s', null, null, null, null, null "
+               "&beginTime='||:begin_time||'&endTime='||:end_time, "
+             ":localhost, :localhost, null, null, null, null, null "
       "WHERE EXISTS(SELECT '*' "
                    "FROM moz_places h  "
                         "JOIN moz_historyvisits v ON h.id = v.place_id "
@@ -3047,7 +3062,7 @@ PlacesSQLQueryBuilder::SelectAsSite()
       "UNION ALL "
       "SELECT DISTINCT null, "
              "'place:type=%ld&sort=%ld&domain='||host||'&domainIsHost=true"
-               "&beginTime='||?1||'&endTime='||?2, "
+               "&beginTime='||:begin_time||'&endTime='||:end_time, "
              "host, host, null, null, null, null, null "
       "FROM (SELECT get_unreversed_host(rev_host) host "
             "FROM (SELECT DISTINCT rev_host "
@@ -3059,8 +3074,6 @@ PlacesSQLQueryBuilder::SelectAsSite()
             "ORDER BY 1 ASC) inner1",
       nsINavHistoryQueryOptions::RESULTS_AS_URI,
       nsINavHistoryQueryOptions::SORT_BY_TITLE_ASCENDING,
-      localFiles.get(),
-      localFiles.get(),
       nsINavHistoryQueryOptions::RESULTS_AS_URI,
       nsINavHistoryQueryOptions::SORT_BY_TITLE_ASCENDING);
   }
@@ -3102,10 +3115,11 @@ PlacesSQLQueryBuilder::Where()
     nsCAutoString innerCondition;
     // If we have condition AND it
     if (!mConditions.IsEmpty()) {
-      innerCondition = " AND ";
+      innerCondition = " AND (";
       innerCondition += mConditions;
+      innerCondition += ")";
     }
-    mQueryString.ReplaceSubstring("{ADDITIONAL_CONDITIONS}", 
+    mQueryString.ReplaceSubstring("{ADDITIONAL_CONDITIONS}",
                                   innerCondition.get());
 
   } else if (!mConditions.IsEmpty()) {
@@ -3213,7 +3227,9 @@ nsresult
 nsNavHistory::ConstructQueryString(
     const nsCOMArray<nsNavHistoryQuery>& aQueries,
     nsNavHistoryQueryOptions* aOptions, 
-    nsCString& queryString, PRBool& aParamsPresent)
+    nsCString& queryString, 
+    PRBool& aParamsPresent,
+    nsNavHistory::StringHash& aAddParams)
 {
   nsresult rv;
 
@@ -3276,19 +3292,11 @@ nsNavHistory::ConstructQueryString(
 
   nsCAutoString conditions;
 
-  // Query string: Output parameters should be in order of kGetInfoIndex_*
-  // WATCH OUT: nsNavBookmarks::Init also creates some statements that share
-  // these same indices for passing to RowToResult. If you add something to
-  // this, you also need to update the bookmark statements to keep them in
-  // sync!
-  
-  PRInt32 numParameters = 0;
   PRInt32 i;
   for (i = 0; i < aQueries.Count(); i ++) {
     nsCString queryClause;
     PRInt32 clauseParameters = 0;
-    rv = QueryToSelectClause(aQueries[i], aOptions, numParameters,
-                             &queryClause, &clauseParameters);
+    rv = QueryToSelectClause(aQueries[i], aOptions, i, &queryClause);
     NS_ENSURE_SUCCESS(rv, rv);
     if (! queryClause.IsEmpty()) {
       aParamsPresent = PR_TRUE;
@@ -3296,7 +3304,6 @@ nsNavHistory::ConstructQueryString(
         conditions += NS_LITERAL_CSTRING(" OR ");
       conditions += NS_LITERAL_CSTRING("(") + queryClause +
         NS_LITERAL_CSTRING(")");
-      numParameters += clauseParameters;
     }
   }
 
@@ -3306,11 +3313,30 @@ nsNavHistory::ConstructQueryString(
   PRBool useLimitClause = !NeedToFilterResultSet(aQueries, aOptions);
 
   PlacesSQLQueryBuilder queryStringBuilder(conditions, aOptions, 
-                                           useLimitClause);
+                                           useLimitClause, aAddParams);
   rv = queryStringBuilder.GetQueryString(queryString);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
+}
+
+PLDHashOperator BindAdditionalParameter(nsNavHistory::StringHash::KeyType aParamName, 
+                                        nsCString aParamValue,
+                                        void* aStatement)
+{
+  mozIStorageStatement* stmt = static_cast<mozIStorageStatement*>(aStatement);
+
+  PRUint32 index;
+  nsresult rv = stmt->GetParameterIndex(aParamName, &index);
+
+  if (NS_FAILED(rv))
+    return PL_DHASH_STOP;
+
+  rv = stmt->BindUTF8StringParameter(index, aParamValue);
+  if (NS_FAILED(rv))
+    return PL_DHASH_STOP;
+
+  return PL_DHASH_NEXT;
 }
 
 // nsNavHistory::GetQueryResults
@@ -3340,8 +3366,10 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
 
   nsCString queryString;
   PRBool paramsPresent = PR_FALSE;
+  nsNavHistory::StringHash addParams;
+  addParams.Init(MAX_HISTORY_DAYS+1);
   nsresult rv = ConstructQueryString(aQueries, aOptions, queryString, 
-                                     paramsPresent);
+                                     paramsPresent, addParams);
   NS_ENSURE_SUCCESS(rv,rv);
 
 #ifdef DEBUG_thunder
@@ -3360,16 +3388,14 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
 
   if (paramsPresent) {
     // bind parameters
-    PRInt32 numParameters = 0;
     PRInt32 i;
     for (i = 0; i < aQueries.Count(); i++) {
-      PRInt32 clauseParameters = 0;
-      rv = BindQueryClauseParameters(statement, numParameters,
-                                     aQueries[i], aOptions, &clauseParameters);
+      rv = BindQueryClauseParameters(statement, i, aQueries[i], aOptions);
       NS_ENSURE_SUCCESS(rv, rv);
-      numParameters += clauseParameters;
     }
   }
+
+  addParams.EnumerateRead(BindAdditionalParameter, statement.get());
 
   // optimize the case where we just use the results as is
   // and we don't need to do any post-query filtering
@@ -3798,6 +3824,19 @@ nsNavHistory::RemoveAllPages()
   nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM"));
   NS_ENSURE_SUCCESS(rv, rv);
 #endif
+
+  // privacy cleanup, if there's an old history.dat around, just delete it
+  nsCOMPtr<nsIFile> oldHistoryFile;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_HISTORY_50_FILE,
+                                       getter_AddRefs(oldHistoryFile));
+  if (NS_FAILED(rv)) return rv;
+
+  PRBool fileExists;
+  if (NS_SUCCEEDED(oldHistoryFile->Exists(&fileExists)) && fileExists) {
+    rv = oldHistoryFile->Remove(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   return NS_OK;
 }
 
@@ -4619,10 +4658,63 @@ nsNavHistory::CommitLazyMessages()
 
 // Query stuff *****************************************************************
 
+// Helper class for QueryToSelectClause
+//
+// This class helps to build part of the WHERE clause. It supports 
+// multiple queries by appending the query index to the parameter name. 
+// For the query with index 0 the parameter name is not altered what
+// allows using this parameter in other situations (see SelectAsSite). 
+
+class ConditionBuilder
+{
+public:
+
+  ConditionBuilder(PRInt32 aQueryIndex): mQueryIndex(aQueryIndex)
+  { }
+
+  ConditionBuilder& Condition(const char* aStr)
+  {
+    if (!mClause.IsEmpty())
+      mClause.AppendLiteral(" AND ");
+    Str(aStr);
+    return *this;
+  }
+
+  ConditionBuilder& Str(const char* aStr)
+  {
+    mClause.Append(' ');
+    mClause.Append(aStr);
+    mClause.Append(' ');
+    return *this;
+  }
+
+  ConditionBuilder& Param(const char* aParam)
+  {
+    mClause.Append(' ');
+    if (!mQueryIndex)
+      mClause.Append(aParam);
+    else
+      mClause += nsPrintfCString("%s%d", aParam, mQueryIndex);
+
+    mClause.Append(' ');
+    return *this;
+  }
+
+  void GetClauseString(nsCString& aResult) 
+  {
+    aResult = mClause;
+  }
+
+private:
+
+  PRInt32 mQueryIndex;
+  nsCString mClause;
+};
+
 
 // nsNavHistory::QueryToSelectClause
 //
-//    THE ORDER AND BEHAVIOR SHOULD BE IN SYNC WITH BindQueryClauseParameters
+//    THE BEHAVIOR SHOULD BE IN SYNC WITH BindQueryClauseParameters
 //
 //    I don't check return values from the query object getters because there's
 //    no way for those to fail.
@@ -4630,86 +4722,47 @@ nsNavHistory::CommitLazyMessages()
 nsresult
 nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
                                   nsNavHistoryQueryOptions* aOptions,
-                                  PRInt32 aStartParameter,
-                                  nsCString* aClause,
-                                  PRInt32* aParamCount)
+                                  PRInt32 aQueryIndex,
+                                  nsCString* aClause)
 {
   PRBool hasIt;
 
-  aClause->Truncate();
-  *aParamCount = 0;
-  nsCAutoString paramString;
+  ConditionBuilder clause(aQueryIndex);
 
   // begin time
-  if (NS_SUCCEEDED(aQuery->GetHasBeginTime(&hasIt)) && hasIt) {
-    parameterString(aStartParameter + *aParamCount, paramString);
-    *aClause += NS_LITERAL_CSTRING("v.visit_date >= ") + paramString;
-    (*aParamCount) ++;
-  }
+  if (NS_SUCCEEDED(aQuery->GetHasBeginTime(&hasIt)) && hasIt) 
+    clause.Condition("v.visit_date >=").Param(":begin_time");
 
   // end time
-  if (NS_SUCCEEDED(aQuery->GetHasEndTime(&hasIt)) && hasIt) {
-    if (! aClause->IsEmpty())
-      *aClause += NS_LITERAL_CSTRING(" AND ");
-    parameterString(aStartParameter + *aParamCount, paramString);
-    *aClause += NS_LITERAL_CSTRING("v.visit_date <= ") + paramString;
-    (*aParamCount) ++;
-  }
+  if (NS_SUCCEEDED(aQuery->GetHasEndTime(&hasIt)) && hasIt)
+    clause.Condition("v.visit_date <=").Param(":end_time");
 
   // search terms FIXME
 
   // min and max visit count
-  if (aQuery->MinVisits() >= 0) {
-    if (! aClause->IsEmpty())
-      *aClause += NS_LITERAL_CSTRING(" AND ");
-    parameterString(aStartParameter + *aParamCount, paramString);
-    *aClause += NS_LITERAL_CSTRING("h.visit_count >= ") + paramString;
-    (*aParamCount) ++;
-  }
+  if (aQuery->MinVisits() >= 0)
+    clause.Condition("h.visit_count >=").Param(":min_visits");
 
-  if (aQuery->MaxVisits() >= 0) {
-    if (! aClause->IsEmpty())
-      *aClause += NS_LITERAL_CSTRING(" AND ");
-    parameterString(aStartParameter + *aParamCount, paramString);
-    *aClause += NS_LITERAL_CSTRING("h.visit_count <= ") + paramString;
-    (*aParamCount) ++;
-  }
-
+  if (aQuery->MaxVisits() >= 0)
+    clause.Condition("h.visit_count <=").Param(":max_visits");
   
+  // only bookmarked, has no affect on bookmarks-only queries
   if (aOptions->QueryType() != nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS &&
-      aQuery->OnlyBookmarked()) {
-    // only bookmarked, has no affect on bookmarks-only queries
-    if (!aClause->IsEmpty())
-      *aClause += NS_LITERAL_CSTRING(" AND ");
-
-    *aClause += NS_LITERAL_CSTRING("EXISTS (SELECT b.fk FROM moz_bookmarks b WHERE b.type = ") +
-                nsPrintfCString("%d", nsNavBookmarks::TYPE_BOOKMARK) +
-                NS_LITERAL_CSTRING(" AND b.fk = h.id)");
-  }
+      aQuery->OnlyBookmarked())
+    clause.Condition("EXISTS (SELECT b.fk FROM moz_bookmarks b WHERE b.type = ")
+          .Str(nsPrintfCString("%d", nsNavBookmarks::TYPE_BOOKMARK).get())
+          .Str("AND b.fk = h.id)");
 
   // domain
   if (NS_SUCCEEDED(aQuery->GetHasDomain(&hasIt)) && hasIt) {
-    if (! aClause->IsEmpty())
-      *aClause += NS_LITERAL_CSTRING(" AND ");
-
     PRBool domainIsHost = PR_FALSE;
     aQuery->GetDomainIsHost(&domainIsHost);
-    if (domainIsHost) {
-      parameterString(aStartParameter + *aParamCount, paramString);
-      *aClause += NS_LITERAL_CSTRING("h.rev_host = ") + paramString;
-      aClause->Append(' ');
-      (*aParamCount) ++;
-    } else {
+    if (domainIsHost)
+      clause.Condition("h.rev_host =").Param(":domain_lower");
+    else
       // see domain setting in BindQueryClauseParameters for why we do this
-      parameterString(aStartParameter + *aParamCount, paramString);
-      *aClause += NS_LITERAL_CSTRING("h.rev_host >= ") + paramString;
-      (*aParamCount) ++;
-
-      parameterString(aStartParameter + *aParamCount, paramString);
-      *aClause += NS_LITERAL_CSTRING(" AND h.rev_host < ") + paramString;
-      aClause->Append(' ');
-      (*aParamCount) ++;
-    }
+      clause.Condition("h.rev_host >=").Param(":domain_lower")
+            .Condition("h.rev_host <").Param(":domain_upper");
   }
 
   // URI
@@ -4720,79 +4773,110 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
   // In the future, we could do a >=,<= thing like we do for domain names to
   // make it use the index.
   if (NS_SUCCEEDED(aQuery->GetHasUri(&hasIt)) && hasIt) {
-    if (! aClause->IsEmpty())
-      *aClause += NS_LITERAL_CSTRING(" AND ");
-
-    nsCAutoString paramString;
-    parameterString(aStartParameter + *aParamCount, paramString);
-    (*aParamCount) ++;
-
-    nsCAutoString match;
-    if (aQuery->UriIsPrefix()) {
-      // Prefix: want something of the form SUBSTR(h.url, 0, length(?1)) = ?1
-      *aClause += NS_LITERAL_CSTRING("SUBSTR(h.url, 0, LENGTH(") +
-        paramString + NS_LITERAL_CSTRING(")) = ") + paramString;
-    } else {
-      *aClause += NS_LITERAL_CSTRING("h.url = ") + paramString;
-    }
-    aClause->Append(' ');
+    if (aQuery->UriIsPrefix())
+      clause.Condition("SUBSTR(h.url, 0, LENGTH(").Param(":uri").Str(")) =")
+            .Param(":uri");
+    else
+      clause.Condition("h.url =").Param(":uri");
   }
 
   // annotation
   aQuery->GetHasAnnotation(&hasIt);
   if (hasIt) {
-    if (! aClause->IsEmpty())
-      *aClause += NS_LITERAL_CSTRING(" AND ");
-
-    nsCAutoString paramString;
-    parameterString(aStartParameter + *aParamCount, paramString);
-    (*aParamCount) ++;
-
+    clause.Condition("");
     if (aQuery->AnnotationIsNot())
-      aClause->AppendLiteral("NOT ");
-    aClause->AppendLiteral("EXISTS (SELECT h.id FROM moz_annos anno JOIN moz_anno_attributes annoname ON anno.anno_attribute_id = annoname.id WHERE anno.place_id = h.id AND annoname.name = ");
-    aClause->Append(paramString);
-    aClause->AppendLiteral(") ");
+      clause.Str("NOT");
+    clause.Str(
+      "EXISTS "
+        "(SELECT h.id "
+         "FROM moz_annos anno "
+              "JOIN moz_anno_attributes annoname "
+                "ON anno.anno_attribute_id = annoname.id "
+         "WHERE anno.place_id = h.id "
+           "AND annoname.name = ").Param(":anno").Str(")");
     // annotation-based queries don't get the common conditions, so you get
     // all URLs with that annotation
   }
 
+  clause.GetClauseString(*aClause);
   return NS_OK;
 }
 
+// Helper class for BindQueryClauseParameters
+//
+// This class converts parameter names to parameter indexes. It supports 
+// multiple queries by appending the query index to the parameter name. 
+// For the query with index 0 the parameter name is not altered what
+// allows using this parameter in other situations (see SelectAsSite). 
+
+class IndexGetter
+{
+public:
+  IndexGetter(PRInt32 aQueryIndex, mozIStorageStatement* aStatement) : 
+    mQueryIndex(aQueryIndex), mStatement(aStatement)
+  {
+    mResult = NS_OK;
+  }
+
+  PRUint32 For(const char* aName) 
+  {
+    PRUint32 index;
+
+    // Do not execute if we already had an error
+    if (NS_SUCCEEDED(mResult)) {
+      if (!mQueryIndex)
+        mResult = mStatement->GetParameterIndex(nsCAutoString(aName), &index);
+      else
+        mResult = mStatement->GetParameterIndex(
+                      nsPrintfCString("%s%d", aName, mQueryIndex), &index);
+    }
+
+    if (NS_SUCCEEDED(mResult))
+      return index;
+
+    return -1; // Invalid index
+  }
+
+  nsresult Result() 
+  {
+    return mResult;
+  }
+
+private:
+  PRInt32 mQueryIndex;
+  mozIStorageStatement* mStatement;
+  nsresult mResult;
+};
 
 // nsNavHistory::BindQueryClauseParameters
 //
-//    THE ORDER AND BEHAVIOR SHOULD BE IN SYNC WITH QueryToSelectClause
+//    THE BEHAVIOR SHOULD BE IN SYNC WITH QueryToSelectClause
 
 nsresult
 nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
-                                        PRInt32 aStartParameter,
+                                        PRInt32 aQueryIndex,
                                         nsNavHistoryQuery* aQuery, // const
-                                        nsNavHistoryQueryOptions* aOptions,
-                                        PRInt32* aParamCount)
+                                        nsNavHistoryQueryOptions* aOptions)
 {
   nsresult rv;
-  (*aParamCount) = 0;
 
   PRBool hasIt;
+  IndexGetter index(aQueryIndex, statement);
 
   // begin time
   if (NS_SUCCEEDED(aQuery->GetHasBeginTime(&hasIt)) && hasIt) {
     PRTime time = NormalizeTime(aQuery->BeginTimeReference(),
                                 aQuery->BeginTime());
-    rv = statement->BindInt64Parameter(aStartParameter + *aParamCount, time);
+    rv = statement->BindInt64Parameter(index.For(":begin_time"), time);
     NS_ENSURE_SUCCESS(rv, rv);
-    (*aParamCount) ++;
   }
 
   // end time
   if (NS_SUCCEEDED(aQuery->GetHasEndTime(&hasIt)) && hasIt) {
     PRTime time = NormalizeTime(aQuery->EndTimeReference(),
                                 aQuery->EndTime());
-    rv = statement->BindInt64Parameter(aStartParameter + *aParamCount, time);
+    rv = statement->BindInt64Parameter(index.For(":end_time"), time);
     NS_ENSURE_SUCCESS(rv, rv);
-    (*aParamCount) ++;
   }
 
   // search terms FIXME
@@ -4800,16 +4884,14 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
   // min and max visit count
   PRInt32 visits = aQuery->MinVisits();
   if (visits >= 0) {
-    rv = statement->BindInt32Parameter(aStartParameter + *aParamCount, visits);
+    rv = statement->BindInt32Parameter(index.For(":min_visits"), visits);
     NS_ENSURE_SUCCESS(rv, rv);
-    (*aParamCount) ++;
   }
 
   visits = aQuery->MaxVisits();
   if (visits >= 0) {
-    rv = statement->BindInt32Parameter(aStartParameter + *aParamCount, visits);
+    rv = statement->BindInt32Parameter(index.For(":max_visits"), visits);
     NS_ENSURE_SUCCESS(rv, rv);
-    (*aParamCount) ++;
   }
 
   // domain (see GetReversedHostname for more info on reversed host names)
@@ -4818,38 +4900,34 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
     GetReversedHostname(NS_ConvertUTF8toUTF16(aQuery->Domain()), revDomain);
 
     if (aQuery->DomainIsHost()) {
-      rv = statement->BindStringParameter(aStartParameter + *aParamCount, revDomain);
+      rv = statement->BindStringParameter(index.For(":domain_lower"), revDomain);
       NS_ENSURE_SUCCESS(rv, rv);
-      (*aParamCount) ++;
     } else {
       // for "mozilla.org" do query >= "gro.allizom." AND < "gro.allizom/"
       // which will get everything starting with "gro.allizom." while using the
       // index (using SUBSTRING() causes indexes to be discarded).
       NS_ASSERTION(revDomain[revDomain.Length() - 1] == '.', "Invalid rev. host");
-      rv = statement->BindStringParameter(aStartParameter + *aParamCount, revDomain);
+      rv = statement->BindStringParameter(index.For(":domain_lower"), revDomain);
       NS_ENSURE_SUCCESS(rv, rv);
-      (*aParamCount) ++;
       revDomain.Truncate(revDomain.Length() - 1);
       revDomain.Append(PRUnichar('/'));
-      rv = statement->BindStringParameter(aStartParameter + *aParamCount, revDomain);
+      rv = statement->BindStringParameter(index.For(":domain_upper"), revDomain);
       NS_ENSURE_SUCCESS(rv, rv);
-      (*aParamCount) ++;
     }
   }
 
   // URI
-  if (NS_SUCCEEDED(aQuery->GetHasUri(&hasIt)) && hasIt) {
-    BindStatementURI(statement, aStartParameter + *aParamCount, aQuery->Uri());
-    (*aParamCount) ++;
-  }
+  if (NS_SUCCEEDED(aQuery->GetHasUri(&hasIt)) && hasIt)
+    BindStatementURI(statement, index.For(":uri"), aQuery->Uri());
 
   // annotation
-  aQuery->GetHasAnnotation(&hasIt);
-  if (hasIt) {
-    rv = statement->BindUTF8StringParameter(aStartParameter + *aParamCount,
+  if (NS_SUCCEEDED(aQuery->GetHasAnnotation(&hasIt)) && hasIt) {
+    rv = statement->BindUTF8StringParameter(index.For(":anno"), 
                                             aQuery->Annotation());
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  NS_ENSURE_SUCCESS(index.Result(), index.Result());
 
   return NS_OK;
 }

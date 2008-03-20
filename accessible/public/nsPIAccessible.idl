@@ -117,5 +117,13 @@ interface nsPIAccessible : nsISupports
    *                      nsnull if none.
    */
    void setRoleMapEntry(in nsRoleMapEntryPtr aRoleMapEntry);
+
+  /**
+   * Maps ARIA state attributes to state of accessible. Note the given state
+   * argument should hold states for accessible before you pass it into this
+   * method.
+   * @param  in/out where to fill the states into.
+   */
+   void getARIAState(out unsigned long aState);
 };
 

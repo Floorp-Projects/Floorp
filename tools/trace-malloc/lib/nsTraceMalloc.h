@@ -229,6 +229,22 @@ NS_TraceMallocFlushLogfiles(void);
 PR_EXTERN(void)
 NS_TrackAllocation(void* ptr, FILE *ofp);
 
+/* opaque type for API */
+typedef struct nsTMStackTraceIDStruct *nsTMStackTraceID;
+
+/**
+ * Get an identifier for the stack trace of the current thread (to this
+ * function's callsite) that can be used to print that stack trace later.
+ */
+PR_EXTERN(nsTMStackTraceID)
+NS_TraceMallocGetStackTrace(void);
+
+/**
+ * Print the stack trace identified.
+ */
+PR_EXTERN(void)
+NS_TraceMallocPrintStackTrace(FILE *ofp, nsTMStackTraceID id);
+
 PR_END_EXTERN_C
 
 #endif /* nsTraceMalloc_h___ */

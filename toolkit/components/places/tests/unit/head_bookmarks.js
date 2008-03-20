@@ -38,6 +38,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
+const NS_APP_HISTORY_50_FILE = "UHist";
+
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
@@ -63,6 +65,11 @@ if (!profileDir) {
       persistent.value = true;
       if (prop == NS_APP_USER_PROFILE_50_DIR) {
         return dirSvc.get("CurProcD", Ci.nsIFile);
+      }
+      if (prop == NS_APP_HISTORY_50_FILE) {
+        var histFile = dirSvc.get("CurProcD", Ci.nsIFile);
+        histFile.append("history.dat");
+        return histFile;
       }
       throw Cr.NS_ERROR_FAILURE;
     },

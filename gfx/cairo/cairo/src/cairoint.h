@@ -715,6 +715,7 @@ struct _cairo_image_surface {
     unsigned char *data;
     cairo_bool_t owns_data;
     cairo_bool_t has_clip;
+    cairo_image_transparency_t transparency;
 
     int width;
     int height;
@@ -1910,6 +1911,9 @@ cairo_private cairo_image_surface_t *
 _cairo_image_surface_clone (cairo_image_surface_t	*surface,
 			    cairo_format_t		 format);
 
+cairo_private cairo_image_transparency_t
+_cairo_image_analyze_transparency (cairo_image_surface_t      *image);
+
 cairo_private cairo_bool_t
 _cairo_surface_is_image (const cairo_surface_t *surface);
 
@@ -2251,6 +2255,7 @@ slim_hidden_proto (cairo_image_surface_create);
 slim_hidden_proto (cairo_image_surface_create_for_data);
 slim_hidden_proto (cairo_image_surface_get_height);
 slim_hidden_proto (cairo_image_surface_get_width);
+slim_hidden_proto (cairo_format_stride_for_width);
 slim_hidden_proto (cairo_line_to);
 slim_hidden_proto (cairo_mask);
 slim_hidden_proto (cairo_matrix_init);

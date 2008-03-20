@@ -51,7 +51,7 @@ bin/run-mozilla.sh
 bin/plugins/libnullplugin.so
 bin/libsqlite3.so
 bin/README.txt
-bin/libjemalloc.so
+bin/blocklist.xml
 
 ; [Components]
 bin/components/alerts.xpt

@@ -160,6 +160,8 @@ STDMETHODIMP
 CAccessibleTable::get_columnDescription(long aColumn, BSTR *aDescription)
 {
 __try {
+  *aDescription = NULL;
+
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryInterface(this));
   NS_ASSERTION(tableAcc, CANT_QUERY_ASSERTION_MSG);
   if (!tableAcc)
@@ -170,7 +172,11 @@ __try {
   if (NS_FAILED(rv))
     return E_FAIL;
 
-  if (!::SysReAllocStringLen(aDescription, descr.get(), descr.Length()))
+  if (descr.IsEmpty())
+    return S_FALSE;
+
+  *aDescription = ::SysAllocStringLen(descr.get(), descr.Length());
+  if (!*aDescription)
     return E_OUTOFMEMORY;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
@@ -370,6 +376,8 @@ STDMETHODIMP
 CAccessibleTable::get_rowDescription(long aRow, BSTR *aDescription)
 {
 __try {
+  *aDescription = NULL;
+
   nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryInterface(this));
   NS_ASSERTION(tableAcc, CANT_QUERY_ASSERTION_MSG);
   if (!tableAcc)
@@ -380,7 +388,11 @@ __try {
   if (NS_FAILED(rv))
     return E_FAIL;
 
-  if (!::SysReAllocStringLen(aDescription, descr.get(), descr.Length()))
+  if (descr.IsEmpty())
+    return S_FALSE;
+
+  *aDescription = ::SysAllocStringLen(descr.get(), descr.Length());
+  if (!*aDescription)
     return E_OUTOFMEMORY;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }

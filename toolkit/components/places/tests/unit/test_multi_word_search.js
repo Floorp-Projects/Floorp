@@ -46,64 +46,35 @@
  * page's title.
  */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 let current_test = 0;
 
 function AutoCompleteInput(aSearches) {
   this.searches = aSearches;
 }
 AutoCompleteInput.prototype = {
-  constructor: AutoCompleteInput,
-
-  searches: null,
-
-  minResultsForPopup: 0,
   timeout: 10,
-  searchParam: "",
   textValue: "",
+  searches: null,
+  searchParam: "",
+  popupOpen: false,
+  minResultsForPopup: 0,
+  invalidate: function() {},
   disableAutoComplete: false,
   completeDefaultIndex: false,
-
-  get searchCount() {
-    return this.searches.length;
-  },
-
-  getSearchAt: function(aIndex) {
-    return this.searches[aIndex];
-  },
-
+  get popup() { return this; },
   onSearchBegin: function() {},
   onSearchComplete: function() {},
-
-  popupOpen: false,
-
-  popup: {
-    setSelectedIndex: function(aIndex) {},
-    invalidate: function() {},
-
-    // nsISupports implementation
-    QueryInterface: function(iid) {
-      if (iid.equals(Ci.nsISupports) ||
-          iid.equals(Ci.nsIAutoCompletePopup))
-        return this;
-
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    }
-  },
-
-  // nsISupports implementation
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIAutoCompleteInput))
-      return this;
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  }
-}
+  setSelectedIndex: function() {},
+  get searchCount() { return this.searches.length; },
+  getSearchAt: function(aIndex) this.searches[aIndex],
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput, Ci.nsIAutoCompletePopup])
+};
 
 function ensure_results(aSearch, aExpected)
 {
-  let controller = Components.classes["@mozilla.org/autocomplete/controller;1"].
-                   getService(Components.interfaces.nsIAutoCompleteController);
+  let controller = Cc["@mozilla.org/autocomplete/controller;1"].
+                   getService(Ci.nsIAutoCompleteController);
 
   // Make an AutoCompleteInput that uses our searches
   // and confirms results on search complete
@@ -111,7 +82,7 @@ function ensure_results(aSearch, aExpected)
 
   controller.input = input;
 
-  var numSearchesStarted = 0;
+  let numSearchesStarted = 0;
   input.onSearchBegin = function() {
     numSearchesStarted++;
     do_check_eq(numSearchesStarted, 1);
@@ -119,13 +90,6 @@ function ensure_results(aSearch, aExpected)
 
   input.onSearchComplete = function() {
     do_check_eq(numSearchesStarted, 1);
-    // If we expect results, make sure we got matches
-    do_check_eq(controller.searchStatus, aExpected.length ?
-                Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH :
-                Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
-
-    // Make sure we have the right number of results
-    do_check_eq(controller.matchCount, aExpected.length);
 
     // Check to see the expected uris and titles match up (in any order)
     for (let i = 0; i < controller.matchCount; i++) {
@@ -136,10 +100,12 @@ function ensure_results(aSearch, aExpected)
       let j;
       for (j = 0; j < aExpected.length; j++) {
         let [uri, title] = aExpected[j];
+
         // Skip processed expected results
         if (uri == undefined) continue;
+
         // Load the real uri and titles
-        [uri, title] = [kURIs[uri], kTitles[title]];
+        [uri, title] = [iosvc.newURI(kURIs[uri], null, null).spec, kTitles[title]];
 
         // Got a match on both uri and title?
         if (uri == value && title == comment) {
@@ -155,6 +121,14 @@ function ensure_results(aSearch, aExpected)
         do_throw("Didn't find the current result (" + value + ", " + comment + ") in expected: " + aExpected);
     }
 
+    // Make sure we have the right number of results
+    do_check_eq(controller.matchCount, aExpected.length);
+
+    // If we expect results, make sure we got matches
+    do_check_eq(controller.searchStatus, aExpected.length ?
+                Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH :
+                Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
+
     // Fetch the next test if we have more
     if (++current_test < gTests.length)
       run_test();
@@ -162,9 +136,8 @@ function ensure_results(aSearch, aExpected)
     do_test_finished();
   };
 
-  let search = kSearches[aSearch];
-  print("Searching for.. " + search);
-  controller.startSearch(search);
+  print("Searching for.. " + aSearch);
+  controller.startSearch(aSearch);
 }
 
 // Get history services
@@ -174,67 +147,51 @@ try {
   var bhist = histsvc.QueryInterface(Ci.nsIBrowserHistory);
   var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
               getService(Ci.nsINavBookmarksService);
+  var tagsvc = Cc["@mozilla.org/browser/tagging-service;1"].
+               getService(Ci.nsITaggingService);
   var iosvc = Cc["@mozilla.org/network/io-service;1"].
               getService(Ci.nsIIOService);
 } catch(ex) {
   do_throw("Could not get services\n");
-} 
+}
 
 // Some date not too long ago
 let gDate = new Date(Date.now() - 1000 * 60 * 60) * 1000;
 
-// Define some shared uris and titles
-let kURIs = [
-  "http://abc/def",
-  "http://def/ghi",
-  "http://ghi/jkl",
-  "http://jkl/mno",
-];
-let kTitles = [
-  "foo bar",
-  "bar baz",
-];
-let kSearches = [
-  "c d",
-  "b e",
-  "b a z",
-  "k f t",
-  "d i g z",
-  "m o z i",
-];
-  
-function addPageBook(aURI, aTitle, aBook)
+function addPageBook(aURI, aTitle, aBook, aTags, aKey)
 {
   let uri = iosvc.newURI(kURIs[aURI], null, null);
   let title = kTitles[aTitle];
 
-  print("Adding page/book: " + [aURI, aTitle, aBook, kURIs[aURI], title].join(", "));
+  let out = [aURI, aTitle, aBook, aTags, aKey];
+  out.push("\nuri=" + kURIs[aURI]);
+  out.push("\ntitle=" + title);
+
   // Add the page and a visit for good measure
   bhist.addPageWithDetails(uri, title, gDate);
 
   // Add a bookmark if we need to
   if (aBook != undefined) {
     let book = kTitles[aBook];
-    bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder, uri, bmsvc.DEFAULT_INDEX, book);
+    let bmid = bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder, uri,
+      bmsvc.DEFAULT_INDEX, book);
+    out.push("\nbook=" + book);
+
+    // Add a keyword to the bookmark if we need to
+    if (aKey != undefined)
+      bmsvc.setKeywordForBookmark(bmid, aKey);
+
+    // Add tags if we need to
+    if (aTags != undefined && aTags.length > 0) {
+      // Convert each tag index into the title
+      let tags = aTags.map(function(aTag) kTitles[aTag]);
+      tagsvc.tagURI(uri, tags);
+      out.push("\ntags=" + tags);
+    }
   }
+
+  print("\nAdding page/book/tag: " + out.join(", "));
 }
-
-addPageBook(0, 0);
-addPageBook(1, 1);
-addPageBook(2, 0, 0);
-addPageBook(3, 0, 1);
-
-/**
- * Test history autocomplete
- */
-let gTests = [
-  ["0: Match 2 terms all in url", [[0,0]]],
-  ["1: Match 1 term in url and 1 term in title", [[0,0],[1,1]]],
-  ["2: Match 3 terms all in title; display bookmark title if matched", [[1,1],[3,1]]],
-  ["3: Match 2 terms in url and 1 in title; bookmark title didn't match", [[2,0],[3,0]]],
-  ["4: Match 3 terms in url and 1 in title", [[1,1]]],
-  ["5: Match nothing", []],
-];
 
 function run_test() {
   print("\n");
@@ -242,7 +199,53 @@ function run_test() {
   do_test_pending();
 
   // Load the test and print a description then run the test
-  let [description, expected] = gTests[current_test];
+  let [description, search, expected, func] = gTests[current_test];
   print(description);
-  ensure_results(current_test, expected);
+
+  // Do an extra function if necessary
+  if (func)
+    func();
+
+  ensure_results(search, expected);
 }
+
+// *************************************************
+// *** vvv Custom Test Stuff Goes Below Here vvv ***
+// *************************************************
+
+// Define some shared uris and titles (each page needs its own uri)
+let kURIs = [
+  "http://a.b.c/d-e_f/h/t/p",
+  "http://d.e.f/g-h_i/h/t/p",
+  "http://g.h.i/j-k_l/h/t/p",
+  "http://j.k.l/m-n_o/h/t/p",
+];
+let kTitles = [
+  "f(o)o b<a>r",
+  "b(a)r b<a>z",
+];
+
+// Regular pages
+addPageBook(0, 0);
+addPageBook(1, 1);
+// Bookmarked pages
+addPageBook(2, 0, 0);
+addPageBook(3, 0, 1);
+
+// For each test, provide a title, the search terms, and an array of
+// [uri,title] indices of the pages that should be returned, followed by an
+// optional function
+let gTests = [
+  ["0: Match 2 terms all in url",
+   "c d", [[0,0]]],
+  ["1: Match 1 term in url and 1 term in title",
+   "b e", [[0,0],[1,1]]],
+  ["2: Match 3 terms all in title; display bookmark title if matched",
+   "b a z", [[1,1],[3,1]]],
+  ["3: Match 2 terms in url and 1 in title; bookmark title didn't match",
+   "k f t", [[2,0],[3,0]]],
+  ["4: Match 3 terms in url and 1 in title",
+   "d i g z", [[1,1]]],
+  ["5: Match nothing",
+   "m o z i", []],
+];

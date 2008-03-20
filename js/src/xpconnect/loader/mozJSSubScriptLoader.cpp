@@ -52,16 +52,22 @@
 #include "nsIInputStream.h"
 #include "nsNetCID.h"
 #include "nsDependentString.h"
+#include "nsAutoPtr.h"
+#include "nsNetUtil.h"
 
 #include "jsapi.h"
 
 /* load() error msgs, XXX localize? */
 #define LOAD_ERROR_NOSERVICE "Error creating IO Service."
-#define LOAD_ERROR_NOCHANNEL "Error creating channel (invalid URL scheme?)"
+#define LOAD_ERROR_NOURI "Error creating URI (invalid URL scheme?)"
+#define LOAD_ERROR_NOSCHEME "Failed to get URI scheme.  This is bad."
+#define LOAD_ERROR_URI_NOT_CHROME "Trying to load a non-chrome URI."
 #define LOAD_ERROR_NOSTREAM  "Error opening input stream (invalid filename?)"
 #define LOAD_ERROR_NOCONTENT "ContentLength not available (not a local URL?)"
 #define LOAD_ERROR_BADREAD   "File Read Error."
 #define LOAD_ERROR_READUNDERFLOW "File Read Error (underflow.)"
+#define LOAD_ERROR_NOPRINCIPALS "Failed to get principals."
+#define LOAD_ERROR_NOSPEC "Failed to get URI spec.  This is bad."
 
 // We just use the same reporter as the component loader
 extern void JS_DLL_CALLBACK
@@ -207,7 +213,7 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * /*url*/
     PRInt32   len = -1;
     PRUint32  readcount = 0;  // Total amount of data read
     PRUint32  lastReadCount = 0;  // Amount of data read in last Read() call
-    char     *buf = nsnull;
+    nsAutoArrayPtr<char> buf;
     
     JSString        *errmsg;
     JSErrorReporter  er;
@@ -215,6 +221,9 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * /*url*/
     
     nsCOMPtr<nsIChannel>     chan;
     nsCOMPtr<nsIInputStream> instream;
+    nsCOMPtr<nsIURI> uri;
+    nsCAutoString uriStr;
+    nsCAutoString scheme;
 
     nsCOMPtr<nsIIOService> serv = do_GetService(NS_IOSERVICE_CONTRACTID);
     if (!serv)
@@ -223,15 +232,27 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * /*url*/
         goto return_exception;
     }
 
-    rv = serv->NewChannel(nsDependentCString(url), nsnull, static_cast<nsIURI *>(nsnull),
-                          getter_AddRefs(chan));
-    if (NS_FAILED(rv))
-    {
-        errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_NOCHANNEL);
+    // Make sure to explicitly create the URI, since we'll need the
+    // canonicalized spec.
+    rv = NS_NewURI(getter_AddRefs(uri), url, nsnull, serv);
+    if (NS_FAILED(rv)) {
+        errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_NOURI);
         goto return_exception;
     }
 
-    rv = chan->Open (getter_AddRefs(instream));
+    rv = uri->GetScheme(scheme);
+    if (NS_FAILED(rv)) {
+        errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_NOSCHEME);
+        goto return_exception;
+    }
+    if (!scheme.EqualsLiteral("chrome")) {
+        errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_URI_NOT_CHROME);
+        goto return_exception;
+    }        
+        
+    rv = NS_OpenURI(getter_AddRefs(instream), uri, serv,
+                    nsnull, nsnull, nsIRequest::LOAD_NORMAL,
+                    getter_AddRefs(chan));
     if (NS_FAILED(rv))
     {
         errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_NOSTREAM);
@@ -271,34 +292,35 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * /*url*/
      * destructor */
     rv = mSystemPrincipal->GetJSPrincipals(cx, &jsPrincipals);
     if (NS_FAILED(rv) || !jsPrincipals) {
-        delete[] buf;
-        return rv;
+        errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_NOPRINCIPALS);
+        goto return_exception;
     }
+
+    rv = uri->GetSpec(uriStr);
+    if (NS_FAILED(rv)) {
+        errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_NOSPEC);
+        goto return_exception;
+    }    
 
     /* set our own error reporter so we can report any bad things as catchable
      * exceptions, including the source/line number */
     er = JS_SetErrorReporter (cx, mozJSLoaderErrorReporter);
 
     ok = JS_EvaluateScriptForPrincipals (cx, target_obj, jsPrincipals,
-                                         buf, len, url, 1, rval);        
+                                         buf, len, uriStr.get(), 1, rval);        
     /* repent for our evil deeds */
     JS_SetErrorReporter (cx, er);
 
     cc->SetExceptionWasThrown (!ok);
     cc->SetReturnValueWasSet (ok);
 
-    delete[] buf;
     JSPRINCIPALS_DROP(cx, jsPrincipals);
     return NS_OK;
 
  return_exception:
-    if (buf)
-        delete[] buf;
-
     JS_SetPendingException (cx, STRING_TO_JSVAL(errmsg));
     cc->SetExceptionWasThrown (JS_TRUE);
     return NS_OK;
-
 }
 
 #endif /* NO_SUBSCRIPT_LOADER */

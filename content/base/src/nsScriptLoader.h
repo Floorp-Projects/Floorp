@@ -147,31 +147,15 @@ public:
   /**
    * Add/remove blocker. Blockers will stop scripts from executing, but not
    * from loading.
-   * NOTE! Calling RemoveExecuteBlocker could potentially execute pending
-   * scripts synchronously. In other words, it should not be done at 'unsafe'
-   * times
    */
   void AddExecuteBlocker()
   {
-    if (!mBlockerCount++) {
-      mHadPendingScripts = mPendingRequests.Count() != 0;
-    }
+    ++mBlockerCount;
   }
   void RemoveExecuteBlocker()
   {
     if (!--mBlockerCount) {
-      // If there were pending scripts then the newly added scripts will
-      // execute once whatever event triggers the pending scripts fires.
-      // However, due to synchronous loads and pushed event queues it's
-      // possible that the requests that were there have already been processed
-      // if so we need to process any new requests asynchronously.
-      // Ideally that should be fixed such that it can't happen.
-      if (mHadPendingScripts) {
-        ProcessPendingRequestsAsync();
-      }
-      else {
-        ProcessPendingRequests();
-      }
+      ProcessPendingRequestsAsync();
     }
   }
 
@@ -246,7 +230,6 @@ protected:
   nsTArray< nsRefPtr<nsScriptLoader> > mPendingChildLoaders;
   PRUint32 mBlockerCount;
   PRPackedBool mEnabled;
-  PRPackedBool mHadPendingScripts;
 };
 
 #endif //__nsScriptLoader_h__

@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!DOCTYPE window>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="XUL Grid Test">
+  <style xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
+    window { background: black; }
+    hbox { height: 100px; width: 100px; }
+  ]]></style>
+  <hbox>
+    <grid>
+      <rows>
+        <row>
+          <hbox style="background: rgb(0, 102, 153)" />
+          <hbox style="background: rgb(0, 102, 153)" />
+          <hbox style="background: rgb(0, 0, 153)" />
+        </row>
+        <row>
+          <hbox style="background: rgb(0, 102, 153)" />
+          <hbox style="background: rgb(0, 102, 153)" />
+          <hbox style="background: rgb(0, 0, 153)" />
+        </row>
+        <row>
+          <hbox style="background: rgb(0, 255, 0)" />
+          <hbox style="background: rgb(0, 255, 0)" />
+          <hbox style="background: rgb(0, 0, 0)" />
+        </row>
+      </rows>
+    </grid>
+  </hbox>
+</window>

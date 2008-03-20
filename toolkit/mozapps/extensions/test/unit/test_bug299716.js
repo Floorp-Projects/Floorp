@@ -177,19 +177,37 @@ registrar.registerFactory(psID,
                           "@mozilla.org/embedcomp/prompt-service;1",
                           PromptServiceFactory);
 
-const updateListener = {
-  _state: -1,
-
-  // nsIAddonUpdateListener
-  onStateChange: function onStateChange(aAddon, aState, aValue) {
-    if ((this._state == -1) &&
-        (aState == Components.interfaces.nsIXPIProgressDialog.DIALOG_CLOSE)) {
-      this._state = aState;
-      next_test();
-    }
+const installListener = {
+  // nsIAddonInstallListener
+  onDownloadStarted: function(aAddon) {
+    // do nothing.
   },
 
-  onProgress: function onProgress(aAddon, aValue, aMaxValue) {
+  onDownloadEnded: function(aAddon) {
+    // do nothing.
+  },
+
+  onInstallStarted: function(aAddon) {
+    // do nothing.
+  },
+
+  onCompatibilityCheckStarted: function(aAddon) {
+    // do nothing.
+  },
+
+  onCompatibilityCheckEnded: function(aAddon, aStatus) {
+    // do nothing.
+  },
+
+  onInstallEnded: function(aAddon, aStatus) {
+    // do nothing.
+  },
+
+  onInstallsCompleted: function() {
+    next_test();
+  },
+
+  onDownloadProgress: function onProgress(aAddon, aValue, aMaxValue) {
     // do nothing.
   }
 };
@@ -349,8 +367,6 @@ function run_test() {
   startupEM();
   dump("\n\n*** INSTALLING NEW ITEMS\n\n");
 
-  gEM.addUpdateListener(updateListener);
-
   for (var i = 0; i < ADDONS.length; i++) {
     gEM.installItemFromFile(do_get_addon(ADDONS[i].addon),
                             NS_INSTALL_LOCATION_APPPROFILE);
@@ -377,7 +393,7 @@ function run_test_pt2() {
   }
 
   dump("\n\n*** REQUESTING UPDATE\n\n");
-  // updateListener will call run_test_pt3().
+  // checkListener will call run_test_pt3().
   next_test = run_test_pt3;
   try {
     gEM.update(updateItems,
@@ -413,7 +429,7 @@ function run_test_pt3() {
   }
   dump("\n\n*** UPDATING " + addonsArray.length + " ITEMS\n\n");
 
-  // updateListener will call run_test_pt4().
+  // installListener will call run_test_pt4().
   next_test = run_test_pt4;
 
   // Here, we have some bad items that try to update.  Pepto-Bismol time.
@@ -430,6 +446,8 @@ function run_test_pt3() {
       addonsArray.splice(i, 1);
     }
   }
+
+  gEM.addInstallListener(installListener);
 
   do_check_true(addonsArray.length > 0);
   gEM.addDownloads(addonsArray, addonsArray.length, null);

@@ -134,18 +134,17 @@ richlistitem[selected="true"]:not([opType]) .descriptionCrop {
 .notifyBadge {
   width: 16px;
   height: 16px;
-  margin-bottom: -3px;
-  list-style-image: url("chrome://mozapps/skin/extensions/notifyBadges.png");
+  margin-bottom: -3px; 
 }
 
 .updateBadge {
   -moz-margin-end: -2px;
-  -moz-image-region: rect(0px 16px 16px 0px);
+  list-style-image: url("chrome://mozapps/skin/extensions/notifyBadges.png");
 }
 
 .notifyBadge {
   -moz-margin-start: -2px;
-  -moz-image-region: rect(0px 48px 16px 32px);
+  list-style-image: url("moz-icon://stock/gtk-dialog-error?size=menu");
 }
 
 .updateBadge,
@@ -259,8 +258,7 @@ richlistitem[opType="needs-uninstall"] .notifyBadge {
 .addonFailure {
   width: 16px;
   height: 16px;
-  list-style-image: url("chrome://mozapps/skin/extensions/notifyBadges.png");
-  -moz-image-region: rect(0px 48px 16px 32px);
+  list-style-image: url("moz-icon://stock/gtk-dialog-error?size=menu");
 }
 
 .addonRating {
@@ -283,23 +281,23 @@ richlistitem[opType="needs-uninstall"] .notifyBadge {
   -moz-image-region: rect(0px 70px 14px 0px);
 }
 
-.addonRating[rating="1"], .addonRating[rating="2"] {
+.addonRating[rating="1"] {
   -moz-image-region: rect(14px 70px 28px 0px);
 }
 
-.addonRating[rating="3"], .addonRating[rating="4"] {
+.addonRating[rating="2"] {
   -moz-image-region: rect(28px 70px 42px 0px);
 }
 
-.addonRating[rating="5"], .addonRating[rating="6"] {
+.addonRating[rating="3"] {
   -moz-image-region: rect(42px 70px 56px 0px);
 }
 
-.addonRating[rating="7"], .addonRating[rating="8"] {
+.addonRating[rating="4"] {
   -moz-image-region: rect(56px 70px 70px 0px);
 }
 
-.addonRating[rating="9"], .addonRating[rating="10"] {
+.addonRating[rating="5"] {
   -moz-image-region: rect(70px 70px 84px 0px);
 }
 

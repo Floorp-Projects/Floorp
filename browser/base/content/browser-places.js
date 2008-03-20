@@ -100,26 +100,32 @@ var StarUI = {
       case "popuphidden":
         if (aEvent.originalTarget == this.panel) {
           if (!this._element("editBookmarkPanelContent").hidden)
-            gEditItemOverlay.uninitPanel(true);
+            this.quitEditMode();
           this._restoreCommandsState();
           this._itemId = -1;
           this._uri = null;
           if (this._batching) {
-            PlacesUtils.ptm.endBatch();
+            PlacesUIUtils.ptm.endBatch();
             this._batching = false;
           }
         }
         break;
       case "keypress":
         if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE) {
-          // In edit mode, the ESC key is mapped to the cancel button
-          if (!this._element("editBookmarkPanelContent").hidden)
-            this.cancelButtonOnCommand();
-          else // otherwise we just hide the panel
+          // In edit mode, if we're not editing a folder, the ESC key is mapped
+          // to the cancel button
+          if (!this._element("editBookmarkPanelContent").hidden) {
+            var elt = aEvent.target;
+            if (elt.localName != "tree" ||
+                (elt.localName == "tree" && !elt.hasAttribute("editing")))
+              this.cancelButtonOnCommand();
+          }
+        }
+        else if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN) {
+          // hide the panel unless the folder tree is focused
+          if (aEvent.target.localName != "tree")
             this.panel.hidePopup();
         }
-        else if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN)
-          this.panel.hidePopup(); // hide the panel
         break;
     }
   },
@@ -188,11 +194,11 @@ var StarUI = {
     // Otherwise, if no changes were done in the edit-item panel, the last
     // transaction on the undo stack may be the initial createItem transaction,
     // or worse, the batched editing of some other item.
-    PlacesUtils.ptm.doTransaction({ doTransaction: function() { },
-                                    undoTransaction: function() { },
-                                    redoTransaction: function() { },
-                                    isTransient: false,
-                                    merge: function() { return false; } });
+    PlacesUIUtils.ptm.doTransaction({ doTransaction: function() { },
+                                      undoTransaction: function() { },
+                                      redoTransaction: function() { },
+                                      isTransient: false,
+                                      merge: function() { return false; } });
 
     if (this.panel.state == "closed") {
       // Consume dismiss clicks, see bug 400924
@@ -241,10 +247,6 @@ var StarUI = {
       bundle.getFormattedString("editBookmarkPanel.pageBookmarkedDescription",
                                 [brandShortName]);
 
-    // hide the edit panel and the buttons below to it (Cancel, Done)
-    this._element("editBookmarkPanelContent").hidden = true;
-    this._element("editBookmarkPanelBottomButtons").hidden = true;
-
     // show the "Edit.." button and the Remove Bookmark button, hide the
     // undo-remove-bookmark button.
     this._element("editBookmarkPanelEditButton").hidden = false;
@@ -265,14 +267,23 @@ var StarUI = {
       this.panel.focus();
   },
 
+  quitEditMode: function SU_quitEditMode() {
+    this._element("editBookmarkPanelContent").hidden = true;
+    this._element("editBookmarkPanelBottomButtons").hidden = true;
+    gEditItemOverlay.uninitPanel(true);
+  },
+
   editButtonCommand: function SU_editButtonCommand() {
     this.showEditBookmarkPopup();
   },
 
   cancelButtonOnCommand: function SU_cancelButtonOnCommand() {
-    this.endBatch();
-    PlacesUtils.ptm.undoTransaction();
+    // The order here is important! We have to hide the panel first, otherwise
+    // changes done as part of Undo may change the panel contents and by
+    // that force it to commit more transactions
     this.panel.hidePopup();
+    this.endBatch();
+    PlacesUIUtils.ptm.undoTransaction();
   },
 
   removeBookmarkButtonCommand: function SU_removeBookmarkButtonCommand() {
@@ -282,18 +293,20 @@ var StarUI = {
     // a "Bookmark Removed" notification along with an Undo button is
     // shown
     if (this._batching) {
-      PlacesUtils.ptm.endBatch();
-      PlacesUtils.ptm.beginBatch(); // allow undo from within the notification
+      PlacesUIUtils.ptm.endBatch();
+      PlacesUIUtils.ptm.beginBatch(); // allow undo from within the notification
       var bundle = this._element("bundle_browser");
 
       // "Bookmark Removed" title (the description field is already empty in
       // this mode)
       this._element("editBookmarkPanelTitle").value =
         bundle.getString("editBookmarkPanel.bookmarkedRemovedTitle");
-      // hide the edit fields, the buttons below to and the remove bookmark
-      // button. Show the undo-remove-bookmark button.
-      this._element("editBookmarkPanelContent").hidden = true;
-      this._element("editBookmarkPanelBottomButtons").hidden = true;
+
+      // hide the edit panel
+      this.quitEditMode();
+
+      // Hide the remove bookmark button, show the undo-remove-bookmark
+      // button.
       this._element("editBookmarkPanelUndoRemoveButton").hidden = false;
       this._element("editBookmarkPanelRemoveButton").hidden = true;
       this._element("editBookmarkPanelStarIcon").setAttribute("unstarred", "true");
@@ -308,8 +321,8 @@ var StarUI = {
     // the tags for the url
     var itemIds = PlacesUtils.getBookmarksForURI(this._uri);
     for (var i=0; i < itemIds.length; i++) {
-      var txn = PlacesUtils.ptm.removeItem(itemIds[i]);
-      PlacesUtils.ptm.doTransaction(txn);
+      var txn = PlacesUIUtils.ptm.removeItem(itemIds[i]);
+      PlacesUIUtils.ptm.doTransaction(txn);
     }
 
 #ifdef ADVANCED_STARRING_UI
@@ -324,21 +337,21 @@ var StarUI = {
     // restore the bookmark by undoing the last transaction and go back
     // to the edit state
     this.endBatch();
-    PlacesUtils.ptm.undoTransaction();
+    PlacesUIUtils.ptm.undoTransaction();
     this._itemId = PlacesUtils.getMostRecentBookmarkForURI(this._uri);
     this.showEditBookmarkPopup();
   },
 
   beginBatch: function SU_beginBatch() {
     if (!this._batching) {
-      PlacesUtils.ptm.beginBatch();
+      PlacesUIUtils.ptm.beginBatch();
       this._batching = true;
     }
   },
 
   endBatch: function SU_endBatch() {
     if (this._batching) {
-      PlacesUtils.ptm.endBatch();
+      PlacesUIUtils.ptm.endBatch();
       this._batching = false;
     }
   }
@@ -372,7 +385,7 @@ var PlacesCommandHook = {
       var description;
       try {
         title = webNav.document.title || url.spec;
-        description = PlacesUtils.getDescriptionFromDocument(webNav.document);
+        description = PlacesUIUtils.getDescriptionFromDocument(webNav.document);
       }
       catch (e) { }
 
@@ -386,9 +399,9 @@ var PlacesCommandHook = {
       var parent = aParent != undefined ?
                    aParent : PlacesUtils.unfiledBookmarksFolderId;
       var descAnno = { name: DESCRIPTION_ANNO, value: description };
-      var txn = PlacesUtils.ptm.createItem(uri, parent, -1,
-                                           title, null, [descAnno]);
-      PlacesUtils.ptm.doTransaction(txn);
+      var txn = PlacesUIUtils.ptm.createItem(uri, parent, -1,
+                                             title, null, [descAnno]);
+      PlacesUIUtils.ptm.doTransaction(txn);
       itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
     }
 
@@ -432,8 +445,8 @@ var PlacesCommandHook = {
     var itemId = PlacesUtils.getMostRecentBookmarkForURI(linkURI);
     if (itemId == -1) {
       StarUI.beginBatch();
-      var txn = PlacesUtils.ptm.createItem(linkURI, aParent, -1, aTitle);
-      PlacesUtils.ptm.doTransaction(txn);
+      var txn = PlacesUIUtils.ptm.createItem(linkURI, aParent, -1, aTitle);
+      PlacesUIUtils.ptm.doTransaction(txn);
       itemId = PlacesUtils.getMostRecentBookmarkForURI(linkURI);
     }
 
@@ -474,7 +487,7 @@ var PlacesCommandHook = {
    */
   bookmarkCurrentPages: function PCH_bookmarkCurrentPages() {
     var tabURIs = this._getUniqueTabInfo();
-    PlacesUtils.showMinimalAddMultiBookmarkUI(tabURIs);
+    PlacesUIUtils.showMinimalAddMultiBookmarkUI(tabURIs);
   },
 
   
@@ -500,12 +513,12 @@ var PlacesCommandHook = {
     if (arguments.length > 2)
       description = feedSubtitle;
     else
-      description = PlacesUtils.getDescriptionFromDocument(doc);
+      description = PlacesUIUtils.getDescriptionFromDocument(doc);
 
     var toolbarIP =
       new InsertionPoint(PlacesUtils.bookmarks.toolbarFolder, -1);
-    PlacesUtils.showMinimalAddLivemarkUI(feedURI, gBrowser.currentURI,
-                                         title, description, toolbarIP, true);
+    PlacesUIUtils.showMinimalAddLivemarkUI(feedURI, gBrowser.currentURI,
+                                           title, description, toolbarIP, true);
   },
 
   /**
@@ -569,50 +582,45 @@ var BookmarksEventHandler = {
   /**
    * Handler for click event for an item in the bookmarks toolbar or menu.
    * Menus and submenus from the folder buttons bubble up to this handler.
-   * Only handle middle-click; left-click is handled in the onCommand function.
-   * When items are middle-clicked, open them in tabs.
+   * Left-click is handled in the onCommand function.
+   * When items are middle-clicked (or clicked with modifier), open in tabs.
    * If the click came through a menu, close the menu.
    * @param aEvent
    *        DOMEvent for the click
    */
   onClick: function BT_onClick(aEvent) {
-    // Only handle middle-clicks.
-    if (aEvent.button != 1)
+    // Only handle middle-click or left-click with modifiers.
+#ifdef XP_MACOSX
+    var modifKey = aEvent.metaKey || aEvent.shiftKey;
+#else
+    var modifKey = aEvent.ctrlKey || aEvent.shiftKey;
+#endif
+    if (aEvent.button == 2 || (aEvent.button == 0 && !modifKey))
       return;
 
     var target = aEvent.originalTarget;
-    var view = PlacesUtils.getViewForNode(target);
-    if (target.node && PlacesUtils.nodeIsFolder(target.node)) {
+    // If this event bubbled up from a menu or menuitem, close the menus.
+    // Do this before opening tabs, to avoid hiding the open tabs confirm-dialog.
+    if (target.localName == "menu" || target.localName == "menuitem") {
+      for (node = target.parentNode; node; node = node.parentNode) {
+        if (node.localName == "menupopup")
+          node.hidePopup();
+        else if (node.localName != "menu")
+          break;
+      }
+    }
+
+    if (target.node && PlacesUtils.nodeIsContainer(target.node)) {
       // Don't open the root folder in tabs when the empty area on the toolbar
       // is middle-clicked or when a non-bookmark item except for Open in Tabs)
       // in a bookmarks menupopup is middle-clicked.
       if (target.localName == "menu" || target.localName == "toolbarbutton")
-        PlacesUtils.openContainerNodeInTabs(target.node, aEvent);
+        PlacesUIUtils.openContainerNodeInTabs(target.node, aEvent);
     }
-    else
+    else if (aEvent.button == 1) {
+      // left-clicks with modifier are already served by onCommand
       this.onCommand(aEvent);
-
-    // If this event bubbled up from a menu or menuitem,
-    // close the menus.
-    if (target.localName == "menu" ||
-        target.localName == "menuitem") {
-      var node = target.parentNode;
-      while (node && 
-             (node.localName == "menu" || 
-              node.localName == "menupopup")) {
-        if (node.localName == "menupopup")
-          node.hidePopup();
-
-        node = node.parentNode;
-      }
     }
-    // The event target we get if someone middle clicks on a bookmark in the
-    // bookmarks toolbar overflow menu is different from if they click on a
-    // bookmark in a folder or in the bookmarks menu; handle this case
-    // separately.
-    var bookmarksBar = document.getElementById("bookmarksBarContent");
-    if (bookmarksBar._chevron.getAttribute("open") == "true")
-      bookmarksBar._chevron.firstChild.hidePopup();
   },
 
   /**
@@ -625,7 +633,7 @@ var BookmarksEventHandler = {
   onCommand: function BM_onCommand(aEvent) {
     var target = aEvent.originalTarget;
     if (target.node)
-      PlacesUtils.openNodeWithEvent(target.node, aEvent);
+      PlacesUIUtils.openNodeWithEvent(target.node, aEvent);
   },
 
   /**
@@ -703,7 +711,7 @@ var BookmarksEventHandler = {
       target._endOptOpenSiteURI.setAttribute("onclick",
           "checkForMiddleClick(this, event); event.stopPropagation();");
       target._endOptOpenSiteURI.setAttribute("label",
-          PlacesUtils.getFormattedString("menuOpenLivemarkOrigin.label",
+          PlacesUIUtils.getFormattedString("menuOpenLivemarkOrigin.label",
           [target.parentNode.getAttribute("label")]));
       target.appendChild(target._endOptOpenSiteURI);
     }
@@ -713,7 +721,9 @@ var BookmarksEventHandler = {
         // at least two menuitems with places result nodes.
         target._endOptOpenAllInTabs = document.createElement("menuitem");
         target._endOptOpenAllInTabs.setAttribute("oncommand",
-            "PlacesUtils.openContainerNodeInTabs(this.parentNode._resultNode, event);");
+            "PlacesUIUtils.openContainerNodeInTabs(this.parentNode._resultNode, event);");
+        target._endOptOpenAllInTabs.setAttribute("onclick",
+            "checkForMiddleClick(this, event); event.stopPropagation();");
         target._endOptOpenAllInTabs.setAttribute("label",
             gNavigatorBundle.getString("menuOpenAllInTabs.label"));
         target.appendChild(target._endOptOpenAllInTabs);
@@ -784,7 +794,8 @@ var BookmarksMenuDropHandler = {
    *          otherwise.
    */
   canDrop: function BMDH_canDrop(event, session) {
-    return PlacesControllerDragHelper.canDrop();
+    var ip = new InsertionPoint(PlacesUtils.bookmarksMenuFolderId, -1);  
+    return ip && PlacesControllerDragHelper.canDrop(ip);
   },
 
   /**
@@ -1014,9 +1025,7 @@ function placesMigrationTasks() {
   }
 
   if (gPrefService.getBoolPref("browser.places.updateRecentTagsUri")) {
-    var bmsvc = PlacesUtils.bookmarks;
-    var tagsFolder = bmsvc.tagsFolder;
-    var oldUriSpec = "place:folder=" + tagsFolder + "&group=3&queryType=1"+
+    var oldUriSpec = "place:folder=TAGS&group=3&queryType=1" +
                      "&applyOptionsToContainers=1&sort=12&maxResults=10";
 
     var maxResults = 10;
@@ -1032,6 +1041,7 @@ function placesMigrationTasks() {
     var oldUri = ios.newURI(oldUriSpec, null, null);
     var newUri = ios.newURI(newUriSpec, null, null);
 
+    let bmsvc = PlacesUtils.bookmarks;
     let bookmarks = bmsvc.getBookmarkIdsForURI( oldUri, {});
     for (let i = 0; i < bookmarks.length; i++) {
       bmsvc.changeBookmarkURI( bookmarks[i], newUri);

@@ -48,6 +48,9 @@
  */ 
 var SelectBookmarkDialog = {
   init: function SBD_init() {
+    document.getElementById("bookmarks").place =
+      "place:queryType=1&folder=" + PlacesUIUtils.allBookmarksFolderId;
+
     // Initial update of the OK button.
     this.selectionChanged();
   },

@@ -292,10 +292,18 @@ static const PRUint32 kTraits_NonNormalWidthMask = NSNarrowFontMask | NSExpanded
                             NSCondensedFontMask | NSCompressedFontMask | NSFixedPitchFontMask;
 
 MacOSFontEntry*
-MacOSFamilyEntry::FindFont(const gfxFontStyle* aStyle)
+MacOSFamilyEntry::FindFont(const gfxFontStyle* aStyle, PRBool& aNeedsBold)
 {
+    aNeedsBold = PR_FALSE;
+    
     // short-circuit the single face per family case
-    if (mAvailableFonts.Length() == 1) return mAvailableFonts[0];
+    if (mAvailableFonts.Length() == 1) {
+        PRInt8 baseWeight, weightDistance;
+        aStyle->ComputeWeightAndOffset(&baseWeight, &weightDistance);
+        // for fonts with a single face, any weight distance implies synthetic bolding needed
+        aNeedsBold = (weightDistance > 0);
+        return mAvailableFonts[0];
+    }
     
     PRBool found = PR_FALSE;
     PRBool isItalic = (aStyle->style == FONT_STYLE_ITALIC || aStyle->style == FONT_STYLE_OBLIQUE);
@@ -333,7 +341,7 @@ MacOSFamilyEntry::FindFont(const gfxFontStyle* aStyle)
     NS_ASSERTION(found, "Font family containing no faces");
     if (!found) return nsnull;
     
-    MacOSFontEntry* chosenFont = FindFontWeight(fontsWithTraits, aStyle);
+    MacOSFontEntry* chosenFont = FindFontWeight(fontsWithTraits, aStyle, aNeedsBold);
     NS_ASSERTION(chosenFont, "Somehow selected a null font entry when choosing based on font weight");
     return chosenFont;
 }
@@ -448,12 +456,14 @@ MacOSFamilyEntry::FindFontsWithTraits(MacOSFontEntry* aFontsForWeights[], PRUint
 }
 
 MacOSFontEntry* 
-MacOSFamilyEntry::FindFontWeight(MacOSFontEntry* aFontsForWeights[], const gfxFontStyle* aStyle)
+MacOSFamilyEntry::FindFontWeight(MacOSFontEntry* aFontsForWeights[], const gfxFontStyle* aStyle, PRBool& aNeedsBold)
 {
     // calculate the desired weight from the style
     PRInt32 w, direction, offset, baseMatch;
     PRInt8 baseWeight, weightDistance;
 
+    aNeedsBold = PR_FALSE;
+    
     aStyle->ComputeWeightAndOffset(&baseWeight, &weightDistance);
     NS_ASSERTION(baseWeight != 0, "Style with font weight 0 (whacked)");
     
@@ -515,6 +525,12 @@ MacOSFamilyEntry::FindFontWeight(MacOSFontEntry* aFontsForWeights[], const gfxFo
                 offset--;
             }
         }
+        
+        // didn't find a face bold enough? flag this for the synthetic bolding case
+        if (direction == 1 && offset) {
+            aNeedsBold = PR_TRUE;
+        }
+
     }
     
     NS_ASSERTION(aFontsForWeights[baseMatch], "Chose a weight without a corresponding face");
@@ -1044,13 +1060,13 @@ gfxQuartzFontCache::PrefChangedCallback(const char *aPrefName, void *closure)
 }
 
 MacOSFontEntry*
-gfxQuartzFontCache::GetDefaultFont(const gfxFontStyle* aStyle)
+gfxQuartzFontCache::GetDefaultFont(const gfxFontStyle* aStyle, PRBool& aNeedsBold)
 {
     NSString *defaultFamily = [[NSFont userFontOfSize:aStyle->size] familyName];
     nsAutoString familyName;
     
     GetStringForNSString(defaultFamily, familyName);
-    return FindFontForFamily(familyName, aStyle);
+    return FindFontForFamily(familyName, aStyle, aNeedsBold);
 }
 
 struct FontListData {
@@ -1154,12 +1170,14 @@ gfxQuartzFontCache::FindFamily(const nsAString& aFamily)
 }
     
 MacOSFontEntry*
-gfxQuartzFontCache::FindFontForFamily(const nsAString& aFamily, const gfxFontStyle* aStyle)
+gfxQuartzFontCache::FindFontForFamily(const nsAString& aFamily, const gfxFontStyle* aStyle, PRBool& aNeedsBold)
 {
     MacOSFamilyEntry *familyEntry = FindFamily(aFamily);
+
+    aNeedsBold = PR_FALSE;
     
     if (familyEntry)
-        return familyEntry->FindFont(aStyle);
+        return familyEntry->FindFont(aStyle, aNeedsBold);
 
     return nsnull;
 }

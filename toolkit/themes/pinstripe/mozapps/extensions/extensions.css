@@ -278,23 +278,23 @@ richlistitem[opType="needs-uninstall"] .notifyBadge {
   -moz-image-region: rect(0px 68px 12px 0px);
 }
 
-.addonRating[rating="1"], .addonRating[rating="2"] {
+.addonRating[rating="1"] {
   -moz-image-region: rect(12px 68px 24px 0px);
 }
 
-.addonRating[rating="3"], .addonRating[rating="4"] {
+.addonRating[rating="2"] {
   -moz-image-region: rect(24px 68px 36px 0px);
 }
 
-.addonRating[rating="5"], .addonRating[rating="6"] {
+.addonRating[rating="3"] {
   -moz-image-region: rect(36px 68px 48px 0px);
 }
 
-.addonRating[rating="7"], .addonRating[rating="8"] {
+.addonRating[rating="4"] {
   -moz-image-region: rect(48px 68px 60px 0px);
 }
 
-.addonRating[rating="9"], .addonRating[rating="10"] {
+.addonRating[rating="5"] {
   -moz-image-region: rect(60px 68px 72px 0px);
 }
 

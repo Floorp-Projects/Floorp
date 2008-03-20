@@ -128,9 +128,6 @@ nsPrincipal::Init(const nsACString& aCertFingerprint,
   mCodebase = NS_TryToMakeImmutable(aCodebase);
   mCodebaseImmutable = URIIsImmutable(mCodebase);
 
-  // Invalidate our cached origin
-  mOrigin = nsnull;
-
   nsresult rv;
   if (!aCertFingerprint.IsEmpty()) {
     rv = SetCertificate(aCertFingerprint, aSubjectName, aPrettyName, aCert);
@@ -172,14 +169,12 @@ nsPrincipal::GetOrigin(char **aOrigin)
 {
   *aOrigin = nsnull;
 
-  if (!mOrigin) {
-    nsIURI* uri = mDomain ? mDomain : mCodebase;
-    if (uri) {
-      mOrigin = NS_GetInnermostURI(uri);
-    }
+  nsCOMPtr<nsIURI> origin;
+  if (mCodebase) {
+    origin = NS_GetInnermostURI(mCodebase);
   }
   
-  if (!mOrigin) {
+  if (!origin) {
     NS_ASSERTION(mCert, "No Domain or Codebase for a non-cert principal");
     return NS_ERROR_FAILURE;
   }
@@ -191,14 +186,14 @@ nsPrincipal::GetOrigin(char **aOrigin)
   // XXX this should be removed in favor of the solution in
   // bug 160042.
   PRBool isChrome;
-  nsresult rv = mOrigin->SchemeIs("chrome", &isChrome);
+  nsresult rv = origin->SchemeIs("chrome", &isChrome);
   if (NS_SUCCEEDED(rv) && !isChrome) {
-    rv = mOrigin->GetHostPort(hostPort);
+    rv = origin->GetHostPort(hostPort);
   }
 
   if (NS_SUCCEEDED(rv) && !isChrome) {
     nsCAutoString scheme;
-    rv = mOrigin->GetScheme(scheme);
+    rv = origin->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);
     *aOrigin = ToNewCString(scheme + NS_LITERAL_CSTRING("://") + hostPort);
   }
@@ -206,7 +201,7 @@ nsPrincipal::GetOrigin(char **aOrigin)
     // Some URIs (e.g., nsSimpleURI) don't support host. Just
     // get the full spec.
     nsCAutoString spec;
-    rv = mOrigin->GetSpec(spec);
+    rv = origin->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
     *aOrigin = ToNewCString(spec);
   }
@@ -249,13 +244,14 @@ nsPrincipal::Equals(nsIPrincipal *aOther, PRBool *aResult)
   }
 
   if (this != aOther) {
-    if (mCert) {
-      PRBool otherHasCert;
-      aOther->GetHasCertificate(&otherHasCert);
-      if (!otherHasCert) {
-        return NS_OK;
-      }
+    PRBool otherHasCert;
+    aOther->GetHasCertificate(&otherHasCert);
+    if (otherHasCert != (mCert != nsnull)) {
+      // One has a cert while the other doesn't.  Not equal.
+      return NS_OK;
+    }
 
+    if (mCert) {
       nsCAutoString str;
       aOther->GetFingerprint(str);
       *aResult = str.Equals(mCert->fingerprint);
@@ -292,8 +288,9 @@ nsPrincipal::Equals(nsIPrincipal *aOther, PRBool *aResult)
 
     // Codebases are equal if they have the same origin.
     *aResult =
-      NS_SUCCEEDED(nsScriptSecurityManager::GetScriptSecurityManager()
-                   ->CheckSameOriginPrincipal(this, aOther));
+      NS_SUCCEEDED(nsScriptSecurityManager::CheckSameOriginPrincipal(this,
+                                                                     aOther,
+                                                                     PR_FALSE));
     return NS_OK;
   }
 
@@ -563,9 +560,6 @@ nsPrincipal::SetURI(nsIURI* aURI)
 {
   mCodebase = NS_TryToMakeImmutable(aURI);
   mCodebaseImmutable = URIIsImmutable(mCodebase);
-
-  // Invalidate our cached origin
-  mOrigin = nsnull;
 }
 
 
@@ -674,9 +668,6 @@ nsPrincipal::SetDomain(nsIURI* aDomain)
   // Domain has changed, forget cached security policy
   SetSecurityPolicy(nsnull);
 
-  // Invalidate our cached origin
-  mOrigin = nsnull;
-
   return NS_OK;
 }
 
@@ -718,9 +709,6 @@ nsPrincipal::InitFromPersistent(const char* aPrefName,
     mCodebaseImmutable = URIIsImmutable(mCodebase);
 
     mTrusted = aTrusted;
-
-    // Invalidate our cached origin
-    mOrigin = nsnull;
   }
 
   rv = mJSPrincipals.Init(this, aToken);
@@ -1091,8 +1079,6 @@ nsPrincipal::Write(nsIObjectOutputStream* aStream)
   if (NS_FAILED(rv)) {
     return rv;
   }
-
-  // mOrigin is an optimization; don't bother serializing it.
 
   rv = aStream->Write8(mTrusted);
   if (NS_FAILED(rv)) {

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-NSPR_CO_TAG = 'NSPR_4_7_1_BETA1'
-NSS_CO_TAG  = 'NSS_3_12_BETA2'
+NSPR_CO_TAG = 'NSPR_4_7_1_BETA2'
+NSS_CO_TAG  = 'NSS_3_12_BETA3'
 
 NSPR_DIRS = ('nsprpub',)
 NSS_DIRS  = ('dbm',

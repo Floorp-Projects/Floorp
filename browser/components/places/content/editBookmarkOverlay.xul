@@ -35,9 +35,12 @@
 #
 # ***** END LICENSE BLOCK *****
 
+<!-- XXXmano: temporary also use moveBookmarks for the "New Folder" button -->
 <!DOCTYPE overlay [
-<!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/editBookmarkOverlay.dtd">
-%placesDTD;
+<!ENTITY % editBookmarkOverlayDTD SYSTEM "chrome://browser/locale/places/editBookmarkOverlay.dtd">
+%editBookmarkOverlayDTD;
+<!ENTITY % moveBookmarksDTD SYSTEM "chrome://browser/locale/places/moveBookmarks.dtd">
+%moveBookmarksDTD;
 ]>
 
 <?xml-stylesheet href="chrome://browser/skin/places/editBookmarkOverlay.css"?>
@@ -124,11 +127,11 @@
                         class="menuitem-iconic folder-icon"/>
               <menuitem id="editBMPanel_toolbarFolderItem"
                         class="menuitem-iconic folder-icon"/>
-              <menuseparator id="editBMPanel_foldersSeparator" hidden="true"/>
               <menuseparator id="editBMPanel_chooseFolderSeparator"/>
               <menuitem id="editBMPanel_chooseFolderMenuItem"
 	        label="&editBookmarkOverlay.choose.label;"
                         class="menuitem-iconic folder-icon"/>
+              <menuseparator id="editBMPanel_foldersSeparator" hidden="true"/>
             </menupopup>
           </menulist>
           <button id="editBMPanel_foldersExpander"
@@ -145,6 +148,7 @@
               type="places"
               height="150"
               collapsed="true"
+              editable="true"
               onselect="gEditItemOverlay.onFolderTreeSelect();"
               hidecolumnpicker="true"
               observes="paneElementsBroadcaster">
@@ -153,6 +157,14 @@
           </treecols>
           <treechildren flex="1"/>
         </tree>
+
+        <hbox id="editBMPanel_newFolderBox" collapsed="true">
+          <button label="&newFolderButton.label;"
+                  id="editBMPanel_newFolderButton"
+                  accesskey="&newFolderButton.accesskey;"
+                  oncommand="gEditItemOverlay.newFolder();"/>
+          <spacer flex="1"/>
+        </hbox>
 
         <row align="center" id="editBMPanel_tagsRow">
           <label value="&editBookmarkOverlay.tags.label;"

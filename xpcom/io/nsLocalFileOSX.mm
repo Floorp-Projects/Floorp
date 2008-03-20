@@ -183,6 +183,11 @@ class nsDirEnumerator : public nsISimpleEnumerator,
         {
           NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
+          if (!mIterator || !mFSRefsArray) {
+            *result = PR_FALSE;
+            return NS_OK;
+          }
+
           if (mNext == nsnull) {
             if (mArrayIndex >= mArrayCnt) {
               ItemCount actualCnt;
@@ -201,6 +206,7 @@ class nsDirEnumerator : public nsISimpleEnumerator,
                 mArrayIndex = 0;
               }
             }
+
             if (mArrayIndex < mArrayCnt) {
               nsLocalFile *newFile = new nsLocalFile;
               if (!newFile)
@@ -212,9 +218,11 @@ class nsDirEnumerator : public nsISimpleEnumerator,
               mNext = newFile;
             } 
           }
+
           *result = mNext != nsnull;
           if (!*result)
             Close();
+
           return NS_OK;
 
           NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;

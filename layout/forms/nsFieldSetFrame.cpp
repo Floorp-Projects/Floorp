@@ -73,9 +73,8 @@ public:
                                  nsIFrame*      aChildList);
 
   NS_HIDDEN_(nscoord)
-    GetLegendPrefWidth(nsIRenderingContext* aRenderingContext);
-  NS_HIDDEN_(nscoord)
-    GetContentMinWidth(nsIRenderingContext* aRenderingContext);
+    GetIntrinsicWidth(nsIRenderingContext* aRenderingContext,
+                      nsLayoutUtils::IntrinsicWidthType);
   virtual nscoord GetMinWidth(nsIRenderingContext* aRenderingContext);
   virtual nscoord GetPrefWidth(nsIRenderingContext* aRenderingContext);
   virtual nsSize ComputeSize(nsIRenderingContext *aRenderingContext,
@@ -334,47 +333,27 @@ nsFieldSetFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
   }
 }
 
-// XXXbz This duplicates code in nsGkAtoms (near IntrinsicForContainer)
-
-static nscoord GetCoord(const nsStyleCoord& aCoord, nscoord aIfNotCoord)
-{
-  return aCoord.GetUnit() == eStyleUnit_Coord
-           ? aCoord.GetCoordValue()
-           : aIfNotCoord;
-}
-
 nscoord
-nsFieldSetFrame::GetLegendPrefWidth(nsIRenderingContext* aRenderingContext)
+nsFieldSetFrame::GetIntrinsicWidth(nsIRenderingContext* aRenderingContext,
+                                   nsLayoutUtils::IntrinsicWidthType aType)
 {
-  NS_ASSERTION(mLegendFrame, "Don't call me if there is no legend frame!");
+  nscoord legendWidth = 0;
+  nscoord contentWidth = 0;
+  if (mLegendFrame) {
+    legendWidth =
+      nsLayoutUtils::IntrinsicForContainer(aRenderingContext, mLegendFrame,
+                                           aType);
+  }
 
-  // We don't want to use nsLayoutUtils::IntrinsicForContainer,
-  // because legends ignore their CSS-specified width.
-  nscoord result = mLegendFrame->GetPrefWidth(aRenderingContext);
-
-  const nsStylePadding *stylePadding = mLegendFrame->GetStylePadding();
-  result += GetCoord(stylePadding->mPadding.GetLeft(), 0);
-  result += GetCoord(stylePadding->mPadding.GetRight(), 0);
-
-  const nsStyleBorder *styleBorder = mLegendFrame->GetStyleBorder();
-  result += styleBorder->GetBorderWidth(NS_SIDE_LEFT);
-  result += styleBorder->GetBorderWidth(NS_SIDE_RIGHT);
-
-  const nsStyleMargin *styleMargin = mLegendFrame->GetStyleMargin();
-  result += GetCoord(styleMargin->mMargin.GetLeft(), 0);
-  result += GetCoord(styleMargin->mMargin.GetRight(), 0);
-
-  return result;
+  if (mContentFrame) {
+    contentWidth =
+      nsLayoutUtils::IntrinsicForContainer(aRenderingContext, mContentFrame,
+                                           aType);
+  }
+      
+  return PR_MAX(legendWidth, contentWidth);
 }
 
-nscoord
-nsFieldSetFrame::GetContentMinWidth(nsIRenderingContext* aRenderingContext)
-{
-  NS_ASSERTION(mContentFrame, "Don't call me if there is no legend frame!");
-
-  return nsLayoutUtils::IntrinsicForContainer(aRenderingContext, mContentFrame,
-                                              nsLayoutUtils::MIN_WIDTH);
-}
 
 nscoord
 nsFieldSetFrame::GetMinWidth(nsIRenderingContext* aRenderingContext)
@@ -382,17 +361,7 @@ nsFieldSetFrame::GetMinWidth(nsIRenderingContext* aRenderingContext)
   nscoord result = 0;
   DISPLAY_MIN_WIDTH(this, result);
 
-  nscoord legendPrefWidth = 0;
-  nscoord contentMinWidth = 0;
-  if (mLegendFrame) {
-    legendPrefWidth = GetLegendPrefWidth(aRenderingContext);
-  }
-
-  if (mContentFrame) {
-    contentMinWidth = GetContentMinWidth(aRenderingContext);
-  }
-      
-  result = PR_MAX(legendPrefWidth, contentMinWidth);
+  result = GetIntrinsicWidth(aRenderingContext, nsLayoutUtils::MIN_WIDTH);
   return result;
 }
 
@@ -402,19 +371,7 @@ nsFieldSetFrame::GetPrefWidth(nsIRenderingContext* aRenderingContext)
   nscoord result = 0;
   DISPLAY_PREF_WIDTH(this, result);
 
-  nscoord legendPrefWidth = 0;
-  nscoord contentPrefWidth = 0;
-  if (mLegendFrame) {
-    legendPrefWidth = GetLegendPrefWidth(aRenderingContext);
-  }
-
-  if (mContentFrame) {
-    contentPrefWidth =
-      nsLayoutUtils::IntrinsicForContainer(aRenderingContext, mContentFrame,
-                                           nsLayoutUtils::PREF_WIDTH);
-  }
-      
-  result = PR_MAX(legendPrefWidth, contentPrefWidth);
+  result = GetIntrinsicWidth(aRenderingContext, nsLayoutUtils::PREF_WIDTH);
   return result;
 }
 
@@ -467,7 +424,16 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
 
   nsSize availSize(aReflowState.ComputedWidth(), aReflowState.availableHeight);
   NS_ASSERTION(!mContentFrame ||
-               GetContentMinWidth(aReflowState.rendContext) <= availSize.width,
+      nsLayoutUtils::IntrinsicForContainer(aReflowState.rendContext,
+                                           mContentFrame,
+                                           nsLayoutUtils::MIN_WIDTH) <=
+               availSize.width,
+               "Bogus availSize.width; should be bigger");
+  NS_ASSERTION(!mLegendFrame ||
+      nsLayoutUtils::IntrinsicForContainer(aReflowState.rendContext,
+                                           mLegendFrame,
+                                           nsLayoutUtils::MIN_WIDTH) <=
+               availSize.width,
                "Bogus availSize.width; should be bigger");
 
   // get our border and padding
@@ -483,18 +449,8 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     const nsStyleMargin* marginStyle = mLegendFrame->GetStyleMargin();
     marginStyle->GetMargin(legendMargin);
 
-    // Give the legend all the space it wants.
-    nsSize legendAvailSize(GetLegendPrefWidth(aReflowState.rendContext),
-                           NS_INTRINSICSIZE);
-
     nsHTMLReflowState legendReflowState(aPresContext, aReflowState,
-                                        mLegendFrame,
-                                        legendAvailSize);
-
-    // always give the legend as much size as it wants
-    legendReflowState.
-      SetComputedWidth(mLegendFrame->GetPrefWidth(aReflowState.rendContext));
-    legendReflowState.SetComputedHeight(NS_INTRINSICSIZE);
+                                        mLegendFrame, availSize);
 
     nsHTMLReflowMetrics legendDesiredSize;
 
@@ -529,9 +485,6 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
       availSize.height -= mLegendSpace;
       availSize.height = PR_MAX(availSize.height, 0);
     }
-  
-    NS_ASSERTION(availSize.width >= mLegendRect.width,
-                 "Bogus availSize.width.  Should be bigger");
 
     FinishReflowChild(mLegendFrame, aPresContext, &legendReflowState, 
                       legendDesiredSize, 0, 0, NS_FRAME_NO_MOVE_FRAME);    

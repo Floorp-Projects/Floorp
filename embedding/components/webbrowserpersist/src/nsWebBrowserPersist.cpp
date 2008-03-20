@@ -914,6 +914,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
                     rv = StartUpload(storStream, data->mFile, contentType);
                     if (NS_FAILED(rv))
                     {
+                        readError = PR_FALSE;
                         cancel = PR_TRUE;
                     }
                 }

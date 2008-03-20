@@ -69,12 +69,6 @@ static int ComponentValue(const PRUnichar* aColorSpec, int aLen, int color, int 
   return component;
 }
 
-NS_GFX_(PRBool) NS_ASCIIHexToRGB(const nsCString& aColorSpec,
-                                            nscolor* aResult)
-{
-  return NS_HexToRGB(NS_ConvertASCIItoUTF16(aColorSpec), aResult);
-}
-
 NS_GFX_(PRBool) NS_HexToRGB(const nsString& aColorSpec,
                                        nscolor* aResult)
 {
@@ -165,16 +159,6 @@ NS_GFX_(void) NS_RGBToHex(nscolor aColor, nsAString& aResult)
   CopyASCIItoUTF16(buf, aResult);
 }
 
-NS_GFX_(void) NS_RGBToASCIIHex(nscolor aColor,
-                                          nsAFlatCString& aResult)
-{
-  aResult.SetLength(7);
-  NS_ASSERTION(aResult.Length() == 7, "small SetLength failed, use an autostring instead!");
-  char *buf = aResult.BeginWriting();
-  PR_snprintf(buf, 8, "#%02x%02x%02x",
-              NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor));
-}
-
 NS_GFX_(PRBool) NS_ColorNameToRGB(const nsAString& aColorName, nscolor* aResult)
 {
   nsColorName id = nsColorNames::LookupName(aColorName);
@@ -186,130 +170,6 @@ NS_GFX_(PRBool) NS_ColorNameToRGB(const nsAString& aColorName, nscolor* aResult)
     return PR_TRUE;
   }
   return PR_FALSE;
-}
-
-NS_GFX_(nscolor) NS_BrightenColor(nscolor inColor)
-{
-  PRIntn r, g, b, max, over;
-
-  r = NS_GET_R(inColor);
-  g = NS_GET_G(inColor);
-  b = NS_GET_B(inColor);
-
-  //10% of max color increase across the board
-  r += 25;
-  g += 25;
-  b += 25;
-
-  //figure out which color is largest
-  if (r > g)
-  {
-    if (b > r)
-      max = b;
-    else
-      max = r;
-  }
-  else
-  {
-    if (b > g)
-      max = b;
-    else
-      max = g;
-  }
-
-  //if we overflowed on this max color, increase
-  //other components by the overflow amount
-  if (max > 255)
-  {
-    over = max - 255;
-
-    if (max == r)
-    {
-      g += over;
-      b += over;
-    }
-    else if (max == g)
-    {
-      r += over;
-      b += over;
-    }
-    else
-    {
-      r += over;
-      g += over;
-    }
-  }
-
-  //clamp
-  if (r > 255)
-    r = 255;
-  if (g > 255)
-    g = 255;
-  if (b > 255)
-    b = 255;
-
-  return NS_RGBA(r, g, b, NS_GET_A(inColor));
-}
-
-NS_GFX_(nscolor) NS_DarkenColor(nscolor inColor)
-{
-  PRIntn r, g, b, max;
-
-  r = NS_GET_R(inColor);
-  g = NS_GET_G(inColor);
-  b = NS_GET_B(inColor);
-
-  //10% of max color decrease across the board
-  r -= 25;
-  g -= 25;
-  b -= 25;
-
-  //figure out which color is largest
-  if (r > g)
-  {
-    if (b > r)
-      max = b;
-    else
-      max = r;
-  }
-  else
-  {
-    if (b > g)
-      max = b;
-    else
-      max = g;
-  }
-
-  //if we underflowed on this max color, decrease
-  //other components by the underflow amount
-  if (max < 0)
-  {
-    if (max == r)
-    {
-      g += max;
-      b += max;
-    }
-    else if (max == g)
-    {
-      r += max;
-      b += max;
-    }
-    else
-    {
-      r += max;
-      g += max;
-    }
-  }
-
-  //clamp
-  if (r < 0)
-    r = 0;
-  if (g < 0)
-    g = 0;
-  if (b < 0)
-    b = 0;
-
-  return NS_RGBA(r, g, b, NS_GET_A(inColor));
 }
 
 NS_GFX_(nscolor)

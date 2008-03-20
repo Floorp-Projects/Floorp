@@ -162,7 +162,7 @@ class MochitestOptions(optparse.OptionParser):
                            "refcounted objects (or bytes in classes with "
                            "MOZ_COUNT_CTOR and MOZ_COUNT_DTOR) is greater "
                            "than the given number")
-    defaults["leakThreshold"] = -1
+    defaults["leakThreshold"] = 1.0e3000
 
     # -h, --help are automatically handled by OptionParser
 
@@ -299,17 +299,21 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   # <http://mochikit.com/doc/html/MochiKit/Logging.html>
 
   testURL = TESTS_URL + options.testPath
+  urlOpts = []
   if options.chrome:
-    testURL = CHROMETESTS_URL + options.testPath
+    testURL = CHROMETESTS_URL
+    if options.testPath:
+      urlOpts.append("testPath=" + encodeURIComponent(options.testPath))
   elif options.a11y:
-    testURL = A11YTESTS_URL + options.testPath
+    testURL = A11YTESTS_URL
+    if options.testPath:
+      urlOpts.append("testPath=" + encodeURIComponent(options.testPath))
   elif options.browserChrome:
     testURL = "about:blank"
 
   if options.browserChrome:
     makeTestConfig(options)
   else:
-    urlOpts = []
     if options.autorun:
       urlOpts.append("autorun=1")
     if options.closeWhenDone:
@@ -323,16 +327,16 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
     if len(urlOpts) > 0:
       testURL += "?" + "&".join(urlOpts)
 
-  if options.leakThreshold >= 0:
-    browserEnv["XPCOM_MEM_BLOAT_LOG"] = LEAK_REPORT_FILE
+  browserEnv["XPCOM_MEM_BLOAT_LOG"] = LEAK_REPORT_FILE
 
-  start = automation.runApp(testURL, browserEnv, options.app, PROFILE_DIRECTORY)
+  start = automation.runApp(testURL, browserEnv, options.app, PROFILE_DIRECTORY,
+                            options.browserArgs)
 
   server.stop()
 
-  if not os.path.exists(LEAK_REPORT_FILE) and options.leakThreshold >= 0:
-    print "WARNING refcount logging is off, so leak detection has been disabled"
-  elif options.leakThreshold >= 0:
+  if not os.path.exists(LEAK_REPORT_FILE):
+    print "WARNING refcount logging is off, so leaks can't be detected!"
+  else:
     leaks = open(LEAK_REPORT_FILE, "r")
     for line in leaks:
       print line,
@@ -348,6 +352,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
                         r"\d+\s+(?P<numLeaked>\d+)")
     thresholdExceeded = False
     seenTotal = False
+    prefix = "WARNING"
     for line in leaks:
       matches = lineRe.match(line)
       if not matches:
@@ -358,6 +363,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
         bytesLeaked = int(matches.group("bytesLeaked"))
         if bytesLeaked > threshold:
           thresholdExceeded = True
+          prefix = "ERROR FAIL"
           print ("ERROR FAIL leaked %(actual)d bytes during test "
                  "execution (should have leaked no more than "
                  "%(expect)d bytes)") % { "actual": bytesLeaked,
@@ -367,7 +373,6 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
       else:
         numLeaked = int(matches.group("numLeaked"))
         if numLeaked != 0:
-          prefix = thresholdExceeded and "ERROR FAIL" or "WARNING"
           if numLeaked > 1:
             instance = "instances"
             rest = " each (%s bytes total)" % matches.group("bytesLeaked")

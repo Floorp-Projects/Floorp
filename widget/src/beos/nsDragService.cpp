@@ -151,8 +151,11 @@ nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode,
                                   PRUint32 aActionType)
 {
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::InvokeDragSession"));
-    nsBaseDragService::InvokeDragSession (aDOMNode, aArrayTransferables,
-                                         aRegion, aActionType);
+    nsresult rv = nsBaseDragService::InvokeDragSession(aDOMNode,
+                                                       aArrayTransferables,
+                                                       aRegion, aActionType);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     ResetDragInfo();       
     // make sure that we have an array of transferables to use
     if (nsnull == aArrayTransferables)

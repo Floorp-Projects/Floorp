@@ -567,8 +567,8 @@ var BookmarkPropertiesPanel = {
     var itemToSelect = userEnteredNameField;
     try {
       this._microsummaries =
-        PlacesUtils.microsummaries.getMicrosummaries(this._bookmarkURI,
-                                                     this._bookmarkId);
+        PlacesUIUtils.microsummaries.getMicrosummaries(this._bookmarkURI,
+                                                       this._bookmarkId);
     }
     catch(ex) {
       // getMicrosummaries will throw an exception if the page to which the URI
@@ -590,8 +590,8 @@ var BookmarkPropertiesPanel = {
           var menuItem = this._createMicrosummaryMenuItem(microsummary);
 
           if (this._action == ACTION_EDIT &&
-              PlacesUtils.microsummaries
-                         .isMicrosummary(this._bookmarkId, microsummary))
+              PlacesUIUtils.microsummaries
+                           .isMicrosummary(this._bookmarkId, microsummary))
             itemToSelect = menuItem;
 
           menupopup.appendChild(menuItem);
@@ -713,7 +713,7 @@ var BookmarkPropertiesPanel = {
     try {
       var value = this._element(aTextboxID).value;
       if (value) {
-        var uri = PlacesUtils.createFixedURI(value);
+        var uri = PlacesUIUtils.createFixedURI(value);
         return true;
       }
     } catch (e) { }
@@ -725,7 +725,7 @@ var BookmarkPropertiesPanel = {
    */
   _getEditTitleTransaction:
   function BPP__getEditTitleTransaction(aItemId, aNewTitle) {
-    return PlacesUtils.ptm.editItemTitle(aItemId, aNewTitle);
+    return PlacesUIUtils.ptm.editItemTitle(aItemId, aNewTitle);
   },
 
   /**
@@ -813,21 +813,21 @@ var BookmarkPropertiesPanel = {
     // description
     var description = this._element("descriptionTextfield").value;
     if (description != this._itemDescription) {
-      transactions.push(PlacesUtils.ptm.
+      transactions.push(PlacesUIUtils.ptm.
                         editItemDescription(itemId, description,
                         this._itemType != BOOKMARK_ITEM));
     }
 
     if (this._itemType == BOOKMARK_ITEM) {
       // location
-      var url = PlacesUtils.createFixedURI(this._element("editURLBar").value);
+      var url = PlacesUIUtils.createFixedURI(this._element("editURLBar").value);
       if (!this._bookmarkURI.equals(url))
-        transactions.push(PlacesUtils.ptm.editBookmarkURI(itemId, url));
+        transactions.push(PlacesUIUtils.ptm.editBookmarkURI(itemId, url));
 
       // keyword transactions
       var newKeyword = this._element("keywordTextfield").value;
       if (newKeyword != this._bookmarkKeyword) {
-        transactions.push(PlacesUtils.ptm.
+        transactions.push(PlacesUIUtils.ptm.
                           editBookmarkKeyword(itemId, newKeyword));
       }
 
@@ -841,39 +841,39 @@ var BookmarkPropertiesPanel = {
       // selected a microsummary which is not the one the bookmark previously
       // had.
       if ((newMicrosummary == null &&
-           PlacesUtils.microsummaries.hasMicrosummary(itemId)) ||
+           PlacesUIUtils.microsummaries.hasMicrosummary(itemId)) ||
           (newMicrosummary != null &&
-           !PlacesUtils.microsummaries
-                       .isMicrosummary(itemId, newMicrosummary))) {
+           !PlacesUIUtils.microsummaries
+                         .isMicrosummary(itemId, newMicrosummary))) {
         transactions.push(
-          PlacesUtils.ptm.editBookmarkMicrosummary(itemId, newMicrosummary));
+          PlacesUIUtils.ptm.editBookmarkMicrosummary(itemId, newMicrosummary));
       }
 
       // load in sidebar
       var loadInSidebarChecked = this._element("loadInSidebarCheckbox").checked;
       if (loadInSidebarChecked != this._loadBookmarkInSidebar) {
         transactions.push(
-          PlacesUtils.ptm.setLoadInSidebar(itemId, loadInSidebarChecked));
+          PlacesUIUtils.ptm.setLoadInSidebar(itemId, loadInSidebarChecked));
       }
     }
     else if (this._itemType == LIVEMARK_CONTAINER) {
       var feedURIString = this._element("feedLocationTextfield").value;
-      var feedURI = PlacesUtils.createFixedURI(feedURIString);
+      var feedURI = PlacesUIUtils.createFixedURI(feedURIString);
       if (!this._feedURI.equals(feedURI)) {
         transactions.push(
-          PlacesUtils.ptm.editLivemarkFeedURI(this._folderId, feedURI));
+          PlacesUIUtils.ptm.editLivemarkFeedURI(this._folderId, feedURI));
       }
 
       // Site Location is empty, we can set its URI to null
       var newSiteURIString = this._element("feedSiteLocationTextfield").value;
       var newSiteURI = null;
       if (newSiteURIString)
-        newSiteURI = PlacesUtils.createFixedURI(newSiteURIString);
+        newSiteURI = PlacesUIUtils.createFixedURI(newSiteURIString);
 
       if ((!newSiteURI && this._siteURI)  ||
           (newSiteURI && (!this._siteURI || !this._siteURI.equals(newSiteURI)))) {
         transactions.push(
-          PlacesUtils.ptm.editLivemarkSiteURI(this._folderId, newSiteURI));
+          PlacesUIUtils.ptm.editLivemarkSiteURI(this._folderId, newSiteURI));
       }
     }
 
@@ -882,8 +882,8 @@ var BookmarkPropertiesPanel = {
     if (transactions.length > 0) {
       window.arguments[0].performed = true;
       var aggregate =
-        PlacesUtils.ptm.aggregateTransactions(this._getDialogTitle(), transactions);
-      PlacesUtils.ptm.doTransaction(aggregate);
+        PlacesUIUtils.ptm.aggregateTransactions(this._getDialogTitle(), transactions);
+      PlacesUIUtils.ptm.doTransaction(aggregate);
     }
   },
 
@@ -912,7 +912,7 @@ var BookmarkPropertiesPanel = {
    */
   _getCreateNewBookmarkTransaction:
   function BPP__getCreateNewBookmarkTransaction(aContainer, aIndex) {
-    var uri = PlacesUtils.createFixedURI(this._element("editURLBar").value);
+    var uri = PlacesUIUtils.createFixedURI(this._element("editURLBar").value);
     var title = this._element("userEnteredName").label;
     var keyword = this._element("keywordTextfield").value;
     var annotations = [];
@@ -928,20 +928,20 @@ var BookmarkPropertiesPanel = {
     var microsummary = this._element("namePicker").selectedItem.microsummary;
     if (microsummary) {
       childTransactions.push(
-        PlacesUtils.ptm.editBookmarkMicrosummary(-1, microsummary));
+        PlacesUIUtils.ptm.editBookmarkMicrosummary(-1, microsummary));
     }
 
     if (this._postData) {
       childTransactions.push(
-        PlacesUtils.ptm.editBookmarkPostData(-1, this._postData));
+        PlacesUIUtils.ptm.editBookmarkPostData(-1, this._postData));
     }
 
-    var transactions = [PlacesUtils.ptm.createItem(uri, aContainer, aIndex,
-                                                   title, keyword,
-                                                   annotations,
-                                                   childTransactions)];
+    var transactions = [PlacesUIUtils.ptm.createItem(uri, aContainer, aIndex,
+                                                     title, keyword,
+                                                     annotations,
+                                                     childTransactions)];
 
-    return PlacesUtils.ptm.aggregateTransactions(this._getDialogTitle(), transactions);
+    return PlacesUIUtils.ptm.aggregateTransactions(this._getDialogTitle(), transactions);
   },
 
   /**
@@ -953,7 +953,7 @@ var BookmarkPropertiesPanel = {
     for (var i = 0; i < this._URIList.length; ++i) {
       var uri = this._URIList[i];
       var title = this._getURITitleFromHistory(uri);
-      transactions.push(PlacesUtils.ptm.createItem(uri, -1, -1, title));
+      transactions.push(PlacesUIUtils.ptm.createItem(uri, -1, -1, title));
     }
     return transactions; 
   },
@@ -973,8 +973,8 @@ var BookmarkPropertiesPanel = {
     if (description)
       annotations.push(this._getDescriptionAnnotation(description));
 
-    return PlacesUtils.ptm.createFolder(folderName, aContainer, aIndex,
-                                        annotations, childItemsTransactions);
+    return PlacesUIUtils.ptm.createFolder(folderName, aContainer, aIndex,
+                                          annotations, childItemsTransactions);
   },
 
   /**
@@ -984,16 +984,16 @@ var BookmarkPropertiesPanel = {
   _getCreateNewLivemarkTransaction:
   function BPP__getCreateNewLivemarkTransaction(aContainer, aIndex) {
     var feedURIString = this._element("feedLocationTextfield").value;
-    var feedURI = PlacesUtils.createFixedURI(feedURIString);
+    var feedURI = PlacesUIUtils.createFixedURI(feedURIString);
 
     var siteURIString = this._element("feedSiteLocationTextfield").value;
     var siteURI = null;
     if (siteURIString)
-      siteURI = PlacesUtils.createFixedURI(siteURIString);
+      siteURI = PlacesUIUtils.createFixedURI(siteURIString);
 
     var name = this._element("namePicker").value;
-    return PlacesUtils.ptm.createLivemark(feedURI, siteURI, name,
-                                          aContainer, aIndex);
+    return PlacesUIUtils.ptm.createLivemark(feedURI, siteURI, name,
+                                            aContainer, aIndex);
   },
 
   /**
@@ -1018,7 +1018,7 @@ var BookmarkPropertiesPanel = {
     // perfrom our transaction do via the transaction manager passed by the
     // opener so it can be undone.
     window.arguments[0].performed = true;
-    PlacesUtils.ptm.doTransaction(createTxn);
+    PlacesUIUtils.ptm.doTransaction(createTxn);
   },
 
   onNamePickerInput: function BPP_onNamePickerInput() {
@@ -1049,7 +1049,7 @@ var BookmarkPropertiesPanel = {
       if (!this._folderTree.place) {
         const FOLDER_TREE_PLACE_URI =
           "place:excludeItems=1&excludeQueries=1&excludeReadOnlyFolders=1&folder=" +
-          PlacesUtils.allBookmarksFolderId;
+          PlacesUIUtils.allBookmarksFolderId;
         this._folderTree.place = FOLDER_TREE_PLACE_URI;
       }
 

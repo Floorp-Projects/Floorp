@@ -38,6 +38,7 @@
  *      Owen Taylor <otaylor@redhat.com>
  */
 
+#define _BSD_SOURCE /* for strdup() */
 #include "cairoint.h"
 
 /* Forward declare so we can use it as an arbitrary backend for

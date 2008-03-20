@@ -175,7 +175,7 @@ HelperApps.prototype = {
         entry.appPath = "";
       }
     } 
-    else {
+    else if (aMIMEInfo.preferredApplicationHandler instanceof Components.interfaces.nsILocalHandlerApp) {
       entry.saveToDisk       = false;
       entry.useSystemDefault = false;
       entry.handleInternal   = false;

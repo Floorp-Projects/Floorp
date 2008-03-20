@@ -463,7 +463,7 @@ nsHTMLImageElement::IsFocusable(PRInt32 *aTabIndex)
     *aTabIndex = (sTabFocusModel & eTabFocus_formElementsMask)? tabIndex : -1;
   }
 
-  return tabIndex >= 0;
+  return tabIndex >= 0 || HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex);
 }
 
 nsresult

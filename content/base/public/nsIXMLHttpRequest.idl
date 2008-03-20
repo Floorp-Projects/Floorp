@@ -90,7 +90,7 @@ interface nsPIDOMWindow;
  * you're aware of all the security implications.  And then think twice about
  * it.
  */
-[scriptable, uuid(f3fb86e6-5914-4b47-a1f6-8907e37e1159)]
+[scriptable, uuid(acda85ab-d06c-4176-b834-6d129ca97ca3)]
 interface nsIXMLHttpRequest : nsISupports
 {
   /**
@@ -300,6 +300,15 @@ interface nsIXMLHttpRequest : nsISupports
    * will be called as each part of the response is received.
    */
   attribute boolean multipart;
+
+  /**
+   * Set to true if this is a background service request. This will
+   * prevent a load group being associated with the request, and
+   * suppress any security dialogs from being shown * to the user.
+   * In the cases where one of those dialogs would be shown, the request
+   * will simply fail instead.
+   */
+  attribute boolean mozBackgroundRequest;
 
   /**
    * Initialize the object for use from C++ code with the principal, script

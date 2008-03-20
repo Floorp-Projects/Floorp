@@ -992,6 +992,7 @@ nsresult nsPluginTag::EnsureMembersAreUTF8()
     rv = ccm->GetUnicodeDecoderRaw(charset.get(), getter_AddRefs(decoder));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    ConvertToUTF8(decoder, mName);
     ConvertToUTF8(decoder, mDescription);
     for (PRUint32 i = 0; i < mMimeDescriptionArray.Length(); ++i) {
       ConvertToUTF8(decoder, mMimeDescriptionArray[i]);
@@ -1074,11 +1075,9 @@ nsPluginTag::SetBlocklisted(PRBool aBlocklisted)
   if (HasFlag(NS_PLUGIN_FLAG_BLOCKLISTED) == aBlocklisted)
     return NS_OK;
 
-  if (aBlocklisted) {
+  if (aBlocklisted)
     Mark(NS_PLUGIN_FLAG_BLOCKLISTED);
-    if (HasFlag(NS_PLUGIN_FLAG_ENABLED))
-      UnMark(NS_PLUGIN_FLAG_ENABLED);
-  } else
+  else
     UnMark(NS_PLUGIN_FLAG_BLOCKLISTED);
 
   mPluginHost->UpdatePluginInfo(nsnull);
@@ -3530,7 +3529,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbeddedPlugin(const char *aMimeType,
   // disabled, we don't want to go on and end up in SetUpDefaultPluginInstance.
   nsPluginTag* pluginTag = FindPluginForType(aMimeType, PR_FALSE);
   if (pluginTag) {
-    if (!pluginTag->HasFlag(NS_PLUGIN_FLAG_ENABLED)) {
+    if (!pluginTag->IsEnabled()) {
       return NS_ERROR_NOT_AVAILABLE;
     }
   } else if (!mJavaEnabled && IsJavaMIMEType(aMimeType)) {
@@ -4216,13 +4215,7 @@ nsPluginHostImpl::IsPluginEnabledForType(const char* aMimeType)
     return NS_ERROR_FAILURE;
   }
 
-  if (!mJavaEnabled && IsJavaMIMEType(aMimeType)) {
-    // Return DISABLED whether we have a java plugin or not -- if it's
-    // disabled, it's disabled.
-    return NS_ERROR_PLUGIN_DISABLED;
-  }
-
-  if (!plugin->HasFlag(NS_PLUGIN_FLAG_ENABLED)) {
+  if (!plugin->IsEnabled()) {
     if (plugin->HasFlag(NS_PLUGIN_FLAG_BLOCKLISTED))
       return NS_ERROR_PLUGIN_BLOCKLISTED;
     else
@@ -4430,7 +4423,7 @@ nsPluginHostImpl::GetPluginCount(PRUint32* aPluginCount)
 
   nsPluginTag* plugin = mPlugins;
   while (plugin != nsnull) {
-    if (plugin->HasFlag(NS_PLUGIN_FLAG_ENABLED)) {
+    if (plugin->IsEnabled()) {
       ++count;
     }
     plugin = plugin->mNext;
@@ -4450,7 +4443,7 @@ nsPluginHostImpl::GetPlugins(PRUint32 aPluginCount, nsIDOMPlugin** aPluginArray)
 
   nsPluginTag* plugin = mPlugins;
   for (PRUint32 i = 0; i < aPluginCount && plugin; plugin = plugin->mNext) {
-    if (plugin->HasFlag(NS_PLUGIN_FLAG_ENABLED)) {
+    if (plugin->IsEnabled()) {
       nsIDOMPlugin* domPlugin = new DOMPluginImpl(plugin);
       NS_IF_ADDREF(domPlugin);
       aPluginArray[i++] = domPlugin;
@@ -4510,7 +4503,7 @@ nsPluginHostImpl::FindPluginForType(const char* aMimeType,
       variants = plugins->mVariants;
 
       for (cnt = 0; cnt < variants; cnt++) {
-        if ((!aCheckEnabled || plugins->HasFlag(NS_PLUGIN_FLAG_ENABLED)) &&
+        if ((!aCheckEnabled || plugins->IsEnabled()) &&
             plugins->mMimeTypeArray[cnt] &&
             (0 == PL_strcasecmp(plugins->mMimeTypeArray[cnt], aMimeType))) {
           return plugins;
@@ -4549,7 +4542,7 @@ nsPluginHostImpl::FindPluginEnabledForExtension(const char* aExtension,
         {
           // mExtensionsArray[cnt] is a list of extensions separated
           // by commas
-          if (plugins->HasFlag(NS_PLUGIN_FLAG_ENABLED) &&
+          if (plugins->IsEnabled() &&
               0 == CompareExtensions(plugins->mExtensionsArray[cnt], aExtension))
           {
             aMimeType = plugins->mMimeTypeArray[cnt];
@@ -5257,7 +5250,8 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
       pluginTag->mNext = mPlugins;
       mPlugins = pluginTag;
 
-      pluginTag->RegisterWithCategoryManager(mOverrideInternalTypes);
+      if (pluginTag->IsEnabled())
+        pluginTag->RegisterWithCategoryManager(mOverrideInternalTypes);
     }
     else if (!pluginTag->HasFlag(NS_PLUGIN_FLAG_UNWANTED)) {
       // we don't need it, delete it;
@@ -5551,7 +5545,7 @@ nsPluginHostImpl::UpdatePluginInfo(nsPluginTag* aPluginTag)
   WritePluginInfo();
   mCachedPlugins = nsnull;
 
-  if (!aPluginTag || aPluginTag->HasFlag(NS_PLUGIN_FLAG_ENABLED))
+  if (!aPluginTag || aPluginTag->IsEnabled())
     return NS_OK;
 
   nsCOMPtr<nsISupportsArray> instsToReload;
@@ -6996,7 +6990,8 @@ nsPluginHostImpl::ScanForRealInComponentsFolder(nsIComponentManager * aCompManag
       mPlugins = pluginTag;
 
       // last thing we need is to register this plugin with layout so it can be used in full-page mode
-      pluginTag->RegisterWithCategoryManager(mOverrideInternalTypes);
+      if (pluginTag->IsEnabled())
+        pluginTag->RegisterWithCategoryManager(mOverrideInternalTypes);
     }
   }
 

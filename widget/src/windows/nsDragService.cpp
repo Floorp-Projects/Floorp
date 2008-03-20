@@ -189,9 +189,11 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
                                  nsIScriptableRegion *aRegion,
                                  PRUint32 aActionType)
 {
-  nsBaseDragService::InvokeDragSession(aDOMNode, anArrayTransferables, aRegion,
-                                       aActionType);
-  nsresult rv;
+  nsresult rv = nsBaseDragService::InvokeDragSession(aDOMNode,
+                                                     anArrayTransferables,
+                                                     aRegion,
+                                                     aActionType);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Try and get source URI of the items that are being dragged
   nsIURI *uri = nsnull;

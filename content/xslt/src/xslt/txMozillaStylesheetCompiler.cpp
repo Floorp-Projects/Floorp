@@ -543,7 +543,7 @@ txCompileObserver::startLoad(nsIURI* aUri, txStylesheetCompiler* aCompiler,
     NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return channel->AsyncOpen(sink, parser);
+    return channel->AsyncOpen(listener, parser);
 }
 
 nsresult

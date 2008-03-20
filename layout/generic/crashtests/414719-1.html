@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<script type="text/javascript">
+
+function boom()
+{
+  var newDiv = document.createElement("div");
+  var ispan = document.getElementById("ispan");
+  ispan.parentNode.insertBefore(newDiv, ispan);
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+
+<div style="-moz-column-count: 1; position: fixed;"><div style="overflow: -moz-hidden-unscrollable; display: table-header-group; white-space: pre; position: absolute;">
+ <span id="ispan">
+</span></div></div>
+
+</body>
+
+</html>

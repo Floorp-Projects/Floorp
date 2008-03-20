@@ -87,6 +87,7 @@ nsKeyObject::InitKey(PRInt16 aAlgorithm, void * aKey)
 
   switch (aAlgorithm) {
     case nsIKeyObject::RC4:
+    case nsIKeyObject::HMAC:
       mSymKey = reinterpret_cast<PK11SymKey*>(aKey);
 
       if (!mSymKey) {
@@ -151,7 +152,7 @@ nsKeyObject::GetType(PRInt16 *_retval)
 //////////////////////////////////////////////////////////////////////////////
 // nsIKeyObjectFactory
 
-NS_IMPL_ISUPPORTS1(nsKeyObjectFactory, nsIKeyObjectFactory)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsKeyObjectFactory, nsIKeyObjectFactory)
 
 nsKeyObjectFactory::nsKeyObjectFactory()
 {
@@ -176,9 +177,24 @@ NS_IMETHODIMP
 nsKeyObjectFactory::KeyFromString(PRInt16 aAlgorithm, const nsACString & aKey,
                                   nsIKeyObject **_retval)
 {
-  if (aAlgorithm != nsIKeyObject::RC4)
+  CK_MECHANISM_TYPE cipherMech;
+  CK_ATTRIBUTE_TYPE cipherOperation;
+  switch (aAlgorithm)
+  {
+  case nsIKeyObject::HMAC:
+    cipherMech = CKM_GENERIC_SECRET_KEY_GEN;
+    cipherOperation = CKA_SIGN;
+    break;
+
+  case nsIKeyObject::RC4:
+    cipherMech = CKM_RC4;
+    cipherOperation = CKA_ENCRYPT;
+    break;
+
+  default:
     return NS_ERROR_INVALID_ARG;
-  
+  }
+
   nsresult rv;
   nsCOMPtr<nsIKeyObject> key =
       do_CreateInstance(NS_KEYMODULEOBJECT_CONTRACTID, &rv);
@@ -191,8 +207,6 @@ nsKeyObjectFactory::KeyFromString(PRInt16 aAlgorithm, const nsACString & aKey,
   keyItem.len = flatKey.Length();
 
   PK11SlotInfo *slot = nsnull;
-  CK_MECHANISM_TYPE cipherMech;
-  cipherMech = CKM_RC4;
   slot = PK11_GetBestSlot(cipherMech, nsnull);
   if (!slot) {
     NS_ERROR("no slot");
@@ -200,7 +214,7 @@ nsKeyObjectFactory::KeyFromString(PRInt16 aAlgorithm, const nsACString & aKey,
   }
 
   PK11SymKey* symKey = PK11_ImportSymKey(slot, cipherMech, PK11_OriginUnwrap,
-                                         CKA_ENCRYPT, &keyItem, nsnull);
+                                         cipherOperation, &keyItem, nsnull);
   // cleanup code
   if (slot)
     PK11_FreeSlot(slot);

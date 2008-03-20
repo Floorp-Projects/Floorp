@@ -195,7 +195,7 @@ private:
     }
   };
 
-  nsresult GetCurrentFrameNoRef(gfxIImageFrame** aFrame);
+  gfxIImageFrame* GetCurrentFrameNoRef();
   
   inline Anim* ensureAnimExists() {
     if (!mAnim)

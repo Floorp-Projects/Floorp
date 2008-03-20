@@ -36,9 +36,6 @@
                              align="end"
                              xbl:inherits="disabled,crop,image,label,accesskey,command,
                                            dir,pack,orient,toolbarmode,buttonstyle"/>
-          <xul:dropmarker type="menu-button"
-                          class="toolbarbutton-menubutton-dropmarker"
-                          xbl:inherits="align,dir,pack,orient,disabled,toolbarmode,buttonstyle,label"/>
         </xul:hbox>
         <xul:hbox flex="1" class="toolbarbutton-text-box allowevents-box">
            <xul:label class="toolbarbutton-text"
@@ -70,9 +67,8 @@
       </xul:stack>
       <xul:dropmarker type="menu" class="toolbarbutton-menu-dropmarker" xbl:inherits="disabled,label"/>
     </content>
-
   </binding>
-   <binding id="toolbarbutton-shadow" extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
+  <binding id="toolbarbutton-shadow" extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
    <content>
       <children includes="observes|template|menupopup|tooltip"/>
       <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,toolbarmode,buttonstyle"/>
@@ -83,7 +79,8 @@
                  xbl:inherits="value=label,accesskey,crop,toolbarmode,buttonstyle"/>
       </xul:stack>
     </content>
-   </binding> 
+  </binding>
+  
   <binding id="tabbrowser-tab" extends="chrome://browser/content/tabbrowser.xml#tabbrowser-tab">
     <content chromedir="&locale.dir;" closetabtext="&closeTab.label;">
       <xul:hbox class="tab-image-left" xbl:inherits="selected"/>

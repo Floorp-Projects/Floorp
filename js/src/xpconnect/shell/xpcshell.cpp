@@ -1181,14 +1181,6 @@ FullTrustSecMan::CheckSameOriginURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
     return NS_OK;
 }
 
-/* void checkSameOriginPrincipal (in nsIPrincipal aSourcePrincipal, in nsIPrincipal aTargetPrincipal); */
-NS_IMETHODIMP
-FullTrustSecMan::CheckSameOriginPrincipal(nsIPrincipal *aSourcePrincipal,
-                                          nsIPrincipal *aTargetPrincipal)
-{
-    return NS_OK;
-}
-
 /* [noscript] nsIPrincipal getPrincipalFromContext (in JSContextPtr cx); */
 NS_IMETHODIMP
 FullTrustSecMan::GetPrincipalFromContext(JSContext * cx, nsIPrincipal **_retval)

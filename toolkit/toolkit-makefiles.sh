@@ -99,7 +99,6 @@ MAKEFILES_gfx="
   gfx/src/beos/Makefile
   gfx/src/psshared/Makefile
   gfx/src/photon/Makefile
-  gfx/src/mac/Makefile
   gfx/src/windows/Makefile
   gfx/src/thebes/Makefile
   gfx/tests/Makefile
@@ -107,8 +106,6 @@ MAKEFILES_gfx="
 
 MAKEFILES_htmlparser="
   parser/htmlparser/Makefile
-  parser/htmlparser/robot/Makefile
-  parser/htmlparser/robot/test/Makefile
   parser/htmlparser/public/Makefile
   parser/htmlparser/src/Makefile
   parser/htmlparser/tests/Makefile
@@ -197,6 +194,8 @@ MAKEFILES_content="
   content/base/Makefile
   content/base/public/Makefile
   content/base/src/Makefile
+  content/base/test/Makefile
+  content/base/test/chrome/Makefile
   content/canvas/Makefile
   content/canvas/public/Makefile
   content/canvas/src/Makefile
@@ -247,7 +246,6 @@ MAKEFILES_layout="
   layout/html/tests/Makefile
   layout/style/Makefile
   layout/printing/Makefile
-  layout/tools/Makefile
   layout/xul/Makefile
   layout/xul/base/Makefile
   layout/xul/base/public/Makefile

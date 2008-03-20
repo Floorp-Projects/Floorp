@@ -386,12 +386,13 @@ nsSVGForeignObjectFrame::NotifySVGChanged(PRUint32 aFlags)
   PRBool reflow = PR_FALSE;
 
   if (aFlags & TRANSFORM_CHANGED) {
-    // Perhaps unexpectedly, we reflow if our CTM changes. This is because
+    // In an ideal world we would reflow when our CTM changes. This is because
     // glyph metrics do not necessarily scale uniformly with change in scale
     // and, as a result, CTM changes may require text to break at different
-    // points.
-    // XXX roc says we shouldn't do this. See bug 381285 comment 20.
-    reflow = PR_TRUE;
+    // points. The problem would be how to keep performance acceptable when
+    // e.g. the transform of an ancestor is animated.
+    // We also seem to get some sort of infinite loop post bug 421584 if we
+    // reflow.
     mCanvasTM = nsnull;
 
   } else if (aFlags & COORD_CONTEXT_CHANGED) {
@@ -572,19 +573,15 @@ void nsSVGForeignObjectFrame::UpdateGraphic()
     // Invalidate the area we used to cover
     // XXXjwatt: if we fix the following XXX, try to subtract the new region from the old here.
     // hmm, if x then y is changed, our second call could invalidate an "old" area we never actually painted to.
-    outerSVGFrame->InvalidateRect(mRect);
+    outerSVGFrame->InvalidateCoveredRegion(this);
 
     UpdateCoveredRegion();
 
     // Invalidate the area we now cover
     // XXXjwatt: when we're called due to an event that also requires reflow,
     // we want to let reflow trigger this rasterization so it doesn't happen twice.
-    nsRect filterRect = nsSVGUtils::FindFilterInvalidation(this);
-    if (!filterRect.IsEmpty()) {
-      outerSVGFrame->InvalidateRect(filterRect);
-    } else {
-      outerSVGFrame->InvalidateRect(mRect);
-    }
+    outerSVGFrame->InvalidateCoveredRegion(this);
+    nsSVGUtils::NotifyAncestorsOfFilterRegionChange(this);
   }
 
   // Clear any layout dirty region since we invalidated our whole area.
@@ -708,6 +705,11 @@ nsSVGForeignObjectFrame::FlushDirtyRegion()
   r.ScaleRoundOut(1.0f / PresContext()->AppUnitsPerDevPixel());
   float x = r.x, y = r.y, w = r.width, h = r.height;
   r = GetTransformedRegion(x, y, w, h, tm);
+
+  // XXX invalidate the entire covered region
+  // See bug 418063
+  r.UnionRect(r, mRect);
+
   outerSVGFrame->InvalidateRect(r);
 
   mDirtyRegion.SetEmpty();

@@ -972,28 +972,13 @@ nsBindingManager::ProcessAttachedQueue(PRUint32 aSkipSize)
   mProcessingAttachedStack = PR_TRUE;
 
   PRUint32 currentIndex = aSkipSize;
+  // Excute constructors. Do this from high index to low
   while (mAttachedStack.Length() > aSkipSize) {
-    // First install all implementations. Do this from low index to high
-    // since that way we'll automatically get any new bindings added in the
-    // process.
-    for (; currentIndex < mAttachedStack.Length(); ++currentIndex) {
-      nsRefPtr<nsXBLBinding> binding = mAttachedStack.ElementAt(currentIndex);
-      if (binding) {
-        nsresult rv = binding->EnsureScriptAPI();
-        if (NS_FAILED(rv)) {
-          mAttachedStack[currentIndex] = nsnull;
-        }
-      }
-    }
-
-    // Then excute constructors. Do this from high index to low
-    while (currentIndex > aSkipSize && currentIndex == mAttachedStack.Length()) {
-      --currentIndex;
-      nsRefPtr<nsXBLBinding> binding = mAttachedStack.ElementAt(currentIndex);
-      mAttachedStack.RemoveElementAt(currentIndex);
-      if (binding) {
-        binding->ExecuteAttachedHandler();
-      }
+    PRUint32 lastItem = mAttachedStack.Length() - 1;
+    nsRefPtr<nsXBLBinding> binding = mAttachedStack.ElementAt(lastItem);
+    mAttachedStack.RemoveElementAt(lastItem);
+    if (binding) {
+      binding->ExecuteAttachedHandler();
     }
   }
 
@@ -1498,28 +1483,38 @@ nsBindingManager::Traverse(nsIContent *aContent,
 
   nsXBLBinding *binding = GetBinding(aContent);
   if (binding) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mBindingTable key");
     cb.NoteXPCOMChild(aContent);
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(binding, nsXBLBinding)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(binding, nsXBLBinding,
+                                  "[via binding manager] mBindingTable value")
   }
   nsISupports *value;
   if (mContentListTable.ops &&
       (value = LookupObject(mContentListTable, aContent))) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mContentListTable key");
     cb.NoteXPCOMChild(aContent);
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mContentListTable value");
     cb.NoteXPCOMChild(value);
   }
   if (mAnonymousNodesTable.ops &&
       (value = LookupObject(mAnonymousNodesTable, aContent))) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mAnonymousNodesTable key");
     cb.NoteXPCOMChild(aContent);
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mAnonymousNodesTable value");
     cb.NoteXPCOMChild(value);
   }
   if (mInsertionParentTable.ops &&
       (value = LookupObject(mInsertionParentTable, aContent))) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mInsertionParentTable key");
     cb.NoteXPCOMChild(aContent);
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mInsertionParentTable value");
     cb.NoteXPCOMChild(value);
   }
   if (mWrapperTable.ops &&
       (value = LookupObject(mWrapperTable, aContent))) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mWrapperTable key");
     cb.NoteXPCOMChild(aContent);
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mWrapperTable value");
     cb.NoteXPCOMChild(value);
   }
 }
@@ -1536,16 +1531,6 @@ nsBindingManager::EndOutermostUpdate()
   if (!mProcessingAttachedStack) {
     ProcessAttachedQueue(mAttachedStackSizeOnOutermost);
     mAttachedStackSizeOnOutermost = 0;
-  }
-  else {
-    PRUint32 i = mAttachedStackSizeOnOutermost;
-    for (; i < mAttachedStack.Length(); ++i) {
-      nsRefPtr<nsXBLBinding> binding = mAttachedStack[i];
-      nsresult rv = binding->EnsureScriptAPI();
-      if (NS_FAILED(rv)) {
-        mAttachedStack[i] = nsnull;
-      }
-    }
   }
 }
 

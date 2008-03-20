@@ -345,7 +345,7 @@ static unsigned int CountCallerFrames() {
       frame_index < stack.frames()->size();
       ++frame_index) {
     StackFrame *frame = stack.frames()->at(frame_index);
-    printf("frame %-3d  instruction = 0x%08llx",
+    printf("frame %-3d  instruction = 0x%08" PRIx64,
            frame_index, frame->instruction);
 #if defined(__i386__)
     StackFrameX86 *frame_x86 = reinterpret_cast<StackFrameX86*>(frame);

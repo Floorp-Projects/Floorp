@@ -331,7 +331,6 @@
               this.stopEditing();
 
             var input = this.inputField;
-            input.hidden = false;
 
             var box = this.treeBoxObject;
             box.ensureCellIsVisible(row, column);
@@ -353,6 +352,7 @@
             coords = box.getCoordsForCellItem(row, column, "cell",
                                               outx, outy, outwidth, outheight);
             input.width = outwidth.value - (left - outx.value);
+            input.hidden = false;
 
             input.value = this.view.getCellText(row, column);
             var selectText = function selectText() {

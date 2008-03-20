@@ -84,7 +84,6 @@ function restoreForm() {
     uname.value = "";
     pword.value = "";
     uname.focus();
-    ok(document.activeElement == uname, "Username should be focused.");
 }
 
 
@@ -127,7 +126,6 @@ function runTest(testNum) {
   // Seems we need to enable this again, or sendKeyEvent() complaints.
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   ok(true, "Starting test #" + testNum);
-  ok(document.hasFocus(), "Document should be focused");
 
   switch(testNum) {
     case 1:
@@ -419,30 +417,11 @@ function runTest(testNum) {
 }
 
 
-function __log(message) {
-  var m = '[CPEARCE] ' + message;
-  dump(m);
-  ok(true, m);
-}
-
-
 function startTest() {
-  __log('JS: onload() document.hasFocus=' + document.hasFocus()
-    +' document.activeElement=[tag=' + document.activeElement.tagName +' name=' +document.activeElement.name +']\n');  
-  runTest(1);
+    runTest(1);
 }
 
 window.onload = startTest;
-
-window.onfocus = function() {
-  __log('JS: onfocus() document.hasFocus=' + document.hasFocus()
-    +' document.activeElement=[tag=' + document.activeElement.tagName +' name=' +document.activeElement.name +']\n');
-}
-
-window.onblur = function() {
-  __log('JS: onblur() document.hasFocus=' + document.hasFocus()
-    +' document.activeElement=[tag=' + document.activeElement.tagName +' name=' +document.activeElement.name +']\n');
-}
 
 SimpleTest.waitForExplicitFinish();
 </script>

@@ -109,14 +109,6 @@ public:
   }
 
   NS_IMETHOD
-  Place(nsIRenderingContext& aRenderingContext,
-        PRBool               aPlaceOrigin,
-        nsHTMLReflowMetrics& aDesiredSize)
-  {
-    return NS_OK;
-  }
-
-  NS_IMETHOD
   GetEmbellishData(nsEmbellishData& aEmbellishData) {
     aEmbellishData = mEmbellishData;
     return NS_OK;

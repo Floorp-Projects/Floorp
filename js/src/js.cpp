@@ -758,7 +758,10 @@ Print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         fprintf(gOutFile, "%s%s", i ? " " : "", bytes);
         JS_free(cx, bytes);
     }
+
     fputc('\n', gOutFile);
+    fflush(gOutFile);
+
     return JS_TRUE;
 }
 
@@ -2480,7 +2483,8 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         JS_ToggleOptions(scx, JSOPTION_DONT_REPORT_UNCAUGHT);
         ok = JS_EvaluateUCScript(scx, sobj, src, srclen,
                                  fp->script->filename,
-                                 JS_PCToLineNumber(cx, fp->script, fp->pc),
+                                 JS_PCToLineNumber(cx, fp->script,
+                                                   fp->regs->pc),
                                  rval);
         if (!ok) {
             if (JS_GetPendingException(scx, &v))

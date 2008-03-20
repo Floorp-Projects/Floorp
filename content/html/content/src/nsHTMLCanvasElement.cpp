@@ -330,7 +330,7 @@ nsHTMLCanvasElement::ToDataURL(nsAString& aDataURL)
 
   // 2-arg case; trusted only (checked above), convert to mime type with params
   if (argc == 2) {
-    if (!JSVAL_IS_STRING(argv[0]) && !JSVAL_IS_STRING(argv[1]))
+    if (!JSVAL_IS_STRING(argv[0]) || !JSVAL_IS_STRING(argv[1]))
       return NS_ERROR_DOM_SYNTAX_ERR;
 
     JSString *type, *params;

@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-       <menubar id="main-menubar" statusbar="statusbar-display"
+       <menubar id="main-menubar"
                 style="border:0px;padding:0px;margin:0px;-moz-appearance:none">
             <menu id="file-menu" label="&fileMenu.label;"
                   accesskey="&fileMenu.accesskey;">
@@ -343,7 +343,7 @@
             </menu>
 
             <menu id="history-menu"
-                  oncommand="var url = event.target.getAttribute('statustext'); if (url) { PlacesUtils.markPageAsTyped(url); openUILink(url, event, false, true); }"
+                  oncommand="var node = event.target.node; if (node) { PlacesUIUtils.markPageAsTyped(node.uri); openUILink(node.uri, event, false, true); }"
                   onclick="checkForMiddleClick(this, event);"
                   label="&historyMenu.label;"
                   accesskey="&historyMenu.accesskey;">
@@ -400,7 +400,7 @@
         ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDropHandler);">
     <menupopup id="bookmarksMenuPopup"
                type="places"
-               place="place:folder=2&amp;expandQueries=1"
+               place="place:folder=BOOKMARKS_MENU&amp;expandQueries=1"
                context="placesContext"
                openInTabs="children"
                oncommand="BookmarksEventHandler.onCommand(event);"
@@ -434,8 +434,6 @@
         <menupopup id="bookmarksToolbarFolderPopup"
                    type="places"
                    context="placesContext"
-                   oncommand="BookmarksEventHandler.onCommand(event);"
-                   onclick="BookmarksEventHandler.onClick(event);"
                    onpopupshowing="BookmarksEventHandler.onPopupShowing(event);"/>
       </menu>
       <menuseparator builder="start"/>

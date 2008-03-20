@@ -79,7 +79,7 @@ XPC_XOW_WrapperMoved(JSContext *cx, XPCWrappedNative *innerObj,
                      XPCWrappedNativeScope *newScope);
 
 nsresult
-IsWrapperSameOrigin(JSContext *cx, JSObject *wrappedObj);
+CanAccessWrapper(JSContext *cx, JSObject *wrappedObj);
 
 inline JSBool
 XPC_XOW_ClassNeedsXOW(const char *name)
@@ -208,7 +208,7 @@ public:
     }
 
     JSObject *wrappedObj = JSVAL_TO_OBJECT(v);
-    nsresult rv = IsWrapperSameOrigin(cx, wrappedObj);
+    nsresult rv = CanAccessWrapper(cx, wrappedObj);
     if (NS_FAILED(rv)) {
       JS_ClearPendingException(cx);
       return nsnull;

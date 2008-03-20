@@ -65,6 +65,7 @@ endif
 
 ifneq ($(OS_ARCH), WINNT)
 _BROWSER_FILES += \
+  browser_cleanup_search.js \
   browser_multiword_search.js \
   $(NULL)
 endif

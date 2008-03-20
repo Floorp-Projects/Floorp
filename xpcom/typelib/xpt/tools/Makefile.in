@@ -90,5 +90,8 @@ endif
 export::
 	@$(MAKE) libs
 
-
-
+# XXX, bug 417045, make -jN combines badly with -save-temps in   
+# CFLAGS/CXXFLAGS (for stabs symbols with XCode3)
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+.NOTPARALLEL:
+endif

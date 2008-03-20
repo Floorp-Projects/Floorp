@@ -363,7 +363,10 @@ nsFindContentIterator::MaybeSetupInnerIterator()
 void
 nsFindContentIterator::SetupInnerIterator(nsIContent* aContent)
 {
-  NS_ASSERTION(aContent && !aContent->IsNativeAnonymous(), "invalid call");
+  if (!aContent) {
+    return;
+  }
+  NS_ASSERTION(!aContent->IsNativeAnonymous(), "invalid call");
 
   nsIDocument* doc = aContent->GetDocument();
   nsIPresShell* shell = doc ? doc->GetPrimaryShell() : nsnull;

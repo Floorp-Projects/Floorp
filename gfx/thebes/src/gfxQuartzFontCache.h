@@ -139,7 +139,8 @@ public:
     
     // decides the right face for a given style, never fails
     // may return a face that doesn't precisely match (e.g. normal face when no italic face exists)
-    MacOSFontEntry* FindFont(const gfxFontStyle* aStyle);
+    // aNeedsBold is set to true when bolder face couldn't be found, false otherwise
+    MacOSFontEntry* FindFont(const gfxFontStyle* aStyle, PRBool& aNeedsBold);
     
     // iterates over faces looking for a match with a given characters
     // used as part of the font fallback process
@@ -163,7 +164,7 @@ protected:
                                 PRUint32 aNegTraitsMask);
 
     // choose font based on CSS font-weight selection rules, never null
-    MacOSFontEntry* FindFontWeight(MacOSFontEntry* aFontsForWeights[], const gfxFontStyle* aStyle);
+    MacOSFontEntry* FindFontWeight(MacOSFontEntry* aFontsForWeights[], const gfxFontStyle* aStyle, PRBool& aNeedsBold);
     
     nsString mName;  // canonical font family name returned from NSFontManager
     nsTArray<nsRefPtr<MacOSFontEntry> >  mAvailableFonts;
@@ -221,9 +222,9 @@ public:
 
     MacOSFamilyEntry* FindFamily(const nsAString& aFamily);
     
-    MacOSFontEntry* FindFontForFamily(const nsAString& aFamily, const gfxFontStyle* aStyle);
+    MacOSFontEntry* FindFontForFamily(const nsAString& aFamily, const gfxFontStyle* aStyle, PRBool& aNeedsBold);
     
-    MacOSFontEntry* GetDefaultFont(const gfxFontStyle* aStyle);
+    MacOSFontEntry* GetDefaultFont(const gfxFontStyle* aStyle, PRBool& aNeedsBold);
 
     static PRInt32 AppleWeightToCSSWeight(PRInt32 aAppleWeight);
     

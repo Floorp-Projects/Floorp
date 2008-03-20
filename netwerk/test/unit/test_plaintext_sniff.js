@@ -154,7 +154,7 @@ function doTest(headerIdx, bodyIdx) {
 }
 
 function createResponse(headerIdx, bodyIdx, metadata, response) {
-  response.setHeader("Content-Type", contentTypeHeaderList[headerIdx][0]);
+  response.setHeader("Content-Type", contentTypeHeaderList[headerIdx][0], false);
   response.bodyOutputStream.write(bodyList[bodyIdx][0],
                                   bodyList[bodyIdx][0].length);
 }

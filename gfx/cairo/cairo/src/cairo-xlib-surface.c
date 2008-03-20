@@ -466,6 +466,7 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
     short x1, y1, x2, y2;
     cairo_format_masks_t masks;
     pixman_format_code_t pixman_format;
+    cairo_status_t status;
 
     x1 = 0;
     y1 = 0;
@@ -606,8 +607,11 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 							ximage->width,
 							ximage->height,
 							ximage->bytes_per_line);
-    if (image->base.status)
-	goto FAIL;
+    status = image->base.status;
+    if (status) {
+	XDestroyImage (ximage);
+	return status;
+    }
 
     /* Let the surface take ownership of the data */
     _cairo_image_surface_assume_ownership_of_data (image);
@@ -616,10 +620,6 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 
     *image_out = image;
     return CAIRO_STATUS_SUCCESS;
-
- FAIL:
-    XDestroyImage (ximage);
-    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 }
 
 static void

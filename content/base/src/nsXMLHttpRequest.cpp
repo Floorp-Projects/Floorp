@@ -68,8 +68,6 @@
 #include "nsVariant.h"
 #include "nsIParser.h"
 #include "nsLoadListenerProxy.h"
-#include "nsIWindowWatcher.h"
-#include "nsIAuthPrompt.h"
 #include "nsStringStream.h"
 #include "nsIStreamConverterService.h"
 #include "nsICachingChannel.h"
@@ -90,6 +88,7 @@
 #include "nsWhitespaceTokenizer.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIScriptObjectPrincipal.h"
+#include "nsIStorageStream.h"
 
 #define LOAD_STR "load"
 #define ERROR_STR "error"
@@ -120,6 +119,7 @@
 #define XML_HTTP_REQUEST_USE_XSITE_AC   (1 << 13) // Internal
 #define XML_HTTP_REQUEST_NON_GET        (1 << 14) // Internal
 #define XML_HTTP_REQUEST_GOT_FINAL_STOP (1 << 15) // Internal
+#define XML_HTTP_REQUEST_BACKGROUND     (1 << 16) // Internal
 
 #define XML_HTTP_REQUEST_LOADSTATES         \
   (XML_HTTP_REQUEST_UNINITIALIZED |         \
@@ -132,6 +132,9 @@
 
 #define ACCESS_CONTROL_CACHE_SIZE 100
 
+#define NS_BADCERTHANDLER_CONTRACTID \
+  "@mozilla.org/content/xmlhttprequest-bad-cert-handler;1"
+
 // This helper function adds the given load flags to the request's existing
 // load flags.
 static void AddLoadFlags(nsIRequest *request, nsLoadFlags newFlags)
@@ -140,6 +143,15 @@ static void AddLoadFlags(nsIRequest *request, nsLoadFlags newFlags)
   request->GetLoadFlags(&flags);
   flags |= newFlags;
   request->SetLoadFlags(flags);
+}
+
+static nsresult IsCapabilityEnabled(const char *capability, PRBool *enabled)
+{
+  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+  if (!secMan)
+    return NS_ERROR_FAILURE;
+
+  return secMan->IsCapabilityEnabled(capability, enabled);
 }
 
 // Helper proxy class to be used when expecting an
@@ -1225,6 +1237,10 @@ nsXMLHttpRequest::GetLoadGroup(nsILoadGroup **aLoadGroup)
   NS_ENSURE_ARG_POINTER(aLoadGroup);
   *aLoadGroup = nsnull;
 
+  if (mState & XML_HTTP_REQUEST_BACKGROUND) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
   if (doc) {
     *aLoadGroup = doc->GetDocumentLoadGroup().get();  // already_AddRefed
@@ -2136,10 +2152,12 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
 
           // Serialize to a stream so that the encoding used will
           // match the document's.
-          nsCOMPtr<nsIInputStream> input;
+          nsCOMPtr<nsIStorageStream> storStream;
+          rv = NS_NewStorageStream(4096, PR_UINT32_MAX, getter_AddRefs(storStream));
+          NS_ENSURE_SUCCESS(rv, rv);
+
           nsCOMPtr<nsIOutputStream> output;
-          rv = NS_NewPipe(getter_AddRefs(input), getter_AddRefs(output),
-                          0, PR_UINT32_MAX);
+          rv = storStream->GetOutputStream(0, getter_AddRefs(output));
           NS_ENSURE_SUCCESS(rv, rv);
 
           // Empty string for encoding means to use document's current
@@ -2148,7 +2166,8 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
           NS_ENSURE_SUCCESS(rv, rv);
 
           output->Close();
-          postDataStream = input;
+          rv = storStream->NewInputStream(0, getter_AddRefs(postDataStream));
+          NS_ENSURE_SUCCESS(rv, rv);
         } else {
           // nsISupportsString?
           nsCOMPtr<nsISupportsString> wstr(do_QueryInterface(supports));
@@ -2389,13 +2408,8 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
   // Prevent modification to certain HTTP headers (see bug 302263), unless
   // the executing script has UniversalBrowserWrite permission.
 
-  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
-  if (!secMan) {
-    return NS_ERROR_FAILURE;
-  }
-
   PRBool privileged;
-  rv = secMan->IsCapabilityEnabled("UniversalBrowserWrite", &privileged);
+  rv = IsCapabilityEnabled("UniversalBrowserWrite", &privileged);
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
@@ -2501,6 +2515,41 @@ nsXMLHttpRequest::SetMultipart(PRBool aMultipart)
     mState |= XML_HTTP_REQUEST_MULTIPART;
   } else {
     mState &= ~XML_HTTP_REQUEST_MULTIPART;
+  }
+
+  return NS_OK;
+}
+
+/* attribute boolean mozBackgroundRequest; */
+NS_IMETHODIMP
+nsXMLHttpRequest::GetMozBackgroundRequest(PRBool *_retval)
+{
+  *_retval = !!(mState & XML_HTTP_REQUEST_BACKGROUND);
+
+  return NS_OK;
+}
+
+/* attribute boolean mozBackgroundRequest; */
+NS_IMETHODIMP
+nsXMLHttpRequest::SetMozBackgroundRequest(PRBool aMozBackgroundRequest)
+{
+  PRBool privileged;
+
+  nsresult rv = IsCapabilityEnabled("UniversalXPConnect", &privileged);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!privileged)
+    return NS_ERROR_DOM_SECURITY_ERR;
+
+  if (!(mState & XML_HTTP_REQUEST_UNINITIALIZED)) {
+    // Can't change this while we're in the middle of something.
+    return NS_ERROR_IN_PROGRESS;
+  }
+
+  if (aMozBackgroundRequest) {
+    mState |= XML_HTTP_REQUEST_BACKGROUND;
+  } else {
+    mState &= ~XML_HTTP_REQUEST_BACKGROUND;
   }
 
   return NS_OK;
@@ -2737,8 +2786,7 @@ nsXMLHttpRequest::GetInterface(const nsIID & aIID, void **aResult)
   }
 
   // Now give mNotificationCallbacks (if non-null) a chance to return the
-  // desired interface.  Note that this means that it can override our
-  // nsIAuthPrompt impl, but that's fine, if it has a better auth prompt idea.
+  // desired interface.
   if (mNotificationCallbacks) {
     nsresult rv = mNotificationCallbacks->GetInterface(aIID, aResult);
     if (NS_SUCCEEDED(rv)) {
@@ -2746,24 +2794,18 @@ nsXMLHttpRequest::GetInterface(const nsIID & aIID, void **aResult)
       return rv;
     }
   }
-  
-  if (aIID.Equals(NS_GET_IID(nsIAuthPrompt))) {    
-    *aResult = nsnull;
 
+  if (mState & XML_HTTP_REQUEST_BACKGROUND) {
     nsresult rv;
-    nsCOMPtr<nsIWindowWatcher> ww(do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
-    if (NS_FAILED(rv))
-      return rv;
+    nsCOMPtr<nsIInterfaceRequestor> badCertHandler(do_CreateInstance(NS_BADCERTHANDLER_CONTRACTID, &rv));
 
-    nsCOMPtr<nsIAuthPrompt> prompt;
-    rv = ww->GetNewAuthPrompter(nsnull, getter_AddRefs(prompt));
-    if (NS_FAILED(rv))
-      return rv;
-
-    nsIAuthPrompt *p = prompt.get();
-    NS_ADDREF(p);
-    *aResult = p;
-    return NS_OK;
+    // Ignore failure to get component, we may not have all its dependencies
+    // available
+    if (NS_SUCCEEDED(rv)) {
+      rv = badCertHandler->GetInterface(aIID, aResult);
+      if (NS_SUCCEEDED(rv))
+        return rv;
+    }
   }
 
   return QueryInterface(aIID, aResult);

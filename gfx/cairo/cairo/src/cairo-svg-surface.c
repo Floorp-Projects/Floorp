@@ -35,10 +35,11 @@
  *
  * Contributor(s):
  *	Kristian Høgsberg <krh@redhat.com>
- * 	Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ *	Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  *	Carl Worth <cworth@cworth.org>
  */
 
+#define _BSD_SOURCE /* for snprintf() */
 #include "cairoint.h"
 #include "cairo-svg.h"
 #include "cairo-svg-surface-private.h"

@@ -21,6 +21,7 @@
  * 
  * Contributor(s): 
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
+ *   Karl Tomlinson <karlt+@karlt.net>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -65,11 +66,39 @@ nsMathMLTokenFrame::GetMathMLFrameType()
   }
 
   // for <mi>, distinguish between italic and upright...
-  // treat invariant the same as italic to inherit its inter-space properties
-  return mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::MOZfontstyle,
-                               nsGkAtoms::normal, eCaseMatters)
-    ? eMathMLFrameType_UprightIdentifier
-    : eMathMLFrameType_ItalicIdentifier;
+  // Don't use nsMathMLFrame::GetAttribute for mathvariant or fontstyle as
+  // default values are not inherited.
+  nsAutoString style;
+  // mathvariant overrides fontstyle
+  // http://www.w3.org/TR/2003/REC-MathML2-20031021/chapter3.html#presm.deprecatt
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::MOZfontstyle, style) ||
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::mathvariant_, style) ||
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::fontstyle_, style);
+
+  if (style.EqualsLiteral("italic") || style.EqualsLiteral("bold-italic") ||
+      style.EqualsLiteral("script") || style.EqualsLiteral("bold-script") ||
+      style.EqualsLiteral("sans-serif-italic") ||
+      style.EqualsLiteral("sans-serif-bold-italic")) {
+    return eMathMLFrameType_ItalicIdentifier;
+  }
+  else if(style.EqualsLiteral("invariant")) {
+    nsAutoString data;
+    nsContentUtils::GetNodeTextContent(mContent, PR_FALSE, data);
+    eMATHVARIANT variant = nsMathMLOperators::LookupInvariantChar(data);
+
+    switch (variant) {
+    case eMATHVARIANT_italic:
+    case eMATHVARIANT_bold_italic:
+    case eMATHVARIANT_script:
+    case eMATHVARIANT_bold_script:
+    case eMATHVARIANT_sans_serif_italic:
+    case eMATHVARIANT_sans_serif_bold_italic:
+      return eMathMLFrameType_ItalicIdentifier;
+    default:
+      ; // fall through to upright
+    }
+  }
+  return eMathMLFrameType_UprightIdentifier;
 }
 
 static void
@@ -163,7 +192,7 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
 // For token elements, mBoundingMetrics is computed at the ReflowToken
 // pass, it is not computed here because our children may be text frames
 // that do not implement the GetBoundingMetrics() interface.
-nsresult
+/* virtual */ nsresult
 nsMathMLTokenFrame::Place(nsIRenderingContext& aRenderingContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
@@ -252,6 +281,29 @@ nsMathMLTokenFrame::ProcessTextData()
 ///////////////////////////////////////////////////////////////////////////
 // For <mi>, if the content is not a single character, turn the font to
 // normal (this function will also query attributes from the mstyle hierarchy)
+// Returns PR_TRUE if there is a style change.
+//
+// http://www.w3.org/TR/2003/REC-MathML2-20031021/chapter3.html#presm.commatt
+//
+//  "It is important to note that only certain combinations of
+//   character data and mathvariant attribute values make sense.
+//   ...
+//   By design, the only cases that have an unambiguous
+//   interpretation are exactly the ones that correspond to SMP Math
+//   Alphanumeric Symbol characters, which are enumerated in Section
+//   6.2.3 Mathematical Alphanumeric Symbols Characters. In all other
+//   cases, it is suggested that renderers ignore the value of the
+//   mathvariant attribute if it is present."
+//
+// There are no corresponding characters for mathvariant=normal, suggesting
+// that this value should be ignored, but this (from the same section of
+// Chapter 3) implies that font-style should not be inherited, but set to
+// normal for mathvariant=normal:
+//
+//  "In particular, inheritance of the mathvariant attribute does not follow
+//   the CSS model. The default value for this attribute is "normal"
+//   (non-slanted) for all tokens except mi. ... (The deprecated fontslant
+//   attribute also behaves this way.)"
 
 PRBool
 nsMathMLTokenFrame::SetTextStyle()
@@ -269,21 +321,47 @@ nsMathMLTokenFrame::SetTextStyle()
   if (!length)
     return PR_FALSE;
 
-  // attributes may override the default behavior
   nsAutoString fontstyle;
-  GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::fontstyle_, fontstyle);
-  if (1 == length && nsMathMLOperators::LookupInvariantChar(data[0])) {
+  PRBool isSingleCharacter =
+    length == 1 ||
+    (length == 2 && NS_IS_HIGH_SURROGATE(data[0]));
+  if (isSingleCharacter &&
+      nsMathMLOperators::LookupInvariantChar(data) != eMATHVARIANT_NONE) {
     // bug 65951 - a non-stylable character has its own intrinsic appearance
     fontstyle.AssignLiteral("invariant");
   }
-  if (fontstyle.IsEmpty()) {
-    fontstyle.AssignASCII((1 == length) ? "italic" : "normal"); 
+  else {
+    // Attributes override the default behavior.
+    if (!(mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::mathvariant_) ||
+          mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::fontstyle_))) {
+      if (!isSingleCharacter) {
+        fontstyle.AssignLiteral("normal");
+      }
+      else if (length == 1 && // BMP
+               !nsMathMLOperators::
+                TransformVariantChar(data[0], eMATHVARIANT_italic).
+                Equals(data)) {
+        // Transformation exists.  Try to make the BMP character look like the
+        // styled character using the style system until bug 114365 is resolved.
+        fontstyle.AssignLiteral("italic");
+      }
+      // else single character but there is no corresponding Math Alphanumeric
+      // Symbol character: "ignore the value of the [default] mathvariant
+      // attribute".
+    }
   }
 
   // set the -moz-math-font-style attribute without notifying that we want a reflow
-  if (!mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::MOZfontstyle,
-                             fontstyle, eCaseMatters)) {
-    mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::MOZfontstyle, fontstyle, PR_FALSE);
+  if (fontstyle.IsEmpty()) {
+    if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::MOZfontstyle)) {
+      mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::MOZfontstyle, PR_FALSE);
+      return PR_TRUE;
+    }
+  }
+  else if (!mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::MOZfontstyle,
+                                  fontstyle, eCaseMatters)) {
+    mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::MOZfontstyle,
+                      fontstyle, PR_FALSE);
     return PR_TRUE;
   }
 

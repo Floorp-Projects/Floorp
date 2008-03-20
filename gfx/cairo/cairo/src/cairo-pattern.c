@@ -341,9 +341,10 @@ _cairo_pattern_create_solid (const cairo_color_t *color,
 	pattern = malloc (sizeof (cairo_solid_pattern_t));
     }
 
-    if (pattern == NULL)
+    if (pattern == NULL) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	pattern = (cairo_solid_pattern_t *) &_cairo_pattern_nil;
-    else
+    } else
 	_cairo_pattern_init_solid (pattern, color, content);
 
     return &pattern->base;
@@ -406,7 +407,6 @@ _cairo_pattern_create_in_error (cairo_status_t status)
 cairo_pattern_t *
 cairo_pattern_create_rgb (double red, double green, double blue)
 {
-    cairo_pattern_t *pattern;
     cairo_color_t color;
 
     _cairo_restrict_value (&red,   0.0, 1.0);
@@ -417,12 +417,7 @@ cairo_pattern_create_rgb (double red, double green, double blue)
 
     CAIRO_MUTEX_INITIALIZE ();
 
-    pattern = _cairo_pattern_create_solid (&color,
-					   CAIRO_CONTENT_COLOR);
-    if (pattern->status)
-	_cairo_error_throw (pattern->status);
-
-    return pattern;
+    return _cairo_pattern_create_solid (&color, CAIRO_CONTENT_COLOR);
 }
 slim_hidden_def (cairo_pattern_create_rgb);
 
@@ -451,7 +446,6 @@ cairo_pattern_t *
 cairo_pattern_create_rgba (double red, double green, double blue,
 			   double alpha)
 {
-    cairo_pattern_t *pattern;
     cairo_color_t color;
 
     _cairo_restrict_value (&red,   0.0, 1.0);
@@ -463,12 +457,7 @@ cairo_pattern_create_rgba (double red, double green, double blue,
 
     CAIRO_MUTEX_INITIALIZE ();
 
-    pattern = _cairo_pattern_create_solid (&color,
-					   CAIRO_CONTENT_COLOR_ALPHA);
-    if (pattern->status)
-	_cairo_error_throw (pattern->status);
-
-    return pattern;
+    return _cairo_pattern_create_solid (&color, CAIRO_CONTENT_COLOR_ALPHA);
 }
 slim_hidden_def (cairo_pattern_create_rgba);
 
@@ -492,8 +481,10 @@ cairo_pattern_create_for_surface (cairo_surface_t *surface)
 {
     cairo_surface_pattern_t *pattern;
 
-    if (surface == NULL)
+    if (surface == NULL) {
+	_cairo_error_throw (CAIRO_STATUS_NULL_POINTER);
 	return (cairo_pattern_t*) &_cairo_pattern_nil_null_pointer;
+    }
 
     if (surface->status)
 	return (cairo_pattern_t*) _cairo_pattern_create_in_error (surface->status);
