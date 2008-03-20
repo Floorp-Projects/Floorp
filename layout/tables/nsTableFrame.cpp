@@ -1396,10 +1396,12 @@ nsTableFrame::PaintTableBorderBackground(nsIRenderingContext& aRenderingContext,
                                          nsPoint aPt)
 {
   nsPresContext* presContext = PresContext();
+  nsRect dirtyRect = aDirtyRect - aPt;
+  nsIRenderingContext::AutoPushTranslation
+    translate(&aRenderingContext, aPt.x, aPt.y);
 
   TableBackgroundPainter painter(this, TableBackgroundPainter::eOrigin_Table,
-                                 presContext, aRenderingContext,
-                                 aDirtyRect, aPt);
+                                 presContext, aRenderingContext, dirtyRect);
   nsresult rv;
   
   if (eCompatibility_NavQuirks == presContext->CompatibilityMode()) {
@@ -1427,18 +1429,15 @@ nsTableFrame::PaintTableBorderBackground(nsIRenderingContext& aRenderingContext,
 
   if (GetStyleVisibility()->IsVisible()) {
     const nsStyleBorder* border = GetStyleBorder();
+    nsRect  rect(0, 0, mRect.width, mRect.height);
     if (!IsBorderCollapse()) {
       PRIntn skipSides = GetSkipSides();
-      nsRect rect(aPt, mRect.Size());
       nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *border, mStyleContext,
+                                  dirtyRect, rect, *border, mStyleContext,
                                   skipSides);
     }
     else {
-      // XXX we should probably get rid of this translation at some stage
-      // But that would mean modifying PaintBCBorders, ugh
-      nsIRenderingContext::AutoPushTranslation translate(&aRenderingContext, aPt.x, aPt.y);
-      PaintBCBorders(aRenderingContext, aDirtyRect - aPt);
+      PaintBCBorders(aRenderingContext, dirtyRect);
     }
   }
 }
