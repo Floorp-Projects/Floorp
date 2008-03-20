@@ -1298,6 +1298,19 @@ nsDocAccessible::ParentChainChanged(nsIContent *aContent)
 }
 
 void
+nsDocAccessible::FireValueChangeForTextFields(nsIAccessible *aPossibleTextFieldAccessible)
+{
+  if (Role(aPossibleTextFieldAccessible) != nsIAccessibleRole::ROLE_ENTRY)
+    return;
+
+  // Dependent value change event for text changes in textfields
+  nsCOMPtr<nsIAccessibleEvent> valueChangeEvent =
+    new nsAccEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, aPossibleTextFieldAccessible,
+                   PR_FALSE, nsAccEvent::eRemoveDupes);
+  FireDelayedAccessibleEvent(valueChangeEvent );
+}
+
+void
 nsDocAccessible::FireTextChangeEventForText(nsIContent *aContent,
                                             CharacterDataChangeInfo* aInfo,
                                             PRBool aIsInserted)
@@ -1357,6 +1370,8 @@ nsDocAccessible::FireTextChangeEventForText(nsIContent *aContent,
                                renderedEndOffset - renderedStartOffset,
                                aIsInserted, PR_FALSE);
     textAccessible->FireAccessibleEvent(event);
+
+    FireValueChangeForTextFields(accessible);
   }
 }
 
@@ -1946,6 +1961,8 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
       roleMapEntry = nsAccUtils::GetRoleMapEntry(ancestorNode);
     }
   }
+
+  FireValueChangeForTextFields(containerAccessible);
 
   if (!isShowing) {
     // Fire an event so the assistive technology knows the children have changed
