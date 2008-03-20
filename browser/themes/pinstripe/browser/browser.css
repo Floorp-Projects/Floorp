@@ -47,6 +47,11 @@
 
 #main-window {
   -moz-binding: url("chrome://global/skin/globalBindings.xml#unifiedWindow");
+  -moz-appearance: none;
+}
+
+#main-window[chromehidden~="toolbar"][chromehidden~="location"][chromehidden~="directories"] {
+  border-top: 1px solid #606060;
 }
 
 /* ----- SEARCH FIELD ----- */
@@ -61,7 +66,7 @@
   background: url("chrome://browser/skin/bookmark_toolbar_background.gif") repeat-x center center;
   border-top: 1px solid #DDDDDD;
   border-bottom: 2px solid;
-  -moz-border-bottom-colors: #404040 #B3B2B3;
+  -moz-border-bottom-colors: #404040 #9D9D9D;
   padding: 2px 0;
 }
 
@@ -139,7 +144,7 @@ toolbarbutton.bookmark-item {
   -moz-padding-start: 7px;
   min-width: 0;
   max-width: 13em;
-  color: #333;
+  color: #222;
   border: none !important;
 }
 
@@ -293,8 +298,8 @@ toolbar:not([mode="text"]) #forward-button .toolbarbutton-menubutton-dropmarker 
 
 toolbar[mode="icons"] #back-button .toolbarbutton-text-box,
 toolbar[mode="icons"] #forward-button .toolbarbutton-text-box,
-#back-button .toolbarbutton-menubutton-dropmarker,
-#forward-button .toolbarbutton-menubutton-dropmarker {
+#back-button > dropmarker,
+#forward-button > dropmarker {
   display: none;
 }
 
@@ -304,7 +309,7 @@ toolbar[mode="icons"] #forward-button .toolbarbutton-text-box,
 .tab-text-shadow {
   color: #f0f0f0;
   padding-top: 1px;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .tab-text-shadow {
@@ -735,7 +740,6 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker[open="true"] {
 
 #page-proxy-stack {
   -moz-margin-start: 11px;
-  margin-bottom: 1px;
   opacity: 1.0;
 }
 
@@ -759,6 +763,11 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker[open="true"] {
 
 statusbarpanel#statusbar-display {
   padding-left: 0;
+}
+
+.statusbarpanel-text {
+  margin-top: 2px;
+  margin-bottom: 0;
 }
 
 /* ----- AUTOCOMPLETE ----- */
@@ -812,6 +821,7 @@ statusbarpanel#statusbar-display {
 
 #go-button {
   list-style-image: url("chrome://browser/skin/Go-arrow.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);  
 }
 
 /* STAR BUTTON */
@@ -989,7 +999,8 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 #nav-bar {
-  background-color: #969696;
+  background-color: #9B9B9B;
+  border-top: none;
   border-bottom: 1px solid #404040;
   background-image: url("chrome://global/skin/toolbar/toolbar-background.gif");
   background-repeat: repeat-x;
@@ -997,8 +1008,9 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   padding: 0 4px;
 }
 
-#nav-bar[mode="full"] {
-  background-image: url("chrome://global/skin/toolbar/toolbar-background-tall.gif");
+#nav-bar[collapsed="true"] + toolbar[customindex] {
+ border-top: 2px solid;
+ -moz-border-top-colors: #606060 #C7C7C7;
 }
 
 .bookmark-item {
@@ -1010,14 +1022,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 /* ::::: tabbrowser ::::: */
-
-.tabbrowser-tab:not([selected="true"]):hover {
-  background: url("chrome://browser/skin/tabbrowser/tabbrowser-tabs-bkgnd.png") repeat-x;
-}
-
-.tabbrowser-tab:hover > .tab-image-middle > .tab-icon > .tab-extra-status {
-  background: none;
-}
 
 .tab-icon-image {
   width: 16px;
@@ -1053,13 +1057,13 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 .tabbrowser-tab {
   -moz-binding: url("chrome://browser/skin/browser.xml#tabbrowser-tab") !important;
   -moz-appearance: none;
-  color: #383838;
+  color: #222;
   -moz-box-pack: center;
   padding: 0px;
   border: none !important;
-  height: 26px !important;
   min-width: 1px !important;
   text-align: center;
+  height: 27px;
 }
 
 .tabbrowser-tab[selected="true"] {
@@ -1100,12 +1104,14 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   background: url("chrome://browser/skin/tabbrowser/tab-left-bkgnd.png") no-repeat;
 }
 
-.tabbrowser-tab > .tab-image-middle {
+.tabbrowser-tab > .tab-image-middle,
+.tabbrowser-tab > .tab-closebutton {
   background: url("chrome://browser/skin/tabbrowser/tab-middle.png") repeat-x;
   -moz-box-pack: center;
 }
 
-.tabbrowser-tab:not([selected="true"]) > .tab-image-middle {
+.tabbrowser-tab:not([selected="true"]) > .tab-image-middle,
+.tabbrowser-tab:not([selected="true"]) > .tab-close-button {
   background: url("chrome://browser/skin/tabbrowser/tab-middle-bkgnd.png");
 }
 
@@ -1114,7 +1120,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .tabs-closebutton {
-  height: 25px;
   margin: 0;
   list-style-image: url("chrome://global/skin/icons/closetab.png") !important;
 }
@@ -1124,13 +1129,17 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   border: none !important;
 }
 
+.tabbrowser-strip {
+  margin-top: -1px;
+  border-bottom: 1px solid #404040;
+}
+
 .tabbrowser-tabs {
   border: none;
-  padding: 0 0 1px 0;
-  margin-top: -1px;
   -moz-box-pack: center;
   -moz-box-align: center;
   background: url("chrome://browser/skin/tabbrowser/tabbrowser-tabs-bkgnd.png") repeat-x;
+  height: 27px;
 }
 
 .tabs-left {
@@ -1179,8 +1188,8 @@ tabbrowser > tabbox > tabpanels {
   list-style-image: url("chrome://global/skin/icons/closetab.png");
   -moz-appearance: none;
   border: none !important;
-  padding: 0px;
-  margin: 0 0 4px 0;
+  padding: 0 0 4px 0;
+  margin: 0;
   background: inherit;
   cursor: default;
 }
@@ -1211,7 +1220,7 @@ tabbrowser > tabbox > tabpanels {
   -moz-image-region: rect(0px, 7px, 11px, 0px);
   -moz-padding-start: 0;
   -moz-padding-end: 2px; 
-  width: 13px;
+  width: 16px;
   margin: 0;
 }
 
@@ -1225,7 +1234,7 @@ tabbrowser > tabbox > tabpanels {
   -moz-image-region: rect(0px, 44px, 11px, 37px);
   -moz-padding-start: 2px;
   -moz-padding-end: 0; 
-  width: 13px;
+  width: 16px;
   margin: 0;
 }
 
@@ -1241,7 +1250,6 @@ tabbrowser > tabbox > tabpanels {
 .tabs-alltabs-box {
   margin: 0;
   width: 27px;
-  height: 25px;
   background-image: url("chrome://browser/skin/tabbrowser/alltabs-box-bkgnd.png");
   background-repeat: no-repeat;
   list-style-image: none;
@@ -1269,7 +1277,6 @@ tabbrowser > tabbox > tabpanels {
 .tabs-alltabs-box-animate {
   margin: 2px 0px 3px 0px;
   width: 16px;
-  height: 18px;
   background-image: url("chrome://browser/skin/tabbrowser/alltabs-box-overflow-bkgnd-animate.png");
   background-repeat: no-repeat;
   opacity: 0.0;
@@ -1296,6 +1303,7 @@ tabbrowser > tabbox > tabpanels {
   list-style-image: url("chrome://global/skin/icons/closetab.png") !important;
   list-style-image: none;
   border: none;
+  -moz-box-align: stretch;
 }
 
 .tabs-closebutton:hover > .toolbarbutton-icon {
@@ -1392,7 +1400,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 #identity-icon-label {
   margin: 0;
   color: black;
-  padding: 3px 6px;
+  padding: 2px 6px 3px;
   -moz-padding-end: 14px;
   background: url("chrome://browser/skin/urlbar/startcap-secure-end.png") no-repeat center right;
 }

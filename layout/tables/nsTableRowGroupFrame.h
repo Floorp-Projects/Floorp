@@ -375,7 +375,8 @@ protected:
                   nsRowGroupReflowState& aReflowState,
                   nsIFrame*              aKidFrame,
                   nsHTMLReflowMetrics&   aDesiredSize,
-                  const nsRect&          aOriginalKidRect);
+                  const nsRect&          aOriginalKidRect,
+                  const nsRect&          aOriginalKidOverflowRect);
 
   void CalculateRowHeights(nsPresContext*          aPresContext, 
                            nsHTMLReflowMetrics&     aDesiredSize,

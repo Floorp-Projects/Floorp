@@ -346,7 +346,7 @@ nsSVGGradientFrame::SetupPaintServer(gfxContext *aContext,
   patternMatrix.Invert();
 
   nsRefPtr<gfxPattern> gradient = CreateGradient();
-  if (!gradient)
+  if (!gradient || gradient->CairoStatus())
     return PR_FALSE;
 
   PRUint16 aSpread = GetSpreadMethod();

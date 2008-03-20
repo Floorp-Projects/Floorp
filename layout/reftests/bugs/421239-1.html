@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <style>
+    div#a { margin: 100px 0px 100px 0px;  }
+  </style>
+  <script>
+  function boom()
+  {
+    var a = document.getElementById("a");
+    a.removeChild(a.firstChild);
+    document.documentElement.className = "";
+  }
+  </script>
+</head>
+<body onload="boom();">
+  <div id="a">a</div>
+  <div>b</div>
+</body>
+</html>

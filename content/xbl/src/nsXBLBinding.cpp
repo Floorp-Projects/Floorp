@@ -272,8 +272,7 @@ nsXBLBinding::nsXBLBinding(nsXBLPrototypeBinding* aBinding)
   : mPrototypeBinding(aBinding),
     mInsertionPointTable(nsnull),
     mIsStyleBinding(PR_TRUE),
-    mMarkedForDeath(PR_FALSE),
-    mInstalledAPI(PR_FALSE)
+    mMarkedForDeath(PR_FALSE)
 {
   NS_ASSERTION(mPrototypeBinding, "Must have a prototype binding!");
   // Grab a ref to the document info so the prototype binding won't die
@@ -294,9 +293,11 @@ TraverseKey(nsISupports* aKey, nsInsertionPointList* aData, void* aClosure)
   nsCycleCollectionTraversalCallback &cb = 
     *static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
 
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mInsertionPointTable key");
   cb.NoteXPCOMChild(aKey);
   if (aData) {
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY(*aData, nsXBLInsertionPoint)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY(*aData, nsXBLInsertionPoint,
+                                               "mInsertionPointTable value")
   }
   return PL_DHASH_NEXT;
 }
@@ -769,7 +770,9 @@ nsXBLBinding::GenerateAnonymousContent()
   const nsAttrName* attrName;
   for (PRUint32 i = 0; (attrName = content->GetAttrNameAt(i)); ++i) {
     PRInt32 namespaceID = attrName->NamespaceID();
-    nsIAtom* name = attrName->LocalName();
+    // Hold a strong reference here so that the atom doesn't go away during
+    // UnsetAttr.
+    nsCOMPtr<nsIAtom> name = attrName->LocalName();
 
     if (name != nsGkAtoms::includes) {
       if (!nsContentUtils::HasNonEmptyAttr(mBoundElement, namespaceID, name)) {
@@ -784,22 +787,6 @@ nsXBLBinding::GenerateAnonymousContent()
     if (mContent)
       mContent->UnsetAttr(namespaceID, name, PR_FALSE);
   }
-}
-
-nsresult
-nsXBLBinding::EnsureScriptAPI()
-{
-  if (mInstalledAPI) {
-    return NS_OK;
-  }
-  
-  // Set mInstalledAPI right away since we'll recurse into here from
-  // nsElementSH::PostCreate when InstallImplementation is called.
-  mInstalledAPI = PR_TRUE;
-
-  InstallEventHandlers();
-
-  return InstallImplementation();
 }
 
 void

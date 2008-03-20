@@ -168,44 +168,21 @@ nsNativeThemeCocoa::DrawCheckbox(CGContextRef cgContext, ThemeButtonKind inKind,
   bdi.adornment = (inState & NS_EVENT_STATE_FOCUS) ? kThemeAdornmentFocus : kThemeAdornmentNone;
 
   HIRect drawFrame = inBoxRect;
-  if (inKind == kThemeSmallCheckBox)
+
+  // on Tiger, shift the checkbox rendering down 1px to get the frame
+  // in the right spot
+  if (!nsToolkit::OnLeopardOrLater() && inKind == kThemeSmallCheckBox)
     drawFrame.origin.y += 1;
 
   HIThemeDrawButton(&drawFrame, &bdi, cgContext, HITHEME_ORIENTATION, NULL);
 
 #if DRAW_IN_FRAME_DEBUG
-  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.8);
+  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
   CGContextFillRect(cgContext, inBoxRect);
 #endif
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
-
-// These are the sizes that Gecko needs to request to draw if it wants
-// to get a standard-sized Aqua radio button drawn. Note that the rects
-// that draw these are actually a little bigger.
-#define NATURAL_MINI_RADIO_BUTTON_WIDTH 11
-#define NATURAL_MINI_RADIO_BUTTON_HEIGHT 11
-#define NATURAL_SMALL_RADIO_BUTTON_WIDTH 14
-#define NATURAL_SMALL_RADIO_BUTTON_HEIGHT 14
-#define NATURAL_REGULAR_RADIO_BUTTON_WIDTH 16
-#define NATURAL_REGULAR_RADIO_BUTTON_HEIGHT 16
-
-// These were calculated by testing all three sizes on the respective operating system.
-static const float radioButtonMargins[2][3][4] =
-{
-  { // Tiger
-    {0, 0, 0, 0}, // mini     - if we ever use this we'll have to calculate it
-    {0, 0, 0, 0}, // small    - if we ever use this we'll have to calculate it
-    {0, 3, 0, -3}  // regular
-  },
-  { // Leopard
-    {0, 4, 0, -4}, // mini
-    {0, 3, 0, -3}, // small
-    {0, 3, 0, -3}  // regular
-  }
-};
 
 /*
  * Draw the given NSCell into the given cgContext.
@@ -245,13 +222,7 @@ nsNativeThemeCocoa::DrawCellWithScaling(NSCell *cell,
   NSRect drawRect = NSMakeRect(destRect.origin.x, destRect.origin.y, destRect.size.width, destRect.size.height);
 
   CGAffineTransform savedCTM;
-
-  if (doSaveCTM)
-    savedCTM = CGContextGetCTM(cgContext);
-
-  // Set up the graphics context we've been asked to draw to.
-  NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
-  [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
+  NSGraphicsContext* savedContext = NULL;
 
   float xscale = 1.0f, yscale = 1.0f;
 
@@ -277,25 +248,101 @@ nsNativeThemeCocoa::DrawCellWithScaling(NSCell *cell,
     drawRect.size.height = minHeight;
   }
 
-  CGContextScaleCTM (cgContext, xscale, yscale);
+  if (doSaveCTM)
+    savedCTM = CGContextGetCTM(cgContext);
 
-  // Inflate the rect Gecko gave us by the margin for the control.
-  InflateControlRect(&drawRect, controlSize, marginSet);
-  [cell drawWithFrame:drawRect inView:[NSView focusView]];
+  if (xscale == 1.0f && yscale == 1.0f) {
+    // Inflate the rect Gecko gave us by the margin for the control.
+    InflateControlRect(&drawRect, controlSize, marginSet);
 
-  [NSGraphicsContext setCurrentContext:savedContext];
+    // Set up the graphics context we've been asked to draw to.
+    savedContext = [NSGraphicsContext currentContext];
+    [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
+
+    [cell drawWithFrame:drawRect inView:[NSView focusView]];
+  }
+  else {
+    float w = ceil(drawRect.size.width);
+    float h = ceil(drawRect.size.height);
+
+    NSRect tmpRect = NSMakeRect(0.0f, 0.0f, w, h);
+
+    // inflate to figure out the frame we need to tell NSCell to draw in, to get something that's 0,0,w,h
+    InflateControlRect(&tmpRect, controlSize, marginSet);
+
+    // and then, expand by MAX_FOCUS_RING_WIDTH size to make sure we can capture any focus ring
+    w += MAX_FOCUS_RING_WIDTH * 2.0;
+    h += MAX_FOCUS_RING_WIDTH * 2.0;
+
+    CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
+    CGContextRef ctx = CGBitmapContextCreate(NULL,
+                                             (int) w, (int) h,
+                                             8, (int) w * 4,
+                                             rgb, kCGImageAlphaPremultipliedFirst);
+    CGColorSpaceRelease(rgb);
+
+    CGContextTranslateCTM(ctx, MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH);
+
+    savedContext = [NSGraphicsContext currentContext];
+    [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:ctx flipped:YES]];
+
+    [cell drawWithFrame:tmpRect inView:[NSView focusView]];
+
+    [NSGraphicsContext setCurrentContext:savedContext];
+
+    CGImageRef img = CGBitmapContextCreateImage(ctx);
+
+    // Drop the image into the original destination rectangle, scaling to fit
+    // XXX in theory we should scale this MAX_FOCUS_RING_WIDTH here by xscale/yscale,
+    // but in practice, this looks better.
+    CGContextDrawImage(cgContext, CGRectMake(destRect.origin.x - MAX_FOCUS_RING_WIDTH,
+                                             destRect.origin.y - MAX_FOCUS_RING_WIDTH,
+                                             destRect.size.width + MAX_FOCUS_RING_WIDTH * 2,
+                                             destRect.size.height + MAX_FOCUS_RING_WIDTH * 2),
+                       img);
+
+    CGImageRelease(img);
+    CGContextRelease(ctx);
+  }
 
   if (doSaveCTM)
     CGContextSetCTM(cgContext, savedCTM);
 
+  [NSGraphicsContext setCurrentContext:savedContext];
+
 #if DRAW_IN_FRAME_DEBUG
-  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.8);
+  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
   CGContextFillRect(cgContext, destRect);
 #endif
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
                                         
+// These are the sizes that Gecko needs to request to draw if it wants
+// to get a standard-sized Aqua radio button drawn. Note that the rects
+// that draw these are actually a little bigger.
+#define NATURAL_MINI_RADIO_BUTTON_WIDTH 11
+#define NATURAL_MINI_RADIO_BUTTON_HEIGHT 11
+#define NATURAL_SMALL_RADIO_BUTTON_WIDTH 14
+#define NATURAL_SMALL_RADIO_BUTTON_HEIGHT 14
+#define NATURAL_REGULAR_RADIO_BUTTON_WIDTH 16
+#define NATURAL_REGULAR_RADIO_BUTTON_HEIGHT 16
+
+// These were calculated by testing all three sizes on the respective operating system.
+static const float radioButtonMargins[2][3][4] =
+{
+  { // Tiger
+    {0, 0, 0, 0}, // mini     - if we ever use this we'll have to calculate it
+    {0, 0, 0, 0}, // small    - if we ever use this we'll have to calculate it
+    {0, 3, 0, -3}  // regular
+  },
+  { // Leopard
+    {0, 4, 0, -4}, // mini
+    {0, 3, 0, -3}, // small
+    {0, 3, 0, -3}  // regular
+  }
+};
+
 void
 nsNativeThemeCocoa::DrawRadioButton(CGContextRef cgContext, const HIRect& inBoxRect, PRBool inSelected,
                                     PRBool inDisabled, PRInt32 inState)
@@ -416,7 +463,7 @@ nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRe
   CGContextSetCTM (cgContext, savedCTM);
 
 #if DRAW_IN_FRAME_DEBUG
-  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.8);
+  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
   CGContextFillRect(cgContext, inBoxRect);
 #endif
 
@@ -452,17 +499,97 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
     bdi.adornment |= kThemeAdornmentDefault;
 
   HIRect drawFrame = inBoxRect;
+  PRBool needsScaling = PR_FALSE;
+  int drawWidth = 0, drawHeight = 0;
+
   if (inKind == kThemePopupButton) {
-    // popup buttons draw outside their frame by 1 pixel on each side and two on the bottom
-    drawFrame.size.width -= 2;
-    drawFrame.origin.x += 1;
-    drawFrame.size.height -= 2;
+    /* popup buttons draw outside their frame by 1 pixel on each side and
+     * two on the bottom but of the bottom two pixels one is a 'shadow'
+     * and not the frame itself.  That extra pixel should be handled
+     * by GetWidgetOverflow, but we already extend each widget's overflow
+     * by 4px to handle a potential focus ring.
+     */
+
+    if (nsToolkit::OnLeopardOrLater()) {
+      /* Leopard will happily scale up for buttons that are sized 20px or higher,
+       * drawing 1px below the actual requested area.  (So 20px == 21px.)
+       * but anything below that will be clamped:
+       *  requested: 20 actual: 21 (handled above)
+       *  requested: 19 actual: 18 <- note that there is no way to draw a dropdown that's exactly 20 px in size
+       *  requested: 18 actual: 18
+       *  requested: 17 actual: 18
+       *  requested: 16 actual: 15 (min size)
+       * For those, draw to a buffer and scale
+       */
+      if (drawFrame.size.height != 18 && drawFrame.size.height != 15) {
+        if (drawFrame.size.height > 20) {
+          drawFrame.size.width -= 2;
+          drawFrame.origin.x += 1;
+          drawFrame.size.height -= 1;
+        }
+        else {
+          // pick which native height to use for the small scale
+          float nativeHeight = 15.0f;
+          if (drawFrame.size.height > 16)
+            nativeHeight = 18.0f;
+
+          drawWidth = (int) drawFrame.size.width;
+          drawHeight = (int) nativeHeight;
+
+          needsScaling = PR_TRUE;
+        }
+      }
+    }
+    else {
+      // leave things alone on Tiger
+      drawFrame.size.height -= 1;
+    }
   }
 
-  HIThemeDrawButton(&drawFrame, &bdi, cgContext, kHIThemeOrientationNormal, NULL);
+  if (!needsScaling) {
+    HIThemeDrawButton(&drawFrame, &bdi, cgContext, kHIThemeOrientationNormal, NULL);
+  } else {
+    int w = drawWidth + MAX_FOCUS_RING_WIDTH*2;
+    int h = drawHeight + MAX_FOCUS_RING_WIDTH*2;
+
+    CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
+    CGContextRef ctx = CGBitmapContextCreate(NULL, w, h, 8, w * 4,
+                                             rgb, kCGImageAlphaPremultipliedFirst);
+    CGColorSpaceRelease(rgb);
+
+    // Flip the context
+    CGContextTranslateCTM(ctx, 0.0f, h);
+    CGContextScaleCTM(ctx, 1.0f, -1.0f);
+
+    // then draw the button (offset by the focus ring size
+    CGRect tmpFrame = CGRectMake(MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH, drawWidth, drawHeight);
+    HIThemeDrawButton(&tmpFrame, &bdi, ctx, kHIThemeOrientationNormal, NULL);
+
+    CGImageRef img = CGBitmapContextCreateImage(ctx);
+    CGRect imgRect = CGRectMake(drawFrame.origin.x - MAX_FOCUS_RING_WIDTH,
+                                drawFrame.origin.y - MAX_FOCUS_RING_WIDTH,
+                                drawFrame.size.width + MAX_FOCUS_RING_WIDTH * 2.0,
+                                drawFrame.size.height + MAX_FOCUS_RING_WIDTH * 2.0);
+
+    // And then flip the main context here so that the image gets drawn right-side up
+    CGAffineTransform ctm = CGContextGetCTM (cgContext);
+
+    CGContextTranslateCTM (cgContext, imgRect.origin.x, imgRect.origin.y + imgRect.size.height);
+    CGContextScaleCTM (cgContext, 1.0, -1.0);
+
+    imgRect.origin.x = imgRect.origin.y = 0.0f;
+
+    // See comment about why we don't scale MAX_FOCUS_RING in DrawCellWithScaling
+    CGContextDrawImage(cgContext, imgRect, img);
+
+    CGContextSetCTM (cgContext, ctm);
+
+    CGImageRelease(img);
+    CGContextRelease(ctx);
+  }
 
 #if DRAW_IN_FRAME_DEBUG
-  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.8);
+  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
   CGContextFillRect(cgContext, inBoxRect);
 #endif
 
@@ -533,7 +660,7 @@ nsNativeThemeCocoa::DrawFrame(CGContextRef cgContext, HIThemeFrameKind inKind,
   }
 
 #if DRAW_IN_FRAME_DEBUG
-  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.8);
+  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
   CGContextFillRect(cgContext, inBoxRect);
 #endif
 
@@ -1037,6 +1164,12 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
                   IsDisabled(aFrame), kThemeButtonOn,
                   kThemeAdornmentArrowDownArrow, eventState);
       break;
+
+    case NS_THEME_GROUPBOX: {
+      HIThemeGroupBoxDrawInfo gdi = { 0, kThemeStateActive, kHIThemeGroupBoxKindPrimary };
+      HIThemeDrawGroupBox(&macRect, &gdi, cgContext, HITHEME_ORIENTATION);
+      break;
+    }
 
     case NS_THEME_TEXTFIELD:
       // HIThemeSetFill is not available on 10.3
@@ -1628,6 +1761,7 @@ nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
     case NS_THEME_TAB_PANEL:
     case NS_THEME_DIALOG:
     case NS_THEME_MENUPOPUP:
+    case NS_THEME_GROUPBOX:
       *aShouldRepaint = PR_FALSE;
       return NS_OK;
   }
@@ -1695,6 +1829,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_RADIO:
     case NS_THEME_RADIO_SMALL:
     case NS_THEME_RADIO_CONTAINER:
+    case NS_THEME_GROUPBOX:
     case NS_THEME_BUTTON:
     case NS_THEME_BUTTON_BEVEL:
     case NS_THEME_SPINNER:

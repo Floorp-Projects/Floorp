@@ -276,7 +276,7 @@ i.e.,:
  }
 */
 
-NS_IMETHODIMP
+/* virtual */ nsresult
 nsMathMLmunderoverFrame::Place(nsIRenderingContext& aRenderingContext,
                                PRBool               aPlaceOrigin,
                                nsHTMLReflowMetrics& aDesiredSize)

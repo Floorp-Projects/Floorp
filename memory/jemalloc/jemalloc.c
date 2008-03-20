@@ -155,10 +155,7 @@
 #define	issetugid() 0
 #if 0 /* Enable in order to test decommit code on Linux. */
 #  define MALLOC_DECOMMIT
-/*
- * The decommit code for Unix doesn't bother to make sure deallocated DSS
- * chunks are writable.
- */
+/* The decommit code for Unix doesn't support DSS chunks. */
 #  undef MALLOC_DSS
 #endif
 #endif
@@ -987,6 +984,9 @@ static size_t		huge_allocated;
  */
 static void		*base_pages;
 static void		*base_next_addr;
+#ifdef MALLOC_DECOMMIT
+static void		*base_next_decommitted;
+#endif
 static void		*base_past_addr; /* Addr immediately past base_pages. */
 static extent_node_t	*base_nodes;
 static malloc_mutex_t	base_mtx;
@@ -1625,6 +1625,34 @@ umax2s(uintmax_t x, char *s)
 
 /******************************************************************************/
 
+#ifdef MALLOC_DECOMMIT
+static inline void
+pages_decommit(void *addr, size_t size)
+{
+
+#ifdef MOZ_MEMORY_WINDOWS
+	VirtualFree(addr, size, MEM_DECOMMIT);
+#else
+	if (mmap(addr, size, PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1,
+	    0) == MAP_FAILED)
+		abort();
+#endif
+}
+
+static inline void
+pages_commit(void *addr, size_t size)
+{
+
+#  ifdef MOZ_MEMORY_WINDOWS
+	VirtualAlloc(addr, size, MEM_COMMIT, PAGE_READWRITE);
+#  else
+	if (mmap(addr, size, PROT_READ | PROT_WRITE, MAP_FIXED | MAP_PRIVATE |
+	    MAP_ANON, -1, 0) == MAP_FAILED)
+		abort();
+#  endif
+}
+#endif
+
 #ifdef MALLOC_DSS
 static bool
 base_pages_alloc_dss(size_t minsize)
@@ -1679,6 +1707,9 @@ static bool
 base_pages_alloc_mmap(size_t minsize)
 {
 	size_t csize;
+#ifdef MALLOC_DECOMMIT
+	size_t pminsize;
+#endif
 
 	assert(minsize != 0);
 	csize = PAGE_CEILING(minsize);
@@ -1687,6 +1718,16 @@ base_pages_alloc_mmap(size_t minsize)
 		return (true);
 	base_next_addr = base_pages;
 	base_past_addr = (void *)((uintptr_t)base_pages + csize);
+#ifdef MALLOC_DECOMMIT
+	/*
+	 * Leave enough pages for minsize committed, since otherwise they would
+	 * have to be immediately recommitted.
+	 */
+	pminsize = PAGE_CEILING(minsize);
+	base_next_decommitted = (void *)((uintptr_t)base_pages + pminsize);
+	if (pminsize < csize)
+		pages_decommit(base_next_decommitted, csize - pminsize);
+#endif
 #ifdef MALLOC_STATS
 	base_mapped += csize;
 #endif
@@ -1732,6 +1773,17 @@ base_alloc(size_t size)
 	/* Allocate. */
 	ret = base_next_addr;
 	base_next_addr = (void *)((uintptr_t)base_next_addr + csize);
+#ifdef MALLOC_DECOMMIT
+	/* Make sure enough pages are committed for the new allocation. */
+	if ((uintptr_t)base_next_addr > (uintptr_t)base_next_decommitted) {
+		void *pbase_next_addr =
+		    (void *)(PAGE_CEILING((uintptr_t)base_next_addr));
+
+		pages_commit(base_next_decommitted, (uintptr_t)pbase_next_addr -
+		    (uintptr_t)base_next_decommitted);
+		base_next_decommitted = pbase_next_addr;
+	}
+#endif
 	malloc_mutex_unlock(&base_mtx);
 
 	return (ret);
@@ -2066,34 +2118,6 @@ pages_unmap(void *addr, size_t size)
 		if (opt_abort)
 			abort();
 	}
-}
-#endif
-
-#ifdef MALLOC_DECOMMIT
-static inline void
-pages_decommit(void *addr, size_t size)
-{
-
-#ifdef MOZ_MEMORY_WINDOWS
-	VirtualFree(addr, size, MEM_DECOMMIT);
-#else
-	if (mmap(addr, size, PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1,
-	    0) == MAP_FAILED)
-		abort();
-#endif
-}
-
-static inline void
-pages_commit(void *addr, size_t size)
-{
-
-#  ifdef MOZ_MEMORY_WINDOWS
-	VirtualAlloc(addr, size, MEM_COMMIT, PAGE_READWRITE);
-#  else
-	if (mmap(addr, size, PROT_READ | PROT_WRITE, MAP_FIXED | MAP_PRIVATE |
-	    MAP_ANON, -1, 0) == MAP_FAILED)
-		abort();
-#  endif
 }
 #endif
 
@@ -4541,6 +4565,9 @@ huge_malloc(size_t size, bool zero)
 {
 	void *ret;
 	size_t csize;
+#ifdef MALLOC_DECOMMIT
+	size_t psize;
+#endif
 	extent_node_t *node;
 
 	/* Allocate one or more contiguous chunks for this request. */
@@ -4564,22 +4591,44 @@ huge_malloc(size_t size, bool zero)
 
 	/* Insert node into huge. */
 	node->addr = ret;
+#ifdef MALLOC_DECOMMIT
+	psize = PAGE_CEILING(size);
+	node->size = psize;
+#else
 	node->size = csize;
+#endif
 
 	malloc_mutex_lock(&huge_mtx);
 	RB_INSERT(extent_tree_ad_s, &huge, node);
 #ifdef MALLOC_STATS
 	huge_nmalloc++;
+#  ifdef MALLOC_DECOMMIT
+	huge_allocated += psize;
+#  else
 	huge_allocated += csize;
+#  endif
 #endif
 	malloc_mutex_unlock(&huge_mtx);
+
+#ifdef MALLOC_DECOMMIT
+	if (csize - psize > 0)
+		pages_decommit((void *)((uintptr_t)ret + psize), csize - psize);
+#endif
 
 #ifdef MALLOC_FILL
 	if (zero == false) {
 		if (opt_junk)
+#  ifdef MALLOC_DECOMMIT
+			memset(ret, 0xa5, psize);
+#  else
 			memset(ret, 0xa5, csize);
+#  endif
 		else if (opt_zero)
+#  ifdef MALLOC_DECOMMIT
+			memset(ret, 0, psize);
+#  else
 			memset(ret, 0, csize);
+#  endif
 	}
 #endif
 
@@ -4592,6 +4641,9 @@ huge_palloc(size_t alignment, size_t size)
 {
 	void *ret;
 	size_t alloc_size, chunk_size, offset;
+#ifdef MALLOC_DECOMMIT
+	size_t psize;
+#endif
 	extent_node_t *node;
 
 	/*
@@ -4616,6 +4668,33 @@ huge_palloc(size_t alignment, size_t size)
 	if (node == NULL)
 		return (NULL);
 
+#ifdef MOZ_MEMORY_WINDOWS
+	/*
+	 * Windows requires that there be a 1:1 mapping between VM
+	 * allocation/deallocation operations.  Therefore, take care here to
+	 * acquire the final result via one mapping operation.
+	 */
+	do {
+		void *over;
+
+		over = chunk_alloc(alloc_size, false);
+		if (over == NULL) {
+			base_node_dealloc(node);
+			return (NULL);
+		}
+
+		offset = (uintptr_t)over & (alignment - 1);
+		assert((offset & chunksize_mask) == 0);
+		assert(offset < alloc_size);
+		ret = (void *)((uintptr_t)over + offset);
+		chunk_dealloc(over, alloc_size);
+		ret = pages_map(ret, chunk_size);
+		/*
+		 * Failure here indicates a race with another thread, so try
+		 * again.
+		 */
+	} while (ret == NULL);
+#else
 	ret = chunk_alloc(alloc_size, false);
 	if (ret == NULL) {
 		base_node_dealloc(node);
@@ -4645,24 +4724,49 @@ huge_palloc(size_t alignment, size_t size)
 			trailsize);
 		}
 	}
+#endif
 
 	/* Insert node into huge. */
 	node->addr = ret;
+#ifdef MALLOC_DECOMMIT
+	psize = PAGE_CEILING(size);
+	node->size = psize;
+#else
 	node->size = chunk_size;
+#endif
 
 	malloc_mutex_lock(&huge_mtx);
 	RB_INSERT(extent_tree_ad_s, &huge, node);
 #ifdef MALLOC_STATS
 	huge_nmalloc++;
+#  ifdef MALLOC_DECOMMIT
+	huge_allocated += psize;
+#  else
 	huge_allocated += chunk_size;
+#  endif
 #endif
 	malloc_mutex_unlock(&huge_mtx);
 
+#ifdef MALLOC_DECOMMIT
+	if (chunk_size - psize > 0) {
+		pages_decommit((void *)((uintptr_t)ret + psize),
+		    chunk_size - psize);
+	}
+#endif
+
 #ifdef MALLOC_FILL
 	if (opt_junk)
+#  ifdef MALLOC_DECOMMIT
+		memset(ret, 0xa5, psize);
+#  else
 		memset(ret, 0xa5, chunk_size);
+#  endif
 	else if (opt_zero)
+#  ifdef MALLOC_DECOMMIT
+		memset(ret, 0, psize);
+#  else
 		memset(ret, 0, chunk_size);
+#  endif
 #endif
 
 	return (ret);
@@ -4675,13 +4779,57 @@ huge_ralloc(void *ptr, size_t size, size_t oldsize)
 	size_t copysize;
 
 	/* Avoid moving the allocation if the size class would not change. */
+
 	if (oldsize > arena_maxclass &&
 	    CHUNK_CEILING(size) == CHUNK_CEILING(oldsize)) {
+#ifdef MALLOC_DECOMMIT
+		size_t psize = PAGE_CEILING(size);
+#endif
 #ifdef MALLOC_FILL
 		if (opt_junk && size < oldsize) {
 			memset((void *)((uintptr_t)ptr + size), 0x5a, oldsize
 			    - size);
-		} else if (opt_zero && size > oldsize) {
+		}
+#endif
+#ifdef MALLOC_DECOMMIT
+		if (psize < oldsize) {
+			extent_node_t *node, key;
+
+			pages_decommit((void *)((uintptr_t)ptr + psize),
+			    oldsize - psize);
+
+			/* Update recorded size. */
+			malloc_mutex_lock(&huge_mtx);
+			key.addr = __DECONST(void *, ptr);
+			node = RB_FIND(extent_tree_ad_s, &huge, &key);
+			assert(node != NULL);
+			assert(node->size == oldsize);
+#  ifdef MALLOC_STATS
+			huge_allocated -= oldsize - psize;
+#  endif
+			node->size = psize;
+			malloc_mutex_unlock(&huge_mtx);
+		} else if (psize > oldsize) {
+			extent_node_t *node, key;
+
+			pages_commit((void *)((uintptr_t)ptr + oldsize),
+			    psize - oldsize);
+
+			/* Update recorded size. */
+			malloc_mutex_lock(&huge_mtx);
+			key.addr = __DECONST(void *, ptr);
+			node = RB_FIND(extent_tree_ad_s, &huge, &key);
+			assert(node != NULL);
+			assert(node->size == oldsize);
+#  ifdef MALLOC_STATS
+			huge_allocated += psize - oldsize;
+#  endif
+			node->size = psize;
+			malloc_mutex_unlock(&huge_mtx);
+		}
+#endif
+#ifdef MALLOC_FILL
+		if (opt_zero && size > oldsize) {
 			memset((void *)((uintptr_t)ptr + oldsize), 0, size
 			    - oldsize);
 		}
@@ -4737,7 +4885,11 @@ huge_dalloc(void *ptr)
 		memset(node->addr, 0x5a, node->size);
 #endif
 #endif
+#ifdef MALLOC_DECOMMIT
+	chunk_dealloc(node->addr, CHUNK_CEILING(node->size));
+#else
 	chunk_dealloc(node->addr, node->size);
+#endif
 
 	base_node_dealloc(node);
 }

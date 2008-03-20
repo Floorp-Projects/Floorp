@@ -74,6 +74,10 @@ static const char kEdgeTop[]         = "print_edge_top";
 static const char kEdgeLeft[]        = "print_edge_left";
 static const char kEdgeBottom[]      = "print_edge_bottom";
 static const char kEdgeRight[]       = "print_edge_right";
+static const char kUnwriteableMarginTop[]    = "print_unwriteable_margin_top";
+static const char kUnwriteableMarginLeft[]   = "print_unwriteable_margin_left";
+static const char kUnwriteableMarginBottom[] = "print_unwriteable_margin_bottom";
+static const char kUnwriteableMarginRight[]  = "print_unwriteable_margin_right";
 
 // Prefs for Print Options
 static const char kPrintEvenPages[]       = "print_evenpages";
@@ -282,6 +286,24 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
                              kEdgeRight);
     DUMP_INT(kReadStr, kEdgeRight, margin.right);
     aPS->SetEdgeInTwips(margin);
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveUnwriteableMargins) {
+    nsMargin margin;
+    margin.SizeTo(0,0,0,0);
+    ReadInchesIntToTwipsPref(GetPrefName(kUnwriteableMarginTop, aPrinterName), margin.top,
+                             kUnwriteableMarginTop);
+    DUMP_INT(kReadStr, kUnwriteableMarginTop, margin.top);
+    ReadInchesIntToTwipsPref(GetPrefName(kUnwriteableMarginLeft, aPrinterName), margin.left,
+                             kUnwriteableMarginLeft);
+    DUMP_INT(kReadStr, kUnwriteableMarginLeft, margin.left);
+    ReadInchesIntToTwipsPref(GetPrefName(kUnwriteableMarginBottom, aPrinterName),
+                             margin.bottom, kUnwriteableMarginBottom);
+    DUMP_INT(kReadStr, kUnwriteableMarginBottom, margin.bottom);
+    ReadInchesIntToTwipsPref(GetPrefName(kUnwriteableMarginRight, aPrinterName), margin.right,
+                             kUnwriteableMarginRight);
+    DUMP_INT(kReadStr, kUnwriteableMarginRight, margin.right);
+    aPS->SetUnwriteableMarginInTwips(margin);
   }
 
   PRBool   b;
@@ -569,6 +591,24 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
       WriteInchesIntFromTwipsPref(GetPrefName(kEdgeRight, aPrinterName),
                                   edge.right);
       DUMP_INT(kWriteStr, kEdgeRight, edge.top);
+    }
+  }
+
+  nsMargin unwriteableMargin;
+  if (aFlags & nsIPrintSettings::kInitSaveUnwriteableMargins) {
+    if (NS_SUCCEEDED(aPS->GetUnwriteableMarginInTwips(unwriteableMargin))) {
+      WriteInchesIntFromTwipsPref(GetPrefName(kUnwriteableMarginTop, aPrinterName),
+                                  unwriteableMargin.top);
+      DUMP_INT(kWriteStr, kUnwriteableMarginTop, unwriteableMargin.top);
+      WriteInchesIntFromTwipsPref(GetPrefName(kUnwriteableMarginLeft, aPrinterName),
+                                  unwriteableMargin.left);
+      DUMP_INT(kWriteStr, kUnwriteableMarginLeft, unwriteableMargin.top);
+      WriteInchesIntFromTwipsPref(GetPrefName(kUnwriteableMarginBottom, aPrinterName),
+                                  unwriteableMargin.bottom);
+      DUMP_INT(kWriteStr, kUnwriteableMarginBottom, unwriteableMargin.top);
+      WriteInchesIntFromTwipsPref(GetPrefName(kUnwriteableMarginRight, aPrinterName),
+                                  unwriteableMargin.right);
+      DUMP_INT(kWriteStr, kUnwriteableMarginRight, unwriteableMargin.top);
     }
   }
 

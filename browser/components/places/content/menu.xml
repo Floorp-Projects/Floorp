@@ -76,7 +76,7 @@
       <field name="_endMarker">-1</field>
 
       <!-- This is the view that manage the popup -->
-      <field name="_rootView">PlacesUtils.getViewForNode(this);</field>
+      <field name="_rootView">PlacesUIUtils.getViewForNode(this);</field>
 
       <field name="_built">false</field>
 
@@ -217,7 +217,7 @@
       <method name="getSupportedFlavours">
         <body><![CDATA[
           var flavourSet = new FlavourSet();
-          var acceptedDropFlavours = PlacesUtils.GENERIC_VIEW_DROP_TYPES;
+          var acceptedDropFlavours = PlacesUIUtils.GENERIC_VIEW_DROP_TYPES;
           acceptedDropFlavours.forEach(flavourSet.appendFlavour, flavourSet);
           return flavourSet;
         ]]></body>
@@ -315,12 +315,8 @@
 
       <method name="canDrop">
         <body><![CDATA[
-          // Can't drop if the menu isn't a folder
-          var resultNode = this._rootView.getResultNode();
-          if (!PlacesUtils.nodeIsFolder(resultNode))
-            return false;
-
-          return PlacesControllerDragHelper.canDrop();
+          var ip = this._rootView.insertionPoint;
+          return ip && PlacesControllerDragHelper.canDrop(ip);
         ]]></body>
       </method>
 
@@ -580,7 +576,7 @@
         <parameter name="aBefore"/>
         <body><![CDATA[
           var element =
-            PlacesUtils.createMenuItemForNode(aChild, this._containerNodesMap);
+            PlacesUIUtils.createMenuItemForNode(aChild, this._containerNodesMap);
 
           if (aBefore)
             aParentPopup.insertBefore(element, aBefore);
@@ -605,7 +601,7 @@
             return;
           }
 
-          var label = PlacesUtils.getString("bookmarksMenuEmptyFolder");
+          var label = PlacesUIUtils.getString("bookmarksMenuEmptyFolder");
           aPopup._emptyMenuItem = document.createElement("menuitem");
           aPopup._emptyMenuItem.setAttribute("label", label);
           aPopup._emptyMenuItem.setAttribute("disabled", true);
@@ -616,7 +612,7 @@
       <method name="_rebuild">
         <parameter name="aPopup"/>
         <body><![CDATA[
-          PlacesUtils.cleanPlacesPopup(aPopup);
+          PlacesUIUtils.cleanPlacesPopup(aPopup);
 
           var cc = aPopup._resultNode.childCount;
           if (cc > 0) {
@@ -756,7 +752,7 @@
           else
             menuitem.removeAttribute("image");
 
-          var title = PlacesUtils.getBestTitle(aNode);
+          var title = PlacesUIUtils.getBestTitle(aNode);
           if (menuitem.getAttribute("label") != title)
             menuitem.setAttribute("label", title);
 
@@ -953,13 +949,18 @@
     <handlers>
       <handler event="popupshowing" phase="capturing"><![CDATA[
         this._ensureInitialized();
-        if (event.target._resultNode)
-          this.onPopupShowing(event);
+        var popup = event.target;
+        // Avoid handling popupshowing of inner views
+        if (!popup._resultNode || PlacesUIUtils.getViewForNode(popup) != this)
+          return;
+
+        this.onPopupShowing(event);
       ]]></handler>
 
       <handler event="popuphidden"><![CDATA[
         var popup = event.target;
-        if (!popup._resultNode)
+        // We should avoid to handle events of inner views
+        if (!popup._resultNode || PlacesUIUtils.getViewForNode(popup) != this)
           return;
 
         // UI performance: folder queries are cheap, keep the resultnode open

@@ -932,6 +932,9 @@ CNavDTD::HandleDefaultStartToken(CToken* aToken, eHTMLTags aChildTag,
 
     do {
       eHTMLTags theParentTag = mBodyContext->TagAt(--theIndex);
+      if (theParentTag == eHTMLTag_userdefined) {
+        continue;
+      }
 
       // Figure out whether this is a hidden input inside a
       // table/tbody/thead/tfoot/tr
@@ -1058,7 +1061,7 @@ CNavDTD::HandleDefaultStartToken(CToken* aToken, eHTMLTags aChildTag,
                 break;
               }
             } else {
-              CreateContextStackFor(aChildTag);
+              CreateContextStackFor(theParentTag, aChildTag);
               theIndex = mBodyContext->GetCount();
             }
           }
@@ -3097,19 +3100,18 @@ CNavDTD::AddHeadContent(nsIParserNode *aNode)
 }
 
 void
-CNavDTD::CreateContextStackFor(eHTMLTags aChild)
+CNavDTD::CreateContextStackFor(eHTMLTags aParent, eHTMLTags aChild)
 {
   mScratch.Truncate();
 
-  eHTMLTags theTop = mBodyContext->Last();
-  PRBool    result = ForwardPropagate(mScratch, theTop, aChild);
+  PRBool    result = ForwardPropagate(mScratch, aParent, aChild);
 
   if (!result) {
-    if (eHTMLTag_unknown == theTop) {
+    if (eHTMLTag_unknown == aParent) {
       result = BackwardPropagate(mScratch, eHTMLTag_html, aChild);
-    } else if (theTop != aChild) {
+    } else if (aParent != aChild) {
       // Don't even bother if we're already inside a similar element...
-      result = BackwardPropagate(mScratch, theTop, aChild);
+      result = BackwardPropagate(mScratch, aParent, aChild);
     }
   }
 

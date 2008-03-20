@@ -209,7 +209,7 @@ XPCWrapper::AddProperty(JSContext *cx, JSObject *wrapperObj,
   uintN attrs = JSPROP_ENUMERATE;
   JSPropertyOp getter = nsnull;
   JSPropertyOp setter = nsnull;
-  jsval v;
+  jsval v = *vp;
   if (isXOW) {
     JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(prop);
 
@@ -340,7 +340,7 @@ XPCWrapper::NewResolve(JSContext *cx, JSObject *wrapperObj,
 
     attrs = sprop->attrs;
     if (attrs & JSPROP_GETTER) {
-      getter =  sprop->getter;
+      getter = sprop->getter;
     }
     if (attrs & JSPROP_SETTER) {
       setter = sprop->setter;

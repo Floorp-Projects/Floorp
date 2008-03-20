@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHTMLAreaAccessible.h"
-#include "nsIAccessibilityService.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLAreaElement.h"
@@ -46,32 +45,36 @@
 #include "nsIImageMap.h"
 
 
-// --- area -----
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLAreaAccessible
 
-nsHTMLAreaAccessible::nsHTMLAreaAccessible(nsIDOMNode *aDomNode, nsIAccessible *aParent, nsIWeakReference* aShell):
-nsLinkableAccessible(aDomNode, aShell)
+nsHTMLAreaAccessible::
+  nsHTMLAreaAccessible(nsIDOMNode *aDomNode, nsIAccessible *aParent,
+                       nsIWeakReference* aShell):
+  nsHTMLLinkAccessible(aDomNode, aShell)
 { 
 }
 
-// Expose nsIAccessibleHyperLink unconditionally
-NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLAreaAccessible, nsLinkableAccessible,
-                             nsIAccessibleHyperLink)
+////////////////////////////////////////////////////////////////////////////////
+// nsIAccessible
 
-/* wstring getName (); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetName(nsAString & aName)
+NS_IMETHODIMP
+nsHTMLAreaAccessible::GetName(nsAString & aName)
 {
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content) {
-    return NS_ERROR_FAILURE;
-  }
-
   aName.Truncate();
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+  
   if (mRoleMapEntry) {
     nsresult rv = nsAccessible::GetName(aName);
-    if (!aName.IsEmpty()) {
-      return rv;
-    }
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!aName.IsEmpty()) 
+      return NS_OK;
   }
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::alt,
                         aName) &&  
       !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title,
@@ -82,47 +85,49 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetName(nsAString & aName)
   return NS_OK;
 }
 
-/* unsigned long getRole (); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetRole(PRUint32 *_retval)
+NS_IMETHODIMP
+nsHTMLAreaAccessible::GetDescription(nsAString& aDescription)
 {
-  *_retval = nsIAccessibleRole::ROLE_LINK;
-  return NS_OK;
-}
+  aDescription.Truncate();
 
-/* wstring getDescription (); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetDescription(nsAString& _retval)
-{
   // Still to do - follow IE's standard here
   nsCOMPtr<nsIDOMHTMLAreaElement> area(do_QueryInterface(mDOMNode));
   if (area) 
-    area->GetShape(_retval);
+    area->GetShape(aDescription);
+
   return NS_OK;
 }
 
-
-/* nsIAccessible getFirstChild (); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetFirstChild(nsIAccessible **_retval)
+NS_IMETHODIMP
+nsHTMLAreaAccessible::GetFirstChild(nsIAccessible **aChild)
 {
-  *_retval = nsnull;
+  NS_ENSURE_ARG_POINTER(aChild);
+
+  *aChild = nsnull;
   return NS_OK;
 }
 
-/* nsIAccessible getLastChild (); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetLastChild(nsIAccessible **_retval)
+NS_IMETHODIMP
+nsHTMLAreaAccessible::GetLastChild(nsIAccessible **aChild)
 {
-  *_retval = nsnull;
+  NS_ENSURE_ARG_POINTER(aChild);
+
+  *aChild = nsnull;
   return NS_OK;
 }
 
-/* long getAccChildCount (); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetChildCount(PRInt32 *_retval)
+NS_IMETHODIMP
+nsHTMLAreaAccessible::GetChildCount(PRInt32 *aCount)
 {
-  *_retval = 0;
+  NS_ENSURE_ARG_POINTER(aCount);
+
+  *aCount = 0;
   return NS_OK;
 }
 
-/* void accGetBounds (out long x, out long y, out long width, out long height); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
+NS_IMETHODIMP
+nsHTMLAreaAccessible::GetBounds(PRInt32 *x, PRInt32 *y,
+                                PRInt32 *width, PRInt32 *height)
 {
   // Essentially this uses GetRect on mAreas of nsImageMap from nsImageFrame
 

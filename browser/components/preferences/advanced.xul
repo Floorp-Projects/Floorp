@@ -220,8 +220,8 @@
              <caption label="&offlineStorage.label;"/>
 
              <hbox align="center">
-               <label id="useCacheBefore"
-                      accesskey="&useCacheBefore.accesskey;">&useCacheBefore.label;</label>
+               <label id="useCacheBefore" control="cacheSize"
+                      accesskey="&useCacheBefore.accesskey;" value="&useCacheBefore.label;"/>
                <textbox id="cacheSize" type="number" size="2"
                         preference="browser.cache.disk.capacity"
                         onsyncfrompreference="return gAdvancedPane.readCacheSize();"

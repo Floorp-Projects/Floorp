@@ -192,8 +192,8 @@ PlacesTreeView.prototype = {
     if (!aContainer.containerOpen)
       return;  // nothing to do
 
-    const openLiteral = PlacesUtils.RDF.GetResource("http://home.netscape.com/NC-rdf#open");
-    const trueLiteral = PlacesUtils.RDF.GetLiteral("true");
+    const openLiteral = PlacesUIUtils.RDF.GetResource("http://home.netscape.com/NC-rdf#open");
+    const trueLiteral = PlacesUIUtils.RDF.GetLiteral("true");
 
     var cc = aContainer.childCount;
     for (var i=0; i < cc; i++) {
@@ -219,8 +219,8 @@ PlacesTreeView.prototype = {
 
         var resource = this._getResourceForNode(curChild);
         var isopen = resource != null &&
-                     PlacesUtils.localStore.HasAssertion(resource, openLiteral,
-                                                         trueLiteral, true);
+                     PlacesUIUtils.localStore.HasAssertion(resource, openLiteral,
+                                                           trueLiteral, true);
         if (isopen != curChild.containerOpen)
           aToOpen.push(curChild);
         else if (curChild.containerOpen && curChild.childCount > 0)
@@ -834,7 +834,7 @@ PlacesTreeView.prototype = {
   {
     var uri = aNode.uri;
     NS_ASSERT(uri, "if there is no uri, we can't persist the open state");
-    return uri ? PlacesUtils.RDF.GetResource(uri) : null;
+    return uri ? PlacesUIUtils.RDF.GetResource(uri) : null;
   },
 
   // nsITreeView
@@ -986,7 +986,9 @@ PlacesTreeView.prototype = {
       if (node.parent && PlacesUtils.nodeIsReadOnly(node.parent))
         return false;
     }
-    return PlacesControllerDragHelper.canDrop();
+  
+    var ip = this._getInsertionPoint(aRow, aOrientation);
+    return ip && PlacesControllerDragHelper.canDrop(ip);
   },
 
   // XXXmano: these two are copied over from tree.xml, to fix this we need to
@@ -1131,7 +1133,7 @@ PlacesTreeView.prototype = {
         // if they go through the "result" API.
         if (PlacesUtils.nodeIsSeparator(node))
           return "";
-        return PlacesUtils.getBestTitle(node);
+        return PlacesUIUtils.getBestTitle(node);
       case this.COLUMN_TYPE_TAGS:
         return node.tags;
       case this.COLUMN_TYPE_URI:
@@ -1205,13 +1207,13 @@ PlacesTreeView.prototype = {
 
     var resource = this._getResourceForNode(node);
     if (resource) {
-      const openLiteral = PlacesUtils.RDF.GetResource("http://home.netscape.com/NC-rdf#open");
-      const trueLiteral = PlacesUtils.RDF.GetLiteral("true");
+      const openLiteral = PlacesUIUtils.RDF.GetResource("http://home.netscape.com/NC-rdf#open");
+      const trueLiteral = PlacesUIUtils.RDF.GetLiteral("true");
 
       if (node.containerOpen)
-        PlacesUtils.localStore.Unassert(resource, openLiteral, trueLiteral);
+        PlacesUIUtils.localStore.Unassert(resource, openLiteral, trueLiteral);
       else
-        PlacesUtils.localStore.Assert(resource, openLiteral, trueLiteral, true);
+        PlacesUIUtils.localStore.Assert(resource, openLiteral, trueLiteral, true);
     }
 
     node.containerOpen = !node.containerOpen;
@@ -1342,11 +1344,33 @@ PlacesTreeView.prototype = {
     this._result.sortingMode = newSort;
   },
 
+  isEditable: function PTV_isEditable(aRow, aColumn) {
+    // At this point we only support editing the title field.
+    if (aColumn.index != 0)
+      return false;
+
+    var node = this.nodeForTreeIndex(aRow);
+    if (!PlacesUtils.nodeIsReadOnly(node) &&
+        (PlacesUtils.nodeIsFolder(node) ||
+         (PlacesUtils.nodeIsBookmark(node) &&
+          !PlacesUtils.nodeIsLivemarkItem(node))))
+      return true;
+
+    return false;
+  },
+
+  setCellText: function PTV_setCellText(aRow, aColumn, aText) {
+    // we may only get here if the cell is editable
+    var node = this.nodeForTreeIndex(aRow);
+    if (node.title != aText) {
+      var txn = PlacesUIUtils.ptm.editItemTitle(node.itemId, aText);
+      PlacesUIUtils.ptm.doTransaction(txn);
+    }
+  },
+
   selectionChanged: function() { },
   cycleCell: function PTV_cycleCell(aRow, aColumn) { },
-  isEditable: function(aRow, aColumn) { return false; },
   isSelectable: function(aRow, aColumn) { return false; },
-  setCellText: function(aRow, aColumn) { },
   performAction: function(aAction) { },
   performActionOnRow: function(aAction, aRow) { },
   performActionOnCell: function(aAction, aRow, aColumn) { }

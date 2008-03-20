@@ -542,6 +542,9 @@ public:
     // This is called by the default Draw() implementation above.
     virtual PRBool SetupCairoFont(gfxContext *aContext) = 0;
 
+    PRBool IsSyntheticBold() { return mSyntheticBoldOffset != 0; }
+    PRUint32 GetSyntheticBoldOffset() { return mSyntheticBoldOffset; }
+    
 protected:
     // The family name of the font
     nsString                   mName;
@@ -549,6 +552,9 @@ protected:
     gfxFontStyle               mStyle;
     nsAutoTArray<gfxGlyphExtents*,1> mGlyphExtentsArray;
 
+    // synthetic bolding for environments where this is not supported by the platform
+    PRUint32                   mSyntheticBoldOffset;  // number of devunit pixels to offset double-strike, 0 ==> no bolding
+    
     // some fonts have bad metrics, this method sanitize them.
     // if this font has bad underline offset, aIsBadUnderlineFont should be true.
     void SanitizeMetrics(gfxFont::Metrics *aMetrics, PRBool aIsBadUnderlineFont);
@@ -1275,6 +1281,9 @@ public:
     
     void Dump(FILE* aOutput);
 #endif
+
+    // post-process glyph advances to deal with synthetic bolding
+    void AdjustAdvancesForSyntheticBold(PRUint32 aStart, PRUint32 aLength);
 
 protected:
     // Allocates extra space for the CompressedGlyph array and the text

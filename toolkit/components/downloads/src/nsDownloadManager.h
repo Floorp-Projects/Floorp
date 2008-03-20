@@ -65,6 +65,7 @@
 #include "nsArrayEnumerator.h"
 #include "nsAutoPtr.h"
 #include "nsIObserverService.h"
+#include "nsITimer.h"
 
 typedef PRInt16 DownloadState;
 typedef PRInt16 DownloadType;
@@ -187,6 +188,17 @@ protected:
    * be canceled.
    */
   nsresult RemoveAllDownloads();
+
+  /**
+   * Callback used for resuming downloads after getting a wake notification.
+   *
+   * @param aTimer
+   *        Timer object fired after some delay after a wake notification
+   * @param aClosure
+   *        nsDownloadManager object used to resume downloads
+   */
+  static void ResumeOnWakeCallback(nsITimer *aTimer, void *aClosure);
+  nsCOMPtr<nsITimer> mResumeOnWakeTimer;
 
   void ConfirmCancelDownloads(PRInt32 aCount,
                               nsISupportsPRBool *aCancelDownloads,

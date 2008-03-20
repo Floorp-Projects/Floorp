@@ -100,6 +100,8 @@ CAccessibleText::get_attributes(long aOffset, long *aStartOffset,
                                 long *aEndOffset, BSTR *aTextAttributes)
 {
 __try {
+  *aTextAttributes = NULL;
+
   GET_NSIACCESSIBLETEXT
 
   nsCOMPtr<nsIAccessible> accessible;
@@ -237,6 +239,8 @@ STDMETHODIMP
 CAccessibleText::get_text(long aStartOffset, long aEndOffset, BSTR *aText)
 {
 __try {
+  *aText = NULL;
+
   GET_NSIACCESSIBLETEXT
 
   nsAutoString text;
@@ -244,8 +248,13 @@ __try {
   if (NS_FAILED(rv))
     return E_FAIL;
 
-  if (!::SysReAllocStringLen(aText, text.get(), text.Length()))
+  if (text.IsEmpty())
+    return S_FALSE;
+
+  *aText = ::SysAllocStringLen(text.get(), text.Length());
+  if (!*aText)
     return E_OUTOFMEMORY;
+
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
@@ -258,6 +267,8 @@ CAccessibleText::get_textBeforeOffset(long aOffset,
                                       BSTR *aText)
 {
 __try {
+  *aText = NULL;
+
   GET_NSIACCESSIBLETEXT
 
   nsresult rv = NS_OK;
@@ -282,8 +293,13 @@ __try {
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
 
-  if (!::SysReAllocStringLen(aText, text.get(), text.Length()))
+  if (text.IsEmpty())
+    return S_FALSE;
+
+  *aText = ::SysAllocStringLen(text.get(), text.Length());
+  if (!*aText)
     return E_OUTOFMEMORY;
+
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
@@ -296,6 +312,8 @@ CAccessibleText::get_textAfterOffset(long aOffset,
                                      BSTR *aText)
 {
 __try {
+  *aText = NULL;
+
   GET_NSIACCESSIBLETEXT
 
   nsresult rv = NS_OK;
@@ -320,8 +338,13 @@ __try {
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
 
-  if (!::SysReAllocStringLen(aText, text.get(), text.Length()))
+  if (text.IsEmpty())
+    return S_FALSE;
+
+  *aText = ::SysAllocStringLen(text.get(), text.Length());
+  if (!*aText)
     return E_OUTOFMEMORY;
+
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
@@ -358,8 +381,13 @@ __try {
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
 
-  if (!::SysReAllocStringLen(aText, text.get(), text.Length()))
+  if (text.IsEmpty())
+    return S_FALSE;
+
+  *aText = ::SysAllocStringLen(text.get(), text.Length());
+  if (!*aText)
     return E_OUTOFMEMORY;
+
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
@@ -497,8 +525,8 @@ CAccessibleText::GetModifiedText(PRBool aGetInsertedText,
   aText->start = startOffset;
   aText->end = endOffset;
 
-  INT result = ::SysReAllocStringLen(&(aText->text), text.get(), text.Length());
-  return result ? NS_OK : E_OUTOFMEMORY;
+  aText->text = ::SysAllocStringLen(text.get(), text.Length());
+  return aText->text ? NS_OK : E_OUTOFMEMORY;
 }
 
 nsAccessibleTextBoundary

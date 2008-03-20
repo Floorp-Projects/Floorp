@@ -458,7 +458,8 @@ sub Verify {
     $this->Shell(
       cmd => catfile($stageHome, 'bin', 'verify-locales.pl'),
       cmdArgs => ['-m', catfile($stageDir, 'batch1', 'config',
-                  'shipped-locales'), '-l', $linuxExtension],
+                  'shipped-locales'), '-l', $linuxExtension,
+                  '-p', $product],
       logFile => $verifyLocalesLogFile,
       dir => catfile($stageDir, 'batch1', 'stage-signed'),
     );

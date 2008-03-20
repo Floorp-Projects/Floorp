@@ -44,6 +44,7 @@
 #include "nsUnicharUtils.h"
 #include "nsIDocument.h"
 #include "nsDOMStorage.h"
+#include "nsEscape.h"
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
@@ -1046,12 +1047,29 @@ nsDOMStorageList::NamedItem(const nsAString& aDomain,
 {
   *aStorage = nsnull;
 
+  nsCAutoString requestedDomain;
+
+  nsresult rv;
+  // Normalize the requested domain
+  nsCOMPtr<nsIIDNService> idn = do_GetService(NS_IDNSERVICE_CONTRACTID);
+  if (idn) {
+    rv = idn->ConvertUTF8toACE(NS_ConvertUTF16toUTF8(aDomain),
+                               requestedDomain);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    // Don't have the IDN service, best we can do is URL escape.
+    NS_EscapeURL(NS_ConvertUTF16toUTF8(aDomain),
+                 esc_OnlyNonASCII | esc_AlwaysCopy,
+                 requestedDomain);
+  }
+  ToLowerCase(requestedDomain);
+
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   if (!ssm)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIPrincipal> subjectPrincipal;
-  nsresult rv = ssm->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
+  rv = ssm->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> uri;
@@ -1082,7 +1100,8 @@ nsDOMStorageList::NamedItem(const nsAString& aDomain,
     isSystem = PR_TRUE;
 
   if (isSystem || !currentDomain.IsEmpty()) {
-    return GetStorageForDomain(uri, aDomain, NS_ConvertUTF8toUTF16(currentDomain),
+    return GetStorageForDomain(uri, NS_ConvertUTF8toUTF16(requestedDomain),
+                               NS_ConvertUTF8toUTF16(currentDomain),
                                isSystem, aStorage);
   }
 
@@ -1094,44 +1113,7 @@ PRBool
 nsDOMStorageList::CanAccessDomain(const nsAString& aRequestedDomain,
                                   const nsAString& aCurrentDomain)
 {
-  PRNetAddr address;
-  PRStatus status = PR_StringToNetAddr(NS_ConvertUTF16toUTF8(aCurrentDomain).get(), &address);
-
-  if (status == PR_SUCCESS) {
-    // An IP address must match exactly. IPv6: when location is e.g. "::1" and we require
-    // "0:0:0:0:0:1" then access will be denied.
-    return aRequestedDomain == aCurrentDomain;
-  }
-
-  nsStringArray requestedDomainArray, currentDomainArray;
-  PRBool ok = ConvertDomainToArray(aRequestedDomain, &requestedDomainArray);
-  if (!ok)
-    return PR_FALSE;
-
-  ok = ConvertDomainToArray(aCurrentDomain, &currentDomainArray);
-  if (!ok)
-    return PR_FALSE;
-
-  if (currentDomainArray.Count() == 1)
-    currentDomainArray.AppendString(NS_LITERAL_STRING("localdomain"));
-
-  // need to use the shorter of the two arrays
-  PRInt32 currentPos = 0;
-  PRInt32 requestedPos = 0;
-  PRInt32 length = requestedDomainArray.Count();
-  if (currentDomainArray.Count() > length)
-    currentPos = currentDomainArray.Count() - length;
-  else if (currentDomainArray.Count() < length)
-    requestedPos = length - currentDomainArray.Count();
-
-  // If the current domain is different in any of the parts from the
-  // requested domain, a security exception is raised
-  for (; requestedPos < length; requestedPos++, currentPos++) {
-    if (*requestedDomainArray[requestedPos] != *currentDomainArray[currentPos])
-      return PR_FALSE;
-  }
-
-  return PR_TRUE;
+  return aRequestedDomain.Equals(aCurrentDomain);
 }
 
 nsresult
@@ -1141,14 +1123,6 @@ nsDOMStorageList::GetStorageForDomain(nsIURI* aURI,
                                       PRBool aNoCurrentDomainCheck,
                                       nsIDOMStorage** aStorage)
 {
-  // fail if the domain contains no periods.
-  // XXXndeakin update this when bug 342314 is fixed so that we can check
-  // for top-level domain names properly
-  nsAutoString trimmedDomain(aRequestedDomain);
-  trimmedDomain.Trim(".");
-  if (trimmedDomain.FindChar('.') == kNotFound)
-    return NS_ERROR_DOM_SECURITY_ERR;
-
   if (!aNoCurrentDomainCheck && !CanAccessDomain(aRequestedDomain,
                                                  aCurrentDomain)) {
     return NS_ERROR_DOM_SECURITY_ERR;

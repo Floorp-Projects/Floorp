@@ -83,7 +83,6 @@
 #include "nsThreadUtils.h"
 #include "nsJSUtils.h"
 #include "nsCRT.h"
-#include "nsIWindowWatcher.h"
 #include "nsIAuthPrompt.h"
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIJSContextStack.h"
@@ -242,27 +241,6 @@ nsXMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
 NS_IMETHODIMP
 nsXMLDocument::GetInterface(const nsIID& aIID, void** aSink)
 {
-  if (aIID.Equals(NS_GET_IID(nsIAuthPrompt))) {
-    NS_ENSURE_ARG_POINTER(aSink);
-    *aSink = nsnull;
-
-    nsresult rv;
-    nsCOMPtr<nsIWindowWatcher> ww(do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
-    if (NS_FAILED(rv))
-      return rv;
-
-    nsCOMPtr<nsIAuthPrompt> prompt;
-    rv = ww->GetNewAuthPrompter(nsnull, getter_AddRefs(prompt));
-    if (NS_FAILED(rv))
-      return rv;
-
-    nsIAuthPrompt *p = prompt.get();
-    NS_ADDREF(p);
-    *aSink = p;
-    return NS_OK;
-  }
-
-
   return QueryInterface(aIID, aSink);
 }
 

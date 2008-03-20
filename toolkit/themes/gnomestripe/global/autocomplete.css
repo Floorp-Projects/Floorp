@@ -102,6 +102,7 @@ panel[type="autocomplete-richlistbox"],
   -moz-appearance: none !important;
   border: none !important;
   background-color: transparent !important;
+  color: MenuText;
 }
 
 .autocomplete-treecol {
@@ -148,12 +149,13 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
 .autocomplete-richlistitem {
   padding: 1px 2px;
   border-bottom: 1px solid ThreeDShadow;
+  color: MenuText;
 }
 
 .ac-site-icon {
   width: 16px; 
   height: 16px;
-  margin-right: 8px;
+  margin: 0 5px -3px 3px;
 }
 
 .ac-type-icon {

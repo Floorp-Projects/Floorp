@@ -243,6 +243,13 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
                   mOpenChar, mCloseChar, mSeparatorsChar, mSeparatorsCount);
 }
 
+/* virtual */ nscoord
+nsMathMLmfencedFrame::GetIntrinsicWidth(nsIRenderingContext* aRenderingContext)
+{
+  return doGetIntrinsicWidth(aRenderingContext, this, mOpenChar, mCloseChar,
+                             mSeparatorsChar, mSeparatorsCount);
+}
+
 // exported routine that both mfenced and mfrac share.
 // mfrac uses this when its bevelled attribute is set.
 /*static*/ nsresult
@@ -468,6 +475,32 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
   return NS_OK;
 }
 
+static void
+GetCharSpacing(nsMathMLChar*        aMathMLChar,
+               nsOperatorFlags      aForm,
+               PRInt32              aScriptLevel,
+               nscoord              em,
+               nscoord&             aLeftSpace,
+               nscoord&             aRightSpace)
+{
+  nsAutoString data;
+  aMathMLChar->GetData(data);
+  nsOperatorFlags flags = 0;
+  float lspace = 0.0f;
+  float rspace = 0.0f;
+  PRBool found = nsMathMLOperators::LookupOperator(data, aForm,
+                                                   &flags, &lspace, &rspace);
+
+  // We don't want extra space when we are a script
+  if (found && aScriptLevel > 0) {
+    lspace /= 2.0f;
+    rspace /= 2.0f;
+  }
+
+  aLeftSpace = NSToCoordRound(lspace * em);
+  aRightSpace = NSToCoordRound(rspace * em);
+}
+
 // helper functions to perform the common task of formatting our chars
 /*static*/ nsresult
 nsMathMLmfencedFrame::ReflowChar(nsPresContext*      aPresContext,
@@ -483,20 +516,9 @@ nsMathMLmfencedFrame::ReflowChar(nsPresContext*      aPresContext,
                                  nscoord&             aDescent)
 {
   if (aMathMLChar && 0 < aMathMLChar->Length()) {
-    nsOperatorFlags flags = 0;
-    float leftSpace = 0.0f;
-    float rightSpace = 0.0f;
-
-    nsAutoString data;
-    aMathMLChar->GetData(data);
-    PRBool found = nsMathMLOperators::LookupOperator(data, aForm,              
-                                           &flags, &leftSpace, &rightSpace);
-
-    // If we don't want extra space when we are a script
-    if (found && aScriptLevel > 0) {
-      leftSpace /= 2.0f;
-      rightSpace /= 2.0f;
-    }
+    nscoord leftSpace;
+    nscoord rightSpace;
+    GetCharSpacing(aMathMLChar, aForm, aScriptLevel, em, leftSpace, rightSpace);
 
     // stretch the char to the appropriate height if it is not big enough.
     nsBoundingMetrics charSize;
@@ -515,6 +537,8 @@ nsMathMLmfencedFrame::ReflowChar(nsPresContext*      aPresContext,
       // GetBoundingMetrics failed)
       leading = 0;
       if (NS_FAILED(res)) {
+        nsAutoString data;
+        aMathMLChar->GetData(data);
         nsTextDimensions dimensions;
         aRenderingContext.GetTextDimensions(data.get(), data.Length(), dimensions);
         charSize.ascent = dimensions.ascent;
@@ -532,11 +556,11 @@ nsMathMLmfencedFrame::ReflowChar(nsPresContext*      aPresContext,
       aDescent = charSize.descent + leading;
 
     // account the spacing
-    charSize.width += NSToCoordRound((leftSpace + rightSpace) * em);
+    charSize.width += leftSpace + rightSpace;
 
     // x-origin is used to store lspace ...
     // y-origin is used to stored the ascent ... 
-    aMathMLChar->SetRect(nsRect(NSToCoordRound(leftSpace * em), 
+    aMathMLChar->SetRect(nsRect(leftSpace, 
                                 charSize.ascent, charSize.width,
                                 charSize.ascent + charSize.descent));
   }
@@ -553,6 +577,7 @@ nsMathMLmfencedFrame::PlaceChar(nsMathMLChar*      aMathMLChar,
 
   // the char's x-origin was used to store lspace ...
   // the char's y-origin was used to store the ascent ... 
+  // the char's width was used to store the advance with (with spacing) ... 
   nsRect rect;
   aMathMLChar->GetRect(rect);
 
@@ -572,6 +597,77 @@ nsMathMLmfencedFrame::PlaceChar(nsMathMLChar*      aMathMLChar,
   // return rect.width since it includes lspace and rspace
   bm.width = rect.width;
   dx += rect.width;
+}
+
+static nscoord
+GetMaxCharWidth(nsPresContext*       aPresContext,
+                nsIRenderingContext* aRenderingContext,
+                nsMathMLChar*        aMathMLChar,
+                nsOperatorFlags      aForm,
+                PRInt32              aScriptLevel,
+                nscoord              em)
+{
+  nscoord width = aMathMLChar->GetMaxWidth(aPresContext, *aRenderingContext);
+
+  if (0 < aMathMLChar->Length()) {
+    nscoord leftSpace;
+    nscoord rightSpace;
+    GetCharSpacing(aMathMLChar, aForm, aScriptLevel, em, leftSpace, rightSpace);
+
+    width += leftSpace + rightSpace;
+  }
+  
+  return width;
+}
+
+/* virtual */ nscoord
+nsMathMLmfencedFrame::doGetIntrinsicWidth(nsIRenderingContext*    aRenderingContext,
+                                          nsMathMLContainerFrame* aForFrame,
+                                          nsMathMLChar*           aOpenChar,
+                                          nsMathMLChar*           aCloseChar,
+                                          nsMathMLChar*           aSeparatorsChar,
+                                          PRInt32                 aSeparatorsCount)
+{
+  nscoord width = 0;
+
+  nsPresContext* presContext = aForFrame->PresContext();
+  const nsStyleFont* font = aForFrame->GetStyleFont();
+  nsCOMPtr<nsIFontMetrics> fm = presContext->GetMetricsFor(font->mFont);
+  nscoord em;
+  GetEmHeight(fm, em);
+
+  if (aOpenChar) {
+    width +=
+      GetMaxCharWidth(presContext, aRenderingContext, aOpenChar,
+                      NS_MATHML_OPERATOR_FORM_PREFIX, font->mScriptLevel, em);
+  }
+
+  PRInt32 i = 0;
+  nsIFrame* childFrame = aForFrame->GetFirstChild(nsnull);
+  while (childFrame) {
+    // XXX This includes margin while Reflow currently doesn't consider
+    // margin, so we may end up with too much space, but, with stretchy
+    // characters, this is an approximation anyway.
+    width += nsLayoutUtils::IntrinsicForContainer(aRenderingContext, childFrame,
+                                                  nsLayoutUtils::PREF_WIDTH);
+
+    if (i < aSeparatorsCount) {
+      width +=
+        GetMaxCharWidth(presContext, aRenderingContext, &aSeparatorsChar[i],
+                        NS_MATHML_OPERATOR_FORM_INFIX, font->mScriptLevel, em);
+    }
+    i++;
+
+    childFrame = childFrame->GetNextSibling();
+  }
+
+  if (aCloseChar) {
+    width +=
+      GetMaxCharWidth(presContext, aRenderingContext, aCloseChar,
+                      NS_MATHML_OPERATOR_FORM_POSTFIX, font->mScriptLevel, em);
+  }
+
+  return width;
 }
 
 nscoord

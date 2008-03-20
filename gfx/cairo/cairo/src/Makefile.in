@@ -165,7 +165,7 @@ endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CSRCS   += cairo-quartz-surface.c cairo-quartz-image-surface.c cairo-atsui-font.c
-EXPORTS += cairo-quartz.h cairo-atsui.h
+EXPORTS += cairo-quartz.h cairo-atsui.h cairo-quartz-image.h
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)

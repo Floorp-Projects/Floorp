@@ -79,6 +79,105 @@
 #define NS_AUTOCOMPLETESIMPLERESULT_CONTRACTID \
   "@mozilla.org/autocomplete/simple-result;1"
 
+////////////////////////////////////////////////////////////////////////////////
+//// nsNavHistoryAutoComplete Helper Functions
+
+/**
+ * Returns true if the string starts with javascript:
+ */
+inline PRBool
+StartsWithJS(const nsAString &aString)
+{
+  return StringBeginsWith(aString, NS_LITERAL_STRING("javascript:"));
+}
+
+/**
+ * Returns true if the unicode character is a word boundary. I.e., anything
+ * that *isn't* used to build up a word from a string of characters. We are
+ * conservative here because anything that we don't list will be treated as
+ * word boundary. This means searching for that not-actually-a-word-boundary
+ * character can still be matched in the middle of a word.
+ */
+inline PRBool
+IsWordBoundary(const PRUnichar &aChar)
+{
+  // Lower-case alphabetic, so upper-case matches CamelCase. Because
+  // upper-case is treated as a word boundary, matches will also happen
+  // _after_ an upper-case character.
+  return !(PRUnichar('a') <= aChar && aChar <= PRUnichar('z'));
+}
+
+/**
+ * Returns true if the token matches the target on a word boundary
+ *
+ * @param aToken
+ *        Token to search for that must match on a word boundary
+ * @param aTarget
+ *        Target string to search against
+ */
+PRBool
+FindOnBoundary(const nsAString &aToken, const nsAString &aTarget)
+{
+  // Define a const instance of this class so it is created once
+  const nsCaseInsensitiveStringComparator caseInsensitiveCompare;
+
+  // Can't match anything if there's nothing to match
+  if (aTarget.IsEmpty())
+    return PR_FALSE;
+
+  nsAString::const_iterator tokenStart, tokenEnd;
+  aToken.BeginReading(tokenStart);
+  aToken.EndReading(tokenEnd);
+
+  nsAString::const_iterator targetStart, targetEnd;
+  aTarget.BeginReading(targetStart);
+  aTarget.EndReading(targetEnd);
+
+  // Go straight into checking the token at the beginning of the target because
+  // the beginning is considered a word boundary
+  do {
+    // We're on a word boundary, so prepare to match by copying the iterators
+    nsAString::const_iterator testToken(tokenStart);
+    nsAString::const_iterator testTarget(targetStart);
+
+    // Keep trying to match the token one by one until it doesn't match
+    while (!caseInsensitiveCompare(*testToken, *testTarget)) {
+      // We matched something, so move down one
+      testToken++;
+      testTarget++;
+
+      // Matched the token! We're done!
+      if (testToken == tokenEnd)
+        return PR_TRUE;
+
+      // If we ran into the end while matching the token, we won't find it
+      if (testTarget == targetEnd)
+        return PR_FALSE;
+    }
+
+    // Unconditionally move past the current position in the target, but if
+    // we're not currently on a word boundary, eat up as many non-word boundary
+    // characters as possible -- don't kill characters if we're currently on a
+    // word boundary so that we can match tokens that start on a word boundary.
+    if (!IsWordBoundary(*targetStart++))
+      while (targetStart != targetEnd && !IsWordBoundary(*targetStart))
+        targetStart++;
+
+    // If we hit the end eating up non-boundaries then boundaries, we're done
+  } while (targetStart != targetEnd);
+
+  return PR_FALSE;
+}
+
+/**
+ * A local wrapper to CaseInsensitiveFindInReadable that isn't overloaded
+ */
+inline PRBool
+FindAnywhere(const nsAString &aToken, const nsAString &aTarget)
+{
+  return CaseInsensitiveFindInReadable(aToken, aTarget);
+}
+
 // nsNavHistory::InitAutoComplete
 nsresult
 nsNavHistory::InitAutoComplete()
@@ -256,14 +355,15 @@ nsNavHistory::PerformAutoComplete()
     rv = StartAutoCompleteTimer(mAutoCompleteSearchTimeout);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    DoneSearching();
+    DoneSearching(PR_TRUE);
   }
   return NS_OK;
 }
 
 void
-nsNavHistory::DoneSearching()
+nsNavHistory::DoneSearching(PRBool aFinished)
 {
+  mAutoCompleteFinishedSearch = aFinished;
   mCurrentResult = nsnull;
   mCurrentListener = nsnull;
 }
@@ -283,6 +383,10 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
 
   NS_ENSURE_ARG_POINTER(aListener);
 
+  // Keep track of the previous search results to try optimizing
+  PRUint32 prevMatchCount = mCurrentResultURLs.Count();
+  nsAutoString prevSearchString(mCurrentSearchString);
+
   // Copy the input search string for case-insensitive search
   ToLowerCase(aSearchString, mCurrentSearchString);
   // remove whitespace, see bug #392141 for details
@@ -294,6 +398,36 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
   mCurrentResult = do_CreateInstance(NS_AUTOCOMPLETESIMPLERESULT_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // We can optimize by reusing the last search if it finished and has strictly
+  // less than maxResults number of results as well as making sure the new
+  // search begins with the old one and both aren't empty. Without these
+  // checks, could cause problems mixing up old and new results. (bug 412730)
+  // Also, only reuse the search if the previous and new search both start with
+  // javascript: or both don't. (bug 417798)
+  if (mAutoCompleteFinishedSearch &&
+      prevMatchCount < (PRUint32)mAutoCompleteMaxResults &&
+      !prevSearchString.IsEmpty() &&
+      StringBeginsWith(mCurrentSearchString, prevSearchString) &&
+      (StartsWithJS(prevSearchString) == StartsWithJS(mCurrentSearchString))) {
+
+    // Got nothing before? We won't get anything new, so stop now
+    if (prevMatchCount == 0) {
+      // Set up the result to let the listener know that there's nothing
+      mCurrentResult->SetSearchString(mCurrentSearchString);
+      mCurrentResult->SetSearchResult(nsIAutoCompleteResult::RESULT_NOMATCH);
+      mCurrentResult->SetDefaultIndex(-1);
+
+      rv = mCurrentResult->SetListener(this);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      (void)mCurrentListener->OnSearchResult(this, mCurrentResult);
+      DoneSearching(PR_TRUE);
+
+      return NS_OK;
+    }
+  }
+
+  mAutoCompleteFinishedSearch = PR_FALSE;
   mCurrentChunkOffset = 0;
   mCurrentResultURLs.Clear();
   mCurrentSearchTokens.Clear();
@@ -342,7 +476,7 @@ nsNavHistory::StopSearch()
     mAutoCompleteTimer->Cancel();
 
   mCurrentSearchString.Truncate();
-  DoneSearching();
+  DoneSearching(PR_FALSE);
 
   return NS_OK;
 }
@@ -437,9 +571,12 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
   NS_ENSURE_TRUE(faviconService, NS_ERROR_OUT_OF_MEMORY);
 
   // We want to filter javascript: URIs if the search doesn't start with it
-  const nsString &javascriptColon = NS_LITERAL_STRING("javascript:");
   PRBool filterJavascript = mAutoCompleteFilterJavascript &&
-    mCurrentSearchString.Find(javascriptColon) != 0;
+    !StartsWithJS(mCurrentSearchString);
+
+  // Determine what type of search to try matching tokens against targets
+  PRBool (*tokenMatchesTarget)(const nsAString &, const nsAString &) =
+    mAutoCompleteOnWordBoundary ? FindOnBoundary : FindAnywhere;
 
   PRBool hasMore = PR_FALSE;
   // Determine the result of the search
@@ -449,7 +586,7 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // If we need to filter and have a javascript URI.. skip!
-    if (filterJavascript && escapedEntryURL.Find(javascriptColon) == 0)
+    if (filterJavascript && StartsWithJS(escapedEntryURL))
       continue;
 
     // Prevent duplicates that might appear from previous searches such as tag
@@ -501,19 +638,19 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
 
             // Check if the current token matches the bookmark
             PRBool bookmarkMatch = parentId &&
-              CaseInsensitiveFindInReadable(*token, entryBookmarkTitle);
+              (*tokenMatchesTarget)(*token, entryBookmarkTitle);
             // If any part of the search string is in the bookmark title, show
             // that in the result instead of the page title
             useBookmark |= bookmarkMatch;
 
             // If the token is in any of the tags, remember to show tags
-            PRBool tagsMatch = CaseInsensitiveFindInReadable(*token, entryTags);
+            PRBool tagsMatch = (*tokenMatchesTarget)(*token, entryTags);
             showTags |= tagsMatch;
 
             // True if any of them match; false makes us quit the loop
             matchAll = bookmarkMatch || tagsMatch ||
-              CaseInsensitiveFindInReadable(*token, entryTitle) ||
-              CaseInsensitiveFindInReadable(*token, entryURL);
+              (*tokenMatchesTarget)(*token, entryTitle) ||
+              (*tokenMatchesTarget)(*token, entryURL);
           }
 
           // Skip if we don't match all terms in the bookmark, tag, title or url

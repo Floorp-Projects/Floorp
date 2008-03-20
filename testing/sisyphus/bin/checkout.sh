@@ -50,42 +50,69 @@ fi
 cd $TREE
 
 case $product in
-    firefox|thunderbird)
+    firefox)
         if [[ ! ( -d mozilla && \
             -e mozilla/client.mk && \
             -e "mozilla/$project/config/mozconfig" ) ]]; then
-            if ! eval cvs -z3 -q co $BRANCH_CO_FLAGS \
+            if ! eval cvs -z3 -q co $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS \
                 mozilla/client.mk mozilla/$project/config/mozconfig; then
-                error "during checkout of mozconfig" $LINENO
+                error "during checkout of $project mozconfig" $LINENO
             fi
         fi
 
         cd mozilla
 
         if ! make -f client.mk checkout 2>&1; then
-            error "during checkout of tree" $LINENO
+            error "during checkout of $project tree" $LINENO
+        fi
+        ;;
+
+    thunderbird)
+        if [[ ! ( -d mozilla && \
+            -e mozilla/client.mk && \
+            -e "mozilla/$project/config/mozconfig" ) ]]; then
+            if ! eval cvs -z3 -q co $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS \
+                mozilla/client.mk mozilla/$project/config/mozconfig; then
+                error "during checkout of $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS $project mozconfig" $LINENO
+            fi
+        fi
+        if [[ ! ( -d mozilla && \
+            -e mozilla/client.mk && \
+            -e "mozilla/browser/config/mozconfig" ) ]]; then
+            if ! eval cvs -z3 -q co $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS \
+                mozilla/client.mk mozilla/browser/config/mozconfig; then
+                error "during checkout of $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS browser mozconfig" $LINENO
+            fi
+        fi
+
+        cd mozilla
+
+        if ! make -f client.mk checkout 2>&1; then
+            error "during checkout of $project tree" $LINENO
         fi
         ;;
 
     js) 
-    if [[ ! ( -d mozilla && \
-        -e mozilla/js && \
-        -e mozilla/js/src ) ]]; then
-        eval cvs -z3 -q co $BRANCH_CO_FLAGS $DATE_CO_FLAGS mozilla/js
-    fi
+        if [[ ! ( -d mozilla && \
+            -e mozilla/js && \
+            -e mozilla/js/src ) ]]; then
+            if ! eval cvs -z3 -q co $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS mozilla/js; then
+                error "during initial co $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS mozilla/js"
+            fi
+        fi
 
-    cd mozilla/js/src
+        cd mozilla/js/src
 
-    if ! eval cvs -z3 -q update $BRANCH_CO_FLAGS $DATE_CO_FLAGS -d -P 2>&1; then
-        error "during checkout of js/src" $LINENO
-    fi
+        if ! eval cvs -z3 -q update $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS -d -P 2>&1; then
+            error "during update $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS js/src" $LINENO
+        fi
 
-    if ! cvs -z3 -q update -d -P -A editline config  2>&1; then
-        error "during checkout of js/src" $LINENO
-    fi
-    # end for js shell
-    ;;
+        if ! cvs -z3 -q update -d -P -A editline config  2>&1; then
+            error "during checkout of js/src" $LINENO
+        fi
+        # end for js shell
+        ;;
     *)
-    error "unknown product $product" $LINENO
-    ;;
+        error "unknown product $product" $LINENO
+        ;;
 esac

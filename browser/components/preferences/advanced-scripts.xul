@@ -38,12 +38,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-<!DOCTYPE overlay [
-  <!ENTITY % advancedDTD SYSTEM "chrome://browser/locale/preferences/advanced-scripts.dtd">
-  <!ENTITY % contentDTD SYSTEM "chrome://browser/locale/preferences/content.dtd">
-  %advancedDTD;
-  %contentDTD;
-]>
+<!DOCTYPE prefwindow SYSTEM "chrome://browser/locale/preferences/advanced-scripts.dtd">
 
 <?xml-stylesheet href="chrome://global/skin/"?>
 
@@ -57,6 +52,7 @@
 
     <preferences>
      <preference id="dom.event.contextmenu.enabled"  name="dom.event.contextmenu.enabled"  type="bool"/>
+     <preference id="dom.disable_window_move_resize" name="dom.disable_window_move_resize" type="bool" inverted="true"/>
      <preference id="dom.disable_window_flip"        name="dom.disable_window_flip"        type="bool" inverted="true"/>
      <preference id="dom.disable_window_open_feature.status" inverted="true"
                  name="dom.disable_window_open_feature.status" type="bool"/>
@@ -70,6 +66,9 @@
 
     <description value="&allowScripts.label;"/>
 
+    <checkbox id="moveResizeWindows" label="&moveResizeWindows.label;" 
+              accesskey="&moveResizeWindows.accesskey;"
+              preference="dom.disable_window_move_resize"/>
     <checkbox id="raiseLowerWindows" label="&raiseLowerWindows.label;" 
               accesskey="&raiseLowerWindows.accesskey;"
               preference="dom.disable_window_flip"/>
@@ -82,13 +81,6 @@
     <checkbox id="changeStatusBar" label="&changeStatusBar.label;" 
               accesskey="&changeStatusBar.accesskey;"
               preference="dom.disable_window_status_change"/>
-
-    <hbox flex="1" align="center">
-      <label id="moveResizeWindows" value="&moveResizeNotAllowed.label;"/>
-      <button label="&exceptions.label;"
-              accesskey="&exceptions.accesskey;"
-              oncommand="gAdvancedJSPane.showRaiseExceptions();"/>
-    </hbox>
 
   </prefpane>
 </prefwindow>

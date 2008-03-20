@@ -91,7 +91,7 @@ OSStatus ATSClearGlyphVector(void *glyphVectorPtr);
 eFontPrefLang GetFontPrefLangFor(PRUint8 aUnicodeRange);
 
 gfxAtsuiFont::gfxAtsuiFont(MacOSFontEntry *aFontEntry,
-                           const gfxFontStyle *fontStyle)
+                           const gfxFontStyle *fontStyle, PRBool aNeedsBold)
     : gfxFont(aFontEntry->Name(), fontStyle),
       mFontStyle(fontStyle), mATSUStyle(nsnull), mFontEntry(aFontEntry),
       mHasMirroring(PR_FALSE), mHasMirroringLookedUp(PR_FALSE), mAdjustedSize(0.0f)
@@ -99,13 +99,45 @@ gfxAtsuiFont::gfxAtsuiFont(MacOSFontEntry *aFontEntry,
     ATSUFontID fontID = mFontEntry->GetFontID();
     ATSFontRef fontRef = FMGetATSFontRefFromFont(fontID);
 
+    // determine whether synthetic bolding is needed
+    PRInt8 baseWeight, weightDistance;
+    mFontStyle->ComputeWeightAndOffset(&baseWeight, &weightDistance);
+    PRUint16 targetWeight = (baseWeight * 100) + (weightDistance * 100);
+
+    // synthetic bolding occurs when font itself is not a bold-face and either the absolute weight 
+    // is at least 600 or the relative weight (e.g. 402) implies a darker face than the ones available.
+    // note: this means that (1) lighter styles *never* synthetic bold and (2) synthetic bolding always occurs 
+    // at the first bolder step beyond available faces, no matter how light the boldest face
+    if (!mFontEntry->IsBold()
+        && ((weightDistance == 0 && targetWeight >= 600) || (weightDistance > 0 && aNeedsBold))) 
+    {
+        mSyntheticBoldOffset = 1;  // devunit offset when double-striking text to fake boldness   
+    }
+
     InitMetrics(fontID, fontRef);
 
     mFontFace = cairo_atsui_font_face_create_for_atsu_font_id(fontID);
-    
+
     cairo_matrix_t sizeMatrix, ctm;
     cairo_matrix_init_identity(&ctm);
     cairo_matrix_init_scale(&sizeMatrix, mAdjustedSize, mAdjustedSize);
+
+    // synthetic oblique by skewing via the font matrix
+    PRBool needsOblique = (!mFontEntry->IsItalicStyle() && (mFontStyle->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)));
+
+    if (needsOblique) {
+        double skewfactor = (needsOblique ? Fix2X(kATSItalicQDSkew) : 0);
+
+        cairo_matrix_t style;
+        cairo_matrix_init(&style,
+                          1,                //xx
+                          0,                //yx
+                          -1 * skewfactor,   //xy
+                          1,                //yy
+                          0,                //x0
+                          0);               //y0
+        cairo_matrix_multiply(&sizeMatrix, &sizeMatrix, &style);
+    }
 
     cairo_font_options_t *fontOptions = cairo_font_options_create();
     mScaledFont = cairo_scaled_font_create(mFontFace, &sizeMatrix, &ctm, fontOptions);
@@ -146,6 +178,7 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
     // fSize is in points (72dpi)
     Fixed fSize = FloatToFixed(size);
     ATSUFontID fid = aFontID;
+
     // make the font render right-side up
     CGAffineTransform transform = CGAffineTransformMakeScale(1, -1);
 
@@ -202,7 +235,7 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
     mMetrics.emAscent = mMetrics.maxAscent * mMetrics.emHeight / mMetrics.maxHeight;
     mMetrics.emDescent = mMetrics.emHeight - mMetrics.emAscent;
 
-    mMetrics.maxAdvance = atsMetrics.maxAdvanceWidth * size;
+    mMetrics.maxAdvance = atsMetrics.maxAdvanceWidth * size + mSyntheticBoldOffset;
 
     float xWidth = GetCharWidth('x');
     if (atsMetrics.avgAdvanceWidth != 0.0)
@@ -210,6 +243,8 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
             PR_MIN(atsMetrics.avgAdvanceWidth * size, xWidth);
     else
         mMetrics.aveCharWidth = xWidth;
+
+    mMetrics.aveCharWidth += mSyntheticBoldOffset;
 
     if (mFontEntry->IsFixedPitch()) {
         // Some Quartz fonts are fixed pitch, but there's some glyph with a bigger
@@ -389,12 +424,12 @@ gfxAtsuiFont::GetFontEntry()
  */
  
 static already_AddRefed<gfxAtsuiFont>
-GetOrMakeFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aStyle)
+GetOrMakeFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aStyle, PRBool aNeedsBold)
 {
     // the font entry name is the psname, not the family name
     nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aFontEntry->Name(), aStyle);
     if (!font) {
-        font = new gfxAtsuiFont(aFontEntry, aStyle);
+        font = new gfxAtsuiFont(aFontEntry, aStyle, aNeedsBold);
         if (!font)
             return nsnull;
         gfxFontCache::GetCache()->AddNew(font);
@@ -422,10 +457,11 @@ gfxAtsuiFontGroup::gfxAtsuiFontGroup(const nsAString& families,
         // a specific langGroup.  Let's just pick the default OSX
         // user font.
 
-        MacOSFontEntry *defaultFont = gfxQuartzFontCache::SharedFontCache()->GetDefaultFont(aStyle);
+        PRBool needsBold;
+        MacOSFontEntry *defaultFont = gfxQuartzFontCache::SharedFontCache()->GetDefaultFont(aStyle, needsBold);
         NS_ASSERTION(defaultFont, "invalid default font returned by GetDefaultFont");
 
-        nsRefPtr<gfxAtsuiFont> font = GetOrMakeFont(defaultFont, aStyle);
+        nsRefPtr<gfxAtsuiFont> font = GetOrMakeFont(defaultFont, aStyle, needsBold);
 
         if (font) {
             mFonts.AppendElement(font);
@@ -455,10 +491,11 @@ gfxAtsuiFontGroup::FindATSUFont(const nsAString& aName,
 
     gfxQuartzFontCache *fc = gfxQuartzFontCache::SharedFontCache();
 
-    MacOSFontEntry *fe = fc->FindFontForFamily(aName, fontStyle);
+    PRBool needsBold;
+    MacOSFontEntry *fe = fc->FindFontForFamily(aName, fontStyle, needsBold);
 
     if (fe && !fontGroup->HasFont(fe->GetFontID())) {
-        nsRefPtr<gfxAtsuiFont> font = GetOrMakeFont(fe, fontStyle);
+        nsRefPtr<gfxAtsuiFont> font = GetOrMakeFont(fe, fontStyle, needsBold);
         if (font) {
             fontGroup->mFonts.AppendElement(font);
         }
@@ -756,10 +793,11 @@ gfxAtsuiFontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
                 return prefFont.forget();
             }
             
-            MacOSFontEntry *fe = family->FindFont(&mStyle);
+            PRBool needsBold;
+            MacOSFontEntry *fe = family->FindFont(&mStyle, needsBold);
             // if ch in cmap, create and return a gfxFont
             if (fe && fe->TestCharacterMap(aCh)) {
-                nsRefPtr<gfxAtsuiFont> prefFont = GetOrMakeFont(fe, &mStyle);
+                nsRefPtr<gfxAtsuiFont> prefFont = GetOrMakeFont(fe, &mStyle, needsBold);
                 mLastPrefFamily = family;
                 mLastPrefFont = prefFont;
                 mLastPrefLang = charLang;
@@ -816,7 +854,7 @@ gfxAtsuiFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh, PRUint32 aNex
 
         fe = gfxQuartzFontCache::SharedFontCache()->FindFontForChar(aCh, GetFontAt(0));
         if (fe) {
-            selectedFont = GetOrMakeFont(fe, &mStyle);
+            selectedFont = GetOrMakeFont(fe, &mStyle, PR_FALSE);  // ignore bolder considerations in system fallback case...
             return selectedFont.forget();
         }
     }
@@ -1526,6 +1564,8 @@ gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
 
     ATSUDisposeTextLayout(layout);
 
+    aRun->AdjustAdvancesForSyntheticBold(aSegmentStart, aSegmentLength);
+    
     PRUint32 i;
     for (i = 0; i < stylesToDispose.Length(); ++i) {
         ATSUDisposeStyle(stylesToDispose[i]);

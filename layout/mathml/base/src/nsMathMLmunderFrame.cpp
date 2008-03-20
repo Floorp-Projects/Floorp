@@ -240,7 +240,7 @@ i.e.,:
  }
 */
 
-NS_IMETHODIMP
+/* virtual */ nsresult
 nsMathMLmunderFrame::Place(nsIRenderingContext& aRenderingContext,
                            PRBool               aPlaceOrigin,
                            nsHTMLReflowMetrics& aDesiredSize)

@@ -89,3 +89,5 @@ include forms/reftest.list
 
 # mathml
 include mathml/reftest.list
+
+include ../xul/base/src/grid/reftests/reftest.list

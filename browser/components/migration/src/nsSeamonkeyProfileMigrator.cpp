@@ -363,6 +363,7 @@ nsSeamonkeyProfileMigrator::PrefTransform gTransforms[] = {
   MAKESAMETYPEPREFTRANSFORM("security.OSCP.URL",                        String),
   MAKESAMETYPEPREFTRANSFORM("security.enable_java",                     Bool),
   MAKESAMETYPEPREFTRANSFORM("javascript.enabled",                       Bool),
+  MAKESAMETYPEPREFTRANSFORM("dom.disable_window_move_resize",           Bool),
   MAKESAMETYPEPREFTRANSFORM("dom.disable_window_flip",                  Bool),
   MAKESAMETYPEPREFTRANSFORM("dom.disable_window_open_feature.status",   Bool),
   MAKESAMETYPEPREFTRANSFORM("dom.disable_window_status_change",         Bool),

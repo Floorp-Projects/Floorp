@@ -18,3 +18,5 @@
 == box-sizing-4.html box-sizing-4-ref.html
 == abspos-non-replaced-width-offset-margin.html abspos-non-replaced-width-offset-margin-ref.html
 == abspos-replaced-width-offset-margin.html abspos-replaced-width-offset-margin-ref.html
+fails == CSS21-t100303.xhtml CSS21-t100303-ref.xhtml # bug 423306
+== CSS21-t100303-simple.xhtml CSS21-t100303-ref.xhtml

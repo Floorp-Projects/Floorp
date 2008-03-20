@@ -5,6 +5,7 @@ include ../../testing/crashtest/sanity/crashtests.list
 
 include ../../content/base/crashtests/crashtests.list
 include ../../content/canvas/crashtests/crashtests.list
+include ../../content/events/crashtests/crashtests.list
 include ../../content/html/document/crashtests/crashtests.list
 include ../../content/html/content/crashtests/crashtests.list
 include ../../content/svg/content/src/crashtests/crashtests.list
@@ -42,6 +43,8 @@ include ../../layout/xul/base/src/tree/src/crashtests/crashtests.list
 
 include ../../gfx/src/thebes/crashtests/crashtests.list
 include ../../gfx/thebes/crashtests/crashtests.list
+
+include ../../parser/htmlparser/tests/crashtests/crashtests.list
 
 include ../../security/manager/ssl/crashtests/crashtests.list
 

@@ -47,6 +47,7 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const TOOLKIT_ID                      = "toolkit@mozilla.org"
 const KEY_PROFILEDIR                  = "ProfD";
+const KEY_APPDIR                      = "XCurProcD";
 const FILE_BLOCKLIST                  = "blocklist.xml";
 const PREF_BLOCKLIST_URL              = "extensions.blocklist.url";
 const PREF_BLOCKLIST_ENABLED          = "extensions.blocklist.enabled";
@@ -275,7 +276,7 @@ Blocklist.prototype = {
 
   isAddonBlocklisted: function(id, version, appVersion, toolkitVersion) {
     if (!this._addonEntries)
-      this._loadBlocklistFromFile(getFile(KEY_PROFILEDIR, [FILE_BLOCKLIST]));
+      this._loadBlocklist();
     if (!appVersion)
       appVersion = gApp.version;
     if (!toolkitVersion)
@@ -399,6 +400,26 @@ Blocklist.prototype = {
   },
 
   /**
+   * Finds the newest blocklist file from the application and the profile and
+   * load it or does nothing if neither exist.
+   */
+  _loadBlocklist: function() {
+    this._addonEntries = { };
+    this._pluginEntries = { };
+    var profFile = getFile(KEY_PROFILEDIR, [FILE_BLOCKLIST]);
+    if (profFile.exists()) {
+      this._loadBlocklistFromFile(profFile);
+      return;
+    }
+    var appFile = getFile(KEY_APPDIR, [FILE_BLOCKLIST]);
+    if (appFile.exists()) {
+      this._loadBlocklistFromFile(appFile);
+      return;
+    }
+    LOG("Blocklist::_loadBlocklist: no XML File found");
+  },
+
+  /**
 #    The blocklist XML file looks something like this:
 #
 #    <blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist">
@@ -451,8 +472,6 @@ Blocklist.prototype = {
    */
 
   _loadBlocklistFromFile: function(file) {
-    this._addonEntries = { };
-    this._pluginEntries = { };
     if (getPref("getBoolPref", PREF_BLOCKLIST_ENABLED, true) == false) {
       LOG("Blocklist::_loadBlocklistFromFile: blocklist is disabled");
       return;
@@ -581,7 +600,7 @@ Blocklist.prototype = {
 
   _checkPluginsList: function() {
     if (!this._addonEntries)
-      this._loadBlocklistFromFile(getFile(KEY_PROFILEDIR, [FILE_BLOCKLIST]));
+      this._loadBlocklist();
     var phs = Cc["@mozilla.org/plugin/host;1"].
               getService(Ci.nsIPluginHost);
     phs.getPluginTags({ }).forEach(this._checkPlugin, this);

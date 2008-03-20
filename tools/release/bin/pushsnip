@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -e
+#set -v
+
+LIVE_SNIPPET_DIR=/opt/aus2/incoming/3
+STAGING_DIR=/opt/aus2/snippets/staging
+
+RSYNC=/usr/bin/rsync
+SED=/bin/sed
+
+if test -z $1; then 
+   echo Usage: $0 [snippet-directory-to-sync-in from $STAGING_DIR]
+   exit 1
+fi
+
+newSnippetDir=`echo $1 | $SED -e 's/\///'g`
+
+if ! test -d $STAGING_DIR/$newSnippetDir; then
+   echo Usage: $0 [snippet-directory-to-sync-in from $STAGING_DIR]
+   exit 1
+fi
+
+# publish the new snippets
+pushd $STAGING_DIR > /dev/null
+echo Running $RSYNC -Pa $STAGING_DIR/$1/ $LIVE_SNIPPET_DIR
+$RSYNC -Pa $STAGING_DIR/$1/ $LIVE_SNIPPET_DIR
+popd > /dev/null
+
+exit 0

@@ -140,6 +140,11 @@ let gStr = {
 // Initialize the lazy string getters!
 gStr._init();
 
+// Keep track of at most this many second/lastSec pairs so that multiple calls
+// to getTimeLeft produce the same time left
+const kCachedLastMaxSize = 10;
+let gCachedLast = [];
+
 let DownloadUtils = {
   /**
    * Generate a full status string for a download given its current progress,
@@ -247,6 +252,15 @@ let DownloadUtils = {
 
     if (aSeconds < 0)
       return [gStr.timeUnknown, aLastSec];
+
+    // Try to find a cached lastSec for the given second
+    aLastSec = gCachedLast.reduce(function(aResult, aItem)
+      aItem[0] == aSeconds ? aItem[1] : aResult, aLastSec);
+
+    // Add the current second/lastSec pair unless we have too many
+    gCachedLast.push([aSeconds, aLastSec]);
+    if (gCachedLast.length > kCachedLastMaxSize)
+      gCachedLast.shift();
 
     // Apply smoothing only if the new time isn't a huge change -- e.g., if the
     // new time is more than half the previous time; this is useful for

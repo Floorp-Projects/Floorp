@@ -373,7 +373,7 @@ nsMathMLmpaddedFrame::Reflow(nsPresContext*          aPresContext,
   return rv;
 }
 
-NS_IMETHODIMP
+/* virtual */ nsresult
 nsMathMLmpaddedFrame::Place(nsIRenderingContext& aRenderingContext,
                             PRBool               aPlaceOrigin,
                             nsHTMLReflowMetrics& aDesiredSize)

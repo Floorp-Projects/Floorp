@@ -4082,7 +4082,7 @@ fbFetchTransformed_Bilinear_General(bits_image_t * pict, int width, uint32_t *bu
 static void
 fbFetchTransformed_Convolution(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
 {
-    pixman_box16_t *box = NULL;
+    pixman_box16_t dummy;
     fetchPixelProc fetch;
     int i;
 
@@ -4144,7 +4144,7 @@ fbFetchTransformed_Convolution(bits_image_t * pict, int width, uint32_t *buffer,
                                 default:
                                     tx = x;
                             }
-                            if (pixman_region_contains_point (pict->common.src_clip, tx, ty, box)) {
+                            if (pixman_region_contains_point (pict->common.src_clip, tx, ty, &dummy)) {
                                 uint32_t c = fetch(pict, tx, ty);
 
                                 srtot += Red(c) * *p;
@@ -4180,6 +4180,19 @@ fbFetchTransformed_Convolution(bits_image_t * pict, int width, uint32_t *buffer,
 }
 
 static void
+adjust (pixman_vector_t *v, pixman_vector_t *u, pixman_fixed_t adjustment)
+{
+    int delta_v = (adjustment * v->vector[2]) >> 16;
+    int delta_u = (adjustment * u->vector[2]) >> 16;
+    
+    v->vector[0] += delta_v;
+    v->vector[1] += delta_v;
+    
+    u->vector[0] += delta_u;
+    u->vector[1] += delta_u;
+}
+
+static void
 fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
     uint32_t     *bits;
@@ -4196,7 +4209,7 @@ fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uint32_t *buffe
     v.vector[1] = pixman_int_to_fixed(y) + pixman_fixed_1 / 2;
     v.vector[2] = pixman_fixed_1;
 
-    /* when using convolution filters one might get here without a transform */
+    /* when using convolution filters or PIXMAN_REPEAT_PAD one might get here without a transform */
     if (pict->common.transform)
     {
         if (!pixman_transform_point_3d (pict->common.transform, &v))
@@ -4216,8 +4229,14 @@ fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uint32_t *buffe
         unit.vector[2] = 0;
     }
 
+    /* This allows filtering code to pretend that pixels are located at integer coordinates */
+    adjust (&v, &unit, -(pixman_fixed_1 / 2));
+    
     if (pict->common.filter == PIXMAN_FILTER_NEAREST || pict->common.filter == PIXMAN_FILTER_FAST)
     {
+	/* Round down to closest integer, ensuring that 0.5 rounds to 0, not 1 */
+	adjust (&v, &unit, pixman_fixed_1 / 2 - pixman_fixed_e);
+	
         if (pict->common.repeat == PIXMAN_REPEAT_NORMAL)
         {
             fbFetchTransformed_Nearest_Normal(pict, width, buffer, mask, maskBits, affine, v, unit);
@@ -4235,12 +4254,6 @@ fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uint32_t *buffe
 	       pict->common.filter == PIXMAN_FILTER_GOOD	||
 	       pict->common.filter == PIXMAN_FILTER_BEST)
     {
-        /* adjust vector for maximum contribution at 0.5, 0.5 of each texel. */
-        v.vector[0] -= v.vector[2] / 2;
-        v.vector[1] -= v.vector[2] / 2;
-        unit.vector[0] -= unit.vector[2] / 2;
-        unit.vector[1] -= unit.vector[2] / 2;
-
         if (pict->common.repeat == PIXMAN_REPEAT_NORMAL)
         {
             fbFetchTransformed_Bilinear_Normal(pict, width, buffer, mask, maskBits, affine, v, unit);
@@ -4256,6 +4269,9 @@ fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uint32_t *buffe
     }
     else if (pict->common.filter == PIXMAN_FILTER_CONVOLUTION)
     {
+	/* Round to closest integer, ensuring that 0.5 rounds to 0, not 1 */
+	adjust (&v, &unit, pixman_fixed_1 / 2 - pixman_fixed_e);
+	
         fbFetchTransformed_Convolution(pict, width, buffer, mask, maskBits, affine, v, unit);
     }
 
@@ -4398,7 +4414,8 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	    fetchSrc = (scanFetchProc)fbFetchSolid;
 	    srcClass = SOURCE_IMAGE_CLASS_HORIZONTAL;
 	}
-	else if (!bits->common.transform && bits->common.filter != PIXMAN_FILTER_CONVOLUTION)
+	else if (!bits->common.transform && bits->common.filter != PIXMAN_FILTER_CONVOLUTION
+                && bits->common.repeat != PIXMAN_REPEAT_PAD)
 	{
 	    fetchSrc = (scanFetchProc)fbFetch;
 	}
@@ -4435,7 +4452,8 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 		fetchMask = (scanFetchProc)fbFetchSolid;
 		maskClass = SOURCE_IMAGE_CLASS_HORIZONTAL;
 	    }
-	    else if (!bits->common.transform && bits->common.filter != PIXMAN_FILTER_CONVOLUTION)
+	    else if (!bits->common.transform && bits->common.filter != PIXMAN_FILTER_CONVOLUTION
+                    && bits->common.repeat != PIXMAN_REPEAT_PAD)
 		fetchMask = (scanFetchProc)fbFetch;
 	    else
 		fetchMask = (scanFetchProc)fbFetchTransformed;

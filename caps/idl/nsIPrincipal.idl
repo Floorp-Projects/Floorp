@@ -51,7 +51,7 @@ interface nsIURI;
 [ptr] native JSContext(JSContext);
 [ptr] native JSPrincipals(JSPrincipals);
 
-[scriptable, uuid(7292475e-2821-4602-9d00-228476696428)]
+[scriptable, uuid(b8268b9a-2403-44ed-81e3-614075c92034)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -142,9 +142,8 @@ interface nsIPrincipal : nsISerializable
     [noscript] attribute nsIURI domain;
 
     /**
-     * The origin of this principal's domain, if non-null, or its
-     * codebase URI otherwise. An origin is defined as:
-     * scheme + host + port.
+     * The origin of this principal's codebase URI.
+     * An origin is defined as: scheme + host + port.
      */
     // XXXcaa this should probably be turned into an nsIURI.
     // The system principal's origin should be some caps namespace

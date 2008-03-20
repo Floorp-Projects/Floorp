@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=199692
+-->
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Popup in test for Bug 199692</title>
+  <style type="text/css">
+#content * {
+  border: 2px solid black;
+  margin: 2px;
+  clear: both;
+  height: 20px;
+  overflow: hidden; 
+}
+
+#txt, #static, #fixed, #absolute, #relative, #hidden, #float, #empty, #static, #relative {
+  width: 200px !important;
+}
+  </style>
+  
+</head>
+<!--
+Elements are styled in such a way that they don't overlap visually
+unless they also overlap structurally.
+
+This file is designed to be opened from test_bug199692.html in a popup
+window, to guarantee that the window in which document.elementFromPoint runs
+is large enough to display all the elements being tested.
+-->
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=199692">Mozilla Bug 199692</a>
+
+<div id="content" style="width: 500px; background-color: #ccc;">
+
+<!-- element containing text -->
+<div id="txt" style="height: 30px;">txt</div>
+
+<!-- element not containing text -->
+<div id="empty" style="border: 2px solid blue;"></div>
+
+<!-- element with only whitespace -->
+<p id="whitespace" style="border: 2px solid magenta;"> </p>
+
+<!-- position: static -->
+<span id="static" style="position: static; border-color: green;">static</span>
+
+<!-- floated element -->
+<div id="float" style="border-color: red; float: right;">float</div>
+
+<!-- position: fixed -->
+<span id="fixed" style="position: fixed; top: 500px; left: 100px; border: 3px solid yellow;">fixed</span>
+
+<!-- position: absolute -->
+<span id="absolute" style="position: absolute; top: 550px; left: 150px; border-color: orange;">abs</span>
+
+<!-- position: relative -->
+<div id="relative" style="position: relative; top: 200px; border-color: teal;">rel</div>
+
+<!-- visibility: hidden -->
+<div id="hidden-wrapper" style="border: 1px dashed teal;">
+    <div id="hidden" style="opacity: 0.5; background-color: blue; visibility:hidden;">hidden</div>
+</div>
+
+<!-- iframe (within iframe) -->
+<iframe id="our-iframe" src="bug199692-nested.html" style="height: 100px; overflow: scroll;"></iframe>
+
+<input type="textbox" id="textbox" value="textbox"></input>
+</div>
+
+<!-- interaction with scrolling -->
+<iframe id="scrolled-iframe"
+        src="bug199692-scrolled.html#down"
+        style="position: absolute; top: 345px; left: 325px; height: 200px; width: 200px"></iframe>
+
+<script type="application/javascript">
+
+var SimpleTest = window.opener.SimpleTest;
+function ok() { window.opener.ok.apply(window.opener, arguments); }
+function is() { window.opener.is.apply(window.opener, arguments); }
+function todo() { window.opener.todo.apply(window.opener, arguments); }
+function todo_is() { window.opener.todo_is.apply(window.opener, arguments); }
+function $(id) { return document.getElementById(id); }
+
+/**
+ * Like is, but for tests which don't always succeed or always fail on all
+ * platforms.
+ */
+function random_fail(a, b, m)
+{
+  if (a != b)
+    todo_is(a, b, m);
+  else
+    is(a, b, m);
+}
+
+/* Test for Bug 199692 */
+
+function getCoords(elt)
+{
+  var x = 0, y = 0;
+
+  do
+  {
+    x += elt.offsetLeft;
+    y += elt.offsetTop;
+  } while ((elt = elt.offsetParent));
+
+  return { x: x, y: y };
+}
+
+var elts = ["txt", "empty", "whitespace", "static", "fixed", "absolute",
+            "relative", "float", "textbox"];
+
+function testPoints()
+{
+  ok('elementFromPoint' in document, "document.elementFromPoint must exist");
+  ok(typeof document.elementFromPoint === "function", "must be a function");
+  
+  var doc = document;
+  doc.pt = doc.elementFromPoint; // for shorter lines
+  is(doc.pt(-1, 0), null, "Negative coordinates (-1, 0) should return null");
+  is(doc.pt(0, -1), null, "Negative coordinates (0, -1) should return null");
+  is(doc.pt(-1, -1), null, "Negative coordinates (-1, -1) should return null");
+
+  var pos;
+  for (var i = 0; i < elts.length; i++)
+  {
+    var id = elts[i];
+    var elt = $(id);
+
+    // The upper left corner of an element (with a moderate offset) will
+    // usually contain text, and the lower right corner usually won't.
+    var pos = getCoords(elt);
+    var x = pos.x, y = pos.y;
+    var w = elt.offsetWidth, h = elt.offsetHeight;
+
+    var d = 5;
+    is(doc.pt(x + d, y + d), elt,
+       "(" + (x + d) + "," + (y + d) + ") IDs should match (upper left " +
+       "corner of " + id + ")");
+    is(doc.pt(x + w - d, y + h - d), elt,
+       "(" + (x + w - d) + "," + (y + h - d) + ") IDs should match (lower " +
+       "right corner of " + id + ")");
+  }
+
+  // content
+  var c = $("content");
+  pos = getCoords(c);
+  x = pos.x + c.offsetWidth / 2;
+  y = pos.y;
+
+  // This fails on some platforms but not others for unknown reasons
+  random_fail(doc.pt(x, y), c, "Point to right of #txt should be #content");
+  is(doc.pt(x, y + 1), c, "Point to right of #txt should be #content");
+  random_fail(doc.pt(x + 1, y), c, "Point to right of #txt should be #content");
+  is(doc.pt(x + 1, y + 1), c, "Point to right of #txt should be #content");
+
+  // hidden
+  c = $("hidden");
+  pos = getCoords(c);
+  x = pos.x, y = pos.y;
+  is(doc.pt(x, y), $("hidden-wrapper"),
+     "Hit testing should bypass hidden elements.");
+
+  // iframe nested
+  var iframe = $("our-iframe");
+  pos = getCoords(iframe);
+  x = pos.x, y = pos.y;
+  is(doc.pt(x + 20, y + 20), $("our-iframe"),
+     "Element from nested iframe returned is from calling document");
+  // iframe, doubly nested
+  is(doc.pt(x + 60, y + 60), $("our-iframe"),
+     "Element from doubly nested iframe returned is from calling document");
+
+  // scrolled iframe tests
+  $("scrolled-iframe").contentWindow.runTests();
+
+  SimpleTest.finish();
+  window.close();
+}
+
+window.onload = testPoints;
+</script>
+</body>
+</html>
+

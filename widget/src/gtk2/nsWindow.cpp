@@ -2107,7 +2107,28 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     case 3:
         domButton = nsMouseEvent::eRightButton;
         break;
-        // Map buttons 8-9 to back/forward
+    // These are mapped to horizontal scroll
+    case 6:
+    case 7:
+        {
+            nsMouseScrollEvent event(PR_TRUE, NS_MOUSE_SCROLL, this);
+            event.scrollFlags = nsMouseScrollEvent::kIsHorizontal;
+            event.refPoint.x = nscoord(aEvent->x);
+            event.refPoint.y = nscoord(aEvent->y);
+            event.delta = (aEvent->button == 6) ? -2 : 2;
+
+            event.isShift   = (aEvent->state & GDK_SHIFT_MASK) != 0;
+            event.isControl = (aEvent->state & GDK_CONTROL_MASK) != 0;
+            event.isAlt     = (aEvent->state & GDK_MOD1_MASK) != 0;
+            event.isMeta    = (aEvent->state & GDK_MOD4_MASK) != 0;
+
+            event.time = aEvent->time;
+
+            nsEventStatus status;
+            DispatchEvent(&event, status);
+            return;
+        }
+    // Map buttons 8-9 to back/forward
     case 8:
         DispatchCommandEvent(nsWidgetAtoms::Back);
         return;
@@ -3123,8 +3144,16 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
             }
         }
         else if (mWindowType == eWindowType_popup) {
-            mShell = gtk_window_new(GTK_WINDOW_POPUP);
-            gtk_window_set_wmclass(GTK_WINDOW(mShell), "Popup", cBrand.get());
+            // treat popups with a parent as top level windows
+            if (mParent) {
+                mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+                gtk_window_set_wmclass(GTK_WINDOW(mShell), "Toplevel", cBrand.get());
+                gtk_window_set_decorated(GTK_WINDOW(mShell), FALSE);
+            }
+            else {
+                mShell = gtk_window_new(GTK_WINDOW_POPUP);
+                gtk_window_set_wmclass(GTK_WINDOW(mShell), "Popup", cBrand.get());
+            }
 
             GdkWindowTypeHint gtkTypeHint;
             switch (aInitData->mPopupHint) {
@@ -6118,9 +6147,17 @@ nsWindow::GetThebesSurface()
     mThebesSurface = nsnull;
 
     if (!mThebesSurface) {
-        GdkDrawable* d = GDK_DRAWABLE(mDrawingarea->inner_window);
+        GdkDrawable* d;
+        gint x_offset, y_offset;
+        gdk_window_get_internal_paint_info(mDrawingarea->inner_window,
+                &d, &x_offset, &y_offset);
+
         gint width, height;
         gdk_drawable_get_size(d, &width, &height);
+        // Owen Taylor says this is the right thing to do!
+        width = PR_MIN(32767, width);
+        height = PR_MIN(32767, height);
+
         if (!gfxPlatform::UseGlitz()) {
             mThebesSurface = new gfxXlibSurface
                 (GDK_WINDOW_XDISPLAY(d),
@@ -6168,6 +6205,10 @@ nsWindow::GetThebesSurface()
             //fprintf (stderr, "## nsThebesDrawingSurface::Init Glitz DRAWABLE %p (DC: %p)\n", aWidget, aDC);
             mThebesSurface = new gfxGlitzSurface (gdraw, gsurf, PR_TRUE);
 #endif
+        }
+
+        if (mThebesSurface) {
+            mThebesSurface->SetDeviceOffset(gfxPoint(-x_offset, -y_offset));
         }
     }
 

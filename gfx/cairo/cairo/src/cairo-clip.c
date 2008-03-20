@@ -744,8 +744,10 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
     if (clip->all_clipped)
 	goto DONE;
 
-    if (clip->path || clip->surface)
+    if (clip->path || clip->surface) {
+	_cairo_error_throw (CAIRO_STATUS_CLIP_NOT_REPRESENTABLE);
 	return (cairo_rectangle_list_t*) &_cairo_rectangles_not_representable;
+    }
 
     if (clip->has_region) {
 	cairo_box_int_t *boxes;
@@ -768,6 +770,7 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
 						    boxes[i].p2.y - boxes[i].p1.y };
 
 		if (!_cairo_clip_int_rect_to_user(gstate, &clip_rect, &rectangles[i])) {
+		    _cairo_error_throw (CAIRO_STATUS_CLIP_NOT_REPRESENTABLE);
 		    _cairo_region_boxes_fini (&clip->region, boxes);
 		    free (rectangles);
 		    return (cairo_rectangle_list_t*) &_cairo_rectangles_not_representable;
@@ -790,6 +793,7 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
 	if (_cairo_surface_get_extents (_cairo_gstate_get_target (gstate), &extents) ||
 	    !_cairo_clip_int_rect_to_user(gstate, &extents, rectangles))
 	{
+	    _cairo_error_throw (CAIRO_STATUS_CLIP_NOT_REPRESENTABLE);
 	    free (rectangles);
 	    return (cairo_rectangle_list_t*) &_cairo_rectangles_not_representable;
 	}
@@ -798,8 +802,8 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
  DONE:
     list = malloc (sizeof (cairo_rectangle_list_t));
     if (list == NULL) {
-        free (rectangles);
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+        free (rectangles);
         return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
     }
 

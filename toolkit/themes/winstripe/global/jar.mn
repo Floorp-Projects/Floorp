@@ -32,10 +32,7 @@ classic.jar:
         skin/classic/global/progressmeter.css
         skin/classic/global/radio.css
         skin/classic/global/richlistbox.css
-# chrome://global/skin/nativescrollbars.css is used on Mac
-        skin/classic/global/nativescrollbars.css                    (../../pinstripe/global/nativescrollbars.css)
-# chrome://global/skin/xulscrollbars.css is used on non-Mac platforms
-        skin/classic/global/xulscrollbars.css
+        skin/classic/global/scrollbars.css                          (xulscrollbars.css)
         skin/classic/global/scrollbox.css
         skin/classic/global/spinbuttons.css
         skin/classic/global/splitter.css
@@ -154,10 +151,7 @@ classic.jar:
         skin/classic/aero/global/progressmeter.css
         skin/classic/aero/global/radio.css
         skin/classic/aero/global/richlistbox.css
-# chrome://global/skin/nativescrollbars.css is used on Mac
-        skin/classic/aero/global/nativescrollbars.css                    (../../pinstripe/global/nativescrollbars.css)
-# chrome://global/skin/xulscrollbars.css is used on non-Mac platforms
-        skin/classic/aero/global/xulscrollbars.css
+        skin/classic/aero/global/scrollbars.css                          (xulscrollbars.css)
         skin/classic/aero/global/scrollbox.css
         skin/classic/aero/global/spinbuttons.css
         skin/classic/aero/global/splitter.css

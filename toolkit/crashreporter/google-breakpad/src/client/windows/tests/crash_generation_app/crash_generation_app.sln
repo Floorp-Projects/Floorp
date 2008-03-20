@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "crash_generation_app", "crash_generation_app.vcproj", "{A15674ED-713D-4B37-B1D2-0C29C7E533C8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		DebugStaticCRT|Win32 = DebugStaticCRT|Win32
+		Release|Win32 = Release|Win32
+		ReleaseStaticCRT|Win32 = ReleaseStaticCRT|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A15674ED-713D-4B37-B1D2-0C29C7E533C8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A15674ED-713D-4B37-B1D2-0C29C7E533C8}.Debug|Win32.Build.0 = Debug|Win32
+		{A15674ED-713D-4B37-B1D2-0C29C7E533C8}.DebugStaticCRT|Win32.ActiveCfg = DebugStaticCRT|Win32
+		{A15674ED-713D-4B37-B1D2-0C29C7E533C8}.DebugStaticCRT|Win32.Build.0 = DebugStaticCRT|Win32
+		{A15674ED-713D-4B37-B1D2-0C29C7E533C8}.Release|Win32.ActiveCfg = Release|Win32
+		{A15674ED-713D-4B37-B1D2-0C29C7E533C8}.Release|Win32.Build.0 = Release|Win32
+		{A15674ED-713D-4B37-B1D2-0C29C7E533C8}.ReleaseStaticCRT|Win32.ActiveCfg = ReleaseStaticCRT|Win32
+		{A15674ED-713D-4B37-B1D2-0C29C7E533C8}.ReleaseStaticCRT|Win32.Build.0 = ReleaseStaticCRT|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

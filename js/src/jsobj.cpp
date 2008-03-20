@@ -1146,7 +1146,8 @@ js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
         return principals->codebase;
     }
 
-    *linenop = js_PCToLineNumber(cx, caller->script, caller->pc);
+    *linenop = js_PCToLineNumber(cx, caller->script,
+                                 caller->regs ? caller->regs->pc : NULL);
     return caller->script->filename;
 }
 
@@ -1170,8 +1171,8 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     fp = cx->fp;
     caller = JS_GetScriptedCaller(cx, fp);
-    JS_ASSERT(!caller || caller->pc);
-    indirectCall = (caller && *caller->pc != JSOP_EVAL);
+    JS_ASSERT(!caller || caller->regs);
+    indirectCall = (caller && *caller->regs->pc != JSOP_EVAL);
 
     /*
      * Ban all indirect uses of eval (global.foo = eval; global.foo(...)) and
@@ -1959,7 +1960,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
 
     /* Block and its locals must be on the current stack for GC safety. */
     JS_ASSERT((size_t) OBJ_BLOCK_DEPTH(cx, obj) <=
-              (size_t) (fp->sp - fp->spbase));
+              (size_t) (fp->regs->sp - fp->spbase));
 
     if (normalUnwind) {
         depth = OBJ_BLOCK_DEPTH(cx, obj);
@@ -1969,7 +1970,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
             if (!(sprop->flags & SPROP_HAS_SHORTID))
                 continue;
             slot = depth + (uintN) sprop->shortid;
-            JS_ASSERT(slot < (size_t) (fp->sp - fp->spbase));
+            JS_ASSERT(slot < (size_t) (fp->regs->sp - fp->spbase));
             if (!js_DefineNativeProperty(cx, obj, sprop->id,
                                          fp->spbase[slot], NULL, NULL,
                                          JSPROP_ENUMERATE | JSPROP_PERMANENT,
@@ -3269,8 +3270,8 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                 if (clasp->flags & JSCLASS_NEW_RESOLVE) {
                     newresolve = (JSNewResolveOp)resolve;
                     if (!(flags & JSRESOLVE_CLASSNAME) &&
-                        cx->fp &&
-                        (pc = cx->fp->pc)) {
+                        cx->fp && cx->fp->regs) {
+                        pc = cx->fp->regs->pc;
                         cs = &js_CodeSpec[*pc];
                         format = cs->format;
                         if (JOF_MODE(format) != JOF_NAME)
@@ -3467,10 +3468,10 @@ js_FindIdentifierBase(JSContext *cx, jsid id, JSPropCacheEntry *entry)
     if (prop) {
         OBJ_DROP_PROPERTY(cx, pobj, prop);
 
-        JS_ASSERT(!entry ||
-                  entry->kpc == ((PCVCAP_TAG(entry->vcap) > 1)
-                                 ? (jsbytecode *) JSID_TO_ATOM(id)
-                                 : cx->fp->pc));
+        JS_ASSERT_IF(entry,
+                     entry->kpc == ((PCVCAP_TAG(entry->vcap) > 1)
+                                    ? (jsbytecode *) JSID_TO_ATOM(id)
+                                    : cx->fp->regs->pc));
         return obj;
     }
 
@@ -3629,10 +3630,11 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
          * Give a strict warning if foo.bar is evaluated by a script for an
          * object foo with no property named 'bar'.
          */
-        if (JSVAL_IS_VOID(*vp) && cx->fp && (pc = cx->fp->pc)) {
+        if (JSVAL_IS_VOID(*vp) && cx->fp && cx->fp->regs) {
             JSOp op;
             uintN flags;
 
+            pc = cx->fp->regs->pc;
             op = (JSOp) *pc;
             if (op == JSOP_GETXPROP) {
                 flags = JSREPORT_ERROR;

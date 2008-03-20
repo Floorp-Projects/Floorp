@@ -55,6 +55,13 @@ legend {
   border: none;
   position: static ! important;
   float: none ! important;
+  width: auto ! important;
+  min-width: 0 ! important;
+  max-width: none ! important;
+  height: auto ! important;
+  min-height: 0 ! important;
+  max-height: none ! important;
+  white-space: nowrap;
 }
 
 fieldset {

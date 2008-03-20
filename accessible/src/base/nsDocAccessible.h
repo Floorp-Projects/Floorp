@@ -74,10 +74,12 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
     virtual ~nsDocAccessible();
 
     NS_IMETHOD GetRole(PRUint32 *aRole);
+    NS_IMETHOD SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry);
     NS_IMETHOD GetName(nsAString& aName);
-    NS_IMETHOD GetValue(nsAString& aValue);
     NS_IMETHOD GetDescription(nsAString& aDescription);
+    NS_IMETHOD GetARIAState(PRUint32 *aState);
     NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
+    NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
     NS_IMETHOD GetFocusedChild(nsIAccessible **aFocusedChild);
     NS_IMETHOD GetParent(nsIAccessible **aParent);
     NS_IMETHOD TakeFocus(void);
@@ -101,8 +103,6 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
     // nsIAccessibleText
     NS_IMETHOD GetAssociatedEditor(nsIEditor **aEditor);
 
-    enum EDupeEventRule { eAllowDupes, eCoalesceFromSameSubtree, eRemoveDupes };
-
     /**
       * Non-virtual method to fire a delayed event after a 0 length timeout
       *
@@ -118,19 +118,15 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
       *                    synchronous with a DOM event
       */
     nsresult FireDelayedToolkitEvent(PRUint32 aEvent, nsIDOMNode *aDOMNode,
-                                     EDupeEventRule aAllowDupes = eRemoveDupes,
+                                     nsAccEvent::EEventRule aAllowDupes = nsAccEvent::eRemoveDupes,
                                      PRBool aIsAsynch = PR_FALSE);
 
     /**
      * Fire accessible event in timeout.
      *
      * @param aEvent - the event to fire
-     * @param aAllowDupes - if false then delayed events of the same type and
-     *                      for the same DOM node in the event queue won't
-     *                      be fired.
      */
-    nsresult FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent,
-                                        EDupeEventRule aAllowDupes = eRemoveDupes);
+    nsresult FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent);
 
     void ShutdownChildDocuments(nsIDocShellTreeItem *aStart);
 
@@ -206,6 +202,11 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
      */
     nsresult FireShowHideEvents(nsIDOMNode *aDOMNode, PRBool aAvoidOnThisNode, PRUint32 aEventType,
                                 PRBool aDelay, PRBool aForceIsFromUserInput);
+
+    /**
+     * If the given accessible object is a ROLE_ENTRY, fire a value change event for it
+     */
+    void FireValueChangeForTextFields(nsIAccessible *aPossibleTextFieldAccessible);
 
     nsAccessNodeHashtable mAccessNodeCache;
     void *mWnd;

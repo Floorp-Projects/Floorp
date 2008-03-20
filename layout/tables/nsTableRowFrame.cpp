@@ -354,10 +354,12 @@ nsTableRowFrame::DidResize()
 
       // resize the cell's height
       nsRect cellRect = cellFrame->GetRect();
+      nsRect cellOverflowRect = cellFrame->GetOverflowRect();
       if (cellRect.height != cellHeight)
       {
         cellFrame->SetSize(nsSize(cellRect.width, cellHeight));
-        nsTableFrame::InvalidateFrame(cellFrame, cellRect, PR_FALSE);
+        nsTableFrame::InvalidateFrame(cellFrame, cellRect, cellOverflowRect,
+                                      PR_FALSE);
       }
 
       // realign cell content based on the new height.  We might be able to
@@ -864,6 +866,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
 
     // Reflow the child frame
     nsRect kidRect = kidFrame->GetRect();
+    nsRect kidOverflowRect = kidFrame->GetOverflowRect();
     PRBool firstReflow =
       (kidFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
 
@@ -964,7 +967,8 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
 
       FinishReflowChild(kidFrame, aPresContext, nsnull, desiredSize, x, 0, 0);
 
-      nsTableFrame::InvalidateFrame(kidFrame, kidRect, firstReflow);
+      nsTableFrame::InvalidateFrame(kidFrame, kidRect, kidOverflowRect,
+                                    firstReflow);
       
       x += desiredSize.width;  
     }
@@ -1061,6 +1065,12 @@ nsTableRowFrame::Reflow(nsPresContext*          aPresContext,
   // just set our width to what was available. The table will calculate the width and not use our value.
   aDesiredSize.width = aReflowState.availableWidth;
 
+  // If our parent is in initial reflow, it'll handle invalidating our
+  // entire overflow rect.
+  if (!GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
+    CheckInvalidateSizeChange(aPresContext, aDesiredSize, aReflowState);
+  }
+
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return rv;
 }
@@ -1084,6 +1094,7 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*          aPresContext,
 
   // Reflow the cell frame with the specified height. Use the existing width
   nsRect cellRect = aCellFrame->GetRect();
+  nsRect cellOverflowRect = aCellFrame->GetOverflowRect();
   
   nsSize  availSize(cellRect.width, aAvailableHeight);
   PRBool borderCollapse = ((nsTableFrame*)tableFrame->GetFirstInFlow())->IsBorderCollapse();
@@ -1102,15 +1113,18 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*          aPresContext,
   }
   aCellFrame->SetSize(nsSize(cellRect.width, desiredSize.height));
 
-  nsTableFrame::InvalidateFrame(aCellFrame, cellRect,
-                                (aCellFrame->GetStateBits() &
-                                   NS_FRAME_FIRST_REFLOW) != 0);
-  
+  // Note: VerticallyAlignChild can affect the overflow rect.
   // XXX What happens if this cell has 'vertical-align: baseline' ?
   // XXX Why is it assumed that the cell's ascent hasn't changed ?
   if (fullyComplete) {
     aCellFrame->VerticallyAlignChild(mMaxCellAscent);
   }
+  
+  nsTableFrame::InvalidateFrame(aCellFrame, cellRect,
+                                cellOverflowRect,
+                                (aCellFrame->GetStateBits() &
+                                   NS_FRAME_FIRST_REFLOW) != 0);
+  
   aCellFrame->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
 
   return desiredSize.height;
@@ -1138,6 +1152,7 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
   
   nsRect rowRect = GetRect();
   nsRect oldRect = rowRect;
+  nsRect oldOverflowRect = GetOverflowRect();
   
   rowRect.y -= aRowOffset;
   rowRect.width  = aWidth;
@@ -1253,6 +1268,7 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
         }
 
         nsRect oldCellRect = cellFrame->GetRect();
+        nsRect oldCellOverflowRect = cellFrame->GetOverflowRect();
 
         if (aRowOffset == 0 && cRect.TopLeft() != oldCellRect.TopLeft()) {
           // We're moving the cell.  Invalidate the old overflow area
@@ -1270,7 +1286,8 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
         ConsiderChildOverflow(overflowArea, cellFrame);
                 
         if (aRowOffset == 0) {
-          nsTableFrame::InvalidateFrame(cellFrame, oldCellRect, PR_FALSE);
+          nsTableFrame::InvalidateFrame(cellFrame, oldCellRect,
+                                        oldCellOverflowRect, PR_FALSE);
         }
       }
       kidFrame = iter.Next(); // Get the next child
@@ -1284,7 +1301,7 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
                                               rowRect.height));
 
   nsTableFrame::RePositionViews(this);
-  nsTableFrame::InvalidateFrame(this, oldRect, PR_FALSE);
+  nsTableFrame::InvalidateFrame(this, oldRect, oldOverflowRect, PR_FALSE);
   return shift;
 }
 

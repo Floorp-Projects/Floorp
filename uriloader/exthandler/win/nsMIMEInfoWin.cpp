@@ -44,7 +44,7 @@
 #include "nsIVariant.h"
 #include "nsMIMEInfoWin.h"
 #include "nsNetUtil.h"
-#include <Windows.h>
+#include <windows.h>
 #include <shellapi.h>
 #include "nsAutoPtr.h"
 #include "nsIMutableArray.h"

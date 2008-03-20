@@ -128,7 +128,7 @@ LIBGNOME_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
 LCMS_VERSION=1.17
-SQLITE_VERSION=3.5
+SQLITE_VERSION=3.5.7
 
 MSMANIFEST_TOOL=
 
@@ -375,6 +375,20 @@ if test "$GNU_CC"; then
     fi
 fi
 
+INTEL_CC=
+INTEL_CXX=
+if test "$GCC" = yes; then
+   if test "`$CC -help 2>&1 | grep -c 'Intel(R) C Compiler'`" != "0"; then
+     INTEL_CC=1
+   fi
+fi
+
+if test "$GXX" = yes; then
+   if test "`$CXX -help 2>&1 | grep -c 'Intel(R) C++ Compiler'`" != "0"; then
+     INTEL_CXX=1
+   fi
+fi
+
 dnl Special win32 checks
 dnl ========================================================
 case "$target" in
@@ -610,6 +624,8 @@ AC_SUBST(GNU_AS)
 AC_SUBST(GNU_LD)
 AC_SUBST(GNU_CC)
 AC_SUBST(GNU_CXX)
+AC_SUBST(INTEL_CC)
+AC_SUBST(INTEL_CXX)
 
 dnl ========================================================
 dnl Checks for programs.
@@ -707,7 +723,7 @@ from building Mozilla. Upgrade to Xcode 2.1 or later.])
     case "$PBBUILD" in
       *xcodebuild*)
         changequote(,)
-        XCODEBUILD_VERSION=`$PBBUILD -version 2>/dev/null | sed -e 's/.*DevToolsCore-\([0-9]*\).*/\1/' | tail -n 1`
+        XCODEBUILD_VERSION=`$PBBUILD -version 2>/dev/null | xargs | sed -e 's/.*DevToolsCore-\([0-9]*\).*/\1/'`
         changequote([,])
         if test -n "$XCODEBUILD_VERSION" && test "$XCODEBUILD_VERSION" -ge 620 ; then
           HAS_XCODE_2_1=1;
@@ -743,6 +759,7 @@ case "$target" in
     if test -n "$_MACOSX_DEPLOYMENT_TARGET" ; then
         dnl Use the specified value
         export MACOSX_DEPLOYMENT_TARGET=$_MACOSX_DEPLOYMENT_TARGET
+        AC_DEFINE_UNQUOTED(__ENVIRONMENT_MAC_OS_X_VERION_MIN_REQUIRED__,$_MACOSX_DEPLOYMENT_TARGET)
     elif test -z "$MACOSX_DEPLOYMENT_TARGET" ; then
         dnl No value specified on the command line or in the environment,
         dnl use the lesser of the application's minimum or the architecture's
@@ -1275,14 +1292,23 @@ if test "$GNU_CC"; then
     # -Wconversion - complained when char's or short's were used a function args
     # -Wshadow - removed because it generates more noise than help --pete
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -W -Wno-unused -Wpointer-arith"
-    if test "$CPU_ARCH" != "ia64" && test "$CPU_ARCH" != "sparc"; then
+    if test "$CPU_ARCH" != "ia64" && test "$CPU_ARCH" != "sparc" \
+       && test -z "$INTEL_CC"; then
         # don't use -Wcast-align on ia64 or sparc, it's noisy on those platforms
+        # icc doesn't support this flag.
         _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wcast-align"
     fi
 
     dnl Turn pedantic on but disable the warnings for long long
     _PEDANTIC=1
-    _IGNORE_LONG_LONG_WARNINGS=1
+
+    if test -z "$INTEL_CC"; then
+      _IGNORE_LONG_LONG_WARNINGS=1
+      _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -W"
+    else
+      _IGNORE_LONG_LONG_WARNINGS=
+    fi
+
 
     _DEFINES_CFLAGS='-include $(DEPTH)/mozilla-config.h -DMOZILLA_CLIENT'
     _USE_CPP_INCLUDE_FLAG=1
@@ -1306,8 +1332,10 @@ if test "$GNU_CXX"; then
     CXXFLAGS="$CXXFLAGS -fno-strict-aliasing"
     # Turn on GNU specific features
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wconversion -Wpointer-arith -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor"
-    if test "$CPU_ARCH" != "ia64" && test "$CPU_ARCH" != "sparc"; then
+    if test "$CPU_ARCH" != "ia64" && test "$CPU_ARCH" != "sparc" \
+       && test -z "$INTEL_CC"; then
         # don't use -Wcast-align on ia64 or sparc, it's noisy on those platforms
+        # icc doesn't support this flag.
         _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wcast-align"
     fi
 
@@ -1744,8 +1772,17 @@ case "$target" in
     ;;
 
 *-*linux*)
+    if test "$GNU_CC"; then
+        GCC_VERSION=`$CC -v 2>&1 | awk '/^gcc version/ { print $3 }'`
+        case $GCC_VERSION in
+        4.1.*|4.2.*)
+            # -Os is broken on gcc 4.1.x and 4.2.x, we need to tweak it to get good results.
+            MOZ_OPTIMIZE_SIZE_TWEAK="-finline-limit=50"
+        esac
+    fi
+
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
-    MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions"
+    MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions $MOZ_OPTIMIZE_SIZE_TWEAK"
     MOZ_DEBUG_FLAGS="-g -fno-inline"  # most people on linux use gcc/gdb,
                                       # and that combo is not yet good at
                                       # debugging inlined functions (even
@@ -2341,8 +2378,16 @@ dnl the qsort routine under solaris is faulty
        NS_USE_NATIVE=1
        MOZ_FIX_LINK_PATHS='-R $(LIBXUL_DIST)/bin'
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-       CFLAGS="$CFLAGS -xstrconst -xbuiltin=%all"
-       CXXFLAGS="$CXXFLAGS -xbuiltin=%all -features=tmplife -norunpath"
+
+       if test "$CPU_ARCH" != "sparc"; then
+          CFLAGS="$CFLAGS -xstrconst -xbuiltin=%all"
+          CXXFLAGS="$CXXFLAGS -xbuiltin=%all -features=tmplife -norunpath"
+       else
+          # Do not use -xbuiltin on SPARC to get around a bug of compiler
+          CFLAGS="$CFLAGS -xstrconst -xbuiltin=%none"
+          CXXFLAGS="$CXXFLAGS -xbuiltin=%none -features=tmplife -norunpath"
+       fi
+
        LDFLAGS="-xildoff -z lazyload -z combreloc $LDFLAGS"
        if test -z "$CROSS_COMPILE" && test -f /usr/lib/ld/map.noexstk; then
            _SAVE_LDFLAGS=$LDFLAGS
@@ -5299,7 +5344,8 @@ dnl ========================================================
 
 if (test "$OS_ARCH" = "WINNT" -a -z "$GNU_CC" \
     || test "$OS_ARCH" = "Darwin" \
-    || test "$OS_ARCH" = "Linux" -a "$CPU_ARCH" = "x86") \
+    || test "$OS_ARCH" = "Linux" -a "$CPU_ARCH" = "x86" \
+    || test "$OS_ARCH" = "SunOS") \
    && test -z "$HAVE_64BIT_OS"; then
    MOZ_CRASHREPORTER=1
 fi
@@ -5312,7 +5358,7 @@ MOZ_ARG_DISABLE_BOOL(crashreporter,
 if test -n "$MOZ_CRASHREPORTER"; then
    AC_DEFINE(MOZ_CRASHREPORTER)
 
-  if test "$OS_ARCH" = "Linux" && \
+  if (test "$OS_ARCH" = "Linux" || test "$OS_ARCH" = "SunOS") && \
     test -z "$SKIP_LIBRARY_CHECKS"; then
     PKG_CHECK_MODULES(MOZ_GTHREAD, gthread-2.0)
     AC_SUBST(MOZ_GTHREAD_CFLAGS)
@@ -5958,6 +6004,7 @@ fi # COMPILE_ENVIRONMENT
 AC_SUBST(MOZ_OPTIMIZE)
 AC_SUBST(MOZ_OPTIMIZE_FLAGS)
 AC_SUBST(MOZ_OPTIMIZE_LDFLAGS)
+AC_SUBST(MOZ_OPTIMIZE_SIZE_TWEAK)
 
 dnl ========================================================
 dnl = Enable/disable debug for specific modules only
@@ -6611,6 +6658,13 @@ fi
 
 CFLAGS="$_SAVE_CFLAGS"
 
+if test -n "$INTEL_CC"; then
+  PROFILE_GEN_CFLAGS="-prof-gen -prof-dir ."
+  PROFILE_GEN_LDFLAGS=
+  PROFILE_USE_CFLAGS="-prof-use -prof-dir ."
+  PROFILE_USE_LDFLAGS=
+fi
+
 AC_SUBST(PROFILE_GEN_CFLAGS)
 AC_SUBST(PROFILE_GEN_LDFLAGS)
 AC_SUBST(PROFILE_USE_CFLAGS)
@@ -7104,6 +7158,7 @@ if test "$MOZ_TREE_CAIRO"; then
     fi
     if test "$MOZ_WIDGET_TOOLKIT" = "mac" -o "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
         QUARTZ_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_SURFACE 1"
+        QUARTZ_IMAGE_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_IMAGE_SURFACE 1"
         ATSUI_FONT_FEATURE="#define CAIRO_HAS_ATSUI_FONT 1"
     fi
     if test "$MOZ_WIDGET_TOOLKIT" = "windows"; then
@@ -7145,7 +7200,7 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(XLIB_SURFACE_FEATURE)
     AC_SUBST(XLIB_XRENDER_SURFACE_FEATURE)
     AC_SUBST(QUARTZ_SURFACE_FEATURE)
-    AC_SUBST(NQUARTZ_SURFACE_FEATURE)
+    AC_SUBST(QUARTZ_IMAGE_SURFACE_FEATURE)
     AC_SUBST(XCB_SURFACE_FEATURE)
     AC_SUBST(WIN32_SURFACE_FEATURE)
     AC_SUBST(OS2_SURFACE_FEATURE)
@@ -7288,6 +7343,8 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c python` -ne 0; then
         dnl - Fixes to the above by Python/*nix knowledgable people welcome!
         if test -f "$MOZ_PYTHON_PREFIX/lib/libpython$MOZ_PYTHON_VER_DOTTED.so.1.0"; then
             MOZ_PYTHON_LIBS="-L$MOZ_PYTHON_PREFIX/lib -lpython$MOZ_PYTHON_VER_DOTTED"
+        elif test -f "$MOZ_PYTHON_PREFIX/lib64/libpython$MOZ_PYTHON_VER_DOTTED.so.1.0"; then
+            MOZ_PYTHON_LIBS="-L$MOZ_PYTHON_PREFIX/lib64 -lpython$MOZ_PYTHON_VER_DOTTED"
         elif test -f "$MOZ_PYTHON_PREFIX/lib/libpython$MOZ_PYTHON_VER_DOTTED.so"; then
             MOZ_PYTHON_LIBS="-L$MOZ_PYTHON_PREFIX/lib -lpython$MOZ_PYTHON_VER_DOTTED"
         elif test -f "$MOZ_PYTHON_PREFIX/libpython$MOZ_PYTHON_VER_DOTTED.so"; then

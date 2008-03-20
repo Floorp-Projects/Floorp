@@ -445,8 +445,10 @@ nsCookieService::Init()
   }
 
   mPermissionService = do_GetService(NS_COOKIEPERMISSION_CONTRACTID);
-  if (!mPermissionService)
+  if (!mPermissionService) {
     NS_WARNING("nsICookiePermission implementation not available - some features won't work!");
+    COOKIE_LOGSTRING(PR_LOG_WARNING, ("Init(): nsICookiePermission implementation not available"));
+  }
 
   return NS_OK;
 }
@@ -1792,8 +1794,11 @@ nsCookieService::CheckPrefs(nsIURI     *aHostURI,
 
   } else if (mCookiesPermissions == BEHAVIOR_REJECTFOREIGN) {
     // check if cookie is foreign
-    if (!mPermissionService)
+    if (!mPermissionService) {
+      NS_WARNING("Foreign cookie blocking enabled, but nsICookiePermission unavailable! Rejecting cookie");
+      COOKIE_LOGSTRING(PR_LOG_WARNING, ("CheckPrefs(): foreign blocking enabled, but nsICookiePermission unavailable! Rejecting cookie"));
       return STATUS_REJECTED;
+    }
 
     nsCOMPtr<nsIURI> firstURI;
     rv = mPermissionService->GetOriginatingURI(aChannel, getter_AddRefs(firstURI));

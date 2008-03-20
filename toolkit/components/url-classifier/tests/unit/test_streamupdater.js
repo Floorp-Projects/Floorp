@@ -8,11 +8,12 @@ function MAC(content, clientKey)
   var converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
                   createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "UTF-8";
-  var result = {};
-  var data = converter.convertToByteArray(clientKey, result);
-  hmac.init(Ci.nsICryptoHMAC.SHA1, data, data.length);
 
-  result = {};
+  var keyObject = Cc["@mozilla.org/security/keyobjectfactory;1"]
+    .getService(Ci.nsIKeyObjectFactory).keyFromString(Ci.nsIKeyObject.HMAC, clientKey);
+  hmac.init(Ci.nsICryptoHMAC.SHA1, keyObject);
+
+  var result = {};
   data = converter.convertToByteArray(content, result);
   hmac.update(data, data.length);
   return hmac.finish(true);

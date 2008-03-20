@@ -124,7 +124,7 @@ nsSVGTransformList::GetConsolidationMatrix(nsIDOMSVGTransformList *transforms)
     
     nsCOMPtr<nsIDOMSVGMatrix> temp1, temp2;
     
-    for (PRInt32 i = 0; i < count; ++i) {
+    for (PRUint32 i = 0; i < count; ++i) {
       transforms->GetItem(i, getter_AddRefs(transform));
       transform->GetMatrix(getter_AddRefs(temp1));
       conmatrix->Multiply(temp1, getter_AddRefs(temp2));

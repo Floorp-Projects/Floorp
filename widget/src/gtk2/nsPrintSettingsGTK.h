@@ -114,24 +114,18 @@ public:
   NS_IMETHOD GetNumCopies(PRInt32 *aNumCopies);
   NS_IMETHOD SetNumCopies(PRInt32 aNumCopies);
 
-  NS_IMETHOD GetEdgeTop(double *aEdgeTop);
-  NS_IMETHOD SetEdgeTop(double aEdgeTop);
-
-  NS_IMETHOD GetEdgeLeft(double *aEdgeLeft);
-  NS_IMETHOD SetEdgeLeft(double aEdgeLeft);
-
-  NS_IMETHOD GetEdgeBottom(double *aEdgeBottom);
-  NS_IMETHOD SetEdgeBottom(double aEdgeBottom);
-
-  NS_IMETHOD GetEdgeRight(double *aEdgeRight);
-  NS_IMETHOD SetEdgeRight(double aEdgeRight);
-
   NS_IMETHOD GetScaling(double *aScaling);
   NS_IMETHOD SetScaling(double aScaling);
 
   // A name recognised by GTK is strongly advised here, as this is used to create a GtkPaperSize.
   NS_IMETHOD GetPaperName(PRUnichar * *aPaperName);
   NS_IMETHOD SetPaperName(const PRUnichar * aPaperName);
+
+  NS_IMETHOD SetUnwriteableMarginInTwips(nsMargin& aUnwriteableMargin);
+  NS_IMETHOD SetUnwriteableMarginTop(double aUnwriteableMarginTop);
+  NS_IMETHOD SetUnwriteableMarginLeft(double aUnwriteableMarginLeft);
+  NS_IMETHOD SetUnwriteableMarginBottom(double aUnwriteableMarginBottom);
+  NS_IMETHOD SetUnwriteableMarginRight(double aUnwriteableMarginRight);
 
   NS_IMETHOD GetPaperWidth(double *aPaperWidth);
   NS_IMETHOD SetPaperWidth(double aPaperWidth);
@@ -140,9 +134,6 @@ public:
   NS_IMETHOD SetPaperHeight(double aPaperHeight);
 
   NS_IMETHOD SetPaperSizeUnit(PRInt16 aPaperSizeUnit);
-
-  NS_IMETHOD SetEdgeInTwips(nsMargin& aEdge);
-  NS_IMETHOD GetEdgeInTwips(nsMargin& aEdge);
 
   NS_IMETHOD GetEffectivePageSize(double *aWidth, double *aHeight);
 
@@ -157,6 +148,12 @@ protected:
 
   GtkUnit GetGTKUnit(PRInt16 aGeckoUnit);
   void SaveNewPageSize();
+
+  /**
+   * Re-initialize mUnwriteableMargin with values from mPageSetup.
+   * Should be called whenever mPageSetup is initialized or overwritten.
+   */
+  void InitUnwriteableMargin();
 
   /**
    * On construction:

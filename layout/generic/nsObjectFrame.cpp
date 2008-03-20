@@ -108,6 +108,7 @@
 #include "nsDisplayList.h"
 #include "nsAttrName.h"
 #include "nsDataHashtable.h"
+#include "nsDOMClassInfo.h"
 
 // headers for plugin scriptability
 #include "nsIScriptGlobalObject.h"
@@ -1682,7 +1683,7 @@ private:
 };
 
 static void
-DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner)
+DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
 {
   nsCOMPtr<nsIPluginInstance> inst;
   aInstanceOwner->GetInstance(*getter_AddRefs(inst));
@@ -1719,6 +1720,13 @@ DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner)
         else 
           inst->SetWindow(nsnull);
 
+        if (aDelayedStop) {
+          nsCOMPtr<nsIRunnable> evt = new nsStopPluginRunnable(aInstanceOwner);
+          NS_DispatchToCurrentThread(evt);
+
+          return;
+        }
+
         inst->Stop();
         inst->Destroy();
       }
@@ -1728,6 +1736,13 @@ DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner)
         window->CallSetWindow(nullinst);
       else 
         inst->SetWindow(nsnull);
+
+      if (aDelayedStop) {
+        nsCOMPtr<nsIRunnable> evt = new nsStopPluginRunnable(aInstanceOwner);
+        NS_DispatchToCurrentThread(evt);
+
+        return;
+      }
 
       inst->Stop();
     }
@@ -1748,7 +1763,7 @@ DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner)
 NS_IMETHODIMP
 nsStopPluginRunnable::Run()
 {
-  DoStopPlugin(mInstanceOwner);
+  DoStopPlugin(mInstanceOwner, PR_FALSE);
 
   return NS_OK;
 }
@@ -1798,21 +1813,7 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
   // touch it!
   owner->PrepareToStop(aDelayedStop);
 
-#ifdef XP_WIN
-  // We only deal with delayed stopping of plugins on Win32 for now,
-  // as that's the only platform where we need to (AFAIK) and it's
-  // unclear how safe widget parenting is on other platforms.
-  if (aDelayedStop) {
-    // nsStopPluginRunnable will hold a strong reference to owner
-    // (mInstanceOwner), and thus keep it alive as long as it needs
-    // it.
-    nsCOMPtr<nsIRunnable> evt = new nsStopPluginRunnable(owner);
-    NS_DispatchToCurrentThread(evt);
-  } else
-#endif
-  {
-    DoStopPlugin(owner);
-  }
+  DoStopPlugin(owner, aDelayedStop);
 
   // Break relationship between frame and plugin instance owner
   owner->SetOwner(nsnull);
@@ -1842,22 +1843,8 @@ nsObjectFrame::NotifyContentObjectWrapper()
                                    getter_AddRefs(wrapper));
 
   if (!wrapper) {
-    // Nothing to do here if there's no wrapper for mContent
-    return;
-  }
-
-  nsCOMPtr<nsIClassInfo> ci(do_QueryInterface(mContent));
-  if (!ci)
-    return;
-
-  nsCOMPtr<nsISupports> s;
-  ci->GetHelperForLanguage(nsIProgrammingLanguage::JAVASCRIPT,
-                           getter_AddRefs(s));
-
-  nsCOMPtr<nsIXPCScriptable> helper(do_QueryInterface(s));
-
-  if (!helper) {
-    // There's nothing we can do if there's no helper
+    // Nothing to do here if there's no wrapper for mContent. The proto
+    // chain will be fixed appropriately when the wrapper is created.
     return;
   }
 
@@ -1866,13 +1853,7 @@ nsObjectFrame::NotifyContentObjectWrapper()
   if (NS_FAILED(rv))
     return;
 
-  nsCxPusher cxPusher;
-  if (cxPusher.Push(mContent)) {
-    // Abuse the scriptable helper to trigger prototype setup for the
-    // wrapper for mContent so that this plugin becomes part of the DOM
-    // object.
-    helper->PostCreate(wrapper, cx, obj);
-  }
+  nsHTMLPluginObjElementSH::SetupProtoChain(wrapper, cx, obj);
 }
 
 // static
@@ -4300,7 +4281,7 @@ static void ConvertRelativeToWindowAbsolute(nsIFrame*   aFrame,
 
 WindowRef nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
 {
-  if (!mWidget || !mPluginWindow || !mInstance)
+  if (!mWidget || !mPluginWindow || !mInstance || !mOwner)
     return nsnull;
 
   nsPluginPort* pluginPort = GetPluginPort(); 

@@ -2201,7 +2201,7 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
     uintN error;
     const char *name, *source;
 
-    for (fp = cx->fp; fp && !fp->spbase; fp = fp->down)
+    for (fp = cx->fp; fp && !fp->regs; fp = fp->down)
         continue;
     name = NULL;
     source = NULL;
@@ -2218,8 +2218,9 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
     }
 
     js_ReportValueError3(cx, error,
-                         (fp && fp->spbase <= vp && vp < fp->sp)
-                         ? vp - fp->sp
+                         (fp && fp->regs &&
+                          fp->spbase <= vp && vp < fp->regs->sp)
+                         ? vp - fp->regs->sp
                          : (flags & JSV2F_SEARCH_STACK)
                          ? JSDVG_SEARCH_STACK
                          : JSDVG_IGNORE_STACK,

@@ -300,7 +300,7 @@ function run_test()
 function override_test_registerdirectory(metadata, response)
 {
   response.setStatusLine("1.1", 200, "OK");
-  response.setHeader("Override-Succeeded", "yes");
+  response.setHeader("Override-Succeeded", "yes", false);
 
   var body = "success!";
   response.bodyOutputStream.write(body, body.length);

@@ -245,12 +245,26 @@ pref("print.whileInPrintPreview", true);
 // Cache old Presentation when going into Print Preview
 pref("print.always_cache_old_pres", false);
 
-// Enables you to specify the gap from the edge of the paper to the margin
-// this is used by both Printing and Print Preview
-pref("print.print_edge_top", 0); // 1/100 of an inch
-pref("print.print_edge_left", 0); // 1/100 of an inch
-pref("print.print_edge_right", 0); // 1/100 of an inch
-pref("print.print_edge_bottom", 0); // 1/100 of an inch
+// Enables you to specify the amount of the paper that is to be treated
+// as unwriteable.  The print_edge_XXX and print_margin_XXX preferences
+// are treated as offsets that are added to this pref.
+// Default is "-1", which means "use the system default".  (If there is
+// no system default, then the -1 is treated as if it were 0.)
+// This is used by both Printing and Print Preview.
+// Units are in 1/100ths of an inch.
+pref("print.print_unwriteable_margin_top",    -1);
+pref("print.print_unwriteable_margin_left",   -1);
+pref("print.print_unwriteable_margin_right",  -1);
+pref("print.print_unwriteable_margin_bottom", -1);
+
+// Enables you to specify the gap from the edge of the paper's 
+// unwriteable area to the margin.
+// This is used by both Printing and Print Preview
+// Units are in 1/100ths of an inch.
+pref("print.print_edge_top", 0);
+pref("print.print_edge_left", 0);
+pref("print.print_edge_right", 0);
+pref("print.print_edge_bottom", 0);
 
 // Pref used by the spellchecker extension to control the 
 // maximum number of misspelled words that will be underlined
@@ -441,6 +455,7 @@ pref("capability.policy.default.Clipboard.paste", "noAccess");
 // Scripts & Windows prefs
 pref("dom.disable_image_src_set",           false);
 pref("dom.disable_window_flip",             false);
+pref("dom.disable_window_move_resize",      false);
 pref("dom.disable_window_status_change",    false);
 
 pref("dom.disable_window_open_feature.titlebar",    false);
@@ -553,22 +568,22 @@ pref("network.http.proxy.keep-alive", true);
 pref("network.http.keep-alive.timeout", 300);
 
 // limit the absolute number of http connections.
-pref("network.http.max-connections", 24);
+pref("network.http.max-connections", 30);
 
 // limit the absolute number of http connections that can be established per
 // host.  if a http proxy server is enabled, then the "server" is the proxy
 // server.  Otherwise, "server" is the http origin server.
-pref("network.http.max-connections-per-server", 8);
+pref("network.http.max-connections-per-server", 15);
 
 // if network.http.keep-alive is true, and if NOT connecting via a proxy, then
 // a new connection will only be attempted if the number of active persistent
 // connections to the server is less then max-persistent-connections-per-server.
-pref("network.http.max-persistent-connections-per-server", 2);
+pref("network.http.max-persistent-connections-per-server", 6);
 
 // if network.http.keep-alive is true, and if connecting via a proxy, then a
 // new connection will only be attempted if the number of active persistent
 // connections to the proxy is less then max-persistent-connections-per-proxy.
-pref("network.http.max-persistent-connections-per-proxy", 4);
+pref("network.http.max-persistent-connections-per-proxy", 8);
 
 // amount of time (in seconds) to suspend pending requests, before spawning a
 // new connection, once the limit on the number of persistent connections per
@@ -1617,11 +1632,11 @@ pref("font.name-list.cursive.x-western", "Apple Chancery");
 pref("font.name-list.fantasy.x-western", "Papyrus");
 
 pref("font.name.serif.zh-CN", "华文宋体");
-pref("font.name.sans-serif.zh-CN", "Hei");
-pref("font.name.monospace.zh-CN", "Hei");
+pref("font.name.sans-serif.zh-CN", "STHeiti");
+pref("font.name.monospace.zh-CN", "STHeiti");
 pref("font.name-list.serif.zh-CN", "华文宋体");
-pref("font.name-list.sans-serif.zh-CN", "Hei");
-pref("font.name-list.monospace.zh-CN", "Hei");
+pref("font.name-list.sans-serif.zh-CN", "STHeiti");
+pref("font.name-list.monospace.zh-CN", "STHeiti");
 
 pref("font.name.serif.zh-TW", "Apple LiSung"); 
 pref("font.name.sans-serif.zh-TW", "Apple LiGothic");  
@@ -2112,13 +2127,6 @@ pref("print.print_reversed", false);
 pref("print.print_color", true);
 pref("print.print_landscape", false);
 pref("print.print_paper_size", 0);
-
-// Enables you to specify the gap from the edge of the paper to the margin
-// this is used by both Printing and Print Preview
-pref("print.print_edge_top", 4); // 1/100 of an inch
-pref("print.print_edge_left", 4); // 1/100 of an inch
-pref("print.print_edge_right", 4); // 1/100 of an inch
-pref("print.print_edge_bottom", 4); // 1/100 of an inch
 
 // print_extra_margin enables platforms to specify an extra gap or margin
 // around the content of the page for Print Preview only

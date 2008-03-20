@@ -572,13 +572,15 @@ private:
   nsresult GetDXY(PRUint32 *aDX, PRUint32 *aDY, const nsSVGFilterInstance& aInstance);
   void InflateRectForBlur(nsRect* aRect, const nsSVGFilterInstance& aInstance);
 
+  PRUint8 *SetupPredivide(PRUint32 size) const;
+
   void BoxBlurH(PRUint8 *aInput, PRUint8 *aOutput,
                 PRInt32 aStride, const nsRect& aRegion,
-                PRUint32 leftLobe, PRUint32 rightLobe);
+                PRUint32 leftLobe, PRUint32 rightLobe, const PRUint8 *prediv);
 
   void BoxBlurV(PRUint8 *aInput, PRUint8 *aOutput,
                 PRInt32 aStride, const nsRect& aRegion,
-                PRUint32 topLobe, PRUint32 bottomLobe);
+                PRUint32 topLobe, PRUint32 bottomLobe, const PRUint8 *prediv);
 
   void GaussianBlur(PRUint8 *aInput, PRUint8 *aOutput,
                     nsSVGFilterResource *aFilterResource,
@@ -684,39 +686,41 @@ nsSVGFEGaussianBlurElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
 void
 nsSVGFEGaussianBlurElement::BoxBlurH(PRUint8 *aInput, PRUint8 *aOutput,
                                      PRInt32 aStride, const nsRect &aRegion,
-                                     PRUint32 leftLobe, PRUint32 rightLobe)
+                                     PRUint32 leftLobe, PRUint32 rightLobe,
+                                     const PRUint8 *prediv)
 {
   PRInt32 boxSize = leftLobe + rightLobe + 1;
+  PRInt32 posStart = aRegion.x - leftLobe;
 
   for (PRInt32 y = aRegion.y; y < aRegion.YMost(); y++) {
     PRUint32 sums[4] = {0, 0, 0, 0};
-    for (PRInt32 i=0; i < boxSize; i++) {
-      PRInt32 pos = aRegion.x - leftLobe + i;
+    PRInt32 lineIndex = aStride * y;
+    for (PRInt32 i = 0; i < boxSize; i++) {
+      PRInt32 pos = posStart + i;
       pos = PR_MAX(pos, aRegion.x);
       pos = PR_MIN(pos, aRegion.XMost() - 1);
-      sums[0] += aInput[aStride*y + 4*pos    ];
-      sums[1] += aInput[aStride*y + 4*pos + 1];
-      sums[2] += aInput[aStride*y + 4*pos + 2];
-      sums[3] += aInput[aStride*y + 4*pos + 3];
+      PRInt32 index = lineIndex + (pos << 2);
+      sums[0] += aInput[index    ];
+      sums[1] += aInput[index + 1];
+      sums[2] += aInput[index + 2];
+      sums[3] += aInput[index + 3];
     }
     for (PRInt32 x = aRegion.x; x < aRegion.XMost(); x++) {
+      PRInt32 index = lineIndex + (x << 2);
+      aOutput[index    ] = prediv[sums[0]];
+      aOutput[index + 1] = prediv[sums[1]];
+      aOutput[index + 2] = prediv[sums[2]];
+      aOutput[index + 3] = prediv[sums[3]];
+
       PRInt32 tmp = x - leftLobe;
       PRInt32 last = PR_MAX(tmp, aRegion.x);
       PRInt32 next = PR_MIN(tmp + boxSize, aRegion.XMost() - 1);
-
-      aOutput[aStride*y + 4*x    ] = sums[0]/boxSize;
-      aOutput[aStride*y + 4*x + 1] = sums[1]/boxSize;
-      aOutput[aStride*y + 4*x + 2] = sums[2]/boxSize;
-      aOutput[aStride*y + 4*x + 3] = sums[3]/boxSize;
-
-      sums[0] += aInput[aStride*y + 4*next    ] -
-                 aInput[aStride*y + 4*last    ];
-      sums[1] += aInput[aStride*y + 4*next + 1] -
-                 aInput[aStride*y + 4*last + 1];
-      sums[2] += aInput[aStride*y + 4*next + 2] -
-                 aInput[aStride*y + 4*last + 2];
-      sums[3] += aInput[aStride*y + 4*next + 3] -
-                 aInput[aStride*y + 4*last + 3];
+      PRInt32 index2 = lineIndex + (next << 2);
+      PRInt32 index3 = lineIndex + (last << 2);
+      sums[0] += aInput[index2    ] - aInput[index3    ];
+      sums[1] += aInput[index2 + 1] - aInput[index3 + 1];
+      sums[2] += aInput[index2 + 2] - aInput[index3 + 2];
+      sums[3] += aInput[index2 + 3] - aInput[index3 + 3];
     }
   }
 }
@@ -724,41 +728,54 @@ nsSVGFEGaussianBlurElement::BoxBlurH(PRUint8 *aInput, PRUint8 *aOutput,
 void
 nsSVGFEGaussianBlurElement::BoxBlurV(PRUint8 *aInput, PRUint8 *aOutput,
                                      PRInt32 aStride, const nsRect &aRegion,
-                                     PRUint32 topLobe, PRUint32 bottomLobe)
+                                     PRUint32 topLobe, PRUint32 bottomLobe,
+                                     const PRUint8 *prediv)
 {
   PRInt32 boxSize = topLobe + bottomLobe + 1;
+  PRInt32 posStart = aRegion.y - topLobe;
 
   for (PRInt32 x = aRegion.x; x < aRegion.XMost(); x++) {
     PRUint32 sums[4] = {0, 0, 0, 0};
-    for (PRInt32 i=0; i < boxSize; i++) {
-      PRInt32 pos = aRegion.y - topLobe + i;
+    PRInt32 fourX = x << 2;
+    for (PRInt32 i = 0; i < boxSize; i++) {
+      PRInt32 pos = posStart + i;
       pos = PR_MAX(pos, aRegion.y);
       pos = PR_MIN(pos, aRegion.YMost() - 1);
-      sums[0] += aInput[aStride*pos + 4*x    ];
-      sums[1] += aInput[aStride*pos + 4*x + 1];
-      sums[2] += aInput[aStride*pos + 4*x + 2];
-      sums[3] += aInput[aStride*pos + 4*x + 3];
+      PRInt32 index = aStride * pos + fourX;
+      sums[0] += aInput[index    ];
+      sums[1] += aInput[index + 1];
+      sums[2] += aInput[index + 2];
+      sums[3] += aInput[index + 3];
     }
     for (PRInt32 y = aRegion.y; y < aRegion.YMost(); y++) {
+      PRInt32 index = aStride * y + fourX;
+      aOutput[index    ] = prediv[sums[0]];
+      aOutput[index + 1] = prediv[sums[1]];
+      aOutput[index + 2] = prediv[sums[2]];
+      aOutput[index + 3] = prediv[sums[3]];
+
       PRInt32 tmp = y - topLobe;
       PRInt32 last = PR_MAX(tmp, aRegion.y);
       PRInt32 next = PR_MIN(tmp + boxSize, aRegion.YMost() - 1);
-
-      aOutput[aStride*y + 4*x    ] = sums[0]/boxSize;
-      aOutput[aStride*y + 4*x + 1] = sums[1]/boxSize;
-      aOutput[aStride*y + 4*x + 2] = sums[2]/boxSize;
-      aOutput[aStride*y + 4*x + 3] = sums[3]/boxSize;
-
-      sums[0] += aInput[aStride*next + 4*x    ] -
-                 aInput[aStride*last + 4*x    ];
-      sums[1] += aInput[aStride*next + 4*x + 1] -
-                 aInput[aStride*last + 4*x + 1];
-      sums[2] += aInput[aStride*next + 4*x + 2] -
-                 aInput[aStride*last + 4*x + 2];
-      sums[3] += aInput[aStride*next + 4*x + 3] -
-                 aInput[aStride*last + 4*x + 3];
+      PRInt32 index2 = aStride * next + fourX;
+      PRInt32 index3 = aStride * last + fourX;
+      sums[0] += aInput[index2    ] - aInput[index3    ];
+      sums[1] += aInput[index2 + 1] - aInput[index3 + 1];
+      sums[2] += aInput[index2 + 2] - aInput[index3 + 2];
+      sums[3] += aInput[index2 + 3] - aInput[index3 + 3];
     }
   }
+}
+
+PRUint8 *
+nsSVGFEGaussianBlurElement::SetupPredivide(PRUint32 size) const
+{
+  PRUint8 *tmp = new PRUint8[size * 256];
+  if (tmp) {
+    for (PRUint32 i = 0; i < 256; i++)
+      memset(tmp + i * size, i, size);
+  }
+  return tmp;
 }
 
 nsresult
@@ -791,8 +808,12 @@ nsSVGFEGaussianBlurElement::GaussianBlur(PRUint8 *aInput, PRUint8 *aOutput,
                                          nsSVGFilterResource *aFilterResource,
                                          PRUint32 aDX, PRUint32 aDY)
 {
-  PRUint8 *tmp = static_cast<PRUint8*>
-                            (calloc(aFilterResource->GetDataSize(), 1));
+  NS_ASSERTION(aDX > 0 && aDY > 0, "Invalid stdDeviation!");
+
+  nsAutoArrayPtr<PRUint8> tmp(new PRUint8[aFilterResource->GetDataSize()]);
+  if (!tmp)
+    return;
+  memset(tmp, 0, aFilterResource->GetDataSize());
   nsRect rect = aFilterResource->GetSurfaceRect();
 #ifdef DEBUG_tor
   fprintf(stderr, "FILTER GAUSS rect: %d,%d  %dx%d\n",
@@ -803,37 +824,53 @@ nsSVGFEGaussianBlurElement::GaussianBlur(PRUint8 *aInput, PRUint8 *aOutput,
 
   if (aDX & 1) {
     // odd
-    BoxBlurH(aInput, tmp,  stride, rect, aDX/2, aDX/2);
-    BoxBlurH(tmp, aOutput, stride, rect, aDX/2, aDX/2);
-    BoxBlurH(aOutput, tmp, stride, rect, aDX/2, aDX/2);
+    nsAutoArrayPtr<PRUint8> prediv(SetupPredivide(2 * (aDX / 2) + 1));
+    if (!prediv)
+      return;
+
+    BoxBlurH(aInput, tmp,  stride, rect, aDX/2, aDX/2, prediv);
+    BoxBlurH(tmp, aOutput, stride, rect, aDX/2, aDX/2, prediv);
+    BoxBlurH(aOutput, tmp, stride, rect, aDX/2, aDX/2, prediv);
   } else {
     // even
     if (aDX == 0) {
       aFilterResource->CopyImageSubregion(tmp, aInput);
     } else {
-      BoxBlurH(aInput, tmp,  stride, rect, aDX/2,     aDX/2 - 1);
-      BoxBlurH(tmp, aOutput, stride, rect, aDX/2 - 1, aDX/2);
-      BoxBlurH(aOutput, tmp, stride, rect, aDX/2,     aDX/2);
+      nsAutoArrayPtr<PRUint8> prediv(SetupPredivide(2 * (aDX / 2) + 1));
+      nsAutoArrayPtr<PRUint8> prediv2(SetupPredivide(2 * (aDX / 2)));
+      if (!prediv || !prediv2)
+        return;
+
+      BoxBlurH(aInput, tmp,  stride, rect, aDX/2,     aDX/2 - 1, prediv2);
+      BoxBlurH(tmp, aOutput, stride, rect, aDX/2 - 1, aDX/2, prediv2);
+      BoxBlurH(aOutput, tmp, stride, rect, aDX/2,     aDX/2, prediv);
     }
   }
 
   if (aDY & 1) {
     // odd
-    BoxBlurV(tmp, aOutput, stride, rect, aDY/2, aDY/2);
-    BoxBlurV(aOutput, tmp, stride, rect, aDY/2, aDY/2);
-    BoxBlurV(tmp, aOutput, stride, rect, aDY/2, aDY/2);
+    nsAutoArrayPtr<PRUint8> prediv(SetupPredivide(2 * (aDY / 2) + 1));
+    if (!prediv)
+      return;
+
+    BoxBlurV(tmp, aOutput, stride, rect, aDY/2, aDY/2, prediv);
+    BoxBlurV(aOutput, tmp, stride, rect, aDY/2, aDY/2, prediv);
+    BoxBlurV(tmp, aOutput, stride, rect, aDY/2, aDY/2, prediv);
   } else {
     // even
     if (aDY == 0) {
       aFilterResource->CopyImageSubregion(aOutput, tmp);
     } else {
-      BoxBlurV(tmp, aOutput, stride, rect, aDY/2,     aDY/2 - 1);
-      BoxBlurV(aOutput, tmp, stride, rect, aDY/2 - 1, aDY/2);
-      BoxBlurV(tmp, aOutput, stride, rect, aDY/2,     aDY/2);
+      nsAutoArrayPtr<PRUint8> prediv(SetupPredivide(2 * (aDY / 2) + 1));
+      nsAutoArrayPtr<PRUint8> prediv2(SetupPredivide(2 * (aDY / 2)));
+      if (!prediv || !prediv2)
+        return;
+
+      BoxBlurV(tmp, aOutput, stride, rect, aDY/2,     aDY/2 - 1, prediv2);
+      BoxBlurV(aOutput, tmp, stride, rect, aDY/2 - 1, aDY/2, prediv2);
+      BoxBlurV(tmp, aOutput, stride, rect, aDY/2,     aDY/2, prediv);
     }
   }
-
-  free(tmp);
 }
 
 nsresult
@@ -4307,7 +4344,7 @@ nsSVGFEConvolveMatrixElement::Filter(nsSVGFilterInstance *instance)
   if (orderX > NS_SVG_OFFSCREEN_MAX_DIMENSION ||
       orderY > NS_SVG_OFFSCREEN_MAX_DIMENSION)
     return NS_ERROR_FAILURE;
-  nsAutoPtr<float> kernel(new float[orderX * orderY]);
+  nsAutoArrayPtr<float> kernel(new float[orderX * orderY]);
   if (!kernel)
     return NS_ERROR_FAILURE;
   for (PRUint32 i = 0; i < num; i++) {
