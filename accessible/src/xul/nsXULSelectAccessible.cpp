@@ -1031,7 +1031,6 @@ NS_IMETHODIMP nsXULComboboxAccessible::GetRole(PRUint32 *aRole)
 /**
   * As a nsComboboxAccessible we can have the following states:
   *     STATE_FOCUSED
-  *     STATE_READONLY
   *     STATE_FOCUSABLE
   *     STATE_HASPOPUP
   *     STATE_EXPANDED
@@ -1056,11 +1055,6 @@ nsXULComboboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     }
     else {
       *aState |= nsIAccessibleStates::STATE_COLLAPSED;
-    }
-    PRBool isEditable;
-    menuList->GetEditable(&isEditable);
-    if (!isEditable) {
-      *aState |= nsIAccessibleStates::STATE_READONLY;
     }
   }
 
