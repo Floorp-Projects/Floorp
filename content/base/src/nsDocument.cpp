@@ -2740,7 +2740,7 @@ nsDocument::EndUpdate(nsUpdateType aUpdateType)
     if (length > 0) {
       nsTArray<nsRefPtr<nsFrameLoader> > loaders;
       mFinalizableFrameLoaders.SwapElements(loaders);
-      for (PRInt32 i = 0; i < length; ++i) {
+      for (PRUint32 i = 0; i < length; ++i) {
         loaders[i]->Finalize();
       }
     }
