@@ -114,8 +114,11 @@ richlistitem[selected="true"]:not([opType]) .descriptionCrop {
 .addonIcon {
   -moz-margin-end: 2px;
   width: 32px;
-  max-width: 32px;
   height: 32px;
+}
+
+.addonIcon > image {
+  max-width: 32px;
   max-height: 32px;
 }
 
