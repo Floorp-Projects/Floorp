@@ -503,49 +503,12 @@ BrowserGlue.prototype = {
       this._dirty = false;
 
       var currentSet = this._rdf.GetResource("currentset");
-      var collapsed = this._rdf.GetResource("collapsed");
-      var target;
-      var moveHome;
-      var homePattern = /(?:^|,)home-button(?:$|,)/;
-
-      // get an nsIRDFResource for the PersonalToolbar item
-      var personalBar = this._rdf.GetResource("chrome://browser/content/browser.xul#PersonalToolbar");
-      var personalBarCollapsed = this._getPersist(personalBar, collapsed) == "true";
 
       // get an nsIRDFResource for the nav-bar item
       var navBar = this._rdf.GetResource("chrome://browser/content/browser.xul#nav-bar");
-      target = this._getPersist(navBar, currentSet);
-      if (target) {
-        let originalTarget = target;
-
-        // move Home if we find it in the nav-bar and the personal toolbar isn't collapsed
-        if (!personalBarCollapsed)
-          target = target.replace(homePattern, ",");
-        moveHome = (target != originalTarget);
-
-        // add the new combined back and forward button
-        if (!/(?:^|,)unified-back-forward-button(?:$|,)/.test(target))
-          target = "unified-back-forward-button," + target;
-
-        if (target != originalTarget)
-          this._setPersist(navBar, currentSet, target);
-      } else {
-        // nav-bar doesn't have a currentset, so the defaultset will be used,
-        // which means Home will be moved
-        moveHome = true;
-      }
-
-      if (moveHome) {
-        // If the personal toolbar has a currentset, add Home. The defaultset will be
-        // used otherwise.
-        target = this._getPersist(personalBar, currentSet);
-        if (target && !homePattern.test(target))
-          this._setPersist(personalBar, currentSet, "home-button," + target);
-
-        // uncollapse the personal toolbar
-        if (personalBarCollapsed)
-          this._setPersist(personalBar, collapsed, "false");
-      }
+      var target = this._getPersist(navBar, currentSet);
+      if (target && !/(?:^|,)unified-back-forward-button(?:$|,)/.test(target))
+        this._setPersist(navBar, currentSet, "unified-back-forward-button," + target);
 
       // force the RDF to be saved
       if (this._dirty)
