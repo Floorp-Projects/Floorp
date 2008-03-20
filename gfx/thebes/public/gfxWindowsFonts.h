@@ -86,6 +86,23 @@ public:
     {
     }
 
+    FontEntry(const FontEntry& aFontEntry) :
+        mFamily(aFontEntry.mFamily),
+        mWindowsFamily(aFontEntry.mWindowsFamily),
+        mWindowsPitch(aFontEntry.mWindowsPitch),
+        mUnicodeFont(aFontEntry.mUnicodeFont),
+        mSymbolFont(aFontEntry.mSymbolFont),
+        mTrueType(aFontEntry.mTrueType),
+        mIsType1(aFontEntry.mIsType1),
+        mIsBadUnderlineFont(aFontEntry.mIsBadUnderlineFont),
+        mItalic(aFontEntry.mItalic),
+        mWeight(aFontEntry.mWeight),
+        mCharset(aFontEntry.mCharset),
+        mUnicodeRanges(aFontEntry.mUnicodeRanges),
+        mCharacterMap(aFontEntry.mCharacterMap)
+    {
+    }
+
     const nsString& GetName() const {
         return mFamily->mName;
     }
