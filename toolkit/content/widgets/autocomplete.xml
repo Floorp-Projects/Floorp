@@ -1115,12 +1115,7 @@
         <xul:image xbl:inherits="src=image" class="ac-site-icon"/>
         <xul:hbox anonid="title-box" class="ac-title" flex="1"
                   onunderflow="_doUnderflow('_title');">
-# note, we rely on the newlines here so that we have
-# a textNode before and after the span.  see _setUpDescription()
-# for more details
-          <xul:description anonid="title" class="ac-normal-text ac-comment" xbl:inherits="selected">
-            <html:span class="ac-emphasize-text"/>
-          </xul:description>
+          <xul:description anonid="title" class="ac-normal-text ac-comment" xbl:inherits="selected"/>
         </xul:hbox>
         <xul:label anonid="title-overflow-ellipsis" xbl:inherits="selected"
                    class="ac-ellipsis-after ac-comment" hidden="true"/>
@@ -1130,12 +1125,7 @@
         <xul:spacer class="ac-site-icon"/>
         <xul:hbox anonid="url-box" class="ac-url" flex="1"
                   onunderflow="_doUnderflow('_url');">
-# note, we rely on the newlines here so that we have
-# a textNode before and after the span.  see _setUpDescription()
-# for more details
-          <xul:description anonid="url" class="ac-normal-text ac-url-text" xbl:inherits="selected">
-            <html:span class="ac-emphasize-text"/>
-          </xul:description>
+          <xul:description anonid="url" class="ac-normal-text ac-url-text" xbl:inherits="selected"/>
         </xul:hbox>
         <xul:label anonid="url-overflow-ellipsis" xbl:inherits="selected" 
                    class="ac-ellipsis-after ac-url-text" hidden="true"/>
@@ -1192,33 +1182,130 @@
         </getter>
       </property>
 
+      <field name="_boundaryCutoff">null</field>
+
+      <property name="boundaryCutoff" readonly="true">
+        <getter>
+          <![CDATA[
+          if (!this._boundaryCutoff) {
+            this._boundaryCutoff =
+              Components.classes["@mozilla.org/preferences-service;1"].
+              getService(Components.interfaces.nsIPrefBranch).
+              getIntPref("toolkit.autocomplete.richBoundaryCutoff");
+          }
+          return this._boundaryCutoff;
+          ]]>
+        </getter>
+      </property>
+
+      <method name="_getBoundaryIndices">
+        <parameter name="aText"/>
+        <parameter name="aSearchTokens"/>
+        <body>
+          <![CDATA[
+          // Short circuit for empty search ([""] == "")
+          if (aSearchTokens == "")
+            return [0, aText.length];
+
+          // Find which regions of text match the search terms
+          let regions = [];
+          for each (let search in aSearchTokens) {
+            let matchIndex;
+            let startIndex = 0;
+            let searchLen = search.length;
+
+            // Find all matches of the search terms, but stop early for perf
+            let lowerText = aText.toLowerCase().substr(0, this.boundaryCutoff);
+            while ((matchIndex = lowerText.indexOf(search, startIndex)) >= 0) {
+              // Start the next search from where this one finished
+              startIndex = matchIndex + searchLen;
+              regions.push([matchIndex, startIndex]);
+            }
+          }
+
+          // Sort the regions by start position then end position
+          regions = regions.sort(function(a, b) let (start = a[0] - b[0])
+            start == 0 ? a[1] - b[1] : start);
+
+          // Generate the boundary indices from each region
+          let start = 0;
+          let end = 0;
+          let boundaries = [];
+          let len = regions.length;
+          for (let i = 0; i < len; i++) {
+            // We have a new boundary if the start of the next is past the end
+            let region = regions[i];
+            if (region[0] > end) {
+              // First index is the beginning of match
+              boundaries.push(start);
+              // Second index is the beginning of non-match
+              boundaries.push(end);
+
+              // Track the new region now that we've stored the previous one
+              start = region[0];
+            }
+
+            // Push back the end index for the current or new region
+            end = Math.max(end, region[1]);
+          }
+
+          // Add the last region
+          boundaries.push(start);
+          boundaries.push(end);
+
+          // Put on the end boundary if necessary
+          if (end < aText.length)
+            boundaries.push(aText.length);
+
+          // Skip the first item because it's always 0
+          return boundaries.slice(1);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_getSearchTokens">
+        <parameter name="aSearch"/>
+        <body>
+          <![CDATA[
+          let search = aSearch.toLowerCase();
+          return [search];
+          ]]>
+        </body>
+      </method>
+
       <method name="_setUpDescription">
         <parameter name="aDescriptionElement"/>
         <parameter name="aText"/>
-        <parameter name="aMatchIndex"/>
-        <parameter name="aMatchLength"/>
         <body>
           <![CDATA[
-          var oldValues = [aDescriptionElement.childNodes[0].textContent,
-                           aDescriptionElement.childNodes[1].textContent,
-                           aDescriptionElement.childNodes[2].textContent];
+          // Get rid of all previous text
+          while (aDescriptionElement.hasChildNodes())
+            aDescriptionElement.removeChild(aDescriptionElement.firstChild);
 
-          var newValues;
+          // Get the indices that separate match and non-match text
+          let search = this.getAttribute("text");
+          let tokens = this._getSearchTokens(search);
+          let indices = this._getBoundaryIndices(aText, tokens);
 
-          if (aMatchIndex == -1) {
-            newValues = [aText, "", ""];
-          }
-          else {
-            var endOfMatch = aMatchIndex + aMatchLength;
-            newValues = [aText.substring(0, aMatchIndex),
-                         aText.substring(aMatchIndex, endOfMatch),
-                         aText.substring(endOfMatch)];
-          }
+          let next;
+          let start = 0;
+          let len = indices.length;
+          // Even indexed boundaries are matches, so skip the 0th if it's empty
+          for (let i = indices[0] == 0 ? 1 : 0; i < len; i++) {
+            next = indices[i];
+            let text = aText.substr(start, next - start);
+            start = next;
 
-          // only update the textContent if the value has changed
-          for (var i=0; i < oldValues.length; i++) {
-            if (oldValues[i] != newValues[i])
-              aDescriptionElement.childNodes[i].textContent = newValues[i];
+            if (i % 2 == 0) {
+              // Emphasize the text for even indices
+              let span = aDescriptionElement.appendChild(
+                document.createElementNS("http://www.w3.org/1999/xhtml", "span"));
+              span.className = "ac-emphasize-text";
+              span.textContent = text;
+            } else {
+              // Otherwise, it's plain text
+              aDescriptionElement.appendChild(document.createTextNode(text));
+            }
           }
           ]]>
         </body>
@@ -1227,7 +1314,6 @@
       <method name="_adjustAcItem">
         <body>
           <![CDATA[
-          var text = this.getAttribute("text");
           var url = this.getAttribute("url");
           var title = this.getAttribute("title");
           var type = this.getAttribute("type");
@@ -1236,14 +1322,9 @@
           this._typeImage.className = "ac-type-icon" +
             (type ? " ac-result-type-" + type : "");
 
-          // emphasize the matching text in both the title and the url
-          var needle = text.toLowerCase();
-
-          // Find the match and emphasize it
-          let index = title.toLowerCase().indexOf(needle);
-          this._setUpDescription(this._title, title, index, text.length);
-          index = url.toLowerCase().indexOf(needle);
-          this._setUpDescription(this._url, url, index, text.length);
+          // Emphasize the matching search terms for the description
+          this._setUpDescription(this._title, title);
+          this._setUpDescription(this._url, url);
 
           // Set up overflow on a timeout because the contents of the box
           // might not have a width yet even though we just changed them
