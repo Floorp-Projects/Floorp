@@ -149,18 +149,13 @@ GetScriptContext(JSContext *cx)
 inline void SetPendingException(JSContext *cx, const char *aMsg)
 {
     JSAutoRequest ar(cx);
-    JSString *str = JS_NewStringCopyZ(cx, aMsg);
-    if (str)
-        JS_SetPendingException(cx, STRING_TO_JSVAL(str));
+    JS_ReportError(cx, "%s", aMsg);
 }
 
 inline void SetPendingException(JSContext *cx, const PRUnichar *aMsg)
 {
     JSAutoRequest ar(cx);
-    JSString *str = JS_NewUCStringCopyZ(cx,
-                        reinterpret_cast<const jschar*>(aMsg));
-    if (str)
-        JS_SetPendingException(cx, STRING_TO_JSVAL(str));
+    JS_ReportError(cx, "%hs", aMsg);
 }
 
 // DomainPolicy members
