@@ -3549,6 +3549,14 @@ nsJSContext::DropScriptObject(void* aScriptObject)
   return NS_OK;
 }
 
+void
+nsJSContext::ReportPendingException()
+{
+  if (mIsInitialized && ::JS_IsExceptionPending(mContext)) {
+    ::JS_ReportPendingException(mContext);
+  }
+}
+
 /**********************************************************************
  * nsJSRuntime implementation
  *********************************************************************/
