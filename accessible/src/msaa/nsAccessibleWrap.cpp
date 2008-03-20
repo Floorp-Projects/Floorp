@@ -1672,11 +1672,6 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
   if (!accessible)
     return NS_OK;
 
-  PRUint32 role = ROLE_SYSTEM_TEXT; // Default value
-
-  nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(accessible));
-  NS_ENSURE_STATE(accessNode);
-
   if (eventType == nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED ||
       eventType == nsIAccessibleEvent::EVENT_FOCUS) {
     UpdateSystemCaret();
@@ -1697,7 +1692,7 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
     newAccessible = accessible;
   }
 
-  HWND hWnd = GetHWNDFor(accessible);
+  HWND hWnd = GetHWNDFor(newAccessible);
   NS_ENSURE_TRUE(hWnd, NS_ERROR_FAILURE);
 
   // Gecko uses two windows for every scrollable area. One window contains
