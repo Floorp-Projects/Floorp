@@ -155,7 +155,7 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
 .ac-site-icon {
   width: 16px; 
   height: 16px;
-  margin-right: 8px;
+  margin: 0 5px -3px 3px;
 }
 
 .ac-type-icon {
