@@ -2192,6 +2192,8 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
     nsIDocShellTreeItem *docShellTreeItem = nsnull;
     if (container)
       CallQueryInterface(container, &docShellTreeItem);
+    if (!docShellTreeItem)
+      break;
     nsIDocShellTreeItem *sameTypeParent = nsnull;
     docShellTreeItem->GetSameTypeParent(&sameTypeParent);
     if (!sameTypeParent || sameTypeParent == docShellTreeItem)
