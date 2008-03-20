@@ -463,7 +463,9 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
       domDoc->GetElementById(id, getter_AddRefs(relatedEl));
       finalFocusNode = do_QueryInterface(relatedEl);
       if (!finalFocusNode) {
-        return PR_FALSE;
+        // If aria-activedescendant is set to nonextistant ID, then treat as focus
+        // on the activedescendant container (which has real DOM focus)
+        finalFocusNode = aNode;
       }
       finalFocusAccessible = nsnull;
     }
