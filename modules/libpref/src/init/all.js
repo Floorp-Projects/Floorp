@@ -180,6 +180,9 @@ pref("browser.frames.enabled", true);
 // form submission
 pref("browser.forms.submit.backwards_compatible", true);
 
+// Number of characters to consider emphasizing for rich autocomplete results
+pref("toolkit.autocomplete.richBoundaryCutoff", 200);
+
 pref("toolkit.scrollbox.smoothScroll", true);
 pref("toolkit.scrollbox.scrollIncrement", 20);
 pref("toolkit.scrollbox.clickToScroll.scrollDelay", 150);
