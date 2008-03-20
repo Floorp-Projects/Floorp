@@ -1268,7 +1268,7 @@
         <body>
           <![CDATA[
           let search = aSearch.toLowerCase();
-          return [search];
+          return search.split(/\s+/);
           ]]>
         </body>
       </method>
