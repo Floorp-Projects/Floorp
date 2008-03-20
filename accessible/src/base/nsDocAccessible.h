@@ -203,6 +203,11 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
     nsresult FireShowHideEvents(nsIDOMNode *aDOMNode, PRBool aAvoidOnThisNode, PRUint32 aEventType,
                                 PRBool aDelay, PRBool aForceIsFromUserInput);
 
+    /**
+     * If the given accessible object is a ROLE_ENTRY, fire a value change event for it
+     */
+    void FireValueChangeForTextFields(nsIAccessible *aPossibleTextFieldAccessible);
+
     nsAccessNodeHashtable mAccessNodeCache;
     void *mWnd;
     nsCOMPtr<nsIDocument> mDocument;
