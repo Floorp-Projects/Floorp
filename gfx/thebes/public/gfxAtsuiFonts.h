@@ -57,7 +57,7 @@ class gfxAtsuiFont : public gfxFont {
 public:
 
     gfxAtsuiFont(MacOSFontEntry *aFontEntry,
-                 const gfxFontStyle *fontStyle);
+                 const gfxFontStyle *fontStyle, PRBool aNeedsBold);
 
     virtual ~gfxAtsuiFont();
 
