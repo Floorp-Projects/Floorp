@@ -155,7 +155,12 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
         JS_ASSERT(pobj != obj);
         protoIndex = 1;
         tmp = obj;
-        while ((tmp = OBJ_GET_PROTO(cx, tmp)) != NULL) {
+        for (;;) {
+            tmp = OBJ_GET_PROTO(cx, tmp);
+            if (!tmp) {
+                PCMETER(cache->noprotos++);
+                return;
+            }
             if (tmp == pobj)
                 break;
             ++protoIndex;
@@ -425,6 +430,7 @@ js_FlushPropertyCache(JSContext *cx)
         P(oddfills);
         P(modfills);
         P(brandfills);
+        P(noprotos);
         P(longchains);
         P(recycles);
         P(pcrecycles);
