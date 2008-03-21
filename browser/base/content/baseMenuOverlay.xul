@@ -77,7 +77,8 @@
           accesskey="&helpMenu.accesskey;">
 #endif
       <menupopup id="menu_HelpPopup" onpopupshowing="buildHelpMenu();">
-        <menuitem oncommand="openHelp('firefox-help', 'chrome://browser/locale/help/help.rdf');"
+        <menuitem id="menu_openHelp"
+                  oncommand="openHelp('firefox-help', 'chrome://browser/locale/help/help.rdf');"
 #ifdef XP_MACOSX
                   label="&helpContentsMac.label;"
                   key="key_openHelpMacFrontend"/>
