@@ -432,14 +432,15 @@ extern JSBool
 js_GetClassId(JSContext *cx, JSClass *clasp, jsid *idp);
 
 extern JSObject *
-js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
+js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent,
+             uintN extraBytes);
 
 /*
  * See jsapi.h, JS_NewObjectWithGivenProto.
  */
 extern JSObject *
 js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
-                           JSObject *parent);
+                           JSObject *parent, uintN extraBytes);
 
 /*
  * Fast access to immutable standard objects (constructors and prototypes).

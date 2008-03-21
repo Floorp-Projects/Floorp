@@ -933,15 +933,15 @@ CountHeap(JSContext *cx, uintN argc, jsval *vp)
         const char       *name;
         int32             kind;
     } traceKindNames[] = {
-        { "all",        -1                  },
-        { "object",     JSTRACE_OBJECT      },
-        { "double",     JSTRACE_DOUBLE      },
-        { "string",     JSTRACE_STRING      },
-        { "function",   JSTRACE_FUNCTION    },
+        { "all",        -1                          },
+        { "object",     JSTRACE_OBJECT              },
+        { "double",     JSTRACE_DOUBLE              },
+        { "string",     JSTRACE_STRING              },
+        { "function",   JSTRACE_SCRIPTED_FUNCTION   },
 #if JS_HAS_XML_SUPPORT
-        { "namespace",  JSTRACE_NAMESPACE   },
-        { "qname",      JSTRACE_QNAME       },
-        { "xml",        JSTRACE_XML         },
+        { "namespace",  JSTRACE_NAMESPACE           },
+        { "qname",      JSTRACE_QNAME               },
+        { "xml",        JSTRACE_XML                 },
 #endif
     };
 
@@ -1029,7 +1029,7 @@ ValueToScript(JSContext *cx, jsval v)
         fun = JS_ValueToFunction(cx, v);
         if (!fun)
             return NULL;
-        script = FUN_SCRIPT(fun);
+        script = JS_GetFunctionScript(cx, fun);
     }
     return script;
 }
@@ -1371,26 +1371,31 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             return JS_FALSE;
 
         if (VALUE_IS_FUNCTION(cx, argv[i])) {
-            JSFunction *fun = JS_ValueToFunction(cx, argv[i]);
-            if (fun && (fun->flags & JSFUN_FLAGS_MASK)) {
-                uint16 flags = fun->flags;
-                fputs("flags:", stdout);
+            JSFunction *fun;
+            uint16 flags;
+
+            fun = JS_ValueToFunction(cx, argv[i]);
+            if (fun) {
+                flags = JS_GetFunctionFlags(fun);
+                if (flags & JSFUN_FLAGS_MASK) {
+                    fputs("flags:", stdout);
 
 #define SHOW_FLAG(flag) if (flags & JSFUN_##flag) fputs(" " #flag, stdout);
 
-                SHOW_FLAG(LAMBDA);
-                SHOW_FLAG(SETTER);
-                SHOW_FLAG(GETTER);
-                SHOW_FLAG(BOUND_METHOD);
-                SHOW_FLAG(HEAVYWEIGHT);
-                SHOW_FLAG(THISP_STRING);
-                SHOW_FLAG(THISP_NUMBER);
-                SHOW_FLAG(THISP_BOOLEAN);
-                SHOW_FLAG(EXPR_CLOSURE);
-                SHOW_FLAG(INTERPRETED);
+                    SHOW_FLAG(LAMBDA);
+                    SHOW_FLAG(SETTER);
+                    SHOW_FLAG(GETTER);
+                    SHOW_FLAG(BOUND_METHOD);
+                    SHOW_FLAG(HEAVYWEIGHT);
+                    SHOW_FLAG(THISP_STRING);
+                    SHOW_FLAG(THISP_NUMBER);
+                    SHOW_FLAG(THISP_BOOLEAN);
+                    SHOW_FLAG(EXPR_CLOSURE);
+                    SHOW_FLAG(SCRIPTED);
 
 #undef SHOW_FLAG
-                putchar('\n');
+                    putchar('\n');
+                }
             }
         }
 
@@ -2947,7 +2952,7 @@ Help(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             type = JS_TypeOfValue(cx, argv[i]);
             if (type == JSTYPE_FUNCTION) {
                 fun = JS_ValueToFunction(cx, argv[i]);
-                str = fun->atom ? ATOM_TO_STRING(fun->atom) : NULL;
+                str = JS_GetFunctionId(fun);
             } else if (type == JSTYPE_STRING) {
                 str = JSVAL_TO_STRING(argv[i]);
             } else {
