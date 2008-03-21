@@ -79,15 +79,15 @@ class FontEntry
 public:
     THEBES_INLINE_DECL_REFCOUNTING(FontEntry)
 
-    FontEntry(FontFamily *aFontFamily) : 
-        mFamily(aFontFamily), mUnicodeFont(PR_FALSE), mSymbolFont(PR_FALSE),
+    FontEntry(const nsString& aFaceName) : 
+        mFaceName(aFaceName), mUnicodeFont(PR_FALSE), mSymbolFont(PR_FALSE),
         mTrueType(PR_FALSE), mIsType1(PR_FALSE),
         mIsBadUnderlineFont(PR_FALSE), mForceGDI(PR_FALSE), mCharset(0), mUnicodeRanges(0)
     {
     }
 
     FontEntry(const FontEntry& aFontEntry) :
-        mFamily(aFontEntry.mFamily),
+        mFaceName(aFontEntry.mFaceName),
         mWindowsFamily(aFontEntry.mWindowsFamily),
         mWindowsPitch(aFontEntry.mWindowsPitch),
         mUnicodeFont(aFontEntry.mUnicodeFont),
@@ -104,7 +104,7 @@ public:
     }
 
     const nsString& GetName() const {
-        return mFamily->mName;
+        return mFaceName;
     }
 
     PRBool IsCrappyFont() const {
@@ -199,8 +199,7 @@ public:
     // whether this font family is in "bad" underline offset blacklist.
     PRBool IsBadUnderlineFont() { return mIsBadUnderlineFont != 0; }
 
-    /* needs to be a weak pointer to avoid a cycle */
-    FontFamily *mFamily;
+    nsString mFaceName;
 
     PRUint8 mWindowsFamily;
     PRUint8 mWindowsPitch;
