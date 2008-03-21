@@ -256,7 +256,7 @@ SyncCore.prototype = {
 	    skip = true;
 	    return false; // b, but we add it back from guidChanges
           }
-  
+
           // watch out for create commands with GUIDs that already exist
           if (b.action == "create" && this._itemExists(b.GUID)) {
             this._log.error("Remote command has GUID that already exists " +
