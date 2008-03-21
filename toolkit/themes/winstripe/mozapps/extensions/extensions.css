@@ -339,25 +339,24 @@ vbox[typeName="status"][type="header-recommended"] {
   margin: 0;
   border: 0;
   padding: 0;
-  width: 19px;
-  height: 19px;
-  min-width: 19px;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  list-style-image: url("chrome://mozapps/skin/extensions/searchIcons.png");
+}
+
+.searchbox-search {
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+
+.searchbox-cancel {
+  -moz-image-region: rect(0px 32px 16px 16px);
 }
 
 .searchbox-search .button-box,
 .searchbox-cancel .button-box {
   border: 0px;
   padding: 0px;
-}
-
-.searchbox-search {
-  list-style-image: url(chrome://mozapps/skin/extensions/searchIcons.png);
-  -moz-image-region: rect(0px 38px 19px 19px);
-}
-
-.searchbox-cancel {
-  list-style-image: url(chrome://mozapps/skin/extensions/searchIcons.png);
-  -moz-image-region: rect(0px 57px 19px 38px);
 }
 
 #progressBox {

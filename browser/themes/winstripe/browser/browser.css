@@ -1391,7 +1391,7 @@ tabpanels {
 
 .tab-close-button {
   -moz-appearance: none;
-  -moz-image-region: rect(0px, 64px, 16px, 48px);
+  -moz-image-region: rect(0px, 56px, 14px, 42px);
   -moz-margin-end: 6px;
   border: none;
   padding: 0px;
@@ -1400,16 +1400,16 @@ tabpanels {
 
 .tab-close-button:hover,
 .tabbrowser-tab[selected="true"] > .tab-close-button:hover {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
+  -moz-image-region: rect(0px, 28px, 14px, 14px);
 }
 
 .tab-close-button:hover:active,
 .tabbrowser-tab[selected="true"] > .tab-close-button:hover:active {
-  -moz-image-region: rect(0px, 48px, 16px, 32px);
+  -moz-image-region: rect(0px, 42px, 14px, 28px);
 }
 
 .tabbrowser-tab[selected="true"] > .tab-close-button {
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
+  -moz-image-region: rect(0px, 14px, 14px, 0px);
   /* Make this button focusable so clicking on it will not focus the tab while
      it's getting closed */
   -moz-user-focus: normal;
