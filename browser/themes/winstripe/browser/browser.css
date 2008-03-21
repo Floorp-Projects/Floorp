@@ -1550,7 +1550,7 @@ stack[chromedir="rtl"] > hbox > .tabs-alltabs-box-animate {
 .tabs-closebutton {
   -moz-appearance: none;
   list-style-image: url("chrome://global/skin/icons/close.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
+  -moz-image-region: rect(0px, 14px, 14px, 0px);
   padding: 4px 2px;
   margin: 0px;
   border: none;
@@ -1563,11 +1563,11 @@ stack[chromedir="rtl"] > hbox > .tabs-alltabs-box-animate {
 }
 
 .tabs-closebutton:hover {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
+  -moz-image-region: rect(0px, 28px, 14px, 14px);
 }
 
 .tabs-closebutton:hover:active {
-  -moz-image-region: rect(0px, 48px, 16px, 32px);
+  -moz-image-region: rect(0px, 42px, 14px, 28px);
 }
 
 .tabs-container > .tabs-closebutton {
