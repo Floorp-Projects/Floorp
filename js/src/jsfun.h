@@ -44,6 +44,7 @@
  */
 #include "jsprvtd.h"
 #include "jspubtd.h"
+#include "jsobj.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -62,44 +63,73 @@ typedef union JSLocalNames {
     JSLocalNameMap  *map;
 } JSLocalNames;
 
-struct JSFunction {
-    JSObject        *object;    /* back-pointer to GC'ed object header */
+struct JSNativeFunction {
+    JSObject        object;
+    uint16          flags;      /* bound method and other flags, see jsapi.h */
     uint16          nargs;      /* maximum number of specified arguments,
                                    reflected as f.length/f.arity */
-    uint16          flags;      /* bound method and other flags, see jsapi.h */
-    union {
-        struct {
-            uint16      extra;  /* number of arg slots for local GC roots */
-            uint16      minargs;/* minimum number of specified arguments, used
+    uint16          extra;      /* number of arg slots for local GC roots */
+    uint16          minargs;    /* minimum number of specified arguments, used
                                    only when calling fast native */
-            JSNative    native; /* native method pointer or null */
-            JSClass     *clasp; /* if non-null, constructor for this class */
-        } n;
-        struct {
-            uint16      nvars;  /* number of local variables */
-            uint16      spare;  /* reserved for future use */
-            JSScript    *script;/* interpreted bytecode descriptor or null */
-            JSLocalNames names; /* argument and variable names */
-        } i;
-    } u;
+    JSNative        native;     /* native method pointer or null */
+    JSClass         *clasp;     /* if non-null, constructor for this class */
+    JSAtom          *atom;      /* name for diagnostics and decompiling */
+};
+
+struct JSScriptedFunction {
+    JSObject        *object;    /* back-pointer to GC'ed object header */
+    uint16          flags;      /* bound method and other flags, see jsapi.h */
+    uint16          nargs;      /* number of arguments */
+    uint16          nvars;      /* number of local variables */
+    uint16          spare;      /* reserved for future use */
+    JSScript        *script;    /* interpreted bytecode descriptor or null */
+    JSLocalNames    names;      /* argument and variable names */
     JSAtom          *atom;      /* name for diagnostics and decompiling */
 };
 
 #define JSFUN_EXPR_CLOSURE   0x4000 /* expression closure: function(x)x*x */
-#define JSFUN_INTERPRETED    0x8000 /* use u.i if set, u.n if unset */
+#define JSFUN_SCRIPTED       0x8000 /* use FUN_TO_SCRIPTED if set,
+                                       FUN_TO_NATIVE if unset */
 
-#define JSFUN_SCRIPT_OR_FAST_NATIVE (JSFUN_INTERPRETED | JSFUN_FAST_NATIVE)
 
-#define FUN_INTERPRETED(fun) ((fun)->flags & JSFUN_INTERPRETED)
-#define FUN_SLOW_NATIVE(fun) (!((fun)->flags & JSFUN_SCRIPT_OR_FAST_NATIVE))
-#define FUN_SCRIPT(fun)      (FUN_INTERPRETED(fun) ? (fun)->u.i.script : NULL)
-#define FUN_NATIVE(fun)      (FUN_SLOW_NATIVE(fun) ? (fun)->u.n.native : NULL)
-#define FUN_FAST_NATIVE(fun) (((fun)->flags & JSFUN_FAST_NATIVE)              \
-                              ? (JSFastNative) (fun)->u.n.native              \
-                              : NULL)
-#define FUN_MINARGS(fun)     (((fun)->flags & JSFUN_FAST_NATIVE)              \
-                              ? (fun)->u.n.minargs                            \
-                              : (fun)->nargs)
+/*
+ * JSFunction * points into the flags field of either JSNativeFunction
+ * or JSScriptedFunction.
+ */
+#define FUN_FLAGS(fun)       (*(uint16 *) (fun))
+
+#define FUN_IS_SCRIPTED(fun) (FUN_FLAGS(fun) & JSFUN_SCRIPTED)
+
+#define FUN_TO_SCRIPTED(fun)                                                  \
+    (JS_ASSERT(FUN_IS_SCRIPTED(fun)),                                         \
+     (JSScriptedFunction *)((uint8 *)fun - offsetof(JSScriptedFunction, flags)))
+
+#define FUN_TO_NATIVE(fun)                                                    \
+    (JS_ASSERT(!FUN_IS_SCRIPTED(fun)),                                        \
+     (JSNativeFunction *)((uint8 *)fun - offsetof(JSNativeFunction, flags)))
+
+#define NATIVE_TO_FUN(nfun)                                                   \
+    (JS_ASSERT(((nfun)->flags & JSFUN_SCRIPTED) == 0),                        \
+     (JSFunction *) (void *) &(nfun)->flags)
+
+#define SCRIPTED_TO_FUN(sfun)                                                 \
+    (JS_ASSERT((sfun)->flags & JSFUN_SCRIPTED),                               \
+     (JSFunction *) (void *) &(sfun)->flags)
+
+#define FUN_NARGS(fun)       (FUN_IS_SCRIPTED(fun)                            \
+                              ? FUN_TO_SCRIPTED(fun)->nargs                   \
+                              : FUN_TO_NATIVE(fun)->nargs)
+
+#define FUN_OBJECT(fun)      (FUN_IS_SCRIPTED(fun)                            \
+                              ? FUN_TO_SCRIPTED(fun)->object                  \
+                              : &FUN_TO_NATIVE(fun)->object)
+
+#define FUN_ATOM(fun)        (FUN_IS_SCRIPTED(fun)                            \
+                              ? FUN_TO_SCRIPTED(fun)->atom                    \
+                              : FUN_TO_NATIVE(fun)->atom)
+
+#define NATIVE_FUN_MINARGS(nfun)                                              \
+    (((nfun)->flags & JSFUN_FAST_NATIVE) ? (nfun)->minargs : (nfun)->nargs)
 
 extern JSClass js_ArgumentsClass;
 extern JS_FRIEND_DATA(JSClass) js_CallClass;
@@ -107,19 +137,20 @@ extern JS_FRIEND_DATA(JSClass) js_CallClass;
 /* JS_FRIEND_DATA so that VALUE_IS_FUNCTION is callable from the shell. */
 extern JS_FRIEND_DATA(JSClass) js_FunctionClass;
 
+#define HAS_FUNCTION_CLASS(obj) (STOBJ_GET_CLASS(obj) == &js_FunctionClass)
+
 /*
  * NB: jsapi.h and jsobj.h must be included before any call to this macro.
  */
 #define VALUE_IS_FUNCTION(cx, v)                                              \
-    (!JSVAL_IS_PRIMITIVE(v) &&                                                \
-     OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_FunctionClass)
+    (!JSVAL_IS_PRIMITIVE(v) && HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(v)))
 
 /*
  * Macro to access the private slot of the function object after the slot is
  * initialized.
  */
 #define GET_FUNCTION_PRIVATE(cx, funobj)                                      \
-    (JS_ASSERT(OBJ_GET_CLASS(cx, funobj) == &js_FunctionClass),               \
+    (JS_ASSERT(HAS_FUNCTION_CLASS(funobj)),                                   \
      (JSFunction *) OBJ_GET_PRIVATE(cx, funobj))
 
 extern JSObject *
@@ -135,19 +166,24 @@ extern JSFunction *
 js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
                uintN flags, JSObject *parent, JSAtom *atom);
 
-extern void
-js_TraceFunction(JSTracer *trc, JSFunction *fun);
+extern JSNativeFunction *
+js_NewNativeFunction(JSContext *cx, JSNative native, uintN nargs, uintN flags,
+                     JSObject *parent, JSAtom *atom);
+
+extern JSScriptedFunction *
+js_NewScriptedFunction(JSContext *cx, JSObject *funobj, uintN flags,
+                       JSObject *parent, JSAtom *atom);
 
 extern void
-js_FinalizeFunction(JSContext *cx, JSFunction *fun);
+js_TraceFunction(JSTracer *trc, JSScriptedFunction *fun);
+
+extern void
+js_FinalizeFunction(JSContext *cx, JSScriptedFunction *fun);
 
 extern JSObject *
 js_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent);
 
-extern JSBool
-js_LinkFunctionObject(JSContext *cx, JSFunction *fun, JSObject *object);
-
-extern JSFunction *
+extern JSNativeFunction *
 js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative native,
                   uintN nargs, uintN flags);
 
@@ -206,10 +242,11 @@ typedef enum JSLocalKind {
     JSLOCAL_CONST
 } JSLocalKind;
 
-#define JS_GET_LOCAL_NAME_COUNT(fun)    ((fun)->nargs + (fun)->u.i.nvars)
+#define JS_GET_LOCAL_NAME_COUNT(fun)    ((fun)->nargs + (fun)->nvars)
 
 extern JSBool
-js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind);
+js_AddLocal(JSContext *cx, JSScriptedFunction *fun, JSAtom *atom,
+            JSLocalKind kind);
 
 /*
  * Look up an argument or variable name returning its kind when found or
@@ -218,7 +255,8 @@ js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind);
  * variable.
  */
 extern JSLocalKind
-js_LookupLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, uintN *indexp);
+js_LookupLocal(JSContext *cx, JSScriptedFunction *fun, JSAtom *atom,
+               uintN *indexp);
 
 /*
  * Functions to work with local names as an array of words.
@@ -235,7 +273,7 @@ js_LookupLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, uintN *indexp);
  * corresponds to the const declaration.
  */
 extern jsuword *
-js_GetLocalNameArray(JSContext *cx, JSFunction *fun, JSArenaPool *pool);
+js_GetLocalNameArray(JSContext *cx, JSScriptedFunction *fun, JSArenaPool *pool);
 
 #define JS_LOCAL_NAME_TO_ATOM(nameWord)                                       \
     ((JSAtom *) ((nameWord) & ~(jsuword) 1))
@@ -244,7 +282,7 @@ js_GetLocalNameArray(JSContext *cx, JSFunction *fun, JSArenaPool *pool);
     ((((nameWord) & (jsuword) 1)) != 0)
 
 extern void
-js_FreezeLocalNames(JSContext *cx, JSFunction *fun);
+js_FreezeLocalNames(JSContext *cx, JSScriptedFunction *fun);
 
 JS_END_EXTERN_C
 

@@ -175,7 +175,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                        XXX combine with blockChain? */
     JSAtomList      decls;          /* function, const, and var declarations */
     JSParseContext  *parseContext;
-    JSFunction      *fun;           /* function to store argument and variable
+    JSScriptedFunction *fun;        /* function to store argument and variable
                                        names when flags & TCF_IN_FUNCTION */
 };
 
