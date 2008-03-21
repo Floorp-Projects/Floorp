@@ -400,7 +400,7 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
              * we use the parent slot to keep track of the iterable, we must
              * fix it up after.
              */
-            iterobj = js_NewObject(cx, &js_IteratorClass, NULL, NULL);
+            iterobj = js_NewObject(cx, &js_IteratorClass, NULL, NULL, 0);
             if (!iterobj)
                 goto bad;
 
@@ -725,13 +725,13 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     jsval *newsp;
 
     /* After the following return, failing control flow must goto bad. */
-    obj = js_NewObject(cx, &js_GeneratorClass, NULL, NULL);
+    obj = js_NewObject(cx, &js_GeneratorClass, NULL, NULL, 0);
     if (!obj)
         return NULL;
 
     /* Load and compute stack slot counts. */
     argc = fp->argc;
-    nargs = JS_MAX(argc, fp->fun->nargs);
+    nargs = JS_MAX(argc, FUN_TO_SCRIPTED(fp->fun)->nargs);
     nvars = fp->nvars;
     nslots = 2 + nargs + nvars + fp->script->depth;
 

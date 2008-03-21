@@ -242,7 +242,8 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
      * We must be in a function activation; the function must be lightweight
      * or else fp must have a variable object.
      */
-    JS_ASSERT(fp->fun && (!(fp->fun->flags & JSFUN_HEAVYWEIGHT) || fp->varobj));
+    JS_ASSERT(fp->fun);
+    JS_ASSERT_IF(FUN_FLAGS(fp->fun) & JSFUN_HEAVYWEIGHT, fp->varobj);
 
     /* Skip eval and debugger frames. */
     while (fp->flags & JSFRAME_SPECIAL)
@@ -254,7 +255,7 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
         return argsobj;
 
     /* Link the new object to fp so it can get actual argument values. */
-    argsobj = js_NewObject(cx, &js_ArgumentsClass, NULL, NULL);
+    argsobj = js_NewObject(cx, &js_ArgumentsClass, NULL, NULL, 0);
     if (!argsobj || !JS_SetPrivate(cx, argsobj, fp)) {
         cx->weakRoots.newborn[GCX_OBJECT] = NULL;
         return NULL;
@@ -418,7 +419,7 @@ args_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
 
       default:
-        if (FUN_INTERPRETED(fp->fun) &&
+        if (FUN_IS_SCRIPTED(fp->fun) &&
             (uintN)slot < fp->argc &&
             !ArgWasDeleted(cx, fp, slot)) {
             fp->argv[slot] = *vp;
@@ -602,7 +603,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp, JSObject *parent)
     }
 
     /* Create the call object and link it to its stack frame. */
-    callobj = js_NewObject(cx, &js_CallClass, NULL, parent);
+    callobj = js_NewObject(cx, &js_CallClass, NULL, parent, 0);
     if (!callobj || !JS_SetPrivate(cx, callobj, fp)) {
         cx->weakRoots.newborn[GCX_OBJECT] = NULL;
         return NULL;
@@ -669,7 +670,7 @@ call_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
     if (!fp)
         return JS_TRUE;
-    JS_ASSERT(fp->fun);
+    JS_ASSERT(fp->fun && FUN_IS_SCRIPTED(fp->fun));
 
     slot = JSVAL_TO_INT(id);
     switch (slot) {
@@ -683,7 +684,7 @@ call_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
 
       default:
-        if ((uintN)slot < JS_MAX(fp->argc, fp->fun->nargs))
+        if ((uintN)slot < JS_MAX(fp->argc, FUN_TO_SCRIPTED(fp->fun)->nargs))
             *vp = fp->argv[slot];
         break;
     }
@@ -701,7 +702,7 @@ call_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
     if (!fp)
         return JS_TRUE;
-    JS_ASSERT(fp->fun);
+    JS_ASSERT(fp->fun && FUN_IS_SCRIPTED(fp->fun));
 
     slot = JSVAL_TO_INT(id);
     switch (slot) {
@@ -710,7 +711,7 @@ call_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
 
       default:
-        if ((uintN)slot < JS_MAX(fp->argc, fp->fun->nargs))
+        if ((uintN)slot < JS_MAX(fp->argc, FUN_TO_SCRIPTED(fp->fun)->nargs))
             fp->argv[slot] = *vp;
         break;
     }
@@ -749,7 +750,7 @@ static JSBool
 call_enumerate(JSContext *cx, JSObject *obj)
 {
     JSStackFrame *fp;
-    JSFunction *fun;
+    JSScriptedFunction *fun;
     uintN n, i, slot;
     void *mark;
     jsuword *names;
@@ -769,7 +770,7 @@ call_enumerate(JSContext *cx, JSObject *obj)
      * and functions in fp->vars for declared variables and nested-at-top-level
      * local functions.
      */
-    fun = fp->fun;
+    fun = FUN_TO_SCRIPTED(fp->fun);
     n = JS_GET_LOCAL_NAME_COUNT(fun);
     if (n == 0)
         return JS_TRUE;
@@ -821,6 +822,7 @@ call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
 {
     JSStackFrame *fp;
     jsid id;
+    JSScriptedFunction *fun;
     JSLocalKind localKind;
     JSPropertyOp getter, setter;
     uintN slot, attrs;
@@ -829,7 +831,7 @@ call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
     fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
     if (!fp)
         return JS_TRUE;
-    JS_ASSERT(fp->fun);
+    JS_ASSERT(fp->fun && FUN_IS_SCRIPTED(fp->fun));
     JS_ASSERT(GET_FUNCTION_PRIVATE(cx, fp->callee) == fp->fun);
 
     if (!JSVAL_IS_STRING(idval))
@@ -838,16 +840,17 @@ call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
     if (!js_ValueToStringId(cx, idval, &id))
         return JS_FALSE;
 
-    localKind = js_LookupLocal(cx, fp->fun, JSID_TO_ATOM(id), &slot);
+    fun = FUN_TO_SCRIPTED(fp->fun);
+    localKind = js_LookupLocal(cx, fun, JSID_TO_ATOM(id), &slot);
     if (localKind != JSLOCAL_NONE) {
         if (localKind == JSLOCAL_ARG) {
-            JS_ASSERT(slot < fp->fun->nargs);
+            JS_ASSERT(slot < fun->nargs);
             vp = fp->argv;
             getter = setter = NULL;
             attrs = JSPROP_PERMANENT;
         } else {
             JS_ASSERT(localKind == JSLOCAL_VAR || localKind == JSLOCAL_CONST);
-            JS_ASSERT(fp->fun->u.i.nvars == fp->nvars);
+            JS_ASSERT(FUN_TO_SCRIPTED(fp->fun)->nvars == fp->nvars);
             JS_ASSERT(slot < fp->nvars);
             vp = fp->vars;
             getter = js_GetCallVariable;
@@ -1012,14 +1015,16 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
       case ARGS_LENGTH:
       case FUN_ARITY:
-            *vp = INT_TO_JSVAL((jsint)fun->nargs);
+        *vp = INT_TO_JSVAL((jsint) FUN_NARGS(fun));
         break;
 
-      case FUN_NAME:
-        *vp = fun->atom
-              ? ATOM_KEY(fun->atom)
-              : STRING_TO_JSVAL(cx->runtime->emptyString);
+      case FUN_NAME: {
+        JSAtom *atom;
+
+        atom = FUN_ATOM(fun);
+        *vp = atom ? ATOM_KEY(atom) : STRING_TO_JSVAL(cx->runtime->emptyString);
         break;
+      }
 
       case FUN_CALLER:
         if (fp && fp->down && fp->down->fun)
@@ -1035,7 +1040,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
       default:
         /* XXX fun[0] and fun.arguments[0] are equivalent. */
-        if (fp && fp->fun && (uintN)slot < fp->fun->nargs)
+        if (fp && fp->fun && (uintN)slot < FUN_NARGS(fp->fun))
             *vp = fp->argv[slot];
         break;
     }
@@ -1070,7 +1075,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
         return JS_TRUE;
 
     fun = GET_FUNCTION_PRIVATE(cx, obj);
-    JS_ASSERT(fun->object);
+    JS_ASSERT(FUN_OBJECT(fun));
 
     /*
      * No need to reflect fun.prototype in 'fun.prototype = ... '.
@@ -1099,7 +1104,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
          * Beware of the wacky case of a user function named Object -- trying
          * to find a prototype for that will recur back here _ad perniciem_.
          */
-        if (fun->atom == CLASS_ATOM(cx, Object))
+        if (FUN_ATOM(fun) == CLASS_ATOM(cx, Object))
             return JS_TRUE;
 
         /*
@@ -1107,7 +1112,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
          * object itself.
          */
         proto = js_NewObject(cx, &js_ObjectClass, NULL,
-                             OBJ_GET_PARENT(cx, obj));
+                             OBJ_GET_PARENT(cx, obj), 0);
         if (!proto)
             return JS_FALSE;
 
@@ -1166,7 +1171,7 @@ static JSBool
 fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 {
     JSContext *cx;
-    JSFunction *fun;
+    JSScriptedFunction *fun;
     uint32 nullAtom;            /* flag to indicate if fun->atom is NULL */
     uintN nargs, nvars, n;
     uint32 localsword;          /* word to xdr argument and variable counts */
@@ -1176,20 +1181,23 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 
     cx = xdr->cx;
     if (xdr->mode == JSXDR_ENCODE) {
-        fun = GET_FUNCTION_PRIVATE(cx, *objp);
-        if (!FUN_INTERPRETED(fun)) {
+        JSFunction *f;
+
+        f = GET_FUNCTION_PRIVATE(cx, *objp);
+        if (!FUN_IS_SCRIPTED(f)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_NOT_SCRIPTED_FUNCTION,
-                                 JS_GetFunctionName(fun));
+                                 JS_GetFunctionName(f));
             return JS_FALSE;
         }
+        fun = FUN_TO_SCRIPTED(f);
         nullAtom = !fun->atom;
         nargs = fun->nargs;
-        nvars = fun->u.i.nvars;
+        nvars = fun->nvars;
         localsword = (nargs << 16) | nvars;
         flagsword = fun->flags;
     } else {
-        fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, NULL, NULL);
+        fun = js_NewScriptedFunction(cx, NULL, 0, NULL, NULL);
         if (!fun)
             return JS_FALSE;
         STOBJ_SET_PARENT(fun->object, NULL);
@@ -1215,7 +1223,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
     if (xdr->mode == JSXDR_DECODE) {
         nargs = localsword >> 16;
         nvars = localsword & JS_BITMASK(16);
-        JS_ASSERT(flagsword | JSFUN_INTERPRETED);
+        JS_ASSERT(flagsword | JSFUN_SCRIPTED);
         fun->flags = (uint16) flagsword;
     }
 
@@ -1316,15 +1324,15 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
             js_FreezeLocalNames(cx, fun);
     }
 
-    if (!js_XDRScript(xdr, &fun->u.i.script, NULL))
+    if (!js_XDRScript(xdr, &fun->script, NULL))
         goto bad;
 
     if (xdr->mode == JSXDR_DECODE) {
         *objp = fun->object;
 #ifdef CHECK_SCRIPT_OWNER
-        fun->u.i.script->owner = NULL;
+        fun->script->owner = NULL;
 #endif
-        js_CallNewScriptHook(cx, fun->u.i.script, fun);
+        js_CallNewScriptHook(cx, fun->script, fun);
     }
 
 out:
@@ -1376,17 +1384,30 @@ static void
 fun_trace(JSTracer *trc, JSObject *obj)
 {
     JSFunction *fun;
+    JSNativeFunction *native;
 
     /* A newborn function object may have a not yet initialized private slot. */
     fun = (JSFunction *) JS_GetPrivate(trc->context, obj);
-    if (fun)
-        JS_CALL_TRACER(trc, fun, JSTRACE_FUNCTION, "private");
+    if (!fun)
+        return;
+
+    if (FUN_IS_SCRIPTED(fun)) {
+        JS_CALL_TRACER(trc, FUN_TO_SCRIPTED(fun),
+                       JSTRACE_SCRIPTED_FUNCTION, "private");
+        return;
+    }
+
+    native = (JSNativeFunction *) obj;
+    JS_ASSERT(FUN_TO_NATIVE(fun) == native);
+    if (native->atom)
+        JS_CALL_STRING_TRACER(trc, ATOM_TO_STRING(native->atom), "atom");
 }
 
 static uint32
 fun_reserveSlots(JSContext *cx, JSObject *obj)
 {
     JSFunction *fun;
+    JSScript *script;
 
     /*
      * We use JS_GetPrivate and not GET_FUNCTION_PRIVATE because during
@@ -1394,9 +1415,12 @@ fun_reserveSlots(JSContext *cx, JSObject *obj)
      * private slot of the function object is set.
      */
     fun = (JSFunction *) JS_GetPrivate(cx, obj);
-    return (fun && FUN_INTERPRETED(fun) &&
-            fun->u.i.script && fun->u.i.script->regexpsOffset != 0)
-           ? JS_SCRIPT_REGEXPS(fun->u.i.script)->length
+    if (!fun || !FUN_IS_SCRIPTED(fun))
+        return 0;
+
+    script = FUN_TO_SCRIPTED(fun)->script;
+    return (script && script->regexpsOffset != 0)
+           ? JS_SCRIPT_REGEXPS(script)->length
            : 0;
 }
 
@@ -1699,7 +1723,7 @@ static JSBool
 Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSStackFrame *fp, *caller;
-    JSFunction *fun;
+    JSScriptedFunction *fun;
     JSObject *parent;
     uintN i, n, lineno;
     JSAtom *atom;
@@ -1715,7 +1739,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     fp = cx->fp;
     if (!(fp->flags & JSFRAME_CONSTRUCTING)) {
-        obj = js_NewObject(cx, &js_FunctionClass, NULL, NULL);
+        obj = js_NewObject(cx, &js_FunctionClass, NULL, NULL, 0);
         if (!obj)
             return JS_FALSE;
         *rval = OBJECT_TO_JSVAL(obj);
@@ -1725,8 +1749,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * The constructor is called before the private slot is initialized so we
      * must use JS_GetPrivate, not GET_FUNCTION_PRIVATE here.
      */
-    fun = (JSFunction *) JS_GetPrivate(cx, obj);
-    if (fun)
+    if (JS_GetPrivate(cx, obj))
         return JS_TRUE;
 
     /*
@@ -1741,8 +1764,8 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      */
     parent = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(argv[-2]));
 
-    fun = js_NewFunction(cx, obj, NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
-                         parent, cx->runtime->atomState.anonymousAtom);
+    fun = js_NewScriptedFunction(cx, obj, JSFUN_LAMBDA, parent,
+                                 cx->runtime->atomState.anonymousAtom);
 
     if (!fun)
         return JS_FALSE;
@@ -1754,7 +1777,9 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * are built for Function.prototype.call or .apply activations that invoke
      * Function indirectly from a script.
      */
-    JS_ASSERT(!fp->script && fp->fun && fp->fun->u.n.native == Function);
+    JS_ASSERT(fp->fun &&
+              !FUN_IS_SCRIPTED(fp->fun) &&
+              FUN_TO_NATIVE(fp->fun)->native == Function);
     caller = JS_GetScriptedCaller(cx, fp);
     if (caller) {
         principals = JS_EvalFramePrincipals(cx, fp, caller);
@@ -1932,7 +1957,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
 {
     JSObject *proto;
     JSAtom *atom;
-    JSFunction *fun;
+    JSScriptedFunction *fun;
 
     proto = JS_InitClass(cx, obj, NULL, &js_FunctionClass, Function, 1,
                          function_props, function_methods, NULL, NULL);
@@ -1942,15 +1967,15 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
                       0);
     if (!atom)
         goto bad;
-    fun = js_NewFunction(cx, proto, NULL, 0, JSFUN_INTERPRETED, obj, NULL);
+    fun = js_NewScriptedFunction(cx, proto, 0, obj, NULL);
     if (!fun)
         goto bad;
-    fun->u.i.script = js_NewScript(cx, 1, 0, 0, 0, 0, 0);
-    if (!fun->u.i.script)
+    fun->script = js_NewScript(cx, 1, 0, 0, 0, 0, 0);
+    if (!fun->script)
         goto bad;
-    fun->u.i.script->code[0] = JSOP_STOP;
+    fun->script->code[0] = JSOP_STOP;
 #ifdef CHECK_SCRIPT_OWNER
-    fun->u.i.script->owner = NULL;
+    fun->script->owner = NULL;
 #endif
     return proto;
 
@@ -1977,18 +2002,20 @@ js_InitCallClass(JSContext *cx, JSObject *obj)
     return proto;
 }
 
-JSFunction *
-js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
-               uintN flags, JSObject *parent, JSAtom *atom)
+JSScriptedFunction *
+js_NewScriptedFunction(JSContext *cx, JSObject *funobj, uintN flags,
+                       JSObject *parent, JSAtom *atom)
 {
-    JSFunction *fun;
+    JSScriptedFunction *sfun;
     JSTempValueRooter tvr;
+
+    JS_ASSERT((flags & ~JSFUN_LAMBDA) == 0);
 
     /* If funobj is null, allocate an object for it. */
     if (funobj) {
         OBJ_SET_PARENT(cx, funobj, parent);
     } else {
-        funobj = js_NewObject(cx, &js_FunctionClass, NULL, parent);
+        funobj = js_NewObject(cx, &js_FunctionClass, NULL, parent, 0);
         if (!funobj)
             return NULL;
     }
@@ -2000,115 +2027,134 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
      * Allocate fun after allocating funobj so allocations in js_NewObject
      * and hooks called from it do not wipe out fun from newborn[GCX_FUNCTION].
      */
-    fun = (JSFunction *) js_NewGCThing(cx, GCX_FUNCTION, sizeof(JSFunction));
-    if (!fun)
+    sfun = (JSScriptedFunction *)
+           js_NewGCThing(cx, GCX_FUNCTION, sizeof(JSScriptedFunction));
+    if (!sfun)
         goto out;
 
     /* Initialize all function members. */
-    fun->object = NULL;
-    fun->nargs = nargs;
-    fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_INTERPRETED);
-    if (flags & JSFUN_INTERPRETED) {
-        JS_ASSERT(!native);
-        JS_ASSERT(nargs == 0);
-        fun->u.i.nvars = 0;
-        fun->u.i.spare = 0;
-        fun->u.i.script = NULL;
+    sfun->object = NULL;
+    sfun->flags = (flags & JSFUN_FLAGS_MASK) | JSFUN_SCRIPTED;
+    sfun->nargs = 0;
+    sfun->nvars = 0;
+    sfun->spare = 0;
+    sfun->script = NULL;
 #ifdef DEBUG
-        fun->u.i.names.taggedAtom = 0;
+    sfun->names.taggedAtom = 0;
 #endif
-    } else {
-        fun->u.n.native = native;
-        fun->u.n.extra = 0;
-        fun->u.n.minargs = 0;
-        fun->u.n.clasp = NULL;
-    }
-    fun->atom = atom;
+    sfun->atom = atom;
 
     /* Link fun to funobj and vice versa. */
-    if (!js_LinkFunctionObject(cx, fun, funobj)) {
-        cx->weakRoots.newborn[GCX_OBJECT] = NULL;
-        fun = NULL;
-    }
+    sfun->object = funobj;
+    JS_SetPrivate(cx, funobj, SCRIPTED_TO_FUN(sfun));
 
 out:
     JS_POP_TEMP_ROOT(cx, &tvr);
-    return fun;
+    return sfun;
+}
+
+JSNativeFunction *
+js_NewNativeFunction(JSContext *cx, JSNative native, uintN nargs,
+                     uintN flags, JSObject *parent, JSAtom *atom)
+{
+    JSNativeFunction *nfun;
+
+    JS_ASSERT(!(flags & (JSFUN_LAMBDA | JSFUN_SCRIPTED)));
+    nfun = (JSNativeFunction *) js_NewObject(cx, &js_FunctionClass, NULL,
+                                             parent,
+                                             sizeof(JSNativeFunction) -
+                                             sizeof(JSObject));
+    if (!nfun)
+        return NULL;
+
+    /* Initialize all function members. */
+    nfun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_SCRIPTED);
+    nfun->nargs = nargs;
+    nfun->native = native;
+    nfun->extra = 0;
+    nfun->minargs = 0;
+    nfun->clasp = NULL;
+    nfun->atom = atom;
+    JS_SetPrivate(cx, &nfun->object, NATIVE_TO_FUN(nfun));
+
+    return nfun;
 }
 
 static void
-TraceLocalNames(JSTracer *trc, JSFunction *fun);
+TraceLocalNames(JSTracer *trc, JSScriptedFunction *fun);
 
 void
-js_TraceFunction(JSTracer *trc, JSFunction *fun)
+js_TraceFunction(JSTracer *trc, JSScriptedFunction *fun)
 {
     if (fun->object)
         JS_CALL_OBJECT_TRACER(trc, fun->object, "object");
     if (fun->atom)
         JS_CALL_STRING_TRACER(trc, ATOM_TO_STRING(fun->atom), "atom");
-    if (FUN_INTERPRETED(fun)) {
-        if (fun->u.i.script)
-            js_TraceScript(trc, fun->u.i.script);
-        TraceLocalNames(trc, fun);
-    }
+    if (fun->script)
+        js_TraceScript(trc, fun->script);
+    TraceLocalNames(trc, fun);
 }
 
 static void
-DestroyLocalNames(JSContext *cx, JSFunction *fun);
+DestroyLocalNames(JSContext *cx, JSScriptedFunction *fun);
 
 void
-js_FinalizeFunction(JSContext *cx, JSFunction *fun)
+js_FinalizeFunction(JSContext *cx, JSScriptedFunction *fun)
 {
     /*
-     * Null-check of i.script is required since the parser sets interpreted
-     * very early.
+     * Null-check of i.script is required since the parser creates
+     * JSScriptedFunction very early.
      */
-    if (FUN_INTERPRETED(fun)) {
-        if (fun->u.i.script)
-            js_DestroyScript(cx, fun->u.i.script);
-        DestroyLocalNames(cx, fun);
-    }
+    if (fun->script)
+        js_DestroyScript(cx, fun->script);
+    DestroyLocalNames(cx, fun);
 }
 
 JSObject *
 js_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
 {
-    JSObject *newfunobj;
     JSFunction *fun;
+    JSObject *newfunobj;
 
     JS_ASSERT(OBJ_GET_CLASS(cx, funobj) == &js_FunctionClass);
-    newfunobj = js_NewObject(cx, &js_FunctionClass, NULL, parent);
-    if (!newfunobj)
-        return NULL;
     fun = GET_FUNCTION_PRIVATE(cx, funobj);
-    if (!js_LinkFunctionObject(cx, fun, newfunobj)) {
-        cx->weakRoots.newborn[GCX_OBJECT] = NULL;
-        return NULL;
+    if (FUN_IS_SCRIPTED(fun)) {
+        JSScriptedFunction *sfun;
+
+        sfun = FUN_TO_SCRIPTED(fun);
+        JS_ASSERT(sfun->object);
+        newfunobj = js_NewObject(cx, &js_FunctionClass, NULL, parent, 0);
+        if (!newfunobj)
+            return NULL;
+        JS_SetPrivate(cx, newfunobj, SCRIPTED_TO_FUN(sfun));
+    } else {
+        JS_ASSERT((JSNativeFunction *) funobj == FUN_TO_NATIVE(fun));
+        newfunobj = js_NewObject(cx, &js_FunctionClass, NULL, parent,
+                                 sizeof(JSNativeFunction) - sizeof(JSObject));
+        if (!newfunobj)
+            return NULL;
+        memcpy((uint8 *) newfunobj + sizeof(JSObject),
+               (uint8 *) funobj + sizeof(JSObject),
+               sizeof(JSNativeFunction) - sizeof(JSObject));
+        JS_SetPrivate(cx, newfunobj,
+                      NATIVE_TO_FUN((JSNativeFunction *) newfunobj));
     }
     return newfunobj;
 }
 
-JSBool
-js_LinkFunctionObject(JSContext *cx, JSFunction *fun, JSObject *funobj)
-{
-    if (!fun->object)
-        fun->object = funobj;
-    return JS_SetPrivate(cx, funobj, fun);
-}
-
-JSFunction *
+JSNativeFunction *
 js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative native,
                   uintN nargs, uintN attrs)
 {
-    JSFunction *fun;
+    JSNativeFunction *fun;
     JSPropertyOp gsop;
 
-    fun = js_NewFunction(cx, NULL, native, nargs, attrs, obj, atom);
+    fun = js_NewNativeFunction(cx, native, nargs, attrs, obj, atom);
     if (!fun)
         return NULL;
     gsop = (attrs & JSFUN_STUB_GSOPS) ? JS_PropertyStub : NULL;
     if (!OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(atom),
-                             OBJECT_TO_JSVAL(fun->object),
+                             OBJECT_TO_JSVAL(&fun->object),
                              gsop, gsop,
                              attrs & ~JSFUN_FLAGS_MASK, NULL)) {
         return NULL;
@@ -2148,6 +2194,7 @@ js_ValueToFunctionObject(JSContext *cx, jsval *vp, uintN flags)
 {
     JSFunction *fun;
     JSObject *funobj;
+    JSAtom *atom;
     JSStackFrame *caller;
     JSPrincipals *principals;
 
@@ -2157,7 +2204,19 @@ js_ValueToFunctionObject(JSContext *cx, jsval *vp, uintN flags)
     fun = js_ValueToFunction(cx, vp, flags);
     if (!fun)
         return NULL;
-    funobj = fun->object;
+    if (FUN_IS_SCRIPTED(fun)) {
+        JSScriptedFunction *sfun;
+
+        sfun = FUN_TO_SCRIPTED(fun);
+        funobj = sfun->object;
+        atom = sfun->atom;
+    } else {
+        JSNativeFunction *nfun;
+
+        nfun = FUN_TO_NATIVE(fun);
+        funobj = &nfun->object;
+        atom = nfun->atom;
+    }
     *vp = OBJECT_TO_JSVAL(funobj);
 
     caller = JS_GetScriptedCaller(cx, cx->fp);
@@ -2169,8 +2228,8 @@ js_ValueToFunctionObject(JSContext *cx, jsval *vp, uintN flags)
     }
 
     if (!js_CheckPrincipalsAccess(cx, funobj, principals,
-                                  fun->atom
-                                  ? fun->atom
+                                  atom
+                                  ? atom
                                   : cx->runtime->atomState.anonymousAtom)) {
         return NULL;
     }
@@ -2321,7 +2380,8 @@ HashLocalName(JSContext *cx, JSLocalNameMap *map, JSAtom *name,
 }
 
 JSBool
-js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind)
+js_AddLocal(JSContext *cx, JSScriptedFunction *fun, JSAtom *atom,
+            JSLocalKind kind)
 {
     jsuword taggedAtom;
     uint16 *indexp;
@@ -2329,14 +2389,13 @@ js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind)
     jsuword *array;
     JSLocalNameMap *map;
 
-    JS_ASSERT(FUN_INTERPRETED(fun));
-    JS_ASSERT(!fun->u.i.script);
+    JS_ASSERT(!fun->script);
     JS_ASSERT(((jsuword) atom & 1) == 0);
     taggedAtom = (jsuword) atom;
     if (kind == JSLOCAL_ARG) {
         indexp = &fun->nargs;
     } else {
-        indexp = &fun->u.i.nvars;
+        indexp = &fun->nvars;
         if (kind == JSLOCAL_CONST)
             taggedAtom |= 1;
         else
@@ -2344,17 +2403,17 @@ js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind)
     }
     n = JS_GET_LOCAL_NAME_COUNT(fun);
     if (n == 0) {
-        JS_ASSERT(fun->u.i.names.taggedAtom == 0);
-        fun->u.i.names.taggedAtom = taggedAtom;
+        JS_ASSERT(fun->names.taggedAtom == 0);
+        fun->names.taggedAtom = taggedAtom;
     } else if (n < MAX_ARRAY_LOCALS) {
         if (n > 1) {
-            array = fun->u.i.names.array;
+            array = fun->names.array;
         } else {
             array = (jsuword *) JS_malloc(cx, MAX_ARRAY_LOCALS * sizeof *array);
             if (!array)
                 return JS_FALSE;
-            array[0] = fun->u.i.names.taggedAtom;
-            fun->u.i.names.array = array;
+            array[0] = fun->names.taggedAtom;
+            fun->names.array = array;
         }
         if (kind == JSLOCAL_ARG) {
             /*
@@ -2362,19 +2421,19 @@ js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind)
              * so for the following arguments nvars != 0.
              */
 #if JS_HAS_DESTRUCTURING
-            if (fun->u.i.nvars != 0) {
+            if (fun->nvars != 0) {
                 memmove(array + fun->nargs + 1, array + fun->nargs,
-                        fun->u.i.nvars * sizeof *array);
+                        fun->nvars * sizeof *array);
             }
 #else
-            JS_ASSERT(fun->u.i.nvars == 0);
+            JS_ASSERT(fun->nvars == 0);
 #endif
             array[fun->nargs] = taggedAtom;
         } else {
             array[n] = taggedAtom;
         }
     } else if (n == MAX_ARRAY_LOCALS) {
-        array = fun->u.i.names.array;
+        array = fun->names.array;
         map = (JSLocalNameMap *) JS_malloc(cx, sizeof *map);
         if (!map)
             return JS_FALSE;
@@ -2408,7 +2467,7 @@ js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind)
          * At this point the entry is added and we cannot fail. It is time
          * to replace fun->u.i.names with the built map.
          */
-        fun->u.i.names.map = map;
+        fun->names.map = map;
         JS_free(cx, array);
     } else {
         if (*indexp == JS_BITMASK(16)) {
@@ -2418,7 +2477,7 @@ js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind)
                                  : JSMSG_TOO_MANY_FUN_VARS);
             return JS_FALSE;
         }
-        if (!HashLocalName(cx, fun->u.i.names.map, atom, kind, *indexp))
+        if (!HashLocalName(cx, fun->names.map, atom, kind, *indexp))
             return JS_FALSE;
     }
 
@@ -2428,18 +2487,18 @@ js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind)
 }
 
 JSLocalKind
-js_LookupLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, uintN *indexp)
+js_LookupLocal(JSContext *cx, JSScriptedFunction *fun, JSAtom *atom,
+               uintN *indexp)
 {
     uintN n, i;
     jsuword *array;
     JSLocalNameHashEntry *entry;
 
-    JS_ASSERT(FUN_INTERPRETED(fun));
     n = JS_GET_LOCAL_NAME_COUNT(fun);
     if (n == 0)
         return JSLOCAL_NONE;
     if (n <= MAX_ARRAY_LOCALS) {
-        array = (n == 1) ? &fun->u.i.names.taggedAtom : fun->u.i.names.array;
+        array = (n == 1) ? &fun->names.taggedAtom : fun->names.array;
 
         /* Search from the tail to pick up the last duplicated name. */
         i = n;
@@ -2460,7 +2519,7 @@ js_LookupLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, uintN *indexp)
         } while (i != 0);
     } else {
         entry = (JSLocalNameHashEntry *)
-                JS_DHashTableOperate(&fun->u.i.names.map->names, atom,
+                JS_DHashTableOperate(&fun->names.map->names, atom,
                                      JS_DHASH_LOOKUP);
         if (JS_DHASH_ENTRY_IS_BUSY(&entry->hdr)) {
             JS_ASSERT(entry->localKind != JSLOCAL_NONE);
@@ -2473,11 +2532,11 @@ js_LookupLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, uintN *indexp)
 }
 
 typedef struct JSLocalNameEnumeratorArgs {
-    JSFunction      *fun;
-    jsuword         *names;
+    JSScriptedFunction  *fun;
+    jsuword             *names;
 #ifdef DEBUG
-    uintN           nCopiedArgs;
-    uintN           nCopiedVars;
+    uintN               nCopiedArgs;
+    uintN               nCopiedVars;
 #endif
 } JSLocalNameEnumeratorArgs;
 
@@ -2501,8 +2560,8 @@ get_local_names_enumerator(JSDHashTable *table, JSDHashEntryHdr *hdr,
     } else {
         JS_ASSERT(entry->localKind == JSLOCAL_VAR ||
                   entry->localKind == JSLOCAL_CONST);
-        JS_ASSERT(entry->index < args->fun->u.i.nvars);
-        JS_ASSERT(args->nCopiedVars++ < args->fun->u.i.nvars);
+        JS_ASSERT(entry->index < args->fun->nvars);
+        JS_ASSERT(args->nCopiedVars++ < args->fun->nvars);
         i = args->fun->nargs + entry->index;
         constFlag = (entry->localKind == JSLOCAL_CONST);
     }
@@ -2511,7 +2570,7 @@ get_local_names_enumerator(JSDHashTable *table, JSDHashEntryHdr *hdr,
 }
 
 jsuword *
-js_GetLocalNameArray(JSContext *cx, JSFunction *fun, JSArenaPool *pool)
+js_GetLocalNameArray(JSContext *cx, JSScriptedFunction *fun, JSArenaPool *pool)
 {
     uintN n;
     jsuword *names;
@@ -2519,12 +2578,11 @@ js_GetLocalNameArray(JSContext *cx, JSFunction *fun, JSArenaPool *pool)
     JSLocalNameEnumeratorArgs args;
     JSNameIndexPair *dup;
 
-    JS_ASSERT(FUN_INTERPRETED(fun));
     n = JS_GET_LOCAL_NAME_COUNT(fun);
     JS_ASSERT(n != 0);
 
     if (n <= MAX_ARRAY_LOCALS)
-        return (n == 1) ? &fun->u.i.names.taggedAtom : fun->u.i.names.array;
+        return (n == 1) ? &fun->names.taggedAtom : fun->names.array;
 
     /*
      * No need to check for overflow of the allocation size as we are making a
@@ -2540,7 +2598,7 @@ js_GetLocalNameArray(JSContext *cx, JSFunction *fun, JSArenaPool *pool)
     /* Some parameter names can be NULL due to destructuring patterns. */
     memset(names, 0, fun->nargs * sizeof *names);
 #endif
-    map = fun->u.i.names.map;
+    map = fun->names.map;
     args.fun = fun;
     args.names = names;
 #ifdef DEBUG
@@ -2556,7 +2614,7 @@ js_GetLocalNameArray(JSContext *cx, JSFunction *fun, JSArenaPool *pool)
 #if !JS_HAS_DESTRUCTURING
     JS_ASSERT(args.nCopiedArgs == fun->nargs);
 #endif
-    JS_ASSERT(args.nCopiedVars == fun->u.i.nvars);
+    JS_ASSERT(args.nCopiedVars == fun->nvars);
 
     return names;
 }
@@ -2579,18 +2637,17 @@ trace_local_names_enumerator(JSDHashTable *table, JSDHashEntryHdr *hdr,
 }
 
 static void
-TraceLocalNames(JSTracer *trc, JSFunction *fun)
+TraceLocalNames(JSTracer *trc, JSScriptedFunction *fun)
 {
     uintN n, i;
     JSAtom *atom;
     jsuword *array;
 
-    JS_ASSERT(FUN_INTERPRETED(fun));
     n = JS_GET_LOCAL_NAME_COUNT(fun);
     if (n == 0)
         return;
     if (n <= MAX_ARRAY_LOCALS) {
-        array = (n == 1) ? &fun->u.i.names.taggedAtom : fun->u.i.names.array;
+        array = (n == 1) ? &fun->names.taggedAtom : fun->names.array;
         i = n;
         do {
             --i;
@@ -2603,7 +2660,7 @@ TraceLocalNames(JSTracer *trc, JSFunction *fun)
             }
         } while (i != 0);
     } else {
-        JS_DHashTableEnumerate(&fun->u.i.names.map->names,
+        JS_DHashTableEnumerate(&fun->names.map->names,
                                trace_local_names_enumerator, trc);
 
         /*
@@ -2614,33 +2671,31 @@ TraceLocalNames(JSTracer *trc, JSFunction *fun)
 }
 
 void
-DestroyLocalNames(JSContext *cx, JSFunction *fun)
+DestroyLocalNames(JSContext *cx, JSScriptedFunction *fun)
 {
     uintN n;
 
-    n = fun->nargs + fun->u.i.nvars;
+    n = fun->nargs + fun->nvars;
     if (n <= 1)
         return;
     if (n <= MAX_ARRAY_LOCALS)
-        JS_free(cx, fun->u.i.names.array);
+        JS_free(cx, fun->names.array);
     else
-        FreeLocalNameHash(cx, fun->u.i.names.map);
+        FreeLocalNameHash(cx, fun->names.map);
 }
 
 void
-js_FreezeLocalNames(JSContext *cx, JSFunction *fun)
+js_FreezeLocalNames(JSContext *cx, JSScriptedFunction *fun)
 {
     uintN n;
     jsuword *array;
 
-    JS_ASSERT(FUN_INTERPRETED(fun));
-    JS_ASSERT(!fun->u.i.script);
-    n = fun->nargs + fun->u.i.nvars;
+    JS_ASSERT(!fun->script);
+    n = fun->nargs + fun->nvars;
     if (2 <= n && n < MAX_ARRAY_LOCALS) {
         /* Shrink over-allocated array ignoring realloc failures. */
-        array = (jsuword *) JS_realloc(cx, fun->u.i.names.array,
-                                       n * sizeof *array);
+        array = (jsuword *) JS_realloc(cx, fun->names.array, n * sizeof *array);
         if (array)
-            fun->u.i.names.array = array;
+            fun->names.array = array;
     }
 }

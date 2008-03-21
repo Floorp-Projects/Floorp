@@ -2150,7 +2150,7 @@ js_NewDateObjectMsec(JSContext *cx, jsdouble msec_time)
     JSObject *obj;
     jsdouble *date;
 
-    obj = js_NewObject(cx, &js_DateClass, NULL, NULL);
+    obj = js_NewObject(cx, &js_DateClass, NULL, NULL, 0);
     if (!obj)
         return NULL;
 

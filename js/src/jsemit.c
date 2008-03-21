@@ -2037,7 +2037,7 @@ CheckSideEffects(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                  JSBool *answer)
 {
     JSBool ok;
-    JSFunction *fun;
+    JSScriptedFunction *fun;
     JSParseNode *pn2;
 
     ok = JS_TRUE;
@@ -2053,7 +2053,7 @@ CheckSideEffects(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
          * name in that scope object.  See comments at case JSOP_NAMEDFUNOBJ:
          * in jsinterp.c.
          */
-        fun = GET_FUNCTION_PRIVATE(cx, pn->pn_funpob->object);
+        fun = FUN_TO_SCRIPTED(GET_FUNCTION_PRIVATE(cx, pn->pn_funpob->object));
         if (fun->atom)
             *answer = JS_TRUE;
         break;
@@ -3924,7 +3924,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     switch (pn->pn_type) {
       case TOK_FUNCTION:
       {
-        JSFunction *fun;
+        JSScriptedFunction *fun;
         void *cg2mark;
         JSCodeGenerator *cg2;
         uintN slot;
@@ -3937,8 +3937,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 #endif
 
-        fun = GET_FUNCTION_PRIVATE(cx, pn->pn_funpob->object);
-        if (fun->u.i.script) {
+        fun = FUN_TO_SCRIPTED(GET_FUNCTION_PRIVATE(cx, pn->pn_funpob->object));
+        if (fun->script) {
             /*
              * This second pass is needed to emit JSOP_NOP with a source note
              * for the already-emitted function. See comments in the TOK_LC

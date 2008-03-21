@@ -227,10 +227,10 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg);
  * of js_XDRScript, the hook should be invoked only after successful decode
  * of any owning function (the fun parameter) or script object (null fun).
  */
-extern JS_FRIEND_API(void)
-js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun);
+extern void
+js_CallNewScriptHook(JSContext *cx, JSScript *script, JSScriptedFunction *fun);
 
-extern JS_FRIEND_API(void)
+extern void
 js_CallDestroyScriptHook(JSContext *cx, JSScript *script);
 
 extern void
