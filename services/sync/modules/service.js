@@ -390,7 +390,7 @@ WeaveSyncService.prototype = {
 
     try {
       if (this._dav.locked)
-        throw "Could not login: could not acquire lock";
+        throw "Login failed: could not acquire lock";
       this._dav.allowLock = false;
   
       // cache password & passphrase
@@ -575,10 +575,9 @@ WeaveSyncService.prototype = {
   _resetClient: function WeaveSync__resetClient() {
     let self = yield;
 
-    this._lock.async(this, self.cb)
-    let locked = yield;
-    if (!locked)
-      return;
+    if (this._dav.locked)
+      throw "Reset client data failed: could not acquire lock";
+    this._dav.allowLock = false;
 
     try {
       this._bmkEngine.resetClient(self.cb);
@@ -588,8 +587,7 @@ WeaveSyncService.prototype = {
       throw e;
 
     } finally {
-      this._unlock.async(this, self.cb)
-      yield;
+      this._dav.allowLock = true;
     }
 
     self.done();

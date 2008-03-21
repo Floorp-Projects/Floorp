@@ -308,86 +308,23 @@ BookmarksStore.prototype = {
     return this.__ans;
   },
 
-  _getFolderNodes: function BSS__getFolderNodes(folder) {
-    let query = this._hsvc.getNewQuery();
-    query.setFolders([folder], 1);
-    return this._hsvc.executeQuery(query, this._hsvc.getNewQueryOptions()).root;
-  },
-
-  _wrapNode: function BSS__wrapNode(node) {
-    var items = {};
-    this._wrapNodeInternal(node, items, null, null);
-    return items;
-  },
-
-  _wrapNodeInternal: function BSS__wrapNodeInternal(node, items, parentGUID, index) {
-    let GUID = this._bms.getItemGUID(node.itemId);
-    let item = {parentGUID: parentGUID,
-                index: index};
-
-    if (node.type == node.RESULT_TYPE_FOLDER) {
-      if (this._ls.isLivemark(node.itemId)) {
-        item.type = "livemark";
-        let siteURI = this._ls.getSiteURI(node.itemId);
-        let feedURI = this._ls.getFeedURI(node.itemId);
-        item.siteURI = siteURI? siteURI.spec : "";
-        item.feedURI = feedURI? feedURI.spec : "";
-      } else {
-        item.type = "folder";
-        node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-        node.containerOpen = true;
-        for (var i = 0; i < node.childCount; i++) {
-          this._wrapNodeInternal(node.getChild(i), items, GUID, i);
-        }
-      }
-      item.title = node.title;
-    } else if (node.type == node.RESULT_TYPE_URI ||
-               node.type == node.RESULT_TYPE_QUERY) {
-      if (this._ms.hasMicrosummary(node.itemId)) {
-        item.type = "microsummary";
-        let micsum = this._ms.getMicrosummary(node.itemId);
-        item.generatorURI = micsum.generator.uri.spec; // breaks local generators
-      } else if (node.type == node.RESULT_TYPE_QUERY) {
-        item.type = "query";
-        item.title = node.title;
-      } else {
-        item.type = "bookmark";
-        item.title = node.title;
-      }
-      item.URI = node.uri;
-      item.tags = this._ts.getTagsForURI(Utils.makeURI(node.uri), {});
-      item.keyword = this._bms.getKeywordForBookmark(node.itemId);
-    } else if (node.type == node.RESULT_TYPE_SEPARATOR) {
-      item.type = "separator";
-    } else {
-      this._log.warn("Warning: unknown item type, cannot serialize: " + node.type);
-      return;
+  _getItemIdForGUID: function BStore__getItemIdForGUID(GUID) {
+    switch (GUID) {
+    case "menu":
+      return this._bms.bookmarksMenuFolder;
+    case "toolbar":
+      return this._bms.toolbarFolder;
+    case "unfiled":
+      return this._bms.unfiledBookmarksFolder;
+    default:
+      return this._bms.getItemIdForGUID(GUID);
     }
-
-    items[GUID] = item;
-  },
-
-  _getWrappedBookmarks: function BSS__getWrappedBookmarks(folder) {
-    return this._wrapNode(this._getFolderNodes(folder));
-  },
-
-  _resetGUIDsInt: function BSS__resetGUIDsInt(node) {
-    if (this._ans.itemHasAnnotation(node.itemId, "placesInternal/GUID"))
-      this._ans.removeItemAnnotation(node.itemId, "placesInternal/GUID");
-
-    if (node.type == node.RESULT_TYPE_FOLDER &&
-        !this._ls.isLivemark(node.itemId)) {
-      node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-      node.containerOpen = true;
-      for (var i = 0; i < node.childCount; i++) {
-        this._resetGUIDsInt(node.getChild(i));
-      }
-    }
+    return null;
   },
 
   _createCommand: function BStore__createCommand(command) {
     let newId;
-    let parentId = this._bms.getItemIdForGUID(command.data.parentGUID);
+    let parentId = this._getItemIdForGUID(command.data.parentGUID);
 
     if (parentId < 0) {
       this._log.warn("Creating node with unknown parent -> reparenting to root");
@@ -445,6 +382,14 @@ BookmarksStore.prototype = {
   },
 
   _removeCommand: function BStore__removeCommand(command) {
+    if (command.GUID == "menu" ||
+        command.GUID == "toolbar" ||
+        command.GUID == "unfiled") {
+      this._log.warn("Attempted to remove root node (" + command.GUID +
+                     ").  Skipping command.");
+      return;
+    }
+
     var itemId = this._bms.getItemIdForGUID(command.GUID);
     if (itemId < 0) {
       this._log.warn("Attempted to remove item " + command.GUID +
@@ -473,6 +418,14 @@ BookmarksStore.prototype = {
   },
 
   _editCommand: function BStore__editCommand(command) {
+    if (command.GUID == "menu" ||
+        command.GUID == "toolbar" ||
+        command.GUID == "unfiled") {
+      this._log.warn("Attempted to edit root node (" + command.GUID +
+                     ").  Skipping command.");
+      return;
+    }
+
     var itemId = this._bms.getItemIdForGUID(command.GUID);
     if (itemId < 0) {
       this._log.warn("Item for GUID " + command.GUID + " not found.  Skipping.");
@@ -482,7 +435,7 @@ BookmarksStore.prototype = {
     for (let key in command.data) {
       switch (key) {
       case "GUID":
-        var existing = this._bms.getItemIdForGUID(command.data.GUID);
+        var existing = this._getItemIdForGUID(command.data.GUID);
         if (existing < 0)
           this._bms.setItemGUID(itemId, command.data.GUID);
         else
@@ -504,7 +457,7 @@ BookmarksStore.prototype = {
         if (command.data.index && command.data.index >= 0)
           index = command.data.index;
         this._bms.moveItem(
-          itemId, this._bms.getItemIdForGUID(command.data.parentGUID), index);
+          itemId, this._getItemIdForGUID(command.data.parentGUID), index);
       } break;
       case "tags": {
         let tagsURI = this._bms.getBookmarkURI(itemId);
@@ -533,22 +486,95 @@ BookmarksStore.prototype = {
     }
   },
 
+  _getNode: function BSS__getNode(folder) {
+    let query = this._hsvc.getNewQuery();
+    query.setFolders([folder], 1);
+    return this._hsvc.executeQuery(query, this._hsvc.getNewQueryOptions()).root;
+  },
+
+  __wrap: function BSS__wrap(node, items, parentGUID, index, guidOverride) {
+    let GUID, item;
+
+    // we override the guid for the root items, "menu", "toolbar", etc.
+    if (guidOverride) {
+      GUID = guidOverride;
+      item = {};
+    } else {
+      GUID = this._bms.getItemGUID(node.itemId);
+      item = {parentGUID: parentGUID, index: index};
+    }
+
+    if (node.type == node.RESULT_TYPE_FOLDER) {
+      if (this._ls.isLivemark(node.itemId)) {
+        item.type = "livemark";
+        let siteURI = this._ls.getSiteURI(node.itemId);
+        let feedURI = this._ls.getFeedURI(node.itemId);
+        item.siteURI = siteURI? siteURI.spec : "";
+        item.feedURI = feedURI? feedURI.spec : "";
+      } else {
+        item.type = "folder";
+        node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
+        node.containerOpen = true;
+        for (var i = 0; i < node.childCount; i++) {
+          this.__wrap(node.getChild(i), items, GUID, i);
+        }
+      }
+      if (!guidOverride)
+        item.title = node.title; // no titles for root nodes
+
+    } else if (node.type == node.RESULT_TYPE_URI ||
+               node.type == node.RESULT_TYPE_QUERY) {
+      if (this._ms.hasMicrosummary(node.itemId)) {
+        item.type = "microsummary";
+        let micsum = this._ms.getMicrosummary(node.itemId);
+        item.generatorURI = micsum.generator.uri.spec; // breaks local generators
+      } else if (node.type == node.RESULT_TYPE_QUERY) {
+        item.type = "query";
+        item.title = node.title;
+      } else {
+        item.type = "bookmark";
+        item.title = node.title;
+      }
+      item.URI = node.uri;
+      item.tags = this._ts.getTagsForURI(Utils.makeURI(node.uri), {});
+      item.keyword = this._bms.getKeywordForBookmark(node.itemId);
+
+    } else if (node.type == node.RESULT_TYPE_SEPARATOR) {
+      item.type = "separator";
+
+    } else {
+      this._log.warn("Warning: unknown item type, cannot serialize: " + node.type);
+      return;
+    }
+
+    items[GUID] = item;
+  },
+
+  // helper
+  _wrap: function BStore_wrap(node, items, rootName) {
+    return this.__wrap(node, items, null, null, rootName);
+  },
+
+  _resetGUIDs: function BSS__resetGUIDs(node) {
+    if (this._ans.itemHasAnnotation(node.itemId, "placesInternal/GUID"))
+      this._ans.removeItemAnnotation(node.itemId, "placesInternal/GUID");
+
+    if (node.type == node.RESULT_TYPE_FOLDER &&
+        !this._ls.isLivemark(node.itemId)) {
+      node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
+      node.containerOpen = true;
+      for (var i = 0; i < node.childCount; i++) {
+        this._resetGUIDs(node.getChild(i));
+      }
+    }
+  },
+
   wrap: function BStore_wrap() {
-    let filed = this._getWrappedBookmarks(this._bms.bookmarksMenuFolder);
-    let toolbar = this._getWrappedBookmarks(this._bms.toolbarFolder);
-    let unfiled = this._getWrappedBookmarks(this._bms.unfiledBookmarksFolder);
-
-    for (let guid in unfiled) {
-      if (!(guid in filed))
-        filed[guid] = unfiled[guid];
-    }
-
-    for (let guid in toolbar) {
-      if (!(guid in filed))
-        filed[guid] = toolbar[guid];
-    }
-
-    return filed; // (combined)
+    var items = {};
+    this._wrap(this._getNode(this._bms.bookmarksMenuFolder), items, "menu");
+    this._wrap(this._getNode(this._bms.toolbarFolder), items, "toolbar");
+    this._wrap(this._getNode(this._bms.unfiledBookmarksFolder), items, "unfiled");
+    return items;
   },
 
   wipe: function BStore_wipe() {
@@ -558,9 +584,9 @@ BookmarksStore.prototype = {
   },
 
   resetGUIDs: function BStore_resetGUIDs() {
-    this._resetGUIDsInt(this._getFolderNodes(this._bms.bookmarksMenuFolder));
-    this._resetGUIDsInt(this._getFolderNodes(this._bms.toolbarFolder));
-    this._resetGUIDsInt(this._getFolderNodes(this._bms.unfiledBookmarksFolder));
+    this._resetGUIDs(this._getNode(this._bms.bookmarksMenuFolder));
+    this._resetGUIDs(this._getNode(this._bms.toolbarFolder));
+    this._resetGUIDs(this._getNode(this._bms.unfiledBookmarksFolder));
   }
 };
 BookmarksStore.prototype.__proto__ = new Store();
