@@ -2199,6 +2199,8 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
     if (!sameTypeParent || sameTypeParent == docShellTreeItem)
       break;
     nsIDocument *parentDoc = doc->GetParentDocument();
+    if (!parentDoc)
+      break;
     startContent = parentDoc->FindContentForSubDocument(doc);      
   }
 
