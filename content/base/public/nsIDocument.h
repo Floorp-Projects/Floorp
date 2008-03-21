@@ -97,8 +97,8 @@ class nsFrameLoader;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x3c441ae9, 0xaa82, 0x4102, \
-  { 0xa3, 0x16, 0x3b, 0x97, 0x2b, 0x60, 0x2b, 0x05 } }
+{ 0xd76acf2e, 0x4b55, 0x420c, \
+  { 0xaa, 0xbf, 0x5c, 0x4d, 0xbf, 0xc9, 0x81, 0x08 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -954,6 +954,10 @@ public:
     // Do nothing.
   }
 
+  // In case of failure, the document really can't initialize the frame loader.
+  virtual nsresult InitializeFrameLoader(nsFrameLoader* aLoader) = 0;
+  // In case of failure, the caller must handle the error, for example by
+  // finalizing frame loader asynchronously.
   virtual nsresult FinalizeFrameLoader(nsFrameLoader* aLoader) = 0;
 protected:
   ~nsIDocument()

@@ -160,23 +160,67 @@ nsFrameLoader::LoadFrame()
 NS_IMETHODIMP
 nsFrameLoader::LoadURI(nsIURI* aURI)
 {
-  NS_PRECONDITION(aURI, "Null URI?");
-  NS_ENSURE_STATE(!mDestroyCalled);
   if (!aURI)
     return NS_ERROR_INVALID_POINTER;
+  NS_ENSURE_STATE(!mDestroyCalled && mOwnerContent);
 
-  nsIDocument* doc = mOwnerContent->GetOwnerDoc();
+  nsCOMPtr<nsIDocument> doc = mOwnerContent->GetOwnerDoc();
   if (!doc) {
     return NS_OK;
   }
 
-  nsresult rv = EnsureDocShell();
+  nsresult rv = CheckURILoad(aURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mURIToLoad = aURI;
+  rv = doc->InitializeFrameLoader(this);
+  if (NS_FAILED(rv)) {
+    mURIToLoad = nsnull;
+  }
+  return rv;
+}
+
+nsresult
+nsFrameLoader::ReallyStartLoading()
+{
+  NS_ENSURE_STATE(mURIToLoad && mOwnerContent && mOwnerContent->IsInDoc());
+  // Just to be safe, recheck uri.
+  nsresult rv = CheckURILoad(mURIToLoad);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = EnsureDocShell();
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
   mDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
   NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
+  // We'll use our principal, not that of the document loaded inside us.  This
+  // is very important; needed to prevent XSS attacks on documents loaded in
+  // subframes!
+  loadInfo->SetOwner(mOwnerContent->NodePrincipal());
+
+  nsCOMPtr<nsIURI> referrer;
+  rv = mOwnerContent->NodePrincipal()->GetURI(getter_AddRefs(referrer));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  loadInfo->SetReferrer(referrer);
+
+  // Kick off the load...
+  rv = mDocShell->LoadURI(mURIToLoad, loadInfo,
+                          nsIWebNavigation::LOAD_FLAGS_NONE, PR_FALSE);
+  mURIToLoad = nsnull;
+#ifdef DEBUG
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to load the URL");
+  }
+#endif
+  return NS_OK;
+}
+
+nsresult
+nsFrameLoader::CheckURILoad(nsIURI* aURI)
+{
   // Check for security.  The fun part is trying to figure out what principals
   // to use.  The way I figure it, if we're doing a LoadFrame() accidentally
   // (eg someone created a frame/iframe node, we're being parsed, XUL iframes
@@ -197,37 +241,15 @@ nsFrameLoader::LoadURI(nsIURI* aURI)
   nsIPrincipal* principal = mOwnerContent->NodePrincipal();
 
   // Check if we are allowed to load absURL
-  rv = secMan->CheckLoadURIWithPrincipal(principal, aURI,
-                                         nsIScriptSecurityManager::STANDARD);
+  nsresult rv =
+    secMan->CheckLoadURIWithPrincipal(principal, aURI,
+                                      nsIScriptSecurityManager::STANDARD);
   if (NS_FAILED(rv)) {
     return rv; // We're not
   }
 
   // Bail out if this is an infinite recursion scenario
-  rv = CheckForRecursiveLoad(aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  // We'll use our principal, not that of the document loaded inside us.  This
-  // is very important; needed to prevent XSS attacks on documents loaded in
-  // subframes!
-  loadInfo->SetOwner(principal);
-
-  nsCOMPtr<nsIURI> referrer;
-  rv = principal->GetURI(getter_AddRefs(referrer));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  loadInfo->SetReferrer(referrer);
-
-  // Kick off the load...
-  rv = mDocShell->LoadURI(aURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE,
-                          PR_FALSE);
-#ifdef DEBUG
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to load the URL");
-  }
-#endif
-
-  return rv;
+  return CheckForRecursiveLoad(aURI);
 }
 
 NS_IMETHODIMP
