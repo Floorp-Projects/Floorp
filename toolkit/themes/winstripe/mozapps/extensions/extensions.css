@@ -266,33 +266,33 @@ richlistitem[opType="needs-uninstall"] .notifyBadge {
 
 .addonRating[rating] {
   display: -moz-box;
-  width: 63px;
+  width: 59px;
   height: 11px;
   list-style-image: url("chrome://mozapps/skin/extensions/ratings.png");
 }
 
 .addonRating[rating="0"] {
-  -moz-image-region: rect(0px 63px 11px 0px);
+  -moz-image-region: rect(0px 59px 11px 0px);
 }
 
 .addonRating[rating="1"] {
-  -moz-image-region: rect(11px 63px 22px 0px);
+  -moz-image-region: rect(12px 59px 23px 0px);
 }
 
 .addonRating[rating="2"] {
-  -moz-image-region: rect(22px 63px 33px 0px);
+  -moz-image-region: rect(24px 59px 35px 0px);
 }
 
 .addonRating[rating="3"] {
-  -moz-image-region: rect(33px 63px 44px 0px);
+  -moz-image-region: rect(36px 59px 47px 0px);
 }
 
 .addonRating[rating="4"] {
-  -moz-image-region: rect(44px 63px 55px 0px);
+  -moz-image-region: rect(48px 59px 59px 0px);
 }
 
 .addonRating[rating="5"] {
-  -moz-image-region: rect(55px 63px 66px 0px);
+  -moz-image-region: rect(60px 59px 71px 0px);
 }
 
 .addonType image {
