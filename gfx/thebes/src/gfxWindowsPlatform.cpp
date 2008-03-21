@@ -144,7 +144,7 @@ gfxWindowsPlatform::FontEnumProc(const ENUMLOGFONTEXW *lpelfe,
     fe->mWeight = logFont.lfWeight;
 
     if (metrics.ntmFlags & NTM_TYPE1)
-        fe->mIsType1 = PR_TRUE;
+        fe->mIsType1 = fe->mForceGDI = PR_TRUE;
     if (metrics.ntmFlags & (NTM_PS_OPENTYPE | NTM_TT_OPENTYPE))
         fe->mTrueType = PR_TRUE;
 

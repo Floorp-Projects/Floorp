@@ -82,7 +82,7 @@ public:
     FontEntry(FontFamily *aFontFamily) : 
         mFamily(aFontFamily), mUnicodeFont(PR_FALSE), mSymbolFont(PR_FALSE),
         mTrueType(PR_FALSE), mIsType1(PR_FALSE),
-        mIsBadUnderlineFont(PR_FALSE), mCharset(0), mUnicodeRanges(0)
+        mIsBadUnderlineFont(PR_FALSE), mForceGDI(PR_FALSE), mCharset(0), mUnicodeRanges(0)
     {
     }
 
@@ -210,6 +210,7 @@ public:
     PRPackedBool mTrueType;
     PRPackedBool mIsType1;
     PRPackedBool mIsBadUnderlineFont;
+    PRPackedBool mForceGDI;
     PRPackedBool mItalic;
     PRUint16 mWeight;
 
