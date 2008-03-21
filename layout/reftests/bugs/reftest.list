@@ -765,6 +765,9 @@ fails == 413027-3.html 413027-3-ref.html
 == 420069-1.html 420069-1-ref.html
 == 420069-2.html 420069-2-ref.html
 == 420351-1.html 420351-1-ref.html
+fails == 421069.html 421069-ref.html # bug 421069
+fails == 421069.html 421069-ref2.html # bug 421069
+== 421069-ref.html 421069-ref2.html
 == 421234-1.html 421234-1-ref.html
 == 421419-1.html 421419-1-ref.html
 == 422394-1.html 422394-1-ref.html
