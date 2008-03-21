@@ -4441,6 +4441,10 @@
     !define UninstallOnInitCommon "!insertmacro UninstallOnInitCommonCall"
 
     Function UninstallOnInitCommon
+; Prevents breaking Thunderbird
+!ifdef SetBrandNameVars
+      ${SetBrandNameVars} "$EXEDIR\distribution\setup.ini"
+!endif
 
       ; Prevent launching the application when a reboot is required and this
       ; executable is the main application executable
@@ -4453,6 +4457,11 @@
       ${GetLongPath} "$INSTDIR" $INSTDIR
       IfFileExists "$INSTDIR\${FileMainEXE}" +2 +1
       Quit ; Nothing initialized so no need to call OnEndCommon
+
+; Prevents breaking Thunderbird
+!ifdef SetBrandNameVars
+      ${SetBrandNameVars} "$INSTDIR\distribution\setup.ini"
+!endif
 
       ; Prevent all operations (e.g. set as default, postupdate, etc.) when a
       ; reboot is required and the executable launched is helper.exe
