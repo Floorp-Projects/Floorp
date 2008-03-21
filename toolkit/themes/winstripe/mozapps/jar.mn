@@ -20,7 +20,12 @@ classic.jar:
         skin/classic/mozapps/extensions/extensionIcons.png         (extensions/extensionIcons.png)
         skin/classic/mozapps/extensions/searchIcons.png            (extensions/searchIcons.png)
         skin/classic/mozapps/extensions/eula.css                   (extensions/eula.css)
+        skin/classic/mozapps/handling/handling.css                 (handling/handling.css)
         skin/classic/mozapps/passwordmgr/key.png                   (passwordmgr/key.png)
+#ifdef MOZ_PLACES
+        skin/classic/mozapps/places/defaultFavicon.png             (places/defaultFavicon.png)
+        skin/classic/mozapps/places/tagContainerIcon.png           (places/tagContainerIcon.png)
+#endif
         skin/classic/mozapps/plugins/missingPlugin.css             (plugins/missingPlugin.css)
         skin/classic/mozapps/plugins/pluginGeneric.png             (plugins/pluginGeneric.png)
         skin/classic/mozapps/plugins/pluginInstallerWizard.css     (plugins/pluginInstallerWizard.css)
@@ -38,11 +43,6 @@ classic.jar:
         skin/classic/mozapps/viewsource/viewsource.css             (viewsource/viewsource.css)
 *       skin/classic/mozapps/xpinstall/xpinstallConfirm.css        (xpinstall/xpinstallConfirm.css)
         skin/classic/mozapps/xpinstall/xpinstallItemGeneric.png    (xpinstall/xpinstallItemGeneric.png)
-#ifdef MOZ_PLACES
-        skin/classic/mozapps/places/defaultFavicon.png             (places/defaultFavicon.png)
-        skin/classic/mozapps/places/tagContainerIcon.png           (places/tagContainerIcon.png)
-#endif
-        skin/classic/mozapps/handling/handling.css                 (handling/handling.css)
 
 #ifdef XP_WIN
 classic.jar:
@@ -55,16 +55,21 @@ classic.jar:
         skin/classic/aero/mozapps/extensions/extensions.css                (extensions/extensions.css)
         skin/classic/aero/mozapps/extensions/itemDisabledFader.png         (extensions/itemDisabledFader.png)
         skin/classic/aero/mozapps/extensions/itemEnabledFader.png          (extensions/itemEnabledFader.png)
-        skin/classic/aero/mozapps/extensions/notifyBadges.png              (extensions/notifyBadges.png)
-        skin/classic/aero/mozapps/extensions/question.png                  (extensions/question.png)
+        skin/classic/aero/mozapps/extensions/notifyBadges.png              (extensions/notifyBadges-aero.png)
+        skin/classic/aero/mozapps/extensions/question.png                  (extensions/question-aero.png)
         skin/classic/aero/mozapps/extensions/update.css                    (extensions/update.css)
         skin/classic/aero/mozapps/extensions/themeGeneric.png              (extensions/themeGeneric-aero.png)
         skin/classic/aero/mozapps/extensions/viewButtons.png               (extensions/viewButtons-aero.png)
         skin/classic/aero/mozapps/extensions/ratings.png                   (extensions/ratings-aero.png)
         skin/classic/aero/mozapps/extensions/extensionIcons.png            (extensions/extensionIcons-aero.png)
-        skin/classic/aero/mozapps/extensions/searchIcons.png               (extensions/searchIcons.png)
+        skin/classic/aero/mozapps/extensions/searchIcons.png               (extensions/searchIcons-aero.png)
         skin/classic/aero/mozapps/extensions/eula.css                      (extensions/eula.css)
+        skin/classic/aero/mozapps/handling/handling.css                    (handling/handling.css)
         skin/classic/aero/mozapps/passwordmgr/key.png                      (passwordmgr/key-aero.png)
+#ifdef MOZ_PLACES
+        skin/classic/aero/mozapps/places/defaultFavicon.png                (places/defaultFavicon-aero.png)
+        skin/classic/aero/mozapps/places/tagContainerIcon.png              (places/tagContainerIcon-aero.png)
+#endif
         skin/classic/aero/mozapps/plugins/missingPlugin.css                (plugins/missingPlugin.css)
         skin/classic/aero/mozapps/plugins/pluginGeneric.png                (plugins/pluginGeneric-aero.png)
         skin/classic/aero/mozapps/plugins/pluginInstallerWizard.css        (plugins/pluginInstallerWizard.css)
@@ -75,16 +80,11 @@ classic.jar:
         skin/classic/aero/mozapps/shared/richview.css                      (shared/richview.css)
         skin/classic/aero/mozapps/shared/richview.xml                      (shared/richview.xml)
         skin/classic/aero/mozapps/shared/viewFader.png                     (shared/viewFader.png)
-        skin/classic/aero/mozapps/update/extensionalert.png                (update/extensionalert.png)
-        skin/classic/aero/mozapps/update/update.png                        (update/update.png)
+        skin/classic/aero/mozapps/update/extensionalert.png                (update/extensionalert-aero.png)
+        skin/classic/aero/mozapps/update/update.png                        (update/update-aero.png)
         skin/classic/aero/mozapps/update/warning.gif                       (update/warning.gif)
         skin/classic/aero/mozapps/update/updates.css                       (update/updates.css)
         skin/classic/aero/mozapps/viewsource/viewsource.css                (viewsource/viewsource.css)
 *       skin/classic/aero/mozapps/xpinstall/xpinstallConfirm.css           (xpinstall/xpinstallConfirm.css)
         skin/classic/aero/mozapps/xpinstall/xpinstallItemGeneric.png       (xpinstall/xpinstallItemGeneric-aero.png)
-#ifdef MOZ_PLACES
-        skin/classic/aero/mozapps/places/defaultFavicon.png                (places/defaultFavicon.png)
-        skin/classic/aero/mozapps/places/tagContainerIcon.png              (places/tagContainerIcon.png)
-#endif
-        skin/classic/aero/mozapps/handling/handling.css                    (handling/handling.css)
 #endif
