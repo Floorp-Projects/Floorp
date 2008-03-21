@@ -365,7 +365,6 @@ WriteImage(const nsCString& aPath, gfxIImageFrame* aImage)
 
   gboolean res = gdk_pixbuf_save(pixbuf, aPath.get(), "png", NULL, NULL);
 
-  aImage->UnlockImageData();
   g_object_unref(pixbuf);
   return res ? NS_OK : NS_ERROR_FAILURE;
 #endif
