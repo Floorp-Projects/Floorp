@@ -39,3 +39,15 @@
 == border-collapse-table-row-group.html border-collapse-table-row-group-ref.html
 == border-collapse-table-row.html border-collapse-table-row-ref.html
 == border-collapse-table.html border-collapse-table-ref.html
+== border-collapse-opacity-table-cell.html border-collapse-opacity-table-cell-ref.html
+fails == border-collapse-opacity-table-column-group.html border-collapse-opacity-table-column-group-ref.html
+fails == border-collapse-opacity-table-column.html border-collapse-opacity-table-column-ref.html
+== border-collapse-opacity-table-row-group.html border-collapse-opacity-table-row-group-ref.html
+== border-collapse-opacity-table-row.html border-collapse-opacity-table-row-ref.html
+== border-collapse-opacity-table.html border-collapse-opacity-table-ref.html
+== border-separate-opacity-table-cell.html border-separate-opacity-table-cell-ref.html
+fails == border-separate-opacity-table-column-group.html border-separate-opacity-table-column-group-ref.html
+fails == border-separate-opacity-table-column.html border-separate-opacity-table-column-ref.html
+== border-separate-opacity-table-row-group.html border-separate-opacity-table-row-group-ref.html
+== border-separate-opacity-table-row.html border-separate-opacity-table-row-ref.html
+== border-separate-opacity-table.html border-separate-opacity-table-ref.html
