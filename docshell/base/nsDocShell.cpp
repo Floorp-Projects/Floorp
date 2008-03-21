@@ -133,6 +133,7 @@
 #include "nsITimer.h"
 #include "nsISHistoryInternal.h"
 #include "nsIPrincipal.h"
+#include "nsIFileURL.h"
 #include "nsIHistoryEntry.h"
 #include "nsISHistoryListener.h"
 #include "nsIWindowWatcher.h"
@@ -289,6 +290,7 @@ nsDocShell::nsDocShell():
     mObserveErrorPages(PR_TRUE),
     mAllowAuth(PR_TRUE),
     mAllowKeywordFixup(PR_FALSE),
+    mStrictFilePolicy(PR_TRUE),
     mFiredUnloadEvent(PR_FALSE),
     mEODForCurrentDocument(PR_FALSE),
     mURIResultedInDocument(PR_FALSE),
@@ -3591,6 +3593,10 @@ nsDocShell::Create()
         }
     }
 
+    rv = mPrefs->GetBoolPref("security.fileuri.strict_origin_policy", &tmpbool);
+    if (NS_SUCCEEDED(rv))
+        mStrictFilePolicy = tmpbool;
+
     // Should we use XUL error pages instead of alerts if possible?
     rv = mPrefs->GetBoolPref("browser.xul.error_pages.enabled", &tmpbool);
     if (NS_SUCCEEDED(rv))
@@ -3606,7 +3612,7 @@ nsDocShell::Create()
         const char* msg = mItemType == typeContent ?
             NS_WEBNAVIGATION_CREATE : NS_CHROME_WEBNAVIGATION_CREATE;
         serv->NotifyObservers(GetAsSupports(this), msg, nsnull);
-    }    
+    }
 
     return NS_OK;
 }
@@ -7343,6 +7349,76 @@ nsDocShell::DoURILoad(nsIURI * aURI,
         channel->SetOwner(aOwner);
     }
 
+    //
+    // file: uri special-casing
+    //
+    // If this is a file: load opened from another file: then it may need
+    // to inherit the owner from the referrer so they can script each other.
+    // If we don't set the owner explicitly then each file: gets an owner
+    // based on its own codebase later.
+    //
+    if (mStrictFilePolicy && URIIsLocalFile(aURI)) {
+        nsCOMPtr<nsIFileURL> fileURL(do_QueryInterface(aURI));
+        nsCOMPtr<nsIPrincipal> ownerPrincipal(do_QueryInterface(aOwner));
+        nsCOMPtr<nsIURI> ownerURI;
+        if (ownerPrincipal) {
+             ownerPrincipal->GetURI(getter_AddRefs(ownerURI));
+        }
+
+        if (!URIIsLocalFile(ownerURI)) {
+            // If the owner is not also a file: uri then forget it
+            // (don't want resource: principals in a file: doc)
+            //
+            // note: we're not de-nesting jar: uris here, we want to
+            // keep archive content bottled up in its own little island
+            ownerURI = nsnull;
+        }
+
+        //
+        // pull out the internal files
+        //
+        nsCOMPtr<nsIFileURL> ownerFileURL(do_QueryInterface(ownerURI));
+        nsCOMPtr<nsIFile> targetFile;
+        nsCOMPtr<nsIFile> ownerFile;
+        if (ownerFileURL &&
+            NS_SUCCEEDED(fileURL->GetFile(getter_AddRefs(targetFile))) &&
+            NS_SUCCEEDED(ownerFileURL->GetFile(getter_AddRefs(ownerFile)))) {
+            //
+            // Make sure targetFile is not a directory (bug 209234)
+            // and that it exists w/out unescaping (bug 395343)
+            //
+            PRBool targetIsDir;
+            if (targetFile && ownerFile && 
+                NS_SUCCEEDED(targetFile->Normalize()) &&
+                NS_SUCCEEDED(ownerFile->Normalize()) &&
+                NS_SUCCEEDED(targetFile->IsDirectory(&targetIsDir)) &&
+                !targetIsDir) {
+                //
+                // If the file to be loaded is in a subdirectory of the owner
+                // (or same-dir if owner is not a directory) then it will
+                // inherit its owner principal and be scriptable by that owner.
+                //
+                PRBool ownerIsDir;
+                PRBool contained = PR_FALSE;
+                rv = ownerFile->IsDirectory(&ownerIsDir);
+                if (NS_SUCCEEDED(rv) && ownerIsDir) {
+                    rv = ownerFile->Contains(targetFile, PR_TRUE, &contained);
+                }
+                else {
+                    nsCOMPtr<nsIFile> ownerParent;
+                    rv = ownerFile->GetParent(getter_AddRefs(ownerParent));
+                    if (NS_SUCCEEDED(rv) && ownerParent) {
+                        rv = ownerParent->Contains(targetFile, PR_TRUE, &contained);
+                    }
+                }
+
+                if (NS_SUCCEEDED(rv) && contained) {
+                    channel->SetOwner(aOwner);
+                }
+            }
+        }
+    }
+
     nsCOMPtr<nsIScriptChannel> scriptChannel = do_QueryInterface(channel);
     if (scriptChannel) {
         // Allow execution against our context if the principals match
@@ -7360,7 +7436,7 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     }
 
     rv = DoChannelLoad(channel, uriLoader, aBypassClassifier);
-    
+
     //
     // If the channel load failed, we failed and nsIWebProgress just ain't
     // gonna happen.
@@ -9312,6 +9388,19 @@ nsDocShell::URIInheritsSecurityContext(nsIURI* aURI, PRBool* aResult)
     return NS_URIChainHasFlags(aURI,
                                nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
                                aResult);
+}
+
+/* static */
+PRBool
+nsDocShell::URIIsLocalFile(nsIURI *aURI)
+{
+    PRBool isFile;
+    nsCOMPtr<nsINetUtil> util = do_GetIOService();
+
+    return util && NS_SUCCEEDED(util->ProtocolHasFlags(aURI,
+                                    nsIProtocolHandler::URI_IS_LOCAL_FILE,
+                                    &isFile)) &&
+           isFile;
 }
 
 /* static */

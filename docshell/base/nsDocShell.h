@@ -514,6 +514,9 @@ protected:
     // Check whether aURI should inherit our security context
     static nsresult URIInheritsSecurityContext(nsIURI* aURI, PRBool* aResult);
 
+    // Check whether aURI is a URI_IS_LOCAL_FILE or not
+    static PRBool URIIsLocalFile(nsIURI *aURI);
+
     // Check whether aURI is about:blank
     static PRBool IsAboutBlank(nsIURI* aURI);
 
@@ -548,6 +551,7 @@ protected:
     PRPackedBool               mObserveErrorPages;
     PRPackedBool               mAllowAuth;
     PRPackedBool               mAllowKeywordFixup;
+    PRPackedBool               mStrictFilePolicy;
 
     // This boolean is set to true right before we fire pagehide and generally
     // unset when we embed a new content viewer.  While it's true no navigation

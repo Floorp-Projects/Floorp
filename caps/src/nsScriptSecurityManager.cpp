@@ -25,6 +25,7 @@
  *   Steve Morse
  *   Christopher A. Aillon
  *   Giorgio Maone
+ *   Daniel Veditz
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -98,7 +99,7 @@ nsIIOService    *nsScriptSecurityManager::sIOService = nsnull;
 nsIXPConnect    *nsScriptSecurityManager::sXPConnect = nsnull;
 nsIStringBundle *nsScriptSecurityManager::sStrBundle = nsnull;
 JSRuntime       *nsScriptSecurityManager::sRuntime   = 0;
-PRInt32 nsScriptSecurityManager::sFileURIOriginPolicy = FILEURI_SOP_SELF;
+PRBool nsScriptSecurityManager::sStrictFileOriginPolicy = PR_TRUE;
 
 // Info we need about the JSClasses used by XPConnects wrapped
 // natives, to avoid having to QI to nsIXPConnectWrappedNative all the
@@ -313,7 +314,16 @@ nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
 
     // special handling for file: URIs
     if (targetScheme.EqualsLiteral("file"))
-        return SecurityCompareFileURIs( sourceBaseURI, targetBaseURI );
+    {
+        // in traditional unsafe behavior all files are the same origin
+        if (!sStrictFileOriginPolicy)
+            return PR_TRUE;
+
+         // Otherwise they had better match
+         PRBool filesAreEqual = PR_FALSE;
+         nsresult rv = sourceBaseURI->Equals(targetBaseURI, &filesAreEqual);
+         return NS_SUCCEEDED(rv) && filesAreEqual;
+    }
 
     // Special handling for mailnews schemes
     if (targetScheme.EqualsLiteral("imap") ||
@@ -367,83 +377,6 @@ nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
     }
 
     return result;
-}
-
-// helper function for SecurityCompareURIs
-PRBool
-nsScriptSecurityManager::SecurityCompareFileURIs(nsIURI* aSourceURI,
-                                                 nsIURI* aTargetURI)
-{
-    // in traditional unsafe behavior all files are the same origin
-    if (sFileURIOriginPolicy == FILEURI_SOP_TRADITIONAL)
-        return PR_TRUE;
-
-
-    // Check simplest and default FILEURI_SOP_SELF case first:
-    // If they're equal or if the policy says they must be, we're done
-    PRBool filesAreEqual = PR_FALSE;
-    if (NS_FAILED( aSourceURI->Equals(aTargetURI, &filesAreEqual) ))
-        return PR_FALSE;
-    if (filesAreEqual || sFileURIOriginPolicy == FILEURI_SOP_SELF)
-        return filesAreEqual;
-
-
-    // disallow access to directory listings (bug 209234)
-    PRBool targetIsDir = PR_TRUE;
-    nsCOMPtr<nsIFile> targetFile;
-    nsCOMPtr<nsIFileURL> targetFileURL( do_QueryInterface(aTargetURI) );
-
-    if (!targetFileURL ||
-        NS_FAILED( targetFileURL->GetFile(getter_AddRefs(targetFile)) ) ||
-        NS_FAILED( targetFile->IsDirectory(&targetIsDir) ) ||
-        targetIsDir)
-    {
-        return PR_FALSE;
-    }
-
-
-    // For policy ANYFILE we're done
-    if (sFileURIOriginPolicy == FILEURI_SOP_ANYFILE)
-        return PR_TRUE;
-
-
-    // source parent directory is needed for remaining policies
-    nsCOMPtr<nsIFile> sourceFile;
-    nsCOMPtr<nsIFile> sourceParent;
-    nsCOMPtr<nsIFileURL> sourceFileURL( do_QueryInterface(aSourceURI) );
-
-    if (!sourceFileURL ||
-        NS_FAILED( sourceFileURL->GetFile(getter_AddRefs(sourceFile)) ) ||
-        NS_FAILED( sourceFile->GetParent(getter_AddRefs(sourceParent)) ) ||
-        !sourceParent)
-    {
-        // unexpected error
-        return PR_FALSE;
-    }
-
-    // check remaining policies
-    if (sFileURIOriginPolicy == FILEURI_SOP_SAMEDIR)
-    {
-        // file: URIs in the same directory have the same origin
-        PRBool sameParent = PR_FALSE;
-        nsCOMPtr<nsIFile> targetParent;
-        if (NS_FAILED( targetFile->GetParent(getter_AddRefs(targetParent)) ) ||
-            NS_FAILED( sourceParent->Equals(targetParent, &sameParent) ))
-            return PR_FALSE;
-        return sameParent;
-    }
-
-    if (sFileURIOriginPolicy == FILEURI_SOP_SUBDIR)
-    {
-        // file: URIs can access files in the same or lower directories
-        PRBool isChild = PR_FALSE;
-        if (NS_FAILED( sourceParent->Contains(targetFile, PR_TRUE, &isChild) ))
-            return PR_FALSE;
-        return isChild;
-    }
-
-    NS_NOTREACHED("invalid file uri policy setting");
-    return PR_FALSE;
 }
 
 NS_IMETHODIMP
@@ -3892,7 +3825,7 @@ const char nsScriptSecurityManager::sJSEnabledPrefName[] =
 const char nsScriptSecurityManager::sJSMailEnabledPrefName[] =
     "javascript.allow.mailnews";
 const char nsScriptSecurityManager::sFileOriginPolicyPrefName[] =
-    "security.fileuri.origin_policy";
+    "security.fileuri.strict_origin_policy";
 #ifdef XPC_IDISPATCH_SUPPORT
 const char nsScriptSecurityManager::sXPCDefaultGrantAllName[] =
     "security.classID.allowByDefault";
@@ -3910,9 +3843,8 @@ nsScriptSecurityManager::ScriptSecurityPrefChanged()
     // JavaScript in Mail defaults to disabled in failure cases.
     mIsMailJavaScriptEnabled = NS_SUCCEEDED(rv) && temp;
 
-    PRInt32 policy;
-    rv = mSecurityPref->SecurityGetIntPref(sFileOriginPolicyPrefName, &policy);
-    sFileURIOriginPolicy = NS_SUCCEEDED(rv) ? policy : FILEURI_SOP_SELF;
+    rv = mSecurityPref->SecurityGetBoolPref(sFileOriginPolicyPrefName, &temp);
+    sStrictFileOriginPolicy = NS_SUCCEEDED(rv) && temp;
 
 #ifdef XPC_IDISPATCH_SUPPORT
     rv = mSecurityPref->SecurityGetBoolPref(sXPCDefaultGrantAllName, &temp);
