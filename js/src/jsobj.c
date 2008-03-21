@@ -5160,17 +5160,32 @@ void printString(JSString *str) {
 
 void printVal(JSContext *cx, jsval val);
 
-void printObj(JSContext *cx, JSObject *jsobj) {
-    jsuint i;
+void printObj(JSContext *cx, JSObject *obj) {
+    jsuint i, slots;
     jsval val;
     JSClass *clasp;
 
-    fprintf(stderr, "object %p\n", (void *)jsobj);
-    clasp = OBJ_GET_CLASS(cx, jsobj);
+    fprintf(stderr, "object %p\n", (void *) obj);
+    clasp = OBJ_GET_CLASS(cx, obj);
     fprintf(stderr, "class %p %s\n", (void *)clasp, clasp->name);
-    for (i=0; i < STOBJ_NSLOTS(jsobj); i++) {
+    if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
+        slots = JS_MIN((jsuint) obj->fslots[JSSLOT_ARRAY_LENGTH],
+                       ARRAY_DENSE_LENGTH(obj));
+        for (i = 0; i < slots; i++) {
+            val = obj->dslots[i];
+            if (JSVAL_IS_OBJECT(val))
+                fprintf(stderr, "object %p\n", (void*)JSVAL_TO_OBJECT(val));
+            else
+                printVal(cx, val);
+        }
+
+        return;
+    }
+
+    slots = STOBJ_NSLOTS(obj);
+    for (i=0; i < slots; i++) {
         fprintf(stderr, "slot %3d ", i);
-        val = STOBJ_GET_SLOT(jsobj, i);
+        val = STOBJ_GET_SLOT(obj, i);
         if (JSVAL_IS_OBJECT(val))
             fprintf(stderr, "object %p\n", (void *)JSVAL_TO_OBJECT(val));
         else
@@ -5192,6 +5207,8 @@ void printVal(JSContext *cx, jsval val) {
         printString(JSVAL_TO_STRING(val));
     } else if (JSVAL_IS_DOUBLE(val)) {
         fprintf(stderr, "(double) %g\n", *JSVAL_TO_DOUBLE(val));
+    } else if (val == JSVAL_HOLE) {
+        fprintf(stderr, "hole\n");
     } else {
         JS_ASSERT(JSVAL_IS_BOOLEAN(val));
         fprintf(stderr, "(boolean) %s\n",
