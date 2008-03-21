@@ -1,3 +1,4 @@
+# these could be moved to crashtests
 != backgr_border-table-cell.html empty.html
 != backgr_border-table-column-group.html empty.html
 != backgr_border-table-column.html empty.html
@@ -22,3 +23,19 @@
 != backgr_simple-table-row-group.html empty.html
 != backgr_simple-table-row.html empty.html
 != backgr_simple-table.html empty.html
+
+# would also be good to test table-header-group and table-footer-group
+# (and rows and row groups in the presence of their reordering)
+# Also need to test different values of background-origin and background-clip.
+== border-separate-table-cell.html border-separate-table-cell-ref.html
+== border-separate-table-column-group.html border-separate-table-column-group-ref.html
+== border-separate-table-column.html border-separate-table-column-ref.html
+== border-separate-table-row-group.html border-separate-table-row-group-ref.html
+== border-separate-table-row.html border-separate-table-row-ref.html
+== border-separate-table.html border-separate-table-ref.html
+== border-collapse-table-cell.html border-collapse-table-cell-ref.html
+== border-collapse-table-column-group.html border-collapse-table-column-group-ref.html
+== border-collapse-table-column.html border-collapse-table-column-ref.html
+== border-collapse-table-row-group.html border-collapse-table-row-group-ref.html
+== border-collapse-table-row.html border-collapse-table-row-ref.html
+== border-collapse-table.html border-collapse-table-ref.html
