@@ -3398,7 +3398,7 @@ nsJSContext::MaybeCC(PRBool aHigherProbability)
     }
 #ifdef DEBUG_smaug
     else {
-      printf("Running cycle collector was delayed: NS_MIN_CC_INTERVAL\n");
+      printf("Running CC was delayed because of NS_MIN_CC_INTERVAL.\n");
     }
 #endif
   }
