@@ -500,6 +500,10 @@ void imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
   GetName(name);
   LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::OnStopRequest", "name", name.get());
 #endif
+  // There's all sorts of stuff here that could kill us (the OnStopRequest call
+  // on the listener, the removal from the loadgroup, the release of the
+  // listener, etc).  Don't let them do it.
+  nsCOMPtr<imgIRequest> kungFuDeathGrip(this);
 
   if (mListener) {
     // Hold a ref to the listener while we call it, just in case.
