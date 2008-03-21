@@ -104,9 +104,9 @@
   border: none;
   padding: 0 !important;
   list-style-image: url("chrome://global/skin/icons/close.png");
-  -moz-image-region: rect(0px 16px 16px 0px);
-  width: 16px;
-  height: 16px;
+  -moz-image-region: rect(0px 14px 14px 0px);
+  width: 14px;
+  height: 14px;
   cursor: default;
 }
 
@@ -117,11 +117,11 @@
 }
 
 .textbox-input-closebutton:hover {
-  -moz-image-region: rect(0px 32px 16px 16px);
+  -moz-image-region: rect(0px 28px 14px 14px);
 }
 
 .textbox-input-closebutton:hover:active {
-  -moz-image-region: rect(0px 48px 16px 32px);
+  -moz-image-region: rect(0px 42px 14px 28px);
 }
 
 .small, .small[disabled="true"] {
