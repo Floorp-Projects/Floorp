@@ -139,7 +139,7 @@ jsdtrace_function_name(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
     jsbytecode *pc;
     char *name;
 
-    atom = fun->atom;
+    atom = FUN_ATOM(fun);
     if (!atom) {
         if (fp->fun != fun || !fp->down)
             return dempty;
