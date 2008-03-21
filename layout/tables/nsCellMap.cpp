@@ -324,7 +324,7 @@ nsTableCellMap::Synchronize(nsTableFrame* aTableFrame)
   nsCellMap* map = nsnull;
   for (PRUint32 rgX = 0; rgX < orderedRowGroups.Length(); rgX++) {
     nsTableRowGroupFrame* rgFrame = orderedRowGroups[rgX];
-    map = GetMapFor(rgFrame, map);
+    map = GetMapFor((nsTableRowGroupFrame*)rgFrame->GetFirstInFlow(), map);
     if (map) {
       if (!maps.AppendElement(map)) {
         delete map;
