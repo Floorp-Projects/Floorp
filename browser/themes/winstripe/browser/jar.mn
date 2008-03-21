@@ -6,13 +6,14 @@ classic.jar:
 *       skin/classic/browser/browser.css                             (browser.css)
         skin/classic/browser/browser.xml
 *       skin/classic/browser/engineManager.css                       (engineManager.css)
-        skin/classic/browser/Info.png
+        skin/classic/browser/Info.png                                (Info.png)
         skin/classic/browser/identity.png                            (identity.png)
         skin/classic/browser/pageInfo.css
-        skin/classic/browser/pageInfo.png
+        skin/classic/browser/pageInfo.png                            (pageInfo.png)
         skin/classic/browser/page-livemarks.png                      (feeds/feedIcon16.png)
         skin/classic/browser/livemark-item.png                       (livemark-item.png)
         skin/classic/browser/livemark-folder.png                     (livemark-folder.png)
+        skin/classic/browser/Bookmarks-folder.png                    (Bookmarks-folder.png)
         skin/classic/browser/Secure.png                              (Secure.png)
         skin/classic/browser/Secure24.png                            (Secure24.png)
         skin/classic/browser/Security-broken.png                     (Security-broken.png)
@@ -24,8 +25,8 @@ classic.jar:
         skin/classic/browser/Go-arrow.png                            (Go-arrow.png)
         skin/classic/browser/Go-arrow-rtl.png                        (Go-arrow-rtl.png)
 *       skin/classic/browser/searchbar.css                           (searchbar.css)
-        skin/classic/browser/Search-glass.png
-        skin/classic/browser/Search-glass-rtl.png
+        skin/classic/browser/Search-glass.png                        (Search-glass.png)
+        skin/classic/browser/Search-glass-rtl.png                    (Search-glass-rtl.png)
         skin/classic/browser/Search-addengines.png
         skin/classic/browser/setDesktopBackground.css
         skin/classic/browser/menu-back.png                           (menu-back.png)
@@ -58,6 +59,8 @@ classic.jar:
         skin/classic/browser/places/importAndBackup.png              (places/importAndBackup.png)
         skin/classic/browser/places/minus.png                        (places/minus.png)
         skin/classic/browser/places/plus.png                         (places/plus.png)
+        skin/classic/browser/places/organize.png                     (places/organize.png)
+        skin/classic/browser/places/view.png                         (places/view.png)
         skin/classic/browser/places/bookmarkProperties.css           (places/bookmarkProperties.css)
         skin/classic/browser/places/organizer-toolbar.png            (bookmarks/Bookmarks-toolbar.png)
         skin/classic/browser/preferences/alwaysAsk.png               (preferences/alwaysAsk.png)
@@ -76,8 +79,8 @@ classic.jar:
         skin/classic/browser/tabbrowser/tab-active-bkgnd.png                    (tabbrowser/tab-active-bkgnd.png)
         skin/classic/browser/tabbrowser/tab-hover-bkgnd.png                     (tabbrowser/tab-hover-bkgnd.png)
         skin/classic/browser/tabbrowser/tabstrip-bottom.png                     (tabbrowser/tabstrip-bottom.png)
-        icon.png
-        preview.png
+        icon.png                                                     (icon.png)
+        preview.png                                                  (preview.png)
 
 #ifdef XP_WIN
 classic.jar:
@@ -85,13 +88,14 @@ classic.jar:
 *       skin/classic/aero/browser/browser.css                        (browser.css)
         skin/classic/aero/browser/browser.xml
 *       skin/classic/aero/browser/engineManager.css                  (engineManager.css)
-        skin/classic/aero/browser/Info.png
+        skin/classic/aero/browser/Info.png                           (Info-aero.png)
         skin/classic/aero/browser/identity.png                       (identity-aero.png)
         skin/classic/aero/browser/pageInfo.css
         skin/classic/aero/browser/pageInfo.png
         skin/classic/aero/browser/page-livemarks.png                 (feeds/feedIcon16-aero.png)
         skin/classic/aero/browser/livemark-item.png                  (livemark-item-aero.png)
         skin/classic/aero/browser/livemark-folder.png                (livemark-folder-aero.png)
+        skin/classic/aero/browser/Bookmarks-folder.png               (Bookmarks-folder-aero.png)
         skin/classic/aero/browser/Secure.png                         (Secure-aero.png)
         skin/classic/aero/browser/Secure24.png                       (Secure24-aero.png)
         skin/classic/aero/browser/Security-broken.png                (Security-broken-aero.png)
@@ -103,8 +107,8 @@ classic.jar:
         skin/classic/aero/browser/Go-arrow.png                       (Go-arrow-aero.png)
         skin/classic/aero/browser/Go-arrow-rtl.png                   (Go-arrow-rtl-aero.png)
 *       skin/classic/aero/browser/searchbar.css                      (searchbar.css)
-        skin/classic/aero/browser/Search-glass.png
-        skin/classic/aero/browser/Search-glass-rtl.png
+        skin/classic/aero/browser/Search-glass.png                   (Search-glass-aero.png)
+        skin/classic/aero/browser/Search-glass-rtl.png               (Search-glass-rtl-aero.png)
         skin/classic/aero/browser/Search-addengines.png
         skin/classic/aero/browser/setDesktopBackground.css
         skin/classic/aero/browser/menu-back.png                      (menu-back-aero.png)
@@ -121,9 +125,9 @@ classic.jar:
         skin/classic/aero/browser/feeds/subscribe.css                (feeds/subscribe.css)
         skin/classic/aero/browser/places/places.css                  (places/places.css)
         skin/classic/aero/browser/places/organizer.css               (places/organizer.css)
-        skin/classic/aero/browser/places/query.png                   (places/query.png)
-        skin/classic/aero/browser/places/bookmarksMenu.png           (places/bookmarksMenu.png)
-        skin/classic/aero/browser/places/bookmarksToolbar.png        (places/bookmarksToolbar.png)
+        skin/classic/aero/browser/places/query.png                   (places/query-aero.png)
+        skin/classic/aero/browser/places/bookmarksMenu.png           (places/bookmarksMenu-aero.png)
+        skin/classic/aero/browser/places/bookmarksToolbar.png        (places/bookmarksToolbar-aero.png)
         skin/classic/aero/browser/places/toolbarDropMarker.png       (places/toolbarDropMarker.png)
         skin/classic/aero/browser/places/editBookmarkOverlay.css     (places/editBookmarkOverlay.css)
         skin/classic/aero/browser/places/starPage.png                (places/starPage-aero.png)
@@ -137,10 +141,12 @@ classic.jar:
         skin/classic/aero/browser/places/importAndBackup.png         (places/importAndBackup-aero.png)
         skin/classic/aero/browser/places/minus.png                   (places/minus-aero.png)
         skin/classic/aero/browser/places/plus.png                    (places/plus-aero.png)
+        skin/classic/aero/browser/places/view.png                    (places/view-aero.png)
+        skin/classic/aero/browser/places/organize.png                (places/organize-aero.png)
         skin/classic/aero/browser/places/bookmarkProperties.css      (places/bookmarkProperties.css)
         skin/classic/aero/browser/places/organizer-toolbar.png       (bookmarks/Bookmarks-toolbar.png)
         skin/classic/aero/browser/preferences/alwaysAsk.png          (preferences/alwaysAsk-aero.png)
-        skin/classic/aero/browser/preferences/application.png        (preferences/application.png)
+        skin/classic/aero/browser/preferences/application.png        (preferences/application-aero.png)
         skin/classic/aero/browser/preferences/Options.png            (preferences/Options-aero.png)
         skin/classic/aero/browser/preferences/plugin.png             (preferences/plugin-aero.png)
         skin/classic/aero/browser/preferences/preferences.css        (preferences/preferences.css)
@@ -155,4 +161,6 @@ classic.jar:
         skin/classic/aero/browser/tabbrowser/tab-active-bkgnd.png               (tabbrowser/tab-active-bkgnd.png)
         skin/classic/aero/browser/tabbrowser/tab-hover-bkgnd.png                (tabbrowser/tab-hover-bkgnd.png)
         skin/classic/aero/browser/tabbrowser/tabstrip-bottom.png                (tabbrowser/tabstrip-bottom.png)
+        icon.png                                                     (icon-aero.png)
+        preview.png                                                  (preview-aero.png)
 #endif
