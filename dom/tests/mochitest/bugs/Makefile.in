@@ -68,6 +68,8 @@ _TEST_FILES	= \
 		test_bug407839.html \
 		iframe_bug407839-1.html \
 		iframe_bug407839-2.html \
+		test_bug424093.html \
+		iframe_bug424093.html \
 		test_bug409349.html \
 		iframe_bug409349.html \
 		test_bug411103.html \
