@@ -812,7 +812,7 @@ real_checkout:
 # update the NSS checkout timestamp, if we checked PSM out
 	@if test -d $(TOPSRCDIR)/security/manager -a \
 		 `egrep -c '^(U|C) mozilla/security/(nss|coreconf)' $(CVSCO_LOGFILE) 2>/dev/null` != 0; then \
-		touch $(TOPSRCDIR)/security/manager/.nss.checkout; \
+		date > $(TOPSRCDIR)/security/manager/.nss.checkout; \
 	fi
 ifdef RUN_AUTOCONF_LOCALLY
 	cd $(ROOTDIR) && \
