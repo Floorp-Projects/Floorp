@@ -160,7 +160,7 @@ SplitInlineAncestors(nsIFrame*     aFrame)
 
 // Convert bidi continuations to fluid continuations for a frame and all of its
 // inline ancestors.
-static nsresult
+static void
 JoinInlineAncestors(nsIFrame* aFrame)
 {
   nsIFrame* frame = aFrame;
