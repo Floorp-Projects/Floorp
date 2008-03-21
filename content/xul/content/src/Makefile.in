@@ -69,6 +69,7 @@ REQUIRES	= xpcom \
 		  webshell \
 		  view \
 		  htmlparser \
+		  docshell \
 		  $(NULL)
 
 ifdef MOZ_XUL
