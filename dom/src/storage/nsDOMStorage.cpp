@@ -1075,8 +1075,15 @@ nsDOMStorageList::NamedItem(const nsAString& aDomain,
   nsCOMPtr<nsIURI> uri;
   nsCAutoString currentDomain;
   if (subjectPrincipal) {
-    rv = subjectPrincipal->GetURI(getter_AddRefs(uri));
-    if (NS_SUCCEEDED(rv) && uri) {
+    rv = subjectPrincipal->GetDomain(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!uri) {
+      rv = subjectPrincipal->GetURI(getter_AddRefs(uri));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    if (uri) {
       PRPackedBool sessionOnly;
       if (!nsDOMStorage::CanUseStorage(uri, &sessionOnly))
         return NS_ERROR_DOM_SECURITY_ERR;
