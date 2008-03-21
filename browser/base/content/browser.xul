@@ -508,10 +508,13 @@
     </vbox>
   </hbox>
 #ifdef TOOLBAR_CUSTOMIZATION_SHEET
-  <panel id="customizeToolbarSheetPopup" noautohide="true">
+  <panel id="customizeToolbarSheetPopup" noautohide="true"
+         onpopupshowing="document.getElementById('customizeToolbarSheetIFrame')
+                           .setAttribute('src', 'chrome://global/content/customizeToolbar.xul');"
+         onpopuphidden="document.getElementById('customizeToolbarSheetIFrame')
+                          .setAttribute('src', 'about:blank');">
     <iframe id="customizeToolbarSheetIFrame"
             style="&dialog.style;"
-            src="chrome://global/content/customizeToolbar.xul"
             hidden="true"/>
   </panel>
 #endif
