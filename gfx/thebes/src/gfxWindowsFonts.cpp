@@ -609,9 +609,9 @@ SetupDCFont(HDC dc, gfxWindowsFont *aFont)
         return PR_FALSE;
     SelectObject(dc, hfont);
 
-    /* GetGlyphIndices is buggy for bitmap and vector fonts,
-       so send them to uniscribe */
-    if (!aFont->GetFontEntry()->mTrueType)
+    // GetGlyphIndices is buggy for bitmap and vector fonts, so send them to uniscribe
+    // Also sent Symbol fonts through Uniscribe as it has special code to deal with them
+    if (!aFont->GetFontEntry()->mTrueType || aFont->GetFontEntry()->mSymbolFont)
         return PR_FALSE;
 
     return PR_TRUE;
@@ -1271,6 +1271,8 @@ public:
     inline FontEntry *WhichFontSupportsChar(const nsTArray<nsRefPtr<FontEntry> >& fonts, PRUint32 ch) {
         for (PRUint32 i = 0; i < fonts.Length(); i++) {
             nsRefPtr<FontEntry> fe = fonts[i];
+            if (fe->mSymbolFont && !mGroup->GetStyle()->familyNameQuirks)
+                continue;
             if (HasCharacter(fe, ch))
                 return fe;
         }
@@ -1359,13 +1361,6 @@ public:
     PRUint32 ComputeRanges() {
         if (mItemLength == 0)
             return 0;
-
-        /* disable font fallback when using symbol fonts */
-        if (mGroup->GetFontEntryAt(0)->mSymbolFont) {
-            TextRange r(0,mItemLength);
-            mRanges.AppendElement(r);
-            return 1;
-        }
 
         PR_LOG(gFontLog, PR_LOG_DEBUG, ("Computing ranges for string: (len = %d)", mItemLength));
 
