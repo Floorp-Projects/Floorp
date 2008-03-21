@@ -319,10 +319,24 @@ nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
         if (!sStrictFileOriginPolicy)
             return PR_TRUE;
 
-         // Otherwise they had better match
-         PRBool filesAreEqual = PR_FALSE;
-         nsresult rv = sourceBaseURI->Equals(targetBaseURI, &filesAreEqual);
-         return NS_SUCCEEDED(rv) && filesAreEqual;
+        nsCOMPtr<nsIFileURL> sourceFileURL(do_QueryInterface(sourceBaseURI));
+        nsCOMPtr<nsIFileURL> targetFileURL(do_QueryInterface(targetBaseURI));
+
+        if (!sourceFileURL || !targetFileURL)
+            return PR_FALSE;
+
+        nsCOMPtr<nsIFile> sourceFile, targetFile;
+
+        sourceFileURL->GetFile(getter_AddRefs(sourceFile));
+        targetFileURL->GetFile(getter_AddRefs(targetFile));
+
+        if (!sourceFile || !targetFile)
+            return PR_FALSE;
+
+        // Otherwise they had better match
+        PRBool filesAreEqual = PR_FALSE;
+        nsresult rv = sourceFile->Equals(targetFile, &filesAreEqual);
+        return NS_SUCCEEDED(rv) && filesAreEqual;
     }
 
     // Special handling for mailnews schemes
