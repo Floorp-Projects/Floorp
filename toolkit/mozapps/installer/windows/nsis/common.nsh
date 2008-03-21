@@ -4845,7 +4845,6 @@
 !macro InstallStartCleanupCommon
 
   !ifndef InstallStartCleanupCommon
-    !insertmacro CleanUpdatesDir
     !insertmacro CleanVirtualStore
     !insertmacro EndUninstallLog
     !insertmacro ParseRemovedFilesLog
@@ -4864,9 +4863,6 @@
       RmDir /r "$INSTDIR\updates"
       Delete "$INSTDIR\updates.xml"
       Delete "$INSTDIR\active-update.xml"
-
-      ; Remove the updates directory for Vista and above
-      ${CleanUpdatesDir} "Mozilla\Firefox"
 
       RmDir /r "$INSTDIR\distribution"
 

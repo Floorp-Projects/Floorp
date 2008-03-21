@@ -112,6 +112,7 @@ VIAddVersionKey "FileDescription" "${BrandShortName} Installer"
 !insertmacro AddDDEHandlerValues
 !insertmacro ChangeMUIHeaderImage
 !insertmacro CheckForFilesInUse
+!insertmacro CleanUpdatesDir
 !insertmacro CloseApp
 !insertmacro CopyFilesFromDir
 !insertmacro CreateRegKey
@@ -254,6 +255,9 @@ Section "-InstallStartCleanup"
       RmDir /r "$INSTDIR\extensions\inspector@mozilla.org"
     ${EndIf}
   ${EndIf}
+
+  ; Remove the updates directory for Vista and above
+  ${CleanUpdatesDir} "Mozilla\Firefox"
 
   ${InstallStartCleanupCommon}
 SectionEnd
