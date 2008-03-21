@@ -137,7 +137,7 @@ gfxWindowsPlatform::FontEnumProc(const ENUMLOGFONTEXW *lpelfe,
         }
     }
 
-    fe = new FontEntry(ff);
+    fe = new FontEntry(ff->mName);
     /* don't append it until the end in case of error */
 
     fe->mItalic = (logFont.lfItalic == 0xFF);
@@ -363,6 +363,9 @@ BuildKeyNameFromFontName(nsAString &aName)
 nsresult
 gfxWindowsPlatform::UpdateFontList()
 {
+    gfxFontCache *fc = gfxFontCache::GetCache();
+    if (fc)
+        fc->AgeAllGenerations();
     mFonts.Clear();
     mFontAliases.Clear();
     mNonExistingFonts.Clear();
@@ -693,7 +696,7 @@ gfxWindowsPlatform::FindFontEntry(FontFamily *aFontFamily, const gfxFontStyle *a
     for (PRUint32 j = 0; j < 2; j++) {
         PRBool matchesSomething = PR_FALSE;
         // build up an array of weights that match the italicness we're looking for
-        for (PRInt32 i = 0; i < aFontFamily->mVariations.Length(); i++) {
+        for (PRUint32 i = 0; i < aFontFamily->mVariations.Length(); i++) {
             nsRefPtr<FontEntry> fe = aFontFamily->mVariations[i];
             const PRUint8 weight = (fe->mWeight / 100);
             if (fe->mItalic == italic) {
