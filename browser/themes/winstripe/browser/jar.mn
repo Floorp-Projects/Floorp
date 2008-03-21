@@ -79,8 +79,8 @@ classic.jar:
         skin/classic/browser/tabbrowser/tab-active-bkgnd.png                    (tabbrowser/tab-active-bkgnd.png)
         skin/classic/browser/tabbrowser/tab-hover-bkgnd.png                     (tabbrowser/tab-hover-bkgnd.png)
         skin/classic/browser/tabbrowser/tabstrip-bottom.png                     (tabbrowser/tabstrip-bottom.png)
-        icon.png                                                     (icon.png)
-        preview.png                                                  (preview.png)
+        icon.png
+        preview.png
 
 #ifdef XP_WIN
 classic.jar:
@@ -161,6 +161,4 @@ classic.jar:
         skin/classic/aero/browser/tabbrowser/tab-active-bkgnd.png               (tabbrowser/tab-active-bkgnd.png)
         skin/classic/aero/browser/tabbrowser/tab-hover-bkgnd.png                (tabbrowser/tab-hover-bkgnd.png)
         skin/classic/aero/browser/tabbrowser/tabstrip-bottom.png                (tabbrowser/tabstrip-bottom.png)
-        icon.png                                                     (icon-aero.png)
-        preview.png                                                  (preview-aero.png)
 #endif
