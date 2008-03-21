@@ -1,4 +1,4 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=411103
@@ -12,11 +12,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=411103
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=411103">Mozilla Bug 411103</a>
 <p id="display"></p>
-<div id="content" style="display: none">
-  
-</div>
+<div id="content" style="display: none"></div>
+
+<!-- XML's createElement and createElementNS aren't HTML's, of course -->
+<iframe src="data:application/xml,%3Cfoo%3EXML%3C/foo%3E" name="xmlWindow"></iframe>
+
+<!-- for good measure... -->
+<iframe src="data:application/xhtml+xml,%3Chtml%20xmlns=%22http://www.w3.org/1999/xhtml%22%3E%3Cbody%3E%3Cp%3EXHTML%3C/p%3E%3C/body%3E%3C/html%3E"
+        name="xhtmlWindow"></iframe>
+
 <pre id="test">
 <script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
 
 /** Test for Bug 411103 **/
 var allNSTests =
@@ -127,7 +135,7 @@ function sourceifyArgs(args)
   return copy.join(", ");
 }
 
-function runTests(tests, methodName)
+function runTests(tests, methodName, document)
 {
   for (var i = 0, sz = tests.length; i < sz; i++)
   {
@@ -153,11 +161,29 @@ function runTests(tests, methodName)
   }
 }
 
-runTests(allNSTests, "createElementNS");
-runTests(allNoNSTests, "createElement");
+
+function run()
+{
+  // HTML document
+  runTests(allNSTests, "createElementNS", document);
+  runTests(allNoNSTests, "createElement", document);
+
+  // XML document
+  var xmlDocument = window.frames.xmlWindow.document;
+  runTests(allNSTests, "createElementNS", xmlDocument);
+  runTests(allNoNSTests, "createElement", xmlDocument);
+
+  // XHTML document, for good measure
+  var xhtmlDocument = window.frames.xhtmlWindow.document;
+  runTests(allNSTests, "createElementNS", xhtmlDocument);
+  runTests(allNoNSTests, "createElement", xhtmlDocument);
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", run, false);
 
 </script>
 </pre>
 </body>
 </html>
-
