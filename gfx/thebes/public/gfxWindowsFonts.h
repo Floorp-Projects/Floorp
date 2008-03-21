@@ -72,8 +72,6 @@ public:
     nsString mName;
 };
 
-
-
 class FontEntry
 {
 public:
