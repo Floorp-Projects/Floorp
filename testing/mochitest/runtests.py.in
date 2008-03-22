@@ -267,6 +267,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   if automation.UNIXISH:
     browserEnv["LD_LIBRARY_PATH"] = automation.DIST_BIN 
     browserEnv["MOZILLA_FIVE_HOME"] = automation.DIST_BIN 
+    browserEnv["GNOME_DISABLE_CRASH_DIALOG"] = "1"
 
   for v in options.environment:
     ix = v.find("=")
