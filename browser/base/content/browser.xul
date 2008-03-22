@@ -312,7 +312,7 @@
                  showimagecolumn="true"
                  enablehistory="true"
                  timeout="100"
-                 maxrows="10"
+                 maxrows="6"
                  newlines="stripsurroundingwhitespace"
                  oninput="URLBarOnInput(event);"
                  ontextentered="return handleURLBarCommand(param);"
