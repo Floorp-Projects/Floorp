@@ -3335,9 +3335,15 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
         nsString stringStr;
         rv = nsScriptLoader::ConvertToUTF16(channel, string, stringLen,
                                             EmptyString(), this, stringStr);
-        if (NS_SUCCEEDED(rv))
-          rv = scriptProto->Compile(stringStr.get(), stringStr.Length(), uri,
-                                    1, this, mCurrentPrototype);
+        if (NS_SUCCEEDED(rv)) {
+            // Downgrade _before_ compiling, since that's when the
+            // script saves its principal.
+            rv = nsScriptLoader::DowngradePrincipalIfNeeded(this, channel);
+            if (NS_SUCCEEDED(rv)) {
+                rv = scriptProto->Compile(stringStr.get(), stringStr.Length(),
+                                          uri, 1, this, mCurrentPrototype);
+            }
+        }
 
         aStatus = rv;
         if (NS_SUCCEEDED(rv)) {
@@ -3422,7 +3428,9 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
         doc->mNextSrcLoadWaiter = nsnull;
 
         // Execute only if we loaded and compiled successfully, then resume
-        if (NS_SUCCEEDED(aStatus) && scriptProto->mScriptObject.mObject) {
+        if (NS_SUCCEEDED(aStatus) && scriptProto->mScriptObject.mObject &&
+            NS_SUCCEEDED(nsScriptLoader::DowngradePrincipalIfNeeded(doc,
+                                                                    channel))) {
             doc->ExecuteScript(scriptProto);
         }
         doc->ResumeWalk();

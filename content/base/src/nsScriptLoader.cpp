@@ -71,48 +71,6 @@
 #include "nsThreadUtils.h"
 
 //////////////////////////////////////////////////////////////
-//
-//////////////////////////////////////////////////////////////
-
-// If aMaybeCertPrincipal is a cert principal and aNewPrincipal is not the same
-// as aMaybeCertPrincipal, downgrade aMaybeCertPrincipal to a codebase
-// principal.  Return the downgraded principal, or aMaybeCertPrincipal if no
-// downgrade was needed.
-static already_AddRefed<nsIPrincipal>
-MaybeDowngradeToCodebase(nsIPrincipal *aMaybeCertPrincipal,
-                         nsIPrincipal *aNewPrincipal)
-{
-  NS_PRECONDITION(aMaybeCertPrincipal, "Null old principal!");
-  NS_PRECONDITION(aNewPrincipal, "Null new principal!");
-
-  nsIPrincipal *principal = aMaybeCertPrincipal;
-
-  PRBool hasCert;
-  aMaybeCertPrincipal->GetHasCertificate(&hasCert);
-  if (hasCert) {
-    PRBool equal;
-    aMaybeCertPrincipal->Equals(aNewPrincipal, &equal);
-    if (!equal) {
-      nsCOMPtr<nsIURI> uri, domain;
-      aMaybeCertPrincipal->GetURI(getter_AddRefs(uri));
-      aMaybeCertPrincipal->GetDomain(getter_AddRefs(domain));
-
-      nsContentUtils::GetSecurityManager()->GetCodebasePrincipal(uri,
-                                                                 &principal);
-      if (principal && domain) {
-        principal->SetDomain(domain);
-      }
-
-      return principal;
-    }
-  }
-
-  NS_ADDREF(principal);
-
-  return principal;
-}
-
-//////////////////////////////////////////////////////////////
 // Per-request data structure
 //////////////////////////////////////////////////////////////
 
@@ -895,18 +853,8 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
     // -- Merge the principal of the script file with that of the document; if
     // the script has a non-cert principal, the document's principal should be
     // downgraded.
-    if (channel) {
-      nsCOMPtr<nsIPrincipal> channelPrincipal;
-      nsContentUtils::GetSecurityManager()->
-        GetChannelPrincipal(channel, getter_AddRefs(channelPrincipal));
-      if (channelPrincipal) {
-        nsCOMPtr<nsIPrincipal> newPrincipal =
-          MaybeDowngradeToCodebase(mDocument->NodePrincipal(),
-                                   channelPrincipal);
-
-        mDocument->SetPrincipal(newPrincipal);
-      }
-    }
+    rv = DowngradePrincipalIfNeeded(mDocument, channel);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // This assertion could fire errorously if we ran out of memory when
@@ -918,6 +866,53 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
 
   // Mark this as loaded
   aRequest->mLoading = PR_FALSE;
+
+  return NS_OK;
+}
+
+/* static */
+nsresult
+nsScriptLoader::DowngradePrincipalIfNeeded(nsIDocument* aDocument,
+                                           nsIChannel* aChannel)
+{
+  if (!aChannel) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCOMPtr<nsIPrincipal> channelPrincipal;
+  nsresult rv = nsContentUtils::GetSecurityManager()->
+    GetChannelPrincipal(aChannel, getter_AddRefs(channelPrincipal));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ASSERTION(channelPrincipal, "Gotta have a principal here!");
+
+  // If the document principal is a cert principal and aNewPrincipal
+  // is not the same as the channel principal, downgrade the document
+  // principal to a codebase principal.
+
+  PRBool hasCert;
+  nsIPrincipal* docPrincipal = aDocument->NodePrincipal();
+  docPrincipal->GetHasCertificate(&hasCert);
+  if (hasCert) {
+    PRBool equal;
+    docPrincipal->Equals(channelPrincipal, &equal);
+    if (!equal) {
+      nsCOMPtr<nsIURI> uri, domain;
+      docPrincipal->GetURI(getter_AddRefs(uri));
+      docPrincipal->GetDomain(getter_AddRefs(domain));
+
+      nsCOMPtr<nsIPrincipal> newPrincipal;
+      rv = nsContentUtils::GetSecurityManager()->
+        GetCodebasePrincipal(uri, getter_AddRefs(newPrincipal));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      NS_ASSERTION(newPrincipal, "Gotta have a new principal");
+      if (domain) {
+        newPrincipal->SetDomain(domain);
+      }
+      aDocument->SetPrincipal(newPrincipal);
+    }
+  }
 
   return NS_OK;
 }

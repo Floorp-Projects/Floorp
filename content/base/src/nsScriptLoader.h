@@ -180,6 +180,13 @@ public:
    */
   void ProcessPendingRequests();
 
+  /**
+   * If needed, downgrade the principal of aDocument based on the
+   * principal of aChannel.
+   */
+  static nsresult DowngradePrincipalIfNeeded(nsIDocument* aDocument,
+                                             nsIChannel* aChannel);
+
 protected:
   /**
    * Process any pending requests asyncronously (i.e. off an event) if there
