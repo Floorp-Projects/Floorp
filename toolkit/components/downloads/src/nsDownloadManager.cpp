@@ -1372,6 +1372,19 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
     (void)aMIMEInfo->GetPreferredAction(&action);
   }
 
+  DownloadState startState = nsIDownloadManager::DOWNLOAD_QUEUED;
+#if defined(XP_WIN) && !defined(__MINGW32__) && !defined(WINCE)
+  if (mScanner) {
+    AVCheckPolicyState res = mScanner->CheckPolicy(source, target);
+    if (res == AVPOLICY_BLOCKED) {
+      // This download will get deleted during a call to IAE's Save,
+      // so go ahead and mark it as blocked and avoid the download.
+      (void)dl->Cancel();
+      startState = nsIDownloadManager::DOWNLOAD_BLOCKED_POLICY;
+    }
+  }
+#endif
+
   PRInt64 id = AddDownloadToDB(dl->mDisplayName, source, target, tempPath,
                                dl->mStartTime, dl->mLastUpdate,
                                nsIDownloadManager::DOWNLOAD_NOTSTARTED,
@@ -1380,7 +1393,7 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
   dl->mID = id;
 
   rv = AddToCurrentDownloads(dl);
-  (void)dl->SetState(nsIDownloadManager::DOWNLOAD_QUEUED);
+  (void)dl->SetState(startState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ADDREF(*aDownload = dl);
@@ -1467,7 +1480,8 @@ nsDownloadManager::RetryDownload(PRUint32 aID)
 
   // if our download is not canceled or failed, we should fail
   if (dl->mDownloadState != nsIDownloadManager::DOWNLOAD_FAILED &&
-      dl->mDownloadState != nsIDownloadManager::DOWNLOAD_BLOCKED &&
+      dl->mDownloadState != nsIDownloadManager::DOWNLOAD_BLOCKED_PARENTAL &&
+      dl->mDownloadState != nsIDownloadManager::DOWNLOAD_BLOCKED_POLICY &&
       dl->mDownloadState != nsIDownloadManager::DOWNLOAD_DIRTY &&
       dl->mDownloadState != nsIDownloadManager::DOWNLOAD_CANCELED)
     return NS_ERROR_FAILURE;
@@ -1542,7 +1556,8 @@ nsDownloadManager::CleanUp()
   DownloadState states[] = { nsIDownloadManager::DOWNLOAD_FINISHED,
                              nsIDownloadManager::DOWNLOAD_FAILED,
                              nsIDownloadManager::DOWNLOAD_CANCELED,
-                             nsIDownloadManager::DOWNLOAD_BLOCKED,
+                             nsIDownloadManager::DOWNLOAD_BLOCKED_PARENTAL,
+                             nsIDownloadManager::DOWNLOAD_BLOCKED_POLICY,
                              nsIDownloadManager::DOWNLOAD_DIRTY };
 
   nsCOMPtr<mozIStorageStatement> stmt;
@@ -1552,7 +1567,8 @@ nsDownloadManager::CleanUp()
       "OR state = ?2 "
       "OR state = ?3 "
       "OR state = ?4 "
-      "OR state = ?5"), getter_AddRefs(stmt));
+      "OR state = ?5 "
+      "OR state = ?6"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(states); ++i) {
     rv = stmt->BindInt32Parameter(i, states[i]);
@@ -1589,7 +1605,8 @@ nsDownloadManager::GetCanCleanUp(PRBool *aResult)
   DownloadState states[] = { nsIDownloadManager::DOWNLOAD_FINISHED,
                              nsIDownloadManager::DOWNLOAD_FAILED,
                              nsIDownloadManager::DOWNLOAD_CANCELED,
-                             nsIDownloadManager::DOWNLOAD_BLOCKED,
+                             nsIDownloadManager::DOWNLOAD_BLOCKED_PARENTAL,
+                             nsIDownloadManager::DOWNLOAD_BLOCKED_POLICY,
                              nsIDownloadManager::DOWNLOAD_DIRTY };
 
   nsCOMPtr<mozIStorageStatement> stmt;
@@ -1600,7 +1617,8 @@ nsDownloadManager::GetCanCleanUp(PRBool *aResult)
       "OR state = ?2 "
       "OR state = ?3 "
       "OR state = ?4 "
-      "OR state = ?5"), getter_AddRefs(stmt));
+      "OR state = ?5 "
+      "OR state = ?6"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(states); ++i) {
     rv = stmt->BindInt32Parameter(i, states[i]);
@@ -1894,7 +1912,8 @@ nsDownload::SetState(DownloadState aState)
   // the database *before* notifying listeners.  At this point, you can safely
   // dispatch to the observers as well.
   switch (aState) {
-    case nsIDownloadManager::DOWNLOAD_BLOCKED:
+    case nsIDownloadManager::DOWNLOAD_BLOCKED_PARENTAL:
+    case nsIDownloadManager::DOWNLOAD_BLOCKED_POLICY:
     case nsIDownloadManager::DOWNLOAD_DIRTY:
     case nsIDownloadManager::DOWNLOAD_CANCELED:
     case nsIDownloadManager::DOWNLOAD_FAILED:
@@ -2024,7 +2043,8 @@ nsDownload::SetState(DownloadState aState)
     case nsIDownloadManager::DOWNLOAD_FINISHED:
       mDownloadManager->SendEvent(this, "dl-done");
       break;
-    case nsIDownloadManager::DOWNLOAD_BLOCKED:
+    case nsIDownloadManager::DOWNLOAD_BLOCKED_PARENTAL:
+    case nsIDownloadManager::DOWNLOAD_BLOCKED_POLICY:
       mDownloadManager->SendEvent(this, "dl-blocked");
       break;
     case nsIDownloadManager::DOWNLOAD_DIRTY:
@@ -2182,8 +2202,8 @@ nsDownload::OnStateChange(nsIWebProgress *aWebProgress,
         // Cancel using the provided object
         (void)Cancel();
 
-        // Fail the download - DOWNLOAD_BLOCKED
-        (void)SetState(nsIDownloadManager::DOWNLOAD_BLOCKED);
+        // Fail the download
+        (void)SetState(nsIDownloadManager::DOWNLOAD_BLOCKED_PARENTAL);
       }
     }
   } else if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_NETWORK) &&
