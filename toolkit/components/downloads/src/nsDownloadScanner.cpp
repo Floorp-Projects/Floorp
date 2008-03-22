@@ -259,6 +259,42 @@ nsDownloadScanner::ListCLSID()
   return 0;
 }
 
+// If IAttachementExecute is available, use the CheckPolicy call to find out
+// if this download should be prevented due to Internet Zone Policy settings.
+AVCheckPolicyState
+nsDownloadScanner::CheckPolicy(const nsACString &aSource, const nsACString &aTarget)
+{
+  if (aSource.IsEmpty())
+    return AVPOLICY_DOWNLOAD;
+
+  if (!mHaveAttachmentExecute)
+    return AVPOLICY_DOWNLOAD;
+
+  nsRefPtr<IAttachmentExecute> ae;
+  HRESULT hr;
+  hr = CoCreateInstance(CLSID_AttachmentServices, NULL, CLSCTX_INPROC,
+                        IID_IAttachmentExecute, getter_AddRefs(ae));
+  if (FAILED(hr))
+    return AVPOLICY_DOWNLOAD;
+
+  (void)ae->SetClientGuid(GUID_MozillaVirusScannerPromptGeneric);
+  (void)ae->SetSource(NS_ConvertUTF8toUTF16(aSource).get());
+  if (!aTarget.IsEmpty())
+    (void)ae->SetLocalPath(NS_ConvertUTF8toUTF16(aTarget).get());
+
+  // Any failure means the file download/exec will be blocked by the system.
+  // S_OK or S_FALSE imply it's ok.
+  hr = ae->CheckPolicy();
+
+  if (hr == S_OK)
+    return AVPOLICY_DOWNLOAD;
+
+  if (hr == S_FALSE)
+    return AVPOLICY_PROMPT;
+
+  return AVPOLICY_BLOCKED;
+}
+
 #ifndef THREAD_MODE_BACKGROUND_BEGIN
 #define THREAD_MODE_BACKGROUND_BEGIN 0x00010000
 #endif

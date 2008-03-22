@@ -49,10 +49,13 @@ interface nsIMIMEInfo;
  * Represents a download object.
  *
  * @note This object is no longer updated once it enters a completed state.
- *       Completed states are the following:
- *       nsIDownloadManager::DOWNLOAD_FINISHED
- *       nsIDownloadManager::DOWNLOAD_FAILED
- *       nsIDownloadManager::DOWNLOAD_CANCELED
+ *       Completed states are the following:  
+ *       nsIDownloadManager::DOWNLOAD_FINISHED  
+ *       nsIDownloadManager::DOWNLOAD_FAILED  
+ *       nsIDownloadManager::DOWNLOAD_CANCELED 
+ *       nsIDownloadManager::DOWNLOAD_BLOCKED_PARENTAL 
+ *       nsIDownloadManager::DOWNLOAD_DIRTY 
+ *       nsIDownloadManager::DOWNLOAD_BLOCKED_POLICY 
  */
 [scriptable, uuid(c891111e-92a6-47b8-bc46-874ebb61ac9d)]
 interface nsIDownload : nsITransfer {

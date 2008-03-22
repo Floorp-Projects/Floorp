@@ -33,6 +33,14 @@ enum AVScanState
   AVSCAN_TIMEDOUT
 };
 
+enum AVCheckPolicyState
+{
+  AVPOLICY_DOWNLOAD,
+  AVPOLICY_PROMPT,
+  AVPOLICY_BLOCKED
+};
+
+
 // See nsDownloadScanner.cpp for declaration and definition
 class nsDownloadScannerWatchdog;
 
@@ -43,6 +51,7 @@ public:
   ~nsDownloadScanner();
   nsresult Init();
   nsresult ScanDownload(nsDownload *download);
+  AVCheckPolicyState CheckPolicy(const nsACString &aSource, const nsACString &aTarget);
 
 private:
   PRBool mHaveAVScanner;

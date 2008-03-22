@@ -81,7 +81,7 @@ public:
 
     PRBool showDM = PR_TRUE;
     if (branch)
-      branch->GetBoolPref(PREF_BDM_SHOWWHENSTARTING , &showDM);
+      branch->GetBoolPref(PREF_BDM_SHOWWHENSTARTING, &showDM);
 
     PRBool useWindow = PR_TRUE;
     if (branch)
