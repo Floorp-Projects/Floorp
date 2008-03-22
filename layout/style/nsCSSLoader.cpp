@@ -1436,7 +1436,10 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     rv = NS_URIChainHasFlags(aLoadData->mURI,
                              nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
                              &inherit);
-    if (NS_SUCCEEDED(rv) && inherit) {
+    if ((NS_SUCCEEDED(rv) && inherit) ||
+        (nsContentUtils::URIIsLocalFile(aLoadData->mURI) &&
+         NS_SUCCEEDED(aLoadData->mLoaderPrincipal->
+                      CheckMayLoad(aLoadData->mURI, PR_FALSE)))) {
       channel->SetOwner(aLoadData->mLoaderPrincipal);
     }
   }
@@ -1445,8 +1448,7 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
   // model is: Necko owns the stream loader, which owns the load data,
   // which owns us
   nsCOMPtr<nsIUnicharStreamLoader> streamLoader;
-  rv = NS_NewUnicharStreamLoader(getter_AddRefs(streamLoader),
-                                 aLoadData);
+  rv = NS_NewUnicharStreamLoader(getter_AddRefs(streamLoader), aLoadData);
 
   if (NS_SUCCEEDED(rv))
     rv = channel->AsyncOpen(streamLoader, nsnull);

@@ -4066,6 +4066,19 @@ nsContentUtils::HidePopupsInDocument(nsIDocument* aDocument)
 }
 
 /* static */
+PRBool
+nsContentUtils::URIIsLocalFile(nsIURI *aURI)
+{
+  PRBool isFile;
+  nsCOMPtr<nsINetUtil> util = do_QueryInterface(sIOService);
+
+  return util && NS_SUCCEEDED(util->ProtocolHasFlags(aURI,
+                                nsIProtocolHandler::URI_IS_LOCAL_FILE,
+                                &isFile)) &&
+         isFile;
+}
+
+/* static */
 void
 nsAutoGCRoot::Shutdown()
 {
