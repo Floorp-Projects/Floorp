@@ -37,11 +37,13 @@
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 let didFail = false;
+var file;
 
 let promptService = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptService]),
   alert: function() {
     ok(didFail, "javascript: uri failed and showed a message");
+    file.remove(false);
     finish();
   }
 };
@@ -74,8 +76,8 @@ function test()
   stmt.bindStringParameter(0, "javascript:5");
 
   // Download to a temp local file
-  let file = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
+  file = Cc["@mozilla.org/file/directory_service;1"].
+         getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
   file.append("javascriptURI");
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
   stmt.bindStringParameter(1, Cc["@mozilla.org/network/io-service;1"].
