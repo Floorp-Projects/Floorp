@@ -153,6 +153,28 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
                              PRUint32 propertiesLength,
                              char *aBuffer, PRUint32 aBufLen)
 {
+#ifdef TARGET_XPCOM_ABI
+  // append the ABI to the properties to match only binary 
+  // compatible GREs
+  static const GREProperty kExtraProperty =
+    { "abi", TARGET_XPCOM_ABI };
+
+  GREProperty *allProperties = new GREProperty[propertiesLength + 1];
+  if (!allProperties)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  for (PRUint32 i=0; i<propertiesLength; i++) {
+    allProperties[i].property = properties[i].property;
+    allProperties[i].value    = properties[i].value;
+  }
+  allProperties[propertiesLength].property = kExtraProperty.property;
+  allProperties[propertiesLength].value    = kExtraProperty.value;
+  PRUint32 allPropertiesLength = propertiesLength + 1;
+#else
+  GREProperty *allProperties = properties;
+  PRUint32 allPropertiesLength = propertiesLength;
+#endif
+
   // if GRE_HOME is in the environment, use that GRE
   const char* env = getenv("GRE_HOME");
   if (env && *env) {
@@ -256,7 +278,7 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
   const char *home = getenv("HOME");
   if (home && *home && GRE_FindGREFramework(home,
                                             versions, versionsLength,
-                                            properties, propertiesLength,
+                                            allProperties, allPropertiesLength,
                                             aBuffer, aBufLen)) {
     return NS_OK;
   }
@@ -264,7 +286,7 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
   // Check /Library/Frameworks/XUL.framework/Versions/<version>/libxpcom.dylib
   if (GRE_FindGREFramework("",
                            versions, versionsLength,
-                           properties, propertiesLength,
+                           allProperties, allPropertiesLength,
                            aBuffer, aBufLen)) {
     return NS_OK;
   }
@@ -273,7 +295,7 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
   env = getenv("MOZ_GRE_CONF");
   if (env && GRE_GetPathFromConfigFile(env,
                                        versions, versionsLength,
-                                       properties, propertiesLength,
+                                       allProperties, allPropertiesLength,
                                        aBuffer, aBufLen)) {
     return NS_OK;
   }
@@ -289,7 +311,7 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
     
     if (GRE_GetPathFromConfigFile(buffer,
                                   versions, versionsLength,
-                                  properties, propertiesLength,
+                                  allProperties, allPropertiesLength,
                                   aBuffer, aBufLen)) {
       return NS_OK;
     }
@@ -301,7 +323,7 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
 
     if (GRE_GetPathFromConfigDir(buffer,
                                  versions, versionsLength,
-                                 properties, propertiesLength,
+                                 allProperties, allPropertiesLength,
                                  aBuffer, aBufLen)) {
       return NS_OK;
     }
@@ -310,7 +332,7 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
   // Look for a global /etc/gre.conf file
   if (GRE_GetPathFromConfigFile(GRE_CONF_PATH,
                                 versions, versionsLength,
-                                properties, propertiesLength,
+                                allProperties, allPropertiesLength,
                                 aBuffer, aBufLen)) {
     return NS_OK;
   }
@@ -318,7 +340,7 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
   // Look for a group of config files in /etc/gre.d/
   if (GRE_GetPathFromConfigDir(GRE_CONF_DIR,
                                versions, versionsLength,
-                               properties, propertiesLength,
+                               allProperties, allPropertiesLength,
                                aBuffer, aBufLen)) {
     return NS_OK;
   }
@@ -327,7 +349,7 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
   env = getenv("MOZ_GRE_CONF");
   if (env && GRE_GetPathFromConfigFile(env,
                                        versions, versionsLength,
-                                       properties, propertiesLength,
+                                       allProperties, allPropertiesLength,
                                        aBuffer, aBufLen)) {
     return NS_OK;
   }
@@ -342,7 +364,7 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
     
     if (GRE_GetPathFromConfigFile(buffer,
                                   versions, versionsLength,
-                                  properties, propertiesLength,
+                                  allProperties, allPropertiesLength,
                                   aBuffer, aBufLen)) {
       return NS_OK;
     }
@@ -353,7 +375,7 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
 
     if (GRE_GetPathFromConfigDir(buffer,
                                  versions, versionsLength,
-                                 properties, propertiesLength,
+                                 allProperties, allPropertiesLength,
                                  aBuffer, aBufLen)) {
       return NS_OK;
     }
@@ -369,7 +391,7 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
              "%s" XPCOM_FILE_PATH_SEPARATOR GRE_CONF_PATH, p);
     if (GRE_GetPathFromConfigFile(buffer,
                                   versions, versionsLength,
-                                  properties, propertiesLength,
+                                  allProperties, allPropertiesLength,
                                   aBuffer, aBufLen)) {
       return NS_OK;
     }
@@ -379,7 +401,7 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
              "%s" XPCOM_FILE_PATH_SEPARATOR GRE_CONF_DIR, p);
     if (GRE_GetPathFromConfigDir(buffer,
                                  versions, versionsLength,
-                                 properties, propertiesLength,
+                                 allProperties, allPropertiesLength,
                                  aBuffer, aBufLen)) {
       return NS_OK;
     }
@@ -403,7 +425,7 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
                      KEY_READ, &hRegKey) == ERROR_SUCCESS) {
     PRBool ok = GRE_GetPathFromRegKey(hRegKey,
                                       versions, versionsLength,
-                                      properties, propertiesLength,
+                                      allProperties, allPropertiesLength,
                                       aBuffer, aBufLen);
     ::RegCloseKey(hRegKey);
 
@@ -415,7 +437,7 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
                      KEY_ENUMERATE_SUB_KEYS, &hRegKey) == ERROR_SUCCESS) {
     PRBool ok = GRE_GetPathFromRegKey(hRegKey,
                                       versions, versionsLength,
-                                      properties, propertiesLength,
+                                      allProperties, allPropertiesLength,
                                       aBuffer, aBufLen);
     ::RegCloseKey(hRegKey);
 
@@ -659,7 +681,7 @@ GRE_GetPathFromRegKey(HKEY aRegKey,
   //   <Property>=<value> (REG_SZ)
   //
   // Additional meta-info may be available in the future, including
-  // localization info, ABI, and other information which might be pertinent
+  // localization info and other information which might be pertinent
   // to selecting one GRE over another.
   //
   // When a GRE is being registered, it should try to register itself at
