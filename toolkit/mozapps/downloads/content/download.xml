@@ -90,7 +90,8 @@
           const dl = Components.interfaces.nsIDownloadManager;
           return state == dl.DOWNLOAD_FINISHED || 
                  state == dl.DOWNLOAD_CANCELED || 
-                 state == dl.DOWNLOAD_BLOCKED || 
+                 state == dl.DOWNLOAD_BLOCKED_PARENTAL || 
+                 state == dl.DOWNLOAD_BLOCKED_POLICY || 
                  state == dl.DOWNLOAD_DIRTY || 
                  state == dl.DOWNLOAD_FAILED;
         ]]>
@@ -272,7 +273,29 @@
     </content>  
   </binding>
 
-  <binding id="download-blocked" extends="chrome://mozapps/content/downloads/download.xml#download-base">
+  <binding id="download-blocked-parental" extends="chrome://mozapps/content/downloads/download.xml#download-base">
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox pack="center">
+          <xul:image class="downloadTypeIcon blockedIcon"/>
+        </xul:vbox>
+        <xul:vbox pack="start" flex="1">
+          <xul:hbox align="center" flex="1">
+            <xul:label xbl:inherits="value=target,tooltiptext=target"
+                       crop="center" flex="1" class="name"/>
+            <xul:label xbl:inherits="value=dateTime,tooltiptext=dateTimeTip"
+                       class="dateTime"/>
+          </xul:hbox>
+          <xul:hbox align="center" flex="1">
+            <xul:label xbl:inherits="value=status,tooltiptext=statusTip"
+                       crop="end" flex="1" class="status"/>
+          </xul:hbox>
+        </xul:vbox>
+      </xul:hbox>
+    </content>
+  </binding>
+
+  <binding id="download-blocked-policy" extends="chrome://mozapps/content/downloads/download.xml#download-base">
     <content>
       <xul:hbox flex="1">
         <xul:vbox pack="center">

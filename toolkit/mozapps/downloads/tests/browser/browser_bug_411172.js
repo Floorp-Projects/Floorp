@@ -69,7 +69,7 @@ const DownloadData = [
     target: gTestPath,
     startTime: 1180493839859230,
     endTime: 1180493839859232,
-    state: Ci.nsIDownloadManager.DOWNLOAD_BLOCKED,
+    state: Ci.nsIDownloadManager.DOWNLOAD_BLOCKED_PARENTAL,
     currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0 },
   { name: "381603.patch",
     source: "https://bugzilla.mozilla.org/attachment.cgi?id=266520",
@@ -77,6 +77,13 @@ const DownloadData = [
     startTime: 1180493839859230,
     endTime: 1180493839859230,
     state: Ci.nsIDownloadManager.DOWNLOAD_DIRTY,
+    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0 },
+  { name: "381603.patch",
+    source: "https://bugzilla.mozilla.org/attachment.cgi?id=266520",
+    target: gTestPath,
+    startTime: 1180493839859230,
+    endTime: 1180493839859231,
+    state: Ci.nsIDownloadManager.DOWNLOAD_BLOCKED_POLICY,
     currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0 }
 ];
 
