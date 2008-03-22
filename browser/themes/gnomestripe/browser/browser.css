@@ -67,6 +67,7 @@
 #navigator-toolbox[inFullscreen="true"],
 #navigator-toolbox[inFullscreen="true"] > #nav-bar {
   border-top: none;
+  padding-top: 0;
 }
 
 /* Places toolbar */
