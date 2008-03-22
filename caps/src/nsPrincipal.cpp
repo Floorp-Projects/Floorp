@@ -45,6 +45,8 @@
 #include "plstr.h"
 #include "nsCRT.h"
 #include "nsIURI.h"
+#include "nsIFileURL.h"
+#include "nsIProtocolHandler.h"
 #include "nsNetUtil.h"
 #include "nsJSPrincipals.h"
 #include "nsVoidArray.h"
@@ -304,10 +306,92 @@ nsPrincipal::Subsumes(nsIPrincipal *aOther, PRBool *aResult)
   return Equals(aOther, aResult);
 }
 
+static PRBool
+URIIsLocalFile(nsIURI *aURI)
+{
+  PRBool isFile;
+  nsCOMPtr<nsINetUtil> util = do_GetIOService();
+
+  return util && NS_SUCCEEDED(util->ProtocolHasFlags(aURI,
+                                nsIProtocolHandler::URI_IS_LOCAL_FILE,
+                                &isFile)) &&
+         isFile;
+}
+
 NS_IMETHODIMP
 nsPrincipal::CheckMayLoad(nsIURI* aURI, PRBool aReport)
 {
   if (!nsScriptSecurityManager::SecurityCompareURIs(mCodebase, aURI)) {
+    if (nsScriptSecurityManager::GetStrictFileOriginPolicy() &&
+        URIIsLocalFile(aURI)) {
+      nsCOMPtr<nsIFileURL> fileURL(do_QueryInterface(aURI));
+
+      if (!URIIsLocalFile(mCodebase)) {
+        // If the codebase is not also a file: uri then forget it
+        // (don't want resource: principals in a file: doc)
+        //
+        // note: we're not de-nesting jar: uris here, we want to
+        // keep archive content bottled up in its own little island
+
+        if (aReport) {
+          nsScriptSecurityManager::ReportError(
+            nsnull, NS_LITERAL_STRING("CheckSameOriginError"), mCodebase, aURI);
+        }
+
+        return NS_ERROR_DOM_BAD_URI;
+      }
+
+      //
+      // pull out the internal files
+      //
+      nsCOMPtr<nsIFileURL> codebaseFileURL(do_QueryInterface(mCodebase));
+      nsCOMPtr<nsIFile> targetFile;
+      nsCOMPtr<nsIFile> codebaseFile;
+      PRBool targetIsDir;
+
+      // Make sure targetFile is not a directory (bug 209234)
+      // and that it exists w/out unescaping (bug 395343)
+
+      if (!codebaseFileURL || !fileURL ||
+          NS_FAILED(fileURL->GetFile(getter_AddRefs(targetFile))) ||
+          NS_FAILED(codebaseFileURL->GetFile(getter_AddRefs(codebaseFile))) ||
+          !targetFile || !codebaseFile ||
+          NS_FAILED(targetFile->Normalize()) ||
+          NS_FAILED(codebaseFile->Normalize()) ||
+          NS_FAILED(targetFile->IsDirectory(&targetIsDir)) ||
+          targetIsDir) {
+        if (aReport) {
+          nsScriptSecurityManager::ReportError(
+            nsnull, NS_LITERAL_STRING("CheckSameOriginError"), mCodebase, aURI);
+        }
+
+        return NS_ERROR_DOM_BAD_URI;
+      }
+
+      //
+      // If the file to be loaded is in a subdirectory of the codebase
+      // (or same-dir if codebase is not a directory) then it will
+      // inherit its codebase principal and be scriptable by that codebase.
+      //
+      PRBool codebaseIsDir;
+      PRBool contained = PR_FALSE;
+      nsresult rv = codebaseFile->IsDirectory(&codebaseIsDir);
+      if (NS_SUCCEEDED(rv) && codebaseIsDir) {
+        rv = codebaseFile->Contains(targetFile, PR_TRUE, &contained);
+      }
+      else {
+        nsCOMPtr<nsIFile> codebaseParent;
+        rv = codebaseFile->GetParent(getter_AddRefs(codebaseParent));
+        if (NS_SUCCEEDED(rv) && codebaseParent) {
+          rv = codebaseParent->Contains(targetFile, PR_TRUE, &contained);
+        }
+      }
+
+      if (NS_SUCCEEDED(rv) && contained) {
+        return NS_OK;
+      }
+    }
+
     if (aReport) {
       nsScriptSecurityManager::ReportError(
         nsnull, NS_LITERAL_STRING("CheckSameOriginError"), mCodebase, aURI);

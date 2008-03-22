@@ -410,6 +410,13 @@ public:
     CheckSameOriginPrincipal(nsIPrincipal* aSubject,
                              nsIPrincipal* aObject,
                              PRBool aIsCheckConnect);
+
+    static PRBool
+    GetStrictFileOriginPolicy()
+    {
+        return sStrictFileOriginPolicy;
+    }
+
 private:
 
     // GetScriptSecurityManager is the only call that can make one
