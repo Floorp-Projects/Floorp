@@ -687,7 +687,7 @@ pref("places.frecency.defaultBucketWeight", 10);
 // bonus (in percent) for visit transition types for frecency calculations
 pref("places.frecency.embedVisitBonus", 0);
 pref("places.frecency.linkVisitBonus", 100);
-pref("places.frecency.typedVisitBonus", 500);
+pref("places.frecency.typedVisitBonus", 2000);
 pref("places.frecency.bookmarkVisitBonus", 150);
 pref("places.frecency.downloadVisitBonus", 0);
 pref("places.frecency.permRedirectVisitBonus", 0);
