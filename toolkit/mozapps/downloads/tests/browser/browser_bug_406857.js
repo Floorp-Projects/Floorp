@@ -80,6 +80,7 @@ function test()
           ok(aDownload.referrer.spec == referrer, "Got referrer on finish");
 
           dm.removeListener(listener);
+          file.remove(false);
           finish();
           break;
       }
