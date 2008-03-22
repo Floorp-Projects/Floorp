@@ -96,19 +96,21 @@ def GetPidsByName(process_name):
   return matchingPids
 
 
-def ProcessesWithNameExist(process_name):
+def ProcessesWithNameExist(*process_names):
   """Returns true if there are any processes running with the
      given name.  Useful to check whether a Firefox process is still running
 
   Args:
-    process_name: String containing the process name, i.e. "firefox"
+    process_names: String or strings containing the process name, i.e. "firefox"
 
   Returns:
     True if any processes with that name are running, False otherwise.
   """
-
-  pids = GetPidsByName(process_name)
-  return len(pids) > 0
+  for process_name in process_names:
+    pids = GetPidsByName(process_name)
+    if len(pids) > 0:
+      return True
+  return False
 
 
 def TerminateProcess(pid):
@@ -129,15 +131,16 @@ def TerminateProcess(pid):
   except OSError, (errno, strerror):
     print 'WARNING: failed os.kill: %s : %s' % (errno, strerror)
 
-def TerminateAllProcesses(process_name):
+def TerminateAllProcesses(*process_names):
   """Helper function to terminate all processes with the given process name
 
   Args:
-    process_name: String containing the process name, i.e. "firefox"
+    process_names: String or strings containing the process name, i.e. "firefox"
   """
-  pids = GetPidsByName(process_name)
-  for pid in pids:
-    TerminateProcess(pid)
+  for process_name in process_names:
+    pids = GetPidsByName(process_name)
+    for pid in pids:
+      TerminateProcess(pid)
 
 def NonBlockingReadProcessOutput(handle):
   """Does a non-blocking read from the output of the process
