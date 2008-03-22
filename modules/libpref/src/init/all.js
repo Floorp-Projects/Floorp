@@ -501,7 +501,7 @@ pref("advanced.mailftp",                    false);
 pref("image.animation_mode",                "normal");
 
 // Same-origin policy for file URIs, "false" is traditional
-pref("security.fileuri.strict_origin_policy", false);
+pref("security.fileuri.strict_origin_policy", true);
 
 // If there is ever a security firedrill that requires
 // us to block certian ports global, this is the pref 
