@@ -217,7 +217,7 @@ pref("browser.urlbar.matchOnWordBoundary", true);
 pref("browser.urlbar.filter.javascript", true);
 
 // the maximum number of results to show in autocomplete when doing richResults
-pref("browser.urlbar.maxRichResults", 25);
+pref("browser.urlbar.maxRichResults", 12);
 // Size of "chunks" affects the number of places to process between each search
 // timeout (ms). Too big and the UI will be unresponsive; too small and we'll
 // be waiting on the timeout too often without many results.
