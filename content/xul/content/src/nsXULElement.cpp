@@ -3206,6 +3206,9 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
                                 // Use the enclosing document's principal
                                 // XXX is this right? or should we use the
                                 // protodoc's?
+                                // If we start using the protodoc's, make sure
+                                // the DowngradePrincipalIfNeeded stuff in
+                                // nsXULDocument::OnStreamComplete still works!
                                 aDocument->NodePrincipal(),
                                 urlspec.get(),
                                 aLineNo,
