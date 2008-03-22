@@ -42,6 +42,7 @@ dmFile.append("dmuitest.file");
 dmFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
 var gTestPath = ios.newFileURI(dmFile).spec;
 
+// Downloads are sorted by endTime, so make sure the end times are distinct
 const DownloadData = [
   { name: "381603.patch",
     source: "https://bugzilla.mozilla.org/attachment.cgi?id=266520",
@@ -81,8 +82,8 @@ const DownloadData = [
   { name: "381603.patch",
     source: "https://bugzilla.mozilla.org/attachment.cgi?id=266520",
     target: gTestPath,
-    startTime: 1180493839859230,
-    endTime: 1180493839859231,
+    startTime: 1180493839859229,
+    endTime: 1180493839859229,
     state: Ci.nsIDownloadManager.DOWNLOAD_BLOCKED_POLICY,
     currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0 }
 ];
