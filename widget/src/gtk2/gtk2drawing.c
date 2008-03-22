@@ -777,6 +777,11 @@ moz_gtk_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
 
     GTK_BUTTON(widget)->relief = relief;
 
+    /* Some theme engines love to cause us pain in that gtk_paint_focus is a
+       no-op on buttons and button-like widgets. They only listen to this flag. */
+    if (state->focused && !state->disabled)
+        GTK_WIDGET_SET_FLAGS(widget, GTK_HAS_FOCUS);
+
     if (!interior_focus && state->focused) {
         x += focus_width + focus_pad;
         y += focus_width + focus_pad;
@@ -822,6 +827,7 @@ moz_gtk_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
     }
 
     GTK_WIDGET_UNSET_FLAGS(widget, GTK_HAS_DEFAULT);
+    GTK_WIDGET_UNSET_FLAGS(widget, GTK_HAS_FOCUS);
     return MOZ_GTK_SUCCESS;
 }
 
