@@ -223,8 +223,6 @@
               newItem.id = "spacer" + uniqueId;
               newItem.className = "chromeclass-toolbar-additional";
             } else if (this.parentNode.localName == "toolbox") {
-              if (document.getElementById(aId))
-                return false;
               // Attempt to locate an item with a matching id within palette.
               var paletteItem = this.parentNode.palette.firstChild;
               while (paletteItem) {
