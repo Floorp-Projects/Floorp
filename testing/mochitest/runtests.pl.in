@@ -621,7 +621,6 @@ sub runTests {
   if ($unixish) {
     $ENV{'LD_LIBRARY_PATH'} = $dist_bin;
     $ENV{'MOZILLA_FIVE_HOME'} = $dist_bin;
-    $ENV{'GNOME_DISABLE_CRASH_DIALOG'} = '1';
   }
 
   for my $key (keys(%{$browser_env})) {
