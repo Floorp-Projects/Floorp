@@ -574,7 +574,7 @@ gfxWindowsPlatform::FontResolveProc(const ENUMLOGFONTEXW *lpelfe,
 
 struct FontSearch {
     FontSearch(PRUint32 aCh, gfxWindowsFont *aFont) :
-        ch(aCh), fontToMatch(aFont), matchRank(0) {
+        ch(aCh), fontToMatch(aFont), matchRank(-1) {
     }
     PRUint32 ch;
     nsRefPtr<gfxWindowsFont> fontToMatch;
