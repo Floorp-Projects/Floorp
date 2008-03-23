@@ -159,7 +159,7 @@ while (<PATTERNS>) {
         debug "test $testid was not included during this run";
     }
     elsif ($_ =~ /^TEST_ID=[^,]*, TEST_BRANCH=$knownfailurebranchpattern, TEST_RESULT=[^,]*, TEST_BUILDTYPE=$knownfailurebuildtypepattern, TEST_TYPE=$knownfailuretesttypepattern, TEST_OS=$knownfailureospattern, TEST_MACHINE=[^,]*, TEST_PROCESSORTYPE=$knownfailurearchpattern, TEST_KERNEL=$knownfailurekernelpattern, TEST_DATE=[^,]*, TEST_TIMEZONE=$knownfailuretimezonepattern,/) {
-        debug "adding pattern: $_";
+        debug "adding pattern  : $_";
         push @patterns, (escape_pattern($_));   
     }
     else {
@@ -574,7 +574,7 @@ sub escape_pattern {
     # unquote the regchars
     $trailing =~ s/\`([^\`])\`/$1/g;
 
-    debug "escape_pattern: after: $leading$trailing";
+    debug "escape_pattern  : $leading$trailing";
 
     return "$leading$trailing";
 
