@@ -343,10 +343,20 @@ nsNavHistory::PerformAutoComplete()
   if (mDBPreviousQuery) {
     rv = AutoCompletePreviousSearch();
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // We want to continue searching if we didn't finish last time, so move to
+    // one before the previous chunk so that we move up to the previous chunk
+    if (moreChunksToSearch = mPreviousChunkOffset != -1)
+      mCurrentChunkOffset = mPreviousChunkOffset - mAutoCompleteSearchChunkSize;
   } else {
     rv = AutoCompleteFullHistorySearch(&moreChunksToSearch);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  // If we ran out of pages to search, set offset to -1, so we can tell the
+  // difference between completing and stopping because we have enough results
+  if (!moreChunksToSearch)
+    mCurrentChunkOffset = -1;
 
   // Only search more chunks if there are more and we need more results
   moreChunksToSearch &= !AutoCompleteHasEnoughResults();
@@ -387,6 +397,7 @@ nsNavHistory::PerformAutoComplete()
 void
 nsNavHistory::DoneSearching(PRBool aFinished)
 {
+  mPreviousChunkOffset = mCurrentChunkOffset;
   mAutoCompleteFinishedSearch = aFinished;
   mCurrentResult = nsnull;
   mCurrentListener = nsnull;
@@ -422,20 +433,17 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
   mCurrentResult = do_CreateInstance(NS_AUTOCOMPLETESIMPLERESULT_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // We can optimize by reusing the last search if it finished and has strictly
-  // less than maxResults number of results as well as making sure the new
-  // search begins with the old one and both aren't empty. Without these
-  // checks, could cause problems mixing up old and new results. (bug 412730)
+  // Use the previous in-progress search by looking at which urls it found if
+  // the new search begins with the old one and both aren't empty. We don't run
+  // into bug 412730 because we only specify urls and not titles to look at.
   // Also, only reuse the search if the previous and new search both start with
   // javascript: or both don't. (bug 417798)
-  if (mAutoCompleteFinishedSearch &&
-      prevMatchCount < (PRUint32)mAutoCompleteMaxResults &&
-      !prevSearchString.IsEmpty() &&
+  if (!prevSearchString.IsEmpty() &&
       StringBeginsWith(mCurrentSearchString, prevSearchString) &&
       (StartsWithJS(prevSearchString) == StartsWithJS(mCurrentSearchString))) {
 
     // Got nothing before? We won't get anything new, so stop now
-    if (prevMatchCount == 0) {
+    if (mAutoCompleteFinishedSearch && prevMatchCount == 0) {
       // Set up the result to let the listener know that there's nothing
       mCurrentResult->SetSearchString(mCurrentSearchString);
       mCurrentResult->SetSearchResult(nsIAutoCompleteResult::RESULT_NOMATCH);
@@ -449,8 +457,10 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
 
       return NS_OK;
     } else {
-      // We must have more than 0 but fewer than the max results, so create an
-      // optimized query that only looks at these urls
+      // We either have a previous in-progress search or a finished search that
+      // has more than 0 results. We can continue from where the previous
+      // search left off, but first we want to create an optimized query that
+      // only searches through the urls that were previously found
       nsCString sql = NS_LITERAL_CSTRING(
         "SELECT h.url, h.title, f.url") + kBookTagSQL + NS_LITERAL_CSTRING(" "
         "FROM moz_places h "
@@ -637,8 +647,9 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
                                         const QueryType aType,
                                         PRBool *aHasMoreResults)
 {
-  // Don't bother processing results if we already have enough results
-  if (AutoCompleteHasEnoughResults())
+  // Unless we're checking if there are any results for the query, don't bother
+  // processing results if we already have enough results
+  if (!aHasMoreResults && AutoCompleteHasEnoughResults())
     return NS_OK;
 
   nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
