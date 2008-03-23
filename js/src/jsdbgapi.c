@@ -550,7 +550,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 closure = (JSObject *) wp->closure;
                 clasp = OBJ_GET_CLASS(cx, closure);
                 if (clasp == &js_FunctionClass) {
-                    fun = GET_FUNCTION_PRIVATE(cx, closure);
+                    fun = OBJ_TO_FUNCTION(closure);
                     script = FUN_IS_SCRIPTED(fun)
                              ? FUN_TO_SCRIPTED(fun)->script
                              : NULL;
@@ -649,8 +649,7 @@ js_watch_set_wrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     jsval userid;
 
     funobj = JSVAL_TO_OBJECT(argv[-2]);
-    JS_ASSERT(OBJ_GET_CLASS(cx, funobj) == &js_FunctionClass);
-    wrapper = GET_FUNCTION_PRIVATE(cx, funobj);
+    wrapper = OBJ_TO_FUNCTION(funobj);
     userid = ATOM_KEY(FUN_ATOM(wrapper));
     *rval = argv[0];
     return js_watch_set(cx, obj, userid, rval);
@@ -679,7 +678,7 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter)
                                    atom);
     if (!wrapper)
         return NULL;
-    return (JSPropertyOp) &wrapper->object;
+    return (JSPropertyOp) &wrapper->base.object;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -990,11 +989,9 @@ JS_StackFramePrincipals(JSContext *cx, JSStackFrame *fp)
     if (fp->fun) {
         JSRuntime *rt = cx->runtime;
 
-        if (rt->findObjectPrincipals) {
-            if (FUN_OBJECT(fp->fun) != fp->callee)
-                return rt->findObjectPrincipals(cx, fp->callee);
-            /* FALL THROUGH */
-        }
+        if (rt->findObjectPrincipals)
+            return rt->findObjectPrincipals(cx, fp->callee);
+        /* FALL THROUGH */
     }
     if (fp->script)
         return fp->script->principals;
@@ -1556,26 +1553,24 @@ GetAtomTotalSize(JSContext *cx, JSAtom *atom)
 }
 
 JS_PUBLIC_API(size_t)
-JS_GetFunctionTotalSize(JSContext *cx, JSFunction *fun)
+JS_GetFunctionTotalSize(JSContext *cx, JSFunction *funobj)
 {
     size_t nbytes;
 
-    if (FUN_IS_SCRIPTED(fun)) {
+    nbytes = JS_GetObjectTotalSize(cx, &funobj->object);
+    if (FUN_IS_SCRIPTED(funobj)) {
         JSScriptedFunction *sfun;
 
-        sfun = FUN_TO_SCRIPTED(fun);
-        nbytes = sizeof *sfun;
+        sfun = FUN_TO_SCRIPTED(funobj);
+        nbytes += sizeof *sfun;
         nbytes += JS_GetScriptTotalSize(cx, sfun->script);
-        if (sfun->object)
-            nbytes += JS_GetObjectTotalSize(cx, sfun->object);
         if (sfun->atom)
             nbytes += GetAtomTotalSize(cx, sfun->atom);
     } else {
         JSNativeFunction *nfun;
 
-        nfun = FUN_TO_NATIVE(fun);
-        nbytes = sizeof(JSNativeFunction) - sizeof(JSObject);
-        nbytes += JS_GetObjectTotalSize(cx, &nfun->object);
+        nfun = FUN_TO_NATIVE(funobj);
+        nbytes += sizeof(JSNativeFunction) - sizeof(JSObject);
         if (nfun->atom)
             nbytes += GetAtomTotalSize(cx, nfun->atom);
     }
@@ -1641,7 +1636,6 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
             pbytes = JS_HOWMANY(pbytes, principals->refcount);
         nbytes += pbytes;
     }
-
     return nbytes;
 }
 
