@@ -129,6 +129,7 @@ gfxWindowsPlatform::FontEnumProc(const ENUMLOGFONTEXW *lpelfe,
     if (!ht->Get(name, &ff)) {
         ff = new FontFamily(nsDependentString(logFont.lfFaceName));
         ht->Put(name, ff);
+        return 1;
     }
 
     nsRefPtr<FontEntry> fe;
@@ -252,8 +253,12 @@ gfxWindowsPlatform::FontGetStylesProc(nsStringHashKey::KeyType aKey,
                                       nsRefPtr<FontFamily>& aFontFamily,
                                       void* userArg)
 {
+    /*
     NS_ASSERTION(aFontFamily->mVariations.Length() == 1, "We should only have 1 variation here");
     nsRefPtr<FontEntry> aFontEntry = aFontFamily->mVariations[0];
+    */
+    NS_ASSERTION(!aFontFamily->mHasStyles, "Already got styles for this family");
+    aFontFamily->mHasStyles = PR_TRUE;
 
     HDC hdc = GetDC(nsnull);
 
@@ -261,9 +266,9 @@ gfxWindowsPlatform::FontGetStylesProc(nsStringHashKey::KeyType aKey,
     memset(&logFont, 0, sizeof(LOGFONTW));
     logFont.lfCharSet = DEFAULT_CHARSET;
     logFont.lfPitchAndFamily = 0;
-    PRUint32 l = PR_MIN(aFontEntry->GetName().Length(), LF_FACESIZE - 1);
+    PRUint32 l = PR_MIN(aFontFamily->mName.Length(), LF_FACESIZE - 1);
     memcpy(logFont.lfFaceName,
-           nsPromiseFlatString(aFontEntry->GetName()).get(),
+           nsPromiseFlatString(aFontFamily->mName).get(),
            l * sizeof(PRUnichar));
     logFont.lfFaceName[l] = 0;
 
@@ -385,9 +390,6 @@ gfxWindowsPlatform::UpdateFontList()
     HDC dc = ::GetDC(nsnull);
     EnumFontFamiliesExW(dc, &logFont, (FONTENUMPROCW)gfxWindowsPlatform::FontEnumProc, (LPARAM)&mFonts, 0);
     ::ReleaseDC(nsnull, dc);
-
-    // Look for additional styles
-    mFonts.Enumerate(gfxWindowsPlatform::FontGetStylesProc, &mFonts);
 
     // Create the list of FontSubstitutes
     nsCOMPtr<nsIWindowsRegKey> regKey = do_CreateInstance("@mozilla.org/windows-registry-key;1");
@@ -691,6 +693,12 @@ gfxWindowsPlatform::FindFontEntry(const nsAString& aName, const gfxFontStyle *aF
 FontEntry *
 gfxWindowsPlatform::FindFontEntry(FontFamily *aFontFamily, const gfxFontStyle *aFontStyle)
 {
+    if (!aFontFamily->mHasStyles) {
+        nsStringHashKey::KeyType aKey = aFontFamily->mName;
+        nsRefPtr<FontFamily> ff = aFontFamily;
+        gfxWindowsPlatform::FontGetStylesProc(aKey, ff, &mFonts);
+    }
+
     PRUint8 bestMatch = 0;
     PRBool italic = (aFontStyle->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0;
 
