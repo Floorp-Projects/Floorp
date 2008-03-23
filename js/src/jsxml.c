@@ -830,7 +830,7 @@ QName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     jsval nameval, nsval;
     JSBool isQName, isNamespace;
-    JSFunction *fun;
+    JSFunction *funobj;
     JSXMLQName *qn;
     JSString *uri, *prefix, *name;
     JSObject *nsobj;
@@ -855,8 +855,9 @@ QName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
          * Use the constructor's clasp so we can be shared by AttributeName
          * (see below after this function).
          */
-        fun = JS_ValueToFunction(cx, argv[-2]);
-        obj = js_NewObject(cx, FUN_TO_NATIVE(fun)->clasp, NULL, NULL, 0);
+        funobj = JS_ValueToFunction(cx, argv[-2]);
+        obj = js_NewObject(cx, NATIVE_FUN_GET_CLASS(FUN_TO_NATIVE(funobj)),
+                           NULL, NULL, 0);
         if (!obj)
             return JS_FALSE;
         *rval = OBJECT_TO_JSVAL(obj);
@@ -5595,7 +5596,7 @@ static JSXML *
 StartNonListXMLMethod(JSContext *cx, jsval *vp, JSObject **objp)
 {
     JSXML *xml;
-    JSFunction *fun;
+    JSFunction *funobj;
     char numBuf[12];
 
     JS_ASSERT(VALUE_IS_FUNCTION(cx, *vp));
@@ -5616,11 +5617,11 @@ StartNonListXMLMethod(JSContext *cx, jsval *vp, JSObject **objp)
         }
     }
 
-    fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(*vp));
+    funobj = OBJ_TO_FUNCTION(JSVAL_TO_OBJECT(*vp));
     JS_snprintf(numBuf, sizeof numBuf, "%u", xml->xml_kids.length);
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                          JSMSG_NON_LIST_XML_METHOD,
-                         JS_GetFunctionName(fun), numBuf);
+                         JS_GetFunctionName(funobj), numBuf);
     return NULL;
 }
 
@@ -7713,7 +7714,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
     fun = JS_DefineFunction(cx, obj, js_XMLList_str, XMLList, 1, 0);
     if (!fun)
         return NULL;
-    if (!js_SetClassPrototype(cx, &FUN_TO_NATIVE(fun)->object, proto,
+    if (!js_SetClassPrototype(cx, &fun->object, proto,
                               JSPROP_READONLY | JSPROP_PERMANENT)) {
         return NULL;
     }
