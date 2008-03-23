@@ -1636,7 +1636,7 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
     {
 #ifdef DEBUG
         {
-            JSFunction *fun = GET_FUNCTION_PRIVATE(aCx, (JSObject *)aFunObj);
+            JSFunction *fun = OBJ_TO_FUNCTION((JSObject *)aFunObj);
             JSScript *script = JS_GetFunctionScript(aCx, fun);
 
             NS_ASSERTION(!script, "Null principal for non-native function!");
@@ -2151,7 +2151,7 @@ nsScriptSecurityManager::GetFunctionObjectPrincipal(JSContext *cx,
                                                     nsresult *rv)
 {
     NS_PRECONDITION(rv, "Null out param");
-    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
+    JSFunction *fun = OBJ_TO_FUNCTION(obj);
     JSScript *script = JS_GetFunctionScript(cx, fun);
 
     *rv = NS_OK;
@@ -2175,29 +2175,17 @@ nsScriptSecurityManager::GetFunctionObjectPrincipal(JSContext *cx,
         // Script object came from, and we want the principal of
         // the eval function object or new Script object.
 
-        script = frameScript;
-    }
-    else if (JS_GetFunctionObject(fun) != obj)
-    {
-        // Here, obj is a cloned function object.  In this case, the
-        // clone's prototype may have been precompiled from brutally
-        // shared chrome, or else it is a lambda or nested function.
-        // The general case here is a function compiled against a
-        // different scope than the one it is parented by at runtime,
-        // hence the creation of a clone to carry the correct scope
-        // chain linkage.
-        //
-        // Since principals follow scope, we must get the object
-        // principal from the clone's scope chain. There are no
-        // reliable principals compiled into the function itself.
-
-        nsIPrincipal *result = doGetObjectPrincipal(obj);
-        if (!result)
-            *rv = NS_ERROR_FAILURE;
-        return result;
+        return GetScriptPrincipal(cx, frameScript, rv);
     }
 
-    return GetScriptPrincipal(cx, script, rv);
+    // Since principals follow scope, we must get the object
+    // principal from the function's scope chain. There are no
+    // reliable principals compiled into the function itself.
+
+    nsIPrincipal *result = doGetObjectPrincipal(obj);
+    if (!result)
+        *rv = NS_ERROR_FAILURE;
+    return result;
 }
 
 // static
@@ -2220,7 +2208,7 @@ nsScriptSecurityManager::GetFramePrincipal(JSContext *cx,
 #ifdef DEBUG
     if (NS_SUCCEEDED(*rv) && !result)
     {
-        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
+        JSFunction *fun = OBJ_TO_FUNCTION(obj);
         JSScript *script = JS_GetFunctionScript(cx, fun);
 
         NS_ASSERTION(!script, "Null principal for non-native function!");
