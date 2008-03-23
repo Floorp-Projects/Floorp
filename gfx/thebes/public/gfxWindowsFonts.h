@@ -64,13 +64,12 @@ public:
     THEBES_INLINE_DECL_REFCOUNTING(FontFamily)
 
     FontFamily(const nsAString& aName) :
-        mName(aName), mHasStyles(PR_FALSE)
+        mName(aName)
     {
     }
 
     nsTArray<nsRefPtr<FontEntry> > mVariations;
     nsString mName;
-    PRBool mHasStyles;
 };
 
 class FontEntry
