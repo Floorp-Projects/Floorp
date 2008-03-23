@@ -43,10 +43,24 @@
  * JS debugger API.
  */
 #include "jsapi.h"
+#include "jsclist.h"
 #include "jsopcode.h"
 #include "jsprvtd.h"
 
 JS_BEGIN_EXTERN_C
+
+typedef struct JSTrap {
+    JSCList         links;
+    JSScript        *script;
+    jsbytecode      *pc;
+    JSOp            op;
+    JSTrapHandler   handler;
+    void            *closure;
+} JSTrap;
+
+#define DBG_LOCK(rt)            JS_ACQUIRE_LOCK((rt)->debuggerLock)
+#define DBG_UNLOCK(rt)          JS_RELEASE_LOCK((rt)->debuggerLock)
+#define DBG_LOCK_EVAL(rt,expr)  (DBG_LOCK(rt), (expr), DBG_UNLOCK(rt))
 
 extern void
 js_PatchOpcode(JSContext *cx, JSScript *script, jsbytecode *pc, JSOp op);

@@ -418,6 +418,8 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
 {
     JSContext *cx;
     JSScript *script, *oldscript;
+    JSBool ok;
+    jsbytecode *code;
     uint32 length, lineno, depth, magic;
     uint32 natoms, nsrcnotes, ntrynotes, nobjects, nregexps, i;
     uint32 prologLength, version;
@@ -516,9 +518,37 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
      * Control hereafter must goto error on failure, in order for the
      * DECODE case to destroy script.
      */
+    code = script->code;
+    if (xdr->mode == JSXDR_ENCODE) {
+        JSTrap *trap;
+        JSRuntime *rt;
+
+        rt = cx->runtime;
+        DBG_LOCK(rt);
+        for (trap = (JSTrap *)rt->trapList.next;
+             trap != (JSTrap *)&rt->trapList;
+             trap = (JSTrap *)trap->links.next) {
+            if (trap->script == script) {
+                if (code == script->code) {
+                    code = JS_malloc(cx, length * sizeof(jsbytecode));
+                    if (!code)
+                        goto error;
+                    memcpy(code, script->code, length * sizeof(jsbytecode));
+                }
+                code[trap->pc - script->code] = trap->op;
+            }
+        }
+        DBG_UNLOCK(rt);
+    }
+
     oldscript = xdr->script;
     xdr->script = script;
-    if (!JS_XDRBytes(xdr, (char *)script->code, length * sizeof(jsbytecode)))
+    ok = JS_XDRBytes(xdr, (char *) code, length * sizeof(jsbytecode));
+
+    if (code != script->code)
+        JS_free(cx, code);
+
+    if (!ok)
         goto error;
 
     if (!JS_XDRBytes(xdr, (char *)notes, nsrcnotes * sizeof(jssrcnote)) ||

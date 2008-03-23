@@ -45,7 +45,6 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsutil.h" /* Added by JSIFY */
-#include "jsclist.h"
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsconfig.h"
@@ -65,19 +64,6 @@
 #ifdef MOZ_SHARK
 #include <CHUD/CHUD.h>
 #endif
-
-typedef struct JSTrap {
-    JSCList         links;
-    JSScript        *script;
-    jsbytecode      *pc;
-    JSOp            op;
-    JSTrapHandler   handler;
-    void            *closure;
-} JSTrap;
-
-#define DBG_LOCK(rt)            JS_ACQUIRE_LOCK((rt)->debuggerLock)
-#define DBG_UNLOCK(rt)          JS_RELEASE_LOCK((rt)->debuggerLock)
-#define DBG_LOCK_EVAL(rt,expr)  (DBG_LOCK(rt), (expr), DBG_UNLOCK(rt))
 
 /*
  * NB: FindTrap must be called with rt->debuggerLock acquired.
@@ -118,6 +104,7 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
     JSRuntime *rt;
     uint32 sample;
 
+    JS_ASSERT((JSOp) *pc != JSOP_TRAP);
     junk = NULL;
     rt = cx->runtime;
     DBG_LOCK(rt);
