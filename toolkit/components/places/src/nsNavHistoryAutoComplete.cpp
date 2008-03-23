@@ -94,10 +94,10 @@
   NS_LITERAL_CSTRING(") " name)
 
 // Get three named columns from the bookmarks and tags table
-const nsCString &kBookTagSQL = 
-  SQL_STR_FRAGMENT_GET_BOOK_TAG("parent", "b.parent", "!=", PR_TRUE) +
-  SQL_STR_FRAGMENT_GET_BOOK_TAG("bookmark", "b.title", "!=", PR_TRUE) +
-  SQL_STR_FRAGMENT_GET_BOOK_TAG("tags", "GROUP_CONCAT(t.title, ',')", "=", PR_FALSE);
+#define BOOK_TAG_SQL (\
+  SQL_STR_FRAGMENT_GET_BOOK_TAG("parent", "b.parent", "!=", PR_TRUE) + \
+  SQL_STR_FRAGMENT_GET_BOOK_TAG("bookmark", "b.title", "!=", PR_TRUE) + \
+  SQL_STR_FRAGMENT_GET_BOOK_TAG("tags", "GROUP_CONCAT(t.title, ',')", "=", PR_FALSE))
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsNavHistoryAutoComplete Helper Functions
@@ -246,7 +246,7 @@ nsresult
 nsNavHistory::CreateAutoCompleteQueries()
 {
   nsCString sql = NS_LITERAL_CSTRING(
-    "SELECT h.url, h.title, f.url") + kBookTagSQL + NS_LITERAL_CSTRING(" "
+    "SELECT h.url, h.title, f.url") + BOOK_TAG_SQL + NS_LITERAL_CSTRING(" "
     "FROM moz_places h "
     "LEFT OUTER JOIN moz_favicons f ON f.id = h.favicon_id "
     "WHERE h.frecency <> 0 ");
@@ -268,7 +268,7 @@ nsNavHistory::CreateAutoCompleteQueries()
   NS_ENSURE_SUCCESS(rv, rv);
 
   sql = NS_LITERAL_CSTRING(
-    "SELECT h.url, h.title, f.url") + kBookTagSQL + NS_LITERAL_CSTRING(", "
+    "SELECT h.url, h.title, f.url") + BOOK_TAG_SQL + NS_LITERAL_CSTRING(", "
       "ROUND(MAX(((i.input = ?2) + (SUBSTR(i.input, 1, LENGTH(?2)) = ?2)) * "
                 "i.use_count), 1) rank "
     "FROM moz_inputhistory i "
@@ -462,7 +462,7 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
       // search left off, but first we want to create an optimized query that
       // only searches through the urls that were previously found
       nsCString sql = NS_LITERAL_CSTRING(
-        "SELECT h.url, h.title, f.url") + kBookTagSQL + NS_LITERAL_CSTRING(" "
+        "SELECT h.url, h.title, f.url") + BOOK_TAG_SQL + NS_LITERAL_CSTRING(" "
         "FROM moz_places h "
         "LEFT OUTER JOIN moz_favicons f ON f.id = h.favicon_id "
         "WHERE h.url IN (");
