@@ -681,6 +681,7 @@ protected:
 
   nsDataHashtable<nsStringHashKey, PRBool> mCurrentResultURLs;
   PRInt32 mCurrentChunkOffset;
+  PRInt32 mPreviousChunkOffset;
 
   nsDataHashtable<nsTrimInt64HashKey, PRBool> mLivemarkFeedItemIds;
   nsDataHashtable<nsStringHashKey, PRBool> mLivemarkFeedURIs;
