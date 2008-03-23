@@ -3,8 +3,12 @@ function test() {
 
   // XXX This looks a bit odd, but is needed to avoid throwing when removing the
   // event listeners below. See bug 310955.
-  document.getElementById("sidebar").addEventListener("load", function() { setTimeout(openPanelUrl, 100) }, true);
+  document.getElementById("sidebar").addEventListener("load", delayedOpenUrl, true);
   toggleSidebar("viewWebPanelsSidebar", true);
+}
+
+function delayedOpenUrl() {
+  setTimeout(openPanelUrl, 100);
 }
 
 function openPanelUrl(event) {
@@ -14,16 +18,20 @@ function openPanelUrl(event) {
   var root = sidebar.contentDocument.documentElement;
   ok(root.nodeName != "parsererror", "Sidebar is well formed");
 
-  sidebar.removeEventListener("load", openPanelUrl, true);
+  sidebar.removeEventListener("load", delayedOpenUrl, true);
   // XXX See comment above
-  sidebar.contentDocument.addEventListener("load", function() { setTimeout(runTest, 100) }, true);
+  sidebar.contentDocument.addEventListener("load", delayedRunTest, true);
   var url = 'data:text/html,<div%20id="test_bug409481">Content!</div>';
   sidebar.contentWindow.loadWebPanel(url);
 }
 
+function delayedRunTest() {
+  setTimeout(runTest, 100);
+}
+
 function runTest(event) {
   var sidebar = document.getElementById("sidebar");
-  sidebar.contentDocument.removeEventListener("load", runTest, true);
+  sidebar.contentDocument.removeEventListener("load", delayedRunTest, true);
 
   var browser = sidebar.contentDocument.getElementById("web-panels-browser");
   var div = browser && browser.contentDocument.getElementById("test_bug409481");
