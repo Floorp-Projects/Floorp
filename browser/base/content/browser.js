@@ -2437,6 +2437,7 @@ function toggleAffectedChrome(aHide)
     gChromeState.notificationsOpen = !notificationBox.notificationsHidden;
     notificationBox.notificationsHidden = aHide;
 
+    document.getElementById("sidebar").setAttribute("src", "about:blank");
     var statusbar = document.getElementById("status-bar");
     gChromeState.statusbarOpen = !statusbar.hidden;
     statusbar.hidden = aHide;
@@ -4497,6 +4498,7 @@ function toggleSidebar(commandID, forceOpen) {
       sidebarBroadcaster.removeAttribute("checked");
       sidebarBox.setAttribute("sidebarcommand", "");
       sidebarTitle.value = "";
+      sidebar.setAttribute("src", "about:blank");
       sidebarBox.hidden = true;
       sidebarSplitter.hidden = true;
       content.focus();
