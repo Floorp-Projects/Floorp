@@ -50,10 +50,14 @@
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             title="&languages.customize.Header;"
             dlgbuttons="accept,cancel,help"
+            ondialoghelp="openPrefsHelp()"
             style="width: &window.width;;">
 
-  <prefpane id="LanguagesDialogPane" onpaneload="gLanguagesDialog.init();"
-            helpTopic="prefs-languages" helpURI="chrome://browser/locale/help/help.rdf">
+  <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
+
+  <prefpane id="LanguagesDialogPane"
+            onpaneload="gLanguagesDialog.init();"
+            helpTopic="prefs-languages">
 
     <preferences>
       <preference id="intl.accept_languages" name="intl.accept_languages" type="wstring"/>

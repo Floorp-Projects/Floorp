@@ -50,10 +50,13 @@
 <prefwindow id="SanitizeDialog" type="child"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             dlgbuttons="accept,cancel,help"
+            ondialoghelp="openPrefsHelp()"
             title="&sanitizeDialog.title;">
 
+  <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
+
   <prefpane id="SanitizeDialogPane"
-            helpTopic="prefs-clear-private-data" helpURI="chrome://browser/locale/help/help.rdf">
+            helpTopic="prefs-clear-private-data">
 
     <preferences>
       <preference id="privacy.item.history"               name="privacy.item.history"               type="bool"/>

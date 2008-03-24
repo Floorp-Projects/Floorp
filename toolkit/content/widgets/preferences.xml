@@ -655,7 +655,17 @@
           return val;
         </setter>          
       </property>
-      <field name="currentPane">null</field>
+      <property name="currentPane"
+                onset="return this._currentPane = val;">
+        <getter>
+          if (!this._currentPane)
+            this._currentPane = this.preferencePanes[0];
+          
+          return this._currentPane;
+        </getter> 
+      </property>
+      <field name="_currentPane">null</field>
+      
       
       <method name="_makePaneButton">
         <parameter name="aPaneElement"/>
@@ -744,7 +754,7 @@
             document.title = paneTitle;
 #endif
           var helpButton = document.documentElement.getButton("help");
-          if (aPaneElement.hasAttribute("helpURI"))
+          if (aPaneElement.helpTopic)
             helpButton.hidden = false;
           else
             helpButton.hidden = true;
@@ -981,67 +991,8 @@
         ]]>
         </body>
       </method>
-      
-      // copied from contextHelp.js
-      // Locate existing help window for this helpFileURI.
-      <method name="locateHelpWindow">
-        <parameter name="helpFileURI"/>
-        <body>
-        <![CDATA[
-          const wm = Components.classes['@mozilla.org/appshell/window-mediator;1']
-                               .getService(Components.interfaces.nsIWindowMediator);
-          const iterator = wm.getEnumerator("mozilla:help");
-          var topWindow = null;
-          var aWindow;
-
-          // Loop through help windows looking for one with selected helpFileURI
-          while (iterator.hasMoreElements()) {
-            aWindow = iterator.getNext();
-            if (aWindow.getHelpFileURI() == helpFileURI)
-              topWindow = aWindow;
-          }
-          return topWindow;
-        ]]>
-        </body>
-      </method>
-      
-      // copied from contextHelp.js
-      // Opens up the Help Viewer with the specified topic and helpFileURI.
-      <method name="openHelp">
-        <parameter name="topic"/>
-        <parameter name="helpFileURI"/>
-        <body>
-        <![CDATA[
-          // Try to find previously opened help.
-          var topWindow = this.locateHelpWindow(helpFileURI);
-
-          if (topWindow) {
-          // Open topic in existing window.
-            topWindow.focus();
-            topWindow.displayTopic(topic);
-          }
-          else {
-          // Open topic in new window.
-            const params = Components.classes["@mozilla.org/embedcomp/dialogparam;1"]
-                                     .createInstance(Components.interfaces.nsIDialogParamBlock);
-            params.SetNumberStrings(2);
-            params.SetString(0, helpFileURI);
-            params.SetString(1, topic);
-            const ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                                 .getService(Components.interfaces.nsIWindowWatcher);
-            ww.openWindow(null, "chrome://help/content/help.xul", "_blank", "chrome,all,alwaysRaised,dialog=no", params);
-          }
-        ]]>
-        </body>
-      </method>
     </implementation>
     <handlers>
-      <handler event="dialoghelp">
-        // currentPane is set in _selectPane for prefwindows which aren't childs.
-        // So if there's no currentPane, just use the first pane.
-        var pane = this.currentPane ? this.currentPane : this.preferencePanes[0];
-        this.openHelp(pane.helpTopic, pane.getAttribute("helpURI"));
-      </handler>
       <handler event="dialogaccept">
       <![CDATA[
         if (!this._fireEvent("beforeaccept", this)) 

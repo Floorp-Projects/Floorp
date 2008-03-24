@@ -725,3 +725,6 @@ pref("editor.singleLine.pasteNewlines", 2);
 
 // The breakpad report server to link to in about:crashes
 pref("breakpad.reportURL", "http://crash-stats.mozilla.com/report/index/");
+
+// base URL for web-based support pages
+pref("app.support.baseURL", "http://support.mozilla.com/1/%APP%/%VERSION%/%OS%/%LOCALE%/");
