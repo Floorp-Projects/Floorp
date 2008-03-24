@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -43,27 +44,18 @@
  * JS debugger API.
  */
 #include "jsapi.h"
-#include "jsclist.h"
 #include "jsopcode.h"
 #include "jsprvtd.h"
 
 JS_BEGIN_EXTERN_C
 
-typedef struct JSTrap {
-    JSCList         links;
-    JSScript        *script;
-    jsbytecode      *pc;
-    JSOp            op;
-    JSTrapHandler   handler;
-    void            *closure;
-} JSTrap;
-
-#define DBG_LOCK(rt)            JS_ACQUIRE_LOCK((rt)->debuggerLock)
-#define DBG_UNLOCK(rt)          JS_RELEASE_LOCK((rt)->debuggerLock)
-#define DBG_LOCK_EVAL(rt,expr)  (DBG_LOCK(rt), (expr), DBG_UNLOCK(rt))
-
-extern void
-js_PatchOpcode(JSContext *cx, JSScript *script, jsbytecode *pc, JSOp op);
+/*
+ * Unexported library-private helper used to unpatch all traps in a script.
+ * Returns script->code if script has no traps, else a JS_malloc'ed copy of
+ * script->code which the caller must JS_free, or null on JS_malloc OOM.
+ */
+extern jsbytecode *
+js_UntrapScriptCode(JSContext *cx, JSScript *script);
 
 extern JS_PUBLIC_API(JSBool)
 JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
@@ -436,24 +428,35 @@ extern JS_PUBLIC_API(JSDebugHooks *)
 JS_SetContextDebugHooks(JSContext *cx, JSDebugHooks *hooks);
 
 #ifdef MOZ_SHARK
-extern JS_PUBLIC_API(JSBool) JS_StartChudRemote();
-extern JS_PUBLIC_API(JSBool) JS_StopChudRemote();
-extern JS_PUBLIC_API(JSBool) JS_ConnectShark();
-extern JS_PUBLIC_API(JSBool) JS_DisconnectShark();
 
-extern JS_FRIEND_API(JSBool) js_StopShark(JSContext *cx, JSObject *obj,
-                                          uintN argc, jsval *argv, jsval *rval);
+extern JS_PUBLIC_API(JSBool)
+JS_StartChudRemote();
 
-extern JS_FRIEND_API(JSBool) js_StartShark(JSContext *cx, JSObject *obj,
-                                           uintN argc, jsval *argv, jsval *rval);
+extern JS_PUBLIC_API(JSBool)
+JS_StopChudRemote();
 
-extern JS_FRIEND_API(JSBool) js_ConnectShark(JSContext *cx, JSObject *obj,
-                                             uintN argc, jsval *argv,
-                                             jsval *rval);
+extern JS_PUBLIC_API(JSBool)
+JS_ConnectShark();
 
-extern JS_FRIEND_API(JSBool) js_DisconnectShark(JSContext *cx, JSObject *obj,
-                                                uintN argc, jsval *argv,
-                                                jsval *rval);
+extern JS_PUBLIC_API(JSBool)
+JS_DisconnectShark();
+
+extern JS_FRIEND_API(JSBool)
+js_StopShark(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+             jsval *rval);
+
+extern JS_FRIEND_API(JSBool)
+js_StartShark(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+              jsval *rval);
+
+extern JS_FRIEND_API(JSBool)
+js_ConnectShark(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                jsval *rval);
+
+extern JS_FRIEND_API(JSBool)
+js_DisconnectShark(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                   jsval *rval);
+
 #endif /* MOZ_SHARK */
 
 JS_END_EXTERN_C

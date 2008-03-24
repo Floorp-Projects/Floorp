@@ -45,6 +45,7 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsutil.h" /* Added by JSIFY */
+#include "jsclist.h"
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsconfig.h"
@@ -61,9 +62,18 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
-#ifdef MOZ_SHARK
-#include <CHUD/CHUD.h>
-#endif
+typedef struct JSTrap {
+    JSCList         links;
+    JSScript        *script;
+    jsbytecode      *pc;
+    JSOp            op;
+    JSTrapHandler   handler;
+    void            *closure;
+} JSTrap;
+
+#define DBG_LOCK(rt)            JS_ACQUIRE_LOCK((rt)->debuggerLock)
+#define DBG_UNLOCK(rt)          JS_RELEASE_LOCK((rt)->debuggerLock)
+#define DBG_LOCK_EVAL(rt,expr)  (DBG_LOCK(rt), (expr), DBG_UNLOCK(rt))
 
 /*
  * NB: FindTrap must be called with rt->debuggerLock acquired.
@@ -82,18 +92,32 @@ FindTrap(JSRuntime *rt, JSScript *script, jsbytecode *pc)
     return NULL;
 }
 
-void
-js_PatchOpcode(JSContext *cx, JSScript *script, jsbytecode *pc, JSOp op)
+jsbytecode *
+js_UntrapScriptCode(JSContext *cx, JSScript *script)
 {
+    jsbytecode *code;
+    JSRuntime *rt;
     JSTrap *trap;
 
-    DBG_LOCK(cx->runtime);
-    trap = FindTrap(cx->runtime, script, pc);
-    if (trap)
-        trap->op = op;
-    else
-        *pc = (jsbytecode)op;
-    DBG_UNLOCK(cx->runtime);
+    code = script->code;
+    rt = cx->runtime;
+    DBG_LOCK(rt);
+    for (trap = (JSTrap *)rt->trapList.next;
+         trap != (JSTrap *)&rt->trapList;
+         trap = (JSTrap *)trap->links.next) {
+        if (trap->script == script) {
+            if (code == script->code) {
+                code = JS_malloc(cx, script->length * sizeof(jsbytecode));
+                if (!code)
+                    break;
+                memcpy(code, script->code,
+                       script->length * sizeof(jsbytecode));
+            }
+            code[trap->pc - script->code] = trap->op;
+        }
+    }
+    DBG_UNLOCK(rt);
+    return code;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1707,6 +1731,8 @@ JS_SetContextDebugHooks(JSContext *cx, JSDebugHooks *hooks)
 }
 
 #ifdef MOZ_SHARK
+
+#include <CHUD/CHUD.h>
 
 JS_PUBLIC_API(JSBool)
 JS_StartChudRemote()
