@@ -1147,8 +1147,13 @@ js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
         return principals->codebase;
     }
 
-    *linenop = js_PCToLineNumber(cx, caller->script,
-                                 caller->regs ? caller->regs->pc : NULL);
+    if (caller->regs && *caller->regs->pc == JSOP_EVAL) {
+        JS_ASSERT(caller->regs->pc[JSOP_EVAL_LENGTH] == JSOP_LINENO);
+        *linenop = GET_UINT16(caller->regs->pc + JSOP_EVAL_LENGTH);
+    } else {
+        *linenop = js_PCToLineNumber(cx, caller->script,
+                                     caller->regs ? caller->regs->pc : NULL);
+    }
     return caller->script->filename;
 }
 

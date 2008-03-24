@@ -2764,6 +2764,10 @@ interrupt:
 
           EMPTY_CASE(JSOP_GROUP)
 
+          /* EMPTY_CASE is not used here as JSOP_LINENO_LENGTH == 3. */
+          BEGIN_CASE(JSOP_LINENO)
+          END_CASE(JSOP_LINENO)
+
           BEGIN_CASE(JSOP_PUSH)
             PUSH_OPND(JSVAL_VOID);
           END_CASE(JSOP_PUSH)
