@@ -181,11 +181,11 @@ public:
   void ProcessPendingRequests();
 
   /**
-   * If needed, downgrade the principal of aDocument based on the
-   * principal of aChannel.
+   * Check whether it's OK to execute a script loaded via aChannel in
+   * aDocument.
    */
-  static nsresult DowngradePrincipalIfNeeded(nsIDocument* aDocument,
-                                             nsIChannel* aChannel);
+  static PRBool ShouldExecuteScript(nsIDocument* aDocument,
+                                    nsIChannel* aChannel);
 
 protected:
   /**
