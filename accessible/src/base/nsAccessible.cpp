@@ -1710,8 +1710,10 @@ nsresult nsAccessible::GetTextFromRelationID(nsIAtom *aIDProperty, nsString &aNa
 {
   // Get DHTML name from content subtree pointed to by ID attribute
   aName.Truncate();
+  NS_ASSERTION(mDOMNode, "Called from shutdown accessible");
   nsCOMPtr<nsIContent> content = GetRoleContent(mDOMNode);
-  NS_ASSERTION(content, "Called from shutdown accessible");
+  if (!content)
+    return NS_OK;
 
   nsAutoString ids;
   if (!content->GetAttr(kNameSpaceID_None, aIDProperty, ids)) {
