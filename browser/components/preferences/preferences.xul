@@ -72,6 +72,7 @@
 <prefwindow type="prefwindow"
             id="BrowserPreferences"
             windowtype="Browser:Preferences"
+            ondialoghelp="openPrefsHelp()"
 #ifdef USE_WIN_TITLE_STYLE
             title="&prefWindow.titleWin;"
 #else
@@ -91,6 +92,8 @@
             style="&prefWin.styleGNOME2;">
 #endif
 #endif
+
+    <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
 
     <stringbundle id="bundleBrand" src="chrome://branding/locale/brand.properties"/>
     <stringbundle id="bundlePreferences"
