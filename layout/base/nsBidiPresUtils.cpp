@@ -447,16 +447,17 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
         // IBMBIDI - Egypt - End
 
         if ( (runLength > 0) && (runLength < fragmentLength) ) {
-          if (!EnsureBidiContinuation(frame, &nextBidi, frameIndex,
-                                      contentOffset,
-                                      contentOffset + runLength) ) {
-            break;
-          }
           if (lineNeedsUpdate) {
             AdvanceLineIteratorToFrame(frame, &lineIter, prevFrame);
             lineNeedsUpdate = PR_FALSE;
           }
           lineIter.GetLine()->MarkDirty();
+          if (!EnsureBidiContinuation(frame, &nextBidi, frameIndex,
+                                      contentOffset,
+                                      contentOffset + runLength, 
+                                      lineNeedsUpdate)) {
+            break;
+          }
           frame = nextBidi;
           contentOffset += runLength;
         } // if (runLength < fragmentLength)
@@ -1068,7 +1069,8 @@ nsBidiPresUtils::EnsureBidiContinuation(nsIFrame*       aFrame,
                                         nsIFrame**      aNewFrame,
                                         PRInt32&        aFrameIndex,
                                         PRInt32         aStart,
-                                        PRInt32         aEnd)
+                                        PRInt32         aEnd,
+                                        PRInt32&        aLineNeedsUpdate)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   NS_PRECONDITION(aFrame, "aFrame is null");
@@ -1088,6 +1090,9 @@ nsBidiPresUtils::EnsureBidiContinuation(nsIFrame*       aFrame,
       if (frame->GetPrevContinuation() == aFrame) {
         *aNewFrame = frame;
         aFrameIndex++;
+        // The frame we found might be on another line. If so, the line iterator
+        // should be updated.
+        aLineNeedsUpdate = PR_TRUE;
       }
       break;
     }
