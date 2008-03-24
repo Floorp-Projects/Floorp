@@ -760,7 +760,7 @@ while ($file = shift @ARGV)
 
                 $test_id{$state} = $tmp_test_id;
             }
-            elsif ( /^\/work\/mozilla\/mozilla\.com\/test\.mozilla\.com\/www$/)
+            elsif ( /^(\/cygdrive\/.)?\/work\/mozilla\/mozilla\.com\/test\.mozilla\.com\/www$/)
             {
                 if ($state eq 'endrun')
                 {
