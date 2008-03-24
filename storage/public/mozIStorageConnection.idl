@@ -54,7 +54,7 @@ interface nsIFile;
  * creating prepared statements, executing SQL, and examining database
  * errors.
  */
-[scriptable, uuid(ffddc17b-cec3-492c-b13e-d5393c4b1595)]
+[scriptable, uuid(623f9ddb-434b-4d39-bc2d-1c617da241d0)]
 interface mozIStorageConnection : nsISupports {
   /*
    * Initialization and status
@@ -68,9 +68,7 @@ interface mozIStorageConnection : nsISupports {
 
   /**
    * Indicates if the connection is open and ready to use.  This will be false
-   * if the connection failed to open, or it has been closed.  It is strongly
-   * recommended that the database be backed up before removing the file by
-   * calling backupDB.
+   * if the connection failed to open, or it has been closed.
    */
   readonly attribute boolean connectionReady;
 
@@ -259,23 +257,4 @@ interface mozIStorageConnection : nsISupports {
    * @return previous registered handler.
    */
   mozIStorageProgressHandler removeProgressHandler();
-
-  /*
-   * Utilities
-   */
-
-  /**
-   * Copies the current database file to the specified parent directory with the
-   * specified file name.  If the parent directory is not specified, it places
-   * the backup in the same directory as the current file.  This function
-   * ensures that the file being created is unique.
-   *
-   * @param aFileName
-   *        The name of the new file to create.
-   * @param [optional] aParentDirectory
-   *        The directory you'd like the file to be placed.
-   * @return The nsIFile representing the backup file.
-   */
-  nsIFile backupDB(in AString aFileName,
-                   [optional] in nsIFile aParentDirectory);
 };

@@ -48,7 +48,7 @@ interface nsIFile;
  *
  * This is the only way to open a database connection.
  */
-[scriptable, uuid(336d2741-8438-449d-8746-8c37c62a2ccb)]
+[scriptable, uuid(fe8e95cb-b377-4c8d-bccb-d9198c67542b)]
 interface mozIStorageService : nsISupports {
   /**
    * Get a connection to a named special database storage.
@@ -100,6 +100,8 @@ interface mozIStorageService : nsISupports {
    *
    * @throws NS_ERROR_OUT_OF_MEMORY
    *         If allocating a new storage object fails.
+   * @throws NS_ERROR_FILE_CORRUPTED
+   *         If the database file is corrupted.
    */
   mozIStorageConnection openDatabase(in nsIFile aDatabaseFile);
 
@@ -135,9 +137,31 @@ interface mozIStorageService : nsISupports {
    *
    * @throws NS_ERROR_OUT_OF_MEMORY
    *         If allocating a new storage object fails.
+   * @throws NS_ERROR_FILE_CORRUPTED
+   *         If the database file is corrupted.
    */
   mozIStorageConnection openUnsharedDatabase(in nsIFile aDatabaseFile);
 
+  /*
+   * Utilities
+   */
+
+  /**
+   * Copies the specified database file to the specified parent directory with
+   * the specified file name.  If the parent directory is not specified, it
+   * places the backup in the same directory as the current file.  This function
+   * ensures that the file being created is unique.
+   *
+   * @param aDBFile
+   *        The database file that will be backed up.
+   * @param aBackupFileName
+   *        The name of the new backup file to create.
+   * @param [optional] aBackupParentDirectory
+   *        The directory you'd like the backup file to be placed.
+   * @return The nsIFile representing the backup file.
+   */
+  nsIFile backupDatabaseFile(in nsIFile aDBFile, in AString aBackupFileName,
+                             [optional] in nsIFile aBackupParentDirectory);
 };
 
 %{C++
