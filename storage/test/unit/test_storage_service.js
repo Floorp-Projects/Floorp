@@ -38,6 +38,8 @@
 // This file tests the functions of mozIStorageService except for
 // openUnsharedDatabase, which is tested by test_storage_service_unshared.js.
 
+const BACKUP_FILE_NAME = "test_storage.sqlite.backup";
+
 function test_openSpecialDatabase_invalid_arg()
 {
   try {
@@ -68,8 +70,61 @@ function test_openDatabase_file_exists()
   do_check_true(db.exists());
 }
 
-var tests = [test_openSpecialDatabase_invalid_arg, test_openDatabase_file_DNE, 
-             test_openDatabase_file_exists];
+function test_corrupt_db_throws_with_openDatabase()
+{
+  try {
+    getDatabase(getCorruptDB());
+    do_throw("should not be here");
+  }
+  catch (e) {
+    do_check_eq(Cr.NS_ERROR_FILE_CORRUPTED, e.result);
+  }
+}
+
+function test_backup_not_new_filename()
+{
+  const fname = getTestDB().leafName;
+
+  var backup = getService().backupDatabaseFile(getTestDB(), fname);
+  do_check_neq(fname, backup.leafName);
+
+  backup.remove(false);
+}
+
+function test_backup_new_filename()
+{
+  var backup = getService().backupDatabaseFile(getTestDB(), BACKUP_FILE_NAME);
+  do_check_eq(BACKUP_FILE_NAME, backup.leafName);
+  
+  backup.remove(false);
+}
+
+function test_backup_new_folder()
+{
+  var parentDir = getTestDB().parent;
+  parentDir.append("test_storage_temp");
+  if (parentDir.exists())
+    parentDir.remove(true);
+  parentDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+  do_check_true(parentDir.exists());
+
+  var backup = getService().backupDatabaseFile(getTestDB(), BACKUP_FILE_NAME,
+                                               parentDir);
+  do_check_eq(BACKUP_FILE_NAME, backup.leafName);
+  do_check_true(parentDir.equals(backup.parent));
+
+  parentDir.remove(true);
+}
+
+var tests = [
+  test_openSpecialDatabase_invalid_arg,
+  test_openDatabase_file_DNE, 
+  test_openDatabase_file_exists,
+  test_corrupt_db_throws_with_openDatabase,
+  test_backup_not_new_filename,
+  test_backup_new_filename,
+  test_backup_new_folder,
+];
 
 function run_test()
 {

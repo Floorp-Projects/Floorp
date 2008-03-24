@@ -49,6 +49,14 @@ function getTestDB()
   return db;
 }
 
+/**
+ * Obtains a corrupt database to test against.
+ */
+function getCorruptDB()
+{
+  return do_get_file("storage/test/unit/corruptDB.sqlite");
+}
+
 function cleanup()
 {
   // close the connection
