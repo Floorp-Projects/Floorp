@@ -52,8 +52,7 @@
 <overlay id="AdvancedPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <prefpane id="paneAdvanced" onpaneload="gAdvancedPane.init();"
-            helpURI="chrome://browser/locale/help/help.rdf">
+  <prefpane id="paneAdvanced" onpaneload="gAdvancedPane.init();">
 
     <preferences id="advancedPreferences">
       <preference id="browser.preferences.advanced.selectedTabIndex"
