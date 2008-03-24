@@ -280,6 +280,10 @@ WeaveCrypto.prototype = {
     keyFOS.writeString(identity.privkey);
     keyFOS.close();
 
+    let tmpKeyFile = Utils.getTmp("tmp-key");
+    if (tmpKeyFile.exists())
+      tmpKeyFile.remove(false);
+
     let tmpFile = Utils.getTmp("tmp-output");
     if (tmpFile.exists())
       tmpFile.remove(false);
@@ -296,14 +300,20 @@ WeaveCrypto.prototype = {
 
     try {
       this._openssl("base64", "-d", "-in", "input", "-out", "tmp-output");
-      this._openssl("rsautl", "-decrypt", "-inkey", "key", "-passin",
-                    "file:pass", "-in", "tmp-output", "-out", "output");
+      // FIXME: this is because openssl.exe (in windows only) doesn't
+      // seem to support -passin for rsautl, but it works for rsa.
+      this._openssl("rsa", "-in", "key", "-out", "tmp-key", "-passin", "file:pass");
+      this._openssl("rsautl", "-decrypt", "-inkey", "tmp-key",
+                    "-in", "tmp-output", "-out", "output");
 
     } catch(e) {
       throw e;
 
     } finally {
       passFile.remove(false);
+      tmpKeyFile.remove(false);
+      tmpFile.remove(false);
+      keyFile.remove(false);
     }
 
     let [outputFIS] = Utils.open(outputFile, "<");
