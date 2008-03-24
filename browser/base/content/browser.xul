@@ -134,7 +134,7 @@
       <hbox flex="1" id="editBookmarkPanelBottomButtons">
         <spacer flex="1"/>
 #ifndef XP_UNIX
-         <button id="editBookmarkPanelDoneButton"
+        <button id="editBookmarkPanelDoneButton"
                 label="&editBookmark.done.label;"
                 default="true"
                 oncommand="StarUI.panel.hidePopup();"/>
