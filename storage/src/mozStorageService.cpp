@@ -177,18 +177,17 @@ mozStorageService::OpenSpecialDatabase(const char *aStorageKey, mozIStorageConne
 NS_IMETHODIMP
 mozStorageService::OpenDatabase(nsIFile *aDatabaseFile, mozIStorageConnection **_retval)
 {
-    mozStorageConnection *msc = new mozStorageConnection(this);
+    nsRefPtr<mozStorageConnection> msc = new mozStorageConnection(this);
     if (!msc)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    // We want to return a valid connection regardless if it succeeded or not so
-    // that consumers can backup the database if it failed.
     {
         nsAutoLock lock(mLock);
-        (void)msc->Initialize(aDatabaseFile);
+        nsresult rv = msc->Initialize(aDatabaseFile);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
-    NS_ADDREF(*_retval = msc);
 
+    NS_ADDREF(*_retval = msc);
     return NS_OK;
 }
 
@@ -206,21 +205,63 @@ mozStorageService::OpenUnsharedDatabase(nsIFile *aDatabaseFile, mozIStorageConne
     // lifetimes, unaffected by changes to the shared caches setting, so we can
     // disable shared caches temporarily while we initialize the new connection
     // without affecting the caches currently in use by other connections.
-    // We want to return a valid connection regardless if it succeeded or not so
-    // that consumers can backup the database if it failed.
+    nsresult rv;
     {
         nsAutoLock lock(mLock);
         int rc = sqlite3_enable_shared_cache(0);
         if (rc != SQLITE_OK)
             return ConvertResultCode(rc);
 
-        (void)msc->Initialize(aDatabaseFile);
+        rv = msc->Initialize(aDatabaseFile);
 
         rc = sqlite3_enable_shared_cache(1);
         if (rc != SQLITE_OK)
             return ConvertResultCode(rc);
     }
-    NS_ADDREF(*_retval = msc);
+    NS_ENSURE_SUCCESS(rv, rv);
 
+    NS_ADDREF(*_retval = msc);
     return NS_OK;
 }
+
+/**
+ ** Utilities
+ **/
+
+NS_IMETHODIMP
+mozStorageService::BackupDatabaseFile(nsIFile *aDBFile,
+                                      const nsAString &aBackupFileName,
+                                      nsIFile *aBackupParentDirectory,
+                                      nsIFile **backup)
+{
+    nsresult rv;
+    nsCOMPtr<nsIFile> parentDir = aBackupParentDirectory;
+    if (!parentDir) {
+        // This argument is optional, and defaults to the same parent directory
+        // as the current file.
+        rv = aDBFile->GetParent(getter_AddRefs(parentDir));
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    nsCOMPtr<nsIFile> backupDB;
+    rv = parentDir->Clone(getter_AddRefs(backupDB));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = backupDB->Append(aBackupFileName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = backupDB->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoString fileName;
+    rv = backupDB->GetLeafName(fileName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = backupDB->Remove(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    backupDB.swap(*backup);
+
+    return aDBFile->CopyTo(parentDir, fileName);
+}
+
