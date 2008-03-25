@@ -2871,14 +2871,11 @@ nsIFrame::InlinePrefWidthData::ForceBreak(nsIRenderingContext *aRenderingContext
 
       nscoord &floats_cur = floatDisp->mFloats == NS_STYLE_FLOAT_LEFT
                               ? floats_cur_left : floats_cur_right;
-      nscoord floatWidth =
+      floats_cur =
+        NSCoordSaturatingAdd(floats_cur,
           nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                                                floatFrame,
-                                               nsLayoutUtils::PREF_WIDTH);
-      // Negative-width floats don't change the available space so they
-      // shouldn't change our intrinsic line width either.
-      floats_cur =
-        NSCoordSaturatingAdd(floats_cur, PR_MAX(0, floatWidth));
+                                               nsLayoutUtils::PREF_WIDTH));
     }
 
     nscoord floats_cur =
