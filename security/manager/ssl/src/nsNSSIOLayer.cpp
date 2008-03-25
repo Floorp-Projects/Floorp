@@ -326,7 +326,7 @@ nsNSSSocketInfo::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsNSSSocketInfo::EnsureDocShellDependentStuffKnown()
 {
   if (mDocShellDependentStuffKnown)
