@@ -114,6 +114,7 @@ bin\components\downloads.xpt
 bin\components\editor.xpt
 bin\components\embed_base.xpt
 bin\components\exthandler.xpt
+bin\components\exthelper.xpt
 bin\components\fastfind.xpt
 bin\components\feeds.xpt
 bin\components\find.xpt
@@ -201,6 +202,7 @@ bin\components\FeedProcessor.js
 bin\components\FeedConverter.js
 bin\components\FeedWriter.js
 bin\components\fuelApplication.js
+bin\components\extApplication.js
 bin\components\WebContentConverter.js
 bin\components\nsAddonRepository.js
 bin\components\nsBrowserContentHandler.js
