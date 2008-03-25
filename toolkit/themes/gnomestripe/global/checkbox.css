@@ -62,7 +62,8 @@ checkbox {
 .checkbox-spacer-box {
   -moz-appearance: checkbox;
   -moz-box-align: center;
-  border-right: 4px solid transparent;
+  margin: 2px;
+  border-right: 2px solid transparent;
 }
 
 .checkbox-label-center-box {
@@ -70,7 +71,6 @@ checkbox {
 }
 
 .checkbox-label-box {
-  border: 1px solid transparent;
   -moz-appearance: checkbox-label;
 }
 
