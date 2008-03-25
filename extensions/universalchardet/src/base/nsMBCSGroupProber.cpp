@@ -134,16 +134,6 @@ nsProbingState nsMBCSGroupProber::HandleData(const char* aBuf, PRUint32 aLen)
             mState = eFoundIt;
             return mState;
           }
-          else if (st == eNotMe)
-          {
-            mIsActive[i] = PR_FALSE;
-            mActiveNum--;
-            if (mActiveNum <= 0)
-              {
-                mState = eNotMe;
-                return mState;
-              }
-          }
         }
       }
     }
@@ -160,16 +150,6 @@ nsProbingState nsMBCSGroupProber::HandleData(const char* aBuf, PRUint32 aLen)
         mBestGuess = i;
         mState = eFoundIt;
         return mState;
-      }
-      else if (st == eNotMe)
-      {
-        mIsActive[i] = PR_FALSE;
-        mActiveNum--;
-        if (mActiveNum <= 0)
-        {
-          mState = eNotMe;
-          return mState;
-        }
       }
     }
   }
