@@ -194,7 +194,6 @@ bin/components/shellservice.xpt
 bin/components/FeedProcessor.js
 bin/components/FeedConverter.js
 bin/components/FeedWriter.js
-bin/components/extApplication.js
 bin/components/fuelApplication.js
 bin/components/WebContentConverter.js
 bin/components/nsAddonRepository.js
