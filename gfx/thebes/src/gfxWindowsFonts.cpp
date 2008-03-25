@@ -1761,7 +1761,7 @@ gfxWindowsFontGroup::InitTextRunUniscribe(gfxContext *aContext, gfxTextRun *aRun
     for (int i = 0; i < numItems; ++i) {
         SaveDC(aDC);
 
-        nsAutoPtr<UniscribeItem> item = us.GetItem(i, this);
+        nsAutoPtr<UniscribeItem> item(us.GetItem(i, this));
 
         PRUint32 nranges = item->ComputeRanges();
 
