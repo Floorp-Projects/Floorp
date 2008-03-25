@@ -80,20 +80,35 @@ NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
 extern PRLogModuleInfo* gPIPNSSLog;
 #endif
 
-struct nsHTTPDownloadEvent : nsRunnable {
+class nsHTTPDownloadEvent : public nsRunnable {
+public:
   nsHTTPDownloadEvent();
   ~nsHTTPDownloadEvent();
 
   NS_IMETHOD Run();
-  
+  void Cancel();
+
   nsNSSHttpRequestSession *mRequestSession; // no ownership
   
   nsCOMPtr<nsHTTPListener> mListener;
   PRBool mResponsibleForDoneSignal;
+
+protected:
+  PRLock *mLock;
+
+  // no nsCOMPtr. When I use it, I get assertions about
+  //   loadgroup not being thread safe.
+  // So, let's use a raw pointer and ensure we only create and destroy
+  // it on the network thread ourselves.
+  nsILoadGroup *mLoadGroup;
+  PRThread *mLoadGroupOwnerThread;
 };
 
 nsHTTPDownloadEvent::nsHTTPDownloadEvent()
 :mResponsibleForDoneSignal(PR_TRUE)
+,mLock(nsnull)
+,mLoadGroup(nsnull)
+,mLoadGroupOwnerThread(nsnull)
 {
 }
 
@@ -101,11 +116,17 @@ nsHTTPDownloadEvent::~nsHTTPDownloadEvent()
 {
   if (mResponsibleForDoneSignal && mListener)
     mListener->send_done_signal();
+  if (mLock)
+    PR_DestroyLock(mLock);
 }
 
 NS_IMETHODIMP
 nsHTTPDownloadEvent::Run()
 {
+  mLock = PR_NewLock();
+  if (!mLock)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   if (!mListener)
     return NS_OK;
 
@@ -120,9 +141,16 @@ nsHTTPDownloadEvent::Run()
 
   // Create a loadgroup for this new channel.  This way if the channel
   // is redirected, we'll have a way to cancel the resulting channel.
-  nsCOMPtr<nsILoadGroup> loadGroup =
-    do_CreateInstance(NS_LOADGROUP_CONTRACTID);
-  chan->SetLoadGroup(loadGroup);
+  nsCOMPtr<nsILoadGroup> lg;
+  {
+    nsAutoLock locker(mLock);
+    lg = do_CreateInstance(NS_LOADGROUP_CONTRACTID);
+    mLoadGroup = lg.get();
+    NS_ADDREF(mLoadGroup);
+    mLoadGroupOwnerThread = PR_GetCurrentThread();
+  }
+  chan->SetLoadGroup(lg);
+  lg = nsnull;
 
   if (mRequestSession->mHasPostData)
   {
@@ -148,8 +176,6 @@ nsHTTPDownloadEvent::Run()
   rv = hchan->SetRequestMethod(mRequestSession->mRequestMethod);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsSSLThread::rememberPendingHTTPRequest(loadGroup);
-
   mResponsibleForDoneSignal = PR_FALSE;
   mListener->mResponsibleForDoneSignal = PR_TRUE;
 
@@ -162,19 +188,46 @@ nsHTTPDownloadEvent::Run()
   if (NS_FAILED(rv)) {
     mListener->mResponsibleForDoneSignal = PR_FALSE;
     mResponsibleForDoneSignal = PR_TRUE;
-    
-    nsSSLThread::rememberPendingHTTPRequest(nsnull);
   }
 
   return NS_OK;
 }
 
 struct nsCancelHTTPDownloadEvent : nsRunnable {
+  nsRefPtr<nsHTTPDownloadEvent> mEvent;
+
   NS_IMETHOD Run() {
-    nsSSLThread::cancelPendingHTTPRequest();
+    mEvent->Cancel();
+    mEvent = nsnull;
     return NS_OK;
   }
 };
+
+void
+nsHTTPDownloadEvent::Cancel()
+{
+  nsILoadGroup *lg = nsnull;
+
+  if (mLock) {
+    nsAutoLock locker(mLock);
+
+    if (mLoadGroup) {
+      if (mLoadGroupOwnerThread != PR_GetCurrentThread()) {
+        NS_ASSERTION(PR_FALSE,
+          "attempt to access nsHTTPDownloadEvent::mLoadGroup on multiple threads");
+      }
+      else {
+        lg = mLoadGroup;
+        mLoadGroup = nsnull;
+      }
+    }
+  }
+
+  if (lg) {
+    lg->Cancel(NS_ERROR_ABORT);
+    NS_RELEASE(lg);
+  }
+}
 
 SECStatus nsNSSHttpServerSession::createSessionFcn(const char *host,
                                                    PRUint16 portnum,
@@ -367,7 +420,6 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(PRBool &retryable_error,
   }
 
   PRBool request_canceled = PR_FALSE;
-  PRBool aborted_wait = PR_FALSE;
 
   {
     nsAutoLock locker(waitLock);
@@ -410,28 +462,24 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(PRBool &retryable_error,
 
       if (!request_canceled)
       {
-        if ((PRIntervalTime)(PR_IntervalNow() - start_time) > mTimeoutInterval)
+        PRBool wantExit = nsSSLThread::exitRequested();
+        PRBool timeout = 
+          (PRIntervalTime)(PR_IntervalNow() - start_time) > mTimeoutInterval;
+
+        if (wantExit || timeout)
         {
           request_canceled = PR_TRUE;
-          // but we'll to continue to wait for waitFlag
-          
-          nsCOMPtr<nsIRunnable> cancelevent = new nsCancelHTTPDownloadEvent;
+
+          nsRefPtr<nsCancelHTTPDownloadEvent> cancelevent = new nsCancelHTTPDownloadEvent;
+          cancelevent->mEvent = event;
           rv = NS_DispatchToMainThread(cancelevent);
-          if (NS_FAILED(rv))
-          {
+          if (NS_FAILED(rv)) {
             NS_WARNING("cannot post cancel event");
-            aborted_wait = PR_TRUE;
-            break;
           }
+          break;
         }
       }
     }
-  }
-
-  if (aborted_wait)
-  {
-    // we couldn't cancel it, let's no longer reference it
-    nsSSLThread::rememberPendingHTTPRequest(nsnull);
   }
 
   if (request_canceled)
@@ -628,8 +676,6 @@ nsHTTPListener::OnStreamComplete(nsIStreamLoader* aLoader,
 
 void nsHTTPListener::send_done_signal()
 {
-  nsSSLThread::rememberPendingHTTPRequest(nsnull);
-  
   mResponsibleForDoneSignal = PR_FALSE;
 
   {
