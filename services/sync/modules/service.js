@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['WeaveSyncService'];
+const EXPORTED_SYMBOLS = ['Weave'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -52,15 +52,28 @@ Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/async.js");
 
 Function.prototype.async = Async.sugar;
-let Crypto = new WeaveCrypto();
+
+// for export
+let Weave = {};
+Components.utils.import("resource://weave/constants.js", Weave);
+Components.utils.import("resource://weave/util.js", Weave);
+Components.utils.import("resource://weave/async.js", Weave);
+Components.utils.import("resource://weave/crypto.js", Weave);
+Components.utils.import("resource://weave/identity.js", Weave);
+Components.utils.import("resource://weave/dav.js", Weave);
+Components.utils.import("resource://weave/stores.js", Weave);
+Components.utils.import("resource://weave/syncCores.js", Weave);
+Components.utils.import("resource://weave/engines.js", Weave);
+Components.utils.import("resource://weave/service.js", Weave);
+Utils.lazy(Weave, 'Service', WeaveSvc);
 
 /*
  * Service singleton
  * Main entry point into Weave's sync framework
  */
 
-function WeaveSyncService() { this._init(); }
-WeaveSyncService.prototype = {
+function WeaveSvc() { this._init(); }
+WeaveSvc.prototype = {
 
   __os: null,
   get _os() {

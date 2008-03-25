@@ -51,6 +51,17 @@ Cu.import("resource://weave/log4moz.js");
 
 let Utils = {
 
+  // lazy load objects from a constructor on first access.  It will
+  // work with the global object ('this' in the global context).
+  lazy: function Weave_lazy(dest, prop, ctr) {
+    let getter = function() {
+      delete dest[prop];
+      dest[prop] = new ctr();
+      return dest[prop];
+    };
+    dest.__defineGetter__(prop, getter);
+  },
+  
   deepEquals: function Weave_deepEquals(a, b) {
     if (!a && !b)
       return true;

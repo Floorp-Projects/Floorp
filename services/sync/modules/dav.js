@@ -49,6 +49,8 @@ Cu.import("resource://weave/constants.js");
 
 Function.prototype.async = Async.sugar;
 
+Utils.lazy(this, 'DAV', DAVCollection);
+
 /*
  * DAV object
  * Abstracts the raw DAV commands

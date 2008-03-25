@@ -52,7 +52,6 @@ Cu.import("resource://weave/syncCores.js");
 Cu.import("resource://weave/async.js");
 
 Function.prototype.async = Async.sugar;
-let Crypto = new WeaveCrypto();
 
 function Engine(davCollection, pbeId) {
   //this._init(davCollection, pbeId);

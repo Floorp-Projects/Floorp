@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['WeaveCrypto'];
+const EXPORTED_SYMBOLS = ['Crypto'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -49,10 +49,12 @@ Cu.import("resource://weave/async.js");
 
 Function.prototype.async = Async.sugar;
 
-function WeaveCrypto() {
+Utils.lazy(this, 'Crypto', CryptoSvc);
+
+function CryptoSvc() {
   this._init();
 }
-WeaveCrypto.prototype = {
+CryptoSvc.prototype = {
   _logName: "Crypto",
 
   __os: null,
