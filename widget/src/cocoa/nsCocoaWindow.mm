@@ -1768,6 +1768,7 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
     case NSLeftMouseDragged:
     case NSRightMouseDragged:
     case NSOtherMouseDragged:
+    {
       // Drop all mouse events if a modal window has appeared above us.
       // This helps make us behave as if the OS were running a "real" modal
       // event loop.
@@ -1782,7 +1783,8 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
         }
       }
       break;
-      default:
+    }
+    default:
       break;
   }
 
@@ -2316,6 +2318,7 @@ already_AddRefed<nsIDOMElement> GetFocusedElement()
     case NSLeftMouseDragged:
     case NSRightMouseDragged:
     case NSOtherMouseDragged:
+    {
       // Drop all mouse events if a modal window has appeared above us.
       // This helps make us behave as if the OS were running a "real" modal
       // event loop.
@@ -2330,7 +2333,8 @@ already_AddRefed<nsIDOMElement> GetFocusedElement()
         }
       }
       break;
-      default:
+    }
+    default:
       break;
   }
 
