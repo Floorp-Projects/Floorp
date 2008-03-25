@@ -78,7 +78,6 @@ function run_test()
       switch (aDownload.state) {
         case dm.DOWNLOAD_FAILED:
         case dm.DOWNLOAD_CANCELED:
-        case dm.DOWNLOAD_FAILED:
         case dm.DOWNLOAD_DIRTY:
         case dm.DOWNLOAD_BLOCKED_POLICY:
           // Fail!
