@@ -152,9 +152,7 @@ public:
 
   static nsresult requestActivateSSL(nsNSSSocketInfo *si);
   
-  // Called from either Necko or SSL thread.
-  static void rememberPendingHTTPRequest(nsIRequest *aRequest);
-  static void cancelPendingHTTPRequest();
+  static PRBool exitRequested();
 };
 
 #endif //_NSSSLTHREAD_H_
