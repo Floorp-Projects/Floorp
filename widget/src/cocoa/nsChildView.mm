@@ -3452,7 +3452,8 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     if ([cocoaEvent type] == NSFlagsChanged) {
       macEvent.what = keyType == NS_KEY_DOWN ? keyDown : keyUp;
     } else {
-      charCode = [[cocoaEvent characters] characterAtIndex:0];
+      if ([[cocoaEvent characters] length] > 0)
+        charCode = [[cocoaEvent characters] characterAtIndex:0];
       if ([cocoaEvent type] == NSKeyDown)
         macEvent.what = [cocoaEvent isARepeat] ? autoKey : keyDown;
       else
@@ -3989,6 +3990,10 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     // create native EventRecord for use by plugins
     EventRecord macEvent;
     if (mCurKeyEvent) {
+      // XXX The ASCII characters inputting mode of egbridge (Japanese IME)
+      // might send the keyDown event with wrong keyboard layout if other
+      // keyboard layouts are already loaded. In that case, the native event
+      // doesn't match to this gecko event...
       ConvertCocoaKeyEventToMacEvent(mCurKeyEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
       geckoEvent.isShift   = ([mCurKeyEvent modifierFlags] & NSShiftKeyMask) != 0;
