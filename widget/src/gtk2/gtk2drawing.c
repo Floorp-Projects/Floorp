@@ -982,7 +982,8 @@ moz_gtk_toggle_paint(GdkDrawable* drawable, GdkRectangle* rect,
 static gint
 calculate_button_inner_rect(GtkWidget* button, GdkRectangle* rect,
                             GdkRectangle* inner_rect,
-                            GtkTextDirection direction)
+                            GtkTextDirection direction,
+                            gboolean ignore_focus)
 {
     GtkBorder inner_border;
     gboolean interior_focus;
@@ -996,13 +997,16 @@ calculate_button_inner_rect(GtkWidget* button, GdkRectangle* rect,
     moz_gtk_widget_get_focus(button, &interior_focus,
                              &focus_width, &focus_pad);
 
-    inner_rect->x = rect->x + XTHICKNESS(style);
+    if (ignore_focus)
+        focus_width = focus_pad = 0;
+
+    inner_rect->x = rect->x + XTHICKNESS(style) + focus_width + focus_pad;
     inner_rect->x += direction == GTK_TEXT_DIR_LTR ?
                         inner_border.left : inner_border.right;
     inner_rect->y = rect->y + inner_border.top + YTHICKNESS(style) +
                     focus_width + focus_pad;
     inner_rect->width = MAX(1, rect->width - inner_border.left -
-       inner_border.right - XTHICKNESS(style) * 2);
+       inner_border.right - (XTHICKNESS(style) + focus_pad + focus_width) * 2);
     inner_rect->height = MAX(1, rect->height - inner_border.top -
        inner_border.bottom - (YTHICKNESS(style) + focus_pad + focus_width) * 2);
 
@@ -1655,7 +1659,7 @@ moz_gtk_expander_paint(GdkDrawable* drawable, GdkRectangle* rect,
 static gint
 moz_gtk_combo_box_paint(GdkDrawable* drawable, GdkRectangle* rect,
                         GdkRectangle* cliprect, GtkWidgetState* state,
-                        GtkTextDirection direction)
+                        gboolean ishtml, GtkTextDirection direction)
 {
     GdkRectangle arrow_rect, real_arrow_rect;
     gint arrow_size, separator_width;
@@ -1673,7 +1677,7 @@ moz_gtk_combo_box_paint(GdkDrawable* drawable, GdkRectangle* rect,
                          gComboBoxButtonWidget, direction);
 
     calculate_button_inner_rect(gComboBoxButtonWidget,
-                                rect, &arrow_rect, direction);
+                                rect, &arrow_rect, direction, ishtml);
     /* Now arrow_rect contains the inner rect ; we want to correct the width
      * to what the arrow needs (see gtk_combo_box_size_allocate) */
     gtk_widget_size_request(gComboBoxArrowWidget, &arrow_req);
@@ -1782,7 +1786,7 @@ moz_gtk_combo_box_entry_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
         GTK_WIDGET_UNSET_FLAGS(gComboBoxEntryTextareaWidget, GTK_HAS_FOCUS);
 
     calculate_button_inner_rect(gComboBoxEntryButtonWidget,
-                                rect, &arrow_rect, direction);
+                                rect, &arrow_rect, direction, FALSE);
     if (state_type == GTK_STATE_ACTIVE) {
         gtk_widget_style_get(gComboBoxEntryButtonWidget,
                              "child-displacement-x", &x_displacement,
@@ -2595,14 +2599,25 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
             /* We need to account for the arrow on the dropdown, so text
              * doesn't come too close to the arrow, or in some cases spill
              * into the arrow. */
-            gboolean wide_separators;
-            gint separator_width;
+            gboolean ignored_interior_focus, wide_separators;
+            gint focus_width, focus_pad, separator_width;
             GtkRequisition arrow_req;
 
             ensure_combo_box_widgets();
 
-            *left = *right = gComboBoxButtonWidget->style->xthickness;
-            *top = *bottom = gComboBoxButtonWidget->style->ythickness;
+            *left = GTK_CONTAINER(gComboBoxButtonWidget)->border_width;
+
+            if (!inhtml) {
+                moz_gtk_widget_get_focus(gComboBoxButtonWidget,
+                                         &ignored_interior_focus,
+                                         &focus_width, &focus_pad);
+                *left += focus_width + focus_pad;
+            }
+
+            *top = *left + gComboBoxButtonWidget->style->ythickness;
+            *left += gComboBoxButtonWidget->style->xthickness;
+
+            *right = *left; *bottom = *top;
 
             /* If there is no separator, don't try to count its width. */
             separator_width = 0;
@@ -3025,7 +3040,7 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
         break;
     case MOZ_GTK_DROPDOWN:
         return moz_gtk_combo_box_paint(drawable, rect, cliprect, state,
-                                       direction);
+                                       (gboolean) flags, direction);
         break;
     case MOZ_GTK_DROPDOWN_ARROW:
         return moz_gtk_combo_box_entry_button_paint(drawable, rect, cliprect,
