@@ -86,29 +86,15 @@ public:
   ~nsHTTPDownloadEvent();
 
   NS_IMETHOD Run();
-  void Cancel();
 
   nsNSSHttpRequestSession *mRequestSession; // no ownership
   
   nsCOMPtr<nsHTTPListener> mListener;
   PRBool mResponsibleForDoneSignal;
-
-protected:
-  PRLock *mLock;
-
-  // no nsCOMPtr. When I use it, I get assertions about
-  //   loadgroup not being thread safe.
-  // So, let's use a raw pointer and ensure we only create and destroy
-  // it on the network thread ourselves.
-  nsILoadGroup *mLoadGroup;
-  PRThread *mLoadGroupOwnerThread;
 };
 
 nsHTTPDownloadEvent::nsHTTPDownloadEvent()
 :mResponsibleForDoneSignal(PR_TRUE)
-,mLock(nsnull)
-,mLoadGroup(nsnull)
-,mLoadGroupOwnerThread(nsnull)
 {
 }
 
@@ -116,17 +102,11 @@ nsHTTPDownloadEvent::~nsHTTPDownloadEvent()
 {
   if (mResponsibleForDoneSignal && mListener)
     mListener->send_done_signal();
-  if (mLock)
-    PR_DestroyLock(mLock);
 }
 
 NS_IMETHODIMP
 nsHTTPDownloadEvent::Run()
 {
-  mLock = PR_NewLock();
-  if (!mLock)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   if (!mListener)
     return NS_OK;
 
@@ -141,16 +121,8 @@ nsHTTPDownloadEvent::Run()
 
   // Create a loadgroup for this new channel.  This way if the channel
   // is redirected, we'll have a way to cancel the resulting channel.
-  nsCOMPtr<nsILoadGroup> lg;
-  {
-    nsAutoLock locker(mLock);
-    lg = do_CreateInstance(NS_LOADGROUP_CONTRACTID);
-    mLoadGroup = lg.get();
-    NS_ADDREF(mLoadGroup);
-    mLoadGroupOwnerThread = PR_GetCurrentThread();
-  }
+  nsCOMPtr<nsILoadGroup> lg = do_CreateInstance(NS_LOADGROUP_CONTRACTID);
   chan->SetLoadGroup(lg);
-  lg = nsnull;
 
   if (mRequestSession->mHasPostData)
   {
@@ -179,6 +151,10 @@ nsHTTPDownloadEvent::Run()
   mResponsibleForDoneSignal = PR_FALSE;
   mListener->mResponsibleForDoneSignal = PR_TRUE;
 
+  mListener->mLoadGroup = lg.get();
+  NS_ADDREF(mListener->mLoadGroup);
+  mListener->mLoadGroupOwnerThread = PR_GetCurrentThread();
+
   rv = NS_NewStreamLoader(getter_AddRefs(mListener->mLoader), 
                           mListener);
 
@@ -188,46 +164,24 @@ nsHTTPDownloadEvent::Run()
   if (NS_FAILED(rv)) {
     mListener->mResponsibleForDoneSignal = PR_FALSE;
     mResponsibleForDoneSignal = PR_TRUE;
+
+    NS_RELEASE(mListener->mLoadGroup);
+    mListener->mLoadGroup = nsnull;
+    mListener->mLoadGroupOwnerThread = nsnull;
   }
 
   return NS_OK;
 }
 
 struct nsCancelHTTPDownloadEvent : nsRunnable {
-  nsRefPtr<nsHTTPDownloadEvent> mEvent;
+  nsCOMPtr<nsHTTPListener> mListener;
 
   NS_IMETHOD Run() {
-    mEvent->Cancel();
-    mEvent = nsnull;
+    mListener->FreeLoadGroup(PR_TRUE);
+    mListener = nsnull;
     return NS_OK;
   }
 };
-
-void
-nsHTTPDownloadEvent::Cancel()
-{
-  nsILoadGroup *lg = nsnull;
-
-  if (mLock) {
-    nsAutoLock locker(mLock);
-
-    if (mLoadGroup) {
-      if (mLoadGroupOwnerThread != PR_GetCurrentThread()) {
-        NS_ASSERTION(PR_FALSE,
-          "attempt to access nsHTTPDownloadEvent::mLoadGroup on multiple threads");
-      }
-      else {
-        lg = mLoadGroup;
-        mLoadGroup = nsnull;
-      }
-    }
-  }
-
-  if (lg) {
-    lg->Cancel(NS_ERROR_ABORT);
-    NS_RELEASE(lg);
-  }
-}
 
 SECStatus nsNSSHttpServerSession::createSessionFcn(const char *host,
                                                    PRUint16 portnum,
@@ -471,7 +425,7 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(PRBool &retryable_error,
           request_canceled = PR_TRUE;
 
           nsRefPtr<nsCancelHTTPDownloadEvent> cancelevent = new nsCancelHTTPDownloadEvent;
-          cancelevent->mEvent = event;
+          cancelevent->mListener = mListener;
           rv = NS_DispatchToMainThread(cancelevent);
           if (NS_FAILED(rv)) {
             NS_WARNING("cannot post cancel event");
@@ -583,7 +537,9 @@ nsHTTPListener::nsHTTPListener()
   mLock(nsnull),
   mCondition(nsnull),
   mWaitFlag(PR_TRUE),
-  mResponsibleForDoneSignal(PR_FALSE)
+  mResponsibleForDoneSignal(PR_FALSE),
+  mLoadGroup(nsnull),
+  mLoadGroupOwnerThread(nsnull)
 {
 }
 
@@ -623,6 +579,34 @@ nsHTTPListener::~nsHTTPListener()
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsHTTPListener, nsIStreamLoaderObserver)
 
+void
+nsHTTPListener::FreeLoadGroup(PRBool aCancelLoad)
+{
+  nsILoadGroup *lg = nsnull;
+
+  if (mLock) {
+    nsAutoLock locker(mLock);
+
+    if (mLoadGroup) {
+      if (mLoadGroupOwnerThread != PR_GetCurrentThread()) {
+        NS_ASSERTION(PR_FALSE,
+          "attempt to access nsHTTPDownloadEvent::mLoadGroup on multiple threads, leaking it!");
+      }
+      else {
+        lg = mLoadGroup;
+        mLoadGroup = nsnull;
+      }
+    }
+  }
+
+  if (lg) {
+    if (aCancelLoad) {
+      lg->Cancel(NS_ERROR_ABORT);
+    }
+    NS_RELEASE(lg);
+  }
+}
+
 NS_IMETHODIMP
 nsHTTPListener::OnStreamComplete(nsIStreamLoader* aLoader,
                                  nsISupports* aContext,
@@ -631,6 +615,8 @@ nsHTTPListener::OnStreamComplete(nsIStreamLoader* aLoader,
                                  const PRUint8* string)
 {
   mResultCode = aStatus;
+
+  FreeLoadGroup(PR_FALSE);
 
   nsCOMPtr<nsIRequest> req;
   nsCOMPtr<nsIHttpChannel> hchan;
