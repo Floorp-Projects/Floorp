@@ -150,20 +150,10 @@ Generator.prototype = {
     } else if (this.onComplete.parentGenerator instanceof Generator) {
       //this._log.trace("Saving exception and stack trace");
 
-      switch (typeof e) {
-      case "string":
+      if (e instanceof AsyncException)
+        e.trace = this.trace + e.trace? "\n" + e.trace : "";
+      else
         e = new AsyncException(this, e);
-        break;
-      case "object":
-        if (e.trace) // means we're re-throwing up the stack
-          e.trace = this.trace + "\n" + e.trace;
-        else
-          e.trace = this.trace;
-        break;
-      default:
-        this._log.debug("Unknown exception type: " + typeof(e));
-        break;
-      }
 
       this._exception = e;
 
