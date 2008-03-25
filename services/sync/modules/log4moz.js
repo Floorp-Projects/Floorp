@@ -58,27 +58,35 @@ const ONE_BYTE = 1;
 const ONE_KILOBYTE = 1024 * ONE_BYTE;
 const ONE_MEGABYTE = 1024 * ONE_KILOBYTE;
 
-const Log4Moz = {};
-Log4Moz.Level = {};
-Log4Moz.Level.Fatal  = 70;
-Log4Moz.Level.Error  = 60;
-Log4Moz.Level.Warn   = 50;
-Log4Moz.Level.Info   = 40;
-Log4Moz.Level.Config = 30;
-Log4Moz.Level.Debug  = 20;
-Log4Moz.Level.Trace  = 10;
-Log4Moz.Level.All    = 0;
+let Log4Moz = {
+  Level: {
+    Fatal:  70,
+    Error:  60,
+    Warn:   50,
+    Info:   40,
+    Config: 30,
+    Debug:  20,
+    Trace:  10,
+    All:    0,
+    Desc: {
+      70: "FATAL",
+      60: "ERROR",
+      50: "WARN",
+      40: "INFO",
+      30: "CONFIG",
+      20: "DEBUG",
+      10: "TRACE",
+      0:  "ALL"
+    }
+  },
 
-Log4Moz.Level.Desc = {
-  70: "FATAL",
-  60: "ERROR",
-  50: "WARN",
-  40: "INFO",
-  30: "CONFIG",
-  20: "DEBUG",
-  10: "TRACE",
-  0:  "ALL"
+  get Service() {
+    delete Log4Moz.Service;
+    Log4Moz.Service = new Log4MozService();
+    return Log4Moz.Service;
+  }
 };
+
 
 /*
  * LogMessage
@@ -495,5 +503,3 @@ Log4MozService.prototype = {
     }
   }
 };
-
-Log4Moz.Service = new Log4MozService();
