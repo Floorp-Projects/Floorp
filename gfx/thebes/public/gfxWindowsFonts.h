@@ -64,22 +64,12 @@ public:
     THEBES_INLINE_DECL_REFCOUNTING(FontFamily)
 
     FontFamily(const nsAString& aName) :
-        mName(aName), mHasStyles(PR_FALSE) { }
+        mName(aName)
+    {
+    }
 
-    FontEntry *FindFontEntry(const gfxFontStyle& aFontStyle);
-
-private:
-    static int CALLBACK FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
-                                            const NEWTEXTMETRICEXW *nmetrics,
-                                            DWORD fontType, LPARAM data);
-    void FindStyleVariations();
-
-public:
     nsTArray<nsRefPtr<FontEntry> > mVariations;
     nsString mName;
-
-private:
-    PRBool mHasStyles;
 };
 
 class FontEntry

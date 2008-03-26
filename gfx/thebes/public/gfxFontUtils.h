@@ -307,14 +307,14 @@ public:
     }
     
     static nsresult
-    ReadCMAPTableFormat12(PRUint8 *aBuf, PRInt32 aLength, gfxSparseBitSet& aCharacterMap);
+    ReadCMAPTableFormat12(PRUint8 *aBuf, PRInt32 aLength, gfxSparseBitSet& aCharacterMap, std::bitset<128>& aUnicodeRanges);
     
     static nsresult 
-    ReadCMAPTableFormat4(PRUint8 *aBuf, PRInt32 aLength, gfxSparseBitSet& aCharacterMap);
+    ReadCMAPTableFormat4(PRUint8 *aBuf, PRInt32 aLength, gfxSparseBitSet& aCharacterMap, std::bitset<128>& aUnicodeRanges);
 
     static nsresult
-    ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCharacterMap,
-             PRPackedBool& aUnicodeFont, PRPackedBool& aSymbolFont);
+    ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCharacterMap, std::bitset<128>& aUnicodeRanges, PRPackedBool& aUnicodeFont, 
+        PRPackedBool& aSymbolFont);
 
     static inline bool IsJoiner(PRUint32 ch) {
         return (ch == 0x200C ||
