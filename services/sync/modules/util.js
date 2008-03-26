@@ -167,6 +167,28 @@ let Utils = {
       throw 'checkStatus failed';
   },
 
+  sha1: function Weave_sha1(string) {
+    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+      createInstance(Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
+
+    let hasher = Cc["@mozilla.org/security/hash;1"]
+      .createInstance(Ci.nsICryptoHash);
+    hasher.init(hasher.SHA1);
+
+    let data = converter.convertToByteArray(string, {});
+    hasher.update(data, data.length);
+    let rawHash = hasher.finish(false);
+
+    // return the two-digit hexadecimal code for a byte
+    function toHexString(charCode) {
+      return ("0" + charCode.toString(16)).slice(-2);
+    }
+
+    let hash = [toHexString(rawHash.charCodeAt(i)) for (i in rawHash)].join("");
+    return hash;
+  },
+
   makeURI: function Weave_makeURI(URIString) {
     if (URIString === null || URIString == "")
       return null;

@@ -676,8 +676,61 @@ Engine.prototype = {
     self.done(ret)
   },
 
+  _share: function Engine__share(username) {
+    let self = yield;
+
+    this._getSymKey.async(this, self.cb);
+    yield;
+
+    let base = this._dav.baseURL;
+    try {
+      // copied from getSymKey
+      this._dav.GET(this.keysFile, self.cb);
+      let ret = yield;
+      Utils.ensureStatus(ret.status,
+                         "Could not get keys file.", [[200,300]]);
+      let keys = this._json.decode(keysResp.responseText);
+
+      // get the other user's pubkey
+      let hash = Utils.sha1(username);
+      this._dav.baseURL = serverURL + "user/" + hash + "/";  //FIXME: very ugly!
+
+      this._dav.GET("public/pubkey", self.cb);
+      ret = yield;
+      Utils.ensureStatus(ret.status,
+                         "Could not get public key for user" + username);
+      let id = new Identity();
+      id.pubkey = ret.responseText;
+
+      this._dav.baseURL = base;
+
+      // now encrypt the symkey with their pubkey and upload the new keyring
+      Crypto.RSAencrypt.async(Crypto, self.cb, this._engineId.password, id);
+      let enckey = yield;
+      if (!enckey)
+        throw "Could not encrypt symmetric encryption key";
+
+      keys.ring[hash] = enckey;
+      this._dav.PUT(this.keysFile, this._json.encode(keys), self.cb);
+      ret = yield;
+      Utils.ensureStatus(ret.status, "Could not upload keyring file.");
+
+    } catch (e) {
+      throw e;
+
+    } finally {
+      this._dav.baseURL = base;
+    }
+
+    self.done();
+  },
+
   sync: function Engine_sync(onComplete) {
     return this._sync.async(this, onComplete);
+  },
+
+  share: function Engine_share(onComplete, username) {
+    return this._share.async(this, onComplete, username);
   },
 
   resetServer: function Engine_resetServer(onComplete) {
