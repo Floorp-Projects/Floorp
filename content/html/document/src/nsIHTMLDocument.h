@@ -174,11 +174,6 @@ public:
                                         nsISupports** aResult) = 0;
 
   /**
-   * Disables getting and setting cookies
-   */
-  virtual void DisableCookieAccess() = 0;
-
-  /**
    * Get the first <body> child of the root <html>, but don't do
    * anything <frameset>-related (like nsIDOMHTMLDocument::GetBody).
    */
