@@ -285,10 +285,7 @@ gfxWindowsPlatform::InitBadUnderlineList()
         FontFamily *ff = FindFontFamily(resolved);
         if (!ff)
             continue;
-        for (PRUint32 j = 0; j < ff->mVariations.Length(); ++j) {
-            nsRefPtr<FontEntry> fe = ff->mVariations[j];
-            fe->mIsBadUnderlineFont = 1;
-        }
+        ff->mIsBadUnderlineFont = 1;
     }
 }
 
