@@ -77,6 +77,7 @@ private:
 public:
     nsTArray<nsRefPtr<FontEntry> > mVariations;
     nsString mName;
+    PRPackedBool mIsBadUnderlineFont;
 
 private:
     PRBool mHasStyles;
