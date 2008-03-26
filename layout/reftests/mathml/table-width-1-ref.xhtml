@@ -1,0 +1,72 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <style type="text/css">
+      html { background-color: grey; }
+      td { border: 1px solid white;
+           padding: 0;
+           background-color: black;
+           color: red; }
+    </style>
+  </head>
+<body>
+  <table>
+    <td>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+	<mphantom>
+	  <msqrt>
+	    <mn>2</mn>
+	    <mo>+</mo>
+	    <mn>3</mn>
+	    <mo>=</mo>
+	    <mo>5</mo>
+	  </msqrt>
+	</mphantom>
+      </math>
+    </td>
+  </table>
+  <!-- uncomment when bug 363240 attachment 311725 is checked in: table>
+    <td>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+	<mphantom>
+	  <mroot>
+	    <mtable>
+	      <mtr><mtd><mn>8</mn></mtd></mtr>
+	      <mtr><mtd><mn>9</mn></mtd></mtr>
+	    </mtable>
+	    <mn>6</mn>
+	  </mroot>
+	</mphantom>
+      </math>
+    </td>
+  </table-->
+  <table>
+    <td>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+	<mphantom>
+	  <mfenced>
+	    <mfrac>
+	      <mn>0</mn>
+	      <mn>90</mn>
+	    </mfrac>
+	  </mfenced>
+	</mphantom>
+      </math>
+    </td>
+  </table>
+  <table>
+    <td>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+	<mphantom>
+	  <mo>{</mo>
+	  <mtable>
+	    <mtr><mtd><mn>0</mn></mtd></mtr>
+	    <mtr><mtd><mn>5</mn></mtd></mtr>
+	    <mtr><mtd><mn>9</mn></mtd></mtr>
+	  </mtable>
+	  <mo>}</mo>
+	</mphantom>
+      </math>
+    </td>
+  </table>
+</body>
+</html>
