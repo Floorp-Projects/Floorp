@@ -678,23 +678,28 @@ Engine.prototype = {
 
   _share: function Engine__share(username) {
     let self = yield;
-
-    this._getSymKey.async(this, self.cb);
-    yield;
-
     let base = this._dav.baseURL;
+
+    this._log.debug("Sharing bookmarks with " + username);
+
     try {
+      this._getSymKey.async(this, self.cb);
+      yield;
+
       // copied from getSymKey
+      this._log.debug("Getting keyring from server");
       this._dav.GET(this.keysFile, self.cb);
       let ret = yield;
-      Utils.ensureStatus(ret.status,
-                         "Could not get keys file.", [[200,300]]);
-      let keys = this._json.decode(keysResp.responseText);
+      Utils.ensureStatus(ret.status, "Could not get keys file.");
+      let keys = this._json.decode(ret.responseText);
 
       // get the other user's pubkey
+      this._log.debug("Constructing other user's URL");
       let hash = Utils.sha1(username);
+      let serverURL = Utils.prefs.getCharPref("serverURL");
       this._dav.baseURL = serverURL + "user/" + hash + "/";  //FIXME: very ugly!
 
+      this._log.debug("Getting other user's public key");
       this._dav.GET("public/pubkey", self.cb);
       ret = yield;
       Utils.ensureStatus(ret.status,
@@ -705,15 +710,19 @@ Engine.prototype = {
       this._dav.baseURL = base;
 
       // now encrypt the symkey with their pubkey and upload the new keyring
+      this._log.debug("Encrypting symmetric key with other user's public key");
       Crypto.RSAencrypt.async(Crypto, self.cb, this._engineId.password, id);
       let enckey = yield;
       if (!enckey)
         throw "Could not encrypt symmetric encryption key";
 
+      this._log.debug("Uploading new keyring");
       keys.ring[hash] = enckey;
       this._dav.PUT(this.keysFile, this._json.encode(keys), self.cb);
       ret = yield;
       Utils.ensureStatus(ret.status, "Could not upload keyring file.");
+
+      this._log.debug("All done sharing!");
 
     } catch (e) {
       throw e;

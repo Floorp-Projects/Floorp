@@ -141,14 +141,17 @@ Generator.prototype = {
 
   _handleException: function AsyncGen__handleException(e) {
     if (e instanceof StopIteration) {
+      if (!this._timer)
+        this._log.trace("[" + this.name + "] Generator stopped unexpectedly");
       if (this.errorOnStop) {
-        this._log.error("Generator stopped unexpectedly");
+        this._log.error("[" + this.name + "] Generator stopped unexpectedly");
         this._log.trace("Stack trace:\n" + this.trace);
         this._exception = "Generator stopped unexpectedly"; // don't propagate StopIteration
       }
 
     } else if (this.onComplete.parentGenerator instanceof Generator) {
-      //this._log.trace("Saving exception and stack trace");
+      this._log.trace("[" + this.name + "] Saving exception and stack trace");
+      this._log.trace(Async.exceptionStr(this, e));
 
       if (e instanceof AsyncException)
         e.trace = this.trace + e.trace? "\n" + e.trace : "";
@@ -167,7 +170,10 @@ Generator.prototype = {
     // in the case of StopIteration we could return an error right
     // away, but instead it's easiest/best to let the caller handle
     // the error after a yield / in a callback.
-    this.done();
+    if (!this._timer) {
+      this._log.trace("[" + this.name + "] running done() from _handleException()");
+      this.done();
+    }
   },
 
   run: function AsyncGen_run() {
@@ -218,10 +224,11 @@ Generator.prototype = {
     this._timer = null;
 
     if (this._exception) {
-      this._log.trace("Propagating exception to parent generator");
+      this._log.trace("[" + this.name + "] Propagating exception to parent generator");
       this.onComplete.parentGenerator.throw(this._exception);
     } else {
       try {
+        this._log.trace("[" + this.name + "] Running onComplete()");
         this.onComplete(retval);
       } catch (e) {
         this._log.error("Exception caught from onComplete handler of " +
