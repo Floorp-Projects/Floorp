@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,17 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Storage Test Code.
+ * The Original Code is JavaScript Engine testing utilities.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2008
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
- * This code is based off of like.test from the sqlite code
- *
- * Contributor(s):
- *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ * Contributor(s): Jesse Ruderman
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,32 +35,58 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Tests to make sure that mozIStorageConnection::backupDB works when trying to
-// open a corrupted database.
+var gTestfile = 'regress-384991.js';
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 384991;
+var summary = ' w(yield) should not cause "yield expression must be parenthesized" syntax error';
+var actual = '';
+var expect = '';
 
-const BACKUP_FILE_NAME = "test_storage.sqlite.backup";
 
-function test_backup_bad_connection()
+//-----------------------------------------------------------------------------
+test();
+//-----------------------------------------------------------------------------
+
+function test()
 {
-  var msc = getDatabase(do_get_file("storage/test/unit/corruptDB.sqlite"));
-  do_check_false(msc.connectionReady);
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+  printStatus (summary);
 
-  var backup = msc.backupDB(BACKUP_FILE_NAME);
-  do_check_eq(BACKUP_FILE_NAME, backup.leafName);
-  do_check_true(backup.exists());
-  
-  backup.remove(false);
+  expect = 'No Error';
+
+  try
+  {
+    actual = 'No Error';
+    (function() { w((yield)); });
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+  reportCompare(expect, actual, summary + ': 1');
+
+  try
+  {
+    actual = 'No Error';
+    (function() { w(1 ? yield : 0); });
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+  reportCompare(expect, actual, summary + ': 2');
+
+  try
+  {
+    actual = 'No Error';
+    (function () { f(x = yield); const x; });
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+  reportCompare(expect, actual, summary + ': 3');
+
+  exitFunc ('test');
 }
-
-var tests = [test_backup_bad_connection];
-
-function run_test()
-{
-  cleanup();
-
-  for (var i = 0; i < tests.length; i++)
-    tests[i]();
-    
-  cleanup();
-}
-

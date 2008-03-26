@@ -2250,8 +2250,8 @@ JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind)
             JS_CALL_STRING_TRACER(trc, JSSTRDEP_BASE(str), "base");
         break;
 
-      case JSTRACE_FUNCTION:
-        js_TraceFunction(trc, (JSFunction *)thing);
+      case JSTRACE_SCRIPTED_FUNCTION:
+        js_TraceScriptedFunction(trc, (JSScriptedFunction *) thing);
         break;
 
 #if JS_HAS_XML_SUPPORT
@@ -2660,7 +2660,7 @@ gc_lock_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
 void
 js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
 {
-    uintN nslots, minargs, skip;
+    uintN nslots, skip;
 
     if (fp->callobj)
         JS_CALL_OBJECT_TRACER(trc, fp->callobj, "call");
@@ -2682,8 +2682,8 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
     }
 
     /* Allow for primitive this parameter due to JSFUN_THISP_* flags. */
-    JS_ASSERT(JSVAL_IS_OBJECT((jsval)fp->thisp) ||
-              (fp->fun && JSFUN_THISP_FLAGS(fp->fun->flags)));
+    JS_ASSERT_IF(!JSVAL_IS_OBJECT((jsval)fp->thisp),
+                 fp->fun && JSFUN_THISP_FLAGS(FUN_FLAGS(fp->fun)));
     JS_CALL_VALUE_TRACER(trc, (jsval)fp->thisp, "this");
 
     if (fp->callee)
@@ -2693,14 +2693,22 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
         nslots = fp->argc;
         skip = 0;
         if (fp->fun) {
-            minargs = FUN_MINARGS(fp->fun);
-            if (minargs > nslots)
-                nslots = minargs;
-            if (!FUN_INTERPRETED(fp->fun)) {
-                JS_ASSERT(!(fp->fun->flags & JSFUN_FAST_NATIVE));
-                nslots += fp->fun->u.n.extra;
+            if (FUN_IS_SCRIPTED(fp->fun)) {
+                JSScriptedFunction *sfun;
+
+                sfun = FUN_TO_SCRIPTED(fp->fun);
+                if (nslots < sfun->nargs)
+                    nslots = sfun->nargs;
+            } else {
+                JSNativeFunction *nfun;
+
+                JS_ASSERT(!(FUN_FLAGS(fp->fun) & JSFUN_FAST_NATIVE));
+                nfun = FUN_TO_NATIVE(fp->fun);
+                if (nslots < nfun->nargs)
+                    nslots = nfun->nargs;
+                nslots += nfun->extra;
             }
-            if (fp->fun->flags & JSFRAME_ROOTED_ARGV)
+            if (fp->flags & JSFRAME_ROOTED_ARGV)
                 skip = 2 + fp->argc;
         }
         TRACE_JSVALS(trc, 2 + nslots - skip, fp->argv - 2 + skip, "operand");
@@ -3328,7 +3336,8 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
                             /* Do nothing. */
                             break;
                           case GCX_FUNCTION:
-                            js_FinalizeFunction(cx, (JSFunction *) thing);
+                            js_FinalizeFunction(cx,
+                                                (JSScriptedFunction *) thing);
                             break;
 #if JS_HAS_XML_SUPPORT
                           case GCX_NAMESPACE:

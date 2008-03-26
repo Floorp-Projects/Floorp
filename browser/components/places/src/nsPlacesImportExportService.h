@@ -48,8 +48,6 @@ class nsPlacesImportExportService : public nsIPlacesImportExportService,
     nsresult WriteSeparator(nsINavHistoryResultNode* aItem, const nsACString& aIndent, nsIOutputStream* aOutput);
     nsresult WriteDescription(PRInt64 aId, PRInt32 aType, nsIOutputStream* aOutput);
 
-    nsresult ArchiveBookmarksFile(PRInt32 aNumberOfBackups, PRBool aForceArchive);
-  
     inline nsresult EnsureServiceState() {
       NS_ENSURE_STATE(mHistoryService);
       NS_ENSURE_STATE(mFaviconService);

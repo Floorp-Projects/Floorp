@@ -392,7 +392,7 @@ function doHelpButton()
 
   var deck  = document.getElementById("mainDeck");
   var helpdoc = helpTopics[deck.selectedPanel.id] || "pageinfo_general";
-  openHelp(helpdoc, 'chrome://browser/locale/help/help.rdf');
+  openHelpLink(helpdoc);
 }
 
 function showTab(id)

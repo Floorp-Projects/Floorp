@@ -11,7 +11,10 @@ classic.jar:
         skin/classic/global/checkbox.css
         skin/classic/global/colorpicker.css
         skin/classic/global/config.css
+        skin/classic/global/customizeToolbar.css
+        skin/classic/global/datetimepicker.css
         skin/classic/global/dialog.css
+        skin/classic/global/dropmarker.css
         skin/classic/global/expander.css
         skin/classic/global/filepicker.css
         skin/classic/global/findBar.css
@@ -24,25 +27,28 @@ classic.jar:
         skin/classic/global/menu.css
         skin/classic/global/menulist.css
         skin/classic/global/netError.css
-        skin/classic/global/dropmarker.css
         skin/classic/global/numberbox.css
         skin/classic/global/notification.css
         skin/classic/global/passwordmgr.css
         skin/classic/global/popup.css
+        skin/classic/global/preferences.css
+        skin/classic/global/printPageSetup.css
+        skin/classic/global/printPreview.css
         skin/classic/global/progressmeter.css
         skin/classic/global/radio.css
         skin/classic/global/richlistbox.css
-        skin/classic/global/scrollbars.css                          (xulscrollbars.css)
+*       skin/classic/global/scale.css
+        skin/classic/global/scrollbars.css                       (xulscrollbars.css)
         skin/classic/global/scrollbox.css
         skin/classic/global/spinbuttons.css
         skin/classic/global/splitter.css
         skin/classic/global/tabbox.css
         skin/classic/global/textbox.css
-        skin/classic/global/datetimepicker.css
         skin/classic/global/toolbar.css
         skin/classic/global/toolbarbutton.css
         skin/classic/global/tree.css
         skin/classic/global/wizard.css
+        skin/classic/global/alerts/alert.css                     (alerts/alert.css)
         skin/classic/global/arrow/arrow-dn.gif                   (arrow/arrow-dn.gif)
         skin/classic/global/arrow/arrow-dn-dis.gif               (arrow/arrow-dn-dis.gif)
         skin/classic/global/arrow/arrow-dn-hov.gif               (arrow/arrow-dn-hov.gif)
@@ -64,6 +70,13 @@ classic.jar:
         skin/classic/global/arrow/arrow-up-sharp.gif             (arrow/arrow-up-sharp.gif)
         skin/classic/global/checkbox/cbox-check.gif              (checkbox/cbox-check.gif)
         skin/classic/global/checkbox/cbox-check-dis.gif          (checkbox/cbox-check-dis.gif)
+        skin/classic/global/console/console.css                  (console/console.css)
+        skin/classic/global/console/console-toolbar.png          (console/console-toolbar.png)
+        skin/classic/global/console/bullet-error.png             (console/bullet-error.png)
+        skin/classic/global/console/bullet-question.png          (console/bullet-question.png)
+        skin/classic/global/console/bullet-warning.png           (console/bullet-warning.png)
+        skin/classic/global/console/console-error-caret.gif      (console/console-error-caret.gif)
+        skin/classic/global/console/console-error-dash.gif       (console/console-error-dash.gif)
 *       skin/classic/global/dirListing/dirListing.css            (dirListing/dirListing.css)
         skin/classic/global/dirListing/local.png                 (dirListing/local.png)
         skin/classic/global/dirListing/remote.png                (dirListing/remote.png)
@@ -105,19 +118,6 @@ classic.jar:
         skin/classic/global/tree/twisty-open.png                 (tree/twisty-open.png)
         skin/classic/global/throbber/Throbber-small.gif          (throbber/Throbber-small.gif)
         skin/classic/global/throbber/Throbber-small.png          (throbber/Throbber-small.png)
-        skin/classic/global/customizeToolbar.css
-        skin/classic/global/preferences.css
-        skin/classic/global/printPageSetup.css
-*       skin/classic/global/scale.css
-        skin/classic/global/printPreview.css
-        skin/classic/global/alerts/alert.css                     (alerts/alert.css)
-        skin/classic/global/console/console.css                  (console/console.css)
-        skin/classic/global/console/console-toolbar.png          (console/console-toolbar.png)        
-        skin/classic/global/console/bullet-question.png          (console/bullet-question.png)
-        skin/classic/global/console/bullet-warning.png           (console/bullet-warning.png)
-        skin/classic/global/console/bullet-error.png             (console/bullet-error.png)
-        skin/classic/global/console/console-error-caret.gif      (console/console-error-caret.gif)
-        skin/classic/global/console/console-error-dash.gif       (console/console-error-dash.gif)
 
 #ifdef XP_WIN
 classic.jar:
@@ -130,7 +130,10 @@ classic.jar:
         skin/classic/aero/global/checkbox.css
         skin/classic/aero/global/colorpicker.css
         skin/classic/aero/global/config.css
+        skin/classic/aero/global/customizeToolbar.css
+        skin/classic/aero/global/datetimepicker.css
         skin/classic/aero/global/dialog.css
+        skin/classic/aero/global/dropmarker.css
         skin/classic/aero/global/expander.css
         skin/classic/aero/global/filepicker.css
         skin/classic/aero/global/findBar.css
@@ -143,25 +146,28 @@ classic.jar:
         skin/classic/aero/global/menu.css
         skin/classic/aero/global/menulist.css
         skin/classic/aero/global/netError.css
-        skin/classic/aero/global/dropmarker.css
         skin/classic/aero/global/numberbox.css
         skin/classic/aero/global/notification.css
         skin/classic/aero/global/passwordmgr.css
         skin/classic/aero/global/popup.css
+        skin/classic/aero/global/preferences.css
+        skin/classic/aero/global/printPageSetup.css
+        skin/classic/aero/global/printPreview.css
         skin/classic/aero/global/progressmeter.css
         skin/classic/aero/global/radio.css
         skin/classic/aero/global/richlistbox.css
+*       skin/classic/aero/global/scale.css
         skin/classic/aero/global/scrollbars.css                          (xulscrollbars.css)
         skin/classic/aero/global/scrollbox.css
         skin/classic/aero/global/spinbuttons.css
         skin/classic/aero/global/splitter.css
         skin/classic/aero/global/tabbox.css
         skin/classic/aero/global/textbox.css
-        skin/classic/aero/global/datetimepicker.css
         skin/classic/aero/global/toolbar.css
         skin/classic/aero/global/toolbarbutton.css
         skin/classic/aero/global/tree.css
         skin/classic/aero/global/wizard.css
+        skin/classic/aero/global/alerts/alert.css                        (alerts/alert.css)
         skin/classic/aero/global/arrow/arrow-dn.gif                      (arrow/arrow-dn.gif)
         skin/classic/aero/global/arrow/arrow-dn-dis.gif                  (arrow/arrow-dn-dis.gif)
         skin/classic/aero/global/arrow/arrow-dn-hov.gif                  (arrow/arrow-dn-hov.gif)
@@ -183,28 +189,35 @@ classic.jar:
         skin/classic/aero/global/arrow/arrow-up-sharp.gif                (arrow/arrow-up-sharp.gif)
         skin/classic/aero/global/checkbox/cbox-check.gif                 (checkbox/cbox-check.gif)
         skin/classic/aero/global/checkbox/cbox-check-dis.gif             (checkbox/cbox-check-dis.gif)
+        skin/classic/aero/global/console/console.css                     (console/console.css)
+        skin/classic/aero/global/console/console-toolbar.png             (console/console-toolbar-aero.png)
+        skin/classic/aero/global/console/bullet-error.png                (console/bullet-error-aero.png)
+        skin/classic/aero/global/console/bullet-question.png             (console/bullet-question-aero.png)
+        skin/classic/aero/global/console/bullet-warning.png              (console/bullet-warning-aero.png)
+        skin/classic/aero/global/console/console-error-caret.gif         (console/console-error-caret.gif)
+        skin/classic/aero/global/console/console-error-dash.gif          (console/console-error-dash.gif)
 *       skin/classic/aero/global/dirListing/dirListing.css               (dirListing/dirListing.css)
-        skin/classic/aero/global/dirListing/local.png                    (dirListing/local.png)
-        skin/classic/aero/global/dirListing/remote.png                   (dirListing/remote.png)
-        skin/classic/aero/global/dirListing/up.png                       (dirListing/up.png)
+        skin/classic/aero/global/dirListing/local.png                    (dirListing/local-aero.png)
+        skin/classic/aero/global/dirListing/remote.png                   (dirListing/remote-aero.png)
+        skin/classic/aero/global/dirListing/up.png                       (dirListing/up-aero.png)
         skin/classic/aero/global/Filepicker.png                          (filepicker/Filepicker.png)
-        skin/classic/aero/global/icons/autoscroll.png                    (icons/autoscroll.png)
+        skin/classic/aero/global/icons/autoscroll.png                    (icons/autoscroll-aero.png)
         skin/classic/aero/global/icons/blacklist_favicon.png             (icons/blacklist_favicon-aero.png)
         skin/classic/aero/global/icons/blacklist_large.png               (icons/blacklist_large-aero.png)
         skin/classic/aero/global/icons/Close.gif                         (icons/Close.gif)
-        skin/classic/aero/global/icons/close.png                         (icons/close.png)
-        skin/classic/aero/global/icons/Error.png                         (icons/Error.png)
+        skin/classic/aero/global/icons/close.png                         (icons/close-aero.png)
+        skin/classic/aero/global/icons/Error.png                         (icons/Error-aero.png)
         skin/classic/aero/global/icons/find.png                          (icons/find-aero.png)
-        skin/classic/aero/global/icons/folder-item.png                   (icons/folder-item.png)
+        skin/classic/aero/global/icons/folder-item.png                   (icons/folder-item-aero.png)
         skin/classic/aero/global/icons/Minimize.gif                      (icons/Minimize.gif)
-        skin/classic/aero/global/icons/notfound.png                      (icons/notfound.png)
-        skin/classic/aero/global/icons/Print-preview.png                 (icons/Print-preview.png)
-        skin/classic/aero/global/icons/Portrait.png                      (icons/Portrait.png)
-        skin/classic/aero/global/icons/Landscape.png                     (icons/Landscape.png)
+        skin/classic/aero/global/icons/notfound.png                      (icons/notfound-aero.png)
+        skin/classic/aero/global/icons/Print-preview.png                 (icons/Print-preview-aero.png)
+        skin/classic/aero/global/icons/Portrait.png                      (icons/Portrait-aero.png)
+        skin/classic/aero/global/icons/Landscape.png                     (icons/Landscape-aero.png)
         skin/classic/aero/global/icons/Question.png                      (icons/Question.png)
         skin/classic/aero/global/icons/Restore.gif                       (icons/Restore.gif)
         skin/classic/aero/global/icons/Warning.png                       (icons/Warning.png)
-        skin/classic/aero/global/icons/warning-large.png                 (icons/warning-large.png)
+        skin/classic/aero/global/icons/warning-large.png                 (icons/warning-large-aero.png)
         skin/classic/aero/global/icons/wrap.png                          (icons/wrap-aero.png)
         skin/classic/aero/global/radio/radio-check.gif                   (radio/radio-check.gif)
         skin/classic/aero/global/radio/radio-check-dis.gif               (radio/radio-check-dis.gif)
@@ -224,17 +237,4 @@ classic.jar:
         skin/classic/aero/global/tree/twisty-open.png                    (tree/twisty-open.png)
         skin/classic/aero/global/throbber/Throbber-small.gif             (throbber/Throbber-small.gif)
         skin/classic/aero/global/throbber/Throbber-small.png             (throbber/Throbber-small.png)
-        skin/classic/aero/global/customizeToolbar.css
-        skin/classic/aero/global/preferences.css
-        skin/classic/aero/global/printPageSetup.css
-*       skin/classic/aero/global/scale.css
-        skin/classic/aero/global/printPreview.css
-        skin/classic/aero/global/alerts/alert.css                        (alerts/alert.css)
-        skin/classic/aero/global/console/console.css                     (console/console.css)
-        skin/classic/aero/global/console/console-toolbar.png             (console/console-toolbar.png)        
-        skin/classic/aero/global/console/bullet-question.png             (console/bullet-question.png)
-        skin/classic/aero/global/console/bullet-warning.png              (console/bullet-warning.png)
-        skin/classic/aero/global/console/bullet-error.png                (console/bullet-error.png)
-        skin/classic/aero/global/console/console-error-caret.gif         (console/console-error-caret.gif)
-        skin/classic/aero/global/console/console-error-dash.gif          (console/console-error-dash.gif)
 #endif

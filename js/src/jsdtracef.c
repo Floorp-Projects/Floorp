@@ -54,9 +54,13 @@ static char dempty[] = "<null>";
 char *
 jsdtrace_funcclass_name(JSFunction *fun)
 {
-    return (!FUN_INTERPRETED(fun) && fun->u.n.clasp)
-           ? (char *)fun->u.n.clasp->name
-           : dempty;
+    JSClass *clasp;
+
+    if (FUN_IS_SCRIPTED(fun))
+        return dempty;
+
+    clasp = NATIVE_FUN_GET_CLASS(FUN_TO_NATIVE(fun));
+    return clasp ? (char *) clasp->name : dempty;
 }
 
 char *
@@ -135,7 +139,7 @@ jsdtrace_function_name(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
     jsbytecode *pc;
     char *name;
 
-    atom = fun->atom;
+    atom = FUN_ATOM(fun);
     if (!atom) {
         if (fp->fun != fun || !fp->down)
             return dempty;

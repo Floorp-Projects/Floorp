@@ -202,12 +202,10 @@ def runTest(browser_config, test_config):
       #use the busted check to ensure that we aren't catching a bad time slice where the browser has
       # completed the test and closed but we haven't picked up the result yet
       if busted:
-        ffprocess.TerminateAllProcesses("firefox")
-        ffprocess.TerminateAllProcesses("crashreporter")
         print "FAIL: browser crash"
         break
       if (total_time % 60 == 0): 
-        if ffprocess.ProcessesWithNameExist("crashreporter") or not ffprocess.ProcessesWithNameExist("firefox"):
+        if ffprocess.ProcessesWithNameExist("crashreporter", "talkback", "dwwin") or not ffprocess.ProcessesWithNameExist("firefox"):
           busted = True
 
     if total_time >= timeout:
@@ -218,8 +216,17 @@ def runTest(browser_config, test_config):
 
     utils.debug("Completed test with: " + browser_results)
     #kill any remaining firefox processes
-    ffprocess.Sleep()
-    ffprocess.TerminateAllProcesses("firefox")
+    ffprocess.TerminateAllProcesses("firefox", "crashreporter", "dwwin", "talkback")
+    #check if anything is left behind
+    if ffprocess.ProcessesWithNameExist("crashreporter", "firefox", "dwwin", "talkback"): 
+      #this is for windows machines.  when attempting to send kill messages to win processes the OS
+      # always gives the process a chance to close cleanly before terminating it, this takes longer
+      # and we need to give it a little extra time to complete
+      time.sleep(10)
+      if ffprocess.ProcessesWithNameExist("crashreporter", "firefox", "dwwin", "talkback"): 
+        print "FAIL: couldn't remove existing firefox processes for clean up"
+        sys.exit(0)
+   
     all_browser_results.append(browser_results)
     all_counter_results.append(counter_results)
     

@@ -180,6 +180,9 @@ pref("browser.frames.enabled", true);
 // form submission
 pref("browser.forms.submit.backwards_compatible", true);
 
+// Number of characters to consider emphasizing for rich autocomplete results
+pref("toolkit.autocomplete.richBoundaryCutoff", 200);
+
 pref("toolkit.scrollbox.smoothScroll", true);
 pref("toolkit.scrollbox.scrollIncrement", 20);
 pref("toolkit.scrollbox.clickToScroll.scrollDelay", 150);
@@ -497,8 +500,8 @@ pref("security.enable_java",                true);
 pref("advanced.mailftp",                    false);
 pref("image.animation_mode",                "normal");
 
-// Same-origin policy for file: URIs: 0=self, 1=samedir, 2=subdir, 3=anyfile
-pref("security.fileuri.origin_policy", 2);
+// Same-origin policy for file URIs, "false" is traditional
+pref("security.fileuri.strict_origin_policy", true);
 
 // If there is ever a security firedrill that requires
 // us to block certian ports global, this is the pref 
@@ -658,6 +661,7 @@ pref("network.IDN.whitelist.li", true);
 pref("network.IDN.whitelist.lt", true);
 pref("network.IDN.whitelist.no", true);
 pref("network.IDN.whitelist.pl", true);
+pref("network.IDN.whitelist.pr", true);
 pref("network.IDN.whitelist.se", true);
 pref("network.IDN.whitelist.sh", true);
 pref("network.IDN.whitelist.th", true);

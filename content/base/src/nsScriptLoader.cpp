@@ -71,48 +71,6 @@
 #include "nsThreadUtils.h"
 
 //////////////////////////////////////////////////////////////
-//
-//////////////////////////////////////////////////////////////
-
-// If aMaybeCertPrincipal is a cert principal and aNewPrincipal is not the same
-// as aMaybeCertPrincipal, downgrade aMaybeCertPrincipal to a codebase
-// principal.  Return the downgraded principal, or aMaybeCertPrincipal if no
-// downgrade was needed.
-static already_AddRefed<nsIPrincipal>
-MaybeDowngradeToCodebase(nsIPrincipal *aMaybeCertPrincipal,
-                         nsIPrincipal *aNewPrincipal)
-{
-  NS_PRECONDITION(aMaybeCertPrincipal, "Null old principal!");
-  NS_PRECONDITION(aNewPrincipal, "Null new principal!");
-
-  nsIPrincipal *principal = aMaybeCertPrincipal;
-
-  PRBool hasCert;
-  aMaybeCertPrincipal->GetHasCertificate(&hasCert);
-  if (hasCert) {
-    PRBool equal;
-    aMaybeCertPrincipal->Equals(aNewPrincipal, &equal);
-    if (!equal) {
-      nsCOMPtr<nsIURI> uri, domain;
-      aMaybeCertPrincipal->GetURI(getter_AddRefs(uri));
-      aMaybeCertPrincipal->GetDomain(getter_AddRefs(domain));
-
-      nsContentUtils::GetSecurityManager()->GetCodebasePrincipal(uri,
-                                                                 &principal);
-      if (principal && domain) {
-        principal->SetDomain(domain);
-      }
-
-      return principal;
-    }
-  }
-
-  NS_ADDREF(principal);
-
-  return principal;
-}
-
-//////////////////////////////////////////////////////////////
 // Per-request data structure
 //////////////////////////////////////////////////////////////
 
@@ -892,20 +850,8 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
                  "Could not convert external JavaScript to Unicode!");
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // -- Merge the principal of the script file with that of the document; if
-    // the script has a non-cert principal, the document's principal should be
-    // downgraded.
-    if (channel) {
-      nsCOMPtr<nsIPrincipal> channelPrincipal;
-      nsContentUtils::GetSecurityManager()->
-        GetChannelPrincipal(channel, getter_AddRefs(channelPrincipal));
-      if (channelPrincipal) {
-        nsCOMPtr<nsIPrincipal> newPrincipal =
-          MaybeDowngradeToCodebase(mDocument->NodePrincipal(),
-                                   channelPrincipal);
-
-        mDocument->SetPrincipal(newPrincipal);
-      }
+    if (!ShouldExecuteScript(mDocument, channel)) {
+      return NS_ERROR_NOT_AVAILABLE;
     }
   }
 
@@ -920,4 +866,34 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
   aRequest->mLoading = PR_FALSE;
 
   return NS_OK;
+}
+
+/* static */
+PRBool
+nsScriptLoader::ShouldExecuteScript(nsIDocument* aDocument,
+                                    nsIChannel* aChannel)
+{
+  if (!aChannel) {
+    return PR_FALSE;
+  }
+
+  PRBool hasCert;
+  nsIPrincipal* docPrincipal = aDocument->NodePrincipal();
+  docPrincipal->GetHasCertificate(&hasCert);
+  if (!hasCert) {
+    return PR_TRUE;
+  }
+
+  nsCOMPtr<nsIPrincipal> channelPrincipal;
+  nsresult rv = nsContentUtils::GetSecurityManager()->
+    GetChannelPrincipal(aChannel, getter_AddRefs(channelPrincipal));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  NS_ASSERTION(channelPrincipal, "Gotta have a principal here!");
+
+  // If the document principal is a cert principal and is not the same
+  // as the channel principal, then we don't execute the script.
+  PRBool equal;
+  rv = docPrincipal->Equals(channelPrincipal, &equal);
+  return NS_SUCCEEDED(rv) && equal;
 }

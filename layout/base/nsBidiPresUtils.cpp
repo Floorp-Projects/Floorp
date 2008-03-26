@@ -158,6 +158,27 @@ SplitInlineAncestors(nsIFrame*     aFrame)
   return NS_OK;
 }
 
+// Convert bidi continuations to fluid continuations for a frame and all of its
+// inline ancestors.
+static void
+JoinInlineAncestors(nsIFrame* aFrame)
+{
+  nsIFrame* frame = aFrame;
+  while (frame && IsBidiSplittable(frame)) {
+    nsIFrame* next = frame->GetNextContinuation();
+    if (next) {
+      NS_ASSERTION (!frame->GetNextInFlow() || frame->GetNextInFlow() == next, 
+                    "next-in-flow is not next continuation!");
+      frame->SetNextInFlow(next);
+
+      NS_ASSERTION (!next->GetPrevInFlow() || next->GetPrevInFlow() == frame,
+                    "prev-in-flow is not prev continuation!");
+      next->SetPrevInFlow(frame);
+    }
+    frame = frame->GetParent();
+  }
+}
+
 static nsresult
 CreateBidiContinuation(nsIFrame*       aFrame,
                        nsIFrame**      aNewFrame)
@@ -426,16 +447,17 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
         // IBMBIDI - Egypt - End
 
         if ( (runLength > 0) && (runLength < fragmentLength) ) {
-          if (!EnsureBidiContinuation(frame, &nextBidi, frameIndex,
-                                      contentOffset,
-                                      contentOffset + runLength) ) {
-            break;
-          }
           if (lineNeedsUpdate) {
             AdvanceLineIteratorToFrame(frame, &lineIter, prevFrame);
             lineNeedsUpdate = PR_FALSE;
           }
           lineIter.GetLine()->MarkDirty();
+          if (!EnsureBidiContinuation(frame, &nextBidi, frameIndex,
+                                      contentOffset,
+                                      contentOffset + runLength, 
+                                      lineNeedsUpdate)) {
+            break;
+          }
           frame = nextBidi;
           contentOffset += runLength;
         } // if (runLength < fragmentLength)
@@ -465,19 +487,27 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
     runLength -= fragmentLength;
     fragmentLength -= temp;
 
-    // If the frame is at the end of a run, split all ancestor inlines that need splitting.
-    if (frame && fragmentLength <= 0 && runLength <= 0) {
-      // As long as we're on the last sibling, the parent doesn't have to be split.
-      nsIFrame* child = frame;
-      nsIFrame* parent = frame->GetParent();
-      while (parent &&
-             IsBidiSplittable(parent) &&
-             !child->GetNextSibling()) {
-        child = parent;
-        parent = child->GetParent();
+    if (frame && fragmentLength <= 0) {
+      if (runLength <= 0) {
+        // If the frame is at the end of a run, split all ancestor inlines that need splitting.
+        nsIFrame* child = frame;
+        nsIFrame* parent = frame->GetParent();
+        // As long as we're on the last sibling, the parent doesn't have to be split.
+        while (parent &&
+               IsBidiSplittable(parent) &&
+               !child->GetNextSibling()) {
+          child = parent;
+          parent = child->GetParent();
+        }
+        if (parent && IsBidiSplittable(parent))
+          SplitInlineAncestors(child);
       }
-      if (parent && IsBidiSplittable(parent))
-        SplitInlineAncestors(child);
+      else {
+        // We're not at an end of a run. If this frame's ancestors happen to have 
+        // bidi continuations, convert them into fluid continuations.
+        nsIFrame* parent = frame->GetParent();
+        JoinInlineAncestors(parent);
+      }
     }
   } // for
   return mSuccess;
@@ -1039,7 +1069,8 @@ nsBidiPresUtils::EnsureBidiContinuation(nsIFrame*       aFrame,
                                         nsIFrame**      aNewFrame,
                                         PRInt32&        aFrameIndex,
                                         PRInt32         aStart,
-                                        PRInt32         aEnd)
+                                        PRInt32         aEnd,
+                                        PRInt32&        aLineNeedsUpdate)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   NS_PRECONDITION(aFrame, "aFrame is null");
@@ -1059,6 +1090,9 @@ nsBidiPresUtils::EnsureBidiContinuation(nsIFrame*       aFrame,
       if (frame->GetPrevContinuation() == aFrame) {
         *aNewFrame = frame;
         aFrameIndex++;
+        // The frame we found might be on another line. If so, the line iterator
+        // should be updated.
+        aLineNeedsUpdate = PR_TRUE;
       }
       break;
     }

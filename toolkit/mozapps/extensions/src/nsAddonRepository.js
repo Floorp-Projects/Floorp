@@ -274,8 +274,11 @@ AddonRepository.prototype = {
             addon[node.localName] = node.textContent;
             break;
           case "rating":
-            if (node.textContent.length > 0)
-              addon.rating = parseInt(node.textContent);
+            if (node.textContent.length > 0) {
+              var rating = parseInt(node.textContent);
+              if (rating >= 0)
+                addon.rating = Math.min(5, rating);
+            }
             break;
           case "thumbnail":
             addon.thumbnailURL = node.textContent;

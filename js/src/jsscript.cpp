@@ -418,6 +418,8 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
 {
     JSContext *cx;
     JSScript *script, *oldscript;
+    JSBool ok;
+    jsbytecode *code;
     uint32 length, lineno, depth, magic;
     uint32 natoms, nsrcnotes, ntrynotes, nobjects, nregexps, i;
     uint32 prologLength, version;
@@ -517,8 +519,20 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
      * DECODE case to destroy script.
      */
     oldscript = xdr->script;
+    code = script->code;
+    if (xdr->mode == JSXDR_ENCODE) {
+        code = js_UntrapScriptCode(cx, script);
+        if (!code)
+            goto error;
+    }
+
     xdr->script = script;
-    if (!JS_XDRBytes(xdr, (char *)script->code, length * sizeof(jsbytecode)))
+    ok = JS_XDRBytes(xdr, (char *) code, length * sizeof(jsbytecode));
+
+    if (code != script->code)
+        JS_free(cx, code);
+
+    if (!ok)
         goto error;
 
     if (!JS_XDRBytes(xdr, (char *)notes, nsrcnotes * sizeof(jssrcnote)) ||
@@ -880,7 +894,7 @@ Script(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     /* If not constructing, replace obj with a new Script object. */
     if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
-        obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
+        obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL, 0);
         if (!obj)
             return JS_FALSE;
 
@@ -904,7 +918,7 @@ script_static_thaw(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj;
 
-    obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
+    obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL, 0);
     if (!obj)
         return JS_FALSE;
     vp[1] = OBJECT_TO_JSVAL(obj);
@@ -1407,7 +1421,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     uint32 mainLength, prologLength, nsrcnotes;
     JSScript *script;
     const char *filename;
-    JSFunction *fun;
+    JSFunction *funobj;
 
     /* The counts of indexed things must be checked during code generation. */
     JS_ASSERT(cg->atomList.count <= INDEX_LIMIT);
@@ -1452,22 +1466,22 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     if (cg->regexpList.length != 0)
         FinishParsedObjects(&cg->regexpList, JS_SCRIPT_REGEXPS(script));
 
-    /*
-     * We initialize fun->u.script to be the script constructed above
-     * so that the debugger has a valid FUN_SCRIPT(fun).
-     */
-    fun = NULL;
+    /* Initialize fun->script early for the debugger. */
+    funobj = NULL;
     if (cg->treeContext.flags & TCF_IN_FUNCTION) {
-        fun = cg->treeContext.fun;
-        JS_ASSERT(FUN_INTERPRETED(fun) && !FUN_SCRIPT(fun));
-        js_FreezeLocalNames(cx, fun);
-        fun->u.i.script = script;
+        JSScriptedFunction *sfun;
+
+        funobj = cg->treeContext.funobj;
+        sfun = FUN_TO_SCRIPTED(funobj);
+        JS_ASSERT(!sfun->script);
+        js_FreezeLocalNames(cx, sfun);
+        sfun->script = script;
 #ifdef CHECK_SCRIPT_OWNER
         script->owner = NULL;
 #endif
         if (cg->treeContext.flags & TCF_FUN_HEAVYWEIGHT)
-            fun->flags |= JSFUN_HEAVYWEIGHT;
-        if (fun->flags & JSFUN_HEAVYWEIGHT)
+            sfun->flags |= JSFUN_HEAVYWEIGHT;
+        if (sfun->flags & JSFUN_HEAVYWEIGHT)
             ++cg->treeContext.maxScopeDepth;
     }
 
@@ -1477,7 +1491,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
 #endif
 
     /* Tell the debugger about this compiled script. */
-    js_CallNewScriptHook(cx, script, fun);
+    js_CallNewScriptHook(cx, script, funobj);
     return script;
 
 bad:
@@ -1485,7 +1499,7 @@ bad:
     return NULL;
 }
 
-JS_FRIEND_API(void)
+void
 js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun)
 {
     JSNewScriptHook hook;
@@ -1499,7 +1513,7 @@ js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun)
     }
 }
 
-JS_FRIEND_API(void)
+void
 js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
 {
     JSDestroyScriptHook hook;
@@ -1679,7 +1693,7 @@ uintN
 js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     JSObject *obj;
-    JSFunction *fun;
+    JSScriptedFunction *sfun;
     uintN lineno;
     ptrdiff_t offset, target;
     jssrcnote *sn;
@@ -1697,9 +1711,8 @@ js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
         pc += js_CodeSpec[*pc].length;
     if (*pc == JSOP_DEFFUN) {
         GET_FUNCTION_FROM_BYTECODE(script, pc, 0, obj);
-        fun = GET_FUNCTION_PRIVATE(cx, obj);
-        JS_ASSERT(FUN_INTERPRETED(fun));
-        return fun->u.i.script->lineno;
+        sfun = FUN_TO_SCRIPTED(OBJ_TO_FUNCTION(obj));
+        return sfun->script->lineno;
     }
 
     /*

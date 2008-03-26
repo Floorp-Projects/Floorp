@@ -49,7 +49,6 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
-<script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
 #ifdef XP_MACOSX
 <!-- nsMenuBarX hides these and uses them to build the Application menu.
@@ -77,7 +76,7 @@
           accesskey="&helpMenu.accesskey;">
 #endif
       <menupopup id="menu_HelpPopup" onpopupshowing="buildHelpMenu();">
-        <menuitem oncommand="openHelp('firefox-help', 'chrome://browser/locale/help/help.rdf');"
+        <menuitem oncommand="openHelpLink('firefox-help')"
 #ifdef XP_MACOSX
                   label="&helpContentsMac.label;"
                   key="key_openHelpMacFrontend"/>
@@ -90,7 +89,7 @@
 #ifdef XP_WIN
         <menuitem label="&helpForIEUsers.label;"
                   accesskey="&helpForIEUsers.accesskey;"
-                  oncommand="openHelp('ieusers', 'chrome://browser/locale/help/help.rdf');"/>
+                  oncommand="openHelpLink('ieusers');"/>
 #endif
         <menuitem id="releaseNotes"
                   accesskey="&helpReleaseNotes.accesskey;"
@@ -116,7 +115,7 @@
 <!-- On mac, we map Cmd+Shift+/, but show Cmd+?
      (that's for en-US, it might be different for other keyboard layouts) -->
         <key id="key_openHelpMac"
-             oncommand="openHelp('firefox-help', 'chrome://browser/locale/help/help.rdf');"
+             oncommand="openHelpLink('firefox-help');"
              key="&openHelpMac.commandkey;"
              modifiers="&openHelpMac.modifiers;"/>
         <key id="key_openHelpMacFrontend"
@@ -134,7 +133,7 @@
              modifiers="&hideOtherAppsCmdMac.modifiers;"/>
 #else
         <key id="key_openHelp"
-            oncommand="openHelp('firefox-help', 'chrome://browser/locale/help/help.rdf');"
+            oncommand="openHelpLink('firefox-help');"
             keycode="&openHelp.commandkey;"/>
 #endif
     </keyset>

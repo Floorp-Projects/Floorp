@@ -756,6 +756,7 @@ fails == 413027-3.html 413027-3-ref.html
 == 414851-1.html 414851-1-ref.html
 == 416106-1.xhtml 416106-1-ref.xhtml
 == 416752-1.html 416752-1-ref.html
+== 417178-1.html 417178-1-ref.html
 == 417246-1.html 417246-1-ref.html
 == 417676.html 417676-ref.html
 == 418766-1a.html 418766-1-ref.html
@@ -765,7 +766,11 @@ fails == 413027-3.html 413027-3-ref.html
 == 420069-1.html 420069-1-ref.html
 == 420069-2.html 420069-2-ref.html
 == 420351-1.html 420351-1-ref.html
+== 421069.html 421069-ref.html
+== 421069.html 421069-ref2.html
+== 421069-ref.html 421069-ref2.html
 == 421234-1.html 421234-1-ref.html
 == 421419-1.html 421419-1-ref.html
 == 422394-1.html 422394-1-ref.html
-
+== 423130-1.html 423130-1-ref.html
+== 423599-1.html 423599-1-ref.html

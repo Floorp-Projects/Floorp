@@ -48,14 +48,17 @@
             dlgbuttons="accept,cancel,help"
             onbeforeaccept="return gConnectionsDialog.beforeAccept();"
             onload="gConnectionsDialog.checkForSystemProxy();"
+            ondialoghelp="openPrefsHelp()"
 #ifdef XP_MACOSX
             style="width: &window.macWidth; !important;">
 #else
             style="width: &window.width; !important;">
 #endif
 
+  <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
+
   <prefpane id="ConnectionsDialogPane"
-            helpTopic="prefs-connection-settings" helpURI="chrome://browser/locale/help/help.rdf">
+            helpTopic="prefs-connection-settings">
 
     <preferences>
       <preference id="network.proxy.type"         name="network.proxy.type"         type="int" onchange="gConnectionsDialog.proxyTypeChanged();"/>

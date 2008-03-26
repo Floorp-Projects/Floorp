@@ -651,6 +651,7 @@ protected:
   static const PRInt32 kAutoCompleteIndex_BookmarkTitle;
   static const PRInt32 kAutoCompleteIndex_Tags;
   nsCOMPtr<mozIStorageStatement> mDBAutoCompleteQuery; //  kAutoCompleteIndex_* results
+  nsCOMPtr<mozIStorageStatement> mDBPreviousQuery; //  kAutoCompleteIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBAdaptiveQuery; //  kAutoCompleteIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBFeedbackIncrease;
 
@@ -680,11 +681,13 @@ protected:
 
   nsDataHashtable<nsStringHashKey, PRBool> mCurrentResultURLs;
   PRInt32 mCurrentChunkOffset;
+  PRInt32 mPreviousChunkOffset;
 
   nsDataHashtable<nsTrimInt64HashKey, PRBool> mLivemarkFeedItemIds;
   nsDataHashtable<nsStringHashKey, PRBool> mLivemarkFeedURIs;
 
   nsresult AutoCompleteFullHistorySearch(PRBool* aHasMoreResults);
+  nsresult AutoCompletePreviousSearch();
   nsresult AutoCompleteAdaptiveSearch();
 
   /**

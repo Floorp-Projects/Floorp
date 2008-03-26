@@ -53,8 +53,10 @@
 <overlay id="ApplicationsPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <prefpane id="paneApplications" onpaneload="gApplicationsPane.init();" flex="1"
-            helpTopic="prefs-applications" helpURI="chrome://browser/locale/help/help.rdf">
+  <prefpane id="paneApplications"
+            onpaneload="gApplicationsPane.init();"
+            flex="1"
+            helpTopic="prefs-applications">
 
     <preferences id="feedsPreferences">
       <preference id="browser.feeds.handler"

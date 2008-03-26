@@ -43,7 +43,7 @@
  * Interface for the native event system layer.  This interface is designed
  * to be used on the main application thread only.
  */
-[uuid(95f1f2b3-051b-4603-bb91-7058191dfc1e)]
+[uuid(501403e9-a091-4780-ba55-cfd1e21287a1)]
 interface nsIAppShell : nsISupports
 {
   /**
@@ -96,4 +96,9 @@ interface nsIAppShell : nsISupports
    * resumeNative() may be nested.  On some platforms this will be a no-op.
    */
   void resumeNative();
+
+  /**
+   * The current event loop nesting level.
+   */
+  readonly attribute unsigned long eventloopNestingLevel;
 };

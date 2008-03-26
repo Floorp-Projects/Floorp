@@ -824,48 +824,6 @@ mozStorageConnection::ProgressHandler()
 }
 
 /**
- ** Utilities
- **/
-
-NS_IMETHODIMP
-mozStorageConnection::BackupDB(const nsAString &aFileName,
-                               nsIFile *aParentDirectory,
-                               nsIFile **backup)
-{
-    NS_ASSERTION(mDatabaseFile, "No database file to backup!");
-
-    nsresult rv;
-    nsCOMPtr<nsIFile> parentDir = aParentDirectory;
-    if (!parentDir) {
-        // This argument is optional, and defaults to the same parent directory
-        // as the current file.
-        rv = mDatabaseFile->GetParent(getter_AddRefs(parentDir));
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    nsCOMPtr<nsIFile> backupDB;
-    rv = parentDir->Clone(getter_AddRefs(backupDB));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = backupDB->Append(aFileName);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = backupDB->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsAutoString fileName;
-    rv = backupDB->GetLeafName(fileName);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = backupDB->Remove(PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    backupDB.swap(*backup);
-
-    return mDatabaseFile->CopyTo(parentDir, fileName);
-}
-
-/**
  ** Other bits
  **/
 void

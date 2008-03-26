@@ -33,6 +33,14 @@ enum AVScanState
   AVSCAN_TIMEDOUT
 };
 
+enum AVCheckPolicyState
+{
+  AVPOLICY_DOWNLOAD,
+  AVPOLICY_PROMPT,
+  AVPOLICY_BLOCKED
+};
+
+
 // See nsDownloadScanner.cpp for declaration and definition
 class nsDownloadScannerWatchdog;
 
@@ -43,6 +51,7 @@ public:
   ~nsDownloadScanner();
   nsresult Init();
   nsresult ScanDownload(nsDownload *download);
+  AVCheckPolicyState CheckPolicy(nsIURI *aSource, nsIURI *aTarget);
 
 private:
   PRBool mHaveAVScanner;
@@ -87,6 +96,7 @@ private:
     nsString mOrigin;
     // Also true if it is an ftp download
     PRBool mIsHttpDownload;
+    PRBool mSkipSource;
     PRBool mIsReadOnlyRequest;
 
     /* @summary Sets the Scan's state to newState if the current state is

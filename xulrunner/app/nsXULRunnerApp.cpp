@@ -253,6 +253,9 @@ InstallXULApp(nsIFile* aXULRunnerDir,
 
 static const GREProperty kGREProperties[] = {
   { "xulrunner", "true" }
+#ifdef TARGET_XPCOM_ABI
+  , { "abi", TARGET_XPCOM_ABI }
+#endif
 #ifdef MOZ_JAVAXPCOM
   , { "javaxpcom", "1" }
 #endif

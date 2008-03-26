@@ -45,10 +45,13 @@
 <prefwindow id="AdvancedJSDialog" type="child"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             title="&advancedJSDialog.title;"
-            dlgbuttons="accept,cancel,help">
+            dlgbuttons="accept,cancel,help"
+            ondialoghelp="openPrefsHelp()">
+
+  <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
 
   <prefpane id="AdvancedJSDialogPane"
-            helpTopic="prefs-advanced-javascript" helpURI="chrome://browser/locale/help/help.rdf">
+            helpTopic="prefs-advanced-javascript">
 
     <preferences>
      <preference id="dom.event.contextmenu.enabled"  name="dom.event.contextmenu.enabled"  type="bool"/>

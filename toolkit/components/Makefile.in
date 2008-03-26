@@ -61,6 +61,7 @@ DIRS += \
 	apppicker \
 	filepicker \
 	console \
+	exthelper \
 	viewconfig \
 	typeaheadfind \
 	$(NULL)
@@ -73,6 +74,10 @@ endif
 
 ifdef MOZ_FEEDS
 DIRS += feeds
+endif
+
+ifdef MOZ_HELP_VIEWER
+DIRS += help
 endif
 
 ifdef MOZ_PLACES
@@ -111,10 +116,6 @@ DIRS +=	history
 endif # MOZ_PLACES
 endif # MOZ_SUITE
 endif # MOZ_THUNDERBIRD
-
-ifdef MOZ_XUL
-DIRS += help
-endif
 
 ifndef MOZ_SUITE
 # XXX Suite doesn't want these just yet

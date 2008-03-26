@@ -514,6 +514,9 @@ protected:
     // Check whether aURI should inherit our security context
     static nsresult URIInheritsSecurityContext(nsIURI* aURI, PRBool* aResult);
 
+    // Check whether aURI is a URI_IS_LOCAL_FILE or not
+    static PRBool URIIsLocalFile(nsIURI *aURI);
+
     // Check whether aURI is about:blank
     static PRBool IsAboutBlank(nsIURI* aURI);
 

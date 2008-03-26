@@ -114,8 +114,11 @@ richlistitem[selected="true"]:not([opType]) .descriptionCrop {
 .addonIcon {
   -moz-margin-end: 2px;
   width: 32px;
-  max-width: 32px;
   height: 32px;
+}
+
+.addonIcon > image {
+  max-width: 32px;
   max-height: 32px;
 }
 
@@ -263,33 +266,33 @@ richlistitem[opType="needs-uninstall"] .notifyBadge {
 
 .addonRating[rating] {
   display: -moz-box;
-  width: 63px;
+  width: 59px;
   height: 11px;
   list-style-image: url("chrome://mozapps/skin/extensions/ratings.png");
 }
 
 .addonRating[rating="0"] {
-  -moz-image-region: rect(0px 63px 11px 0px);
+  -moz-image-region: rect(0px 59px 11px 0px);
 }
 
 .addonRating[rating="1"] {
-  -moz-image-region: rect(11px 63px 22px 0px);
+  -moz-image-region: rect(12px 59px 23px 0px);
 }
 
 .addonRating[rating="2"] {
-  -moz-image-region: rect(22px 63px 33px 0px);
+  -moz-image-region: rect(24px 59px 35px 0px);
 }
 
 .addonRating[rating="3"] {
-  -moz-image-region: rect(33px 63px 44px 0px);
+  -moz-image-region: rect(36px 59px 47px 0px);
 }
 
 .addonRating[rating="4"] {
-  -moz-image-region: rect(44px 63px 55px 0px);
+  -moz-image-region: rect(48px 59px 59px 0px);
 }
 
 .addonRating[rating="5"] {
-  -moz-image-region: rect(55px 63px 66px 0px);
+  -moz-image-region: rect(60px 59px 71px 0px);
 }
 
 .addonType image {
@@ -336,25 +339,24 @@ vbox[typeName="status"][type="header-recommended"] {
   margin: 0;
   border: 0;
   padding: 0;
-  width: 19px;
-  height: 19px;
-  min-width: 19px;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  list-style-image: url("chrome://mozapps/skin/extensions/searchIcons.png");
+}
+
+.searchbox-search {
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+
+.searchbox-cancel {
+  -moz-image-region: rect(0px 32px 16px 16px);
 }
 
 .searchbox-search .button-box,
 .searchbox-cancel .button-box {
   border: 0px;
   padding: 0px;
-}
-
-.searchbox-search {
-  list-style-image: url(chrome://mozapps/skin/extensions/searchIcons.png);
-  -moz-image-region: rect(0px 38px 19px 19px);
-}
-
-.searchbox-cancel {
-  list-style-image: url(chrome://mozapps/skin/extensions/searchIcons.png);
-  -moz-image-region: rect(0px 57px 19px 38px);
 }
 
 #progressBox {

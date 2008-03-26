@@ -1,4 +1,5 @@
-ar
+af
+ar linux win32
 be
 ca
 cs
@@ -13,19 +14,22 @@ eu
 fi
 fr
 fy-NL
-ga-IE
 gu-IN
-he
+he linux win32
 hu
+id
 it
 ja-JP-mac osx
 ja win32 linux
 ka
 ko
+ku
 lt
 mk
+mn
 nb-NO
 nl
+nn-NO
 pa-IN
 pl
 pt-BR
@@ -34,6 +38,7 @@ ro
 ru
 sk
 sq
+sr
 sv-SE
 tr
 uk

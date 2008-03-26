@@ -107,11 +107,17 @@
 #include "nsIDocShellTreeNode.h"
 
 #include "nsIMarkupDocumentViewer.h"
+#include "nsIFocusEventSuppressor.h"
 
 #if defined(XP_MACOSX)
 #include "nsIMenuBar.h"
 #define USE_NATIVE_MENUS
 #endif
+
+static nsWebShellWindow* gCurrentlyFocusedWindow = nsnull;
+static nsWebShellWindow* gFocusedWindowBeforeSuppression = nsnull;
+static PRBool gFocusSuppressed = PR_FALSE;
+static PRUint32 gWebShellWindowCount = 0;
 
 /* Define Class IDs */
 static NS_DEFINE_CID(kWindowCID,           NS_WINDOW_CID);
@@ -124,11 +130,25 @@ static NS_DEFINE_CID(kMenuBarCID,          NS_MENUBAR_CID);
 nsWebShellWindow::nsWebShellWindow() : nsXULWindow()
 {
   mSPTimerLock = PR_NewLock();
+  if (++gWebShellWindowCount == 1) {
+    nsCOMPtr<nsIFocusEventSuppressorService> suppressor =
+      do_GetService(NS_NSIFOCUSEVENTSUPPRESSORSERVICE_CONTRACTID);
+    if (suppressor) {
+      suppressor->AddObserverCallback(&nsWebShellWindow::SuppressFocusEvents);
+    }
+  }
 }
 
 
 nsWebShellWindow::~nsWebShellWindow()
 {
+  --gWebShellWindowCount;
+  if (gCurrentlyFocusedWindow == this) {
+    gCurrentlyFocusedWindow = nsnull;
+  }
+  if (gFocusedWindowBeforeSuppression == this) {
+    gFocusedWindowBeforeSuppression = nsnull;
+  }
   if (mWindow)
     mWindow->SetClientData(0);
   mWindow = nsnull; // Force release here.
@@ -422,7 +442,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
       }
       
       case NS_ACTIVATE: {
-#ifdef DEBUG_saari
+#if defined(DEBUG_saari) || defined(DEBUG_smaug)
         printf("nsWebShellWindow::NS_ACTIVATE\n");
 #endif
         nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_GetInterface(docShell);
@@ -433,7 +453,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
       }
 
       case NS_DEACTIVATE: {
-#ifdef DEBUG_saari
+#if defined(DEBUG_saari) || defined(DEBUG_smaug)
         printf("nsWebShellWindow::NS_DEACTIVATE\n");
 #endif
 
@@ -450,9 +470,13 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
       }
       
       case NS_GOTFOCUS: {
-#ifdef DEBUG_saari
+#if defined(DEBUG_saari) || defined(DEBUG_smaug)
         printf("nsWebShellWindow::GOTFOCUS\n");
 #endif
+        gCurrentlyFocusedWindow = eventWindow;
+        if (gFocusSuppressed) {
+          break;
+        }
         nsCOMPtr<nsIDOMDocument> domDocument;
         nsCOMPtr<nsPIDOMWindow> piWin = do_GetInterface(docShell);
         if (!piWin) {
@@ -499,6 +523,15 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
 
             break;
           }
+        }
+        break;
+      }
+      case NS_LOSTFOCUS: {
+#if defined(DEBUG_saari) || defined(DEBUG_smaug)
+        printf("nsWebShellWindow::LOSTFOCUS\n");
+#endif
+        if (gCurrentlyFocusedWindow == eventWindow) {
+          gCurrentlyFocusedWindow = nsnull;
         }
         break;
       }
@@ -838,5 +871,45 @@ NS_IMETHODIMP nsWebShellWindow::Destroy()
   mSPTimerLock = nsnull;
   }
   return nsXULWindow::Destroy();
+}
+
+void
+nsWebShellWindow::SuppressFocusEvents(PRBool aSuppress)
+{
+  if (aSuppress) {
+    gFocusSuppressed = PR_TRUE;
+    gFocusedWindowBeforeSuppression = gCurrentlyFocusedWindow;
+    return;
+  }
+
+  gFocusSuppressed = PR_FALSE;
+  if (gFocusedWindowBeforeSuppression == gCurrentlyFocusedWindow) {
+    return;
+  }
+
+  // Backup what is focused before we send the blur. If the
+  // blur causes a focus change, keep that new focus change,
+  // don't overwrite with the old "currently focused window".
+  nsWebShellWindow* currentFocusBeforeBlur = gCurrentlyFocusedWindow;
+
+  if (gFocusedWindowBeforeSuppression) {
+    nsCOMPtr<nsIWidget> widget = gFocusedWindowBeforeSuppression->mWindow;
+    if (widget) {
+      nsRefPtr<nsWebShellWindow> window = gFocusedWindowBeforeSuppression;
+      nsGUIEvent lostfocus(PR_TRUE, NS_LOSTFOCUS, widget);
+      window->HandleEvent(&lostfocus);
+    }
+  }
+
+  // Send NS_GOTFOCUS to the widget that we think should be focused.
+  if (gCurrentlyFocusedWindow &&
+      gCurrentlyFocusedWindow == currentFocusBeforeBlur) {
+    nsCOMPtr<nsIWidget> widget = gCurrentlyFocusedWindow->mWindow;
+    if (widget) {
+      nsRefPtr<nsWebShellWindow> window = gCurrentlyFocusedWindow;
+      nsGUIEvent gotfocus(PR_TRUE, NS_GOTFOCUS, widget);
+      window->HandleEvent(&gotfocus);
+    }
+  }
 }
 

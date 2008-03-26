@@ -2993,11 +2993,7 @@ nsUrlClassifierDBServiceWorker::OpenDb()
 
   nsCOMPtr<mozIStorageConnection> connection;
   rv = storageService->OpenDatabase(mDBFile, getter_AddRefs(connection));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool ready;
-  connection->GetConnectionReady(&ready);
-  if (!ready) {
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
     // delete the db and try opening again
     rv = mDBFile->Remove(PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3005,8 +3001,8 @@ nsUrlClassifierDBServiceWorker::OpenDb()
     newDB = PR_TRUE;
 
     rv = storageService->OpenDatabase(mDBFile, getter_AddRefs(connection));
-    NS_ENSURE_SUCCESS(rv, rv);
   }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (!newDB) {
     PRInt32 databaseVersion;

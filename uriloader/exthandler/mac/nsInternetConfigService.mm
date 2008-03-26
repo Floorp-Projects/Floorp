@@ -53,7 +53,22 @@
 #include "nsMimeTypes.h"
 
 #import <Carbon/Carbon.h>
+#import <Foundation/NSArray.h>
+#import <Foundation/NSString.h>
 
+/* This is an undocumented interface that seems to exist at least in 10.4 and 10.5 */
+@class NSURLFileTypeMappingsInternal;
+
+@interface NSURLFileTypeMappings : NSObject
+{
+    NSURLFileTypeMappingsInternal *_internal;
+}
+
++ (NSURLFileTypeMappings*)sharedMappings;
+- (NSString*)MIMETypeForExtension:(NSString*)fp8;
+- (NSString*)preferredExtensionForMIMEType:(NSString*)fp8;
+- (NSArray*)extensionsForMIMEType:(NSString*)fp8;
+@end
 
 // helper converter function.....
 static void ConvertCharStringToStr255(const char* inString, Str255& outString)
@@ -289,6 +304,8 @@ nsresult nsInternetConfigService::GetMappingForMIMEType(const char *mimetype, co
 
 nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIMIMEInfo ** mimeinfo)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   // create a mime info object and we'll fill it in based on the values from IC mapping entry
   nsresult  rv = NS_OK;
   nsRefPtr<nsMIMEInfoMac> info (new nsMIMEInfoMac());
@@ -308,11 +325,32 @@ nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIM
       else
         info->SetMIMEType(NS_LITERAL_CSTRING(APPLICATION_OCTET_STREAM));
     }
-    
-    // convert entry.extension which is a Str255 
-    // don't forget to remove the '.' in front of the file extension....
-    nsCAutoString temp((char *)&entry.extension[2], entry.extension[0] > 0 ? (int)entry.extension[0]-1 : 0);
-    info->AppendExtension(temp);
+
+    nsCAutoString temp;
+
+    /* The internet config service seems to return the first extension
+     * from the map's list; however, that first extension is sometimes
+     * not the best one to use.  Specifically, for image/jpeg, the
+     * internet config service will return "jfif", whereas the
+     * preferred extension is really "jpg".  So, don't believe IC's
+     * lies, and ask NSURLFileTypeMappings instead (see bug 414201).
+     */
+    NSURLFileTypeMappings *map = [NSURLFileTypeMappings sharedMappings];
+    NSString *mimeStr = [NSString stringWithCString:mimetype.get() encoding:NSASCIIStringEncoding];
+    NSString *realExtension = map ? [map preferredExtensionForMIMEType:mimeStr] : NULL;
+
+    if (realExtension) {
+      temp.Assign([realExtension cStringUsingEncoding:NSASCIIStringEncoding]);
+
+      info->AppendExtension(temp);
+    } else {
+      // convert entry.extension which is a Str255 
+      // don't forget to remove the '.' in front of the file extension....
+      temp.Assign((char *)&entry.extension[2], entry.extension[0] > 0 ? (int)entry.extension[0]-1 : 0);
+
+      info->AppendExtension(temp);
+    }
+
     info->SetMacType(entry.fileType);
     info->SetMacCreator(entry.fileCreator);
     temp.Assign((char *) &entry.entryName[1], entry.entryName[0]);
@@ -350,6 +388,8 @@ nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIM
     rv = NS_ERROR_FAILURE;
    
   return rv;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /* void FillInMIMEInfo (in string mimetype, in string fileExtension, out nsIMIMEInfo mimeinfo); */
