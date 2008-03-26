@@ -109,6 +109,260 @@ struct DCFromContext {
     PRBool needsRelease;
 };
 
+
+/**********************************************************************
+ *
+ * class FontFamily
+ *
+ **********************************************************************/
+static nsresult
+ReadCMAP(HDC hdc, FontEntry *aFontEntry)
+{
+    const PRUint32 kCMAP = (('c') | ('m' << 8) | ('a' << 16) | ('p' << 24));
+
+    DWORD len = GetFontData(hdc, kCMAP, 0, nsnull, 0);
+    if (len == GDI_ERROR || len == 0) // not a truetype font --
+        return NS_ERROR_FAILURE;      // we'll treat it as a symbol font
+
+    nsAutoTArray<PRUint8,16384> buffer;
+    if (!buffer.AppendElements(len))
+        return NS_ERROR_OUT_OF_MEMORY;
+    PRUint8 *buf = buffer.Elements();
+
+    DWORD newLen = GetFontData(hdc, kCMAP, 0, buf, len);
+    NS_ENSURE_TRUE(newLen == len, NS_ERROR_FAILURE);
+    
+    return gfxFontUtils::ReadCMAP(buf, len, aFontEntry->mCharacterMap,
+                                  aFontEntry->mUnicodeFont, aFontEntry->mSymbolFont);
+}
+
+struct FamilyAddStyleProcData {
+    HDC dc;
+    FontFamily *ff;
+};
+
+int CALLBACK 
+FontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
+                                const NEWTEXTMETRICEXW *nmetrics,
+                                DWORD fontType, LPARAM data)
+{
+    const NEWTEXTMETRICW& metrics = nmetrics->ntmTm;
+    LOGFONTW logFont = lpelfe->elfLogFont;
+
+    FamilyAddStyleProcData *faspd = reinterpret_cast<FamilyAddStyleProcData*>(data);
+    FontFamily *ff = faspd->ff;
+    HDC hdc = faspd->dc;
+
+    // Some fonts claim to support things > 900, but we don't so clamp the sizes
+    logFont.lfWeight = PR_MAX(PR_MIN(logFont.lfWeight, 900), 100);
+
+    FontEntry *fe = nsnull;
+    for (PRUint32 i = 0; i < ff->mVariations.Length(); ++i) {
+        fe = ff->mVariations[i];
+
+        // check if we already know about this face
+        if (fe->mWeight == logFont.lfWeight &&
+            fe->mItalic == (logFont.lfItalic == 0xFF)) {
+            // update the charset bit here since this could be different
+            fe->mCharset[metrics.tmCharSet] = 1;
+            return 1; 
+        }
+    }
+
+    fe = new FontEntry(ff->mName);
+    ff->mVariations.AppendElement(fe);
+
+    fe->mItalic = (logFont.lfItalic == 0xFF);
+    fe->mWeight = logFont.lfWeight;
+
+    if (metrics.ntmFlags & NTM_TYPE1)
+        fe->mIsType1 = fe->mForceGDI = PR_TRUE;
+
+    // fontType == TRUETYPE_FONTTYPE when (metrics.ntmFlags & NTM_TT_OPENTYPE)
+    if (fontType == TRUETYPE_FONTTYPE || metrics.ntmFlags & (NTM_PS_OPENTYPE))
+        fe->mTrueType = PR_TRUE;
+
+    // mark the charset bit
+    fe->mCharset[metrics.tmCharSet] = 1;
+
+    fe->mWindowsFamily = logFont.lfPitchAndFamily & 0xF0;
+    fe->mWindowsPitch = logFont.lfPitchAndFamily & 0x0F;
+
+    if (nmetrics->ntmFontSig.fsUsb[0] != 0x00000000 &&
+        nmetrics->ntmFontSig.fsUsb[1] != 0x00000000 &&
+        nmetrics->ntmFontSig.fsUsb[2] != 0x00000000 &&
+        nmetrics->ntmFontSig.fsUsb[3] != 0x00000000) {
+
+        // set the unicode ranges
+        PRUint32 x = 0;
+        for (PRUint32 i = 0; i < 4; ++i) {
+            DWORD range = nmetrics->ntmFontSig.fsUsb[i];
+            for (PRUint32 k = 0; k < 32; ++k) {
+                fe->mUnicodeRanges[x++] = (range & (1 << k)) != 0;
+            }
+        }
+    }
+
+    // read in the character map
+    logFont.lfCharSet = DEFAULT_CHARSET;
+    HFONT font = CreateFontIndirectW(&logFont);
+
+    NS_ASSERTION(font, "This font creation should never ever ever fail");
+    if (font) {
+        HFONT oldFont = (HFONT)SelectObject(hdc, font);
+
+        // ReadCMAP may change the values of mUnicodeFont and mSymbolFont
+        if (NS_FAILED(ReadCMAP(hdc, fe))) {
+            // Type1 fonts aren't necessarily Unicode but
+            // this is the best guess we can make here
+            if (fe->mIsType1)
+                fe->mUnicodeFont = PR_TRUE;
+            else
+                fe->mUnicodeFont = PR_FALSE;
+
+            // For fonts where we failed to read the character map,
+            // we should use GDI to slowly determine their cmap lazily
+            fe->mForceGDI = PR_TRUE;
+
+            //printf("%d, %s failed to get cmap\n", aFontEntry->mIsType1, NS_ConvertUTF16toUTF8(aFontEntry->mName).get());
+        }
+
+        SelectObject(hdc, oldFont);
+        DeleteObject(font);
+    }
+
+    return 1;
+}
+
+// general cmap reading routines moved to gfxFontUtils.cpp
+void
+FontFamily::FindStyleVariations()
+{
+    mHasStyles = PR_TRUE;
+
+    HDC hdc = GetDC(nsnull);
+
+    LOGFONTW logFont;
+    memset(&logFont, 0, sizeof(LOGFONTW));
+    logFont.lfCharSet = DEFAULT_CHARSET;
+    logFont.lfPitchAndFamily = 0;
+    PRUint32 l = PR_MIN(mName.Length(), LF_FACESIZE - 1);
+    memcpy(logFont.lfFaceName,
+           nsPromiseFlatString(mName).get(),
+           l * sizeof(PRUnichar));
+    logFont.lfFaceName[l] = 0;
+
+    FamilyAddStyleProcData faspd;
+    faspd.dc = hdc;
+    faspd.ff = this;
+
+    EnumFontFamiliesExW(hdc, &logFont, (FONTENUMPROCW)FontFamily::FamilyAddStylesProc, (LPARAM)&faspd, 0);
+
+    ReleaseDC(nsnull, hdc);
+
+    // Look for font families without bold variations and add a FontEntry
+    // with synthetic bold (weight 600) for them.
+    FontEntry *darkestItalic = nsnull;
+    FontEntry *darkestNonItalic = nsnull;
+    PRUint8 highestItalic = 0, highestNonItalic = 0;
+    for (PRUint32 i = 0; i < mVariations.Length(); i++) {
+        FontEntry *fe = mVariations[i];
+        if (fe->mItalic) {
+            if (!darkestItalic || fe->mWeight > darkestItalic->mWeight)
+                darkestItalic = fe;
+        } else {
+            if (!darkestNonItalic || fe->mWeight > darkestNonItalic->mWeight)
+                darkestNonItalic = fe;
+        }
+    }
+
+    if (darkestItalic && darkestItalic->mWeight < 600) {
+        FontEntry *newEntry = new FontEntry(*darkestItalic);
+        newEntry->mWeight = 600;
+        mVariations.AppendElement(newEntry);
+    }
+    if (darkestNonItalic && darkestNonItalic->mWeight < 600) {
+        FontEntry *newEntry = new FontEntry(*darkestNonItalic);
+        newEntry->mWeight = 600;
+        mVariations.AppendElement(newEntry);
+    }
+}
+
+
+FontEntry *
+FontFamily::FindFontEntry(const gfxFontStyle& aFontStyle)
+{
+    if (!mHasStyles)
+        FindStyleVariations();
+
+    PRUint8 bestMatch = 0;
+    PRBool italic = (aFontStyle.style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0;
+
+    FontEntry *weightList[10] = { 0 };
+    for (PRUint32 j = 0; j < 2; j++) {
+        PRBool matchesSomething = PR_FALSE;
+        // build up an array of weights that match the italicness we're looking for
+        for (PRUint32 i = 0; i < mVariations.Length(); i++) {
+            FontEntry *fe = mVariations[i];
+            const PRUint8 weight = (fe->mWeight / 100);
+            if (fe->mItalic == italic) {
+                weightList[weight] = fe;
+                matchesSomething = PR_TRUE;
+            }
+        }
+        if (matchesSomething)
+            break;
+        italic = !italic;
+    }
+
+    PRInt8 baseWeight, weightDistance;
+    aFontStyle.ComputeWeightAndOffset(&baseWeight, &weightDistance);
+
+    // 500 isn't quite bold so we want to treat it as 400 if we don't
+    // have a 500 weight
+    if (baseWeight == 5 && weightDistance == 0) {
+        // If we have a 500 weight then use it
+        if (weightList[5])
+            return weightList[5];
+
+        // Otherwise treat as 400
+        baseWeight = 4;
+    }
+
+    PRInt8 matchBaseWeight = 0;
+    PRInt8 direction = (baseWeight > 5) ? 1 : -1;
+    for (PRInt8 i = baseWeight; ; i += direction) {
+        if (weightList[i]) {
+            matchBaseWeight = i;
+            break;
+        }
+
+        // if we've reached one side without finding a font,
+        // go the other direction until we find a match
+        if (i == 1 || i == 9)
+            direction = -direction;
+    }
+
+    FontEntry *matchFE;
+    const PRInt8 absDistance = abs(weightDistance);
+    direction = (weightDistance >= 0) ? 1 : -1;
+    for (PRInt8 i = matchBaseWeight, k = 0; i < 10 && i > 0; i += direction) {
+        if (weightList[i]) {
+            matchFE = weightList[i];
+            k++;
+        }
+        if (k > absDistance)
+            break;
+    }
+
+    if (!matchFE)
+        matchFE = weightList[matchBaseWeight];
+
+    NS_ASSERTION(matchFE, "we should always be able to return something here");
+    return matchFE;
+}
+
+
 /**********************************************************************
  *
  * class gfxWindowsFont
@@ -442,7 +696,7 @@ gfxWindowsFontGroup::GroupFamilyListToArrayList(nsTArray<nsRefPtr<FontEntry> > *
 
     PRUint32 len = fonts.Length();
     for (PRUint32 i = 0; i < len; ++i) {
-        nsRefPtr<FontEntry> fe = gfxWindowsPlatform::GetPlatform()->FindFontEntry(fonts[i], &mStyle);
+        nsRefPtr<FontEntry> fe = gfxWindowsPlatform::GetPlatform()->FindFontEntry(fonts[i], mStyle);
         list->AppendElement(fe);
     }
 }
@@ -458,7 +712,7 @@ gfxWindowsFontGroup::FamilyListToArrayList(const nsString& aFamilies,
     PRUint32 len = fonts.Length();
     for (PRUint32 i = 0; i < len; ++i) {
         const nsAutoString& str = fonts[i];
-        nsRefPtr<FontEntry> fe = gfxWindowsPlatform::GetPlatform()->FindFontEntry(str, &mStyle);
+        nsRefPtr<FontEntry> fe = gfxWindowsPlatform::GetPlatform()->FindFontEntry(str, mStyle);
         list->AppendElement(fe);
     }
 }
@@ -477,7 +731,7 @@ gfxWindowsFontGroup::gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFo
             NS_ERROR("Failed to create font group");
             return;
         }
-        nsRefPtr<FontEntry> fe = gfxWindowsPlatform::GetPlatform()->FindFontEntry(nsDependentString(logFont.lfFaceName), aStyle);
+        nsRefPtr<FontEntry> fe = gfxWindowsPlatform::GetPlatform()->FindFontEntry(nsDependentString(logFont.lfFaceName), *aStyle);
         mFontEntries.AppendElement(fe);
     }
 
@@ -737,7 +991,7 @@ struct ScriptPropertyEntry {
 static const struct ScriptPropertyEntry gScriptToText[] =
 {
     { nsnull, nsnull },
-    { "LANG_ARABIC",     "ara" },
+    { "LANG_ARABIC",     "ar" }, // ara
     { "LANG_BULGARIAN",  "bul" },
     { "LANG_CATALAN",    "cat" },
     { "LANG_CHINESE",    "zh-CN" }, //XXX right lang code?
@@ -1303,6 +1557,13 @@ public:
         if ((ch >= 0xE000  && ch <= 0xF8FF) || 
             (ch >= 0xF0000 && ch <= 0x10FFFD))
             return selectedFont;
+
+        // check out the style's language group
+        if (!selectedFont) {
+            nsAutoTArray<nsRefPtr<FontEntry>, 5> fonts;
+            this->GetPrefFonts(mGroup->GetStyle()->langGroup.get(), fonts);
+            selectedFont = WhichFontSupportsChar(fonts, ch);
+        }
 
         // otherwise search prefs
         if (!selectedFont) {
