@@ -107,7 +107,8 @@ js_UntrapScriptCode(JSContext *cx, JSScript *script)
          trap = (JSTrap *)trap->links.next) {
         if (trap->script == script) {
             if (code == script->code) {
-                code = JS_malloc(cx, script->length * sizeof(jsbytecode));
+                code = (jsbytecode *)
+                       JS_malloc(cx, script->length * sizeof(jsbytecode));
                 if (!code)
                     break;
                 memcpy(code, script->code,
