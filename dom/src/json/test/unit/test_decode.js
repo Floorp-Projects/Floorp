@@ -153,6 +153,50 @@ function test_files() {
   do_check_eq(x[17], 2e+00);
   do_check_eq(x[18], 2e-00);
   do_check_eq(x[19], "rosebud");
+  
+  // test invalid input
+  //
+  // We allow some minor JSON infractions, like trailing commas
+  // Those are special-cased below, leaving the original sequence
+  // of failure's from Crockford intact.
+  //
+  // Section 4 of RFC 4627 allows this tolerance.
+  //
+  for (var i = 1; i <= 34; ++i) {
+    var path = "/dom/src/json/test/fail" + i + ".json";
+    try {
+      dump(path +"\n");
+      x = read_file(path);
+      if (i == 4) {
+        // ["extra comma",]
+        do_check_eq(x[0], "extra comma");
+        do_check_eq(x.length, 1);
+      } else if (i == 9) {
+        // {"Extra comma": true,}
+        do_check_eq(x["Extra comma"], true);
+      } else if (i == 13) {
+        // {"Numbers cannot have leading zeroes": 013}
+        do_check_eq(x["Numbers cannot have leading zeroes"], 13);
+      } else if (i == 18) {
+        // [[[[[[[[[[[[[[[[[[[["Too deep"]]]]]]]]]]]]]]]]]]]]
+        var t = x[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0];
+        do_check_eq(t, "Too deep");
+      } else if (i == 25) {
+        // ["	tab	character	in	string	"]
+        do_check_eq(x[0], "\ttab\tcharacter\tin\tstring\t");
+      } else if (i == 27) {
+        do_check_eq(x[0], "line\nbreak");
+      } else {
+
+        do_throw("UNREACHED");
+
+      }
+
+    } catch (ex) {
+      // expected from parsing invalid JSON
+    }
+  }
+  
 }
 
 function run_test() {

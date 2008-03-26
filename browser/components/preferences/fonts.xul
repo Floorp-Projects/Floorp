@@ -52,6 +52,7 @@
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             title="&fontsDialog.title;"
             dlgbuttons="accept,cancel,help"
+            ondialoghelp="openPrefsHelp()"
 #ifdef XP_UNIX
 #ifdef XP_MACOSX
             style="width: &window.macWidth; !important;">
@@ -62,8 +63,10 @@
             style="width: &window.width; !important;">
 #endif
 
+  <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
+
   <prefpane id="FontsDialogPane"
-            helpTopic="prefs-fonts-and-colors" helpURI="chrome://browser/locale/help/help.rdf">
+            helpTopic="prefs-fonts-and-colors">
   
     <preferences id="fontPreferences">
       <preference id="font.language.group"  name="font.language.group"  type="wstring"/>

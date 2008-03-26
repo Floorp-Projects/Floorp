@@ -64,7 +64,7 @@ static const char* const sEventNames[] = {
   "compositionstart", "compositionend", "popupshowing", "popupshown",
   "popuphiding", "popuphidden", "close", "command", "broadcast", "commandupdate",
   "dragenter", "dragover", "dragexit", "dragdrop", "draggesture",
-  "drag", "dragend", "dragstart", "dragleave", "drop", "resize",
+  "drag", "dragend", "resize",
   "scroll", "overflow", "underflow", "overflowchanged",
   "DOMSubtreeModified", "DOMNodeInserted", "DOMNodeRemoved", 
   "DOMNodeRemovedFromDocument", "DOMNodeInsertedIntoDocument",
@@ -1259,7 +1259,7 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_dragover];
   case NS_DRAGDROP_EXIT_SYNTH:
     return sEventNames[eDOMEvents_dragexit];
-  case NS_DRAGDROP_DRAGDROP:
+  case NS_DRAGDROP_DROP:
     return sEventNames[eDOMEvents_dragdrop];
   case NS_DRAGDROP_GESTURE:
     return sEventNames[eDOMEvents_draggesture];
@@ -1267,12 +1267,6 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_drag];
   case NS_DRAGDROP_END:
     return sEventNames[eDOMEvents_dragend];
-  case NS_DRAGDROP_START:
-    return sEventNames[eDOMEvents_dragstart];
-  case NS_DRAGDROP_LEAVE_SYNTH:
-    return sEventNames[eDOMEvents_dragleave];
-  case NS_DRAGDROP_DROP:
-    return sEventNames[eDOMEvents_drop];
   case NS_SCROLLPORT_OVERFLOW:
     return sEventNames[eDOMEvents_overflow];
   case NS_SCROLLPORT_UNDERFLOW:

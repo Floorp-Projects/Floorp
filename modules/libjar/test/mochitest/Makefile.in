@@ -48,6 +48,7 @@ _TEST_FILES = \
 		test_bug403331.html    \
 		bug403331.zip          \
 		bug403331.zip^headers^ \
+		openredirect.sjs       \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

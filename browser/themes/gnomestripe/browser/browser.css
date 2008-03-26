@@ -67,6 +67,7 @@
 #navigator-toolbox[inFullscreen="true"],
 #navigator-toolbox[inFullscreen="true"] > #nav-bar {
   border-top: none;
+  padding-top: 0;
 }
 
 /* Places toolbar */
@@ -1015,7 +1016,7 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 }
 
 .ac-comment {
-  font-size: larger;
+  font-size: 1.15em;
 }
 
 .ac-url-text {

@@ -90,7 +90,7 @@ static vector<string>       gRestartArgs;
 static map<wstring,wstring> gQueryParameters;
 static wstring              gCrashReporterKey(L"Software\\Mozilla\\Crash Reporter");
 static wstring              gURLParameter;
-static int                  gCheckboxPadding = 0;
+static int                  gCheckboxPadding = 6;
 
 // When vertically resizing the dialog, these items should move down
 static set<UINT> gAttachedBottom;
@@ -293,6 +293,10 @@ static void GetThemeSizes(HWND hwnd)
   }
 
   HANDLE buttonTheme = openTheme(hwnd, L"Button");
+  if (!buttonTheme) {
+    FreeLibrary(themeDLL);
+    return;
+  }
   HDC hdc = GetDC(hwnd);
   SIZE s;
   getThemePartSize(buttonTheme, hdc, BP_CHECKBOX, 0, NULL, TS_DRAW, &s);

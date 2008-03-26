@@ -689,7 +689,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         if (IsDisabled(isXULCheckboxRadio ? aFrame->GetParent(): aFrame))
           aState = TS_DISABLED;
         else {
-          aState = StandardGetState(aFrame, aState, PR_FALSE);
+          aState = StandardGetState(aFrame, aWidgetType, PR_FALSE);
         }
       }
 

@@ -1,0 +1,191 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+	<title>Testcase, bug 421069</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="Content-Style-Type" content="text/css">
+	<style type="text/css">
+
+	body > div { position: absolute; top: 10px; left: 10px; }
+	img { margin-left: 10px; }
+
+	.p0 { margin-top: 10.0px; }
+	.p1 { margin-top: 50.1px; }
+	.p2 { margin-top: 90.2px; }
+	.p3 { margin-top: 130.3px; }
+	.p4 { margin-top: 170.4px; }
+	.p5 { margin-top: 210.5px; }
+	.p6 { margin-top: 250.6px; }
+	.p7 { margin-top: 290.7px; }
+	.p8 { margin-top: 330.8px; }
+	.p9 { margin-top: 370.9px; }
+
+	body > div > div, body > div > div {
+		background-color: white;
+	}
+
+	div { margin: 0; border-spacing: 0; }
+	td { padding: 0; }
+
+	.big { width: 30px; height: 30px; }
+	.small { width: 19px; height: 19px; }
+
+	div.tl {
+		margin-left: 50px;
+		border-top: 1px solid black;
+		border-left: 1px solid black;
+	}
+
+	div.br {
+		margin-left: 90px;
+		border-bottom: 1px solid black;
+		border-right: 1px solid black;
+	}
+
+	div.tr {
+		margin-left: 130px;
+		border-top: 1px solid black;
+		border-right: 1px solid black;
+	}
+
+	div.bl {
+		margin-left: 170px;
+		border-bottom: 1px solid black;
+		border-left: 1px solid black;
+	}
+
+	div.tl.big {
+        margin-left: 210px;
+		border-top: 1px solid black;
+		border-right: 2px solid black;
+		border-bottom: 2px solid black;
+		border-left: 1px solid black;
+	}
+	div.br.big {
+        margin-left: 250px;
+		border-top: 2px solid black;
+		border-right: 1px solid black;
+		border-bottom: 1px solid black;
+		border-left: 2px solid black;
+	}
+	div.tr.big {
+        margin-left: 290px;
+		border-top: 1px solid black;
+		border-right: 1px solid black;
+		border-bottom: 2px solid black;
+		border-left: 2px solid black;
+	}
+	div.bl.big {
+        margin-left: 330px;
+		border-top: 2px solid black;
+		border-right: 2px solid black;
+		border-bottom: 1px solid black;
+		border-left: 1px solid black;
+	}
+
+	</style>
+</head>
+<body>
+
+<div><img src="square-outline-32x32.png" class="p0"></div>
+<div><img src="square-outline-32x32.png" class="p1"></div>
+<div><img src="square-outline-32x32.png" class="p2"></div>
+<div><img src="square-outline-32x32.png" class="p3"></div>
+<div><img src="square-outline-32x32.png" class="p4"></div>
+<div><img src="square-outline-32x32.png" class="p5"></div>
+<div><img src="square-outline-32x32.png" class="p6"></div>
+<div><img src="square-outline-32x32.png" class="p7"></div>
+<div><img src="square-outline-32x32.png" class="p8"></div>
+<div><img src="square-outline-32x32.png" class="p9"></div>
+
+<div><div class="tl small p0"></div></div>
+<div><div class="tl small p1"></div></div>
+<div><div class="tl small p2"></div></div>
+<div><div class="tl small p3"></div></div>
+<div><div class="tl small p4"></div></div>
+<div><div class="tl small p5"></div></div>
+<div><div class="tl small p6"></div></div>
+<div><div class="tl small p7"></div></div>
+<div><div class="tl small p8"></div></div>
+<div><div class="tl small p9"></div></div>
+
+<div><div class="br small p0"></div></div>
+<div><div class="br small p1"></div></div>
+<div><div class="br small p2"></div></div>
+<div><div class="br small p3"></div></div>
+<div><div class="br small p4"></div></div>
+<div><div class="br small p5"></div></div>
+<div><div class="br small p6"></div></div>
+<div><div class="br small p7"></div></div>
+<div><div class="br small p8"></div></div>
+<div><div class="br small p9"></div></div>
+
+<div><div class="tr small p0"></div></div>
+<div><div class="tr small p1"></div></div>
+<div><div class="tr small p2"></div></div>
+<div><div class="tr small p3"></div></div>
+<div><div class="tr small p4"></div></div>
+<div><div class="tr small p5"></div></div>
+<div><div class="tr small p6"></div></div>
+<div><div class="tr small p7"></div></div>
+<div><div class="tr small p8"></div></div>
+<div><div class="tr small p9"></div></div>
+
+<div><div class="bl small p0"></div></div>
+<div><div class="bl small p1"></div></div>
+<div><div class="bl small p2"></div></div>
+<div><div class="bl small p3"></div></div>
+<div><div class="bl small p4"></div></div>
+<div><div class="bl small p5"></div></div>
+<div><div class="bl small p6"></div></div>
+<div><div class="bl small p7"></div></div>
+<div><div class="bl small p8"></div></div>
+<div><div class="bl small p9"></div></div>
+
+<div><div class="tl big p0"></div></div>
+<div><div class="tl big p1"></div></div>
+<div><div class="tl big p2"></div></div>
+<div><div class="tl big p3"></div></div>
+<div><div class="tl big p4"></div></div>
+<div><div class="tl big p5"></div></div>
+<div><div class="tl big p6"></div></div>
+<div><div class="tl big p7"></div></div>
+<div><div class="tl big p8"></div></div>
+<div><div class="tl big p9"></div></div>
+
+<div><div class="br big p0"></div></div>
+<div><div class="br big p1"></div></div>
+<div><div class="br big p2"></div></div>
+<div><div class="br big p3"></div></div>
+<div><div class="br big p4"></div></div>
+<div><div class="br big p5"></div></div>
+<div><div class="br big p6"></div></div>
+<div><div class="br big p7"></div></div>
+<div><div class="br big p8"></div></div>
+<div><div class="br big p9"></div></div>
+
+<div><div class="tr big p0"></div></div>
+<div><div class="tr big p1"></div></div>
+<div><div class="tr big p2"></div></div>
+<div><div class="tr big p3"></div></div>
+<div><div class="tr big p4"></div></div>
+<div><div class="tr big p5"></div></div>
+<div><div class="tr big p6"></div></div>
+<div><div class="tr big p7"></div></div>
+<div><div class="tr big p8"></div></div>
+<div><div class="tr big p9"></div></div>
+
+<div><div class="bl big p0"></div></div>
+<div><div class="bl big p1"></div></div>
+<div><div class="bl big p2"></div></div>
+<div><div class="bl big p3"></div></div>
+<div><div class="bl big p4"></div></div>
+<div><div class="bl big p5"></div></div>
+<div><div class="bl big p6"></div></div>
+<div><div class="bl big p7"></div></div>
+<div><div class="bl big p8"></div></div>
+<div><div class="bl big p9"></div></div>
+
+</body>
+</html>

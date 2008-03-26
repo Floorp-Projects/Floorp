@@ -125,8 +125,11 @@ richlistitem[selected="true"]:not([opType]) .descriptionCrop {
 .addonIcon {
   -moz-margin-end: 2px;
   width: 32px;
-  max-width: 32px;
   height: 32px;
+}
+
+.addonIcon > image {
+  max-width: 32px;
   max-height: 32px;
 }
 
@@ -338,22 +341,21 @@ vbox[typeName="status"][type="header-recommended"] {
 .searchbox-search, .searchbox-cancel {
   -moz-appearance: none;
   cursor: pointer;
+  background-color: transparent;
   margin: 0;
   border: 0;
   padding: 0;
-  width: 19px;
-  height: 19px;
-  min-width: 19px;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
 }
 
 .searchbox-search {
-  list-style-image: url(chrome://mozapps/skin/extensions/searchIcons.png);
-  -moz-image-region: rect(0px 38px 19px 19px);
+  list-style-image: url("chrome://mozapps/skin/extensions/searchIcons.png");
 }
 
 .searchbox-cancel {
-  list-style-image: url(chrome://mozapps/skin/extensions/searchIcons.png);
-  -moz-image-region: rect(0px 57px 19px 38px);
+  list-style-image: url("moz-icon://stock/gtk-clear?size=menu");
 }
 
 #progressBox {

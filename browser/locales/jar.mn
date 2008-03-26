@@ -69,6 +69,7 @@
     locale/browser/sidebar/sidebar.properties      (%chrome/browser/sidebar/sidebar.properties)
 % locale browser-region @AB_CD@ %locale/browser-region/
     locale/browser-region/region.properties        (%chrome/browser-region/region.properties)
+#ifdef MOZ_HELP_VIEWER
     locale/browser/help/help.rdf                      (%chrome/help/firebirdhelp.rdf)
     locale/browser/help/firebird-toc.rdf              (%chrome/help/firebird-toc.rdf)
     locale/browser/help/search-db.rdf                 (%chrome/help/search-db.rdf)
@@ -87,6 +88,7 @@
     locale/browser/help/platformStrings.dtd           (%chrome/help/platformStrings.dtd)
     locale/browser/help/tabbed_browsing.xhtml         (%chrome/help/tabbed_browsing.xhtml)
     locale/browser/help/glossary.xhtml                (%chrome/help/glossary.xhtml)
+#endif
 # the following files are browser-specific overrides
 *   locale/browser/netError.dtd                (%chrome/overrides/netError.dtd)
 *   locale/browser/appstrings.properties       (%chrome/overrides/appstrings.properties)

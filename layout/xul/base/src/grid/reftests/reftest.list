@@ -15,3 +15,4 @@
 == not-full-row-leaf-direction.xul not-full-row-leaf-pack-ref.xhtml
 == scrollable-columns.xul scrollable-columns-ref.xhtml
 fails == scrollable-rows.xul scrollable-rows-ref.xhtml
+== sizing-2d.xul sizing-2d-ref.xul

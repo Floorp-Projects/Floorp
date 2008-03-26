@@ -868,6 +868,9 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     break;
   case NS_GOTFOCUS:
     {
+#ifdef DEBUG_smaug
+      printf("nsEventStateManager::PreHandleEvent, NS_GOTFOCUS \n");
+#endif
       // This is called when a child widget has received focus.
       // We need to take care of sending a blur event for the previously
       // focused content and document, then dispatching a focus
@@ -1031,6 +1034,9 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
   case NS_LOSTFOCUS:
     {
+#ifdef DEBUG_smaug
+      printf("nsEventStateManager::PreHandleEvent, NS_LOSTFOCUS \n");
+#endif
       // Hide the caret if it's visible.
       if (mPresContext) {
         nsIPresShell *presShell = mPresContext->GetPresShell();
@@ -1052,7 +1058,10 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       // This allows "-moz-user-focus: ignore" to work.
 
 #if defined(XP_WIN) || defined(XP_OS2)
-      if (!static_cast<nsFocusEvent*>(aEvent)->isMozWindowTakingFocus) {
+      //XXXsmaug Change all the NS_LOSTFOCUS/GOTFOCUS events to use
+      //         the same event struct type!
+      if (aEvent->eventStructType == NS_FOCUS_EVENT &&
+          !static_cast<nsFocusEvent*>(aEvent)->isMozWindowTakingFocus) {
 
         // This situation occurs when focus goes to a non-gecko child window
         // in an embedding application.  In this case we do fire a blur
@@ -1124,6 +1133,9 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
  case NS_ACTIVATE:
     {
+#ifdef DEBUG_smaug
+      printf("nsEventStateManager::PreHandleEvent, NS_ACTIVATE \n");
+#endif
       // If we have a focus controller, and if it has a focused window and a
       // focused element in its focus memory, then restore the focus to those
       // objects.
@@ -1211,6 +1223,9 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
  case NS_DEACTIVATE:
     {
+#ifdef DEBUG_smaug
+      printf("nsEventStateManager::PreHandleEvent, NS_DEACTIVATE \n");
+#endif
       EnsureDocument(aPresContext);
 
       nsIMEStateManager::OnDeactivate(aPresContext);
@@ -1932,10 +1947,6 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       nsCOMPtr<nsIWidget> widget = mCurrentTarget->GetWindow();
 
       // get the widget from the target frame
-      nsMouseEvent startEvent(NS_IS_TRUSTED_EVENT(aEvent), NS_DRAGDROP_START,
-                              widget, nsMouseEvent::eReal);
-      FillInEventFromGestureDown(&startEvent);
-
       nsMouseEvent gestureEvent(NS_IS_TRUSTED_EVENT(aEvent), NS_DRAGDROP_GESTURE,
                                 widget, nsMouseEvent::eReal);
       FillInEventFromGestureDown(&gestureEvent);
@@ -1955,16 +1966,10 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       // Set the current target to the content for the mouse down
       mCurrentTargetContent = targetContent;
 
-      // Dispatch both the dragstart and draggesture events to the DOM
+      // Dispatch the draggesture event to the DOM
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsEventDispatcher::Dispatch(targetContent, aPresContext, &startEvent, nsnull,
+      nsEventDispatcher::Dispatch(targetContent, aPresContext, &gestureEvent, nsnull,
                                   &status);
-
-      if (status != nsEventStatus_eConsumeNoDefault) {
-        status = nsEventStatus_eIgnore;
-        nsEventDispatcher::Dispatch(targetContent, aPresContext, &gestureEvent, nsnull,
-                                    &status);
-      }
 
       // Note that frame event handling doesn't care about NS_DRAGDROP_GESTURE,
       // which is just as well since we don't really know which frame to
@@ -2503,34 +2508,6 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
     break;
 
   case NS_DRAGDROP_DROP:
-    {
-      // now fire the dragdrop event, for compatibility with XUL
-      if (mCurrentTarget) {
-        nsCOMPtr<nsIContent> targetContent;
-        mCurrentTarget->GetContentForEvent(presContext, aEvent,
-                                           getter_AddRefs(targetContent));
-
-        nsCOMPtr<nsIWidget> widget = mCurrentTarget->GetWindow();
-        nsMouseEvent event(NS_IS_TRUSTED_EVENT(aEvent), NS_DRAGDROP_DRAGDROP,
-                           widget, nsMouseEvent::eReal);
-
-        nsMouseEvent* mouseEvent = static_cast<nsMouseEvent*>(aEvent);
-        event.refPoint = mouseEvent->refPoint;
-        event.isShift = mouseEvent->isShift;
-        event.isControl = mouseEvent->isControl;
-        event.isAlt = mouseEvent->isAlt;
-        event.isMeta = mouseEvent->isMeta;
-
-        nsEventStatus status = nsEventStatus_eIgnore;
-        nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
-        if (presShell) {
-          presShell->HandleEventWithTarget(&event, mCurrentTarget,
-                                           targetContent, &status);
-        }
-      }
-      // fall through and call GenerateDragDropEnterExit
-    }
-
   case NS_DRAGDROP_EXIT:
     // clean up after ourselves. make sure we do this _after_ the event, else we'll
     // clean up too early!
@@ -3167,8 +3144,6 @@ nsEventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
           //The frame has changed but the content may not have. Check before dispatching to content
           mLastDragOverFrame->GetContentForEvent(aPresContext, aEvent, getter_AddRefs(lastContent));
 
-          FireDragEnterOrExit(aPresContext, aEvent, NS_DRAGDROP_LEAVE_SYNTH,
-                              targetContent, lastContent, mLastDragOverFrame);
           FireDragEnterOrExit(aPresContext, aEvent, NS_DRAGDROP_EXIT_SYNTH,
                               targetContent, lastContent, mLastDragOverFrame);
         }
@@ -3189,8 +3164,6 @@ nsEventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
         nsCOMPtr<nsIContent> lastContent;
         mLastDragOverFrame->GetContentForEvent(aPresContext, aEvent, getter_AddRefs(lastContent));
 
-        FireDragEnterOrExit(aPresContext, aEvent, NS_DRAGDROP_LEAVE_SYNTH,
-                            nsnull, lastContent, mLastDragOverFrame);
         FireDragEnterOrExit(aPresContext, aEvent, NS_DRAGDROP_EXIT_SYNTH,
                             nsnull, lastContent, mLastDragOverFrame);
 

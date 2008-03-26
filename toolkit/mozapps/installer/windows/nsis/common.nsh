@@ -3114,10 +3114,20 @@
  * If present removes the VirtualStore directory for this installation. Uses the
  * program files directory path and the current install location to determine
  * the sub-directory in the VirtualStore directory.
+ *
+ * $R7 = stores the value of the open command and the path macros return values
+ * $R8 = stores the handler's registry key name
+ * $R9 = _DEFAULT_VALUE and _RESULT
  */
 !macro CleanVirtualStore
 
   !ifndef ${_MOZFUNC_UN}CleanVirtualStore
+    !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
+    !insertmacro ${_MOZFUNC_UN_TMP}GetLongPath
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
+    !undef _MOZFUNC_UN_TMP
+
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
     !define ${_MOZFUNC_UN}CleanVirtualStore "!insertmacro ${_MOZFUNC_UN}CleanVirtualStoreCall"
@@ -3137,11 +3147,13 @@
       StrCmp $R7 "\" +1 start
 
       StrCpy $R9 "$INSTDIR" "" $R8
+      StrCmp $R8 "" end +1
 
       ClearErrors
-      GetFullPathName $R8 "$PROGRAMFILES$R9"
-      IfErrors end
-      GetFullPathName $R7 "$INSTDIR"
+      ${${_MOZFUNC_UN}GetLongPath} "$PROGRAMFILES$R9" $R8
+      StrCmp $R8 "" end +1
+      ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR" $R7
+      StrCmp $R7 "" end +1
 
       ; Compare the installation's directory path with the path created by
       ; concatenating the installation's directory name and the path to the
@@ -3188,6 +3200,114 @@
     !define _MOZFUNC_UN "un."
 
     !insertmacro CleanVirtualStore
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+/**
+ * If present removes the updates directory located in the profile's local
+ * directory for this installation.
+ *
+ * @param   _REL_PROFILE_PATH
+ *          The relative path to the profile directory from $LOCALAPPDATA.
+ *
+ ^ $R6 = stores single characters to find the first "\" from the right of
+ *       $INSTDIR and the long path to $INSTDIR
+ * $R7 = long path of the concatenation of Program Files and the  installation
+ *       directory name (e.g. $PROGRAMFILES$R68)
+ * $R8 = installation directory name
+ * $R9 = _REL_PROFILE_PATH
+ */
+!macro CleanUpdatesDir
+
+  !ifndef ${_MOZFUNC_UN}CleanUpdatesDir
+    !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
+    !insertmacro ${_MOZFUNC_UN_TMP}GetLongPath
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
+    !undef _MOZFUNC_UN_TMP
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}CleanUpdatesDir "!insertmacro ${_MOZFUNC_UN}CleanUpdatesDirCall"
+
+    Function ${_MOZFUNC_UN}CleanUpdatesDir
+      Exch $R9
+      Push $R8
+      Push $R7
+      Push $R6
+
+      StrCmp $R9 "" end +1   ; The path to the app's profiles is required
+      StrLen $R8 "$INSTDIR"
+
+      ; Get the installation's directory name including the preceding slash
+      start:
+      IntOp $R7 $R7 - 1
+      IntCmp $R7 -$R8 end end +1
+      StrCpy $R6 "$INSTDIR" 1 $R7
+      StrCmp $R6 "\" +1 start
+
+      StrCpy $R8 "$INSTDIR" "" $R7
+      StrCmp $R8 "" end +1
+
+      ClearErrors
+      ${${_MOZFUNC_UN}GetLongPath} "$PROGRAMFILES$R8" $R7
+      StrCmp $R7 "" end +1
+      ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR" $R6
+      StrCmp $R6 "" end +1
+
+      ; Compare the installation's directory path with the path created by
+      ; concatenating the installation's directory name and the path to the
+      ; program files directory.
+      StrCmp "$R6" "$R7" +1 end
+
+      StrCpy $R6 "$LOCALAPPDATA\$R9$R8"
+
+      ${${_MOZFUNC_UN}GetLongPath} "$R6" $R6
+      StrCmp $R6 "" end +1
+      IfFileExists "$R6\updates" +1 end
+      RmDir /r "$R6"
+
+      end:
+      ClearErrors
+
+      Pop $R6
+      Pop $R7
+      Pop $R8
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro CleanUpdatesDirCall _REL_PROFILE_PATH
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_REL_PROFILE_PATH}"
+  Call CleanUpdatesDir
+  !verbose pop
+!macroend
+
+!macro un.CleanUpdatesDirCall _REL_PROFILE_PATH
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_REL_PROFILE_PATH}"
+  Call un.CleanUpdatesDir
+  !verbose pop
+!macroend
+
+!macro un.CleanUpdatesDir
+  !ifndef un.CleanUpdatesDir
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro CleanUpdatesDir
 
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN
@@ -4441,6 +4561,10 @@
     !define UninstallOnInitCommon "!insertmacro UninstallOnInitCommonCall"
 
     Function UninstallOnInitCommon
+; Prevents breaking Thunderbird
+!ifdef SetBrandNameVars
+      ${SetBrandNameVars} "$EXEDIR\distribution\setup.ini"
+!endif
 
       ; Prevent launching the application when a reboot is required and this
       ; executable is the main application executable
@@ -4453,6 +4577,11 @@
       ${GetLongPath} "$INSTDIR" $INSTDIR
       IfFileExists "$INSTDIR\${FileMainEXE}" +2 +1
       Quit ; Nothing initialized so no need to call OnEndCommon
+
+; Prevents breaking Thunderbird
+!ifdef SetBrandNameVars
+      ${SetBrandNameVars} "$INSTDIR\distribution\setup.ini"
+!endif
 
       ; Prevent all operations (e.g. set as default, postupdate, etc.) when a
       ; reboot is required and the executable launched is helper.exe

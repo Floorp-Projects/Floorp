@@ -133,6 +133,15 @@
       <vbox id="editBookmarkPanelContent" flex="1" hidden="true"/>
       <hbox flex="1" id="editBookmarkPanelBottomButtons">
         <spacer flex="1"/>
+#ifndef XP_UNIX
+        <button id="editBookmarkPanelDoneButton"
+                label="&editBookmark.done.label;"
+                default="true"
+                oncommand="StarUI.panel.hidePopup();"/>
+        <button id="editBookmarkPanelDeleteButton"
+                label="&editBookmark.cancel.label;"
+                oncommand="StarUI.cancelButtonOnCommand();"/>
+#else
         <button id="editBookmarkPanelDeleteButton"
                 label="&editBookmark.cancel.label;"
                 oncommand="StarUI.cancelButtonOnCommand();"/>
@@ -140,6 +149,7 @@
                 label="&editBookmark.done.label;"
                 default="true"
                 oncommand="StarUI.panel.hidePopup();"/>
+#endif
       </hbox>
     </panel>
 
@@ -312,7 +322,7 @@
                  showimagecolumn="true"
                  enablehistory="true"
                  timeout="100"
-                 maxrows="10"
+                 maxrows="6"
                  newlines="stripsurroundingwhitespace"
                  oninput="URLBarOnInput(event);"
                  ontextentered="return handleURLBarCommand(param);"
@@ -511,7 +521,6 @@
   <panel id="customizeToolbarSheetPopup" noautohide="true">
     <iframe id="customizeToolbarSheetIFrame"
             style="&dialog.style;"
-            src="chrome://global/content/customizeToolbar.xul"
             hidden="true"/>
   </panel>
 #endif

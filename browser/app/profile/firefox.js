@@ -217,12 +217,12 @@ pref("browser.urlbar.matchOnWordBoundary", true);
 pref("browser.urlbar.filter.javascript", true);
 
 // the maximum number of results to show in autocomplete when doing richResults
-pref("browser.urlbar.maxRichResults", 25);
+pref("browser.urlbar.maxRichResults", 12);
 // Size of "chunks" affects the number of places to process between each search
 // timeout (ms). Too big and the UI will be unresponsive; too small and we'll
 // be waiting on the timeout too often without many results.
 pref("browser.urlbar.search.chunkSize", 1000);
-pref("browser.urlbar.search.timeout", 50);
+pref("browser.urlbar.search.timeout", 100);
 
 pref("browser.download.useDownloadDir", true);
 pref("browser.download.folderList", 0);
@@ -687,7 +687,7 @@ pref("places.frecency.defaultBucketWeight", 10);
 // bonus (in percent) for visit transition types for frecency calculations
 pref("places.frecency.embedVisitBonus", 0);
 pref("places.frecency.linkVisitBonus", 100);
-pref("places.frecency.typedVisitBonus", 500);
+pref("places.frecency.typedVisitBonus", 2000);
 pref("places.frecency.bookmarkVisitBonus", 150);
 pref("places.frecency.downloadVisitBonus", 0);
 pref("places.frecency.permRedirectVisitBonus", 0);
@@ -725,3 +725,6 @@ pref("editor.singleLine.pasteNewlines", 2);
 
 // The breakpad report server to link to in about:crashes
 pref("breakpad.reportURL", "http://crash-stats.mozilla.com/report/index/");
+
+// base URL for web-based support pages
+pref("app.support.baseURL", "http://support.mozilla.com/1/%APP%/%VERSION%/%OS%/%LOCALE%/");

@@ -863,8 +863,9 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
                  * they might appear here.  This code can be confused by people
                  * defining Function.prototype.toString, so let's be cautious.
                  */
-                if (JSFUN_GETTER_TEST(fun->flags) ||
-                    JSFUN_SETTER_TEST(fun->flags)) { /* skip "getter/setter" */
+                if (JSFUN_GETTER_TEST(FUN_FLAGS(fun)) ||
+                    JSFUN_SETTER_TEST(FUN_FLAGS(fun))) {
+                    /* skip "getter/setter" */
                     const jschar *tmp = js_strchr_limit(vchars, ' ', end);
                     if (tmp)
                         vchars = tmp + 1;
@@ -1146,8 +1147,13 @@ js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
         return principals->codebase;
     }
 
-    *linenop = js_PCToLineNumber(cx, caller->script,
-                                 caller->regs ? caller->regs->pc : NULL);
+    if (caller->regs && *caller->regs->pc == JSOP_EVAL) {
+        JS_ASSERT(caller->regs->pc[JSOP_EVAL_LENGTH] == JSOP_LINENO);
+        *linenop = GET_UINT16(caller->regs->pc + JSOP_EVAL_LENGTH);
+    } else {
+        *linenop = js_PCToLineNumber(cx, caller->script,
+                                     caller->regs ? caller->regs->pc : NULL);
+    }
     return caller->script->filename;
 }
 
@@ -1754,7 +1760,7 @@ Object(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         JS_ASSERT(!argc || JSVAL_IS_NULL(argv[0]) || JSVAL_IS_VOID(argv[0]));
         if (cx->fp->flags & JSFRAME_CONSTRUCTING)
             return JS_TRUE;
-        obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
+        obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL, 0);
         if (!obj)
             return JS_FALSE;
     }
@@ -1895,7 +1901,7 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
 {
     JSObject *obj;
 
-    obj = js_NewObject(cx, &js_WithClass, proto, parent);
+    obj = js_NewObject(cx, &js_WithClass, proto, parent, 0);
     if (!obj)
         return NULL;
     STOBJ_SET_SLOT(obj, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(cx->fp));
@@ -1914,7 +1920,7 @@ js_NewBlockObject(JSContext *cx)
      * scopes.  Make sure obj has its own scope too, since clearing proto does
      * not affect OBJ_SCOPE(obj).
      */
-    obj = js_NewObject(cx, &js_BlockClass, NULL, NULL);
+    obj = js_NewObject(cx, &js_BlockClass, NULL, NULL, 0);
     if (!obj)
         return NULL;
     JS_LOCK_OBJ(cx, obj);
@@ -1932,7 +1938,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSObject *parent,
 {
     JSObject *clone;
 
-    clone = js_NewObject(cx, &js_BlockClass, proto, parent);
+    clone = js_NewObject(cx, &js_BlockClass, proto, parent, 0);
     if (!clone)
         return NULL;
     STOBJ_SET_SLOT(clone, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(fp));
@@ -2418,7 +2424,8 @@ js_GetClassId(JSContext *cx, JSClass *clasp, jsid *idp)
 }
 
 JSObject *
-js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
+js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent,
+             uintN extraBytes)
 {
     jsid id;
 
@@ -2435,12 +2442,12 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
         }
     }
 
-    return js_NewObjectWithGivenProto(cx, clasp, proto, parent);
+    return js_NewObjectWithGivenProto(cx, clasp, proto, parent, extraBytes);
 }
 
 JSObject *
 js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
-                           JSObject *parent)
+                           JSObject *parent, uintN extraBytes)
 {
     JSObject *obj;
     JSObjectOps *ops;
@@ -2459,12 +2466,16 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
           ? clasp->getObjectOps(cx, clasp)
           : &js_ObjectOps;
 
+    if (clasp == &js_FunctionClass && extraBytes == 0)
+        extraBytes = sizeof(JSFunction) - sizeof(JSObject);
+
     /*
      * Allocate a zeroed object from the GC heap.  Do this *after* any other
      * GC-thing allocations under js_GetClassPrototype or clasp->getObjectOps,
      * to avoid displacing the newborn root for obj.
      */
-    obj = (JSObject *) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
+    obj = (JSObject *) js_NewGCThing(cx, GCX_OBJECT,
+                                     sizeof(JSObject) + extraBytes);
     if (!obj)
         goto earlybad;
 
@@ -2490,6 +2501,9 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
     /* Initialize the remaining fixed slots. */
     for (i = JSSLOT_PRIVATE; i != JS_INITIAL_NSLOTS; ++i)
         obj->fslots[i] = JSVAL_VOID;
+
+    if (extraBytes != 0)
+        memset((uint8 *) obj + sizeof(JSObject), 0, extraBytes);
 
     /*
      * Root obj to prevent it from being collected out from under this call to
@@ -2766,7 +2780,7 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
             proto = JSVAL_TO_OBJECT(rval);
     }
 
-    obj = js_NewObject(cx, clasp, proto, parent);
+    obj = js_NewObject(cx, clasp, proto, parent, 0);
     if (!obj)
         goto out;
 
@@ -4651,7 +4665,7 @@ js_PrimitiveToObject(JSContext *cx, jsval *vp)
     JS_ASSERT(!JSVAL_IS_OBJECT(*vp));
     JS_ASSERT(*vp != JSVAL_VOID);
     clasp = PrimitiveClasses[JSVAL_TAG(*vp) - 1];
-    obj = js_NewObject(cx, clasp, NULL, NULL);
+    obj = js_NewObject(cx, clasp, NULL, NULL, 0);
     if (!obj)
         return JS_FALSE;
     STOBJ_SET_SLOT(obj, JSSLOT_PRIVATE, *vp);
@@ -5157,17 +5171,32 @@ void printString(JSString *str) {
 
 void printVal(JSContext *cx, jsval val);
 
-void printObj(JSContext *cx, JSObject *jsobj) {
-    jsuint i;
+void printObj(JSContext *cx, JSObject *obj) {
+    jsuint i, slots;
     jsval val;
     JSClass *clasp;
 
-    fprintf(stderr, "object %p\n", (void *)jsobj);
-    clasp = OBJ_GET_CLASS(cx, jsobj);
+    fprintf(stderr, "object %p\n", (void *) obj);
+    clasp = OBJ_GET_CLASS(cx, obj);
     fprintf(stderr, "class %p %s\n", (void *)clasp, clasp->name);
-    for (i=0; i < STOBJ_NSLOTS(jsobj); i++) {
+    if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
+        slots = JS_MIN((jsuint) obj->fslots[JSSLOT_ARRAY_LENGTH],
+                       ARRAY_DENSE_LENGTH(obj));
+        for (i = 0; i < slots; i++) {
+            val = obj->dslots[i];
+            if (JSVAL_IS_OBJECT(val))
+                fprintf(stderr, "object %p\n", (void*)JSVAL_TO_OBJECT(val));
+            else
+                printVal(cx, val);
+        }
+
+        return;
+    }
+
+    slots = STOBJ_NSLOTS(obj);
+    for (i=0; i < slots; i++) {
         fprintf(stderr, "slot %3d ", i);
-        val = STOBJ_GET_SLOT(jsobj, i);
+        val = STOBJ_GET_SLOT(obj, i);
         if (JSVAL_IS_OBJECT(val))
             fprintf(stderr, "object %p\n", (void *)JSVAL_TO_OBJECT(val));
         else
@@ -5189,6 +5218,8 @@ void printVal(JSContext *cx, jsval val) {
         printString(JSVAL_TO_STRING(val));
     } else if (JSVAL_IS_DOUBLE(val)) {
         fprintf(stderr, "(double) %g\n", *JSVAL_TO_DOUBLE(val));
+    } else if (val == JSVAL_HOLE) {
+        fprintf(stderr, "hole\n");
     } else {
         JS_ASSERT(JSVAL_IS_BOOLEAN(val));
         fprintf(stderr, "(boolean) %s\n",

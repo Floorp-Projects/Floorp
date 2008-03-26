@@ -936,7 +936,7 @@ buf[bufIndex] = _c;                          \
 bufIndex++;
 
   if (*mStatep == JSON_PARSE_STATE_INIT) {
-    PushState(JSON_PARSE_STATE_VALUE);
+    PushState(JSON_PARSE_STATE_OBJECT_VALUE);
   }
 
   for (i = 0; i < len; i++) {
@@ -944,6 +944,35 @@ bufIndex++;
 
     switch (*mStatep) {
       case JSON_PARSE_STATE_VALUE :
+        if (c == ']') {
+          // empty array
+          rv = PopState();
+          NS_ENSURE_SUCCESS(rv, rv);
+          if (*mStatep != JSON_PARSE_STATE_ARRAY) {
+            return NS_ERROR_FAILURE; // unexpected char
+          }
+          rv = this->CloseArray();
+          NS_ENSURE_SUCCESS(rv, rv);
+          rv = PopState();
+          NS_ENSURE_SUCCESS(rv, rv);
+          break;
+        } else if (c == '}') {
+          // we should only find these in OBJECT_KEY state
+          return NS_ERROR_FAILURE; // unexpected failure
+        } else if (c == '"') {
+          *mStatep = JSON_PARSE_STATE_STRING;
+          break;
+        } else if (IsNumChar(c)) {
+          *mStatep = JSON_PARSE_STATE_NUMBER;
+          PUSHCHAR(c);
+          break;
+        } else if (NS_IsAsciiAlpha(c)) {
+          *mStatep = JSON_PARSE_STATE_KEYWORD;
+          PUSHCHAR(c);
+          break;
+        } 
+        // fall through in case the value is an object or array
+      case JSON_PARSE_STATE_OBJECT_VALUE :
         if (c == '{') {
           *mStatep = JSON_PARSE_STATE_OBJECT;
           rv = this->OpenObject();
@@ -956,28 +985,6 @@ bufIndex++;
           NS_ENSURE_SUCCESS(rv, rv);
           rv = PushState(JSON_PARSE_STATE_VALUE);
           NS_ENSURE_SUCCESS(rv, rv);
-        } else if (c == ']') {
-          // empty array
-          rv = PopState();
-          NS_ENSURE_SUCCESS(rv, rv);
-          if (*mStatep != JSON_PARSE_STATE_ARRAY) {
-            return NS_ERROR_FAILURE; // unexpected char
-          }
-          rv = this->CloseArray();
-          NS_ENSURE_SUCCESS(rv, rv);
-          rv = PopState();
-          NS_ENSURE_SUCCESS(rv, rv);
-        } else if (c == '}') {
-          // we should only find these in OBJECT_KEY state
-          return NS_ERROR_FAILURE; // unexpected failure
-        } else if (c == '"') {
-          *mStatep = JSON_PARSE_STATE_STRING;
-        } else if (IsNumChar(c)) {
-          *mStatep = JSON_PARSE_STATE_NUMBER;
-          PUSHCHAR(c);
-        } else if (NS_IsAsciiAlpha(c)) {
-          *mStatep = JSON_PARSE_STATE_KEYWORD;
-          PUSHCHAR(c);
         } else if (!NS_IsAsciiWhitespace(c)) {
           return NS_ERROR_FAILURE; // unexpected
         }

@@ -71,7 +71,6 @@
   <script type="application/x-javascript" src="chrome://browser/content/pageinfo/permissions.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/pageinfo/security.js"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
 
   <stringbundleset id="pageinfobundleset">
@@ -100,8 +99,9 @@
     <key keycode="VK_ESCAPE"                       command="cmd_close"/>
 #ifdef XP_MACOSX
     <key key="."                 modifiers="meta"  command="cmd_close"/>
-#endif
+#else
     <key keycode="VK_F1"                           command="cmd_help"/>
+#endif
     <key key="&copy.key;"        modifiers="accel" command="cmd_copy"/>
     <key key="&selectall.key;"   modifiers="accel" command="cmd_selectall"/>
     <key key="&selectall.key;"   modifiers="alt"   command="cmd_selectall"/>

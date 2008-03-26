@@ -695,12 +695,15 @@ ContentPrefService.prototype = {
     if (!dbFile.exists())
       dbConnection = this._dbCreate(dbService, dbFile);
     else {
-      dbConnection = dbService.openDatabase(dbFile);
-
+      try {
+        dbConnection = dbService.openDatabase(dbFile);
+      }
       // If the connection isn't ready after we open the database, that means
       // the database has been corrupted, so we back it up and then recreate it.
-      if (!dbConnection.connectionReady)
-        dbConnection = this._dbBackUpAndRecreate(dbService, dbFile, dbConnection);
+      catch (e if e.result == Cr.NS_ERROR_FILE_CORRUPTED) {
+        dbConnection = this._dbBackUpAndRecreate(dbService, dbFile,
+                                                 dbConnection);
+      }
 
       // Get the version of the schema in the file.
       var version = dbConnection.schemaVersion;
@@ -762,7 +765,7 @@ ContentPrefService.prototype = {
   _dbBackUpAndRecreate: function ContentPrefService__dbBackUpAndRecreate(aDBService,
                                                                          aDBFile,
                                                                          aDBConnection) {
-    aDBConnection.backupDB("content-prefs.sqlite.corrupt");
+    aDBService.backupDatabaseFile(aDBFile, "content-prefs.sqlite.corrupt");
 
     // Close the database, ignoring the "already closed" exception, if any.
     // It'll be open if we're here because of a migration failure but closed

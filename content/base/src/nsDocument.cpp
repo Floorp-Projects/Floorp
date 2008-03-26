@@ -2736,7 +2736,16 @@ nsDocument::EndUpdate(nsUpdateType aUpdateType)
   }
 
   if (mUpdateNestLevel == 0) {
-    PRUint32 length = mFinalizableFrameLoaders.Length();
+    PRUint32 length = mInitializableFrameLoaders.Length();
+    if (length > 0) {
+      nsTArray<nsRefPtr<nsFrameLoader> > loaders;
+      mInitializableFrameLoaders.SwapElements(loaders);
+      for (PRUint32 i = 0; i < length; ++i) {
+        loaders[i]->ReallyStartLoading();
+      }
+    }
+
+    length = mFinalizableFrameLoaders.Length();
     if (length > 0) {
       nsTArray<nsRefPtr<nsFrameLoader> > loaders;
       mFinalizableFrameLoaders.SwapElements(loaders);
@@ -3864,8 +3873,28 @@ nsDocument::FlushSkinBindings()
 }
 
 nsresult
+nsDocument::InitializeFrameLoader(nsFrameLoader* aLoader)
+{
+  mInitializableFrameLoaders.RemoveElement(aLoader);
+  // Don't even try to initialize.
+  if (mInDestructor) {
+    NS_WARNING("Trying to initialize a frame loader while"
+               "document is being deleted");
+    return NS_ERROR_FAILURE;
+  }
+  if (mUpdateNestLevel == 0) {
+    nsRefPtr<nsFrameLoader> loader = aLoader;
+    return loader->ReallyStartLoading();
+  } else {
+    mInitializableFrameLoaders.AppendElement(aLoader);
+  }
+  return NS_OK;
+}
+
+nsresult
 nsDocument::FinalizeFrameLoader(nsFrameLoader* aLoader)
 {
+  mInitializableFrameLoaders.RemoveElement(aLoader);
   if (mInDestructor) {
     return NS_ERROR_FAILURE;
   }

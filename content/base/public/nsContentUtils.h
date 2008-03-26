@@ -1164,6 +1164,11 @@ public:
   static void HidePopupsInDocument(nsIDocument* aDocument);
 
   /**
+   * Return true if aURI is a local file URI (i.e. file://).
+   */
+  static PRBool URIIsLocalFile(nsIURI *aURI);
+
+  /**
    * Get the application manifest URI for this context.  The manifest URI
    * is specified in the manifest= attribute of the root element of the
    * toplevel window.
