@@ -310,7 +310,6 @@ nsLayoutStatics::Shutdown()
   nsTextServicesDocument::Shutdown();
 #endif
 
-  nsXMLHttpRequest::ShutdownACCache();
   NS_ShutdownFocusSuppressor();
 }
 
