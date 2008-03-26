@@ -335,7 +335,7 @@ BookmarksStore.prototype = {
     case "query":
     case "bookmark":
     case "microsummary": {
-      this._log.info(" -> creating bookmark \"" + command.data.title + "\"");
+      this._log.debug(" -> creating bookmark \"" + command.data.title + "\"");
       let URI = Utils.makeURI(command.data.URI);
       newId = this._bms.insertBookmark(parentId,
                                        URI,
@@ -346,7 +346,7 @@ BookmarksStore.prototype = {
       this._bms.setKeywordForBookmark(newId, command.data.keyword);
 
       if (command.data.type == "microsummary") {
-        this._log.info("   \-> is a microsummary");
+        this._log.debug("   \-> is a microsummary");
         let genURI = Utils.makeURI(command.data.generatorURI);
         try {
           let micsum = this._ms.createMicrosummary(URI, genURI);
@@ -356,13 +356,13 @@ BookmarksStore.prototype = {
       }
     } break;
     case "folder":
-      this._log.info(" -> creating folder \"" + command.data.title + "\"");
+      this._log.debug(" -> creating folder \"" + command.data.title + "\"");
       newId = this._bms.createFolder(parentId,
                                      command.data.title,
                                      command.data.index);
       break;
     case "livemark":
-      this._log.info(" -> creating livemark \"" + command.data.title + "\"");
+      this._log.debug(" -> creating livemark \"" + command.data.title + "\"");
       newId = this._ls.createLivemark(parentId,
                                       command.data.title,
                                       Utils.makeURI(command.data.siteURI),
@@ -370,7 +370,7 @@ BookmarksStore.prototype = {
                                       command.data.index);
       break;
     case "separator":
-      this._log.info(" -> creating separator");
+      this._log.debug(" -> creating separator");
       newId = this._bms.insertSeparator(parentId, command.data.index);
       break;
     default:
@@ -400,15 +400,15 @@ BookmarksStore.prototype = {
 
     switch (type) {
     case this._bms.TYPE_BOOKMARK:
-      this._log.info("  -> removing bookmark " + command.GUID);
+      this._log.debug("  -> removing bookmark " + command.GUID);
       this._bms.removeItem(itemId);
       break;
     case this._bms.TYPE_FOLDER:
-      this._log.info("  -> removing folder " + command.GUID);
+      this._log.debug("  -> removing folder " + command.GUID);
       this._bms.removeFolder(itemId);
       break;
     case this._bms.TYPE_SEPARATOR:
-      this._log.info("  -> removing separator " + command.GUID);
+      this._log.debug("  -> removing separator " + command.GUID);
       this._bms.removeItem(itemId);
       break;
     default:
@@ -599,40 +599,37 @@ HistoryStore.prototype = {
 
   __hsvc: null,
   get _hsvc() {
-    if (!this.__hsvc)
+    if (!this.__hsvc) {
       this.__hsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
                     getService(Ci.nsINavHistoryService);
+      this.__hsvc.QueryInterface(Ci.nsIGlobalHistory2);
+      this.__hsvc.QueryInterface(Ci.nsIBrowserHistory);
+    }
     return this.__hsvc;
   },
 
-  __browserHist: null,
-  get _browserHist() {
-    if (!this.__browserHist)
-      this.__browserHist = Cc["@mozilla.org/browser/nav-history-service;1"].
-                           getService(Ci.nsIBrowserHistory);
-    return this.__browserHist;
-  },
-
   _createCommand: function HistStore__createCommand(command) {
-    this._log.info("  -> creating history entry: " + command.GUID);
+    this._log.debug("  -> creating history entry: " + command.GUID);
     try {
-      this._browserHist.addPageWithDetails(Utils.makeURI(command.GUID),
-					   command.data.title,
-					   command.data.time);
-      this._hsvc.setPageDetails(Utils.makeURI(command.GUID), command.data.title,
-				command.data.accessCount, false, false);
+      let uri = Utils.makeURI(command.GUID);
+      this._hsvc.addVisit(uri, command.data.time, null,
+                          this._hsvc.TRANSITION_TYPED, false, null);
+      this._hsvc.setPageTitle(uri, command.data.title);
     } catch (e) {
       this._log.error("Exception caught: " + (e.message? e.message : e));
     }
   },
 
   _removeCommand: function HistStore__removeCommand(command) {
-    this._log.info("  -> NOT removing history entry: " + command.GUID);
-    //this._browserHist.removePage(command.GUID);
+    this._log.debug("  -> NOT removing history entry: " + command.GUID);
+    // we can't remove because we only sync the last 500 items, not
+    // the whole store.  So we don't know if remove commands were
+    // generated due to the user removing an entry or because it
+    // dropped past the 500 item mark.
   },
 
   _editCommand: function HistStore__editCommand(command) {
-    this._log.info("  -> FIXME: NOT editing history entry: " + command.GUID);
+    this._log.debug("  -> FIXME: NOT editing history entry: " + command.GUID);
     // FIXME: implement!
   },
 
@@ -642,6 +639,7 @@ HistoryStore.prototype = {
 
     query.minVisits = 1;
     options.maxResults = 500;
+    options.resultType = options.RESULTS_AS_FULL_VISIT;
     options.sortingMode = query.SORT_BY_LASTMODIFIED_DESCENDING;
     options.queryType = options.QUERY_TYPE_HISTORY;
 
@@ -659,16 +657,15 @@ HistoryStore.prototype = {
       items[item.uri] = {parentGUID: '',
 			 title: item.title,
 			 URI: item.uri,
-			 time: item.time,
-			 accessCount: item.accessCount,
-			 dateAdded: item.dateAdded,
+			 time: item.time
 			};
+      // FIXME: sync transition type
     }
     return items;
   },
 
   wipe: function HistStore_wipe() {
-    this._browserHist.removeAllPages();
+    this._hsvc.removeAllPages();
   }
 };
 HistoryStore.prototype.__proto__ = new Store();

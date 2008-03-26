@@ -1,0 +1,3 @@
+<!ENTITY dialog.title                 "Weave Sharing">
+<!ENTITY dialog.label                 "Enter a Weave ID to share bookmarks with:">
+<!ENTITY username.label               "Email:">
