@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=425013
+-->
+<head>
+  <title>Test for Bug 425013</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=425013">Mozilla Bug 425013</a>
+<br>
+
+<script>
+var missingPlugins = new Array();
+
+function pluginNotFound(event)
+{
+  missingPlugins.push(event.target);
+}
+
+document.addEventListener("PluginNotFound", pluginNotFound, false);
+</script>
+
+<object type="foo/bar" id="obj1"></object>
+
+<object type="foo/bar" id="obj2">
+  <embed type="a/b" id="embed1"></embed>
+</object>
+
+<object type="foo/bar"
+        data="data:foo/bar,bah" id="obj3">
+<param name="movie" value="data:foo/bar,bah">
+</object>
+
+<object type="foo/bar"
+        data="data:foo/bar,bah" id="obj4">
+<param name="movie" value="data:foo/bar,bah">
+<p>Alternate content</p>
+</object>
+
+<object type="text/html"
+        data="data:text/html,an html document in an object tag" id="obj5">
+</object>
+
+<object type="text/html"
+        data="data:text/html,an html document in an object tag" id="obj5">
+<p>Alternate content</p>
+</object>
+
+<embed type="a/b" id="embed2"></embed>
+
+<script>
+function runtests()
+{
+  is(missingPlugins[0], document.getElementById("obj1"),
+     "Wrong missing plugin element 1");
+  is(missingPlugins[1], document.getElementById("embed1"),
+     "Wrong missing plugin element 2");
+  is(missingPlugins[2], document.getElementById("obj2"),
+     "Wrong missing plugin element 3");
+  is(missingPlugins[3], document.getElementById("embed2"),
+     "Wrong missing plugin element 4");
+  is(missingPlugins[4], document.getElementById("obj3"),
+     "Wrong missing plugin element 5");
+
+  is(missingPlugins.length, 5, "Wrong number of missing plugins");
+
+  SimpleTest.finish();
+}
+</script>
+
+<script class="testbody" type="text/javascript">
+setTimeout(runtests, 100);
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

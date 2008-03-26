@@ -160,13 +160,14 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug421602.html \
 		test_bug422537.html \
 		test_bug424212.html \
-    test_XHR.html \
-    file_XHR_pass1.xml \
-    file_XHR_pass2.txt \
-    file_XHR_pass3.txt \
-    file_XHR_pass3.txt^headers^ \
-    file_XHR_fail1.txt \
-    file_XHR_fail1.txt^headers^ \
+		test_bug425013.html \
+		test_XHR.html \
+		file_XHR_pass1.xml \
+		file_XHR_pass2.txt \
+		file_XHR_pass3.txt \
+		file_XHR_pass3.txt^headers^ \
+		file_XHR_fail1.txt \
+		file_XHR_fail1.txt^headers^ \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

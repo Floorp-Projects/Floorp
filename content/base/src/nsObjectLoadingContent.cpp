@@ -77,6 +77,7 @@
 #include "nsNetUtil.h"
 #include "nsPresShellIterator.h"
 #include "nsMimeTypes.h"
+#include "nsStyleUtil.h"
 
 // Concrete classes
 #include "nsFrameLoader.h"
@@ -1725,6 +1726,8 @@ nsObjectLoadingContent::GetPluginSupportState(nsIContent* aContent,
     return GetPluginDisabledState(aContentType);
   }
 
+  PRBool hasAlternateContent = PR_FALSE;
+
   // Search for a child <param> with a pluginurl name
   PRUint32 count = aContent->GetChildCount();
   for (PRUint32 i = 0; i < count; ++i) {
@@ -1732,13 +1735,19 @@ nsObjectLoadingContent::GetPluginSupportState(nsIContent* aContent,
     NS_ASSERTION(child, "GetChildCount lied!");
 
     if (child->IsNodeOfType(nsINode::eHTML) &&
-        child->Tag() == nsGkAtoms::param &&
-        child->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
-                           NS_LITERAL_STRING("pluginurl"), eIgnoreCase)) {
-      return GetPluginDisabledState(aContentType);
+        child->Tag() == nsGkAtoms::param) {
+      if (child->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                             NS_LITERAL_STRING("pluginurl"), eIgnoreCase)) {
+        return GetPluginDisabledState(aContentType);
+      }
+    } else if (!hasAlternateContent) {
+      hasAlternateContent =
+        nsStyleUtil::IsSignificantChild(child, PR_TRUE, PR_FALSE);
     }
   }
-  return ePluginOtherState;
+
+  return hasAlternateContent ? ePluginOtherState :
+    GetPluginDisabledState(aContentType);
 }
 
 /* static */ nsObjectLoadingContent::PluginSupportState
