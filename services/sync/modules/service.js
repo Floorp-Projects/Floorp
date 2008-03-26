@@ -610,19 +610,20 @@ WeaveSvc.prototype = {
     let self = yield;
 
     try {
-      //this._lock.async(this, self.cb);
-      //let locked = yield;
-      //if (!locked)
-      //  return;
+      this._lock.async(this, self.cb);
+      let locked = yield;
+      if (!locked)
+        return;
 
       this._bmkEngine.share(self.cb, username);
+      yield;
 
     } catch (e) {
       throw e;
 
     } finally {
-      //this._unlock.async(this, self.cb);
-      //yield;
+      this._unlock.async(this, self.cb);
+      yield;
     }
 
     self.done();
@@ -666,6 +667,6 @@ WeaveSvc.prototype = {
   resetServer: function WeaveSync_resetServer() { this._resetServer.async(this); },
   resetClient: function WeaveSync_resetClient() { this._resetClient.async(this); },
   shareBookmarks: function WeaveSync_shareBookmarks(username) {
-    this._shareBookmarks.async(this, null, username);
+    this._shareBookmarks.async(this, function() {}, username);
   }
 };
