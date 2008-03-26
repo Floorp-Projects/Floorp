@@ -162,7 +162,6 @@ nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
   mMonitor = PR_NewMonitor();
   mOnStateLocationChangeReentranceDetection = 0;
   mTransferringRequests.ops = nsnull;
-  mInconsistency = PR_FALSE;
   mNewToplevelSecurityState = STATE_IS_INSECURE;
   mNewToplevelIsEV = PR_FALSE;
   mNewToplevelSecurityStateKnown = PR_TRUE;
@@ -597,6 +596,10 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
                                      PRUint32 aProgressStateFlags,
                                      nsresult aStatus)
 {
+  nsAutoAtomic atomic(mOnStateLocationChangeReentranceDetection);
+  NS_ASSERTION(mOnStateLocationChangeReentranceDetection == 1,
+               "unexpected parallel nsIWebProgress OnStateChange and/or OnLocationChange notification");
+
   /*
     All discussion, unless otherwise mentioned, only refers to
     http, https, file or wyciwig requests.
@@ -687,43 +690,19 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     regardless of whether the load flags indicate a top level document.
   */
 
-  nsAutoAtomic atomic(mOnStateLocationChangeReentranceDetection);
-  if (mOnStateLocationChangeReentranceDetection > 1)
-  {
-    nsAutoMonitor lock(mMonitor);
-    mInconsistency = PR_TRUE;
-    // we ignore all events until the reentrance is gone
-    return NS_ERROR_FAILURE;
-  }
-
-  PRBool mustResetAfterInconsistency = PR_FALSE;
-
   nsCOMPtr<nsIDOMWindow> windowForProgress;
+  aWebProgress->GetDOMWindow(getter_AddRefs(windowForProgress));
+
   nsCOMPtr<nsIDOMWindow> window;
   PRBool isViewSource;
 
   {
     nsAutoMonitor lock(mMonitor);
-
-    if (mInconsistency) {
-      mInconsistency = PR_FALSE;
-      mustResetAfterInconsistency = PR_TRUE;
-    }
-
     window = do_QueryReferent(mWindow);
     NS_ASSERTION(window, "Window has gone away?!");
     isViewSource = mIsViewSource;
   }
 
-  if (mustResetAfterInconsistency) {
-    mNewToplevelSecurityState = STATE_IS_INSECURE;
-    mNewToplevelIsEV = PR_FALSE;
-    mNewToplevelSecurityStateKnown = PR_TRUE;
-    mSSLStatus = nsnull;
-    ResetStateTracking();
-  }
-
-  aWebProgress->GetDOMWindow(getter_AddRefs(windowForProgress));
   const PRBool isToplevelProgress = (windowForProgress.get() == window.get());
   
 #ifdef PR_LOGGING
@@ -1272,8 +1251,8 @@ void nsSecureBrowserUIImpl::UpdateMyFlags(PRBool &showWarning, lockIconState &wa
   mNotifiedToplevelIsEV = mNewToplevelIsEV;
 }
 
-nsresult nsSecureBrowserUIImpl::TellTheWorld(PRBool showWarning, 
-                                             lockIconState warnSecurityState, 
+nsresult nsSecureBrowserUIImpl::TellTheWorld(PRBool &showWarning, 
+                                             lockIconState &warnSecurityState, 
                                              nsIRequest* aRequest)
 {
   nsCOMPtr<nsISecurityEventSink> temp_ToplevelEventSink;
@@ -1340,20 +1319,8 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
                                         nsIURI* aLocation)
 {
   nsAutoAtomic atomic(mOnStateLocationChangeReentranceDetection);
-  if (mOnStateLocationChangeReentranceDetection > 1)
-  {
-    nsAutoMonitor lock(mMonitor);
-    mInconsistency = PR_TRUE;
-    // We ignore all events until the reentrance is gone
-    // and has been reset by ::OnStateChange.
-    return NS_ERROR_FAILURE;
-  }
-  
-  // We could test for mInconsistency right here and exit,
-  // but let's avoid another lock to mMonitor.
-  // We'll do the preparation work based on the parameters,
-  // and once we are ready to lock the monitor, we'll do
-  // the inconsistency check.
+  NS_ASSERTION(mOnStateLocationChangeReentranceDetection == 1,
+               "unexpected parallel nsIWebProgress OnStateChange and/or OnLocationChange notification");
 
   PRBool updateIsViewSource = PR_FALSE;
   PRBool temp_IsViewSource = PR_FALSE;
@@ -1377,9 +1344,6 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
 
   {
     nsAutoMonitor lock(mMonitor);
-    if (mInconsistency) {
-      return NS_ERROR_FAILURE;
-    }
     if (updateIsViewSource) {
       mIsViewSource = temp_IsViewSource;
     }

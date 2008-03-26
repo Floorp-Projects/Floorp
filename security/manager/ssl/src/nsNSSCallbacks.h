@@ -86,14 +86,6 @@ public:
   
   PRBool mResponsibleForDoneSignal;
   void send_done_signal();
-
-  // no nsCOMPtr. When I use it, I get assertions about
-  //   loadgroup not being thread safe.
-  // So, let's use a raw pointer and ensure we only create and destroy
-  // it on the network thread ourselves.
-  nsILoadGroup *mLoadGroup;
-  PRThread *mLoadGroupOwnerThread;
-  void FreeLoadGroup(PRBool aCancelLoad);
 };
 
 class nsNSSHttpServerSession
