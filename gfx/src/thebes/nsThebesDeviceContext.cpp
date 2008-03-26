@@ -272,7 +272,10 @@ nsThebesDeviceContext::Init(nsNativeWidget aWidget)
 
 #endif
 
-    mScreenManager = do_GetService("@mozilla.org/gfx/screenmanager;1");
+
+    mDepth = 24;
+
+    mScreenManager = do_GetService("@mozilla.org/gfx/screenmanager;1");   
 
     return NS_OK;
 }
@@ -418,12 +421,6 @@ nsThebesDeviceContext::CheckFontExistence(const nsString& aFaceName)
 NS_IMETHODIMP
 nsThebesDeviceContext::GetDepth(PRUint32& aDepth)
 {
-    nsCOMPtr<nsIScreen> primaryScreen;
-    if (mDepth == 0) {
-        mScreenManager->GetPrimaryScreen(getter_AddRefs(primaryScreen));
-        primaryScreen->GetColorDepth(reinterpret_cast<PRInt32 *>(&mDepth));
-    }
-
     aDepth = mDepth;
     return NS_OK;
 }
