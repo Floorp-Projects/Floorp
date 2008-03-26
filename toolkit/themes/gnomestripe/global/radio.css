@@ -62,9 +62,8 @@ radio {
 .radio-spacer-box {
   -moz-appearance: radio;
   -moz-box-align: center;
-  border-right: 4px solid transparent;
-  border-top: 1px;
-  border-bottom: 1px;
+  margin: 2px;
+  border-right: 2px solid transparent;
 }
 
 .radio-label-center-box {
@@ -72,7 +71,6 @@ radio {
 }
 
 .radio-label-box {
-  border: 1px solid transparent;
   -moz-appearance: radio-label;
 }
 

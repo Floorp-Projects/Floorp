@@ -180,6 +180,13 @@ public:
    */
   void ProcessPendingRequests();
 
+  /**
+   * Check whether it's OK to execute a script loaded via aChannel in
+   * aDocument.
+   */
+  static PRBool ShouldExecuteScript(nsIDocument* aDocument,
+                                    nsIChannel* aChannel);
+
 protected:
   /**
    * Process any pending requests asyncronously (i.e. off an event) if there

@@ -370,6 +370,8 @@ private:
    *                          any fluid continuations)
    * @param aEnd         [IN] the offset of the end of the single-directional
    *                          text run.
+   * @param aLineNeedsUpdate [OUT] set to true if we're re-using a frame (which
+   *                               might be on another line).
    *
    * If there is already a bidi continuation for this frame in mLogicalFrames,
    * no new frame will be created. On exit aNewFrame will point to the existing
@@ -389,7 +391,8 @@ private:
                                 nsIFrame**      aNewFrame,
                                 PRInt32&        aFrameIndex,
                                 PRInt32         aStart,
-                                PRInt32         aEnd);
+                                PRInt32         aEnd,
+                                PRBool&         aLineNeedsUpdate);
 
   /**
    * Helper method for Resolve()

@@ -2437,6 +2437,7 @@ function toggleAffectedChrome(aHide)
     gChromeState.notificationsOpen = !notificationBox.notificationsHidden;
     notificationBox.notificationsHidden = aHide;
 
+    document.getElementById("sidebar").setAttribute("src", "about:blank");
     var statusbar = document.getElementById("status-bar");
     gChromeState.statusbarOpen = !statusbar.hidden;
     statusbar.hidden = aHide;
@@ -3211,16 +3212,22 @@ function BrowserCustomizeToolbar()
   if (splitter)
     splitter.parentNode.removeChild(splitter);
 
+  var customizeURL = "chrome://global/content/customizeToolbar.xul";
 #ifdef TOOLBAR_CUSTOMIZATION_SHEET
   var sheetFrame = document.getElementById("customizeToolbarSheetIFrame");
   sheetFrame.hidden = false;
+
+  // The document might not have been loaded yet, if this is the first time
+  if (sheetFrame.getAttribute("src") != customizeURL)
+    sheetFrame.setAttribute("src", customizeURL);
+
   // XXXmano: there's apparently no better way to get this when the iframe is
   // hidden
   var sheetWidth = sheetFrame.style.width.match(/([0-9]+)px/)[1];
   document.getElementById("customizeToolbarSheetPopup")
           .openPopup(getNavToolbox(), "after_start", (window.innerWidth - sheetWidth) / 2, 0);
 #else
-  window.openDialog("chrome://global/content/customizeToolbar.xul",
+  window.openDialog(customizeURL,
                     "CustomizeToolbar",
                     "chrome,all,dependent",
                     getNavToolbox());
@@ -4497,6 +4504,7 @@ function toggleSidebar(commandID, forceOpen) {
       sidebarBroadcaster.removeAttribute("checked");
       sidebarBox.setAttribute("sidebarcommand", "");
       sidebarTitle.value = "";
+      sidebar.setAttribute("src", "about:blank");
       sidebarBox.hidden = true;
       sidebarSplitter.hidden = true;
       content.focus();

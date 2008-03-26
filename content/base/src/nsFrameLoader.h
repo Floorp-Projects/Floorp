@@ -47,6 +47,7 @@
 #include "nsIDocShell.h"
 #include "nsStringFwd.h"
 #include "nsIFrameLoader.h"
+#include "nsIURI.h"
 
 class nsIContent;
 class nsIURI;
@@ -71,14 +72,16 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(nsFrameLoader)
   NS_DECL_NSIFRAMELOADER
   NS_HIDDEN_(nsresult) CheckForRecursiveLoad(nsIURI* aURI);
+  nsresult ReallyStartLoading();
   void Finalize();
 private:
 
   NS_HIDDEN_(nsresult) EnsureDocShell();
   NS_HIDDEN_(void) GetURL(nsString& aURL);
+  nsresult CheckURILoad(nsIURI* aURI);
 
   nsCOMPtr<nsIDocShell> mDocShell;
-
+  nsCOMPtr<nsIURI> mURIToLoad;
   nsIContent *mOwnerContent; // WEAK
   PRPackedBool mDepthTooGreat;
   PRPackedBool mIsTopLevelContent;

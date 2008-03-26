@@ -48,12 +48,19 @@ local $file;
 local $temp;
 my $debug = $ENV{DEBUG};
 
+# required for mac os x 10.5 to prevent sort from 
+# complaining about illegal byte sequences
+$ENV{LC_ALL} = 'C';
+
 (undef, $temp) = tempfile();
 
 open TEMP, ">$temp" or
     die "FATAL ERROR: Unable to open temporary file $temp for writing: $!\n";
 
-local ($test_id, 
+local ($test_id,
+       $tmp_test_id,
+       %test_id,
+       %test_reported,
        $test_result, 
        $test_type, 
        $tmp_test_type,
@@ -62,19 +69,13 @@ local ($test_id,
        $test_processortype, 
        $test_kernel, 
        $test_suite,
-       $exit_flag,
        $exit_status,
-       $tmp_exit_flag,
-       $tmp_exit_status,
-       $page_flag, 
        $page_status,
-       $tmp_page_status,
-       $tmp_page_flag,
-       $test_state);
+       $state);
 
 local ($actual_exit, $actual_signal);
-local $count_records = 0;
-local $count_jstests = 0;
+
+local %test_reported       = ();
 
 while ($file = shift @ARGV)
 {
@@ -96,21 +97,14 @@ while ($file = shift @ARGV)
     local ($test_timezone) = $test_date;
     $test_timezone =~ s/.*([-+]\d{4,4})/$1/;
 
-#    dbg "test_date:          $test_date";
-#    dbg "test_timezone:      $test_timezone";
-#    dbg "test_product:       $test_product";
-#    dbg "test_branchid:      $test_branchid";
-#    dbg "test_buildtype:     $test_buildtype";
-#    dbg "test_os:            $test_os";
-#    dbg "test_machine:       $test_machine";
-#    dbg "test_suite: $test_suite";
-
     open FILE, "$file" or die "FATAL ERROR: unable to open $file for reading: $!\n";
 
     dbg "process header with environment variables used in test";
 
     while (<FILE>)
     {
+        $state = 'failure';
+
         chomp;
 
         # remove carriage returns, bels and other annoyances.
@@ -144,14 +138,18 @@ while ($file = shift @ARGV)
 
             dbg  "INPUT: $_";
 
+            if (/Wrote results to/)
+            {
+                $state = 'success';
+                last;
+            }
+
             $_ =~ s/[\r]$//;
             $_ =~ s/[\r]/CR/g;
             $_ =~ s/[\x01-\x08]//g;
             $_ =~ s/\s+$//;
 
             next if ( $_ !~ /^jstest: /);
-
-            ++$count_jstests;
 
             ($test_id)          = $_ =~ /^jstest: (.*?) *bug:/;
             ($test_result)      = $_ =~ /result: (.*?) *type:/;
@@ -179,43 +177,93 @@ while ($file = shift @ARGV)
                 }
             }
 
+            if ($test_description =~ /error: can.t allocate region/ || /set a breakpoint in malloc_error_break/ || 
+                /set a breakpoint in szone_error to debug/ || /malloc:.*mmap/ || /vm_allocate/ )
+            {
+                dbg "Adding message: /$test_id:0: out of memory";
+                $test_description .= "; /$test_id:0: out of memory";
+            }
+
             dbg "test_id:          $test_id";
             dbg "test_result:      $test_result";
             dbg "test_type:        $test_type";
             dbg "test_description: $test_description";
 
-            outputrecord;
+            outputrecord $test_id, $test_description, $test_result;
 
             dbg "-";
-
         }
     }
-
     elsif ($test_product eq "firefox")
     {
-        $test_state     = 'started program';
-        $test_buildtype = "nightly" unless $test_buildtype;
-        $test_type      = "browser";
-        @messages       = ();
+        %test_id         = ();
+        @messages        = ();
 
-        dbg "skip over test run start up";
+        $page_status     = '';
+        $exit_status     = '';
+        $test_buildtype  = "nightly" unless $test_buildtype;
+        $test_type       = "browser";
 
-        while (<FILE>)
-        {
-            chomp;
 
-            # remove carriage returns, bels and other annoyances.
-            $_ =~ s/[\r]$//;
-            $_ =~ s/[\r]/CR/g;
-            $_ =~ s/[\x01-\x08]//g;
-            $_ =~ s/\s+$//;
+# non-restart mode. start spider; for each test { load test;} exit spider;
+# restart mode.     for each test; { start spider; load test; exit spider; }
+# 
+#                    Expected sequence if all output written to the log.
+#
+#    Input                                            Initial State       Next State       userhook event                         outputrecord
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Spider: Start.*start-spider.html                    idle                startrun
+# Spider: Begin loading.*start-spider.html            startrun            startrun
+# Start Spider: try.*EXIT STATUS: NORMAL              startrun            initialized
+# Start Spider: try.*EXIT STATUS: (TIMED OUT|CRASHED) startrun            startrun
+# Spider: Start.*urllist                              initialized         initialized      (non restart mode)
+# Spider: Begin loading.*urllist                      initialized         initialized      (non restart mode)
+# Spider: Finish loading.*urllist                     initialized         initialized      (non restart mode)
+# Spider: Current Url:.*urllist                       initialized         initialized      (non restart mode)
+# Spider: Start.*test=t;                              initialized         starttest        (has test id)
+# JavaScriptTest: Begin Run                           starttest           starttest        onStart
+# Spider: Begin loading.*test=t;                      starttest           loadingtest      (has test id)
+# JavaScriptTest: Begin Test t;                       loadingtest         runningtest      onBeforePage (has test id)                         
+# jstest: t                                           runningtest         reportingtest    (has test id)                          yes.        
+# Spider: Finish loading.*t=t;                        reportingtest       loadedtest       (has test id)                                      
+# Spider: Finish loading.*t=t;                        runningtest         pendingtest      (has test id)                                      
+# Spider: Current Url:.*test=t;                       loadedtest          loadedtest       (has test id)                                      
+# http://.*test=t;.*PAGE STATUS: NORMAL               loadedtest          loadedtest       onAfterPage (has test id)                          
+# http://.*test=t;.*PAGE STATUS: TIMED OUT            loadedtest          endrun           onPageTimeout (has test id)            yes.        
+# JavaScriptTest: t Elapsed time                      loadedtest          completedtest    checkTestCompleted (has test id)                   
+# JavaScriptTest: End Test t                          completedtest       completedtest    checkTestCompleted (has test id)                   
+# JavaScriptTest: End Test t                          endrun              endrun           onPageTimeout (has test id)                        
+# Spider: Start.*test=t;                              completedtest       starttest        (non restart mode) (has test id)
+# JavaScriptTest: End Run                             completedtest       endrun           onStop
+# JavaScriptTest: End Run                             loadedtest          endrun           onStop
+# Spider: Start.*test=t;                              endrun              starttest        (restart mode) (has test id)
+# http://.*test=t;.*EXIT STATUS: NORMAL               endrun              endrun           (has test id)                          maybe.
+# http://.*test=t;.*EXIT STATUS: TIMED OUT            endrun              endrun           (has test id)                          yes.
+# http://.*test=t;.*EXIT STATUS: CRASHED              endrun              endrun           (has test id)                          yes.
+# /work/mozilla/mozilla.com/test.mozilla.com/www$     endrun              success
+# EOF                                                 success             success
+# EOF                                                 endrun              failure
+# 
+# States        has test id
+# -------------------------
+# idle
+# startrun
+# initialized
+# starttest     has test id
+# loadingtest   has test id
+# runningtest   has test id
+# pendingtest   has test id
+# reportingtest has test id
+# loadedtest    has test id
+# endrun        has test id
+# completedtest has test id
+# success
+# failure
 
-            dbg  "INPUT: $_";
+        dbg "Assuming starting in restart mode";
 
-            last if (/^Spider: Start/ && !/start-spider.html/);
-        }
-
-        dbg "begin processing test results";
+        $mode  = 'restart';
+        $state = 'idle';
 
         while (<FILE>)
         {
@@ -229,247 +277,533 @@ while ($file = shift @ARGV)
 
             if ($debug)
             {
-                dbg "INPUT: $_";
-                dbg "test_id: $test_id, test_state: $test_state, page_status: $page_status";
+                dbg "\nINPUT: $_";
             }
 
             # massage the input to make more uniform across test types and platforms
             s/\.js, line ([0-9]*): out of memory/.js:$1: out of memory/g;
 
-            if ( /^Spider: Begin loading.*urllist/)
+
+            if (/^Spider: Start.*start-spider.html/)
             {
-                $test_state = 'loading list'; # optional, only if run in non-restart mode
-                dbg "ignore loading the test list when running in non restart mode"
+                if ($state eq 'idle')
+                {
+                    $state = 'startrun';
+                }
+                else
+                {
+                    warn "WARNING: state: $state, expected: idle, log: $file";
+                    $state = 'startrun';
+                }
+            }
+            elsif (/^Spider: Begin loading.*start-spider.html/)
+            {
+                if ($state eq 'startrun')
+                {
+                    $state = 'startrun';
+                }
+                else
+                {
+                    warn "WARNING: state: $state, expected: startrun, log: $file";
+                    $state = 'startrun';
+                }
+            }
+            elsif (/^Start Spider: try.*EXIT STATUS: NORMAL/)
+            {
+                if ($state eq 'startrun')
+                {
+                    $state = 'initialized';
+                }
+                else
+                {
+                    warn "WARNING: state: $state, expected: startrun, log: $file";
+                    $state = 'initialized';
+                }
+            }
+            elsif (/^Start Spider: try.*EXIT STATUS: (TIMED OUT|CRASHED)/)
+            {
+                if ($state eq 'startrun')
+                {
+                    $state = 'startrun';
+                }
+                else
+                {
+                    warn "WARNING: state: $state, expected: startrun, log: $file";
+                    $state = 'startrun';
+                }
+            }
+            elsif ( /^Spider: Start: -url .*test.mozilla.com.tests.mozilla.org.js.urllist-/)
+            {
+                dbg "Setting mode to nonrestart";
+
+                $mode = 'nonrestart';
+
+                if ($state eq 'initialized')
+                {
+                    $state = 'initialized';
+                }
+                elsif ($state eq 'starttest')
+                {
+                    $state = 'initialized';
+                }
+                else
+                {
+                    warn "WARNING: state: $state, expected: initialized, starttest, log: $file";
+                    $state = 'initialized';
+                }
+            }
+            elsif ( ($tmp_test_id) = $_ =~ /^Spider: Start.*http.*test=([^;]*);/)
+            {
+                if ($state eq 'initialized')
+                {
+                    $state = 'starttest';
+                }
+                elsif ($state eq 'completedtest')
+                {
+                    $state = 'starttest';
+                }
+                elsif ($state eq 'endrun')
+                {
+                    $state = 'starttest';
+                }
+                else
+                {
+                    warn "WARNING: state: $state, expected: initialized, completedtest, endrun, log: $file";
+                    $state = 'starttest';
+                }
+
+                $test_id{$state} = $tmp_test_id;
+                $test_id{'loadingtest'} = $test_id{'runningtest'} = $test_id{'reportingtest'} = $test_id{'loadedtest'} = $test_id{'endrun'} = $test_id {'completedtest'} = $test_id{'loadedtest'} = '';
+                @messages = ();
+            }
+            elsif ( /^JavaScriptTest: Begin Run/)
+            {
+                if ($state eq 'starttest')
+                {
+                    $state = 'starttest';
+                }
+                elsif ($state eq 'initialized' && $mode eq 'nonrestart')
+                {
+                    $state = 'starttest';
+                }
+                else
+                {
+                    warn "WARNING: state: $state, expected: starttest or initialized in non restart mode, mode $mode, log: $file";
+                    $state = 'starttest';
+                }
             }
             elsif ( ($tmp_test_id) = $_ =~ /^Spider: Begin loading http.*test=([^;]*);/)
             {
-                dbg "Begin loading $tmp_test_id";
-
-                # add reporting test as a valid state in case the previous test timed out during 
-                # a restart run and the test was killed before reporting end of test, exit, etc.
-                die "FATAL ERROR: Spider Begin loading: previous test not completed: test: $test_id, current test: $tmp_test_id, test state: $test_state, log: $file" 
-                    if ("started program, loading list, finished test, exited program, reporting test" !~ /$test_state/);
-
-                $test_state  = 'loading test';
-                $test_id     = $tmp_test_id;
-                $page_flag   = '';
-                $page_status = '';
-                $exit_flag   = '';
-                $exit_status = '';
-                @messages    = ();
-            }
-            elsif ( ($tmp_test_id) = $_ =~ /^JavaScriptTest: Begin Test (.*)/)
-            {
-                dbg "Begin Test: test: $test_id, current test: $tmp_test_id";
-
-                die "FATAL ERROR: JavaScript Begin Test: test mismatch: test $test_id, current test $tmp_test_id, log: $file" 
-                    if ($test_id ne $tmp_test_id);
-
-                die "FATAL ERROR: JavaScript Begin Test: test not loaded: test $test_id, current test $tmp_test_id, test state: $test_state, log: $file" 
-                    if ("loading test" !~ /$test_state/);
-
-                $test_state = 'running test';
-            }
-            elsif ( $_ =~ /^jstest: /)
-            {
-                dbg "processing jstest";
-
-                # may be in 'completed test' for delayed browser only tests.
-                # may be in 'exited program' in win32 for tests which timed out.
-                die "FATAL ERROR: jstest not in test: test state: $test_state: $_, log: $file" 
-                    if ('running test, reporting test, completed test, finished test, exited program' !~ /$test_state/);
-
-                if ($test_state ne 'finished test')
+                if ($mode eq 'restart' && $test_id{$state} && $tmp_test_id ne $test_id{$state})
                 {
-                    # once the test is finished, don't change state here.
-                    $test_state = 'reporting test';
+                    warn "WARNING: state: $state, expected starttest. mismatched test_id: expected: $tmp_test_id, actual: $test_id{$state}, log: $file";
                 }
-                ($tmp_test_id)      = $_ =~ /^jstest: (.*?) *bug:/;
+
+                if ($state eq 'starttest')
+                {
+                    $state = 'loadingtest';
+                }
+                elsif ($state eq 'initialized' && $mode eq 'nonrestart')
+                {
+                    $state = 'loadingtest';
+                }
+                else
+                {
+                    warn "WARNING: state: $state, expected: starttest or initialized in non restart mode, log: $file";
+                    $state = 'loadingtest';
+                }
+
+                $test_id{$state} = $tmp_test_id;
+            }
+            elsif ( ($tmp_test_id) = $_ =~ /^JavaScriptTest: Begin Test ([^ ]*)/)
+            {
+                if ($test_id{$state} && $tmp_test_id ne $test_id{$state})
+                {
+                    warn "WARNING: state: $state, expected loadingtest. mismatched test_id: expected: $tmp_test_id, actual: $test_id{$state}, log: $file";
+                }
+
+                if ($state eq 'loadingtest')
+                {
+                    $state = 'runningtest';
+                }
+                else
+                {
+                    warn "WARNING: state: $state, expected: loadingtest, log: $file";
+                    $state = 'runningtest';
+                }
+
+                $test_id{$state} = $tmp_test_id;
+            }
+            elsif ( ($tmp_test_id) = $_ =~ /^jstest: (.*?) *bug:/)
+            {
+                if ($test_id{$state} && $tmp_test_id ne $test_id{$state})
+                {
+                    warn "WARNING: state: $state, expected runningtest, reportingtest. mismatched test_id: expected: $tmp_test_id, actual: $test_id{$state}, log: $file";
+                }
+
+                if ($state eq 'runningtest')
+                {
+                    $state = 'reportingtest';
+                }
+                elsif ($state eq 'reportingtest')
+                {
+                    $state = 'reportingtest';
+                }
+                elsif ($state eq 'pendingtest')
+                {
+                    $state = 'reportingtest';
+                }
+                else
+                {
+                    warn "WARNING: state: $state, expected: runningtest, reportingtest, pendingtest, log: $file";
+                    $state = 'reportingtest';
+                }
+
                 ($test_result)      = $_ =~ /result: (.*?) *type:/;
                 ($tmp_test_type)    = $_ =~ /type: (.*?) *description:/;
+
+                die "FATAL ERROR: jstest test type mismatch: start test_type: $test_type, current test_type: $tmp_test_type, test state: $state, log: $file" 
+                    if ($test_type ne $tmp_test_type);
+
                 ($test_description) = $_ =~ /description: (.*)/;
 
                 if (!$test_description)
                 {
                     $test_description = "";
                 }
+                $test_description .= ' ' . join '; ', @messages;
 
-                ++$count_jstests;
+                outputrecord $tmp_test_id, $test_description, $test_result;
 
-                if ($debug)
+                $test_id{$state} = $tmp_test_id;
+            }
+            elsif ( ($tmp_test_id) = $_ =~ /^Spider: Finish loading http.*test=([^;]*);/)
+            {
+                if ($test_id{$state} && $tmp_test_id ne $test_id{$state})
                 {
-                    dbg "tmp_test_id:      $tmp_test_id";
-                    dbg "test_result:      $test_result";
-                    dbg "tmp_test_type:    $tmp_test_type";
-                    dbg "test_description: $test_description";
+                    warn "WARNING: state: $state, expected reportingtest. mismatched test_id: expected: $tmp_test_id, actual: $test_id{$state}, log: $file";
                 }
 
-                die "FATAL ERROR: jstest test type mismatch: start test_type: $test_type, current test_type: $tmp_test_type, test state: $test_state, log: $file" 
-                    if ($test_type ne $tmp_test_type);
-
-                if ($test_id ne $tmp_test_id)
+                if ($state eq 'reportingtest')
                 {
-                    # a previous test delayed its output either due to buffering or another reason
-                    # recover by temporarily setting the test id to the previous test and outputing 
-                    # the record.
-                    warn "WARNING: jstest test id mismatch: start test_id: $test_id, current test_id: $tmp_test_id, test state: $test_state, log: $file";
-                    my $save_test_id = $test_id;
-                    $test_id = $tmp_test_id;
-                    outputrecord;
-                    $test_id = $save_test_id;
+                    $state = 'loadedtest';
                 }
                 else
                 {
-                    outputrecord;
+                    # probably an out of memory error or a browser only delayed execution test.
+                    dbg "state: $state, expected: reportingtest. assuming test result is pending";
+                    $state = 'pendingtest';
                 }
+
+                $test_id{$state} = $tmp_test_id;
             }
-            elsif ( $test_state ne 'loading list' && (($tmp_page_flag, $tmp_page_status) = $_ =~ /(http:[^:]*): PAGE STATUS: (.*)/) )
+            elsif ( ($tmp_test_id) = $_ =~ /^Spider: Current Url:.*test=([^;]*);/)
             {
-                $page_flag = $tmp_page_flag;
-                $page_status = $tmp_page_status;
-
-                dbg "Processing PAGE STATUS: test_state: $test_state, page_flag: $page_flag, page_status: $page_status";
-
-                ($tmp_test_id) = $page_flag =~ /http.*test=([^;]*);/;
-
-                # may be in 'exited program' in win32 for tests which timed out.
-                die "FATAL ERROR: Test loaded but not in a test: test_state: $test_state:  test: $test_id, current test: $tmp_test_id, log: $file" 
-                    if ('loading test, running test, reporting test, exited program' !~ /$test_state/);
-                    
-                die "FATAL ERROR: Test loaded does not match currently running test: test: $test_id, current test: $tmp_test_id, log: $file"
-                    if ($test_id ne $tmp_test_id);
-
-                if ($page_status =~ /^NORMAL/)
+                if ($test_id{$state} && $tmp_test_id ne $test_id{$state})
                 {
-                    # since the deferred execution browser based tests finish loading before the
-                    # tests executes, we must wait to handle the case where the test may have
-                    # failed report any test results
+                    warn "WARNING: state: $state, expected loadedtest. mismatched test_id: expected: $tmp_test_id, actual: $test_id{$state}, log: $file";
                 }
-                elsif ($page_status =~ /^TIMED OUT/)
+
+                if ($state eq 'loadedtest')
                 {
-                    # if we got here, the test terminated because it
-                    # is one of the old style -n.js negative tests, it
-                    # crashed or the harness messed up.
-
-                    dbg "Test $test_id timed out";
-
-                    $test_description = join '; ', @messages;
-                    $test_result      = "FAILED";
-                    $test_description = "EXIT STATUS: $page_status, $test_description";
-
-                    outputrecord;
-
-                    $test_state = 'completed test';
-                    @messages   = ();
-
+                    $state = 'loadedtest';
+                }
+                elsif ($state eq 'reportingtest')
+                {
+                    $state = 'loadedtest';
+                }
+                elsif ($state eq 'pendingtest')
+                {
+                    $state = 'pendingtest';
                 }
                 else
                 {
-                    die "FATAL ERROR: Invalid Page Status: $page_status, log: $file";
+                    warn "WARNING: state: $state, expected: loadedtest, reportingtest, pendingtest, log: $file";
+                    $state = 'loadedtest';
                 }
 
+                $test_id{$state} = $tmp_test_id;
             }
-            elsif ( ($tmp_test_id) = $_ =~ /^JavaScriptTest: End Test (.*)/)
+            elsif ( ($tmp_test_id, $page_status) = $_ =~ /^http:.*test=([^;]*);.* (PAGE STATUS: NORMAL.*)/)
             {
-                dbg "End test test_id: $test_id, tmp_test_id: $tmp_test_id, page_status: $page_status, test_state: $test_state";
-
-                die "FATAL ERROR: JavaScript End Test: test mismatch: test $test_id, current test $tmp_test_id, log: $file" 
-                    if ($test_id ne $tmp_test_id);
-    
-                die "FATAL ERROR: JavaScript End Test: not in a test: test $test_id, current test $tmp_test_id, test state: $test_state, log: $file" 
-                    if ('reporting test, running test, completed test' !~ /$test_state/);
-
-                if ($page_status && $page_status =~ /^NORMAL/)
+                if ($test_id{$state} && $tmp_test_id ne $test_id{$state})
                 {
-                    dbg "Test $test_id loaded normally before the test was executed.";
-
-                    if ($test_state eq 'running test')
-                    {
-                        # if we got here, the test completed loading but it
-                        # didn't report a result before End Test was seen.
-
-                        dbg "Test $test_id did not report any results";
-
-                        # XXX: too much trouble updating failure list for the moment
-                        #      to make this change.
-                        # $test_description = 'No test results reported. ' . (join '; ', @messages);
-                        $test_description = (join '; ', @messages);
-
-                        if ($test_id =~ /-n.js$/ && $test_description =~
-                            /JavaScript (Exception|Error)/i)
-                        {
-                            # force -n.js tests which pass if they end
-                            # with an error or exception to 'pass'
-                            $test_result = "PASSED";
-                        }
-                        else
-                        {
-                            $test_result = "FAILED";
-                        }
-
-                        outputrecord;
-                    }
+                    warn "WARNING: state: $state, expected loadedtest. mismatched test_id: expected: $tmp_test_id, actual: $test_id{$state}, log: $file";
                 }
 
-                $test_state = 'finished test';
-            }
-            elsif ( ($tmp_exit_flag, $tmp_exit_status) = $_ =~ /(http:[^:]*): EXIT STATUS: (.*)/ )
-            {
-                $exit_flag = $tmp_exit_flag,
-                $exit_status = $tmp_exit_status;
-
-                dbg "Processing EXIT STATUS: exit_flag: $exit_flag, exit_status: $exit_status";
-
-                if ($exit_status =~ /^NORMAL/)
+                if ($state eq 'loadedtest')
                 {
-                    dbg "Program exited normally";
-                    
-                    die "FATAL ERROR: Program exited normally without running tests: test state: $test_state, $_, log: $file"
-                        if ('started program, loading list' =~ /$test_state/);
-
-                    die "FATAL ERROR: Program exited normally without finishing last test: test state: $test_state, $_, log: $file"
-                        if ('finished test, running test' !~ /$test_state/);
-
-                    if ($test_state eq 'running test')
-                    {
-                        $test_result = "FAILED";
-                        $test_description = join '; ', @messages;
-                        $test_description = "No test results reported. $test_description";
-                        $test_description = "EXIT STATUS: $exit_status, $test_description";
-                        outputrecord;
-                    }
+                    $state = 'loadedtest';
+                }
+                elsif ($state eq 'pendingtest')
+                {
+                    $state = 'pendingtest';
+                }
+                elsif ($state eq 'reportingtest')
+                {
+                    # test was pending, but output a result.
+                    $state = 'loadedtest';
                 }
                 else
                 {
-                    dbg "Program exited abnormally: test state: $test_state";
+                    warn "WARNING: state: $state, expected: loadedtest, pendingtest, reportingtest, log: $file";
+                    $state = 'loadedtest';
+                }
 
-                    if ($test_state eq 'finished test' && $exit_status =~ /^TIMED OUT/)
+                $test_id{$state} = $tmp_test_id;
+            }
+            elsif ( ($tmp_test_id, $page_status) = $_ =~ /^http:.*test=([^;]*);.* (PAGE STATUS: TIMED OUT.*)/)
+            {
+                if ($test_id{$state} && $tmp_test_id ne $test_id{$state})
+                {
+                    warn "WARNING: state: $state, expected loadedtest. mismatched test_id: expected: $tmp_test_id, actual: $test_id{$state}, log: $file";
+                }
+
+                if ($state eq 'loadedtest')
+                {
+                    $state = 'endrun';
+                }
+                elsif ($state eq 'runningtest')
+                {
+                    $state = 'completedtest';
+                }
+                elsif ($state eq 'reportingtest')
+                {
+                    $state = 'completedtest';
+                }
+                elsif ($state eq 'pendingtest')
+                {
+                    $state = 'completedtest';
+                }
+                else
+                {
+                    warn "WARNING: state: $state, expected: loadedtest, runningtest, reportingtest, pendingtest, log: $file";
+                    $state = 'endrun';
+                }
+
+                $test_result     = 'FAILED';
+                $test_description = $page_status . ' ' . join '; ', @messages;;
+                
+                outputrecord $tmp_test_id, $test_description, $test_result;
+
+                $test_id{$state} = $tmp_test_id;
+            }
+            elsif ( ($tmp_test_id) = $_ =~ /^JavaScriptTest: ([^ ]*) Elapsed time/)
+            {
+                if ($test_id{$state} && $tmp_test_id ne $test_id{$state})
+                {
+                    warn "WARNING: state: $state, expected loadedtest. mismatched test_id: expected: $tmp_test_id, actual: $test_id{$state}, log: $file";
+                }
+
+                if ($state eq 'loadedtest')
+                {
+                    $state = 'completedtest';
+                }
+                elsif ($state eq 'pendingtest')
+                {
+                    $state = 'pendingtest';
+                }
+                elsif ($state eq 'reportingtest')
+                {
+                    # test was pending, but has been reported.
+                    $state = 'completedtest';
+                }
+                else
+                {
+                    warn "WARNING: state: $state, expected: loadedtest, loadedtest, pendingtest, reportingtest, log: $file";
+                    $state = 'completedtest';
+                }
+
+                $test_id{$state} = $tmp_test_id;
+            }
+            elsif ( ($tmp_test_id) = $_ =~ /^JavaScriptTest: End Test ([^ ]*)/)
+            {
+                if ($test_id{$state} && $tmp_test_id ne $test_id{$state})
+                {
+                    warn "WARNING: state: $state, expected completedtest, endrun. mismatched test_id: expected: $tmp_test_id, actual: $test_id{$state}, log: $file";
+                }
+
+                if ($state eq 'completedtest')
+                {
+                    if ($mode eq 'restart')
                     {
-                        # as long as the program time out is greater than the page time out
-                        # this will have been reported already by the End Test page status code
+                        $state = 'completedtest';
                     }
                     else
                     {
-                        $test_result = "FAILED";
-                        $test_description = join '; ', @messages;
-
-                        if ($test_state eq 'running test')
-                        {
-                            $test_description = "No test results reported. $test_description";
-                        }
-                        $test_description = "EXIT STATUS: $exit_status, $test_description";
-                        outputrecord;
+                        $state = 'starttest';
                     }
                 }
+                elsif ($state eq 'pendingtest')
+                {
+                    $state = 'completedtest';
 
-                $test_state = 'exited program';
-                @messages = ();
+                    $test_result = 'UNKNOWN';
+                    $test_description = 'No test results reported. ' . join '; ', @messages;
+                    
+                    outputrecord $tmp_test_id, $test_description, $test_result;
+                }
+                elsif ($state eq 'endrun')
+                {
+                    $state = 'endrun';
+                }
+                else
+                {
+                    warn "WARNING: state: $state, expected: completedtest, pendingtest, endrun, log: $file";
+                    $state = 'completedtest';
+                }
 
+                $test_id{$state} = $tmp_test_id;
             }
-            elsif (!/^[-+]{2,2}(WEBSHELL|DOMWINDOW)/ && !/^Spider:/ && !/^JavaScriptTest:/ && !/^WARNING:/)
+            elsif ( /^JavaScriptTest: End Run/)
             {
-                dbg "Saving message $_";
-                push @messages, ($_);
+                if ($state eq 'completedtest')
+                {
+                    $state = 'endrun';
+                }
+                elsif ($state eq 'loadedtest')
+                {
+                    $state = 'endrun';
+                }
+                elsif ($state eq 'pendingtest')
+                {
+                    $state = 'pendingtest';
+                }
+                elsif ($state eq 'starttest' && $mode eq 'nonrestart')
+                {
+                    # non restart mode, at last test.
+                    $state = 'endrun';
+                }
+                else
+                {
+                    warn "WARNING: state: $state, expected: completedtest, loadedtest, pendingtest or starttest in non restart mode, log: $file";
+                    $state = 'endrun';
+                }
+            }
+            elsif ( ($tmp_test_id, $exit_status) = $_ =~ /^http:.*test=([^;]*);.* (EXIT STATUS: NORMAL.*)/)
+            {
+                if ($test_id{$state} && $tmp_test_id ne $test_id{$state})
+                {
+                    warn "WARNING: state: $state, expected endrun. mismatched test_id: expected: $tmp_test_id, actual: $test_id{$state}, log: $file";
+                }
+
+                if ($state eq 'endrun')
+                {
+                    $state = 'endrun';
+                }
+                elsif ($state eq 'completedtest')
+                {
+                    dbg "previously pending test $test_id{$state} completed and is now endrun";
+                    $state = 'endrun';
+                }
+                else
+                {
+                    warn "WARNING: state: $state, expected: endrun, log: $file";
+                    $state = 'endrun';
+                }
+
+                if (! $test_reported{$tmp_test_id})
+                {
+                    $test_result = 'UNKNOWN';
+                    $test_description = $exit_status . ' No test results reported. ' . join '; ', @messages;
+                    
+                    outputrecord $tmp_test_id, $test_description, $test_result;
+                }
+
+                $test_id{$state} = $tmp_test_id;
+            }
+            elsif ( ($tmp_test_id, $exit_status) = $_ =~ /^http:.*test=([^;]*);.* (EXIT STATUS: TIMED OUT.*)/)
+            {
+                if ($test_id{$state} && $tmp_test_id ne $test_id{$state})
+                {
+                    warn "WARNING: state: $state, expected endrun. mismatched test_id: expected: $tmp_test_id, actual: $test_id{$state}, log: $file";
+                }
+
+                if ($state eq 'endrun')
+                {
+                    $state = 'endrun';
+                }
+                else
+                {
+                    dbg "state: $state, expected: endrun";
+                    $state = 'endrun';
+                }
+
+                $test_result     = 'FAILED';
+                $test_description = $exit_status . ' ' . join '; ', @messages;
+                
+                outputrecord $tmp_test_id, $test_description, $test_result;
+
+                $test_id{$state} = $tmp_test_id;
+            }
+            elsif ( ($tmp_test_id, $exit_status) = $_ =~ /^http:.*test=([^;]*);.* (EXIT STATUS: CRASHED.*)/)
+            {
+                if ($test_id{$state} && $tmp_test_id ne $test_id{$state})
+                {
+                    warn "WARNING: state: $state, expected endrun. mismatched test_id: expected: $tmp_test_id, actual: $test_id{$state}, log: $file";
+                }
+
+                if ($state eq 'endrun')
+                {
+                    $state = 'endrun';
+                }
+                else
+                {
+                    dbg "state: $state, expected: endrun";
+                    $state = 'endrun';
+                }
+
+                $test_result     = 'FAILED';
+                $test_description = $exit_status . ' ' . join '; ', @messages;;
+                
+                outputrecord $tmp_test_id, $test_description, $test_result;
+
+                $test_id{$state} = $tmp_test_id;
+            }
+            elsif ( /^(\/cygdrive\/.)?\/work\/mozilla\/mozilla\.com\/test\.mozilla\.com\/www$/)
+            {
+                if ($state eq 'endrun')
+                {
+                    $state = 'success';
+                }
+                else
+                {
+                    warn "WARNING: state: $state, expected: endrun, log: $file";
+                    $state = 'success';
+                }
+
+                $test_id{$state} = $tmp_test_id;
+            }
+            elsif (!/^ \=\>/ && !/^\s+$/ && !/^[*][*][*]/ && !/^[-+]{2,2}(WEBSHELL|DOMWINDOW)/ && !/^Spider:/ && 
+                   !/^JavaScriptTest:/ && !/real.*user.*sys.*$/ && !/user.*system.*elapsed/)
+            {
+                if ('starttest, loadingtest, runningtest, reportingtest, pendingtest, loadedtest, endrun, completedtest' =~ /$state/)
+                {
+
+                    if (/error: can.t allocate region/ || /set a breakpoint in malloc_error_break/ || 
+                        /set a breakpoint in szone_error to debug/ || /malloc:.*mmap/ || /vm_allocate/ )
+                    {
+                        dbg "Adding message: $_ converted to /$test_id{$state}:0: out of memory";
+                        push @messages, ('/' . $test_id{$state} . ':0: out of memory');
+                    }
+                    else
+                    {
+                        dbg "Adding message: $_";
+                        push @messages, ($_);
+                    }
+                }
+            }
+
+            if ($debug)
+            {
+                if ($test_id{$state})
+                {
+                    dbg "test_id{$state}=$test_id{$state}, " . join '; ', @messages;
+                }
+                else
+                {
+                    dbg "state=$state, " . join '; ', @messages;
+                }
             }
         }
     }
@@ -481,6 +815,8 @@ while ($file = shift @ARGV)
     undef $test_machine;
     undef $test_product;
     undef $test_suite;
+
+    die "FATAL ERROR: Test run terminated prematurely. state: $state, log: $file" if ($state ne 'success');
 }
 
 close TEMP;
@@ -488,12 +824,6 @@ close TEMP;
 outresults;
 
 unlink $temp;
-
-if ($debug)
-{
-    dbg "jstests       $count_jstests\n";
-    dbg "total records $count_records\n";
-}
 
 sub dbg {
     if ($debug)
@@ -510,7 +840,7 @@ sub outresults
 
 sub outputrecord
 {
-    ++$count_records;
+    my ($test_id, $test_description, $test_result) = @_;
 
     # cut off the extra jstest: summaries as they duplicate the other
     # output and follow it.
@@ -534,4 +864,6 @@ sub outputrecord
     }
     print TEMP $output;
 
+    $test_reported{$test_id} = 1;
+    @messages = ();
 }

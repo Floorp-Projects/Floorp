@@ -38,7 +38,7 @@
 var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 var dmFile = Cc["@mozilla.org/file/directory_service;1"].
              getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
-dmFile.append("dmuitest.file");
+dmFile.append("dm-ui-test.file");
 dmFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
 var gTestPath = ios.newFileURI(dmFile).spec;
 
@@ -142,6 +142,7 @@ function test()
       t(win);
 
     win.close();
+    dmFile.remove(false);
     finish();
   }
   

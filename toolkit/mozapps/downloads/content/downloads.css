@@ -24,7 +24,7 @@ richlistitem[type="download"][state="4"] {
 }
 
 richlistitem[type="download"][state="6"] {
-  -moz-binding: url('chrome://mozapps/content/downloads/download.xml#download-blocked');
+  -moz-binding: url('chrome://mozapps/content/downloads/download.xml#download-blocked-parental');
 }
 
 richlistitem[type="download"][state="7"] {
@@ -33,6 +33,10 @@ richlistitem[type="download"][state="7"] {
 
 richlistitem[type="download"][state="8"] {
   -moz-binding: url('chrome://mozapps/content/downloads/download.xml#download-dirty');
+}
+
+richlistitem[type="download"][state="9"] {
+  -moz-binding: url('chrome://mozapps/content/downloads/download.xml#download-blocked-policy');
 }
 
 /* Only focus buttons in the selected item*/

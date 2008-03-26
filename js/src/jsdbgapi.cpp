@@ -62,10 +62,6 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
-#ifdef MOZ_SHARK
-#include <CHUD/CHUD.h>
-#endif
-
 typedef struct JSTrap {
     JSCList         links;
     JSScript        *script;
@@ -96,18 +92,32 @@ FindTrap(JSRuntime *rt, JSScript *script, jsbytecode *pc)
     return NULL;
 }
 
-void
-js_PatchOpcode(JSContext *cx, JSScript *script, jsbytecode *pc, JSOp op)
+jsbytecode *
+js_UntrapScriptCode(JSContext *cx, JSScript *script)
 {
+    jsbytecode *code;
+    JSRuntime *rt;
     JSTrap *trap;
 
-    DBG_LOCK(cx->runtime);
-    trap = FindTrap(cx->runtime, script, pc);
-    if (trap)
-        trap->op = op;
-    else
-        *pc = (jsbytecode)op;
-    DBG_UNLOCK(cx->runtime);
+    code = script->code;
+    rt = cx->runtime;
+    DBG_LOCK(rt);
+    for (trap = (JSTrap *)rt->trapList.next;
+         trap != (JSTrap *)&rt->trapList;
+         trap = (JSTrap *)trap->links.next) {
+        if (trap->script == script) {
+            if (code == script->code) {
+                code = JS_malloc(cx, script->length * sizeof(jsbytecode));
+                if (!code)
+                    break;
+                memcpy(code, script->code,
+                       script->length * sizeof(jsbytecode));
+            }
+            code[trap->pc - script->code] = trap->op;
+        }
+    }
+    DBG_UNLOCK(rt);
+    return code;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -118,6 +128,7 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
     JSRuntime *rt;
     uint32 sample;
 
+    JS_ASSERT((JSOp) *pc != JSOP_TRAP);
     junk = NULL;
     rt = cx->runtime;
     DBG_LOCK(rt);
@@ -563,8 +574,10 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 closure = (JSObject *) wp->closure;
                 clasp = OBJ_GET_CLASS(cx, closure);
                 if (clasp == &js_FunctionClass) {
-                    fun = GET_FUNCTION_PRIVATE(cx, closure);
-                    script = FUN_SCRIPT(fun);
+                    fun = OBJ_TO_FUNCTION(closure);
+                    script = FUN_IS_SCRIPTED(fun)
+                             ? FUN_TO_SCRIPTED(fun)->script
+                             : NULL;
                 } else if (clasp == &js_ScriptClass) {
                     fun = NULL;
                     script = (JSScript *) JS_GetPrivate(cx, closure);
@@ -576,10 +589,15 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 nslots = 2;
                 injectFrame = JS_TRUE;
                 if (fun) {
-                    nslots += FUN_MINARGS(fun);
-                    if (!FUN_INTERPRETED(fun)) {
-                        nslots += fun->u.n.extra;
-                        injectFrame = !(fun->flags & JSFUN_FAST_NATIVE);
+                    if (FUN_IS_SCRIPTED(fun)) {
+                        nslots += FUN_TO_SCRIPTED(fun)->nargs;
+                    } else {
+                        JSNativeFunction *nfun;
+
+                        nfun = FUN_TO_NATIVE(fun);
+                        nslots += NATIVE_FUN_MINARGS(nfun);
+                        nslots += nfun->extra;
+                        injectFrame = !(nfun->flags & JSFUN_FAST_NATIVE);
                     }
                 }
 
@@ -655,9 +673,8 @@ js_watch_set_wrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     jsval userid;
 
     funobj = JSVAL_TO_OBJECT(argv[-2]);
-    JS_ASSERT(OBJ_GET_CLASS(cx, funobj) == &js_FunctionClass);
-    wrapper = GET_FUNCTION_PRIVATE(cx, funobj);
-    userid = ATOM_KEY(wrapper->atom);
+    wrapper = OBJ_TO_FUNCTION(funobj);
+    userid = ATOM_KEY(FUN_ATOM(wrapper));
     *rval = argv[0];
     return js_watch_set(cx, obj, userid, rval);
 }
@@ -666,7 +683,7 @@ JSPropertyOp
 js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter)
 {
     JSAtom *atom;
-    JSFunction *wrapper;
+    JSNativeFunction *wrapper;
 
     if (!(attrs & JSPROP_SETTER))
         return &js_watch_set;   /* & to silence schoolmarmish MSVC */
@@ -680,12 +697,12 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter)
     } else {
         atom = NULL;
     }
-    wrapper = js_NewFunction(cx, NULL, js_watch_set_wrapper, 1, 0,
-                             OBJ_GET_PARENT(cx, (JSObject *)setter),
-                             atom);
+    wrapper = js_NewNativeFunction(cx, js_watch_set_wrapper, 1, 0,
+                                   OBJ_GET_PARENT(cx, (JSObject *)setter),
+                                   atom);
     if (!wrapper)
         return NULL;
-    return (JSPropertyOp) wrapper->object;
+    return (JSPropertyOp) &wrapper->base.object;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -918,19 +935,33 @@ JS_LineNumberToPC(JSContext *cx, JSScript *script, uintN lineno)
 JS_PUBLIC_API(JSScript *)
 JS_GetFunctionScript(JSContext *cx, JSFunction *fun)
 {
-    return FUN_SCRIPT(fun);
+    return FUN_IS_SCRIPTED(fun) ? FUN_TO_SCRIPTED(fun)->script : NULL;
 }
 
 JS_PUBLIC_API(JSNative)
 JS_GetFunctionNative(JSContext *cx, JSFunction *fun)
 {
-    return FUN_NATIVE(fun);
+    JSNativeFunction *nfun;
+
+    if (FUN_IS_SCRIPTED(fun))
+        return NULL;
+
+    nfun = FUN_TO_NATIVE(fun);
+    return (nfun->flags & JSFUN_FAST_NATIVE) ? NULL : nfun->native;
 }
 
 JS_PUBLIC_API(JSFastNative)
 JS_GetFunctionFastNative(JSContext *cx, JSFunction *fun)
 {
-    return FUN_FAST_NATIVE(fun);
+    JSNativeFunction *nfun;
+
+    if (FUN_IS_SCRIPTED(fun))
+        return NULL;
+
+    nfun = FUN_TO_NATIVE(fun);
+    return (nfun->flags & JSFUN_FAST_NATIVE)
+           ? (JSFastNative) nfun->native
+           : NULL;
 }
 
 JS_PUBLIC_API(JSPrincipals *)
@@ -982,11 +1013,9 @@ JS_StackFramePrincipals(JSContext *cx, JSStackFrame *fp)
     if (fp->fun) {
         JSRuntime *rt = cx->runtime;
 
-        if (rt->findObjectPrincipals) {
-            if (fp->fun->object != fp->callee)
-                return rt->findObjectPrincipals(cx, fp->callee);
-            /* FALL THROUGH */
-        }
+        if (rt->findObjectPrincipals)
+            return rt->findObjectPrincipals(cx, fp->callee);
+        /* FALL THROUGH */
     }
     if (fp->script)
         return fp->script->principals;
@@ -1548,17 +1577,27 @@ GetAtomTotalSize(JSContext *cx, JSAtom *atom)
 }
 
 JS_PUBLIC_API(size_t)
-JS_GetFunctionTotalSize(JSContext *cx, JSFunction *fun)
+JS_GetFunctionTotalSize(JSContext *cx, JSFunction *funobj)
 {
     size_t nbytes;
 
-    nbytes = sizeof *fun;
-    if (fun->object)
-        nbytes += JS_GetObjectTotalSize(cx, fun->object);
-    if (FUN_INTERPRETED(fun))
-        nbytes += JS_GetScriptTotalSize(cx, fun->u.i.script);
-    if (fun->atom)
-        nbytes += GetAtomTotalSize(cx, fun->atom);
+    nbytes = JS_GetObjectTotalSize(cx, &funobj->object);
+    if (FUN_IS_SCRIPTED(funobj)) {
+        JSScriptedFunction *sfun;
+
+        sfun = FUN_TO_SCRIPTED(funobj);
+        nbytes += sizeof *sfun;
+        nbytes += JS_GetScriptTotalSize(cx, sfun->script);
+        if (sfun->atom)
+            nbytes += GetAtomTotalSize(cx, sfun->atom);
+    } else {
+        JSNativeFunction *nfun;
+
+        nfun = FUN_TO_NATIVE(funobj);
+        nbytes += sizeof(JSNativeFunction) - sizeof(JSObject);
+        if (nfun->atom)
+            nbytes += GetAtomTotalSize(cx, nfun->atom);
+    }
     return nbytes;
 }
 
@@ -1621,7 +1660,6 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
             pbytes = JS_HOWMANY(pbytes, principals->refcount);
         nbytes += pbytes;
     }
-
     return nbytes;
 }
 
@@ -1667,7 +1705,7 @@ JS_NewSystemObject(JSContext *cx, JSClass *clasp, JSObject *proto,
 {
     JSObject *obj;
 
-    obj = js_NewObject(cx, clasp, proto, parent);
+    obj = js_NewObject(cx, clasp, proto, parent, 0);
     if (obj && system)
         STOBJ_SET_SYSTEM(obj);
     return obj;
@@ -1693,6 +1731,8 @@ JS_SetContextDebugHooks(JSContext *cx, JSDebugHooks *hooks)
 }
 
 #ifdef MOZ_SHARK
+
+#include <CHUD/CHUD.h>
 
 JS_PUBLIC_API(JSBool)
 JS_StartChudRemote()

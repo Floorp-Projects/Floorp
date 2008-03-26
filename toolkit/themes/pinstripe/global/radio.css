@@ -80,28 +80,4 @@ radio[disabled="true"] {
   -moz-appearance: radio;
   width: 14px;
   height: 12px;
-  background: url("chrome://global/skin/radio/radio.gif") no-repeat;
 }
-  
-radio:hover:active > .radio-check {
-  background-image: url("chrome://global/skin/radio/radio-act.gif");
-}
-
-radio[disabled="true"] > .radio-check {
-  background-image: url("chrome://global/skin/radio/radio-dis.gif") !important;
-}
-
-/* ..... selected state ..... */
-
-radio[selected="true"] > .radio-check {
-  background-image: url("chrome://global/skin/radio/radio-check.gif");
-}
-
-radio[selected="true"]:hover:active > .radio-check {
-  background-image: url("chrome://global/skin/radio/radio-check-act.gif");
-}
-
-radio[selected="true"][disabled="true"] > .radio-check {
-  background-image: url("chrome://global/skin/radio/radio-check-dis.gif") !important
-}
-

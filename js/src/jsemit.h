@@ -175,7 +175,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                        XXX combine with blockChain? */
     JSAtomList      decls;          /* function, const, and var declarations */
     JSParseContext  *parseContext;
-    JSFunction      *fun;           /* function to store argument and variable
+    JSFunction      *funobj;        /* function to store argument and variable
                                        names when flags & TCF_IN_FUNCTION */
 };
 
@@ -216,7 +216,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
      ATOM_LIST_INIT(&(tc)->decls),                                            \
      (tc)->blockNode = NULL,                                                  \
      (tc)->parseContext = (pc),                                               \
-     (tc)->fun = NULL)
+     (tc)->funobj = NULL)
 
 #define TREE_CONTEXT_FINISH(tc)                                               \
     ((void)0)

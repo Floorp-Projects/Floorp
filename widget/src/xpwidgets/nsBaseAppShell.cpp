@@ -54,6 +54,7 @@ nsBaseAppShell::nsBaseAppShell()
   , mBlockedWait(nsnull)
   , mFavorPerf(0)
   , mNativeEventPending(0)
+  , mEventloopNestingLevel(0)
   , mStarvationDelay(0)
   , mSwitchTime(0)
   , mLastNativeEventTime(0)
@@ -115,6 +116,7 @@ nsBaseAppShell::NativeEventCallback()
     mBlockNativeEvent = PR_TRUE;
   }
 
+  ++mEventloopNestingLevel;
   EventloopNestingState prevVal = mEventloopNestingState;
   NS_ProcessPendingEvents(thread, THREAD_EVENT_STARVATION_LIMIT);
   mEventloopNestingState = prevVal;
@@ -124,6 +126,8 @@ nsBaseAppShell::NativeEventCallback()
   // embedders event loop).
   if (NS_HasPendingEvents(thread))
     OnDispatchedEvent(nsnull);
+
+  --mEventloopNestingLevel;
 }
 
 PRBool
@@ -143,7 +147,9 @@ nsBaseAppShell::DoProcessNextNativeEvent(PRBool mayWait)
   EventloopNestingState prevVal = mEventloopNestingState;
   mEventloopNestingState = eEventloopXPCOM;
 
+  ++mEventloopNestingLevel;
   PRBool result = ProcessNextNativeEvent(mayWait);
+  --mEventloopNestingLevel;
 
   mEventloopNestingState = prevVal;
   return result;
@@ -189,17 +195,27 @@ nsBaseAppShell::FavorPerformanceHint(PRBool favorPerfOverStarvation,
 }
 
 NS_IMETHODIMP
-nsBaseAppShell::SuspendNative(void)
+nsBaseAppShell::SuspendNative()
 {
   ++mSuspendNativeCount;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBaseAppShell::ResumeNative(void)
+nsBaseAppShell::ResumeNative()
 {
   --mSuspendNativeCount;
   NS_ASSERTION(mSuspendNativeCount >= 0, "Unbalanced call to nsBaseAppShell::ResumeNative!");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseAppShell::GetEventloopNestingLevel(PRUint32* aNestingLevelResult)
+{
+  NS_ENSURE_ARG_POINTER(aNestingLevelResult);
+
+  *aNestingLevelResult = mEventloopNestingLevel;
+
   return NS_OK;
 }
 

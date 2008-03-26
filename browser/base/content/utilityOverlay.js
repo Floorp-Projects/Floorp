@@ -673,3 +673,25 @@ function getOfflineAppUsage(host)
   return usage;
 }
 
+// aCalledFromModal is optional
+function openHelpLink(aHelpTopic, aCalledFromModal) {
+  var url = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
+                      .getService(Components.interfaces.nsIURLFormatter)
+                      .formatURLPref("app.support.baseURL");
+  url += aHelpTopic;
+
+  var where = aCalledFromModal ? "window" : "tab";
+  openUILinkIn(url, where);
+}
+
+function openPrefsHelp() {
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefBranch2);
+
+  // non-instant apply prefwindows are usually modal, so we can't open in the topmost window, 
+  // since its probably behind the window.
+  var instantApply = prefs.getBoolPref("browser.preferences.instantApply");
+
+  var helpTopic = document.getElementsByTagName("prefwindow")[0].currentPane.helpTopic;
+  openHelpLink(helpTopic, !instantApply);
+}

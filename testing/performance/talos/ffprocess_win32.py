@@ -75,40 +75,43 @@ def TerminateProcess(pid):
   win32api.CloseHandle(handle)
 
 
-def ProcessesWithNameExist(process_name):
+def ProcessesWithNameExist(*process_names):
   """Returns true if there are any processes running with the
      given name.  Useful to check whether a Firefox process is still running
 
   Args:
-    process_name: String containing the process name, i.e. "firefox"
+    process_name: String or strings containing the process name, i.e. "firefox"
 
   Returns:
     True if any processes with that name are running, False otherwise.
   """
 
-  try:
-    pids = win32pdhutil.FindPerformanceAttributesByName(process_name, counter="ID Process")
-    return len(pids) > 0
-  except:
-    # Might get an exception if there are no instances of the process running.
-    return False
+  for process_name in process_names: 
+    try:
+      pids = win32pdhutil.FindPerformanceAttributesByName(process_name, counter="ID Process")
+      if len(pids) > 0:
+        return True 
+    except:
+      # Might get an exception if there are no instances of the process running.
+      continue
+  return False
 
 
-def TerminateAllProcesses(process_name):
+def TerminateAllProcesses(*process_names):
   """Helper function to terminate all processes with the given process name
 
   Args:
-    process_name: String containing the process name, i.e. "firefox"
+    process_name: String or strings containing the process name, i.e. "firefox"
   """
-
-  # Get all the process ids of running instances of this process, and terminate them.
-  try:
-    pids = win32pdhutil.FindPerformanceAttributesByName(process_name, counter="ID Process")
-    for pid in pids:
-      TerminateProcess(pid)
-  except:
-    # Might get an exception if there are no instances of the process running.
-    pass
+  for process_name in process_names:
+    # Get all the process ids of running instances of this process, and terminate them.
+    try:
+      pids = win32pdhutil.FindPerformanceAttributesByName(process_name, counter="ID Process")
+      for pid in pids:
+        TerminateProcess(pid)
+    except:
+      # Might get an exception if there are no instances of the process running.
+      continue
 
 
 def NonBlockingReadProcessOutput(handle):

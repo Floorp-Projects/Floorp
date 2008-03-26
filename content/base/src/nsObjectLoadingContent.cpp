@@ -1245,7 +1245,10 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
                            nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
                            &inheritPrincipal);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (inheritPrincipal || IsAboutBlank(aURI)) {
+  if (inheritPrincipal || IsAboutBlank(aURI) ||
+      (nsContentUtils::URIIsLocalFile(aURI) &&
+       NS_SUCCEEDED(thisContent->NodePrincipal()->CheckMayLoad(aURI,
+                                                               PR_FALSE)))) {
     chan->SetOwner(thisContent->NodePrincipal());
   }
 

@@ -53,16 +53,66 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
+  var s;
+
+  // see bug 416933
+  print('see bug 416933 for changed behavior on Gecko 1.9');
+
   try
   {
-    expect = 'SyntaxError: invalid range in character class';
-    eval('/[Q-b]/i.exec("")');
+    s = '/[Q-b]/.exec("")';
+    expect = 'No Error';
+    print(s + ' expect ' + expect);
+    eval(s);
+    actual = 'No Error';
   }
   catch(ex)
   {
     actual = ex + '';
   }
-  reportCompare(expect, actual, summary);
+  reportCompare(expect, actual, summary + ': ' + s);
+
+  try
+  {
+    s ='/[Q-b]/i.exec("")';
+    expect = 'No Error';
+    print(s + ' expect ' + expect);
+    eval(s);
+    actual = 'No Error';
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+  reportCompare(expect, actual, summary + ': ' + s);
+
+  try
+  {
+    s = '/[q-b]/.exec("")';
+    expect = 'SyntaxError: invalid range in character class';
+    print(s + ' expect ' + expect);
+    eval(s);
+    actual = 'No Error';
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+  reportCompare(expect, actual, summary + ': ' + s);
+
+  try
+  {
+    s ='/[q-b]/i.exec("")';
+    expect = 'No Error';
+    print(s + ' expect ' + expect);
+    eval(s);
+    actual = 'No Error';
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+  reportCompare(expect, actual, summary + ': ' + s);
 
   exitFunc ('test');
 }

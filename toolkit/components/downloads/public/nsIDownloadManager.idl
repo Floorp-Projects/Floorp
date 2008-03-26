@@ -50,21 +50,71 @@ interface nsIDownloadProgressListener;
 interface nsISimpleEnumerator;
 interface mozIStorageConnection;
 
-[scriptable, uuid(05ed1d45-0aff-4ba0-9e2c-a9ef20383048)]
+[scriptable, uuid(88a2df08-47f7-4268-bb16-81bab231f1bf)]
 interface nsIDownloadManager : nsISupports {
-  // Download States
-  const short DOWNLOAD_NOTSTARTED       = -1;
-  const short DOWNLOAD_DOWNLOADING      = 0;
-  const short DOWNLOAD_FINISHED         = 1;
-  const short DOWNLOAD_FAILED           = 2;
-  const short DOWNLOAD_CANCELED         = 3;
-  const short DOWNLOAD_PAUSED           = 4;
-  const short DOWNLOAD_QUEUED           = 5;
-  const short DOWNLOAD_BLOCKED          = 6;
-  const short DOWNLOAD_SCANNING         = 7;
-  const short DOWNLOAD_DIRTY            = 8;
+  /**
+   * Download type for generic file download.
+   */
+  const short DOWNLOAD_TYPE_DOWNLOAD = 0;
 
-  const short DOWNLOAD_TYPE_DOWNLOAD    = 0;
+  /**
+   * Download state for uninitialized download object.
+   */
+  const short DOWNLOAD_NOTSTARTED = -1;
+
+  /**
+   * Download is currently transferring data.
+   */
+  const short DOWNLOAD_DOWNLOADING = 0;
+
+  /**
+   * Download completed including any processing of the target
+   * file.  (completed)
+   */
+  const short DOWNLOAD_FINISHED = 1;
+
+  /**
+   * Transfer failed due to error. (completed)
+   */
+  const short DOWNLOAD_FAILED = 2;
+
+  /**
+   * Download was canceled by the user. (completed)
+   */
+  const short DOWNLOAD_CANCELED = 3;
+
+  /**
+   * Transfer was paused by the user.
+   */
+  const short DOWNLOAD_PAUSED = 4;
+
+  /**
+   * Download is active but data has not yet been received.
+   */
+  const short DOWNLOAD_QUEUED = 5;
+
+  /**
+   * Transfer request was blocked by parental controls proxies. (completed)
+   */
+  const short DOWNLOAD_BLOCKED_PARENTAL = 6;
+
+  /**
+   * Transferred download is being scanned by virus scanners.
+   */
+  const short DOWNLOAD_SCANNING = 7;
+
+  /**
+   * A virus was detected in the download. The target will most likely
+   * no longer exist. (completed)
+   */
+  const short DOWNLOAD_DIRTY = 8;
+
+  /**
+   * Win specific: Request was blocked by zone policy settings.
+   * (see bug #416683) (completed)
+   */
+  const short DOWNLOAD_BLOCKED_POLICY = 9;
+
 
   /**
    * Creates an nsIDownload and adds it to be managed by the download manager.

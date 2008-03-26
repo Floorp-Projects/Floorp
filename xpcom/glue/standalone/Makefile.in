@@ -126,3 +126,8 @@ export:: $(XPCOM_GLUE_SRC_CSRCS) $(XPCOM_GLUE_SRC_CPPSRCS) $(topsrcdir)/xpcom/gl
 GARBAGE += nsStringAPI.cpp
 
 DEFINES		+= -DXPCOM_GLUE
+
+ifdef TARGET_XPCOM_ABI
+DEFINES += -DTARGET_XPCOM_ABI=\"$(TARGET_XPCOM_ABI)\"
+endif
+

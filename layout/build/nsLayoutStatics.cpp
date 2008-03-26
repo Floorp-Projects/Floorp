@@ -82,6 +82,7 @@
 #include "nsTextFragment.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsXMLHttpRequest.h"
+#include "nsIFocusEventSuppressor.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -310,6 +311,7 @@ nsLayoutStatics::Shutdown()
 #endif
 
   nsXMLHttpRequest::ShutdownACCache();
+  NS_ShutdownFocusSuppressor();
 }
 
 void
