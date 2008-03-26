@@ -220,7 +220,7 @@ static const struct UnicodeRangeTableEntry gUnicodeRanges[] = {
 
 
 nsresult
-gfxFontUtils::ReadCMAPTableFormat12(PRUint8 *aBuf, PRInt32 aLength, gfxSparseBitSet& aCharacterMap) 
+gfxFontUtils::ReadCMAPTableFormat12(PRUint8 *aBuf, PRInt32 aLength, gfxSparseBitSet& aCharacterMap, std::bitset<128>& aUnicodeRanges) 
 {
     enum {
         OffsetFormat = 0,
@@ -260,7 +260,7 @@ gfxFontUtils::ReadCMAPTableFormat12(PRUint8 *aBuf, PRInt32 aLength, gfxSparseBit
 }
 
 nsresult 
-gfxFontUtils::ReadCMAPTableFormat4(PRUint8 *aBuf, PRInt32 aLength, gfxSparseBitSet& aCharacterMap)
+gfxFontUtils::ReadCMAPTableFormat4(PRUint8 *aBuf, PRInt32 aLength, gfxSparseBitSet& aCharacterMap, std::bitset<128>& aUnicodeRanges)
 {
     enum {
         OffsetFormat = 0,
@@ -340,8 +340,8 @@ gfxFontUtils::ReadCMAPTableFormat4(PRUint8 *aBuf, PRInt32 aLength, gfxSparseBitS
      (platformID == PlatformIDUnicode   && encodingID == EncodingIDUCS4ForUnicodePlatform))
 
 nsresult
-gfxFontUtils::ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCharacterMap, 
-                       PRPackedBool& aUnicodeFont, PRPackedBool& aSymbolFont)
+gfxFontUtils::ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCharacterMap, std::bitset<128>& aUnicodeRanges, 
+    PRPackedBool& aUnicodeFont, PRPackedBool& aSymbolFont)
 {
     enum {
         OffsetVersion = 0,
@@ -395,13 +395,9 @@ gfxFontUtils::ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCha
             keepOffset = offset;
             break;
         } else if (format == 4 && acceptableFormat4(platformID, encodingID, keepFormat)) {
-            aUnicodeFont = PR_TRUE;
-            aSymbolFont = PR_FALSE;
             keepFormat = format;
             keepOffset = offset;
         } else if (format == 12 && acceptableUCS4Encoding(platformID, encodingID)) {
-            aUnicodeFont = PR_TRUE;
-            aSymbolFont = PR_FALSE;
             keepFormat = format;
             keepOffset = offset;
             break; // we don't want to try anything else when this format is available.
@@ -411,9 +407,9 @@ gfxFontUtils::ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCha
     nsresult rv = NS_ERROR_FAILURE;
 
     if (keepFormat == 12)
-        rv = ReadCMAPTableFormat12(aBuf + keepOffset, aBufLength - keepOffset, aCharacterMap);
+        rv = ReadCMAPTableFormat12(aBuf + keepOffset, aBufLength - keepOffset, aCharacterMap, aUnicodeRanges);
     else if (keepFormat == 4)
-        rv = ReadCMAPTableFormat4(aBuf + keepOffset, aBufLength - keepOffset, aCharacterMap);
+        rv = ReadCMAPTableFormat4(aBuf + keepOffset, aBufLength - keepOffset, aCharacterMap, aUnicodeRanges);
 
     return rv;
 }
