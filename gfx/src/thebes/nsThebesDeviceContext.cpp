@@ -536,58 +536,71 @@ nsThebesDeviceContext::BeginDocument(PRUnichar*  aTitle,
                                      PRInt32     aEndPage)
 {
     static const PRUnichar kEmpty[] = { '\0' };
+    nsresult rv;
 
-    mPrintingSurface->BeginPrinting(nsDependentString(aTitle ? aTitle : kEmpty),
-                                    nsDependentString(aPrintToFileName ? aPrintToFileName : kEmpty));
-    if (mDeviceContextSpec)
-        mDeviceContextSpec->BeginDocument(aTitle, aPrintToFileName, aStartPage, aEndPage);
-    return NS_OK;
+    rv = mPrintingSurface->BeginPrinting(nsDependentString(aTitle ? aTitle : kEmpty),
+                                         nsDependentString(aPrintToFileName ? aPrintToFileName : kEmpty));
+
+    if (NS_SUCCEEDED(rv) && mDeviceContextSpec)
+        rv = mDeviceContextSpec->BeginDocument(aTitle, aPrintToFileName, aStartPage, aEndPage);
+
+    return rv;
 }
 
 
 NS_IMETHODIMP
 nsThebesDeviceContext::EndDocument(void)
 {
+    nsresult rv = NS_OK;
+
     if (mPrintingSurface) {
-        mPrintingSurface->EndPrinting();
-        mPrintingSurface->Finish();
+        rv = mPrintingSurface->EndPrinting();
+        if (NS_SUCCEEDED(rv))
+            mPrintingSurface->Finish();
     }
+
     if (mDeviceContextSpec)
         mDeviceContextSpec->EndDocument();
-    return NS_OK;
+
+    return rv;
 }
 
 
 NS_IMETHODIMP
 nsThebesDeviceContext::AbortDocument(void)
 {
-    mPrintingSurface->AbortPrinting();
+    nsresult rv = mPrintingSurface->AbortPrinting();
 
     if (mDeviceContextSpec)
         mDeviceContextSpec->EndDocument();
-    return NS_OK;
+
+    return rv;
 }
 
 
 NS_IMETHODIMP
 nsThebesDeviceContext::BeginPage(void)
 {
+    nsresult rv = NS_OK;
+
     if (mDeviceContextSpec)
-        mDeviceContextSpec->BeginPage();
+        rv = mDeviceContextSpec->BeginPage();
+
+    if (NS_FAILED(rv)) return rv;
 
    /* We need to get a new surface for each page on the Mac */
 #ifdef XP_MACOSX
     mDeviceContextSpec->GetSurfaceForPrinter(getter_AddRefs(mPrintingSurface));
 #endif
-    mPrintingSurface->BeginPage();
+    rv = mPrintingSurface->BeginPage();
 
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP
 nsThebesDeviceContext::EndPage(void)
 {
-    mPrintingSurface->EndPage();
+    nsresult rv = mPrintingSurface->EndPage();
 
     /* We need to release the CGContextRef in the surface here, plus it's
        not something you would want anyway, as these CGContextRefs are only good
@@ -599,7 +612,7 @@ nsThebesDeviceContext::EndPage(void)
     if (mDeviceContextSpec)
         mDeviceContextSpec->EndPage();
 
-    return NS_OK;
+    return rv;
 }
 
 /** End printing methods **/
