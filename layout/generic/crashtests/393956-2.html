@@ -1,0 +1,26 @@
+<html>
+<head>
+<style>
+body {
+  height: 40px;
+  -moz-column-count: 2;
+}
+#x {
+  height: 20px;
+}
+#y {
+  height: 80px;
+}
+</style>
+
+<script>
+function boom()
+{
+  document.getElementById("x").style.content = "'0'";
+}
+</script>
+</head>
+
+<body onload="boom();"><div id="x"><div id="y"></div></div></body>
+
+</html>
