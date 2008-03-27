@@ -46,6 +46,27 @@
 #include "nsRect.h"
 #include "nsIWidget.h"
 
+// "Borrowed" in part from the QTKit framework's QTKitDefines.h.  This is
+// needed when building on OS X Tiger (10.4.X) or with a 10.4 SDK.  It won't
+// be used when building on Leopard (10.5.X) or higher (or with a 10.5 or
+// higher SDK).
+//
+// These definitions for NSInteger and NSUInteger are the 32-bit ones -- since
+// we assume we'll always be building 32-bit binaries when building on Tiger
+// (or with a 10.4 SDK).
+#ifndef NSINTEGER_DEFINED
+
+typedef int NSInteger;
+typedef unsigned int NSUInteger;
+
+#define NSIntegerMax    LONG_MAX
+#define NSIntegerMin    LONG_MIN
+#define NSUIntegerMax   ULONG_MAX
+
+#define NSINTEGER_DEFINED 1
+
+#endif  /* NSINTEGER_DEFINED */
+
 @interface NSApplication (Undocumented)
 
 // Present in all versions of OS X from (at least) 10.2.8 through 10.5.
