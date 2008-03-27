@@ -435,21 +435,12 @@ PRBool nsToolkit::OnLeopardOrLater()
 // subclasses.  In order for method swizzling to work properly, posedMethod
 // needs to be unique in the class where the substitution takes place and all
 // of its subclasses.
-nsresult nsToolkit::SwizzleMethods(Class aClass, SEL orgMethod, SEL posedMethod,
-                                   PRBool classMethods)
+nsresult nsToolkit::SwizzleMethods(Class aClass, SEL orgMethod, SEL posedMethod)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  Method original = nil;
-  Method posed = nil;
-
-  if (classMethods) {
-    original = class_getClassMethod(aClass, orgMethod);
-    posed = class_getClassMethod(aClass, posedMethod);
-  } else {
-    original = class_getInstanceMethod(aClass, orgMethod);
-    posed = class_getInstanceMethod(aClass, posedMethod);
-  }
+  Method original = class_getInstanceMethod(aClass, orgMethod);
+  Method posed = class_getInstanceMethod(aClass, posedMethod);
 
   if (!original || !posed)
     return NS_ERROR_FAILURE;
