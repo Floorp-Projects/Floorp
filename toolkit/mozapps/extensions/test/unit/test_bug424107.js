@@ -14,9 +14,9 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Alexander J. Vincent <ajvincent@gmail.com>.
+ *      Dave Townsend <dtownsend@oxymoronical.com>.
  *
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -31,55 +31,43 @@
  * decision by deleting the provisions above and replace them with the notice
  * and other provisions required by the GPL or the LGPL. If you do not delete
  * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK *****
  */
 
-const checkListener = {
-  _onUpdateStartedCalled: false,
-  _onUpdateEndedCalled: false,
-  _onAddonUpdateStartedCount: 0,
-  _onAddonUpdateEndedCount: 0,
-
-  // nsIAddonUpdateCheckListener
-  onUpdateStarted: function onUpdateStarted() {
-    this._onUpdateStartedCalled = true;
-  },
-
-  // nsIAddonUpdateCheckListener
-  onUpdateEnded: function onUpdateEnded() {
-    this._onUpdateEndedCalled = true;
-  },
-
-  // nsIAddonUpdateCheckListener
-  onAddonUpdateStarted: function onAddonUpdateStarted(aAddon) {
-    this._onAddonUpdateStartedCount++;
-  },
-
-  // nsIAddonUpdateCheckListener
-  onAddonUpdateEnded: function onAddonUpdateEnded(aAddon, aStatus) {
-    this._onAddonUpdateEndedCount++;
-  }
-}
-
-/**
- * Run the test.
- */
-function run_test() {
+function run_test()
+{
+  // Copy an initial add-on into the profile.
+  var extension = gProfD.clone()
+  extension.append("extensions");
+  extension.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0755);
+  extension.append("bug424107@tests.mozilla.org");
+  extension.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0755);
+  var sourcerdf = do_get_file("toolkit/mozapps/extensions/test/unit/data/test_bug424107_1.rdf");
+  sourcerdf.copyTo(extension, "install.rdf");
+  
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "5", "1.9");
   startupEM();
-  const Ci = Components.interfaces;
-  gEM.update([], 0, Ci.nsIExtensionManager.UPDATE_SYNC_COMPATIBILITY, checkListener);
-  do_test_pending();
-  do_timeout(5000, "run_test_pt2()");
+  var addon = gEM.getItemForID("bug424107@tests.mozilla.org");
+  do_check_neq(addon, null);
+  do_check_eq(addon.version, 1);
+
+  // Uninstall
+  extension.remove(true);
+
+  restartEM();
+  addon = gEM.getItemForID("bug424107@tests.mozilla.org");
+  do_check_eq(addon, null);
+
+  // Install a new version
+  extension.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0755);
+  sourcerdf = do_get_file("toolkit/mozapps/extensions/test/unit/data/test_bug424107_2.rdf");
+  sourcerdf.copyTo(extension, "install.rdf");
+
+  restartEM();
+  addon = gEM.getItemForID("bug424107@tests.mozilla.org");
+  do_check_neq(addon, null);
+  do_check_eq(addon.version, 2);
 }
 
-function run_test_pt2() {
-  dump("Checking onUpdateStarted\n");
-  do_check_true(checkListener._onUpdateStartedCalled);
-  dump("Checking onUpdateEnded\n");
-  do_check_true(checkListener._onUpdateEndedCalled);
-  do_check_eq(checkListener._onAddonUpdateStartedCount, checkListener._onAddonUpdateEndedCount);
-  do_test_finished();
-}
