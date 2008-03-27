@@ -38,6 +38,7 @@
 from optparse import OptionParser
 import partner
 import urllib
+import sys
 
 
 def main(branch, version, url, loc, name, vFiles, minDir, creds, aus):
@@ -75,6 +76,14 @@ if __name__ == "__main__":
                     help="The AUS parameter for the AUS URI (-cck param)",
                     metavar="AUS_PARAM")
   (options, args) = parser.parse_args()
+
+  # Print Help if no args passed
+  if not options.branch or not options.version or not options.url or \
+     not options.loc or not options.name or not options.minDir:
+    print "Required Items Not Specified. Must specify build name, minotaur dir,",
+    print "locale, url, and version"
+    parser.print_help()
+    sys.exit(1)
 
   # Call Main
   main(options.branch, options.version, options.url, options.loc, options.name,
