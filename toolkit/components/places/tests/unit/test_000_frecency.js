@@ -148,7 +148,10 @@ bucketPrefs.every(function(bucket) {
       // visited
       var points = Math.ceil(1 * ((bonusValue / parseFloat(100.000000)).toFixed(6) * weight) / 1);
       if (!points) {
-        if (visitType == Ci.nsINavHistoryService.TRANSITION_EMBED || bonusName == "defaultVisitBonus")
+        if (!visitType ||
+            visitType == Ci.nsINavHistoryService.TRANSITION_EMBED ||
+            visitType == Ci.nsINavHistoryService.TRANSITION_DOWNLOAD ||
+            bonusName == "defaultVisitBonus")
           frecency = 0;
         else
           frecency = -1;
