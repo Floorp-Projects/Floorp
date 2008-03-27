@@ -44,6 +44,21 @@
 #import <Cocoa/Cocoa.h>
 
 #include "nsRect.h"
+#include "nsIWidget.h"
+
+@interface NSApplication (Undocumented)
+
+// Present in all versions of OS X from (at least) 10.2.8 through 10.5.
+- (BOOL)_isRunningModal;
+- (BOOL)_isRunningAppModal;
+
+// It's sometimes necessary to explicitly remove a window from the "window
+// cache" in order to deactivate it.  The "window cache" is an undocumented
+// subsystem, all of whose methods are included in the NSWindowCache category
+// of the NSApplication class (in header files generated using class-dump).
+- (void)_removeWindowFromCache:(NSWindow *)aWindow;
+
+@end
 
 class nsCocoaUtils
 {
@@ -81,7 +96,12 @@ class nsCocoaUtils
   static NSPoint EventLocationForWindow(NSEvent* anEvent, NSWindow* aWindow);
   
   // Finds the foremost window that is under the mouse for the current application.
-  static NSWindow* FindWindowUnderPoint(NSPoint aPoint);  
+  static NSWindow* FindWindowUnderPoint(NSPoint aPoint);
+
+  static nsIWidget* GetHiddenWindowWidget();
+
+  static void PrepareForNativeAppModalDialog();
+  static void CleanUpAfterNativeAppModalDialog();
 };
 
 #endif // nsCocoaUtils_h_

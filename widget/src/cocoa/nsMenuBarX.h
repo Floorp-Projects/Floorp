@@ -66,6 +66,8 @@ namespace MenuHelpersX
   NSString* CreateTruncatedCocoaLabel(const nsString& itemLabel);
   PRUint8 GeckoModifiersForNodeAttribute(const nsString& modifiersAttribute);
   unsigned int MacModifiersForGeckoModifiers(PRUint8 geckoModifiers);
+  nsIMenuBar* GetHiddenWindowMenuBar();
+  NSMenuItem* GetStandardEditMenuItem();
 }
 
 
