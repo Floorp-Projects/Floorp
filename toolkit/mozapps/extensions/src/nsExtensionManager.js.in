@@ -4856,13 +4856,19 @@ ExtensionManager.prototype = {
       catch (e) {
         ERROR("_finalizeUninstall: failed to remove directory for item: " + id +
               " at Install Location: " + installLocation.name + ", rolling back uninstall");
-        // Removal of the files failed, reset the uninstalled flag and rewrite
-        // the install manifests so this item's components are registered.
-        // Clear the op flag from the Startup Cache
-        StartupCache.put(installLocation, id, OP_NONE, true);
-        var restartRequired = this.installRequiresRestart(id, ds.getItemProperty(id, "type"))
-        this._updateManifests(restartRequired);
-        return;
+        var manifest = installLocation.getItemFile(id, "FILE_INSTALL_MANIFEST");
+        // If there is no manifest then either the rollback failed, or there was
+        // no manifest in the first place. Either way this item is now invalid
+        // and we shouldn't try to re-install it.
+        if (manifest.exists()) {
+          // Removal of the files failed, reset the uninstalled flag and rewrite
+          // the install manifests so this item's components are registered.
+          // Clear the op flag from the Startup Cache
+          StartupCache.put(installLocation, id, OP_NONE, true);
+          var restartRequired = this.installRequiresRestart(id, ds.getItemProperty(id, "type"))
+          this._updateManifests(restartRequired);
+          return;
+        }
       }
     }
     else if (installLocation.name == KEY_APP_PROFILE ||
