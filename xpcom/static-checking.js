@@ -23,9 +23,10 @@ ClassType.prototype = {
   stack: false,
 };
 
-function process_class(c)
+function process_type(c)
 {
-  get_class(c, true);
+  if (c.kind == 'class' || c.kind == 'struct')
+    get_class(c, true);
 }
 
 /**
