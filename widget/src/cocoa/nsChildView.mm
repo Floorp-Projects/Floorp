@@ -2849,6 +2849,12 @@ NSEvent* gLastDragEvent = nil;
 
   mGeckoChild->DispatchMouseEvent(geckoEvent);
 
+  // If the last call to menuForEvent: had the same event, we need to call it
+  // again. menuForEvent: didn't send a context menu event because we need to
+  // send the mouse down event first.
+  if (mLastMenuForEventEvent == theEvent)
+    [self menuForEvent:theEvent];
+
   // XXX maybe call markedTextSelectionChanged:client: here?
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -3361,8 +3367,17 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   if (!mGeckoChild)
     return nil;
 
+  // If this is the second time menuForEvent: has been called with the same
+  // mouse down event then we should let it through. We don't process the first
+  // call for any particular left mouse down event because Cocoa calls
+  // menuForEvent: *before* mouseDown: and we need to send mouse down events
+  // before context menu events. Cocoa correctly calls menuForEvent: after calls
+  // to rightMouseDown:.
+  BOOL letThrough = (theEvent == mLastMenuForEventEvent);
   [mLastMenuForEventEvent release];
   mLastMenuForEventEvent = [theEvent retain];
+  if (!letThrough && [theEvent type] == NSLeftMouseDown)
+    return nil;
 
   nsMouseEvent geckoEvent(PR_TRUE, NS_CONTEXTMENU, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
