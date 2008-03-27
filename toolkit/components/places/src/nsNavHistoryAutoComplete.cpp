@@ -55,7 +55,7 @@
  * have that, as should unvisited children of livemark feeds (that aren't
  * bookmarked elsewhere).
  *
- * But places with frecency (-1) are included, as that means that these items
+ * But places with frecency < 0 are included, as that means that these items
  * have not had their frecency calculated yet (will happen on idle).
  */
 
@@ -256,7 +256,7 @@ nsNavHistory::CreateAutoCompleteQueries()
 
   // NOTE:
   // after migration or clear all private data, we might end up with
-  // a lot of places with frecency = -1 (until idle)
+  // a lot of places with frecency < 0 (until idle)
   //
   // XXX bug 412736
   // in the case of a frecency tie, break it with h.typed and h.visit_count
