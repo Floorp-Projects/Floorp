@@ -1,0 +1,64 @@
+<html class="reftest-wait">
+<head>
+<style>
+
+    #colset {
+      width: 300pt;
+      height: 2in;
+      -moz-column-count: 3;
+    }
+    
+    .container {
+      height: 1in;
+    }
+
+    .b6 {
+      height: 10in;
+    }
+    
+    .c3 {
+      position: absolute;
+    }
+
+    .c4 {
+      height: 3in;
+    }
+
+</style>
+
+<script>
+
+function boom()
+{
+  document.getElementById("x").setAttribute("class", "c4");
+  setTimeout(boom2, 10);
+}
+
+function boom2()
+{
+  document.getElementById("x").setAttribute("class", "");
+  setTimeout(boom3, 10);
+}
+
+function boom3()
+{
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+
+<div id="colset">
+  <div id="x"></div>
+  <div class="container">
+    <div class="b6"></div>
+    <div>
+      <div class="c3"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
