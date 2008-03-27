@@ -6,6 +6,7 @@ pref("extensions.weave.encryption", "aes-256-cbc");
 pref("extensions.weave.lastversion", "firstrun");
 pref("extensions.weave.lastsync", "0");
 
+pref("extensions.weave.ui.syncnow", false);
 pref("extensions.weave.rememberpassword", true);
 pref("extensions.weave.autoconnect", true);
 pref("extensions.weave.enabled", true);
@@ -18,7 +19,7 @@ pref("extensions.weave.log.appender.dump", "Error");
 pref("extensions.weave.log.appender.briefLog", "Info");
 pref("extensions.weave.log.appender.debugLog", "Trace");
 
-pref("extensions.weave.log.rootLogger", "Debug");
+pref("extensions.weave.log.rootLogger", "Trace");
 pref("extensions.weave.log.logger.async", "Debug");
 pref("extensions.weave.log.logger.service.crypto", "Debug");
 pref("extensions.weave.log.logger.service.dav", "Debug");
