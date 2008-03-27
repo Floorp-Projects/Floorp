@@ -330,7 +330,7 @@ vbox[typeName="status"][type="header-recommended"] {
 }
 
 #searchbox {
-  padding: 0;
+  padding: 2px;
 }
 
 .searchbox-search, .searchbox-cancel {
@@ -343,6 +343,7 @@ vbox[typeName="status"][type="header-recommended"] {
   height: 16px;
   min-width: 16px;
   list-style-image: url("chrome://mozapps/skin/extensions/searchIcons.png");
+  background-color: -moz-field;
 }
 
 .searchbox-search {
