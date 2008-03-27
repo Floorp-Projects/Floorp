@@ -415,7 +415,7 @@ nsMathMLmrootFrame::GetIntrinsicWidth(nsIRenderingContext* aRenderingContext)
   nscoord dxSqr;
   GetRadicalXOffsets(indexWidth, sqrWidth, fm, nsnull, &dxSqr);
 
-  return dxSqr + baseWidth;
+  return dxSqr + sqrWidth + baseWidth;
 }
 
 // ----------------------
