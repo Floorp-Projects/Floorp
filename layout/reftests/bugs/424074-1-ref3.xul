@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window orient="horizontal" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <vbox width="500">
+    <scrollbar
+        orient="horizontal"
+        curpos="0"
+        maxpos="1000"
+        pageincrement="400"/>
+  </vbox>
+</window>
