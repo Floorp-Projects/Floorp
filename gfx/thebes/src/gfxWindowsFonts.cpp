@@ -663,9 +663,17 @@ gfxWindowsFont::SetupCairoFont(gfxContext *aContext)
 static already_AddRefed<gfxWindowsFont>
 GetOrMakeFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle)
 {
-    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aFontEntry->GetName(), aStyle);
+    // because we know the FontEntry has the weight we really want, use it for matching
+    // things in the cache so we don't end up with things like 402 in there.
+    gfxFontStyle style(*aStyle);
+    style.weight = aFontEntry->mWeight;
+    // also pre-round the size if there is no size adjust
+    if (style.sizeAdjust == 0.0)
+        style.size = ROUND(style.size);
+
+    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aFontEntry->GetName(), &style);
     if (!font) {
-        font = new gfxWindowsFont(aFontEntry->GetName(), aStyle, aFontEntry);
+        font = new gfxWindowsFont(aFontEntry->GetName(), &style, aFontEntry);
         if (!font)
             return nsnull;
         gfxFontCache::GetCache()->AddNew(font);
