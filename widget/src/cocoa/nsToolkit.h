@@ -66,8 +66,7 @@ public:
   
   static void        PostSleepWakeNotification(const char* aNotification);
 
-  static nsresult    SwizzleMethods(Class aClass, SEL orgMethod, SEL posedMethod,
-                                    PRBool classMethods = PR_FALSE);
+  static nsresult    SwizzleMethods(Class aClass, SEL orgMethod, SEL posedMethod);
 
 protected:
 
