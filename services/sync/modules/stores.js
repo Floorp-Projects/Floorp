@@ -72,10 +72,10 @@ Store.prototype = {
   },
 
   applyCommands: function Store_applyCommands(commandList) {
-    let self = yield;
+    let self = yield, timer;
 
     if (this._yieldDuringApply)
-      let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
     for (var i = 0; i < commandList.length; i++) {
       if (this._yieldDuringApply) {
