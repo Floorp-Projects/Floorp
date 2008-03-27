@@ -53,6 +53,7 @@
 #include "nsIMenuBar.h"
 #include "nsIMenuItem.h"
 #include "nsToolkit.h"
+#include "nsCocoaUtils.h"
 
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -79,6 +80,8 @@ extern nsIWidget         * gRollupWidget;
 
 static PRBool gConstructingMenu = PR_FALSE;
 
+static PRBool gMenuMethodsSwizzled = PR_FALSE;
+
 // CIDs
 #include "nsWidgetsCID.h"
 static NS_DEFINE_CID(kMenuCID,     NS_MENU_CID);
@@ -94,6 +97,14 @@ nsMenuX::nsMenuX()
   mConstructed(PR_FALSE), mVisible(PR_TRUE), mXBLAttached(PR_FALSE)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (nsToolkit::OnLeopardOrLater() && !gMenuMethodsSwizzled) {
+    nsToolkit::SwizzleMethods([NSMenu class], @selector(_addItem:toTable:),
+                              @selector(nsMenuX_NSMenu_addItem:toTable:), PR_TRUE);
+    nsToolkit::SwizzleMethods([NSMenu class], @selector(_removeItem:fromTable:),
+                              @selector(nsMenuX_NSMenu_removeItem:fromTable:), PR_TRUE);
+    gMenuMethodsSwizzled = PR_TRUE;
+  }
 
   mMenuDelegate = [[MenuDelegate alloc] initWithGeckoMenu:this];
     
@@ -1251,6 +1262,170 @@ static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, Event
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+@end
+
+
+// OS X Leopard (at least as of 10.5.2) has an obscure bug triggered by some
+// behavior that's present in Mozilla.org browsers but not (as best I can
+// tell) in Apple products like Safari.  (It's not yet clear exactly what this
+// behavior is.)
+//
+// The bug is that sometimes you crash on quit in nsMenuX::RemoveAll(), on a
+// call to [NSMenu removeItemAtIndex:].  The crash is caused by trying to
+// access a deleted NSMenuItem object (sometimes (perhaps always?) by trying
+// to send it a _setChangedFlags: message).  Though this object was deleted
+// some time ago, it remains registered as a potential target for a particular
+// key equivalent.  So when [NSMenu removeItemAtIndex:] removes the current
+// target for that same key equivalent, the OS tries to "activate" the
+// previous target.
+//
+// The underlying reason appears to be that NSMenu's _addItem:toTable: and
+// _removeItem:fromTable: methods (which are used to keep a hashtable of
+// registered key equivalents) don't properly "retain" and "release"
+// NSMenuItem objects as they are added to and removed from the hashtable.
+//
+// Our (hackish) workaround is to shadow the OS's hashtable with another
+// hastable of our own (gShadowKeyEquivDB), and use it to "retain" and
+// "release" NSMenuItem objects as needed.  This resolves bmo bugs 422287 and
+// 423669.  When (if) Apple fixes this bug, we can remove this workaround.
+
+static NSMutableDictionary *gShadowKeyEquivDB = nil;
+
+// Class for numerical-index keys in gShadowKeyEquivDB (each is the NSUInteger
+// equivalent of an NSMenuItem's address).  Using this kind of key is more
+// efficient and also less dangerous -- we won't get into trouble if an
+// NSMenuItem object contains invalid pointers (as it appears they sometimes
+// do).
+//
+// Note: NSUInteger is 64-bit safe, but below we must (if we want to be able
+// build on OS X 10.4.X) create IndexNumbers using a method that _isn't_
+// 64-bit safe -- [NSNumber numberWithUnsignedInt:(unsigned int)value].  Once
+// we start compiling 64-bit binaries, we will need to change this to
+// [NSNumber numberWithUnsignedInteger:(NSUInteger)value] (which is only
+// available starting with OS X 10.5).  We should get a compiler error if we
+// try to compile a 64-bit binary without making this change.
+
+@interface IndexNumber : NSNumber
+- (BOOL)isEqual:(id)anObject;
+@end
+
+@implementation IndexNumber
+
+// Ensure that hastable comparisons use an NSNumber object's value -- not its
+// address in memory.
+- (BOOL)isEqual:(id)anObject
+{
+  if ([anObject isKindOfClass:[NSNumber class]])
+    return [self isEqualToNumber:(NSNumber *)anObject];
+  return [super isEqual:anObject];
+}
+
+@end
+
+// Class for values in gShadowKeyEquivDB.
+
+@interface KeyEquivDBItem : NSObject
+{
+  NSMenuItem *mItem;
+  NSMutableIndexSet *mTables;
+}
+
+- (id)initWithItem:(NSMenuItem *)aItem table:(NSMapTable *)aTable;
+- (BOOL)hasTable:(NSMapTable *)aTable;
+- (int)addTable:(NSMapTable *)aTable;
+- (int)removeTable:(NSMapTable *)aTable;
+
+@end
+
+@implementation KeyEquivDBItem
+
+- (id)initWithItem:(NSMenuItem *)aItem table:(NSMapTable *)aTable
+{
+  if (!gShadowKeyEquivDB)
+    gShadowKeyEquivDB = [[NSMutableDictionary alloc] init];
+  self = [super init];
+  if (aItem && aTable) {
+    mTables = [[NSMutableIndexSet alloc] init];
+    mItem = [aItem retain];
+    [mTables addIndex:(NSUInteger)aTable];
+  } else {
+    mTables = nil;
+    mItem = nil;
+  }
+  return self;
+}
+
+- (void)dealloc
+{
+  if (mTables)
+    [mTables release];
+  if (mItem)
+    [mItem release];
+  [super dealloc];
+}
+
+- (BOOL)hasTable:(NSMapTable *)aTable
+{
+  return [mTables containsIndex:(NSUInteger)aTable];
+}
+
+// Does nothing if aTable (its index value) is already present in mTables.
+- (int)addTable:(NSMapTable *)aTable
+{
+  if (aTable)
+    [mTables addIndex:(NSUInteger)aTable];
+  return [mTables count];
+}
+
+- (int)removeTable:(NSMapTable *)aTable
+{
+  if (aTable)
+    [mTables removeIndex:(NSUInteger)aTable];
+  return [mTables count];
+}
+
+@end
+
+@interface NSMenu (MethodSwizzling)
++ (void)nsMenuX_NSMenu_addItem:(NSMenuItem *)aItem toTable:(NSMapTable *)aTable;
++ (void)nsMenuX_NSMenu_removeItem:(NSMenuItem *)aItem fromTable:(NSMapTable *)aTable;
+@end
+
+@implementation NSMenu (MethodSwizzling)
+
++ (void)nsMenuX_NSMenu_addItem:(NSMenuItem *)aItem toTable:(NSMapTable *)aTable
+{
+  if (aItem && aTable) {
+    IndexNumber *itemNumber = (IndexNumber *)
+      [NSNumber numberWithUnsignedInt:(NSUInteger)aItem];
+    KeyEquivDBItem *shadowItem = [gShadowKeyEquivDB objectForKey:itemNumber];
+    if (shadowItem) {
+      [shadowItem addTable:aTable];
+    } else {
+      shadowItem = [[KeyEquivDBItem alloc] initWithItem:aItem table:aTable];
+      [gShadowKeyEquivDB setObject:shadowItem forKey:itemNumber];
+      // Release after [NSMutableDictionary setObject:forKey:] retains it (so
+      // that it will get dealloced when removeObjectForKey: is called).
+      [shadowItem release];
+    }
+  }
+  [self nsMenuX_NSMenu_addItem:aItem toTable:aTable];
+}
+
++ (void)nsMenuX_NSMenu_removeItem:(NSMenuItem *)aItem fromTable:(NSMapTable *)aTable
+{
+  [self nsMenuX_NSMenu_removeItem:aItem fromTable:aTable];
+  if (aItem && aTable) {
+    IndexNumber *itemNumber = (IndexNumber *)
+      [NSNumber numberWithUnsignedInt:(NSUInteger)aItem];
+    KeyEquivDBItem *shadowItem = [gShadowKeyEquivDB objectForKey:itemNumber];
+    if (shadowItem && [shadowItem hasTable:aTable]) {
+      if (![shadowItem removeTable:aTable])
+        [gShadowKeyEquivDB removeObjectForKey:itemNumber];
+    }
+  }
 }
 
 @end
