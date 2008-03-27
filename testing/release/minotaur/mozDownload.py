@@ -118,9 +118,8 @@ class MozDownloader:
     try:
       # Work around the fact that the os.path module doesn't understand ~/ paths
       if self.dest[0] == "~":
-        self.dest = self.dest.replace("~", "${HOME}", 1)
+        self.dest = os.path.expanduser(self.dest)
       headpath = os.path.split(self.dest)[0]
-      headpath = os.path.expandvars(headpath)
       try:
         if not os.path.exists(headpath):
           os.makedirs(headpath)
@@ -141,9 +140,8 @@ class MozDownloader:
       # Create directory - we assume that the name of the file is the last
       # parameter on the path
       if self.dest[0] == "~":
-        self.dest = self.dest.replace("~", "${HOME}", 1)
+        self.dest = os.path.expanduser(self.dest)
       headpath = os.path.split(self.dest)[0]
-      headpath = os.path.expandvars(headpath)
       try:
         if not os.path.exists(headpath):
           os.makedirs(headpath)
