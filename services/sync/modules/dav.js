@@ -108,11 +108,10 @@ DAVCollection.prototype = {
     let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
     request = request.QueryInterface(Ci.nsIDOMEventTarget);
   
-//    request.addEventListener("load", new Utils.EventListener(self.cb, "load"), false);
-//    request.addEventListener("error", new Utils.EventListener(self.cb, "error"), false);
+    request.addEventListener("load", new Utils.EventListener(self.cb, "load"), false);
+    request.addEventListener("error", new Utils.EventListener(self.cb, "error"), false);
     request = request.QueryInterface(Ci.nsIXMLHttpRequest);
-//    request.open(op, this._baseURL + path, true);
-    request.open(op, this._baseURL + path, false); // FIXME: blocking
+    request.open(op, this._baseURL + path, true);
 
 
     // Force cache validation
@@ -135,9 +134,8 @@ DAVCollection.prototype = {
     request.channel.notificationCallbacks = this._authProvider;
 
     request.send(data);
-    ret = request;
-//    let event = yield;
-//    ret = event.target;
+    let event = yield;
+    ret = event.target;
 
     if (this._authProvider._authFailed)
       this._log.warn("_makeRequest: authentication failed");
