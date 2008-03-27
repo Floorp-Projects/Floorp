@@ -1265,6 +1265,9 @@ XPC_WN_JSOp_Clear(JSContext *cx, JSObject *obj)
     if(wrapper && wrapper->IsValid())
     {
         XPCNativeWrapper::ClearWrappedNativeScopes(cx, wrapper);
+
+        nsXPConnect* xpc = nsXPConnect::GetXPConnect();
+        xpc->UpdateXOWs(cx, wrapper, nsIXPConnect::XPC_XOW_CLEARSCOPE);
     }
 
     js_ObjectOps.clear(cx, obj);
