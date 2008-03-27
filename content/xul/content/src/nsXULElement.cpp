@@ -573,7 +573,7 @@ nsXULElement::IsFocusable(PRInt32 *aTabIndex)
    *
    * Confusingly, the supplied value for the aTabIndex argument may indicate
    * whether the element may be focused as a result of the -moz-user-focus
-   * property.
+   * property, where -1 means no and 0 means yes.
    *
    * For controls, the element cannot be focused and is not part of the tab
    * order if it is disabled.
@@ -611,13 +611,20 @@ nsXULElement::IsFocusable(PRInt32 *aTabIndex)
   }
 
   if (aTabIndex) {
-    if (xulControl && HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)) {
-      // if either the aTabIndex argument or a specified tabindex is non-negative,
-      // the element becomes focusable.
-      PRInt32 tabIndex = 0;
-      xulControl->GetTabIndex(&tabIndex);
-      shouldFocus = *aTabIndex >= 0 || tabIndex >= 0;
-      *aTabIndex = tabIndex;
+    if (xulControl) {
+      if (HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)) {
+        // if either the aTabIndex argument or a specified tabindex is non-negative,
+        // the element becomes focusable.
+        PRInt32 tabIndex = 0;
+        xulControl->GetTabIndex(&tabIndex);
+        shouldFocus = *aTabIndex >= 0 || tabIndex >= 0;
+        *aTabIndex = tabIndex;
+      }
+      else {
+        // otherwise, if there is no tabindex attribute, just use the value of
+        // *aTabIndex to indicate focusability
+        shouldFocus = *aTabIndex >= 0;
+      }
 
       if (shouldFocus && sTabFocusModelAppliesToXUL &&
           !(sTabFocusModel & eTabFocus_formElementsMask)) {
