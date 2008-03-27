@@ -1,0 +1,55 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+
+<style type="text/css">
+.pad { padding: 3ch; }
+.fl:first-letter { }
+td { border: 1px solid green }
+</style>
+
+<style id="s" type="text/css"></style>
+
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("td").nextSibling.splitText(6);
+  document.getElementById("td").style.padding = "2px";
+  
+  setTimeout(boom2, 10);
+}
+
+function boom2()
+{
+  document.body.style.counterReset = "chicken";
+  
+  setTimeout(boom3, 10);
+}
+
+function boom3()
+{
+  document.getElementById("s").textContent = "#xxx { }";
+  
+  setTimeout(boom4, 10);
+}
+
+function boom4()
+{
+  document.getElementById("td").style.padding = "";
+  setTimeout(boom5, 10);
+}
+
+function boom5()
+{
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body style="font-family: monospace; width: 14ch; border: 1px solid orange;" dir="rtl" onload="boom();">
+
+<div class="pad fl"><span><td class="pad fl" id="td"><span>abcd</span></td>ghi jk 2</span></div>
+
+</body>
+</html>
