@@ -786,8 +786,7 @@ function showBlocklistMessage(items, fromInstall) {
   if (fromInstall) {
     var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
              getService(Ci.nsIWindowMediator);
-    win = wm.getMostRecentWindow(Ci.nsIUpdateItem.TYPE_THEME ? "Extension:Manager-themes" :
-                                                               "Extension:Manager-extensions");
+    win = wm.getMostRecentWindow("Extension:Manager");
   }
   var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
            getService(Ci.nsIWindowWatcher);
