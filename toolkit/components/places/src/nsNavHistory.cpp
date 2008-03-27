@@ -4390,8 +4390,17 @@ nsNavHistory::OnIdle()
     nsCOMPtr<mozIStorageStatement> detectBogusIndex;
     rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
         "SELECT name FROM sqlite_master WHERE type = 'index' AND "
-        "name = 'moz_places_visitcount' AND sql LIKE '%rev_host%'"),
+        "name = 'moz_places_visitcount' AND sql LIKE ?1 ESCAPE '/'"),
         getter_AddRefs(detectBogusIndex));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoString escapedString;
+    rv = detectBogusIndex->EscapeStringForLIKE(NS_LITERAL_STRING("rev_host"),
+                                               '/', escapedString);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = detectBogusIndex->BindStringParameter(0, NS_LITERAL_STRING("%") +
+                                                  escapedString +
+                                                  NS_LITERAL_STRING("%"));
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool hasResult;
