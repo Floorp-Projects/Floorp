@@ -167,9 +167,14 @@ var StarUI = {
 
     var bundle = this._element("bundle_browser");
 
-    // "Page Bookmarked" title
+    // Set panel title:
+    // if we are batching, i.e. the bookmark has been added now,
+    // then show Page Bookmarked, else if the bookmark did already exist,
+    // we are about editing it, then use Edit This Bookmark.
     this._element("editBookmarkPanelTitle").value =
-      bundle.getString("editBookmarkPanel.pageBookmarkedTitle");
+      this._batching ?
+        bundle.getString("editBookmarkPanel.pageBookmarkedTitle") :
+        bundle.getString("editBookmarkPanel.editBookmarkTitle");
 
     // No description; show the Done, Cancel;
     // hide the Edit, Undo buttons
