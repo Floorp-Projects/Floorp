@@ -782,3 +782,4 @@ fails == 413027-3.html 413027-3-ref.html
 == 424074-1.xul 424074-1-ref.xul
 != 424074-1.xul 424074-1-ref2.xul
 fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 424074-1-ref2.xul 424074-1-ref3.xul
+== 424631-1.html 424631-1-ref.html
