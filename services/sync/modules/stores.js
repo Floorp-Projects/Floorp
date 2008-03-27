@@ -57,6 +57,7 @@ function Store() {
 }
 Store.prototype = {
   _logName: "Store",
+  _yieldDuringApply: true,
 
   __json: null,
   get _json() {
@@ -71,7 +72,16 @@ Store.prototype = {
   },
 
   applyCommands: function Store_applyCommands(commandList) {
+    let self = yield;
+
+    if (this._yieldDuringApply)
+      let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+
     for (var i = 0; i < commandList.length; i++) {
+      if (this._yieldDuringApply) {
+        timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
+        yield; // Yield to main loop
+      }
       var command = commandList[i];
       this._log.debug("Processing command: " + this._json.encode(command));
       switch (command["action"]) {
@@ -89,6 +99,7 @@ Store.prototype = {
         break;
       }
     }
+    self.done();
   },
 
   // override these in derived objects
