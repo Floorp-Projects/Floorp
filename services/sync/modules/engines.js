@@ -337,10 +337,12 @@ Engine.prototype = {
       // Note that we need to need to apply client changes to the
       // current tree, not the saved snapshot
 
-      localJson.applyCommands(clientChanges);
+      localJson.applyCommands.async(localJson, self.cb, clientChanges);
+      yield;
       this._snapshot.data = localJson.data;
       this._snapshot.version = server.maxVersion;
-      this._store.applyCommands(clientChanges);
+      this._store.applyCommands.async(this._store, self.cb, clientChanges);
+      yield;
       newSnapshot = this._store.wrap();
 
       this._core.detectUpdates(self.cb, this._snapshot.data, newSnapshot);
@@ -570,7 +572,8 @@ Engine.prototype = {
       }
 
       for (var i = 0; i < deltas.length; i++) {
-        snap.applyCommands(deltas[i]);
+        snap.applyCommands.async(snap, self.cb, deltas[i]);
+        yield;
       }
 
       ret.status = 0;
