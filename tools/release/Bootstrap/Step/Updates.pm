@@ -94,9 +94,8 @@ sub Execute {
     $this->Shell(
       cmd => './patcher2.pl',
       cmdArgs => ['--create-patches', '--app=' . $product, 
-                  '--config=../config/' . $patcherConfig],
-# fails on production-1.9-master, bug 425462
-#                 '--partial-patchlist-file=patchlist.cfg'],
+                  '--config=../config/' . $patcherConfig,
+                  '--partial-patchlist-file=patchlist.cfg'],
       logFile => catfile($logDir, 'updates_patcher-create-patches.log'),
       dir => catfile($versionedUpdateDir, 'patcher'),
       timeout => 18000,
