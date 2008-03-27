@@ -837,9 +837,10 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  PRInt32 curpos = CheckIntAttr(aFrame, nsWidgetAtoms::curpos);
-  PRInt32 minpos = CheckIntAttr(aFrame, nsWidgetAtoms::minpos);
-  PRInt32 maxpos = CheckIntAttr(aFrame, nsWidgetAtoms::maxpos);
+  PRInt32 curpos = CheckIntAttr(aFrame, nsWidgetAtoms::curpos, 0);
+  PRInt32 minpos = CheckIntAttr(aFrame, nsWidgetAtoms::minpos, 0);
+  PRInt32 maxpos = CheckIntAttr(aFrame, nsWidgetAtoms::maxpos, 100);
+  PRInt32 thumbSize = CheckIntAttr(aFrame, nsWidgetAtoms::pageincrement, 10);
 
   PRBool isHorizontal = aFrame->GetContent()->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::orient, 
                                                           nsWidgetAtoms::horizontal, eCaseMatters);
@@ -856,12 +857,12 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
   if (isHorizontal)
     aTdi.attributes |= kThemeTrackHorizontal;
 
-  PRInt32 longSideLength = (PRInt32)(isHorizontal ? (aRect.size.width) : (aRect.size.height));
-  aTdi.trackInfo.scrollbar.viewsize = (SInt32)longSideLength;
+  aTdi.trackInfo.scrollbar.viewsize = (SInt32)thumbSize;
 
   /* Only display features if we have enough room for them.
    * Gecko still maintains the scrollbar info; this is just a visual issue (bug 380185).
    */
+  PRInt32 longSideLength = (PRInt32)(isHorizontal ? (aRect.size.width) : (aRect.size.height));
   if (longSideLength >= (isSmall ? MIN_SMALL_SCROLLBAR_SIZE_WITH_THUMB : MIN_SCROLLBAR_SIZE_WITH_THUMB)) {
     aTdi.attributes |= kThemeTrackShowThumb;
   }
@@ -1240,9 +1241,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
 
     case NS_THEME_SCALE_HORIZONTAL:
     case NS_THEME_SCALE_VERTICAL: {
-      PRInt32 curpos = CheckIntAttr(aFrame, nsWidgetAtoms::curpos);
-      PRInt32 minpos = CheckIntAttr(aFrame, nsWidgetAtoms::minpos);
-      PRInt32 maxpos = CheckIntAttr(aFrame, nsWidgetAtoms::maxpos);
+      PRInt32 curpos = CheckIntAttr(aFrame, nsWidgetAtoms::curpos, 0);
+      PRInt32 minpos = CheckIntAttr(aFrame, nsWidgetAtoms::minpos, 0);
+      PRInt32 maxpos = CheckIntAttr(aFrame, nsWidgetAtoms::maxpos, 100);
       if (!maxpos)
         maxpos = 100;
 

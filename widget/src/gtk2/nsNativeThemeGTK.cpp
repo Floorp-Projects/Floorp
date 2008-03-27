@@ -267,8 +267,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
           // the slider to the actual scrollbar object
           nsIFrame *tmpFrame = aFrame->GetParent()->GetParent();
 
-          aState->curpos = CheckIntAttr(tmpFrame, nsWidgetAtoms::curpos);
-          aState->maxpos = CheckIntAttr(tmpFrame, nsWidgetAtoms::maxpos);
+          aState->curpos = CheckIntAttr(tmpFrame, nsWidgetAtoms::curpos, 0);
+          aState->maxpos = CheckIntAttr(tmpFrame, nsWidgetAtoms::maxpos, 100);
         }
 
         if (aWidgetType == NS_THEME_SCROLLBAR_BUTTON_UP ||
@@ -277,8 +277,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
             aWidgetType == NS_THEME_SCROLLBAR_BUTTON_RIGHT) {
           // set the state to disabled when the scrollbar is scrolled to
           // the beginning or the end, depending on the button type.
-          PRInt32 curpos = CheckIntAttr(aFrame, nsWidgetAtoms::curpos);
-          PRInt32 maxpos = CheckIntAttr(aFrame, nsWidgetAtoms::maxpos);
+          PRInt32 curpos = CheckIntAttr(aFrame, nsWidgetAtoms::curpos, 0);
+          PRInt32 maxpos = CheckIntAttr(aFrame, nsWidgetAtoms::maxpos, 100);
           if ((curpos == 0 && (aWidgetType == NS_THEME_SCROLLBAR_BUTTON_UP ||
                 aWidgetType == NS_THEME_SCROLLBAR_BUTTON_LEFT)) ||
               (curpos == maxpos &&

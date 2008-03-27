@@ -114,16 +114,16 @@ nsNativeTheme::CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
 }
 
 PRInt32
-nsNativeTheme::CheckIntAttr(nsIFrame* aFrame, nsIAtom* aAtom)
+nsNativeTheme::CheckIntAttr(nsIFrame* aFrame, nsIAtom* aAtom, PRInt32 defaultValue)
 {
   if (!aFrame)
-    return 0;
+    return defaultValue;
 
   nsAutoString attr;
   aFrame->GetContent()->GetAttr(kNameSpaceID_None, aAtom, attr);
   PRInt32 err, value = attr.ToInteger(&err);
-  if (NS_FAILED(err))
-    return 0;
+  if (attr.IsEmpty() || NS_FAILED(err))
+    return defaultValue;
 
   return value;
 }
