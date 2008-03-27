@@ -40,7 +40,14 @@
 
 #include "nsCocoaUtils.h"
 #include "nsObjCExceptions.h"
-
+#include "nsMenuBarX.h"
+#include "nsCocoaWindow.h"
+#include "nsCOMPtr.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIAppShellService.h"
+#include "nsIXULWindow.h"
+#include "nsIBaseWindow.h"
+#include "nsIServiceManager.h"
 
 float nsCocoaUtils::MenuBarScreenHeight()
 {
@@ -143,4 +150,90 @@ NSWindow* nsCocoaUtils::FindWindowUnderPoint(NSPoint aPoint)
   return nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+
+#define NS_APPSHELLSERVICE_CONTRACTID "@mozilla.org/appshell/appShellService;1"
+nsIWidget* nsCocoaUtils::GetHiddenWindowWidget()
+{
+  nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
+  if (!appShell) {
+    NS_WARNING("Couldn't get AppShellService in order to get hidden window ref");
+    return nsnull;
+  }
+  
+  nsCOMPtr<nsIXULWindow> hiddenWindow;
+  appShell->GetHiddenWindow(getter_AddRefs(hiddenWindow));
+  if (!hiddenWindow) {
+    // Don't warn, this happens during shutdown, bug 358607.
+    return nsnull;
+  }
+  
+  nsCOMPtr<nsIBaseWindow> baseHiddenWindow;
+  baseHiddenWindow = do_GetInterface(hiddenWindow);
+  if (!baseHiddenWindow) {
+    NS_WARNING("Couldn't get nsIBaseWindow from hidden window (nsIXULWindow)");
+    return nsnull;
+  }
+  
+  nsCOMPtr<nsIWidget> hiddenWindowWidget;
+  if (NS_FAILED(baseHiddenWindow->GetMainWidget(getter_AddRefs(hiddenWindowWidget)))) {
+    NS_WARNING("Couldn't get nsIWidget from hidden window (nsIBaseWindow)");
+    return nsnull;
+  }
+  
+  return hiddenWindowWidget;
+}
+
+
+void nsCocoaUtils::PrepareForNativeAppModalDialog()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  
+  // First put up the hidden window menu bar so that app menu event handling is correct.
+  // Not a big deal if we don't do this, the chances of the spawning window having lost
+  // its menu bar is small.
+  nsIMenuBar* hiddenWindowMenuBar = MenuHelpersX::GetHiddenWindowMenuBar();
+  if (hiddenWindowMenuBar)
+    hiddenWindowMenuBar->Paint();
+  
+  NSMenu* mainMenu = [NSApp mainMenu];
+  NS_ASSERTION([mainMenu numberOfItems] > 0, "Main menu does not have any items, something is terribly wrong!");
+  
+  // Create new menu bar for use with modal dialog
+  NSMenu* newMenuBar = [[NSMenu alloc] initWithTitle:@""];
+  
+  // Swap in our app menu. Note that the event target is whatever window is up when
+  // the app modal dialog goes up.
+  NSMenuItem* firstMenuItem = [[mainMenu itemAtIndex:0] retain];
+  [mainMenu removeItemAtIndex:0];
+  [newMenuBar insertItem:firstMenuItem atIndex:0];
+  [firstMenuItem release];
+  
+  // Add standard edit menu
+  [newMenuBar addItem:MenuHelpersX::GetStandardEditMenuItem()];
+  
+  // Show the new menu bar
+  [NSApp setMainMenu:newMenuBar];
+  [newMenuBar release];
+  
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+
+void nsCocoaUtils::CleanUpAfterNativeAppModalDialog()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  
+  NSWindow* mainWindow = [NSApp mainWindow];
+  if (!mainWindow) {
+    nsIMenuBar* hiddenWindowMenuBar = MenuHelpersX::GetHiddenWindowMenuBar();
+    if (hiddenWindowMenuBar)
+      hiddenWindowMenuBar->Paint();
+  }
+  else {
+    [WindowDelegate paintMenubarForWindow:mainWindow];
+  }
+  
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }

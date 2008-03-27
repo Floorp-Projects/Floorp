@@ -55,6 +55,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsObjCExceptions.h"
+#include "nsCocoaUtils.h"
 
 // defined in nsChildView.mm
 extern nsIRollupListener * gRollupListener;
@@ -62,14 +63,6 @@ extern nsIWidget         * gRollupWidget;
 
 // defined in nsCocoaWindow.mm
 extern PRInt32             gXULModalLevel;
-
-@interface NSApplication (Undocumented)
-
-// Present in all versions of OS X from (at least) 10.2.8 through 10.5.
-- (BOOL)_isRunningModal;
-- (BOOL)_isRunningAppModal;
-
-@end
 
 // AppShellDelegate
 //
@@ -695,7 +688,9 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+
 // AppShellDelegate implementation
+
 
 @implementation AppShellDelegate
 // initWithAppShell:
