@@ -46,6 +46,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
+Cu.import("resource://weave/async.js");
+
+Function.prototype.async = Async.sugar;
 
 /*
  * Data Stores
@@ -72,10 +75,12 @@ Store.prototype = {
   },
 
   applyCommands: function Store_applyCommands(commandList) {
-    let self = yield, timer;
+    let self = yield, timer, listener;
 
-    if (this._yieldDuringApply)
+    if (this._yieldDuringApply) {
+      listener = new Utils.EventListener(self.cb);
       timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    }
 
     for (var i = 0; i < commandList.length; i++) {
       if (this._yieldDuringApply) {

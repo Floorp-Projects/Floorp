@@ -172,7 +172,7 @@ DAVCollection.prototype = {
         // check if it exists first
         this._makeRequest.async(this, self.cb, "GET", path2 + "/", this._defaultHeaders);
         let ret = yield;
-        if (!(ret.status == 404 || ret.status == 500)) { // FIXME: 500 is a services.m.c oddity
+        if (ret.status != 404) {
           this._log.trace("Skipping creation of path " + path2 +
         		  " (got status " + ret.status + ")");
         } else {
