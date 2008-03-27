@@ -41,9 +41,11 @@
 /**
  * Test for bug 401869 to allow multiple words separated by spaces to match in
  * the page title, page url, or bookmark title to be considered a match. All
- * terms must match but not all terms need to be in the title, etc. Also, if
- * any part of the bookmark's title matches, it should be displayed over the
- * page's title.
+ * terms must match but not all terms need to be in the title, etc.
+ *
+ * Test bug 424216 by making sure bookmark titles are always shown if one is
+ * available. Also bug 425056 makes sure matches aren't found partially in the
+ * page title and partially in the bookmark.
  */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -242,8 +244,8 @@ let gTests = [
    "b e", [[0,0],[1,1]]],
   ["2: Match 3 terms all in title; display bookmark title if matched",
    "b a z", [[1,1],[3,1]]],
-  ["3: Match 2 terms in url and 1 in title; bookmark title didn't match",
-   "k f t", [[2,0],[3,0]]],
+  ["3: Match 2 terms in url and 1 in title; make sure bookmark title is used for search",
+   "k f t", [[2,0]]],
   ["4: Match 3 terms in url and 1 in title",
    "d i g z", [[1,1]]],
   ["5: Match nothing",
