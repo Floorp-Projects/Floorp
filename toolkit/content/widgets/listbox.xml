@@ -843,8 +843,10 @@
           if (this.currentItem) {
             if (this.currentItem.getAttribute("type") != "checkbox")
               this.addItemToSelection(this.currentItem);
-            else if (!this.currentItem.disabled)
+            else if (!this.currentItem.disabled) {
               this.currentItem.checked = !this.currentItem.checked;
+              this.currentItem.doCommand();
+            }
           }
         ]]>
       </handler>
@@ -1039,8 +1041,10 @@
     <handlers> 
       <handler event="mousedown" button="0">
       <![CDATA[
-        if (!this.disabled && !this.control.disabled)
+        if (!this.disabled && !this.control.disabled) {
           this.checked = !this.checked;
+          this.doCommand();
+        }
       ]]>
       </handler>
     </handlers>
