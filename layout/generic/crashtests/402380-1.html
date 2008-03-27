@@ -1,0 +1,13 @@
+<html>
+<head>
+<style type="text/css">
+
+div::first-letter { color: magenta; }
+span:before { content: "\"" "This "; }
+
+</style>
+</head>
+<body style="width: 1em;" onload="document.getElementById('div').style.direction = 'rtl';">
+<div id="div"><span>is text</span></div>
+</body>
+</html>
