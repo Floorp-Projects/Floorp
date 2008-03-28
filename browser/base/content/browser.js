@@ -1950,11 +1950,11 @@ function checkForDirectoryListing()
   }
 }
 
-function URLBarSetURI(aURI, aMustUseURI) {
+function URLBarSetURI(aURI) {
   var value = getBrowser().userTypedValue;
   var state = "invalid";
 
-  if (!value || aMustUseURI) {
+  if (!value) {
     if (aURI) {
       // If the url has "wyciwyg://" as the protocol, strip it off.
       // Nobody wants to see it on the urlbar for dynamically generated
@@ -1969,39 +1969,42 @@ function URLBarSetURI(aURI, aMustUseURI) {
       aURI = getWebNavigation().currentURI;
     }
 
-    value = aURI.spec;
-    if (value == "about:blank") {
+    if (aURI.spec == "about:blank") {
       // Replace "about:blank" with an empty string
       // only if there's no opener (bug 370555).
-      if (!content.opener)
-        value = "";
+      value = content.opener ? aURI.spec : "";
     } else {
-      // Try to decode as UTF-8 if there's no encoding sequence that we would break.
-      if (!/%25(?:3B|2F|3F|3A|40|26|3D|2B|24|2C|23)/i.test(value))
-        try {
-          value = decodeURI(value)
-                    // 1. decodeURI decodes %25 to %, which creates unintended
-                    //    encoding sequences. Re-encode it, unless it's part of
-                    //    a sequence that survived decodeURI, i.e. one for:
-                    //    ';', '/', '?', ':', '@', '&', '=', '+', '$', ',', '#'
-                    //    (RFC 3987 section 3.2)
-                    // 2. Re-encode whitespace so that it doesn't get eaten away
-                    //    by the location bar (bug 410726).
-                    .replace(/%(?!3B|2F|3F|3A|40|26|3D|2B|24|2C|23)|[\r\n\t]/ig,
-                             encodeURIComponent);
-        } catch (e) {}
-
-      // Encode bidirectional formatting characters.
-      // (RFC 3987 sections 3.2 and 4.1 paragraph 6)
-      value = value.replace(/[\u200e\u200f\u202a\u202b\u202c\u202d\u202e]/g,
-                            encodeURIComponent);
-
+      value = losslessDecodeURI(aURI);
       state = "valid";
     }
   }
 
   gURLBar.value = value;
   SetPageProxyState(state);
+}
+
+function losslessDecodeURI(aURI) {
+  var value = aURI.spec;
+  // Try to decode as UTF-8 if there's no encoding sequence that we would break.
+  if (!/%25(?:3B|2F|3F|3A|40|26|3D|2B|24|2C|23)/i.test(value))
+    try {
+      value = decodeURI(value)
+                // 1. decodeURI decodes %25 to %, which creates unintended
+                //    encoding sequences. Re-encode it, unless it's part of
+                //    a sequence that survived decodeURI, i.e. one for:
+                //    ';', '/', '?', ':', '@', '&', '=', '+', '$', ',', '#'
+                //    (RFC 3987 section 3.2)
+                // 2. Re-encode whitespace so that it doesn't get eaten away
+                //    by the location bar (bug 410726).
+                .replace(/%(?!3B|2F|3F|3A|40|26|3D|2B|24|2C|23)|[\r\n\t]/ig,
+                         encodeURIComponent);
+    } catch (e) {}
+
+  // Encode bidirectional formatting characters.
+  // (RFC 3987 sections 3.2 and 4.1 paragraph 6)
+  value = value.replace(/[\u200e\u200f\u202a\u202b\u202c\u202d\u202e]/g,
+                        encodeURIComponent);
+  return value;
 }
 
 // Replace the urlbar's value with the url of the page.
