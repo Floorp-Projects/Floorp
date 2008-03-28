@@ -61,6 +61,7 @@
 #include "nsCOMArray.h"
 #include "nsNodeUtils.h"
 #include "nsBindingManager.h"
+#include "nsCCUncollectableMarker.h"
 
 #include "pldhash.h"
 #include "prprf.h"
@@ -79,6 +80,19 @@ nsGenericDOMDataNode::~nsGenericDOMDataNode()
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGenericDOMDataNode)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericDOMDataNode)
+  nsIDocument* currentDoc = tmp->GetCurrentDoc();
+  if (currentDoc && nsCCUncollectableMarker::InGeneration(
+                      currentDoc->GetMarkedCCGeneration())) {
+    return NS_OK;
+  }
+
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mNodeInfo)
+
+  nsIDocument* ownerDoc = tmp->GetOwnerDoc();
+  if (ownerDoc) {
+    ownerDoc->BindingManager()->Traverse(tmp, cb);
+  }
+
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_LISTENERMANAGER
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_USERDATA
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_PRESERVED_WRAPPER
