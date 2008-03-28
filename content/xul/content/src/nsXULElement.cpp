@@ -2550,7 +2550,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXULPrototypeNode)
     if (tmp->mType == nsXULPrototypeNode::eType_Element) {
         nsXULPrototypeElement *elem =
             static_cast<nsXULPrototypeElement*>(tmp);
+        cb.NoteXPCOMChild(elem->mNodeInfo);
         PRUint32 i;
+        for (i = 0; i < elem->mNumAttributes; ++i) {
+            const nsAttrName& name = elem->mAttributes[i].mName;
+            if (!name.IsAtom())
+                cb.NoteXPCOMChild(name.NodeInfo());
+        }
         for (i = 0; i < elem->mNumChildren; ++i) {
             NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(elem->mChildren[i],
                                                          nsXULPrototypeNode,

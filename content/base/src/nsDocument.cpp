@@ -881,11 +881,6 @@ nsDocument::~nsDocument()
     mStyleAttrStyleSheet->SetOwningDocument(nsnull);
   }
 
-  if (mBindingManager) {
-    mBindingManager->DropDocumentReference();
-    NS_RELEASE(mBindingManager);
-  }
-
   delete mHeaderData;
 
   if (mBoxObjectTable) {
@@ -1025,6 +1020,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
     return NS_OK;
   }
 
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mNodeInfo)
+
   // Traverse the mChildren nsAttrAndChildArray.
   for (PRInt32 indx = PRInt32(tmp->mChildren.ChildCount()); indx > 0; --indx) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mChildren[i]");
@@ -1035,7 +1032,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
 
   // Traverse all nsIDocument pointer members.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCachedRootContent)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mBindingManager)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mNodeInfoManager,
+                                                  nsNodeInfoManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSecurityInfo)
 
   // Traverse all nsDocument nsCOMPtrs.
@@ -1116,7 +1114,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 nsresult
 nsDocument::Init()
 {
-  if (mBindingManager || mCSSLoader || mNodeInfoManager || mScriptLoader) {
+  if (mCSSLoader || mNodeInfoManager || mScriptLoader) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
@@ -1124,10 +1122,6 @@ nsDocument::Init()
   mRadioGroups.Init();
 
   // Force initialization.
-  nsBindingManager *bindingManager = new nsBindingManager(this);
-  NS_ENSURE_TRUE(bindingManager, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(mBindingManager = bindingManager);
-
   nsINode::nsSlots* slots = GetSlots();
   NS_ENSURE_TRUE(slots,NS_ERROR_OUT_OF_MEMORY);
 
@@ -2707,7 +2701,7 @@ void
 nsDocument::BeginUpdate(nsUpdateType aUpdateType)
 {
   if (mUpdateNestLevel == 0) {
-    mBindingManager->BeginOutermostUpdate();
+    BindingManager()->BeginOutermostUpdate();
   }
   
   ++mUpdateNestLevel;
@@ -2732,7 +2726,7 @@ nsDocument::EndUpdate(nsUpdateType aUpdateType)
   if (mUpdateNestLevel == 0) {
     // This set of updates may have created XBL bindings.  Let the
     // binding manager know we're done.
-    mBindingManager->EndOutermostUpdate();
+    BindingManager()->EndOutermostUpdate();
   }
 
   if (mUpdateNestLevel == 0) {
@@ -3514,7 +3508,7 @@ nsDocument::AddBinding(nsIDOMElement* aContent, const nsAString& aURI)
     subject = NodePrincipal();
   }
   
-  return mBindingManager->AddLayeredBinding(content, uri, subject);
+  return BindingManager()->AddLayeredBinding(content, uri, subject);
 }
 
 NS_IMETHODIMP
@@ -3534,7 +3528,7 @@ nsDocument::RemoveBinding(nsIDOMElement* aContent, const nsAString& aURI)
   }
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(aContent));
-  return mBindingManager->RemoveLayeredBinding(content, uri);
+  return BindingManager()->RemoveLayeredBinding(content, uri);
 }
 
 NS_IMETHODIMP
@@ -3560,7 +3554,7 @@ nsDocument::LoadBindingDocument(const nsAString& aURI)
     subject = NodePrincipal();
   }
   
-  mBindingManager->LoadBindingDocument(this, uri, subject);
+  BindingManager()->LoadBindingDocument(this, uri, subject);
 
   return NS_OK;
 }
@@ -3648,7 +3642,7 @@ nsDocument::GetAnonymousNodes(nsIDOMElement* aElement,
   *aResult = nsnull;
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
-  return mBindingManager->GetAnonymousNodesFor(content, aResult);
+  return BindingManager()->GetAnonymousNodesFor(content, aResult);
 }
 
 NS_IMETHODIMP
@@ -3802,7 +3796,7 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
   }
 
   PRInt32 namespaceID;
-  nsCOMPtr<nsIAtom> tag = mBindingManager->ResolveTag(content, &namespaceID);
+  nsCOMPtr<nsIAtom> tag = BindingManager()->ResolveTag(content, &namespaceID);
 
   nsCAutoString contractID("@mozilla.org/layout/xul-boxobject");
   if (namespaceID == kNameSpaceID_XUL) {
@@ -3857,19 +3851,19 @@ nsDocument::ClearBoxObjectFor(nsIContent* aContent)
 nsresult
 nsDocument::GetXBLChildNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult)
 {
-  return mBindingManager->GetXBLChildNodesFor(aContent, aResult);
+  return BindingManager()->GetXBLChildNodesFor(aContent, aResult);
 }
 
 nsresult
 nsDocument::GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResult)
 {
-  return mBindingManager->GetContentListFor(aContent, aResult);
+  return BindingManager()->GetContentListFor(aContent, aResult);
 }
 
 void
 nsDocument::FlushSkinBindings()
 {
-  mBindingManager->FlushSkinBindings();
+  BindingManager()->FlushSkinBindings();
 }
 
 nsresult
