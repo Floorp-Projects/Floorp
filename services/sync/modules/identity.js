@@ -79,7 +79,7 @@ Identity.prototype = {
 
   _password: null,
   get password() {
-    if (this._password === null)
+    if (!this._password)
       return findPassword(this.realm, this.username);
     return this._password;
   },
