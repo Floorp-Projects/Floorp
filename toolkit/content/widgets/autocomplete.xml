@@ -352,6 +352,7 @@
             input.setAttribute("open", "true");
             function onHide() {
               input.removeAttribute("open");
+              input.mConsumeRollupEvent = false;
               popup.removeEventListener("popuphiding", onHide, false);
             }
             popup.addEventListener("popuphiding", onHide, false);
