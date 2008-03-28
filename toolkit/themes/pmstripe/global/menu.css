@@ -84,7 +84,7 @@ menuitem.spell-suggestion {
 }
 
 .menu-text {
-  -moz-margin-start: 17px !important;
+  -moz-margin-start: 18px !important;
   font-weight: inherit;
 }
 
@@ -106,9 +106,8 @@ menuitem.spell-suggestion {
 }
 
 .menu-iconic-left {
-  padding: 1px;
-  min-width: 15px;
-  min-height: 15px;
+  min-width: 16px;
+  min-height: 16px;
 }
 
 .menu-iconic-icon {

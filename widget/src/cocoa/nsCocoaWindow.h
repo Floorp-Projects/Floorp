@@ -56,16 +56,6 @@ typedef struct _nsCocoaWindowList {
   nsCocoaWindow *window; // Weak
 } nsCocoaWindowList;
 
-@interface NSApplication (Undocumented)
-
-// It's sometimes necessary to explicitly remove a window from the "window
-// cache" in order to deactivate it.  The "window cache" is an undocumented
-// subsystem, all of whose methods are included in the NSWindowCache category
-// of the NSApplication class (in header files generated using class-dump).
-- (void)_removeWindowFromCache:(NSWindow *)aWindow;
-
-@end
-
 
 @interface NSWindow (Undocumented)
 
@@ -112,6 +102,7 @@ typedef struct _nsCocoaWindowList {
 {
   nsCocoaWindow* mGeckoWindow; // [WEAK] (we are owned by the window)
 }
++ (void)paintMenubarForWindow:(NSWindow*)aWindow;
 - (id)initWithGeckoWindow:(nsCocoaWindow*)geckoWind;
 - (void)windowDidResize:(NSNotification*)aNotification;
 - (void)sendFocusEvent:(PRUint32)eventType;

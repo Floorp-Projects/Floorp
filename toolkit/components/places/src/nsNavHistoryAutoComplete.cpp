@@ -55,7 +55,7 @@
  * have that, as should unvisited children of livemark feeds (that aren't
  * bookmarked elsewhere).
  *
- * But places with frecency (-1) are included, as that means that these items
+ * But places with frecency < 0 are included, as that means that these items
  * have not had their frecency calculated yet (will happen on idle).
  */
 
@@ -256,7 +256,7 @@ nsNavHistory::CreateAutoCompleteQueries()
 
   // NOTE:
   // after migration or clear all private data, we might end up with
-  // a lot of places with frecency = -1 (until idle)
+  // a lot of places with frecency < 0 (until idle)
   //
   // XXX bug 412736
   // in the case of a frecency tie, break it with h.typed and h.visit_count
@@ -706,8 +706,10 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
       rv = aQuery->GetString(kAutoCompleteIndex_Tags, entryTags);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      PRBool useBookmark = PR_FALSE;
-      PRBool showTags = PR_FALSE;
+      // Always prefer the bookmark title unless it's empty
+      nsAutoString title =
+        entryBookmarkTitle.IsEmpty() ? entryTitle : entryBookmarkTitle;
+
       nsString style;
       switch (aType) {
         case QUERY_FULL: {
@@ -721,21 +723,15 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
           for (PRInt32 i = 0; i < mCurrentSearchTokens.Count() && matchAll; i++) {
             const nsString *token = mCurrentSearchTokens.StringAt(i);
 
-            // Check if the current token matches the bookmark
-            PRBool bookmarkMatch = parentId &&
-              (*tokenMatchesTarget)(*token, entryBookmarkTitle);
-            // If any part of the search string is in the bookmark title, show
-            // that in the result instead of the page title
-            useBookmark |= bookmarkMatch;
-
-            // If the token is in any of the tags, remember to show tags
-            PRBool tagsMatch = (*tokenMatchesTarget)(*token, entryTags);
-            showTags |= tagsMatch;
+            // Check if the tags match the search term
+            PRBool matchTags = (*tokenMatchesTarget)(*token, entryTags);
+            // Check if the title matches the search term
+            PRBool matchTitle = (*tokenMatchesTarget)(*token, title);
+            // Check if the url matches the search term
+            PRBool matchUrl = (*tokenMatchesTarget)(*token, entryURL);
 
             // True if any of them match; false makes us quit the loop
-            matchAll = bookmarkMatch || tagsMatch ||
-              (*tokenMatchesTarget)(*token, entryTitle) ||
-              (*tokenMatchesTarget)(*token, entryURL);
+            matchAll = matchTags || matchTitle || matchUrl;
           }
 
           // Skip if we don't match all terms in the bookmark, tag, title or url
@@ -744,27 +740,16 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
 
           break;
         }
-        default: {
-          // Always prefer to show tags if we have them; otherwise, prefer the
-          // bookmark title if we have it
-          if (!entryTags.IsEmpty())
-            showTags = PR_TRUE;
-          else
-            useBookmark = !entryBookmarkTitle.IsEmpty();
-
-          break;
-        }
       }
+
+      // Always prefer to show tags if we have them
+      PRBool showTags = !entryTags.IsEmpty();
 
       // Add the tags to the title if necessary
-      if (showTags) {
-        // Always show the bookmark if possible when we have tags
-        useBookmark = !entryBookmarkTitle.IsEmpty();
-        /* XXX bug 418257 to look at RTL issues of appending tags
-        (useBookmark ? entryBookmarkTitle : entryTitle)
-          += NS_LITERAL_STRING(" (") + entryTags + NS_LITERAL_STRING(")");
-        */
-      }
+      /* XXX bug 418257 to look at RTL issues of appending tags
+      if (showTags)
+        title += kTitleTagsSeparator + entryTags;
+      */
 
       // Tags have a special style to show a tag icon; otherwise, style the
       // bookmarks that aren't feed items and feed URIs as bookmark
@@ -772,9 +757,6 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
         !mLivemarkFeedItemIds.Get(parentId, &dummy)) ||
         mLivemarkFeedURIs.Get(escapedEntryURL, &dummy) ?
         NS_LITERAL_STRING("bookmark") : NS_LITERAL_STRING("favicon");
-
-      // Pick the right title to show based on the result of the query type
-      const nsAString &title = useBookmark ? entryBookmarkTitle : entryTitle;
 
       // Get the URI for the favicon
       nsCAutoString faviconSpec;

@@ -62,6 +62,7 @@
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
+#include "nsMenuBarX.h"
 
 PRInt32 gXULModalLevel = 0;
 // In principle there should be only one app-modal window at any given time.
@@ -146,48 +147,6 @@ nsCocoaWindow::~nsCocoaWindow()
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-
-static nsIWidget* GetHiddenWindowWidget()
-{
-  nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
-  if (!appShell) {
-    NS_WARNING("Couldn't get AppShellService in order to get hidden window ref");
-    return nsnull;
-  }
-  
-  nsCOMPtr<nsIXULWindow> hiddenWindow;
-  appShell->GetHiddenWindow(getter_AddRefs(hiddenWindow));
-  if (!hiddenWindow) {
-    // Don't warn, this happens during shutdown, bug 358607.
-    return nsnull;
-  }
-  
-  nsCOMPtr<nsIBaseWindow> baseHiddenWindow;
-  baseHiddenWindow = do_GetInterface(hiddenWindow);
-  if (!baseHiddenWindow) {
-    NS_WARNING("Couldn't get nsIBaseWindow from hidden window (nsIXULWindow)");
-    return nsnull;
-  }
-  
-  nsCOMPtr<nsIWidget> hiddenWindowWidget;
-  if (NS_FAILED(baseHiddenWindow->GetMainWidget(getter_AddRefs(hiddenWindowWidget)))) {
-    NS_WARNING("Couldn't get nsIWidget from hidden window (nsIBaseWindow)");
-    return nsnull;
-  }
-
-  return hiddenWindowWidget;
-}
-
-
-static nsIMenuBar* GetHiddenWindowMenuBar()
-{
-  nsIWidget* hiddenWindowWidgetNoCOMPtr = GetHiddenWindowWidget();
-  if (hiddenWindowWidgetNoCOMPtr)
-    return static_cast<nsCocoaWindow*>(hiddenWindowWidgetNoCOMPtr)->GetMenuBar();
-  else
-    return nsnull;
 }
 
 
@@ -1221,7 +1180,7 @@ NS_IMETHODIMP nsCocoaWindow::SetMenuBar(nsIMenuBar *aMenuBar)
   
   // We paint the hidden window menu bar if no other menu bar has been painted
   // yet so that some reasonable menu bar is displayed when the app starts up.
-  if (!gSomeMenuBarPainted && mMenuBar && (GetHiddenWindowMenuBar() == mMenuBar))
+  if (!gSomeMenuBarPainted && mMenuBar && (MenuHelpersX::GetHiddenWindowMenuBar() == mMenuBar))
     mMenuBar->Paint();
   
   return NS_OK;
@@ -1341,7 +1300,7 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor)
   // If our cocoa window isn't a ToolbarWindow, something is wrong.
   if (![mWindow isKindOfClass:[ToolbarWindow class]]) {
     // Don't output a warning for the hidden window.
-    NS_WARN_IF_FALSE(SameCOMIdentity(GetHiddenWindowWidget(), (nsIWidget*)this),
+    NS_WARN_IF_FALSE(SameCOMIdentity(nsCocoaUtils::GetHiddenWindowWidget(), (nsIWidget*)this),
                      "Calling SetWindowTitlebarColor on window that isn't of the ToolbarWindow class.");
     return NS_ERROR_FAILURE;
   }
@@ -1480,6 +1439,10 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 
   RollUpPopups();
 
+  // [NSApp _isRunningAppModal] will return true if we're running an OS dialog
+  // app modally. If one of those is up then we want it to retain its menu bar.
+  if ([NSApp _isRunningAppModal])
+    return;
   NSWindow* window = [aNotification object];
   if (window)
     [WindowDelegate paintMenubarForWindow:window];
@@ -1491,8 +1454,12 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 - (void)windowDidResignMain:(NSNotification *)aNotification
 {
   RollUpPopups();
-  
-  nsCOMPtr<nsIMenuBar> hiddenWindowMenuBar = GetHiddenWindowMenuBar();
+
+  // [NSApp _isRunningAppModal] will return true if we're running an OS dialog
+  // app modally. If one of those is up then we want it to retain its menu bar.
+  if ([NSApp _isRunningAppModal])
+    return;
+  nsCOMPtr<nsIMenuBar> hiddenWindowMenuBar = MenuHelpersX::GetHiddenWindowMenuBar();
   if (hiddenWindowMenuBar) {
     // printf("painting hidden window menu bar due to window losing main status\n");
     hiddenWindowMenuBar->Paint();

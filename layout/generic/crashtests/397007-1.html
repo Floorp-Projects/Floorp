@@ -1,0 +1,37 @@
+<html>
+<head>
+<script type="text/javascript">
+function boom()
+{
+  var img = document.createElement("img");
+  document.getElementById("g").appendChild(img);
+  img.width = 1;
+}
+
+</script>
+
+<style type="text/css">
+
+.margin {
+  margin: 1em 0;
+}
+
+.dd:before {
+  white-space: pre;
+  line-height: 0;
+  content: "b";
+}
+
+</style>
+
+</head>
+
+<body onload="boom();">
+<div style="-moz-column-count: 2;">
+  X
+  <div class="margin">y</div>
+  <span><span id="g"></span>&shy;<div class="margin"></div><span class="dd"><div></div></span></span>
+</div>
+</body>
+
+</html>

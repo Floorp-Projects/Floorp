@@ -1,5 +1,3 @@
-/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,15 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Bug 378079 unit test code.
+ * The Original Code is Places Test Code.
  *
- * The Initial Developer of the Original Code is POTI Inc.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * The Initial Developer of the Original Code is
+ * Edward Lee <edward.lee@engineering.uiuc.edu>.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *   Erwan Loisant <eloisant@gmail.com>
- *   Edward Lee <edward.lee@engineering.uiuc.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,114 +36,54 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
+ * Test autocomplete for non-English URLs that match the tag bug 416214. Also
+ * test bug 417441 by making sure escaped ascii characters like "+" remain
+ * escaped.
+ *
+ * - add a visit for a page with a non-English URL
+ * - add a tag for the page
+ * - search for the tag
+ * - test number of matches (should be exactly one)
+ * - make sure the url is decoded
+ */
 
-Test autocomplete for non-English URLs that match the tag bug 416214
-Also test bug 417441 by making sure escaped ascii characters like "+" remain
-escaped.
-
-- add a visit for a page with a non-English URL
-- add a tag for the page
-- search for the tag
-- test number of matches (should be exactly one)
-- make sure the url is decoded
-
-*/
-
-try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                getService(Ci.nsINavHistoryService);
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
-  var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
-                getService(Ci.nsITaggingService);
-} catch (ex) {
-  do_throw("Could not get services\n");
-}
-
-function add_visit(aURI, aVisitDate, aVisitType) {
-  var isRedirect = aVisitType == histsvc.TRANSITION_REDIRECT_PERMANENT ||
-                   aVisitType == histsvc.TRANSITION_REDIRECT_TEMPORARY;
-  var placeID = histsvc.addVisit(aURI, aVisitDate, null,
-                                 aVisitType, isRedirect, 0);
-  do_check_true(placeID > 0);
-  return placeID;
-}
-
-// create test data
-var searchTerm = "ユニコード";
-var theTag = "superTag";
-var decoded = "http://www.foobar.com/" + searchTerm + "/blocking-firefox3%2B";
-var url = uri(decoded);
-add_visit(url, Date.now(), Ci.nsINavHistoryService.TRANSITION_LINK);
-tagssvc.tagURI(url, [theTag]);
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+let current_test = 0;
 
 function AutoCompleteInput(aSearches) {
   this.searches = aSearches;
 }
-
 AutoCompleteInput.prototype = {
-  constructor: AutoCompleteInput, 
-
-  searches: null,
-
-  minResultsForPopup: 0,
   timeout: 10,
-  searchParam: "",
   textValue: "",
-  disableAutoComplete: false,  
+  searches: null,
+  searchParam: "",
+  popupOpen: false,
+  minResultsForPopup: 0,
+  invalidate: function() {},
+  disableAutoComplete: false,
   completeDefaultIndex: false,
-
-  get searchCount() {
-    return this.searches.length;
-  },
-
-  getSearchAt: function(aIndex) {
-    return this.searches[aIndex];
-  },
-
+  get popup() { return this; },
   onSearchBegin: function() {},
   onSearchComplete: function() {},
+  setSelectedIndex: function() {},
+  get searchCount() { return this.searches.length; },
+  getSearchAt: function(aIndex) this.searches[aIndex],
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput, Ci.nsIAutoCompletePopup])
+};
 
-  popupOpen: false,
-
-  popup: {
-    setSelectedIndex: function(aIndex) {},
-    invalidate: function() {},
-
-    // nsISupports implementation
-    QueryInterface: function(iid) {
-      if (iid.equals(Ci.nsISupports) ||
-          iid.equals(Ci.nsIAutoCompletePopup))
-        return this;
-
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    }
-  },
-
-  // nsISupports implementation
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIAutoCompleteInput))
-      return this;
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  }
-}
-
-function run_test() {
-  var controller = Components.classes["@mozilla.org/autocomplete/controller;1"].
-                   getService(Components.interfaces.nsIAutoCompleteController);
+function ensure_results(aSearch, aExpected)
+{
+  let controller = Cc["@mozilla.org/autocomplete/controller;1"].
+                   getService(Ci.nsIAutoCompleteController);
 
   // Make an AutoCompleteInput that uses our searches
   // and confirms results on search complete
-  var input = new AutoCompleteInput(["history"]);
+  let input = new AutoCompleteInput(["history"]);
 
   controller.input = input;
 
-  // Search is asynchronous, so don't let the test finish immediately
-  do_test_pending();
-
-  var numSearchesStarted = 0;
+  let numSearchesStarted = 0;
   input.onSearchBegin = function() {
     numSearchesStarted++;
     do_check_eq(numSearchesStarted, 1);
@@ -153,17 +91,150 @@ function run_test() {
 
   input.onSearchComplete = function() {
     do_check_eq(numSearchesStarted, 1);
-    do_check_eq(controller.searchStatus,
-                Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
+    aExpected = aExpected.slice();
 
-    // test that we found the entry we added
-    do_check_eq(controller.matchCount, 1);
+    // Check to see the expected uris and titles match up (in any order)
+    for (let i = 0; i < controller.matchCount; i++) {
+      let value = controller.getValueAt(i);
+      let comment = controller.getCommentAt(i);
 
-    // Make sure the url is the one with the decoded search string
-    do_check_eq(controller.getValueAt(0), url.spec);
+      print("Looking for an expected result of " + value + ", " + comment + "...");
+      let j;
+      for (j = 0; j < aExpected.length; j++) {
+        let [uri, title] = aExpected[j];
+
+        // Skip processed expected results
+        if (uri == undefined) continue;
+
+        // Load the real uri and titles
+        [uri, title] = [iosvc.newURI(kURIs[uri], null, null).spec, kTitles[title]];
+
+        // Got a match on both uri and title?
+        if (uri == value && title == comment) {
+          print("Got it at index " + j + "!!");
+          // Make it undefined so we don't process it again
+          aExpected[j] = [,];
+          break;
+        }
+      }
+
+      // We didn't hit the break, so we must have not found it
+      if (j == aExpected.length)
+        do_throw("Didn't find the current result (" + value + ", " + comment + ") in expected: " + aExpected);
+    }
+
+    // Make sure we have the right number of results
+    do_check_eq(controller.matchCount, aExpected.length);
+
+    // If we expect results, make sure we got matches
+    do_check_eq(controller.searchStatus, aExpected.length ?
+                Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH :
+                Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
+
+    // Fetch the next test if we have more
+    if (++current_test < gTests.length)
+      run_test();
 
     do_test_finished();
   };
 
-  controller.startSearch(theTag);
+  print("Searching for.. " + aSearch);
+  controller.startSearch(aSearch);
 }
+
+// Get history services
+try {
+  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+                getService(Ci.nsINavHistoryService);
+  var bhist = histsvc.QueryInterface(Ci.nsIBrowserHistory);
+  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+              getService(Ci.nsINavBookmarksService);
+  var tagsvc = Cc["@mozilla.org/browser/tagging-service;1"].
+               getService(Ci.nsITaggingService);
+  var iosvc = Cc["@mozilla.org/network/io-service;1"].
+              getService(Ci.nsIIOService);
+} catch(ex) {
+  do_throw("Could not get services\n");
+}
+
+// Some date not too long ago
+let gDate = new Date(Date.now() - 1000 * 60 * 60) * 1000;
+
+function addPageBook(aURI, aTitle, aBook, aTags, aKey)
+{
+  let uri = iosvc.newURI(kURIs[aURI], null, null);
+  let title = kTitles[aTitle];
+
+  let out = [aURI, aTitle, aBook, aTags, aKey];
+  out.push("\nuri=" + kURIs[aURI]);
+  out.push("\ntitle=" + title);
+
+  // Add the page and a visit for good measure
+  bhist.addPageWithDetails(uri, title, gDate);
+
+  // Add a bookmark if we need to
+  if (aBook != undefined) {
+    let book = kTitles[aBook];
+    let bmid = bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder, uri,
+      bmsvc.DEFAULT_INDEX, book);
+    out.push("\nbook=" + book);
+
+    // Add a keyword to the bookmark if we need to
+    if (aKey != undefined)
+      bmsvc.setKeywordForBookmark(bmid, aKey);
+
+    // Add tags if we need to
+    if (aTags != undefined && aTags.length > 0) {
+      // Convert each tag index into the title
+      let tags = aTags.map(function(aTag) kTitles[aTag]);
+      tagsvc.tagURI(uri, tags);
+      out.push("\ntags=" + tags);
+    }
+  }
+
+  print("\nAdding page/book/tag: " + out.join(", "));
+}
+
+function run_test() {
+  print("\n");
+  // Search is asynchronous, so don't let the test finish immediately
+  do_test_pending();
+
+  // Load the test and print a description then run the test
+  let [description, search, expected, func] = gTests[current_test];
+  print(description);
+
+  // Do an extra function if necessary
+  if (func)
+    func();
+
+  ensure_results(search, expected);
+}
+
+// *************************************************
+// *** vvv Custom Test Stuff Goes Below Here vvv ***
+// *************************************************
+
+let theTag = "superTag";
+
+// Define some shared uris and titles (each page needs its own uri)
+let kURIs = [
+  "http://escaped/ユニコード",
+  "http://asciiescaped/blocking-firefox3%2B",
+];
+let kTitles = [
+  "title",
+  theTag,
+];
+
+// Add pages that match the tag
+addPageBook(0, 0, 0, [1]);
+addPageBook(1, 0, 0, [1]);
+
+// For each test, provide a title, the search terms, and an array of
+// [uri,title] indices of the pages that should be returned, followed by an
+// optional function
+let gTests = [
+  ["0: Make sure tag matches return the right url as well as '+' remain escaped",
+   theTag, [[0,0],[1,0]]],
+];

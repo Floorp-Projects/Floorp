@@ -376,7 +376,8 @@
                   <observes element="Browser:Forward" attribute="disabled" />
                 </menuitem>
 
-                <menuitem label="&historyHomeCmd.label;"
+                <menuitem id="historyMenuHome"
+                          label="&historyHomeCmd.label;"
                           oncommand="BrowserGoHome(event);"
                           onclick="checkForMiddleClick(this, event);"
                           key="goHome"/>

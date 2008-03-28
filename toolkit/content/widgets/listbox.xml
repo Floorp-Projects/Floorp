@@ -545,9 +545,12 @@
         <parameter name="aEvent"/>
         <body>
         <![CDATA[
-          this._userSelecting = true;
-          this.moveByOffset(aOffset, !aEvent.ctrlKey, aEvent.shiftKey);
-          this._userSelecting = false;
+          if (!aEvent.getPreventDefault()) {
+            this._userSelecting = true;
+            this.moveByOffset(aOffset, !aEvent.ctrlKey, aEvent.shiftKey);
+            this._userSelecting = false;
+            aEvent.preventDefault();
+          }
         ]]>
         </body>
       </method>
@@ -580,22 +583,22 @@
     <handlers>
       <handler event="keypress" keycode="VK_UP" modifiers="control shift any"
                action="this._moveByOffsetFromUserEvent(-1, event);"
-               phase="target" preventdefault="true"/>
+               group="system"/>
       <handler event="keypress" keycode="VK_DOWN" modifiers="control shift any"
                action="this._moveByOffsetFromUserEvent(1, event);"
-               phase="target" preventdefault="true"/>
+               group="system"/>
       <handler event="keypress" keycode="VK_HOME" modifiers="control shift any"
                action="this._moveByOffsetFromUserEvent(-this.currentIndex, event);"
-               phase="target" preventdefault="true"/>
+               group="system"/>
       <handler event="keypress" keycode="VK_END" modifiers="control shift any"
                action="this._moveByOffsetFromUserEvent(this.getRowCount() - this.currentIndex - 1, event);"
-               phase="target" preventdefault="true"/>
+               group="system"/>
       <handler event="keypress" keycode="VK_PAGE_UP" modifiers="control shift any"
                action="this._moveByOffsetFromUserEvent(this.scrollOnePage(-1), event);"
-               phase="target" preventdefault="true"/>
+               group="system"/>
       <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="control shift any"
                action="this._moveByOffsetFromUserEvent(this.scrollOnePage(1), event);"
-               phase="target" preventdefault="true"/>
+               group="system"/>
       <handler event="keypress" key=" " modifiers="control" phase="target">
       <![CDATA[
         if (this.currentItem && this.selType == "multiple")
@@ -843,8 +846,10 @@
           if (this.currentItem) {
             if (this.currentItem.getAttribute("type") != "checkbox")
               this.addItemToSelection(this.currentItem);
-            else if (!this.currentItem.disabled)
+            else if (!this.currentItem.disabled) {
               this.currentItem.checked = !this.currentItem.checked;
+              this.currentItem.doCommand();
+            }
           }
         ]]>
       </handler>
@@ -1039,8 +1044,10 @@
     <handlers> 
       <handler event="mousedown" button="0">
       <![CDATA[
-        if (!this.disabled && !this.control.disabled)
+        if (!this.disabled && !this.control.disabled) {
           this.checked = !this.checked;
+          this.doCommand();
+        }
       ]]>
       </handler>
     </handlers>

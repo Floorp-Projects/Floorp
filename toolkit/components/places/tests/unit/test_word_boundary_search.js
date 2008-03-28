@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Places Word Boundary Search Test Code.
+ * The Original Code is Places Test Code.
  *
  * The Initial Developer of the Original Code is
  * Edward Lee <edward.lee@engineering.uiuc.edu>.
@@ -83,6 +83,7 @@ function ensure_results(aSearch, aExpected)
 
   input.onSearchComplete = function() {
     do_check_eq(numSearchesStarted, 1);
+    aExpected = aExpected.slice();
 
     // Check to see the expected uris and titles match up (in any order)
     for (let i = 0; i < controller.matchCount; i++) {
@@ -263,8 +264,8 @@ let gTests = [
    "t", [[0,0],[1,0],[2,1],[3,2],[4,0],[5,0],[9,0]]],
   ["4: Match 'word' after many consecutive word boundaries",
    "word", [[6,3]]],
-  ["5: Match a word boundary ':' for everything",
-   ":", [[0,0],[1,0],[2,1],[3,2],[4,0],[5,0],[6,3],[7,4],[8,5],[9,0]]],
+  ["5: Match a word boundary '/' for everything",
+   "/", [[0,0],[1,0],[2,1],[3,2],[4,0],[5,0],[6,3],[7,4],[8,5],[9,0]]],
   ["6: Match word boundaries '()_+' that are among word boundaries",
    "()_+", [[6,3]]],
 

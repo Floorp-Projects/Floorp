@@ -209,29 +209,39 @@ nsresult gfxWindowsSurface::BeginPrinting(const nsAString& aTitle,
     docinfo.lpszDatatype = NULL;
     docinfo.fwType = 0;
 
-    ::StartDoc(mDC, &docinfo);
+    int result = ::StartDoc(mDC, &docinfo);
         
     delete [] title;
     if (docName != nsnull) nsMemory::Free(docName);
+
+    if (result <= 0)
+        return NS_ERROR_FAILURE;
 
     return NS_OK;
 }
 
 nsresult gfxWindowsSurface::EndPrinting()
 {
-    ::EndDoc(mDC);
+    int result = ::EndDoc(mDC);
+    if (result <= 0)
+        return NS_ERROR_FAILURE;
+
     return NS_OK;
 }
 
 nsresult gfxWindowsSurface::AbortPrinting()
 {
-    ::AbortDoc(mDC);
+    int result = ::AbortDoc(mDC);
+    if (result <= 0)
+        return NS_ERROR_FAILURE;
     return NS_OK;
 }
 
 nsresult gfxWindowsSurface::BeginPage()
 {
-    ::StartPage(mDC);
+    int result = ::StartPage(mDC);
+    if (result <= 0)
+        return NS_ERROR_FAILURE;
     return NS_OK;
 }
 
@@ -239,7 +249,9 @@ nsresult gfxWindowsSurface::EndPage()
 {
     if (mForPrinting)
         cairo_surface_show_page(CairoSurface());
-    ::EndPage(mDC);
+    int result = ::EndPage(mDC);
+    if (result <= 0)
+        return NS_ERROR_FAILURE;
     return NS_OK;
 }
 

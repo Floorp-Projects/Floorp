@@ -786,8 +786,7 @@ function showBlocklistMessage(items, fromInstall) {
   if (fromInstall) {
     var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
              getService(Ci.nsIWindowMediator);
-    win = wm.getMostRecentWindow(Ci.nsIUpdateItem.TYPE_THEME ? "Extension:Manager-themes" :
-                                                               "Extension:Manager-extensions");
+    win = wm.getMostRecentWindow("Extension:Manager");
   }
   var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
            getService(Ci.nsIWindowWatcher);
@@ -849,8 +848,22 @@ function extractRDFFileToTempDir(zipFile, fileName, suppressErrors) {
  * @returns The Install Manifest datasource
  */
 function getInstallManifest(file) {
-  var fileURL = getURLSpecFromFile(file);
-  var ds = gRDF.GetDataSourceBlocking(fileURL);
+  var fis = Cc["@mozilla.org/network/file-input-stream;1"].
+            createInstance(Ci.nsIFileInputStream);
+  fis.init(file, -1, -1, false);
+  fis.QueryInterface(Ci.nsILineInputStream);
+  var line = { value: "" };
+  var text = "";
+  while (fis.readLine(line))
+    text += line.value;
+  fis.close();
+  
+  var rdfParser = Cc["@mozilla.org/rdf/xml-parser;1"].
+                  createInstance(Ci.nsIRDFXMLParser)
+  var ds = Cc["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"].
+           createInstance(Ci.nsIRDFDataSource);
+  rdfParser.parseString(ds, getURIFromFile(file), text);
+
   var arcs = ds.ArcLabelsOut(gInstallManifestRoot);
   if (!arcs.hasMoreElements()) {
     ds = null;
@@ -3586,10 +3599,10 @@ ExtensionManager.prototype = {
       if (ds.getItemProperty(id, "providesUpdatesSecurely") == "false") {
         /* It's possible the previous version did not understand updateKeys so
          * check if we can import one for this addon from it's manifest. */
-        var location = this.getInstallLocation(id);
-        var installRDF = location.getItemFile(id, FILE_INSTALL_MANIFEST);
+        location = this.getInstallLocation(id);
+        installRDF = location.getItemFile(id, FILE_INSTALL_MANIFEST);
         if (installRDF.exists()) {
-          var metadataDS = getInstallManifest(installRDF);
+          metadataDS = getInstallManifest(installRDF);
           var literal = metadataDS.GetTarget(gInstallManifestRoot, EM_R("updateKey"), true);
           if (literal && literal instanceof Ci.nsIRDFLiteral)
             ds.setItemProperty(id, EM_R("updateKey"), literal);
@@ -4408,10 +4421,6 @@ ExtensionManager.prototype = {
                                                   addon.maxAppVersion,
                                                   null);
           }
-          // Prevent the datasource file from being lazily recreated after
-          // it is deleted by calling Flush.
-          this._installManifest.QueryInterface(Ci.nsIRDFRemoteDataSource);
-          this._installManifest.Flush();
         }
         else {
           em.datasource.removeDownload(this._xpi.path);
@@ -4847,13 +4856,19 @@ ExtensionManager.prototype = {
       catch (e) {
         ERROR("_finalizeUninstall: failed to remove directory for item: " + id +
               " at Install Location: " + installLocation.name + ", rolling back uninstall");
-        // Removal of the files failed, reset the uninstalled flag and rewrite
-        // the install manifests so this item's components are registered.
-        // Clear the op flag from the Startup Cache
-        StartupCache.put(installLocation, id, OP_NONE, true);
-        var restartRequired = this.installRequiresRestart(id, ds.getItemProperty(id, "type"))
-        this._updateManifests(restartRequired);
-        return;
+        var manifest = installLocation.getItemFile(id, "FILE_INSTALL_MANIFEST");
+        // If there is no manifest then either the rollback failed, or there was
+        // no manifest in the first place. Either way this item is now invalid
+        // and we shouldn't try to re-install it.
+        if (manifest.exists()) {
+          // Removal of the files failed, reset the uninstalled flag and rewrite
+          // the install manifests so this item's components are registered.
+          // Clear the op flag from the Startup Cache
+          StartupCache.put(installLocation, id, OP_NONE, true);
+          var restartRequired = this.installRequiresRestart(id, ds.getItemProperty(id, "type"))
+          this._updateManifests(restartRequired);
+          return;
+        }
       }
     }
     else if (installLocation.name == KEY_APP_PROFILE ||

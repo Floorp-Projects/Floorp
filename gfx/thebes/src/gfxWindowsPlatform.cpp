@@ -58,7 +58,13 @@
 
 //#define DEBUG_CMAP_SIZE 1
 
-static nsresult ReadCMAP(HDC hdc, FontEntry *aFontEntry);
+static __inline void
+BuildKeyNameFromFontName(nsAString &aName)
+{
+    if (aName.Length() >= LF_FACESIZE)
+        aName.Truncate(LF_FACESIZE - 1);
+    ToLowerCase(aName);
+}
 
 int PR_CALLBACK
 gfxWindowsPlatform::PrefChangedCallback(const char *aPrefName, void *closure)
@@ -107,23 +113,14 @@ gfxWindowsPlatform::FontEnumProc(const ENUMLOGFONTEXW *lpelfe,
     FontTable *ht = reinterpret_cast<FontTable*>(data);
 
     const NEWTEXTMETRICW& metrics = nmetrics->ntmTm;
-    LOGFONTW logFont = lpelfe->elfLogFont;
+    const LOGFONTW& logFont = lpelfe->elfLogFont;
 
     // Ignore vertical fonts
-    if (logFont.lfFaceName[0] == L'@') {
+    if (logFont.lfFaceName[0] == L'@')
         return 1;
-    }
 
-    // Some fonts claim to support things > 900, but we don't so clamp the sizes
-    logFont.lfWeight = PR_MAX(PR_MIN(logFont.lfWeight, 900), 100);
-
-#ifdef DEBUG_pavlov
-    printf("%s %d %d %d\n", NS_ConvertUTF16toUTF8(nsDependentString(logFont.lfFaceName)).get(),
-           logFont.lfCharSet, logFont.lfItalic, logFont.lfWeight);
-#endif
-
-    nsString name(logFont.lfFaceName);
-    ToLowerCase(name);
+    nsAutoString name(logFont.lfFaceName);
+    BuildKeyNameFromFontName(name);
 
     nsRefPtr<FontFamily> ff;
     if (!ht->Get(name, &ff)) {
@@ -131,175 +128,11 @@ gfxWindowsPlatform::FontEnumProc(const ENUMLOGFONTEXW *lpelfe,
         ht->Put(name, ff);
     }
 
-    nsRefPtr<FontEntry> fe;
-    for (PRUint32 i = 0; i < ff->mVariations.Length(); ++i) {
-        fe = ff->mVariations[i];
-        if (fe->mWeight == logFont.lfWeight &&
-            fe->mItalic == (logFont.lfItalic == 0xFF)) {
-            return 1; /* we already know about this font */
-        }
-    }
-
-    fe = new FontEntry(ff->mName);
-    /* don't append it until the end in case of error */
-
-    fe->mItalic = (logFont.lfItalic == 0xFF);
-    fe->mWeight = logFont.lfWeight;
-
-    if (metrics.ntmFlags & NTM_TYPE1)
-        fe->mIsType1 = fe->mForceGDI = PR_TRUE;
-    if (metrics.ntmFlags & (NTM_PS_OPENTYPE | NTM_TT_OPENTYPE))
-        fe->mTrueType = PR_TRUE;
-
-    // mark the charset bit
-    fe->mCharset[metrics.tmCharSet] = 1;
-
-    fe->mWindowsFamily = logFont.lfPitchAndFamily & 0xF0;
-    fe->mWindowsPitch = logFont.lfPitchAndFamily & 0x0F;
-
-    if (nmetrics->ntmFontSig.fsUsb[0] == 0x00000000 &&
-        nmetrics->ntmFontSig.fsUsb[1] == 0x00000000 &&
-        nmetrics->ntmFontSig.fsUsb[2] == 0x00000000 &&
-        nmetrics->ntmFontSig.fsUsb[3] == 0x00000000) {
-        // no unicode ranges
-        fe->mUnicodeFont = PR_FALSE;
-    } else {
-        fe->mUnicodeFont = PR_TRUE;
-
-        // set the unicode ranges
-        PRUint32 x = 0;
-        for (PRUint32 i = 0; i < 4; ++i) {
-            DWORD range = nmetrics->ntmFontSig.fsUsb[i];
-            for (PRUint32 k = 0; k < 32; ++k) {
-                fe->mUnicodeRanges[x++] = (range & (1 << k)) != 0;
-            }
-        }
-    }
-
-    /* read in the character map */
-    HDC hdc = GetDC(nsnull);
-    logFont.lfCharSet = DEFAULT_CHARSET;
-    HFONT font = CreateFontIndirectW(&logFont);
-
-    NS_ASSERTION(font, "This font creation should never ever ever fail");
-    if (font) {
-        HFONT oldFont = (HFONT)SelectObject(hdc, font);
-
-        TEXTMETRIC metrics;
-        GetTextMetrics(hdc, &metrics);
-        if (metrics.tmPitchAndFamily & TMPF_TRUETYPE)
-            fe->mTrueType = PR_TRUE;
-
-        if (NS_FAILED(ReadCMAP(hdc, fe))) {
-            // Type1 fonts aren't necessarily Unicode but
-            // this is the best guess we can make here
-            if (fe->mIsType1)
-                fe->mUnicodeFont = PR_TRUE;
-            else
-                fe->mUnicodeFont = PR_FALSE;
-
-            //printf("%d, %s failed to get cmap\n", aFontEntry->mIsType1, NS_ConvertUTF16toUTF8(aFontEntry->mName).get());
-        }
-
-        SelectObject(hdc, oldFont);
-        DeleteObject(font);
-    }
-
-    ReleaseDC(nsnull, hdc);
-
-    if (!fe->mUnicodeFont) {
-        /* non-unicode fonts.. boy lets just set all code points
-           between 0x20 and 0xFF.  All the ones on my system do...
-           If we really wanted to test which characters in this
-           range were supported we could just generate a string with
-           each codepoint and do GetGlyphIndicies or similar to determine
-           what is there.
-        */
-        fe->mCharacterMap.SetRange(0x20, 0xFF);
-    }
-
-    /* append the variation to the font family */
-    ff->mVariations.AppendElement(fe);
-
     return 1;
 }
 
+
 // general cmap reading routines moved to gfxFontUtils.cpp
-
-static nsresult
-ReadCMAP(HDC hdc, FontEntry *aFontEntry)
-{
-    const PRUint32 kCMAP = (('c') | ('m' << 8) | ('a' << 16) | ('p' << 24));
-
-    DWORD len = GetFontData(hdc, kCMAP, 0, nsnull, 0);
-    if (len == GDI_ERROR || len == 0) // not a truetype font --
-        return NS_ERROR_FAILURE;      // we'll treat it as a symbol font
-
-    nsAutoTArray<PRUint8,16384> buffer;
-    if (!buffer.AppendElements(len))
-        return NS_ERROR_OUT_OF_MEMORY;
-    PRUint8 *buf = buffer.Elements();
-
-    DWORD newLen = GetFontData(hdc, kCMAP, 0, buf, len);
-    NS_ENSURE_TRUE(newLen == len, NS_ERROR_FAILURE);
-    
-    return gfxFontUtils::ReadCMAP(buf, len, aFontEntry->mCharacterMap, aFontEntry->mUnicodeRanges,
-                                  aFontEntry->mUnicodeFont, aFontEntry->mSymbolFont);
-}
-
-PLDHashOperator PR_CALLBACK
-gfxWindowsPlatform::FontGetStylesProc(nsStringHashKey::KeyType aKey,
-                                      nsRefPtr<FontFamily>& aFontFamily,
-                                      void* userArg)
-{
-    NS_ASSERTION(aFontFamily->mVariations.Length() == 1, "We should only have 1 variation here");
-    nsRefPtr<FontEntry> aFontEntry = aFontFamily->mVariations[0];
-
-    HDC hdc = GetDC(nsnull);
-
-    LOGFONTW logFont;
-    memset(&logFont, 0, sizeof(LOGFONTW));
-    logFont.lfCharSet = DEFAULT_CHARSET;
-    logFont.lfPitchAndFamily = 0;
-    PRUint32 l = PR_MIN(aFontEntry->GetName().Length(), LF_FACESIZE - 1);
-    memcpy(logFont.lfFaceName,
-           nsPromiseFlatString(aFontEntry->GetName()).get(),
-           l * sizeof(PRUnichar));
-    logFont.lfFaceName[l] = 0;
-
-    EnumFontFamiliesExW(hdc, &logFont, (FONTENUMPROCW)gfxWindowsPlatform::FontEnumProc, (LPARAM)userArg, 0);
-
-    ReleaseDC(nsnull, hdc);
-
-    // Look for font families without bold variations and add a FontEntry
-    // with synthetic bold (weight 600) for them.
-    nsRefPtr<FontEntry> darkestItalic;
-    nsRefPtr<FontEntry> darkestNonItalic;
-    PRUint8 highestItalic = 0, highestNonItalic = 0;
-    for (PRUint32 i = 0; i < aFontFamily->mVariations.Length(); i++) {
-        nsRefPtr<FontEntry> fe = aFontFamily->mVariations[i];
-        if (fe->mItalic) {
-            if (!darkestItalic || fe->mWeight > darkestItalic->mWeight)
-                darkestItalic = fe;
-        } else {
-            if (!darkestNonItalic || fe->mWeight > darkestNonItalic->mWeight)
-                darkestNonItalic = fe;
-        }
-    }
-
-    if (darkestItalic && darkestItalic->mWeight < 600) {
-        nsRefPtr<FontEntry> newEntry = new FontEntry(*darkestItalic.get());
-        newEntry->mWeight = 600;
-        aFontFamily->mVariations.AppendElement(newEntry);
-    }
-    if (darkestNonItalic && darkestNonItalic->mWeight < 600) {
-        nsRefPtr<FontEntry> newEntry = new FontEntry(*darkestNonItalic.get());
-        newEntry->mWeight = 600;
-        aFontFamily->mVariations.AppendElement(newEntry);
-    }
-
-    return PL_DHASH_NEXT;
-}
 
 struct FontListData {
     FontListData(const nsACString& aLangGroup, const nsACString& aGenericFamily, nsStringArray& aListOfFonts) :
@@ -319,7 +152,9 @@ gfxWindowsPlatform::HashEnumFunc(nsStringHashKey::KeyType aKey,
     // use the first variation for now.  This data should be the same
     // for all the variations and should probably be moved up to
     // the Family
-    nsRefPtr<FontEntry> aFontEntry = aFontFamily->mVariations[0];
+    gfxFontStyle style;
+    style.langGroup = data->mLangGroup;
+    nsRefPtr<FontEntry> aFontEntry = aFontFamily->FindFontEntry(style);
 
     /* skip symbol fonts */
     if (aFontEntry->mSymbolFont)
@@ -355,14 +190,6 @@ RemoveCharsetFromFontSubstitute(nsAString &aName)
         aName.Truncate(comma);
 }
 
-static void
-BuildKeyNameFromFontName(nsAString &aName)
-{
-    if (aName.Length() >= LF_FACESIZE)
-        aName.Truncate(LF_FACESIZE - 1);
-    ToLowerCase(aName);
-}
-
 nsresult
 gfxWindowsPlatform::UpdateFontList()
 {
@@ -385,9 +212,6 @@ gfxWindowsPlatform::UpdateFontList()
     HDC dc = ::GetDC(nsnull);
     EnumFontFamiliesExW(dc, &logFont, (FONTENUMPROCW)gfxWindowsPlatform::FontEnumProc, (LPARAM)&mFonts, 0);
     ::ReleaseDC(nsnull, dc);
-
-    // Look for additional styles
-    mFonts.Enumerate(gfxWindowsPlatform::FontGetStylesProc, &mFonts);
 
     // Create the list of FontSubstitutes
     nsCOMPtr<nsIWindowsRegKey> regKey = do_CreateInstance("@mozilla.org/windows-registry-key;1");
@@ -441,7 +265,7 @@ gfxWindowsPlatform::UpdateFontList()
 
 static PRBool SimpleResolverCallback(const nsAString& aName, void* aClosure)
 {
-    nsString* result = static_cast<nsString*>(aClosure);
+    nsString *result = static_cast<nsString*>(aClosure);
     result->Assign(aName);
     return PR_FALSE;
 }
@@ -461,10 +285,7 @@ gfxWindowsPlatform::InitBadUnderlineList()
         FontFamily *ff = FindFontFamily(resolved);
         if (!ff)
             continue;
-        for (PRUint32 j = 0; j < ff->mVariations.Length(); ++j) {
-            nsRefPtr<FontEntry> fe = ff->mVariations[j];
-            fe->mIsBadUnderlineFont = 1;
-        }
+        ff->mIsBadUnderlineFont = 1;
     }
 }
 
@@ -591,7 +412,7 @@ gfxWindowsPlatform::FindFontForCharProc(nsStringHashKey::KeyType aKey,
 
     const PRUint32 ch = data->ch;
 
-    nsRefPtr<FontEntry> fe = GetPlatform()->FindFontEntry(aFontFamily, data->fontToMatch->GetStyle());
+    nsRefPtr<FontEntry> fe = aFontFamily->FindFontEntry(*data->fontToMatch->GetStyle());
 
     // skip over non-unicode and bitmap fonts and fonts that don't have
     // the code point we're looking for
@@ -613,7 +434,7 @@ gfxWindowsPlatform::FindFontForCharProc(nsStringHashKey::KeyType aKey,
         rank += 3;
 
     /* italic */
-    const PRBool italic = (data->fontToMatch->GetStyle()->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) ? PR_TRUE : PR_FALSE;
+    const PRBool italic = (data->fontToMatch->GetStyle()->style != FONT_STYLE_NORMAL);
     if (fe->mItalic != italic)
         rank += 3;
 
@@ -652,7 +473,7 @@ gfxWindowsPlatform::FindFontForChar(PRUint32 aCh, gfxWindowsFont *aFont)
     if (!data.bestMatch) {
         mCodepointsWithNoFonts.set(aCh);
     }
-    
+
     return data.bestMatch;
 }
 
@@ -666,8 +487,8 @@ gfxWindowsPlatform::CreateFontGroup(const nsAString &aFamilies,
 FontFamily *
 gfxWindowsPlatform::FindFontFamily(const nsAString& aName)
 {
-    nsString name(aName);
-    ToLowerCase(name);
+    nsAutoString name(aName);
+    BuildKeyNameFromFontName(name);
 
     nsRefPtr<FontFamily> ff;
     if (!mFonts.Get(name, &ff) &&
@@ -679,93 +500,13 @@ gfxWindowsPlatform::FindFontFamily(const nsAString& aName)
 }
 
 FontEntry *
-gfxWindowsPlatform::FindFontEntry(const nsAString& aName, const gfxFontStyle *aFontStyle)
+gfxWindowsPlatform::FindFontEntry(const nsAString& aName, const gfxFontStyle& aFontStyle)
 {
     nsRefPtr<FontFamily> ff = FindFontFamily(aName);
     if (!ff)
         return nsnull;
 
-    return FindFontEntry(ff, aFontStyle);
-}
-
-FontEntry *
-gfxWindowsPlatform::FindFontEntry(FontFamily *aFontFamily, const gfxFontStyle *aFontStyle)
-{
-    PRUint8 bestMatch = 0;
-    PRBool italic = (aFontStyle->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0;
-
-    nsAutoTArray<nsRefPtr<FontEntry>, 10> weightList;
-    weightList.AppendElements(10);
-    for (PRUint32 j = 0; j < 2; j++) {
-        PRBool matchesSomething = PR_FALSE;
-        // build up an array of weights that match the italicness we're looking for
-        for (PRUint32 i = 0; i < aFontFamily->mVariations.Length(); i++) {
-            nsRefPtr<FontEntry> fe = aFontFamily->mVariations[i];
-            const PRUint8 weight = (fe->mWeight / 100);
-            if (fe->mItalic == italic) {
-                weightList[weight] = fe;
-                matchesSomething = PR_TRUE;
-            }
-        }
-        if (matchesSomething)
-            break;
-        italic = !italic;
-    }
-
-    PRInt8 baseWeight, weightDistance;
-    aFontStyle->ComputeWeightAndOffset(&baseWeight, &weightDistance);
-
-    // 500 isn't quite bold so we want to treat it as 400 if we don't
-    // have a 500 weight
-    if (baseWeight == 5 && weightDistance == 0) {
-        // If we have a 500 weight then use it
-        if (weightList[5])
-            return weightList[5];
-
-        // Otherwise treat as 400
-        baseWeight = 4;
-    }
-
-
-    PRInt8 matchBaseWeight = 0;
-    PRInt8 direction = (baseWeight > 5) ? 1 : -1;
-    for (PRInt8 i = baseWeight; ; i += direction) {
-        if (weightList[i]) {
-            matchBaseWeight = i;
-            break;
-        }
-
-        // if we've reached one side without finding a font,
-        // go the other direction until we find a match
-        if (i == 1 || i == 9)
-            direction = -direction;
-    }
-
-    nsRefPtr<FontEntry> matchFE;
-    const PRInt8 absDistance = abs(weightDistance);
-    direction = (weightDistance >= 0) ? 1 : -1;
-    for (PRInt8 i = matchBaseWeight, k = 0; i < 10 && i > 0; i += direction) {
-        if (weightList[i]) {
-            matchFE = weightList[i];
-            k++;
-        }
-        if (k > absDistance)
-            break;
-    }
-
-    if (!matchFE) {
-        /* if we still don't have a match, grab the closest thing in the other direction */
-        direction = -direction;
-        for (PRInt8 i = matchBaseWeight; i < 10 && i > 0; i += direction) {
-            if (weightList[i]) {
-                matchFE = weightList[i];
-            }
-        }
-    }
-
-
-    NS_ASSERTION(matchFE, "we should always be able to return something here");
-    return matchFE;
+    return ff->FindFontEntry(aFontStyle);
 }
 
 cmsHPROFILE

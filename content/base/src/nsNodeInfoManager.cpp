@@ -52,6 +52,7 @@
 #include "nsGkAtoms.h"
 #include "nsComponentManagerUtils.h"
 #include "nsLayoutStatics.h"
+#include "nsBindingManager.h"
 
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
@@ -97,7 +98,8 @@ nsNodeInfoManager::nsNodeInfoManager()
     mPrincipal(nsnull),
     mTextNodeInfo(nsnull),
     mCommentNodeInfo(nsnull),
-    mDocumentNodeInfo(nsnull)
+    mDocumentNodeInfo(nsnull),
+    mBindingManager(nsnull)
 {
   nsLayoutStatics::AddRef();
 
@@ -123,6 +125,8 @@ nsNodeInfoManager::~nsNodeInfoManager()
 
   // Note: mPrincipal may be null here if we never got inited correctly
   NS_IF_RELEASE(mPrincipal);
+
+  NS_IF_RELEASE(mBindingManager);
 
 #ifdef PR_LOGGING
   if (gNodeInfoManagerLeakPRLog)
@@ -160,6 +164,14 @@ nsNodeInfoManager::Release()
   return count;
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsNodeInfoManager)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsNodeInfoManager, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsNodeInfoManager, Release)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_NATIVE_0(nsNodeInfoManager)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsNodeInfoManager)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mBindingManager)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 nsresult
 nsNodeInfoManager::Init(nsIDocument *aDocument)
 {
@@ -170,6 +182,13 @@ nsNodeInfoManager::Init(nsIDocument *aDocument)
   nsresult rv = CallCreateInstance("@mozilla.org/nullprincipal;1",
                                    &mPrincipal);
   NS_ENSURE_TRUE(mPrincipal, rv);
+
+  if (aDocument) {
+    mBindingManager = new nsBindingManager(aDocument);
+    NS_ENSURE_TRUE(mBindingManager, NS_ERROR_OUT_OF_MEMORY);
+
+    NS_ADDREF(mBindingManager);
+  }
 
   mDefaultPrincipal = mPrincipal;
 
@@ -187,6 +206,10 @@ nsNodeInfoManager::Init(nsIDocument *aDocument)
 void
 nsNodeInfoManager::DropDocumentReference()
 {
+  if (mBindingManager) {
+    mBindingManager->DropDocumentReference();
+  }
+
   mDocument = nsnull;
 }
 

@@ -59,7 +59,6 @@
 #include "nsAutoPtr.h"
 #include "nsLoadListenerProxy.h"
 #include "nsStreamUtils.h"
-#include "nsCrossSiteListenerProxy.h"
 
 /**
  * This class manages loading a single XML document
@@ -219,10 +218,12 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
     }
 
     if (aLoaderPrincipal) {
-        listener = new nsCrossSiteListenerProxy(listener, aLoaderPrincipal,
-                                                mChannel, &rv);
-        NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
-        NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsIURI> docURI;
+      rv = aChannel->GetOriginalURI(getter_AddRefs(docURI));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = aLoaderPrincipal->CheckMayLoad(docURI, PR_TRUE);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     // Register as a load listener on the document
@@ -367,6 +368,18 @@ nsSyncLoader::OnChannelRedirect(nsIChannel *aOldChannel,
     NS_PRECONDITION(aNewChannel, "Redirecting to null channel?");
 
     mChannel = aNewChannel;
+
+    nsCOMPtr<nsIURI> oldURI;
+    nsresult rv = aOldChannel->GetURI(getter_AddRefs(oldURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIURI> newURI;
+    rv = aNewChannel->GetURI(getter_AddRefs(newURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = nsContentUtils::GetSecurityManager()->
+        CheckSameOriginURI(oldURI, newURI, PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
 }

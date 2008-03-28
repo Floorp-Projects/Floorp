@@ -108,8 +108,8 @@
   </keyset>
 
   <menupopup id="picontext">
-    <menuitem label="&selectall.label;" command="cmd_selectall" accesskey="&selectall.accesskey;"/>
-    <menuitem label="&copy.label;"      command="cmd_copy"      accesskey="&copy.accesskey;"/>
+    <menuitem id="menu_selectall" label="&selectall.label;" command="cmd_selectall" accesskey="&selectall.accesskey;"/>
+    <menuitem id="menu_copy"      label="&copy.label;"      command="cmd_copy"      accesskey="&copy.accesskey;"/>
   </menupopup>
 
   <stack id="topStackBar">

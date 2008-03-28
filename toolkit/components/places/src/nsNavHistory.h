@@ -102,7 +102,7 @@
 // see Bug #392399 for more details
 #define SQL_STR_FRAGMENT_MAX_VISIT_DATE( place_relation ) \
   "(SELECT visit_date FROM moz_historyvisits WHERE place_id = " place_relation \
-  " AND visit_type NOT IN (0,4) ORDER BY visit_date DESC LIMIT 1)"
+  " AND visit_type NOT IN (0,4,7) ORDER BY visit_date DESC LIMIT 1)"
 
 struct AutoCompleteIntermediateResult;
 class AutoCompleteResultComparator;
@@ -202,7 +202,7 @@ public:
   nsresult GetUrlIdFor(nsIURI* aURI, PRInt64* aEntryID,
                        PRBool aAutoCreate);
 
-  nsresult CalculateVisitCount(PRInt64 aPlaceId, PRBool aForFrecency, PRInt32 *aVisitCount);
+  nsresult CalculateFullVisitCount(PRInt64 aPlaceId, PRInt32 *aVisitCount);
 
   nsresult UpdateFrecency(PRInt64 aPageID, PRBool isBookmark);
 
@@ -429,8 +429,7 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBUpdateFrecencyAndHidden;
   nsCOMPtr<mozIStorageStatement> mDBGetPlaceVisitStats;
   nsCOMPtr<mozIStorageStatement> mDBGetBookmarkParentsForPlace;
-  nsCOMPtr<mozIStorageStatement> mDBVisitCountForFrecency;
-  nsCOMPtr<mozIStorageStatement> mDBTrueVisitCount;
+  nsCOMPtr<mozIStorageStatement> mDBFullVisitCount;
 
   /**
    * Initializes the database file.  If the database does not exist, was
@@ -461,6 +460,7 @@ protected:
   nsresult InitDB(PRInt16 *aMadeChanges);
   nsresult InitFunctions();
   nsresult InitStatements();
+  nsresult CreateTriggers();
   nsresult ForceMigrateBookmarksDB(mozIStorageConnection *aDBConn);
   nsresult MigrateV3Up(mozIStorageConnection *aDBConn);
   nsresult MigrateV6Up(mozIStorageConnection *aDBConn);

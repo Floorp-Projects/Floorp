@@ -48,6 +48,7 @@ include $(topsrcdir)/config/rules.mk
 _BROWSER_FILES = \
   browser_basic_functionality.js \
   browser_bug_394039.js \
+  browser_bug_397935.js \
   browser_bug_406857.js \
   browser_bug_410289.js \
   browser_bug_411172.js \
