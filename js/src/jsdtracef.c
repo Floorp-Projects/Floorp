@@ -79,7 +79,7 @@ jsdtrace_linenumber(JSContext *cx, JSStackFrame *fp)
     while (fp && fp->script == NULL)
         fp = fp->down;
     return (fp && fp->regs)
-           ? js_PCToLineNumber(cx, fp->script, fp->regs->pc)
+           ? (int) js_PCToLineNumber(cx, fp->script, fp->regs->pc)
            : -1;
 }
 
@@ -111,7 +111,7 @@ jsdtrace_jsvaltovoid(JSContext *cx, jsval argval)
     switch (type) {
       case JSTYPE_NULL:
       case JSTYPE_VOID:
-        return JS_TYPE_STR(type);
+        return (void *)JS_TYPE_STR(type);
 
       case JSTYPE_BOOLEAN:
         return (void *)JSVAL_TO_BOOLEAN(argval);
@@ -164,6 +164,8 @@ jsdtrace_function_name(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
              * FIXME bug 422864: update this code to use the pc stack from the
              * decompiler.
              */
+            break;
+          default: /* FIXME bug 425744: need to consider other CALL cases. */
             break;
         }
 
