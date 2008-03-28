@@ -820,16 +820,16 @@ FeedWriter.prototype = {
         var stringLabel = "alwaysUseForFeeds";
         switch (this._getFeedType()) {
           case Ci.nsIFeed.TYPE_VIDEO:
-            stringlabel = "alwaysUseForVideoPodcasts";
+            stringLabel = "alwaysUseForVideoPodcasts";
             break;
 
           case Ci.nsIFeed.TYPE_AUDIO:
-            stringlabel = "alwaysUseForAudioPodcasts";
+            stringLabel = "alwaysUseForAudioPodcasts";
             break;
         }
 
         this._contentSandbox.checkbox = checkbox;
-        this._contentSandbox.label = this._getFormattedString(stringlabel, [handlerName]);
+        this._contentSandbox.label = this._getFormattedString(stringLabel, [handlerName]);
         
         var codeStr = "checkbox.setAttribute('label', label);";
         Cu.evalInSandbox(codeStr, this._contentSandbox);

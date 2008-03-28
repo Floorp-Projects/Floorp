@@ -408,6 +408,19 @@ public:
     if (appShell) {
       PRUint32 currentLevel = 0;
       appShell->GetEventloopNestingLevel(&currentLevel);
+#ifdef XP_MACOSX
+      // Cocoa widget code doesn't process UI events through the normal appshell
+      // event loop, so it needs an additional count here.
+      currentLevel++;
+#else
+      // No idea how this happens... but Linux doesn't consistently process UI
+      // events through the appshell event loop. If we get a 0 here on any
+      // platform we increment the level just in case so that we make sure we
+      // always tear the plugin down eventually.
+      if (!currentLevel) {
+        currentLevel++;
+      }
+#endif
       if (currentLevel < mLastEventloopNestingLevel) {
         mLastEventloopNestingLevel = currentLevel;
       }
@@ -1813,7 +1826,9 @@ nsStopPluginRunnable::Run()
       if (!mTimer)
         mTimer = do_CreateInstance("@mozilla.org/timer;1");
       if (mTimer) {
-        nsresult rv = mTimer->InitWithCallback(this, 3000, nsITimer::TYPE_ONE_SHOT);
+        // Fire 100ms timer to try to tear down this plugin as quickly as
+        // possible once the nesting level comes back down.
+        nsresult rv = mTimer->InitWithCallback(this, 100, nsITimer::TYPE_ONE_SHOT);
         if (NS_SUCCEEDED(rv)) {
           return rv;
         }

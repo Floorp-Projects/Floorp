@@ -380,7 +380,7 @@ def create_partial_patches(patches):
 
             mar_extract_time = time.time()
 
-            partial_filename = create_partial_patch(work_dir_from, work_dir_to, patch_filename, shas, PatchInfo(work_dir, ['channel-prefs.js','update.manifest'],['/readme.txt']))
+            partial_filename = create_partial_patch(work_dir_from, work_dir_to, patch_filename, shas, PatchInfo(work_dir, ['channel-prefs.js','update.manifest','removed-files'],['/readme.txt']))
             partial_decoded = decode_filename(os.path.basename(partial_filename))
             partial_buildid = to_buildid
             partial_shasum = sha.sha(open(partial_filename).read()).hexdigest()

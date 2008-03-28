@@ -354,20 +354,6 @@ PRBool nsPSMDetector::HandleData(const char* aBuf, PRUint32 aLen)
             Report( mVerifier[mItemIdx[j]]->charset);
             mDone = PR_TRUE;
             return mDone;
-        } else if (eError == st) 
-        {
-#ifdef DETECTOR_DEBUG
-            printf("It's NOT %s- byte %d(%x)\n", 
-                    mVerifier[mItemIdx[j]]->charset,
-                    i+mDbgLen,
-                    i+mDbgLen);
-#endif
-            mItems--;
-            if(j < mItems )
-            {
-                mItemIdx[j] = mItemIdx[mItems];
-                mState[j] = mState[mItems];
-            } 
         } else {
             mState[j++] = st;
         } 

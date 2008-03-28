@@ -131,7 +131,7 @@ class nsNativeTheme
   PRBool IsIndeterminateProgress(nsIFrame* aFrame);
 
   PRInt32 GetProgressValue(nsIFrame* aFrame) {
-    return CheckIntAttr(aFrame, nsWidgetAtoms::value);
+    return CheckIntAttr(aFrame, nsWidgetAtoms::value, 0);
   }
 
   // textfield:
@@ -139,9 +139,8 @@ class nsNativeTheme
       return CheckBooleanAttr(aFrame, nsWidgetAtoms::readonly);
   }
 
-  // These are used by nsNativeThemeGtk
   nsIPresShell *GetPresShell(nsIFrame* aFrame);
-  PRInt32 CheckIntAttr(nsIFrame* aFrame, nsIAtom* aAtom);
+  PRInt32 CheckIntAttr(nsIFrame* aFrame, nsIAtom* aAtom, PRInt32 defaultValue);
   PRBool CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom);
 
   PRBool GetCheckedOrSelected(nsIFrame* aFrame, PRBool aCheckSelected);

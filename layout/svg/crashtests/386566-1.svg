@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" height="5" onload="setTimeout(boom, 30);" class="reftest-wait">
+     
+<bindings xmlns="http://www.mozilla.org/xbl"><binding id="foo"><content></content></binding></bindings>
+
+<script>
+function boom()
+{
+  document.getElementById("rr").style.MozBinding = "url('#foo')";
+  document.documentElement.setAttribute('height', "5px");
+  setTimeout(done, 30);
+}
+
+function done()
+{
+  document.documentElement.removeAttribute("class");
+}
+</script>
+
+<rect id="rr" x="50%" width="25%" height="10em" fill="red"/>
+
+</svg>

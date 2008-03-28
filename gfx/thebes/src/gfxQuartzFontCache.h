@@ -102,7 +102,6 @@ protected:
     MacOSFamilyEntry *mFamily;
 
     ATSUFontID mATSUFontID;
-    std::bitset<128> mUnicodeRanges;
     gfxSparseBitSet mCharacterMap;
     
     PRPackedBool mCmapInitialized;

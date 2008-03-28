@@ -190,7 +190,7 @@ MacOSFontEntry::ReadCMAP()
 
     nsresult rv = NS_ERROR_FAILURE;
     PRPackedBool  unicodeFont, symbolFont; // currently ignored
-    rv = gfxFontUtils::ReadCMAP(cmap, size, mCharacterMap, mUnicodeRanges, unicodeFont, symbolFont);
+    rv = gfxFontUtils::ReadCMAP(cmap, size, mCharacterMap, unicodeFont, symbolFont);
 
     // for complex scripts, check for the presence of mort/morx
     PRBool checkedForMorphTable = PR_FALSE, hasMorphTable = PR_FALSE;

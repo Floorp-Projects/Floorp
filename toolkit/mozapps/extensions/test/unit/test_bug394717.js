@@ -39,6 +39,8 @@
 const checkListener = {
   _onUpdateStartedCalled: false,
   _onUpdateEndedCalled: false,
+  _onAddonUpdateStartedCount: 0,
+  _onAddonUpdateEndedCount: 0,
 
   // nsIAddonUpdateCheckListener
   onUpdateStarted: function onUpdateStarted() {
@@ -52,12 +54,12 @@ const checkListener = {
 
   // nsIAddonUpdateCheckListener
   onAddonUpdateStarted: function onAddonUpdateStarted(aAddon) {
-    do_throw("Unexpected call to onAddonUpdateStarted!");
+    this._onAddonUpdateStartedCount++;
   },
 
   // nsIAddonUpdateCheckListener
   onAddonUpdateEnded: function onAddonUpdateEnded(aAddon, aStatus) {
-    do_throw("Unexpected call to onAddonUpdateEnded!");
+    this._onAddonUpdateEndedCount++;
   }
 }
 
@@ -78,5 +80,6 @@ function run_test_pt2() {
   do_check_true(checkListener._onUpdateStartedCalled);
   dump("Checking onUpdateEnded\n");
   do_check_true(checkListener._onUpdateEndedCalled);
+  do_check_eq(checkListener._onAddonUpdateStartedCount, checkListener._onAddonUpdateEndedCount);
   do_test_finished();
 }

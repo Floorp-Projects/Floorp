@@ -208,11 +208,6 @@ public:
     return mEditingState;
   }
 
-  virtual void DisableCookieAccess()
-  {
-    mDisableCookieAccess = PR_TRUE;
-  }
-
   virtual nsIContent* GetBodyContentExternal();
 
   void EndUpdate(nsUpdateType aUpdateType);
@@ -390,8 +385,6 @@ protected:
   // XXXbz should this be reset if someone manually calls
   // SetContentType() on this document?
   PRInt32 mDefaultNamespaceID;
-
-  PRBool mDisableCookieAccess;
 
   // Parser used for constructing document fragments.
   nsCOMPtr<nsIParser> mFragmentParser;

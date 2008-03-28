@@ -114,12 +114,12 @@ function init() {
       var brandBundle = document.getElementById("brandBundle");
       var brandShortName = brandBundle.getString("brandShortName");
       params = {
-        message1: extensionsBundle.getFormattedString("blocklistNotifyMsg",
+        message1: extensionsBundle.getFormattedString("blocklistNotifyMsg2",
                                                       [brandShortName]),
-        message2: extensionsBundle.getFormattedString("blocklistRestartMsg",
+        message2: extensionsBundle.getFormattedString("blocklistRestartMsg2",
                                                       [brandShortName]),
         moreInfoURL: url,
-        title: extensionsBundle.getString("blocklistNotifyTitle")
+        title: extensionsBundle.getString("blocklistNotifyTitle2")
       };
       de.buttons = "extra1,cancel";
       button = de.getButton("cancel");

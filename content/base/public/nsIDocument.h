@@ -51,6 +51,7 @@
 #include "nsIAtom.h"
 #include "nsCompatibility.h"
 #include "nsTObserverArray.h"
+#include "nsNodeInfoManager.h"
 
 class nsIContent;
 class nsPresContext;
@@ -80,7 +81,6 @@ class nsIObserver;
 class nsScriptLoader;
 class nsIContentSink;
 class nsIScriptEventManager;
-class nsNodeInfoManager;
 class nsICSSLoader;
 class nsHTMLStyleSheet;
 class nsIHTMLCSSStyleSheet;
@@ -97,8 +97,8 @@ class nsFrameLoader;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0xd76acf2e, 0x4b55, 0x420c, \
-  { 0xaa, 0xbf, 0x5c, 0x4d, 0xbf, 0xc9, 0x81, 0x08 } }
+{ 0x0cf9986f, 0x6e27, 0x4c24, \
+  { 0x9f, 0x43, 0x87, 0x01, 0x52, 0xf7, 0x4c, 0x0a } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -117,7 +117,6 @@ public:
   nsIDocument()
     : nsINode(nsnull),
       mCharacterSet(NS_LITERAL_CSTRING("ISO-8859-1")),
-      mBindingManager(nsnull),
       mNodeInfoManager(nsnull),
       mCompatMode(eCompatibility_FullStandards),
       mIsInitialDocumentInWindow(PR_FALSE),
@@ -631,7 +630,7 @@ public:
 
   nsBindingManager* BindingManager() const
   {
-    return mBindingManager;
+    return mNodeInfoManager->GetBindingManager();
   }
 
   /**
@@ -966,7 +965,6 @@ protected:
     //     releasing it) happens in the nsDocument destructor. We'd prefer to
     //     do it here but nsNodeInfoManager is a concrete class that we don't
     //     want to expose to users of the nsIDocument API outside of Gecko.
-    // XXX Same thing applies to mBindingManager
   }
 
   /**
@@ -1001,7 +999,6 @@ protected:
   // We'd like these to be nsRefPtrs, but that'd require us to include
   // additional headers that we don't want to expose.
   // The cleanup is handled by the nsDocument destructor.
-  nsBindingManager* mBindingManager; // [STRONG]
   nsNodeInfoManager* mNodeInfoManager; // [STRONG]
   nsICSSLoader* mCSSLoader; // [STRONG]
 
