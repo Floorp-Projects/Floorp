@@ -5490,6 +5490,24 @@ var OfflineApps = {
            Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN);
   },
 
+  // XXX: duplicated in preferences/advanced.js
+  _getOfflineAppUsage: function (host)
+  {
+    var cacheService = Components.classes["@mozilla.org/network/cache-service;1"].
+                       getService(Components.interfaces.nsICacheService);
+    var cacheSession = cacheService.createSession("HTTP-offline",
+                                                  Components.interfaces.nsICache.STORE_OFFLINE,
+                                                  true).
+                       QueryInterface(Components.interfaces.nsIOfflineCacheSession);
+    var usage = cacheSession.getDomainUsage(host);
+
+    var storageManager = Components.classes["@mozilla.org/dom/storagemanager;1"].
+                         getService(Components.interfaces.nsIDOMStorageManager);
+    usage += storageManager.getUsage(host);
+
+    return usage;
+  },
+
   _checkUsage: function(aURI) {
     var pm = Cc["@mozilla.org/permissionmanager;1"].
              getService(Ci.nsIPermissionManager);
@@ -5497,7 +5515,7 @@ var OfflineApps = {
     // if the user has already allowed excessive usage, don't bother checking
     if (pm.testExactPermission(aURI, "offline-app") !=
         Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN) {
-      var usage = getOfflineAppUsage(aURI.asciiHost);
+      var usage = this._getOfflineAppUsage(aURI.asciiHost);
       var warnQuota = gPrefService.getIntPref("offline-apps.quota.warn");
       if (usage >= warnQuota * 1024) {
         return true;
