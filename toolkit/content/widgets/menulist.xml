@@ -49,8 +49,10 @@
                event.charCode > 0)) {
             // Moving relative to an item: start from the currently selected item
             this.menuBoxObject.activeChild = this.mSelectedInternal;
-            if (this.menuBoxObject.handleKeyPress(event))
+            if (this.menuBoxObject.handleKeyPress(event)) {
               this.menuBoxObject.activeChild.doCommand();
+              event.preventDefault();
+            }
           }
         ]]>
       </handler>
