@@ -385,6 +385,15 @@ BookmarksStore.prototype = {
                                       Utils.makeURI(command.data.feedURI),
                                       command.data.index);
       break;
+    case "mounted-share":
+      this._log.debug(" -> creating share mountpoint \"" + command.data.title + "\"");
+      newId = this._bms.createFolder(parentId,
+                                     command.data.title,
+                                     command.data.index);
+      
+      this._ans.setItemAnnotation(newId, "weave/mounted-share-id",
+                                  command.data.mountId, 0, this._ans.EXPIRE_NEVER);
+      break;
     case "separator":
       this._log.debug(" -> creating separator");
       newId = this._bms.insertSeparator(parentId, command.data.index);
@@ -508,7 +517,7 @@ BookmarksStore.prototype = {
     return this._hsvc.executeQuery(query, this._hsvc.getNewQueryOptions()).root;
   },
 
-  __wrap: function BSS__wrap(node, items, parentGUID, index, guidOverride) {
+  __wrap: function BSS___wrap(node, items, parentGUID, index, guidOverride) {
     let GUID, item;
 
     // we override the guid for the root items, "menu", "toolbar", etc.
@@ -527,6 +536,14 @@ BookmarksStore.prototype = {
         let feedURI = this._ls.getFeedURI(node.itemId);
         item.siteURI = siteURI? siteURI.spec : "";
         item.feedURI = feedURI? feedURI.spec : "";
+
+      } else if (this._ans.itemHasAnnotation(node.itemId,
+                                             "weave/mounted-share-id")) {
+        item.type = "mounted-share";
+        item.title = node.title;
+        item.mountId = this._ans.getItemAnnotation(node.itemId,
+                                                   "weave/mounted-share-id");
+
       } else {
         item.type = "folder";
         node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
@@ -567,9 +584,31 @@ BookmarksStore.prototype = {
   },
 
   // helper
-  _wrap: function BStore_wrap(node, items, rootName) {
+  _wrap: function BStore__wrap(node, items, rootName) {
     return this.__wrap(node, items, null, null, rootName);
   },
+
+  _wrapMount: function BStore__wrapMount(node, id) {
+    if (node.type != node.RESULT_TYPE_FOLDER)
+      throw "Trying to wrap a non-folder mounted share";
+
+    let GUID = this._bms.getItemGUID(node.itemId);
+    let ret = {rootGUID: GUID, userid: id, snapshot: {}};
+
+    node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
+    node.containerOpen = true;
+    for (var i = 0; i < node.childCount; i++) {
+      this.__wrap(node.getChild(i), ret.snapshot, GUID, i);
+    }
+
+    // remove any share mountpoints
+    for (let guid in ret.snapshot) {
+      if (ret.snapshot[guid].type == "mounted-share")
+        delete ret.snapshot[guid];
+    }
+
+    return ret;
+  }, 
 
   _resetGUIDs: function BSS__resetGUIDs(node) {
     if (this._ans.itemHasAnnotation(node.itemId, "placesInternal/GUID"))
@@ -583,6 +622,16 @@ BookmarksStore.prototype = {
         this._resetGUIDs(node.getChild(i));
       }
     }
+  },
+
+  findMounts: function BStore_findMounts() {
+    let ret = [];
+    let a = this._ans.getItemsWithAnnotation("weave/mounted-share-id", {});
+    for (let i = 0; i < a.length; i++) {
+      let id = this._ans.getItemAnnotation(a[i], "weave/mounted-share-id");
+      ret.push(this._wrapMount(this._getNode(a[i]), id));
+    }
+    return ret;
   },
 
   wrap: function BStore_wrap() {

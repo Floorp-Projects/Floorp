@@ -219,11 +219,12 @@ Generator.prototype = {
 
   _done: function AsyncGen__done(retval) {
     if (!this._generator) {
-      this._log.error("Generator '" + this.name + "' called 'done' after it's finalized");
+      this._log.error("Async method '" + this.name + "' is missing a 'yield' call " +
+                      "(or called done() after being finalized)");
       this._log.trace("Initial stack trace:\n" + this.trace);
-      return;
+    } else {
+      this._generator.close();
     }
-    this._generator.close();
     this._generator = null;
     this._timer = null;
 
