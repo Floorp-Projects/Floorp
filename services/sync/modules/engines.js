@@ -685,56 +685,83 @@ Engine.prototype = {
 
     this._log.debug("Sharing bookmarks with " + username);
 
+    this._getSymKey.async(this, self.cb);
+    yield;
+
+    // copied from getSymKey
+    this._dav.GET(this.keysFile, self.cb);
+    let ret = yield;
+    Utils.ensureStatus(ret.status, "Could not get keys file.");
+    let keys = this._json.decode(ret.responseText);
+
+    // get the other user's pubkey
+    let hash = Utils.sha1(username);
+    let serverURL = Utils.prefs.getCharPref("serverURL");
+
     try {
-      this._getSymKey.async(this, self.cb);
-      yield;
-
-      // copied from getSymKey
-      this._log.debug("Getting keyring from server");
-      this._dav.GET(this.keysFile, self.cb);
-      let ret = yield;
-      Utils.ensureStatus(ret.status, "Could not get keys file.");
-      let keys = this._json.decode(ret.responseText);
-
-      // get the other user's pubkey
-      this._log.debug("Constructing other user's URL");
-      let hash = Utils.sha1(username);
-      let serverURL = Utils.prefs.getCharPref("serverURL");
       this._dav.baseURL = serverURL + "user/" + hash + "/";  //FIXME: very ugly!
-
-      this._log.debug("Getting other user's public key");
       this._dav.GET("public/pubkey", self.cb);
       ret = yield;
-      Utils.ensureStatus(ret.status,
-                         "Could not get public key for user" + username);
-      let id = new Identity();
-      id.pubkey = ret.responseText;
+    }
+    catch (e) { throw e; }
+    finally { this._dav.baseURL = base; }
 
-      this._dav.baseURL = base;
+    Utils.ensureStatus(ret.status, "Could not get public key for " + username);
 
-      // now encrypt the symkey with their pubkey and upload the new keyring
-      this._log.debug("Encrypting symmetric key with other user's public key");
-      Crypto.RSAencrypt.async(Crypto, self.cb, this._engineId.password, id);
-      let enckey = yield;
-      if (!enckey)
-        throw "Could not encrypt symmetric encryption key";
+    let id = new Identity();
+    id.pubkey = ret.responseText;
 
-      this._log.debug("Uploading new keyring");
-      keys.ring[hash] = enckey;
-      this._dav.PUT(this.keysFile, this._json.encode(keys), self.cb);
-      ret = yield;
-      Utils.ensureStatus(ret.status, "Could not upload keyring file.");
+    // now encrypt the symkey with their pubkey and upload the new keyring
+    Crypto.RSAencrypt.async(Crypto, self.cb, this._engineId.password, id);
+    let enckey = yield;
+    if (!enckey)
+      throw "Could not encrypt symmetric encryption key";
 
-      this._log.debug("All done sharing!");
+    keys.ring[hash] = enckey;
+    this._dav.PUT(this.keysFile, this._json.encode(keys), self.cb);
+    ret = yield;
+    Utils.ensureStatus(ret.status, "Could not upload keyring file.");
 
-    } catch (e) {
-      throw e;
+    this._createShare(username, username);
 
-    } finally {
-      this._dav.baseURL = base;
+    this._log.debug("All done sharing!");
+
+    self.done(true);
+  },
+
+  // FIXME: EEK bookmarks specific
+  _createShare: function Engine__createShare(id, title) {
+    let bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+      getService(Ci.nsINavBookmarksService);
+    let ans = Cc["@mozilla.org/browser/annotation-service;1"].
+      getService(Ci.nsIAnnotationService);
+
+    let root;
+    let a = ans.getItemsWithAnnotation("weave/mounted-shares-folder", {});
+    if (a.length == 1)
+      root = a[0];
+
+    if (!root) {
+      root = bms.createFolder(bms.toolbarFolder, "Shared Folders",
+                              bms.DEFAULT_INDEX);
+      ans.setItemAnnotation(root, "weave/mounted-shares-folder", true, 0,
+                            ans.EXPIRE_NEVER);
     }
 
-    self.done();
+    let item
+    a = ans.getItemsWithAnnotation("weave/mounted-share-id", {});
+    for (let i = 0; i < a.length; i++) {
+      if (ans.getItemAnnotation(a[i], "weave/mounted-share-id") == id) {
+        item = a[i];
+        break;
+      }
+    }
+
+    if (!item) {
+      let newId = bms.createFolder(root, title, bms.DEFAULT_INDEX);
+      ans.setItemAnnotation(newId, "weave/mounted-share-id", id, 0,
+                            ans.EXPIRE_NEVER);
+    }
   },
 
   sync: function Engine_sync(onComplete) {
@@ -774,6 +801,93 @@ BookmarksEngine.prototype = {
     if (!this.__store)
       this.__store = new BookmarksStore();
     return this.__store;
+  },
+
+  syncMounts: function BmkEngine_syncMounts(onComplete) {
+    this._syncMounts.async(this, onComplete);
+  },
+  _syncMounts: function BmkEngine__syncMounts() {
+    let self = yield;
+    let mounts = this._store.findMounts();
+
+    for (i = 0; i < mounts.length; i++) {
+      try {
+        this._syncOneMount.async(this, self.cb, mounts[i]);
+        yield;
+      } catch (e) {
+        this._log.warn("Could not sync shared folder from " + mounts[i].userid);
+        this._log.trace(Utils.stackTrace(e));
+      }
+    }
+  },
+
+  _syncOneMount: function BmkEngine__syncOneMount(mountData) {
+    let self = yield;
+    let user = mountData.userid;
+    let base = this._dav.baseURL;
+    let serverURL = Utils.prefs.getCharPref("serverURL");
+    let snap = new SnapshotStore();
+
+    this._log.debug("Syncing shared folder from user " + user);
+
+    try {
+      let hash = Utils.sha1(user);
+      this._dav.baseURL = serverURL + "user/" + hash + "/";  //FIXME: very ugly!
+
+      this._getSymKey.async(this, self.cb);
+      yield;
+
+      this._log.trace("Getting status file for " + user);
+      this._dav.GET(this.statusFile, self.cb);
+      let resp = yield;
+      Utils.ensureStatus(resp.status, "Could not download status file.");
+      let status = this._json.decode(resp.responseText);
+
+      this._log.trace("Downloading server snapshot for " + user);
+      this._dav.GET(this.snapshotFile, self.cb);
+      resp = yield;
+      Utils.ensureStatus(resp.status, "Could not download snapshot.");
+      Crypto.PBEdecrypt.async(Crypto, self.cb, resp.responseText,
+    			        this._engineId, status.snapEncryption);
+      let data = yield;
+      snap.data = this._json.decode(data);
+
+      this._log.trace("Downloading server deltas for " + user);
+      this._dav.GET(this.deltasFile, self.cb);
+      resp = yield;
+      Utils.ensureStatus(resp.status, "Could not download deltas.");
+      Crypto.PBEdecrypt.async(Crypto, self.cb, resp.responseText,
+    			        this._engineId, status.deltasEncryption);
+      data = yield;
+      deltas = this._json.decode(data);
+    }
+    catch (e) { throw e; }
+    finally { this._dav.baseURL = base; }
+
+    // apply deltas to get current snapshot
+    for (var i = 0; i < deltas.length; i++) {
+      snap.applyCommands.async(snap, self.cb, deltas[i]);
+      yield;
+    }
+
+    // prune tree / get what we want
+    for (let guid in snap.data) {
+      if (snap.data[guid].type != "bookmark")
+        delete snap.data[guid];
+      else
+        snap.data[guid].parentGUID = mountData.rootGUID;
+    }
+
+    this._log.trace("Got bookmarks fror " + user + ", comparing with local copy");
+    this._core.detectUpdates(self.cb, mountData.snapshot, snap.data);
+    let diff = yield;
+
+    // FIXME: should make sure all GUIDs here live under the mountpoint
+    this._log.trace("Applying changes to folder from " + user);
+    this._store.applyCommands.async(this._store, self.cb, diff);
+    yield;
+
+    this._log.trace("Shared folder from " + user + " successfully synced!");
   }
 };
 BookmarksEngine.prototype.__proto__ = new Engine();

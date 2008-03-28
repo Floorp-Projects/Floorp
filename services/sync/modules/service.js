@@ -512,6 +512,8 @@ WeaveSvc.prototype = {
         this._notify(this._bmkEngine.name + ":sync",
                      engineCb, this._bmkEngine).async(this, innerSelf.cb);
         yield;
+        this._bmkEngine.syncMounts(innerSelf.cb);
+        yield;
       }
       if (Utils.prefs.getBoolPref("history")) {
         this._notify(this._histEngine.name + ":sync",
@@ -569,11 +571,13 @@ WeaveSvc.prototype = {
     let cb = function Weave_shareBookmarks() {
       let innerSelf = yield;
       this._bmkEngine.share(innerSelf.cb, username);
-      yield;
+      let ret = yield;
+      innerSelf.done(ret);
     };
 
     this._lock(this._notify("share-bookmarks", cb)).async(this, self.cb);
-    yield;
+    let ret = yield;
+    self.done(ret);
   }
 
 };
