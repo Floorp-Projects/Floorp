@@ -9,7 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=425013
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body>
+<body onload="runtests();">
 
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=425013">Mozilla Bug 425013</a>
 <br>
@@ -47,13 +47,13 @@ document.addEventListener("PluginNotFound", pluginNotFound, false);
 </object>
 
 <object type="text/html"
-        data="data:text/html,an html document in an object tag" id="obj5">
+        data="data:text/html,an html document in an object tag" id="obj6">
 <p>Alternate content</p>
 </object>
 
 <embed type="a/b" id="embed2"></embed>
 
-<script>
+<script class="testbody" type="text/javascript">
 function runtests()
 {
   is(missingPlugins[0], document.getElementById("obj1"),
@@ -71,10 +71,7 @@ function runtests()
 
   SimpleTest.finish();
 }
-</script>
 
-<script class="testbody" type="text/javascript">
-setTimeout(runtests, 500);
 SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
