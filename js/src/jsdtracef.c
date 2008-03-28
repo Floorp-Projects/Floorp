@@ -165,8 +165,7 @@ jsdtrace_function_name(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
              * decompiler.
              */
             break;
-          default: /* FIXME bug 425744: need to consider other CALL cases. */
-            break;
+          default: ;
         }
 
         switch ((JSOp) *pc) {
