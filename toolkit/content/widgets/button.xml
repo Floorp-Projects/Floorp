@@ -149,6 +149,7 @@
             (event.keyCode == KeyEvent.DOM_VK_RIGHT &&
               document.defaultView.getComputedStyle(this.parentNode, "")
                       .direction == "rtl")) {
+          event.preventDefault();
           window.document.commandDispatcher.rewindFocus();
           return;
         }
@@ -160,6 +161,7 @@
             (event.keyCode == KeyEvent.DOM_VK_LEFT &&
               document.defaultView.getComputedStyle(this.parentNode, "")
                       .direction == "rtl")) {
+          event.preventDefault();
           window.document.commandDispatcher.advanceFocus();
           return;
         }
