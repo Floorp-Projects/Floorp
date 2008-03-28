@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="boom();">
+<script type="text/javascript">
+
+function boom()
+{
+  var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+  var wizard = document.createElementNS(XUL_NS, "wizard");
+  var space = document.createTextNode(" ");
+  var hbox = document.createElementNS(XUL_NS, "hbox");
+  hbox.setAttribute("anonid", "Buttons");
+
+  document.documentElement.appendChild(wizard);
+  wizard.appendChild(space);
+  wizard.appendChild(hbox);
+  wizard.cloneNode(true);
+}
+
+</script>
+</window>
