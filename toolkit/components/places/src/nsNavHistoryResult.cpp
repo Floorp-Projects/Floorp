@@ -2865,11 +2865,17 @@ nsNavHistoryFolderResultNode::nsNavHistoryFolderResultNode(
                                   nsNavHistoryResultNode::RESULT_TYPE_FOLDER,
                                   PR_FALSE, aDynamicContainerType, aOptions),
   mContentsValid(PR_FALSE),
-  mQueryItemId(-1)
+  mQueryItemId(-1),
+  mIsRegisteredFolderObserver(PR_FALSE)
 {
   mItemId = aFolderId;
 }
 
+nsNavHistoryFolderResultNode::~nsNavHistoryFolderResultNode()
+{
+  if (mIsRegisteredFolderObserver && mResult)
+    mResult->RemoveBookmarkFolderObserver(this, mItemId);
+}
 
 // nsNavHistoryFolderResultNode::OnRemoving
 //
@@ -3111,6 +3117,7 @@ nsNavHistoryFolderResultNode::FillChildren()
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
   result->AddBookmarkFolderObserver(this, mItemId);
+  mIsRegisteredFolderObserver = PR_TRUE;
 
   mContentsValid = PR_TRUE;
   return NS_OK;
@@ -3129,9 +3136,10 @@ nsNavHistoryFolderResultNode::ClearChildren(PRBool unregister)
   mChildren.Clear();
 
   if (unregister && mContentsValid) {
-    nsNavHistoryResult* result = GetResult();
-    if (result)
-      result->RemoveBookmarkFolderObserver(this, mItemId);
+    if (mResult) {
+      mResult->RemoveBookmarkFolderObserver(this, mItemId);
+      mIsRegisteredFolderObserver = PR_FALSE;
+    }
   }
   mContentsValid = PR_FALSE;
 }
