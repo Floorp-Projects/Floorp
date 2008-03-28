@@ -82,7 +82,6 @@
 #include "nsContentPolicyUtils.h"
 #include "nsContentErrors.h"
 #include "nsLayoutStatics.h"
-#include "nsCrossSiteListenerProxy.h"
 #include "nsDOMError.h"
 #include "nsIHTMLDocument.h"
 #include "nsWhitespaceTokenizer.h"
@@ -116,10 +115,8 @@
                                                   //           access-control spec is supported
 #define XML_HTTP_REQUEST_SYNCLOOPING    (1 << 11) // Internal
 #define XML_HTTP_REQUEST_MULTIPART      (1 << 12) // Internal
-#define XML_HTTP_REQUEST_USE_XSITE_AC   (1 << 13) // Internal
-#define XML_HTTP_REQUEST_NON_GET        (1 << 14) // Internal
-#define XML_HTTP_REQUEST_GOT_FINAL_STOP (1 << 15) // Internal
-#define XML_HTTP_REQUEST_BACKGROUND     (1 << 16) // Internal
+#define XML_HTTP_REQUEST_GOT_FINAL_STOP (1 << 13) // Internal
+#define XML_HTTP_REQUEST_BACKGROUND     (1 << 14) // Internal
 
 #define XML_HTTP_REQUEST_LOADSTATES         \
   (XML_HTTP_REQUEST_UNINITIALIZED |         \
@@ -129,8 +126,6 @@
    XML_HTTP_REQUEST_COMPLETED |             \
    XML_HTTP_REQUEST_SENT |                  \
    XML_HTTP_REQUEST_STOPPED)
-
-#define ACCESS_CONTROL_CACHE_SIZE 100
 
 #define NS_BADCERTHANDLER_CONTRACTID \
   "@mozilla.org/content/xmlhttprequest-bad-cert-handler;1"
@@ -245,134 +240,6 @@ nsMultipartProxyListener::OnDataAvailable(nsIRequest *aRequest,
                                         count);
 }
 
-// Class used as streamlistener and notification callback when
-// doing the initial GET request for an access-control check
-class nsACProxyListener : public nsIStreamListener,
-                          public nsIInterfaceRequestor,
-                          public nsIChannelEventSink
-{
-public:
-  nsACProxyListener(nsIChannel* aOuterChannel,
-                    nsIStreamListener* aOuterListener,
-                    nsISupports* aOuterContext,
-                    nsIPrincipal* aReferrerPrincipal,
-                    const nsACString& aRequestMethod)
-   : mOuterChannel(aOuterChannel), mOuterListener(aOuterListener),
-     mOuterContext(aOuterContext), mReferrerPrincipal(aReferrerPrincipal),
-     mRequestMethod(aRequestMethod)
-  { }
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMLISTENER
-  NS_DECL_NSIREQUESTOBSERVER
-  NS_DECL_NSIINTERFACEREQUESTOR
-  NS_DECL_NSICHANNELEVENTSINK
-
-private:
-  nsCOMPtr<nsIChannel> mOuterChannel;
-  nsCOMPtr<nsIStreamListener> mOuterListener;
-  nsCOMPtr<nsISupports> mOuterContext;
-  nsCOMPtr<nsIPrincipal> mReferrerPrincipal;
-  nsCString mRequestMethod;
-};
-
-NS_IMPL_ISUPPORTS4(nsACProxyListener, nsIStreamListener, nsIRequestObserver,
-                   nsIInterfaceRequestor, nsIChannelEventSink)
-
-NS_IMETHODIMP
-nsACProxyListener::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
-{
-  nsresult status;
-  nsresult rv = aRequest->GetStatus(&status);
-
-  if (NS_SUCCEEDED(rv)) {
-    rv = status;
-  }
-
-  if (NS_SUCCEEDED(rv)) {
-    // Everything worked, check to see if there is an expiration time set on
-    // this access control list. If so go ahead and cache it.
-
-    nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(aRequest, &rv);
-
-    // The "Access-Control-Max-Age" header should return an age in seconds.
-    nsCAutoString ageString;
-    http->GetResponseHeader(NS_LITERAL_CSTRING("Access-Control-Max-Age"),
-                            ageString);
-
-    // Sanitize the string. We only allow 'delta-seconds' as specified by
-    // http://dev.w3.org/2006/waf/access-control (digits 0-9 with no leading or
-    // trailing non-whitespace characters). We don't allow a + or - character
-    // but PR_sscanf does so we ensure that the first character is actually a
-    // digit.
-    ageString.StripWhitespace();
-    if (ageString.CharAt(0) >= '0' || ageString.CharAt(0) <= '9') {
-      PRUint64 age;
-      PRInt32 convertedChars = PR_sscanf(ageString.get(), "%llu", &age);
-      if ((PRInt32)ageString.Length() == convertedChars &&
-          nsXMLHttpRequest::EnsureACCache()) {
-
-        // String seems fine, go ahead and cache.
-        nsCOMPtr<nsIURI> uri;
-        http->GetURI(getter_AddRefs(uri));
-
-        // PR_Now gives microseconds
-        PRTime expirationTime = PR_Now() + age * PR_USEC_PER_SEC;
-        nsXMLHttpRequest::sAccessControlCache->PutEntry(uri, mReferrerPrincipal,
-                                                        expirationTime);
-      }
-    }
-  }
-
-  if (NS_SUCCEEDED(rv)) {
-    rv = mOuterChannel->AsyncOpen(mOuterListener, mOuterContext);
-  }
-
-  if (NS_FAILED(rv)) {
-    mOuterChannel->Cancel(rv);
-    mOuterListener->OnStartRequest(mOuterChannel, mOuterContext);
-    mOuterListener->OnStopRequest(mOuterChannel, mOuterContext, rv);
-    
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsACProxyListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
-                                 nsresult aStatus)
-{
-  return NS_OK;
-}
-
-/** nsIStreamListener methods **/
-
-NS_IMETHODIMP
-nsACProxyListener::OnDataAvailable(nsIRequest *aRequest,
-                                   nsISupports *ctxt,
-                                   nsIInputStream *inStr,
-                                   PRUint32 sourceOffset,
-                                   PRUint32 count)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsACProxyListener::OnChannelRedirect(nsIChannel *aOldChannel,
-                                     nsIChannel *aNewChannel,
-                                     PRUint32 aFlags)
-{
-  // No redirects allowed for now.
-  return NS_ERROR_DOM_BAD_URI;
-}
-
-NS_IMETHODIMP
-nsACProxyListener::GetInterface(const nsIID & aIID, void **aResult)
-{
-  return QueryInterface(aIID, aResult);
-}
-
 /**
  * Gets the nsIDocument given the script context. Will return nsnull on failure.
  *
@@ -399,154 +266,10 @@ GetDocumentFromScriptContext(nsIScriptContext *aScriptContext)
   return doc;
 }
 
-void
-nsAccessControlLRUCache::GetEntry(nsIURI* aURI,
-                                  nsIPrincipal* aPrincipal,
-                                  PRTime* _retval)
-{
-  nsCAutoString key;
-  if (GetCacheKey(aURI, aPrincipal, key)) {
-    CacheEntry* entry;
-    if (GetEntryInternal(key, &entry)) {
-      *_retval = entry->value;
-      return;
-    }
-  }
-  *_retval = 0;
-}
-
-void
-nsAccessControlLRUCache::PutEntry(nsIURI* aURI,
-                                  nsIPrincipal* aPrincipal,
-                                  PRTime aValue)
-{
-  nsCString key;
-  if (!GetCacheKey(aURI, aPrincipal, key)) {
-    NS_WARNING("Invalid cache key!");
-    return;
-  }
-
-  CacheEntry* entry;
-  if (GetEntryInternal(key, &entry)) {
-    // Entry already existed, just update the expiration time and bail. The LRU
-    // list is updated as a result of the call to GetEntryInternal.
-    entry->value = aValue;
-    return;
-  }
-
-  // This is a new entry, allocate and insert into the table now so that any
-  // failures don't cause items to be removed from a full cache.
-  entry = new CacheEntry(key, aValue);
-  if (!entry) {
-    NS_WARNING("Failed to allocate new cache entry!");
-    return;
-  }
-
-  if (!mTable.Put(key, entry)) {
-    // Failed, clean up the new entry.
-    delete entry;
-
-    NS_WARNING("Failed to add entry to the access control cache!");
-    return;
-  }
-
-  PR_INSERT_LINK(entry, &mList);
-
-  NS_ASSERTION(mTable.Count() <= ACCESS_CONTROL_CACHE_SIZE + 1,
-               "Something is borked, too many entries in the cache!");
-
-  // Now enforce the max count.
-  if (mTable.Count() > ACCESS_CONTROL_CACHE_SIZE) {
-    // Try to kick out all the expired entries.
-    PRTime now = PR_Now();
-    mTable.Enumerate(RemoveExpiredEntries, &now);
-
-    // If that didn't remove anything then kick out the least recently used
-    // entry.
-    if (mTable.Count() > ACCESS_CONTROL_CACHE_SIZE) {
-      CacheEntry* lruEntry = static_cast<CacheEntry*>(PR_LIST_TAIL(&mList));
-      PR_REMOVE_LINK(lruEntry);
-
-      // This will delete 'lruEntry'.
-      mTable.Remove(lruEntry->key);
-
-      NS_ASSERTION(mTable.Count() >= ACCESS_CONTROL_CACHE_SIZE,
-                   "Somehow tried to remove an entry that was never added!");
-    }
-  }
-}
-
-void
-nsAccessControlLRUCache::Clear()
-{
-  PR_INIT_CLIST(&mList);
-  mTable.Clear();
-}
-
-PRBool
-nsAccessControlLRUCache::GetEntryInternal(const nsACString& aKey,
-                                          CacheEntry** _retval)
-{
-  if (!mTable.Get(aKey, _retval))
-    return PR_FALSE;
-
-  // Move to the head of the list.
-  PR_REMOVE_LINK(*_retval);
-  PR_INSERT_LINK(*_retval, &mList);
-
-  return PR_TRUE;
-}
-
-/* static */ PR_CALLBACK PLDHashOperator
-nsAccessControlLRUCache::RemoveExpiredEntries(const nsACString& aKey,
-                                              nsAutoPtr<CacheEntry>& aValue,
-                                              void* aUserData)
-{
-  PRTime* now = static_cast<PRTime*>(aUserData);
-  if (*now >= aValue->value) {
-    // Expired, remove from the list as well as the hash table.
-    PR_REMOVE_LINK(aValue);
-    return PL_DHASH_REMOVE;
-  }
-  // Keep going.
-  return PL_DHASH_NEXT;
-}
-
-/* static */ PRBool
-nsAccessControlLRUCache::GetCacheKey(nsIURI* aURI,
-                                     nsIPrincipal* aPrincipal,
-                                     nsACString& _retval)
-{
-  NS_ASSERTION(aURI, "Null uri!");
-  NS_ASSERTION(aPrincipal, "Null principal!");
-  
-  NS_NAMED_LITERAL_CSTRING(space, " ");
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  
-  nsCAutoString host;
-  if (uri) {
-    uri->GetHost(host);
-  }
-
-  nsCAutoString spec;
-  rv = aURI->GetSpec(spec);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-  _retval.Assign(host + space + spec);
-
-  return PR_TRUE;
-}
-
 /////////////////////////////////////////////
 //
 //
 /////////////////////////////////////////////
-
-// Will be initialized in nsXMLHttpRequest::EnsureACCache.
-nsAccessControlLRUCache* nsXMLHttpRequest::sAccessControlCache = nsnull;
 
 nsXMLHttpRequest::nsXMLHttpRequest()
   : mState(XML_HTTP_REQUEST_UNINITIALIZED)
@@ -1122,9 +845,6 @@ nsXMLHttpRequest::Abort()
   if (mChannel) {
     mChannel->Cancel(NS_BINDING_ABORTED);
   }
-  if (mACGetChannel) {
-    mACGetChannel->Cancel(NS_BINDING_ABORTED);
-  }
   mDocument = nsnull;
   mResponseBody.Truncate();
   mState |= XML_HTTP_REQUEST_ABORTED;
@@ -1151,10 +871,6 @@ nsXMLHttpRequest::GetAllResponseHeaders(char **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsnull;
-
-  if (mState & XML_HTTP_REQUEST_USE_XSITE_AC) {
-    return NS_OK;
-  }
 
   nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
 
@@ -1183,37 +899,6 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
 {
   nsresult rv = NS_OK;
   _retval.Truncate();
-
-  // Check for dangerous headers
-  if (mState & XML_HTTP_REQUEST_USE_XSITE_AC) {
-    
-    // Make sure we don't leak header information from denied cross-site
-    // requests.
-    if (mChannel) {
-      nsresult status;
-      mChannel->GetStatus(&status);
-      if (NS_FAILED(status)) {
-        return NS_OK;
-      }
-    }
-
-    const char *kCrossOriginSafeHeaders[] = {
-      "cache-control", "content-language", "content-type", "expires",
-      "last-modified", "pragma"
-    };
-    PRBool safeHeader = PR_FALSE;
-    PRUint32 i;
-    for (i = 0; i < NS_ARRAY_LENGTH(kCrossOriginSafeHeaders); ++i) {
-      if (header.LowerCaseEqualsASCII(kCrossOriginSafeHeaders[i])) {
-        safeHeader = PR_TRUE;
-        break;
-      }
-    }
-
-    if (!safeHeader) {
-      return NS_OK;
-    }
-  }
 
   nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
 
@@ -1416,34 +1101,6 @@ IsSameOrigin(nsIPrincipal* aPrincipal, nsIChannel* aChannel)
   return NS_SUCCEEDED(rv);
 }
 
-nsresult
-nsXMLHttpRequest::CheckChannelForCrossSiteRequest()
-{
-  // First check if this is a same-origin request, or if cross-site requests
-  // are enabled.
-  if ((mState & XML_HTTP_REQUEST_XSITEENABLED) ||
-      IsSameOrigin(mPrincipal, mChannel)) {
-    return NS_OK;
-  }
-
-  // This is a cross-site request
-
-  // The request is now cross-site, so update flag.
-  mState |= XML_HTTP_REQUEST_USE_XSITE_AC;
-
-  // Remove dangerous headers
-  nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(mChannel);
-  if (http) {
-    PRUint32 i;
-    for (i = 0; i < mExtraRequestHeaders.Length(); ++i) {
-      http->SetRequestHeader(mExtraRequestHeaders[i], EmptyCString(), PR_FALSE);
-    }
-    mExtraRequestHeaders.Clear();
-  }
-
-  return NS_OK;
-}
-
 /* noscript void openRequest (in AUTF8String method, in AUTF8String url, in boolean async, in AString user, in AString password); */
 NS_IMETHODIMP
 nsXMLHttpRequest::OpenRequest(const nsACString& method,
@@ -1561,46 +1218,11 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
     // Chrome callers are always allowed to read from different origins.
     mState |= XML_HTTP_REQUEST_XSITEENABLED;
   }
-  else if (!(mState & XML_HTTP_REQUEST_XSITEENABLED) &&
-           !IsSameOrigin(mPrincipal, mChannel)) {
-    mState |= XML_HTTP_REQUEST_USE_XSITE_AC;
-  }
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
   if (httpChannel) {
     rv = httpChannel->SetRequestMethod(method);
     NS_ENSURE_SUCCESS(rv, rv);
-    
-    if (!method.LowerCaseEqualsLiteral("get")) {
-      mState |= XML_HTTP_REQUEST_NON_GET;
-    }
-  }
-
-  // Do we need to set up an initial OPTIONS request to make sure that it is
-  // safe to make the request?
-  if ((mState & XML_HTTP_REQUEST_USE_XSITE_AC) &&
-      (mState & XML_HTTP_REQUEST_NON_GET)) {
-
-    // Check to see if this initial OPTIONS request has already been cached in
-    // our special Access Control Cache.
-    PRTime expiration = 0;
-    if (sAccessControlCache) {
-      sAccessControlCache->GetEntry(uri, mPrincipal, &expiration);
-    }
-
-    if (expiration <= PR_Now()) {
-      // Either it wasn't cached or the cached result has expired. Build a
-      // channel for the OPTIONS request.
-      rv = NS_NewChannel(getter_AddRefs(mACGetChannel), uri, nsnull, loadGroup,
-                         nsnull, loadFlags);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<nsIHttpChannel> acHttp = do_QueryInterface(mACGetChannel);
-      NS_ASSERTION(acHttp, "Failed to QI to nsIHttpChannel!");
-
-      rv = acHttp->SetRequestMethod(NS_LITERAL_CSTRING("OPTIONS"));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
   }
 
   ChangeState(XML_HTTP_REQUEST_OPENED);
@@ -1644,7 +1266,7 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
       return NS_ERROR_FAILURE;
     }
 
-    rv = secMan->CheckConnect(cx, targetURI, "XMLHttpRequest", "open-uri");
+    rv = secMan->CheckConnect(cx, targetURI, "XMLHttpRequest", "open");
     if (NS_FAILED(rv))
     {
       // Security check failed.
@@ -1799,7 +1421,18 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
   NS_ENSURE_TRUE(channel, NS_ERROR_UNEXPECTED);
 
-  channel->SetOwner(mPrincipal);
+  nsCOMPtr<nsIPrincipal> documentPrincipal = mPrincipal;
+  if (IsSystemPrincipal(documentPrincipal)) {
+    // Don't give this document the system principal.  We need to keep track of
+    // mPrincipal being system because we use it for various security checks
+    // that should be passing, but the document data shouldn't get a system
+    // principal.
+    nsresult rv;
+    documentPrincipal = do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  channel->SetOwner(documentPrincipal);
 
   mReadRequest = request;
   mContext = ctxt;
@@ -1808,19 +1441,19 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
   nsIURI* uri = GetBaseURI();
 
-  // Create an empty document from it 
+  // Create an empty document from it.  Here we have to cheat a little bit...
+  // Setting the base URI to |uri| won't work if the document has a null
+  // principal, so use mPrincipal when creating the document, then reset the
+  // principal.
   const nsAString& emptyStr = EmptyString();
   nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(mOwner);
   nsresult rv = nsContentUtils::CreateDocument(emptyStr, emptyStr, nsnull, uri,
                                                uri, mPrincipal, global,
                                                getter_AddRefs(mDocument));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (mState & XML_HTTP_REQUEST_USE_XSITE_AC) {
-    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
-    if (htmlDoc) {
-      htmlDoc->DisableCookieAccess();
-    }
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
+  if (doc) {
+    doc->SetPrincipal(documentPrincipal);
   }
 
   // Reset responseBody
@@ -2275,9 +1908,6 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     mState |= XML_HTTP_REQUEST_SYNCLOOPING;
   }
 
-  rv = CheckChannelForCrossSiteRequest();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Hook us up to listen to redirects and the like
   mChannel->GetNotificationCallbacks(getter_AddRefs(mNotificationCallbacks));
   mChannel->SetNotificationCallbacks(this);
@@ -2289,15 +1919,6 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     if (!listener) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-  }
-
-  if (!(mState & XML_HTTP_REQUEST_XSITEENABLED)) {
-    // Always create a nsCrossSiteListenerProxy here even if it's
-    // a same-origin request right now, since it could be redirected.
-    listener = new nsCrossSiteListenerProxy(listener, mPrincipal, mChannel,
-                                            &rv);
-    NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Bypass the network cache in cases where it makes no sense:
@@ -2316,10 +1937,6 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   else if (mState & XML_HTTP_REQUEST_SYNCLOOPING) {
     AddLoadFlags(mChannel,
         nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY);
-    if (mACGetChannel) {
-      AddLoadFlags(mACGetChannel,
-          nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY);
-    }
   }
 
   // Since we expect XML data, set the type hint accordingly
@@ -2327,24 +1944,8 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   // ignoring return value, as this is not critical
   mChannel->SetContentType(NS_LITERAL_CSTRING("application/xml"));
 
-  // If we're doing a cross-site non-GET request we need to first do
-  // a GET request to the same URI. Set that up if needed
-  if (mACGetChannel) {
-    nsCOMPtr<nsIStreamListener> acListener =
-      new nsACProxyListener(mChannel, listener, nsnull, mPrincipal, method);
-    NS_ENSURE_TRUE(acListener, NS_ERROR_OUT_OF_MEMORY);
-
-    listener = new nsCrossSiteListenerProxy(acListener, mPrincipal,
-                                            mACGetChannel, &rv);
-    NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mACGetChannel->AsyncOpen(listener, nsnull);
-  }
-  else {
-    // Start reading from the channel
-    rv = mChannel->AsyncOpen(listener, nsnull);
-  }
+  // Start reading from the channel
+  rv = mChannel->AsyncOpen(listener, nsnull);
 
   if (NS_FAILED(rv)) {
     // Drop our ref to the channel to avoid cycles
@@ -2383,19 +1984,6 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
 {
   nsresult rv;
 
-  // Check that we haven't already opened the channel. We can't rely on
-  // the channel throwing from mChannel->SetRequestHeader since we might
-  // still be waiting for mACGetChannel to actually open mChannel
-  if (mACGetChannel) {
-    PRBool pending;
-    rv = mACGetChannel->IsPending(&pending);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    if (pending) {
-      return NS_ERROR_IN_PROGRESS;
-    }
-  }
-
   if (!mChannel)             // open() initializes mChannel, and open()
     return NS_ERROR_FAILURE; // must be called before first setRequestHeader()
 
@@ -2426,32 +2014,6 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
         NS_WARNING("refusing to set request header");
         return NS_OK;
       }
-    }
-
-    // Check for dangerous cross-site headers
-    PRBool safeHeader = !!(mState & XML_HTTP_REQUEST_XSITEENABLED);
-    if (!safeHeader) {
-      const char *kCrossOriginSafeHeaders[] = {
-        "accept", "accept-language"
-      };
-      for (i = 0; i < NS_ARRAY_LENGTH(kCrossOriginSafeHeaders); ++i) {
-        if (header.LowerCaseEqualsASCII(kCrossOriginSafeHeaders[i])) {
-          safeHeader = PR_TRUE;
-          break;
-        }
-      }
-    }
-
-    if (!safeHeader) {
-      // The header is unsafe for cross-site requests. If this is a cross-site
-      // request throw an exception...
-      if (mState & XML_HTTP_REQUEST_USE_XSITE_AC) {
-        return NS_ERROR_FAILURE;
-      }
-
-      // ...otherwise just add it to mExtraRequestHeaders so that we can
-      // remove it in case we're redirected to another site
-      mExtraRequestHeaders.AppendElement(header);
     }
   }
 
@@ -2693,18 +2255,19 @@ nsXMLHttpRequest::OnChannelRedirect(nsIChannel *aOldChannel,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  mChannel = aNewChannel;
-
-  rv = CheckChannelForCrossSiteRequest();
+  nsCOMPtr<nsIURI> oldURI;
+  rv = aOldChannel->GetURI(getter_AddRefs(oldURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Disable redirects for non-get cross-site requests entirely for now
-  // Note, do this after the call to CheckChannelForCrossSiteRequest
-  // to make sure that XML_HTTP_REQUEST_USE_XSITE_AC is up-to-date
-  if ((mState & XML_HTTP_REQUEST_NON_GET) &&
-      (mState & XML_HTTP_REQUEST_USE_XSITE_AC)) {
-    return NS_ERROR_DOM_BAD_URI;
-  }
+  nsCOMPtr<nsIURI> newURI;
+  rv = aNewChannel->GetURI(getter_AddRefs(newURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = nsContentUtils::GetSecurityManager()->
+    CheckSameOriginURI(oldURI, newURI, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mChannel = aNewChannel;
 
   return NS_OK;
 }

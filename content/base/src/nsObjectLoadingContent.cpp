@@ -77,6 +77,7 @@
 #include "nsNetUtil.h"
 #include "nsPresShellIterator.h"
 #include "nsMimeTypes.h"
+#include "nsStyleUtil.h"
 
 // Concrete classes
 #include "nsFrameLoader.h"
@@ -352,7 +353,8 @@ nsObjectLoadingContent::~nsObjectLoadingContent()
 
 // nsIRequestObserver
 NS_IMETHODIMP
-nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
+nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
+                                       nsISupports *aContext)
 {
   if (aRequest != mChannel) {
     // This is a bit of an edge case - happens when a new load starts before the
@@ -408,6 +410,17 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
     mContentType = channelType;
   }
 
+  nsCOMPtr<nsIURI> uri;
+  chan->GetURI(getter_AddRefs(uri));
+
+  if (mContentType.EqualsASCII(APPLICATION_OCTET_STREAM)) {
+    nsCAutoString extType;
+    if (IsPluginEnabledByExtension(uri, extType)) {
+      mContentType = extType;
+      chan->SetContentType(extType);
+    }
+  }
+
   // Now find out what type the content is
   // UnloadContent will set our type to null; need to be sure to only set it to
   // the real value on success
@@ -429,8 +442,6 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
       contentPolicyType = nsIContentPolicy::TYPE_OBJECT;
       break;
   }
-  nsCOMPtr<nsIURI> uri;
-  chan->GetURI(getter_AddRefs(uri));
   nsCOMPtr<nsIContent> thisContent = 
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
@@ -1725,6 +1736,8 @@ nsObjectLoadingContent::GetPluginSupportState(nsIContent* aContent,
     return GetPluginDisabledState(aContentType);
   }
 
+  PRBool hasAlternateContent = PR_FALSE;
+
   // Search for a child <param> with a pluginurl name
   PRUint32 count = aContent->GetChildCount();
   for (PRUint32 i = 0; i < count; ++i) {
@@ -1732,13 +1745,19 @@ nsObjectLoadingContent::GetPluginSupportState(nsIContent* aContent,
     NS_ASSERTION(child, "GetChildCount lied!");
 
     if (child->IsNodeOfType(nsINode::eHTML) &&
-        child->Tag() == nsGkAtoms::param &&
-        child->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
-                           NS_LITERAL_STRING("pluginurl"), eIgnoreCase)) {
-      return GetPluginDisabledState(aContentType);
+        child->Tag() == nsGkAtoms::param) {
+      if (child->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                             NS_LITERAL_STRING("pluginurl"), eIgnoreCase)) {
+        return GetPluginDisabledState(aContentType);
+      }
+    } else if (!hasAlternateContent) {
+      hasAlternateContent =
+        nsStyleUtil::IsSignificantChild(child, PR_TRUE, PR_FALSE);
     }
   }
-  return ePluginOtherState;
+
+  return hasAlternateContent ? ePluginOtherState :
+    GetPluginDisabledState(aContentType);
 }
 
 /* static */ nsObjectLoadingContent::PluginSupportState

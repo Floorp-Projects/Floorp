@@ -1662,7 +1662,8 @@ nsTableRowGroupFrame::GetLine(PRInt32    aLineNumber,
   if (*aNumFramesOnLine == 0) {
     return NS_OK;
   }
-  for (PRInt32 i = 0; i < *aNumFramesOnLine; i++) {
+  PRInt32 colCount = table->GetColCount();
+  for (PRInt32 i = 0; i < colCount; i++) {
     CellData* data = cellMap->GetDataAt(aLineNumber, i);
     if (data && data->IsOrig()) {
       *aFirstFrameOnLine = (nsIFrame*)data->GetCellFrame();

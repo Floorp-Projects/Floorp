@@ -175,6 +175,9 @@ JoinInlineAncestors(nsIFrame* aFrame)
                     "prev-in-flow is not prev continuation!");
       next->SetPrevInFlow(frame);
     }
+    // Join the parent only as long as we're its last child.
+    if (frame->GetNextSibling())
+      break;
     frame = frame->GetParent();
   }
 }
@@ -502,9 +505,10 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
         if (parent && IsBidiSplittable(parent))
           SplitInlineAncestors(child);
       }
-      else {
-        // We're not at an end of a run. If this frame's ancestors happen to have 
-        // bidi continuations, convert them into fluid continuations.
+      else if (!frame->GetNextSibling()) {
+        // We're not at an end of a run, and |frame| is the last child of its parent.
+        // If its ancestors happen to have bidi continuations, convert them into
+        // fluid continuations.
         nsIFrame* parent = frame->GetParent();
         JoinInlineAncestors(parent);
       }

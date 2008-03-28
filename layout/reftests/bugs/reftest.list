@@ -575,6 +575,7 @@ fails == 386310-1d.html 386310-1-ref.html
 == 387876-3a.html 387876-3-ref.html
 == 387876-3b.html 387876-3-ref.html
 == 388026-1.html 388026-1-ref.html
+== 388367-1.html about:blank
 == 388980-1.html 388980-1-ref.html
 == 389468-1.html 389468-1-ref.html
 == 389636-1.html about:blank  # assertion test
@@ -618,6 +619,7 @@ skip-if(MOZ_WIDGET_TOOLKIT!="windows") == 391045.html 391045-ref.html # windows-
 == 395331-1.xml 395331-1-ref.xml
 == 396286-1.html about:blank  # crash test
 == 397428-1.html 397428-1-ref.html
+== 397844-1.xhtml 397844-1-ref.xhtml
 == 398101-1.html 398101-1-ref.html
 == 398289-1.html 398289-1-ref.html
 == 398144-1.html 398144-1-ref.html
@@ -771,6 +773,13 @@ fails == 413027-3.html 413027-3-ref.html
 == 421069-ref.html 421069-ref2.html
 == 421234-1.html 421234-1-ref.html
 == 421419-1.html 421419-1-ref.html
+== 421955-1.html 421955-1-ref.html
 == 422394-1.html 422394-1-ref.html
 == 423130-1.html 423130-1-ref.html
+== 423385-1.html 423385-1-ref.html
 == 423599-1.html 423599-1-ref.html
+== 423676-1.html 423676-1-ref.html
+== 424074-1.xul 424074-1-ref.xul
+!= 424074-1.xul 424074-1-ref2.xul
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 424074-1-ref2.xul 424074-1-ref3.xul
+== 424631-1.html 424631-1-ref.html

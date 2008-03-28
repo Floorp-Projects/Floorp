@@ -171,8 +171,8 @@ var PlacesUIUtils = {
   /**
    * Get a transaction for copying a uri item from one container to another
    * as a bookmark.
-   * @param   aURI
-   *          The URI of the item being copied
+   * @param   aData
+   *          JSON object of dropped or pasted item properties
    * @param   aContainer
    *          The container being copied into
    * @param   aIndex
@@ -187,8 +187,8 @@ var PlacesUIUtils = {
   /**
    * Get a transaction for copying a bookmark item from one container to
    * another.
-   * @param   aID
-   *          The identifier of the bookmark item being copied
+   * @param   aData
+   *          JSON object of dropped or pasted item properties
    * @param   aContainer
    *          The container being copied into
    * @param   aIndex
@@ -215,6 +215,17 @@ var PlacesUIUtils = {
       childTxns.push(this.ptm.editItemDateAdded(null, aData.dateAdded));
     if (aData.lastModified)
       childTxns.push(this.ptm.editItemLastModified(null, aData.lastModified));
+    if (aData.tags) {
+      var tags = aData.tags.split(", ");
+      // filter out tags already present, so that undo doesn't remove them
+      // from pre-existing bookmarks
+      var storedTags = PlacesUtils.tagging.getTagsForURI(itemURL, {});
+      tags = tags.filter(function (aTag) {
+        return (storedTags.indexOf(aTag) == -1);
+      }, this);
+      if (tags.length)
+        childTxns.push(this.ptm.tagURI(itemURL, tags));
+    }
 
     return this.ptm.createItem(itemURL, aContainer, aIndex, itemTitle, keyword,
                                annos, childTxns);

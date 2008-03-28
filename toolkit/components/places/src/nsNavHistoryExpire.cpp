@@ -245,8 +245,24 @@ nsNavHistoryExpire::ClearHistory()
   mozIStorageConnection* connection = mHistory->GetStorageConnection();
   NS_ENSURE_TRUE(connection, NS_ERROR_OUT_OF_MEMORY);
 
-  // expire visits, then let the paranoid functions do the cleanup for us
+  // reset frecency for all items that will _not_ be deleted
+  // Note, we set frecency to -visit_count since we use that value in our
+  // idle query to figure out which places to recalcuate frecency first.
+  // We must do this before deleting visits
   nsresult rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE moz_places SET frecency = -MAX(visit_count, 1) "
+    "WHERE id IN("
+      "SELECT h.id FROM moz_places h WHERE "
+        "EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) "
+        "OR EXISTS "
+        "(SELECT id FROM moz_annos WHERE place_id = h.id AND expiration = ") +
+      nsPrintfCString("%d", nsIAnnotationService::EXPIRE_NEVER) +
+      NS_LITERAL_CSTRING(")"));
+  if (NS_FAILED(rv))
+    NS_WARNING("failed to recent frecency");
+
+  // expire visits, then let the paranoid functions do the cleanup for us
+  rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "DELETE FROM moz_historyvisits"));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -265,14 +281,6 @@ nsNavHistoryExpire::ClearHistory()
   rv = ExpireInputHistoryParanoid(connection);
   if (NS_FAILED(rv))
     NS_WARNING("ExpireInputHistoryParanoid failed.");
-
-  // for all remaining places, reset the frecency
-  // Note, we don't reset the visit_count, as we use that in our "on idle"
-  // query to figure out which places to recalcuate frecency first.
-  rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "UPDATE moz_places SET frecency = -1"));
-  if (NS_FAILED(rv))
-    NS_WARNING("failed to recent frecency");
 
   // some of the remaining places could be place: urls or
   // unvisited livemark items, so setting the frecency to -1
@@ -535,8 +543,7 @@ nsNavHistoryExpire::EraseVisits(mozIStorageConnection* aConnection,
     const nsTArray<nsNavHistoryExpireRecord>& aRecords)
 {
   // build a comma separated string of visit ids to delete
-  // also build a comma separated string of place ids to reset frecency and
-  // visit_count.
+  // also build a comma separated string of place ids to reset frecency
   nsCString deletedVisitIds;
   nsCString placeIds;
   nsTArray<PRInt64> deletedPlaceIdsArray, deletedVisitIdsArray;
@@ -559,30 +566,30 @@ nsNavHistoryExpire::EraseVisits(mozIStorageConnection* aConnection,
   if (deletedVisitIds.IsEmpty())
     return NS_OK;
 
+  // Reset the frecencies for the places that won't have any visits after
+  // we delete them and make sure they aren't bookmarked either. This means we
+  // keep the old frecencies when possible as an estimate for the new frecency
+  // unless we know it has to be invalidated.
+  // We must do this before deleting visits
   nsresult rv = aConnection->ExecuteSimpleSQL(
+    NS_LITERAL_CSTRING(
+      "UPDATE moz_places "
+      "SET frecency = -MAX(visit_count, 1) "
+      "WHERE id IN ("
+        "SELECT h.id FROM moz_places h "
+        "WHERE NOT EXISTS (SELECT b.id FROM moz_bookmarks b WHERE b.fk = h.id) "
+          "AND NOT EXISTS "
+            "(SELECT v.id FROM moz_historyvisits v WHERE v.place_id = h.id AND "
+              "v.id NOT IN (") + deletedVisitIds +
+              NS_LITERAL_CSTRING(")) AND "
+              "h.id IN (") + placeIds +
+    NS_LITERAL_CSTRING("))"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(
     NS_LITERAL_CSTRING("DELETE FROM moz_historyvisits WHERE id IN (") +
     deletedVisitIds +
     NS_LITERAL_CSTRING(")"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (placeIds.IsEmpty())
-    return NS_OK;
-
-  // Reset the frecencies for the places that don't have any more visits after
-  // we deleted them and make sure they aren't bookmarked either. This means we
-  // keep the old frecencies when possible as an estimate for the new frecency
-  // unless we know it has to be -1.
-  rv = aConnection->ExecuteSimpleSQL(
-    NS_LITERAL_CSTRING(
-      "UPDATE moz_places "
-      "SET frecency = -1 "
-      "WHERE id IN ("
-        "SELECT h.id FROM moz_places h "
-        "LEFT OUTER JOIN moz_historyvisits v ON v.place_id = h.id "
-        "LEFT OUTER JOIN moz_bookmarks b ON b.fk = h.id "
-        "WHERE v.id IS NULL AND b.id IS NULL AND h.id IN (") +
-    placeIds +
-    NS_LITERAL_CSTRING("))"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

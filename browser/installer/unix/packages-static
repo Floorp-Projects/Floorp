@@ -103,6 +103,7 @@ bin/components/downloads.xpt
 bin/components/editor.xpt
 bin/components/embed_base.xpt
 bin/components/exthandler.xpt
+bin/components/exthelper.xpt
 bin/components/fastfind.xpt
 bin/components/feeds.xpt
 bin/components/filepicker.xpt

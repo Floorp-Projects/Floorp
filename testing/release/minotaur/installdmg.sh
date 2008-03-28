@@ -38,8 +38,6 @@
 #!/bin/sh
 
 #set -x
-
-mkdir -p mnt
 ./installdmg-expect.ex $1
 rsync -a ./mnt/* $2
 hdiutil detach mnt

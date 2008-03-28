@@ -57,10 +57,10 @@ public:
   NS_IMETHOD BeginDocument(PRUnichar*  aTitle, 
                            PRUnichar*  aPrintToFileName,
                            PRInt32     aStartPage, 
-                           PRInt32     aEndPage) { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD EndDocument() { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD BeginPage() { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD EndPage() { return NS_ERROR_NOT_IMPLEMENTED; }
+                           PRInt32     aEndPage) { return NS_OK; }
+  NS_IMETHOD EndDocument() { return NS_OK; }
+  NS_IMETHOD BeginPage() { return NS_OK; }
+  NS_IMETHOD EndPage() { return NS_OK; }
 
   NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPS, PRBool aIsPrintPreview);
 

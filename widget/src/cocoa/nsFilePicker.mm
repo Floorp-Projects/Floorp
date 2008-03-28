@@ -55,6 +55,7 @@
 #include "nsIStringBundle.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsCocoaUtils.h"
 
 const float kAccessoryViewPadding = 5;
 const int   kSaveTypeControlTag = 1;
@@ -259,8 +260,10 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsC
       [(NSString *)[filters objectAtIndex:0] isEqualToString:@"app"]) {
     theDir = @"/Applications/";
   }
-  
+
+  nsCocoaUtils::PrepareForNativeAppModalDialog();
   int result = [thePanel runModalForDirectory:theDir file:nil types:filters];  
+  nsCocoaUtils::CleanUpAfterNativeAppModalDialog();
   
   if (result == NSFileHandlingPanelCancelButton)
     return retVal;
@@ -312,7 +315,9 @@ nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
 
   // set up default directory
   NSString *theDir = PanelDefaultDirectory();
+  nsCocoaUtils::PrepareForNativeAppModalDialog();
   int result = [thePanel runModalForDirectory:theDir file:nil types:nil];  
+  nsCocoaUtils::CleanUpAfterNativeAppModalDialog();
 
   if (result == NSFileHandlingPanelCancelButton)
     return retVal;
@@ -361,7 +366,10 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
   NSString *theDir = PanelDefaultDirectory();
 
   // load the panel
-  if ([thePanel runModalForDirectory:theDir file:defaultFilename] == NSFileHandlingPanelCancelButton)
+  nsCocoaUtils::PrepareForNativeAppModalDialog();
+  int result = [thePanel runModalForDirectory:theDir file:defaultFilename];
+  nsCocoaUtils::CleanUpAfterNativeAppModalDialog();
+  if (result == NSFileHandlingPanelCancelButton)
     return retVal;
 
   // get the save type

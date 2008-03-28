@@ -211,6 +211,7 @@ menuitem:not([type]) {
   -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic");
 }
 
+#placesContext_open\:newwindow,
 menuitem[command="cmd_newNavigator"],
 #context-openlink,
 #context-openframe {
@@ -218,6 +219,8 @@ menuitem[command="cmd_newNavigator"],
   -moz-image-region: rect(0px 80px 16px 64px);
 }
 
+#placesContext_open\:newtab,
+#placesContext_openContainer\:tabs,
 menuitem[command="cmd_newNavigatorTab"],
 #context-openlinkintab,
 #context-openframeintab {
@@ -341,6 +344,8 @@ menuitem[command="Browser:Stop"][disabled],
   list-style-image: url("moz-icon://stock/gtk-stop?size=menu&state=disabled");
 }
 
+#placesContext_reload,
+#placesContext_reloadMicrosummary,
 menuitem[command="Browser:Reload"],
 #context-reload,
 #context-reloadframe {
@@ -404,7 +409,7 @@ menuitem[key="goForwardKb"][disabled][chromedir="rtl"],
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu&state=disabled");
 }
 
-menuitem[command="Browser:Home"] {
+#historyMenuHome {
   list-style-image: url("moz-icon://stock/gtk-home?size=menu");
 }
 
@@ -429,6 +434,7 @@ menuitem[command="View:PageInfo"],
   list-style-image: url("moz-icon://stock/gtk-info?size=menu");
 }
 
+#placesContext_show\:info,
 #context-metadata {
   list-style-image: url("moz-icon://stock/gtk-properties?size=menu");
 }

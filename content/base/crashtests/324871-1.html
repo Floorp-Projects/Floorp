@@ -1,0 +1,14 @@
+<html>
+<head>
+<script>
+function loaded() {
+  var node = document;
+  var handler = function(operation, key, data, src, dst) { alert(data); };
+  node.setUserData("foo", "data", handler);
+}
+</script>
+</head>
+<body onload="loaded();">
+<div id="elem"></div>
+</body>
+</html>

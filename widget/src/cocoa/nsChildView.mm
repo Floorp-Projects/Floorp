@@ -2849,6 +2849,12 @@ NSEvent* gLastDragEvent = nil;
 
   mGeckoChild->DispatchMouseEvent(geckoEvent);
 
+  // If the last call to menuForEvent: had the same event, we need to call it
+  // again. menuForEvent: didn't send a context menu event because we need to
+  // send the mouse down event first.
+  if (mLastMenuForEventEvent == theEvent)
+    [self menuForEvent:theEvent];
+
   // XXX maybe call markedTextSelectionChanged:client: here?
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -3361,8 +3367,17 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   if (!mGeckoChild)
     return nil;
 
+  // If this is the second time menuForEvent: has been called with the same
+  // mouse down event then we should let it through. We don't process the first
+  // call for any particular left mouse down event because Cocoa calls
+  // menuForEvent: *before* mouseDown: and we need to send mouse down events
+  // before context menu events. Cocoa correctly calls menuForEvent: after calls
+  // to rightMouseDown:.
+  BOOL letThrough = (theEvent == mLastMenuForEventEvent);
   [mLastMenuForEventEvent release];
   mLastMenuForEventEvent = [theEvent retain];
+  if (!letThrough && [theEvent type] == NSLeftMouseDown)
+    return nil;
 
   nsMouseEvent geckoEvent(PR_TRUE, NS_CONTEXTMENU, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
@@ -3452,7 +3467,8 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     if ([cocoaEvent type] == NSFlagsChanged) {
       macEvent.what = keyType == NS_KEY_DOWN ? keyDown : keyUp;
     } else {
-      charCode = [[cocoaEvent characters] characterAtIndex:0];
+      if ([[cocoaEvent characters] length] > 0)
+        charCode = [[cocoaEvent characters] characterAtIndex:0];
       if ([cocoaEvent type] == NSKeyDown)
         macEvent.what = [cocoaEvent isARepeat] ? autoKey : keyDown;
       else
@@ -3989,6 +4005,10 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     // create native EventRecord for use by plugins
     EventRecord macEvent;
     if (mCurKeyEvent) {
+      // XXX The ASCII characters inputting mode of egbridge (Japanese IME)
+      // might send the keyDown event with wrong keyboard layout if other
+      // keyboard layouts are already loaded. In that case, the native event
+      // doesn't match to this gecko event...
       ConvertCocoaKeyEventToMacEvent(mCurKeyEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
       geckoEvent.isShift   = ([mCurKeyEvent modifierFlags] & NSShiftKeyMask) != 0;

@@ -35,9 +35,11 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-
+system mkdir -p mnt
 spawn hdiutil attach -verbose -noautoopen -mountpoint ./mnt $argv
 expect {
 "byte" {send "G"; exp_continue}
-"Y/N" {send "Y\r"; exp_continue}
+"END" {send "\r"; exp_continue}
+"Y/N?" {send "Y\r"; exp_continue}
 }
+

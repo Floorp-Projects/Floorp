@@ -296,9 +296,6 @@ __try {
     if (NS_FAILED(xpAccessible->GetName(name)))
       return E_FAIL;
 
-    if (name.IsEmpty())
-      return S_FALSE;
-
     *pszName = ::SysAllocStringLen(name.get(), name.Length());
     if (!*pszName)
       return E_OUTOFMEMORY;
