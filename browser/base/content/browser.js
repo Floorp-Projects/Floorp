@@ -4195,7 +4195,21 @@ nsBrowserStatusHandler.prototype =
       this.securityButton.removeAttribute("label");
 
     this.securityButton.setAttribute("tooltiptext", this._tooltipText);
-    getIdentityHandler().checkIdentity(this._state, gBrowser.contentWindow.location);
+
+    // Don't pass in the actual location object, since it can cause us to 
+    // hold on to the window object too long.  Just pass in the fields we
+    // care about. (bug 424829)
+    var location = gBrowser.contentWindow.location;
+    var locationObj = {};
+    try {
+      locationObj.host = location.host;
+      locationObj.hostname = location.hostname
+    } catch (ex) {
+      // Can sometimes throw if the URL being visited has no host/hostname,
+      // e.g. about:blank. The _state for these pages means we won't need these
+      // properties anyways, though.
+    }
+    getIdentityHandler().checkIdentity(this._state, locationObj);
   },
 
   // simulate all change notifications after switching tabs
@@ -6405,7 +6419,8 @@ IdentityHandler.prototype = {
    * be called by onSecurityChange
    * 
    * @param PRUint32 state
-   * @param Location location
+   * @param JS Object location that mirrors an nsLocation (i.e. has .host and
+   *                           .hostname)
    */
   checkIdentity : function(state, location) {
     var currentStatus = gBrowser.securityUI
