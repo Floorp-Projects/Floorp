@@ -695,9 +695,13 @@
             var docViewer = docShell.contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
             var width = (rect.right - rect.left) * docViewer.fullZoom;
             this.setAttribute("width", width > 100 ? width : 100);
-            this.openPopup(aElement, "after_start", 0, 0, false, false);
 
-            this.popupBoxObject.setConsumeRollupEvent(this.mInput.consumeRollupEvent);
+            // setConsumeRollupEvent() before we call openPopup()
+            this.popupBoxObject.setConsumeRollupEvent(
+              this.mInput.consumeRollupEvent ? 
+                Ci.nsIPopupBoxObject.ROLLUP_CONSUME : 
+                Ci.nsIPopupBoxObject.ROLLUP_NO_CONSUME);
+            this.openPopup(aElement, "after_start", 0, 0, false, false);
           }
         ]]></body>
       </method>
@@ -940,8 +944,12 @@
             // invalidate() depends on the width attribute
             this._invalidate();
 
+            // setConsumeRollupEvent() before we call openPopup()
+            this.popupBoxObject.setConsumeRollupEvent(
+              this.mInput.consumeRollupEvent ? 
+                Ci.nsIPopupBoxObject.ROLLUP_CONSUME : 
+                Ci.nsIPopupBoxObject.ROLLUP_NO_CONSUME);
             this.openPopup(aElement, "after_start", 0, 0, false, false);
-            this.popupBoxObject.setConsumeRollupEvent(this.mInput.consumeRollupEvent);
           }
         ]]>
         </body>
