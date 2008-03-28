@@ -2251,7 +2251,7 @@ JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind)
         break;
 
       case JSTRACE_SCRIPTED_FUNCTION:
-        js_TraceScriptedFunction(trc, (JSScriptedFunction *) thing);
+        js_TraceFunction(trc, (JSScriptedFunction *) thing);
         break;
 
 #if JS_HAS_XML_SUPPORT

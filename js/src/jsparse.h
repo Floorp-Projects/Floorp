@@ -464,7 +464,7 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
                  FILE *file, const char *filename, uintN lineno);
 
 extern JSBool
-js_CompileFunctionBody(JSContext *cx, JSFunction *funobj,
+js_CompileFunctionBody(JSContext *cx, JSScriptedFunction *fun,
                        JSPrincipals *principals,
                        const jschar *chars, size_t length,
                        const char *filename, uintN lineno);
