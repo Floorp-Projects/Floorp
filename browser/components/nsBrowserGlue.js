@@ -383,6 +383,13 @@ BrowserGlue.prototype = {
   /**
    * Initialize Places
    * - imports the bookmarks html file if bookmarks datastore is empty
+   *
+   * These prefs are set by the backend services upon creation (or recreation)
+   * of the Places db:
+   * - browser.places.importBookmarksHTML
+   *   Set to false by the history service to indicate we need to re-import.
+   * - browser.places.createdSmartBookmarks
+   *   Set during HTML import to indicate that the queries were created.
    */
   _initPlaces: function bg__initPlaces() {
     // we need to instantiate the history service before we check the 
@@ -401,14 +408,6 @@ BrowserGlue.prototype = {
     } catch(ex) {}
 
     if (!importBookmarks) {
-+     /**
-+      * These prefs are set by the backend services upon creation (or recreation)
-+      * of the Places db:
-+      * - browser.places.importBookmarksHTML
-+      *   Set to false by the history service to indicate we need to re-import.
-+      * - browser.places.createdSmartBookmarks
-+      *   Set during HTML import to indicate that the queries were created.
-+      */
       // Call it here for Fx3 profiles created before the Places folder
       // has been added, otherwise it's called during import.
       this.ensurePlacesDefaultQueriesInitialized();
