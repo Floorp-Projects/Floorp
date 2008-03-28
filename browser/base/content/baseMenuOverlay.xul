@@ -76,7 +76,8 @@
           accesskey="&helpMenu.accesskey;">
 #endif
       <menupopup id="menu_HelpPopup" onpopupshowing="buildHelpMenu();">
-        <menuitem oncommand="openHelpLink('firefox-help')"
+        <menuitem id="menu_openHelp"
+                  oncommand="openHelpLink('firefox-help')"
 #ifdef XP_MACOSX
                   label="&helpContentsMac.label;"
                   key="key_openHelpMacFrontend"/>
