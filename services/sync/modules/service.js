@@ -45,6 +45,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
+Cu.import("resource://weave/wrap.js");
 Cu.import("resource://weave/crypto.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/dav.js");
@@ -72,8 +73,25 @@ Utils.lazy(Weave, 'Service', WeaveSvc);
  * Main entry point into Weave's sync framework
  */
 
-function WeaveSvc() { this._init(); }
+function WeaveSvc() {
+  this._initLogs();
+  this._log.info("Weave Sync Service Initializing");
+
+  Utils.prefs.addObserver("", this, false);
+
+  if (!this.enabled) {
+    this._log.info("Weave Sync disabled");
+    return;
+  }
+
+  this._setSchedule(this.schedule);
+}
 WeaveSvc.prototype = {
+
+  _notify: Wrap.notify,
+  _lock: Wrap.lock,
+  _localLock: Wrap.localLock,
+  _osPrefix: "weave:service:",
 
   __os: null,
   get _os() {
@@ -173,20 +191,6 @@ WeaveSvc.prototype = {
     return Utils.prefs.getIntPref("schedule");
   },
 
-  _init: function WeaveSync__init() {
-    this._initLogs();
-    this._log.info("Weave Sync Service Initializing");
-
-    Utils.prefs.addObserver("", this, false);
-
-    if (!this.enabled) {
-      this._log.info("Weave Sync disabled");
-      return;
-    }
-
-    this._setSchedule(this.schedule);
-  },
-
   _setSchedule: function Weave__setSchedule(schedule) {
     switch (this.schedule) {
     case 0:
@@ -267,42 +271,6 @@ WeaveSvc.prototype = {
     root.addAppender(vapp);
   },
 
-  _lock: function weaveSync__lock() {
-    let self = yield;
-
-    this._dav.lock.async(this._dav, self.cb);
-    let locked = yield;
-
-    if (!locked) {
-      this._log.warn("Service lock failed: already locked");
-      this._os.notifyObservers(null, "weave:service-lock:error", "");
-      self.done(false);
-      return;
-    }
-
-    this._log.debug("Service lock acquired");
-    this._os.notifyObservers(null, "weave:service-lock:success", "");
-    self.done(true);
-  },
-
-  _unlock: function WeaveSync__unlock() {
-    let self = yield;
-
-    this._dav.unlock.async(this._dav, self.cb);
-    let unlocked = yield;
-
-    if (!unlocked) {
-      this._log.error("Service unlock failed");
-      this._os.notifyObservers(null, "weave:service-unlock:error", "");
-      self.done(false);
-      return;
-    }
-
-    this._log.debug("Service lock released");
-    this._os.notifyObservers(null, "weave:service-unlock:success", "");
-    self.done(true);
-  },
-
   _createUserDir: function WeaveSync__createUserDir(serverURL) {
     let self = yield;
 
@@ -320,8 +288,6 @@ WeaveSvc.prototype = {
     let success = yield;
     if (!success)
       throw "Created user directory, but login still failed.  Aborting.";
-
-    self.done();
   },
 
   _uploadVersion: function WeaveSync__uploadVersion() {
@@ -335,8 +301,6 @@ WeaveSvc.prototype = {
     this._dav.PUT("meta/version", STORAGE_FORMAT_VERSION, self.cb);
     ret = yield;
     Utils.ensureStatus(ret.status, "Could not upload server version file");
-
-    self.done();
   },
 
   // force a server wipe when the version is lower than ours (or there is none)
@@ -363,8 +327,6 @@ WeaveSvc.prototype = {
     } else if (ret.responseText > STORAGE_FORMAT_VERSION) {
       // FIXME: should we do something here?
     }
-
-    self.done();
   },
 
   _generateKeys: function WeaveSync__generateKeys() {
@@ -394,8 +356,6 @@ WeaveSvc.prototype = {
     this._dav.PUT("public/pubkey", pubkey, self.cb);
     ret = yield;
     Utils.ensureStatus(ret.status, "Could not upload public key");
-
-    self.done();
   },
 
   _login: function WeaveSync__login(password, passphrase) {
@@ -462,171 +422,26 @@ WeaveSvc.prototype = {
     }
   },
 
-  // NOTE: doesn't lock because it's called from _login() which already holds the lock
   _serverWipe: function WeaveSync__serverWipe() {
     let self = yield;
 
-    this._dav.listFiles.async(this._dav, self.cb);
-    let names = yield;
+    let cb = function Weave_serverWipe() {
+      let innerSelf = yield;
 
-    for (let i = 0; i < names.length; i++) {
-      this._dav.DELETE(names[i], self.cb);
-      let resp = yield;
-      this._log.debug(resp.status);
-    }
+      this._dav.listFiles.async(this._dav, self.cb);
+      let names = yield;
 
-    self.done();
-  },
-
-  // NOTE: can't lock because it assumes the lock is being held ;)
-  _resetLock: function WeaveSync__resetLock() {
-    let self = yield;
-    let success = false;
-
-    try {
-      this._log.debug("Resetting server lock");
-      this._os.notifyObservers(null, "weave:server-lock-reset:start", "");
-
-      this._dav.forceUnlock.async(this._dav, self.cb);
-      success = yield;
-
-    } catch (e) {
-      throw e;
-
-    } finally {
-      if (success) {
-        this._log.debug("Server lock reset successful");
-        this._os.notifyObservers(null, "weave:server-lock-reset:success", "");
-      } else {
-        this._log.debug("Server lock reset failed");
-        this._os.notifyObservers(null, "weave:server-lock-reset:error", "");
+      for (let i = 0; i < names.length; i++) {
+        this._dav.DELETE(names[i], self.cb);
+        let resp = yield;
+        this._log.debug(resp.status);
       }
-      self.done(success);
-    }
-  },
+    };
 
-  _syncEngine: function WeaveSync__syncEngine(eng) {
-    let self = yield;
-
-    this._os.notifyObservers(null, "weave:" + eng.name + ":sync:start", "");
-
-    let ret;
-    try {
-      eng.sync(self.cb);
-      ret = yield;
-    } catch (e) {
-      this._log.warn("Engine failed with error: " + Utils.exceptionStr(e));
-      if (e.trace)
-        this._log.debug("Engine stack trace: " + Utils.stackTrace(e.trace));
-    }
-
-    if (ret)
-      this._os.notifyObservers(null, "weave:" + eng.name + ":sync:success", "");
-    else
-      this._os.notifyObservers(null, "weave:" + eng.name + ":sync:error", "");
-
-    self.done();
-  },
-
-  _sync: function WeaveSync__sync() {
-    let self = yield;
-
-    try {
-      this._lock.async(this, self.cb)
-      let locked = yield;
-      if (!locked)
-        return;
-
-      this._os.notifyObservers(null, "weave:service:sync:start", "");
-
-      if (Utils.prefs.getBoolPref("bookmarks")) {
-        this._syncEngine.async(this, self.cb, this._bmkEngine);
-        yield;
-      }
-      if (Utils.prefs.getBoolPref("history")) {
-        this._syncEngine.async(this, self.cb, this._histEngine);
-        yield;
-      }
-
-      this._unlock.async(this, self.cb)
-      yield;
-      this._os.notifyObservers(null, "weave:service:sync:success", "");
-
-    } catch (e) {
-      this._unlock.async(this, self.cb)
-      yield;
-      this._os.notifyObservers(null, "weave:service:sync:error", "");
-      throw e;
-    }
-
-    self.done();
-  },
-
-  _resetServer: function WeaveSync__resetServer() {
-    let self = yield;
-
-    this._lock.async(this, self.cb);
-    let locked = yield;
-    if (!locked)
-      return;
-
-    try {
-      this._bmkEngine.resetServer(self.cb);
-      this._histEngine.resetServer(self.cb);
-
-    } catch (e) {
-      throw e;
-
-    } finally {
-      this._unlock.async(this, self.cb)
-      yield;
-    }
-
-    self.done();
-  },
-
-  _resetClient: function WeaveSync__resetClient() {
-    let self = yield;
-
-    if (this._dav.locked)
-      throw "Reset client data failed: could not acquire lock";
-    this._dav.allowLock = false;
-
-    try {
-      this._bmkEngine.resetClient(self.cb);
-      this._histEngine.resetClient(self.cb);
-
-    } catch (e) {
-      throw e;
-
-    } finally {
-      this._dav.allowLock = true;
-    }
-
-    self.done();
-  },
-
-  _shareBookmarks: function WeaveSync__shareBookmarks(username) {
-    let self = yield;
-
-    try {
-      this._lock.async(this, self.cb);
-      let locked = yield;
-      if (!locked)
-        return;
-
-      this._bmkEngine.share(self.cb, username);
-      yield;
-
-    } catch (e) {
-      throw e;
-
-    } finally {
-      this._unlock.async(this, self.cb);
-      yield;
-    }
-
-    self.done();
+    // NOTE: doesn't lock because it's called from _login() which
+    // already holds the lock
+    this._notify("server-wipe", cb).async(this, self.cb);
+    yield;
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupports]),
@@ -647,8 +462,8 @@ WeaveSvc.prototype = {
 
   // These are global (for all engines)
 
-  login: function WeaveSync_login(password, passphrase) {
-    this._login.async(this, null, password, passphrase);
+  login: function WeaveSync_login(onComplete, password, passphrase) {
+    this._login.async(this, onComplete, password, passphrase);
   },
 
   logout: function WeaveSync_logout() {
@@ -659,14 +474,106 @@ WeaveSvc.prototype = {
     this._os.notifyObservers(null, "weave:service-logout:success", "");
   },
 
-  resetLock: function WeaveSync_resetLock() { this._resetLock.async(this); },
+  resetLock: function WeaveSync_resetLock(onComplete) {
+    this._resetLock.async(this, onComplete);
+  },
+  _resetLock: function WeaveSync__resetLock() {
+    let self = yield;
+
+    let cb = function Weave_resetLock() {
+      let innerSelf = yield;
+      this._dav.forceUnlock.async(this._dav, innerSelf.cb);
+      yield;
+    };
+
+    this._notify("reset-server-lock", cb).async(this, self.cb);
+    yield;
+  },
+
 
   // These are per-engine
 
-  sync: function WeaveSync_sync() { this._sync.async(this); },
-  resetServer: function WeaveSync_resetServer() { this._resetServer.async(this); },
-  resetClient: function WeaveSync_resetClient() { this._resetClient.async(this); },
-  shareBookmarks: function WeaveSync_shareBookmarks(username) {
-    this._shareBookmarks.async(this, function() {}, username);
+  sync: function WeaveSync_sync(onComplete) {
+    this._sync.async(this, onComplete);
+  },
+  _sync: function WeaveSync__sync() {
+    let self = yield;
+
+    let cb = function Weave_sync() {
+      let innerSelf = yield;
+
+      let engineCb = function WeaveSvc_syncEngine(engine) {
+        let innerInnerSelf = yield;
+        engine.sync(innerInnerSelf.cb);
+        yield;
+      };
+
+      if (Utils.prefs.getBoolPref("bookmarks")) {
+        this._notify(this._bmkEngine.name + ":sync",
+                     engineCb, this._bmkEngine).async(this, innerSelf.cb);
+        yield;
+      }
+      if (Utils.prefs.getBoolPref("history")) {
+        this._notify(this._histEngine.name + ":sync",
+                     engineCb, this._histEngine).async(this, innerSelf.cb);
+        yield;
+      }
+    };
+
+    this._lock(this._notify("sync", cb)).async(this, self.cb);
+    yield;
+  },
+
+  resetServer: function WeaveSync_resetServer(onComplete) {
+    this._resetServer.async(this, onComplete);
+  },
+  _resetServer: function WeaveSync__resetServer() {
+    let self = yield;
+
+    let cb = function Weave_resetServer() {
+      let innerSelf = yield;
+      this._bmkEngine.resetServer(innerSelf.cb);
+      yield;
+      this._histEngine.resetServer(innerSelf.cb);
+      yield;
+    };
+
+    this._lock(this._notify("reset-server",cb)).async(this, self.cb);
+    yield;
+  },
+
+  resetClient: function WeaveSync_resetClient(onComplete) {
+    this._resetClient.async(this, onComplete);
+  },
+  _resetClient: function WeaveSync__resetClient() {
+    let self = yield;
+
+    let cb = function Weave_resetClient() {
+      let innerSelf = yield;
+      this._bmkEngine.resetClient(innerSelf.cb);
+      yield;
+      this._histEngine.resetClient(innerSelf.cb);
+      yield;
+    };
+
+    this._localLock(this._notify("reset-client", cb)).async(this, self.cb);
+    yield;
+  },
+
+  shareBookmarks: function WeaveSync_shareBookmarks(onComplete, username) {
+    this._shareBookmarks.async(this, onComplete, username);
+  },
+  _shareBookmarks: function WeaveSync__shareBookmarks(username) {
+    let self = yield;
+
+    let cb = function Weave_shareBookmarks() {
+      let innerSelf = yield;
+      this._bmkEngine.share(innerSelf.cb, username);
+      yield;
+    };
+
+    this._lock(this._notify("share-bookmarks", cb)).async(this, self.cb);
+    yield;
   }
+
 };

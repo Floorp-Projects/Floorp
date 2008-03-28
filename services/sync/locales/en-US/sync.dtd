@@ -5,3 +5,5 @@
 <!ENTITY shareItem.label      "Share Bookmarks...">
 <!ENTITY openPrefsItem.label  "Weave Preferences...">
 <!ENTITY openLogItem.label    "Activity Log...">
+<!ENTITY status.offline.label "Offline">
+

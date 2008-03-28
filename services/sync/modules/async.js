@@ -43,7 +43,6 @@ const Cu = Components.utils;
 
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/constants.js");
 
 /*
  * Asynchronous generator helpers
@@ -101,7 +100,7 @@ Generator.prototype = {
   set errorOnStop(value) { this._errorOnStop = value; },
 
   get cb() {
-    let cb = Utils.bind2(this, function(data) { this.cont(data); });
+    let self = this, cb = function(data) { self.cont(data); };
     cb.parentGenerator = this;
     return cb;
   },
@@ -141,8 +140,6 @@ Generator.prototype = {
 
   _handleException: function AsyncGen__handleException(e) {
     if (e instanceof StopIteration) {
-      if (!this._timer)
-        this._log.trace("[" + this.name + "] Generator stopped unexpectedly");
       if (this.errorOnStop) {
         this._log.error("[" + this.name + "] Generator stopped unexpectedly");
         this._log.trace("Stack trace:\n" + this.trace);
@@ -182,18 +179,25 @@ Generator.prototype = {
       this.generator.next(); // must initialize before sending
       this.generator.send(this);
     } catch (e) {
-      this._handleException(e);
+      if (!(e instanceof StopIteration) || !this._timer)
+        this._handleException(e);
     }
   },
 
   cont: function AsyncGen_cont(data) {
     try { this.generator.send(data); }
-    catch (e) { this._handleException(e); }
+    catch (e) {
+      if (!(e instanceof StopIteration) || !this._timer)
+        this._handleException(e);
+    }
   },
 
   throw: function AsyncGen_throw(exception) {
     try { this.generator.throw(exception); }
-    catch (e) { this._handleException(e); }
+    catch (e) {
+      if (!(e instanceof StopIteration) || !this._timer)
+        this._handleException(e);
+    }
   },
 
   // async generators can't simply call a callback with the return
@@ -250,7 +254,7 @@ Async = {
   // where fooGen is a generator function, and gen is a Generator instance
   // ret is whatever the generator 'returns' via Generator.done().
 
-  run: function Async_run(object, method, onComplete, args) {
+  run: function Async_run(object, method, onComplete /* , arg1, arg2, ... */) {
     let args = Array.prototype.slice.call(arguments, 3);
     let gen = new Generator(object, method, onComplete, args);
     gen.run();
@@ -270,7 +274,7 @@ Async = {
   // Note that 'this' refers to the method being called, not the
   // Async object.
 
-  sugar: function Async_sugar(object, onComplete, extra_args) {
+  sugar: function Async_sugar(object, onComplete  /* , arg1, arg2, ... */) {
     let args = Array.prototype.slice.call(arguments, 1);
     args.unshift(object, this);
     Async.run.apply(Async, args);
