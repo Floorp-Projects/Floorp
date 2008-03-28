@@ -220,12 +220,21 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
     stream = bufferedStream;
   }
 
+  // Here we have to cheat a little bit...  Setting the base URI won't
+  // work if the document has a null principal, so use
+  // mOriginalPrincipal when creating the document, then reset the
+  // principal.
   nsCOMPtr<nsIDOMDocument> domDocument;
   rv = nsContentUtils::CreateDocument(EmptyString(), EmptyString(), nsnull,
-                                      mDocumentURI, mBaseURI, mPrincipal,
+                                      mDocumentURI, mBaseURI,
+                                      mOriginalPrincipal,
                                       scriptHandlingObject,
                                       getter_AddRefs(domDocument));
   NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
+  if (!document) return NS_ERROR_FAILURE;
+
+  document->SetPrincipal(mPrincipal);
 
   // Register as a load listener on the document
   nsCOMPtr<nsPIDOMEventTarget> target(do_QueryInterface(domDocument));
@@ -254,8 +263,6 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
 
   // Tell the document to start loading
   nsCOMPtr<nsIStreamListener> listener;
-  nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
-  if (!document) return NS_ERROR_FAILURE;
 
   mLoopingForSyncLoad = PR_TRUE;
 
@@ -335,13 +342,24 @@ nsDOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
 
   mScriptHandlingObject = do_GetWeakReference(aScriptObject);
   mPrincipal = principal;
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  NS_ENSURE_TRUE(secMan, NS_ERROR_NOT_AVAILABLE);
+  nsresult rv;
   if (!mPrincipal) {
-    nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-    NS_ENSURE_TRUE(secMan, NS_ERROR_NOT_AVAILABLE);
-    nsresult rv =
+    rv =
       secMan->GetCodebasePrincipal(mDocumentURI, getter_AddRefs(mPrincipal));
-    NS_ENSURE_SUCCESS(rv, rv);
+    mOriginalPrincipal = mPrincipal;
+  } else {
+    mOriginalPrincipal = principal;
+    PRBool isSystem;
+    rv = secMan->IsSystemPrincipal(mPrincipal, &isSystem);
+    if (NS_FAILED(rv) || isSystem) {
+      // Don't give DOMParsers the system principal.  Use a null
+      // principal instead.
+      mPrincipal = do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
+    }
   }
+  NS_ENSURE_SUCCESS(rv, rv);
   
   mBaseURI = baseURI;
   // Note: if mBaseURI is null, fine.  Leave it like that; that will use the
@@ -349,6 +367,7 @@ nsDOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
   // nsDocument::SetBaseURI giving errors.
 
   NS_POSTCONDITION(mPrincipal, "Must have principal");
+  NS_POSTCONDITION(mOriginalPrincipal, "Must have original principal");
   NS_POSTCONDITION(mDocumentURI, "Must have document URI");
   return NS_OK;
 }

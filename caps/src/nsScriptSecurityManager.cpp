@@ -1378,9 +1378,14 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     rv = sourceBaseURI->GetScheme(sourceScheme);
     if (NS_FAILED(rv)) return rv;
 
-    if (targetScheme.Equals(sourceScheme,
-                            nsCaseInsensitiveCStringComparator()) &&
-        !sourceScheme.LowerCaseEqualsLiteral(NS_NULLPRINCIPAL_SCHEME))
+    if (sourceScheme.LowerCaseEqualsLiteral(NS_NULLPRINCIPAL_SCHEME)) {
+        // A null principal can target its own URI.
+        if (sourceURI == aTargetURI) {
+            return NS_OK;
+        }
+    }
+    else if (targetScheme.Equals(sourceScheme,
+                                 nsCaseInsensitiveCStringComparator()))
     {
         // every scheme can access another URI from the same scheme,
         // as long as they don't represent null principals.
