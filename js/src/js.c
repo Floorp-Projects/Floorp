@@ -1391,6 +1391,7 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                     SHOW_FLAG(THISP_NUMBER);
                     SHOW_FLAG(THISP_BOOLEAN);
                     SHOW_FLAG(EXPR_CLOSURE);
+                    SHOW_FLAG(SCRIPTED);
 
 #undef SHOW_FLAG
                     putchar('\n');

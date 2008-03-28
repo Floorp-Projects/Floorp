@@ -1070,10 +1070,10 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
             break;
 
         /* Make this constructor make objects of class Exception. */
-        NATIVE_FUN_SET_CLASS(fun, &js_ErrorClass);
+        fun->clasp = &js_ErrorClass;
 
         /* Extract the constructor object. */
-        funobj = &fun->base.object;
+        funobj = &fun->object;
 
         /* Make the prototype and constructor links. */
         if (!js_SetClassPrototype(cx, funobj, protos[i],
