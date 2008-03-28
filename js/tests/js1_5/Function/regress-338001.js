@@ -40,7 +40,7 @@ var gTestfile = 'regress-338001.js';
 var BUGNUMBER = 338001;
 var summary = 'integer overflow in jsfun.c:Function';
 var actual = 'No Crash';
-var expect = 'No Crash';
+var expect = /No Crash|InternalError: allocation size overflow|InternalError: script stack space quota is exhausted/;
 
 printBugNumber(BUGNUMBER);
 printStatus (summary);
@@ -66,10 +66,9 @@ try
 catch(ex)
 {
   // handle changed 1.9 branch behavior. see bug 422348
-  expect = 'InternalError: allocation size overflow';
   actual = ex + '';
 }
  
-print('Done');
+print('Done: ' + actual);
 
-reportCompare(expect, actual, summary);
+reportMatch(expect, actual, summary);
