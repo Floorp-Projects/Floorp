@@ -138,16 +138,25 @@ menuitem[cmd="cmd_selectAll"][disabled] {
   list-style-image: url("moz-icon://stock/gtk-select-all?size=menu&state=disabled");
 }
 
+#placesContext_open\:newwindow,
 menuitem[command="placesCmd_open:window"] {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 80px 16px 64px);
 }
 
+#placesContext_open\:newtab,
+#placesContext_openContainer\:tabs,
 menuitem[command="placesCmd_open:tab"] {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 64px 16px 48px);
 }
 
+#placesContext_show\:info,
 menuitem[command="placesCmd_show:info"] {
   list-style-image: url("moz-icon://stock/gtk-properties?size=menu");
+}
+
+#placesContext_reload,
+#placesContext_reloadMicrosummary {
+  list-style-image: url("moz-icon://stock/gtk-refresh?size=menu");
 }
