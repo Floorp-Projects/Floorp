@@ -2466,9 +2466,6 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
           ? clasp->getObjectOps(cx, clasp)
           : &js_ObjectOps;
 
-    if (clasp == &js_FunctionClass && extraBytes == 0)
-        extraBytes = sizeof(JSFunction) - sizeof(JSObject);
-
     /*
      * Allocate a zeroed object from the GC heap.  Do this *after* any other
      * GC-thing allocations under js_GetClassPrototype or clasp->getObjectOps,
@@ -2501,9 +2498,6 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
     /* Initialize the remaining fixed slots. */
     for (i = JSSLOT_PRIVATE; i != JS_INITIAL_NSLOTS; ++i)
         obj->fslots[i] = JSVAL_VOID;
-
-    if (extraBytes != 0)
-        memset((uint8 *) obj + sizeof(JSObject), 0, extraBytes);
 
     /*
      * Root obj to prevent it from being collected out from under this call to

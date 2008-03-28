@@ -2029,7 +2029,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                                          jp->indent, jp->pretty);
                     if (!jp2)
                         return NULL;
-                    fun = FUN_TO_SCRIPTED(OBJ_TO_FUNCTION(obj));
+                    fun = FUN_TO_SCRIPTED(GET_FUNCTION_PRIVATE(cx, obj));
                     ok = js_DecompileFunction(jp2, fun);
                     if (ok && jp2->sprinter.base)
                         js_puts(jp, jp2->sprinter.base);
@@ -3772,7 +3772,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     SprintStack ss2;
 
                     LOAD_FUNCTION(0);
-                    fun = FUN_TO_SCRIPTED(OBJ_TO_FUNCTION(obj));
+                    fun = FUN_TO_SCRIPTED(GET_FUNCTION_PRIVATE(cx, obj));
                     inner = fun->script;
 
                     /*
@@ -3888,10 +3888,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * parenthesization without confusing getter/setter code
                      * that checks for JSOP_ANONFUNOBJ and JSOP_NAMEDFUNOBJ.
                      */
-                    fun = FUN_TO_SCRIPTED(OBJ_TO_FUNCTION(obj));
+                    fun = FUN_TO_SCRIPTED(GET_FUNCTION_PRIVATE(cx, obj));
                     if (!(fun->flags & JSFUN_EXPR_CLOSURE))
                         indent |= JS_IN_GROUP_CONTEXT;
-                    str = JS_DecompileFunction(cx, OBJ_TO_FUNCTION(obj),
+                    str = JS_DecompileFunction(cx, SCRIPTED_TO_FUN(fun),
                                                indent);
                     if (!str)
                         return NULL;

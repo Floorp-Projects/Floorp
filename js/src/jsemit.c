@@ -1614,8 +1614,8 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
              * nor can prop be deleted.
              */
             if (cg->treeContext.flags & TCF_IN_FUNCTION) {
-                if (js_LookupLocal(cx, FUN_TO_SCRIPTED(cg->treeContext.funobj),
-                                   atom, NULL) != JSLOCAL_NONE) {
+                if (js_LookupLocal(cx, cg->treeContext.fun, atom, NULL) !=
+                    JSLOCAL_NONE) {
                     break;
                 }
             } else if (cg->treeContext.flags & TCF_COMPILE_N_GO) {
@@ -1962,8 +1962,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
          * to stack slot. Look for an argument or variable in the function and
          * rewrite pn_op and update pn accordingly.
          */
-        localKind = js_LookupLocal(cx, FUN_TO_SCRIPTED(tc->funobj), atom,
-                                   &index);
+        localKind = js_LookupLocal(cx, tc->fun, atom, &index);
         if (localKind != JSLOCAL_NONE) {
             op = PN_OP(pn);
             if (localKind == JSLOCAL_ARG) {
@@ -2054,7 +2053,7 @@ CheckSideEffects(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
          * name in that scope object.  See comments at case JSOP_NAMEDFUNOBJ:
          * in jsinterp.c.
          */
-        fun = FUN_TO_SCRIPTED(OBJ_TO_FUNCTION(pn->pn_funpob->object));
+        fun = FUN_TO_SCRIPTED(GET_FUNCTION_PRIVATE(cx, pn->pn_funpob->object));
         if (fun->atom)
             *answer = JS_TRUE;
         break;
@@ -3925,7 +3924,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     switch (pn->pn_type) {
       case TOK_FUNCTION:
       {
-        JSFunction *funobj;
+        JSScriptedFunction *fun;
         void *cg2mark;
         JSCodeGenerator *cg2;
         uintN slot;
@@ -3938,8 +3937,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 #endif
 
-        funobj = OBJ_TO_FUNCTION(pn->pn_funpob->object);
-        if (FUN_TO_SCRIPTED(funobj)->script) {
+        fun = FUN_TO_SCRIPTED(GET_FUNCTION_PRIVATE(cx, pn->pn_funpob->object));
+        if (fun->script) {
             /*
              * This second pass is needed to emit JSOP_NOP with a source note
              * for the already-emitted function. See comments in the TOK_LC
@@ -3965,7 +3964,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                              pn->pn_pos.begin.lineno);
         cg2->treeContext.flags = (uint16) (pn->pn_flags | TCF_IN_FUNCTION);
         cg2->treeContext.maxScopeDepth = pn->pn_sclen;
-        cg2->treeContext.funobj = funobj;
+        cg2->treeContext.fun = fun;
         cg2->parent = cg;
         if (!js_EmitFunctionScript(cx, cg2, pn->pn_body)) {
             pn = NULL;
@@ -4026,8 +4025,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #ifdef DEBUG
             JSLocalKind localKind =
 #endif
-                js_LookupLocal(cx, FUN_TO_SCRIPTED(cg->treeContext.funobj),
-                               FUN_TO_SCRIPTED(funobj)->atom, &slot);
+                js_LookupLocal(cx, cg->treeContext.fun, fun->atom, &slot);
             JS_ASSERT(localKind == JSLOCAL_VAR || localKind == JSLOCAL_CONST);
             JS_ASSERT(pn->pn_index == (uint32) -1);
             pn->pn_index = index;
