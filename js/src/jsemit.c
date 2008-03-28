@@ -5458,7 +5458,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     EMIT_UINT16_IMM_OP(PN_OP(pn2), atomIndex);
                 break;
             }
-            // FALL THROUGH
+            /* FALL THROUGH */
           case TOK_DOT:
             EMIT_INDEX_OP(PN_OP(pn2), atomIndex);
             break;
