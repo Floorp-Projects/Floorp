@@ -524,7 +524,7 @@ var gEditItemOverlay = {
 
   onDescriptionFieldBlur: function EIO_onDescriptionFieldInput() {
     var description = this._element("descriptionField").value;
-    if (description != PlacesUtils.getItemDescription(this._itemId)) {
+    if (description != PlacesUIUtils.getItemDescription(this._itemId)) {
       var txn = PlacesUIUtils.ptm
                              .editItemDescription(this._itemId, description);
       PlacesUIUtils.ptm.doTransaction(txn);
@@ -862,7 +862,7 @@ var gEditItemOverlay = {
       break;
     case DESCRIPTION_ANNO:
       this._initTextField("descriptionField",
-                          PlacesUtils.getItemDescription(this._itemId));
+                          PlacesUIUtils.getItemDescription(this._itemId));
       break;
     case LOAD_IN_SIDEBAR_ANNO:
       this._element("loadInSidebarCheckbox").checked =
