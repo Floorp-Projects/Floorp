@@ -1421,7 +1421,18 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
   NS_ENSURE_TRUE(channel, NS_ERROR_UNEXPECTED);
 
-  channel->SetOwner(mPrincipal);
+  nsCOMPtr<nsIPrincipal> documentPrincipal = mPrincipal;
+  if (IsSystemPrincipal(documentPrincipal)) {
+    // Don't give this document the system principal.  We need to keep track of
+    // mPrincipal being system because we use it for various security checks
+    // that should be passing, but the document data shouldn't get a system
+    // principal.
+    nsresult rv;
+    documentPrincipal = do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  channel->SetOwner(documentPrincipal);
 
   mReadRequest = request;
   mContext = ctxt;
@@ -1430,13 +1441,20 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
   nsIURI* uri = GetBaseURI();
 
-  // Create an empty document from it 
+  // Create an empty document from it.  Here we have to cheat a little bit...
+  // Setting the base URI to |uri| won't work if the document has a null
+  // principal, so use mPrincipal when creating the document, then reset the
+  // principal.
   const nsAString& emptyStr = EmptyString();
   nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(mOwner);
   nsresult rv = nsContentUtils::CreateDocument(emptyStr, emptyStr, nsnull, uri,
                                                uri, mPrincipal, global,
                                                getter_AddRefs(mDocument));
   NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
+  if (doc) {
+    doc->SetPrincipal(documentPrincipal);
+  }
 
   // Reset responseBody
   mResponseBody.Truncate();
