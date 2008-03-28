@@ -1022,15 +1022,16 @@ nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
       // Encountered a Bookmark, so add it to the current folder...
       CFDictionaryRef URIDictionary = (CFDictionaryRef)
                       ::CFDictionaryGetValue(entry, CFSTR("URIDictionary"));
-      nsCAutoString title, url;
-      if (GetDictionaryCStringValue(URIDictionary, CFSTR("title"), title, kCFStringEncodingUTF8) &&
+      nsAutoString title;
+      nsCAutoString url;
+      if (GetDictionaryStringValue(URIDictionary, CFSTR("title"), title) &&
           GetDictionaryCStringValue(entry, CFSTR("URLString"), url, kCFStringEncodingUTF8)) {
         nsCOMPtr<nsIURI> uri;
-        PRInt64 id;
         rv |= NS_NewURI(getter_AddRefs(uri), url);
+        PRInt64 id;
         rv |= aBookmarksService->InsertBookmark(aParentFolder, uri,
                                                 nsINavBookmarksService::DEFAULT_INDEX,
-                                                title, &id);
+                                                NS_ConvertUTF16toUTF8(title), &id);
       }
     }
   }
