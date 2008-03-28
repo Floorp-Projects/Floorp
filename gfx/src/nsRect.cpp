@@ -185,17 +185,6 @@ nsRect& nsRect::ScaleRoundOut(float aScale)
   return *this;
 }
 
-nsRect& nsRect::ScaleRoundOutInverse(float aScale) 
-{
-  nscoord right = NSToCoordCeil(float(XMost()) / aScale);
-  nscoord bottom = NSToCoordCeil(float(YMost()) / aScale);
-  x = NSToCoordFloor(float(x) / aScale);
-  y = NSToCoordFloor(float(y) / aScale);
-  width = (right - x);
-  height = (bottom - y);
-  return *this;
-}
-
 // scale the rect but round to largest contained rect
 nsRect& nsRect::ScaleRoundIn(float aScale) 
 {

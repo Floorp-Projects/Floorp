@@ -177,10 +177,6 @@ struct NS_GFX nsRect {
   // Scale by aScale, converting coordinates to integers so that the result
   // is the smallest integer-coordinate rectangle containing the unrounded result
   nsRect& ScaleRoundOut(float aScale);
-  // Scale by the inverse of aScale, converting coordinates to integers so that the result
-  // is the smallest integer-coordinate rectangle containing the unrounded result.
-  // More accurate than ScaleRoundOut(1.0/aScale).
-  nsRect& ScaleRoundOutInverse(float aScale);
   // Scale by aScale, converting coordinates to integers so that the result
   // is the larges integer-coordinate rectangle contained in the unrounded result
   nsRect& ScaleRoundIn(float aScale);

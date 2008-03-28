@@ -84,7 +84,6 @@ public:
                             nsIDeviceContext* dx,
                             const gfxPoint& aOffset,
                             const gfxRect& aTileRect,
-                            const nsIntRect& aSubimageRect,
                             const PRInt32 aXPadding,
                             const PRInt32 aYPadding);
 
