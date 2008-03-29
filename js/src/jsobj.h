@@ -191,13 +191,6 @@ struct JSObject {
 #define OBJ_CHECK_SLOT(obj,slot)                                              \
     JS_ASSERT(slot < (obj)->map->freeslot)
 
-/*
- * Macros for accessing slots in obj while obj is locked (if thread-safe) and
- * when slot must be bounded by the map->freeslot.
- */
-#define LOCKED_OBJ_NSLOTS(obj)                                                \
-   JS_MIN((obj)->map->freeslot, STOBJ_NSLOTS(obj))
-
 #define LOCKED_OBJ_GET_SLOT(obj,slot)                                         \
     (OBJ_CHECK_SLOT(obj, slot), STOBJ_GET_SLOT(obj, slot))
 #define LOCKED_OBJ_SET_SLOT(obj,slot,value)                                   \
