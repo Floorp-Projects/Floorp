@@ -891,8 +891,7 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
  * handler attribute in an HTML <INPUT> tag.
  */
 JSBool
-js_CompileFunctionBody(JSContext *cx, JSScriptedFunction *fun,
-                       JSPrincipals *principals,
+js_CompileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *principals,
                        const jschar *chars, size_t length,
                        const char *filename, uintN lineno)
 {
@@ -998,7 +997,7 @@ BindArg(JSContext *cx, JSAtom *atom, JSTreeContext *tc)
 }
 
 static JSBool
-BindLocalVariable(JSContext *cx, JSScriptedFunction *fun, JSAtom *atom,
+BindLocalVariable(JSContext *cx, JSFunction *fun, JSAtom *atom,
                   JSLocalKind localKind)
 {
     JS_ASSERT(localKind == JSLOCAL_VAR || localKind == JSLOCAL_CONST);
@@ -1056,16 +1055,17 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
 }
 #endif /* JS_HAS_DESTRUCTURING */
 
-static JSScriptedFunction *
+static JSFunction *
 NewCompilerFunction(JSContext *cx, JSTreeContext *tc, JSAtom *atom,
                     uintN lambda)
 {
     JSObject *parent;
-    JSScriptedFunction *fun;
+    JSFunction *fun;
 
     JS_ASSERT((lambda & ~JSFUN_LAMBDA) == 0);
     parent = (tc->flags & TCF_IN_FUNCTION) ? tc->fun->object : cx->fp->varobj;
-    fun = js_NewScriptedFunction(cx, NULL, lambda, parent, atom);
+    fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED | lambda,
+                         parent, atom);
     if (fun && !(tc->flags & TCF_COMPILE_N_GO)) {
         STOBJ_SET_PARENT(fun->object, NULL);
         STOBJ_SET_PROTO(fun->object, NULL);
@@ -1083,7 +1083,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     JSAtom *funAtom;
     JSParsedObjectBox *funpob;
     JSAtomListElement *ale;
-    JSScriptedFunction *fun;
+    JSFunction *fun;
     JSTreeContext funtc;
 #if JS_HAS_DESTRUCTURING
     JSParseNode *item, *list = NULL;
@@ -4253,7 +4253,7 @@ GeneratorExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
               uintN oldflags, JSParseNode *pn, JSParseNode *kid)
 {
     JSParseNode *body, *lambda;
-    JSScriptedFunction *fun;
+    JSFunction *fun;
 
     /* Initialize pn, connecting it to kid. */
     JS_ASSERT(pn->pn_arity == PN_UNARY);
