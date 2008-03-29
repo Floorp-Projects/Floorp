@@ -378,29 +378,29 @@ BookmarksSyncCore.prototype = {
     // the same index to qualify for 'likeness'.
     switch (a.data.type) {
     case "bookmark":
-      if (this._comp(a.data, b.data, 'URI') &&
-          this._comp(a.data, b.data, 'title'))
+      if (this._comp(a, b, 'URI') &&
+          this._comp(a, b, 'title'))
         return true;
       return false;
     case "query":
-      if (this._comp(a.data, b.data, 'URI') &&
-          this._comp(a.data, b.data, 'title'))
+      if (this._comp(a, b, 'URI') &&
+          this._comp(a, b, 'title'))
         return true;
       return false;
     case "microsummary":
-      if (this._comp(a.data, b.data, 'URI') &&
-          this._comp(a.data, b.data, 'generatorURI'))
+      if (this._comp(a, b, 'URI') &&
+          this._comp(a, b, 'generatorURI'))
         return true;
       return false;
     case "folder":
       if (this._comp(a, b, 'index') &&
-          this._comp(a.data, b.data, 'title'))
+          this._comp(a, b, 'title'))
         return true;
       return false;
     case "livemark":
-      if (this._comp(a.data, b.data, 'title') &&
-          this._comp(a.data, b.data, 'siteURI') &&
-          this._comp(a.data, b.data, 'feedURI'))
+      if (this._comp(a, b, 'title') &&
+          this._comp(a, b, 'siteURI') &&
+          this._comp(a, b, 'feedURI'))
         return true;
       return false;
     case "separator":
