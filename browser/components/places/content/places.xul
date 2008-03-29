@@ -435,6 +435,7 @@
               <button id="saveSearch" class="small" 
                        label="&saveSearch.label;" accesskey="&saveSearch.accesskey;"
                        command="OrganizerCommand_search:save"/>
+#ifdef PLACES_QUERY_BUILDER
               <button id="organizerScopeBarExpander"
                       class="expander-down"
                       tooltiptext="&search.scopeBarExpanderDown.tooltip;"
@@ -443,6 +444,9 @@
                       oncommand="PlacesQueryBuilder.toggleVisibility();"/>
             </toolbar>
 #include advancedSearch.inc
+#else
+            </toolbar>
+#endif
           </vbox>
           <vbox flex="1">
             <tree id="placeContent" class="placesTree" context="placesContext" 
