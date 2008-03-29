@@ -1033,9 +1033,7 @@ jsdScript::CreatePPLineMap()
     PRBool      scriptOwner = PR_FALSE;
     
     if (fun) {
-        PRUint32 nargs = JS_GetFunctionArity(fun);
-
-        if (nargs > 12)
+        if (fun->nargs > 12)
             return nsnull;
         JSString *jsstr = JS_DecompileFunctionBody (cx, fun, 4);
         if (!jsstr)
@@ -1044,7 +1042,7 @@ jsdScript::CreatePPLineMap()
         const char *argnames[] = {"arg1", "arg2", "arg3", "arg4", 
                                   "arg5", "arg6", "arg7", "arg8",
                                   "arg9", "arg10", "arg11", "arg12" };
-        fun = JS_CompileUCFunction (cx, obj, "ppfun", nargs, argnames,
+        fun = JS_CompileUCFunction (cx, obj, "ppfun", fun->nargs, argnames,
                                     JS_GetStringChars(jsstr),
                                     JS_GetStringLength(jsstr),
                                     "x-jsd:ppbuffer?type=function", 3);

@@ -369,7 +369,7 @@ JS_PushArgumentsVA(JSContext *cx, void **markp, const char *format, va_list ap)
             break;
           case 'f':
             fun = va_arg(ap, JSFunction *);
-            *sp = fun ? OBJECT_TO_JSVAL(FUN_OBJECT(fun)) : JSVAL_NULL;
+            *sp = fun ? OBJECT_TO_JSVAL(fun->object) : JSVAL_NULL;
             break;
           case 'v':
             *sp = va_arg(ap, jsval);
@@ -2014,7 +2014,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
         name = "double";
         break;
 
-      case JSTRACE_SCRIPTED_FUNCTION:
+      case JSTRACE_FUNCTION:
         name = "function";
         break;
 
@@ -2074,9 +2074,9 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
             JS_snprintf(buf, bufsize, "%g", *(jsdouble *)thing);
             break;
 
-          case JSTRACE_SCRIPTED_FUNCTION:
+          case JSTRACE_FUNCTION:
           {
-            JSScriptedFunction *fun = (JSScriptedFunction *)thing;
+            JSFunction *fun = (JSFunction *)thing;
 
             if (fun->atom && ATOM_IS_STRING(fun->atom))
                 js_PutEscapedString(buf, bufsize, ATOM_TO_STRING(fun->atom), 0);
@@ -2668,7 +2668,7 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
     JSTempValueRooter tvr;
     jsval cval, rval;
     JSBool named;
-    JSNativeFunction *fun;
+    JSFunction *fun;
 
     CHECK_REQUEST(cx);
     atom = js_Atomize(cx, clasp->name, strlen(clasp->name), 0);
@@ -2698,7 +2698,7 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
     }
 
     /* Create a prototype object for this class. */
-    proto = js_NewObject(cx, clasp, parent_proto, obj, 0);
+    proto = js_NewObject(cx, clasp, parent_proto, obj);
     if (!proto)
         return NULL;
 
@@ -2741,7 +2741,7 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
          * we know to create an object of this class when we call the
          * constructor.
          */
-        fun->clasp = clasp;
+        fun->u.n.clasp = clasp;
 
         /*
          * Optionally construct the prototype object, before the class has
@@ -2749,7 +2749,7 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
          * different object, as is done for operator new -- and as at least
          * XML support requires.
          */
-        ctor = &fun->object;
+        ctor = fun->object;
         if (clasp->flags & JSCLASS_CONSTRUCT_PROTOTYPE) {
             cval = OBJECT_TO_JSVAL(ctor);
             if (!js_InternalConstruct(cx, proto, cval, 0, NULL, &rval))
@@ -2966,7 +2966,7 @@ JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     CHECK_REQUEST(cx);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
-    return js_NewObject(cx, clasp, proto, parent, 0);
+    return js_NewObject(cx, clasp, proto, parent);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -2976,7 +2976,7 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
     CHECK_REQUEST(cx);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
-    return js_NewObjectWithGivenProto(cx, clasp, proto, parent, 0);
+    return js_NewObjectWithGivenProto(cx, clasp, proto, parent);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3120,7 +3120,7 @@ JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *clasp,
     CHECK_REQUEST(cx);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
-    nobj = js_NewObject(cx, clasp, proto, obj, 0);
+    nobj = js_NewObject(cx, clasp, proto, obj);
     if (!nobj)
         return NULL;
     if (!DefineProperty(cx, obj, name, OBJECT_TO_JSVAL(nobj), NULL, NULL, attrs,
@@ -3999,7 +3999,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
     JSIdArray *ida;
 
     CHECK_REQUEST(cx);
-    iterobj = js_NewObject(cx, &prop_iter_class, NULL, obj, 0);
+    iterobj = js_NewObject(cx, &prop_iter_class, NULL, obj);
     if (!iterobj)
         return NULL;
 
@@ -4197,7 +4197,6 @@ JS_NewFunction(JSContext *cx, JSNative native, uintN nargs, uintN flags,
                JSObject *parent, const char *name)
 {
     JSAtom *atom;
-    JSNativeFunction *fun;
 
     CHECK_REQUEST(cx);
 
@@ -4208,8 +4207,7 @@ JS_NewFunction(JSContext *cx, JSNative native, uintN nargs, uintN flags,
         if (!atom)
             return NULL;
     }
-    fun = js_NewNativeFunction(cx, native, nargs, flags, parent, atom);
-    return fun ? NATIVE_TO_FUN(fun) : NULL;
+    return js_NewFunction(cx, NULL, native, nargs, flags, parent, atom);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -4226,43 +4224,49 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
 JS_PUBLIC_API(JSObject *)
 JS_GetFunctionObject(JSFunction *fun)
 {
-    return FUN_OBJECT(fun);
+    return fun->object;
 }
 
 JS_PUBLIC_API(const char *)
 JS_GetFunctionName(JSFunction *fun)
 {
-    JSAtom *atom;
-
-    atom = FUN_ATOM(fun);
-    return atom ? JS_GetStringBytes(ATOM_TO_STRING(atom)) : js_anonymous_str;
+    return fun->atom
+           ? JS_GetStringBytes(ATOM_TO_STRING(fun->atom))
+           : js_anonymous_str;
 }
 
 JS_PUBLIC_API(JSString *)
 JS_GetFunctionId(JSFunction *fun)
 {
-    JSAtom *atom;
-
-    atom = FUN_ATOM(fun);
-    return atom ? ATOM_TO_STRING(atom) : NULL;
+    return fun->atom ? ATOM_TO_STRING(fun->atom) : NULL;
 }
 
 JS_PUBLIC_API(uintN)
 JS_GetFunctionFlags(JSFunction *fun)
 {
-    return FUN_FLAGS(fun);
+#ifdef MOZILLA_1_8_BRANCH
+    uintN flags = fun->flags;
+
+    return JSFUN_DISJOINT_FLAGS(flags) |
+           (JSFUN_GETTER_TEST(flags) ? JSFUN_GETTER : 0) |
+           (JSFUN_SETTER_TEST(flags) ? JSFUN_SETTER : 0) |
+           (JSFUN_BOUND_METHOD_TEST(flags) ? JSFUN_BOUND_METHOD : 0) |
+           (JSFUN_HEAVYWEIGHT_TEST(flags) ? JSFUN_HEAVYWEIGHT : 0);
+#else
+    return fun->flags;
+#endif
 }
 
 JS_PUBLIC_API(uint16)
 JS_GetFunctionArity(JSFunction *fun)
 {
-    return FUN_NARGS(fun);
+    return fun->nargs;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_ObjectIsFunction(JSContext *cx, JSObject *obj)
 {
-    return HAS_FUNCTION_CLASS(obj);
+    return OBJ_GET_CLASS(cx, obj) == &js_FunctionClass;
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
@@ -4382,7 +4386,6 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
     uintN flags;
     JSObject *ctor;
     JSFunction *fun;
-    JSNativeFunction *native;
 
     CHECK_REQUEST(cx);
     ctor = NULL;
@@ -4409,16 +4412,14 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
                                     fs->nargs + 1, flags);
             if (!fun)
                 return JS_FALSE;
-            native = FUN_TO_NATIVE(fun);
-            native->extra = (uint16)fs->extra;
-            native->minargs = (uint16)(fs->extra >> 16);
+            fun->u.n.extra = (uint16)fs->extra;
+            fun->u.n.minargs = (uint16)(fs->extra >> 16);
 
             /*
              * As jsapi.h notes, fs must point to storage that lives as long
              * as fun->object lives.
              */
-            if (!JS_SetReservedSlot(cx, &native->object, 0,
-                                    PRIVATE_TO_JSVAL(fs)))
+            if (!JS_SetReservedSlot(cx, fun->object, 0, PRIVATE_TO_JSVAL(fs)))
                 return JS_FALSE;
         }
 
@@ -4427,9 +4428,8 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
         fun = JS_DefineFunction(cx, obj, fs->name, fs->call, fs->nargs, flags);
         if (!fun)
             return JS_FALSE;
-        native = FUN_TO_NATIVE(fun);
-        native->extra = (uint16)fs->extra;
-        native->minargs = (uint16)(fs->extra >> 16);
+        fun->u.n.extra = (uint16)fs->extra;
+        fun->u.n.minargs = (uint16)(fs->extra >> 16);
     }
     return JS_TRUE;
 }
@@ -4439,14 +4439,12 @@ JS_DefineFunction(JSContext *cx, JSObject *obj, const char *name, JSNative call,
                   uintN nargs, uintN attrs)
 {
     JSAtom *atom;
-    JSNativeFunction *fun;
 
     CHECK_REQUEST(cx);
     atom = js_Atomize(cx, name, strlen(name), 0);
     if (!atom)
         return NULL;
-    fun = js_DefineFunction(cx, obj, atom, call, nargs, attrs);
-    return fun ? NATIVE_TO_FUN(fun) : NULL;
+    return js_DefineFunction(cx, obj, atom, call, nargs, attrs);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -4455,13 +4453,11 @@ JS_DefineUCFunction(JSContext *cx, JSObject *obj,
                     uintN nargs, uintN attrs)
 {
     JSAtom *atom;
-    JSNativeFunction *fun;
 
     atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
     if (!atom)
         return NULL;
-    fun = js_DefineFunction(cx, obj, atom, call, nargs, attrs);
-    return fun ? NATIVE_TO_FUN(fun) : NULL;
+    return js_DefineFunction(cx, obj, atom, call, nargs, attrs);
 }
 
 JS_PUBLIC_API(JSScript *)
@@ -4639,10 +4635,10 @@ JS_NewScriptObject(JSContext *cx, JSScript *script)
     JSObject *obj;
 
     if (!script)
-        return js_NewObject(cx, &js_ScriptClass, NULL, NULL, 0);
+        return js_NewObject(cx, &js_ScriptClass, NULL, NULL);
 
     JS_PUSH_TEMP_ROOT_SCRIPT(cx, script, &tvr);
-    obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL, 0);
+    obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
     if (obj) {
         JS_SetPrivate(cx, obj, script);
         script->object = obj;
@@ -4727,7 +4723,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
                                   const jschar *chars, size_t length,
                                   const char *filename, uintN lineno)
 {
-    JSScriptedFunction *fun;
+    JSFunction *fun;
     JSTempValueRooter tvr;
     JSAtom *funAtom, *argAtom;
     uintN i;
@@ -4742,7 +4738,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
             goto out2;
         }
     }
-    fun = js_NewScriptedFunction(cx, NULL, 0, obj, funAtom);
+    fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, obj, funAtom);
     if (!fun)
         goto out2;
 
@@ -4786,12 +4782,12 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
 #endif
 
   out:
-    cx->weakRoots.newborn[JSTRACE_SCRIPTED_FUNCTION] = fun;
+    cx->weakRoots.newborn[JSTRACE_FUNCTION] = fun;
     JS_POP_TEMP_ROOT(cx, &tvr);
 
   out2:
     LAST_FRAME_CHECKS(cx, fun);
-    return fun ? SCRIPTED_TO_FUN(fun) : NULL;
+    return fun;
 }
 
 JS_PUBLIC_API(JSString *)
@@ -4802,7 +4798,7 @@ JS_DecompileScript(JSContext *cx, JSScript *script, const char *name,
     JSString *str;
 
     CHECK_REQUEST(cx);
-    jp = JS_NEW_PRINTER(cx, name,
+    jp = JS_NEW_PRINTER(cx, name, NULL,
                         indent & ~JS_DONT_PRETTY_PRINT,
                         !(indent & JS_DONT_PRETTY_PRINT));
     if (!jp)
@@ -4822,18 +4818,15 @@ JS_DecompileFunction(JSContext *cx, JSFunction *fun, uintN indent)
     JSString *str;
 
     CHECK_REQUEST(cx);
-    jp = JS_NEW_PRINTER(cx, "JS_DecompileFunction",
+    jp = JS_NEW_PRINTER(cx, "JS_DecompileFunction", fun,
                         indent & ~JS_DONT_PRETTY_PRINT,
                         !(indent & JS_DONT_PRETTY_PRINT));
     if (!jp)
         return NULL;
-    if (FUN_IS_SCRIPTED(fun)
-        ? js_DecompileFunction(jp, FUN_TO_SCRIPTED(fun))
-        : js_DecompileNativeFunction(jp, FUN_TO_NATIVE(fun))) {
+    if (js_DecompileFunction(jp))
         str = js_GetPrinterOutput(jp);
-    } else {
+    else
         str = NULL;
-    }
     js_DestroyPrinter(jp);
     return str;
 }
@@ -4845,19 +4838,15 @@ JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, uintN indent)
     JSString *str;
 
     CHECK_REQUEST(cx);
-
-    jp = JS_NEW_PRINTER(cx, "JS_DecompileFunctionBody",
+    jp = JS_NEW_PRINTER(cx, "JS_DecompileFunctionBody", fun,
                         indent & ~JS_DONT_PRETTY_PRINT,
                         !(indent & JS_DONT_PRETTY_PRINT));
     if (!jp)
         return NULL;
-    if (FUN_IS_SCRIPTED(fun)
-        ? js_DecompileFunctionBody(jp, FUN_TO_SCRIPTED(fun))
-        : js_DecompileNativeFunctionBody(jp, FUN_TO_NATIVE(fun))) {
+    if (js_DecompileFunctionBody(jp))
         str = js_GetPrinterOutput(jp);
-    } else {
+    else
         str = NULL;
-    }
     js_DestroyPrinter(jp);
     return str;
 }
@@ -4983,11 +4972,10 @@ JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, uintN argc,
                 jsval *argv, jsval *rval)
 {
     JSBool ok;
-    jsval funval;
 
     CHECK_REQUEST(cx);
-    funval = OBJECT_TO_JSVAL(FUN_OBJECT(fun));
-    ok = js_InternalCall(cx, obj, funval, argc, argv, rval);
+    ok = js_InternalCall(cx, obj, OBJECT_TO_JSVAL(fun->object), argc, argv,
+                         rval);
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
