@@ -14,12 +14,12 @@
 #
 # The Original Code is mozilla.org code.
 #
-# The Initial Developer of the Original Code is Mozilla.
-# Portions created by the Initial Developer are Copyright (C) 2007
+# The Initial Developer of the Original Code is
+# Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Justin Dolske <dolske@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,25 +35,18 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir  = modules/libpr0n/test
+relativesrcdir  = modules/libpr0n/test/mochitest
 
 include $(DEPTH)/config/autoconf.mk
-
-# Module name for xpcshell tests.
-MODULE		= test_libpr0n
-
-XPCSHELL_TESTS  = unit
-
-ifdef MOZ_MOCHITEST
-DIRS            += mochitest
-endif
-
 include $(topsrcdir)/config/rules.mk
 
-# Note: Invoke any additional (non-xpcshell) test programs here.
-check::
+_TEST_FILES = 	test_bug399925.html \
+		bug399925.gif \
+		$(NULL)
 
+libs:: $(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
