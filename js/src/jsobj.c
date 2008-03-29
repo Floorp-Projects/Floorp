@@ -5027,9 +5027,9 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
      * don't move it up and unify it with the |if (!traceScope)| section
      * above.
      */
-    nslots = (scope->object != obj)
-             ? STOBJ_NSLOTS(obj)
-             : LOCKED_OBJ_NSLOTS(obj);
+    nslots = STOBJ_NSLOTS(obj);
+    if (scope->object == obj && scope->map.freeslot < nslots)
+        nslots = scope->map.freeslot;
 
     for (i = 0; i != nslots; ++i) {
         v = STOBJ_GET_SLOT(obj, i);
