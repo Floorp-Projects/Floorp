@@ -78,8 +78,10 @@ var PlacesOrganizer = {
     // Set up the search UI.
     PlacesSearchBox.init();
 
+#ifdef PLACES_QUERY_BUILDER
     // Set up the advanced query builder UI
     PlacesQueryBuilder.init();
+#endif
 
     window.addEventListener("AppCommand", this, true);
 #ifdef XP_MACOSX
@@ -632,25 +634,15 @@ var PlacesOrganizer = {
   saveSearch: function PO_saveSearch() {
     // Get the place: uri for the query.
     // If the advanced query builder is showing, use that.
-    var queries = [];
+    var queries = PlacesQueryBuilder.queries;
     var options = this.getCurrentOptions();
-    options.excludeQueries = true;
-    // unset expandQueries=false, which is set by the left pane
-    options.expandQueries = true;
-    var searchUI = document.getElementById("searchModifiers");
-    if (!searchUI.hidden)
-      queries = PlacesQueryBuilder.queries;
-    else if (PlacesSearchBox.value && PlacesSearchBox.value.length > 0) {
-      // If not, use the value of the search box.
-      var query = PlacesUtils.history.getNewQuery();
-      query.searchTerms = PlacesSearchBox.value;
-      queries.push(query);
-    }
-    else {
-      // if there is no query, do nothing.
-      // XXX should probably have a dialog here to explain that the user needs to search first.
-     return;
-    }
+
+#ifndef PLACES_QUERY_BUILDER
+    var query = PlacesUtils.history.getNewQuery();
+    query.searchTerms = PlacesSearchBox.value;
+    queries.push(query);
+#endif
+
     var placeSpec = PlacesUtils.history.queriesToQueryString(queries,
                                                              queries.length,
                                                              options);
@@ -843,9 +835,11 @@ var PlacesSearchBox = {
     var searchModifiers = document.getElementById("searchModifiers");
     searchModifiers.hidden = false;
 
+#ifdef PLACES_QUERY_BUILDER
     // if new search, open builder with pre-populated text row
     if (PlacesQueryBuilder.numRows == 0)
       document.getElementById("OrganizerCommand_search:moreCriteria").doCommand();
+#endif
   },
 
   hideSearchUI: function PSB_hideSearchUI() {
@@ -862,6 +856,7 @@ var PlacesQueryBuilder = {
   queries: [],
   queryOptions: null,
 
+#ifdef PLACES_QUERY_BUILDER
   numRows: 0,
 
   /**
@@ -903,6 +898,7 @@ var PlacesQueryBuilder = {
   },
   _nextSearch: null,
   _queryBuilders: null,
+
 
   init: function PQB_init() {
     // Initialize advanced search
@@ -1319,6 +1315,7 @@ var PlacesQueryBuilder = {
     // XXXben - find some public way of doing this!
     PlacesOrganizer._content.load(this.queries, this.options);
   },
+#endif
 
   onScopeSelected: function PQB_onScopeSelected(aButton) {
     var id = aButton.getAttribute("id");

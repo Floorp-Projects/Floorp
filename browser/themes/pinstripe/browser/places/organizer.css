@@ -443,6 +443,7 @@ menulist[open="true"] > .menulist-label-box  .menulist-label {
   background: url("chrome://global/skin/icons/round-button-active-right.png") no-repeat center right;
 }
 
+%ifdef PLACES_QUERY_BUILDER
 /* Calendar */
 .history-calendar {
   margin: 0px 0px 7px 6px;
@@ -503,33 +504,6 @@ menulist[open="true"] > .menulist-label-box  .menulist-label {
   color:#888;
 }
 
-.no-margin-button {
-  min-width:0em;
-}
-
-/**
- * info pane
- */
-
-/* More/Less button */
-#infoScrollboxExpander {
-  list-style-image: url("chrome://browser/skin/places/twisty-open.gif");
-  -moz-appearance: none;
-  margin: 0;
-  padding: 0;
-  max-width: 0;
-}
-
-#infoScrollbox[minimal="true"] #infoScrollboxExpander {
-  list-style-image: url("chrome://browser/skin/places/twisty-closed.gif");
-}
-
-#itemsCountText,
-#selectItemDescription {
-  color: GrayText;
-}
-
-
 .advancedSearchPlus,
 .advancedSearchMinus {
   width: 18px;
@@ -584,6 +558,33 @@ menulist[open="true"] > .menulist-label-box  .menulist-label {
 
 .expander-up:hover:active {
   list-style-image: url("chrome://browser/skin/places/expander-open-active.png") !important;
+}
+%endif
+
+.no-margin-button {
+  min-width:0em;
+}
+
+/**
+ * info pane
+ */
+
+/* More/Less button */
+#infoScrollboxExpander {
+  list-style-image: url("chrome://browser/skin/places/twisty-open.gif");
+  -moz-appearance: none;
+  margin: 0;
+  padding: 0;
+  max-width: 0;
+}
+
+#infoScrollbox[minimal="true"] #infoScrollboxExpander {
+  list-style-image: url("chrome://browser/skin/places/twisty-closed.gif");
+}
+
+#itemsCountText,
+#selectItemDescription {
+  color: GrayText;
 }
 
 #editBookmarkPanelGrid > rows > row > label {
