@@ -263,12 +263,17 @@ WeaveSvc.prototype = {
     if (!verbose.exists())
       verbose.create(verbose.NORMAL_FILE_TYPE, PERMS_FILE);
 
-    let fapp = Log4Moz.Service.newFileAppender("rotating", brief, formatter);
-    fapp.level = Log4Moz.Level[Utils.prefs.getCharPref("log.appender.briefLog")];
-    root.addAppender(fapp);
-    let vapp = Log4Moz.Service.newFileAppender("rotating", verbose, formatter);
-    vapp.level = Log4Moz.Level[Utils.prefs.getCharPref("log.appender.debugLog")];
-    root.addAppender(vapp);
+    this._briefApp = Log4Moz.Service.newFileAppender("rotating", brief, formatter);
+    this._briefApp.level = Log4Moz.Level[Utils.prefs.getCharPref("log.appender.briefLog")];
+    root.addAppender(this._briefApp);
+    this._debugApp = Log4Moz.Service.newFileAppender("rotating", verbose, formatter);
+    this._debugApp.level = Log4Moz.Level[Utils.prefs.getCharPref("log.appender.debugLog")];
+    root.addAppender(this._debugApp);
+  },
+
+  clearLogs: function WeaveSvc_clearLogs() {
+    this._briefApp.clear();
+    this._debugApp.clear();
   },
 
   _createUserDir: function WeaveSync__createUserDir(serverURL) {

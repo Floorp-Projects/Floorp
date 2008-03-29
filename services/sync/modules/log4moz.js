@@ -397,6 +397,11 @@ FileAppender.prototype = {
     } catch(e) {
       dump("Error writing file:\n" + e);
     }
+  },
+
+  clear: function FApp_clear() {
+    this.closeStream();
+    this._file.remove(false);
   }
 };
 FileAppender.prototype.__proto__ = new Appender();
