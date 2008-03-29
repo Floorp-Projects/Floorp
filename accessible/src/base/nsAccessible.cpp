@@ -2430,6 +2430,18 @@ nsAccessible::GetARIAState(PRUint32 *aState)
   // Once DHTML role is used, we're only readonly if DHTML readonly used
   *aState &= ~nsIAccessibleStates::STATE_READONLY;
 
+  if (content->HasAttr(kNameSpaceID_None, content->GetIDAttributeName())) {
+    // If has a role & ID and aria-activedescendant on the container, assume focusable
+    nsIContent *ancestorContent = content;
+    while ((ancestorContent = ancestorContent->GetParent()) != nsnull) {
+      if (ancestorContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_activedescendant)) {
+          // ancestor has activedescendant property, this content could be active
+        *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
+        break;
+      }
+    }
+  }
+
   *aState |= mRoleMapEntry->state;
   if (MappedAttrState(content, aState, &mRoleMapEntry->attributeMap1) &&
       MappedAttrState(content, aState, &mRoleMapEntry->attributeMap2) &&
