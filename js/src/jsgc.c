@@ -3352,6 +3352,9 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
                                                 cx);
                             break;
                         }
+#ifdef DEBUG
+                        memset(thing, JS_FREE_PATTERN, thingSize);
+#endif
                     }
                     thing->flagp = flagp;
                     thing->next = freeList;

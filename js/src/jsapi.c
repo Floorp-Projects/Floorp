@@ -3032,7 +3032,7 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
         return JS_TRUE;
 
     /* Walk slots in obj and if any value is a non-null object, seal it. */
-    nslots = LOCKED_OBJ_NSLOTS(obj);
+    nslots = scope->map.freeslot;
     for (i = 0; i != nslots; ++i) {
         v = STOBJ_GET_SLOT(obj, i);
         if (JSVAL_IS_PRIMITIVE(v))
