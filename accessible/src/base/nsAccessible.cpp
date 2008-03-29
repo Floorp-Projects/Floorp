@@ -2419,7 +2419,6 @@ nsAccessible::GetARIAState(PRUint32 *aState)
     return NS_OK;
   }
 
-  PRUint32 ariaState = 0;
   PRUint32 index = 0;
   while (MappedAttrState(content, aState, &nsARIAMap::gWAIUnivStateMap[index])) {
     ++ index;
@@ -2429,9 +2428,9 @@ nsAccessible::GetARIAState(PRUint32 *aState)
     return NS_OK;
 
   // Once DHTML role is used, we're only readonly if DHTML readonly used
-  ariaState &= ~nsIAccessibleStates::STATE_READONLY;
+  *aState &= ~nsIAccessibleStates::STATE_READONLY;
 
-  ariaState |= mRoleMapEntry->state;
+  *aState |= mRoleMapEntry->state;
   if (MappedAttrState(content, aState, &mRoleMapEntry->attributeMap1) &&
       MappedAttrState(content, aState, &mRoleMapEntry->attributeMap2) &&
       MappedAttrState(content, aState, &mRoleMapEntry->attributeMap3) &&
