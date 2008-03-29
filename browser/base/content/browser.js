@@ -1211,6 +1211,9 @@ function nonBrowserWindowDelayedStartup()
   
   // Set up Sanitize Item
   gSanitizeListener = new SanitizeListener();
+
+  // "Bookmarks Toolbar" menu
+  initBookmarksToolbar();
 }
 
 function nonBrowserWindowShutdown()
