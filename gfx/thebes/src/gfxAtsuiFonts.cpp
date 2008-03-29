@@ -470,13 +470,15 @@ gfxAtsuiFontGroup::gfxAtsuiFontGroup(const nsAString& families,
 
     mPageLang = gfxPlatform::GetFontPrefLangFor(mStyle.langGroup.get());
 
-    for (PRUint32 i = 0; i < mFonts.Length(); ++i) {
-        gfxAtsuiFont* font = static_cast<gfxAtsuiFont*>(mFonts[i].get());
-        if (font->GetFontEntry()->FamilyEntry()->IsBadUnderlineFontFamily()) {
-            gfxFloat first = mFonts[0]->GetMetrics().underlineOffset;
-            gfxFloat bad = font->GetMetrics().underlineOffset;
-            mUnderlineOffset = PR_MIN(first, bad);
-            break;
+    if (!mStyle.systemFont) {
+        for (PRUint32 i = 0; i < mFonts.Length(); ++i) {
+            gfxAtsuiFont* font = static_cast<gfxAtsuiFont*>(mFonts[i].get());
+            if (font->GetFontEntry()->FamilyEntry()->IsBadUnderlineFontFamily()) {
+                gfxFloat first = mFonts[0]->GetMetrics().underlineOffset;
+                gfxFloat bad = font->GetMetrics().underlineOffset;
+                mUnderlineOffset = PR_MIN(first, bad);
+                break;
+            }
         }
     }
 }
