@@ -90,6 +90,7 @@
     </handlers>
   </binding>
 
+#ifdef PLACES_QUERY_BUILDER
   <binding id="calendar">
     <content>
       <xul:vbox class="calendar-box">
@@ -505,6 +506,6 @@
 
     </implementation>
   </binding> <!-- end calendar -->
-
+#endif
   
 </bindings>
