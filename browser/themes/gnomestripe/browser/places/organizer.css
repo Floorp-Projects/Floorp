@@ -140,29 +140,7 @@
   padding: 2px 2px 3px 4px;
 }
 
-.filterList {
-  -moz-appearance: none;
-  background-color: transparent;
-  border: 0px;
-  margin: 2px;
-  padding: 0px;
-  min-width: 0px;
-  width: 16px;
-  height: 16px;
-  list-style-image: url("chrome://browser/skin/Search-bar.png");
-  -moz-user-focus: ignore;
-  cursor: default;
-}
-
-.filterList .button-box {
-  border: 0px;
-  padding: 0px;
-}
-
-.filterList .button-menu-dropmarker {
-  margin: 9px -3px -4px 8px;
-}
-
+%ifdef PLACES_QUERY_BUILDER
 /* Calendar */
 .history-calendar {
   margin: 0px 0px 7px 6px;
@@ -229,16 +207,6 @@
   padding: 3px 3px 3px 0px;
 }
 
-#searchModifiers {
-  padding-right: 3px;
-}
-
-#debugPanel {
-  background-color: ThreeDFace;
-  border-top: 2px solid; 
-  -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
-}
-
 .advancedSearchMinus {
   list-style-image: url("moz-icon://stock/gtk-remove?size=menu");
 }
@@ -257,14 +225,19 @@
   margin: 0 !important;
 }
 
-#saveSearch {
-  list-style-image: url("moz-icon://stock/gtk-save?size=menu");
-}
-
 /**** expanders ****/
 .expander-up,
 .expander-down {
   min-width: 0;
+}
+%endif
+
+#searchModifiers {
+  padding-right: 3px;
+}
+
+#saveSearch {
+  list-style-image: url("moz-icon://stock/gtk-save?size=menu");
 }
 
 /**** menuitem stock icons ****/
@@ -272,11 +245,10 @@
   list-style-image: url("moz-icon://stock/gtk-close?size=menu");
 }
 
-menuitem[command="OrganizerCommand_import"] {
+#fileImport {
   list-style-image: url("moz-icon://stock/gtk-revert-to-saved?size=menu");
 }
 
-menuitem[command="OrganizerCommand_export"] {
+#fileExport {
   list-style-image: url("moz-icon://stock/gtk-save-as?size=menu");
 }
-

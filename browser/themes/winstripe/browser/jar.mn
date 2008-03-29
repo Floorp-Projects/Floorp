@@ -42,7 +42,7 @@ classic.jar:
         skin/classic/browser/feeds/audioFeedIcon16.png               (feeds/audioFeedIcon16.png)
         skin/classic/browser/feeds/subscribe.css                     (feeds/subscribe.css)
         skin/classic/browser/places/places.css                       (places/places.css)
-        skin/classic/browser/places/organizer.css                    (places/organizer.css)
+*       skin/classic/browser/places/organizer.css                    (places/organizer.css)
         skin/classic/browser/places/query.png                        (places/query.png)
         skin/classic/browser/places/bookmarksMenu.png                (places/bookmarksMenu.png)
         skin/classic/browser/places/bookmarksToolbar.png             (places/bookmarksToolbar.png)
