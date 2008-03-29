@@ -1064,6 +1064,14 @@ nsNavHistory::InitStatements()
     getter_AddRefs(mDBGetPageVisitStats));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // mDBIsPageVisited
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT h.id FROM moz_places h WHERE h.url = ?1 " 
+      "AND EXISTS "
+      "(SELECT id FROM moz_historyvisits WHERE place_id = h.id LIMIT 1)"),
+    getter_AddRefs(mDBIsPageVisited));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // mDBUpdatePageVisitStats (see InternalAdd)
   // we don't need to update visit_count since it's maintained
   // in sync by triggers, and we must NEVER touch it
@@ -1815,24 +1823,14 @@ PRBool nsNavHistory::IsURIStringVisited(const nsACString& aURIString)
 #endif
 
   // check the main DB
-  mozStorageStatementScoper scoper(mDBGetPageVisitStats);
-  nsresult rv = mDBGetPageVisitStats->BindUTF8StringParameter(0, aURIString);
+  mozStorageStatementScoper scoper(mDBIsPageVisited);
+  nsresult rv = mDBIsPageVisited->BindUTF8StringParameter(0, aURIString);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   PRBool hasMore = PR_FALSE;
-  rv = mDBGetPageVisitStats->ExecuteStep(&hasMore);
+  rv = mDBIsPageVisited->ExecuteStep(&hasMore);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  if (!hasMore)
-    return PR_FALSE;
-
-  // Actually get the result to make sure the visit count > 0.  there are
-  // several ways that we can get pages with visit counts of 0, and those
-  // should not count.
-  PRInt32 visitCount;
-  rv = mDBGetPageVisitStats->GetInt32(1, &visitCount);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-  return visitCount > 0;
+  return hasMore;
 #endif
 }
 
