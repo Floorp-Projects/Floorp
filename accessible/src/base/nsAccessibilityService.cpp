@@ -1284,9 +1284,8 @@ static PRBool HasRelatedContent(nsIContent *aContent)
   }
 
   nsIContent *ancestorContent = aContent;
-  nsAutoString activeID;
   while ((ancestorContent = ancestorContent->GetParent()) != nsnull) {
-    if (ancestorContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_activedescendant, activeID)) {
+    if (ancestorContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_activedescendant)) {
         // ancestor has activedescendant property, this content could be active
       return PR_TRUE;
     }
