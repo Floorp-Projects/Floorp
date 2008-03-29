@@ -77,7 +77,8 @@
 #include "nsCExternalHandlerService.h"
 #include "nsIExternalHelperAppService.h"
 #include "nsIMIMEService.h"
-
+#include "nsIParentalControlsService.h"
+#include "nsToolkitCompsCID.h"
 #include "nsIDownloadHistory.h"
 #include "nsDocShellCID.h"
 
@@ -1387,6 +1388,30 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
   rv = AddToCurrentDownloads(dl);
   (void)dl->SetState(startState);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Check with parental controls to see if file downloads
+  // are allowed for this user. If not allowed, cancel the
+  // download and mark its state as being blocked.
+  nsCOMPtr<nsIParentalControlsService> pc =
+    do_CreateInstance(NS_PARENTALCONTROLSSERVICE_CONTRACTID);
+  if (pc) {
+    PRBool enabled = PR_FALSE;
+    (void)pc->GetBlockFileDownloadsEnabled(&enabled);
+    if (enabled) {
+      (void)CancelDownload(id);
+      (void)dl->SetState(nsIDownloadManager::DOWNLOAD_BLOCKED);
+    }
+
+    // Log the event if required by pc settings.
+    PRBool logEnabled = PR_FALSE;
+    (void)pc->GetLoggingEnabled(&logEnabled);
+    if (logEnabled) {
+      (void)pc->Log(nsIParentalControlsService::ePCLog_FileDownload,
+                    enabled,
+                    aSource,
+                    nsnull);
+    }
+  }
 
   NS_ADDREF(*aDownload = dl);
 
