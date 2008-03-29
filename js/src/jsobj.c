@@ -863,9 +863,8 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
                  * they might appear here.  This code can be confused by people
                  * defining Function.prototype.toString, so let's be cautious.
                  */
-                if (JSFUN_GETTER_TEST(FUN_FLAGS(fun)) ||
-                    JSFUN_SETTER_TEST(FUN_FLAGS(fun))) {
-                    /* skip "getter/setter" */
+                if (JSFUN_GETTER_TEST(fun->flags) ||
+                    JSFUN_SETTER_TEST(fun->flags)) { /* skip "getter/setter" */
                     const jschar *tmp = js_strchr_limit(vchars, ' ', end);
                     if (tmp)
                         vchars = tmp + 1;
@@ -1760,7 +1759,7 @@ Object(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         JS_ASSERT(!argc || JSVAL_IS_NULL(argv[0]) || JSVAL_IS_VOID(argv[0]));
         if (cx->fp->flags & JSFRAME_CONSTRUCTING)
             return JS_TRUE;
-        obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL, 0);
+        obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
     }
@@ -1901,7 +1900,7 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
 {
     JSObject *obj;
 
-    obj = js_NewObject(cx, &js_WithClass, proto, parent, 0);
+    obj = js_NewObject(cx, &js_WithClass, proto, parent);
     if (!obj)
         return NULL;
     STOBJ_SET_SLOT(obj, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(cx->fp));
@@ -1920,7 +1919,7 @@ js_NewBlockObject(JSContext *cx)
      * scopes.  Make sure obj has its own scope too, since clearing proto does
      * not affect OBJ_SCOPE(obj).
      */
-    obj = js_NewObject(cx, &js_BlockClass, NULL, NULL, 0);
+    obj = js_NewObject(cx, &js_BlockClass, NULL, NULL);
     if (!obj)
         return NULL;
     JS_LOCK_OBJ(cx, obj);
@@ -1938,7 +1937,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSObject *parent,
 {
     JSObject *clone;
 
-    clone = js_NewObject(cx, &js_BlockClass, proto, parent, 0);
+    clone = js_NewObject(cx, &js_BlockClass, proto, parent);
     if (!clone)
         return NULL;
     STOBJ_SET_SLOT(clone, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(fp));
@@ -2424,8 +2423,7 @@ js_GetClassId(JSContext *cx, JSClass *clasp, jsid *idp)
 }
 
 JSObject *
-js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent,
-             uintN extraBytes)
+js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
 {
     jsid id;
 
@@ -2442,12 +2440,12 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent,
         }
     }
 
-    return js_NewObjectWithGivenProto(cx, clasp, proto, parent, extraBytes);
+    return js_NewObjectWithGivenProto(cx, clasp, proto, parent);
 }
 
 JSObject *
 js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
-                           JSObject *parent, uintN extraBytes)
+                           JSObject *parent)
 {
     JSObject *obj;
     JSObjectOps *ops;
@@ -2471,8 +2469,7 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
      * GC-thing allocations under js_GetClassPrototype or clasp->getObjectOps,
      * to avoid displacing the newborn root for obj.
      */
-    obj = (JSObject *) js_NewGCThing(cx, GCX_OBJECT,
-                                     sizeof(JSObject) + extraBytes);
+    obj = (JSObject *) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
     if (!obj)
         goto earlybad;
 
@@ -2774,7 +2771,7 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
             proto = JSVAL_TO_OBJECT(rval);
     }
 
-    obj = js_NewObject(cx, clasp, proto, parent, 0);
+    obj = js_NewObject(cx, clasp, proto, parent);
     if (!obj)
         goto out;
 
@@ -4659,7 +4656,7 @@ js_PrimitiveToObject(JSContext *cx, jsval *vp)
     JS_ASSERT(!JSVAL_IS_OBJECT(*vp));
     JS_ASSERT(*vp != JSVAL_VOID);
     clasp = PrimitiveClasses[JSVAL_TAG(*vp) - 1];
-    obj = js_NewObject(cx, clasp, NULL, NULL, 0);
+    obj = js_NewObject(cx, clasp, NULL, NULL);
     if (!obj)
         return JS_FALSE;
     STOBJ_SET_SLOT(obj, JSSLOT_PRIVATE, *vp);

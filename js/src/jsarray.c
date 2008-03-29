@@ -2879,7 +2879,7 @@ Array(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* If called without new, replace obj with a new Array object. */
     if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
-        obj = js_NewObject(cx, &js_ArrayClass, NULL, NULL, 0);
+        obj = js_NewObject(cx, &js_ArrayClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
         *rval = OBJECT_TO_JSVAL(obj);
@@ -2929,7 +2929,7 @@ js_NewArrayObject(JSContext *cx, jsuint length, jsval *vector)
     JSTempValueRooter tvr;
     JSObject *obj;
 
-    obj = js_NewObject(cx, &js_ArrayClass, NULL, NULL, 0);
+    obj = js_NewObject(cx, &js_ArrayClass, NULL, NULL);
     if (!obj)
         return NULL;
 
@@ -2946,7 +2946,7 @@ js_NewArrayObject(JSContext *cx, jsuint length, jsval *vector)
 JSObject *
 js_NewSlowArrayObject(JSContext *cx)
 {
-    JSObject *obj = js_NewObject(cx, &js_SlowArrayClass, NULL, NULL, 0);
+    JSObject *obj = js_NewObject(cx, &js_SlowArrayClass, NULL, NULL);
     if (obj)
         obj->fslots[JSSLOT_ARRAY_LENGTH] = 0;
     return obj;

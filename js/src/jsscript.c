@@ -894,7 +894,7 @@ Script(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     /* If not constructing, replace obj with a new Script object. */
     if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
-        obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL, 0);
+        obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
 
@@ -918,7 +918,7 @@ script_static_thaw(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj;
 
-    obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL, 0);
+    obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
     if (!obj)
         return JS_FALSE;
     vp[1] = OBJECT_TO_JSVAL(obj);
@@ -1421,7 +1421,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     uint32 mainLength, prologLength, nsrcnotes;
     JSScript *script;
     const char *filename;
-    JSScriptedFunction *fun;
+    JSFunction *fun;
 
     /* The counts of indexed things must be checked during code generation. */
     JS_ASSERT(cg->atomList.count <= INDEX_LIMIT);
@@ -1466,13 +1466,16 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     if (cg->regexpList.length != 0)
         FinishParsedObjects(&cg->regexpList, JS_SCRIPT_REGEXPS(script));
 
-    /* Initialize fun->script early for the debugger. */
+    /*
+     * We initialize fun->u.script to be the script constructed above
+     * so that the debugger has a valid FUN_SCRIPT(fun).
+     */
     fun = NULL;
     if (cg->treeContext.flags & TCF_IN_FUNCTION) {
         fun = cg->treeContext.fun;
-        JS_ASSERT(!fun->script);
+        JS_ASSERT(FUN_INTERPRETED(fun) && !FUN_SCRIPT(fun));
         js_FreezeLocalNames(cx, fun);
-        fun->script = script;
+        fun->u.i.script = script;
 #ifdef CHECK_SCRIPT_OWNER
         script->owner = NULL;
 #endif
@@ -1496,22 +1499,21 @@ bad:
     return NULL;
 }
 
-void
-js_CallNewScriptHook(JSContext *cx, JSScript *script, JSScriptedFunction *fun)
+JS_FRIEND_API(void)
+js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun)
 {
     JSNewScriptHook hook;
 
     hook = cx->debugHooks->newScriptHook;
     if (hook) {
         JS_KEEP_ATOMS(cx->runtime);
-        hook(cx, script->filename, script->lineno, script,
-             fun ? SCRIPTED_TO_FUN(fun) : NULL,
+        hook(cx, script->filename, script->lineno, script, fun,
              cx->debugHooks->newScriptHookData);
         JS_UNKEEP_ATOMS(cx->runtime);
     }
 }
 
-void
+JS_FRIEND_API(void)
 js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
 {
     JSDestroyScriptHook hook;
@@ -1691,7 +1693,7 @@ uintN
 js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     JSObject *obj;
-    JSScriptedFunction *fun;
+    JSFunction *fun;
     uintN lineno;
     ptrdiff_t offset, target;
     jssrcnote *sn;
@@ -1709,8 +1711,9 @@ js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
         pc += js_CodeSpec[*pc].length;
     if (*pc == JSOP_DEFFUN) {
         GET_FUNCTION_FROM_BYTECODE(script, pc, 0, obj);
-        fun = FUN_TO_SCRIPTED(GET_FUNCTION_PRIVATE(cx, obj));
-        return fun->script->lineno;
+        fun = GET_FUNCTION_PRIVATE(cx, obj);
+        JS_ASSERT(FUN_INTERPRETED(fun));
+        return fun->u.i.script->lineno;
     }
 
     /*

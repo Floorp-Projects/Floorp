@@ -54,13 +54,9 @@ static char dempty[] = "<null>";
 char *
 jsdtrace_funcclass_name(JSFunction *fun)
 {
-    JSNativeFunction *nfun;
-
-    if (FUN_IS_SCRIPTED(fun))
-        return dempty;
-
-    nfun = FUN_TO_NATIVE(fun);
-    return nfun->clasp ? (char *) nfun->clasp->name : dempty;
+    return (!FUN_INTERPRETED(fun) && fun->u.n.clasp)
+           ? (char *)fun->u.n.clasp->name
+           : dempty;
 }
 
 char *

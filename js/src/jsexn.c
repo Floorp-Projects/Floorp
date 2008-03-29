@@ -321,11 +321,8 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
             elem->funName = NULL;
             elem->argc = 0;
         } else {
-            JSAtom *atom;
-
-            atom = FUN_ATOM(fp->fun);
-            elem->funName = atom
-                            ? ATOM_TO_STRING(atom)
+            elem->funName = fp->fun->atom
+                            ? ATOM_TO_STRING(fp->fun->atom)
                             : cx->runtime->emptyString;
             elem->argc = fp->argc;
             memcpy(values, fp->argv, fp->argc * sizeof(jsval));
@@ -753,7 +750,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                                            .classPrototypeAtom),
                               rval))
             return JS_FALSE;
-        obj = js_NewObject(cx, &js_ErrorClass, JSVAL_TO_OBJECT(*rval), NULL, 0);
+        obj = js_NewObject(cx, &js_ErrorClass, JSVAL_TO_OBJECT(*rval), NULL);
         if (!obj)
             return JS_FALSE;
         *rval = OBJECT_TO_JSVAL(obj);
@@ -1046,7 +1043,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
     /* Initialize the prototypes first. */
     for (i = 0; exceptions[i].name != 0; i++) {
         JSAtom *atom;
-        JSNativeFunction *fun;
+        JSFunction *fun;
         JSObject *funobj;
         JSString *nameString;
         int protoIndex = exceptions[i].protoIndex;
@@ -1056,7 +1053,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
                                  (protoIndex != JSEXN_NONE)
                                  ? protos[protoIndex]
                                  : obj_proto,
-                                 obj, 0);
+                                 obj);
         if (!protos[i])
             break;
 
@@ -1070,10 +1067,10 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
             break;
 
         /* Make this constructor make objects of class Exception. */
-        fun->clasp = &js_ErrorClass;
+        fun->u.n.clasp = &js_ErrorClass;
 
         /* Extract the constructor object. */
-        funobj = &fun->object;
+        funobj = fun->object;
 
         /* Make the prototype and constructor links. */
         if (!js_SetClassPrototype(cx, funobj, protos[i],
@@ -1226,7 +1223,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
         goto out;
     tv[0] = OBJECT_TO_JSVAL(errProto);
 
-    errObject = js_NewObject(cx, &js_ErrorClass, errProto, NULL, 0);
+    errObject = js_NewObject(cx, &js_ErrorClass, errProto, NULL);
     if (!errObject) {
         ok = JS_FALSE;
         goto out;
