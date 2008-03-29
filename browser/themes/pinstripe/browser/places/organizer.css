@@ -206,21 +206,6 @@
   padding-top: 1px;
 }
 
-#placeContent treechildren::-moz-tree-row(odd) {
-  background-color: #edf3fe;
-}
-
-#placeContent treechildren::-moz-tree-row(selected),
-#placeContent treechildren::-moz-tree-row(odd, selected) {
-  background-color: -moz-mac-secondaryhighlight;
-}
-
-#placeContent treechildren::-moz-tree-row(selected, focus), 
-#placeContent treechildren::-moz-tree-row(odd, selected, focus) {
-  background-color: Highlight;
-  color: HighlightText !important;
-}
-
 #placeContent treechildren::-moz-tree-cell,
 #placeContent treechildren::-moz-tree-column {
   border-right: 1px solid #d7dad7;

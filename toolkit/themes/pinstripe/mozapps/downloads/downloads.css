@@ -13,7 +13,7 @@ richlistitem[type="download"] {
 }
 
 richlistitem[type="download"][alternate="true"]:not([selected="true"]) {
-  background-color: #EDF3FE;
+  background-color: -moz-oddrowbackground;
 }
 
 richlistitem[type="download"] .name {
