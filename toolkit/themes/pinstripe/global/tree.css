@@ -69,13 +69,13 @@ tree {
 /* ::::: tree rows ::::: */
 
 treechildren::-moz-tree-row {
-  border-top: 1px solid -moz-field;
+  border-top: 1px solid transparent;
   height: 18px;
-  background-color: #fff;
+  background-color: -moz-field;
 }
 
 tree:not([hidecolumnpicker="true"]) treechildren::-moz-tree-row(odd) {
- background-color: #f0f0f0;
+ background-color: -moz-oddrowbackground;
 }
 
 treechildren::-moz-tree-row(selected),
@@ -369,7 +369,7 @@ treechildren::-moz-tree-cell-text(Name, separator, selected, focus) {
 /* ::::: alternating background ::::: */
 
 treechildren[alternatingbackground="true"]::-moz-tree-row(odd) {
-  background-color: #f3f3f3;
+  background-color: -moz-oddrowbackground;
 }
 
 treechildren[alternatingbackground="true"]::-moz-tree-row(odd, selected) {
