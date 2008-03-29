@@ -179,10 +179,10 @@ extern JS_FRIEND_API(JSBool)
 js_PutCallObject(JSContext *cx, JSStackFrame *fp);
 
 extern JSBool
-js_GetCallVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+js_GetCallArg(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 extern JSBool
-js_SetCallVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+js_GetCallVar(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
 extern JSBool
 js_GetArgsValue(JSContext *cx, JSStackFrame *fp, jsval *vp);

@@ -1353,28 +1353,17 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
 
     pd->flags |= ((sprop->attrs & JSPROP_ENUMERATE) ? JSPD_ENUMERATE : 0)
               | ((sprop->attrs & JSPROP_READONLY)  ? JSPD_READONLY  : 0)
-              | ((sprop->attrs & JSPROP_PERMANENT) ? JSPD_PERMANENT : 0)
-              | ((sprop->getter == js_GetCallVariable) ? JSPD_VARIABLE  : 0);
-
-    /* for Call Object 'real' getter isn't passed in to us */
-    if (OBJ_GET_CLASS(cx, obj) == &js_CallClass &&
-        sprop->getter == js_CallClass.getProperty) {
-        /*
-         * Property of a heavyweight function's variable object having the
-         * class-default getter.  It's either an argument if permanent, or a
-         * nested function if impermanent.  Local variables have a special
-         * getter (js_GetCallVariable, tested above) and setter, and not the
-         * class default.
-         */
-        pd->flags |= (sprop->attrs & JSPROP_PERMANENT)
-                     ? JSPD_ARGUMENT
-                     : JSPD_VARIABLE;
-    }
-
+              | ((sprop->attrs & JSPROP_PERMANENT) ? JSPD_PERMANENT : 0);
     pd->spare = 0;
-    pd->slot = (pd->flags & (JSPD_ARGUMENT | JSPD_VARIABLE))
-               ? sprop->shortid
-               : 0;
+    if (sprop->getter == js_GetCallArg) {
+        pd->slot = sprop->shortid;
+        pd->flags |= JSPD_ARGUMENT;
+    } else if (sprop->getter == js_GetCallVar) {
+        pd->slot = sprop->shortid;
+        pd->flags |= JSPD_VARIABLE;
+    } else {
+        pd->slot = 0;
+    }
     pd->alias = JSVAL_VOID;
     scope = OBJ_SCOPE(obj);
     if (SPROP_HAS_VALID_SLOT(sprop, scope)) {
