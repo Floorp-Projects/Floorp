@@ -1399,7 +1399,7 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
     (void)pc->GetBlockFileDownloadsEnabled(&enabled);
     if (enabled) {
       (void)CancelDownload(id);
-      (void)dl->SetState(nsIDownloadManager::DOWNLOAD_BLOCKED);
+      (void)dl->SetState(nsIDownloadManager::DOWNLOAD_BLOCKED_PARENTAL);
     }
 
     // Log the event if required by pc settings.
