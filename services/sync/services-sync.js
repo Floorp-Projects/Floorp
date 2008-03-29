@@ -6,7 +6,7 @@ pref("extensions.weave.encryption", "aes-256-cbc");
 pref("extensions.weave.lastversion", "firstrun");
 pref("extensions.weave.lastsync", "0");
 
-pref("extensions.weave.ui.syncnow", false);
+pref("extensions.weave.ui.syncnow", true);
 pref("extensions.weave.rememberpassword", true);
 pref("extensions.weave.autoconnect", true);
 pref("extensions.weave.enabled", true);
