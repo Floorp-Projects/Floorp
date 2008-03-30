@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=418368
+-->
+<head>
+  <title>nsIHyperLinkAccessible chrome tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript">
+    function testThis(aID, aAcc, aRole, aAnchors, aName, aValid, aStartIndex,
+                      aEndIndex)
+    {
+      is(aAcc.finalRole, aRole, "Wrong role for ID " + aID + "!");
+      is(aAcc.anchorsCount, aAnchors, "Wrong number of anchors for ID "
+                                      + aID + "!");
+      is(aAcc.getAnchor(0).name, aName, "Wrong name for ID "
+                                        + aID + "!");
+      is(aAcc.valid, aValid, "No correct valid state for ID "
+                             + aID + "!");
+      is(aAcc.startIndex, aStartIndex, "Wrong startIndex value for ID "
+                                       + aID + "!");
+      is(aAcc.endIndex, aEndIndex, "Wrong endIndex value for ID "
+                                   + aID + "!");
+    }
+
+    function testFocus(aID, aAcc, aSelectedBefore, aSelectedAfter)
+    {
+      is(aAcc.selected, aSelectedBefore,
+         "Wrong selected state before focus for ID " + aID + "!");
+      document.getElementById(aID).focus();
+      is(aAcc.selected, aSelectedAfter,
+         "Wrong seleccted state after focus for ID " + aID + "!");
+    }
+
+    function testStates(aID, aAcc, aState, aExtraState, aAbsentState)
+    {
+      var state = {}, extraState = {};
+      aAcc.getFinalState(state, extraState);
+      is(state.value & aState, aState, "Wrong state bits for ID " + aID + "!");
+      is(extraState.value & aExtraState, aExtraState, 
+         "Wrong extra state bits for ID " + aID + "!");
+      if (aAbsentState != 0)
+        is(state.value & aAbsentState, 0, "state bits should not be present in ID "
+           + aID + "!");
+    }
+      
+    function doTest()
+    {
+      // Mapping needed state flags for easier handling.
+      const state_focusable = 
+            Components.interfaces.nsIAccessibleStates.STATE_FOCUSABLE;
+      const state_focused = 
+            Components.interfaces.nsIAccessibleStates.STATE_FOCUSED;
+      const state_selectable = 
+            Components.interfaces.nsIAccessibleStates.STATE_SELECTABLE;
+      const state_linked = 
+            Components.interfaces.nsIAccessibleStates.STATE_LINKED;
+      const state_traversed = 
+            Components.interfaces.nsIAccessibleStates.STATE_TRAVERSED;
+
+      const ext_state_multi_line = 
+            Components.interfaces.nsIAccessibleStates.EXT_STATE_MULTI_LINE;
+      const ext_state_horizontal = 
+            Components.interfaces.nsIAccessibleStates.EXT_STATE_HORIZONTAL;
+      const ext_state_required = 
+            Components.interfaces.nsIAccessibleStates.STATE_REQUIRED;
+      const ext_state_invalid = 
+            Components.interfaces.nsIAccessibleStates.STATE_INVALID;
+
+      var accService = Components.classes["@mozilla.org/accessibleRetrieval;1"].
+                       getService(Components.interfaces.nsIAccessibleRetrieval);
+
+      //////////////////////////////////////////////////////////////////////////
+      // normal hyperlink
+      var normalHyperlinkElement = document.getElementById("NormalHyperlink");
+      var normalHyperlinkAcc;
+      try {
+        normalHyperlinkAcc = accService.getAccessibleFor(normalHyperlinkElement).
+              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
+      } catch(e) {
+        ok(normalHyperlinkAcc, "no interface for normal hyperlink!");
+      }
+      testThis("NormalHyperlink", normalHyperlinkAcc,
+               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1, 
+               "Mozilla Foundation", true, 18, 19);
+      is(normalHyperlinkAcc.getURI(0).spec, "http://www.mozilla.org/", 
+         "URI wrong for normalHyperlinkElement!");
+      testStates("NormalHyperlink", normalHyperlinkAcc,
+                 (state_focusable | state_linked),
+                 (ext_state_horizontal), (0));
+      testFocus("NormalHyperlink", normalHyperlinkAcc, false, true);
+      testStates("NormalHyperlink", normalHyperlinkAcc,
+                 (state_focusable | state_focused | state_linked),
+                 (ext_state_horizontal), (0));
+
+      //////////////////////////////////////////////////////////////////////////
+      // ARIA hyperlink
+      var ariaHyperlinkElement = document.getElementById("AriaHyperlink");
+      var ariaHyperlinkAcc;
+      try {
+        ariaHyperlinkAcc = accService.getAccessibleFor(ariaHyperlinkElement).
+            QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
+      } catch(e) {
+        ok(ariaHyperlinkAcc, "no interface for ARIA Hyperlink!");
+      }
+      testThis("AriaHyperlink", ariaHyperlinkAcc,
+               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1,
+               "Mozilla Foundation Home", true, 32, 33);
+      testStates("AriaHyperlink", ariaHyperlinkAcc,
+                 (state_focusable | state_linked),
+                 (ext_state_horizontal), (0));
+      testFocus("AriaHyperlink", ariaHyperlinkAcc, false, true);
+      testStates("AriaHyperlink", ariaHyperlinkAcc,
+                 (state_focusable | state_focused | state_linked),
+                 (ext_state_horizontal), (0));
+
+      //////////////////////////////////////////////////////////////////////////
+      // ARIA hyperlink with status invalid
+      var invalidAriaHyperlinkElement =
+          document.getElementById("InvalidAriaHyperlink");
+      var invalidAriaHyperlinkAcc;
+      try {
+        invalidAriaHyperlinkAcc =
+               accService.getAccessibleFor(invalidAriaHyperlinkElement).
+               QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
+      } catch(e) {
+        ok(invalidAriaHyperlinkAcc, "no interface for invalid ARIA hyperlink!");
+      }
+      is(invalidAriaHyperlinkAcc.valid, false, "Should not be valid!");
+      testStates("InvalidAriaHyperlink", invalidAriaHyperlinkAcc,
+                 (state_linked),
+                 (ext_state_horizontal), (state_focusable));
+      testFocus("InvalidAriaHyperlink", invalidAriaHyperlinkAcc,
+                false, false);
+
+      //////////////////////////////////////////////////////////////////////////
+      // image map and its link children
+      var imageMapHyperlinkElement =
+          document.getElementById("imgmap");
+      var imageMapHyperlinkAcc;
+      try {
+        imageMapHyperlinkAcc =
+             accService.getAccessibleFor(imageMapHyperlinkElement).
+              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
+      } catch(e) {
+        ok(imageMapHyperlinkAcc, "no Image Map interface!");
+      }
+      testThis("imgmap", imageMapHyperlinkAcc,
+               Components.interfaces.nsIAccessibleRole.ROLE_IMAGE_MAP, 2, 
+               "b", true, 83, 84);
+      is(imageMapHyperlinkAcc.getURI(0).spec,
+         "http://www.bbc.co.uk/radio4/atoz/index.shtml#b", "URI wrong!");
+      is(imageMapHyperlinkAcc.getURI(1).spec,
+         "http://www.bbc.co.uk/radio4/atoz/index.shtml#a", "URI wrong!");
+      testStates("imgmap", imageMapHyperlinkAcc,
+                 (0),
+                 (ext_state_horizontal), (0));
+
+      var area1 = imageMapHyperlinkAcc.firstChild;
+      ok(area1, "no children in image map acc!");
+      var area1HL;
+      try {
+        area1HL =
+             area1.QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
+      } catch (e) {
+        ok(area1HL, "no interface for first child of Image Map!");
+      }
+      testThis("Area1", area1HL,
+               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1,
+               "b", true, 0, 1);
+      is(area1HL.getURI(0).spec,
+         "http://www.bbc.co.uk/radio4/atoz/index.shtml#b", "URI wrong!");
+      testStates("Area1", area1HL,
+                 (state_linked),
+                 (0), (0));
+
+      var area2 = area1.nextSibling;
+      ok(area2, "no next sibling!");
+      var area2HL;
+      try {
+        area2HL =
+             area2.QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
+      } catch (e) {
+        ok(area2HL, "no interface for second child of Image Map!");
+      }
+      testThis("Area2", area2HL,
+               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1,
+               "a", true, 1, 2);
+      is(area2HL.getURI(0).spec,
+         "http://www.bbc.co.uk/radio4/atoz/index.shtml#a", "URI wrong!");
+      testStates("Area2", area2HL,
+                 (state_linked),
+                 (0), (0));
+
+      //////////////////////////////////////////////////////////////////////////
+      // empty hyperlink
+      var emptyLinkElement = document.getElementById("emptyLink");
+      var EmptyHLAcc;
+      try {
+        EmptyHLAcc =
+             accService.getAccessibleFor(emptyLinkElement).
+             QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
+      } catch (e) {
+        ok(EmptyHLAcc, "no interface for empty link!");
+      }
+      testThis("emptyLink", EmptyHLAcc,
+               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1,
+               "", true, 98, 99);
+      testStates("emptyLink", EmptyHLAcc,
+                 (state_focusable | state_linked),
+                 (ext_state_horizontal), (0));
+
+      //////////////////////////////////////////////////////////////////////////
+      // normal hyperlink with embedded span
+      var hyperlinkElementWithSpan = document.getElementById("LinkWithSpan");
+      var hyperlinkWithSpanAcc;
+      try {
+        hyperlinkWithSpanAcc =
+              accService.getAccessibleFor(hyperlinkElementWithSpan).
+              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
+      } catch(e) {
+        ok(hyperlinkWithSpanAcc, "no interface for hyperlink with span!");
+      }
+      testThis("LinkWithSpan", hyperlinkWithSpanAcc,
+               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1, 
+               "Heise Online", true, 124, 125);
+      is(hyperlinkWithSpanAcc.getURI(0).spec, "http://www.heise.de/", 
+         "URI wrong for hyperlinkElementWithSpan!");
+      testStates("LinkWithSpan", hyperlinkWithSpanAcc,
+                 (state_focusable | state_linked),
+                 (ext_state_horizontal), (0));
+      testFocus("LinkWithSpan", hyperlinkWithSpanAcc, false, true);
+      testStates("LinkWithSpan", hyperlinkWithSpanAcc,
+                 (state_focusable | state_focused | state_linked),
+                 (ext_state_horizontal), (0));
+
+      //////////////////////////////////////////////////////////////////////////
+      // Named anchor, should never have state_linked
+      var namedAnchorElement = document.getElementById("namedAnchor");
+      var namedAnchorAcc;
+      try {
+        namedAnchorAcc = accService.getAccessibleFor(namedAnchorElement).
+              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
+      } catch(e) {
+        ok(namedAnchorAcc, "no interface for named anchor!");
+      }
+      testThis("namedAnchor", namedAnchorAcc,
+               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1, 
+               "This should never be of state_linked", true, 202, 203);
+      testStates("namedAnchor", namedAnchorAcc,
+                 (state_selectable),
+                 (ext_state_horizontal), (state_focusable | state_linked));
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=418368">Mozilla Bug 418368</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <br>Simple link:<br>
+  <a id="NormalHyperlink" href="http://www.mozilla.org">Mozilla Foundation</a>
+  <br>ARIA link:<br>
+  <span id="AriaHyperlink" role="link"
+         onclick="window.open('http://www.mozilla.org/');"
+         tabindex="0">Mozilla Foundation Home</span>
+  <br>Invalid, non-focusable hyperlink:<br>
+  <span id="InvalidAriaHyperlink" role="link" aria-invalid="true"
+        onclick="window.open('http:/www.mozilla.org/');">Invalid link</span>
+  <br>Image map:<br>
+  <map name="atoz_map">
+    <area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#b"
+          coords="17,0,30,14"
+          alt="b"
+          shape="rect"></area>
+    <area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#a"
+          coords="0,0,13,14"
+          alt="a"
+          shape="rect"></area>
+  </map>
+  <img width="447" id="imgmap"
+       height="15"
+       usemap="#atoz_map"
+       src="http://www.bbc.co.uk/radio4/images/letters.gif"></img>
+  <br>Empty link:<br>
+  <a id="emptyLink" href=""><img src=""></img></a>
+  <br>Link with embedded span<br>
+  <a id="LinkWithSpan" href="http://www.heise.de/"><span lang="de">Heise Online</span></a>
+  <br>Named anchor, must not have "linked" state for it to be exposed correctly:<br>
+  <a id="namedAnchor" name="named_anchor">This should never be of state_linked</a>
+</body>
+</html>
