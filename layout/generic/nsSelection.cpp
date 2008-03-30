@@ -221,7 +221,7 @@ public:
                                PRBool aDoFlush,
                                PRInt16 aVPercent = NS_PRESSHELL_SCROLL_ANYWHERE,
                                PRInt16 aHPercent = NS_PRESSHELL_SCROLL_ANYWHERE);
-  nsresult      AddItem(nsIDOMRange *aRange, PRInt32* aOutIndex = nsnull);
+  nsresult      AddItem(nsIDOMRange *aRange);
   nsresult      RemoveItem(nsIDOMRange *aRange);
   nsresult      Clear(nsPresContext* aPresContext);
 
@@ -307,7 +307,7 @@ private:
   NS_IMETHOD   selectFrames(nsPresContext* aPresContext, nsIContentIterator *aInnerIter, nsIContent *aContent, nsIDOMRange *aRange, nsIPresShell *aPresShell, PRBool aFlags);
   NS_IMETHOD   selectFrames(nsPresContext* aPresContext, nsIDOMRange *aRange, PRBool aSelect);
   nsresult     getTableCellLocationFromRange(nsIDOMRange *aRange, PRInt32 *aSelectionType, PRInt32 *aRow, PRInt32 *aCol);
-  nsresult     addTableCellRange(nsIDOMRange *aRange, PRBool *aDidAddRange, PRInt32 *aOutIndex);
+  nsresult     addTableCellRange(nsIDOMRange *aRange, PRBool *aDidAddRange);
   
 #ifdef OLD_SELECTION
   NS_IMETHOD   FixupSelectionPoints(nsIDOMRange *aRange, nsDirection *aDir, PRBool *aFixupState);
@@ -360,9 +360,9 @@ private:
                                    PRInt32 aOffset,
                                    const nsTArray<PRInt32>* aRemappingArray,
                                    PRBool aUseBeginning);
-  PRInt32 FindRangeGivenPoint(nsIDOMNode* aBeginNode, PRInt32 aBeginOffset,
-                              nsIDOMNode* aEndNode, PRInt32 aEndOffset,
-                              PRInt32 aStartSearchingHere);
+  PRBool FindRangeGivenPoint(nsIDOMNode* aBeginNode, PRInt32 aBeginOffset,
+                             nsIDOMNode* aEndNode, PRInt32 aEndOffset,
+                             PRInt32 aStartSearchingHere);
 
   nsTArray<RangeData> mRanges;
   nsTArray<PRInt32> mRangeEndings;    // references info mRanges
@@ -3741,14 +3741,12 @@ nsTypedSelection::getTableCellLocationFromRange(nsIDOMRange *aRange, PRInt32 *aS
 }
 
 nsresult
-nsTypedSelection::addTableCellRange(nsIDOMRange *aRange, PRBool *aDidAddRange,
-                                    PRInt32 *aOutIndex)
-{  
-  if (!aDidAddRange || !aOutIndex)
+nsTypedSelection::addTableCellRange(nsIDOMRange *aRange, PRBool *aDidAddRange)
+{
+  if (!aDidAddRange)
     return NS_ERROR_NULL_POINTER;
 
   *aDidAddRange = PR_FALSE;
-  *aOutIndex = -1;
 
   if (!mFrameSelection)
     return NS_OK;
@@ -3776,8 +3774,7 @@ nsTypedSelection::addTableCellRange(nsIDOMRange *aRange, PRBool *aDidAddRange,
   if (mFrameSelection->mSelectingTableCellMode == TABLESELECTION_NONE)
     mFrameSelection->mSelectingTableCellMode = tableMode;
 
-  *aDidAddRange = PR_TRUE;
-  return AddItem(aRange, aOutIndex);
+  return AddItem(aRange);
 }
 
 //TODO: Figure out TABLESELECTION_COLUMN and TABLESELECTION_ALLCELLS
@@ -4413,14 +4410,12 @@ nsTypedSelection::FindInsertionPoint(
 }
 
 nsresult
-nsTypedSelection::AddItem(nsIDOMRange *aItem, PRInt32 *aOutIndex)
+nsTypedSelection::AddItem(nsIDOMRange *aItem)
 {
   nsresult rv;
   if (!aItem)
-    return NS_ERROR_NULL_POINTER;  
-  if (aOutIndex)
-    *aOutIndex = -1;
-  
+    return NS_ERROR_NULL_POINTER;
+
   NS_ASSERTION(ValidateRanges(), "Ranges out of sync");
 
   // a common case is that we have no ranges yet
@@ -4431,8 +4426,6 @@ nsTypedSelection::AddItem(nsIDOMRange *aItem, PRInt32 *aOutIndex)
       mRanges.Clear();
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    if (aOutIndex)
-      *aOutIndex = 0;
     return NS_OK;
   }
 
@@ -4448,9 +4441,6 @@ nsTypedSelection::AddItem(nsIDOMRange *aItem, PRInt32 *aOutIndex)
                           CompareToRangeStart, &beginInsertionPoint);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aOutIndex)
-    *aOutIndex = beginInsertionPoint;
-  
   // XXX Performance: 99% of the time, the beginning array and the ending array
   // will be the same because the ranges do not overlap. We could save a few
   // compares (which can be expensive) in this common case by special casing
@@ -4464,13 +4454,9 @@ nsTypedSelection::AddItem(nsIDOMRange *aItem, PRInt32 *aOutIndex)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // make sure that this range is not already in the selection
-  PRInt32 index = FindRangeGivenPoint(beginNode, beginOffset,
-                                      endNode, endOffset,
-                                      beginInsertionPoint);
-  if (index >= 0) {
+  if (FindRangeGivenPoint(beginNode, beginOffset, endNode, endOffset,
+                          beginInsertionPoint)) {
     // silently succeed, this range is already in the selection
-    if (aOutIndex)
-      *aOutIndex = index;
     return NS_OK;
   }
 
@@ -4478,6 +4464,7 @@ nsTypedSelection::AddItem(nsIDOMRange *aItem, PRInt32 *aOutIndex)
   rv = FindInsertionPoint(&mRangeEndings, endNode, endOffset,
                           CompareToRangeEnd, &endInsertionPoint);
   NS_ENSURE_SUCCESS(rv, rv);
+
 
   // insert the range, being careful to revert everything on error to keep
   // consistency
@@ -4876,10 +4863,9 @@ RangeMatchesEndPoint(nsIDOMRange* aRange, nsIDOMNode* aNode, PRInt32 aOffset)
 //
 //    Therefore, this function searches backwards and forwards from that point
 //    of all matching beginning points, and then compares the ending points to
-//    find a match. Returns the index of the match if a match was found, -1 if 
-//    not.
+//    find a match. Returns true if a match was found, false if not.
 
-PRInt32
+PRBool
 nsTypedSelection::FindRangeGivenPoint(
     nsIDOMNode* aBeginNode, PRInt32 aBeginOffset,
     nsIDOMNode* aEndNode, PRInt32 aEndOffset,
@@ -4893,7 +4879,7 @@ nsTypedSelection::FindRangeGivenPoint(
   for (i = aStartSearchingHere; i >= 0 && i < (PRInt32)mRanges.Length(); i --) {
     if (RangeMatchesBeginPoint(mRanges[i].mRange, aBeginNode, aBeginOffset)) {
       if (RangeMatchesEndPoint(mRanges[i].mRange, aEndNode, aEndOffset))
-        return i;
+        return PR_TRUE;
     } else {
       // done with matches going backwards
       break;
@@ -4904,7 +4890,7 @@ nsTypedSelection::FindRangeGivenPoint(
   for (i = aStartSearchingHere + 1; i < (PRInt32)mRanges.Length(); i ++) {
     if (RangeMatchesBeginPoint(mRanges[i].mRange, aBeginNode, aBeginOffset)) {
       if (RangeMatchesEndPoint(mRanges[i].mRange, aEndNode, aEndOffset))
-        return i;
+        return PR_TRUE;
     } else {
       // done with matches going forwards
       break;
@@ -4912,7 +4898,7 @@ nsTypedSelection::FindRangeGivenPoint(
   }
 
   // match not found
-  return -1;
+  return PR_FALSE;
 }
 
 //utility method to get the primary frame of node or use the offset to get frame of child node
@@ -5797,18 +5783,25 @@ nsTypedSelection::AddRange(nsIDOMRange* aRange)
   // This inserts a table cell range in proper document order
   // and returns NS_OK if range doesn't contain just one table cell
   PRBool didAddRange;
-  PRInt32 rangeIndex;
-  nsresult result = addTableCellRange(aRange, &didAddRange, &rangeIndex);
+  nsresult result = addTableCellRange(aRange, &didAddRange);
   if (NS_FAILED(result)) return result;
 
   if (!didAddRange)
   {
-    result = AddItem(aRange, &rangeIndex);
+    result = AddItem(aRange);
     if (NS_FAILED(result)) return result;
   }
 
-  NS_ASSERTION(rangeIndex >= 0, "Range index not returned");
-  setAnchorFocusRange(rangeIndex);
+  PRInt32 count;
+  result = GetRangeCount(&count);
+  if (NS_FAILED(result)) return result;
+
+  if (count <= 0)
+  {
+    NS_ASSERTION(0,"bad count after additem\n");
+    return NS_ERROR_FAILURE;
+  }
+  setAnchorFocusRange(count -1);
   
   // Make sure the caret appears on the next line, if at a newline
   if (mType == nsISelectionController::SELECTION_NORMAL)
