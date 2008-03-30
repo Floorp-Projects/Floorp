@@ -148,6 +148,10 @@ nsXULLinkAccessible::
 {
 }
 
+// Expose nsIAccessibleHyperLink unconditionally
+NS_IMPL_ISUPPORTS_INHERITED1(nsXULLinkAccessible, nsHyperTextAccessibleWrap,
+                             nsIAccessibleHyperLink)
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULLinkAccessible. nsIAccessible
 
