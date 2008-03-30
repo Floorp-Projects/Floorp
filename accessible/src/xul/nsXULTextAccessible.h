@@ -74,6 +74,8 @@ class nsXULLinkAccessible : public nsHyperTextAccessibleWrap
 public:
   nsXULLinkAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
 
+  NS_DECL_ISUPPORTS_INHERITED
+
   // nsIAccessible
   NS_IMETHOD GetName(nsAString& aName); 
   NS_IMETHOD GetRole(PRUint32 *aRole);
