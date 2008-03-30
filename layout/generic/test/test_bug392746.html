@@ -25,10 +25,9 @@ function ctrlselect(aX,aY, aX2, aY2) {
   var wu =  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                   .getInterface(Components.interfaces.nsIDOMWindowUtils);
 
-  var modifyers = (navigator.platform.indexOf("Mac") >= 0) ? 8 : 2;
-  wu.sendMouseEvent('mousedown',  aX, aY, 0, 1, modifyers);
-  wu.sendMouseEvent('mousemove',  aX2, aY2, 0, 0, modifyers);
-  wu.sendMouseEvent('mouseup',  aY2, aY2, 0, 1, modifyers);
+  wu.sendMouseEvent('mousedown',  aX, aY, 0, 1, 2);
+  wu.sendMouseEvent('mousemove',  aX2, aY2, 0, 0, 2);
+  wu.sendMouseEvent('mouseup',  aY2, aY2, 0, 1, 2);
 }
 
  function test() {
@@ -36,15 +35,15 @@ function ctrlselect(aX,aY, aX2, aY2) {
   sel.removeAllRanges();
 
   var a=document.getElementById('a').getBoundingClientRect();
-  ctrlselect(a.left, a.top+1, a.right-1, a.top+1);
+  ctrlselect(a.left, a.top, a.right-1, a.top);
   var b=document.getElementById('b').getBoundingClientRect();
-  ctrlselect(b.left, b.top+1, b.right-1, b.top+1);
+  ctrlselect(b.left, b.top, b.right-1, b.top);
   var c=document.getElementById('c').getBoundingClientRect();
-  ctrlselect(c.left, c.top+1, c.right-1, c.top+1);
+  ctrlselect(c.left, c.top, c.right-1, c.top);
   var d=document.getElementById('d').getBoundingClientRect();
-  ctrlselect(d.left, d.top+1, d.right-1, d.top+1);
+  ctrlselect(d.left, d.top, d.right-1, d.top);
   var e=document.getElementById('e').getBoundingClientRect();
-  ctrlselect(e.right-1, e.top+1, e.left+1, e.top+1);
+  ctrlselect(e.right-1, e.top, e.left, e.top);
 
   ok(sel.getRangeAt(0).toString() == 'ddd text text ', 'First selection range should be "ddd text text "');
   ok(sel.getRangeAt(1).toString() == 'ccc text', 'First selection range should be "ccc text"');
