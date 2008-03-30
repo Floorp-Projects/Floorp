@@ -179,7 +179,7 @@ SyncCore.prototype = {
     for (let i = 0; i < list.length; i++) {
       if (!list[i])
         continue;
-      if (list[i].data.parentGUID == oldGUID)
+      if (list[i].data && list[i].data.parentGUID == oldGUID)
         list[i].data.parentGUID = newGUID;
       for (let j = 0; j < list[i].parents.length; j++) {
         if (list[i].parents[j] == oldGUID)
@@ -227,83 +227,76 @@ SyncCore.prototype = {
     this._log.debug("Reconciling " + listA.length +
 		    " against " + listB.length + "commands");
 
-    try {
-      let guidChanges = [];
-      for (let i = 0; i < listA.length; i++) {
-	let a = listA[i];
+    let guidChanges = [];
+    for (let i = 0; i < listA.length; i++) {
+      let a = listA[i];
+      timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
+      yield; // Yield to main loop
+
+      //this._log.debug("comparing " + i + ", listB length: " + listB.length);
+
+      let skip = false;
+      listB = listB.filter(function(b) {
+        // fast path for when we already found a matching command
+        if (skip)
+          return true;
+
+        if (Utils.deepEquals(a, b)) {
+          delete listA[i]; // a
+          skip = true;
+          return false; // b
+
+        } else if (this._commandLike(a, b)) {
+          this._fixParents(listA, a.GUID, b.GUID);
+          guidChanges.push({action: "edit",
+      		      GUID: a.GUID,
+      		      data: {GUID: b.GUID}});
+          delete listA[i]; // a
+          skip = true;
+          return false; // b, but we add it back from guidChanges
+        }
+
+        // watch out for create commands with GUIDs that already exist
+        if (b.action == "create" && this._itemExists(b.GUID)) {
+          this._log.error("Remote command has GUID that already exists " +
+                          "locally. Dropping command.");
+          return false; // delete b
+        }
+        return true; // keep b
+      }, this);
+    }
+
+    listA = listA.filter(function(elt) { return elt });
+    listB = guidChanges.concat(listB);
+
+    for (let i = 0; i < listA.length; i++) {
+      for (let j = 0; j < listB.length; j++) {
+
         timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
         yield; // Yield to main loop
 
-	//this._log.debug("comparing " + i + ", listB length: " + listB.length);
-
-	let skip = false;
-	listB = listB.filter(function(b) {
-	  // fast path for when we already found a matching command
-	  if (skip)
-	    return true;
-
-          if (Utils.deepEquals(a, b)) {
-            delete listA[i]; // a
-	    skip = true;
-	    return false; // b
-
-          } else if (this._commandLike(a, b)) {
-            this._fixParents(listA, a.GUID, b.GUID);
-	    guidChanges.push({action: "edit",
-			      GUID: a.GUID,
-			      data: {GUID: b.GUID}});
-            delete listA[i]; // a
-	    skip = true;
-	    return false; // b, but we add it back from guidChanges
-          }
-
-          // watch out for create commands with GUIDs that already exist
-          if (b.action == "create" && this._itemExists(b.GUID)) {
-            this._log.error("Remote command has GUID that already exists " +
-                            "locally. Dropping command.");
-	    return false; // delete b
-          }
-	  return true; // keep b
-        }, this);
-      }
-  
-      listA = listA.filter(function(elt) { return elt });
-      listB = guidChanges.concat(listB);
-  
-      for (let i = 0; i < listA.length; i++) {
-        for (let j = 0; j < listB.length; j++) {
-
-          timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
-          yield; // Yield to main loop
-  
-          if (this._conflicts(listA[i], listB[j]) ||
-              this._conflicts(listB[j], listA[i])) {
-            if (!conflicts[0].some(
-              function(elt) { return elt.GUID == listA[i].GUID }))
-              conflicts[0].push(listA[i]);
-            if (!conflicts[1].some(
-              function(elt) { return elt.GUID == listB[j].GUID }))
-              conflicts[1].push(listB[j]);
-          }
+        if (this._conflicts(listA[i], listB[j]) ||
+            this._conflicts(listB[j], listA[i])) {
+          if (!conflicts[0].some(
+            function(elt) { return elt.GUID == listA[i].GUID }))
+            conflicts[0].push(listA[i]);
+          if (!conflicts[1].some(
+            function(elt) { return elt.GUID == listB[j].GUID }))
+            conflicts[1].push(listB[j]);
         }
       }
-  
-      this._getPropagations(listA, conflicts[0], propagations[1]);
-  
-      timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
-      yield; // Yield to main loop
-  
-      this._getPropagations(listB, conflicts[1], propagations[0]);
-      ret = {propagations: propagations, conflicts: conflicts};
-
-    } catch (e) {
-      this._log.error("Exception caught: " + (e.message? e.message : e) +
-                      " - " + (e.location? e.location : "_reconcile"));
-
-    } finally {
-      timer = null;
-      self.done(ret);
     }
+
+    this._getPropagations(listA, conflicts[0], propagations[1]);
+
+    timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
+    yield; // Yield to main loop
+
+    this._getPropagations(listB, conflicts[1], propagations[0]);
+    ret = {propagations: propagations, conflicts: conflicts};
+
+    timer = null;
+    self.done(ret);
   },
 
   // Public methods
@@ -356,18 +349,18 @@ BookmarksSyncCore.prototype = {
     // Check that neither command is null, that their actions, types,
     // and parents are the same, and that they don't have the same
     // GUID.
-    // Items with the same GUID do not qualify for 'likeness' because
-    // we already consider them to be the same object, and therefore
-    // we need to process any edits.
-    // Remove commands don't qualify for likeness either, since two
-    // remove commands for different GUIDs are guaranteed to refer to
-    // two different items
-    // The parent GUID check works because reconcile() fixes up the
-    // parent GUIDs as it runs, and the command list is sorted by
-    // depth
+    // * Items with the same GUID do not qualify for 'likeness' because
+    //   we already consider them to be the same object, and therefore
+    //   we need to process any edits.
+    // * Remove or edit commands don't qualify for likeness either,
+    //   since remove or edit commands with different GUIDs are
+    //   guaranteed to refer to two different items
+    // * The parent GUID check works because reconcile() fixes up the
+    //   parent GUIDs as it runs, and the command list is sorted by
+    //   depth
     if (!a || !b ||
         a.action != b.action ||
-        a.action == "remove" ||
+        a.action != "create" ||
         a.data.type != b.data.type ||
         a.data.parentGUID != b.data.parentGUID ||
         a.GUID == b.GUID)
