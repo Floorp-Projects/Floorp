@@ -3210,33 +3210,45 @@ NS_IMETHODIMP nsAccessible::SelectAllSelection(PRBool *_retval)
 // nsIAccessibleHyperLink, which helps determine where it is located
 // within containing text
 
-NS_IMETHODIMP nsAccessible::GetAnchors(PRInt32 *aAnchors)
+// readonly attribute long nsIAccessibleHyperLink::anchorsCount
+NS_IMETHODIMP
+nsAccessible::GetAnchorsCount(PRInt32 *aAnchorsCount)
 {
-  *aAnchors = 1;
+  NS_ENSURE_ARG_POINTER(aAnchorsCount);
+  *aAnchorsCount = 1;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAccessible::GetStartIndex(PRInt32 *aStartIndex)
+// readonly attribute long nsIAccessibleHyperLink::startIndex
+NS_IMETHODIMP
+nsAccessible::GetStartIndex(PRInt32 *aStartIndex)
 {
+  NS_ENSURE_ARG_POINTER(aStartIndex);
   *aStartIndex = 0;
   PRInt32 endIndex;
   return GetLinkOffset(aStartIndex, &endIndex);
 }
 
-NS_IMETHODIMP nsAccessible::GetEndIndex(PRInt32 *aEndIndex)
+// readonly attribute long nsIAccessibleHyperLink::endIndex
+NS_IMETHODIMP
+nsAccessible::GetEndIndex(PRInt32 *aEndIndex)
 {
+  NS_ENSURE_ARG_POINTER(aEndIndex);
   *aEndIndex = 0;
   PRInt32 startIndex;
   return GetLinkOffset(&startIndex, aEndIndex);
 }
 
-NS_IMETHODIMP nsAccessible::GetURI(PRInt32 i, nsIURI **aURI)
+NS_IMETHODIMP
+nsAccessible::GetURI(PRInt32 i, nsIURI **aURI)
 {
+  NS_ENSURE_ARG_POINTER(aURI);
   *aURI = nsnull;
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsAccessible::GetObject(PRInt32 aIndex,
+NS_IMETHODIMP
+nsAccessible::GetAnchor(PRInt32 aIndex,
                                       nsIAccessible **aAccessible)
 {
   NS_ENSURE_ARG_POINTER(aAccessible);
@@ -3250,21 +3262,26 @@ NS_IMETHODIMP nsAccessible::GetObject(PRInt32 aIndex,
   return NS_OK;
 }
 
-// nsIAccessibleHyperLink::IsValid()
-NS_IMETHODIMP nsAccessible::IsValid(PRBool *aIsValid)
+// readonly attribute boolean nsIAccessibleHyperLink::valid
+NS_IMETHODIMP
+nsAccessible::GetValid(PRBool *aValid)
 {
+  NS_ENSURE_ARG_POINTER(aValid);
   PRUint32 state = State(this);
-  *aIsValid = (0 == (state & nsIAccessibleStates::STATE_INVALID));
+  *aValid = (0 == (state & nsIAccessibleStates::STATE_INVALID));
   // XXX In order to implement this we would need to follow every link
   // Perhaps we can get information about invalid links from the cache
-  // In the mean time authors can use role="link" aria_invalid="true"
+  // In the mean time authors can use role="link" aria-invalid="true"
   // to force it for links they internally know to be invalid
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAccessible::IsSelected(PRBool *aIsSelected)
+// readonly attribute boolean nsIAccessibleHyperLink::selected
+NS_IMETHODIMP
+nsAccessible::GetSelected(PRBool *aSelected)
 {
-  *aIsSelected = (gLastFocusedNode == mDOMNode);
+  NS_ENSURE_ARG_POINTER(aSelected);
+  *aSelected = (gLastFocusedNode == mDOMNode);
   return NS_OK;
 }
 

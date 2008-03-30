@@ -226,12 +226,12 @@ NS_IMETHODIMP nsHTMLImageAccessible::DoAction(PRUint8 index)
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessibleHyperLink
 NS_IMETHODIMP
-nsHTMLImageAccessible::GetAnchors(PRInt32 *aAnchors)
+nsHTMLImageAccessible::GetAnchorsCount(PRInt32 *aAnchors)
 {
   NS_ENSURE_ARG_POINTER(aAnchors);
 
   if (!mMapElement)
-    return nsLinkableAccessible::GetAnchors(aAnchors);
+    return nsLinkableAccessible::GetAnchorsCount(aAnchors);
 
   return GetChildCount(aAnchors);
 }
@@ -262,13 +262,13 @@ nsHTMLImageAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
 }
 
 NS_IMETHODIMP
-nsHTMLImageAccessible::GetObject(PRInt32 aIndex, nsIAccessible **aAccessible)
+nsHTMLImageAccessible::GetAnchor(PRInt32 aIndex, nsIAccessible **aAccessible)
 {
   NS_ENSURE_ARG_POINTER(aAccessible);
   *aAccessible = nsnull;
 
   if (!mMapElement)
-    return nsLinkableAccessible::GetObject(aIndex, aAccessible);
+    return nsLinkableAccessible::GetAnchor(aIndex, aAccessible);
 
   nsCOMPtr<nsIDOMHTMLCollection> mapAreas = GetAreaCollection();
   if (mapAreas) {
