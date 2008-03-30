@@ -1522,10 +1522,10 @@ pref("font.name-list.fantasy.x-baltic", "Papyrus");
 // no suitable fonts for bengali ship with mac os x
 // however two can be freely downloaded
 // SolaimanLipi, Rupali http://ekushey.org/?page/mac_download
-pref("font.name.serif.x-beng", "সোলাইমান লিপি");
+pref("font.name.serif.x-beng", "সোলাইমান লিপি");
 pref("font.name.sans-serif.x-beng", "রূপালী");
 pref("font.name.monospace.x-beng", "রূপালী");
-pref("font.name-list.serif.x-beng", "সোলাইমান লিপি");
+pref("font.name-list.serif.x-beng", "সোলাইমান লিপি");
 pref("font.name-list.sans-serif.x-beng", "রূপালী");
 pref("font.name-list.monospace.x-beng", "রূপালী");
 
