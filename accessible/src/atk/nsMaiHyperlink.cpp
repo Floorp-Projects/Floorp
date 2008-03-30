@@ -69,7 +69,6 @@ struct MaiAtkHyperlink
      * hyperlink instance.
      */
     MaiHyperlink *maiHyperlink;
-    gchar *uri;
 };
 
 struct MaiAtkHyperlinkClass
@@ -175,7 +174,6 @@ MaiHyperlink::Initialize(AtkHyperlink *aObj, MaiHyperlink *aHyperlink)
 
     /* initialize hyperlink */
     MAI_ATK_HYPERLINK(aObj)->maiHyperlink = aHyperlink;
-    MAI_ATK_HYPERLINK(aObj)->uri = nsnull;
     return NS_OK;
 }
 
@@ -206,8 +204,6 @@ finalizeCB(GObject *aObj)
         return;
 
     MaiAtkHyperlink *maiAtkHyperlink = MAI_ATK_HYPERLINK(aObj);
-    if (maiAtkHyperlink->uri)
-        g_free(maiAtkHyperlink->uri);
     maiAtkHyperlink->maiHyperlink = nsnull;
 
     /* call parent finalize function */
@@ -222,8 +218,6 @@ getUriCB(AtkHyperlink *aLink, gint aLinkIndex)
     NS_ENSURE_TRUE(accHyperlink, nsnull);
 
     MaiAtkHyperlink *maiAtkHyperlink = MAI_ATK_HYPERLINK(aLink);
-    if (maiAtkHyperlink->uri)
-        return g_strdup(maiAtkHyperlink->uri);
 
     nsCOMPtr<nsIURI> uri;
     nsresult rv = accHyperlink->GetURI(aLinkIndex,getter_AddRefs(uri));
@@ -232,8 +226,7 @@ getUriCB(AtkHyperlink *aLink, gint aLinkIndex)
     nsCAutoString cautoStr;
     rv = uri->GetSpec(cautoStr);
 
-    maiAtkHyperlink->uri = ToNewCString(cautoStr);
-    return g_strdup(maiAtkHyperlink->uri);
+    return g_strdup(cautoStr.get());
 }
 
 AtkObject *
