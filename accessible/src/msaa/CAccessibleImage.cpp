@@ -85,18 +85,16 @@ __try {
   nsAutoString description;
   nsresult rv = acc->GetName(description);
   if (NS_FAILED(rv))
-    return E_FAIL;
+    return GetHRESULT(rv);
 
   if (description.IsEmpty())
     return S_FALSE;
 
   *aDescription = ::SysAllocStringLen(description.get(), description.Length());
-  if (!*aDescription)
-    return E_OUTOFMEMORY;
+  return *aDescription ? S_OK : E_OUTOFMEMORY;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-
-  return S_OK;
+  return E_FAIL;
 }
 
 STDMETHODIMP
@@ -119,13 +117,15 @@ __try {
   PRInt32 x = 0, y = 0;
   nsresult rv = imageAcc->GetImagePosition(geckoCoordType, &x, &y);
   if (NS_FAILED(rv))
-    return E_FAIL;
+    return GetHRESULT(rv);
 
   *aX = x;
   *aY = y;
+  return S_OK;
+
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
-  return S_OK;
+  return E_FAIL;
 }
 
 STDMETHODIMP
@@ -142,12 +142,13 @@ __try {
   PRInt32 x = 0, y = 0, width = 0, height = 0;
   nsresult rv = imageAcc->GetImageSize(&width, &height);
   if (NS_FAILED(rv))
-    return E_FAIL;
+    return GetHRESULT(rv);
 
   *aHeight = width;
   *aWidth = height;
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-
   return S_OK;
+
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 

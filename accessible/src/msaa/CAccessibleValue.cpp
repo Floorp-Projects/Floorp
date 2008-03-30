@@ -83,13 +83,14 @@ __try {
   double currentValue = 0;
   nsresult rv = valueAcc->GetCurrentValue(&currentValue);
   if (NS_FAILED(rv))
-    return E_FAIL;
+    return GetHRESULT(rv);
 
   aCurrentValue->vt = VT_R8;
   aCurrentValue->dblVal = currentValue;
+  return S_OK;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return NS_OK;
+  return E_FAIL;
 }
 
 STDMETHODIMP
@@ -103,10 +104,10 @@ __try {
   if (aValue.vt != VT_R8)
     return E_INVALIDARG;
 
-  if (NS_SUCCEEDED(valueAcc->SetCurrentValue(aValue.dblVal)))
-    return S_OK;
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  nsresult rv = valueAcc->SetCurrentValue(aValue.dblVal);
+  return GetHRESULT(rv);
 
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
 
@@ -123,13 +124,14 @@ __try {
   double maximumValue = 0;
   nsresult rv = valueAcc->GetMaximumValue(&maximumValue);
   if (NS_FAILED(rv))
-    return E_FAIL;
+    return GetHRESULT(rv);
 
   aMaximumValue->vt = VT_R8;
   aMaximumValue->dblVal = maximumValue;
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return S_OK;
 
-  return NS_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
 STDMETHODIMP
@@ -145,12 +147,13 @@ __try {
   double minimumValue = 0;
   nsresult rv = valueAcc->GetMinimumValue(&minimumValue);
   if (NS_FAILED(rv))
-    return E_FAIL;
+    return GetHRESULT(rv);
 
   aMinimumValue->vt = VT_R8;
   aMinimumValue->dblVal = minimumValue;
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return S_OK;
 
-  return NS_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 

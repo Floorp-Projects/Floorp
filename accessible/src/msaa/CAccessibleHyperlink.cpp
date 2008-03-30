@@ -87,26 +87,26 @@ __try {
     return E_FAIL;
 
   nsCOMPtr<nsIAccessible> anchor;
-  acc->GetObject(aIndex, getter_AddRefs(anchor));
-  if (!anchor)
-    return E_FAIL;
+  nsresult rv = acc->GetObject(aIndex, getter_AddRefs(anchor));
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
 
   nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryInterface(anchor));
   if (!winAccessNode)
     return E_FAIL;
 
   void *instancePtr = NULL;
-  nsresult rv =  winAccessNode->QueryNativeInterface(IID_IUnknown,
-                                                     &instancePtr);
+  rv =  winAccessNode->QueryNativeInterface(IID_IUnknown, &instancePtr);
   if (NS_FAILED(rv))
     return E_FAIL;
 
   IUnknown *unknownPtr = static_cast<IUnknown*>(instancePtr);
   aAnchor->ppunkVal = &unknownPtr;
   aAnchor->vt = VT_UNKNOWN;
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-
   return S_OK;
+
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
 STDMETHODIMP
@@ -122,17 +122,17 @@ __try {
   nsCOMPtr<nsIURI> uri;
   nsresult rv = acc->GetURI(aIndex, getter_AddRefs(uri));
   if (NS_FAILED(rv) || !uri)
-    return E_FAIL;
+    return GetHRESULT(rv);
 
   nsCAutoString prePath;
   rv = uri->GetPrePath(prePath);
   if (NS_FAILED(rv))
-    return E_FAIL;
+    return GetHRESULT(rv);
 
   nsCAutoString path;
   rv = uri->GetPath(path);
   if (NS_FAILED(rv))
-    return E_FAIL;
+    return GetHRESULT(rv);
 
   nsAutoString stringURI;
   AppendUTF8toUTF16(prePath, stringURI);
@@ -141,12 +141,10 @@ __try {
   aAnchorTarget->vt = VT_BSTR;
   aAnchorTarget->bstrVal = ::SysAllocStringLen(stringURI.get(),
                                                stringURI.Length());
-  if (!aAnchorTarget->bstrVal)
-    return E_OUTOFMEMORY;
+  return aAnchorTarget->bstrVal ? S_OK : E_OUTOFMEMORY;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-
-  return S_OK;
+  return E_FAIL;
 }
 
 STDMETHODIMP
@@ -161,11 +159,13 @@ __try {
 
   PRInt32 index = 0;
   nsresult rv = acc->GetStartIndex(&index);
-  *aIndex = index;
-  if (NS_SUCCEEDED(rv))
-    return S_OK;
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
 
+  *aIndex = index;
+  return S_OK;
+
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
 
@@ -181,12 +181,13 @@ __try {
 
   PRInt32 index = 0;
   nsresult rv = acc->GetEndIndex(&index);
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
+
   *aIndex = index;
+  return S_OK;
 
-  if (NS_SUCCEEDED(rv))
-    return S_OK;
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-
   return E_FAIL;
 }
 
@@ -194,17 +195,21 @@ STDMETHODIMP
 CAccessibleHyperlink::get_valid(boolean *aValid)
 {
 __try {
+  *aValid = false;
+
   nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryInterface(this));
   if (!acc)
     return E_FAIL;
 
   PRBool isValid = PR_FALSE;
   nsresult rv = acc->IsValid(&isValid);
-  *aValid = isValid;
-  if (NS_SUCCEEDED(rv))
-    return S_OK;
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
 
+  *aValid = isValid;
+  return S_OK;
+
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
 

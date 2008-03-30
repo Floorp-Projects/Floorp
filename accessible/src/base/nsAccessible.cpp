@@ -2923,10 +2923,15 @@ nsAccessible::GetRelation(PRUint32 aIndex, nsIAccessibleRelation **aRelation)
   nsCOMPtr<nsIAccessibleRelation> relation;
   rv = relations->QueryElementAt(aIndex, NS_GET_IID(nsIAccessibleRelation),
                                  getter_AddRefs(relation));
+
+  // nsIArray::QueryElementAt() returns NS_ERROR_ILLEGAL_VALUE on invalid index.
+  if (rv == NS_ERROR_ILLEGAL_VALUE)
+    return NS_ERROR_INVALID_ARG;
+
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_IF_ADDREF(*aRelation = relation);
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3234,10 +3239,12 @@ NS_IMETHODIMP nsAccessible::GetURI(PRInt32 i, nsIURI **aURI)
 NS_IMETHODIMP nsAccessible::GetObject(PRInt32 aIndex,
                                       nsIAccessible **aAccessible)
 {
-  if (aIndex != 0) {
-    *aAccessible = nsnull;
-    return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_ARG_POINTER(aAccessible);
+  *aAccessible = nsnull;
+
+  if (aIndex != 0)
+    return NS_ERROR_INVALID_ARG;
+
   *aAccessible = this;
   NS_ADDREF_THIS();
   return NS_OK;
