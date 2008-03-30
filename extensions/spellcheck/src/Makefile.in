@@ -76,7 +76,7 @@ CPPSRCS		= \
 		mozInlineSpellWordUtil.cpp      \
 		$(NULL)
 
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+ifeq (camino,$(MOZ_BUILD_APP))
 SHARED_LIBRARY_LIBS += ../osxspell/src/$(LIB_PREFIX)osxspell_s.$(LIB_SUFFIX)
 LOCAL_INCLUDES += -I$(srcdir)/../osxspell/src
 else
