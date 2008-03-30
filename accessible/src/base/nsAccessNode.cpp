@@ -446,7 +446,8 @@ nsAccessNode::GetInnerHTML(nsAString& aInnerHTML)
 NS_IMETHODIMP
 nsAccessNode::ScrollTo(PRUint32 aScrollType)
 {
-  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIPresShell> shell(GetPresShell());
   NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
