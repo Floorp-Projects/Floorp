@@ -323,9 +323,6 @@ __try {
     if (NS_FAILED(xpAccessible->GetValue(value)))
       return E_FAIL;
 
-    if (value.IsEmpty())
-      return S_FALSE;
-
     *pszValue = ::SysAllocStringLen(value.get(), value.Length());
     if (!*pszValue)
       return E_OUTOFMEMORY;
@@ -435,9 +432,6 @@ __try {
     // parsed out by assistive technologies.
     description = NS_LITERAL_STRING("Description: ") + description;
   }
-
-  if (description.IsEmpty())
-    return S_FALSE;
 
   *pszDescription = ::SysAllocStringLen(description.get(),
                                         description.Length());
@@ -580,9 +574,6 @@ __try {
     nsresult rv = xpAccessible->GetKeyboardShortcut(shortcut);
     if (NS_FAILED(rv))
       return E_FAIL;
-
-    if (shortcut.IsEmpty())
-      return S_FALSE;
 
     *pszKeyboardShortcut = ::SysAllocStringLen(shortcut.get(),
                                                shortcut.Length());
@@ -814,9 +805,6 @@ __try {
     nsAutoString defaultAction;
     if (NS_FAILED(xpAccessible->GetActionName(0, defaultAction)))
       return E_FAIL;
-
-    if (defaultAction.IsEmpty())
-      return S_FALSE;
 
     *pszDefaultAction = ::SysAllocStringLen(defaultAction.get(),
                                             defaultAction.Length());
