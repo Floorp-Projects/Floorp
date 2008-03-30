@@ -727,15 +727,15 @@ _TEST_FILES_E	= \
 		test_table51.html \
 		test_table52.html \
 		test_table53.html \
-		$(NULL)
-
-_TEST_FILES_F	= \
-		test_hasFeature01.html \
+                test_hasFeature01.html \
 		test_hasFeature02.html \
 		test_hasFeature03.html \
 		test_hasFeature04.html \
 		test_hasFeature05.html \
 		test_hasFeature06.html \
+		$(NULL)
+
+_TEST_FILES_F	= \
 		test_HTMLAppletElement01.html \
 		test_HTMLAppletElement02.html \
 		test_HTMLAppletElement03.html \
@@ -760,5 +760,5 @@ libs:: 	$(_TEST_FILES_D)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 libs:: 	$(_TEST_FILES_E)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-libs:: 	$(_TEST_FILES_F)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+#libs:: 	$(_TEST_FILES_F)
+#	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
