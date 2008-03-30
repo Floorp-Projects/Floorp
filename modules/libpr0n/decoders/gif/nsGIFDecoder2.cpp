@@ -142,18 +142,8 @@ NS_IMETHODIMP nsGIFDecoder2::Init(imgILoad *aLoad)
 {
   mObserver = do_QueryInterface(aLoad);
 
-  /* The image container may already exist if it is reloading itself from us.
-   */
-  aLoad->GetImage(getter_AddRefs(mImageContainer));
-  if (!mImageContainer) {
-    mImageContainer = do_CreateInstance("@mozilla.org/image/container;1");
-    if (!mImageContainer)
-      return NS_ERROR_OUT_OF_MEMORY;
-      
-    aLoad->SetImage(mImageContainer);
-    nsresult rv = mImageContainer->SetDiscardable("image/gif");
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-  }
+  mImageContainer = do_CreateInstance("@mozilla.org/image/container;1");
+  aLoad->SetImage(mImageContainer);
   
   // Start with the version (GIF89a|GIF87a)
   mGIFStruct.state = gif_type;
@@ -184,7 +174,7 @@ NS_IMETHODIMP nsGIFDecoder2::Close()
 /* void flush (); */
 NS_IMETHODIMP nsGIFDecoder2::Flush()
 {
-  return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //******************************************************************************
@@ -197,7 +187,7 @@ static NS_METHOD ReadDataOut(nsIInputStream* in,
                              PRUint32 *writeCount)
 {
   nsGIFDecoder2 *decoder = static_cast<nsGIFDecoder2*>(closure);
-  nsresult rv = decoder->ProcessData(fromRawSegment, count, writeCount);
+  nsresult rv = decoder->ProcessData((unsigned char*)fromRawSegment, count, writeCount);
   if (NS_FAILED(rv)) {
     *writeCount = 0;
     return rv;
@@ -246,22 +236,11 @@ nsGIFDecoder2::FlushImageData()
 }
 
 //******************************************************************************
-nsresult nsGIFDecoder2::ProcessData(const char *data, PRUint32 count, PRUint32 *_retval)
+nsresult nsGIFDecoder2::ProcessData(unsigned char *data, PRUint32 count, PRUint32 *_retval)
 {
-  // We should just disable the 'restore' when AddRestoreData fails, so that we
-  // still load the image...
-  //
-  // Note that this has to be done before we call GifWrite(), because
-  // GifWrite() can call mImageContainer->RestoreDataDone(), which disallows
-  // any further restore data addition.
-  nsresult rv = mImageContainer->AddRestoreData(data, count);
-  if (NS_FAILED(rv)) { 
-    mGIFStruct.state = gif_oom;
-    return rv;
-  }
-
   // Push the data to the GIF decoder
-  rv = GifWrite((const PRUint8*)data, count);
+  
+  nsresult rv = GifWrite(data, count);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Flushing is only needed for first frame
@@ -331,7 +310,6 @@ void nsGIFDecoder2::EndGIF()
   
   mImageContainer->SetLoopCount(mGIFStruct.loop_count);
   mImageContainer->DecodingComplete();
-  (void)mImageContainer->RestoreDataDone(); // Discard error code
 
   mGIFOpen = PR_FALSE;
 }
