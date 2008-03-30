@@ -274,7 +274,10 @@ nsHTMLImageAccessible::GetObject(PRInt32 aIndex, nsIAccessible **aAccessible)
   if (mapAreas) {
     nsCOMPtr<nsIAccessible> accessible;
     accessible = GetAreaAccessible(mapAreas, aIndex);
-    NS_IF_ADDREF(*aAccessible = accessible);
+    if (!accessible)
+      return NS_ERROR_INVALID_ARG;
+
+    NS_ADDREF(*aAccessible = accessible);
   }
 
   return NS_OK;

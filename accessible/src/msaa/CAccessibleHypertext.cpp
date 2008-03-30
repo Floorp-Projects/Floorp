@@ -81,10 +81,12 @@ __try {
 
   PRInt32 count = 0;
   nsresult rv = hyperAcc->GetLinks(&count);
-  *aHyperlinkCount = count;
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
 
-  if (NS_SUCCEEDED(rv))
-    return S_OK;
+  *aHyperlinkCount = count;
+  return S_OK;
+
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
@@ -101,22 +103,24 @@ __try {
     return E_FAIL;
 
   nsCOMPtr<nsIAccessibleHyperLink> hyperLink;
-  hyperAcc->GetLink(aIndex, getter_AddRefs(hyperLink));
-  if (!hyperLink)
-    return E_FAIL;
+  nsresult rv = hyperAcc->GetLink(aIndex, getter_AddRefs(hyperLink));
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
 
   nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryInterface(hyperLink));
   if (!winAccessNode)
     return E_FAIL;
 
   void *instancePtr = NULL;
-  nsresult rv =  winAccessNode->QueryNativeInterface(IID_IAccessibleHyperlink,
-                                                     &instancePtr);
-  *aHyperlink = static_cast<IAccessibleHyperlink*>(instancePtr);
-  if (NS_SUCCEEDED(rv))
-    return S_OK;
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  rv =  winAccessNode->QueryNativeInterface(IID_IAccessibleHyperlink,
+                                            &instancePtr);
+  if (NS_FAILED(rv))
+    return E_FAIL;
 
+  *aHyperlink = static_cast<IAccessibleHyperlink*>(instancePtr);
+  return S_OK;
+
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
 
@@ -132,11 +136,13 @@ __try {
 
   PRInt32 index = 0;
   nsresult rv = hyperAcc->GetLinkIndex(aCharIndex, &index);
-  *aHyperlinkIndex = index;
-  if (NS_SUCCEEDED(rv))
-    return S_OK;
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
 
+  *aHyperlinkIndex = index;
+  return S_OK;
+
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
 

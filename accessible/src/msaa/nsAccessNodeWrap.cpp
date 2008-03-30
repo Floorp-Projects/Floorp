@@ -633,3 +633,25 @@ int nsAccessNodeWrap::FilterA11yExceptions(unsigned int aCode, EXCEPTION_POINTER
   }
   return EXCEPTION_CONTINUE_SEARCH;
 }
+
+HRESULT
+GetHRESULT(nsresult aResult)
+{
+  switch (aResult) {
+    case NS_OK:
+      return S_OK;
+
+    case NS_ERROR_INVALID_ARG: case NS_ERROR_INVALID_POINTER:
+      return E_INVALIDARG;
+
+    case NS_ERROR_OUT_OF_MEMORY:
+      return E_OUTOFMEMORY;
+
+    case NS_ERROR_NOT_IMPLEMENTED:
+      return E_NOTIMPL;
+
+    default:
+      return E_FAIL;
+  }
+}
+

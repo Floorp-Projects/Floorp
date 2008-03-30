@@ -91,9 +91,8 @@ __try {
   PRUint32 type = 0;
   nsresult rv = GetRelationType(&type);
   if (NS_FAILED(rv))
-    return E_FAIL;
+    return GetHRESULT(rv);
 
-  INT res;
   switch (type) {
     case RELATION_CONTROLLED_BY:
       *aRelationType = ::SysAllocString(IA2_RELATION_CONTROLLED_BY);
@@ -144,18 +143,19 @@ __try {
       return E_FAIL;
   }
 
-  if (!res)
-    return E_OUTOFMEMORY;
+  return *aRelationType ? S_OK : E_OUTOFMEMORY;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  
-  return S_OK;
+  return E_FAIL;
 }
 
 STDMETHODIMP
 nsAccessibleRelationWrap::get_localizedRelationType(BSTR *aLocalizedRelationType)
 {
-  ::SysFreeString(*aLocalizedRelationType);
+__try {
+  *aLocalizedRelationType = NULL;
+
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_NOTIMPL;
 }
 
@@ -163,14 +163,18 @@ STDMETHODIMP
 nsAccessibleRelationWrap::get_nTargets(long *aNTargets)
 {
 __try {
+  *aNTargets = 0;
+
   PRUint32 count = 0;
   nsresult rv = GetTargetsCount(&count);
-  *aNTargets = count;
   if (NS_FAILED(rv))
-    return E_FAIL;
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+    return GetHRESULT(rv);
 
+  *aNTargets = count;
   return S_OK;
+
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
 STDMETHODIMP
@@ -179,6 +183,8 @@ nsAccessibleRelationWrap::get_target(long aTargetIndex, IUnknown **aTarget)
 __try {
   nsCOMPtr<nsIAccessible> accessible;
   nsresult rv = GetTarget(aTargetIndex, getter_AddRefs(accessible));
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
 
   nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryInterface(accessible));
   if (!winAccessNode)
@@ -187,12 +193,13 @@ __try {
   void *instancePtr = NULL;
   rv = winAccessNode->QueryNativeInterface(IID_IUnknown, &instancePtr);
   if (NS_FAILED(rv))
-    return E_FAIL;
+    return GetHRESULT(rv);
 
   *aTarget = static_cast<IUnknown*>(instancePtr);
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-
   return S_OK;
+
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
 STDMETHODIMP
@@ -205,19 +212,23 @@ __try {
   nsCOMPtr<nsIArray> targets;
   nsresult rv = GetTargets(getter_AddRefs(targets));
   if (NS_FAILED(rv))
-    return E_FAIL;
+    return GetHRESULT(rv);
 
   PRUint32 length = 0;
   rv = targets->GetLength(&length);
   if (NS_FAILED(rv))
-    return E_FAIL;
+    return GetHRESULT(rv);
+
+  if (length == 0)
+    return S_FALSE;
 
   PRUint32 count = length < PRUint32(aMaxTargets) ? length : aMaxTargets;
 
   PRUint32 index = 0;
   for (; index < count; index++) {
-    nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryElementAt(targets, index, &rv));
-    if (NS_FAILED(rv) || !winAccessNode)
+    nsCOMPtr<nsIWinAccessNode> winAccessNode =
+      do_QueryElementAt(targets, index, &rv);
+    if (NS_FAILED(rv))
       break;
 
     void *instancePtr = NULL;
@@ -234,12 +245,13 @@ __try {
       aTarget[index2]->Release();
       aTarget[index2] = NULL;
     }
-    return E_FAIL;
+    return GetHRESULT(rv);
   }
 
   *aNTargets = count;
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-
   return S_OK;
+
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
