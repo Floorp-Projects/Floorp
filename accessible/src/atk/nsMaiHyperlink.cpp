@@ -236,7 +236,7 @@ getObjectCB(AtkHyperlink *aLink, gint aLinkIndex)
     NS_ENSURE_TRUE(accHyperlink, nsnull);
 
     nsCOMPtr<nsIAccessible> accObj;
-    accHyperlink->GetObject(aLinkIndex, getter_AddRefs(accObj));
+    accHyperlink->GetAnchor(aLinkIndex, getter_AddRefs(accObj));
     NS_ENSURE_TRUE(accObj, nsnull);
 
     AtkObject *atkObj = nsAccessibleWrap::GetAtkObject(accObj);
@@ -275,7 +275,7 @@ isValidCB(AtkHyperlink *aLink)
     NS_ENSURE_TRUE(accHyperlink, FALSE);
 
     PRBool isValid = PR_FALSE;
-    nsresult rv = accHyperlink->IsValid(&isValid);
+    nsresult rv = accHyperlink->GetValid(&isValid);
     return (NS_FAILED(rv)) ? FALSE : static_cast<gboolean>(isValid);
 }
 
@@ -286,7 +286,7 @@ getAnchorCountCB(AtkHyperlink *aLink)
     NS_ENSURE_TRUE(accHyperlink, -1);
 
     PRInt32 count = -1;
-    nsresult rv = accHyperlink->GetAnchors(&count);
+    nsresult rv = accHyperlink->GetAnchorsCount(&count);
     return (NS_FAILED(rv)) ? -1 : static_cast<gint>(count);
 }
 

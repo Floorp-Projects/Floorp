@@ -87,7 +87,7 @@ __try {
     return E_FAIL;
 
   nsCOMPtr<nsIAccessible> anchor;
-  nsresult rv = acc->GetObject(aIndex, getter_AddRefs(anchor));
+  nsresult rv = acc->GetAnchor(aIndex, getter_AddRefs(anchor));
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
 
@@ -202,7 +202,7 @@ __try {
     return E_FAIL;
 
   PRBool isValid = PR_FALSE;
-  nsresult rv = acc->IsValid(&isValid);
+  nsresult rv = acc->GetValid(&isValid);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
 
