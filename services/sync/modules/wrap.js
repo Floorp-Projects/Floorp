@@ -72,18 +72,20 @@ let Wrap = {
   //     ...
   //   }
   // };
-  notify: function Weave_notify(name, method /* , arg1, arg2, ... */) {
+  notify: function Weave_notify(name, method /* , arg1, arg2, ..., argN */) {
     let savedName = name;
     let savedMethod = method;
-    let args = Array.prototype.slice.call(arguments, 2);
+    let savedArgs = Array.prototype.slice.call(arguments, 2);
 
-    return function WeaveNotifyWrapper() {
+    return function WeaveNotifyWrapper(/* argN+1, argN+2, ... */) {
       let self = yield;
       let ret;
+      let args = Array.prototype.slice.call(arguments);
 
       try {
         this._os.notifyObservers(null, this._osPrefix + savedName + ":start", "");
 
+        args = savedArgs.concat(args);
         args.unshift(this, savedMethod, self.cb);
         Async.run.apply(Async, args);
         ret = yield;
@@ -101,13 +103,14 @@ let Wrap = {
 
   // NOTE: see notify, this works the same way.  they can be
   // chained together as well.
-  lock: function WeaveSync_lock(method /* , arg1, arg2, ... */) {
+  lock: function WeaveSync_lock(method /* , arg1, arg2, ..., argN */) {
     let savedMethod = method;
-    let args = Array.prototype.slice.call(arguments, 1);
+    let savedArgs = Array.prototype.slice.call(arguments, 1);
 
-    return function WeaveLockWrapper() {
+    return function WeaveLockWrapper( /* argN+1, argN+2, ... */) {
       let self = yield;
       let ret;
+      let args = Array.prototype.slice.call(arguments);
 
       this._dav.lock.async(this._dav, self.cb);
       let locked = yield;
@@ -115,6 +118,7 @@ let Wrap = {
         throw "Could not acquire lock";
 
       try {
+        args = savedArgs.concat(args);
         args.unshift(this, savedMethod, self.cb);
         Async.run.apply(Async, args);
         ret = yield;
@@ -133,19 +137,21 @@ let Wrap = {
 
   // NOTE: see notify, this works the same way.  they can be
   // chained together as well.
-  localLock: function WeaveSync_localLock(method /* , arg1, arg2, ... */) {
+  localLock: function WeaveSync_localLock(method /* , arg1, arg2, ..., argN */) {
     let savedMethod = method;
-    let args = Array.prototype.slice.call(arguments, 1);
+    let savedArgs = Array.prototype.slice.call(arguments, 1);
 
-    return function WeaveLocalLockWrapper() {
+    return function WeaveLocalLockWrapper(/* argN+1, argN+2, ... */) {
       let self = yield;
       let ret;
+      let args = Array.prototype.slice.call(arguments);
 
       if (this._dav.locked)
         throw "Could not acquire lock";
       this._dav.allowLock = false;
 
       try {
+        args = savedArgs.concat(args);
         args.unshift(this, savedMethod, self.cb);
         Async.run.apply(Async, args);
         ret = yield;
