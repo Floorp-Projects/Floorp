@@ -79,6 +79,8 @@ DAVCollection.prototype = {
     return this._baseURL;
   },
   set baseURL(value) {
+    if (value[value.length-1] != '/')
+      value = value + '/';
     this._baseURL = value;
   },
 
@@ -286,7 +288,7 @@ DAVCollection.prototype = {
       yield;
     }
  
-    this._log.info("Logging in");
+    this._log.debug("Logging in");
 
     let URI = Utils.makeURI(this._baseURL);
     this._auth = "Basic " + btoa(username + ":" + password);
@@ -307,7 +309,7 @@ DAVCollection.prototype = {
   },
 
   logout: function DC_logout() {
-    this._log.debug("Logging out (forgetting auth header)");
+    this._log.trace("Logging out (forgetting auth header)");
     this._loggedIn = false;
     this.__auth = null;
   },
@@ -318,7 +320,7 @@ DAVCollection.prototype = {
     let self = yield;
     let ret = null;
 
-    this._log.info("Getting active lock token");
+    this._log.debug("Getting active lock token");
     this.PROPFIND("",
                   "<?xml version=\"1.0\" encoding=\"utf-8\" ?>" +
                   "<D:propfind xmlns:D='DAV:'>" +
@@ -334,12 +336,13 @@ DAVCollection.prototype = {
 
     let tokens = Utils.xpath(resp.responseXML, '//D:locktoken/D:href');
     let token = tokens.iterateNext();
-    ret = token.textContent;
+    if (token)
+      ret = token.textContent;
 
     if (ret)
-      this._log.debug("Found an active lock token");
+      this._log.trace("Found an active lock token");
     else
-      this._log.debug("No active lock token found");
+      this._log.trace("No active lock token found");
     self.done(ret);
   },
 
@@ -416,25 +419,25 @@ DAVCollection.prototype = {
     let self = yield;
     let unlocked = true;
 
-    this._log.info("Forcibly releasing any server locks");
+    this._log.debug("Forcibly releasing any server locks");
 
     this._getActiveLock.async(this, self.cb);
     this._token = yield;
 
     if (!this._token) {
-      this._log.info("No server lock found");
+      this._log.debug("No server lock found");
       self.done(true);
       yield;
     }
 
-    this._log.info("Server lock found, unlocking");
+    this._log.trace("Server lock found, unlocking");
     this.unlock.async(this, self.cb);
     unlocked = yield;
 
     if (unlocked)
-      this._log.debug("Lock released");
+      this._log.trace("Lock released");
     else
-      this._log.debug("No lock released");
+      this._log.trace("No lock released");
     self.done(unlocked);
   },
 

@@ -363,92 +363,6 @@ WeaveSvc.prototype = {
     Utils.ensureStatus(ret.status, "Could not upload public key");
   },
 
-  _login: function WeaveSync__login(password, passphrase) {
-    let self = yield;
-
-    try {
-      if (this._dav.locked)
-        throw "Login failed: could not acquire lock";
-      this._dav.allowLock = false;
-  
-      // cache password & passphrase
-      // if null, we'll try to get them from the pw manager below
-      this._mozId.setTempPassword(password);
-      this._cryptoId.setTempPassword(passphrase);
-
-      this._log.debug("Logging in");
-      this._os.notifyObservers(null, "weave:service-login:start", "");
-
-      if (!this.username)
-        throw "No username set, login failed";
-      if (!this.password)
-        throw "No password given or found in password manager";
-
-      let serverURL = Utils.prefs.getCharPref("serverURL");
-      this._dav.baseURL = serverURL + "user/" + this.userPath + "/";
-      this._log.info("Using server URL: " + this._dav.baseURL);
-
-      this._dav.login.async(this._dav, self.cb, this.username, this.password);
-      let success = yield;
-
-      if (!success) {
-        // FIXME: we should actually limit this to when we get a 404
-        this._createUserDir.async(this, self.cb, serverURL);
-        yield;
-      }
-
-      this._versionCheck.async(this, self.cb);
-      yield;
-
-      this._dav.GET("private/privkey", self.cb);
-      let keyResp = yield;
-      Utils.ensureStatus(keyResp.status,
-                         "Could not get private key from server", [[200,300],404]);
-
-      if (keyResp.status != 404) {
-        this._cryptoId.privkey = keyResp.responseText;
-        Crypto.RSAkeydecrypt.async(Crypto, self.cb, this._cryptoId);
-        this._cryptoId.pubkey = yield;
-
-      } else {
-        this._generateKeys.async(this, self.cb);
-        yield;
-      }
-
-      this._passphrase = null;
-      this._dav.allowLock = true;
-      this._os.notifyObservers(null, "weave:service-login:success", "");
-      self.done(true);
-
-    } catch (e) {
-      this._dav.allowLock = true;
-      this._os.notifyObservers(null, "weave:service-login:error", "");
-      throw e;
-    }
-  },
-
-  _serverWipe: function WeaveSync__serverWipe() {
-    let self = yield;
-
-    let cb = function Weave_serverWipe() {
-      let innerSelf = yield;
-
-      this._dav.listFiles.async(this._dav, self.cb);
-      let names = yield;
-
-      for (let i = 0; i < names.length; i++) {
-        this._dav.DELETE(names[i], self.cb);
-        let resp = yield;
-        this._log.debug(resp.status);
-      }
-    };
-
-    // NOTE: doesn't lock because it's called from _login() which
-    // already holds the lock
-    this._notify("server-wipe", cb).async(this, self.cb);
-    yield;
-  },
-
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupports]),
 
   // nsIObserver
@@ -468,7 +382,59 @@ WeaveSvc.prototype = {
   // These are global (for all engines)
 
   login: function WeaveSync_login(onComplete, password, passphrase) {
-    this._login.async(this, onComplete, password, passphrase);
+    this._localLock(this._notify("login", this._login,
+                                 password, passphrase)).async(this, onComplete);
+  },
+  _login: function WeaveSync__login(password, passphrase) {
+    let self = yield;
+
+    // cache password & passphrase
+    // if null, we'll try to get them from the pw manager below
+    this._mozId.setTempPassword(password);
+    this._cryptoId.setTempPassword(passphrase);
+
+    this._log.debug("Logging in");
+
+    if (!this.username)
+      throw "No username set, login failed";
+    if (!this.password)
+      throw "No password given or found in password manager";
+
+    let serverURL = Utils.prefs.getCharPref("serverURL");
+    if (serverURL[serverURL.length-1] != '/')
+      serverURL = serverURL + '/';
+    this._dav.baseURL = serverURL + "user/" + this.userPath + "/";
+    this._log.info("Using server URL: " + this._dav.baseURL);
+
+    this._dav.login.async(this._dav, self.cb, this.username, this.password);
+    let success = yield;
+
+    if (!success) {
+      // FIXME: we should actually limit this to when we get a 404
+      this._createUserDir.async(this, self.cb, serverURL);
+      yield;
+    }
+
+    this._versionCheck.async(this, self.cb);
+    yield;
+
+    this._dav.GET("private/privkey", self.cb);
+    let keyResp = yield;
+    Utils.ensureStatus(keyResp.status,
+                       "Could not get private key from server", [[200,300],404]);
+
+    if (keyResp.status != 404) {
+      this._cryptoId.privkey = keyResp.responseText;
+      Crypto.RSAkeydecrypt.async(Crypto, self.cb, this._cryptoId);
+      this._cryptoId.pubkey = yield;
+
+    } else {
+      this._generateKeys.async(this, self.cb);
+      yield;
+    }
+
+    this._passphrase = null;
+    self.done(true);
   },
 
   logout: function WeaveSync_logout() {
@@ -476,111 +442,96 @@ WeaveSvc.prototype = {
     this._dav.logout();
     this._mozId.setTempPassword(null); // clear cached password
     this._cryptoId.setTempPassword(null); // and passphrase
-    this._os.notifyObservers(null, "weave:service-logout:success", "");
+    this._os.notifyObservers(null, "weave:service:logout:success", "");
   },
 
-  resetLock: function WeaveSync_resetLock(onComplete) {
-    this._resetLock.async(this, onComplete);
+  resetLock: function WeaveSvc_resetLock(onComplete) {
+    this._notify("reset-server-lock", this._resetLock).async(this, onComplete);
   },
-  _resetLock: function WeaveSync__resetLock() {
+  _resetLock: function WeaveSvc__resetLock() {
     let self = yield;
-
-    let cb = function Weave_resetLock() {
-      let innerSelf = yield;
-      this._dav.forceUnlock.async(this._dav, innerSelf.cb);
-      yield;
-    };
-
-    this._notify("reset-server-lock", cb).async(this, self.cb);
+    this._dav.forceUnlock.async(this._dav, self.cb);
     yield;
   },
+
+  serverWipe: function WeaveSvc_serverWipe(onComplete) {
+    this._lock(this._notify("server-wipe",
+                            this._serverWipe)).async(this, onComplete);
+  },
+  _serverWipe: function WeaveSvc__serverWipe() {
+    let self = yield;
+
+    this._dav.listFiles.async(this._dav, self.cb);
+    let names = yield;
+
+    for (let i = 0; i < names.length; i++) {
+      this._dav.DELETE(names[i], self.cb);
+      let resp = yield;
+      this._log.debug(resp.status);
+    }
+  },
+
 
 
   // These are per-engine
 
   sync: function WeaveSync_sync(onComplete) {
-    this._sync.async(this, onComplete);
+    this._lock(this._notify("sync", this._sync)).async(this, onComplete);
   },
   _sync: function WeaveSync__sync() {
     let self = yield;
 
-    let cb = function Weave_sync() {
-      let innerSelf = yield;
-
-      let engineCb = function WeaveSvc_syncEngine(engine) {
-        let innerInnerSelf = yield;
-        engine.sync(innerInnerSelf.cb);
-        yield;
-      };
-
-      if (Utils.prefs.getBoolPref("bookmarks")) {
-        this._notify(this._bmkEngine.name + ":sync",
-                     engineCb, this._bmkEngine).async(this, innerSelf.cb);
-        yield;
-        this._bmkEngine.syncMounts(innerSelf.cb);
-        yield;
-      }
-      if (Utils.prefs.getBoolPref("history")) {
-        this._notify(this._histEngine.name + ":sync",
-                     engineCb, this._histEngine).async(this, innerSelf.cb);
-        yield;
-      }
-    };
-
-    this._lock(this._notify("sync", cb)).async(this, self.cb);
+    if (Utils.prefs.getBoolPref("bookmarks")) {
+      this._notify(this._bmkEngine.name + ":sync",
+                   this._syncEngine, this._bmkEngine).async(this, self.cb);
+      yield;
+      this._bmkEngine.syncMounts(self.cb); // FIXME
+      yield;
+    }
+    if (Utils.prefs.getBoolPref("history")) {
+      this._notify(this._histEngine.name + ":sync",
+                   this._syncEngine, this._histEngine).async(this, self.cb);
+      yield;
+    }
+  },
+  _syncEngine: function WeaveSvc__syncEngine(engine) {
+    let self = yield;
+    engine.sync(self.cb);
     yield;
   },
 
   resetServer: function WeaveSync_resetServer(onComplete) {
-    this._resetServer.async(this, onComplete);
+    this._lock(this._notify("reset-server",
+                            this._resetServer)).async(this, onComplete);
   },
   _resetServer: function WeaveSync__resetServer() {
     let self = yield;
-
-    let cb = function Weave_resetServer() {
-      let innerSelf = yield;
-      this._bmkEngine.resetServer(innerSelf.cb);
-      yield;
-      this._histEngine.resetServer(innerSelf.cb);
-      yield;
-    };
-
-    this._lock(this._notify("reset-server",cb)).async(this, self.cb);
+    this._bmkEngine.resetServer(self.cb);
+    yield;
+    this._histEngine.resetServer(self.cb);
     yield;
   },
 
   resetClient: function WeaveSync_resetClient(onComplete) {
-    this._resetClient.async(this, onComplete);
+    this._localLock(this._notify("reset-client",
+                                 this._resetClient)).async(this, onComplete);
   },
   _resetClient: function WeaveSync__resetClient() {
     let self = yield;
-
-    let cb = function Weave_resetClient() {
-      let innerSelf = yield;
-      this._bmkEngine.resetClient(innerSelf.cb);
-      yield;
-      this._histEngine.resetClient(innerSelf.cb);
-      yield;
-    };
-
-    this._localLock(this._notify("reset-client", cb)).async(this, self.cb);
+    this._bmkEngine.resetClient(self.cb);
+    yield;
+    this._histEngine.resetClient(self.cb);
     yield;
   },
 
   shareBookmarks: function WeaveSync_shareBookmarks(onComplete, username) {
-    this._shareBookmarks.async(this, onComplete, username);
+    this._lock(this._notify("share-bookmarks",
+                            this._shareBookmarks,
+                            username)).async(this, onComplete);
   },
   _shareBookmarks: function WeaveSync__shareBookmarks(username) {
     let self = yield;
-
-    let cb = function Weave_shareBookmarks() {
-      let innerSelf = yield;
-      this._bmkEngine.share(innerSelf.cb, username);
-      let ret = yield;
-      innerSelf.done(ret);
-    };
-
-    this._lock(this._notify("share-bookmarks", cb)).async(this, self.cb);
+    this._bmkEngine.share(self.cb, username);
     let ret = yield;
     self.done(ret);
   }
