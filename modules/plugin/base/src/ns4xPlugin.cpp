@@ -1471,7 +1471,7 @@ doGetIdentifier(JSContext *cx, const NPUTF8* name)
                                        utf16name.Length());
 
   if (!str)
-    return NULL;
+    return nsnull;
 
   return (NPIdentifier)STRING_TO_JSVAL(str);
 }
@@ -1479,11 +1479,6 @@ doGetIdentifier(JSContext *cx, const NPUTF8* name)
 NPIdentifier NP_CALLBACK
 _getstringidentifier(const NPUTF8* name)
 {
-  if (!name) {
-    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS, ("NPN_getstringidentifier: passed null name"));
-    return NULL;
-  }
-
   nsCOMPtr<nsIThreadJSContextStack> stack =
     do_GetService("@mozilla.org/js/xpc/ContextStack;1");
   if (!stack)
@@ -1515,13 +1510,7 @@ _getstringidentifiers(const NPUTF8** names, int32_t nameCount,
   JSAutoRequest ar(cx);
 
   for (int32_t i = 0; i < nameCount; ++i) {
-    if (names[i]) {
-      identifiers[i] = doGetIdentifier(cx, names[i]);
-    } else {
-      NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS, ("NPN_getstringidentifiers: passed null nam
-e"));
-      identifiers[i] = NULL;
-    }
+    identifiers[i] = doGetIdentifier(cx, names[i]);
   }
 }
 
