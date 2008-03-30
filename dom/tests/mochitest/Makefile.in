@@ -46,12 +46,17 @@ DIRS	+= \
 	dom-level0 \
 	dom-level1-core \
 	dom-level2-core \
-	dom-level2-html \
 	ajax \
 	bugs \
 	chrome \
 	whatwg \
 	$(NULL)
+
+ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+DIRS	+= \
+	dom-level2-html \
+	$(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk
 
