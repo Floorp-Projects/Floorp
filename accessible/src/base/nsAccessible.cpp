@@ -88,6 +88,7 @@
 #include "nsIServiceManager.h"
 #include "nsWhitespaceTokenizer.h"
 #include "nsAttrName.h"
+#include "nsNetUtil.h"
 
 #ifdef NS_DEBUG
 #include "nsIFrameDebug.h"
@@ -1052,6 +1053,10 @@ nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   nsIFrame *frame = GetFrame();
   if (frame && (frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW))
     *aState |= nsIAccessibleStates::STATE_FLOATING;
+
+  // Add 'linked' state for simple xlink.
+  if (nsAccUtils::IsXLink(content))
+    *aState |= nsIAccessibleStates::STATE_LINKED;
 
   return NS_OK;
 }
@@ -2459,23 +2464,36 @@ nsAccessible::GetARIAState(PRUint32 *aState)
 // Not implemented by this class
 
 /* DOMString getValue (); */
-NS_IMETHODIMP nsAccessible::GetValue(nsAString& aValue)
+NS_IMETHODIMP
+nsAccessible::GetValue(nsAString& aValue)
 {
-  if (!mDOMNode) {
-    return NS_ERROR_FAILURE;  // Node already shut down
-  }
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+
   if (mRoleMapEntry) {
     if (mRoleMapEntry->valueRule == eNoValue) {
       return NS_OK;
     }
-    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-    NS_ENSURE_STATE(content);
+
     // aria-valuenow is a number, and aria-valuetext is the optional text equivalent
     // For the string value, we will try the optional text equivalent first
     if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_valuetext, aValue)) {
       content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_valuenow, aValue);
     }
   }
+
+  if (!aValue.IsEmpty())
+    return NS_OK;
+
+  // Check if it's an simple xlink.
+  if (nsAccUtils::IsXLink(content)) {
+    nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
+    if (presShell)
+      return presShell->GetLinkLocation(mDOMNode, aValue);
+  }
+
   return NS_OK;
 }
 
@@ -2579,6 +2597,14 @@ NS_IMETHODIMP nsAccessible::GetRole(PRUint32 *aRole)
 {
   NS_ENSURE_ARG_POINTER(aRole);
   *aRole = nsIAccessibleRole::ROLE_NOTHING;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (nsAccUtils::IsXLink(content))
+    *aRole = nsIAccessibleRole::ROLE_LINK;
+
   return NS_OK;
 }
 
@@ -2592,7 +2618,14 @@ nsAccessible::GetNumActions(PRUint8 *aNumActions)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
+  // Check if it's an simple xlink.
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (nsAccUtils::IsXLink(content)) {
+    *aNumActions = 1;
+    return NS_OK;
+  }
+
+  // Has registered 'click' event handler.
   PRBool isOnclick = nsAccUtils::HasListener(content,
                                              NS_LITERAL_STRING("click"));
 
@@ -2614,7 +2647,14 @@ nsAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
+  // Check if it's simple xlink.
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (nsAccUtils::IsXLink(content)) {
+    aName.AssignLiteral("jump");
+    return NS_OK;
+  }
+
+  // Has registered 'click' event handler.
   PRBool isOnclick = nsAccUtils::HasListener(content,
                                              NS_LITERAL_STRING("click"));
   
@@ -2648,11 +2688,18 @@ nsAccessible::DoAction(PRUint8 aIndex)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
+  PRBool doAction = PR_FALSE;
+
+  // Check if it's simple xlink.
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  PRBool isOnclick = nsAccUtils::HasListener(content,
-                                             NS_LITERAL_STRING("click"));
+  if (nsAccUtils::IsXLink(content))
+    doAction = PR_TRUE;
+
+  // Has registered 'click' event handler.
+  if (!doAction)
+    doAction = nsAccUtils::HasListener(content, NS_LITERAL_STRING("click"));
   
-  if (isOnclick)
+  if (doAction)
     return DoCommand(content);
 
   return NS_ERROR_INVALID_ARG;
@@ -3240,16 +3287,34 @@ nsAccessible::GetEndIndex(PRInt32 *aEndIndex)
 }
 
 NS_IMETHODIMP
-nsAccessible::GetURI(PRInt32 i, nsIURI **aURI)
+nsAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
 {
   NS_ENSURE_ARG_POINTER(aURI);
   *aURI = nsnull;
-  return NS_ERROR_FAILURE;
+
+  if (aIndex != 0)
+    return NS_ERROR_INVALID_ARG;
+
+  // Check if it's simple xlink.
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (nsAccUtils::IsXLink(content)) {
+    nsAutoString href;
+    content->GetAttr(kNameSpaceID_XLink, nsAccessibilityAtoms::href, href);
+
+    nsCOMPtr<nsIURI> baseURI = content->GetBaseURI();
+    nsCOMPtr<nsIDocument> document = content->GetOwnerDoc();
+    return NS_NewURI(aURI, href,
+                     document ? document->GetDocumentCharacterSet().get() : nsnull,
+                     baseURI);
+  }
+
+  return NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsAccessible::GetAnchor(PRInt32 aIndex,
-                                      nsIAccessible **aAccessible)
+                        nsIAccessible **aAccessible)
 {
   NS_ENSURE_ARG_POINTER(aAccessible);
   *aAccessible = nsnull;
