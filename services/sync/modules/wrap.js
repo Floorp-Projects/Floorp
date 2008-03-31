@@ -43,6 +43,7 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
+Cu.import("resource://weave/dav.js");
 Cu.import("resource://weave/async.js");
 
 Function.prototype.async = Async.sugar;
@@ -112,7 +113,7 @@ let Wrap = {
       let ret;
       let args = Array.prototype.slice.call(arguments);
 
-      this._dav.lock.async(this._dav, self.cb);
+      DAV.lock.async(DAV, self.cb);
       let locked = yield;
       if (!locked)
         throw "Could not acquire lock";
@@ -127,7 +128,7 @@ let Wrap = {
         throw e;
 
       } finally {
-        this._dav.unlock.async(this._dav, self.cb);
+        DAV.unlock.async(DAV, self.cb);
         yield;
       }
 
@@ -146,9 +147,9 @@ let Wrap = {
       let ret;
       let args = Array.prototype.slice.call(arguments);
 
-      if (this._dav.locked)
+      if (DAV.locked)
         throw "Could not acquire lock";
-      this._dav.allowLock = false;
+      DAV.allowLock = false;
 
       try {
         args = savedArgs.concat(args);
@@ -157,7 +158,7 @@ let Wrap = {
         ret = yield;
       }
       catch (e) { throw e; }
-      finally { this._dav.allowLock = true; }
+      finally { DAV.allowLock = true; }
 
       self.done(ret);
     };

@@ -46,6 +46,7 @@ Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/crypto.js");
+Cu.import("resource://weave/dav.js");
 Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/syncCores.js");
@@ -115,7 +116,6 @@ Engine.prototype = {
   },
 
   _init: function Engine__init(davCollection, pbeId) {
-    this._dav = davCollection;
     this._pbeId = pbeId;
     this._engineId = new Identity(pbeId.realm + " - " + this.logName,
                                   pbeId.username);
@@ -129,7 +129,7 @@ Engine.prototype = {
   _getSymKey: function Engine__getSymKey() {
     let self = yield;
 
-    this._dav.GET(this.keysFile, self.cb);
+    DAV.GET(this.keysFile, self.cb);
     let keysResp = yield;
     Utils.ensureStatus(keysResp.status,
                        "Could not get keys file.", [[200,300]]);
@@ -151,7 +151,7 @@ Engine.prototype = {
     //json = json.replace(/ {action/g, "\n {action");
     return json;
   },
-  
+
   _serializeConflicts: function Engine__serializeConflicts(conflicts) {
     let json = this._json.encode(conflicts);
     //json = json.replace(/ {action/g, "\n {action");
@@ -167,11 +167,11 @@ Engine.prototype = {
       this._os.notifyObservers(null, this._osPrefix + "reset-server:start", "");
 
       // try to delete all 3, check status after
-      this._dav.DELETE(this.statusFile, self.cb);
+      DAV.DELETE(this.statusFile, self.cb);
       let statusResp = yield;
-      this._dav.DELETE(this.snapshotFile, self.cb);
+      DAV.DELETE(this.snapshotFile, self.cb);
       let snapshotResp = yield;
-      this._dav.DELETE(this.deltasFile, self.cb);
+      DAV.DELETE(this.deltasFile, self.cb);
       let deltasResp = yield;
 
       Utils.ensureStatus(statusResp.status,
@@ -184,7 +184,7 @@ Engine.prototype = {
       this._log.debug("Server files deleted");
       done = true;
       this._os.notifyObservers(null, this._osPrefix + "reset-server:success", "");
-        
+
     } catch (e) {
       this._log.error("Could not delete server files");
       this._os.notifyObservers(null, this._osPrefix + "reset-server:error", "");
@@ -255,7 +255,7 @@ Engine.prototype = {
     this._log.info("Beginning sync");
 
     // Before we get started, make sure we have a remote directory to play in
-    this._dav.MKCOL(this.serverPrefix, self.cb);
+    DAV.MKCOL(this.serverPrefix, self.cb);
     let ret = yield;
     if (!ret)
       throw "Could not create remote folder";
@@ -292,7 +292,7 @@ Engine.prototype = {
       self.done(true);
       return;
     }
-        
+
     // 3) Reconcile client/server deltas and generate new deltas for them.
 
     this._log.info("Reconciling client/server updates");
@@ -399,14 +399,14 @@ Engine.prototype = {
                                 this._serializeCommands(server.deltas),
       			  this._engineId);
         let data = yield;
-        this._dav.PUT(this.deltasFile, data, self.cb);
+        DAV.PUT(this.deltasFile, data, self.cb);
         let deltasPut = yield;
 
         let c = 0;
         for (GUID in this._snapshot.data)
           c++;
 
-        this._dav.PUT(this.statusFile,
+        DAV.PUT(this.statusFile,
                       this._json.encode(
                         {GUID: this._snapshot.GUID,
                          formatVersion: ENGINE_STORAGE_FORMAT_VERSION,
@@ -465,7 +465,7 @@ Engine.prototype = {
                snapshot: null, deltas: null, updates: null};
 
     this._log.debug("Getting status file from server");
-    this._dav.GET(this.statusFile, self.cb);
+    DAV.GET(this.statusFile, self.cb);
     let resp = yield;
     let status = resp.status;
 
@@ -510,7 +510,7 @@ Engine.prototype = {
           this._log.info("Local snapshot is out of date");
 
         this._log.info("Downloading server snapshot");
-        this._dav.GET(this.snapshotFile, self.cb);
+        DAV.GET(this.snapshotFile, self.cb);
         resp = yield;
         Utils.ensureStatus(resp.status, "Could not download snapshot.");
         Crypto.PBEdecrypt.async(Crypto, self.cb,
@@ -521,7 +521,7 @@ Engine.prototype = {
         snap.data = this._json.decode(data);
 
         this._log.info("Downloading server deltas");
-        this._dav.GET(this.deltasFile, self.cb);
+        DAV.GET(this.deltasFile, self.cb);
         resp = yield;
         Utils.ensureStatus(resp.status, "Could not download deltas.");
         Crypto.PBEdecrypt.async(Crypto, self.cb,
@@ -538,7 +538,7 @@ Engine.prototype = {
         snap.data = Utils.deepCopy(this._snapshot.data);
 
         this._log.info("Downloading server deltas");
-        this._dav.GET(this.deltasFile, self.cb);
+        DAV.GET(this.deltasFile, self.cb);
         resp = yield;
         Utils.ensureStatus(resp.status, "Could not download deltas.");
         Crypto.PBEdecrypt.async(Crypto, self.cb,
@@ -555,7 +555,7 @@ Engine.prototype = {
 
         // FIXME: could optimize this case by caching deltas file
         this._log.info("Downloading server deltas");
-        this._dav.GET(this.deltasFile, self.cb);
+        DAV.GET(this.deltasFile, self.cb);
         resp = yield;
         Utils.ensureStatus(resp.status, "Could not download deltas.");
         Crypto.PBEdecrypt.async(Crypto, self.cb,
@@ -641,7 +641,7 @@ Engine.prototype = {
 
     let keys = {ring: {}};
     keys.ring[this._engineId.userHash] = enckey;
-    this._dav.PUT(this.keysFile, this._json.encode(keys), self.cb);
+    DAV.PUT(this.keysFile, this._json.encode(keys), self.cb);
     let resp = yield;
     Utils.ensureStatus(resp.status, "Could not upload keyring file.");
 
@@ -650,11 +650,11 @@ Engine.prototype = {
       		            this._engineId);
     let data = yield;
 
-    this._dav.PUT(this.snapshotFile, data, self.cb);
+    DAV.PUT(this.snapshotFile, data, self.cb);
     resp = yield;
     Utils.ensureStatus(resp.status, "Could not upload snapshot.");
 
-    this._dav.PUT(this.deltasFile, "[]", self.cb);
+    DAV.PUT(this.deltasFile, "[]", self.cb);
     resp = yield;
     Utils.ensureStatus(resp.status, "Could not upload deltas.");
 
@@ -662,7 +662,7 @@ Engine.prototype = {
     for (GUID in this._snapshot.data)
       c++;
 
-    this._dav.PUT(this.statusFile,
+    DAV.PUT(this.statusFile,
                   this._json.encode(
                     {GUID: this._snapshot.GUID,
                      formatVersion: ENGINE_STORAGE_FORMAT_VERSION,
@@ -681,7 +681,7 @@ Engine.prototype = {
 
   _share: function Engine__share(username) {
     let self = yield;
-    let base = this._dav.baseURL;
+    let base = DAV.baseURL;
 
     this._log.debug("Sharing bookmarks with " + username);
 
@@ -689,7 +689,7 @@ Engine.prototype = {
     yield;
 
     // copied from getSymKey
-    this._dav.GET(this.keysFile, self.cb);
+    DAV.GET(this.keysFile, self.cb);
     let ret = yield;
     Utils.ensureStatus(ret.status, "Could not get keys file.");
     let keys = this._json.decode(ret.responseText);
@@ -699,12 +699,12 @@ Engine.prototype = {
     let serverURL = Utils.prefs.getCharPref("serverURL");
 
     try {
-      this._dav.baseURL = serverURL + "user/" + hash + "/";  //FIXME: very ugly!
-      this._dav.GET("public/pubkey", self.cb);
+      DAV.baseURL = serverURL + "user/" + hash + "/";  //FIXME: very ugly!
+      DAV.GET("public/pubkey", self.cb);
       ret = yield;
     }
     catch (e) { throw e; }
-    finally { this._dav.baseURL = base; }
+    finally { DAV.baseURL = base; }
 
     Utils.ensureStatus(ret.status, "Could not get public key for " + username);
 
@@ -718,7 +718,7 @@ Engine.prototype = {
       throw "Could not encrypt symmetric encryption key";
 
     keys.ring[hash] = enckey;
-    this._dav.PUT(this.keysFile, this._json.encode(keys), self.cb);
+    DAV.PUT(this.keysFile, this._json.encode(keys), self.cb);
     ret = yield;
     Utils.ensureStatus(ret.status, "Could not upload keyring file.");
 
@@ -824,7 +824,7 @@ BookmarksEngine.prototype = {
   _syncOneMount: function BmkEngine__syncOneMount(mountData) {
     let self = yield;
     let user = mountData.userid;
-    let base = this._dav.baseURL;
+    let base = DAV.baseURL;
     let serverURL = Utils.prefs.getCharPref("serverURL");
     let snap = new SnapshotStore();
 
@@ -832,19 +832,19 @@ BookmarksEngine.prototype = {
 
     try {
       let hash = Utils.sha1(user);
-      this._dav.baseURL = serverURL + "user/" + hash + "/";  //FIXME: very ugly!
+      DAV.baseURL = serverURL + "user/" + hash + "/";  //FIXME: very ugly!
 
       this._getSymKey.async(this, self.cb);
       yield;
 
       this._log.trace("Getting status file for " + user);
-      this._dav.GET(this.statusFile, self.cb);
+      DAV.GET(this.statusFile, self.cb);
       let resp = yield;
       Utils.ensureStatus(resp.status, "Could not download status file.");
       let status = this._json.decode(resp.responseText);
 
       this._log.trace("Downloading server snapshot for " + user);
-      this._dav.GET(this.snapshotFile, self.cb);
+      DAV.GET(this.snapshotFile, self.cb);
       resp = yield;
       Utils.ensureStatus(resp.status, "Could not download snapshot.");
       Crypto.PBEdecrypt.async(Crypto, self.cb, resp.responseText,
@@ -853,7 +853,7 @@ BookmarksEngine.prototype = {
       snap.data = this._json.decode(data);
 
       this._log.trace("Downloading server deltas for " + user);
-      this._dav.GET(this.deltasFile, self.cb);
+      DAV.GET(this.deltasFile, self.cb);
       resp = yield;
       Utils.ensureStatus(resp.status, "Could not download deltas.");
       Crypto.PBEdecrypt.async(Crypto, self.cb, resp.responseText,
@@ -862,7 +862,7 @@ BookmarksEngine.prototype = {
       deltas = this._json.decode(data);
     }
     catch (e) { throw e; }
-    finally { this._dav.baseURL = base; }
+    finally { DAV.baseURL = base; }
 
     // apply deltas to get current snapshot
     for (var i = 0; i < deltas.length; i++) {
