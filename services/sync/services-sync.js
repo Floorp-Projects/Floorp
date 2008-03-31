@@ -7,6 +7,7 @@ pref("extensions.weave.lastversion", "firstrun");
 pref("extensions.weave.lastsync", "0");
 
 pref("extensions.weave.ui.syncnow", true);
+pref("extensions.weave.ui.sharebookmarks", false);
 pref("extensions.weave.rememberpassword", true);
 pref("extensions.weave.autoconnect", true);
 pref("extensions.weave.enabled", true);
