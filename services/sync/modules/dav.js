@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['DAVCollection'];
+const EXPORTED_SYMBOLS = ['DAV', 'DAVCollection'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -109,7 +109,7 @@ DAVCollection.prototype = {
 
     let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
     request = request.QueryInterface(Ci.nsIDOMEventTarget);
-  
+
     request.addEventListener("load", new Utils.EventListener(self.cb, "load"), false);
     request.addEventListener("error", new Utils.EventListener(self.cb, "error"), false);
     request = request.QueryInterface(Ci.nsIXMLHttpRequest);
@@ -162,15 +162,15 @@ DAVCollection.prototype = {
     try {
       let components = path.split('/');
       let path2 = '';
-  
+
       for (let i = 0; i < components.length; i++) {
-  
+
         // trailing slashes will cause an empty path component at the end
         if (components[i] == '')
           break;
-  
+
         path2 = path2 + components[i];
-  
+
         // check if it exists first
         this._makeRequest.async(this, self.cb, "GET", path2 + "/", this._defaultHeaders);
         let ret = yield;
@@ -182,13 +182,13 @@ DAVCollection.prototype = {
           this._makeRequest.async(this, self.cb, "MKCOL", path2,
         			  this._defaultHeaders);
           ret = yield;
-  
+
           if (ret.status != 201) {
             this._log.debug(ret.responseText);
             throw 'request failed: ' + ret.status;
           }
         }
-  
+
         // add slash *after* the request, trailing slashes cause a 412!
         path2 = path2 + "/";
       }
@@ -287,7 +287,7 @@ DAVCollection.prototype = {
       self.done(true);
       yield;
     }
- 
+
     this._log.debug("Logging in");
 
     let URI = Utils.makeURI(this._baseURL);
@@ -467,7 +467,7 @@ function DummyAuthProvider() {}
 DummyAuthProvider.prototype = {
   // Implement notification callback interfaces so we can suppress UI
   // and abort loads for bad SSL certs and HTTP authorization requests.
-  
+
   // Interfaces this component implements.
   interfaces: [Ci.nsIBadCertListener,
                Ci.nsIAuthPromptProvider,
@@ -503,7 +503,7 @@ DummyAuthProvider.prototype = {
   },
 
   // nsIInterfaceRequestor
-  
+
   getInterface: function DAP_getInterface(iid) {
     return this.QueryInterface(iid);
   },
@@ -511,7 +511,7 @@ DummyAuthProvider.prototype = {
   // nsIBadCertListener
 
   // Suppress UI and abort secure loads from servers with bad SSL certificates.
-  
+
   confirmUnknownIssuer: function DAP_confirmUnknownIssuer(socketInfo, cert, certAddType) {
     return false;
   },
@@ -528,7 +528,7 @@ DummyAuthProvider.prototype = {
   },
 
   // nsIAuthPromptProvider
-  
+
   getAuthPrompt: function(aPromptReason, aIID) {
     this._authFailed = true;
     throw Cr.NS_ERROR_NOT_AVAILABLE;
