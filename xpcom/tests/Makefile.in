@@ -73,6 +73,7 @@ CPPSRCS		= \
 		TestVersionComparator.cpp \
 		TestTextFormatter.cpp \
 		TestPipe.cpp \
+		TestRegistrationOrder.cpp \
 		$(NULL)
 
 ifndef MOZ_ENABLE_LIBXUL
@@ -139,6 +140,13 @@ libs::
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/test.properties $(DESTDIR)$(mozappdir)/res
 
+ifeq (,$(filter-out WINNT WINCE, $(HOST_OS_ARCH)))
+swapslashes = $(shell echo $(1) | sed -e 's|/|\\|g')
+getnativepath = $(call swapslashes,$(call normalizepath,$(1)))
+else
+getnativepath = $(1)
+endif
+
 check::
 	@echo "Running TestVersionComparator tests"
 	@$(PERL) -w $(srcdir)/TestVersionComparatorRunner.pl "$(RUN_TEST_PROGRAM) $(FINAL_TARGET)/TestVersionComparator$(BIN_SUFFIX)"
@@ -158,3 +166,7 @@ check::
 		echo "Scriptable object marked nonscriptable by xpidl"; \
 		exit 1; \
 	fi
+	@rm -f $(DIST)/bin/components/compreg.dat; \
+	regOrderDir="$(call getnativepath,${srcdir}/regorder)";	\
+	XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) \
+	  $(DIST)/bin/TestRegistrationOrder$(BIN_SUFFIX) "$$regOrderDir"

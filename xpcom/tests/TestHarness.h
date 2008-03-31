@@ -53,12 +53,13 @@
 class ScopedXPCOM
 {
   public:
-    ScopedXPCOM(const char* testName)
+    ScopedXPCOM(const char* testName,
+                nsIDirectoryServiceProvider *dirSvcProvider = NULL)
     {
       mTestName = testName;
       printf("Running %s tests...\n", mTestName);
 
-      nsresult rv = NS_InitXPCOM2(&mServMgr, NULL, NULL);
+      nsresult rv = NS_InitXPCOM2(&mServMgr, NULL, dirSvcProvider);
       if (NS_FAILED(rv))
       {
         printf("FAIL NS_InitXPCOM2 returned failure code %x\n", rv);

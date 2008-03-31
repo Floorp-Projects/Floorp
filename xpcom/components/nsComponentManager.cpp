@@ -3066,7 +3066,7 @@ nsComponentManagerImpl::LoadDeferredModules(nsTArray<DeferredModule> &aDeferred)
 
         lastCount = aDeferred.Length();
 
-        for (PRInt32 i = aDeferred.Length() - 1; i >= 0; --i) {
+        for (PRInt32 i = 0; i < aDeferred.Length(); ) {
             DeferredModule &d = aDeferred[i];
             nsresult rv = d.module->RegisterSelf(this,
                                                  d.file,
@@ -3080,6 +3080,9 @@ nsComponentManagerImpl::LoadDeferredModules(nsTArray<DeferredModule> &aDeferred)
 
             if (rv != NS_ERROR_FACTORY_REGISTER_AGAIN) {
                 aDeferred.RemoveElementAt(i);
+            }
+            else {
+                ++i;
             }
         }
     }
