@@ -254,7 +254,9 @@ nsXULLinkAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::href, href);
 
+  nsCOMPtr<nsIURI> baseURI = content->GetBaseURI();
   nsCOMPtr<nsIDocument> document = content->GetOwnerDoc();
   return NS_NewURI(aURI, href,
-                   document ? document->GetDocumentCharacterSet().get() : nsnull);
+                   document ? document->GetDocumentCharacterSet().get() : nsnull,
+                   baseURI);
 }

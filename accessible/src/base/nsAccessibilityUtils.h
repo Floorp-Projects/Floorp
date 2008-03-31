@@ -295,6 +295,14 @@ public:
   static PRBool GetID(nsIContent *aContent, nsAString& aID);
 
   /**
+   * Check if the given element is XLink.
+   *
+   * @param aContent  the given element
+   * @return          PR_TRUE if the given element is XLink
+   */
+  static PRBool IsXLink(nsIContent *aContent);
+
+  /**
    * Get the role map entry for a given DOM node. This will use the first
    * ARIA role if the role attribute provides a space delimited list of roles.
    * @param aNode  The DOM node to get the role map entry for
