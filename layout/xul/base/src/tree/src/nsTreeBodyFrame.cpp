@@ -3657,7 +3657,7 @@ nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
     nsCOMPtr<imgIContainer> image;
     GetImage(aRowIndex, aColumn, PR_TRUE, meterContext, useImageRegion, getter_AddRefs(image));
     if (image)
-      aRenderingContext.DrawTile(image, 0, 0, &meterRect);
+      aRenderingContext.DrawTile(image, 0, 0, &meterRect, nsnull);
     else
       aRenderingContext.FillRect(meterRect);
   }
@@ -3669,7 +3669,7 @@ nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
     nsCOMPtr<imgIContainer> image;
     GetImage(aRowIndex, aColumn, PR_TRUE, meterContext, useImageRegion, getter_AddRefs(image));
     if (image)
-      aRenderingContext.DrawTile(image, 0, 0, &meterRect);
+      aRenderingContext.DrawTile(image, 0, 0, &meterRect, nsnull);
   }
 }
 
