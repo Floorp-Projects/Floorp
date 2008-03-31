@@ -237,12 +237,12 @@ function SetClickAndHoldHandlers()
     var popup = document.getElementById("back-forward-dropmarker")
                        .firstChild.cloneNode(true);
     var backButton = document.getElementById("back-button");
-    backButton.setAttribute("type", "menu");
+    backButton.setAttribute("type", "menu-button");
     backButton.appendChild(popup);
     _addClickAndHoldListenersOnElement(backButton);
     var forwardButton = document.getElementById("forward-button");
     popup = popup.cloneNode(true);
-    forwardButton.setAttribute("type", "menu");
+    forwardButton.setAttribute("type", "menu-button");
     forwardButton.appendChild(popup);    
     _addClickAndHoldListenersOnElement(forwardButton);
   }
