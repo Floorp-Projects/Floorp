@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['WeaveSyncService'];
+const EXPORTED_SYMBOLS = ['Weave'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -45,6 +45,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
+Cu.import("resource://weave/wrap.js");
 Cu.import("resource://weave/crypto.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/dav.js");
@@ -52,26 +53,45 @@ Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/async.js");
 
 Function.prototype.async = Async.sugar;
-let Crypto = new WeaveCrypto();
+
+// for export
+let Weave = {};
+Cu.import("resource://weave/constants.js", Weave);
+Cu.import("resource://weave/util.js", Weave);
+Cu.import("resource://weave/async.js", Weave);
+Cu.import("resource://weave/crypto.js", Weave);
+Cu.import("resource://weave/identity.js", Weave);
+Cu.import("resource://weave/dav.js", Weave);
+Cu.import("resource://weave/stores.js", Weave);
+Cu.import("resource://weave/syncCores.js", Weave);
+Cu.import("resource://weave/engines.js", Weave);
+Cu.import("resource://weave/service.js", Weave);
+Utils.lazy(Weave, 'Service', WeaveSvc);
 
 /*
  * Service singleton
  * Main entry point into Weave's sync framework
  */
 
-function WeaveSyncService() { this._init(); }
-WeaveSyncService.prototype = {
+function WeaveSvc() {
+  this._initLogs();
+  this._log.info("Weave Sync Service Initializing");
 
-  __prefs: null,
-  get _prefs() {
-    if (!this.__prefs) {
-      this.__prefs = Cc["@mozilla.org/preferences-service;1"]
-        .getService(Ci.nsIPrefService);
-      this.__prefs = this.__prefs.getBranch(PREFS_BRANCH);
-      this.__prefs.QueryInterface(Ci.nsIPrefBranch2);
-    }
-    return this.__prefs;
-  },
+  Utils.prefs.addObserver("", this, false);
+
+  if (!this.enabled) {
+    this._log.info("Weave Sync disabled");
+    return;
+  }
+
+  this._setSchedule(this.schedule);
+}
+WeaveSvc.prototype = {
+
+  _notify: Wrap.notify,
+  _lock: Wrap.lock,
+  _localLock: Wrap.localLock,
+  _osPrefix: "weave:service:",
 
   __os: null,
   get _os() {
@@ -89,38 +109,29 @@ WeaveSyncService.prototype = {
     return this.__dirSvc;
   },
 
-  __dav: null,
-  get _dav() {
-    if (!this.__dav)
-      this.__dav = new DAVCollection();
-    return this.__dav;
-  },
-
   // FIXME: engines should be loaded dynamically somehow / need API to register
 
   __bmkEngine: null,
   get _bmkEngine() {
     if (!this.__bmkEngine)
-      this.__bmkEngine = new BookmarksEngine(this._dav, this._cryptoId);
+      this.__bmkEngine = new BookmarksEngine(DAV, this._cryptoId);
     return this.__bmkEngine;
   },
 
   __histEngine: null,
   get _histEngine() {
     if (!this.__histEngine)
-      this.__histEngine = new HistoryEngine(this._dav, this._cryptoId);
+      this.__histEngine = new HistoryEngine(DAV, this._cryptoId);
     return this.__histEngine;
   },
 
   __cookieEngine: null,
   get _cookieEngine() {
     if (!this.__cookieEngine)
-      this.__cookieEngine = new CookieEngine(this._dav, this._cryptoId);
+      this.__cookieEngine = new CookieEngine(DAV, this._cryptoId);
     return this.__cookieEngine;
   },
 
-  // Logger object
-  _log: null,
 
   // Timer object for automagically syncing
   _scheduleTimer: null,
@@ -141,13 +152,13 @@ WeaveSyncService.prototype = {
   },
 
   get username() {
-    return this._prefs.getCharPref("username");
+    return Utils.prefs.getCharPref("username");
   },
   set username(value) {
     if (value)
-      this._prefs.setCharPref("username", value);
+      Utils.prefs.setCharPref("username", value);
     else
-      this._prefs.clearUserPref("username");
+      Utils.prefs.clearUserPref("username");
 
     // fixme - need to loop over all Identity objects - needs some rethinking...
     this._mozId.username = value;
@@ -160,59 +171,22 @@ WeaveSyncService.prototype = {
   get passphrase() { return this._cryptoId.password; },
   set passphrase(value) { this._cryptoId.password = value; },
 
-  get userPath() {
-    this._log.info("Hashing username " + this.username);
-
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-      createInstance(Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-
-    let hasher = Cc["@mozilla.org/security/hash;1"]
-      .createInstance(Ci.nsICryptoHash);
-    hasher.init(hasher.SHA1);
-
-    let data = converter.convertToByteArray(this.username, {});
-    hasher.update(data, data.length);
-    let rawHash = hasher.finish(false);
-
-    // return the two-digit hexadecimal code for a byte
-    function toHexString(charCode) {
-      return ("0" + charCode.toString(16)).slice(-2);
-    }
-
-    let hash = [toHexString(rawHash.charCodeAt(i)) for (i in rawHash)].join("");
-    this._log.debug("Username hashes to " + hash);
-    return hash;
-  },
+  get userPath() { return this._mozId.userHash; },
 
   get currentUser() {
-    if (this._dav.loggedIn)
+    if (DAV.loggedIn)
       return this.username;
     return null;
   },
 
   get enabled() {
-    return this._prefs.getBoolPref("enabled");
+    return Utils.prefs.getBoolPref("enabled");
   },
 
   get schedule() {
     if (!this.enabled)
       return 0; // manual/off
-    return this._prefs.getIntPref("schedule");
-  },
-
-  _init: function WeaveSync__init() {
-    this._initLogs();
-    this._log.info("Weave Sync Service Initializing");
-
-    this._prefs.addObserver("", this, false);
-
-    if (!this.enabled) {
-      this._log.info("Weave Sync disabled");
-      return;
-    }
-
-    this._setSchedule(this.schedule);
+    return Utils.prefs.getIntPref("schedule");
   },
 
   _setSchedule: function Weave__setSchedule(schedule) {
@@ -259,17 +233,19 @@ WeaveSyncService.prototype = {
 
   _initLogs: function WeaveSync__initLogs() {
     this._log = Log4Moz.Service.getLogger("Service.Main");
+    this._log.level =
+      Log4Moz.Level[Utils.prefs.getCharPref("log.logger.service.main")];
 
     let formatter = Log4Moz.Service.newFormatter("basic");
     let root = Log4Moz.Service.rootLogger;
-    root.level = Log4Moz.Level[this._prefs.getCharPref("log.rootLogger")];
+    root.level = Log4Moz.Level[Utils.prefs.getCharPref("log.rootLogger")];
 
     let capp = Log4Moz.Service.newAppender("console", formatter);
-    capp.level = Log4Moz.Level[this._prefs.getCharPref("log.appender.console")];
+    capp.level = Log4Moz.Level[Utils.prefs.getCharPref("log.appender.console")];
     root.addAppender(capp);
 
     let dapp = Log4Moz.Service.newAppender("dump", formatter);
-    dapp.level = Log4Moz.Level[this._prefs.getCharPref("log.appender.dump")];
+    dapp.level = Log4Moz.Level[Utils.prefs.getCharPref("log.appender.dump")];
     root.addAppender(dapp);
 
     let brief = this._dirSvc.get("ProfD", Ci.nsIFile);
@@ -285,222 +261,123 @@ WeaveSyncService.prototype = {
     if (!verbose.exists())
       verbose.create(verbose.NORMAL_FILE_TYPE, PERMS_FILE);
 
-    let fapp = Log4Moz.Service.newFileAppender("rotating", brief, formatter);
-    fapp.level = Log4Moz.Level[this._prefs.getCharPref("log.appender.briefLog")];
-    root.addAppender(fapp);
-    let vapp = Log4Moz.Service.newFileAppender("rotating", verbose, formatter);
-    vapp.level = Log4Moz.Level[this._prefs.getCharPref("log.appender.debugLog")];
-    root.addAppender(vapp);
+    this._briefApp = Log4Moz.Service.newFileAppender("rotating", brief, formatter);
+    this._briefApp.level = Log4Moz.Level[Utils.prefs.getCharPref("log.appender.briefLog")];
+    root.addAppender(this._briefApp);
+    this._debugApp = Log4Moz.Service.newFileAppender("rotating", verbose, formatter);
+    this._debugApp.level = Log4Moz.Level[Utils.prefs.getCharPref("log.appender.debugLog")];
+    root.addAppender(this._debugApp);
   },
 
-  _lock: function weaveSync__lock() {
-    if (this._locked) {
-      this._log.warn("Service lock failed: already locked");
-      this._os.notifyObservers(null, "weave:service-lock:error", "");
-      return false;
-    }
-    this._locked = true;
-    this._log.debug("Service lock acquired");
-    this._os.notifyObservers(null, "weave:service-lock:success", "");
-    return true;
+  clearLogs: function WeaveSvc_clearLogs() {
+    this._briefApp.clear();
+    this._debugApp.clear();
   },
 
-  _unlock: function WeaveSync__unlock() {
-    this._locked = false;
-    this._log.debug("Service lock released");
-    this._os.notifyObservers(null, "weave:service-unlock:success", "");
-  },
-
-  _login: function WeaveSync__login() {
+  _uploadVersion: function WeaveSync__uploadVersion() {
     let self = yield;
 
-    try {
-      this._log.debug("Logging in");
-      this._os.notifyObservers(null, "weave:service-login:start", "");
+    DAV.MKCOL("meta", self.cb);
+    let ret = yield;
+    if (!ret)
+      throw "Could not create meta information directory";
 
-      if (!this.username)
-        throw "No username set, login failed";
-      if (!this.password)
-        throw "No password given or found in password manager";
+    DAV.PUT("meta/version", STORAGE_FORMAT_VERSION, self.cb);
+    ret = yield;
+    Utils.ensureStatus(ret.status, "Could not upload server version file");
+  },
 
-      let serverURL = this._prefs.getCharPref("serverURL");
-      this._dav.baseURL = serverURL + "user/" + this.userPath + "/";
-      this._log.info("Using server URL: " + this._dav.baseURL);
+  // force a server wipe when the version is lower than ours (or there is none)
+  _versionCheck: function WeaveSync__versionCheck() {
+    let self = yield;
 
-      this._dav.login.async(this._dav, self.cb, this.username, this.password);
-      let success = yield;
+    DAV.GET("meta/version", self.cb);
+    let ret = yield;
 
-      // FIXME: we want to limit this to when we get a 404!
-      if (!success) {
-        this._log.debug("Attempting to create user directory");
+    if (!Utils.checkStatus(ret.status)) {
+      this._log.info("Server has no version file.  Wiping server data.");
+      this._serverWipe.async(this, self.cb);
+      yield;
+      this._uploadVersion.async(this, self.cb);
+      yield;
 
-        this._dav.baseURL = serverURL;
-        this._dav.MKCOL("user/" + this.userPath, self.cb);
-        let ret = yield;
-        if (!ret)
-          throw "Could not create user directory.  Got status: " + ret.status;
+    } else if (ret.responseText < STORAGE_FORMAT_VERSION) {
+      this._log.info("Server version too low.  Wiping server data.");
+      this._serverWipe.async(this, self.cb);
+      yield;
+      this._uploadVersion.async(this, self.cb);
+      yield;
 
-        this._log.debug("Successfully created user directory.  Re-attempting login.");
-        this._dav.baseURL = serverURL + "user/" + this.userPath + "/";
-        this._dav.login.async(this._dav, self.cb, this.username, this.password);
-        success = yield;
-        if (!success)
-          throw "Created user directory, but login still failed.  Aborting.";
-      }
-
-      this._dav.GET("private/privkey", self.cb);
-      let keyResp = yield;
-      Utils.ensureStatus(keyResp.status,
-                         "Could not get private key from server", [[200,300],404]);
-
-      if (keyResp.status != 404) {
-        this._cryptoId.key = keyResp.responseText;
-
-      } else {
-        // FIXME: hack to wipe everyone's server data... needs to be removed at some point
-        this._serverWipe.async(this, self.cb);
-        yield;
-        
-        // generate a new key
-        this._log.debug("Generating new RSA key");
-        Crypto.RSAkeygen.async(Crypto, self.cb, this._cryptoId.password);
-        let [privkey, pubkey] = yield;
-
-        this._cryptoId.key = privkey;
-
-        this._dav.MKCOL("private/", self.cb);
-        ret = yield;
-        if (!ret)
-          throw "Could not create private key directory";
-
-        this._dav.MKCOL("public/", self.cb);
-        ret = yield;
-        if (!ret)
-          throw "Could not create public key directory";
-
-        this._dav.PUT("private/privkey", privkey, self.cb);
-        ret = yield;
-        Utils.ensureStatus(ret.status, "Could not upload private key");
-
-        this._dav.PUT("public/pubkey", pubkey, self.cb);
-        ret = yield;
-        Utils.ensureStatus(ret.status, "Could not upload public key");
-      }
-
-      this._passphrase = null;
-      this._os.notifyObservers(null, "weave:service-login:success", "");
-      self.done(true);
-
-    } catch (e) {
-      this._log.warn(Async.exceptionStr(self, e));
-      this._log.trace(e.trace);
-      this._os.notifyObservers(null, "weave:service-login:error", "");
-      self.done(false);
+    } else if (ret.responseText > STORAGE_FORMAT_VERSION) {
+      // FIXME: should we do something here?
     }
   },
 
-  _resetLock: function WeaveSync__resetLock() {
+  _checkUserDir: function WeaveSvc__checkUserDir() {
     let self = yield;
-    let success = false;
 
-    try {
-      this._log.debug("Resetting server lock");
-      this._os.notifyObservers(null, "weave:server-lock-reset:start", "");
+    this._log.trace("Checking user directory exists");
 
-      this._dav.forceUnlock.async(this._dav, self.cb);
-      success = yield;
+    let serverURL = Utils.prefs.getCharPref("serverURL");
+    if (serverURL[serverURL.length-1] != '/')
+      serverURL = serverURL + '/';
 
-    } catch (e) {
-      throw e;
+    DAV.baseURL = serverURL;
+    DAV.MKCOL("user/" + this.userPath, self.cb);
+    let ret = yield;
+    if (!ret)
+      throw "Could not create user directory";
 
-    } finally {
-      if (success) {
-        this._log.debug("Server lock reset successful");
-        this._os.notifyObservers(null, "weave:server-lock-reset:success", "");
-      } else {
-        this._log.debug("Server lock reset failed");
-        this._os.notifyObservers(null, "weave:server-lock-reset:error", "");
-      }
-      self.done(success);
+    DAV.baseURL = serverURL + "user/" + this.userPath + "/";
+    this._log.info("Using server URL: " + DAV.baseURL);
+  },
+
+  _keyCheck: function WeaveSvc__keyCheck() {
+    let self = yield;
+
+    DAV.GET("private/privkey", self.cb);
+    let keyResp = yield;
+    Utils.ensureStatus(keyResp.status,
+                       "Could not get private key from server", [[200,300],404]);
+
+    if (keyResp.status != 404) {
+      this._cryptoId.privkey = keyResp.responseText;
+      Crypto.RSAkeydecrypt.async(Crypto, self.cb, this._cryptoId);
+      this._cryptoId.pubkey = yield;
+
+    } else {
+      this._generateKeys.async(this, self.cb);
+      yield;
     }
   },
 
-  _sync: function WeaveSync__sync() {
-    let self = yield;
-    let success = false;
-
-    try {
-      if (!this._lock())
-	return;
-
-      this._os.notifyObservers(null, "weave:service:sync:start", "");
-
-      if (this._prefs.getBoolPref("bookmarks")) {
-        this._bmkEngine.sync(self.cb);
-        yield;
-      }
-      if (this._prefs.getBoolPref("history")) {
-        this._histEngine.sync(self.cb);
-        yield;
-      }
-      if (this._prefs.getBoolPref("cookies")) {
-        this._cookieEngine.sync(self.cb);
-        yield;
-      }
-      success = true;
-      this._unlock();
-
-    } catch (e) {
-      throw e;
-
-    } finally {
-      if (success)
-        this._os.notifyObservers(null, "weave:service:sync:success", "");
-      else
-        this._os.notifyObservers(null, "weave:service:sync:error", "");
-      self.done();
-    }
-  },
-
-  _resetServer: function WeaveSync__resetServer() {
+  _generateKeys: function WeaveSync__generateKeys() {
     let self = yield;
 
-    if (!this._lock())
-      throw "Could not acrquire lock";
+    this._log.debug("Generating new RSA key");
+    Crypto.RSAkeygen.async(Crypto, self.cb, this._cryptoId);
+    let [privkey, pubkey] = yield;
 
-    this._bmkEngine.resetServer(self.cb);
-    this._histEngine.resetServer(self.cb);
+    this._cryptoId.privkey = privkey;
+    this._cryptoId.pubkey = pubkey;
 
-    this._unlock();
-    self.done();
-  },
+    DAV.MKCOL("private/", self.cb);
+    let ret = yield;
+    if (!ret)
+      throw "Could not create private key directory";
 
-  _resetClient: function WeaveSync__resetClient() {
-    let self = yield;
+    DAV.MKCOL("public/", self.cb);
+    ret = yield;
+    if (!ret)
+      throw "Could not create public key directory";
 
-    if (!this._lock())
-      throw "Could not acrquire lock";
+    DAV.PUT("private/privkey", privkey, self.cb);
+    ret = yield;
+    Utils.ensureStatus(ret.status, "Could not upload private key");
 
-    this._bmkEngine.resetClient(self.cb);
-    this._histEngine.resetClient(self.cb);
-
-    this._unlock();
-    self.done();
-  },
-
-  _serverWipe: function WeaveSync__serverWipe() {
-    let self = yield;
-
-    this._dav.listFiles.async(this._dav, self.cb);
-    let names = yield;
-
-    for (let i = 0; i < names.length; i++) {
-      this._dav.DELETE(names[i], self.cb);
-      let resp = yield;
-      this._log.debug(resp.status);
-    }
-
-    self.done();
+    DAV.PUT("public/pubkey", pubkey, self.cb);
+    ret = yield;
+    Utils.ensureStatus(ret.status, "Could not upload public key");
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupports]),
@@ -521,35 +398,161 @@ WeaveSyncService.prototype = {
 
   // These are global (for all engines)
 
-  login: function WeaveSync_login(password, passphrase) {
-    if (!this._lock())
-      return;
+  login: function WeaveSync_login(onComplete, password, passphrase) {
+    this._localLock(this._notify("login", this._login,
+                                 password, passphrase)).async(this, onComplete);
+  },
+  _login: function WeaveSync__login(password, passphrase) {
+    let self = yield;
+
     // cache password & passphrase
-    // if null, _login() will try to get them from the pw manager
+    // if null, we'll try to get them from the pw manager below
     this._mozId.setTempPassword(password);
     this._cryptoId.setTempPassword(passphrase);
-    let self = this;
-    this._login.async(this, function() {self._unlock()});
+
+    this._log.debug("Logging in");
+
+    if (!this.username)
+      throw "No username set, login failed";
+    if (!this.password)
+      throw "No password given or found in password manager";
+
+    this._checkUserDir.async(this, self.cb);
+    yield;
+
+    DAV.login.async(DAV, self.cb, this.username, this.password);
+    let success = yield;
+    if (!success)
+      throw "Login failed";
+
+    this._versionCheck.async(this, self.cb);
+    yield;
+
+    this._keyCheck.async(this, self.cb);
+    yield;
+
+    self.done(true);
   },
 
   logout: function WeaveSync_logout() {
     this._log.info("Logging out");
-    this._dav.logout();
+    DAV.logout();
     this._mozId.setTempPassword(null); // clear cached password
     this._cryptoId.setTempPassword(null); // and passphrase
-    this._os.notifyObservers(null, "weave:service-logout:success", "");
+    this._os.notifyObservers(null, "weave:service:logout:success", "");
   },
 
-  resetLock: function WeaveSync_resetLock() {
-    if (!this._lock())
-      return;
-    let self = this;
-    this._resetLock.async(this, function() {self._unlock()});
+  resetLock: function WeaveSvc_resetLock(onComplete) {
+    this._notify("reset-server-lock", this._resetLock).async(this, onComplete);
+  },
+  _resetLock: function WeaveSvc__resetLock() {
+    let self = yield;
+    DAV.forceUnlock.async(DAV, self.cb);
+    yield;
+  },
+
+  serverWipe: function WeaveSvc_serverWipe(onComplete) {
+    let cb = function WeaveSvc_serverWipeCb() {
+      let self = yield;
+      this._serverWipe.async(this, self.cb);
+      yield;
+      this.logout();
+      self.done();
+    };
+    this._lock(this._notify("server-wipe", cb)).async(this, onComplete);
+  },
+  _serverWipe: function WeaveSvc__serverWipe() {
+    let self = yield;
+
+    DAV.listFiles.async(DAV, self.cb);
+    let names = yield;
+
+    for (let i = 0; i < names.length; i++) {
+      DAV.DELETE(names[i], self.cb);
+      let resp = yield;
+      this._log.debug(resp.status);
+    }
   },
 
   // These are per-engine
 
-  sync: function WeaveSync_sync() { this._sync.async(this); },
-  resetServer: function WeaveSync_resetServer() { this._resetServer.async(this); },
-  resetClient: function WeaveSync_resetClient() { this._resetClient.async(this); }
+  sync: function WeaveSync_sync(onComplete) {
+    this._lock(this._notify("sync", this._sync)).async(this, onComplete);
+  },
+  _sync: function WeaveSync__sync() {
+    let self = yield;
+
+    if (!DAV.loggedIn)
+      throw "Can't sync: Not logged in";
+
+    this._versionCheck.async(this, self.cb);
+    yield;
+
+    this._keyCheck.async(this, self.cb);
+    yield;
+
+    if (Utils.prefs.getBoolPref("bookmarks")) {
+      this._notify(this._bmkEngine.name + ":sync",
+                   this._syncEngine, this._bmkEngine).async(this, self.cb);
+      yield;
+      this._bmkEngine.syncMounts(self.cb); // FIXME
+      yield;
+    }
+    if (Utils.prefs.getBoolPref("history")) {
+      this._notify(this._histEngine.name + ":sync",
+                   this._syncEngine, this._histEngine).async(this, self.cb);
+      yield;
+    }
+    if (this._prefs.getBoolPref("cookies")) {
+	this._notify(this._cookieEngine.name + ":sync",
+                    this._syncEngine, this._cookieEngine).async(this, self.cb);
+      yield;
+    }
+  },
+  _syncEngine: function WeaveSvc__syncEngine(engine) {
+    let self = yield;
+    engine.sync(self.cb);
+    yield;
+  },
+
+  resetServer: function WeaveSync_resetServer(onComplete) {
+    this._lock(this._notify("reset-server",
+                            this._resetServer)).async(this, onComplete);
+  },
+  _resetServer: function WeaveSync__resetServer() {
+    let self = yield;
+
+    if (!DAV.loggedIn)
+      throw "Can't reset server: Not logged in";
+
+    this._bmkEngine.resetServer(self.cb);
+    yield;
+    this._histEngine.resetServer(self.cb);
+    yield;
+  },
+
+  resetClient: function WeaveSync_resetClient(onComplete) {
+    this._localLock(this._notify("reset-client",
+                                 this._resetClient)).async(this, onComplete);
+  },
+  _resetClient: function WeaveSync__resetClient() {
+    let self = yield;
+    this._bmkEngine.resetClient(self.cb);
+    yield;
+    this._histEngine.resetClient(self.cb);
+    yield;
+  },
+
+  shareBookmarks: function WeaveSync_shareBookmarks(onComplete, username) {
+    this._lock(this._notify("share-bookmarks",
+                            this._shareBookmarks,
+                            username)).async(this, onComplete);
+  },
+  _shareBookmarks: function WeaveSync__shareBookmarks(username) {
+    let self = yield;
+    this._bmkEngine.share(self.cb, username);
+    let ret = yield;
+    self.done(ret);
+  }
+
 };

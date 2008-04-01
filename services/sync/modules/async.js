@@ -74,6 +74,8 @@ AsyncException.prototype = {
 
 function Generator(object, method, onComplete, args) {
   this._log = Log4Moz.Service.getLogger("Async.Generator");
+  this._log.level =
+    Log4Moz.Level[Utils.prefs.getCharPref("log.logger.async")];
   this._object = object;
   this._method = method;
   this.onComplete = onComplete;
@@ -98,7 +100,7 @@ Generator.prototype = {
   set errorOnStop(value) { this._errorOnStop = value; },
 
   get cb() {
-    let cb = Utils.bind2(this, function(data) { this.cont(data); });
+    let self = this, cb = function(data) { self.cont(data); };
     cb.parentGenerator = this;
     return cb;
   },
@@ -121,7 +123,9 @@ Generator.prototype = {
   get onComplete() {
     if (this._onComplete)
       return this._onComplete;
-    return function() { this._log.trace("Generator " + this.name + " has no onComplete"); };
+    return function() {
+      //this._log.trace("Generator " + this.name + " has no onComplete");
+    };
   },
   set onComplete(value) {
     if (value && typeof value != "function")
@@ -137,34 +141,25 @@ Generator.prototype = {
   _handleException: function AsyncGen__handleException(e) {
     if (e instanceof StopIteration) {
       if (this.errorOnStop) {
-        this._log.error("Generator stopped unexpectedly");
+        this._log.error("[" + this.name + "] Generator stopped unexpectedly");
         this._log.trace("Stack trace:\n" + this.trace);
         this._exception = "Generator stopped unexpectedly"; // don't propagate StopIteration
       }
 
     } else if (this.onComplete.parentGenerator instanceof Generator) {
-      //this._log.trace("Saving exception and stack trace");
+      this._log.trace("[" + this.name + "] Saving exception and stack trace");
+      this._log.trace(Async.exceptionStr(this, e));
 
-      switch (typeof e) {
-      case "string":
+      if (e instanceof AsyncException)
+        e.trace = this.trace + e.trace? "\n" + e.trace : "";
+      else
         e = new AsyncException(this, e);
-        break;
-      case "object":
-        if (e.trace) // means we're re-throwing up the stack
-          e.trace = this.trace + "\n" + e.trace;
-        else
-          e.trace = this.trace;
-        break;
-      default:
-        this._log.debug("Unknown exception type: " + typeof(e));
-        break;
-      }
 
       this._exception = e;
 
     } else {
       this._log.error(Async.exceptionStr(this, e));
-      this._log.trace("Stack trace:\n" + this.trace +
+      this._log.debug("Stack trace:\n" + this.trace +
                       (e.trace? "\n" + e.trace : ""));
     }
 
@@ -172,7 +167,10 @@ Generator.prototype = {
     // in the case of StopIteration we could return an error right
     // away, but instead it's easiest/best to let the caller handle
     // the error after a yield / in a callback.
-    this.done();
+    if (!this._timer) {
+      this._log.trace("[" + this.name + "] running done() from _handleException()");
+      this.done();
+    }
   },
 
   run: function AsyncGen_run() {
@@ -181,18 +179,25 @@ Generator.prototype = {
       this.generator.next(); // must initialize before sending
       this.generator.send(this);
     } catch (e) {
-      this._handleException(e);
+      if (!(e instanceof StopIteration) || !this._timer)
+        this._handleException(e);
     }
   },
 
   cont: function AsyncGen_cont(data) {
     try { this.generator.send(data); }
-    catch (e) { this._handleException(e); }
+    catch (e) {
+      if (!(e instanceof StopIteration) || !this._timer)
+        this._handleException(e);
+    }
   },
 
   throw: function AsyncGen_throw(exception) {
     try { this.generator.throw(exception); }
-    catch (e) { this._handleException(e); }
+    catch (e) {
+      if (!(e instanceof StopIteration) || !this._timer)
+        this._handleException(e);
+    }
   },
 
   // async generators can't simply call a callback with the return
@@ -213,15 +218,22 @@ Generator.prototype = {
   },
 
   _done: function AsyncGen__done(retval) {
-    this._generator.close();
+    if (!this._generator) {
+      this._log.error("Async method '" + this.name + "' is missing a 'yield' call " +
+                      "(or called done() after being finalized)");
+      this._log.trace("Initial stack trace:\n" + this.trace);
+    } else {
+      this._generator.close();
+    }
     this._generator = null;
     this._timer = null;
 
     if (this._exception) {
-      this._log.trace("Propagating exception to parent generator");
+      this._log.trace("[" + this.name + "] Propagating exception to parent generator");
       this.onComplete.parentGenerator.throw(this._exception);
     } else {
       try {
+        this._log.trace("[" + this.name + "] Running onComplete()");
         this.onComplete(retval);
       } catch (e) {
         this._log.error("Exception caught from onComplete handler of " +
@@ -243,7 +255,7 @@ Async = {
   // where fooGen is a generator function, and gen is a Generator instance
   // ret is whatever the generator 'returns' via Generator.done().
 
-  run: function Async_run(object, method, onComplete, args) {
+  run: function Async_run(object, method, onComplete /* , arg1, arg2, ... */) {
     let args = Array.prototype.slice.call(arguments, 3);
     let gen = new Generator(object, method, onComplete, args);
     gen.run();
@@ -263,7 +275,7 @@ Async = {
   // Note that 'this' refers to the method being called, not the
   // Async object.
 
-  sugar: function Async_sugar(object, onComplete, extra_args) {
+  sugar: function Async_sugar(object, onComplete  /* , arg1, arg2, ... */) {
     let args = Array.prototype.slice.call(arguments, 1);
     args.unshift(object, this);
     Async.run.apply(Async, args);

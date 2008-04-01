@@ -21,7 +21,7 @@
 <!ENTITY syncItemsList.label                "Synchronize these items:">
 <!ENTITY bookmarksCheckbox.label            "Bookmarks">
 <!ENTITY historyCheckbox.label              "Browsing History">
-<!ENTITY cookiesCheckbox.label              "Cookies (Not recommended!)">
+<!ENTITY cookiesCheckbox.label              "Cookies (Not recommended)">
 
 <!ENTITY addonsGroupbox.description         "This is where you will find, install, and manage Weave add-ons.">
 
