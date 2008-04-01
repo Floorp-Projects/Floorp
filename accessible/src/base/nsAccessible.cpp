@@ -2471,6 +2471,8 @@ nsAccessible::GetValue(nsAString& aValue)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content)
+    return NS_OK;
 
   if (mRoleMapEntry) {
     if (mRoleMapEntry->valueRule == eNoValue) {
