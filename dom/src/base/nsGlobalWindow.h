@@ -585,6 +585,9 @@ protected:
   nsresult GetScrollXY(PRInt32* aScrollX, PRInt32* aScrollY,
                        PRBool aDoFlush);
   nsresult GetScrollMaxXY(PRInt32* aScrollMaxX, PRInt32* aScrollMaxY);
+  
+  nsresult GetOuterSize(nsIntSize* aSizeCSSPixels);
+  nsresult SetOuterSize(PRInt32 aLengthCSSPixels, PRBool aIsWidth);
 
   PRBool IsFrame()
   {
