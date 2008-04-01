@@ -227,6 +227,7 @@ function startupEM()
     needsRestart = gEM.checkForMismatches();
   }
   catch (e) {
+    dump("checkForMismatches threw an exception: " + e + "\n");
     needsRestart = false;
     upgraded = false;
   }
