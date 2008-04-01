@@ -51,6 +51,17 @@ Cu.import("resource://weave/log4moz.js");
 
 let Utils = {
 
+  // lazy load objects from a constructor on first access.  It will
+  // work with the global object ('this' in the global context).
+  lazy: function Weave_lazy(dest, prop, ctr) {
+    let getter = function() {
+      delete dest[prop];
+      dest[prop] = new ctr();
+      return dest[prop];
+    };
+    dest.__defineGetter__(prop, getter);
+  },
+  
   deepEquals: function Weave_deepEquals(a, b) {
     if (!a && !b)
       return true;
@@ -143,14 +154,39 @@ let Utils = {
       }
     }
 
-    let log = Log4Moz.Service.getLogger("Service.Util");
-    log.error(msg + " Error code: " + code);
+    if (msg) {
+      let log = Log4Moz.Service.getLogger("Service.Util");
+      log.error(msg + " Error code: " + code);
+    }
+
     return false;
   },
 
   ensureStatus: function Weave_ensureStatus(args) {
     if (!Utils.checkStatus.apply(Utils, arguments))
       throw 'checkStatus failed';
+  },
+
+  sha1: function Weave_sha1(string) {
+    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+      createInstance(Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
+
+    let hasher = Cc["@mozilla.org/security/hash;1"]
+      .createInstance(Ci.nsICryptoHash);
+    hasher.init(hasher.SHA1);
+
+    let data = converter.convertToByteArray(string, {});
+    hasher.update(data, data.length);
+    let rawHash = hasher.finish(false);
+
+    // return the two-digit hexadecimal code for a byte
+    function toHexString(charCode) {
+      return ("0" + charCode.toString(16)).slice(-2);
+    }
+
+    let hash = [toHexString(rawHash.charCodeAt(i)) for (i in rawHash)].join("");
+    return hash;
   },
 
   makeURI: function Weave_makeURI(URIString) {
@@ -278,6 +314,17 @@ let Utils = {
     return function innerBind() { return method.apply(object, arguments); }
   },
 
+  _prefs: null,
+  get prefs() {
+    if (!this.__prefs) {
+      this.__prefs = Cc["@mozilla.org/preferences-service;1"]
+        .getService(Ci.nsIPrefService);
+      this.__prefs = this.__prefs.getBranch(PREFS_BRANCH);
+      this.__prefs.QueryInterface(Ci.nsIPrefBranch2);
+    }
+    return this.__prefs;
+  },
+
   /*
    * Event listener object
    * Used to handle XMLHttpRequest and nsITimer callbacks
@@ -286,7 +333,9 @@ let Utils = {
   EventListener: function Weave_EventListener(handler, eventName) {
     this._handler = handler;
     this._eventName = eventName;
-    this._log = Log4Moz.Service.getLogger("Service.EventHandler");
+    this._log = Log4Moz.Service.getLogger("Async.EventHandler");
+    this._log.level =
+      Log4Moz.Level[Utils.prefs.getCharPref("log.logger.async")];
   }
 };
 

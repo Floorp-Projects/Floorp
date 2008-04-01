@@ -1,0 +1,6 @@
+<!ENTITY dialog.title        "Weave Sharing">
+<!ENTITY close.button.label  "Close">
+<!ENTITY share.button.label  "Share">
+<!ENTITY description.top     "Enter a the ID of the user you wish to share your bookmarks with:">
+<!ENTITY username.label      "Weave ID (Email):">
+<!ENTITY status.waiting      "Waiting...">

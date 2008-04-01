@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['DAVCollection'];
+const EXPORTED_SYMBOLS = ['DAV', 'DAVCollection'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -45,8 +45,11 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/async.js");
+Cu.import("resource://weave/constants.js");
 
 Function.prototype.async = Async.sugar;
+
+Utils.lazy(this, 'DAV', DAVCollection);
 
 /*
  * DAV object
@@ -57,8 +60,11 @@ function DAVCollection(baseURL) {
   this._baseURL = baseURL;
   this._authProvider = new DummyAuthProvider();
   this._log = Log4Moz.Service.getLogger("Service.DAV");
+  this._log.level =
+    Log4Moz.Level[Utils.prefs.getCharPref("log.logger.service.dav")];
 }
 DAVCollection.prototype = {
+
   __dp: null,
   get _dp() {
     if (!this.__dp)
@@ -73,6 +79,8 @@ DAVCollection.prototype = {
     return this._baseURL;
   },
   set baseURL(value) {
+    if (value[value.length-1] != '/')
+      value = value + '/';
     this._baseURL = value;
   },
 
@@ -81,15 +89,27 @@ DAVCollection.prototype = {
     return this._loggedIn;
   },
 
+  get locked() {
+    return !this._lockAllowed || this._token != null;
+  },
+
+  _lockAllowed: true,
+  get allowLock() {
+    return this._lockAllowed;
+  },
+  set allowLock(value) {
+    this._lockAllowed = value;
+  },
+
   _makeRequest: function DC__makeRequest(op, path, headers, data) {
     let self = yield;
     let ret;
 
-    this._log.debug("Creating " + op + " request for " + this._baseURL + path);
+    this._log.debug(op + " request for " + path);
 
     let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
     request = request.QueryInterface(Ci.nsIDOMEventTarget);
-  
+
     request.addEventListener("load", new Utils.EventListener(self.cb, "load"), false);
     request.addEventListener("error", new Utils.EventListener(self.cb, "error"), false);
     request = request.QueryInterface(Ci.nsIXMLHttpRequest);
@@ -106,9 +126,9 @@ DAVCollection.prototype = {
     let key;
     for (key in headers) {
       if (key == 'Authorization')
-        this._log.debug("HTTP Header " + key + ": ***** (suppressed)");
+        this._log.trace("HTTP Header " + key + ": ***** (suppressed)");
       else
-        this._log.debug("HTTP Header " + key + ": " + headers[key]);
+        this._log.trace("HTTP Header " + key + ": " + headers[key]);
       request.setRequestHeader(key, headers[key]);
     }
 
@@ -142,33 +162,33 @@ DAVCollection.prototype = {
     try {
       let components = path.split('/');
       let path2 = '';
-  
+
       for (let i = 0; i < components.length; i++) {
-  
+
         // trailing slashes will cause an empty path component at the end
         if (components[i] == '')
           break;
-  
+
         path2 = path2 + components[i];
-  
+
         // check if it exists first
         this._makeRequest.async(this, self.cb, "GET", path2 + "/", this._defaultHeaders);
         let ret = yield;
-        if (!(ret.status == 404 || ret.status == 500)) { // FIXME: 500 is a services.m.c oddity
-          this._log.debug("Skipping creation of path " + path2 +
+        if (ret.status != 404) {
+          this._log.trace("Skipping creation of path " + path2 +
         		  " (got status " + ret.status + ")");
         } else {
           this._log.debug("Creating path: " + path2);
           this._makeRequest.async(this, self.cb, "MKCOL", path2,
         			  this._defaultHeaders);
           ret = yield;
-  
+
           if (ret.status != 201) {
             this._log.debug(ret.responseText);
             throw 'request failed: ' + ret.status;
           }
         }
-  
+
         // add slash *after* the request, trailing slashes cause a 412!
         path2 = path2 + "/";
       }
@@ -211,6 +231,9 @@ DAVCollection.prototype = {
   },
 
   LOCK: function DC_LOCK(path, data, onComplete) {
+    if (!this._lockAllowed)
+      throw "Cannot acquire lock (internal lock)";
+
     let headers = {'Content-type': 'text/xml; charset="utf-8"',
                    'Depth': 'infinity',
                    'Timeout': 'Second-600'};
@@ -264,8 +287,8 @@ DAVCollection.prototype = {
       self.done(true);
       yield;
     }
- 
-    this._log.info("Logging in");
+
+    this._log.debug("Logging in");
 
     let URI = Utils.makeURI(this._baseURL);
     this._auth = "Basic " + btoa(username + ":" + password);
@@ -286,7 +309,7 @@ DAVCollection.prototype = {
   },
 
   logout: function DC_logout() {
-    this._log.debug("Logging out (forgetting auth header)");
+    this._log.trace("Logging out (forgetting auth header)");
     this._loggedIn = false;
     this.__auth = null;
   },
@@ -297,7 +320,7 @@ DAVCollection.prototype = {
     let self = yield;
     let ret = null;
 
-    this._log.info("Getting active lock token");
+    this._log.debug("Getting active lock token");
     this.PROPFIND("",
                   "<?xml version=\"1.0\" encoding=\"utf-8\" ?>" +
                   "<D:propfind xmlns:D='DAV:'>" +
@@ -313,12 +336,13 @@ DAVCollection.prototype = {
 
     let tokens = Utils.xpath(resp.responseXML, '//D:locktoken/D:href');
     let token = tokens.iterateNext();
-    ret = token.textContent;
+    if (token)
+      ret = token.textContent;
 
     if (ret)
-      this._log.debug("Found an active lock token");
+      this._log.trace("Found an active lock token");
     else
-      this._log.debug("No active lock token found");
+      this._log.trace("No active lock token found");
     self.done(ret);
   },
 
@@ -326,7 +350,7 @@ DAVCollection.prototype = {
     let self = yield;
     this._token = null;
 
-    this._log.info("Acquiring lock");
+    this._log.trace("Acquiring lock");
 
     if (this._token) {
       this._log.debug("Lock called, but we already hold a token");
@@ -354,7 +378,7 @@ DAVCollection.prototype = {
       this._token = token.textContent;
 
     if (this._token)
-      this._log.debug("Lock acquired");
+      this._log.trace("Lock acquired");
     else
       this._log.warn("Could not acquire lock");
 
@@ -364,9 +388,9 @@ DAVCollection.prototype = {
   unlock: function DC_unlock() {
     let self = yield;
 
-    this._log.info("Releasing lock");
+    this._log.trace("Releasing lock");
 
-    if (this._token === null) {
+    if (!this.locked) {
       this._log.debug("Unlock called, but we don't hold a token right now");
       self.done(true);
       yield;
@@ -384,9 +408,9 @@ DAVCollection.prototype = {
     this._token = null;
 
     if (this._token)
-      this._log.info("Could not release lock");
+      this._log.trace("Could not release lock");
     else
-      this._log.info("Lock released (or we didn't have one)");
+      this._log.trace("Lock released (or we didn't have one)");
 
     self.done(!this._token);
   },
@@ -395,25 +419,25 @@ DAVCollection.prototype = {
     let self = yield;
     let unlocked = true;
 
-    this._log.info("Forcibly releasing any server locks");
+    this._log.debug("Forcibly releasing any server locks");
 
     this._getActiveLock.async(this, self.cb);
     this._token = yield;
 
     if (!this._token) {
-      this._log.info("No server lock found");
+      this._log.debug("No server lock found");
       self.done(true);
       yield;
     }
 
-    this._log.info("Server lock found, unlocking");
+    this._log.trace("Server lock found, unlocking");
     this.unlock.async(this, self.cb);
     unlocked = yield;
 
     if (unlocked)
-      this._log.debug("Lock released");
+      this._log.trace("Lock released");
     else
-      this._log.debug("No lock released");
+      this._log.trace("No lock released");
     self.done(unlocked);
   },
 
@@ -443,7 +467,7 @@ function DummyAuthProvider() {}
 DummyAuthProvider.prototype = {
   // Implement notification callback interfaces so we can suppress UI
   // and abort loads for bad SSL certs and HTTP authorization requests.
-  
+
   // Interfaces this component implements.
   interfaces: [Ci.nsIBadCertListener,
                Ci.nsIAuthPromptProvider,
@@ -479,7 +503,7 @@ DummyAuthProvider.prototype = {
   },
 
   // nsIInterfaceRequestor
-  
+
   getInterface: function DAP_getInterface(iid) {
     return this.QueryInterface(iid);
   },
@@ -487,7 +511,7 @@ DummyAuthProvider.prototype = {
   // nsIBadCertListener
 
   // Suppress UI and abort secure loads from servers with bad SSL certificates.
-  
+
   confirmUnknownIssuer: function DAP_confirmUnknownIssuer(socketInfo, cert, certAddType) {
     return false;
   },
@@ -504,7 +528,7 @@ DummyAuthProvider.prototype = {
   },
 
   // nsIAuthPromptProvider
-  
+
   getAuthPrompt: function(aPromptReason, aIID) {
     this._authFailed = true;
     throw Cr.NS_ERROR_NOT_AVAILABLE;
