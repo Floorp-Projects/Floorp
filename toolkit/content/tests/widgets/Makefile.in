@@ -109,7 +109,7 @@ _TEST_FILES += test_menubar.xul \
 endif
 
 ifeq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-_TEST_FILES += test_contextmenu_list.xul \
+_TEST_FILES += test_contextmenu_list.xul 
 endif
 
 libs:: $(_TEST_FILES)
