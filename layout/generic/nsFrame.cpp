@@ -5310,7 +5310,7 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
 
   const nsStyleDisplay *disp = GetStyleDisplay();
   if (!IsBoxWrapped() && IsThemed(disp)) {
-    nsRect r;
+    nsRect r(nsPoint(0, 0), aNewSize);
     nsPresContext *presContext = PresContext();
     if (presContext->GetTheme()->
           GetWidgetOverflow(presContext->DeviceContext(), this,
