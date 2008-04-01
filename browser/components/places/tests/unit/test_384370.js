@@ -284,12 +284,13 @@ function testUnfiledBookmarks() {
   var result = PlacesUtils.history.executeQuery(query, PlacesUtils.history.getNewQueryOptions());
   var rootNode = result.root;
   rootNode.containerOpen = true;
-  do_check_eq(rootNode.childCount, bookmarkData.length);
-  for (var i = 0; i < rootNode.childCount; i++) {
+  // child count (add 1 for pre-existing item)
+  do_check_eq(rootNode.childCount, bookmarkData.length + 1);
+  for (var i = 1; i < rootNode.childCount; i++) {
     var child = rootNode.getChild(i);
-    dump(bookmarkData[i].uri.spec + " == " + child.uri + "?\n");
-    do_check_true(bookmarkData[i].uri.equals(uri(child.uri)));
-    do_check_eq(child.title, bookmarkData[i].title);
+    dump(bookmarkData[i - 1].uri.spec + " == " + child.uri + "?\n");
+    do_check_true(bookmarkData[i - 1].uri.equals(uri(child.uri)));
+    do_check_eq(child.title, bookmarkData[i - 1].title);
     /* WTF
     if (child.tags)
       do_check_eq(child.tags, bookmarkData[i].title);
