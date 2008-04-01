@@ -75,7 +75,8 @@ Store.prototype = {
   },
 
   applyCommands: function Store_applyCommands(commandList) {
-    let self = yield, timer, listener;
+    let self = yield;
+    let timer, listener;
 
     if (this._yieldDuringApply) {
       listener = new Utils.EventListener(self.cb);
@@ -849,6 +850,7 @@ CookieStore.prototype = {
 		// since they're deprecated.
 
 	    }
+	}
     return items;
   },
 
