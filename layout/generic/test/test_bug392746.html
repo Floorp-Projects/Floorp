@@ -70,8 +70,11 @@ function ctrlselect(aX,aY, aX2, aY2) {
   window.onload=function() {
   	// XXX: This test causes subsequent tests to fail on Linux,
   	// so disable on Linux for now.
-	if (navigator.platform.indexOf("Linux") >= 0)
+	if (navigator.platform.indexOf("Linux") >= 0) {
+          SimpleTest.waitForExplicitFinish();
+          SimpleTest.finish();
   	  return;
+        }
 
     SimpleTest.waitForExplicitFinish();
     setTimeout(test, 0);
