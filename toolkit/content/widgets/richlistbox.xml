@@ -539,16 +539,6 @@
         </setter>
       </property>
     </implementation>
-
-    <handlers>
-      <handler event="contextmenu" phase="capturing">
-        <![CDATA[
-          // handle someone right-clicking on an item other than the current one
-          if (event.target == this && this.control)
-            this.control.currentItem = this;
-        ]]>
-      </handler>
-    </handlers>
   </binding>
 </bindings>
 
