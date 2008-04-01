@@ -5459,37 +5459,6 @@ PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
   return DispatchWindowEvent(&event);
 }
 
-static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
-
-static already_AddRefed<nsIRegion>
-ConvertHRGNToRegion(HRGN aRgn)
-{
-  nsCOMPtr<nsIRegion> region = do_CreateInstance(kRegionCID);
-  if (!region)
-    return nsnull;
-
-  region->Init();
-
-  if (aRgn != NULL) {
-    DWORD size = ::GetRegionData(aRgn, 0, NULL);
-    nsAutoTArray<PRUint8,100> buffer;
-    if (!buffer.SetLength(size))
-      return region.forget();
-
-    RGNDATA* data = reinterpret_cast<RGNDATA*>(buffer.Elements());
-    if (!::GetRegionData(aRgn, size, data))
-      return region.forget();
-    
-    RECT* rects = reinterpret_cast<RECT*>(data->Buffer);
-    for (PRUint32 i = 0; i < data->rdh.nCount; ++i) {
-      RECT* r = rects + i;
-      region->Union(r->left, r->top, r->right - r->left, r->bottom - r->top);
-    }
-  }
-
-  return region.forget();
-}
-
 //-------------------------------------------------------------------------
 //
 // Paint
@@ -5534,32 +5503,21 @@ PRBool nsWindow::OnPaint(HDC aDC)
 
   HDC hDC = aDC ? aDC : (::BeginPaint(mWnd, &ps));
   mPaintDC = hDC;
-  HRGN paintRgn = NULL;
+  RECT paintRect;
 
 #ifdef MOZ_XUL
   if (aDC || mIsTransparent) {
 #else
   if (aDC) {
 #endif
-    RECT paintRect;
     ::GetClientRect(mWnd, &paintRect);
-    paintRgn = ::CreateRectRgn(paintRect.left, paintRect.top, paintRect.right, paintRect.bottom);
   }
   else {
-    paintRgn = ::CreateRectRgn(0, 0, 0, 0);
-    if (paintRgn != NULL) {
-      int result = GetRandomRgn(hDC, paintRgn, SYSRGN);
-      if (result == 1) {
-        POINT pt = {0,0};
-        ::MapWindowPoints(NULL, mWnd, &pt, 1);
-        ::OffsetRgn(paintRgn, pt.x, pt.y);
-      }
-    }
+    paintRect = ps.rcPaint;
   }
 
-  nsCOMPtr<nsIRegion> paintRgnWin = ConvertHRGNToRegion(paintRgn);
-
-  if (paintRgnWin && !paintRgnWin->IsEmpty()) {
+  if (!IsRectEmpty(&paintRect))
+  {
     // call the event callback
     if (mEventCallback)
     {
@@ -5567,9 +5525,12 @@ PRBool nsWindow::OnPaint(HDC aDC)
 
       InitEvent(event);
 
-      event.region = paintRgnWin;
-      event.rect = nsnull;
- 
+      nsRect rect(paintRect.left,
+                  paintRect.top,
+                  paintRect.right - paintRect.left,
+                  paintRect.bottom - paintRect.top);
+      event.region = nsnull;
+      event.rect = &rect;
       // Should probably pass in a real region here, using GetRandomRgn
       // http://msdn.microsoft.com/library/default.asp?url=/library/en-us/gdi/clipping_4q0e.asp
 
