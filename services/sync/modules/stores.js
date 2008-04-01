@@ -390,7 +390,7 @@ BookmarksStore.prototype = {
       newId = this._bms.createFolder(parentId,
                                      command.data.title,
                                      command.data.index);
-      
+
       this._ans.setItemAnnotation(newId, "weave/mounted-share-id",
                                   command.data.mountId, 0, this._ans.EXPIRE_NEVER);
       break;
@@ -490,7 +490,7 @@ BookmarksStore.prototype = {
       } break;
       case "tags": {
         let tagsURI = this._bms.getBookmarkURI(itemId);
-        this._ts.untagURI(URI, null);
+        this._ts.untagURI(tagsURI, null);
         this._ts.tagURI(tagsURI, command.data.tags);
       } break;
       case "keyword":
@@ -612,7 +612,7 @@ BookmarksStore.prototype = {
     }
 
     return ret;
-  }, 
+  },
 
   _resetGUIDs: function BSS__resetGUIDs(node) {
     if (this._ans.itemHasAnnotation(node.itemId, "placesInternal/GUID"))
