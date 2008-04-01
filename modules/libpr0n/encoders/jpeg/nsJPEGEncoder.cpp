@@ -265,8 +265,8 @@ NS_IMETHODIMP nsJPEGEncoder::ReadSegments(nsWriteSegmentFun aWriter, void *aClos
   if (aCount > maxCount)
     aCount = maxCount;
   nsresult rv = aWriter(this, aClosure,
-                        reinterpret_cast<const char*>(mImageBuffer),
-                        mImageBufferReadPoint, aCount, _retval);
+                        reinterpret_cast<const char*>(mImageBuffer+mImageBufferReadPoint),
+                        0, aCount, _retval);
   if (NS_SUCCEEDED(rv)) {
     NS_ASSERTION(*_retval <= aCount, "bad write count");
     mImageBufferReadPoint += *_retval;
