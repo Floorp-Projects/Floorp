@@ -848,33 +848,56 @@ function extractRDFFileToTempDir(zipFile, fileName, suppressErrors) {
  * @returns The Install Manifest datasource
  */
 function getInstallManifest(file) {
-  var fis = Cc["@mozilla.org/network/file-input-stream;1"].
-            createInstance(Ci.nsIFileInputStream);
-  fis.init(file, -1, -1, false);
-  fis.QueryInterface(Ci.nsILineInputStream);
-  var line = { value: "" };
-  var text = "";
-  while (fis.readLine(line))
-    text += line.value;
-  fis.close();
+  var uri = getURIFromFile(file);
+  try {
+    var fis = Cc["@mozilla.org/network/file-input-stream;1"].
+              createInstance(Ci.nsIFileInputStream);
+    fis.init(file, -1, -1, false);
+    var bis = Cc["@mozilla.org/network/buffered-input-stream;1"].
+              createInstance(Ci.nsIBufferedInputStream);
+    bis.init(fis, 4096);
+    
+    var rdfParser = Cc["@mozilla.org/rdf/xml-parser;1"].
+                    createInstance(Ci.nsIRDFXMLParser)
+    var ds = Cc["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"].
+             createInstance(Ci.nsIRDFDataSource);
+    var listener = rdfParser.parseAsync(ds, uri);
+    var channel = Cc["@mozilla.org/network/input-stream-channel;1"].
+                  createInstance(Ci.nsIInputStreamChannel);
+    channel.setURI(uri);
+    channel.contentStream = bis;
+    channel.QueryInterface(Ci.nsIChannel);
+    channel.contentType = "text/xml";
   
-  var rdfParser = Cc["@mozilla.org/rdf/xml-parser;1"].
-                  createInstance(Ci.nsIRDFXMLParser)
-  var ds = Cc["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"].
-           createInstance(Ci.nsIRDFDataSource);
-  rdfParser.parseString(ds, getURIFromFile(file), text);
+    listener.onStartRequest(channel, null);
+    try {
+      var pos = 0;
+      var count = bis.available();
+      while (count > 0) {
+        listener.onDataAvailable(channel, null, bis, pos, count);
+        pos += count;
+        count = bis.available();
+      }
+      listener.onStopRequest(channel, null, Components.results.NS_OK);
+      bis.close();
+      fis.close();
 
-  var arcs = ds.ArcLabelsOut(gInstallManifestRoot);
-  if (!arcs.hasMoreElements()) {
-    ds = null;
-    var uri = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService)
-                        .newFileURI(file);
-    var url = uri.QueryInterface(Ci.nsIURL);
-    showMessage("malformedTitle", [], "malformedMessage",
-                [BundleManager.appName, url.fileName]);
+      var arcs = ds.ArcLabelsOut(gInstallManifestRoot);
+      if (arcs.hasMoreElements())
+        return ds;
+    }
+    catch (e) {
+      listener.onStopRequest(channel, null, e.result);
+      bis.close();
+      fis.close();
+    }
   }
-  return ds;
+  catch (e) { }
+
+  var url = uri.QueryInterface(Ci.nsIURL);
+  showMessage("malformedTitle", [], "malformedMessage",
+              [BundleManager.appName, url.fileName]);
+  return null;
 }
 
 /**
