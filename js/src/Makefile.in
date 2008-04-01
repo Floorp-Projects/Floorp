@@ -65,7 +65,7 @@ INTERP_OPTIMIZER = -O3 -fstrict-aliasing
 endif
 else
 ifeq ($(OS_ARCH),SunOS)
-MODULE_OPTIMIZE_FLAGS = -O
+MODULE_OPTIMIZE_FLAGS = -xO4
 endif
 ifeq ($(OS_ARCH),WINNT)
 MODULE_OPTIMIZE_FLAGS = -O2 -GL
