@@ -2344,6 +2344,9 @@ var StartupCache = {
           // We hash on guid second, because we want a way to quickly determine
           // item GUID during a check loop that runs on every startup.
           var parts = line.value.split("\t");
+          // Silently drop any entries in unknown install locations
+          if (!InstallLocations.get(parts[0]))
+            continue;
           var op = parts[4];
           this._putRaw(parts[0], parts[1], parts[2], parts[3], op, true);
           if (op)
@@ -2885,86 +2888,87 @@ ExtensionManager.prototype = {
   },
 
   /**
+   * Configure an item that was installed or upgraded by another process
+   * so that |_finishOperations| can properly complete processing and
+   * registration.
+   * As this is the only point at which we can reliably know the Install
+   * Location of this item, we use this as an opportunity to:
+   * 1. Check that this item is compatible with this Firefox version.
+   * 2. If it is, configure the item by using the supplied callback.
+   *    We do not do any special handling in the case that the item is
+   *    not compatible with this version other than to simply not register
+   *    it and log that fact - there is no "phone home" check for updates.
+   *    It may or may not make sense to do this, but for now we'll just
+   *    not register.
+   * @param   id
+   *          The GUID of the item to validate and configure.
+   * @param   location
+   *          The Install Location where this item is installed.
+   * @param   callback
+   *          The callback that configures the item for installation upon
+   *          successful validation.
+   */
+   installItem: function(id, location, callback) {
+    // As this is the only pint at which we reliably know the installation
+    var installRDF = location.getItemFile(id, FILE_INSTALL_MANIFEST);
+    if (installRDF.exists()) {
+      LOG("Item Installed/Upgraded at Install Location: " + location.name +
+          " Item ID: " + id + ", attempting to register...");
+      var installManifest = getInstallManifest(installRDF);
+      var installData = this._getInstallData(installManifest);
+      if (installData.error == INSTALLERROR_SUCCESS) {
+        LOG("... success, item is compatible");
+        callback(installManifest, installData.id, location, installData.type);
+      }
+      else if (installData.error == INSTALLERROR_INCOMPATIBLE_VERSION) {
+        LOG("... success, item installed but is not compatible");
+        callback(installManifest, installData.id, location, installData.type);
+        this._appDisableItem(id);
+      }
+      else if (installData.error == INSTALLERROR_INSECURE_UPDATE) {
+        LOG("... success, item installed but does not provide updates securely");
+        callback(installManifest, installData.id, location, installData.type);
+        this._appDisableItem(id);
+      }
+      else if (installData.error == INSTALLERROR_BLOCKLISTED) {
+        LOG("... success, item installed but is blocklisted");
+        callback(installManifest, installData.id, location, installData.type);
+        this._appDisableItem(id);
+      }
+      else {
+        /**
+         * Turns an error code into a message for logging
+         * @param   error
+         *          an Install Error code
+         * @returns A string message to be logged.
+         */
+        function translateErrorMessage(error) {
+          switch (error) {
+          case INSTALLERROR_INVALID_GUID:
+            return "Invalid GUID";
+          case INSTALLERROR_INVALID_VERSION:
+            return "Invalid Version";
+          case INSTALLERROR_INCOMPATIBLE_PLATFORM:
+            return "Incompatible Platform";
+          }
+        }
+        LOG("... failure, item is not compatible, error: " +
+            translateErrorMessage(installData.error));
+
+        // Add the item to the Startup Cache anyway, so we don't re-detect it
+        // every time the app starts.
+        StartupCache.put(location, id, OP_NONE, true);
+      }
+    }
+  },
+
+  /**
    * Check for changes to items that were made independently of the Extension
    * Manager, e.g. items were added or removed from a Install Location or items
    * in an Install Location changed.
    */
   _checkForFileChanges: function() {
     var em = this;
-    /**
-     * Configure an item that was installed or upgraded by another process
-     * so that |_finishOperations| can properly complete processing and
-     * registration.
-     * As this is the only point at which we can reliably know the Install
-     * Location of this item, we use this as an opportunity to:
-     * 1. Check that this item is compatible with this Firefox version.
-     * 2. If it is, configure the item by using the supplied callback.
-     *    We do not do any special handling in the case that the item is
-     *    not compatible with this version other than to simply not register
-     *    it and log that fact - there is no "phone home" check for updates.
-     *    It may or may not make sense to do this, but for now we'll just
-     *    not register.
-     * @param   id
-     *          The GUID of the item to validate and configure.
-     * @param   location
-     *          The Install Location where this item is installed.
-     * @param   callback
-     *          The callback that configures the item for installation upon
-     *          successful validation.
-     */
-    function installItem(id, location, callback) {
-      // As this is the only pint at which we reliably know the installation
-      var installRDF = location.getItemFile(id, FILE_INSTALL_MANIFEST);
-      if (installRDF.exists()) {
-        LOG("Item Installed/Upgraded at Install Location: " + location.name +
-            " Item ID: " + id + ", attempting to register...");
-        var installManifest = getInstallManifest(installRDF);
-        var installData = em._getInstallData(installManifest);
-        if (installData.error == INSTALLERROR_SUCCESS) {
-          LOG("... success, item is compatible");
-          callback(installManifest, installData.id, location, installData.type);
-        }
-        else if (installData.error == INSTALLERROR_INCOMPATIBLE_VERSION) {
-          LOG("... success, item installed but is not compatible");
-          callback(installManifest, installData.id, location, installData.type);
-          em._appDisableItem(id);
-        }
-        else if (installData.error == INSTALLERROR_INSECURE_UPDATE) {
-          LOG("... success, item installed but does not provide updates securely");
-          callback(installManifest, installData.id, location, installData.type);
-          em._appDisableItem(id);
-        }
-        else if (installData.error == INSTALLERROR_BLOCKLISTED) {
-          LOG("... success, item installed but is blocklisted");
-          callback(installManifest, installData.id, location, installData.type);
-          em._appDisableItem(id);
-        }
-        else {
-          /**
-           * Turns an error code into a message for logging
-           * @param   error
-           *          an Install Error code
-           * @returns A string message to be logged.
-           */
-          function translateErrorMessage(error) {
-            switch (error) {
-            case INSTALLERROR_INVALID_GUID:
-              return "Invalid GUID";
-            case INSTALLERROR_INVALID_VERSION:
-              return "Invalid Version";
-            case INSTALLERROR_INCOMPATIBLE_PLATFORM:
-              return "Incompatible Platform";
-            }
-          }
-          LOG("... failure, item is not compatible, error: " +
-              translateErrorMessage(installData.error));
-
-          // Add the item to the Startup Cache anyway, so we don't re-detect it
-          // every time the app starts.
-          StartupCache.put(location, id, OP_NONE, true);
-        }
-      }
-    }
 
     /**
      * Determines if an item can be used based on whether or not the install
@@ -3181,11 +3185,11 @@ ExtensionManager.prototype = {
                 LOG("Item Location path changed: " + lf.path + " Item ID: " +
                     id + " Location Key: " + location.name + ", attempting to upgrade item...");
                 if (canUse(id, location)) {
-                  installItem(id, location,
-                              function(installManifest, id, location, type) {
-                                em._upgradeItem(installManifest, id, location,
-                                                type);
-                              });
+                  this.installItem(id, location,
+                                   function(installManifest, id, location, type) {
+                                     em._upgradeItem(installManifest, id, location,
+                                                     type);
+                                   });
                   isDirty = true;
                 }
               }
@@ -3232,11 +3236,11 @@ ExtensionManager.prototype = {
       if (canUse(id, location)) {
         LOG("Item Installed via directory addition to Install Location: " +
             location.name + " Item ID: " + id + ", attempting to register...");
-        installItem(id, location,
-                    function(installManifest, id, location, type) {
-                      em._configureForthcomingItem(installManifest, id, location,
-                                                   type);
-                    });
+        this.installItem(id, location,
+                         function(installManifest, id, location, type) {
+                           em._configureForthcomingItem(installManifest, id, location,
+                                                        type);
+                         });
         // Disable add-ons on install when the InstallDisabled file exists.
         // This is so Talkback will be disabled on a subset of installs.
         var installDisabled = location.getItemFile(id, "InstallDisabled");
@@ -3596,17 +3600,24 @@ ExtensionManager.prototype = {
     }
     ds.endUpdateBatch();
 
+    var badItems = [];
     var allAppManaged = true;
     var ctr = getContainer(ds, ds._itemRoot);
     var elements = ctr.GetElements();
     while (elements.hasMoreElements()) {
       var itemResource = elements.getNext().QueryInterface(Ci.nsIRDFResource);
       var id = stripPrefix(itemResource.Value, PREFIX_ITEM_URI);
+      var location = this.getInstallLocation(id);
+      if (!location) {
+        // Item was in an unknown install location
+        badItems.push(id);
+        continue;
+      }
+
       if (ds.getItemProperty(id, "appManaged") == "true") {
         // Force an update of the metadata for appManaged extensions since the
         // last modified time is not updated for directories on FAT / FAT32
         // filesystems when software update applies a new version of the app.
-        var location = this.getInstallLocation(id);
         if (location.name == KEY_APP_GLOBAL) {
           var installRDF = location.getItemFile(id, FILE_INSTALL_MANIFEST);
           if (installRDF.exists()) {
@@ -3622,7 +3633,6 @@ ExtensionManager.prototype = {
       if (ds.getItemProperty(id, "providesUpdatesSecurely") == "false") {
         /* It's possible the previous version did not understand updateKeys so
          * check if we can import one for this addon from it's manifest. */
-        location = this.getInstallLocation(id);
         installRDF = location.getItemFile(id, FILE_INSTALL_MANIFEST);
         if (installRDF.exists()) {
           metadataDS = getInstallManifest(installRDF);
@@ -3644,6 +3654,36 @@ ExtensionManager.prototype = {
       ds.setItemProperty(id, EM_R("availableUpdateURL"), null);
       ds.setItemProperty(id, EM_R("availableUpdateVersion"), null);
     }
+
+    // Must clean up outside of the loop. Modifying the container while
+    // iterating its contents is bad.
+    for (var i = 0; i < badItems.length; i++) {
+      id = badItems[i];
+      LOG("Item " + id + " was installed in an unknown location, removing.");
+      var disabled = ds.getItemProperty(id, "userDisabled") == "true";
+      // Clean up the datasource
+      ds.removeCorruptItem(id);
+      // Check for any unhidden items.
+      var entries = StartupCache.findEntries(id);
+      if (entries.length > 0) {
+        var newLocation = InstallLocations.get(entries[0].location);
+        for (var j = 1; j < entries.length; j++) {
+          location = InstallLocations.get(entries[j].location);
+          if (newLocation.priority < location.priority)
+            newLocation = location;
+        }
+        LOG("Activating item " + id + " in " + newLocation.name);
+        var em = this;
+        this.installItem(id, newLocation,
+                         function(installManifest, id, location, type) {
+                           em._configureForthcomingItem(installManifest, id, location,
+                                                        type);
+                         });
+        if (disabled)
+          em.disableItem(id);
+      }
+    }
+
     // Update the manifests to reflect the items that were disabled / enabled.
     this._updateManifests(true);
 
@@ -3894,9 +3934,12 @@ ExtensionManager.prototype = {
     for (var i = 0; i < allItems.length; ++i) {
       var item = allItems[i];
 
+      var installLocation = this.getInstallLocation(item.id);
+      // An entry with an invalid install location is not active.
+      if (!installLocation)
+        continue;
       // An item entry is valid only if it is not disabled, not about to
       // be disabled, and not about to be uninstalled.
-      var installLocation = this.getInstallLocation(item.id);
       if (installLocation.name in StartupCache.entries &&
           item.id in StartupCache.entries[installLocation.name] &&
           StartupCache.entries[installLocation.name][item.id]) {
@@ -4780,7 +4823,7 @@ ExtensionManager.prototype = {
     var ds = this.datasource;
     var type = ds.getItemProperty(id, "type");
     if (id == 0 || id == -1) {
-      ds.removeCorruptItem(id, type);
+      ds.removeCorruptItem(id);
       return;
     }
     var installLocation = this.getInstallLocation(id);
@@ -7539,6 +7582,7 @@ ExtensionsDataSource.prototype = {
   removeCorruptItem: function(id) {
     this.removeItemMetadata(id);
     this.removeItemFromContainer(id);
+    this.visibleItems[id] = null;
   },
 
   /**
