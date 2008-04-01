@@ -86,8 +86,7 @@ nsMenuBarFrame::nsMenuBarFrame(nsIPresShell* aShell, nsStyleContext* aContext):
     mStayActive(PR_FALSE),
     mIsActive(PR_FALSE),
     mCurrentMenu(nsnull),
-    mTarget(nsnull),
-    mCaretWasVisible(PR_FALSE)
+    mTarget(nsnull)
 {
 } // cntr
 
@@ -150,57 +149,6 @@ nsMenuBarFrame::SetActive(PRBool aActiveFlag)
   else {
     RemoveKeyboardNavigator();
   }
-  
-  // We don't want the caret to blink while the menus are active
-  // The caret distracts screen readers and other assistive technologies from the menu selection
-  // There is 1 caret per document, we need to find the focused document and toggle its caret 
-  do {
-    nsIPresShell *presShell = PresContext()->GetPresShell();
-    if (!presShell)
-      break;
-
-    nsIDocument *document = presShell->GetDocument();
-    if (!document)
-      break;
-
-    nsCOMPtr<nsISupports> container = document->GetContainer();
-    nsCOMPtr<nsPIDOMWindow> windowPrivate = do_GetInterface(container);
-    if (!windowPrivate)
-      break;
-
-    nsIFocusController *focusController =
-      windowPrivate->GetRootFocusController();
-    if (!focusController)
-      break;
-
-    nsCOMPtr<nsIDOMWindowInternal> windowInternal;
-    focusController->GetFocusedWindow(getter_AddRefs(windowInternal));
-    if (!windowInternal)
-      break;
-
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    nsCOMPtr<nsIDocument> focusedDoc;
-    windowInternal->GetDocument(getter_AddRefs(domDoc));
-    focusedDoc = do_QueryInterface(domDoc);
-    if (!focusedDoc)
-      break;
-
-    presShell = focusedDoc->GetPrimaryShell();
-    nsCOMPtr<nsISelectionController> selCon(do_QueryInterface(presShell));
-    // there is no selection controller for full page plugins
-    if (!selCon)
-      break;
-
-    if (mIsActive) {// store whether caret was visible so that we can restore that state when menu is closed
-      PRBool isCaretVisible;
-      selCon->GetCaretEnabled(&isCaretVisible);
-      mCaretWasVisible |= isCaretVisible;
-    }
-    selCon->SetCaretEnabled(!mIsActive && mCaretWasVisible);
-    if (!mIsActive) {
-      mCaretWasVisible = PR_FALSE;
-    }
-  } while (0);
 
   NS_NAMED_LITERAL_STRING(active, "DOMMenuBarActive");
   NS_NAMED_LITERAL_STRING(inactive, "DOMMenuBarInactive");

@@ -58,8 +58,9 @@ class nsIDOMNode;
 
 // IID for the nsICaret interface
 #define NS_ICARET_IID \
-{ 0xb899c578, 0x0894, 0x4d3b, \
-  { 0x81, 0xa0, 0x7a, 0xfe, 0x4f, 0xb9, 0xa9, 0x39 } }
+{ 0x35d82f6b, 0x78f6, 0x4e8a, \
+  { 0xb9, 0x2a, 0x1a, 0x26, 0xac, 0x2c, 0xe8, 0x53 } }
+
 
 class nsICaret: public nsISupports
 {
@@ -115,6 +116,11 @@ public:
    *  this will erase the caret if its drawn and reset drawn status
    */
   NS_IMETHOD EraseCaret() = 0;
+
+  /**
+   * Checks if the caret is drawn when it shouldn't be, and erases it if so.
+   */
+  NS_IMETHOD CheckCaretDrawingState() = 0;
 
   NS_IMETHOD SetVisibilityDuringSelection(PRBool aVisibilityDuringSelection) = 0;
   
