@@ -419,9 +419,14 @@
           var cancel = false;
 
           // Catch any keys that could potentially move the caret. Ctrl can be
-          // used in combination with these keys, so only make sure that Alt
-          // isn't used.
-          if (!this.disableKeyNavigation && !aEvent.altKey) {
+          // used in combination with these keys on Windows and Linux; and Alt
+          // can be used on OS X, so make sure the unused one isn't used.
+          if (!this.disableKeyNavigation &&
+#ifdef XP_MACOSX
+              !aEvent.ctrlKey) {
+#else
+              !aEvent.altKey) {
+#endif
             switch (aEvent.keyCode) {
               case KeyEvent.DOM_VK_LEFT:
               case KeyEvent.DOM_VK_RIGHT:
