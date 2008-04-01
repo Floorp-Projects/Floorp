@@ -464,6 +464,9 @@
       <method name="handleSearchCommand">
         <parameter name="aEvent"/>
         <body><![CDATA[
+          var textBox = this._textbox;
+          var textValue = textBox.value;
+
           var where = "current";
           if (aEvent && aEvent.originalTarget.getAttribute("anonid") == "search-go-button") {
             if (aEvent.button == 2)
@@ -475,9 +478,6 @@
             if ((aEvent && aEvent.altKey) ^ newTabPref)
               where = "tab";
           }
-
-          var textBox = this._textbox;
-          var textValue = textBox.value;
 
           // Save the current value in the form history
           if (textValue) {
