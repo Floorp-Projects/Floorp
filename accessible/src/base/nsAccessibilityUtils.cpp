@@ -725,6 +725,9 @@ nsAccUtils::GetID(nsIContent *aContent, nsAString& aID)
 PRBool
 nsAccUtils::IsXLink(nsIContent *aContent)
 {
+  if (!aContent)
+    return PR_FALSE;
+
   return aContent->AttrValueIs(kNameSpaceID_XLink, nsAccessibilityAtoms::type,
                                nsAccessibilityAtoms::simple, eCaseMatters) &&
          aContent->HasAttr(kNameSpaceID_XLink, nsAccessibilityAtoms::href);
