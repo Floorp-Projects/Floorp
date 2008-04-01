@@ -464,6 +464,18 @@
       <method name="handleSearchCommand">
         <parameter name="aEvent"/>
         <body><![CDATA[
+          var where = "current";
+          if (aEvent && aEvent.originalTarget.getAttribute("anonid") == "search-go-button") {
+            if (aEvent.button == 2)
+              return;
+            where = whereToOpenLink(aEvent, false, true);
+          }
+          else {
+            var newTabPref = textBox._prefBranch.getBoolPref("browser.search.openintab");
+            if ((aEvent && aEvent.altKey) ^ newTabPref)
+              where = "tab";
+          }
+
           var textBox = this._textbox;
           var textValue = textBox.value;
 
@@ -473,14 +485,6 @@
                                           textValue);
           }
 
-          var where = "current";
-          if (aEvent && aEvent.originalTarget.getAttribute("anonid") == "search-go-button")
-            where = whereToOpenLink(aEvent, false, true);
-          else {
-            var newTabPref = textBox._prefBranch.getBoolPref("browser.search.openintab");
-            if ((aEvent && aEvent.altKey) ^ newTabPref)
-              where = "tab";
-          }
           this.doSearch(textValue, where);
         ]]></body>
       </method>
