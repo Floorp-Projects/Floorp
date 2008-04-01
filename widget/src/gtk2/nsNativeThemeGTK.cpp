@@ -950,7 +950,7 @@ nsNativeThemeGTK::GetWidgetPadding(nsIDeviceContext* aContext,
 PRBool
 nsNativeThemeGTK::GetWidgetOverflow(nsIDeviceContext* aContext,
                                     nsIFrame* aFrame, PRUint8 aWidgetType,
-                                    nsRect* aResult)
+                                    nsRect* aOverflowRect)
 {
   nsMargin m;
   PRInt32 p2a;
@@ -981,9 +981,7 @@ nsNativeThemeGTK::GetWidgetOverflow(nsIDeviceContext* aContext,
                  NSIntPixelsToAppUnits(extraSize.bottom, p2a));
   }
 
-  nsRect r(nsPoint(0, 0), aFrame->GetSize());
-  r.Inflate(m);
-  *aResult = r;
+  aOverflowRect->Inflate(m);
   return PR_TRUE;
 }
 
