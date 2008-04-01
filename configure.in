@@ -1242,11 +1242,11 @@ Alpha | alpha | ALPHA)
     CPU_ARCH=Alpha
     ;;
 
-sun4u)
+sun4u | sparc*)
     CPU_ARCH=sparc
     ;;
 
-x86_64 | sparc | ppc | ia64)
+x86_64 | ia64)
     CPU_ARCH="$OS_TEST"
     ;;
 esac
