@@ -110,7 +110,6 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
 #define KEY_TOOLBARFOLDER_LOWER "personal_toolbar_folder"
 #define KEY_BOOKMARKSMENU_LOWER "bookmarks_menu"
-#define KEY_UNFILEDFOLDER_LOWER "unfiled_bookmarks_folder"
 #define KEY_PLACESROOT_LOWER "places_root"
 #define KEY_HREF_LOWER "href"
 #define KEY_FEEDURL_LOWER "feedurl"
@@ -165,8 +164,7 @@ public:
   enum ContainerType { Container_Normal,
                        Container_Places,
                        Container_Menu,
-                       Container_Toolbar,
-                       Container_Unfiled};
+                       Container_Toolbar };
 
   PRInt64 mContainerID;
 
@@ -758,10 +756,6 @@ BookmarkContentSink::HandleHeadBegin(const nsIParserNode& node)
         if (mIsImportDefaults)
           frame.mLastContainerType = BookmarkImportFrame::Container_Menu;
         break;
-      } else if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_UNFILEDFOLDER_LOWER)) {
-        if (mIsImportDefaults)
-          frame.mLastContainerType = BookmarkImportFrame::Container_Unfiled;
-        break;
       } else if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_PLACESROOT_LOWER)) {
         if (mIsImportDefaults)
           frame.mLastContainerType = BookmarkImportFrame::Container_Places;
@@ -1173,15 +1167,8 @@ BookmarkContentSink::NewFrame()
       NS_ENSURE_SUCCESS(rv, rv);
       break;
     case BookmarkImportFrame::Container_Menu:
-      // menu folder
+      // menu root
       rv = mBookmarksService->GetBookmarksMenuFolder(&ourID);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (mAllowRootChanges)
-        updateFolder = PR_TRUE;
-      break;
-    case BookmarkImportFrame::Container_Unfiled:
-      // unfiled bookmarks folder
-      rv = mBookmarksService->GetUnfiledBookmarksFolder(&ourID);
       NS_ENSURE_SUCCESS(rv, rv);
       if (mAllowRootChanges)
         updateFolder = PR_TRUE;
@@ -1451,7 +1438,6 @@ static const char kDescriptionClose[] = NS_LINEBREAK;
 static const char kPlacesRootAttribute[] = " PLACES_ROOT=\"true\"";
 static const char kBookmarksRootAttribute[] = " BOOKMARKS_MENU=\"true\"";
 static const char kToolbarFolderAttribute[] = " PERSONAL_TOOLBAR_FOLDER=\"true\"";
-static const char kUnfiledBookmarksFolderAttribute[] = " UNFILED_BOOKMARKS_FOLDER=\"true\"";
 static const char kIconAttribute[] = " ICON=\"";
 static const char kIconURIAttribute[] = " ICON_URI=\"";
 static const char kHrefAttribute[] = " HREF=\"";
@@ -1695,19 +1681,12 @@ nsPlacesImportExportService::WriteContainerHeader(nsINavHistoryResultNode* aFold
   rv = mBookmarksService->GetToolbarFolder(&toolbarFolder);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  PRInt64 unfiledBookmarksFolder;
-  rv = mBookmarksService->GetUnfiledBookmarksFolder(&unfiledBookmarksFolder);
-  NS_ENSURE_SUCCESS(rv,rv);
-
   // " PERSONAL_TOOLBAR_FOLDER="true"", etc.
   if (folderId == placesRoot) {
     rv = aOutput->Write(kPlacesRootAttribute, sizeof(kPlacesRootAttribute)-1, &dummy);
     NS_ENSURE_SUCCESS(rv, rv);
   } else if (folderId == bookmarksMenuFolder) {
     rv = aOutput->Write(kBookmarksRootAttribute, sizeof(kBookmarksRootAttribute)-1, &dummy);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else if (folderId == unfiledBookmarksFolder) {
-    rv = aOutput->Write(kUnfiledBookmarksFolderAttribute, sizeof(kUnfiledBookmarksFolderAttribute)-1, &dummy);
     NS_ENSURE_SUCCESS(rv, rv);
   } else if (folderId == toolbarFolder) {
     rv = aOutput->Write(kToolbarFolderAttribute, sizeof(kToolbarFolderAttribute)-1, &dummy);
@@ -2294,13 +2273,6 @@ nsPlacesImportExportService::RunBatched(nsISupports* aUserData)
     rv = mBookmarksService->RemoveFolderChildren(toolbarFolder);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRInt64 unfiledBookmarksFolder;
-    rv = mBookmarksService->GetUnfiledBookmarksFolder(&unfiledBookmarksFolder);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = mBookmarksService->RemoveFolderChildren(unfiledBookmarksFolder);
-    NS_ENSURE_SUCCESS(rv,rv);
-
     // add the "Places" folder
     nsCOMPtr<nsIBrowserGlue> glue(do_GetService("@mozilla.org/browser/browserglue;1", &rv));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2394,10 +2366,6 @@ nsPlacesImportExportService::ExportHTMLToFile(nsILocalFile* aBookmarksFile)
   rv = mBookmarksService->GetToolbarFolder(&toolbarFolder);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  PRInt64 unfiledBookmarksFolder;
-  rv = mBookmarksService->GetUnfiledBookmarksFolder(&unfiledBookmarksFolder);
-  NS_ENSURE_SUCCESS(rv,rv);
-
   // file header
   PRUint32 dummy;
   rv = strm->Write(kFileIntro, sizeof(kFileIntro)-1, &dummy);
@@ -2451,8 +2419,8 @@ nsPlacesImportExportService::ExportHTMLToFile(nsILocalFile* aBookmarksFile)
   rv = WriteContainerContents(rootNode, EmptyCString(), strm);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // write out the toolbar folder and unfiled-bookmarks folder (if not empty)
-  // under the bookmarks-menu for backwards compatibility
+  // write out the toolbar folder contents as a folder under the bookmarks-menu
+  // for backwards compatibility
   rv = query->SetFolders(&toolbarFolder, 1);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2465,29 +2433,6 @@ nsPlacesImportExportService::ExportHTMLToFile(nsILocalFile* aBookmarksFile)
 
   rv = WriteContainer(rootNode, nsDependentCString(kIndent), strm);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // unfiled bookmarks
-  rv = query->SetFolders(&unfiledBookmarksFolder, 1);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mHistoryService->ExecuteQuery(query, options, getter_AddRefs(result));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // get root (folder) node
-  rv = result->GetRoot(getter_AddRefs(rootNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = rootNode->SetContainerOpen(PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRUint32 childCount = 0;
-  rv = rootNode->GetChildCount(&childCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (childCount > 0) {
-    rv = WriteContainer(rootNode, nsDependentCString(kIndent), strm);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
 
   // epilogue
   rv = WriteContainerEpilogue(EmptyCString(), strm);
