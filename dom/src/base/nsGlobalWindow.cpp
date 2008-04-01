@@ -605,6 +605,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mFireOfflineStatusChangeEventOnThaw(PR_FALSE),
     mCreatingInnerWindow(PR_FALSE),
     mIsChrome(PR_FALSE),
+    mTimersSuspended(PR_FALSE),
     mTimeoutInsertionPoint(nsnull),
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
@@ -8382,6 +8383,11 @@ nsGlobalWindow::SuspendTimeouts()
 {
   FORWARD_TO_INNER_VOID(SuspendTimeouts, ());
 
+  if (mTimersSuspended) {
+    return;
+  }
+  mTimersSuspended = PR_TRUE;
+
   PRTime now = PR_Now();
   for (nsTimeout *t = FirstTimeout(); IsTimeout(t); t = t->Next()) {
     // Change mWhen to be the time remaining for this timer.    
@@ -8436,6 +8442,11 @@ nsresult
 nsGlobalWindow::ResumeTimeouts()
 {
   FORWARD_TO_INNER(ResumeTimeouts, (), NS_ERROR_NOT_INITIALIZED);
+
+  if (!mTimersSuspended) {
+    return NS_OK;
+  }
+  mTimersSuspended = PR_FALSE;
 
   // Restore all of the timeouts, using the stored time remaining
   // (stored in timeout->mWhen).
