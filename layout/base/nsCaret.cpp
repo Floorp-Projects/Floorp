@@ -69,6 +69,8 @@
 #include "nsDisplayList.h"
 #include "nsCaret.h"
 #include "nsTextFrame.h"
+#include "nsXULPopupManager.h"
+#include "nsMenuPopupFrame.h"
 
 // The bidi indicator hangs off the caret to one side, to show which
 // direction the typing is in. It needs to be at least 2x2 to avoid looking like 
@@ -934,18 +936,27 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame,
   *outRenderingView = returnView;
 }
 
+nsresult nsCaret::CheckCaretDrawingState() 
+{
+  // If the caret's drawn when it shouldn't be, erase it.
+  if (mDrawn && (!mVisible || !MustDrawCaret(PR_TRUE)))
+    EraseCaret();
+  return NS_OK;
+}
 
 /*-----------------------------------------------------------------------------
 
   MustDrawCaret
   
-  FInd out if we need to do any caret drawing. This returns true if
-  either a) or b)
-  a) caret has been drawn, and we need to erase it.
-  b) caret is not drawn, and selection is collapsed
+  Find out if we need to do any caret drawing. This returns true if
+  either:
+  a) The caret has been drawn, and we need to erase it.
+  b) The caret is not drawn, and the selection is collapsed.
+  c) The caret is not hidden due to open XUL popups
+     (see IsMenuPopupHidingCaret()).
   
 ----------------------------------------------------------------------------- */
-PRBool nsCaret::MustDrawCaret()
+PRBool nsCaret::MustDrawCaret(PRBool aIgnoreDrawnState)
 {
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
   if (presShell) {
@@ -955,7 +966,7 @@ PRBool nsCaret::MustDrawCaret()
       return PR_FALSE;
   }
 
-  if (mDrawn)
+  if (!aIgnoreDrawnState && mDrawn)
     return PR_TRUE;
 
   nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
@@ -969,9 +980,55 @@ PRBool nsCaret::MustDrawCaret()
   if (mShowDuringSelection)
     return PR_TRUE;      // show the caret even in selections
 
+  if (IsMenuPopupHidingCaret())
+    return PR_FALSE;
+
   return isCollapsed;
 }
 
+PRBool nsCaret::IsMenuPopupHidingCaret()
+{
+  // Check if there are open popups.
+  nsXULPopupManager *popMgr = nsXULPopupManager::GetInstance();
+  nsTArray<nsIFrame*> popups = popMgr->GetOpenPopups();
+
+  if (popups.Length() == 0)
+    return PR_FALSE; // No popups, so caret can't be hidden by them.
+
+  // Get the selection focus content, that's where the caret would 
+  // go if it was drawn.
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
+  if (!domSelection)
+    return PR_TRUE; // No selection/caret to draw.
+  domSelection->GetFocusNode(getter_AddRefs(node));
+  if (!node)
+    return PR_TRUE; // No selection/caret to draw.
+  nsCOMPtr<nsIContent> caretContent = do_QueryInterface(node);
+
+  // If there's a menu popup open before the popup with
+  // the caret, don't show the caret.
+  for (PRUint32 i=0; i<popups.Length(); i++) {
+    nsMenuPopupFrame* popupFrame = static_cast<nsMenuPopupFrame*>(popups[i]);
+    nsIContent* popupContent = popupFrame->GetContent();
+
+    if (nsContentUtils::ContentIsDescendantOf(caretContent, popupContent)) {
+      // The caret is in this popup. There were no menu popups before this
+      // popup, so don't hide the caret.
+      return PR_FALSE;
+    }
+
+    if (popupFrame->PopupType() == ePopupTypeMenu) {
+      // This is an open menu popup. It does not contain the caret (else we'd
+      // have returned above). Even if the caret is in a subsequent popup,
+      // or another document/frame, it should be hidden.
+      return PR_TRUE;
+    }
+  }
+
+  // There are no open menu popups, no need to hide the caret.
+  return PR_FALSE;
+}
 
 /*-----------------------------------------------------------------------------
 
@@ -982,7 +1039,7 @@ PRBool nsCaret::MustDrawCaret()
 void nsCaret::DrawCaret(PRBool aInvalidate)
 {
   // do we need to draw the caret at all?
-  if (!MustDrawCaret())
+  if (!MustDrawCaret(PR_FALSE))
     return;
   
   nsCOMPtr<nsIDOMNode> node;
