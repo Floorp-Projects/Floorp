@@ -571,9 +571,17 @@ Engine.prototype = {
         break;
       }
 
-      for (var i = 0; i < deltas.length; i++) {
-        snap.applyCommands.async(snap, self.cb, deltas[i]);
-        yield;
+      try {
+        for (var i = 0; i < deltas.length; i++) {
+          snap.applyCommands.async(snap, self.cb, deltas[i]);
+          yield;
+        }
+      } catch (e) {
+        this._log.error("Error applying remote deltas to saved snapshot");
+        this._log.error("Clearing local snapshot; next sync will merge");
+        this._log.debug("Exception: " + Utils.exceptionStr(e));
+        this._log.trace("Stack:\n" + Utils.stackTrace(e));
+        this._snapshot.wipe();
       }
 
       ret.status = 0;
