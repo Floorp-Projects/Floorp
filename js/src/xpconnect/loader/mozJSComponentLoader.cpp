@@ -99,13 +99,13 @@ static const char kObserverServiceContractID[] = "@mozilla.org/observer-service;
 
 /**
  * Buffer sizes for serialization and deserialization of scripts.
- * These should be tuned at some point.
+ * FIXME: bug #411579 (tune this macro!) Last updated: Jan 2008
  */
 #define XPC_SERIALIZATION_BUFFER_SIZE   (64 * 1024)
-#define XPC_DESERIALIZATION_BUFFER_SIZE (8 * 1024)
+#define XPC_DESERIALIZATION_BUFFER_SIZE (12 * 8192)
 
 // Inactivity delay before closing our fastload file stream.
-static const int kFastLoadWriteDelay = 5000;   // 5 seconds
+static const int kFastLoadWriteDelay = 10000;   // 10 seconds
 
 #ifdef PR_LOGGING
 // NSPR_LOG_MODULES=JSComponentLoader:5
