@@ -68,13 +68,15 @@ var security = {
       return null;
 
     var isBroken =
-      (ui.state == Components.interfaces.nsIWebProgressListener.STATE_IS_BROKEN);
+      (ui.state & Components.interfaces.nsIWebProgressListener.STATE_IS_BROKEN);
+    var isInsecure = 
+      (ui.state & Components.interfaces.nsIWebProgressListener.STATE_IS_INSECURE);
     var isEV =
       (ui.state & Components.interfaces.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL);
     ui.QueryInterface(nsISSLStatusProvider);
     var status = ui.SSLStatus;
 
-    if (status) {
+    if (!isInsecure && status) {
       status.QueryInterface(nsISSLStatus);
       var cert = status.serverCert;
       var issuerName =
