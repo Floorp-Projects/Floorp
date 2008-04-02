@@ -467,8 +467,6 @@ CookieSyncCore.prototype = {
 	cookie.host = cookieArray[0];
 	cookie.path = cookieArray[1];
 	cookie.name = cookieArray[2];
-        if (this._cookieManager == null )
-	    throw "Cookie manager is null in CookieSyncCore._itemExists.";
     	return this._cookieManager.findMatchingCookie( cookie, unused );
   },
 
