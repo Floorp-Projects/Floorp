@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['Engine', 'BookmarksEngine', 'HistoryEngine'];
+const EXPORTED_SYMBOLS = ['Engine', 'BookmarksEngine', 'HistoryEngine', 'CookieEngine'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -917,8 +917,8 @@ HistoryEngine.prototype = {
 HistoryEngine.prototype.__proto__ = new Engine();
 
 // Jono: the following is copy-and-paste code
-function CookieEngine(davCollection, cryptoId) {
-  this._init(davCollection, cryptoId);
+function CookieEngine(davCollection, pbeId) {
+  this._init(davCollection, pbeId);
 }
 CookieEngine.prototype = {
   get name() { return "cookie-engine"; },

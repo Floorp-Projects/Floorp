@@ -127,6 +127,9 @@ WeaveSvc.prototype = {
 
   __cookieEngine: null,
   get _cookieEngine() {
+	// This gets an error that "CookieEngine" is undefined.  Why?
+        // BookmarksEngine and HistoryEngine are both defined in engines.js
+        // and so is CookieEngine, but...
     if (!this.__cookieEngine)
       this.__cookieEngine = new CookieEngine(DAV, this._cryptoId);
     return this.__cookieEngine;
@@ -503,7 +506,7 @@ WeaveSvc.prototype = {
                    this._syncEngine, this._histEngine).async(this, self.cb);
       yield;
     }
-    if (this._prefs.getBoolPref("cookies")) {
+    if (Utils.prefs.getBoolPref("cookies")) {
 	this._notify(this._cookieEngine.name + ":sync",
                     this._syncEngine, this._cookieEngine).async(this, self.cb);
       yield;
