@@ -390,10 +390,15 @@ BrowserGlue.prototype = {
    *   Set to false by the history service to indicate we need to re-import.
    * - browser.places.createdSmartBookmarks
    *   Set during HTML import to indicate that the queries were created.
+   *
+   * These prefs are set up by the frontend:
+   * - browser.bookmarks.restore_default_bookmarks
+   *   Set to true by safe-mode dialog to indicate we must restore default
+   *   bookmarks.
    */
   _initPlaces: function bg__initPlaces() {
-    // we need to instantiate the history service before we check the 
-    // the browser.places.importBookmarksHTML pref, as 
+    // we need to instantiate the history service before checking
+    // the browser.places.importBookmarksHTML pref, as
     // nsNavHistory::ForceMigrateBookmarksDB() will set that pref
     // if we need to force a migration (due to a schema change)
     var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
@@ -403,9 +408,22 @@ BrowserGlue.prototype = {
                      getService(Ci.nsIPrefBranch);
 
     var importBookmarks = false;
+    var restoreDefaultBookmarks = false;
     try {
-      importBookmarks = prefBranch.getBoolPref("browser.places.importBookmarksHTML");
+      restoreDefaultBookmarks = prefBranch.getBoolPref("browser.bookmarks.restore_default_bookmarks");
     } catch(ex) {}
+
+    if (restoreDefaultBookmarks) {
+      // Ensure that we already have a bookmarks backup for today
+      this._archiveBookmarks();
+      // we will restore bookmarks from html
+      importBookmarks = true;
+    }
+    else {
+      try {
+        importBookmarks = prefBranch.getBoolPref("browser.places.importBookmarksHTML");
+      } catch(ex) {}
+    }
 
     if (!importBookmarks) {
       // Call it here for Fx3 profiles created before the Places folder
@@ -417,19 +435,28 @@ BrowserGlue.prototype = {
       Cu.import("resource://gre/modules/utils.js");
       var bookmarksFile = PlacesUtils.getMostRecentBackup();
 
-      if (bookmarksFile && bookmarksFile.leafName.match("\.json$")) {
+      if (!restoreDefaultBookmarks &&
+          bookmarksFile && bookmarksFile.leafName.match("\.json$")) {
         // restore a JSON backup
         PlacesUtils.restoreBookmarksFromJSONFile(bookmarksFile);
       }
       else {
-        // if there's no json backup use bookmarks.html
+        // if there's no JSON backup or we are restoring default bookmarks
 
         // ensurePlacesDefaultQueriesInitialized() is called by import.
         prefBranch.setBoolPref("browser.places.createdSmartBookmarks", false);
 
         var dirService = Cc["@mozilla.org/file/directory_service;1"].
                          getService(Ci.nsIProperties);
-        var bookmarksFile = dirService.get("BMarks", Ci.nsILocalFile);
+
+        if (restoreDefaultBookmarks) {
+          // get bookmarks.html file from default profile folder
+          var bookmarksFileName = "bookmarks.html";
+          var bookmarksFile = dirService.get("profDef", Ci.nsILocalFile);
+          bookmarksFile.append(bookmarksFileName);
+        }
+        else
+          var bookmarksFile = dirService.get("BMarks", Ci.nsILocalFile);
 
         // import the file
         try {
@@ -438,6 +465,9 @@ BrowserGlue.prototype = {
           importer.importHTMLFromFile(bookmarksFile, true /* overwrite existing */);
         } finally {
           prefBranch.setBoolPref("browser.places.importBookmarksHTML", false);
+          if (restoreDefaultBookmarks)
+            prefBranch.setBoolPref("browser.bookmarks.restore_default_bookmarks",
+                                   false);
         }
       }
     }
