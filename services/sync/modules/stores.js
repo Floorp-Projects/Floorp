@@ -781,8 +781,6 @@ CookieStore.prototype = {
         // in order to sync with the server.
 
 	this._log.info("CookieStore got createCommand: " + command );
-        if (this._cookieManager == null )
-	    throw "Cookie manager is null in CookieStore._createCommand.";
         // this assumes command.data fits the nsICookie2 interface
 	this._cookieManager.add( command.data.host,
 				  command.data.path,
@@ -805,8 +803,6 @@ CookieStore.prototype = {
         // http://developer.mozilla.org/en/docs/nsICookieManager
         // the last argument is "always block cookies from this domain?"
 	// and the answer is "no".
-        if (this._cookieManager == null )
-	    throw "Cookie manager is null in CookieStore._removeCommand.";
 	this._cookieManager.remove( command.data.host,
                                     command.data.name,
 				    command.data.path,
@@ -817,7 +813,10 @@ CookieStore.prototype = {
         // we got a command to change a cookie in the local browser
         // in order to sync with the server.
     
-	// TODO implement this!!
+	// TODO implement this!!  The behavior should be that if the
+        // local copy of the cookie is more-recently modified, it should
+        // be kept, but if it's older, it should be replaced with the
+        // server's copy.
         this._log.info("CookieStore got editCommand: " + command );
   },
 
@@ -828,8 +827,6 @@ CookieStore.prototype = {
         // values are sub-dictionaries containing all cookie fields.
 
 	let items = {};
-        if (this._cookieManager == null )
-	    throw "Cookie manager is null in CookieStore.wrap.";
 	var iter = this._cookieManager.enumerator;
 	while (iter.hasMoreElements()){
 	    var cookie = iter.getNext();
@@ -864,8 +861,6 @@ CookieStore.prototype = {
         // TODO are the semantics of this just wiping out an internal
         // buffer, or am I supposed to wipe out all cookies from
         // the browser itself for reals?
-        if (this._cookieManager == null )
-	    throw "Cookie manager is null in CookieStore.wipe";
         this._cookieManager.removeAll()
   },
 
