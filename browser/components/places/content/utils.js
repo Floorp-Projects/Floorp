@@ -262,16 +262,8 @@ var PlacesUIUtils = {
         if (node.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER) {
           if (node.livemark && node.annos) // node is a livemark
             txn = self._getLivemarkCopyTransaction(node, aContainer, index);
-          else {
-            var folderItemsTransactions = [];
-            if (node.dateAdded)
-              folderItemsTransactions.push(self.ptm.editItemDateAdded(null, node.dateAdded));
-            if (node.lastModified)
-              folderItemsTransactions.push(self.ptm.editItemLastModified(null, node.lastModified));
-            var annos = node.annos || [];
-            txn = self.ptm.createFolder(node.title, -1, index, annos,
-                                        folderItemsTransactions);
-          }
+          else
+            txn = self._getFolderCopyTransaction(node, aContainer, index);
         }
         else if (node.type == PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR)
           txn = self.ptm.createSeparator(-1, index);
