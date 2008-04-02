@@ -549,6 +549,13 @@ gfxFont::SetupGlyphExtents(gfxContext *aContext, PRUint32 aGlyphID, PRBool aNeed
 void
 gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, PRBool aIsBadUnderlineFont)
 {
+    // Even if this font size is zero, this font is created with non-zero size.
+    // However, for layout and others, we should return the metrics of zero size font.
+    if (mStyle.size == 0) {
+        memset(aMetrics, 0, sizeof(gfxFont::Metrics));
+        return;
+    }
+
     // MS (P)Gothic and MS (P)Mincho are not having suitable values in their super script offset.
     // If the values are not suitable, we should use x-height instead of them.
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=353632
@@ -579,10 +586,6 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, PRBool aIsBadUnderlineFont)
         aMetrics->underlineOffset = PR_MIN(aMetrics->underlineOffset, -2.0);
 
         // Next, we put the underline to bottom of below of the descent space.
-        // Note that the underline might overlap to next line when the line height is 1em.
-        // However, in CJK text, such case is very rare, so, we don't need to worry about such case.
-        // Becasue most CJK glyphs use top of the em square. Therefore, for readability, CJK text needs
-        // larger line gap than Western text, generally.
         if (aMetrics->internalLeading + aMetrics->externalLeading > aMetrics->underlineSize) {
             aMetrics->underlineOffset = PR_MIN(aMetrics->underlineOffset, -aMetrics->emDescent);
         } else {

@@ -747,12 +747,14 @@ gfxWindowsFontGroup::gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFo
 
     mFonts.AppendElements(mFontEntries.Length());
 
-    for (PRUint32 i = 0; i < mFontEntries.Length(); ++i) {
-        if (mFontEntries[i]->IsBadUnderlineFont()) {
-            gfxFloat first = GetFontAt(0)->GetMetrics().underlineOffset;
-            gfxFloat bad = GetFontAt(i)->GetMetrics().underlineOffset;
-            mUnderlineOffset = PR_MIN(first, bad);
-            break;
+    if (!mStyle.systemFont) {
+        for (PRUint32 i = 0; i < mFontEntries.Length(); ++i) {
+            if (mFontEntries[i]->IsBadUnderlineFont()) {
+                gfxFloat first = GetFontAt(0)->GetMetrics().underlineOffset;
+                gfxFloat bad = GetFontAt(i)->GetMetrics().underlineOffset;
+                mUnderlineOffset = PR_MIN(first, bad);
+                break;
+            }
         }
     }
 }

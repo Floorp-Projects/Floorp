@@ -103,11 +103,15 @@ public:
    * This matrix will be applied to aContext in the SetupFor methods below,
    * before any glyph translation/rotation.
    */
-  void SetupGlobalTransform(const gfxMatrix& aInitialMatrix);
-
+  void SetInitialMatrix(gfxContext *aContext) {
+    mInitialMatrix = aContext->CurrentMatrix();
+    if (mInitialMatrix.IsSingular()) {
+      mInError = PR_TRUE;
+    }
+  }
   /**
    * Try to set up aContext so we can draw the whole textrun at once.
-   * This applies any global transform requested by SetupGlobalTransform,
+   * This applies any global transform requested by SetInitialMatrix,
    * then applies the positioning of the text. Returns false if drawing
    * the whole textrun at once is impossible due to individual positioning
    * and/or rotation of glyphs.
@@ -117,7 +121,7 @@ public:
   }
   /**
    * Try to set up aContext so we can measure the whole textrun at once.
-   * This applies any global transform requested by SetupGlobalTransform,
+   * This applies any global transform requested by SetInitialMatrix,
    * then applies the positioning of the text, then applies a scale
    * from appunits to device pixels so drawing in appunits works.
    * Returns false if drawing the whole textrun at once is impossible due
@@ -142,7 +146,7 @@ public:
 
   /**
    * Set up aContext for glyph drawing. This applies any global transform
-   * requested by SetupGlobalTransform, then applies any positioning and
+   * requested by SetInitialMatrix, then applies any positioning and
    * rotation for the current character.
    */
   void SetupForDrawing(gfxContext *aContext) {
@@ -150,7 +154,7 @@ public:
   }
   /**
    * Set up aContext for glyph measuring. This applies any global transform
-   * requested by SetupGlobalTransform, then applies any positioning and
+   * requested by SetInitialMatrix, then applies any positioning and
    * rotation for the current character, then applies a scale from appunits
    * to device pixels so that drawing in appunits sizes works.
    */
@@ -305,11 +309,14 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
 
   gfxContext *gfx = aContext->GetGfxContext();
   PRUint16 renderMode = aContext->GetRenderMode();
-  gfxMatrix matrix = gfx->CurrentMatrix();
 
   if (renderMode != nsSVGRenderState::NORMAL) {
+
+    gfxMatrix matrix = gfx->CurrentMatrix();
+    SetupGlobalTransform(gfx);
+
     CharacterIterator iter(this, PR_TRUE);
-    iter.SetupGlobalTransform(matrix);
+    iter.SetInitialMatrix(gfx);
 
     if (GetClipRule() == NS_STYLE_FILL_RULE_EVENODD)
       gfx->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
@@ -328,20 +335,25 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
     return NS_OK;
   }
 
-  // XXX why save+restore instead of just saving the matrix?
+  // We are adding patterns or gradients to the context. Save
+  // it so we don't leak them into the next object we draw
   gfx->Save();
+  SetupGlobalTransform(gfx);
+
   if (HasFill() && SetupCairoFill(gfx)) {
+    gfxMatrix matrix = gfx->CurrentMatrix();
     CharacterIterator iter(this, PR_TRUE);
-    iter.SetupGlobalTransform(matrix);
+    iter.SetInitialMatrix(gfx);
 
     FillCharacters(&iter, gfx);
+    gfx->SetMatrix(matrix);
   }
 
   if (HasStroke() && SetupCairoStroke(gfx)) {
-    // It's possible for SetupCairoStroke to clear mTextRun in bizarre
-    // cases (see 308917-1.svg crashtest), so we recreate the iterator here.
+    // SetupCairoStroke will clear mTextRun whenever
+    // there is a pattern or gradient on the text
     CharacterIterator iter(this, PR_TRUE);
-    iter.SetupGlobalTransform(matrix);
+    iter.SetInitialMatrix(gfx);
 
     gfx->NewPath();
     AddCharactersToPath(&iter, gfx);
@@ -423,8 +435,9 @@ NS_IMETHODIMP
 nsSVGGlyphFrame::UpdateCoveredRegion()
 {
   nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
+  SetupGlobalTransform(tmpCtx);
   CharacterIterator iter(this, PR_TRUE);
-  iter.SetupGlobalTransform(gfxMatrix());
+  iter.SetInitialMatrix(tmpCtx);
   
   gfxRect extent;
 
@@ -547,8 +560,9 @@ nsSVGGlyphFrame::GetBBox(nsIDOMSVGRect **_retval)
   *_retval = nsnull;
 
   nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
+  SetupGlobalTransform(tmpCtx);
   CharacterIterator iter(this, PR_TRUE);
-  iter.SetupGlobalTransform(gfxMatrix());
+  iter.SetInitialMatrix(tmpCtx);
   AddCharactersToPath(&iter, tmpCtx);
 
   tmpCtx->IdentityMatrix();
@@ -1165,8 +1179,9 @@ PRBool
 nsSVGGlyphFrame::ContainsPoint(float x, float y)
 {
   nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
+  SetupGlobalTransform(tmpCtx);
   CharacterIterator iter(this, PR_TRUE);
-  iter.SetupGlobalTransform(gfxMatrix());
+  iter.SetInitialMatrix(tmpCtx);
   
   PRInt32 i;
   while ((i = iter.NextChar()) >= 0) {
@@ -1188,15 +1203,16 @@ nsSVGGlyphFrame::GetGlobalTransform(gfxMatrix *aMatrix)
   if (!ctm)
     return PR_FALSE;
 
-  gfxMatrix matrix = nsSVGUtils::ConvertSVGMatrixToThebes(ctm);
+  *aMatrix = nsSVGUtils::ConvertSVGMatrixToThebes(ctm);
+  return !aMatrix->IsSingular();
+}
 
-  if (matrix.IsSingular()) {
-    aMatrix->Reset();
-    return PR_FALSE;
-  }
-
-  *aMatrix = matrix;
-  return PR_TRUE;
+void
+nsSVGGlyphFrame::SetupGlobalTransform(gfxContext *aContext)
+{
+  gfxMatrix matrix;
+  GetGlobalTransform(&matrix);
+  aContext->Multiply(matrix);
 }
 
 void
@@ -1310,16 +1326,6 @@ CharacterIterator::CharacterIterator(nsSVGGlyphFrame *aSource,
       !aSource->GetCharacterPositions(&mPositions, mMetricsScale)) {
     mInError = PR_TRUE;
   }
-}
-
-void
-CharacterIterator::SetupGlobalTransform(const gfxMatrix& aMatrix)
-{
-  if (!mSource->GetGlobalTransform(&mInitialMatrix)) {
-    mInError = PR_TRUE;
-    return;
-  }
-  mInitialMatrix.Multiply(aMatrix);
 }
 
 PRBool

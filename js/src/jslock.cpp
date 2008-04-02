@@ -353,7 +353,7 @@ js_FinishSharingTitle(JSContext *cx, JSTitle *title)
     scope = (JSScope *)map;
 
     obj = scope->object;
-    nslots = LOCKED_OBJ_NSLOTS(obj);
+    nslots = scope->map.freeslot;
     for (i = 0; i != nslots; ++i) {
         v = STOBJ_GET_SLOT(obj, i);
         if (JSVAL_IS_STRING(v) &&

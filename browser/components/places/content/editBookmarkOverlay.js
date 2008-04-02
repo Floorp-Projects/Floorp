@@ -524,7 +524,7 @@ var gEditItemOverlay = {
 
   onDescriptionFieldBlur: function EIO_onDescriptionFieldInput() {
     var description = this._element("descriptionField").value;
-    if (description != PlacesUtils.getItemDescription(this._itemId)) {
+    if (description != PlacesUIUtils.getItemDescription(this._itemId)) {
       var txn = PlacesUIUtils.ptm
                              .editItemDescription(this._itemId, description);
       PlacesUIUtils.ptm.doTransaction(txn);
@@ -777,7 +777,8 @@ var gEditItemOverlay = {
     var ip = this._folderTree.insertionPoint;
 
     // default to the bookmarks menu folder
-    if (ip.itemId == PlacesUIUtils.allBookmarksFolderId ||
+    if (!ip ||
+        ip.itemId == PlacesUIUtils.allBookmarksFolderId ||
         ip.itemId == PlacesUIUtils.unfiledBookmarksFolderId) {
       ip.itemId = PlacesUtils.bookmarksMenuFolderId;
       ip.index = -1;
@@ -819,8 +820,22 @@ var gEditItemOverlay = {
   // nsINavBookmarkObserver
   onItemChanged: function EIO_onItemChanged(aItemId, aProperty,
                                             aIsAnnotationProperty, aValue) {
-    if (this._itemId != aItemId)
+    if (this._itemId != aItemId) {
+      if (aProperty == "title") {
+        // If the title of a folder which is listed within the folders
+        // menulist has been changed, we need to update the label of its
+        // representing element.
+        var menupopup = this._folderMenuList.menupopup;
+        for (var i=0; i < menupopup.childNodes.length; i++) {
+          if (menupopup.childNodes[i].folderId == aItemId) {
+            menupopup.childNodes[i].label = aValue;
+            break;
+          }
+        }
+      }
+
       return;
+    }
 
     switch (aProperty) {
     case "title":
@@ -862,7 +877,7 @@ var gEditItemOverlay = {
       break;
     case DESCRIPTION_ANNO:
       this._initTextField("descriptionField",
-                          PlacesUtils.getItemDescription(this._itemId));
+                          PlacesUIUtils.getItemDescription(this._itemId));
       break;
     case LOAD_IN_SIDEBAR_ANNO:
       this._element("loadInSidebarCheckbox").checked =

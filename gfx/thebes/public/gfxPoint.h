@@ -120,6 +120,11 @@ struct THEBES_API gfxPoint {
     int operator!=(const gfxPoint& p) const {
         return ((x != p.x) || (y != p.y));
     }
+    const gfxPoint& operator+=(const gfxPoint& p) {
+        x += p.x;
+        y += p.y;
+        return *this;
+    }
     gfxPoint operator+(const gfxPoint& p) const {
         return gfxPoint(x + p.x, y + p.y);
     }

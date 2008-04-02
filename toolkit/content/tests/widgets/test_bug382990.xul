@@ -11,7 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=382990
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"/>
 
-  <!-- test resuls are displayed in the html:body -->
+  <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
   <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=382990"
      target="_blank">Mozilla Bug 382990</a>

@@ -104,14 +104,14 @@ struct JSThread {
     /* Opaque thread-id, from NSPR's PR_GetCurrentThread(). */
     jsword              id;
 
-    /* Thread-local gc free lists array. */
-    JSGCThing           *gcFreeLists[GC_NUM_FREELISTS];
-
     /*
      * Thread-local version of JSRuntime.gcMallocBytes to avoid taking
      * locks on each JS_malloc.
      */
     uint32              gcMallocBytes;
+
+    /* Thread-local gc free lists array. */
+    JSGCThing           *gcFreeLists[GC_NUM_FREELISTS];
 
     /*
      * Store the GSN cache in struct JSThread, not struct JSContext, both to
@@ -618,9 +618,6 @@ JS_STATIC_ASSERT(sizeof(JSTempValueUnion) == sizeof(void *));
 
 #define JS_PUSH_TEMP_ROOT_STRING(cx,str,tvr)                                  \
     JS_PUSH_TEMP_ROOT_COMMON(cx, str, tvr, JSTVU_SINGLE, string)
-
-#define JS_PUSH_TEMP_ROOT_FUNCTION(cx,fun,tvr)                                \
-    JS_PUSH_TEMP_ROOT_COMMON(cx, fun, tvr, JSTVU_SINGLE, function)
 
 #define JS_PUSH_TEMP_ROOT_QNAME(cx,qn,tvr)                                    \
     JS_PUSH_TEMP_ROOT_COMMON(cx, qn, tvr, JSTVU_SINGLE, qname)

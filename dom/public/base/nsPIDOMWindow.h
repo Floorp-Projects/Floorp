@@ -76,8 +76,8 @@ class nsScriptObjectHolder;
 class nsXBLPrototypeHandler;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x909852b5, 0xb9e6, 0x4d94, \
-  { 0x8d, 0xe3, 0x05, 0x16, 0x34, 0x80, 0x0b, 0x73 } }
+{ 0xc9c187f9, 0x2104, 0x4c2c, \
+  { 0xb4, 0xd7, 0xc1, 0xb1, 0x9d, 0xa5, 0xc7, 0xd8 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -269,6 +269,8 @@ public:
   // Restore the window state from aState.
   virtual nsresult RestoreWindowState(nsISupports *aState) = 0;
 
+  // Suspend timeouts in this and in child windows.
+  virtual void SuspendTimeouts() = 0;
   // Resume suspended timeouts in this window and in child windows.
   virtual nsresult ResumeTimeouts() = 0;
   

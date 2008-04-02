@@ -467,20 +467,24 @@
           var textBox = this._textbox;
           var textValue = textBox.value;
 
+          var where = "current";
+          if (aEvent && aEvent.originalTarget.getAttribute("anonid") == "search-go-button") {
+            if (aEvent.button == 2)
+              return;
+            where = whereToOpenLink(aEvent, false, true);
+          }
+          else {
+            var newTabPref = textBox._prefBranch.getBoolPref("browser.search.openintab");
+            if ((aEvent && aEvent.altKey) ^ newTabPref)
+              where = "tab";
+          }
+
           // Save the current value in the form history
           if (textValue) {
             textBox._formHistSvc.addEntry(textBox.getAttribute("autocompletesearchparam"),
                                           textValue);
           }
 
-          var where = "current";
-          if (aEvent && aEvent.originalTarget.getAttribute("anonid") == "search-go-button")
-            where = whereToOpenLink(aEvent, false, true);
-          else {
-            var newTabPref = textBox._prefBranch.getBoolPref("browser.search.openintab");
-            if ((aEvent && aEvent.altKey) ^ newTabPref)
-              where = "tab";
-          }
           this.doSearch(textValue, where);
         ]]></body>
       </method>
@@ -642,9 +646,14 @@
             var innerRect = this.inputField.getBoundingClientRect();
             var width = outerRect.right - innerRect.left;
             popup.setAttribute("width", width > 100 ? width : 100);
-            popup.openPopup(null, "", innerRect.left, outerRect.bottom, false, false);
 
-            popup.popupBoxObject.setConsumeRollupEvent(this.consumeRollupEvent);
+            // setConsumeRollupEvent() before we call openPopup(), 
+            // see bug #404438 for more details
+            popup.popupBoxObject.setConsumeRollupEvent(
+              this.consumeRollupEvent ? 
+                Ci.nsIPopupBoxObject.ROLLUP_CONSUME : 
+                Ci.nsIPopupBoxObject.ROLLUP_NO_CONSUME);
+            popup.openPopup(null, "", innerRect.left, outerRect.bottom, false, false);
           }
         ]]></body>
       </method>

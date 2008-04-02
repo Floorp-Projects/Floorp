@@ -70,7 +70,6 @@ components\xpconnect.xpt
 ; XP widgets/graphics
 ; 
 gkgfx.dll
-components\gkgfxwin.dll      
 components\gkgfxthebes.dll
 components\gkwidget.dll   
 components\widget.xpt

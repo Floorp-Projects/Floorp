@@ -136,6 +136,7 @@ public:
     eColor__moz_menuhover,                                   //used to menu item background, when mouse is over
     eColor__moz_menuhovertext,                               //used to menu item text, when mouse is over
     eColor__moz_menubarhovertext,                            //used to menu bar item text, when mouse is over
+    eColor__moz_oddrowbackground,                            //background color of odd list rows
 
     //colours needed by Mac Classic skin
     eColor__moz_mac_focusring,				//ring around text fields and lists

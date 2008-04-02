@@ -64,6 +64,7 @@ DIRS += \
 	exthelper \
 	viewconfig \
 	typeaheadfind \
+	parentalcontrols \
 	$(NULL)
 
 ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))

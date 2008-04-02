@@ -52,5 +52,11 @@ DIRS	+= \
 	whatwg \
 	$(NULL)
 
+ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+DIRS	+= \
+	dom-level2-html \
+	$(NULL)
+endif
+
 include $(topsrcdir)/config/rules.mk
 

@@ -531,95 +531,6 @@ GetContainingBlockSize(const nsHTMLReflowState& aOuterRS)
   return size;
 }
 
-void
-nsTableOuterFrame::InvalidateDamage(PRUint8         aCaptionSide,
-                                    const nsSize&   aOuterSize,
-                                    PRBool          aInnerChanged,
-                                    PRBool          aCaptionChanged,
-                                    nsRect*         aOldOverflowArea)
-{
-  if (!aInnerChanged && !aCaptionChanged) return;
-
-  nsRect damage;
-  if (aInnerChanged && aCaptionChanged) {
-    damage = nsRect(0, 0, aOuterSize.width, aOuterSize.height);
-    if (aOldOverflowArea) {
-      damage.UnionRect(damage, *aOldOverflowArea);
-    }
-    damage.UnionRect(damage, GetOverflowRect());
-  }
-  else {
-    nsRect captionRect(0,0,0,0);
-    nsRect innerRect = mInnerTableFrame->GetRect();
-    if (mCaptionFrame) {
-      captionRect = mCaptionFrame->GetRect();
-    }
-    
-    damage.x = 0;
-    damage.width  = aOuterSize.width;
-    switch(aCaptionSide) {
-    case NS_STYLE_CAPTION_SIDE_BOTTOM:
-    case NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE:
-      if (aCaptionChanged) {
-        damage.y = innerRect.y;
-        damage.height = aOuterSize.height - damage.y;
-      }
-      else { // aInnerChanged 
-        damage.y = 0;
-        damage.height = captionRect.y;
-      }
-      break;
-    case NS_STYLE_CAPTION_SIDE_LEFT:
-      if (aCaptionChanged) {
-        damage.width = innerRect.x;
-        damage.y = 0;
-        damage.height = captionRect.YMost();
-      }
-      else { // aInnerChanged
-        damage.x = captionRect.XMost();
-        damage.width = innerRect.XMost() - damage.x;
-        damage.y = 0;
-        damage.height = innerRect.YMost();
-      }
-      break;
-    case NS_STYLE_CAPTION_SIDE_RIGHT:
-     if (aCaptionChanged) {
-        damage.x = innerRect.XMost();
-        damage.width -= damage.x;
-        damage.y = 0;
-        damage.height = captionRect.YMost();
-      }
-     else { // aInnerChanged
-        damage.width -= captionRect.width;
-        damage.y = 0;
-        damage.height = innerRect.YMost();
-      }
-      break;
-    default:
-      NS_ASSERTION(aCaptionSide == NS_STYLE_CAPTION_SIDE_TOP ||
-                   aCaptionSide == NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE ||
-                   aCaptionSide == NO_SIDE,
-                   "unexpected caption side");
-      if (aCaptionChanged) {
-        damage.y = 0;
-        damage.height = innerRect.y;
-      }
-      else { // aInnerChanged
-        damage.y = captionRect.y;
-        damage.height = aOuterSize.height - damage.y;
-      }
-      break;
-    }
-     
-    nsIFrame* kidFrame = aCaptionChanged ? mCaptionFrame : mInnerTableFrame;
-    ConsiderChildOverflow(damage, kidFrame);
-    if (aOldOverflowArea) {
-      damage.UnionRect(damage, *aOldOverflowArea);
-    }
-  }
-  Invalidate(damage);
-}
-
 /* virtual */ nscoord
 nsTableOuterFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 {
@@ -1279,6 +1190,20 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   nsHTMLReflowState *innerRS =
     static_cast<nsHTMLReflowState*>((void*) innerRSSpace);
 
+  nsRect origInnerRect = mInnerTableFrame->GetRect();
+  nsRect origInnerOverflowRect = mInnerTableFrame->GetOverflowRect();
+  PRBool innerFirstReflow =
+    (mInnerTableFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
+  nsRect origCaptionRect;
+  nsRect origCaptionOverflowRect;
+  PRBool captionFirstReflow;
+  if (mCaptionFrame) {
+    origCaptionRect = mCaptionFrame->GetRect();
+    origCaptionOverflowRect = mCaptionFrame->GetOverflowRect();
+    captionFirstReflow =
+      (mCaptionFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
+  }
+  
   // ComputeAutoSize has to match this logic.
   if (captionSide == NO_SIDE) {
     // We don't have a caption.
@@ -1382,6 +1307,13 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   FinishReflowChild(mInnerTableFrame, aPresContext, innerRS, innerMet,
                     innerOrigin.x, innerOrigin.y, 0);
   innerRS->~nsHTMLReflowState();
+
+  nsTableFrame::InvalidateFrame(mInnerTableFrame, origInnerRect,
+                                origInnerOverflowRect, innerFirstReflow);
+  if (mCaptionFrame) {
+    nsTableFrame::InvalidateFrame(mCaptionFrame, origCaptionRect,
+                                  origCaptionOverflowRect, captionFirstReflow);
+  }
 
   UpdateReflowMetrics(captionSide, aDesiredSize, innerMargin, captionMargin);
   

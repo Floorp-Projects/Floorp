@@ -138,17 +138,36 @@ nsThebesFontMetrics::GetStrikeout(nscoord& aOffset, nscoord& aSize)
 NS_IMETHODIMP
 nsThebesFontMetrics::GetUnderline(nscoord& aOffset, nscoord& aSize)
 {
-    aOffset = ROUND_TO_TWIPS(GetMetrics().underlineOffset);
+    aOffset = ROUND_TO_TWIPS(mFontGroup->GetUnderlineOffset());
     aSize = ROUND_TO_TWIPS(GetMetrics().underlineSize);
 
     return NS_OK;
 }
 
+// GetHeight/GetMaxAscent/GetMaxDescent/GetMaxHeight must contain the
+// text-decoration lines drawable area. See bug 421353.
+// BE CAREFUL for rounding each values. The logic MUST be same as
+// nsCSSRendering::GetTextDecorationRectInternal's.
+
+static gfxFloat ComputeMaxDescent(const gfxFont::Metrics& aMetrics,
+                                  gfxFontGroup* aFontGroup)
+{
+    gfxFloat offset = NS_floor(-aFontGroup->GetUnderlineOffset() + 0.5);
+    gfxFloat size = NS_round(aMetrics.underlineSize);
+    gfxFloat minDescent = NS_floor(offset + size + 0.5);
+    return PR_MAX(minDescent, aMetrics.maxDescent);
+}
+
+static gfxFloat ComputeMaxAscent(const gfxFont::Metrics& aMetrics)
+{
+    return NS_floor(aMetrics.maxAscent + 0.5);
+}
+
 NS_IMETHODIMP
 nsThebesFontMetrics::GetHeight(nscoord &aHeight)
 {
-    aHeight = CEIL_TO_TWIPS(GetMetrics().maxAscent) +
-        CEIL_TO_TWIPS(GetMetrics().maxDescent);
+    aHeight = CEIL_TO_TWIPS(ComputeMaxAscent(GetMetrics())) +
+        CEIL_TO_TWIPS(ComputeMaxDescent(GetMetrics(), mFontGroup));
     return NS_OK;
 }
 
@@ -190,22 +209,22 @@ nsThebesFontMetrics::GetEmDescent(nscoord &aDescent)
 NS_IMETHODIMP
 nsThebesFontMetrics::GetMaxHeight(nscoord &aHeight)
 {
-    aHeight = CEIL_TO_TWIPS(GetMetrics().maxAscent) +
-        CEIL_TO_TWIPS(GetMetrics().maxDescent);
+    aHeight = CEIL_TO_TWIPS(ComputeMaxAscent(GetMetrics())) +
+        CEIL_TO_TWIPS(ComputeMaxDescent(GetMetrics(), mFontGroup));
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::GetMaxAscent(nscoord &aAscent)
 {
-    aAscent = CEIL_TO_TWIPS(GetMetrics().maxAscent);
+    aAscent = CEIL_TO_TWIPS(ComputeMaxAscent(GetMetrics()));
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::GetMaxDescent(nscoord &aDescent)
 {
-    aDescent = CEIL_TO_TWIPS(GetMetrics().maxDescent);
+    aDescent = CEIL_TO_TWIPS(ComputeMaxDescent(GetMetrics(), mFontGroup));
     return NS_OK;
 }
 

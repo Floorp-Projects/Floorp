@@ -145,7 +145,6 @@ menuitem[command="placesCmd_open:window"] {
 }
 
 #placesContext_open\:newtab,
-#placesContext_openContainer\:tabs,
 menuitem[command="placesCmd_open:tab"] {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 64px 16px 48px);

@@ -620,6 +620,7 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
                               nsIDeviceContext* dx,
                               const gfxPoint& offset,
                               const gfxRect& targetRect,
+                              const nsIntRect& aSubimageRect,
                               const PRInt32 xPadding,
                               const PRInt32 yPadding)
 {
@@ -634,8 +635,9 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
 
     PRBool doSnap = !(thebesContext->CurrentMatrix().HasNonTranslation());
     PRBool hasPadding = ((xPadding != 0) || (yPadding != 0));
-
-    nsRefPtr<gfxASurface> tmpSurfaceGrip;
+    gfxImageSurface::gfxImageFormat format = mFormat;
+    
+    gfxPoint tmpOffset = offset;
 
     if (mSinglePixel && !hasPadding) {
         thebesContext->SetColor(mSinglePixelColor);
@@ -653,13 +655,12 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
             if (!AllowedImageSize(width, height))
                 return NS_ERROR_FAILURE;
 
-            surface = new gfxImageSurface(gfxIntSize(width, height),
-                                          gfxASurface::ImageFormatARGB32);
+            format = gfxASurface::ImageFormatARGB32;
+            surface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(
+                    gfxIntSize(width, height), format);
             if (!surface || surface->CairoStatus()) {
                 return NS_ERROR_OUT_OF_MEMORY;
             }
-
-            tmpSurfaceGrip = surface;
 
             gfxContext tmpContext(surface);
             if (mSinglePixel) {
@@ -675,17 +676,105 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
             height = mHeight;
             surface = ThebesSurface();
         }
-
-        gfxMatrix patMat;
-        gfxPoint p0;
-
-        p0.x = - floor(offset.x + 0.5);
-        p0.y = - floor(offset.y + 0.5);
+        
         // Scale factor to account for CSS pixels; note that the offset (and 
         // therefore p0) is in device pixels, while the width and height are in
         // CSS pixels.
         gfxFloat scale = gfxFloat(dx->AppUnitsPerDevPixel()) /
                          gfxFloat(nsIDeviceContext::AppUnitsPerCSSPixel());
+
+        if ((aSubimageRect.width < width || aSubimageRect.height < height) &&
+            (thebesContext->CurrentMatrix().HasNonTranslation() || scale != 1.0)) {
+            // Some of the source image should not be drawn, and we're going
+            // to be doing more than just translation, so we might accidentally
+            // sample the non-drawn pixels. Avoid that by creating a
+            // temporary image representing the portion that will be drawn,
+            // with built-in padding since we can't use EXTEND_PAD and
+            // EXTEND_REPEAT at the same time for different axes.
+            PRInt32 padX = aSubimageRect.width < width ? 1 : 0;
+            PRInt32 padY = aSubimageRect.height < height ? 1 : 0;
+            PRInt32 tileWidth = PR_MIN(aSubimageRect.width, width);
+            PRInt32 tileHeight = PR_MIN(aSubimageRect.height, height);
+            
+            // This tmpSurface will contain a snapshot of the repeated
+            // tile image at (aSubimageRect.x, aSubimageRect.y,
+            // tileWidth, tileHeight), with padX padding added to the left
+            // and right sides and padY padding added to the top and bottom
+            // sides.
+            nsRefPtr<gfxASurface> tmpSurface;
+            tmpSurface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(
+                    gfxIntSize(tileWidth + 2*padX, tileHeight + 2*padY), format);
+            if (!tmpSurface || tmpSurface->CairoStatus()) {
+                return NS_ERROR_OUT_OF_MEMORY;
+            }
+
+            gfxContext tmpContext(tmpSurface);
+            tmpContext.SetOperator(gfxContext::OPERATOR_SOURCE);
+            gfxPattern pat(surface);
+            pat.SetExtend(gfxPattern::EXTEND_REPEAT);
+            
+            // Copy the needed portion of the source image to the temporary
+            // surface. We also copy over horizontal and/or vertical padding
+            // strips one pixel wide, plus the corner pixels if necessary.
+            // So in the most general case the temporary surface ends up
+            // looking like
+            //     P P P ... P P P
+            //     P X X ... X X P
+            //     P X X ... X X P
+            //     ...............
+            //     P X X ... X X P
+            //     P X X ... X X P
+            //     P P P ... P P P
+            // Where each P pixel has the color of its nearest source X
+            // pixel. We implement this as a loop over all nine possible
+            // areas, [padding, body, padding] x [padding, body, padding].
+            // Note that we will not need padding on both axes unless
+            // we are painting just a single tile, in which case this
+            // will hardly ever get called since nsCSSRendering converts
+            // the single-tile case to nsLayoutUtils::DrawImage. But this
+            // could be called on other paths (XUL trees?) and it's simpler
+            // and clearer to do it the general way.
+            PRInt32 destY = 0;
+            for (PRInt32 y = -1; y <= 1; ++y) {
+                PRInt32 stripHeight = y == 0 ? tileHeight : padY;
+                if (stripHeight == 0)
+                    continue;
+                PRInt32 srcY = y == 1 ? aSubimageRect.YMost() - padY : aSubimageRect.y;
+                
+                PRInt32 destX = 0;
+                for (PRInt32 x = -1; x <= 1; ++x) {
+                    PRInt32 stripWidth = x == 0 ? tileWidth : padX;
+                    if (stripWidth == 0)
+                        continue;
+                    PRInt32 srcX = x == 1 ? aSubimageRect.XMost() - padX : aSubimageRect.x;
+
+                    gfxMatrix patMat;
+                    patMat.Translate(gfxPoint(srcX - destX, srcY - destY));
+                    pat.SetMatrix(patMat);
+                    tmpContext.SetPattern(&pat);
+                    tmpContext.Rectangle(gfxRect(destX, destY, stripWidth, stripHeight));
+                    tmpContext.Fill();
+                    tmpContext.NewPath();
+                    
+                    destX += stripWidth;
+                }
+                destY += stripHeight;
+            }
+
+            // tmpOffset was the top-left of the old tile image. Make it
+            // the top-left of the new tile image. Note that tmpOffset is
+            // in destination coordinate space so we have to scale our
+            // CSS pixels.
+            tmpOffset += gfxPoint(aSubimageRect.x - padX, aSubimageRect.y - padY)/scale;
+            
+            surface = tmpSurface;
+        }
+
+        gfxMatrix patMat;
+        gfxPoint p0;
+
+        p0.x = - floor(tmpOffset.x + 0.5);
+        p0.y = - floor(tmpOffset.y + 0.5);
         patMat.Scale(scale, scale);
         patMat.Translate(p0);
 
@@ -705,7 +794,7 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
     }
 
     gfxContext::GraphicsOperator op = thebesContext->CurrentOperator();
-    if (op == gfxContext::OPERATOR_OVER && mFormat == gfxASurface::ImageFormatRGB24)
+    if (op == gfxContext::OPERATOR_OVER && format == gfxASurface::ImageFormatRGB24)
         thebesContext->SetOperator(gfxContext::OPERATOR_SOURCE);
 
     thebesContext->NewPath();

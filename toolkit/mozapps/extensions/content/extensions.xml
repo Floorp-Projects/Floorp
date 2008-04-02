@@ -406,6 +406,14 @@
     </content>
 
     <implementation extends="nsIAccessibleProvider">
+      <property name="label" readonly="true">
+        <getter>
+          return this.getAttribute("name") + " " +
+            this.getAttribute("version") + " " +
+            this.getAttribute("description");
+        </getter>
+      </property>
+
       <constructor>
         if (!this.hasAttribute("thumbnailURL")) {
           this._hideImage();
@@ -894,8 +902,14 @@
         document.getAnonymousElementByAttribute(this, "class", "searchbox-cancel");
       </field>
 
-      <property name="value" onget="return this.textbox.value"
-                             onset="this.textbox.value = val"/>
+      <property name="value" onget="return this.textbox.value">
+        <setter>
+          this.textbox.value = val;
+          this.setAttribute("value", val);
+          this._cancelButton.hidden = !val;
+          this._searchButton.hidden = !!val;
+        </setter>
+      </property>
 
       <property name="disabled" onget="return this.textbox.disabled">
         <setter>

@@ -238,8 +238,7 @@ nsThebesDeviceContext::SetDPI()
         // to get the number of app units per dev pixel.  The PR_MAXes are to
         // make sure we don't end up dividing by zero.
         mAppUnitsPerDevNotScaledPixel = PR_MAX(1, AppUnitsPerCSSPixel() /
-                                        PR_MAX(1, (dpi + 48) / 96));
-
+                                        PR_MAX(1, dpi / 96));
     } else {
         /* set mAppUnitsPerDevPixel so we're using exactly 72 dpi, even
          * though that means we have a non-integer number of device "pixels"

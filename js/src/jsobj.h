@@ -191,13 +191,6 @@ struct JSObject {
 #define OBJ_CHECK_SLOT(obj,slot)                                              \
     JS_ASSERT(slot < (obj)->map->freeslot)
 
-/*
- * Macros for accessing slots in obj while obj is locked (if thread-safe) and
- * when slot must be bounded by the map->freeslot.
- */
-#define LOCKED_OBJ_NSLOTS(obj)                                                \
-   JS_MIN((obj)->map->freeslot, STOBJ_NSLOTS(obj))
-
 #define LOCKED_OBJ_GET_SLOT(obj,slot)                                         \
     (OBJ_CHECK_SLOT(obj, slot), STOBJ_GET_SLOT(obj, slot))
 #define LOCKED_OBJ_SET_SLOT(obj,slot,value)                                   \
@@ -433,14 +426,17 @@ js_GetClassId(JSContext *cx, JSClass *clasp, jsid *idp);
 
 extern JSObject *
 js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent,
-             uintN extraBytes);
+             uintN objectSize);
 
 /*
  * See jsapi.h, JS_NewObjectWithGivenProto.
+ *
+ * objectSize is either the explicit size for the allocated object or 0
+ * indicating to use the default size based on object's class.
  */
 extern JSObject *
 js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
-                           JSObject *parent, uintN extraBytes);
+                           JSObject *parent, uintN objectSize);
 
 /*
  * Fast access to immutable standard objects (constructors and prototypes).

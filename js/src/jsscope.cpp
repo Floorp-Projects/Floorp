@@ -63,6 +63,8 @@ JSScope *
 js_GetMutableScope(JSContext *cx, JSObject *obj)
 {
     JSScope *scope, *newscope;
+    JSClass *clasp;
+    uint32 freeslot;
 
     scope = OBJ_SCOPE(obj);
     JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, scope));
@@ -74,6 +76,15 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
         return NULL;
     JS_LOCK_SCOPE(cx, newscope);
     obj->map = js_HoldObjectMap(cx, &newscope->map);
+    JS_ASSERT(newscope->map.freeslot == JSSLOT_FREE(STOBJ_GET_CLASS(obj)));
+    clasp = STOBJ_GET_CLASS(obj);
+    if (clasp->reserveSlots) {
+        freeslot = JSSLOT_FREE(clasp) + clasp->reserveSlots(cx, obj);
+        if (freeslot > STOBJ_NSLOTS(obj))
+            freeslot = STOBJ_NSLOTS(obj);
+        if (newscope->map.freeslot < freeslot)
+            newscope->map.freeslot = freeslot;
+    }
     scope = (JSScope *) js_DropObjectMap(cx, &scope->map, obj);
     JS_TRANSFER_SCOPE_LOCK(cx, scope, newscope);
     return newscope;

@@ -778,7 +778,8 @@ nsThebesRenderingContext::PopFilter()
 NS_IMETHODIMP
 nsThebesRenderingContext::DrawTile(imgIContainer *aImage,
                                    nscoord twXOffset, nscoord twYOffset,
-                                   const nsRect *twTargetRect)
+                                   const nsRect *twTargetRect,
+                                   const nsIntRect *subimageRect)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::DrawTile %p %f %f [%f,%f,%f,%f]\n",
                                          this, aImage, FROM_TWIPS(twXOffset), FROM_TWIPS(twYOffset),
@@ -813,18 +814,34 @@ nsThebesRenderingContext::DrawTile(imgIContainer *aImage,
     PRInt32 xPadding = 0;
     PRInt32 yPadding = 0;
 
+    nsIntRect tmpSubimageRect;
+    if (subimageRect) {
+        tmpSubimageRect = *subimageRect;
+    } else {
+        tmpSubimageRect = nsIntRect(0, 0, containerWidth, containerHeight);
+    }
+
     if (imgFrameRect.width != containerWidth ||
         imgFrameRect.height != containerHeight)
     {
         xPadding = containerWidth - imgFrameRect.width;
         yPadding = containerHeight - imgFrameRect.height;
 
+        // XXXroc shouldn't we be adding to 'phase' here? it's tbe origin
+        // at which the image origin should be drawn, and ThebesDrawTile
+        // just draws the origin of its "frame" there, so we should be
+        // adding imgFrameRect.x/y. so that the imgFrame draws in the
+        // right place.
         phase.x -= imgFrameRect.x;
         phase.y -= imgFrameRect.y;
+
+        tmpSubimageRect.x -= imgFrameRect.x;
+        tmpSubimageRect.y -= imgFrameRect.y;
     }
 
     return thebesImage->ThebesDrawTile (mThebes, mDeviceContext, phase,
                                         GFX_RECT_FROM_TWIPS_RECT(*twTargetRect),
+                                        tmpSubimageRect,
                                         xPadding, yPadding);
 }
 

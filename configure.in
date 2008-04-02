@@ -1242,11 +1242,11 @@ Alpha | alpha | ALPHA)
     CPU_ARCH=Alpha
     ;;
 
-sun4u)
+sun4u | sparc*)
     CPU_ARCH=sparc
     ;;
 
-x86_64 | sparc | ppc | ia64)
+x86_64 | ia64)
     CPU_ARCH="$OS_TEST"
     ;;
 esac
@@ -4281,6 +4281,7 @@ MOZ_PYTHON_VER_DOTTED=
 MOZ_RDF=1
 MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
+MOZ_HELP_VIEWER=
 MOZ_SPELLCHECK=1
 MOZ_STATIC_MAIL_BUILD=
 MOZ_STORAGE=1
@@ -5825,6 +5826,17 @@ else
 fi
 
 AC_SUBST(MOZ_NATIVE_SQLITE)
+
+dnl = Enable help viewer (off by default)
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(help-viewer,
+[  --enable-help-viewer        Enable help viewer],
+    MOZ_HELP_VIEWER=1,
+    MOZ_HELP_VIEWER= )
+if test -n "$MOZ_HELP_VIEWER"; then
+     AC_DEFINE(MOZ_HELP_VIEWER)
+fi
+AC_SUBST(MOZ_HELP_VIEWER)
 
 dnl ========================================================
 dnl = Enable safe browsing (anti-phishing)

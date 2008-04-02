@@ -379,7 +379,6 @@ protected:
                                     PRBool isBidiSystem);
 
   void UnionTextDecorationOverflow(nsPresContext* aPresContext,
-                                   const gfxTextRun::Metrics& aTextMetrics,
                                    nsRect* aOverflowRect);
 
   struct TextDecorations {
@@ -409,6 +408,9 @@ protected:
     }
   };
   TextDecorations GetTextDecorations(nsPresContext* aPresContext);
+
+  PRBool HasSelectionOverflowingDecorations(nsPresContext* aPresContext,
+                                            float* aRatio = nsnull);
 };
 
 #endif

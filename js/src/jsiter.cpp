@@ -731,7 +731,7 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
 
     /* Load and compute stack slot counts. */
     argc = fp->argc;
-    nargs = JS_MAX(argc, FUN_TO_SCRIPTED(fp->fun)->nargs);
+    nargs = JS_MAX(argc, fp->fun->nargs);
     nvars = fp->nvars;
     nslots = 2 + nargs + nvars + fp->script->depth;
 
