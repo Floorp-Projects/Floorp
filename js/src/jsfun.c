@@ -254,7 +254,7 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
         return argsobj;
 
     /* Link the new object to fp so it can get actual argument values. */
-    argsobj = js_NewObject(cx, &js_ArgumentsClass, NULL, NULL);
+    argsobj = js_NewObject(cx, &js_ArgumentsClass, NULL, NULL, 0);
     if (!argsobj || !JS_SetPrivate(cx, argsobj, fp)) {
         cx->weakRoots.newborn[GCX_OBJECT] = NULL;
         return NULL;
@@ -602,7 +602,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp, JSObject *parent)
     }
 
     /* Create the call object and link it to its stack frame. */
-    callobj = js_NewObject(cx, &js_CallClass, NULL, parent);
+    callobj = js_NewObject(cx, &js_CallClass, NULL, parent, 0);
     if (!callobj || !JS_SetPrivate(cx, callobj, fp)) {
         cx->weakRoots.newborn[GCX_OBJECT] = NULL;
         return NULL;
@@ -1076,7 +1076,6 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
         return JS_TRUE;
 
     fun = GET_FUNCTION_PRIVATE(cx, obj);
-    JS_ASSERT(fun->object);
 
     /*
      * No need to reflect fun.prototype in 'fun.prototype = ... '.
@@ -1112,8 +1111,8 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
          * Make the prototype object to have the same parent as the function
          * object itself.
          */
-        proto = js_NewObject(cx, &js_ObjectClass, NULL,
-                             OBJ_GET_PARENT(cx, obj));
+        proto = js_NewObject(cx, &js_ObjectClass, NULL, OBJ_GET_PARENT(cx, obj),
+                             0);
         if (!proto)
             return JS_FALSE;
 
@@ -1198,15 +1197,15 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
         fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, NULL, NULL);
         if (!fun)
             return JS_FALSE;
-        STOBJ_SET_PARENT(fun->object, NULL);
-        STOBJ_SET_PROTO(fun->object, NULL);
+        STOBJ_SET_PARENT(FUN_OBJECT(fun), NULL);
+        STOBJ_SET_PROTO(FUN_OBJECT(fun), NULL);
 #ifdef __GNUC__
         nvars = nargs = 0;   /* quell GCC uninitialized warning */
 #endif
     }
 
     /* From here on, control flow must flow through label out. */
-    JS_PUSH_TEMP_ROOT_OBJECT(cx, fun->object, &tvr);
+    JS_PUSH_TEMP_ROOT_OBJECT(cx, FUN_OBJECT(fun), &tvr);
     ok = JS_TRUE;
 
     if (!JS_XDRUint32(xdr, &nullAtom))
@@ -1226,7 +1225,8 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
     }
 
     /* do arguments and local vars */
-    if (fun->object && (n = nargs + nvars) != 0) {
+    n = nargs + nvars;
+    if (n != 0) {
         void *mark;
         uintN i;
         uintN bitmapLength;
@@ -1326,7 +1326,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
         goto bad;
 
     if (xdr->mode == JSXDR_DECODE) {
-        *objp = fun->object;
+        *objp = FUN_OBJECT(fun);
 #ifdef CHECK_SCRIPT_OWNER
         fun->u.i.script->owner = NULL;
 #endif
@@ -1379,14 +1379,54 @@ fun_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 }
 
 static void
+TraceLocalNames(JSTracer *trc, JSFunction *fun);
+
+static void
+DestroyLocalNames(JSContext *cx, JSFunction *fun);
+
+static void
 fun_trace(JSTracer *trc, JSObject *obj)
 {
     JSFunction *fun;
 
     /* A newborn function object may have a not yet initialized private slot. */
     fun = (JSFunction *) JS_GetPrivate(trc->context, obj);
-    if (fun)
-        JS_CALL_TRACER(trc, fun, JSTRACE_FUNCTION, "private");
+    if (!fun)
+        return;
+
+    if (FUN_OBJECT(fun) != obj) {
+        /* obj is cloned function object, trace the original. */
+        JS_CALL_TRACER(trc, FUN_OBJECT(fun), JSTRACE_OBJECT, "private");
+        return;
+    }
+    if (fun->atom)
+        JS_CALL_STRING_TRACER(trc, ATOM_TO_STRING(fun->atom), "atom");
+    if (FUN_INTERPRETED(fun)) {
+        if (fun->u.i.script)
+            js_TraceScript(trc, fun->u.i.script);
+        TraceLocalNames(trc, fun);
+    }
+}
+
+static void
+fun_finalize(JSContext *cx, JSObject *obj)
+{
+    JSFunction *fun;
+
+    /* Ignore newborn and cloned function objects. */
+    fun = (JSFunction *) JS_GetPrivate(cx, obj);
+    if (!fun || FUN_OBJECT(fun) != obj)
+        return;
+
+    /*
+     * Null-check of u.i.script is required since the parser sets interpreted
+     * very early.
+     */
+    if (FUN_INTERPRETED(fun)) {
+        if (fun->u.i.script)
+            js_DestroyScript(cx, fun->u.i.script);
+        DestroyLocalNames(cx, fun);
+    }
 }
 
 static uint32
@@ -1418,7 +1458,7 @@ JS_FRIEND_DATA(JSClass) js_FunctionClass = {
     JS_PropertyStub,  JS_PropertyStub,
     fun_getProperty,  JS_PropertyStub,
     fun_enumerate,    (JSResolveOp)fun_resolve,
-    fun_convert,      JS_FinalizeStub,
+    fun_convert,      fun_finalize,
     NULL,             NULL,
     NULL,             NULL,
     fun_xdrObject,    fun_hasInstance,
@@ -1721,19 +1761,18 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     fp = cx->fp;
     if (!(fp->flags & JSFRAME_CONSTRUCTING)) {
-        obj = js_NewObject(cx, &js_FunctionClass, NULL, NULL);
+        obj = js_NewObject(cx, &js_FunctionClass, NULL, NULL, 0);
         if (!obj)
             return JS_FALSE;
         *rval = OBJECT_TO_JSVAL(obj);
+    } else {
+        /*
+         * The constructor is called before the private slot is initialized so
+         * we must use JS_GetPrivate, not GET_FUNCTION_PRIVATE here.
+         */
+        if (JS_GetPrivate(cx, obj))
+            return JS_TRUE;
     }
-
-    /*
-     * The constructor is called before the private slot is initialized so we
-     * must use JS_GetPrivate, not GET_FUNCTION_PRIVATE here.
-     */
-    fun = (JSFunction *) JS_GetPrivate(cx, obj);
-    if (fun)
-        return JS_TRUE;
 
     /*
      * NB: (new Function) is not lexically closed by its caller, it's just an
@@ -1988,30 +2027,19 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
                uintN flags, JSObject *parent, JSAtom *atom)
 {
     JSFunction *fun;
-    JSTempValueRooter tvr;
 
-    /* If funobj is null, allocate an object for it. */
     if (funobj) {
+        JS_ASSERT(HAS_FUNCTION_CLASS(funobj));
         OBJ_SET_PARENT(cx, funobj, parent);
     } else {
-        funobj = js_NewObject(cx, &js_FunctionClass, NULL, parent);
+        funobj = js_NewObject(cx, &js_FunctionClass, NULL, parent, 0);
         if (!funobj)
             return NULL;
     }
-
-    /* Protect fun from any potential GC callback. */
-    JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(funobj), &tvr);
-
-    /*
-     * Allocate fun after allocating funobj so allocations in js_NewObject
-     * and hooks called from it do not wipe out fun from newborn[GCX_FUNCTION].
-     */
-    fun = (JSFunction *) js_NewGCThing(cx, GCX_FUNCTION, sizeof(JSFunction));
-    if (!fun)
-        goto out;
+    JS_ASSERT(funobj->fslots[JSSLOT_PRIVATE] == JSVAL_VOID);
+    fun = (JSFunction *) funobj;
 
     /* Initialize all function members. */
-    fun->object = NULL;
     fun->nargs = nargs;
     fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_INTERPRETED);
     if (flags & JSFUN_INTERPRETED) {
@@ -2031,75 +2059,26 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
     }
     fun->atom = atom;
 
-    /* Link fun to funobj and vice versa. */
-    if (!js_LinkFunctionObject(cx, fun, funobj)) {
-        cx->weakRoots.newborn[GCX_OBJECT] = NULL;
-        fun = NULL;
-    }
-
-out:
-    JS_POP_TEMP_ROOT(cx, &tvr);
+    /* Set private to self to indicate non-cloned fully initialized function. */
+    FUN_OBJECT(fun)->fslots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(fun);
     return fun;
 }
 
-static void
-TraceLocalNames(JSTracer *trc, JSFunction *fun);
-
-void
-js_TraceFunction(JSTracer *trc, JSFunction *fun)
-{
-    if (fun->object)
-        JS_CALL_OBJECT_TRACER(trc, fun->object, "object");
-    if (fun->atom)
-        JS_CALL_STRING_TRACER(trc, ATOM_TO_STRING(fun->atom), "atom");
-    if (FUN_INTERPRETED(fun)) {
-        if (fun->u.i.script)
-            js_TraceScript(trc, fun->u.i.script);
-        TraceLocalNames(trc, fun);
-    }
-}
-
-static void
-DestroyLocalNames(JSContext *cx, JSFunction *fun);
-
-void
-js_FinalizeFunction(JSContext *cx, JSFunction *fun)
-{
-    /*
-     * Null-check of i.script is required since the parser sets interpreted
-     * very early.
-     */
-    if (FUN_INTERPRETED(fun)) {
-        if (fun->u.i.script)
-            js_DestroyScript(cx, fun->u.i.script);
-        DestroyLocalNames(cx, fun);
-    }
-}
-
 JSObject *
-js_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
+js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent)
 {
-    JSObject *newfunobj;
-    JSFunction *fun;
+    JSObject *clone;
 
-    JS_ASSERT(OBJ_GET_CLASS(cx, funobj) == &js_FunctionClass);
-    newfunobj = js_NewObject(cx, &js_FunctionClass, NULL, parent);
-    if (!newfunobj)
+    /*
+     * The cloned function object does not need the extra fields beyond
+     * JSObject as it points to fun via the private slot.
+     */
+    clone = js_NewObject(cx, &js_FunctionClass, NULL, parent,
+                         sizeof(JSObject));
+    if (!clone)
         return NULL;
-    fun = GET_FUNCTION_PRIVATE(cx, funobj);
-    if (!js_LinkFunctionObject(cx, fun, newfunobj)) {
-        cx->weakRoots.newborn[GCX_OBJECT] = NULL;
-        return NULL;
-    }
-    return newfunobj;
-}
-
-JSBool
-js_LinkFunctionObject(JSContext *cx, JSFunction *fun, JSObject *funobj)
-{
-    if (!fun->object)
-        fun->object = funobj;
-    return JS_SetPrivate(cx, funobj, fun);
+    clone->fslots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(fun);
+    return clone;
 }
 
 JSFunction *
@@ -2114,7 +2093,7 @@ js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative native,
         return NULL;
     gsop = (attrs & JSFUN_STUB_GSOPS) ? JS_PropertyStub : NULL;
     if (!OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(atom),
-                             OBJECT_TO_JSVAL(fun->object),
+                             OBJECT_TO_JSVAL(FUN_OBJECT(fun)),
                              gsop, gsop,
                              attrs & ~JSFUN_FLAGS_MASK, NULL)) {
         return NULL;
@@ -2153,7 +2132,6 @@ JSObject *
 js_ValueToFunctionObject(JSContext *cx, jsval *vp, uintN flags)
 {
     JSFunction *fun;
-    JSObject *funobj;
     JSStackFrame *caller;
     JSPrincipals *principals;
 
@@ -2163,8 +2141,7 @@ js_ValueToFunctionObject(JSContext *cx, jsval *vp, uintN flags)
     fun = js_ValueToFunction(cx, vp, flags);
     if (!fun)
         return NULL;
-    funobj = fun->object;
-    *vp = OBJECT_TO_JSVAL(funobj);
+    *vp = OBJECT_TO_JSVAL(FUN_OBJECT(fun));
 
     caller = JS_GetScriptedCaller(cx, cx->fp);
     if (caller) {
@@ -2174,13 +2151,13 @@ js_ValueToFunctionObject(JSContext *cx, jsval *vp, uintN flags)
         principals = NULL;
     }
 
-    if (!js_CheckPrincipalsAccess(cx, funobj, principals,
+    if (!js_CheckPrincipalsAccess(cx, FUN_OBJECT(fun), principals,
                                   fun->atom
                                   ? fun->atom
                                   : cx->runtime->atomState.anonymousAtom)) {
         return NULL;
     }
-    return funobj;
+    return FUN_OBJECT(fun);
 }
 
 JSObject *

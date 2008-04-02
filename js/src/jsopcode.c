@@ -1700,7 +1700,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
     GET_OBJECT_FROM_BYTECODE(jp->script, pc, PCOFF, obj)
 
 #define LOAD_FUNCTION(PCOFF)                                                  \
-    GET_FUNCTION_FROM_BYTECODE(jp->script, pc, PCOFF, obj)
+    GET_FUNCTION_FROM_BYTECODE(jp->script, pc, PCOFF, fun)
 
 #define LOAD_REGEXP(PCOFF)                                                    \
     GET_REGEXP_FROM_BYTECODE(jp->script, pc, PCOFF, obj)
@@ -2016,11 +2016,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     break;
 
                   case SRC_FUNCDEF:
-                    JS_GET_SCRIPT_OBJECT(jp->script, js_GetSrcNoteOffset(sn, 0),
-                                         obj);
+                    JS_GET_SCRIPT_FUNCTION(jp->script,
+                                           js_GetSrcNoteOffset(sn, 0),
+                                           fun);
                   do_function:
                     js_puts(jp, "\n");
-                    fun = GET_FUNCTION_PRIVATE(cx, obj);
                     jp2 = JS_NEW_PRINTER(cx, "nested_function", fun,
                                          jp->indent, jp->pretty);
                     if (!jp2)
@@ -3767,8 +3767,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     SprintStack ss2;
 
                     LOAD_FUNCTION(0);
-                    fun = GET_FUNCTION_PRIVATE(cx, obj);
-                    LOCAL_ASSERT(FUN_INTERPRETED(fun));
                     inner = fun->u.i.script;
 
                     /*
@@ -3884,7 +3882,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * parenthesization without confusing getter/setter code
                      * that checks for JSOP_ANONFUNOBJ and JSOP_NAMEDFUNOBJ.
                      */
-                    fun = GET_FUNCTION_PRIVATE(cx, obj);
                     if (!(fun->flags & JSFUN_EXPR_CLOSURE))
                         indent |= JS_IN_GROUP_CONTEXT;
                     str = JS_DecompileFunction(cx, fun, indent);

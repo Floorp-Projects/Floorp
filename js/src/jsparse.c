@@ -1063,12 +1063,12 @@ NewCompilerFunction(JSContext *cx, JSTreeContext *tc, JSAtom *atom,
     JSFunction *fun;
 
     JS_ASSERT((lambda & ~JSFUN_LAMBDA) == 0);
-    parent = (tc->flags & TCF_IN_FUNCTION) ? tc->fun->object : cx->fp->varobj;
+    parent = (tc->flags & TCF_IN_FUNCTION) ? FUN_OBJECT(tc->fun) : cx->fp->varobj;
     fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED | lambda,
                          parent, atom);
     if (fun && !(tc->flags & TCF_COMPILE_N_GO)) {
-        STOBJ_SET_PARENT(fun->object, NULL);
-        STOBJ_SET_PROTO(fun->object, NULL);
+        STOBJ_SET_PARENT(FUN_OBJECT(fun), NULL);
+        STOBJ_SET_PROTO(FUN_OBJECT(fun), NULL);
     }
     return fun;
 }
@@ -1191,7 +1191,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
      * Create wrapping box for fun->object early to protect against a
      * last-ditch GC.
      */
-    funpob = js_NewParsedObjectBox(cx, tc->parseContext, fun->object);
+    funpob = js_NewParsedObjectBox(cx, tc->parseContext, FUN_OBJECT(fun));
     if (!funpob)
         return NULL;
 
@@ -4293,7 +4293,7 @@ GeneratorExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     lambda->pn_op = JSOP_ANONFUNOBJ;
     lambda->pn_pos.begin = body->pn_pos.begin;
     lambda->pn_funpob = js_NewParsedObjectBox(cx, tc->parseContext,
-                                              fun->object);
+                                              FUN_OBJECT(fun));
     if (!lambda->pn_funpob)
         return NULL;
     lambda->pn_body = body;

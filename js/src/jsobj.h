@@ -425,14 +425,18 @@ extern JSBool
 js_GetClassId(JSContext *cx, JSClass *clasp, jsid *idp);
 
 extern JSObject *
-js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
+js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent,
+             uintN objectSize);
 
 /*
  * See jsapi.h, JS_NewObjectWithGivenProto.
+ *
+ * objectSize is either the explicit size for the allocated object or 0
+ * indicating to use the default size based on object's class.
  */
 extern JSObject *
 js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
-                           JSObject *parent);
+                           JSObject *parent, uintN objectSize);
 
 /*
  * Fast access to immutable standard objects (constructors and prototypes).
