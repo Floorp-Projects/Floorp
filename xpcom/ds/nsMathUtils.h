@@ -63,8 +63,6 @@ inline NS_HIDDEN_(PRInt32) NS_lround(double x)
 
 inline NS_HIDDEN_(PRInt32) NS_lroundup30(float x)
 {
-#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__)
-
     /* Code derived from Laurent de Soras' paper at             */
     /* http://ldesoras.free.fr/doc/articles/rounding_en.pdf     */
 
@@ -92,9 +90,6 @@ inline NS_HIDDEN_(PRInt32) NS_lroundup30(float x)
       fistp   dword ptr i         ; convert the result to int
     }
     return i >> 1;                /* divide by 2 */
-#else
-    return nscoord(NS_floorf(x + 0.5f));
-#endif /* XP_WIN32 && _M_IX86 && !__GNUC__ */
 }
 
 inline NS_HIDDEN_(PRInt32) NS_lroundf(float x)
