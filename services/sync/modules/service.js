@@ -127,14 +127,13 @@ WeaveSvc.prototype = {
 
   __cookieEngine: null,
   get _cookieEngine() {
-	// This gets an error that "CookieEngine" is undefined.  Why?
-        // BookmarksEngine and HistoryEngine are both defined in engines.js
-        // and so is CookieEngine, but...
+    // This gets an error that "CookieEngine" is undefined.  Why?
+    // BookmarksEngine and HistoryEngine are both defined in engines.js
+    // and so is CookieEngine, but...
     if (!this.__cookieEngine)
       this.__cookieEngine = new CookieEngine(DAV, this._cryptoId);
     return this.__cookieEngine;
   },
-
 
   // Timer object for automagically syncing
   _scheduleTimer: null,
@@ -325,13 +324,20 @@ WeaveSvc.prototype = {
     if (serverURL[serverURL.length-1] != '/')
       serverURL = serverURL + '/';
 
-    DAV.baseURL = serverURL;
-    DAV.MKCOL("user/" + this.userPath, self.cb);
-    let ret = yield;
-    if (!ret)
-      throw "Could not create user directory";
+    try {
+      DAV.baseURL = serverURL;
+      DAV.MKCOL("user/" + this.userPath, self.cb);
+      let ret = yield;
+      if (!ret)
+        throw "Could not create user directory";
 
-    DAV.baseURL = serverURL + "user/" + this.userPath + "/";
+    } catch (e) {
+      throw e;
+
+    } finally {
+      DAV.baseURL = serverURL + "user/" + this.userPath + "/";
+    }
+
     this._log.info("Using server URL: " + DAV.baseURL);
   },
 
@@ -420,17 +426,26 @@ WeaveSvc.prototype = {
     if (!this.password)
       throw "No password given or found in password manager";
 
-    this._checkUserDir.async(this, self.cb);
-    yield;
+    let serverURL = Utils.prefs.getCharPref("serverURL");
+    if (serverURL[serverURL.length-1] != '/')
+      serverURL = serverURL + '/';
+    DAV.baseURL = serverURL + "user/" + this.userPath + "/";
 
     DAV.login.async(DAV, self.cb, this.username, this.password);
     let success = yield;
-    if (!success)
-      throw "Login failed";
+    if (!success) {
+      try {
+        this._checkUserDir.async(this, self.cb);
+        yield;
+      } catch (e) { /* FIXME: tmp workaround for services.m.c */ }
+      DAV.login.async(DAV, self.cb, this.username, this.password);
+      let success = yield;
+      if (!success)
+        throw "Login failed";
+    }
 
     this._versionCheck.async(this, self.cb);
     yield;
-
     this._keyCheck.async(this, self.cb);
     yield;
 
@@ -507,8 +522,8 @@ WeaveSvc.prototype = {
       yield;
     }
     if (Utils.prefs.getBoolPref("cookies")) {
-	this._notify(this._cookieEngine.name + ":sync",
-                    this._syncEngine, this._cookieEngine).async(this, self.cb);
+      this._notify(this._cookieEngine.name + ":sync",
+                   this._syncEngine, this._cookieEngine).async(this, self.cb);
       yield;
     }
   },
