@@ -76,6 +76,7 @@ public:
   NS_IMETHOD GetParent(nsIAccessible * *aParent);
   NS_IMETHOD GetNextSibling(nsIAccessible * *aNextSibling);
   NS_IMETHOD GetPreviousSibling(nsIAccessible **aPreviousSibling);
+  NS_IMETHOD GetIndexInParent(PRInt32 *aIndexInParent);
   NS_IMETHOD GetChildAt(PRInt32 aChildNum, nsIAccessible **aChild);
 
   // nsApplicationAccessible

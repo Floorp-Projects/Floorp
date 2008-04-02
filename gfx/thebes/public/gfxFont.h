@@ -1469,7 +1469,7 @@ public:
     // The value should be lower value of first font's metrics and the bad font's metrics.
     // Otherwise, this returns from first font's metrics.
     gfxFloat GetUnderlineOffset() {
-        if (mUnderlineOffset == 0)
+        if (mStyle.size != 0 && mUnderlineOffset == 0)
             mUnderlineOffset = GetFontAt(0)->GetMetrics().underlineOffset;
         return mUnderlineOffset;
     }

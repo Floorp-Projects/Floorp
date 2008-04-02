@@ -210,7 +210,8 @@ protected:
   void UpdateGeometry(PRBool bRedraw, PRBool suppressInvalidation);
   void UpdateMetrics();
   PRBool ContainsPoint(float x, float y);
-  PRBool GetGlobalTransform(gfxMatrix *aContext);
+  PRBool GetGlobalTransform(gfxMatrix *aMatrix);
+  void SetupGlobalTransform(gfxContext *aContext);
   nsresult GetHighlight(PRUint32 *charnum, PRUint32 *nchars,
                         nscolor *foreground, nscolor *background);
 

@@ -108,15 +108,17 @@ public:
                                   nsMargin* aResult) = 0;
 
   /**
+   * On entry, *aResult is positioned at 0,0 and sized to the new size
+   * of aFrame (aFrame->GetSize() may be stale and should not be used).
    * This method can return PR_FALSE to indicate that no special
    * overflow area is required by the native widget. Otherwise it will
-   * fill in aResult with the desired overflow area, in twips, relative
-   * to the widget origin, and return PR_TRUE.
+   * fill in aResult with the desired overflow area, in appunits, relative
+   * to the frame origin, and return PR_TRUE.
    */
   virtual PRBool GetWidgetOverflow(nsIDeviceContext* aContext,
                                    nsIFrame* aFrame,
                                    PRUint8 aWidgetType,
-                                   nsRect* aResult)
+                                   /*INOUT*/ nsRect* aOverflowRect)
   { return PR_FALSE; }
 
   /**

@@ -321,11 +321,8 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
             elem->funName = NULL;
             elem->argc = 0;
         } else {
-            JSAtom *atom;
-
-            atom = FUN_ATOM(fp->fun);
-            elem->funName = atom
-                            ? ATOM_TO_STRING(atom)
+            elem->funName = fp->fun->atom
+                            ? ATOM_TO_STRING(fp->fun->atom)
                             : cx->runtime->emptyString;
             elem->argc = fp->argc;
             memcpy(values, fp->argv, fp->argc * sizeof(jsval));
@@ -1046,8 +1043,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
     /* Initialize the prototypes first. */
     for (i = 0; exceptions[i].name != 0; i++) {
         JSAtom *atom;
-        JSNativeFunction *fun;
-        JSObject *funobj;
+        JSFunction *fun;
         JSString *nameString;
         int protoIndex = exceptions[i].protoIndex;
 
@@ -1070,13 +1066,10 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
             break;
 
         /* Make this constructor make objects of class Exception. */
-        NATIVE_FUN_SET_CLASS(fun, &js_ErrorClass);
-
-        /* Extract the constructor object. */
-        funobj = &fun->base.object;
+        fun->u.n.clasp = &js_ErrorClass;
 
         /* Make the prototype and constructor links. */
-        if (!js_SetClassPrototype(cx, funobj, protos[i],
+        if (!js_SetClassPrototype(cx, FUN_OBJECT(fun), protos[i],
                                   JSPROP_READONLY | JSPROP_PERMANENT)) {
             break;
         }
@@ -1095,7 +1088,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         }
 
         /* Finally, stash the constructor for later uses. */
-        if (!js_SetClassObject(cx, obj, exceptions[i].key, funobj))
+        if (!js_SetClassObject(cx, obj, exceptions[i].key, FUN_OBJECT(fun)))
             break;
     }
 

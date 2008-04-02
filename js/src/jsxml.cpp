@@ -830,7 +830,6 @@ QName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     jsval nameval, nsval;
     JSBool isQName, isNamespace;
-    JSFunction *funobj;
     JSXMLQName *qn;
     JSString *uri, *prefix, *name;
     JSObject *nsobj;
@@ -855,8 +854,8 @@ QName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
          * Use the constructor's clasp so we can be shared by AttributeName
          * (see below after this function).
          */
-        funobj = JS_ValueToFunction(cx, argv[-2]);
-        obj = js_NewObject(cx, NATIVE_FUN_GET_CLASS(FUN_TO_NATIVE(funobj)),
+        obj = js_NewObject(cx,
+                           JS_ValueToFunction(cx, argv[-2])->u.n.clasp,
                            NULL, NULL, 0);
         if (!obj)
             return JS_FALSE;
@@ -5596,7 +5595,7 @@ static JSXML *
 StartNonListXMLMethod(JSContext *cx, jsval *vp, JSObject **objp)
 {
     JSXML *xml;
-    JSFunction *funobj;
+    JSFunction *fun;
     char numBuf[12];
 
     JS_ASSERT(VALUE_IS_FUNCTION(cx, *vp));
@@ -5617,11 +5616,11 @@ StartNonListXMLMethod(JSContext *cx, jsval *vp, JSObject **objp)
         }
     }
 
-    funobj = OBJ_TO_FUNCTION(JSVAL_TO_OBJECT(*vp));
+    fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(*vp));
     JS_snprintf(numBuf, sizeof numBuf, "%u", xml->xml_kids.length);
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                          JSMSG_NON_LIST_XML_METHOD,
-                         JS_GetFunctionName(funobj), numBuf);
+                         JS_GetFunctionName(fun), numBuf);
     return NULL;
 }
 
@@ -7714,7 +7713,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
     fun = JS_DefineFunction(cx, obj, js_XMLList_str, XMLList, 1, 0);
     if (!fun)
         return NULL;
-    if (!js_SetClassPrototype(cx, &fun->object, proto,
+    if (!js_SetClassPrototype(cx, FUN_OBJECT(fun), proto,
                               JSPROP_READONLY | JSPROP_PERMANENT)) {
         return NULL;
     }
@@ -7878,7 +7877,7 @@ js_SetDefaultXMLNamespace(JSContext *cx, jsval v)
             return JS_FALSE;
         }
     } else {
-        JS_ASSERT(fp->fun && !JSFUN_HEAVYWEIGHT_TEST(FUN_FLAGS(fp->fun)));
+        JS_ASSERT(fp->fun && !JSFUN_HEAVYWEIGHT_TEST(fp->fun->flags));
     }
     fp->xmlNamespace = JSVAL_TO_OBJECT(v);
     return JS_TRUE;

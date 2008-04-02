@@ -127,7 +127,8 @@ function run_test() {
   try {
     importer.importHTMLFromFile(bookmarksFileNew, true);
   } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
-  testCanonicalBookmarks(bmsvc.bookmarksMenuFolder); 
+  testCanonicalBookmarks(bmsvc.bookmarksMenuFolder);
+
   /*
   // XXX import-to-folder tests disabled due to bug 363634
   // Test importing a pre-Places canonical bookmarks file to a specific folder.
@@ -194,8 +195,8 @@ function testCanonicalBookmarks(aFolder) {
   var rootNode = result.root;
   rootNode.containerOpen = true;
 
-  // 6-2: the toolbar contents are imported to the places-toolbar folder,
-  // the separator above it is removed.
+  // 6-2: the toolbar folder and unfiled bookmarks folder imported to the
+  // corresponding places folders
   do_check_eq(rootNode.childCount, 4);
 
   // get test folder
@@ -299,4 +300,12 @@ function testCanonicalBookmarks(aFolder) {
               livemarksvc.getFeedURI(livemark.itemId).spec);
 
   toolbar.containerOpen = false;
+  
+  // unfiled bookmarks
+  query.setFolders([bmsvc.unfiledBookmarksFolder], 1);
+  result = histsvc.executeQuery(query, histsvc.getNewQueryOptions());
+  var unfiledBookmarks = result.root;
+  unfiledBookmarks.containerOpen = true;
+  do_check_eq(unfiledBookmarks.childCount, 1);
+  unfiledBookmarks.containerOpen = false;
 }

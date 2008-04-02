@@ -40,6 +40,11 @@
 #include "nsUserInfo.h"
 #include "nsXPFEComponentsCID.h"
 #include "nsToolkitCompsCID.h"
+
+#ifdef XP_WIN
+#include "nsParentalControlsServiceWin.h"
+#endif
+
 #ifdef ALERTS_SERVICE
 #include "nsAlertsService.h"
 #endif
@@ -70,6 +75,10 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAppStartup, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
+
+#ifdef XP_WIN
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsParentalControlsServiceWin)
+#endif
 
 #ifdef ALERTS_SERVICE
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
@@ -133,6 +142,12 @@ static const nsModuleComponentInfo components[] =
     NS_ALERTSSERVICE_CID, 
     NS_ALERTSERVICE_CONTRACTID,
     nsAlertsServiceConstructor },
+#endif
+#ifdef XP_WIN
+  { "Parental Controls Service",
+    NS_PARENTALCONTROLSSERVICE_CID,
+    NS_PARENTALCONTROLSSERVICE_CONTRACTID,
+    nsParentalControlsServiceWinConstructor },
 #endif
 #ifndef MOZ_SUITE
 // XXX Suite isn't ready to include this just yet

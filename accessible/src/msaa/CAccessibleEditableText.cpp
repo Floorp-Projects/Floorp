@@ -82,10 +82,9 @@ __try {
   GET_NSIACCESSIBLEEDITABLETEXT
 
   nsresult rv = textAcc->CopyText(aStartOffset, aEndOffset);
-  if (NS_SUCCEEDED(rv))
-    return S_OK;
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return GetHRESULT(rv);
 
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
 
@@ -96,10 +95,9 @@ __try {
   GET_NSIACCESSIBLEEDITABLETEXT
 
   nsresult rv = textAcc->DeleteText(aStartOffset, aEndOffset);
-  if (NS_SUCCEEDED(rv))
-    return S_OK;
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return GetHRESULT(rv);
 
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
 
@@ -113,10 +111,9 @@ __try {
   nsAutoString text(*aText, length);
 
   nsresult rv = textAcc->InsertText(text, aOffset);
-  if (NS_SUCCEEDED(rv))
-    return S_OK;
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return GetHRESULT(rv);
 
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
 
@@ -127,10 +124,9 @@ __try {
   GET_NSIACCESSIBLEEDITABLETEXT
 
   nsresult rv = textAcc->CutText(aStartOffset, aEndOffset);
-  if (NS_SUCCEEDED(rv))
-    return S_OK;
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return GetHRESULT(rv);
 
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
 
@@ -141,10 +137,9 @@ __try {
   GET_NSIACCESSIBLEEDITABLETEXT
 
   nsresult rv = textAcc->PasteText(aOffset);
-  if (NS_SUCCEEDED(rv))
-    return S_OK;
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return GetHRESULT(rv);
 
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
 
@@ -157,16 +152,15 @@ __try {
 
   nsresult rv = textAcc->DeleteText(aStartOffset, aEndOffset);
   if (NS_FAILED(rv))
-    return E_FAIL;
+    return GetHRESULT(rv);
 
   PRUint32 length = ::SysStringLen(*aText);
   nsAutoString text(*aText, length);
 
   rv = textAcc->InsertText(text, aStartOffset);
-  if (NS_SUCCEEDED(rv))
-    return S_OK;
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return GetHRESULT(rv);
 
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
 
@@ -174,5 +168,8 @@ STDMETHODIMP
 CAccessibleEditableText::setAttributes(long aStartOffset, long aEndOffset,
                                        BSTR *aAttributes)
 {
+__try {
+
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_NOTIMPL;
 }

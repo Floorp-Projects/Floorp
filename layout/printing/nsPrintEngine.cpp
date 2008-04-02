@@ -213,6 +213,35 @@ static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,nsIDeviceContext * aD
 #define DUMP_DOC_TREELAYOUT
 #endif
 
+class nsScriptSuppressor
+{
+public:
+  nsScriptSuppressor(nsPrintEngine* aPrintEngine)
+  : mPrintEngine(aPrintEngine), mSuppressed(PR_FALSE) {}
+
+  ~nsScriptSuppressor() { Unsuppress(); }
+
+  void Suppress()
+  {
+    if (mPrintEngine) {
+      mSuppressed = PR_TRUE;
+      mPrintEngine->TurnScriptingOn(PR_FALSE);
+    }
+  }
+  
+  void Unsuppress()
+  {
+    if (mPrintEngine && mSuppressed) {
+      mPrintEngine->TurnScriptingOn(PR_TRUE);
+    }
+    mSuppressed = PR_FALSE;
+  }
+
+  void Disconnect() { mPrintEngine = nsnull; }
+protected:
+  nsRefPtr<nsPrintEngine> mPrintEngine;
+  PRBool                  mSuppressed;
+};
 
 // Class IDs
 static NS_DEFINE_CID(kViewManagerCID,       NS_VIEW_MANAGER_CID);
@@ -557,11 +586,13 @@ nsPrintEngine::DoCommonPrint(PRBool                  aIsPrintPreview,
     (do_CreateInstance("@mozilla.org/gfx/devicecontextspec;1", &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsScriptSuppressor scriptSuppressor(this);
   if (!aIsPrintPreview) {
 #ifdef NS_DEBUG
     mPrt->mDebugFilePtr = mDebugFile;
 #endif
 
+    scriptSuppressor.Suppress();
     PRBool printSilently;
     mPrt->mPrintSettings->GetPrintSilent(&printSilently);
 
@@ -712,6 +743,9 @@ nsPrintEngine::DoCommonPrint(PRBool                  aIsPrintPreview,
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
+
+  // We will enable scripting later after printing has finished.
+  scriptSuppressor.Disconnect();
 
   return NS_OK;
 }
@@ -2712,6 +2746,7 @@ nsPrintEngine::DonePrintingPages(nsPrintObject* aPO, nsresult aResult)
     FirePrintCompletionEvent();
   }
 
+  TurnScriptingOn(PR_TRUE);
   SetIsPrinting(PR_FALSE);
 
   // Release reference to mPagePrintTimer; the timer object destroys itself
@@ -2993,6 +3028,13 @@ nsPrintEngine::FindSmallestSTF()
 void
 nsPrintEngine::TurnScriptingOn(PRBool aDoTurnOn)
 {
+  if (mIsDoingPrinting && aDoTurnOn && mDocViewerPrint &&
+      mDocViewerPrint->GetIsPrintPreview()) {
+    // We don't want to turn scripting on if print preview is shown still after
+    // printing.
+    return;
+  }
+
   nsPrintData* prt = mPrt;
 #ifdef NS_PRINT_PREVIEW
   if (!prt) {
@@ -3016,25 +3058,32 @@ nsPrintEngine::TurnScriptingOn(PRBool aDoTurnOn)
     nsIScriptGlobalObject *scriptGlobalObj = doc->GetScriptGlobalObject();
 
     if (scriptGlobalObj) {
+      nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(scriptGlobalObj);
+      NS_ASSERTION(window, "Can't get nsPIDOMWindow");
       nsIScriptContext *scx = scriptGlobalObj->GetContext();
       NS_ASSERTION(scx, "Can't get nsIScriptContext");
+      nsresult propThere = NS_PROPTABLE_PROP_NOT_THERE;
+      doc->GetProperty(nsGkAtoms::scriptEnabledBeforePrintOrPreview,
+                       &propThere);
       if (aDoTurnOn) {
-        doc->DeleteProperty(nsGkAtoms::scriptEnabledBeforePrintPreview);
+        if (propThere != NS_PROPTABLE_PROP_NOT_THERE) {
+          doc->DeleteProperty(nsGkAtoms::scriptEnabledBeforePrintOrPreview);
+          scx->SetScriptsEnabled(PR_TRUE, PR_FALSE);
+          window->ResumeTimeouts();
+        }
       } else {
         // Have to be careful, because people call us over and over again with
         // aDoTurnOn == PR_FALSE.  So don't set the property if it's already
         // set, since in that case we'd set it to the wrong value.
-        nsresult propThere;
-        doc->GetProperty(nsGkAtoms::scriptEnabledBeforePrintPreview,
-                         &propThere);
         if (propThere == NS_PROPTABLE_PROP_NOT_THERE) {
           // Stash the current value of IsScriptEnabled on the document, so
           // that layout code running in print preview doesn't get confused.
-          doc->SetProperty(nsGkAtoms::scriptEnabledBeforePrintPreview,
+          doc->SetProperty(nsGkAtoms::scriptEnabledBeforePrintOrPreview,
                            NS_INT32_TO_PTR(doc->IsScriptEnabled()));
+          scx->SetScriptsEnabled(PR_FALSE, PR_FALSE);
+          window->SuspendTimeouts();
         }
       }
-      scx->SetScriptsEnabled(aDoTurnOn, PR_TRUE);
     }
   }
 }

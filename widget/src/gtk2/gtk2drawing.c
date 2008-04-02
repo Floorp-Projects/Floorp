@@ -103,6 +103,16 @@ static style_prop_t style_prop_func;
 static gboolean have_arrow_scaling;
 static gboolean is_initialized;
 
+/* Because we have such an unconventional way of drawing widgets, signal to the GTK theme engine
+   that they are drawing for Mozilla instead of a conventional GTK app so they can do any specific
+   things they may want to do.
+   This must be called from any ensure_* function that does not call setup_widget_prototype. */
+static void
+moz_gtk_set_widget_name(GtkWidget* widget)
+{
+    gtk_widget_set_name(widget, "MozillaGtkWidget");
+}
+
 gint
 moz_gtk_enable_style_props(style_prop_t styleGetProp)
 {
@@ -116,6 +126,7 @@ ensure_window_widget()
     if (!gProtoWindow) {
         gProtoWindow = gtk_window_new(GTK_WINDOW_POPUP);
         gtk_widget_realize(gProtoWindow);
+        moz_gtk_set_widget_name(gProtoWindow);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -132,6 +143,7 @@ setup_widget_prototype(GtkWidget* widget)
 
     gtk_container_add(GTK_CONTAINER(protoLayout), widget);
     gtk_widget_realize(widget);
+    moz_gtk_set_widget_name(widget);
     return MOZ_GTK_SUCCESS;
 }
 
@@ -186,6 +198,7 @@ ensure_button_arrow_widget()
         gButtonArrowWidget = gtk_arrow_new(GTK_ARROW_DOWN, GTK_SHADOW_OUT);
         gtk_container_add(GTK_CONTAINER(gToggleButtonWidget), gButtonArrowWidget);
         gtk_widget_realize(gButtonArrowWidget);
+        moz_gtk_set_widget_name(gButtonArrowWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -299,10 +312,10 @@ moz_gtk_get_combo_box_button_inner_widgets(GtkWidget *widget,
 static gint
 ensure_combo_box_widgets()
 {
+    GtkWidget* buttonChild;
+
     if (gComboBoxButtonWidget && gComboBoxArrowWidget)
         return MOZ_GTK_SUCCESS;
-
-    GtkWidget* buttonChild;
 
     /* Create a ComboBox if needed */
     if (!gComboBoxWidget) {
@@ -398,12 +411,12 @@ moz_gtk_get_combo_box_entry_arrow(GtkWidget *widget, gpointer client_data)
 static gint
 ensure_combo_box_entry_widgets()
 {
+    GtkWidget* buttonChild;
+
     if (gComboBoxEntryTextareaWidget &&
             gComboBoxEntryButtonWidget &&
             gComboBoxEntryArrowWidget)
         return MOZ_GTK_SUCCESS;
-
-    GtkWidget* buttonChild;
 
     /* Create a ComboBoxEntry if needed */
     if (!gComboBoxEntryWidget) {
@@ -481,6 +494,7 @@ ensure_toolbar_widget()
         gToolbarWidget = gtk_toolbar_new();
         gtk_container_add(GTK_CONTAINER(gHandleBoxWidget), gToolbarWidget);
         gtk_widget_realize(gToolbarWidget);
+        moz_gtk_set_widget_name(gToolbarWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -502,6 +516,7 @@ ensure_tooltip_widget()
     if (!gTooltipWidget) {
         gTooltipWidget = gtk_window_new(GTK_WINDOW_POPUP);
         gtk_widget_realize(gTooltipWidget);
+        moz_gtk_set_widget_name(gTooltipWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -544,6 +559,7 @@ ensure_frame_widget()
         gFrameWidget = gtk_frame_new(NULL);
         gtk_container_add(GTK_CONTAINER(gStatusbarWidget), gFrameWidget);
         gtk_widget_realize(gFrameWidget);
+        moz_gtk_set_widget_name(gFrameWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -567,6 +583,7 @@ ensure_menu_bar_item_widget()
         gtk_menu_shell_append(GTK_MENU_SHELL(gMenuBarWidget),
                               gMenuBarItemWidget);
         gtk_widget_realize(gMenuBarItemWidget);
+        moz_gtk_set_widget_name(gMenuBarItemWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -580,6 +597,7 @@ ensure_menu_popup_widget()
         gtk_menu_item_set_submenu(GTK_MENU_ITEM(gMenuBarItemWidget),
                                   gMenuPopupWidget);
         gtk_widget_realize(gMenuPopupWidget);
+        moz_gtk_set_widget_name(gMenuPopupWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -593,6 +611,7 @@ ensure_menu_item_widget()
         gtk_menu_shell_append(GTK_MENU_SHELL(gMenuPopupWidget),
                               gMenuItemWidget);
         gtk_widget_realize(gMenuItemWidget);
+        moz_gtk_set_widget_name(gMenuItemWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -606,6 +625,7 @@ ensure_image_menu_item_widget()
         gtk_menu_shell_append(GTK_MENU_SHELL(gMenuPopupWidget),
                               gImageMenuItemWidget);
         gtk_widget_realize(gImageMenuItemWidget);
+        moz_gtk_set_widget_name(gImageMenuItemWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -619,6 +639,7 @@ ensure_menu_separator_widget()
         gtk_menu_shell_append(GTK_MENU_SHELL(gMenuPopupWidget),
                               gMenuSeparatorWidget);
         gtk_widget_realize(gMenuSeparatorWidget);
+        moz_gtk_set_widget_name(gMenuSeparatorWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -632,6 +653,7 @@ ensure_check_menu_item_widget()
         gtk_menu_shell_append(GTK_MENU_SHELL(gMenuPopupWidget),
                               gCheckMenuItemWidget);
         gtk_widget_realize(gCheckMenuItemWidget);
+        moz_gtk_set_widget_name(gCheckMenuItemWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -677,6 +699,7 @@ ensure_tree_header_cell_widget()
         gtk_tree_view_column_set_title(GTK_TREE_VIEW_COLUMN(gMiddleTreeViewColumn), "M");
         gtk_tree_view_append_column(GTK_TREE_VIEW(gTreeViewWidget),
                                     GTK_TREE_VIEW_COLUMN(gMiddleTreeViewColumn));
+        moz_gtk_set_widget_name(gMiddleTreeViewColumn);
 
         lastTreeViewColumn = gtk_tree_view_column_new();
         gtk_tree_view_column_set_title(lastTreeViewColumn, "M");

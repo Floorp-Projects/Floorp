@@ -1289,22 +1289,22 @@ NS_IMETHODIMP nsHyperTextAccessible::GetLinks(PRInt32 *aLinks)
 }
 
 
-NS_IMETHODIMP nsHyperTextAccessible::GetLink(PRInt32 aIndex, nsIAccessibleHyperLink **aLink)
+NS_IMETHODIMP
+nsHyperTextAccessible::GetLink(PRInt32 aIndex, nsIAccessibleHyperLink **aLink)
 {
+  NS_ENSURE_ARG_POINTER(aLink);
   *aLink = nsnull;
-  if (!mDOMNode) {
+
+  if (IsDefunct())
     return NS_ERROR_FAILURE;
-  }
 
   nsCOMPtr<nsIAccessible> accessible;
-
   while (NextChild(accessible)) {
-    if (IsEmbeddedObject(accessible) && aIndex-- == 0) {
-      CallQueryInterface(accessible, aLink);
-      return NS_OK;
-    }
+    if (IsEmbeddedObject(accessible) && aIndex-- == 0)
+      return CallQueryInterface(accessible, aLink);
   }
-  return NS_OK;
+
+  return NS_ERROR_INVALID_ARG;
 }
 
 NS_IMETHODIMP nsHyperTextAccessible::GetLinkIndex(PRInt32 aCharIndex, PRInt32 *aLinkIndex)

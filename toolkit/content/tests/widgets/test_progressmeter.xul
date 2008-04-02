@@ -13,7 +13,7 @@
   <progressmeter id="n1"/>
   <progressmeter id="n2" mode="undetermined"/>
 
-  <!-- test resuls are displayed in the html:body -->
+  <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
   <!-- test code goes here -->

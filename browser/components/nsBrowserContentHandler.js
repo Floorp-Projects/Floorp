@@ -517,7 +517,7 @@ var nsBrowserContentHandler = {
     var startPage = "";
     try {
       var choice = prefb.getIntPref("browser.startup.page");
-      if (choice == 1)
+      if (choice == 1 || choice == 3)
         startPage = this.startPage;
 
       if (choice == 2)

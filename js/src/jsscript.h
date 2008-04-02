@@ -140,6 +140,17 @@ struct JSScript {
         (obj) = objects_->vector[(index)];                                    \
     JS_END_MACRO
 
+#define JS_GET_SCRIPT_FUNCTION(script, index, fun)                            \
+    JS_BEGIN_MACRO                                                            \
+        JSObject *funobj_;                                                    \
+                                                                              \
+        JS_GET_SCRIPT_OBJECT(script, index, funobj_);                         \
+        JS_ASSERT(HAS_FUNCTION_CLASS(funobj_));                               \
+        JS_ASSERT(funobj_ == (JSObject *) STOBJ_GET_PRIVATE(funobj_));        \
+        (fun) = (JSFunction *) funobj_;                                       \
+        JS_ASSERT(FUN_INTERPRETED(fun));                                      \
+    JS_END_MACRO
+
 #define JS_GET_SCRIPT_REGEXP(script, index, obj)                              \
     JS_BEGIN_MACRO                                                            \
         JSObjectArray *regexps_ = JS_SCRIPT_REGEXPS(script);                  \
@@ -227,10 +238,10 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg);
  * of js_XDRScript, the hook should be invoked only after successful decode
  * of any owning function (the fun parameter) or script object (null fun).
  */
-extern void
+extern JS_FRIEND_API(void)
 js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun);
 
-extern void
+extern JS_FRIEND_API(void)
 js_CallDestroyScriptHook(JSContext *cx, JSScript *script);
 
 extern void

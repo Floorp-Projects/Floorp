@@ -185,7 +185,7 @@ public:
     NS_IMETHOD SetTranslation(nscoord aX, nscoord aY);
 
     NS_IMETHOD DrawTile(imgIContainer *aImage, nscoord aXOffset, nscoord aYOffset,
-                        const nsRect * aTargetRect);
+                        const nsRect * aTargetRect, const nsIntRect * aSubimageRect);
     NS_IMETHOD SetRightToLeftText(PRBool aIsRTL);
     NS_IMETHOD GetRightToLeftText(PRBool* aIsRTL);
     virtual void SetTextRunRTL(PRBool aIsRTL);

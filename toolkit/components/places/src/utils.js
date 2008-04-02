@@ -528,12 +528,8 @@ var PlacesUtils = {
       case this.TYPE_X_MOZ_PLACE:
       case this.TYPE_X_MOZ_PLACE_SEPARATOR:
       case this.TYPE_X_MOZ_PLACE_CONTAINER:
-        try {
-          var JSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
-          nodes = JSON.decode("[" + blob + "]");
-        } catch(ex) {
-          LOG("unwrapNodes(): JSON.decode(): " + ex);
-        }
+        var JSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+        nodes = JSON.decode("[" + blob + "]");
         break;
       case this.TYPE_X_MOZ_URL:
         var parts = blob.split("\n");
@@ -958,22 +954,38 @@ var PlacesUtils = {
    * restoring from the file.
    */
   restoreBookmarksFromFile: function PU_restoreBookmarksFromFile(aFile) {
+    var errorStr = null;
+
     var ioSvc = Cc["@mozilla.org/network/io-service;1"].
                  getService(Ci.nsIIOService);
     var fileURL = ioSvc.newFileURI(aFile).QueryInterface(Ci.nsIURL);
     var fileExtension = fileURL.fileExtension.toLowerCase();
-    if (fileExtension == "json")
-      this.restoreBookmarksFromJSONFile(aFile);
+
+    if (fileExtension == "json") {
+      try {
+        this.restoreBookmarksFromJSONFile(aFile);
+      } catch(ex) {
+        errorStr = this.getString("restoreParseError");
+      }
+    }
     else {
+      errorStr = this.getString("restoreFormatError");
+    }
+
+    if (errorStr) {
       const BRANDING_BUNDLE_URI = "chrome://branding/locale/brand.properties";
       var brandShortName = Cc["@mozilla.org/intl/stringbundle;1"].
                            getService(Ci.nsIStringBundleService).
                            createBundle(BRANDING_BUNDLE_URI).
                            GetStringFromName("brandShortName");
-      var errorStr = this.getString("restoreFormatError");
+
+      var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+               getService(Ci.nsIWindowMediator);
+      var win = wm.getMostRecentWindow(null);
+
       Cc["@mozilla.org/embedcomp/prompt-service;1"].
         getService(Ci.nsIPromptService).
-        alert(window, brandShortName, errorStr);
+        alert(win, brandShortName, errorStr);
     }
   },
 
@@ -1017,13 +1029,7 @@ var PlacesUtils = {
   restoreBookmarksFromJSONString:
   function PU_restoreBookmarksFromJSONString(aString, aReplace) {
     // convert string to JSON
-    var nodes = null;
-    try {
-      nodes = this.unwrapNodes(aString, this.TYPE_X_MOZ_PLACE_CONTAINER);
-    } catch (ex) {
-      LOG("restoreBookmarksFromJSONString(): " + ex);
-      return;
-    }
+    var nodes = this.unwrapNodes(aString, this.TYPE_X_MOZ_PLACE_CONTAINER);
 
     if (nodes.length == 0 || !nodes[0].children ||
         nodes[0].children.length == 0)
@@ -1276,14 +1282,15 @@ var PlacesUtils = {
     }
 
     function writeComplexNode(aStream, aNode, aSourceNode) {
+      var escJSONStringRegExp = /(["\\])/g;
       // write prefix
       var properties = [];
       for (let [name, value] in Iterator(aNode)) {
         if (name == "annos")
           value = self.toJSONString(value);
         else if (typeof value == "string")
-          value = "\"" + value + "\"";
-        properties.push("\"" + name + "\":" + value);
+          value = "\"" + value.replace(escJSONStringRegExp, '\\$1') + "\"";
+        properties.push("\"" + name.replace(escJSONStringRegExp, '\\$1') + "\":" + value);
       }
       var jStr = "{" + properties.join(",") + ",\"children\":[";
       aStream.write(jStr, jStr.length);

@@ -223,7 +223,7 @@ nsresult nsZipHeader::WriteCDSHeader(nsIOutputStream *aStream)
     rv = ZW_WriteData(aStream, mName.get(), mName.Length());
     NS_ENSURE_SUCCESS(rv, rv);
     if (mExtraField) {
-        rv = ZW_WriteData(aStream, mExtraField, sizeof(mExtraField));
+        rv = ZW_WriteData(aStream, mExtraField, mFieldLength);
         NS_ENSURE_SUCCESS(rv, rv);
     }
     return ZW_WriteData(aStream, mComment.get(), mComment.Length());
@@ -253,7 +253,7 @@ nsresult nsZipHeader::ReadCDSHeader(nsIInputStream *stream)
     mCSize = READ32(buf, &pos);
     mUSize = READ32(buf, &pos);
     PRUint16 namelength = READ16(buf, &pos);
-    PRUint16 fieldlength = READ16(buf, &pos);
+    mFieldLength = READ16(buf, &pos);
     PRUint16 commentlength = READ16(buf, &pos);
     mDisk = READ16(buf, &pos);
     mIAttr = READ16(buf, &pos);
@@ -270,10 +270,10 @@ nsresult nsZipHeader::ReadCDSHeader(nsIInputStream *stream)
     else
         mName = NS_LITERAL_CSTRING("");
 
-    if (fieldlength > 0) {
-        mExtraField = new char[fieldlength];
+    if (mFieldLength > 0) {
+        mExtraField = new char[mFieldLength];
         NS_ENSURE_TRUE(mExtraField, NS_ERROR_OUT_OF_MEMORY);
-        rv = ZW_ReadData(stream, mExtraField.get(), fieldlength);
+        rv = ZW_ReadData(stream, mExtraField.get(), mFieldLength);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 

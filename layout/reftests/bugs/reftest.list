@@ -43,9 +43,9 @@ fails == 25888-3l.html 25888-3l-ref.html # bug 25888
 fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 271747-1a.html 271747-1-ref.html
 == 271747-1b.html 271747-1-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 28811-1a.html 28811-1-ref.html # bug 381765
+== 28811-1a.html 28811-1-ref.html
 == 28811-1b.html 28811-1-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 28811-2a.html 28811-2-ref.html # bug 381765
+== 28811-2a.html 28811-2-ref.html
 == 28811-2b.html 28811-2-ref.html
 == 40596-1a.html 40596-1-ref.html
 != 40596-1b.html 40596-1-ref.html
@@ -773,6 +773,7 @@ fails == 413027-3.html 413027-3-ref.html
 == 421069-ref.html 421069-ref2.html
 == 421234-1.html 421234-1-ref.html
 == 421419-1.html 421419-1-ref.html
+== 421885-1.xml 421885-1-ref.xml
 == 421955-1.html 421955-1-ref.html
 == 422394-1.html 422394-1-ref.html
 == 423130-1.html 423130-1-ref.html

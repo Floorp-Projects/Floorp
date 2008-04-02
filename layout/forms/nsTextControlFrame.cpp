@@ -2466,11 +2466,6 @@ nsTextControlFrame::GetText(nsString* aText)
   } else {
     nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea = do_QueryInterface(mContent);
     if (textArea) {
-      if (mEditor) {
-        nsCOMPtr<nsIEditorIMESupport> imeSupport = do_QueryInterface(mEditor);
-        if (imeSupport)
-          imeSupport->ForceCompositionEnd();
-      }
       rv = textArea->GetValue(*aText);
     }
   }

@@ -54,13 +54,9 @@ static char dempty[] = "<null>";
 char *
 jsdtrace_funcclass_name(JSFunction *fun)
 {
-    JSClass *clasp;
-
-    if (FUN_IS_SCRIPTED(fun))
-        return dempty;
-
-    clasp = NATIVE_FUN_GET_CLASS(FUN_TO_NATIVE(fun));
-    return clasp ? (char *) clasp->name : dempty;
+    return (!FUN_INTERPRETED(fun) && fun->u.n.clasp)
+           ? (char *)fun->u.n.clasp->name
+           : dempty;
 }
 
 char *
@@ -79,7 +75,7 @@ jsdtrace_linenumber(JSContext *cx, JSStackFrame *fp)
     while (fp && fp->script == NULL)
         fp = fp->down;
     return (fp && fp->regs)
-           ? js_PCToLineNumber(cx, fp->script, fp->regs->pc)
+           ? (int) js_PCToLineNumber(cx, fp->script, fp->regs->pc)
            : -1;
 }
 
@@ -111,7 +107,7 @@ jsdtrace_jsvaltovoid(JSContext *cx, jsval argval)
     switch (type) {
       case JSTYPE_NULL:
       case JSTYPE_VOID:
-        return JS_TYPE_STR(type);
+        return (void *)JS_TYPE_STR(type);
 
       case JSTYPE_BOOLEAN:
         return (void *)JSVAL_TO_BOOLEAN(argval);
@@ -139,7 +135,7 @@ jsdtrace_function_name(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
     jsbytecode *pc;
     char *name;
 
-    atom = FUN_ATOM(fun);
+    atom = fun->atom;
     if (!atom) {
         if (fp->fun != fun || !fp->down)
             return dempty;
@@ -165,6 +161,7 @@ jsdtrace_function_name(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
              * decompiler.
              */
             break;
+          default: ;
         }
 
         switch ((JSOp) *pc) {

@@ -533,13 +533,9 @@ nsXPConnect::Collect()
     return gCollected;
 }
 
-// JSTRACE_SCRIPTED_FUNCTION can hold on to a lot of objects, adding it to the
-// cycle collector reduces the number of edges to those objects.
 // JSTRACE_XML can recursively hold on to more JSTRACE_XML objects, adding it to
 // the cycle collector avoids stack overflow.
-#define ADD_TO_CC(_kind) \
-    ((_kind) == JSTRACE_OBJECT || (_kind) == JSTRACE_SCRIPTED_FUNCTION || \
-     (_kind) == JSTRACE_XML)
+#define ADD_TO_CC(_kind)    ((_kind) == JSTRACE_OBJECT || (_kind) == JSTRACE_XML)
 
 #ifdef DEBUG_CC
 struct NoteJSRootTracer : public JSTracer

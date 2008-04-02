@@ -753,6 +753,8 @@ public:
                                PRInt64 aFolderId,
                                const nsACString& aDynamicContainerType);
 
+  virtual ~nsNavHistoryFolderResultNode();
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_COMMON_RESULTNODE_TO_BASE_NO_GETITEMMID
   NS_IMETHOD GetType(PRUint32* type) {
@@ -798,6 +800,10 @@ public:
 
   nsNavHistoryResultNode* FindChildById(PRInt64 aItemId,
                                         PRUint32* aNodeIndex);
+
+private:
+
+  PRBool mIsRegisteredFolderObserver;
 };
 
 // nsNavHistorySeparatorResultNode

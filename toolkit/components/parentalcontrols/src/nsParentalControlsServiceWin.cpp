@@ -52,6 +52,27 @@ static const IID IID_IWinParentalControls  = {0x28B4D88B,0xE072,0x49E6,{0x80,0x4
 
 NS_IMPL_ISUPPORTS1(nsParentalControlsServiceWin, nsIParentalControlsService)
 
+static HINSTANCE gAdvAPIDLLInst = NULL;
+
+typedef ULONG (STDMETHODCALLTYPE *MyEventWrite)(
+  REGHANDLE RegHandle,
+  PCEVENT_DESCRIPTOR EventDescriptor,
+  ULONG UserDataCount,
+  PEVENT_DATA_DESCRIPTOR UserData);
+
+typedef ULONG (STDMETHODCALLTYPE *MyEventRegister)(
+  LPCGUID ProviderId,
+  PENABLECALLBACK EnableCallback,
+  PVOID CallbackContext,
+  PREGHANDLE RegHandle);
+
+typedef ULONG (STDMETHODCALLTYPE *MyEventUnregister)(
+  REGHANDLE RegHandle);
+
+MyEventWrite gEventWrite = NULL;
+MyEventRegister gEventRegister = NULL;
+MyEventUnregister gEventUnregister = NULL;
+
 nsParentalControlsServiceWin::nsParentalControlsServiceWin() :
   mPC(nsnull)
 , mEnabled(PR_FALSE)
@@ -75,16 +96,28 @@ nsParentalControlsServiceWin::nsParentalControlsServiceWin() :
   DWORD settings = 0;
   wpcs->GetRestrictions(&settings);
   
-  if (settings)  // WPCFLAG_NO_RESTRICTION = 0
+  if (settings) { // WPCFLAG_NO_RESTRICTION = 0
+    gAdvAPIDLLInst = ::LoadLibrary("Advapi32.dll");
+    if(gAdvAPIDLLInst)
+    {
+      gEventWrite = (MyEventWrite) GetProcAddress(gAdvAPIDLLInst, "EventWrite");
+      gEventRegister = (MyEventRegister) GetProcAddress(gAdvAPIDLLInst, "EventRegister");
+      gEventUnregister = (MyEventUnregister) GetProcAddress(gAdvAPIDLLInst, "EventUnregister");
+    }
     mEnabled = PR_TRUE;
+  }
 }
 
 nsParentalControlsServiceWin::~nsParentalControlsServiceWin()
 {
   if (mPC)
     mPC->Release();
-  if (mProvider)
-    EventUnregister(mProvider);
+
+  if (gEventUnregister && mProvider)
+    gEventUnregister(mProvider);
+
+  if (gAdvAPIDLLInst)
+    ::FreeLibrary(gAdvAPIDLLInst);
 }
 
 //------------------------------------------------------------------------
@@ -154,9 +187,11 @@ nsParentalControlsServiceWin::Log(PRInt16 aEntryType, PRBool blocked, nsIURI *aS
   if (!enabled)
     return NS_ERROR_NOT_AVAILABLE;
 
-  // Register a windows log event provider associated with the parental controls channel.
+  // Register a Vista log event provider associated with the parental controls channel.
   if (!mProvider) {
-    if (EventRegister(&WPCPROV, NULL, NULL, &mProvider) != ERROR_SUCCESS)
+    if (!gEventRegister)
+      return NS_ERROR_NOT_AVAILABLE;
+    if (gEventRegister(&WPCPROV, NULL, NULL, &mProvider) != ERROR_SUCCESS)
       return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -288,11 +323,17 @@ nsParentalControlsServiceWin::RequestURIOverrides(nsIArray *aTargets, nsIInterfa
 
 //------------------------------------------------------------------------
 
-// Sends a file download event to the Windows Event Log 
+// Sends a file download event to the Vista Event Log 
 void
 nsParentalControlsServiceWin::LogFileDownload(PRBool blocked, nsIURI *aSource, nsIFile *aTarget)
 {
   nsCAutoString curi;
+
+  if (!gEventWrite)
+    return;
+
+  // Note, EventDataDescCreate is a macro defined in the headers, not a function
+
   aSource->GetSpec(curi);
   nsAutoString uri = NS_ConvertUTF8toUTF16(curi);
 
@@ -328,6 +369,6 @@ nsParentalControlsServiceWin::LogFileDownload(PRBool blocked, nsIURI *aSource, n
     EventDataDescCreate(&eventData[WPC_ARGS_FILEDOWNLOADEVENT_PATH], (const void*)fill, sizeof(fill));
   }
 
-  EventWrite(mProvider, &WPCEVENT_WEB_FILEDOWNLOAD, ARRAYSIZE(eventData), eventData);
+  gEventWrite(mProvider, &WPCEVENT_WEB_FILEDOWNLOAD, ARRAYSIZE(eventData), eventData);
 }
 

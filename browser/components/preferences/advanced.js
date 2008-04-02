@@ -207,6 +207,24 @@ var gAdvancedPane = {
                                         "", params);
   },
 
+  // XXX: duplicated in browser.js
+  _getOfflineAppUsage: function (host)
+  {
+    var cacheService = Components.classes["@mozilla.org/network/cache-service;1"].
+                       getService(Components.interfaces.nsICacheService);
+    var cacheSession = cacheService.createSession("HTTP-offline",
+                                                  Components.interfaces.nsICache.STORE_OFFLINE,
+                                                  true).
+                       QueryInterface(Components.interfaces.nsIOfflineCacheSession);
+    var usage = cacheSession.getDomainUsage(host);
+
+    var storageManager = Components.classes["@mozilla.org/dom/storagemanager;1"].
+                         getService(Components.interfaces.nsIDOMStorageManager);
+    usage += storageManager.getUsage(host);
+
+    return usage;
+  },
+
   /**
    * Updates the list of offline applications
    */
@@ -233,7 +251,7 @@ var gAdvancedPane = {
         row.className = "offlineapp";
         row.setAttribute("host", perm.host);
         var converted = DownloadUtils.
-                        convertByteUnits(getOfflineAppUsage(perm.host));
+                        convertByteUnits(this._getOfflineAppUsage(perm.host));
         row.setAttribute("usage",
                          bundle.getFormattedString("offlineAppUsage",
                                                    converted));

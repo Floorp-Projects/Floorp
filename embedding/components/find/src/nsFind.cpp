@@ -942,6 +942,9 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
          (void*)aSearchRange, (void*)aStartPoint, (void*)aEndPoint);
 #endif
 
+  NS_ENSURE_ARG(aSearchRange);
+  NS_ENSURE_ARG(aStartPoint);
+  NS_ENSURE_ARG(aEndPoint);
   NS_ENSURE_ARG_POINTER(aRangeRet);
   *aRangeRet = 0;
 

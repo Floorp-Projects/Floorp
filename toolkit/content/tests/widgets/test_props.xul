@@ -28,7 +28,7 @@
          crop="end" image="happy.png" command="cmd_nothing"/>
 </radiogroup>
 
-  <!-- test resuls are displayed in the html:body -->
+  <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
   <!-- test code goes here -->

@@ -3810,6 +3810,20 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 }
 
 
+static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
+{
+  // this is not character inputting event, simply.
+  if (!aEvent.isChar || !aEvent.charCode)
+    return PR_FALSE;
+  // if this is unicode char inputting event, we don't need to check
+  // ctrl/alt/command keys
+  if (aEvent.charCode > 0x7F)
+    return PR_TRUE;
+  // ASCII chars should be inputted without ctrl/alt/command keys
+  return !aEvent.isControl && !aEvent.isAlt && !aEvent.isMeta;
+}
+
+
 // Basic conversion for cocoa to gecko events, common to all conversions.
 // Note that it is OK for inEvent to be nil.
 - (void) convertGenericCocoaEvent:(NSEvent*)inEvent toGeckoEvent:(nsInputEvent*)outGeckoEvent
@@ -4459,8 +4473,11 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   // We don't do it if this came from performKeyEquivalent because
   // interpretKeyEvents isn't set up to handle those key combinations.
   PRBool wasComposing = nsTSMManager::IsComposing();
-  if (!isKeyEquiv && nsTSMManager::IsIMEEnabled())
+  PRBool interpretKeyEventsCalled = PR_FALSE;
+  if (!isKeyEquiv && nsTSMManager::IsIMEEnabled()) {
     [super interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
+    interpretKeyEventsCalled = PR_TRUE;
+  }
 
   if (!mGeckoChild)
     return (mKeyDownHandled || mKeyPressHandled);;
@@ -4468,15 +4485,21 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   if (!mKeyPressSent && nonDeadKeyPress && !wasComposing && !nsTSMManager::IsComposing()) {
     nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
     [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
-    if (mKeyDownHandled)
-      geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
 
-    // create native EventRecord for use by plugins
-    EventRecord macEvent;
-    ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
-    geckoEvent.nativeMsg = &macEvent;
+    // If we called interpretKeyEvents and this isn't normal character input
+    // then IME probably ate the event for some reason. We do not want to
+    // send a key press event in that case.
+    if (!(interpretKeyEventsCalled && IsNormalCharInputtingEvent(geckoEvent))) {
+      if (mKeyDownHandled)
+        geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
 
-    mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
+      // create native EventRecord for use by plugins
+      EventRecord macEvent;
+      ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
+      geckoEvent.nativeMsg = &macEvent;
+
+      mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
+    }
   }
 
   // Note: mGeckoChild might have become null here. Don't count on it from here on.

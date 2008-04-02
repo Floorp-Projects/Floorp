@@ -271,24 +271,12 @@ menubutton:not([disabled="true"]):hover:active {
   color: ButtonText !important;
 }
 
-/* set up extended binding for the back & forward buttons */
-toolbar:not([mode="text"]) #back-button,
-toolbar:not([mode="text"]) #forward-button {
-  -moz-binding: url(chrome://browser/skin/browser.xml#bf-menu-button);
-}
-
 toolbar:not([mode="text"]) #back-button .toolbarbutton-menubutton-button,
 toolbar:not([mode="text"]) #forward-button .toolbarbutton-menubutton-button {
-  -moz-binding: url('chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-image');
   margin: 0;
   padding: 0;
   border-left: 0;
   border-right: 0;
-}
-
-toolbar:not([mode="text"]) #back-button .allowevents-box,
-toolbar:not([mode="text"]) #forward-button .allowevents-box {
-  -moz-binding: url(chrome://browser/skin/browser.xml#bf-menu-button-allowevents-box);
 }
 
 toolbar:not([mode="text"]) #back-button .toolbarbutton-menubutton-dropmarker,
