@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 const EXPORTED_SYMBOLS = ['Store', 'SnapshotStore', 'BookmarksStore',
-			  'HistoryStore'];
+			  'HistoryStore', 'CookieStore'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
