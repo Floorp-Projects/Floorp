@@ -742,6 +742,13 @@ var PlacesUIUtils = {
    */
   getViewForNode: function PU_getViewForNode(aNode) {
     var node = aNode;
+
+    // the view for a <menu> of which its associated menupopup is a places view,
+    // is the menupopup
+    if (node.localName == "menu" && !node.node &&
+        node.firstChild.getAttribute("type") == "places")
+      return node.firstChild;
+
     while (node) {
       // XXXmano: Use QueryInterface(nsIPlacesView) once we implement it...
       if (node.getAttribute("type") == "places")
