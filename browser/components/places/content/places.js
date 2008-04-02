@@ -772,6 +772,9 @@ var PlacesSearchBox = {
 
     PlacesSearchBox.showSearchUI();
     this.searchFilter.setAttribute("filtered", "true");
+
+    // Update the details panel
+    PlacesOrganizer.onContentTreeSelect();
   },
 
   /**
@@ -1327,6 +1330,9 @@ var PlacesQueryBuilder = {
 
     // XXXben - find some public way of doing this!
     PlacesOrganizer._content.load(this.queries, this.options);
+
+    // Update the details panel
+    PlacesOrganizer.onContentTreeSelect();
   },
 #endif
 
