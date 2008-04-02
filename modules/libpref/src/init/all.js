@@ -1367,9 +1367,6 @@ pref("font.default.zh-HK", "sans-serif");
 pref("font.size.variable.zh-HK", 16);
 pref("font.size.fixed.zh-HK", 16);
 
-// We have special support for Monotype Symbol on Windows.
-pref("font.mathfont-family", "STIXNonUnicode, STIXSize1, STIXGeneral, Symbol, DejaVu Sans, Cambria Math");
-
 pref("ui.key.menuAccessKeyFocuses", true);
 
 // override double-click word selection behavior.
