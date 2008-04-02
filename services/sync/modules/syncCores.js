@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['SyncCore', 'BookmarksSyncCore', 'HistorySyncCore', 'CookiesSyncCore'];
+const EXPORTED_SYMBOLS = ['SyncCore', 'BookmarksSyncCore', 'HistorySyncCore', 'CookieSyncCore'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -431,10 +431,10 @@ HistorySyncCore.prototype = {
 HistorySyncCore.prototype.__proto__ = new SyncCore();
 
 
-function CookiesSyncCore() {
+function CookieSyncCore() {
   this._init();
 }
-CookiesSyncCore.prototype = {
+CookieSyncCore.prototype = {
   _logName: "CookieSync",
 
   __cookieManager: null,
@@ -464,10 +464,12 @@ CookiesSyncCore.prototype = {
         // create a generic object to represent the cookie -- just has
 	// to implement nsICookie2 interface.
 	cookie = Object();
-	cookie.host = cookieArray[0]
-	cookie.path = cookieArray[1]
+	cookie.host = cookieArray[0];
+	cookie.path = cookieArray[1];
 	cookie.name = cookieArray[2];
-    	return this.__cookieManager.findMatchingCookie( cookie, unused );
+        if (this._cookieManager == null )
+	    throw "Cookie manager is null in CookieSyncCore._itemExists.";
+    	return this._cookieManager.findMatchingCookie( cookie, unused );
   },
 
   _commandLike: function CSC_commandLike(a, b) {
@@ -480,4 +482,4 @@ CookiesSyncCore.prototype = {
         return false;
   }
 };
-CookiesSyncCore.prototype.__proto__ = new SyncCore();
+CookieSyncCore.prototype.__proto__ = new SyncCore();

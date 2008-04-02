@@ -781,9 +781,10 @@ CookieStore.prototype = {
         // in order to sync with the server.
 
 	this._log.info("CookieStore got createCommand: " + command );
-
+        if (this._cookieManager == null )
+	    throw "Cookie manager is null in CookieStore._createCommand.";
         // this assumes command.data fits the nsICookie2 interface
-	this.__cookieManager.add( command.data.host,
+	this._cookieManager.add( command.data.host,
 				  command.data.path,
 				  command.data.name,
 				  command.data.value,
@@ -804,6 +805,8 @@ CookieStore.prototype = {
         // http://developer.mozilla.org/en/docs/nsICookieManager
         // the last argument is "always block cookies from this domain?"
 	// and the answer is "no".
+        if (this._cookieManager == null )
+	    throw "Cookie manager is null in CookieStore._removeCommand.";
 	this._cookieManager.remove( command.data.host,
                                     command.data.name,
 				    command.data.path,
@@ -825,7 +828,9 @@ CookieStore.prototype = {
         // values are sub-dictionaries containing all cookie fields.
 
 	let items = {};
-	var iter = this.__cookieManager.enumerator;
+        if (this._cookieManager == null )
+	    throw "Cookie manager is null in CookieStore.wrap.";
+	var iter = this._cookieManager.enumerator;
 	while (iter.hasMoreElements()){
 	    var cookie = iter.getNext();
 	    if (cookie instanceof Ci.nsICookie){
@@ -859,8 +864,9 @@ CookieStore.prototype = {
         // TODO are the semantics of this just wiping out an internal
         // buffer, or am I supposed to wipe out all cookies from
         // the browser itself for reals?
-
-        this.__cookieManager.removeAll()
+        if (this._cookieManager == null )
+	    throw "Cookie manager is null in CookieStore.wipe";
+        this._cookieManager.removeAll()
   },
 
   resetGUIDs: function CookieStore_resetGUIDs() {
