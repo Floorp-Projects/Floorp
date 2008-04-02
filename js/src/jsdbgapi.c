@@ -697,7 +697,7 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter)
                              atom);
     if (!wrapper)
         return NULL;
-    return (JSPropertyOp) wrapper->object;
+    return (JSPropertyOp) FUN_OBJECT(wrapper);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -995,7 +995,7 @@ JS_StackFramePrincipals(JSContext *cx, JSStackFrame *fp)
         JSRuntime *rt = cx->runtime;
 
         if (rt->findObjectPrincipals) {
-            if (fp->fun->object != fp->callee)
+            if (FUN_OBJECT(fp->fun) != fp->callee)
                 return rt->findObjectPrincipals(cx, fp->callee);
             /* FALL THROUGH */
         }
@@ -1554,8 +1554,7 @@ JS_GetFunctionTotalSize(JSContext *cx, JSFunction *fun)
     size_t nbytes;
 
     nbytes = sizeof *fun;
-    if (fun->object)
-        nbytes += JS_GetObjectTotalSize(cx, fun->object);
+    nbytes += JS_GetObjectTotalSize(cx, FUN_OBJECT(fun));
     if (FUN_INTERPRETED(fun))
         nbytes += JS_GetScriptTotalSize(cx, fun->u.i.script);
     if (fun->atom)
@@ -1668,7 +1667,7 @@ JS_NewSystemObject(JSContext *cx, JSClass *clasp, JSObject *proto,
 {
     JSObject *obj;
 
-    obj = js_NewObject(cx, clasp, proto, parent);
+    obj = js_NewObject(cx, clasp, proto, parent, 0);
     if (obj && system)
         STOBJ_SET_SYSTEM(obj);
     return obj;

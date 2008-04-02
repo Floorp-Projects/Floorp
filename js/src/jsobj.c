@@ -1759,7 +1759,7 @@ Object(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         JS_ASSERT(!argc || JSVAL_IS_NULL(argv[0]) || JSVAL_IS_VOID(argv[0]));
         if (cx->fp->flags & JSFRAME_CONSTRUCTING)
             return JS_TRUE;
-        obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
+        obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL, 0);
         if (!obj)
             return JS_FALSE;
     }
@@ -1900,7 +1900,7 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
 {
     JSObject *obj;
 
-    obj = js_NewObject(cx, &js_WithClass, proto, parent);
+    obj = js_NewObject(cx, &js_WithClass, proto, parent, 0);
     if (!obj)
         return NULL;
     STOBJ_SET_SLOT(obj, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(cx->fp));
@@ -1919,7 +1919,7 @@ js_NewBlockObject(JSContext *cx)
      * scopes.  Make sure obj has its own scope too, since clearing proto does
      * not affect OBJ_SCOPE(obj).
      */
-    obj = js_NewObject(cx, &js_BlockClass, NULL, NULL);
+    obj = js_NewObject(cx, &js_BlockClass, NULL, NULL, 0);
     if (!obj)
         return NULL;
     JS_LOCK_OBJ(cx, obj);
@@ -1937,7 +1937,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSObject *parent,
 {
     JSObject *clone;
 
-    clone = js_NewObject(cx, &js_BlockClass, proto, parent);
+    clone = js_NewObject(cx, &js_BlockClass, proto, parent, 0);
     if (!clone)
         return NULL;
     STOBJ_SET_SLOT(clone, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(fp));
@@ -2423,7 +2423,8 @@ js_GetClassId(JSContext *cx, JSClass *clasp, jsid *idp)
 }
 
 JSObject *
-js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
+js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent,
+             uintN objectSize)
 {
     jsid id;
 
@@ -2440,12 +2441,12 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
         }
     }
 
-    return js_NewObjectWithGivenProto(cx, clasp, proto, parent);
+    return js_NewObjectWithGivenProto(cx, clasp, proto, parent, objectSize);
 }
 
 JSObject *
 js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
-                           JSObject *parent)
+                           JSObject *parent, uintN objectSize)
 {
     JSObject *obj;
     JSObjectOps *ops;
@@ -2459,24 +2460,25 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
         jsdtrace_object_create_start(cx->fp, clasp);
 #endif
 
-    /* Always call the class's getObjectOps hook if it has one. */
-    ops = clasp->getObjectOps
-          ? clasp->getObjectOps(cx, clasp)
-          : &js_ObjectOps;
+    /* Currently only functions can have non-standard allocation size. */
+    if (clasp == &js_FunctionClass) {
+        if (objectSize == 0)
+            objectSize = sizeof(JSFunction);
+        else
+            JS_ASSERT(objectSize == sizeof(JSObject));
+    } else {
+        JS_ASSERT(objectSize == 0);
+        objectSize = sizeof(JSObject);
+    }
 
     /*
-     * Allocate a zeroed object from the GC heap.  Do this *after* any other
-     * GC-thing allocations under js_GetClassPrototype or clasp->getObjectOps,
-     * to avoid displacing the newborn root for obj.
+     * Allocate an object from the GC heap and initialize all its fields before
+     * doing any operation that can potentially trigger GC.
      */
-    obj = (JSObject *) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
+    obj = (JSObject *) js_NewGCThing(cx, GCX_OBJECT, objectSize);
     if (!obj)
         goto earlybad;
 
-    /*
-     * Initialize all JSObject fields before doing any operation that can
-     * potentially trigger GC.
-     */
     obj->map = NULL;
     obj->dslots = NULL;
 
@@ -2496,6 +2498,11 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
     for (i = JSSLOT_PRIVATE; i != JS_INITIAL_NSLOTS; ++i)
         obj->fslots[i] = JSVAL_VOID;
 
+#ifdef DEBUG
+    memset((uint8 *) obj + sizeof(JSObject), JS_FREE_PATTERN,
+           objectSize - sizeof(JSObject));
+#endif
+
     /*
      * Root obj to prevent it from being collected out from under this call to
      * js_NewObject. There's a possibilty of GC under the objectHook call-out
@@ -2503,11 +2510,16 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
      */
     JS_PUSH_TEMP_ROOT_OBJECT(cx, obj, &tvr);
 
+    /* Always call the class's getObjectOps hook if it has one. */
+    ops = clasp->getObjectOps
+          ? clasp->getObjectOps(cx, clasp)
+          : &js_ObjectOps;
+
     /*
      * Default parent to the parent of the prototype, which was set from
      * the parent of the prototype's constructor.
      */
-    if (!parent && proto)
+    if (proto && !parent)
         STOBJ_SET_PARENT(obj, OBJ_GET_PARENT(cx, proto));
 
     /*
@@ -2771,7 +2783,7 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
             proto = JSVAL_TO_OBJECT(rval);
     }
 
-    obj = js_NewObject(cx, clasp, proto, parent);
+    obj = js_NewObject(cx, clasp, proto, parent, 0);
     if (!obj)
         goto out;
 
@@ -4656,7 +4668,7 @@ js_PrimitiveToObject(JSContext *cx, jsval *vp)
     JS_ASSERT(!JSVAL_IS_OBJECT(*vp));
     JS_ASSERT(*vp != JSVAL_VOID);
     clasp = PrimitiveClasses[JSVAL_TAG(*vp) - 1];
-    obj = js_NewObject(cx, clasp, NULL, NULL);
+    obj = js_NewObject(cx, clasp, NULL, NULL, 0);
     if (!obj)
         return JS_FALSE;
     STOBJ_SET_SLOT(obj, JSSLOT_PRIVATE, *vp);
