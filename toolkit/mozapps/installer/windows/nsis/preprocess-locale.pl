@@ -103,6 +103,7 @@ while( $line = <infile> ) {
   $value =~ s/\s+$//; # trim whitespace from the end of the string
   $value =~ s/^"(.*)"$/$1/g; # remove " at the beginning and end of the value
   $value =~ s/(")/\$\\$1/g;  # prefix " with $\
+  $value =~ s/â€¦/.../g;     # replace … (unicode ellipsis) with ...
   print outfile "LangString  ^@values[0] $langID \"$value\"\r\n";
   $lnum++;
 }
@@ -134,6 +135,7 @@ while( $line = <infile> ) {
   $value =~ s/(")/\$\\$1/g;  # prefix " with $\
   $value =~ s/(\\n)/\\r$1/g; # insert \\r before each occurence of \\n
   $value =~ s/(\\r)\\r/$1/g; # replace all ocurrences of \\r\\r with \\r
+  $value =~ s/â€¦/.../g;     # replace … (unicode ellipsis) with ...
   print outfile "!define @values[0] \"$value\"\r\n";
   $lnum++;
 }
@@ -162,6 +164,7 @@ while( $line = <infile> ) {
   $string =~ s/(\\n)/\\r$1/g;   # insert \\r before each occurence of \\n
   $string =~ s/(\\r)\\r/$1/g;   # replace all ocurrences of \\r\\r with \\r
   $string =~ s/(\\[rn])/\$$1/g; # prefix all occurences of \\r and \\n with $
+  $string =~ s/â€¦/.../g;       # replace … (unicode ellipsis) with ...
   print outfile "LangString @values[0] $langID \"$string\"\r\n";
   $lnum++;
 }
