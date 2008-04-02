@@ -113,18 +113,31 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-_PROPERTIES 	= \
-	mathfont.properties \
+font_properties = \
 	mathfontUnicode.properties \
 	mathfontSTIXNonUnicode.properties \
 	mathfontSTIXSize1.properties \
 	mathfontStandardSymbolsL.properties \
 	$(NULL)
 
-libs:: $(_PROPERTIES)
+ifeq ($(TARGET_MD_ARCH),win32)
+font_properties += \
+	mathfontSymbol.properties
+endif
+
+libs:: $(font_properties)
 	$(INSTALL) $^ $(DIST)/bin/res/fonts
 
-install:: $(_PROPERTIES)
+install:: $(font_properties)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res/fonts
+
+math_properties = mathfont.properties
+
+$(DIST)/bin/res/fonts/$(math_properties) $(DESTDIR)$(mozappdir)/res/fonts/$(math_properties): $(math_properties) Makefile
+	test -d $(@D) || $(NSINSTALL) -D $(@D)
+	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py --marker=% $(DEFINES) $(ACDEFINES) $< > $@
+
+libs:: $(DIST)/bin/res/fonts/$(math_properties)
+install:: $(DESTDIR)$(mozappdir)/res/fonts/$(math_properties)
 
 DEFINES += -D_IMPL_NS_LAYOUT
