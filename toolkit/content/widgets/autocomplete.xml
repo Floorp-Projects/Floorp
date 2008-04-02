@@ -1363,6 +1363,10 @@
           this._typeImage.className = "ac-type-icon" +
             (type ? " ac-result-type-" + type : "");
 
+          // Show the url as the title if we don't have a title
+          if (title == "")
+            title = url;
+
           // Emphasize the matching search terms for the description
           this._setUpDescription(this._title, title);
           this._setUpDescription(this._url, url);
