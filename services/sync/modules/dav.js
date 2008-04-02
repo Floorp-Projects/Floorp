@@ -264,15 +264,16 @@ DAVCollection.prototype = {
     let resp = yield;
     Utils.ensureStatus(resp.status, "propfind failed");
 
-    // FIXME: shouldn't depend on the first one being the root
-    let tokens = Utils.xpath(resp.responseXML, '//D:href');
-    let ret = [],
-        token,
-        root = tokens.iterateNext();
-    root = root.textContent;
-
-    while (token = tokens.iterateNext())
-      ret.push(token.textContent.replace(root, ''));
+    let ret = [];
+    try {
+      let tokens = Utils.xpath(resp.responseXML, '//D:href');
+      // FIXME: shouldn't depend on the first one being the root
+      let root = tokens.iterateNext();
+      root = root.textContent;
+      let token;
+      while (token = tokens.iterateNext())
+        ret.push(token.textContent.replace(root, ''));
+    } catch (e) {}
 
     self.done(ret);
   },
