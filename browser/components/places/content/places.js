@@ -348,17 +348,9 @@ var PlacesOrganizer = {
     while (restorePopup.childNodes.length > 1)
       restorePopup.removeChild(restorePopup.firstChild);
 
-    // get bookmarks backup dir
-    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-                 getService(Ci.nsIProperties);
-    var bookmarksBackupDir = dirSvc.get("ProfD", Ci.nsIFile);
-    bookmarksBackupDir.append("bookmarkbackups");
-    if (!bookmarksBackupDir.exists())
-      return; // no backup files
-
     // get list of files
     var fileList = [];
-    var files = bookmarksBackupDir.directoryEntries;
+    var files = this.bookmarksBackupDir.directoryEntries;
     while (files.hasMoreElements()) {
       var f = files.getNext().QueryInterface(Ci.nsIFile);
       if (!f.isHidden() && f.leafName.match(/^bookmarks-.+(html|json)?$/))
@@ -465,8 +457,29 @@ var PlacesOrganizer = {
     fp.defaultString = PlacesUtils.getFormattedString("bookmarksBackupFilename",
                                                         [date]);
 
-    if (fp.show() != Ci.nsIFilePicker.returnCancel)
+    if (fp.show() != Ci.nsIFilePicker.returnCancel) {
       PlacesUtils.backupBookmarksToFile(fp.file);
+
+      // copy new backup to /backups dir (bug 424389)
+      var latestBackup = PlacesUtils.getMostRecentBackup();
+      if (latestBackup != fp.file) {
+        var date = new Date().toLocaleFormat("%Y-%m-%d");
+        var name = PlacesUtils.getFormattedString("bookmarksArchiveFilename",
+                                                  [date]);
+        fp.file.copyTo(this.bookmarksBackupDir, name);
+      }
+    }
+  },
+
+  get bookmarksBackupDir() {
+    delete this.bookmarksBackupDir;
+    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
+                 getService(Ci.nsIProperties);
+    var bookmarksBackupDir = dirSvc.get("ProfD", Ci.nsIFile);
+    bookmarksBackupDir.append("bookmarkbackups");
+    if (!bookmarksBackupDir.exists())
+      bookmarksBackupDir.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+    return this.bookmarksBackupDir = bookmarksBackupDir;
   },
 
   _paneDisabled: false,
