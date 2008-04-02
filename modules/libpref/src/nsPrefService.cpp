@@ -50,6 +50,7 @@
 #include "nsCRT.h"
 #include "nsCOMArray.h"
 #include "nsXPCOMCID.h"
+#include "nsAutoPtr.h"
 
 #include "nsQuickSort.h"
 #include "prmem.h"
@@ -68,7 +69,6 @@
 
 // Definitions
 #define INITIAL_PREF_FILES 10
-#define PREF_READ_BUFFER_SIZE 4096
 
 // Prototypes
 #ifdef MOZ_PROFILESHARING
@@ -586,7 +586,6 @@ static PRBool isSharingEnabled()
 static nsresult openPrefFile(nsIFile* aFile)
 {
   nsCOMPtr<nsIInputStream> inStr;
-  char      readBuf[PREF_READ_BUFFER_SIZE];
 
 #if MOZ_TIMELINE
   {
@@ -600,21 +599,33 @@ static nsresult openPrefFile(nsIFile* aFile)
   if (NS_FAILED(rv)) 
     return rv;        
 
+  PRInt64 fileSize;
+  rv = aFile->GetFileSize(&fileSize);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsAutoArrayPtr<char> fileBuffer(new char[fileSize]);
+  if (fileBuffer == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   PrefParseState ps;
   PREF_InitParseState(&ps, PREF_ReaderCallback, NULL);
+
+  // Read is not guaranteed to return a buf the size of fileSize,
+  // but usually will.
   nsresult rv2 = NS_OK;
   for (;;) {
     PRUint32 amtRead = 0;
-    rv = inStr->Read(readBuf, sizeof(readBuf), &amtRead);
+    rv = inStr->Read((char*)fileBuffer, fileSize, &amtRead);
     if (NS_FAILED(rv) || amtRead == 0)
       break;
-
-    if (!PREF_ParseBuf(&ps, readBuf, amtRead)) {
+    if (!PREF_ParseBuf(&ps, fileBuffer, amtRead))
       rv2 = NS_ERROR_FILE_CORRUPTED;
-    }
   }
+
   PREF_FinalizeParseState(&ps);
-  return NS_FAILED(rv) ? rv : rv2;        
+
+  return NS_FAILED(rv) ? rv : rv2;
 }
 
 /*
