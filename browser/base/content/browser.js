@@ -233,7 +233,8 @@ function SetClickAndHoldHandlers()
 
   // Bug 414797: Clone the dropmarker's menu into both the back and
   // the forward buttons.
-  if (document.getElementById("unified-back-forward-button"))  {
+  var unifiedButton = document.getElementById("unified-back-forward-button");
+  if (unifiedButton && !unifiedButton._clickHandlersAttached)  {
     var popup = document.getElementById("back-forward-dropmarker")
                        .firstChild.cloneNode(true);
     var backButton = document.getElementById("back-button");
@@ -245,6 +246,7 @@ function SetClickAndHoldHandlers()
     forwardButton.setAttribute("type", "menu-button");
     forwardButton.appendChild(popup);    
     _addClickAndHoldListenersOnElement(forwardButton);
+    unifiedButton._clickHandlersAttached = true;
   }
 }
 #endif
