@@ -369,7 +369,7 @@ JS_PushArgumentsVA(JSContext *cx, void **markp, const char *format, va_list ap)
             break;
           case 'f':
             fun = va_arg(ap, JSFunction *);
-            *sp = fun ? OBJECT_TO_JSVAL(fun->object) : JSVAL_NULL;
+            *sp = fun ? OBJECT_TO_JSVAL(FUN_OBJECT(fun)) : JSVAL_NULL;
             break;
           case 'v':
             *sp = va_arg(ap, jsval);
@@ -2014,10 +2014,6 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
         name = "double";
         break;
 
-      case JSTRACE_FUNCTION:
-        name = "function";
-        break;
-
 #if JS_HAS_XML_SUPPORT
       case JSTRACE_NAMESPACE:
         name = "namespace";
@@ -2053,7 +2049,20 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
           {
             JSObject  *obj = (JSObject *)thing;
             JSClass *clasp = STOBJ_GET_CLASS(obj);
-            if (clasp->flags & JSCLASS_HAS_PRIVATE) {
+            if (clasp == &js_FunctionClass) {
+                JSFunction *fun = (JSFunction *)
+                                  JS_GetPrivate(trc->context, obj);
+
+                if (!fun) {
+                    JS_snprintf(buf, bufsize, "<newborn>");
+                } else if (FUN_OBJECT(fun) != obj) {
+                    JS_snprintf(buf, bufsize, "%p", fun);
+                } else {
+                    if (fun->atom && ATOM_IS_STRING(fun->atom))
+                        js_PutEscapedString(buf, bufsize,
+                                            ATOM_TO_STRING(fun->atom), 0);
+                }
+            } else if (clasp->flags & JSCLASS_HAS_PRIVATE) {
                 jsval     privateValue = STOBJ_GET_SLOT(obj, JSSLOT_PRIVATE);
                 void      *privateThing = JSVAL_IS_VOID(privateValue)
                                           ? NULL
@@ -2073,15 +2082,6 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
           case JSTRACE_DOUBLE:
             JS_snprintf(buf, bufsize, "%g", *(jsdouble *)thing);
             break;
-
-          case JSTRACE_FUNCTION:
-          {
-            JSFunction *fun = (JSFunction *)thing;
-
-            if (fun->atom && ATOM_IS_STRING(fun->atom))
-                js_PutEscapedString(buf, bufsize, ATOM_TO_STRING(fun->atom), 0);
-            break;
-          }
 
 #if JS_HAS_XML_SUPPORT
           case JSTRACE_NAMESPACE:
@@ -2698,7 +2698,7 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
     }
 
     /* Create a prototype object for this class. */
-    proto = js_NewObject(cx, clasp, parent_proto, obj);
+    proto = js_NewObject(cx, clasp, parent_proto, obj, 0);
     if (!proto)
         return NULL;
 
@@ -2749,7 +2749,7 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
          * different object, as is done for operator new -- and as at least
          * XML support requires.
          */
-        ctor = fun->object;
+        ctor = FUN_OBJECT(fun);
         if (clasp->flags & JSCLASS_CONSTRUCT_PROTOTYPE) {
             cval = OBJECT_TO_JSVAL(ctor);
             if (!js_InternalConstruct(cx, proto, cval, 0, NULL, &rval))
@@ -2966,7 +2966,7 @@ JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     CHECK_REQUEST(cx);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
-    return js_NewObject(cx, clasp, proto, parent);
+    return js_NewObject(cx, clasp, proto, parent, 0);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -2976,7 +2976,7 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
     CHECK_REQUEST(cx);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
-    return js_NewObjectWithGivenProto(cx, clasp, proto, parent);
+    return js_NewObjectWithGivenProto(cx, clasp, proto, parent, 0);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3120,7 +3120,7 @@ JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *clasp,
     CHECK_REQUEST(cx);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
-    nobj = js_NewObject(cx, clasp, proto, obj);
+    nobj = js_NewObject(cx, clasp, proto, obj, 0);
     if (!nobj)
         return NULL;
     if (!DefineProperty(cx, obj, name, OBJECT_TO_JSVAL(nobj), NULL, NULL, attrs,
@@ -3999,7 +3999,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
     JSIdArray *ida;
 
     CHECK_REQUEST(cx);
-    iterobj = js_NewObject(cx, &prop_iter_class, NULL, obj);
+    iterobj = js_NewObject(cx, &prop_iter_class, NULL, obj, 0);
     if (!iterobj)
         return NULL;
 
@@ -4218,13 +4218,13 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
         /* Indicate we cannot clone this object. */
         return funobj;
     }
-    return js_CloneFunctionObject(cx, funobj, parent);
+    return js_CloneFunctionObject(cx, GET_FUNCTION_PRIVATE(cx, funobj), parent);
 }
 
 JS_PUBLIC_API(JSObject *)
 JS_GetFunctionObject(JSFunction *fun)
 {
-    return fun->object;
+    return FUN_OBJECT(fun);
 }
 
 JS_PUBLIC_API(const char *)
@@ -4419,7 +4419,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
              * As jsapi.h notes, fs must point to storage that lives as long
              * as fun->object lives.
              */
-            if (!JS_SetReservedSlot(cx, fun->object, 0, PRIVATE_TO_JSVAL(fs)))
+            if (!JS_SetReservedSlot(cx, FUN_OBJECT(fun), 0, PRIVATE_TO_JSVAL(fs)))
                 return JS_FALSE;
         }
 
@@ -4635,10 +4635,10 @@ JS_NewScriptObject(JSContext *cx, JSScript *script)
     JSObject *obj;
 
     if (!script)
-        return js_NewObject(cx, &js_ScriptClass, NULL, NULL);
+        return js_NewObject(cx, &js_ScriptClass, NULL, NULL, 0);
 
     JS_PUSH_TEMP_ROOT_SCRIPT(cx, script, &tvr);
-    obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
+    obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL, 0);
     if (obj) {
         JS_SetPrivate(cx, obj, script);
         script->object = obj;
@@ -4743,7 +4743,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
         goto out2;
 
     /* From this point the control must flow through the label out. */
-    JS_PUSH_TEMP_ROOT_FUNCTION(cx, fun, &tvr);
+    JS_PUSH_TEMP_ROOT_OBJECT(cx, FUN_OBJECT(fun), &tvr);
     for (i = 0; i < nargs; i++) {
         argAtom = js_Atomize(cx, argnames[i], strlen(argnames[i]), 0);
         if (!argAtom) {
@@ -4765,7 +4765,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
     if (obj &&
         funAtom &&
         !OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(funAtom),
-                             OBJECT_TO_JSVAL(fun->object),
+                             OBJECT_TO_JSVAL(FUN_OBJECT(fun)),
                              NULL, NULL, JSPROP_ENUMERATE, NULL)) {
         fun = NULL;
     }
@@ -4782,7 +4782,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
 #endif
 
   out:
-    cx->weakRoots.newborn[JSTRACE_FUNCTION] = fun;
+    cx->weakRoots.newborn[JSTRACE_OBJECT] = FUN_OBJECT(fun);
     JS_POP_TEMP_ROOT(cx, &tvr);
 
   out2:
@@ -4974,7 +4974,7 @@ JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, uintN argc,
     JSBool ok;
 
     CHECK_REQUEST(cx);
-    ok = js_InternalCall(cx, obj, OBJECT_TO_JSVAL(fun->object), argc, argv,
+    ok = js_InternalCall(cx, obj, OBJECT_TO_JSVAL(FUN_OBJECT(fun)), argc, argv,
                          rval);
     LAST_FRAME_CHECKS(cx, ok);
     return ok;

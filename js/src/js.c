@@ -937,7 +937,6 @@ CountHeap(JSContext *cx, uintN argc, jsval *vp)
         { "object",     JSTRACE_OBJECT      },
         { "double",     JSTRACE_DOUBLE      },
         { "string",     JSTRACE_STRING      },
-        { "function",   JSTRACE_FUNCTION    },
 #if JS_HAS_XML_SUPPORT
         { "namespace",  JSTRACE_NAMESPACE   },
         { "qname",      JSTRACE_QNAME       },

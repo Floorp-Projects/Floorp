@@ -2053,7 +2053,7 @@ CheckSideEffects(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
          * name in that scope object.  See comments at case JSOP_NAMEDFUNOBJ:
          * in jsinterp.c.
          */
-        fun = GET_FUNCTION_PRIVATE(cx, pn->pn_funpob->object);
+        fun = (JSFunction *) pn->pn_funpob->object;
         if (fun->atom)
             *answer = JS_TRUE;
         break;
@@ -3937,7 +3937,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 #endif
 
-        fun = GET_FUNCTION_PRIVATE(cx, pn->pn_funpob->object);
+        fun = (JSFunction *) pn->pn_funpob->object;
         if (fun->u.i.script) {
             /*
              * This second pass is needed to emit JSOP_NOP with a source note

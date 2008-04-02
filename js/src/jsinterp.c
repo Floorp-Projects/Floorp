@@ -931,7 +931,7 @@ js_OnUnknownMethod(JSContext *cx, jsval *vp)
                 vp[0] = ID_TO_VALUE(id);
         }
 #endif
-        obj = js_NewObject(cx, &js_NoSuchMethodClass, NULL, NULL);
+        obj = js_NewObject(cx, &js_NoSuchMethodClass, NULL, NULL, 0);
         if (!obj) {
             ok = JS_FALSE;
             goto out;
@@ -1600,7 +1600,9 @@ js_ImportProperty(JSContext *cx, JSObject *obj, jsid id)
             goto out;
         if (VALUE_IS_FUNCTION(cx, value)) {
             funobj = JSVAL_TO_OBJECT(value);
-            closure = js_CloneFunctionObject(cx, funobj, obj);
+            closure = js_CloneFunctionObject(cx,
+                                             GET_FUNCTION_PRIVATE(cx, funobj),
+                                             obj);
             if (!closure) {
                 ok = JS_FALSE;
                 goto out;
@@ -1839,7 +1841,7 @@ js_InvokeConstructor(JSContext *cx, jsval *vp, uintN argc)
                 clasp = fun2->u.n.clasp;
         }
     }
-    obj = js_NewObject(cx, clasp, proto, parent);
+    obj = js_NewObject(cx, clasp, proto, parent, 0);
     if (!obj)
         return JS_FALSE;
 
@@ -2546,10 +2548,7 @@ js_Interpret(JSContext *cx)
     JS_GET_SCRIPT_OBJECT(script, GET_FULL_INDEX(PCOFF), obj)
 
 #define LOAD_FUNCTION(PCOFF)                                                  \
-    JS_BEGIN_MACRO                                                            \
-        LOAD_OBJECT(PCOFF);                                                   \
-        JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_FunctionClass);               \
-    JS_END_MACRO
+    JS_GET_SCRIPT_FUNCTION(script, GET_FULL_INDEX(PCOFF), fun)
 
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
@@ -5586,8 +5585,9 @@ interrupt:
              * have seen the right parent already and created a sufficiently
              * well-scoped function object.
              */
+            obj = FUN_OBJECT(fun);
             if (OBJ_GET_PARENT(cx, obj) != obj2) {
-                obj = js_CloneFunctionObject(cx, obj, obj2);
+                obj = js_CloneFunctionObject(cx, fun, obj2);
                 if (!obj)
                     goto error;
             }
@@ -5605,7 +5605,6 @@ interrupt:
              * and setters do not need a slot, their value is stored elsewhere
              * in the property itself, not in obj slots.
              */
-            fun = GET_FUNCTION_PRIVATE(cx, obj);
             flags = JSFUN_GSFLAG2ATTR(fun->flags);
             if (flags) {
                 attrs |= flags | JSPROP_SHARED;
@@ -5670,7 +5669,7 @@ interrupt:
             if (!parent)
                 goto error;
 
-            obj = js_CloneFunctionObject(cx, obj, parent);
+            obj = js_CloneFunctionObject(cx, fun, parent);
             if (!obj)
                 goto error;
 
@@ -5685,8 +5684,9 @@ interrupt:
             parent = js_GetScopeChain(cx, fp);
             if (!parent)
                 goto error;
+            obj = FUN_OBJECT(fun);
             if (OBJ_GET_PARENT(cx, obj) != parent) {
-                obj = js_CloneFunctionObject(cx, obj, parent);
+                obj = js_CloneFunctionObject(cx, fun, parent);
                 if (!obj)
                     goto error;
             }
@@ -5694,11 +5694,11 @@ interrupt:
           END_CASE(JSOP_ANONFUNOBJ)
 
           BEGIN_CASE(JSOP_NAMEDFUNOBJ)
-            /* ECMA ed. 3 FunctionExpression: function Identifier [etc.]. */
             LOAD_FUNCTION(0);
-            rval = OBJECT_TO_JSVAL(obj);
 
             /*
+             * ECMA ed. 3 FunctionExpression: function Identifier [etc.].
+             *
              * 1. Create a new object as if by the expression new Object().
              * 2. Add Result(1) to the front of the scope chain.
              *
@@ -5709,7 +5709,7 @@ interrupt:
             obj2 = js_GetScopeChain(cx, fp);
             if (!obj2)
                 goto error;
-            parent = js_NewObject(cx, &js_ObjectClass, NULL, obj2);
+            parent = js_NewObject(cx, &js_ObjectClass, NULL, obj2, 0);
             if (!parent)
                 goto error;
 
@@ -5719,16 +5719,10 @@ interrupt:
              * that was parsed by the compiler into a Function object, and
              * saved in the script's atom map].
              *
-             * Protect parent from GC after js_CloneFunctionObject calls into
-             * js_NewObject, which displaces the newborn object root in cx by
-             * allocating the clone, then runs a last-ditch GC while trying
-             * to allocate the clone's slots vector.  Another, multi-threaded
-             * path: js_CloneFunctionObject => js_NewObject => OBJ_GET_CLASS
-             * which may suspend the current request in ClaimScope, with the
-             * newborn displaced as in the first scenario.
+             * Protect parent from the GC.
              */
             fp->scopeChain = parent;
-            obj = js_CloneFunctionObject(cx, JSVAL_TO_OBJECT(rval), parent);
+            obj = js_CloneFunctionObject(cx, fun, parent);
             if (!obj)
                 goto error;
 
@@ -5745,7 +5739,6 @@ interrupt:
              * name is [fun->atom, the identifier parsed by the compiler],
              * value is Result(3), and attributes are { DontDelete, ReadOnly }.
              */
-            fun = GET_FUNCTION_PRIVATE(cx, obj);
             attrs = JSFUN_GSFLAG2ATTR(fun->flags);
             if (attrs) {
                 attrs |= JSPROP_SHARED;
@@ -5912,7 +5905,7 @@ interrupt:
             JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
             obj = (i == JSProto_Array)
                   ? js_NewArrayObject(cx, 0, NULL)
-                  : js_NewObject(cx, &js_ObjectClass, NULL, NULL);
+                  : js_NewObject(cx, &js_ObjectClass, NULL, NULL, 0);
             if (!obj)
                 goto error;
             PUSH_OPND(OBJECT_TO_JSVAL(obj));

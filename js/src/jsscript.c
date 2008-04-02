@@ -1692,7 +1692,6 @@ js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
 uintN
 js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
-    JSObject *obj;
     JSFunction *fun;
     uintN lineno;
     ptrdiff_t offset, target;
@@ -1710,9 +1709,7 @@ js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
     if (js_CodeSpec[*pc].format & JOF_INDEXBASE)
         pc += js_CodeSpec[*pc].length;
     if (*pc == JSOP_DEFFUN) {
-        GET_FUNCTION_FROM_BYTECODE(script, pc, 0, obj);
-        fun = GET_FUNCTION_PRIVATE(cx, obj);
-        JS_ASSERT(FUN_INTERPRETED(fun));
+        GET_FUNCTION_FROM_BYTECODE(script, pc, 0, fun);
         return fun->u.i.script->lineno;
     }
 

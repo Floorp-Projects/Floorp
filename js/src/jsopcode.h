@@ -332,10 +332,10 @@ js_GetIndexFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
         JS_GET_SCRIPT_OBJECT((script), index_, obj);                          \
     JS_END_MACRO
 
-#define GET_FUNCTION_FROM_BYTECODE(script, pc, pcoff, obj)                    \
+#define GET_FUNCTION_FROM_BYTECODE(script, pc, pcoff, fun)                    \
     JS_BEGIN_MACRO                                                            \
-        GET_OBJECT_FROM_BYTECODE(script, pc, pcoff, obj);                     \
-        JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_FunctionClass);               \
+        uintN index_ = js_GetIndexFromBytecode(cx, (script), (pc), (pcoff));  \
+        JS_GET_SCRIPT_FUNCTION((script), index_, fun);                        \
     JS_END_MACRO
 
 #define GET_REGEXP_FROM_BYTECODE(script, pc, pcoff, obj)                      \

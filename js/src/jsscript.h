@@ -140,6 +140,17 @@ struct JSScript {
         (obj) = objects_->vector[(index)];                                    \
     JS_END_MACRO
 
+#define JS_GET_SCRIPT_FUNCTION(script, index, fun)                            \
+    JS_BEGIN_MACRO                                                            \
+        JSObject *funobj_;                                                    \
+                                                                              \
+        JS_GET_SCRIPT_OBJECT(script, index, funobj_);                         \
+        JS_ASSERT(HAS_FUNCTION_CLASS(funobj_));                               \
+        JS_ASSERT(funobj_ == (JSObject *) STOBJ_GET_PRIVATE(funobj_));        \
+        (fun) = (JSFunction *) funobj_;                                       \
+        JS_ASSERT(FUN_INTERPRETED(fun));                                      \
+    JS_END_MACRO
+
 #define JS_GET_SCRIPT_REGEXP(script, index, obj)                              \
     JS_BEGIN_MACRO                                                            \
         JSObjectArray *regexps_ = JS_SCRIPT_REGEXPS(script);                  \
