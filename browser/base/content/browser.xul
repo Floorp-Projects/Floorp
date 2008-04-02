@@ -279,7 +279,7 @@
           <observes element="Browser:Forward" attribute="disabled"/>
         </toolbarbutton>
         <toolbarbutton id="back-forward-dropmarker" type="menu" chromedir="&locale.dir;"
-                       disabled="true">
+                       disabled="true" tooltiptext="&backForwardMenu.tooltip;">
           <!-- bug 415444: event.stopPropagation is here for the cloned version of
                this menupopup -->
           <menupopup context=""
