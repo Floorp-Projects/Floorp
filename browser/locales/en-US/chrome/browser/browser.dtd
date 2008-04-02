@@ -64,7 +64,7 @@
 <!ENTITY subscribeToPageMenupopup.label "Subscribe to This Page">
 <!ENTITY subscribeToPageMenuitem.label "Subscribe to This Page…">
 <!ENTITY addCurPagesCmd.label "Bookmark All Tabs…">
-<!ENTITY showAllBookmarksCmd2.label "Organize Bookmarks">
+<!ENTITY organizeBookmarks.label "Organize Bookmarks…">
 <!ENTITY bookmarkAllCmd.label "Bookmark All Tabs…">
 
 <!ENTITY backCmd.label                "Back">
