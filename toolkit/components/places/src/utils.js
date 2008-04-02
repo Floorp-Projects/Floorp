@@ -412,7 +412,7 @@ var PlacesUtils = {
     // organizer
     function convertNode(cNode) {
       if (self.nodeIsFolder(cNode) && asQuery(cNode).queryOptions.excludeItems)
-          return self.getFolderContents(cNode.itemId, false, true).root;
+        return self.getFolderContents(cNode.itemId, false, true).root;
       return cNode;
     }
 
@@ -426,7 +426,7 @@ var PlacesUtils = {
             this.value += aStr;
           }
         };
-        self.serializeNodeAsJSONToOutputStream(aNode, writer, true);
+        self.serializeNodeAsJSONToOutputStream(convertNode(aNode), writer, true);
         return writer.value;
       case this.TYPE_X_MOZ_URL:
         function gatherDataUrl(bNode) {
