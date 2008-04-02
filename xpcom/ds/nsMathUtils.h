@@ -57,6 +57,46 @@ inline NS_HIDDEN_(PRInt32) NS_lround(double x)
 {
     return x >= 0.0 ? PRInt32(x + 0.5) : PRInt32(x - 0.5);
 }
+
+/* NS_roundup30 rounds towards infinity for positive and       */
+/* negative numbers.                                           */
+
+inline NS_HIDDEN_(PRInt32) NS_lroundup30(float x)
+{
+#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__)
+
+    /* Code derived from Laurent de Soras' paper at             */
+    /* http://ldesoras.free.fr/doc/articles/rounding_en.pdf     */
+
+    /* Rounding up on Windows is expensive using the float to   */
+    /* int conversion and the floor function. A faster          */
+    /* approach is to use f87 rounding while assuming the       */
+    /* default rounding mode of rounding to the nearest         */
+    /* integer. This rounding mode, however, actually rounds    */
+    /* to the nearest integer so we add the floating point      */
+    /* number to itself and add our rounding factor before      */
+    /* doing the conversion to an integer. We then do a right   */
+    /* shift of one bit on the integer to divide by two.        */
+
+    /* This routine doesn't handle numbers larger in magnitude  */
+    /* than 2^30 but this is fine for NSToCoordRound because    */
+    /* Coords are limited to 2^30 in magnitude.                 */
+
+    static const double round_to_nearest = 0.5f;
+    int i;
+
+    __asm {
+      fld     x                   ; load fp argument
+      fadd    st, st(0)           ; double it
+      fadd    round_to_nearest    ; add the rounding factor
+      fistp   dword ptr i         ; convert the result to int
+    }
+    return i >> 1;                /* divide by 2 */
+#else
+    return nscoord(NS_floorf(x + 0.5f));
+#endif /* XP_WIN32 && _M_IX86 && !__GNUC__ */
+}
+
 inline NS_HIDDEN_(PRInt32) NS_lroundf(float x)
 {
     return x >= 0.0f ? PRInt32(x + 0.5f) : PRInt32(x - 0.5f);
