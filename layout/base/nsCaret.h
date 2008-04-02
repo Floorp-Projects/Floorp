@@ -120,7 +120,10 @@ class nsCaret : public nsICaret,
                                              PRUint8 aBidiLevel,
                                              nsIFrame** aReturnFrame,
                                              PRInt32* aReturnOffset);
-  protected:
+
+    NS_IMETHOD CheckCaretDrawingState();
+
+protected:
 
     void          KillTimer();
     nsresult      PrimeTimer();
@@ -138,7 +141,14 @@ class nsCaret : public nsICaret,
                                          nsFrameSelection::HINT aFrameHint,
                                          PRUint8 aBidiLevel,
                                          PRBool aInvalidate);
-    PRBool        MustDrawCaret();
+
+    // Returns true if the caret should be drawn. When |mDrawn| is true,
+    // this returns true, so that we erase the drawn caret. If |aIgnoreDrawnState|
+    // is true, we don't take into account whether the caret is currently
+    // drawn or not. This can be used to determine if the caret is drawn when
+    // it shouldn't be.
+    PRBool        MustDrawCaret(PRBool aIgnoreDrawnState);
+
     void          DrawCaret(PRBool aInvalidate);
     void          DrawCaretAfterBriefDelay();
     nsresult      UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset);
@@ -156,6 +166,16 @@ class nsCaret : public nsICaret,
     void          ToggleDrawnStatus() { mDrawn = !mDrawn; }
 
     already_AddRefed<nsFrameSelection> GetFrameSelection();
+
+    // Returns true if we should not draw the caret because of XUL menu popups.
+    // The caret should be hidden if:
+    // 1. An open popup contains the caret, but a menu popup exists before the
+    //    caret-owning popup in the popup list (i.e. a menu is in front of the
+    //    popup with the caret). If the menu itself contains the caret we don't
+    //    hide it.
+    // 2. A menu popup is open, but there is no caret present in any popup.
+    // 3. The caret selection is empty.
+    PRBool IsMenuPopupHidingCaret();
 
 protected:
 

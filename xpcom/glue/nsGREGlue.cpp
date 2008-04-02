@@ -171,7 +171,7 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
   allProperties[propertiesLength].value    = kExtraProperty.value;
   PRUint32 allPropertiesLength = propertiesLength + 1;
 #else
-  GREProperty *allProperties = properties;
+  const GREProperty *allProperties = properties;
   PRUint32 allPropertiesLength = propertiesLength;
 #endif
 

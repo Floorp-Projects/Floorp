@@ -1421,9 +1421,9 @@ FeedProcessor.prototype = {
   // The XMLReader will throw sensible exceptions if these get called
   // out of order.
   onStartRequest: function FP_onStartRequest(request, context) {
+    // this will throw if the request is not a channel, but so will nsParser.
     var channel = request.QueryInterface(Ci.nsIChannel);
-    if (channel)
-      channel.contentType = "application/xml";
+    channel.contentType = "application/vnd.mozilla.maybe.feed";
     this._reader.onStartRequest(request, context);
   },
 

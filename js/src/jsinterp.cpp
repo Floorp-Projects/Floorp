@@ -645,7 +645,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
          * insist that there is a call object for a heavyweight function call.
          */
         JS_ASSERT(!fp->fun ||
-                  !(FUN_FLAGS(fp->fun) & JSFUN_HEAVYWEIGHT) ||
+                  !(fp->fun->flags & JSFUN_HEAVYWEIGHT) ||
                   fp->callobj);
         JS_ASSERT(fp->scopeChain);
         return fp->scopeChain;
@@ -1094,28 +1094,21 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
     } else {
 have_fun:
         /* Get private data and set derived locals from it. */
-        fun = OBJ_TO_FUNCTION(funobj);
-        if (FUN_IS_SCRIPTED(fun)) {
-            JSScriptedFunction *sfun;
-
-            sfun = FUN_TO_SCRIPTED(fun);
+        fun = GET_FUNCTION_PRIVATE(cx, funobj);
+        nslots = FUN_MINARGS(fun);
+        nslots = (nslots > argc) ? nslots - argc : 0;
+        if (FUN_INTERPRETED(fun)) {
             native = NULL;
-            script = sfun->script;
-            nvars = sfun->nvars;
-            nslots = (sfun->nargs > argc) ? sfun->nargs - argc : 0;
+            script = fun->u.i.script;
+            nvars = fun->u.i.nvars;
         } else {
-            JSNativeFunction *nfun;
-
-            nfun = FUN_TO_NATIVE(fun);
-            native = nfun->native;
+            native = fun->u.n.native;
             script = NULL;
             nvars = 0;
-            nslots = NATIVE_FUN_MINARGS(nfun);
-            nslots = (nslots > argc) ? nslots - argc : 0;
-            nslots += nfun->extra;
+            nslots += fun->u.n.extra;
         }
 
-        if (JSFUN_BOUND_METHOD_TEST(FUN_FLAGS(fun))) {
+        if (JSFUN_BOUND_METHOD_TEST(fun->flags)) {
             /* Handle bound method special case. */
             vp[1] = OBJECT_TO_JSVAL(parent);
         } else if (!JSVAL_IS_OBJECT(vp[1])) {
@@ -1138,7 +1131,7 @@ have_fun:
          * JS_THIS or JS_THIS_OBJECT, and scripted functions will go through
          * the appropriate this-computing bytecode, e.g., JSOP_THIS.
          */
-        if (native && (!fun || !(FUN_FLAGS(fun) & JSFUN_FAST_NATIVE))) {
+        if (native && (!fun || !(fun->flags & JSFUN_FAST_NATIVE))) {
             if (!js_ComputeThis(cx, JS_FALSE, vp + 2)) {
                 ok = JS_FALSE;
                 goto out2;
@@ -1178,7 +1171,7 @@ have_fun:
         } while (--i != 0);
     }
 
-    if (native && fun && (FUN_FLAGS(fun) & JSFUN_FAST_NATIVE)) {
+    if (native && fun && (fun->flags & JSFUN_FAST_NATIVE)) {
         JSTempValueRooter tvr;
 #ifdef DEBUG_NOT_THROWING
         JSBool alreadyThrowing = cx->throwing;
@@ -1300,7 +1293,7 @@ have_fun:
     } else if (script) {
         /* Use parent scope so js_GetCallObject can find the right "Call". */
         frame.scopeChain = parent;
-        if (JSFUN_HEAVYWEIGHT_TEST(FUN_FLAGS(fun))) {
+        if (JSFUN_HEAVYWEIGHT_TEST(fun->flags)) {
             /* Scope with a call object parented by the callee's parent. */
             if (!js_GetCallObject(cx, &frame, parent)) {
                 ok = JS_FALSE;
@@ -1415,7 +1408,7 @@ js_InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, jsval fval,
     JS_ASSERT(mode == JSACC_READ || mode == JSACC_WRITE);
     if (cx->runtime->checkObjectAccess &&
         VALUE_IS_FUNCTION(cx, fval) &&
-        FUN_IS_SCRIPTED(OBJ_TO_FUNCTION(JSVAL_TO_OBJECT(fval))) &&
+        FUN_INTERPRETED(GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fval))) &&
         !cx->runtime->checkObjectAccess(cx, obj, ID_TO_VALUE(id), mode,
                                         &fval)) {
         return JS_FALSE;
@@ -1614,7 +1607,9 @@ js_ImportProperty(JSContext *cx, JSObject *obj, jsid id)
             goto out;
         if (VALUE_IS_FUNCTION(cx, value)) {
             funobj = JSVAL_TO_OBJECT(value);
-            closure = js_CloneFunctionObject(cx, funobj, obj);
+            closure = js_CloneFunctionObject(cx,
+                                             GET_FUNCTION_PRIVATE(cx, funobj),
+                                             obj);
             if (!closure) {
                 ok = JS_FALSE;
                 goto out;
@@ -1848,17 +1843,11 @@ js_InvokeConstructor(JSContext *cx, jsval *vp, uintN argc)
         parent = OBJ_GET_PARENT(cx, obj2);
 
         if (OBJ_GET_CLASS(cx, obj2) == &js_FunctionClass) {
-            fun2 = OBJ_TO_FUNCTION(obj2);
-            if (!FUN_IS_SCRIPTED(fun2)) {
-                JSClass *constructorClass;
-
-                constructorClass = NATIVE_FUN_GET_CLASS(FUN_TO_NATIVE(fun2));
-                if (constructorClass)
-                    clasp = constructorClass;
-            }
+            fun2 = GET_FUNCTION_PRIVATE(cx, obj2);
+            if (!FUN_INTERPRETED(fun2) && fun2->u.n.clasp)
+                clasp = fun2->u.n.clasp;
         }
     }
-
     obj = js_NewObject(cx, clasp, proto, parent, 0);
     if (!obj)
         return JS_FALSE;
@@ -2472,7 +2461,6 @@ js_Interpret(JSContext *cx)
     jsdouble d, d2;
     JSClass *clasp;
     JSFunction *fun;
-    JSScriptedFunction *sfun;
     JSType type;
 #if !JS_THREADED_INTERP && defined DEBUG
     FILE *tracefp = NULL;
@@ -2567,10 +2555,7 @@ js_Interpret(JSContext *cx)
     JS_GET_SCRIPT_OBJECT(script, GET_FULL_INDEX(PCOFF), obj)
 
 #define LOAD_FUNCTION(PCOFF)                                                  \
-    JS_BEGIN_MACRO                                                            \
-        LOAD_OBJECT(PCOFF);                                                   \
-        JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_FunctionClass);               \
-    JS_END_MACRO
+    JS_GET_SCRIPT_FUNCTION(script, GET_FULL_INDEX(PCOFF), fun)
 
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
@@ -3139,13 +3124,13 @@ interrupt:
             switch (op) {
               case JSOP_FORARG:
                 slot = GET_ARGNO(regs.pc);
-                JS_ASSERT(slot < FUN_TO_SCRIPTED(fp->fun)->nargs);
+                JS_ASSERT(slot < fp->fun->nargs);
                 fp->argv[slot] = rval;
                 break;
 
               case JSOP_FORVAR:
                 slot = GET_VARNO(regs.pc);
-                JS_ASSERT(slot < FUN_TO_SCRIPTED(fp->fun)->nvars);
+                JS_ASSERT(slot < fp->fun->u.i.nvars);
                 fp->vars[slot] = rval;
                 break;
 
@@ -3976,7 +3961,7 @@ interrupt:
 
           do_arg_incop:
             slot = GET_ARGNO(regs.pc);
-            JS_ASSERT(slot < FUN_TO_SCRIPTED(fp->fun)->nargs);
+            JS_ASSERT(slot < fp->fun->nargs);
             METER_SLOT_OP(op, slot);
             vp = fp->argv + slot;
             goto do_int_fast_incop;
@@ -4012,7 +3997,7 @@ interrupt:
            */
           do_var_incop:
             slot = GET_VARNO(regs.pc);
-            JS_ASSERT(slot < FUN_TO_SCRIPTED(fp->fun)->nvars);
+            JS_ASSERT(slot < fp->fun->u.i.nvars);
             METER_SLOT_OP(op, slot);
             vp = fp->vars + slot;
 
@@ -4112,7 +4097,7 @@ interrupt:
           BEGIN_CASE(JSOP_GETARGPROP)
             i = ARGNO_LEN;
             slot = GET_ARGNO(regs.pc);
-            JS_ASSERT(slot < FUN_TO_SCRIPTED(fp->fun)->nargs);
+            JS_ASSERT(slot < fp->fun->nargs);
             PUSH_OPND(fp->argv[slot]);
             len = JSOP_GETARGPROP_LENGTH;
             goto do_getprop_body;
@@ -4120,7 +4105,7 @@ interrupt:
           BEGIN_CASE(JSOP_GETVARPROP)
             i = VARNO_LEN;
             slot = GET_VARNO(regs.pc);
-            JS_ASSERT(slot < FUN_TO_SCRIPTED(fp->fun)->nvars);
+            JS_ASSERT(slot < fp->fun->u.i.nvars);
             PUSH_OPND(fp->vars[slot]);
             len = JSOP_GETVARPROP_LENGTH;
             goto do_getprop_body;
@@ -4302,7 +4287,7 @@ interrupt:
                 /* FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=412571 */
                 if (!VALUE_IS_FUNCTION(cx, rval) ||
                     (obj = JSVAL_TO_OBJECT(rval),
-                     fun = OBJ_TO_FUNCTION(obj),
+                     fun = GET_FUNCTION_PRIVATE(cx, obj),
                      !PRIMITIVE_THIS_TEST(fun, lval))) {
                     if (!js_PrimitiveToObject(cx, &regs.sp[-1]))
                         goto error;
@@ -4626,11 +4611,10 @@ interrupt:
             vp = regs.sp - (argc + 2);
             lval = *vp;
             if (VALUE_IS_FUNCTION(cx, lval)) {
-                JSNativeFunction *nfun;
-
                 obj = JSVAL_TO_OBJECT(lval);
-                fun = OBJ_TO_FUNCTION(obj);
-                if (FUN_IS_SCRIPTED(fun)) {
+                fun = GET_FUNCTION_PRIVATE(cx, obj);
+
+                if (FUN_INTERPRETED(fun)) {
                     uintN nframeslots, nvars, missing;
                     JSArena *a;
                     jsuword nbytes;
@@ -4642,9 +4626,8 @@ interrupt:
                     /* Compute the total number of stack slots needed by fun. */
                     nframeslots = JS_HOWMANY(sizeof(JSInlineFrame),
                                              sizeof(jsval));
-                    sfun = FUN_TO_SCRIPTED(fun);
-                    nvars = sfun->nvars;
-                    script = sfun->script;
+                    nvars = fun->u.i.nvars;
+                    script = fun->u.i.script;
                     atoms = script->atomMap.vector;
                     nbytes = (nframeslots + nvars + script->depth) *
                              sizeof(jsval);
@@ -4652,10 +4635,10 @@ interrupt:
                     /* Allocate missing expected args adjacent to actuals. */
                     a = cx->stackPool.current;
                     newmark = (void *) a->avail;
-                    if (sfun->nargs <= argc) {
+                    if (fun->nargs <= argc) {
                         missing = 0;
                     } else {
-                        newsp = vp + 2 + sfun->nargs;
+                        newsp = vp + 2 + fun->nargs;
                         JS_ASSERT(newsp > regs.sp);
                         if ((jsuword) newsp <= a->limit) {
                             if ((jsuword) newsp > a->avail)
@@ -4665,8 +4648,8 @@ interrupt:
                             } while (newsp != regs.sp);
                             missing = 0;
                         } else {
-                            missing = sfun->nargs - argc;
-                            nbytes += (2 + sfun->nargs) * sizeof(jsval);
+                            missing = fun->nargs - argc;
+                            nbytes += (2 + fun->nargs) * sizeof(jsval);
                         }
                     }
 
@@ -4727,7 +4710,7 @@ interrupt:
                     newifp->mark = newmark;
 
                     /* Compute the 'this' parameter now that argv is set. */
-                    JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(sfun->flags));
+                    JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
                     JS_ASSERT(JSVAL_IS_OBJECT(vp[1]));
                     newifp->frame.thisp = (JSObject *)vp[1];
 
@@ -4749,7 +4732,7 @@ interrupt:
                     }
 
                     /* Scope with a call object parented by callee's parent. */
-                    if (JSFUN_HEAVYWEIGHT_TEST(sfun->flags) &&
+                    if (JSFUN_HEAVYWEIGHT_TEST(fun->flags) &&
                         !js_GetCallObject(cx, &newifp->frame, parent)) {
                         goto bad_inline_call;
                     }
@@ -4807,17 +4790,16 @@ interrupt:
                 }
 #endif
 
-                nfun = FUN_TO_NATIVE(fun);
-                if (nfun->flags & JSFUN_FAST_NATIVE) {
-                    uintN nargs;
+                if (fun->flags & JSFUN_FAST_NATIVE) {
+                    JS_ASSERT(fun->u.n.extra == 0);
+                    if (argc < fun->u.n.minargs) {
+                        uintN nargs;
 
-                    JS_ASSERT(nfun->extra == 0);
-                    if (argc < nfun->minargs) {
                         /*
                          * If we can't fit missing args and local roots in
                          * this frame's operand stack, take the slow path.
                          */
-                        nargs = nfun->minargs - argc;
+                        nargs = fun->u.n.minargs - argc;
                         if (regs.sp + nargs > fp->spbase + script->depth)
                             goto do_invoke;
                         do {
@@ -4828,7 +4810,7 @@ interrupt:
                     JS_ASSERT(JSVAL_IS_OBJECT(vp[1]) ||
                               PRIMITIVE_THIS_TEST(fun, vp[1]));
 
-                    ok = ((JSFastNative) nfun->native)(cx, argc, vp);
+                    ok = ((JSFastNative) fun->u.n.native)(cx, argc, vp);
 #ifdef INCLUDE_MOZILLA_DTRACE
                     if (VALUE_IS_FUNCTION(cx, lval)) {
                         if (JAVASCRIPT_FUNCTION_RVAL_ENABLED())
@@ -5422,7 +5404,7 @@ interrupt:
           BEGIN_CASE(JSOP_GETARG)
           BEGIN_CASE(JSOP_CALLARG)
             slot = GET_ARGNO(regs.pc);
-            JS_ASSERT(slot < FUN_TO_SCRIPTED(fp->fun)->nargs);
+            JS_ASSERT(slot < fp->fun->nargs);
             METER_SLOT_OP(op, slot);
             PUSH_OPND(fp->argv[slot]);
             if (op == JSOP_CALLARG)
@@ -5431,7 +5413,7 @@ interrupt:
 
           BEGIN_CASE(JSOP_SETARG)
             slot = GET_ARGNO(regs.pc);
-            JS_ASSERT(slot < FUN_TO_SCRIPTED(fp->fun)->nargs);
+            JS_ASSERT(slot < fp->fun->nargs);
             METER_SLOT_OP(op, slot);
             vp = &fp->argv[slot];
             GC_POKE(cx, *vp);
@@ -5441,7 +5423,7 @@ interrupt:
           BEGIN_CASE(JSOP_GETVAR)
           BEGIN_CASE(JSOP_CALLVAR)
             slot = GET_VARNO(regs.pc);
-            JS_ASSERT(slot < FUN_TO_SCRIPTED(fp->fun)->nvars);
+            JS_ASSERT(slot < fp->fun->u.i.nvars);
             METER_SLOT_OP(op, slot);
             PUSH_OPND(fp->vars[slot]);
             if (op == JSOP_CALLVAR)
@@ -5450,7 +5432,7 @@ interrupt:
 
           BEGIN_CASE(JSOP_SETVAR)
             slot = GET_VARNO(regs.pc);
-            JS_ASSERT(slot < FUN_TO_SCRIPTED(fp->fun)->nvars);
+            JS_ASSERT(slot < fp->fun->u.i.nvars);
             METER_SLOT_OP(op, slot);
             vp = &fp->vars[slot];
             GC_POKE(cx, *vp);
@@ -5610,8 +5592,9 @@ interrupt:
              * have seen the right parent already and created a sufficiently
              * well-scoped function object.
              */
+            obj = FUN_OBJECT(fun);
             if (OBJ_GET_PARENT(cx, obj) != obj2) {
-                obj = js_CloneFunctionObject(cx, obj, obj2);
+                obj = js_CloneFunctionObject(cx, fun, obj2);
                 if (!obj)
                     goto error;
             }
@@ -5629,8 +5612,7 @@ interrupt:
              * and setters do not need a slot, their value is stored elsewhere
              * in the property itself, not in obj slots.
              */
-            sfun = FUN_TO_SCRIPTED(OBJ_TO_FUNCTION(obj));
-            flags = JSFUN_GSFLAG2ATTR(sfun->flags);
+            flags = JSFUN_GSFLAG2ATTR(fun->flags);
             if (flags) {
                 attrs |= flags | JSPROP_SHARED;
                 rval = JSVAL_VOID;
@@ -5650,7 +5632,7 @@ interrupt:
              * here at runtime as well as at compile-time, to handle eval
              * as well as multiple HTML script tags.
              */
-            id = ATOM_TO_JSID(sfun->atom);
+            id = ATOM_TO_JSID(fun->atom);
             ok = js_CheckRedeclaration(cx, parent, id, attrs, NULL, NULL);
             if (ok) {
                 if (attrs == JSPROP_ENUMERATE) {
@@ -5694,7 +5676,7 @@ interrupt:
             if (!parent)
                 goto error;
 
-            obj = js_CloneFunctionObject(cx, obj, parent);
+            obj = js_CloneFunctionObject(cx, fun, parent);
             if (!obj)
                 goto error;
 
@@ -5709,8 +5691,9 @@ interrupt:
             parent = js_GetScopeChain(cx, fp);
             if (!parent)
                 goto error;
+            obj = FUN_OBJECT(fun);
             if (OBJ_GET_PARENT(cx, obj) != parent) {
-                obj = js_CloneFunctionObject(cx, obj, parent);
+                obj = js_CloneFunctionObject(cx, fun, parent);
                 if (!obj)
                     goto error;
             }
@@ -5718,11 +5701,11 @@ interrupt:
           END_CASE(JSOP_ANONFUNOBJ)
 
           BEGIN_CASE(JSOP_NAMEDFUNOBJ)
-            /* ECMA ed. 3 FunctionExpression: function Identifier [etc.]. */
             LOAD_FUNCTION(0);
-            rval = OBJECT_TO_JSVAL(obj);
 
             /*
+             * ECMA ed. 3 FunctionExpression: function Identifier [etc.].
+             *
              * 1. Create a new object as if by the expression new Object().
              * 2. Add Result(1) to the front of the scope chain.
              *
@@ -5743,16 +5726,10 @@ interrupt:
              * that was parsed by the compiler into a Function object, and
              * saved in the script's atom map].
              *
-             * Protect parent from GC after js_CloneFunctionObject calls into
-             * js_NewObject, which displaces the newborn object root in cx by
-             * allocating the clone, then runs a last-ditch GC while trying
-             * to allocate the clone's slots vector.  Another, multi-threaded
-             * path: js_CloneFunctionObject => js_NewObject => OBJ_GET_CLASS
-             * which may suspend the current request in ClaimScope, with the
-             * newborn displaced as in the first scenario.
+             * Protect parent from the GC.
              */
             fp->scopeChain = parent;
-            obj = js_CloneFunctionObject(cx, JSVAL_TO_OBJECT(rval), parent);
+            obj = js_CloneFunctionObject(cx, fun, parent);
             if (!obj)
                 goto error;
 
@@ -5766,17 +5743,15 @@ interrupt:
 
             /*
              * 4. Create a property in the object Result(1).  The property's
-             * name is [sfun->atom, the identifier parsed by the compiler],
+             * name is [fun->atom, the identifier parsed by the compiler],
              * value is Result(3), and attributes are { DontDelete, ReadOnly }.
              */
-            sfun = FUN_TO_SCRIPTED(OBJ_TO_FUNCTION(obj));
-            attrs = JSFUN_GSFLAG2ATTR(sfun->flags);
+            attrs = JSFUN_GSFLAG2ATTR(fun->flags);
             if (attrs) {
                 attrs |= JSPROP_SHARED;
                 rval = JSVAL_VOID;
             }
-            ok = OBJ_DEFINE_PROPERTY(cx, parent, ATOM_TO_JSID(sfun->atom),
-                                     rval,
+            ok = OBJ_DEFINE_PROPERTY(cx, parent, ATOM_TO_JSID(fun->atom), rval,
                                      (attrs & JSPROP_GETTER)
                                      ? JS_EXTENSION (JSPropertyOp) obj
                                      : JS_PropertyStub,

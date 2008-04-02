@@ -146,29 +146,7 @@
   padding: 2px 2px 3px 4px;
 }
 
-.filterList {
-  -moz-appearance: none;
-  background-color: transparent;
-  border: 0px;
-  margin: 2px;
-  padding: 0px;
-  min-width: 0px;
-  width: 16px;
-  height: 16px;
-  list-style-image: url("chrome://browser/skin/Search-bar.png");
-  -moz-user-focus: ignore;
-  cursor: default;
-}
-
-.filterList .button-box {
-  border: 0px;
-  padding: 0px;
-}
-
-.filterList .button-menu-dropmarker {
-  margin: 9px -3px -4px 8px;
-}
-
+%ifdef PLACES_QUERY_BUILDER
 /* Calendar */
 .history-calendar {
   margin: 0px 0px 7px 6px;
@@ -235,16 +213,6 @@
   padding: 3px 3px 3px 0px;
 }
 
-#searchModifiers {
-  padding-right: 3px;
-}
-
-#debugPanel {
-  background-color: ThreeDFace;
-  border-top: 2px solid; 
-  -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
-}
-
 /**** expanders ****/
 
 .expander-up,
@@ -267,3 +235,9 @@
 .expander-up:hover:active {
   list-style-image: url("chrome://global/skin/arrow/arrow-up-hov.gif");
 }
+%endif
+
+#searchModifiers {
+  padding-right: 3px;
+}
+

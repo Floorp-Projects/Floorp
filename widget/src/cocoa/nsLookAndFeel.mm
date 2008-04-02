@@ -342,6 +342,10 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       // For inactive list selection
       res = GetMacBrushColor(kThemeBrushSecondaryHighlightColor, aColor, NS_RGB(0x00,0x00,0x00));
       break;
+    case eColor__moz_oddrowbackground:
+      // Background color of odd list rows. Note that Apple's row index is different from ours.
+      res = GetMacBrushColor(kThemeBrushListViewEvenRowBackground, aColor, NS_RGB(0xF0,0xF0,0xF0));
+      break;
     default:
       NS_WARNING("Someone asked nsILookAndFeel for a color I don't know about");
       aColor = NS_RGB(0xff,0xff,0xff);

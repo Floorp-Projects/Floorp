@@ -53,10 +53,10 @@
 #include "jsj_private.h"
 #include "jsjava.h"
 
-#include "jsarena.h"
-#include "jscntxt.h"        /* For js_ReportErrorAgain().*/
 #include "jsdbgapi.h"
+#include "jsarena.h"
 #include "jsfun.h"
+#include "jscntxt.h"        /* For js_ReportErrorAgain().*/
 #include "jsscript.h"
 
 #include "netscape_javascript_JSObject.h"   /* javah-generated headers */

@@ -282,15 +282,16 @@ js_QuoteString(JSContext *cx, JSString *str, jschar quote);
  */
 
 #ifdef JS_ARENAMETER
-# define JS_NEW_PRINTER(cx, name, indent, pretty)                             \
-    js_NewPrinter(cx, name, indent, pretty)
+# define JS_NEW_PRINTER(cx, name, fun, indent, pretty)                        \
+    js_NewPrinter(cx, name, fun, indent, pretty)
 #else
-# define JS_NEW_PRINTER(cx, name, indent, pretty)                             \
-    js_NewPrinter(cx, indent, pretty)
+# define JS_NEW_PRINTER(cx, name, fun, indent, pretty)                        \
+    js_NewPrinter(cx, fun, indent, pretty)
 #endif
 
 extern JSPrinter *
-JS_NEW_PRINTER(JSContext *cx, const char *name, uintN indent, JSBool pretty);
+JS_NEW_PRINTER(JSContext *cx, const char *name, JSFunction *fun,
+               uintN indent, JSBool pretty);
 
 extern void
 js_DestroyPrinter(JSPrinter *jp);
@@ -331,10 +332,10 @@ js_GetIndexFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
         JS_GET_SCRIPT_OBJECT((script), index_, obj);                          \
     JS_END_MACRO
 
-#define GET_FUNCTION_FROM_BYTECODE(script, pc, pcoff, obj)                    \
+#define GET_FUNCTION_FROM_BYTECODE(script, pc, pcoff, fun)                    \
     JS_BEGIN_MACRO                                                            \
-        GET_OBJECT_FROM_BYTECODE(script, pc, pcoff, obj);                     \
-        JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_FunctionClass);               \
+        uintN index_ = js_GetIndexFromBytecode(cx, (script), (pc), (pcoff));  \
+        JS_GET_SCRIPT_FUNCTION((script), index_, fun);                        \
     JS_END_MACRO
 
 #define GET_REGEXP_FROM_BYTECODE(script, pc, pcoff, obj)                      \
@@ -361,19 +362,13 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
  * Decompilers, for script, function, and expression pretty-printing.
  */
 extern JSBool
-js_DecompileNativeFunctionBody(JSPrinter *jp, JSNativeFunction *fun);
-
-JSBool
-js_DecompileNativeFunction(JSPrinter *jp, JSNativeFunction *fun);
-
-extern JSBool
 js_DecompileScript(JSPrinter *jp, JSScript *script);
 
 extern JSBool
-js_DecompileFunctionBody(JSPrinter *jp, JSScriptedFunction *fun);
+js_DecompileFunctionBody(JSPrinter *jp);
 
 extern JSBool
-js_DecompileFunction(JSPrinter *jp, JSScriptedFunction *fun);
+js_DecompileFunction(JSPrinter *jp);
 
 /*
  * Find the source expression that resulted in v, and return a newly allocated

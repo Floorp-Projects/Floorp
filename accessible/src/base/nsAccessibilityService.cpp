@@ -1284,9 +1284,8 @@ static PRBool HasRelatedContent(nsIContent *aContent)
   }
 
   nsIContent *ancestorContent = aContent;
-  nsAutoString activeID;
   while ((ancestorContent = ancestorContent->GetParent()) != nsnull) {
-    if (ancestorContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_activedescendant, activeID)) {
+    if (ancestorContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_activedescendant)) {
         // ancestor has activedescendant property, this content could be active
       return PR_TRUE;
     }
@@ -1489,6 +1488,8 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
                                         nsIAccessibleRole::ROLE_EQUATION);
     }
   } else if (!newAcc) {  // HTML accessibles
+    PRBool tryTagNameOrFrame = PR_TRUE;
+
     nsIAtom *frameType = frame->GetType();
     if (!roleMapEntry &&
         (frameType == nsAccessibilityAtoms::tableCaptionFrame ||
@@ -1528,38 +1529,41 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
         else if (tableFrame->GetType() == nsAccessibilityAtoms::tableCellFrame) {
           // Stop before we are fooled by any additional table ancestors
           // This table cell frameis part of a separate ancestor table.
-          NS_ASSERTION(!roleMapEntry, "Should not be changing ARIA role, just overriding impl class role");
-          // Not in table: override role (roleMap entry was null).
-          roleMapEntry = &nsARIAMap::gEmptyRoleMap;
+          tryTagNameOrFrame = PR_FALSE;
           break;
         }
       }
+
+      if (!tableContent)
+        tryTagNameOrFrame = PR_FALSE;
     }
 
-    // Prefer to use markup (mostly tag name, perhaps attributes) to
-    // decide if and what kind of accessible to create.
-    // The method creates accessibles for table related content too therefore
-    // we do not call it if accessibles for table related content are
-    // prevented above.
-    rv = CreateHTMLAccessibleByMarkup(frame, aWeakShell, aNode,
-                                      getter_AddRefs(newAcc));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (tryTagNameOrFrame) {
+      // Prefer to use markup (mostly tag name, perhaps attributes) to
+      // decide if and what kind of accessible to create.
+      // The method creates accessibles for table related content too therefore
+      // we do not call it if accessibles for table related content are
+      // prevented above.
+      rv = CreateHTMLAccessibleByMarkup(frame, aWeakShell, aNode,
+                                        getter_AddRefs(newAcc));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!newAcc) {
-      // Do not create accessible object subtrees for non-rendered table
-      // captions. This could not be done in
-      // nsTableCaptionFrame::GetAccessible() because the descendants of
-      // the table caption would still be created. By setting
-      // *aIsHidden = PR_TRUE we ensure that no descendant accessibles are
-      // created.
-      if (frame->GetType() == nsAccessibilityAtoms::tableCaptionFrame &&
-         frame->GetRect().IsEmpty()) {
-        // XXX This is not the ideal place for this code, but right now there
-        // is no better place:
-        *aIsHidden = PR_TRUE;
-        return NS_OK;
+      if (!newAcc) {
+        // Do not create accessible object subtrees for non-rendered table
+        // captions. This could not be done in
+        // nsTableCaptionFrame::GetAccessible() because the descendants of
+        // the table caption would still be created. By setting
+        // *aIsHidden = PR_TRUE we ensure that no descendant accessibles are
+        // created.
+        if (frame->GetType() == nsAccessibilityAtoms::tableCaptionFrame &&
+           frame->GetRect().IsEmpty()) {
+          // XXX This is not the ideal place for this code, but right now there
+          // is no better place:
+          *aIsHidden = PR_TRUE;
+          return NS_OK;
+        }
+        frame->GetAccessible(getter_AddRefs(newAcc)); // Try using frame to do it
       }
-      frame->GetAccessible(getter_AddRefs(newAcc)); // Try using frame to do it
     }
   }
 
@@ -1575,7 +1579,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
       (content->IsFocusable() ||
        (isHTML && nsAccUtils::HasListener(content, NS_LITERAL_STRING("click"))) ||
        HasUniversalAriaProperty(content, aWeakShell) || roleMapEntry ||
-       HasRelatedContent(content))) {
+       HasRelatedContent(content) || nsAccUtils::IsXLink(content))) {
     // This content is focusable or has an interesting dynamic content accessibility property.
     // If it's interesting we need it in the accessibility hierarchy so that events or
     // other accessibles can point to it, or so that it can hold a state, etc.

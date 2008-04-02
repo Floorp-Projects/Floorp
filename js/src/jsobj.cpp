@@ -863,9 +863,8 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
                  * they might appear here.  This code can be confused by people
                  * defining Function.prototype.toString, so let's be cautious.
                  */
-                if (JSFUN_GETTER_TEST(FUN_FLAGS(fun)) ||
-                    JSFUN_SETTER_TEST(FUN_FLAGS(fun))) {
-                    /* skip "getter/setter" */
+                if (JSFUN_GETTER_TEST(fun->flags) ||
+                    JSFUN_SETTER_TEST(fun->flags)) { /* skip "getter/setter" */
                     const jschar *tmp = js_strchr_limit(vchars, ' ', end);
                     if (tmp)
                         vchars = tmp + 1;
@@ -2425,7 +2424,7 @@ js_GetClassId(JSContext *cx, JSClass *clasp, jsid *idp)
 
 JSObject *
 js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent,
-             uintN extraBytes)
+             uintN objectSize)
 {
     jsid id;
 
@@ -2442,12 +2441,12 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent,
         }
     }
 
-    return js_NewObjectWithGivenProto(cx, clasp, proto, parent, extraBytes);
+    return js_NewObjectWithGivenProto(cx, clasp, proto, parent, objectSize);
 }
 
 JSObject *
 js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
-                           JSObject *parent, uintN extraBytes)
+                           JSObject *parent, uintN objectSize)
 {
     JSObject *obj;
     JSObjectOps *ops;
@@ -2461,28 +2460,25 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
         jsdtrace_object_create_start(cx->fp, clasp);
 #endif
 
-    /* Always call the class's getObjectOps hook if it has one. */
-    ops = clasp->getObjectOps
-          ? clasp->getObjectOps(cx, clasp)
-          : &js_ObjectOps;
-
-    if (clasp == &js_FunctionClass && extraBytes == 0)
-        extraBytes = sizeof(JSFunction) - sizeof(JSObject);
+    /* Currently only functions can have non-standard allocation size. */
+    if (clasp == &js_FunctionClass) {
+        if (objectSize == 0)
+            objectSize = sizeof(JSFunction);
+        else
+            JS_ASSERT(objectSize == sizeof(JSObject));
+    } else {
+        JS_ASSERT(objectSize == 0);
+        objectSize = sizeof(JSObject);
+    }
 
     /*
-     * Allocate a zeroed object from the GC heap.  Do this *after* any other
-     * GC-thing allocations under js_GetClassPrototype or clasp->getObjectOps,
-     * to avoid displacing the newborn root for obj.
+     * Allocate an object from the GC heap and initialize all its fields before
+     * doing any operation that can potentially trigger GC.
      */
-    obj = (JSObject *) js_NewGCThing(cx, GCX_OBJECT,
-                                     sizeof(JSObject) + extraBytes);
+    obj = (JSObject *) js_NewGCThing(cx, GCX_OBJECT, objectSize);
     if (!obj)
         goto earlybad;
 
-    /*
-     * Initialize all JSObject fields before doing any operation that can
-     * potentially trigger GC.
-     */
     obj->map = NULL;
     obj->dslots = NULL;
 
@@ -2502,8 +2498,10 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
     for (i = JSSLOT_PRIVATE; i != JS_INITIAL_NSLOTS; ++i)
         obj->fslots[i] = JSVAL_VOID;
 
-    if (extraBytes != 0)
-        memset((uint8 *) obj + sizeof(JSObject), 0, extraBytes);
+#ifdef DEBUG
+    memset((uint8 *) obj + sizeof(JSObject), JS_FREE_PATTERN,
+           objectSize - sizeof(JSObject));
+#endif
 
     /*
      * Root obj to prevent it from being collected out from under this call to
@@ -2512,11 +2510,16 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
      */
     JS_PUSH_TEMP_ROOT_OBJECT(cx, obj, &tvr);
 
+    /* Always call the class's getObjectOps hook if it has one. */
+    ops = clasp->getObjectOps
+          ? clasp->getObjectOps(cx, clasp)
+          : &js_ObjectOps;
+
     /*
      * Default parent to the parent of the prototype, which was set from
      * the parent of the prototype's constructor.
      */
-    if (!parent && proto)
+    if (proto && !parent)
         STOBJ_SET_PARENT(obj, OBJ_GET_PARENT(cx, proto));
 
     /*
@@ -5036,9 +5039,9 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
      * don't move it up and unify it with the |if (!traceScope)| section
      * above.
      */
-    nslots = (scope->object != obj)
-             ? STOBJ_NSLOTS(obj)
-             : LOCKED_OBJ_NSLOTS(obj);
+    nslots = STOBJ_NSLOTS(obj);
+    if (scope->object == obj && scope->map.freeslot < nslots)
+        nslots = scope->map.freeslot;
 
     for (i = 0; i != nslots; ++i) {
         v = STOBJ_GET_SLOT(obj, i);

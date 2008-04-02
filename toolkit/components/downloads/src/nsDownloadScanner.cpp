@@ -419,6 +419,7 @@ nsDownloadScanner::Scan::Start()
   // We count https/ftp/http as an http download
   PRBool isHttp(PR_FALSE), isFtp(PR_FALSE), isHttps(PR_FALSE);
   nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(uri);
+  if (!innerURI) innerURI = uri;
   (void)innerURI->SchemeIs("http", &isHttp);
   (void)innerURI->SchemeIs("ftp", &isFtp);
   (void)innerURI->SchemeIs("https", &isHttps);

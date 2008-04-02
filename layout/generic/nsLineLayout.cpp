@@ -2606,8 +2606,6 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
     combinedAreaResult.height = mFinalLineHeight;
   }
 
-  PRBool isStandardsMode =
-    mPresContext->CompatibilityMode() != eCompatibility_NavQuirks;
   for (PerFrameData* pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
     nsIFrame* frame = pfd->mFrame;
     nsPoint origin = frame->GetPosition();
@@ -2636,15 +2634,6 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
     // <b>x</b> and <b>y</b> which were computed above.
     nsRect r;
     if (pfd->mSpan) {
-      if (isStandardsMode) {
-        // Combine the text decoration area for inline elements of standards
-        // mode
-        PRUint8 decorations = frame->GetStyleTextReset()->mTextDecoration;
-        if (decorations) {
-          nsLineLayout::CombineTextDecorations(mPresContext, decorations,
-                          frame, pfd->mSpan->mFrame->mCombinedArea);
-        }
-      }
       // Compute a new combined area for the child span before
       // aggregating it into our combined area.
       RelativePositionFrames(pfd->mSpan, r);
@@ -2708,7 +2697,7 @@ nsLineLayout::CombineTextDecorations(nsPresContext* aPresContext,
   gfxFontGroup* fontGroup = tfm->GetThebesFontGroup();
   gfxFont* firstFont = fontGroup->GetFontAt(0);
   if (!firstFont)
-      return; // OOM
+    return; // OOM
   const gfxFont::Metrics& metrics = firstFont->GetMetrics();
 
   gfxFloat ascent = aAscentOverride == 0 ? metrics.maxAscent :

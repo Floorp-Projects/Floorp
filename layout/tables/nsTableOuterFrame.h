@@ -275,12 +275,6 @@ protected:
                            const nsMargin&      aInnerMargin,
                            const nsMargin&      aCaptionMargin);
 
-  void InvalidateDamage(PRUint8         aCaptionSide,
-                        const nsSize&   aOuterSize,
-                        PRBool          aInnerChanged,
-                        PRBool          aCaptionChanged,
-                        nsRect*         aOldOverflowArea);
-  
   // Get the margin.  aMarginNoAuto is aMargin, but with auto 
   // margins set to 0
   void GetMargin(nsPresContext*           aPresContext,

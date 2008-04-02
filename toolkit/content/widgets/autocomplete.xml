@@ -352,6 +352,7 @@
             input.setAttribute("open", "true");
             function onHide() {
               input.removeAttribute("open");
+              input.mConsumeRollupEvent = false;
               popup.removeEventListener("popuphiding", onHide, false);
             }
             popup.addEventListener("popuphiding", onHide, false);
@@ -415,12 +416,20 @@
           if (aEvent.getPreventDefault())
             return false;
 
+          // Make sure we have the controller before handling key presses
+          this.attachController();
+
           var cancel = false;
 
           // Catch any keys that could potentially move the caret. Ctrl can be
-          // used in combination with these keys, so only make sure that Alt
-          // isn't used.
-          if (!this.disableKeyNavigation && !aEvent.altKey) {
+          // used in combination with these keys on Windows and Linux; and Alt
+          // can be used on OS X, so make sure the unused one isn't used.
+          if (!this.disableKeyNavigation &&
+#ifdef XP_MACOSX
+              !aEvent.ctrlKey) {
+#else
+              !aEvent.altKey) {
+#endif
             switch (aEvent.keyCode) {
               case KeyEvent.DOM_VK_LEFT:
               case KeyEvent.DOM_VK_RIGHT:
@@ -695,9 +704,14 @@
             var docViewer = docShell.contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
             var width = (rect.right - rect.left) * docViewer.fullZoom;
             this.setAttribute("width", width > 100 ? width : 100);
-            this.openPopup(aElement, "after_start", 0, 0, false, false);
 
-            this.popupBoxObject.setConsumeRollupEvent(this.mInput.consumeRollupEvent);
+            // setConsumeRollupEvent() before we call openPopup()
+            var nsIPopupBO = Components.interfaces.nsIPopupBoxObject;
+            this.popupBoxObject.setConsumeRollupEvent(
+              this.mInput.consumeRollupEvent ? 
+                nsIPopupBO.ROLLUP_CONSUME : 
+                nsIPopupBO.ROLLUP_NO_CONSUME);
+            this.openPopup(aElement, "after_start", 0, 0, false, false);
           }
         ]]></body>
       </method>
@@ -940,8 +954,13 @@
             // invalidate() depends on the width attribute
             this._invalidate();
 
+            // setConsumeRollupEvent() before we call openPopup()
+            var nsIPopupBO = Components.interfaces.nsIPopupBoxObject;
+            this.popupBoxObject.setConsumeRollupEvent(
+              this.mInput.consumeRollupEvent ? 
+                nsIPopupBO.ROLLUP_CONSUME : 
+                nsIPopupBO.ROLLUP_NO_CONSUME);
             this.openPopup(aElement, "after_start", 0, 0, false, false);
-            this.popupBoxObject.setConsumeRollupEvent(this.mInput.consumeRollupEvent);
           }
         ]]>
         </body>
@@ -1343,6 +1362,10 @@
           // Give the image the icon style and a special one for the type
           this._typeImage.className = "ac-type-icon" +
             (type ? " ac-result-type-" + type : "");
+
+          // Show the url as the title if we don't have a title
+          if (title == "")
+            title = url;
 
           // Emphasize the matching search terms for the description
           this._setUpDescription(this._title, title);

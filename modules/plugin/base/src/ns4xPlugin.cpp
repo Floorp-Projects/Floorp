@@ -991,6 +991,11 @@ MakeNew4xStreamInternal(NPP npp, const char *relativeURL, const char *target,
 NPError NP_CALLBACK
 _geturl(NPP npp, const char* relativeURL, const char* target)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_geturl called from the wrong thread\n"));
+    return NPERR_INVALID_PARAM;
+  }
+
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPN_GetURL: npp=%p, target=%s, url=%s\n", (void *)npp, target,
    relativeURL));
@@ -1022,6 +1027,11 @@ NPError NP_CALLBACK
 _geturlnotify(NPP npp, const char* relativeURL, const char* target,
               void* notifyData)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_geturlnotify called from the wrong thread\n"));
+    return NPERR_INVALID_PARAM;
+  }
+
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
     ("NPN_GetURLNotify: npp=%p, target=%s, notify=%p, url=%s\n", (void*)npp,
      target, notifyData, relativeURL));
@@ -1039,6 +1049,10 @@ NPError NP_CALLBACK
 _posturlnotify(NPP npp, const char *relativeURL, const char *target,
                uint32 len, const char *buf, NPBool file, void *notifyData)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_posturlnotify called from the wrong thread\n"));
+    return NPERR_INVALID_PARAM;
+  }
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
                  ("NPN_PostURLNotify: npp=%p, target=%s, len=%d, file=%d, "
                   "notify=%p, url=%s, buf=%s\n",
@@ -1058,6 +1072,10 @@ NPError NP_CALLBACK
 _posturl(NPP npp, const char *relativeURL, const char *target,
          uint32 len, const char *buf, NPBool file)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_posturl called from the wrong thread\n"));
+    return NPERR_INVALID_PARAM;
+  }
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
                  ("NPN_PostURL: npp=%p, target=%s, file=%d, len=%d, url=%s, "
                   "buf=%s\n",
@@ -1124,6 +1142,10 @@ ns4xStreamWrapper::GetStream(nsIOutputStream* &result)
 NPError NP_CALLBACK
 _newstream(NPP npp, NPMIMEType type, const char* target, NPStream* *result)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_newstream called from the wrong thread\n"));
+    return NPERR_INVALID_PARAM;
+  }
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPN_NewStream: npp=%p, type=%s, target=%s\n", (void*)npp,
    (const char *)type, target));
@@ -1159,6 +1181,10 @@ _newstream(NPP npp, NPMIMEType type, const char* target, NPStream* *result)
 int32 NP_CALLBACK
 _write(NPP npp, NPStream *pstream, int32 len, void *buffer)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_write called from the wrong thread\n"));
+    return 0;
+  }
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
                  ("NPN_Write: npp=%p, url=%s, len=%d, buffer=%s\n", (void*)npp,
                   pstream->url, len, (char*)buffer));
@@ -1193,6 +1219,10 @@ _write(NPP npp, NPStream *pstream, int32 len, void *buffer)
 NPError NP_CALLBACK
 _destroystream(NPP npp, NPStream *pstream, NPError reason)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_write called from the wrong thread\n"));
+    return NPERR_INVALID_PARAM;
+  }
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
                  ("NPN_DestroyStream: npp=%p, url=%s, reason=%d\n", (void*)npp,
                   pstream->url, (int)reason));
@@ -1236,6 +1266,10 @@ _destroystream(NPP npp, NPStream *pstream, NPError reason)
 void NP_CALLBACK
 _status(NPP npp, const char *message)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_status called from the wrong thread\n"));
+    return;
+  }
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_Status: npp=%p, message=%s\n",
                                      (void*)npp, message));
 
@@ -1259,6 +1293,9 @@ _status(NPP npp, const char *message)
 void NP_CALLBACK
 _memfree (void *ptr)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_memfree called from the wrong thread\n"));
+  }
   NPN_PLUGIN_LOG(PLUGIN_LOG_NOISY, ("NPN_MemFree: ptr=%p\n", ptr));
 
   if (ptr)
@@ -1270,6 +1307,9 @@ _memfree (void *ptr)
 uint32 NP_CALLBACK
 _memflush(uint32 size)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_memflush called from the wrong thread\n"));
+  }
   NPN_PLUGIN_LOG(PLUGIN_LOG_NOISY, ("NPN_MemFlush: size=%d\n", size));
 
   nsMemory::HeapMinimize(PR_TRUE);
@@ -1281,10 +1321,16 @@ _memflush(uint32 size)
 void NP_CALLBACK
 _reloadplugins(NPBool reloadPages)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_reloadplugins called from the wrong thread\n"));
+    return;
+  }
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
                  ("NPN_ReloadPlugins: reloadPages=%d\n", reloadPages));
 
   nsCOMPtr<nsIPluginManager> pm(do_GetService(kPluginManagerCID));
+  if (!pm)
+    return;
 
   pm->ReloadPlugins(reloadPages);
 }
@@ -1294,6 +1340,10 @@ _reloadplugins(NPBool reloadPages)
 void NP_CALLBACK
 _invalidaterect(NPP npp, NPRect *invalidRect)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_invalidaterect called from the wrong thread\n"));
+    return;
+  }
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
                  ("NPN_InvalidateRect: npp=%p, top=%d, left=%d, bottom=%d, "
                   "right=%d\n", (void *)npp, invalidRect->top,
@@ -1323,6 +1373,10 @@ _invalidaterect(NPP npp, NPRect *invalidRect)
 void NP_CALLBACK
 _invalidateregion(NPP npp, NPRegion invalidRegion)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_invalidateregion called from the wrong thread\n"));
+    return;
+  }
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
                  ("NPN_InvalidateRegion: npp=%p, region=%p\n", (void*)npp,
                   (void*)invalidRegion));
@@ -1351,6 +1405,10 @@ _invalidateregion(NPP npp, NPRegion invalidRegion)
 void NP_CALLBACK
 _forceredraw(NPP npp)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_forceredraw called from the wrong thread\n"));
+    return;
+  }
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_ForceDraw: npp=%p\n", (void*)npp));
 
   if (!npp || !npp->ndata) {
@@ -1420,6 +1478,10 @@ GetJSContextFromNPP(NPP npp)
 NPObject* NP_CALLBACK
 _getwindowobject(NPP npp)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_getwindowobject called from the wrong thread\n"));
+    return nsnull;
+  }
   JSContext *cx = GetJSContextFromNPP(npp);
   NS_ENSURE_TRUE(cx, nsnull);
 
@@ -1432,6 +1494,10 @@ _getwindowobject(NPP npp)
 NPObject* NP_CALLBACK
 _getpluginelement(NPP npp)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_getpluginelement called from the wrong thread\n"));
+    return nsnull;
+  }
   nsIDOMElement *elementp = nsnull;
   NPError nperr = _getvalue(npp, NPNVDOMElement, &elementp);
 
@@ -1471,7 +1537,7 @@ doGetIdentifier(JSContext *cx, const NPUTF8* name)
                                        utf16name.Length());
 
   if (!str)
-    return nsnull;
+    return NULL;
 
   return (NPIdentifier)STRING_TO_JSVAL(str);
 }
@@ -1479,6 +1545,14 @@ doGetIdentifier(JSContext *cx, const NPUTF8* name)
 NPIdentifier NP_CALLBACK
 _getstringidentifier(const NPUTF8* name)
 {
+  if (!name) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS, ("NPN_getstringidentifier: passed null name"));
+    return NULL;
+  }
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_getstringidentifier called from the wrong thread\n"));
+  }
+
   nsCOMPtr<nsIThreadJSContextStack> stack =
     do_GetService("@mozilla.org/js/xpc/ContextStack;1");
   if (!stack)
@@ -1497,6 +1571,9 @@ void NP_CALLBACK
 _getstringidentifiers(const NPUTF8** names, int32_t nameCount,
                       NPIdentifier *identifiers)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_getstringidentifiers called from the wrong thread\n"));
+  }
   nsCOMPtr<nsIThreadJSContextStack> stack =
     do_GetService("@mozilla.org/js/xpc/ContextStack;1");
   if (!stack)
@@ -1510,19 +1587,30 @@ _getstringidentifiers(const NPUTF8** names, int32_t nameCount,
   JSAutoRequest ar(cx);
 
   for (int32_t i = 0; i < nameCount; ++i) {
-    identifiers[i] = doGetIdentifier(cx, names[i]);
+    if (names[i]) {
+      identifiers[i] = doGetIdentifier(cx, names[i]);
+    } else {
+      NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS, ("NPN_getstringidentifiers: passed null name"));
+      identifiers[i] = NULL;
+    }
   }
 }
 
 NPIdentifier NP_CALLBACK
 _getintidentifier(int32_t intid)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_getstringidentifier called from the wrong thread\n"));
+  }
   return (NPIdentifier)INT_TO_JSVAL(intid);
 }
 
 NPUTF8* NP_CALLBACK
 _utf8fromidentifier(NPIdentifier identifier)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_utf8fromidentifier called from the wrong thread\n"));
+  }
   if (!identifier)
     return NULL;
 
@@ -1542,6 +1630,9 @@ _utf8fromidentifier(NPIdentifier identifier)
 int32_t NP_CALLBACK
 _intfromidentifier(NPIdentifier identifier)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_intfromidentifier called from the wrong thread\n"));
+  }
   jsval v = (jsval)identifier;
 
   if (!JSVAL_IS_INT(v)) {
@@ -1554,6 +1645,9 @@ _intfromidentifier(NPIdentifier identifier)
 bool NP_CALLBACK
 _identifierisstring(NPIdentifier identifier)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_identifierisstring called from the wrong thread\n"));
+  }
   jsval v = (jsval)identifier;
 
   return JSVAL_IS_STRING(v);
@@ -1562,6 +1656,10 @@ _identifierisstring(NPIdentifier identifier)
 NPObject* NP_CALLBACK
 _createobject(NPP npp, NPClass* aClass)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_createobject called from the wrong thread\n"));
+    return nsnull;
+  }
   if (!npp) {
     NS_ERROR("Null npp passed to _createobject()!");
 
@@ -1600,6 +1698,9 @@ _createobject(NPP npp, NPClass* aClass)
 NPObject* NP_CALLBACK
 _retainobject(NPObject* npobj)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_retainobject called from the wrong thread\n"));
+  }
   if (npobj) {
     PR_AtomicIncrement((PRInt32*)&npobj->referenceCount);
   }
@@ -1610,6 +1711,9 @@ _retainobject(NPObject* npobj)
 void NP_CALLBACK
 _releaseobject(NPObject* npobj)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_releaseobject called from the wrong thread\n"));
+  }
   if (!npobj)
     return;
 
@@ -1633,6 +1737,10 @@ bool NP_CALLBACK
 _invoke(NPP npp, NPObject* npobj, NPIdentifier method, const NPVariant *args,
         uint32_t argCount, NPVariant *result)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_invoke called from the wrong thread\n"));
+    return false;
+  }
   if (!npp || !npobj || !npobj->_class || !npobj->_class->invoke)
     return false;
 
@@ -1652,6 +1760,10 @@ bool NP_CALLBACK
 _invokeDefault(NPP npp, NPObject* npobj, const NPVariant *args,
                uint32_t argCount, NPVariant *result)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_invokedefault called from the wrong thread\n"));
+    return false;
+  }
   if (!npp || !npobj || !npobj->_class || !npobj->_class->invokeDefault)
     return false;
 
@@ -1668,6 +1780,10 @@ _invokeDefault(NPP npp, NPObject* npobj, const NPVariant *args,
 bool NP_CALLBACK
 _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_evaluate called from the wrong thread\n"));
+    return false;
+  }
   if (!npp)
     return false;
 
@@ -1754,6 +1870,10 @@ bool NP_CALLBACK
 _getproperty(NPP npp, NPObject* npobj, NPIdentifier property,
              NPVariant *result)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_getproperty called from the wrong thread\n"));
+    return false;
+  }
   if (!npp || !npobj || !npobj->_class || !npobj->_class->getProperty)
     return false;
 
@@ -1771,6 +1891,10 @@ bool NP_CALLBACK
 _setproperty(NPP npp, NPObject* npobj, NPIdentifier property,
              const NPVariant *value)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_setproperty called from the wrong thread\n"));
+    return false;
+  }
   if (!npp || !npobj || !npobj->_class || !npobj->_class->setProperty)
     return false;
 
@@ -1787,6 +1911,10 @@ _setproperty(NPP npp, NPObject* npobj, NPIdentifier property,
 bool NP_CALLBACK
 _removeproperty(NPP npp, NPObject* npobj, NPIdentifier property)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_removeproperty called from the wrong thread\n"));
+    return false;
+  }
   if (!npp || !npobj || !npobj->_class || !npobj->_class->removeProperty)
     return false;
 
@@ -1803,6 +1931,10 @@ _removeproperty(NPP npp, NPObject* npobj, NPIdentifier property)
 bool NP_CALLBACK
 _hasproperty(NPP npp, NPObject* npobj, NPIdentifier propertyName)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_hasproperty called from the wrong thread\n"));
+    return false;
+  }
   if (!npp || !npobj || !npobj->_class || !npobj->_class->hasProperty)
     return false;
 
@@ -1819,6 +1951,10 @@ _hasproperty(NPP npp, NPObject* npobj, NPIdentifier propertyName)
 bool NP_CALLBACK
 _hasmethod(NPP npp, NPObject* npobj, NPIdentifier methodName)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_hasmethod called from the wrong thread\n"));
+    return false;
+  }
   if (!npp || !npobj || !npobj->_class || !npobj->_class->hasMethod)
     return false;
 
@@ -1836,6 +1972,10 @@ bool NP_CALLBACK
 _enumerate(NPP npp, NPObject *npobj, NPIdentifier **identifier,
            uint32_t *count)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_enumerate called from the wrong thread\n"));
+    return false;
+  }
   if (!npp || !npobj || !npobj->_class)
     return false;
 
@@ -1859,6 +1999,10 @@ bool NP_CALLBACK
 _construct(NPP npp, NPObject* npobj, const NPVariant *args,
                uint32_t argCount, NPVariant *result)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_construct called from the wrong thread\n"));
+    return false;
+  }
   if (!npp || !npobj || !npobj->_class ||
       !NP_CLASS_STRUCT_VERSION_HAS_CTOR(npobj->_class) ||
       !npobj->_class->construct) {
@@ -1874,6 +2018,9 @@ _construct(NPP npp, NPObject* npobj, const NPVariant *args,
 void NP_CALLBACK
 _releasevariantvalue(NPVariant* variant)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_releasevariantvalue called from the wrong thread\n"));
+  }
   switch (variant->type) {
   case NPVariantType_Void :
   case NPVariantType_Null :
@@ -1911,7 +2058,12 @@ _tostring(NPObject* npobj, NPVariant *result)
 {
   NS_ERROR("Write me!");
 
-  return PR_FALSE;
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_tostring called from the wrong thread\n"));
+    return false;
+  }
+
+  return false;
 }
 
 static char *gNPPException;
@@ -1919,6 +2071,11 @@ static char *gNPPException;
 void NP_CALLBACK
 _setexception(NPObject* npobj, const NPUTF8 *message)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_setexception called from the wrong thread\n"));
+    return;
+  }
+
   if (gNPPException) {
     // If a plugin throws multiple exceptions, we'll only report the
     // last one for now.
@@ -1963,6 +2120,10 @@ NPPExceptionAutoHolder::~NPPExceptionAutoHolder()
 NPError NP_CALLBACK
 _getvalue(NPP npp, NPNVariable variable, void *result)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_getvalue called from the wrong thread\n"));
+    return NPERR_INVALID_PARAM;
+  }
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_GetValue: npp=%p, var=%d\n",
                                      (void*)npp, (int)variable));
 
@@ -2171,6 +2332,10 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 NPError NP_CALLBACK
 _setvalue(NPP npp, NPPVariable variable, void *result)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_setvalue called from the wrong thread\n"));
+    return NPERR_INVALID_PARAM;
+  }
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_SetValue: npp=%p, var=%d\n",
                                      (void*)npp, (int)variable));
 
@@ -2260,6 +2425,10 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
 NPError NP_CALLBACK
 _requestread(NPStream *pstream, NPByteRange *rangeList)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_requestread called from the wrong thread\n"));
+    return NPERR_INVALID_PARAM;
+  }
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_RequestRead: stream=%p\n",
                                      (void*)pstream));
 
@@ -2305,13 +2474,20 @@ _getJavaEnv(void)
 const char * NP_CALLBACK
 _useragent(NPP npp)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_useragent called from the wrong thread\n"));
+    return nsnull;
+  }
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_UserAgent: npp=%p\n", (void*)npp));
 
-  char *retstr;
-
   nsCOMPtr<nsIPluginManager> pm(do_GetService(kPluginManagerCID));
+  if (!pm)
+    return nsnull;
 
-  pm->UserAgent((const char **)&retstr);
+  const char *retstr;
+  nsresult rv = pm->UserAgent(&retstr);
+  if (NS_FAILED(rv))
+    return nsnull;
 
   return retstr;
 }
@@ -2321,6 +2497,9 @@ _useragent(NPP npp)
 void * NP_CALLBACK
 _memalloc (uint32 size)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,("NPN_memalloc called from the wrong thread\n"));
+  }
   NPN_PLUGIN_LOG(PLUGIN_LOG_NOISY, ("NPN_MemAlloc: size=%d\n", size));
   return nsMemory::Alloc(size);
 }
@@ -2339,6 +2518,10 @@ _getJavaPeer(NPP npp)
 void NP_CALLBACK
 _pushpopupsenabledstate(NPP npp, NPBool enabled)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_pushpopupsenabledstate called from the wrong thread\n"));
+    return;
+  }
   ns4xPluginInstance *inst = (ns4xPluginInstance *)npp->ndata;
   if (!inst)
     return;
@@ -2349,6 +2532,10 @@ _pushpopupsenabledstate(NPP npp, NPBool enabled)
 void NP_CALLBACK
 _poppopupsenabledstate(NPP npp)
 {
+  if (!NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_poppopupsenabledstate called from the wrong thread\n"));
+    return;
+  }
   ns4xPluginInstance *inst = (ns4xPluginInstance *)npp->ndata;
   if (!inst)
     return;
@@ -2444,6 +2631,11 @@ nsPluginThreadRunnable::Run()
 void NP_CALLBACK
 _pluginthreadasynccall(NPP instance, PluginThreadCallback func, void *userData)
 {
+  if (NS_IsMainThread()) {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_NOISY,("NPN_pluginthreadasynccall called from the main thread\n"));
+  } else {
+    NPN_PLUGIN_LOG(PLUGIN_LOG_NOISY,("NPN_pluginthreadasynccall called from a non main thread\n"));
+  }
   nsRefPtr<nsPluginThreadRunnable> evt =
     new nsPluginThreadRunnable(instance, func, userData);
 

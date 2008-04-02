@@ -324,6 +324,55 @@ compareArrays(encodedBytes, referenceBytes);
 
 
 
+/* ========== bug 363986 ========== */
+testnum = 363986;
+testdesc = "test PNG and JPEG encoders' Read/ReadSegments methods";
+
+var testData = 
+    [{preImage: "image3.ico",
+      preImageMimeType: "image/x-icon",
+      refImage: "image3ico16x16.png",
+      refImageMimeType: "image/png"},
+     {preImage: "image1.png",
+      preImageMimeType: "image/png",
+      refImage: "image1png64x64.jpg",
+      refImageMimeType: "image/jpeg"}];
+
+for(var i=0; i<testData.length; ++i) {
+    var dict = testData[i];
+
+    var imgFile = do_get_file(TESTDIR + dict["refImage"]);
+    var istream = getFileInputStream(imgFile);
+    var refBytes = streamToArray(istream);
+
+    imgFile = do_get_file(TESTDIR + dict["preImage"]);
+    istream = getFileInputStream(imgFile);
+
+    var outParam = { value: null };
+    imgTools.decodeImageData(istream, dict["preImageMimeType"], outParam);
+    var container = outParam.value;
+
+    istream = imgTools.encodeImage(container, dict["refImageMimeType"]);
+
+    var sstream = Cc["@mozilla.org/storagestream;1"].
+	          createInstance(Ci.nsIStorageStream);
+    sstream.init(4096, 4294967295, null);
+    var ostream = sstream.getOutputStream(0);
+    var bostream = Cc["@mozilla.org/network/buffered-output-stream;1"].
+	           createInstance(Ci.nsIBufferedOutputStream);
+
+    //use a tiny buffer to make sure the image data doesn't fully fit in it
+    bostream.init(ostream, 8);
+
+    bostream.writeFrom(istream, istream.available());
+    bostream.flush(); bostream.close();
+
+    var encBytes = streamToArray(sstream.newInputStream(0));
+
+    compareArrays(refBytes, encBytes);
+}
+
+
 /* ========== bug 413512  ========== */
 testnum = 413512;
 testdesc = "test decoding bad favicon (bug 413512)";

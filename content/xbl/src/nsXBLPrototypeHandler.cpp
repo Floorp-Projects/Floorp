@@ -70,6 +70,7 @@
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsGkAtoms.h"
 #include "nsGUIEvent.h"
 #include "nsIXPConnect.h"
@@ -605,19 +606,7 @@ nsXBLPrototypeHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
 
   if (mMisc) {
     aKeyEvent->GetCharCode(&code);
-    // non-BMP characters are currently not handled.
-    if (!IS_IN_BMP(code))
-      return PR_FALSE;
-
-    // Ignore CapsLock, and distinguish between Ctrl-a and Ctrl-Shift-A,
-    // unless any Shift-state is explicitly permitted (in which case,
-    // mDetail is lowercase).
-    PRBool isShift;
-    aKeyEvent->GetShiftKey(&isShift);
-    if ((mKeyMask & cShiftMask) && isShift)
-      code = ToUpperCase(PRUnichar(code));
-    else
-      code = ToLowerCase(PRUnichar(code));
+    code = ToLowerCase(PRUnichar(code));
   }
   else
     aKeyEvent->GetKeyCode(&code);
@@ -941,19 +930,11 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   if (!key.IsEmpty()) {
     if (mKeyMask == 0)
       mKeyMask = cAllModifiers;
-    // If Shift is required then ensure the case of the character matches the
-    // Shift-state.  Otherwise normalize to lowercase.
-    if ((mKeyMask & (cShift | cShiftMask)) == (cShift | cShiftMask))
-      ToUpperCase(key);
-    else
-      ToLowerCase(key);
+    ToLowerCase(key);
 
     // We have a charcode.
     mMisc = 1;
-    // non-BMP characters are currently not handled.
-    // KeyEventMatched doesn't match against surrogate codes.
     mDetail = key[0];
-
     const PRUint8 GTK2Modifiers = cShift | cControl | cShiftMask | cControlMask;
     if ((mKeyMask & GTK2Modifiers) == GTK2Modifiers &&
         modifiers.First() != PRUnichar(',') &&
@@ -1023,11 +1004,7 @@ nsXBLPrototypeHandler::ModifiersMatchMask(nsIDOMUIEvent* aEvent)
       return PR_FALSE;
   }
 
-  // Punctuation and characters from some scripts may be on any level,
-  // so ignore the Shift state for key events with unicase character codes.
-  // (The Shift state is considered in KeyEventMatched for letters from
-  // bicameral scripts.)
-  if (!(key && mMisc) && (mKeyMask & cShiftMask)) {
+  if (mKeyMask & cShiftMask) {
     key ? key->GetShiftKey(&keyPresent) : mouse->GetShiftKey(&keyPresent);
     if (keyPresent != ((mKeyMask & cShift) != 0))
       return PR_FALSE;

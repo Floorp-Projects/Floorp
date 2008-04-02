@@ -80,19 +80,17 @@ __try {
   nsCAutoString cname;
   nsresult rv = sAppInfo->GetName(cname);
   if (NS_FAILED(rv))
-    return E_FAIL;
+    return GetHRESULT(rv);
 
   if (cname.IsEmpty())
     return S_FALSE;
 
   NS_ConvertUTF8toUTF16 name(cname);
   *aName = ::SysAllocStringLen(name.get(), name.Length());
-  if (!*aName)
-    return E_OUTOFMEMORY;
+  return *aName ? S_OK : E_OUTOFMEMORY;
 
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-
-  return S_OK;
+  return E_FAIL;
 }
 
 STDMETHODIMP
@@ -107,18 +105,17 @@ __try {
   nsCAutoString cversion;
   nsresult rv = sAppInfo->GetVersion(cversion);
   if (NS_FAILED(rv))
-    return E_FAIL;
+    return GetHRESULT(rv);
 
   if (cversion.IsEmpty())
     return S_FALSE;
 
   NS_ConvertUTF8toUTF16 version(cversion);
   *aVersion = ::SysAllocStringLen(version.get(), version.Length());
-  if (!*aVersion)
-    return E_OUTOFMEMORY;
+  return *aVersion ? S_OK : E_OUTOFMEMORY;
 
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return S_OK;
+  return E_FAIL;
 }
 
 STDMETHODIMP
@@ -127,8 +124,8 @@ nsApplicationAccessibleWrap::get_toolkitName(BSTR *aName)
 __try {
   *aName = ::SysAllocString(L"Gecko");
   return *aName ? S_OK : E_OUTOFMEMORY;
-} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
 
@@ -144,7 +141,7 @@ __try {
   nsCAutoString cversion;
   nsresult rv = sAppInfo->GetPlatformVersion(cversion);
   if (NS_FAILED(rv))
-    return E_FAIL;
+    return GetHRESULT(rv);
 
   if (cversion.IsEmpty())
     return S_FALSE;

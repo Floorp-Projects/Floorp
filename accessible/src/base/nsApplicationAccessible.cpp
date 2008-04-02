@@ -180,6 +180,15 @@ nsApplicationAccessible::GetPreviousSibling(nsIAccessible **aPreviousSibling)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsApplicationAccessible::GetIndexInParent(PRInt32 *aIndexInParent)
+{
+  NS_ENSURE_ARG_POINTER(aIndexInParent);
+
+  *aIndexInParent = -1;
+  return NS_OK;
+}
+
 void
 nsApplicationAccessible::CacheChildren()
 {

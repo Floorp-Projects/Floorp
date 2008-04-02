@@ -1471,7 +1471,7 @@ nsNativeThemeCocoa::GetWidgetPadding(nsIDeviceContext* aContext,
 
 PRBool
 nsNativeThemeCocoa::GetWidgetOverflow(nsIDeviceContext* aContext, nsIFrame* aFrame,
-                                      PRUint8 aWidgetType, nsRect* aResult)
+                                      PRUint8 aWidgetType, nsRect* aOverflowRect)
 {
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
@@ -1493,9 +1493,7 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsIDeviceContext* aContext, nsIFrame* aFra
                  NSIntPixelsToAppUnits(extraSize.top, p2a),
                  NSIntPixelsToAppUnits(extraSize.right, p2a),
                  NSIntPixelsToAppUnits(extraSize.bottom, p2a));
-      nsRect r(nsPoint(0, 0), aFrame->GetSize());
-      r.Inflate(m);
-      *aResult = r;
+      aOverflowRect->Inflate(m);
       return PR_TRUE;
     }
   }

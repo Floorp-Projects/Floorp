@@ -964,7 +964,11 @@
         var control = this.control;
         if (!control || control.disabled)
           return;
-        if (!event.ctrlKey && !event.shiftKey && !event.metaKey) {
+        if ((!event.ctrlKey
+#ifdef XP_MACOSX
+             || event.button == 2
+#endif
+            ) && !event.shiftKey && !event.metaKey) {
           if (!this.selected) {
             control.selectItem(this);
           }
