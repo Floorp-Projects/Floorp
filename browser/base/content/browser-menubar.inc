@@ -426,7 +426,7 @@
                 command="Browser:BookmarkAllTabs" key="bookmarkAllTabsKb"/>
       <menuseparator id="organizeBookmarksSeparator"/>
       <menuitem id="bookmarksShowAll"
-                label="&showAllBookmarksCmd2.label;"
+                label="&organizeBookmarks.label;"
                 command="Browser:ShowAllBookmarks"
                 key="manBookmarkKb"/>
       <menu id="bookmarksToolbarFolderMenu"
