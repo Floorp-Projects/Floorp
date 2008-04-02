@@ -1441,6 +1441,22 @@ nsSecureBrowserUIImpl::GetSSLStatus(nsISupports** _result)
   NS_ENSURE_ARG_POINTER(_result);
 
   nsAutoMonitor lock(mMonitor);
+
+  switch (mNotifiedSecurityState)
+  {
+    case lis_mixed_security:
+    case lis_low_security:
+    case lis_high_security:
+      break;
+
+    default:
+      NS_NOTREACHED("if this is reached you must add more entries to the switch");
+    case lis_no_security:
+    case lis_broken_security:
+      *_result = nsnull;
+      return NS_OK;
+  }
+ 
   *_result = mSSLStatus;
   NS_IF_ADDREF(*_result);
 
