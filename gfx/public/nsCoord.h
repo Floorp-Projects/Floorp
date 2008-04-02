@@ -295,7 +295,7 @@ inline nscoord NSToCoordRound(float aValue)
 #if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__)
   return NS_lroundup30(aValue);
 #else
-  return nscoord(NS_floorf(x + 0.5f));
+  return nscoord(NS_floorf(aValue + 0.5f));
 #endif /* XP_WIN32 && _M_IX86 && !__GNUC__ */
 }
 
