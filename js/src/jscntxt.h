@@ -104,14 +104,14 @@ struct JSThread {
     /* Opaque thread-id, from NSPR's PR_GetCurrentThread(). */
     jsword              id;
 
-    /* Thread-local gc free lists array. */
-    JSGCThing           *gcFreeLists[GC_NUM_FREELISTS];
-
     /*
      * Thread-local version of JSRuntime.gcMallocBytes to avoid taking
      * locks on each JS_malloc.
      */
     uint32              gcMallocBytes;
+
+    /* Thread-local gc free lists array. */
+    JSGCThing           *gcFreeLists[GC_NUM_FREELISTS];
 
     /*
      * Store the GSN cache in struct JSThread, not struct JSContext, both to
