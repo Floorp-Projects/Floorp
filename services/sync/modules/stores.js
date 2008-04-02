@@ -783,12 +783,12 @@ CookieStore.prototype = {
 	this._log.info("CookieStore got createCommand: " + command );
         // this assumes command.data fits the nsICookie2 interface
 	this._cookieManager.add( command.data.host,
-				  command.data.path,
-				  command.data.name,
-				  command.data.value,
-				  command.data.isSecure,
-				  command.data.isSession,
-				  command.data.expiry );
+                                 command.data.path,
+                                 command.data.name,
+                                 command.data.value,
+                                 command.data.isSecure,
+                                 command.data.isSession,
+                                 command.data.expiry );
   },
 
   _removeCommand: function CookieStore__removeCommand(command) {
@@ -813,10 +813,14 @@ CookieStore.prototype = {
         // we got a command to change a cookie in the local browser
         // in order to sync with the server.
     
-	// TODO implement this!!  The behavior should be that if the
+	// The behavior should be that if the
         // local copy of the cookie is more-recently modified, it should
         // be kept, but if it's older, it should be replaced with the
         // server's copy.
+
+        // The nsICookie interface doesn't seem to include the date/time
+        // that the cookie was set -- only the expiry.  TODO: Figure out
+        // the best way to deal with this.
         this._log.info("CookieStore got editCommand: " + command );
   },
 
