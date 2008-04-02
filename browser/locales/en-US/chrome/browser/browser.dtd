@@ -73,6 +73,7 @@
 <!ENTITY forwardCmd.label             "Forward">
 <!ENTITY forwardCmd.accesskey         "F">
 <!ENTITY forwardButton.tooltip        "Go forward one page">
+<!ENTITY backForwardMenu.tooltip      "Recent pages">
 <!ENTITY reloadCmd.label              "Reload">
 <!ENTITY reloadCmd.accesskey          "R">
 <!ENTITY reloadButton.tooltip         "Reload current page">
