@@ -106,7 +106,7 @@ public:
       if (visible && !focus)
         return dmui->GetAttention();
 
-      return dmui->Show(nsnull, id);
+      return dmui->Show(nsnull, id, nsIDownloadManagerUI::REASON_NEW_DOWNLOAD);
     }
     return rv;
   }
