@@ -1036,11 +1036,11 @@ var PlacesUtils = {
                 // remove tags via the tagging service
                 var tags = this.tagging.allTags;
                 var uris = [];
-                for (let i in tags) {
-                  var tagURIs = this.tagging.getURIsForTag(tags[i]);
+                tags.forEach(function(aTag) {
+                  var tagURIs = this.tagging.getURIsForTag(aTag);
                   for (let i in tagURIs)
-                    this.tagging.untagURI(tagURIs[i], [tags[i]]);
-                }
+                    this.tagging.untagURI(tagURIs[i], [aTag]);
+                }, this);
             }
           }
 
