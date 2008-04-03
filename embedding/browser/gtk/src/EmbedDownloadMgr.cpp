@@ -212,6 +212,7 @@ NS_IMETHODIMP EmbedDownloadMgr::PromptForSaveToFile(nsIHelperAppLauncher *aLaunc
                                                     nsISupports *aWindowContext,
                                                     const PRUnichar *aDefaultFile,
                                                     const PRUnichar *aSuggestedFileExtension,
+                                                    PRBool aForcePrompt,
                                                     nsILocalFile **_retval)
 {
   *_retval = nsnull;

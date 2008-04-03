@@ -224,6 +224,12 @@ pref("browser.urlbar.maxRichResults", 12);
 pref("browser.urlbar.search.chunkSize", 1000);
 pref("browser.urlbar.search.timeout", 100);
 
+// Number of milliseconds to wait for the http headers (and thus
+// the Content-Disposition filename) before giving up and falling back to 
+// picking a filename without that info in hand so that the user sees some
+// feedback from their action.
+pref("browser.download.saveLinkAsFilenameTimeout", 1000);
+
 pref("browser.download.useDownloadDir", true);
 pref("browser.download.folderList", 0);
 pref("browser.download.manager.showAlertOnComplete", true);
