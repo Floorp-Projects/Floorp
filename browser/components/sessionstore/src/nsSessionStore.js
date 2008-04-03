@@ -1893,9 +1893,7 @@ SessionStoreService.prototype = {
     this._dirty = aUpdateAll;
     var oState = this._getCurrentState();
     oState.session = { state: ((this._loadState == STATE_RUNNING) ? STATE_RUNNING_STR : STATE_STOPPED_STR) };
-    //var oStateString = this._toJSONString(oState);
-    var oStateString = oState.toSource();
-    this._writeFile(this._sessionFile, oStateString);
+    this._writeFile(this._sessionFile, oState.toSource());
     this._lastSaveTime = Date.now();
   },
 
