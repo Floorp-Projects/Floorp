@@ -119,7 +119,7 @@ nsHelperAppDialog.prototype = {
     },
 
     // promptForSaveToFile:  Display file picker dialog and return selected file.
-    promptForSaveToFile: function(aLauncher, aContext, aDefaultFile, aSuggestedFileExtension) {
+    promptForSaveToFile: function(aLauncher, aContext, aDefaultFile, aSuggestedFileExtension, aForcePrompt) {
         var result = "";
 
         const prefSvcContractID = "@mozilla.org/preferences-service;1";
@@ -142,7 +142,7 @@ nsHelperAppDialog.prototype = {
 
         var autoDownload = branch.getBoolPref("autoDownload");
         // If the autoDownload pref is set then just download to default download directory
-        if (autoDownload && dir && dir.exists()) {
+        if (!aForcePrompt && autoDownload && dir && dir.exists()) {
             if (aDefaultFile == "")
                 aDefaultFile = bundle.GetStringFromName("noDefaultFile") + (aSuggestedFileExtension || "");
             dir.append(aDefaultFile);

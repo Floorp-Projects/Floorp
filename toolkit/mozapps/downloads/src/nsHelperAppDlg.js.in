@@ -141,32 +141,34 @@ nsUnknownContentTypeDialog.prototype = {
     //
     // Note - this function is called without a dialog, so it cannot access any part
     // of the dialog XUL as other functions on this object do. 
-    promptForSaveToFile: function(aLauncher, aContext, aDefaultFile, aSuggestedFileExtension) {
+    promptForSaveToFile: function(aLauncher, aContext, aDefaultFile, aSuggestedFileExtension, aForcePrompt) {
       var result = null;
       
       this.mLauncher = aLauncher;
 
-      // Check to see if the user wishes to auto save to the default download
-      // folder without prompting.  This preferences may not be set, so default
-      // to not prompting.
       let prefs = Components.classes["@mozilla.org/preferences-service;1"]
                             .getService(Components.interfaces.nsIPrefBranch);
-      let autodownload = true;
-      try {
-        autodownload = prefs.getBoolPref(PREF_BD_USEDOWNLOADDIR);
-      } catch (e) { }
+
+      if (!aForcePrompt) {
+        // Check to see if the user wishes to auto save to the default download
+        // folder without prompting. Note that preference might not be set.
+        let autodownload = false;
+        try {
+          autodownload = prefs.getBoolPref(PREF_BD_USEDOWNLOADDIR);
+        } catch (e) { }
       
-      if (autodownload) {
-        // Retrieve the user's default download directory
-        var dnldMgr = Components.classes["@mozilla.org/download-manager;1"]
-                                .getService(Components.interfaces.nsIDownloadManager);
-        var defaultFolder = dnldMgr.userDownloadsDirectory;
-        result = this.validateLeafName(defaultFolder, aDefaultFile, aSuggestedFileExtension);
+        if (autodownload) {
+          // Retrieve the user's default download directory
+          let dnldMgr = Components.classes["@mozilla.org/download-manager;1"]
+                                  .getService(Components.interfaces.nsIDownloadManager);
+          let defaultFolder = dnldMgr.userDownloadsDirectory;
+          result = this.validateLeafName(defaultFolder, aDefaultFile, aSuggestedFileExtension);
+
+          // Check to make sure we have a valid directory, otherwise, prompt
+          if (result)
+            return result;
+        }
       }
-      
-      // Check to make sure we have a valid directory, otherwise, prompt
-      if (result)
-        return result;
       
       // Use file picker to show dialog.
       var nsIFilePicker = Components.interfaces.nsIFilePicker;
