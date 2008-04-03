@@ -4474,7 +4474,8 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
   // interpretKeyEvents isn't set up to handle those key combinations.
   PRBool wasComposing = nsTSMManager::IsComposing();
   PRBool interpretKeyEventsCalled = PR_FALSE;
-  if (!isKeyEquiv && nsTSMManager::IsIMEEnabled()) {
+  if (!isKeyEquiv &&
+      (nsTSMManager::IsIMEEnabled() || nsTSMManager::IsRomanKeyboardsOnly())) {
     [super interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
     interpretKeyEventsCalled = PR_TRUE;
   }
