@@ -37,11 +37,17 @@
 #
 # ***** END LICENSE BLOCK *****
 
-TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
-TEST_JSDIR=${TEST_JSDIR:-$TEST_DIR/tests/mozilla.org/js}
+if [[ -z "$TEST_DIR" ]]; then
+  cat <<EOF
+`basename $0`: error
 
-if [[ ! -e $TEST_BIN/library.sh ]]; then
+TEST_DIR, the location of the Sisyphus framework, 
+is required to be set prior to calling this script.
+EOF
+  exit 2
+fi
+
+if [[ ! -e $TEST_DIR/bin/library.sh ]]; then
     echo "TEST_DIR=$TEST_DIR"
     echo ""
     echo "This script requires the Sisyphus testing framework. Please "
@@ -49,23 +55,13 @@ if [[ ! -e $TEST_BIN/library.sh ]]; then
     echo "and set the environment variable TEST_DIR to the directory where it"
     echo "located."
     echo ""
-fi
 
-if [[ ! -e $TEST_JSDIR/runtests.sh ]]; then
-    echo "TEST_JSDIR=$TEST_JSDIR"
-    echo ""
-    echo "If the TEST_JSDIR environment variable is not set, this script "
-    echo "assumes the JavaScript Tests live in \${TEST_DIR}/www/tests/mozilla.org/js"
-    echo "If this is not correct, please set the TEST_JSDIR environment variable"
-    echo "to point to the directory containing the JavaScript Test Library."
-    echo ""
-fi
-
-if [[ ! -e $TEST_BIN/library.sh || ! -e $TEST_JSDIR/runtests.sh ]]; then
     exit 2
 fi
 
-source ${TEST_BIN}/library.sh
+source $TEST_DIR/bin/library.sh
+
+TEST_JSDIR=`dirname $0`
 
 TEST_JSEACH_TIMEOUT=${TEST_JSEACH_TIMEOUT:-125}
 TEST_JSEACH_PAGE_TIMEOUT=${TEST_JSEACH_PAGE_TIMEOUT:-120}
@@ -291,8 +287,8 @@ do
             *) version="";;
         esac
         
-        echo "http://$TEST_HTTP$TEST_WWW_JS/js-test-driver-standards.html?test=$jsfile;language=type;text/javascript$version" >> $urllist
-        echo "<li><a href='http://$TEST_HTTP$TEST_WWW_JS/js-test-driver-standards.html?test=$jsfile;language=type;text/javascript$version'>$jsfile</a></li>" >> $urlhtml
+        echo "http://$TEST_HTTP/$TEST_WWW_JS/js-test-driver-standards.html?test=$jsfile;language=type;text/javascript$version" >> $urllist
+        echo "<li><a href='http://$TEST_HTTP/$TEST_WWW_JS/js-test-driver-standards.html?test=$jsfile;language=type;text/javascript$version'>$jsfile</a></li>" >> $urlhtml
     fi
 done
 
@@ -317,19 +313,19 @@ if [[ -z "$filesonly" ]]; then
 		        -spider -start -quit \
 		        -uri "$url" \
 		        -depth 0 -timeout "$TEST_JSEACH_PAGE_TIMEOUT" \
-		        -hook "http://$TEST_HTTP$TEST_WWW_JS/userhookeach.js"; then
+		        -hook "http://$TEST_HTTP/$TEST_WWW_JS/userhookeach.js"; then
                 true;
             fi
 
         done
     else
-	    edit-talkback.sh -p "$product" -b "$branch" -x "$executablepath" -i "http://$TEST_HTTP$TEST_WWW_JS/$urlhtml"
-	    if ! time timed_run.py $TEST_JSALL_TIMEOUT "http://$TEST_HTTP$TEST_WWW_JS/$urlhtml" \
+	    edit-talkback.sh -p "$product" -b "$branch" -x "$executablepath" -i "http://$TEST_HTTP/$TEST_WWW_JS/$urlhtml"
+	    if ! time timed_run.py $TEST_JSALL_TIMEOUT "http://$TEST_HTTP/$TEST_WWW_JS/$urlhtml" \
 		    "$executable" -P "$profilename" \
 		    -spider -start -quit \
-		    -uri "http://$TEST_HTTP$TEST_WWW_JS/$urlhtml" \
+		    -uri "http://$TEST_HTTP/$TEST_WWW_JS/$urlhtml" \
 		    -depth 1 -timeout "$TEST_JSEACH_PAGE_TIMEOUT" \
-		    -hook "http://$TEST_HTTP$TEST_WWW_JS/userhookeach.js"; then
+		    -hook "http://$TEST_HTTP/$TEST_WWW_JS/userhookeach.js"; then
             error "timed_run.py ended abnormally: $?" $LINENO
         fi
     fi

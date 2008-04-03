@@ -36,60 +36,89 @@
 # ***** END LICENSE BLOCK *****
 
 export VSINSTALLDIR='C:\Program Files\Microsoft Visual Studio 8'
-export VS80COMNTOOLS='C:\Program Files\Microsoft Visual Studio 8\Common7\Tools\'
-export VCINSTALLDIR='C:\Program Files\Microsoft Visual Studio 8\VC'
+export VS80COMNTOOLS="$VSINSTALLDIR\\Common7\\Tools\\"
+export VCINSTALLDIR="$VSINSTALLDIR\\VC"
 export FrameworkDir='C:\WINDOWS\Microsoft.NET\Framework'
 export FrameworkVersion='v2.0.50727'
-export FrameworkSDKDir='C:\Program Files\Microsoft Visual Studio 8\SDK\v2.0'
-
-export VSINSTALLDIR_cyg="/cygdrive/c/Program Files/Microsoft Visual Studio 8"
-export VCINSTALLDIR_cyg="/cygdrive/c/Program Files/Microsoft Visual Studio 8/VC"
-
+export FrameworkSDKDir="$VSINSTALLDIR\\SDK\\v2.0"
 export DevEnvDir="$VSINSTALLDIR\\Common7\\IDE"
-export DevEnvDir_cyg="$VSINSTALLDIR_cyg/Common7/IDE"
+export MSVCDir="$VSINSTALLDIR\\VC"
+export PlatformSDKDir="$MSVCDir"\\PlatformSDK
 
-export MSVCDir="$VCINSTALLDIR"
-export MSVCDir_cyg="$VCINSTALLDIR_cyg"
+# Windows SDK 6 or later is required after https://bugzilla.mozilla.org/show_bug.cgi?id=412374
+# v6.0 - Windows SDK Update for Vista
+# v6.1 - Windows SDK for Windows Server 2008
+export WindowsSDK6='c:\Program Files\Microsoft SDKs\Windows\v6.0'
+export WindowsSDK6_cyg=`cygpath -u "$WindowsSDK6"`
 
+if [[ ! -d "$WindowsSDK6_cyg" ]]; then
+    export WindowsSDK6='c:\Program Files\Microsoft SDKs\Windows\v6.1'
+    export WindowsSDK6_cyg=`cygpath -u "$WindowsSDK6"`
+fi
 
-if [ -d "$MSVCDir_cyg"/PlatformSDK ] ; then
-    export PlatformSDKDir="$MSVCDir"\\PlatformSDK
-    export PlatformSDKDir_cyg="$MSVCDir_cyg"/PlatformSDK
-elif [ -d "/cygdrive/c/Program Files/Microsoft Platform SDK" ] ; then
-    export PlatformSDKDir='C:\Program Files\Microsoft Platform SDK'
-    export PlatformSDKDir_cyg='/cygdrive/c/Program Files/Microsoft Platform SDK'
-else
-    echo Can\'t find Platform SDK\!
+export VSINSTALLDIR_cyg=`cygpath -u "$VSINSTALLDIR"`
+export VS80COMNTOOLS_cyg=`cygpath -u "$VSINSTALLDIR"`
+export VCINSTALLDIR_cyg=`cygpath -u "$VCINSTALLDIR"`
+export FrameworkDir_cyg=`cygpath -u "$FrameworkDir"`
+export DevEnvDir_cyg=`cygpath -u "$DevEnvDir"`
+export MSVCDir_cyg=`cygpath -u "$VCINSTALLDIR"`
+export PlatformSDKDir_cyg=`cygpath -u "$PlatformSDKDir"`
+
+if [ ! -d "$PlatformSDKDir_cyg" ] ; then
+    echo "Can not find Platform SDK at $PlatformSDKDir_cyg"
     break 2
 fi
 
 echo Platform SDK Location: $PlatformSDKDir_cyg
 
-if [ ! -f "$MOZ_TOOLS"/lib/libIDL-0.6_s.lib ] ; then
-    echo Can\'t find moztools\!  Edit this file and check MOZ_TOOLS path.
+if [ ! -d "$WindowsSDK6_cyg" ] ; then
+    echo "Can not find Windows SDK 6 at $WindowsSDK6_cyg"
+    break 2
 fi
 
+echo Windows SDK Location: $WindowsSDK6_cyg
+
+if [ ! -f "$MOZ_TOOLS"/lib/libIDL-0.6_s.lib ] ; then
+    echo "Can not find moztools at $MOZ_TOOLS"
+    break 2
+fi
 
 export PATH="\
+$WindowsSDK6_cyg/bin:\
 $DevEnvDir_cyg:\
-$PlatformSDKDir_cyg/bin:\
 $MSVCDir_cyg/bin:\
-$VSINSTALLDIR_cyg/Common7/Tools:\
-$VSINSTALLDIR_cyg/Common7/Tools/bin:\
+$VS80COMNTOOLS_cyg:\
+$VS80COMNTOOLS_cyg/bin:\
+$PlatformSDKDir_cyg/bin:\
+$FrameworkSDKDir_cyg/bin:\
+$FrameworkDir_cyg/$FrameworkVersion:\
+$MSVCDir/VCPackages:\
 $MOZ_TOOLS/bin:\
 $PATH"
 
 export INCLUDE="\
-$MSVCDir\ATLMFC\INCLUDE;\
-$MSVCDir\INCLUDE;\
-$PlatformSDKDir\include;\
-$FrameworkSDKDir\include;\
+$WindowsSDK6\\include;\
+$WindowsSDK6\\include\\atl;\
+$MSVCDir\\ATLMFC\\INCLUDE;\
+$MSVCDir\\INCLUDE;\
+$PlatformSDKDir\\include;\
+$FrameworkSDKDir\\include;\
 $INCLUDE"
 
 export LIB="\
-$MSVCDir\ATLMFC\LIB;\
-$MSVCDir\LIB;\
-$PlatformSDKDir\lib;\
-$FrameworkSDKDir\lib;\
+$WindowsSDK6\\lib;\
+$MSVCDir\\ATLMFC\\LIB;\
+$MSVCDir\\LIB;\
+$PlatformSDKDir\\lib;\
+$FrameworkSDKDir\\lib;\
 $LIB" 
+
+export LIBPATH="\
+$FrameworkDir\\$FrameworkVersion;\
+$MSVCDir\\ATLMFC\\LIB\
+"
+# necessary for msys' /etc/profile.d/profile-extrapaths.sh to set properly
+if [[ -d "/c/mozilla-build" ]]; then
+    export MOZILLABUILD='C:\\mozilla-build\\'
+fi
 

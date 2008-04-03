@@ -1,10 +1,16 @@
 #!/bin/bash -e
 
-TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
-source ${TEST_BIN}/library.sh
+if [[ -z "$TEST_DIR" ]]; then
+  cat <<EOF
+`basename $0`: error
 
-TEST_DLDIR=${TEST_DLDIR:-$TEST_DIR/tests/mozilla.org/download-page}
+TEST_DIR, the location of the Sisyphus framework, 
+is required to be set prior to calling this script.
+EOF
+  exit 2
+fi
+
+source $TEST_DIR/bin/library.sh
 
 TEST_DOWNLOAD_PAGE_TIMEOUT=${TEST_DOWNLOAD_PAGE_TIMEOUT:-60}
 TEST_DOWNLOAD_BUILD_TIMEOUT=${TEST_DOWNLOAD_BUILD_TIMEOUT:-900}
@@ -83,13 +89,13 @@ executable=`get_executable $product $branch $executablepath`
 urlfile=`mktemp /tmp/URLS.XXXX`
 
 if [[ "$test" == "all" ]]; then
-    $TEST_BIN/timed_run.py $TEST_DOWNLOAD_PAGE_TIMEOUT "test download" \
+    $TEST_DIR/bin/timed_run.py $TEST_DOWNLOAD_PAGE_TIMEOUT "test download" \
 	"$executable" -P "$profilename" -spider -start -quit \
 	-uri "$allurl" -timeout=$TEST_DOWNLOAD_PAGE_TIMEOUT \
 	-hook "http://$TEST_HTTP/tests/mozilla.org/download-page/collect-urls-userhook.js" | \
 	grep 'href: ' | sed 's/^href: //' > $urlfile
 elif [[ "$test" == "ftp" ]]; then
-    $TEST_BIN/timed_run.py $TEST_DOWNLOAD_PAGE_TIMEOUT "test download" \
+    $TEST_DIR/bin/timed_run.py $TEST_DOWNLOAD_PAGE_TIMEOUT "test download" \
 	"$executable" -P "$profilename" -spider -start -quit \
 	-uri "$allurl" -timeout=$TEST_DOWNLOAD_PAGE_TIMEOUT \
 	-hook "http://$TEST_HTTP/tests/mozilla.org/download-page/userhook-ftp.js" | \
@@ -175,7 +181,7 @@ cat $urlfile | while read url; do
 
     downloadexecutable=`get_executable $downloadproduct $downloadbranch $downloadexecutablepath`
 
-    $TEST_BIN/timed_run.py $TEST_DOWNLOAD_BUILD_TIMEOUT "..." \
+    $TEST_DIR/bin/timed_run.py $TEST_DOWNLOAD_BUILD_TIMEOUT "..." \
 	"$downloadexecutable" \
 	-spider -P $downloadprofilename \
 	-uri "http://$TEST_HTTP/bin/buildinfo.html" \

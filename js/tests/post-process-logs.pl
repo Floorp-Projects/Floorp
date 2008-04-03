@@ -47,6 +47,9 @@ sub outputrecord;
 local $file;
 local $temp;
 my $debug = $ENV{DEBUG};
+my $test_dir = $ENV{TEST_DIR};
+
+die "FATAL ERROR: environment variable TEST_DIR must be set to the Sisyphus root directory" unless ($test_dir);
 
 # required for mac os x 10.5 to prevent sort from 
 # complaining about illegal byte sequences
@@ -455,14 +458,14 @@ while ($file = shift @ARGV)
                 }
                 else
                 {
-                    warn "WARNING: state: $state, expected: runningtest, reportingtest, pendingtest, log: $file";
+                    warn "WARNING: test_id: $test_id{$state}, state: $state, expected: runningtest, reportingtest, pendingtest, log: $file";
                     $state = 'reportingtest';
                 }
 
                 ($test_result)      = $_ =~ /result: (.*?) *type:/;
                 ($tmp_test_type)    = $_ =~ /type: (.*?) *description:/;
 
-                die "FATAL ERROR: jstest test type mismatch: start test_type: $test_type, current test_type: $tmp_test_type, test state: $state, log: $file" 
+                die "FATAL ERROR: test_id: $test_id{$state}, jstest test type mismatch: start test_type: $test_type, current test_type: $tmp_test_type, test state: $state, log: $file" 
                     if ($test_type ne $tmp_test_type);
 
                 ($test_description) = $_ =~ /description: (.*)/;
@@ -760,7 +763,7 @@ while ($file = shift @ARGV)
 
                 $test_id{$state} = $tmp_test_id;
             }
-            elsif ( /^(\/cygdrive\/.)?\/work\/mozilla\/mozilla\.com\/test\.mozilla\.com\/www$/)
+            elsif ( m@^(\/cygdrive\/.|\/.)?$test_dir$@)
             {
                 if ($state eq 'endrun')
                 {

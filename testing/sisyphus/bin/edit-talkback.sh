@@ -37,9 +37,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
-source ${TEST_BIN}/library.sh
+source $TEST_DIR/bin/library.sh
 
 #
 # options processing
@@ -129,7 +127,7 @@ if [[ $talkback -eq 1 ]]; then
     # edit to automatically send talkback incidents
     if [[ ! -e master.sed ]]; then
         #echo "$0: editing talkback master.ini in `pwd`"
-        cp $TEST_BIN/master.sed .
+        cp $TEST_DIR/bin/master.sed .
         sed -f master.sed -i.bak master.ini
     fi
 
@@ -184,7 +182,7 @@ if [[ $talkback -eq 1 ]]; then
 
     cd $talkbackinidir
 
-    cp /work/mozilla/mozilla.com/test.mozilla.com/www/talkback/$OSID/Talkback.ini .
+    cp ${TEST_DIR}/talkback/$OSID/Talkback.ini .
 
     case "$OSID" in
         win32)
