@@ -1806,7 +1806,7 @@ nsDownloadManager::Observe(nsISupports *aSubject,
     nsCOMPtr<nsIDownloadManagerUI> dmui =
       do_GetService("@mozilla.org/download-manager-ui;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-    return dmui->Show(nsnull, 0);
+    return dmui->Show(nsnull, 0, nsIDownloadManagerUI::REASON_USER_INTERACTED);
   } else if (strcmp(aTopic, "sleep_notification") == 0) {
     // Pause downloads if we're sleeping, and mark the downloads as auto-resume
     (void)PauseAllDownloads(PR_TRUE);

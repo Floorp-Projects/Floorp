@@ -58,39 +58,53 @@ nsDownloadManagerUI.prototype = {
   //////////////////////////////////////////////////////////////////////////////
   //// nsIDownloadManagerUI
 
-  show: function show(aWindowContext, aID)
+  show: function show(aWindowContext, aID, aReason)
   {
+    if (!aReason)
+      aReason = Ci.nsIDownloadManagerUI.REASON_USER_INTERACTED;
+
     // First we see if it is already visible
-    if (this.recentWindow) {
-      this.recentWindow.focus();
+    let window = this.recentWindow;
+    if (window) {
+      window.focus();
+      
+      // If we are being asked to show again, with a user interaction reason,
+      // set the appropriate variable.
+      if (aReason == Ci.nsIDownloadManagerUI.REASON_USER_INTERACTED)
+        window.gUserInteracted = true;
       return;
     }
 
+    let parent = null;
     // We try to get a window to use as the parent here.  If we don't have one,
     // the download manager will close immediately after opening if the pref
     // browser.download.manager.closeWhenDone is set to true.
-    var window = null;
     try {
       if (aWindowContext)
-        window = aWindowContext.getInterface(Ci.nsIDOMWindow);
+        parent = aWindowContext.getInterface(Ci.nsIDOMWindow);
     } catch (e) { /* it's OK to not have a parent window */ }
 
     // We pass the download manager and the nsIDownload we want selected (if any)
     var params = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
-    var dm = Cc["@mozilla.org/download-manager;1"].
-             getService(Ci.nsIDownloadManager);
-    params.appendElement(dm, false);
 
     // Don't fail if our passed in ID is invalid
     var download = null;
     try {
+      let dm = Cc["@mozilla.org/download-manager;1"].
+               getService(Ci.nsIDownloadManager);
       download = dm.getDownload(aID);
     } catch (ex) {}
     params.appendElement(download, false);
 
+    // Pass in the reason as well
+    let reason = Cc["@mozilla.org/supports-PRInt16;1"].
+                 createInstance(Ci.nsISupportsPRInt16);
+    reason.data = aReason;
+    params.appendElement(reason, false);
+
     var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
              getService(Ci.nsIWindowWatcher);
-    ww.openWindow(window,
+    ww.openWindow(parent,
                   DOWNLOAD_MANAGER_URL,
                   "Download:Manager",
                   "chrome,dialog=no,resizable",

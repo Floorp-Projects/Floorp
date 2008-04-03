@@ -401,6 +401,11 @@ function Startup()
   gDownloadListener = new DownloadProgressListener();
   gDownloadManager.addListener(gDownloadListener);
 
+  // If the UI was displayed because the user interacted, we need to make sure
+  // we update gUserInteracted accordingly.
+  if (window.arguments[1] == Ci.nsIDownloadManagerUI.REASON_USER_INTERACTED)
+    gUserInteracted = true;
+
   // downloads can finish before Startup() does, so check if the window should
   // close and act accordingly
   if (!autoRemoveAndClose())
