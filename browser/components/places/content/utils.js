@@ -1169,9 +1169,6 @@ var PlacesUIUtils = {
                                                   "AllBookmarks", 0, EXPIRE_NEVER);
         self.leftPaneQueries["AllBookmarks"] = itemId;
 
-        // disallow manipulating this folder within the organizer UI
-        PlacesUtils.bookmarks.setFolderReadonly(allBookmarksId, true);
-
         // All Bookmarks->Bookmarks Toolbar Query
         uri = PlacesUtils._uri("place:folder=TOOLBAR");
         itemId = PlacesUtils.bookmarks.insertBookmark(allBookmarksId, uri, -1, null);
