@@ -3138,7 +3138,7 @@ PlacesSQLQueryBuilder::SelectAsTag()
   mHasDateColumns = PR_TRUE; 
 
   mQueryString = nsPrintfCString(2048,
-    "SELECT null, 'place:type=%ld&queryType=%d&folder=' || id, "
+    "SELECT null, 'place:type=%ld&queryType=%d&excludeQueries=1&folder=' || id, "
       "title, null, null, null, null, null, null, dateAdded, lastModified "
     "FROM   moz_bookmarks "
     "WHERE  parent = %ld",
