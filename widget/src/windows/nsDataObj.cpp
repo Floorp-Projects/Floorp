@@ -1745,6 +1745,8 @@ nsDataObj::ExtractUniformResourceLocatorW(FORMATETC& aFE, STGMEDIUM& aSTG )
 nsresult nsDataObj::GetDownloadDetails(nsIURI **aSourceURI,
                                        nsAString &aFilename)
 {
+  *aSourceURI = nsnull;
+
   NS_ENSURE_TRUE(mTransferable, NS_ERROR_FAILURE);
 
   // get the URI from the kFilePromiseURLMime flavor
@@ -1754,42 +1756,37 @@ nsresult nsDataObj::GetDownloadDetails(nsIURI **aSourceURI,
   nsCOMPtr<nsISupportsString> srcUrlPrimitive = do_QueryInterface(urlPrimitive);
   NS_ENSURE_TRUE(srcUrlPrimitive, NS_ERROR_FAILURE);
   
-  // Get data for flavor
-  // The format of the data is (URLSTRING\nFILENAME)
-  nsAutoString strData;
-  srcUrlPrimitive->GetData(strData);
-  if (strData.IsEmpty())
+  nsAutoString srcUri;
+  srcUrlPrimitive->GetData(srcUri);
+  if (srcUri.IsEmpty())
     return NS_ERROR_FAILURE;
-
-  // Now figure if there is a "\n" delimiter in the data string.
-  // If there is, the string after the "\n" is a filename.
-  // If there is no delimiter then just get the filename from the url.
-  nsCAutoString strFileName;
   nsCOMPtr<nsIURI> sourceURI;
-  // New line char is used as a delimiter (hardcoded)
-  PRInt32 nPos = strData.FindChar('\n');
-  // Store source uri
-  NS_NewURI(aSourceURI, Substring(strData, 0, nPos));
-  if (nPos != -1) {
-    // if there is delimiter
-    CopyUTF16toUTF8(Substring(strData, nPos + 1, strData.Length()), strFileName);
-  } else {
-    // no filename was supplied - try to get it from a URL
-    nsCOMPtr<nsIURL> sourceURL = do_QueryInterface(*aSourceURI);
-    sourceURL->GetFileName(strFileName);
-  }
-  // check for an error; the URL must point to a file
-  if (strFileName.IsEmpty())
-    return NS_ERROR_FAILURE;
+  NS_NewURI(getter_AddRefs(sourceURI), srcUri);
 
-  NS_UnescapeURL(strFileName);
-  NS_ConvertUTF8toUTF16 wideFileName(strFileName);
+  nsAutoString srcFileName;
+  nsCOMPtr<nsISupports> fileNamePrimitive;
+  mTransferable->GetTransferData(kFilePromiseDestFilename, getter_AddRefs(fileNamePrimitive), &dataSize);
+  nsCOMPtr<nsISupportsString> srcFileNamePrimitive = do_QueryInterface(fileNamePrimitive);
+  if (srcFileNamePrimitive) {
+    srcFileNamePrimitive->GetData(srcFileName);
+  } else {
+    nsCOMPtr<nsIURL> sourceURL = do_QueryInterface(sourceURI);
+    if (!sourceURL)
+      return NS_ERROR_FAILURE;
+    
+    nsCAutoString urlFileName;
+    sourceURL->GetFileName(urlFileName);
+    NS_UnescapeURL(urlFileName);
+    CopyUTF8toUTF16(urlFileName, srcFileName);
+  }
+  if (srcFileName.IsEmpty())
+    return NS_ERROR_FAILURE;
 
   // make the name safe for the filesystem
-  MangleTextToValidFilename(wideFileName);
+  MangleTextToValidFilename(srcFileName);
 
-  aFilename = wideFileName;
-
+  sourceURI.swap(*aSourceURI);
+  aFilename = srcFileName;
   return NS_OK;
 }
 
