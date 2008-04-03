@@ -5854,7 +5854,7 @@ missingPluginInstaller.prototype.installSinglePlugin = function(aEvent){
 
   if (missingPluginsArray) {
     window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-                      "PFSWindow", "modal,chrome,resizable=yes",
+                      "PFSWindow", "chrome,centerscreen,resizable=yes",
                       {plugins: missingPluginsArray, browser: tabbrowser.selectedBrowser});
   }
 
@@ -5981,7 +5981,7 @@ function pluginsMissing()
   var missingPluginsArray = tabbrowser.selectedBrowser.missingPlugins;
   if (missingPluginsArray) {
     window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-                      "PFSWindow", "modal,chrome,resizable=yes",
+                      "PFSWindow", "chrome,centerscreen,resizable=yes",
                       {plugins: missingPluginsArray, browser: tabbrowser.selectedBrowser});
   }
 }
