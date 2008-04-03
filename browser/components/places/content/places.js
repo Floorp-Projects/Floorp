@@ -298,7 +298,7 @@ var PlacesOrganizer = {
     openDialog("chrome://browser/content/migration/migration.xul",
                "migration", features, "bookmarks");
     if (window.fromFile)
-    this.importFromFile();
+      this.importFromFile();
   },
 
   /**
@@ -309,7 +309,7 @@ var PlacesOrganizer = {
              createInstance(Ci.nsIFilePicker);
     fp.init(window, PlacesUIUtils.getString("SelectImport"),
             Ci.nsIFilePicker.modeOpen);
-    fp.appendFilters(Ci.nsIFilePicker.filterHTML | Ci.nsIFilePicker.filterAll);
+    fp.appendFilters(Ci.nsIFilePicker.filterHTML);
     if (fp.show() != Ci.nsIFilePicker.returnCancel) {
       if (fp.file) {
         var importer = Cc["@mozilla.org/browser/places/import-export-service;1"].
@@ -353,7 +353,7 @@ var PlacesOrganizer = {
     var files = this.bookmarksBackupDir.directoryEntries;
     while (files.hasMoreElements()) {
       var f = files.getNext().QueryInterface(Ci.nsIFile);
-      if (!f.isHidden() && f.leafName.match(/^bookmarks-.+(html|json)?$/))
+      if (!f.isHidden() && f.leafName.match(/^bookmarks-.+json$/))
         fileList.push(f);
     }
 
@@ -370,7 +370,7 @@ var PlacesOrganizer = {
         (document.createElement("menuitem"),
          document.getElementById("restoreFromFile"));
       var dateStr = fileList[i].leafName.replace("bookmarks-", "").
-        replace(/\.(html|json)$/, "");
+        replace(/\.json$/, "");
       if (!dateStr.length)
         dateStr = fileList[i].leafName;
       m.setAttribute("label", dateStr);
@@ -404,6 +404,8 @@ var PlacesOrganizer = {
     var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     fp.init(window, PlacesUIUtils.getString("bookmarksRestoreTitle"),
             Ci.nsIFilePicker.modeOpen);
+    fp.appendFilter(PlacesUIUtils.getString("bookmarksRestoreFilterName"),
+                    PlacesUIUtils.getString("bookmarksRestoreFilterExtension"));
 
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                  getService(Ci.nsIProperties);
@@ -411,13 +413,20 @@ var PlacesOrganizer = {
     fp.displayDirectory = backupsDir;
 
     if (fp.show() != Ci.nsIFilePicker.returnCancel)
-      PlacesUtils.restoreBookmarksFromFile(fp.file);
+      this.restoreBookmarksFromFile(fp.file);
   },
 
   /**
-   * Restores bookmarks from an HTML or JSON file.
+   * Restores bookmarks from a JSON file.
    */
   restoreBookmarksFromFile: function PO_restoreBookmarksFromFile(aFile) {
+    // check file extension
+    if (!aFile.leafName.match(/\.json$/)) {
+      this._showErrorAlert(PlacesUIUtils.getString("bookmarksRestoreFormatError"));
+      return;
+    }
+
+    // confirm ok to delete existing bookmarks
     var prompts = Cc["@mozilla.org/embedcomp/prompt-service;1"].
                   getService(Ci.nsIPromptService);
     if (!prompts.confirm(null,
@@ -425,15 +434,21 @@ var PlacesOrganizer = {
                          PlacesUIUtils.getString("bookmarksRestoreAlert")))
       return;
 
-    if (aFile.leafName.match("\.json$")) {
-      // restore a JSON backup
+    try {
       PlacesUtils.restoreBookmarksFromJSONFile(aFile);
     }
-    else {
-      var importer = Cc["@mozilla.org/browser/places/import-export-service;1"].
-                     getService(Ci.nsIPlacesImportExportService);
-      importer.importHTMLFromFile(aFile, true /* overwrite existing */);
+    catch(ex) {
+      this._showErrorAlert(PlacesUIUtils.getString("bookmarksRestoreParseError"));
     }
+  },
+
+  _showErrorAlert: function PO__showErrorAlert(aMsg) {
+    var brandShortName = document.getElementById("brandStrings").
+                                  getString("brandShortName");
+
+    Cc["@mozilla.org/embedcomp/prompt-service;1"].
+      getService(Ci.nsIPromptService).
+      alert(window, brandShortName, aMsg);
   },
 
   /**
@@ -445,6 +460,8 @@ var PlacesOrganizer = {
     var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     fp.init(window, PlacesUIUtils.getString("bookmarksBackupTitle"),
             Ci.nsIFilePicker.modeSave);
+    fp.appendFilter(PlacesUIUtils.getString("bookmarksRestoreFilterName"),
+                    PlacesUIUtils.getString("bookmarksRestoreFilterExtension"));
 
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                  getService(Ci.nsIProperties);
@@ -454,7 +471,7 @@ var PlacesOrganizer = {
     // Use YYYY-MM-DD (ISO 8601) as it doesn't contain illegal characters
     // and makes the alphabetical order of multiple backup files more useful.
     var date = (new Date).toLocaleFormat("%Y-%m-%d");
-    fp.defaultString = PlacesUtils.getFormattedString("bookmarksBackupFilename",
+    fp.defaultString = PlacesUIUtils.getFormattedString("bookmarksBackupFilenameJSON",
                                                         [date]);
 
     if (fp.show() != Ci.nsIFilePicker.returnCancel) {
@@ -463,6 +480,7 @@ var PlacesOrganizer = {
       // copy new backup to /backups dir (bug 424389)
       var latestBackup = PlacesUtils.getMostRecentBackup();
       if (latestBackup != fp.file) {
+        latestBackup.remove(false);
         var date = new Date().toLocaleFormat("%Y-%m-%d");
         var name = PlacesUtils.getFormattedString("bookmarksArchiveFilename",
                                                   [date]);
@@ -478,7 +496,7 @@ var PlacesOrganizer = {
     var bookmarksBackupDir = dirSvc.get("ProfD", Ci.nsIFile);
     bookmarksBackupDir.append("bookmarkbackups");
     if (!bookmarksBackupDir.exists())
-      bookmarksBackupDir.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+      bookmarksBackupDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0700);
     return this.bookmarksBackupDir = bookmarksBackupDir;
   },
 

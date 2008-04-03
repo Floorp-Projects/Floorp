@@ -31,8 +31,8 @@
 <!ENTITY importFromEpiphany.accesskey   "E">
 <!ENTITY importFromGaleon.label         "Galeon">
 <!ENTITY importFromGaleon.accesskey     "G">
-<!ENTITY importFromFile.label           "From File">
-<!ENTITY importFromFile.accesskey       "F">
+<!ENTITY importFromHTMLFile.label       "From an HTML File">
+<!ENTITY importFromHTMLFile.accesskey   "F">
 
 <!ENTITY noMigrationSources.label       "No programs that contain bookmarks, history or password data could be found.">
 

@@ -335,6 +335,12 @@ pref("browser.bookmarks.sort.resource", "rdf:http://home.netscape.com/NC-rdf#Nam
 // be exported as HTML to the bookmarks.html file.
 pref("browser.bookmarks.autoExportHTML",          false);
 
+// The maximum number of daily bookmark backups to 
+// keep in {PROFILEDIR}/bookmarkbackups. Special values:
+// -1: unlimited
+//  0: no backups created (and deletes all existing backups)
+pref("browser.bookmarks.max_backups",             5);
+
 // Scripts & Windows prefs
 pref("dom.disable_open_during_load",              true);
 #ifdef DEBUG

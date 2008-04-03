@@ -953,47 +953,6 @@ var PlacesUtils = {
    * WARNING: This method *removes* any bookmarks in the collection before
    * restoring from the file.
    */
-  restoreBookmarksFromFile: function PU_restoreBookmarksFromFile(aFile) {
-    var errorStr = null;
-
-    var ioSvc = Cc["@mozilla.org/network/io-service;1"].
-                 getService(Ci.nsIIOService);
-    var fileURL = ioSvc.newFileURI(aFile).QueryInterface(Ci.nsIURL);
-    var fileExtension = fileURL.fileExtension.toLowerCase();
-
-    if (fileExtension == "json") {
-      try {
-        this.restoreBookmarksFromJSONFile(aFile);
-      } catch(ex) {
-        errorStr = this.getString("restoreParseError");
-      }
-    }
-    else {
-      errorStr = this.getString("restoreFormatError");
-    }
-
-    if (errorStr) {
-      const BRANDING_BUNDLE_URI = "chrome://branding/locale/brand.properties";
-      var brandShortName = Cc["@mozilla.org/intl/stringbundle;1"].
-                           getService(Ci.nsIStringBundleService).
-                           createBundle(BRANDING_BUNDLE_URI).
-                           GetStringFromName("brandShortName");
-
-      var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-               getService(Ci.nsIWindowMediator);
-      var win = wm.getMostRecentWindow(null);
-
-      Cc["@mozilla.org/embedcomp/prompt-service;1"].
-        getService(Ci.nsIPromptService).
-        alert(win, brandShortName, errorStr);
-    }
-  },
-
-  /**
-   * Restores bookmarks/tags from a JSON file.
-   * WARNING: This method *removes* any bookmarks in the collection before
-   * restoring from the file.
-   */
   restoreBookmarksFromJSONFile:
   function PU_restoreBookmarksFromJSONFile(aFile) {
     // open file stream
