@@ -60,7 +60,7 @@ function nsPluginInstallerWizard(){
 
   this.mBrowser = null;
   this.mSuccessfullPluginInstallation = 0;
-  this.mNeedsRestart = false
+  this.mNeedsRestart = false;
 
   // arguments[0] is an array that contains two items:
   //     an array of mimetypes that are missing
