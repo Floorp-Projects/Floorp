@@ -1456,10 +1456,7 @@ PresShell::~PresShell()
 
   NS_IF_RELEASE(mPresContext);
   NS_IF_RELEASE(mDocument);
-  if (mSelection) {
-    mSelection->DisconnectFromPresShell();
-    NS_RELEASE(mSelection);
-  }
+  NS_IF_RELEASE(mSelection);
 }
 
 /**
@@ -1655,6 +1652,10 @@ PresShell::Destroy()
     mCaret = nsnull;
   }
   
+  if (mSelection) {
+    mSelection->DisconnectFromPresShell();
+  }
+
   // release our pref style sheet, if we have one still
   ClearPreferenceStyleRules();
 
