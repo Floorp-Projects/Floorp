@@ -905,7 +905,6 @@
 
     <implementation implements="nsIAutoCompletePopup">
       <field name="_currentIndex">0</field>
-      <field name="_rowHeight">0</field>
       <field name="_chunkSize">5</field>
 
       <!-- =================== nsIAutoCompletePopup =================== -->
@@ -1014,24 +1013,40 @@
         </getter>
       </property>
 
+      <method name="adjustHeight">
+        <body>
+          <![CDATA[
+          // Figure out how many rows to show
+          let rows = this.richlistbox.childNodes;
+          let numRows = Math.min(this._matchCount, this.maxRows, rows.length);
+
+          // Default the height to 0 if we have no rows to show
+          let height = 0;
+          if (numRows) {
+            let lastRowShown = rows[numRows - 1];
+
+            // Calculate the height to have the first row to last row shown
+            height = lastRowShown.boxObject.y + lastRowShown.boxObject.height -
+              rows[0].boxObject.y;
+          }
+
+          // Only update the height if necessary
+          if (height != this.richlistbox.height)
+            this.richlistbox.height = height;
+          ]]>
+        </body>
+      </method>
+
       <method name="_appendCurrentResult">
         <body>
           <![CDATA[
           var controller = this.mInput.controller;
 
-          // detect the desired height of the tree  
-          var rows = this.maxRows;  
-          if (!this._matchCount || (rows && this._matchCount < rows))  
-            rows = this._matchCount;  
-  
           // until we have support for "rows" on richlistbox,
           // determine the height dynamically.  (see bug #401939)
-          if (!this._rowHeight && this.richlistbox.childNodes.length)
-            this._rowHeight = this.richlistbox.childNodes[0].boxObject.height;
-
-          var height = this._rowHeight * rows;
-          if (this._rowHeight && this.richlistbox.height != height)
-            this.richlistbox.height = height;
+          // Adjust the height immediately and after the contents have updated
+          this.adjustHeight();
+          setTimeout(function(self) self.adjustHeight(), 0, this);
 
           // process _chunkSize results at a time to increase performance
           for (var i = 0; i < this._chunkSize; i++) {
