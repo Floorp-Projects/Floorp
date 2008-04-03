@@ -86,6 +86,11 @@
   <script type="application/javascript"
           src="chrome://browser/content/places/editBookmarkOverlay.js"/>
 
+  <stringbundleset id="placesStringSet">
+    <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>
+  </stringbundleset>
+
+
 #ifdef XP_MACOSX
 #include ../../../base/content/browserMountPoints.inc
 #else
@@ -346,20 +351,11 @@
 #endif
               id="maintenanceButton" label="&maintenance.label;">
           <menupopup id="maintenanceButtonPopup">
-            <menuitem id="fileImport"
-                      command="OrganizerCommand_import"
-                      label="&cmd.import.label;"
-                      accesskey="&cmd.import.accesskey;"/>
-            <menuitem id="fileExport"
-                      command="OrganizerCommand_export"
-                      label="&cmd.export.label;"
-                      accesskey="&cmd.export.accesskey;"/>
-            <menuseparator/>
             <menuitem id="backupBookmarks"
                       command="OrganizerCommand_backup"
                       label="&cmd.backup.label;"
                       accesskey="&cmd.backup.accesskey;"/>
-            <menu id="fileRestoreMenu" label="&cmd.restore.label;"
+            <menu id="fileRestoreMenu" label="&cmd.restore2.label;"
                       accesskey="&cmd.restore.accesskey;">
               <menupopup id="fileRestorePopup" onpopupshowing="PlacesOrganizer.populateRestoreMenu();">
                 <menuitem id="restoreFromFile"
@@ -368,6 +364,15 @@
                           accesskey="&cmd.restoreFromFile.accesskey;"/>
               </menupopup>
             </menu>
+            <menuseparator/>
+            <menuitem id="fileImport"
+                      command="OrganizerCommand_import"
+                      label="&cmd.importHTML.label;"
+                      accesskey="&cmd.importHTML.accesskey;"/>
+            <menuitem id="fileExport"
+                      command="OrganizerCommand_export"
+                      label="&cmd.exportHTML.label;"
+                      accesskey="&cmd.exportHTML.accesskey;"/>
           </menupopup>
 #ifdef XP_MACOSX
         </toolbarbutton>
