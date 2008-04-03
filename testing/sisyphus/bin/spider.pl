@@ -40,8 +40,6 @@
 select STDERR; $| = 1;
 select STDOUT; $| = 1;
 
-my $TEST_BIN  = $ENV{TEST_BIN} || "/work/mozilla/mozilla.com/test.mozilla.com/www/bin/";
-
 use File::Temp qw/ tempfile tempdir /;
 use File::Basename;
 use Getopt::Mixed "nextOption";

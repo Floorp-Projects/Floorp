@@ -1,9 +1,9 @@
 product=firefox
 branch=1.8.0
-url=http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla1.8.0/firefox-1.5.0.14pre.en-US.mac.dmg
+url=http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla1.8.0/firefox-1.5.0.12eol.en-US.mac.dmg
 profilename=firefox-1.8.0-profile
 profiledirectory=/tmp/firefox-1.8.0-profile
 executablepath=/tmp/firefox-1.8.0
-userpreferences=/work/mozilla/mozilla.com/test.mozilla.com/www/prefs/test-user.js
-extensiondir=/work/mozilla/mozilla.com/test.mozilla.com/www/xpi
+userpreferences=${TEST_DIR}/prefs/test-user.js
+extensiondir=${TEST_DIR}/xpi
 buildtype=nightly

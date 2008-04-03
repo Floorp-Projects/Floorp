@@ -38,11 +38,9 @@
 
 # This script contains a number of variables, functions, etc which 
 # are reused across a number of scripts. It should be included in each
-# script as follows:
+# script prior to any other commands as follows:
 #
-# TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-# TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
-# source ${TEST_BIN}/library.sh
+# source $TEST_DIR/bin/library.sh
 
 if [[ -n "$DEBUG" ]]; then
     echo "calling $0 $@" 1>&2
@@ -207,6 +205,8 @@ if [[ -z "$LIBRARYSH" ]]; then
 
     function get_scriptname()
     {
+        debug "\$0: $0"
+
         local script
         if [[ "$0" == "-bash" || "$0" == "bash" ]]; then
             script="library.sh"
@@ -218,8 +218,15 @@ if [[ -z "$LIBRARYSH" ]]; then
 
     SCRIPT=`get_scriptname $0`
 
-    TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-    TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
+    if [[ -z "$TEST_DIR" ]]; then
+        # get the "bin" directory
+        TEST_DIR=`dirname $0`
+        # get the "bin" directory parent
+        TEST_DIR=`dirname $TEST_DIR`
+        if [[ ! -e "${TEST_DIR}/bin/library.sh" ]]; then
+            error "BAD TEST_DIR $TEST_DIR"
+        fi
+    fi
     TEST_HTTP=${TEST_HTTP:-test.mozilla.com}
     TEST_STARTUP_TIMEOUT=${TEST_STARTUP_TIMEOUT:-30}
 
@@ -228,8 +235,8 @@ if [[ -z "$LIBRARYSH" ]]; then
     TEST_PROCESSORTYPE=`uname -p`
 
     # set path to make life easier
-    if ! echo ${PATH} | grep -q $TEST_BIN; then
-        PATH=${TEST_BIN}:$PATH
+    if ! echo ${PATH} | grep -q $TEST_DIR/bin; then
+        PATH=$TEST_DIR/bin:$PATH
     fi
 
     if echo $OSTYPE | grep -iq cygwin; then
@@ -282,4 +289,14 @@ if [[ -z "$LIBRARYSH" ]]; then
     #leak gauge
     #NSPR_LOG_MODULES=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5
 
+    if [[ -z "$BUILDDIR" ]]; then
+        case `uname -s` in
+            MINGW*)
+                export BUILDDIR=/c/work/mozilla/builds
+                ;;
+            *)
+                export BUILDDIR=/work/mozilla/builds
+                ;;
+        esac
+    fi
 fi

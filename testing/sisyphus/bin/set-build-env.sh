@@ -37,10 +37,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-export BUILDDIR=/work/mozilla/builds
-export SHELL=/bin/bash
-export CONFIG_SHELL=/bin/bash
-export CONFIGURE_ENV_ARGS=/bin/bash 
 export MOZ_CVS_FLAGS="-z3 -q"
 export CVSROOT=:pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
 export MOZILLA_OFFICIAL=1
@@ -124,27 +120,99 @@ for step in step1; do # dummy loop for handling exits
         export DATE_CO_FLAGS="-D \"$MOZ_CO_DATE\""
     fi
 
-    if [[ -n "$WINDIR" ]] ; then
-        OSID=win32
-        export platform=i686
+    case `uname -s` in 
+        CYGWIN*)
 
-        if echo $branch | egrep -q '^1\.8'; then
-            export MOZ_TOOLS="/work/mozilla/moztools"
-            source /work/mozilla/mozilla.com/test.mozilla.com/www/bin/set-msvc6-env.sh
-        else
-            export MOZ_TOOLS="/work/mozilla/moztools-static"
-            source /work/mozilla/mozilla.com/test.mozilla.com/www/bin/set-msvc8-env.sh
-        fi
+            # On Windows, Sisyphus is run under Cygwin, so the OS will be CYGWIN
+            # regardless. Check if mozilla-build has been installed to the default
+            # location, and if so, set up to call mozilla-build to perform the actual
+            # build steps.
+            # 
+            # To make life simpler, change the mount point of the C: drive in cygwin from
+            # /cygdrive/c to /c via mount -c /
+            # which will make paths to non cygwin and non msys locations identical between cygwin
+            # and msys, e.g. /c/work will work in both to point to c:\work
+            # 
+            # Note that all commands *except* make client.mk will be performed in cygwin.
+            #
+            # Note that when calling a command string of the form $buildbash --login -c "command",
+            # you must cd to the desired directory as part of "command" since msys will set the 
+            # directory to the home directory prior to executing the command.
 
-        echo moztools Location: $MOZ_TOOLS
+            if [[ -e "/c/mozilla-build" ]]; then
+                OSID=win32
+                export BUILDDIR=${BUILDDIR:-/c/work/mozilla/builds}
+                export buildbash="/c/mozilla-build/msys/bin/bash"
+                export platform=i686
+                export bashlogin=--login # this is for msys' bash.
 
-    elif uname | grep -iq darwin ; then
-        OSID=mac
-        export platform=`uname -p`
-    else
-        OSID=linux
-        export platform=i686
-    fi
+                if echo $branch | egrep -q '^1\.8'; then
+                    export MOZ_TOOLS="/c/mozilla-build/moztools-180compat"
+                    source ${TEST_DIR}/bin/set-msvc6-env.sh
+                else
+                    export MOZ_TOOLS="/c/mozilla-build/moztools"
+                    source ${TEST_DIR}/bin/set-msvc8-env.sh
+                fi
+
+                echo moztools Location: $MOZ_TOOLS
+            else
+                OSID=win32
+                export BUILDDIR=${BUILDDIR:-/work/mozilla/builds}
+                export buildbash="/bin/bash"
+                export platform=i686
+                export bashlogin=-l
+
+                if echo $branch | egrep -q '^1\.8'; then
+                    export MOZ_TOOLS="$BUILDDIR/moztools"
+                    source ${TEST_DIR}/bin/set-msvc6-env.sh
+                else
+                    export MOZ_TOOLS="$BUILDDIR/moztools-static"
+                    source ${TEST_DIR}/bin/set-msvc8-env.sh
+                fi
+
+                echo moztools Location: $MOZ_TOOLS
+            fi
+
+            # now convert TEST_DIR and BUILDDIR to cross compatible paths using
+            # the common cygdrive prefix for cygwin and msys
+            TEST_DIR_WIN=`cygpath -w $TEST_DIR`
+            BUILDDIR_WIN=`cygpath -w $BUILDDIR`
+            TEST_DIR=`cygpath -u $TEST_DIR_WIN`
+            BUILDDIR=`cygpath -u $BUILDDIR_WIN`
+            ;;
+
+        Linux)
+            OSID=linux
+            export BUILDDIR=${BUILDDIR:-/work/mozilla/builds}
+            export buildbash="/bin/bash"
+            export platform=`uname -p`
+            export bashlogin=-l
+
+            # if a 64 bit linux system, assume the 
+            # compiler is in the standard reference
+            # location /tools/gcc/bin/
+            case "$platform" in
+                x86_64)
+                    export PATH=/tools/gcc/bin:$PATH
+                    ;;
+            esac
+            
+            ;;
+        Darwin)
+            OSID=mac
+
+            export BUILDDIR=${BUILDDIR:-/work/mozilla/builds}
+            export buildbash="/bin/bash"
+            export platform=`uname -p`
+            export bashlogin=-l
+            ;;
+        *)
+            ;;
+    esac
+
+    export SHELL=$buildbash
+    export CONFIG_SHELL=$buildbash
+    export CONFIGURE_ENV_ARGS=$buildbash
 
     if [[ -z $extra ]]; then
         export TREE="$BUILDDIR/$branch"
