@@ -1124,6 +1124,7 @@ nsTextControlFrame::PreDestroy()
   mSelCon = nsnull;
   if (mFrameSel) {
     mFrameSel->SetScrollableViewProvider(nsnull);
+    mFrameSel->DisconnectFromPresShell();
     mFrameSel = nsnull;
   }
 
