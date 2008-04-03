@@ -67,3 +67,9 @@ export LIB="$MSVCDir\\Lib;$MSVCDir\\MFC\\Lib;$LIB"
 unset VcOsDir
 unset VSCommonDir
 
+# necessary for msys' /etc/profile.d/profile-extrapaths.sh to set properly
+if [[ -d "/c/mozilla-build" ]]; then
+    export MOZILLABUILD='C:\\mozilla-build\\'
+fi
+
+

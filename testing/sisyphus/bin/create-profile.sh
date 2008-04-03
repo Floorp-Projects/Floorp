@@ -37,9 +37,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
-source ${TEST_BIN}/library.sh
+source $TEST_DIR/bin/library.sh
 
 #
 # options processing
@@ -119,7 +117,7 @@ if [[ ! -x "$executable" ]]; then
     error "executable \"$executable\" is not executable" $LINENO
 fi
 
-$TEST_BIN/create-directory.sh -d "$directory" -n 
+$TEST_DIR/bin/create-directory.sh -d "$directory" -n 
 
 if echo "$profilename" | egrep -qiv '[a-z0-9_]'; then
     error "profile name \"$profilename\" must consist of letters, digits or _" $LINENO
@@ -136,7 +134,7 @@ fi
 
 echo "creating profile $profilename in directory $directory"
 
-if ! $TEST_BIN/timed_run.py ${TEST_STARTUP_TIMEOUT} "-" $executable -CreateProfile "$profilename $directoryospath"; then
+if ! $TEST_DIR/bin/timed_run.py ${TEST_STARTUP_TIMEOUT} "-" $executable -CreateProfile "$profilename $directoryospath"; then
 	error "creating profile $directory" $LINENO
 fi
 
