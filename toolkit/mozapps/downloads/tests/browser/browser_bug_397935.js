@@ -74,7 +74,7 @@ function test()
     // Make sure the window stays open
     let dmui = Cc["@mozilla.org/download-manager-ui;1"].
                getService(Ci.nsIDownloadManagerUI);
-    // TODO bug 397935 ok(dmui.visible, "Download Manager stays open on alert click");
+    ok(dmui.visible, "Download Manager stays open on alert click");
 
     setClose(false);
     finish();
