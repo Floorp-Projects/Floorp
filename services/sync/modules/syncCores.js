@@ -449,24 +449,25 @@ CookieSyncCore.prototype = {
 
 
   _itemExists: function CSC__itemExists(GUID) {
-    // true if a cookie with the given GUID exists.
-    // The GUID that we are passed should correspond to the keys
-    // that we define in the JSON returned by CookieStore.wrap()
-    // That is, it will be a string of the form
-    // "host:path:name".
+    /* true if a cookie with the given GUID exists.
+       The GUID that we are passed should correspond to the keys
+       that we define in the JSON returned by CookieStore.wrap()
+       That is, it will be a string of the form
+       "host:path:name". */
     
-    // TODO verify that colons can't normally appear in any of
-    // the fields -- if they did it then we can't rely on .split(":")
-    // to parse correctly.
+    /* TODO verify that colons can't normally appear in any of
+       the fields -- if they did it then we can't rely on .split(":")
+       to parse correctly.*/
     
     let cookieArray = GUID.split( ":" );
     let cookieHost = cookieArray[0];
     let cookiePath = cookieArray[1];
     let cookieName = cookieArray[2];
 
-    // alternate implementation would be to instantiate a cookie from
-    // cookieHost, cookiePath, and cookieName, 
-    // then call cookieManager.cookieExists().
+    /* alternate implementation would be to instantiate a cookie from
+       cookieHost, cookiePath, and cookieName, then call 
+       cookieManager.cookieExists(). Maybe that would have better
+       performance?  This implementation seems pretty slow.*/
     let enumerator = this._cookieManager.enumerator;
     while (enumerator.hasMoreElements())
       {
@@ -478,6 +479,12 @@ CookieSyncCore.prototype = {
 	}
       }
     return false;
+    /* Note: We can't just call cookieManager.cookieExists() with a generic
+       javascript object with .host, .path, and .name attributes attatched.
+       cookieExists is implemented in C and does a hard static_cast to an
+       nsCookie object, so duck typing doesn't work (and in fact makes 
+       Firefox hard-crash as the static_cast returns null and is not checked.)
+    */
   },
 
   _commandLike: function CSC_commandLike(a, b) {
