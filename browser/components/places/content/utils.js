@@ -369,7 +369,10 @@ var PlacesUIUtils = {
       case PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR:
         // There is no data in a separator, so copying it just amounts to
         // inserting a new separator.
-        return this.ptm.createSeparator(container, index);
+        if (copy)
+          return this.ptm.createSeparator(container, index);
+        // Move the separator otherwise
+        return this.ptm.moveItem(data.id, container, index);
         break;
       default:
         if (type == PlacesUtils.TYPE_X_MOZ_URL || type == PlacesUtils.TYPE_UNICODE) {
