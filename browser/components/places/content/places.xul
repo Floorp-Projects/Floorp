@@ -356,7 +356,7 @@
                       label="&cmd.backup.label;"
                       accesskey="&cmd.backup.accesskey;"/>
             <menu id="fileRestoreMenu" label="&cmd.restore2.label;"
-                      accesskey="&cmd.restore.accesskey;">
+                      accesskey="&cmd.restore2.accesskey;">
               <menupopup id="fileRestorePopup" onpopupshowing="PlacesOrganizer.populateRestoreMenu();">
                 <menuitem id="restoreFromFile"
                           command="OrganizerCommand_restoreFromFile"
