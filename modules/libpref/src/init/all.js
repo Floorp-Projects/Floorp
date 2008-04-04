@@ -1093,6 +1093,38 @@ pref("dom.max_script_run_time", 10);
 
 pref("svg.enabled", true);
 
+pref("font.minimum-size.ar", 0);
+pref("font.minimum-size.x-armn", 0);
+pref("font.minimum-size.x-beng", 0);
+pref("font.minimum-size.x-baltic", 0);
+pref("font.minimum-size.x-central-euro", 0);
+pref("font.minimum-size.zh-CN", 0);
+pref("font.minimum-size.zh-HK", 0);
+pref("font.minimum-size.zh-TW", 0);
+pref("font.minimum-size.x-cyrillic", 0);
+pref("font.minimum-size.x-devanagari", 0);
+pref("font.minimum-size.x-ethi", 0);
+pref("font.minimum-size.x-geor", 0);
+pref("font.minimum-size.el", 0);
+pref("font.minimum-size.x-gujr", 0);
+pref("font.minimum-size.x-guru", 0);
+pref("font.minimum-size.he", 0);
+pref("font.minimum-size.ja", 0);
+pref("font.minimum-size.x-knda", 0);
+pref("font.minimum-size.x-khmr", 0);
+pref("font.minimum-size.ko", 0);
+pref("font.minimum-size.x-mlym", 0);
+pref("font.minimum-size.x-orya", 0);
+pref("font.minimum-size.x-sinh", 0);
+pref("font.minimum-size.x-tamil", 0);
+pref("font.minimum-size.x-telu", 0);
+pref("font.minimum-size.th", 0);
+pref("font.minimum-size.tr", 0);
+pref("font.minimum-size.x-cans", 0);
+pref("font.minimum-size.x-western", 0);
+pref("font.minimum-size.x-unicode", 0);
+pref("font.minimum-size.x-user-def", 0);
+
 #ifdef XP_WIN
 pref("font.name.serif.ar", "Times New Roman");
 pref("font.name.sans-serif.ar", "Arial");
@@ -1214,11 +1246,12 @@ pref("font.name.monospace.x-armn", "Arial AMU");
 pref("font.name-list.serif.x-armn", "Sylfaen,Arial Unicode MS, Code2000");
 pref("font.name-list.monospace.x-armn", "Arial AMU, Arial Unicode MS, Code2000");
 
-pref("font.name.serif.x-beng", "Akaash");
-pref("font.name.sans-serif.x-beng", "Likhan");
+pref("font.name.serif.x-beng", "Vrinda");
+pref("font.name.sans-serif.x-beng", "Vrinda");
 pref("font.name.monospace.x-beng", "Mitra Mono");
-pref("font.name-list.serif.x-beng", "Akaash, Ekushey Punarbhaba, Code2000, Arial Unicode MS"); 
-pref("font.name-list.monospace.x-beng", "Likhan, Mukti Narrow, Code 2000, Arial Unicode MS");
+pref("font.name-list.serif.x-beng", "Vrinda, Akaash, Likhan, Ekushey Punarbhaba, Code2000, Arial Unicode MS"); 
+pref("font.name-list.sans-serif.x-beng", "Vrinda, Akaash, Likhan, Ekushey Punarbhaba, Code2000, Arial Unicode MS"); 
+pref("font.name-list.monospace.x-beng", "Likhan, Mukti Narrow, Code2000, Arial Unicode MS");
 
 pref("font.name.serif.x-cans", "Aboriginal Serif");
 pref("font.name.sans-serif.x-cans", "Aboriginal Sans");
@@ -1257,11 +1290,40 @@ pref("font.name.monospace.x-khmr", "Code2000");
 pref("font.name-list.serif.x-khmr", "PhnomPenh OT,.Mondulkiri U GR 1.5, Khmer OS");
 pref("font.name-list.monospace.x-khmr", "Code2000, Khmer OS, Khmer OS System");
 
-pref("font.name.serif.x-mlym", "Kartika");
-pref("font.name.sans-serif.x-mlym", "Anjali-Beta");
-pref("font.name.monospace.x-mlym", "Code2000");
-pref("font.name-list.serif.x-mlym", "Kartika, ThoolikaUnicode, Code2000, Arial Unicode MS");
-pref("font.name-list.monospace.x-mlym", "Code2000, Anjali-Beta");
+pref("font.name.serif.x-mlym", "Rachana_w01");
+pref("font.name.sans-serif.x-mlym", "Rachana_w01");
+pref("font.name.monospace.x-mlym", "Rachana_w01");
+pref("font.name-list.serif.x-mlym", "AnjaliOldLipi, Kartika, ThoolikaUnicode, Code2000, Arial Unicode MS");
+pref("font.name-list.sans-serif.x-mlym", "AnjaliOldLipi, Kartika, ThoolikaUnicode, Code2000, Arial Unicode MS");
+pref("font.name-list.monospace.x-mlym", "AnjaliOldLipi, Kartika, ThoolikaUnicode, Code2000, Arial Unicode MS");
+
+pref("font.name.serif.x-orya", "ori1Uni");
+pref("font.name.sans-serif.x-orya", "ori1Uni");
+pref("font.name.monospace.x-orya", "ori1Uni");
+pref("font.name-list.serif.x-orya", "Kalinga, ori1Uni, Code2000, Arial Unicode MS");
+pref("font.name-list.sans-serif.x-orya", "Kalinga, ori1Uni, Code2000, Arial Unicode MS");
+pref("font.name-list.monospace.x-orya", "Kalinga, ori1Uni, Code2000, Arial Unicode MS");
+
+pref("font.name.serif.x-telu", "Gautami");
+pref("font.name.sans-serif.x-telu", "Gautami");
+pref("font.name.monospace.x-telu", "Gautami");
+pref("font.name-list.serif.x-telu", "Gautami, Akshar Unicode, Code2000, Arial Unicode MS");
+pref("font.name-list.sans-serif.x-telu", "Gautami, Akshar Unicode, Code2000, Arial Unicode MS");
+pref("font.name-list.monospace.x-telu", "Gautami, Akshar Unicode, Code2000, Arial Unicode MS");
+
+pref("font.name.serif.x-knda", "Tunga");
+pref("font.name.sans-serif.x-knda", "Tunga");
+pref("font.name.monospace.x-knda", "Tunga");
+pref("font.name-list.serif.x-knda", "Tunga, AksharUnicode, Code2000, Arial Unicode MS");
+pref("font.name-list.sans-serif.x-knda", "Tunga, AksharUnicode, Code2000, Arial Unicode MS");
+pref("font.name-list.monospace.x-knda", "Tunga, AksharUnicode, Code2000, Arial Unicode MS");
+
+pref("font.name.serif.x-sinh", "Iskoola Pota");
+pref("font.name.sans-serif.x-sinh", "Iskoola Pota");
+pref("font.name.monospace.x-sinh", "Iskoola Pota");
+pref("font.name-list.serif.x-sinh", "Iskoola Pota, AksharUnicode");
+pref("font.name-list.sans-serif.x-sinh", "Iskoola Pota, AksharUnicode");
+pref("font.name-list.monospace.x-sinh", "Iskoola Pota, AksharUnicode");
 
 pref("font.default.ar", "sans-serif");
 pref("font.size.variable.ar", 16);
@@ -1346,6 +1408,22 @@ pref("font.size.fixed.x-khmr", 13);
 pref("font.default.x-mlym", "serif");
 pref("font.size.variable.x-mlym", 16);
 pref("font.size.fixed.x-mlym", 13);
+
+pref("font.default.x-orya", "serif");
+pref("font.size.variable.x-orya", 16);
+pref("font.size.fixed.x-orya", 13);
+
+pref("font.default.x-telu", "serif");
+pref("font.size.variable.x-telu", 16);
+pref("font.size.fixed.x-telu", 13);
+
+pref("font.default.x-knda", "serif");
+pref("font.size.variable.x-knda", 16);
+pref("font.size.fixed.x-knda", 13);
+
+pref("font.default.x-sinh", "serif");
+pref("font.size.variable.x-sinh", 16);
+pref("font.size.fixed.x-sinh", 13);
 
 pref("font.default.x-unicode", "serif");
 pref("font.size.variable.x-unicode", 16);
@@ -1606,6 +1684,18 @@ pref("font.name-list.monospace.x-guru", "Gurmukhi MT");
 // no suitable fonts for malayalam ship with mac os x
 // add this section when fonts exist
 
+// no suitable fonts for oriya ship with mac os x
+// add this section when fonts exist
+
+// no suitable fonts for telugu ship with mac os x
+// add this section when fonts exist
+
+// no suitable fonts for kannada ship with mac os x
+// add this section when fonts exist
+
+// no suitable fonts for sinhala ship with mac os x
+// add this section when fonts exist
+
 pref("font.name.serif.x-tamil", "InaiMathi");
 pref("font.name.sans-serif.x-tamil", "InaiMathi");
 pref("font.name.monospace.x-tamil", "InaiMathi");
@@ -1739,6 +1829,22 @@ pref("font.size.fixed.x-mlym", 13);
 pref("font.default.x-tamil", "serif");
 pref("font.size.variable.x-tamil", 16);
 pref("font.size.fixed.x-tamil", 13);
+
+pref("font.default.x-orya", "serif");
+pref("font.size.variable.x-orya", 16);
+pref("font.size.fixed.x-orya", 13);
+
+pref("font.default.x-telu", "serif");
+pref("font.size.variable.x-telu", 16);
+pref("font.size.fixed.x-telu", 13);
+
+pref("font.default.x-knda", "serif");
+pref("font.size.variable.x-knda", 16);
+pref("font.size.fixed.x-knda", 13);
+
+pref("font.default.x-sinh", "serif");
+pref("font.size.variable.x-sinh", 16);
+pref("font.size.fixed.x-sinh", 13);
 
 pref("font.default.x-unicode", "serif");
 pref("font.size.variable.x-unicode", 16);
@@ -2247,6 +2353,10 @@ pref("font.default.x-unicode", "serif");
 pref("font.size.variable.x-unicode", 16);
 pref("font.size.fixed.x-unicode", 12);
 
+pref("font.default.x-user-def", "serif");
+pref("font.size.variable.x-user-def", 16);
+pref("font.size.fixed.x-user-def", 12);
+
 pref("font.default.x-western", "serif");
 pref("font.size.variable.x-western", 16);
 pref("font.size.fixed.x-western", 12);
@@ -2262,6 +2372,66 @@ pref("font.size.fixed.zh-TW", 16);
 pref("font.default.zh-HK", "sans-serif");
 pref("font.size.variable.zh-HK", 16);
 pref("font.size.fixed.zh-HK", 16);
+
+pref("font.default.x-devanagari", "serif");
+pref("font.size.variable.x-devanagari", 16);
+pref("font.size.fixed.x-devanagari", 13);
+
+pref("font.default.x-tamil", "serif");
+pref("font.size.variable.x-tamil", 16);
+pref("font.size.fixed.x-tamil", 13);
+
+pref("font.default.x-armn", "serif");
+pref("font.size.variable.x-armn", 16);
+pref("font.size.fixed.x-armn", 13);
+
+pref("font.default.x-beng", "serif");
+pref("font.size.variable.x-beng", 16);
+pref("font.size.fixed.x-beng", 13);
+
+pref("font.default.x-cans", "serif");
+pref("font.size.variable.x-cans", 16);
+pref("font.size.fixed.x-cans", 13);
+
+pref("font.default.x-ethi", "serif");
+pref("font.size.variable.x-ethi", 16);
+pref("font.size.fixed.x-ethi", 13);
+
+pref("font.default.x-geor", "serif");
+pref("font.size.variable.x-geor", 16);
+pref("font.size.fixed.x-geor", 13);
+
+pref("font.default.x-gujr", "serif");
+pref("font.size.variable.x-gujr", 16);
+pref("font.size.fixed.x-gujr", 13);
+
+pref("font.default.x-guru", "serif");
+pref("font.size.variable.x-guru", 16);
+pref("font.size.fixed.x-guru", 13);
+
+pref("font.default.x-khmr", "serif");
+pref("font.size.variable.x-khmr", 16);
+pref("font.size.fixed.x-khmr", 13);
+
+pref("font.default.x-mlym", "serif");
+pref("font.size.variable.x-mlym", 16);
+pref("font.size.fixed.x-mlym", 13);
+
+pref("font.default.x-orya", "serif");
+pref("font.size.variable.x-orya", 16);
+pref("font.size.fixed.x-orya", 13);
+
+pref("font.default.x-telu", "serif");
+pref("font.size.variable.x-telu", 16);
+pref("font.size.fixed.x-telu", 13);
+
+pref("font.default.x-knda", "serif");
+pref("font.size.variable.x-knda", 16);
+pref("font.size.fixed.x-knda", 13);
+
+pref("font.default.x-sinh", "serif");
+pref("font.size.variable.x-sinh", 16);
+pref("font.size.fixed.x-sinh", 13);
 
 /* PostScript print module prefs */
 // pref("print.postscript.enabled",      true);
