@@ -76,7 +76,7 @@
       <label id="distribution"/>
       <label id="distributionId"/>
       <description id="copyright">&copyrightInfo;</description>
-      <textbox id="userAgent" multiline="true" readonly="true"/>
+      <textbox id="userAgent" multiline="true" readonly="true" flex="1"/>
     </vbox>
     <vbox flex="1" id="creditsBox">
       <iframe id="creditsIframe" flex="1"/>
