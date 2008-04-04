@@ -366,7 +366,6 @@ nsContextMenu.prototype = {
     if (aNode.namespaceURI == xulNS ||
         this.isTargetAFormControl(aNode)) {
       this.shouldDisplay = false;
-      return;
     }
 
     // Initialize contextual info.
