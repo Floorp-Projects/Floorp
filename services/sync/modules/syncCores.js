@@ -449,35 +449,52 @@ CookieSyncCore.prototype = {
 
 
   _itemExists: function CSC__itemExists(GUID) {
-        // true if a cookie with the given GUID exists.
-	// The GUID that we are passed should correspond to the keys
-	// that we define in the JSON returned by CookieStore.wrap()
-	// That is, it will be a string of the form
-	// "host:path:name".
+    /* true if a cookie with the given GUID exists.
+       The GUID that we are passed should correspond to the keys
+       that we define in the JSON returned by CookieStore.wrap()
+       That is, it will be a string of the form
+       "host:path:name". */
+    
+    /* TODO verify that colons can't normally appear in any of
+       the fields -- if they did it then we can't rely on .split(":")
+       to parse correctly.*/
+    
+    let cookieArray = GUID.split( ":" );
+    let cookieHost = cookieArray[0];
+    let cookiePath = cookieArray[1];
+    let cookieName = cookieArray[2];
 
-	// TODO verify that colons can't normally appear in any of
-	// the fields -- if they did it then we can't rely on .split(":")
-	// to parse correctly.
-
-        let unused = 0; // for outparam from findMatchingCookie
-	let cookieArray = GUID.split( ":" );
-        // create a generic object to represent the cookie -- just has
-	// to implement nsICookie2 interface.
-	cookie = Object();
-	cookie.host = cookieArray[0];
-	cookie.path = cookieArray[1];
-	cookie.name = cookieArray[2];
-    	return this._cookieManager.findMatchingCookie( cookie, unused );
+    /* alternate implementation would be to instantiate a cookie from
+       cookieHost, cookiePath, and cookieName, then call 
+       cookieManager.cookieExists(). Maybe that would have better
+       performance?  This implementation seems pretty slow.*/
+    let enumerator = this._cookieManager.enumerator;
+    while (enumerator.hasMoreElements())
+      {
+	let aCookie = enumerator.getNext();
+	if (aCookie.host == cookieHost &&
+	    aCookie.path == cookiePath &&
+	    aCookie.name == cookieName ) {
+	  return true;
+	}
+      }
+    return false;
+    /* Note: We can't just call cookieManager.cookieExists() with a generic
+       javascript object with .host, .path, and .name attributes attatched.
+       cookieExists is implemented in C and does a hard static_cast to an
+       nsCookie object, so duck typing doesn't work (and in fact makes 
+       Firefox hard-crash as the static_cast returns null and is not checked.)
+    */
   },
 
   _commandLike: function CSC_commandLike(a, b) {
-        // Method required to be overridden.
-        // a and b each have a .data and a .GUID
-	// If this function returns true, an editCommand will be
-	// generated to try to resolve the thing.
-	// but are a and b objects of the type in the Store or
-	// are they "commands"??
-        return false;
+    // Method required to be overridden.
+    // a and b each have a .data and a .GUID
+    // If this function returns true, an editCommand will be
+    // generated to try to resolve the thing.
+    // but are a and b objects of the type in the Store or
+    // are they "commands"??
+    return false;
   }
 };
 CookieSyncCore.prototype.__proto__ = new SyncCore();
