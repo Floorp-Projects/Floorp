@@ -7892,6 +7892,7 @@ if test "$MOZ_X11"; then
     CFLAGS="$CFLAGS $XCFLAGS"
     AC_TRY_COMPILE([
         #include <stdio.h>
+        #include <stdlib.h>
         #include <X11/Xlib.h>
         #include <X11/Intrinsic.h>
     ],
