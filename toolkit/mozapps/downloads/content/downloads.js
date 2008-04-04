@@ -95,7 +95,7 @@ let gStr = {
   stateFailed: "stateFailed",
   stateCanceled: "stateCanceled",
   stateBlockedParentalControls: "stateBlocked",
-  stateBlockedPolicy: "stateDirty",
+  stateBlockedPolicy: "stateBlockedPolicy",
   stateDirty: "stateDirty",
   yesterday: "yesterday",
   monthDate: "monthDate",
