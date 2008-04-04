@@ -114,7 +114,7 @@
                  aria-labelledby="rememberHistoryDays historyDays rememberAfter"
                  onkeyup="gPrivacyPane.onkeyupHistoryDaysText();"
                  preference="browser.history_expire_days_min"/>
-        <label id="rememberAfter"> &rememberDaysAfter.label;</label>
+        <label id="rememberAfter"> &rememberDaysAfter2.label;</label>
       </hbox>
       <checkbox id="rememberForms"
                 label="&rememberForms.label;"
