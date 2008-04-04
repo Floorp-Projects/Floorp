@@ -172,7 +172,7 @@ public:
     // |NSMenuItem|s target Objective-C objects
     static NativeMenuItemTarget* sNativeEventTarget;
     
-    static NSWindow* sEventTargetWindow;
+    static nsMenuBarX* sLastGeckoMenuBarPainted;
     
     NS_DECL_ISUPPORTS
 
@@ -197,6 +197,7 @@ public:
 
     PRUint32 RegisterForCommand(nsIMenuItem* aItem);
     void UnregisterCommand(PRUint32 aCommandID);
+    nsIMenuItem* GetMenuItemForCommandID(PRUint32 inCommandID);
 
     void RegisterForContentChanges(nsIContent* aContent, nsChangeObserver* aMenuObject);
     void UnregisterForContentChanges(nsIContent* aContent);
@@ -204,41 +205,30 @@ public:
 
     void RegisterKeyEquivalent(unsigned int modifiers, NSString* string);
     void UnregisterKeyEquivalent(unsigned int modifiers, NSString* string);
+
+    nsCOMPtr<nsIContent>    mAboutItemContent;    // holds the content node for the about item that has
+                                                  //   been removed from the menubar
+    nsCOMPtr<nsIContent>    mPrefItemContent;     // as above, but for prefs
+    nsCOMPtr<nsIContent>    mQuitItemContent;     // as above, but for quit
 protected:
     // Make our menubar conform to Aqua UI guidelines
     void AquifyMenuBar();
     void HideItem(nsIDOMDocument* inDoc, const nsAString & inID, nsIContent** outHiddenNode);
-    OSStatus InstallCommandEventHandler();
 
-    // command handler for some special menu items (prefs/quit/etc)
-    pascal static OSStatus CommandEventHandler(EventHandlerCallRef inHandlerChain, 
-                                               EventRef inEvent, void* userData);
-    nsEventStatus ExecuteCommand(nsIContent* inDispatchTo);
-    
     // build the Application menu shared by all menu bars.
     NSMenuItem* CreateNativeAppMenuItem(nsIMenu* inMenu, const nsAString& nodeID, SEL action,
                                                     int tag, NativeMenuItemTarget* target);
     nsresult CreateApplicationMenu(nsIMenu* inMenu);
 
-    nsHashtable             mObserverTable;       // stores observers for content change notification
-
     nsCOMArray<nsIMenu>     mMenusArray;          // holds refs
     nsCOMPtr<nsIContent>    mMenuBarContent;      // menubar content node, strong ref
-    nsCOMPtr<nsIContent>    mAboutItemContent;    // holds the content node for the about item that has
-                                                  //   been removed from the menubar
-    nsCOMPtr<nsIContent>    mPrefItemContent;     // as above, but for prefs
-    nsCOMPtr<nsIContent>    mQuitItemContent;     // as above, but for quit
     nsIWidget*              mParent;              // weak ref
     PRBool                  mIsMenuBarAdded;
     PRUint32                mCurrentCommandID;    // unique command id (per menu-bar) to give to next item that asks
-
     nsIDocument*            mDocument;            // pointer to document
-
     NSMenu*                 mRootMenu;            // root menu, representing entire menu bar
-
+    nsHashtable             mObserverTable;       // stores observers for content change notification
     nsTHashtable<CocoaKeyEquivKey> mKeyEquivTable;
-
-    static EventHandlerUPP  sCommandEventHandler; // carbon event handler for commands, shared
 };
 
 #endif // nsMenuBarX_h_
