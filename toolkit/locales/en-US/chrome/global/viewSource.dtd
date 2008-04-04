@@ -24,10 +24,19 @@
 <!ENTITY closeCmd.accesskey "C">
 <!ENTITY closeCmd.commandkey "W">
 
+<!-- LOCALIZATION NOTE :
+textEnlarge.commandkey3, textReduce.commandkey2 and
+textReset.commandkey2 are alternative acceleration keys for zoom.
+If shift key is needed with your locale popular keyboard for them,
+you can use these alternative items. Otherwise, their values should be empty.  -->
+
 <!ENTITY textEnlarge.commandkey "+">
 <!ENTITY textEnlarge.commandkey2 "=">
+<!ENTITY textEnlarge.commandkey3 "">
 <!ENTITY textReduce.commandkey "-">
+<!ENTITY textReduce.commandkey2 "">
 <!ENTITY textReset.commandkey "0">
+<!ENTITY textReset.commandkey2 "">
 
 <!ENTITY goToLineCmd.label "Go to Line…">
 <!ENTITY goToLineCmd.accesskey "G">
