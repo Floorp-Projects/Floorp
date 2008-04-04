@@ -3225,8 +3225,12 @@ function BrowserCustomizeToolbar()
   var sheetFrame = document.getElementById("customizeToolbarSheetIFrame");
   sheetFrame.hidden = false;
 
-  // The document might not have been loaded yet, if this is the first time
-  if (sheetFrame.getAttribute("src") != customizeURL)
+  // The document might not have been loaded yet, if this is the first time.
+  // If it is already loaded, reload it so that the onload initialization code
+  // re-runs.
+  if (sheetFrame.getAttribute("src") == customizeURL)
+    sheetFrame.contentWindow.location.reload()
+  else
     sheetFrame.setAttribute("src", customizeURL);
 
   // XXXmano: there's apparently no better way to get this when the iframe is
