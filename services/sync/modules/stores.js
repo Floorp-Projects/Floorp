@@ -824,6 +824,15 @@ CookieStore.prototype = {
         // the best way to deal with this.
         this._log.info("CookieStore got editCommand: " + command );
 
+	this._log.debug( "Info on command object passed in: " );
+	for ( var x in command )
+	  {
+	    this._log.debug( "Command." + x + " = " + command[x] );
+	  }
+	for ( var y in command.data )
+	  {
+	    this._log.debug( "Command.data." + y + " = " + command.data[y] );
+	  }
   },
 
   wrap: function CookieStore_wrap() {
