@@ -1538,7 +1538,7 @@ public:
 
             ReleaseDC(NULL, dc);
 
-            if (rv != S_FALSE) {
+            if (rv == S_OK) {
                 aFontEntry->mCharacterMap.set(ch);
                 return PR_TRUE;
             }
