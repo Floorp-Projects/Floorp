@@ -192,7 +192,6 @@ NS_IMETHODIMP nsJPEGDecoder::Init(imgILoad *aLoad)
       return NS_ERROR_OUT_OF_MEMORY;
       
     mImageLoad->SetImage(mImage);
-#if 0
     nsresult result = mImage->SetDiscardable("image/jpeg");
     if (NS_FAILED(result)) {
       mState = JPEG_ERROR;
@@ -200,7 +199,6 @@ NS_IMETHODIMP nsJPEGDecoder::Init(imgILoad *aLoad)
              (" (could not set image container to discardable)"));
       return result;
     }
-#endif
   }
 
   return NS_OK;
