@@ -226,7 +226,9 @@ FontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
             // we should use GDI to slowly determine their cmap lazily
             fe->mForceGDI = PR_TRUE;
 
-            //printf("%d, %s failed to get cmap\n", aFontEntry->mIsType1, NS_ConvertUTF16toUTF8(aFontEntry->mName).get());
+            //printf("(fontinit-cmap) %s failed to get cmap, type1:%d \n", NS_ConvertUTF16toUTF8(fe->mFaceName).get(), (PRUint32)(fe->mIsType1));
+        } else {
+            //printf("(fontinit-cmap) %s cmap loaded, italic:%d, weight:%d\n", NS_ConvertUTF16toUTF8(fe->mFaceName).get(), (PRUint32)(fe->mItalic), (PRUint32)(fe->mWeight));
         }
 
         SelectObject(hdc, oldFont);
@@ -240,6 +242,8 @@ FontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
 void
 FontFamily::FindStyleVariations()
 {
+    if (mHasStyles)
+        return;
     mHasStyles = PR_TRUE;
 
     HDC hdc = GetDC(nsnull);
@@ -1420,7 +1424,7 @@ public:
                 PRInt32 advance = mAdvances[k]*appUnitsPerDevUnit;
                 WORD glyph = mGlyphs[k];
                 NS_ASSERTION(!gfxFontGroup::IsInvalidChar(mRangeString[offset]),
-                		     "invalid character detected");
+                             "invalid character detected");
                 if (missing) {
                     if (NS_IS_HIGH_SURROGATE(mRangeString[offset]) &&
                         offset + 1 < mRangeLength &&
