@@ -947,7 +947,13 @@
         <body><![CDATA[
           this._contextMenuShown = true;
           this.focus();
-          return this.controller.buildContextMenu(aPopup);
+          var show = this.controller.buildContextMenu(aPopup);
+          if (show) {
+            // disable the Delete command if the selection isn't explicit
+            if (document.popupNode && document.popupNode.localName == "menupopup")
+              document.getElementById("cmd_delete").setAttribute("disabled", "true");
+          }
+          return false;
         ]]></body>
       </method>
 
