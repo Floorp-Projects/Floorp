@@ -1085,14 +1085,14 @@ static const struct ScriptPropertyEntry gScriptToText[] =
     { "LANG_BENGALI",    "x-beng" }, // ben
     { "LANG_PUNJABI",    "x-guru" }, // pan -- XXX x-guru is for Gurmukhi which isn't just Punjabi
     { "LANG_GUJARATI",   "x-gujr" }, // guj
-    { "LANG_ORIYA",      "ori" },
+    { "LANG_ORIYA",      "x-orya" }, // ori
     { "LANG_TAMIL",      "x-tamil" }, // tam
-    { "LANG_TELUGU",     "tel" },
-    { "LANG_KANNADA",    "kan" },
+    { "LANG_TELUGU",     "x-telu" },  //tel
+    { "LANG_KANNADA",    "x-knda" },  // kan
     { "LANG_MALAYALAM",  "x-mlym" }, // mal
-    { "LANG_ASSAMESE",   "asm" },
-    { "LANG_MARATHI",    "mar" },
-    { "LANG_SANSKRIT",   "san" },
+    { "LANG_ASSAMESE",   "x-beng" },    // asm
+    { "LANG_MARATHI",    "x-devanagari" }, // mar
+    { "LANG_SANSKRIT",   "x-devanagari" }, // san
     { "LANG_MONGOLIAN",  "mon" },
     { "TIBETAN",         "tib" }, // tib/bod
     { nsnull, nsnull },
@@ -1102,14 +1102,14 @@ static const struct ScriptPropertyEntry gScriptToText[] =
     { "LANG_GALICIAN",   "glg" },
     { "LANG_KONKANI",    "kok" },
     { "LANG_MANIPURI",   "mni" },
-    { "LANG_SINDHI",     "x-devanagari" }, // snd
+    { "LANG_SINDHI",     "snd" },
     { "LANG_SYRIAC",     "syr" },
-    { "SINHALESE",       "sin" },
+    { "SINHALESE",       "x-sinh" }, // sin
     { "CHEROKEE",        "chr" },
     { "INUKTITUT",       "x-cans" }, // iku
     { "ETHIOPIC",        "x-ethi" }, // amh -- this is both Amharic and Tigrinya
     { nsnull, nsnull },
-    { "LANG_KASHMIRI",   "x-devanagari" }, // kas
+    { "LANG_KASHMIRI",   "kas" },
     { "LANG_NEPALI",     "x-devanagari" }, // nep
     { nsnull, nsnull },
     { nsnull, nsnull },
