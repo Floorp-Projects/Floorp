@@ -4929,16 +4929,6 @@ FindFirstLetterRange(const nsTextFragment* aFrag,
   return PR_TRUE;
 }
 
-static nsRect ConvertGfxRectOutward(const gfxRect& aRect)
-{
-  nsRect r;
-  r.x = NSToCoordFloor(aRect.X());
-  r.y = NSToCoordFloor(aRect.Y());
-  r.width = NSToCoordCeil(aRect.XMost()) - r.x;
-  r.height = NSToCoordCeil(aRect.YMost()) - r.y;
-  return r;
-}
-
 static PRUint32
 FindStartAfterSkippingWhitespace(PropertyProvider* aProvider,
                                  nsIFrame::InlineIntrinsicWidthData* aData,
@@ -5587,8 +5577,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   mAscent = aMetrics.ascent;
 
   // Handle text that runs outside its normal bounds.
-  nsRect boundingBox =
-    ConvertGfxRectOutward(textMetrics.mBoundingBox + gfxPoint(0, mAscent));
+  nsRect boundingBox = RoundOut(textMetrics.mBoundingBox) + nsPoint(0, mAscent);
   aMetrics.mOverflowArea.UnionRect(boundingBox,
                                    nsRect(0, 0, aMetrics.width, aMetrics.height));
 
@@ -5812,8 +5801,7 @@ nsTextFrame::RecomputeOverflowRect()
                           ComputeTransformedLength(provider), PR_FALSE, nsnull,
                           &provider);
 
-  nsRect boundingBox =
-    ConvertGfxRectOutward(textMetrics.mBoundingBox + gfxPoint(0, mAscent));
+  nsRect boundingBox = RoundOut(textMetrics.mBoundingBox) + nsPoint(0, mAscent);
   boundingBox.UnionRect(boundingBox,
                         nsRect(nsPoint(0,0), GetSize()));
 
