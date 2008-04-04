@@ -5,7 +5,7 @@
 package Bootstrap::Step::Repack;
 use Bootstrap::Step;
 use Bootstrap::Config;
-use Bootstrap::Util qw(CvsCatfile SyncToStaging);
+use Bootstrap::Util qw(CvsCatfile);
 use MozBuild::Util qw(MkdirWithPath);
 @ISA = ("Bootstrap::Step");
 
@@ -206,20 +206,15 @@ sub Push {
     $pushDir =~ s!^http://ftp.mozilla.org/pub/mozilla.org!/home/ftp/pub!;
 
     my $candidateDir = $config->GetFtpCandidateDir(bitsUnsigned => 1);
+    $this->CreateCandidatesDir();
 
-    my $osFileMatch = $config->SystemInfo(var => 'osname');
+    my $osFileMatch = $config->SystemInfo(var => 'osname');    
+    # TODO - use a more generic function for this kind of remapping
     if ($osFileMatch eq 'win32')  {
       $osFileMatch = 'win';
     } elsif ($osFileMatch eq 'macosx') {
       $osFileMatch = 'mac';
     }
-
-    $this->Shell(
-      cmd => 'ssh',
-      cmdArgs => ['-2', '-l', $stagingUser, $stagingServer,
-                  'mkdir -p ' . $candidateDir],
-      logFile => $pushLog,
-    );
 
     $this->Shell(
       cmd => 'ssh',
@@ -231,8 +226,6 @@ sub Push {
                   $pushDir, $candidateDir],
       logFile => $pushLog,
     );
-
-    SyncToStaging(); 
 }
 
 sub Announce {
