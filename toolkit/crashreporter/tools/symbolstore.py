@@ -67,6 +67,7 @@ class VCSFileInfo:
         following attributes are generated only once (successfully):
 
             self.root
+            self.clean_root
             self.revision
             self.filename
 
@@ -91,6 +92,12 @@ class VCSFileInfo:
                 self.root = root
             return root
 
+        elif name == "clean_root":
+            clean_root = self.GetCleanRoot()
+            if clean_root:
+                self.clean_root = clean_root
+            return clean_root
+
         elif name == "revision":
             revision = self.GetRevision()
             if revision:
@@ -106,9 +113,14 @@ class VCSFileInfo:
         raise AttributeError
 
     def GetRoot(self):
-        """ This method should return the repository root for the file or 'None'
+        """ This method should return the unmodified root for the file or 'None'
             on failure. """
         raise NotImplementedError
+
+    def GetCleanRoot(self):
+        """ This method should return the repository root for the file or 'None'
+            on failure. """
+        raise NotImplementedErrors
 
     def GetRevision(self):
         """ This method should return the revision number for the file or 'None'
@@ -136,7 +148,13 @@ class CVSFileInfo(VCSFileInfo):
         f = open(root, "r")
         root_name = f.readline().strip()
         f.close()
-        parts = root_name.split("@")
+        if root_name:
+            return root_name
+        print >> sys.stderr, "Failed to get CVS Root for %s" % filename
+        return None
+
+    def GetCleanRoot(self):
+        parts = self.root.split('@')
         if len(parts) > 1:
             # we don't want the extra colon
             return parts[1].replace(":","")
@@ -158,7 +176,7 @@ class CVSFileInfo(VCSFileInfo):
 
     def GetFilename(self):
         file = self.file
-        if self.revision and self.root:
+        if self.revision and self.clean_root:
             if self.srcdir:
                 # strip the base path off
                 # but we actually want the last dir in srcdir
@@ -172,7 +190,7 @@ class CVSFileInfo(VCSFileInfo):
                 if tail == "":
                     tail = os.path.basename(head)
                 file = tail + file
-            return "cvs:%s:%s:%s" % (self.root, file, self.revision)
+            return "cvs:%s:%s:%s" % (self.clean_root, file, self.revision)
         return file
 
 class SVNFileInfo(VCSFileInfo):
@@ -220,6 +238,10 @@ class SVNFileInfo(VCSFileInfo):
         print >> sys.stderr, "Failed to get SVN Root for %s" % self.file
         return None
 
+    # File bug to get this teased out from the current GetRoot, this is temporary
+    def GetCleanRoot(self):
+        return self.root
+
     def GetRevision(self):
         key = "Revision"
         if key in self.svndata:
@@ -245,22 +267,27 @@ vcsFileInfoCache = {}
 def GetVCSFilename(file, srcdir):
     """Given a full path to a file, and the top source directory,
     look for version control information about this file, and return
-    a specially formatted filename that contains the VCS type,
+    a tuple containing
+    1) a specially formatted filename that contains the VCS type,
     VCS location, relative filename, and revision number, formatted like:
     vcs:vcs location:filename:revision
     For example:
-    cvs:cvs.mozilla.org/cvsroot:mozilla/browser/app/nsBrowserApp.cpp:1.36"""
+    cvs:cvs.mozilla.org/cvsroot:mozilla/browser/app/nsBrowserApp.cpp:1.36
+    2) the unmodified root information if it exists"""
     (path, filename) = os.path.split(file)
     if path == '' or filename == '':
         return file
 
     fileInfo = None
+    root = ''
     if file in vcsFileInfoCache:
         # Already cached this info, use it.
         fileInfo = vcsFileInfoCache[file]
     else:
         if os.path.isdir(os.path.join(path, "CVS")):
             fileInfo = CVSFileInfo(file, srcdir)
+            if fileInfo:
+               root = fileInfo.root
         elif os.path.isdir(os.path.join(path, ".svn")) or \
              os.path.isdir(os.path.join(path, "_svn")):
             fileInfo = SVNFileInfo(file);
@@ -270,7 +297,7 @@ def GetVCSFilename(file, srcdir):
         file = fileInfo.filename
 
     # we want forward slashes on win32 paths
-    return file.replace("\\", "/")
+    return (file.replace("\\", "/"), root)
 
 def GetPlatformSpecificDumper(**kwargs):
     """This function simply returns a instance of a subclass of Dumper
@@ -281,13 +308,15 @@ def GetPlatformSpecificDumper(**kwargs):
             'sunos5': Dumper_Solaris,
             'darwin': Dumper_Mac}[sys.platform](**kwargs)
 
-def SourceIndex(fileStream, outputPath):
+def SourceIndex(fileStream, outputPath, cvs_root):
     """Takes a list of files, writes info to a data block in a .stream file"""
     # Creates a .pdb.stream file in the mozilla\objdir to be used for source indexing
     # Create the srcsrv data block that indexes the pdb file
     result = True
     pdbStreamFile = open(outputPath, "w")
-    pdbStreamFile.write('''SRCSRV: ini ------------------------------------------------\r\nVERSION=1\r\nSRCSRV: variables ------------------------------------------\r\nCVS_EXTRACT_CMD=%fnchdir%(%CVS_WORKINGDIR%)cvs.exe -d %fnvar%(%var2%) checkout -r %var4% %var3%\r\nCVS_EXTRACT_TARGET=%targ%\%var2%\%fnbksl%(%var3%)\%fnfile%(%var1%)\r\nCVS_WORKING_DIR=%targ%\%var2%\%fnbksl%(%var3%)\r\nMYSERVER=%CVSROOT%\r\nSRCSRVTRG=%CVS_WORKING_DIR%\r\nSRCSRVCMD=%CVS_EXTRACT_CMD%\r\nSRCSRV: source files ---------------------------------------\r\n''')
+    pdbStreamFile.write('''SRCSRV: ini ------------------------------------------------\r\nVERSION=1\r\nSRCSRV: variables ------------------------------------------\r\nCVS_EXTRACT_CMD=%fnchdir%(%CVS_WORKINGDIR%)cvs.exe -d %fnvar%(%var2%) checkout -r %var4% %var3%\r\nCVS_EXTRACT_TARGET=%targ%\%var2%\%fnbksl%(%var3%)\%fnfile%(%var1%)\r\nCVS_WORKING_DIR=%targ%\r\nMYSERVER=''')
+    pdbStreamFile.write(cvs_root)
+    pdbStreamFile.write('''\r\nSRCSRVTRG=%targ%\%fnbksl%(%var3%)\r\nSRCSRVCMD=%CVS_EXTRACT_CMD%\r\nSRCSRV: source files ---------------------------------------\r\n''')
     pdbStreamFile.write(fileStream) # can't do string interpolation because the source server also uses this and so there are % in the above
     pdbStreamFile.write("SRCSRV: end ------------------------------------------------\r\n\n")
     pdbStreamFile.close()
@@ -344,7 +373,7 @@ class Dumper:
         return file
 
     # This is a no-op except on Win32
-    def SourceServerIndexing(self, debug_file, guid, sourceFileStream):
+    def SourceServerIndexing(self, debug_file, guid, sourceFileStream, cvs_root):
         return ""
 
     # subclasses override this if they want to support this
@@ -377,6 +406,7 @@ class Dumper:
         in the proper directory structure in  |symbol_path|."""
         result = False
         sourceFileStream = ''
+        cvs_root = ''
         for arch in self.archs:
             try:
                 cmd = os.popen("%s %s %s" % (self.dump_syms, arch, file), "r")
@@ -411,7 +441,10 @@ class Dumper:
                             filename = self.FixFilenameCase(filename.rstrip())
                             sourcepath = filename
                             if self.vcsinfo:
-                                filename = GetVCSFilename(filename, self.srcdir)
+                                (filename, rootname) = GetVCSFilename(filename, self.srcdir)
+                                # sets cvs_root in case the loop through files were to end on an empty rootname
+                                if rootname:
+                                   cvs_root = rootname
                             # gather up files with cvs for indexing   
                             if filename.startswith("cvs"):
                                 (ver, checkout, source_file, revision) = filename.split(":", 3)
@@ -429,7 +462,7 @@ class Dumper:
                         self.CopyDebug(file, debug_file, guid)
                     if self.srcsrv:
                         # Call on SourceServerIndexing
-                        result = self.SourceServerIndexing(debug_file, guid, sourceFileStream)
+                        result = self.SourceServerIndexing(debug_file, guid, sourceFileStream, cvs_root)
                     result = True
             except StopIteration:
                 pass
@@ -486,13 +519,13 @@ class Dumper_Win32(Dumper):
         shutil.copyfile(file, full_path)
         pass
         
-    def SourceServerIndexing(self, debug_file, guid, sourceFileStream):
+    def SourceServerIndexing(self, debug_file, guid, sourceFileStream, cvs_root):
         # Creates a .pdb.stream file in the mozilla\objdir to be used for source indexing
         cwd = os.getcwd()
         streamFilename = debug_file + ".stream"
         stream_output_path = os.path.join(cwd, streamFilename)
         # Call SourceIndex to create the .stream file
-        result = SourceIndex(sourceFileStream, stream_output_path)
+        result = SourceIndex(sourceFileStream, stream_output_path, cvs_root)
         
         if self.copy_debug:
             pdbstr_path = os.environ.get("PDBSTR_PATH")
