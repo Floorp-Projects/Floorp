@@ -20,10 +20,6 @@ richlistitem[type="download"][selected="true"] {
   background-image: url(chrome://mozapps/skin/extensions/itemEnabledFader.png);
 }
 
-richlistitem[type="download"][alternate="true"]:not([selected="true"]) {
-  background-color: ThreeDLightShadow;
-}
-
 richlistitem[type="download"] .name {
   font-size: larger;
 }
