@@ -53,11 +53,16 @@
 - (ATSUFontID)_atsFontID;
 @end
 
+// font info loader constants
+static const PRUint32 kDelayBeforeLoadingCmaps = 8 * 1000; // 8secs
+static const PRUint32 kIntervalBetweenLoadingCmaps = 150; // 150ms
+static const PRUint32 kNumFontsPerSlice = 10; // read in info 10 fonts at a time
+
 #define INDEX_FONT_POSTSCRIPT_NAME 0
 #define INDEX_FONT_FACE_NAME 1
 #define INDEX_FONT_WEIGHT 2
 #define INDEX_FONT_TRAITS 3
- 
+
 static const int kAppleMaxWeight = 14;
 
 static const int gAppleWeightToCSSWeight[] = {
@@ -84,7 +89,7 @@ static void GetStringForNSString(const NSString *aSrc, nsAString& aDist)
     aDist.SetLength([aSrc length]);
     [aSrc getCharacters:aDist.BeginWriting()];
 }
- 
+
 static NSString* GetNSStringForString(const nsAString& aSrc)
 {
     return [NSString stringWithCharacters:aSrc.BeginReading()
@@ -168,15 +173,16 @@ nsresult
 MacOSFontEntry::ReadCMAP()
 {
     OSStatus status;
-    ByteCount size;
-    
+    ByteCount size, cmapSize;
+
     if (mCmapInitialized) return NS_OK;
     ATSUFontID fontID = GetFontID();
-    
+
     // attempt this once, if errors occur leave a blank cmap
     mCmapInitialized = PR_TRUE;
-    
+
     status = ATSFontGetTable(fontID, 'cmap', 0, 0, 0, &size);
+    cmapSize = size;
     //printf( "cmap size: %s %d\n", NS_ConvertUTF16toUTF8(mName).get(), size );
     NS_ENSURE_TRUE(status == noErr, NS_ERROR_FAILURE);
 
@@ -234,6 +240,9 @@ MacOSFontEntry::ReadCMAP()
         }
     }
 
+    PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontinit-cmap) psname: %s, size: %d\n", 
+                                        NS_ConvertUTF16toUTF8(mPostscriptName).get(), mCharacterMap.GetSize()));
+                                        
     return rv;
 }
 
@@ -248,11 +257,11 @@ public:
     AddOtherFamilyNameFunctor(gfxQuartzFontCache *aFontCache) :
         mFontCache(aFontCache)
     {}
-        
+
     void operator() (MacOSFamilyEntry *aFamilyEntry, nsAString& aOtherName) {
         mFontCache->AddOtherFamilyName(aFamilyEntry, aOtherName);
     }
-    
+
     gfxQuartzFontCache *mFontCache;
 };
 
@@ -584,14 +593,14 @@ static PRBool ReadOtherFamilyNamesForFace(AddOtherFamilyNameFunctor& aOtherFamil
     OSStatus err;
     ItemCount i, nameCount;
     PRBool foundNames = PR_FALSE;
-    
+
     if (fontID == kATSUInvalidFontID)
         return foundNames;
 
     err = ATSUCountFontNames(fontID, &nameCount);
     if (err != noErr) 
         return foundNames;
-    
+
     for (i = 0; i < nameCount; i++) {
 
         FontNameCode nameCode;
@@ -609,7 +618,7 @@ static PRBool ReadOtherFamilyNamesForFace(AddOtherFamilyNameFunctor& aOtherFamil
         // any other error, bail
         if (err != noErr) 
             return foundNames;
-        
+
         if (useFullName) {
             if (nameCode != kFontFullName)
                 continue;
@@ -619,9 +628,9 @@ static PRBool ReadOtherFamilyNamesForFace(AddOtherFamilyNameFunctor& aOtherFamil
         }
         if (len >= kBufLength) continue; 
         buf[len] = 0;
-        
+
         NSString *name = CreateNameFromBuffer((UInt8*)buf, len, platformCode, scriptCode, langCode);
-        
+
         // add if not same as canonical family name or already in list of names
         if (name) {
 
@@ -631,7 +640,7 @@ static PRBool ReadOtherFamilyNamesForFace(AddOtherFamilyNameFunctor& aOtherFamil
                 aOtherFamilyFunctor(aFamilyEntry, otherFamilyName);
                 foundNames = PR_TRUE;
             }
-    
+
             [name release];
         }
     }
@@ -712,12 +721,13 @@ void SingleFaceFamily::ReadOtherFamilyNames(AddOtherFamilyNameFunctor& aOtherFam
 gfxQuartzFontCache *gfxQuartzFontCache::sSharedFontCache = nsnull;
 
 gfxQuartzFontCache::gfxQuartzFontCache()
+    : mStartIndex(0), mIncrement(kNumFontsPerSlice), mNumFamilies(0)
 {
     mFontFamilies.Init(100);
     mOtherFamilyNames.Init(30);
     mOtherFamilyNamesInitialized = PR_FALSE;
     mPrefFonts.Init(10);
-
+    
     InitFontList();
     ::ATSFontNotificationSubscribe(ATSNotification,
                                    kATSFontNotifyOptionDefault,
@@ -741,7 +751,8 @@ gfxQuartzFontCache::InitFontList()
     mOtherFamilyNamesInitialized = PR_FALSE;
     mPrefFonts.Clear();
     mCodepointsWithNoFonts.reset();
-    
+    CancelLoader();
+
     // iterate over available families
     NSFontManager *fontManager = [NSFontManager sharedFontManager];
     NSEnumerator *families = [[fontManager availableFontFamilies] objectEnumerator];  // returns "canonical", non-localized family name
@@ -812,6 +823,10 @@ gfxQuartzFontCache::InitFontList()
     mCodepointsWithNoFonts.set(0xfffd);          // unknown
 
     InitBadUnderlineList();
+
+    // start the delayed cmap loader
+    StartLoader(kDelayBeforeLoadingCmaps, kIntervalBetweenLoadingCmaps); 
+
 }
 
 void 
@@ -918,18 +933,18 @@ gfxQuartzFontCache::EliminateDuplicateFaces(const nsAString& aFamilyName)
     if (!family) return;
 
     nsTArray<nsRefPtr<MacOSFontEntry> >& fontlist = family->GetFontList();
-    
+
     PRUint32 i, bold, numFonts, italicIndex;
     MacOSFontEntry *italic, *nonitalic;
     PRUint32 boldtraits[2] = { 0, NSBoldFontMask };
-    
+
     // if normal and italic have the same ATSUI id, delete italic
     // if bold and bold-italic have the same ATSUI id, delete bold-italic
-    
+
     // two iterations, one for normal, one for bold
     for (bold = 0; bold < 2; bold++) {
         numFonts = fontlist.Length();
-        
+
         // find the non-italic face
         nonitalic = nsnull;
         for (i = 0; i < numFonts; i++) {
@@ -939,7 +954,7 @@ gfxQuartzFontCache::EliminateDuplicateFaces(const nsAString& aFamilyName)
                 break;
             }
         }
-        
+
         // find the italic face
         if (nonitalic) {
             italic = nsnull;
@@ -951,7 +966,7 @@ gfxQuartzFontCache::EliminateDuplicateFaces(const nsAString& aFamilyName)
                     break;
                 }
             }
-            
+
             // if italic face and non-italic face have matching ATSUI id's, 
             // the italic face is bogus so remove it
             if (italic && italic->GetFontID() == nonitalic->GetFontID()) {
@@ -1083,10 +1098,10 @@ struct FontListData {
 PLDHashOperator PR_CALLBACK
 gfxQuartzFontCache::HashEnumFuncForFamilies(nsStringHashKey::KeyType aKey,
                                             nsRefPtr<MacOSFamilyEntry>& aFamilyEntry,
-                                            void* aUserArg)
+                                            void *aUserArg)
 {
     FontListData *data = (FontListData*)aUserArg;
-    
+
     nsAutoString localizedFamilyName;
     aFamilyEntry->LocalizedName(localizedFamilyName);
     data->mListOfFonts.AppendString(localizedFamilyName);
@@ -1106,6 +1121,30 @@ gfxQuartzFontCache::GetFontList (const nsACString& aLangGroup,
     aListOfFonts.Compact();
 }
 
+struct FontFamilyListData {
+    FontFamilyListData(nsTArray<nsRefPtr<MacOSFamilyEntry> >& aFamilyArray) 
+        : mFamilyArray(aFamilyArray)
+    {}
+
+    static PLDHashOperator PR_CALLBACK AppendFamily(nsStringHashKey::KeyType aKey,
+                                                    nsRefPtr<MacOSFamilyEntry>& aFamilyEntry,
+                                                    void *aUserArg)
+    {
+        FontFamilyListData *data = (FontFamilyListData*)aUserArg;
+        data->mFamilyArray.AppendElement(aFamilyEntry);
+        return PL_DHASH_NEXT;
+    }
+
+    nsTArray<nsRefPtr<MacOSFamilyEntry> >& mFamilyArray;
+};
+
+void
+gfxQuartzFontCache::GetFontFamilyList(nsTArray<nsRefPtr<MacOSFamilyEntry> >& aFamilyArray)
+{
+    FontFamilyListData data(aFamilyArray);
+    mFontFamilies.Enumerate(FontFamilyListData::AppendFamily, &data);
+}
+
 MacOSFontEntry*  
 gfxQuartzFontCache::FindFontForChar(const PRUint32 aCh, gfxAtsuiFont *aPrevFont)
 {
@@ -1123,13 +1162,13 @@ gfxQuartzFontCache::FindFontForChar(const PRUint32 aCh, gfxAtsuiFont *aPrevFont)
     if (!data.bestMatch) {
         mCodepointsWithNoFonts.set(aCh);
     }
-    
+
     return data.bestMatch;
 }
 
 PLDHashOperator PR_CALLBACK 
 gfxQuartzFontCache::FindFontForCharProc(nsStringHashKey::KeyType aKey, nsRefPtr<MacOSFamilyEntry>& aFamilyEntry,
-     void* userArg)
+     void *userArg)
 {
     FontSearch *data = (FontSearch*)userArg;
 
@@ -1145,7 +1184,7 @@ gfxQuartzFontCache::FindFamily(const nsAString& aFamily)
     MacOSFamilyEntry *familyEntry;
     PRBool found;
     GenerateFontListKey(aFamily, key);
-    
+
     // lookup in canonical (i.e. English) family name list
     if ((familyEntry = mFontFamilies.GetWeak(key, &found))) {
         return familyEntry;
@@ -1218,3 +1257,41 @@ gfxQuartzFontCache::AddOtherFamilyName(MacOSFamilyEntry *aFamilyEntry, nsAString
                                             NS_ConvertUTF16toUTF8(aOtherFamilyName).get()));
     }
 }
+
+void 
+gfxQuartzFontCache::InitLoader()
+{
+    GetFontFamilyList(mFontFamiliesToLoad);
+    mStartIndex = 0;
+    mNumFamilies = mFontFamiliesToLoad.Length();
+}
+
+PRBool 
+gfxQuartzFontCache::RunLoader()
+{
+    PRUint32 i, endIndex = ( mStartIndex + mIncrement < mNumFamilies ? mStartIndex + mIncrement : mNumFamilies );
+
+    // for each font family, load in various font info
+    for (i = mStartIndex; i < endIndex; i++) {
+        AddOtherFamilyNameFunctor addOtherNames(this);
+
+        // load the cmap
+        mFontFamiliesToLoad[i]->ReadCMAP();
+
+        // read in other family names
+        mFontFamiliesToLoad[i]->ReadOtherFamilyNames(addOtherNames);
+    }
+
+    mStartIndex += mIncrement;
+    if (mStartIndex < mNumFamilies)
+        return PR_FALSE;
+    return PR_TRUE;
+}
+
+void 
+gfxQuartzFontCache::FinishLoader()
+{
+    mFontFamiliesToLoad.Clear();
+    mNumFamilies = 0;
+}
+
