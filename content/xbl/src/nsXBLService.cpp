@@ -81,6 +81,7 @@
 #include "nsStyleContext.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptError.h"
+#include "nsIConsoleService.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPrototypeCache.h"
@@ -145,6 +146,60 @@ IsAncestorBinding(nsIDocument* aDocument,
   }
 
   return PR_FALSE;
+}
+
+PRBool CheckTagNameWhiteList(PRInt32 aNameSpaceID, nsIAtom *aTagName)
+{
+  static nsIContent::AttrValuesArray kValidXULTagNames[] =  {
+    &nsGkAtoms::box, &nsGkAtoms::browser, &nsGkAtoms::button,
+    &nsGkAtoms::hbox, &nsGkAtoms::image, &nsGkAtoms::menu,
+    &nsGkAtoms::menubar, &nsGkAtoms::menuitem, &nsGkAtoms::menupopup,
+    &nsGkAtoms::row, &nsGkAtoms::spacer, &nsGkAtoms::splitter,
+    &nsGkAtoms::text, &nsGkAtoms::tree, nsnull};
+
+  PRUint32 i;
+  if (aNameSpaceID == kNameSpaceID_XUL) {
+    for (i = 0; kValidXULTagNames[i]; ++i) {
+      if (aTagName == *(kValidXULTagNames[i])) {
+        return PR_TRUE;
+      }
+    }
+  }
+  else if (aNameSpaceID == kNameSpaceID_SVG) {
+    if (aTagName == nsGkAtoms::g) {
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
+/* static */ nsresult
+PrintErrorToConsole(const nsAString& errText, nsIURI* aURI,
+                    const nsAFlatString& aSourceLine, PRUint32 aLineNumber,
+                    PRUint32 aColumnNumber, PRUint32 aErrorFlags,
+                    const char *aCategory)
+{
+  nsresult rv;
+  nsCOMPtr<nsIConsoleService> consoleService
+    (do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString spec;
+  if (aURI)
+    aURI->GetSpec(spec);
+
+  nsCOMPtr<nsIScriptError> errorObject =
+      do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = errorObject->Init(errText.Data(),
+                         NS_ConvertUTF8toUTF16(spec).get(), // file name
+                         aSourceLine.get(),
+                         aLineNumber, aColumnNumber,
+                         aErrorFlags, aCategory);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return consoleService->LogMessage(errorObject);
 }
 
 // Individual binding requests.
@@ -865,6 +920,18 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
               nsContentUtils::NameSpaceManager()->GetNameSpaceID(nameSpace);
 
             nsCOMPtr<nsIAtom> tagName = do_GetAtom(display);
+            // Check the white list
+            if (!CheckTagNameWhiteList(nameSpaceID, tagName)) {
+              nsAutoString errText = NS_LITERAL_STRING("Extending ") + value +
+                NS_LITERAL_STRING(
+                  " is invalid. In general, do not extend tag names.");
+
+              PrintErrorToConsole(errText, boundDocument->GetDocumentURI(),
+                                  EmptyString(), 0, 0,
+                                  nsIScriptError::errorFlag, "XBL");
+              NS_ERROR("Invalid extends value");
+              return NS_ERROR_ILLEGAL_VALUE;
+            }
             protoBinding->SetBaseTag(nameSpaceID, tagName);
           }
         }
