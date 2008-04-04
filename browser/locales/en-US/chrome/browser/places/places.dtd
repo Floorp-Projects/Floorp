@@ -45,7 +45,7 @@
 <!ENTITY cmd.backup.label               "Backup…">
 <!ENTITY cmd.backup.accesskey           "B">
 <!ENTITY cmd.restore2.label             "Restore">
-<!ENTITY cmd.restore.accesskey          "R">
+<!ENTITY cmd.restore2.accesskey         "R">
 <!ENTITY cmd.restoreFromFile.label      "Choose File…">
 <!ENTITY cmd.restoreFromFile.accesskey  "C">
 
