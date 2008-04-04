@@ -450,6 +450,7 @@ gfxAtsuiFontGroup::gfxAtsuiFontGroup(const nsAString& families,
         // default fonts for on the mac; we should fix this!
         // Known:
         // ja x-beng x-devanagari x-tamil x-geor x-ethi x-gujr x-mlym x-armn
+        // x-orya x-telu x-knda x-sinh
 
         //fprintf (stderr, "gfxAtsuiFontGroup: %s [%s] -> %d fonts found\n", NS_ConvertUTF16toUTF8(families).get(), aStyle->langGroup.get(), mFonts.Length());
 

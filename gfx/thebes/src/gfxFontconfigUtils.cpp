@@ -132,6 +132,10 @@ const MozGtkLangGroup MozGtkLangGroups[] = {
     { "x-guru",         (const FcChar8 *)"pa" },
     { "x-khmr",         (const FcChar8 *)"km" },
     { "x-mlym",         (const FcChar8 *)"ml" },
+    { "x-orya",         (const FcChar8 *)"or" },
+    { "x-telu",         (const FcChar8 *)"te" },
+    { "x-knda",         (const FcChar8 *)"kn" },
+    { "x-sinh",         (const FcChar8 *)"si" },
     { "x-unicode",                       0    },
     { "x-user-def",                      0    }
 };
