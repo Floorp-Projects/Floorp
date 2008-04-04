@@ -4140,13 +4140,15 @@ nsBrowserStatusHandler.prototype =
         this._tooltipText == gBrowser.securityUI.tooltipText &&
         !this._hostChanged) {
 #ifdef DEBUG
-      var contentHost = gBrowser.contentWindow.location.host;
-      if (this._host !== undefined && this._host != contentHost) {
-          Components.utils.reportError(
-            "ASSERTION: browser.js host is inconsistent. Content window has " + 
-            "<" + contentHost + "> but cached host is <" + this._host + ">.\n"
-          );
-      }
+      try {
+        var contentHost = gBrowser.contentWindow.location.host;
+        if (this._host !== undefined && this._host != contentHost) {
+            Components.utils.reportError(
+              "ASSERTION: browser.js host is inconsistent. Content window has " + 
+              "<" + contentHost + "> but cached host is <" + this._host + ">.\n"
+            );
+        }
+      } catch (ex) {}
 #endif
       return;
     }
