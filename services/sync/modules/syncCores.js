@@ -442,8 +442,8 @@ CookieSyncCore.prototype = {
     if (!this.__cookieManager)
       this.__cookieManager = Cc["@mozilla.org/cookiemanager;1"].
                              getService(Ci.nsICookieManager2);
-    // need the 2nd revision of the ICookieManager interface
-    // because it supports add() and the 1st one doesn't.
+    /* need the 2nd revision of the ICookieManager interface
+       because it supports add() and the 1st one doesn't. */
     return this.__cookieManager
   },
 
@@ -488,12 +488,12 @@ CookieSyncCore.prototype = {
   },
 
   _commandLike: function CSC_commandLike(a, b) {
-    // Method required to be overridden.
-    // a and b each have a .data and a .GUID
-    // If this function returns true, an editCommand will be
-    // generated to try to resolve the thing.
-    // but are a and b objects of the type in the Store or
-    // are they "commands"??
+    /* Method required to be overridden.
+       a and b each have a .data and a .GUID
+       If this function returns true, an editCommand will be
+       generated to try to resolve the thing.
+       but are a and b objects of the type in the Store or
+       are they "commands"?? */
     return false;
   }
 };

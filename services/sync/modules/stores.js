@@ -777,113 +777,113 @@ CookieStore.prototype = {
   },
 
   _createCommand: function HistStore__createCommand(command) {
-	// we got a command to create a cookie in the local browser
-        // in order to sync with the server.
+    /* we got a command to create a cookie in the local browser
+       in order to sync with the server. */
 
-	this._log.info("CookieStore got createCommand: " + command );
-        // this assumes command.data fits the nsICookie2 interface
-	this._cookieManager.add( command.data.host,
-                                 command.data.path,
-                                 command.data.name,
-                                 command.data.value,
-                                 command.data.isSecure,
-				 command.data.isHttpOnly,
-                                 command.data.isSession,
-                                 command.data.expiry );
+    this._log.info("CookieStore got createCommand: " + command );
+    // this assumes command.data fits the nsICookie2 interface
+    this._cookieManager.add( command.data.host,
+			     command.data.path,
+			     command.data.name,
+			     command.data.value,
+			     command.data.isSecure,
+			     command.data.isHttpOnly,
+			     command.data.isSession,
+			     command.data.expiry );
   },
 
   _removeCommand: function CookieStore__removeCommand(command) {
-	// we got a command to remove a cookie from the local browser
-        // in order to sync with the server.
-        // command.data appears to be equivalent to what wrap() puts in
-        // the JSON dictionary.
+    /* we got a command to remove a cookie from the local browser
+       in order to sync with the server.
+       command.data appears to be equivalent to what wrap() puts in
+       the JSON dictionary. */
     
-        this._log.info("CookieStore got removeCommand: " + command );
+    this._log.info("CookieStore got removeCommand: " + command );
 
-        // I think it goes like this, according to 
-        // http://developer.mozilla.org/en/docs/nsICookieManager
-        // the last argument is "always block cookies from this domain?"
-	// and the answer is "no".
-	this._cookieManager.remove( command.data.host,
-                                    command.data.name,
-				    command.data.path,
-                                    false );
+    /* I think it goes like this, according to 
+      http://developer.mozilla.org/en/docs/nsICookieManager
+      the last argument is "always block cookies from this domain?"
+      and the answer is "no". */
+    this._cookieManager.remove( command.data.host,
+				command.data.name,
+				command.data.path,
+				false );
   },
 
   _editCommand: function CookieStore__editCommand(command) {
-        // we got a command to change a cookie in the local browser
-        // in order to sync with the server.
+    /* we got a command to change a cookie in the local browser
+       in order to sync with the server.
     
-	// The behavior should be that if the
-        // local copy of the cookie is more-recently modified, it should
-        // be kept, but if it's older, it should be replaced with the
-        // server's copy.
+       if the local copy of the cookie is more-recently modified, it
+       should be kept, but if it's older, it should be replaced with
+       the server's copy.
+    */
 
-        // The nsICookie interface doesn't seem to include the date/time
-        // that the cookie was set -- only the expiry.  TODO: Figure out
-        // the best way to deal with this.
-        this._log.info("CookieStore got editCommand: " + command );
+    /* Problem: The nsICookie interface doesn't seem to include the date/time
+       that the cookie was set -- only the expiry.  TODO: Figure out
+       the best way to deal with this. */
+    this._log.info("CookieStore got editCommand: " + command );
 
-	this._log.debug( "Info on command object passed in: " );
-	for ( var x in command )
-	  {
-	    this._log.debug( "Command." + x + " = " + command[x] );
-	  }
-	for ( var y in command.data )
-	  {
-	    this._log.debug( "Command.data." + y + " = " + command.data[y] );
-	  }
+    this._log.debug( "Info on command object passed in: " );
+    for ( var x in command )
+      {
+	this._log.debug( "Command." + x + " = " + command[x] );
+      }
+    for ( var y in command.data )
+      {
+	this._log.debug( "Command.data." + y + " = " + command.data[y] );
+      }
   },
 
   wrap: function CookieStore_wrap() {
-	// Return contents of this store, as JSON.
-        // A dictionary of cookies where the keys are GUIDs and the
-        // values are sub-dictionaries containing all cookie fields.
+    /* Return contents of this store, as JSON.
+       A dictionary of cookies where the keys are GUIDs and the
+       values are sub-dictionaries containing all cookie fields. */
 
-	let items = {};
-	var iter = this._cookieManager.enumerator;
-	while (iter.hasMoreElements()){
-	    var cookie = iter.getNext();
-	    if (cookie instanceof Ci.nsICookie){
-                // String used to identify cookies is
-		// host:path:name
-                let key = cookie.host + ":" + cookie.path + ":" + cookie.name
-		items[ key ] = { parentGUID: '',
-				 name: cookie.name,
-				 value: cookie.value,
-				 isDomain: cookie.isDomain,
-				 host: cookie.host,
-				 path: cookie.path,
-				 isSecure: cookie.isSecure,
-                                 // nsICookie2 values:
-				 rawHost: cookie.rawHost,
-				 isSession: cookie.isSession,
-				 expiry: cookie.expiry,
-				 isHttpOnly: cookie.isHttpOnly }
-
-		// http://developer.mozilla.org/en/docs/nsICookie
-		// Note: not syncing "expires", "status", or "policy"
-		// since they're deprecated.
-
-	    }
-	}
+    let items = {};
+    var iter = this._cookieManager.enumerator;
+    while (iter.hasMoreElements()){
+      var cookie = iter.getNext();
+      if (cookie instanceof Ci.nsICookie){
+	// String used to identify cookies is
+	// host:path:name
+	let key = cookie.host + ":" + cookie.path + ":" + cookie.name
+	  items[ key ] = { parentGUID: '',
+			   name: cookie.name,
+			   value: cookie.value,
+			   isDomain: cookie.isDomain,
+			   host: cookie.host,
+			   path: cookie.path,
+			   isSecure: cookie.isSecure,
+			   // nsICookie2 values:
+			   rawHost: cookie.rawHost,
+			   isSession: cookie.isSession,
+			   expiry: cookie.expiry,
+			   isHttpOnly: cookie.isHttpOnly }
+	
+	/* See http://developer.mozilla.org/en/docs/nsICookie
+	   Note: not syncing "expires", "status", or "policy"
+	   since they're deprecated. */
+	
+      }
+    }
     return items;
   },
 
   wipe: function CookieStore_wipe() {
-	// Remove everything from the store.  Return nothing.
-        // TODO are the semantics of this just wiping out an internal
-        // buffer, or am I supposed to wipe out all cookies from
-        // the browser itself for reals?
-        this._cookieManager.removeAll()
+    /* Remove everything from the store.  Return nothing.
+       TODO are the semantics of this just wiping out an internal
+       buffer, or am I supposed to wipe out all cookies from
+       the browser itself for reals? */
+    this._cookieManager.removeAll()
   },
 
   resetGUIDs: function CookieStore_resetGUIDs() {
-      // called in the case where remote/local sync GUIDs do not
-      // match.  We do need to override this, but since we're deriving
-      // GUIDs from the cookie data itself and not generating them,
-      // there's basically no way they can get "out of sync" so there's
-      // nothing to do here.
+    /* called in the case where remote/local sync GUIDs do not
+       match.  We do need to override this, but since we're deriving
+       GUIDs from the cookie data itself and not generating them,
+       there's basically no way they can get "out of sync" so there's
+       nothing to do here. */
   }
 };
 CookieStore.prototype.__proto__ = new Store();
