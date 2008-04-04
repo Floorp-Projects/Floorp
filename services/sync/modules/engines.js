@@ -582,6 +582,7 @@ Engine.prototype = {
         this._log.debug("Exception: " + Utils.exceptionStr(e));
         this._log.trace("Stack:\n" + Utils.stackTrace(e));
         this._snapshot.wipe();
+        throw e;
       }
 
       ret.status = 0;
