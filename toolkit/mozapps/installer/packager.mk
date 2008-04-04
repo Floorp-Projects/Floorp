@@ -48,12 +48,14 @@ ifndef MOZ_PKG_FORMAT
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 MOZ_PKG_FORMAT  = DMG
 else
-ifeq (,$(filter-out OS2 WINNT, $(OS_ARCH)))
+ifeq (,$(filter-out OS2 WINNT BeOS, $(OS_ARCH)))
 MOZ_PKG_FORMAT  = ZIP
 ifeq ($(OS_ARCH),OS2)
 INSTALLER_DIR   = os2
 else
+ifeq ($(OS_ARCH), WINNT)
 INSTALLER_DIR   = windows
+endif
 endif
 else
 ifeq (,$(filter-out SunOS, $(OS_ARCH)))
