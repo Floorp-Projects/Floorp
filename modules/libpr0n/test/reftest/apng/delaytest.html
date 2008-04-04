@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<title>Delayed image reftest wrapper</title>
+</head>
+<body>
+<img id="image1">
+<script>
+// This loads a externally specified image, waits 100ms, and then triggers the
+// reftest snapshot. This allows the animation on the page to complete.
+//
+// Use as "delaytest.html?animation.png"
+//
+function startTimer() {
+  const delay = 100;
+  setTimeout("document.documentElement.className = '';", delay);
+}
+var imgURL = document.location.search.substr(1);
+var img = document.images[0];
+img.src = imgURL;
+img.onload = startTimer;
+</script>
+</body>
+</html>
