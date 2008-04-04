@@ -847,19 +847,19 @@ CookieStore.prototype = {
       if (cookie instanceof Ci.nsICookie){
 	// String used to identify cookies is
 	// host:path:name
-	let key = cookie.host + ":" + cookie.path + ":" + cookie.name
-	  items[ key ] = { parentGUID: '',
-			   name: cookie.name,
-			   value: cookie.value,
-			   isDomain: cookie.isDomain,
-			   host: cookie.host,
-			   path: cookie.path,
-			   isSecure: cookie.isSecure,
-			   // nsICookie2 values:
-			   rawHost: cookie.rawHost,
-			   isSession: cookie.isSession,
-			   expiry: cookie.expiry,
-			   isHttpOnly: cookie.isHttpOnly }
+	let key = cookie.host + ":" + cookie.path + ":" + cookie.name;
+	items[ key ] = { parentGUID: '',
+			 name: cookie.name,
+			 value: cookie.value,
+			 isDomain: cookie.isDomain,
+			 host: cookie.host,
+			 path: cookie.path,
+			 isSecure: cookie.isSecure,
+			 // nsICookie2 values:
+			 rawHost: cookie.rawHost,
+			 isSession: cookie.isSession,
+			 expiry: cookie.expiry,
+			 isHttpOnly: cookie.isHttpOnly }
 	
 	/* See http://developer.mozilla.org/en/docs/nsICookie
 	   Note: not syncing "expires", "status", or "policy"
