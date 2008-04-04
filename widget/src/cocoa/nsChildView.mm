@@ -2964,7 +2964,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
       nsIWidget* lastViewEnteredWidget = [(NSView<mozView>*)sLastViewEntered widget];
       NSPoint exitEventLocation = [sLastViewEntered convertPoint:windowEventLocation fromView:nil];
       SendGeckoMouseEnterOrExitEvent(PR_TRUE, NS_MOUSE_EXIT, lastViewEnteredWidget, nsMouseEvent::eReal,
-                                     &exitEventLocation, nsMouseEvent::eChild);
+                                     &exitEventLocation, nsMouseEvent::eTopLevel);
       sLastViewEntered = nil;
     }
     return;
