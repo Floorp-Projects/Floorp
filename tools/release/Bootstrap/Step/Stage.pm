@@ -13,7 +13,7 @@ use Cwd;
 
 use Bootstrap::Step;
 use Bootstrap::Config;
-use Bootstrap::Util qw(CvsCatfile SyncToStaging);
+use Bootstrap::Util qw(CvsCatfile);
 
 use MozBuild::Util qw(MkdirWithPath);
 
@@ -22,7 +22,7 @@ use MozBuild::Util qw(MkdirWithPath);
 use strict;
 
 #
-# List of directories that are allowed to be in the prestage-trimmed directory,
+# List of directories that are allowed to be in the stage-unsigned directory,
 # theoretically because TrimCallback() will know what to do with them.
 #
 my @ALLOWED_DELIVERABLE_DIRECTORIES = qw(windows-xpi mac-xpi linux-xpi);
@@ -190,6 +190,7 @@ sub Execute {
 
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
+    my $productTag = $config->Get(var => 'productTag');
     my $version = $config->GetVersion(longName => 0);
     my $rc = $config->Get(var => 'rc');
     my $logDir = $config->Get(sysvar => 'logDir');
@@ -198,7 +199,9 @@ sub Execute {
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $mofoCvsroot = $config->Get(var => 'mofoCvsroot');
     my $releaseTag = $config->Get(var => 'productTag') . '_RELEASE';
- 
+    my $stagingUser = $config->Get(var => 'stagingUser');
+    my $stagingServer = $config->Get(var => 'stagingServer');
+    
     ## Prepare the staging directory for the release.
     # Create the staging directory.
 
@@ -282,39 +285,25 @@ sub Execute {
       logFile => catfile($logDir, 'stage_merge_skel.log'),
       dir => $stageDir,
     );
-    
-    # Collect the release files from the candidates directory into a prestage
-    # directory.
-    my $prestageDir = catfile($batch1Dir, 'prestage');
-    if (not -d $prestageDir) {
-        MkdirWithPath(dir => $prestageDir, mask => 0755) 
-          or die "Cannot create $prestageDir: $!";
-        $this->Log(msg => "Created directory $prestageDir");
-    }
 
-    $this->Shell(
-      cmd => 'rsync',
-      cmdArgs => ['-Lav', catfile('/home', 'ftp', 'pub', $product, 'nightly',
-                                    $version . '-candidates', 'rc' . $rc ) . 
-                                 '/',
-                    './'],
-      logFile => catfile($logDir, 'stage_collect.log'),
-      dir => $prestageDir
-    );
-
-    # Create a pruning/"trimmed" area; this area will be used to remove
+    # Collect the release files from the candidates directory into 
+    # a pruning/"trimmed" area; this area will be used to remove
     # locales and deliverables we don't ship. 
+    my $ftpNightlyDir = $config->GetFtpCandidateDir(bitsUnsigned => 0);
+
     $this->Shell(
       cmd => 'rsync',
-      cmdArgs => ['-av', 'prestage/', 'prestage-trimmed/'],
-      logFile => catfile($logDir, 'stage_collect_trimmed.log'),
+      cmdArgs => ['-Lav', '-e', 'ssh',
+                  $stagingUser . '@' .  $stagingServer . ':' . $ftpNightlyDir,
+                  './stage-unsigned'],
+      logFile => catfile($logDir, 'download_stage.log'),
       dir => $batch1Dir
     );
 
-    my $prestageTrimmedDir = catfile($batch1Dir, 'prestage-trimmed');
+    my $prestageTrimmedDir = catfile($batch1Dir, 'stage-unsigned');
 
     # Remove unknown/unrecognized directories from the -candidates dir; after
-    # this, the only directories that should be in the prestage-trimmed
+    # this, the only directories that should be in the stage-unsigned
     # directory are directories that we expliciately handle below, to prep
     # for groom-files.
     $this->{'scrubTrimmedDirDeleteList'} = [];
@@ -341,14 +330,34 @@ sub Execute {
     # some point (says the hacker who wrote most of that ickyness ;-)
     find(sub { return $this->TrimCallback(); }, $prestageTrimmedDir);
    
-    # Create a stage-unsigned directory to run groom-files in.
+    # Process the update mars; we copy everything from the trimmed directory
+    # that we created above; this will have only the locales/deliverables
+    # we actually ship; then, remove everything but the mars, including
+    # the [empty] directories; then, run groom-files in the directory that 
+    # has only updates now.
     $this->Shell(
       cmd => 'rsync',
-      cmdArgs => ['-av', 'prestage-trimmed/', 'stage-unsigned/'],
-      logFile => catfile($logDir, 'stage_collect_stage.log'),
+      cmdArgs => ['-av', 'stage-unsigned/', 'mar/'],
+      logFile => catfile($logDir, 'stage_trimmed_to_mars.log'),
       dir => $batch1Dir
     );
 
+    $this->{'leaveOnlyMarsDirDeleteList'} = [];
+    find(sub { return $this->LeaveOnlyUpdateMarsCallback(); },
+     catfile($stageDir, 'batch1', 'mar'));
+
+    foreach my $delDir (@{$this->{'leaveOnlyMarsDirDeleteList'}}) {
+        if (-e $delDir && -d $delDir) {
+            $this->Log(msg => "rmtree() ing $delDir");
+            if (rmtree($delDir, 1, 1) <= 0) {
+                die("ASSERT: rmtree() called on $delDir, but nothing deleted.");
+            }
+        }
+    }
+
+    $this->GroomFiles(catfile($batch1Dir, 'mar'));
+
+    # Remove MAR files from stage-unsigned now that they have been processed.
     find(sub { return $this->RemoveMarsCallback(); },
      catfile($batch1Dir, 'stage-unsigned'));
 
@@ -392,36 +401,7 @@ sub Execute {
       dir => $batch1Dir
     );
 
-
-    # Process the update mars; we copy everything from the trimmed directory
-    # that we created above; this will have only the locales/deliverables
-    # we actually ship; then, remove everything but the mars, including
-    # the [empty] directories; then, run groom-files in the directory that 
-    # has only updates now.
-    $this->Shell(
-      cmd => 'rsync',
-      cmdArgs => ['-av', 'prestage-trimmed/', 'mar/'],
-      logFile => catfile($logDir, 'stage_trimmed_to_mars.log'),
-      dir => $batch1Dir
-    );
-
-    $this->{'leaveOnlyMarsDirDeleteList'} = [];
-    find(sub { return $this->LeaveOnlyUpdateMarsCallback(); },
-     catfile($stageDir, 'batch1', 'mar'));
-
-    foreach my $delDir (@{$this->{'leaveOnlyMarsDirDeleteList'}}) {
-        if (-e $delDir && -d $delDir) {
-            $this->Log(msg => "rmtree() ing $delDir");
-            if (rmtree($delDir, 1, 1) <= 0) {
-                die("ASSERT: rmtree() called on $delDir, but nothing deleted.");
-            }
-        }
-    }
-
-    $this->GroomFiles(catfile($batch1Dir, 'mar'));
-    SyncToStaging();
 }
-
 
 sub Verify {
     my $this = shift;
@@ -436,9 +416,6 @@ sub Verify {
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $linuxExtension = $config->GetLinuxExtension();
  
-    ## Prepare the staging directory for the release.
-    # Create the staging directory.
-
     my $stageDir = $this->GetStageDir();
 
     # check out locales manifest (shipped-locales)
@@ -471,6 +448,27 @@ sub Verify {
     $this->CheckLog(
       log => $verifyLocalesLogFile,
       notAllowed => '^ASSERT: '
+    );
+}
+
+sub Push {
+    my $this = shift;
+
+    my $config = new Bootstrap::Config();
+    my $logDir = $config->Get(sysvar => 'logDir');
+    my $stageHome = $config->Get(var => 'stageHome');
+    my $stagingUser = $config->Get(var => 'stagingUser');
+    my $stagingServer = $config->Get(var => 'stagingServer');
+
+    # upload public and private staging areas
+    my $stageDir = $this->GetStageDir();
+
+    $this->Shell(
+      cmd => 'rsync',
+      cmdArgs => ['-av', '-e', 'ssh', $stageDir,
+                  $stagingUser . '@' .  $stagingServer . ':' . 
+                  $stageDir],
+      logFile => catfile($logDir, 'upload_stage_private.log'),
     );
 }
 
@@ -532,9 +530,9 @@ sub ScrubTrimmedDirCallback {
     my $dirent = $File::Find::name;
 
     my $trimmedDir = catfile($this->GetStageDir(), 'batch1', 
-     'prestage-trimmed');
+     'stage-unsigned');
   
-    # if $dirent is a directory and is a direct child of the prestage-trimmed
+    # if $dirent is a directory and is a direct child of the stage-unsigned
     # directory (a hacky attempt at the equivalent of find's maxdepth 1 option);
     if (-d $dirent && dirname($dirent) eq $trimmedDir) {
         foreach my $allowedDir (@ALLOWED_DELIVERABLE_DIRECTORIES) {
@@ -566,7 +564,7 @@ sub TrimCallback {
 
         # source tarballs don't have a locale, so don't check them for one;
         # all other deliverables need to be checked to make sure they should
-        # be in prestage-trimmed, i.e. if their locale shipped.
+        # be in stage-unsigned, i.e. if their locale shipped.
         if ($dirent !~ /\-source\.tar\.bz2$/) {
             my $validDeliverable = 0;
            

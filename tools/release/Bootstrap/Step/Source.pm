@@ -8,7 +8,6 @@ use Bootstrap::Config;
 use File::Copy qw(move);
 use File::Find qw(find);
 use MozBuild::Util qw(MkdirWithPath);
-use Bootstrap::Util qw(SyncToStaging);
 @ISA = ("Bootstrap::Step");
 
 sub Execute {
@@ -21,23 +20,23 @@ sub Execute {
     my $version = $config->GetVersion(longName => 0);
     my $rc = $config->Get(var => 'rc');
     my $logDir = $config->Get(sysvar => 'logDir');
-    my $stageHome = $config->Get(var => 'stageHome');
+    my $sourceDir = $config->Get(var => 'sourceDir');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
 
     # create staging area
-    my $stageDir = catfile($stageHome, $product . '-' . $version, 
+    my $versionedSourceDir = catfile($sourceDir, $product . '-' . $version, 
                            'batch-source', 'rc' . $rc);
 
-    if (not -d $stageDir) {
-        MkdirWithPath(dir => $stageDir) 
-          or die("Cannot create $stageDir: $!");
+    if (not -d $versionedSourceDir) {
+        MkdirWithPath(dir => $versionedSourceDir) 
+          or die("Cannot create $versionedSourceDir: $!");
     }
 
     $this->CvsCo(cvsroot => $mozillaCvsroot,
                  tag => $productTag . '_RELEASE',
                  modules => ['mozilla/client.mk',
                              catfile('mozilla', $appName, 'config')],
-                 workDir => $stageDir,
+                 workDir => $versionedSourceDir,
                  logFile => catfile($logDir, 'source.log')
     );
                  
@@ -45,26 +44,27 @@ sub Execute {
       cmd => 'make',
       cmdArgs => ['-f', 'client.mk', 'checkout',
                   'MOZ_CO_PROJECT=' . $appName],
-      dir => catfile($stageDir, 'mozilla'),
+      dir => catfile($versionedSourceDir, 'mozilla'),
       logFile => catfile($logDir, 'source.log'),
     );
 
     # change all CVS/Root files to anonymous CVSROOT
-    File::Find::find(\&CvsChrootCallback, catfile($stageDir, 'mozilla'));
+    File::Find::find(\&CvsChrootCallback, catfile($versionedSourceDir, 
+                     'mozilla'));
 
     # remove leftover mozconfig files
-    unlink(glob(catfile($stageDir, 'mozilla', '.mozconfig*')));
+    unlink(glob(catfile($versionedSourceDir, 'mozilla', '.mozconfig*')));
 
     my $tarFile = $product . '-' . $version . '-' . 'source' . '.tar.bz2';
 
     $this->Shell(
       cmd => 'tar',
       cmdArgs => ['-cjf', $tarFile, 'mozilla'],
-      dir => catfile($stageDir),
+      dir => catfile($versionedSourceDir),
       logFile => catfile($logDir, 'source.log'),
     );
               
-    chmod(0644, glob("$stageDir/$tarFile"));
+    chmod(0644, glob("$versionedSourceDir/$tarFile"));
 }
 
 sub Verify {
@@ -94,28 +94,24 @@ sub Push {
     my $version = $config->GetVersion(longName => 0);
     my $rc = $config->Get(var => 'rc');
     my $logDir = $config->Get(sysvar => 'logDir');
-    my $stageHome = $config->Get(var => 'stageHome');
+    my $sourceDir = $config->Get(var => 'sourceDir');
+    my $stagingUser = $config->Get(var => 'stagingUser');
+    my $stagingServer = $config->Get(var => 'stagingServer');
 
-    my $stageDir =  catfile($stageHome, $product . '-' . $version);
-    my $candidateDir = catfile('/home', 'ftp', 'pub', $product, 'nightly',
-                            $version . '-candidates', 'rc' . $rc ) . '/';
+    my $candidateDir = $config->GetFtpCandidateDir(bitsUnsigned => 0);
 
-    if (not -d $candidateDir) {
-        MkdirWithPath(dir => $candidateDir) 
-          or die("Could not mkdir $candidateDir: $!");
-        $this->Log(msg => "Created directory $candidateDir");
-    }
+    my $versionedSourceDir =  catfile($sourceDir, $product . '-' . $version);
+
+    $this->CreateCandidatesDir();
 
     $this->Shell(
       cmd => 'rsync',
-      cmdArgs => ['-av', catfile('batch-source', 'rc' . $rc, 
+      cmdArgs => ['-av', '-e', 'ssh', catfile('batch-source', 'rc' . $rc, 
                             $product . '-' . $version . '-source.tar.bz2'),
-                  $candidateDir],
+                  $stagingUser . '@' . $stagingServer . ':' . $candidateDir],
       logFile => catfile($logDir, 'source.log'),
-      dir => catfile($stageDir),
+      dir => catfile($versionedSourceDir),
     );
-
-    SyncToStaging();
 }
 
 sub Announce {
