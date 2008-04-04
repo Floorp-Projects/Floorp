@@ -131,9 +131,16 @@ ReadCMAP(HDC hdc, FontEntry *aFontEntry)
 
     DWORD newLen = GetFontData(hdc, kCMAP, 0, buf, len);
     NS_ENSURE_TRUE(newLen == len, NS_ERROR_FAILURE);
-    
-    return gfxFontUtils::ReadCMAP(buf, len, aFontEntry->mCharacterMap,
-                                  aFontEntry->mUnicodeFont, aFontEntry->mSymbolFont);
+
+    // can't pass bits as references...
+    PRPackedBool unicodeFont = aFontEntry->mUnicodeFont;
+    PRPackedBool symbolFont = aFontEntry->mSymbolFont;
+    nsresult rv = gfxFontUtils::ReadCMAP(buf, len, aFontEntry->mCharacterMap,
+                                         unicodeFont, symbolFont);
+    aFontEntry->mUnicodeFont = unicodeFont;
+    aFontEntry->mSymbolFont = symbolFont;
+
+    return rv;
 }
 
 struct FamilyAddStyleProcData {
@@ -223,8 +230,8 @@ FontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
                 fe->mUnicodeFont = PR_FALSE;
 
             // For fonts where we failed to read the character map,
-            // we should use GDI to slowly determine their cmap lazily
-            fe->mForceGDI = PR_TRUE;
+            // we can take a slow path to look up glyphs character by character
+            fe->mUnknownCMAP = PR_TRUE;
 
             //printf("(fontinit-cmap) %s failed to get cmap, type1:%d \n", NS_ConvertUTF16toUTF8(fe->mFaceName).get(), (PRUint32)(fe->mIsType1));
         } else {
@@ -1331,7 +1338,7 @@ public:
             }
         }
 
-        if (allCJK || mCurrentFont->GetFontEntry()->mForceGDI)
+        if (allCJK)
             return PlaceGDI();
 
         return PlaceUniscribe();
@@ -1513,7 +1520,7 @@ public:
         if (aFontEntry->mCharacterMap.test(ch))
             return PR_TRUE;
 
-        if (aFontEntry->mForceGDI) {
+        if (aFontEntry->mUnknownCMAP) {
             if (ch > 0xFFFF)
                 return PR_FALSE;
 
@@ -1526,10 +1533,12 @@ public:
             PRUnichar str[1] = { (PRUnichar)ch };
             WORD glyph[1];
 
-            DWORD ret = GetGlyphIndicesW(dc, str, 1, glyph, GGI_MARK_NONEXISTING_GLYPHS);
+            // ScriptGetCMap works better than GetGlyphIndicesW for things like bitmap/vector fonts
+            HRESULT rv = ScriptGetCMap(dc, font->ScriptCache(), str, 1, 0, glyph);
 
             ReleaseDC(NULL, dc);
-            if (ret != GDI_ERROR && glyph[0] != 0xFFFF) {
+
+            if (rv != S_FALSE) {
                 aFontEntry->mCharacterMap.set(ch);
                 return PR_TRUE;
             }
