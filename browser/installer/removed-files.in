@@ -553,7 +553,9 @@ res/fonts/mathfontMath2.properties
 res/fonts/mathfontMath4.properties
 res/fonts/mathfontMTExtra.properties
 res/fonts/mathfontPUA.properties
+#ifndef XP_WIN
 res/fonts/mathfontSymbol.properties
+#endif
 res/fonts/fontEncoding.properties
 res/fonts/pangoFontEncoding.properties
 res/fonts/fontNameMap.properties
