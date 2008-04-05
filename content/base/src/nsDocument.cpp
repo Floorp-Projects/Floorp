@@ -2706,7 +2706,7 @@ nsDocument::BeginUpdate(nsUpdateType aUpdateType)
   
   ++mUpdateNestLevel;
   if (aUpdateType == UPDATE_CONTENT_MODEL) {
-    ++mRemovableUpdateLevel;
+    ++mContentUpdateNestLevel;
   }
   NS_DOCUMENT_NOTIFY_OBSERVERS(BeginUpdate, (this, aUpdateType));
 
@@ -2720,8 +2720,7 @@ nsDocument::EndUpdate(nsUpdateType aUpdateType)
   NS_DOCUMENT_NOTIFY_OBSERVERS(EndUpdate, (this, aUpdateType));
 
   if (aUpdateType == UPDATE_CONTENT_MODEL) {
-    NS_ASSERTION(mRemovableUpdateLevel != 0, "level going below 0");
-    --mRemovableUpdateLevel;
+    --mContentUpdateNestLevel;
   }
   --mUpdateNestLevel;
   if (mUpdateNestLevel == 0) {
@@ -2749,6 +2748,18 @@ nsDocument::EndUpdate(nsUpdateType aUpdateType)
       }
     }
   }
+}
+
+PRUint32
+nsDocument::GetUpdateNestingLevel()
+{
+  return mUpdateNestLevel;
+}
+
+PRBool
+nsDocument::AllUpdatesAreContent()
+{
+  return mContentUpdateNestLevel == mUpdateNestLevel;
 }
 
 void
@@ -5850,12 +5861,10 @@ nsDocument::MutationEventDispatched(nsINode* aTarget)
 
     PRInt32 realTargetCount = realTargets.Count();
     for (PRInt32 k = 0; k < realTargetCount; ++k) {
-      mozAutoDocUpdateRemover updateRemover(this);
+      mozAutoDocUpdateContentUnnest updateUnnest(this);
 
-      if (nsContentUtils::IsSafeToRunScript()) {
-        nsMutationEvent mutation(PR_TRUE, NS_MUTATION_SUBTREEMODIFIED);
-        nsEventDispatcher::Dispatch(realTargets[k], nsnull, &mutation);
-      }
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_SUBTREEMODIFIED);
+      nsEventDispatcher::Dispatch(realTargets[k], nsnull, &mutation);
     }
   }
 }

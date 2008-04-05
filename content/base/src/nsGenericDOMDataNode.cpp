@@ -497,21 +497,19 @@ nsGenericDOMDataNode::SetTextInternal(PRUint32 aOffset, PRUint32 aCount,
     nsNodeUtils::CharacterDataChanged(this, &info);
 
     if (haveMutationListeners) {
-      mozAutoDocUpdateRemover updateRemover(document);
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_CHARACTERDATAMODIFIED);
 
-      if (nsContentUtils::IsSafeToRunScript()) {
-        nsMutationEvent mutation(PR_TRUE, NS_MUTATION_CHARACTERDATAMODIFIED);
-
-        mutation.mPrevAttrValue = oldValue;
-        if (aLength > 0) {
-          nsAutoString val;
-          mText.AppendTo(val);
-          mutation.mNewAttrValue = do_GetAtom(val);
-        }
-
-        mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
-        nsEventDispatcher::Dispatch(this, nsnull, &mutation);
+      mutation.mPrevAttrValue = oldValue;
+      if (aLength > 0) {
+        nsAutoString val;
+        mText.AppendTo(val);
+        mutation.mNewAttrValue = do_GetAtom(val);
       }
+
+      mozAutoDocUpdateContentUnnest updateUnnest(document);
+
+      mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
+      nsEventDispatcher::Dispatch(this, nsnull, &mutation);
     }
   }
 
