@@ -4005,6 +4005,7 @@ nsContentUtils::AddScriptBlocker()
 void
 nsContentUtils::RemoveScriptBlocker()
 {
+  NS_ASSERTION(sScriptBlockerCount != 0, "Negative script blockers");
   --sScriptBlockerCount;
   if (sScriptBlockerCount) {
     return;
