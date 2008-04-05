@@ -3191,21 +3191,14 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
     return PR_FALSE;
   }
 
+  doc->MayDispatchMutationEvent(aTargetForSubtreeModified);
+
   // global object will be null for documents that don't have windows.
   nsCOMPtr<nsPIDOMWindow> window;
   window = do_QueryInterface(doc->GetScriptGlobalObject());
-  // This relies on nsEventListenerManager::AddEventListener, which sets
-  // all mutation bits when there is a listener for DOMSubtreeModified event.
   if (window && !window->HasMutationListeners(aType)) {
     return PR_FALSE;
   }
-
-  if (aNode->IsNodeOfType(nsINode::eCONTENT) &&
-      static_cast<nsIContent*>(aNode)->IsInNativeAnonymousSubtree()) {
-    return PR_FALSE;
-  }
-
-  doc->MayDispatchMutationEvent(aTargetForSubtreeModified);
 
   // If we have a window, we can check it for mutation listeners now.
   nsCOMPtr<nsPIDOMEventTarget> piTarget(do_QueryInterface(window));
