@@ -5825,13 +5825,11 @@ nsDocument::MutationEventDispatched(nsINode* aTarget)
     nsCOMArray<nsINode> realTargets;
     for (PRInt32 i = 0; i < count; ++i) {
       nsINode* possibleTarget = mSubtreeModifiedTargets[i];
-      nsCOMPtr<nsIContent> content = do_QueryInterface(possibleTarget);
-      if (content && content->IsInNativeAnonymousSubtree()) {
-        if (realTargets.IndexOf(possibleTarget) == -1) {
-          realTargets.AppendObject(possibleTarget);
-        }
-        continue;
-      }
+      NS_ASSERTION(!possibleTarget ||
+                   !possibleTarget->IsNodeOfType(nsINode::eCONTENT) ||
+                   !static_cast<nsIContent*>(possibleTarget)->
+                     IsInNativeAnonymousSubtree(),
+                   "Mutation event targeted to native anonymous content!?!");
 
       nsINode* commonAncestor = nsnull;
       PRInt32 realTargetCount = realTargets.Count();
