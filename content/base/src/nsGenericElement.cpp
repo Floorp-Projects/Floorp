@@ -2289,11 +2289,13 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
 
   nsCOMPtr<nsIContent> parent = aContent->GetParent();
   if (isAnonForEvents) {
-    // If a DOM event is explicitly dispatched using node.dispatchEvent(), then
-    // all the events are allowed even in the native anonymous content..
-    NS_ASSERTION(aVisitor.mEvent->eventStructType != NS_MUTATION_EVENT ||
-                 aVisitor.mDOMEvent,
-                 "Mutation event dispatched in native anonymous content!?!");
+    // Don't propagate mutation events which are dispatched somewhere inside
+    // native anonymous content.
+    if (aVisitor.mEvent->eventStructType == NS_MUTATION_EVENT) {
+      aVisitor.mParentTarget = nsnull;
+      return NS_OK;
+    }
+
     aVisitor.mEventTargetAtParent = parent;
   } else if (parent) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mEvent->target));
