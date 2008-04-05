@@ -54,7 +54,7 @@ math {
   display: inline;
   font-size: inherit;
   font-style: normal;
-  font-family: STIXGeneral, Cambria, Cambria Math, DejaVu Serif, DejaVu Sans, Times, Lucida Sans Unicode, OpenSymbol, Standard Symbols L, serif;
+  font-family: STIXGeneral, DejaVu Serif, DejaVu Sans, Cambria, Cambria Math, Times, Lucida Sans Unicode, OpenSymbol, Standard Symbols L, serif;
   -moz-float-edge: margin-box;
 }
 math[mode="display"], math[display="block"] {
