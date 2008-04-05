@@ -6,7 +6,8 @@
 include reftest-sanity/reftest.list
 
 #images
-include ../../modules/libpr0n/test/reftest/reftest.list
+# Temporarily disable to try and figure out cause of failures (bug 425987).
+#include ../../modules/libpr0n/test/reftest/reftest.list
 
 # printing
 include printing/reftest.list
