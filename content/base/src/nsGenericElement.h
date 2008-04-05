@@ -1067,15 +1067,15 @@ private:
   nsRefPtr<nsGenericElement> mContent;
 };
 
-class mozAutoDocUpdateRemover
+class mozAutoDocUpdateContentUnnest
 {
 public:
-  mozAutoDocUpdateRemover(nsIDocument* aDocument)
-    : mDocument(aDocument)
+  mozAutoDocUpdateContentUnnest(nsIDocument* aDocument)
   {
     if (aDocument) {
-      mNestingLevel = aDocument->GetRemovableUpdateLevel();
-      aDocument->SetRemovableUpdateLevel(0);
+      NS_ASSERTION(aDocument->AllUpdatesAreContent(),
+                   "There are non-content updates in progress");
+      mNestingLevel = aDocument->GetUpdateNestingLevel();
       for (PRUint32 i = 0; i < mNestingLevel; ++i) {
         nsContentUtils::RemoveScriptBlocker();
       }
@@ -1085,21 +1085,15 @@ public:
     }
   }
 
-  ~mozAutoDocUpdateRemover()
+  ~mozAutoDocUpdateContentUnnest()
   {
-    NS_ASSERTION(mNestingLevel == 0 || mDocument,
-                 "Count should be zero if there's no document");
-    if (mDocument) {
-      for (PRUint32 i = 0; i < mNestingLevel; ++i) {
-        nsContentUtils::AddScriptBlocker();
-      }
-      mDocument->SetRemovableUpdateLevel(mNestingLevel);
+    for (PRUint32 i = 0; i < mNestingLevel; ++i) {
+      nsContentUtils::AddScriptBlocker();
     }
   }
 
 private:
   PRUint32 mNestingLevel;
-  nsCOMPtr<nsIDocument> mDocument;
 };
 
 #endif /* nsGenericElement_h___ */

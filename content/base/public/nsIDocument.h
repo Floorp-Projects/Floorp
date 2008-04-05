@@ -595,6 +595,8 @@ public:
   // To make this easy and painless, use the mozAutoDocUpdate helper class.
   virtual void BeginUpdate(nsUpdateType aUpdateType) = 0;
   virtual void EndUpdate(nsUpdateType aUpdateType) = 0;
+  virtual PRUint32 GetUpdateNestingLevel() = 0;
+  virtual PRBool AllUpdatesAreContent() = 0;
   virtual void BeginLoad() = 0;
   virtual void EndLoad() = 0;
   // notify that one or two content nodes changed state
@@ -975,22 +977,6 @@ protected:
   friend class mozAutoSubtreeModified;
   friend class nsPresShellIterator;
 
-  /**
-   * Get/Set the current number of removable updates. Currently only
-   * UPDATE_CONTENT_MODEL updates are removable, and only when firing mutation
-   * events. These functions should only be called by mozAutoDocUpdateRemover.
-   * The count is also adjusted by the normal calls to BeginUpdate/EndUpdate.
-   */
-  PRUint32 GetRemovableUpdateLevel()
-  {
-    return mRemovableUpdateLevel;
-  }
-  void SetRemovableUpdateLevel(PRUint32 aLevel)
-  {
-    mRemovableUpdateLevel = aLevel;
-  }
-  friend class mozAutoDocUpdateRemover;
-
   nsString mDocumentTitle;
   nsCOMPtr<nsIURI> mDocumentURI;
   nsCOMPtr<nsIURI> mDocumentBaseURI;
@@ -1060,9 +1046,6 @@ protected:
   // Cycle collector generation in which we're certain that this document
   // won't be collected
   PRUint32 mMarkedCCGeneration;
-
-  // Current number of removable updates.
-  PRUint32 mRemovableUpdateLevel;
 
   nsTObserverArray<nsIPresShell*> mPresShells;
 
