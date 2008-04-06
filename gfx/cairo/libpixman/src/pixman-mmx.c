@@ -76,9 +76,8 @@
 
 /* --------------- MMX primitivess ------------------------------------ */
 
-typedef unsigned long long ullong;
-
 #ifdef __GNUC__
+typedef unsigned long long ullong;
 typedef ullong mmxdatafield;
 #endif
 #ifdef _MSC_VER
@@ -913,8 +912,14 @@ mmxCombineAddC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
     _mm_empty();
 }
 
-void fbComposeSetupMMX(void)
+void
+fbComposeSetupMMX(void)
 {
+    static pixman_bool_t initialized = FALSE;
+
+    if (initialized)
+	return;
+    
     /* check if we have MMX support and initialize accordingly */
     if (pixman_have_mmx())
     {
@@ -944,6 +949,8 @@ void fbComposeSetupMMX(void)
 
         pixman_composeFunctions.combineMaskU = mmxCombineMaskU;
     }
+
+    initialized = TRUE;
 }
 
 
@@ -1616,7 +1623,7 @@ fbCompositeSolidMask_nx8x8888mmx (pixman_op_t op,
     if (srca == 0)
 	return;
 
-    srcsrc = (unsigned long long)src << 32 | src;
+    srcsrc = (ullong)src << 32 | src;
 
     fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
     fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
@@ -1659,7 +1666,7 @@ fbCompositeSolidMask_nx8x8888mmx (pixman_op_t op,
 
 	    if (srca == 0xff && (m0 & m1) == 0xff)
 	    {
-		*(unsigned long long *)dst = srcsrc;
+		*(ullong *)dst = srcsrc;
 	    }
 	    else if (m0 | m1)
 	    {
@@ -1980,7 +1987,7 @@ fbCompositeSolidMask_nx8x0565mmx (pixman_op_t op,
     int	dstStride, maskStride;
     uint16_t	w;
     __m64	vsrc, vsrca, tmp;
-    unsigned long long srcsrcsrcsrc, src16;
+    ullong srcsrcsrcsrc, src16;
 
     CHECKPOINT();
 
@@ -2042,7 +2049,7 @@ fbCompositeSolidMask_nx8x0565mmx (pixman_op_t op,
 
 	    if (srca == 0xff && (m0 & m1 & m2 & m3) == 0xff)
 	    {
-		*(unsigned long long *)dst = srcsrcsrcsrc;
+		*(ullong *)dst = srcsrcsrcsrc;
 	    }
 	    else if (m0 | m1 | m2 | m3)
 	    {
@@ -2956,8 +2963,6 @@ fbCompositeOver_x888x8x8888mmx (pixman_op_t      op,
     uint32_t    *dst, *dstLine;
     uint8_t	*mask, *maskLine;
     int		 srcStride, maskStride, dstStride;
-    __m64 m;
-    uint32_t s, d;
     uint16_t w;
 
     fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
