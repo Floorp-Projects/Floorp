@@ -1602,7 +1602,7 @@ nsTableRowGroupFrame::GetFrameName(nsAString& aResult) const
 nsMargin* 
 nsTableRowGroupFrame::GetBCBorderWidth(nsMargin& aBorder)
 {
-  aBorder.left = aBorder.right = 0;
+  aBorder.left = aBorder.right = aBorder.top = aBorder.bottom = 0;
 
   nsTableRowFrame* firstRowFrame = nsnull;
   nsTableRowFrame* lastRowFrame = nsnull;
