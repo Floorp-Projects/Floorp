@@ -192,7 +192,7 @@ cairo_status_t
 _cairo_hull_compute (cairo_pen_vertex_t *vertices, int *num_vertices)
 {
     cairo_status_t status;
-    cairo_hull_t *hull;
+    cairo_hull_t *hull = NULL;
     int num_hull = *num_vertices;
 
     status = _cairo_hull_create (vertices, num_hull, &hull);

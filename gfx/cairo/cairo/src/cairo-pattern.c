@@ -821,7 +821,6 @@ _cairo_pattern_add_color_stop (cairo_gradient_pattern_t *pattern,
 			       double			 alpha)
 {
     cairo_gradient_stop_t *stops;
-    cairo_fixed_t	   x;
     unsigned int	   i;
 
     if (pattern->n_stops >= pattern->stops_size) {
@@ -834,10 +833,9 @@ _cairo_pattern_add_color_stop (cairo_gradient_pattern_t *pattern,
 
     stops = pattern->stops;
 
-    x = _cairo_fixed_from_double (offset);
     for (i = 0; i < pattern->n_stops; i++)
     {
-	if (x < stops[i].x)
+	if (offset < stops[i].offset)
 	{
 	    memmove (&stops[i + 1], &stops[i],
 		     sizeof (cairo_gradient_stop_t) * (pattern->n_stops - i));
@@ -846,7 +844,7 @@ _cairo_pattern_add_color_stop (cairo_gradient_pattern_t *pattern,
 	}
     }
 
-    stops[i].x = x;
+    stops[i].offset = offset;
 
     stops[i].color.red   = red;
     stops[i].color.green = green;
@@ -1208,7 +1206,7 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     }
 
     for (i = 0; i < pattern->n_stops; i++) {
-	pixman_stops[i].x = _cairo_fixed_to_16_16 (pattern->stops[i].x);
+	pixman_stops[i].x = _cairo_fixed_16_16_from_double (pattern->stops[i].offset);
 	pixman_stops[i].color.red = pattern->stops[i].color.red_short;
 	pixman_stops[i].color.green = pattern->stops[i].color.green_short;
 	pixman_stops[i].color.blue = pattern->stops[i].color.blue_short;
@@ -2155,7 +2153,7 @@ cairo_pattern_get_color_stop_rgba (cairo_pattern_t *pattern,
 	return _cairo_error (CAIRO_STATUS_INVALID_INDEX);
 
     if (offset)
-	*offset = _cairo_fixed_to_double(gradient->stops[index].x);
+	*offset = gradient->stops[index].offset;
     if (red)
 	*red = gradient->stops[index].color.red;
     if (green)

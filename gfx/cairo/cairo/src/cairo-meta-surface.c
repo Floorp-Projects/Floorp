@@ -743,7 +743,11 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 	{
 	    cairo_command_t *stroke_command;
 
-	    stroke_command = (i < num_elements - 1) ? elements[i + 1] : NULL;
+	    if (type != CAIRO_META_CREATE_REGIONS)
+		stroke_command = (i < num_elements - 1) ? elements[i + 1] : NULL;
+	    else
+		stroke_command = NULL;
+
 	    if (stroke_command != NULL &&
 		type == CAIRO_META_REPLAY && region != CAIRO_META_REGION_ALL)
 	    {
@@ -783,14 +787,6 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 						     stroke_command->stroke.tolerance,
 						     stroke_command->stroke.antialias);
 		i++;
-		if (type == CAIRO_META_CREATE_REGIONS) {
-		    if (status == CAIRO_STATUS_SUCCESS) {
-			stroke_command->header.region = CAIRO_META_REGION_NATIVE;
-		    } else if (status == CAIRO_INT_STATUS_IMAGE_FALLBACK) {
-			stroke_command->header.region = CAIRO_META_REGION_IMAGE_FALLBACK;
-			status = CAIRO_STATUS_SUCCESS;
-		    }
-		}
 	    } else
 		status = _cairo_surface_fill (target,
 					      command->fill.op,
