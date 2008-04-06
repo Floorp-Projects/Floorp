@@ -111,6 +111,9 @@ _cairo_output_stream_write_hex_string (cairo_output_stream_t *stream,
 				       size_t length);
 
 cairo_private void
+_cairo_dtostr (char *buffer, size_t size, double d);
+
+cairo_private void
 _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 			      const char *fmt,
 			      va_list ap) CAIRO_PRINTF_FORMAT ( 2, 0);

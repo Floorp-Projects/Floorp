@@ -1907,7 +1907,7 @@ cairo_font_face_t *
 cairo_win32_font_face_create_for_hfont (HFONT font)
 {
     LOGFONTW logfont;
-    GetObjectW (font, sizeof(logfont), &logfont);
+    GetObject (font, sizeof(logfont), &logfont);
 
     if (logfont.lfEscapement != 0 || logfont.lfOrientation != 0 ||
         logfont.lfWidth != 0) {

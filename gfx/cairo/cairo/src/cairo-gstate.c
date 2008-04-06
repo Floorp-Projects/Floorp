@@ -255,7 +255,7 @@ _cairo_gstate_clone (cairo_gstate_t *other, cairo_gstate_t **out)
 cairo_status_t
 _cairo_gstate_save (cairo_gstate_t **gstate)
 {
-    cairo_gstate_t *top = NULL;
+    cairo_gstate_t *top;
     cairo_status_t status;
 
     status = _cairo_gstate_clone (*gstate, &top);
@@ -288,6 +288,27 @@ _cairo_gstate_restore (cairo_gstate_t **gstate)
     _cairo_gstate_destroy (top);
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_gstate_recursive_apply_clip_path (cairo_gstate_t *gstate,
+					 cairo_clip_path_t *cpath)
+{
+    cairo_status_t status;
+
+    if (cpath == NULL)
+	return CAIRO_STATUS_SUCCESS;
+
+    status = _cairo_gstate_recursive_apply_clip_path (gstate, cpath->prev);
+    if (status)
+	return status;
+
+    return _cairo_clip_clip (&gstate->clip,
+			     &cpath->path,
+			     cpath->fill_rule,
+			     cpath->tolerance,
+			     cpath->antialias,
+			     gstate->target);
 }
 
 /**

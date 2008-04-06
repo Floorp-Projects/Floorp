@@ -125,20 +125,8 @@ _cairo_analysis_surface_add_operation  (cairo_analysis_surface_t *surface,
     cairo_int_status_t status;
     cairo_box_t bbox;
 
-    if (rect->width == 0 || rect->height == 0) {
-	/* Even though the operation is not visible we must be careful
-	 * to not allow unsupported operations to be replayed to the
-	 * backend during CAIRO_PAGINATED_MODE_RENDER */
-	if (backend_status == CAIRO_STATUS_SUCCESS ||
-	    backend_status == CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY)
-	{
-	    return CAIRO_STATUS_SUCCESS;
-	}
-	else
-	{
-	    return CAIRO_INT_STATUS_IMAGE_FALLBACK;
-	}
-    }
+    if (rect->width == 0 || rect->height == 0)
+	return CAIRO_STATUS_SUCCESS;
 
     if (surface->has_ctm) {
 	double x1, y1, x2, y2;
@@ -155,21 +143,8 @@ _cairo_analysis_surface_add_operation  (cairo_analysis_surface_t *surface,
 
 	x2 = ceil (x2) - rect->x;
 	y2 = ceil (y2) - rect->y;
-	if (x2 <= 0 || y2 <= 0) {
-	    /* Even though the operation is not visible we must be
-	     * careful to not allow unsupported operations to be
-	     * replayed to the backend during
-	     * CAIRO_PAGINATED_MODE_RENDER */
-	    if (backend_status == CAIRO_STATUS_SUCCESS ||
-		backend_status == CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY)
-	    {
-		return CAIRO_STATUS_SUCCESS;
-	    }
-	    else
-	    {
-		return CAIRO_INT_STATUS_IMAGE_FALLBACK;
-	    }
-	}
+	if (x2 <= 0 || y2 <= 0)
+	    return CAIRO_STATUS_SUCCESS;
 
 	rect->width  = x2;
 	rect->height = y2;
@@ -459,23 +434,17 @@ _cairo_analysis_surface_stroke (void			*abstract_surface,
 						    ctm, ctm_inverse,
 						    tolerance,
 						    &traps);
-	if (status) {
+
+	if (status || traps.num_traps == 0) {
 	    _cairo_traps_fini (&traps);
 	    return status;
 	}
 
-	if (traps.num_traps == 0) {
-	    extents.x = 0;
-	    extents.y = 0;
-	    extents.width = 0;
-	    extents.height = 0;
-	} else {
-	    _cairo_traps_extents (&traps, &box);
-	    extents.x = _cairo_fixed_integer_floor (box.p1.x);
-	    extents.y = _cairo_fixed_integer_floor (box.p1.y);
-	    extents.width = _cairo_fixed_integer_ceil (box.p2.x) - extents.x;
-	    extents.height = _cairo_fixed_integer_ceil (box.p2.y) - extents.y;
-	}
+	_cairo_traps_extents (&traps, &box);
+	extents.x = _cairo_fixed_integer_floor (box.p1.x);
+	extents.y = _cairo_fixed_integer_floor (box.p1.y);
+	extents.width = _cairo_fixed_integer_ceil (box.p2.x) - extents.x;
+	extents.height = _cairo_fixed_integer_ceil (box.p2.y) - extents.y;
 	_cairo_traps_fini (&traps);
     }
 
@@ -537,23 +506,17 @@ _cairo_analysis_surface_fill (void			*abstract_surface,
 						  fill_rule,
 						  tolerance,
 						  &traps);
-	if (status) {
+
+	if (status || traps.num_traps == 0) {
 	    _cairo_traps_fini (&traps);
 	    return status;
 	}
 
-	if (traps.num_traps == 0) {
-	    extents.x = 0;
-	    extents.y = 0;
-	    extents.width = 0;
-	    extents.height = 0;
-	} else {
-	    _cairo_traps_extents (&traps, &box);
-	    extents.x = _cairo_fixed_integer_floor (box.p1.x);
-	    extents.y = _cairo_fixed_integer_floor (box.p1.y);
-	    extents.width = _cairo_fixed_integer_ceil (box.p2.x) - extents.x;
-	    extents.height = _cairo_fixed_integer_ceil (box.p2.y) - extents.y;
-	}
+	_cairo_traps_extents (&traps, &box);
+	extents.x = _cairo_fixed_integer_floor (box.p1.x);
+	extents.y = _cairo_fixed_integer_floor (box.p1.y);
+	extents.width = _cairo_fixed_integer_ceil (box.p2.x) - extents.x;
+	extents.height = _cairo_fixed_integer_ceil (box.p2.y) - extents.y;
 
 	_cairo_traps_fini (&traps);
     }
