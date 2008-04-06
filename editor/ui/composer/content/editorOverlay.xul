@@ -826,7 +826,7 @@
           onclick="EditorSelectColor('Text', event);"
           tooltiptext="&TextColorButton.tooltip;"/>
   </stack>
-  <toolbarbutton id="HighlightColorButton" tooltip="aTooltip"
+  <toolbarbutton id="HighlightColorButton"
           tooltiptext="&HighlightColorButton.tooltip;" command="cmd_highlight">
     <observes element="cmd_highlight" attribute="state" onbroadcast="onHighlightColorChange()"/>
     <observes element="cmd_highlight" attribute="collapsed"/>
