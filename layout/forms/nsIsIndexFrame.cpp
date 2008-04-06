@@ -252,6 +252,10 @@ nsIsIndexFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = static_cast<nsIDOMKeyListener*>(this);
     return NS_OK;
   }
+  if (aIID.Equals(NS_GET_IID(nsIDOMEventListener))) {
+    *aInstancePtr = static_cast<nsIDOMEventListener*>(this);
+    return NS_OK;
+  }
 
   return nsAreaFrame::QueryInterface(aIID, aInstancePtr);
 }

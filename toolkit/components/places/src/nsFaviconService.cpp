@@ -858,9 +858,10 @@ nsFaviconService::OptimizeFaviconImage(const PRUint8* aData, PRUint32 aDataLen,
 }
 
 
-NS_IMPL_ISUPPORTS4(FaviconLoadListener,
+NS_IMPL_ISUPPORTS5(FaviconLoadListener,
                    nsIRequestObserver,
                    nsIStreamListener,
+                   nsIRequestObserver,
                    nsIInterfaceRequestor,
                    nsIChannelEventSink)
 
