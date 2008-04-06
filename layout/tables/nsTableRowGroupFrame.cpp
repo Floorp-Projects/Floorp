@@ -1757,7 +1757,8 @@ nsTableRowGroupFrame::FindFrameAt(PRInt32    aLineNumber,
    }
   
    nsIFrame* frame = nsnull;
-   for (PRInt32 i = 0; i < numCells; i++) {
+   PRInt32 colCount = table->GetColCount();
+   for (PRInt32 i = 0; i < colCount; i++) {
      CellData* data = cellMap->GetDataAt(aLineNumber, i);
      if (data && data->IsOrig()) {
        frame = (nsIFrame*)data->GetCellFrame();
