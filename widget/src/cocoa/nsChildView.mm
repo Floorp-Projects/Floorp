@@ -2014,7 +2014,7 @@ NSEvent* gLastDragEvent = nil;
     mMarkedRange.location = NSNotFound;
     mMarkedRange.length = 0;
 
-    mLastMenuForEventEvent = nil;
+    mLastMouseDownEvent = nil;
     mDragService = nsnull;
   }
   
@@ -2041,7 +2041,7 @@ NSEvent* gLastDragEvent = nil;
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   [mPendingDirtyRects release];
-  [mLastMenuForEventEvent release];
+  [mLastMouseDownEvent release];
   
   if (sLastViewEntered == self)
     sLastViewEntered = nil;
@@ -2749,9 +2749,6 @@ NSEvent* gLastDragEvent = nil;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  if (mLastMenuForEventEvent == theEvent)
-    return PR_FALSE;
-
   PRBool retVal = PR_FALSE;
   if (gRollupWidget && gRollupListener) {
     NSWindow* currentPopup = static_cast<NSWindow*>(gRollupWidget->GetNativeData(NS_NATIVE_WINDOW));
@@ -2767,7 +2764,7 @@ NSEvent* gLastDragEvent = nil;
         retVal = PR_TRUE;
       }
       // if we're dealing with menus, we probably have submenus and
-      // we don't want to rollup if the clickis in a parent menu of
+      // we don't want to rollup if the click is in a parent menu of
       // the current submenu
       nsCOMPtr<nsIMenuRollup> menuRollup;
       menuRollup = (do_QueryInterface(gRollupListener));
@@ -2801,6 +2798,18 @@ NSEvent* gLastDragEvent = nil;
 - (void)mouseDown:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  // If we've already seen this event due to direct dispatch from menuForEvent:
+  // just bail; if not, remember it.
+  if (mLastMouseDownEvent == theEvent) {
+    [mLastMouseDownEvent release];
+    mLastMouseDownEvent = nil;
+    return;
+  }
+  else {
+    [mLastMouseDownEvent release];
+    mLastMouseDownEvent = [theEvent retain];
+  }
 
   if (![self ensureCorrectMouseEventTarget:theEvent])
     return;
@@ -2848,12 +2857,6 @@ NSEvent* gLastDragEvent = nil;
   geckoEvent.nativeMsg = &macEvent;
 
   mGeckoChild->DispatchMouseEvent(geckoEvent);
-
-  // If the last call to menuForEvent: had the same event, we need to call it
-  // again. menuForEvent: didn't send a context menu event because we need to
-  // send the mouse down event first.
-  if (mLastMenuForEventEvent == theEvent)
-    [self menuForEvent:theEvent];
 
   // XXX maybe call markedTextSelectionChanged:client: here?
 
@@ -3367,17 +3370,15 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   if (!mGeckoChild)
     return nil;
 
-  // If this is the second time menuForEvent: has been called with the same
-  // mouse down event then we should let it through. We don't process the first
-  // call for any particular left mouse down event because Cocoa calls
-  // menuForEvent: *before* mouseDown: and we need to send mouse down events
-  // before context menu events. Cocoa correctly calls menuForEvent: after calls
-  // to rightMouseDown:.
-  BOOL letThrough = (theEvent == mLastMenuForEventEvent);
-  [mLastMenuForEventEvent release];
-  mLastMenuForEventEvent = [theEvent retain];
-  if (!letThrough && [theEvent type] == NSLeftMouseDown)
-    return nil;
+  // Cocoa doesn't always dispatch a mouseDown: for a control-click event,
+  // depends on what we return from menuForEvent:. Gecko always expects one
+  // and expects the mouse down event before the context menu event, so
+  // get that event sent first if this is a left mouse click.
+  if ([theEvent type] == NSLeftMouseDown) {
+    [self mouseDown:theEvent];
+    if (!mGeckoChild)
+      return nil;
+  }
 
   nsMouseEvent geckoEvent(PR_TRUE, NS_CONTEXTMENU, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
