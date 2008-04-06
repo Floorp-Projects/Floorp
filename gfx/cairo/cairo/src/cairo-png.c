@@ -211,8 +211,9 @@ write_png (cairo_surface_t	*surface,
 		  PNG_COMPRESSION_TYPE_DEFAULT,
 		  PNG_FILTER_TYPE_DEFAULT);
 
-    white.gray = (1 << depth) - 1;
-    white.red = white.blue = white.green = white.gray;
+    white.red = 0xff;
+    white.blue = 0xff;
+    white.green = 0xff;
     png_set_bKGD (png, info, &white);
 
     png_convert_from_time_t (&pt, time (NULL));

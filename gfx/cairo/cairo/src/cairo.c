@@ -634,7 +634,9 @@ slim_hidden_def(cairo_pop_group_to_source);
  * operations. See #cairo_operator_t for details on the semantics of
  * each available compositing operator.
  *
- * The default operator is %CAIRO_OPERATOR_OVER.
+ * XXX: I'd also like to direct the reader's attention to some
+ * (not-yet-written) section on cairo's imaging model. How would I do
+ * that if such a section existed? (cworth).
  **/
 void
 cairo_set_operator (cairo_t *cr, cairo_operator_t op)
@@ -664,9 +666,6 @@ slim_hidden_def (cairo_set_operator);
  * The color components are floating point numbers in the range 0 to
  * 1. If the values passed in are outside that range, they will be
  * clamped.
- *
- * The default source pattern is opaque black, (that is, it is
- * equivalent to cairo_set_source_rgb (cr, 0.0, 0.0, 0.0)).
  **/
 void
 cairo_set_source_rgb (cairo_t *cr, double red, double green, double blue)
@@ -699,9 +698,6 @@ cairo_set_source_rgb (cairo_t *cr, double red, double green, double blue)
  * The color and alpha components are floating point numbers in the
  * range 0 to 1. If the values passed in are outside that range, they
  * will be clamped.
- *
- * The default source pattern is opaque black, (that is, it is
- * equivalent to cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0)).
  **/
 void
 cairo_set_source_rgba (cairo_t *cr,
@@ -784,9 +780,9 @@ slim_hidden_def (cairo_set_source_surface);
  * that further modifications of the current transformation matrix
  * will not affect the source pattern. See cairo_pattern_set_matrix().
  *
- * The default source pattern is a solid pattern that is opaque black,
- * (that is, it is equivalent to cairo_set_source_rgb (cr, 0.0, 0.0,
- * 0.0)).
+ * XXX: I'd also like to direct the reader's attention to some
+ * (not-yet-written) section on cairo's imaging model. How would I do
+ * that if such a section existed? (cworth).
  **/
 void
 cairo_set_source (cairo_t *cr, cairo_pattern_t *source)
@@ -895,8 +891,6 @@ cairo_set_antialias (cairo_t *cr, cairo_antialias_t antialias)
  * (potentially self-intersecting) path. The current fill rule affects
  * both cairo_fill() and cairo_clip(). See #cairo_fill_rule_t for details
  * on the semantics of each available fill rule.
- *
- * The default fill rule is %CAIRO_FILL_RULE_WINDING.
  **/
 void
 cairo_set_fill_rule (cairo_t *cr, cairo_fill_rule_t fill_rule)
@@ -965,8 +959,6 @@ cairo_set_line_width (cairo_t *cr, double width)
  * examined by cairo_stroke(), cairo_stroke_extents(), and
  * cairo_stroke_to_path(), but does not have any effect during path
  * construction.
- *
- * The default line cap style is %CAIRO_LINE_CAP_BUTT.
  **/
 void
 cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap)
@@ -984,7 +976,7 @@ cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap)
 /**
  * cairo_set_line_join:
  * @cr: a cairo context
- * @line_join: a line join style
+ * @line_join: a line joint style
  *
  * Sets the current line join style within the cairo context. See
  * #cairo_line_join_t for details about how the available line join
@@ -994,8 +986,6 @@ cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap)
  * examined by cairo_stroke(), cairo_stroke_extents(), and
  * cairo_stroke_to_path(), but does not have any effect during path
  * construction.
- *
- * The default line join style is %CAIRO_LINE_JOIN_MITER.
  **/
 void
 cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
@@ -1126,15 +1116,6 @@ cairo_get_dash (cairo_t *cr,
  * examined by cairo_stroke(), cairo_stroke_extents(), and
  * cairo_stroke_to_path(), but does not have any effect during path
  * construction.
- *
- * The default miter limit value is 10.0, which will convert joins
- * with interior angles less than 11 degrees to bevels instead of
- * miters. For reference, a miter limit of 2.0 makes the miter cutoff
- * at 60 degrees, and a miter limit of 1.414 makes the cutoff at 90
- * degrees.
- *
- * A miter limit for a desired angle can be computed as: miter limit =
- * 1/sin(angle/2)
  **/
 void
 cairo_set_miter_limit (cairo_t *cr, double limit)
@@ -2314,14 +2295,9 @@ cairo_in_fill (cairo_t *cr, double x, double y)
  * taken into account.
  *
  * Note that if the line width is set to exactly zero, then
- * cairo_stroke_extents() will return an empty rectangle. Contrast with
+ * cairo_stroke_extents will return an empty rectangle. Contrast with
  * cairo_path_extents() which can be used to compute the non-empty
  * bounds as the line width approaches zero.
- *
- * Note that cairo_stroke_extents() must necessarily do more work to
- * compute the precise inked areas in light of the stroke parameters,
- * so cairo_path_extents() may be more desirable for sake of
- * performance if non-inked path extents are desired.
  *
  * See cairo_stroke(), cairo_set_line_width(), cairo_set_line_join(),
  * cairo_set_line_cap(), cairo_set_dash(), and
@@ -2368,13 +2344,8 @@ cairo_stroke_extents (cairo_t *cr,
  * dimensions and clipping are not taken into account.
  *
  * Contrast with cairo_path_extents(), which is similar, but returns
- * non-zero extents for some paths with no inked area, (such as a
- * simple line segment).
- *
- * Note that cairo_fill_extents() must necessarily do more work to
- * compute the precise inked areas in light of the fill rule, so
- * cairo_path_extents() may be more desirable for sake of performance
- * if the non-inked path extents are desired.
+ * non-zero extents for some paths no inked area, (such as a simple
+ * line segment).
  *
  * See cairo_fill(), cairo_set_fill_rule() and cairo_fill_preserve().
  **/
@@ -2590,38 +2561,13 @@ cairo_copy_clip_rectangle_list (cairo_t *cr)
  * @slant: the slant for the font
  * @weight: the weight for the font
  *
- * Note: The cairo_select_font_face() function call is part of what
- * the cairo designers call the "toy" text API. It is convenient for
- * short demos and simple programs, but it is not expected to be
- * adequate for serious text-using applications.
- *
  * Selects a family and style of font from a simplified description as
- * a family name, slant and weight. Cairo provides no operation to
- * list available family names on the system (this is a "toy",
- * remember"), but the standard CSS2 generic family names, ("serif",
- * "sans-serif", "cursive", "fantasy", "monospace"), are likely to
- * work as expected.
- *
- * For "real" font selection, see the font-backend-specific
- * font_face_create functions for the font backend you are using. (For
- * example, if you are using the freetype-based cairo-ft font backend,
- * see cairo_ft_font_face_create_for_ft_face() or
- * cairo_ft_font_face_create_for_pattern().) The resulting font face
- * could then be used with cairo_scaled_font_create() and
- * cairo_set_scaled_font().
- *
- * Similarly, when using the "real" font support, you can call
- * directly into the underlying font system, (such as fontconfig or
- * freetype), for operations such as listing available fonts, etc.
- *
- * It is expected that most applications will need to use a more
- * comprehensive font handling and text layout library, (for example,
- * pango), in conjunction with cairo.
- *
- * If text is drawn without a call to cairo_select_font_face(), (nor
- * cairo_set_font_face() nor cairo_set_scaled_font()), the default
- * family is "sans", slant is %CAIRO_FONT_SLANT_NORMAL, and weight is
- * %CAIRO_FONT_WEIGHT_NORMAL.
+ * a family name, slant and weight. This function is meant to be used
+ * only for applications with simple font needs: Cairo doesn't provide
+ * for operations such as listing all available fonts on the system,
+ * and it is expected that most applications will need to use a more
+ * comprehensive font handling and text layout library in addition to
+ * cairo.
  **/
 void
 cairo_select_font_face (cairo_t              *cr,
@@ -2736,10 +2682,6 @@ cairo_get_font_face (cairo_t *cr)
  * cairo_set_font_matrix(). This results in a font size of @size user space
  * units. (More precisely, this matrix will result in the font's
  * em-square being a @size by @size square in user space.)
- *
- * If text is drawn without a call to cairo_set_font_size(), (nor
- * cairo_set_font_matrix() nor cairo_set_scaled_font()), the default
- * font size is 10.0.
  **/
 void
 cairo_set_font_size (cairo_t *cr, double size)

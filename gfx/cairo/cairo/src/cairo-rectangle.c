@@ -108,7 +108,7 @@ _cairo_rectangle_intersect (cairo_rectangle_int_t *dest, cairo_rectangle_int_t *
 cairo_bool_t
 _cairo_box_intersects_line_segment (cairo_box_t *box, cairo_line_t *line)
 {
-    cairo_fixed_t t1=0, t2=0, t3=0, t4=0;
+    cairo_fixed_t t1, t2, t3, t4;
     cairo_int64_t t1y, t2y, t3x, t4x;
 
     cairo_fixed_t xlen, ylen;

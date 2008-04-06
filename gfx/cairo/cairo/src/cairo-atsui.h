@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2006, 2007 Mozilla Corporation
+ * Copyright Â© 2004 Calum Robinson
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,40 +27,32 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is Mozilla Corporation.
+ * The Initial Developer of the Original Code is Calum Robinson
  *
  * Contributor(s):
- *      Vladimir Vukicevic <vladimir@mozilla.com>
+ *	Calum Robinson <calumr@mac.com>
  */
 
-#ifndef CAIRO_QUARTZ_H
-#define CAIRO_QUARTZ_H
+#ifndef CAIRO_ATSUI_H
+#define CAIRO_ATSUI_H
 
 #include <cairo.h>
 
-#if CAIRO_HAS_QUARTZ_SURFACE
+#if CAIRO_HAS_ATSUI_FONT
+
+/* ATSUI platform-specific font interface */
 
 #include <Carbon/Carbon.h>
 
 CAIRO_BEGIN_DECLS
 
-cairo_public cairo_surface_t *
-cairo_quartz_surface_create (cairo_format_t format,
-                             unsigned int width,
-                             unsigned int height);
-
-cairo_public cairo_surface_t *
-cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext,
-                                            unsigned int width,
-                                            unsigned int height);
-
-cairo_public CGContextRef
-cairo_quartz_surface_get_cg_context (cairo_surface_t *surface);
+cairo_public cairo_font_face_t *
+cairo_atsui_font_face_create_for_atsu_font_id (ATSUFontID font_id);
 
 CAIRO_END_DECLS
 
-#else  /* CAIRO_HAS_QUARTZ_SURFACE */
-# error Cairo was not compiled with support for the quartz backend
-#endif /* CAIRO_HAS_QUARTZ_SURFACE */
+#else  /* CAIRO_HAS_ATSUI_FONT */
+# error Cairo was not compiled with support for the atsui font backend
+#endif /* CAIRO_HAS_ATSUI_FONT */
 
-#endif /* CAIRO_QUARTZ_H */
+#endif /* CAIRO_ATSUI_H */
