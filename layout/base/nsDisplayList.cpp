@@ -56,6 +56,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     : mReferenceFrame(aReferenceFrame),
       mMovingFrame(aMovingFrame),
       mIgnoreScrollFrame(nsnull),
+      mCurrentTableItem(nsnull),
       mBuildCaret(aBuildCaret),
       mEventDelivery(aIsForEvents),
       mIsAtRootOfPseudoStackingContext(PR_FALSE),
@@ -136,6 +137,7 @@ nsDisplayListBuilder::~nsDisplayListBuilder() {
                "All frames should have been unmarked");
   NS_ASSERTION(mPresShellStates.Length() == 0,
                "All presshells should have been exited");
+  NS_ASSERTION(!mCurrentTableItem, "No table item should be active");
 
   PL_FreeArenaPool(&mPool);
   PL_FinishArenaPool(&mPool);
@@ -525,11 +527,8 @@ nsDisplayBackground::IsVaryingRelativeToFrame(nsDisplayListBuilder* aBuilder,
   // will move relative to its viewport, which means this display item will
   // change when it is moved.  If they are in different documents, we do not
   // want to return true because mFrame won't move relative to its viewport.
-  for (nsIFrame* f = mFrame; f; f = f->GetParent()) {
-    if (f == aAncestorFrame)
-      return PR_TRUE;
-  }
-  return PR_FALSE;
+  return mFrame == aAncestorFrame ||
+    nsLayoutUtils::IsProperAncestorFrame(aAncestorFrame, mFrame);
 }
 
 void
