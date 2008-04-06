@@ -302,8 +302,12 @@ interface nsINavBookmarksService : nsISupports
    *         The id of the new parent
    *  @param aIndex
    *         The index under aNewParent, or DEFAULT_INDEX to append
+   *
+   * NOTE: When moving down in the same container we take into account the
+   * removal of the original item. If you want to move from index X to
+   * index Y > X you must use moveItem(id, folder, Y + 1)
    */
-  void moveItem(in long long aFolder, in long long newParent, in long aIndex);
+  void moveItem(in long long aItemId, in long long aNewParent, in long aIndex);
 
   /**
    * Returns the ID of a child folder with the given name. This does not
