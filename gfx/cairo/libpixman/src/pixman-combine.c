@@ -13,7 +13,6 @@
  * this difference will have two versions using the same convention.
  */
 
-
 /*
  * Combine src and mask
  */
@@ -1210,6 +1209,7 @@ static CombineFuncU pixman_fbCombineFuncU[] = {
     fbCombineConjointAtopU,
     fbCombineConjointAtopReverseU,
     fbCombineConjointXorU,
+    NULL /* Noop */
 };
 
 static CombineFuncC pixman_fbCombineFuncC[] = {
@@ -1257,6 +1257,7 @@ static CombineFuncC pixman_fbCombineFuncC[] = {
     fbCombineConjointAtopC,
     fbCombineConjointAtopReverseC,
     fbCombineConjointXorC,
+    NULL /* Noop */
 };
 
 FbComposeFunctions pixman_composeFunctions = {

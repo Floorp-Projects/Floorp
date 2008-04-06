@@ -839,6 +839,12 @@ pixman_rasterize_edges_accessors (pixman_image_t *image,
 				  pixman_fixed_t	t,
 				  pixman_fixed_t	b);
 
+pixman_bool_t
+pixman_image_is_opaque(pixman_image_t *image);
+
+pixman_bool_t
+pixman_image_can_get_solid (pixman_image_t *image);
+
 
 #ifdef PIXMAN_TIMING
 

@@ -7,8 +7,8 @@ http://www.cairographics.org/.
 
 VERSIONS:
 
-  cairo (1.6.x - 1.5.16-23-gbb76eb5)
-  pixman (0.10.x - pixman-0.10.0-5-g4cde088)
+  cairo (1.6.x - 1.5.18-3-g3d22902)
+  pixman (0.10.x - pixman-0.10.0-8-g0b207ae)
   glitz 0.5.2 (cvs - 2006-01-10)
 
 ***** NOTE FOR VISUAL C++ 6.0 *****
