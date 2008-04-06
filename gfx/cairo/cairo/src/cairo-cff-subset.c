@@ -34,11 +34,6 @@
  *      Eugeniy Meshcheryakov <eugen@debian.org>
  */
 
-/*
- * Useful links:
- * http://www.adobe.com/devnet/font/pdfs/5176.CFF.pdf
- */
-
 #define _BSD_SOURCE /* for snprintf(), strdup() */
 #include "cairoint.h"
 #include "cairo-scaled-font-subsets-private.h"

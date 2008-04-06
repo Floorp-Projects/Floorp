@@ -821,6 +821,7 @@ _cairo_pattern_add_color_stop (cairo_gradient_pattern_t *pattern,
 			       double			 alpha)
 {
     cairo_gradient_stop_t *stops;
+    cairo_fixed_t	   x;
     unsigned int	   i;
 
     if (pattern->n_stops >= pattern->stops_size) {
@@ -833,9 +834,10 @@ _cairo_pattern_add_color_stop (cairo_gradient_pattern_t *pattern,
 
     stops = pattern->stops;
 
+    x = _cairo_fixed_from_double (offset);
     for (i = 0; i < pattern->n_stops; i++)
     {
-	if (offset < stops[i].offset)
+	if (x < stops[i].x)
 	{
 	    memmove (&stops[i + 1], &stops[i],
 		     sizeof (cairo_gradient_stop_t) * (pattern->n_stops - i));
@@ -844,7 +846,7 @@ _cairo_pattern_add_color_stop (cairo_gradient_pattern_t *pattern,
 	}
     }
 
-    stops[i].offset = offset;
+    stops[i].x = x;
 
     stops[i].color.red   = red;
     stops[i].color.green = green;
@@ -1084,9 +1086,6 @@ cairo_pattern_get_filter (cairo_pattern_t *pattern)
  * Sets the mode to be used for drawing outside the area of a pattern.
  * See #cairo_extend_t for details on the semantics of each extend
  * strategy.
- *
- * The default extend mode is %CAIRO_EXTEND_NONE for surface patterns
- * and %CAIRO_EXTEND_PAD for gradient patterns.
  **/
 void
 cairo_pattern_set_extend (cairo_pattern_t *pattern, cairo_extend_t extend)
@@ -1209,7 +1208,7 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     }
 
     for (i = 0; i < pattern->n_stops; i++) {
-	pixman_stops[i].x = _cairo_fixed_16_16_from_double (pattern->stops[i].offset);
+	pixman_stops[i].x = _cairo_fixed_to_16_16 (pattern->stops[i].x);
 	pixman_stops[i].color.red = pattern->stops[i].color.red_short;
 	pixman_stops[i].color.green = pattern->stops[i].color.green_short;
 	pixman_stops[i].color.blue = pattern->stops[i].color.blue_short;
@@ -1983,65 +1982,50 @@ _cairo_pattern_get_extents (cairo_pattern_t         *pattern,
 	    (cairo_surface_pattern_t *) pattern;
 	cairo_surface_t *surface = surface_pattern->surface;
 	cairo_matrix_t imatrix;
-	double x1, y1, x2, y2;
+	double x, y;
+	/* Initialize to keep the compiler quiet. */
+	int left=0, right=0, top=0, bottom=0;
+	int lx, rx, ty, by;
+	int sx, sy;
+	cairo_bool_t set = FALSE;
 
 	status = _cairo_surface_get_extents (surface, &surface_extents);
 	if (status)
 	    return status;
-
-	x1 = surface_extents.x;
-	y1 = surface_extents.y;
-	x2 = x1 + surface_extents.width;
-	y2 = y1 + surface_extents.height;
-
-	/* The filter can effectively enlarge the extents of the
-	 * pattern, so extend as necessary. Note: We aren't doing any
-	 * backend-specific querying of filter box sizes at this time,
-	 * (since currently no specific backends that could do custom
-	 * filters are calling _cairo_pattern_get_extents). */
-	switch (pattern->filter) {
-	case CAIRO_FILTER_GOOD:
-	case CAIRO_FILTER_BEST:
-	case CAIRO_FILTER_BILINEAR:
-	    x1 -= 0.5;
-	    y1 -= 0.5;
-	    x2 += 0.5;
-	    y2 += 0.5;
-	    break;
-	case CAIRO_FILTER_FAST:
-	case CAIRO_FILTER_NEAREST:
-	case CAIRO_FILTER_GAUSSIAN:
-	default:
-	    /* Nothing to do */
-	    break;
-	}
 
 	imatrix = pattern->matrix;
 	status = cairo_matrix_invert (&imatrix);
 	/* cairo_pattern_set_matrix ensures the matrix is invertible */
 	assert (status == CAIRO_STATUS_SUCCESS);
 
-	_cairo_matrix_transform_bounding_box (&imatrix,
-					      &x1, &y1, &x2, &y2,
-					      NULL);
-
-	x1 = floor (x1);
-	if (x1 < 0)
-	    x1 = 0;
-	y1 = floor (y1);
-	if (y1 < 0)
-	    y1 = 0;
-
-	x2 = ceil (x2);
-	if (x2 > CAIRO_RECT_INT_MAX)
-	    x2 = CAIRO_RECT_INT_MAX;
-	y2 = ceil (y2);
-	if (y2 > CAIRO_RECT_INT_MAX)
-	    y2 = CAIRO_RECT_INT_MAX;
-
-	extents->x = x1; extents->width = x2 - x1;
-	extents->y = y1; extents->height = y2 - y1;
-
+	/* XXX Use _cairo_matrix_transform_bounding_box here */
+	for (sy = 0; sy <= 1; sy++) {
+	    for (sx = 0; sx <= 1; sx++) {
+		x = surface_extents.x + sx * surface_extents.width;
+		y = surface_extents.y + sy * surface_extents.height;
+		cairo_matrix_transform_point (&imatrix, &x, &y);
+		if (x < 0) x = 0;
+		if (x > CAIRO_RECT_INT_MAX) x = CAIRO_RECT_INT_MAX;
+		if (y < 0) y = 0;
+		if (y > CAIRO_RECT_INT_MAX) y = CAIRO_RECT_INT_MAX;
+		lx = floor (x); rx = ceil (x);
+		ty = floor (y); by = ceil (y);
+		if (!set) {
+		    left = lx;
+		    right = rx;
+		    top = ty;
+		    bottom = by;
+		    set = TRUE;
+		} else {
+		    if (lx < left) left = lx;
+		    if (rx > right) right = rx;
+		    if (ty < top) top = ty;
+		    if (by > bottom) bottom = by;
+		}
+	    }
+	}
+	extents->x = left; extents->width = right - left;
+	extents->y = top; extents->height = bottom - top;
 	return CAIRO_STATUS_SUCCESS;
     }
 
@@ -2171,7 +2155,7 @@ cairo_pattern_get_color_stop_rgba (cairo_pattern_t *pattern,
 	return _cairo_error (CAIRO_STATUS_INVALID_INDEX);
 
     if (offset)
-	*offset = gradient->stops[index].offset;
+	*offset = _cairo_fixed_to_double(gradient->stops[index].x);
     if (red)
 	*red = gradient->stops[index].color.red;
     if (green)

@@ -44,26 +44,6 @@
 #include <ctype.h>
 #include <errno.h>
 
-/* Numbers printed with %f are printed with this number of significant
- * digits after the decimal.
- */
-#define SIGNIFICANT_DIGITS_AFTER_DECIMAL 6
-
-/* Numbers printed with %g are assumed to only have CAIRO_FIXED_FRAC_BITS
- * bits of precision available after the decimal point.
- *
- * FIXED_POINT_DECIMAL_DIGITS specifies the minimum number of decimal
- * digits after the decimal point required to preserve the available
- * precision.
- *
- * The conversion is:
- *
- * FIXED_POINT_DECIMAL_DIGITS = ceil( CAIRO_FIXED_FRAC_BITS * ln(2)/ln(10) )
- *
- * We can replace ceil(x) with (int)(x+1) since x will never be an
- * integer for any likely value of CAIRO_FIXED_FRAC_BITS.
- */
-#define FIXED_POINT_DECIMAL_DIGITS ((int)(CAIRO_FIXED_FRAC_BITS*0.301029996 + 1))
 
 void
 _cairo_output_stream_init (cairo_output_stream_t            *stream,
@@ -256,6 +236,8 @@ _cairo_output_stream_write_hex_string (cairo_output_stream_t *stream,
     }
 }
 
+#define SIGNIFICANT_DIGITS_AFTER_DECIMAL 6
+
 /* Format a double in a locale independent way and trim trailing
  * zeros.  Based on code from Alex Larson <alexl@redhat.com>.
  * http://mail.gnome.org/archives/gtk-devel-list/2001-October/msg00087.html
@@ -264,8 +246,8 @@ _cairo_output_stream_write_hex_string (cairo_output_stream_t *stream,
  * has been relicensed under the LGPL/MPL dual license for inclusion
  * into cairo (see COPYING). -- Kristian Høgsberg <krh@redhat.com>
  */
-static void
-_cairo_dtostr (char *buffer, size_t size, double d, cairo_bool_t limited_precision)
+void
+_cairo_dtostr (char *buffer, size_t size, double d)
 {
     struct lconv *locale_data;
     const char *decimal_point;
@@ -284,44 +266,40 @@ _cairo_dtostr (char *buffer, size_t size, double d, cairo_bool_t limited_precisi
 
     assert (decimal_point_len != 0);
 
-    if (limited_precision) {
-	snprintf (buffer, size, "%.*f", FIXED_POINT_DECIMAL_DIGITS, d);
+    /* Using "%f" to print numbers less than 0.1 will result in
+     * reduced precision due to the default 6 digits after the
+     * decimal point.
+     *
+     * For numbers is < 0.1, we print with maximum precision and count
+     * the number of zeros between the decimal point and the first
+     * significant digit. We then print the number again with the
+     * number of decimal places that gives us the required number of
+     * significant digits. This ensures the number is correctly
+     * rounded.
+     */
+    if (fabs (d) >= 0.1) {
+	snprintf (buffer, size, "%f", d);
     } else {
-	/* Using "%f" to print numbers less than 0.1 will result in
-	 * reduced precision due to the default 6 digits after the
-	 * decimal point.
-	 *
-	 * For numbers is < 0.1, we print with maximum precision and count
-	 * the number of zeros between the decimal point and the first
-	 * significant digit. We then print the number again with the
-	 * number of decimal places that gives us the required number of
-	 * significant digits. This ensures the number is correctly
-	 * rounded.
-	 */
-	if (fabs (d) >= 0.1) {
-	    snprintf (buffer, size, "%f", d);
-	} else {
-	    snprintf (buffer, size, "%.18f", d);
-	    p = buffer;
+	snprintf (buffer, size, "%.18f", d);
+	p = buffer;
 
-	    if (*p == '+' || *p == '-')
-		p++;
+	if (*p == '+' || *p == '-')
+	    p++;
 
-	    while (isdigit (*p))
-		p++;
+	while (isdigit (*p))
+	    p++;
 
-	    if (strncmp (p, decimal_point, decimal_point_len) == 0)
-		p += decimal_point_len;
+	if (strncmp (p, decimal_point, decimal_point_len) == 0)
+	    p += decimal_point_len;
 
-	    num_zeros = 0;
-	    while (*p++ == '0')
-		num_zeros++;
+	num_zeros = 0;
+	while (*p++ == '0')
+	    num_zeros++;
 
-	    decimal_digits = num_zeros + SIGNIFICANT_DIGITS_AFTER_DECIMAL;
+	decimal_digits = num_zeros + SIGNIFICANT_DIGITS_AFTER_DECIMAL;
 
-	    if (decimal_digits < 18)
-		snprintf (buffer, size, "%.*f", decimal_digits, d);
-	}
+	if (decimal_digits < 18)
+	    snprintf (buffer, size, "%.*f", decimal_digits, d);
     }
     p = buffer;
 
@@ -463,10 +441,7 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 		      single_fmt, va_arg (ap, const char *));
 	    break;
 	case 'f':
-	    _cairo_dtostr (buffer, sizeof buffer, va_arg (ap, double), FALSE);
-	    break;
-	case 'g':
-	    _cairo_dtostr (buffer, sizeof buffer, va_arg (ap, double), TRUE);
+	    _cairo_dtostr (buffer, sizeof buffer, va_arg (ap, double));
 	    break;
 	case 'c':
 	    buffer[0] = va_arg (ap, int);

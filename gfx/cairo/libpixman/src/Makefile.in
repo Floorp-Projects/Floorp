@@ -83,9 +83,6 @@ endif
 
 
 CSRCS	= \
-	pixman-access.c \
-	pixman-access-accessors.c \
-	pixman-combine.c \
 	pixman-compose.c \
 	pixman-compose-accessors.c \
 	pixman-compute-region.c \
@@ -94,9 +91,6 @@ CSRCS	= \
 	pixman-image.c \
 	pixman-pict.c \
 	pixman-region.c \
-	pixman-source.c \
-	pixman-transformed.c \
-	pixman-transformed-accessors.c \
 	pixman-trap.c \
 	pixman-utils.c \
 	$(NULL)
@@ -106,7 +100,7 @@ CSRCS += pixman-mmx.c
 DEFINES += -DUSE_MMX
 endif
 
-EXPORTS		= pixman.h pixman-remap.h pixman-version.h
+EXPORTS		= pixman.h pixman-remap.h
 
 LOCAL_INCLUDES	+= -I$(srcdir) -I$(srcdir)/../../cairo/src
 
