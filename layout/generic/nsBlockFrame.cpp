@@ -806,10 +806,14 @@ CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
     // content.
     const nsHTMLReflowState* aLastRS = &aReflowState;
     const nsHTMLReflowState* lastButOneRS = &aReflowState;
+    PRBool isCanvasBlock = PR_FALSE;
     while (aLastRS->parentReflowState &&
            aLastRS->parentReflowState->frame->GetContent() == frame->GetContent()) {
       lastButOneRS = aLastRS;
       aLastRS = aLastRS->parentReflowState;
+      if (aLastRS->frame->GetType() == nsGkAtoms::canvasFrame) {
+        isCanvasBlock = PR_TRUE;
+      }
     }
     if (aLastRS != &aReflowState) {
       // Scrollbars need to be specifically excluded, if present, because they are outside the
@@ -830,11 +834,23 @@ CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
       }
       // We found a reflow state for the outermost wrapping frame, so use
       // its computed metrics if available
-      if (aLastRS->ComputedWidth() != NS_UNCONSTRAINEDSIZE) {
+      // XXX grotesque hack for Firefox 2 compatibility until we can
+      // properly fix abs-pos containers! If this is the block for
+      // the root element, don't adjust the width here, just use the block's
+      // width. We have to do this because the abs-pos frame will be
+      // positioned relative to the block, not the canvas frame, and the
+      // block might have borders and margin which will throw things off
+      // if we use the canvas frame width.
+      // Positioning abs-pos frames relative to the canvas is bug 425432.
+      if (aLastRS->ComputedWidth() != NS_UNCONSTRAINEDSIZE && !isCanvasBlock) {
         cbSize.width = PR_MAX(0,
           aLastRS->ComputedWidth() + aLastRS->mComputedPadding.LeftRight() - scrollbars.LeftRight());
       }
       if (aLastRS->ComputedHeight() != NS_UNCONSTRAINEDSIZE) {
+        // XXX This can be terribly wrong if we're the root element's block,
+        // because our margin and borders will be included in the height
+        // here but the abs-pos element(s) are positioned relative to
+        // our content rect...
         cbSize.height = PR_MAX(0,
           aLastRS->ComputedHeight() + aLastRS->mComputedPadding.TopBottom() - scrollbars.TopBottom());
       }
