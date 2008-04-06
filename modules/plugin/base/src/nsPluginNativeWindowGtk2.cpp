@@ -286,9 +286,12 @@ PRBool nsPluginNativeWindowGtk2::CanGetValueFromPlugin(nsCOMPtr<nsIPluginInstanc
 
           rv = pluginHost->GetPluginFactory("application/x-java-vm", &pluginFactory);
           if (NS_SUCCEEDED(rv) && pluginFactory) {
-            const char * jpiDescription;
+            const char * jpiDescription = NULL;
 
             pluginFactory->GetValue(nsPluginVariable_DescriptionString, (void*)&jpiDescription);
+            if (!jpiDescription)
+              return PR_FALSE;
+
             /** 
              * "Java(TM) Plug-in" is Sun's Java Plugin Trademark,
              * so we are sure that this is Sun 's Java Plugin if 
