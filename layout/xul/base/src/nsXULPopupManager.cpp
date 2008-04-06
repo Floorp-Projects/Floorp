@@ -126,8 +126,12 @@ void nsMenuChainItem::Detach(nsMenuChainItem** aRoot)
   }
 }
 
-NS_IMPL_ISUPPORTS4(nsXULPopupManager, nsIDOMKeyListener,
-                   nsIMenuRollup, nsIRollupListener, nsITimerCallback)
+NS_IMPL_ISUPPORTS5(nsXULPopupManager,
+                   nsIDOMKeyListener,
+                   nsIDOMEventListener,
+                   nsIMenuRollup,
+                   nsIRollupListener,
+                   nsITimerCallback)
 
 nsXULPopupManager::nsXULPopupManager() :
   mRangeOffset(0),

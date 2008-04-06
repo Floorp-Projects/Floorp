@@ -247,9 +247,9 @@ RelatedLinksStreamListener::Init()
 
 
 // nsISupports interface
-NS_IMPL_ISUPPORTS1(RelatedLinksStreamListener, nsIStreamListener)
-
-
+NS_IMPL_ISUPPORTS2(RelatedLinksStreamListener,
+                   nsIStreamListener,
+                   nsIRequestObserver)
 
 // stream observer methods
 
