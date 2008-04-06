@@ -1151,9 +1151,9 @@ _cairo_surface_fallback_fill_rectangles (cairo_surface_t         *surface,
 	if (rects[i].y < y1)
 	    y1 = rects[i].y;
 
-	if (rects[i].x + rects[i].width > x2)
+	if ((int)(rects[i].x + rects[i].width) > x2)
 	    x2 = rects[i].x + rects[i].width;
-	if (rects[i].y + rects[i].height > y2)
+	if ((int)(rects[i].y + rects[i].height) > y2)
 	    y2 = rects[i].y + rects[i].height;
     }
 

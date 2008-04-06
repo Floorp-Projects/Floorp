@@ -393,10 +393,15 @@ _extract_pdf_surface (cairo_surface_t		 *surface,
 {
     cairo_surface_t *target;
 
+    if (surface->status)
+	return surface->status;
+
     if (! _cairo_surface_is_paginated (surface))
 	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 
     target = _cairo_paginated_surface_get_target (surface);
+    if (target->status)
+	return target->status;
 
     if (! _cairo_surface_is_pdf (target))
 	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
@@ -1245,7 +1250,6 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
     int i, x, y;
     cairo_bool_t opaque;
     uint8_t a;
-    int src_bit, dst_bit;
 
     /* This is the only image format we support, which simplifies things. */
     assert (image->format == CAIRO_FORMAT_ARGB32 ||
@@ -1255,11 +1259,7 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
     stream_ret->id = 0;
 
     if (image->format == CAIRO_FORMAT_A1) {
-	/* We allocate using slightly different math so that we can get
-	 * the overflow checking from _cairo_malloc_ab, but alpha_size
-	 * needs to be the correct size for emitting the data in the PDF.
-	 */
-	alpha_size = (image->width*image->height + 7) / 8;
+	alpha_size = (image->width + 7) / 8 * image->height;
 	alpha = _cairo_malloc_ab ((image->width+7) / 8, image->height);
     } else {
 	alpha_size = image->height * image->width;
@@ -1273,8 +1273,6 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 
     opaque = TRUE;
     i = 0;
-    src_bit = 0;
-    dst_bit = 7;
     for (y = 0; y < image->height; y++) {
 	if (image->format == CAIRO_FORMAT_ARGB32) {
 	    pixel32 = (uint32_t *) (image->data + y * image->stride);
@@ -1297,21 +1295,12 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 	} else { /* image->format == CAIRO_FORMAT_A1 */
 	    pixel8 = (uint8_t *) (image->data + y * image->stride);
 
-	    for (x = 0; x < image->width; x++, pixel8++) {
-		if (dst_bit == 7)
-		    alpha[i] = 0;
-		if ((*pixel8 >> src_bit) & 1) {
-			opaque = FALSE;
-			alpha[i] |= (1 << dst_bit);
-		}
-		if (++src_bit > 7) {
-		    src_bit = 0;
-		    pixel8++;
-		}
-		if (--dst_bit < 0) {
-		    dst_bit = 7;
-		    i++;
-		}
+	    for (x = 0; x < (image->width + 7) / 8; x++, pixel8++) {
+		a = *pixel8;
+		a = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (a);
+		alpha[i++] = a;
+		if (a != 0xff)
+		    opaque = FALSE;
 	    }
 	}
     }
@@ -1494,8 +1483,9 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
     double old_width, old_height;
     cairo_matrix_t old_cairo_to_pdf;
     cairo_paginated_mode_t old_paginated_mode;
+    cairo_clip_t *old_clip;
     cairo_rectangle_int_t meta_extents;
-    cairo_status_t status;
+    cairo_status_t status, status2;
     int alpha = 0;
 
     status = _cairo_surface_get_extents (meta_surface, &meta_extents);
@@ -1506,6 +1496,7 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
     old_height = surface->height;
     old_cairo_to_pdf = surface->cairo_to_pdf;
     old_paginated_mode = surface->paginated_mode;
+    old_clip = _cairo_surface_get_clip (&surface->base);
     surface->width = meta_extents.width;
     surface->height = meta_extents.height;
     /* Patterns are emitted after fallback images. The paginated mode
@@ -1548,6 +1539,10 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
     surface->height = old_height;
     surface->paginated_mode = old_paginated_mode;
     surface->cairo_to_pdf = old_cairo_to_pdf;
+    status2 = _cairo_surface_set_clip (&surface->base, old_clip);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = status2;
+
     _cairo_pdf_operators_set_cairo_to_pdf_matrix (&surface->pdf_operators,
 						  &surface->cairo_to_pdf);
 
@@ -1981,7 +1976,7 @@ _cairo_pdf_surface_emit_pattern_stops (cairo_pdf_surface_t      *surface,
 	stops[i].color[3] = pattern->stops[i].color.alpha;
         if (!CAIRO_ALPHA_IS_OPAQUE (stops[i].color[3]))
             emit_alpha = TRUE;
-	stops[i].offset = _cairo_fixed_to_double (pattern->stops[i].x);
+	stops[i].offset = pattern->stops[i].offset;
     }
 
     if (pattern->base.extend == CAIRO_EXTEND_REPEAT ||
@@ -2220,8 +2215,8 @@ _cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t    *surface,
     assert (status == CAIRO_STATUS_SUCCESS);
 
     cairo_matrix_multiply (&pat_to_pdf, &pat_to_pdf, &surface->cairo_to_pdf);
-    first_stop = _cairo_fixed_to_double (gradient->stops[0].x);
-    last_stop = _cairo_fixed_to_double (gradient->stops[gradient->n_stops - 1].x);
+    first_stop = gradient->stops[0].offset;
+    last_stop = gradient->stops[gradient->n_stops - 1].offset;
 
     if (pattern->base.base.extend == CAIRO_EXTEND_REPEAT ||
 	pattern->base.base.extend == CAIRO_EXTEND_REFLECT) {
@@ -4148,9 +4143,10 @@ _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t  *surface,
     if (! _pattern_supported (pattern))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (op == CAIRO_OPERATOR_OVER || op == CAIRO_OPERATOR_SOURCE) {
+    if (op == CAIRO_OPERATOR_OVER) {
 	if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	    cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
+
 	    if ( _cairo_surface_is_meta (surface_pattern->surface))
 		return CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN;
 	}
@@ -4165,8 +4161,13 @@ _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t  *surface,
 	if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	    cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
 
-	    return _cairo_pdf_surface_analyze_surface_pattern_transparency (surface,
-									    surface_pattern);
+	    if (_cairo_surface_is_meta (surface_pattern->surface)) {
+		if (_cairo_pattern_is_opaque (pattern))
+		    return CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN;
+	    } else {
+		return _cairo_pdf_surface_analyze_surface_pattern_transparency (surface,
+										surface_pattern);
+	    }
 	}
 
 	if (_cairo_pattern_is_opaque (pattern))
@@ -4536,19 +4537,14 @@ _cairo_pdf_surface_fill_stroke (void		     *abstract_surface,
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    /* Fill-stroke with patterns requiring an SMask are not currently
-     * implemented. Non opaque stroke patterns are not supported
-     * because the PDF fill-stroke operator does not blend a
-     * transparent stroke with the fill.
+    /* PDF rendering of fill-stroke is not the same as cairo when
+     * either the fill or stroke is not opaque.
      */
-    if (fill_source->type == CAIRO_PATTERN_TYPE_LINEAR ||
-        fill_source->type == CAIRO_PATTERN_TYPE_RADIAL)
+    if ( !_cairo_pattern_is_opaque (fill_source) ||
+	 !_cairo_pattern_is_opaque (stroke_source))
     {
-        if (!_cairo_pattern_is_opaque (fill_source))
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
-    if (!_cairo_pattern_is_opaque (stroke_source))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     fill_pattern_res.id = 0;
     gstate_res.id = 0;
