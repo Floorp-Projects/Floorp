@@ -110,14 +110,18 @@ _cairo_array_fini (cairo_array_t *array)
  * is always increased by doubling as many times as necessary.
  **/
 cairo_status_t
-_cairo_array_grow_by (cairo_array_t *array, int additional)
+_cairo_array_grow_by (cairo_array_t *array, unsigned int additional)
 {
     char *new_elements;
-    int old_size = array->size;
-    int required_size = array->num_elements + additional;
-    int new_size;
+    unsigned int old_size = array->size;
+    unsigned int required_size = array->num_elements + additional;
+    unsigned int new_size;
 
     assert (! array->is_snapshot);
+
+    /* check for integer overflow */
+    if (required_size > INT_MAX || required_size < array->num_elements)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     if (required_size <= old_size)
 	return CAIRO_STATUS_SUCCESS;
