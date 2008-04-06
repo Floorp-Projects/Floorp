@@ -339,6 +339,7 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
                                              scaled_font_glyph_index,
                                              CAIRO_SCALED_GLYPH_INFO_METRICS,
                                              &scaled_glyph);
+	assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
 	if (status)
 	    return status;
 
@@ -544,11 +545,21 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
     }
 
     /* Glyph not found. Determine whether the glyph is outline or
-     * bitmap and add to the appropriate subset */
-    status = _cairo_scaled_glyph_lookup (scaled_font,
-                                         scaled_font_glyph_index,
-					 CAIRO_SCALED_GLYPH_INFO_PATH,
-                                         &scaled_glyph);
+     * bitmap and add to the appropriate subset.
+     *
+     * glyph_index 0 (the .notdef glyph) is a special case. Some fonts
+     * will return CAIRO_INT_STATUS_UNSUPPORTED when doing a
+     * _scaled_glyph_lookup(_GLYPH_INFO_PATH). Type1-fallback creates
+     * empty glyphs in this case so we can put the glyph in a unscaled
+     * subset. */
+    if (scaled_font_glyph_index == 0) {
+	status = CAIRO_STATUS_SUCCESS;
+    } else {
+	status = _cairo_scaled_glyph_lookup (scaled_font,
+					     scaled_font_glyph_index,
+					     CAIRO_SCALED_GLYPH_INFO_PATH,
+					     &scaled_glyph);
+    }
     if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
         return status;
 

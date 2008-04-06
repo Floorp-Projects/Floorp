@@ -33,6 +33,11 @@
  *	Kristian Høgsberg <krh@redhat.com>
  */
 
+/*
+ * Useful links:
+ * http://partners.adobe.com/public/developer/en/font/T1_SPEC.PDF
+ */
+
 #define _BSD_SOURCE /* for snprintf(), strdup() */
 #include "cairoint.h"
 #include "cairo-type1-private.h"

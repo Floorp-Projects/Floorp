@@ -946,7 +946,7 @@ _cairo_pdf_operators_show_glyphs (cairo_pdf_operators_t		*pdf_operators,
                         _cairo_output_stream_printf (word_wrap_stream,
                                                      "%f %f Td ",
                                                      (glyphs[i].x - Tlm_x)/scaled_font->scale.xx,
-                                                     (glyphs[i].y - Tlm_y)/-scaled_font->scale.yy);
+                                                     (glyphs[i].y - Tlm_y)/scaled_font->scale.yy);
                         Tlm_x = glyphs[i].x;
                         Tlm_y = glyphs[i].y;
                         Tm_x = Tlm_x;
