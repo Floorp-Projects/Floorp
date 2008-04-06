@@ -2353,6 +2353,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRegion(nsPluginRegion invalidRegi
 
 NS_IMETHODIMP nsPluginInstanceOwner::ForceRedraw()
 {
+  NS_ENSURE_TRUE(mOwner,NS_ERROR_NULL_POINTER);
   nsIView* view = mOwner->GetView();
   if (view) {
     return view->GetViewManager()->Composite();
