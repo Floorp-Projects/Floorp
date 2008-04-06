@@ -416,9 +416,6 @@
           if (aEvent.getPreventDefault())
             return false;
 
-          // Make sure we have the controller before handling key presses
-          this.attachController();
-
           var cancel = false;
 
           // Catch any keys that could potentially move the caret. Ctrl can be
