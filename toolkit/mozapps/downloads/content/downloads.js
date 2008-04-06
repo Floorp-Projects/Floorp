@@ -1096,8 +1096,14 @@ function buildDownloadList(aForceBuild)
 function stepListBuilder(aNumItems) {
   try {
     // If we're done adding all items, we can quit
-    if (!gStmt.executeStep())
+    if (!gStmt.executeStep()) {
+      // Send a notification that we finished
+      Cc["@mozilla.org/observer-service;1"].
+      getService(Ci.nsIObserverService).
+      notifyObservers(window, "download-manager-ui-done", null);
+
       return;
+    }
 
     // Try to get the attribute values from the statement
     let attrs = {
