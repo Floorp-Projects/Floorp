@@ -464,13 +464,7 @@ placesMoveItemTransactions.prototype = {
   },
 
   undoTransaction: function PMIT_undoTransaction() {
-    // moving down in the same container takes in count removal of the item
-    // so to revert positions we must move to oldIndex + 1
-    if (this._newContainer == this._oldContainer &&
-        this._oldIndex > this._newIndex)
-      PlacesUtils.bookmarks.moveItem(this._id, this._oldContainer, this._oldIndex + 1);
-    else
-      PlacesUtils.bookmarks.moveItem(this._id, this._oldContainer, this._oldIndex);
+    PlacesUtils.bookmarks.moveItem(this._id, this._oldContainer, this._oldIndex);
   }
 };
 

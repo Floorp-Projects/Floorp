@@ -3242,11 +3242,6 @@ PlacesSQLQueryBuilder::OrderBy()
       if (mHasDateColumns)
         OrderByColumnIndexDesc(nsNavHistory::kGetInfoIndex_ItemLastModified);
       break;
-    case nsINavHistoryQueryOptions::SORT_BY_TAGS_ASCENDING:
-    case nsINavHistoryQueryOptions::SORT_BY_TAGS_DESCENDING:
-    case nsINavHistoryQueryOptions::SORT_BY_ANNOTATION_ASCENDING:
-    case nsINavHistoryQueryOptions::SORT_BY_ANNOTATION_DESCENDING:
-      break; // Sort later in nsNavHistoryQueryResultNode::FillChildren()
     default:
       NS_NOTREACHED("Invalid sorting mode");
   }
