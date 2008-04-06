@@ -342,6 +342,8 @@ TextRunWordCache::FinishTextRun(gfxTextRun *aTextRun, gfxTextRun *aNewRun,
         // in the cache, so we'll remove the associated cache entry
         PRBool wordStartsInsideCluster =
             !source->IsClusterStart(word->mSourceOffset);
+        PRBool wordStartsInsideLigature =
+            !source->IsLigatureGroupStart(word->mSourceOffset);
         if (source == aNewRun) {
             // We created a cache entry for this word based on the assumption
             // that the word matches GetFontAt(0). If this assumption is false,
@@ -349,7 +351,8 @@ TextRunWordCache::FinishTextRun(gfxTextRun *aTextRun, gfxTextRun *aNewRun,
             // keyed off the fontgroup.
             PRBool rekeyWithFontGroup =
                 GetWordFontOrGroup(aNewRun, word->mSourceOffset, word->mLength) != font;
-            if (!aSuccessful || wordStartsInsideCluster || rekeyWithFontGroup) {
+            if (!aSuccessful || rekeyWithFontGroup ||
+                wordStartsInsideCluster || wordStartsInsideLigature) {
                 // We need to remove the current placeholder cache entry
                 CacheHashKey key(aTextRun, font, word->mDestOffset, word->mLength,
                                  word->mHash);
@@ -361,7 +364,7 @@ TextRunWordCache::FinishTextRun(gfxTextRun *aTextRun, gfxTextRun *aNewRun,
 #endif
                 PR_LOG(gWordCacheLog, PR_LOG_DEBUG, ("%p(%d-%d,%d): removed using font", aTextRun, word->mDestOffset, word->mLength, word->mHash));
                 
-                if (aSuccessful && !wordStartsInsideCluster) {
+                if (aSuccessful && !wordStartsInsideCluster && !wordStartsInsideLigature) {
                     key.mFontOrGroup = fontGroup;
                     CacheHashEntry *groupEntry = mCache.PutEntry(key);
                     if (groupEntry) {
@@ -387,9 +390,12 @@ TextRunWordCache::FinishTextRun(gfxTextRun *aTextRun, gfxTextRun *aNewRun,
             PRUint32 length = word->mLength;
             nsAutoPtr<gfxTextRun> tmpTextRun;
             PRBool stealData = source == aNewRun;
-            if (wordStartsInsideCluster) {
+            if (wordStartsInsideCluster || wordStartsInsideLigature) {
                 NS_ASSERTION(sourceOffset > 0, "How can the first character be inside a cluster?");
-                if (destOffset > 0 && IsBoundarySpace(aTextRun->GetChar(destOffset - 1))) {
+                if (wordStartsInsideCluster && destOffset > 0 &&
+                    IsBoundarySpace(aTextRun->GetChar(destOffset - 1))) {
+                    // The first character of the word formed a cluster
+                    // with the preceding space.
                     // We should copy over data for the preceding space
                     // as well. The glyphs have probably been attached
                     // to that character.
@@ -397,13 +403,13 @@ TextRunWordCache::FinishTextRun(gfxTextRun *aTextRun, gfxTextRun *aNewRun,
                     --destOffset;
                     ++length;
                 } else {
-                    // URK! This case sucks! We have combining marks
-                    // at the start of the text. We had to prepend a space
-                    // just so we could detect these are combining marks
-                    // (so we can keep this "word" out of the cache).
-                    // But now the data in aNewRun is no use to us. We
-                    // need to find out what the platform would do
-                    // if the marks were at the start of the text.
+                    // URK! This case sucks! We have combining marks or
+                    // part of a ligature at the start of the text. We
+                    // had to prepend a space just so we could detect this
+                    // situation (so we can keep this "word" out of the
+                    // cache). But now the data in aNewRun is no use to us.
+                    // We need to find out what the platform would do
+                    // if the characters were at the start of the text.
                     tmpTextRun = aNewRun->GetFontGroup()->MakeTextRun(
                         source->GetTextUnicode() + sourceOffset, length, aParams,
                         aNewRun->GetFlags());
