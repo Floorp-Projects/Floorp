@@ -2925,6 +2925,20 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 	already_had_glyph_surface = TRUE;
     }
 
+    /* XXX XRenderAddGlyph does not handle a glyph surface larger than the
+     * maximum XRequest size.
+     */
+    {
+	/* pessimistic length estimation in case we need to change formats */
+	int len = 4 * glyph_surface->width * glyph_surface->height;
+	int max_request_size = XMaxRequestSize (dpy)  -
+	                       sz_xRenderAddGlyphsReq -
+	                       sz_xGlyphInfo          -
+			       4;
+	if (len >= max_request_size)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
     if (scaled_font->surface_private == NULL) {
 	status = _cairo_xlib_surface_font_init (dpy, scaled_font);
 	if (status)
