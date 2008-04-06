@@ -365,6 +365,9 @@
         <getter><![CDATA[
           if (this._contextMenuShown) {
             var popupNode = document.popupNode;
+            if (popupNode == this)
+              return this.getResultNode();
+
             return popupNode.node || popupNode.parentNode._resultNode || null;
           }
           return null;
@@ -952,6 +955,7 @@
             // disable the Delete command if the selection isn't explicit
             if (document.popupNode && document.popupNode.localName == "menupopup")
               document.getElementById("cmd_delete").setAttribute("disabled", "true");
+            return true;
           }
           return false;
         ]]></body>
