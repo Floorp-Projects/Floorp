@@ -3710,24 +3710,21 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
     size.height = fontMetrics.underlineSize;
     nsCSSRendering::PaintDecorationLine(
       aCtx, decorations.mOverColor, pt, size, ascent, ascent,
-      NS_STYLE_TEXT_DECORATION_OVERLINE, NS_STYLE_BORDER_STYLE_SOLID,
-      mTextRun->IsRightToLeft());
+      NS_STYLE_TEXT_DECORATION_OVERLINE, NS_STYLE_BORDER_STYLE_SOLID);
   }
   if (decorations.HasUnderline()) {
     size.height = fontMetrics.underlineSize;
     gfxFloat offset = aProvider.GetFontGroup()->GetUnderlineOffset();
     nsCSSRendering::PaintDecorationLine(
       aCtx, decorations.mUnderColor, pt, size, ascent, offset,
-      NS_STYLE_TEXT_DECORATION_UNDERLINE, NS_STYLE_BORDER_STYLE_SOLID,
-      mTextRun->IsRightToLeft());
+      NS_STYLE_TEXT_DECORATION_UNDERLINE, NS_STYLE_BORDER_STYLE_SOLID);
   }
   if (decorations.HasStrikeout()) {
     size.height = fontMetrics.strikeoutSize;
     gfxFloat offset = fontMetrics.strikeoutOffset;
     nsCSSRendering::PaintDecorationLine(
       aCtx, decorations.mStrikeColor, pt, size, ascent, offset,
-      NS_STYLE_TEXT_DECORATION_UNDERLINE, NS_STYLE_BORDER_STYLE_SOLID,
-      mTextRun->IsRightToLeft());
+      NS_STYLE_TEXT_DECORATION_UNDERLINE, NS_STYLE_BORDER_STYLE_SOLID);
   }
 }
 
@@ -3741,7 +3738,7 @@ static const SelectionType SelectionTypesWithDecorations =
 
 static void DrawIMEUnderline(gfxContext* aContext, PRInt32 aIndex,
     nsTextPaintStyle& aTextPaintStyle, const gfxPoint& aPt, gfxFloat aWidth,
-    gfxFloat aAscent, gfxFloat aSize, gfxFloat aOffset, PRBool aIsRTL)
+    gfxFloat aAscent, gfxFloat aSize, gfxFloat aOffset)
 {
   nscolor color;
   float relativeSize;
@@ -3754,7 +3751,7 @@ static void DrawIMEUnderline(gfxContext* aContext, PRInt32 aIndex,
   gfxPoint pt(aPt.x + 1.0, aPt.y);
   nsCSSRendering::PaintDecorationLine(
     aContext, color, pt, gfxSize(width, actualSize), aAscent, aOffset,
-    NS_STYLE_TEXT_DECORATION_UNDERLINE, style, aIsRTL);
+    NS_STYLE_TEXT_DECORATION_UNDERLINE, style);
 }
 
 /**
@@ -3763,7 +3760,7 @@ static void DrawIMEUnderline(gfxContext* aContext, PRInt32 aIndex,
  */
 static void DrawSelectionDecorations(gfxContext* aContext, SelectionType aType,
     nsTextPaintStyle& aTextPaintStyle, const gfxPoint& aPt, gfxFloat aWidth,
-    gfxFloat aAscent, const gfxFont::Metrics& aFontMetrics, PRBool aIsRTL)
+    gfxFloat aAscent, const gfxFont::Metrics& aFontMetrics)
 {
   gfxSize size(aWidth, aFontMetrics.underlineSize);
 
@@ -3772,30 +3769,29 @@ static void DrawSelectionDecorations(gfxContext* aContext, SelectionType aType,
       nsCSSRendering::PaintDecorationLine(
         aContext, NS_RGB(255,0,0),
         aPt, size, aAscent, aFontMetrics.underlineOffset,
-        NS_STYLE_TEXT_DECORATION_UNDERLINE, NS_STYLE_BORDER_STYLE_DOTTED,
-        aIsRTL);
+        NS_STYLE_TEXT_DECORATION_UNDERLINE, NS_STYLE_BORDER_STYLE_DOTTED);
       break;
     }
 
     case nsISelectionController::SELECTION_IME_RAWINPUT:
       DrawIMEUnderline(aContext, nsTextPaintStyle::eIndexRawInput,
                        aTextPaintStyle, aPt, aWidth, aAscent, size.height,
-                       aFontMetrics.underlineOffset, aIsRTL);
+                       aFontMetrics.underlineOffset);
       break;
     case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT:
       DrawIMEUnderline(aContext, nsTextPaintStyle::eIndexSelRawText,
                        aTextPaintStyle, aPt, aWidth, aAscent, size.height,
-                       aFontMetrics.underlineOffset, aIsRTL);
+                       aFontMetrics.underlineOffset);
       break;
     case nsISelectionController::SELECTION_IME_CONVERTEDTEXT:
       DrawIMEUnderline(aContext, nsTextPaintStyle::eIndexConvText,
                        aTextPaintStyle, aPt, aWidth, aAscent, size.height,
-                       aFontMetrics.underlineOffset, aIsRTL);
+                       aFontMetrics.underlineOffset);
       break;
     case nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT:
       DrawIMEUnderline(aContext, nsTextPaintStyle::eIndexSelConvText,
                        aTextPaintStyle, aPt, aWidth, aAscent, size.height,
-                       aFontMetrics.underlineOffset, aIsRTL);
+                       aFontMetrics.underlineOffset);
       break;
 
     default:
@@ -4089,11 +4085,11 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
     gfxFloat advance = hyphenWidth +
       mTextRun->GetAdvanceWidth(offset, length, &aProvider);
     if (type == aSelectionType) {
-      pt.x = (aTextBaselinePt.x + xOffset) / app;
+      pt.x = (aFramePt.x + xOffset -
+             (mTextRun->IsRightToLeft() ? advance : 0)) / app;
       gfxFloat width = PR_ABS(advance) / app;
       DrawSelectionDecorations(aCtx, aSelectionType, aTextPaintStyle,
-                               pt, width, mAscent / app, decorationMetrics,
-                               mTextRun->IsRightToLeft());
+                               pt, width, mAscent / app, decorationMetrics);
     }
     iterator.UpdateWithAdvance(advance);
   }
