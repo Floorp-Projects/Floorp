@@ -4462,8 +4462,7 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
                                     const gfxFloat aAscent,
                                     const gfxFloat aOffset,
                                     const PRUint8 aDecoration,
-                                    const PRUint8 aStyle,
-                                    const PRBool aIsRTL)
+                                    const PRUint8 aStyle)
 {
   gfxRect rect =
     GetTextDecorationRectInternal(aPt, aLineSize, aAscent, aOffset,
@@ -4545,13 +4544,8 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
     case NS_STYLE_BORDER_STYLE_DOTTED:
     case NS_STYLE_BORDER_STYLE_DASHED:
       aGfxContext->NewPath();
-      if (aIsRTL) {
-        aGfxContext->MoveTo(rect.TopRight());
-        aGfxContext->LineTo(rect.TopLeft());
-      } else {
-        aGfxContext->MoveTo(rect.TopLeft());
-        aGfxContext->LineTo(rect.TopRight());
-      }
+      aGfxContext->LineTo(rect.TopLeft());
+      aGfxContext->MoveTo(rect.TopRight());
       aGfxContext->Stroke();
       break;
     default:
