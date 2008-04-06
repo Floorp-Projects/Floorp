@@ -545,9 +545,9 @@ nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
  * Table row backgrounds can extend beyond the row frame bounds, when
  * the row contains row-spanning cells.
  */
-class nsDisplayTableRowBackground : public nsDisplayItem {
+class nsDisplayTableRowBackground : public nsDisplayTableItem {
 public:
-  nsDisplayTableRowBackground(nsTableRowFrame* aFrame) : nsDisplayItem(aFrame) {
+  nsDisplayTableRowBackground(nsTableRowFrame* aFrame) : nsDisplayTableItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayTableRowBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -556,13 +556,6 @@ public:
   }
 #endif
 
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
-    // the overflow rect contains any row-spanning cells, so it contains
-    // our background. Note that this means we may not be opaque even if
-    // the background style is a solid color.
-    return static_cast<nsTableRowFrame*>(mFrame)->GetOverflowRect() +
-      aBuilder->ToReferenceFrame(mFrame);
-  }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("TableRowBackground")
@@ -590,6 +583,7 @@ nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return NS_OK;
 
   PRBool isRoot = aBuilder->IsAtRootOfPseudoStackingContext();
+  nsDisplayTableItem* item = nsnull;
   if (isRoot) {
     // This background is created regardless of whether this frame is
     // visible or not. Visibility decisions are delegated to the
@@ -597,12 +591,12 @@ nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // We would use nsDisplayGeneric for this rare case except that we
     // need the background to be larger than the row frame in some
     // cases.
-    nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayTableRowBackground(this));
+    item = new (aBuilder) nsDisplayTableRowBackground(this);
+    nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   
-  return nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists, isRoot);
+  return nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists, item);
 }
 
 PRIntn
