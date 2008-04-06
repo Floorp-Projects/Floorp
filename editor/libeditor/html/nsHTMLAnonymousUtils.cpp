@@ -57,7 +57,7 @@
 #include "nsIDOMCSSValue.h"
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "nsIDOMCSSStyleDeclaration.h"
-
+#include "nsIMutationObserver.h"
 #include "nsUnicharUtils.h"
 
 // retrieve an integer stored into a CSS computed float value
@@ -102,6 +102,36 @@ static PRInt32 GetCSSFloatValue(nsIDOMCSSStyleDeclaration * aDecl,
   return (PRInt32) f;
 }
 
+class nsElementDeletionObserver : public nsIMutationObserver
+{
+public:
+  nsElementDeletionObserver(nsINode* aNativeAnonNode, nsINode* aObservedNode)
+  : mNativeAnonNode(aNativeAnonNode), mObservedNode(aObservedNode) {}
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMUTATIONOBSERVER
+protected:
+  nsINode* mNativeAnonNode;
+  nsINode* mObservedNode;
+};
+
+NS_IMPL_ISUPPORTS1(nsElementDeletionObserver, nsIMutationObserver)
+NS_IMPL_NSIMUTATIONOBSERVER_CONTENT(nsElementDeletionObserver)
+
+void
+nsElementDeletionObserver::NodeWillBeDestroyed(const nsINode* aNode)
+{
+  NS_ASSERTION(aNode == mNativeAnonNode || aNode == mObservedNode,
+               "Wrong aNode!");
+  if (aNode == mNativeAnonNode) {
+    mObservedNode->RemoveMutationObserver(this);
+  } else {
+    mNativeAnonNode->RemoveMutationObserver(this);
+    static_cast<nsIContent*>(mNativeAnonNode)->UnbindFromTree();
+  }
+
+  NS_RELEASE_THIS();
+}
+
 // Returns in *aReturn an anonymous nsDOMElement of type aTag,
 // child of aParentNode. If aIsCreatedHidden is true, the class
 // "hidden" is added to the created element. If aAnonClass is not
@@ -113,6 +143,7 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
 {
   NS_ENSURE_ARG_POINTER(aParentNode);
   NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
 
   nsCOMPtr<nsIContent> parentContent( do_QueryInterface(aParentNode) );
   if (!parentContent)
@@ -158,7 +189,17 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
     newContent->UnbindFromTree();
     return res;
   }
-  
+
+  nsElementDeletionObserver* observer =
+    new nsElementDeletionObserver(newContent, parentContent);
+  if (!observer) {
+    newContent->UnbindFromTree();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_ADDREF(observer); // NodeWillBeDestroyed releases.
+  parentContent->AddMutationObserver(observer);
+  newContent->AddMutationObserver(observer);
+
   // display the element
   ps->RecreateFramesFor(newContent);
 
