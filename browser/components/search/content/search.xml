@@ -140,8 +140,9 @@
         }
 
         // Make sure to break the cycle from _texbox to us. Otherwise we leak
-        // the world.
-        this._textbox.mController.input = null;
+        // the world. But make sure it's actually pointing to us.
+        if (this._textbox.mController.input == this)
+          this._textbox.mController.input = null;
       ]]></destructor>
 
       <field name="_stringBundle">document.getAnonymousElementByAttribute(this,
