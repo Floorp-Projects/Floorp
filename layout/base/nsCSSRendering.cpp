@@ -4544,8 +4544,8 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
     case NS_STYLE_BORDER_STYLE_DOTTED:
     case NS_STYLE_BORDER_STYLE_DASHED:
       aGfxContext->NewPath();
-      aGfxContext->LineTo(rect.TopLeft());
-      aGfxContext->MoveTo(rect.TopRight());
+      aGfxContext->MoveTo(rect.TopLeft());
+      aGfxContext->LineTo(rect.TopRight());
       aGfxContext->Stroke();
       break;
     default:
