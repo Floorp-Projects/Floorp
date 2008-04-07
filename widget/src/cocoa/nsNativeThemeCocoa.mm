@@ -678,7 +678,9 @@ nsNativeThemeCocoa::DrawProgress(CGContextRef cgContext,
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   HIThemeTrackDrawInfo tdi;
-  static SInt32 sPhase = 0;
+
+  PRInt32 stepsPerSecond = inIsIndeterminate ? 60 : 30;
+  PRInt32 milliSecondsPerStep = 1000 / stepsPerSecond;
 
   tdi.version = 0;
   tdi.kind = inIsIndeterminate ? kThemeMediumIndeterminateBar: kThemeMediumProgressBar;
@@ -688,7 +690,8 @@ nsNativeThemeCocoa::DrawProgress(CGContextRef cgContext,
   tdi.value = inValue;
   tdi.attributes = inIsHorizontal ? kThemeTrackHorizontal : 0;
   tdi.enableState = kThemeTrackActive;
-  tdi.trackInfo.progress.phase = sPhase++; // animate for the next time we're called
+  tdi.trackInfo.progress.phase = PR_IntervalToMilliseconds(PR_IntervalNow()) /
+                                 milliSecondsPerStep % 16;
 
   HIThemeDrawTrack(&tdi, NULL, cgContext, HITHEME_ORIENTATION);
 
@@ -1751,10 +1754,6 @@ nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
     case NS_THEME_STATUSBAR:
     case NS_THEME_STATUSBAR_PANEL:
     case NS_THEME_STATUSBAR_RESIZER_PANEL:
-    case NS_THEME_PROGRESSBAR_CHUNK:
-    case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
-    case NS_THEME_PROGRESSBAR:
-    case NS_THEME_PROGRESSBAR_VERTICAL:
     case NS_THEME_TOOLTIP:
     case NS_THEME_TAB_PANELS:
     case NS_THEME_TAB_PANEL:
@@ -1762,6 +1761,12 @@ nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
     case NS_THEME_MENUPOPUP:
     case NS_THEME_GROUPBOX:
       *aShouldRepaint = PR_FALSE;
+      return NS_OK;
+    case NS_THEME_PROGRESSBAR_CHUNK:
+    case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
+    case NS_THEME_PROGRESSBAR:
+    case NS_THEME_PROGRESSBAR_VERTICAL:
+      *aShouldRepaint = (aAttribute == nsWidgetAtoms::step);
       return NS_OK;
   }
 
