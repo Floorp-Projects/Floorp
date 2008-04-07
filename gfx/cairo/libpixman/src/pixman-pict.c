@@ -1261,38 +1261,6 @@ pixman_walk_composite_region (pixman_op_t op,
     pixman_region_fini (&reg);
 }
 
-static pixman_bool_t
-can_get_solid (pixman_image_t *image)
-{
-    if (image->type == SOLID)
-	return TRUE;
-
-    if (image->type != BITS	||
-	image->bits.width != 1	||
-	image->bits.height != 1)
-    {
-	return FALSE;
-    }
-
-    if (image->common.repeat != PIXMAN_REPEAT_NORMAL)
-	return FALSE;
-
-    switch (image->bits.format)
-    {
-    case PIXMAN_a8r8g8b8:
-    case PIXMAN_x8r8g8b8:
-    case PIXMAN_a8b8g8r8:
-    case PIXMAN_x8b8g8r8:
-    case PIXMAN_r8g8b8:
-    case PIXMAN_b8g8r8:
-    case PIXMAN_r5g6b5:
-    case PIXMAN_b5g6r5:
-	return TRUE;
-    default:
-	return FALSE;
-    }
-}
-
 #define SCANLINE_BUFFER_LENGTH 2048
 
 static void
@@ -1554,7 +1522,7 @@ get_fast_path (const FastPathInfo *fast_paths,
 	if (info->op != op)
 	    continue;
 
-	if ((info->src_format == PIXMAN_solid && can_get_solid (pSrc))		||
+	if ((info->src_format == PIXMAN_solid && pixman_image_can_get_solid (pSrc))		||
 	    (pSrc->type == BITS && info->src_format == pSrc->bits.format))
 	{
 	    valid_src = TRUE;
@@ -1595,6 +1563,82 @@ get_fast_path (const FastPathInfo *fast_paths,
 
     return NULL;
 }
+
+/*
+ * Operator optimizations based on source or destination opacity
+ */
+typedef struct
+{
+    pixman_op_t			op;
+    pixman_op_t			opSrcDstOpaque;
+    pixman_op_t			opSrcOpaque;
+    pixman_op_t			opDstOpaque;
+} OptimizedOperatorInfo;
+
+static const OptimizedOperatorInfo optimized_operators[] =
+{
+    /* Input Operator           SRC&DST Opaque          SRC Opaque              DST Opaque      */
+    { PIXMAN_OP_OVER,           PIXMAN_OP_SRC,          PIXMAN_OP_SRC,          PIXMAN_OP_OVER },
+    { PIXMAN_OP_OVER_REVERSE,   PIXMAN_OP_DST,          PIXMAN_OP_OVER_REVERSE, PIXMAN_OP_DST },
+    { PIXMAN_OP_IN,             PIXMAN_OP_SRC,          PIXMAN_OP_IN,           PIXMAN_OP_SRC },
+    { PIXMAN_OP_IN_REVERSE,     PIXMAN_OP_DST,          PIXMAN_OP_DST,          PIXMAN_OP_IN_REVERSE },
+    { PIXMAN_OP_OUT,            PIXMAN_OP_CLEAR,        PIXMAN_OP_OUT,          PIXMAN_OP_CLEAR },
+    { PIXMAN_OP_OUT_REVERSE,    PIXMAN_OP_CLEAR,        PIXMAN_OP_CLEAR,        PIXMAN_OP_OUT_REVERSE },
+    { PIXMAN_OP_ATOP,           PIXMAN_OP_SRC,          PIXMAN_OP_IN,           PIXMAN_OP_OVER },
+    { PIXMAN_OP_ATOP_REVERSE,   PIXMAN_OP_DST,          PIXMAN_OP_OVER_REVERSE, PIXMAN_OP_IN_REVERSE },
+    { PIXMAN_OP_XOR,            PIXMAN_OP_CLEAR,        PIXMAN_OP_OUT,          PIXMAN_OP_OUT_REVERSE },
+    { PIXMAN_OP_SATURATE,       PIXMAN_OP_DST,          PIXMAN_OP_OVER_REVERSE, PIXMAN_OP_DST },
+    { PIXMAN_OP_NONE }
+};
+
+
+/*
+ * Check if the current operator could be optimized
+ */
+static const OptimizedOperatorInfo*
+pixman_operator_can_be_optimized(pixman_op_t op)
+{
+    const OptimizedOperatorInfo *info;
+
+    for (info = optimized_operators; info->op != PIXMAN_OP_NONE; info++)
+    {
+        if(info->op == op)
+            return info;
+    }
+    return NULL;
+}
+
+/*
+ * Optimize the current operator based on opacity of source or destination
+ * The output operator should be mathematically equivalent to the source.
+ */
+static pixman_op_t
+pixman_optimize_operator(pixman_op_t op, pixman_image_t *pSrc, pixman_image_t *pMask, pixman_image_t *pDst )
+{
+    pixman_bool_t is_source_opaque;
+    pixman_bool_t is_dest_opaque;
+    const OptimizedOperatorInfo *info = pixman_operator_can_be_optimized(op);
+
+    if(!info || pMask)
+        return op;
+
+    is_source_opaque = pixman_image_is_opaque(pSrc);
+    is_dest_opaque = pixman_image_is_opaque(pDst);
+
+    if(is_source_opaque == FALSE && is_dest_opaque == FALSE)
+        return op;
+
+    if(is_source_opaque && is_dest_opaque)
+        return info->opSrcDstOpaque;
+    else if(is_source_opaque)
+        return info->opSrcOpaque;
+    else if(is_dest_opaque)
+        return info->opDstOpaque;
+
+    return op;
+
+}
+
 
 void
 pixman_image_composite (pixman_op_t      op,
@@ -1652,7 +1696,15 @@ pixman_image_composite (pixman_op_t      op,
 	}
     }
 
-    if ((pSrc->type == BITS || can_get_solid (pSrc)) && (!pMask || pMask->type == BITS)
+    /*
+    * Check if we can replace our operator by a simpler one if the src or dest are opaque
+    * The output operator should be mathematically equivalent to the source.
+    */
+    op = pixman_optimize_operator(op, pSrc, pMask, pDst);
+    if(op == PIXMAN_OP_DST)
+        return;
+
+    if ((pSrc->type == BITS || pixman_image_can_get_solid (pSrc)) && (!pMask || pMask->type == BITS)
         && !srcTransform && !maskTransform
         && !maskAlphaMap && !srcAlphaMap && !dstAlphaMap
         && (pSrc->common.filter != PIXMAN_FILTER_CONVOLUTION)
@@ -1751,6 +1803,7 @@ pixman_image_composite (pixman_op_t      op,
 				  xMask, yMask, xDst, yDst, width, height,
 				  srcRepeat, maskRepeat, func);
 }
+
 
 
 #ifdef USE_MMX
