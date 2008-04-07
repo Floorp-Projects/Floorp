@@ -37,11 +37,8 @@
 #
 # ***** END LICENSE BLOCK *****
 
-TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
-source ${TEST_BIN}/library.sh
-
-source ${TEST_BIN}/set-build-env.sh $@
+source $TEST_DIR/bin/library.sh
+source $TEST_DIR/bin/set-build-env.sh $@
 
 if [[ -z "$TREE" ]]; then
     error "source tree not specified!" $LINENO
@@ -60,9 +57,9 @@ case $product in
             fi
         fi
 
-        cd mozilla
+#        cd mozilla
 
-        if ! make -f client.mk checkout 2>&1; then
+        if ! $buildbash $bashlogin -c "cd $TREE/mozilla; make -f client.mk checkout" 2>&1; then
             error "during checkout of $project tree" $LINENO
         fi
         ;;
@@ -85,9 +82,9 @@ case $product in
             fi
         fi
 
-        cd mozilla
+ #       cd mozilla
 
-        if ! make -f client.mk checkout 2>&1; then
+        if ! $buildbash $bashlogin -c "cd $TREE/mozilla; make -f client.mk checkout" 2>&1; then
             error "during checkout of $project tree" $LINENO
         fi
         ;;

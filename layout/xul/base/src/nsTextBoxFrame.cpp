@@ -447,7 +447,6 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
     nscoord size;
     nscoord ascent;
     fontMet->GetMaxAscent(ascent);
-    PRBool isRTL = vis->mDirection == NS_STYLE_DIRECTION_RTL;
 
     nscoord baseline =
       presContext->RoundAppUnitsToNearestDevPixels(textRect.y + ascent);
@@ -465,16 +464,14 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
                                             pt, gfxSize(width, sizePixel),
                                             ascentPixel, ascentPixel,
                                             NS_STYLE_TEXT_DECORATION_OVERLINE,
-                                            NS_STYLE_BORDER_STYLE_SOLID,
-                                            isRTL);
+                                            NS_STYLE_BORDER_STYLE_SOLID);
       }
       if (decorations & NS_FONT_DECORATION_UNDERLINE) {
         nsCSSRendering::PaintDecorationLine(ctx, underColor,
                                             pt, gfxSize(width, sizePixel),
                                             ascentPixel, offsetPixel,
                                             NS_STYLE_TEXT_DECORATION_UNDERLINE,
-                                            NS_STYLE_BORDER_STYLE_SOLID,
-                                            isRTL);
+                                            NS_STYLE_BORDER_STYLE_SOLID);
       }
     }
     if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
@@ -485,8 +482,7 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
                                           pt, gfxSize(width, sizePixel),
                                           ascentPixel, offsetPixel,
                                           NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
-                                          NS_STYLE_BORDER_STYLE_SOLID,
-                                          isRTL);
+                                          NS_STYLE_BORDER_STYLE_SOLID);
     }
 
     aRenderingContext.SetFont(fontMet);

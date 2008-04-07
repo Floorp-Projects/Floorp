@@ -223,7 +223,6 @@ public:
    *                              NS_STYLE_BORDER_STYLE_DOTTED or
    *                              NS_STYLE_BORDER_STYLE_DASHED or
    *                              NS_STYLE_BORDER_STYLE_DOUBLE.
-   *     @param aIsRTL            when the text is RTL, it is true.
    */
   static void PaintDecorationLine(gfxContext* aGfxContext,
                                   const nscolor aColor,
@@ -232,8 +231,7 @@ public:
                                   const gfxFloat aAscent,
                                   const gfxFloat aOffset,
                                   const PRUint8 aDecoration,
-                                  const PRUint8 aStyle,
-                                  const PRBool aIsRTL);
+                                  const PRUint8 aStyle);
 
   /**
    * Function for getting the decoration line rect for the text.

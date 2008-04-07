@@ -1,14 +1,14 @@
 <!ENTITY  history.label "History">
 
 <!-- LOCALIZATION NOTE:
-  The entities rememberDaysBefore.label and rememberDaysAfter.label appear on a single
+  The entities rememberDaysBefore.label and rememberDaysAfter2.label appear on a single
   line in preferences as follows:
 
-  &rememberDaysBefore.label  [ textbox for number of days ]   &rememberDaysAfter.label;
+  &rememberDaysBefore.label  [ textbox for number of days ]  &rememberDaysAfter2.label;
 -->
 <!ENTITY  rememberDaysBefore.label      "Keep my history for at least">
 <!ENTITY  rememberDaysBefore.accesskey  "h">
-<!ENTITY  rememberDaysAfter.label       "days.">
+<!ENTITY  rememberDaysAfter2.label      "days">
 
 <!ENTITY  rememberForms.label           "Remember what I enter in forms and the search bar">
 <!ENTITY  rememberForms.accesskey       "f">

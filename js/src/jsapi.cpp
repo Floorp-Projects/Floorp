@@ -787,11 +787,15 @@ JS_DestroyRuntime(JSRuntime *rt)
     if (!JS_CLIST_IS_EMPTY(&rt->contextList)) {
         JSContext *cx, *iter = NULL;
         uintN cxcount = 0;
-        while ((cx = js_ContextIterator(rt, JS_TRUE, &iter)) != NULL)
+        while ((cx = js_ContextIterator(rt, JS_TRUE, &iter)) != NULL) {
+            fprintf(stderr,
+"JS API usage error: found live context at %p\n",
+                    cx);
             cxcount++;
+        }
         fprintf(stderr,
-"JS API usage error: %u contexts left in runtime upon JS_DestroyRuntime.\n",
-                cxcount);
+"JS API usage error: %u context%s left in runtime upon JS_DestroyRuntime.\n",
+                cxcount, (cxcount == 1) ? "" : "s");
     }
 #endif
 

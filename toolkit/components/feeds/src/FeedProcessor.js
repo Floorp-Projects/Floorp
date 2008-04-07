@@ -586,20 +586,29 @@ Entry.prototype = {
   },
 
   _mediacontentToEnclosures: function Entry_mediacontentToEnclosures() {
-    var mc = this.fields.getPropertyAsInterface("mediacontent", Ci.nsIPropertyBag2);
+    var mediacontent = this.fields.getPropertyAsInterface("mediacontent", Ci.nsIArray);
 
-    if (!(mc.getProperty("url")))
-      return;
+    for (var i = 0; i < mediacontent.length; ++i) {
+      var contentElement = mediacontent.queryElementAt(i, Ci.nsIWritablePropertyBag2);
 
-    var enc = Cc[BAG_CONTRACTID].createInstance(Ci.nsIWritablePropertyBag2);
+      // media:content don't require url, but if it's not there, we should
+      // skip it.
+      if (!bagHasKey(contentElement, "url"))
+        continue;
 
-    enc.setPropertyAsAString("url", mc.getPropertyAsAString("url"));
-    if (bagHasKey(mc, "fileSize"))
-      enc.setPropertyAsAString("length", mc.getPropertyAsAString("fileSize"));
-    if (bagHasKey(mc, "type"))
-      enc.setPropertyAsAString("type", mc.getPropertyAsAString("type"));
-    
-    this._addToEnclosures(enc);
+      var enc = Cc[BAG_CONTRACTID].createInstance(Ci.nsIWritablePropertyBag2);
+
+      // copy media:content bits over to equivalent enclosure bits
+      enc.setPropertyAsAString("url", contentElement.getPropertyAsAString("url"));
+      if (bagHasKey(contentElement, "type")) {
+        enc.setPropertyAsAString("type", contentElement.getPropertyAsAString("type"));
+      }
+      if (bagHasKey(contentElement, "fileSize")) {
+        enc.setPropertyAsAString("length", contentElement.getPropertyAsAString("fileSize"));
+      }
+
+      this._addToEnclosures(enc);
+    }
   },
 
   _mediagroupToEnclosures: function Entry_mediagroupToEnclosures() {
@@ -1262,7 +1271,7 @@ function FeedProcessor() {
                                          rssAuthor, true),
       "category": new ElementInfo("categories", null, rssCatTerm, true),
       "enclosure": new ElementInfo("enclosure", null, null, false),
-      "media:content": new ElementInfo("mediacontent", null, null, false),
+      "media:content": new ElementInfo("mediacontent", null, null, true),
       "media:group": new ElementInfo("mediagroup", null, null, false),
       "guid": new ElementInfo("guid", null, rssGuid, false)
     },

@@ -50,11 +50,17 @@ var gAdvancedPane = {
   {
     this._inited = true;
     var advancedPrefs = document.getElementById("advancedPrefs");
-    var preference = document.getElementById("browser.preferences.advanced.selectedTabIndex");
-    if (preference.value === null)
-      return;
-    advancedPrefs.selectedIndex = preference.value;
-    
+
+    var extraArgs = window.arguments[1];
+    if (extraArgs && extraArgs["advancedTab"]){
+      advancedPrefs.selectedTab = document.getElementById(extraArgs["advancedTab"]);
+    } else {
+      var preference = document.getElementById("browser.preferences.advanced.selectedTabIndex");
+      if (preference.value === null)
+        return;
+      advancedPrefs.selectedIndex = preference.value;
+    }
+
     this.updateAppUpdateItems();
     this.updateAutoItems();
     this.updateModeItems();

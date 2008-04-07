@@ -368,7 +368,11 @@ nsColumnSetFrame::GetMinWidth(nsIRenderingContext *aRenderingContext) {
     NS_ASSERTION(colStyle->mColumnCount > 0, "column-count and column-width can't both be auto");
     // As available width reduces to zero, we still have mColumnCount columns, so
     // multiply the child's min-width by the number of columns.
+    colWidth = width;
     width *= colStyle->mColumnCount;
+    // The multiplication above can make 'width' negative (integer overflow),
+    // so use PR_MAX to protect against that.
+    width = PR_MAX(width, colWidth);
   }
   // XXX count forced column breaks here? Maybe we should return the child's
   // min-width times the minimum number of columns.
@@ -395,12 +399,15 @@ nsColumnSetFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext) {
   }
 
   PRInt32 numColumns = colStyle->mColumnCount;
-   if (numColumns <= 0) {
+  if (numColumns <= 0) {
     // if column-count is auto, assume one column
     numColumns = 1;
   }
-
-  return colWidth*numColumns + colGap*(numColumns - 1);
+  
+  nscoord width = colWidth*numColumns + colGap*(numColumns - 1);
+  // The multiplication above can make 'width' negative (integer overflow),
+  // so use PR_MAX to protect against that.
+  return PR_MAX(width, colWidth);
 }
 
 PRBool

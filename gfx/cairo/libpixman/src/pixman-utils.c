@@ -407,3 +407,183 @@ pixman_malloc_abc (unsigned int a,
     else
 	return malloc (a * b * c);
 }
+
+
+/**
+ * pixman_version:
+ *
+ * Returns the version of the pixman library encoded in a single
+ * integer as per %PIXMAN_VERSION_ENCODE. The encoding ensures that
+ * later versions compare greater than earlier versions.
+ *
+ * A run-time comparison to check that pixman's version is greater than
+ * or equal to version X.Y.Z could be performed as follows:
+ *
+ * <informalexample><programlisting>
+ * if (pixman_version() >= PIXMAN_VERSION_ENCODE(X,Y,Z)) {...}
+ * </programlisting></informalexample>
+ *
+ * See also pixman_version_string() as well as the compile-time
+ * equivalents %PIXMAN_VERSION and %PIXMAN_VERSION_STRING.
+ *
+ * Return value: the encoded version.
+ **/
+int
+pixman_version (void)
+{
+    return PIXMAN_VERSION;
+}
+
+/**
+ * pixman_version_string:
+ *
+ * Returns the version of the pixman library as a human-readable string
+ * of the form "X.Y.Z".
+ *
+ * See also pixman_version() as well as the compile-time equivalents
+ * %PIXMAN_VERSION_STRING and %PIXMAN_VERSION.
+ *
+ * Return value: a string containing the version.
+ **/
+const char*
+pixman_version_string (void)
+{
+    return PIXMAN_VERSION_STRING;
+}
+
+/**
+ * pixman_format_supported_destination:
+ * @format: A pixman_format_code_t format
+ * 
+ * Return value: whether the provided format code is a supported
+ * format for a pixman surface used as a destination in
+ * rendering.
+ *
+ * Currently, all pixman_format_code_t values are supported
+ * except for the YUV formats.
+ **/
+pixman_bool_t
+pixman_format_supported_destination (pixman_format_code_t format)
+{
+    switch (format) {
+    /* 32 bpp formats */
+    case PIXMAN_a8r8g8b8:
+    case PIXMAN_x8r8g8b8:
+    case PIXMAN_a8b8g8r8:
+    case PIXMAN_x8b8g8r8:
+    case PIXMAN_r8g8b8:
+    case PIXMAN_b8g8r8:
+    case PIXMAN_r5g6b5:
+    case PIXMAN_b5g6r5:
+    /* 16 bpp formats */
+    case PIXMAN_a1r5g5b5:
+    case PIXMAN_x1r5g5b5:
+    case PIXMAN_a1b5g5r5:
+    case PIXMAN_x1b5g5r5:
+    case PIXMAN_a4r4g4b4:
+    case PIXMAN_x4r4g4b4:
+    case PIXMAN_a4b4g4r4:
+    case PIXMAN_x4b4g4r4:
+    /* 8bpp formats */
+    case PIXMAN_a8:
+    case PIXMAN_r3g3b2:
+    case PIXMAN_b2g3r3:
+    case PIXMAN_a2r2g2b2:
+    case PIXMAN_a2b2g2r2:
+    case PIXMAN_c8:
+    case PIXMAN_g8:
+    case PIXMAN_x4a4:
+    /* Collides with PIXMAN_c8
+    case PIXMAN_x4c4:
+    */
+    /* Collides with PIXMAN_g8
+    case PIXMAN_x4g4:
+    */
+    /* 4bpp formats */
+    case PIXMAN_a4:
+    case PIXMAN_r1g2b1:
+    case PIXMAN_b1g2r1:
+    case PIXMAN_a1r1g1b1:
+    case PIXMAN_a1b1g1r1:
+    case PIXMAN_c4:
+    case PIXMAN_g4:
+    /* 1bpp formats */
+    case PIXMAN_a1:
+    case PIXMAN_g1:
+	return TRUE;
+	
+    /* YUV formats */
+    case PIXMAN_yuy2:
+    case PIXMAN_yv12:
+    default:
+	return FALSE;
+    }
+}
+
+/**
+ * pixman_format_supported_source:
+ * @format: A pixman_format_code_t format
+ * 
+ * Return value: whether the provided format code is a supported
+ * format for a pixman surface used as a source in
+ * rendering.
+ *
+ * Currently, all pixman_format_code_t values are supported.
+ **/
+pixman_bool_t
+pixman_format_supported_source (pixman_format_code_t format)
+{
+    switch (format) {
+    /* 32 bpp formats */
+    case PIXMAN_a8r8g8b8:
+    case PIXMAN_x8r8g8b8:
+    case PIXMAN_a8b8g8r8:
+    case PIXMAN_x8b8g8r8:
+    case PIXMAN_r8g8b8:
+    case PIXMAN_b8g8r8:
+    case PIXMAN_r5g6b5:
+    case PIXMAN_b5g6r5:
+    /* 16 bpp formats */
+    case PIXMAN_a1r5g5b5:
+    case PIXMAN_x1r5g5b5:
+    case PIXMAN_a1b5g5r5:
+    case PIXMAN_x1b5g5r5:
+    case PIXMAN_a4r4g4b4:
+    case PIXMAN_x4r4g4b4:
+    case PIXMAN_a4b4g4r4:
+    case PIXMAN_x4b4g4r4:
+    /* 8bpp formats */
+    case PIXMAN_a8:
+    case PIXMAN_r3g3b2:
+    case PIXMAN_b2g3r3:
+    case PIXMAN_a2r2g2b2:
+    case PIXMAN_a2b2g2r2:
+    case PIXMAN_c8:
+    case PIXMAN_g8:
+    case PIXMAN_x4a4:
+    /* Collides with PIXMAN_c8
+    case PIXMAN_x4c4:
+    */
+    /* Collides with PIXMAN_g8
+    case PIXMAN_x4g4:
+    */
+    /* 4bpp formats */
+    case PIXMAN_a4:
+    case PIXMAN_r1g2b1:
+    case PIXMAN_b1g2r1:
+    case PIXMAN_a1r1g1b1:
+    case PIXMAN_a1b1g1r1:
+    case PIXMAN_c4:
+    case PIXMAN_g4:
+    /* 1bpp formats */
+    case PIXMAN_a1:
+    case PIXMAN_g1:
+    /* YUV formats */
+    case PIXMAN_yuy2:
+    case PIXMAN_yv12:
+	return TRUE;
+
+    default:
+	return FALSE;
+    }
+}

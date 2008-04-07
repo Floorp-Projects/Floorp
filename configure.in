@@ -7171,7 +7171,7 @@ if test "$MOZ_TREE_CAIRO"; then
     if test "$MOZ_WIDGET_TOOLKIT" = "mac" -o "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
         QUARTZ_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_SURFACE 1"
         QUARTZ_IMAGE_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_IMAGE_SURFACE 1"
-        ATSUI_FONT_FEATURE="#define CAIRO_HAS_ATSUI_FONT 1"
+        QUARTZ_FONT_FEATURE="#define CAIRO_HAS_QUARTZ_FONT 1"
     fi
     if test "$MOZ_WIDGET_TOOLKIT" = "windows"; then
         WIN32_SURFACE_FEATURE="#define CAIRO_HAS_WIN32_SURFACE 1"
@@ -7221,7 +7221,7 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(DIRECTFB_SURFACE_FEATURE)
     AC_SUBST(FT_FONT_FEATURE)
     AC_SUBST(WIN32_FONT_FEATURE)
-    AC_SUBST(ATSUI_FONT_FEATURE)
+    AC_SUBST(QUARTZ_FONT_FEATURE)
     AC_SUBST(PNG_FUNCTIONS_FEATURE)
 
     if test "$_WIN32_MSVC"; then
@@ -7880,6 +7880,7 @@ if test "$MOZ_X11"; then
     CFLAGS="$CFLAGS $XCFLAGS"
     AC_TRY_COMPILE([
         #include <stdio.h>
+        #include <stdlib.h>
         #include <X11/Xlib.h>
         #include <X11/Intrinsic.h>
     ],

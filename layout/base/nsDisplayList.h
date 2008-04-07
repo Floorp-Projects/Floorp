@@ -62,6 +62,7 @@ class nsIContent;
 class nsRegion;
 class nsIRenderingContext;
 class nsIDeviceContext;
+class nsDisplayTableItem;
 
 /*
  * An nsIFrame can have many different visual parts. For example an image frame
@@ -281,6 +282,10 @@ public:
     PRPackedBool          mOldValue;
   };
   
+  // Helpers for tables
+  nsDisplayTableItem* GetCurrentTableItem() { return mCurrentTableItem; }
+  void SetCurrentTableItem(nsDisplayTableItem* aTableItem) { mCurrentTableItem = aTableItem; }
+
 private:
   // This class is only used on stack, so we don't have to worry about leaking
   // it.  Don't let us be heap-allocated!
@@ -304,6 +309,7 @@ private:
   nsCOMPtr<nsISelection>         mBoundingSelection;
   nsAutoTArray<PresShellState,8> mPresShellStates;
   nsAutoTArray<nsIFrame*,100>    mFramesMarkedForDisplay;
+  nsDisplayTableItem*            mCurrentTableItem;
   PRPackedBool                   mBuildCaret;
   PRPackedBool                   mEventDelivery;
   PRPackedBool                   mIsBackgroundOnly;

@@ -889,7 +889,6 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
             "Object",
             "Double",
             "String",
-            "Function",
             "Namespace",
             "Qname",
             "Xml"

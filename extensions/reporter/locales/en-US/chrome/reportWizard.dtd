@@ -31,6 +31,7 @@
 <!ENTITY reportForm.problem_type.item6.title        "Appearance wrong">
 <!ENTITY reportForm.problem_type.item7.title        "Other problem">
 <!ENTITY reportForm.problem_type.item8.title        "Disability access">
+<!ENTITY reportForm.problem_type.item9.title        "Printed output is wrong">
 
 <!ENTITY reportForm.describe.title                  "Describe Problem:">
 <!ENTITY reportForm.describe.accesskey              "D">

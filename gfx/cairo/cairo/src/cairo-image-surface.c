@@ -59,6 +59,7 @@ _cairo_format_from_pixman_format (pixman_format_code_t pixman_format)
     case PIXMAN_a4:       case PIXMAN_r1g2b1:   case PIXMAN_b1g2r1:
     case PIXMAN_a1r1g1b1: case PIXMAN_a1b1g1r1: case PIXMAN_c4:
     case PIXMAN_g4:       case PIXMAN_g1:
+    case PIXMAN_yuy2:     case PIXMAN_yv12:
     default:
 	return CAIRO_FORMAT_INVALID;
     }
@@ -100,6 +101,8 @@ _cairo_content_from_pixman_format (pixman_format_code_t pixman_format)
     case PIXMAN_c4:
     case PIXMAN_g4:
     case PIXMAN_g1:
+    case PIXMAN_yuy2:
+    case PIXMAN_yv12:
 	return CAIRO_CONTENT_COLOR;
     case PIXMAN_a8:
     case PIXMAN_a1:
@@ -141,142 +144,103 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
     return &surface->base;
 }
 
-/* XXX: This function should really live inside pixman. */
-pixman_format_code_t
-_pixman_format_from_masks (cairo_format_masks_t *masks)
+cairo_int_status_t
+_pixman_format_from_masks (cairo_format_masks_t *masks,
+			   pixman_format_code_t *format_ret)
 {
-    switch (masks->bpp) {
-    case 32:
-	if (masks->alpha_mask == 0xff000000 &&
-	    masks->red_mask   == 0x00ff0000 &&
-	    masks->green_mask == 0x0000ff00 &&
-	    masks->blue_mask  == 0x000000ff)
-	{
-	    return PIXMAN_a8r8g8b8;
-	}
-	if (masks->alpha_mask == 0x00000000 &&
-	    masks->red_mask   == 0x00ff0000 &&
-	    masks->green_mask == 0x0000ff00 &&
-	    masks->blue_mask  == 0x000000ff)
-	{
-	    return PIXMAN_x8r8g8b8;
-	}
-	if (masks->alpha_mask == 0xff000000 &&
-	    masks->red_mask   == 0x000000ff &&
-	    masks->green_mask == 0x0000ff00 &&
-	    masks->blue_mask  == 0x00ff0000)
-	{
-	    return PIXMAN_a8b8g8r8;
-	}
-	if (masks->alpha_mask == 0x00000000 &&
-	    masks->red_mask   == 0x000000ff &&
-	    masks->green_mask == 0x0000ff00 &&
-	    masks->blue_mask  == 0x00ff0000)
-	{
-	    return PIXMAN_x8b8g8r8;
-	}
-	break;
-    case 16:
-	if (masks->alpha_mask == 0x0000 &&
-	    masks->red_mask   == 0xf800 &&
-	    masks->green_mask == 0x07e0 &&
-	    masks->blue_mask  == 0x001f)
-	{
-	    return PIXMAN_r5g6b5;
-	}
-	if (masks->alpha_mask == 0x0000 &&
-	    masks->red_mask   == 0x7c00 &&
-	    masks->green_mask == 0x03e0 &&
-	    masks->blue_mask  == 0x001f)
-	{
-	    return PIXMAN_x1r5g5b5;
-	}
-	break;
-    case 8:
-	if (masks->alpha_mask == 0xff)
-	{
-	    return PIXMAN_a8;
-	}
-	break;
-    case 1:
-	if (masks->alpha_mask == 0x1)
-	{
-	    return PIXMAN_a1;
-	}
-	break;
+    pixman_format_code_t format;
+    int format_type;
+    int a, r, g, b;
+    cairo_format_masks_t format_masks;
+
+    a = _cairo_popcount (masks->alpha_mask);
+    r = _cairo_popcount (masks->red_mask);
+    g = _cairo_popcount (masks->green_mask);
+    b = _cairo_popcount (masks->blue_mask);
+
+    if (masks->red_mask) {
+	if (masks->red_mask > masks->blue_mask)
+	    format_type = PIXMAN_TYPE_ARGB;
+	else
+	    format_type = PIXMAN_TYPE_ABGR;
+    } else if (masks->alpha_mask) {
+	format_type = PIXMAN_TYPE_A;
+    } else {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    fprintf (stderr,
-	     "Error: Cairo " PACKAGE_VERSION " does not yet support the requested image format:\n"
-	     "\tDepth: %d\n"
-	     "\tAlpha mask: 0x%08lx\n"
-	     "\tRed   mask: 0x%08lx\n"
-	     "\tGreen mask: 0x%08lx\n"
-	     "\tBlue  mask: 0x%08lx\n"
-	     "Please file an enhancement request (quoting the above) at:\n"
-	     PACKAGE_BUGREPORT "\n",
-	     masks->bpp, masks->alpha_mask,
-	     masks->red_mask, masks->green_mask, masks->blue_mask);
+    format = PIXMAN_FORMAT (masks->bpp, format_type, a, r, g, b);
 
-    ASSERT_NOT_REACHED;
-    return 0;
+    if (! pixman_format_supported_destination (format))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* Sanity check that we got out of PIXMAN_FORMAT exactly what we
+     * expected. This avoid any problems from something bizarre like
+     * alpha in the least-significant bits, or insane channel order,
+     * or whatever. */
+     _pixman_format_to_masks (format, &format_masks);
+
+     if (masks->bpp        != format_masks.bpp        ||
+	 masks->red_mask   != format_masks.red_mask   ||
+	 masks->green_mask != format_masks.green_mask ||
+	 masks->blue_mask  != format_masks.blue_mask)
+     {
+	 return CAIRO_INT_STATUS_UNSUPPORTED;
+     }
+
+    *format_ret = format;
+    return CAIRO_STATUS_SUCCESS;
 }
 
-/* XXX: This function should really live inside pixman. */
+/* A mask consisting of N bits set to 1. */
+#define MASK(N) ((1 << (N))-1)
+
 void
-_pixman_format_to_masks (pixman_format_code_t	 pixman_format,
-			 uint32_t		*bpp,
-			 uint32_t		*red,
-			 uint32_t		*green,
-			 uint32_t		*blue)
+_pixman_format_to_masks (pixman_format_code_t	 format,
+			 cairo_format_masks_t	*masks)
 {
-    *red = 0x0;
-    *green = 0x0;
-    *blue = 0x0;
+    int a, r, g, b;
 
-    switch (pixman_format)
-    {
-    case PIXMAN_a8r8g8b8:
-    case PIXMAN_x8r8g8b8:
+    masks->bpp = PIXMAN_FORMAT_BPP (format);
+
+    /* Number of bits in each channel */
+    a = PIXMAN_FORMAT_A (format);
+    r = PIXMAN_FORMAT_R (format);
+    g = PIXMAN_FORMAT_G (format);
+    b = PIXMAN_FORMAT_B (format);
+
+    switch (PIXMAN_FORMAT_TYPE (format)) {
+    case PIXMAN_TYPE_ARGB:
+        masks->alpha_mask = MASK (a) << (r + g + b);
+        masks->red_mask   = MASK (r) << (g + b);
+        masks->green_mask = MASK (g) << (b);
+        masks->blue_mask  = MASK (b);
+        return;
+    case PIXMAN_TYPE_ABGR:
+        masks->alpha_mask = MASK (a) << (b + g + r);
+        masks->blue_mask  = MASK (b) << (g +r);
+        masks->green_mask = MASK (g) << (r);
+        masks->red_mask   = MASK (r);
+        return;
+    case PIXMAN_TYPE_A:
+        masks->alpha_mask = MASK (a);
+        masks->red_mask   = 0;
+        masks->green_mask = 0;
+        masks->blue_mask  = 0;
+        return;
+    case PIXMAN_TYPE_OTHER:
+    case PIXMAN_TYPE_COLOR:
+    case PIXMAN_TYPE_GRAY:
+    case PIXMAN_TYPE_YUY2:
+    case PIXMAN_TYPE_YV12:
     default:
-	*bpp   = 32;
-	*red   = 0x00ff0000;
-	*green = 0x0000ff00;
-	*blue  = 0x000000ff;
-	break;
-
-    case PIXMAN_a8b8g8r8:
-    case PIXMAN_x8b8g8r8:
-	*bpp   = 32;
-	*red   = 0x000000ff;
-	*green = 0x0000ff00;
-	*blue  = 0x00ff0000;
-	break;
-
-    case PIXMAN_r5g6b5:
-	*bpp   = 16;
-	*red   = 0xf800;
-	*green = 0x07e0;
-	*blue  = 0x001f;
-	break;
-
-    case PIXMAN_x1r5g5b5:
-	*bpp   = 16;
-	*red   = 0x7c00;
-	*green = 0x03e0;
-	*blue  = 0x001f;
-	break;
-
-    case PIXMAN_a8:
-	*bpp = 8;
-	break;
-
-    case PIXMAN_a1:
-	*bpp = 1;
-	break;
+        masks->alpha_mask = 0;
+        masks->red_mask   = 0;
+        masks->green_mask = 0;
+        masks->blue_mask  = 0;
+        return;
     }
 }
-
 
 /* XXX: This function really should be eliminated. We don't really
  * want to advertise a cairo image surface that supports any possible
@@ -289,9 +253,25 @@ _cairo_image_surface_create_with_masks (unsigned char	       *data,
 					int			height,
 					int			stride)
 {
+    cairo_int_status_t status;
     pixman_format_code_t pixman_format;
 
-    pixman_format = _pixman_format_from_masks (masks);
+    status = _pixman_format_from_masks (masks, &pixman_format);
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+	fprintf (stderr,
+		 "Error: Cairo " PACKAGE_VERSION " does not yet support the requested image format:\n"
+		 "\tDepth: %d\n"
+		 "\tAlpha mask: 0x%08lx\n"
+		 "\tRed   mask: 0x%08lx\n"
+		 "\tGreen mask: 0x%08lx\n"
+		 "\tBlue  mask: 0x%08lx\n"
+		 "Please file an enhancement request (quoting the above) at:\n"
+		 PACKAGE_BUGREPORT "\n",
+		 masks->bpp, masks->alpha_mask,
+		 masks->red_mask, masks->green_mask, masks->blue_mask);
+
+	ASSERT_NOT_REACHED;
+    }
 
     return _cairo_image_surface_create_with_pixman_format (data,
 							   pixman_format,
@@ -395,9 +375,6 @@ _cairo_image_surface_create_with_content (cairo_content_t	content,
 				       width, height);
 }
 
-/* pixman required stride alignment in bytes.  should be power of two. */
-#define STRIDE_ALIGNMENT (sizeof (uint32_t))
-
 /**
  * cairo_format_stride_for_width:
  * @format: A #cairo_format_t value
@@ -439,7 +416,7 @@ cairo_format_stride_for_width (cairo_format_t	format,
     if ((unsigned) (width) >= (INT32_MAX - 7) / (unsigned) (bpp))
 	return -1;
 
-    return ((bpp*width+7)/8 + STRIDE_ALIGNMENT-1) & ~(STRIDE_ALIGNMENT-1);
+    return CAIRO_STRIDE_FOR_WIDTH_BPP (width, bpp);
 }
 slim_hidden_def (cairo_format_stride_for_width);
 
@@ -498,7 +475,7 @@ cairo_image_surface_create_for_data (unsigned char     *data,
     if (! CAIRO_FORMAT_VALID (format))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
 
-    if ((stride & (STRIDE_ALIGNMENT-1)) != 0)
+    if ((stride & (CAIRO_STRIDE_ALIGNMENT-1)) != 0)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_STRIDE));
 
     pixman_format = _cairo_format_to_pixman_format_code (format);
@@ -547,6 +524,7 @@ cairo_image_surface_get_data (cairo_surface_t *surface)
 
     return image_surface->data;
 }
+slim_hidden_def (cairo_image_surface_get_data);
 
 /**
  * cairo_image_surface_get_format:
@@ -643,6 +621,7 @@ cairo_image_surface_get_stride (cairo_surface_t *surface)
 
     return image_surface->stride;
 }
+slim_hidden_def (cairo_image_surface_get_stride);
 
 cairo_format_t
 _cairo_format_from_content (cairo_content_t content)

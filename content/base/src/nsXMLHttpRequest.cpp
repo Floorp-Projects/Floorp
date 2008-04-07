@@ -2249,23 +2249,26 @@ nsXMLHttpRequest::OnChannelRedirect(nsIChannel *aOldChannel,
   NS_PRECONDITION(aNewChannel, "Redirect without a channel?");
 
   nsresult rv;
+
+  if (!(mState & XML_HTTP_REQUEST_XSITEENABLED)) {
+    nsCOMPtr<nsIURI> oldURI;
+    rv = aOldChannel->GetURI(getter_AddRefs(oldURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIURI> newURI;
+    rv = aNewChannel->GetURI(getter_AddRefs(newURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = nsContentUtils::GetSecurityManager()->
+      CheckSameOriginURI(oldURI, newURI, PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   if (mChannelEventSink) {
     rv =
       mChannelEventSink->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  nsCOMPtr<nsIURI> oldURI;
-  rv = aOldChannel->GetURI(getter_AddRefs(oldURI));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIURI> newURI;
-  rv = aNewChannel->GetURI(getter_AddRefs(newURI));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = nsContentUtils::GetSecurityManager()->
-    CheckSameOriginURI(oldURI, newURI, PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   mChannel = aNewChannel;
 

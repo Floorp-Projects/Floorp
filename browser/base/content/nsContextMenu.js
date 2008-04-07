@@ -41,6 +41,7 @@
 #   Simon Bünzli <zeniko@gmail.com>
 #   Gijs Kruitbosch <gijskruitbosch@gmail.com>
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+#   Dan Mosedale <dmose@mozilla.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -365,7 +366,6 @@ nsContextMenu.prototype = {
     if (aNode.namespaceURI == xulNS ||
         this.isTargetAFormControl(aNode)) {
       this.shouldDisplay = false;
-      return;
     }
 
     // Initialize contextual info.
@@ -654,11 +654,11 @@ nsContextMenu.prototype = {
   // Open frame in a new tab.
   openFrameInTab: function() {
     var doc = this.target.ownerDocument;
-    var frameURL = doc.documentURIObject.spec;
+    var frameURL = doc.location.href;
     var referrer = doc.referrer;
 
-    openNewTabWith(frameURL, null, null, null, false,
-                   referrer ? makeURI(referrer) : null);
+    return openNewTabWith(frameURL, null, null, null, false,
+                          referrer ? makeURI(referrer) : null);
   },
 
   // Reload clicked-in frame.
@@ -669,17 +669,17 @@ nsContextMenu.prototype = {
   // Open clicked-in frame in its own window.
   openFrame: function() {
     var doc = this.target.ownerDocument;
-    var frameURL = doc.documentURIObject.spec;
+    var frameURL = doc.location.href;
     var referrer = doc.referrer;
 
-    openNewWindowWith(frameURL, null, null, false,
-                      referrer ? makeURI(referrer) : null);
+    return openNewWindowWith(frameURL, null, null, false,
+                             referrer ? makeURI(referrer) : null);
   },
 
   // Open clicked-in frame in the same window.
   showOnlyThisFrame: function() {
     var doc = this.target.ownerDocument;
-    var frameURL = doc.documentURIObject.spec;
+    var frameURL = doc.location.href;
 
     urlSecurityCheck(frameURL, this.browser.contentPrincipal,
                      Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
@@ -826,10 +826,123 @@ nsContextMenu.prototype = {
 
   // Save URL of clicked-on link.
   saveLink: function() {
+    // canonical def in nsURILoader.h
+    const NS_ERROR_SAVE_LINK_AS_TIMEOUT = 0x805d0020;
+    
     var doc =  this.target.ownerDocument;
     urlSecurityCheck(this.linkURL, doc.nodePrincipal);
-    saveURL(this.linkURL, this.linkText(), null, true, false,
-            doc.documentURIObject);
+    var linkText = this.linkText();
+    var linkURL = this.linkURL;
+
+
+    // an object to proxy the data through to
+    // nsIExternalHelperAppService.doContent, which will wait for the
+    // appropriate MIME-type headers and then prompt the user with a
+    // file picker
+    function saveAsListener() {}
+    saveAsListener.prototype = {
+      extListener: null, 
+
+      onStartRequest: function saveLinkAs_onStartRequest(aRequest, aContext) {
+
+        // if the timer fired, the error status will have been caused by that,
+        // and we'll be restarting in onStopRequest, so no reason to notify
+        // the user
+        if (aRequest.status == NS_ERROR_SAVE_LINK_AS_TIMEOUT)
+          return;
+
+        timer.cancel();
+
+        // some other error occured; notify the user...
+        if (!Components.isSuccessCode(aRequest.status)) {
+          try {
+            const sbs = Cc["@mozilla.org/intl/stringbundle;1"].
+                        getService(Ci.nsIStringBundleService);
+            const bundle = sbs.createBundle(
+                    "chrome://mozapps/locale/downloads/downloads.properties");
+            
+            const title = bundle.GetStringFromName("downloadErrorAlertTitle");
+            const msg = bundle.GetStringFromName("downloadErrorGeneric");
+            
+            const promptSvc = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+                              getService(Ci.nsIPromptService);
+            promptSvc.alert(doc.defaultView, title, msg);
+          } catch (ex) {}
+          return;
+        }
+
+        var extHelperAppSvc = 
+          Cc["@mozilla.org/uriloader/external-helper-app-service;1"].
+          getService(Ci.nsIExternalHelperAppService);
+        var channel = aRequest.QueryInterface(Ci.nsIChannel);
+        this.extListener = 
+          extHelperAppSvc.doContent(channel.contentType, aRequest, 
+                                    doc.defaultView, true);
+        this.extListener.onStartRequest(aRequest, aContext);
+      }, 
+
+      onStopRequest: function saveLinkAs_onStopRequest(aRequest, aContext, 
+                                                       aStatusCode) {
+        if (aStatusCode == NS_ERROR_SAVE_LINK_AS_TIMEOUT) {
+          // do it the old fashioned way, which will pick the best filename
+          // it can without waiting.
+          saveURL(linkURL, linkText, null, true, false, doc.documentURIObject);
+        }
+        if (this.extListener)
+          this.extListener.onStopRequest(aRequest, aContext, aStatusCode);
+      },
+       
+      onDataAvailable: function saveLinkAs_onDataAvailable(aRequest, aContext,
+                                                           aInputStream,
+                                                           aOffset, aCount) {
+        this.extListener.onDataAvailable(aRequest, aContext, aInputStream,
+                                         aOffset, aCount);
+      }
+    }
+
+    // in case we need to prompt the user for authentication
+    function callbacks() {}
+    callbacks.prototype = {
+      getInterface: function sLA_callbacks_getInterface(aIID) {
+        if (aIID.equals(Ci.nsIAuthPrompt) || aIID.equals(Ci.nsIAuthPrompt2)) {
+          var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+                   getService(Ci.nsIPromptFactory);
+          return ww.getPrompt(doc.defaultView, aIID);
+        }
+        throw Cr.NS_ERROR_NO_INTERFACE;
+      } 
+    }
+
+    // if it we don't have the headers after a short time, the user 
+    // won't have received any feedback from their click.  that's bad.  so
+    // we give up waiting for the filename. 
+    function timerCallback() {}
+    timerCallback.prototype = {
+      notify: function sLA_timer_notify(aTimer) {
+        channel.cancel(NS_ERROR_SAVE_LINK_AS_TIMEOUT);
+        return;
+      }
+    }
+
+    // set up a channel to do the saving
+    var ioService = Cc["@mozilla.org/network/io-service;1"].
+                    getService(Ci.nsIIOService);
+    var channel = ioService.newChannelFromURI(this.getLinkURI());
+    channel.notificationCallbacks = new callbacks();
+    channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE |
+                         Ci.nsIChannel.LOAD_CALL_CONTENT_SNIFFERS;
+    if (channel instanceof Ci.nsIHttpChannel)
+      channel.referrer = doc.documentURIObject;
+
+    // fallback to the old way if we don't see the headers quickly 
+    var timeToWait = 
+      gPrefService.getIntPref("browser.download.saveLinkAsFilenameTimeout");
+    var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    timer.initWithCallback(new timerCallback(), timeToWait,
+                           timer.TYPE_ONE_SHOT);
+
+    // kick off the channel with our proxy object as the listener
+    channel.asyncOpen(new saveAsListener(), null);
   },
 
   sendLink: function() {

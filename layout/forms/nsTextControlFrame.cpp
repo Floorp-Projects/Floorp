@@ -602,7 +602,10 @@ private:
 };
 
 // Implement our nsISupports methods
-NS_IMPL_ISUPPORTS2(nsTextInputSelectionImpl, nsISelectionController, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS3(nsTextInputSelectionImpl,
+                   nsISelectionController,
+                   nsISelectionDisplay,
+                   nsISupportsWeakReference)
 
 
 // BEGIN nsTextInputSelectionImpl
@@ -1124,6 +1127,7 @@ nsTextControlFrame::PreDestroy()
   mSelCon = nsnull;
   if (mFrameSel) {
     mFrameSel->SetScrollableViewProvider(nsnull);
+    mFrameSel->DisconnectFromPresShell();
     mFrameSel = nsnull;
   }
 

@@ -2,7 +2,12 @@
   min-height: 22px;
   width: 6em;
   min-width: 6em;
-  background-color: -moz-field;
+  -moz-appearance: none;
+  border-width: 1px;
+  -moz-border-top-colors: ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDShadow;
+  -moz-border-right-colors: ThreeDShadow;
+  -moz-border-left-colors: ThreeDShadow;
 }
 
 .textbox-input-box {
@@ -38,10 +43,6 @@
   border-right-width: 0;
   border-left-width: 1px;
   -moz-border-left-colors: ButtonShadow;
-}
-
-.searchbar-engine-button:hover {
-  outline-color: ThreeDDarkShadow;
 }
 
 .searchbar-engine-button > .button-box {

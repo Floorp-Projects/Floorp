@@ -68,9 +68,8 @@ static NS_DEFINE_CID(kMenuCID, NS_MENU_CID);
 
 NS_IMPL_ISUPPORTS3(nsMenuBarX, nsIMenuBar, nsIMutationObserver, nsISupportsWeakReference)
 
-EventHandlerUPP nsMenuBarX::sCommandEventHandler = nsnull;
 NativeMenuItemTarget* nsMenuBarX::sNativeEventTarget = nil;
-NSWindow* nsMenuBarX::sEventTargetWindow = nil;
+nsMenuBarX* nsMenuBarX::sLastGeckoMenuBarPainted = nsnull;
 NSMenu* sApplicationMenu = nil;
 BOOL gSomeMenuBarPainted = NO;
 
@@ -111,10 +110,6 @@ nsMenuBarX::nsMenuBarX()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   mRootMenu = [[NSMenu alloc] initWithTitle:@"MainMenuBar"];
-  
-  // create our global carbon event command handler shared by all windows
-  if (!sCommandEventHandler)
-    sCommandEventHandler = ::NewEventHandlerUPP(CommandEventHandler);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -179,124 +174,6 @@ nsMenuBarX::AquifyMenuBar()
 }
 
 
-// Grab our window and install an event handler to handle command events which are
-// used to drive the action when the user chooses an item from a menu. We have to install
-// it on the window because the menubar isn't in the event chain for a menu command event.
-OSStatus
-nsMenuBarX::InstallCommandEventHandler()
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  OSStatus err = noErr;
-  NSWindow* myWindow = reinterpret_cast<NSWindow*>(mParent->GetNativeData(NS_NATIVE_WINDOW));
-  WindowRef myWindowRef = (WindowRef)[myWindow windowRef];
-  NS_ASSERTION(myWindowRef, "Can't get WindowRef to install command handler!");
-  if (myWindowRef && sCommandEventHandler) {
-    const EventTypeSpec commandEventList[] = {{kEventClassCommand, kEventCommandProcess}};
-    err = ::InstallWindowEventHandler(myWindowRef, sCommandEventHandler, GetEventTypeCount(commandEventList), commandEventList, this, NULL);
-    NS_ASSERTION(err == noErr, "Uh oh, command handler not installed");
-  }
-  return err;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(noErr);
-}
-
-
-// Processes Command carbon events from enabling/selecting of items in the menu.
-pascal OSStatus
-nsMenuBarX::CommandEventHandler(EventHandlerCallRef inHandlerChain, EventRef inEvent, void* userData)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  OSStatus handled = eventNotHandledErr;
-  
-  HICommand command;
-  OSErr err1 = ::GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand,
-                                   NULL, sizeof(HICommand), NULL, &command);
-  if (err1)
-    return handled;
-  
-  nsMenuBarX* self = reinterpret_cast<nsMenuBarX*>(userData);
-
-  switch (command.commandID) {
-    case eCommand_ID_About:
-    {
-      nsIContent* mostSpecificContent = sAboutItemContent;
-      if (self->mAboutItemContent)
-        mostSpecificContent = self->mAboutItemContent;
-      
-      nsEventStatus status = self->ExecuteCommand(mostSpecificContent);
-      if (status == nsEventStatus_eConsumeNoDefault) // event handled, no other processing
-        handled = noErr;
-      break;
-    }
-
-    case eCommand_ID_Prefs:
-    {
-      nsIContent* mostSpecificContent = sPrefItemContent;
-      if (self->mPrefItemContent)
-        mostSpecificContent = self->mPrefItemContent;
-      
-      nsEventStatus status = self->ExecuteCommand(mostSpecificContent);
-      if (status == nsEventStatus_eConsumeNoDefault) // event handled, no other processing
-        handled = noErr;
-      break;
-    }
-
-    case eCommand_ID_Quit:
-    {
-      nsIContent* mostSpecificContent = sQuitItemContent;
-      if (self->mQuitItemContent)
-        mostSpecificContent = self->mQuitItemContent;
-
-      // If we have some content for quit we execute it. Otherwise we send a native app terminate
-      // message. If you want to stop a quit from happening, provide quit content and return
-      // the event as unhandled.
-      if (mostSpecificContent) {
-        nsEventStatus status = self->ExecuteCommand(mostSpecificContent);
-        if (status == nsEventStatus_eConsumeNoDefault) // event handled, no other processing
-          handled = noErr;
-      }
-      else {
-        [NSApp terminate:nil];
-        handled = noErr;
-      }
-      break;
-    }
-
-    default:
-    {
-      // given the commandID, look it up in our hashtable and dispatch to
-      // that content node. Recall that we store weak pointers to the content
-      // nodes in the hash table.
-      nsPRUint32Key key(command.commandID);
-      nsIMenuItem* content = reinterpret_cast<nsIMenuItem*>(self->mObserverTable.Get(&key));
-      if (content) {
-        content->DoCommand();
-        handled = noErr;
-      }
-      break;
-    }
-  } // switch on commandID
-  
-  return handled;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(noErr);
-}
-
-
-// Execute the menu item by sending a command message to the 
-// DOM node specified in |inDispatchTo|.
-nsEventStatus
-nsMenuBarX::ExecuteCommand(nsIContent* inDispatchTo)
-{
-  if (!inDispatchTo)
-    return nsEventStatus_eIgnore;
-  
-  return MenuHelpersX::DispatchCommandTo(inDispatchTo);
-}
-
-
 // Hide the item in the menu by setting the 'hidden' attribute. Returns it in |outHiddenNode| so
 // the caller can hang onto it if they so choose. It is acceptable to pass nsull
 // for |outHiddenNode| if the caller doesn't care about the hidden node.
@@ -328,10 +205,6 @@ nsMenuBarX::MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
   SetParent(aParentWindow);
 
   AquifyMenuBar();
-
-  OSStatus err = InstallCommandEventHandler();
-  if (err)
-    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   domNode->GetOwnerDocument(getter_AddRefs(domDoc));
@@ -733,7 +606,7 @@ NS_IMETHODIMP nsMenuBarX::Paint()
 
   // Set menu bar and event target.
   [NSApp setMainMenu:mRootMenu];
-  nsMenuBarX::sEventTargetWindow = (NSWindow*)mParent->GetNativeData(NS_NATIVE_WINDOW);
+  nsMenuBarX::sLastGeckoMenuBarPainted = this;
 
   gSomeMenuBarPainted = YES;
 
@@ -932,6 +805,14 @@ nsMenuBarX::UnregisterCommand(PRUint32 inCommandID)
 }
 
 
+nsIMenuItem*
+nsMenuBarX::GetMenuItemForCommandID(PRUint32 inCommandID)
+{
+  nsPRUint32Key key(inCommandID);
+  return reinterpret_cast<nsIMenuItem*>(mObserverTable.Get(&key));
+}
+
+
 nsEventStatus
 MenuHelpersX::DispatchCommandTo(nsIContent* aTargetContent)
 {
@@ -1089,40 +970,55 @@ NSMenuItem* MenuHelpersX::GetStandardEditMenuItem()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  // just abort if we don't have a target window for events
-  if (!nsMenuBarX::sEventTargetWindow) {
-    NS_WARNING("No target window for keyboard events!");
-    return;
-  }
-  
-  MenuRef senderMenuRef = _NSGetCarbonMenu([sender menu]);
-  int senderCarbonMenuItemIndex = [[sender menu] indexOfItem:sender] + 1;
-  
-  // If this carbon menu item has never had a command ID assigned to it, give it
-  // one from the sender's tag
-  MenuCommand menuCommand;
-  ::GetMenuItemCommandID(senderMenuRef, senderCarbonMenuItemIndex, &menuCommand);
-  if (menuCommand == 0) {
-    menuCommand = (MenuCommand)[sender tag];
-    ::SetMenuItemCommandID(senderMenuRef, senderCarbonMenuItemIndex, menuCommand);
-  }
-  
-  // set up an HICommand to send
-  HICommand menuHICommand;
-  menuHICommand.commandID = menuCommand;
-  menuHICommand.menu.menuRef = senderMenuRef;
-  menuHICommand.menu.menuItemIndex = senderCarbonMenuItemIndex;
-  
-  // send Carbon Event
-  EventRef newEvent;
-  OSErr err = ::CreateEvent(NULL, kEventClassCommand, kEventCommandProcess, 0, kEventAttributeUserEvent, &newEvent);
-  if (err == noErr) {
-    err = ::SetEventParameter(newEvent, kEventParamDirectObject, typeHICommand, sizeof(HICommand), &menuHICommand);
-    if (err == noErr) {
-      err = ::SendEventToEventTarget(newEvent, GetWindowEventTarget((WindowRef)[nsMenuBarX::sEventTargetWindow windowRef]));
-      NS_ASSERTION(err == noErr, "Carbon event for menu hit either not sent or not handled!");
+  nsMenuBarX* menuBar = nsMenuBarX::sLastGeckoMenuBarPainted;
+  int tag = [sender tag];
+  switch (tag) {
+    case eCommand_ID_About:
+    {
+      nsIContent* mostSpecificContent = sAboutItemContent;
+      if (menuBar && menuBar->mAboutItemContent)
+        mostSpecificContent = menuBar->mAboutItemContent;
+      MenuHelpersX::DispatchCommandTo(mostSpecificContent);
+      break;
     }
-    ReleaseEvent(newEvent);
+
+    case eCommand_ID_Prefs:
+    {
+      nsIContent* mostSpecificContent = sPrefItemContent;
+      if (menuBar && menuBar->mPrefItemContent)
+        mostSpecificContent = menuBar->mPrefItemContent;
+      MenuHelpersX::DispatchCommandTo(mostSpecificContent);
+      break;
+    }
+
+    case eCommand_ID_Quit:
+    {
+      nsIContent* mostSpecificContent = sQuitItemContent;
+      if (menuBar && menuBar->mQuitItemContent)
+        mostSpecificContent = menuBar->mQuitItemContent;
+      // If we have some content for quit we execute it. Otherwise we send a native app terminate
+      // message. If you want to stop a quit from happening, provide quit content and return
+      // the event as unhandled.
+      if (mostSpecificContent)
+        MenuHelpersX::DispatchCommandTo(mostSpecificContent);
+      else
+        [NSApp terminate:nil];
+      break;
+    }
+
+    default:
+    {
+      // Can't do anything if we don't know the last painted menu bar.
+      if (!menuBar)
+        return;
+      // given the commandID, look it up in our hashtable and dispatch to
+      // that content node. Recall that we store weak pointers to the content
+      // nodes in the hash table.
+      nsIMenuItem* content = menuBar->GetMenuItemForCommandID(static_cast<PRUint32>(tag));
+      if (content)
+        content->DoCommand();
+      break;
+    }
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;

@@ -37,9 +37,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
-source ${TEST_BIN}/library.sh
+source $TEST_DIR/bin/library.sh
 
 echo "$SCRIPT $@"
 
@@ -133,7 +131,7 @@ for extension in $extensions/all/*.xpi; do
     fi
 
     echo installing $extension
-    $TEST_BIN/timed_run.py ${TEST_STARTUP_TIMEOUT} "-" $executable -P $profilename -install-global-extension "$extensionos"
+    $TEST_DIR/bin/timed_run.py ${TEST_STARTUP_TIMEOUT} "-" $executable -P $profilename -install-global-extension "$extensionos"
     # there is no reliable method of determining if the install worked 
     # from the output or from the exit code.
 done
@@ -149,7 +147,7 @@ for extension in $extensions/$OSID/*; do
     fi
 
     echo installing $extension
-    if ! $TEST_BIN/timed_run.py ${TEST_STARTUP_TIMEOUT} "-" $executable -P $profilename -install-global-extension "$extensionos"; then
+    if ! $TEST_DIR/bin/timed_run.py ${TEST_STARTUP_TIMEOUT} "-" $executable -P $profilename -install-global-extension "$extensionos"; then
         error "Failed to install $extensionos" $LINENO
     fi
 
@@ -157,12 +155,12 @@ done
 
 # restart twice to make extension manager happy
 
-if ! $TEST_BIN/timed_run.py ${TEST_STARTUP_TIMEOUT} "install extensions - first restart" \
+if ! $TEST_DIR/bin/timed_run.py ${TEST_STARTUP_TIMEOUT} "install extensions - first restart" \
     $executable -P $profilename "http://${TEST_HTTP}/bin/install-extensions-1.html"; then
     echo "Ignoring 1st failure to load the install-extensions page"
 fi
 
-if ! $TEST_BIN/timed_run.py ${TEST_STARTUP_TIMEOUT} "install extensions - second restart" \
+if ! $TEST_DIR/bin/timed_run.py ${TEST_STARTUP_TIMEOUT} "install extensions - second restart" \
     $executable -P $profilename "http://${TEST_HTTP}/bin/install-extensions-2.html"; then
     error "Fatal 2nd failure to load the install-extensions page" $LINENO
 fi

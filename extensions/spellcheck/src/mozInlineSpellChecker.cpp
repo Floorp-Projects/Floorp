@@ -360,6 +360,10 @@ mozInlineSpellStatus::FinishInitOnEvent(mozInlineSpellWordUtil& aWordUtil)
 nsresult
 mozInlineSpellStatus::FinishNavigationEvent(mozInlineSpellWordUtil& aWordUtil)
 {
+  nsCOMPtr<nsIEditor> editor = do_QueryReferent(mSpellChecker->mEditor);
+  if (! editor)
+    return NS_ERROR_FAILURE; // editor is gone
+
   NS_ASSERTION(mAnchorRange, "No anchor for navigation!");
   nsCOMPtr<nsIDOMNode> newAnchorNode, oldAnchorNode;
   PRInt32 newAnchorOffset, oldAnchorOffset;
@@ -377,6 +381,12 @@ mozInlineSpellStatus::FinishNavigationEvent(mozInlineSpellWordUtil& aWordUtil)
   rv = aWordUtil.GetRangeForWord(oldAnchorNode, oldAnchorOffset,
                                  getter_AddRefs(oldWord));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // aWordUtil.GetRangeForWord flushes pending notifications, check editor again.
+  editor = do_QueryReferent(mSpellChecker->mEditor);
+  if (! editor)
+    return NS_ERROR_FAILURE; // editor is gone
+
   nsCOMPtr<nsIDOMNSRange> oldWordNS = do_QueryInterface(oldWord, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -574,6 +584,7 @@ nsresult mozInlineSpellChecker::Cleanup()
 
     rv = UnregisterEventListeners();
   }
+  mEditor = nsnull;
 
   return rv;
 }
@@ -1303,6 +1314,11 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
   aWordUtil.SetEnd(endNode, endOffset);
   aWordUtil.SetPosition(beginNode, beginOffset);
 
+  // aWordUtil.SetPosition flushes pending notifications, check editor again.
+  editor = do_QueryReferent(mEditor);
+  if (! editor)
+    return NS_ERROR_FAILURE;
+  
   // we need to use IsPointInRange which is on a more specific interface
   nsCOMPtr<nsIDOMNSRange> noCheckRange, createdRange;
   if (aStatus->mNoCheckRange)
@@ -1397,7 +1413,7 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
     // see if we've run out of time, only check every N words for perf
     if (wordsSinceTimeCheck >= INLINESPELL_TIMEOUT_CHECK_FREQUENCY) {
       wordsSinceTimeCheck = 0;
-      if (PR_Now() > beginTime + INLINESPELL_CHECK_TIMEOUT * PR_USEC_PER_MSEC) {
+      if (PR_Now() > PRTime(beginTime + INLINESPELL_CHECK_TIMEOUT * PR_USEC_PER_MSEC)) {
         // stop checking, our time limit has been exceeded
 
         // move the range to encompass the stuff that needs checking
@@ -1427,6 +1443,10 @@ mozInlineSpellChecker::ResumeCheck(mozInlineSpellStatus* aStatus)
 {
   if (! mSpellCheck)
     return NS_OK; // spell checking has been turned off
+
+  nsCOMPtr<nsIEditor> editor = do_QueryReferent(mEditor);
+  if (! editor)
+    return NS_OK; // editor is gone
 
   mozInlineSpellWordUtil wordUtil;
   nsresult rv = wordUtil.Init(mEditor);
