@@ -394,6 +394,9 @@ nsSVGForeignObjectFrame::NotifySVGChanged(PRUint32 aFlags)
     // We also seem to get some sort of infinite loop post bug 421584 if we
     // reflow.
     mCanvasTM = nsnull;
+    if (!(aFlags & SUPPRESS_INVALIDATION)) {
+      UpdateGraphic();
+    }
 
   } else if (aFlags & COORD_CONTEXT_CHANGED) {
     // Our coordinate context's width/height has changed. If we have a
