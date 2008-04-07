@@ -303,6 +303,23 @@ var PlacesUtils = {
   },
 
   /**
+   * Determines whether or not a ResultNode is an history related container.
+   * @param   node
+   *          A result node
+   * @returns true if the node is an history related container, false otherwise
+   */
+  nodeIsHistoryContainer: function PU_nodeIsHistoryContainer(aNode) {
+    var resultType;
+    return this.nodeIsQuery(aNode) &&
+           ((resultType = asQuery(aNode).queryOptions.resultType) ==
+              Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY ||
+            resultType == Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY ||
+            resultType == Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY ||
+            this.nodeIsDay(aNode) ||
+            this.nodeIsHost(aNode));
+  },
+
+  /**
    * Determines whether or not a result-node is a dynamic-container item.
    * The dynamic container result node type is for dynamically created
    * containers (e.g. for the file browser service where you get your folders
