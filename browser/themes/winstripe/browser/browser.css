@@ -1107,7 +1107,7 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
 }
 
 #urlbar-throbber {
-  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
+  list-style-image: url("chrome://browser/skin/places/searching_16.png");
 }
 
 

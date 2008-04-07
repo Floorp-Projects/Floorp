@@ -740,7 +740,7 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker[open="true"] {
 }
 
 #urlbar-throbber {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+  list-style-image: url("chrome://browser/skin/places/searching_16.png");
 }
 
 
