@@ -65,6 +65,7 @@ REQUIRES = xpcom \
            intl \
            layout \
            locale \
+           uconv \
            unicharutil \
            autocomplete \
            storage \

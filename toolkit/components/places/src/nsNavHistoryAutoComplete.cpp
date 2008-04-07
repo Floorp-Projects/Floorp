@@ -418,6 +418,10 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
 
   NS_ENSURE_ARG_POINTER(aListener);
 
+  // Lazily init nsITextToSubURI service
+  if (!mTextURIService)
+    mTextURIService = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID);
+
   // Keep track of the previous search results to try optimizing
   PRUint32 prevMatchCount = mCurrentResultURLs.Count();
   nsAutoString prevSearchString(mCurrentSearchString);
@@ -682,11 +686,6 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
     // XXX bug 412734
     PRBool dummy;
     if (!mCurrentResultURLs.Get(escapedEntryURL, &dummy)) {
-      // Convert the escaped UTF16 (all ascii) to ASCII then unescape to UTF16
-      NS_LossyConvertUTF16toASCII cEntryURL(escapedEntryURL);
-      NS_UnescapeURL(cEntryURL);
-      NS_ConvertUTF8toUTF16 entryURL(cEntryURL);
-
       PRInt64 parentId = 0;
       nsAutoString entryTitle, entryFavicon, entryBookmarkTitle;
       rv = aQuery->GetString(kAutoCompleteIndex_Title, entryTitle);
@@ -716,6 +715,9 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
           // If we get any results, there's potentially another chunk to proces
           if (aHasMoreResults)
             *aHasMoreResults = PR_TRUE;
+
+          // Unescape the url to search for unescaped terms
+          nsString entryURL = FixupURIText(escapedEntryURL);
 
           // Determine if every token matches either the bookmark title, tags,
           // page title, or page url
@@ -826,4 +828,24 @@ nsNavHistory::AutoCompleteFeedback(PRInt32 aIndex,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
+}
+
+nsString
+nsNavHistory::FixupURIText(const nsAString &aURIText)
+{
+  // Unescaping utilities expect UTF8 strings
+  NS_ConvertUTF16toUTF8 escaped(aURIText);
+
+  nsString fixedUp;
+  // Use the service if we have it to avoid invalid UTF8 strings
+  if (mTextURIService) {
+    mTextURIService->UnEscapeURIForUI(NS_LITERAL_CSTRING("UTF-8"),
+      escaped, fixedUp);
+    return fixedUp;
+  }
+
+  // Fallback on using this if the service is unavailable for some reason
+  NS_UnescapeURL(escaped);
+  CopyUTF8toUTF16(escaped, fixedUp);
+  return fixedUp;
 }

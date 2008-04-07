@@ -69,6 +69,7 @@
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIStringBundle.h"
+#include "nsITextToSubURI.h"
 #include "nsITimer.h"
 #ifdef MOZ_XUL
 #include "nsITreeSelection.h"
@@ -710,6 +711,10 @@ protected:
 
   PRBool mAutoCompleteFinishedSearch;
   void DoneSearching(PRBool aFinished);
+
+  // Used to unescape encoded URI strings for searching
+  nsCOMPtr<nsITextToSubURI> mTextURIService;
+  nsString FixupURIText(const nsAString &aURIText);
 
   PRInt32 mExpireDaysMin;
   PRInt32 mExpireDaysMax;
