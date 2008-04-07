@@ -1378,13 +1378,14 @@ CharacterIterator::SetupFor(gfxContext *aContext, float aScale)
 
   aContext->SetMatrix(mInitialMatrix);
   if (mPositions.IsEmpty()) {
-    gfxFloat advance = mCurrentAdvance/nsSVGGlyphFrame::GetTextRunUnitsFactor();
-    aContext->Translate(mSource->mPosition + gfxPoint(advance, 0));
+    aContext->Translate(mSource->mPosition);
+    aContext->Scale(aScale, aScale);
+    aContext->Translate(gfxPoint(mCurrentAdvance, 0));
   } else {
     aContext->Translate(mPositions[mCurrentChar].pos);
     aContext->Rotate(mPositions[mCurrentChar].angle);
+    aContext->Scale(aScale, aScale);
   }
-  aContext->Scale(aScale, aScale);
 }
 
 CharacterPosition
