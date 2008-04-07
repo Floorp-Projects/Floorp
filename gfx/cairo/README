@@ -27,6 +27,8 @@ nonfatal-assertions.patch: Make assertions non-fatal
 
 buggy-repeat.patch: Unconditionally turn on buggy-repeat handling to bandaid bug 413583.
 
+rollback-731e121.patch: roll back 731e121; causes bugs
+
 ==== pixman patches ====
 
 endian.patch: include cairo-platform.h for endian macros
