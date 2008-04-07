@@ -223,14 +223,61 @@ var PlacesOrganizer = {
       searchFilter.reset();
     }
 
-    // Update the "Find in <current collection>" command and the gray text in
-    // the search box in the toolbar if the active collection is the current
-    // collection.
+    this._setSearchScopeForNode(node);
+  },
+
+  /**
+   * Sets the search scope based on node's properties
+   * @param   aNode
+   *          the node to set up scope from
+   */
+  _setSearchScopeForNode: function PO__setScopeForNode(aNode) {
+    var scopeBarFolder = document.getElementById("scopeBarFolder");
+    var itemId = aNode.itemId;
+    if (PlacesUtils.nodeIsHistoryContainer(aNode) ||
+        itemId == PlacesUIUtils.leftPaneQueries["History"]) {
+      scopeBarFolder.disabled = true;
+      var folders = [];
+      var filterCollection = "history";
+      var scopeButton = "scopeBarHistory";
+    }
+    else if (PlacesUtils.nodeIsFolder(aNode) &&
+             itemId != PlacesUIUtils.leftPaneQueries["AllBookmarks"] &&
+             itemId != PlacesUIUtils.leftPaneQueries["Tags"] &&
+             aNode.parent.itemId != PlacesUIUtils.leftPaneQueries["Tags"]) {
+      // enable folder scope
+      scopeBarFolder.disabled = false;
+      var folders = [PlacesUtils.getConcreteItemId(aNode)];
+      var filterCollection = "collection";
+      var scopeButton = "scopeBarFolder";
+    }
+    else {
+      // default to All Bookmarks
+      scopeBarFolder.disabled = true;
+      var folders = [];
+      var filterCollection = "bookmarks";
+      var scopeButton = "scopeBarAll";
+    }
+
+    // set search scope
+    PlacesSearchBox.folders = folders;
+    PlacesSearchBox.filterCollection = filterCollection;
+
+    // update scope bar active child
+    var scopeBar = document.getElementById("organizerScopeBar");
+    var child = scopeBar.firstChild;
+    while (child) {
+      if (child.getAttribute("id") != scopeButton)
+        child.removeAttribute("checked");
+      else
+        child.setAttribute("checked", "true");
+      child = child.nextSibling;
+    }
+
+    // Update the "Find in <current collection>" command
     var findCommand = document.getElementById("OrganizerCommand_find:current");
-    var findLabel = PlacesUIUtils.getFormattedString("findInPrefix", [node.title]);
+    var findLabel = PlacesUIUtils.getFormattedString("findInPrefix", [aNode.title]);
     findCommand.setAttribute("label", findLabel);
-    if (PlacesSearchBox.filterCollection == "collection")
-      PlacesSearchBox.updateCollectionTitle(node.title);
   },
 
   /**
@@ -817,10 +864,13 @@ var PlacesSearchBox = {
    *          The title of the current collection.
    */
   updateCollectionTitle: function PSB_updateCollectionTitle(title) {
-    this.searchFilter.emptyText =
-      title ?
-      PlacesUIUtils.getFormattedString("searchCurrentDefault", [title]) :
-      PlacesUIUtils.getString("searchBookmarks");
+    if (title)
+      this.searchFilter.emptyText =
+        PlacesUIUtils.getFormattedString("searchCurrentDefault", [title]);
+    else
+      this.searchFilter.emptyText = this.filterCollection == "history" ?
+                                    PlacesUIUtils.getString("searchHistory") :
+                                    PlacesUIUtils.getString("searchBookmarks");
   },
 
   /**

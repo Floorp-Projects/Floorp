@@ -344,7 +344,7 @@
    padding: 0 5px !important;
 }
 
-#organizerScopeBar> toolbarbutton:hover {
+#organizerScopeBar> toolbarbutton:not([disabled="true"]):hover {
   color: #fff;
   background: url("chrome://global/skin/20pct_transparent_pixel.png") repeat;
 }
