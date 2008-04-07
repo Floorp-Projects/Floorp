@@ -1985,6 +1985,12 @@ _cairo_surface_set_empty_clip_path (cairo_surface_t *surface,
     return _cairo_surface_set_error (surface, status);
 }
 
+cairo_clip_t *
+_cairo_surface_get_clip (cairo_surface_t *surface)
+{
+    return surface->clip;
+}
+
 cairo_status_t
 _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
 {
@@ -2487,6 +2493,24 @@ _cairo_surface_create_in_error (cairo_status_t status)
 	return (cairo_surface_t *) &_cairo_surface_nil_temp_file_error;
     case CAIRO_STATUS_INVALID_STRIDE:
 	return (cairo_surface_t *) &_cairo_surface_nil_invalid_stride;
+    case CAIRO_STATUS_SUCCESS:
+	ASSERT_NOT_REACHED;
+	/* fall-through */
+    case CAIRO_STATUS_INVALID_RESTORE:
+    case CAIRO_STATUS_INVALID_POP_GROUP:
+    case CAIRO_STATUS_NO_CURRENT_POINT:
+    case CAIRO_STATUS_INVALID_MATRIX:
+    case CAIRO_STATUS_INVALID_STATUS:
+    case CAIRO_STATUS_NULL_POINTER:
+    case CAIRO_STATUS_INVALID_STRING:
+    case CAIRO_STATUS_INVALID_PATH_DATA:
+    case CAIRO_STATUS_SURFACE_FINISHED:
+    case CAIRO_STATUS_SURFACE_TYPE_MISMATCH:
+    case CAIRO_STATUS_PATTERN_TYPE_MISMATCH:
+    case CAIRO_STATUS_INVALID_DASH:
+    case CAIRO_STATUS_INVALID_DSC_COMMENT:
+    case CAIRO_STATUS_INVALID_INDEX:
+    case CAIRO_STATUS_CLIP_NOT_REPRESENTABLE:
     default:
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t *) &_cairo_surface_nil;

@@ -70,6 +70,12 @@ struct _cairo_xlib_display {
     unsigned int closed :1;
 };
 
+typedef struct _cairo_xlib_visual_info {
+    VisualID visualid;
+    XColor colors[256];
+    unsigned long rgb333_to_pseudocolor[512];
+} cairo_xlib_visual_info_t;
+
 struct _cairo_xlib_screen_info {
     cairo_xlib_screen_info_t *next;
     cairo_reference_count_t ref_count;
@@ -82,6 +88,8 @@ struct _cairo_xlib_screen_info {
 
     GC gc[9];
     unsigned int gc_needs_clip_reset;
+
+    cairo_array_t visuals;
 };
 
 cairo_private cairo_xlib_display_t *
@@ -124,5 +132,19 @@ cairo_private GC
 _cairo_xlib_screen_get_gc (cairo_xlib_screen_info_t *info, int depth);
 cairo_private cairo_status_t
 _cairo_xlib_screen_put_gc (cairo_xlib_screen_info_t *info, int depth, GC gc, cairo_bool_t reset_clip);
+
+cairo_private cairo_status_t
+_cairo_xlib_screen_get_visual_info (cairo_xlib_screen_info_t *info,
+				    Visual *visual,
+				    cairo_xlib_visual_info_t **out);
+
+cairo_private cairo_status_t
+_cairo_xlib_visual_info_create (Display *dpy,
+	                        int screen,
+				VisualID visualid,
+				cairo_xlib_visual_info_t **out);
+
+cairo_private void
+_cairo_xlib_visual_info_destroy (Display *dpy, cairo_xlib_visual_info_t *info);
 
 #endif /* CAIRO_XLIB_PRIVATE_H */

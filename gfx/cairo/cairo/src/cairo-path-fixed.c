@@ -613,8 +613,10 @@ _cairo_path_fixed_is_equal (cairo_path_fixed_t *path,
 	if (other_buf == NULL ||
 	    path_buf->num_ops != other_buf->num_ops ||
 	    path_buf->num_points != other_buf->num_points ||
-	    memcmp (path_buf->op, other_buf->op, path_buf->num_ops) != 0 ||
-	    memcmp (path_buf->points, other_buf->points, path_buf->num_points != 0))
+	    memcmp (path_buf->op, other_buf->op,
+		    sizeof (cairo_path_op_t) * path_buf->num_ops) != 0 ||
+	    memcmp (path_buf->points, other_buf->points,
+		    sizeof (cairo_point_t) * path_buf->num_points) != 0)
 	{
 	    return FALSE;
 	}
