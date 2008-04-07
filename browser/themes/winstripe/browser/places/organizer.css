@@ -241,3 +241,34 @@
   padding-right: 3px;
 }
 
+#organizerScopeBar {
+  background-color: Window;
+  padding: 2px 0;
+}
+
+#organizerScopeBar > toolbarbutton {
+  -moz-appearance: none;
+  border: 1px solid transparent;
+  -moz-border-radius: 2px;
+  padding: 0 !important;
+  margin: 0 1px;
+}
+
+#organizerScopeBar > toolbarbutton > label,
+#organizerScopeBar > toolbarbutton > image {
+  padding: 0;
+  margin: 0;
+}
+
+#organizerScopeBar .toolbarbutton-text {
+   margin: 0;
+   padding: 2px 5px;
+}
+
+#organizerScopeBar> toolbarbutton:not([disabled="true"]):hover {
+  border-color: ThreeDShadow;
+}
+
+#organizerScopeBar > toolbarbutton[checked="true"] {
+  border-color: ThreeDDarkShadow !important;
+}

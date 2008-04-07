@@ -422,12 +422,6 @@
                              oncommand="PlacesQueryBuilder.onScopeSelected(this);"
                              label="&search.scopeAll.label;"
                              checked="true"/>
-              <toolbarbutton id="scopeBarMenu" type="radio" group="scopeBar"
-                             oncommand="PlacesQueryBuilder.onScopeSelected(this);"
-                             label="&search.scopeMenu.label;"/>
-              <toolbarbutton id="scopeBarToolbar" type="radio" group="scopeBar"
-                             oncommand="PlacesQueryBuilder.onScopeSelected(this);"
-                             label="&search.scopeToolbar.label;"/>
               <!--
               <toolbarbutton id="scopeBarDownloads" type="radio" group="scopeBar"
                              oncommand="PlacesQueryBuilder.onScopeSelected(this);"
