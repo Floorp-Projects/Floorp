@@ -768,7 +768,7 @@ struct _cairo_color {
 
 #define CAIRO_EXTEND_SURFACE_DEFAULT CAIRO_EXTEND_NONE
 #define CAIRO_EXTEND_GRADIENT_DEFAULT CAIRO_EXTEND_PAD
-#define CAIRO_FILTER_DEFAULT CAIRO_FILTER_BEST
+#define CAIRO_FILTER_DEFAULT CAIRO_FILTER_GOOD
 
 struct _cairo_pattern {
     cairo_pattern_type_t	type;

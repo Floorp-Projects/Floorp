@@ -887,6 +887,9 @@ slim_hidden_def (cairo_surface_get_device_offset);
  * there is currently no way to have more than one fallback resolution
  * in effect on a single page.
  *
+ * The default fallback resoultion is 300 pixels per inch in both
+ * dimensions.
+ *
  * Since: 1.2
  **/
 void

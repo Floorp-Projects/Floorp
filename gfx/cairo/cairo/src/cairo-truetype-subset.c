@@ -34,6 +34,12 @@
  *	Adrian Johnson <ajohnson@redneon.com>
  */
 
+/*
+ * Useful links:
+ * http://developer.apple.com/textfonts/TTRefMan/RM06/Chap6.html
+ * http://www.microsoft.com/typography/specs/default.htm
+ */
+
 #define _BSD_SOURCE /* for snprintf(), strdup() */
 #include "cairoint.h"
 
@@ -499,27 +505,30 @@ cairo_truetype_font_remap_composite_glyph (cairo_truetype_font_t	*font,
 					   unsigned long		 size)
 {
     tt_glyph_data_t *glyph_data;
-    tt_composite_glyph_t *composite_glyph, *last_glyph;
+    tt_composite_glyph_t *composite_glyph;
     int num_args;
     int has_more_components;
     unsigned short flags;
     unsigned short index;
     cairo_status_t status;
+    unsigned char *end = buffer + size;
 
     if (font->status)
 	return font->status;
 
-    if (size < sizeof (tt_glyph_data_t))
+    glyph_data = (tt_glyph_data_t *) buffer;
+    if ((unsigned char *)(&glyph_data->data) >= end)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    glyph_data = (tt_glyph_data_t *) buffer;
     if ((int16_t)be16_to_cpu (glyph_data->num_contours) >= 0)
         return CAIRO_STATUS_SUCCESS;
 
     composite_glyph = &glyph_data->glyph;
-    last_glyph = (tt_composite_glyph_t *) (buffer + size);
     do {
-        flags = be16_to_cpu (composite_glyph->flags);
+	if ((unsigned char *)(&composite_glyph->args[1]) >= end)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+	flags = be16_to_cpu (composite_glyph->flags);
         has_more_components = flags & TT_MORE_COMPONENTS;
         status = cairo_truetype_font_use_glyph (font, be16_to_cpu (composite_glyph->index), &index);
 	if (status)
@@ -536,9 +545,6 @@ cairo_truetype_font_remap_composite_glyph (cairo_truetype_font_t	*font,
         else if (flags & TT_WE_HAVE_A_TWO_BY_TWO)
             num_args += 3;
         composite_glyph = (tt_composite_glyph_t *) &(composite_glyph->args[num_args]);
-
-	if (has_more_components && composite_glyph >= last_glyph)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
     } while (has_more_components);
 
     return CAIRO_STATUS_SUCCESS;
@@ -1079,7 +1085,8 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
     for (i = 0; i < font->scaled_font_subset->num_glyphs; i++) {
 	unsigned short parent_glyph = font->scaled_font_subset->glyphs[i];
 	status = cairo_truetype_font_use_glyph (font, parent_glyph, &parent_glyph);
-	assert (status == CAIRO_STATUS_SUCCESS);
+	if (status)
+	    goto fail1;
     }
 
     cairo_truetype_font_create_truetype_table_list (font);
