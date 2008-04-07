@@ -159,6 +159,21 @@ static bool RestartApplication()
   // resize some buttons horizontally and possibly some controls vertically
   [self doInitialResizing];
 
+  // load default state of submit checkbox
+  // we don't just do this via IB because we want the default to be
+  // off a certain percentage of the time
+  BOOL submitChecked = NO;
+  NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
+  if (nil != [userDefaults objectForKey:@"submitReport"]) {
+    submitChecked =  [userDefaults boolForKey:@"submitReport"];
+  }
+  else {
+    // use compile-time specified enable percentage
+    submitChecked = ShouldEnableSending();
+    [userDefaults setBool:submitChecked forKey:@"submitReport"];
+  }
+  [mSubmitReportButton setState:(submitChecked ? NSOnState : NSOffState)];
+  
   [self updateSubmit];
   [self updateURL];
   [self updateEmail];
@@ -244,6 +259,9 @@ static bool RestartApplication()
 -(IBAction)submitReportClicked:(id)sender
 {
   [self updateSubmit];
+  NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
+  [userDefaults setBool:[mSubmitReportButton state] == NSOnState
+   forKey:@"submitReport"];
 }
 
 -(IBAction)viewReportClicked:(id)sender

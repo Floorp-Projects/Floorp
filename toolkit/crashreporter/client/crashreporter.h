@@ -102,6 +102,7 @@ namespace CrashReporter {
                           bool escape);
   void LogMessage(const std::string& message);
   void DeleteDump();
+  bool ShouldEnableSending();
 }
 
 //=============================================================================
