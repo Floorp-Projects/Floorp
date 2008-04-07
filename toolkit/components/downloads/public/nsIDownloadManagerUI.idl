@@ -37,18 +37,35 @@
 #include "nsISupports.idl"
 interface nsIInterfaceRequestor;
 
-[scriptable, uuid(67796ac0-effe-4cb0-91d4-229176956164)]
+[scriptable, uuid(ca7663d5-69e3-4c4a-b754-f462bd36b05f)]
 interface nsIDownloadManagerUI : nsISupports {
+  /**
+   * The reason that should be passed when the user requests to show the
+   * download manager's UI.
+   */
+  const short REASON_USER_INTERACTED = 0;
+
+  /**
+   * The reason that should be passed to the show method when we are displaying
+   * the UI because a new download is being added to it.
+   */
+  const short REASON_NEW_DOWNLOAD = 1;
+
  /**
   * Shows the Download Manager's UI to the user.
   *
-  * @param aWindowContext
+  * @param [optional] aWindowContext
   *        The parent window context to show the UI.
-  * @param aID
+  * @param [optional] aID
   *        The id of the download to be preselected upon opening.
+  * @param [optional] aReason
+  *        The reason to show the download manager's UI.  This defaults to
+  *        REASON_USER_INTERACTED, and should be one of the previously listed
+  *        constants.
   */
   void show([optional] in nsIInterfaceRequestor aWindowContext,
-            [optional] in unsigned long aID);
+            [optional] in unsigned long aID,
+            [optional] in short aReason);
 
  /**
   * Indicates if the UI is visible or not.

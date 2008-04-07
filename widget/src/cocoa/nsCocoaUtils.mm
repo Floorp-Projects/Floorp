@@ -189,14 +189,16 @@ nsIWidget* nsCocoaUtils::GetHiddenWindowWidget()
 void nsCocoaUtils::PrepareForNativeAppModalDialog()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-  
-  // First put up the hidden window menu bar so that app menu event handling is correct.
-  // Not a big deal if we don't do this, the chances of the spawning window having lost
-  // its menu bar is small.
+
+  // Don't do anything if this is embedding. We'll assume that if there is no hidden
+  // window we shouldn't do anything, and that should cover the embedding case.
   nsIMenuBar* hiddenWindowMenuBar = MenuHelpersX::GetHiddenWindowMenuBar();
-  if (hiddenWindowMenuBar)
-    hiddenWindowMenuBar->Paint();
-  
+  if (!hiddenWindowMenuBar)
+    return;
+
+  // First put up the hidden window menu bar so that app menu event handling is correct.
+  hiddenWindowMenuBar->Paint();
+
   NSMenu* mainMenu = [NSApp mainMenu];
   NS_ASSERTION([mainMenu numberOfItems] > 0, "Main menu does not have any items, something is terribly wrong!");
   
@@ -224,16 +226,18 @@ void nsCocoaUtils::PrepareForNativeAppModalDialog()
 void nsCocoaUtils::CleanUpAfterNativeAppModalDialog()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-  
+
+  // Don't do anything if this is embedding. We'll assume that if there is no hidden
+  // window we shouldn't do anything, and that should cover the embedding case.
+  nsIMenuBar* hiddenWindowMenuBar = MenuHelpersX::GetHiddenWindowMenuBar();
+  if (!hiddenWindowMenuBar)
+    return;
+
   NSWindow* mainWindow = [NSApp mainWindow];
-  if (!mainWindow) {
-    nsIMenuBar* hiddenWindowMenuBar = MenuHelpersX::GetHiddenWindowMenuBar();
-    if (hiddenWindowMenuBar)
-      hiddenWindowMenuBar->Paint();
-  }
-  else {
+  if (!mainWindow)
+    hiddenWindowMenuBar->Paint();
+  else
     [WindowDelegate paintMenubarForWindow:mainWindow];
-  }
-  
+
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }

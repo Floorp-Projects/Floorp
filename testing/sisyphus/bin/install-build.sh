@@ -37,9 +37,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
-source ${TEST_BIN}/library.sh
+source $TEST_DIR/bin/library.sh
 
 #
 # options processing
@@ -93,9 +91,9 @@ if [[ -z "$product" || -z "$branch" || -z "$executablepath" || -z "$filename" ]]
     usage
 fi
 
-${TEST_BIN}/uninstall-build.sh -p "$product" -b "$branch" -x "$executablepath"
+$TEST_DIR/bin/uninstall-build.sh -p "$product" -b "$branch" -x "$executablepath"
 
-${TEST_BIN}/create-directory.sh -d "$executablepath" -n
+$TEST_DIR/bin/create-directory.sh -d "$executablepath" -n
 
 filetype=`file $filename`
 
@@ -129,7 +127,7 @@ else
 
         mac)
         # answer license prompt
-        result=`${TEST_BIN}/hdiutil-expect.ex $filename`
+        result=`$TEST_DIR/bin/hdiutil-expect.ex $filename`
         # now get the volume data
 	    #result=`hdiutil attach $filename`
         disk=`echo $result | sed 's@.*\(/dev/[^ ]*\).*/dev.*/dev.*@\1@'`
@@ -163,12 +161,12 @@ else
     cd "$executabledir"
     if [ -e "$product" ]; then
 	    echo "$SCRIPT: patching $product"
-	    cp $TEST_BIN/$product.diff .
+	    cp $TEST_DIR/bin/$product.diff .
 	    patch -N -p0 < $product.diff
     fi
     if [ -e run-mozilla.sh ]; then
 	    echo "$SCRIPT: patching run-mozilla.sh"
-	    cp $TEST_BIN/run-mozilla.diff .
+	    cp $TEST_DIR/bin/run-mozilla.diff .
 	    patch -N -p0 < run-mozilla.diff
     fi
 fi

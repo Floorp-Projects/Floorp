@@ -112,8 +112,8 @@ union nsPluginPort;
   NSPoint mHandScrollStartMouseLoc;
   nscoord mHandScrollStartScrollX, mHandScrollStartScrollY;
   
-  // when menuForEvent: is called, we store its event here (strong)
-  NSEvent* mLastMenuForEventEvent;
+  // when mouseDown: is called, we store its event here (strong)
+  NSEvent* mLastMouseDownEvent;
   
   // rects that were invalidated during a draw, so have pending drawing
   NSMutableArray* mPendingDirtyRects;

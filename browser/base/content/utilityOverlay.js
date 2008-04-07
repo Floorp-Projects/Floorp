@@ -370,7 +370,7 @@ function openAboutDialog()
 #endif
 }
 
-function openPreferences(paneID)
+function openPreferences(paneID, extraArgs)
 {
   var instantApply = getBoolPref("browser.preferences.instantApply", false);
   var features = "chrome,titlebar,toolbar,centerscreen" + (instantApply ? ",dialog=no" : ",modal");
@@ -384,28 +384,22 @@ function openPreferences(paneID)
       var pane = win.document.getElementById(paneID);
       win.document.documentElement.showPane(pane);
     }
+
+    if (extraArgs && extraArgs["advancedTab"]) {
+      var advancedPaneTabs = win.document.getElementById("advancedPrefs");
+      advancedPaneTabs.selectedTab = win.document.getElementById(extraArgs["advancedTab"]);
+    }
+
     return win;
   }
 
   return openDialog("chrome://browser/content/preferences/preferences.xul",
-                    "Preferences", features, paneID);
+                    "Preferences", features, paneID, extraArgs);
 }
 
 function openAdvancedPreferences(tabID)
 {
-  var win = openPreferences("paneAdvanced");
-  if (win) {
-    var selectTab = function() {
-      var tabs = win.document.getElementById("advancedPrefs");
-      tabs.selectedTab = win.document.getElementById(tabID);
-    }
-
-    if (win.document.getElementById("advancedPrefs")) {
-      selectTab();
-    } else {
-      win.addEventListener("load", selectTab, false);
-    }
-  }
+  return openPreferences("paneAdvanced", { "advancedTab" : tabID });
 }
 
 /**
@@ -584,8 +578,8 @@ function openNewTabWith(aURL, aDocument, aPostData, aEvent,
   // open link in new tab
   var referrerURI = aDocument ? aDocument.documentURIObject : aReferrer;
   var browser = top.document.getElementById("content");
-  browser.loadOneTab(aURL, referrerURI, originCharset, aPostData,
-                     loadInBackground, aAllowThirdPartyFixup || false);
+  return browser.loadOneTab(aURL, referrerURI, originCharset, aPostData,
+                            loadInBackground, aAllowThirdPartyFixup || false);
 }
 
 function openNewWindowWith(aURL, aDocument, aPostData, aAllowThirdPartyFixup,
@@ -604,9 +598,9 @@ function openNewWindowWith(aURL, aDocument, aPostData, aAllowThirdPartyFixup,
     charsetArg = "charset=" + window.content.document.characterSet;
 
   var referrerURI = aDocument ? aDocument.documentURIObject : aReferrer;
-  window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no",
-                    aURL, charsetArg, referrerURI, aPostData,
-                    aAllowThirdPartyFixup);
+  return window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no",
+                           aURL, charsetArg, referrerURI, aPostData,
+                           aAllowThirdPartyFixup);
 }
 
 /**

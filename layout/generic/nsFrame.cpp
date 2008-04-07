@@ -5296,6 +5296,14 @@ nsIFrame::GetOverflowAreaProperty(PRBool aCreateIfNecessary)
   return nsnull;
 }
 
+inline PRBool
+IsInlineFrame(nsIFrame *aFrame)
+{
+  nsIAtom *type = aFrame->GetType();
+  return type == nsGkAtoms::inlineFrame ||
+         type == nsGkAtoms::positionedInlineFrame;
+}
+
 void 
 nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
 {
@@ -5321,8 +5329,11 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
   
   // Overflow area must always include the frame's top-left and bottom-right,
   // even if the frame rect is empty.
-  aOverflowArea->UnionRectIncludeEmpty(*aOverflowArea,
-                                       nsRect(nsPoint(0, 0), aNewSize));
+  // Pending a real fix for bug 426879, don't do this for inline frames
+  // with zero width.
+  if (aNewSize.width != 0 || !IsInlineFrame(this))
+    aOverflowArea->UnionRectIncludeEmpty(*aOverflowArea,
+                                         nsRect(nsPoint(0, 0), aNewSize));
 
   PRBool geometricOverflow =
     aOverflowArea->x < 0 || aOverflowArea->y < 0 ||

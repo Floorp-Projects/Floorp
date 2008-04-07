@@ -23,15 +23,15 @@
 } 
 
 #userAgent {
-  margin-top: 11px;
-  -moz-margin-end: 20px;
+  margin-top: 10px;
+  -moz-margin-end: 13px;
   margin-bottom: 0;
   -moz-margin-start: 13px;
   background-color: #FFFFFF;
   color: #000000;
   padding-top: 1px;
-  -moz-padding-end: 0;
-  padding-bottom: 0;
+  -moz-padding-end: 1px;
+  padding-bottom: 1px;
   -moz-padding-start: 3px;
   -moz-appearance: none;
   overflow: hidden;

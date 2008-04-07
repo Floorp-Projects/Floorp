@@ -58,6 +58,11 @@
 
 //#define DEBUG_CMAP_SIZE 1
 
+// font info loader constants
+static const PRUint32 kDelayBeforeLoadingCmaps = 8 * 1000; // 8secs
+static const PRUint32 kIntervalBetweenLoadingCmaps = 150; // 150ms
+static const PRUint32 kNumFontsPerSlice = 10; // read in info 10 fonts at a time
+
 static __inline void
 BuildKeyNameFromFontName(nsAString &aName)
 {
@@ -77,6 +82,7 @@ gfxWindowsPlatform::PrefChangedCallback(const char *aPrefName, void *closure)
 }
 
 gfxWindowsPlatform::gfxWindowsPlatform()
+    : mStartIndex(0), mIncrement(kNumFontsPerSlice), mNumFamilies(0)
 {
     mFonts.Init(200);
     mFontAliases.Init(20);
@@ -202,7 +208,8 @@ gfxWindowsPlatform::UpdateFontList()
     mFontSubstitutes.Clear();
     mPrefFonts.Clear();
     mCodepointsWithNoFonts.reset();
-
+    CancelLoader();
+    
     LOGFONTW logFont;
     logFont.lfCharSet = DEFAULT_CHARSET;
     logFont.lfFaceName[0] = 0;
@@ -212,6 +219,9 @@ gfxWindowsPlatform::UpdateFontList()
     HDC dc = ::GetDC(nsnull);
     EnumFontFamiliesExW(dc, &logFont, (FONTENUMPROCW)gfxWindowsPlatform::FontEnumProc, (LPARAM)&mFonts, 0);
     ::ReleaseDC(nsnull, dc);
+
+    // initialize the cmap loading process after font list has been initialized
+    StartLoader(kDelayBeforeLoadingCmaps, kIntervalBetweenLoadingCmaps); 
 
     // Create the list of FontSubstitutes
     nsCOMPtr<nsIWindowsRegKey> regKey = do_CreateInstance("@mozilla.org/windows-registry-key;1");
@@ -261,6 +271,30 @@ gfxWindowsPlatform::UpdateFontList()
     InitBadUnderlineList();
 
     return NS_OK;
+}
+
+struct FontFamilyListData {
+    FontFamilyListData(nsTArray<nsRefPtr<FontFamily> >& aFamilyArray) 
+        : mFamilyArray(aFamilyArray)
+    {}
+
+    static PLDHashOperator PR_CALLBACK AppendFamily(nsStringHashKey::KeyType aKey,
+                                                    nsRefPtr<FontFamily>& aFamilyEntry,
+                                                    void *aUserArg)
+    {
+        FontFamilyListData *data = (FontFamilyListData*)aUserArg;
+        data->mFamilyArray.AppendElement(aFamilyEntry);
+        return PL_DHASH_NEXT;
+    }
+
+    nsTArray<nsRefPtr<FontFamily> >& mFamilyArray;
+};
+
+void
+gfxWindowsPlatform::GetFontFamilyList(nsTArray<nsRefPtr<FontFamily> >& aFamilyArray)
+{
+    FontFamilyListData data(aFamilyArray);
+    mFonts.Enumerate(FontFamilyListData::AppendFamily, &data);
 }
 
 static PRBool SimpleResolverCallback(const nsAString& aName, void* aClosure)
@@ -541,3 +575,36 @@ gfxWindowsPlatform::SetPrefFontEntries(const nsCString& aKey, nsTArray<nsRefPtr<
 {
     mPrefFonts.Put(aKey, array);
 }
+
+void 
+gfxWindowsPlatform::InitLoader()
+{
+    GetFontFamilyList(mFontFamilies);
+    mStartIndex = 0;
+    mNumFamilies = mFontFamilies.Length();
+}
+
+PRBool 
+gfxWindowsPlatform::RunLoader()
+{
+    PRUint32 i, endIndex = ( mStartIndex + mIncrement < mNumFamilies ? mStartIndex + mIncrement : mNumFamilies );
+
+    // for each font family, load in various font info
+    for (i = mStartIndex; i < endIndex; i++) {
+        // load the cmaps for all variations
+        mFontFamilies[i]->FindStyleVariations();
+    }
+
+    mStartIndex += mIncrement;
+    if (mStartIndex < mNumFamilies)
+        return PR_FALSE;
+    return PR_TRUE;
+}
+
+void 
+gfxWindowsPlatform::FinishLoader()
+{
+    mFontFamilies.Clear();
+    mNumFamilies = 0;
+}
+

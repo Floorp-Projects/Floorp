@@ -2,7 +2,7 @@
 <!--
 
 Description: mrss content works
-Expect: var enc = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).fields.getProperty('mediacontent'); enc.QueryInterface(Components.interfaces.nsIPropertyBag); ((enc.getProperty('fileSize') == '24986239') && (enc.getProperty('type') == 'video/mpeg') && (enc.getProperty('url') == 'http://dallas.example.com/joebob_050689.mpeg') && (feed.type == 4) && (feed.enclosureCount == 1));
+Expect: var enc = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).fields.getPropertyAsInterface('mediacontent', Components.interfaces.nsIArray).queryElementAt(0, Components.interfaces.nsIPropertyBag); ((enc.getProperty('fileSize') == '24986239') && (enc.getProperty('type') == 'video/mpeg') && (enc.getProperty('url') == 'http://dallas.example.com/joebob_050689.mpeg') && (feed.type == 4) && (feed.enclosureCount == 1));
 
 -->
 <rss xmlns:media="http://search.yahoo.com/mrss" version="2.0" >

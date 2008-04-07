@@ -366,7 +366,7 @@ WebContentConverterRegistrar.prototype = {
     if ((!pb.prefHasUserValue(PREF_ALLOW_DIFFERENT_HOST) ||
          !pb.getBoolPref(PREF_ALLOW_DIFFERENT_HOST)) &&
         aContentWindow.location.hostname != uri.host)
-      throw("Permision denied to add " + uri.spec + " as a content or protocol handler");
+      throw("Permission denied to add " + uri.spec + " as a content or protocol handler");
 
     // If the uri doesn't contain '%s', it won't be a good handler
     if (uri.spec.indexOf("%s") < 0)

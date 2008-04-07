@@ -70,6 +70,7 @@ cvsmirror_mofo:
 clean_stage: clean_logs
 	rm -rf /builds/config/*
 	rm -rf /builds/tags/*
+	rm -rf /builds/source/*
 	rm -rf /builds/release/logs/*
 	rm -rf /builds/updates/*
 	rm -rf /builds/verify/*

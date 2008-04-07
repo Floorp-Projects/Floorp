@@ -492,7 +492,8 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 368020-5.html 368020-5-ref.html # bug 3
 fails == 374927-1.html 374927-1-ref.html # Was broken by patch for bug 368600; fails until bug 400776 is fixed
 == 375716-1.html 375716-1-ref.html
 == 375827-1.html 375827-1-ref.html
-== 376375-1.html 376375-1-ref.html
+# see bug 427480 -- this test is causing random crashes due to a BadMatch error
+#== 376375-1.html 376375-1-ref.html
 == 376484-1.html 376484-1-ref.html
 == 376532-1.html 376532-1-ref.html
 != 376532-2.html 376532-2-ref.html
@@ -783,4 +784,8 @@ fails == 413027-3.html 413027-3-ref.html
 == 424074-1.xul 424074-1-ref.xul
 != 424074-1.xul 424074-1-ref2.xul
 fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 424074-1-ref2.xul 424074-1-ref3.xul
+== 424236-10.html 424236-10-ref.html
+== 424434-1.html 424434-1-ref.html
 == 424631-1.html 424631-1-ref.html
+== 424710-1.html 424710-1-ref.html
+

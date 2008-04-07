@@ -4,7 +4,6 @@
 package Bootstrap::Step::Sign;
 use Bootstrap::Step;
 use Bootstrap::Config;
-use Bootstrap::Util qw(SyncToStaging);
 @ISA = ("Bootstrap::Step");
 
 sub Execute {
@@ -33,10 +32,6 @@ sub Announce {
       subject => "$product $version sign step finished",
       message => "$product $version win32 builds have been signed and copied to the candidates dir.",
     );
-}
-
-sub Push {
-    SyncToStaging();
 }
 
 1;

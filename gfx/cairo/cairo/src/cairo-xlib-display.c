@@ -300,6 +300,17 @@ _cairo_xlib_display_get (Display *dpy)
 	 * back up to 6.7 or 6.8. */
 	if (VendorRelease (dpy) >= 60700000 && VendorRelease (dpy) <= 60802000)
 	    display->buggy_repeat = TRUE;
+
+	/* But even the new modular server has bugs, (bad enough to
+	 * crash the X server), that it so happens we can avoid with
+	 * the exact same buggy_repeat workaround. We've verified that
+	 * this bug exists as least as late as version 1.3.0.0, (which
+	 * is in Fedora 8), and is gone again in version 1.4.99.901
+	 * (from a Fedora 9 Beta). Versions between those are still
+	 * unknown, but until we learn more, we'll assume that any 1.3
+	 * version is buggy.  */
+	if (VendorRelease (dpy) < 10400000)
+	    display->buggy_repeat = TRUE;
     } else if (strstr (ServerVendor (dpy), "XFree86") != NULL) {
 	if (VendorRelease (dpy) <= 40500000)
 	    display->buggy_repeat = TRUE;

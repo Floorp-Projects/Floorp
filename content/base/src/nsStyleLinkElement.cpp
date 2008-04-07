@@ -314,6 +314,10 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
     rv = doc->CSSLoader()->
       LoadStyleLink(thisContent, uri, title, media, isAlternate, aObserver,
                     &isAlternate);
+    if (rv == NS_ERROR_FILE_NOT_FOUND) {
+      doneLoading = PR_TRUE;
+      rv = NS_OK;
+    }
   }
 
   NS_ENSURE_SUCCESS(rv, rv);

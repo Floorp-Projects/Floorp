@@ -61,10 +61,6 @@
       .gnu-number {
         font-weight: bold;
       }
-      
-      #exceptions-link {
-        text-decoration: none;
-      }
     </style>
 
     <script type="text/javascript">
@@ -169,12 +165,14 @@
       <li><a href="about:license#apple-mozilla">Apple/Mozilla NPRuntime License</a></li>
       <li><a href="about:license#breakpad">Breakpad License</a></li>
       <li><a href="about:license#bspatch">bspatch License</a></li>
-      <li><a href="about:license#cairo">Cairo Licenses</a></li>      
+      <li><a href="about:license#cairo">Cairo Component Licenses</a></li>      
       <li><a href="about:license#expat">Expat License</a></li>
       <li><a href="about:license#growl">Growl License</a></li>
       <li><a href="about:license#jpnic">Japan Network Information Centre License</a></li>
       <li><a href="about:license#jep">Java Embedding Plugin License</a></li>
+      <li><a href="about:license#jemalloc">jemalloc License</a></li>
       <li><a href="about:license#openvision">OpenVision License</a></li>
+      <li><a href="about:license#xdg">Red Hat xdg_user_dir_lookup License</a></li>
       <li><a href="about:license#sparkle">Sparkle License</a></li>
       <li><a href="about:license#ucal">University of California License</a></li>      
     </ul>
@@ -2000,7 +1998,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
     <hr>
 
-    <h1><a name="cairo"></a>Cairo Licenses</h1>
+    <h1><a name="cairo"></a>Cairo Component Licenses</h1>
 
     <p class="correctme">This license, with different copyright holders, applies 
     to certain files in the directory
@@ -2015,7 +2013,7 @@ POSSIBILITY OF SUCH DAMAGE.
 <li>2005 Novell, Inc.
 <li>2004 David Reveman, Peter Nilsson
 <li>2000 Keith Packard, member of The XFree86 Project, Inc.
-<li>2005 Lars Knoll & Zack Rusin, Trolltech
+<li>2005 Lars Knoll &amp; Zack Rusin, Trolltech
 <li>1998, 2000, 2002, 2004 Keith Packard
 <li>2004 Nicholas Miell
 <li>2005 Trolltech AS
@@ -2211,6 +2209,44 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     <hr>
 
+    <h1><a name="jemalloc"></a>jemalloc License</h1>
+
+    <p class="correctme">This license applies to files in the directory
+    <span class="path">memory/jemalloc/</span>.
+    </p>
+
+<pre>
+Copyright (C) 2006-2008 Jason Evans <jasone@FreeBSD.org>.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+   notice(s), this list of conditions and the following disclaimer as
+   the first lines of this file unmodified other than the possible
+   addition of one or more copyright notices.
+2. Redistributions in binary form must reproduce the above copyright
+   notice(s), this list of conditions and the following disclaimer in
+   the documentation and/or other materials provided with the
+   distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) ``AS IS'' AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDER(S) BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+</pre>
+
+
+    <hr>
+
     <h1><a name="openvision"></a>OpenVision License</h1>
 
     <p class="correctme">This license applies to the file 
@@ -2317,6 +2353,39 @@ SUCH DAMAGE.
 
     <hr>
 
+    <h1><a name="xdg"></a>Red Hat xdg_user_dir_lookup License</h1>
+
+    <p class="correctme">This license applies to the 
+    <span class="path">xdg_user_dir_lookup</span> function in
+    <span class="path">xpcom/io/SpecialSystemDirectory.cpp</span>:</p>
+    
+<pre>
+Copyright (c) 2007 Red Hat, Inc.
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions: 
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software. 
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+</pre>
+
+
+    <hr>
+
     <h1><a name="other-notices"></a>Other Required Notices</h1>
 
     <ul>
@@ -2345,7 +2414,10 @@ SUCH DAMAGE.
           (Julian Seward)</li>
       <li>The <a href="http://www.libpng.org/pub/png/">libpng</a> graphics library
           (Glenn Randers-Pehrson and team)</li>
+      <li>The <a href="http://www.sqlite.org/">sqlite</a> database engine
+          (D. Richard Hipp and team)</li>
     </ul>
+    
     
     <hr>
     

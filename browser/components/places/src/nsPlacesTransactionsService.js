@@ -341,11 +341,11 @@ placesCreateFolderTransactions.prototype = {
   },
 
   undoTransaction: function PCFT_undoTransaction() {
-    PlacesUtils.bookmarks.removeFolder(this._id);
     for (var i = 0; i < this._childItemsTransactions.length; ++i) {
-      var txn = this.childItemsTransactions[i];
+      var txn = this._childItemsTransactions[i];
       txn.undoTransaction();
     }
+    PlacesUtils.bookmarks.removeFolder(this._id);
   }
 };
 
@@ -404,7 +404,7 @@ placesCreateSeparatorTransactions.prototype = {
 
   // childItemsTransaction support
   get container() { return this._container; },
-  set container(val) { return this._container = val;clear },
+  set container(val) { return this._container = val; },
 
   doTransaction: function PCST_doTransaction() {
     this._id = PlacesUtils.bookmarks
@@ -412,7 +412,7 @@ placesCreateSeparatorTransactions.prototype = {
   },
 
   undoTransaction: function PCST_undoTransaction() {
-    PlacesUtils.bookmarks.removeChildAt(this.container, this._index);
+    PlacesUtils.bookmarks.removeItem(this._id);
   }
 };
 
@@ -808,12 +808,12 @@ placesEditItemDateAddedTransaction.prototype = {
   get container() { return this.id; },
   set container(val) { return this.id = val; },
 
-  doTransaction: function PEITT_doTransaction() {
+  doTransaction: function PEIDA_doTransaction() {
     this._oldDateAdded = PlacesUtils.bookmarks.getItemDateAdded(this.id);
     PlacesUtils.bookmarks.setItemDateAdded(this.id, this._newDateAdded);
   },
 
-  undoTransaction: function PEITT_undoTransaction() {
+  undoTransaction: function PEIDA_undoTransaction() {
     PlacesUtils.bookmarks.setItemDateAdded(this.id, this._oldDateAdded);
   }
 };
@@ -832,12 +832,12 @@ placesEditItemLastModifiedTransaction.prototype = {
   get container() { return this.id; },
   set container(val) { return this.id = val; },
 
-  doTransaction: function PEITT_doTransaction() {
+  doTransaction: function PEILM_doTransaction() {
     this._oldLastModified = PlacesUtils.bookmarks.getItemLastModified(this.id);
     PlacesUtils.bookmarks.setItemLastModified(this.id, this._newLastModified);
   },
 
-  undoTransaction: function PEITT_undoTransaction() {
+  undoTransaction: function PEILM_undoTransaction() {
     PlacesUtils.bookmarks.setItemLastModified(this.id, this._oldLastModified);
   }
 };
@@ -932,7 +932,19 @@ placesTagURITransaction.prototype = {
 
 function placesUntagURITransaction(aURI, aTags) {
   this._uri = aURI;
-  this._tags = aTags || PlacesUtils.tagging.getTagsForURI(this._uri, {});
+  if (aTags) {    
+    // Within this transaction, we cannot rely on tags given by itemId
+    // since the tag containers may be gone after we call untagURI.
+    // Thus, we convert each tag given by its itemId to name.
+    this._tags = aTags;
+    for (var i=0; i < aTags.length; i++) {
+      if (typeof(this._tags[i]) == "number")
+        this._tags[i] = PlacesUtils.bookmarks.getItemTitle(this._tags[i]);
+    }
+  }
+  else
+    this._tags = PlacesUtils.tagging.getTagsForURI(this._uri, {});
+
   this.redoTransaction = this.doTransaction;
 }
 

@@ -221,16 +221,13 @@ nsHTMLContainerFrame::PaintTextDecorationLine(
       bp.side(side) = 0;
     }
   }
-  const nsStyleVisibility* visibility = GetStyleVisibility();
-  PRBool isRTL = visibility->mDirection == NS_STYLE_DIRECTION_RTL;
   nscoord innerWidth = mRect.width - bp.left - bp.right;
   nsRefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
   gfxPoint pt(PresContext()->AppUnitsToGfxUnits(bp.left + aPt.x),
               PresContext()->AppUnitsToGfxUnits(bp.top + aPt.y));
   gfxSize size(PresContext()->AppUnitsToGfxUnits(innerWidth), aSize);
   nsCSSRendering::PaintDecorationLine(ctx, aColor, pt, size, aAscent, aOffset,
-                                      aDecoration, NS_STYLE_BORDER_STYLE_SOLID,
-                                      isRTL);
+                                      aDecoration, NS_STYLE_BORDER_STYLE_SOLID);
 }
 
 void

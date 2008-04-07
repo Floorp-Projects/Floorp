@@ -3225,8 +3225,12 @@ function BrowserCustomizeToolbar()
   var sheetFrame = document.getElementById("customizeToolbarSheetIFrame");
   sheetFrame.hidden = false;
 
-  // The document might not have been loaded yet, if this is the first time
-  if (sheetFrame.getAttribute("src") != customizeURL)
+  // The document might not have been loaded yet, if this is the first time.
+  // If it is already loaded, reload it so that the onload initialization code
+  // re-runs.
+  if (sheetFrame.getAttribute("src") == customizeURL)
+    sheetFrame.contentWindow.location.reload()
+  else
     sheetFrame.setAttribute("src", customizeURL);
 
   // XXXmano: there's apparently no better way to get this when the iframe is
@@ -4136,13 +4140,15 @@ nsBrowserStatusHandler.prototype =
         this._tooltipText == gBrowser.securityUI.tooltipText &&
         !this._hostChanged) {
 #ifdef DEBUG
-      var contentHost = gBrowser.contentWindow.location.host;
-      if (this._host !== undefined && this._host != contentHost) {
-          Components.utils.reportError(
-            "ASSERTION: browser.js host is inconsistent. Content window has " + 
-            "<" + contentHost + "> but cached host is <" + this._host + ">.\n"
-          );
-      }
+      try {
+        var contentHost = gBrowser.contentWindow.location.host;
+        if (this._host !== undefined && this._host != contentHost) {
+            Components.utils.reportError(
+              "ASSERTION: browser.js host is inconsistent. Content window has " + 
+              "<" + contentHost + "> but cached host is <" + this._host + ">.\n"
+            );
+        }
+      } catch (ex) {}
 #endif
       return;
     }
@@ -5854,7 +5860,7 @@ missingPluginInstaller.prototype.installSinglePlugin = function(aEvent){
 
   if (missingPluginsArray) {
     window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-                      "PFSWindow", "modal,chrome,resizable=yes",
+                      "PFSWindow", "chrome,centerscreen,resizable=yes",
                       {plugins: missingPluginsArray, browser: tabbrowser.selectedBrowser});
   }
 
@@ -5981,7 +5987,7 @@ function pluginsMissing()
   var missingPluginsArray = tabbrowser.selectedBrowser.missingPlugins;
   if (missingPluginsArray) {
     window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-                      "PFSWindow", "modal,chrome,resizable=yes",
+                      "PFSWindow", "chrome,centerscreen,resizable=yes",
                       {plugins: missingPluginsArray, browser: tabbrowser.selectedBrowser});
   }
 }

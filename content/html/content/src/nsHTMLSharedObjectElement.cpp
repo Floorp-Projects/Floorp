@@ -213,12 +213,13 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLSharedObjectElement, nsGenericElement)
 NS_HTML_CONTENT_CC_INTERFACE_TABLE_AMBIGUOUS_HEAD(nsHTMLSharedObjectElement,
                                                   nsGenericHTMLElement,
                                                   nsIDOMHTMLAppletElement)
-  NS_INTERFACE_TABLE_INHERITED8(nsHTMLSharedObjectElement,
-                                imgIDecoderObserver,
+  NS_INTERFACE_TABLE_INHERITED9(nsHTMLSharedObjectElement,
                                 nsIRequestObserver,
                                 nsIStreamListener,
                                 nsIFrameLoaderOwner,
+                                imgIContainerObserver,
                                 nsIObjectLoadingContent,
+                                imgIDecoderObserver,
                                 nsIImageLoadingContent,
                                 nsIInterfaceRequestor,
                                 nsIChannelEventSink)

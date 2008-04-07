@@ -53,19 +53,22 @@ function test()
     "INSERT INTO moz_downloads (name, target, source, state, endTime, maxBytes) " +
     "VALUES (?1, ?2, ?3, ?4, ?5, ?6)");
 
-  for each (let site in ["ed.agadak.net", "mozilla.org"]) {
-    stmt.bindStringParameter(0, "Super Pimped Download");
-    stmt.bindStringParameter(1, "file://dummy/file");
-    stmt.bindStringParameter(2, "http://" + site + "/file");
-    stmt.bindInt32Parameter(3, dm.DOWNLOAD_FINISHED);
-    stmt.bindInt64Parameter(4, new Date(1985, 7, 2) * 1000);
-    stmt.bindInt64Parameter(5, 111222333444);
+  try {
+    for each (let site in ["ed.agadak.net", "mozilla.org"]) {
+      stmt.bindStringParameter(0, "Super Pimped Download");
+      stmt.bindStringParameter(1, "file://dummy/file");
+      stmt.bindStringParameter(2, "http://" + site + "/file");
+      stmt.bindInt32Parameter(3, dm.DOWNLOAD_FINISHED);
+      stmt.bindInt64Parameter(4, new Date(1985, 7, 2) * 1000);
+      stmt.bindInt64Parameter(5, 111222333444);
 
-    // Add it!
-    stmt.execute();
+      // Add it!
+      stmt.execute();
+    }
+  } finally {
+    stmt.reset();
+    stmt.finalize();
   }
-
-  stmt.finalize();
 
   // Close the UI if necessary
   let wm = Cc["@mozilla.org/appshell/window-mediator;1"].
@@ -73,67 +76,54 @@ function test()
   let win = wm.getMostRecentWindow("Download:Manager");
   if (win) win.close();
 
-  // Start the test when the download manager window loads
-  let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-           getService(Ci.nsIWindowWatcher);
-  ww.registerNotification({
-    observe: function(aSubject, aTopic, aData) {
-      ww.unregisterNotification(this);
-      aSubject.QueryInterface(Ci.nsIDOMEventTarget).
-      addEventListener("DOMContentLoaded", doTest, false);
-    }
-  });
+  let obs = Cc["@mozilla.org/observer-service;1"].
+            getService(Ci.nsIObserverService);
+  const DLMGR_UI_DONE = "download-manager-ui-done";
 
   let testPhase = 0;
+  let testObs = {
+    observe: function(aSubject, aTopic, aData) {
+      if (aTopic != DLMGR_UI_DONE)
+        return;
 
-  // Let the Startup method of the download manager UI finish before we test
-  let doTest = function() setTimeout(function() {
-    win = wm.getMostRecentWindow("Download:Manager");
-    let $ = function(id) win.document.getElementById(id);
+      let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      let $ = function(aId) win.document.getElementById(aId);
+      let downloadView = $("downloadView");
+      let searchbox = $("searchbox");
 
-    let downloadView = $("downloadView");
-    let searchbox = $("searchbox");
-
-    // Try again if selectedIndex is -1
-    if (downloadView.selectedIndex)
-      return doTest();
-
-    // The list must have built, so figure out what test to do
-    switch (testPhase) {
-      case 0:
-        // Search for multiple words in any order in all places
-        searchbox.value = "download super pimped 104 GB august 2";
+      let search = function(aTerms) {
+        searchbox.value = aTerms;
         searchbox.doCommand();
+      };
 
-        // Next phase eventually checks for two downloads
-        testPhase++;
-        return doTest();
-      case 1:
-        // List is being populated
-        ok(downloadView.itemCount > 0, "Search found something");
+      // The list must have built, so figure out what test to do
+      switch (testPhase++) {
+        case 0:
+          // Search for multiple words in any order in all places
+          search("download super pimped 104 GB august 2");
 
-        // Actually check for the two downloads
-        testPhase++;
-        return doTest();
-      case 2:
-        // Done populating the two items
-        ok(downloadView.itemCount == 2, "Search matched both downloads");
+          break;
+        case 1:
+          // Done populating the two items
+          ok(downloadView.itemCount == 2, "Search matched both downloads");
 
-        // Do partial word matches including the site
-        searchbox.value = "agadak aug 2 downl 104";
-        searchbox.doCommand();
+          // Do partial word matches including the site
+          search("agadak aug 2 downl 104");
 
-        // Next phase checks for a single item
-        testPhase++;
-        return doTest();
-      case 3:
-        // Done populating the one result
-        ok(downloadView.itemCount == 1, "Found the single download");
+          break;
+        case 2:
+          // Done populating the one result
+          ok(downloadView.itemCount == 1, "Found the single download");
 
-        // We're done!
-        return finish();
+          // We're done!
+          obs.removeObserver(testObs, DLMGR_UI_DONE);
+          finish();
+
+          break;
+      }
     }
-  }, 0);
+  };
+  obs.addObserver(testObs, DLMGR_UI_DONE, false);
  
   // Show the Download Manager UI
   Cc["@mozilla.org/download-manager-ui;1"].

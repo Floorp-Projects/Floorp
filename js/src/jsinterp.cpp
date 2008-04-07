@@ -2388,6 +2388,8 @@ JS_STATIC_ASSERT(!CAN_DO_FAST_INC_DEC(INT_TO_JSVAL(JSVAL_INT_MAX)));
 
 #endif
 
+#define MAX_INLINE_CALL_COUNT 3000
+
 /*
  * Threaded interpretation via computed goto appears to be well-supported by
  * GCC 3 and higher.  IBM's C compiler when run with the right options (e.g.,
@@ -4622,6 +4624,12 @@ interrupt:
                     jsval *newsp;
                     JSInlineFrame *newifp;
                     JSInterpreterHook hook;
+
+                    /* Restrict recursion of lightweight functions. */
+                    if (inlineCallCount == MAX_INLINE_CALL_COUNT) {
+                        js_ReportOverRecursed(cx);
+                        goto error;
+                    }
 
                     /* Compute the total number of stack slots needed by fun. */
                     nframeslots = JS_HOWMANY(sizeof(JSInlineFrame),

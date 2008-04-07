@@ -54,7 +54,7 @@
 #include "gfxFontTest.h"
 #include "gfxFontUtils.h"
 
-#include "cairo-atsui.h"
+#include "cairo-quartz.h"
 
 #include "gfxQuartzSurface.h"
 #include "gfxQuartzFontCache.h"
@@ -116,7 +116,7 @@ gfxAtsuiFont::gfxAtsuiFont(MacOSFontEntry *aFontEntry,
 
     InitMetrics(fontID, fontRef);
 
-    mFontFace = cairo_atsui_font_face_create_for_atsu_font_id(fontID);
+    mFontFace = cairo_quartz_font_face_create_for_atsu_font_id(fontID);
 
     cairo_matrix_t sizeMatrix, ctm;
     cairo_matrix_init_identity(&ctm);
@@ -450,6 +450,7 @@ gfxAtsuiFontGroup::gfxAtsuiFontGroup(const nsAString& families,
         // default fonts for on the mac; we should fix this!
         // Known:
         // ja x-beng x-devanagari x-tamil x-geor x-ethi x-gujr x-mlym x-armn
+        // x-orya x-telu x-knda x-sinh
 
         //fprintf (stderr, "gfxAtsuiFontGroup: %s [%s] -> %d fonts found\n", NS_ConvertUTF16toUTF8(families).get(), aStyle->langGroup.get(), mFonts.Length());
 

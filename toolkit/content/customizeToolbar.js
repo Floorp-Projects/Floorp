@@ -143,7 +143,7 @@ function getToolbarAt(i)
  */
 function persistCurrentSets()
 {
-  if (!gToolboxChanged)
+  if (!gToolboxChanged || gToolboxDocument.defaultView.closed)
     return;
 
   var customCount = 0;

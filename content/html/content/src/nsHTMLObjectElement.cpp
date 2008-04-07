@@ -168,16 +168,17 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLObjectElement, nsGenericElement)
 
 NS_HTML_CONTENT_CC_INTERFACE_TABLE_HEAD(nsHTMLObjectElement,
                                         nsGenericHTMLFormElement)
-  NS_INTERFACE_TABLE_INHERITED9(nsHTMLObjectElement,
-                                nsIDOMHTMLObjectElement,
-                                imgIDecoderObserver,
-                                nsIRequestObserver,
-                                nsIStreamListener,
-                                nsIFrameLoaderOwner,
-                                nsIObjectLoadingContent,
-                                nsIImageLoadingContent,
-                                nsIInterfaceRequestor,
-                                nsIChannelEventSink)
+  NS_INTERFACE_TABLE_INHERITED10(nsHTMLObjectElement,
+                                 nsIDOMHTMLObjectElement,
+                                 imgIDecoderObserver,
+                                 nsIRequestObserver,
+                                 nsIStreamListener,
+                                 nsIFrameLoaderOwner,
+                                 nsIObjectLoadingContent,
+                                 nsIImageLoadingContent,
+                                 imgIContainerObserver,
+                                 nsIInterfaceRequestor,
+                                 nsIChannelEventSink)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLObjectElement)
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLObjectElement)

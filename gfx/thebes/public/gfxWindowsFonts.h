@@ -69,10 +69,13 @@ public:
     FontEntry *FindFontEntry(const gfxFontStyle& aFontStyle);
 
 private:
+    friend class gfxWindowsPlatform;
+
+    void FindStyleVariations();
+
     static int CALLBACK FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
                                             const NEWTEXTMETRICEXW *nmetrics,
                                             DWORD fontType, LPARAM data);
-    void FindStyleVariations();
 
 public:
     nsTArray<nsRefPtr<FontEntry> > mVariations;
@@ -91,7 +94,8 @@ public:
     FontEntry(const nsString& aFaceName) : 
         mFaceName(aFaceName), mUnicodeFont(PR_FALSE), mSymbolFont(PR_FALSE),
         mTrueType(PR_FALSE), mIsType1(PR_FALSE),
-        mIsBadUnderlineFont(PR_FALSE), mForceGDI(PR_FALSE), mCharset(0), mUnicodeRanges(0)
+        mIsBadUnderlineFont(PR_FALSE), mForceGDI(PR_FALSE), mUnknownCMAP(PR_FALSE),
+        mCharset(0), mUnicodeRanges(0)
     {
     }
 
@@ -104,6 +108,8 @@ public:
         mTrueType(aFontEntry.mTrueType),
         mIsType1(aFontEntry.mIsType1),
         mIsBadUnderlineFont(aFontEntry.mIsBadUnderlineFont),
+        mForceGDI(aFontEntry.mForceGDI),
+        mUnknownCMAP(aFontEntry.mUnknownCMAP),
         mItalic(aFontEntry.mItalic),
         mWeight(aFontEntry.mWeight),
         mCharset(aFontEntry.mCharset),
@@ -213,13 +219,14 @@ public:
     PRUint8 mWindowsFamily;
     PRUint8 mWindowsPitch;
 
-    PRPackedBool mUnicodeFont;
-    PRPackedBool mSymbolFont;
-    PRPackedBool mTrueType;
-    PRPackedBool mIsType1;
-    PRPackedBool mIsBadUnderlineFont;
-    PRPackedBool mForceGDI;
-    PRPackedBool mItalic;
+    PRPackedBool mUnicodeFont : 1;
+    PRPackedBool mSymbolFont  : 1;
+    PRPackedBool mTrueType    : 1;
+    PRPackedBool mIsType1     : 1;
+    PRPackedBool mIsBadUnderlineFont : 1;
+    PRPackedBool mForceGDI    : 1;
+    PRPackedBool mUnknownCMAP : 1;
+    PRPackedBool mItalic      : 1;
     PRUint16 mWeight;
 
     std::bitset<256> mCharset;

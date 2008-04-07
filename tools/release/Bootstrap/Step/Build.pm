@@ -6,7 +6,7 @@ package Bootstrap::Step::Build;
 use File::Temp qw(tempfile);
 
 use Bootstrap::Step;
-use Bootstrap::Util qw(CvsCatfile SyncToStaging);
+use Bootstrap::Util qw(CvsCatfile);
 
 use MozBuild::Util qw(MkdirWithPath);
 
@@ -136,43 +136,15 @@ sub Push {
     $pushDir =~ s!^http://ftp.mozilla.org/pub/mozilla.org!/home/ftp/pub!;
 
     my $candidateDir = $config->GetFtpCandidateDir(bitsUnsigned => 1);
+    $this->CreateCandidatesDir();
 
     my $osFileMatch = $config->SystemInfo(var => 'osname');    
-
     # TODO - use a more generic function for this kind of remapping
     if ($osFileMatch eq 'win32')  {
       $osFileMatch = 'win';
     } elsif ($osFileMatch eq 'macosx') {
       $osFileMatch = 'mac';
     }
-
-    $this->Shell(
-      cmd => 'ssh',
-      cmdArgs => ['-2', '-l', $stagingUser, $stagingServer,
-                  'mkdir -p ' . $candidateDir],
-      logFile => $pushLog,
-    );
-
-    # Make sure permissions are created on the server correctly;
-    #
-    # Note the '..' at the end of the chmod string; this is because
-    # Config::GetFtpCandidateDir() returns the full path, including the
-    # rcN directories on the end. What we really want to ensure
-    # have the correct permissions (from the mkdir call above) is the
-    # firefox/nightly/$version-candidates/ directory.
-    #
-    # XXX - This is ugly; another solution is to fix the umask on stage, or
-    # change what GetFtpCandidateDir() returns.
-
-    my $chmodArg = CvsCatfile($config->GetFtpCandidateDir(bitsUnsigned => 0), 
-     '..');
-
-    $this->Shell(
-      cmd => 'ssh',
-      cmdArgs => ['-2', '-l', $stagingUser, $stagingServer,
-                  'chmod 0755 ' . $chmodArg],
-      logFile => $pushLog,
-    );
 
     $this->Shell(
       cmd => 'ssh',
@@ -184,8 +156,6 @@ sub Push {
                   $candidateDir],
       logFile => $pushLog,
     );
-
-    SyncToStaging(); 
 }
 
 sub Announce {
