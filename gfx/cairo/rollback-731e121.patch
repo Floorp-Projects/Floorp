@@ -1,0 +1,32 @@
+diff --git a/gfx/cairo/cairo/src/cairo-pattern.c b/gfx/cairo/cairo/src/cairo-pattern.c
+--- a/gfx/cairo/cairo/src/cairo-pattern.c
++++ b/gfx/cairo/cairo/src/cairo-pattern.c
+@@ -1994,28 +1994,6 @@
+ 	x2 = x1 + surface_extents.width;
+ 	y2 = y1 + surface_extents.height;
+ 
+-	/* The filter can effectively enlarge the extents of the
+-	 * pattern, so extend as necessary. Note: We aren't doing any
+-	 * backend-specific querying of filter box sizes at this time,
+-	 * (since currently no specific backends that could do custom
+-	 * filters are calling _cairo_pattern_get_extents). */
+-	switch (pattern->filter) {
+-	case CAIRO_FILTER_GOOD:
+-	case CAIRO_FILTER_BEST:
+-	case CAIRO_FILTER_BILINEAR:
+-	    x1 -= 0.5;
+-	    y1 -= 0.5;
+-	    x2 += 0.5;
+-	    y2 += 0.5;
+-	    break;
+-	case CAIRO_FILTER_FAST:
+-	case CAIRO_FILTER_NEAREST:
+-	case CAIRO_FILTER_GAUSSIAN:
+-	default:
+-	    /* Nothing to do */
+-	    break;
+-	}
+-
+ 	imatrix = pattern->matrix;
+ 	status = cairo_matrix_invert (&imatrix);
+ 	/* cairo_pattern_set_matrix ensures the matrix is invertible */
