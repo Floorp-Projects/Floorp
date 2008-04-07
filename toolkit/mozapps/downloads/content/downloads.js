@@ -95,7 +95,7 @@ let gStr = {
   stateFailed: "stateFailed",
   stateCanceled: "stateCanceled",
   stateBlockedParentalControls: "stateBlocked",
-  stateBlockedPolicy: "stateDirty",
+  stateBlockedPolicy: "stateBlockedPolicy",
   stateDirty: "stateDirty",
   yesterday: "yesterday",
   monthDate: "monthDate",
@@ -400,6 +400,11 @@ function Startup()
   // notifications.
   gDownloadListener = new DownloadProgressListener();
   gDownloadManager.addListener(gDownloadListener);
+
+  // If the UI was displayed because the user interacted, we need to make sure
+  // we update gUserInteracted accordingly.
+  if (window.arguments[1] == Ci.nsIDownloadManagerUI.REASON_USER_INTERACTED)
+    gUserInteracted = true;
 
   // downloads can finish before Startup() does, so check if the window should
   // close and act accordingly
@@ -1091,8 +1096,14 @@ function buildDownloadList(aForceBuild)
 function stepListBuilder(aNumItems) {
   try {
     // If we're done adding all items, we can quit
-    if (!gStmt.executeStep())
+    if (!gStmt.executeStep()) {
+      // Send a notification that we finished
+      Cc["@mozilla.org/observer-service;1"].
+      getService(Ci.nsIObserverService).
+      notifyObservers(window, "download-manager-ui-done", null);
+
       return;
+    }
 
     // Try to get the attribute values from the statement
     let attrs = {

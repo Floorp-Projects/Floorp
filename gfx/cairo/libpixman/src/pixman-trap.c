@@ -49,7 +49,7 @@ pixman_add_traps (pixman_image_t *	image,
     height = image->bits.height;
     bpp = PIXMAN_FORMAT_BPP (image->bits.format);
     
-    x_off_fixed = pixman_int_to_fixed(y_off);
+    x_off_fixed = pixman_int_to_fixed(x_off);
     y_off_fixed = pixman_int_to_fixed(y_off);
 
     while (ntrap--)
@@ -83,8 +83,6 @@ pixman_add_traps (pixman_image_t *	image,
 	}
 	traps++;
     }
-
-    fbFinishAccess (pPicture->pDrawable);
 }
 
 static void

@@ -37,25 +37,26 @@
 #
 # ***** END LICENSE BLOCK *****
 
-TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
-source ${TEST_BIN}/library.sh
-
-source ${TEST_BIN}/set-build-env.sh $@
+source $TEST_DIR/bin/library.sh
+source $TEST_DIR/bin/set-build-env.sh $@
 
 case $product in
     firefox|thunderbird)
-        cd $TREE/mozilla
+#        cd $TREE/mozilla
 
-        if ! make -f client.mk clean 2>&1; then
+        if ! $buildbash $bashlogin -c "cd $TREE/mozilla; make -f client.mk clean" 2>&1; then
             error "during client.mk clean" $LINENO
         fi
         ;;
 
     js)
-        cd $TREE/mozilla/js/src
+#        cd $TREE/mozilla/js/src/editline
+        if ! $buildbash $bashlogin -c "cd $TREE/mozilla/js/src/editline; make -f Makefile.ref clean" 2>&1; then
+            error "during editline clean" $LINENO
+        fi
 
-        if ! make -f Makefile.ref clean 2>&1; then
+#        cd ..
+        if ! $buildbash $bashlogin -c "cd $TREE/mozilla/js/src; make -f Makefile.ref clean" 2>&1; then
             error "during SpiderMonkey clean" $LINENO
         fi
         ;;

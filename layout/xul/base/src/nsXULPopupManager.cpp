@@ -126,8 +126,12 @@ void nsMenuChainItem::Detach(nsMenuChainItem** aRoot)
   }
 }
 
-NS_IMPL_ISUPPORTS4(nsXULPopupManager, nsIDOMKeyListener,
-                   nsIMenuRollup, nsIRollupListener, nsITimerCallback)
+NS_IMPL_ISUPPORTS5(nsXULPopupManager,
+                   nsIDOMKeyListener,
+                   nsIDOMEventListener,
+                   nsIMenuRollup,
+                   nsIRollupListener,
+                   nsITimerCallback)
 
 nsXULPopupManager::nsXULPopupManager() :
   mRangeOffset(0),
@@ -523,9 +527,13 @@ CheckCaretDrawingState(nsIDocument *aDocument) {
     return;
 
   nsIPresShell* presShell = focusedDoc->GetPrimaryShell();
+  if (!presShell)
+    return;
 
   nsCOMPtr<nsICaret> caret;
   nsresult res = presShell->GetCaret(getter_AddRefs(caret));
+  if (!caret)
+    return;
   caret->CheckCaretDrawingState();
 
 }

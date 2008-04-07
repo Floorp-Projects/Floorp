@@ -37,26 +37,23 @@
 #
 # ***** END LICENSE BLOCK *****
 
-TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
-source ${TEST_BIN}/library.sh
-
-source $TEST_BIN/set-build-env.sh $@
+source $TEST_DIR/bin/library.sh
+source $TEST_DIR/bin/set-build-env.sh $@
 
 case $product in
     firefox|thunderbird)
         cd $TREE/mozilla
 
-        if ! make -f client.mk build 2>&1; then
+        if ! $buildbash $bashlogin -c "cd $TREE/mozilla; make -f client.mk build" 2>&1; then
 
             if [[ -z "$TEST_FORCE_CLOBBER_ON_ERROR" ]]; then
                 error "error during build" $LINENO
             else
                 echo "error occured during build. attempting a clobber build" $LINENO
-                if ! make -f client.mk distclean 2>&1; then
+                if ! $buildbash $bashlogin -c "cd $TREE/mozilla; make -f client.mk distclean" 2>&1; then
                     error "error during forced clobber" $LINENO
                 fi
-                if ! make -f client.mk build 2>&1; then
+                if ! $buildbash $bashlogin -c "cd $TREE/mozilla; make -f client.mk build" 2>&1; then
                     error "error during forced build" $LINENO
                 fi
             fi
@@ -79,7 +76,7 @@ case $product in
                 fi
                 ;;
             linux)
-            executablepath=$product-$buildtype/dist/bin
+                executablepath=$product-$buildtype/dist/bin
             ;;
         esac
 
@@ -100,18 +97,18 @@ case $product in
             cd "$executabledir"
             if [ -e "$product" ]; then
                 echo "$SCRIPT: patching $product"
-                cp $TEST_BIN/$product.diff .
+                cp $TEST_DIR/bin/$product.diff .
                 patch -N -p0 < $product.diff
             fi
             if [ -e run-mozilla.sh ]; then
                 echo "$SCRIPT: patching run-mozilla.sh"
-                cp $TEST_BIN/run-mozilla.diff .
+                cp $TEST_DIR/bin/run-mozilla.diff .
                 patch -N -p0 < run-mozilla.diff
             fi
         fi
         ;;
     js)
-    cd $TREE/mozilla/js/src
+#    cd $TREE/mozilla/js/src
 
     if [[ $buildtype == "debug" ]]; then
         export JSBUILDOPT=
@@ -119,11 +116,11 @@ case $product in
         export JSBUILDOPT=BUILD_OPT=1
     fi
 
-    if ! make -f Makefile.ref ${JSBUILDOPT} clean 2>&1; then
+    if ! $buildbash $bashlogin -c "cd $TREE/mozilla/js/src; make -f Makefile.ref ${JSBUILDOPT} clean" 2>&1; then
         error "during js/src clean" $LINENO
     fi 
 
-    if ! make -f Makefile.ref ${JSBUILDOPT} 2>&1; then
+    if ! $buildbash $bashlogin -c "cd $TREE/mozilla/js/src; make -f Makefile.ref ${JSBUILDOPT}" 2>&1; then
         error "during js/src build" $LINENO
     fi
     ;;

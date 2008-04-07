@@ -224,6 +224,12 @@ pref("browser.urlbar.maxRichResults", 12);
 pref("browser.urlbar.search.chunkSize", 1000);
 pref("browser.urlbar.search.timeout", 100);
 
+// Number of milliseconds to wait for the http headers (and thus
+// the Content-Disposition filename) before giving up and falling back to 
+// picking a filename without that info in hand so that the user sees some
+// feedback from their action.
+pref("browser.download.saveLinkAsFilenameTimeout", 1000);
+
 pref("browser.download.useDownloadDir", true);
 pref("browser.download.folderList", 0);
 pref("browser.download.manager.showAlertOnComplete", true);
@@ -328,6 +334,12 @@ pref("browser.bookmarks.sort.resource", "rdf:http://home.netscape.com/NC-rdf#Nam
 // If true, at shutdown the bookmarks in your menu and toolbar will
 // be exported as HTML to the bookmarks.html file.
 pref("browser.bookmarks.autoExportHTML",          false);
+
+// The maximum number of daily bookmark backups to 
+// keep in {PROFILEDIR}/bookmarkbackups. Special values:
+// -1: unlimited
+//  0: no backups created (and deletes all existing backups)
+pref("browser.bookmarks.max_backups",             5);
 
 // Scripts & Windows prefs
 pref("dom.disable_open_during_load",              true);

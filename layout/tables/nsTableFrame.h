@@ -47,6 +47,7 @@
 #include "nsTableColGroupFrame.h"
 #include "nsCellMap.h"
 #include "nsGkAtoms.h"
+#include "nsDisplayList.h"
 
 class nsTableCellFrame;
 class nsTableColFrame;
@@ -71,6 +72,58 @@ static inline PRBool IS_TABLE_CELL(nsIAtom* frameType) {
   return nsGkAtoms::tableCellFrame == frameType ||
     nsGkAtoms::bcTableCellFrame == frameType;
 }
+
+class nsDisplayTableItem : public nsDisplayItem
+{
+public:
+  nsDisplayTableItem(nsIFrame* aFrame) : nsDisplayItem(aFrame),
+      mPartHasFixedBackground(PR_FALSE) {}
+
+  virtual PRBool IsVaryingRelativeToFrame(nsDisplayListBuilder* aBuilder,
+                                          nsIFrame* aAncestorFrame);
+  // With collapsed borders, parts of the collapsed border can extend outside
+  // the table part frames, so allow this display element to blow out to our
+  // overflow rect. This is also useful for row frames that have spanning
+  // cells extending outside them.
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
+
+  void UpdateForFrameBackground(nsIFrame* aFrame);
+
+private:
+  PRPackedBool mPartHasFixedBackground;
+};
+
+class nsAutoPushCurrentTableItem
+{
+public:
+  nsAutoPushCurrentTableItem() : mBuilder(nsnull) {}
+  
+  void Push(nsDisplayListBuilder* aBuilder, nsDisplayTableItem* aPushItem)
+  {
+    mBuilder = aBuilder;
+    mOldCurrentItem = aBuilder->GetCurrentTableItem();
+    aBuilder->SetCurrentTableItem(aPushItem);
+#ifdef DEBUG
+    mPushedItem = aPushItem;
+#endif
+  }
+  ~nsAutoPushCurrentTableItem() {
+    if (!mBuilder)
+      return;
+#ifdef DEBUG
+    NS_ASSERTION(mBuilder->GetCurrentTableItem() == mPushedItem,
+                 "Someone messed with the current table item behind our back!");
+#endif
+    mBuilder->SetCurrentTableItem(mOldCurrentItem);
+  }
+
+private:
+  nsDisplayListBuilder* mBuilder;
+  nsDisplayTableItem*   mOldCurrentItem;
+#ifdef DEBUG
+  nsDisplayTableItem*   mPushedItem;
+#endif
+};
 
 /* ============================================================================ */
 
@@ -176,8 +229,8 @@ public:
    * and row frames. It creates a background display item for handling events
    * if necessary, an outline display item if necessary, and displays
    * all the the frame's children.
-   * @param aIsRoot true if aFrame is the table frame or a table part which
-   * happens to be the root of a stacking context
+   * @param aDisplayItem the display item created for this part, or null
+   * if this part's border/background painting is delegated to an ancestor
    * @param aTraversal a function that gets called to traverse the table
    * part's child frames and add their display list items to a
    * display list set.
@@ -186,7 +239,7 @@ public:
                                           nsFrame* aFrame,
                                           const nsRect& aDirtyRect,
                                           const nsDisplayListSet& aLists,
-                                          PRBool aIsRoot,
+                                          nsDisplayTableItem* aDisplayItem,
                                           DisplayGenericTablePartTraversal aTraversal = GenericTraversal);
 
   // Return the closest sibling of aPriorChildFrame (including aPriroChildFrame)

@@ -131,9 +131,16 @@ ReadCMAP(HDC hdc, FontEntry *aFontEntry)
 
     DWORD newLen = GetFontData(hdc, kCMAP, 0, buf, len);
     NS_ENSURE_TRUE(newLen == len, NS_ERROR_FAILURE);
-    
-    return gfxFontUtils::ReadCMAP(buf, len, aFontEntry->mCharacterMap,
-                                  aFontEntry->mUnicodeFont, aFontEntry->mSymbolFont);
+
+    // can't pass bits as references...
+    PRPackedBool unicodeFont = aFontEntry->mUnicodeFont;
+    PRPackedBool symbolFont = aFontEntry->mSymbolFont;
+    nsresult rv = gfxFontUtils::ReadCMAP(buf, len, aFontEntry->mCharacterMap,
+                                         unicodeFont, symbolFont);
+    aFontEntry->mUnicodeFont = unicodeFont;
+    aFontEntry->mSymbolFont = symbolFont;
+
+    return rv;
 }
 
 struct FamilyAddStyleProcData {
@@ -223,10 +230,12 @@ FontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
                 fe->mUnicodeFont = PR_FALSE;
 
             // For fonts where we failed to read the character map,
-            // we should use GDI to slowly determine their cmap lazily
-            fe->mForceGDI = PR_TRUE;
+            // we can take a slow path to look up glyphs character by character
+            fe->mUnknownCMAP = PR_TRUE;
 
-            //printf("%d, %s failed to get cmap\n", aFontEntry->mIsType1, NS_ConvertUTF16toUTF8(aFontEntry->mName).get());
+            //printf("(fontinit-cmap) %s failed to get cmap, type1:%d \n", NS_ConvertUTF16toUTF8(fe->mFaceName).get(), (PRUint32)(fe->mIsType1));
+        } else {
+            //printf("(fontinit-cmap) %s cmap loaded, italic:%d, weight:%d\n", NS_ConvertUTF16toUTF8(fe->mFaceName).get(), (PRUint32)(fe->mItalic), (PRUint32)(fe->mWeight));
         }
 
         SelectObject(hdc, oldFont);
@@ -240,6 +249,8 @@ FontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
 void
 FontFamily::FindStyleVariations()
 {
+    if (mHasStyles)
+        return;
     mHasStyles = PR_TRUE;
 
     HDC hdc = GetDC(nsnull);
@@ -1074,14 +1085,14 @@ static const struct ScriptPropertyEntry gScriptToText[] =
     { "LANG_BENGALI",    "x-beng" }, // ben
     { "LANG_PUNJABI",    "x-guru" }, // pan -- XXX x-guru is for Gurmukhi which isn't just Punjabi
     { "LANG_GUJARATI",   "x-gujr" }, // guj
-    { "LANG_ORIYA",      "ori" },
+    { "LANG_ORIYA",      "x-orya" }, // ori
     { "LANG_TAMIL",      "x-tamil" }, // tam
-    { "LANG_TELUGU",     "tel" },
-    { "LANG_KANNADA",    "kan" },
+    { "LANG_TELUGU",     "x-telu" },  //tel
+    { "LANG_KANNADA",    "x-knda" },  // kan
     { "LANG_MALAYALAM",  "x-mlym" }, // mal
-    { "LANG_ASSAMESE",   "asm" },
-    { "LANG_MARATHI",    "mar" },
-    { "LANG_SANSKRIT",   "san" },
+    { "LANG_ASSAMESE",   "x-beng" },    // asm
+    { "LANG_MARATHI",    "x-devanagari" }, // mar
+    { "LANG_SANSKRIT",   "x-devanagari" }, // san
     { "LANG_MONGOLIAN",  "mon" },
     { "TIBETAN",         "tib" }, // tib/bod
     { nsnull, nsnull },
@@ -1091,14 +1102,14 @@ static const struct ScriptPropertyEntry gScriptToText[] =
     { "LANG_GALICIAN",   "glg" },
     { "LANG_KONKANI",    "kok" },
     { "LANG_MANIPURI",   "mni" },
-    { "LANG_SINDHI",     "x-devanagari" }, // snd
+    { "LANG_SINDHI",     "snd" },
     { "LANG_SYRIAC",     "syr" },
-    { "SINHALESE",       "sin" },
+    { "SINHALESE",       "x-sinh" }, // sin
     { "CHEROKEE",        "chr" },
     { "INUKTITUT",       "x-cans" }, // iku
     { "ETHIOPIC",        "x-ethi" }, // amh -- this is both Amharic and Tigrinya
     { nsnull, nsnull },
-    { "LANG_KASHMIRI",   "x-devanagari" }, // kas
+    { "LANG_KASHMIRI",   "kas" },
     { "LANG_NEPALI",     "x-devanagari" }, // nep
     { nsnull, nsnull },
     { nsnull, nsnull },
@@ -1327,7 +1338,7 @@ public:
             }
         }
 
-        if (allCJK || mCurrentFont->GetFontEntry()->mForceGDI)
+        if (allCJK)
             return PlaceGDI();
 
         return PlaceUniscribe();
@@ -1420,7 +1431,7 @@ public:
                 PRInt32 advance = mAdvances[k]*appUnitsPerDevUnit;
                 WORD glyph = mGlyphs[k];
                 NS_ASSERTION(!gfxFontGroup::IsInvalidChar(mRangeString[offset]),
-                		     "invalid character detected");
+                             "invalid character detected");
                 if (missing) {
                     if (NS_IS_HIGH_SURROGATE(mRangeString[offset]) &&
                         offset + 1 < mRangeLength &&
@@ -1509,7 +1520,7 @@ public:
         if (aFontEntry->mCharacterMap.test(ch))
             return PR_TRUE;
 
-        if (aFontEntry->mForceGDI) {
+        if (aFontEntry->mUnknownCMAP) {
             if (ch > 0xFFFF)
                 return PR_FALSE;
 
@@ -1522,10 +1533,12 @@ public:
             PRUnichar str[1] = { (PRUnichar)ch };
             WORD glyph[1];
 
-            DWORD ret = GetGlyphIndicesW(dc, str, 1, glyph, GGI_MARK_NONEXISTING_GLYPHS);
+            // ScriptGetCMap works better than GetGlyphIndicesW for things like bitmap/vector fonts
+            HRESULT rv = ScriptGetCMap(dc, font->ScriptCache(), str, 1, 0, glyph);
 
             ReleaseDC(NULL, dc);
-            if (ret != GDI_ERROR && glyph[0] != 0xFFFF) {
+
+            if (rv == S_OK) {
                 aFontEntry->mCharacterMap.set(ch);
                 return PR_TRUE;
             }

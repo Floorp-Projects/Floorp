@@ -60,6 +60,7 @@ function nsPluginInstallerWizard(){
 
   this.mBrowser = null;
   this.mSuccessfullPluginInstallation = 0;
+  this.mNeedsRestart = false;
 
   // arguments[0] is an array that contains two items:
   //     an array of mimetypes that are missing
@@ -120,10 +121,9 @@ nsPluginInstallerWizard.prototype.pluginInfoReceived = function (aPluginInfo){
   if (this.WSPluginCounter == this.mPluginRequestArrayLength) {
     // check if no plugins were found
     if (this.mPluginInfoArrayLength == 0) {
-      this.advancePage("lastpage", true, false, false);
+      this.advancePage("lastpage");
     } else {
-      // we want to allow user to cancel
-      this.advancePage(null, true, false, true);
+      this.advancePage(null);
     }
   } else {
     // process more.
@@ -211,7 +211,7 @@ nsPluginInstallerWizard.prototype.showLicenses = function (){
 
   if (this.mPluginLicenseArray.length == 0) {
     // no plugins require licenses
-    this.advancePage(null, true, false, false);
+    this.advancePage(null);
   } else {
     this.licenseAcceptCounter = 0;
 
@@ -325,13 +325,9 @@ nsPluginInstallerWizard.prototype.licenseRadioGroupChange = function(aAccepted) 
     this.canAdvance(aAccepted);
 }
 
-nsPluginInstallerWizard.prototype.advancePage = function (aPageId, aCanAdvance, aCanRewind, aCanCancel){
+nsPluginInstallerWizard.prototype.advancePage = function (aPageId){
   this.canAdvance(true);
   document.getElementById("plugin-installer-wizard").advance(aPageId);
-
-  this.canAdvance(aCanAdvance);
-  this.canRewind(aCanRewind);
-  this.canCancel(aCanCancel);
 }
 
 nsPluginInstallerWizard.prototype.startPluginInstallation = function (){
@@ -356,7 +352,7 @@ nsPluginInstallerWizard.prototype.startPluginInstallation = function (){
     PluginInstallService.startPluginInstallation(installerPlugins,
                                                  xpiPlugins);
   else
-    this.advancePage(null, true, false, false);
+    this.advancePage(null);
 }
 
 /*
@@ -404,7 +400,7 @@ nsPluginInstallerWizard.prototype.pluginInstallationProgress = function (aPid, a
     document.getElementById("plugin_install_progress_message").value = statMsg;
 
   if (aProgress == 4) {
-    this.advancePage(null, true, false, false);
+    this.advancePage(null);
   }
 }
 
@@ -465,7 +461,6 @@ nsPluginInstallerWizard.prototype.addPluginResultRow = function (aImgSrc, aName,
 
 nsPluginInstallerWizard.prototype.showPluginResults = function (){
   var notInstalledList = "?action=missingplugins";
-  var needsRestart = false;
   var myRows = document.getElementById("pluginResultList");
 
   // clear children
@@ -495,7 +490,7 @@ nsPluginInstallerWizard.prototype.showPluginResults = function (){
 
         // only check needsRestart if the plugin was successfully installed.
         if (myPluginItem.needsRestart)
-          needsRestart = true;
+          this.mNeedsRestart = true;
       }
 
       // manual url - either returned from the webservice or the pluginspage attribute
@@ -542,7 +537,7 @@ nsPluginInstallerWizard.prototype.showPluginResults = function (){
     document.getElementById("pluginSummaryDescription").setAttribute("value", noPluginsInstalled);
   }
 
-  document.getElementById("pluginSummaryRestartNeeded").hidden = !needsRestart;
+  document.getElementById("pluginSummaryRestartNeeded").hidden = !this.mNeedsRestart;
 
   var app = Components.classes["@mozilla.org/xre/app-info;1"]
                       .getService(Components.interfaces.nsIXULAppInfo);
@@ -556,9 +551,20 @@ nsPluginInstallerWizard.prototype.showPluginResults = function (){
 
   document.getElementById("moreInfoLink").addEventListener("click", function() { gPluginInstaller.loadURL("https://pfs.mozilla.org/plugins/" + notInstalledList) }, false);
 
+  if (this.mNeedsRestart) {
+    var cancel = document.getElementById("plugin-installer-wizard").getButton("cancel");
+    cancel.label = this.getString("pluginInstallation.close.label");
+    cancel.accessKey = this.getString("pluginInstallation.close.accesskey");
+    var finish = document.getElementById("plugin-installer-wizard").getButton("finish");
+    finish.label = this.getFormattedString("pluginInstallation.restart.label", [app.name]);
+    finish.accessKey = this.getString("pluginInstallation.restart.accesskey");
+    this.canCancel(true);
+  }
+  else {
+    this.canCancel(false);
+  }
   this.canAdvance(true);
   this.canRewind(false);
-  this.canCancel(false);
 }
 
 nsPluginInstallerWizard.prototype.loadURL = function (aUrl){
@@ -642,6 +648,24 @@ function wizardInit(){
 }
 
 function wizardFinish(){
+  if (gPluginInstaller.mNeedsRestart) {
+    // Notify all windows that an application quit has been requested.
+    var os = Components.classes["@mozilla.org/observer-service;1"]
+                       .getService(Components.interfaces.nsIObserverService);
+    var cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"]
+                               .createInstance(Components.interfaces.nsISupportsPRBool);
+    os.notifyObservers(cancelQuit, "quit-application-requested", "restart");
+
+    // Something aborted the quit process.
+    if (!cancelQuit.data) {
+      var nsIAppStartup = Components.interfaces.nsIAppStartup;
+      var appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"]
+                                 .getService(nsIAppStartup);
+      appStartup.quit(nsIAppStartup.eAttemptQuit | nsIAppStartup.eRestart);
+      return true;
+    }
+  }
+
   // don't refresh if no plugins were found or installed
   if ((gPluginInstaller.mSuccessfullPluginInstallation > 0) &&
       (gPluginInstaller.mPluginInfoArray.length != 0) &&

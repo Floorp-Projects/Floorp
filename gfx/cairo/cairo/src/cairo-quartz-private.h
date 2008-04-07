@@ -92,17 +92,14 @@ _cairo_quartz_create_cgimage (cairo_format_t format,
 			      CGDataProviderReleaseDataCallback releaseCallback,
 			      void *releaseInfo);
 
+CGFontRef
+_cairo_quartz_scaled_font_get_cg_font_ref (cairo_scaled_font_t *sfont);
+
 #endif /* CAIRO_HAS_QUARTZ_SURFACE */
 
-#if CAIRO_HAS_ATSUI_FONT
-ATSUStyle
-_cairo_atsui_scaled_font_get_atsu_style (cairo_scaled_font_t *sfont);
-
-ATSUFontID
-_cairo_atsui_scaled_font_get_atsu_font_id (cairo_scaled_font_t *sfont);
-
+#if CAIRO_HAS_CGFONT_FONT
 CGFontRef
-_cairo_atsui_scaled_font_get_cg_font_ref (cairo_scaled_font_t *sfont);
-#endif /* CAIRO_HAS_ATSUI_FONT */
+_cairo_cgfont_scaled_font_get_cg_font_ref (cairo_scaled_font_t *sfont);
+#endif /* CAIRO_HAS_CGFONT_FONT */
 
 #endif /* CAIRO_QUARTZ_PRIVATE_H */

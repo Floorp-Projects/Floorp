@@ -938,13 +938,13 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
     const PRUint8 GTK2Modifiers = cShift | cControl | cShiftMask | cControlMask;
     if ((mKeyMask & GTK2Modifiers) == GTK2Modifiers &&
         modifiers.First() != PRUnichar(',') &&
-        (('0' <= mDetail && mDetail <= '9') ||
-         ('a' <= mDetail && mDetail <= 'f')))
+        (mDetail == 'u' || mDetail == 'U'))
       ReportKeyConflict(key.get(), modifiers.get(), aKeyElement, "GTK2Conflict");
     const PRUint8 WinModifiers = cControl | cAlt | cControlMask | cAltMask;
     if ((mKeyMask & WinModifiers) == WinModifiers &&
         modifiers.First() != PRUnichar(',') &&
-        'a' <= mDetail && mDetail <= 'f')
+        (('A' <= mDetail && mDetail <= 'Z') ||
+         ('a' <= mDetail && mDetail <= 'z')))
       ReportKeyConflict(key.get(), modifiers.get(), aKeyElement, "WinConflict");
   }
   else {

@@ -37,11 +37,17 @@
 #
 # ***** END LICENSE BLOCK *****
 
-TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
-TEST_JSDIR=${TEST_JSDIR:-${TEST_DIR}/tests/mozilla.org/js}
+if [[ -z "$TEST_DIR" ]]; then
+  cat <<EOF
+`basename $0`: error
 
-if [[ ! -e $TEST_BIN/library.sh ]]; then
+TEST_DIR, the location of the Sisyphus framework, 
+is required to be set prior to calling this script.
+EOF
+  exit 2
+fi
+
+if [[ ! -e $TEST_DIR/bin/library.sh ]]; then
     echo "TEST_DIR=$TEST_DIR"
     echo ""
     echo "This script requires the Sisyphus testing framework. Please "
@@ -53,7 +59,9 @@ if [[ ! -e $TEST_BIN/library.sh ]]; then
     exit 2
 fi
 
-source $TEST_BIN/library.sh
+source $TEST_DIR/bin/library.sh
+
+TEST_JSDIR=`dirname $0`
 
 usage()
 {

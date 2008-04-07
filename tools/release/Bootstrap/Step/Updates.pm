@@ -6,7 +6,7 @@ package Bootstrap::Step::Updates;
 
 use Bootstrap::Step;
 use Bootstrap::Config;
-use Bootstrap::Util qw(CvsCatfile SyncToStaging GetLocaleManifest);
+use Bootstrap::Util qw(CvsCatfile GetLocaleManifest);
 
 use File::Find qw(find);
 use POSIX qw(strftime);
@@ -233,7 +233,7 @@ sub BumpVerifyConfig {
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $verifyDir = $config->Get(var => 'verifyDir');
     my $ausServerUrl = $config->Get(var => 'ausServerUrl');
-    my $externalStagingServer = $config->Get(var => 'externalStagingServer');
+    my $stagingServer = $config->Get(var => 'stagingServer');
     my $verifyConfig = $config->Get(sysvar => 'verifyConfig');
     my $logDir = $config->Get(sysvar => 'logDir');
     my $linuxExtension = $config->GetLinuxExtension();
@@ -320,7 +320,7 @@ sub BumpVerifyConfig {
                 $channel . '" from="/' . $product . '/releases/' . 
                 $oldVersion . '/' . $ftpOsname . '/%locale%/' . $releaseFile .
                 '" aus_server="' . $ausServerUrl . '" ftp_server="' .
-                $externalStagingServer . '/pub/mozilla.org" to="/' . 
+                $stagingServer . '/pub/mozilla.org" to="/' . 
                 $product . '/nightly/' .  $version .  '-candidates/rc' . 
                 $rc . '/' . $nightlyFile . '"' .  "\n");
 
@@ -405,8 +405,6 @@ sub Push {
         logFile => $pushLog,
       );
     }
-
-    SyncToStaging();
 
     # Backup test channels
     $this->Shell(

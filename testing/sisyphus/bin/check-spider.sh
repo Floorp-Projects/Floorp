@@ -37,9 +37,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
-source ${TEST_BIN}/library.sh
+source $TEST_DIR/bin/library.sh
 
 TEST_STARTUP_TRIES=${TEST_STARTUP_TRIES:-3}
 
@@ -128,7 +126,7 @@ fi
 echo # attempt to force Spider to load
 
 tries=1
-while ! $TEST_BIN/timed_run.py ${TEST_STARTUP_TIMEOUT} "Start Spider: try $tries" \
+while ! $TEST_DIR/bin/timed_run.py ${TEST_STARTUP_TIMEOUT} "Start Spider: try $tries" \
     "$executable" -P "$profilename" \
     -spider -start -quit \
     -uri "http://${TEST_HTTP}/bin/start-spider.html" \
@@ -137,5 +135,6 @@ while ! $TEST_BIN/timed_run.py ${TEST_STARTUP_TIMEOUT} "Start Spider: try $tries
   if [ "$tries" -gt $TEST_STARTUP_TRIES  ]; then
       error "Failed to start spider. Exiting..." $LINENO
   fi
+  sleep 30
 done
 

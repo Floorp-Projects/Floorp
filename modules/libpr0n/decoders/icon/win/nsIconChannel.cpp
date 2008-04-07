@@ -273,10 +273,10 @@ static DWORD GetSpecialFolderIcon(nsIFile* aFile, int aFolder, SHFILEINFO* aSFI,
 nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBlocking)
 {
   nsXPIDLCString contentType;
-  nsCAutoString filePath;
+  nsCAutoString fileExt;
   nsCOMPtr<nsIFile> localFile; // file we want an icon for
   PRUint32 desiredImageSize;
-  nsresult rv = ExtractIconInfoFromUrl(getter_AddRefs(localFile), &desiredImageSize, contentType, filePath);
+  nsresult rv = ExtractIconInfoFromUrl(getter_AddRefs(localFile), &desiredImageSize, contentType, fileExt);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // if the file exists, we are going to use it's real attributes...otherwise we only want to use it for it's extension...
@@ -285,6 +285,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
   
   PRBool fileExists = PR_FALSE;
  
+  nsCAutoString filePath;
   if (localFile)
   {
     rv = localFile->Normalize();
@@ -318,12 +319,12 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
     nsCOMPtr<nsIMIMEService> mimeService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString fileExt;
-    mimeService->GetPrimaryExtension(contentType, EmptyCString(), fileExt);
+    nsCAutoString defFileExt;
+    mimeService->GetPrimaryExtension(contentType, fileExt, defFileExt);
     // If the mime service does not know about this mime type, we show
     // the generic icon.
     // In any case, we need to insert a '.' before the extension.
-    filePath = NS_LITERAL_CSTRING(".") + fileExt;
+    filePath = NS_LITERAL_CSTRING(".") + defFileExt;
   }
 
   rv = NS_ERROR_NOT_AVAILABLE;

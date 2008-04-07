@@ -180,7 +180,13 @@ public:
 };
 
 
-NS_IMPL_ISUPPORTS2(nsSplitterFrameInner, nsIDOMMouseListener, nsIDOMMouseMotionListener)
+NS_IMPL_ADDREF(nsSplitterFrameInner)
+NS_IMPL_RELEASE(nsSplitterFrameInner)
+NS_INTERFACE_MAP_BEGIN(nsSplitterFrameInner)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener,nsIDOMMouseListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMouseMotionListener)
+NS_INTERFACE_MAP_END
 
 nsSplitterFrameInner::ResizeType
 nsSplitterFrameInner::GetResizeBefore()

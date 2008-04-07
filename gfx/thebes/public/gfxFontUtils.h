@@ -47,6 +47,11 @@
 
 #include "nsDataHashtable.h"
 
+#include "nsITimer.h"
+#include "nsCOMPtr.h"
+#include "nsIRunnable.h"
+#include "nsThreadUtils.h"
+
 /* Bug 341128 - w32api defines min/max which causes problems with <bitset> */
 #ifdef __MINGW32__
 #undef min
@@ -264,9 +269,11 @@ public:
 
     PRUint32 GetSize() {
         PRUint32 size = 0;
-        for (PRUint32 i = 0; i < mBlocks.Length(); i++)
+        for (PRUint32 i = 0; i < mBlocks.Length(); i++) {
             if (mBlocks[i])
                 size += sizeof(Block);
+            size += sizeof(nsAutoPtr<Block>);
+        }
         return size;
     }
 
@@ -331,6 +338,112 @@ public:
     // for a given font list pref name, set up a list of font names
     static void GetPrefsFontList(const char *aPrefName, nsTArray<nsAutoString>& aFontList);
 
+};
+
+// helper class for loading in font info spaced out at regular intervals
+
+class gfxFontInfoLoader {
+public:
+
+    // state transitions:
+    //   initial ---StartLoader with delay---> timer on delay
+    //   initial ---StartLoader without delay---> timer on interval
+    //   timer on delay ---LoaderTimerFire---> timer on interval
+    //   timer on delay ---CancelLoader---> timer off
+    //   timer on interval ---CancelLoader---> timer off
+    //   timer off ---StartLoader with delay---> timer on delay
+    //   timer off ---StartLoader without delay---> timer on interval
+    typedef enum {
+        stateInitial,
+        stateTimerOnDelay,
+        stateTimerOnInterval,
+        stateTimerOff
+    } TimerState;
+
+    gfxFontInfoLoader() :
+        mInterval(0), mState(stateInitial)
+    {
+    }
+
+    virtual ~gfxFontInfoLoader() {}
+
+    // start timer with an initial delay, then call Run method at regular intervals
+    void StartLoader(PRUint32 aDelay, PRUint32 aInterval) {
+        mInterval = aInterval;
+
+        // sanity check
+        if (mState != stateInitial && mState != stateTimerOff)
+            CancelLoader();
+
+        // set up timer
+        if (!mTimer) {
+            mTimer = do_CreateInstance("@mozilla.org/timer;1");
+            if (!mTimer) {
+                NS_WARNING("Failure to create font info loader timer");
+                return;
+            }
+        }
+
+        // need an initial delay?
+        PRUint32 timerInterval;
+
+        if (aDelay) {
+            mState = stateTimerOnDelay;
+            timerInterval = aDelay;
+        } else {
+            mState = stateTimerOnInterval;
+            timerInterval = mInterval;
+        }
+
+        InitLoader();
+
+        // start timer
+        mTimer->InitWithFuncCallback(LoaderTimerCallback, this, aDelay, nsITimer::TYPE_REPEATING_SLACK);
+    }
+
+    // cancel the timer and cleanup
+    void CancelLoader() {
+        if (mState == stateInitial)
+            return;
+        mState = stateTimerOff;
+        if (mTimer) {
+            mTimer->Cancel();
+        }
+        FinishLoader();
+    }
+
+protected:
+
+    // Init - initialization at start time after initial delay
+    virtual void InitLoader() = 0;
+
+    // Run - called at intervals, return true to indicate done
+    virtual PRBool RunLoader() = 0;
+
+    // Finish - cleanup after done
+    virtual void FinishLoader() = 0;
+
+    static void LoaderTimerCallback(nsITimer *aTimer, void *aThis) {
+        gfxFontInfoLoader *loader = (gfxFontInfoLoader*) aThis;
+        loader->LoaderTimerFire();
+    }
+
+    // start the timer, interval callbacks
+    void LoaderTimerFire() {
+        if (mState == stateTimerOnDelay) {
+            mState = stateTimerOnInterval;
+            mTimer->SetDelay(mInterval);
+        }
+
+        PRBool done = RunLoader();
+        if (done) {
+            CancelLoader();
+        }
+    }
+
+    nsCOMPtr<nsITimer> mTimer;
+    PRUint32 mInterval;
+    TimerState mState;
 };
 
 #endif /* GFX_FONT_UTILS_H */

@@ -262,16 +262,8 @@ var PlacesUIUtils = {
         if (node.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER) {
           if (node.livemark && node.annos) // node is a livemark
             txn = self._getLivemarkCopyTransaction(node, aContainer, index);
-          else {
-            var folderItemsTransactions = [];
-            if (node.dateAdded)
-              folderItemsTransactions.push(self.ptm.editItemDateAdded(null, node.dateAdded));
-            if (node.lastModified)
-              folderItemsTransactions.push(self.ptm.editItemLastModified(null, node.lastModified));
-            var annos = node.annos || [];
-            txn = self.ptm.createFolder(node.title, -1, index, annos,
-                                        folderItemsTransactions);
-          }
+          else
+            txn = self._getFolderCopyTransaction(node, aContainer, index);
         }
         else if (node.type == PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR)
           txn = self.ptm.createSeparator(-1, index);
@@ -377,7 +369,10 @@ var PlacesUIUtils = {
       case PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR:
         // There is no data in a separator, so copying it just amounts to
         // inserting a new separator.
-        return this.ptm.createSeparator(container, index);
+        if (copy)
+          return this.ptm.createSeparator(container, index);
+        // Move the separator otherwise
+        return this.ptm.moveItem(data.id, container, index);
         break;
       default:
         if (type == PlacesUtils.TYPE_X_MOZ_URL || type == PlacesUtils.TYPE_UNICODE) {
@@ -742,6 +737,13 @@ var PlacesUIUtils = {
    */
   getViewForNode: function PU_getViewForNode(aNode) {
     var node = aNode;
+
+    // the view for a <menu> of which its associated menupopup is a places view,
+    // is the menupopup
+    if (node.localName == "menu" && !node.node &&
+        node.firstChild.getAttribute("type") == "places")
+      return node.firstChild;
+
     while (node) {
       // XXXmano: Use QueryInterface(nsIPlacesView) once we implement it...
       if (node.getAttribute("type") == "places")
@@ -1166,9 +1168,6 @@ var PlacesUIUtils = {
         PlacesUtils.annotations.setItemAnnotation(itemId, ORGANIZER_QUERY_ANNO,
                                                   "AllBookmarks", 0, EXPIRE_NEVER);
         self.leftPaneQueries["AllBookmarks"] = itemId;
-
-        // disallow manipulating this folder within the organizer UI
-        PlacesUtils.bookmarks.setFolderReadonly(allBookmarksId, true);
 
         // All Bookmarks->Bookmarks Toolbar Query
         uri = PlacesUtils._uri("place:folder=TOOLBAR");

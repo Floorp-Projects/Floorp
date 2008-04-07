@@ -90,6 +90,7 @@
 #include "nsIFileChannel.h"
 #include "nsIFileURL.h"
 #include "nsIIOService.h"
+#include "nsIJARProtocolHandler.h"
 #include "nsIJARURI.h"
 #include "nsILocalFile.h"
 #include "nsILocaleService.h"
@@ -487,6 +488,22 @@ nsChromeRegistry::Init()
 
   NS_RegisterStaticAtoms(atoms, NS_ARRAY_LENGTH(atoms));
   
+  // Check to see if necko and the JAR protocol handler are registered yet
+  // if not, somebody is doing work during XPCOM registration that they
+  // shouldn't be doing. See bug 292549, where JS components are trying
+  // to call Components.utils.import("chrome:///") early in registration
+
+  nsCOMPtr<nsIIOService> io (do_GetIOService());
+  if (!io) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIProtocolHandler> ph;
+  rv = io->GetProtocolHandler("jar", getter_AddRefs(ph));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIJARProtocolHandler> jph = do_QueryInterface(ph);
+  if (!jph)
+    return NS_ERROR_NOT_INITIALIZED;
+
   if (!PL_DHashTableInit(&mPackagesHash, &kTableOps,
                          nsnull, sizeof(PackageEntry), 16))
     return NS_ERROR_FAILURE;
@@ -1145,6 +1162,7 @@ nsChromeRegistry::CheckForNewChrome()
 
   nsCOMPtr<nsIFileURL> manifestFileURL (do_QueryInterface(manifestURI));
   NS_ASSERTION(manifestFileURL, "Not a nsIFileURL!");
+  NS_ENSURE_TRUE(manifestFileURL, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIFile> manifest;
   manifestFileURL->GetFile(getter_AddRefs(manifest));

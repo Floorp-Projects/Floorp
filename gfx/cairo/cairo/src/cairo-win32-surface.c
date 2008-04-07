@@ -410,9 +410,15 @@ _cairo_win32_surface_create_similar_internal (void	    *abstract_src,
 	saved_dc_bitmap = SelectObject (ddb_dc, ddb);
 
 	new_surf = (cairo_win32_surface_t*) cairo_win32_surface_create (ddb_dc);
-	new_surf->bitmap = ddb;
-	new_surf->saved_dc_bitmap = saved_dc_bitmap;
-	new_surf->is_dib = FALSE;
+	if (new_surf->base.status == CAIRO_STATUS_SUCCESS) {
+	    new_surf->bitmap = ddb;
+	    new_surf->saved_dc_bitmap = saved_dc_bitmap;
+	    new_surf->is_dib = FALSE;
+	} else {
+	    SelectObject (ddb_dc, saved_dc_bitmap);
+	    DeleteDC (ddb_dc);
+	    DeleteObject (ddb);
+	}
     }
 
     return (cairo_surface_t*) new_surf;

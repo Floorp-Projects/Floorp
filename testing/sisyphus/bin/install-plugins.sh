@@ -37,9 +37,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
-source ${TEST_BIN}/library.sh
+source $TEST_DIR/bin/library.sh
 
 #
 # options processing

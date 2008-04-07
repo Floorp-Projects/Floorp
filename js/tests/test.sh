@@ -37,11 +37,17 @@
 #
 # ***** END LICENSE BLOCK *****
 
-TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
-TEST_JSDIR=${TEST_JSDIR:-$TEST_DIR/tests/mozilla.org/js}
+if [[ -z "$TEST_DIR" ]]; then
+  cat <<EOF
+`basename $0`: error
 
-if [[ ! -e $TEST_BIN/library.sh ]]; then
+TEST_DIR, the location of the Sisyphus framework, 
+is required to be set prior to calling this script.
+EOF
+  exit 2
+fi
+
+if [[ ! -e $TEST_DIR/bin/library.sh ]]; then
     echo "TEST_DIR=$TEST_DIR"
     echo ""
     echo "This script requires the Sisyphus testing framework. Please "
@@ -49,23 +55,13 @@ if [[ ! -e $TEST_BIN/library.sh ]]; then
     echo "and set the environment variable TEST_DIR to the directory where it"
     echo "located."
     echo ""
-fi
 
-if [[ ! -e $TEST_JSDIR/runtests.sh ]]; then
-    echo "TEST_JSDIR=$TEST_JSDIR"
-    echo ""
-    echo "If the TEST_JSDIR environment variable is not set, this script "
-    echo "assumes the JavaScript Tests live in \${TEST_DIR}/www/tests/mozilla.org/js"
-    echo "If this is not correct, please set the TEST_JSDIR environment variable"
-    echo "to point to the directory containing the JavaScript Test Library."
-    echo ""
-fi
-
-if [[ ! -e $TEST_BIN/library.sh || ! -e $TEST_JSDIR/runtests.sh ]]; then
     exit 2
 fi
 
-source ${TEST_BIN}/library.sh
+source $TEST_DIR/bin/library.sh
+
+TEST_JSDIR=`dirname $0`
 
 #
 # options processing

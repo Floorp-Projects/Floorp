@@ -48,7 +48,6 @@
 #define FloatToFixed(a)     ((Fixed)((float)(a) * fixed1))
 #endif
 
-#include <Carbon/Carbon.h>
 #include <limits.h>
 
 #undef QUARTZ_DEBUG
@@ -102,19 +101,22 @@ CG_EXTERN void CGContextReplacePathWithStrokedPath (CGContextRef);
 CG_EXTERN CGImageRef CGBitmapContextCreateImage (CGContextRef);
 #endif
 
-/* Only present in 10.4+ */
+/* Some of these are present in earlier versions of the OS than where
+ * they are public; others are not public at all (CGContextCopyPath,
+ * CGContextReplacePathWithClipPath, many of the getters, etc.)
+ */
 static void (*CGContextClipToMaskPtr) (CGContextRef, CGRect, CGImageRef) = NULL;
-/* Only present in 10.5+ */
 static void (*CGContextDrawTiledImagePtr) (CGContextRef, CGRect, CGImageRef) = NULL;
 static unsigned int (*CGContextGetTypePtr) (CGContextRef) = NULL;
 static void (*CGContextSetShouldAntialiasFontsPtr) (CGContextRef, bool) = NULL;
-static void (*CGContextSetShouldSmoothFontsPtr) (CGContextRef, bool) = NULL;
 static bool (*CGContextGetShouldAntialiasFontsPtr) (CGContextRef) = NULL;
 static bool (*CGContextGetShouldSmoothFontsPtr) (CGContextRef) = NULL;
 static void (*CGContextSetAllowsFontSmoothingPtr) (CGContextRef, bool) = NULL;
 static bool (*CGContextGetAllowsFontSmoothingPtr) (CGContextRef) = NULL;
 static CGPathRef (*CGContextCopyPathPtr) (CGContextRef) = NULL;
 static void (*CGContextReplacePathWithClipPathPtr) (CGContextRef) = NULL;
+
+static SInt32 _cairo_quartz_osx_version = 0x0;
 
 static cairo_bool_t _cairo_quartz_symbol_lookup_done = FALSE;
 
@@ -143,13 +145,17 @@ static void quartz_ensure_symbols(void)
     CGContextDrawTiledImagePtr = dlsym(RTLD_DEFAULT, "CGContextDrawTiledImage");
     CGContextGetTypePtr = dlsym(RTLD_DEFAULT, "CGContextGetType");
     CGContextSetShouldAntialiasFontsPtr = dlsym(RTLD_DEFAULT, "CGContextSetShouldAntialiasFonts");
-    CGContextSetShouldSmoothFontsPtr = dlsym(RTLD_DEFAULT, "CGContextSetShouldSmoothFonts");
     CGContextGetShouldAntialiasFontsPtr = dlsym(RTLD_DEFAULT, "CGContextGetShouldAntialiasFonts");
     CGContextGetShouldSmoothFontsPtr = dlsym(RTLD_DEFAULT, "CGContextGetShouldSmoothFonts");
     CGContextCopyPathPtr = dlsym(RTLD_DEFAULT, "CGContextCopyPath");
     CGContextReplacePathWithClipPathPtr = dlsym(RTLD_DEFAULT, "CGContextReplacePathWithClipPath");
     CGContextGetAllowsFontSmoothingPtr = dlsym(RTLD_DEFAULT, "CGContextGetAllowsFontSmoothing");
     CGContextSetAllowsFontSmoothingPtr = dlsym(RTLD_DEFAULT, "CGContextSetAllowsFontSmoothing");
+
+    if (Gestalt(gestaltSystemVersion, &_cairo_quartz_osx_version) != noErr) {
+	// assume 10.4
+	_cairo_quartz_osx_version = 0x1040;
+    }
 
     _cairo_quartz_symbol_lookup_done = TRUE;
 }
@@ -479,6 +485,10 @@ _cairo_quartz_fixup_unbounded_operation (cairo_quartz_surface_t *surface,
 	CGContextTranslateCTM (cgc, op->u.show_glyphs.origin.x, op->u.show_glyphs.origin.y);
 
 	if (op->u.show_glyphs.isClipping) {
+	    /* Note that the comment in show_glyphs about kCGTextClip
+	     * and the text transform still applies here; however, the
+	     * cg_advances we have were already transformed, so we
+	     * don't have to do anything. */
 	    CGContextSetTextDrawingMode (cgc, kCGTextClip);
 	    CGContextSaveGState (cgc);
 	}
@@ -540,7 +550,6 @@ static void
 ComputeGradientValue (void *info, const float *in, float *out)
 {
     double fdist = *in;
-    cairo_fixed_t fdist_fix;
     cairo_gradient_pattern_t *grad = (cairo_gradient_pattern_t*) info;
     unsigned int i;
 
@@ -556,10 +565,8 @@ ComputeGradientValue (void *info, const float *in, float *out)
 	}
     }
 
-    fdist_fix = _cairo_fixed_from_double(fdist);
-
     for (i = 0; i < grad->n_stops; i++) {
-	if (grad->stops[i].x > fdist_fix)
+	if (grad->stops[i].offset > fdist)
 	    break;
     }
 
@@ -571,8 +578,8 @@ ComputeGradientValue (void *info, const float *in, float *out)
 	out[2] = grad->stops[i].color.blue;
 	out[3] = grad->stops[i].color.alpha;
     } else {
-	float ax = _cairo_fixed_to_double(grad->stops[i-1].x);
-	float bx = _cairo_fixed_to_double(grad->stops[i].x) - ax;
+	float ax = grad->stops[i-1].offset;
+	float bx = grad->stops[i].offset - ax;
 	float bp = (fdist - ax)/bx;
 	float ap = 1.0 - bp;
 
@@ -1731,7 +1738,7 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
     cairo_int_status_t rv = CAIRO_STATUS_SUCCESS;
     cairo_quartz_action_t action;
     quartz_stroke_t stroke;
-    CGAffineTransform strokeTransform;
+    CGAffineTransform origCTM, strokeTransform;
     CGPathRef path_for_unbounded = NULL;
 
     ND((stderr, "%p _cairo_quartz_surface_stroke op %d source->type %d\n", surface, op, source->type));
@@ -1752,6 +1759,9 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
     CGContextSetLineCap (surface->cgContext, _cairo_quartz_cairo_line_cap_to_quartz (style->line_cap));
     CGContextSetLineJoin (surface->cgContext, _cairo_quartz_cairo_line_join_to_quartz (style->line_join));
     CGContextSetMiterLimit (surface->cgContext, style->miter_limit);
+
+    origCTM = CGContextGetCTM (surface->cgContext);
+
     _cairo_quartz_cairo_matrix_to_quartz (ctm, &strokeTransform);
     CGContextConcatCTM (surface->cgContext, strokeTransform);
 
@@ -1798,6 +1808,8 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
 	CGContextReplacePathWithStrokedPath (surface->cgContext);
 	CGContextClip (surface->cgContext);
 
+	CGContextSetCTM (surface->cgContext, origCTM);
+
 	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
 	CGContextTranslateCTM (surface->cgContext, 0, surface->sourceImageRect.size.height);
 	CGContextScaleCTM (surface->cgContext, 1, -1);
@@ -1809,6 +1821,8 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
     } else if (action == DO_SHADING) {
 	CGContextReplacePathWithStrokedPath (surface->cgContext);
 	CGContextClip (surface->cgContext);
+
+	CGContextSetCTM (surface->cgContext, origCTM);
 
 	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
 	CGContextDrawShading (surface->cgContext, surface->sourceShading);
@@ -1854,7 +1868,7 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
     return rv;
 }
 
-#if CAIRO_HAS_ATSUI_FONT
+#if CAIRO_HAS_QUARTZ_FONT
 static cairo_int_status_t
 _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 				   cairo_operator_t op,
@@ -1889,7 +1903,7 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
     if (op == CAIRO_OPERATOR_DEST)
 	return CAIRO_STATUS_SUCCESS;
 
-    if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_ATSUI)
+    if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_QUARTZ)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     CGContextSaveGState (surface->cgContext);
@@ -1909,33 +1923,31 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
     CGContextSetCompositeOperation (surface->cgContext, _cairo_quartz_cairo_operator_to_quartz (op));
 
     /* this doesn't addref */
-    cgfref = _cairo_atsui_scaled_font_get_cg_font_ref (scaled_font);
+    cgfref = _cairo_quartz_scaled_font_get_cg_font_ref (scaled_font);
     CGContextSetFont (surface->cgContext, cgfref);
     CGContextSetFontSize (surface->cgContext, 1.0);
 
-    if (CGContextSetShouldAntialiasFontsPtr) {
-	switch (scaled_font->options.antialias) {
-	    case CAIRO_ANTIALIAS_SUBPIXEL:
-		CGContextSetShouldAntialiasFontsPtr (surface->cgContext, TRUE);
-		CGContextSetShouldSmoothFontsPtr (surface->cgContext, TRUE);
-		if (CGContextSetAllowsFontSmoothingPtr &&
-		    !CGContextGetAllowsFontSmoothingPtr (surface->cgContext))
-		{
-		    didForceFontSmoothing = TRUE;
-		    CGContextSetAllowsFontSmoothingPtr (surface->cgContext, TRUE);
-		}
-		break;
-	    case CAIRO_ANTIALIAS_NONE:
-		CGContextSetShouldAntialiasFontsPtr (surface->cgContext, FALSE);
-		break;
-	    case CAIRO_ANTIALIAS_GRAY:
-		CGContextSetShouldAntialiasFontsPtr (surface->cgContext, TRUE);
-		CGContextSetShouldSmoothFontsPtr (surface->cgContext, FALSE);
-		break;
-	    case CAIRO_ANTIALIAS_DEFAULT:
-		/* Don't do anything */
-		break;
-	}
+    switch (scaled_font->options.antialias) {
+	case CAIRO_ANTIALIAS_SUBPIXEL:
+	    CGContextSetShouldAntialias (surface->cgContext, TRUE);
+	    CGContextSetShouldSmoothFonts (surface->cgContext, TRUE);
+	    if (CGContextSetAllowsFontSmoothingPtr &&
+		!CGContextGetAllowsFontSmoothingPtr (surface->cgContext))
+	    {
+		didForceFontSmoothing = TRUE;
+		CGContextSetAllowsFontSmoothingPtr (surface->cgContext, TRUE);
+	    }
+	    break;
+	case CAIRO_ANTIALIAS_NONE:
+	    CGContextSetShouldAntialias (surface->cgContext, FALSE);
+	    break;
+	case CAIRO_ANTIALIAS_GRAY:
+	    CGContextSetShouldAntialias (surface->cgContext, TRUE);
+	    CGContextSetShouldSmoothFonts (surface->cgContext, FALSE);
+	    break;
+	case CAIRO_ANTIALIAS_DEFAULT:
+	    /* Don't do anything */
+	    break;
     }
 
     if (num_glyphs > STATIC_BUF_SIZE) {
@@ -1984,10 +1996,13 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 	yprev = yf;
     }
 
-    if (isClipping) {
-	/* If we're clipping, we get multiplied by the inverse of our text matrix; no,
-	 * I don't understand why this is any different.  So pre-apply our textTransform.
-	 * Note that the new CGContextShowGlyphsAtPositions has a similar problem. */
+    if (_cairo_quartz_osx_version >= 0x1050 && isClipping) {
+	/* If we're clipping, OSX 10.5 (at least as of 10.5.2) has a
+	 * bug (apple bug ID #5834794) where the glyph
+	 * advances/positions are not transformed by the text matrix
+	 * if kCGTextClip is being used.  So, we pre-transform here.
+	 * 10.4 does not have this problem (as of 10.4.11).
+	 */
 	for (i = 0; i < num_glyphs - 1; i++)
 	    cg_advances[i] = CGSizeApplyAffineTransform(cg_advances[i], textTransform);
     }
@@ -2060,7 +2075,7 @@ BAIL:
 
     return rv;
 }
-#endif /* CAIRO_HAS_ATSUI_FONT */
+#endif /* CAIRO_HAS_QUARTZ_FONT */
 
 static cairo_int_status_t
 _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
@@ -2293,11 +2308,11 @@ static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
     _cairo_quartz_surface_mask,
     _cairo_quartz_surface_stroke,
     _cairo_quartz_surface_fill,
-#if CAIRO_HAS_ATSUI_FONT
+#if CAIRO_HAS_QUARTZ_FONT
     _cairo_quartz_surface_show_glyphs,
 #else
-    NULL, /* surface_show_glyphs */
-#endif /* CAIRO_HAS_ATSUI_FONT */
+    NULL, /* show_glyphs */
+#endif
 
     NULL, /* snapshot */
     NULL, /* is_similar */
@@ -2358,22 +2373,20 @@ _cairo_quartz_surface_create_internal (CGContextRef cgContext,
  * @height: height of the surface, in pixels
  *
  * Creates a Quartz surface that wraps the given CGContext.  The
- * CGContext is assumed to be in the QuickDraw coordinate space (that
- * is, with the origin at the upper left and the Y axis increasing
- * downward.)  If the CGContext is in the Quartz coordinate space (with
- * the origin at the bottom left), then it should be flipped before
- * this function is called:
+ * CGContext is assumed to be in the standard Cairo coordinate space
+ * (that is, with the origin at the upper left and the Y axis
+ * increasing downward).  If the CGContext is in the Quartz coordinate
+ * space (with the origin at the bottom left), then it should be
+ * flipped before this function is called.  The flip can be accomplished
+ * using a translate and a scale; for example:
  *
  * <informalexample><programlisting>
  * CGContextTranslateCTM (cgContext, 0.0, height);
  * CGContextScaleCTM (cgContext, 1.0, -1.0);
  * </programlisting></informalexample>
  *
- * A very small number of Cairo operations cannot be translated to
- * Quartz operations; those operations will fail on this surface.
- * If all Cairo operations are required to succeed, consider rendering
- * to a surface created by cairo_quartz_surface_create() and then copying
- * the result to the CGContext.
+ * All Cairo operations are implemented in terms of Quartz operations,
+ * as long as Quartz-compatible elements are used (such as Quartz fonts).
  *
  * Return value: the newly created Cairo surface.
  *
