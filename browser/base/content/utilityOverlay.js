@@ -578,8 +578,8 @@ function openNewTabWith(aURL, aDocument, aPostData, aEvent,
   // open link in new tab
   var referrerURI = aDocument ? aDocument.documentURIObject : aReferrer;
   var browser = top.document.getElementById("content");
-  return browser.loadOneTab(aURL, referrerURI, originCharset, aPostData,
-                            loadInBackground, aAllowThirdPartyFixup || false);
+  browser.loadOneTab(aURL, referrerURI, originCharset, aPostData,
+                     loadInBackground, aAllowThirdPartyFixup || false);
 }
 
 function openNewWindowWith(aURL, aDocument, aPostData, aAllowThirdPartyFixup,
@@ -598,9 +598,9 @@ function openNewWindowWith(aURL, aDocument, aPostData, aAllowThirdPartyFixup,
     charsetArg = "charset=" + window.content.document.characterSet;
 
   var referrerURI = aDocument ? aDocument.documentURIObject : aReferrer;
-  return window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no",
-                           aURL, charsetArg, referrerURI, aPostData,
-                           aAllowThirdPartyFixup);
+  window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no",
+                    aURL, charsetArg, referrerURI, aPostData,
+                    aAllowThirdPartyFixup);
 }
 
 /**
