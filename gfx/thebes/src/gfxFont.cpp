@@ -515,12 +515,15 @@ void
 gfxFont::SetupGlyphExtents(gfxContext *aContext, PRUint32 aGlyphID, PRBool aNeedTight,
                            gfxGlyphExtents *aExtents)
 {
+    gfxMatrix matrix = aContext->CurrentMatrix();
+    aContext->IdentityMatrix();
     cairo_glyph_t glyph;
     glyph.index = aGlyphID;
     glyph.x = 0;
     glyph.y = 0;
     cairo_text_extents_t extents;
     cairo_glyph_extents(aContext->GetCairo(), &glyph, 1, &extents);
+    aContext->SetMatrix(matrix);
 
     const Metrics& fontMetrics = GetMetrics();
     PRUint32 appUnitsPerDevUnit = aExtents->GetAppUnitsPerDevUnit();
