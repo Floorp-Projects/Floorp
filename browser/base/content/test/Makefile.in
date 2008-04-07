@@ -54,6 +54,7 @@ _BROWSER_FILES = browser_bug321000.js \
                  browser_bug409481.js \
                  browser_autodiscovery.js \
                  browser_bug420160.js \
+                 browser_bug423833.js \
                  autodiscovery.html \
                  moz.png \
                  browser_getshortcutoruri.js \
