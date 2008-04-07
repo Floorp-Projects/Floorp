@@ -812,27 +812,45 @@ CookieStore.prototype = {
 
   _editCommand: function CookieStore__editCommand(command) {
     /* we got a command to change a cookie in the local browser
-       in order to sync with the server.
-    
-       if the local copy of the cookie is more-recently modified, it
-       should be kept, but if it's older, it should be replaced with
-       the server's copy.
-    */
-
-    /* Problem: The nsICookie interface doesn't seem to include the date/time
-       that the cookie was set -- only the expiry.  TODO: Figure out
-       the best way to deal with this. */
+       in order to sync with the server. */
     this._log.info("CookieStore got editCommand: " + command );
 
-    this._log.debug( "Info on command object passed in: " );
-    for ( var x in command )
-      {
-	this._log.debug( "Command." + x + " = " + command[x] );
-      }
-    for ( var y in command.data )
-      {
-	this._log.debug( "Command.data." + y + " = " + command.data[y] );
-      }
+    /* Look up the cookie that matches the one in the command: */
+    var iter = this._cookieManager.enumerator;
+    var matchingCookie = null;
+    while (iter.hasMoreElements()){
+      let cookie = iter.getNext();
+      if (cookie instanceof Ci.nsICookie){
+        // see if host:path:name of cookie matches GUID given in command 
+	let key = cookie.host + ":" + cookie.path + ":" + cookie.name;
+	if (key == command.GUID) {
+	  matchingCookie = cookie;
+	  break;
+	}
+      }   
+    }
+    // Update values in the cookie:
+    for (var key in command.data) {
+      // Whatever values command.data has, use them
+      matchingCookie[ key ] = command.data[ key ]
+    }
+    // Remove the old incorrect cookie from the manager:
+    this._cookieManager.remove( matchingCookie.host,
+				matchingCookie.name,
+				matchingCookie.path,
+				false );
+    // Re-add the new updated cookie:
+    this._cookieManager.add( matchingCookie.host,
+			     matchingCookie.path,
+			     matchingCookie.name,
+			     matchingCookie.value,
+			     matchingCookie.isSecure,
+			     matchingCookie.isHttpOnly,
+			     matchingCookie.isSession,
+			     matchingCookie.expiry );
+    
+    // Also, there's an exception raised because
+    // this._data[comand.GUID] is undefined
   },
 
   wrap: function CookieStore_wrap() {
