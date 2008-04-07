@@ -91,6 +91,11 @@ struct _cairo_xlib_surface {
     cairo_filter_t filter;
     int repeat;
     XTransform xtransform;
+
+    uint32_t a_mask;
+    uint32_t r_mask;
+    uint32_t g_mask;
+    uint32_t b_mask;
 };
 
 enum {

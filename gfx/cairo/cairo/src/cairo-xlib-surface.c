@@ -48,6 +48,16 @@
 typedef int (*cairo_xlib_error_func_t) (Display     *display,
 					XErrorEvent *event);
 
+static cairo_surface_t *
+_cairo_xlib_surface_create_internal (Display		       *dpy,
+				     Drawable		        drawable,
+				     Screen		       *screen,
+				     Visual		       *visual,
+				     XRenderPictFormat	       *xrender_format,
+				     int			width,
+				     int			height,
+				     int			depth);
+
 static cairo_status_t
 _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface);
 
@@ -70,10 +80,6 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 cairo_glyph_t       *glyphs,
 				 int		      num_glyphs,
 				 cairo_scaled_font_t *scaled_font);
-
-#if CAIRO_HAS_XLIB_XRENDER_SURFACE
-slim_hidden_proto (cairo_xlib_surface_create_with_xrender_format);
-#endif
 
 /*
  * Instead of taking two round trips for each blending request,
@@ -173,9 +179,11 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
 			 depth);
 
     surface = (cairo_xlib_surface_t *)
-	cairo_xlib_surface_create_with_xrender_format (dpy, pix, src->screen,
-						       xrender_format,
-						       width, height);
+	      _cairo_xlib_surface_create_internal (dpy, pix,
+		                                   src->screen, src->visual,
+						   xrender_format,
+						   width, height,
+						   depth);
     if (surface->base.status) {
 	XFreePixmap (dpy, pix);
 	return &surface->base;
@@ -251,10 +259,11 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
 			 xrender_format->depth);
 
     surface = (cairo_xlib_surface_t *)
-	cairo_xlib_surface_create_with_xrender_format (src->dpy, pix,
-						       src->screen,
-						       xrender_format,
-						       width, height);
+	      _cairo_xlib_surface_create_internal (src->dpy, pix,
+		                                   src->screen, src->visual,
+						   xrender_format,
+						   width, height,
+						   xrender_format->depth);
     if (surface->base.status != CAIRO_STATUS_SUCCESS) {
 	XFreePixmap (src->dpy, pix);
 	return &surface->base;
@@ -455,18 +464,70 @@ _swap_ximage_to_native (XImage *ximage)
     }
 }
 
+/* Given a mask, (with a single sequence of contiguous 1 bits), return
+ * the number of 1 bits in 'width' and the number of 0 bits to its
+ * right in 'shift'. */
+static inline void
+_characterize_field (uint32_t mask, int *width, int *shift)
+{
+    *width = _cairo_popcount (mask);
+    /* The final '& 31' is to force a 0 mask to result in 0 shift. */
+    *shift = _cairo_popcount ((mask - 1) & ~mask) & 31;
+}
+
+/* Convert a field of 'width' bits to 'new_width' bits with correct
+ * rounding. */
+static inline uint32_t
+_resize_field (uint32_t field, int width, int new_width)
+{
+    if (width == 0)
+	return 0;
+
+    if (width >= new_width) {
+	return field >> (width - new_width);
+    } else {
+	uint32_t result = field << (new_width - width);
+
+	while (width < new_width) {
+	    result |= result >> width;
+	    width <<= 1;
+	}
+	return result;
+    }
+}
+
+/* Given a shifted field value, (described by 'width' and 'shift),
+ * resize it 8-bits and return that value.
+ *
+ * Note that the original field value must not have any non-field bits
+ * set.
+ */
+static inline uint32_t
+_field_to_8 (uint32_t field, int width, int shift)
+{
+    return _resize_field (field >> shift, width, 8);
+}
+
+/* Given an 8-bit value, convert it to a field of 'width', shift it up
+ *  to 'shift, and return it. */
+static inline uint32_t
+_field_from_8 (uint32_t field, int width, int shift)
+{
+    return _resize_field (field, 8, width) << shift;
+}
+
 static cairo_status_t
 _get_image_surface (cairo_xlib_surface_t    *surface,
 		    cairo_rectangle_int_t   *interest_rect,
 		    cairo_image_surface_t  **image_out,
 		    cairo_rectangle_int_t   *image_rect)
 {
+    cairo_int_status_t status;
     cairo_image_surface_t *image;
     XImage *ximage;
-    short x1, y1, x2, y2;
-    cairo_format_masks_t masks;
+    unsigned short x1, y1, x2, y2;
     pixman_format_code_t pixman_format;
-    cairo_status_t status;
+    cairo_format_masks_t xlib_masks;
 
     x1 = 0;
     y1 = 0;
@@ -567,55 +628,127 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 
     _swap_ximage_to_native (ximage);
 
-    /*
-     * Compute the pixel format masks from either a XrenderFormat or
-     * else from a visual; failing that we assume the drawable is an
-     * alpha-only pixmap as it could only have been created that way
-     * through the cairo_xlib_surface_create_for_bitmap function.
-     */
-    if (surface->xrender_format) {
-	masks.bpp = ximage->bits_per_pixel;
-	masks.red_mask =   (unsigned long) surface->xrender_format->direct.redMask
-	    << surface->xrender_format->direct.red;
-	masks.green_mask = (unsigned long) surface->xrender_format->direct.greenMask
-	    << surface->xrender_format->direct.green;
-	masks.blue_mask =  (unsigned long) surface->xrender_format->direct.blueMask
-	    << surface->xrender_format->direct.blue;
-	masks.alpha_mask = (unsigned long) surface->xrender_format->direct.alphaMask
-	    << surface->xrender_format->direct.alpha;
-    } else if (surface->visual) {
-	masks.bpp = ximage->bits_per_pixel;
-	masks.alpha_mask = 0;
-	masks.red_mask = surface->visual->red_mask;
-	masks.green_mask = surface->visual->green_mask;
-	masks.blue_mask = surface->visual->blue_mask;
+    xlib_masks.bpp = ximage->bits_per_pixel;
+    xlib_masks.alpha_mask = surface->a_mask;
+    xlib_masks.red_mask = surface->r_mask;
+    xlib_masks.green_mask = surface->g_mask;
+    xlib_masks.blue_mask = surface->b_mask;
+
+    status = _pixman_format_from_masks (&xlib_masks, &pixman_format);
+    if (status == CAIRO_STATUS_SUCCESS) {
+	image = (cairo_image_surface_t*)
+	    _cairo_image_surface_create_with_pixman_format ((unsigned char *) ximage->data,
+							    pixman_format,
+							    ximage->width,
+							    ximage->height,
+							    ximage->bytes_per_line);
+	status = image->base.status;
+	if (status) {
+	    XDestroyImage (ximage);
+	    return status;
+	}
+
+	/* Let the surface take ownership of the data */
+	_cairo_image_surface_assume_ownership_of_data (image);
+	ximage->data = NULL;
     } else {
-	masks.bpp = ximage->bits_per_pixel;
-	masks.red_mask = 0;
-	masks.green_mask = 0;
-	masks.blue_mask = 0;
-	if (surface->depth < 32)
-	    masks.alpha_mask = (1 << surface->depth) - 1;
-	else
-	    masks.alpha_mask = 0xffffffff;
+	cairo_format_t format;
+	unsigned char *data;
+	uint32_t *row;
+	uint32_t in_pixel, out_pixel;
+	unsigned int rowstride;
+	uint32_t a_mask=0, r_mask=0, g_mask=0, b_mask=0;
+	int a_width=0, r_width=0, g_width=0, b_width=0;
+	int a_shift=0, r_shift=0, g_shift=0, b_shift=0;
+	int x, y;
+	XColor *colors = NULL;
+
+	/* The visual we are dealing with is not supported by the
+	 * standard pixman formats. So we must first convert the data
+	 * to a supported format. */
+	if (surface->visual->class == TrueColor) {
+	    cairo_bool_t has_color;
+	    cairo_bool_t has_alpha;
+
+	    has_color = (surface->r_mask ||
+			 surface->g_mask ||
+			 surface->b_mask);
+	    has_alpha = surface->a_mask;
+
+	    if (has_color) {
+		if (has_alpha) {
+		    format = CAIRO_FORMAT_ARGB32;
+		} else {
+		    format = CAIRO_FORMAT_RGB24;
+		}
+	    } else {
+		/* XXX: Using CAIRO_FORMAT_A8 here would be more
+		 * efficient, but would require slightly different code in
+		 * the image conversion to put the alpha channel values
+		 * into the right place. */
+		format = CAIRO_FORMAT_ARGB32;
+	    }
+
+	    a_mask = surface->a_mask;
+	    r_mask = surface->r_mask;
+	    g_mask = surface->g_mask;
+	    b_mask = surface->b_mask;
+
+	    _characterize_field (a_mask, &a_width, &a_shift);
+	    _characterize_field (r_mask, &r_width, &r_shift);
+	    _characterize_field (g_mask, &g_width, &g_shift);
+	    _characterize_field (b_mask, &b_width, &b_shift);
+
+	} else {
+	    cairo_xlib_visual_info_t *visual_info;
+
+	    format = CAIRO_FORMAT_RGB24;
+
+	    status = _cairo_xlib_screen_get_visual_info (surface->screen_info,
+							 surface->visual,
+							 &visual_info);
+	    if (status) {
+		XDestroyImage (ximage);
+		return status;
+	    }
+
+	    colors = visual_info->colors;
+	}
+
+	image = (cairo_image_surface_t *) cairo_image_surface_create
+	    (format, ximage->width, ximage->height);
+	status = image->base.status;
+	if (status) {
+	    XDestroyImage (ximage);
+	    return status;
+	}
+
+	data = cairo_image_surface_get_data (&image->base);
+	rowstride = cairo_image_surface_get_stride (&image->base) >> 2;
+	row = (uint32_t *) data;
+	for (y = 0; y < ximage->height; y++) {
+	    for (x = 0; x < ximage->width; x++) {
+		in_pixel = XGetPixel (ximage, x, y);
+		if (surface->visual->class == TrueColor) {
+		    out_pixel = (
+			_field_to_8 (in_pixel & a_mask, a_width, a_shift) << 24 |
+			_field_to_8 (in_pixel & r_mask, r_width, r_shift) << 16 |
+			_field_to_8 (in_pixel & g_mask, g_width, g_shift) << 8 |
+			_field_to_8 (in_pixel & b_mask, b_width, b_shift));
+		} else {
+		    XColor *color;
+		    color = &colors[in_pixel & 0xff];
+		    out_pixel = (
+			_field_to_8 (color->red,   16, 0) << 16 |
+			_field_to_8 (color->green, 16, 0) << 8 |
+			_field_to_8 (color->blue,  16, 0));
+		}
+		row[x] = out_pixel;
+	    }
+	    row += rowstride;
+	}
     }
 
-    pixman_format = _pixman_format_from_masks (&masks);
-    image = (cairo_image_surface_t*)
-	_cairo_image_surface_create_with_pixman_format ((unsigned char *) ximage->data,
-							pixman_format,
-							ximage->width,
-							ximage->height,
-							ximage->bytes_per_line);
-    status = image->base.status;
-    if (status) {
-	XDestroyImage (ximage);
-	return status;
-    }
-
-    /* Let the surface take ownership of the data */
-    _cairo_image_surface_assume_ownership_of_data (image);
-    ximage->data = NULL;
     XDestroyImage (ximage);
 
     *image_out = image;
@@ -719,39 +852,118 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 		     int                    dst_y)
 {
     XImage ximage;
-    uint32_t bpp, red, green, blue;
+    cairo_format_masks_t image_masks;
     int native_byte_order = _native_byte_order_lsb () ? LSBFirst : MSBFirst;
     cairo_status_t status;
+    cairo_bool_t own_data;
+    unsigned long *rgb333_to_pseudocolor = NULL;
 
-    _pixman_format_to_masks (image->pixman_format, &bpp, &red, &green, &blue);
-    
+    _pixman_format_to_masks (image->pixman_format, &image_masks);
+
     ximage.width = image->width;
     ximage.height = image->height;
     ximage.format = ZPixmap;
-    ximage.data = (char *)image->data;
     ximage.byte_order = native_byte_order;
     ximage.bitmap_unit = 32;	/* always for libpixman */
     ximage.bitmap_bit_order = native_byte_order;
     ximage.bitmap_pad = 32;	/* always for libpixman */
-    ximage.depth = image->depth;
-    ximage.bytes_per_line = image->stride;
-    ximage.bits_per_pixel = bpp;
-    ximage.red_mask = red;
-    ximage.green_mask = green;
-    ximage.blue_mask = blue;
+    ximage.depth = surface->depth;
+    ximage.red_mask = surface->r_mask;
+    ximage.green_mask = surface->g_mask;
+    ximage.blue_mask = surface->b_mask;
     ximage.xoffset = 0;
 
-    XInitImage (&ximage);
+    if (image_masks.red_mask   == surface->r_mask &&
+	image_masks.green_mask == surface->g_mask &&
+	image_masks.blue_mask  == surface->b_mask)
+    {
+	ximage.bits_per_pixel = image_masks.bpp;
+	ximage.bytes_per_line = image->stride;
+	ximage.data = (char *)image->data;
+	own_data = FALSE;
+	XInitImage (&ximage);
+    } else {
+	unsigned int stride, rowstride;
+	int x, y;
+	uint32_t in_pixel, out_pixel, *row;
+	int a_width=0, r_width=0, g_width=0, b_width=0;
+	int a_shift=0, r_shift=0, g_shift=0, b_shift=0;
+
+	if (surface->depth > 16) {
+	    ximage.bits_per_pixel = 32;
+	} else if (surface->depth > 8) {
+	    ximage.bits_per_pixel = 16;
+	} else if (surface->depth > 1) {
+	    ximage.bits_per_pixel = 8;
+	} else {
+	    ximage.bits_per_pixel = 1;
+	}
+	stride = CAIRO_STRIDE_FOR_WIDTH_BPP (ximage.width,
+					     ximage.bits_per_pixel);
+	ximage.bytes_per_line = stride;
+	ximage.data = _cairo_malloc_ab (stride, ximage.height);
+	if (ximage.data == NULL)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+	own_data = TRUE;
+
+	XInitImage (&ximage);
+
+	if (surface->visual->class == TrueColor) {
+	    _characterize_field (surface->a_mask, &a_width, &a_shift);
+	    _characterize_field (surface->r_mask, &r_width, &r_shift);
+	    _characterize_field (surface->g_mask, &g_width, &g_shift);
+	    _characterize_field (surface->b_mask, &b_width, &b_shift);
+	} else {
+	    cairo_xlib_visual_info_t *visual_info;
+
+	    status = _cairo_xlib_screen_get_visual_info (surface->screen_info,
+							 surface->visual,
+							 &visual_info);
+	    if (status)
+		goto BAIL;
+
+	    rgb333_to_pseudocolor = visual_info->rgb333_to_pseudocolor;
+	}
+
+	rowstride = cairo_image_surface_get_stride (&image->base) >> 2;
+	row = (uint32_t *) cairo_image_surface_get_data (&image->base);
+	for (y = 0; y < ximage.height; y++) {
+	    for (x = 0; x < ximage.width; x++) {
+		int a, r, g, b;
+		in_pixel = row[x];
+		a = (in_pixel >> 24) & 0xff;
+		r = (in_pixel >> 16) & 0xff;
+		g = (in_pixel >>  8) & 0xff;
+		b = (in_pixel      ) & 0xff;
+		if (surface->visual->class == TrueColor)
+		    out_pixel = (_field_from_8 (a, a_width, a_shift) |
+				 _field_from_8 (r, r_width, r_shift) |
+				 _field_from_8 (g, g_width, g_shift) |
+				 _field_from_8 (b, b_width, b_shift));
+		else
+		    out_pixel = rgb333_to_pseudocolor[_field_from_8 (r, 3, 6) |
+						      _field_from_8 (g, 3, 3) |
+						      _field_from_8 (b, 3, 0)];
+		XPutPixel (&ximage, x, y, out_pixel);
+	    }
+	    row += rowstride;
+	}
+    }
 
     status = _cairo_xlib_surface_ensure_gc (surface);
     if (status)
-	return status;
+	goto BAIL;
+
     XPutImage(surface->dpy, surface->drawable, surface->gc,
 	      &ximage, src_x, src_y, dst_x, dst_y,
 	      width, height);
 
-    return CAIRO_STATUS_SUCCESS;
+  BAIL:
+    if (own_data)
+	free (ximage.data);
 
+    return status;
 }
 
 static cairo_status_t
@@ -2032,6 +2244,40 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     surface->clip_rects = surface->embedded_clip_rects;
     surface->num_clip_rects = 0;
 
+    /*
+     * Compute the pixel format masks from either a XrenderFormat or
+     * else from a visual; failing that we assume the drawable is an
+     * alpha-only pixmap as it could only have been created that way
+     * through the cairo_xlib_surface_create_for_bitmap function.
+     */
+    if (xrender_format) {
+	surface->a_mask = (unsigned long)
+	    surface->xrender_format->direct.alphaMask
+	    << surface->xrender_format->direct.alpha;
+	surface->r_mask = (unsigned long)
+	    surface->xrender_format->direct.redMask
+	    << surface->xrender_format->direct.red;
+	surface->g_mask = (unsigned long)
+	    surface->xrender_format->direct.greenMask
+	    << surface->xrender_format->direct.green;
+	surface->b_mask = (unsigned long)
+	    surface->xrender_format->direct.blueMask
+	    << surface->xrender_format->direct.blue;
+    } else if (visual) {
+	surface->a_mask = 0;
+	surface->r_mask = visual->red_mask;
+	surface->g_mask = visual->green_mask;
+	surface->b_mask = visual->blue_mask;
+    } else {
+	if (depth < 32)
+	    surface->a_mask = (1 << depth) - 1;
+	else
+	    surface->a_mask = 0xffffffff;
+	surface->r_mask = 0;
+	surface->g_mask = 0;
+	surface->b_mask = 0;
+    }
+
     return (cairo_surface_t *) surface;
 }
 
@@ -2155,7 +2401,6 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
     return _cairo_xlib_surface_create_internal (dpy, drawable, screen,
 						NULL, format, width, height, 0);
 }
-slim_hidden_def (cairo_xlib_surface_create_with_xrender_format);
 
 /**
  * cairo_xlib_surface_get_xrender_format:
@@ -2665,7 +2910,6 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
     cairo_xlib_font_glyphset_info_t *glyphset_info;
 
     if (!glyph_surface) {
-
 	status = _cairo_scaled_glyph_lookup (scaled_font,
 					     _cairo_scaled_glyph_index (scaled_glyph),
 					     CAIRO_SCALED_GLYPH_INFO_METRICS |
@@ -2694,17 +2938,18 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
     /* If the glyph surface has zero height or width, we create
      * a clear 1x1 surface, to avoid various X server bugs.
      */
-    if ((glyph_surface->width == 0) || (glyph_surface->height == 0)) {
+    if (glyph_surface->width == 0 || glyph_surface->height == 0) {
 	cairo_t *cr;
 	cairo_surface_t *tmp_surface;
 
 	tmp_surface = cairo_image_surface_create (glyphset_info->format, 1, 1);
+	if (tmp_surface->status)
+	    goto BAIL;
+
 	cr = cairo_create (tmp_surface);
 	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
 	cairo_paint (cr);
-
 	status = cairo_status (cr);
-
 	cairo_destroy (cr);
 
 	tmp_surface->device_transform = glyph_surface->base.device_transform;
@@ -2727,17 +2972,17 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 	tmp_surface = cairo_image_surface_create (glyphset_info->format,
 						  glyph_surface->width,
 						  glyph_surface->height);
+	if (tmp_surface->status)
+	    goto BAIL;
+
 	tmp_surface->device_transform = glyph_surface->base.device_transform;
 	tmp_surface->device_transform_inverse = glyph_surface->base.device_transform_inverse;
 
 	cr = cairo_create (tmp_surface);
-
 	cairo_set_source_surface (cr, &glyph_surface->base, 0, 0);
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 	cairo_paint (cr);
-
 	status = cairo_status (cr);
-
 	cairo_destroy (cr);
 
 	glyph_surface = (cairo_image_surface_t *) tmp_surface;
@@ -2821,7 +3066,7 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
     glyph_index = _cairo_scaled_glyph_index (scaled_glyph);
 
     XRenderAddGlyphs (dpy, glyphset_info->glyphset,
-		      &glyph_index, &(glyph_info), 1,
+		      &glyph_index, &glyph_info, 1,
 		      (char *) data,
 		      glyph_surface->stride * glyph_surface->height);
 
