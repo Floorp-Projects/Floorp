@@ -148,6 +148,12 @@ typedef struct point point_t;
 typedef FASTCALL void (*CombineMaskU) (uint32_t *src, const uint32_t *mask, int width);
 typedef FASTCALL void (*CombineFuncU) (uint32_t *dest, const uint32_t *src, int width);
 typedef FASTCALL void (*CombineFuncC) (uint32_t *dest, uint32_t *src, uint32_t *mask, int width);
+typedef FASTCALL void (*fetchProc)(bits_image_t *pict, int x, int y, int width,
+                                   uint32_t *buffer);
+typedef FASTCALL uint32_t (*fetchPixelProc)(bits_image_t *pict, int offset, int line);
+typedef FASTCALL void (*storeProc)(pixman_image_t *, uint32_t *bits,
+                                   const uint32_t *values, int x, int width,
+                                   const pixman_indexed_t *);
 
 typedef struct _FbComposeData {
     uint8_t	 op;
@@ -176,6 +182,32 @@ void pixman_composite_rect_general_accessors (const FbComposeData *data,
 					      uint32_t *scanline_buffer);
 void pixman_composite_rect_general (const FbComposeData *data,
 				    uint32_t *scanline_buffer);
+
+fetchProc pixman_fetchProcForPicture (bits_image_t *);
+fetchPixelProc pixman_fetchPixelProcForPicture (bits_image_t *);
+storeProc pixman_storeProcForPicture (bits_image_t *);
+fetchProc pixman_fetchProcForPicture_accessors (bits_image_t *);
+fetchPixelProc pixman_fetchPixelProcForPicture_accessors (bits_image_t *);
+storeProc pixman_storeProcForPicture_accessors (bits_image_t *);
+
+void pixmanFetchSourcePict(source_image_t *, int x, int y, int width,
+                           uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
+
+void fbFetchTransformed(bits_image_t *, int x, int y, int width,
+                        uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
+void fbStoreExternalAlpha(bits_image_t *, int x, int y, int width,
+                          uint32_t *buffer);
+void fbFetchExternalAlpha(bits_image_t *, int x, int y, int width,
+                          uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
+
+void fbFetchTransformed_accessors(bits_image_t *, int x, int y, int width,
+                                  uint32_t *buffer, uint32_t *mask,
+                                  uint32_t maskBits);
+void fbStoreExternalAlpha_accessors(bits_image_t *, int x, int y, int width,
+                                    uint32_t *buffer);
+void fbFetchExternalAlpha_accessors(bits_image_t *, int x, int y, int width,
+                                    uint32_t *buffer, uint32_t *mask,
+                                    uint32_t maskBits);
 
 /* end */
 
@@ -300,6 +332,7 @@ union pixman_image
     radial_gradient_t		radial;
     solid_fill_t		solid;
 };
+
 
 #define LOG2_BITMAP_PAD 5
 #define FB_STIP_SHIFT	LOG2_BITMAP_PAD
@@ -673,10 +706,6 @@ union pixman_image
 	}								\
     } while (0)
 
-/* FIXME */
-#define fbPrepareAccess(x)
-#define fbFinishAccess(x)
-
 #else
 
 #define READ(img, ptr)		(*(ptr))
@@ -685,8 +714,7 @@ union pixman_image
     memcpy(dst, src, size)
 #define MEMSET_WRAPPED(img, dst, val, size)					\
     memset(dst, val, size)
-#define fbPrepareAccess(x)
-#define fbFinishAccess(x)
+
 #endif
 
 #define fbComposeGetSolid(img, res, fmt)				\
