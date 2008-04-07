@@ -48,6 +48,7 @@
 #include <sstream>
 #include <memory>
 #include <time.h>
+#include <stdlib.h>
 #include <string.h>
 
 using std::string;
@@ -363,6 +364,12 @@ bool SendCompleted(bool success, const string& serverResponse)
     return AddSubmittedReport(serverResponse);
   }
   return true;
+}
+
+bool ShouldEnableSending()
+{
+  srand(time(0));
+  return ((rand() % 100) < MOZ_CRASHREPORTER_ENABLE_PERCENT);
 }
 
 } // namespace CrashReporter
