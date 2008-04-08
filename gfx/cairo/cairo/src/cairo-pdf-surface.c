@@ -212,9 +212,9 @@ _cairo_pdf_surface_update_object (cairo_pdf_surface_t	*surface,
 }
 
 static void
-cairo_pdf_surface_set_size_internal (cairo_pdf_surface_t *surface,
-				     double		  width,
-				     double		  height)
+_cairo_pdf_surface_set_size_internal (cairo_pdf_surface_t *surface,
+				      double		  width,
+				      double		  height)
 {
     surface->width = width;
     surface->height = height;
@@ -454,9 +454,9 @@ cairo_pdf_surface_set_size (cairo_surface_t	*surface,
 	return;
     }
 
-    cairo_pdf_surface_set_size_internal (pdf_surface,
-					 width_in_points,
-					 height_in_points);
+    _cairo_pdf_surface_set_size_internal (pdf_surface,
+					  width_in_points,
+					  height_in_points);
     status = _cairo_paginated_surface_set_size (pdf_surface->paginated_surface,
 						width_in_points,
 						height_in_points);
@@ -1507,9 +1507,9 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
     old_height = surface->height;
     old_paginated_mode = surface->paginated_mode;
     old_clip = _cairo_surface_get_clip (&surface->base);
-    cairo_pdf_surface_set_size_internal (surface,
-					 meta_extents.width,
-					 meta_extents.height);
+    _cairo_pdf_surface_set_size_internal (surface,
+					  meta_extents.width,
+					  meta_extents.height);
     /* Patterns are emitted after fallback images. The paginated mode
      * needs to be set to _RENDER while the meta surface is replayed
      * back to this surface.
@@ -1542,9 +1542,9 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
     status = _cairo_pdf_surface_close_content_stream (surface);
 
  CLEANUP_GROUP:
-    cairo_pdf_surface_set_size_internal (surface,
-					 old_width,
-					 old_height);
+    _cairo_pdf_surface_set_size_internal (surface,
+					  old_width,
+					  old_height);
     surface->paginated_mode = old_paginated_mode;
     status2 = _cairo_surface_set_clip (&surface->base, old_clip);
     if (status == CAIRO_STATUS_SUCCESS)
@@ -2519,9 +2519,9 @@ _cairo_pdf_surface_emit_pattern (cairo_pdf_surface_t *surface, cairo_pdf_pattern
 
     old_width = surface->width;
     old_height = surface->height;
-    cairo_pdf_surface_set_size_internal (surface,
-					 pdf_pattern->width,
-					 pdf_pattern->height);
+    _cairo_pdf_surface_set_size_internal (surface,
+					  pdf_pattern->width,
+					  pdf_pattern->height);
 
     switch (pdf_pattern->pattern->type) {
     case CAIRO_PATTERN_TYPE_SOLID:
@@ -2547,9 +2547,9 @@ _cairo_pdf_surface_emit_pattern (cairo_pdf_surface_t *surface, cairo_pdf_pattern
 	break;
     }
 
-    cairo_pdf_surface_set_size_internal (surface,
-					 old_width,
-					 old_height);
+    _cairo_pdf_surface_set_size_internal (surface,
+					  old_width,
+					  old_height);
 
     return status;
 }
@@ -3831,9 +3831,9 @@ _cairo_pdf_surface_write_smask_group (cairo_pdf_surface_t     *surface,
 
     old_width = surface->width;
     old_height = surface->height;
-    cairo_pdf_surface_set_size_internal (surface,
-					 group->width,
-					 group->height);
+    _cairo_pdf_surface_set_size_internal (surface,
+					  group->width,
+					  group->height);
     /* _mask is a special case that requires two groups - source
      * and mask as well as a smask and gstate dictionary */
     if (group->operation == PDF_MASK)
@@ -3884,9 +3884,9 @@ _cairo_pdf_surface_write_smask_group (cairo_pdf_surface_t     *surface,
     _cairo_pdf_surface_unselect_pattern (surface);
     status = _cairo_pdf_surface_close_group (surface, NULL);
 
-    cairo_pdf_surface_set_size_internal (surface,
-					 old_width,
-					 old_height);
+    _cairo_pdf_surface_set_size_internal (surface,
+					  old_width,
+					  old_height);
 
     return status;
 }
