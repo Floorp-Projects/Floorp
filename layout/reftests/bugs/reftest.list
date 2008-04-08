@@ -126,7 +126,7 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 214077-1a.html 214077-1-ref.html
 == 214077-1b.html 214077-1-ref.html
 == 218473-1.html 218473-1-ref.html
-== 231823-1.html 231823-1-ref.html
+# == 231823-1.html 231823-1-ref.html
 == 234686-1.html 234686-ref.html
 == 234686-2.html 234686-ref.html
 == 234686-3.html 234686-ref.html
