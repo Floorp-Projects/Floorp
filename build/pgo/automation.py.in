@@ -185,9 +185,15 @@ class Process:
     "Continues execution of this process on a separate thread."
     p = self._process
     out = self._out
+
+    if IS_WIN32:
+      running = lambda: p.poll() is None
+    else:
+      running = lambda: p.poll() == -1
+
     # read in lines until the process finishes, then read in any last remaining
     # buffered lines
-    while p.poll() == -1:
+    while running():
       line = out.readline().rstrip()
       if len(line) > 0:
         log.info(line)
