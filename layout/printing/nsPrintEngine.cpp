@@ -1871,7 +1871,20 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   } else {
     nscoord pageWidth, pageHeight;
     mPrt->mPrintDC->GetDeviceSurfaceDimensions(pageWidth, pageHeight);
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
+    // If we're in landscape mode on Linux, the device surface will have 
+    // been rotated, so for the purposes of reflowing content, we'll 
+    // treat device's height as our width and its width as our height, 
+    PRInt32 orientation;
+    mPrt->mPrintSettings->GetOrientation(&orientation);
+    if (nsIPrintSettings::kLandscapeOrientation == orientation) {
+      adjSize = nsSize(pageHeight, pageWidth);
+    } else {
+      adjSize = nsSize(pageWidth, pageHeight);
+    }
+#else
     adjSize = nsSize(pageWidth, pageHeight);
+#endif // XP_UNIX && !XP_MACOSX
     documentIsTopLevel = PR_TRUE;
   }
 
