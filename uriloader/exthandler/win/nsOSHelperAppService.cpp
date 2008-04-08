@@ -257,31 +257,112 @@ nsOSHelperAppService::typeFromExtEquals(const PRUnichar* aExt, const char *aType
   return eq;
 }
 
-static void RemoveParameters(nsString& aPath)
+// Strip a handler command string of it's quotes and paramters.
+static void CleanupHandlerPath(nsString& aPath)
 {
-  // Command Strings stored in the Windows registry with parameters look like 
-  // this:
-  //
-  // 1) "C:\Program Files\Company Name\product.exe" -foo -bar  (long version)
-  //                      -- OR --
-  // 2) C:\PROGRA~1\COMPAN~2\product.exe -foo -bar             (short version)
-  //
-  // For 1), the path is the first "" quoted string. (quotes are used to 
-  //         prevent parameter parsers from choking)
-  // For 2), the path is the string up until the first space (spaces are 
-  //         illegal in short DOS-style paths)
-  //
-  if (aPath.First() == PRUnichar('"')) {
-    aPath = Substring(aPath, 1, aPath.Length() - 1);
-    PRInt32 nextQuote = aPath.FindChar(PRUnichar('"'));
-    if (nextQuote != kNotFound)
-      aPath.Truncate(nextQuote);
+  // Example command strings passed into this routine:
+
+  // 1) C:\Program Files\Company\some.exe -foo -bar
+  // 2) C:\Program Files\Company\some.dll
+  // 3) C:\Windows\some.dll,-foo -bar
+  // 4) C:\Windows\some.cpl,-foo -bar
+
+  PRInt32 lastCommaPos = aPath.RFindChar(',');
+  if (lastCommaPos != kNotFound)
+    aPath.Truncate(lastCommaPos);
+
+  aPath.AppendLiteral(" ");
+
+  // case insensitive
+  PRUint32 index = aPath.Find(".exe ", PR_TRUE);
+  if (index == kNotFound)
+    index = aPath.Find(".dll ", PR_TRUE);
+  if (index == kNotFound)
+    index = aPath.Find(".cpl ", PR_TRUE);
+
+  if (index != kNotFound)
+    aPath.Truncate(index + 4);
+  aPath.Trim(" ", PR_TRUE, PR_TRUE);
+}
+
+// Strip the windows host process bootstrap executable rundll32.exe
+// from a handler's command string if it exists.
+static void StripRundll32(nsString& aCommandString)
+{
+  // Example rundll formats:
+  // C:\Windows\System32\rundll32.exe "path to dll"
+  // rundll32.exe "path to dll"
+  // C:\Windows\System32\rundll32.exe "path to dll", var var
+  // rundll32.exe "path to dll", var var
+
+  NS_NAMED_LITERAL_STRING(rundllSegment, "rundll32.exe ");
+  NS_NAMED_LITERAL_STRING(rundllSegmentShort, "rundll32 ");
+
+  // case insensitive
+  PRInt32 strLen = rundllSegment.Length();
+  PRInt32 index = aCommandString.Find(rundllSegment, PR_TRUE);
+  if (index == kNotFound) {
+    strLen = rundllSegmentShort.Length();
+    index = aCommandString.Find(rundllSegmentShort, PR_TRUE);
   }
-  else {
-    PRInt32 firstSpace = aPath.FindChar(PRUnichar(' '));
-    if (firstSpace != kNotFound) 
-      aPath.Truncate(firstSpace);
+
+  if (index != kNotFound) {
+    PRUint32 rundllSegmentLength = index + strLen;
+    aCommandString.Cut(0, rundllSegmentLength);
   }
+}
+
+// Returns the fully qualified path to an application handler based on
+// a parameterized command string. Note this routine should not be used
+// to launch the associated application as it strips parameters and
+// rundll.exe from the string. Designed for retrieving display information
+// on a particular handler.   
+/* static */ PRBool nsOSHelperAppService::CleanupCmdHandlerPath(nsAString& aCommandHandler)
+{
+  nsAutoString handlerCommand(aCommandHandler);
+
+  // Straight command path:
+  //
+  // %SystemRoot%\system32\NOTEPAD.EXE var
+  // "C:\Program Files\iTunes\iTunes.exe" var var
+  // C:\Program Files\iTunes\iTunes.exe var var
+  //
+  // Example rundll handlers:
+  //
+  // rundll32.exe "%ProgramFiles%\Win...ery\PhotoViewer.dll", var var
+  // rundll32.exe "%ProgramFiles%\Windows Photo Gallery\PhotoViewer.dll"
+  // C:\Windows\System32\rundll32.exe "path to dll", var var
+  // %SystemRoot%\System32\rundll32.exe "%ProgramFiles%\Win...ery\Photo
+  //    Viewer.dll", var var
+
+  // Expand environment variables so we have full path strings.
+  PRUint32 bufLength = ::ExpandEnvironmentStringsW(handlerCommand.get(),
+                                                   L"", 0);
+  if (bufLength == 0) // Error
+    return PR_FALSE;
+
+  nsAutoArrayPtr<PRUnichar> destination(new PRUnichar[bufLength]);
+  if (!destination)
+    return PR_FALSE;
+  if (!::ExpandEnvironmentStringsW(handlerCommand.get(), destination,
+                                   bufLength))
+    return PR_FALSE;
+
+  handlerCommand = destination;
+
+  // Remove quotes around paths
+  handlerCommand.StripChars("\"");
+
+  // Strip windows host process bootstrap so we can get to the actual
+  // handler.
+  StripRundll32(handlerCommand);
+
+  // Trim any command parameters so that we have a native path we can
+  // initialize a local file with.
+  CleanupHandlerPath(handlerCommand);
+
+  aCommandHandler.Assign(handlerCommand);
+  return PR_TRUE;
 }
 
 //
@@ -348,83 +429,6 @@ nsOSHelperAppService::GetDefaultAppInfo(const nsAString& aTypeName,
   }
 
   return NS_OK;
-}
-
-// Returns the dll path of a rundll command handler. 
-/* static */ PRBool nsOSHelperAppService::CleanupCmdHandlerPath(nsAString& aCommandHandler)
-{
-  nsAutoString handlerFilePath;
-  nsAutoString handlerCommand(aCommandHandler);
-
-  // %SystemRoot%\system32\NOTEPAD.EXE %1
-  //
-  // rundll32.exe "%ProgramFiles%\Windows Photo Gallery\
-  //   PhotoViewer.dll", ImageView_Fullscreen %1
-  //
-  // rundll32.exe "%ProgramFiles%\Windows Photo Gallery\PhotoViewer.dll"
-  //
-  // %SystemRoot%\System32\rundll32.exe "%ProgramFiles%\
-  //   Windows Photo Gallery\PhotoViewer.dll", ImageView_Fullscreen %1
-
-  // Replace embedded environment variables.
-  PRUint32 bufLength = ::ExpandEnvironmentStringsW(handlerCommand.get(),
-                                                   L"", 0);
-  if (bufLength == 0) // Error
-    return PR_FALSE;
-
-  nsAutoArrayPtr<PRUnichar> destination(new PRUnichar[bufLength]);
-  if (!destination)
-    return PR_FALSE;
-  if (!::ExpandEnvironmentStringsW(handlerCommand.get(), destination,
-                                   bufLength))
-    return PR_FALSE;
-
-  handlerCommand = destination;
-
-  // Look to see if we're invoking a Windows shell service, such as 
-  // the Picture & Fax Viewer, which are invoked through rundll32.exe.
-  //
-  // What we want is the DLL - since that's where the real application name
-  // is stored, e.g. zipfldr.dll, shimgvw.dll, etc. 
-  // 
-  // Working from the end of the registry value, the path begins at the last
-  // comma in the string (stripping off Function and args) to the position
-  // just after the first space (the space after rundll32.exe).
-
-  NS_NAMED_LITERAL_STRING(rundllSegment, "rundll32.exe ");
-
-  PRInt32 index = handlerCommand.Find(rundllSegment);
-  if (index != kNotFound) {
-    // Strip off the rundll command handler
-    PRInt32 lastCommaPos = handlerCommand.RFindChar(',');
-    PRUint32 rundllSegmentLength = index + rundllSegment.Length();
-    PRUint32 len;
-
-    if (lastCommaPos == kNotFound) {
-      // C:\Windows\System32\rundll32.exe "C:\Program Files\
-      //   Windows Photo Gallery\PhotoViewer.dll"
-      // rundll32.exe "C:\Program Files\Windows Photo Gallery\PhotoViewer.dll"
-      len = handlerCommand.Length() - rundllSegmentLength;
-    } else {
-      // C:\Windows\System32\rundll32.exe "C:\Program Files\
-      //   Windows Photo Gallery\PhotoViewer.dll", ImageView_Fullscreen %1
-      // rundll32.exe "C:\Program Files\Windows Photo Gallery\
-      //   PhotoViewer.dll", ImageView_Fullscreen %1
-      len = lastCommaPos - rundllSegmentLength;
-    }
-
-    // Clip off 'C:\Windows\System32\rundll32.exe ' or 'rundll32.exe '
-    handlerFilePath = Substring(handlerCommand, rundllSegmentLength, len);
-  } else {
-    handlerFilePath = handlerCommand;
-  }
-
-  // Trim any command parameters so that we have a native path we can
-  // initialize a local file with.
-  RemoveParameters(handlerFilePath);
-
-  aCommandHandler = handlerFilePath;
-  return PR_TRUE;
 }
 
 already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFlatString& aFileExt, const char *aTypeHint)
