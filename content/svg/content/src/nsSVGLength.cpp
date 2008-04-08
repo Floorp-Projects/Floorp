@@ -246,10 +246,12 @@ nsSVGLength::GetValue(float *aValue)
       *aValue = mValueInSpecifiedUnits * 25.4f / mmPerPixel();
       break;
     case SVG_LENGTHTYPE_PT:
-      *aValue = mValueInSpecifiedUnits * 25.4f / 72.0f / mmPerPixel();
+      *aValue = mValueInSpecifiedUnits * 25.4f / POINTS_PER_INCH_FLOAT / 
+        mmPerPixel();
       break;
     case SVG_LENGTHTYPE_PC:
-      *aValue = mValueInSpecifiedUnits * 25.4f * 12.0f / 72.0f / mmPerPixel();
+      *aValue = mValueInSpecifiedUnits * 25.4f * 12.0f / POINTS_PER_INCH_FLOAT /
+        mmPerPixel();
       break;
     case SVG_LENGTHTYPE_PERCENTAGE:
       *aValue = mValueInSpecifiedUnits * AxisLength() / 100.0f;
@@ -290,10 +292,12 @@ nsSVGLength::SetValue(float aValue)
       mValueInSpecifiedUnits = aValue * mmPerPixel() / 25.4f;
       break;
     case SVG_LENGTHTYPE_PT:
-      mValueInSpecifiedUnits = aValue * mmPerPixel() * 72.0f / 25.4f;
+      mValueInSpecifiedUnits = aValue * mmPerPixel() * POINTS_PER_INCH_FLOAT /
+        25.4f;
       break;
     case SVG_LENGTHTYPE_PC:
-      mValueInSpecifiedUnits = aValue * mmPerPixel() * 72.0f / 24.4f / 12.0f;
+      mValueInSpecifiedUnits = aValue * mmPerPixel() * POINTS_PER_INCH_FLOAT /
+        24.4f / 12.0f;
       break;
     case SVG_LENGTHTYPE_PERCENTAGE:
       mValueInSpecifiedUnits = aValue * 100.0f / AxisLength();
