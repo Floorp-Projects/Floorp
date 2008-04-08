@@ -27,13 +27,13 @@ function test() {
   newBrowser.contentWindow.location = testPage;
 }
 
-var loadCount = 0;
 function test1Setup() {
-  if(!loadCount++)
-    // Wait for both frames to load
+  
+  if(newBrowser.contentWindow.frames.length < 2 ||
+     newBrowser.contentWindow.frames[1].document.location != invalidPage)
+    // The error frame hasn't loaded yet
     return;
   
-  loadCount = 0;
   newBrowser.removeEventListener("load", test1Setup, true);
 
   var badFrame = newBrowser.contentWindow.frames[1];
@@ -65,11 +65,11 @@ function testShowOnlyThisFrame() {
 }
 
 function test2Setup() {
-  if(!loadCount++)
-    // Wait for both frames to load
+  if(newBrowser.contentWindow.frames.length < 2 ||
+     newBrowser.contentWindow.frames[1].document.location != invalidPage)
+    // The error frame hasn't loaded yet
     return;
   
-  loadCount = 0;
   gBrowser.removeEventListener("load", test2Setup, true);
   
   // Now let's do the whole thing again, but this time for "Open frame in new tab"
