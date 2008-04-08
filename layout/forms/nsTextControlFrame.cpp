@@ -579,6 +579,7 @@ public:
   NS_IMETHOD SetCaretEnabled(PRBool enabled);
   NS_IMETHOD SetCaretReadOnly(PRBool aReadOnly);
   NS_IMETHOD GetCaretEnabled(PRBool *_retval);
+  NS_IMETHOD GetCaretVisible(PRBool *_retval);
   NS_IMETHOD SetCaretVisibilityDuringSelection(PRBool aVisibility);
   NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD CharacterExtendForDelete();
@@ -754,6 +755,12 @@ nsTextInputSelectionImpl::SetCaretReadOnly(PRBool aReadOnly)
 
 NS_IMETHODIMP
 nsTextInputSelectionImpl::GetCaretEnabled(PRBool *_retval)
+{
+  return GetCaretVisible(_retval);
+}
+
+NS_IMETHODIMP
+nsTextInputSelectionImpl::GetCaretVisible(PRBool *_retval)
 {
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsresult result;

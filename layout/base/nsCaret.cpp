@@ -242,7 +242,7 @@ NS_IMETHODIMP nsCaret::SetCaretVisible(PRBool inMakeVisible)
 NS_IMETHODIMP nsCaret::GetCaretVisible(PRBool *outMakeVisible)
 {
   NS_ENSURE_ARG_POINTER(outMakeVisible);
-  *outMakeVisible = mVisible;
+  *outMakeVisible = (mVisible && MustDrawCaret(PR_TRUE));
   return NS_OK;
 }
 
