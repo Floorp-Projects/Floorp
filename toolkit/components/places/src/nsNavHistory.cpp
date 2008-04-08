@@ -208,6 +208,9 @@
 #define DB_MIGRATION_CREATED 1
 #define DB_MIGRATION_UPDATED 2
 
+// character-set annotation
+#define CHARSET_ANNO NS_LITERAL_CSTRING("URIProperties/characterSet")
+
 NS_IMPL_ADDREF(nsNavHistory)
 NS_IMPL_RELEASE(nsNavHistory)
 
@@ -219,6 +222,7 @@ NS_INTERFACE_MAP_BEGIN(nsNavHistory)
   NS_INTERFACE_MAP_ENTRY(nsIBrowserHistory)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsICharsetResolver)
 #ifdef MOZ_XUL
   NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSearch)
   NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSimpleResultListener)
@@ -3647,8 +3651,8 @@ nsNavHistory::RemovePagesInternal(const nsCString& aPlaceIdsQueryString)
   // this will remove all expire-able annotations for these URIs.
   (void)mExpire.OnDeleteURI();
 
-  // if there are no more annotations, and the entry is not bookmarked
-  // then we can remove the moz_places entry.
+  // if the entry is not bookmarked and is not a place: uri
+  // then we can remove it from moz_places.
   // Note that we do NOT delete favicons. Any unreferenced favicons will be
   // deleted next time the browser is shut down.
   rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
@@ -3656,8 +3660,8 @@ nsNavHistory::RemovePagesInternal(const nsCString& aPlaceIdsQueryString)
         "SELECT h.id FROM moz_places h WHERE h.id IN (") +
         aPlaceIdsQueryString +
         NS_LITERAL_CSTRING(") AND "
-        "NOT EXISTS (SELECT b.id FROM moz_bookmarks b WHERE b.fk = h.id) AND "
-        "NOT EXISTS (SELECT a.id FROM moz_annos a WHERE a.place_id = h.id))"));
+        "NOT EXISTS (SELECT b.id FROM moz_bookmarks b WHERE b.fk = h.id LIMIT 1) "
+        "AND SUBSTR(h.url,0,6) <> 'place:')"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // placeId could have a livemark item, so setting the frecency to -1
@@ -4002,6 +4006,57 @@ nsNavHistory::MarkPageAsTyped(nsIURI *aURI)
   mRecentTyped.Put(uriString, GetNow());
   return NS_OK;
 }
+
+
+// nsNavHistory::SetCharsetForURI
+//
+// Sets the character-set for an URI.
+// If aCharset is empty remove character-set annotation for aURI.
+
+NS_IMETHODIMP
+nsNavHistory::SetCharsetForURI(nsIURI* aURI,
+                               const nsAString& aCharset)
+{
+  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
+  NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
+
+  if (aCharset.IsEmpty()) {
+    // remove the current page character-set annotation
+    nsresult rv = annosvc->RemovePageAnnotation(aURI, CHARSET_ANNO);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  else {
+    // Set page character-set annotation, silently overwrite if already exists
+    nsresult rv = annosvc->SetPageAnnotationString(aURI, CHARSET_ANNO,
+                                                   aCharset, 0,
+                                                   nsAnnotationService::EXPIRE_NEVER);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
+
+// nsNavHistory::GetCharsetForURI
+//
+// Get the last saved character-set for an URI.
+
+NS_IMETHODIMP
+nsNavHistory::GetCharsetForURI(nsIURI* aURI, 
+                               nsAString& aCharset)
+{
+  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
+  NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
+
+  nsAutoString charset;
+  nsresult rv = annosvc->GetPageAnnotationString(aURI, CHARSET_ANNO, aCharset);
+  if (NS_FAILED(rv)) {
+    // be sure to return an empty string if character-set is not found
+    aCharset.Truncate();
+  }
+  return NS_OK;
+}
+
 
 // nsGlobalHistory2 ************************************************************
 
@@ -6424,4 +6479,37 @@ nsNavHistory::RecalculateFrecenciesInternal(mozIStorageStatement *aStatement, PR
   }
 
   return NS_OK;
+}
+
+// nsICharsetResolver **********************************************************
+
+NS_IMETHODIMP
+nsNavHistory::RequestCharset(nsIWebNavigation* aWebNavigation,
+                             nsIChannel* aChannel,
+                             PRBool* aWantCharset,
+                             nsISupports** aClosure,
+                             nsACString& aResult)
+{
+  *aWantCharset = PR_FALSE;
+  *aClosure = nsnull;
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
+  if (NS_FAILED(rv))
+    return NS_OK;
+
+  nsAutoString charset;
+  rv = GetCharsetForURI(uri, charset);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  CopyUTF16toUTF8(charset, aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistory::NotifyResolvedCharset(const nsACString& aCharset,
+                                    nsISupports* aClosure)
+{
+    NS_ERROR("Unexpected call to NotifyResolvedCharset -- we never set aWantCharset to true!");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }

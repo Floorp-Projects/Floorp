@@ -1045,7 +1045,7 @@ interface nsINavHistoryQueryOptions : nsISupports
   nsINavHistoryQueryOptions clone();
 };
 
-[scriptable, uuid(1972ac40-d270-40ee-995a-c97d02849596)]
+[scriptable, uuid(8b258ff6-b591-4da5-8b7c-0665b27d09cc)]
 interface nsINavHistoryService : nsISupports
 {
   /**
@@ -1104,7 +1104,6 @@ interface nsINavHistoryService : nsISupports
    */
   AString getPageTitle(in nsIURI aURI);
 
-
   /**
    * This is just like markPageAsTyped (in nsIBrowserHistory, also implemented
    * by the history service), but for bookmarks. It declares that the given URI
@@ -1113,6 +1112,25 @@ interface nsINavHistoryService : nsISupports
    * as following a bookmark.
    */
   void markPageAsFollowedBookmark(in nsIURI aURI);
+
+  /**
+   * Gets the stored character-set for an URI.
+   *
+   * @param aURI
+   *        URI to retrieve character-set for
+   * @returns character-set, empty string if not found
+   */
+  AString getCharsetForURI(in nsIURI aURI);
+
+  /**
+   * Sets the character-set for an URI.
+   *
+   * @param aURI
+   *        URI to set the character-set for
+   * @param aCharset
+   *        character-set to be set
+   */
+  void setCharsetForURI(in nsIURI aURI, in AString aCharset);
 
   /**
    * Returns true if this URI would be added to the history. You don't have to

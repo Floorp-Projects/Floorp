@@ -90,11 +90,14 @@ interface nsIAnnotationService : nsISupports
     // Removed at 180 days.
     const unsigned short EXPIRE_MONTHS = 3;
 
-    // For data that should never expire. Must be explictly removed.
+    // For annotations that only live as long as the URI is in the database.
+    // A page annotation will expire if the page has no visits
+    // and is not bookmarked.
+    // An item annotation will expire when the item is deleted.
     const unsigned short EXPIRE_NEVER = 4;
 
-    // For annotations that only live as long as the URI is in history
-    // (eg: Has >0 visits).
+    // For annotations that only live as long as the URI has visits.
+    // Valid only for page annotations.
     const unsigned short EXPIRE_WITH_HISTORY = 5;
 
     // For short-lived temporary data that you still want to outlast a session.

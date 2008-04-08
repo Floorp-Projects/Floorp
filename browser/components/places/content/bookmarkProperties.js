@@ -124,6 +124,7 @@ var BookmarkPropertiesPanel = {
   _microsummaries: null,
   _URIList: null,
   _postData: null,
+  _charSet: "",
 
   // sizeToContent is not usable due to bug 90276, so we'll use resizeTo
   // instead and cache the bookmarks tree view size. See WSucks in the legacy
@@ -220,6 +221,8 @@ var BookmarkPropertiesPanel = {
             this._bookmarkKeyword = dialogInfo.keyword;
             if ("postData" in dialogInfo)
               this._postData = dialogInfo.postData;
+            if ("charSet" in dialogInfo)
+              this._charSet = dialogInfo.charSet;
           }
 
           break;
@@ -935,6 +938,9 @@ var BookmarkPropertiesPanel = {
       childTransactions.push(
         PlacesUIUtils.ptm.editBookmarkPostData(-1, this._postData));
     }
+
+    if (this._charSet)
+      PlacesUtils.history.setCharsetForURI(this._bookmarkURI, this._charSet);
 
     var transactions = [PlacesUIUtils.ptm.createItem(uri, aContainer, aIndex,
                                                      title, keyword,
