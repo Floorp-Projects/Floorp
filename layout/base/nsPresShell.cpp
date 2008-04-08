@@ -920,6 +920,7 @@ public:
   NS_IMETHOD SetCaretReadOnly(PRBool aReadOnly);
   NS_IMETHOD GetCaretEnabled(PRBool *aOutEnabled);
   NS_IMETHOD SetCaretVisibilityDuringSelection(PRBool aVisibility);
+  NS_IMETHOD GetCaretVisible(PRBool *_retval);
   virtual void SetCaret(nsICaret *aNewCaret);
   virtual void RestoreCaret();
 
@@ -2737,6 +2738,16 @@ NS_IMETHODIMP PresShell::SetCaretVisibilityDuringSelection(PRBool aVisibility)
 {
   if (mCaret)
     mCaret->SetVisibilityDuringSelection(aVisibility);
+  return NS_OK;
+}
+
+NS_IMETHODIMP PresShell::GetCaretVisible(PRBool *aOutIsVisible)
+{
+  *aOutIsVisible = PR_FALSE;
+  if (mCaret) {
+    nsresult rv = mCaret->GetCaretVisible(aOutIsVisible);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
   return NS_OK;
 }
 
