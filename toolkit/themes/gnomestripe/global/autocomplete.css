@@ -148,7 +148,7 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
 
 .autocomplete-richlistitem {
   padding: 1px 2px;
-  border-bottom: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDLightShadow;
   color: MenuText;
 }
 
