@@ -273,6 +273,8 @@ nsSVGLength::GetValue(float *aValue)
 NS_IMETHODIMP
 nsSVGLength::SetValue(float aValue)
 {
+  NS_ENSURE_FINITE(aValue, NS_ERROR_ILLEGAL_VALUE);
+
   nsresult rv = NS_OK;
 
   WillModify();
@@ -329,6 +331,7 @@ nsSVGLength::GetValueInSpecifiedUnits(float *aValueInSpecifiedUnits)
 NS_IMETHODIMP
 nsSVGLength::SetValueInSpecifiedUnits(float aValueInSpecifiedUnits)
 {
+  NS_ENSURE_FINITE(aValueInSpecifiedUnits, NS_ERROR_ILLEGAL_VALUE);
   WillModify();
   mValueInSpecifiedUnits = aValueInSpecifiedUnits;
   DidModify();
@@ -456,6 +459,8 @@ nsSVGLength::SetValueAsString(const nsAString & aValueAsString)
 NS_IMETHODIMP
 nsSVGLength::NewValueSpecifiedUnits(PRUint16 unitType, float valueInSpecifiedUnits)
 {
+  NS_ENSURE_FINITE(valueInSpecifiedUnits, NS_ERROR_ILLEGAL_VALUE);
+
   if (!IsValidUnitType(unitType))
     return NS_ERROR_FAILURE;
 

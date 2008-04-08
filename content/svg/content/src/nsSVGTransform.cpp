@@ -301,6 +301,8 @@ NS_IMETHODIMP nsSVGTransform::SetMatrix(nsIDOMSVGMatrix *matrix)
 /* void setTranslate (in float tx, in float ty); */
 NS_IMETHODIMP nsSVGTransform::SetTranslate(float tx, float ty)
 {
+  NS_ENSURE_FINITE2(tx, ty, NS_ERROR_ILLEGAL_VALUE);
+
   WillModify();
   
   mType = SVG_TRANSFORM_TRANSLATE;
@@ -321,6 +323,8 @@ NS_IMETHODIMP nsSVGTransform::SetTranslate(float tx, float ty)
 /* void setScale (in float sx, in float sy); */
 NS_IMETHODIMP nsSVGTransform::SetScale(float sx, float sy)
 {
+  NS_ENSURE_FINITE2(sx, sy, NS_ERROR_ILLEGAL_VALUE);
+
   WillModify();
   
   mType = SVG_TRANSFORM_SCALE;
@@ -341,6 +345,8 @@ NS_IMETHODIMP nsSVGTransform::SetScale(float sx, float sy)
 /* void setRotate (in float angle, in float cx, in float cy); */
 NS_IMETHODIMP nsSVGTransform::SetRotate(float angle, float cx, float cy)
 {
+  NS_ENSURE_FINITE3(angle, cx, cy, NS_ERROR_ILLEGAL_VALUE);
+
   WillModify();
   
   mType = SVG_TRANSFORM_ROTATE;
@@ -366,6 +372,8 @@ NS_IMETHODIMP nsSVGTransform::SetRotate(float angle, float cx, float cy)
 /* void setSkewX (in float angle); */
 NS_IMETHODIMP nsSVGTransform::SetSkewX(float angle)
 {
+  NS_ENSURE_FINITE(angle, NS_ERROR_ILLEGAL_VALUE);
+
   WillModify();
   
   mType = SVG_TRANSFORM_SKEWX;
@@ -385,6 +393,8 @@ NS_IMETHODIMP nsSVGTransform::SetSkewX(float angle)
 /* void setSkewY (in float angle); */
 NS_IMETHODIMP nsSVGTransform::SetSkewY(float angle)
 {
+  NS_ENSURE_FINITE(angle, NS_ERROR_ILLEGAL_VALUE);
+
   WillModify();
   
   mType = SVG_TRANSFORM_SKEWY;

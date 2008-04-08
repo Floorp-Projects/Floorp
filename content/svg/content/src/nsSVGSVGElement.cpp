@@ -343,6 +343,8 @@ nsSVGSVGElement::GetCurrentScale(float *aCurrentScale)
 NS_IMETHODIMP
 nsSVGSVGElement::SetCurrentScale(float aCurrentScale)
 {
+  NS_ENSURE_FINITE(aCurrentScale, NS_ERROR_ILLEGAL_VALUE);
+
   // Prevent bizarre behaviour and maxing out of CPU and memory by clamping
   if (aCurrentScale < CURRENT_SCALE_MIN)
     aCurrentScale = CURRENT_SCALE_MIN;
@@ -481,6 +483,7 @@ nsSVGSVGElement::GetCurrentTime(float *_retval)
 NS_IMETHODIMP
 nsSVGSVGElement::SetCurrentTime(float seconds)
 {
+  NS_ENSURE_FINITE(seconds, NS_ERROR_ILLEGAL_VALUE);
   NS_NOTYETIMPLEMENTED("nsSVGSVGElement::SetCurrentTime");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
