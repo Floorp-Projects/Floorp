@@ -135,6 +135,9 @@ _cairo_svg_document_finish (cairo_svg_document_t *document);
 static cairo_svg_document_t *
 _cairo_svg_document_reference (cairo_svg_document_t *document);
 
+static unsigned int
+_cairo_svg_document_allocate_mask_id (cairo_svg_document_t *document);
+
 static cairo_surface_t *
 _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
 					cairo_content_t		 content,
@@ -2036,6 +2039,7 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
     cairo_output_stream_t *mask_stream;
     char buffer[64];
     cairo_bool_t discard_filter = FALSE;
+    unsigned int mask_id;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _cairo_svg_surface_analyze_operation (surface, op, source);
@@ -2059,10 +2063,12 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
     if (_cairo_output_stream_get_status (mask_stream))
 	return _cairo_output_stream_destroy (mask_stream);
 
+    mask_id = _cairo_svg_document_allocate_mask_id (document);
+
     _cairo_output_stream_printf (mask_stream,
 				 "<mask id=\"mask%d\">\n"
 				 "%s",
-				 document->mask_id,
+				 mask_id,
 				 discard_filter ? "" : "  <g filter=\"url(#alpha)\">\n");
     status = _cairo_svg_surface_emit_paint (mask_stream, surface, op, mask, NULL);
     if (status) {
@@ -2082,12 +2088,10 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
 	return status;
 
     snprintf (buffer, sizeof buffer, "mask=\"url(#mask%d)\"",
-	      document->mask_id);
+	      mask_id);
     status = _cairo_svg_surface_emit_paint (surface->xml_node, surface, op, source, buffer);
     if (status)
 	return status;
-
-    document->mask_id++;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -2376,6 +2380,12 @@ _cairo_svg_document_reference (cairo_svg_document_t *document)
     document->refcount++;
 
     return document;
+}
+
+static unsigned int
+_cairo_svg_document_allocate_mask_id (cairo_svg_document_t *document)
+{
+    return document->mask_id++;
 }
 
 static cairo_status_t
