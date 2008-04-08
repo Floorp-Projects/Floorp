@@ -160,7 +160,9 @@ class Process:
       import subprocess
       cmd = [command]
       cmd.extend(args)
-      p = subprocess.Popen(cmd, env = env)
+      p = subprocess.Popen(cmd, env = env,
+                           stdout = subprocess.PIPE,
+                           stderr = subprocess.STDOUT)
       self._out = p.stdout
     else:
       import popen2
