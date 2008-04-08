@@ -285,6 +285,12 @@ cairo_surface_write_to_png (cairo_surface_t	*surface,
     FILE *fp;
     cairo_status_t status;
 
+    if (surface->status)
+	return surface->status;
+
+    if (surface->finished)
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
+
     fp = fopen (filename, "wb");
     if (fp == NULL) {
 	switch (errno) {
