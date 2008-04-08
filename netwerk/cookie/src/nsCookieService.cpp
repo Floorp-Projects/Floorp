@@ -859,21 +859,30 @@ nsCookieService::Remove(const nsACString &aHost,
   if (FindCookie(PromiseFlatCString(aHost),
                  PromiseFlatCString(aName),
                  PromiseFlatCString(aPath),
-                 matchIter)) {
+                 matchIter,
+                 PR_Now() / PR_USEC_PER_SEC)) {
     nsRefPtr<nsCookie> cookie = matchIter.current;
     RemoveCookieFromList(matchIter);
     NotifyChanged(cookie, NS_LITERAL_STRING("deleted").get());
-
-    // check if we need to add the host to the permissions blacklist.
-    if (aBlocked && mPermissionService) {
-      nsCAutoString host(NS_LITERAL_CSTRING("http://") + cookie->RawHost());
-      nsCOMPtr<nsIURI> uri;
-      NS_NewURI(getter_AddRefs(uri), host);
-
-      if (uri)
-        mPermissionService->SetAccess(uri, nsICookiePermission::ACCESS_DENY);
-    }
   }
+
+  // check if we need to add the host to the permissions blacklist.
+  if (aBlocked && mPermissionService) {
+    nsCAutoString host(NS_LITERAL_CSTRING("http://"));
+    
+    // strip off the domain dot, if necessary
+    if (!aHost.IsEmpty() && aHost.First() == '.')
+      host.Append(Substring(aHost, 1, aHost.Length() - 1));
+    else
+      host.Append(aHost);
+
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), host);
+
+    if (uri)
+      mPermissionService->SetAccess(uri, nsICookiePermission::ACCESS_DENY);
+  }
+
   return NS_OK;
 }
 
@@ -1376,8 +1385,8 @@ nsCookieService::AddInternal(nsCookie   *aCookie,
   mozStorageTransaction transaction(mDBConn, PR_TRUE);
 
   nsListIter matchIter;
-  const PRBool foundCookie =
-    FindCookie(aCookie->Host(), aCookie->Name(), aCookie->Path(), matchIter);
+  PRBool foundCookie = FindCookie(aCookie->Host(), aCookie->Name(), aCookie->Path(),
+                                  matchIter, aCurrentTime);
 
   nsRefPtr<nsCookie> oldCookie;
   if (foundCookie) {
@@ -2024,10 +2033,11 @@ nsCookieService::CookieExists(nsICookie2 *aCookie,
   NS_ENSURE_ARG_POINTER(aCookie);
 
   // just a placeholder
-  nsEnumerationData data(PR_Now() / PR_USEC_PER_SEC, LL_MININT);
+  nsListIter iter;
   nsCookie *cookie = static_cast<nsCookie*>(aCookie);
 
-  *aFoundCookie = FindCookie(cookie->Host(), cookie->Name(), cookie->Path(), data.iter);
+  *aFoundCookie = FindCookie(cookie->Host(), cookie->Name(), cookie->Path(),
+                             iter, PR_Now() / PR_USEC_PER_SEC);
   return NS_OK;
 }
 
@@ -2080,16 +2090,18 @@ nsCookieService::CountCookiesFromHost(const nsACString &aHost,
   return NS_OK;
 }
 
-// find an exact previous match.
+// find an exact cookie specified by host, name, and path that hasn't expired.
 PRBool
 nsCookieService::FindCookie(const nsAFlatCString &aHost,
                             const nsAFlatCString &aName,
                             const nsAFlatCString &aPath,
-                            nsListIter           &aIter)
+                            nsListIter           &aIter,
+                            PRInt64               aCurrentTime)
 {
   nsCookieEntry *entry = mHostTable.GetEntry(aHost.get());
   for (aIter = nsListIter(entry); aIter.current; ++aIter) {
-    if (aPath.Equals(aIter.current->Path()) &&
+    if (aIter.current->Expiry() > aCurrentTime &&
+        aPath.Equals(aIter.current->Path()) &&
         aName.Equals(aIter.current->Name())) {
       return PR_TRUE;
     }
