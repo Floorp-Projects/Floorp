@@ -321,11 +321,6 @@ function run_test() {
   // XXX expose FolderCount, and check that the old parent has one less child?
   do_check_eq(getChildCount(testRoot), oldParentCC-1);
 
-  // XXX move folder, specified index, to different folder
-  // XXX move folder, specified index, within the same folder
-  // XXX move folder, specify same index, within the same folder
-  // XXX move folder, appending, within the same folder
-
   // move item, appending, to different folder
   bmsvc.moveItem(newId5, testRoot, bmsvc.DEFAULT_INDEX);
   do_check_eq(observer._itemMovedId, newId5);
@@ -334,34 +329,6 @@ function run_test() {
   do_check_eq(observer._itemMovedNewParent, testRoot);
   do_check_eq(observer._itemMovedNewIndex, 3);
 
-  // XXX move item, specified index, to different folder 
-  // XXX move item, specified index, within the same folder 
-  // XXX move item, specify same index, within the same folder
-  // XXX move item, appending, within the same folder 
-
-  // Test expected failure of moving a folder to be its own parent
-  try {
-    bmsvc.moveItem(workFolder, workFolder, bmsvc.DEFAULT_INDEX);
-    do_throw("moveItem() allowed moving a folder to be its own parent.");
-  } catch (e) {}
-
-  // Test expected failure of moving a folder to be a child of its child
-  // or of its grandchild.  see bug #383678 
-  var childFolder = bmsvc.createFolder(workFolder, "childFolder", bmsvc.DEFAULT_INDEX);
-  do_check_eq(observer._itemAddedId, childFolder);
-  do_check_eq(observer._itemAddedParent, workFolder);
-  var grandchildFolder = bmsvc.createFolder(childFolder, "grandchildFolder", bmsvc.DEFAULT_INDEX);
-  do_check_eq(observer._itemAddedId, grandchildFolder);
-  do_check_eq(observer._itemAddedParent, childFolder);
-  try {
-    bmsvc.moveItem(workFolder, childFolder, bmsvc.DEFAULT_INDEX);
-    do_throw("moveItem() allowed moving a folder to be a child of its child");
-  } catch (e) {}
-  try {
-    bmsvc.moveItem(workFolder, grandchildFolder, bmsvc.DEFAULT_INDEX);
-    do_throw("moveItem() allowed moving a folder to be a child of its grandchild");
-  } catch (e) {}
-  
   // test insertSeparator and removeChildAt
   // XXX - this should also query bookmarks for the folder children
   // and then test the node type at our index
