@@ -164,6 +164,7 @@ NS_IMETHODIMP nsSVGNumber::GetValue(float *aValue)
 }
 NS_IMETHODIMP nsSVGNumber::SetValue(float aValue)
 {
+  NS_ENSURE_FINITE(aValue, NS_ERROR_ILLEGAL_VALUE);
   WillModify();
   mValue = aValue;
   DidModify();
