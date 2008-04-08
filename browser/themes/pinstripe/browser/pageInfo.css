@@ -48,7 +48,7 @@
   display: -moz-box;
   background-color: #969696;
   border-bottom: 1px solid #404040;
-  background-image: url("chrome://global/skin/toolbar/toolbar-background-tall.gif");
+  background-image: url("chrome://global/skin/toolbar/toolbar-background.gif");
   background-repeat: repeat-x;
   background-position: top right;
   padding: 4px 0 8px;
