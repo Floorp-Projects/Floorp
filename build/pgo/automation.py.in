@@ -39,14 +39,27 @@
 
 from datetime import datetime
 import itertools
+import logging
 import shutil
 import os
+import signal
 import sys
+import threading
 
 """
 Runs the browser from a script, and provides useful utilities
 for setting up the browser environment.
 """
+
+__all__ = [
+           "UNIXISH",
+           "IS_WIN32",
+           "runApp",
+           "Process",
+           "initializeProfile",
+           "DIST_BIN",
+           "DEFAULT_APP",
+          ]
 
 # Since some tests require cross-domain support in Mochitest, across ports,
 # domains, subdomains, etc. we use a proxy autoconfig hack to map a bunch of
@@ -112,6 +125,19 @@ UNIXISH = not IS_WIN32 and not IS_MAC
 
 #expand DEFAULT_APP = "./" + __BROWSER_PATH__
 
+###########
+# LOGGING #
+###########
+
+# We use the logging system here primarily because it'll handle multiple
+# threads, which is needed to process the output of the server and application
+# processes simultaneously.
+log = logging.getLogger()
+handler = logging.StreamHandler(sys.stdout)
+log.setLevel(logging.INFO)
+log.addHandler(handler)
+
+
 #################
 # SUBPROCESSING #
 #################
@@ -125,15 +151,17 @@ class Process:
 
   def __init__(self, command, args, env):
     """
-    Executes the given command, which must be an absolute path, with the given
-    arguments in the given environment.
+    Creates a process representing the execution of the given command, which
+    must be an absolute path, with the given arguments in the given environment.
+    The process is then started.
     """
     command = os.path.abspath(command)
     if IS_WIN32:
       import subprocess
       cmd = [command]
       cmd.extend(args)
-      self._process = subprocess.Popen(cmd, env = env)
+      p = subprocess.Popen(cmd, env = env)
+      self._out = p.stdout
     else:
       import popen2
       cmd = []
@@ -142,34 +170,48 @@ class Process:
       cmd.append("'" + command + "'")
       cmd.extend(map(lambda x: "'" + x + "'", args))
       cmd = " ".join(cmd)
-      self._process = popen2.Popen4(cmd)
-    self.pid = self._process.pid
+      p = popen2.Popen4(cmd)
+      self._out = p.fromchild
 
-  def wait(self):
-    "Waits for this process to finish, then returns the process's status."
-    if IS_WIN32:
-      return self._process.wait()
-    # popen2 is a bit harder to work with because we have to manually redirect
-    # output to stdout
+    self._process = p
+    self.pid = p.pid
+    
+    self._thread = threading.Thread(target = lambda: self._run())
+    self._thread.start()
+
+  def _run(self):
+    "Continues execution of this process on a separate thread."
     p = self._process
-    stdout = sys.stdout
-    out = p.fromchild
+    out = self._out
+    # read in lines until the process finishes, then read in any last remaining
+    # buffered lines
     while p.poll() == -1:
       line = out.readline().rstrip()
       if len(line) > 0:
-        print >> stdout, line
-    # read in the last lines that happened between the last -1 poll and the
-    # process finishing
+        log.info(line)
     for line in out:
       line = line.rstrip()
       if len(line) > 0:
-        print >> stdout, line
-    return p.poll()
+        log.info(line)
+    self._status = p.poll()
+
+  def wait(self):
+    "Waits for this process to finish, then returns the process's status."
+    self._thread.join()
+    return self._status
+
+  def kill(self):
+    "Kills this process."
+    try:
+      if not IS_WIN32: # XXX
+        os.kill(self._process.pid, signal.SIGKILL)
+    except:
+      pass
 
 
-#######################
-# PROFILE SETUP       #
-#######################
+#################
+# PROFILE SETUP #
+#################
 
 def initializeProfile(profileDir):
   "Sets up the standard testing profile."
@@ -243,9 +285,9 @@ user_pref("network.proxy.autoconfig_url", "%(pacURL)s");
   prefsFile.close()
 
 
-#######################
-# RUN THE APP         #
-#######################
+###############
+# RUN THE APP #
+###############
 
 def runApp(testURL, env, app, profileDir, extraArgs):
   "Run the app, returning the time at which it was started."
@@ -270,9 +312,9 @@ def runApp(testURL, env, app, profileDir, extraArgs):
   args.extend(("-no-remote", "-profile", profileDirectory, testURL))
   args.extend(extraArgs)
   proc = Process(cmd, args, env = env)
-  print "Application pid: " + str(proc.pid)
+  log.info("Application pid: %d", proc.pid)
   status = proc.wait()
   if status != 0:
-    print "FAIL Exited with code " + str(status) + " during test run"
+    log.info("ERROR FAIL Exited with code %d during test run", status)
 
   return start
