@@ -409,7 +409,8 @@
     </handlers>
   </binding>
 
-  <binding id="colorpicker-button" extends="xul:menu">
+  <binding id="colorpicker-button" display="xul:menu"
+           extends="chrome://global/content/bindings/general.xml#basecontrol">
     <resources>
       <stylesheet src="chrome://global/skin/colorpicker.css"/>
     </resources>
@@ -427,7 +428,7 @@
       </xul:panel>
     </content>
     
-    <implementation implements="nsIAccessibleProvider, nsIDOMXULControlElement">
+    <implementation implements="nsIAccessibleProvider">
       <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
