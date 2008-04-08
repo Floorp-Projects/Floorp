@@ -727,6 +727,9 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 != 409659-1c.html 409659-1-ref.html
 == 409659-1d.html 409659-1-ref.html
 == 411334-1.xml 411334-1-ref.xml
+== 411585-1.html 411585-1-ref.html
+== 411585-2.html 411585-2-ref.html
+fails == 411585-3.html 411585-3-ref.html # bug 426909
 == 411792-1.html 411792-1-ref.html
 == 412093-1.html 412093-1-ref.html
 == 412607-1a.html 412607-1-ref.html
