@@ -3658,30 +3658,19 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
         }
       }
       aLine->SetBreakTypeAfter(breakType);
-      if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus)) {
-        // Create a continuation for the incomplete frame. Note that the
-        // frame may already have a continuation.
-        PRBool madeContinuation;
-        rv = CreateContinuationFor(aState, aLine, aFrame, madeContinuation);
+      if (NS_FRAME_IS_COMPLETE(frameReflowStatus)) {
+        // Split line, but after the frame just reflowed
+        rv = SplitLine(aState, aLineLayout, aLine, aFrame->GetNextSibling(), aLineReflowStatus);
         NS_ENSURE_SUCCESS(rv, rv);
-        if (!aLineLayout.GetLineEndsInBR()) {
-          // Remember that the line has wrapped
-          aLine->SetLineWrapped(PR_TRUE);
-        }
-      }
 
-      // Split line, but after the frame just reflowed
-      rv = SplitLine(aState, aLineLayout, aLine, aFrame->GetNextSibling(), aLineReflowStatus);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus) ||
-          (NS_INLINE_IS_BREAK_AFTER(frameReflowStatus) &&
-           !aLineLayout.GetLineEndsInBR())) {
-        // Mark next line dirty in case SplitLine didn't end up
-        // pushing any frames.
-        nsLineList_iterator next = aLine.next();
-        if (next != end_lines() && !next->IsBlock()) {
-          next->MarkDirty();
+        if (NS_INLINE_IS_BREAK_AFTER(frameReflowStatus) &&
+            !aLineLayout.GetLineEndsInBR()) {
+          // Mark next line dirty in case SplitLine didn't end up
+          // pushing any frames.
+          nsLineList_iterator next = aLine.next();
+          if (next != end_lines() && !next->IsBlock()) {
+            next->MarkDirty();
+          }
         }
       }
     }
@@ -3691,14 +3680,13 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     // if the frame is a placeholder and was complete but truncated (and not at the top
     // of page), the entire line will be pushed to give it another chance to not truncate.
     *aLineReflowStatus = LINE_REFLOW_TRUNCATED;
-  }  
-  else if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus)) {
-    // Frame is not-complete, no special breaking status
+  }
 
-    nsIAtom* frameType = aFrame->GetType();
-
+  if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus)) {
     // Create a continuation for the incomplete frame. Note that the
     // frame may already have a continuation.
+    nsIAtom* frameType = aFrame->GetType();
+
     PRBool madeContinuation;
     rv = (nsGkAtoms::placeholderFrame == frameType)
          ? SplitPlaceholder(aState, aFrame)
