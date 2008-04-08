@@ -1135,6 +1135,8 @@ var PlacesUtils = {
           if (tags.length)
             this.tagging.tagURI(this._uri(aData.uri), tags);
         }
+        if (aData.charset)
+          this.history.setCharsetForURI(this._uri(aData.uri), aData.charset);
         break;
       case this.TYPE_X_MOZ_PLACE_SEPARATOR:
         id = this.bookmarks.insertSeparator(aContainer, aIndex);
@@ -1219,6 +1221,12 @@ var PlacesUtils = {
       var tags = aIsUICommand ? aPlacesNode.tags : null;
       if (tags)
         aJSNode.tags = tags;
+
+      // last character-set
+      var uri = self._uri(aPlacesNode.uri);
+      var lastCharset = self.history.getCharsetForURI(uri);
+      if (lastCharset)
+        aJSNode.charset = lastCharset;
     }
 
     function addSeparatorProperties(aPlacesNode, aJSNode) {

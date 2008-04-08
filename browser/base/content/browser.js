@@ -1759,7 +1759,12 @@ function getShortcutOrURI(aURL, aPostDataRef) {
     if (matches)
       [, shortcutURL, charset] = matches;
     else {
-      //XXX Bug 317472 will add lastCharset support to places.
+      // Try to get the saved character-set.
+      try {
+        // makeURI throws if URI is invalid.
+        // Will return an empty string if character-set is not found.
+        charset = PlacesUtils.history.getCharsetForURI(makeURI(shortcutURL));
+      } catch (e) {}
     }
 
     var encodedParam = "";
@@ -5089,6 +5094,8 @@ function BrowserSetForcedCharacterSet(aCharset)
   var docCharset = getBrowser().docShell.QueryInterface(
                             Components.interfaces.nsIDocCharset);
   docCharset.charset = aCharset;
+  // Save the forced character-set
+  PlacesUtils.history.setCharsetForURI(getWebNavigation().currentURI, aCharset);
   BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
 }
 
@@ -5757,11 +5764,13 @@ function AddKeywordForSearchField()
 {
   var node = document.popupNode;
 
+  var charset = node.ownerDocument.characterSet;
+
   var docURI = makeURI(node.ownerDocument.URL,
-                       node.ownerDocument.characterSet);
+                       charset);
 
   var formURI = makeURI(node.form.getAttribute("action"),
-                        node.ownerDocument.characterSet,
+                        charset,
                         docURI);
 
   var spec = formURI.spec;
@@ -5810,7 +5819,7 @@ function AddKeywordForSearchField()
 
   var description = PlacesUIUtils.getDescriptionFromDocument(node.ownerDocument);
   PlacesUIUtils.showMinimalAddBookmarkUI(makeURI(spec), "", description, null,
-                                         null, null, "", postData);
+                                         null, null, "", postData, charset);
 }
 
 function SwitchDocumentDirection(aWindow) {

@@ -129,7 +129,6 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 #define LOAD_IN_SIDEBAR_ANNO NS_LITERAL_CSTRING("bookmarkProperties/loadInSidebar")
 #define DESCRIPTION_ANNO NS_LITERAL_CSTRING("bookmarkProperties/description")
 #define POST_DATA_ANNO NS_LITERAL_CSTRING("bookmarkProperties/POSTData")
-#define LAST_CHARSET_ANNO NS_LITERAL_CSTRING("URIProperties/characterSet")
 #define STATIC_TITLE_ANNO NS_LITERAL_CSTRING("bookmarks/staticTitle")
 
 #define BOOKMARKS_MENU_ICON_URI "chrome://browser/skin/places/bookmarksMenu.png"
@@ -987,13 +986,8 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
 
   // import last charset
   if (!lastCharset.IsEmpty()) {
-    PRBool hasCharset = PR_FALSE;
-    mAnnotationService->ItemHasAnnotation(frame.mPreviousId,
-                                          LAST_CHARSET_ANNO, &hasCharset);
-    if (!hasCharset)
-      mAnnotationService->SetItemAnnotationString(frame.mPreviousId, LAST_CHARSET_ANNO,
-                                                  lastCharset, 0,
-                                                  nsIAnnotationService::EXPIRE_NEVER);
+    rv = mHistoryService->SetCharsetForURI(frame.mPreviousLink,lastCharset);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "setCharsetForURI failed");
   }
 }
 
@@ -1935,15 +1929,9 @@ nsPlacesImportExportService::WriteItem(nsINavHistoryResultNode* aItem,
   }
 
   // last charset
-  PRBool hasLastCharset = PR_FALSE;
-  rv = mAnnotationService->ItemHasAnnotation(itemId, LAST_CHARSET_ANNO,
-                                             &hasLastCharset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (hasLastCharset) {
-    nsAutoString lastCharset;
-    rv = mAnnotationService->GetItemAnnotationString(itemId, LAST_CHARSET_ANNO,
-                                                     lastCharset);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoString lastCharset;
+  if (NS_SUCCEEDED(mHistoryService->GetCharsetForURI(pageURI, lastCharset)) &&
+      !lastCharset.IsEmpty()) {
     rv = aOutput->Write(kLastCharsetAttribute, sizeof(kLastCharsetAttribute)-1, &dummy);
     NS_ENSURE_SUCCESS(rv, rv);
     char* escapedLastCharset = nsEscapeHTML(NS_ConvertUTF16toUTF8(lastCharset).get());

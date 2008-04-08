@@ -39,7 +39,6 @@
 const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 const POST_DATA_ANNO = "bookmarkProperties/POSTData";
-const LAST_CHARSET_ANNO = "URIProperties/characterSet";
 
 Components.utils.import("resource://gre/modules/utils.js");
 do_check_eq(typeof PlacesUtils, "object");
@@ -209,10 +208,10 @@ function testCanonicalBookmarks() {
   do_check_eq("hidden1%3Dbar&text1%3D%25s",
               PlacesUtils.annotations.getItemAnnotation(testBookmark1.itemId, POST_DATA_ANNO));
 
-  // last charset 
-  do_check_true(PlacesUtils.annotations.itemHasAnnotation(testBookmark1.itemId, LAST_CHARSET_ANNO));
-  do_check_eq("ISO-8859-1", PlacesUtils.annotations.getItemAnnotation(testBookmark1.itemId,
-                                                                      LAST_CHARSET_ANNO));
+  // last charset
+  var testURI = PlacesUtils._uri(testBookmark1.uri);
+  do_check_eq("ISO-8859-1", PlacesUtils.history.getCharsetForURI(testURI));
+
   // description 
   do_check_true(PlacesUtils.annotations.itemHasAnnotation(testBookmark1.itemId,
                                                           DESCRIPTION_ANNO));
