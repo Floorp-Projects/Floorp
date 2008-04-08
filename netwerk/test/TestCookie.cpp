@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -659,7 +659,7 @@ main(PRInt32 argc, char *argv[])
                                            PR_FALSE,                             // is secure
                                            PR_TRUE,                              // is httponly
                                            PR_TRUE,                              // is session
-                                           LL_MAXINT));                          // expiry time
+                                           PR_Now() / PR_USEC_PER_SEC + 2));     // expiry time
       rv[3] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("new.domain"),     // domain
                                            NS_LITERAL_CSTRING("/rabbit"),        // path
                                            NS_LITERAL_CSTRING("test3"),          // name
@@ -673,18 +673,20 @@ main(PRInt32 argc, char *argv[])
       rv[4] = NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator)));
       PRInt32 i = 0;
       PRBool more;
-      nsCOMPtr<nsICookie2> newDomainCookie;
+      nsCOMPtr<nsICookie2> expiredCookie, newDomainCookie;
       while (NS_SUCCEEDED(enumerator->HasMoreElements(&more)) && more) {
         nsCOMPtr<nsISupports> cookie;
         if (NS_FAILED(enumerator->GetNext(getter_AddRefs(cookie)))) break;
         ++i;
         
-        // keep tabs on the third cookie, so we can check it later
+        // keep tabs on the second and third cookies, so we can check them later
         nsCOMPtr<nsICookie2> cookie2(do_QueryInterface(cookie));
         if (!cookie2) break;
-        nsCAutoString domain;
-        cookie2->GetRawHost(domain);
-        if (domain == NS_LITERAL_CSTRING("new.domain"))
+        nsCAutoString name;
+        cookie2->GetName(name);
+        if (name == NS_LITERAL_CSTRING("test2"))
+          expiredCookie = cookie2;
+        else if (name == NS_LITERAL_CSTRING("test3"))
           newDomainCookie = cookie2;
       }
       rv[5] = i == 3;
@@ -715,13 +717,19 @@ main(PRInt32 argc, char *argv[])
                                             PR_TRUE,                              // is session
                                             LL_MININT));                          // expiry time
       rv[13] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && !found;
+      // sleep four seconds, to make sure the second cookie has expired
+      PR_Sleep(4 * PR_TicksPerSecond());
+      // check CountCookiesFromHost() and CookieExists() don't count the expired cookie
+      rv[14] = NS_SUCCEEDED(cookieMgr2->CountCookiesFromHost(NS_LITERAL_CSTRING("cookiemgr.test"), &hostCookies)) &&
+              hostCookies == 1;
+      rv[15] = NS_SUCCEEDED(cookieMgr2->CookieExists(expiredCookie, &found)) && !found;
       // double-check RemoveAll() using the enumerator
-      rv[14] = NS_SUCCEEDED(cookieMgr->RemoveAll());
-      rv[15] = NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator))) &&
+      rv[16] = NS_SUCCEEDED(cookieMgr->RemoveAll());
+      rv[17] = NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator))) &&
                NS_SUCCEEDED(enumerator->HasMoreElements(&more)) &&
                !more;
 
-      allTestsPassed = PrintResult(rv, 16) && allTestsPassed;
+      allTestsPassed = PrintResult(rv, 18) && allTestsPassed;
 
 
       // *** eviction and creation ordering tests
