@@ -58,12 +58,11 @@
   background-image: none !important;       
 } 
 
-
 /* back button */
 
 #back-button {
   list-style-image: url("chrome://browser/skin/places/back-forward.png");
-  -moz-image-region: rect(0px, 27px, 23px, 0px);
+  -moz-image-region: rect(0px, 34px, 23px, 0px);
   -moz-margin-end: 0;
   -moz-padding-end: 0;
   border-left: none;
@@ -71,13 +70,13 @@
 }
 
 #back-button[disabled="true"] {
- -moz-image-region: rect(23px, 27px, 46px, 0px) !important;
+ -moz-image-region: rect(23px, 34px, 46px, 0px) !important;
 }
 
 #back-button:hover:active,
 #back-button[buttondown="true"],
 #back-button[open="true"] {
-  -moz-image-region: rect(46px, 27px, 69px, 0px);
+  -moz-image-region: rect(46px, 34px, 69px, 0px);
 }
 
 #back-button > .toolbarbutton-text,
@@ -89,7 +88,7 @@
 
 #forward-button {
   list-style-image: url("chrome://browser/skin/places/back-forward.png");
-  -moz-image-region: rect(0px, 53px, 23px, 27px);
+  -moz-image-region: rect(0px, 67px, 23px, 34px);
   -moz-margin-start: 0;
   -moz-margin-end: 8px;
   -moz-padding-start: 0;
@@ -98,19 +97,22 @@
 }
 
 #forward-button[disabled="true"] {
- -moz-image-region: rect(23px, 53px, 46px, 27px) !important;
+ -moz-image-region: rect(23px, 67px, 46px, 34px) !important;
 }
 
 #forward-button:hover:active,
 #forward-button[buttondown="true"],
 #forward-button[open="true"] {
-  -moz-image-region: rect(46px, 53px, 69px, 27px);
+  -moz-image-region: rect(46px, 67px, 69px, 34px);
 }
 
 #placesToolbar > toolbarbutton[type="menu"] {
   -moz-margin-start: 5px;
-  -moz-padding-end: 6px;
+  -moz-padding-end: 10px;
   background: url("chrome://browser/skin/places/menubutton-end.png") center right no-repeat;
+}
+#placesToolbar > toolbarbutton[type="menu"][open="true"] {
+  background: url("chrome://browser/skin/places/menubutton-end-pressed.png") center right no-repeat;
 }
 
 #placesToolbar > toolbarbutton[type="menu"] > menupopup {
@@ -120,31 +122,35 @@
 
 #placesToolbar > toolbarbutton[type="menu"] > .toolbarbutton-icon {
   background: url("chrome://browser/skin/places/menubutton-start.png") center left no-repeat;
-  padding: 4px 2px;
+  padding: 3px 4px 4px 10px;
   height: 23px;
+}
+#placesToolbar > toolbarbutton[type="menu"][open="true"] > .toolbarbutton-icon {
+  background: url("chrome://browser/skin/places/menubutton-start-pressed.png") center left no-repeat;
 }
 
 #placesToolbar > toolbarbutton[type="menu"] > .toolbarbutton-text {
-  background: url("chrome://browser/skin/places/menubutton-mid.png") center left repeat-x;
-  height: 23px;
-  margin: 0;
-  padding: 4px;
+  display:  none;
 }
 
 #placesToolbar > toolbarbutton[type="menu"] > .toolbarbutton-menu-dropmarker {
   list-style-image: url("chrome://browser/skin/places/folderDropArrow.png");
+  padding: 0;
 }
 
 /* organize button */
 #organizeButton {
+  list-style-image: url("chrome://browser/skin/places/toolbar-button-organize.png");
 }
 
 /* view button */
 #viewMenu {
+  list-style-image: url("chrome://browser/skin/places/toolbar-button-view.png");
 }
 
 /* maintenance button */
 #maintenanceButton {
+  list-style-image: url("chrome://browser/skin/places/toolbar-button-backup.png");
 }
 
 /* Root View */
@@ -206,6 +212,21 @@
   padding-top: 1px;
 }
 
+#placeContent treechildren::-moz-tree-row(odd) {
+  background-color: #edf3fe;
+}
+
+#placeContent treechildren::-moz-tree-row(selected),
+#placeContent treechildren::-moz-tree-row(odd, selected) {
+  background-color: -moz-mac-secondaryhighlight;
+}
+
+#placeContent treechildren::-moz-tree-row(selected, focus), 
+#placeContent treechildren::-moz-tree-row(odd, selected, focus) {
+  background-color: Highlight;
+  color: HighlightText !important;
+}
+
 #placeContent treechildren::-moz-tree-cell,
 #placeContent treechildren::-moz-tree-column {
   border-right: 1px solid #d7dad7;
@@ -265,11 +286,17 @@
   -moz-border-bottom-colors: #C2C2C2 #A4A4A4 -moz-Field;
   -moz-border-right-colors: #969696 #C5C5C5 -moz-Field;
   -moz-border-left-colors: #969696 #C5C5C5 -moz-Field;
-  -moz-border-radius: 11.5px;
+  -moz-border-radius: 12px;
   background: url("chrome://global/skin/icons/search-textbox.png") -moz-Field no-repeat 1px center;
-  -moz-background-clip: padding !important;
+  -moz-background-clip: border !important;
   padding: 0;
   -moz-padding-start: 14px;
+}
+
+#searchFilter[focused="true"] {
+  outline: 2px solid #4F8EC9;
+  -moz-outline-radius: 12px;
+  -moz-outline-offset: -2px;
 }
 
 #searchFilter > .textbox-input-box {
@@ -418,6 +445,21 @@ menulist[open="true"] > .menulist-label-box  .menulist-label {
   margin: 0px !important;
   padding:  0px !important;
 }
+#editBMPanel_namePicker[droppable="false"] > .menulist-editable-box {
+  -moz-appearance: textfield;
+  cursor: text;
+  margin: 4px 4px;
+  border: 3px solid;
+  -moz-border-top-colors: transparent #888888 #000000;
+  -moz-border-right-colors: transparent #FFFFFF #000000;
+  -moz-border-bottom-colors: transparent #FFFFFF #000000;
+  -moz-border-left-colors: transparent #888888 #000000;
+  -moz-border-radius-topright: 2px;
+  -moz-border-radius-bottomleft: 2px;
+  padding: 0;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+}
 
 #saveSearch {
   -moz-appearance: none;
@@ -533,6 +575,7 @@ menulist[open="true"] > .menulist-label-box  .menulist-label {
   background: url("chrome://browser/skin/places/minus-active.png") no-repeat left center;
 }
 
+%endif
 
 /**** expanders ****/
 
@@ -559,7 +602,6 @@ menulist[open="true"] > .menulist-label-box  .menulist-label {
 .expander-up:hover:active {
   list-style-image: url("chrome://browser/skin/places/expander-open-active.png") !important;
 }
-%endif
 
 .no-margin-button {
   min-width:0em;
@@ -570,6 +612,7 @@ menulist[open="true"] > .menulist-label-box  .menulist-label {
  */
 
 /* More/Less button */
+
 #infoScrollboxExpander {
   list-style-image: url("chrome://browser/skin/places/twisty-open.gif");
   -moz-appearance: none;

@@ -98,7 +98,7 @@ findbar > checkbox > .checkbox-label-box > .checkbox-label {
   -moz-border-left-colors: #7F7F7F #EFEFEF -moz-Field;
   -moz-border-radius: 11.5px;
   background: url("chrome://global/skin/icons/search-textbox.png") -moz-Field no-repeat 1px center;
-  -moz-background-clip: padding !important;
+  -moz-background-clip: border !important;
   padding: 0 8px;
   -moz-padding-start: 17px;
 }

@@ -43,6 +43,7 @@ classic.jar:
 +  skin/classic/global/spinbuttons.css
 +  skin/classic/global/splitter.css
 +  skin/classic/global/statusbar-background.gif
++  skin/classic/global/statusbar-background-inactive.gif
 +  skin/classic/global/tabbox.css
 +  skin/classic/global/textbox.css
 +  skin/classic/global/datetimepicker.css
@@ -174,7 +175,9 @@ classic.jar:
 +  skin/classic/global/toolbar/dropmark-nav-small.png                 (toolbar/dropmark-nav-small.png)
 +  skin/classic/global/toolbar/spring.gif                             (toolbar/spring.gif)
 +  skin/classic/global/toolbar/toolbar-background.gif                 (toolbar/toolbar-background.gif)
-+  skin/classic/global/toolbar/toolbar-background-tall.gif            (toolbar/toolbar-background-tall.gif)
++  skin/classic/global/toolbar/toolbar-background-inactive.png        (toolbar/toolbar-background-inactive.png)
++  skin/classic/global/toolbar/toolbar-background-tall.png            (toolbar/toolbar-background-tall.png)
++  skin/classic/global/toolbar/toolbar-background-tall-inactive.png   (toolbar/toolbar-background-tall-inactive.png)
 +  skin/classic/global/toolbar/toolbar-pinstripe-overlay.png          (toolbar/toolbar-pinstripe-overlay.png)
 +  skin/classic/global/toolbar/toolbar-separator.png                  (toolbar/toolbar-separator.png)
 +  skin/classic/global/toolbar/toolbarbutton-customhover-left.png     (toolbar/toolbarbutton-customhover-left.png)
@@ -187,4 +190,3 @@ classic.jar:
 +  skin/classic/global/tree/item-grayscale.png                        (tree/item-grayscale.png)
 +  skin/classic/global/tree/sort-asc.gif                              (tree/sort-asc.gif)
 +  skin/classic/global/tree/sort-dsc.gif                              (tree/sort-dsc.gif)
-
