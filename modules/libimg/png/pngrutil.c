@@ -3305,10 +3305,15 @@ defined(PNG_USER_TRANSFORM_PTR_SUPPORTED)
    if (row_bytes > (png_uint_32)65536L)
       png_error(png_ptr, "This image requires a row greater than 64KB");
 #endif
-   if (png_ptr->big_row_buf == NULL)
-      png_ptr->big_row_buf = (png_bytep)png_malloc(png_ptr, row_bytes+64);
-   if (png_ptr->row_buf == NULL)
-      png_ptr->row_buf = png_ptr->big_row_buf+32;
+
+   if(row_bytes + 64 > png_ptr->old_big_row_buf_size)
+   {
+     if (png_ptr->big_row_buf)
+        png_free(png_ptr,png_ptr->big_row_buf);
+     png_ptr->big_row_buf = (png_bytep)png_malloc(png_ptr, row_bytes+64);
+     png_ptr->row_buf = png_ptr->big_row_buf+32;
+     png_ptr->old_big_row_buf_size = row_bytes+64;
+   }
 
 #ifdef PNG_MAX_MALLOC_64K
    if ((png_uint_32)png_ptr->rowbytes + 1 > (png_uint_32)65536L)
@@ -3316,8 +3321,15 @@ defined(PNG_USER_TRANSFORM_PTR_SUPPORTED)
 #endif
    if ((png_uint_32)png_ptr->rowbytes > (png_uint_32)(PNG_SIZE_MAX - 1))
       png_error(png_ptr, "Row has too many bytes to allocate in memory.");
-   png_ptr->prev_row = (png_bytep)png_malloc(png_ptr, (png_uint_32)(
-      png_ptr->rowbytes + 1));
+
+   if(png_ptr->rowbytes+1 > png_ptr->old_prev_row_size)
+   {
+     if (png_ptr->prev_row)
+        png_free(png_ptr,png_ptr->prev_row);
+     png_ptr->prev_row = (png_bytep)png_malloc(png_ptr, (png_uint_32)(
+        png_ptr->rowbytes + 1));
+     png_ptr->old_prev_row_size = png_ptr->rowbytes+1;
+   }
 
    png_memset_check(png_ptr, png_ptr->prev_row, 0, png_ptr->rowbytes + 1);
 
@@ -3342,7 +3354,10 @@ png_read_reset(png_structp png_ptr)
     png_ptr->mode &= ~PNG_AFTER_IDAT;
     png_ptr->row_number = 0;
     png_ptr->pass = 0;
+#if 0 /* this isn't needed now but might be if png_read_start_row() uses it */
     png_ptr->flags &= ~PNG_FLAG_ROW_INIT;
+#endif
+    png_read_start_row(png_ptr);
 }
 
 void /* PRIVATE */
@@ -3398,7 +3413,6 @@ png_progressive_read_reset(png_structp png_ptr)
         png_ptr->iwidth = png_ptr->width;
         png_ptr->irowbytes = png_ptr->rowbytes + 1;
     }
-    
     png_ptr->flags &= ~PNG_FLAG_ZLIB_FINISHED;
     if (inflateReset(&(png_ptr->zstream)) != Z_OK)
         png_error(png_ptr, "inflateReset failed");
