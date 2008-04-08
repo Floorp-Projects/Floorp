@@ -6,17 +6,28 @@ use Bootstrap::Step;
 use Bootstrap::Config;
 @ISA = ("Bootstrap::Step");
 
+use LWP::Simple;
+
 sub Execute {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
+    my $product = $config->Get(var => 'product');
+    my $version = $config->Get(var => 'version');
     my $rc = $config->Get(var => 'rc');
+    my $stagingServer = $config->Get(var => 'stagingServer');
 
-    my $signedDir = $config->GetFtpCandidateDir(bitsUnsigned => 0);
+    my $logFile = 'win32_signing_rc' . $rc . '.log';
+    my $url = 'http://' . $stagingServer . '/pub/mozilla.org/' . $product . 
+     '/nightly/' .  $version . '-candidates/' . 'rc' . $rc . '/' . $logFile;
 
-    while (! -f catfile($signedDir . 'win32_signing_rc' . $rc . '.log')) {
+    $this->Log(msg => 'Looking for url ' . $url);
+
+    while (! head($url)) {
         sleep(10);
     }
+
+    $this->Log(msg => 'Found signing log');
 }
 
 sub Verify {}
