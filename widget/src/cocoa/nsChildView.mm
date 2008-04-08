@@ -1114,13 +1114,6 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   if (mPluginDrawing)
     return NS_ERROR_FAILURE;
 
-  // If this is a CoreGraphics plugin, nothing to do but prevent being
-  // reentered.
-  if (mPluginIsCG) {
-    mPluginDrawing = PR_TRUE;
-    return NS_OK;
-  }
-
   NSWindow* window = [mView nativeWindow];
   if (!window)
     return NS_ERROR_FAILURE;
@@ -1131,16 +1124,22 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   // we don't know here if we're being drawn inside a BeginUpdate/EndUpdate pair
   // (which seem to occur in [NSWindow display]), and we don't want to have the burden
   // of correctly doing Carbon invalidates of the plugin rect, we manually set the
-  // visible region to be the entire port every time.
+  // visible region to be the entire port every time. It is necessary to set up our
+  // window's port even for CoreGraphics plugins, because they may still use Carbon
+  // internally (see bug #420527 for details).
+  CGrafPtr port = ::GetWindowPort(WindowRef([window windowRef]));
+  if (!mPluginIsCG)
+    port = mPluginPort.qdPort.port;
+
   RgnHandle pluginRegion = ::NewRgn();
   if (pluginRegion) {
-    PRBool portChanged = (mPluginPort.qdPort.port != CGrafPtr(GetQDGlobalsThePort()));
+    PRBool portChanged = (port != CGrafPtr(GetQDGlobalsThePort()));
     CGrafPtr oldPort;
     GDHandle oldDevice;
 
     if (portChanged) {
       ::GetGWorld(&oldPort, &oldDevice);
-      ::SetGWorld(mPluginPort.qdPort.port, ::IsPortOffscreen(mPluginPort.qdPort.port) ? nsnull : ::GetMainDevice());
+      ::SetGWorld(port, ::IsPortOffscreen(port) ? nsnull : ::GetMainDevice());
     }
 
     ::SetOrigin(0, 0);
@@ -1155,8 +1154,8 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
     ConvertGeckoRectToMacRect(clipRect, pluginRect);
     
     ::RectRgn(pluginRegion, &pluginRect);
-    ::SetPortVisibleRegion(mPluginPort.qdPort.port, pluginRegion);
-    ::SetPortClipRegion(mPluginPort.qdPort.port, pluginRegion);
+    ::SetPortVisibleRegion(port, pluginRegion);
+    ::SetPortClipRegion(port, pluginRegion);
     
     // now set up the origin for the plugin
     ::SetOrigin(origin.x, origin.y);
