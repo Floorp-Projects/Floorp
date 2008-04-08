@@ -271,6 +271,11 @@ public:
   static void UpdateFilterRegion(nsIFrame *aFrame);
 
   /*
+   * Update the area covered by the frame
+   */
+  static void UpdateGraphic(nsISVGChildFrame *aSVGFrame);
+
+  /*
    * Update the filter invalidation region for ancestor frames, if relevant.
    */
   static void NotifyAncestorsOfFilterRegionChange(nsIFrame *aFrame);
