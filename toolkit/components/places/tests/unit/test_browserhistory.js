@@ -159,6 +159,9 @@ function run_test() {
                             Ci.nsIAnnotationService.EXPIRE_NEVER);
   var bookmark = bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder,
       deletedPages[bookmarkIndex], bmsvc.DEFAULT_INDEX, bookmarkName);
+  annosvc.setPageAnnotation(deletedPages[bookmarkIndex],
+                            annoName, annoValue, 0,
+                            Ci.nsIAnnotationService.EXPIRE_NEVER);
 
   try {
     bhist.removePages(deletedPages, deletedPages.length, false);
@@ -170,10 +173,14 @@ function run_test() {
   // check that bookmark and annotation still exist
   do_check_eq(bmsvc.getBookmarkURI(bookmark).spec,
               deletedPages[bookmarkIndex].spec);
-  do_check_eq(annosvc.getPageAnnotation(deletedPages[annoIndex], annoName),
+  do_check_eq(annosvc.getPageAnnotation(deletedPages[bookmarkIndex], annoName),
               annoValue);
+  try {
+    annosvc.getPageAnnotation(deletedPages[annoIndex], annoName);
+    do_throw("did not expire expire_never anno on a not bookmarked item");
+  } catch(ex) {}
   // remove annotation and bookmark
-  annosvc.removePageAnnotation(deletedPages[annoIndex], annoName);
+  annosvc.removePageAnnotation(deletedPages[bookmarkIndex], annoName);
   bmsvc.removeItem(bookmark);
   bhist.removeAllPages();
 

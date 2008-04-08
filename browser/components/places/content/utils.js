@@ -418,6 +418,8 @@ var PlacesUIUtils = {
    *        will be shown in the dialog if this is used.
    * @param [optional] aPostData
    *        POST data for POST-style keywords.
+   * @param [optional] aCharSet
+   *        The character set for the bookmarked page.
    * @return true if any transaction has been performed.
    *
    * Notes:
@@ -433,7 +435,8 @@ var PlacesUIUtils = {
                                                    aShowPicker,
                                                    aLoadInSidebar,
                                                    aKeyword,
-                                                   aPostData) {
+                                                   aPostData,
+                                                   aCharSet) {
     var info = {
       action: "add",
       type: "bookmark"
@@ -462,6 +465,8 @@ var PlacesUIUtils = {
       info.keyword = aKeyword;
       if (typeof(aPostData) == "string")
         info.postData = aPostData;
+      if (typeof(aCharSet) == "string")
+        info.charSet = aCharSet;
     }
 
     return this._showBookmarkDialog(info);
@@ -481,7 +486,8 @@ var PlacesUIUtils = {
   showMinimalAddBookmarkUI:
   function PU_showMinimalAddBookmarkUI(aURI, aTitle, aDescription,
                                        aDefaultInsertionPoint, aShowPicker,
-                                       aLoadInSidebar, aKeyword, aPostData) {
+                                       aLoadInSidebar, aKeyword, aPostData,
+                                       aCharSet) {
     var info = {
       action: "add",
       type: "bookmark",
@@ -510,6 +516,8 @@ var PlacesUIUtils = {
       info.keyword = aKeyword;
       if (typeof(aPostData) == "string")
         info.postData = aPostData;
+      if (typeof(aCharSet) == "string")
+        info.charSet = aCharSet;
     }
     else
       info.hiddenRows.push("keyword");

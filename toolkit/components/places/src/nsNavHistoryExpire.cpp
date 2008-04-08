@@ -599,8 +599,8 @@ nsNavHistoryExpire::EraseVisits(mozIStorageConnection* aConnection,
 // nsNavHistoryExpire::EraseHistory
 //
 //    This erases records in moz_places when there are no more visits.
-//    We need to be careful not to delete bookmarks, place:URIs and
-//    URIs with EXPIRE_NEVER annotations.
+//    We need to be careful not to delete: bookmarks, items that still have
+//    visits and place: URIs.
 //
 //    This will modify the input by setting the erased flag on each of the
 //    array elements according to whether the history item was erased or not.
@@ -635,12 +635,13 @@ nsNavHistoryExpire::EraseHistory(mozIStorageConnection* aConnection,
     NS_LITERAL_CSTRING("DELETE FROM moz_places WHERE id IN( "
       "SELECT h.id "
       "FROM moz_places h "
-      "LEFT OUTER JOIN moz_historyvisits v ON v.place_id = h.id "
-      "LEFT OUTER JOIN moz_annos a ON a.place_id = h.id "
-      "WHERE h.id IN(") + deletedPlaceIds +
-      NS_LITERAL_CSTRING(") AND v.place_id IS NULL AND (a.expiration <> ") +
-      nsPrintfCString("%d", nsIAnnotationService::EXPIRE_NEVER) +
-      NS_LITERAL_CSTRING(" OR a.expiration IS NULL))"));
+      "WHERE h.id IN(") +
+        deletedPlaceIds +
+        NS_LITERAL_CSTRING(") AND NOT EXISTS "
+          "(SELECT id FROM moz_historyvisits WHERE place_id = h.id LIMIT 1) "
+          "AND NOT EXISTS "
+          "(SELECT id FROM moz_bookmarks WHERE fk = h.id LIMIT 1) "
+          "AND SUBSTR(h.url,0,6) <> 'place:')"));
 }
 
 
@@ -786,6 +787,15 @@ nsNavHistoryExpire::ExpireAnnotations(mozIStorageConnection* aConnection)
   rv = expireItemsStatement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // remove EXPIRE_WITH_HISTORY annos for pages without visits
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "DELETE FROM moz_annos WHERE expiration = ") +
+        nsPrintfCString("%d", nsIAnnotationService::EXPIRE_WITH_HISTORY) +
+        NS_LITERAL_CSTRING(" AND NOT EXISTS "
+          "(SELECT id FROM moz_historyvisits "
+          "WHERE place_id = moz_annos.place_id LIMIT 1)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -822,7 +832,7 @@ nsNavHistoryExpire::ExpireEmbeddedLinks(mozIStorageConnection* aConnection)
 // nsNavHistoryExpire::ExpireHistoryParanoid
 //
 //    Deletes any dangling history entries that aren't associated with any
-//    visits, bookmarks, EXPIRE_NEVER annotations or "place:" URIs.
+//    visits, bookmarks or "place:" URIs.
 //
 //    The aMaxRecords parameter is an optional cap on the number of 
 //    records to delete. If it's value is -1, all records will be deleted.
@@ -831,15 +841,12 @@ nsresult
 nsNavHistoryExpire::ExpireHistoryParanoid(mozIStorageConnection* aConnection,
                                           PRInt32 aMaxRecords)
 {
-  nsCAutoString query = NS_LITERAL_CSTRING(
+  nsCAutoString query(
     "DELETE FROM moz_places WHERE id IN ("
       "SELECT h.id FROM moz_places h "
         "LEFT OUTER JOIN moz_historyvisits v ON h.id = v.place_id "
         "LEFT OUTER JOIN moz_bookmarks b ON h.id = b.fk "
-        "LEFT OUTER JOIN moz_annos a ON h.id = a.place_id "
-      "WHERE v.id IS NULL AND b.id IS NULL AND (a.expiration != ") +
-      nsPrintfCString("%d", nsIAnnotationService::EXPIRE_NEVER) +
-      NS_LITERAL_CSTRING(" OR a.id IS NULL) AND SUBSTR(h.url,0,6) <> 'place:'");
+      "WHERE v.id IS NULL AND b.id IS NULL AND SUBSTR(h.url,0,6) <> 'place:'");
   if (aMaxRecords != -1) {
     query.AppendLiteral(" LIMIT ");
     query.AppendInt(aMaxRecords);
@@ -896,49 +903,47 @@ nsNavHistoryExpire::ExpireAnnotationsParanoid(mozIStorageConnection* aConnection
       NS_LITERAL_CSTRING("))"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // XXX REMOVE ME BEFORE FINAL
-  // There was a period in which we inserted bogus charset annos during bookmark
-  // import, we must move them into items annos, since those pages will
-  // never get deleted from moz_places and that is a valid privacy concern.
+  // XXX REMOVE ME LATE AFTER FINAL
+  // Move current charset item annos to page annos.
+  // There was a period in which EXPIRE_NEVER annos were undeletable
+  // so we moved charset annos from pageAnnos to itemAnnos.
+  // Since this has been fixed in RC1, we can use pageAnnos for charset
+  // so we must revert old itemAnnos to pageAnnos.
+  // see bug 317472 for details.
   nsCAutoString charsetAnno("URIProperties/characterSet");
-
-  // XXX REMOVE ME BEFORE FINAL
-  // Move current page annos to items annos for bookmarked items.
   // In the migration query we use NULL as the id, since we don't know the
   // new id where the annotation will be inserted
-  nsCOMPtr<mozIStorageStatement> migrateStatement;
+  // The GROUP BY is needed because we have a unique index on annos tables
+  // INSERT OR REPLACE is needed to overwrite existing values and not fail
+  nsCOMPtr<mozIStorageStatement> migrateCharsetStatement;
   rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-        "INSERT INTO moz_items_annos "
-        "SELECT null, b.id, a.anno_attribute_id, a.mime_type, a.content, "
-        " a.flags, a.expiration, a.type, a.dateAdded, a.lastModified "
-        "FROM moz_annos a "
-        "JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id "
-        "JOIN moz_bookmarks b ON b.fk = a.place_id "
-        "WHERE b.id IS NOT NULL AND n.name = ?1 AND a.expiration = ") +
-        nsPrintfCString("%d", nsIAnnotationService::EXPIRE_NEVER),
-      getter_AddRefs(migrateStatement));
+        "INSERT OR REPLACE INTO moz_annos "
+        "SELECT null, b.fk, t.anno_attribute_id, t.mime_type, t.content, "
+          "t.flags, t.expiration, t.type, t.dateAdded, t.lastModified "
+        "FROM moz_items_annos t "
+          "JOIN moz_anno_attributes n ON t.anno_attribute_id = n.id "
+          "JOIN moz_bookmarks b ON b.id = t.item_id "
+        "WHERE n.name = ?1 "
+        "GROUP BY b.fk, t.anno_attribute_id"),
+      getter_AddRefs(migrateCharsetStatement));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = migrateStatement->BindUTF8StringParameter(0, charsetAnno);
+  rv = migrateCharsetStatement->BindUTF8StringParameter(0, charsetAnno);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = migrateStatement->Execute();
+  rv = migrateCharsetStatement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // XXX REMOVE ME BEFORE FINAL
-  // Delete old bogus page annos for bookmarked items
-  nsCOMPtr<mozIStorageStatement> cleanupStatement;
+  // delete old charset item annos
+  nsCOMPtr<mozIStorageStatement> deleteCharsetStatement;
   rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-        "DELETE FROM moz_annos WHERE id IN "
-        "(SELECT a.id FROM moz_annos a "
-        "JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id "
-        "JOIN moz_bookmarks b ON b.fk = a.place_id "
-        "WHERE b.id IS NOT NULL AND n.name = ?1 AND a.expiration = ") +
-        nsPrintfCString("%d", nsIAnnotationService::EXPIRE_NEVER) +
-        NS_LITERAL_CSTRING(")"),
-      getter_AddRefs(cleanupStatement));
+    "DELETE FROM moz_items_annos WHERE id IN "
+      "(SELECT t.id FROM moz_items_annos t "
+        "JOIN moz_anno_attributes n ON t.anno_attribute_id = n.id "
+        "WHERE n.name = ?1)"),
+    getter_AddRefs(deleteCharsetStatement));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = cleanupStatement->BindUTF8StringParameter(0, charsetAnno);
+  rv = deleteCharsetStatement->BindUTF8StringParameter(0, charsetAnno);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = cleanupStatement->Execute();
+  rv = deleteCharsetStatement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // delete item annos w/o a corresponding item id
