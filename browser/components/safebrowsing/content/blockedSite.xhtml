@@ -147,10 +147,6 @@
         el = document.getElementById("errorLongDescText_malware");
         el.parentNode.removeChild(el);
 
-        // Unhide clickthrough button
-        el = document.getElementById("ignoreWarningButton");
-        el.style.display = "-moz-box";
-        
         // Set sitename
         document.getElementById("phishing_sitename").textContent = getHostString();
         document.title = document.getElementById("errorTitleText_phishing")
@@ -174,7 +170,6 @@
         top: 23px;
         left: 20px;
         font-size: smaller;
-        display: none; /* Hide the button by default */
       }
       
       #ignoreWarning {
