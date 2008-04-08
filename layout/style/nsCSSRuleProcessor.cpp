@@ -23,6 +23,7 @@
  * Contributor(s):
  *   L. David Baron <dbaron@dbaron.org>
  *   Daniel Glazman <glazman@netscape.com>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -780,6 +781,11 @@ InitSystemMetrics()
   lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ImagesInMenus, metricResult);
   if (metricResult) {
     sSystemMetrics->AppendElement(do_GetAtom("images-in-menus"));
+  }
+
+  rv = lookAndFeel->GetMetric(nsILookAndFeel::eMetric_WindowsDefaultTheme, metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(do_GetAtom("windows-default-theme"));
   }
 
   return PR_TRUE;
