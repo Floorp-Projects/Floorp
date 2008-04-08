@@ -890,6 +890,7 @@ PlacesTreeView.prototype = {
       properties = new Array();
       var nodeType = node.type;
       if (PlacesUtils.containerTypes.indexOf(nodeType) != -1) {
+        var itemId = node.itemId;
         if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY) {
           properties.push(this._getAtomFor("query"));
           if (this._showQueryAsFolder)
@@ -897,12 +898,22 @@ PlacesTreeView.prototype = {
         } 
         else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER ||
                  nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT) {
-          if (PlacesUtils.annotations.itemHasAnnotation(node.itemId,
+          
+          if (PlacesUtils.annotations.itemHasAnnotation(itemId,
                                                         LMANNO_FEEDURI))
             properties.push(this._getAtomFor("livemark"));
-          else if (PlacesUtils.bookmarks.getFolderIdForItem(node.itemId) ==
+          else if (PlacesUtils.bookmarks.getFolderIdForItem(itemId) ==
                    PlacesUtils.tagsFolderId)
             properties.push(this._getAtomFor("tagContainer"));
+        }
+
+        if (itemId != -1) {
+          var oqAnno;
+          try {
+            oqAnno = PlacesUtils.annotations.getItemAnnotation(itemId, ORGANIZER_QUERY_ANNO);
+            properties.push(this._getAtomFor("OrganizerQuery_" + oqAnno));
+          }
+          catch (ex) { /* not a special query */ }
         }
       }
       else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR)
