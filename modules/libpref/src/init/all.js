@@ -69,7 +69,7 @@ pref("browser.cache.check_doc_frequency",   3);
 
 pref("browser.cache.offline.enable",           true);
 // offline cache capacity in kilobytes
-pref("browser.cache.offline.capacity",         10240);
+pref("browser.cache.offline.capacity",         512000);
 
 // offline apps should be limited to this much data in global storage
 // (in kilobytes)
