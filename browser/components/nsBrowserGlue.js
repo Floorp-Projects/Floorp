@@ -115,8 +115,6 @@ BrowserGlue.prototype = {
         if (this._saveSession) {
           this._setPrefToSaveSession();
         }
-        this._shutdownPlaces();
-        this.idleService.removeIdleObserver(this, BOOKMARKS_ARCHIVE_IDLE_TIME);
         break;
       case "session-save":
         this._setPrefToSaveSession();
@@ -221,6 +219,7 @@ BrowserGlue.prototype = {
   _onProfileShutdown: function() 
   {
     this._shutdownPlaces();
+    this.idleService.removeIdleObserver(this, BOOKMARKS_ARCHIVE_IDLE_TIME);
     this.Sanitizer.onShutdown();
   },
 
@@ -493,10 +492,14 @@ BrowserGlue.prototype = {
 
     // Backup bookmarks to bookmarks.html to support apps that depend
     // on the legacy format.
+    var prefs = Cc["@mozilla.org/preferences-service;1"].
+                getService(Ci.nsIPrefBranch);
     var autoExportHTML = false;
     try {
-      autoExportHTML = prefs.getIntPref("browser.bookmarks.autoExportHTML");
-    } catch(ex) {}
+      autoExportHTML = prefs.getBoolPref("browser.bookmarks.autoExportHTML");
+    } catch(ex) {
+      Components.utils.reportError(ex);
+    }
 
     if (autoExportHTML) {
       Cc["@mozilla.org/browser/places/import-export-service;1"].
