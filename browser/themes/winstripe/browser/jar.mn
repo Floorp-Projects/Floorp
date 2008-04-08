@@ -86,7 +86,7 @@ classic.jar:
 #ifdef XP_WIN
 classic.jar:
 % skin browser classic/1.0 %skin/classic/aero/browser/ os=WINNT osversion>=6
-*       skin/classic/aero/browser/browser.css                        (browser.css)
+*       skin/classic/aero/browser/browser.css                        (browser-aero.css)
         skin/classic/aero/browser/browser.xml
 *       skin/classic/aero/browser/engineManager.css                  (engineManager.css)
         skin/classic/aero/browser/Info.png                           (Info-aero.png)

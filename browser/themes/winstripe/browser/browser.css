@@ -1754,7 +1754,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #urlbar[chromedir="ltr"] {
   -moz-margin-start: 4px;
-  /*-moz-margin-start: 6px;*/
 }
 
 #urlbar > .autocomplete-textbox-container {
@@ -1767,7 +1766,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #urlbar[chromedir="ltr"] > #identity-box {
   -moz-margin-start: -4px;
-  /*-moz-margin-start: -6px;*/
 }
 
 #identity-box > hbox {
@@ -1789,11 +1787,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   background-position: 0 10px;
   -moz-border-radius-topleft: 21px;
   -moz-border-radius-bottomleft: 21px;
-  /*margin: -4px 0;
-  padding: 3px 2px 3px 4px;
-  background-position: 0 3px;
-  -moz-border-radius-topleft: 14px;
-  -moz-border-radius-bottomleft: 14px;*/
 }
 
 #urlbar[chromedir="ltr"] > .autocomplete-textbox-container > .textbox-input-box {
