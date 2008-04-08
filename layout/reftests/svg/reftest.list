@@ -15,7 +15,13 @@ include moz-only/reftest.list
 == currentColor-02.svg pass.svg
 == currentColor-03.svg pass.svg
 == dynamic-link-style-01.svg pass.svg
+== dynamic-rect-01.svg dynamic-rect-01-ref.svg
+== dynamic-rect-02.svg dynamic-rect-02-ref.svg
+== dynamic-rect-03.svg dynamic-rect-03-ref.svg
 == dynamic-reflow-01.svg dynamic-reflow-01-ref.svg
+== dynamic-text-01.svg dynamic-text-01-ref.svg
+== dynamic-text-02.svg dynamic-text-02-ref.svg
+== dynamic-text-03.svg dynamic-text-03-ref.svg
 == fallback-color-01a.svg pass.svg
 == fallback-color-01b.svg pass.svg
 == fallback-color-02a.svg fallback-color-02-ref.svg
