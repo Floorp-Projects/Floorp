@@ -349,8 +349,6 @@ void nsMenuItemX::SetKeyEquiv(PRUint8 aModifiers, const nsString &aText)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  mMenuBar->UnregisterKeyEquivalent([mNativeMenuItem keyEquivalentModifierMask], [mNativeMenuItem keyEquivalent]);
-
   mModifiers = aModifiers;
   unsigned int macModifiers = MenuHelpersX::MacModifiersForGeckoModifiers(mModifiers);
   [mNativeMenuItem setKeyEquivalentModifierMask:macModifiers];
@@ -362,8 +360,6 @@ void nsMenuItemX::SetKeyEquiv(PRUint8 aModifiers, const nsString &aText)
     [mNativeMenuItem setKeyEquivalent:@""];
   else
     [mNativeMenuItem setKeyEquivalent:keyEquivalent];
-
-  mMenuBar->RegisterKeyEquivalent([mNativeMenuItem keyEquivalentModifierMask], [mNativeMenuItem keyEquivalent]);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }

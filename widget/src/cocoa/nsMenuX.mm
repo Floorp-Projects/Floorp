@@ -631,12 +631,12 @@ NS_IMETHODIMP nsMenuX::GetMenuContent(nsIContent ** aMenuContent)
 }
 
 
-NSMenu* nsMenuX::CreateMenuWithGeckoString(nsString& menuTitle)
+GeckoNSMenu* nsMenuX::CreateMenuWithGeckoString(nsString& menuTitle)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   NSString* title = [NSString stringWithCharacters:(UniChar*)menuTitle.get() length:menuTitle.Length()];
-  NSMenu* myMenu = [[NSMenu alloc] initWithTitle:title];
+  GeckoNSMenu* myMenu = [[GeckoNSMenu alloc] initWithTitle:title];
   [myMenu setDelegate:mMenuDelegate];
   
   // We don't want this menu to auto-enable menu items because then Cocoa
