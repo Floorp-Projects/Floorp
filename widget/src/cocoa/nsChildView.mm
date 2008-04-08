@@ -3146,12 +3146,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   geckoEvent.nativeMsg = &macEvent;
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
-  PRBool handled = mGeckoChild->DispatchMouseEvent(geckoEvent);
-  if (!mGeckoChild)
-    return;
-
-  if (!handled)
-    [super rightMouseUp:theEvent];
+  mGeckoChild->DispatchMouseEvent(geckoEvent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
