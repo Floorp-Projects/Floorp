@@ -70,7 +70,7 @@ interface nsIBrowserGlue : nsISupports
   void sanitize(in nsIDOMWindow aParentWindow);
 
   /**
-   * Add the special "Places" folder (with some special queries) to the personal toolbar folder.
+   * Add Smart Bookmarks special queries to bookmarks menu and toolbar folder.
    */
   void ensurePlacesDefaultQueriesInitialized();
 };
