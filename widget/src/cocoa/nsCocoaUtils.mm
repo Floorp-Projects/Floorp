@@ -39,7 +39,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCocoaUtils.h"
-#include "nsObjCExceptions.h"
 #include "nsMenuBarX.h"
 #include "nsCocoaWindow.h"
 #include "nsCOMPtr.h"

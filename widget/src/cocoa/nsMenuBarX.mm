@@ -109,7 +109,7 @@ nsMenuBarX::nsMenuBarX()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  mRootMenu = [[NSMenu alloc] initWithTitle:@"MainMenuBar"];
+  mRootMenu = [[GeckoNSMenu alloc] initWithTitle:@"MainMenuBar"];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -246,8 +246,6 @@ nsMenuBarX::MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
 NS_IMETHODIMP nsMenuBarX::Create(nsIWidget *aParent)
 {
   SetParent(aParent);
-  if (!mKeyEquivTable.Init())
-    return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
 
@@ -753,27 +751,6 @@ nsMenuBarX::LookupContentChangeObserver(nsIContent* aContent)
 }
 
 
-void nsMenuBarX::RegisterKeyEquivalent(unsigned int modifiers, NSString* string)
-{
-  const CocoaKeyEquivContainer keyEquiv(modifiers, string);
-  mKeyEquivTable.PutEntry(keyEquiv);
-}
-
-
-void nsMenuBarX::UnregisterKeyEquivalent(unsigned int modifiers, NSString* string)
-{
-  CocoaKeyEquivContainer keyEquiv(modifiers, string);
-  mKeyEquivTable.RemoveEntry(keyEquiv);  
-}
-
-
-PRBool nsMenuBarX::ContainsKeyEquiv(unsigned int modifiers, NSString* string)
-{
-  const CocoaKeyEquivContainer keyEquiv(modifiers, string);
-  return (mKeyEquivTable.GetEntry(keyEquiv) != nsnull);
-}
-
-
 // Given a menu item, creates a unique 4-character command ID and
 // maps it to the item. Returns the id for use by the client.
 PRUint32
@@ -959,6 +936,54 @@ NSMenuItem* MenuHelpersX::GetStandardEditMenuItem()
 
 
 //
+// Objective-C class used to allow us to have keyboard commands
+// look like they are doing something but actually do nothing.
+// We allow mouse actions to work normally.
+//
+
+
+// This tells us whether or not pKE is on the stack from a GeckoNSMenu. If it
+// is nil, it is not on the stack. The non-nil value is the object that put it
+// on the stack first.
+static GeckoNSMenu* gPerformKeyEquivOnStack = nil;
+// When this variable is set to YES, don't do special command processing.
+static BOOL gMenuEffectsOnly = NO;
+
+@implementation GeckoNSMenu
+
+- (BOOL)performKeyEquivalent:(NSEvent *)theEvent
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  NS_ASSERTION(gPerformKeyEquivOnStack != self, "GeckoNSMenu pKE re-entering for the same object!");
+
+  // Don't bother doing this if we don't have any items. It appears as though
+  // the OS will sometimes expect this sort of check.
+  if ([self numberOfItems] <= 0)
+    return NO;
+
+  if (!gPerformKeyEquivOnStack)
+    gPerformKeyEquivOnStack = self;
+  BOOL rv = [super performKeyEquivalent:theEvent];
+  if (gPerformKeyEquivOnStack == self)
+    gPerformKeyEquivOnStack = nil;
+  return rv;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
+}
+
+
+- (void)performMenuUserInterfaceEffectsForEvent:(NSEvent*)theEvent
+{
+  gMenuEffectsOnly = YES;
+  [self performKeyEquivalent:theEvent];
+  gMenuEffectsOnly = NO;
+}
+
+@end
+
+
+//
 // Objective-C class used as action target for menu items
 //
 
@@ -970,55 +995,58 @@ NSMenuItem* MenuHelpersX::GetStandardEditMenuItem()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  nsMenuBarX* menuBar = nsMenuBarX::sLastGeckoMenuBarPainted;
   int tag = [sender tag];
-  switch (tag) {
-    case eCommand_ID_About:
-    {
+  nsMenuBarX* menuBar = nsMenuBarX::sLastGeckoMenuBarPainted;
+
+  // We want to avoid processing app-global commands when we are asked to
+  // perform native menu effects only. This avoids sending events twice,
+  // which can lead to major problems.
+  if (!gMenuEffectsOnly) {
+    // Do special processing if this is for an app-global command.
+    if (tag == eCommand_ID_About) {
       nsIContent* mostSpecificContent = sAboutItemContent;
       if (menuBar && menuBar->mAboutItemContent)
         mostSpecificContent = menuBar->mAboutItemContent;
       MenuHelpersX::DispatchCommandTo(mostSpecificContent);
-      break;
     }
-
-    case eCommand_ID_Prefs:
-    {
+    else if (tag == eCommand_ID_Prefs) {
       nsIContent* mostSpecificContent = sPrefItemContent;
       if (menuBar && menuBar->mPrefItemContent)
         mostSpecificContent = menuBar->mPrefItemContent;
       MenuHelpersX::DispatchCommandTo(mostSpecificContent);
-      break;
     }
-
-    case eCommand_ID_Quit:
-    {
+    else if (tag == eCommand_ID_Quit) {
       nsIContent* mostSpecificContent = sQuitItemContent;
       if (menuBar && menuBar->mQuitItemContent)
         mostSpecificContent = menuBar->mQuitItemContent;
       // If we have some content for quit we execute it. Otherwise we send a native app terminate
       // message. If you want to stop a quit from happening, provide quit content and return
       // the event as unhandled.
-      if (mostSpecificContent)
+      if (mostSpecificContent) {
         MenuHelpersX::DispatchCommandTo(mostSpecificContent);
-      else
+      }
+      else {
         [NSApp terminate:nil];
-      break;
-    }
-
-    default:
-    {
-      // Can't do anything if we don't know the last painted menu bar.
-      if (!menuBar)
         return;
-      // given the commandID, look it up in our hashtable and dispatch to
-      // that content node. Recall that we store weak pointers to the content
-      // nodes in the hash table.
-      nsIMenuItem* content = menuBar->GetMenuItemForCommandID(static_cast<PRUint32>(tag));
-      if (content)
-        content->DoCommand();
-      break;
+      }
     }
+  }
+
+  // Don't do anything unless this is not a keyboard command and
+  // this isn't for the hidden window menu. We assume that if there
+  // is no main window then the hidden window menu bar is up, even
+  // if that isn't true for some reason we better play it safe if
+  // there is no main window.
+  if (gPerformKeyEquivOnStack && [NSApp mainWindow])
+    return;
+
+  // given the commandID, look it up in our hashtable and dispatch to
+  // that content node. Recall that we store weak pointers to the content
+  // nodes in the hash table.
+  if (menuBar) {
+    nsIMenuItem* content = menuBar->GetMenuItemForCommandID(static_cast<PRUint32>(tag));
+    if (content)
+      content->DoCommand();    
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
