@@ -1396,8 +1396,10 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
     NSMenu* mainMenu = [NSApp mainMenu];
     NS_ASSERTION([mainMenu numberOfItems] > 0, "Main menu does not have any items, something is terribly wrong!");
 
-    // create a new menu bar
-    NSMenu* newMenuBar = [[NSMenu alloc] initWithTitle:@"MainMenuBar"];
+    // Create a new menu bar.
+    // We create a GeckoNSMenu because all menu bar NSMenu objects should use that subclass for
+    // key handling reasons.
+    GeckoNSMenu* newMenuBar = [[GeckoNSMenu alloc] initWithTitle:@"MainMenuBar"];
 
     // move the application menu from the existing menu bar to the new one
     NSMenuItem* firstMenuItem = [[mainMenu itemAtIndex:0] retain];
