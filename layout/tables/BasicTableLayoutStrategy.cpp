@@ -680,9 +680,10 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
      *   percent width have nonzero pref width, in proportion to pref
      *   width [total_flex_pref]
      *
-     *   b. (NOTE: this case is for BTLS_FINAL_WIDTH only) otherwise, if any
-     *   columns without a specified coordinate width or percent width have
-     *   zero pref width, equally between these [numNonSpecZeroWidthCols]
+     *   b. (NOTE: this case is for BTLS_FINAL_WIDTH only) otherwise, if
+     *   any columns without a specified coordinate width or percent
+     *   width, but with cells originating in them have zero pref width,
+     *   equally between these [numNonSpecZeroWidthCols]
      *
      *   c. otherwise, if any columns without percent width have nonzero
      *   pref width, in proportion to pref width [total_fixed_pref]
@@ -739,7 +740,8 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
                 total_fixed_pref = NSCoordSaturatingAdd(total_fixed_pref, 
                                                         pref_width);
             } else if (pref_width == 0) {
-                if (aWidthType == BTLS_FINAL_WIDTH) {
+                if (aWidthType == BTLS_FINAL_WIDTH &&
+                    mTableFrame->GetNumCellsOriginatingInCol(col)) {
                     ++numNonSpecZeroWidthCols;
                 }
             } else {
@@ -937,7 +939,8 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
                              "FLEX_FLEX_LARGE_ZERO only should be hit "
                              "when we're setting final width.");
                 if (pct == 0.0f &&
-                    !colFrame->GetHasSpecifiedCoord()) {
+                    !colFrame->GetHasSpecifiedCoord() &&
+                    mTableFrame->GetNumCellsOriginatingInCol(col)) {
 
                     NS_ASSERTION(col_width == 0 &&
                                  colFrame->GetPrefCoord() == 0,
