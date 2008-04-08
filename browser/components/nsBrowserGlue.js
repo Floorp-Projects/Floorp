@@ -388,8 +388,10 @@ BrowserGlue.prototype = {
    * of the Places db:
    * - browser.places.importBookmarksHTML
    *   Set to false by the history service to indicate we need to re-import.
-   * - browser.places.createdSmartBookmarks
-   *   Set during HTML import to indicate that the queries were created.
+   * - browser.places.smartBookmarksVersion
+   *   Set during HTML import to indicate that Smart Bookmarks were created.
+   *   Set to -1 to disable Smart Bookmarks creation.
+   *   Set to 0 to restore current Smart Bookmarks.
    *
    * These prefs are set up by the frontend:
    * - browser.bookmarks.restore_default_bookmarks
@@ -444,7 +446,7 @@ BrowserGlue.prototype = {
         // if there's no JSON backup or we are restoring default bookmarks
 
         // ensurePlacesDefaultQueriesInitialized() is called by import.
-        prefBranch.setBoolPref("browser.places.createdSmartBookmarks", false);
+        prefBranch.setIntPref("browser.places.smartBookmarksVersion", 0);
 
         var dirService = Cc["@mozilla.org/file/directory_service;1"].
                          getService(Ci.nsIProperties);
@@ -597,19 +599,31 @@ BrowserGlue.prototype = {
   },
 
   ensurePlacesDefaultQueriesInitialized: function() {
-    // bail out if the folder is already created
+    const SMART_BOOKMARKS_VERSION = 1;
+    const SMART_BOOKMARKS_ANNO = "Places/SmartBookmark";
+    const SMART_BOOKMARKS_PREF = "browser.places.smartBookmarksVersion";
+
+    // XXX should this be a pref?  see bug #399268
+    const MAX_RESULTS = 10;
+
     var prefBranch = Cc["@mozilla.org/preferences-service;1"].
                      getService(Ci.nsIPrefBranch);
-    var createdSmartBookmarks = false;
-    try {
-      createdSmartBookmarks = prefBranch.getBoolPref("browser.places.createdSmartBookmarks");
-    } catch(ex) { }
 
-    if (createdSmartBookmarks)
+    // get current smart bookmarks version
+    var smartBookmarksCurrentVersion = -1;
+    try {
+      smartBookmarksCurrentVersion = prefBranch.getIntPref(SMART_BOOKMARKS_PREF);
+    } catch(ex) {}
+
+    // bail out if we don't have to create or update Smart Bookmarks
+    if (smartBookmarksCurrentVersion == -1 ||
+        smartBookmarksCurrentVersion >= SMART_BOOKMARKS_VERSION)
       return;
 
     var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
                 getService(Ci.nsINavBookmarksService);
+    var annosvc = Cc["@mozilla.org/browser/annotation-service;1"].
+                  getService(Ci.nsIAnnotationService);
 
     var callback = {
       _placesBundle: Cc["@mozilla.org/intl/stringbundle;1"].
@@ -623,54 +637,91 @@ BrowserGlue.prototype = {
       },
 
       runBatched: function() {
-        var smartBookmarksFolderTitle =
-          this._placesBundle.GetStringFromName("smartBookmarksFolderTitle");
-        var mostVisitedTitle =
-          this._placesBundle.GetStringFromName("mostVisitedTitle");
-        var recentlyBookmarkedTitle =
-          this._placesBundle.GetStringFromName("recentlyBookmarkedTitle");
-        var recentTagsTitle =
-          this._placesBundle.GetStringFromName("recentTagsTitle");
+        var smartBookmarks = [];
+        var bookmarksMenuIndex = 0;
+        var bookmarksToolbarIndex = 0;
 
-        var defaultIndex = bmsvc.DEFAULT_INDEX;
+        // MOST VISITED
+        var smart = {queryId: "MostVisited", // don't change this
+                     itemId: null,
+                     title: this._placesBundle.GetStringFromName("mostVisitedTitle"),
+                     uri: this._uri("place:queryType=" +
+                                    Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY +
+                                    "&sort=" +
+                                    Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING +
+                                    "&maxResults=" + MAX_RESULTS),
+                     parent: bmsvc.toolbarFolder,
+                     position: bookmarksToolbarIndex++};
+        smartBookmarks.push(smart);
 
-        // index = 0, make it the first folder
-        var placesFolder = bmsvc.createFolder(bmsvc.toolbarFolder, smartBookmarksFolderTitle,
-                                              0);
+        // RECENTLY BOOKMARKED
+        smart = {queryId: "RecentlyBookmarked", // don't change this
+                 itemId: null,
+                 title: this._placesBundle.GetStringFromName("recentlyBookmarkedTitle"),
+                 uri: this._uri("place:folder=BOOKMARKS_MENU" +
+                                "&folder=UNFILED_BOOKMARKS" +
+                                "&folder=TOOLBAR" +
+                                "&queryType=" +
+                                Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
+                                "&sort=" +
+                                Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
+                                "&excludeItemIfParentHasAnnotation=livemark%2FfeedURI" +
+                                "&maxResults=" + MAX_RESULTS +
+                                "&excludeQueries=1"),
+                 parent: bmsvc.bookmarksMenuFolder,
+                 position: bookmarksMenuIndex++};
+        smartBookmarks.push(smart);
 
-        // XXX should this be a pref?  see bug #399268
-        var maxResults = 10;
+        // RECENT TAGS
+        smart = {queryId: "RecentTags", // don't change this
+                 itemId: null,
+                 title: this._placesBundle.GetStringFromName("recentTagsTitle"),
+                 uri: this._uri("place:"+
+                    "type=" +
+                    Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY +
+                    "&sort=" +
+                    Ci.nsINavHistoryQueryOptions.SORT_BY_LASTMODIFIED_DESCENDING +
+                    "&maxResults=" + MAX_RESULTS),
+                 parent: bmsvc.bookmarksMenuFolder,
+                 position: bookmarksMenuIndex++};
+        smartBookmarks.push(smart);
 
-        var mostVisitedItem = bmsvc.insertBookmark(placesFolder,
-          this._uri("place:queryType=" +
-              Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY +
-              "&sort=" +
-              Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING +
-              "&maxResults=" + maxResults),
-              defaultIndex, mostVisitedTitle);
+        var smartBookmarkItemIds = annosvc.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO, {});
+        // set current itemId, parent and position if Smart Bookmark exists
+        for each(var itemId in smartBookmarkItemIds) {
+          var queryId = annosvc.getItemAnnotation(itemId, SMART_BOOKMARKS_ANNO);
+          for (var i = 0; i < smartBookmarks.length; i++){
+            if (smartBookmarks[i].queryId == queryId) {
+              smartBookmarks[i].itemId = itemId;
+              smartBookmarks[i].parent = bmsvc.getFolderIdForItem(itemId);
+              smartBookmarks[i].position = bmsvc.getItemIndex(itemId);
+              // remove current item, since it will be replaced
+              bmsvc.removeItem(itemId);
+              break;
+            }
+            // We don't remove old Smart Bookmarks because user could still
+            // find them useful, or could have personalized them.
+            // Instead we remove the Smart Bookmark annotation.
+            if (i == smartBookmarks.length - 1)
+              annosvc.removeItemAnnotation(itemId, SMART_BOOKMARKS_ANNO);
+          }
+        }
 
-        // excludeQueries=1 so that user created "saved searches" 
-        // and these queries (added automatically) are excluded
-        var recentlyBookmarkedItem = bmsvc.insertBookmark(placesFolder,
-          this._uri("place:folder=BOOKMARKS_MENU" + 
-              "&folder=UNFILED_BOOKMARKS" +
-              "&folder=TOOLBAR" +
-              "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
-              "&sort=" +
-              Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
-              "&excludeItemIfParentHasAnnotation=livemark%2FfeedURI" +
-              "&maxResults=" + maxResults +
-              "&excludeQueries=1"),
-              defaultIndex, recentlyBookmarkedTitle);
-
-        var sep =  bmsvc.insertSeparator(placesFolder, defaultIndex);
-
-        var recentTagsItem = bmsvc.insertBookmark(placesFolder,
-          this._uri("place:"+
-              "type=" + Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY +
-              "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_LASTMODIFIED_DESCENDING +
-              "&maxResults=" + maxResults),
-          defaultIndex, recentTagsTitle);
+        // create smart bookmarks
+        for each(var smartBookmark in smartBookmarks) {
+          smartBookmark.itemId = bmsvc.insertBookmark(smartBookmark.parent,
+                                                      smartBookmark.uri,
+                                                      smartBookmark.position,
+                                                      smartBookmark.title);
+          annosvc.setItemAnnotation(smartBookmark.itemId,
+                                    SMART_BOOKMARKS_ANNO, smartBookmark.queryId,
+                                    0, annosvc.EXPIRE_NEVER);
+        }
+        
+        // If we are creating all Smart Bookmarks from ground up, add a
+        // separator below them in the bookmarks menu.
+        if (smartBookmarkItemIds.length == 0)
+          bmsvc.insertSeparator(bmsvc.bookmarksMenuFolder, bookmarksMenuIndex);
       }
     };
 
@@ -681,7 +732,7 @@ BrowserGlue.prototype = {
       Components.utils.reportError(ex);
     }
     finally {
-      prefBranch.setBoolPref("browser.places.createdSmartBookmarks", true);
+      prefBranch.setIntPref(SMART_BOOKMARKS_PREF, SMART_BOOKMARKS_VERSION);
       prefBranch.QueryInterface(Ci.nsIPrefService).savePrefFile(null);
     }
   },

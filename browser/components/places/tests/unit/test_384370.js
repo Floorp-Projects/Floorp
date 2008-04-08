@@ -62,7 +62,7 @@ function run_test() {
 
   // avoid creating the places smart folder during tests
   Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch).
-  setBoolPref("browser.places.createdSmartBookmarks", true);
+  setIntPref("browser.places.smartBookmarksVersion", -1);
 
   // file pointer to legacy bookmarks file
   //var bookmarksFileOld = do_get_file("browser/components/places/tests/unit/bookmarks.large.html");
