@@ -133,15 +133,9 @@
          command="cmd_fullZoomEnlarge" modifiers="accel"/>
     <key id="key_fullZoomEnlarge2" key="&fullZoomEnlargeCmd.commandkey2;"
          command="cmd_fullZoomEnlarge" modifiers="accel"/>
-    <key id="key_fullZoomEnlarge3" key="&fullZoomEnlargeCmd.commandkey3;"
-         command="cmd_fullZoomEnlarge" modifiers="accel"/>
     <key id="key_fullZoomReduce" key="&fullZoomReduceCmd.commandkey;"
          command="cmd_fullZoomReduce" modifiers="accel"/>
-    <key id="key_fullZoomReduce2" key="&fullZoomReduceCmd.commandkey2;"
-         command="cmd_fullZoomReduce" modifiers="accel"/>
     <key id="key_fullZoomReset" key="&fullZoomResetCmd.commandkey;"
-         command="cmd_fullZoomReset" modifiers="accel"/>
-    <key id="key_fullZoomReset2" key="&fullZoomResetCmd.commandkey2;"
          command="cmd_fullZoomReset" modifiers="accel"/>
     <key id="key_focusSearch" key="&helpSearch.commandkey;"
          oncommand="focusSearch()" modifiers="accel"/>

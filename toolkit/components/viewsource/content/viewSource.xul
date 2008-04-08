@@ -106,11 +106,8 @@
 
     <key id="key_textZoomEnlarge" key="&textEnlarge.commandkey;" command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key id="key_textZoomEnlarge2" key="&textEnlarge.commandkey2;" command="cmd_textZoomEnlarge" modifiers="accel"/>
-    <key id="key_textZoomEnlarge3" key="&textEnlarge.commandkey3;" command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key id="key_textZoomReduce"  key="&textReduce.commandkey;" command="cmd_textZoomReduce" modifiers="accel"/>
-    <key id="key_textZoomReduce2"  key="&textReduce.commandkey2;" command="cmd_textZoomReduce" modifiers="accel"/>
     <key id="key_textZoomReset" key="&textReset.commandkey;" command="cmd_textZoomReset" modifiers="accel"/>
-    <key id="key_textZoomReset2" key="&textReset.commandkey2;" command="cmd_textZoomReset" modifiers="accel"/>
 
     <key id="key_reload" key="&reloadCmd.commandkey;" command="cmd_reload" modifiers="accel"/>
     <key key="&reloadCmd.commandkey;" command="cmd_reload" modifiers="accel,shift"/>
