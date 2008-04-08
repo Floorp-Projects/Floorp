@@ -6144,7 +6144,7 @@ dnl ========================================================
 dnl = Enable jemalloc
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(jemalloc,
-[  --enable-jemalloc         Replace memory allocator with jemalloc],
+[  --enable-jemalloc       Replace memory allocator with jemalloc],
     MOZ_MEMORY=1,
     MOZ_MEMORY=)
 
@@ -6242,6 +6242,14 @@ if test "$MOZ_MEMORY"; then
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
     ;;
   esac
+
+  AC_ARG_WITH([valgrind],
+    [  --with-valgrind         Enable valgrind integration hooks],
+    [enable_valgrind="yes"], [enable_valgrind="no"])
+  AC_CHECK_HEADER([valgrind/valgrind.h], [], [enable_valgrind="no"])
+  if test "x$enable_valgrind" = "xyes" ; then
+    AC_DEFINE(MOZ_VALGRIND)
+  fi
 fi
 AC_SUBST(MOZ_MEMORY)
 AC_SUBST(WIN32_CRT_SRC_DIR)
