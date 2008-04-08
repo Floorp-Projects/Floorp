@@ -1166,7 +1166,7 @@ function BrowserShutdown()
 function nonBrowserWindowStartup()
 {
   // Disable inappropriate commands / submenus
-  var disabledItems = ['cmd_newNavigatorTab', 'Browser:SavePage', 'Browser:SendLink',
+  var disabledItems = ['Browser:SavePage', 'Browser:SendLink',
                        'cmd_pageSetup', 'cmd_print', 'cmd_find', 'cmd_findAgain', 'viewToolbarsMenu',
                        'cmd_toggleTaskbar', 'viewSidebarMenuMenu', 'Browser:Reload', 'Browser:ReloadSkipCache',
                        'viewFullZoomMenu', 'pageStyleMenu', 'charsetMenu', 'View:PageSource', 'View:FullScreen',
@@ -1578,6 +1578,12 @@ function openLocationCallback()
 
 function BrowserOpenTab()
 {
+  if (!gBrowser) {
+    // If there are no open browser windows, open a new one
+    window.openDialog("chrome://browser/content/", "_blank",
+                      "chrome,all,dialog=no", "about:blank");
+    return;
+  }
   gBrowser.loadOneTab("about:blank", null, null, null, false, false);
   if (gURLBar)
     gURLBar.focus();
