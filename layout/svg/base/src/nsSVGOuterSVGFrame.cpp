@@ -109,7 +109,7 @@ nsSVGMutationObserver::AttributeChanged(nsIDocument *aDocument,
     if (metrics) {
       nsSVGTextContainerFrame *containerFrame =
         static_cast<nsSVGTextContainerFrame *>(frame);
-      containerFrame->UpdateGraphic();
+      containerFrame->NotifyGlyphMetricsChange();
       continue;
     }
     // if not, are there text elements amongst its descendents

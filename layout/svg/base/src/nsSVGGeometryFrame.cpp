@@ -103,6 +103,8 @@ nsSVGGeometryFrame::DidModifySVGObservable(nsISVGValue* observable,
   if (!frame)
     return NS_OK;
 
+  PRBool refresh = PR_FALSE;
+
   if (GetStateBits() & NS_STATE_SVG_FILL_PSERVER) {
     nsIFrame *ps = static_cast<nsIFrame*>(GetProperty(nsGkAtoms::fill));
     if (frame == ps) {
@@ -110,7 +112,7 @@ nsSVGGeometryFrame::DidModifySVGObservable(nsISVGValue* observable,
         DeleteProperty(nsGkAtoms::fill);
         RemoveStateBits(NS_STATE_SVG_FILL_PSERVER);
       }
-      UpdateGraphic();
+      refresh = PR_TRUE;
     }
   }
 
@@ -121,7 +123,15 @@ nsSVGGeometryFrame::DidModifySVGObservable(nsISVGValue* observable,
         DeleteProperty(nsGkAtoms::stroke);
         RemoveStateBits(NS_STATE_SVG_STROKE_PSERVER);
       }
-      UpdateGraphic();
+      refresh = PR_TRUE;
+    }
+  }
+
+  if (refresh) {
+    nsISVGChildFrame* svgFrame = nsnull;
+    CallQueryInterface(this, &svgFrame);
+    if (svgFrame) {
+      nsSVGUtils::UpdateGraphic(svgFrame);
     }
   }
 

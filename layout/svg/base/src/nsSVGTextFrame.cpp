@@ -322,6 +322,7 @@ void
 nsSVGTextFrame::NotifyGlyphMetricsChange()
 {
   mPositioningDirty = PR_TRUE;
+  UpdateGlyphPositioning(PR_FALSE);
 }
 
 static void
@@ -354,6 +355,8 @@ nsSVGTextFrame::UpdateGlyphPositioning(PRBool aForceGlobalTransform)
 
   nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
   if (!node) return;
+
+  mPositioningDirty = PR_FALSE;
 
   // we'll align every fragment in this chunk on the dominant-baseline:
   // XXX should actually inspect 'alignment-baseline' for each fragment
@@ -393,7 +396,6 @@ nsSVGTextFrame::UpdateGlyphPositioning(PRBool aForceGlobalTransform)
 
   firstFragment = node->GetFirstGlyphFragment();
   if (!firstFragment) {
-    mPositioningDirty = PR_FALSE;
     return;
   }
 
@@ -477,6 +479,4 @@ nsSVGTextFrame::UpdateGlyphPositioning(PRBool aForceGlobalTransform)
     }
     firstFragment = fragment;
   }
-
-  mPositioningDirty = PR_FALSE;
 }
