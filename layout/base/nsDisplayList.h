@@ -1190,6 +1190,7 @@ public:
   NS_DISPLAY_DECL_NAME("Clip")
   
   nsRect GetClipRect() { return mClip; }
+  void SetClipRect(const nsRect& aRect) { mClip = aRect; }
 
   virtual nsDisplayWrapList* WrapWithClone(nsDisplayListBuilder* aBuilder,
                                            nsDisplayItem* aItem);
