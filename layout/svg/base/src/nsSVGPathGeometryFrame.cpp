@@ -162,7 +162,7 @@ nsSVGMarkerProperty::RemoveMutationObserver(nsWeakPtr aObservedMarker)
 void
 nsSVGMarkerProperty::DoUpdate()
 {
-  mFrame->UpdateGraphic();
+  nsSVGUtils::UpdateGraphic(mFrame);
 }
 
 void
@@ -248,7 +248,7 @@ nsSVGPathGeometryFrame::AttributeChanged(PRInt32         aNameSpaceID,
       (static_cast<nsSVGPathGeometryElement*>
                   (mContent)->IsDependentAttribute(aAttribute) ||
        aAttribute == nsGkAtoms::transform))
-    UpdateGraphic();
+    nsSVGUtils::UpdateGraphic(this);
 
   return NS_OK;
 }
@@ -272,7 +272,7 @@ nsSVGPathGeometryFrame::DidSetStyleContext()
   // style_hints don't map very well onto svg. Here seems to be the
   // best place to deal with style changes:
 
-  UpdateGraphic();
+  nsSVGUtils::UpdateGraphic(this);
 
   return NS_OK;
 }
@@ -447,8 +447,10 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
   }
 
   // Add in markers
+  UpdateMarkerProperty();
   mRect = GetCoveredRegion();
 
+  nsSVGUtils::UpdateFilterRegion(this);
   return NS_OK;
 }
 
@@ -459,7 +461,7 @@ nsSVGPathGeometryFrame::InitialUpdate()
                "Yikes! We've been called already! Hopefully we weren't called "
                "before our nsSVGOuterSVGFrame's initial Reflow()!!!");
 
-  UpdateGraphic();
+  nsSVGUtils::UpdateGraphic(this);
 
   NS_ASSERTION(!(mState & NS_FRAME_IN_REFLOW),
                "We don't actually participate in reflow");
@@ -473,7 +475,9 @@ nsSVGPathGeometryFrame::InitialUpdate()
 void
 nsSVGPathGeometryFrame::NotifySVGChanged(PRUint32 aFlags)
 {
-  UpdateGraphic((aFlags & SUPPRESS_INVALIDATION) != 0);
+  if (!(aFlags & SUPPRESS_INVALIDATION)) {
+    nsSVGUtils::UpdateGraphic(this);
+  }
 }
 
 NS_IMETHODIMP
@@ -487,7 +491,7 @@ NS_IMETHODIMP
 nsSVGPathGeometryFrame::NotifyRedrawUnsuspended()
 {
   if (GetStateBits() & NS_STATE_SVG_DIRTY)
-    UpdateGraphic();
+    nsSVGUtils::UpdateGraphic(this);
 
   return NS_OK;
 }
@@ -734,40 +738,3 @@ nsSVGPathGeometryFrame::GetHittestMask()
 
   return mask;
 }
-
-//---------------------------------------------------------------------- 
-
-nsresult
-nsSVGPathGeometryFrame::UpdateGraphic(PRBool suppressInvalidation)
-{
-  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
-    return NS_OK;
-
-  nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-  if (!outerSVGFrame) {
-    NS_ERROR("null outerSVGFrame");
-    return NS_ERROR_FAILURE;
-  }
-
-  if (outerSVGFrame->IsRedrawSuspended()) {
-    AddStateBits(NS_STATE_SVG_DIRTY);
-  } else {
-    RemoveStateBits(NS_STATE_SVG_DIRTY);
-
-    if (suppressInvalidation)
-      return NS_OK;
-
-    outerSVGFrame->InvalidateCoveredRegion(this);
-
-    UpdateMarkerProperty();
-    UpdateCoveredRegion();
-    nsSVGUtils::UpdateFilterRegion(this);
-
-    outerSVGFrame->InvalidateCoveredRegion(this);
-    nsSVGUtils::NotifyAncestorsOfFilterRegionChange(this);
-  }
-
-  return NS_OK;
-}
-
-

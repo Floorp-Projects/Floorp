@@ -158,7 +158,7 @@ nsSVGDisplayContainerFrame::RemoveFrame(nsIAtom* aListName,
 
   nsresult rv = nsSVGContainerFrame::RemoveFrame(aListName, aOldFrame);
 
-  if (!GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) {
+  if (!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
     nsSVGUtils::NotifyAncestorsOfFilterRegionChange(this);
   }
 

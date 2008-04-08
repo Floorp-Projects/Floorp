@@ -52,7 +52,7 @@ NS_INTERFACE_MAP_BEGIN(nsSVGTextContainerFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGDisplayContainerFrame)
 
 void
-nsSVGTextContainerFrame::UpdateGraphic()
+nsSVGTextContainerFrame::NotifyGlyphMetricsChange()
 {
   nsSVGTextFrame *textFrame = GetTextFrame();
   if (textFrame)
@@ -141,7 +141,7 @@ nsSVGTextContainerFrame::InsertFrames(nsIAtom* aListName,
                                                          aPrevFrame,
                                                          aFrameList);
 
-  UpdateGraphic();
+  NotifyGlyphMetricsChange();
   return rv;
 }
 
