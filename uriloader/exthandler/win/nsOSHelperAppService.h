@@ -48,6 +48,9 @@
 #include "nsCOMPtr.h"
 #include <windows.h>
 
+// Vista SDK application registration definitions for non-Vista SDK builds
+#include "IApplicationAssociationRegistration.h"
+ 
 class nsMIMEInfoWin;
 
 class nsOSHelperAppService : public nsExternalHelperAppService
@@ -84,6 +87,9 @@ protected:
   static nsresult GetMIMEInfoFromRegistry(const nsAFlatString& fileType, nsIMIMEInfo *pInfo);
   /// Looks up the type for the extension aExt and compares it to aType
   static PRBool typeFromExtEquals(const PRUnichar* aExt, const char *aType);
+
+private:
+  IApplicationAssociationRegistration* mAppAssoc;
 };
 
 #endif // nsOSHelperAppService_h__
