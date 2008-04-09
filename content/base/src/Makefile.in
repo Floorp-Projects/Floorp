@@ -82,6 +82,7 @@ REQUIRES	= xpcom \
 		  appshell \
 		  shistory \
 		  editor \
+		  windowwatcher \
 		  $(NULL)
 
 ifdef ACCESSIBILITY
