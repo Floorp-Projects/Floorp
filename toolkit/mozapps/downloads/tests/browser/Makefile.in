@@ -56,6 +56,7 @@ _BROWSER_FILES = \
   browser_bug_413093.js \
   browser_bug_413985.js \
   browser_bug_416303.js \
+  browser_multi_select.js \
   $(NULL)
 
 ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
