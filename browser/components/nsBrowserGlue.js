@@ -613,7 +613,8 @@ BrowserGlue.prototype = {
                      getService(Ci.nsIPrefBranch);
 
     // get current smart bookmarks version
-    var smartBookmarksCurrentVersion = -1;
+    // By default, if the pref is not set up, we must create Smart Bookmarks
+    var smartBookmarksCurrentVersion = 0;
     try {
       smartBookmarksCurrentVersion = prefBranch.getIntPref(SMART_BOOKMARKS_PREF);
     } catch(ex) {}
