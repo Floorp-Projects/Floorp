@@ -2909,6 +2909,14 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
   nsEventStatus status;
   widget->DispatchEvent(&event, status);
+
+  // After the cursor exits a view set it to a visible regular arrow cursor.
+  // This lets us recover from plugins that mess with it.
+  if (msg == NS_MOUSE_EXIT) {
+    [NSCursor unhide];
+    [[NSCursor arrowCursor] set];
+  }
+
   return status;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsEventStatus_eIgnore);
