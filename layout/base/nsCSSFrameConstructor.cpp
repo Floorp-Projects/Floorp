@@ -13452,6 +13452,8 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
   // already processing, sending us into an infinite loop.
   mPendingRestyles.Clear();
 
+  nsAutoScriptBlocker scriptBlocker;
+
   // Make sure to not rebuild quote or counter lists while we're
   // processing restyles
   BeginUpdate();

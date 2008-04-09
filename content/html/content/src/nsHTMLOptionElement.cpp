@@ -69,6 +69,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsContentCreatorFunctions.h"
+#include "mozAutoDocUpdate.h"
 
 /**
  * Implementation of &lt;option&gt;

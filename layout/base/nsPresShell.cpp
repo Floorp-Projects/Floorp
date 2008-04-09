@@ -1704,6 +1704,8 @@ PresShell::Destroy()
   CancelAllPendingReflows();
   CancelPostedReflowCallbacks();
 
+  nsAutoScriptBlocker scriptBlocker;
+
   // Destroy the frame manager. This will destroy the frame hierarchy
   mFrameConstructor->WillDestroyFrameTree();
   FrameManager()->Destroy();
@@ -4605,6 +4607,7 @@ PresShell::DoFlushPendingNotifications(mozFlushType aType,
     // be good.
     
     if (aType >= Flush_Layout && !mIsDestroying) {
+      nsAutoScriptBlocker scriptBlocker;
       mFrameConstructor->RecalcQuotesAndCounters();
       ProcessReflowCommands(aInterruptibleReflow);
     }
