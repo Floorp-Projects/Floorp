@@ -6719,6 +6719,19 @@ if test -n "$INTEL_CC"; then
   PROFILE_USE_LDFLAGS=
 fi
 
+dnl Sun Studio on Solaris
+if test -z "$GNU_CC" && test -z "$GNU_CXX" && test "$OS_ARCH" = "SunOS"; then
+  PROFILE_GEN_CFLAGS="-xprofile=collect:$_objdir/$enable_application"
+  PROFILE_GEN_LDFLAGS="-xprofile=collect:$_objdir/$enable_application"
+  if test "$CPU_ARCH" != "sparc"; then
+    PROFILE_USE_CFLAGS="-xprofile=use:$_objdir/$enable_application"
+    PROFILE_USE_LDFLAGS="-xprofile=use:$_objdir/$enable_application"
+  else
+    PROFILE_USE_CFLAGS="-xlinkopt=2 -xprofile=use:$_objdir/$enable_application"
+    PROFILE_USE_LDFLAGS="-xlinkopt=2 -xprofile=use:$_objdir/$enable_application"
+  fi
+fi
+
 AC_SUBST(PROFILE_GEN_CFLAGS)
 AC_SUBST(PROFILE_GEN_LDFLAGS)
 AC_SUBST(PROFILE_USE_CFLAGS)
