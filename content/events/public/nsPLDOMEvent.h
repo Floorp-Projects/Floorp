@@ -66,7 +66,6 @@ public:
 
   NS_IMETHOD Run();
   nsresult PostDOMEvent();
-  nsresult RunDOMEventWhenSafe();
 
   nsCOMPtr<nsIDOMNode>  mEventNode;
   nsCOMPtr<nsIDOMEvent> mEvent;

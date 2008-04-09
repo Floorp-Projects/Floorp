@@ -83,7 +83,6 @@
 #include "nsFrameLoader.h"
 
 #include "nsObjectLoadingContent.h"
-#include "mozAutoDocUpdate.h"
 
 static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 

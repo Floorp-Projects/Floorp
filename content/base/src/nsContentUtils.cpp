@@ -162,8 +162,6 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIScriptError.h"
 #include "nsIConsoleService.h"
 
-#include "mozAutoDocUpdate.h"
-
 const char kLoadAsData[] = "loadAsData";
 
 static const char kJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";

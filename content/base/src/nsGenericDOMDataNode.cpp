@@ -62,7 +62,6 @@
 #include "nsNodeUtils.h"
 #include "nsBindingManager.h"
 #include "nsCCUncollectableMarker.h"
-#include "mozAutoDocUpdate.h"
 
 #include "pldhash.h"
 #include "prprf.h"

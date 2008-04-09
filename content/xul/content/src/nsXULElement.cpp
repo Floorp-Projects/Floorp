@@ -151,7 +151,6 @@
 #include "nsXBLBinding.h"
 #include "nsEventDispatcher.h"
 #include "nsPresShellIterator.h"
-#include "mozAutoDocUpdate.h"
 
 /**
  * Three bits are used for XUL Element's lazy state.
