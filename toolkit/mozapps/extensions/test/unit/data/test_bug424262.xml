@@ -11,6 +11,7 @@
     <compatible_applications>
       <application>
         <name>XPCShell</name>
+        <appID>xpcshell@tests.mozilla.org</appID>
         <application_id>1</application_id>
         <min_version>1</min_version>
         <max_version>1</max_version>
@@ -31,6 +32,7 @@
     <compatible_applications>
       <application>
         <name>XPCShell</name>
+        <appID>xpcshell@tests.mozilla.org</appID>
         <application_id>1</application_id>
         <min_version>1</min_version>
         <max_version>1</max_version>
@@ -51,6 +53,7 @@
     <compatible_applications>
       <application>
         <name>XPCShell</name>
+        <appID>xpcshell@tests.mozilla.org</appID>
         <application_id>1</application_id>
         <min_version>1</min_version>
         <max_version>1</max_version>
@@ -71,6 +74,7 @@
     <compatible_applications>
       <application>
         <name>XPCShell</name>
+        <appID>xpcshell@tests.mozilla.org</appID>
         <application_id>1</application_id>
         <min_version>1</min_version>
         <max_version>1</max_version>
@@ -91,6 +95,7 @@
     <compatible_applications>
       <application>
         <name>XPCShell</name>
+        <appID>xpcshell@tests.mozilla.org</appID>
         <application_id>1</application_id>
         <min_version>1</min_version>
         <max_version>1</max_version>
@@ -111,6 +116,7 @@
     <compatible_applications>
       <application>
         <name>XPCShell</name>
+        <appID>xpcshell@tests.mozilla.org</appID>
         <application_id>1</application_id>
         <min_version>1</min_version>
         <max_version>1</max_version>
@@ -131,6 +137,7 @@
     <compatible_applications>
       <application>
         <name>XPCShell</name>
+        <appID>xpcshell@tests.mozilla.org</appID>
         <application_id>1</application_id>
         <min_version>1</min_version>
         <max_version>1</max_version>
@@ -151,6 +158,7 @@
     <compatible_applications>
       <application>
         <name>XPCShell</name>
+        <appID>xpcshell@tests.mozilla.org</appID>
         <application_id>1</application_id>
         <min_version>1</min_version>
         <max_version>1</max_version>
