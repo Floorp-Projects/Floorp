@@ -210,7 +210,7 @@
     </resources>
 
     <content hidden="true">
-    <xul:hbox class="findbar-container" flex="1" align="center">
+    <xul:hbox anonid="findbar-container" class="findbar-container" flex="1" align="center">
       <xul:toolbarbutton anonid="find-closebutton"
                          class="findbar-closebutton"
                          tooltiptext="&findCloseButton.tooltip;"
@@ -1080,7 +1080,7 @@
         <body><![CDATA[
           var showMinimalUI = this._findMode != this.FIND_NORMAL;
 
-          var nodes = document.getAnonymousNodes(this);
+          var nodes = this.getElement("findbar-container").childNodes;
           for (var i = 0; i < nodes.length; i++) {
             if (nodes[i].className.indexOf("findbar-find-fast") != -1)
                continue;
