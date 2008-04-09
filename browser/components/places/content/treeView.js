@@ -918,6 +918,10 @@ PlacesTreeView.prototype = {
       }
       else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR)
         properties.push(this._getAtomFor("separator"));
+      else if (itemId != -1) { // bookmark nodes
+        if (PlacesUtils.nodeIsLivemarkContainer(node.parent))
+          properties.push(this._getAtomFor("livemarkItem"));
+      }
 
       this._visibleElements[aRow].properties = properties;
     }
@@ -1114,18 +1118,10 @@ PlacesTreeView.prototype = {
       return "";
 
     var node = this._visibleElements[aRow].node;
-
-    // Containers may or may not have favicons. If not, we will return
-    // nothing as the image, and the style rule should pick up the
-    // default. Separator rows never have icons.
-    if (PlacesUtils.nodeIsSeparator(node) ||
-        (PlacesUtils.nodeIsContainer(node) && !node.icon))
-      return "";
-
-    // For consistency, we always return a favicon for non-containers,
-    // even if it is just the default one.
-    var icon = node.icon || PlacesUtils.favicons.defaultFavicon;
-    return icon ? icon.spec : "";
+    var icon = node.icon;
+    if (icon)
+      return icon.spec;
+    return "";
   },
 
   getProgressMode: function(aRow, aColumn) { },

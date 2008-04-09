@@ -55,21 +55,6 @@
   height: 12px;
 }
 
-/* organize button */
-#organizeButton {
-  list-style-image: url("moz-icon://stock/gtk-properties?size=button");
-}
-
-/* view button */
-#viewMenu {
-  list-style-image: url("moz-icon://stock/gtk-sort-ascending?size=button");
-}
-
-/* maintenance button */
-#maintenanceButton {
-  list-style-image: url("moz-icon://stock/gtk-revert-to-saved?size=button");
-}
-
 /* Root View */
 #placesView {
   background-color: Window;
