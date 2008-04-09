@@ -2,29 +2,57 @@
 /* Toolbar */
 #placesToolbar {
   border: none;
+  min-height: 30px;
 }
 
 /* back & forward buttons */
 #back-button, #forward-button {
   list-style-image: url("chrome://browser/skin/Toolbar.png");
+  -moz-appearance: none;
+  padding: 0;
+  border: none;
+}
+
+#placesToolbar > toolbarbutton > image,
+#placesToolbar > toolbarbutton > label {
+  margin: 0;
+  padding: 0;
 }
 
 #back-button,
 #forward-button[chromedir="rtl"] {  
+  -moz-margin-start: 8px;
   -moz-image-region: rect(0px, 24px, 24px, 0px);
+}
+#back-button:not([disabled="true"]):hover,
+#forward-button:not([disabled="true"]):hover[chromedir="rtl"]{
+ -moz-image-region: rect(24px, 24px, 48px, 0px);
 }
 #back-button[disabled="true"],
 #forward-button[chromedir="rtl"][disabled="true"] {
- -moz-image-region: rect(48px, 24px, 72px, 0px);
+ -moz-image-region: rect(48px, 24px, 72px, 0px) !important;
+}
+#back-button:not([disabled="true"]):hover:active,
+#forward-button:not([disabled="true"]):hover:active[chromedir="rtl"]{
+ -moz-image-region: rect(96px, 24px, 120px, 0px);
 }
 
 #forward-button,
 #back-button[chromedir="rtl"] {
+  -moz-margin-end: 8px;
   -moz-image-region: rect(0px, 48px, 24px, 24px);
+}
+#forward-button:not([disabled="true"]):hover,
+#back-button:not([disabled="true"]):hover[chromedir="rtl"]{
+  -moz-image-region: rect(24px, 48px, 48px, 24px);
 }
 #forward-button[disabled="true"],
 #back-button[chromedir="rtl"][disabled="true"] {
- -moz-image-region: rect(48px, 48px, 72px, 24px);
+ -moz-image-region: rect(48px, 48px, 72px, 24px) !important;
+}
+#forward-button:not([disabled="true"]):hover:active,
+#back-button:not([disabled="true"]):hover:active[chromedir="rtl"]{
+  -moz-image-region: rect(96px, 48px, 120px, 24px);
 }
 
 /* Menu */
@@ -70,8 +98,16 @@
 }
 
 #splitter {
-  border: 0px;
+  border: none;
   width: 3px;
+  background-color: transparent;
+}
+
+#placesView > splitter {
+  width: 6px !important;
+  min-width: 6px;
+  border-left: 1px solid ThreeDShadow;
+  border-right: 1px solid ThreeDDarkShadow;
 }
 
 /* Place List, Place Content */
@@ -94,6 +130,11 @@
 /* Search Bar */
 #searchbar {
   margin: 6px -4px 0px 2px;
+}
+
+#infoPane {
+  border-top: 1px solid ThreeDShadow;
+  padding: 5px;
 }
 
 .textbox-input-closebutton {

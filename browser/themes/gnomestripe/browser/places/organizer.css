@@ -79,6 +79,11 @@
   border: 0px;
 }
 
+#infoPane {
+  border-top: 1px solid ThreeDShadow;
+  padding: 5px;
+}
+
 /* Search Bar */
 #searchbar {
   margin: 6px -4px 0px 2px;
