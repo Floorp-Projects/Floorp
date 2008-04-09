@@ -52,6 +52,7 @@ _TEST_FILES	= \
 	test_missingFile.html \
 	test_simpleManifest.html \
 	test_identicalManifest.html \
+	test_changingManifest.html \
 	test_offlineIFrame.html \
 	badManifestMagic.cacheManifest \
 	badManifestMagic.cacheManifest^headers^ \
@@ -60,6 +61,9 @@ _TEST_FILES	= \
 	simpleManifest.cacheManifest \
 	simpleManifest.cacheManifest^headers^ \
 	simpleManifest.notmanifest \
+	changing1Sec.sjs \
+	changing1Hour.sjs \
+	changingManifest.sjs \
 	offlineChild.html \
         $(NULL)
 
