@@ -1694,10 +1694,24 @@ pref("font.name-list.monospace.x-guru", "Gurmukhi MT");
 // add this section when fonts exist
 
 // no suitable fonts for telugu ship with mac os x
-// add this section when fonts exist
+// however one can be freely downloaded
+// Pothana http://web.nickshanks.com/typography/telugu/
+pref("font.name.serif.x-telu", "Pothana");
+pref("font.name.sans-serif.x-telu", "Pothana");
+pref("font.name.monospace.x-telu", "Pothana");
+pref("font.name-list.serif.x-telu", "Pothana");
+pref("font.name-list.sans-serif.x-telu", "Pothana");
+pref("font.name-list.monospace.x-telu", "Pothana");
 
 // no suitable fonts for kannada ship with mac os x
-// add this section when fonts exist
+// however one can be freely downloaded
+// Kedage http://web.nickshanks.com/typography/kannada/
+pref("font.name.serif.x-knda", "Kedage");
+pref("font.name.sans-serif.x-knda", "Kedage");
+pref("font.name.monospace.x-knda", "Kedage");
+pref("font.name-list.serif.x-knda", "Kedage");
+pref("font.name-list.sans-serif.x-knda", "Kedage");
+pref("font.name-list.monospace.x-knda", "Kedage");
 
 // no suitable fonts for sinhala ship with mac os x
 // add this section when fonts exist
