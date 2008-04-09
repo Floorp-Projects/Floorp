@@ -67,6 +67,15 @@ let gSearchBox = null;
 let gSearchTerms = [];
 let gBuilder = 0;
 
+// This variable is used when performing commands on download items and gives
+// the command the ability to do something after all items have been operated
+// on. The following convention is used to handle the value of the variable:
+// whenever we aren't performing a command, the value is |undefined|; just
+// before executing commands, the value will be set to |null|; and when
+// commands want to create a callback, they set the value to be a callback
+// function to be executed after all download items have been visited.
+let gPerformAllCallback;
+
 // Control the performance of the incremental list building by setting how many
 // milliseconds to wait before building more of the list and how many items to
 // add between each delay.
@@ -327,7 +336,20 @@ function copySourceLocation(aDownload)
   var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
                   getService(Ci.nsIClipboardHelper);
 
-  clipboard.copyString(uri);
+  // Check if we should initialize a callback
+  if (gPerformAllCallback === null) {
+    let uris = [];
+    gPerformAllCallback = function(aURI) aURI ? uris.push(aURI) :
+      clipboard.copyString(uris.join("\n"));
+  }
+
+  // We have a callback to use, so use it to add a uri
+  if (typeof gPerformAllCallback == "function")
+    gPerformAllCallback(uri);
+  else {
+    // It's a plain copy source, so copy it
+    clipboard.copyString(uri);
+  }
 }
 
 // This is called by the progress listener.
@@ -704,6 +726,12 @@ var gDownloadViewController = {
       copySourceLocation(aSelectedItem);
     },
     cmd_clearList: function() {
+      // If we're performing all, we can save some work by only doing it once
+      if (gPerformAllCallback === null)
+        gPerformAllCallback = function() {};
+      else if (gPerformAllCallback)
+        return;
+
       // Clear the whole list if there's no search
       if (gSearchTerms == "") {
         gDownloadManager.cleanUp();
@@ -731,8 +759,8 @@ var gDownloadViewController = {
  *        The command to be performed.
  * @param aItem
  *        The richlistitem that represents the download that will have the
- *        command performed on it.  If this is null, it assumes the currently
- *        selected item.  If the item passed in is not a richlistitem that
+ *        command performed on it. If this is null, the command is performed on
+ *        all downloads. If the item passed in is not a richlistitem that
  *        represents a download, it will walk up the parent nodes until it finds
  *        a DOM node that is.
  */
@@ -740,7 +768,27 @@ function performCommand(aCmd, aItem)
 {
   let elm = aItem;
   if (!elm) {
-    elm = gDownloadsView.selectedItem;
+    // If we don't have a desired download item, do the command for all
+    // selected items. Initialize the callback to null so commands know to add
+    // a callback if they want. We will call the callback with empty arguments
+    // after performing the command on each selected download item.
+    gPerformAllCallback = null;
+
+    // Convert the nodelist into an array to keep a copy of the download items
+    let items = [];
+    for (let i = gDownloadsView.selectedItems.length; --i >= 0; )
+      items.unshift(gDownloadsView.selectedItems[i]);
+
+    // Do the command for each download item
+    for each (let item in items)
+      performCommand(aCmd, item);
+
+    // Call the callback with no arguments and reset because we're done
+    if (typeof gPerformAllCallback == "function")
+      gPerformAllCallback();
+    gPerformAllCallback = undefined;
+
+    return;
   } else {
     while (elm.nodeName != "richlistitem" ||
            elm.getAttribute("type") != "download")
