@@ -110,12 +110,14 @@ SHARED_LIBRARY_LIBS = \
 	../startup/src/$(LIB_PREFIX)appstartup_s.$(LIB_SUFFIX) \
 	$(NULL)
 
+ifndef MOZ_DISABLE_PARENTAL_CONTROLS
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 SHARED_LIBRARY_LIBS += ../parentalcontrols/src/$(LIB_PREFIX)parentalcontrols_s.$(LIB_SUFFIX)
 LOCAL_INCLUDES += \
 	-I$(srcdir)/../parentalcontrols/src \
 	$(NULL)
 REQUIRES += parentalcontrols
+endif
 endif
 
 ifndef MOZ_SUITE
