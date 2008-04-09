@@ -53,16 +53,66 @@
 #define NS_UNIVERSAL_STRING_DETECTOR_CID \
 { 0x6ee5301a, 0x3981, 0x49bd, { 0x85, 0xf8, 0x1a, 0x2c, 0xc2, 0x28, 0xcf, 0x3e } }
 
+// {12BB8F1B-2389-11d3-B3BF-00805F8A6670}
+#define NS_JA_PSMDETECTOR_CID \
+{ 0x12bb8f1b, 0x2389, 0x11d3, { 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
+
+// {12BB8F1C-2389-11d3-B3BF-00805F8A6670}
+#define NS_JA_STRING_PSMDETECTOR_CID \
+{ 0x12bb8f1c, 0x2389, 0x11d3, { 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
+
+// {EA06D4E1-2B3D-11d3-B3BF-00805F8A6670}
+#define NS_KO_PSMDETECTOR_CID \
+{ 0xea06d4e1, 0x2b3d, 0x11d3, { 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
+
+// {EA06D4E2-2B3D-11d3-B3BF-00805F8A6670}
+#define NS_ZHCN_PSMDETECTOR_CID \
+{ 0xea06d4e2, 0x2b3d, 0x11d3, { 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
+
+// {EA06D4E3-2B3D-11d3-B3BF-00805F8A6670}
+#define NS_ZHTW_PSMDETECTOR_CID \
+{ 0xea06d4e3, 0x2b3d, 0x11d3, { 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
+
+
+// {EA06D4E4-2B3D-11d3-B3BF-00805F8A6670}
+#define NS_KO_STRING_PSMDETECTOR_CID \
+{ 0xea06d4e4, 0x2b3d, 0x11d3, { 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
+
+// {EA06D4E5-2B3D-11d3-B3BF-00805F8A6670}
+#define NS_ZHCN_STRING_PSMDETECTOR_CID \
+{ 0xea06d4e5, 0x2b3d, 0x11d3, { 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
+
+// {EA06D4E6-2B3D-11d3-B3BF-00805F8A6670}
+#define NS_ZHTW_STRING_PSMDETECTOR_CID \
+{ 0xea06d4e6, 0x2b3d, 0x11d3, { 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
+
+
+// {FCACEF21-2B40-11d3-B3BF-00805F8A6670}
+#define NS_ZH_STRING_PSMDETECTOR_CID \
+{ 0xfcacef21, 0x2b40, 0x11d3, { 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
+
+// {FCACEF22-2B40-11d3-B3BF-00805F8A6670}
+#define NS_CJK_STRING_PSMDETECTOR_CID \
+{ 0xfcacef22, 0x2b40, 0x11d3, { 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
+
+
+// {FCACEF23-2B40-11d3-B3BF-00805F8A6670}
+#define NS_ZH_PSMDETECTOR_CID \
+{ 0xfcacef23, 0x2b40, 0x11d3, { 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
+
+// {FCACEF24-2B40-11d3-B3BF-00805F8A6670}
+#define NS_CJK_PSMDETECTOR_CID \
+{ 0xfcacef24, 0x2b40, 0x11d3, { 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
 
 //=====================================================================
-class nsUniversalXPCOMDetector :  
+class nsXPCOMDetector :  
       public nsUniversalDetector,
       public nsICharsetDetector
 {
   NS_DECL_ISUPPORTS
   public:
-    nsUniversalXPCOMDetector();
-    virtual ~nsUniversalXPCOMDetector();
+    nsXPCOMDetector(PRUint32 aLanguageFilter);
+    virtual ~nsXPCOMDetector();
     NS_IMETHOD Init(nsICharsetDetectionObserver* aObserver);
     NS_IMETHOD DoIt(const char* aBuf, PRUint32 aLen, PRBool *oDontFeedMe);
     NS_IMETHOD Done();
@@ -74,14 +124,14 @@ class nsUniversalXPCOMDetector :
 
 
 //=====================================================================
-class nsUniversalXPCOMStringDetector :  
+class nsXPCOMStringDetector :  
       public nsUniversalDetector,
       public nsIStringCharsetDetector
 {
   NS_DECL_ISUPPORTS
   public:
-    nsUniversalXPCOMStringDetector();
-    virtual ~nsUniversalXPCOMStringDetector();
+    nsXPCOMStringDetector(PRUint32 aLanguageFilter);
+    virtual ~nsXPCOMStringDetector();
     NS_IMETHOD DoIt(const char* aBuf, PRUint32 aLen, 
                     const char** oCharset, nsDetectionConfident &oConf);
   protected:
@@ -89,6 +139,105 @@ class nsUniversalXPCOMStringDetector :
   private:
     nsCOMPtr<nsICharsetDetectionObserver> mObserver;
     const char* mResult;
+};
+
+//=====================================================================
+class nsUniversalXPCOMDetector : public nsXPCOMDetector
+{
+public:
+  nsUniversalXPCOMDetector() 
+    : nsXPCOMDetector(NS_FILTER_ALL) {}
+};
+
+class nsUniversalXPCOMStringDetector : public nsXPCOMStringDetector
+{
+public:
+  nsUniversalXPCOMStringDetector() 
+    : nsXPCOMStringDetector(NS_FILTER_ALL) {}
+};
+
+class nsJAPSMDetector : public nsXPCOMDetector
+{
+public:
+  nsJAPSMDetector() 
+    : nsXPCOMDetector(NS_FILTER_JAPANESE) {}
+};
+
+class nsJAStringPSMDetector : public nsXPCOMStringDetector
+{
+public:
+  nsJAStringPSMDetector() 
+    : nsXPCOMStringDetector(NS_FILTER_JAPANESE) {}
+};
+
+class nsKOPSMDetector : public nsXPCOMDetector
+{
+public:
+  nsKOPSMDetector() 
+    : nsXPCOMDetector(NS_FILTER_KOREAN) {}
+};
+
+class nsKOStringPSMDetector : public nsXPCOMStringDetector
+{
+public:
+  nsKOStringPSMDetector() 
+    : nsXPCOMStringDetector(NS_FILTER_KOREAN) {}
+};
+
+class nsZHTWPSMDetector : public nsXPCOMDetector
+{
+public:
+  nsZHTWPSMDetector() 
+    : nsXPCOMDetector(NS_FILTER_CHINESE_TRADITIONAL) {}
+};
+
+class nsZHTWStringPSMDetector : public nsXPCOMStringDetector
+{
+public:
+  nsZHTWStringPSMDetector() 
+    : nsXPCOMStringDetector(NS_FILTER_CHINESE_TRADITIONAL) {}
+};
+
+class nsZHCNPSMDetector : public nsXPCOMDetector
+{
+public:
+  nsZHCNPSMDetector() 
+    : nsXPCOMDetector(NS_FILTER_CHINESE_SIMPLIFIED) {}
+};
+
+class nsZHCNStringPSMDetector : public nsXPCOMStringDetector
+{
+public:
+  nsZHCNStringPSMDetector() 
+    : nsXPCOMStringDetector(NS_FILTER_CHINESE_SIMPLIFIED) {}
+};
+
+class nsZHPSMDetector : public nsXPCOMDetector
+{
+public:
+  nsZHPSMDetector() 
+    : nsXPCOMDetector(NS_FILTER_CHINESE) {}
+};
+
+class nsZHStringPSMDetector : public nsXPCOMStringDetector
+{
+public:
+  nsZHStringPSMDetector() 
+    : nsXPCOMStringDetector(NS_FILTER_CHINESE) {}
+};
+
+class nsCJKPSMDetector : public nsXPCOMDetector
+{
+public:
+  nsCJKPSMDetector() 
+    : nsXPCOMDetector(NS_FILTER_CJK) {}
+};
+
+class nsCJKStringPSMDetector : public nsXPCOMStringDetector
+{
+public:
+  nsCJKStringPSMDetector() 
+    : nsXPCOMStringDetector(NS_FILTER_CJK) {}
 };
 
 #endif //_nsUdetXPCOMWrapper_h__

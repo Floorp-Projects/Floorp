@@ -54,19 +54,20 @@ static NS_DEFINE_CID(kUniversalDetectorCID, NS_UNIVERSAL_DETECTOR_CID);
 static NS_DEFINE_CID(kUniversalStringDetectorCID, NS_UNIVERSAL_STRING_DETECTOR_CID);
 
 //---------------------------------------------------------------------
-nsUniversalXPCOMDetector:: nsUniversalXPCOMDetector() : nsUniversalDetector()
+nsXPCOMDetector:: nsXPCOMDetector(PRUint32 aLanguageFilter)
+ : nsUniversalDetector(aLanguageFilter)
 {
 }
 //---------------------------------------------------------------------
-nsUniversalXPCOMDetector::~nsUniversalXPCOMDetector() 
+nsXPCOMDetector::~nsXPCOMDetector() 
 {
 }
 //---------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS1(nsUniversalXPCOMDetector, nsICharsetDetector)
+NS_IMPL_ISUPPORTS1(nsXPCOMDetector, nsICharsetDetector)
 
 //---------------------------------------------------------------------
-NS_IMETHODIMP nsUniversalXPCOMDetector::Init(
+NS_IMETHODIMP nsXPCOMDetector::Init(
               nsICharsetDetectionObserver* aObserver)
 {
   NS_ASSERTION(mObserver == nsnull , "Init twice");
@@ -77,7 +78,7 @@ NS_IMETHODIMP nsUniversalXPCOMDetector::Init(
   return NS_OK;
 }
 //----------------------------------------------------------
-NS_IMETHODIMP nsUniversalXPCOMDetector::DoIt(const char* aBuf,
+NS_IMETHODIMP nsXPCOMDetector::DoIt(const char* aBuf,
               PRUint32 aLen, PRBool* oDontFeedMe)
 {
   NS_ASSERTION(mObserver != nsnull , "have not init yet");
@@ -100,7 +101,7 @@ NS_IMETHODIMP nsUniversalXPCOMDetector::DoIt(const char* aBuf,
   return NS_OK;
 }
 //----------------------------------------------------------
-NS_IMETHODIMP nsUniversalXPCOMDetector::Done()
+NS_IMETHODIMP nsXPCOMDetector::Done()
 {
   NS_ASSERTION(mObserver != nsnull , "have not init yet");
 #ifdef DEBUG_chardet
@@ -117,7 +118,7 @@ NS_IMETHODIMP nsUniversalXPCOMDetector::Done()
   return NS_OK;
 }
 //----------------------------------------------------------
-void nsUniversalXPCOMDetector::Report(const char* aCharset)
+void nsXPCOMDetector::Report(const char* aCharset)
 {
   NS_ASSERTION(mObserver != nsnull , "have not init yet");
 #ifdef DEBUG_chardet
@@ -128,18 +129,18 @@ void nsUniversalXPCOMDetector::Report(const char* aCharset)
 
 
 //---------------------------------------------------------------------
-nsUniversalXPCOMStringDetector:: nsUniversalXPCOMStringDetector()
-  : nsUniversalDetector()
+nsXPCOMStringDetector:: nsXPCOMStringDetector(PRUint32 aLanguageFilter)
+  : nsUniversalDetector(aLanguageFilter)
 {
 }
 //---------------------------------------------------------------------
-nsUniversalXPCOMStringDetector::~nsUniversalXPCOMStringDetector() 
+nsXPCOMStringDetector::~nsXPCOMStringDetector() 
 {
 }
 //---------------------------------------------------------------------
-NS_IMPL_ISUPPORTS1(nsUniversalXPCOMStringDetector, nsIStringCharsetDetector)
+NS_IMPL_ISUPPORTS1(nsXPCOMStringDetector, nsIStringCharsetDetector)
 //---------------------------------------------------------------------
-void nsUniversalXPCOMStringDetector::Report(const char *aCharset) 
+void nsXPCOMStringDetector::Report(const char *aCharset) 
 {
   mResult = aCharset;
 #ifdef DEBUG_chardet
@@ -147,7 +148,7 @@ void nsUniversalXPCOMStringDetector::Report(const char *aCharset)
 #endif
 }
 //---------------------------------------------------------------------
-NS_IMETHODIMP nsUniversalXPCOMStringDetector::DoIt(const char* aBuf,
+NS_IMETHODIMP nsXPCOMStringDetector::DoIt(const char* aBuf,
                      PRUint32 aLen, const char** oCharset,
                      nsDetectionConfident &oConf)
 {
