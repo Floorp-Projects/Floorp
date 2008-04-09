@@ -178,26 +178,8 @@
   border: 0px;
 }
 
-#contentSplitter {
-  height: 10px !important;
-  min-height: 10px;
-  border-top: 1px solid #919191;
-  border-bottom: none;
-  background-color: #f0f0f0;
-  background-image: none;
-}
-
-#contentSplitter > grippy {
-  background-image: url('chrome://browser/skin/places/infoPaneGrippy.png');
-  background-position: center center;
-  height: 5px;
-}
-
-#contentSplitter > grippy:hover {
-  background-color: transparent;
-}
-
 #infoPane {
+  border-top: 1px solid #919191;
   background-color: #f0f0f0;
   padding: 10px;
 }
@@ -613,7 +595,7 @@ menulist[open="true"] > .menulist-label-box  .menulist-label {
 
 /* More/Less button */
 
-#infoScrollboxExpander {
+#infoBoxExpander {
   list-style-image: url("chrome://browser/skin/places/twisty-open.gif");
   -moz-appearance: none;
   margin: 0;
@@ -621,7 +603,7 @@ menulist[open="true"] > .menulist-label-box  .menulist-label {
   max-width: 0;
 }
 
-#infoScrollbox[minimal="true"] #infoScrollboxExpander {
+#infoBox[minimal="true"] #infoBoxExpander {
   list-style-image: url("chrome://browser/skin/places/twisty-closed.gif");
 }
 
