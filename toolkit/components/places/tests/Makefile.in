@@ -47,6 +47,7 @@ MODULE		= test_places
 
 XPCSHELL_TESTS = unit \
                  bookmarks \
+                 queries \
                  $(NULL)
 
 ifdef MOZ_MOCHITEST
