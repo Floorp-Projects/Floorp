@@ -405,8 +405,8 @@ make-package: stage-package
 # dist/sdk/lib -> prefix/lib/appname-devel-version/lib
 # prefix/lib/appname-devel-version/* symlinks to the above directories
 install:: stage-package
-ifeq (WINNT,$(OS_ARCH))
-	$(error "make install" is not supported on Windows. Use "make package" instead.)
+ifneq (,$(filter WINNT Darwin,$(OS_ARCH)))
+	$(error "make install" is not supported on this platform. Use "make package" instead.)
 endif
 	$(NSINSTALL) -D $(DESTDIR)$(installdir)
 	(cd $(DIST)/$(MOZ_PKG_APPNAME) && tar $(TAR_CREATE_FLAGS) - .) | \
