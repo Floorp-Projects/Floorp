@@ -137,7 +137,8 @@ static JSPropertySpec object_props[] = {
                                                   obj_getSlot,  obj_setSlot},
     {js_parent_str,JSSLOT_PARENT,JSPROP_READONLY|JSPROP_PERMANENT|JSPROP_SHARED,
                                                   obj_getSlot,  obj_setSlot},
-    {js_count_str, 0,            JSPROP_PERMANENT,obj_getCount, obj_getCount},
+    {js_count_str, 0,            JSPROP_PERMANENT|JSPROP_SHARED,
+                                                  obj_getCount, obj_getCount},
     {0,0,0,0,0}
 };
 
