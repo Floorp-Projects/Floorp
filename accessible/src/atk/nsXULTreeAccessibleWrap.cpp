@@ -280,7 +280,7 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::GetColumnAtIndex(PRInt32 aIndex, PRInt32 
   PRInt32 treeCols;
   nsAccessible::GetChildCount(&treeCols);
 
-  if (aIndex > treeCols) {
+  if (aIndex >= treeCols) {
     *aColumn = (aIndex - treeCols) % columns;
   }
   
@@ -301,7 +301,7 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::GetRowAtIndex(PRInt32 aIndex, PRInt32 *aR
   PRInt32 treeCols;
   nsAccessible::GetChildCount(&treeCols);
 
-  if (aIndex > treeCols) {
+  if (aIndex >= treeCols) {
     *aRow = (aIndex - treeCols) / columns;
   }
 
