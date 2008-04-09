@@ -1005,6 +1005,8 @@ PRBool nsCaret::IsMenuPopupHidingCaret()
   if (!node)
     return PR_TRUE; // No selection/caret to draw.
   nsCOMPtr<nsIContent> caretContent = do_QueryInterface(node);
+  if (!caretContent)
+    return PR_TRUE; // No selection/caret to draw.
 
   // If there's a menu popup open before the popup with
   // the caret, don't show the caret.
