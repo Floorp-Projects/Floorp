@@ -891,6 +891,7 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
       // It seems that unless all four buttons are showing, kThemeTopOutsideArrowPressed is the correct constant for
       // the up scrollbar button.
       aTdi.trackInfo.scrollbar.pressState = ConvertToPressState(buttonStates[0], kThemeTopOutsideArrowPressed) |
+                                            ConvertToPressState(buttonStates[1], kThemeBottomOutsideArrowPressed) |
                                             ConvertToPressState(buttonStates[2], kThemeTopOutsideArrowPressed) |
                                             ConvertToPressState(buttonStates[3], kThemeBottomOutsideArrowPressed);
     }
