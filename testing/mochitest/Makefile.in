@@ -47,6 +47,7 @@ DIRS =	MochiKit \
 	static \
 	tests \
 	chrome \
+	ssltunnel \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
