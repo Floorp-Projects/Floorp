@@ -50,6 +50,15 @@ groupbox {
   padding: 5px;
 }
 
+groupbox:not(:-moz-system-metric(windows-default-theme)) {
+  border-width: 2px;
+  -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
+  -moz-border-right-colors: ThreeDHighlight ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDShadow;
+  -moz-border-left-colors: ThreeDShadow ThreeDHighlight;
+  -moz-border-radius: 0px;
+}
+
 .groupbox-body {
   padding: inherit;
 }
