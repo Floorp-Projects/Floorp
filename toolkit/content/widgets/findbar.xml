@@ -209,7 +209,8 @@
       <stylesheet src="chrome://global/skin/findBar.css"/>
     </resources>
 
-    <content align="center" hidden="true">
+    <content hidden="true">
+    <xul:hbox class="findbar-container" flex="1" align="center">
       <xul:toolbarbutton anonid="find-closebutton"
                          class="findbar-closebutton"
                          tooltiptext="&findCloseButton.tooltip;"
@@ -259,6 +260,7 @@
                        control="findbar-textbox">
       <!-- Do not use value, first child is used because it provides a11y with text change events -->
       </xul:description>
+    </xul:hbox>
     </content>
 
     <implementation implements="nsIDOMEventListener">

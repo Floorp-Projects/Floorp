@@ -62,10 +62,6 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   min-width: 1px;
 }
 
-#FindToolbar {
-  overflow-x: hidden;
-}
-
 /* Identity UI */
 #identity-popup-content-box.unknownIdentity > #identity-popup-connectedToLabel ,
 #identity-popup-content-box.unknownIdentity > #identity-popup-runByLabel ,
