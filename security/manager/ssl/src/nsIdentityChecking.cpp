@@ -450,13 +450,15 @@ loadTestEVInfos()
         descriptor.EqualsLiteral(("2_readable_oid"))) {
       readable_oid = data;
       reader_position = pos_issuer;
+      continue;
     }
     else if (reader_position == pos_issuer &&
         descriptor.EqualsLiteral(("3_issuer"))) {
       issuer = data;
       reader_position = pos_serial;
+      continue;
     }
-    else if (reader_position == pos_readable_oid &&
+    else if (reader_position == pos_serial &&
         descriptor.EqualsLiteral(("4_serial"))) {
       serial = data;
       reader_position = pos_fingerprint;
