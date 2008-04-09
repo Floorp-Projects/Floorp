@@ -4512,6 +4512,20 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       }
       break;
 
+    case WM_MOUSEACTIVATE:
+      if (mWindowType == eWindowType_popup) {
+        // a popup with a parent owner should not be activated when clicked
+        // but should still allow the mouse event to be fired, so the return
+        // value is set to MA_NOACTIVATE. But if the owner isn't the frontmost
+        // window, just use default processing so that the window is activated.
+        HWND owner = ::GetWindow(mWnd, GW_OWNER);
+        if (owner && owner == ::GetForegroundWindow()) {
+          *aRetValue = MA_NOACTIVATE;
+          result = PR_TRUE;
+        }
+      }
+      break;
+
 #ifndef WINCE
     case WM_WINDOWPOSCHANGING:
     {
