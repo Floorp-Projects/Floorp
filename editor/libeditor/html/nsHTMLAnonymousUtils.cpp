@@ -59,6 +59,7 @@
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIMutationObserver.h"
 #include "nsUnicharUtils.h"
+#include "nsContentUtils.h"
 
 // retrieve an integer stored into a CSS computed float value
 static PRInt32 GetCSSFloatValue(nsIDOMCSSStyleDeclaration * aDecl,
@@ -182,12 +183,16 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
     if (NS_FAILED(res)) return res;
   }
 
-  // establish parenthood of the element
-  newContent->SetNativeAnonymous();
-  res = newContent->BindToTree(doc, parentContent, newContent, PR_TRUE);
-  if (NS_FAILED(res)) {
-    newContent->UnbindFromTree();
-    return res;
+  {
+    nsAutoScriptBlocker scriptBlocker;
+
+    // establish parenthood of the element
+    newContent->SetNativeAnonymous();
+    res = newContent->BindToTree(doc, parentContent, newContent, PR_TRUE);
+    if (NS_FAILED(res)) {
+      newContent->UnbindFromTree();
+      return res;
+    }
   }
 
   nsElementDeletionObserver* observer =
@@ -237,6 +242,7 @@ nsHTMLEditor::DeleteRefToAnonymousNode(nsIDOMElement* aElement,
   if (aElement) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
     if (content) {
+      nsAutoScriptBlocker scriptBlocker;
       // Need to check whether aShell has been destroyed (but not yet deleted).
       // In that case presContext->GetPresShell() returns nsnull.
       // See bug 338129.

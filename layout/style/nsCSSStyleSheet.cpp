@@ -74,6 +74,7 @@
 #include "nsContentUtils.h"
 #include "nsIJSContextStack.h"
 #include "nsIScriptSecurityManager.h"
+#include "mozAutoDocUpdate.h"
 
 // -------------------------------
 // Style Rule List for the DOM

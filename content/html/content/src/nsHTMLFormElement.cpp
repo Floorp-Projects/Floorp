@@ -87,6 +87,8 @@
 #include "nsUnicharUtils.h"
 #include "nsEventDispatcher.h"
 
+#include "mozAutoDocUpdate.h"
+
 static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 16;
 
 class nsFormControlList;
