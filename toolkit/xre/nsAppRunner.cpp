@@ -2357,20 +2357,36 @@ static nsGTKToolkit* GetGTKToolkit()
 
 static void MOZ_gdk_display_close(GdkDisplay *display)
 {
+  // XXX wallpaper for bug 417163: don't close the Display if we're using the
+  // Qt theme because we crash (in Qt code) when using jemalloc.
+  PRBool theme_is_qt = PR_FALSE;
+  GtkSettings* settings =
+    gtk_settings_get_for_screen(gdk_display_get_default_screen(display));
+  gchar *theme_name;
+  g_object_get(settings, "gtk-theme-name", &theme_name, NULL);
+  if (theme_name) {
+    theme_is_qt = strcmp(theme_name, "Qt") == 0;
+    if (theme_is_qt)
+      NS_WARNING("wallpaper bug 417163 for Qt theme");
+    g_free(theme_name);
+  }
+
   // gdk_display_close was broken prior to gtk+-2.10.0.
   // (http://bugzilla.gnome.org/show_bug.cgi?id=85715)
   // gdk_display_manager_set_default_display (gdk_display_manager_get(), NULL)
   // was also broken.
-  if(gtk_check_version(2,10,0) != NULL) {
+  if (gtk_check_version(2,10,0) != NULL) {
     // Version check failed - broken gdk_display_close.
     //
     // Let the gdk structures leak but at least close the Display,
     // assuming that gdk will not use it again.
     Display* dpy = GDK_DISPLAY_XDISPLAY(display);
-    XCloseDisplay(dpy);
+    if (!theme_is_qt)
+      XCloseDisplay(dpy);
   }
   else {
-    gdk_display_close(display);
+    if (!theme_is_qt)
+      gdk_display_close(display);
 #if GTK_CHECK_VERSION(2,8,0) && \
   (defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING) || defined(NS_TRACE_MALLOC))
     cairo_debug_reset_static_data();
