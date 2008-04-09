@@ -247,6 +247,10 @@ toolbarpaletteitem[place="toolbar"] .places-toolbar-items {
   height: 16px;
 }
 
+#bookmarksToolbarFolderMenu {
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");  
+}
+
 /* ----- PRIMARY TOOLBAR BUTTONS ----- */	
 
 .toolbarbutton-1,

@@ -1888,3 +1888,8 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 96px 16px 80px);
 }
+
+/* Bookmarks Toolbar menu-item */
+#bookmarksToolbarFolderMenu {
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");  
+}
