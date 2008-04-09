@@ -3922,6 +3922,7 @@ JSBool
 js_regexp_toString(JSContext *cx, JSObject *obj, jsval *vp)
 {
     JSRegExp *re;
+    JSString *escstr;
     const jschar *source;
     jschar *chars;
     size_t length, nflags;
@@ -3938,7 +3939,11 @@ js_regexp_toString(JSContext *cx, JSObject *obj, jsval *vp)
         return JS_TRUE;
     }
 
-    JSSTRING_CHARS_AND_LENGTH(re->source, source, length);
+    escstr = js_QuoteString(cx, re->source, 0);
+    if (!escstr)
+        return JS_FALSE;
+    *vp = STRING_TO_JSVAL(escstr); /* use vp for rooting */
+    JSSTRING_CHARS_AND_LENGTH(escstr, source, length);
     if (length == 0) {
         source = empty_regexp_ucstr;
         length = JS_ARRAY_LENGTH(empty_regexp_ucstr) - 1;
