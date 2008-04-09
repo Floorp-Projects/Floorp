@@ -51,7 +51,6 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsDOMClassInfoID.h"
-#include "mozAutoDocUpdate.h"
 
 //----------------------------------------------------------------------
 // nsISupports methods:

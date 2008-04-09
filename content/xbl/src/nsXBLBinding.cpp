@@ -345,8 +345,6 @@ nsXBLBinding::InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElem
   nsIDocument* doc = aElement->GetCurrentDoc();
   PRBool allowScripts = AllowScripts();
 
-  nsAutoScriptBlocker scriptBlocker;
-
   PRUint32 childCount = aAnonParent->GetChildCount();
   for (PRUint32 i = 0; i < childCount; i++) {
     nsIContent *child = aAnonParent->GetChildAt(i);
@@ -1141,7 +1139,6 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
       nsCOMPtr<nsIXULDocument> xuldoc(do_QueryInterface(aOldDocument));
 #endif
 
-      nsAutoScriptBlocker scriptBlocker;
       anonymous->UnbindFromTree(); // Kill it.
 
 #ifdef MOZ_XUL

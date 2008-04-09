@@ -62,7 +62,6 @@
 #include "nsIProgrammingLanguage.h"
 #include "nsIXPConnect.h"
 #include "nsXTFWeakTearoff.h"
-#include "mozAutoDocUpdate.h"
 
 nsXTFElementWrapper::nsXTFElementWrapper(nsINodeInfo* aNodeInfo,
                                          nsIXTFElement* aXTFElement)

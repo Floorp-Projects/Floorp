@@ -642,7 +642,6 @@ nsAttrAndChildArray::Clear()
     ATTRS(mImpl)[i].~InternalAttr();
   }
 
-  nsAutoScriptBlocker scriptBlocker;
   PRUint32 end = slotCount * ATTRSIZE + ChildCount();
   for (i = slotCount * ATTRSIZE; i < end; ++i) {
     nsIContent* child = static_cast<nsIContent*>(mImpl->mBuffer[i]);

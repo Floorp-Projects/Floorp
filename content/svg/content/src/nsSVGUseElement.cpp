@@ -65,7 +65,6 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Use)
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsSVGUseElement)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsSVGUseElement,
                                                 nsSVGUseElementBase)
-  nsAutoScriptBlocker scriptBlocker;
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOriginal)
   tmp->DestroyAnonymousContent();
   tmp->RemoveListener();
