@@ -34,6 +34,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * Test bug 406857 to make sure a download's referrer doesn't disappear when
+ * retrying the download.
+ */
+
 function test()
 {
   let dm = Cc["@mozilla.org/download-manager;1"].
@@ -80,7 +85,8 @@ function test()
           ok(aDownload.referrer.spec == referrer, "Got referrer on finish");
 
           dm.removeListener(listener);
-          file.remove(false);
+          obs.removeObserver(testObs, DLMGR_UI_DONE);
+          try { file.remove(false); } catch(e) { /* stupid windows box */ }
           finish();
           break;
       }
@@ -94,29 +100,22 @@ function test()
   let win = wm.getMostRecentWindow("Download:Manager");
   if (win) win.close();
 
-  // Start the test when the download manager window loads
-  let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-           getService(Ci.nsIWindowWatcher);
-  ww.registerNotification({
+  let obs = Cc["@mozilla.org/observer-service;1"].
+            getService(Ci.nsIObserverService);
+  const DLMGR_UI_DONE = "download-manager-ui-done";
+
+  let testObs = {
     observe: function(aSubject, aTopic, aData) {
-      ww.unregisterNotification(this);
-      aSubject.QueryInterface(Ci.nsIDOMEventTarget).
-      addEventListener("DOMContentLoaded", doTest, false);
+      if (aTopic != DLMGR_UI_DONE)
+        return;
+
+      // Send the enter key to Download Manager to retry the download
+      let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      EventUtils.synthesizeKey("VK_ENTER", {}, win);
     }
-  });
+  };
+  obs.addObserver(testObs, DLMGR_UI_DONE, false);
 
-  // Let the Startup method of the download manager UI finish before we test
-  let doTest = function() setTimeout(function() {
-    win = wm.getMostRecentWindow("Download:Manager");
-
-    // Try again if selectedIndex is -1
-    if (win.document.getElementById("downloadView").selectedIndex)
-      return doTest();
-
-    // Send the enter key to Download Manager to retry the download
-    EventUtils.synthesizeKey("VK_ENTER", {}, win);
-  }, 0);
- 
   // Show the Download Manager UI
   Cc["@mozilla.org/download-manager-ui;1"].
   getService(Ci.nsIDownloadManagerUI).show();
