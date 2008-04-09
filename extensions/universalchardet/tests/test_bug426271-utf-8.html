@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=426271
+-->
+<head>
+  <title>Test for Bug 426271</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=426271">Mozilla Bug 426271</a>
+<p id="display"></p>
+<div id="content" style="display: none">  
+</div>
+<iframe id="testframe"></iframe>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Bug 426271 **/
+const expectedText = "\u3053\u308C\u306FUTF-8\u3067\u3059\u6614\u3005\u3001";
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+	           .getService(Components.interfaces.nsIPrefBranch);
+var str =  Components.classes["@mozilla.org/supports-string;1"]
+              .createInstance(Components.interfaces.nsISupportsString);
+var oldPref;
+
+try {
+    oldPref = prefService
+     .getComplexValue("intl.charset.detector",
+		      Components.interfaces.nsIPrefLocalizedString).data;
+} catch (e) {
+    oldPref = "";
+}
+str.data = "ja_parallel_state_machine";
+prefService.setComplexValue("intl.charset.detector",
+			    Components.interfaces.nsISupportsString, str);
+
+function afterLoad() {
+    var iframeDoc = $("testframe").contentDocument;
+
+    is(iframeDoc.getElementById("testtext").innerHTML, expectedText,
+       "decoded as UTF-8");
+
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+	           .getService(Components.interfaces.nsIPrefBranch);
+    var str =  Components.classes["@mozilla.org/supports-string;1"]
+              .createInstance(Components.interfaces.nsISupportsString);
+    str.data = oldPref;
+    prefService.setComplexValue("intl.charset.detector",
+				Components.interfaces.nsISupportsString, str);
+    SimpleTest.finish();
+}
+
+$("testframe").onload= afterLoad;
+$("testframe").src="bug426271_text-utf-8.html";
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
+
