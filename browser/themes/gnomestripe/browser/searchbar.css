@@ -27,7 +27,6 @@
   min-width: 0;
   margin: 0;
   -moz-margin-end: 2px;
-  padding: 2px 0;
   border: 0;
   -moz-box-align: center;
   background-color: -moz-dialog;
@@ -38,13 +37,17 @@
 
 .searchbar-engine-button > .button-box {
   -moz-appearance: none;
-  padding: 0;
+  padding: 2px 0;
   -moz-padding-end: 2px;
   border: 0;
 }
 
 .searchbar-engine-button[addengines="true"] {
   background-color: Highlight;
+}
+
+.searchbar-engine-button[addengines="true"] > .button-box {
+  background-color: rgba(230, 230, 230, 0.3);
 }
 
 .searchbar-dropmarker-image {
