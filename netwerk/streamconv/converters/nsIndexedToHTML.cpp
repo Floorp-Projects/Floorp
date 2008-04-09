@@ -50,6 +50,9 @@
 #include "nsURLHelper.h"
 #include "nsCRT.h"
 #include "nsIPlatformCharset.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefLocalizedString.h"
 
 NS_IMPL_ISUPPORTS4(nsIndexedToHTML,
                    nsIDirIndexListener,
@@ -93,6 +96,22 @@ nsIndexedToHTML::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult) {
 
 nsresult
 nsIndexedToHTML::Init(nsIStreamListener* aListener) {
+
+    nsXPIDLString ellipsis;
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefs) {
+      nsCOMPtr<nsIPrefLocalizedString> prefVal;
+      prefs->GetComplexValue("intl.ellipsis",
+                           NS_GET_IID(nsIPrefLocalizedString),
+                           getter_AddRefs(prefVal));
+      if (prefVal)
+        prefVal->ToString(getter_Copies(ellipsis));
+    }
+    if (ellipsis.IsEmpty())
+      mEscapedEllipsis.AppendLiteral("&#8230;");
+    else
+      mEscapedEllipsis.Adopt(nsEscapeHTML2(ellipsis.get(), ellipsis.Length()));
+
     nsresult rv = NS_OK;
 
     mListener = aListener;
@@ -824,8 +843,10 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
                 description.Truncate(description.Length() - 1);
 
             escapedShort.Adopt(nsEscapeHTML2(description.get(), description.Length()));
-            // add HORIZONTAL ELLIPSIS (U+2026) and ZERO WIDTH SPACE (U+200B) for wrapping
-            escapedShort.AppendLiteral("&#8230;&#8203;");
+
+            escapedShort.Append(mEscapedEllipsis);
+            // add ZERO WIDTH SPACE (U+200B) for wrapping
+            escapedShort.AppendLiteral("&#8203;");
             nsString tmp;
             tmp.Adopt(nsEscapeHTML2(descriptionAffix.get(), descriptionAffix.Length()));
             escapedShort.Append(tmp);
