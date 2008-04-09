@@ -90,6 +90,8 @@
 #include "nsIDOMUserDataHandler.h"
 #include "nsEventDispatcher.h"
 #include "nsNodeUtils.h"
+#include "nsIConsoleService.h"
+#include "nsIScriptError.h"
 
 
 // ==================================================================
@@ -343,39 +345,46 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   nsCOMPtr<nsIURI> codebase;
   principal->GetURI(getter_AddRefs(codebase));
 
-  // Get security manager, check to see whether the current document
-  // is allowed to load this URI. It's important to use the current
-  // document's principal for this check so that we don't end up in a
-  // case where code with elevated privileges is calling us and
-  // changing the principal of this document.
-  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+  // Check to see whether the current document is allowed to load this URI.
+  // It's important to use the current document's principal for this check so
+  // that we don't end up in a case where code with elevated privileges is
+  // calling us and changing the principal of this document.
 
   // Enforce same-origin even for chrome loaders to avoid someone accidentally
   // using a document that content has a reference to and turn that into a
   // chrome document.
   if (codebase) {
-    rv = secMan->CheckSameOriginURI(codebase, uri, PR_FALSE);
-
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+    rv = principal->CheckMayLoad(uri, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
   } else {
     // We're called from chrome, check to make sure the URI we're
     // about to load is also chrome.
 
     PRBool isChrome = PR_FALSE;
     if (NS_FAILED(uri->SchemeIs("chrome", &isChrome)) || !isChrome) {
+      nsCAutoString spec;
+      if (mDocumentURI)
+        mDocumentURI->GetSpec(spec);
+
+      nsAutoString error;
+      error.AssignLiteral("Cross site loading using document.load is no "
+                          "longer supported. Use XMLHttpRequest instead.");
+      nsCOMPtr<nsIScriptError> errorObject =
+          do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = errorObject->Init(error.get(), NS_ConvertUTF8toUTF16(spec).get(),
+                             nsnull, 0, 0, nsIScriptError::warningFlag,
+                             "DOM");
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIConsoleService> consoleService =
+        do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+      if (consoleService) {
+        consoleService->LogMessage(errorObject);
+      }
+
       return NS_ERROR_DOM_SECURITY_ERR;
     }
-  }
-
-  rv = secMan->CheckConnect(nsnull, uri, "XMLDocument", "load");
-  if (NS_FAILED(rv)) {
-    // We need to return success here so that JS will get a proper
-    // exception thrown later. Native calls should always result in
-    // CheckConnect() succeeding, but in case JS calls C++ which calls
-    // this code the exception might be lost.
-    return NS_OK;
   }
 
   // Partial Reset, need to restore principal for security reasons and
