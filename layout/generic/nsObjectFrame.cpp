@@ -1728,6 +1728,19 @@ private:
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsStopPluginRunnable, nsRunnable, nsITimerCallback)
 
+static const char*
+GetMIMEType(nsIPluginInstance *aPluginInstance)
+{
+  nsCOMPtr<nsIPluginInstancePeer> peer;
+  aPluginInstance->GetPeer(getter_AddRefs(peer));
+  if (peer) {
+    nsMIMEType mime = NULL;
+    if (NS_SUCCEEDED(peer->GetMIMEType(&mime)) && mime)
+      return mime;
+  }
+  return "";
+}
+
 static void
 DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
 {
@@ -1848,30 +1861,18 @@ nsStopPluginRunnable::Run()
 void
 nsObjectFrame::StopPlugin()
 {
+  PRBool delayedStop = PR_FALSE;
 #ifdef XP_WIN
-  // XXXjst: ns4xPluginInstance::Destroy() is a no-op, clean
-  // this mess up when there are no other instance types.
-  PRBool delayedStop = PR_TRUE;
   nsCOMPtr<nsIPluginInstance> inst;
   if (mInstanceOwner)
     mInstanceOwner->GetInstance(*getter_AddRefs(inst));
   if (inst) {
-    PRBool doCache = PR_TRUE;
-    inst->GetValue(nsPluginInstanceVariable_DoCacheBool, (void *)&doCache);
-    if (!doCache) {
-      PRBool doCallSetWindowAfterDestroy = PR_FALSE;
-      inst->GetValue(nsPluginInstanceVariable_CallSetWindowAfterDestroyBool, 
-                     (void *)&doCallSetWindowAfterDestroy);
-      if (doCallSetWindowAfterDestroy) {
-        // Because DoStopPlugin ignores its 'aDelayedStop' arg in this case.
-        delayedStop = PR_FALSE;
-      }
-    }
+    // Delayed stop for Real plugin only; see bug 420886, 426852.
+    const char* pluginType = ::GetMIMEType(inst);
+    delayedStop = strcmp(pluginType, "audio/x-pn-realaudio-plugin") == 0;
   }
-  StopPluginInternal(delayedStop);
-#else
-  StopPluginInternal(PR_FALSE);
 #endif
+  StopPluginInternal(delayedStop);
 }
 
 void
