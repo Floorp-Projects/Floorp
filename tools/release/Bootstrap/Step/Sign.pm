@@ -6,8 +6,6 @@ use Bootstrap::Step;
 use Bootstrap::Config;
 @ISA = ("Bootstrap::Step");
 
-use LWP::Simple;
-
 sub Execute {
     my $this = shift;
 
@@ -23,7 +21,7 @@ sub Execute {
 
     $this->Log(msg => 'Looking for url ' . $url);
 
-    while (! head($url)) {
+    while (system('wget', '-q', '--spider', $url)) {
         sleep(10);
     }
 
