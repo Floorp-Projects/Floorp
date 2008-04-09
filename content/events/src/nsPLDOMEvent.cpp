@@ -41,7 +41,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEventTarget.h"
-#include "nsContentUtils.h"
 
 NS_IMETHODIMP nsPLDOMEvent::Run()
 {
@@ -76,9 +75,4 @@ NS_IMETHODIMP nsPLDOMEvent::Run()
 nsresult nsPLDOMEvent::PostDOMEvent()
 {
   return NS_DispatchToCurrentThread(this);
-}
-
-nsresult nsPLDOMEvent::RunDOMEventWhenSafe()
-{
-  return nsContentUtils::AddScriptRunner(this) ? NS_OK : NS_ERROR_FAILURE;
 }

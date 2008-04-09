@@ -93,7 +93,6 @@
 #include "nsThreadUtils.h"
 #include "nsPresShellIterator.h"
 #include "nsPIDOMWindow.h"
-#include "mozAutoDocUpdate.h"
 
 PRLogModuleInfo* gContentSinkLogModuleInfo;
 

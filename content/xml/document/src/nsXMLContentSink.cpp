@@ -96,7 +96,6 @@
 #include "nsNodeUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsEventDispatcher.h"
-#include "mozAutoDocUpdate.h"
 
 #ifdef MOZ_SVG
 #include "nsGUIEvent.h"

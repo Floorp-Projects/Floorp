@@ -1062,6 +1062,45 @@ private:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)
 
 /**
+ * Helper class to automatically handle batching of document updates.  This
+ * class will call BeginUpdate on construction and EndUpdate on destruction on
+ * the given document with the given update type.  The document could be null,
+ * in which case no updates will be called.  The constructor also takes a
+ * boolean that can be set to false to prevent notifications.
+ */
+class mozAutoDocUpdate
+{
+public:
+  mozAutoDocUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType,
+                   PRBool aNotify) :
+    mDocument(aNotify ? aDocument : nsnull),
+    mUpdateType(aUpdateType)
+  {
+    if (mDocument) {
+      mDocument->BeginUpdate(mUpdateType);
+    }
+  }
+
+  ~mozAutoDocUpdate()
+  {
+    if (mDocument) {
+      mDocument->EndUpdate(mUpdateType);
+    }
+  }
+
+private:
+  nsCOMPtr<nsIDocument> mDocument;
+  nsUpdateType mUpdateType;
+};
+
+#define MOZ_AUTO_DOC_UPDATE_PASTE2(tok,line) tok##line
+#define MOZ_AUTO_DOC_UPDATE_PASTE(tok,line) \
+  MOZ_AUTO_DOC_UPDATE_PASTE2(tok,line)
+#define MOZ_AUTO_DOC_UPDATE(doc,type,notify) \
+  mozAutoDocUpdate MOZ_AUTO_DOC_UPDATE_PASTE(_autoDocUpdater_, __LINE__) \
+  (doc,type,notify)
+
+/**
  * mozAutoSubtreeModified batches DOM mutations so that a DOMSubtreeModified
  * event is dispatched, if necessary, when the outermost mozAutoSubtreeModified
  * object is deleted.

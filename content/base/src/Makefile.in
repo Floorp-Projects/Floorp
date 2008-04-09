@@ -102,7 +102,6 @@ EXPORTS		= \
 		nsStubImageDecoderObserver.h \
 		nsStubMutationObserver.h \
 		nsTextFragment.h \
-		mozAutoDocUpdate.h \
 		$(NULL)
 
 CPPSRCS		= \
