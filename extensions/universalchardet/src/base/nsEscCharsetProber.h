@@ -45,7 +45,7 @@
 
 class nsEscCharSetProber: public nsCharSetProber {
 public:
-  nsEscCharSetProber(void);
+  nsEscCharSetProber(PRUint32 aLanguageFilter);
   virtual ~nsEscCharSetProber(void);
   nsProbingState HandleData(const char* aBuf, PRUint32 aLen);
   const char* GetCharSetName() {return mDetectedCharset;}

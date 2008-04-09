@@ -39,6 +39,7 @@
 #include <stdio.h>
 
 #include "nsMBCSGroupProber.h"
+#include "nsUniversalDetector.h"
 
 #if defined(DEBUG_chardet) || defined(DEBUG_jgmyers)
 const char *ProberName[] = 
@@ -54,15 +55,26 @@ const char *ProberName[] =
 
 #endif
 
-nsMBCSGroupProber::nsMBCSGroupProber()
+nsMBCSGroupProber::nsMBCSGroupProber(PRUint32 aLanguageFilter)
 {
+  for (PRUint32 i = 0; i < NUM_OF_PROBERS; i++)
+    mProbers[i] = nsnull;
+
   mProbers[0] = new nsUTF8Prober();
-  mProbers[1] = new nsSJISProber();
-  mProbers[2] = new nsEUCJPProber();
-  mProbers[3] = new nsGB18030Prober();
-  mProbers[4] = new nsEUCKRProber();
-  mProbers[5] = new nsBig5Prober();
-  mProbers[6] = new nsEUCTWProber();
+  if (aLanguageFilter & NS_FILTER_JAPANESE) 
+  {
+    mProbers[1] = new nsSJISProber();
+    mProbers[2] = new nsEUCJPProber();
+  }
+  if (aLanguageFilter & NS_FILTER_CHINESE_SIMPLIFIED)
+    mProbers[3] = new nsGB18030Prober();
+  if (aLanguageFilter & NS_FILTER_KOREAN)
+    mProbers[4] = new nsEUCKRProber();
+  if (aLanguageFilter & NS_FILTER_CHINESE_TRADITIONAL) 
+  {
+    mProbers[5] = new nsBig5Prober();
+    mProbers[6] = new nsEUCTWProber();
+  }
   Reset();
 }
 
