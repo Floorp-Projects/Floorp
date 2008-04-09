@@ -564,27 +564,27 @@ var PlacesOrganizer = {
   function PO__detectAndSetDetailsPaneMinimalState(aNode) {
     /**
      * The details of simple folder-items (as opposed to livemarks) or the
-     * of livemark-children are not likely to fill the scrollbox anyway,
+     * of livemark-children are not likely to fill the infoPane anyway,
      * thus we remove the "More/Less" button and show all details.
      *
      * the wasminimal attribute here is used to persist the "more/less"
      * state in a bookmark->folder->bookmark scenario.
      */
-    var infoScrollbox = document.getElementById("infoScrollbox");
-    var scrollboxExpander = document.getElementById("infoScrollboxExpander");
+    var infoBox = document.getElementById("infoBox");
+    var infoBoxExpander = document.getElementById("infoBoxExpander");
     if ((PlacesUtils.nodeIsFolder(aNode) &&
          !PlacesUtils.nodeIsLivemarkContainer(aNode)) ||
         PlacesUtils.nodeIsLivemarkItem(aNode)) {
-      if (infoScrollbox.getAttribute("minimal") == "true")
-        infoScrollbox.setAttribute("wasminimal", "true");
-      infoScrollbox.removeAttribute("minimal");
-      scrollboxExpander.hidden = true;
+      if (infoBox.getAttribute("minimal") == "true")
+        infoBox.setAttribute("wasminimal", "true");
+      infoBox.removeAttribute("minimal");
+      infoBoxExpander.hidden = true;
     }
     else {
-      if (infoScrollbox.getAttribute("wasminimal") == "true")
-        infoScrollbox.setAttribute("minimal", "true");
-      infoScrollbox.removeAttribute("wasminimal");
-      scrollboxExpander.hidden = false;
+      if (infoBox.getAttribute("wasminimal") == "true")
+        infoBox.setAttribute("minimal", "true");
+      infoBox.removeAttribute("wasminimal");
+      infoBoxExpander.hidden = false;
     }
   },
 
@@ -609,11 +609,12 @@ var PlacesOrganizer = {
         focusedElement.blur();
     }
 
-    var contentTree = document.getElementById("placeContent");
+    var infoBox = document.getElementById("infoBox");
     var detailsDeck = document.getElementById("detailsDeck");
     detailsDeck.selectedIndex = 1;
-    var selectedNode = contentTree.selectedNode;
+    var selectedNode = this._content.selectedNode;
     if (selectedNode) {
+      infoBox.hidden = false;
       if (selectedNode.itemId != -1 &&
           !PlacesUtils.nodeIsSeparator(selectedNode)) {
         if (this._paneDisabled) {
@@ -642,6 +643,9 @@ var PlacesOrganizer = {
     }
     else {
       detailsDeck.selectedIndex = 0;
+      // The details deck has the height of its biggest child, so we hide the
+      // infoBox to allow it shrinking when there is no selection.
+      infoBox.hidden = true;
       var selectItemDesc = document.getElementById("selectItemDescription");
       var itemsCountLabel = document.getElementById("itemsCountText");
       var rowCount = this._content.treeBoxObject.view.rowCount;
@@ -692,17 +696,17 @@ var PlacesOrganizer = {
   },
 
   toggleAdditionalInfoFields: function PO_toggleAdditionalInfoFields() {
-    var infoScrollbox = document.getElementById("infoScrollbox");
-    var scrollboxExpander = document.getElementById("infoScrollboxExpander");
-    if (infoScrollbox.getAttribute("minimal") == "true") {
-      infoScrollbox.removeAttribute("minimal");
-      scrollboxExpander.label = scrollboxExpander.getAttribute("lesslabel");
-      scrollboxExpander.accessKey = scrollboxExpander.getAttribute("lessaccesskey");
+    var infoBox = document.getElementById("infoBox");
+    var infoBoxExpander = document.getElementById("infoBoxExpander");
+    if (infoBox.getAttribute("minimal") == "true") {
+      infoBox.removeAttribute("minimal");
+      infoBoxExpander.label = infoBoxExpander.getAttribute("lesslabel");
+      infoBoxExpander.accessKey = infoBoxExpander.getAttribute("lessaccesskey");
     }
     else {
-      infoScrollbox.setAttribute("minimal", "true");
-      scrollboxExpander.label = scrollboxExpander.getAttribute("morelabel");
-      scrollboxExpander.accessKey = scrollboxExpander.getAttribute("moreaccesskey");
+      infoBox.setAttribute("minimal", "true");
+      infoBoxExpander.label = infoBoxExpander.getAttribute("morelabel");
+      infoBoxExpander.accessKey = infoBoxExpander.getAttribute("moreaccesskey");
     }
   },
 
