@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXBLInsertionPoint.h"
+#include "nsContentUtils.h"
 
 nsXBLInsertionPoint::nsXBLInsertionPoint(nsIContent* aParentElement,
                                          PRUint32 aIndex,
@@ -124,6 +125,8 @@ nsXBLInsertionPoint::UnbindDefaultContent()
 
   // Hold a strong ref while doing this, just in case
   nsCOMPtr<nsIContent> defContent = mDefaultContent;
+
+  nsAutoScriptBlocker scriptBlocker;
 
   // Unbind the _kids_ of the default content, not just the default content
   // itself, since they are bound to some other parent.  Basically we want to
