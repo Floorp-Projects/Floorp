@@ -525,7 +525,7 @@ gfxPangoFont::GetCharSize(char aChar, gfxSize& aInkSize, gfxSize& aLogSize,
     pango_glyph_string_free(glstr);
 }
 
-// rounding and truncation functions for a Freetype fixed point number 
+// rounding and truncation functions for a Freetype floating point number 
 // (FT26Dot6) stored in a 32bit integer with high 26 bits for the integer
 // part and low 6 bits for the fractional part. 
 #define MOZ_FT_ROUND(x) (((x) + 32) & ~63) // 63 = 2^6 - 1
@@ -567,12 +567,8 @@ gfxPangoFont::GetMetrics()
         mMetrics.maxDescent =
             pango_font_metrics_get_descent(pfm) / FLOAT_PANGO_SCALE;
 
-        // This is used for the width of text input elements so be liberal
-        // rather than conservative in the estimate.
         mMetrics.aveCharWidth =
-            PR_MAX(pango_font_metrics_get_approximate_char_width(pfm),
-                   pango_font_metrics_get_approximate_digit_width(pfm))
-            / FLOAT_PANGO_SCALE;
+            pango_font_metrics_get_approximate_char_width(pfm) / FLOAT_PANGO_SCALE;
 
         mMetrics.underlineOffset =
             pango_font_metrics_get_underline_position(pfm) / FLOAT_PANGO_SCALE;
@@ -588,7 +584,8 @@ gfxPangoFont::GetMetrics()
 
         // We're going to overwrite this below if we have a FT_Face
         // (which we normally should have...).
-        mMetrics.maxAdvance = mMetrics.aveCharWidth;
+        mMetrics.maxAdvance =
+            pango_font_metrics_get_approximate_char_width(pfm) / FLOAT_PANGO_SCALE;
     } else {
         mMetrics.maxAscent = 0.0;
         mMetrics.maxDescent = 0.0;
@@ -601,7 +598,7 @@ gfxPangoFont::GetMetrics()
     }
 
     // ??
-    mMetrics.emHeight = mAdjustedSize;
+    mMetrics.emHeight = mAdjustedSize ? mAdjustedSize : GetStyle()->size;
 
     gfxFloat lineHeight = mMetrics.maxAscent + mMetrics.maxDescent;
     if (lineHeight > mMetrics.emHeight)
