@@ -1269,23 +1269,13 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
       return NS_ERROR_FAILURE;
     }
 
-    rv = secMan->CheckConnect(cx, targetURI, "XMLHttpRequest", "open");
-    if (NS_FAILED(rv))
-    {
-      // Security check failed.
-      return NS_OK;
-    }
-
     // Find out if UniversalBrowserRead privileges are enabled
-    // we will need this in case of a redirect
-    PRBool crossSiteAccessEnabled;
-    rv = secMan->IsCapabilityEnabled("UniversalBrowserRead",
-                                     &crossSiteAccessEnabled);
-    if (NS_FAILED(rv)) return rv;
-    if (crossSiteAccessEnabled) {
+    if (nsContentUtils::IsCallerTrustedForRead()) {
       mState |= XML_HTTP_REQUEST_XSITEENABLED;
     } else {
       mState &= ~XML_HTTP_REQUEST_XSITEENABLED;
+      rv = mPrincipal->CheckMayLoad(targetURI, PR_TRUE);
+      NS_ENSURE_SUCCESS(rv, NS_OK);
     }
 
     if (argc > 2) {
