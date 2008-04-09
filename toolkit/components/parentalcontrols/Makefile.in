@@ -45,8 +45,10 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = public
 
+ifndef MOZ_DISABLE_PARENTAL_CONTROLS
 ifeq (WINNT,$(OS_ARCH))
 DIRS += src
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk

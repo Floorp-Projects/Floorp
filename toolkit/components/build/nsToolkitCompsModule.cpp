@@ -41,7 +41,7 @@
 #include "nsXPFEComponentsCID.h"
 #include "nsToolkitCompsCID.h"
 
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
 #include "nsParentalControlsServiceWin.h"
 #endif
 
@@ -76,7 +76,7 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAppStartup, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
 
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParentalControlsServiceWin)
 #endif
 
@@ -143,7 +143,7 @@ static const nsModuleComponentInfo components[] =
     NS_ALERTSERVICE_CONTRACTID,
     nsAlertsServiceConstructor },
 #endif
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
   { "Parental Controls Service",
     NS_PARENTALCONTROLSSERVICE_CID,
     NS_PARENTALCONTROLSSERVICE_CONTRACTID,
