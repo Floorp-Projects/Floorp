@@ -423,6 +423,10 @@ menuitem[command="Browser:ShowAllBookmarks"] {
   -moz-image-region: rect(0px 48px 16px 32px);
 }
 
+#bookmarksToolbarFolderMenu {
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");  
+}
+
 #menu_openDownloads {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 16px 16px 0px);
