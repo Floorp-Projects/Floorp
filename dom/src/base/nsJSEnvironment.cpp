@@ -1530,11 +1530,11 @@ nsJSContext::EvaluateString(const nsAString& aScript,
                                               &val);
 
     if (!ok) {
-        // Tell XPConnect about any pending exceptions. This is needed
-        // to avoid dropping JS exceptions in case we got here through
-        // nested calls through XPConnect.
+      // Tell XPConnect about any pending exceptions. This is needed
+      // to avoid dropping JS exceptions in case we got here through
+      // nested calls through XPConnect.
 
-        nsContentUtils::NotifyXPCIfExceptionPending(mContext);
+      JS_ReportPendingException(mContext);
     }
   }
 
