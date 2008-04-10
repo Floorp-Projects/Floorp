@@ -90,7 +90,6 @@
 #include "nsIDOMKeyListener.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
-#include "nsBoxLayoutState.h"
 
 // Constants
 const nscoord kMaxDropDownRows          = 20; // This matches the setting for 4.x browsers
@@ -535,8 +534,8 @@ nsListControlFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   // content. Combobox frames depend on this happening in the dropdown,
   // and standalone listboxes are overflow:scroll so they need it too.
   result = GetScrolledFrame()->GetPrefWidth(aRenderingContext);
-  nsBoxLayoutState bls(PresContext(), aRenderingContext);
-  result = NSCoordSaturatingAdd(result, GetDesiredScrollbarSizes(&bls).LeftRight());
+  result = NSCoordSaturatingAdd(result,
+          GetDesiredScrollbarSizes(PresContext(), aRenderingContext).LeftRight());
 
   return result;
 }
@@ -551,8 +550,7 @@ nsListControlFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
   // content. Combobox frames depend on this happening in the dropdown,
   // and standalone listboxes are overflow:scroll so they need it too.
   result = GetScrolledFrame()->GetMinWidth(aRenderingContext);
-  nsBoxLayoutState bls(PresContext(), aRenderingContext);
-  result += GetDesiredScrollbarSizes(&bls).LeftRight();
+  result += GetDesiredScrollbarSizes(PresContext(), aRenderingContext).LeftRight();
 
   return result;
 }

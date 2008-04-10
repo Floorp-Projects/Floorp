@@ -51,6 +51,7 @@
 #include "nsIScrollableView.h"
 #include "nsIView.h"
 #include "nsIReflowCallback.h"
+#include "nsBoxLayoutState.h"
 
 class nsPresContext;
 class nsIPresShell;
@@ -364,6 +365,11 @@ public:
     return mInner.GetActualScrollbarSizes();
   }
   virtual nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);
+  virtual nsMargin GetDesiredScrollbarSizes(nsPresContext* aPresContext,
+          nsIRenderingContext* aRC) {
+    nsBoxLayoutState bls(aPresContext, aRC, 0);
+    return GetDesiredScrollbarSizes(&bls);
+  }
   virtual nsGfxScrollFrameInner::ScrollbarStyles GetScrollbarStyles() const;
 
   /**
@@ -561,6 +567,11 @@ public:
     return mInner.GetActualScrollbarSizes();
   }
   virtual nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);
+  virtual nsMargin GetDesiredScrollbarSizes(nsPresContext* aPresContext,
+          nsIRenderingContext* aRC) {
+    nsBoxLayoutState bls(aPresContext, aRC, 0);
+    return GetDesiredScrollbarSizes(&bls);
+  }
   virtual nsGfxScrollFrameInner::ScrollbarStyles GetScrollbarStyles() const;
 
   /**

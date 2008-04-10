@@ -88,7 +88,6 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
-#include "nsBoxLayoutState.h"
 #include "nsITheme.h"
 #include "nsThemeConstants.h"
 
@@ -574,8 +573,8 @@ nsComboboxControlFrame::GetIntrinsicWidth(nsIRenderingContext* aRenderingContext
     nsIScrollableFrame* scrollable;
     CallQueryInterface(mListControlFrame, &scrollable);
     NS_ASSERTION(scrollable, "List must be a scrollable frame");
-    nsBoxLayoutState bls(presContext, aRenderingContext);
-    scrollbarWidth = scrollable->GetDesiredScrollbarSizes(&bls).LeftRight();
+    scrollbarWidth =
+      scrollable->GetDesiredScrollbarSizes(presContext, aRenderingContext).LeftRight();
   }
 
   nscoord displayWidth = 0;
@@ -680,8 +679,9 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
     nsIScrollableFrame* scrollable;
     CallQueryInterface(mListControlFrame, &scrollable);
     NS_ASSERTION(scrollable, "List must be a scrollable frame");
-    nsBoxLayoutState bls(PresContext(), aReflowState.rendContext);
-    buttonWidth = scrollable->GetDesiredScrollbarSizes(&bls).LeftRight();
+    buttonWidth =
+      scrollable->GetDesiredScrollbarSizes(PresContext(), 
+                                           aReflowState.rendContext).LeftRight();
     if (buttonWidth > aReflowState.ComputedWidth()) {
       buttonWidth = 0;
     }
