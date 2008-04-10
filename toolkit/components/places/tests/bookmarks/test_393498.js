@@ -124,6 +124,9 @@ function run_test() {
   // test live update of lastModified caused by other changes:
   // set title (causing update of last modified)
   var oldLastModified = bmsvc.getItemLastModified(bookmarkId);
+  // This double call to setItemTitle is a temporary hack to workaround a
+  // timing bug on virtual machines. See bug 427142 for details.
+  bmsvc.setItemTitle(bookmarkId, "Google"); 
   bmsvc.setItemTitle(bookmarkId, "Google");
   // test that lm is updated
   do_check_neq(oldLastModified, childNode.lastModified);
