@@ -45,21 +45,30 @@ var expect = 'No Crash';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-var fe="vv";
+try
+{
+  var fe="vv";
 
-for (i=0; i<24; i++)
-  fe += fe;
+  for (i=0; i<24; i++)
+    fe += fe;
 
-var fu=new Function(
-  fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe,
-  fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe,
-  "done"
-  );
+  var fu=new Function(
+    fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe,
+    fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe,
+    "done"
+    );
 
 //alert("fu="+fu);
 //print("fu="+fu);
-var fuout = 'fu=' + fu;
+  var fuout = 'fu=' + fu;
 
-print('Done');
+  print('Done');
+}
+catch(ex)
+{
+  expect = 'InternalError: script stack space quota is exhausted';
+  actual = ex + '';
+  print(actual);
+}
 
 reportCompare(expect, actual, summary);
