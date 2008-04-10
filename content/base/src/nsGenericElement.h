@@ -436,6 +436,8 @@ public:
   virtual nsresult SetScriptTypeID(PRUint32 aLang);
 
   virtual void DestroyContent();
+  virtual void SaveSubtreeState();
+
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const
   {

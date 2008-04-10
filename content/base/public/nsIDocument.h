@@ -97,8 +97,8 @@ class nsFrameLoader;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x0cf9986f, 0x6e27, 0x4c24, \
-  { 0x9f, 0x43, 0x87, 0x01, 0x52, 0xf7, 0x4c, 0x0a } }
+{ 0xaa79d9ba, 0x73a3, 0x42af, \
+  { 0xad, 0xb0, 0x3a, 0x57, 0xe1, 0x8d, 0xa8, 0xa2 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -791,6 +791,8 @@ public:
    */
   virtual void Destroy() = 0;
 
+  virtual void SaveState() = 0;
+  
   /**
    * Get the layout history state that should be used to save and restore state
    * for nodes in this document.  This may return null; if that happens state

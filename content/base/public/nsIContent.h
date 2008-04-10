@@ -62,8 +62,8 @@ class nsIDocShell;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0xd3434698, 0x3a16, 0x4dbe, \
-  { 0x9d, 0xed, 0xbe, 0x64, 0x16, 0x1a, 0xa3, 0x52 } }
+{ 0x14c78a19, 0xe3a3, 0x4809, \
+  { 0x8a, 0xee, 0x6f, 0x15, 0x4e, 0x1c, 0x16, 0xb6 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -793,10 +793,15 @@ public:
   virtual void UpdateEditableState();
 
   /**
-   * Destroy this node and it's children. Ideally this shouldn't be needed
+   * Destroy this node and its children. Ideally this shouldn't be needed
    * but for now we need to do it to break cycles.
    */
   virtual void DestroyContent() = 0;
+
+  /**
+   * Saves the form state of this node and its children.
+   */
+  virtual void SaveSubtreeState() = 0;
 
 #ifdef DEBUG
   /**
