@@ -129,5 +129,3 @@ install:: $(pkg_config_files)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(libdir)/pkgconfig
 
 GARBAGE += $(MOZILLA_VERSION).system.conf $(pkg_config_files)
-
-libs:: make-sdk
