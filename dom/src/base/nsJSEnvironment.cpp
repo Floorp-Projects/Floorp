@@ -3659,6 +3659,14 @@ MaxScriptRunTimePrefChangedCallback(const char *aPrefName, void *aClosure)
   return 0;
 }
 
+static int PR_CALLBACK
+ReportAllJSExceptionsPrefChangedCallback(const char* aPrefName, void* aClosure)
+{
+  PRBool reportAll = nsContentUtils::GetBoolPref(aPrefName, PR_FALSE);
+  nsContentUtils::XPConnect()->SetReportAllJSExceptions(reportAll);
+  return 0;
+}
+
 JS_STATIC_DLL_CALLBACK(JSPrincipals *)
 ObjectPrincipalFinder(JSContext *cx, JSObject *obj)
 {
@@ -3731,6 +3739,12 @@ nsJSRuntime::Init()
                                        nsnull);
   MaxScriptRunTimePrefChangedCallback("dom.max_chrome_script_run_time",
                                       nsnull);
+
+  nsContentUtils::RegisterPrefCallback("dom.report_all_js_exceptions",
+                                       ReportAllJSExceptionsPrefChangedCallback,
+                                       nsnull);
+  ReportAllJSExceptionsPrefChangedCallback("dom.report_all_js_exceptions",
+                                           nsnull);
 
   nsCOMPtr<nsIObserverService> obs =
     do_GetService("@mozilla.org/observer-service;1", &rv);
