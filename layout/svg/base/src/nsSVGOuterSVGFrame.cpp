@@ -320,7 +320,8 @@ nsSVGOuterSVGFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
                                 nsSize aMargin, nsSize aBorder, nsSize aPadding,
                                 PRBool aShrinkWrap)
 {
-  if (EmbeddedByReference()) {
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox) &&
+      EmbeddedByReference()) {
     // The embedding element has done the replaced element sizing, using our
     // intrinsic dimensions as necessary. We just need to fill the viewport.
     return aCBSize;
