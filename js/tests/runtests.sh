@@ -97,6 +97,8 @@ variable            description
                     list of either individual tests, manifest files or 
                     sub-directories which will override the default inclusion 
                     list.
+-Z n                optional. Set gczeal to n. Currently, only valid for 
+                    Gecko 1.9.0 and later.
 -c                  optional. By default the test will exclude tests 
                     which crash on this branch, test type, build type and 
                     operating system. -c will include tests which crash. 
@@ -114,7 +116,7 @@ EOF
 
 verbose=0
 
-while getopts "p:b:T:B:e:X:I:vSRct" optname;
+while getopts "p:b:T:B:e:X:I:Z:vSRct" optname;
 do
     case $optname in
         p) products=$OPTARG;;
@@ -129,6 +131,7 @@ do
         S) summary=1;;
         X) exclude=$OPTARG;;
         I) include=$OPTARG;;
+        Z) gczeal="-Z $OPTARG";;
         c) crashes=1;;
         t) timeouts=1;;
     esac
@@ -167,7 +170,7 @@ branchesextra=`combo.sh -d - "$branches" "$extra"`
 
 # can't test tester.sh's exit code to see if there was
 # an error since we are piping it and can't count on pipefail
-tester.sh -t $TEST_JSDIR/test.sh  $verboseflag "$products" "$branchesextra" "$buildtypes" 2>&1 | tee -a $testlogfilelist
+tester.sh -t "$TEST_JSDIR/test.sh $gczeal" $verboseflag "$products" "$branchesextra" "$buildtypes" 2>&1 | tee -a $testlogfilelist
 testlogfiles="`grep '^log:' $testlogfilelist|sed 's|^log: ||'`"
 
 fatalerrors=`grep 'FATAL ERROR' $testlogfiles | cat`

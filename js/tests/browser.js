@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var gPageCompleted;
 var GLOBAL = this + '';
 
 function htmlesc(str) {
@@ -236,16 +237,70 @@ function Preferences_getPref(aPrefName)
         'enablePrivilege' in netscape.security.PrivilegeManager)
     {
       netscape.security.PrivilegeManager.enablePrivilege(this.privs);
-      try
-      {
-        value = this.prefBranch.getBoolPref(aPrefName);
-      }
-      catch(ex)
-      {
-      }
+      value = this.prefBranch.getBoolPref(aPrefName);
     }
   }
-  catch(ex2)
+  catch(ex)
+  {
+  }
+  return value;
+}
+
+function Preferences_getBoolPref(aPrefName)
+{
+  var value;
+  try
+  {
+    if (typeof netscape != 'undefined' &&
+        'security' in netscape &&
+        'PrivilegeManager' in netscape.security &&
+        'enablePrivilege' in netscape.security.PrivilegeManager)
+    {
+      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
+      value = this.prefBranch.getBoolPref(aPrefName);
+    }
+  }
+  catch(ex)
+  {
+  }
+  return value;
+}
+
+function Preferences_getIntPref(aPrefName)
+{
+  var value;
+  try
+  {
+    if (typeof netscape != 'undefined' &&
+        'security' in netscape &&
+        'PrivilegeManager' in netscape.security &&
+        'enablePrivilege' in netscape.security.PrivilegeManager)
+    {
+      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
+      value = this.prefBranch.getIntPref(aPrefName);
+    }
+  }
+  catch(ex)
+  {
+  }
+  return value;
+}
+
+function Preferences_getCharPref(aPrefName)
+{
+  var value;
+  try
+  {
+    if (typeof netscape != 'undefined' &&
+        'security' in netscape &&
+        'PrivilegeManager' in netscape.security &&
+        'enablePrivilege' in netscape.security.PrivilegeManager)
+    {
+      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
+      value = this.prefBranch.getCharPref(aPrefName);
+    }
+  }
+  catch(ex)
   {
   }
   return value;
@@ -253,6 +308,8 @@ function Preferences_getPref(aPrefName)
 
 function Preferences_setPref(aPrefName, aPrefValue)
 {
+  var value;
+
   try
   {
     if (typeof netscape != 'undefined' &&
@@ -267,17 +324,88 @@ function Preferences_setPref(aPrefName, aPrefValue)
         this.orig[aPrefName] = this.getPref(aPrefName);
       }
 
-      try
-      {
-        value = this.prefBranch.setBoolPref(aPrefName, aPrefValue);
-      }
-      catch(ex)
-      {
-      }
+      value = this.prefBranch.setBoolPref(aPrefName, Boolean(aPrefValue));
     }
-
   }
-  catch(ex2)
+  catch(ex)
+  {
+  }
+}
+
+function Preferences_setBoolPref(aPrefName, aPrefValue)
+{
+  var value;
+
+  try
+  {
+    if (typeof netscape != 'undefined' &&
+        'security' in netscape &&
+        'PrivilegeManager' in netscape.security &&
+        'enablePrivilege' in netscape.security.PrivilegeManager)
+    {
+      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
+
+      if (typeof this.orig[aPrefName] == 'undefined')
+      {
+        this.orig[aPrefName] = this.getBoolPref(aPrefName);
+      }
+
+      value = this.prefBranch.setBoolPref(aPrefName, Boolean(aPrefValue));
+    }
+  }
+  catch(ex)
+  {
+  }
+}
+
+function Preferences_setIntPref(aPrefName, aPrefValue)
+{
+  var value;
+
+  try
+  {
+    if (typeof netscape != 'undefined' &&
+        'security' in netscape &&
+        'PrivilegeManager' in netscape.security &&
+        'enablePrivilege' in netscape.security.PrivilegeManager)
+    {
+      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
+
+      if (typeof this.orig[aPrefName] == 'undefined')
+      {
+        this.orig[aPrefName] = this.getIntPref(aPrefName);
+      }
+
+      value = this.prefBranch.setIntPref(aPrefName, Number(aPrefValue));
+    }
+  }
+  catch(ex)
+  {
+  }
+}
+
+function Preferences_setCharPref(aPrefName, aPrefValue)
+{
+  var value;
+
+  try
+  {
+    if (typeof netscape != 'undefined' &&
+        'security' in netscape &&
+        'PrivilegeManager' in netscape.security &&
+        'enablePrivilege' in netscape.security.PrivilegeManager)
+    {
+      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
+
+      if (typeof this.orig[aPrefName] == 'undefined')
+      {
+        this.orig[aPrefName] = this.getCharPref(aPrefName);
+      }
+
+      value = this.prefBranch.setCharPref(aPrefName, String(aPrefValue));
+    }
+  }
+  catch(ex)
   {
   }
 }
@@ -295,7 +423,14 @@ function Preferences_resetPref(aPrefName)
 
       if (aPrefName in this.orig)
       {
-        this.setPref(aPrefName, this.orig[aPrefName]);
+        if (typeof this.orig[aPrefName] == 'undefined')
+        {
+          this.clearPref(aPrefName);
+        }
+        else
+        {
+          this.setPref(aPrefName, this.orig[aPrefName]);
+        }
       }
     }
   }
@@ -348,7 +483,13 @@ function Preferences_clearPref(aPrefName)
 
 Preferences.prototype.getPrefRoot    = Preferences_getPrefRoot;
 Preferences.prototype.getPref        = Preferences_getPref;
+Preferences.prototype.getBoolPref    = Preferences_getBoolPref;
+Preferences.prototype.getIntPref     = Preferences_getIntPref;
+Preferences.prototype.getCharPref    = Preferences_getCharPref;
 Preferences.prototype.setPref        = Preferences_setPref;
+Preferences.prototype.setBoolPref    = Preferences_setBoolPref;
+Preferences.prototype.setIntPref     = Preferences_setIntPref;
+Preferences.prototype.setCharPref    = Preferences_setCharPref;
 Preferences.prototype.resetAllPrefs  = Preferences_resetAllPrefs;
 Preferences.prototype.resetPref      = Preferences_resetPref;
 Preferences.prototype.clearPref      = Preferences_clearPref;
@@ -421,6 +562,12 @@ function optionsInit() {
   }
 }
 
+function gczeal(z)
+{
+  var javascriptoptions = new Preferences('javascript.options.');
+  javascriptoptions.setIntPref('gczeal', Number(z));
+}
+
 var gVersion = 150;
 
 function jsTestDriverBrowserInit()
@@ -453,6 +600,14 @@ function jsTestDriverBrowserInit()
   }
 
   var ise4x = /e4x\//.test(testpath);
+
+  var gczealmatches = /gczeal=([0-9]*)/.exec(document.location.search);
+
+  if (gczealmatches)
+  {
+    var zeal = Number(gczealmatches[1]);
+    gczeal(zeal);
+  }
 
   if (value.indexOf('1.1') != -1)
   {
@@ -581,6 +736,8 @@ function jsTestDriverEnd()
 
   try
   {
+    var javascriptoptions = new Preferences('javascript.options.');
+    javascriptoptions.clearPref('gczeal');
     optionsReset();
   }
   catch(ex)
