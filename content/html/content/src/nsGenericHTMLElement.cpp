@@ -595,9 +595,8 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
 
   // Get the union of all rectangles in this and continuation frames.
   // It doesn't really matter what we use as aRelativeTo here, since
-  // we only care about the size. Using 'parent' might make things
-  // a bit faster by speeding up the internal GetOffsetTo operations.
-  nsRect rcFrame = nsLayoutUtils::GetAllInFlowRectsUnion(frame, parent);
+  // we only care about the size. We just have to use something non-null.
+  nsRect rcFrame = nsLayoutUtils::GetAllInFlowRectsUnion(frame, frame);
   aRect.width = nsPresContext::AppUnitsToIntCSSPixels(rcFrame.width);
   aRect.height = nsPresContext::AppUnitsToIntCSSPixels(rcFrame.height);
 }
