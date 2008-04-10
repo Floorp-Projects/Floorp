@@ -480,6 +480,56 @@
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 7" Bottom "117"
 !macroend
 
+!macro createBasicCustomSetAsDefaultOptionsINI
+  WriteINIStr "$PLUGINSDIR\options.ini" "Settings" NumFields "6"
+
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 1" Type   "label"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 1" Text   "$(OPTIONS_SUMMARY)"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 1" Left   "0"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 1" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 1" Top    "0"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 1" Bottom "10"
+
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Type   "RadioButton"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Text   "$(OPTION_STANDARD_RADIO)"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Left   "15"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Top    "25"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Bottom "35"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" State  "1"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Flags  "GROUP"
+
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Type   "RadioButton"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Text   "$(OPTION_CUSTOM_RADIO)"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Left   "15"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Top    "55"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Bottom "65"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" State  "0"
+
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Type   "label"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Text   "$(OPTION_STANDARD_DESC)"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Left   "30"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Top    "37"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Bottom "57"
+
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Type   "label"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Text   "$(OPTION_CUSTOM_DESC)"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Left   "30"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Top    "67"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Bottom "87"
+
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Type   "checkbox"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Text   "$(OPTIONS_MAKE_DEFAULT)"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Left   "0"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Top    "124"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Bottom "145"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" State  "1"
+!macroend
+
 !macro createSummaryINI
   WriteINIStr "$PLUGINSDIR\summary.ini" "Settings" NumFields "3"
 
@@ -519,6 +569,26 @@
     WriteINIStr "$PLUGINSDIR\summary.ini" "Settings" NumFields "4"
   ${EndIf}
 
+  ReadINIStr $0 "$PLUGINSDIR\options.ini" "Field 6" "State"
+  ${If} "$0" == "1"
+    ${If} "$TmpVal" == "true"
+      ; To insert this control reset Top / Bottom for controls below this one
+      WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Top    "50"
+      WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Bottom "60"
+      StrCpy $0 "5"
+    ${Else}
+      StrCpy $0 "4"
+    ${EndIf}
+
+    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $0" Type   "label"
+    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $0" Text   "$(SUMMARY_MAKE_DEFAULT)"
+    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $0" Left   "0"
+    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $0" Right  "-1"
+    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $0" Top    "35"
+    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $0" Bottom "45"
+
+    WriteINIStr "$PLUGINSDIR\summary.ini" "Settings" NumFields "$0"
+  ${EndIf}
 !macroend
 
 !macro un.createUnConfirmINI
@@ -3214,7 +3284,7 @@
  * @param   _REL_PROFILE_PATH
  *          The relative path to the profile directory from $LOCALAPPDATA.
  *
- ^ $R6 = stores single characters to find the first "\" from the right of
+ * $R6 = stores single characters to find the first "\" from the right of
  *       $INSTDIR and the long path to $INSTDIR
  * $R7 = long path of the concatenation of Program Files and the  installation
  *       directory name (e.g. $PROGRAMFILES$R68)
