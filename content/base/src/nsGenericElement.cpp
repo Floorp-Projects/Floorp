@@ -2967,6 +2967,15 @@ nsGenericElement::DestroyContent()
   }
 }
 
+void
+nsGenericElement::SaveSubtreeState()
+{
+  PRUint32 i, count = mAttrsAndChildren.ChildCount();
+  for (i = 0; i < count; ++i) {
+    mAttrsAndChildren.ChildAt(i)->SaveSubtreeState();
+  }
+}
+
 //----------------------------------------------------------------------
 
 // Generic DOMNode implementations

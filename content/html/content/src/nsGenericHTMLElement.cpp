@@ -2506,11 +2506,11 @@ nsGenericHTMLFormElement::IsNodeOfType(PRUint32 aFlags) const
 }
 
 void
-nsGenericHTMLFormElement::DestroyContent()
+nsGenericHTMLFormElement::SaveSubtreeState()
 {
   SaveState();
-  
-  nsGenericHTMLElement::DestroyContent();
+
+  nsGenericHTMLElement::SaveSubtreeState();
 }
 
 NS_IMETHODIMP

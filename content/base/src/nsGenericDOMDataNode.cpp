@@ -832,6 +832,11 @@ nsGenericDOMDataNode::IsNodeOfType(PRUint32 aFlags) const
 }
 
 void
+nsGenericDOMDataNode::SaveSubtreeState()
+{
+}
+
+void
 nsGenericDOMDataNode::DestroyContent()
 {
 }

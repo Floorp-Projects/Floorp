@@ -5573,6 +5573,8 @@ nsDocument::Destroy()
 
   mIsGoingAway = PR_TRUE;
 
+  SaveState();
+
   PRUint32 i, count = mChildren.ChildCount();
   for (i = 0; i < count; ++i) {
     mChildren.ChildAt(i)->DestroyContent();
@@ -5588,6 +5590,20 @@ nsDocument::Destroy()
   //     check for mScriptGlobalObject in AddReference.
   delete mContentWrapperHash;
   mContentWrapperHash = nsnull;
+}
+
+void
+nsDocument::SaveState()
+{
+  if (mSavedState)
+    return;
+
+  mSavedState = PR_TRUE;
+
+  PRUint32 i, count = mChildren.ChildCount();
+  for (i = 0; i < count; ++i) {
+    mChildren.ChildAt(i)->SaveSubtreeState();
+  }
 }
 
 already_AddRefed<nsILayoutHistoryState>
