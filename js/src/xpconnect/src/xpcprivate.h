@@ -532,6 +532,10 @@ public:
 #ifndef XPCONNECT_STANDALONE
     void RecordTraversal(void *p, nsISupports *s);
 #endif
+    static PRBool ReportAllJSExceptions()
+    {
+      return gReportAllJSExceptions > 0;
+    }
 
 #ifdef XPC_IDISPATCH_SUPPORT
 public:
@@ -573,6 +577,7 @@ private:
     typedef nsBaseHashtable<nsVoidPtrHashKey, nsISupports*, nsISupports*> ScopeSet;
     ScopeSet mScopes;
 #endif
+    static PRUint32 gReportAllJSExceptions;
 };
 
 /***************************************************************************/
@@ -2453,7 +2458,8 @@ public:
 
     static nsresult CheckForException(XPCCallContext & ccx,
                                       const char * aPropertyName,
-                                      const char * anInterfaceName);
+                                      const char * anInterfaceName,
+                                      PRBool aForceReport);
 private:
     nsXPCWrappedJSClass();   // not implemented
     nsXPCWrappedJSClass(XPCCallContext& ccx, REFNSIID aIID,
@@ -3945,8 +3951,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(PrincipalHolder, PRINCIPALHOLDER_IID)
 
 /***************************************************************************/
 // Utilities
-
-JSBool xpc_IsReportableErrorCode(nsresult code);
 
 inline void *
 xpc_GetJSPrivate(JSObject *obj)
