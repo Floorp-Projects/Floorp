@@ -738,6 +738,7 @@ fails == 411585-3.html 411585-3-ref.html # bug 426909
 fails == 413027-1.html 413027-1-ref.html
 fails == 413027-2.html 413027-2-ref.html
 fails == 413027-3.html 413027-3-ref.html
+== 413027-4.html 413027-4-ref.html
 == 413286-1a.html 413286-1-ref.html
 == 413286-1b.html 413286-1-ref.html
 == 413286-1c.html 413286-1-ref.html
