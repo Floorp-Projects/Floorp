@@ -649,7 +649,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     nsCOMPtr<nsIContent> treeContent = do_QueryInterface(aTargetNode);
     nsAccEvent::PrepareForEvent(aTargetNode, PR_TRUE);
     return accService->InvalidateSubtreeFor(eventShell, treeContent,
-                                            nsIAccessibleEvent::EVENT_ASYNCH_SIGNIFICANT_CHANGE);
+                                            nsIAccessibleEvent::EVENT_DOM_SIGNIFICANT_CHANGE);
   }
 #endif
 
