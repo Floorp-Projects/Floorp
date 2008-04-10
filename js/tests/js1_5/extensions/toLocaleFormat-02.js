@@ -129,7 +129,10 @@ expect = '22';
 actual = date.toLocaleFormat('%V');
 reportCompare(expect, actual, 'Date.toLocaleFormat("%V")');
 
+print('Note: For Date.toLocaleFormat("%m/%d/%y") == Date.toLocaleFormat("%x") ' + 
+      'to pass in Windows, the Regional Setting for the short date must be ' + 
+      'set to mm/dd/yyyy');
 expect = date.toLocaleFormat('%m/%d/%Y');
 actual = date.toLocaleFormat('%x');
-reportCompare(expect, actual, 'Date.toLocaleFormat("%m/%d/%y) == ' +
+reportCompare(expect, actual, 'Date.toLocaleFormat("%m/%d/%Y") == ' +
               'Date.toLocaleFormat("%x")');
