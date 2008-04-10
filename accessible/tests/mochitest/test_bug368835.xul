@@ -62,13 +62,21 @@
       performActionOnCell: function(aAction, aRow, aCol) {}
     };
 
+    var gTreeViewChangedCount = 0;
     var gTreeViewChanged = false;
     function TreeViewChangedHandler(aEvent)
     {
-      gTreeViewChanged = true;
+      gTreeViewChangedCount++;
 
-      // Tree view has been setted. We can continue tests for the tree.
-      window.setTimeout(doTest2, 0);
+      // We get two systems 'treeViewChanged' event when tree is initialized
+      // The third one is our when we change the tree view by
+      // nsITreeBoxObject::setTree.
+      if (gTreeViewChangedCount == 3) {
+        gTreeViewChanged = true;
+
+        // Tree view has been setted. We can continue tests for the tree.
+        window.setTimeout(doTest2, 500);
+      }
     }
 
     var gTreeRowCountChanged = false;
@@ -83,59 +91,50 @@
       is(count, 1, "Wrong 'count' data of 'treeRowCountChanged' event.");
     }
 
+    var gTreeColumnInvalidated = false;
+    var gTreeRowInvalidated = false;
+
     var gTreeInvalidatedCount = 0;
     function TreeInvalidatedHandler(aEvent)
     {
       gTreeInvalidatedCount++;
 
-      if (gTreeInvalidatedCount == 2)
-        TreeColumnInvalidatedHandler(aEvent);
-      else if (gTreeInvalidatedCount == 5)
-        TreeRowInvalidatedHandler(aEvent);
+      switch (gTreeInvalidatedCount) {
+        case 1:
+          TreeInvalidatedHandlerHelper(aEvent, 0, 5, null, null,
+                                       "nsITreeBoxObject::rowCountChanged");
+          break;
+        case 2:
+          TreeInvalidatedHandlerHelper(aEvent, null, null, 0, 0,
+                                       "nsITreeBoxObject::invalidateColumn");
+          gTreeColumnInvalidated = true;
+          break;
+        case 3:
+          TreeInvalidatedHandlerHelper(aEvent, 1, 1, null, null,
+                                       "nsITreeBoxObject::invalidateRow");
+          gTreeRowInvalidated = true;
+          break;
+        }
     }
 
-    var gTreeColumnInvalidated = false;
-    function TreeColumnInvalidatedHandler(aEvent)
+    function TreeInvalidatedHandlerHelper(aEvent, aStartRow, aEndRow,
+                                          aStartCol, aEndCol, aCauseMsg)
     {
       var startRow = aEvent.getData("startrow");
-      is(startRow, null,
-         "Wrong 'startrow' of 'treeInvalidated' event on InvalidateRow().");
+      is(startRow, aStartRow,
+         "Wrong 'startrow' of 'treeInvalidated' event on " + aCauseMsg);
 
       var endRow = aEvent.getData("endrow");
-      is(endRow, null,
-         "Wrong 'endrow' of 'treeInvalidated' event on InvalidateRow().");
+      is(endRow, aEndRow,
+         "Wrong 'endrow' of 'treeInvalidated' event on " + aCauseMsg);
 
       var startCol = aEvent.getData("startcolumn");
-      is(startCol, 0,
-         "Wrong 'startcolumn' of 'treeInvalidated' event on InvalidateRow().");
+      is(startCol, aStartCol,
+         "Wrong 'startcolumn' of 'treeInvalidated' event on " + aCauseMsg);
 
       var endCol = aEvent.getData("endcolumn");
-      is(endCol, 0,
-         "Wrong 'endcolumn' of 'treeInvalidated' event on InvalidateRow().");
-
-      gTreeColumnInvalidated = true;
-    }
-
-    var gTreeRowInvalidated = false;
-    function TreeRowInvalidatedHandler(aEvent)
-    {
-      var startRow = aEvent.getData("startrow");
-      is(startRow, 1,
-         "Wrong 'startrow' of 'treeInvalidated' event on InvalidateColumn().");
-
-      var endRow = aEvent.getData("endrow");
-      is(endRow, 1,
-         "Wrong 'endrow' of 'treeInvalidated' event on InvalidateColumn().");
-
-      var startCol = aEvent.getData("startcolumn");
-      is(startCol, null,
-         "Wrong 'startcolumn' of 'treeInvalidated' event on InvalidateColumn().");
-
-      var endCol = aEvent.getData("endcolumn");
-      is(endCol, null,
-         "Wrong 'endcolumn' of 'treeInvalidated' event on InvalidateColumn().");
-
-      gTreeRowInvalidated = true;
+      is(endCol, aEndCol,
+         "Wrong 'endcolumn' of 'treeInvalidated' event on " + aCauseMsg);
     }
 
     var gNameChangedOnTreeRowInvalidated = false;
@@ -155,6 +154,9 @@
 
         ++this.mCount;
 
+        // We should get first six 'name changed' events on
+        //  nsITreeBoxObject::invalidateColumn when we update 0th column
+        // containing six rows.
         if (this.mCount == 6) {
           gNameChangedOnTreeColumnInvalidated = true;
 
@@ -166,8 +168,7 @@
           gNameChangedOnTreeRowInvalidated = true;
       },
 
-      mCount: 0,
-      mType: ""
+      mCount: 0
     };
 
     function CheckEvents()
@@ -175,21 +176,25 @@
       // If these fail then it doesn't mean actually events are not fired,
       // possibly setTimeout was executed earlier than events have been fired.
 
-      // DOM events
+      // nsITreeBoxObject::view
       ok(gTreeViewChanged,
          "TreeViewChanged event should have been fired.");
+
+      // nsITreeBoxObject::rowCountChanged
       ok(gTreeRowCountChanged,
          "TreeRowCountChanged event should have been fired.");
+
+      // nsITreeBoxObject::invalidateColumn
       ok(gTreeColumnInvalidated,
          "TreeInvalidated event should have been fired for InvalidateColumn().");
-      ok(gTreeRowInvalidated,
-         "TreeInvalidated event should have been fired for InvalidateRow().");
-
-      // A11y events
-      ok(gNameChangedOnTreeRowInvalidated,
-         "Wrong NameChanged events number on tree row invalidation.");
       ok(gNameChangedOnTreeColumnInvalidated,
          "Wrong NameChanged events number on tree column invalidation.");
+
+      // nsITreeBoxObject::invalidateRow
+      ok(gTreeRowInvalidated,
+         "TreeInvalidated event should have been fired for InvalidateRow().");
+      ok(gNameChangedOnTreeRowInvalidated,
+         "Wrong NameChanged events number on tree row invalidation.");
 
       // Remove DOM event listeners
       document.removeEventListener("TreeViewChanged",
@@ -225,7 +230,6 @@
                          getService(Components.interfaces.nsIObserverService);
       gObserverService.addObserver(gA11yEventObserver, "accessible-event",
                                    false);
-
       // Add DOM event listeners
       document.addEventListener("TreeViewChanged",
                                 TreeViewChangedHandler, true);
