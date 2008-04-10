@@ -280,13 +280,15 @@ BrowserGlue.prototype = {
                      getService(Ci.nsIPrefBranch);
     var showPrompt = true;
     try {
-      if (prefBranch.getIntPref("browser.startup.page") == 3 ||
-          prefBranch.getBoolPref("browser.sessionstore.resume_session_once"))
+      // browser.warnOnQuit is a hidden global boolean to override all quit prompts
+      // browser.warnOnRestart specifically covers app-initiated restarts where we restart the app
+      // browser.tabs.warnOnClose is the global "warn when closing multiple tabs" pref
+      if (prefBranch.getBoolPref("browser.warnOnQuit") == false)
         showPrompt = false;
+      else if (aQuitType == "restart")
+        showPrompt = prefBranch.getBoolPref("browser.warnOnRestart");
       else
-        showPrompt = aQuitType == "restart" ?
-                     prefBranch.getBoolPref("browser.warnOnRestart") :
-                     prefBranch.getBoolPref("browser.warnOnQuit");
+        showPrompt = prefBranch.getBoolPref("browser.tabs.warnOnClose");
     } catch (ex) {}
 
     var buttonChoice = 0;
@@ -338,7 +340,7 @@ BrowserGlue.prototype = {
       switch (buttonChoice) {
       case 2:
         if (neverAsk.value)
-          prefBranch.setBoolPref("browser.warnOnQuit", false);
+          prefBranch.setBoolPref("browser.tabs.warnOnClose", false);
         break;
       case 1:
         aCancelQuit.QueryInterface(Ci.nsISupportsPRBool);
@@ -350,8 +352,9 @@ BrowserGlue.prototype = {
           if (aQuitType == "restart")
             prefBranch.setBoolPref("browser.warnOnRestart", false);
           else {
-            // could also set browser.warnOnQuit to false here,
-            // but not setting it is a little safer.
+            // don't prompt in the future
+            prefBranch.setBoolPref("browser.tabs.warnOnClose", false);
+            // always save state when shutting down
             prefBranch.setIntPref("browser.startup.page", 3);
           }
         }
