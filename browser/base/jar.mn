@@ -71,6 +71,9 @@ browser.jar:
   content/branding/icon48.png                    (branding/icon48.png)
   content/branding/icon64.png                    (branding/icon64.png)
 #endif
+# the following files are browser-specific overrides
+*       content/browser/license.html                  (/toolkit/content/license.html)
+% override chrome://global/content/license.html chrome://browser/content/license.html
 
 #ifdef TOOLBAR_CUSTOMIZATION_SHEET
 toolkit.jar:
