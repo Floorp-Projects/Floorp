@@ -62,7 +62,7 @@ fi
 source $TEST_DIR/bin/library.sh
 
 TEST_JSDIR=`dirname $0`
-TEST_JSSHELL_TIMEOUT=${TEST_JSSHELL_TIMEOUT:-120}
+TEST_JSSHELL_TIMEOUT=${TEST_JSSHELL_TIMEOUT:-480}
 
 #
 # options processing
@@ -88,6 +88,8 @@ variable            description
                     list of either individual tests, manifest files or 
                     sub-directories which will override the default inclusion 
                     list.
+-Z n                optional. Set gczeal to n. Currently, only valid for 
+                    Gecko 1.9.0 and later.
 -c                  optional. By default the test will exclude tests 
                     which crash on this branch, test type, build type and 
                     operating system. -c will include tests which crash. 
@@ -104,7 +106,7 @@ EOF
     exit 2
 }
 
-while getopts "b:s:T:d:X:I:ct" optname
+while getopts "b:s:T:d:X:I:Z:ct" optname
 do 
     case $optname in
         b) branch=$OPTARG;;
@@ -114,6 +116,7 @@ do
         I) include=$OPTARG;;
         C) crashes=1;;
         T) timeouts=1;;
+        Z) gczeal="-Z $OPTARG";;
         d) datafiles=$OPTARG;;
     esac
 done
@@ -125,7 +128,7 @@ if [[ -n "$datafiles" ]]; then
     done
 fi
 
-dumpvars branch sourcepath buildtype exclude include crashes timeouts datafiles | sed "s|^|arguments: |"
+dumpvars branch sourcepath buildtype exclude include crashes timeouts gczeal datafiles | sed "s|^|arguments: |"
 
 if [[ -z "$branch" || -z "$sourcepath" || -z "$buildtype" ]]; then
     usage
@@ -247,7 +250,7 @@ if ! time perl jsDriver.pl \
 	-L $excludetests \
 	-s $executable \
     -e sm$buildtype \
-	-o '-S 524288' \
+	-o "-S 524288 $gczeal" \
 	-R \
 	-T $TEST_JSSHELL_TIMEOUT \
 	-f /dev/null \
