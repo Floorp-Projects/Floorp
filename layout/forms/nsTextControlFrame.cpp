@@ -1383,8 +1383,8 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
     CallQueryInterface(first, &scrollableFrame);
     NS_ASSERTION(scrollableFrame, "Child must be scrollable");
 
-    nsBoxLayoutState bls(PresContext(), aRenderingContext);
-    nsMargin scrollbarSizes = scrollableFrame->GetDesiredScrollbarSizes(&bls);
+    nsMargin scrollbarSizes =
+      scrollableFrame->GetDesiredScrollbarSizes(PresContext(), aRenderingContext);
 
     aIntrinsicSize.width  += scrollbarSizes.LeftRight();
     
