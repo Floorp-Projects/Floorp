@@ -6483,6 +6483,7 @@ interrupt:
             LOAD_OBJECT(0);
             JS_ASSERT(fp->spbase + OBJ_BLOCK_DEPTH(cx, obj) == regs.sp);
             vp = regs.sp + OBJ_BLOCK_COUNT(cx, obj);
+            JS_ASSERT(regs.sp < vp);
             JS_ASSERT(vp <= fp->spbase + script->depth);
             while (regs.sp < vp) {
                 STORE_OPND(0, JSVAL_VOID);
