@@ -753,21 +753,16 @@ void DEBUG_CheckForComponentsInScope(XPCCallContext& ccx, JSObject* obj,
     if(JS_LookupProperty(ccx, obj, name, &prop) && !JSVAL_IS_PRIMITIVE(prop))
         return;
 
-    static const char msg[] =
-    "XPConnect is being called on a scope without a 'Components' property!\n"
-    "\n"
-    "This is pretty much always bad. It usually means that native code is\n"
-    "making a callback to an interface implemented in JavaScript, but the\n"
-    "document where the JS object was created has already been cleared and the\n"
-    "global properties of that document's window are *gone*. Generally this\n"
-    "indicates a problem that should be addressed in the design and use of the\n"
-    "callback code."
-    "\n";
-
+    // This is pretty much always bad. It usually means that native code is
+    // making a callback to an interface implemented in JavaScript, but the
+    // document where the JS object was created has already been cleared and the
+    // global properties of that document's window are *gone*. Generally this
+    // indicates a problem that should be addressed in the design and use of the
+    // callback code.
 #ifdef I_FOOLISHLY_WANT_TO_IGNORE_THIS_LIKE_THE_OTHER_CRAP_WE_PRINTF
-    NS_WARNING(msg);
+    NS_WARNING("XPConnect is being called on a scope without a 'Components' property!");
 #else
-    NS_ERROR(msg);
+    NS_ERROR("XPConnect is being called on a scope without a 'Components' property!");
 #endif
 }
 #else
