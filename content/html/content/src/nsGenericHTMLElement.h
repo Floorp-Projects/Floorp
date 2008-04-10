@@ -814,7 +814,7 @@ public:
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
-  virtual void DestroyContent();
+  virtual void SaveSubtreeState();
 
   // nsIFormControl
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
@@ -826,6 +826,7 @@ public:
   {
     return NS_OK;
   }
+  
   virtual PRBool RestoreState(nsPresState* aState)
   {
     return PR_FALSE;

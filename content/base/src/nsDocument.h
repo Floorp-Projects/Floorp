@@ -633,6 +633,7 @@ public:
 
   virtual NS_HIDDEN_(PRBool) CanSavePresentation(nsIRequest *aNewRequest);
   virtual NS_HIDDEN_(void) Destroy();
+  virtual NS_HIDDEN_(void) SaveState();
   virtual NS_HIDDEN_(already_AddRefed<nsILayoutHistoryState>) GetLayoutHistoryState() const;
 
   virtual NS_HIDDEN_(void) BlockOnload();
@@ -774,6 +775,8 @@ protected:
 
   // True if the document has been detached from its content viewer.
   PRPackedBool mIsGoingAway:1;
+  // True if we've already saved form control state
+  PRPackedBool mSavedState:1;
   // True if the document is being destroyed.
   PRPackedBool mInDestructor:1;
   // True if the document "page" is not hidden
