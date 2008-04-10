@@ -46,7 +46,6 @@
 ]>
 
 <wizard id="reportWizard" title="&reportWizard.title;"
-        onload="initPrivacyNotice()"
         style="min-width: 535px; min-height: 442px;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/x-javascript" src="chrome://reporter/content/reportWizard.js"/>
@@ -54,6 +53,7 @@
 
 <!-- Privacy Notice -->
   <wizardpage id="privacyNotice"
+              onpageshow="initPrivacyNotice()"
               onpageadvanced="setPrivacyPref()"
               label = "&privacyNotice.label;">
     <description>&reportWizardPrivacy.description;</description>
