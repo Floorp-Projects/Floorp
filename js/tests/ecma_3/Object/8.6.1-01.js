@@ -51,8 +51,14 @@ var actual = '';
 var expect = 's.length is read-only';
 var status = summary + ': Throw if STRICT and WERROR is enabled';
 
-options('strict');
-options('werror');
+if (!options().match(/strict/))
+{
+  options('strict');
+}
+if (!options().match(/werror/))
+{
+  options('werror');
+}
 
 try
 {
