@@ -12,7 +12,9 @@ e4x/extensions/regress-353165.js
 e4x/extensions/regress-354145-06.js
 e4x/extensions/regress-354151-01.js
 e4x/extensions/regress-354151-02.js
+e4x/extensions/regress-374025.js
 e4x/extensions/regress-374163.js
+e4x/extensions/regress-393874.js
 e4x/extensions/regress-410192.js
 ecma_2/extensions/constructor-001.js
 ecma_2/extensions/function-001.js
@@ -171,6 +173,7 @@ js1_5/extensions/regress-355820.js
 js1_5/extensions/regress-355982.js
 js1_5/extensions/regress-356085.js
 js1_5/extensions/regress-356106.js
+js1_5/extensions/regress-356378.js
 js1_5/extensions/regress-356402.js
 js1_5/extensions/regress-358594-01.js
 js1_5/extensions/regress-358594-02.js
@@ -213,6 +216,7 @@ js1_5/extensions/regress-371636.js
 js1_5/extensions/regress-372309.js
 js1_5/extensions/regress-374589.js
 js1_5/extensions/regress-375183.js
+js1_5/extensions/regress-375344.js
 js1_5/extensions/regress-375801.js
 js1_5/extensions/regress-376052.js
 js1_5/extensions/regress-379523.js
@@ -235,12 +239,22 @@ js1_5/extensions/regress-391033-02.js
 js1_5/extensions/regress-391851.js
 js1_5/extensions/regress-394967.js
 js1_5/extensions/regress-396326.js
+js1_5/extensions/regress-406572.js
+js1_5/extensions/regress-407019.js
 js1_5/extensions/regress-407501.js
+js1_5/extensions/regress-407720.js
 js1_5/extensions/regress-412926.js
 js1_5/extensions/regress-414755.js
 js1_5/extensions/regress-416354.js
 js1_5/extensions/regress-416460.js
+js1_5/extensions/regress-416834.js
+js1_5/extensions/regress-418730.js
 js1_5/extensions/regress-420612.js
+js1_5/extensions/regress-420869-01.js
+js1_5/extensions/regress-422592.js
+js1_5/extensions/regress-424683-01.js
+js1_5/extensions/regress-424942.js
+js1_5/extensions/regress-424964.js
 js1_5/extensions/regress-44009.js
 js1_5/extensions/regress-50447-1.js
 js1_5/extensions/regress-50447.js
@@ -307,6 +321,10 @@ js1_7/extensions/regress-387955-01.js
 js1_7/extensions/regress-387955-02.js
 js1_7/extensions/regress-392308.js
 js1_7/extensions/regress-396326.js
+js1_8/extensions/dekker.js
+js1_8/extensions/for-in.js
+js1_8/extensions/lamport.js
+js1_8/extensions/peterson.js
 js1_8/extensions/regress-300079.js
 js1_8/extensions/regress-353116.js
 js1_8/extensions/regress-378789.js
@@ -315,3 +333,5 @@ js1_8/extensions/regress-385393-10.js
 js1_8/extensions/regress-385393-11.js
 js1_8/extensions/regress-385729.js
 js1_8/extensions/regress-394709.js
+js1_8/extensions/regress-415721.js
+js1_8/extensions/simple-tree.js
