@@ -6420,9 +6420,11 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
                 pn->pn_type = TOK_RP;
                 pn->pn_arity = PN_UNARY;
                 pn->pn_kid = pn2;
-            } else {
-                PN_MOVE_NODE(pn, pn2);
+                if (pn3 && pn3 != pn2)
+                    RecycleTree(pn3, tc);
+                break;
             }
+            PN_MOVE_NODE(pn, pn2);
         }
         if (!pn2 || (pn->pn_type == TOK_SEMI && !pn->pn_kid)) {
             /*
