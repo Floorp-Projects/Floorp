@@ -1136,6 +1136,40 @@ nsChromeRegistry::AllowScriptsForPackage(nsIURI* aChromeURI, PRBool *aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsChromeRegistry::AllowContentToAccess(nsIURI *aURI, PRBool *aResult)
+{
+  nsresult rv;
+
+  *aResult = PR_FALSE;
+
+#ifdef DEBUG
+  PRBool isChrome;
+  aURI->SchemeIs("chrome", &isChrome);
+  NS_ASSERTION(isChrome, "Non-chrome URI passed to AllowContentToAccess!");
+#endif
+
+  nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
+  if (!url) {
+    NS_ERROR("Chrome URL doesn't implement nsIURL.");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCAutoString package;
+  rv = url->GetHostPort(package);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PackageEntry *entry =
+    static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
+                                                    & (nsACString&) package,
+                                                    PL_DHASH_LOOKUP));
+
+  if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+    *aResult = !!(entry->flags & PackageEntry::CONTENT_ACCESSIBLE);
+  }
+  return NS_OK;
+}
+
 static PLDHashOperator
 RemoveAll(PLDHashTable *table, PLDHashEntryHdr *entry, PRUint32 number, void *arg)
 {
@@ -2130,6 +2164,7 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
 
   NS_NAMED_LITERAL_STRING(kPlatform, "platform");
   NS_NAMED_LITERAL_STRING(kXPCNativeWrappers, "xpcnativewrappers");
+  NS_NAMED_LITERAL_STRING(kContentAccessible, "contentaccessible");
   NS_NAMED_LITERAL_STRING(kApplication, "application");
   NS_NAMED_LITERAL_STRING(kAppVersion, "appversion");
   NS_NAMED_LITERAL_STRING(kOs, "os");
@@ -2234,6 +2269,7 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
 
       PRBool platform = PR_FALSE;
       PRBool xpcNativeWrappers = PR_TRUE;
+      PRBool contentAccessible = PR_FALSE;
       TriState stAppVersion = eUnspecified;
       TriState stApp = eUnspecified;
       TriState stOsVersion = eUnspecified;
@@ -2248,6 +2284,7 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
 
         if (CheckFlag(kPlatform, wtoken, platform) ||
             CheckFlag(kXPCNativeWrappers, wtoken, xpcNativeWrappers) ||
+            CheckFlag(kContentAccessible, wtoken, contentAccessible) ||
             CheckStringFlag(kApplication, wtoken, appID, stApp) ||
             CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
             CheckVersionFlag(kOsVersion, wtoken, osVersion, vc, stOsVersion) ||
@@ -2283,6 +2320,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
         entry->flags |= PackageEntry::PLATFORM_PACKAGE;
       if (xpcNativeWrappers)
         entry->flags |= PackageEntry::XPCNATIVEWRAPPERS;
+      if (contentAccessible)
+        entry->flags |= PackageEntry::CONTENT_ACCESSIBLE;
       if (xpc) {
         nsCAutoString urlp("chrome://");
         urlp.Append(package);

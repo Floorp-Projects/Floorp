@@ -14,7 +14,7 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- *      Ehsan Akhgari <ehsan.akhgari@gmail.com>.
+ *      Dave Townsend <dtownsend@oxymoronical.com>.
  *
  * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
@@ -36,46 +36,35 @@
  * ***** END LICENSE BLOCK *****
  */
 
-var gIOS = Cc["@mozilla.org/network/io-service;1"]
-            .getService(Ci.nsIIOService);
+const MANIFESTS = [
+  do_get_file("chrome/test/unit/data/test_bug292789.manifest")
+];
 
-function test_uri(obj)
+registerManifests(MANIFESTS);
+
+var gIOS;
+var gCR;
+
+function check_accessibility(spec, desired)
 {
-  var uri = null;
-  var failed = false;
-  var message = "";
-  try {
-    uri = gIOS.newURI(obj.uri, null, null);
-    if (!obj.result) {
-      failed = true;
-      message = obj.uri + " should not be accepted as a valid URI";
-    }
-  }
-  catch (ex) {
-    if (obj.result) {
-      failed = true;
-      message = obj.uri + " should be accepted as a valid URI";
-    }
-  }
-  if (failed)
-    do_throw(message);
-  if (obj.result) {
-    do_check_true(uri != null);
-    do_check_eq(uri.spec, obj.uri);
-  }
+  var uri = gIOS.newURI(spec, null, null);
+  var actual = gCR.allowContentToAccess(uri);
+  do_check_eq(desired, actual);
 }
 
 function run_test()
 {
-  var tests = [
-    {uri: "chrome://blah/content/blah.xul", result: true},
-    {uri: "chrome://blah/content/:/blah/blah.xul", result: false},
-    {uri: "chrome://blah/content/%252e./blah/blah.xul", result: false},
-    {uri: "chrome://blah/content/%252e%252e/blah/blah.xul", result: false},
-    {uri: "chrome://blah/content/blah.xul?param=%252e./blah/", result: true},
-    {uri: "chrome://blah/content/blah.xul?param=:/blah/", result: true},
-    {uri: "chrome://blah/content/blah.xul?param=%252e%252e/blah/", result: true},
-  ];
-  for (var i = 0; i < tests.length; ++ i)
-    test_uri(tests[i]);
+  gIOS = Cc["@mozilla.org/network/io-service;1"].
+    getService(Ci.nsIIOService);
+  gCR = Cc["@mozilla.org/chrome/chrome-registry;1"].
+    getService(Ci.nsIXULChromeRegistry);
+  gCR.checkForNewChrome();
+
+  check_accessibility("chrome://test1/content/", false);
+  check_accessibility("chrome://test1/content/foo.js", false);
+  check_accessibility("chrome://test2/content/", true);
+  check_accessibility("chrome://test2/content/foo.js", true);
+  check_accessibility("chrome://test3/content/", false);
+  check_accessibility("chrome://test3/content/foo.js", false);
+  check_accessibility("chrome://test4/content/", true);
 }
