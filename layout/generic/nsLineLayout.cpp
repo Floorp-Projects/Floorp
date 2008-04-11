@@ -2710,7 +2710,7 @@ nsLineLayout::CombineTextDecorations(nsPresContext* aPresContext,
     if (aDecorations & NS_STYLE_TEXT_DECORATION_OVERLINE) {
       decorationArea =
         nsCSSRendering::GetTextDecorationRect(aPresContext, size, ascent,
-                          ascent, NS_STYLE_TEXT_DECORATION_OVERLINE,
+                          metrics.maxAscent, NS_STYLE_TEXT_DECORATION_OVERLINE,
                           NS_STYLE_BORDER_STYLE_SOLID);
       aCombinedArea.UnionRect(aCombinedArea, decorationArea);
     }

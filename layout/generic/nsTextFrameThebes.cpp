@@ -3669,8 +3669,20 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext)
 
 void
 nsTextFrame::UnionTextDecorationOverflow(nsPresContext* aPresContext,
+                                         PropertyProvider& aProvider,
                                          nsRect* aOverflowRect)
 {
+  if (IsFloatingFirstLetterChild()) {
+    // The underline/overline drawable area must be contained in the overflow
+    // rect when this is in floating first letter frame at *both* modes.
+    nscoord fontAscent, fontHeight;
+    nsIFontMetrics* fm = aProvider.GetFontMetrics();
+    fm->GetMaxAscent(fontAscent);
+    fm->GetMaxHeight(fontHeight);
+    nsRect fontRect(0, mAscent - fontAscent, GetSize().width, fontHeight);
+    aOverflowRect->UnionRect(*aOverflowRect, fontRect);
+  }
+
   // When this frame is not selected, the text-decoration area must be in
   // frame bounds.
   float ratio;
@@ -3709,7 +3721,7 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
   if (decorations.HasOverline()) {
     size.height = fontMetrics.underlineSize;
     nsCSSRendering::PaintDecorationLine(
-      aCtx, decorations.mOverColor, pt, size, ascent, ascent,
+      aCtx, decorations.mOverColor, pt, size, ascent, fontMetrics.maxAscent,
       NS_STYLE_TEXT_DECORATION_OVERLINE, NS_STYLE_BORDER_STYLE_SOLID);
   }
   if (decorations.HasUnderline()) {
@@ -5268,6 +5280,17 @@ nsTextFrame::SetLength(PRInt32 aLength)
 #endif
 }
 
+PRBool
+nsTextFrame::IsFloatingFirstLetterChild()
+{
+  if (!GetStateBits() & TEXT_FIRST_LETTER)
+    return PR_FALSE;
+  nsIFrame* frame = GetParent();
+  if (!frame || frame->GetType() != nsGkAtoms::letterFrame)
+    return PR_FALSE;
+  return frame->GetStyleDisplay()->IsFloating();
+}
+
 NS_IMETHODIMP
 nsTextFrame::Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aMetrics,
@@ -5416,7 +5439,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
 
   // The metrics for the text go in here
   gfxTextRun::Metrics textMetrics;
-  PRBool needTightBoundingBox = (GetStateBits() & TEXT_FIRST_LETTER) != 0;
+  PRBool needTightBoundingBox = IsFloatingFirstLetterChild();
 #ifdef MOZ_MATHML
   NS_ASSERTION(!(NS_REFLOW_CALC_BOUNDING_METRICS & aMetrics.mFlags),
                "We shouldn't be passed NS_REFLOW_CALC_BOUNDING_METRICS anymore");
@@ -5557,16 +5580,23 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   // Disallow negative widths
   aMetrics.width = NSToCoordCeil(PR_MAX(0, textMetrics.mAdvanceWidth));
 
-  // nsIFontMetrics::GetMaxAscent and nsIFontMetrics::GetMaxDescent return
-  // the decoration lines drawable size when the font-size is not zero.
-  nscoord minAscent, minDescent;
-  nsIFontMetrics* fm = provider.GetFontMetrics();
-  fm->GetMaxAscent(minAscent);
-  fm->GetMaxDescent(minDescent);
-  aMetrics.ascent = PR_MAX(NSToCoordCeil(textMetrics.mAscent), minAscent);
-  nscoord descent = PR_MAX(NSToCoordCeil(textMetrics.mDescent), minDescent);
+  if (needTightBoundingBox) {
+    // Use actual text metrics for floating first letter frame.
+    aMetrics.ascent = NSToCoordCeil(textMetrics.mAscent);
+    aMetrics.height = aMetrics.ascent + NSToCoordCeil(textMetrics.mDescent);
+  } else {
+    // Otherwise, ascent should contain the overline drawable area.
+    // And also descent should contain the underline drawable area.
+    // nsIFontMetrics::GetMaxAscent/GetMaxDescent contains them.
+    nscoord fontAscent, fontDescent;
+    nsIFontMetrics* fm = provider.GetFontMetrics();
+    fm->GetMaxAscent(fontAscent);
+    fm->GetMaxDescent(fontDescent);
+    aMetrics.ascent = PR_MAX(NSToCoordCeil(textMetrics.mAscent), fontAscent);
+    nscoord descent = PR_MAX(NSToCoordCeil(textMetrics.mDescent), fontDescent);
+    aMetrics.height = aMetrics.ascent + descent;
+  }
 
-  aMetrics.height = aMetrics.ascent + descent;
   NS_ASSERTION(aMetrics.ascent >= 0, "Negative ascent???");
   NS_ASSERTION(aMetrics.height - aMetrics.ascent >= 0, "Negative descent???");
 
@@ -5577,7 +5607,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   aMetrics.mOverflowArea.UnionRect(boundingBox,
                                    nsRect(0, 0, aMetrics.width, aMetrics.height));
 
-  UnionTextDecorationOverflow(aPresContext, &aMetrics.mOverflowArea);
+  UnionTextDecorationOverflow(aPresContext, provider, &aMetrics.mOverflowArea);
 
   /////////////////////////////////////////////////////////////////////
   // Clean up, update state
@@ -5801,7 +5831,7 @@ nsTextFrame::RecomputeOverflowRect()
   boundingBox.UnionRect(boundingBox,
                         nsRect(nsPoint(0,0), GetSize()));
 
-  UnionTextDecorationOverflow(PresContext(), &boundingBox);
+  UnionTextDecorationOverflow(PresContext(), provider, &boundingBox);
 
   return boundingBox;
 }
