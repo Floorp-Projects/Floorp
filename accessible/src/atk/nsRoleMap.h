@@ -166,6 +166,7 @@ static const PRUint32 atkRoleMap[] = {
     ATK_ROLE_LIST_ITEM,           // nsIAccessibleRole::ROLE_OPTION               117
     ATK_ROLE_LIST_ITEM,           // nsIAccessibleRole::ROLE_RICH_OPTION          118
     ATK_ROLE_LIST,                // nsIAccessibleRole::ROLE_LISTBOX              119
+    ATK_ROLE_UNKNOWN,             // nsIAccessibleRole::ROLE_FLAT_EQUATION        120
     kROLE_ATK_LAST_ENTRY          // nsIAccessibleRole::ROLE_LAST_ENTRY
 };
 
