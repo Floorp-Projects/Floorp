@@ -150,7 +150,7 @@ menuitem.bookmark-item {
 
 .bookmark-item  {
   list-style-image: url("chrome://global/skin/icons/folder-item.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px)
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
 .bookmark-item[container] {
@@ -1891,5 +1891,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 /* Bookmarks Toolbar menu-item */
 #bookmarksToolbarFolderMenu {
-  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");  
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");
+  -moz-image-region: auto;
 }
