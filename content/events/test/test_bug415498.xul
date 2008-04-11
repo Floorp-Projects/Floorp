@@ -75,19 +75,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=415498
       browser.loadURI("chrome://mochikit/content/chrome/content/events/test/bug415498-doc1.html");
       yield;
 
-      is(gMessages.length, 1, "One error message should be reported");
-      isnot(gMessages[0].message.indexOf("NS_ERROR_DOM_HIERARCHY_REQUEST_ERR"), -1,
-            "message should be about NS_ERROR_DOM_HIERARCHY_REQUEST_ERR exception");
+      ok(verifyErrorReceived("NS_ERROR_DOM_HIERARCHY_REQUEST_ERR"),
+         "Error message not reported in event listener callback!");
       gMessages = [];
 
       // 2) This document sets window.onload to register a method throwing an exception
       browser.loadURI("chrome://mochikit/content/chrome/content/events/test/bug415498-doc2.html");
       yield;
 
-      is(gMessages.length, 1, "One error message should be reported");
-      isnot(gMessages[0].message.indexOf("NS_ERROR_DOM_HIERARCHY_REQUEST_ERR"), -1,
-            "message should be about NS_ERROR_DOM_HIERARCHY_REQUEST_ERR exception");
-      gMessages = [];
+      ok(verifyErrorReceived("NS_ERROR_DOM_HIERARCHY_REQUEST_ERR"),
+         "Error message not reported in window.onload!");
+    }
+    
+    function verifyErrorReceived(errorString) {
+      for (var i = 0; i < gMessages.length; i++) {
+        if (gMessages[i].message.indexOf(errorString) != -1)
+          return true;
+      }
+      return false;
     }
   ]]></script>
   </pre>
