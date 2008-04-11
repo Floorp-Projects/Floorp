@@ -491,6 +491,9 @@
       <method name="_disallowInsertion">
         <parameter name="aContainer"/>
         <body><![CDATA[
+          // allow dropping into Tag containers
+          if (PlacesUtils.nodeIsTagQuery(aContainer))
+            return false;
           // Disallow insertion of items under readonly folders
           return (!PlacesUtils.nodeIsFolder(aContainer) ||
                    PlacesUtils.nodeIsReadOnly(aContainer));
@@ -554,7 +557,8 @@
             return null;
 
           return new InsertionPoint(PlacesUtils.getConcreteItemId(container),
-                                    index, orientation);
+                                    index, orientation,
+                                    PlacesUtils.nodeIsTagQuery(container));
         ]]></body>
       </method>
 
@@ -669,7 +673,8 @@
             // If this node is part of a readonly container (e.g. a livemark) it 
             // cannot be moved, only copied, so we must change the action used
             // by the drag session.
-            if (PlacesUtils.nodeIsReadOnly(parent)) {
+            if (PlacesUtils.nodeIsReadOnly(parent) ||
+                PlacesUtils.nodeIsTagQuery(parent)) {
               dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
               break;
             }

@@ -1163,8 +1163,12 @@ var PlacesUIUtils = {
         // XXX: Downloads
 
         // Tags Query
-        uri = PlacesUtils._uri("place:folder=TAGS");
-        itemId = PlacesUtils.bookmarks.insertBookmark(leftPaneRoot, uri, -1, null);
+        uri = PlacesUtils._uri("place:type=" +
+                          Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY +
+                          "&sort=" +
+                          Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING);
+        title = PlacesUtils.bookmarks.getItemTitle(PlacesUtils.tagsFolderId);
+        itemId = PlacesUtils.bookmarks.insertBookmark(leftPaneRoot, uri, -1, title);
         PlacesUtils.annotations.setItemAnnotation(itemId, ORGANIZER_QUERY_ANNO,
                                                   "Tags", 0, EXPIRE_NEVER);
         self.leftPaneQueries["Tags"] = itemId;

@@ -380,6 +380,7 @@
           // By default, the insertion point is at the top level, at the end. 
           var index = -1;
           var folderId = PlacesUtils.getConcreteItemId(this._result.root);
+          var isTag = false;
 
           var selectedNode = this.selectedNode;
           if (selectedNode) {
@@ -393,9 +394,10 @@
               // is after that node.
               folderId = PlacesUtils.getConcreteItemId(selectedNode.parent);
               index = PlacesUtils.getIndexOfNode(selectedNode);
+              isTag = PlacesUtils.nodeIsTagQuery(selectedNode.parent);
             }
           }
-          return new InsertionPoint(folderId, index, 1);
+          return new InsertionPoint(folderId, index, 1, isTag);
         ]]></getter>
       </property>
 
