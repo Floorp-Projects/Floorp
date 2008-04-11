@@ -256,14 +256,12 @@ _cairo_xlib_screen_info_close_display (cairo_xlib_screen_info_t *info)
 {
     int i;
 
-    CAIRO_MUTEX_LOCK (info->mutex);
     for (i = 0; i < ARRAY_LENGTH (info->gc); i++) {
 	if (info->gc[i] != NULL) {
 	    XFreeGC (info->display->display, info->gc[i]);
 	    info->gc[i] = NULL;
 	}
     }
-    CAIRO_MUTEX_UNLOCK (info->mutex);
 }
 
 void
@@ -296,8 +294,6 @@ _cairo_xlib_screen_info_destroy (cairo_xlib_screen_info_t *info)
     _cairo_xlib_display_destroy (info->display);
 
     _cairo_array_fini (&info->visuals);
-
-    CAIRO_MUTEX_FINI (info->mutex);
 
     free (info);
 }
@@ -339,7 +335,6 @@ _cairo_xlib_screen_info_get (Display *dpy, Screen *screen)
 	info = malloc (sizeof (cairo_xlib_screen_info_t));
 	if (info != NULL) {
 	    CAIRO_REFERENCE_COUNT_INIT (&info->ref_count, 2); /* Add one for display cache */
-	    CAIRO_MUTEX_INIT (info->mutex);
 	    info->display = _cairo_xlib_display_reference (display);
 	    info->screen = screen;
 	    info->has_render = FALSE;
@@ -390,18 +385,16 @@ GC
 _cairo_xlib_screen_get_gc (cairo_xlib_screen_info_t *info, int depth)
 {
     GC gc;
-    cairo_bool_t needs_reset;
 
     depth = depth_to_index (depth);
 
-    CAIRO_MUTEX_LOCK (info->mutex);
     gc = info->gc[depth];
     info->gc[depth] = NULL;
-    needs_reset = info->gc_needs_clip_reset & (1 << depth);
-    CAIRO_MUTEX_UNLOCK (info->mutex);
 
-    if (needs_reset)
+    if (info->gc_needs_clip_reset & (1 << depth)) {
 	XSetClipMask(info->display->display, gc, None);
+	info->gc_needs_clip_reset &= ~(1 << depth);
+    }
 
     return gc;
 }
@@ -410,25 +403,21 @@ cairo_status_t
 _cairo_xlib_screen_put_gc (cairo_xlib_screen_info_t *info, int depth, GC gc, cairo_bool_t reset_clip)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    GC oldgc;
 
     depth = depth_to_index (depth);
 
-    CAIRO_MUTEX_LOCK (info->mutex);
-    oldgc = info->gc[depth];
+    if (info->gc[depth] != NULL) {
+	status = _cairo_xlib_display_queue_work (info->display,
+		                               (cairo_xlib_notify_func) XFreeGC,
+					       info->gc[depth],
+					       NULL);
+    }
+
     info->gc[depth] = gc;
     if (reset_clip)
 	info->gc_needs_clip_reset |= 1 << depth;
     else
 	info->gc_needs_clip_reset &= ~(1 << depth);
-    CAIRO_MUTEX_UNLOCK (info->mutex);
-
-    if (oldgc != NULL) {
-	status = _cairo_xlib_display_queue_work (info->display,
-		                               (cairo_xlib_notify_func) XFreeGC,
-					       oldgc,
-					       NULL);
-    }
 
     return status;
 }

@@ -183,11 +183,10 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 				 "    { show } { -0.001 mul 0 cairo_font_matrix dtransform rmoveto } ifelse\n"
 				 "  } forall\n"
 				 "} bind def\n"
-				 "/Td { matrix translate cairo_font_matrix matrix concatmatrix aload\n"
-				 "      /cairo_font_matrix exch def 6 2 roll 0 0 6 array astore\n"
-				 "      cairo_font exch selectfont moveto } bind def\n"
-				 "/Tm { 6 copy 6 array astore /cairo_font_matrix exch def 6 2 roll 0 0\n"
-				 "      6 array astore cairo_font exch selectfont moveto } bind def\n"
+				 "/Td { matrix translate cairo_font_matrix matrix concatmatrix dup\n"
+				 "   /cairo_font_matrix exch def cairo_font exch selectfont 0 0 moveto } bind def\n"
+				 "/Tm { 6 array astore dup /cairo_font_matrix exch def\n"
+				 "      cairo_font exch selectfont 0 0 moveto } bind def\n"
 				 "/g { setgray } bind def\n"
 				 "/rg { setrgbcolor } bind def\n");
 
