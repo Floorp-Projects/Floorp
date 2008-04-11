@@ -133,7 +133,7 @@ public:
    * operation, we specify the scrolled frame as the moving frame.
    */
   nsDisplayListBuilder(nsIFrame* aReferenceFrame, PRBool aIsForEvents,
-                       PRBool aBuildCaret, nsIFrame* aMovingFrame = nsnull);
+                       PRBool aBuildCaret);
   ~nsDisplayListBuilder();
 
   /**
@@ -154,14 +154,30 @@ public:
    * a new stacking context
    */
   PRBool IsAtRootOfPseudoStackingContext() { return mIsAtRootOfPseudoStackingContext; }
+
+  /**
+   * Indicate that we'll use this display list to analyze the effects
+   * of aMovingFrame moving by aMoveDelta. The move has already been
+   * applied to the frame tree.
+   */
+  void SetMovingFrame(nsIFrame* aMovingFrame, const nsPoint& aMoveDelta) {
+    mMovingFrame = aMovingFrame;
+    mMoveDelta = aMoveDelta;
+  }
+
   /**
    * @return PR_TRUE if we are doing analysis of moving frames
    */
   PRBool HasMovingFrames() { return mMovingFrame != nsnull; }
   /**
-   * @return the frame that is being hypothetically moved
+   * @return the frame that was moved
    */
   nsIFrame* GetRootMovingFrame() { return mMovingFrame; }
+  /**
+   * @return the amount by which mMovingFrame was moved.
+   * Only valid when GetRootMovingFrame() returns non-null.
+   */
+  const nsPoint& GetMoveDelta() { return mMoveDelta; }
   /**
    * @return PR_TRUE if aFrame is, or is a descendant of, the hypothetical
    * moving frame
@@ -305,6 +321,7 @@ private:
   nsIFrame*                      mReferenceFrame;
   nsIFrame*                      mMovingFrame;
   nsIFrame*                      mIgnoreScrollFrame;
+  nsPoint                        mMoveDelta; // only valid when mMovingFrame is non-null
   PLArenaPool                    mPool;
   nsCOMPtr<nsISelection>         mBoundingSelection;
   nsAutoTArray<PresShellState,8> mPresShellStates;
@@ -426,11 +443,12 @@ public:
   virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder) { return PR_FALSE; }
   /**
    * @return PR_FALSE if the painting performed by the item is invariant
-   * when frame aFrame is moved relative to its parent (so it would be safe
-   * to update the display by just copying pixels from their old to new location)
+   * when frame aFrame is moved relative to aBuilder->GetRootMovingFrame().
+   * This can only be called when aBuilder->IsMovingFrame(mFrame) is true.
+   * It return PR_TRUE for all wrapped lists.
    */
-  virtual PRBool IsVaryingRelativeToFrame(nsDisplayListBuilder* aBuilder,
-       nsIFrame* aFrame) { return PR_FALSE; }
+  virtual PRBool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder)
+  { return PR_FALSE; }
   /**
    * Actually paint this item to some rendering context.
    * @param aDirtyRect relative to aBuilder->ReferenceFrame()
@@ -996,8 +1014,7 @@ public:
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
                             HitTestState* aState) { return mFrame; }
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
-  virtual PRBool IsVaryingRelativeToFrame(nsDisplayListBuilder* aBuilder,
-                                          nsIFrame* aAncestorFrame);
+  virtual PRBool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder);
   virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
@@ -1080,8 +1097,7 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
   virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder);
-  virtual PRBool IsVaryingRelativeToFrame(nsDisplayListBuilder* aBuilder,
-                                          nsIFrame* aFrame);
+  virtual PRBool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder);
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   virtual PRBool OptimizeVisibility(nsDisplayListBuilder* aBuilder,
