@@ -563,15 +563,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       // now.
       nsIDocument* document = GetCurrentDoc();
       MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, aNotify);
-
-      UpdateEditableState();
-      if (document) {
-        MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, PR_TRUE);
-        document->ContentStatesChanged(this, nsnull,
-                                       NS_EVENT_STATE_MOZ_READONLY |
-                                       NS_EVENT_STATE_MOZ_READWRITE);
-      }
-
+      
       if (!aValue) {
         // We're now a text input.  Note that we have to handle this manually,
         // since removing an attribute (which is what happened, since aValue is
