@@ -1474,7 +1474,7 @@ nsParser::Parse(const nsAString& aSourceBuffer,
 NS_IMETHODIMP
 nsParser::ParseFragment(const nsAString& aSourceBuffer,
                         void* aKey,
-                        nsTArray<nsAutoString>& aTagStack,
+                        nsTArray<nsString>& aTagStack,
                         PRBool aXMLMode,
                         const nsACString& aMimeType,
                         nsDTDMode aMode)
@@ -1566,7 +1566,7 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
           endContext.AppendLiteral("</");
         }
 
-        nsAutoString& thisTag = aTagStack[theIndex];
+        nsString& thisTag = aTagStack[theIndex];
         // was there an xmlns=?
         PRInt32 endOfTag = thisTag.FindChar(PRUnichar(' '));
         if (endOfTag == -1) {
