@@ -2183,17 +2183,24 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
     JSStackFrame *fp;
     uintN error;
     const char *name, *source;
+    JSTempValueRooter tvr;
 
     for (fp = cx->fp; fp && !fp->regs; fp = fp->down)
         continue;
-    name = NULL;
-    source = NULL;
+    name = source = NULL;
+    JS_PUSH_TEMP_ROOT_STRING(cx, NULL, &tvr);
     if (flags & JSV2F_ITERATOR) {
         error = JSMSG_BAD_ITERATOR;
         name = js_iterator_str;
-        source = js_ValueToPrintableSource(cx, *vp);
+        tvr.u.string = js_ValueToSource(cx, *vp);
+        if (!tvr.u.string)
+            goto out;
+        tvr.u.string = js_QuoteString(cx, tvr.u.string, 0);
+        if (!tvr.u.string)
+            goto out;
+        source = js_GetStringBytes(cx, tvr.u.string);
         if (!source)
-            return;
+            goto out;
     } else if (flags & JSV2F_CONSTRUCT) {
         error = JSMSG_NOT_CONSTRUCTOR;
     } else {
@@ -2209,6 +2216,9 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
                          : JSDVG_IGNORE_STACK,
                          *vp, NULL,
                          name, source);
+
+  out:
+    JS_POP_TEMP_ROOT(cx, &tvr);
 }
 
 /*
