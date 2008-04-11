@@ -641,7 +641,7 @@ protected:
                                         nsCOMPtr<nsIDOMNode> *outEndNode,
                                         PRInt32 *outStartOffset,
                                         PRInt32 *outEndOffset);
-  nsresult   ParseFragment(const nsAString & aStr, nsTArray<nsAutoString> &aTagStack,
+  nsresult   ParseFragment(const nsAString & aStr, nsTArray<nsString> &aTagStack,
                            nsIDocument* aTargetDoc,
                            nsCOMPtr<nsIDOMNode> *outNode);
   nsresult   CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
@@ -650,7 +650,7 @@ protected:
                                       PRInt32 aStartOffset,
                                       nsIDOMNode *aEndNode,
                                       PRInt32 aEndOffset);
-  nsresult CreateTagStack(nsTArray<nsAutoString> &aTagStack,
+  nsresult CreateTagStack(nsTArray<nsString> &aTagStack,
                           nsIDOMNode *aNode);
   nsresult GetListAndTableParents( PRBool aEnd, 
                                    nsCOMArray<nsIDOMNode>& aListOfNodes,

@@ -3398,7 +3398,7 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
   nsCOMPtr<nsIDocument> document = node->GetOwnerDoc();
   NS_ENSURE_TRUE(document, NS_ERROR_NOT_AVAILABLE);
 
-  nsAutoTArray<nsAutoString, 32> tagStack;
+  nsAutoTArray<nsString, 32> tagStack;
   nsAutoString uriStr, nameStr;
   nsCOMPtr<nsIContent> content = do_QueryInterface(aContextNode);
   // just in case we have a text node
@@ -3406,7 +3406,7 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
     content = content->GetParent();
 
   while (content && content->IsNodeOfType(nsINode::eELEMENT)) {
-    nsAutoString& tagName = *tagStack.AppendElement();
+    nsString& tagName = *tagStack.AppendElement();
     NS_ENSURE_TRUE(&tagName, NS_ERROR_OUT_OF_MEMORY);
 
     content->NodeInfo()->GetQualifiedName(tagName);
