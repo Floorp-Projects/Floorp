@@ -80,7 +80,7 @@ __try {
     return E_FAIL;
 
   PRInt32 count = 0;
-  nsresult rv = hyperAcc->GetLinks(&count);
+  nsresult rv = hyperAcc->GetLinkCount(&count);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
 
@@ -92,7 +92,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleHypertext::get_hyperlink(long aIndex,
+CAccessibleHypertext::get_hyperlink(long aLinkIndex,
                                     IAccessibleHyperlink **aHyperlink)
 {
 __try {
@@ -103,7 +103,7 @@ __try {
     return E_FAIL;
 
   nsCOMPtr<nsIAccessibleHyperLink> hyperLink;
-  nsresult rv = hyperAcc->GetLink(aIndex, getter_AddRefs(hyperLink));
+  nsresult rv = hyperAcc->GetLink(aLinkIndex, getter_AddRefs(hyperLink));
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
 
