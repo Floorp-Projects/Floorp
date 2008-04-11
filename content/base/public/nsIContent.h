@@ -62,8 +62,8 @@ class nsIDocShell;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x14c78a19, 0xe3a3, 0x4809, \
-  { 0x8a, 0xee, 0x6f, 0x15, 0x4e, 0x1c, 0x16, 0xb6 } }
+{ 0x0acd0482, 0x09a2, 0x42fd, \
+  { 0xb6, 0x1b, 0x95, 0xa2, 0x01, 0x6a, 0x55, 0xd3 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -169,7 +169,25 @@ public:
   /**
    * Returns PR_TRUE if |this| or any of its ancestors is native anonymous.
    */
-  virtual PRBool IsInNativeAnonymousSubtree() const;
+  PRBool IsInNativeAnonymousSubtree() const
+  {
+#ifdef DEBUG
+    if (HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE)) {
+      return PR_TRUE;
+    }
+    nsIContent* content = GetBindingParent();
+    while (content) {
+      if (content->IsNativeAnonymous()) {
+        NS_ERROR("Element not marked to be in native anonymous subtree!");
+        break;
+      }
+      content = content->GetBindingParent();
+    }
+    return PR_FALSE;
+#else
+    return HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE);
+#endif
+  }
 
   /**
    * Get the namespace that this element's tag is defined in

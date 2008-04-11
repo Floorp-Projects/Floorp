@@ -446,19 +446,6 @@ nsIContent::FindFirstNonNativeAnonymous() const
   return possibleResult;
 }
 
-PRBool
-nsIContent::IsInNativeAnonymousSubtree() const
-{
-  nsIContent* content = GetBindingParent();
-  while (content) {
-    if (content->IsNativeAnonymous()) {
-      return PR_TRUE;
-    }
-    content = content->GetBindingParent();
-  }
-  return PR_FALSE;
-}
-
 //----------------------------------------------------------------------
 
 nsChildContentList::~nsChildContentList()
@@ -2069,6 +2056,15 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
       slots->mBindingParent = aBindingParent; // Weak, so no addref happens.
     }
   }
+  NS_ASSERTION(!aBindingParent || IsNativeAnonymous() ||
+               !HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE) ||
+               aBindingParent->IsInNativeAnonymousSubtree(),
+               "Trying to re-bind content from native anonymous subtree to"
+               "non-native anonymous parent!");
+  if (IsNativeAnonymous() ||
+      aBindingParent && aBindingParent->IsInNativeAnonymousSubtree()) {
+    SetFlags(NODE_IS_IN_ANONYMOUS_SUBTREE);
+  }
 
   PRBool hadForceXBL = HasFlag(NODE_FORCE_XBL_BINDINGS);
 
@@ -2291,13 +2287,11 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
 
   nsCOMPtr<nsIContent> parent = aContent->GetParent();
   if (isAnonForEvents) {
-    // Don't propagate mutation events which are dispatched somewhere inside
-    // native anonymous content.
-    if (aVisitor.mEvent->eventStructType == NS_MUTATION_EVENT) {
-      aVisitor.mParentTarget = nsnull;
-      return NS_OK;
-    }
-
+    // If a DOM event is explicitly dispatched using node.dispatchEvent(), then
+    // all the events are allowed even in the native anonymous content..
+    NS_ASSERTION(aVisitor.mEvent->eventStructType != NS_MUTATION_EVENT ||
+                 aVisitor.mDOMEvent,
+                 "Mutation event dispatched in native anonymous content!?!");
     aVisitor.mEventTargetAtParent = parent;
   } else if (parent) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mEvent->target));
