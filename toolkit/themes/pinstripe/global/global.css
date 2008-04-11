@@ -138,8 +138,20 @@ window.dialog {
 .question-icon {
   width: 64px;
   height: 64px;
-  list-style-image: url("chrome://branding/content/icon64.png");
+  list-style-image: url("chrome://global/skin/icons/information-64.png");
   margin: 6px 20px 6px 6px !important;
+}
+
+.alert-icon {
+  list-style-image: url("chrome://global/skin/icons/warning-64.png");
+}
+
+.error-icon {
+  list-style-image: url("chrome://global/skin/icons/error-64.png");
+}
+
+.question-icon {
+  list-style-image: url("chrome://global/skin/icons/question-64.png");
 }
 
 /* ::::: iframe ::::: */

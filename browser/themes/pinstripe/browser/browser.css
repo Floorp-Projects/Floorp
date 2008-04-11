@@ -923,7 +923,7 @@ statusbarpanel#statusbar-display {
 }
 
 #editBookmarkPanel > #editBookmarkPanelBottomButtons > button[default="true"] {
-  background-color: #222;
+  background-color: #666;
 }
 
 #editBookmarkPanel > #editBookmarkPanelContent {
@@ -1033,6 +1033,29 @@ statusbarpanel#statusbar-display {
   outline: 2px solid -moz-mac-focusring;
   outline-offset: -2px;
   -moz-outline-radius: 1px;
+}
+
+#editBMPanel_folderTree treechildren::-moz-tree-twisty {
+  -moz-appearance: none !important;
+  list-style-image: url("chrome://browser/skin/hud-style-twisties.png");
+  -moz-image-region: rect(0px, 10px, 10px, 0px);
+  margin-top: 1px;
+  -moz-margin-end: 1px;
+}
+
+#editBMPanel_folderTree treechildren::-moz-tree-twisty(open) {
+  -moz-appearance: none;
+  -moz-image-region: rect(0px, 20px, 10px, 10px);
+}
+
+#editBMPanel_folderTree treechildren::-moz-tree-twisty(selected) {
+  -moz-appearance: none;
+  -moz-image-region: rect(0px, 30px, 10px, 20px);
+}
+
+#editBMPanel_folderTree treechildren::-moz-tree-twisty(selected, open) {
+  -moz-appearance: none;
+  -moz-image-region: rect(0px, 40px, 10px, 30px);
 }
 
 #editBookmarkPanel #editBMPanel_tagsSelector {
@@ -1163,6 +1186,10 @@ statusbarpanel#statusbar-display {
   padding: 0;
   background-color: #666666;
   color: #ffffff;
+}
+
+#editBookmarkPanel #editBMPanel_tagsField[empty="true"] {
+  color: #bbbbbb;
 }
 
 #editBookmarkPanel #editBMPanel_tagsField[focused="true"],
@@ -1504,11 +1531,11 @@ tabbrowser > tabbox > tabpanels {
 }
 
 .tab-drop-indicator {
-  height: 10px;
-  width: 8px;
-  margin-bottom: -5px;
+  height: 33px;
+  width: 10px;
+  margin-bottom: -24px;
   position: relative;
-  background: url('chrome://browser/skin/tabbrowser/tabDragIndicator.png') 50% 50% no-repeat;
+  background: url('chrome://browser/skin/tabbrowser/tabDragIndicator.png') 50% 40% no-repeat;
 }
 
 /**

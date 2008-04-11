@@ -272,33 +272,33 @@ richlistitem[opType="needs-uninstall"] .notifyBadge {
 
 .addonRating[rating] {
   display: -moz-box;
-  width: 68px;
-  height: 12px;
+  width: 78px;
+  height: 18px;
   list-style-image: url("chrome://mozapps/skin/extensions/ratings.png");
 }
 
 .addonRating[rating="0"] {
-  -moz-image-region: rect(0px 68px 12px 0px);
+  -moz-image-region: rect(0px 78px 18px 0px);
 }
 
 .addonRating[rating="1"] {
-  -moz-image-region: rect(12px 68px 24px 0px);
+  -moz-image-region: rect(18px 78px 36px 0px);
 }
 
 .addonRating[rating="2"] {
-  -moz-image-region: rect(24px 68px 36px 0px);
+  -moz-image-region: rect(36px 78px 54px 0px);
 }
 
 .addonRating[rating="3"] {
-  -moz-image-region: rect(36px 68px 48px 0px);
+  -moz-image-region: rect(54px 78px 72px 0px);
 }
 
 .addonRating[rating="4"] {
-  -moz-image-region: rect(48px 68px 60px 0px);
+  -moz-image-region: rect(72px 78px 90px 0px);
 }
 
 .addonRating[rating="5"] {
-  -moz-image-region: rect(60px 68px 72px 0px);
+  -moz-image-region: rect(90px 78px 108px 0px);
 }
 
 .addonType image {
@@ -338,6 +338,25 @@ vbox[typeName="status"][type="header-recommended"] {
 #searchPanel {
   border-bottom: 1px solid #878787;
 }
+
+#searchbox {
+  -moz-appearance: none;
+  border: 3px solid;
+  -moz-border-top-colors: #5F5F5F #CFCFCF -moz-Field;
+  -moz-border-bottom-colors: #9F9F9F #EEE -moz-Field;
+  -moz-border-right-colors: #7F7F7F #EEE -moz-Field;
+  -moz-border-left-colors: #7F7F7F #EFEFEF -moz-Field;
+  -moz-border-radius: 11px;
+  -moz-background-clip: border !important;
+  padding: 0 8px;
+}
+
+#searchbox[focused="true"] {
+  outline: 2px solid #4A8BC7;
+  outline-offset: -2px;
+  -moz-outline-radius: 11px;
+}
+
 
 .searchbox-search, .searchbox-cancel {
   list-style-image: url(chrome://mozapps/skin/extensions/searchIcons.png);
