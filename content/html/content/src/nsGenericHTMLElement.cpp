@@ -1916,17 +1916,24 @@ nsGenericHTMLFormElement::UpdateEditableFormControlState()
   }
 
   nsIContent *parent = GetParent();
-  PRBool editable = parent && parent->HasFlag(NODE_IS_EDITABLE);
 
-  if (!editable) {
-    // If not contentEditable we still need to check the readonly attribute.
-    PRBool roState;
-    GetBoolAttr(nsGkAtoms::readonly, &roState);
-
-    editable = !roState;
+  if (parent && parent->HasFlag(NODE_IS_EDITABLE)) {
+    SetEditableFlag(PR_TRUE);
+    return;
   }
 
-  SetEditableFlag(editable);
+  PRInt32 formType = GetType();
+  if (formType != NS_FORM_INPUT_PASSWORD && formType != NS_FORM_INPUT_TEXT &&
+      formType != NS_FORM_TEXTAREA) {
+    SetEditableFlag(PR_FALSE);
+    return;
+  }
+
+  // If not contentEditable we still need to check the readonly attribute.
+  PRBool roState;
+  GetBoolAttr(nsGkAtoms::readonly, &roState);
+
+  SetEditableFlag(!roState);
 }
 
 
