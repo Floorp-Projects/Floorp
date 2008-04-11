@@ -44,7 +44,7 @@
  * @note - When adding a new role, be sure to also add it to nsRoleMap.h for
  *         each platform.
  */
-[scriptable, uuid(31685b85-36a3-448c-99ed-b034a198e303)]
+[scriptable, uuid(8c0f68f8-164a-4078-a9ee-36a7d180f0e4)]
 interface nsIAccessibleRole : nsISupports
 {
   /**
@@ -392,7 +392,8 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_ANIMATION = 54;
 
   /**
-   * Represents a mathematical equation. It is used by MATHML.
+   * Represents a mathematical equation. It is used by MATHML, where there is a
+   * rich DOM subtree for an equation. Use ROLE_FLAT_EQUATION for <img role="math" alt="[TeX]"/>
    */
   const unsigned long ROLE_EQUATION = 55;
 
@@ -764,9 +765,14 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_LISTBOX = 119;
 
   /**
+   * Represents a mathematical equation in the accessible name
+   */
+  const unsigned long ROLE_FLAT_EQUATION = 120;
+  
+  /**
    * It's not role actually. This contanst is important to help ensure
    * nsRoleMap's are synchronized.
    */
-  const unsigned long ROLE_LAST_ENTRY = 120;
+  const unsigned long ROLE_LAST_ENTRY = 121;
 };
 
