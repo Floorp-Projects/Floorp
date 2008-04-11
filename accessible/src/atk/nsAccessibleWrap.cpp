@@ -873,7 +873,7 @@ getChildCountCB(AtkObject *aAtkObj)
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleHyperText), getter_AddRefs(hyperText));
     if (hyperText) {
         // If HyperText, then number of links matches number of children
-        hyperText->GetLinks(&count);
+        hyperText->GetLinkCount(&count);
     }
     else {
         nsCOMPtr<nsIAccessibleText> accText;
