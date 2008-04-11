@@ -915,6 +915,7 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, PRBool &validEV)
 
   CERTValOutParam cvout[2];
   cvout[0].type = cert_po_trustAnchor;
+  cvout[0].value.pointer.cert = nsnull;
   cvout[1].type = cert_po_end;
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("calling CERT_PKIXVerifyCert nss cert %p\n", mCert));
