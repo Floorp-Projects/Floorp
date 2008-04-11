@@ -1025,21 +1025,19 @@ AddItemsToRegion(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
         AddItemsToRegion(aBuilder, sublist, aRect, aClipRect, aDelta, aRegion);
       }
     } else {
-      // Items left in the list are either IsVaryingRelativeToFrame
-      // or !IsMovingFrame (i.e., not in the moving subtree)
       nsRect r;
       if (r.IntersectRect(aClipRect, item->GetBounds(aBuilder))) {
-        PRBool inMovingSubtree = PR_FALSE;
-        if (item->IsVaryingRelativeToFrame(aBuilder, aBuilder->GetRootMovingFrame())) {
-          nsIFrame* f = item->GetUnderlyingFrame();
-          NS_ASSERTION(f, "Must have an underlying frame for leaf item");
-          inMovingSubtree = aBuilder->IsMovingFrame(f);
-          AccumulateItemInRegion(aRegion, aRect + aDelta, r, item);
-        }
-      
-        if (!inMovingSubtree) {
-          // if it's uniform and it includes both the old and new areas, then
-          // we don't need to paint it
+        nsIFrame* f = item->GetUnderlyingFrame();
+        NS_ASSERTION(f, "Must have an underlying frame for leaf item");
+        if (aBuilder->IsMovingFrame(f)) {
+          if (item->IsVaryingRelativeToMovingFrame(aBuilder)) {
+            // something like background-attachment:fixed that varies
+            // its drawing when it moves
+            AccumulateItemInRegion(aRegion, aRect + aDelta, r, item);
+          }
+        } else {
+          // not moving. If it's uniform and it includes both the old and
+          // new areas, then we don't need to paint it
           PRBool skip = r.Contains(aRect) && r.Contains(aRect + aDelta) &&
               item->IsUniform(aBuilder);
           if (!skip) {
@@ -1067,15 +1065,21 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
                "The root frame shouldn't be the one that's moving, that makes no sense");
 
   // Build the 'after' display list over the whole area of interest.
-  // Frames under aMovingFrame will not be allowed to affect (clip or cover)
-  // non-moving frame display items ... then we can be sure the non-moving
-  // frame display items we get are the same ones we would have gotten if
-  // we had constructed the 'before' display list.
   // (We have to build the 'after' display list because the frame/view
-  // hierarchy has already been updated for the move.)
+  // hierarchy has already been updated for the move.
+  // We need to ensure that the non-moving frame display items we get
+  // are the same ones we would have gotten if we had constructed the
+  // 'before' display list. So opaque moving items are only considered to
+  // cover the intersection of their old and new bounds (see
+  // nsDisplayItem::OptimizeVisibility). A moving clip item is not allowed
+  // to clip non-moving items --- this is enforced by the code that sets
+  // up nsDisplayClip items, in particular see ApplyAbsPosClipping.
+  // XXX but currently a non-moving clip item can incorrectly clip
+  // moving moving items! See bug 428156.
   nsRect rect;
   rect.UnionRect(aCopyRect, aCopyRect + aDelta);
-  nsDisplayListBuilder builder(aRootFrame, PR_FALSE, PR_TRUE, aMovingFrame);
+  nsDisplayListBuilder builder(aRootFrame, PR_FALSE, PR_TRUE);
+  builder.SetMovingFrame(aMovingFrame, aDelta);
   nsDisplayList list;
 
   builder.EnterPresShell(aRootFrame, rect);
