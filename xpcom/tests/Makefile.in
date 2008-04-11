@@ -147,6 +147,8 @@ else
 getnativepath = $(1)
 endif
 
+abs_srcdir = $(shell cd $(srcdir) && pwd)
+
 check::
 	@echo "Running TestVersionComparator tests"
 	@$(PERL) -w $(srcdir)/TestVersionComparatorRunner.pl "$(RUN_TEST_PROGRAM) $(FINAL_TARGET)/TestVersionComparator$(BIN_SUFFIX)"
@@ -166,7 +168,7 @@ check::
 		echo "Scriptable object marked nonscriptable by xpidl"; \
 		exit 1; \
 	fi
-	@rm -f $(DIST)/bin/components/compreg.dat; \
-	regOrderDir="$(call getnativepath,${srcdir}/regorder)";	\
+	rm -f $(DIST)/bin/components/compreg.dat; \
+	regOrderDir="$(call getnativepath,$(abs_srcdir)/regorder)";	\
 	XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) \
 	  $(DIST)/bin/TestRegistrationOrder$(BIN_SUFFIX) "$$regOrderDir"
