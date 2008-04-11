@@ -605,7 +605,15 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     nsDataSlots *slots = GetDataSlots();
     NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
 
+    NS_ASSERTION(IsNativeAnonymous() || !HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE) ||
+                 aBindingParent->IsInNativeAnonymousSubtree(),
+                 "Trying to re-bind content from native anonymous subtree to"
+                 "non-native anonymous parent!");
     slots->mBindingParent = aBindingParent; // Weak, so no addref happens.
+    if (IsNativeAnonymous() ||
+        aBindingParent->IsInNativeAnonymousSubtree()) {
+      SetFlags(NODE_IS_IN_ANONYMOUS_SUBTREE);
+    }
   }
 
   // Set parent
