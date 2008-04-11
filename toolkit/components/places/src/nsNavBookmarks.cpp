@@ -152,20 +152,21 @@ nsNavBookmarks::Init()
   // Results are kGetInfoIndex_*
 
   // mDBGetChildren: select all children of a given folder, sorted by position
-  nsCAutoString selectChildren(
-    NS_LITERAL_CSTRING("SELECT h.id, h.url, COALESCE(a.title, h.title), "
+  // This is a LEFT OUTER JOIN with moz_places since folders does not have
+  // a reference into that table.
+  rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT h.id, h.url, COALESCE(b.title, h.title), "
       "h.rev_host, h.visit_count, "
       SQL_STR_FRAGMENT_MAX_VISIT_DATE( "h.id" )
-      ", f.url, null, a.id, "
-      "a.dateAdded, a.lastModified, "
-      "a.position, a.type, a.fk "
-     "FROM moz_bookmarks a "
-     "LEFT JOIN moz_places h ON a.fk = h.id "
-     "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
-     "WHERE a.parent = ?1 "
-     " ORDER BY a.position"));
-
-  rv = dbConn->CreateStatement(selectChildren, getter_AddRefs(mDBGetChildren));
+      ", f.url, null, b.id, "
+      "b.dateAdded, b.lastModified, "
+      "b.position, b.type, b.fk "
+      "FROM moz_bookmarks b "
+      "LEFT OUTER JOIN moz_places h ON b.fk = h.id "
+      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
+      "WHERE b.parent = ?1 "
+      "ORDER BY b.position"),
+    getter_AddRefs(mDBGetChildren));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // mDBFolderCount: count all of the children of a given folder
@@ -345,12 +346,20 @@ nsNavBookmarks::InitTables(mozIStorageConnection* aDBConn)
     // Making it compound with "type" speeds up type-differentiation
     // queries, such as expiration and search.
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_bookmarks_itemindex ON moz_bookmarks (fk,type)"));
+        "CREATE INDEX moz_bookmarks_itemindex ON moz_bookmarks (fk, type)"));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // The most common operation is to find the children given a parent and position.
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_bookmarks_parentindex ON moz_bookmarks (parent,position)"));
+        "CREATE INDEX moz_bookmarks_parentindex "
+        "ON moz_bookmarks (parent, position)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // fast access to lastModified is useful during sync and to get
+    // last modified bookmark title for tags container's children.
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE INDEX moz_bookmarks_itemlastmodifiedindex "
+        "ON moz_bookmarks (fk, lastModified)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

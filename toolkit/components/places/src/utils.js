@@ -255,8 +255,10 @@ var PlacesUtils = {
   nodeIsReadOnly: function PU_nodeIsReadOnly(aNode) {
     if (this.nodeIsFolder(aNode))
       return this.bookmarks.getFolderReadonly(asQuery(aNode).folderItemId);
-    if (this.nodeIsQuery(aNode))
-      return asQuery(aNode).childrenReadOnly;
+    if (this.nodeIsQuery(aNode) &&
+        asQuery(aNode).queryOptions.resultType !=
+          Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_CONTENTS)
+      return aNode.childrenReadOnly;
     return false;
   },
 
@@ -286,6 +288,18 @@ var PlacesUtils = {
            ((resultType = asQuery(aNode.parent).queryOptions.resultType) ==
                Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY ||
              resultType == Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY);
+  },
+
+  /**
+   * Determines whether or not a result-node is a tag container.
+   * @param   aNode
+   *          A result-node
+   * @returns true if the node is a tag container, false otherwise
+   */
+  nodeIsTagQuery: function PU_nodeIsTagQuery(aNode) {
+    return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY &&
+           asQuery(aNode).queryOptions.resultType ==
+             Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_CONTENTS;
   },
 
   /**
@@ -376,6 +390,13 @@ var PlacesUtils = {
   getConcreteItemId: function PU_getConcreteItemId(aNode) {
     if (aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT)
       return asQuery(aNode).folderItemId;
+    else if (PlacesUtils.nodeIsTagQuery(aNode)) {
+      // RESULTS_AS_TAG_CONTENTS queries are similar to folder shortcuts
+      // so we can still get the concrete itemId for them.
+      var queries = aNode.getQueries({});
+      var folders = queries[0].getFolders({});
+      return folders[0];
+    }
     return aNode.itemId;
   },
 

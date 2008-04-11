@@ -171,7 +171,7 @@ placesTransactionsService.prototype = {
     return new placesTagURITransaction(aURI, aTags);
   },
 
-  untagURI: function placesTagURI(aURI, aTags) {
+  untagURI: function placesUntagURI(aURI, aTags) {
     return new placesUntagURITransaction(aURI, aTags);
   },
 
@@ -919,12 +919,13 @@ placesTagURITransaction.prototype = {
   __proto__: placesBaseTransaction.prototype,
 
   doTransaction: function PTU_doTransaction() {
-    if (PlacesUtils.getBookmarksForURI(this._uri).length == 0) {
+    if (PlacesUtils.getMostRecentBookmarkForURI(this._uri) == -1) {
       // Force an unfiled bookmark first
       this._unfiledItemId =
         PlacesUtils.bookmarks
                    .insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                   this._uri, -1,
+                                   this._uri,
+                                   PlacesUtils.bookmarks.DEFAULT_INDEX,
                                    PlacesUtils.history.getPageTitle(this._uri));
     }
     PlacesUtils.tagging.tagURI(this._uri, this._tags);
