@@ -61,7 +61,7 @@ let Utils = {
     };
     dest.__defineGetter__(prop, getter);
   },
-  
+
   deepEquals: function Weave_deepEquals(a, b) {
     if (!a && !b)
       return true;
@@ -136,7 +136,7 @@ let Utils = {
 
     if (!str)
       str = "";
-    str += stackFrame + "\n";
+    str = stackFrame + "\n" + str;
 
     return str;
   },
@@ -248,7 +248,7 @@ let Utils = {
 
     return tmp;
   },
-  
+
   open: function open(pathOrFile, mode, perms) {
     let stream, file;
 

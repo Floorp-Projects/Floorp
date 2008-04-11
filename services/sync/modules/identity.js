@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['Identity'];
+const EXPORTED_SYMBOLS = ['Identity', 'ID'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -45,6 +45,37 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
+
+Utils.lazy(this, 'ID', IDManager);
+
+// For storing identities we'll use throughout Weave
+function IDManager() {
+  this._ids = {};
+  this._aliases = {};
+}
+IDManager.prototype = {
+  get: function IDMgr_get(name) {
+    if (this._aliases[name])
+      return this._ids[this._aliases[name]];
+    else
+      return this._ids[name]
+  },
+  set: function IDMgr_set(name, id) {
+    this._ids[name] = id;
+  },
+  del: function IDMgr_del(name) {
+    delete this._ids[name];
+  },
+  getAlias: function IDMgr_getAlias(alias) {
+    return this._aliases[alias];
+  },
+  setAlias: function IDMgr_setAlias(name, alias) {
+    this._aliases[alias] = name;
+  },
+  delAlias: function IDMgr_delAlias(alias) {
+    delete this._aliases[alias];
+  }
+};
 
 /*
  * Identity
