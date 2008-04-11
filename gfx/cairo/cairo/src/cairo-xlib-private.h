@@ -79,7 +79,6 @@ typedef struct _cairo_xlib_visual_info {
 struct _cairo_xlib_screen_info {
     cairo_xlib_screen_info_t *next;
     cairo_reference_count_t ref_count;
-    cairo_mutex_t mutex;
 
     cairo_xlib_display_t *display;
     Screen *screen;
