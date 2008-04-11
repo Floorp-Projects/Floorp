@@ -110,6 +110,7 @@
 #include "nsEventDispatcher.h"
 #include "nsLayoutUtils.h"
 #include "nsContentCreatorFunctions.h"
+#include "mozAutoDocUpdate.h"
 
 class nsINodeInfo;
 class nsIDOMNodeList;

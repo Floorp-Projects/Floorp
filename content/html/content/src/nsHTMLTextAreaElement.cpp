@@ -75,6 +75,7 @@
 #include "nsLayoutErrors.h"
 #include "nsStubMutationObserver.h"
 #include "nsDOMError.h"
+#include "mozAutoDocUpdate.h"
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 

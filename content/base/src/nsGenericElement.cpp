@@ -138,6 +138,8 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCCUncollectableMarker.h"
 
+#include "mozAutoDocUpdate.h"
+
 #ifdef MOZ_SVG
 PRBool NS_SVG_TestFeature(const nsAString &fstr);
 #endif /* MOZ_SVG */
@@ -2043,7 +2045,7 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   NS_PRECONDITION(!IsNativeAnonymous() || aBindingParent == this,
                   "Native anonymous content must have itself as its "
                   "own binding parent");
-  
+
   if (!aBindingParent && aParent) {
     aBindingParent = aParent->GetBindingParent();
   }
@@ -3465,13 +3467,17 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
 
   // Unlink child content (and unbind our subtree).
   {
-    PRUint32 i;
-    PRUint32 kids = tmp->mAttrsAndChildren.ChildCount();
-    for (i = kids; i > 0; i--) {
-      // We could probably do a non-deep unbind here when IsInDoc is false
-      // for better performance.
-      tmp->mAttrsAndChildren.ChildAt(i-1)->UnbindFromTree();
-      tmp->mAttrsAndChildren.RemoveChildAt(i-1);    
+    PRUint32 childCount = tmp->mAttrsAndChildren.ChildCount();
+    if (childCount) {
+      // Don't allow script to run while we're unbinding everything.
+      nsAutoScriptBlocker scriptBlocker;
+      while (childCount-- > 0) {
+        // Once we have XPCOMGC we shouldn't need to call UnbindFromTree.
+        // We could probably do a non-deep unbind here when IsInDoc is false
+        // for better performance.
+        tmp->mAttrsAndChildren.ChildAt(childCount)->UnbindFromTree();
+        tmp->mAttrsAndChildren.RemoveChildAt(childCount);
+      }
     }
   }  
 

@@ -52,18 +52,12 @@ public:
     if (mDocument) {
       mDocument->BeginUpdate(mUpdateType);
     }
-    else {
-      nsContentUtils::AddScriptBlocker();
-    }
   }
 
   ~mozAutoDocUpdate()
   {
     if (mDocument) {
       mDocument->EndUpdate(mUpdateType);
-    }
-    else {
-      nsContentUtils::RemoveScriptBlocker();
     }
   }
 

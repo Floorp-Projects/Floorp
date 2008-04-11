@@ -111,6 +111,8 @@
 #include "nsImageLoadingContent.h"
 #include "nsIDOMWindowInternal.h"
 
+#include "mozAutoDocUpdate.h"
+
 // XXX align=left, hspace, vspace, border? other nav4 attrs
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
