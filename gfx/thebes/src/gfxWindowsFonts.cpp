@@ -1528,7 +1528,7 @@ public:
 
             HDC dc = GetDC((HWND)nsnull);
             HFONT hfont = font->GetHFONT();
-            SelectObject(dc, hfont);
+            HFONT oldFont = (HFONT)SelectObject(dc, hfont);
 
             PRUnichar str[1] = { (PRUnichar)ch };
             WORD glyph[1];
@@ -1540,8 +1540,8 @@ public:
                 if (ret != GDI_ERROR && glyph[0] != 0xFFFF)
                     hasGlyph = PR_TRUE;
             } else {
-            // ScriptGetCMap works better than GetGlyphIndicesW for things like bitmap/vector fonts
-            HRESULT rv = ScriptGetCMap(dc, font->ScriptCache(), str, 1, 0, glyph);
+                // ScriptGetCMap works better than GetGlyphIndicesW for things like bitmap/vector fonts
+                HRESULT rv = ScriptGetCMap(dc, font->ScriptCache(), str, 1, 0, glyph);
                 if (rv == S_OK)
                     hasGlyph = PR_TRUE;
             }
@@ -1550,6 +1550,9 @@ public:
                 aFontEntry->mCharacterMap.set(ch);
                 return PR_TRUE;
             }
+
+            SelectObject(dc, oldFont);
+            ReleaseDC(NULL, dc);
         }
 
         return PR_FALSE;
