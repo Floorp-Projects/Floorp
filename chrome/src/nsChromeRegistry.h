@@ -94,7 +94,9 @@ public:
   NS_DECL_NSIOBSERVER
 
   // nsChromeRegistry methods:
-  nsChromeRegistry() : mInitialized(PR_FALSE) { }
+  nsChromeRegistry() : mInitialized(PR_FALSE) {
+    mPackagesHash.ops = nsnull;
+  }
   ~nsChromeRegistry();
 
   nsresult Init();
