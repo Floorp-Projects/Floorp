@@ -118,7 +118,7 @@ window.dialog {
 }
 
 .authentication-icon {
-  list-style-image: url("moz-icon://stock/gtk-dialog-authentication?size=dialog");
+  list-style-image: url("chrome://global/skin/icons/Authentication.png");
 }
 
 /* ::::: iframe ::::: */
