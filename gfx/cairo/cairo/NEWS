@@ -1,3 +1,1052 @@
+Release 1.6.2 (2008-04-11 Carl Worth <cworth@cworth.org>)
+=========================================================
+The cairo community is pleased (but somewhat sheepish) to announce the
+1.6.2 release of the cairo graphics library. This is an update to
+yesterday's 1.6.0 release with an important fix to prevent cairo's
+PostScript output from crashing some printers. This release also
+includes a locking fix for cairo's xlib backend to improve thread
+safety. There are no changes beyond these two fixes.
+
+Fix for PostScript printer crash
+--------------------------------
+Adrian Johnson discovered that cairo 1.6.0 was being a bit hard on
+PostScript printers, by changing the font matrix very frequently. This
+causes some PostScript interpreters to allocate new font objects every
+few glyphs, eventually exhausting available resources. The fix
+involves leaving translational components of the font matrix as zero,
+so that the PostScript interpreter sees an identical font matrix
+repeatedly, and can more easily share internal font object resources.
+
+This fix has been tested to resolve the bugs posted here, (for both
+Xerox and Dell printers):
+
+	Printing some PDFs from evince is crashing our Xerox printer
+	http://bugs.freedesktop.org/show_bug.cgi?id=15348
+
+	Cairo-generated postscript blocks Dell 5100cn
+	http://bugs.freedesktop.org/show_bug.cgi?id=15445
+
+Add missing locking in cairo-xlib
+---------------------------------
+Chris Wilson noticed that cairo 1.6.0 was manipulating an internal
+cache of GC object within cairo's Xlib backend without proper
+locking. The missing locking could cause failures for multi-threaded
+applications. He fixed this in 1.6.2 by adding the missing locks.
+
+Release 1.6.0 (2008-04-10 Carl Worth <cworth@cworth.org>)
+=========================================================
+The cairo community is quite pleased to announce the 1.6.0 release of
+the cairo graphics library. This is a major update to cairo, with new
+features and enhanced functionality which maintains compatibility for
+applications written using cairo 1.4, 1.2, or 1.0. We recommend that
+anybody using a previous version of cairo upgrade to cairo 1.6.0.
+
+The most significant new features in this release are dramatically
+improved PDF and PostScript[*] output, support for arbitrary X server
+visuals (including PseudoColor), a new Quartz backend, and and a new
+"win32 printing" backend. See below for more details on these and
+other new features.
+
+New dependency on external pixman library (Thanks, Søren!)
+----------------------------------------------------------
+As of cairo 1.6, cairo now depends on the pixman library, for which
+the latest release can be obtained alongside cairo:
+
+	http://cairographics.org/releases/pixman-0.10.0.tar.gz
+
+This library provides all software rendering for cairo, (the
+implementation of the image backend as well as any image fallbacks
+required for other backends). This is the same code that was
+previously included as part of cairo itself, but is now an external
+library so that it can be shared by both cairo and by the X server,
+(which is where the code originated).
+
+Improved PDF, PostScript, and SVG output (Thanks, Adrian!)
+----------------------------------------------------------
+Users of the cairo-pdf, cairo-ps, and cairo-svg should see a dramatic
+improvement from cairo 1.2/1.4 to 1.6. With this release there are now
+almost no operations that will result in unnecessary rasterization in
+the PDF and PostScript. Rasterized "image fallbacks" are restricted
+only to minimal portions of the document where something is being
+drawn with cairo that is beyond the native capabilities of the
+document, (this is rare for PDF or SVG, but occurs when blending
+translucent objects for PostScript).
+
+This means that the final output will be of higher quality, and will
+also be much smaller, and therefore will print more quickly. The
+machinery for doing analysis and minimal fallbacks also benefits the
+win32-printing surface described below.
+
+In addition to doing less rasterization, the PostScript and PDF output
+also has several other improvements to make the output more efficient
+and more compatible with specifications.
+
+[*] Note: Just before this release, a bug has been reported that the
+PostScript output from cairo can crash some printers, (so far the
+following models have been reported as problematic Xerox Workcentre
+7228 or 7328 and Dell 5100cn). We will implement a workaround as soon
+as we can learn exactly what in cairo's output these printers object
+to, (and we could use help from users that have access to misbehaving
+printers). This bug is being tracked here:
+
+	Printing some PDFs from evince is crashing our Xerox printer
+	http://bugs.freedesktop.org/show_bug.cgi?id=15348
+
+New support for arbitrary X server visuals (Thanks, Keith and Behdad!)
+----------------------------------------------------------------------
+As of cairo 1.6, cairo should now work with an arbitrary TrueColor or
+8-bit PseudoColor X server visual. Previous versions of cairo did not
+support these X servers and refused to draw anything. We're pleased to
+announce that this limitation has been lifted and people stuck with
+ancient display systems need no longer be stuck with ancient software
+just because of cairo.
+
+New, supported Quartz backend for Mac OS X (Thanks, Brian and Vladimir!)
+------------------------------------------------------------------------
+As of cairo 1.6, the cairo-quartz backend is now marked as "supported"
+rather than "experimental" as in previous cairo releases. Its API now
+has guarantees of API stability into future cairo releases, and its
+output quality is comparable to other backends. There have been
+significant improvements to cairo-quartz since 1.4. It now uses many
+fewer image fallbacks, (meaning better performance), and has greatly
+improved text rendering.
+
+New, "win32 printing" backend (Thanks, Adrian and Vladimir!)
+------------------------------------------------------------
+A new win32-printing surface has been added with an interface very
+similar to the original win32 surface, (both accept an HDC
+parameter). But this new surface should only be called with a printing
+DC, and will result in all drawing commands being stored into a
+meta-surface and emitted after each page is complete. This allows
+cairo to analyze the contents, (as it does with PDF, PostScript, and
+SVG backends), and to do minimal image-based fallbacks as
+necessary. The analysis keeps things as efficient as possible, while
+the presence of fallbacks, (when necessary), ensure the consistent,
+high-quality output expected from cairo.
+
+Robustness fixes (Thanks, Chris!)
+---------------------------------
+There has been a tremendous number of improvements to cairo's
+robustness. Areas that have been improved include:
+
+	* Proper reporting of errors
+
+	* Responding correctly to invalid input
+
+	* Avoiding integer overflows
+
+	* Avoiding memory leaks on error-recovery paths
+
+	* Making reference counting thread safe
+
+	* Exhaustive testing of memory allocation points
+
+Other fixes (Thanks, everybody!)
+--------------------------------
+Cairo's internal fixed-point representation has been changed from
+16.16 to 24.8. This has a direct impact on applications as it allows
+much larger objects to be drawn before internal limits in cairo make
+the drawing not work.
+
+The CAIRO_EXTEND_PAD mode is now fully supported by surface
+patterns. This mode allows applications to use cairo_rectangle and
+cairo_fill to draw scaled images with high-quality bilinear filtering
+for the internal of the image, but without any objectionably blurry
+edges, (as would happen with the default EXTEND_NONE and cairo_paint).
+
+Rendering with CAIRO_ANTIALIAS_NONE has been fixed to be more
+predictable, (previously image rendering and geometry rendering would
+be slightly misaligned with respect to each other).
+
+The reference manual at http://cairographics.org/manual now documents
+100% of the functions and types in cairo's public API.
+
+API additions
+-------------
+Several small features have been added to cairo with new API functions:
+
+cairo_format_stride_for_width
+
+    Must be called to compute a properly aligned stride value before
+    calling cairo_image_surface_create_for_data.
+
+cairo_has_current_point
+
+    Allows querying if there is a current point defined for the
+    current path.
+
+cairo_path_extents
+
+    Allows querying for path extents, (independent of any fill or
+    stroke parameters).
+
+cairo_surface_copy_page
+cairo_surface_show_page
+
+    Allow beginning a new document page without requiring a cairo_t
+    object.
+
+cairo_ps_surface_restrict_to_level
+cairo_ps_get_levels
+cairo_ps_level_to_string
+cairo_ps_surface_set_eps
+
+    Allow controlling the Post PostScript level, (2 or 3), to
+    target, as well as to generate Encapsulated PostScript (EPS).
+
+cairo_quartz_font_face_create_for_cgfont
+
+    Create a quartz-specific cairo_font_face_t from a CGFontRef.
+
+cairo_win32_font_face_create_for_logfontw_hfont
+
+    Create a win32-specific cairo_font_face from a LOGFONTW and an
+    HFONT together.
+
+Thanks, Everyone!
+-----------------
+I've accounted for 32 distinct people with attributed code added to
+cairo between 1.4.14 and 1.6.0, (their names are below). That's an
+impressive number, but there are certainly dozens more that
+contributed with testing, suggestions, clarifying questions, and
+encouragement. I'm grateful for the friendships that have developed as
+we have worked on cairo together. Thanks to everyone for making this
+all so much fun!
+
+Adrian Johnson, Alp Toker, Antoine Azar, Behdad Esfahbod,
+Benjamin Otte, Bernardo Innocenti, Bertram Felgenhauer,
+Boying Lu, Brian Ewins, Carl Worth, Chris Heath, Chris Wilson,
+Claudio Ciccani, Emmanuel Pacaud, Jeff Muizelaar, Jeremy Huddleston,
+Jim Meyering, Jinghua Luo, Jody Goldberg, Jonathan Gramain,
+Keith Packard, Ken Herron, Kouhei Sutou, Kristian Høgsberg,
+Larry Ewing, Martin Ejdestig, Nis Martensen, Peter Weilbacher,
+Richard Hult, Shailendra Jain, Søren Sandmann Pedersen,
+Vladimir Vukicevic
+
+Snapshot 1.5.20 (2008-04-04 Carl Worth <cworth@cworth.org>)
+===========================================================
+This is the tenth snapshot in cairo's unstable 1.5 series. It comes
+just two days (and only one working day) after the 1.5.18
+snapshot. The quick snapshot is due to two embarrassing bugs (both
+affecting cairo-xlib) that had been introduced in the 1.5.18
+snapshot. The fixes for these are described below along with a few
+other fixes, (which hopefully aren't introducing new bugs this time).
+
+cairo-xlib
+----------
+Revert fix from 1.5.18 to allow pattern expansion based on the filter
+mode. This fix seemed so boring, (the use case it addresses is almost
+never used in practice), that it didn't even get mentioned in the
+1.5.18 release notes. However, the "fix" happened to break rendering
+that is always used resulting in corrupt image rendering in mozilla,
+evolution, and probably everything else that uses cairo.
+
+Fix to avoid BadMatch errors in cairo_surface_create_similar. These
+were introduced, (inadvertently, of course), as part of the fix in
+1.5.18 for creating similar surfaces without the Render
+extension. Again, thanks to mozilla, (and Vladimir Vukicevic in
+particular), for noticing our mistake.
+
+general
+-------
+Correctly handle an in-error surface in
+cairo_surface_write_to_png. Previously this function would cause an
+assertion failure if you gave it a finished surface. Now it cleanly
+returns a CAIRO_STATUS_SURFACE_FINISHED result instead.
+
+Avoid potentially infinite wandering through memory inside
+_cairo_hull_prev_valid. Thanks to Jonathan Watt for noticing this
+problem:
+
+	https://bugzilla.mozilla.org/show_bug.cgi?id=306649#c21
+
+cairo-pdf
+---------
+Fix generation of "soft" masks made by drawing to a similar surface
+and then calling cairo_mask_surface() with it.
+
+cairo-svg
+---------
+Fix for code that uses cairo_mask() on an intermediate surface which
+is later passed to cairo_mask_surface().
+
+Snapshot 1.5.18 (2008-04-05 Carl Worth <cworth@cworth.org>)
+===========================================================
+This is the ninth snapshot in cairo's unstable 1.5 series. It comes
+just 4 days after the 1.5.16 snapshot. We had hoped to not need
+another snapshot before the final 1.6.0 release, but several critical
+bugs were found and fixed in the last few days, so we thought it
+important to let people test the fixes with this snapshot. See below
+for details.
+
+documentation
+-------------
+The README now lists necessary dependencies.
+
+Various graphics state defaults are now documented, (source pattern is
+opaque black, line width is 2.0, line join is miter, line cap is butt,
+miter limit is 10.0, etc.).
+
+general
+-------
+Several cleanups have been made along many error-path returns,
+(carefully propagating up the original error status values, cleaning
+up memory leaks during error recovery, etc.). This is yet another in
+Chris "ickle" Wilson's long series of error-handling cleanups during
+the 1.5 series.
+
+Avoid undesired clipping when drawing scaled surface patterns with
+bilinear filtering.
+
+cairo-pdf
+---------
+Fix emission of 1-bit alpha masks in PDF output.
+
+Fix a bug that would cause glyphs to be misplaced along the Y axis:
+
+    http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=%23474136
+
+    Originally, an issue about a crash, but later leading to the
+    misplaced glyphs issue being discovered.
+
+cairo-ps
+--------
+Fix misplaced glyphs in cairo's PostScript output.
+
+    This issue occurs when consecutive glyphs are placed far
+    apart. This case is exercised by the new ft-show-glyphs-table test
+    case, which was originally inspired by the Debian bug #23474136
+    mentioned above.
+
+Fix more misplaced glyphs in cairo's PostScript output:
+
+    The issue here showed up under very particular circumstance, (when
+    converting a PDF file with a CFF font with CID Identity-H encoding
+    and using glyph 0, (defined by the CFF specification as .notdef)
+    as a space instead). More concretely, this problem appeared when
+    converting the UbuntuDesktop.pdf file mentioned in this bug
+    report:
+
+	https://bugs.freedesktop.org/show_bug.cgi?id=15348#c3
+
+    As usual with arcane font-encoding-specific bugs like this, many
+    thanks to Adrian Johnson for his magical ability to dive into
+    specifications and emerge almost instantaneously with fixes. And
+    thanks to Sebastien Bacher for bringing the bug to our attention.
+
+cairo-xlib
+----------
+Fix serious failure on X servers without the Render extension.
+
+    Since the 1.5.14 snapshot (with support for PseudoColor visuals),
+    any application attempting to create a "similar" xlib surface would
+    fail on an X server without the Render extension. Thanks to
+    Frederic Crozat for pointing out that cairo's test suite was
+    entirely failing when run against Xvfb.
+
+Avoid crashing cairo-xlib applications for too-large glyphs
+
+    Naively sending glyphs of any size to the X server will eventually
+    violate the X limit on maximum request sizes. We now properly
+    detect when a glyph would be too large and use existing fallbacks
+    to render the glyph rather than trying to send it to the X server.
+
+Enable the buggy_repeat workaround for Xorg servers < 1.4
+
+    We have determined that Xorg 1.3.0 (as packaged in Fedora 8 at
+    least) has a bug that can result in an X server crash when cairo
+    uses certain X Render repeat operations, (as exercised by cairo's
+    extend-reflect test). We avoid this crash by using fallbacks
+    whenever a repeating surface is needed for any Xorg server with a
+    version less than 1.4. This is slower, but should prevent the
+    crash.
+
+    (Meanwhile, there appears to be a separate bug where some X
+    servers or specific X-server drivers will use random pixmap data
+    when asked to draw a repeating surface. The buggy_repeat
+    workaround would also avoid those problems, but we have not yet
+    characterized whether the new "version < 1.4" is a good
+    characterization of those problems or not.)
+
+cairo-quartz-font
+-----------------
+Implement cairo_font_extents for this backend.
+
+The cairo-quartz-font implementation added in the 1.5.14 snapshot was
+entirely missing support for the cairo_font_extents function. Thanks to
+Richard Hult for pointing out this obvious shortcoming, (and obvious
+lack of coverage in our test suite):
+
+	CGFont backend returns 0 font extents
+	https://bugs.freedesktop.org/show_bug.cgi?id=15319
+
+Snapshot 1.5.16 (2008-04-01 Carl Worth <cworth@cworth.org>)
+===========================================================
+This is the eighth snapshot in cairo's unstable 1.5 series. It comes
+less than two weeks after the 1.5.14 snapshot and it really is a
+legitimate snapshot, (in spite of sharing this date with that of many
+bogus announcements). The major change in this snapshot is that the
+cairo-quartz backend is now officially "supported", including new API
+to construct a font face from a CGFontRef . Also several bug fixes
+have been fixed in many backends. See below for details.
+
+general
+-------
+Cairo now depends on pixman 0.10.0 which was recently released. The
+latest pixman release can always be found alongside cairo releases at:
+
+   http://cairographics.org/releases
+
+Increase the precision of color stops for gradients. This fixes a
+regression in gradient rendering that had been present since the
+1.5.12 snapshot.
+
+paginated (all of ps, pdf, svg, and win32-printing)
+---------------------------------------------------
+Fix assertion failure when some drawing elements are outside the page
+boundaries, (this bug was noticed when using Inkscape to print a
+drawing with landscape orientation to a portrait-oriented piece of
+paper).
+
+cairo-ps
+--------
+Fix of bug causing incorrect glyph positioning.
+
+Fix handling of CAIRO_OPERATOR_SOURCE.
+
+cairo-pdf
+---------
+More reduction of unnecessary digits of precision in PDF output.
+
+Fix handling of CAIRO_OPERATOR_SOURCE.
+
+cairo-svg
+---------
+Fix bug in usage of libpng that was preventing cairo_mask from working
+with the svg backend.
+
+Fix transformation of source pattern for cairo_stroke().
+
+cairo-win32-printing
+--------------------
+Fix fallback resolution, (thanks again to inkscape users/developers
+for helping us find this one).
+
+cairo-quartz
+------------
+Mark the cairo-quartz backend as "supported" rather than
+"experimental". This means the following:
+
+    * The backend will now be built by default (if possible).
+
+    * We are committing that the backend-specific API (as published in
+      cairo-quartz.h) are stable and will be supported in all future
+      cairo 1.x releases.
+
+    * We are committing that the output quality of this backend
+      compares favorably with other cairo backends, (and that quality
+      is ensured by good results from the cairo test suite).
+
+    * We recommend that distributions build and distribute this
+      backend when possible.
+
+Note that the cairo_quartz_image API (in cairo-quartz-image.h) is
+still experimental, will not build by default, (pass
+--enable-quartz-image to configure to build it), and may see API
+changes before it is marked as "supported" in a future release.
+
+Put the CAIRO_FONT_TYPE_ATSUI name back into
+cairo-deprecated.h. Without this, the cairo 1.5.14 snapshot broke all
+builds for applications using the C++ cairomm bindings (and perhaps
+others) which have the CAIRO_FONT_TYPE_ATSUI name in their header
+files. This breakage happened even for applications not using
+cairo-quartz at all.
+
+    Note: Even though the CAIRO_FONT_TYPE_ATSUI name is provided to
+    avoid this build breakage, we still recommend that bindings and
+    applications move to the new, and more accurate,
+    CAIRO_FONT_TYPE_QUARTZ name.
+
+Replace the implementation of cairo-quartz-font to use CFFont instead
+of ATSUI. The CGFont API is a better fit than ATSUI, and this new
+implementation is also more correct than the old one as well.
+
+This also adds the following new API call:
+
+	cairo_public cairo_font_face_t *
+	cairo_quartz_font_face_create_for_cgfont (CGFontRef font);
+
+The previous cairo_quartz_font_face_create_for_atsu_font_id function
+continues to exist and is part of the supported API going
+forward. (However, the old name of that same function, which was
+cairo_atsui_font_face_create_for_atsu_font_id is officially
+deprecated. Any source code using the old name should be updated to
+use the new name.)
+
+Fix transformation of source pattern for cairo_stroke().
+
+cairo-win32
+-----------
+Avoid crash in create_similar is cairo_win32_surface_create fails.
+
+Snapshot 1.5.14 (2008-03-20 Carl Worth <cworth@cworth.org>)
+===========================================================
+This is the seventh snapshot in cairo's unstable 1.5 series. It comes
+3 weeks after the 1.5.12 snapshot. This snapshot includes support for
+arbitrary X server visuals, (including PseudoColor), which was the
+final remaining cairo-specific item on the cairo 1.6 roadmap. It also
+includes a huge number of improvements to the cairo-quartz backend. So
+this is effectively a cairo 1.6 release candidate. We expect very few
+changes from now until 1.6 and only for specific bug fixes.
+
+API Change
+----------
+Rename ATSUI font backend to Quartz font backend. This affects the
+following usage:
+
+	--enable-atsui		-> --enable-quartz-font
+	CAIRO_HAS_ATSUI_FONT 	-> CAIRO_HAS_QUARTZ_FONT
+	CAIRO_FONT_TYPE_ATSUI	-> CAIRO_FONT_TYPE_QUARTZ
+
+	cairo_atsui_font_face_create_for_atsu_font_id ->
+	cairo_quartz_font_font_create_for_atsu_font_id
+
+This API change is justified by the cairo-quartz backend still be
+marked as "experimental" rather than "supported", (though this is one
+step toward making the change to "supported" before 1.6). Cairo will
+still provide ABI compatibility with the old symbol name, however.
+
+paginated (all of ps, pdf, svg, and win32-printing)
+---------------------------------------------------
+Optimize by not analyzing an image surface for transparency more than
+once, (previously all images were analyzed twice).
+
+cairo-ps and cairo-pdf
+----------------------
+Avoiding emitting a matrix into the stroke output when unnecessary,
+(making output size more efficient).
+
+Reduce rounding error of path shapes by factoring large scale factors
+out of the path matrix, (ensuring that a fixed-number of printed
+digits for path coordinates contains as much information as possible).
+
+Reduce excess digits for text position coordinates. This makes the
+output file size much smaller without making the result any less
+correct.
+
+cairo-ps
+--------
+Eliminate bug causing extraneous text repetition on Linux PostScript
+output in some cases.
+
+	See: Mozilla Bug 419917 – Printed page contents are reflected
+	inside bordered tables (Linux-only)
+
+	https://bugzilla.mozilla.org/show_bug.cgi?id=419917
+
+Optimize output when EXTEND_PAD is used.
+
+cairo-pdf
+---------
+Fix to not use fill-stroke operator with transparent fill, (else PDF
+output doesn't match the cairo-defined correct result). See:
+
+	https://bugs.launchpad.net/inkscape/+bug/202096
+
+cairo-svg
+---------
+Fix stroke of path with a non-solid-color source pattern:
+
+	http://bugs.freedesktop.org/show_bug.cgi?id=14556
+
+cairo-quartz
+------------
+Fix text rendering with gradient or image source pattern.
+
+Handling antialiasing correctly for cairo_stroke(), cairo_clip(), and
+cairo_show_text()/cairo_show_glyphs().
+
+Correctly handle gradients with non-identity transformations:
+
+	Fixes http://bugs.freedesktop.org/show_bug.cgi?id=14248
+
+Add native implementation of REPEAT and REFLECT extend modes for
+gradients.
+
+Fix implementation for the "unbounded" operators, (CAIRO_OPERATOR_OUT,
+_IN, _DEST_IN, and _DEST_ATOP).
+
+Correctly handle endiannees in multi-architecture compiles on Mac OS
+X.
+
+Avoid behavior which would cause Core Graphics to print warnings to
+the console in some cases.
+
+cairo-win32
+-----------
+Fix handling of miter limit.
+
+cairo-win32-printing
+--------------------
+Fix to not use a 1bpp temporary surface in some cases while printing,
+(so grayscale data is preserved rather than just becoming black and
+white).
+
+cairo-xlib
+----------
+Add support for rendering to arbitrary TrueColor X server
+visuals. This fixes at least the following bugs:
+
+	cairo doesn't support 8-bit truecolor visuals
+	https://bugs.freedesktop.org/show_bug.cgi?id=7735
+
+	cairo doesn't support 655 xlib format
+	https://bugs.freedesktop.org/show_bug.cgi?id=9719
+
+Add support for rendering to 8-bit PseudoColor X server visuals. This
+fixes the following bug:
+
+	Cairo doesn't support 8-bit pseudocolor visuals
+	https://bugs.freedesktop.org/show_bug.cgi?id=4945
+
+Snapshot 1.5.12 (2008-02-28 Carl Worth <cworth@cworth.org>)
+===========================================================
+This is the sixth snapshot in cairo's unstable 1.5 series. It comes 1
+week after the 1.5.10 snapshot. This snapshot includes the
+long-awaited change from 16.16 to 24.8 fixed-point values, (see below
+for why you should care).  It also includes several backend-specific
+bug fixes.
+
+24.8 fixed-point format
+-----------------------
+Cairo has always converted path coordinates to a fixed-point
+representation very early in its processing. Historically, this has
+been a 32-bit representation with 16 bits of integer for the
+device-pixel grid and 16 bits of sub-pixel positioning. The choice of
+16 bits for the integer coordinate space was based on the 16-bit limit
+for X Window drawables.
+
+This 16-bit limit has proven problematic for many applications. It's
+an especially vexing problem when targeting non-X backends that don't
+have any 16-bit restriction. But even when targeting cairo-xlib, it's
+often desirable to draw a large shape, (say a background rectangle),
+that extends beyond the surface bounds and expect it to fill the
+surface completely, (rather than overflowing and triggering random
+behavior).
+
+Meanwhile, nobody has ever really needed 16 bits of sub-pixel
+precision.
+
+With this snapshot, the fixed-point system is still in place and is
+still using a 32-bit representation, (future versions of cairo might
+move entirely to floating-point when targeting PDF output for
+example). But the representation now provides 24 bits of pixel
+addressing and only 8 bits of sub-pixel positioning. This should give
+a much less stifling space to many applications.
+
+However, the underlying pixman library still has 16-bit limitations in
+many places, (it has its roots in the X server as well). Until those
+are also fixed, applications targeting cairo image surfaces, or
+hitting software fallbacks when targeting other surfaces will still
+encounter problems with device-space values needing more than 16
+integer bits.
+
+generic fixes
+-------------
+Add a few tests to the test suite to increase coverage.
+
+Cleanup a few error-handling paths, (propagate error correctly).
+
+cairo-ft
+--------
+Fix handling of font sizes smaller than 1 device pixel.
+
+cairo-pdf
+---------
+Fix to properly save/restore clip when analyzing meta-surface
+patterns, (fixing a couple of test-suite failures).
+
+Implement native support for CAIRO_OPERATOR_SOURCE when the source
+pattern is opaque.
+
+Emit rectangles as PDF rectangles ("re" operator) rather than as
+general paths.
+
+cairo-ps
+--------
+Fix to work properly with the 16.16->24.8 change.
+
+cairo-svg
+---------
+Fix CAIRO_EXTEND_REFLECT by using an image fallback, (there's no
+direct SVG support for reflected patterns).
+
+Fix the use of alpha-only masks, (such as CAIRO_FORMAT_A8).
+
+cairo-quartz
+------------
+Add new API for efficiently using image data as a source:
+
+	cairo_surface_t *
+	cairo_quartz_image_surface_create (cairo_surface_t *image_surface);
+
+	cairo_surface_t *
+	cairo_quartz_image_surface_get_image (cairo_surface_t *surface);
+
+For full documentation, see:
+
+	http://cairographics.org/manual/cairo-Quartz-Surfaces.html#cairo-quartz-image-surface-create
+
+Several fixes for cairo_mask().
+
+cairo-atsui
+-----------
+Change default from from Monaco to Helvetica to be more consistent
+with other font backends.
+
+Snapshot 1.5.10 (2008-02-20 Carl Worth <cworth@cworth.org>)
+===========================================================
+This is the fifth snapshot in cairo's unstable 1.5 series. It comes 3
+weeks after the 1.5.8 snapshot. This snapshot adds one new API
+function, (cairo_has_current_point), and the usual mix of
+improvements, (more efficient PostScript/PDF output, optimized
+stroking), and fixes (more robust error-handling, etc.). See below for
+details.
+
+New API
+-------
+Add a new function to query if there is a current point:
+
+	cairo_bool_t
+	cairo_has_current_point (cairo_t *cr);
+
+There is no current point immediately after cairo_create(), nor after
+cairo_new_path() or cairo_new_sub_path(). There is a current point
+after any of the path-creation functions, (cairo_move_to,
+cairo_line_to, cairo_curve_to, etc.).
+
+With this new function, we also revert the change of the return type
+of cairo_get_current_point from cairo 1.5.8, (it's now a void function
+again).
+
+Optimizations
+-------------
+Optimize stroking code to avoid repeated calculation of redundant
+values, (particularly significant for very large, offscreen paths).
+
+General fixes
+-------------
+Patch a few more potential buffer overruns, (due to integer
+overflow).
+
+Many fixes and improvements to cairo's error-handling, (ensure that
+correct error values are returned, clean up memory leaks on
+error-handling paths, etc.).
+
+Fix a potential infinite loop when stroking a spline with a pen that
+has been transformed to a line segment.
+
+Remove treating NULL as a synonym for a valid cairo_font_options_t*
+with default values, (a change that had been introduced as of cairo
+1.5.8).
+
+Remove the altered handling of tolerance and fallback-resolution that
+had been introduced as of cairo 1.5.4.
+
+cairo-xlib
+----------
+Pass the original Drawable, (as opposed to the root window), to
+XCreatePixmap when creating a similar surface. This gives the X server
+more information so that it can be clever and efficient.
+
+cairo-pdf
+---------
+Fix the rendering of repeating and reflecting patterns.
+
+Ensure miter limit is always >= 1, (smaller limits are not meaningful,
+but they can cause some PDF viewers to fail to display pages).
+
+Generate more efficient output when the same path is used for both
+fill and stroke.
+
+cairo-ps
+--------
+Start sharing much of the cairo-pdf code rather than implementing very
+similar code in cairo-ps.
+
+Implement native support for repeating and reflecting linear
+gradients.
+
+Implement reflected surface patterns.
+
+Ensure miter limit is always >= 1, (smaller limits are not meaningful,
+but they can cause some PostScript viewers to crash).
+
+Generate PostScript that will perform more efficiently and use less
+memory on printers, (use currentfile instead of a giant string array
+for image data, and avoid using PostScript patterns for paint() and
+fill() when possible).
+
+cairo-svg
+---------
+Avoid unnecessary rasterization when copying a "similar" surface to
+another svg surface, (allow the SOURCE operator to be implemented with
+all-vector operations if there are no underlying objects).
+
+cairo-atsui
+-----------
+Eliminate infinite loop when attempting to render an empty string.
+
+Snapshot 1.5.8 (2008-01-30 Carl Worth <cworth@cworth.org>)
+==========================================================
+This is the fourth snapshot in cairo's unstable 1.5 series. It comes 2
+weeks after the 1.5.6 snapshot. It adds a few new API functions. Most
+notably all callers of cairo_image_surface_create_for_data should now
+be calling cairo_format_stride_for_width to compute a legal stride
+value. See below for more details.
+
+New API in cairo 1.5.8
+----------------------
+We've added a new function that should be called to compute a legal
+stride value before allocating data to be used with
+cairo_image_surface_create_for_data:
+
+	int
+	cairo_format_stride_for_width (cairo_format_t	format,
+				       int		width);
+
+We've also added a new cairo_path_extents function that can be used to
+compute a bounding box for geometry such as a single line segment,
+(contrast with cairo_path_extents and cairo_stroke_extents):
+
+	void
+	cairo_path_extents (cairo_t *cr,
+			    double *x1, double *y1,
+			    double *x2, double *y2);
+
+And finally, we've added a function to allow for querying the
+XRenderPictFormat of a cairo-xlib surface:
+
+	XRenderPictFormat *
+	cairo_xlib_surface_get_xrender_format (cairo_surface_t *surface);
+
+API changes
+-----------
+Fix return types of cairo_surface_show_page and
+cairo_surface_copy_page. This is an API change to functions that are
+new in the 1.5 series, so not an API break compared to any stable
+cairo release, (1.0.x, 1.2.x, 1.4.x).
+
+Change the return type of cairo_get_current_point() from void to
+cairo_status_t. This allows the caller to receive a
+CAIRO_STATUS_NO_CURRENT_POINT value to distinguish the a current point
+at the origin from no current point existing.
+
+Performance improvement
+-----------------------
+Improve performance of clipping by using an optimized code path
+internally, (with the ADD operator instead of IN).
+
+General bug fixes
+-----------------
+Fix various cairo_*_extents functions to initialize the return-value
+variables even in the case of a cairo_t in error.
+
+Treat NULL as a legitimate value for cairo_font_options_t*. [NOTE:
+On discussion afterwards, we decided against this change so it has
+been removed as of cairo 1.5.10.]
+
+Fix rendering with CAIRO_ANTIALIAS_NONE to be more predictable, (that
+is, to avoid seams appearing when geometry and imagery share an
+identical edge). Portions of this fix are in the pixman library and
+will appear in a future release of that library.
+
+Avoid triggering an error for a font size of 0.
+
+Miscellaneous changes
+---------------------
+Require pixman >= 0.9.6.
+
+There has been a tremendous amount improvement to cairo's
+documentation. We're delighted that 100% of the public API has at
+least some documentation in the API reference manual. Many thanks to
+Behdad Esfahbod and Nis Martensen for leading this effort.
+
+cairo-pdf and cairo-ps
+----------------------
+Eliminate failure when a Type 1 font is embedded with an explicit
+glyph 0.
+
+cairo-pdf
+---------
+Implement a more correct and more efficient approach for patterns with
+an extend mode of CAIRO_EXTEND_REFLECT.
+
+cairo-ps
+--------
+Fix image masks to properly pack and pad mask bits.
+
+cairo-quartz
+------------
+Take care to only use DrawTiledImage for integer-aligned images, (and
+use slower paths to get the correct result in other cases).
+
+cairo-win32
+-----------
+Fix for older versions of mingw.
+
+Improve the handling of the clipping with the win32 and win32-printing
+surfaces.
+
+Fix rendering of non black/white text.
+
+Snapshot 1.5.6 (2008-01-15 Carl Worth <cworth@cworth.org>)
+==========================================================
+This is the third snapshot in cairo's unstable 1.5 series. It comes
+about 6 weeks after the 1.5.4 snapshot. The only API addition compared
+to 1.5.4 is very minor, (a new value CAIRO_STATUS_TEMP_FILE_ERROR).
+The remainder of the changes are the usual accumulation of bug fixes
+and improvements. See below for details.
+
+General bug fixes
+-----------------
+Fix handling of fonts that contain a mixture of outline and bitmapped
+glyphs. There was a change in this handling in 1.5.4 that improved
+some cases and also regressed other cases. Now, all cases should be
+handled quite well.
+
+Fix alignment issues that were causing SIGBUS failures on SPARC.
+
+Fix a regression (which first appeared in 1.5.2) where stroking under
+a large scale would sometimes incorrectly replace a miter join with a
+bevel join. (Thanks to Keith Packard.)
+
+Fix reporting of zero-sized extents to be {0,0} rather than
+{INT_MAX,INT_MIN}. This avoids several integer overflow and
+allocations of massive regions in some cases.
+
+Fix failures of gradients with no stops, (quartz, ps, and pdf).
+
+Fix handling of Type 1 fonts on Windows platforms.
+
+Fix handling of Type 1 fonts with no specific family name in the font
+itself, (generate a CairoFont-x-y name).
+
+Handle NULL string values in cairo_show_text, cairo_show_glyphs, and
+friends.
+
+Many robustness improvements along error-handling paths, (thanks as
+always, to Chris "ickle" Wilson).
+
+Various other minor fixes.
+
+Paginated backends (PDF/PostScript/win32-printing)
+--------------------------------------------------
+Avoid unnecessary rasterization when using a paginated surface as a
+source, (such as drawing from one pdf surface to another).
+
+Fix replaying of paginated surface with more than one level of push/pop
+group.
+
+cairo-xlib
+----------
+Fix xlib backend to not consider recent X server release as having a
+buggy repeat implementation in the Render extension.
+
+cairo-pdf
+---------
+Fix PDF output to avoid triggering very slow rendering in PDF viewers,
+(avoid starting and stopping the content stream for each pattern
+emission).
+
+Support CAIRO_OPERATOR_SOURCE in cases where there is nothing below
+the object being drawn.
+
+Fix to avoid seams appearing between multiple fallback regions.
+
+cairo-ps (PostScript)
+---------------------
+Use correct bounding box in Type 3 fonts.
+
+Fix several bugs in cairo's PostScript output. These include making
+the PostScript output more compatible with recent versions of
+ghostscript that are more strict about Type 3 fonts, for
+example.
+
+Fix for win32 to not attempt to create temporary files in the root
+directory, (where the user may not have write permission).
+
+Avoid generating Level 3 PostScript if Level 2 is sufficient. Also,
+add code in output documents to alert the user if Level 3 PostScript
+is handed to a device that cannot handle PostScript beyond Level
+2.
+
+cairo-directfb
+--------------
+Various performance optimizations.
+
+Fixed support for small surfaces (less than 8x8).
+
+Provide support for environment variables CAIRO_DIRECTFB_NO_ACCEL to
+disable acceleration and CAIRO_DIRECTFB_ARGB_FONT to enable ARGB fonts
+instead of A8.
+
+cairo-os2
+---------
+Allow OS/2 APIs instead of C library allocation functions.
+
+Snapshot 1.5.4 (2007-12-05 Carl Worth <cworth@cworth.org>)
+==========================================================
+This is the second snapshot in cairo's unstable 1.5 series. It comes
+just over 1 month after the 1.5.2 snapshot. There are no API changes
+or additions in 1.5.4 compared to 1.5.2, but there are several bug
+fixes, and some optimizations. Most of these apply to particular
+backends. See below for details.
+
+General improvements
+--------------------
+Use less memory for spline approximation calculations.
+
+Change how the tolerance value is interpreted with regard to
+fallback-resolution. [Note: On further discussion, we decided against
+this change for now. It is removed as of cairo 1.5.10.]
+
+Fix precision of floating-point values in vector-output backends to
+avoid rounding errors with very small numbers.
+
+Xlib improvements
+-----------------
+Fix bug in glyph rendering with xlib, (due to everything being clipped
+out). This was a regression in the 1.5.2 snapshot that was visible in
+the GIMP, for example. See:
+
+	cairo 1.5.2 causes font problems in GIMP 2.4 status bar and evolution 2.12.1
+	https://bugs.freedesktop.org/show_bug.cgi?id=13084
+
+PostScript improvements
+-----------------------
+Fix bug leading to invalid PostScript files when rendering
+text, (need "0 0 xyshow" instead of "0 xyshow").
+
+Fix many issues with Type 3 fonts, including making the resulting text
+extractable.
+
+Quartz improvements
+-------------------
+Fix font metrics height value for ATSUI, (helps webkit on GTK+ OS X
+layout nicely).
+
+Fix gradients.
+
+Fix EXTEND_NONE mode for patterns.
+
+Fix cairo_quartz_surface_create to properly clear the new surface
+in cairo_quartz_surface_create.
+
+Fix to correctly handle 0x0 sized surfaces.
+
+Optimize drawing of EXTEND_REPEAT patterns for OS X 10.5.
+
 Snapshot 1.5.2 (2007-10-30 Carl Worth <cworth@cworth.org>)
 ==========================================================
 This is the first snapshot in cairo's unstable 1.5 series. It comes 4

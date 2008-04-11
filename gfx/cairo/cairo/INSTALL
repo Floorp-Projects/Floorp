@@ -22,13 +22,16 @@ anywhere it is mentioned in these instructions.
 
 More detailed build instructions
 --------------------------------
-
 1) Configure the package
 
    The first step in building cairo is to configure the package by
-   running the configure script. The configure script attempts to
-   automatically detect as much as possible about your system. So,
-   you should primarily just accept its defaults by running:
+   running the configure script. [Note: if you don't have a configure
+   script, skip down below to the Extremely detailed build
+   instructions.]
+
+   The configure script attempts to automatically detect as much as
+   possible about your system. So, you should primarily just accept
+   its defaults by running:
 
 	./configure
 
@@ -60,7 +63,7 @@ More detailed build instructions
 		LD_LIBRARY_PATH=/opt/cairo/lib
 		export PKG_CONFIG_PATH LD_LIBRARY_PATH
 
-	(NOTE: On mac OS X, at least, use DYLD_LIBRARY_PATH in place
+	(NOTE: On Mac OS X, at least, use DYLD_LIBRARY_PATH in place
 	       of LD_LIBRARY_PATH above.)
 
     --enable-quartz
@@ -122,7 +125,63 @@ More detailed build instructions
 	make install
 
    If you are installing to a system-wide location you may need to
-   temporarily acquite root access in order to perform this
+   temporarily acquire root access in order to perform this
    operation. A good way to do this is to use the sudo program:
 
 	sudo make install
+
+Extremely detailed build instructions
+-------------------------------------
+So you want to build cairo but it didn't come with a configure
+script. This is probably because you have checked out the latest
+in-development code via git. If you need to be on the bleeding edge,
+(for example, because you're wanting to develop some aspect of cairo
+itself), then you're in the right place and should read on.
+
+However, if you don't need such a bleeding-edge version of cairo, then
+you might prefer to start by building the latest stable cairo release:
+
+	http://cairographics.org/releases
+
+or perhaps the latest (unstable) development snapshot:
+
+	http://cairographics.org/snapshots
+
+There you'll find nicely packaged tar files that include a configure
+script so you can go back the the simpler instructions above.
+
+But you're still reading, so you're someone that loves to
+learn. Excellent! We hope you'll learn enough to make some excellent
+contributions to cairo. Since you're not using a packaged tar file,
+you're going to need some additional tools beyond just a C compiler in
+order to compile cairo. Specifically, you need the following utilities:
+
+	automake (1.8 or newer)
+	autoconf
+	libtool
+
+Hopefully your platform of choice has packages readily available so
+that you can easily install things with your system's package
+management tool, (such as "apt-get install automake" on Debian or "yum
+install automake" on Fedora, etc.). Note that Mac OS X ships with it's
+own utility called libtool which is not what you want, (the one you do
+want goes by the name of glibtool).
+
+Once you have all of those packages installed, the next step is to run
+the autogen.sh script. That can be as simple as:
+
+	./autogen.sh
+
+Or, if you're using Mac OS X, you'll have to let it know to use
+glibtool by instead doing:
+
+	LIBTOOLIZE=glibtoolize ./autogen.sh
+
+But before you run that command, note that the autogen.sh script
+accepts all the same arguments as the configure script, (and in fact,
+will generate the configure script and run it with the arguments you
+provide). So go back up to step (1) above and see what additional
+arguments you might want to pass, (such as prefix). Then continue with
+the instructions, simply using ./autogen.sh in place of ./configure.
+
+Happy hacking!
