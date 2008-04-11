@@ -76,6 +76,7 @@
 
 #include "nsContentUtils.h"
 #include "nsContentErrors.h"
+#include "mozAutoDocUpdate.h"
 
 #define NS_IF_CLONE(member_)                                                  \
   PR_BEGIN_MACRO                                                              \
