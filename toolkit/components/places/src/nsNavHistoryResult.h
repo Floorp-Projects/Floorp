@@ -706,6 +706,7 @@ public:
   NS_DECL_NSINAVHISTORYQUERYRESULTNODE
 
   PRBool CanExpand();
+  PRBool IsContainersQuery();
 
   virtual nsresult OpenContainer();
 
