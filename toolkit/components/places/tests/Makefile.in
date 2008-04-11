@@ -40,6 +40,7 @@ DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir		= toolkit/components/places/tests
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -50,6 +51,13 @@ XPCSHELL_TESTS = unit \
                  queries \
                  $(NULL)
 
+# Simple MochiTests
+MOCHI_TESTS = mochitest/test_bug_405924.html \
+              $(NULL)
+
+MOCHI_CONTENT = mochitest/prompt_common.js \
+                $(NULL)
+
 ifdef MOZ_MOCHITEST
 DIRS = \
   chrome \
@@ -59,3 +67,6 @@ DIRS = \
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+libs:: $(MOCHI_TESTS) $(MOCHI_CONTENT)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
