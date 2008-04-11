@@ -92,7 +92,7 @@ getLinkCountCB(AtkHypertext *aText)
     NS_ENSURE_TRUE(hyperText, -1);
 
     PRInt32 count = -1;
-    nsresult rv = hyperText->GetLinks(&count);
+    nsresult rv = hyperText->GetLinkCount(&count);
     NS_ENSURE_SUCCESS(rv, -1);
 
     return count;
