@@ -141,6 +141,7 @@ class nsXBLInsertionPointEntry {
 public:
   ~nsXBLInsertionPointEntry() {
     if (mDefaultContent) {
+      nsAutoScriptBlocker scriptBlocker;
       // mDefaultContent is a sort of anonymous content within the XBL
       // document, and we own and manage it.  Unhook it here, since we're going
       // away.
@@ -248,6 +249,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsXBLInsertionPointEntry)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsXBLInsertionPointEntry)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mInsertionParent)
   if (tmp->mDefaultContent) {
+    nsAutoScriptBlocker scriptBlocker;
     // mDefaultContent is a sort of anonymous content within the XBL
     // document, and we own and manage it.  Unhook it here, since we're going
     // away.
@@ -1285,6 +1287,7 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
     // in situations where no content ends up being placed at the insertion point.
     PRUint32 defaultCount = child->GetChildCount();
     if (defaultCount > 0) {
+      nsAutoScriptBlocker scriptBlocker;
       // Annotate the insertion point with our default content.
       xblIns->SetDefaultContent(child);
 
