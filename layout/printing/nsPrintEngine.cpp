@@ -1935,7 +1935,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   // OK, so there is a selection, we will print the entire selection
   // on one page and then crop the page.
   // This means you can never print any selection that is longer than
-  // one page put it keeps it from page breaking in the middle of your
+  // one page, but it keeps it from page breaking in the middle of your
   // print of the selection (see also nsSimplePageSequence.cpp)
   PRInt16 printRangeType = nsIPrintSettings::kRangeAllPages;
   mPrt->mPrintSettings->GetPrintRange(&printRangeType);
