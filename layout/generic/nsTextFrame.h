@@ -379,6 +379,7 @@ protected:
                                     PRBool isBidiSystem);
 
   void UnionTextDecorationOverflow(nsPresContext* aPresContext,
+                                   PropertyProvider& aProvider,
                                    nsRect* aOverflowRect);
 
   struct TextDecorations {
@@ -411,6 +412,8 @@ protected:
 
   PRBool HasSelectionOverflowingDecorations(nsPresContext* aPresContext,
                                             float* aRatio = nsnull);
+
+  PRBool IsFloatingFirstLetterChild();
 };
 
 #endif
