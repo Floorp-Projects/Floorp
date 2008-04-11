@@ -812,7 +812,7 @@ static PRBool
 GetSubjectAltNames(CERTCertificate *nssCert,
                    nsINSSComponent *component,
                    nsString &allNames,
-                   PRUint32 nameCount)
+                   PRUint32 &nameCount)
 {
   allNames.Truncate();
   nameCount = 0;
@@ -844,9 +844,9 @@ GetSubjectAltNames(CERTCertificate *nssCert,
       case certDNSName:
         name.AssignASCII((char*)current->name.other.data, current->name.other.len);
         if (!allNames.IsEmpty()) {
-          ++nameCount;
           allNames.Append(NS_LITERAL_STRING(" , "));
         }
+        ++nameCount;
         allNames.Append(name);
         break;
 
@@ -869,9 +869,9 @@ GetSubjectAltNames(CERTCertificate *nssCert,
           }
           if (!name.IsEmpty()) {
             if (!allNames.IsEmpty()) {
-              ++nameCount;
               allNames.Append(NS_LITERAL_STRING(" , "));
             }
+            ++nameCount;
             allNames.Append(name);
           }
           break;
