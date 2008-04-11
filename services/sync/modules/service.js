@@ -176,7 +176,7 @@ WeaveSvc.prototype = {
   get userPath() { return this._mozId.userHash; },
 
   get currentUser() {
-    if (DAV.loggedIn)
+    if (this._loggedIn)
       return this.username;
     return null;
   },
@@ -419,6 +419,9 @@ WeaveSvc.prototype = {
     this._mozId.setTempPassword(password);
     this._cryptoId.setTempPassword(passphrase);
 
+    ID.set('MozID', this._mozId);
+    ID.setAlias('MozID', 'DAV:default');
+
     this._log.debug("Logging in");
 
     if (!this.username)
@@ -431,14 +434,14 @@ WeaveSvc.prototype = {
       serverURL = serverURL + '/';
     DAV.baseURL = serverURL + "user/" + this.userPath + "/";
 
-    DAV.login.async(DAV, self.cb, this.username, this.password);
+    DAV.checkLogin.async(DAV, self.cb, this.username, this.password);
     let success = yield;
     if (!success) {
       try {
         this._checkUserDir.async(this, self.cb);
         yield;
       } catch (e) { /* FIXME: tmp workaround for services.m.c */ }
-      DAV.login.async(DAV, self.cb, this.username, this.password);
+      DAV.checkLogin.async(DAV, self.cb, this.username, this.password);
       let success = yield;
       if (!success)
         throw "Login failed";
@@ -449,12 +452,14 @@ WeaveSvc.prototype = {
     this._keyCheck.async(this, self.cb);
     yield;
 
+    this._loggedIn = true;
+
     self.done(true);
   },
 
   logout: function WeaveSync_logout() {
     this._log.info("Logging out");
-    DAV.logout();
+    this._loggedIn = false;
     this._mozId.setTempPassword(null); // clear cached password
     this._cryptoId.setTempPassword(null); // and passphrase
     this._os.notifyObservers(null, "weave:service:logout:success", "");
@@ -500,7 +505,7 @@ WeaveSvc.prototype = {
   _sync: function WeaveSync__sync() {
     let self = yield;
 
-    if (!DAV.loggedIn)
+    if (!this._loggedIn)
       throw "Can't sync: Not logged in";
 
     this._versionCheck.async(this, self.cb);
@@ -540,7 +545,7 @@ WeaveSvc.prototype = {
   _resetServer: function WeaveSync__resetServer() {
     let self = yield;
 
-    if (!DAV.loggedIn)
+    if (!this._loggedIn)
       throw "Can't reset server: Not logged in";
 
     this._bmkEngine.resetServer(self.cb);

@@ -48,25 +48,21 @@ Cu.import("resource://weave/util.js");
  * Asynchronous generator helpers
  */
 
-function AsyncException(generator, message) {
-  this.generator = generator;
+function AsyncException(initFrame, message) {
   this.message = message;
-  this._trace = this.generator.trace;
+  this._trace = initFrame;
 }
 AsyncException.prototype = {
-  get generator() { return this._generator; },
-  set generator(value) {
-    if (!(value instanceof Generator))
-      throw "expected type 'Generator'";
-    this._generator = value;
-  },
-
   get message() { return this._message; },
   set message(value) { this._message = value; },
 
   get trace() { return this._trace; },
   set trace(value) { this._trace = value; },
-  
+
+  addFrame: function AsyncException_addFrame(frame) {
+    this.trace += (this.trace? "\n" : "") + formatFrame(frame);
+  },
+
   toString: function AsyncException_toString() {
     return this.message;
   }
@@ -80,24 +76,15 @@ function Generator(object, method, onComplete, args) {
   this._method = method;
   this.onComplete = onComplete;
   this._args = args;
-
-  let frame = Components.stack.caller;
-  if (frame.name == "Async_run")
-    frame = frame.caller;
-  if (frame.name == "Async_sugar")
-    frame = frame.caller;
-
-  this._initFrame = frame;
+  this._initFrame = Components.stack.caller;
+  // skip our frames
+  // FIXME: we should have a pref for this, for debugging async.js itself
+  while (this._initFrame.name.match(/^Async(Gen|)_/))
+    this._initFrame = this._initFrame.caller;
 }
 Generator.prototype = {
   get name() { return this._method.name; },
   get generator() { return this._generator; },
-
-  // set to true to error when generators to bottom out/return.
-  // you will then have to ensure that all generators yield as the
-  // last thing they do, and never call 'return'
-  get errorOnStop() { return this._errorOnStop; },
-  set errorOnStop(value) { this._errorOnStop = value; },
 
   get cb() {
     let self = this, cb = function(data) { self.cont(data); };
@@ -134,33 +121,31 @@ Generator.prototype = {
   },
 
   get trace() {
-    return Utils.stackTrace(this._initFrame) +
-      "JS frame :: unknown (async) :: " + this.name;
+    return "unknown (async) :: " + this.name + "\n" + trace(this._initFrame);
   },
 
   _handleException: function AsyncGen__handleException(e) {
     if (e instanceof StopIteration) {
-      if (this.errorOnStop) {
-        this._log.error("[" + this.name + "] Generator stopped unexpectedly");
-        this._log.trace("Stack trace:\n" + this.trace);
-        this._exception = "Generator stopped unexpectedly"; // don't propagate StopIteration
-      }
+      // skip to calling done()
 
     } else if (this.onComplete.parentGenerator instanceof Generator) {
       this._log.trace("[" + this.name + "] Saving exception and stack trace");
-      this._log.trace(Async.exceptionStr(this, e));
+      this._log.trace("Exception: " + Utils.exceptionStr(e));
 
-      if (e instanceof AsyncException)
-        e.trace = this.trace + e.trace? "\n" + e.trace : "";
-      else
-        e = new AsyncException(this, e);
+        if (e instanceof AsyncException) {
+          // FIXME: attempt to skip repeated frames, which can happen if the
+          // child generator never yielded.  Would break for valid repeats (recursion)
+          if (e.trace.indexOf(formatFrame(this._initFrame)) == -1)
+            e.addFrame(this._initFrame);
+        } else {
+          e = new AsyncException(this.trace, e);
+        }
 
       this._exception = e;
 
     } else {
-      this._log.error(Async.exceptionStr(this, e));
-      this._log.debug("Stack trace:\n" + this.trace +
-                      (e.trace? "\n" + e.trace : ""));
+      this._log.error("Exception: " + Utils.exceptionStr(e));
+      this._log.debug("Stack trace:\n" + (e.trace? e.trace : this.trace));
     }
 
     // continue execution of caller.
@@ -174,6 +159,7 @@ Generator.prototype = {
   },
 
   run: function AsyncGen_run() {
+    this._continued = false;
     try {
       this._generator = this._method.apply(this._object, this._args);
       this.generator.next(); // must initialize before sending
@@ -185,6 +171,7 @@ Generator.prototype = {
   },
 
   cont: function AsyncGen_cont(data) {
+    this._continued = true;
     try { this.generator.send(data); }
     catch (e) {
       if (!(e instanceof StopIteration) || !this._timer)
@@ -239,12 +226,37 @@ Generator.prototype = {
         this._log.error("Exception caught from onComplete handler of " +
                         this.name + " generator");
         this._log.error("Exception: " + Utils.exceptionStr(e));
-        this._log.trace("Current stack trace:\n" + Utils.stackTrace(Components.stack));
+        this._log.trace("Current stack trace:\n" + trace(Components.stack));
         this._log.trace("Initial stack trace:\n" + this.trace);
       }
     }
   }
 };
+
+function formatFrame(frame) {
+  // FIXME: sort of hackish, might be confusing if there are multiple
+  // extensions with similar filenames
+  let tmp = frame.filename.replace(/^file:\/\/.*\/([^\/]+.js)$/, "module:$1");
+  tmp += ":" + frame.lineNumber + " :: " + frame.name;
+  return tmp;
+}
+
+function trace(frame, str) {
+  if (!str)
+    str = "";
+
+  // skip our frames
+  // FIXME: we should have a pref for this, for debugging async.js itself
+  while (frame.name.match(/^Async(Gen|)_/))
+    frame = frame.caller;
+
+  if (frame.caller)
+    str = trace(frame.caller, str);
+  str = formatFrame(frame) + (str? "\n" : "") + str;
+
+  return str;
+}
+
 
 Async = {
 
