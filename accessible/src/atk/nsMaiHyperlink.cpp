@@ -286,7 +286,7 @@ getAnchorCountCB(AtkHyperlink *aLink)
     NS_ENSURE_TRUE(accHyperlink, -1);
 
     PRInt32 count = -1;
-    nsresult rv = accHyperlink->GetAnchorsCount(&count);
+    nsresult rv = accHyperlink->GetAnchorCount(&count);
     return (NS_FAILED(rv)) ? -1 : static_cast<gint>(count);
 }
 
