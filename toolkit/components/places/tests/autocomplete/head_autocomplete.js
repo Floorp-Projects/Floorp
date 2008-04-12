@@ -98,10 +98,10 @@ function ensure_results(aSearch, aExpected)
       print("Looking for an expected result of " + value + ", " + comment + "...");
       let j;
       for (j = 0; j < aExpected.length; j++) {
-        let [uri, title, tags] = gPages[aExpected[j]];
-
         // Skip processed expected results
-        if (uri == undefined) continue;
+        if (aExpected[j] == undefined) continue;
+
+        let [uri, title, tags] = gPages[aExpected[j]];
 
         // Load the real uri and titles and tags if necessary
         uri = toURI(kURIs[uri]).spec;
@@ -113,7 +113,7 @@ function ensure_results(aSearch, aExpected)
         if (uri == value && title == comment) {
           print("Got it at index " + j + "!!");
           // Make it undefined so we don't process it again
-          aExpected[j] = [];
+          aExpected[j] = undefined;
           break;
         }
       }
