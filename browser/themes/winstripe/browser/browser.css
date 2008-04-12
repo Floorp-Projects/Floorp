@@ -1139,6 +1139,10 @@ statusbarpanel#statusbar-display {
   font-size: 1.15em;
 }
 
+.ac-extra > .ac-comment {
+  font-size: inherit;
+}
+
 .ac-url-text {
   color: #336633;
 }
