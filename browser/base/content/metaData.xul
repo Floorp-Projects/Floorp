@@ -76,7 +76,7 @@
         <row id="link-url">
           <separator orient="vertical"/>
           <label value="&link-url.label; "/>
-          <textbox readonly="true" multiline="true" id="link-url-text"/>
+          <textbox readonly="true" id="link-url-text"/>
         </row>
         <row id="link-target">
           <separator orient="vertical"/>
@@ -125,7 +125,7 @@
         <row id="image-url">
           <separator orient="vertical"/>
           <label value="&image-url.label; "/>
-          <textbox readonly="true" multiline="true" id="image-url-text"/>
+          <textbox readonly="true" id="image-url-text"/>
         </row>
         <row id="image-type">
           <separator orient="vertical"/>
@@ -145,12 +145,12 @@
         <row id="image-alt">
           <separator orient="vertical"/>
           <label value="&image-alt.label; "/>
-          <textbox readonly="true" multiline="true" id="image-alt-text"/>
+          <textbox readonly="true" id="image-alt-text"/>
         </row>
         <row id="image-desc">
           <separator orient="vertical"/>
           <label value="&image-desc.label; "/>
-          <textbox readonly="true" multiline="true" id="image-desc-text"/>
+          <textbox readonly="true" id="image-desc-text"/>
         </row>
       </rows>
     </grid>
@@ -169,7 +169,7 @@
         <row id="insdel-cite">
           <separator orient="vertical"/>
           <label value="&insdel-cite.label; "/>
-          <textbox readonly="true" multiline="true" id="insdel-cite-text"/>
+          <textbox readonly="true" id="insdel-cite-text"/>
         </row>
         <row id="insdel-date">
           <separator orient="vertical"/>
@@ -193,7 +193,7 @@
         <row id="quote-cite">
           <separator orient="vertical"/>
           <label value="&quote-cite.label; "/>
-          <textbox readonly="true" multiline="true" id="quote-cite-text"/>
+          <textbox readonly="true" id="quote-cite-text"/>
         </row>
       </rows>
     </grid>
@@ -217,12 +217,12 @@
         <row id="misc-title">
           <separator orient="vertical"/>
           <label value="&misc-title.label; "/>
-          <textbox readonly="true" multiline="true" id="misc-title-text"/>
+          <textbox readonly="true" id="misc-title-text"/>
         </row>
         <row id="misc-tblsummary">
           <separator orient="vertical"/>
           <label value="&misc-tblsummary.label; "/>
-          <textbox readonly="true" multiline="true" id="misc-tblsummary-text"/>
+          <textbox readonly="true" id="misc-tblsummary-text"/>
         </row>
       </rows>
     </grid>
