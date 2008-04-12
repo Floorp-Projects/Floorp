@@ -706,6 +706,13 @@ public:
   PRBool IsLastLineInList();
   nsBlockFrame* GetContainer() { return mFrame; }
   PRBool GetInOverflow() { return mInOverflowLines != nsnull; }
+
+
+  /**
+   * Returns the end-iterator of whatever line list we're in.
+   */
+  line_iterator End();
+
   /**
    * Returns false if there are no more lines. After this has returned false,
    * don't call any methods on this object again.
