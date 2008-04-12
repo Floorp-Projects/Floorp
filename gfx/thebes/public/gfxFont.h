@@ -1468,8 +1468,9 @@ public:
     // If this group has such "bad" font, each platform's gfxFontGroup initialized mUnderlineOffset.
     // The value should be lower value of first font's metrics and the bad font's metrics.
     // Otherwise, this returns from first font's metrics.
+    enum { UNDERLINE_OFFSET_NOT_SET = PR_INT16_MAX };
     gfxFloat GetUnderlineOffset() {
-        if (mStyle.size != 0 && mUnderlineOffset == 0)
+        if (mUnderlineOffset == UNDERLINE_OFFSET_NOT_SET)
             mUnderlineOffset = GetFontAt(0)->GetMetrics().underlineOffset;
         return mUnderlineOffset;
     }
