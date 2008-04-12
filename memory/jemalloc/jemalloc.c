@@ -126,6 +126,13 @@
 #  define MALLOC_SYSV
 #endif
 
+/*
+ * MALLOC_VALIDATE causes malloc_usable_size() to perform some pointer
+ * validation.  There are many possible errors that validation does not even
+ * attempt to detect.
+ */
+#define MALLOC_VALIDATE
+
 /* Embed no-op macros that support memory allocation tracking via valgrind. */
 #ifdef MOZ_VALGRIND
 #  define MALLOC_VALGRIND
@@ -190,6 +197,7 @@
 #define	STDERR_FILENO 2
 #define	PATH_MAX MAX_PATH
 #define	vsnprintf _vsnprintf
+#define	alloca _alloca
 #define	assert(f) /* we can't assert in the CRT */
 
 static unsigned long tlsIndex = 0xffffffff;
@@ -3929,6 +3937,95 @@ arena_salloc(const void *ptr)
 	return (ret);
 }
 
+#if (defined(MALLOC_VALIDATE) || defined(MOZ_MEMORY_DARWIN))
+/*
+ * Validate ptr before assuming that it points to an allocation.  Currently,
+ * the following validation is performed:
+ *
+ * + Check that ptr is not NULL.
+ *
+ * + Check that ptr lies within a mapped chunk.
+ */
+static inline size_t
+isalloc_validate(const void *ptr)
+{
+	arena_chunk_t *chunk;
+
+	if (ptr == NULL)
+		return (0);
+
+	chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(ptr);
+	if (chunk != ptr) {
+		arena_t *arena;
+		unsigned i;
+		arena_t **arenas_snapshot = alloca(narenas * sizeof(arena_t*));
+
+		if (narenas == 1) {
+			/*
+			 * Don't bother with the more expensive snapshotting
+			 * algorithm here, since there is only one arena, and
+			 * there are no race conditions that allow arenas[0] to
+			 * be stale on this processor under any conditions that
+			 * even remotely resemble normal program behavior.
+			 */
+			arenas_snapshot[0] = arenas[0];
+		} else {
+			/*
+			 * Make a copy of the arenas vector while holding
+			 * arenas_lock in order to assure that all elements are
+			 * up to date in this processor's cache.  Do this
+			 * outside the following loop in order to reduce lock
+			 * acquisitions.
+			 */
+			malloc_spin_lock(&arenas_lock);
+			memcpy(&arenas_snapshot, arenas, sizeof(arena_t *) *
+			    narenas);
+			malloc_spin_unlock(&arenas_lock);
+		}
+
+		/* Region. */
+		for (i = 0; i < narenas; i++) {
+			arena = arenas_snapshot[i];
+
+			if (arena != NULL) {
+				/* Make sure ptr is within a chunk. */
+				malloc_spin_lock(&arena->lock);
+				if (RB_FIND(arena_chunk_tree_s, &arena->chunks,
+				    chunk) == chunk) {
+					malloc_spin_unlock(&arena->lock);
+					/*
+					 * We only lock in arena_salloc() for
+					 * large objects, so don't worry about
+					 * the overhead of possibly locking
+					 * twice.
+					 */
+					assert(chunk->arena->magic ==
+					    ARENA_MAGIC);
+					return (arena_salloc(ptr));
+				}
+				malloc_spin_unlock(&arena->lock);
+			}
+		}
+		return (0);
+	} else {
+		size_t ret;
+		extent_node_t *node;
+		extent_node_t key;
+
+		/* Chunk. */
+		key.addr = (void *)chunk;
+		malloc_mutex_lock(&huge_mtx);
+		node = RB_FIND(extent_tree_ad_s, &huge, &key);
+		if (node != NULL)
+			ret = node->size;
+		else
+			ret = 0;
+		malloc_mutex_unlock(&huge_mtx);
+		return (ret);
+	}
+}
+#endif
+
 static inline size_t
 isalloc(const void *ptr)
 {
@@ -5957,9 +6054,13 @@ malloc_usable_size(const void *ptr)
 #endif
 {
 
+#ifdef MALLOC_VALIDATE
+	return (isalloc_validate(ptr));
+#else
 	assert(ptr != NULL);
 
 	return (isalloc(ptr));
+#endif
 }
 
 #ifdef MOZ_MEMORY_WINDOWS
@@ -6078,8 +6179,6 @@ static struct malloc_introspection_t zone_introspect;
 static size_t
 zone_size(malloc_zone_t *zone, void *ptr)
 {
-	size_t ret = 0;
-	arena_chunk_t *chunk;
 
 	/*
 	 * There appear to be places within Darwin (such as setenv(3)) that
@@ -6090,62 +6189,7 @@ zone_size(malloc_zone_t *zone, void *ptr)
 	 * not work in practice, we must check all pointers to assure that they
 	 * reside within a mapped chunk before determining size.
 	 */
-
-	chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(ptr);
-	if (chunk != ptr) {
-		arena_t *arena;
-		unsigned i;
-		arena_t *arenas_snapshot[narenas];
-
-		/*
-		 * Make a copy of the arenas vector while holding arenas_lock in
-		 * order to assure that all elements are up to date in this
-		 * processor's cache.  Do this outside the following loop in
-		 * order to reduce lock acquisitions.
-		 */
-		malloc_spin_lock(&arenas_lock);
-		memcpy(&arenas_snapshot, arenas, sizeof(arena_t *) * narenas);
-		malloc_spin_unlock(&arenas_lock);
-
-		/* Region. */
-		for (i = 0; i < narenas; i++) {
-			arena = arenas_snapshot[i];
-
-			if (arena != NULL) {
-				bool own;
-
-				/* Make sure ptr is within a chunk. */
-				malloc_spin_lock(&arena->lock);
-				if (RB_FIND(arena_chunk_tree_s, &arena->chunks,
-				    chunk) == chunk)
-					own = true;
-				else
-					own = false;
-				malloc_spin_unlock(&arena->lock);
-
-				if (own) {
-					ret = arena_salloc(ptr);
-					goto RETURN;
-				}
-			}
-		}
-	} else {
-		extent_node_t *node;
-		extent_node_t key;
-
-		/* Chunk. */
-		key.addr = (void *)chunk;
-		malloc_mutex_lock(&huge_mtx);
-		node = RB_FIND(extent_tree_ad_s, &huge, &key);
-		if (node != NULL)
-			ret = node->size;
-		else
-			ret = 0;
-		malloc_mutex_unlock(&huge_mtx);
-	}
-
-RETURN:
-	return (ret);
+	return (isalloc_validate(ptr));
 }
 
 static void *
