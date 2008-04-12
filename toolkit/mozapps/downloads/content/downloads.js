@@ -497,6 +497,8 @@ var gContextMenus = [
     , "menuseparator"
     , "menuitem_openReferrer"
     , "menuitem_copyLocation"
+    , "menuseparator"
+    , "menuitem_clearList"
   ],
   // DOWNLOAD_FINISHED
   [
@@ -538,6 +540,8 @@ var gContextMenus = [
     , "menuseparator"
     , "menuitem_openReferrer"
     , "menuitem_copyLocation"
+    , "menuseparator"
+    , "menuitem_clearList"
   ],
   // DOWNLOAD_QUEUED
   [
@@ -547,6 +551,8 @@ var gContextMenus = [
     , "menuseparator"
     , "menuitem_openReferrer"
     , "menuitem_copyLocation"
+    , "menuseparator"
+    , "menuitem_clearList"
   ],
   // DOWNLOAD_BLOCKED_PARENTAL
   [
@@ -562,6 +568,8 @@ var gContextMenus = [
     , "menuseparator"
     , "menuitem_openReferrer"
     , "menuitem_copyLocation"
+    , "menuseparator"
+    , "menuitem_clearList"
   ],
   // DOWNLOAD_DIRTY
   [
