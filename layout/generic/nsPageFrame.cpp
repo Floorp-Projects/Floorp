@@ -601,6 +601,12 @@ nsPageBreakFrame::GetIntrinsicWidth()
   return nsPresContext::CSSPixelsToAppUnits(1);
 }
 
+nscoord
+nsPageBreakFrame::GetIntrinsicHeight()
+{
+  return 0;
+}
+
 nsresult 
 nsPageBreakFrame::Reflow(nsPresContext*          aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,

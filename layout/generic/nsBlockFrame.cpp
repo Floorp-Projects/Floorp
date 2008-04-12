@@ -5160,10 +5160,16 @@ nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
   } while (Next());
 }
 
+nsBlockFrame::line_iterator
+nsBlockInFlowLineIterator::End()
+{
+  return mInOverflowLines ? mInOverflowLines->end() : mFrame->end_lines();
+}
+
 PRBool
 nsBlockInFlowLineIterator::IsLastLineInList()
 {
-  line_iterator end = mInOverflowLines ? mInOverflowLines->end() : mFrame->end_lines();
+  line_iterator end = End();
   return mLine != end && mLine.next() == end;
 }
 
