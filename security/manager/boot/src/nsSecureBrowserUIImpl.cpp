@@ -166,6 +166,10 @@ nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
   mNewToplevelIsEV = PR_FALSE;
   mNewToplevelSecurityStateKnown = PR_TRUE;
   ResetStateTracking();
+  mSubRequestsHighSecurity = 0;
+  mSubRequestsLowSecurity = 0;
+  mSubRequestsBrokenSecurity = 0;
+  mSubRequestsNoSecurity = 0;
   
 #if defined(PR_LOGGING)
   if (!gSecureDocLog)
@@ -359,31 +363,28 @@ static nsresult IsChildOfDomWindow(nsIDOMWindow *parent, nsIDOMWindow *child,
   return NS_OK;
 }
 
-static PRUint32 GetSecurityStateFromChannel(nsIChannel* aChannel)
+static PRUint32 GetSecurityStateFromSecurityInfo(nsISupports *info)
 {
   nsresult res;
   PRUint32 securityState;
 
-  // qi for the psm information about this channel load.
-  nsCOMPtr<nsISupports> info;
-  aChannel->GetSecurityInfo(getter_AddRefs(info));
   nsCOMPtr<nsITransportSecurityInfo> psmInfo(do_QueryInterface(info));
   if (!psmInfo) {
-    PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI: GetSecurityState:%p - no nsITransportSecurityInfo for %p\n",
-                                         aChannel, (nsISupports *)info));
+    PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI: GetSecurityState: - no nsITransportSecurityInfo for %p\n",
+                                         (nsISupports *)info));
     return nsIWebProgressListener::STATE_IS_INSECURE;
   }
-  PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI: GetSecurityState:%p - info is %p\n", aChannel,
+  PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI: GetSecurityState: - info is %p\n", 
                                        (nsISupports *)info));
   
   res = psmInfo->GetSecurityState(&securityState);
   if (NS_FAILED(res)) {
-    PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI: GetSecurityState:%p - GetSecurityState failed: %d\n",
-                                         aChannel, res));
+    PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI: GetSecurityState: - GetSecurityState failed: %d\n",
+                                         res));
     securityState = nsIWebProgressListener::STATE_IS_BROKEN;
   }
   
-  PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI: GetSecurityState:%p - Returning %d\n", aChannel,
+  PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI: GetSecurityState: - Returning %d\n", 
                                        securityState));
   return securityState;
 }
@@ -471,10 +472,6 @@ void nsSecureBrowserUIImpl::ResetStateTracking()
 
   mInfoTooltip.Truncate();
   mDocumentRequestsInProgress = 0;
-  mSubRequestsHighSecurity = 0;
-  mSubRequestsLowSecurity = 0;
-  mSubRequestsBrokenSecurity = 0;
-  mSubRequestsNoSecurity = 0;
   if (mTransferringRequests.ops) {
     PL_DHashTableFinish(&mTransferringRequests);
     mTransferringRequests.ops = nsnull;
@@ -484,10 +481,8 @@ void nsSecureBrowserUIImpl::ResetStateTracking()
 }
 
 nsresult
-nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest *aRequest)
+nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest* aRequest, nsISupports *info)
 {
-  nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
-
   /* I explicitly ignore the camelCase variable naming style here,
      I want to make it clear these are temp variables that relate to the 
      member variables with the same suffix.*/
@@ -501,16 +496,12 @@ nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest *aRequest)
   PRBool updateTooltip = PR_FALSE;
   nsXPIDLString temp_InfoTooltip;
 
-  if (channel) {
-    temp_NewToplevelSecurityState = GetSecurityStateFromChannel(channel);
+    temp_NewToplevelSecurityState = GetSecurityStateFromSecurityInfo(info);
 
     PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
            ("SecureUI:%p: OnStateChange: remember mNewToplevelSecurityState => %x\n", this,
             temp_NewToplevelSecurityState));
 
-    // Get SSL Status information if possible
-    nsCOMPtr<nsISupports> info;
-    channel->GetSecurityInfo(getter_AddRefs(info));
     nsCOMPtr<nsISSLStatusProvider> sp = do_QueryInterface(info);
     if (sp) {
       // Ignore result
@@ -533,7 +524,6 @@ nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest *aRequest)
         }
       }
     }
-  }
 
   // assume temp_NewToplevelSecurityState was set in this scope!
   // see code that is directly above
@@ -549,22 +539,21 @@ nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest *aRequest)
     if (updateTooltip) {
       mInfoTooltip = temp_InfoTooltip;
     }
+    PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+           ("SecureUI:%p: remember securityInfo %p\n", this,
+            info));
+    mCurrentToplevelSecurityInfo = info;
   }
 
   return UpdateSecurityState(aRequest);
 }
 
 void
-nsSecureBrowserUIImpl::UpdateSubrequestMembers(nsIRequest *aRequest)
+nsSecureBrowserUIImpl::UpdateSubrequestMembers(nsISupports *securityInfo)
 {
   // For wyciwyg channels in subdocuments we only update our
   // subrequest state members.
-  PRUint32 reqState = nsIWebProgressListener::STATE_IS_INSECURE;
-  nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
-
-  if (channel) {
-    reqState = GetSecurityStateFromChannel(channel);
-  }
+  PRUint32 reqState = GetSecurityStateFromSecurityInfo(securityInfo);
 
   // the code above this line should run without a lock
   nsAutoMonitor lock(mMonitor);
@@ -749,10 +738,13 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   }
 #endif
 
+  nsCOMPtr<nsISupports> securityInfo;
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
 
   if (channel)
   {
+    channel->GetSecurityInfo(getter_AddRefs(securityInfo));
+
     nsCOMPtr<nsIURI> uri;
     channel->GetURI(getter_AddRefs(uri));
     if (uri)
@@ -914,6 +906,11 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     f -= nsIWebProgressListener::STATE_SECURE_LOW;
     info.Append("SECURE_LOW ");
   }
+  if (f & nsIWebProgressListener::STATE_RESTORING)
+  {
+    f -= nsIWebProgressListener::STATE_RESTORING;
+    info.Append("STATE_RESTORING ");
+  }
 
   if (f > 0)
   {
@@ -930,7 +927,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   {
     PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
            ("SecureUI:%p: OnStateChange: seeing STOP with security state: %d\n", this,
-            GetSecurityStateFromChannel(channel)
+            GetSecurityStateFromSecurityInfo(securityInfo)
             ));
   }
 #endif
@@ -964,12 +961,13 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     }
   }
 
+  PRBool allowSecurityStateChange = PR_TRUE;
   if (loadFlags & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
   {
     // The original consumer (this) is no longer the target of the load.
     // Ignore any events with this flag, do not allow them to update
     // our secure UI state.
-    return NS_OK;
+    allowSecurityStateChange = PR_FALSE;
   }
 
   if (aProgressStateFlags & STATE_START
@@ -980,27 +978,99 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       &&
       loadFlags & nsIChannel::LOAD_DOCUMENT_URI)
   {
-    nsAutoMonitor lock(mMonitor);
-    if (!mDocumentRequestsInProgress)
+    PRBool inProgress;
+
+    PRInt32 saveSubHigh;
+    PRInt32 saveSubLow;
+    PRInt32 saveSubBroken;
+    PRInt32 saveSubNo;
+    nsCOMPtr<nsIAssociatedContentSecurity> prevContentSecurity;
+
+    PRInt32 newSubHigh = 0;
+    PRInt32 newSubLow = 0;
+    PRInt32 newSubBroken = 0;
+    PRInt32 newSubNo = 0;
+
+    {
+      nsAutoMonitor lock(mMonitor);
+      inProgress = (mDocumentRequestsInProgress!=0);
+
+      if (allowSecurityStateChange && !inProgress)
+      {
+        saveSubHigh = mSubRequestsHighSecurity;
+        saveSubLow = mSubRequestsLowSecurity;
+        saveSubBroken = mSubRequestsBrokenSecurity;
+        saveSubNo = mSubRequestsNoSecurity;
+        prevContentSecurity = do_QueryInterface(mCurrentToplevelSecurityInfo);
+      }
+    }
+
+    if (allowSecurityStateChange && !inProgress)
     {
       PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
              ("SecureUI:%p: OnStateChange: start for toplevel document\n", this
               ));
 
-      ResetStateTracking();
-      mNewToplevelSecurityStateKnown = PR_FALSE;
+      if (prevContentSecurity)
+      {
+        PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+               ("SecureUI:%p: OnStateChange: start, saving current sub state\n", this
+                ));
+  
+        // before resetting our state, let's save information about
+        // sub element loads, so we can restore it later
+        prevContentSecurity->SetCountSubRequestsHighSecurity(saveSubHigh);
+        prevContentSecurity->SetCountSubRequestsLowSecurity(saveSubLow);
+        prevContentSecurity->SetCountSubRequestsBrokenSecurity(saveSubBroken);
+        prevContentSecurity->SetCountSubRequestsNoSecurity(saveSubNo);
+      }
+  
+      if (securityInfo &&
+          (aProgressStateFlags & nsIWebProgressListener::STATE_RESTORING) != 0)
+      {
+        // When restoring from bfcache, we will not get events for the 
+        // page's sub elements, so let's load the state of sub elements
+        // from the cache.
+    
+        nsCOMPtr<nsIAssociatedContentSecurity> 
+          newContentSecurity(do_QueryInterface(securityInfo));
+    
+        if (newContentSecurity)
+        {
+          PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+                 ("SecureUI:%p: OnStateChange: start, loading old sub state\n", this
+                  ));
+    
+          newContentSecurity->GetCountSubRequestsHighSecurity(&newSubHigh);
+          newContentSecurity->GetCountSubRequestsLowSecurity(&newSubLow);
+          newContentSecurity->GetCountSubRequestsBrokenSecurity(&newSubBroken);
+          newContentSecurity->GetCountSubRequestsNoSecurity(&newSubNo);
+        }
+      }
     }
 
-    // By using a counter, this code also works when the toplevel
-    // document get's redirected, but the STOP request for the 
-    // previous toplevel document has not yet have been received.
+    {
+      nsAutoMonitor lock(mMonitor);
 
-    PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-           ("SecureUI:%p: OnStateChange: ++mDocumentRequestsInProgress\n", this
-            ));
+      if (allowSecurityStateChange && !inProgress)
+      {
+        ResetStateTracking();
+        mSubRequestsHighSecurity = newSubHigh;
+        mSubRequestsLowSecurity = newSubLow;
+        mSubRequestsBrokenSecurity = newSubBroken;
+        mSubRequestsNoSecurity = newSubNo;
+        mNewToplevelSecurityStateKnown = PR_FALSE;
+      }
 
-    ++mDocumentRequestsInProgress;
-    
+      // By using a counter, this code also works when the toplevel
+      // document get's redirected, but the STOP request for the 
+      // previous toplevel document has not yet have been received.
+      PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+             ("SecureUI:%p: OnStateChange: ++mDocumentRequestsInProgress\n", this
+              ));
+      ++mDocumentRequestsInProgress;
+    }
+
     return NS_OK;
   }
 
@@ -1018,7 +1088,10 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     {
       nsAutoMonitor lock(mMonitor);
       temp_DocumentRequestsInProgress = mDocumentRequestsInProgress;
-      temp_ToplevelEventSink = mToplevelEventSink;
+      if (allowSecurityStateChange)
+      {
+        temp_ToplevelEventSink = mToplevelEventSink;
+      }
     }
 
     if (temp_DocumentRequestsInProgress <= 0)
@@ -1034,20 +1107,26 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 
     if (!temp_ToplevelEventSink && channel)
     {
-      ObtainEventSink(channel, temp_ToplevelEventSink);
+      if (allowSecurityStateChange)
+      {
+        ObtainEventSink(channel, temp_ToplevelEventSink);
+      }
     }
 
     {
       nsAutoMonitor lock(mMonitor);
-      mToplevelEventSink = temp_ToplevelEventSink;
+      if (allowSecurityStateChange)
+      {
+        mToplevelEventSink = temp_ToplevelEventSink;
+      }
       --mDocumentRequestsInProgress;
     }
 
-    if (requestHasTransferedData) {
+    if (allowSecurityStateChange && requestHasTransferedData) {
       // Data has been transferred for the single toplevel
       // request. Evaluate the security state.
 
-      return EvaluateAndUpdateSecurityState(aRequest);
+      return EvaluateAndUpdateSecurityState(aRequest, securityInfo);
     }
     
     return NS_OK;
@@ -1064,9 +1143,9 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     
     // We only care for the security state of sub requests which have actually transfered data.
 
-    if (requestHasTransferedData)
+    if (allowSecurityStateChange && requestHasTransferedData)
     {  
-      UpdateSubrequestMembers(aRequest);
+      UpdateSubrequestMembers(securityInfo);
       
       // Care for the following scenario:
       // A new top level document load might have already started,
@@ -1251,8 +1330,8 @@ void nsSecureBrowserUIImpl::UpdateMyFlags(PRBool &showWarning, lockIconState &wa
   mNotifiedToplevelIsEV = mNewToplevelIsEV;
 }
 
-nsresult nsSecureBrowserUIImpl::TellTheWorld(PRBool &showWarning, 
-                                             lockIconState &warnSecurityState, 
+nsresult nsSecureBrowserUIImpl::TellTheWorld(PRBool showWarning, 
+                                             lockIconState warnSecurityState, 
                                              nsIRequest* aRequest)
 {
   nsCOMPtr<nsISecurityEventSink> temp_ToplevelEventSink;
@@ -1322,6 +1401,9 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
   NS_ASSERTION(mOnStateLocationChangeReentranceDetection == 1,
                "unexpected parallel nsIWebProgress OnStateChange and/or OnLocationChange notification");
 
+  PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+         ("SecureUI:%p: OnLocationChange\n", this));
+
   PRBool updateIsViewSource = PR_FALSE;
   PRBool temp_IsViewSource = PR_FALSE;
   nsCOMPtr<nsIDOMWindow> window;
@@ -1368,13 +1450,18 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
   nsCOMPtr<nsIDOMWindow> windowForProgress;
   aWebProgress->GetDOMWindow(getter_AddRefs(windowForProgress));
 
+  nsCOMPtr<nsISupports> securityInfo;
+  nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+  if (channel)
+    channel->GetSecurityInfo(getter_AddRefs(securityInfo));
+
   if (windowForProgress.get() == window.get()) {
     // For toplevel channels, update the security state right away.
-    return EvaluateAndUpdateSecurityState(aRequest);
+    return EvaluateAndUpdateSecurityState(aRequest, securityInfo);
   }
 
   // For channels in subdocuments we only update our subrequest state members.
-  UpdateSubrequestMembers(aRequest);
+  UpdateSubrequestMembers(securityInfo);
 
   // Care for the following scenario:
 
