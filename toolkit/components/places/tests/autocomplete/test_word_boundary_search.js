@@ -82,10 +82,8 @@ addPageBook(8, 5);
 // CamelCase
 addPageBook(9, 0);
 
-// For each test, provide a title, the search terms, and an array of uri
-// indices of the pages that should be returned, followed by an optional
-// function. The uris can be in any order, but must be an index created by
-// addPageBook or placed manually into gPages.
+// Provide for each test: description; search terms; array of gPages indices of
+// pages that should match; optional function to be run before the test
 let gTests = [
   ["0: Match 'match' at the beginning or after / or on a CamelCase",
    "match", [0,2,4,9]],
