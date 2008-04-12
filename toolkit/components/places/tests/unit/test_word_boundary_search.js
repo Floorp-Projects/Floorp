@@ -93,7 +93,7 @@ function ensure_results(aSearch, aExpected)
       print("Looking for an expected result of " + value + ", " + comment + "...");
       let j;
       for (j = 0; j < aExpected.length; j++) {
-        let [uri, title, tags] = aExpected[j];
+        let [uri, title, tags] = gPages[aExpected[j]];
 
         // Skip processed expected results
         if (uri == undefined) continue;
@@ -108,7 +108,7 @@ function ensure_results(aSearch, aExpected)
         if (uri == value && title == comment) {
           print("Got it at index " + j + "!!");
           // Make it undefined so we don't process it again
-          aExpected[j] = [,];
+          aExpected[j] = [];
           break;
         }
       }
@@ -154,9 +154,14 @@ try {
 
 // Some date not too long ago
 let gDate = new Date(Date.now() - 1000 * 60 * 60) * 1000;
+// Store the page info for each uri
+let gPages = [];
 
 function addPageBook(aURI, aTitle, aBook, aTags, aKey)
 {
+  // Add a page entry for the current uri
+  gPages[aURI] = [aURI, aTitle, aTags];
+
   let uri = iosvc.newURI(kURIs[aURI], null, null);
   let title = kTitles[aTitle];
 
@@ -253,36 +258,37 @@ addPageBook(8, 5);
 // CamelCase
 addPageBook(9, 0);
 
-// For each test, provide a title, the search terms, and an array of
-// [uri,title] indices of the pages that should be returned, followed by an
-// optional function
+// For each test, provide a title, the search terms, and an array of uri
+// indices of the pages that should be returned, followed by an optional
+// function. The uris can be in any order, but must be an index created by
+// addPageBook or placed manually into gPages.
 let gTests = [
   ["0: Match 'match' at the beginning or after / or on a CamelCase",
-   "match", [[0,0],[2,1],[4,0],[9,0]]],
+   "match", [0,2,4,9]],
   ["1: Match 'dont' at the beginning or after /",
-   "dont", [[1,0],[3,2],[5,0]]],
+   "dont", [1,3,5]],
   ["2: Match '2' after the slash and after a word (in tags too)",
-   "2", [[2,1],[3,2],[4,0],[5,0]]],
+   "2", [2,3,4,5]],
   ["3: Match 't' at the beginning or after /",
-   "t", [[0,0],[1,0],[2,1],[3,2],[4,0],[5,0],[9,0]]],
+   "t", [0,1,2,3,4,5,9]],
   ["4: Match 'word' after many consecutive word boundaries",
-   "word", [[6,3]]],
+   "word", [6]],
   ["5: Match a word boundary '/' for everything",
-   "/", [[0,0],[1,0],[2,1],[3,2],[4,0],[5,0],[6,3],[7,4],[8,5],[9,0]]],
+   "/", [0,1,2,3,4,5,6,7,8,9]],
   ["6: Match word boundaries '()_+' that are among word boundaries",
-   "()_+", [[6,3]]],
+   "()_+", [6]],
 
   ["7: Katakana characters form a string, so match the beginning",
-   katakana[0], [[7,4]]],
+   katakana[0], [7]],
   /*["8: Middle of a katakana word shouldn't be matched",
    katakana[1], []],*/
 
   ["9: Ideographs are treated as words so 'nin' is one word",
-   ideograph[0], [[8,5]]],
+   ideograph[0], [8]],
   ["10: Ideographs are treated as words so 'ten' is another word",
-   ideograph[1], [[8,5]]],
+   ideograph[1], [8]],
   ["11: Ideographs are treated as words so 'do' is yet another",
-   ideograph[2], [[8,5]]],
+   ideograph[2], [8]],
 
   ["12: Extra negative assert that we don't match in the middle",
    "ch", []],

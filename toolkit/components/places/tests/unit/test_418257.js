@@ -34,9 +34,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
- * Test bug 416211 to make sure results that match the tag show the bookmark
- * title instead of the page title.
+/**
+ * Test bug 418257 by making sure tags are returned with the title as part of
+ * the "comment" if there are tags even if we didn't match in the tags. They
+ * are separated from the title by a endash.
  */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -93,7 +94,7 @@ function ensure_results(aSearch, aExpected)
       print("Looking for an expected result of " + value + ", " + comment + "...");
       let j;
       for (j = 0; j < aExpected.length; j++) {
-        let [uri, title, tags] = aExpected[j];
+        let [uri, title, tags] = gPages[aExpected[j]];
 
         // Skip processed expected results
         if (uri == undefined) continue;
@@ -108,7 +109,7 @@ function ensure_results(aSearch, aExpected)
         if (uri == value && title == comment) {
           print("Got it at index " + j + "!!");
           // Make it undefined so we don't process it again
-          aExpected[j] = [,];
+          aExpected[j] = [];
           break;
         }
       }
@@ -154,9 +155,14 @@ try {
 
 // Some date not too long ago
 let gDate = new Date(Date.now() - 1000 * 60 * 60) * 1000;
+// Store the page info for each uri
+let gPages = [];
 
 function addPageBook(aURI, aTitle, aBook, aTags, aKey)
 {
+  // Add a page entry for the current uri
+  gPages[aURI] = [aURI, aTitle, aTags];
+
   let uri = iosvc.newURI(kURIs[aURI], null, null);
   let title = kTitles[aTitle];
 
@@ -210,25 +216,38 @@ function run_test() {
 // *** vvv Custom Test Stuff Goes Below Here vvv ***
 // *************************************************
 
-let theTag = "superTag";
-
 // Define some shared uris and titles (each page needs its own uri)
 let kURIs = [
-  "http://theuri/",
+  "http://page1",
+  "http://page2",
+  "http://page3",
+  "http://page4",
 ];
 let kTitles = [
-  "Page title",
-  "Bookmark title",
-  theTag,
+  "tag1",
+  "tag2",
+  "tag3",
 ];
 
-// Add page with a title, bookmark, and tag
-addPageBook(0, 0, 1, [2]);
+// Add pages with varying number of tags
+addPageBook(0, 0, 0, [0]);
+addPageBook(1, 0, 0, [0,1]);
+addPageBook(2, 0, 0, [0,2]);
+addPageBook(3, 0, 0, [0,1,2]);
 
-// For each test, provide a title, the search terms, and an array of
-// [uri,title] indices of the pages that should be returned, followed by an
-// optional function
+// For each test, provide a title, the search terms, and an array of uri
+// indices of the pages that should be returned, followed by an optional
+// function. The uris can be in any order, but must be an index created by
+// addPageBook or placed manually into gPages.
 let gTests = [
-  ["0: Make sure the tag match gives the bookmark title",
-   theTag, [[0,1,[2]]]],
+  ["0: Make sure tags come back in the title when matching tags",
+   "page1 tag", [0]],
+  ["1: Check tags in title for page2",
+   "page2 tag", [1]],
+  ["2: Make sure tags appear even when not matching the tag",
+   "page3", [2]],
+  ["3: Multiple tags come in commas for page4",
+   "page4", [3]],
+  ["4: Extra test just to make sure we match the title",
+   "tag2", [1,3]],
 ];

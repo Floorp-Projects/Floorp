@@ -99,6 +99,11 @@
   SQL_STR_FRAGMENT_GET_BOOK_TAG("bookmark", "b.title", "!=", PR_TRUE) + \
   SQL_STR_FRAGMENT_GET_BOOK_TAG("tags", "GROUP_CONCAT(t.title, ',')", "=", PR_FALSE))
 
+// This separator is used as an RTL-friendly way to split the title and tags.
+// It can also be used by an nsIAutoCompleteResult consumer to re-split the
+// "comment" back into the title and tag.
+NS_NAMED_LITERAL_STRING(kTitleTagsSeparator, " \u2013 ");
+
 ////////////////////////////////////////////////////////////////////////////////
 //// nsNavHistoryAutoComplete Helper Functions
 
@@ -748,10 +753,8 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
       PRBool showTags = !entryTags.IsEmpty();
 
       // Add the tags to the title if necessary
-      /* XXX bug 418257 to look at RTL issues of appending tags
       if (showTags)
         title += kTitleTagsSeparator + entryTags;
-      */
 
       // Tags have a special style to show a tag icon; otherwise, style the
       // bookmarks that aren't feed items and feed URIs as bookmark
