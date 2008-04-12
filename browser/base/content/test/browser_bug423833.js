@@ -44,7 +44,7 @@ function test1Setup() {
 
   // We'd like to use another load listener here, but error pages don't fire load events
   contextMenu.showOnlyThisFrame();
-  intervalID = window.setInterval(testShowOnlyThisFrame, 3000);
+  intervalID = window.setInterval(testShowOnlyThisFrame, 1000);
 }
 
 function testShowOnlyThisFrame() {
@@ -87,7 +87,7 @@ function test2Setup() {
   
   gBrowser.selectedTab = test2tab;
 
-  intervalID = window.setInterval(testOpenFrameInTab, 3000);
+  intervalID = window.setInterval(testOpenFrameInTab, 1000);
 }
 
 function testOpenFrameInTab() {
@@ -119,7 +119,7 @@ function test3Setup() {
   test3window = contextMenu.openFrame();
   ok(test3window instanceof Window, "openFrame() should return a window (non-null) ");
   
-  intervalID = window.setInterval(testOpenFrame, 3000);
+  intervalID = window.setInterval(testOpenFrame, 1000);
 }
 
 function testOpenFrame() {
