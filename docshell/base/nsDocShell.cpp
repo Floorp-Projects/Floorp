@@ -1086,11 +1086,11 @@ nsDocShell::ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
     nsCOMPtr<nsIURI> innerTargetURI;
 
     rv = originDocument->NodePrincipal()->GetURI(getter_AddRefs(originURI));
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv) && originURI)
         innerOriginURI = NS_GetInnermostURI(originURI);
 
     rv = targetDocument->NodePrincipal()->GetURI(getter_AddRefs(targetURI));
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv) && targetURI)
         innerTargetURI = NS_GetInnermostURI(targetURI);
 
     return innerOriginURI && innerTargetURI &&
