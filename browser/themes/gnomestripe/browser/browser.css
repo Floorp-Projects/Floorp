@@ -1029,6 +1029,10 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   font-size: 1.15em;
 }
 
+.ac-extra > .ac-comment {
+  font-size: inherit;
+}
+
 .ac-url-text {
   color: GrayText;
 }

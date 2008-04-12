@@ -239,5 +239,5 @@ addPageBook(1, 0, 0, [1]);
 // optional function
 let gTests = [
   ["0: Make sure tag matches return the right url as well as '+' remain escaped",
-   theTag, [[0,0],[1,0]]],
+   theTag, [[0,0,[1]],[1,0,[1]]]],
 ];

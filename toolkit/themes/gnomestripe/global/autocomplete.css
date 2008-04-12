@@ -163,6 +163,14 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   height: 16px;
 }
 
+.ac-extra > .ac-result-type-tag {
+  margin: 0 4px;
+}
+
+.ac-extra > .ac-comment {
+  padding-right: 4px;
+}
+
 .ac-ellipsis-after {
   margin: 2px 0px 0px 0px !important;
   padding: 0; 
