@@ -63,9 +63,8 @@ addPageBook(1, 1);
 addPageBook(2, 0, 0);
 addPageBook(3, 0, 1);
 
-// For each test, provide a title, the search terms, and an array of
-// [uri,title] indices of the pages that should be returned, followed by an
-// optional function
+// Provide for each test: description; search terms; array of gPages indices of
+// pages that should match; optional function to be run before the test
 let gTests = [
   ["0: Match 2 terms all in url",
    "c d", [0]],
