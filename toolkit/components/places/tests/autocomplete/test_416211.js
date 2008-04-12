@@ -51,12 +51,11 @@ let kTitles = [
   theTag,
 ];
 
-// Add page with a title, bookmark, and tag
+// Add page with a title, bookmark, and [tags]
 addPageBook(0, 0, 1, [2]);
 
-// For each test, provide a title, the search terms, and an array of
-// [uri,title] indices of the pages that should be returned, followed by an
-// optional function
+// Provide for each test: description; search terms; array of gPages indices of
+// pages that should match; optional function to be run before the test
 let gTests = [
   ["0: Make sure the tag match gives the bookmark title",
    theTag, [0]],

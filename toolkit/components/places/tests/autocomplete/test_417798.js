@@ -51,9 +51,8 @@ let kTitles = [
 addPageBook(0, 0); // regular url
 addPageBook(1, 0); // javascript: uri
 
-// For each test, provide a title, the search terms, and an array of
-// [uri,title] indices of the pages that should be returned, followed by an
-// optional function
+// Provide for each test: description; search terms; array of gPages indices of
+// pages that should match; optional function to be run before the test
 let gTests = [
   ["0: Match non-javascript: with plain search",
    "a", [0]],

@@ -59,10 +59,8 @@ addPageBook(1, 0, 0, [0,1]);
 addPageBook(2, 0, 0, [0,2]);
 addPageBook(3, 0, 0, [0,1,2]);
 
-// For each test, provide a title, the search terms, and an array of uri
-// indices of the pages that should be returned, followed by an optional
-// function. The uris can be in any order, but must be an index created by
-// addPageBook or placed manually into gPages.
+// Provide for each test: description; search terms; array of gPages indices of
+// pages that should match; optional function to be run before the test
 let gTests = [
   ["0: Make sure tags come back in the title when matching tags",
    "page1 tag", [0]],
