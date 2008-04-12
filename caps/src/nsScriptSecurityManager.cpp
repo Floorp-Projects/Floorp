@@ -92,6 +92,7 @@
 #include "nsIClassInfo.h"
 #include "nsIURIFixup.h"
 #include "nsCDefaultURIFixup.h"
+#include "nsIChromeRegistry.h"
 
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 
@@ -1355,7 +1356,21 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     NS_ENSURE_SUCCESS(rv, rv);
     if (hasFlags) {
         if (aFlags & nsIScriptSecurityManager::ALLOW_CHROME) {
-            return NS_OK;
+            if (!targetScheme.EqualsLiteral("chrome")) {
+                // for now don't change behavior for resource: or moz-icon:
+                return NS_OK;
+            }
+
+            // allow load only if chrome package is whitelisted
+            nsCOMPtr<nsIXULChromeRegistry> reg(do_GetService(
+                                                 NS_CHROMEREGISTRY_CONTRACTID));
+            if (reg) {
+                PRBool accessAllowed = PR_FALSE;
+                reg->AllowContentToAccess(targetBaseURI, &accessAllowed);
+                if (accessAllowed) {
+                    return NS_OK;
+                }
+            }
         }
 
         // resource: and chrome: are equivalent, securitywise
