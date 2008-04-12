@@ -149,7 +149,7 @@ testScope.prototype = {
 // Check whether the test has completed every 3 seconds
 const CHECK_INTERVAL = 3000;
 // Test timeout (seconds)
-const TIMEOUT_SECONDS = 15;
+const TIMEOUT_SECONDS = 30;
 
 const MAX_LOOP_COUNT = (TIMEOUT_SECONDS * 1000) / CHECK_INTERVAL;
 
