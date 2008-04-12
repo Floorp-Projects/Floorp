@@ -1,5 +1,5 @@
 toolkit.jar:
-%  content global %content/global/ xpcnativewrappers=yes
+%  content global %content/global/ xpcnativewrappers=yes contentaccessible=yes
 %  content global-platform %content/global-platform/ platform xpcnativewrappers=yes
 %  content global-region %content/global-region/ xpcnativewrappers=yes
 # provide the nsTransferable in nsDragAndDrop.js to extensions that have to
