@@ -309,8 +309,7 @@
 
       <method name="attachController">
         <body><![CDATA[
-          if (this.mController.input != this)
-            this.mController.input = this;
+          this.mController.input = this;
         ]]></body>
       </method>
 
