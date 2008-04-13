@@ -6592,35 +6592,18 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   mBullet->WillReflow(aState.mPresContext);
   mBullet->Reflow(aState.mPresContext, aMetrics, reflowState, status);
 
-  // Place the bullet now.  We want to place the bullet relative to the
-  // border-box of the associated box (using the right/left margin of
-  // the bullet frame as separation).  However, if a line box would be
-  // displaced by floats, we want to displace it by the same amount.
-  // That is, we act as though the edge of the floats is the
-  // content-edge of the block, and place the bullet at a position
-  // offset from there by the block's padding, the block's border, and
-  // the bullet frame's margin.
-  // FIXME (bug 25888): need to check the entire region that the first
-  // line overlaps, not just the top pixel.
-  nscoord x;
-  aState.GetAvailableSpace(aLineTop, PR_FALSE);
-  if (rs.mStyleVisibility->mDirection == NS_STYLE_DIRECTION_LTR) {
-    // Note: mAvailSpaceRect.x is relative to the content box and never
-    // less than zero.  Converting to frame coordinates and subtracting
-    // the padding and border cancel each other out, and the PR_MAX()
-    // with 0 (or with the left border+padding) is even implied in the
-    // right place.
-    x = aState.mAvailSpaceRect.x
-        - reflowState.mComputedMargin.right - aMetrics.width;
-  } else {
-    // The XMost() of the available space and the computed width both
-    // give us offsets from the left content edge.  Then we add the left
-    // border/padding to get into frame coordinates, and the right
-    // border/padding and the bullet's margin to offset the position.
-    x = PR_MIN(rs.ComputedWidth(), aState.mAvailSpaceRect.XMost())
-        + rs.mComputedBorderPadding.LeftRight()
-        + reflowState.mComputedMargin.left;
-  }
+  // Place the bullet now, separate it from mOutsideBulletX by its margin.
+  // If the mAvailSpaceRect position is outside the mOutsideBulletX
+  // position it means the line didn't care about the float edge and we
+  // use that position instead (there cannot be any floats at the start
+  // of the line this case since that would violate CSS 2.1 float rules).
+  // XXX we need to take floats inside the principal block that clears
+  // outside floats into account also (bug 428810).
+  nscoord x = rs.mStyleVisibility->mDirection == NS_STYLE_DIRECTION_LTR ?
+    PR_MIN(aState.mOutsideBulletX, aState.mAvailSpaceRect.x)
+      - reflowState.mComputedMargin.right - aMetrics.width :
+    PR_MAX(aState.mOutsideBulletX, aState.mAvailSpaceRect.XMost())
+      + reflowState.mComputedMargin.left;
 
   // FIXME: come up with rules for when mAvailSpaceRect is valid so we
   // don't need to do this.
