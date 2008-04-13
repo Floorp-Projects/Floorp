@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=292789
+-->
+<head>
+  <title>Test for Bug 292789</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=292789">Mozilla Bug 292789</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <script src="chrome://global/content/strres.js"></script>
+  <script src="chrome://mozapps/content/xpinstall/xpinstallConfirm.js"></script>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 292789
+ **
+ ** Selectively allow access to whitelisted chrome packages
+ ** even for ALLOW_CHROME mechanisms (<script>, <img> etc)
+ **/
+
+/** <script src=""> test **/
+
+is(typeof srGetStrBundle, "function",
+   "content can still load <script> from chrome://global");
+is(typeof XPInstallConfirm, "undefined",
+   "content should not be able to load <script> from chrome://mozapps");
+
+/** make sure the last one didn't pass because someone
+ ** moved the resource
+ **/
+var resjs = document.createElement("script");
+resjs.src = "jar:resource://gre/chrome/toolkit.jar!/content/mozapps/xpinstall/xpinstallConfirm.js";
+document.body.appendChild(resjs);
+
+setTimeout('is(typeof XPInstallConfirm, "object",'+
+   '"xpinstallConfirm.js has not moved unexpectedly")',0);
+
+
+/** <img src=""> tests **/
+var img_global = "chrome://global/skin/icons/Error.png";
+var img_mozapps = "chrome://mozapps/skin/passwordmgr/key.png";
+var res_mozapps = "jar:resource://gre/chrome/classic.jar!/skin/classic/mozapps/passwordmgr/key.png";
+
+function fail(event) {
+    is(event.target.expected, "fail",
+       "content should not be allowed to load "+event.target.src);
+}
+
+function success(event) {
+    is(event.target.expected, "success",
+       "content should be able to load "+event.target.src);
+}
+
+function loadImage(uri, expect) {
+    var img = document.createElement("img");
+    img.onerror = fail;
+    img.onload = success;
+    img.expected = expect;
+    img.src = uri;
+    //document.getElementById("content").appendChild(img);
+}
+
+loadImage(img_global, "success");
+loadImage(img_mozapps, "fail");
+loadImage(res_mozapps, "success");
+
+</script>
+</pre>
+</body>
+</html>
+
