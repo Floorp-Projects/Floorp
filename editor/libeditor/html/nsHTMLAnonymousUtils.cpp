@@ -344,30 +344,29 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
   //                cellElement   contains the element for InlineTableEditing
   //                absPosElement contains the element for Positioning
 
-  // first let's cancel old settings if needed
-  PRBool refreshResizing     = (mResizedObject != nsnull);
-  PRBool refreshPositioning  = (mAbsolutelyPositionedObject != nsnull);
-  PRBool refreshTableEditing = (mInlineEditedCell != nsnull);
+  // Note: All the Hide/Show methods below may change attributes on real
+  // content which means a DOMAttrModified handler may cause arbitrary
+  // side effects while this code runs (bug 420439).
 
   if (mIsAbsolutelyPositioningEnabled && mAbsolutelyPositionedObject &&
       absPosElement != mAbsolutelyPositionedObject) {
     res = HideGrabber();
     if (NS_FAILED(res)) return res;
-    refreshPositioning = PR_FALSE;
+    NS_ASSERTION(!mAbsolutelyPositionedObject, "HideGrabber failed");
   }
 
   if (mIsObjectResizingEnabled && mResizedObject &&
       mResizedObject != focusElement) {
     res = HideResizers();
     if (NS_FAILED(res)) return res;
-    refreshResizing = PR_FALSE;
+    NS_ASSERTION(!mResizedObject, "HideResizers failed");
   }
 
   if (mIsInlineTableEditingEnabled && mInlineEditedCell &&
       mInlineEditedCell != cellElement) {
     res = HideInlineTableEditingUI();
     if (NS_FAILED(res)) return res;
-    refreshTableEditing = PR_FALSE;
+    NS_ASSERTION(!mInlineEditedCell, "HideInlineTableEditingUI failed");
   }
 
   // now, let's display all contextual UI for good
@@ -376,7 +375,7 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
       IsModifiableNode(focusElement)) {
     if (nsEditProperty::img == focusTagAtom)
       mResizedObjectIsAnImage = PR_TRUE;
-    if (refreshResizing)
+    if (mResizedObject)
       res = RefreshResizers();
     else
       res = ShowResizers(focusElement);
@@ -385,7 +384,7 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
 
   if (mIsAbsolutelyPositioningEnabled && absPosElement &&
       IsModifiableNode(absPosElement)) {
-    if (refreshPositioning)
+    if (mAbsolutelyPositionedObject)
       res = RefreshGrabber();
     else
       res = ShowGrabberOnElement(absPosElement);
@@ -394,7 +393,7 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
 
   if (mIsInlineTableEditingEnabled && cellElement &&
       IsModifiableNode(cellElement)) {
-    if (refreshTableEditing)
+    if (mInlineEditedCell)
       res = RefreshInlineTableEditingUI();
     else
       res = ShowInlineTableEditingUI(cellElement);
