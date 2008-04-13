@@ -474,7 +474,7 @@ toolbar#nav-bar {
   (path, leaf) = os.path.split(options.app)
   manifest = path + "/" + "chrome/mochikit.manifest"
   manifestFile = open(manifest, "w")
-  manifestFile.write("content mochikit " + chrometestDir + "\n")
+  manifestFile.write("content mochikit " + chrometestDir + " contentaccessible=yes\n")
   if options.browserChrome:
     overlayLine = "overlay " + BROWSER_CHROME_URL + " " \
                   "chrome://mochikit/content/browser-test-overlay.xul\n"
