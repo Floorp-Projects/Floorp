@@ -2460,8 +2460,9 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
   mozStorageStatementScoper scoper(mDBGetPageVisitStats);
   rv = BindStatementURI(mDBGetPageVisitStats, 0, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
-  PRBool alreadyVisited = PR_TRUE;
+  PRBool alreadyVisited = PR_FALSE;
   rv = mDBGetPageVisitStats->ExecuteStep(&alreadyVisited);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt64 pageID = 0;
   PRBool hidden; // XXX fix me, this should not be a PRBool, as we later do BindInt32Parameter()
