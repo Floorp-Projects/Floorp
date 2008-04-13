@@ -141,6 +141,16 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
 
   mMinLineHeight = nsHTMLReflowState::CalcLineHeight(aReflowState.rendContext,
                                                      aReflowState.frame);
+
+  // Calculate mOutsideBulletX
+  GetAvailableSpace();
+  // FIXME (bug 25888): need to check the entire region that the first
+  // line overlaps, not just the top pixel.
+  mOutsideBulletX =
+    mReflowState.mStyleVisibility->mDirection == NS_STYLE_DIRECTION_LTR ?
+      mAvailSpaceRect.x :
+      PR_MIN(mReflowState.ComputedWidth(), mAvailSpaceRect.XMost()) +
+        mReflowState.mComputedBorderPadding.LeftRight();
 }
 
 void
