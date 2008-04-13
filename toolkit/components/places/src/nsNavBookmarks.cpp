@@ -657,16 +657,16 @@ nsNavBookmarks::FillBookmarksHash()
 //    @see RecursiveAddBookmarkHash
 
 nsresult
-nsNavBookmarks::AddBookmarkToHash(PRInt64 aBookmarkId, PRTime aMinTime)
+nsNavBookmarks::AddBookmarkToHash(PRInt64 aPlaceId, PRTime aMinTime)
 {
   // this function might be called before our hashtable is initialized (for
   // example, on history import), just ignore these, we'll pick up the add when
   // the hashtable is initialized later
   if (! mBookmarksHash.IsInitialized())
     return NS_OK;
-  if (! mBookmarksHash.Put(aBookmarkId, aBookmarkId))
+  if (! mBookmarksHash.Put(aPlaceId, aPlaceId))
     return NS_ERROR_OUT_OF_MEMORY;
-  return RecursiveAddBookmarkHash(aBookmarkId, aBookmarkId, aMinTime);
+  return RecursiveAddBookmarkHash(aPlaceId, aPlaceId, aMinTime);
 }
 
 
@@ -683,7 +683,7 @@ nsNavBookmarks::AddBookmarkToHash(PRInt64 aBookmarkId, PRTime aMinTime)
 //    to search all history for redirects.
 
 nsresult
-nsNavBookmarks::RecursiveAddBookmarkHash(PRInt64 aBookmarkID,
+nsNavBookmarks::RecursiveAddBookmarkHash(PRInt64 aPlaceID,
                                          PRInt64 aCurrentSource,
                                          PRTime aMinTime)
 {
@@ -717,7 +717,7 @@ nsNavBookmarks::RecursiveAddBookmarkHash(PRInt64 aBookmarkID,
       if (mBookmarksHash.Get(curID, &alreadyExistingOne))
         continue;
 
-      if (! mBookmarksHash.Put(curID, aBookmarkID))
+      if (! mBookmarksHash.Put(curID, aPlaceID))
         return NS_ERROR_OUT_OF_MEMORY;
 
       // save for recursion later
@@ -727,7 +727,7 @@ nsNavBookmarks::RecursiveAddBookmarkHash(PRInt64 aBookmarkID,
 
   // recurse on each found item now that we're done with the statement
   for (PRUint32 i = 0; i < found.Length(); i ++) {
-    rv = RecursiveAddBookmarkHash(aBookmarkID, found[i], aMinTime);
+    rv = RecursiveAddBookmarkHash(aPlaceID, found[i], aMinTime);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -747,10 +747,10 @@ nsNavBookmarks::RecursiveAddBookmarkHash(PRInt64 aBookmarkID,
 
 PR_STATIC_CALLBACK(PLDHashOperator)
 RemoveBookmarkHashCallback(nsTrimInt64HashKey::KeyType aKey,
-                           PRInt64& aBookmark, void* aUserArg)
+                           PRInt64& aPlaceId, void* aUserArg)
 {
   const PRInt64* removeThisOne = reinterpret_cast<const PRInt64*>(aUserArg);
-  if (aBookmark == *removeThisOne)
+  if (aPlaceId == *removeThisOne)
     return PL_DHASH_REMOVE;
   return PL_DHASH_NEXT;
 }
@@ -986,20 +986,12 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder, nsIURI *aItem, PRInt32 aIndex,
 NS_IMETHODIMP
 nsNavBookmarks::RemoveItem(PRInt64 aItemId)
 {
-  mozIStorageConnection *dbConn = DBConn();
-  mozStorageTransaction transaction(dbConn, PR_FALSE);
-
+  nsresult rv;
   PRInt32 childIndex;
   PRInt64 placeId, folderId;
   PRInt32 itemType;
   nsCAutoString buffer;
   nsCAutoString spec;
-
-  // First, remove item annotations
-  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
-  NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
-  nsresult rv = annosvc->RemoveItemAnnotations(aItemId);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   { // scoping to ensure the statement gets reset
     mozStorageStatementScoper scope(mDBGetItemProperties);
@@ -1021,6 +1013,21 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
+
+  if (itemType == TYPE_FOLDER) {
+    rv = RemoveFolder(aItemId);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return NS_OK;
+  }
+
+  mozIStorageConnection *dbConn = DBConn();
+  mozStorageTransaction transaction(dbConn, PR_FALSE);
+
+  // First, remove item annotations
+  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
+  NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
+  rv = annosvc->RemoveItemAnnotations(aItemId);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   buffer.AssignLiteral("DELETE FROM moz_bookmarks WHERE id = ");
   buffer.AppendInt(aItemId);
@@ -1402,23 +1409,19 @@ nsNavBookmarks::GetParentAndIndexOfFolder(PRInt64 aFolder, PRInt64* aParent,
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
+nsNavBookmarks::RemoveFolder(PRInt64 aFolderId)
 {
   mozIStorageConnection *dbConn = DBConn();
   mozStorageTransaction transaction(dbConn, PR_FALSE);
 
-  // First, remove item annotations
-  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
-  NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
-  nsresult rv = annosvc->RemoveItemAnnotations(aFolder);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv;
 
   PRInt64 parent;
-  PRInt32 index;
+  PRInt32 index, type;
   nsCAutoString folderType;
   {
     mozStorageStatementScoper scope(mDBGetItemProperties);
-    rv = mDBGetItemProperties->BindInt64Parameter(0, aFolder);
+    rv = mDBGetItemProperties->BindInt64Parameter(0, aFolderId);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool results;
@@ -1428,30 +1431,42 @@ nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
       return NS_ERROR_INVALID_ARG; // folder is not in the hierarchy
     }
 
+    type = mDBGetItemProperties->AsInt32(kGetItemPropertiesIndex_Type);
     parent = mDBGetItemProperties->AsInt64(kGetItemPropertiesIndex_Parent);
     index = mDBGetItemProperties->AsInt32(kGetItemPropertiesIndex_Position);
     rv = mDBGetItemProperties->GetUTF8String(kGetItemPropertiesIndex_ServiceContractId, folderType);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  if (type != TYPE_FOLDER) {
+    NS_WARNING("RemoveFolder(): aFolderId is not a folder!");
+    return NS_ERROR_INVALID_ARG; // aFolderId is not a folder!
+  }
+
+  // First, remove item annotations
+  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
+  NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
+  rv = annosvc->RemoveItemAnnotations(aFolderId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // If this is a container bookmark, try to notify its service.
   if (folderType.Length() > 0) {
     // There is a type associated with this folder; it's a livemark.
     nsCOMPtr<nsIDynamicContainer> bmcServ = do_GetService(folderType.get());
     if (bmcServ) {
-      rv = bmcServ->OnContainerRemoving(aFolder);
+      rv = bmcServ->OnContainerRemoving(aFolderId);
       if (NS_FAILED(rv))
         NS_WARNING("Remove folder container notification failed.");
     }
   }
 
   // Remove all of the folder's children
-  RemoveFolderChildren(aFolder);
+  RemoveFolderChildren(aFolderId);
 
   // Remove the folder from its parent
   nsCAutoString buffer;
   buffer.AssignLiteral("DELETE FROM moz_bookmarks WHERE id = ");
-  buffer.AppendInt(aFolder);
+  buffer.AppendInt(aFolderId);
   rv = dbConn->ExecuteSimpleSQL(buffer);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1464,12 +1479,12 @@ nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aFolder == mToolbarFolder) {
+  if (aFolderId == mToolbarFolder) {
     mToolbarFolder = 0;
   }
 
   ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
-                      OnItemRemoved(aFolder, parent, index))
+                      OnItemRemoved(aFolderId, parent, index))
 
   return NS_OK;
 }
@@ -2135,6 +2150,8 @@ nsNavBookmarks::FolderCount(PRInt64 aFolder)
 NS_IMETHODIMP
 nsNavBookmarks::IsBookmarked(nsIURI *aURI, PRBool *aBookmarked)
 {
+  NS_ENSURE_ARG(aURI);
+
   nsNavHistory* history = History();
   NS_ENSURE_TRUE(history, NS_ERROR_UNEXPECTED);
 

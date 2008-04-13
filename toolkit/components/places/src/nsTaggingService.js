@@ -201,8 +201,9 @@ TaggingService.prototype = {
     var cc = node.childCount;
     if (wasOpen)
       node.containerOpen = false;
-    if (cc == 0)
-      this._bms.removeFolder(aTagId);
+    if (cc == 0) {
+      this._bms.removeFolder(node.itemId);
+    }
   },
 
   // nsITaggingService
