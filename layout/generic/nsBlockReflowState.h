@@ -185,6 +185,13 @@ public:
   // XXX get rid of this
   nsReflowStatus mReflowStatus;
 
+  // The x-position we should place an outside bullet relative to.
+  // This is the border-box edge of the principal box.  However, if a line box
+  // would be displaced by floats, we want to displace it by the same amount.
+  // That is, we act as though the edge of the floats is the content-edge of
+  // the block, displaced by the block's padding and border.
+  nscoord mOutsideBulletX;
+
   nscoord mBottomEdge;
 
   // The content area to reflow child frames within. The x/y
