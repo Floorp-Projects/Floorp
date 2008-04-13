@@ -2838,12 +2838,12 @@ PlacesSQLQueryBuilder::PlacesSQLQueryBuilder(
     PRBool aUseLimit,
     nsNavHistory::StringHash& aAddParams) :
   mConditions(aConditions),
+  mUseLimit(aUseLimit),
   mResultType(aOptions->ResultType()),
   mQueryType(aOptions->QueryType()),
   mIncludeHidden(aOptions->IncludeHidden()),
   mSortingMode(aOptions->SortingMode()),
   mMaxResults(aOptions->MaxResults()),
-  mUseLimit(aUseLimit),
   mSkipOrderBy(PR_FALSE),
   mAddParams(aAddParams)
 {
@@ -3204,8 +3204,8 @@ PlacesSQLQueryBuilder::Where()
 {
   // If we used WHERE already, we inject the conditions 
   // in place of {ADDITIONAL_CONDITIONS}
-  PRUint32 useInnerCondition;
-  useInnerCondition = mQueryString.Find("{ADDITIONAL_CONDITIONS}",0);
+  PRInt32 useInnerCondition;
+  useInnerCondition = mQueryString.Find("{ADDITIONAL_CONDITIONS}", 0);
   if (useInnerCondition != kNotFound) {
 
     nsCAutoString innerCondition;
@@ -3396,7 +3396,6 @@ nsNavHistory::ConstructQueryString(
   PRInt32 i;
   for (i = 0; i < aQueries.Count(); i ++) {
     nsCString queryClause;
-    PRInt32 clauseParameters = 0;
     rv = QueryToSelectClause(aQueries[i], aOptions, i, &queryClause);
     NS_ENSURE_SUCCESS(rv, rv);
     if (! queryClause.IsEmpty()) {
@@ -3739,7 +3738,7 @@ nsNavHistory::RemovePages(nsIURI **aURIs, PRUint32 aLength, PRBool aDoBatchNotif
   nsresult rv;
   // build a list of place ids to delete
   nsCString deletePlaceIdsQueryString;
-  for (PRInt32 i = 0; i < aLength; i++) {
+  for (PRUint32 i = 0; i < aLength; i++) {
     PRInt64 placeId;
     rv = GetUrlIdFor(aURIs[i], &placeId, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -5226,7 +5225,7 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
   nsTArray<nsStringArray*> terms;
   ParseSearchTermsFromQueries(aQueries, &terms);
 
-  PRUint32 queryIndex;
+  PRInt32 queryIndex;
   PRUint16 resultType = aOptions->ResultType();
 
   // The includeFolders array for each query is initialized with its
