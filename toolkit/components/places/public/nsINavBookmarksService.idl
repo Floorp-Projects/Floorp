@@ -259,10 +259,15 @@ interface nsINavBookmarksService : nsISupports
    *  @returns the ID of the newly-inserted folder
    */
   long long createDynamicContainer(in long long aParentFolder, in AUTF8String aName,
-                                  in AString aContractId, in long aIndex);
+                                   in AString aContractId, in long aIndex);
 
   /**
    * Removes a folder from the bookmarks tree.
+   *
+   * NOTE: This API is deprecated. The correct method to use is removeItem.
+   *       This will be removed in the next release after Firefox 3.0. The
+   *       removal is in bug 428558.
+   *
    *  @param aFolder
    *         The id of the folder to remove.
    */
