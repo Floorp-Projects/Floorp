@@ -52,7 +52,7 @@ license {
   margin-top: 3px;
 }
 .licenseLoadingThrobber[state="loading"] {
-  list-style-image: url("chrome://global/skin/icons/loading_16.gif");
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 .licenseLoadingThrobber[state="error"] {
   list-style-image: url("chrome://global/skin/icons/notfound.png");
@@ -126,7 +126,7 @@ wizard[currentpageid="updatesfound"] .wizard-page-box {
   list-style-image: url("chrome://global/skin/icons/notloading_16.png");
 }
 #downloadThrobber[state="loading"] {
-  list-style-image: url("chrome://global/skin/icons/loading_16.gif");
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 
 #verificationFailedIcon {
