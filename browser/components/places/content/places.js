@@ -564,7 +564,7 @@ var PlacesOrganizer = {
   function PO__detectAndSetDetailsPaneMinimalState(aNode) {
     /**
      * The details of simple folder-items (as opposed to livemarks) or the
-     * of livemark-children are not likely to fill the infoPane anyway,
+     * of livemark-children are not likely to fill the infoBox anyway,
      * thus we remove the "More/Less" button and show all details.
      *
      * the wasminimal attribute here is used to persist the "more/less"
