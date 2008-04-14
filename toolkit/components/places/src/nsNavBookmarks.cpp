@@ -1892,24 +1892,20 @@ NS_IMETHODIMP
 nsNavBookmarks::SetItemTitle(PRInt64 aItemId, const nsACString &aTitle)
 {
   mozIStorageConnection *dbConn = DBConn();
-  mozStorageTransaction transaction(dbConn, PR_FALSE);
 
   nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("UPDATE moz_bookmarks SET title = ?1 WHERE id = ?2"),
-                               getter_AddRefs(statement));
+  nsresult rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
+      "UPDATE moz_bookmarks SET title = ?1, lastModified = ?2 WHERE id = ?3"),
+    getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->BindUTF8StringParameter(0, aTitle);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt64Parameter(1, aItemId);
+  rv = statement->BindInt64Parameter(1, PR_Now());
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindInt64Parameter(2, aItemId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = statement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = SetItemDateInternal(mDBSetItemLastModified, aItemId, PR_Now());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
   ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
