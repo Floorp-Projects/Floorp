@@ -487,7 +487,7 @@
               </treecols>
               <treechildren flex="1"/>
             </tree>
-            <hbox id="infoPane">
+            <hbox id="infoPaneBox">
               <deck flex="1" id="detailsDeck">
                 <vbox id="itemsCountBox" align="center">
                   <spacer flex="3"/>
