@@ -120,7 +120,7 @@ function doSimpleUpdate(updateText, success, failure, clientKey) {
     },
 
     updateUrlRequested: function(url) { },
-    streamFinished: function() { },
+    streamFinished: function(status) { },
     updateError: function(errorCode) { failure(errorCode); },
     updateSuccess: function(requestedTimeout) { success(requestedTimeout); }
   };
