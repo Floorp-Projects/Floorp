@@ -1977,7 +1977,6 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
                 continue;
             if (sprop->id == ATOM_TO_JSID(cx->runtime->atomState.emptyAtom)) {
                 /* See comments before EnsureNonEmptyLet from jsparse.c. */
-                JS_ASSERT(OBJ_BLOCK_COUNT(cx, obj) == 1);
                 JS_ASSERT(sprop->shortid == 0);
                 continue;
             }
