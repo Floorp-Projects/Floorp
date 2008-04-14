@@ -58,8 +58,13 @@ _BROWSER_FILES = browser_bug321000.js \
                  autodiscovery.html \
                  moz.png \
                  browser_getshortcutoruri.js \
-                 browser_bug427559.js \
     $(NULL)
+
+ifeq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
+_BROWSER_FILES += \
+                  browser_bug427559.js \
+    $(NULL)
+endif
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
