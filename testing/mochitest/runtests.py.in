@@ -106,7 +106,8 @@ class MochitestOptions(optparse.OptionParser):
     defaults["app"] = automation.DEFAULT_APP
 
     self.add_option("--log-file",
-                    action = "store", type = "string", dest = "logFile",
+                    action = "store", type = "string",
+                    dest = "logFile", metavar = "FILE",
                     help = "file to which logging occurs")
     defaults["logFile"] = ""
 
@@ -115,19 +116,23 @@ class MochitestOptions(optparse.OptionParser):
                     help = "start running tests when the application starts")
     defaults["autorun"] = False
 
-    LOG_LEVELS = ("DEBUG", "INFO", "ERROR", "FATAL", "WARNING")
+    LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR", "FATAL")
+    LEVEL_STRING = ", ".join(LOG_LEVELS)
 
     self.add_option("--console-level",
                     action = "store", type = "choice", dest = "consoleLevel",
-                    choices = LOG_LEVELS,
-                    help = "logging level of console logging")
+                    choices = LOG_LEVELS, metavar = "LEVEL",
+                    help = "one of %s to determine the level of console "
+                           "logging" % LEVEL_STRING)
     defaults["consoleLevel"] = None
 
     self.add_option("--file-level", 
                     action = "store", type = "choice", dest = "fileLevel",
-                    choices = LOG_LEVELS,
-                    help = "logging level of file logging")
-    defaults["fileLevel"] = None
+                    choices = LOG_LEVELS, metavar = "LEVEL",
+                    help = "one of %s to determine the level of file "
+                           "logging if a file has been specified, defaulting "
+                           "to INFO" % LEVEL_STRING)
+    defaults["fileLevel"] = "INFO"
 
     self.add_option("--chrome",
                     action = "store_true", dest = "chrome",
@@ -149,18 +154,21 @@ class MochitestOptions(optparse.OptionParser):
                     help = "run accessibility Mochitests");
 
     self.add_option("--setenv",
-                    action = "append", type = "string", dest = "environment",
-                    help = "given a VAR=value pair, sets that in the "
-                           "browser's environment")
+                    action = "append", type = "string",
+                    dest = "environment", metavar = "NAME=VALUE",
+                    help = "sets the given variable in the application's "
+                           "environment")
     defaults["environment"] = []
     
     self.add_option("--browser-arg",
-                    action = "append", type = "string", dest = "browserArgs",
+                    action = "append", type = "string",
+                    dest = "browserArgs", metavar = "ARG",
                     help = "provides an argument to the test application")
     defaults["browserArgs"] = []
 
     self.add_option("--leak-threshold",
-                    action = "store", type = "int", dest = "leakThreshold",
+                    action = "store", type = "int",
+                    dest = "leakThreshold", metavar = "THRESHOLD",
                     help = "fail if the number of bytes leaked through "
                            "refcounted objects (or bytes in classes with "
                            "MOZ_COUNT_CTOR and MOZ_COUNT_DTOR) is greater "
@@ -174,12 +182,9 @@ class MochitestOptions(optparse.OptionParser):
     usage = """\
 Usage instructions for runtests.py.
 All arguments are optional.
-If --log-file is specified, --file-level must be specified as well.
 If --chrome is specified, chrome tests will be run instead of web content tests.
 If --browser-chrome is specified, browser-chrome tests will be run instead of web content tests.
-Logging levels are one of %s.
-For further details on the logging levels, see
-<http://mochikit.com/doc/html/MochiKit/Logging.html>.""" % ", ".join(LOG_LEVELS)
+See <http://mochikit.com/doc/html/MochiKit/Logging.html> for details on the logging levels."""
     self.set_usage(usage)
 
 
@@ -320,7 +325,6 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
       urlOpts.append("closeWhenDone=1")
     if options.logFile:
       urlOpts.append("logFile=" + encodeURIComponent(options.logFile))
-    if options.fileLevel:
       urlOpts.append("fileLevel=" + encodeURIComponent(options.fileLevel))
     if options.consoleLevel:
       urlOpts.append("consoleLevel=" + encodeURIComponent(options.consoleLevel))
