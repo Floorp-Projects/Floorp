@@ -70,6 +70,7 @@ REQUIRES    = xpcom                             \
 CPPSRCS		= nsPrompt.cpp \
                   nsWWJSUtils.cpp \
                   nsWindowWatcher.cpp  \
+                  nsAutoWindowStateHelper.cpp \
                   $(NULL)
 
 ifdef MOZ_XUL

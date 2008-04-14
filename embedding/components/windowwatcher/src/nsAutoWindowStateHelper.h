@@ -35,48 +35,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsPromptService_h
-#define __nsPromptService_h
-
-// {A2112D6A-0E28-421f-B46A-25C0B308CBD0}
-#define NS_PROMPTSERVICE_CID \
- {0xa2112d6a, 0x0e28, 0x421f, {0xb4, 0x6a, 0x25, 0xc0, 0xb3, 0x8, 0xcb, 0xd0}}
-// {150E7415-72D7-11DA-A924-00039386357A}
-#define NS_NONBLOCKINGALERTSERVICE_CID \
- {0x150e7415, 0x72d7, 0x11da, {0xa9, 0x24, 0x00, 0x03, 0x93, 0x86, 0x35, 0x7a}}
+#ifndef __nsAutoWindowStateHelper_h
+#define __nsAutoWindowStateHelper_h
 
 #include "nsCOMPtr.h"
-#include "nsIPromptService2.h"
-#include "nsPIPromptService.h"
-#include "nsINonBlockingAlertService.h"
-#include "nsIWindowWatcher.h"
-#include "nsAutoWindowStateHelper.h"
+
+/**
+ * Helper class for dealing with notifications around opening modal
+ * windows.
+ */
 
 class nsIDOMWindow;
-class nsIDialogParamBlock;
 
-class nsPromptService: public nsIPromptService2,
-                       public nsPIPromptService,
-                       public nsINonBlockingAlertService {
-
+class nsAutoWindowStateHelper
+{
 public:
+  nsAutoWindowStateHelper(nsIDOMWindow *aWindow);
+  ~nsAutoWindowStateHelper();
 
-  nsPromptService();
-  virtual ~nsPromptService();
+  PRBool DefaultEnabled()
+  {
+    return mDefaultEnabled;
+  }
 
-  nsresult Init();
+protected:
+  PRBool DispatchCustomEvent(const char *aEventName);
 
-  NS_DECL_NSIPROMPTSERVICE
-  NS_DECL_NSIPROMPTSERVICE2
-  NS_DECL_NSPIPROMPTSERVICE
-  NS_DECL_NSINONBLOCKINGALERTSERVICE
-  NS_DECL_ISUPPORTS
-
-private:
-  nsresult GetLocaleString(const char *aKey, PRUnichar **aResult);
-
-  nsCOMPtr<nsIWindowWatcher> mWatcher;
+  nsIDOMWindow *mWindow;
+  PRBool mDefaultEnabled;
 };
 
-#endif
 
+#endif
