@@ -1144,6 +1144,10 @@ statusbarpanel#statusbar-display {
 }
 
 .ac-url-text {
+  color: GrayText;
+}
+
+.ac-url-text:-moz-system-metric(windows-default-theme) {
   color: #336633;
 }
 
