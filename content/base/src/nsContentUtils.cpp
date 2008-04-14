@@ -200,6 +200,7 @@ PRUint32 nsContentUtils::sJSGCThingRootCount;
 nsIBidiKeyboard *nsContentUtils::sBidiKeyboard = nsnull;
 #endif
 PRUint32 nsContentUtils::sScriptBlockerCount = 0;
+PRUint32 nsContentUtils::sRemovableScriptBlockerCount = 0;
 nsCOMArray<nsIRunnable>* nsContentUtils::sBlockedScriptRunners = nsnull;
 PRUint32 nsContentUtils::sRunnersCountAtFirstBlocker = 0;
 
@@ -4014,6 +4015,7 @@ nsContentUtils::AddScriptBlocker()
 void
 nsContentUtils::RemoveScriptBlocker()
 {
+  NS_ASSERTION(sScriptBlockerCount != 0, "Negative script blockers");
   --sScriptBlockerCount;
   if (sScriptBlockerCount) {
     return;

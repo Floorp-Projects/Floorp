@@ -58,6 +58,7 @@ class nsIFontMetrics;
 #include "nsStyleSet.h"
 #include "nsIView.h"
 #include "nsIFrame.h"
+#include "nsThreadUtils.h"
 
 class nsBlockFrame;
 
@@ -813,6 +814,30 @@ public:
 private:
   PRBool mOldValue;
 #endif  
+};
+
+class nsSetAttrRunnable : public nsRunnable
+{
+public:
+  nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,
+                    const nsAString& aValue);
+
+  NS_DECL_NSIRUNNABLE
+
+  nsCOMPtr<nsIContent> mContent;
+  nsCOMPtr<nsIAtom> mAttrName;
+  nsAutoString mValue;
+};
+
+class nsUnsetAttrRunnable : public nsRunnable
+{
+public:
+  nsUnsetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName);
+
+  NS_DECL_NSIRUNNABLE
+
+  nsCOMPtr<nsIContent> mContent;
+  nsCOMPtr<nsIAtom> mAttrName;
 };
 
 #endif // nsLayoutUtils_h__
