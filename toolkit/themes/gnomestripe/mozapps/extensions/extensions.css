@@ -340,7 +340,7 @@ vbox[typeName="status"][type="header-recommended"] {
 
 .searchbox-search, .searchbox-cancel {
   -moz-appearance: none;
-  cursor: pointer;
+  cursor: default;
   background-color: transparent;
   margin: 0;
   border: 0;
