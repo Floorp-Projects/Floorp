@@ -283,10 +283,33 @@ NS_IMETHODIMP nsIDNService::Normalize(const nsACString & input, nsACString & out
   NS_ConvertUTF8toUTF16 inUTF16(input);
   normalizeFullStops(inUTF16);
 
-  nsAutoString outUTF16;
-  nsresult rv = stringPrep(inUTF16, outUTF16);
-  if (NS_FAILED(rv))
-    return rv;
+  // pass the domain name to stringprep label by label
+  nsAutoString outUTF16, outLabel;
+
+  PRUint32 len = 0, offset = 0;
+  nsresult rv;
+  nsAString::const_iterator start, end;
+  inUTF16.BeginReading(start);
+  inUTF16.EndReading(end);
+
+  while (start != end) {
+    len++;
+    if (*start++ == PRUnichar('.')) {
+      rv = stringPrep(Substring(inUTF16, offset, len - 1), outLabel);
+      NS_ENSURE_SUCCESS(rv, rv);
+   
+      outUTF16.Append(outLabel);
+      outUTF16.Append(PRUnichar('.'));
+      offset += len;
+      len = 0;
+    }
+  }
+  if (len) {
+    rv = stringPrep(Substring(inUTF16, offset, len), outLabel);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    outUTF16.Append(outLabel);
+  }
 
   CopyUTF16toUTF8(outUTF16, output);
   if (!isOnlySafeChars(outUTF16, mIDNBlacklist))
