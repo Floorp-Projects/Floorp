@@ -65,6 +65,7 @@ ifneq ($(OS_ARCH),Linux)
 _BROWSER_FILES += \
                  browser_bug427559.js \
     $(NULL)
+endif
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
