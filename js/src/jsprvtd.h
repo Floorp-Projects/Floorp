@@ -239,6 +239,7 @@ typedef union JSTempValueUnion {
     JSString            *string;
     JSXML               *xml;
     JSXMLQName          *qname;
+    JSXMLNamespace      *nspace;
     JSTempValueTrace    trace;
     JSScopeProperty     *sprop;
     JSWeakRoots         *weakRoots;
