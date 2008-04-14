@@ -94,7 +94,6 @@
 /* Root View */
 #placesView {
   border-top: 1px solid ThreeDDarkShadow;
-  background-color: Window;
 }
 
 #splitter {
@@ -278,13 +277,10 @@
 }
 %endif
 
-#searchModifiers {
-  padding-right: 3px;
-}
-
 #organizerScopeBar {
-  background-color: Window;
+  -moz-appearance: toolbox;
   padding: 2px 0;
+  -moz-padding-end: 3px;
 }
 
 #organizerScopeBar > toolbarbutton {
