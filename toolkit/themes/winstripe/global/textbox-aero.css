@@ -1,0 +1,5 @@
+%include textbox.css
+
+textbox[empty="true"] {
+  font-style: italic;
+}
