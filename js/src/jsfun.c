@@ -1976,17 +1976,12 @@ JSObject *
 js_InitFunctionClass(JSContext *cx, JSObject *obj)
 {
     JSObject *proto;
-    JSAtom *atom;
     JSFunction *fun;
 
     proto = JS_InitClass(cx, obj, NULL, &js_FunctionClass, Function, 1,
                          function_props, function_methods, NULL, NULL);
     if (!proto)
         return NULL;
-    atom = js_Atomize(cx, js_FunctionClass.name, strlen(js_FunctionClass.name),
-                      0);
-    if (!atom)
-        goto bad;
     fun = js_NewFunction(cx, proto, NULL, 0, JSFUN_INTERPRETED, obj, NULL);
     if (!fun)
         goto bad;
