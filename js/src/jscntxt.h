@@ -622,6 +622,9 @@ JS_STATIC_ASSERT(sizeof(JSTempValueUnion) == sizeof(void *));
 #define JS_PUSH_TEMP_ROOT_QNAME(cx,qn,tvr)                                    \
     JS_PUSH_TEMP_ROOT_COMMON(cx, qn, tvr, JSTVU_SINGLE, qname)
 
+#define JS_PUSH_TEMP_ROOT_NAMESPACE(cx,ns,tvr)                                \
+    JS_PUSH_TEMP_ROOT_COMMON(cx, ns, tvr, JSTVU_SINGLE, nspace)
+
 #define JS_PUSH_TEMP_ROOT_XML(cx,xml_,tvr)                                    \
     JS_PUSH_TEMP_ROOT_COMMON(cx, xml_, tvr, JSTVU_SINGLE, xml)
 
