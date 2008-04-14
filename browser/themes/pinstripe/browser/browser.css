@@ -665,12 +665,12 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker[open="true"] {
   -moz-appearance: none;
   border: none;
   background: url("chrome://browser/skin/urlbar/endcap.png") transparent right center no-repeat;
-  margin: 1px 4px;
+  margin: 0px 4px 1px 4px;
   -moz-padding-end: 8px;
   font: icon !important;
   width: 7em;
   min-width: 7em;
-  min-height: 26px;
+  height: 26px;
 }
 
 #urlbar[focused="true"] {
@@ -688,13 +688,16 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker[open="true"] {
   background-image: url("chrome://browser/skin/urlbar/textfield-mid-focused.png");
 }
 
+#urlbar .textbox-input-box {
+  padding-top: 1px;
+}
+
 .autocomplete-textbox {
   background-image: inherit !important;
 }
 
 #urlbar-icons {
   -moz-box-align: center;
-  margin: 2px 0;
   min-height: 26px;
 }
 
