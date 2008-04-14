@@ -146,7 +146,7 @@ classic.jar:
         skin/classic/aero/global/linkTree.css
         skin/classic/aero/global/listbox.css
         skin/classic/aero/global/menu.css
-        skin/classic/aero/global/menulist.css
+*       skin/classic/aero/global/menulist.css                            (menulist-aero.css)
         skin/classic/aero/global/netError.css
         skin/classic/aero/global/numberbox.css
         skin/classic/aero/global/notification.css
