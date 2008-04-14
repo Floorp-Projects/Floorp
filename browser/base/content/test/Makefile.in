@@ -50,6 +50,7 @@ _TEST_FILES =	test_feed_discovery.html \
 		$(NULL)
 
 # browser_bug423833.js disabled temporarily since it's unreliable
+# browser_bug427559.js disabled temporarily..
 _BROWSER_FILES = browser_bug321000.js \
                  browser_bug405137.js \
                  browser_bug409481.js \
@@ -59,12 +60,6 @@ _BROWSER_FILES = browser_bug321000.js \
                  moz.png \
                  browser_getshortcutoruri.js \
     $(NULL)
-
-ifeq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
-_BROWSER_FILES += \
-                  browser_bug427559.js \
-    $(NULL)
-endif
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
