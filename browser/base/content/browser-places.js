@@ -415,6 +415,9 @@ var PlacesCommandHook = {
       itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
     }
 
+    // Revert the contents of the location bar
+    handleURLBarRevert();
+
     // dock the panel to the star icon when possible, otherwise dock
     // it to the content area
     if (aBrowser.contentWindow == window.content) {
