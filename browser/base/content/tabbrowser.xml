@@ -846,8 +846,12 @@
 
             var whatToFocus = window.content;
 
-            // Focus the previously focused element or window
-            if (newBrowser.focusedElement) {
+            // Focus the previously focused element or window, but make sure
+            // the focused element is still part of the document
+            let focusedElem = newBrowser.focusedElement;
+            if (focusedElem && focusedElem.ownerDocument &&
+                !(focusedElem.ownerDocument.compareDocumentPosition(focusedElem) &
+                  Node.DOCUMENT_POSITION_DISCONNECTED)) {
               if (newBrowser.focusedElement.parentNode !=
                   this.mCurrentTab.parentNode) {
                 // Focus the remembered element unless it's in the current tab panel
