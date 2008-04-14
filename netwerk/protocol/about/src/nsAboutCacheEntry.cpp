@@ -392,9 +392,10 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
             PRUint32 count = PR_MIN(dataSize, sizeof(chunk));
             if (NS_FAILED(stream->Read(chunk, count, &n)) || n == 0)
                 break;
+            dataSize -= n;
             HexDump(&hexDumpState, chunk, n, buffer);
             outputStream->Write(buffer.get(), buffer.Length(), &n);
-            dataSize -= n;
+            buffer.Truncate();
         }
     }
 
