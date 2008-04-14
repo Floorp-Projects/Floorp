@@ -2662,3 +2662,31 @@ nsLayoutUtils::GetRectDifferenceStrips(const nsRect& aR1, const nsRect& aR2,
   aHStrip->height -= HStripStart;
 }
 
+nsSetAttrRunnable::nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,
+                                     const nsAString& aValue)
+  : mContent(aContent),
+    mAttrName(aAttrName),
+    mValue(aValue)
+{
+  NS_ASSERTION(aContent && aAttrName, "Missing stuff, prepare to crash");
+}
+
+NS_IMETHODIMP
+nsSetAttrRunnable::Run()
+{
+  return mContent->SetAttr(kNameSpaceID_None, mAttrName, mValue, PR_TRUE);
+}
+
+nsUnsetAttrRunnable::nsUnsetAttrRunnable(nsIContent* aContent,
+                                         nsIAtom* aAttrName)
+  : mContent(aContent),
+    mAttrName(aAttrName)
+{
+  NS_ASSERTION(aContent && aAttrName, "Missing stuff, prepare to crash");
+}
+
+NS_IMETHODIMP
+nsUnsetAttrRunnable::Run()
+{
+  return mContent->UnsetAttr(kNameSpaceID_None, mAttrName, PR_TRUE);
+}
