@@ -58,6 +58,7 @@ _BROWSER_FILES = browser_bug321000.js \
                  autodiscovery.html \
                  moz.png \
                  browser_getshortcutoruri.js \
+                 browser_bug427559.js \
     $(NULL)
 
 libs:: $(_TEST_FILES)
