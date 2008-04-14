@@ -3221,11 +3221,13 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
     if (mSessionHistory && !mLSHE) {
         PRInt32 idx;
         mSessionHistory->GetRequestedIndex(&idx);
+        if (idx == -1)
+            mSessionHistory->GetIndex(&idx);
+
         nsCOMPtr<nsIHistoryEntry> entry;
         mSessionHistory->GetEntryAtIndex(idx, PR_FALSE,
                                          getter_AddRefs(entry));
         mLSHE = do_QueryInterface(entry);
-
     }
 
     nsCAutoString url;
