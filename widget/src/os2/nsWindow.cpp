@@ -2274,6 +2274,32 @@ NS_METHOD nsWindow::SetColorMap(nsColorMap *aColorMap)
 
 //-------------------------------------------------------------------------
 //
+// Notify a child window of a coming move by sending it a WM_VRNDISABLED
+// message. Only do that if it's not one of ours like e.g. plugin windows.
+//
+//-------------------------------------------------------------------------
+BOOL nsWindow::NotifyForeignChildWindows(HWND aWnd)
+{
+  HENUM hEnum = WinBeginEnumWindows(aWnd);
+  HWND hwnd;
+
+  while ((hwnd = WinGetNextWindow(hEnum)) != NULLHANDLE) {
+    char className[19];
+    WinQueryClassName(hwnd, 19, className);
+    if (strcmp(className, WindowClass()) != 0) {
+      // This window is not one of our windows so notify it (and wait for
+      // the call to return so that the plugin has time to react)
+      WinSendMsg(hwnd, WM_VRNDISABLED, MPVOID, MPVOID);
+    } else {
+      // Recurse starting at this Mozilla child window.
+      NotifyForeignChildWindows(hwnd);
+    }
+  }
+  return WinEndEnumWindows(hEnum);
+}
+
+//-------------------------------------------------------------------------
+//
 // Scroll the bits of a window
 //
 //-------------------------------------------------------------------------
@@ -2298,6 +2324,7 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
   HPS hps = 0;
   CheckDragStatus(ACTION_SCROLL, &hps);
 
+  NotifyForeignChildWindows(mWnd);
   WinScrollWindow( mWnd, aDx, -aDy, aClipRect ? &rcl : 0, 0, 0,
                    0, SW_SCROLLCHILDREN | SW_INVALIDATERGN);
   Update();
