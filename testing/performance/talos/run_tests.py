@@ -60,6 +60,7 @@ socket.setdefaulttimeout(480)
 import getopt
 
 import utils
+from utils import talosError
 import post_file
 import ttest
 
@@ -312,10 +313,12 @@ def test_file(filename):
   utils.stamped_msg(title, "Started")
   for test in tests:
     utils.stamped_msg("Running test " + test, "Started")
-    res, browser_dump, counter_dump = ttest.runTest(browser_config, tests[test])
-    if not res:
+    try:
+      browser_dump, counter_dump = ttest.runTest(browser_config, tests[test])
+    except talosError, e:
       utils.stamped_msg("Failed " + test, "Stopped")
-      print 'FAIL: failure to complete test: ' + test
+      print 'FAIL: Busted: ' + test
+      print 'FAIL: ' + e.msg
       sys.exit(0)
     utils.debug("Received test results: " + " ".join(browser_dump))
     results[test] = [browser_dump, counter_dump]
