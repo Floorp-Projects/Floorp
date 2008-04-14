@@ -92,3 +92,9 @@ def restoreEnvironmentVars():
   global saved_environment
   for var in saved_environment:
     os.environ[var] = saved_environment[var]
+
+class talosError(Exception):
+  def __init__(self, msg):
+    self.msg = msg
+  def __str__(self):
+    return repr(self.msg)
