@@ -161,5 +161,4 @@ def InitializeNewProfile(firefox_path, profile_dir, init_url):
     print match
   else:
     res = 0
-    print "ERROR: no metrics"
   return res
