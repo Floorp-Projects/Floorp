@@ -51,7 +51,8 @@ function test() {
   gBrowser.selectedTab = testTab;
   let testBrowser = gBrowser.getBrowserForTab(testTab);
 
-  testBrowser.addEventListener("load", function() {
+  // Do stuff just after the page loads, so the page script can do its stuff
+  testBrowser.addEventListener("load", function() setTimeout(function() {
     // The test page loaded, so open an empty tab, select it, then restore
     // the test tab. This causes the test page's focused element to be removed
     // from its document.
@@ -65,7 +66,7 @@ function test() {
        "content window is focused");
     gBrowser.removeCurrentTab();
     finish();
-  }, true);
+  }, 0), true);
 
   // Start the test by loading the test page
   testBrowser.contentWindow.location = testPage;
