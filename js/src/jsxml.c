@@ -314,11 +314,17 @@ js_NewXMLNamespaceObject(JSContext *cx, JSString *prefix, JSString *uri,
                          JSBool declared)
 {
     JSXMLNamespace *ns;
+    JSTempValueRooter tvr;
+    JSObject *obj;
 
     ns = js_NewXMLNamespace(cx, prefix, uri, declared);
     if (!ns)
         return NULL;
-    return js_GetXMLNamespaceObject(cx, ns);
+
+    JS_PUSH_TEMP_ROOT_NAMESPACE(cx, ns, &tvr);
+    obj = js_GetXMLNamespaceObject(cx, ns);
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    return obj;
 }
 
 JSObject *
@@ -590,11 +596,16 @@ js_NewXMLQNameObject(JSContext *cx, JSString *uri, JSString *prefix,
                      JSString *localName)
 {
     JSXMLQName *qn;
+    JSTempValueRooter tvr;
+    JSObject *obj;
 
     qn = js_NewXMLQName(cx, uri, prefix, localName);
     if (!qn)
         return NULL;
-    return js_GetXMLQNameObject(cx, qn);
+    JS_PUSH_TEMP_ROOT_QNAME(cx, qn, &tvr);
+    obj = js_GetXMLQNameObject(cx, qn);
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    return obj;
 }
 
 JSObject *
@@ -7755,9 +7766,6 @@ js_GetFunctionNamespace(JSContext *cx, jsval *vp)
         obj = rt->functionNamespaceObject;
         if (!obj) {
             JS_UNLOCK_GC(rt);
-            atom = js_Atomize(cx, js_function_str, 8, 0);
-            JS_ASSERT(atom);
-            prefix = ATOM_TO_STRING(atom);
 
             /*
              * Note that any race to atomize anti_uri here is resolved by
@@ -7771,6 +7779,7 @@ js_GetFunctionNamespace(JSContext *cx, jsval *vp)
                 return JS_FALSE;
             rt->atomState.lazy.functionNamespaceURIAtom = atom;
 
+            prefix = ATOM_TO_STRING(rt->atomState.typeAtoms[JSTYPE_FUNCTION]);
             uri = ATOM_TO_STRING(atom);
             obj = js_NewXMLNamespaceObject(cx, prefix, uri, JS_FALSE);
             if (!obj)
