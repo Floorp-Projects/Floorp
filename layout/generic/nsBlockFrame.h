@@ -299,8 +299,13 @@ public:
    * Returns the width that needs to be cleared past floats for blocks
    * that cannot intersect floats.
    */
-  static nscoord WidthToClearPastFloats(nsBlockReflowState& aState,
-                                        nsIFrame* aFrame);
+  struct ReplacedElementWidthToClear {
+    nscoord marginLeft, borderBoxWidth, marginRight;
+    nscoord MarginBoxWidth() const
+      { return marginLeft + borderBoxWidth + marginRight; }
+  };
+  static ReplacedElementWidthToClear
+    WidthToClearPastFloats(nsBlockReflowState& aState, nsIFrame* aFrame);
 
   /**
    * Walks up the frame tree, starting with aCandidate, and returns the first
