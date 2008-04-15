@@ -192,10 +192,14 @@
 
             if (PlacesUtils.containerTypes.indexOf(type) != -1) {
               button.setAttribute("type", "menu");
-              if (PlacesUtils.nodeIsQuery(aChild))
-                button.setAttribute("query", "true");
               button.setAttribute("container", "true");
-              if (PlacesUtils.nodeIsLivemarkContainer(aChild))
+
+              if (PlacesUtils.nodeIsQuery(aChild)) {
+                button.setAttribute("query", "true");
+                if (PlacesUtils.nodeIsTagQuery(aChild))
+                  button.setAttribute("tagContainer", "true");
+              }
+              else if (PlacesUtils.nodeIsLivemarkContainer(aChild))
                 button.setAttribute("livemark", "true");
 
               var popup = document.createElement("menupopup");
