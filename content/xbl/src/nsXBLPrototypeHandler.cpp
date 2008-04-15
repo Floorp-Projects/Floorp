@@ -596,7 +596,9 @@ nsXBLPrototypeHandler::GetController(nsPIDOMEventTarget* aTarget)
 }
 
 PRBool
-nsXBLPrototypeHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
+nsXBLPrototypeHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent,
+                                       PRUint32 aCharCode,
+                                       PRBool aIgnoreShiftKey)
 {
   if (mDetail == -1)
     return PR_TRUE; // No filters set up. It's generic.
@@ -605,8 +607,12 @@ nsXBLPrototypeHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
   PRUint32 code;
 
   if (mMisc) {
-    aKeyEvent->GetCharCode(&code);
-    code = ToLowerCase(PRUnichar(code));
+    if (aCharCode)
+      code = aCharCode;
+    else
+      aKeyEvent->GetCharCode(&code);
+    if (IS_IN_BMP(code))
+      code = ToLowerCase(PRUnichar(code));
   }
   else
     aKeyEvent->GetKeyCode(&code);
@@ -614,7 +620,7 @@ nsXBLPrototypeHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
   if (code != PRUint32(mDetail))
     return PR_FALSE;
 
-  return ModifiersMatchMask(aKeyEvent);
+  return ModifiersMatchMask(aKeyEvent, aIgnoreShiftKey);
 }
 
 PRBool
@@ -992,7 +998,8 @@ nsXBLPrototypeHandler::ReportKeyConflict(const PRUnichar* aKey, const PRUnichar*
 }
 
 PRBool
-nsXBLPrototypeHandler::ModifiersMatchMask(nsIDOMUIEvent* aEvent)
+nsXBLPrototypeHandler::ModifiersMatchMask(nsIDOMUIEvent* aEvent,
+                                          PRBool aIgnoreShiftKey)
 {
   nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aEvent));
   nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aEvent));
@@ -1004,7 +1011,7 @@ nsXBLPrototypeHandler::ModifiersMatchMask(nsIDOMUIEvent* aEvent)
       return PR_FALSE;
   }
 
-  if (mKeyMask & cShiftMask) {
+  if (mKeyMask & cShiftMask && !aIgnoreShiftKey) {
     key ? key->GetShiftKey(&keyPresent) : mouse->GetShiftKey(&keyPresent);
     if (keyPresent != ((mKeyMask & cShift) != 0))
       return PR_FALSE;

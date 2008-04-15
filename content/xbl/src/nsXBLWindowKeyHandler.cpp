@@ -70,6 +70,7 @@
 #include "nsIPresShell.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsISelectionController.h"
+#include "nsGUIEvent.h"
 
 static nsINativeKeyBindings *sNativeEditorBindings = nsnull;
 
@@ -216,6 +217,16 @@ BuildHandlerChain(nsIContent* aContent, nsXBLPrototypeHandler** aResult)
     nsIContent *key = aContent->GetChildAt(j);
 
     if (key->NodeInfo()->Equals(nsGkAtoms::key, kNameSpaceID_XUL)) {
+      // Check whether the key element has empty value at key/char attribute.
+      // Such element is used by localizers for alternative shortcut key
+      // definition on the locale. See bug 426501.
+      nsAutoString valKey, valChar;
+      PRBool attrExists =
+               key->GetAttr(kNameSpaceID_None, nsGkAtoms::key, valKey) ||
+               key->GetAttr(kNameSpaceID_None, nsGkAtoms::charcode, valChar);
+      if (attrExists && valKey.IsEmpty() && valChar.IsEmpty())
+        continue;
+
       nsXBLPrototypeHandler* handler = new nsXBLPrototypeHandler(key);
 
       if (!handler)
@@ -405,11 +416,13 @@ nsresult nsXBLWindowKeyHandler::KeyPress(nsIDOMEvent* aKeyEvent)
 //
 PRBool
 nsXBLWindowKeyHandler::EventMatched(nsXBLPrototypeHandler* inHandler,
-                                    nsIAtom* inEventType, nsIDOMEvent* inEvent)
+                                    nsIAtom* inEventType, nsIDOMEvent* inEvent,
+                                    PRUint32 aCharCode, PRBool aIgnoreShiftKey)
 {
   nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(inEvent));
   if (keyEvent)
-    return inHandler->KeyEventMatched(inEventType, keyEvent);
+    return inHandler->KeyEventMatched(inEventType, keyEvent, aCharCode,
+                                      aIgnoreShiftKey);
 
   return PR_FALSE;
 }
@@ -458,7 +471,7 @@ nsXBLWindowKeyHandler::IsEditor()
 }
 
 //
-// WalkHandlersInternal
+// WalkHandlersInternal and WalkHandlersAndExecute
 //
 // Given a particular DOM event and a pointer to the first handler in the list,
 // scan through the list to find something to handle the event and then make it
@@ -469,9 +482,33 @@ nsXBLWindowKeyHandler::WalkHandlersInternal(nsIDOMEvent* aEvent,
                                             nsIAtom* aEventType, 
                                             nsXBLPrototypeHandler* aHandler)
 {
+  nsAutoTArray<nsShortcutCandidate, 10> accessKeys;
+  nsContentUtils::GetAccelKeyCandidates(aEvent, accessKeys);
+
+  if (accessKeys.IsEmpty()) {
+    WalkHandlersAndExecute(aEvent, aEventType, aHandler, 0, PR_FALSE);
+    return NS_OK;
+  }
+
+  for (PRUint32 i = 0; i < accessKeys.Length(); ++i) {
+    nsShortcutCandidate &key = accessKeys[i];
+    if (WalkHandlersAndExecute(aEvent, aEventType, aHandler,
+                               key.mCharCode, key.mIgnoreShift))
+      return NS_OK;
+  }
+  return NS_OK;
+}
+
+PRBool
+nsXBLWindowKeyHandler::WalkHandlersAndExecute(nsIDOMEvent* aEvent,
+                                              nsIAtom* aEventType,
+                                              nsXBLPrototypeHandler* aHandler,
+                                              PRUint32 aCharCode,
+                                              PRBool aIgnoreShiftKey)
+{
   nsresult rv;
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aEvent));
-  
+
   // Try all of the handlers until we find one that matches the event.
   for (nsXBLPrototypeHandler *currHandler = aHandler; currHandler;
        currHandler = currHandler->GetNextHandler()) {
@@ -482,7 +519,8 @@ nsXBLWindowKeyHandler::WalkHandlersInternal(nsIDOMEvent* aEvent,
       return NS_OK;
     }
 
-    if (!EventMatched(currHandler, aEventType, aEvent))
+    if (!EventMatched(currHandler, aEventType, aEvent,
+                      aCharCode, aIgnoreShiftKey))
       continue;  // try the next one
 
     // Before executing this handler, check that it's not disabled,
@@ -541,11 +579,11 @@ nsXBLWindowKeyHandler::WalkHandlersInternal(nsIDOMEvent* aEvent,
 
     rv = currHandler->ExecuteHandler(piTarget, aEvent);
     if (NS_SUCCEEDED(rv)) {
-      return NS_OK;
+      return PR_TRUE;
     }
   }
 
-  return NS_OK;
+  return PR_FALSE;
 }
 
 already_AddRefed<nsIDOMElement>

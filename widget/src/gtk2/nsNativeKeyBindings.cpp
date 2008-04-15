@@ -280,6 +280,47 @@ nsNativeKeyBindings::KeyPress(const nsNativeKeyEvent& aEvent,
   else
     keyCode = DOMKeyCodeToGdkKeyCode(aEvent.keyCode);
 
+  if (KeyPressInternal(aEvent, aCallback, aCallbackData, keyCode))
+    return PR_TRUE;
+
+  nsKeyEvent *nativeKeyEvent = static_cast<nsKeyEvent*>(aEvent.nativeEvent);
+  if (!nativeKeyEvent || nativeKeyEvent->eventStructType != NS_KEY_EVENT &&
+      nativeKeyEvent->message != NS_KEY_PRESS)
+    return PR_FALSE;
+
+  for (PRUint32 i = 0; i < nativeKeyEvent->alternativeCharCodes.Length(); ++i) {
+    PRUint32 ch = nativeKeyEvent->isShift ?
+        nativeKeyEvent->alternativeCharCodes[i].mShiftedCharCode :
+        nativeKeyEvent->alternativeCharCodes[i].mUnshiftedCharCode;
+    if (ch && ch != aEvent.charCode) {
+      keyCode = gdk_unicode_to_keyval(ch);
+      if (KeyPressInternal(aEvent, aCallback, aCallbackData, keyCode))
+        return PR_TRUE;
+    }
+  }
+
+/* gtk_bindings_activate_event is preferable, but it has unresolved bug: http://bugzilla.gnome.org/show_bug.cgi?id=162726
+Also gtk_bindings_activate may work with some non-shortcuts operations (todo: check it)
+See bugs 411005 406407
+
+  Code, which should be used after fixing http://bugzilla.gnome.org/show_bug.cgi?id=162726:
+  const nsGUIEvent *guiEvent = static_cast<nsGUIEvent*>(aEvent.nativeEvent);
+  if (guiEvent &&
+     (guiEvent->message == NS_KEY_PRESS || guiEvent->message == NS_KEY_UP || guiEvent->message == NS_KEY_DOWN) &&
+      guiEvent->nativeMsg)
+        gtk_bindings_activate_event(GTK_OBJECT(mNativeTarget),
+                                    static_cast<GdkEventKey*>(guiEvent->nativeMsg));
+*/
+
+  return PR_FALSE;
+}
+
+PRBool
+nsNativeKeyBindings::KeyPressInternal(const nsNativeKeyEvent& aEvent,
+                                      DoCommandCallback aCallback,
+                                      void *aCallbackData,
+                                      PRUint32 aKeyCode)
+{
   int modifiers = 0;
   if (aEvent.altKey)
     modifiers |= GDK_MOD1_MASK;
@@ -295,20 +336,8 @@ nsNativeKeyBindings::KeyPress(const nsNativeKeyEvent& aEvent,
   gHandled = PR_FALSE;
 
   gtk_bindings_activate(GTK_OBJECT(mNativeTarget),
-                        keyCode, GdkModifierType(modifiers));
+                        aKeyCode, GdkModifierType(modifiers));
 
-/* gtk_bindings_activate_event is preferable, but it has unresolved bug: http://bugzilla.gnome.org/show_bug.cgi?id=162726
-Also gtk_bindings_activate may work with some non-shortcuts operations (todo: check it)
-See bugs 411005 406407
-
-  Code, which should be used after fixing http://bugzilla.gnome.org/show_bug.cgi?id=162726:
-  const nsGUIEvent *guiEvent = static_cast<nsGUIEvent*>(aEvent.nativeEvent);
-  if (guiEvent &&
-     (guiEvent->message == NS_KEY_PRESS || guiEvent->message == NS_KEY_UP || guiEvent->message == NS_KEY_DOWN) &&
-      guiEvent->nativeMsg)
-        gtk_bindings_activate_event(GTK_OBJECT(mNativeTarget),
-                                    static_cast<GdkEventKey*>(guiEvent->nativeMsg));
-*/
   gCurrentCallback = nsnull;
   gCurrentCallbackData = nsnull;
 

@@ -57,6 +57,7 @@
 #include "nsIScriptRuntime.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMEvent.h"
+#include "nsTArray.h"
 
 struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
 
@@ -122,6 +123,15 @@ enum EventNameType {
 struct EventNameMapping {
   PRUint32  mId;
   PRInt32 mType;
+};
+
+struct nsShortcutCandidate {
+  nsShortcutCandidate(PRUint32 aCharCode, PRBool aIgnoreShift) :
+    mCharCode(aCharCode), mIgnoreShift(aIgnoreShift)
+  {
+  }
+  PRUint32 mCharCode;
+  PRBool   mIgnoreShift;
 };
 
 class nsContentUtils
@@ -1157,6 +1167,26 @@ public:
   static PRBool DOMEventToNativeKeyEvent(nsIDOMEvent* aDOMEvent,
                                          nsNativeKeyEvent* aNativeEvent,
                                          PRBool aGetCharCode);
+
+  /**
+   * Get the candidates for accelkeys for aDOMEvent.
+   *
+   * @param aDOMEvent [in] the input event for accelkey handling.
+   * @param aCandidates [out] the candidate shortcut key combination list.
+   *                          the first item is most preferred.
+   */
+  static void GetAccelKeyCandidates(nsIDOMEvent* aDOMEvent,
+                                    nsTArray<nsShortcutCandidate>& aCandidates);
+
+  /**
+   * Get the candidates for accesskeys for aDOMEvent.
+   *
+   * @param aNativeKeyEvent [in] the input event for accesskey handling.
+   * @param aCandidates [out] the candidate access key list.
+   *                          the first item is most preferred.
+   */
+  static void GetAccessKeyCandidates(nsKeyEvent* aNativeKeyEvent,
+                                     nsTArray<PRUint32>& aCandidates);
 
   /**
    * Hide any XUL popups associated with aDocument, including any documents

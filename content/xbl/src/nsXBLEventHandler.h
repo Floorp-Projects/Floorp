@@ -46,6 +46,7 @@
 class nsIAtom;
 class nsIContent;
 class nsIDOM3EventTarget;
+class nsIDOMKeyEvent;
 class nsPIDOMEventTarget;
 class nsXBLPrototypeHandler;
 
@@ -121,6 +122,8 @@ public:
   }
 private:
   nsXBLKeyEventHandler();
+  PRBool ExecuteMatchedHandlers(nsIDOMKeyEvent* aEvent, PRUint32 aCharCode,
+                                PRBool aIgnoreShiftKey);
 
   nsVoidArray mProtoHandlers;
   nsCOMPtr<nsIAtom> mEventType;
