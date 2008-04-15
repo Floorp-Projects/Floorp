@@ -196,14 +196,24 @@ menuitem.bookmark-item {
   list-style-image: url("chrome://browser/skin/places/livemark-item.png");
 }
 
-.bookmark-item[container][tagContainer] {
-  list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");
-  -moz-image-region: auto;
-}
-
 .bookmark-item[container][query] {
   list-style-image: url("chrome://browser/skin/places/query.png");
-  -moz-image-region: auto;
+}
+
+.bookmark-item[query][tagContainer] {
+  list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");
+}
+
+.bookmark-item[query][dayContainer] {
+  list-style-image: url("moz-icon://stock/gtk-directory?size=menu");
+}
+
+.bookmark-item[query][hostContainer] {
+  list-style-image: url("moz-icon://stock/gtk-directory?size=menu");
+}
+
+.bookmark-item[query][hostContainer][open] {
+  list-style-image: url("moz-icon://stock/gtk-directory?size=menu");
 }
 
 /* Stock icons for the menu bar items */

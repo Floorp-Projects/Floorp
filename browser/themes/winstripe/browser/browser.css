@@ -171,14 +171,29 @@ menuitem.bookmark-item {
   -moz-image-region: auto;
 }
 
-.bookmark-item[container][tagContainer] {
+.bookmark-item[container][query] {
+  list-style-image: url("chrome://browser/skin/places/query.png");
+  -moz-image-region: auto;
+}
+
+.bookmark-item[query][tagContainer] {
   list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");
   -moz-image-region: auto;
 }
 
-.bookmark-item[container][query] {
-  list-style-image: url("chrome://browser/skin/places/query.png");
-  -moz-image-region: auto;
+.bookmark-item[query][dayContainer] {
+  list-style-image: url("chrome://global/skin/icons/folder-item.png");
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+.bookmark-item[query][hostContainer] {
+  list-style-image: url("chrome://global/skin/icons/folder-item.png");
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+.bookmark-item[query][hostContainer][open] {
+  list-style-image: url("chrome://global/skin/icons/folder-item.png");
+  -moz-image-region: rect(16px, 32px, 32px, 16px);
 }
 
 /* ::::: primary toolbar buttons ::::: */

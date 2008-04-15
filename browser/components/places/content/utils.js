@@ -1006,14 +1006,18 @@ var PlacesUIUtils = {
         element = document.createElement("menu");
         element.setAttribute("container", "true");
 
-        if (aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY)
+        if (aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY) {
           element.setAttribute("query", "true");
+          if (PlacesUtils.nodeIsTagQuery(aNode))
+            element.setAttribute("tagContainer", "true");
+          else if (PlacesUtils.nodeIsDay(aNode))
+            element.setAttribute("dayContainer", "true");
+          else if (PlacesUtils.nodeIsHost(aNode))
+            element.setAttribute("hostContainer", "true");
+        }
         else if (aNode.itemId != -1) {
           if (PlacesUtils.nodeIsLivemarkContainer(aNode))
             element.setAttribute("livemark", "true");
-          else if (PlacesUtils.bookmarks
-                              .getFolderIdForItem(aNode.itemId) == PlacesUtils.tagsFolderId)
-            element.setAttribute("tagContainer", "true");
         }
 
         var popup = document.createElement("menupopup");
