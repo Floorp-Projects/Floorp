@@ -324,6 +324,30 @@ PRUint32 KeyboardLayout::GetUniChars (PRUint16* aUniChars, PRUint8* aShiftStates
 #endif
 }
 
+PRUint32
+KeyboardLayout::GetUniCharsWithShiftState(PRUint8 aVirtualKey,
+                                          PRUint8 aShiftStates,
+                                          PRUint16* aUniChars,
+                                          PRUint32 aMaxChars) const
+{
+#ifndef WINCE
+  PRInt32 key = GetKeyIndex(aVirtualKey);
+  if (key < 0)
+    return 0;
+  PRUint8 finalShiftState;
+  PRUint16 uniChars[5];
+  PRUint32 numOfBaseChars =
+    mVirtualKeys[key].GetUniChars(aShiftStates, uniChars, &finalShiftState);
+  PRUint32 chars = PR_MIN(numOfBaseChars, aMaxChars);
+
+  memcpy(aUniChars, uniChars, chars * sizeof (PRUint16));
+
+  return chars;
+#else
+  return 0;
+#endif
+}
+
 void KeyboardLayout::LoadLayout ()
 {
 #ifndef WINCE

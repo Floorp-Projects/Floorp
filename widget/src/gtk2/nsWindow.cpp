@@ -2276,14 +2276,6 @@ nsWindow::OnContainerFocusOutEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
     LOGFOCUS(("Done with container focus out [%p]\n", (void *)this));
 }
 
-inline PRBool
-is_latin_shortcut_key(guint aKeyval)
-{
-    return ((GDK_0 <= aKeyval && aKeyval <= GDK_9) ||
-            (GDK_A <= aKeyval && aKeyval <= GDK_Z) ||
-            (GDK_a <= aKeyval && aKeyval <= GDK_z));
-}
-
 PRBool
 nsWindow::DispatchCommandEvent(nsIAtom* aCommand)
 {
@@ -2291,6 +2283,45 @@ nsWindow::DispatchCommandEvent(nsIAtom* aCommand)
     nsCommandEvent event(PR_TRUE, nsWidgetAtoms::onAppCommand, aCommand, this);
     DispatchEvent(&event, status);
     return TRUE;
+}
+
+static PRUint32
+GetCharCodeFor(const GdkEventKey *aEvent, GdkModifierType aShiftState,
+               gint aGroup)
+{
+    guint keyval;
+    if (gdk_keymap_translate_keyboard_state(NULL,
+                                            aEvent->hardware_keycode,
+                                            aShiftState, aGroup,
+                                            &keyval, NULL, NULL, NULL)) {
+        GdkEventKey tmpEvent = *aEvent;
+        tmpEvent.state = guint(aShiftState);
+        tmpEvent.keyval = keyval;
+        tmpEvent.group = aGroup;
+        return nsConvertCharCodeToUnicode(&tmpEvent);
+    }
+    return 0;
+}
+
+static gint
+GetKeyLevel(GdkEventKey *aEvent)
+{
+    gint level;
+    if (!gdk_keymap_translate_keyboard_state(NULL,
+                                             aEvent->hardware_keycode,
+                                             GdkModifierType(aEvent->state),
+                                             aEvent->group,
+                                             NULL, NULL, &level, NULL))
+        return -1;
+    return level;
+}
+
+static PRBool
+IsBasicLatinLetterOrNumeral(PRUint32 aChar)
+{
+    return (aChar >= 'a' && aChar <= 'z') ||
+           (aChar >= 'A' && aChar <= 'Z') ||
+           (aChar >= '0' && aChar <= '9');
 }
 
 gboolean
@@ -2382,91 +2413,60 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
     event.charCode = nsConvertCharCodeToUnicode(aEvent);
     if (event.charCode) {
         event.keyCode = 0;
-        // if the control, meta, or alt key is down, then we should leave
-        // the isShift flag alone (probably not a printable character)
-        // if none of the other modifier keys are pressed then we need to
-        // clear isShift so the character can be inserted in the editor
-
-        if (event.isControl || event.isAlt || event.isMeta) {
-            GdkEventKey tmpEvent = *aEvent;
-
-            // Fix for bug 69230:
-            // if modifier key is pressed and key pressed is not latin character,
-            // we should try other keyboard layouts to find out correct latin
-            // character corresponding to pressed key;
-            // that way shortcuts like Ctrl+C will work no matter what
-            // keyboard layout is selected
-            // We don't try to fix up punctuation accelerators here,
-            // because their location differs between latin layouts
-            if (!is_latin_shortcut_key(event.charCode)) {
-                // We have a non-latin char, try other keyboard groups
-                GdkKeymapKey *keys;
-                guint *keyvals;
-                gint n_entries;
-                PRUint32 latinCharCode;
-                gint level;
-
-                if (gdk_keymap_translate_keyboard_state(NULL,
-                                                        tmpEvent.hardware_keycode,
-                                                        (GdkModifierType)tmpEvent.state,
-                                                        tmpEvent.group,
-                                                        NULL, NULL, &level, NULL)
-                    && gdk_keymap_get_entries_for_keycode(NULL,
-                                                          tmpEvent.hardware_keycode,
-                                                          &keys, &keyvals,
-                                                          &n_entries)) {
-                    gint n;
-                    for (n=0; n<n_entries; n++) {
-                        if (keys[n].group == tmpEvent.group) {
-                            // Skip keys from the same group
-                            continue;
-                        }
-                        if (keys[n].level != level) {
-                            // Allow only same level keys
-                            continue;
-                        }
-                        if (is_latin_shortcut_key(keyvals[n])) {
-                            // Latin character found
-                            if (event.isShift)
-                                tmpEvent.keyval = gdk_keyval_to_upper(keyvals[n]);
-                            else
-                                tmpEvent.keyval = gdk_keyval_to_lower(keyvals[n]);
-                            tmpEvent.group = keys[n].group;
-                            latinCharCode = nsConvertCharCodeToUnicode(&tmpEvent);
-                            if (latinCharCode) {
-                                event.charCode = latinCharCode;
-                                break;
-                            }
-                        }
-                    }
-                    g_free(keys);
-                    g_free(keyvals);
-                }
+        gint level = GetKeyLevel(aEvent);
+        if ((event.isControl || event.isAlt || event.isMeta) &&
+            (level == 0 || level == 1)) {
+            // We shold send both shifted char and unshifted char,
+            // all keyboard layout users can use all keys.
+            // Don't change event.charCode. On some keyboard layouts,
+            // ctrl/alt/meta keys are used for inputting some characters.
+            nsAlternativeCharCode altCharCodes(0, 0);
+            // unshifted charcode of current keyboard layout.
+            altCharCodes.mUnshiftedCharCode =
+                GetCharCodeFor(aEvent, GdkModifierType(0), aEvent->group);
+            PRBool isLatin = (altCharCodes.mUnshiftedCharCode <= 0xFF);
+            // shifted charcode of current keyboard layout.
+            altCharCodes.mShiftedCharCode =
+                GetCharCodeFor(aEvent, GDK_SHIFT_MASK, aEvent->group);
+            isLatin = isLatin && (altCharCodes.mShiftedCharCode <= 0xFF);
+            if (altCharCodes.mUnshiftedCharCode ||
+                altCharCodes.mShiftedCharCode) {
+                event.alternativeCharCodes.AppendElement(altCharCodes);
             }
 
-           // make Ctrl+uppercase functional as same as Ctrl+lowercase
-           // when Ctrl+uppercase(eg.Ctrl+C) is pressed,convert the charCode
-           // from uppercase to lowercase(eg.Ctrl+c),so do Alt and Meta Key
-           // It is hack code for bug 61355, there is same code snip for
-           // Windows platform in widget/src/windows/nsWindow.cpp: See bug 16486
-           // Note: if Shift is pressed at the same time, do not to_lower()
-           // Because Ctrl+Shift has different function with Ctrl
-           if (!event.isShift &&
-               event.charCode >= GDK_A &&
-               event.charCode <= GDK_Z)
-            event.charCode = gdk_keyval_to_lower(event.charCode);
-
-           // Keep the characters unshifted for shortcuts and accesskeys and
-           // make sure that numbers are always passed as such (among others:
-           // bugs 50255 and 351310)
-           if (!event.isControl && event.isShift &&
-               (event.charCode < GDK_0 || event.charCode > GDK_9)) {
-               GdkKeymapKey k = { tmpEvent.hardware_keycode, tmpEvent.group, 0 };
-               tmpEvent.keyval = gdk_keymap_lookup_key(gdk_keymap_get_default(), &k);
-               PRUint32 unshiftedCharCode = nsConvertCharCodeToUnicode(&tmpEvent);
-               if (unshiftedCharCode)
-                   event.charCode = unshiftedCharCode;
-           }
+            if (!isLatin) {
+                // Next, find latin inputtable keyboard layout.
+                GdkKeymapKey *keys;
+                gint count;
+                gint minGroup = -1;
+                if (gdk_keymap_get_entries_for_keyval(NULL, GDK_a,
+                                                      &keys, &count)) {
+                    // find the minimum number group for latin inputtable layout
+                    for (gint i = 0; i < count && minGroup != 0; ++i) {
+                        if (keys[i].level != 0 && keys[i].level != 1)
+                            continue;
+                        if (minGroup >= 0 && keys[i].group > minGroup)
+                            continue;
+                        minGroup = keys[i].group;
+                    }
+                    g_free(keys);
+                }
+                if (minGroup >= 0) {
+                    // unshifted charcode of found keyboard layout.
+                    PRUint32 ch =
+                        GetCharCodeFor(aEvent, GdkModifierType(0), minGroup);
+                    altCharCodes.mUnshiftedCharCode =
+                        IsBasicLatinLetterOrNumeral(ch) ? ch : 0;
+                    // shifted charcode of found keyboard layout.
+                    ch = GetCharCodeFor(aEvent, GDK_SHIFT_MASK, minGroup);
+                    altCharCodes.mShiftedCharCode =
+                        IsBasicLatinLetterOrNumeral(ch) ? ch : 0;
+                    if (altCharCodes.mUnshiftedCharCode ||
+                        altCharCodes.mShiftedCharCode) {
+                        event.alternativeCharCodes.AppendElement(altCharCodes);
+                    }
+                }
+            }
         }
     }
 
