@@ -2056,6 +2056,9 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
       role == nsIAccessibleRole::ROLE_PUSHBUTTON ||
       role == nsIAccessibleRole::ROLE_MENUITEM ||
       role == nsIAccessibleRole::ROLE_LISTITEM ||
+      role == nsIAccessibleRole::ROLE_OPTION ||
+      role == nsIAccessibleRole::ROLE_RADIOBUTTON ||
+      role == nsIAccessibleRole::ROLE_RICH_OPTION ||
       role == nsIAccessibleRole::ROLE_OUTLINEITEM ||
       content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_checked)) {
     // Might be checkable -- checking role & ARIA attribute first is faster than getting state
@@ -2080,6 +2083,8 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
         role == nsIAccessibleRole::ROLE_MENUITEM ||
         role == nsIAccessibleRole::ROLE_RADIOBUTTON ||
         role == nsIAccessibleRole::ROLE_PAGETAB ||
+        role == nsIAccessibleRole::ROLE_OPTION ||
+        role == nsIAccessibleRole::ROLE_RADIOBUTTON ||
         role == nsIAccessibleRole::ROLE_OUTLINEITEM) &&
         0 == (State(this) & nsIAccessibleStates::STATE_INVISIBLE)) {
       nsCOMPtr<nsIAccessible> parent = GetParent();
