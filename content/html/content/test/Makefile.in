@@ -109,7 +109,6 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug408231.html \
 		test_bug417760.html \
 		file_bug417760.png \
-		test_bug406596.html \
 		test_bug421640.html \
 		$(NULL)
 
