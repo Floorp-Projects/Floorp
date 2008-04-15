@@ -126,6 +126,7 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 214077-1a.html 214077-1-ref.html
 == 214077-1b.html 214077-1-ref.html
 == 218473-1.html 218473-1-ref.html
+# == 231823-1.html 231823-1-ref.html
 == 234686-1.html 234686-ref.html
 == 234686-2.html 234686-ref.html
 == 234686-3.html 234686-ref.html
@@ -492,8 +493,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 368020-5.html 368020-5-ref.html # bug 3
 fails == 374927-1.html 374927-1-ref.html # Was broken by patch for bug 368600; fails until bug 400776 is fixed
 == 375716-1.html 375716-1-ref.html
 == 375827-1.html 375827-1-ref.html
-# see bug 427480 -- this test is causing random crashes due to a BadMatch error
-#== 376375-1.html 376375-1-ref.html
+== 376375-1.html 376375-1-ref.html
 == 376484-1.html 376484-1-ref.html
 == 376532-1.html 376532-1-ref.html
 != 376532-2.html 376532-2-ref.html
@@ -622,7 +622,6 @@ skip-if(MOZ_WIDGET_TOOLKIT!="windows") == 391045.html 391045-ref.html # windows-
 == 397428-1.html 397428-1-ref.html
 == 397844-1.xhtml 397844-1-ref.xhtml
 == 398101-1.html 398101-1-ref.html
-== 398289-1.html 398289-1-ref.html
 == 398144-1.html 398144-1-ref.html
 == 398797-1a.html 398797-1-ref.html
 == 398797-1b.html 398797-1-ref.html
@@ -630,6 +629,7 @@ skip-if(MOZ_WIDGET_TOOLKIT!="windows") == 391045.html 391045-ref.html # windows-
 == 398797-1d.html 398797-1-ref.html
 == 399209-1.html 399209-1-ref.html
 == 399209-2.html 399209-2-ref.html
+== 399258-1.html 399258-1-ref.html
 == 399384-1.html 399384-1-ref.html
 == 400081-1.html about:blank
 == 400171-1a.html 400171-1-ref.html
@@ -727,6 +727,9 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 != 409659-1c.html 409659-1-ref.html
 == 409659-1d.html 409659-1-ref.html
 == 411334-1.xml 411334-1-ref.xml
+== 411585-1.html 411585-1-ref.html
+== 411585-2.html 411585-2-ref.html
+fails == 411585-3.html 411585-3-ref.html # bug 426909
 == 411792-1.html 411792-1-ref.html
 == 412093-1.html 412093-1-ref.html
 == 412607-1a.html 412607-1-ref.html
@@ -736,6 +739,7 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 fails == 413027-1.html 413027-1-ref.html
 fails == 413027-2.html 413027-2-ref.html
 fails == 413027-3.html 413027-3-ref.html
+== 413027-4.html 413027-4-ref.html
 == 413286-1a.html 413286-1-ref.html
 == 413286-1b.html 413286-1-ref.html
 == 413286-1c.html 413286-1-ref.html
@@ -774,9 +778,12 @@ fails == 413027-3.html 413027-3-ref.html
 == 421069-ref.html 421069-ref2.html
 == 421234-1.html 421234-1-ref.html
 == 421419-1.html 421419-1-ref.html
+!= 421710-1.html about:blank     # assertion test (and crash test)
 == 421885-1.xml 421885-1-ref.xml
 == 421955-1.html 421955-1-ref.html
+== 422249-1.html 422249-1-ref.html
 == 422394-1.html 422394-1-ref.html
+== 422678-1.html 422678-1-ref.html
 == 423130-1.html 423130-1-ref.html
 == 423385-1.html 423385-1-ref.html
 == 423599-1.html 423599-1-ref.html
@@ -788,4 +795,14 @@ fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 424074-1-ref2.xul 424074-1-ref3.xul
 == 424434-1.html 424434-1-ref.html
 == 424631-1.html 424631-1-ref.html
 == 424710-1.html 424710-1-ref.html
+== 425972-1.html 425972-1-ref.html
+== 425972-2.html 425972-2-ref.html
+!= 425972-1.html 425972-2.html
+!= 427017-1.xhtml about:blank    # crash test (needs reftest-print)
+== 427129-scrollframe.html 427129-ref.html
+== 427129-table.html 427129-ref.html
+== 427129-image.html 427129-ref.html
+== 427129-table-caption.html 427129-table-caption-ref.html
+== 427370-1.html 427370-1-ref.html
+== 427730-1.html 427730-1-ref.html
 

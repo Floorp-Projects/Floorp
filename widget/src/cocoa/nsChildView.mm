@@ -174,23 +174,6 @@ nsIWidget         * gRollupWidget   = nsnull;
 @end
 
 
-// Used to retain an NSView for the remainder of a method's execution.
-class nsAutoRetainView {
-public:
-  nsAutoRetainView(NSView *aView)
-  {
-    mView = NS_OBJC_TRY_EXPR_ABORT([aView retain]);
-  }
-  ~nsAutoRetainView()
-  {
-    NS_OBJC_TRY_ABORT([mView release]);
-  }
-
-private:
-  NSView *mView;  // [STRONG]
-};
-
-
 #pragma mark -
 
 
@@ -838,7 +821,7 @@ NS_IMETHODIMP nsChildView::SetFocus(PRBool aRaise)
   mInSetFocus = PR_TRUE;
   NSWindow* window = [mView window];
   if (window) {
-    nsAutoRetainView kungFuDeathGrip(mView);
+    nsAutoRetainCocoaObject kungFuDeathGrip(mView);
     // For reasons that aren't yet clear, focus changes within a window (as
     // opposed to those between windows or between apps) should only trigger
     // NS_LOSTFOCUS and NS_GOTFOCUS events (sent to Gecko) in the context of
@@ -1131,13 +1114,6 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   if (mPluginDrawing)
     return NS_ERROR_FAILURE;
 
-  // If this is a CoreGraphics plugin, nothing to do but prevent being
-  // reentered.
-  if (mPluginIsCG) {
-    mPluginDrawing = PR_TRUE;
-    return NS_OK;
-  }
-
   NSWindow* window = [mView nativeWindow];
   if (!window)
     return NS_ERROR_FAILURE;
@@ -1148,16 +1124,22 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   // we don't know here if we're being drawn inside a BeginUpdate/EndUpdate pair
   // (which seem to occur in [NSWindow display]), and we don't want to have the burden
   // of correctly doing Carbon invalidates of the plugin rect, we manually set the
-  // visible region to be the entire port every time.
+  // visible region to be the entire port every time. It is necessary to set up our
+  // window's port even for CoreGraphics plugins, because they may still use Carbon
+  // internally (see bug #420527 for details).
+  CGrafPtr port = ::GetWindowPort(WindowRef([window windowRef]));
+  if (!mPluginIsCG)
+    port = mPluginPort.qdPort.port;
+
   RgnHandle pluginRegion = ::NewRgn();
   if (pluginRegion) {
-    PRBool portChanged = (mPluginPort.qdPort.port != CGrafPtr(GetQDGlobalsThePort()));
+    PRBool portChanged = (port != CGrafPtr(GetQDGlobalsThePort()));
     CGrafPtr oldPort;
     GDHandle oldDevice;
 
     if (portChanged) {
       ::GetGWorld(&oldPort, &oldDevice);
-      ::SetGWorld(mPluginPort.qdPort.port, ::IsPortOffscreen(mPluginPort.qdPort.port) ? nsnull : ::GetMainDevice());
+      ::SetGWorld(port, ::IsPortOffscreen(port) ? nsnull : ::GetMainDevice());
     }
 
     ::SetOrigin(0, 0);
@@ -1172,8 +1154,8 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
     ConvertGeckoRectToMacRect(clipRect, pluginRect);
     
     ::RectRgn(pluginRegion, &pluginRect);
-    ::SetPortVisibleRegion(mPluginPort.qdPort.port, pluginRegion);
-    ::SetPortClipRegion(mPluginPort.qdPort.port, pluginRegion);
+    ::SetPortVisibleRegion(port, pluginRegion);
+    ::SetPortClipRegion(port, pluginRegion);
     
     // now set up the origin for the plugin
     ::SetOrigin(origin.x, origin.y);
@@ -2557,7 +2539,7 @@ NSEvent* gLastDragEvent = nil;
   paintEvent.rect = &fullRect;
   paintEvent.region = rgn;
 
-  nsAutoRetainView kungFuDeathGrip(self);
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
   mGeckoChild->DispatchWindowEvent(paintEvent);
   if (!mGeckoChild)
     return;
@@ -2814,7 +2796,7 @@ NSEvent* gLastDragEvent = nil;
   if (![self ensureCorrectMouseEventTarget:theEvent])
     return;
 
-  nsAutoRetainView kungFuDeathGrip(self);
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   if ([self maybeRollup:theEvent])
     return;
@@ -2927,6 +2909,14 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
   nsEventStatus status;
   widget->DispatchEvent(&event, status);
+
+  // After the cursor exits a view set it to a visible regular arrow cursor.
+  // This lets us recover from plugins that mess with it.
+  if (msg == NS_MOUSE_EXIT) {
+    [NSCursor unhide];
+    [[NSCursor arrowCursor] set];
+  }
+
   return status;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsEventStatus_eIgnore);
@@ -3003,7 +2993,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   if (!mGeckoChild)
     return;
 
-  nsAutoRetainView kungFuDeathGrip(self);
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
   if (sLastViewEntered != self) {
     if (sLastViewEntered) {
       NSPoint exitEventLocation = [sLastViewEntered convertPoint:windowEventLocation fromView:nil];
@@ -3107,7 +3097,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   if (![self ensureCorrectMouseEventTarget:theEvent])
     return;
 
-  nsAutoRetainView kungFuDeathGrip(self);
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   [self maybeRollup:theEvent];
   if (!mGeckoChild)
@@ -3163,13 +3153,8 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   macEvent.modifiers = controlKey;  // fake a context menu click
   geckoEvent.nativeMsg = &macEvent;
 
-  nsAutoRetainView kungFuDeathGrip(self);
-  PRBool handled = mGeckoChild->DispatchMouseEvent(geckoEvent);
-  if (!mGeckoChild)
-    return;
-
-  if (!handled)
-    [super rightMouseUp:theEvent];
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
+  mGeckoChild->DispatchMouseEvent(geckoEvent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -3200,7 +3185,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   if (![self ensureCorrectMouseEventTarget:theEvent])
     return;
 
-  nsAutoRetainView kungFuDeathGrip(self);
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   if ([self maybeRollup:theEvent])
     return;
@@ -3281,7 +3266,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   else
     geckoEvent.delta = (PRInt32)ceilf(scrollDelta);
 
-  nsAutoRetainView kungFuDeathGrip(self);
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
   mGeckoChild->DispatchWindowEvent(geckoEvent);
   if (!mGeckoChild)
     return;
@@ -3336,7 +3321,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  nsAutoRetainView kungFuDeathGrip(self);
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   if ([self maybeRollup:theEvent])
     return;
@@ -3364,7 +3349,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   if (!mGeckoChild || [self isPluginView])
     return nil;
 
-  nsAutoRetainView kungFuDeathGrip(self);
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   [self maybeRollup:theEvent];
   if (!mGeckoChild)
@@ -3894,17 +3879,73 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
     outGeckoEvent->charCode = 0;
     outGeckoEvent->keyCode  = 0; // not set for key press events
     
-    NSString* unmodifiedChars = [aKeyEvent charactersIgnoringModifiers];
-    if ([unmodifiedChars length] > 0)
-      outGeckoEvent->charCode = [unmodifiedChars characterAtIndex:0];
+    NSString* chars = [aKeyEvent characters];
+    if ([chars length] > 0)
+      outGeckoEvent->charCode = [chars characterAtIndex:0];
     
     // convert control-modified charCode to raw charCode (with appropriate case)
     if (outGeckoEvent->isControl && outGeckoEvent->charCode <= 26)
       outGeckoEvent->charCode += (outGeckoEvent->isShift) ? ('A' - 1) : ('a' - 1);
     
-    // gecko also wants charCode to be in the appropriate case
-    if (outGeckoEvent->isShift && (outGeckoEvent->charCode >= 'a' && outGeckoEvent->charCode <= 'z'))
-      outGeckoEvent->charCode -= 32; // convert to uppercase
+    // If Ctrl or Command is pressed, we should set shiftCharCode and
+    // unshiftCharCode for accessKeys and accelKeys.
+    if ((outGeckoEvent->isControl || outGeckoEvent->isMeta) &&
+        !outGeckoEvent->isAlt) {
+      SInt16 keyLayoutID =
+        ::GetScriptVariable(::GetScriptManagerVariable(smKeyScript),
+                            smScriptKeys);
+      Handle handle = ::GetResource('uchr', keyLayoutID);
+      PRUint32 unshiftedChar = 0;
+      PRUint32 shiftedChar = 0;
+      PRUint32 shiftedCmdChar = 0;
+      if (handle) {
+        UInt32 kbType = ::LMGetKbdType();
+        UInt32 deadKeyState = 0;
+        UniCharCount len;
+        UniChar chars[1];
+        OSStatus err;
+        err = ::UCKeyTranslate((UCKeyboardLayout*)*handle,
+                               [aKeyEvent keyCode],
+                               kUCKeyActionDown, 0,
+                               kbType, 0, &deadKeyState, 1, &len, chars);
+        if (noErr == err && len > 0)
+          unshiftedChar = chars[0];
+        deadKeyState = 0;
+        err = ::UCKeyTranslate((UCKeyboardLayout*)*handle, [aKeyEvent keyCode],
+                               kUCKeyActionDown, shiftKey >> 8,
+                               kbType, 0, &deadKeyState, 1, &len, chars);
+        if (noErr == err && len > 0)
+          shiftedChar = chars[0];
+        deadKeyState = 0;
+        err = ::UCKeyTranslate((UCKeyboardLayout*)*handle, [aKeyEvent keyCode],
+                               kUCKeyActionDown, (cmdKey | shiftKey) >> 8,
+                               kbType, 0, &deadKeyState, 1, &len, chars);
+        if (noErr == err && len > 0)
+          shiftedCmdChar = chars[0];
+      } else if (handle = (char**)::GetScriptManagerVariable(smKCHRCache)) {
+        UInt32 state = 0;
+        UInt32 keyCode = [aKeyEvent keyCode];
+        unshiftedChar = ::KeyTranslate(handle, keyCode, &state) & charCodeMask;
+        keyCode = [aKeyEvent keyCode] | shiftKey;
+        shiftedChar = ::KeyTranslate(handle, keyCode, &state) & charCodeMask;
+        keyCode = [aKeyEvent keyCode] | shiftKey | cmdKey;
+        shiftedCmdChar = ::KeyTranslate(handle, keyCode, &state) & charCodeMask;        
+      }
+      // If the current keyboad layout is switchable by Cmd key
+      // (e.g., Dvorak-QWERTY layout), we should not append the alternative
+      // char codes to unshiftedCharCodes and shiftedCharCodes.
+      // Because then, the alternative char codes might execute wrong item.
+      // Therefore, we should check whether the unshiftedChar and shiftedCmdChar
+      // are same. Because Cmd+Shift+'foo' returns unshifted 'foo'. So, they
+      // should be same for this case.
+      // Note that we cannot support the combination of Cmd and Shift needed
+      // char. (E.g., Cmd++ in US keyboard layout.)
+      if ((unshiftedChar || shiftedChar) &&
+          (!outGeckoEvent->isMeta || unshiftedChar == shiftedCmdChar)) {
+        nsAlternativeCharCode altCharCodes(unshiftedChar, shiftedChar);
+        outGeckoEvent->alternativeCharCodes.AppendElement(altCharCodes);
+      }
+    }
   }
   else {
     NSString* characters = nil;
@@ -3982,7 +4023,7 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
   if (!mGeckoChild)
     return;
 
-  nsAutoRetainView kungFuDeathGrip(self);
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
   id arp = [[NSAutoreleasePool alloc] init];
 
   if (![insertString isKindOfClass:[NSAttributedString class]])
@@ -4111,7 +4152,7 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
   NSLog(@" aString = '%@'", aString);
 #endif
 
-  nsAutoRetainView kungFuDeathGrip(self);
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
   id arp = [[NSAutoreleasePool alloc] init];
 
   if (![aString isKindOfClass:[NSAttributedString class]])
@@ -4402,7 +4443,7 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
   if (!mGeckoChild)
     return NO;
 
-  nsAutoRetainView kungFuDeathGrip(self);
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
   mCurKeyEvent = theEvent;
 
   BOOL nonDeadKeyPress = [[theEvent characters] length] > 0;
@@ -4536,7 +4577,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   if (!mGeckoChild || [[theEvent characters] length] == 0)
     return;
 
-  nsAutoRetainView kungFuDeathGrip(self);
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   // Cocoa doesn't send an NSKeyDown event for control-tab on 10.4, so if this
   // is an NSKeyUp event for control-tab, send a down event to gecko first.
@@ -4613,46 +4654,32 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   if (!mGeckoChild)
     return NO;
 
-  nsAutoRetainView kungFuDeathGrip(self);
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   // if we aren't the first responder, pass the event on
-  if ([[self window] firstResponder] != self)
-    return [super performKeyEquivalent:theEvent];
+  id firstResponder = [[self window] firstResponder];
+  if (firstResponder != self) {
+    if ([firstResponder isKindOfClass:[ChildView class]])
+      return [(ChildView *)firstResponder performKeyEquivalent:theEvent];
+    else
+      return [super performKeyEquivalent:theEvent];
+  }
 
   // don't process if we're composing, but don't consume the event
   if (nsTSMManager::IsComposing())
     return NO;
 
-  unsigned int modifierFlags = [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
-
-  // see if the menu system will handle the event
-  if ([[NSApp mainMenu] performKeyEquivalent:theEvent]) {
-    return YES;
-  }
-  else {
-    // On Mac OS X 10.5 NSMenu's performKeyEquivalent: method returns NO for disabled menu
-    // items that have a matching key equiv. We need to know if that was the case so we can
-    // stop here like we would on 10.4 (it returns YES in that case). Since we want to eat
-    // the event if that happens the system won't give the disabled command beep, do it here
-    // manually.
-    if (nsToolkit::OnLeopardOrLater()) {
-      id delegate = [[self window] delegate];
-      if (delegate && [delegate isKindOfClass:[WindowDelegate class]]) {
-        nsCocoaWindow* toplevelWindow = [delegate geckoWidget];
-        if (toplevelWindow) {
-          nsMenuBarX* menuBar = static_cast<nsMenuBarX*>(toplevelWindow->GetMenuBar());
-          if (menuBar && menuBar->ContainsKeyEquiv(modifierFlags, [theEvent characters])) {
-            NSBeep();
-            return YES;
-          }
-        }
-      }
-    }
-  }
+  // Perform native menu UI feedback even if we stop the event from propagating to it normally.
+  // Recall that the menu system won't actually execute any commands for keyboard command invocations.
+  // By checking the class for the main menu we ensure that we don't do any of this for embedders.
+  NSMenu* mainMenu = [NSApp mainMenu];
+  if ([mainMenu isKindOfClass:[GeckoNSMenu class]])
+    [(GeckoNSMenu*)mainMenu performMenuUserInterfaceEffectsForEvent:theEvent];
 
   // don't handle this if certain modifiers are down - those should
   // be sent as normal key up/down events and cocoa will do so automatically
   // if we reject here
+  unsigned int modifierFlags = [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
   if ((modifierFlags & NSFunctionKeyMask) || (modifierFlags & NSNumericPadKeyMask))
     return NO;
 
@@ -4677,7 +4704,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   if (!mGeckoChild)
     return;
 
-  nsAutoRetainView kungFuDeathGrip(self);
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   // Fire key up/down events for the modifier keys (shift, alt, ctrl, command).
   if ([theEvent type] == NSFlagsChanged) {
@@ -4745,7 +4772,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   if (!mGeckoChild)
     return;
 
-  nsAutoRetainView kungFuDeathGrip(self);
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   // check to see if the window implements the mozWindow protocol. This
   // allows embedders to avoid re-entrant calls to -makeKeyAndOrderFront,
@@ -4770,7 +4797,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   if (!mGeckoChild)
     return;
 
-  nsAutoRetainView kungFuDeathGrip(self);
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   [self sendFocusEvent:NS_DEACTIVATE];
   [self sendFocusEvent:NS_LOSTFOCUS];
@@ -4866,7 +4893,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   geckoEvent.refPoint.x = static_cast<nscoord>(localPoint.x);
   geckoEvent.refPoint.y = static_cast<nscoord>(localPoint.y);
 
-  nsAutoRetainView kungFuDeathGrip(self);
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
   mGeckoChild->DispatchWindowEvent(geckoEvent);
   if (!mGeckoChild)
     return YES;
@@ -4925,7 +4952,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 {
   PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("ChildView draggingExited: entered\n"));
 
-  nsAutoRetainView kungFuDeathGrip(self);
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
   [self doDragAction:NS_DRAGDROP_EXIT sender:sender];
   NS_IF_RELEASE(mDragService);
 }
@@ -4933,7 +4960,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
-  nsAutoRetainView kungFuDeathGrip(self);
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
   BOOL handled = [self doDragAction:NS_DRAGDROP_DROP sender:sender];
   NS_IF_RELEASE(mDragService);
   return handled;
@@ -5053,7 +5080,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
   id<mozAccessible> nativeAccessible = nil;
 
-  nsAutoRetainView kungFuDeathGrip(self);
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
   nsCOMPtr<nsIWidget> kungFuDeathGrip2(mGeckoChild);
   nsCOMPtr<nsIAccessible> accessible;
   mGeckoChild->GetDocumentAccessible(getter_AddRefs(accessible));

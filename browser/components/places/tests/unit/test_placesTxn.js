@@ -187,10 +187,10 @@ function run_test() {
   var bkmk1Id = bkmkIds[0];
   var bkmk2Id = bkmkIds[1];
   var bkmk3Id = bkmkIds[2];
-  var txn3 = ptSvc.moveItem(bkmk1Id, root, -1);
-  txn3.doTransaction();
 
   // Moving items between the same folder
+  var txn3 = ptSvc.moveItem(bkmk1Id, root, -1);
+  txn3.doTransaction();
   do_check_eq(observer._itemMovedId, bkmk1Id);
   do_check_eq(observer._itemMovedOldParent, root);
   do_check_eq(observer._itemMovedOldIndex, 1);
@@ -236,11 +236,10 @@ function run_test() {
   txn5.doTransaction();
   do_check_eq(observer._itemRemovedId, bkmk2Id);
   do_check_eq(observer._itemRemovedFolder, root);
-  do_check_eq(observer._itemRemovedIndex, 1);
+  do_check_eq(observer._itemRemovedIndex, 2);
   txn5.undoTransaction();
-
   do_check_eq(observer._itemAddedParent, root);
-  do_check_eq(observer._itemAddedIndex, 1);
+  do_check_eq(observer._itemAddedIndex, 2);
 
   // Test creating a separator
   var txn6 = ptSvc.createSeparator(root, 1);

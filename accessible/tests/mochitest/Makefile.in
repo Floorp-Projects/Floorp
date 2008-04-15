@@ -56,6 +56,9 @@ _TEST_FILES =\
 		test_nsIAccessibleTable_4.html \
 		test_nsIAccessibleTable_listboxes.xul \
 		test_nsIAccessibleHyperLink.html \
+		test_nsIAccessibleHyperLink.xul \
+		test_nsIAccessibleHyperText.html \
+		test_bug428479.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

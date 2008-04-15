@@ -113,8 +113,6 @@ public:
   PRBool SetupCairoStroke(gfxContext *aContext);
 
 protected:
-  virtual nsresult UpdateGraphic(PRBool suppressInvalidation = PR_FALSE) = 0;
-
   nsSVGPaintServerFrame *GetPaintServer(const nsStyleSVGPaint *aPaint);
 
 private:

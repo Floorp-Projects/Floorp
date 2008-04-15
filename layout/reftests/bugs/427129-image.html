@@ -1,0 +1,190 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+	<title>Reftest, bug 427129</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="Content-Style-Type" content="text/css">
+	<style type="text/css">
+
+	html, body { margin: 0; }
+
+	.contain {
+		background: aqua; color: black;
+		height: 10px; margin: 2px 50px;
+		padding-top: 0.1px; /* needed for some reason (XXX WHY?) */
+	}
+
+	.fl, .fr { height: 5px; }
+	.fl { float: left; width: 56px; }
+	.fr { float: right; width: 73px; }
+
+	.t { display: block; background: blue; height: 5px; width: 85px;
+	     border-left: 1px solid blue; padding-left: 2px;
+	     padding-right: 4px; border-right: 8px solid blue; }
+
+	</style>
+</head>
+<body>
+
+<div class="contain">
+	<div class="fl"></div>
+	<div class="fr"></div>
+	<img src="solidblue2.png" class="t">
+</div>
+
+<div class="contain">
+	<div class="fl"></div>
+	<div class="fr"></div>
+	<img src="solidblue2.png" class="t" style="margin-left: 30px">
+</div>
+
+<div class="contain">
+	<div class="fl"></div>
+	<div class="fr"></div>
+	<img src="solidblue2.png" class="t" style="margin-left: 56px">
+</div>
+
+<div class="contain">
+	<div class="fl"></div>
+	<div class="fr"></div>
+	<img src="solidblue2.png" class="t" style="margin-left: 73px">
+</div>
+
+<div class="contain">
+	<div class="fl"></div>
+	<div class="fr"></div>
+	<img src="solidblue2.png" class="t" style="margin-left: 100px">
+</div>
+
+<div class="contain">
+	<div class="fl"></div>
+	<div class="fr"></div>
+	<img src="solidblue2.png" class="t" style="margin-left: auto">
+</div>
+
+<div class="contain">
+	<div class="fl"></div>
+	<div class="fr"></div>
+	<img src="solidblue2.png" class="t" style="margin-left: auto; margin-right: 30px">
+</div>
+
+<div class="contain">
+	<div class="fl"></div>
+	<div class="fr"></div>
+	<img src="solidblue2.png" class="t" style="margin-left: auto; margin-right: 56px">
+</div>
+
+<div class="contain">
+	<div class="fl"></div>
+	<div class="fr"></div>
+	<img src="solidblue2.png" class="t" style="margin-left: auto; margin-right: 73px">
+</div>
+
+<div class="contain">
+	<div class="fl"></div>
+	<div class="fr"></div>
+	<img src="solidblue2.png" class="t" style="margin-left: auto; margin-right: 100px">
+</div>
+
+<!-- Remember that the extra end-edge margin gets ignored -->
+<div style="width: 300px">
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<img src="solidblue2.png" class="t" style="width: 56px">
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<img src="solidblue2.png" class="t" style="margin: 0 15px; width: 56px">
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<img src="solidblue2.png" class="t" style="width: 57px">
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<img src="solidblue2.png" class="t" style="margin: 0 15px; width: 57px">
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<img src="solidblue2.png" class="t" style="margin: 0 15px 0 56px; width: 56px">
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<img src="solidblue2.png" class="t" style="margin: 0 15px 0 57px; width: 56px">
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<img src="solidblue2.png" class="t" style="margin: 0 73px 0 15px; width: 56px">
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<img src="solidblue2.png" class="t" style="margin: 0 74px 0 15px; width: 56px">
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<img src="solidblue2.png" class="t" style="width: 28%">
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<img src="solidblue2.png" class="t" style="margin: 0 15px; width: 28%">
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<img src="solidblue2.png" class="t" style="width: 29%">
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<img src="solidblue2.png" class="t" style="margin: 0 15px; width: 29%">
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<img src="solidblue2.png" class="t" style="margin: 0 15px 0 56px; width: 28%">
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<img src="solidblue2.png" class="t" style="margin: 0 15px 0 57px; width: 28%">
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<img src="solidblue2.png" class="t" style="margin: 0 73px 0 15px; width: 28%">
+	</div>
+
+	<div class="contain">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<img src="solidblue2.png" class="t" style="margin: 0 74px 0 15px; width: 28%">
+	</div>
+</div>
+
+</body>
+</html>

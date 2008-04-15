@@ -7,7 +7,7 @@ http://www.cairographics.org/.
 
 VERSIONS:
 
-  cairo (1.6.x - 1.5.18-3-g3d22902)
+  cairo (1.6.2 - 1.6.2)
   pixman (0.10.x - pixman-0.10.0-8-g0b207ae)
   glitz 0.5.2 (cvs - 2006-01-10)
 
@@ -26,8 +26,6 @@ win32-logical-font-scale.patch: set CAIRO_WIN32_LOGICAL_FONT_SCALE to 1
 nonfatal-assertions.patch: Make assertions non-fatal
 
 buggy-repeat.patch: Unconditionally turn on buggy-repeat handling to bandaid bug 413583.
-
-rollback-731e121.patch: roll back 731e121; causes bugs
 
 ==== pixman patches ====
 

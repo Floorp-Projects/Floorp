@@ -45,8 +45,14 @@ var expect = '';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-options('strict');
-options('werror');
+if (!options().match(/strict/))
+{
+  options('strict');
+}
+if (!options().match(/werror/))
+{
+  options('werror');
+}
 
 expect = 'SyntaxError';
 

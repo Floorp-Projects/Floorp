@@ -387,8 +387,11 @@ js_TraceSharpMap(JSTracer *trc, JSSharpObjectMap *map);
 extern JSBool
 js_HasOwnPropertyHelper(JSContext *cx, JSLookupPropOp lookup, jsval *vp);
 
-extern JSObject*
+extern JSObject *
 js_InitBlockClass(JSContext *cx, JSObject* obj);
+
+extern JSObject *
+js_InitEval(JSContext *cx, JSObject *obj);
 
 extern JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj);

@@ -61,7 +61,7 @@
   padding: 0 5px 2px 5px;
   background-color: #999;
   border-bottom: 1px solid #404040;
-  background-image: url("chrome://global/skin/toolbar/toolbar-background-tall.gif");
+  background-image: url("chrome://global/skin/toolbar/toolbar-background-tall.png");
   background-repeat: repeat-x;
   background-position: top right;
   margin: 0;
@@ -90,7 +90,7 @@
 }
 
 radio[pane][selected="true"] {
-    background: url("chrome://browser/skin/radio-selected-bg.gif") repeat-x center center;
+    background: url("chrome://browser/skin/radio-selected-bg.png") repeat-x center center;
     -moz-border-left-colors: #6a6a6a #868686;
     -moz-border-right-colors: #6a6a6a #868686;    
 }

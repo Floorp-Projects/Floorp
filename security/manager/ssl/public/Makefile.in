@@ -62,6 +62,7 @@ XPIDLSRCS = \
     nsIBadCertListener2.idl \
     nsISSLErrorListener.idl \
     nsIIdentityInfo.idl \
+    nsIAssociatedContentSecurity.idl \
     nsICertOverrideService.idl \
     nsIRecentBadCertsService.idl \
     nsIFormSigningDialog.idl \

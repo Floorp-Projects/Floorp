@@ -38,6 +38,7 @@
 import win32api
 import win32file
 import win32pdhutil
+import win32pdh
 import win32pipe
 import msvcrt
 
@@ -88,6 +89,8 @@ def ProcessesWithNameExist(*process_names):
 
   for process_name in process_names: 
     try:
+      # refresh list of processes
+      win32pdh.EnumObjects(None, None, 0, 1)
       pids = win32pdhutil.FindPerformanceAttributesByName(process_name, counter="ID Process")
       if len(pids) > 0:
         return True 

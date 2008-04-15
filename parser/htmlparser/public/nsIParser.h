@@ -254,7 +254,7 @@ class nsIParser : public nsISupports {
      */
     NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
                              void* aKey,
-                             nsTArray<nsAutoString>& aTagStack,
+                             nsTArray<nsString>& aTagStack,
                              PRBool aXMLMode,
                              const nsACString& aContentType,
                              nsDTDMode aMode = eDTDMode_autodetect) = 0;

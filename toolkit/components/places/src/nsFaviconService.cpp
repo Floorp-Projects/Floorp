@@ -756,6 +756,7 @@ nsFaviconService::RemoveFailedFavicon(nsIURI* aIcon)
 NS_IMETHODIMP
 nsFaviconService::IsFailedFavicon(nsIURI* aIcon, PRBool* _retval)
 {
+  NS_ENSURE_ARG(aIcon);
   nsCAutoString spec;
   nsresult rv = aIcon->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);

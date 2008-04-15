@@ -259,10 +259,15 @@ interface nsINavBookmarksService : nsISupports
    *  @returns the ID of the newly-inserted folder
    */
   long long createDynamicContainer(in long long aParentFolder, in AUTF8String aName,
-                                  in AString aContractId, in long aIndex);
+                                   in AString aContractId, in long aIndex);
 
   /**
    * Removes a folder from the bookmarks tree.
+   *
+   * NOTE: This API is deprecated. The correct method to use is removeItem.
+   *       This will be removed in the next release after Firefox 3.0. The
+   *       removal is in bug 428558.
+   *
    *  @param aFolder
    *         The id of the folder to remove.
    */
@@ -302,8 +307,12 @@ interface nsINavBookmarksService : nsISupports
    *         The id of the new parent
    *  @param aIndex
    *         The index under aNewParent, or DEFAULT_INDEX to append
+   *
+   * NOTE: When moving down in the same container we take into account the
+   * removal of the original item. If you want to move from index X to
+   * index Y > X you must use moveItem(id, folder, Y + 1)
    */
-  void moveItem(in long long aFolder, in long long newParent, in long aIndex);
+  void moveItem(in long long aItemId, in long long aNewParent, in long aIndex);
 
   /**
    * Returns the ID of a child folder with the given name. This does not

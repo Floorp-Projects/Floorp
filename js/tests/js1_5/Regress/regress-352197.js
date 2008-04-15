@@ -45,8 +45,14 @@ var expect = 'TypeError: function f does not always return a value';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
  
-options('strict');
-options('werror');
+if (!options().match(/strict/))
+{
+  options('strict');
+}
+if (!options().match(/werror/))
+{
+  options('werror');
+}
 
 try
 {

@@ -950,7 +950,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
       // this line.      
       // XXXbz the line box is not fully reflown yet if our containing block is
       // relatively positioned...
-      if (lineBox != blockFrame->end_lines()) {
+      if (lineBox != iter.End()) {
         nsIFrame * firstFrame = lineBox->mFirstChild;
         PRBool found = PR_FALSE;
         PRBool allEmpty = PR_TRUE;

@@ -123,9 +123,6 @@ def TerminateProcess(pid):
       time.sleep(5)
       if ProcessesWithNameExist(str(pid)):
         os.kill(pid, signal.SIGKILL)
-        time.sleep(5)
-        if ProcessesWithNameExist(str(pid)):
-          print 'WARNING: failed to terminate: %s' % (str(pid))
   except OSError, (errno, strerror):
     print 'WARNING: failed os.kill: %s : %s' % (errno, strerror)
 

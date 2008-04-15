@@ -151,6 +151,7 @@
 #include "nsXBLBinding.h"
 #include "nsEventDispatcher.h"
 #include "nsPresShellIterator.h"
+#include "mozAutoDocUpdate.h"
 
 /**
  * Three bits are used for XUL Element's lazy state.
@@ -1435,20 +1436,22 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
     }
 
     if (hasMutationListeners) {
-        nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
+        mozAutoRemovableBlockerRemover blockerRemover;
 
-        mutation.mRelatedNode = attrNode;
-        mutation.mAttrName = aName;
+        if (nsContentUtils::IsSafeToRunScript()) {
+            nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
 
-        if (!oldValue.IsEmpty())
-          mutation.mPrevAttrValue = do_GetAtom(oldValue);
-        mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
+            mutation.mRelatedNode = attrNode;
+            mutation.mAttrName = aName;
 
-        mozAutoDocUpdateContentUnnest updateUnnest(doc);
+            if (!oldValue.IsEmpty())
+              mutation.mPrevAttrValue = do_GetAtom(oldValue);
+            mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
 
-        mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
-        nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
-                                    nsnull, &mutation);
+            mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
+            nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
+                                        nsnull, &mutation);
+        }
     }
 
     return NS_OK;

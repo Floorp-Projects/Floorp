@@ -539,7 +539,8 @@ static void UpdateEmail(HWND hwndDlg)
     wchar_t email[MAX_EMAIL_LENGTH];
     GetDlgItemText(hwndDlg, IDC_EMAILTEXT, email, sizeof(email));
     gQueryParameters[L"Email"] = email;
-    EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILTEXT), true);
+    if (IsDlgButtonChecked(hwndDlg, IDC_SUBMITREPORTCHECK))
+      EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILTEXT), true);
   } else {
     gQueryParameters.erase(L"Email");
     EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILTEXT), false);
@@ -781,6 +782,19 @@ static void StretchControlsToFit(HWND hwndDlg)
   }
 }
 
+static void SubmitReportChecked(HWND hwndDlg)
+{
+  bool enabled = (IsDlgButtonChecked(hwndDlg, IDC_SUBMITREPORTCHECK) != 0);
+  EnableWindow(GetDlgItem(hwndDlg, IDC_VIEWREPORTBUTTON), enabled);
+  EnableWindow(GetDlgItem(hwndDlg, IDC_COMMENTTEXT), enabled);
+  EnableWindow(GetDlgItem(hwndDlg, IDC_INCLUDEURLCHECK), enabled);
+  EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILMECHECK), enabled);
+  EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILTEXT),
+               enabled && (IsDlgButtonChecked(hwndDlg, IDC_EMAILMECHECK)
+                           != 0));
+  SetDlgItemVisible(hwndDlg, IDC_PROGRESSTEXT, enabled);
+}
+
 static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
                                              WPARAM wParam, LPARAM lParam)
 {
@@ -816,20 +830,13 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
     SetDlgItemText(hwndDlg, IDC_SUBMITREPORTCHECK,
                    Str(ST_CHECKSUBMIT).c_str());
 
-    if (CheckBoolKey(gCrashReporterKey.c_str(),
-                     SUBMIT_REPORT_VALUE, &enabled) &&
-        !enabled) {
-      CheckDlgButton(hwndDlg, IDC_SUBMITREPORTCHECK, BST_UNCHECKED);
-      EnableWindow(GetDlgItem(hwndDlg, IDC_VIEWREPORTBUTTON), enabled);
-      EnableWindow(GetDlgItem(hwndDlg, IDC_COMMENTTEXT), enabled);
-      EnableWindow(GetDlgItem(hwndDlg, IDC_INCLUDEURLCHECK), enabled);
-      EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILMECHECK), enabled);
-      EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILTEXT), enabled);
-      SetDlgItemVisible(hwndDlg, IDC_PROGRESSTEXT, enabled);
-    } else {
-      CheckDlgButton(hwndDlg, IDC_SUBMITREPORTCHECK, BST_CHECKED);
-    }
+    if (!CheckBoolKey(gCrashReporterKey.c_str(),
+                      SUBMIT_REPORT_VALUE, &enabled))
+      enabled = ShouldEnableSending();
 
+    CheckDlgButton(hwndDlg, IDC_SUBMITREPORTCHECK, enabled ? BST_CHECKED
+                                                           : BST_UNCHECKED);
+    SubmitReportChecked(hwndDlg);
 
     HWND hwndComment = GetDlgItem(hwndDlg, IDC_COMMENTTEXT);
     WNDPROC OldWndProc = (WNDPROC)SetWindowLongPtr(hwndComment,
@@ -1040,15 +1047,7 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
                        (DLGPROC)ViewReportDialogProc, 0);
         break;
       case IDC_SUBMITREPORTCHECK:
-        enabled = (IsDlgButtonChecked(hwndDlg, IDC_SUBMITREPORTCHECK) != 0);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_VIEWREPORTBUTTON), enabled);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_COMMENTTEXT), enabled);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_INCLUDEURLCHECK), enabled);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILMECHECK), enabled);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILTEXT),
-                     enabled && (IsDlgButtonChecked(hwndDlg, IDC_EMAILMECHECK)
-                                 != 0));
-        SetDlgItemVisible(hwndDlg, IDC_PROGRESSTEXT, enabled);
+        SubmitReportChecked(hwndDlg);
         break;
       case IDC_INCLUDEURLCHECK:
         UpdateURL(hwndDlg);

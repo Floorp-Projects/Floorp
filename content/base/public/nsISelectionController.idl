@@ -51,7 +51,7 @@ interface nsIDOMNode;
 interface nsISelection;
 interface nsISelectionDisplay;
 
-[scriptable, uuid(80d2e85a-4ad2-45be-88e7-8c1fe943ac4d)]
+[scriptable, uuid(5f8f41cb-f182-4010-9e38-7c873e8e8a9f)]
 interface nsISelectionController : nsISelectionDisplay
 {
    const short SELECTION_NONE=0;
@@ -140,6 +140,13 @@ interface nsISelectionController : nsISelectionDisplay
    */
     boolean getCaretEnabled();
 
+    /**
+    * This is true if the caret is enabled, visible, and currently blinking.
+    * This is still true when the caret is enabled, visible, but in its "off"
+    * blink cycle.
+    */
+    readonly attribute boolean caretVisible;
+    
    /**
    * Show the caret even in selections. By default the caret is hidden unless the
    * selection is collapsed. Use this function to show the caret even in selections.
@@ -156,12 +163,6 @@ interface nsISelectionController : nsISelectionDisplay
    *  @param aExtend  should it collapse the selection of extend it?
    */
     void characterMove(in boolean forward, in boolean extend);
-
-   /** CharacterExtendForDelete will extend the selection one character cell
-   *  forward in the document.
-   *  this method is used internally for handling del key.
-   */
-    [noscript] void characterExtendForDelete();
 
    /** WordMove will move the selection one word forward/backward in the document.
    *  this will also have the effect of collapsing the selection if the aExtend = PR_FALSE
@@ -252,6 +253,6 @@ interface nsISelectionController : nsISelectionDisplay
 };
 %{ C++
    #define NS_ISELECTIONCONTROLLER_CID \
-   { 0xd2d1d179, 0x85a7, 0x11d3, \
-   { 0x99, 0x32, 0x0, 0x10, 0x83, 0x1, 0x23, 0x3c }}
+   { 0x513b9460, 0xd56a, 0x4c4e, \
+   { 0xb6, 0xf9, 0x0b, 0x8a, 0xe4, 0x37, 0x2a, 0x3b }}
 %}

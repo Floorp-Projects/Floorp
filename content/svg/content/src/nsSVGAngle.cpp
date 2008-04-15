@@ -53,12 +53,20 @@ public:
   NS_IMETHOD GetValue(float* aResult)
     { *aResult = mVal.GetBaseValue(); return NS_OK; }
   NS_IMETHOD SetValue(float aValue)
-    { mVal.SetBaseValue(aValue, nsnull); return NS_OK; }
+    {
+      NS_ENSURE_FINITE(aValue, NS_ERROR_ILLEGAL_VALUE);
+      mVal.SetBaseValue(aValue, nsnull);
+      return NS_OK;
+    }
 
   NS_IMETHOD GetValueInSpecifiedUnits(float* aResult)
     { *aResult = mVal.mBaseVal; return NS_OK; }
   NS_IMETHOD SetValueInSpecifiedUnits(float aValue)
-    { mVal.mBaseVal = aValue; return NS_OK; }
+    {
+      NS_ENSURE_FINITE(aValue, NS_ERROR_ILLEGAL_VALUE);
+      mVal.mBaseVal = aValue;
+      return NS_OK;
+    }
 
   NS_IMETHOD SetValueAsString(const nsAString& aValue)
     { return mVal.SetBaseValueString(aValue, nsnull, PR_FALSE); }
@@ -67,8 +75,11 @@ public:
 
   NS_IMETHOD NewValueSpecifiedUnits(PRUint16 unitType,
                                     float valueInSpecifiedUnits)
-    { mVal.NewValueSpecifiedUnits(unitType, valueInSpecifiedUnits, nsnull);
-      return NS_OK; }
+    {
+      NS_ENSURE_FINITE(valueInSpecifiedUnits, NS_ERROR_ILLEGAL_VALUE);
+      mVal.NewValueSpecifiedUnits(unitType, valueInSpecifiedUnits, nsnull);
+      return NS_OK;
+    }
 
   NS_IMETHOD ConvertToSpecifiedUnits(PRUint16 unitType)
     { mVal.ConvertToSpecifiedUnits(unitType, nsnull); return NS_OK; }

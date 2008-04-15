@@ -131,7 +131,7 @@ protected:
     void LoadMenuItem(nsIContent* inMenuItemContent);  
     void LoadSubMenu(nsIContent* inMenuContent);
 
-    NSMenu* CreateMenuWithGeckoString(nsString& menuTitle);
+    GeckoNSMenu* CreateMenuWithGeckoString(nsString& menuTitle);
 
 protected:
     nsString                    mLabel;
@@ -145,7 +145,7 @@ protected:
 
     // Mac specific
     PRInt16                     mMacMenuID;
-    NSMenu*                     mMacMenu;               // strong ref, we own it
+    GeckoNSMenu*                mMacMenu;               // strong ref, we own it
     MenuDelegate*               mMenuDelegate;          // strong ref, we keep this around to get events for us
     NSMenuItem*                 mNativeMenuItem;        // strong ref, we own
     PRPackedBool                mIsEnabled;

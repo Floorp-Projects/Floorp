@@ -80,7 +80,6 @@ tab
   -moz-border-left-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-radius-topleft: 2px;
   -moz-border-radius-topright: 2px;
-  -moz-border-radius-bottomright: 1px;
   padding: 1px 4px 2px 4px;
   background-color: -moz-Dialog;
   color: -moz-DialogText;
@@ -169,4 +168,3 @@ tab[first-tab="true"][selected="true"] {
   border-bottom: none;
 }
 
-  

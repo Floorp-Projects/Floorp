@@ -64,6 +64,9 @@
 #include "nsIDOMElement.h"
 #include "nsMenuBarX.h"
 
+#include "gfxPlatform.h"
+#include "lcms.h"
+
 PRInt32 gXULModalLevel = 0;
 // In principle there should be only one app-modal window at any given time.
 // But sometimes, despite our best efforts, another window appears above the
@@ -1310,6 +1313,13 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor)
   if (NS_GET_A(aColor) == 0) {
     [(ToolbarWindow*)mWindow setTitlebarColor:nil]; 
   } else {
+    // Transform from sRGBA to monitor RGBA. This seems like it would make trying
+    // to match the system appearance lame, so probably we just shouldn't color 
+    // correct chrome.
+    cmsHTRANSFORM transform = NULL;
+    if (gfxPlatform::IsCMSEnabled() && (transform = gfxPlatform::GetCMSRGBATransform()))
+      cmsDoTransform(transform, &aColor, &aColor, 1);
+
     [(ToolbarWindow*)mWindow setTitlebarColor:[NSColor colorWithDeviceRed:NS_GET_R(aColor)/255.0
                                                                     green:NS_GET_G(aColor)/255.0
                                                                      blue:NS_GET_B(aColor)/255.0
@@ -1386,8 +1396,10 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
     NSMenu* mainMenu = [NSApp mainMenu];
     NS_ASSERTION([mainMenu numberOfItems] > 0, "Main menu does not have any items, something is terribly wrong!");
 
-    // create a new menu bar
-    NSMenu* newMenuBar = [[NSMenu alloc] initWithTitle:@"MainMenuBar"];
+    // Create a new menu bar.
+    // We create a GeckoNSMenu because all menu bar NSMenu objects should use that subclass for
+    // key handling reasons.
+    GeckoNSMenu* newMenuBar = [[GeckoNSMenu alloc] initWithTitle:@"MainMenuBar"];
 
     // move the application menu from the existing menu bar to the new one
     NSMenuItem* firstMenuItem = [[mainMenu itemAtIndex:0] retain];

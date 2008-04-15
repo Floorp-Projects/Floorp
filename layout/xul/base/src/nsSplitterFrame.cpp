@@ -989,15 +989,16 @@ nsSplitterFrameInner::UpdateState()
           // CollapsedBefore -> Dragging
           // CollapsedAfter -> Open
           // CollapsedAfter -> Dragging
-          sibling->UnsetAttr(kNameSpaceID_None, nsGkAtoms::collapsed,
-                             PR_TRUE);
+          nsContentUtils::AddScriptRunner(
+            new nsUnsetAttrRunnable(sibling, nsGkAtoms::collapsed));
         } else if ((mState == Open || mState == Dragging)
                    && (newState == CollapsedBefore ||
                        newState == CollapsedAfter)) {
           // Open -> CollapsedBefore / CollapsedAfter
           // Dragging -> CollapsedBefore / CollapsedAfter
-          sibling->SetAttr(kNameSpaceID_None, nsGkAtoms::collapsed,
-                           NS_LITERAL_STRING("true"), PR_TRUE);
+          nsContentUtils::AddScriptRunner(
+            new nsSetAttrRunnable(sibling, nsGkAtoms::collapsed,
+                                  NS_LITERAL_STRING("true")));
         }
       }
     }

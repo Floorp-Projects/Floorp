@@ -36,9 +36,6 @@
  * ***** END LICENSE BLOCK *****
  */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 var gIOS = Cc["@mozilla.org/network/io-service;1"]
             .getService(Ci.nsIIOService);
 

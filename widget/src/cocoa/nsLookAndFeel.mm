@@ -547,10 +547,14 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         case kThemeScrollBarArrowsSingle:
           aMetric = eMetric_ScrollArrowStyleSingle;
           break;
-        // This constant isn't selectable in System Preferences like the other two (don't know why) 
+        // These constants aren't selectable in System Preferences like the other two (don't know why) 
         // `defaults write -g AppleScrollBarVariant DoubleBoth` to enable it.
         case kThemeScrollBarArrowsBoth:
           aMetric = eMetric_ScrollArrowStyleBothAtEachEnd;
+          break;
+        // `defaults write -g AppleScrollBarVariant DoubleMin` to enable it.
+        case kThemeScrollBarArrowsUpperLeft:
+          aMetric = eMetric_ScrollArrowStyleBothAtTop;
           break;
         default:
           NS_WARNING("Not handling all possible ThemeScrollBarArrowStyle values");
@@ -587,6 +591,10 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
       break;
     case eMetric_TreeScrollLinesMax:
       aMetric = 3;
+      break;
+    case eMetric_WindowsDefaultTheme:
+      aMetric = 0;
+      res = NS_ERROR_NOT_IMPLEMENTED;
       break;
     case eMetric_TabFocusModel:
     {

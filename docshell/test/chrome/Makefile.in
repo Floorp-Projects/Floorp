@@ -48,6 +48,7 @@ _TEST_FILES =	\
 		bug364461_window.xul \
 		test_bug396519.xul \
 		bug396519_window.xul \
+		test_bug428288.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

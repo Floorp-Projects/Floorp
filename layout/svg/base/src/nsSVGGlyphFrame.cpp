@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGOuterSVGFrame.h"
 #include "nsSVGTextFrame.h"
 #include "nsILookAndFeel.h"
 #include "nsTextFragment.h"
@@ -216,16 +215,7 @@ nsSVGGlyphFrame::CharacterDataChanged(nsPresContext*  aPresContext,
                                       PRBool          aAppend)
 {
   ClearTextRun();
-  return UpdateGraphic();
-}
-
-nsresult
-nsSVGGlyphFrame::UpdateGraphic(PRBool suppressInvalidation)
-{
-  nsSVGTextContainerFrame *containerFrame =
-    static_cast<nsSVGTextContainerFrame *>(mParent);
-  if (containerFrame)
-    containerFrame->UpdateGraphic();
+  NotifyGlyphMetricsChange();
 
   return NS_OK;
 }
@@ -240,7 +230,9 @@ nsSVGGlyphFrame::DidSetStyleContext()
 {
   nsSVGGlyphFrameBase::DidSetStyleContext();
   ClearTextRun();
-  return UpdateGraphic();
+  NotifyGlyphMetricsChange();
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -266,7 +258,7 @@ nsSVGGlyphFrame::SetSelected(nsPresContext* aPresContext,
   else
     mState &= ~NS_FRAME_SELECTED_CONTENT;
 
-  UpdateGeometry(PR_FALSE, PR_FALSE);
+  nsSVGUtils::UpdateGraphic(this);
 
   return NS_OK;
 }
@@ -466,7 +458,9 @@ nsSVGGlyphFrame::InitialUpdate()
 
   NS_ASSERTION(!(mState & NS_FRAME_IN_REFLOW),
                "We don't actually participate in reflow");
-  
+
+  NotifyGlyphMetricsChange();
+
   // Do unset the various reflow bits, though.
   mState &= ~(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
               NS_FRAME_HAS_DIRTY_CHILDREN);
@@ -480,7 +474,9 @@ nsSVGGlyphFrame::NotifySVGChanged(PRUint32 aFlags)
   if (aFlags & TRANSFORM_CHANGED) {
     ClearTextRun();
   }
-  UpdateGeometry(PR_TRUE, (aFlags & SUPPRESS_INVALIDATION) != 0);
+  if (!(aFlags & SUPPRESS_INVALIDATION)) {
+    nsSVGUtils::UpdateGraphic(this);
+  }
 }
 
 NS_IMETHODIMP
@@ -494,7 +490,7 @@ NS_IMETHODIMP
 nsSVGGlyphFrame::NotifyRedrawUnsuspended()
 {
   if (GetStateBits() & NS_STATE_SVG_DIRTY)
-    UpdateGeometry(PR_TRUE, PR_FALSE);
+    nsSVGUtils::UpdateGraphic(this);
 
   return NS_OK;
 }
@@ -821,7 +817,7 @@ NS_IMETHODIMP_(void)
 nsSVGGlyphFrame::SetGlyphPosition(float x, float y)
 {
   mPosition.MoveTo(x, y);
-  UpdateGeometry(PR_TRUE, PR_FALSE);
+  nsSVGUtils::UpdateGraphic(this);
 }
 
 NS_IMETHODIMP
@@ -1142,37 +1138,13 @@ nsSVGGlyphFrame::SetWhitespaceHandling(PRUint8 aWhitespaceHandling)
 //----------------------------------------------------------------------
 //
 
-void nsSVGGlyphFrame::UpdateGeometry(PRBool bRedraw,
-                                     PRBool suppressInvalidation)
+void
+nsSVGGlyphFrame::NotifyGlyphMetricsChange()
 {
-  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
-    return;
-
-  nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-  if (!outerSVGFrame) {
-    NS_ERROR("null outerSVGFrame");
-    return;
-  }
-  
-  if (outerSVGFrame->IsRedrawSuspended()) {
-    AddStateBits(NS_STATE_SVG_DIRTY);
-  } else {
-    RemoveStateBits(NS_STATE_SVG_DIRTY);
-
-    if (suppressInvalidation)
-      return;
-
-    outerSVGFrame->InvalidateRect(mRect);
-    UpdateCoveredRegion();
-
-    nsRect filterRect;
-    filterRect = nsSVGUtils::FindFilterInvalidation(this);
-    if (!filterRect.IsEmpty()) {
-      outerSVGFrame->InvalidateRect(filterRect);
-    } else {
-      outerSVGFrame->InvalidateRect(mRect);
-    }
-  }  
+  nsSVGTextContainerFrame *containerFrame =
+    static_cast<nsSVGTextContainerFrame *>(mParent);
+  if (containerFrame)
+    containerFrame->NotifyGlyphMetricsChange();
 }
 
 PRBool
@@ -1378,13 +1350,14 @@ CharacterIterator::SetupFor(gfxContext *aContext, float aScale)
 
   aContext->SetMatrix(mInitialMatrix);
   if (mPositions.IsEmpty()) {
-    gfxFloat advance = mCurrentAdvance/nsSVGGlyphFrame::GetTextRunUnitsFactor();
-    aContext->Translate(mSource->mPosition + gfxPoint(advance, 0));
+    aContext->Translate(mSource->mPosition);
+    aContext->Scale(aScale, aScale);
+    aContext->Translate(gfxPoint(mCurrentAdvance, 0));
   } else {
     aContext->Translate(mPositions[mCurrentChar].pos);
     aContext->Rotate(mPositions[mCurrentChar].angle);
+    aContext->Scale(aScale, aScale);
   }
-  aContext->Scale(aScale, aScale);
 }
 
 CharacterPosition

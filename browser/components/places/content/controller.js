@@ -75,15 +75,18 @@ const REMOVE_PAGES_MAX_SINGLEREMOVES = 10;
  *          insertion point to accommodate the orientation should be done by
  *          the person who constructs the IP, not the user. The orientation
  *          is provided for informational purposes only!
+ * @param   [optional] aIsTag
+ *          Indicates if parent container is a tag
  * @constructor
  */
-function InsertionPoint(aItemId, aIndex, aOrientation) {
+function InsertionPoint(aItemId, aIndex, aOrientation, aIsTag) {
   this.itemId = aItemId;
   this.index = aIndex;
   this.orientation = aOrientation;
+  this.isTag = aIsTag;
 }
 InsertionPoint.prototype.toString = function IP_toString() {
-  return "[object InsertionPoint(folder:" + this.itemId + ",index:" + this.index + ",orientation:" + this.orientation + ")]";
+  return "[object InsertionPoint(folder:" + this.itemId + ",index:" + this.index + ",orientation:" + this.orientation + ",isTag:" + this.isTag + ")]";
 };
 
 /**
@@ -308,7 +311,8 @@ PlacesController.prototype = {
    * Determines whether or not nodes can be inserted relative to the selection.
    */
   _canInsert: function PC__canInsert() {
-    return this._view.insertionPoint != null;
+    var ip = this._view.insertionPoint;
+    return ip != null && ip.isTag != true;
   },
 
   /**
@@ -854,6 +858,18 @@ PlacesController.prototype = {
 
       if (PlacesUtils.nodeIsFolder(node))
         removedFolders.push(node);
+      else if (PlacesUtils.nodeIsTagQuery(node.parent)) {
+        var queries = asQuery(node.parent).getQueries({});
+        if (queries.length == 1) {
+          var folders = queries[0].getFolders({});
+          if (folders.length == 1) {
+            var uri = PlacesUtils._uri(node.uri);
+            var tagItemId = folders[0];
+            transactions.push(PlacesUIUtils.ptm.untagURI(uri, [tagItemId]));
+          }
+        }
+        continue;
+      }
 
       transactions.push(PlacesUIUtils.ptm.removeItem(node.itemId));
     }
@@ -1337,9 +1353,17 @@ var PlacesControllerDragHelper = {
         movedCount++;
       }
 
-      transactions.push(PlacesUIUtils.makeTransaction(unwrapped,
-                        flavor.value, insertionPoint.itemId,
-                        index, copy));
+      // if dragging over a tag container we should tag the item
+      if (insertionPoint.isTag) {
+        var uri = PlacesUtils._uri(unwrapped.uri);
+        var tagItemId = insertionPoint.itemId;
+        transactions.push(PlacesUIUtils.ptm.tagURI(uri,[tagItemId]));
+      }
+      else {
+        transactions.push(PlacesUIUtils.makeTransaction(unwrapped,
+                          flavor.value, insertionPoint.itemId,
+                          index, copy));
+      }
     }
 
     var txn = PlacesUIUtils.ptm.aggregateTransactions("DropItems", transactions);

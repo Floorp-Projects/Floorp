@@ -112,18 +112,19 @@ AutoScriptEvaluate::~AutoScriptEvaluate()
 // function is factored out to manage that.
 JSBool xpc_IsReportableErrorCode(nsresult code)
 {
+    if (NS_SUCCEEDED(code))
+        return JS_FALSE;
+
     switch(code)
     {
-        case NS_ERROR_XPC_JS_THREW_NULL:
-        case NS_ERROR_XPC_JS_THREW_JS_OBJECT:
-        case NS_ERROR_XPC_JS_THREW_NATIVE_OBJECT:
-        case NS_ERROR_XPC_JS_THREW_STRING:
-        case NS_ERROR_XPC_JS_THREW_NUMBER:
-        case NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS:
-        case NS_ERROR_XPC_JAVASCRIPT_ERROR:
-            return JS_TRUE;
+        // Error codes that we don't want to report as errors...
+        // These generally indicate bad interface design AFAIC. 
+        case NS_ERROR_FACTORY_REGISTER_AGAIN:
+        case NS_BASE_STREAM_WOULD_BLOCK:
+            return JS_FALSE;
     }
-    return JS_FALSE;
+
+    return JS_TRUE;
 }
 
 // static
@@ -908,7 +909,8 @@ nsXPCWrappedJSClass::CleanupPointerTypeObject(const nsXPTType& type,
 nsresult
 nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                                        const char * aPropertyName,
-                                       const char * anInterfaceName)
+                                       const char * anInterfaceName,
+                                       PRBool aForceReport)
 {
     XPCContext * xpcc = ccx.GetXPCContext();
     JSContext * cx = ccx.GetJSContext();
@@ -929,7 +931,8 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
     {
         if(!xpc_exception)
             XPCConvert::JSValToXPCException(ccx, js_exception, anInterfaceName,
-                                            aPropertyName, getter_AddRefs(xpc_exception));
+                                            aPropertyName,
+                                            getter_AddRefs(xpc_exception));
 
         /* cleanup and set failed even if we can't build an exception */
         if(!xpc_exception)
@@ -944,7 +947,52 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
         nsresult e_result;
         if(NS_SUCCEEDED(xpc_exception->GetResult(&e_result)))
         {
-            if(xpc_IsReportableErrorCode(e_result))
+            // Figure out whether or not we should report this exception.
+            PRBool reportable = xpc_IsReportableErrorCode(e_result);
+            if(reportable)
+            {
+                // Always want to report forced exceptions and XPConnect's own
+                // errors.
+                reportable = aForceReport ||
+                    NS_ERROR_GET_MODULE(e_result) == NS_ERROR_MODULE_XPCONNECT;
+
+                // See if an environment variable was set or someone has told us
+                // that a user pref was set indicating that we should report all
+                // exceptions.
+                if(!reportable)
+                    reportable = nsXPConnect::ReportAllJSExceptions();
+
+                // Finally, check to see if this is the last JS frame on the
+                // stack. If so then we always want to report it.
+                if(!reportable)
+                {
+                    PRBool onlyNativeStackFrames = PR_TRUE;
+                    JSStackFrame * fp = nsnull;
+                    while((fp = JS_FrameIterator(cx, &fp)))
+                    {
+                        if(!JS_IsNativeFrame(cx, fp))
+                        {
+                            onlyNativeStackFrames = PR_FALSE;
+                            break;
+                        }
+                    }
+                    reportable = onlyNativeStackFrames;
+                }
+                
+                // Ugly special case for GetInterface. It's "special" in the
+                // same way as QueryInterface in that a failure is not
+                // exceptional and shouldn't be reported. We have to do this
+                // check here instead of in xpcwrappedjs (like we do for QI) to
+                // avoid adding extra code to all xpcwrappedjs objects.
+                if(reportable && e_result == NS_ERROR_NO_INTERFACE &&
+                   !strcmp(anInterfaceName, "nsIInterfaceRequestor") &&
+                   !strcmp(aPropertyName, "getInterface"))
+                {
+                    reportable = PR_FALSE;
+                }
+            }
+
+            if(reportable)
             {
 #ifdef DEBUG
                 static const char line[] =
@@ -1502,7 +1550,14 @@ pre_call_clean_up:
 
     if (!success)
     {
-        retval = CheckForException(ccx, name, GetInterfaceName());
+        PRBool forceReport;
+        if(NS_FAILED(mInfo->IsFunction(&forceReport)))
+            forceReport = PR_FALSE;
+
+        // May also want to check if we're moving from content->chrome and force
+        // a report in that case.
+
+        retval = CheckForException(ccx, name, GetInterfaceName(), forceReport);
         goto done;
     }
 

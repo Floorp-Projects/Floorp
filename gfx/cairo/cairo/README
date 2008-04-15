@@ -37,68 +37,139 @@ The primary source of information about cairo is:
 
 	http://cairographics.org/
 
-The latest releases of cairo can be found at:
+The latest versions of cairo can always be found at:
 
-	http://cairographics.org/releases
+	http://cairographics.org/download
 
-Snapshots of in-development versions of cairo:
+Documentation on using cairo and frequently-asked questions:
 
-	http://cairographics.org/snapshots
-
-The programming manual for using cairo:
-
-	http://cairographics.org/manual
+	http://cairographics.org/documentation
+	http://cairographics.org/FAQ
 
 Mailing lists for contacting cairo users and developers:
 
 	http://cairographics.org/lists
 
-Answers to some frequently asked questions about cairo:
+Roadmap and unscheduled things to do, (please feel free to help out):
 
-	http://cairographics.org/FAQ
+	http://cairographics.org/roadmap
+	http://cairographics.org/todo
 
 Dependencies
 ============
 The set of libraries needed to compile cairo depends on which backends
-are enabled when cairo is configured. Here are the dependencies for
-each backend:
+are enabled when cairo is configured. So look at the list below to
+determine which dependencies are needed for the backends of interest.
 
-Surface backends:
+For the surface backends, we have both "supported" and "experimental"
+backends. Further, the supported backends can be divided into the
+"standard" backends which can be easily built on any platform, and the
+"platform" backends which depend on some underlying platform-specific
+system, (such as the X Window System or some other window system).
 
+As an example, for a standard Linux build, (with image, png, pdf,
+PostScript, svg, and xlib surface backends, and the freetype font
+backend), the following sample commands will install necessary
+dependencies:
+
+    Debian (and similar):
+
+	apt-get install libpng12-dev libz-dev libxrender-dev libfontconfig1-dev
+
+    Fedora (and similar):
+
+	yum install libpng-devel zlib-devel libXrender-devel fontconfig-devel
+
+(Those commands intentionally don't install pixman from a distribution
+package since if you're manually compiling cairo, then you likely want
+to grab pixman from the same place at the same time and compile it as
+well.)
+
+Supported, "standard" surface backends
+------------------------------------
 	image backend (required)
 	------------------------
-	pixman			http://cairographics.org/releases
-			or:	git://git.cairographics.org/git/pixman
+	pixman >= 0.10.0	http://cairographics.org/releases
 
-	glitz backend
-	-------------
-	glitz >= 0.4.4 		http://freedesktop.org/Software/glitz
+	png support (can be left out if desired, but many
+	-----------  applications expect it to be present)
+	libpng			http://www.libpng.org/pub/png/libpng.html
 
 	pdf backend
 	-----------
-	freetype >= 2.1.4	http://freetype.org
 	zlib			http://www.gzip.org/zlib
 
 	postscript backend
 	------------------
-	freetype >= 2.1.4	http://freetype.org
 	zlib			http://www.gzip.org/zlib
+
+	svg backend
+	-----------
+	[none]
+
+Supported, "platform" surface backends
+-----------------------------------
+	xlib backend
+	------------
+	X11			http://freedesktop.org/Software/xlibs
+
+	xlib-xrender backend
+	--------------------
+	Xrender >= 0.6		http://freedesktop.org/Software/xlibs
 
 	quartz backend
 	--------------
-	[*]
+	MacOS X >= 10.4 with Xcode >= 2.4
 
 	win32 backend
 	-------------
-	[*]
+	Microsoft Windows 2000 or newer[*].
+
+Font backends (required to have at least one)
+---------------------------------------------
+	freetype font backend
+	---------------------
+	freetype >= 2.1.9	http://freetype.org
+	fontconfig		http://fontconfig.org
+
+	quartz-font backend
+	-------------------
+	MacOS X >= 10.4 with Xcode >= 2.4
+
+	win32 font backend
+	------------------
+	Microsoft Windows 2000 or newer[*].
+
+	[*] The Win32 backend should work on Windows 2000 and newer
+	    (excluding Windows Me.) Most testing has been done on
+	    Windows XP. While some portions of the code have been
+	    adapted to work on older versions of Windows, considerable
+	    work still needs to be done to get cairo running in those
+	    environments.
+
+	    Cairo can be compiled on Windows with either the gcc
+	    toolchain (see http://www.mingw.org) or with Microsoft
+	    Visual C++.  If the gcc toolchain is used, the standard
+	    build instructions using configure apply, (see INSTALL).
+	    If Visual C++ is desired, GNU make is required and
+	    Makefile.win32 can be used via 'make -f Makefile.win32'.
+	    The compiler, include paths, and library paths must be set
+	    up correctly in the environment.
+
+	    MSVC versions earlier than 7.1 are known to miscompile
+	    parts of cairo and pixman, and so should be avoided. MSVC
+	    7.1 or later, including the free Microsoft Visual Studio
+	    Express editions, produce correct code.
+
+Experimental surface backends
+-----------------------------
+	glitz
+	-------------
+	glitz >= 0.4.4 		http://freedesktop.org/Software/glitz
 
 	xcb backend
 	-----------
 	XCB			http://xcb.freedesktop.org
-
-	xlib backend
-	------------
-	Xrender >= 0.6		http://freedesktop.org/Software/xlibs
 
 	beos backend
 	------------
@@ -111,40 +182,6 @@ Surface backends:
 	requires a font backend. See the freetype dependency list. Ready to use
 	packages and developer dependencies are available at Netlabs:
 				ftp://ftp.netlabs.org/pub/cairo
-
-Font backends:
-
-	freetype font backend
-	---------------------
-	freetype >= 2.1.4	http://freetype.org
-	fontconfig		http://fontconfig.org
-
-	win32 font backend
-	------------------
-	[*]
-
-	atsui font backend
-	------------------
-	[*]
-
-	[*] I don't know specifically what packages might need to be
-	    installed on a Mac OS X system to use the Quartz and ATSUI
-	    backends. As far as win32, the situation is rather complex:
-
-	    The Win32 backend should work on Windows 2000 and newer
-	    (excluding Windows Me.) Most testing has been done on
-	    Windows XP. While some portions of the code have been
-	    adapted to work on older versions of Windows, considerable
-	    work still needs to be done to get cairo running in these
-	    environments.
-
-	    Cairo can be compiled on Windows either with the GCC
-	    toolchain (see http://www.mingw.org) or with Microsoft
-	    Visual C++. Makefiles or project files for compiling with
-	    MSVC are however not provided as of this release. We have
-	    received reports that MSVC 6.0 compiles parts of cairo
-	    incorrectly, (leading to incorrect color). MSVC 7.0 is
-	    known to work.
 
 Compiling
 =========

@@ -187,7 +187,7 @@ nsSVGImageFrame::AttributeChanged(PRInt32         aNameSpaceID,
         aAttribute == nsGkAtoms::width ||
         aAttribute == nsGkAtoms::height ||
         aAttribute == nsGkAtoms::preserveAspectRatio)) {
-     UpdateGraphic();
+     nsSVGUtils::UpdateGraphic(this);
      return NS_OK;
    }
 
@@ -389,7 +389,7 @@ NS_IMETHODIMP nsSVGImageListener::OnStopDecode(imgIRequest *aRequest,
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
-  mFrame->UpdateGraphic();
+  nsSVGUtils::UpdateGraphic(mFrame);
   return NS_OK;
 }
 
@@ -400,7 +400,7 @@ NS_IMETHODIMP nsSVGImageListener::FrameChanged(imgIContainer *aContainer,
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
-  mFrame->UpdateGraphic();
+  nsSVGUtils::UpdateGraphic(mFrame);
   return NS_OK;
 }
 
@@ -411,7 +411,7 @@ NS_IMETHODIMP nsSVGImageListener::OnStartContainer(imgIRequest *aRequest,
     return NS_ERROR_FAILURE;
 
   mFrame->mImageContainer = aContainer;
-  mFrame->UpdateGraphic();
+  nsSVGUtils::UpdateGraphic(mFrame);
 
   return NS_OK;
 }

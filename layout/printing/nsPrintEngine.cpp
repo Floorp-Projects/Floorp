@@ -1871,7 +1871,20 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   } else {
     nscoord pageWidth, pageHeight;
     mPrt->mPrintDC->GetDeviceSurfaceDimensions(pageWidth, pageHeight);
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
+    // If we're in landscape mode on Linux, the device surface will have 
+    // been rotated, so for the purposes of reflowing content, we'll 
+    // treat device's height as our width and its width as our height, 
+    PRInt32 orientation;
+    mPrt->mPrintSettings->GetOrientation(&orientation);
+    if (nsIPrintSettings::kLandscapeOrientation == orientation) {
+      adjSize = nsSize(pageHeight, pageWidth);
+    } else {
+      adjSize = nsSize(pageWidth, pageHeight);
+    }
+#else
     adjSize = nsSize(pageWidth, pageHeight);
+#endif // XP_UNIX && !XP_MACOSX
     documentIsTopLevel = PR_TRUE;
   }
 
@@ -1922,7 +1935,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   // OK, so there is a selection, we will print the entire selection
   // on one page and then crop the page.
   // This means you can never print any selection that is longer than
-  // one page put it keeps it from page breaking in the middle of your
+  // one page, but it keeps it from page breaking in the middle of your
   // print of the selection (see also nsSimplePageSequence.cpp)
   PRInt16 printRangeType = nsIPrintSettings::kRangeAllPages;
   mPrt->mPrintSettings->GetPrintRange(&printRangeType);
@@ -3113,6 +3126,11 @@ nsPrintEngine::FinishPrintPreview()
   nsresult rv = NS_OK;
 
 #ifdef NS_PRINT_PREVIEW
+
+  if (!mPrt) {
+    /* we're already finished with print preview */
+    return rv;
+  }
 
   rv = DocumentReadyForPrinting();
 

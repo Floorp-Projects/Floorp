@@ -56,6 +56,8 @@ var callStack = new Array();
 
 var gTestfile;
 var gTestPath;
+var gTestsuite;
+var gTestsubsuite;
 var gDelayTestDriverEnd = false;
 
 var gTestcases = new Array();
@@ -512,6 +514,7 @@ function BigO(data)
     return deriv;
   }
 
+  return 0;
 }
 
 function compareSource(expect, actual, summary)

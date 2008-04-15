@@ -49,16 +49,23 @@ _TEST_FILES =	test_feed_discovery.html \
 		bug395533-data.txt \
 		$(NULL)
 
+# browser_bug423833.js disabled temporarily since it's unreliable
 _BROWSER_FILES = browser_bug321000.js \
                  browser_bug405137.js \
                  browser_bug409481.js \
                  browser_autodiscovery.js \
                  browser_bug420160.js \
-                 browser_bug423833.js \
                  autodiscovery.html \
                  moz.png \
                  browser_getshortcutoruri.js \
     $(NULL)
+
+# disable tests on linux for now..
+ifneq ($(OS_ARCH),Linux)
+_BROWSER_FILES += \
+                 browser_bug427559.js \
+    $(NULL)
+endif
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

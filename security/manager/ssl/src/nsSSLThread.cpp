@@ -1120,28 +1120,14 @@ void nsSSLThread::Run(void)
   }
 }
 
-void nsSSLThread::rememberPendingHTTPRequest(nsIRequest *aRequest)
+PRBool nsSSLThread::exitRequested()
 {
   if (!ssl_thread_singleton)
-    return;
+    return PR_FALSE;
 
-  nsAutoLock threadLock(ssl_thread_singleton->mMutex);
+  // no lock
 
-  ssl_thread_singleton->mPendingHTTPRequest = aRequest;
-}
-
-void nsSSLThread::cancelPendingHTTPRequest()
-{
-  if (!ssl_thread_singleton)
-    return;
-
-  nsAutoLock threadLock(ssl_thread_singleton->mMutex);
-
-  if (ssl_thread_singleton->mPendingHTTPRequest)
-  {
-    ssl_thread_singleton->mPendingHTTPRequest->Cancel(NS_ERROR_ABORT);
-    ssl_thread_singleton->mPendingHTTPRequest = nsnull;
-  }
+  return ssl_thread_singleton->mExitRequested;
 }
 
 nsSSLThread *nsSSLThread::ssl_thread_singleton = nsnull;

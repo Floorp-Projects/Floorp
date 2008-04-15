@@ -58,6 +58,7 @@
 #include "nsISecurityEventSink.h"
 #include "nsWeakReference.h"
 #include "nsISSLStatusProvider.h"
+#include "nsIAssociatedContentSecurity.h"
 #include "pldhash.h"
 #include "prmon.h"
 
@@ -120,7 +121,6 @@ protected:
 
   nsXPIDLString mInfoTooltip;
   PRInt32 mDocumentRequestsInProgress;
-  PRInt32 mSubRequestsInProgress;
   PRInt32 mSubRequestsHighSecurity;
   PRInt32 mSubRequestsLowSecurity;
   PRInt32 mSubRequestsBrokenSecurity;
@@ -129,17 +129,18 @@ protected:
   static nsresult MapInternalToExternalState(PRUint32* aState, lockIconState lock, PRBool ev);
   nsresult UpdateSecurityState(nsIRequest* aRequest);
   void UpdateMyFlags(PRBool &showWarning, lockIconState &warnSecurityState);
-  nsresult TellTheWorld(PRBool &showWarning, 
-                        lockIconState &warnSecurityState, 
+  nsresult TellTheWorld(PRBool showWarning, 
+                        lockIconState warnSecurityState, 
                         nsIRequest* aRequest);
 
-  nsresult EvaluateAndUpdateSecurityState(nsIRequest *aRequest);
-  void UpdateSubrequestMembers(nsIRequest *aRequest);
+  nsresult EvaluateAndUpdateSecurityState(nsIRequest* aRequest, nsISupports *info);
+  void UpdateSubrequestMembers(nsISupports *securityInfo);
 
   void ObtainEventSink(nsIChannel *channel, 
                        nsCOMPtr<nsISecurityEventSink> &sink);
-  
+
   nsCOMPtr<nsISupports> mSSLStatus;
+  nsCOMPtr<nsISupports> mCurrentToplevelSecurityInfo;
 
   void GetBundleString(const PRUnichar* name, nsAString &outString);
   

@@ -53,7 +53,7 @@ interface nsIBadCertListener2 : nsISupports {
   /**
    *  @param socketInfo A network communication context that can be used to obtain more information
    *                    about the active connection.
-   *  @param cert The certificate that is not trusted and that is having the problem.
+   *  @param status The SSL status object that describes the problem(s).
    *  @param targetSite The Site name that was used to open the current connection.
    *
    *  @return The consumer shall return true if it wants to suppress the error message

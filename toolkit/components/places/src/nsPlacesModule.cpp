@@ -56,6 +56,11 @@ static const nsModuleComponentInfo components[] =
     NS_FAVICONSERVICE_CONTRACTID,
     nsFaviconServiceConstructor },
 
+  { "Browser History Charset Resolver",
+    NS_NAVHISTORYSERVICE_CID,
+    "@mozilla.org/embeddor.implemented/bookmark-charset-resolver;1",
+    nsNavHistoryConstructor },
+
 };
 
 NS_IMPL_NSGETMODULE(nsPlacesModule, components)

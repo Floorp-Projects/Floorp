@@ -67,6 +67,8 @@ _TEST_FILES = 	bug288254_window.xul \
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 _TEST_FILES += test_panel_focus.xul \
                window_panel_focus.xul
+else
+_TEST_FILES += test_autocomplete.xul
 endif
 
 libs:: $(_TEST_FILES)

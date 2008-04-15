@@ -268,6 +268,9 @@ protected:
                        ProcessingAccessKeyState aAccessKeyState,
                        PRInt32 aModifierMask);
 
+  PRBool ExecuteAccessKey(nsTArray<PRUint32>& aAccessCharCodes,
+                          PRBool aIsTrustedEvent);
+
   //---------------------------------------------
   // DocShell Focus Traversal Methods
   //---------------------------------------------

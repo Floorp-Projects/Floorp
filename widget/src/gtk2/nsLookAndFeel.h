@@ -71,6 +71,7 @@ protected:
     static nscolor sButtonText;
     static nscolor sButtonOuterLightBorder;
     static nscolor sButtonInnerDarkBorder;
+    static nscolor sOddCellBackground;
     static PRUnichar sInvisibleCharacter;
 
     static void InitLookAndFeel();

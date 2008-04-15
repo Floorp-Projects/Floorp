@@ -189,12 +189,15 @@
         <parameter name="aXferData"/>
         <parameter name="aDragAction"/>
         <body><![CDATA[
-          if (aEvent.ctrlKey)
+          // Force a copy action if parent node is a query
+          if (aEvent.ctrlKey ||
+              PlacesUtils.nodeIsQuery(aEvent.target.node.parent))
             aDragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
 
           // activate the view and cache the dragged node
           this._rootView._draggedNode = aEvent.target.node;
           this._rootView.focus();
+
           aXferData.data = this._rootView.controller
                                          .getTransferData(aDragAction.action);
         ]]></body>
@@ -274,7 +277,8 @@
               var nodeY = xulNode.boxObject.y - popupY;
               var nodeHeight = xulNode.boxObject.height;
               if (xulNode.node &&
-                  PlacesUtils.nodeIsFolder(xulNode.node) &&
+                  (PlacesUtils.nodeIsFolder(xulNode.node) ||
+                   PlacesUtils.nodeIsTagQuery(xulNode.node)) &&
                   !PlacesUtils.nodeIsReadOnly(xulNode.node)) {
                 // This is a folder. If the mouse is in the top 25% of the
                 // node, drop above the folder.  If it's in the middle
@@ -893,8 +897,12 @@
           // By default, the insertion point is at the top level, at the end.
           var index = -1;
           var folderId = 0;
-          if (PlacesUtils.nodeIsFolder(this._resultNode))
+          var isTag = false;
+
+          if (PlacesUtils.nodeIsFolder(this._resultNode)) {
             folderId = PlacesUtils.getConcreteItemId(this._resultNode);
+            isTag = PlacesUtils.nodeIsTagQuery(this._resultNode);
+          }
 
           var selectedNode = this.selectedNode;
           if (selectedNode) {
@@ -907,10 +915,11 @@
               // If there is another type of node selected, the insertion point
               // is after that node.
               folderId = PlacesUtils.getConcreteItemId(selectedNode.parent);
-              index = PlacesUtils.getIndexOfNode(selectedNode)
+              index = PlacesUtils.getIndexOfNode(selectedNode);
+              isTag = PlacesUtils.nodeIsTagQuery(selectedNode.parent);
             }
           }
-          return new InsertionPoint(folderId, index);
+          return new InsertionPoint(folderId, index, 1, isTag);
         ]]></getter>
       </property>
 

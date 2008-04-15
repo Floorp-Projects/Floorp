@@ -63,9 +63,9 @@ source $TEST_DIR/bin/library.sh
 
 TEST_JSDIR=`dirname $0`
 
-TEST_JSEACH_TIMEOUT=${TEST_JSEACH_TIMEOUT:-125}
-TEST_JSEACH_PAGE_TIMEOUT=${TEST_JSEACH_PAGE_TIMEOUT:-120}
-TEST_JSALL_TIMEOUT=${TEST_JSALL_TIMEOUT:-18000}
+TEST_JSEACH_TIMEOUT=${TEST_JSEACH_TIMEOUT:-485}
+TEST_JSEACH_PAGE_TIMEOUT=${TEST_JSEACH_PAGE_TIMEOUT:-480}
+TEST_JSALL_TIMEOUT=${TEST_JSALL_TIMEOUT:-21600}
 TEST_WWW_JS=`echo $TEST_JSDIR|sed "s|$TEST_DIR||"`
 
 #
@@ -98,6 +98,7 @@ variable            description
                     list of either individual tests, manifest files or 
                     sub-directories which will override the default inclusion 
                     list.
+-Z n                Set gczeal to n. Only valid for Gecko 1.9.0 and later.
 -c                  optional. By default the test will exclude tests 
                     which crash on this branch, test type, build type and 
                     operating system. -c will include tests which crash. 
@@ -119,7 +120,7 @@ EOF
     exit 2
 }
 
-while getopts "p:b:T:x:N:d:X:I:RctF" optname
+while getopts "p:b:T:x:N:d:X:I:Z:RctF" optname
 do 
     case $optname in
         p) product=$OPTARG;;
@@ -133,6 +134,7 @@ do
         c) crashes=1;;
         t) timeouts=1;;
         F) filesonly=1;;
+        Z) gczeal=";gczeal=$OPTARG";;
         d) datafiles=$OPTARG;;
     esac
 done
@@ -144,7 +146,7 @@ if [[ -n "$datafiles" ]]; then
     done
 fi
 
-dumpvars product branch buildtype profilename executablepath restart exclude include crashes timeouts filesonly datafiles | sed "s|^|arguments: |"
+dumpvars product branch buildtype profilename executablepath restart exclude include crashes timeouts filesonly gczeal datafiles | sed "s|^|arguments: |"
 
 if [[ -z "$product" || -z "$branch" || -z "$executablepath" || -z "$profilename" ]]; then
     usage
@@ -287,8 +289,8 @@ do
             *) version="";;
         esac
         
-        echo "http://$TEST_HTTP/$TEST_WWW_JS/js-test-driver-standards.html?test=$jsfile;language=type;text/javascript$version" >> $urllist
-        echo "<li><a href='http://$TEST_HTTP/$TEST_WWW_JS/js-test-driver-standards.html?test=$jsfile;language=type;text/javascript$version'>$jsfile</a></li>" >> $urlhtml
+        echo "http://$TEST_HTTP/$TEST_WWW_JS/js-test-driver-standards.html?test=$jsfile;language=type;text/javascript$version$gczeal" >> $urllist
+        echo "<li><a href='http://$TEST_HTTP/$TEST_WWW_JS/js-test-driver-standards.html?test=$jsfile;language=type;text/javascript$version$gczeal'>$jsfile</a></li>" >> $urlhtml
     fi
 done
 

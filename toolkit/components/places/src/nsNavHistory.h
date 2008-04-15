@@ -69,6 +69,7 @@
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIStringBundle.h"
+#include "nsITextToSubURI.h"
 #include "nsITimer.h"
 #ifdef MOZ_XUL
 #include "nsITreeSelection.h"
@@ -84,6 +85,8 @@
 #include "nsNavHistoryExpire.h"
 #include "nsNavHistoryResult.h"
 #include "nsNavHistoryQuery.h"
+
+#include "nsICharsetResolver.h"
 
 // set to use more optimized (in-memory database) link coloring
 //#define IN_MEMORY_LINKS
@@ -121,7 +124,8 @@ class nsNavHistory : public nsSupportsWeakReference,
                      public nsIObserver,
                      public nsIBrowserHistory,
                      public nsIGlobalHistory3,
-                     public nsIDownloadHistory
+                     public nsIDownloadHistory,
+                     public nsICharsetResolver
 #ifdef MOZ_XUL
                      , public nsIAutoCompleteSearch,
                      public nsIAutoCompleteSimpleResultListener
@@ -409,6 +413,9 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBVisitToVisitResult; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBUrlToUrlResult; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBBookmarkToUrlResult; // kGetInfoIndex_* results
+
+  // nsICharsetResolver
+  NS_DECL_NSICHARSETRESOLVER
 
   /**
    * Recalculates aCount frecencies.  If aRecalcOld, it will also calculate
@@ -710,6 +717,10 @@ protected:
 
   PRBool mAutoCompleteFinishedSearch;
   void DoneSearching(PRBool aFinished);
+
+  // Used to unescape encoded URI strings for searching
+  nsCOMPtr<nsITextToSubURI> mTextURIService;
+  nsString FixupURIText(const nsAString &aURIText);
 
   PRInt32 mExpireDaysMin;
   PRInt32 mExpireDaysMax;

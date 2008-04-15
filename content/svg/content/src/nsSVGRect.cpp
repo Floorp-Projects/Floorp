@@ -140,6 +140,7 @@ NS_IMETHODIMP nsSVGRect::GetX(float *aX)
 }
 NS_IMETHODIMP nsSVGRect::SetX(float aX)
 {
+  NS_ENSURE_FINITE(aX, NS_ERROR_ILLEGAL_VALUE);
   WillModify();
   mX = aX;
   DidModify();
@@ -154,6 +155,7 @@ NS_IMETHODIMP nsSVGRect::GetY(float *aY)
 }
 NS_IMETHODIMP nsSVGRect::SetY(float aY)
 {
+  NS_ENSURE_FINITE(aY, NS_ERROR_ILLEGAL_VALUE);
   WillModify();
   mY = aY;
   DidModify();
@@ -168,6 +170,7 @@ NS_IMETHODIMP nsSVGRect::GetWidth(float *aWidth)
 }
 NS_IMETHODIMP nsSVGRect::SetWidth(float aWidth)
 {
+  NS_ENSURE_FINITE(aWidth, NS_ERROR_ILLEGAL_VALUE);
   WillModify();
   mWidth = aWidth;
   DidModify();
@@ -182,6 +185,7 @@ NS_IMETHODIMP nsSVGRect::GetHeight(float *aHeight)
 }
 NS_IMETHODIMP nsSVGRect::SetHeight(float aHeight)
 {
+  NS_ENSURE_FINITE(aHeight, NS_ERROR_ILLEGAL_VALUE);
   WillModify();
   mHeight = aHeight;
   DidModify();

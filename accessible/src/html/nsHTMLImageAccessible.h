@@ -67,7 +67,7 @@ public:
   NS_IMETHOD DoAction(PRUint8 index);
 
   // nsIAccessibleHyperLink
-  NS_IMETHOD GetAnchorsCount(PRInt32 *aAnchors);
+  NS_IMETHOD GetAnchorCount(PRInt32 *aAnchorCount);
   NS_IMETHOD GetURI(PRInt32 aIndex, nsIURI **aURI);
   NS_IMETHOD GetAnchor(PRInt32 aIndex, nsIAccessible **aAccessible);
 

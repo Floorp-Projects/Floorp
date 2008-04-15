@@ -388,9 +388,11 @@ var PlacesCommandHook = {
       var url = webNav.currentURI;
       var title;
       var description;
+      var charset;
       try {
         title = webNav.document.title || url.spec;
         description = PlacesUIUtils.getDescriptionFromDocument(webNav.document);
+        charset = webNav.document.characterSet;
       }
       catch (e) { }
 
@@ -407,8 +409,14 @@ var PlacesCommandHook = {
       var txn = PlacesUIUtils.ptm.createItem(uri, parent, -1,
                                              title, null, [descAnno]);
       PlacesUIUtils.ptm.doTransaction(txn);
+      // Set the character-set
+      if (charset)
+        PlacesUtils.history.setCharsetForURI(uri, charset);
       itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
     }
+
+    // Revert the contents of the location bar
+    handleURLBarRevert();
 
     // dock the panel to the star icon when possible, otherwise dock
     // it to the content area

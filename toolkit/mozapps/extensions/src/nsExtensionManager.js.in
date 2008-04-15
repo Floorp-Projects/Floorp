@@ -4530,11 +4530,14 @@ ExtensionManager.prototype = {
         this._installListeners[i].onInstallStarted(addon);
 
       shouldPhoneHomeIfNecessary = true;
+      var installManifest = null;
       var installManifestFile = extractRDFFileToTempDir(aXPIFile,
                                                         FILE_INSTALL_MANIFEST,
                                                         true);
-      var installManifest = getInstallManifest(installManifestFile);
-      installManifestFile.remove(false);
+      if (installManifestFile.exists()) {
+        installManifest = getInstallManifest(installManifestFile);
+        installManifestFile.remove(false);
+      }
       if (!installManifest) {
         LOG("The Install Manifest supplied by this item is not well-formed. " +
             "Installation will not proceed.");
@@ -4550,8 +4553,8 @@ ExtensionManager.prototype = {
     // Recreate the add-on item with the full detail from the install manifest
     addon = makeItem(installData.id, installData.version,
                      aInstallLocationKey,
-                     installData.currentApp.minVersion,
-                     installData.currentApp.maxVersion,
+                     installData.currentApp ? installData.currentApp.minVersion : "",
+                     installData.currentApp ? installData.currentApp.maxVersion : "",
                      installData.name,
                      getURIFromFile(aXPIFile).spec,
                      "", /* XPI Update Hash */
@@ -4559,7 +4562,7 @@ ExtensionManager.prototype = {
                      installData.updateURL || "",
                      installData.updateKey || "",
                      installData.type,
-                     installData.currentApp.id);
+                     installData.currentApp ? installData.currentApp.id : "");
 
     switch (installData.error) {
     case INSTALLERROR_INCOMPATIBLE_VERSION:

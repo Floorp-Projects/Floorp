@@ -104,6 +104,7 @@
               <menuitem label="&reportForm.problem_type.item5.title;" value="5"/>
               <menuitem label="&reportForm.problem_type.item6.title;" value="6"/>
               <menuitem label="&reportForm.problem_type.item8.title;" value="8"/>
+              <menuitem label="&reportForm.problem_type.item9.title;" value="9"/>
               <!-- Other problem: must be item #7 and must be last -->
               <menuitem label="&reportForm.problem_type.item7.title;" value="7"/>
             </menupopup>

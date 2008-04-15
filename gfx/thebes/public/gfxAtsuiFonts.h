@@ -160,9 +160,27 @@ protected:
 
     PRUint32 GuessMaximumStringLength();
 
-    /** Returns true for success */
-    PRBool InitTextRun(gfxTextRun *aRun, const PRUnichar *aString, PRUint32 aLength,
-                       PRBool aWrapped, PRUint32 aSegmentStart, PRUint32 aSegmentLength);
+    /**
+     * @param aRun the text run to fill in
+     * @param aString the complete text including all wrapper characters
+     * @param aLength the length of aString
+     * @param aLayoutStart the first character of aString that should be
+     * at the start of the ATSUI layout; this skips any wrapper character
+     * used to override direction
+     * @param aLayoutLength the length of the characters that should be
+     * in the ATSUI layout; this excludes any trailing wrapper character
+     * used to override direction
+     * @param aTrailingCharsToIgnore the number of trailing characters
+     * in the ATSUI layout that are not part of the text run
+     * (characters added to ensure correct RTL and kerning behaviour)
+     * @param aTextRunOffset the character offset in the textrun where
+     * the glyph data from the ATSUI layout should be copied
+     * @return true for success
+     */
+    PRBool InitTextRun(gfxTextRun *aRun,
+                       const PRUnichar *aString, PRUint32 aLength,
+                       PRUint32 aLayoutStart, PRUint32 aLayoutLength,
+                       PRUint32 aOffsetInTextRun, PRUint32 aLengthInTextRun);
     
     // cache the most recent pref font to avoid general pref font lookup
     nsRefPtr<MacOSFamilyEntry>    mLastPrefFamily;

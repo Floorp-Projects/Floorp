@@ -57,8 +57,13 @@ DEFINES += -DAB_CD=$(AB_CD)
 ifeq ($(USE_SHORT_LIBNAME), 1)
 PROGRAM = xulrunner$(BIN_SUFFIX)
 else
+ifeq ($(OS_ARCH), BeOS)
+PROGRAM = xulrunner$(BIN_SUFFIX)
+else
 PROGRAM = xulrunner-bin$(BIN_SUFFIX)
 endif
+endif
+
 DEFINES += -DXULRUNNER_PROGNAME=\"xulrunner\"
 
 ifdef MOZ_JAVAXPCOM
@@ -197,7 +202,7 @@ LDFLAGS += /HEAP:0x40000
 endif
 endif
 
-ifneq (,$(filter-out OS2 WINNT Darwin,$(OS_ARCH)))
+ifneq (,$(filter-out OS2 WINNT Darwin BeOS,$(OS_ARCH)))
 
 xulrunner:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \

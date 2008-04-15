@@ -65,12 +65,14 @@ REQUIRES = xpcom \
            intl \
            layout \
            locale \
+           uconv \
            unicharutil \
            autocomplete \
            storage \
            txmgr \
            nkcache \
            widget \
+           chardet \
            $(NULL)
 
 CPPSRCS = \

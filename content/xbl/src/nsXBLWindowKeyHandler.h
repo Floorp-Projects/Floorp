@@ -80,13 +80,19 @@ protected:
                                 nsIAtom* aEventType, 
                                 nsXBLPrototypeHandler* aHandler);
 
+  // walk the handlers for aEvent, aCharCode and aIgnoreShiftKey
+  PRBool WalkHandlersAndExecute(nsIDOMEvent* aEvent, nsIAtom* aEventType,
+                                nsXBLPrototypeHandler* aHandler,
+                                PRUint32 aCharCode, PRBool aIgnoreShiftKey);
+
   // lazily load the handlers. Overridden to handle being attached
   // to a particular element rather than the document
   nsresult EnsureHandlers(PRBool *aIsEditor);
 
   // check if the given handler cares about the given key event
   PRBool EventMatched(nsXBLPrototypeHandler* inHandler, nsIAtom* inEventType,
-                      nsIDOMEvent* inEvent);
+                      nsIDOMEvent* inEvent, PRUint32 aCharCode,
+                      PRBool aIgnoreShiftKey);
 
   // are we working with editor or browser?
   PRBool IsEditor() ;

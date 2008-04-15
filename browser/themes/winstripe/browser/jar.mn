@@ -56,11 +56,13 @@ classic.jar:
         skin/classic/browser/places/collapse.png                     (places/collapse.png)
         skin/classic/browser/places/expand.png                       (places/expand.png)
         skin/classic/browser/places/history.png                      (places/history.png)
+        skin/classic/browser/places/allBookmarks.png                 (places/allBookmarks.png)
         skin/classic/browser/places/importAndBackup.png              (places/importAndBackup.png)
         skin/classic/browser/places/minus.png                        (places/minus.png)
         skin/classic/browser/places/plus.png                         (places/plus.png)
         skin/classic/browser/places/organize.png                     (places/organize.png)
         skin/classic/browser/places/view.png                         (places/view.png)
+        skin/classic/browser/places/searching_16.png                 (places/searching_16.png)
         skin/classic/browser/places/bookmarkProperties.css           (places/bookmarkProperties.css)
         skin/classic/browser/places/organizer-toolbar.png            (bookmarks/Bookmarks-toolbar.png)
         skin/classic/browser/preferences/alwaysAsk.png               (preferences/alwaysAsk.png)
@@ -85,7 +87,7 @@ classic.jar:
 #ifdef XP_WIN
 classic.jar:
 % skin browser classic/1.0 %skin/classic/aero/browser/ os=WINNT osversion>=6
-*       skin/classic/aero/browser/browser.css                        (browser.css)
+*       skin/classic/aero/browser/browser.css                        (browser-aero.css)
         skin/classic/aero/browser/browser.xml
 *       skin/classic/aero/browser/engineManager.css                  (engineManager.css)
         skin/classic/aero/browser/Info.png                           (Info-aero.png)
@@ -138,10 +140,12 @@ classic.jar:
         skin/classic/aero/browser/places/collapse.png                (places/collapse-aero.png)
         skin/classic/aero/browser/places/expand.png                  (places/expand-aero.png)
         skin/classic/aero/browser/places/history.png                 (places/history-aero.png)
+        skin/classic/aero/browser/places/allBookmarks.png            (places/allBookmarks-aero.png)
         skin/classic/aero/browser/places/importAndBackup.png         (places/importAndBackup-aero.png)
         skin/classic/aero/browser/places/minus.png                   (places/minus-aero.png)
         skin/classic/aero/browser/places/plus.png                    (places/plus-aero.png)
         skin/classic/aero/browser/places/view.png                    (places/view-aero.png)
+        skin/classic/aero/browser/places/searching_16.png            (places/searching_16-aero.png)
         skin/classic/aero/browser/places/organize.png                (places/organize-aero.png)
         skin/classic/aero/browser/places/bookmarkProperties.css      (places/bookmarkProperties.css)
         skin/classic/aero/browser/places/organizer-toolbar.png       (bookmarks/Bookmarks-toolbar.png)
