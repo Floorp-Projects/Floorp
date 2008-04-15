@@ -3191,7 +3191,7 @@ PlacesSQLQueryBuilder::SelectAsTag()
     "SELECT null, 'place:folder=' || id || '&queryType=%d&type=%ld', "
       "title, null, null, null, null, null, null, dateAdded, lastModified "
     "FROM   moz_bookmarks "
-    "WHERE  parent = %ld",
+    "WHERE  parent = %lld",
     nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS,
     nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS,
     history->GetTagsFolder());
