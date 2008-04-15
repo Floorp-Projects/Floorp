@@ -141,13 +141,16 @@ private:
   @param ch (in) 
   @param aStringToAppendto (out) - the string to append the escaped
                                    string to.
+  @param inAttribute (in) - will escape quotes, too (which is
+                            only needed for attribute values)
 */
-  void EscapeChar(const PRUnichar ch, nsString& aStringToAppendto);
+  void EscapeChar(const PRUnichar ch, nsString& aStringToAppendto,
+                  PRBool inAttribute);
 
 /**
   See EscapeChar. Escapes the string in place.
 */
-  void EscapeStr(nsString& aInString);
+  void EscapeStr(nsString& aInString, PRBool inAttribute);
 
 /**
   Currently only reverts "<", ">" and "&". All others stay as they are.<p>
@@ -156,7 +159,8 @@ private:
   @param aLength (in) length of the buffer
   @param aOutString (out) unescaped buffer
 */
-  void UnescapeStr(const PRUnichar * aInString, PRInt32 aStartPos, PRInt32 aLength, nsString& aOutString);
+  void UnescapeStr(const PRUnichar * aInString, PRInt32 aStartPos,
+                   PRInt32 aLength, nsString& aOutString);
 
 /**
   <em>Note</em>: I use different strategies to pass context between the

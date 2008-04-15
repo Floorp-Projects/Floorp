@@ -309,8 +309,7 @@
 
       <method name="attachController">
         <body><![CDATA[
-          if (this.mController.input != this)
-            this.mController.input = this;
+          this.mController.input = this;
         ]]></body>
       </method>
 
@@ -902,7 +901,6 @@
 
     <implementation implements="nsIAutoCompletePopup">
       <field name="_currentIndex">0</field>
-      <field name="_chunkSize">5</field>
 
       <!-- =================== nsIAutoCompletePopup =================== -->
 
@@ -980,6 +978,11 @@
           // collapsed if no matches
           this.richlistbox.collapsed = (this._matchCount == 0);
 
+          // Dynamically update height until richlistbox.rows works (bug 401939)
+          // Adjust the height immediately and after the row contents update
+          this.adjustHeight();
+          setTimeout(function(self) self.adjustHeight(), 0, this);
+
           // make sure to collapse any existing richlistitems
           // that aren't going to be used
           var existingItemsCount = this.richlistbox.childNodes.length;
@@ -1027,8 +1030,9 @@
               rows[0].boxObject.y;
           }
 
-          // Only update the height if necessary
-          if (height != this.richlistbox.height)
+          // Only update the height if we have a non-zero height and if it
+          // changed (the richlistbox is collapsed if there are no results)
+          if (height && height != this.richlistbox.height)
             this.richlistbox.height = height;
           ]]>
         </body>
@@ -1039,14 +1043,8 @@
           <![CDATA[
           var controller = this.mInput.controller;
 
-          // until we have support for "rows" on richlistbox,
-          // determine the height dynamically.  (see bug #401939)
-          // Adjust the height immediately and after the contents have updated
-          this.adjustHeight();
-          setTimeout(function(self) self.adjustHeight(), 0, this);
-
-          // process _chunkSize results at a time to increase performance
-          for (var i = 0; i < this._chunkSize; i++) {
+          // Process maxRows per chunk to improve performance and user experience
+          for (let i = 0; i < this.maxRows; i++) {
             if (this._currentIndex >= this._matchCount)
               return;
 
@@ -1147,6 +1145,10 @@
         <xul:hbox anonid="title-box" class="ac-title" flex="1"
                   onunderflow="_doUnderflow('_title');">
           <xul:description anonid="title" class="ac-normal-text ac-comment" xbl:inherits="selected"/>
+          <xul:hbox anonid="extra-box" class="ac-extra" align="center" hidden="true">
+            <xul:image class="ac-result-type-tag"/>
+            <xul:description anonid="extra" class="ac-normal-text ac-comment" xbl:inherits="selected"/>
+          </xul:hbox>
         </xul:hbox>
         <xul:label anonid="title-overflow-ellipsis" xbl:inherits="selected"
                    class="ac-ellipsis-after ac-comment" hidden="true"/>
@@ -1189,6 +1191,9 @@
 
             this._titleBox = document.getAnonymousElementByAttribute(this, "anonid", "title-box");
             this._title = document.getAnonymousElementByAttribute(this, "anonid", "title");
+
+            this._extraBox = document.getAnonymousElementByAttribute(this, "anonid", "extra-box");
+            this._extra = document.getAnonymousElementByAttribute(this, "anonid", "extra");
 
             this._adjustAcItem();
           ]]>
@@ -1370,6 +1375,30 @@
           var url = this.getAttribute("url");
           var title = this.getAttribute("title");
           var type = this.getAttribute("type");
+
+          // If we have a tag match, show the tags and icon
+          if (type == "tag") {
+            // Configure the extra box for tags display
+            this._extraBox.hidden = false;
+            this._extraBox.flex = 1;
+            this._extraBox.pack = "end";
+
+            // The title is separated from the tags by an endash
+            let tags;
+            [, title, tags] = title.match(/^(.+) \u2013 (.+)$/);
+
+            // Each tag is split by a comma in an undefined order, so sort it
+            let sortedTags = tags.split(",").sort().join(", ");
+
+            // Emphasize the matching text in the tags
+            this._setUpDescription(this._extra, sortedTags);
+
+            // Treat tagged matches as bookmarks for the star
+            type = "bookmark";
+          } else {
+            // Hide the title's extra box if we don't need extra stuff
+            this._extraBox.hidden = true;
+          }
 
           // Give the image the icon style and a special one for the type
           this._typeImage.className = "ac-type-icon" +

@@ -97,8 +97,8 @@ class nsFrameLoader;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x0cf9986f, 0x6e27, 0x4c24, \
-  { 0x9f, 0x43, 0x87, 0x01, 0x52, 0xf7, 0x4c, 0x0a } }
+{ 0xaa79d9ba, 0x73a3, 0x42af, \
+  { 0xad, 0xb0, 0x3a, 0x57, 0xe1, 0x8d, 0xa8, 0xa2 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -595,8 +595,6 @@ public:
   // To make this easy and painless, use the mozAutoDocUpdate helper class.
   virtual void BeginUpdate(nsUpdateType aUpdateType) = 0;
   virtual void EndUpdate(nsUpdateType aUpdateType) = 0;
-  virtual PRUint32 GetUpdateNestingLevel() = 0;
-  virtual PRBool AllUpdatesAreContent() = 0;
   virtual void BeginLoad() = 0;
   virtual void EndLoad() = 0;
   // notify that one or two content nodes changed state
@@ -791,6 +789,8 @@ public:
    */
   virtual void Destroy() = 0;
 
+  virtual void SaveState() = 0;
+  
   /**
    * Get the layout history state that should be used to save and restore state
    * for nodes in this document.  This may return null; if that happens state
@@ -1060,45 +1060,6 @@ private:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)
-
-/**
- * Helper class to automatically handle batching of document updates.  This
- * class will call BeginUpdate on construction and EndUpdate on destruction on
- * the given document with the given update type.  The document could be null,
- * in which case no updates will be called.  The constructor also takes a
- * boolean that can be set to false to prevent notifications.
- */
-class mozAutoDocUpdate
-{
-public:
-  mozAutoDocUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType,
-                   PRBool aNotify) :
-    mDocument(aNotify ? aDocument : nsnull),
-    mUpdateType(aUpdateType)
-  {
-    if (mDocument) {
-      mDocument->BeginUpdate(mUpdateType);
-    }
-  }
-
-  ~mozAutoDocUpdate()
-  {
-    if (mDocument) {
-      mDocument->EndUpdate(mUpdateType);
-    }
-  }
-
-private:
-  nsCOMPtr<nsIDocument> mDocument;
-  nsUpdateType mUpdateType;
-};
-
-#define MOZ_AUTO_DOC_UPDATE_PASTE2(tok,line) tok##line
-#define MOZ_AUTO_DOC_UPDATE_PASTE(tok,line) \
-  MOZ_AUTO_DOC_UPDATE_PASTE2(tok,line)
-#define MOZ_AUTO_DOC_UPDATE(doc,type,notify) \
-  mozAutoDocUpdate MOZ_AUTO_DOC_UPDATE_PASTE(_autoDocUpdater_, __LINE__) \
-  (doc,type,notify)
 
 /**
  * mozAutoSubtreeModified batches DOM mutations so that a DOMSubtreeModified

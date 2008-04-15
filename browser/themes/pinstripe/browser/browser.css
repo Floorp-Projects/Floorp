@@ -25,6 +25,7 @@
  *   Kevin Gerich (kevin@kmgerich.com)
  *   Pamela Greene (pamg.bugs@gmail.com)
  *   Dao Gottwald (dao@design-noir.de)
+ *   Stephen Horlander (stephen@noved.org)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,7 +52,7 @@
 }
 
 #main-window[chromehidden~="toolbar"][chromehidden~="location"][chromehidden~="directories"] {
-  border-top: 1px solid #606060;
+  border-top: 1px solid rgba(0,0,0,0.65);
 }
 
 /* ----- SEARCH FIELD ----- */
@@ -64,9 +65,9 @@
 
 #PersonalToolbar {
   background: url("chrome://browser/skin/bookmark_toolbar_background.gif") repeat-x center center;
-  border-top: 1px solid #DDDDDD;
+  border-top: 1px solid rgba(255,255,255,0.25);
   border-bottom: 2px solid;
-  -moz-border-bottom-colors: #404040 #9D9D9D;
+  -moz-border-bottom-colors: rgba(0,0,0,0.35) transparent;
   padding: 2px 0;
 }
 
@@ -78,7 +79,7 @@
 }
 
 .query-item[container] {
-  list-style-image: url("chrome://browser/skin/places/query.png");
+  list-style-image: url("chrome://browser/skin/places/history.png");
 }
 
 toolbarbutton.bookmark-item:hover
@@ -246,6 +247,10 @@ toolbarpaletteitem[place="toolbar"] .places-toolbar-items {
   height: 16px;
 }
 
+#bookmarksToolbarFolderMenu {
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");  
+}
+
 /* ----- PRIMARY TOOLBAR BUTTONS ----- */	
 
 .toolbarbutton-1,
@@ -253,6 +258,11 @@ toolbarpaletteitem[place="toolbar"] .places-toolbar-items {
   min-width: 0px;
   list-style-image: url("chrome://browser/skin/Toolbar.png");
   -moz-box-orient: vertical;
+}
+
+toolbar[mode="text"] .toolbarbutton-1,
+toolbar[mode="text"] .toolbarbutton-menubutton-button {
+  -moz-box-orient: horizontal;
 }
 
 toolbar[mode="text"] .toolbarbutton-1 > .toolbarbutton-text {
@@ -336,7 +346,7 @@ toolbar[mode="icons"] #forward-button .toolbarbutton-text-box,
 /* ----- DEFAULT BACK/FORWARD BUTTONS ----- */
 
 toolbar[mode="icons"] #back-button {
-  -moz-image-region: rect(0px, 548px, 39px, 504px) !important;
+  -moz-image-region: rect(0px, 539px, 33px, 504px) !important;
   -moz-margin-end: 0 !important;
   -moz-padding-end: 0 !important;
   border-left: none !important;
@@ -344,16 +354,16 @@ toolbar[mode="icons"] #back-button {
 }
 
 toolbar[mode="icons"] #back-button[disabled="true"] {
- -moz-image-region: rect(39px, 548px, 78px, 504px) !important;
+ -moz-image-region: rect(33px, 539px, 66px, 504px) !important;
 }
 
 toolbar[mode="icons"] #back-button:hover:active:not([disabled]),
 toolbar[mode="icons"] #back-button[open="true"] {
-  -moz-image-region: rect(78px, 548px, 117px, 504px) !important;
+  -moz-image-region: rect(66px, 539px, 99px, 504px) !important;
 }
 
 toolbar[mode="icons"] #forward-button {
-  -moz-image-region: rect(0px, 576px, 39px, 548px) !important;
+  -moz-image-region: rect(0px, 566px, 33px, 539px) !important;
   -moz-margin-start: 0 !important;
   -moz-margin-end: 0 !important;
   -moz-padding-start: 0 !important;
@@ -363,16 +373,16 @@ toolbar[mode="icons"] #forward-button {
 }
 
 toolbar[mode="icons"] #forward-button[disabled="true"] {
- -moz-image-region: rect(39px, 576px, 78px, 548px) !important;
+ -moz-image-region: rect(33px, 566px, 66px, 539px) !important;
 }
 
 toolbar[mode="icons"] #forward-button:hover:active:not([disabled]),
 toolbar[mode="icons"] #forward-button[open="true"] {
-  -moz-image-region: rect(78px, 576px, 117px, 548px) !important;
+  -moz-image-region: rect(66px, 566px, 99px, 539px) !important;
 }
 
 toolbar[mode="icons"] #back-forward-dropmarker {
-  -moz-image-region: rect(0px, 590px, 39px, 576px) !important;
+  -moz-image-region: rect(0px, 582px, 33px, 566px) !important;
   -moz-margin-start: 0 !important;
   -moz-margin-end: 3px !important;
   -moz-padding-start: 0 !important;
@@ -392,18 +402,18 @@ toolbar[mode="icons"] #back-forward-dropmarker > dropmarker {
 }
 
 toolbar[mode="icons"] #back-forward-dropmarker[disabled="true"] {
- -moz-image-region: rect(39px, 590px, 78px, 576px) !important;
+ -moz-image-region: rect(33px, 582px, 66px, 566px) !important;
 }
 
 toolbar[mode="icons"] #back-forward-dropmarker:hover:active:not([disabled]),
 toolbar[mode="icons"] #back-forward-dropmarker[open="true"] {
-  -moz-image-region: rect(78px, 590px, 117px, 576px) !important;
+  -moz-image-region: rect(0px, 582px, 33px, 566px) !important;
 }
 
 /* ----- SMALL BACK BUTTON, PAIRED----- */	
 
 toolbar[iconsize="small"][mode="icons"] #back-button {
-  -moz-image-region: rect(0px, 623px, 23px, 590px) !important;
+  -moz-image-region: rect(0px, 616px, 23px, 582px) !important;
   -moz-margin-end: 0 !important;
   -moz-padding-end: 0 !important;
   border-left: none !important;
@@ -411,44 +421,44 @@ toolbar[iconsize="small"][mode="icons"] #back-button {
 }
 
 toolbar[iconsize="small"][mode="icons"] #back-button[disabled="true"] {
- -moz-image-region: rect(23px, 623px, 46px, 590px) !important;
+  -moz-image-region: rect(23px, 616px, 46px, 582px) !important;
 }
 
 toolbar[iconsize="small"][mode="icons"] #back-button:hover:active:not([disabled]),
 toolbar[iconsize="small"][mode="icons"] #back-button[open="true"] {
-  -moz-image-region: rect(46px, 623px, 69px, 590px) !important;
+  -moz-image-region: rect(46px, 616px, 69px, 582px) !important;
 }
 
 /* ----- SMALL FORWARD BUTTON, PAIRED ----- */	
 
 toolbar[iconsize="small"][mode="icons"] #forward-button {
-  -moz-image-region: rect(0px, 657px, 23px, 623px) !important;
+  -moz-image-region: rect(0px, 649px, 23px, 616px) !important;
   -moz-margin-start: 0 !important;
   -moz-padding-start: 0 !important;
   border-left: none !important;
   border-right: none !important;
 }
 toolbar[iconsize="small"][mode="icons"] #forward-button[disabled="true"] {
- -moz-image-region: rect(23px, 657px, 46px, 623px) !important;
+ -moz-image-region: rect(23px, 649px, 46px, 616px) !important;
 }
 toolbar[iconsize="small"][mode="icons"] #forward-button:hover:active:not([disabled]),
 toolbar[iconsize="small"][mode="icons"] #forward-button[open="true"] {
-  -moz-image-region: rect(46px, 657px, 69px, 623px) !important;
+  -moz-image-region: rect(46px, 649px, 69px, 616px) !important;
 }
 
 /* ----- SMALL BACK/FORWARD DROPMARKER ----- */	
 
 toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker {
-  -moz-image-region: rect(0px, 672px, 23px, 657px) !important;
+  -moz-image-region: rect(0px, 664px, 23px, 649px) !important;
 }
 
 toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker[disabled="true"] {
- -moz-image-region: rect(23px, 672px, 46px, 657px) !important;
+ -moz-image-region: rect(23px, 664px, 46px, 649px) !important;
 }
 
 toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:hover:active:not([disabled]),
 toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker[open="true"] {
-  -moz-image-region: rect(46px, 672px, 69px, 657px) !important;
+  -moz-image-region: rect(46px, 664px, 69px, 649px) !important;
 }
 
 /* ----- DEFAULT RELOAD BUTTON ----- */	
@@ -655,12 +665,12 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker[open="true"] {
   -moz-appearance: none;
   border: none;
   background: url("chrome://browser/skin/urlbar/endcap.png") transparent right center no-repeat;
-  margin: 1px 4px;
+  margin: 0px 4px 1px 4px;
   -moz-padding-end: 8px;
   font: icon !important;
   width: 7em;
   min-width: 7em;
-  min-height: 26px;
+  height: 26px;
 }
 
 #urlbar[focused="true"] {
@@ -678,13 +688,16 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker[open="true"] {
   background-image: url("chrome://browser/skin/urlbar/textfield-mid-focused.png");
 }
 
+#urlbar .textbox-input-box {
+  padding-top: 1px;
+}
+
 .autocomplete-textbox {
   background-image: inherit !important;
 }
 
 #urlbar-icons {
   -moz-box-align: center;
-  margin: 2px 0;
   min-height: 26px;
 }
 
@@ -713,6 +726,7 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker[open="true"] {
 
 #PopupAutoCompleteRichResult {
   direction: ltr !important;
+  margin-top: -2px;
 }
 
 /* ----- PAGE PROXY ICON ----- */
@@ -740,7 +754,7 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker[open="true"] {
 }
 
 #urlbar-throbber {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+  list-style-image: url("chrome://browser/skin/places/searching_16.png");
 }
 
 
@@ -782,6 +796,10 @@ statusbarpanel#statusbar-display {
   font-size: 1.15em;
 }
 
+.ac-extra > .ac-comment {
+  font-size: inherit;
+}
+
 .ac-url-text {
   color: #336633;
 }
@@ -812,21 +830,42 @@ statusbarpanel#statusbar-display {
   -moz-image-region: rect(0px, 16px, 16px, 0px);  
 }
 
+#go-button:hover {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);  
+}
+
+#go-button:hover:active {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);  
+}
+
 /* STAR BUTTON */
 #star-button {
   padding: 1px;
-  list-style-image: url("chrome://browser/skin/places/starPage.png");
+  list-style-image: url("chrome://browser/skin/places/star-icons.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);  
+}
+
+#star-button:hover {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);  
+}
+
+#star-button:hover:active {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);  
 }
 
 #star-button[starred="true"] {
-  list-style-image: url("chrome://browser/skin/places/pageStarred.png");
+  -moz-image-region: rect(16px, 16px, 32px, 0px);  
+}
+
+#star-button:hover[starred="true"] {
+  -moz-image-region: rect(16px, 32px, 32px, 16px);  
+}
+
+#star-button:hover:active[starred="true"] {
+  -moz-image-region: rect(16px, 48px, 32px, 32px);  
 }
 
 /* BOOKMARKING PANEL */
-#editBookmarkPanel {
-  padding: 4px;
-}
-
 #editBookmarkPanelStarIcon {
   list-style-image: url("chrome://browser/skin/places/starred48.png");
   width: 48px;
@@ -837,10 +876,352 @@ statusbarpanel#statusbar-display {
   list-style-image: url("chrome://browser/skin/places/unstarred48.png");
 }
 
-#editBookmarkPanelTitle {
-  font-size: 130%;
+#editBookmarkPanel {
+  -moz-appearance: none;
+  background-color: rgba(68,68,68,0.9);
+  border: 1px solid rgba(255,255,255,0.15);
+  -moz-border-radius: 8px;
+  -moz-border-radius-topright: 0px ;
+  padding: 10px 8px 6px 8px;
+  margin-top: 4px;
+  color: #ffffff;
 }
 
+#editBookmarkPanelTitle {
+  font-size: 130%;
+  font-weight: bold;
+  margin: 8px 12px 0px 9px;
+}
+
+#editBookmarkPanel > hbox {
+ padding-right: 1px;
+}
+
+/**** HUD style buttons ****/
+
+#editBookmarkPanel > hbox > vbox > hbox > button,
+#editBookmarkPanel > #editBookmarkPanelBottomButtons > button {
+  -moz-appearance: none;
+  background: url("chrome://browser/skin/hud-style-button-middle-background.png") repeat-x #464646 center center;
+  border-width: 3px;
+  border-style: solid;
+  -moz-border-radius: 20px;
+  -moz-border-top-colors: rgba(0,0,0,0.35) rgba(26,26,26,0.5) rgba(255,255,255,0.4);
+  -moz-border-right-colors: rgba(0,0,0,0.35) rgba(26,26,26,0.5) rgba(255,255,255,0.4);
+  -moz-border-bottom-colors: rgba(128,128,128,0.35) rgba(0,0,0,0.5) rgba(255,255,255,0.15);
+  -moz-border-left-colors: rgba(0,0,0,0.35) rgba(26,26,26,0.5) rgba(255,255,255,0.4);
+  padding: 0 9px;
+  margin: 6px;
+  min-width: 79px;
+  min-height: 22px;
+  color: #ffffff;
+}
+
+#editBookmarkPanel > hbox > vbox > hbox > button:hover:active,
+#editBookmarkPanel > #editBookmarkPanelBottomButtons > button:hover:active {
+  background-color: #86888B;
+}
+
+#editBookmarkPanel > hbox > vbox > hbox > button:focus,
+#editBookmarkPanel > #editBookmarkPanelBottomButtons > button:focus {
+  outline: 2px solid -moz-mac-focusring;
+  outline-offset: -2px;
+  -moz-outline-radius: 100%;
+}
+
+#editBookmarkPanel > #editBookmarkPanelBottomButtons > button[default="true"] {
+  background-color: #666;
+}
+
+#editBookmarkPanel > #editBookmarkPanelContent {
+  margin-top: 6px;
+}
+
+#editBookmarkPanel #editBMPanel_newFolderBox {
+  background-image: url("chrome://browser/skin/hud-style-new-folder-bar-background.png");
+  background-repeat: repeat-x;
+  border: 0;
+  border-width: 1px 0 1px 0;
+  border-style: solid;
+  border-top-color: #212121;
+  border-bottom-color: #212121;
+  padding: 0;
+  margin: 0;
+  -moz-margin-start: -8px;
+  -moz-margin-end: -8px;
+  margin-bottom: 8px !important;
+  height:  20px;
+}
+
+#editBookmarkPanel #editBMPanel_newFolderButton {
+  -moz-appearance: none;
+  background-color: transparent !important;
+  border-width: 0 3px 0 0;
+  border-style: solid;
+  -moz-border-right-colors: rgba(255,255,255,0.15) rgba(0,0,0,0.5) rgba(255,255,255,0.15);
+  padding: 0 9px;
+  margin: 0;
+  min-width: 21px;
+  min-height: 20px;
+  height:  20px;
+  color: #ffffff;
+  list-style-image: url("chrome://browser/skin/hud-style-new-folder-plus-sign.png") !important;
+}
+
+#editBookmarkPanel #editBMPanel_newFolderButton:hover:active {
+  background-color: #86888B;
+}
+
+#editBookmarkPanel #editBMPanel_newFolderButton:focus {
+  outline: 2px solid -moz-mac-focusring;
+  outline-offset: -2px;
+  -moz-outline-radius: 1px;
+}
+
+#editBookmarkPanel #editBMPanel_newFolderButton .button-text {
+  display: none !important;
+}
+
+#editBookmarkPanel #editBMPanel_folderMenuList {
+  -moz-appearance: none;
+  background: url("chrome://browser/skin/hud-style-button-middle-background.png") repeat-x #464646 center center;
+  border: 3px solid;
+  -moz-border-radius: 5px;
+  -moz-border-top-colors: rgba(0,0,0,0.35) rgba(26,26,26,0.5) rgba(255,255,255,0.4);
+  -moz-border-right-colors: rgba(53,53,53,1) rgba(53,53,53,1) rgba(162,162,162,1);
+  -moz-border-bottom-colors: rgba(128,128,128,0.35) rgba(0,0,0,0.5) rgba(255,255,255,0.15);
+  -moz-border-left-colors: rgba(0,0,0,0.35) rgba(26,26,26,0.5) rgba(255,255,255,0.4);
+  margin: 0 3px !important;
+  min-height: 22px;
+  -moz-padding-start: 2px;
+  color: #ffffff !important;
+}
+
+#editBookmarkPanel #editBMPanel_folderMenuList:focus {
+  outline: 2px solid -moz-mac-focusring;
+  outline-offset: -2px;
+  -moz-outline-radius: 5px;
+}
+
+#editBookmarkPanel #editBMPanel_folderMenuList[open="true"],
+#editBookmarkPanel #editBMPanel_folderMenuList:hover:active {
+  background-image: url("chrome://browser/skin/hud-style-button-middle-background-active.png");
+}
+
+#editBookmarkPanel #editBMPanel_folderMenuList > .menulist-dropmarker {
+  -moz-appearance: none;
+  display: -moz-box;
+  background-color: transparent;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+#editBookmarkPanel #editBMPanel_folderMenuList > .menulist-dropmarker > .dropmarker-icon {
+  list-style-image: url("chrome://browser/skin/hud-style-dropmarker-double-arrows.png");
+}
+
+/**** folder tree ****/
+
+#editBookmarkPanel #editBMPanel_folderTree {
+  background-color: #333333;
+  border-top: 2px solid !important;
+  border-right: 0 !important;
+  border-bottom: 0 !important;
+  border-left: 0 !important;
+  -moz-border-top-colors: rgba(0,0,0,0.35) rgba(255,255,255,0.15);
+  margin: 0px;
+  -moz-margin-start: -8px;
+  -moz-margin-end: -8px;
+  color: #ffffff !important;
+}
+
+#editBookmarkPanel #editBMPanel_folderTree:focus {
+  outline: 2px solid -moz-mac-focusring;
+  outline-offset: -2px;
+  -moz-outline-radius: 1px;
+}
+
+#editBMPanel_folderTree treechildren::-moz-tree-twisty {
+  -moz-appearance: none !important;
+  list-style-image: url("chrome://browser/skin/hud-style-twisties.png");
+  -moz-image-region: rect(0px, 10px, 10px, 0px);
+  margin-top: 1px;
+  -moz-margin-end: 1px;
+}
+
+#editBMPanel_folderTree treechildren::-moz-tree-twisty(open) {
+  -moz-appearance: none;
+  -moz-image-region: rect(0px, 20px, 10px, 10px);
+}
+
+#editBMPanel_folderTree treechildren::-moz-tree-twisty(selected) {
+  -moz-appearance: none;
+  -moz-image-region: rect(0px, 30px, 10px, 20px);
+}
+
+#editBMPanel_folderTree treechildren::-moz-tree-twisty(selected, open) {
+  -moz-appearance: none;
+  -moz-image-region: rect(0px, 40px, 10px, 30px);
+}
+
+#editBookmarkPanel #editBMPanel_tagsSelector {
+  -moz-appearance: none;
+  background-color: #333333;
+  border-top: 2px solid !important;
+  border-right: 0 !important;
+  border-bottom: 2px solid !important;
+  border-left: 0 !important;
+  -moz-border-top-colors: rgba(0,0,0,0.35) rgba(255,255,255,0.15);
+  -moz-border-bottom-colors: rgba(255,255,255,0.30) rgba(0,0,0,0.35) ;
+  margin: 6px -8px !important;
+  color: #ffffff !important;
+}
+
+#editBookmarkPanel #editBMPanel_tagsSelector:focus {
+  outline: 2px solid -moz-mac-focusring;
+  outline-offset: -2px;
+  -moz-outline-radius: 1px;
+}
+
+#editBookmarkPanel #editBMPanel_tagsSelector .listcell-check {
+  -moz-appearance: none !important;
+  background-color: transparent;
+  border: 0;
+  list-style-image: url("chrome://browser/skin/hud-style-check-box-empty.png");
+  min-height: 14px;
+  min-width: 14px;
+}
+
+#editBookmarkPanel #editBMPanel_tagsSelector .listcell-check[checked="true"] {
+  list-style-image: url("chrome://browser/skin/hud-style-check-box-checked.png");
+}
+
+#editBMPanel_folderTree treechildren::-moz-tree-row {
+  color: #ffffff !important;
+  background-color: transparent !important;
+  border: none !important;
+}
+
+#editBMPanel_folderTree treechildren::-moz-tree-row(selected) {
+  background-color: #b3b3b3 !important;
+}
+
+#editBMPanel_folderTree treechildren::-moz-tree-cell-text(selected),
+#editBMPanel_folderTree treechildren::-moz-tree-cell-text(selected, focus) {
+  color: #222222 !important;
+}
+
+#editBMPanel_folderTree treechildren::-moz-tree-row(selected, focus) {
+  background-color: #b3b3b3 !important;
+}
+
+#editBookmarkPanel #editBMPanel_tagsSelector > listitem[selected="true"] {
+  color: #222222;
+  background-color: #b3b3b3;
+}
+
+/**** expanders ****/
+
+#editBookmarkPanel .expander-up,
+#editBookmarkPanel .expander-down {
+  -moz-appearance: none;
+  background: url("chrome://browser/skin/hud-style-button-middle-background.png") repeat-x #464646 center center;
+  border: 3px solid;
+  -moz-border-radius: 5px;
+  -moz-border-top-colors: rgba(0,0,0,0.35) rgba(26,26,26,0.5) rgba(255,255,255,0.4);
+  -moz-border-right-colors: rgba(53,53,53,1) rgba(53,53,53,1) rgba(162,162,162,1);
+  -moz-border-bottom-colors: rgba(128,128,128,0.35) rgba(0,0,0,0.5) rgba(255,255,255,0.15);
+  -moz-border-left-colors: rgba(0,0,0,0.35) rgba(26,26,26,0.5) rgba(255,255,255,0.4);
+  -moz-margin-start: 4px;
+  -moz-margin-end: 2px;
+  padding: 0 0 0 4px;
+  min-width: 10px;
+  min-height: 22px;
+  color: #ffffff !important;
+}
+
+#editBookmarkPanel .expander-up:focus,
+#editBookmarkPanel .expander-down:focus {
+  outline: 2px solid -moz-mac-focusring;
+  outline-offset: -2px;
+  -moz-outline-radius: 5px;
+}
+
+#editBookmarkPanel .expander-up {
+  list-style-image: url("chrome://browser/skin/hud-style-expander-open.png") !important;
+}
+
+#editBookmarkPanel .expander-down {
+  list-style-image: url("chrome://browser/skin/hud-style-expander-closed.png") !important;
+}
+
+#editBookmarkPanel .expander-down:hover:active {
+  list-style-image: url("chrome://browser/skin/hud-style-expander-open.png") !important;
+  background-image: url("chrome://browser/skin/hud-style-button-middle-background-active.png") !important;
+  background-repeat: repeat-x !important;
+}
+
+#editBookmarkPanel .expander-up:hover:active {
+  list-style-image: url("chrome://browser/skin/hud-style-expander-closed.png") !important;
+  background-image: url("chrome://browser/skin/hud-style-button-middle-background-active.png") !important;
+  background-repeat: repeat-x !important;
+}
+
+
+/**** name picker ****/
+
+#editBookmarkPanel #editBMPanel_namePicker[droppable="false"] {
+  color: #ffffff !important;
+}
+
+#editBookmarkPanel #editBMPanel_namePicker[droppable="false"] > .menulist-dropmarker {
+  display: none;
+}
+
+#editBookmarkPanel #editBMPanel_tagsField,
+#editBookmarkPanel #editBMPanel_namePicker[droppable="false"] > .menulist-editable-box {
+  -moz-appearance: none !important;
+  cursor: text;
+  margin: 2px 4px;
+  border: 2px solid;
+  -moz-border-top-colors: #1c1c1c #545454 ;
+  -moz-border-right-colors: #1c1c1c #636363;
+  -moz-border-bottom-colors: #1c1c1c #797979;
+  -moz-border-left-colors: #1c1c1c #636363;
+  -moz-border-radius: 1px;
+  padding: 0;
+  background-color: #666666;
+  color: #ffffff;
+}
+
+#editBookmarkPanel #editBMPanel_tagsField[empty="true"] {
+  color: #bbbbbb;
+}
+
+#editBookmarkPanel #editBMPanel_tagsField[focused="true"],
+#editBookmarkPanel #editBMPanel_namePicker[droppable="false"][focused="true"] > .menulist-editable-box {
+  outline: 2px solid -moz-mac-focusring;
+  outline-offset: -1px;
+  -moz-outline-radius: 1px;
+}
+
+#editBookmarkPanel #editBMPanel_namePicker[droppable="false"][disabled="true"] > .menulist-editable-box {
+  color: #ffffff;
+}
+
+#editBookmarkPanel #editBMPanel_namePicker[droppable="false"] > .menulist-editable-box > html|*.menulist-editable-input {
+  margin: 0px !important;
+  border: none !important;
+  padding: 0px !important;
+  background-color: inherit;
+  color: #ffffff !important;
+  font: inherit;
+}
+
+#editBookmarkPanel > #editBookmarkPanelContent > #editBookmarkPanelGrid > rows > row > label {
+  text-align: right;
+}
 
 /* ----- SIDEBAR ELEMENTS ----- */
 
@@ -936,14 +1317,14 @@ sidebarheader > .tabs-closebutton > .toolbarbutton-text {
 }
 
 #feed-button[feeds] {
-  list-style-image: url("chrome://browser/skin/livemark-item.png");
-  -moz-image-region: rect(0px, 36px, 18px, 18px);
+  list-style-image: url("chrome://browser/skin/feed-icons.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 #feed-button[feeds]:hover {
-  -moz-image-region: rect(18px, 36px, 36px, 18px);
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 #feed-button[feeds]:active {
-  -moz-image-region: rect(54px, 36px, 72px, 18px);
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
 
 /* ----- THROBBER ----- */
@@ -989,7 +1370,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 #nav-bar {
   background-color: #9B9B9B;
   border-top: none;
-  border-bottom: 1px solid #404040;
+  border-bottom: 1px solid rgba(0,0,0,0.35);
   background-image: url("chrome://global/skin/toolbar/toolbar-background.gif");
   background-repeat: repeat-x;
   background-position: top right;
@@ -998,8 +1379,8 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #nav-bar[collapsed="true"] + toolbar[customindex] {
  border-top: 2px solid;
- -moz-border-top-colors: #606060 #C7C7C7;
-}
+ -moz-border-top-colors: rgba(0,0,0,0.35) rgba(255,255,255,0.45);
+} 
 
 .bookmark-item {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
@@ -1120,6 +1501,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 .tabbrowser-strip {
   margin-top: -1px;
   border-bottom: 1px solid #404040;
+  background-color: #9B9B9B;
 }
 
 .tabbrowser-tabs {
@@ -1156,11 +1538,11 @@ tabbrowser > tabbox > tabpanels {
 }
 
 .tab-drop-indicator {
-  height: 10px;
-  width: 8px;
-  margin-bottom: -5px;
+  height: 33px;
+  width: 10px;
+  margin-bottom: -24px;
   position: relative;
-  background: url('chrome://browser/skin/tabbrowser/tabDragIndicator.png') 50% 50% no-repeat;
+  background: url('chrome://browser/skin/tabbrowser/tabDragIndicator.png') 50% 40% no-repeat;
 }
 
 /**
@@ -1237,17 +1619,23 @@ tabbrowser > tabbox > tabpanels {
 
 .tabs-alltabs-box {
   margin: 0;
-  width: 27px;
-  background-image: url("chrome://browser/skin/tabbrowser/alltabs-box-bkgnd.png");
-  background-repeat: no-repeat;
-  list-style-image: none;
+  width: 25px;
 }
 
 .tabs-alltabs-button {
-  margin: 2px 0px 3px 0px;
+  list-style-image: url("chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon.png");
+  border-left: 2px solid;
+  -moz-border-left-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15);
+  margin: 0;
   padding-left: 0;
   padding-right: 0;
-  border: none;
+}
+.tabs-alltabs-button:hover {
+  background-color: rgba(0,0,0,0.10);
+}
+.tabs-alltabs-button:hover:active,
+.tabs-alltabs-button[open="true"] {
+  background-color: rgba(0,0,0,0.20);
 }
 
 .tabs-alltabs-button  > .toolbarbutton-menu-dropmarker {
@@ -1478,7 +1866,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 #identity-popup-content-box > description,
 #identity-popup-encryption-label {
   white-space: pre-wrap;
-  color: black;
+  color: #ffffff;
   padding-left: 15px;
   margin: 2px 0 4px;
 }
@@ -1512,21 +1900,57 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 #identity-popup-content-box.verifiedIdentity > #identity-popup-encryption ,
 #identity-popup-content-box.verifiedDomain > #identity-popup-encryption {
   margin-top: 10px;
-  margin-left: -18px;
+  margin-left: -24px;
 }
 
 #identity-popup-content-box.verifiedIdentity > #identity-popup-encryption > vbox > #identity-popup-encryption-icon ,
 #identity-popup-content-box.verifiedDomain > #identity-popup-encryption > vbox > #identity-popup-encryption-icon {
-  list-style-image: url("chrome://browser/skin/Secure.png");
-  -moz-image-region: rect(0px, 18px, 18px, 0px);
+  margin-top: 5px;
+  list-style-image: url("chrome://browser/skin/Secure-Glyph-White.png");
 }
 
 /* Popup Bounding Box */
-#identity-popup-container {
-  background-image: none;
-  background-color: white;
+#identity-popup {
+  -moz-appearance: none;
+  background-color: rgba(68,68,68,0.9);
+  border: 1px solid rgba(255,255,255,0.15);
+  -moz-border-radius: 8px;
+  -moz-border-radius-topleft: 0px;
+  padding: 10px 8px 6px 8px;
+  margin-top: -3px;
+  -moz-margin-start: 11px;
+  color:  #ffffff;
   min-width: 280px;
-  padding: 10px;
+}
+
+#identity-popup-container {
+  -moz-appearance: none;
+  color:  #ffffff;
+}
+
+/* Popup Buttons */
+#identity-popup-more-info-button {
+  -moz-appearance: none;
+  background: url("chrome://browser/skin/hud-style-button-middle-background.png") repeat-x #464646 center center;
+  border: 3px solid;
+  -moz-border-radius: 5px;
+  -moz-border-top-colors: rgba(0,0,0,0.35) rgba(26,26,26,0.5) rgba(255,255,255,0.4);
+  -moz-border-right-colors: rgba(53,53,53,1) rgba(53,53,53,1) rgba(162,162,162,1);
+  -moz-border-bottom-colors: rgba(128,128,128,0.35) rgba(0,0,0,0.5) rgba(255,255,255,0.15);
+  -moz-border-left-colors: rgba(0,0,0,0.35) rgba(26,26,26,0.5) rgba(255,255,255,0.4);
+  -moz-border-radius: 20px;
+  padding: 1px 9px;
+  margin: 6px;
+  min-height: 0px;
+  color:  #ffffff;	
+}
+
+#identity-popup-more-info-button > .button-box > .button-text {
+  margin: 0 !important;
+}
+
+#identity-popup-more-info-button:hover:active {
+  background-color: #86888B;
 }
 
 #download-monitor {

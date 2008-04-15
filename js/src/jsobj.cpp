@@ -137,7 +137,8 @@ static JSPropertySpec object_props[] = {
                                                   obj_getSlot,  obj_setSlot},
     {js_parent_str,JSSLOT_PARENT,JSPROP_READONLY|JSPROP_PERMANENT|JSPROP_SHARED,
                                                   obj_getSlot,  obj_setSlot},
-    {js_count_str, 0,            JSPROP_PERMANENT,obj_getCount, obj_getCount},
+    {js_count_str, 0,            JSPROP_PERMANENT|JSPROP_SHARED,
+                                                  obj_getCount, obj_getCount},
     {0,0,0,0,0}
 };
 
@@ -1974,6 +1975,11 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
                 continue;
             if (!(sprop->flags & SPROP_HAS_SHORTID))
                 continue;
+            if (sprop->id == ATOM_TO_JSID(cx->runtime->atomState.emptyAtom)) {
+                /* See comments before EnsureNonEmptyLet from jsparse.c. */
+                JS_ASSERT(sprop->shortid == 0);
+                continue;
+            }
             slot = depth + (uintN) sprop->shortid;
             JS_ASSERT(slot < (size_t) (fp->regs->sp - fp->spbase));
             if (!js_DefineNativeProperty(cx, obj, sprop->id,
@@ -2203,22 +2209,22 @@ js_InitBlockClass(JSContext *cx, JSObject* obj)
 }
 
 JSObject *
-js_InitObjectClass(JSContext *cx, JSObject *obj)
+js_InitEval(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto;
-
-    proto = JS_InitClass(cx, obj, NULL, &js_ObjectClass, Object, 1,
-                         object_props, object_methods, NULL, NULL);
-    if (!proto)
-        return NULL;
-
     /* ECMA (15.1.2.1) says 'eval' is a property of the global object. */
     if (!js_DefineFunction(cx, obj, cx->runtime->atomState.evalAtom,
                            obj_eval, 1, 0)) {
         return NULL;
     }
 
-    return proto;
+    return obj;
+}
+
+JSObject *
+js_InitObjectClass(JSContext *cx, JSObject *obj)
+{
+    return JS_InitClass(cx, obj, NULL, &js_ObjectClass, Object, 1,
+                        object_props, object_methods, NULL, NULL);
 }
 
 void

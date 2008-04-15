@@ -137,7 +137,12 @@ nsDNSRecord::GetNextAddr(PRUint16 port, PRNetAddr *addr)
     }
     else {
         PR_Unlock(mHostRecord->addr_info_lock);
-        NS_ASSERTION(mHostRecord->addr, "no addr");
+        if (!mHostRecord->addr) {
+            // Both mHostRecord->addr_info and mHostRecord->addr are null.
+            // This can happen if mHostRecord->addr_info expired and the
+            // attempt to reresolve it failed.
+            return NS_ERROR_NOT_AVAILABLE;
+        }
         memcpy(addr, mHostRecord->addr, sizeof(PRNetAddr));
         // set given port
         port = PR_htons(port);

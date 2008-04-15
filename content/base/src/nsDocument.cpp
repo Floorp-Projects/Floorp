@@ -160,6 +160,8 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
 #include "nsFrameLoader.h"
 
+#include "mozAutoDocUpdate.h"
+
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
 #define FORCE_PR_LOG 1
@@ -831,6 +833,8 @@ nsDocument::~nsDocument()
   // links one by one
   DestroyLinkMap();
 
+  nsAutoScriptBlocker scriptBlocker;
+
   PRInt32 indx; // must be signed
   PRUint32 count = mChildren.ChildCount();
   for (indx = PRInt32(count) - 1; indx >= 0; --indx) {
@@ -1084,6 +1088,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   // don't waste time removing links one by one as they are removed
   // from the doc.
   tmp->DestroyLinkMap();
+
+  nsAutoScriptBlocker scriptBlocker;
 
   // Unlink the mChildren nsAttrAndChildArray.
   for (PRInt32 indx = PRInt32(tmp->mChildren.ChildCount()) - 1; 
@@ -2705,23 +2711,27 @@ nsDocument::BeginUpdate(nsUpdateType aUpdateType)
   }
   
   ++mUpdateNestLevel;
-  if (aUpdateType == UPDATE_CONTENT_MODEL) {
-    ++mContentUpdateNestLevel;
-  }
   NS_DOCUMENT_NOTIFY_OBSERVERS(BeginUpdate, (this, aUpdateType));
 
-  nsContentUtils::AddScriptBlocker();
+  if (aUpdateType == UPDATE_CONTENT_MODEL) {
+    nsContentUtils::AddRemovableScriptBlocker();
+  }
+  else {
+    nsContentUtils::AddScriptBlocker();
+  }
 }
 
 void
 nsDocument::EndUpdate(nsUpdateType aUpdateType)
 {
-  nsContentUtils::RemoveScriptBlocker();
+  if (aUpdateType == UPDATE_CONTENT_MODEL) {
+    nsContentUtils::RemoveRemovableScriptBlocker();
+  }
+  else {
+    nsContentUtils::RemoveScriptBlocker();
+  }
   NS_DOCUMENT_NOTIFY_OBSERVERS(EndUpdate, (this, aUpdateType));
 
-  if (aUpdateType == UPDATE_CONTENT_MODEL) {
-    --mContentUpdateNestLevel;
-  }
   --mUpdateNestLevel;
   if (mUpdateNestLevel == 0) {
     // This set of updates may have created XBL bindings.  Let the
@@ -2748,18 +2758,6 @@ nsDocument::EndUpdate(nsUpdateType aUpdateType)
       }
     }
   }
-}
-
-PRUint32
-nsDocument::GetUpdateNestingLevel()
-{
-  return mUpdateNestLevel;
-}
-
-PRBool
-nsDocument::AllUpdatesAreContent()
-{
-  return mContentUpdateNestLevel == mUpdateNestLevel;
 }
 
 void
@@ -5573,6 +5571,8 @@ nsDocument::Destroy()
 
   mIsGoingAway = PR_TRUE;
 
+  SaveState();
+
   PRUint32 i, count = mChildren.ChildCount();
   for (i = 0; i < count; ++i) {
     mChildren.ChildAt(i)->DestroyContent();
@@ -5588,6 +5588,20 @@ nsDocument::Destroy()
   //     check for mScriptGlobalObject in AddReference.
   delete mContentWrapperHash;
   mContentWrapperHash = nsnull;
+}
+
+void
+nsDocument::SaveState()
+{
+  if (mSavedState)
+    return;
+
+  mSavedState = PR_TRUE;
+
+  PRUint32 i, count = mChildren.ChildCount();
+  for (i = 0; i < count; ++i) {
+    mChildren.ChildAt(i)->SaveSubtreeState();
+  }
 }
 
 already_AddRefed<nsILayoutHistoryState>
@@ -5838,9 +5852,6 @@ nsDocument::MutationEventDispatched(nsINode* aTarget)
       nsINode* possibleTarget = mSubtreeModifiedTargets[i];
       nsCOMPtr<nsIContent> content = do_QueryInterface(possibleTarget);
       if (content && content->IsInNativeAnonymousSubtree()) {
-        if (realTargets.IndexOf(possibleTarget) == -1) {
-          realTargets.AppendObject(possibleTarget);
-        }
         continue;
       }
 
@@ -5863,10 +5874,12 @@ nsDocument::MutationEventDispatched(nsINode* aTarget)
 
     PRInt32 realTargetCount = realTargets.Count();
     for (PRInt32 k = 0; k < realTargetCount; ++k) {
-      mozAutoDocUpdateContentUnnest updateUnnest(this);
+      mozAutoRemovableBlockerRemover blockerRemover;
 
-      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_SUBTREEMODIFIED);
-      nsEventDispatcher::Dispatch(realTargets[k], nsnull, &mutation);
+      if (nsContentUtils::IsSafeToRunScript()) {
+        nsMutationEvent mutation(PR_TRUE, NS_MUTATION_SUBTREEMODIFIED);
+        nsEventDispatcher::Dispatch(realTargets[k], nsnull, &mutation);
+      }
     }
   }
 }

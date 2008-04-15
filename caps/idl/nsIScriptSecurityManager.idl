@@ -42,7 +42,7 @@ interface nsIURI;
 interface nsIChannel;
 
 
-[scriptable, uuid(3fffd8e8-3fea-442e-a0ed-2ba81ae197d5)]
+[scriptable, uuid(e74487fd-98ef-48d1-b973-3f2938f04e8e)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -54,14 +54,6 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
                                         in string aClassName,
                                         in JSVal aProperty,
                                         in PRUint32 aAction);
-
-    /**
-     * Checks whether the running script is allowed to connect to aTargetURI
-     */
-    [noscript] void checkConnect(in JSContextPtr aJSContext,
-                                 in nsIURI aTargetURI,
-                                 in string aClassName,
-                                 in string aProperty);
 
     /**
      * Check that the script currently running in context "cx" can load "uri".

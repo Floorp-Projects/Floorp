@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=428288
+-->
+<head>
+  <title>Test for Bug 428288</title>
+  <script type="text/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=428288">Mozilla Bug 428288</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe name="target"></iframe>
+  <a id="crashy" target="target" href="http://www.mozilla.com">crash me</a>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 428288 **/
+
+function makeClick() {
+  var event = document.createEvent("MouseEvents");
+  event.initMouseEvent("click", true, true, window, 0, 0,0,0,0,
+                        false, false, false, false, 0, null);
+  document.getElementById("crashy").dispatchEvent(event);
+  return true;
+}
+
+ok(makeClick(), "Crashes if bug 428288 is present");
+
+</script>
+</pre>
+</body>
+</html>
+

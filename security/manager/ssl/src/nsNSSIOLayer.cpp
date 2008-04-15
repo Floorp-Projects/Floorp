@@ -204,6 +204,11 @@ nsNSSSocketInfo::nsNSSSocketInfo()
   : mFd(nsnull),
     mBlockingState(blocking_state_unknown),
     mSecurityState(nsIWebProgressListener::STATE_IS_INSECURE),
+    mSubRequestsHighSecurity(0),
+    mSubRequestsLowSecurity(0),
+    mSubRequestsBrokenSecurity(0),
+    mSubRequestsNoSecurity(0),
+    mDocShellDependentStuffKnown(PR_FALSE),
     mExternalErrorReporting(PR_FALSE),
     mForSTARTTLS(PR_FALSE),
     mHandshakePending(PR_TRUE),
@@ -232,12 +237,13 @@ void nsNSSSocketInfo::virtualDestroyNSSReference()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS7(nsNSSSocketInfo,
+NS_IMPL_THREADSAFE_ISUPPORTS8(nsNSSSocketInfo,
                               nsITransportSecurityInfo,
                               nsISSLSocketControl,
                               nsIInterfaceRequestor,
                               nsISSLStatusProvider,
                               nsIIdentityInfo,
+                              nsIAssociatedContentSecurity,
                               nsISerializable,
                               nsIClassInfo)
 
@@ -319,14 +325,29 @@ nsNSSSocketInfo::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
     return NS_OK;
   }
 
+  mCallbacks = aCallbacks;
+  mDocShellDependentStuffKnown = PR_FALSE;
+
+  return NS_OK;
+}
+
+nsresult
+nsNSSSocketInfo::EnsureDocShellDependentStuffKnown()
+{
+  if (mDocShellDependentStuffKnown)
+    return NS_OK;
+
+  if (!mCallbacks || nsSSLThread::exitRequested())
+    return NS_ERROR_FAILURE;
+
+  mDocShellDependentStuffKnown = PR_TRUE;
+
   nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
   NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
                        NS_GET_IID(nsIInterfaceRequestor),
-                       static_cast<nsIInterfaceRequestor*>(aCallbacks),
+                       static_cast<nsIInterfaceRequestor*>(mCallbacks),
                        NS_PROXY_SYNC,
                        getter_AddRefs(proxiedCallbacks));
-
-  mCallbacks = proxiedCallbacks;
 
   // Are we running within a context that wants external SSL error reporting?
   // We'll look at the presence of a security UI object inside docshell.
@@ -339,7 +360,7 @@ nsNSSSocketInfo::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
 
   nsCOMPtr<nsIDocShell> docshell;
 
-  nsCOMPtr<nsIDocShellTreeItem> item(do_GetInterface(mCallbacks));
+  nsCOMPtr<nsIDocShellTreeItem> item(do_GetInterface(proxiedCallbacks));
   if (item)
   {
     nsCOMPtr<nsIDocShellTreeItem> proxiedItem;
@@ -395,6 +416,8 @@ nsNSSSocketInfo::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
 nsresult
 nsNSSSocketInfo::GetExternalErrorReporting(PRBool* state)
 {
+  nsresult rv = EnsureDocShellDependentStuffKnown();
+  NS_ENSURE_SUCCESS(rv, rv);
   *state = mExternalErrorReporting;
   return NS_OK;
 }
@@ -417,6 +440,54 @@ nsresult
 nsNSSSocketInfo::SetSecurityState(PRUint32 aState)
 {
   mSecurityState = aState;
+  return NS_OK;
+}
+
+/* attribute unsigned long countSubRequestsHighSecurity; */
+NS_IMETHODIMP nsNSSSocketInfo::GetCountSubRequestsHighSecurity(PRInt32 *aSubRequestsHighSecurity)
+{
+  *aSubRequestsHighSecurity = mSubRequestsHighSecurity;
+  return NS_OK;
+}
+NS_IMETHODIMP nsNSSSocketInfo::SetCountSubRequestsHighSecurity(PRInt32 aSubRequestsHighSecurity)
+{
+  mSubRequestsHighSecurity = aSubRequestsHighSecurity;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* attribute unsigned long countSubRequestsLowSecurity; */
+NS_IMETHODIMP nsNSSSocketInfo::GetCountSubRequestsLowSecurity(PRInt32 *aSubRequestsLowSecurity)
+{
+  *aSubRequestsLowSecurity = mSubRequestsLowSecurity;
+  return NS_OK;
+}
+NS_IMETHODIMP nsNSSSocketInfo::SetCountSubRequestsLowSecurity(PRInt32 aSubRequestsLowSecurity)
+{
+  mSubRequestsLowSecurity = aSubRequestsLowSecurity;
+  return NS_OK;
+}
+
+/* attribute unsigned long countSubRequestsBrokenSecurity; */
+NS_IMETHODIMP nsNSSSocketInfo::GetCountSubRequestsBrokenSecurity(PRInt32 *aSubRequestsBrokenSecurity)
+{
+  *aSubRequestsBrokenSecurity = mSubRequestsBrokenSecurity;
+  return NS_OK;
+}
+NS_IMETHODIMP nsNSSSocketInfo::SetCountSubRequestsBrokenSecurity(PRInt32 aSubRequestsBrokenSecurity)
+{
+  mSubRequestsBrokenSecurity = aSubRequestsBrokenSecurity;
+  return NS_OK;
+}
+
+/* attribute unsigned long countSubRequestsNoSecurity; */
+NS_IMETHODIMP nsNSSSocketInfo::GetCountSubRequestsNoSecurity(PRInt32 *aSubRequestsNoSecurity)
+{
+  *aSubRequestsNoSecurity = mSubRequestsNoSecurity;
+  return NS_OK;
+}
+NS_IMETHODIMP nsNSSSocketInfo::SetCountSubRequestsNoSecurity(PRInt32 aSubRequestsNoSecurity)
+{
+  mSubRequestsNoSecurity = aSubRequestsNoSecurity;
   return NS_OK;
 }
 
@@ -465,10 +536,17 @@ NS_IMETHODIMP nsNSSSocketInfo::GetInterface(const nsIID & uuid, void * *result)
 
     rv = ir->GetInterface(uuid, result);
   } else {
-    // Proxy of the channel callbacks should probably go here, rather
-    // than in the password callback code
+    if (nsSSLThread::exitRequested())
+      return NS_ERROR_FAILURE;
 
-    rv = mCallbacks->GetInterface(uuid, result);
+    nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
+    NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                         NS_GET_IID(nsIInterfaceRequestor),
+                         mCallbacks,
+                         NS_PROXY_SYNC,
+                         getter_AddRefs(proxiedCallbacks));
+
+    rv = proxiedCallbacks->GetInterface(uuid, result);
   }
   return rv;
 }
@@ -619,6 +697,8 @@ nsresult nsNSSSocketInfo::SetFileDescPtr(PRFileDesc* aFilePtr)
 nsresult nsNSSSocketInfo::GetPreviousCert(nsIX509Cert** _result)
 {
   NS_ENSURE_ARG_POINTER(_result);
+  nsresult rv = EnsureDocShellDependentStuffKnown();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   *_result = mPreviousCert;
   NS_IF_ADDREF(*_result);
@@ -812,7 +892,7 @@ static PRBool
 GetSubjectAltNames(CERTCertificate *nssCert,
                    nsINSSComponent *component,
                    nsString &allNames,
-                   PRUint32 nameCount)
+                   PRUint32 &nameCount)
 {
   allNames.Truncate();
   nameCount = 0;
@@ -844,9 +924,9 @@ GetSubjectAltNames(CERTCertificate *nssCert,
       case certDNSName:
         name.AssignASCII((char*)current->name.other.data, current->name.other.len);
         if (!allNames.IsEmpty()) {
-          ++nameCount;
           allNames.Append(NS_LITERAL_STRING(" , "));
         }
+        ++nameCount;
         allNames.Append(name);
         break;
 
@@ -869,9 +949,9 @@ GetSubjectAltNames(CERTCertificate *nssCert,
           }
           if (!name.IsEmpty()) {
             if (!allNames.IsEmpty()) {
-              ++nameCount;
               allNames.Append(NS_LITERAL_STRING(" , "));
             }
+            ++nameCount;
             allNames.Append(name);
           }
           break;
@@ -1142,6 +1222,9 @@ displayAlert(nsAFlatString &formattedString, nsNSSSocketInfo *infoObject)
   // The interface requestor object may not be safe, so proxy the call to get
   // the nsIPrompt.
 
+  if (nsSSLThread::exitRequested())
+    return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
   NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
                        NS_GET_IID(nsIInterfaceRequestor),
@@ -1176,6 +1259,10 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
     return NS_OK;
   }
 
+  if (nsSSLThread::exitRequested()) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsresult rv;
   NS_DEFINE_CID(nssComponentCID, NS_NSSCOMPONENT_CID);
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(nssComponentCID, &rv));
@@ -1190,9 +1277,16 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
   socketInfo->GetPort(&port);
 
   // Try to get a nsISSLErrorListener implementation from the socket consumer.
-  nsCOMPtr<nsIInterfaceRequestor> callbacks;
-  socketInfo->GetNotificationCallbacks(getter_AddRefs(callbacks));
-  if (callbacks) {
+  nsCOMPtr<nsIInterfaceRequestor> cb;
+  socketInfo->GetNotificationCallbacks(getter_AddRefs(cb));
+  if (cb) {
+    nsCOMPtr<nsIInterfaceRequestor> callbacks;
+    NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                         NS_GET_IID(nsIInterfaceRequestor),
+                         cb,
+                         NS_PROXY_SYNC,
+                         getter_AddRefs(callbacks));
+
     nsCOMPtr<nsISSLErrorListener> sel = do_GetInterface(callbacks);
     if (sel) {
       nsISSLErrorListener *proxy_sel = nsnull;
@@ -2746,6 +2840,9 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   if (!infoObject)
     return SECFailure;
 
+  if (nsSSLThread::exitRequested())
+    return cancel_and_failure(infoObject);
+
   CERTCertificate *peerCert = nsnull;
   CERTCertificateCleaner peerCertCleaner(peerCert);
   peerCert = SSL_PeerCertificate(sslSocket);
@@ -2915,9 +3012,16 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   nsresult rv;
 
   // Try to get a nsIBadCertListener2 implementation from the socket consumer.
-  nsCOMPtr<nsIInterfaceRequestor> callbacks;
-  infoObject->GetNotificationCallbacks(getter_AddRefs(callbacks));
-  if (callbacks) {
+  nsCOMPtr<nsIInterfaceRequestor> cb;
+  infoObject->GetNotificationCallbacks(getter_AddRefs(cb));
+  if (cb) {
+    nsCOMPtr<nsIInterfaceRequestor> callbacks;
+    NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                         NS_GET_IID(nsIInterfaceRequestor),
+                         cb,
+                         NS_PROXY_SYNC,
+                         getter_AddRefs(callbacks));
+
     nsCOMPtr<nsIBadCertListener2> bcl = do_GetInterface(callbacks);
     if (bcl) {
       nsIBadCertListener2 *proxy_bcl = nsnull;

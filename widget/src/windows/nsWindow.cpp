@@ -3040,7 +3040,10 @@ UINT nsWindow::MapFromNativeToDOM(UINT aNativeKeyCode)
 // OnKey
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVirtualCharCode, 
+PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
+                                  PRUint32 aUnshiftedCharCode,
+                                  PRUint32 aShiftedCharCode,
+                                  UINT aVirtualCharCode,
                                   LPARAM aKeyData, PRUint32 aFlags)
 {
   nsKeyEvent event(PR_TRUE, aEventType, this);
@@ -3050,6 +3053,10 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVir
 
   event.flags |= aFlags;
   event.charCode = aCharCode;
+  if (aUnshiftedCharCode || aShiftedCharCode) {
+    nsAlternativeCharCode altCharCodes(aUnshiftedCharCode, aShiftedCharCode);
+    event.alternativeCharCodes.AppendElement(altCharCodes);
+  }
   event.keyCode  = aVirtualCharCode;
 
 #ifdef KE_DEBUG
@@ -3133,7 +3140,7 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
   //printf("In OnKeyDown virt: %d  scan: %d\n", DOMKeyCode, aScanCode);
 #endif
 
-  BOOL noDefault = DispatchKeyEvent(NS_KEY_DOWN, 0, DOMKeyCode, aKeyData);
+  BOOL noDefault = DispatchKeyEvent(NS_KEY_DOWN, 0, 0, 0, DOMKeyCode, aKeyData);
 
   // If we won't be getting a WM_CHAR, WM_SYSCHAR or WM_DEADCHAR, synthesize a keypress
   // for almost all keys
@@ -3233,9 +3240,13 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
   if (gKbdLayout.IsDeadKey ())
     return PR_FALSE;
 
-  PRUint8 shiftStates [5];
-  PRUint16 uniChars [5];
+  PRUint8 shiftStates[5];
+  PRUint16 uniChars[5];
+  PRUint16 shiftedChars[5] = {0, 0, 0, 0, 0};
+  PRUint16 unshiftedChars[5] = {0, 0, 0, 0, 0};
   PRUint32 numOfUniChars = 0;
+  PRUint32 numOfShiftedChars = 0;
+  PRUint32 numOfUnshiftedChars = 0;
   PRUint32 numOfShiftStates = 0;
 
   switch (aVirtualKeyCode) {
@@ -3258,67 +3269,55 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
       numOfUniChars = 1;
       break;
     default:
-      if (KeyboardLayout::IsPrintableCharKey (aVirtualKeyCode))
-        numOfUniChars = numOfShiftStates = gKbdLayout.GetUniChars (uniChars, shiftStates, NS_ARRAY_LENGTH (uniChars));
+      if (KeyboardLayout::IsPrintableCharKey(aVirtualKeyCode)) {
+        numOfUniChars = numOfShiftStates =
+          gKbdLayout.GetUniChars(uniChars, shiftStates,
+                                 NS_ARRAY_LENGTH(uniChars));
+      }
 
-      if (mIsControlDown ^ mIsAltDown)
-      {
-        // XXX
-        // For both Alt+key and Ctrl+key combinations we return the latin characters A..Z and
-        // numbers 0..9, ignoring the real characters returned by active keyboard layout.
-        // This is required to make sure that all shortcut keys (e.g. Ctrl+c, Ctrl+1, Alt+f)
-        // work the same way no matter what keyboard layout you are using.
-
-        if ((NS_VK_0 <= DOMKeyCode && DOMKeyCode <= NS_VK_9) ||
-            (NS_VK_A <= DOMKeyCode && DOMKeyCode <= NS_VK_Z))
-        {
-          uniChars [0] = DOMKeyCode;
-          numOfUniChars = 1;
-          numOfShiftStates = 0;
-
-          // For letters take the Shift state into account
-          if (!mIsShiftDown &&
-              NS_VK_A <= DOMKeyCode && DOMKeyCode <= NS_VK_Z)
-            uniChars [0] += 0x20;
-        }
-        else if (!anyCharMessagesRemoved && DOMKeyCode != aVirtualKeyCode) {
-          switch (DOMKeyCode) {
-            case NS_VK_ADD:
-              uniChars [0] = '+'; numOfUniChars = 1; break;
-            case NS_VK_SUBTRACT:
-              uniChars [0] = '-'; numOfUniChars = 1; break;
-            case NS_VK_SEMICOLON:
-              // XXXmnakano I don't know whether this is correct.
-              uniChars [0] = ';';
-              uniChars [1] = ':';
-              numOfUniChars = 2;
-              break;
-            default:
-              NS_ERROR("implement me!");
-          }
-        }
+      if (mIsControlDown ^ mIsAltDown) {
+        numOfUnshiftedChars =
+          gKbdLayout.GetUniCharsWithShiftState(aVirtualKeyCode, 0,
+                       unshiftedChars, NS_ARRAY_LENGTH(unshiftedChars));
+        numOfShiftedChars =
+          gKbdLayout.GetUniCharsWithShiftState(aVirtualKeyCode, eShift,
+                       shiftedChars, NS_ARRAY_LENGTH(shiftedChars));
       }
   }
 
-  if (numOfUniChars)
-  {
-    for (PRUint32 cnt = 0; cnt < numOfUniChars; cnt++)
-    {
-      if (cnt < numOfShiftStates)
-      {
-        // If key in combination with Alt and/or Ctrl produces a different character than without them
-        // then do not report these flags because it is separate keyboard layout shift state.
-        // If dead-key and base character does not produce a valid composite character then both produced
-        // dead-key character and following base character may have different modifier flags, too.
-        mIsShiftDown   = (shiftStates [cnt] & eShift) != 0;
-        mIsControlDown = (shiftStates [cnt] & eCtrl) != 0;
-        mIsAltDown     = (shiftStates [cnt] & eAlt) != 0;
+  if (numOfUniChars > 0 || numOfShiftedChars > 0 || numOfUnshiftedChars > 0) {
+    PRUint32 num = PR_MAX(numOfUniChars,
+                          PR_MAX(numOfShiftedChars, numOfUnshiftedChars));
+    PRUint32 skipUniChars = num - numOfUniChars;
+    PRUint32 skipShiftedChars = num - numOfShiftedChars;
+    PRUint32 skipUnshiftedChars = num - numOfUnshiftedChars;
+    UINT keyCode = numOfUniChars == 0 ? DOMKeyCode : 0;
+    for (PRUint32 cnt = 0; cnt < num; cnt++) {
+      PRUint16 uniChar, shiftedChar, unshiftedChar;
+      uniChar = shiftedChar = unshiftedChar = 0;
+      if (skipUniChars <= cnt) {
+        if (cnt - skipUniChars  < numOfShiftStates) {
+          // If key in combination with Alt and/or Ctrl produces a different
+          // character than without them then do not report these flags
+          // because it is separate keyboard layout shift state. If dead-key
+          // and base character does not produce a valid composite character
+          // then both produced dead-key character and following base
+          // character may have different modifier flags, too.
+          mIsShiftDown   = (shiftStates[cnt - skipUniChars] & eShift) != 0;
+          mIsControlDown = (shiftStates[cnt - skipUniChars] & eCtrl) != 0;
+          mIsAltDown     = (shiftStates[cnt - skipUniChars] & eAlt) != 0;
+        }
+        uniChar = uniChars[cnt - skipUniChars];
       }
-
-      DispatchKeyEvent(NS_KEY_PRESS, uniChars [cnt], 0, aKeyData, extraFlags);
+      if (skipShiftedChars <= cnt)
+        shiftedChar = shiftedChars[cnt - skipShiftedChars];
+      if (skipUnshiftedChars <= cnt)
+        unshiftedChar = unshiftedChars[cnt - skipUnshiftedChars];
+      DispatchKeyEvent(NS_KEY_PRESS, uniChar, unshiftedChar,
+                       shiftedChar, keyCode, aKeyData, extraFlags);
     }
   } else
-    DispatchKeyEvent(NS_KEY_PRESS, 0, DOMKeyCode, aKeyData, extraFlags);
+    DispatchKeyEvent(NS_KEY_PRESS, 0, 0, 0, DOMKeyCode, aKeyData, extraFlags);
 
   return noDefault;
 }
@@ -3335,7 +3334,7 @@ BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 #endif
 
   aVirtualKeyCode = sIMEIsComposing ? aVirtualKeyCode : MapFromNativeToDOM(aVirtualKeyCode);
-  BOOL result = DispatchKeyEvent(NS_KEY_UP, 0, aVirtualKeyCode, aKeyData);
+  BOOL result = DispatchKeyEvent(NS_KEY_UP, 0, 0, 0, aVirtualKeyCode, aKeyData);
   return result;
 }
 
@@ -3412,7 +3411,8 @@ BOOL nsWindow::OnChar(UINT charCode, LPARAM keyData, PRUint32 aFlags)
     uniChar = towlower(uniChar);
   }
 
-  PRBool result = DispatchKeyEvent(NS_KEY_PRESS, uniChar, charCode, 0, aFlags);
+  PRBool result = DispatchKeyEvent(NS_KEY_PRESS, uniChar, 0, 0,
+                                   charCode, 0, aFlags);
   mIsAltDown = saveIsAltDown;
   mIsControlDown = saveIsControlDown;
   return result;
@@ -4508,6 +4508,20 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
           if (gSwitchKeyboardLayout && mLastKeyboardLayout)
             ActivateKeyboardLayout(mLastKeyboardLayout, 0);
+        }
+      }
+      break;
+
+    case WM_MOUSEACTIVATE:
+      if (mWindowType == eWindowType_popup) {
+        // a popup with a parent owner should not be activated when clicked
+        // but should still allow the mouse event to be fired, so the return
+        // value is set to MA_NOACTIVATE. But if the owner isn't the frontmost
+        // window, just use default processing so that the window is activated.
+        HWND owner = ::GetWindow(mWnd, GW_OWNER);
+        if (owner && owner == ::GetForegroundWindow()) {
+          *aRetValue = MA_NOACTIVATE;
+          result = PR_TRUE;
         }
       }
       break;
@@ -6521,7 +6535,7 @@ BOOL nsWindow::OnIMEChar(BYTE aByte1, BYTE aByte2, LPARAM aKeyState)
 
   // We need to return TRUE here so that Windows doesn't
   // send two WM_CHAR msgs
-  DispatchKeyEvent(NS_KEY_PRESS, uniChar, 0, 0);
+  DispatchKeyEvent(NS_KEY_PRESS, uniChar, 0, 0, 0, 0);
   return PR_TRUE;
 }
 
@@ -6801,7 +6815,7 @@ BOOL nsWindow::OnIMENotify(WPARAM aIMN, LPARAM aData, LRESULT *oResult)
     mIsControlDown = PR_FALSE;
     mIsAltDown = PR_TRUE;
 
-    DispatchKeyEvent(NS_KEY_PRESS, 0, 192, 0); // XXX hack hack hack
+    DispatchKeyEvent(NS_KEY_PRESS, 0, 0, 0, 192, 0); // XXX hack hack hack
     if (aIMN == IMN_SETOPENSTATUS)
       sIMEIsStatusChanged = PR_TRUE;
   }

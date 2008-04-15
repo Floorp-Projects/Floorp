@@ -75,7 +75,7 @@
 // The bidi indicator hangs off the caret to one side, to show which
 // direction the typing is in. It needs to be at least 2x2 to avoid looking like 
 // an insignificant dot
-static const PRUint32 kMinBidiIndicatorPixels = 2;
+static const PRInt32 kMinBidiIndicatorPixels = 2;
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -119,23 +119,19 @@ NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
   nsILookAndFeel *lookAndFeel = nsnull;
   nsPresContext *presContext = inPresShell->GetPresContext();
   
-  PRInt32 caretPixelsWidth = 1;
+  // XXX we should just do this nsILookAndFeel consultation every time
+  // we need these values.
+  mCaretWidthCSSPx = 1;
   if (presContext && (lookAndFeel = presContext->LookAndFeel())) {
     PRInt32 tempInt;
     if (NS_SUCCEEDED(lookAndFeel->GetMetric(nsILookAndFeel::eMetric_CaretWidth, tempInt)))
-      caretPixelsWidth = (nscoord)tempInt;
+      mCaretWidthCSSPx = (nscoord)tempInt;
     if (NS_SUCCEEDED(lookAndFeel->GetMetric(nsILookAndFeel::eMetric_CaretBlinkTime, tempInt)))
       mBlinkRate = (PRUint32)tempInt;
     if (NS_SUCCEEDED(lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ShowCaretDuringSelection, tempInt)))
       mShowDuringSelection = tempInt ? PR_TRUE : PR_FALSE;
   }
   
-  mCaretWidth = presContext->DevPixelsToAppUnits(caretPixelsWidth);
-  mBidiIndicatorSize = presContext->DevPixelsToAppUnits(kMinBidiIndicatorPixels);
-  if (mBidiIndicatorSize < mCaretWidth) {
-    mBidiIndicatorSize = mCaretWidth;
-  }
-
   // get the selection from the pres shell, and set ourselves up as a selection
   // listener
 
@@ -167,6 +163,21 @@ NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
   return NS_OK;
 }
 
+nsCaret::Metrics nsCaret::ComputeMetrics(nsPresContext *aPresContext)
+{
+  // Compute nominal sizes in appunits
+  nscoord caretWidth = nsPresContext::CSSPixelsToAppUnits(mCaretWidthCSSPx);
+  nscoord bidiIndicatorSize = nsPresContext::CSSPixelsToAppUnits(kMinBidiIndicatorPixels);
+  bidiIndicatorSize = PR_MAX(caretWidth, bidiIndicatorSize);
+
+  // Round them to device pixels. Always round down, except that anything
+  // between 0 and 1 goes up to 1 so we don't let the caret disappear.
+  PRUint32 tpp = aPresContext->AppUnitsPerDevPixel();
+  Metrics result;
+  result.mCaretWidth = NS_ROUND_BORDER_TO_PIXELS(caretWidth, tpp);
+  result.mBidiIndicatorSize = NS_ROUND_BORDER_TO_PIXELS(bidiIndicatorSize, tpp);
+  return result;
+}
 
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP nsCaret::Terminate()
@@ -242,7 +253,7 @@ NS_IMETHODIMP nsCaret::SetCaretVisible(PRBool inMakeVisible)
 NS_IMETHODIMP nsCaret::GetCaretVisible(PRBool *outMakeVisible)
 {
   NS_ENSURE_ARG_POINTER(outMakeVisible);
-  *outMakeVisible = mVisible;
+  *outMakeVisible = (mVisible && MustDrawCaret(PR_TRUE));
   return NS_OK;
 }
 
@@ -339,7 +350,7 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType,
   outCoordinates->x = viewOffset.x;
   outCoordinates->y = viewOffset.y;
   outCoordinates->height = theFrame->GetSize().height;
-  outCoordinates->width  = mCaretWidth;
+  outCoordinates->width = ComputeMetrics(theFrame->PresContext()).mCaretWidth;
   
   return NS_OK;
 }
@@ -1005,6 +1016,8 @@ PRBool nsCaret::IsMenuPopupHidingCaret()
   if (!node)
     return PR_TRUE; // No selection/caret to draw.
   nsCOMPtr<nsIContent> caretContent = do_QueryInterface(node);
+  if (!caretContent)
+    return PR_TRUE; // No selection/caret to draw.
 
   // If there's a menu popup open before the popup with
   // the caret, don't show the caret.
@@ -1146,7 +1159,8 @@ nsresult nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
   }
 
   mCaretRect += framePos;
-  mCaretRect.width = mCaretWidth;
+  Metrics metrics = ComputeMetrics(presContext);
+  mCaretRect.width = metrics.mCaretWidth;
 
   // Clamp our position to be within our scroll frame. If we don't, then it
   // clips us, and we don't appear at all. See bug 335560.
@@ -1181,10 +1195,11 @@ nsresult nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
   if (NS_STYLE_DIRECTION_RTL == vis->mDirection)
     mCaretRect.x -= mCaretRect.width;
 
-  return UpdateHookRect(presContext);
+  return UpdateHookRect(presContext, metrics);
 }
 
-nsresult nsCaret::UpdateHookRect(nsPresContext* aPresContext)
+nsresult nsCaret::UpdateHookRect(nsPresContext* aPresContext,
+                                 const Metrics& aMetrics)
 {
   mHookRect.Empty();
 
@@ -1230,11 +1245,12 @@ nsresult nsCaret::UpdateHookRect(nsPresContext* aPresContext)
     // If keyboard language is RTL, draw the hook on the left; if LTR, to the right
     // The height of the hook rectangle is the same as the width of the caret
     // rectangle.
+    nscoord bidiIndicatorSize = aMetrics.mBidiIndicatorSize;
     mHookRect.SetRect(mCaretRect.x + ((isCaretRTL) ?
-                      mBidiIndicatorSize * -1 :
+                      bidiIndicatorSize * -1 :
                       mCaretRect.width),
-                      mCaretRect.y + mBidiIndicatorSize,
-                      mBidiIndicatorSize,
+                      mCaretRect.y + bidiIndicatorSize,
+                      bidiIndicatorSize,
                       mCaretRect.width);
   }
 #endif //IBMBIDI

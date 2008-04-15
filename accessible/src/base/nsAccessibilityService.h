@@ -269,8 +269,8 @@ static const char kRoleNames[][20] = {
   "image map",           //ROLE_IMAGE_MAP
   "listbox option",      //ROLE_OPTION
   "listbox rich option", //ROLE_RICH_OPTION
-  "listbox"              //ROLE_LISTBOX
-  
+  "listbox",             //ROLE_LISTBOX
+  "flat equation"        //ROLE_FLAT_EQUATION  
 };
 
 /**

@@ -66,6 +66,7 @@
 #include "nsContentUtils.h"
 #include "nsAttrName.h"
 #include "nsNodeUtils.h"
+#include "mozAutoDocUpdate.h"
 
 #include "jsapi.h"
 #include "pldhash.h"

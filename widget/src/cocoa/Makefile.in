@@ -66,6 +66,7 @@ REQUIRES = xpcom \
 		  intl \
 		  exthandler \
 		  appshell \
+                  lcms \
 		  thebes \
 		  js \
 		  xpconnect \

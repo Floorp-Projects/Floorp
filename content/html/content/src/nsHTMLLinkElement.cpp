@@ -209,10 +209,6 @@ nsHTMLLinkElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   UpdateStyleSheetInternal(nsnull);
 
-  // XXXbz we really shouldn't fire the event until after we've finished with
-  // the outermost BindToTree...  In particular, this can effectively cause us
-  // to reenter this code, or for some part of the document to become unbound
-  // inside the event!
   CreateAndDispatchEvent(aDocument, NS_LITERAL_STRING("DOMLinkAdded"));
 
   return rv;  
@@ -243,10 +239,8 @@ nsHTMLLinkElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     mLinkState = eLinkState_Unknown;
   }
 
-  // XXXbz we really shouldn't fire the event until after we've finished with
-  // the outermost UnbindFromTree...  In particular, this can effectively cause
-  // us to reenter this code, or to be bound to a different tree inside the
-  // event!
+  // Once we have XPCOMGC we shouldn't need to call UnbindFromTree during Unlink
+  // and so this messy event dispatch can go away.
   CreateAndDispatchEvent(oldDoc, NS_LITERAL_STRING("DOMLinkRemoved"));
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
   UpdateStyleSheetInternal(oldDoc);
@@ -276,7 +270,13 @@ nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
 
   nsRefPtr<nsPLDOMEvent> event = new nsPLDOMEvent(this, aEventName);
   if (event) {
-    event->PostDOMEvent();
+    // If we have script blockers on the stack then we want to run as soon as
+    // they are removed. Otherwise punt the runable to the event loop as we
+    // don't know when it will be safe to run script.
+    if (nsContentUtils::IsSafeToRunScript())
+      event->PostDOMEvent();
+    else
+      event->RunDOMEventWhenSafe();
   }
 }
 

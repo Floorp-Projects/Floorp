@@ -87,7 +87,7 @@ NSSCleanupAutoPtrClass(CERTCertificateList, CERT_DestroyCertificateList)
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
 
-NS_IMPL_ISUPPORTS2(nsNSSCertificateDB, nsIX509CertDB, nsIX509CertDB2)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsNSSCertificateDB, nsIX509CertDB, nsIX509CertDB2)
 
 nsNSSCertificateDB::nsNSSCertificateDB()
 {

@@ -400,15 +400,15 @@
           onclick="PlacesOrganizer.onTreeClick(event);"
           seltype="single"
           persist="width"
-          width="200">
+          width="200"
+          minwidth="100"
+          maxwidth="400">
       <treecols>
         <treecol anonid="title" flex="1" primary="true" hideheader="true"/>
       </treecols>
       <treechildren flex="1"/>
     </tree>
-    <splitter id="splitter" collapse="before" persist="state">
-      <grippy/>
-    </splitter>
+    <splitter collapse="none" persist="state"></splitter>
     <vbox id="contentView" flex="4">
       <deck id="contentDeck" flex="1">
         <vbox id="defaultView" flex="1">
@@ -422,12 +422,6 @@
                              oncommand="PlacesQueryBuilder.onScopeSelected(this);"
                              label="&search.scopeAll.label;"
                              checked="true"/>
-              <toolbarbutton id="scopeBarMenu" type="radio" group="scopeBar"
-                             oncommand="PlacesQueryBuilder.onScopeSelected(this);"
-                             label="&search.scopeMenu.label;"/>
-              <toolbarbutton id="scopeBarToolbar" type="radio" group="scopeBar"
-                             oncommand="PlacesQueryBuilder.onScopeSelected(this);"
-                             label="&search.scopeToolbar.label;"/>
               <!--
               <toolbarbutton id="scopeBarDownloads" type="radio" group="scopeBar"
                              oncommand="PlacesQueryBuilder.onScopeSelected(this);"
@@ -493,12 +487,9 @@
               </treecols>
               <treechildren flex="1"/>
             </tree>
-            <splitter id="contentSplitter" collapse="after" persist="state">
-              <grippy/>
-            </splitter>
-            <hbox persist="height" id="infoPane">
+            <hbox id="infoPaneBox">
               <deck flex="1" id="detailsDeck">
-                <vbox align="center">
+                <vbox id="itemsCountBox" align="center">
                   <spacer flex="3"/>
                   <label id="itemsCountText"/>
                   <spacer flex="1"/>
@@ -507,10 +498,10 @@
                   </description>
                   <spacer flex="3"/>
                 </vbox>
-                <scrollbox id="infoScrollbox" minimal="true" orient="vertical" flex="1" style='overflow: auto;'>
+                <vbox id="infoBox" minimal="true">
                   <vbox id="editBookmarkPanelContent"/>
                   <hbox>
-                    <button type="image" id="infoScrollboxExpander"
+                    <button type="image" id="infoBoxExpander"
                             lesslabel="&detailsPane.less.label;"
                             lessaccesskey="&detailsPane.less.accesskey;"
                             morelabel="&detailsPane.more.label;"
@@ -521,7 +512,7 @@
                             observes="paneElementsBroadcaster"/>
                     <spacer flex="1"/>
                   </hbox>
-                </scrollbox>
+                </vbox>
               </deck>
             </hbox>
           </vbox>

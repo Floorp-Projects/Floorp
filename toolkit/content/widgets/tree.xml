@@ -1308,7 +1308,13 @@
       </xul:menupopup>
     </content>
     
-    <implementation>
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XULButton;
+        </getter>
+      </property>
+
       <method name="buildPopup">
         <parameter name="aPopup"/>
         <body>

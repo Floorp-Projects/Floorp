@@ -82,6 +82,128 @@ struct nsMyTrustedEVInfo
 
 static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
   {
+    // CN=VeriSign Class 3 Public Primary Certification Authority - G5,OU="(c) 2006 VeriSign, Inc. - For authorized use only",OU=VeriSign Trust Network,O="VeriSign, Inc.",C=US
+    "2.16.840.1.113733.1.7.23.6",
+    "VeriSign EV OID",
+    SEC_OID_UNKNOWN,
+    "4E:B6:D5:78:49:9B:1C:CF:5F:58:1E:AD:56:BE:3D:9B:67:44:A5:E5",
+    "MIHKMQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdBgNV"
+    "BAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOjA4BgNVBAsTMShjKSAyMDA2IFZl"
+    "cmlTaWduLCBJbmMuIC0gRm9yIGF1dGhvcml6ZWQgdXNlIG9ubHkxRTBDBgNVBAMT"
+    "PFZlcmlTaWduIENsYXNzIDMgUHVibGljIFByaW1hcnkgQ2VydGlmaWNhdGlvbiBB"
+    "dXRob3JpdHkgLSBHNQ==",
+    "GNrRniZ96LtKIVjNzGs7Sg==",
+    nsnull
+  },
+  {
+    // CN=GeoTrust Primary Certification Authority,O=GeoTrust Inc.,C=US
+    "1.3.6.1.4.1.14370.1.6",
+    "GeoTrust EV OID",
+    SEC_OID_UNKNOWN,
+    "32:3C:11:8E:1B:F7:B8:B6:52:54:E2:E2:10:0D:D6:02:90:37:F0:96",
+    "MFgxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1HZW9UcnVzdCBJbmMuMTEwLwYDVQQD"
+    "EyhHZW9UcnVzdCBQcmltYXJ5IENlcnRpZmljYXRpb24gQXV0aG9yaXR5",
+    "GKy1av1pthU6Y2yv2vrEoQ==",
+    nsnull
+  },
+  {
+    // CN=thawte Primary Root CA,OU="(c) 2006 thawte, Inc. - For authorized use only",OU=Certification Services Division,O="thawte, Inc.",C=US
+    "2.16.840.1.113733.1.7.48.1",
+    "Thawte EV OID",
+    SEC_OID_UNKNOWN,
+    "91:C6:D6:EE:3E:8A:C8:63:84:E5:48:C2:99:29:5C:75:6C:81:7B:81",
+    "MIGpMQswCQYDVQQGEwJVUzEVMBMGA1UEChMMdGhhd3RlLCBJbmMuMSgwJgYDVQQL"
+    "Ex9DZXJ0aWZpY2F0aW9uIFNlcnZpY2VzIERpdmlzaW9uMTgwNgYDVQQLEy8oYykg"
+    "MjAwNiB0aGF3dGUsIEluYy4gLSBGb3IgYXV0aG9yaXplZCB1c2Ugb25seTEfMB0G"
+    "A1UEAxMWdGhhd3RlIFByaW1hcnkgUm9vdCBDQQ==",
+    "NE7VVyDV7exJ9C/ON9srbQ==",
+    nsnull
+  },
+  {
+    // CN=XRamp Global Certification Authority,O=XRamp Security Services Inc,OU=www.xrampsecurity.com,C=US
+    "2.16.840.1.114404.1.1.2.4.1",
+    "Trustwave EV OID",
+    SEC_OID_UNKNOWN,
+    "B8:01:86:D1:EB:9C:86:A5:41:04:CF:30:54:F3:4C:52:B7:E5:58:C6",
+    "MIGCMQswCQYDVQQGEwJVUzEeMBwGA1UECxMVd3d3LnhyYW1wc2VjdXJpdHkuY29t"
+    "MSQwIgYDVQQKExtYUmFtcCBTZWN1cml0eSBTZXJ2aWNlcyBJbmMxLTArBgNVBAMT"
+    "JFhSYW1wIEdsb2JhbCBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eQ==",
+    "UJRs7Bjq1ZxN1ZfvdY+grQ==",
+    nsnull
+  },
+  {
+    // CN=SecureTrust CA,O=SecureTrust Corporation,C=US
+    "2.16.840.1.114404.1.1.2.4.1",
+    "Trustwave EV OID",
+    SEC_OID_UNKNOWN,
+    "87:82:C6:C3:04:35:3B:CF:D2:96:92:D2:59:3E:7D:44:D9:34:FF:11",
+    "MEgxCzAJBgNVBAYTAlVTMSAwHgYDVQQKExdTZWN1cmVUcnVzdCBDb3Jwb3JhdGlv"
+    "bjEXMBUGA1UEAxMOU2VjdXJlVHJ1c3QgQ0E=",
+    "DPCOXAgWpa1Cf/DrJxhZ0A==",
+    nsnull
+  },
+  {
+    // CN=Secure Global CA,O=SecureTrust Corporation,C=US
+    "2.16.840.1.114404.1.1.2.4.1",
+    "Trustwave EV OID",
+    SEC_OID_UNKNOWN,
+    "3A:44:73:5A:E5:81:90:1F:24:86:61:46:1E:3B:9C:C4:5F:F5:3A:1B",
+    "MEoxCzAJBgNVBAYTAlVTMSAwHgYDVQQKExdTZWN1cmVUcnVzdCBDb3Jwb3JhdGlv"
+    "bjEZMBcGA1UEAxMQU2VjdXJlIEdsb2JhbCBDQQ==",
+    "B1YipOjUiolN9BPI8PjqpQ==",
+    nsnull
+  },
+  {
+    // CN=COMODO Certification Authority,O=COMODO CA Limited,L=Salford,ST=Greater Manchester,C=GB
+    "1.3.6.1.4.1.6449.1.2.1.5.1",
+    "Comodo EV OID",
+    SEC_OID_UNKNOWN,
+    "66:31:BF:9E:F7:4F:9E:B6:C9:D5:A6:0C:BA:6A:BE:D1:F7:BD:EF:7B",
+    "MIGBMQswCQYDVQQGEwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAw"
+    "DgYDVQQHEwdTYWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0EgTGltaXRlZDEnMCUG"
+    "A1UEAxMeQ09NT0RPIENlcnRpZmljYXRpb24gQXV0aG9yaXR5",
+    "ToEtioJl4AsC7j41AkblPQ==",
+    nsnull
+  },
+  {
+    // CN=AddTrust External CA Root,OU=AddTrust External TTP Network,O=AddTrust AB,C=SE
+    "1.3.6.1.4.1.6449.1.2.1.5.1",
+    "Comodo EV OID",
+    SEC_OID_UNKNOWN,
+    "02:FA:F3:E2:91:43:54:68:60:78:57:69:4D:F5:E4:5B:68:85:18:68",
+    "MG8xCzAJBgNVBAYTAlNFMRQwEgYDVQQKEwtBZGRUcnVzdCBBQjEmMCQGA1UECxMd"
+    "QWRkVHJ1c3QgRXh0ZXJuYWwgVFRQIE5ldHdvcmsxIjAgBgNVBAMTGUFkZFRydXN0"
+    "IEV4dGVybmFsIENBIFJvb3Q=",
+    "AQ==",
+    nsnull
+  },
+  {
+    // CN=UTN - DATACorp SGC,OU=http://www.usertrust.com,O=The USERTRUST Network,L=Salt Lake City,ST=UT,C=US
+    "1.3.6.1.4.1.6449.1.2.1.5.1",
+    "Comodo EV OID",
+    SEC_OID_UNKNOWN,
+    "58:11:9F:0E:12:82:87:EA:50:FD:D9:87:45:6F:4F:78:DC:FA:D6:D4",
+    "MIGTMQswCQYDVQQGEwJVUzELMAkGA1UECBMCVVQxFzAVBgNVBAcTDlNhbHQgTGFr"
+    "ZSBDaXR5MR4wHAYDVQQKExVUaGUgVVNFUlRSVVNUIE5ldHdvcmsxITAfBgNVBAsT"
+    "GGh0dHA6Ly93d3cudXNlcnRydXN0LmNvbTEbMBkGA1UEAxMSVVROIC0gREFUQUNv"
+    "cnAgU0dD",
+    "RL4Mi1AAIbQR0ypoBqmtaQ==",
+    nsnull
+  },
+  {
+    // CN=UTN-USERFirst-Hardware,OU=http://www.usertrust.com,O=The USERTRUST Network,L=Salt Lake City,ST=UT,C=US
+    "1.3.6.1.4.1.6449.1.2.1.5.1",
+    "Comodo EV OID",
+    SEC_OID_UNKNOWN,
+    "04:83:ED:33:99:AC:36:08:05:87:22:ED:BC:5E:46:00:E3:BE:F9:D7",
+    "MIGXMQswCQYDVQQGEwJVUzELMAkGA1UECBMCVVQxFzAVBgNVBAcTDlNhbHQgTGFr"
+    "ZSBDaXR5MR4wHAYDVQQKExVUaGUgVVNFUlRSVVNUIE5ldHdvcmsxITAfBgNVBAsT"
+    "GGh0dHA6Ly93d3cudXNlcnRydXN0LmNvbTEfMB0GA1UEAxMWVVROLVVTRVJGaXJz"
+    "dC1IYXJkd2FyZQ==",
+    "RL4Mi1AAJLQR0zYq/mUK/Q==",
+    nsnull
+  },
+  {
     // OU=Go Daddy Class 2 Certification Authority,O=\"The Go Daddy Group, Inc.\",C=US
     "2.16.840.1.114413.1.7.23.3",
     "Go Daddy EV OID a",
@@ -152,18 +274,6 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
     "MEUxCzAJBgNVBAYTAkJNMRkwFwYDVQQKExBRdW9WYWRpcyBMaW1pdGVkMRswGQYD"
     "VQQDExJRdW9WYWRpcyBSb290IENBIDI=",
     "BQk=",
-    nsnull
-  },
-  {
-    // OU=Class 3 Public Primary Certification Authority,O=\"VeriSign, Inc.\",C=US
-    "2.16.840.1.113733.1.7.23.6",
-    "Verisign EV OID",
-    SEC_OID_UNKNOWN,
-    "74:2C:31:92:E6:07:E4:24:EB:45:49:54:2B:E1:BB:C5:3E:61:74:E2",
-    "MF8xCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5WZXJpU2lnbiwgSW5jLjE3MDUGA1UE"
-    "CxMuQ2xhc3MgMyBQdWJsaWMgUHJpbWFyeSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0"
-    "eQ==",
-    "cLrkHRDZKTS2OMp7A8y6vw==",
     nsnull
   },
   {
@@ -340,13 +450,15 @@ loadTestEVInfos()
         descriptor.EqualsLiteral(("2_readable_oid"))) {
       readable_oid = data;
       reader_position = pos_issuer;
+      continue;
     }
     else if (reader_position == pos_issuer &&
         descriptor.EqualsLiteral(("3_issuer"))) {
       issuer = data;
       reader_position = pos_serial;
+      continue;
     }
-    else if (reader_position == pos_readable_oid &&
+    else if (reader_position == pos_serial &&
         descriptor.EqualsLiteral(("4_serial"))) {
       serial = data;
       reader_position = pos_fingerprint;
@@ -803,6 +915,7 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, PRBool &validEV)
 
   CERTValOutParam cvout[2];
   cvout[0].type = cert_po_trustAnchor;
+  cvout[0].value.pointer.cert = nsnull;
   cvout[1].type = cert_po_end;
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("calling CERT_PKIXVerifyCert nss cert %p\n", mCert));

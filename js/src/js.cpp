@@ -3414,13 +3414,15 @@ global_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
                JSObject **objp)
 {
 #ifdef LAZY_STANDARD_CLASSES
-    JSBool resolved;
+    if ((flags & JSRESOLVE_ASSIGNING) == 0) {
+        JSBool resolved;
 
-    if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
-        return JS_FALSE;
-    if (resolved) {
-        *objp = obj;
-        return JS_TRUE;
+        if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
+            return JS_FALSE;
+        if (resolved) {
+            *objp = obj;
+            return JS_TRUE;
+        }
     }
 #endif
 

@@ -59,7 +59,7 @@ void usage() {
 class nsUniversalChardetTest : public nsUniversalDetector
 {
  public:
-   nsUniversalChardetTest() { };
+   nsUniversalChardetTest() : nsUniversalDetector(NS_FILTER_ALL) { };
    virtual ~nsUniversalChardetTest() { };
 
   PRBool done() const { return mDone; }

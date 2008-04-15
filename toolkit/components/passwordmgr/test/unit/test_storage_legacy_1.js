@@ -317,7 +317,7 @@ LoginTest.initStorage(storage, INDIR, "signons-2d-06.txt");
 LoginTest.checkStorageData(storage, [], [testuser1, testuser2]);
 
 
-/* ========== 17 ========== */
+/* ========== 18 ========== */
 testnum++;
 testdesc = "Initialize with signons-2d-07.txt";
 // Form logins could have been saved with the port number explicitly
@@ -338,7 +338,7 @@ LoginTest.initStorage(storage, INDIR, "signons-2d-07.txt");
 LoginTest.checkStorageData(storage, [], [testuser1, testuser2, testuser3]);
 
 
-/* ========== 18 ========== */
+/* ========== 19 ========== */
 testnum++;
 testdesc = "Initialize with signons-2d-08.txt";
 // Bug 396316: Non-HTTP[S] hostnames were stored the same way for both forms 
@@ -357,7 +357,7 @@ LoginTest.initStorage(storage, INDIR, "signons-2d-08.txt");
 LoginTest.checkStorageData(storage, [], [testuser1, testuser2, testuser3]);
 
 
-/* ========== 19 ========== */
+/* ========== 20 ========== */
 testnum++;
 testdesc = "Initialize with signons-2d-09.txt";
 // Logins stored when signing into, say, an FTP server via a URL with a
@@ -374,7 +374,7 @@ LoginTest.initStorage(storage, INDIR, "signons-2d-09.txt");
 LoginTest.checkStorageData(storage, [], [testuser1, testuser2]);
 
 
-/* ========== 20 ========== */
+/* ========== 21 ========== */
 testnum++;
 testdesc = "Initialize with signons-2d-10.txt";
 // Extensions like the eBay Companion just use an arbitrary string for the
@@ -386,6 +386,29 @@ testuser2.init("eBay.companion.ebay.guard", "", null,
                "p", "ebaypass", "", "");
 LoginTest.initStorage(storage, INDIR, "signons-2d-10.txt");
 LoginTest.checkStorageData(storage, [], [testuser1, testuser2]);
+
+
+/*
+ * ---------------------- Bug 427033 ----------------------
+ * Check migration of logins stored with a JS formSubmitURL
+ */
+
+
+/* ========== 22 ========== */
+testnum++;
+
+testdesc = "checking import of JS formSubmitURL entries"
+
+testuser1.init("http://jstest.site.org", "javascript:", null,
+               "dummydude", "itsasecret", "put_user_here", "put_pw_here");
+LoginTest.initStorage(storage, INDIR, "signons-427033-1.txt",
+                               OUTDIR, "output-427033-1.txt");
+LoginTest.checkStorageData(storage, [], [testuser1]);
+
+testdesc = "[flush and reload for verification]"
+LoginTest.initStorage(storage, OUTDIR, "output-427033-1.txt");
+LoginTest.checkStorageData(storage, [], [testuser1]);
+
 
 
 } catch (e) {

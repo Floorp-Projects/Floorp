@@ -59,6 +59,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsXPConnect,
 
 nsXPConnect* nsXPConnect::gSelf = nsnull;
 JSBool       nsXPConnect::gOnceAliveNowDead = JS_FALSE;
+PRUint32     nsXPConnect::gReportAllJSExceptions = 0;
 
 // Global cache of the default script security manager (QI'd to
 // nsIScriptSecurityManager)
@@ -119,7 +120,9 @@ nsXPConnect::nsXPConnect()
     }
   }
 #endif
-
+    char* reportableEnv = PR_GetEnv("MOZ_REPORT_ALL_JS_EXCEPTIONS");
+    if(reportableEnv && *reportableEnv)
+        gReportAllJSExceptions = 1;
 }
 
 nsXPConnect::~nsXPConnect()
@@ -2311,6 +2314,16 @@ NS_IMETHODIMP
 nsXPConnect::RemoveJSHolder(void* aHolder)
 {
     return mRuntime->RemoveJSHolder(aHolder);
+}
+
+NS_IMETHODIMP
+nsXPConnect::SetReportAllJSExceptions(PRBool newval)
+{
+    // Ignore if the environment variable was set.
+    if (gReportAllJSExceptions != 1)
+        gReportAllJSExceptions = newval ? 2 : 0;
+
+    return NS_OK;
 }
 
 #ifdef DEBUG

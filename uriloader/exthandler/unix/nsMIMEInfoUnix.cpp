@@ -57,7 +57,12 @@ nsMIMEInfoUnix::GetHasDefaultHandler(PRBool *_retval)
     if (NS_SUCCEEDED(vfs->GetAppForMimeType(mType, getter_AddRefs(app))) && app)
       *_retval = PR_TRUE;
   }
-  return NS_OK;
+
+  if (*_retval)
+    return NS_OK;
+
+  // If we didn't find a VFS handler, fallback.
+  return nsMIMEInfoImpl::GetHasDefaultHandler(_retval);
 }
 
 nsresult

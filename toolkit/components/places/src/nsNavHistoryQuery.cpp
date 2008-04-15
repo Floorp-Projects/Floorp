@@ -1195,7 +1195,7 @@ nsNavHistoryQueryOptions::GetResultType(PRUint16* aType)
 NS_IMETHODIMP
 nsNavHistoryQueryOptions::SetResultType(PRUint16 aType)
 {
-  if (aType > RESULTS_AS_TAG_QUERY)
+  if (aType > RESULTS_AS_TAG_CONTENTS)
     return NS_ERROR_INVALID_ARG;
   mResultType = aType;
   return NS_OK;

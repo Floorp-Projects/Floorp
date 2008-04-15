@@ -876,10 +876,13 @@ LoginManager.prototype = {
      *
      * Get the parts of the URL we want for identification.
      */
-    _getPasswordOrigin : function (uriString) {
+    _getPasswordOrigin : function (uriString, allowJS) {
         var realm = "";
         try {
             var uri = this._ioService.newURI(uriString, null, null);
+
+            if (allowJS && uri.scheme == "javascript")
+                return "javascript:"
 
             realm = uri.scheme + "://" + uri.host;
 
@@ -894,7 +897,7 @@ LoginManager.prototype = {
 
         } catch (e) {
             // bug 159484 - disallow url types that don't support a hostPort.
-            // (set null to cause throw in the JS above)
+            // (although we handle "javascript:..." as a special case above.)
             this.log("Couldn't parse origin for " + uriString);
             realm = null;
         }
@@ -909,7 +912,7 @@ LoginManager.prototype = {
         if (uriString == "")
             uriString = form.baseURI; // ala bug 297761
 
-        return this._getPasswordOrigin(uriString);
+        return this._getPasswordOrigin(uriString, true);
     },
 
 

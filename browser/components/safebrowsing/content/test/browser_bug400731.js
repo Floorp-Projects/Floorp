@@ -15,12 +15,12 @@ function test() {
 }
 
 function testMalware() {
-  // Confirm that "Ignore this warning" is hidden
+  // Confirm that "Ignore this warning" is visible - bug 422410
   var el = newBrowser.contentDocument.getElementById("ignoreWarningButton");
-  ok(el, "Ignore warning button should be present (but hidden) for malware");
+  ok(el, "Ignore warning button should be present for malware");
   
   var style = newBrowser.contentWindow.getComputedStyle(el, null);
-  is(style.display, "none", "Ignore Warning button should be display:none for malware");
+  is(style.display, "-moz-box", "Ignore Warning button should be display:-moz-box for malware");
   
   // Now launch the phishing test
   newBrowser.contentWindow.location = 'http://www.mozilla.com/firefox/its-a-trap.html';

@@ -57,7 +57,11 @@ else
 DBGTAG =
 endif
 
+ifdef LIBXUL_SDK # {
+APP_CONTENTS = Contents/Frameworks/XUL.framework
+else # } {
 APP_CONTENTS = Contents/MacOS
+endif # } LIBXUL_SDK
 
 ifeq ($(MOZ_BUILD_APP),camino) # {
 INSTALLER_DIR = camino/installer
@@ -67,14 +71,13 @@ BUILDCONFIG_JAR = Contents/MacOS/chrome/embed.jar
 else # } {
 MOZ_PKG_APPNAME = $(MOZ_APP_NAME)
 APPNAME = $(MOZ_APP_DISPLAYNAME)$(DBGTAG).app
-BUILDCONFIG_JAR = Contents/MacOS/chrome/toolkit.jar
 INSTALLER_DIR = $(MOZ_BUILD_APP)/installer
 ifeq ($(MOZ_BUILD_APP),xulrunner) # {
 INSTALLER_DIR = xulrunner/installer/mac
-BUILDCONFIG_JAR = Versions/Current/chrome/toolkit.jar
 APPNAME = XUL.framework
 APP_CONTENTS = Versions/Current
 endif # } xulrunner
+BUILDCONFIG_JAR = $(APP_CONTENTS)/chrome/toolkit.jar
 endif # } !camino
 
 postflight_all:

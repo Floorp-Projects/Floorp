@@ -4,6 +4,63 @@ netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 
+const kNetBase = 2152398848; // 0x804B0000
+var NS_ERROR_CACHE_KEY_NOT_FOUND = kNetBase + 61;
+var NS_ERROR_CACHE_KEY_WAIT_FOR_VALIDATION = kNetBase + 64;
+
+// Reading the contents of multiple cache entries asynchronously
+function OfflineCacheContents(urls) {
+  this.urls = urls;
+  this.contents = {};
+}
+
+OfflineCacheContents.prototype = {
+QueryInterface: function(iid) {
+    if (!iid.equals(Ci.nsISupports) &&
+        !iid.equals(Ci.nsICacheListener)) {
+      throw Cr.NS_ERROR_NO_INTERFACE;
+    }
+    return this;
+  },
+onCacheEntryAvailable: function(desc, accessGranted, status) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    if (!desc) {
+      this.fetch(this.callback);
+      return;
+    }
+
+    var stream = desc.QueryInterface(Ci.nsICacheEntryDescriptor).openInputStream(0);
+    var sstream = Components.classes["@mozilla.org/scriptableinputstream;1"]
+                 .createInstance(Components.interfaces.nsIScriptableInputStream);
+    sstream.init(stream);
+    this.contents[desc.key] = sstream.read(sstream.available());
+    sstream.close();
+    desc.close();
+    this.fetch(this.callback);
+  },
+
+fetch: function(callback)
+{
+  this.callback = callback;
+  if (this.urls.length == 0) {
+    callback(this.contents);
+    return;
+  }
+
+  var url = this.urls.shift();
+  var self = this;
+
+  var cacheService = Cc["@mozilla.org/network/cache-service;1"]
+                     .getService(Ci.nsICacheService);
+  var cacheSession = cacheService.createSession("HTTP-offline",
+                                                Ci.nsICache.STORE_OFFLINE,
+                                                true);
+  cacheSession.asyncOpenCacheEntry(url, Ci.nsICache.ACCESS_READ, this);
+}
+
+};
+
 var OfflineTest = {
 
 _slaveWindow: null,
@@ -103,6 +160,11 @@ is: function(a, b, name)
   return this._masterWindow.SimpleTest.is(a, b, name);
 },
 
+isnot: function(a, b, name)
+{
+  return this._masterWindow.SimpleTest.isnot(a, b, name);
+},
+
 clear: function()
 {
   // Clear the ownership list
@@ -179,7 +241,7 @@ priv: function(func)
   var self = this;
   return function() {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    func();
+    func(arguments);
   }
 },
 
@@ -191,7 +253,7 @@ checkCache: function(url, expectEntry)
                                                 Ci.nsICache.STORE_OFFLINE,
                                                 true);
   try {
-    var entry = cacheSession.openCacheEntry(url, Ci.nsICache.ACCESS_READ, true);
+    var entry = cacheSession.openCacheEntry(url, Ci.nsICache.ACCESS_READ, false);
     if (expectEntry) {
       this.ok(true, url + " should exist in the offline cache");
     } else {
@@ -199,14 +261,18 @@ checkCache: function(url, expectEntry)
     }
     entry.close();
   } catch (e) {
-    // this constant isn't in Components.results
-    const kNetBase = 2152398848; // 0x804B0000
-    var NS_ERROR_CACHE_KEY_NOT_FOUND = kNetBase + 61
     if (e.result == NS_ERROR_CACHE_KEY_NOT_FOUND) {
       if (expectEntry) {
         this.ok(false, url + " should exist in the offline cache");
       } else {
         this.ok(true, url + " should not exist in the offline cache");
+      }
+    } else if (e.result == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
+      // There was a cache key that we couldn't access yet, that's good enough.
+      if (expectEntry) {
+        this.ok(true, url + " should exist in the offline cache");
+      } else {
+        this.ok(false, url + " should not exist in the offline cache");
       }
     } else {
       throw e;

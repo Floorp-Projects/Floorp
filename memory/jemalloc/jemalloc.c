@@ -127,11 +127,22 @@
 #endif
 
 /*
- * MALLOC_LAZY_FREE enables the use of a per-thread vector of slots that free()
- * can atomically stuff object pointers into.  This can reduce arena lock
- * contention.
+ * MALLOC_VALIDATE causes malloc_usable_size() to perform some pointer
+ * validation.  There are many possible errors that validation does not even
+ * attempt to detect.
  */
-/* #define	MALLOC_LAZY_FREE */
+#define MALLOC_VALIDATE
+
+/* Embed no-op macros that support memory allocation tracking via valgrind. */
+#ifdef MOZ_VALGRIND
+#  define MALLOC_VALGRIND
+#endif
+#ifdef MALLOC_VALGRIND
+#  include <valgrind/valgrind.h>
+#else
+#  define VALGRIND_MALLOCLIKE_BLOCK(addr, sizeB, rzB, is_zeroed)
+#  define VALGRIND_FREELIKE_BLOCK(addr, rzB)
+#endif
 
 /*
  * MALLOC_BALANCE enables monitoring of arena lock contention and dynamically
@@ -186,6 +197,7 @@
 #define	STDERR_FILENO 2
 #define	PATH_MAX MAX_PATH
 #define	vsnprintf _vsnprintf
+#define	alloca _alloca
 #define	assert(f) /* we can't assert in the CRT */
 
 static unsigned long tlsIndex = 0xffffffff;
@@ -410,10 +422,6 @@ static const bool __isthreaded = true;
 #  ifdef MALLOC_BALANCE
 #    undef MALLOC_BALANCE
 #  endif
-   /* MALLOC_LAZY_FREE requires TLS. */
-#  ifdef MALLOC_LAZY_FREE
-#    undef MALLOC_LAZY_FREE
-#  endif
 #endif
 
 /*
@@ -472,19 +480,6 @@ static const bool __isthreaded = true;
  */
 #define	RUN_MAX_SMALL_2POW	15
 #define	RUN_MAX_SMALL		(1U << RUN_MAX_SMALL_2POW)
-
-#ifdef MALLOC_LAZY_FREE
-   /* Default size of each arena's lazy free cache. */
-#  define LAZY_FREE_2POW_DEFAULT 8
-   /*
-    * Number of pseudo-random probes to conduct before considering the cache to
-    * be overly full.  It takes on average n probes to detect fullness of
-    * (n-1)/n.  However, we are effectively doing multiple non-independent
-    * trials (each deallocation is a trial), so the actual average threshold
-    * for clearing the cache is somewhat lower.
-    */
-#  define LAZY_FREE_NPROBES	5
-#endif
 
 /*
  * Hyper-threaded CPUs may need a special instruction inside spin loops in
@@ -863,16 +858,6 @@ struct arena_s {
 	uint32_t		contention;
 #endif
 
-#ifdef MALLOC_LAZY_FREE
-	/*
-	 * Deallocation of small objects can be lazy, in which case free_cache
-	 * stores pointers to those objects that have not yet been deallocated.
-	 * In order to avoid lock contention, slots are chosen randomly.  Empty
-	 * slots contain NULL.
-	 */
-	void			**free_cache;
-#endif
-
 	/*
 	 * bins is used to store rings of free regions of the following sizes,
 	 * assuming a 16-byte quantum, 4kB pagesize, and default MALLOC_OPTIONS.
@@ -1063,9 +1048,6 @@ static bool	opt_dss = true;
 static bool	opt_mmap = true;
 #endif
 static size_t	opt_dirty_max = DIRTY_MAX_DEFAULT;
-#ifdef MALLOC_LAZY_FREE
-static int	opt_lazy_free_2pow = LAZY_FREE_2POW_DEFAULT;
-#endif
 #ifdef MALLOC_BALANCE
 static uint64_t	opt_balance_threshold = BALANCE_THRESHOLD_DEFAULT;
 #endif
@@ -1178,10 +1160,6 @@ static void	*arena_malloc_large(arena_t *arena, size_t size, bool zero);
 static void	*arena_palloc(arena_t *arena, size_t alignment, size_t size,
     size_t alloc_size);
 static size_t	arena_salloc(const void *ptr);
-#ifdef MALLOC_LAZY_FREE
-static void	arena_dalloc_lazy_hard(arena_t *arena, arena_chunk_t *chunk,
-    void *ptr, size_t pageind, arena_chunk_map_t *mapelm);
-#endif
 static void	arena_dalloc_large(arena_t *arena, arena_chunk_t *chunk,
     void *ptr);
 static void	arena_ralloc_large_shrink(arena_t *arena, arena_chunk_t *chunk,
@@ -1472,7 +1450,7 @@ pow2_ceil(size_t x)
 	return (x);
 }
 
-#if (defined(MALLOC_LAZY_FREE) || defined(MALLOC_BALANCE))
+#ifdef MALLOC_BALANCE
 /*
  * Use a simple linear congruential pseudo-random number generator:
  *
@@ -1520,12 +1498,6 @@ prn_##suffix(uint32_t lg_range)						\
  * Define PRNGs, one for each purpose, in order to avoid auto-correlation
  * problems.
  */
-
-#ifdef MALLOC_LAZY_FREE
-/* Define the per-thread PRNG used for lazy deallocation. */
-static __thread uint32_t lazy_free_x;
-PRN_DEFINE(lazy_free, lazy_free_x, 12345, 12347)
-#endif
 
 #ifdef MALLOC_BALANCE
 /* Define the PRNG used for arena assignment. */
@@ -1785,6 +1757,7 @@ base_alloc(size_t size)
 	}
 #endif
 	malloc_mutex_unlock(&base_mtx);
+	VALGRIND_MALLOCLIKE_BLOCK(ret, size, 0, false);
 
 	return (ret);
 }
@@ -1795,6 +1768,12 @@ base_calloc(size_t number, size_t size)
 	void *ret;
 
 	ret = base_alloc(number * size);
+#ifdef MALLOC_VALGRIND
+	if (ret != NULL) {
+		VALGRIND_FREELIKE_BLOCK(ret, 0);
+		VALGRIND_MALLOCLIKE_BLOCK(ret, size, 0, true);
+	}
+#endif
 	memset(ret, 0, number * size);
 
 	return (ret);
@@ -1809,6 +1788,8 @@ base_node_alloc(void)
 	if (base_nodes != NULL) {
 		ret = base_nodes;
 		base_nodes = *(extent_node_t **)ret;
+		VALGRIND_FREELIKE_BLOCK(ret, 0);
+		VALGRIND_MALLOCLIKE_BLOCK(ret, sizeof(extent_node_t), 0, false);
 		malloc_mutex_unlock(&base_mtx);
 	} else {
 		malloc_mutex_unlock(&base_mtx);
@@ -1823,6 +1804,8 @@ base_node_dealloc(extent_node_t *node)
 {
 
 	malloc_mutex_lock(&base_mtx);
+	VALGRIND_FREELIKE_BLOCK(node, 0);
+	VALGRIND_MALLOCLIKE_BLOCK(node, sizeof(extent_node_t *), 0, false);
 	*(extent_node_t **)node = base_nodes;
 	base_nodes = node;
 	malloc_mutex_unlock(&base_mtx);
@@ -2628,20 +2611,6 @@ choose_arena_hard(void)
 
 	assert(__isthreaded);
 
-#ifdef MALLOC_LAZY_FREE
-	/*
-	 * Seed the PRNG used for lazy deallocation.  Since seeding only occurs
-	 * on the first allocation by a thread, it is possible for a thread to
-	 * deallocate before seeding.  This is not a critical issue though,
-	 * since it is extremely unusual for an application to to use threads
-	 * that deallocate but *never* allocate, and because even if seeding
-	 * never occurs for multiple threads, they will tend to drift apart
-	 * unless some aspect of the application forces deallocation
-	 * synchronization.
-	 */
-	SPRN(lazy_free, (uint32_t)(uintptr_t)(_pthread_self()));
-#endif
-
 #ifdef MALLOC_BALANCE
 	/*
 	 * Seed the PRNG used for arena load balancing.  We can get away with
@@ -3017,6 +2986,8 @@ arena_chunk_alloc(arena_t *arena)
 		chunk = (arena_chunk_t *)chunk_alloc(chunksize, true);
 		if (chunk == NULL)
 			return (NULL);
+		VALGRIND_MALLOCLIKE_BLOCK(chunk, (arena_chunk_header_npages <<
+		    pagesize_2pow), 0, false);
 #ifdef MALLOC_STATS
 		arena->stats.mapped += chunksize;
 #endif
@@ -3089,6 +3060,7 @@ arena_chunk_dealloc(arena_t *arena, arena_chunk_t *chunk)
 		RB_REMOVE(arena_chunk_tree_s, &chunk->arena->chunks,
 		    arena->spare);
 		arena->ndirty -= arena->spare->ndirty;
+		VALGRIND_FREELIKE_BLOCK(arena->spare, 0);
 		chunk_dealloc((void *)arena->spare, chunksize);
 #ifdef MALLOC_STATS
 		arena->stats.mapped -= chunksize;
@@ -3402,6 +3374,9 @@ arena_bin_nonfull_run_get(arena_t *arena, arena_bin_t *bin)
 	if (run == NULL)
 		return (NULL);
 
+	VALGRIND_MALLOCLIKE_BLOCK(run, sizeof(arena_run_t) + (sizeof(unsigned) *
+	    bin->regs_mask_nelms - 1), 0, false);
+
 	/* Initialize run internals. */
 	run->bin = bin;
 
@@ -3656,6 +3631,7 @@ arena_malloc_small(arena_t *arena, size_t size, bool zero)
 #endif
 	malloc_spin_unlock(&arena->lock);
 
+	VALGRIND_MALLOCLIKE_BLOCK(ret, size, 0, zero);
 	if (zero == false) {
 #ifdef MALLOC_FILL
 		if (opt_junk)
@@ -3692,6 +3668,7 @@ arena_malloc_large(arena_t *arena, size_t size, bool zero)
 #endif
 	malloc_spin_unlock(&arena->lock);
 
+	VALGRIND_MALLOCLIKE_BLOCK(ret, size, 0, zero);
 	if (zero == false) {
 #ifdef MALLOC_FILL
 		if (opt_junk)
@@ -3813,6 +3790,7 @@ arena_palloc(arena_t *arena, size_t alignment, size_t size, size_t alloc_size)
 #endif
 	malloc_spin_unlock(&arena->lock);
 
+	VALGRIND_MALLOCLIKE_BLOCK(ret, size, 0, false);
 #ifdef MALLOC_FILL
 	if (opt_junk)
 		memset(ret, 0xa5, size);
@@ -3959,6 +3937,95 @@ arena_salloc(const void *ptr)
 	return (ret);
 }
 
+#if (defined(MALLOC_VALIDATE) || defined(MOZ_MEMORY_DARWIN))
+/*
+ * Validate ptr before assuming that it points to an allocation.  Currently,
+ * the following validation is performed:
+ *
+ * + Check that ptr is not NULL.
+ *
+ * + Check that ptr lies within a mapped chunk.
+ */
+static inline size_t
+isalloc_validate(const void *ptr)
+{
+	arena_chunk_t *chunk;
+
+	if (ptr == NULL)
+		return (0);
+
+	chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(ptr);
+	if (chunk != ptr) {
+		arena_t *arena;
+		unsigned i;
+		arena_t **arenas_snapshot = alloca(narenas * sizeof(arena_t*));
+
+		if (narenas == 1) {
+			/*
+			 * Don't bother with the more expensive snapshotting
+			 * algorithm here, since there is only one arena, and
+			 * there are no race conditions that allow arenas[0] to
+			 * be stale on this processor under any conditions that
+			 * even remotely resemble normal program behavior.
+			 */
+			arenas_snapshot[0] = arenas[0];
+		} else {
+			/*
+			 * Make a copy of the arenas vector while holding
+			 * arenas_lock in order to assure that all elements are
+			 * up to date in this processor's cache.  Do this
+			 * outside the following loop in order to reduce lock
+			 * acquisitions.
+			 */
+			malloc_spin_lock(&arenas_lock);
+			memcpy(&arenas_snapshot, arenas, sizeof(arena_t *) *
+			    narenas);
+			malloc_spin_unlock(&arenas_lock);
+		}
+
+		/* Region. */
+		for (i = 0; i < narenas; i++) {
+			arena = arenas_snapshot[i];
+
+			if (arena != NULL) {
+				/* Make sure ptr is within a chunk. */
+				malloc_spin_lock(&arena->lock);
+				if (RB_FIND(arena_chunk_tree_s, &arena->chunks,
+				    chunk) == chunk) {
+					malloc_spin_unlock(&arena->lock);
+					/*
+					 * We only lock in arena_salloc() for
+					 * large objects, so don't worry about
+					 * the overhead of possibly locking
+					 * twice.
+					 */
+					assert(chunk->arena->magic ==
+					    ARENA_MAGIC);
+					return (arena_salloc(ptr));
+				}
+				malloc_spin_unlock(&arena->lock);
+			}
+		}
+		return (0);
+	} else {
+		size_t ret;
+		extent_node_t *node;
+		extent_node_t key;
+
+		/* Chunk. */
+		key.addr = (void *)chunk;
+		malloc_mutex_lock(&huge_mtx);
+		node = RB_FIND(extent_tree_ad_s, &huge, &key);
+		if (node != NULL)
+			ret = node->size;
+		else
+			ret = 0;
+		malloc_mutex_unlock(&huge_mtx);
+		return (ret);
+	}
+}
+#endif
+
 static inline size_t
 isalloc(const void *ptr)
 {
@@ -4031,6 +4098,7 @@ arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 #ifdef MALLOC_DEBUG
 		run->magic = 0;
 #endif
+		VALGRIND_FREELIKE_BLOCK(run, 0);
 		arena_run_dalloc(arena, run, true);
 #ifdef MALLOC_STATS
 		bin->stats.curruns--;
@@ -4058,90 +4126,6 @@ arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 	arena->stats.ndalloc_small++;
 #endif
 }
-
-#ifdef MALLOC_LAZY_FREE
-static inline void
-arena_dalloc_lazy(arena_t *arena, arena_chunk_t *chunk, void *ptr,
-    size_t pageind, arena_chunk_map_t *mapelm)
-{
-	void **free_cache = arena->free_cache;
-	unsigned i, slot;
-
-	if (__isthreaded == false || opt_lazy_free_2pow < 0) {
-		malloc_spin_lock(&arena->lock);
-		arena_dalloc_small(arena, chunk, ptr, pageind, *mapelm);
-		malloc_spin_unlock(&arena->lock);
-		return;
-	}
-
-	for (i = 0; i < LAZY_FREE_NPROBES; i++) {
-		slot = PRN(lazy_free, opt_lazy_free_2pow);
-		if (atomic_cmpset_ptr((uintptr_t *)&free_cache[slot],
-		    (uintptr_t)NULL, (uintptr_t)ptr)) {
-			return;
-		}
-	}
-
-	arena_dalloc_lazy_hard(arena, chunk, ptr, pageind, mapelm);
-}
-
-static void
-arena_dalloc_lazy_hard(arena_t *arena, arena_chunk_t *chunk, void *ptr,
-    size_t pageind, arena_chunk_map_t *mapelm)
-{
-	void **free_cache = arena->free_cache;
-	unsigned i, slot;
-
-	malloc_spin_lock(&arena->lock);
-	arena_dalloc_small(arena, chunk, ptr, pageind, *mapelm);
-
-	/*
-	 * Check whether another thread already cleared the cache.  It is
-	 * possible that another thread cleared the cache *and* this slot was
-	 * already refilled, which could result in a mostly fruitless cache
-	 * sweep, but such a sequence of events causes no correctness issues.
-	 */
-	if ((ptr = (void *)atomic_readandclear_ptr(
-	    (uintptr_t *)&free_cache[slot]))
-	    != NULL) {
-		unsigned lazy_free_mask;
-		
-		/*
-		 * Clear the cache, since we failed to find a slot.  It is
-		 * possible that other threads will continue to insert objects
-		 * into the cache while this one sweeps, but that is okay,
-		 * since on average the cache is still swept with the same
-		 * frequency.
-		 */
-
-		/* Handle pointer at current slot. */
-		chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(ptr);
-		pageind = (((uintptr_t)ptr - (uintptr_t)chunk) >>
-		    pagesize_2pow);
-		mapelm = &chunk->map[pageind];
-		arena_dalloc_small(arena, chunk, ptr, pageind, *mapelm);
-
-		/* Sweep remainder of slots. */
-		lazy_free_mask = (1U << opt_lazy_free_2pow) - 1;
-		for (i = (slot + 1) & lazy_free_mask;
-		     i != slot;
-		     i = (i + 1) & lazy_free_mask) {
-			ptr = (void *)atomic_readandclear_ptr(
-			    (uintptr_t *)&free_cache[i]);
-			if (ptr != NULL) {
-				chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(ptr);
-				pageind = (((uintptr_t)ptr - (uintptr_t)chunk)
-				    >> pagesize_2pow);
-				mapelm = &chunk->map[pageind];
-				arena_dalloc_small(arena, chunk, ptr, pageind,
-				    *mapelm);
-			}
-		}
-	}
-
-	malloc_spin_unlock(&arena->lock);
-}
-#endif
 
 static void
 arena_dalloc_large(arena_t *arena, arena_chunk_t *chunk, void *ptr)
@@ -4197,17 +4181,14 @@ arena_dalloc(arena_t *arena, arena_chunk_t *chunk, void *ptr)
 	mapelm = &chunk->map[pageind];
 	if ((*mapelm & CHUNK_MAP_LARGE) == 0) {
 		/* Small allocation. */
-#ifdef MALLOC_LAZY_FREE
-		arena_dalloc_lazy(arena, chunk, ptr, pageind, mapelm);
-#else
 		malloc_spin_lock(&arena->lock);
 		arena_dalloc_small(arena, chunk, ptr, pageind, *mapelm);
 		malloc_spin_unlock(&arena->lock);
-#endif
 	} else {
 		assert((*mapelm & CHUNK_MAP_POS_MASK) == 0);
 		arena_dalloc_large(arena, chunk, ptr);
 	}
+	VALGRIND_FREELIKE_BLOCK(ptr, 0);
 }
 
 static inline void
@@ -4424,10 +4405,28 @@ iralloc(void *ptr, size_t size)
 
 	oldsize = isalloc(ptr);
 
+#ifndef MALLOC_VALGRIND
 	if (size <= arena_maxclass)
 		return (arena_ralloc(ptr, size, oldsize));
 	else
 		return (huge_ralloc(ptr, size, oldsize));
+#else
+	/*
+	 * Valgrind does not provide a public interface for modifying an
+	 * existing allocation, so use malloc/memcpy/free instead.
+	 */
+	{
+		void *ret = imalloc(size);
+		if (ret != NULL) {
+			if (oldsize < size)
+			    memcpy(ret, ptr, oldsize);
+			else
+			    memcpy(ret, ptr, size);
+			idalloc(ptr);
+		}
+		return (ret);
+	}
+#endif
 }
 
 static bool
@@ -4456,15 +4455,6 @@ arena_new(arena_t *arena)
 
 #ifdef MALLOC_BALANCE
 	arena->contention = 0;
-#endif
-#ifdef MALLOC_LAZY_FREE
-	if (opt_lazy_free_2pow >= 0) {
-		arena->free_cache = (void **) base_calloc(1, sizeof(void *)
-		    * (1U << opt_lazy_free_2pow));
-		if (arena->free_cache == NULL)
-			return (true);
-	} else
-		arena->free_cache = NULL;
 #endif
 
 	/* Initialize bins. */
@@ -4615,6 +4605,12 @@ huge_malloc(size_t size, bool zero)
 		pages_decommit((void *)((uintptr_t)ret + psize), csize - psize);
 #endif
 
+#ifdef MALLOC_DECOMMIT
+	VALGRIND_MALLOCLIKE_BLOCK(ret, psize, 0, zero);
+#else
+	VALGRIND_MALLOCLIKE_BLOCK(ret, csize, 0, zero);
+#endif
+
 #ifdef MALLOC_FILL
 	if (zero == false) {
 		if (opt_junk)
@@ -4754,6 +4750,12 @@ huge_palloc(size_t alignment, size_t size)
 	}
 #endif
 
+#ifdef MALLOC_DECOMMIT
+	VALGRIND_MALLOCLIKE_BLOCK(ret, psize, 0, false);
+#else
+	VALGRIND_MALLOCLIKE_BLOCK(ret, chunk_size, 0, false);
+#endif
+
 #ifdef MALLOC_FILL
 	if (opt_junk)
 #  ifdef MALLOC_DECOMMIT
@@ -4890,6 +4892,7 @@ huge_dalloc(void *ptr)
 #else
 	chunk_dealloc(node->addr, node->size);
 #endif
+	VALGRIND_FREELIKE_BLOCK(node->addr, 0);
 
 	base_node_dealloc(node);
 }
@@ -5085,13 +5088,6 @@ malloc_print_stats(void)
 
 		_malloc_message("CPUs: ", umax2s(ncpus, s), "\n", "");
 		_malloc_message("Max arenas: ", umax2s(narenas, s), "\n", "");
-#ifdef MALLOC_LAZY_FREE
-		if (opt_lazy_free_2pow >= 0) {
-			_malloc_message("Lazy free slots: ",
-			    umax2s(1U << opt_lazy_free_2pow, s), "\n", "");
-		} else
-			_malloc_message("Lazy free slots: 0\n", "", "", "");
-#endif
 #ifdef MALLOC_BALANCE
 		_malloc_message("Arena balance threshold: ",
 		    umax2s(opt_balance_threshold, s), "\n", "");
@@ -5281,11 +5277,6 @@ malloc_init_hard(void)
 	pagesize_mask = result - 1;
 	pagesize_2pow = ffs((int)result) - 1;
 
-#ifdef MALLOC_LAZY_FREE
-		if (ncpus == 1)
-			opt_lazy_free_2pow = -1;
-#endif
-
 	for (i = 0; i < 3; i++) {
 		unsigned j;
 
@@ -5426,18 +5417,6 @@ MALLOC_OUT:
 					if (opt_chunk_2pow + 1 <
 					    (sizeof(size_t) << 3))
 						opt_chunk_2pow++;
-					break;
-				case 'l':
-#ifdef MALLOC_LAZY_FREE
-					if (opt_lazy_free_2pow >= 0)
-						opt_lazy_free_2pow--;
-#endif
-					break;
-				case 'L':
-#ifdef MALLOC_LAZY_FREE
-					if (ncpus > 1)
-						opt_lazy_free_2pow++;
-#endif
 					break;
 				case 'm':
 #ifdef MALLOC_DSS
@@ -5585,14 +5564,6 @@ MALLOC_OUT:
 	}
 	arena_maxclass = chunksize - (arena_chunk_header_npages <<
 	    pagesize_2pow);
-#ifdef MALLOC_LAZY_FREE
-	/*
-	 * Make sure that allocating the free_cache does not exceed the limits
-	 * of what base_alloc() can handle.
-	 */
-	while ((sizeof(void *) << opt_lazy_free_2pow) > chunksize)
-		opt_lazy_free_2pow--;
-#endif
 
 	UTRACE(0, 0, 0);
 
@@ -5747,9 +5718,6 @@ MALLOC_OUT:
 	 * Seed here for the initial thread, since choose_arena_hard() is only
 	 * called for other threads.  The seed values don't really matter.
 	 */
-#ifdef MALLOC_LAZY_FREE
-	SPRN(lazy_free, 42);
-#endif
 #ifdef MALLOC_BALANCE
 	SPRN(balance, 42);
 #endif
@@ -6086,9 +6054,13 @@ malloc_usable_size(const void *ptr)
 #endif
 {
 
+#ifdef MALLOC_VALIDATE
+	return (isalloc_validate(ptr));
+#else
 	assert(ptr != NULL);
 
 	return (isalloc(ptr));
+#endif
 }
 
 #ifdef MOZ_MEMORY_WINDOWS
@@ -6207,8 +6179,6 @@ static struct malloc_introspection_t zone_introspect;
 static size_t
 zone_size(malloc_zone_t *zone, void *ptr)
 {
-	size_t ret = 0;
-	arena_chunk_t *chunk;
 
 	/*
 	 * There appear to be places within Darwin (such as setenv(3)) that
@@ -6219,62 +6189,7 @@ zone_size(malloc_zone_t *zone, void *ptr)
 	 * not work in practice, we must check all pointers to assure that they
 	 * reside within a mapped chunk before determining size.
 	 */
-
-	chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(ptr);
-	if (chunk != ptr) {
-		arena_t *arena;
-		unsigned i;
-		arena_t *arenas_snapshot[narenas];
-
-		/*
-		 * Make a copy of the arenas vector while holding arenas_lock in
-		 * order to assure that all elements are up to date in this
-		 * processor's cache.  Do this outside the following loop in
-		 * order to reduce lock acquisitions.
-		 */
-		malloc_spin_lock(&arenas_lock);
-		memcpy(&arenas_snapshot, arenas, sizeof(arena_t *) * narenas);
-		malloc_spin_unlock(&arenas_lock);
-
-		/* Region. */
-		for (i = 0; i < narenas; i++) {
-			arena = arenas_snapshot[i];
-
-			if (arena != NULL) {
-				bool own;
-
-				/* Make sure ptr is within a chunk. */
-				malloc_spin_lock(&arena->lock);
-				if (RB_FIND(arena_chunk_tree_s, &arena->chunks,
-				    chunk) == chunk)
-					own = true;
-				else
-					own = false;
-				malloc_spin_unlock(&arena->lock);
-
-				if (own) {
-					ret = arena_salloc(ptr);
-					goto RETURN;
-				}
-			}
-		}
-	} else {
-		extent_node_t *node;
-		extent_node_t key;
-
-		/* Chunk. */
-		key.addr = (void *)chunk;
-		malloc_mutex_lock(&huge_mtx);
-		node = RB_FIND(extent_tree_ad_s, &huge, &key);
-		if (node != NULL)
-			ret = node->size;
-		else
-			ret = 0;
-		malloc_mutex_unlock(&huge_mtx);
-	}
-
-RETURN:
-	return (ret);
+	return (isalloc_validate(ptr));
 }
 
 static void *

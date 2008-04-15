@@ -460,12 +460,12 @@ sub Push {
     my $stagingUser = $config->Get(var => 'stagingUser');
     my $stagingServer = $config->Get(var => 'stagingServer');
 
-    # upload public and private staging areas
+    # upload private staging area
     my $stageDir = $this->GetStageDir();
 
     $this->Shell(
       cmd => 'rsync',
-      cmdArgs => ['-av', '-e', 'ssh', $stageDir,
+      cmdArgs => ['-av', '-e', 'ssh', $stageDir . '/',
                   $stagingUser . '@' .  $stagingServer . ':' . 
                   $stageDir],
       logFile => catfile($logDir, 'upload_stage_private.log'),

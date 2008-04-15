@@ -72,7 +72,7 @@ nsSVGPathListener::AttributeChanged(nsIDocument *aDocument,
                                     PRInt32 aModType,
                                     PRUint32 aStateMask)
 {
-  mTextPathFrame->UpdateGraphic();
+  mTextPathFrame->NotifyGlyphMetricsChange();
 }
 
 //----------------------------------------------------------------------
@@ -237,11 +237,11 @@ nsSVGTextPathFrame::AttributeChanged(PRInt32         aNameSpaceID,
 {
   if (aNameSpaceID == kNameSpaceID_None &&
       aAttribute == nsGkAtoms::startOffset) {
-    UpdateGraphic();
+    NotifyGlyphMetricsChange();
   } else if (aNameSpaceID == kNameSpaceID_XLink &&
              aAttribute == nsGkAtoms::href) {
     mPathListener = nsnull;
-    UpdateGraphic();
+    NotifyGlyphMetricsChange();
   }
 
   return NS_OK;

@@ -22,6 +22,7 @@
  *   Darin Fisher <darin@meer.net>
  *   Benjamin Smedberg <benjamin@smedbergs.us>
  *   Ben Turner <mozilla@songbirdnest.com>
+ *   Prasad Sunkari <prasad@medhas.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -270,7 +271,7 @@ public:
   NS_HIDDEN_(PRBool) LowerCaseEqualsLiteral(const char *aASCIIString) const;
 
   /**
-   * Find the first occurence of aStr in this string.
+   * Find the first occurrence of aStr in this string.
    *
    * @return the offset of aStr, or -1 if not found
    */
@@ -279,7 +280,7 @@ public:
   { return Find(aStr, 0, c); }
 
   /**
-   * Find the first occurence of aStr in this string, beginning at aOffset.
+   * Find the first occurrence of aStr in this string, beginning at aOffset.
    *
    * @return the offset of aStr, or -1 if not found
    */
@@ -295,6 +296,46 @@ public:
   { return Find(aStr, 0, aIgnoreCase); }
 
   NS_HIDDEN_(PRInt32) Find(const char *aStr, PRUint32 aOffset, PRBool aIgnoreCase = PR_FALSE) const;
+
+  /**
+   * Find the last occurrence of aStr in this string.
+   *
+   * @return The offset of aStr from the beginning of the string,
+   *         or -1 if not found.
+   */
+  NS_HIDDEN_(PRInt32) RFind(const self_type& aStr,
+                            ComparatorFunc c = DefaultComparator) const
+  { return RFind(aStr, -1, c); }
+
+  /**
+   * Find the last occurrence of aStr in this string, beginning at aOffset.
+   *
+   * @param aOffset the offset from the beginning of the string to begin
+   *        searching. If aOffset < 0, search from end of this string.
+   * @return The offset of aStr from the beginning of the string,
+   *         or -1 if not found.
+   */
+  NS_HIDDEN_(PRInt32) RFind(const self_type& aStr, PRInt32 aOffset,
+                            ComparatorFunc c = DefaultComparator) const;
+
+  /**
+   * Find the last occurrence of an ASCII string within this string.
+   *
+   * @return The offset of aStr from the beginning of the string,
+   *         or -1 if not found.
+   */
+  NS_HIDDEN_(PRInt32) RFind(const char *aStr, PRBool aIgnoreCase = PR_FALSE) const
+  { return RFind(aStr, -1, aIgnoreCase); }
+
+  /**
+   * Find the last occurrence of an ASCII string beginning at aOffset.
+   *
+   * @param aOffset the offset from the beginning of the string to begin
+   *        searching. If aOffset < 0, search from end of this string.
+   * @return The offset of aStr from the beginning of the string,
+   *         or -1 if not found.
+   */
+  NS_HIDDEN_(PRInt32) RFind(const char *aStr, PRInt32 aOffset, PRBool aIgnoreCase) const;
 
   /**
    * Search for the offset of the first occurrence of a character in a
@@ -554,7 +595,7 @@ public:
   }
 
   /**
-   * Find the first occurence of aStr in this string.
+   * Find the first occurrence of aStr in this string.
    *
    * @return the offset of aStr, or -1 if not found
    */
@@ -563,7 +604,7 @@ public:
   { return Find(aStr, 0, c); }
 
   /**
-   * Find the first occurence of aStr in this string, beginning at aOffset.
+   * Find the first occurrence of aStr in this string, beginning at aOffset.
    *
    * @return the offset of aStr, or -1 if not found
    */
@@ -571,7 +612,7 @@ public:
                            ComparatorFunc c = DefaultComparator) const;
 
   /**
-   * Find the first occurence of aStr in this string.
+   * Find the first occurrence of aStr in this string.
    *
    * @return the offset of aStr, or -1 if not found
    */
@@ -580,6 +621,47 @@ public:
 
   NS_HIDDEN_(PRInt32) Find(const char_type *aStr, PRUint32 aLen,
                            ComparatorFunc c = DefaultComparator) const;
+
+  /**
+   * Find the last occurrence of aStr in this string.
+   *
+   * @return The offset of the character from the beginning of the string,
+   *         or -1 if not found.
+   */
+  NS_HIDDEN_(PRInt32) RFind(const self_type& aStr,
+                            ComparatorFunc c = DefaultComparator) const
+  { return RFind(aStr, -1, c); }
+
+  /**
+   * Find the last occurrence of aStr in this string, beginning at aOffset.
+   *
+   * @param aOffset the offset from the beginning of the string to begin
+   *        searching. If aOffset < 0, search from end of this string.
+   * @return The offset of aStr from the beginning of the string,
+   *         or -1 if not found.
+   */
+  NS_HIDDEN_(PRInt32) RFind(const self_type& aStr, PRInt32 aOffset,
+                            ComparatorFunc c = DefaultComparator) const;
+
+  /**
+   * Find the last occurrence of aStr in this string.
+   *
+   * @return The offset of aStr from the beginning of the string,
+   *         or -1 if not found.
+   */
+  NS_HIDDEN_(PRInt32) RFind(const char_type *aStr,
+                            ComparatorFunc c = DefaultComparator) const;
+
+  /**
+   * Find the last occurrence of an ASCII string in this string, 
+   * beginning at aOffset.
+   *
+   * @param aLen is the length of aStr
+   * @return The offset of aStr from the beginning of the string,
+   *         or -1 if not found.
+   */
+  NS_HIDDEN_(PRInt32) RFind(const char_type *aStr, PRInt32 aLen,
+                            ComparatorFunc c = DefaultComparator) const;
 
   /**
    * Search for the offset of the first occurrence of a character in a

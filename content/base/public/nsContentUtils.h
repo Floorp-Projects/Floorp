@@ -43,6 +43,7 @@
 #define nsContentUtils_h___
 
 #include "jspubtd.h"
+#include "jsnum.h"
 #include "nsAString.h"
 #include "nsIStatefulFrame.h"
 #include "nsIPref.h"
@@ -56,6 +57,7 @@
 #include "nsIScriptRuntime.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMEvent.h"
+#include "nsTArray.h"
 
 struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
 
@@ -121,6 +123,15 @@ enum EventNameType {
 struct EventNameMapping {
   PRUint32  mId;
   PRInt32 mType;
+};
+
+struct nsShortcutCandidate {
+  nsShortcutCandidate(PRUint32 aCharCode, PRBool aIgnoreShift) :
+    mCharCode(aCharCode), mIgnoreShift(aIgnoreShift)
+  {
+  }
+  PRUint32 mCharCode;
+  PRBool   mIgnoreShift;
 };
 
 class nsContentUtils
@@ -1158,6 +1169,26 @@ public:
                                          PRBool aGetCharCode);
 
   /**
+   * Get the candidates for accelkeys for aDOMEvent.
+   *
+   * @param aDOMEvent [in] the input event for accelkey handling.
+   * @param aCandidates [out] the candidate shortcut key combination list.
+   *                          the first item is most preferred.
+   */
+  static void GetAccelKeyCandidates(nsIDOMEvent* aDOMEvent,
+                                    nsTArray<nsShortcutCandidate>& aCandidates);
+
+  /**
+   * Get the candidates for accesskeys for aDOMEvent.
+   *
+   * @param aNativeKeyEvent [in] the input event for accesskey handling.
+   * @param aCandidates [out] the candidate access key list.
+   *                          the first item is most preferred.
+   */
+  static void GetAccessKeyCandidates(nsKeyEvent* aNativeKeyEvent,
+                                     nsTArray<PRUint32>& aCandidates);
+
+  /**
    * Hide any XUL popups associated with aDocument, including any documents
    * displayed in child frames.
    */
@@ -1220,6 +1251,29 @@ public:
    */
   static PRBool IsSafeToRunScript() {
     return sScriptBlockerCount == 0;
+  }
+
+  /**
+   * Get/Set the current number of removable updates. Currently only
+   * UPDATE_CONTENT_MODEL updates are removable, and only when firing mutation
+   * events. These functions should only be called by mozAutoDocUpdateRemover.
+   * The count is also adjusted by the normal calls to BeginUpdate/EndUpdate.
+   */
+  static void AddRemovableScriptBlocker()
+  {
+    AddScriptBlocker();
+    ++sRemovableScriptBlockerCount;
+  }
+  static void RemoveRemovableScriptBlocker()
+  {
+    NS_ASSERTION(sRemovableScriptBlockerCount != 0,
+                "Number of removable blockers should never go below zero");
+    --sRemovableScriptBlockerCount;
+    RemoveScriptBlocker();
+  }
+  static PRUint32 GetRemovableScriptBlockerLevel()
+  {
+    return sRemovableScriptBlockerCount;
   }
 
 private:
@@ -1295,6 +1349,7 @@ private:
 
   static PRBool sInitialized;
   static PRUint32 sScriptBlockerCount;
+  static PRUint32 sRemovableScriptBlockerCount;
   static nsCOMArray<nsIRunnable>* sBlockedScriptRunners;
   static PRUint32 sRunnersCountAtFirstBlocker;
 };
@@ -1376,6 +1431,32 @@ public:
   }
 };
 
+class mozAutoRemovableBlockerRemover
+{
+public:
+  mozAutoRemovableBlockerRemover()
+  {
+    mNestingLevel = nsContentUtils::GetRemovableScriptBlockerLevel();
+    for (PRUint32 i = 0; i < mNestingLevel; ++i) {
+      nsContentUtils::RemoveRemovableScriptBlocker();
+    }
+
+    NS_ASSERTION(nsContentUtils::IsSafeToRunScript(), "killing mutation events");
+  }
+
+  ~mozAutoRemovableBlockerRemover()
+  {
+    NS_ASSERTION(nsContentUtils::GetRemovableScriptBlockerLevel() == 0,
+                 "Should have had none");
+    for (PRUint32 i = 0; i < mNestingLevel; ++i) {
+      nsContentUtils::AddRemovableScriptBlocker();
+    }
+  }
+
+private:
+  PRUint32 mNestingLevel;
+};
+
 #define NS_AUTO_GCROOT_PASTE2(tok,line) tok##line
 #define NS_AUTO_GCROOT_PASTE(tok,line) \
   NS_AUTO_GCROOT_PASTE2(tok,line)
@@ -1394,5 +1475,58 @@ public:
       return NS_ERROR_OUT_OF_MEMORY;                                          \
     }                                                                         \
   } else
+
+/*
+ * Check whether a floating point number is finite (not +/-infinity and not a
+ * NaN value). We wrap JSDOUBLE_IS_FINITE in a function because it expects to
+ * take the address of its argument, and because the argument must be of type
+ * jsdouble to have the right size and layout of bits.
+ *
+ * Note: we could try to exploit the fact that |infinity - infinity == NaN|
+ * instead of using JSDOUBLE_IS_FINITE. This would produce more compact code
+ * and perform better by avoiding type conversions and bit twiddling.
+ * Unfortunately, some architectures don't guarantee that |f == f| evaluates
+ * to true (where f is any *finite* floating point number). See
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=369418#c63 . To play it safe
+ * for gecko 1.9, we just reuse JSDOUBLE_IS_FINITE.
+ */
+inline NS_HIDDEN_(PRBool) NS_FloatIsFinite(jsdouble f) {
+  return JSDOUBLE_IS_FINITE(f);
+}
+
+/*
+ * In the following helper macros we exploit the fact that the result of a
+ * series of additions will not be finite if any one of the operands in the
+ * series is not finite.
+ */
+#define NS_ENSURE_FINITE(f, rv)                                               \
+  if (!NS_FloatIsFinite(f)) {                                                 \
+    return (rv);                                                              \
+  }
+
+#define NS_ENSURE_FINITE2(f1, f2, rv)                                         \
+  if (!NS_FloatIsFinite((f1)+(f2))) {                                         \
+    return (rv);                                                              \
+  }
+
+#define NS_ENSURE_FINITE3(f1, f2, f3, rv)                                     \
+  if (!NS_FloatIsFinite((f1)+(f2)+(f3))) {                                    \
+    return (rv);                                                              \
+  }
+
+#define NS_ENSURE_FINITE4(f1, f2, f3, f4, rv)                                 \
+  if (!NS_FloatIsFinite((f1)+(f2)+(f3)+(f4))) {                               \
+    return (rv);                                                              \
+  }
+
+#define NS_ENSURE_FINITE5(f1, f2, f3, f4, f5, rv)                             \
+  if (!NS_FloatIsFinite((f1)+(f2)+(f3)+(f4)+(f5))) {                          \
+    return (rv);                                                              \
+  }
+
+#define NS_ENSURE_FINITE6(f1, f2, f3, f4, f5, f6, rv)                         \
+  if (!NS_FloatIsFinite((f1)+(f2)+(f3)+(f4)+(f5)+(f6))) {                     \
+    return (rv);                                                              \
+  }
 
 #endif /* nsContentUtils_h___ */

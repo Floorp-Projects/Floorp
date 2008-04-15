@@ -7489,6 +7489,13 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
 }
 #endif // MOZ_SVG
 
+// If page-break-before is set, this function constructs a page break frame,
+// EXCEPT for on these types of elements:
+//  * row groups, rows, cells (these are handled internally by tables)
+//  * fixed- and absolutely-positioned elements (currently, our positioning
+//    code doesn't expect positioned frames to have nsPageBreakFrame siblings)
+//
+// Returns true iff we should construct a page break frame after this element.
 PRBool
 nsCSSFrameConstructor::PageBreakBefore(nsFrameConstructorState& aState,
                                        nsIContent*              aContent,
@@ -7498,9 +7505,9 @@ nsCSSFrameConstructor::PageBreakBefore(nsFrameConstructorState& aState,
 {
   const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
 
-  // See if page-break-before is set for all elements except row groups, rows, cells 
-  // (these are handled internally by tables) and construct a page break frame if so.
   if (NS_STYLE_DISPLAY_NONE != display->mDisplay &&
+      NS_STYLE_POSITION_FIXED    != display->mPosition &&
+      NS_STYLE_POSITION_ABSOLUTE != display->mPosition &&
       (NS_STYLE_DISPLAY_TABLE == display->mDisplay ||
        !IsTableRelated(display->mDisplay, PR_TRUE))) { 
     if (display->mBreakBefore) {

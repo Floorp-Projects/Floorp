@@ -88,6 +88,8 @@
 #include "nsIMultiPartChannel.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIStorageStream.h"
+#include "nsIPromptFactory.h"
+#include "nsIWindowWatcher.h"
 
 #define LOAD_STR "load"
 #define ERROR_STR "error"
@@ -447,6 +449,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXMLHttpRequest)
   NS_INTERFACE_MAP_ENTRY(nsIXMLHttpRequest)
   NS_INTERFACE_MAP_ENTRY(nsIJSXMLHttpRequest)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLoadListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
@@ -1266,23 +1269,13 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
       return NS_ERROR_FAILURE;
     }
 
-    rv = secMan->CheckConnect(cx, targetURI, "XMLHttpRequest", "open");
-    if (NS_FAILED(rv))
-    {
-      // Security check failed.
-      return NS_OK;
-    }
-
     // Find out if UniversalBrowserRead privileges are enabled
-    // we will need this in case of a redirect
-    PRBool crossSiteAccessEnabled;
-    rv = secMan->IsCapabilityEnabled("UniversalBrowserRead",
-                                     &crossSiteAccessEnabled);
-    if (NS_FAILED(rv)) return rv;
-    if (crossSiteAccessEnabled) {
+    if (nsContentUtils::IsCallerTrustedForRead()) {
       mState |= XML_HTTP_REQUEST_XSITEENABLED;
     } else {
       mState &= ~XML_HTTP_REQUEST_XSITEENABLED;
+      rv = mPrincipal->CheckMayLoad(targetURI, PR_TRUE);
+      NS_ENSURE_SUCCESS(rv, NS_OK);
     }
 
     if (argc > 2) {
@@ -2334,6 +2327,8 @@ nsXMLHttpRequest::OnStatus(nsIRequest *aRequest, nsISupports *aContext, nsresult
 NS_IMETHODIMP
 nsXMLHttpRequest::GetInterface(const nsIID & aIID, void **aResult)
 {
+  nsresult rv;
+
   // Make sure to return ourselves for the channel event sink interface and
   // progress event sink interface, no matter what.  We can forward these to
   // mNotificationCallbacks if it wants to get notifications for them.  But we
@@ -2353,7 +2348,7 @@ nsXMLHttpRequest::GetInterface(const nsIID & aIID, void **aResult)
   // Now give mNotificationCallbacks (if non-null) a chance to return the
   // desired interface.
   if (mNotificationCallbacks) {
-    nsresult rv = mNotificationCallbacks->GetInterface(aIID, aResult);
+    rv = mNotificationCallbacks->GetInterface(aIID, aResult);
     if (NS_SUCCEEDED(rv)) {
       NS_ASSERTION(*aResult, "Lying nsIInterfaceRequestor implementation!");
       return rv;
@@ -2361,7 +2356,6 @@ nsXMLHttpRequest::GetInterface(const nsIID & aIID, void **aResult)
   }
 
   if (mState & XML_HTTP_REQUEST_BACKGROUND) {
-    nsresult rv;
     nsCOMPtr<nsIInterfaceRequestor> badCertHandler(do_CreateInstance(NS_BADCERTHANDLER_CONTRACTID, &rv));
 
     // Ignore failure to get component, we may not have all its dependencies
@@ -2371,6 +2365,24 @@ nsXMLHttpRequest::GetInterface(const nsIID & aIID, void **aResult)
       if (NS_SUCCEEDED(rv))
         return rv;
     }
+  }
+  else if (aIID.Equals(NS_GET_IID(nsIAuthPrompt)) ||
+           aIID.Equals(NS_GET_IID(nsIAuthPrompt2))) {
+    nsCOMPtr<nsIPromptFactory> wwatch =
+      do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Get the an auth prompter for our window so that the parenting
+    // of the dialogs works as it should when using tabs.
+
+    nsCOMPtr<nsIDOMWindow> window;
+    if (mOwner) {
+      window = mOwner->GetOuterWindow();
+    }
+
+    return wwatch->GetPrompt(window, aIID,
+                             reinterpret_cast<void**>(aResult));
+
   }
 
   return QueryInterface(aIID, aResult);

@@ -45,6 +45,7 @@
 
 #include "nsRect.h"
 #include "nsIWidget.h"
+#include "nsObjCExceptions.h"
 
 // "Borrowed" in part from the QTKit framework's QTKitDefines.h.  This is
 // needed when building on OS X Tiger (10.4.X) or with a 10.4 SDK.  It won't
@@ -66,6 +67,23 @@ typedef unsigned int NSUInteger;
 #define NSINTEGER_DEFINED 1
 
 #endif  /* NSINTEGER_DEFINED */
+
+
+// Used to retain a Cocoa object for the remainder of a method's execution.
+class nsAutoRetainCocoaObject {
+public:
+nsAutoRetainCocoaObject(id anObject)
+{
+  mObject = NS_OBJC_TRY_EXPR_ABORT([anObject retain]);
+}
+~nsAutoRetainCocoaObject()
+{
+  NS_OBJC_TRY_ABORT([mObject release]);
+}
+private:
+  id mObject;  // [STRONG]
+};
+
 
 @interface NSApplication (Undocumented)
 

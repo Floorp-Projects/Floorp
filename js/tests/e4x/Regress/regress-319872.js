@@ -45,8 +45,11 @@ var expect = 'No Crash';
 
 printBugNumber(BUGNUMBER);
 START(summary);
-printStatus ("Expect out of memory or script stack space quota is exhausted error");
+printStatus ("Expect either no error, out of memory or catchable script stack " + 
+             "space quota is exhausted error");
+expectExitCode(0);
 expectExitCode(3);
+expectExitCode(5);
 
 try
 {
@@ -68,6 +71,8 @@ try
 }
 catch(ex)
 {
-  print(ex + '');
+  expect = 'InternalError: script stack space quota is exhausted';
+  actual = ex + '';
+  print(actual);
 }
 TEST(1, expect, actual);

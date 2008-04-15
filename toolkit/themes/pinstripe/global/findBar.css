@@ -9,8 +9,8 @@ findbar {
   min-width: 1px;
 }
 
-findbar > label,
-findbar > description {
+.findbar-container > label,
+.findbar-container > description {
   font-weight: bold;
 }
 
@@ -30,8 +30,8 @@ findbar > description {
   list-style-image: url("chrome://global/skin/icons/closetab-active.png") !important;
 }
 
-findbar > toolbarbutton,
-findbar > hbox > toolbarbutton {
+.findbar-container > toolbarbutton,
+.findbar-container > hbox > toolbarbutton {
   -moz-appearance: none;
   border: 1px solid #5F5F5F;
   -moz-border-radius: 10px;
@@ -40,51 +40,51 @@ findbar > hbox > toolbarbutton {
   padding: 0 3px;
 }
 
-findbar > toolbarbutton > .toolbarbutton-text,
-findbar > hbox > toolbarbutton > .toolbarbutton-text {
+.findbar-container > toolbarbutton > .toolbarbutton-text,
+.findbar-container > hbox > toolbarbutton > .toolbarbutton-text {
   margin: 1px 6px !important;
 }
 
-findbar > toolbarbutton[disabled],
-findbar > hbox > toolbarbutton[disabled] {
+.findbar-container > toolbarbutton[disabled],
+.findbar-container > hbox > toolbarbutton[disabled] {
   border-color: #8F8F8F !important;
   color: graytext;
 }
 
-findbar > toolbarbutton:not([disabled]):hover:active,
-findbar > hbox > toolbarbutton:not([disabled]):hover:active {
+.findbar-container > toolbarbutton:not([disabled]):hover:active,
+.findbar-container > hbox > toolbarbutton:not([disabled]):hover:active {
   background-image: url("chrome://global/skin/icons/white-gray-gradient-active.gif");
 }
 
 
-findbar > .findbar-closebutton > .toolbarbutton-text {
+.findbar-container > .findbar-closebutton > .toolbarbutton-text {
   display: none;  
 }
 
-findbar > checkbox {
+.findbar-container > checkbox {
    list-style-image: url("chrome://global/skin/icons/checkbox.png");
    -moz-image-region: rect(0px 16px 16px 0px);
    -moz-appearance: none;
    -moz-margin-start: 7px;
 }
 
-findbar > checkbox:hover:active {
+.findbar-container > checkbox:hover:active {
    -moz-image-region: rect(0px 32px 16px 16px);
 }
 
-findbar > checkbox[checked] {
+.findbar-container > checkbox[checked] {
    -moz-image-region: rect(0px 48px 16px 32px);
 }
 
-findbar > checkbox[checked]:hover:active {
+.findbar-container > checkbox[checked]:hover:active {
    -moz-image-region: rect(0px 64px 16px 48px);
 }
 
-findbar > checkbox > .checkbox-check {
+.findbar-container > checkbox > .checkbox-check {
   display: none; 
 }
 
-findbar > checkbox > .checkbox-label-box > .checkbox-label {
+.findbar-container > checkbox > .checkbox-label-box > .checkbox-label {
   margin: 1px 0 !important;
 }
 
@@ -98,7 +98,7 @@ findbar > checkbox > .checkbox-label-box > .checkbox-label {
   -moz-border-left-colors: #7F7F7F #EFEFEF -moz-Field;
   -moz-border-radius: 11.5px;
   background: url("chrome://global/skin/icons/search-textbox.png") -moz-Field no-repeat 1px center;
-  -moz-background-clip: padding !important;
+  -moz-background-clip: border !important;
   padding: 0 8px;
   -moz-padding-start: 17px;
 }
@@ -109,7 +109,7 @@ findbar > checkbox > .checkbox-label-box > .checkbox-label {
   -moz-outline-radius: 11px;
 }
 
-findbar[flash="true"] > .find-field-container > .findbar-textbox {
+findbar[flash="true"] > .findbar-container > .find-field-container > .findbar-textbox {
   -moz-border-top-colors: #5F5F5F #F7E379 #F7E379;
   -moz-border-bottom-colors: #9F9F9F #F7E379 #F7E379;
   -moz-border-right-colors: #7F7F7F #F7E379 #F7E379;

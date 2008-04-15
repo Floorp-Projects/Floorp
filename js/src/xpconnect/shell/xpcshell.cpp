@@ -1002,14 +1002,6 @@ FullTrustSecMan::CheckPropertyAccess(JSContext * aJSContext,
     return NS_OK;
 }
 
-/* [noscript] void checkConnect (in JSContextPtr aJSContext, in nsIURI aTargetURI, in string aClassName, in string aProperty); */
-NS_IMETHODIMP
-FullTrustSecMan::CheckConnect(JSContext * aJSContext, nsIURI *aTargetURI,
-                              const char *aClassName, const char *aProperty)
-{
-    return NS_OK;
-}
-
 /* [noscript] void checkLoadURIFromScript (in JSContextPtr cx, in nsIURI uri); */
 NS_IMETHODIMP
 FullTrustSecMan::CheckLoadURIFromScript(JSContext * cx, nsIURI *uri)
@@ -1297,6 +1289,16 @@ nsXPCFunctionThisTranslator::TranslateThis(nsISupports *aInitialThis,
 
 #endif
 
+JS_STATIC_DLL_CALLBACK(JSBool)
+ContextCallback(JSContext *cx, uintN contextOp)
+{
+    if (contextOp == JSCONTEXT_NEW) {
+        JS_SetErrorReporter(cx, my_ErrorReporter);
+        JS_SetVersion(cx, JSVERSION_LATEST);
+    }
+    return JS_TRUE;
+}
+
 int
 main(int argc, char **argv, char **envp)
 {
@@ -1338,13 +1340,13 @@ main(int argc, char **argv, char **envp)
             return 1;
         }
 
+        JS_SetContextCallback(rt, ContextCallback);
+
         cx = JS_NewContext(rt, 8192);
         if (!cx) {
             printf("JS_NewContext failed!\n");
             return 1;
         }
-
-        JS_SetErrorReporter(cx, my_ErrorReporter);
 
         nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
         if (!xpc) {

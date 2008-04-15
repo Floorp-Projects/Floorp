@@ -1476,6 +1476,9 @@ struct png_struct_def
    /* storage for unknown chunk that the library doesn't recognize. */
    png_unknown_chunk unknown_chunk;
 #endif
+
+/* New members added in libpng-1.2.26 */
+  png_uint_32 old_big_row_buf_size, old_prev_row_size;
 };
 
 

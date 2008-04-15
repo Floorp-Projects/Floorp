@@ -186,7 +186,8 @@ case "$target" in
     MAKE_VERSION=3.79
     if test -z "$CC"; then CC=cl; fi
     if test -z "$CXX"; then CXX=cl; fi
-    if test -z "$CPP"; then CPP=cl; fi
+    if test -z "$CPP"; then CPP="cl -E -nologo"; fi
+    if test -z "$CXXCPP"; then CXXCPP="cl -TP -E -nologo"; ac_cv_prog_CXXCPP="$CXXCPP"; fi
     if test -z "$LD"; then LD=link; fi
     if test -z "$AS"; then AS=ml; fi
     if test -z "$MIDL"; then MIDL=midl; fi
@@ -593,13 +594,6 @@ case "$target" in
     ;;
 esac
 
-if test -n "$_WIN32_MSVC"; then
-    SKIP_PATH_CHECKS=1
-    SKIP_COMPILER_CHECKS=1
-    SKIP_LIBRARY_CHECKS=1
-    AC_CHECK_HEADERS(mmintrin.h)
-fi
-
 dnl Test breaks icc on OS/2 && MSVC
 if test "$CC" != "icc" -a -z "$_WIN32_MSVC"; then
     AC_PROG_CC_C_O
@@ -614,6 +608,12 @@ fi
 
 AC_PROG_CPP
 AC_PROG_CXXCPP
+
+if test -n "$_WIN32_MSVC"; then
+    SKIP_PATH_CHECKS=1
+    SKIP_COMPILER_CHECKS=1
+    SKIP_LIBRARY_CHECKS=1
+fi
 
 fi # COMPILE_ENVIRONMENT
 
@@ -2103,6 +2103,13 @@ case "$target" in
         LIBIDL_LIBS="${LIBIDL_LIBS} ${GLIB_LIBS}"
         ;;
     esac 
+
+    AC_CHECK_HEADERS(mmintrin.h oleacc.idl)
+
+    AC_LANG_SAVE
+    AC_LANG_CPLUSPLUS
+    AC_CHECK_HEADERS(atlbase.h wpcapi.h)
+    AC_LANG_RESTORE
 
     case "$target" in
     i*86-*)
@@ -5369,6 +5376,17 @@ if test -n "$MOZ_CRASHREPORTER"; then
   fi
 fi
 
+MOZ_ARG_WITH_STRING(crashreporter-enable-percent,
+[  --with-crashreporter-enable-percent=NN  Enable sending crash reports by default on NN% of users. (default=100)],
+[ val=`echo $withval | sed 's/[^0-9]//g'`
+    MOZ_CRASHREPORTER_ENABLE_PERCENT="$val"])
+
+if test -z "$MOZ_CRASHREPORTER_ENABLE_PERCENT"; then
+   MOZ_CRASHREPORTER_ENABLE_PERCENT=100
+fi
+AC_DEFINE_UNQUOTED(MOZ_CRASHREPORTER_ENABLE_PERCENT, $MOZ_CRASHREPORTER_ENABLE_PERCENT)
+
+
 dnl ========================================================
 dnl = Build mochitest JS/DOM tests (on by default)
 dnl ========================================================
@@ -5744,6 +5762,19 @@ MOZ_ARG_DISABLE_BOOL(tests,
     ENABLE_TESTS=1 )
 
 dnl ========================================================
+dnl parental controls (for Windows Vista)
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(parental-controls,
+[  --disable-parental-controls
+                           Do not build parental controls],
+   MOZ_DISABLE_PARENTAL_CONTROLS=1,
+   MOZ_DISABLE_PARENTAL_CONTROLS=)
+if test -n "$MOZ_DISABLE_PARENTAL_CONTROLS"; then
+    AC_DEFINE(MOZ_DISABLE_PARENTAL_CONTROLS)
+fi
+AC_SUBST(MOZ_DISABLE_PARENTAL_CONTROLS)
+
+dnl ========================================================
 dnl =
 dnl = Module specific options
 dnl =
@@ -6105,7 +6136,7 @@ dnl ========================================================
 dnl = Enable jemalloc
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(jemalloc,
-[  --enable-jemalloc         Replace memory allocator with jemalloc],
+[  --enable-jemalloc       Replace memory allocator with jemalloc],
     MOZ_MEMORY=1,
     MOZ_MEMORY=)
 
@@ -6203,6 +6234,14 @@ if test "$MOZ_MEMORY"; then
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
     ;;
   esac
+
+  AC_ARG_WITH([valgrind],
+    [  --with-valgrind         Enable valgrind integration hooks],
+    [enable_valgrind="yes"], [enable_valgrind="no"])
+  AC_CHECK_HEADER([valgrind/valgrind.h], [], [enable_valgrind="no"])
+  if test "x$enable_valgrind" = "xyes" ; then
+    AC_DEFINE(MOZ_VALGRIND)
+  fi
 fi
 AC_SUBST(MOZ_MEMORY)
 AC_SUBST(WIN32_CRT_SRC_DIR)
@@ -6675,6 +6714,19 @@ if test -n "$INTEL_CC"; then
   PROFILE_GEN_LDFLAGS=
   PROFILE_USE_CFLAGS="-prof-use -prof-dir ."
   PROFILE_USE_LDFLAGS=
+fi
+
+dnl Sun Studio on Solaris
+if test -z "$GNU_CC" && test -z "$GNU_CXX" && test "$OS_ARCH" = "SunOS"; then
+  PROFILE_GEN_CFLAGS="-xprofile=collect:$_objdir/$enable_application"
+  PROFILE_GEN_LDFLAGS="-xprofile=collect:$_objdir/$enable_application"
+  if test "$CPU_ARCH" != "sparc"; then
+    PROFILE_USE_CFLAGS="-xprofile=use:$_objdir/$enable_application"
+    PROFILE_USE_LDFLAGS="-xprofile=use:$_objdir/$enable_application"
+  else
+    PROFILE_USE_CFLAGS="-xlinkopt=2 -xprofile=use:$_objdir/$enable_application"
+    PROFILE_USE_LDFLAGS="-xlinkopt=2 -xprofile=use:$_objdir/$enable_application"
+  fi
 fi
 
 AC_SUBST(PROFILE_GEN_CFLAGS)

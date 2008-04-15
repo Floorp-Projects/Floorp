@@ -214,6 +214,15 @@ public:
     eMetric_TabFocusModel,                                // What type of tab-order to use
 
     /*
+     * A Boolean value to determine whether the Windows default theme is
+     * being used.
+     *
+     * The value of this metric is not used on other platforms. These platforms
+     * should return NS_ERROR_NOT_IMPLEMENTED when queried for this metric.
+     */
+    eMetric_WindowsDefaultTheme,
+
+    /*
      * eMetric_AlertNotificationOrigin indicates from which corner of the
      * screen alerts slide in, and from which direction (horizontal/vertical).
      * 0, the default, represents bottom right, sliding vertically.

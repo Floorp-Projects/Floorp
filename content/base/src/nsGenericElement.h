@@ -436,6 +436,8 @@ public:
   virtual nsresult SetScriptTypeID(PRUint32 aLang);
 
   virtual void DestroyContent();
+  virtual void SaveSubtreeState();
+
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const
   {
@@ -1065,35 +1067,6 @@ public:
   
 private:
   nsRefPtr<nsGenericElement> mContent;
-};
-
-class mozAutoDocUpdateContentUnnest
-{
-public:
-  mozAutoDocUpdateContentUnnest(nsIDocument* aDocument)
-  {
-    if (aDocument) {
-      NS_ASSERTION(aDocument->AllUpdatesAreContent(),
-                   "There are non-content updates in progress");
-      mNestingLevel = aDocument->GetUpdateNestingLevel();
-      for (PRUint32 i = 0; i < mNestingLevel; ++i) {
-        nsContentUtils::RemoveScriptBlocker();
-      }
-    }
-    else {
-      mNestingLevel = 0;
-    }
-  }
-
-  ~mozAutoDocUpdateContentUnnest()
-  {
-    for (PRUint32 i = 0; i < mNestingLevel; ++i) {
-      nsContentUtils::AddScriptBlocker();
-    }
-  }
-
-private:
-  PRUint32 mNestingLevel;
 };
 
 #endif /* nsGenericElement_h___ */

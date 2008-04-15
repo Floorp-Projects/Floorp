@@ -1702,6 +1702,8 @@ moz_gtk_combo_box_paint(GdkDrawable* drawable, GdkRectangle* rect,
     style = gComboBoxArrowWidget->style;
     TSOffsetStyleGCs(style, rect->x, rect->y);
 
+    gtk_widget_size_allocate(gComboBoxWidget, rect);
+
     gtk_paint_arrow(style, drawable, state_type, shadow_type, cliprect,
                     gComboBoxArrowWidget, "arrow",  GTK_ARROW_DOWN, TRUE,
                     real_arrow_rect.x, real_arrow_rect.y,

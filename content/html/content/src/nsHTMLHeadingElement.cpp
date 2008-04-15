@@ -42,6 +42,7 @@
 #include "nsPresContext.h"
 #include "nsMappedAttributes.h"
 #include "nsRuleData.h"
+#include "mozAutoDocUpdate.h"
 
 class nsHTMLHeadingElement : public nsGenericHTMLElement,
                              public nsIDOMHTMLHeadingElement

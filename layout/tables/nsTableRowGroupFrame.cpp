@@ -89,6 +89,10 @@ nsTableRowGroupFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = static_cast<nsILineIteratorNavigator*>(this);
     return NS_OK;
   }
+  if (aIID.Equals(NS_GET_IID(nsILineIterator))) {
+    *aInstancePtr = static_cast<nsILineIterator*>(this);
+    return NS_OK;
+  }
 
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
 }

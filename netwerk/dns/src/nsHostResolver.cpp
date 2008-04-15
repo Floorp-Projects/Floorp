@@ -637,7 +637,9 @@ nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, PRAddrInfo 
         PR_Unlock(rec->addr_info_lock);
         if (old_addr_info)
             PR_FreeAddrInfo(old_addr_info);
-        rec->expiration = NowInMinutes() + mMaxCacheLifetime;
+        rec->expiration = NowInMinutes();
+        if (result)
+            rec->expiration += mMaxCacheLifetime;
         rec->resolving = PR_FALSE;
         
         if (rec->addr_info && !mShutdown) {

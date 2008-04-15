@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+
+<!-- This rdf is valid, but no install manifest resource -->
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+</RDF>

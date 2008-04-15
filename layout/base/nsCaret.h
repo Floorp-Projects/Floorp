@@ -142,6 +142,12 @@ protected:
                                          PRUint8 aBidiLevel,
                                          PRBool aInvalidate);
 
+    struct Metrics {
+      nscoord mBidiIndicatorSize; // width and height of bidi indicator
+      nscoord mCaretWidth;        // full caret width including bidi indicator
+    };
+    Metrics ComputeMetrics(nsPresContext *aPresContext);
+
     // Returns true if the caret should be drawn. When |mDrawn| is true,
     // this returns true, so that we erase the drawn caret. If |aIgnoreDrawnState|
     // is true, we don't take into account whether the caret is currently
@@ -152,7 +158,8 @@ protected:
     void          DrawCaret(PRBool aInvalidate);
     void          DrawCaretAfterBriefDelay();
     nsresult      UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset);
-    nsresult      UpdateHookRect(nsPresContext* aPresContext);
+    nsresult      UpdateHookRect(nsPresContext* aPresContext,
+                                 const Metrics& aMetrics);
     static void   InvalidateRects(const nsRect &aRect, const nsRect &aHook,
                                   nsIFrame *aFrame);
     nsRect        GetHookRect()
@@ -185,11 +192,11 @@ protected:
     nsCOMPtr<nsITimer>              mBlinkTimer;
     nsCOMPtr<nsIRenderingContext>   mRendContext;
 
+    // XXX these fields should go away and the values be acquired as needed,
+    // probably by ComputeMetrics.
     PRUint32              mBlinkRate;         // time for one cyle (off then on), in milliseconds
-
-    nscoord               mCaretWidth;   // caret width. this gets calculated laziiy
-    nscoord               mBidiIndicatorSize;   // width and height of bidi indicator
-
+    nscoord               mCaretWidthCSSPx;   // caret width in CSS pixels
+    
     PRPackedBool          mVisible;           // is the caret blinking
 
     PRPackedBool          mDrawn;             // Denotes when the caret is physically drawn on the screen.

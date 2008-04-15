@@ -23,6 +23,7 @@
  *   Michael Lowe <michael.lowe@bigfoot.com>
  *   Jens Bannmann <jens.b@web.de>
  *   Ryan Jones <sciguyryan@gmail.com>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,11 +51,16 @@ typedef HRESULT (WINAPI*CloseThemeDataPtr)(HANDLE hTheme);
 typedef HRESULT (WINAPI*GetThemeColorPtr)(HANDLE hTheme, int iPartId,
                                           int iStateId, int iPropId, OUT COLORREF* pFont);
 typedef BOOL (WINAPI*IsAppThemedPtr)(VOID);
+typedef HRESULT (WINAPI*GetCurrentThemeNamePtr)(LPWSTR pszThemeFileName, int dwMaxNameChars,
+                                                LPWSTR pszColorBuff, int cchMaxColorChars,
+                                                LPWSTR pszSizeBuff, int cchMaxSizeChars);
+
 
 static OpenThemeDataPtr openTheme = NULL;
 static CloseThemeDataPtr closeTheme = NULL;
 static GetThemeColorPtr getThemeColor = NULL;
 static IsAppThemedPtr isAppThemed = NULL;
+static GetCurrentThemeNamePtr getCurrentThemeName = NULL;
 
 static const char kThemeLibraryName[] = "uxtheme.dll";
 static HINSTANCE gThemeDLLInst = NULL;
@@ -118,6 +124,7 @@ nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
     closeTheme = (CloseThemeDataPtr)GetProcAddress(gThemeDLLInst, "CloseThemeData");
     getThemeColor = (GetThemeColorPtr)GetProcAddress(gThemeDLLInst, "GetThemeColor");
     isAppThemed = (IsAppThemedPtr)GetProcAddress(gThemeDLLInst, "IsAppThemed");
+    getCurrentThemeName = (GetCurrentThemeNamePtr)GetProcAddress(gThemeDLLInst, "GetCurrentThemeName");
     gMenuTheme = openTheme(NULL, L"Menu");
   }
 #endif
@@ -497,6 +504,42 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         break;
     case eMetric_TreeScrollLinesMax:
         aMetric = 3;
+        break;
+    case eMetric_WindowsDefaultTheme:
+        aMetric = 0;
+#ifndef WINCE
+        if (getCurrentThemeName) {
+          WCHAR themeFileName[MAX_PATH + 1] = {L'\0'};
+          HRESULT hresult = getCurrentThemeName(themeFileName, MAX_PATH,
+                                                NULL, 0, NULL, 0);
+          if (hresult == S_OK) {
+            const WCHAR * defaultThemeName = NULL;
+            switch (GetWindowsVersion()) {
+              case WINXP_VERSION:
+              case WIN2K3_VERSION:
+                defaultThemeName = L"luna.msstyles";
+                break;
+
+              case VISTA_VERSION:
+                defaultThemeName = L"aero.msstyles";
+                break;
+
+              default:
+                res = NS_ERROR_NOT_IMPLEMENTED;
+                break;
+            }
+            const int pathLen = lstrlenW(themeFileName),
+                      defaultLen = lstrlenW(defaultThemeName);
+            if (pathLen > defaultLen &&
+                !wcsicmp(themeFileName + pathLen - defaultLen, defaultThemeName)) {
+              aMetric = 1;
+            }
+          }
+        } else
+#endif
+        {
+          res = NS_ERROR_NOT_IMPLEMENTED;
+        }
         break;
 #ifndef WINCE
     case eMetric_AlertNotificationOrigin:

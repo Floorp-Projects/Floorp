@@ -223,14 +223,61 @@ var PlacesOrganizer = {
       searchFilter.reset();
     }
 
-    // Update the "Find in <current collection>" command and the gray text in
-    // the search box in the toolbar if the active collection is the current
-    // collection.
+    this._setSearchScopeForNode(node);
+  },
+
+  /**
+   * Sets the search scope based on node's properties
+   * @param   aNode
+   *          the node to set up scope from
+   */
+  _setSearchScopeForNode: function PO__setScopeForNode(aNode) {
+    var scopeBarFolder = document.getElementById("scopeBarFolder");
+    var itemId = aNode.itemId;
+    if (PlacesUtils.nodeIsHistoryContainer(aNode) ||
+        itemId == PlacesUIUtils.leftPaneQueries["History"]) {
+      scopeBarFolder.disabled = true;
+      var folders = [];
+      var filterCollection = "history";
+      var scopeButton = "scopeBarHistory";
+    }
+    else if (PlacesUtils.nodeIsFolder(aNode) &&
+             itemId != PlacesUIUtils.leftPaneQueries["AllBookmarks"] &&
+             itemId != PlacesUIUtils.leftPaneQueries["Tags"] &&
+             aNode.parent.itemId != PlacesUIUtils.leftPaneQueries["Tags"]) {
+      // enable folder scope
+      scopeBarFolder.disabled = false;
+      var folders = [PlacesUtils.getConcreteItemId(aNode)];
+      var filterCollection = "collection";
+      var scopeButton = "scopeBarFolder";
+    }
+    else {
+      // default to All Bookmarks
+      scopeBarFolder.disabled = true;
+      var folders = [];
+      var filterCollection = "bookmarks";
+      var scopeButton = "scopeBarAll";
+    }
+
+    // set search scope
+    PlacesSearchBox.folders = folders;
+    PlacesSearchBox.filterCollection = filterCollection;
+
+    // update scope bar active child
+    var scopeBar = document.getElementById("organizerScopeBar");
+    var child = scopeBar.firstChild;
+    while (child) {
+      if (child.getAttribute("id") != scopeButton)
+        child.removeAttribute("checked");
+      else
+        child.setAttribute("checked", "true");
+      child = child.nextSibling;
+    }
+
+    // Update the "Find in <current collection>" command
     var findCommand = document.getElementById("OrganizerCommand_find:current");
-    var findLabel = PlacesUIUtils.getFormattedString("findInPrefix", [node.title]);
+    var findLabel = PlacesUIUtils.getFormattedString("findInPrefix", [aNode.title]);
     findCommand.setAttribute("label", findLabel);
-    if (PlacesSearchBox.filterCollection == "collection")
-      PlacesSearchBox.updateCollectionTitle(node.title);
   },
 
   /**
@@ -517,27 +564,27 @@ var PlacesOrganizer = {
   function PO__detectAndSetDetailsPaneMinimalState(aNode) {
     /**
      * The details of simple folder-items (as opposed to livemarks) or the
-     * of livemark-children are not likely to fill the scrollbox anyway,
+     * of livemark-children are not likely to fill the infoBox anyway,
      * thus we remove the "More/Less" button and show all details.
      *
      * the wasminimal attribute here is used to persist the "more/less"
      * state in a bookmark->folder->bookmark scenario.
      */
-    var infoScrollbox = document.getElementById("infoScrollbox");
-    var scrollboxExpander = document.getElementById("infoScrollboxExpander");
+    var infoBox = document.getElementById("infoBox");
+    var infoBoxExpander = document.getElementById("infoBoxExpander");
     if ((PlacesUtils.nodeIsFolder(aNode) &&
          !PlacesUtils.nodeIsLivemarkContainer(aNode)) ||
         PlacesUtils.nodeIsLivemarkItem(aNode)) {
-      if (infoScrollbox.getAttribute("minimal") == "true")
-        infoScrollbox.setAttribute("wasminimal", "true");
-      infoScrollbox.removeAttribute("minimal");
-      scrollboxExpander.hidden = true;
+      if (infoBox.getAttribute("minimal") == "true")
+        infoBox.setAttribute("wasminimal", "true");
+      infoBox.removeAttribute("minimal");
+      infoBoxExpander.hidden = true;
     }
     else {
-      if (infoScrollbox.getAttribute("wasminimal") == "true")
-        infoScrollbox.setAttribute("minimal", "true");
-      infoScrollbox.removeAttribute("wasminimal");
-      scrollboxExpander.hidden = false;
+      if (infoBox.getAttribute("wasminimal") == "true")
+        infoBox.setAttribute("minimal", "true");
+      infoBox.removeAttribute("wasminimal");
+      infoBoxExpander.hidden = false;
     }
   },
 
@@ -562,11 +609,12 @@ var PlacesOrganizer = {
         focusedElement.blur();
     }
 
-    var contentTree = document.getElementById("placeContent");
+    var infoBox = document.getElementById("infoBox");
     var detailsDeck = document.getElementById("detailsDeck");
     detailsDeck.selectedIndex = 1;
-    var selectedNode = contentTree.selectedNode;
+    var selectedNode = this._content.selectedNode;
     if (selectedNode) {
+      infoBox.hidden = false;
       if (selectedNode.itemId != -1 &&
           !PlacesUtils.nodeIsSeparator(selectedNode)) {
         if (this._paneDisabled) {
@@ -595,6 +643,9 @@ var PlacesOrganizer = {
     }
     else {
       detailsDeck.selectedIndex = 0;
+      // The details deck has the height of its biggest child, so we hide the
+      // infoBox to allow it shrinking when there is no selection.
+      infoBox.hidden = true;
       var selectItemDesc = document.getElementById("selectItemDescription");
       var itemsCountLabel = document.getElementById("itemsCountText");
       var rowCount = this._content.treeBoxObject.view.rowCount;
@@ -645,17 +696,17 @@ var PlacesOrganizer = {
   },
 
   toggleAdditionalInfoFields: function PO_toggleAdditionalInfoFields() {
-    var infoScrollbox = document.getElementById("infoScrollbox");
-    var scrollboxExpander = document.getElementById("infoScrollboxExpander");
-    if (infoScrollbox.getAttribute("minimal") == "true") {
-      infoScrollbox.removeAttribute("minimal");
-      scrollboxExpander.label = scrollboxExpander.getAttribute("lesslabel");
-      scrollboxExpander.accessKey = scrollboxExpander.getAttribute("lessaccesskey");
+    var infoBox = document.getElementById("infoBox");
+    var infoBoxExpander = document.getElementById("infoBoxExpander");
+    if (infoBox.getAttribute("minimal") == "true") {
+      infoBox.removeAttribute("minimal");
+      infoBoxExpander.label = infoBoxExpander.getAttribute("lesslabel");
+      infoBoxExpander.accessKey = infoBoxExpander.getAttribute("lessaccesskey");
     }
     else {
-      infoScrollbox.setAttribute("minimal", "true");
-      scrollboxExpander.label = scrollboxExpander.getAttribute("morelabel");
-      scrollboxExpander.accessKey = scrollboxExpander.getAttribute("moreaccesskey");
+      infoBox.setAttribute("minimal", "true");
+      infoBoxExpander.label = infoBoxExpander.getAttribute("morelabel");
+      infoBoxExpander.accessKey = infoBoxExpander.getAttribute("moreaccesskey");
     }
   },
 
@@ -817,10 +868,13 @@ var PlacesSearchBox = {
    *          The title of the current collection.
    */
   updateCollectionTitle: function PSB_updateCollectionTitle(title) {
-    this.searchFilter.emptyText =
-      title ?
-      PlacesUIUtils.getFormattedString("searchCurrentDefault", [title]) :
-      PlacesUIUtils.getString("searchBookmarks");
+    if (title)
+      this.searchFilter.emptyText =
+        PlacesUIUtils.getFormattedString("searchCurrentDefault", [title]);
+    else
+      this.searchFilter.emptyText = this.filterCollection == "history" ?
+                                    PlacesUIUtils.getString("searchHistory") :
+                                    PlacesUIUtils.getString("searchBookmarks");
   },
 
   /**

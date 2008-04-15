@@ -51,7 +51,7 @@ const PREF_GETADDONS_GETSEARCHRESULTS    = "extensions.getAddons.search.url";
 
 const XMLURI_PARSE_ERROR  = "http://www.mozilla.org/newlayout/xml/parsererror.xml";
 
-const API_VERSION = "1";
+const API_VERSION = "1.1";
 
 function AddonSearchResult() {
 }
@@ -242,10 +242,10 @@ AddonRepository.prototype = {
       return;
     var vc = Cc["@mozilla.org/xpcom/version-comparator;1"].
              getService(Ci.nsIVersionComparator);
-    var apps = tags[0].getElementsByTagName("name");
+    var apps = tags[0].getElementsByTagName("appID");
     var i = 0;
     while (i < apps.length) {
-      if (apps[i].textContent.toLowerCase() == app.name.toLowerCase()) {
+      if (apps[i].textContent == app.ID) {
         var minversion = apps[i].parentNode.getElementsByTagName("min_version")[0].textContent;
         var maxversion = apps[i].parentNode.getElementsByTagName("max_version")[0].textContent;
         if ((vc.compare(minversion, app.version) > 0) ||

@@ -720,7 +720,8 @@ NS_IMETHODIMP nsXULMenupopupAccessible::GetRole(PRUint32 *aRole)
     // Some widgets like the search bar have several popups, owned by buttons
     PRUint32 role = Role(parent);
     if (role == nsIAccessibleRole::ROLE_COMBOBOX ||
-        role == nsIAccessibleRole::ROLE_PUSHBUTTON) {
+        role == nsIAccessibleRole::ROLE_PUSHBUTTON ||
+        role == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
       *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
       return NS_OK;
     }

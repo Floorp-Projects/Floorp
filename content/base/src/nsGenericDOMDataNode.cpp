@@ -62,6 +62,7 @@
 #include "nsNodeUtils.h"
 #include "nsBindingManager.h"
 #include "nsCCUncollectableMarker.h"
+#include "mozAutoDocUpdate.h"
 
 #include "pldhash.h"
 #include "prprf.h"
@@ -497,19 +498,21 @@ nsGenericDOMDataNode::SetTextInternal(PRUint32 aOffset, PRUint32 aCount,
     nsNodeUtils::CharacterDataChanged(this, &info);
 
     if (haveMutationListeners) {
-      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_CHARACTERDATAMODIFIED);
+      mozAutoRemovableBlockerRemover blockerRemover;
 
-      mutation.mPrevAttrValue = oldValue;
-      if (aLength > 0) {
-        nsAutoString val;
-        mText.AppendTo(val);
-        mutation.mNewAttrValue = do_GetAtom(val);
+      if (nsContentUtils::IsSafeToRunScript()) {
+        nsMutationEvent mutation(PR_TRUE, NS_MUTATION_CHARACTERDATAMODIFIED);
+
+        mutation.mPrevAttrValue = oldValue;
+        if (aLength > 0) {
+          nsAutoString val;
+          mText.AppendTo(val);
+          mutation.mNewAttrValue = do_GetAtom(val);
+        }
+
+        mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
+        nsEventDispatcher::Dispatch(this, nsnull, &mutation);
       }
-
-      mozAutoDocUpdateContentUnnest updateUnnest(document);
-
-      mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
-      nsEventDispatcher::Dispatch(this, nsnull, &mutation);
     }
   }
 
@@ -604,7 +607,15 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     nsDataSlots *slots = GetDataSlots();
     NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
 
+    NS_ASSERTION(IsNativeAnonymous() || !HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE) ||
+                 aBindingParent->IsInNativeAnonymousSubtree(),
+                 "Trying to re-bind content from native anonymous subtree to"
+                 "non-native anonymous parent!");
     slots->mBindingParent = aBindingParent; // Weak, so no addref happens.
+    if (IsNativeAnonymous() ||
+        aBindingParent->IsInNativeAnonymousSubtree()) {
+      SetFlags(NODE_IS_IN_ANONYMOUS_SUBTREE);
+    }
   }
 
   // Set parent
@@ -829,6 +840,11 @@ PRBool
 nsGenericDOMDataNode::IsNodeOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~(eCONTENT | eDATA_NODE));
+}
+
+void
+nsGenericDOMDataNode::SaveSubtreeState()
+{
 }
 
 void

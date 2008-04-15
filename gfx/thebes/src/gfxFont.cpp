@@ -515,12 +515,15 @@ void
 gfxFont::SetupGlyphExtents(gfxContext *aContext, PRUint32 aGlyphID, PRBool aNeedTight,
                            gfxGlyphExtents *aExtents)
 {
+    gfxMatrix matrix = aContext->CurrentMatrix();
+    aContext->IdentityMatrix();
     cairo_glyph_t glyph;
     glyph.index = aGlyphID;
     glyph.x = 0;
     glyph.y = 0;
     cairo_text_extents_t extents;
     cairo_glyph_extents(aContext->GetCairo(), &glyph, 1, &extents);
+    aContext->SetMatrix(matrix);
 
     const Metrics& fontMetrics = GetMetrics();
     PRUint32 appUnitsPerDevUnit = aExtents->GetAppUnitsPerDevUnit();
@@ -574,11 +577,22 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, PRBool aIsBadUnderlineFont)
 
     aMetrics->underlineOffset = PR_MIN(aMetrics->underlineOffset, -1.0);
 
+    if (aMetrics->maxAscent < 1.0) {
+        // We cannot draw strikeout line and overline in the ascent...
+        aMetrics->underlineSize = 0;
+        aMetrics->underlineOffset = 0;
+        aMetrics->strikeoutSize = 0;
+        aMetrics->strikeoutOffset = 0;
+        return;
+    }
+
     /**
      * Some CJK fonts have bad underline offset. Therefore, if this is such font,
      * we need to lower the underline offset to bottom of *em* descent.
      * However, if this is system font, we should not do this for the rendering compatibility with
      * another application's UI on the platform.
+     * XXX Should not use this hack if the font size is too small?
+     *     Such text cannot be read, this might be used for tight CSS rendering? (E.g., Acid2)
      */
     if (!mStyle.systemFont && aIsBadUnderlineFont) {
         // First, we need 2 pixels between baseline and underline at least. Because many CJK characters
@@ -596,8 +610,28 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, PRBool aIsBadUnderlineFont)
     // If underline positioned is too far from the text, descent position is preferred so that underline
     // will stay within the boundary.
     else if (aMetrics->underlineSize - aMetrics->underlineOffset > aMetrics->maxDescent) {
+        if (aMetrics->underlineSize > aMetrics->maxDescent)
+            aMetrics->underlineSize = PR_MAX(aMetrics->maxDescent, 1.0);
+        // The max underlineOffset is 1px (the min underlineSize is 1px, and min maxDescent is 0px.)
         aMetrics->underlineOffset = aMetrics->underlineSize - aMetrics->maxDescent;
-        aMetrics->underlineOffset = PR_MIN(aMetrics->underlineOffset, -1.0);
+    }
+
+    // If strikeout line is overflowed from the ascent, the line should be resized and moved for
+    // that being in the ascent space.
+    // Note that the strikeoutOffset is *middle* of the strikeout line position.
+    gfxFloat halfOfStrikeoutSize = NS_floor(aMetrics->strikeoutSize / 2.0 + 0.5);
+    if (halfOfStrikeoutSize + aMetrics->strikeoutOffset > aMetrics->maxAscent) {
+        if (aMetrics->strikeoutSize > aMetrics->maxAscent) {
+            aMetrics->strikeoutSize = PR_MAX(aMetrics->maxAscent, 1.0);
+            halfOfStrikeoutSize = NS_floor(aMetrics->strikeoutSize / 2.0 + 0.5);
+        }
+        gfxFloat ascent = NS_floor(aMetrics->maxAscent + 0.5);
+        aMetrics->strikeoutOffset = PR_MAX(halfOfStrikeoutSize, ascent / 2.0);
+    }
+
+    // If overline is larger than the ascent, the line should be resized.
+    if (aMetrics->underlineSize > aMetrics->maxAscent) {
+        aMetrics->underlineSize = aMetrics->maxAscent;
     }
 }
 
@@ -715,7 +749,7 @@ gfxGlyphExtents::SetTightGlyphExtents(PRUint32 aGlyphID, const gfxRect& aExtents
 }
 
 gfxFontGroup::gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle)
-    : mFamilies(aFamilies), mStyle(*aStyle), mUnderlineOffset(0)
+    : mFamilies(aFamilies), mStyle(*aStyle), mUnderlineOffset(UNDERLINE_OFFSET_NOT_SET)
 {
 
 }

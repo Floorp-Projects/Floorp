@@ -6198,6 +6198,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
     // messes up dimensions.
     reflowState.parentReflowState = &parentReflowState;
     reflowState.mCBReflowState = &parentReflowState;
+    reflowState.mReflowDepth = aState.GetReflowDepth();
 
     // mComputedWidth and mComputedHeight are content-box, not
     // border-box

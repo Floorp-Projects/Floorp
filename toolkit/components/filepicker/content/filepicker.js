@@ -238,7 +238,7 @@ function selectOnOK()
   var isDir = false;
   var isFile = false;
 
-  retvals.filterIndex = document.getElementById("filterMenuList");
+  retvals.filterIndex = document.getElementById("filterMenuList").selectedIndex;
   retvals.fileURL = null;
 
   if (allowURLs) {
