@@ -77,6 +77,17 @@ function WeaveSvc() {
   this._initLogs();
   this._log.info("Weave Sync Service Initializing");
 
+  ID.set('WeaveID', new Identity('Mozilla Services Password', this.username));
+  ID.setAlias('WeaveID', 'DAV:default');
+
+  ID.set('WeaveCryptoID',
+         new Identity('Mozilla Services Encryption Passphrase', this.username));
+  //ID.setAlias('WeaveCryptoID', '...');
+
+  Engines.register(new BookmarksEngine(DAV, ID.get('WeaveCryptoID')));
+  Engines.register(new HistoryEngine(DAV, ID.get('WeaveCryptoID')));
+  Engines.register(new CookieEngine(DAV, ID.get('WeaveCryptoID')));
+
   Utils.prefs.addObserver("", this, false);
 
   if (!this.enabled) {
@@ -109,49 +120,8 @@ WeaveSvc.prototype = {
     return this.__dirSvc;
   },
 
-  // FIXME: engines should be loaded dynamically somehow / need API to register
-
-  __bmkEngine: null,
-  get _bmkEngine() {
-    if (!this.__bmkEngine)
-      this.__bmkEngine = new BookmarksEngine(DAV, this._cryptoId);
-    return this.__bmkEngine;
-  },
-
-  __histEngine: null,
-  get _histEngine() {
-    if (!this.__histEngine)
-      this.__histEngine = new HistoryEngine(DAV, this._cryptoId);
-    return this.__histEngine;
-  },
-
-  __cookieEngine: null,
-  get _cookieEngine() {
-    // This gets an error that "CookieEngine" is undefined.  Why?
-    // BookmarksEngine and HistoryEngine are both defined in engines.js
-    // and so is CookieEngine, but...
-    if (!this.__cookieEngine)
-      this.__cookieEngine = new CookieEngine(DAV, this._cryptoId);
-    return this.__cookieEngine;
-  },
-
   // Timer object for automagically syncing
   _scheduleTimer: null,
-
-  __mozId: null,
-  get _mozId() {
-    if (this.__mozId === null)
-      this.__mozId = new Identity('Mozilla Services Password', this.username);
-    return this.__mozId;
-  },
-
-  __cryptoId: null,
-  get _cryptoId() {
-    if (this.__cryptoId === null)
-      this.__cryptoId = new Identity('Mozilla Services Encryption Passphrase',
-				     this.username);
-    return this.__cryptoId;
-  },
 
   get username() {
     return Utils.prefs.getCharPref("username");
@@ -163,17 +133,17 @@ WeaveSvc.prototype = {
       Utils.prefs.clearUserPref("username");
 
     // fixme - need to loop over all Identity objects - needs some rethinking...
-    this._mozId.username = value;
-    this._cryptoId.username = value;
+    ID.get('WeaveID').username = value;
+    ID.get('WeaveCryptoID').username = value;
   },
 
-  get password() { return this._mozId.password; },
-  set password(value) { this._mozId.password = value; },
+  get password() { return ID.get('WeaveID').password; },
+  set password(value) { ID.get('WeaveID').password = value; },
 
-  get passphrase() { return this._cryptoId.password; },
-  set passphrase(value) { this._cryptoId.password = value; },
+  get passphrase() { return ID.get('WeaveCryptoID').password; },
+  set passphrase(value) { ID.get('WeaveCryptoID').password = value; },
 
-  get userPath() { return this._mozId.userHash; },
+  get userPath() { return ID.get('WeaveID').userHash; },
 
   get currentUser() {
     if (this._loggedIn)
@@ -350,9 +320,10 @@ WeaveSvc.prototype = {
                        "Could not get private key from server", [[200,300],404]);
 
     if (keyResp.status != 404) {
-      this._cryptoId.privkey = keyResp.responseText;
-      Crypto.RSAkeydecrypt.async(Crypto, self.cb, this._cryptoId);
-      this._cryptoId.pubkey = yield;
+      let id = ID.get('WeaveCryptoID');
+      id.privkey = keyResp.responseText;
+      Crypto.RSAkeydecrypt.async(Crypto, self.cb, id);
+      id.pubkey = yield;
 
     } else {
       this._generateKeys.async(this, self.cb);
@@ -364,11 +335,13 @@ WeaveSvc.prototype = {
     let self = yield;
 
     this._log.debug("Generating new RSA key");
-    Crypto.RSAkeygen.async(Crypto, self.cb, this._cryptoId);
+
+    let id = ID.get('WeaveCryptoID');
+    Crypto.RSAkeygen.async(Crypto, self.cb, id);
     let [privkey, pubkey] = yield;
 
-    this._cryptoId.privkey = privkey;
-    this._cryptoId.pubkey = pubkey;
+    id.privkey = privkey;
+    id.pubkey = pubkey;
 
     DAV.MKCOL("private/", self.cb);
     let ret = yield;
@@ -416,11 +389,8 @@ WeaveSvc.prototype = {
 
     // cache password & passphrase
     // if null, we'll try to get them from the pw manager below
-    this._mozId.setTempPassword(password);
-    this._cryptoId.setTempPassword(passphrase);
-
-    ID.set('MozID', this._mozId);
-    ID.setAlias('MozID', 'DAV:default');
+    ID.get('WeaveID').setTempPassword(password);
+    ID.get('WeaveCryptoID').setTempPassword(passphrase);
 
     this._log.debug("Logging in");
 
@@ -460,8 +430,8 @@ WeaveSvc.prototype = {
   logout: function WeaveSync_logout() {
     this._log.info("Logging out");
     this._loggedIn = false;
-    this._mozId.setTempPassword(null); // clear cached password
-    this._cryptoId.setTempPassword(null); // and passphrase
+    ID.get('WeaveID').setTempPassword(null); // clear cached password
+    ID.get('WeaveCryptoID').setTempPassword(null); // and passphrase
     this._os.notifyObservers(null, "weave:service:logout:success", "");
   },
 
@@ -515,20 +485,20 @@ WeaveSvc.prototype = {
     yield;
 
     if (Utils.prefs.getBoolPref("bookmarks")) {
-      this._notify(this._bmkEngine.name + ":sync",
-                   this._syncEngine, this._bmkEngine).async(this, self.cb);
+      this._notify(Engines.get("bookmarks").name + "-engine:sync",
+                   this._syncEngine, Engines.get("bookmarks")).async(this, self.cb);
       yield;
-      this._bmkEngine.syncMounts(self.cb); // FIXME
+      Engines.get("bookmarks").syncMounts(self.cb); // FIXME
       yield;
     }
     if (Utils.prefs.getBoolPref("history")) {
-      this._notify(this._histEngine.name + ":sync",
-                   this._syncEngine, this._histEngine).async(this, self.cb);
+      this._notify(Engines.get("history").name + "-engine:sync",
+                   this._syncEngine, Engines.get("history")).async(this, self.cb);
       yield;
     }
     if (Utils.prefs.getBoolPref("cookies")) {
-      this._notify(this._cookieEngine.name + ":sync",
-                   this._syncEngine, this._cookieEngine).async(this, self.cb);
+      this._notify(Engines.get("cookies").name + "-engine:sync",
+                   this._syncEngine, Engines.get("cookies")).async(this, self.cb);
       yield;
     }
   },
@@ -548,10 +518,11 @@ WeaveSvc.prototype = {
     if (!this._loggedIn)
       throw "Can't reset server: Not logged in";
 
-    this._bmkEngine.resetServer(self.cb);
-    yield;
-    this._histEngine.resetServer(self.cb);
-    yield;
+    let engines = Engines.getAll();
+    for (let i = 0; i < engines.length; i++) {
+      engines[i].resetServer(self.cb);
+      yield;
+    }
   },
 
   resetClient: function WeaveSync_resetClient(onComplete) {
@@ -560,10 +531,11 @@ WeaveSvc.prototype = {
   },
   _resetClient: function WeaveSync__resetClient() {
     let self = yield;
-    this._bmkEngine.resetClient(self.cb);
-    yield;
-    this._histEngine.resetClient(self.cb);
-    yield;
+    let engines = Engines.getAll();
+    for (let i = 0; i < engines.length; i++) {
+      engines[i].resetClient(self.cb);
+      yield;
+    }
   },
 
   shareBookmarks: function WeaveSync_shareBookmarks(onComplete, username) {
@@ -573,7 +545,7 @@ WeaveSvc.prototype = {
   },
   _shareBookmarks: function WeaveSync__shareBookmarks(username) {
     let self = yield;
-    this._bmkEngine.share(self.cb, username);
+    Engines.get("bookmarks").share(self.cb, username);
     let ret = yield;
     self.done(ret);
   }
