@@ -252,15 +252,15 @@ nsThebesFontMetrics::GetFontHandle(nsFontHandle &aHandle)
 NS_IMETHODIMP
 nsThebesFontMetrics::GetAveCharWidth(nscoord& aAveCharWidth)
 {
-    aAveCharWidth = ROUND_TO_TWIPS(GetMetrics().aveCharWidth);
+    // Use CEIL instead of ROUND for consistency with GetMaxAdvance
+    aAveCharWidth = CEIL_TO_TWIPS(GetMetrics().aveCharWidth);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::GetSpaceWidth(nscoord& aSpaceCharWidth)
 {
-    aSpaceCharWidth = ROUND_TO_TWIPS(GetMetrics().spaceWidth);
-
+    aSpaceCharWidth = CEIL_TO_TWIPS(GetMetrics().spaceWidth);
     return NS_OK;
 }
 
