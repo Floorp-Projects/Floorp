@@ -996,7 +996,8 @@ NS_IMPL_ISUPPORTS2(nsTextEditorFocusListener, nsIDOMEventListener, nsIDOMFocusLi
 nsTextEditorFocusListener::nsTextEditorFocusListener(nsIEditor *aEditor,
                                                      nsIPresShell *aShell) 
   : mEditor(aEditor),
-    mPresShell(do_GetWeakReference(aShell))
+    mPresShell(do_GetWeakReference(aShell)),
+    mIsFocused(PR_FALSE)
 {
 }
 
@@ -1108,6 +1109,8 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
   if (!IsTargetFocused(target))
     return NS_OK;
 
+  mIsFocused = PR_TRUE;
+
   // turn on selection and caret
   if (mEditor)
   {
@@ -1161,7 +1164,7 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
           selectionPrivate->SetAncestorLimiter(editableRoot);
         }
 
-        if (!editableRoot) {
+        if (selection && !editableRoot) {
           PRInt32 rangeCount;
           selection->GetRangeCount(&rangeCount);
           if (rangeCount == 0) {
@@ -1182,7 +1185,7 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
 {
   NS_ENSURE_ARG(aEvent);
   // turn off selection and caret
-  if (mEditor)
+  if (mEditor && mIsFocused)
   {
     // when imeEditor exists, call ForceCompositionEnd() to tell
     // the input focus is leaving first
@@ -1209,18 +1212,6 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
         }
 
         nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
-        nsCOMPtr<nsISelectionController> presSelCon =
-          do_QueryInterface(presShell);
-        if (presSelCon == selCon && selection) {
-          nsCOMPtr<nsIDOMEventTarget> target;
-          aEvent->GetTarget(getter_AddRefs(target));
-          nsCOMPtr<nsINode> node = do_QueryInterface(target);
-          nsIDocument* doc = node ? node->GetOwnerDoc() : nsnull;
-          if (doc && !doc->HasFlag(NODE_IS_EDITABLE)) {
-            selection->RemoveAllRanges();
-          }
-        }
-
         if (presShell) {
           nsCOMPtr<nsICaret> caret;
           presShell->GetCaret(getter_AddRefs(caret));
@@ -1250,6 +1241,9 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
       }
     }
   }
+
+  mIsFocused = PR_FALSE;
+
   return NS_OK;
 }
 

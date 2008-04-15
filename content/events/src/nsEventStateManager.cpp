@@ -3520,6 +3520,13 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
       GetDocSelectionLocation(getter_AddRefs(selectionContent), getter_AddRefs(endSelectionContent), &selectionFrame, &selectionOffset);
       if (selectionContent == rootContent)  // If selection on rootContent, same as null -- we have no selection yet
         selectionFrame = nsnull;
+      // Don't start from the selection if the selection is in a contentEditable
+      // region.
+      nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
+      if (htmlDoc &&
+          htmlDoc->GetEditingState() == nsIHTMLDocument::eContentEditable &&
+          selectionContent && selectionContent->HasFlag(NODE_IS_EDITABLE))
+        selectionFrame = nsnull;
       // Only use tabindex if selection is synchronized with focus
       // That way, if the user clicks in content, or does a find text that lands between focusable elements,
       // they can then tab relative to that selection
