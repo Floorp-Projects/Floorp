@@ -6804,6 +6804,12 @@ let DownloadMonitorPanel = {
     this.updateStatus();
   },
 
+  onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus, aDownload) {
+  },
+
+  onSecurityChange: function(aWebProgress, aRequest, aState, aDownload) {
+  },
+
   //////////////////////////////////////////////////////////////////////////////
   //// nsISupports
 
