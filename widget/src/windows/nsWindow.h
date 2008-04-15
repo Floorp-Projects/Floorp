@@ -98,13 +98,13 @@ const LPCWSTR kWClassNameUI           = L"MozillaUIWindowClass";
 const LPCWSTR kWClassNameContent      = L"MozillaContentWindowClass";
 const LPCWSTR kWClassNameContentFrame = L"MozillaContentFrameWindowClass";
 const LPCWSTR kWClassNameGeneral      = L"MozillaWindowClass";
-const LPCWSTR kWClassNameDialog       = L"#32770";
+const LPCWSTR kWClassNameDialog       = L"MozillaDialogClass";
 const LPCSTR kClassNameHidden         = "MozillaHiddenWindowClass";
 const LPCSTR kClassNameUI             = "MozillaUIWindowClass";
 const LPCSTR kClassNameContent        = "MozillaContentWindowClass";
 const LPCSTR kClassNameContentFrame   = "MozillaContentFrameWindowClass";
 const LPCSTR kClassNameGeneral        = "MozillaWindowClass";
-const LPCSTR kClassNameDialog         = "#32770";
+const LPCSTR kClassNameDialog         = "MozillaDialogClass";
 
 /**
  * Native WIN32 window wrapper.
