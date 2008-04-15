@@ -34,7 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['Engine', 'BookmarksEngine', 'HistoryEngine', 'CookieEngine'];
+const EXPORTED_SYMBOLS = ['Engines', 'Engine',
+                          'BookmarksEngine', 'HistoryEngine', 'CookieEngine'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -54,9 +55,36 @@ Cu.import("resource://weave/async.js");
 
 Function.prototype.async = Async.sugar;
 
-function Engine(davCollection, pbeId) {
-  //this._init(davCollection, pbeId);
+// Singleton service, holds registered engines
+
+Utils.lazy(this, 'Engines', EngineManagerSvc);
+
+function EngineManagerSvc() {
+  this._engines = {};
 }
+EngineManagerSvc.prototype = {
+  get: function EngMgr_get(name) {
+    return this._engines[name]
+  },
+  getAll: function EngMgr_getAll() {
+    let ret = [];
+    for (key in this._engines) {
+      ret.push(this._engines[key]);
+    }
+    return ret;
+  },
+  register: function EngMgr_register(engine) {
+    this._engines[engine.name] = engine;
+  },
+  unregister: function EngMgr_unregister(val) {
+    let name = val;
+    if (val instanceof Engine)
+      name = val.name;
+    delete this._engines[name];
+  }
+};
+
+function Engine() {}
 Engine.prototype = {
   // "default-engine";
   get name() { throw "name property must be overridden in subclasses"; },
@@ -794,7 +822,7 @@ function BookmarksEngine(davCollection, pbeId) {
   this._init(davCollection, pbeId);
 }
 BookmarksEngine.prototype = {
-  get name() { return "bookmarks-engine"; },
+  get name() { return "bookmarks"; },
   get logName() { return "BmkEngine"; },
   get serverPrefix() { return "user-data/bookmarks/"; },
 
@@ -905,7 +933,7 @@ function HistoryEngine(davCollection, pbeId) {
   this._init(davCollection, pbeId);
 }
 HistoryEngine.prototype = {
-  get name() { return "history-engine"; },
+  get name() { return "history"; },
   get logName() { return "HistEngine"; },
   get serverPrefix() { return "user-data/history/"; },
 
@@ -925,12 +953,11 @@ HistoryEngine.prototype = {
 };
 HistoryEngine.prototype.__proto__ = new Engine();
 
-// Jono: the following is copy-and-paste code
 function CookieEngine(davCollection, pbeId) {
   this._init(davCollection, pbeId);
 }
 CookieEngine.prototype = {
-  get name() { return "cookie-engine"; },
+  get name() { return "cookies"; },
   get logName() { return "CookieEngine"; },
   get serverPrefix() { return "user-data/cookies/"; },
 
