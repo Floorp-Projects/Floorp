@@ -3879,17 +3879,73 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
     outGeckoEvent->charCode = 0;
     outGeckoEvent->keyCode  = 0; // not set for key press events
     
-    NSString* unmodifiedChars = [aKeyEvent charactersIgnoringModifiers];
-    if ([unmodifiedChars length] > 0)
-      outGeckoEvent->charCode = [unmodifiedChars characterAtIndex:0];
+    NSString* chars = [aKeyEvent characters];
+    if ([chars length] > 0)
+      outGeckoEvent->charCode = [chars characterAtIndex:0];
     
     // convert control-modified charCode to raw charCode (with appropriate case)
     if (outGeckoEvent->isControl && outGeckoEvent->charCode <= 26)
       outGeckoEvent->charCode += (outGeckoEvent->isShift) ? ('A' - 1) : ('a' - 1);
     
-    // gecko also wants charCode to be in the appropriate case
-    if (outGeckoEvent->isShift && (outGeckoEvent->charCode >= 'a' && outGeckoEvent->charCode <= 'z'))
-      outGeckoEvent->charCode -= 32; // convert to uppercase
+    // If Ctrl or Command is pressed, we should set shiftCharCode and
+    // unshiftCharCode for accessKeys and accelKeys.
+    if ((outGeckoEvent->isControl || outGeckoEvent->isMeta) &&
+        !outGeckoEvent->isAlt) {
+      SInt16 keyLayoutID =
+        ::GetScriptVariable(::GetScriptManagerVariable(smKeyScript),
+                            smScriptKeys);
+      Handle handle = ::GetResource('uchr', keyLayoutID);
+      PRUint32 unshiftedChar = 0;
+      PRUint32 shiftedChar = 0;
+      PRUint32 shiftedCmdChar = 0;
+      if (handle) {
+        UInt32 kbType = ::LMGetKbdType();
+        UInt32 deadKeyState = 0;
+        UniCharCount len;
+        UniChar chars[1];
+        OSStatus err;
+        err = ::UCKeyTranslate((UCKeyboardLayout*)*handle,
+                               [aKeyEvent keyCode],
+                               kUCKeyActionDown, 0,
+                               kbType, 0, &deadKeyState, 1, &len, chars);
+        if (noErr == err && len > 0)
+          unshiftedChar = chars[0];
+        deadKeyState = 0;
+        err = ::UCKeyTranslate((UCKeyboardLayout*)*handle, [aKeyEvent keyCode],
+                               kUCKeyActionDown, shiftKey >> 8,
+                               kbType, 0, &deadKeyState, 1, &len, chars);
+        if (noErr == err && len > 0)
+          shiftedChar = chars[0];
+        deadKeyState = 0;
+        err = ::UCKeyTranslate((UCKeyboardLayout*)*handle, [aKeyEvent keyCode],
+                               kUCKeyActionDown, (cmdKey | shiftKey) >> 8,
+                               kbType, 0, &deadKeyState, 1, &len, chars);
+        if (noErr == err && len > 0)
+          shiftedCmdChar = chars[0];
+      } else if (handle = (char**)::GetScriptManagerVariable(smKCHRCache)) {
+        UInt32 state = 0;
+        UInt32 keyCode = [aKeyEvent keyCode];
+        unshiftedChar = ::KeyTranslate(handle, keyCode, &state) & charCodeMask;
+        keyCode = [aKeyEvent keyCode] | shiftKey;
+        shiftedChar = ::KeyTranslate(handle, keyCode, &state) & charCodeMask;
+        keyCode = [aKeyEvent keyCode] | shiftKey | cmdKey;
+        shiftedCmdChar = ::KeyTranslate(handle, keyCode, &state) & charCodeMask;        
+      }
+      // If the current keyboad layout is switchable by Cmd key
+      // (e.g., Dvorak-QWERTY layout), we should not append the alternative
+      // char codes to unshiftedCharCodes and shiftedCharCodes.
+      // Because then, the alternative char codes might execute wrong item.
+      // Therefore, we should check whether the unshiftedChar and shiftedCmdChar
+      // are same. Because Cmd+Shift+'foo' returns unshifted 'foo'. So, they
+      // should be same for this case.
+      // Note that we cannot support the combination of Cmd and Shift needed
+      // char. (E.g., Cmd++ in US keyboard layout.)
+      if ((unshiftedChar || shiftedChar) &&
+          (!outGeckoEvent->isMeta || unshiftedChar == shiftedCmdChar)) {
+        nsAlternativeCharCode altCharCodes(unshiftedChar, shiftedChar);
+        outGeckoEvent->alternativeCharCodes.AppendElement(altCharCodes);
+      }
+    }
   }
   else {
     NSString* characters = nil;
