@@ -123,6 +123,9 @@ private:
   // updates, not to determine whether an update is still being
   // processed.
   PRBool mInUpdate;
+
+  // The list of tables that can use the default hash completer object.
+  nsTArray<nsCString> mGethashWhitelist;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsUrlClassifierDBService, NS_URLCLASSIFIERDBSERVICE_CID)

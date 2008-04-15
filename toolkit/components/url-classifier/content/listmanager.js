@@ -408,10 +408,16 @@ PROT_ListManager.prototype.makeUpdateRequest_ = function(tableData) {
     return;
   }
 
+  var tableList;
   var tableNames = {};
   for (var tableName in this.tablesData) {
     if (this.tablesData[tableName].needsUpdate)
       tableNames[tableName] = true;
+    if (!tableList) {
+      tableList = tableName;
+    } else {
+      tableList += "," + tableName;
+    }
   }
 
   var request = "";
@@ -444,7 +450,8 @@ PROT_ListManager.prototype.makeUpdateRequest_ = function(tableData) {
     return;
   }
 
-  if (!streamer.downloadUpdates(request,
+  if (!streamer.downloadUpdates(tableList,
+                                request,
                                 this.keyManager_.getClientKey(),
                                 BindToObject(this.updateSuccess_, this),
                                 BindToObject(this.updateError_, this),
