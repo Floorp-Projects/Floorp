@@ -1441,7 +1441,7 @@ GetAccessModifierMask(nsISupports* aDocShell)
 }
 
 static PRBool
-IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame, nsString& aKey)
+IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame, nsAString& aKey)
 {
   if (!aFrame)
     return PR_FALSE;
@@ -1465,6 +1465,45 @@ IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame, nsString& aKey)
   return PR_FALSE;
 }
 
+PRBool
+nsEventStateManager::ExecuteAccessKey(nsTArray<PRUint32>& aAccessCharCodes,
+                                      PRBool aIsTrustedEvent)
+{
+  PRInt32 count, start = -1;
+  if (mCurrentFocus) {
+    start = mAccessKeys.IndexOf(mCurrentFocus);
+    if (start == -1 && mCurrentFocus->GetBindingParent())
+      start = mAccessKeys.IndexOf(mCurrentFocus->GetBindingParent());
+  }
+  nsIContent *content;
+  nsIFrame *frame;
+  PRInt32 length = mAccessKeys.Count();
+  for (PRUint32 i = 0; i < aAccessCharCodes.Length(); ++i) {
+    PRUint32 ch = aAccessCharCodes[i];
+    nsAutoString accessKey;
+    AppendUCS4ToUTF16(ch, accessKey);
+    for (count = 1; count <= length; ++count) {
+      content = mAccessKeys[(start + count) % length];
+      frame = mPresContext->PresShell()->GetPrimaryFrameFor(content);
+      if (IsAccessKeyTarget(content, frame, accessKey)) {
+        PRBool shouldActivate = sKeyCausesActivation;
+        while (shouldActivate && ++count <= length) {
+          nsIContent *oc = mAccessKeys[(start + count) % length];
+          nsIFrame *of = mPresContext->PresShell()->GetPrimaryFrameFor(oc);
+          if (IsAccessKeyTarget(oc, of, accessKey))
+            shouldActivate = PR_FALSE;
+        }
+        if (shouldActivate)
+          content->PerformAccesskey(shouldActivate, aIsTrustedEvent);
+        else if (frame && frame->IsFocusable())
+          ChangeFocusWith(content, eEventFocusedByKey);
+        return PR_TRUE;
+      }
+    }
+  }
+  return PR_FALSE;
+}
+
 void
 nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
                                      nsKeyEvent *aEvent,
@@ -1476,37 +1515,15 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
   nsCOMPtr<nsISupports> pcContainer = aPresContext->GetContainer();
 
   // Alt or other accesskey modifier is down, we may need to do an accesskey
-  PRInt32 length = mAccessKeys.Count();
-  if (length > 0 && aModifierMask == GetAccessModifierMask(pcContainer)) {
+  if (mAccessKeys.Count() > 0 &&
+      aModifierMask == GetAccessModifierMask(pcContainer)) {
     // Someone registered an accesskey.  Find and activate it.
-    nsAutoString accKey(aEvent->charCode);
-    PRInt32 count, start = -1;
-    if (mCurrentFocus) {
-      start = mAccessKeys.IndexOf(mCurrentFocus);
-      if (start == -1 && mCurrentFocus->GetBindingParent())
-        start = mAccessKeys.IndexOf(mCurrentFocus->GetBindingParent());
-    }
-    nsIContent *content;
-    nsIFrame *frame;
-    for (count = 1; count <= length; ++count) {
-      content = mAccessKeys[(start + count) % length];
-      frame = mPresContext->PresShell()->GetPrimaryFrameFor(content);
-      if (IsAccessKeyTarget(content, frame, accKey)) {
-        PRBool shouldActivate = sKeyCausesActivation;
-        while (shouldActivate && ++count <= length) {
-          nsIContent *oc = mAccessKeys[(start + count) % length];
-          nsIFrame *of = mPresContext->PresShell()->GetPrimaryFrameFor(oc);
-          if (IsAccessKeyTarget(oc, of, accKey))
-            shouldActivate = PR_FALSE;
-        }
-        if (shouldActivate)
-          content->PerformAccesskey(shouldActivate,
-                                    NS_IS_TRUSTED_EVENT(aEvent));
-        else if (frame && frame->IsFocusable())
-          ChangeFocusWith(content, eEventFocusedByKey);
-        *aStatus = nsEventStatus_eConsumeNoDefault;
-        break;
-      }
+    PRBool isTrusted = NS_IS_TRUSTED_EVENT(aEvent);
+    nsAutoTArray<PRUint32, 10> accessCharCodes;
+    nsContentUtils::GetAccessKeyCandidates(aEvent, accessCharCodes);
+    if (ExecuteAccessKey(accessCharCodes, isTrusted)) {
+      *aStatus = nsEventStatus_eConsumeNoDefault;
+      return;
     }
   }
 

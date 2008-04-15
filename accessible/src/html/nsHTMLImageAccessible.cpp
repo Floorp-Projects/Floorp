@@ -226,14 +226,14 @@ NS_IMETHODIMP nsHTMLImageAccessible::DoAction(PRUint8 index)
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessibleHyperLink
 NS_IMETHODIMP
-nsHTMLImageAccessible::GetAnchorsCount(PRInt32 *aAnchors)
+nsHTMLImageAccessible::GetAnchorCount(PRInt32 *aAnchorCount)
 {
-  NS_ENSURE_ARG_POINTER(aAnchors);
+  NS_ENSURE_ARG_POINTER(aAnchorCount);
 
   if (!mMapElement)
-    return nsLinkableAccessible::GetAnchorsCount(aAnchors);
+    return nsLinkableAccessible::GetAnchorCount(aAnchorCount);
 
-  return GetChildCount(aAnchors);
+  return GetChildCount(aAnchorCount);
 }
 
 NS_IMETHODIMP

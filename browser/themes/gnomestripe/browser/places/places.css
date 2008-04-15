@@ -23,9 +23,15 @@ treechildren::-moz-tree-image(title) {
   margin: 0px 2px;
   width: 16px;
   height: 16px;
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+}
+
+treechildren::-moz-tree-image(title, livemarkItem) {
+  list-style-image: url("chrome://browser/skin/places/livemark-item.png");
 }
 
 treechildren::-moz-tree-image(title, separator) {
+  list-style-image: none;
   width: 0;
   height: 0;
 }
@@ -44,10 +50,30 @@ treechildren::-moz-tree-image(title, container, tagContainer) {
   -moz-image-region: auto;
 }
 
+treechildren::-moz-tree-image(container, OrganizerQuery_AllBookmarks) {
+  list-style-image: url("chrome://browser/skin/Toolbar-small.png");
+  -moz-image-region: rect(0px 48px 16px 32px);
+}
+
+treechildren::-moz-tree-image(container, OrganizerQuery_BookmarksToolbar) {
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");
+  -moz-image-region: auto;
+}
+
+treechildren::-moz-tree-image(container, OrganizerQuery_BookmarksMenu) {
+  list-style-image: url("chrome://browser/skin/places/bookmarksMenu.png");
+  -moz-image-region: auto;
+}
+
 /* query-nodes should be styled even if they're not expandable */
 treechildren::-moz-tree-image(title, query) {
   list-style-image: url("chrome://browser/skin/places/query.png");
   -moz-image-region: auto;
+}
+
+treechildren::-moz-tree-image(title, query, OrganizerQuery_History) {
+  list-style-image: url("chrome://browser/skin/Toolbar-small.png");
+  -moz-image-region: rect(0px 32px 16px 16px);
 }
 
 /* We want some queries to look like ordinary folders. This must come

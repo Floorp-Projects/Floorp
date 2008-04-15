@@ -1,0 +1,19 @@
+%include browser.css
+
+/* ::::: Identity Indicator Styling ::::: */
+
+#urlbar[chromedir="ltr"] {
+  -moz-margin-start: 6px;
+}
+
+#urlbar[chromedir="ltr"] > #identity-box {
+  -moz-margin-start: -6px;
+}
+
+#urlbar[chromedir="ltr"] > #identity-box > hbox {
+  margin: -4px 0;
+  padding: 3px 2px 3px 4px;
+  background-position: 0 3px;
+  -moz-border-radius-topleft: 14px;
+  -moz-border-radius-bottomleft: 14px;
+}

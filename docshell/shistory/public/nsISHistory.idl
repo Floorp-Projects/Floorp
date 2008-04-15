@@ -80,7 +80,9 @@ interface nsISHistory: nsISupports
 
   /**
    * A readonly property of the interface that returns 
-   * the index of the last document that started to load.
+   * the index of the last document that started to load and
+   * didn't finished yet. When document finishes the loading
+   * value -1 is returned.
    */
    readonly attribute long requestedIndex;
 

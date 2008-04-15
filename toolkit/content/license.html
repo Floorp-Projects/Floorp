@@ -120,12 +120,10 @@
     <h1 class="correctme"><a name="top"></a>about:license</h1>
 
     <div class="correctme">
-    
-    <p>Official <b>binaries</b> of this product released by the 
-    <a href="http://www.mozilla.com/">Mozilla Corporation</a>
-    are made available under 
-    <a href="http://www.mozilla.org/foundation/EULA/">the corresponding 
-    EULA</a>.</p>
+
+#ifdef APP_EULA_BLOCK
+#includesubst @APP_EULA_BLOCK@
+#endif
     
     <p>Except as described
        <a id="exceptions-link" href="about:license#exceptions">here</a>, all 

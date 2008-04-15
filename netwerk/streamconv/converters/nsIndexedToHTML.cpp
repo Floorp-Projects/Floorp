@@ -50,6 +50,9 @@
 #include "nsURLHelper.h"
 #include "nsCRT.h"
 #include "nsIPlatformCharset.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefLocalizedString.h"
 
 NS_IMPL_ISUPPORTS4(nsIndexedToHTML,
                    nsIDirIndexListener,
@@ -93,6 +96,22 @@ nsIndexedToHTML::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult) {
 
 nsresult
 nsIndexedToHTML::Init(nsIStreamListener* aListener) {
+
+    nsXPIDLString ellipsis;
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefs) {
+      nsCOMPtr<nsIPrefLocalizedString> prefVal;
+      prefs->GetComplexValue("intl.ellipsis",
+                           NS_GET_IID(nsIPrefLocalizedString),
+                           getter_AddRefs(prefVal));
+      if (prefVal)
+        prefVal->ToString(getter_Copies(ellipsis));
+    }
+    if (ellipsis.IsEmpty())
+      mEscapedEllipsis.AppendLiteral("&#8230;");
+    else
+      mEscapedEllipsis.Adopt(nsEscapeHTML2(ellipsis.get(), ellipsis.Length()));
+
     nsresult rv = NS_OK;
 
     mListener = aListener;
@@ -455,45 +474,37 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     if (fileURL) {
         //buffer.AppendLiteral("chrome://global/skin/dirListing/local.png");
         buffer.AppendLiteral("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB"
-                             "AAAAAQCAYAAAAf8/9hAAAABGd BTUEAANbY1E9YMgAAAfRJR"
-                             "EFUeNrFUk1IVFEU/t7MfU2pMRiGLVxYhGCgEoIbyZVGtFJXt"
-                             "hIDQ7BlgtvQpQs1NWgTA5YbscjZZLQNZkRpnEBFRR0sf9FG5"
-                             "zne9969z/PuvAHHEN114Xv33nfP+c453znA/15a9C1qhPS3c"
-                             "S4cYaPQtgHCmmlhvqkHo2QjLyP4WN44+azgTk3Ow9Rg/URyK"
-                             "y7hIOiRwrawTMSLHe/wJkvMHAdF/uB9wOzPIXj8cqQZvrLzA"
-                             "RsGnhdP0P6ekHJJmGGgIcB8kKaZa2p9/jffay9Q+QDNdOokG"
-                             "CoD109a9EnzKyhmwotzneAjCEUgrBOAp5GIRZD6Sy8sCEEVC"
-                             "pGBdHd17wArrMXUkLaaTu1id30RHgHHn1gUvhsVePjU1Sd5Q"
-                             "Qp+wLFI1zxsLU3jS1/jBuOU+fHhAZI7e6hq6aVwUTK0LyghA"
-                             "Meh0rVqzIZ7EE+gW2WwGQ+htPYVmJ4ggt+5TlKJRJGFapxEC"
-                             "ZZnx5yVXzPfh7/iB9N1qtlewK17r0n5cdVsUEng1CXBM47Zx"
-                             "Ypw4q9D5FP70bc5ULo4ZjfzgbuPuqDxeaJ/kjHUPZxbUhj4G"
-                             "R7G5s5hKDyDVfp1xKisWGS0tSqge9PmwVX/7D2L7X2Euj+g3"
-                             "5sDrrmJEW4TAq5Mlw+DGmHDa5WVdWBXdD5LosQ5BeW364651"
-                             "CZwAAAAAElFTkSuQmCC");
+                             "AAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZS"
+                             "BJbWFnZVJlYWR5ccllPAAAAWhJREFUeNrEk71KA0EQx/97uR"
+                             "A4CCIkNmIEO2NnYaOInc/gC1hHfAhLU0ewEi1S2YiFnRZWNh"
+                             "JTaFLEkySHgbtLvFzua929j1wC5hRSODDMMLPz29lhllBKMY"
+                             "8ImFPEl6vCKbOlGfly8aB1lEioXa7QWRLmkKQih1Cv8iM8t7"
+                             "EL1iFN6swHwPWYugDhU0kFR5ifL+746gsNYtypV0/4kycAmg"
+                             "YqEKjtNzhW/9fB5da3Id/vU12uVwKAKMIaqOgrClb3zmZXkv"
+                             "zYVZtV6PLxYQDwPAw1BVI2C9o7ny6KJkCmw3rzhpt3cRzotr"
+                             "CQKwC2Ex+O3j05xjBnah1ubgOAYcAxDaTTmWCYfDujQkJCG9"
+                             "KYcR0Trj3ilXc+YPDZZgEbmcUtICXF1/uQ8EoOCDsxlGcQIQ"
+                             "3qjh59wEfjCctrmxh2HuKCBIDarbHdsS+Y+8UB5V7jtcT0z/"
+                             "ufXZLYugjXgkgs8u+/8VuAAQBqe8GpcIXMpgAAAABJRU5Erk"
+                             "Jggg==");
     } else {
         //buffer.AppendLiteral("chrome://global/skin/dirListing/remote.png");
         buffer.AppendLiteral("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB"
-                             "AAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAohJRE"
-                             "FUeNqFU0tPE2EUPTMtr5G2DBCNYrVKxAXgKwgLNlYCiWGhG3"
-                             "eICxNZuXBl/AEQggsNO4Jxb0gwokYxGmNgIRuMSRcGbMAoVV"
-                             "NgBqSveX3e+01LwEicyZ37Te/cc859VMF/rrm5uWvkOm3bhu"
-                             "M4YM9mWZaRyWTeKXslJhKJi5FIpL1QKMQqKjQUKAmeB8FBIa"
-                             "DrNZiefmkE90i+Qq6DGPVwOIyl5RXJ7nkCnvAISMAlMALXgz"
-                             "MzM1fpY42smixEFjEMQ+eEVCq1U7L06+sGAXno7rkkfwum0+"
-                             "lMPN7VZZobkl3wLVilkMYvxIlaPYJnU0/R3HJWsnOMFIBLqO"
-                             "LkOw/n6ahAoa4o/kN6tt+bmxi5eV4yfpz/ANd1cbD3sq+gxM"
-                             "of6rV1UFUVCplaND4zgPB8xpZTbfIs/B5A5frpnQBUBAKBXa"
-                             "YWPV/cPGZMh5bwyHwgyyopqODxKKqCQDC4zS49l6Cqfm8I4P"
-                             "uhqYHlRWrmVppVjDEAR3VuCJfAjMcP7ENsv4aj9ZWI1lVKMF"
-                             "8Br4GN7ubryFsFCchTYQWeWqyTLbnw78UKqAFYngOXS/EsOa"
-                             "lSCfmysiCGb5yR47FtB9msz1BeXkZlCLl9qkKJtBuu5yLvWH"
-                             "KMUoGu6yvJ5KJGi9PI4zFNkwCycvPW1tbkyNLHpgfyjo2G2h"
-                             "PgZW6sb8attxcGclEqfafM0dHRjqamprYqrbo1FKrBi+dPkM"
-                             "vlJil0OnlkciRadxKthzvx/ssbpMxfOPejt//v/0K8oSEaqw"
-                             "6FSIGLvr5+jI+PxYeGhu5S7F7PfVNsWTnMfp7FwmBWeYVP2A"
-                             "Wwurr6bWLicay0/1SGoWna11L89e2fSvvwhlgYzG0r/wN/4X"
-                             "tnm2x4eQAAAABJRU5ErkJggg==");
+                             "AAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZS"
+                             "BJbWFnZVJlYWR5ccllPAAAAdBJREFUeNqcUz1LA0EQfXsXDz"
+                             "8jKAERsQiYQuwEsbfwq7AWe/0FamVl6S84W7GxESvTi/4EGz"
+                             "VW2ojxI8ll9y6368yuCSYRURdmd9/uzJs3e3PCGIP9/TODf4"
+                             "y9vTWRaYL19dlvnYxxEycyENB8oIGjk5K9twT1dNiC09PLX2"
+                             "VeXJxr7VsK0lTjxctCrCwj1w+MsPUB2QAYIIsS4E0BV+E5Yp"
+                             "V2E8SJtqsmhSmr1EwK8HGNghPaUw6UKYmMG90ESazt5QA5Kr"
+                             "qvkwUUyE+Q8YGGdipsMpkiqnQQKGK9zUygQE41CujxPp2J0P"
+                             "dcdiZlH6ne2hUwm5KurmpMh5/BLD8iMs9zpTVLl7JBKjoUSO"
+                             "XqqiiHWTJzBkwgHEH8haBdQdUdrs4MkWeZtMLZN2OCfOT9A3"
+                             "2JTgVEMBbdwVAqbbStmfcOwzZQEyvCnv+FIFYCxfPoj40s3G"
+                             "yM+w3C8MJmqrwHmwyvr2Wb+/R0Ly9bQlQPSSB2dhc6GomeuC"
+                             "77bHA+H8D3a04+dYKhx8vnsyiV4tCYQSTJ62FXI0n3xOHS0r"
+                             "jF8/OTGB3tt/vn5wjlcoRCASgWH8OkYVoErRJ4bG8fm6enmx"
+                             "8rz+WmcHCwIZr4Q4ABAI8O/FsARX5sAAAAAElFTkSuQmCC");
     }
     buffer.AppendLiteral("\">\n<title>");
 
@@ -824,8 +835,10 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
                 description.Truncate(description.Length() - 1);
 
             escapedShort.Adopt(nsEscapeHTML2(description.get(), description.Length()));
-            // add HORIZONTAL ELLIPSIS (U+2026) and ZERO WIDTH SPACE (U+200B) for wrapping
-            escapedShort.AppendLiteral("&#8230;&#8203;");
+
+            escapedShort.Append(mEscapedEllipsis);
+            // add ZERO WIDTH SPACE (U+200B) for wrapping
+            escapedShort.AppendLiteral("&#8203;");
             nsString tmp;
             tmp.Adopt(nsEscapeHTML2(descriptionAffix.get(), descriptionAffix.Length()));
             escapedShort.Append(tmp);

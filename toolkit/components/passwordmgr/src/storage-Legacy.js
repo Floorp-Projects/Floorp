@@ -699,13 +699,16 @@ LoginManagerStorage_legacy.prototype = {
         var ioService = this._ioService;
         var log = this.log;
 
-        function cleanupURL(aURL) {
+        function cleanupURL(aURL, allowJS) {
             var newURL, username = null, pathname = "";
 
             try {
                 var uri = ioService.newURI(aURL, null, null);
-
                 var scheme = uri.scheme;
+
+                if (allowJS && scheme == "javascript")
+                    return ["javascript:", null, ""];
+
                 newURL = scheme + "://" + uri.host;
 
                 // If the URL explicitly specified a port, only include it when
@@ -758,7 +761,8 @@ LoginManagerStorage_legacy.prototype = {
 
 
         if (aLogin.formSubmitURL) {
-            [hostname, username, pathname] = cleanupURL(aLogin.formSubmitURL);
+            [hostname, username, pathname] = cleanupURL(aLogin.formSubmitURL,
+                                                        true);
             aLogin.formSubmitURL = hostname;
             // username, if any, ignored.
         }

@@ -1185,8 +1185,9 @@ private:
   nsTArray<PendingLookup> mPendingLookups;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsUrlClassifierDBServiceWorker,
-                              nsIUrlClassifierDBServiceWorker)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsUrlClassifierDBServiceWorker,
+                              nsIUrlClassifierDBServiceWorker,
+                              nsIUrlClassifierDBService)
 
 nsUrlClassifierDBServiceWorker::nsUrlClassifierDBServiceWorker()
   : mUpdateWait(0)

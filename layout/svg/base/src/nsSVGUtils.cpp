@@ -888,9 +888,46 @@ nsSVGUtils::UpdateFilterRegion(nsIFrame *aFrame)
   }
 }
 
-void 
+void
+nsSVGUtils::UpdateGraphic(nsISVGChildFrame *aSVGFrame)
+{
+  nsIFrame *frame;
+  CallQueryInterface(aSVGFrame, &frame);
+
+  if (frame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
+    return;
+
+  nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(frame);
+  if (!outerSVGFrame) {
+    NS_ERROR("null outerSVGFrame");
+    return;
+  }
+
+  if (outerSVGFrame->IsRedrawSuspended()) {
+    frame->AddStateBits(NS_STATE_SVG_DIRTY);
+  } else {
+    frame->RemoveStateBits(NS_STATE_SVG_DIRTY);
+
+    // Invalidate the area we used to cover
+    outerSVGFrame->InvalidateCoveredRegion(frame);
+
+    aSVGFrame->UpdateCoveredRegion();
+
+    // Invalidate the area we now cover
+    outerSVGFrame->InvalidateCoveredRegion(frame);
+
+    NotifyAncestorsOfFilterRegionChange(frame);
+  }
+}
+
+void
 nsSVGUtils::NotifyAncestorsOfFilterRegionChange(nsIFrame *aFrame)
 {
+  if (aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG) {
+    // It would be better if we couldn't get here
+    return;
+  }
+
   aFrame = aFrame->GetParent();
 
   while (aFrame) {

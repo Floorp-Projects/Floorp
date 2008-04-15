@@ -820,7 +820,6 @@ gfxQuartzFontCache::InitFontList()
     // initialize ranges of characters for which system-wide font search should be skipped
     mCodepointsWithNoFonts.SetRange(0,0x1f);     // C0 controls
     mCodepointsWithNoFonts.SetRange(0x7f,0x9f);  // C1 controls
-    mCodepointsWithNoFonts.set(0xfffd);          // unknown
 
     InitBadUnderlineList();
 
@@ -1151,6 +1150,24 @@ gfxQuartzFontCache::FindFontForChar(const PRUint32 aCh, gfxAtsuiFont *aPrevFont)
     // is codepoint with no matching font? return null immediately
     if (mCodepointsWithNoFonts.test(aCh)) {
         return nsnull;
+    }
+    
+    // short-circuit system font fallback for U+FFFD, used to represent encoding errors
+    // just use Lucida Grande (system font, guaranteed to be around)
+    // this helps speed up pages with lots of encoding errors, binary-as-text, etc.
+    if (aCh == 0xFFFD) {
+        MacOSFontEntry* fontEntry;
+        PRBool needsBold;  // ignored in the system fallback case
+        
+        if (aPrevFont) {
+            fontEntry = FindFontForFamily(NS_LITERAL_STRING("Lucida Grande"), aPrevFont->GetStyle(), needsBold);
+        } else {
+            gfxFontStyle normalStyle;
+            fontEntry = FindFontForFamily(NS_LITERAL_STRING("Lucida Grande"), &normalStyle, needsBold);
+        }
+
+        if (fontEntry && fontEntry->TestCharacterMap(aCh))
+            return fontEntry;
     }
 
     FontSearch data(aCh, aPrevFont);

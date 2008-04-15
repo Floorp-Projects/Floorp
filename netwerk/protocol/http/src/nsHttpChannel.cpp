@@ -1540,10 +1540,11 @@ nsHttpChannel::UpdateExpirationTime()
 {
     NS_ENSURE_TRUE(mResponseHead, NS_ERROR_FAILURE);
 
+    nsresult rv;
+
     PRUint32 expirationTime = 0;
     if (!mResponseHead->MustValidate()) {
         PRUint32 freshnessLifetime = 0;
-        nsresult rv;
 
         rv = mResponseHead->ComputeFreshnessLifetime(&freshnessLifetime);
         if (NS_FAILED(rv)) return rv;
@@ -1569,7 +1570,16 @@ nsHttpChannel::UpdateExpirationTime()
                 expirationTime = now;
         }
     }
-    return mCacheEntry->SetExpirationTime(expirationTime);
+
+    rv = mCacheEntry->SetExpirationTime(expirationTime);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (mOfflineCacheEntry) {
+        rv = mOfflineCacheEntry->SetExpirationTime(expirationTime);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    return NS_OK;
 }
 
 // CheckCache is called from Connect after a cache entry has been opened for
@@ -1631,10 +1641,11 @@ nsHttpChannel::CheckCache()
 
     // Don't bother to validate LOAD_ONLY_FROM_CACHE items.
     // Don't bother to validate items that are read-only,
-    // unless they are read-only because of INHIBIT_CACHING.
+    // unless they are read-only because of INHIBIT_CACHING or because
+    // we're updating the offline cache.
     if (mLoadFlags & LOAD_ONLY_FROM_CACHE ||
         (mCacheAccess == nsICache::ACCESS_READ &&
-         !(mLoadFlags & INHIBIT_CACHING))) {
+         !((mLoadFlags & INHIBIT_CACHING) || mCacheForOfflineUse))) {
         mCachedContentIsValid = PR_TRUE;
         return NS_OK;
     }
@@ -2052,6 +2063,17 @@ nsHttpChannel::InitOfflineCacheEntry()
         CloseOfflineCacheEntry();
 
         return NS_OK;
+    }
+
+    // This entry's expiration time should match the main entry's expiration
+    // time.  UpdateExpirationTime() will keep it in sync once the offline
+    // cache entry has been created.
+    if (mCacheEntry) {
+        PRUint32 expirationTime;
+        nsresult rv = mCacheEntry->GetExpirationTime(&expirationTime);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        mOfflineCacheEntry->SetExpirationTime(expirationTime);
     }
 
     return AddCacheEntryHeaders(mOfflineCacheEntry);

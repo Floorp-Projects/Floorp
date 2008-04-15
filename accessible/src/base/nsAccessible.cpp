@@ -2056,6 +2056,9 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
       role == nsIAccessibleRole::ROLE_PUSHBUTTON ||
       role == nsIAccessibleRole::ROLE_MENUITEM ||
       role == nsIAccessibleRole::ROLE_LISTITEM ||
+      role == nsIAccessibleRole::ROLE_OPTION ||
+      role == nsIAccessibleRole::ROLE_RADIOBUTTON ||
+      role == nsIAccessibleRole::ROLE_RICH_OPTION ||
       role == nsIAccessibleRole::ROLE_OUTLINEITEM ||
       content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_checked)) {
     // Might be checkable -- checking role & ARIA attribute first is faster than getting state
@@ -2080,6 +2083,8 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
         role == nsIAccessibleRole::ROLE_MENUITEM ||
         role == nsIAccessibleRole::ROLE_RADIOBUTTON ||
         role == nsIAccessibleRole::ROLE_PAGETAB ||
+        role == nsIAccessibleRole::ROLE_OPTION ||
+        role == nsIAccessibleRole::ROLE_RADIOBUTTON ||
         role == nsIAccessibleRole::ROLE_OUTLINEITEM) &&
         0 == (State(this) & nsIAccessibleStates::STATE_INVISIBLE)) {
       nsCOMPtr<nsIAccessible> parent = GetParent();
@@ -3259,12 +3264,12 @@ NS_IMETHODIMP nsAccessible::SelectAllSelection(PRBool *_retval)
 // nsIAccessibleHyperLink, which helps determine where it is located
 // within containing text
 
-// readonly attribute long nsIAccessibleHyperLink::anchorsCount
+// readonly attribute long nsIAccessibleHyperLink::anchorCount
 NS_IMETHODIMP
-nsAccessible::GetAnchorsCount(PRInt32 *aAnchorsCount)
+nsAccessible::GetAnchorCount(PRInt32 *aAnchorCount)
 {
-  NS_ENSURE_ARG_POINTER(aAnchorsCount);
-  *aAnchorsCount = 1;
+  NS_ENSURE_ARG_POINTER(aAnchorCount);
+  *aAnchorCount = 1;
   return NS_OK;
 }
 
@@ -3523,6 +3528,7 @@ PRBool nsAccessible::MustPrune(nsIAccessible *aAccessible)
          role == nsIAccessibleRole::ROLE_COMBOBOX_OPTION ||
          role == nsIAccessibleRole::ROLE_OPTION ||
          role == nsIAccessibleRole::ROLE_ENTRY ||
+         role == nsIAccessibleRole::ROLE_FLAT_EQUATION ||
          role == nsIAccessibleRole::ROLE_PASSWORD_TEXT ||
          role == nsIAccessibleRole::ROLE_PUSHBUTTON ||
          role == nsIAccessibleRole::ROLE_TOGGLE_BUTTON ||

@@ -742,12 +742,6 @@ nsTreeBodyFrame::InvalidateRange(PRInt32 aStart, PRInt32 aEnd)
   if (aStart == aEnd)
     return InvalidateRow(aStart);
 
-#ifdef ACCESSIBILITY
-  nsIPresShell *presShell = PresContext()->PresShell();
-  if (presShell->IsAccessibilityActive())
-    FireInvalidateEvent(aStart, aEnd, nsnull, nsnull);
-#endif
-
   PRInt32 last = GetLastVisibleRow();
   if (aStart > aEnd || aEnd < mTopRowIndex || aStart > last)
     return NS_OK;
@@ -757,6 +751,15 @@ nsTreeBodyFrame::InvalidateRange(PRInt32 aStart, PRInt32 aEnd)
 
   if (aEnd > last)
     aEnd = last;
+
+#ifdef ACCESSIBILITY
+  nsIPresShell *presShell = PresContext()->PresShell();
+  if (presShell->IsAccessibilityActive()) {
+    PRInt32 end =
+      mRowCount > 0 ? ((mRowCount <= aEnd) ? mRowCount - 1 : aEnd) : 0;
+    FireInvalidateEvent(aStart, end, nsnull, nsnull);
+  }
+#endif
 
   nsRect rangeRect(mInnerBox.x, mInnerBox.y+mRowHeight*(aStart-mTopRowIndex), mInnerBox.width, mRowHeight*(aEnd-aStart+1));
   nsIFrame::Invalidate(rangeRect, PR_FALSE);
@@ -777,12 +780,6 @@ nsTreeBodyFrame::InvalidateColumnRange(PRInt32 aStart, PRInt32 aEnd, nsITreeColu
   if (aStart == aEnd)
     return InvalidateCell(aStart, col);
 
-#ifdef ACCESSIBILITY
-  nsIPresShell *presShell = PresContext()->PresShell();
-  if (presShell->IsAccessibilityActive())
-    FireInvalidateEvent(aStart, aEnd, aCol, aCol);
-#endif
-
   PRInt32 last = GetLastVisibleRow();
   if (aStart > aEnd || aEnd < mTopRowIndex || aStart > last)
     return NS_OK;
@@ -792,6 +789,15 @@ nsTreeBodyFrame::InvalidateColumnRange(PRInt32 aStart, PRInt32 aEnd, nsITreeColu
 
   if (aEnd > last)
     aEnd = last;
+
+#ifdef ACCESSIBILITY
+  nsIPresShell *presShell = PresContext()->PresShell();
+  if (presShell->IsAccessibilityActive()) {
+    PRInt32 end =
+      mRowCount > 0 ? ((mRowCount <= aEnd) ? mRowCount - 1 : aEnd) : 0;
+    FireInvalidateEvent(aStart, end, aCol, aCol);
+  }
+#endif
 
   nsRect rangeRect;
   nsresult rv = col->GetRect(this, 

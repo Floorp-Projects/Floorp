@@ -18,7 +18,7 @@
     </em:targetApplication>
 
     <!-- front-end metadata -->
-    <em:name>Metrics Collector</em:name>
+    <em:name>Spectator</em:name>
     <em:description>Collects anonymous usage statistics from the browser</em:description>
     <em:creator>mozilla.org</em:creator>
     <em:optionsURL>chrome://metrics/content/prefs.xul</em:optionsURL>

@@ -1528,20 +1528,31 @@ public:
 
             HDC dc = GetDC((HWND)nsnull);
             HFONT hfont = font->GetHFONT();
-            SelectObject(dc, hfont);
+            HFONT oldFont = (HFONT)SelectObject(dc, hfont);
 
             PRUnichar str[1] = { (PRUnichar)ch };
             WORD glyph[1];
 
-            // ScriptGetCMap works better than GetGlyphIndicesW for things like bitmap/vector fonts
-            HRESULT rv = ScriptGetCMap(dc, font->ScriptCache(), str, 1, 0, glyph);
+            PRBool hasGlyph = PR_FALSE;
+            if (aFontEntry->mIsType1) {
+                // Type1 fonts and uniscribe APIs don't get along.  ScriptGetCMap will return E_HANDLE
+                DWORD ret = GetGlyphIndicesW(dc, str, 1, glyph, GGI_MARK_NONEXISTING_GLYPHS);
+                if (ret != GDI_ERROR && glyph[0] != 0xFFFF)
+                    hasGlyph = PR_TRUE;
+            } else {
+                // ScriptGetCMap works better than GetGlyphIndicesW for things like bitmap/vector fonts
+                HRESULT rv = ScriptGetCMap(dc, font->ScriptCache(), str, 1, 0, glyph);
+                if (rv == S_OK)
+                    hasGlyph = PR_TRUE;
+            }
 
-            ReleaseDC(NULL, dc);
-
-            if (rv == S_OK) {
+            if (hasGlyph) {
                 aFontEntry->mCharacterMap.set(ch);
                 return PR_TRUE;
             }
+
+            SelectObject(dc, oldFont);
+            ReleaseDC(NULL, dc);
         }
 
         return PR_FALSE;

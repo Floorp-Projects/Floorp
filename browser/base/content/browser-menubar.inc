@@ -407,7 +407,7 @@
                oncommand="BookmarksEventHandler.onCommand(event);"
                onclick="BookmarksEventHandler.onClick(event);"
                onpopupshowing="BookmarksEventHandler.onPopupShowing(event);">
-      <menuitem label="&bookmarkThisPageCmd.label;" 
+      <menuitem label="&bookmarkThisPageCmd.label;"
                 command="Browser:AddBookmarkAs" key="addBookmarkAsKb"/>
       <menuitem id="subscribeToPageMenuitem"
                 label="&subscribeToPageMenuitem.label;"
@@ -418,17 +418,17 @@
             label="&subscribeToPageMenupopup.label;"
             hidden="true">
         <menupopup id="subscribeToPageSubmenuMenupopup" 
-                   onpopupshowing="return FeedHandler.buildFeedList(event.target);" 
+                   onpopupshowing="return FeedHandler.buildFeedList(event.target);"
                    oncommand="return FeedHandler.subscribeToFeed(null, event);"
                    onclick="checkForMiddleClick(this, event);"/>
       </menu>
-      <menuitem label="&addCurPagesCmd.label;" 
+      <menuitem label="&addCurPagesCmd.label;"
                 command="Browser:BookmarkAllTabs" key="bookmarkAllTabsKb"/>
-      <menuseparator id="organizeBookmarksSeparator"/>
       <menuitem id="bookmarksShowAll"
                 label="&organizeBookmarks.label;"
                 command="Browser:ShowAllBookmarks"
                 key="manBookmarkKb"/>
+      <menuseparator id="organizeBookmarksSeparator"/>
       <menu id="bookmarksToolbarFolderMenu"
             class="menu-iconic bookmark-item"
             container="true">

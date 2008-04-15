@@ -42,11 +42,11 @@ Runs the Mochitest test harness.
 """
 
 from datetime import datetime
+import logging
 import optparse
 import os
 import os.path
 import re
-import signal
 import sys
 import time
 from urllib import quote_plus as encodeURIComponent
@@ -82,6 +82,9 @@ PROFILE_DIRECTORY = os.path.abspath("./mochitesttestingprofile")
 
 LEAK_REPORT_FILE = PROFILE_DIRECTORY + "/" + "leaks-report.log"
 
+log = logging.getLogger()
+
+
 #######################
 # COMMANDLINE OPTIONS #
 #######################
@@ -103,7 +106,8 @@ class MochitestOptions(optparse.OptionParser):
     defaults["app"] = automation.DEFAULT_APP
 
     self.add_option("--log-file",
-                    action = "store", type = "string", dest = "logFile",
+                    action = "store", type = "string",
+                    dest = "logFile", metavar = "FILE",
                     help = "file to which logging occurs")
     defaults["logFile"] = ""
 
@@ -112,19 +116,23 @@ class MochitestOptions(optparse.OptionParser):
                     help = "start running tests when the application starts")
     defaults["autorun"] = False
 
-    LOG_LEVELS = ("DEBUG", "INFO", "ERROR", "FATAL", "WARNING")
+    LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR", "FATAL")
+    LEVEL_STRING = ", ".join(LOG_LEVELS)
 
     self.add_option("--console-level",
                     action = "store", type = "choice", dest = "consoleLevel",
-                    choices = LOG_LEVELS,
-                    help = "logging level of console logging")
+                    choices = LOG_LEVELS, metavar = "LEVEL",
+                    help = "one of %s to determine the level of console "
+                           "logging" % LEVEL_STRING)
     defaults["consoleLevel"] = None
 
     self.add_option("--file-level", 
                     action = "store", type = "choice", dest = "fileLevel",
-                    choices = LOG_LEVELS,
-                    help = "logging level of file logging")
-    defaults["fileLevel"] = None
+                    choices = LOG_LEVELS, metavar = "LEVEL",
+                    help = "one of %s to determine the level of file "
+                           "logging if a file has been specified, defaulting "
+                           "to INFO" % LEVEL_STRING)
+    defaults["fileLevel"] = "INFO"
 
     self.add_option("--chrome",
                     action = "store_true", dest = "chrome",
@@ -146,18 +154,21 @@ class MochitestOptions(optparse.OptionParser):
                     help = "run accessibility Mochitests");
 
     self.add_option("--setenv",
-                    action = "append", type = "string", dest = "environment",
-                    help = "given a VAR=value pair, sets that in the "
-                           "browser's environment")
+                    action = "append", type = "string",
+                    dest = "environment", metavar = "NAME=VALUE",
+                    help = "sets the given variable in the application's "
+                           "environment")
     defaults["environment"] = []
     
     self.add_option("--browser-arg",
-                    action = "append", type = "string", dest = "browserArgs",
+                    action = "append", type = "string",
+                    dest = "browserArgs", metavar = "ARG",
                     help = "provides an argument to the test application")
     defaults["browserArgs"] = []
 
     self.add_option("--leak-threshold",
-                    action = "store", type = "int", dest = "leakThreshold",
+                    action = "store", type = "int",
+                    dest = "leakThreshold", metavar = "THRESHOLD",
                     help = "fail if the number of bytes leaked through "
                            "refcounted objects (or bytes in classes with "
                            "MOZ_COUNT_CTOR and MOZ_COUNT_DTOR) is greater "
@@ -171,12 +182,9 @@ class MochitestOptions(optparse.OptionParser):
     usage = """\
 Usage instructions for runtests.py.
 All arguments are optional.
-If --log-file is specified, --file-level must be specified as well.
 If --chrome is specified, chrome tests will be run instead of web content tests.
 If --browser-chrome is specified, browser-chrome tests will be run instead of web content tests.
-Logging levels are one of %s.
-For further details on the logging levels, see
-<http://mochikit.com/doc/html/MochiKit/Logging.html>.""" % ", ".join(LOG_LEVELS)
+See <http://mochikit.com/doc/html/MochiKit/Logging.html> for details on the logging levels."""
     self.set_usage(usage)
 
 
@@ -210,7 +218,7 @@ class MochitestServer:
     if pid < 0:
       print "Error starting server."
       sys.exit(2)
-    print "Server pid: " + str(pid)
+    log.info("Server pid: %d", pid)
     
 
   def ensureReady(self, timeout):
@@ -229,17 +237,13 @@ class MochitestServer:
       sys.exit(1)
 
   def stop(self):
-    pid = self._process.pid
     try:
       c = urllib2.urlopen(SERVER_SHUTDOWN_URL)
       c.read()
       c.close()
-      os.waitpid(pid, 0)
+      self._process.wait()
     except:
-      if automation.IS_WIN32:
-        pass # XXX do something here!
-      else:
-        os.kill(pid, signal.SIGKILL)
+      self._process.kill()
 
 
 #################
@@ -321,7 +325,6 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
       urlOpts.append("closeWhenDone=1")
     if options.logFile:
       urlOpts.append("logFile=" + encodeURIComponent(options.logFile))
-    if options.fileLevel:
       urlOpts.append("fileLevel=" + encodeURIComponent(options.fileLevel))
     if options.consoleLevel:
       urlOpts.append("consoleLevel=" + encodeURIComponent(options.consoleLevel))
@@ -333,14 +336,16 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   start = automation.runApp(testURL, browserEnv, options.app, PROFILE_DIRECTORY,
                             options.browserArgs)
 
+  # Server's no longer needed, and perhaps more importantly, anything it might
+  # spew to console shouldn't disrupt the leak information table we print next.
   server.stop()
 
   if not os.path.exists(LEAK_REPORT_FILE):
-    print "WARNING refcount logging is off, so leaks can't be detected!"
+    log.info("WARNING refcount logging is off, so leaks can't be detected!")
   else:
     leaks = open(LEAK_REPORT_FILE, "r")
     for line in leaks:
-      print line,
+      log.info(line.rstrip())
     leaks.close()
 
     threshold = options.leakThreshold
@@ -365,12 +370,12 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
         if bytesLeaked > threshold:
           thresholdExceeded = True
           prefix = "ERROR FAIL"
-          print ("ERROR FAIL leaked %(actual)d bytes during test "
-                 "execution (should have leaked no more than "
-                 "%(expect)d bytes)") % { "actual": bytesLeaked,
-                                          "expect": threshold }
+          log.info("ERROR FAIL leaked %d bytes during test execution (should "
+                   "have leaked no more than %d bytes)",
+                   bytesLeaked, threshold)
         elif bytesLeaked > 0:
-          print "WARNING leaked %d bytes during test execution" % bytesLeaked
+          log.info("WARNING leaked %d bytes during test execution",
+                   bytesLeaked)
       else:
         numLeaked = int(matches.group("numLeaked"))
         if numLeaked != 0:
@@ -380,26 +385,30 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
           else:
             instance = "instance"
             rest = ""
-          vars = { "prefix": prefix,
-                   "numLeaked": numLeaked,
-                   "instance": instance,
-                   "name": name,
-                   "size": matches.group("size"),
-                   "rest": rest }
-          print ("%(prefix)s leaked %(numLeaked)d %(instance)s of %(name)s "
-                 "with size %(size)s bytes%(rest)s") % vars
+          log.info("%(prefix)s leaked %(numLeaked)d %(instance)s of %(name)s "
+                   "with size %(size)s bytes%(rest)s" %
+                   { "prefix": prefix,
+                     "numLeaked": numLeaked,
+                     "instance": instance,
+                     "name": name,
+                     "size": matches.group("size"),
+                     "rest": rest })
     if not seenTotal:
-      print "ERROR FAIL missing output line for total leaks!"
+      log.info("ERROR FAIL missing output line for total leaks!")
     leaks.close()
 
 
   # print test run times
   finish = datetime.now()
-  print " started: " + str(start)
-  print "finished: " + str(finish)
+  log.info(" started: %s", str(start))
+  log.info("finished: %s", str(finish))
 
   # delete the profile and manifest
   os.remove(manifest)
+
+  # hanging due to non-halting threads is no fun; assume we hit the errors we
+  # were going to hit already and exit with a success code
+  sys.exit(0)
 
 
 
@@ -469,7 +478,7 @@ toolbar#nav-bar {
   (path, leaf) = os.path.split(options.app)
   manifest = path + "/" + "chrome/mochikit.manifest"
   manifestFile = open(manifest, "w")
-  manifestFile.write("content mochikit " + chrometestDir + "\n")
+  manifestFile.write("content mochikit " + chrometestDir + " contentaccessible=yes\n")
   if options.browserChrome:
     overlayLine = "overlay " + BROWSER_CHROME_URL + " " \
                   "chrome://mochikit/content/browser-test-overlay.xul\n"

@@ -180,6 +180,9 @@ public:
   void LoadLayout ();
   void OnKeyDown (PRUint8 aVirtualKey);
   PRUint32 GetUniChars (PRUint16* aUniChars, PRUint8* aShiftStates, PRUint32 aMaxChars) const;
+  PRUint32 GetUniCharsWithShiftState(PRUint8 aVirtualKey, PRUint8 aShiftStates,
+                                     PRUint16* aUniChars,
+                                     PRUint32 aMaxChars) const;
 };
 
 #endif

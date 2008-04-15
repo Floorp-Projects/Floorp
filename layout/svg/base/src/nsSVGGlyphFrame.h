@@ -130,9 +130,8 @@ public:
   NS_IMETHOD_(PRBool) IsDisplayContainer() { return PR_FALSE; }
   NS_IMETHOD_(PRBool) HasValidCoveredRect() { return PR_TRUE; }
 
-  // nsISVGGeometrySource interface: 
+  // nsSVGGeometryFrame methods
   NS_IMETHOD GetCanvasTM(nsIDOMSVGMatrix * *aCTM);
-  virtual nsresult UpdateGraphic(PRBool suppressInvalidation = PR_FALSE);
 
   // nsISVGGlyphFragmentLeaf interface:
   // These do not use the global transform if NS_STATE_NONDISPLAY_CHILD
@@ -207,8 +206,7 @@ protected:
   void FillCharacters(CharacterIterator *aIter,
                       gfxContext *aContext);
 
-  void UpdateGeometry(PRBool bRedraw, PRBool suppressInvalidation);
-  void UpdateMetrics();
+  void NotifyGlyphMetricsChange();
   PRBool ContainsPoint(float x, float y);
   PRBool GetGlobalTransform(gfxMatrix *aMatrix);
   void SetupGlobalTransform(gfxContext *aContext);

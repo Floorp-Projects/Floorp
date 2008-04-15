@@ -181,7 +181,7 @@ class nsCookieService : public nsICookieService
     static PRBool                 GetExpiry(nsCookieAttributes &aCookie, PRInt64 aServerTime, PRInt64 aCurrentTime);
     void                          RemoveAllFromMemory();
     void                          RemoveExpiredCookies(PRInt64 aCurrentTime);
-    PRBool                        FindCookie(const nsAFlatCString &aHost, const nsAFlatCString &aName, const nsAFlatCString &aPath, nsListIter &aIter);
+    PRBool                        FindCookie(const nsAFlatCString &aHost, const nsAFlatCString &aName, const nsAFlatCString &aPath, nsListIter &aIter, PRInt64 aCurrentTime);
     void                          FindOldestCookie(nsEnumerationData &aData);
     PRUint32                      CountCookiesFromHostInternal(const nsACString &aHost, nsEnumerationData &aData);
     void                          NotifyRejected(nsIURI *aHostURI);

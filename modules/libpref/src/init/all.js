@@ -69,7 +69,7 @@ pref("browser.cache.check_doc_frequency",   3);
 
 pref("browser.cache.offline.enable",           true);
 // offline cache capacity in kilobytes
-pref("browser.cache.offline.capacity",         10240);
+pref("browser.cache.offline.capacity",         512000);
 
 // offline apps should be limited to this much data in global storage
 // (in kilobytes)
@@ -1515,7 +1515,10 @@ pref("browser.drag_out_of_frame_style", 1);
 pref("ui.key.saveLink.shift", false); // true = shift, false = meta
 pref("ui.click_hold_context_menus", false);
 
-// default font name (in UTF8)
+// default fonts (in UTF8 and using canonical names)
+// to determine canonical font names, use a debug build and 
+// enable NSPR logging for module fontInfoLog:5
+// canonical names immediately follow '(fontinit) family:' in the log
 
 pref("font.name.serif.ar", "Al Bayan");
 pref("font.name.sans-serif.ar", "Geeza Pro");
@@ -1550,12 +1553,12 @@ pref("font.name-list.monospace.he", "Arial Hebrew");
 pref("font.name-list.cursive.he", "Corsiva Hebrew");
 pref("font.name-list.fantasy.he", "Corsiva Hebrew");
 
-pref("font.name.serif.ja", "ヒラギノ明朝 Pro"); 
-pref("font.name.sans-serif.ja", "ヒラギノ角ゴ Pro"); 
-pref("font.name.monospace.ja", "Osaka−等幅"); 
-pref("font.name-list.serif.ja", "ヒラギノ明朝 Pro"); 
-pref("font.name-list.sans-serif.ja", "ヒラギノ角ゴ Pro"); 
-pref("font.name-list.monospace.ja", "Osaka−等幅"); 
+pref("font.name.serif.ja", "Hiragino Mincho Pro"); 
+pref("font.name.sans-serif.ja", "Hiragino Kaku Gothic Pro"); 
+pref("font.name.monospace.ja", "Osaka-Mono"); 
+pref("font.name-list.serif.ja", "Hiragino Mincho Pro"); 
+pref("font.name-list.sans-serif.ja", "Hiragino Kaku Gothic Pro"); 
+pref("font.name-list.monospace.ja", "Osaka-Mono"); 
 
 pref("font.name.serif.ko", "AppleMyungjo"); 
 pref("font.name.sans-serif.ko", "AppleGothic"); 
@@ -1691,10 +1694,24 @@ pref("font.name-list.monospace.x-guru", "Gurmukhi MT");
 // add this section when fonts exist
 
 // no suitable fonts for telugu ship with mac os x
-// add this section when fonts exist
+// however one can be freely downloaded
+// Pothana http://web.nickshanks.com/typography/telugu/
+pref("font.name.serif.x-telu", "Pothana");
+pref("font.name.sans-serif.x-telu", "Pothana");
+pref("font.name.monospace.x-telu", "Pothana");
+pref("font.name-list.serif.x-telu", "Pothana");
+pref("font.name-list.sans-serif.x-telu", "Pothana");
+pref("font.name-list.monospace.x-telu", "Pothana");
 
 // no suitable fonts for kannada ship with mac os x
-// add this section when fonts exist
+// however one can be freely downloaded
+// Kedage http://web.nickshanks.com/typography/kannada/
+pref("font.name.serif.x-knda", "Kedage");
+pref("font.name.sans-serif.x-knda", "Kedage");
+pref("font.name.monospace.x-knda", "Kedage");
+pref("font.name-list.serif.x-knda", "Kedage");
+pref("font.name-list.sans-serif.x-knda", "Kedage");
+pref("font.name-list.monospace.x-knda", "Kedage");
 
 // no suitable fonts for sinhala ship with mac os x
 // add this section when fonts exist
@@ -1728,10 +1745,10 @@ pref("font.name-list.monospace.x-western", "Courier");
 pref("font.name-list.cursive.x-western", "Apple Chancery");
 pref("font.name-list.fantasy.x-western", "Papyrus");
 
-pref("font.name.serif.zh-CN", "华文宋体");
+pref("font.name.serif.zh-CN", "STSong");
 pref("font.name.sans-serif.zh-CN", "STHeiti");
 pref("font.name.monospace.zh-CN", "STHeiti");
-pref("font.name-list.serif.zh-CN", "华文宋体");
+pref("font.name-list.serif.zh-CN", "STSong");
 pref("font.name-list.sans-serif.zh-CN", "STHeiti");
 pref("font.name-list.monospace.zh-CN", "STHeiti");
 
@@ -1742,12 +1759,12 @@ pref("font.name-list.serif.zh-TW", "Apple LiSung");
 pref("font.name-list.sans-serif.zh-TW", "Apple LiGothic");  
 pref("font.name-list.monospace.zh-TW", "Apple LiGothic");  
 
-pref("font.name.serif.zh-HK", "儷宋 Pro");
-pref("font.name.sans-serif.zh-HK", "儷黑 Pro");
-pref("font.name.monospace.zh-HK", "儷黑 Pro");
-pref("font.name-list.serif.zh-HK", "儷宋 Pro");
-pref("font.name-list.sans-serif.zh-HK", "儷黑 Pro");
-pref("font.name-list.monospace.zh-HK", "儷黑 Pro");
+pref("font.name.serif.zh-HK", "LiSong Pro");
+pref("font.name.sans-serif.zh-HK", "LiHei Pro");
+pref("font.name.monospace.zh-HK", "LiHei Pro");
+pref("font.name-list.serif.zh-HK", "LiSong Pro");
+pref("font.name-list.sans-serif.zh-HK", "LiHei Pro");
+pref("font.name-list.monospace.zh-HK", "LiHei Pro");
 
 pref("font.default.ar", "sans-serif");
 pref("font.size.variable.ar", 16);

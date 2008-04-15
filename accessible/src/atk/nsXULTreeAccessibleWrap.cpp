@@ -68,7 +68,7 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::GetChildCount(PRInt32 *aAccChildCount)
     // created and appended by XUL tree accessible implementation
     PRInt32 rowCount, colCount = 1;
     mTreeView->GetRowCount(&rowCount);
-    mFirstChild->GetChildCount(&colCount);
+    GetColumns(&colCount);
 
     *aAccChildCount += rowCount * colCount;
   }
@@ -87,33 +87,21 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::GetSummary(nsAString &aSummary)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULTreeAccessibleWrap::GetColumns(PRInt32 *aColumns)
+NS_IMETHODIMP nsXULTreeAccessibleWrap::GetColumns(PRInt32 *aColumnCount)
 {
-  nsresult rv = NS_OK;
+  NS_ENSURE_ARG_POINTER(aColumnCount);
+  *aColumnCount = 0;
 
-  nsCOMPtr<nsIAccessible> acc;
-  rv = nsAccessible::GetFirstChild(getter_AddRefs(acc));
-  NS_ENSURE_TRUE(acc, NS_ERROR_FAILURE);
+  nsCOMPtr<nsITreeColumn> column;
+  column = GetFirstVisibleColumn(mTree);
+  if (!column)
+    return NS_ERROR_FAILURE;
 
-  rv = acc->GetChildCount(aColumns);
+  do {
+    (*aColumnCount)++;
+  } while ((column = GetNextVisibleColumn(column)));
 
-  // The last child could be column picker. In that case, we need to minus the
-  // number of columns by 1
-  nsCOMPtr<nsIAccessible> lastChildAccessible;
-  acc->GetLastChild(getter_AddRefs(lastChildAccessible));
-  nsCOMPtr<nsIAccessNode> accessNode = do_QueryInterface(lastChildAccessible);
-  NS_ENSURE_TRUE(accessNode, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIDOMNode> domNode;
-  accessNode->GetDOMNode(getter_AddRefs(domNode));
-  nsCOMPtr<nsIContent> content = do_QueryInterface(domNode);
-  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
-  // it's menupopup inside column picker
-  if (content->NodeInfo()->Equals(nsAccessibilityAtoms::menupopup,
-                                  kNameSpaceID_XUL)) {
-    (*aColumns)--;
-  }
-
-  return *aColumns > 0 ? rv : NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULTreeAccessibleWrap::GetColumnHeader(nsIAccessibleTable **aColumnHeader)
@@ -278,10 +266,11 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::GetIndexAt(PRInt32 aRow, PRInt32 aColumn,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULTreeAccessibleWrap::GetColumnAtIndex(PRInt32 aIndex, PRInt32 *_retval)
+NS_IMETHODIMP nsXULTreeAccessibleWrap::GetColumnAtIndex(PRInt32 aIndex, PRInt32 *aColumn)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_ARG_POINTER(aColumn);
 
+  *aColumn = -1;
   nsresult rv = NS_OK;
 
   PRInt32 columns;
@@ -291,15 +280,18 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::GetColumnAtIndex(PRInt32 aIndex, PRInt32 
   PRInt32 treeCols;
   nsAccessible::GetChildCount(&treeCols);
 
-  *_retval = (aIndex - treeCols) % columns;
+  if (aIndex >= treeCols) {
+    *aColumn = (aIndex - treeCols) % columns;
+  }
   
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULTreeAccessibleWrap::GetRowAtIndex(PRInt32 aIndex, PRInt32 *_retval)
+NS_IMETHODIMP nsXULTreeAccessibleWrap::GetRowAtIndex(PRInt32 aIndex, PRInt32 *aRow)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_ARG_POINTER(aRow);
 
+  *aRow = -1;
   nsresult rv = NS_OK;
 
   PRInt32 columns;
@@ -309,7 +301,9 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::GetRowAtIndex(PRInt32 aIndex, PRInt32 *_r
   PRInt32 treeCols;
   nsAccessible::GetChildCount(&treeCols);
 
-  *_retval = (aIndex - treeCols) / columns;
+  if (aIndex >= treeCols) {
+    *aRow = (aIndex - treeCols) / columns;
+  }
 
   return NS_OK;
 }

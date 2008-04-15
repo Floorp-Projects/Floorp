@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-424683.js';
+var gTestfile = 'regress-424683-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 424683;
 var summary = 'Throw too much recursion instead of script stack space quota';

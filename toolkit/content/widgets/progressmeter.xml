@@ -111,4 +111,26 @@
     </implementation>
   </binding>
 
+  <binding id="progressmeter-periodic-redraw"
+           extends="chrome://global/content/bindings/progressmeter.xml#progressmeter">
+    <implementation>
+      <method name="_init">
+        <body><![CDATA[
+          var step = 0;
+          var self = this;
+          var interval = setInterval(function nextStep() {
+            try {
+              // Trigger redraw by changing the step attribute
+              step = (step + 1) % 2;
+              self.setAttribute('step', step);
+            } catch (e) {
+              clearInterval(interval);
+            }
+          }, 1000/30);
+        ]]></body>
+      </method>
+      <constructor>this._init();</constructor>
+    </implementation>
+  </binding>
+
 </bindings>

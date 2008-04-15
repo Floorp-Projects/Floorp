@@ -141,7 +141,15 @@ function listEngines() {
 
 function listPrefs() {
   output("\n<section id=\"preferences\">\n");
-  var grab = /(app\.distributor)|(app\.partner)|(app\.update\.channel)|(homepage)|(startup)|(browser\.contentHandlers)/;
+  var reStrings = ['(app\.distributor)',
+                   '(app\.partner)',
+                   '(app\.update\.channel)',
+                   '(homepage)',
+                   '(startup)',
+                   '(browser\.contentHandlers)',
+                   '(gecko\.handlerService\.schemes)',
+                   '(browser\.places\.smartBookmarksVersion)'];
+  var grab = new RegExp(reStrings.join('|'));
   for (var i=0; i < prefs.length; ++i) {
     var pref = prefs[i], pval = [pref, null];
     var ptype = pb.getPrefType(pref);

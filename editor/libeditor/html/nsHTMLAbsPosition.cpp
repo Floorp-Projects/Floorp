@@ -334,6 +334,11 @@ nsHTMLEditor::ShowGrabberOnElement(nsIDOMElement * aElement)
 {
   NS_ENSURE_ARG_POINTER(aElement);
 
+  if (mGrabber) {
+    NS_ERROR("call HideGrabber first");
+    return NS_ERROR_UNEXPECTED;
+  }
+
   nsAutoString classValue;
   nsresult res = CheckPositionedElementBGandFG(aElement, classValue);
   if (NS_FAILED(res)) return res;

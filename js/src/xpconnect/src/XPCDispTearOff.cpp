@@ -471,9 +471,11 @@ pre_call_clean_up:
                 JS_smprintf_free(sz);
         }
 
-        if (!success)
+        if(!success)
         {
-            retval = nsXPCWrappedJSClass::CheckForException(ccx, name.get(), "IDispatch");
+            retval = nsXPCWrappedJSClass::CheckForException(ccx, name.get(),
+                                                            "IDispatch",
+                                                            PR_FALSE);
             goto done;
         }
 

@@ -1166,7 +1166,7 @@ function BrowserShutdown()
 function nonBrowserWindowStartup()
 {
   // Disable inappropriate commands / submenus
-  var disabledItems = ['cmd_newNavigatorTab', 'Browser:SavePage', 'Browser:SendLink',
+  var disabledItems = ['Browser:SavePage', 'Browser:SendLink',
                        'cmd_pageSetup', 'cmd_print', 'cmd_find', 'cmd_findAgain', 'viewToolbarsMenu',
                        'cmd_toggleTaskbar', 'viewSidebarMenuMenu', 'Browser:Reload', 'Browser:ReloadSkipCache',
                        'viewFullZoomMenu', 'pageStyleMenu', 'charsetMenu', 'View:PageSource', 'View:FullScreen',
@@ -1271,7 +1271,7 @@ function SanitizeListener()
     gPrefService.clearUserPref(this.didSanitizeDomain);
     // We need to persist this preference change, since we want to
     // check it at next app start even if the browser exits abruptly
-    gPrefService.savePrefFile(null);
+    gPrefService.QueryInterface(Ci.nsIPrefService).savePrefFile(null);
   }
 }
 
@@ -1578,6 +1578,12 @@ function openLocationCallback()
 
 function BrowserOpenTab()
 {
+  if (!gBrowser) {
+    // If there are no open browser windows, open a new one
+    window.openDialog("chrome://browser/content/", "_blank",
+                      "chrome,all,dialog=no", "about:blank");
+    return;
+  }
   gBrowser.loadOneTab("about:blank", null, null, null, false, false);
   if (gURLBar)
     gURLBar.focus();
@@ -1753,7 +1759,12 @@ function getShortcutOrURI(aURL, aPostDataRef) {
     if (matches)
       [, shortcutURL, charset] = matches;
     else {
-      //XXX Bug 317472 will add lastCharset support to places.
+      // Try to get the saved character-set.
+      try {
+        // makeURI throws if URI is invalid.
+        // Will return an empty string if character-set is not found.
+        charset = PlacesUtils.history.getCharsetForURI(makeURI(shortcutURL));
+      } catch (e) {}
     }
 
     var encodedParam = "";
@@ -2944,8 +2955,13 @@ const BrowserSearch = {
    */
   updateSearchButton: function() {
     var searchBar = this.searchBar;
-    if (!searchBar)
+    
+    // The search bar binding might not be applied even though the element is
+    // in the document (e.g. when the navigation toolbar is hidden), so check
+    // for .searchButton specifically.
+    if (!searchBar || !searchBar.searchButton)
       return;
+
     var engines = gBrowser.mCurrentBrowser.engines;
     if (engines && engines.length > 0)
       searchBar.searchButton.setAttribute("addengines", "true");
@@ -5083,6 +5099,8 @@ function BrowserSetForcedCharacterSet(aCharset)
   var docCharset = getBrowser().docShell.QueryInterface(
                             Components.interfaces.nsIDocCharset);
   docCharset.charset = aCharset;
+  // Save the forced character-set
+  PlacesUtils.history.setCharsetForURI(getWebNavigation().currentURI, aCharset);
   BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
 }
 
@@ -5751,11 +5769,13 @@ function AddKeywordForSearchField()
 {
   var node = document.popupNode;
 
+  var charset = node.ownerDocument.characterSet;
+
   var docURI = makeURI(node.ownerDocument.URL,
-                       node.ownerDocument.characterSet);
+                       charset);
 
   var formURI = makeURI(node.form.getAttribute("action"),
-                        node.ownerDocument.characterSet,
+                        charset,
                         docURI);
 
   var spec = formURI.spec;
@@ -5804,7 +5824,7 @@ function AddKeywordForSearchField()
 
   var description = PlacesUIUtils.getDescriptionFromDocument(node.ownerDocument);
   PlacesUIUtils.showMinimalAddBookmarkUI(makeURI(spec), "", description, null,
-                                         null, null, "", postData);
+                                         null, null, "", postData, charset);
 }
 
 function SwitchDocumentDirection(aWindow) {

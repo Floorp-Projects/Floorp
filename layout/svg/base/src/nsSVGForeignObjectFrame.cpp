@@ -246,7 +246,22 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
   if (!kid)
     return NS_OK;
 
-  nsCOMPtr<nsIDOMSVGMatrix> tm = GetTMIncludingOffset();
+  // GetCanvasTM includes a device pixel to CSS pixel scaling. Since non-SVG
+  // content takes care of this itself, we need to remove this pre-scaling from
+  // the matrix returned by GetTMIncludingOffset before painting our children.
+  float cssPxPerDevPx =
+    PresContext()->AppUnitsToFloatCSSPixels(
+                                PresContext()->AppUnitsPerDevPixel());
+  nsCOMPtr<nsIDOMSVGMatrix> cssPxToDevPxMatrix;
+  NS_NewSVGMatrix(getter_AddRefs(cssPxToDevPxMatrix),
+                  cssPxPerDevPx, 0.0f,
+                  0.0f, cssPxPerDevPx);
+
+  nsCOMPtr<nsIDOMSVGMatrix> localTM = GetTMIncludingOffset();
+
+  // POST-multiply px conversion!
+  nsCOMPtr<nsIDOMSVGMatrix> tm;
+  localTM->Multiply(cssPxToDevPxMatrix, getter_AddRefs(tm));
 
   gfxMatrix matrix = nsSVGUtils::ConvertSVGMatrixToThebes(tm);
 
@@ -267,7 +282,7 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
       GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
 
     // tm already includes the x,y offset
-    nsSVGUtils::SetClipRect(gfx, tm, 0.0f, 0.0f, width, height);
+    nsSVGUtils::SetClipRect(gfx, localTM, 0.0f, 0.0f, width, height);
   }
 
   gfx->Multiply(matrix);
@@ -357,6 +372,9 @@ nsSVGForeignObjectFrame::UpdateCoveredRegion()
   // XXXjwatt: _this_ is where we should reflow _if_ mRect.width has changed!
   // we should not unconditionally reflow in AttributeChanged
   mRect = GetTransformedRegion(x, y, w, h, ctm);
+
+  nsSVGUtils::UpdateFilterRegion(this);
+
   return NS_OK;
 }
 
@@ -559,33 +577,7 @@ void nsSVGForeignObjectFrame::RequestReflow(nsIPresShell::IntrinsicDirty aType)
 
 void nsSVGForeignObjectFrame::UpdateGraphic()
 {
-  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
-    return;
-
-  nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-  if (!outerSVGFrame) {
-    NS_ERROR("null outerSVGFrame");
-    return;
-  }
-  
-  if (outerSVGFrame->IsRedrawSuspended()) {
-    AddStateBits(NS_STATE_SVG_DIRTY);
-  } else {
-    RemoveStateBits(NS_STATE_SVG_DIRTY);
-
-    // Invalidate the area we used to cover
-    // XXXjwatt: if we fix the following XXX, try to subtract the new region from the old here.
-    // hmm, if x then y is changed, our second call could invalidate an "old" area we never actually painted to.
-    outerSVGFrame->InvalidateCoveredRegion(this);
-
-    UpdateCoveredRegion();
-
-    // Invalidate the area we now cover
-    // XXXjwatt: when we're called due to an event that also requires reflow,
-    // we want to let reflow trigger this rasterization so it doesn't happen twice.
-    outerSVGFrame->InvalidateCoveredRegion(this);
-    nsSVGUtils::NotifyAncestorsOfFilterRegionChange(this);
-  }
+  nsSVGUtils::UpdateGraphic(this);
 
   // Clear any layout dirty region since we invalidated our whole area.
   mDirtyRegion.SetEmpty();

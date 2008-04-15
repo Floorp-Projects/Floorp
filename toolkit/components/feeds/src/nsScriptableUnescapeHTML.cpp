@@ -146,7 +146,7 @@ nsScriptableUnescapeHTML::ParseFragment(const nsAString &aFragment,
 
   // Wrap things in a div or body for parsing, but it won't show up in
   // the fragment.
-  nsAutoTArray<nsAutoString, 2> tagStack;
+  nsAutoTArray<nsString, 2> tagStack;
   nsCAutoString base, spec;
   if (aIsXML) {
     // XHTML

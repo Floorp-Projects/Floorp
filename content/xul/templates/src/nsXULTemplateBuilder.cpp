@@ -218,8 +218,9 @@ nsXULTemplateBuilder::InitGlobals()
 void
 nsXULTemplateBuilder::Uninit(PRBool aIsFinal)
 {
-    if (mObservedDocument) {
+    if (mObservedDocument && aIsFinal) {
         gObserverService->RemoveObserver(this, DOM_WINDOW_DESTROYED_TOPIC);
+        mObservedDocument->RemoveObserver(this);
         mObservedDocument = nsnull;
     }
 

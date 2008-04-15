@@ -76,44 +76,46 @@ enum {
   // Whether this node is anonymous
   // NOTE: Should only be used on nsIContent nodes
   NODE_IS_ANONYMOUS =            0x00000008U,
+  
+  NODE_IS_IN_ANONYMOUS_SUBTREE = 0x00000010U,
 
   // Whether this node may have a frame
   // NOTE: Should only be used on nsIContent nodes
-  NODE_MAY_HAVE_FRAME =          0x00000010U,
+  NODE_MAY_HAVE_FRAME =          0x00000020U,
 
   // Forces the XBL code to treat this node as if it were
   // in the document and therefore should get bindings attached.
-  NODE_FORCE_XBL_BINDINGS =      0x00000020U,
+  NODE_FORCE_XBL_BINDINGS =      0x00000040U,
 
   // Whether a binding manager may have a pointer to this
-  NODE_MAY_BE_IN_BINDING_MNGR =  0x00000040U,
+  NODE_MAY_BE_IN_BINDING_MNGR =  0x00000080U,
 
-  NODE_IS_EDITABLE =             0x00000080U,
+  NODE_IS_EDITABLE =             0x00000100U,
 
   // Optimizations to quickly check whether element may have ID, class or style
   // attributes. Not all element implementations may use these!
-  NODE_MAY_HAVE_ID =             0x00000100U,
-  NODE_MAY_HAVE_CLASS =          0x00000200U,
-  NODE_MAY_HAVE_STYLE =          0x00000400U,
+  NODE_MAY_HAVE_ID =             0x00000200U,
+  NODE_MAY_HAVE_CLASS =          0x00000400U,
+  NODE_MAY_HAVE_STYLE =          0x00000800U,
 
-  NODE_IS_INSERTION_PARENT =     0x00000800U,
+  NODE_IS_INSERTION_PARENT =     0x00001000U,
 
   // Node has an :empty or :-moz-only-whitespace selector
-  NODE_HAS_EMPTY_SELECTOR =      0x00001000U,
+  NODE_HAS_EMPTY_SELECTOR =      0x00002000U,
 
   // A child of the node has a selector such that any insertion,
   // removal, or appending of children requires restyling the parent.
-  NODE_HAS_SLOW_SELECTOR =       0x00002000U,
+  NODE_HAS_SLOW_SELECTOR =       0x00004000U,
 
   // A child of the node has a :first-child, :-moz-first-node,
   // :only-child, :last-child or :-moz-last-node selector.
-  NODE_HAS_EDGE_CHILD_SELECTOR = 0x00004000U,
+  NODE_HAS_EDGE_CHILD_SELECTOR = 0x00008000U,
 
   // A child of the node has a selector such that any insertion or
   // removal of children requires restyling the parent (but append is
   // OK).
   NODE_HAS_SLOW_SELECTOR_NOAPPEND
-                               = 0x00008000U,
+                               = 0x00010000U,
 
   NODE_ALL_SELECTOR_FLAGS =      NODE_HAS_EMPTY_SELECTOR |
                                  NODE_HAS_SLOW_SELECTOR |
@@ -121,7 +123,7 @@ enum {
                                  NODE_HAS_SLOW_SELECTOR_NOAPPEND,
 
   // Four bits for the script-type ID
-  NODE_SCRIPT_TYPE_OFFSET =               16,
+  NODE_SCRIPT_TYPE_OFFSET =               17,
 
   NODE_SCRIPT_TYPE_SIZE =                  4,
 

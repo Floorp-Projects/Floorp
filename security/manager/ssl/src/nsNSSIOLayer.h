@@ -52,6 +52,7 @@
 #include "nsSSLStatus.h"
 #include "nsISSLStatusProvider.h"
 #include "nsIIdentityInfo.h"
+#include "nsIAssociatedContentSecurity.h"
 #include "nsXPIDLString.h"
 #include "nsNSSShutDown.h"
 #include "nsAutoPtr.h"
@@ -128,6 +129,7 @@ class nsNSSSocketInfo : public nsITransportSecurityInfo,
                         public nsIInterfaceRequestor,
                         public nsISSLStatusProvider,
                         public nsIIdentityInfo,
+                        public nsIAssociatedContentSecurity,
                         public nsISerializable,
                         public nsIClassInfo,
                         public nsNSSShutDownObject,
@@ -143,6 +145,7 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSISSLSTATUSPROVIDER
   NS_DECL_NSIIDENTITYINFO
+  NS_DECL_NSIASSOCIATEDCONTENTSECURITY
   NS_DECL_NSISERIALIZABLE
   NS_DECL_NSICLASSINFO
 
@@ -198,14 +201,19 @@ protected:
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   PRFileDesc* mFd;
   nsCOMPtr<nsIX509Cert> mCert;
-  nsCOMPtr<nsIX509Cert> mPreviousCert;
+  nsCOMPtr<nsIX509Cert> mPreviousCert; // DocShellDependent
   enum { 
     blocking_state_unknown, is_nonblocking_socket, is_blocking_socket 
   } mBlockingState;
   PRUint32 mSecurityState;
+  PRInt32 mSubRequestsHighSecurity;
+  PRInt32 mSubRequestsLowSecurity;
+  PRInt32 mSubRequestsBrokenSecurity;
+  PRInt32 mSubRequestsNoSecurity;
   nsString mShortDesc;
   nsString mErrorMessage;
-  PRPackedBool mExternalErrorReporting;
+  PRPackedBool mDocShellDependentStuffKnown;
+  PRPackedBool mExternalErrorReporting; // DocShellDependent
   PRPackedBool mForSTARTTLS;
   PRPackedBool mHandshakePending;
   PRPackedBool mCanceled;
@@ -222,6 +230,8 @@ protected:
   nsresult ActivateSSL();
 
   nsSSLSocketThreadData *mThreadData;
+
+  nsresult EnsureDocShellDependentStuffKnown();
 
 private:
   virtual void virtualDestroyNSSReference();

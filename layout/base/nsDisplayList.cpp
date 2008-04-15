@@ -52,9 +52,9 @@
 #include "gfxContext.h"
 
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
-    PRBool aIsForEvents, PRBool aBuildCaret, nsIFrame* aMovingFrame)
+    PRBool aIsForEvents, PRBool aBuildCaret)
     : mReferenceFrame(aReferenceFrame),
-      mMovingFrame(aMovingFrame),
+      mMovingFrame(nsnull),
       mIgnoreScrollFrame(nsnull),
       mCurrentTableItem(nsnull),
       mBuildCaret(aBuildCaret),
@@ -233,23 +233,23 @@ nsDisplayItem::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
   nsRect bounds = GetBounds(aBuilder);
   if (!aVisibleRegion->Intersects(bounds))
     return PR_FALSE;
-  
+
   nsIFrame* f = GetUnderlyingFrame();
   NS_ASSERTION(f, "GetUnderlyingFrame() must return non-null for leaf items");
-  if (aBuilder->HasMovingFrames() && aBuilder->IsMovingFrame(f)) {
-    // If this frame is in the moving subtree, and it doesn't
-    // require repainting just because it's moved, then just remove it now
-    // because it's not relevant.
-    if (!IsVaryingRelativeToFrame(aBuilder, aBuilder->GetRootMovingFrame()))
-      return PR_FALSE;
-    // keep it, but don't let it cover other display items (see nsLayoutUtils::
-    // ComputeRepaintRegionForCopy)
-    return PR_TRUE;
-  }
+  PRBool isMoving = aBuilder->IsMovingFrame(f);
 
   if (IsOpaque(aBuilder)) {
-    aVisibleRegion->SimpleSubtract(bounds);
+    nsRect opaqueArea = bounds;
+    if (isMoving) {
+      // The display list should include items for both the before and after
+      // states (see nsLayoutUtils::ComputeRepaintRegionForCopy. So the
+      // only area we want to cover is the the area that was opaque in the
+      // before state and in the after state.
+      opaqueArea.IntersectRect(bounds - aBuilder->GetMoveDelta(), bounds);
+    }
+    aVisibleRegion->SimpleSubtract(opaqueArea);
   }
+
   return PR_TRUE;
 }
 
@@ -509,26 +509,29 @@ nsDisplayBackground::IsUniform(nsDisplayListBuilder* aBuilder) {
 }
 
 PRBool
-nsDisplayBackground::IsVaryingRelativeToFrame(nsDisplayListBuilder* aBuilder,
-    nsIFrame* aAncestorFrame)
+nsDisplayBackground::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder)
 {
+  NS_ASSERTION(aBuilder->IsMovingFrame(mFrame),
+              "IsVaryingRelativeToMovingFrame called on non-moving frame!");
+
+  nsPresContext* presContext = mFrame->PresContext();
   PRBool isCanvas;
   const nsStyleBackground* bg;
   PRBool hasBG =
-    nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bg, &isCanvas);
+    nsCSSRendering::FindBackground(presContext, mFrame, &bg, &isCanvas);
   if (!hasBG)
     return PR_FALSE;
   if (!bg->HasFixedBackground())
     return PR_FALSE;
 
-  // aAncestorFrame is the frame that is going to be moved.
-  // Check if mFrame is equal to aAncestorFrame or aAncestorFrame is an
-  // ancestor of mFrame in the same document. If this is true, mFrame
+  nsIFrame* movingFrame = aBuilder->GetRootMovingFrame();
+  // movingFrame is the frame that is going to be moved. It must be equal
+  // to mFrame or some ancestor of mFrame, see assertion above.
+  // If mFrame is in the same document as movingFrame, then mFrame
   // will move relative to its viewport, which means this display item will
-  // change when it is moved.  If they are in different documents, we do not
+  // change when it is moved. If they are in different documents, we do not
   // want to return true because mFrame won't move relative to its viewport.
-  return mFrame == aAncestorFrame ||
-    nsLayoutUtils::IsProperAncestorFrame(aAncestorFrame, mFrame);
+  return movingFrame->PresContext() == presContext;
 }
 
 void
@@ -676,13 +679,13 @@ PRBool nsDisplayWrapList::IsUniform(nsDisplayListBuilder* aBuilder) {
   return PR_FALSE;
 }
 
-PRBool nsDisplayWrapList::IsVaryingRelativeToFrame(nsDisplayListBuilder* aBuilder,
-                                                   nsIFrame* aFrame) {
-  for (nsDisplayItem* i = mList.GetBottom(); i != nsnull; i = i->GetAbove()) {
-    if (i->IsVaryingRelativeToFrame(aBuilder, aFrame))
-      return PR_TRUE;
-  }
-  return PR_FALSE;
+PRBool nsDisplayWrapList::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder) {
+  // The only existing consumer of IsVaryingRelativeToMovingFrame is
+  // nsLayoutUtils::ComputeRepaintRegionForCopy, which refrains from calling
+  // this on wrapped lists.
+  NS_WARNING("nsDisplayWrapList::IsVaryingRelativeToMovingFrame called unexpectedly");
+  // We could try to do something but let's conservatively just return PR_TRUE.
+  return PR_TRUE;
 }
 
 void nsDisplayWrapList::Paint(nsDisplayListBuilder* aBuilder,

@@ -75,6 +75,7 @@
 #include "nsIContent.h"
 #include "nsDisplayList.h"
 #include "nsNodeUtils.h"
+#include "mozAutoDocUpdate.h"
 
 // masks for mEdgeVisibility
 #define LEFT_VIS   0x0001

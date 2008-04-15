@@ -177,6 +177,7 @@ UNMAKE_PACKAGE	= \
 # The plst and blkx resources are skipped because they belong to each
 # individual dmg and are created by hdiutil.
 SDK_SUFFIX = .tar.bz2
+SDK = $(MOZ_PKG_APPNAME)-$(MOZ_PKG_VERSION).$(AB_CD).mac-$(TARGET_CPU).sdk$(SDK_SUFFIX)
 MAKE_SDK = $(CREATE_FINAL_TAR) - $(MOZ_APP_NAME)-sdk | bzip2 -vf > $(SDK)
 endif
 
@@ -405,8 +406,8 @@ make-package: stage-package
 # dist/sdk/lib -> prefix/lib/appname-devel-version/lib
 # prefix/lib/appname-devel-version/* symlinks to the above directories
 install:: stage-package
-ifeq (WINNT,$(OS_ARCH))
-	$(error "make install" is not supported on Windows. Use "make package" instead.)
+ifneq (,$(filter WINNT Darwin,$(OS_ARCH)))
+	$(error "make install" is not supported on this platform. Use "make package" instead.)
 endif
 	$(NSINSTALL) -D $(DESTDIR)$(installdir)
 	(cd $(DIST)/$(MOZ_PKG_APPNAME) && tar $(TAR_CREATE_FLAGS) - .) | \
@@ -445,12 +446,15 @@ ifdef INSTALL_SDK # Here comes the hard part
 endif # INSTALL_SDK
 
 make-sdk:
-	$(MAKE) stage-package STAGE_SDK=1 MOZ_PKG_APPNAME=sdk-stage
+	$(MAKE) stage-package UNIVERSAL_BINARY= STAGE_SDK=1 MOZ_PKG_APPNAME=sdk-stage
 	@echo "Packaging SDK..."
 	$(RM) -rf $(DIST)/$(MOZ_APP_NAME)-sdk
 	$(NSINSTALL) -D $(DIST)/$(MOZ_APP_NAME)-sdk/bin
 	(cd $(DIST)/sdk-stage && tar $(TAR_CREATE_FLAGS) - .) | \
 	  (cd $(DIST)/$(MOZ_APP_NAME)-sdk/bin && tar -xf -)
+	$(NSINSTALL) -D $(DIST)/$(MOZ_APP_NAME)-sdk/host/bin
+	(cd $(DIST)/host/bin && tar $(TAR_CREATE_FLAGS) - .) | \
+	  (cd $(DIST)/$(MOZ_APP_NAME)-sdk/host/bin && tar -xf -)
 	$(NSINSTALL) -D $(DIST)/$(MOZ_APP_NAME)-sdk/sdk
 	(cd $(DIST)/sdk && tar $(TAR_CREATE_FLAGS) - .) | \
 	  (cd $(DIST)/$(MOZ_APP_NAME)-sdk/sdk && tar -xf -)

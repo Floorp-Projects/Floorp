@@ -664,6 +664,7 @@ NS_IMETHODIMP nsSVGFEGaussianBlurElement::GetStdDeviationY(nsIDOMSVGAnimatedNumb
 NS_IMETHODIMP
 nsSVGFEGaussianBlurElement::SetStdDeviation(float stdDeviationX, float stdDeviationY)
 {
+  NS_ENSURE_FINITE2(stdDeviationX, stdDeviationY, NS_ERROR_ILLEGAL_VALUE);
   mNumberAttributes[STD_DEV_X].SetBaseValue(stdDeviationX, this, PR_TRUE);
   mNumberAttributes[STD_DEV_Y].SetBaseValue(stdDeviationY, this, PR_TRUE);
   return NS_OK;
@@ -1669,6 +1670,7 @@ NS_IMETHODIMP nsSVGFECompositeElement::GetK4(nsIDOMSVGAnimatedNumber * *aK4)
 NS_IMETHODIMP
 nsSVGFECompositeElement::SetK(float k1, float k2, float k3, float k4)
 {
+  NS_ENSURE_FINITE4(k1, k2, k3, k4, NS_ERROR_ILLEGAL_VALUE);
   mNumberAttributes[K1].SetBaseValue(k1, this, PR_TRUE);
   mNumberAttributes[K2].SetBaseValue(k2, this, PR_TRUE);
   mNumberAttributes[K3].SetBaseValue(k3, this, PR_TRUE);
@@ -3773,6 +3775,7 @@ NS_IMETHODIMP nsSVGFEMorphologyElement::GetRadiusY(nsIDOMSVGAnimatedNumber * *aY
 NS_IMETHODIMP
 nsSVGFEMorphologyElement::SetRadius(float rx, float ry)
 {
+  NS_ENSURE_FINITE2(rx, ry, NS_ERROR_ILLEGAL_VALUE);
   mNumberAttributes[RADIUS_X].SetBaseValue(rx, this, PR_TRUE);
   mNumberAttributes[RADIUS_Y].SetBaseValue(ry, this, PR_TRUE);
   return NS_OK;

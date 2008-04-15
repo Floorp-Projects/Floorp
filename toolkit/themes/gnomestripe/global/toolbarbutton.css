@@ -116,6 +116,7 @@ toolbarbutton[checked="true"]:hover:active {
 .toolbarbutton-menu-dropmarker {
   -moz-appearance: toolbarbutton-dropdown !important;
   list-style-image: none;
+  -moz-image-region: auto;
   border: none !important;
   background-color: transparent !important;
   padding: 0;
@@ -159,4 +160,5 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
   padding: 3px;
   -moz-appearance: toolbarbutton-dropdown !important;
   list-style-image: none;
+  -moz-image-region: auto;
 }

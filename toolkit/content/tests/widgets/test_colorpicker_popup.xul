@@ -14,7 +14,7 @@
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>      
 
-<colorpicker id="colorpicker-popup" type="button" color="#FF0000"/>
+<colorpicker id="colorpicker-popup" type="button" color="#FF0000" tabindex="1"/>
 
 <script class="testbody" type="application/javascript">
 <![CDATA[
@@ -28,6 +28,8 @@ function runTests()
 {
   gCp = document.getElementById("colorpicker-popup");
   is(gCp.color, "#FF0000", "popup color is initialized");
+  is(gCp.tabIndex, 1, "button tabindex is initialized");
+  is(gCp.disabled, false, "button is not disabled");
 
   goNext();
 }

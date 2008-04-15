@@ -54,10 +54,6 @@ public:
                      const nsHTMLReflowState& aMaxSize,
                      nsReflowStatus&      aStatus);
 
-  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                              const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists);
-
   virtual PRBool IsContainingBlock() const;
 
   virtual void SetSharedPageData(nsSharedPageData* aPD) { mPD = aPD; }
@@ -74,7 +70,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsGkAtoms::pageFrame
+   * @see nsGkAtoms::pageContentFrame
    */
   virtual nsIAtom* GetType() const;
   

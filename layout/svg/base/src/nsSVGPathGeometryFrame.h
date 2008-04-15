@@ -98,9 +98,8 @@ public:
   }
 #endif
 
-  // nsISVGGeometrySource interface:
+  // nsSVGGeometryFrame methods
   NS_IMETHOD GetCanvasTM(nsIDOMSVGMatrix * *aCTM);
-  virtual nsresult UpdateGraphic(PRBool suppressInvalidation = PR_FALSE);
 
 protected:
   // nsISVGChildFrame interface:

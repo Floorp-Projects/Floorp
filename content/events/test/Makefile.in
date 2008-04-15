@@ -47,6 +47,7 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES = \
 		test_bug238987.html \
 		test_bug288392.html \
+		test_bug328885.html \
 		test_bug336682_1.html \
 		test_bug336682_2.xul \
 		test_bug336682.js \
@@ -58,6 +59,14 @@ _TEST_FILES = \
 		test_bug405632.html \
 		$(NULL)
 
+_CHROME_FILES = \
+		test_bug415498.xul \
+		bug415498-doc1.html \
+		bug415498-doc2.html \
+		$(NULL)
+
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 
+libs:: $(_CHROME_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)

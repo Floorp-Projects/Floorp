@@ -90,6 +90,8 @@ classic.jar:
         skin/classic/global/icons/Error.png                      (icons/Error.png)
         skin/classic/global/icons/find.png                       (icons/find.png)
         skin/classic/global/icons/folder-item.png                (icons/folder-item.png)
+        skin/classic/global/icons/loading_16.png                 (icons/loading_16.png)
+        skin/classic/global/icons/notloading_16.png              (icons/notloading_16.png)
         skin/classic/global/icons/Minimize.gif                   (icons/Minimize.gif)
         skin/classic/global/icons/notfound.png                   (icons/notfound.png)
         skin/classic/global/icons/Print-preview.png              (icons/Print-preview.png)
@@ -144,7 +146,7 @@ classic.jar:
         skin/classic/aero/global/linkTree.css
         skin/classic/aero/global/listbox.css
         skin/classic/aero/global/menu.css
-        skin/classic/aero/global/menulist.css
+*       skin/classic/aero/global/menulist.css                            (menulist-aero.css)
         skin/classic/aero/global/netError.css
         skin/classic/aero/global/numberbox.css
         skin/classic/aero/global/notification.css
@@ -162,7 +164,7 @@ classic.jar:
         skin/classic/aero/global/spinbuttons.css
         skin/classic/aero/global/splitter.css
         skin/classic/aero/global/tabbox.css
-        skin/classic/aero/global/textbox.css
+*       skin/classic/aero/global/textbox.css                             (textbox-aero.css)
         skin/classic/aero/global/toolbar.css
         skin/classic/aero/global/toolbarbutton.css
         skin/classic/aero/global/tree.css
@@ -209,6 +211,8 @@ classic.jar:
         skin/classic/aero/global/icons/Error.png                         (icons/Error-aero.png)
         skin/classic/aero/global/icons/find.png                          (icons/find-aero.png)
         skin/classic/aero/global/icons/folder-item.png                   (icons/folder-item-aero.png)
+        skin/classic/aero/global/icons/loading_16.png                    (icons/loading_16-aero.png)
+        skin/classic/aero/global/icons/notloading_16.png                 (icons/notloading_16-aero.png)
         skin/classic/aero/global/icons/Minimize.gif                      (icons/Minimize.gif)
         skin/classic/aero/global/icons/notfound.png                      (icons/notfound-aero.png)
         skin/classic/aero/global/icons/Print-preview.png                 (icons/Print-preview-aero.png)

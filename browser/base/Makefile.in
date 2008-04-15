@@ -44,13 +44,20 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
+abs_srcdir = $(shell cd $(srcdir) && pwd)
+
+CHROME_DEPS += $(abs_srcdir)/content/overrides/app-license.html
+
 ifdef MOZ_MOCHITEST
 DIRS += content/test
 endif
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DMOZ_APP_VERSION=$(MOZ_APP_VERSION)
+DEFINES += \
+	-DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
+	-DAPP_EULA_BLOCK=$(abs_srcdir)/content/overrides/app-license.html \
+	$(NULL)
 
 ifndef MOZ_BRANDING_DIRECTORY
 DEFINES += -DMOZ_USE_GENERIC_BRANDING

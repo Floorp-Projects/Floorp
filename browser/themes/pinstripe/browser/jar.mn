@@ -1,6 +1,7 @@
 classic.jar:
 % skin browser classic/1.0 %skin/classic/browser/
   skin/classic/browser/bookmark_toolbar_background.gif
+  skin/classic/browser/bookmark_toolbar_background-inactive.png
   skin/classic/browser/bookmark-open-left.png
   skin/classic/browser/bookmark-open-mid.png
   skin/classic/browser/bookmark-open-right.png
@@ -9,10 +10,22 @@ classic.jar:
   skin/classic/browser/contextDialogBackground.png
 * skin/classic/browser/engineManager.css                    (engineManager.css)
   skin/classic/browser/expander-round.png 
+  skin/classic/browser/feed-icons.png
   skin/classic/browser/find.png
   skin/classic/browser/find-bar-background.png
   skin/classic/browser/Go-arrow.png
   skin/classic/browser/home.png
+  skin/classic/browser/hud-style-button-middle-background.png
+  skin/classic/browser/hud-style-check-box-checked.png
+  skin/classic/browser/hud-style-check-box-empty.png
+  skin/classic/browser/hud-style-dropmarker-double-arrows.png
+  skin/classic/browser/hud-style-expander-closed.png
+  skin/classic/browser/hud-style-expander-open.png
+  skin/classic/browser/hud-style-new-folder-bar-background-active.png
+  skin/classic/browser/hud-style-new-folder-bar-background.gif
+  skin/classic/browser/hud-style-new-folder-bar-background.png
+  skin/classic/browser/hud-style-new-folder-plus-sign.png
+  skin/classic/browser/hud-style-twisties.png
   skin/classic/browser/identity.png
   skin/classic/browser/Info.png
   skin/classic/browser/page-livemarks.png
@@ -23,9 +36,11 @@ classic.jar:
   skin/classic/browser/searchbar.css
   skin/classic/browser/Search.png
   skin/classic/browser/Search-addengines.png
+  skin/classic/browser/Search-bar.png
   skin/classic/browser/search-bar-background-left.png
   skin/classic/browser/search-bar-background-mid.png
   skin/classic/browser/search-bar-background-right.png
+  skin/classic/browser/Secure-Glyph-White.png
   skin/classic/browser/Secure.png
   skin/classic/browser/Security-broken.png
   skin/classic/browser/Secure-statusbar.png
@@ -39,7 +54,7 @@ classic.jar:
   skin/classic/browser/feeds/videoFeedIcon16.png            (feeds/videoFeedIcon16.png)
   skin/classic/browser/feeds/audioFeedIcon.png              (feeds/audioFeedIcon.png)
   skin/classic/browser/feeds/audioFeedIcon16.png            (feeds/audioFeedIcon16.png)
-  skin/classic/browser/radio-selected-bg.gif
+  skin/classic/browser/radio-selected-bg.png
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png
@@ -50,6 +65,14 @@ classic.jar:
   skin/classic/browser/places/livemarkItem.png              (places/livemarkItem.png)
   skin/classic/browser/places/bookmarksMenu.png             (places/bookmarksMenu.png)
   skin/classic/browser/places/bookmarksToolbar.png          (places/bookmarksToolbar.png)
+  skin/classic/browser/places/history.png                   (places/history.png)
+  skin/classic/browser/places/menubutton-end-pressed.png    (places/menubutton-end-pressed.png)
+  skin/classic/browser/places/menubutton-mid-pressed.png    (places/menubutton-mid-pressed.png)
+  skin/classic/browser/places/menubutton-start-pressed.png  (places/menubutton-start-pressed.png)
+  skin/classic/browser/places/star-icons.png                (places/star-icons.png)
+  skin/classic/browser/places/toolbar-button-backup.png     (places/toolbar-button-backup.png)
+  skin/classic/browser/places/toolbar-button-organize.png   (places/toolbar-button-organize.png)
+  skin/classic/browser/places/toolbar-button-view.png       (places/toolbar-button-view.png)
   skin/classic/browser/places/toolbarDropMarker.png         (places/toolbarDropMarker.png)
   skin/classic/browser/places/folderDropArrow.png           (places/folderDropArrow.png)
   skin/classic/browser/places/infoPaneGrippy.png            (places/infoPaneGrippy.png)
@@ -69,6 +92,7 @@ classic.jar:
   skin/classic/browser/places/plus-active.png				(places/plus-active.png)
   skin/classic/browser/places/starPage.png                  (places/starPage.png)
   skin/classic/browser/places/pageStarred.png               (places/pageStarred.png)
+  skin/classic/browser/places/searching_16.png              (places/searching_16.png)
   skin/classic/browser/places/starred48.png                 (places/starred48.png)
   skin/classic/browser/places/unstarred48.png               (places/unstarred48.png)
   skin/classic/browser/places/twisty-open.gif               (places/twisty-open.gif)
@@ -87,6 +111,7 @@ classic.jar:
   skin/classic/browser/preferences/preferences.css          (preferences/preferences.css)
   skin/classic/browser/preferences/applications.css         (preferences/applications.css)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd.png                  (tabbrowser/alltabs-box-bkgnd.png)
+  skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon.png             (tabbrowser/alltabs-box-bkgnd-icon.png)
   skin/classic/browser/tabbrowser/alltabs-box-overflow-bkgnd.png         (tabbrowser/alltabs-box-overflow-bkgnd.png)
   skin/classic/browser/tabbrowser/alltabs-box-overflow-bkgnd-animate.png (tabbrowser/alltabs-box-overflow-bkgnd-animate.png)
   skin/classic/browser/tabbrowser/tab-arrow-start.png                    (tabbrowser/tab-arrow-start.png)
@@ -100,12 +125,15 @@ classic.jar:
   skin/classic/browser/tabbrowser/tab-left.png                           (tabbrowser/tab-left.png)
   skin/classic/browser/tabbrowser/tab-left-bkgnd.png                     (tabbrowser/tab-left-bkgnd.png)
   skin/classic/browser/tabbrowser/tab-left-hover.png                     (tabbrowser/tab-left-hover.png)
+  skin/classic/browser/tabbrowser/tab-left-inactive.png                  (tabbrowser/tab-left-inactive.png)
   skin/classic/browser/tabbrowser/tab-middle.png                         (tabbrowser/tab-middle.png)
   skin/classic/browser/tabbrowser/tab-middle-bkgnd.png                   (tabbrowser/tab-middle-bkgnd.png)
   skin/classic/browser/tabbrowser/tab-middle-hover.png                   (tabbrowser/tab-middle-hover.png)
+  skin/classic/browser/tabbrowser/tab-middle-inactive.png                (tabbrowser/tab-middle-inactive.png)
   skin/classic/browser/tabbrowser/tab-right.png                          (tabbrowser/tab-right.png)
   skin/classic/browser/tabbrowser/tab-right-bkgnd.png                    (tabbrowser/tab-right-bkgnd.png)
   skin/classic/browser/tabbrowser/tab-right-hover.png                    (tabbrowser/tab-right-hover.png)
+  skin/classic/browser/tabbrowser/tab-right-inactive.png                 (tabbrowser/tab-right-inactive.png)
   skin/classic/browser/tabbrowser/tabs-bottom-bg.png                     (tabbrowser/tabs-bottom-bg.png)
   skin/classic/browser/urlbar/endcap.png                                 (urlbar/endcap.png)
   skin/classic/browser/urlbar/endcap-focused.png                         (urlbar/endcap-focused.png)

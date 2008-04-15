@@ -51,18 +51,25 @@ var gPageStop;
 
 function userOnStart()
 {
-  dlog('userOnStart');
-  cdump('JavaScriptTest: Begin Run');
-  registerDialogCloser();
+  try
+  {
+    dlog('userOnStart');
+    cdump('JavaScriptTest: Begin Run');
+    registerDialogCloser();
+  }
+  catch(ex)
+  {
+    cdump('Spider: FATAL ERROR: userOnStart: ' + ex);
+  }
 }
 
 function userOnBeforePage()
 {
-  dlog('userOnBeforePage');
-  gPageStart = new Date();
-
   try
   {
+    dlog('userOnBeforePage');
+    gPageStart = new Date();
+
     gCurrentTestId = /test=(.*);language/.exec(gSpider.mCurrentUrl.mUrl)[1];
     gCurrentTestValid = true;
     cdump('JavaScriptTest: Begin Test ' + gCurrentTestId);
@@ -70,7 +77,7 @@ function userOnBeforePage()
   }
   catch(ex)
   {
-    cdump('userOnBeforePage: ' + ex);
+    cdump('Spider: WARNING ERROR: userOnBeforePage: ' + ex);
     gCurrentTestValid = false;
     gPageCompleted = true;
   }
@@ -78,19 +85,35 @@ function userOnBeforePage()
 
 function userOnAfterPage()
 {
-  dlog('userOnAfterPage');
-  gPageStop = new Date();
+  try
+  {
+    dlog('userOnAfterPage');
+    gPageStop = new Date();
 
-  cdump(gSpider.mCurrentUrl.mUrl + ': PAGE STATUS: NORMAL (' + ((gPageStop - gPageStart)/1000).toFixed(0) + ' seconds)');
-  checkTestCompleted();
+    cdump(gSpider.mCurrentUrl.mUrl + ': PAGE STATUS: NORMAL (' + ((gPageStop - gPageStart)/1000).toFixed(0) + ' seconds)');
+    checkTestCompleted();
+  }
+  catch(ex)
+  {
+    cdump('Spider: WARNING ERROR: userOnAfterPage: ' + ex);
+    gCurrentTestValid = false;
+    gPageCompleted = true;
+  }
 }
 
 function userOnStop()
 {
-  // close any pending dialogs
-  cdump('JavaScriptTest: End Run');
-  closeDialog();
-  unregisterDialogCloser();
+  try
+  {
+    // close any pending dialogs
+    cdump('JavaScriptTest: End Run');
+    closeDialog();
+    unregisterDialogCloser();
+  }
+  catch(ex)
+  {
+    cdump('Spider: WARNING ERROR: userOnStop: ' + ex);
+  }
 }
 
 function userOnPageTimeout()
@@ -111,7 +134,7 @@ function userOnPageTimeout()
     }
     catch(ex)
     {
-      cdump('userOnPageTimeout: ' + ex);
+      cdump('Spider: WARNING ERROR: userOnPageTimeout: ' + ex);
     }
   }
   cdump('JavaScriptTest: End Test ' + gCurrentTestId);
@@ -119,53 +142,60 @@ function userOnPageTimeout()
 
 function checkTestCompleted()
 {
-  dlog('checkTestCompleted()');
-
-  var win = gSpider.mDocument.defaultView;
-  if (win.wrappedJSObject)
+  try
   {
-    win = win.wrappedJSObject;
-  }
+    dlog('checkTestCompleted()');
 
-  if (!gCurrentTestValid)
-  {
-    gPageCompleted = true;
-  }
-  else if (win.gPageCompleted)
-  {
-    gCurrentTestStop = new Date();
-    // gc to flush out issues quickly
-    collectGarbage();
-
-    dlog('Page Completed');
-
-    var gTestcases = win.gTestcases;
-    if (typeof gTestcases == 'undefined')
+    var win = gSpider.mDocument.defaultView;
+    if (win.wrappedJSObject)
     {
-      cdump('JavaScriptTest: ' + gCurrentTestId +
-            ' gTestcases array not defined. Possible test failure.');
-      throw 'gTestcases array not defined. Possible test failure.';
+      win = win.wrappedJSObject;
     }
-    else if (gTestcases.length == 0)
+
+    if (!gCurrentTestValid)
     {
-      cdump('JavaScriptTest: ' + gCurrentTestId +
-            ' gTestcases array is empty. Tests not run.');
-      new win.TestCase(win.gTestFile, win.summary, 'Unknown', 'gTestcases array is empty. Tests not run..');
+      gPageCompleted = true;
+    }
+    else if (win.gPageCompleted)
+    {
+      gCurrentTestStop = new Date();
+      // gc to flush out issues quickly
+      collectGarbage();
+
+      dlog('Page Completed');
+
+      var gTestcases = win.gTestcases;
+      if (typeof gTestcases == 'undefined')
+      {
+        cdump('JavaScriptTest: ' + gCurrentTestId +
+              ' gTestcases array not defined. Possible test failure.');
+        throw 'gTestcases array not defined. Possible test failure.';
+      }
+      else if (gTestcases.length == 0)
+      {
+        cdump('JavaScriptTest: ' + gCurrentTestId +
+              ' gTestcases array is empty. Tests not run.');
+        new win.TestCase(win.gTestFile, win.summary, 'Unknown', 'gTestcases array is empty. Tests not run..');
+      }
+      else
+      {
+      }
+      cdump('JavaScriptTest: ' + gCurrentTestId + ' Elapsed time ' + ((gCurrentTestStop - gCurrentTestStart)/1000).toFixed(2) + ' seconds');
+      cdump('JavaScriptTest: End Test ' + gCurrentTestId);
+
+      gPageCompleted = true;
     }
     else
     {
+      dlog('page not completed, recheck');
+      setTimeout(checkTestCompleted, gCheckInterval);
     }
-    cdump('JavaScriptTest: ' + gCurrentTestId + ' Elapsed time ' + ((gCurrentTestStop - gCurrentTestStart)/1000).toFixed(2) + ' seconds');
-    cdump('JavaScriptTest: End Test ' + gCurrentTestId);
-
-    gPageCompleted = true;
   }
-  else
+  catch(ex)
   {
-    dlog('page not completed, recheck');
-    setTimeout(checkTestCompleted, gCheckInterval);
-  }
- 
+    cdump('Spider: WARNING ERROR: checkTestCompleted: ' + ex);
+    gPageCompleted = true;
+  } 
 }
 
 gConsoleListener.onConsoleMessage =

@@ -510,8 +510,9 @@ nsContextMenu.prototype = {
           // we're going to walk up the DOM looking for a parent link node,
           // this shouldn't be necessary, but we're matching the existing behaviour for left click
           var realLink = elem;
-          var parent = elem.parentNode;
-          while (parent) {
+          var parent = elem;
+          while ((parent = parent.parentNode) &&
+                 (parent.nodeType == Node.ELEMENT_NODE)) {
             try {
               if ((parent instanceof HTMLAnchorElement && parent.href) ||
                   (parent instanceof HTMLAreaElement && parent.href) ||
@@ -519,7 +520,6 @@ nsContextMenu.prototype = {
                   parent.getAttributeNS("http://www.w3.org/1999/xlink", "type") == "simple")
                 realLink = parent;
             } catch (e) { }
-            parent = parent.parentNode;
           }
           
           // Remember corresponding element.

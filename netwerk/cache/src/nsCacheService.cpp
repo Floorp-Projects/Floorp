@@ -1465,8 +1465,10 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
 
     if (entry &&
         ((request->AccessRequested() == nsICache::ACCESS_WRITE) ||
-         (entry->mExpirationTime <= SecondsFromPRTime(PR_Now()) &&
-          request->WillDoomEntriesIfExpired())))
+         ((request->StoragePolicy() != nsICache::STORE_OFFLINE) &&
+          (entry->mExpirationTime <= SecondsFromPRTime(PR_Now()) &&
+           request->WillDoomEntriesIfExpired()))))
+
     {
         // this is FORCE-WRITE request or the entry has expired
         rv = DoomEntry_Internal(entry);

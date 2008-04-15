@@ -143,6 +143,7 @@ class nsPageBreakFrame : public nsLeafFrame {
 protected:
 
   virtual nscoord GetIntrinsicWidth();
+  virtual nscoord GetIntrinsicHeight();
 
     PRBool mHaveReflowed;
 

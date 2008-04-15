@@ -228,7 +228,6 @@ nsSliderFrame::GetIntegerAttribute(nsIContent* content, nsIAtom* atom, PRInt32 d
     return defaultValue;
 }
 
-
 NS_IMETHODIMP
 nsSliderFrame::AttributeChanged(PRInt32 aNameSpaceID,
                                 nsIAtom* aAttribute,
@@ -271,7 +270,8 @@ nsSliderFrame::AttributeChanged(PRInt32 aNameSpaceID,
 
         nsAutoString currentStr;
         currentStr.AppendInt(current);
-        scrollbar->SetAttr(kNameSpaceID_None, nsGkAtoms::curpos, currentStr, PR_TRUE);
+        nsContentUtils::AddScriptRunner(
+          new nsSetAttrRunnable(scrollbar, nsGkAtoms::curpos, currentStr));
       }
   }
 

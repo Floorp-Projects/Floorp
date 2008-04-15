@@ -48,6 +48,16 @@
 typedef int (*cairo_xlib_error_func_t) (Display     *display,
 					XErrorEvent *event);
 
+static cairo_surface_t *
+_cairo_xlib_surface_create_internal (Display		       *dpy,
+				     Drawable		        drawable,
+				     Screen		       *screen,
+				     Visual		       *visual,
+				     XRenderPictFormat	       *xrender_format,
+				     int			width,
+				     int			height,
+				     int			depth);
+
 static cairo_status_t
 _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface);
 
@@ -70,10 +80,6 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 cairo_glyph_t       *glyphs,
 				 int		      num_glyphs,
 				 cairo_scaled_font_t *scaled_font);
-
-#if CAIRO_HAS_XLIB_XRENDER_SURFACE
-slim_hidden_proto (cairo_xlib_surface_create_with_xrender_format);
-#endif
 
 /*
  * Instead of taking two round trips for each blending request,
@@ -111,22 +117,6 @@ static const XTransform identity = { {
 #define CAIRO_SURFACE_RENDER_HAS_PICTURE_TRANSFORM(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 6)
 #define CAIRO_SURFACE_RENDER_HAS_FILTERS(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 6)
 
-static int
-_CAIRO_FORMAT_DEPTH (cairo_format_t format)
-{
-    switch (format) {
-    case CAIRO_FORMAT_A1:
-	return 1;
-    case CAIRO_FORMAT_A8:
-	return 8;
-    case CAIRO_FORMAT_RGB24:
-	return 24;
-    case CAIRO_FORMAT_ARGB32:
-    default:
-	return 32;
-    }
-}
-
 static XRenderPictFormat *
 _CAIRO_FORMAT_TO_XRENDER_FORMAT(Display *dpy, cairo_format_t format)
 {
@@ -155,7 +145,6 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
     Display *dpy = src->dpy;
     Pixmap pix;
     cairo_xlib_surface_t *surface;
-    int depth = _CAIRO_FORMAT_DEPTH (format);
     XRenderPictFormat *xrender_format = _CAIRO_FORMAT_TO_XRENDER_FORMAT (dpy,
 									 format);
 
@@ -164,18 +153,19 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
      * using image surfaces for all temporary operations, so return NULL
      * and let the fallback code happen.
      */
-    if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE(src)) {
+    if (xrender_format == NULL || ! CAIRO_SURFACE_RENDER_HAS_COMPOSITE (src))
 	return NULL;
-    }
 
     pix = XCreatePixmap (dpy, src->drawable,
 			 width <= 0 ? 1 : width, height <= 0 ? 1 : height,
-			 depth);
+			 xrender_format->depth);
 
     surface = (cairo_xlib_surface_t *)
-	cairo_xlib_surface_create_with_xrender_format (dpy, pix, src->screen,
-						       xrender_format,
-						       width, height);
+	      _cairo_xlib_surface_create_internal (dpy, pix,
+		                                   src->screen, NULL,
+						   xrender_format,
+						   width, height,
+						   xrender_format->depth);
     if (surface->base.status) {
 	XFreePixmap (dpy, pix);
 	return &surface->base;
@@ -251,10 +241,11 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
 			 xrender_format->depth);
 
     surface = (cairo_xlib_surface_t *)
-	cairo_xlib_surface_create_with_xrender_format (src->dpy, pix,
-						       src->screen,
-						       xrender_format,
-						       width, height);
+	      _cairo_xlib_surface_create_internal (src->dpy, pix,
+		                                   src->screen, src->visual,
+						   xrender_format,
+						   width, height,
+						   xrender_format->depth);
     if (surface->base.status != CAIRO_STATUS_SUCCESS) {
 	XFreePixmap (src->dpy, pix);
 	return &surface->base;
@@ -1071,6 +1062,9 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	clone = (cairo_xlib_surface_t *)
 	    _cairo_xlib_surface_create_similar_with_format (surface, image_src->format,
 						image_src->width, image_src->height);
+	if (clone == NULL)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
 	if (clone->base.status)
 	    return clone->base.status;
 
@@ -2392,7 +2386,6 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
     return _cairo_xlib_surface_create_internal (dpy, drawable, screen,
 						NULL, format, width, height, 0);
 }
-slim_hidden_def (cairo_xlib_surface_create_with_xrender_format);
 
 /**
  * cairo_xlib_surface_get_xrender_format:

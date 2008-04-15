@@ -171,7 +171,7 @@ placesTransactionsService.prototype = {
     return new placesTagURITransaction(aURI, aTags);
   },
 
-  untagURI: function placesTagURI(aURI, aTags) {
+  untagURI: function placesUntagURI(aURI, aTags) {
     return new placesUntagURITransaction(aURI, aTags);
   },
 
@@ -461,10 +461,19 @@ placesMoveItemTransactions.prototype = {
 
   doTransaction: function PMIT_doTransaction() {
     PlacesUtils.bookmarks.moveItem(this._id, this._newContainer, this._newIndex);
+    // if newIndex == DEFAULT_INDEX we append, so get correct index for undo
+    if (this._newIndex == PlacesUtils.bookmarks.DEFAULT_INDEX)
+      this._newIndex = PlacesUtils.bookmarks.getItemIndex(this._id);
   },
 
   undoTransaction: function PMIT_undoTransaction() {
-    PlacesUtils.bookmarks.moveItem(this._id, this._oldContainer, this._oldIndex);
+    // moving down in the same container takes in count removal of the item
+    // so to revert positions we must move to oldIndex + 1
+    if (this._newContainer == this._oldContainer &&
+        this._oldIndex > this._newIndex)
+      PlacesUtils.bookmarks.moveItem(this._id, this._oldContainer, this._oldIndex + 1);
+    else
+      PlacesUtils.bookmarks.moveItem(this._id, this._oldContainer, this._oldIndex);
   }
 };
 
@@ -910,12 +919,13 @@ placesTagURITransaction.prototype = {
   __proto__: placesBaseTransaction.prototype,
 
   doTransaction: function PTU_doTransaction() {
-    if (PlacesUtils.getBookmarksForURI(this._uri).length == 0) {
+    if (PlacesUtils.getMostRecentBookmarkForURI(this._uri) == -1) {
       // Force an unfiled bookmark first
       this._unfiledItemId =
         PlacesUtils.bookmarks
                    .insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                   this._uri, -1,
+                                   this._uri,
+                                   PlacesUtils.bookmarks.DEFAULT_INDEX,
                                    PlacesUtils.history.getPageTitle(this._uri));
     }
     PlacesUtils.tagging.tagURI(this._uri, this._tags);

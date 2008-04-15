@@ -55,7 +55,6 @@ browser/components/shell/Makefile
 browser/components/shell/public/Makefile
 browser/components/shell/src/Makefile
 browser/installer/Makefile
-browser/installer/unix/Makefile
 browser/installer/windows/Makefile
 browser/locales/Makefile
 browser/themes/Makefile

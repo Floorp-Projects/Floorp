@@ -890,6 +890,7 @@ PlacesTreeView.prototype = {
       properties = new Array();
       var nodeType = node.type;
       if (PlacesUtils.containerTypes.indexOf(nodeType) != -1) {
+        var itemId = node.itemId;
         if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY) {
           properties.push(this._getAtomFor("query"));
           if (this._showQueryAsFolder)
@@ -897,16 +898,30 @@ PlacesTreeView.prototype = {
         } 
         else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER ||
                  nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT) {
-          if (PlacesUtils.annotations.itemHasAnnotation(node.itemId,
+          
+          if (PlacesUtils.annotations.itemHasAnnotation(itemId,
                                                         LMANNO_FEEDURI))
             properties.push(this._getAtomFor("livemark"));
-          else if (PlacesUtils.bookmarks.getFolderIdForItem(node.itemId) ==
+          else if (PlacesUtils.bookmarks.getFolderIdForItem(itemId) ==
                    PlacesUtils.tagsFolderId)
             properties.push(this._getAtomFor("tagContainer"));
+        }
+
+        if (itemId != -1) {
+          var oqAnno;
+          try {
+            oqAnno = PlacesUtils.annotations.getItemAnnotation(itemId, ORGANIZER_QUERY_ANNO);
+            properties.push(this._getAtomFor("OrganizerQuery_" + oqAnno));
+          }
+          catch (ex) { /* not a special query */ }
         }
       }
       else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR)
         properties.push(this._getAtomFor("separator"));
+      else if (itemId != -1) { // bookmark nodes
+        if (PlacesUtils.nodeIsLivemarkContainer(node.parent))
+          properties.push(this._getAtomFor("livemarkItem"));
+      }
 
       this._visibleElements[aRow].properties = properties;
     }
@@ -983,7 +998,8 @@ PlacesTreeView.prototype = {
       if (elt.localName == "tree" && elt.view == this &&
           this.selection.isSelected(aRow))
         return false;
-      if (node.parent && PlacesUtils.nodeIsReadOnly(node.parent))
+      if (node.parent && PlacesUtils.nodeIsReadOnly(node.parent) &&
+          !PlacesUtils.nodeIsTagQuery(node))
         return false;
     }
   
@@ -995,6 +1011,9 @@ PlacesTreeView.prototype = {
   // either add a helper to PlacesUtils or keep it here and add insertionPoint
   // to the view interface.
   _disallowInsertion: function PTV__disallowInsertion(aContainer) {
+    // allow dropping into Tag containers
+    if (PlacesUtils.nodeIsTagQuery(aContainer))
+      return false;
     // Disallow insertion of items under readonly folders
     return (!PlacesUtils.nodeIsFolder(aContainer) ||
             PlacesUtils.nodeIsReadOnly(aContainer));
@@ -1041,7 +1060,8 @@ PlacesTreeView.prototype = {
       return null;
 
     return new InsertionPoint(PlacesUtils.getConcreteItemId(container),
-                              index, orientation);
+                              index, orientation,
+                              PlacesUtils.nodeIsTagQuery(container));
   },
 
   drop: function PTV_drop(aRow, aOrientation) {
@@ -1103,18 +1123,10 @@ PlacesTreeView.prototype = {
       return "";
 
     var node = this._visibleElements[aRow].node;
-
-    // Containers may or may not have favicons. If not, we will return
-    // nothing as the image, and the style rule should pick up the
-    // default. Separator rows never have icons.
-    if (PlacesUtils.nodeIsSeparator(node) ||
-        (PlacesUtils.nodeIsContainer(node) && !node.icon))
-      return "";
-
-    // For consistency, we always return a favicon for non-containers,
-    // even if it is just the default one.
-    var icon = node.icon || PlacesUtils.favicons.defaultFavicon;
-    return icon ? icon.spec : "";
+    var icon = node.icon;
+    if (icon)
+      return icon.spec;
+    return "";
   },
 
   getProgressMode: function(aRow, aColumn) { },

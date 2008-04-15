@@ -49,19 +49,46 @@ richlistitem[type="download"] button {
   list-style-image: url(chrome://mozapps/skin/downloads/buttons.png);
 }
 .cancel {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-.pause {
-  -moz-image-region: rect(0px, 48px, 16px, 32px);
-}
-.pause[disabled="true"] {
-  -moz-image-region: rect(16px, 48px, 16px, 32px);
-}
-.resume {
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
+.cancel:hover {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+.cancel:hover:active {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+
+.pause {
+  -moz-image-region: rect(48px, 16px, 64px, 0px);
+}
+.pause:hover {
+  -moz-image-region: rect(48px, 32px, 64px, 16px);
+}
+.pause:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(48px, 48px, 64px, 32px);
+}
+.pause[disabled="true"] {
+  -moz-image-region: rect(48px, 16px, 64px, 0px);
+}
+
+.resume {
+  -moz-image-region: rect(16px, 16px, 32px, 0px);
+}
+.resume:hover {
+  -moz-image-region: rect(16px, 32px, 32px, 16px);
+}
+.resume:hover:active {
+  -moz-image-region: rect(16px, 48px, 32px, 32px);
+}
+
 .retry {
-  -moz-image-region: rect(0px, 64px, 16px, 48px);
+  -moz-image-region: rect(32px, 16px, 48px, 0px);
+}
+.retry:hover {
+  -moz-image-region: rect(32px, 32px, 48px, 16px);
+}
+.retry:hover:active {
+  -moz-image-region: rect(32px, 48px, 48px, 32px);
 }
 
 .blockedIcon {
@@ -91,7 +118,13 @@ richlistitem[type="download"] button {
   -moz-border-left-colors: #969696 #C5C5C5 -moz-Field;
   -moz-border-radius: 11.5px;
   background: url("chrome://global/skin/icons/search-textbox.png") -moz-Field no-repeat 1px center;
-  -moz-background-clip: padding !important;
+  -moz-background-clip: border !important;
   padding: 0 8px;
   -moz-padding-start: 16px;
+}
+
+#searchbox[focused="true"] {
+  outline: 2px solid -moz-mac-focusring;
+  outline-offset: -2px;
+  -moz-outline-radius: 100%;
 }

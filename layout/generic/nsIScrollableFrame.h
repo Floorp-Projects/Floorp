@@ -85,7 +85,9 @@ public:
    * be visible due to overflowing content, are.
    */
   virtual nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState) = 0;
-
+  virtual nsMargin GetDesiredScrollbarSizes(nsPresContext* aPresContext,
+                                            nsIRenderingContext* aRC) = 0;
+  
   /**
    * Get the position of the scrolled view.
    */

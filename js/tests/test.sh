@@ -66,7 +66,6 @@ TEST_JSDIR=`dirname $0`
 #
 # options processing
 #
-options="d:"
 usage()
 {
     cat <<EOF
@@ -82,6 +81,8 @@ variable            description
 ===============     ============================================================
 -d datafiles        optional. one or more filenames of files containing 
                     environment variable definitions to be included.
+-Z n                optional. Set gczeal to n. Currently, only valid for 
+                    Gecko 1.9.0 and later.
 if an argument contains more than one value, it must be quoted.
 EOF
     exit 2
@@ -89,10 +90,11 @@ EOF
 
 unset datafiles
 
-while getopts $options optname ; 
+while getopts "d:Z:" optname ; 
 do 
     case $optname in
         d) datafiles=$OPTARG;;
+        Z) gczeal="-Z $OPTARG";;
     esac
 done
 
@@ -112,4 +114,4 @@ case "$product" in
         ;;
 esac
 
-$testscript -d "$datafiles"
+$testscript -d "$datafiles" $gczeal

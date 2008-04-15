@@ -911,7 +911,19 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
 
   // 0 dimensioned cells need to be treated specially in Standard/NavQuirks mode 
   // see testcase "emptyCells.html"
-  SetContentEmpty(0 == kidSize.height);
+  nsIFrame* prevInFlow = GetPrevInFlow();
+  PRBool isEmpty;
+  if (prevInFlow) {
+    isEmpty = static_cast<nsTableCellFrame*>(prevInFlow)->GetContentEmpty();
+  } else {
+    // XXX this is a bad way to check for empty content. There are various
+    // ways the cell could have content but the kid could end up with zero
+    // height. See
+    // http://www.w3.org/TR/CSS21/tables.html#empty-cells
+    // and bug 76331.
+    isEmpty = kidSize.height == 0;
+  }
+  SetContentEmpty(isEmpty);
 
   // Place the child
   FinishReflowChild(firstKid, aPresContext, &kidReflowState, kidSize,

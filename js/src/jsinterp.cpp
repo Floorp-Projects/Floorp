@@ -132,6 +132,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
     JS_ASSERT(scope->object == pobj);
     if (!SCOPE_HAS_PROPERTY(scope, sprop)) {
         PCMETER(cache->oddfills++);
+        *entryp = NULL;
         return;
     }
 
@@ -159,6 +160,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
             tmp = OBJ_GET_PROTO(cx, tmp);
             if (!tmp) {
                 PCMETER(cache->noprotos++);
+                *entryp = NULL;
                 return;
             }
             if (tmp == pobj)
@@ -168,6 +170,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
     }
     if (scopeIndex > PCVCAP_SCOPEMASK || protoIndex > PCVCAP_PROTOMASK) {
         PCMETER(cache->longchains++);
+        *entryp = NULL;
         return;
     }
 
@@ -6490,6 +6493,7 @@ interrupt:
             LOAD_OBJECT(0);
             JS_ASSERT(fp->spbase + OBJ_BLOCK_DEPTH(cx, obj) == regs.sp);
             vp = regs.sp + OBJ_BLOCK_COUNT(cx, obj);
+            JS_ASSERT(regs.sp < vp);
             JS_ASSERT(vp <= fp->spbase + script->depth);
             while (regs.sp < vp) {
                 STORE_OPND(0, JSVAL_VOID);

@@ -138,6 +138,8 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCCUncollectableMarker.h"
 
+#include "mozAutoDocUpdate.h"
+
 #ifdef MOZ_SVG
 PRBool NS_SVG_TestFeature(const nsAString &fstr);
 #endif /* MOZ_SVG */
@@ -442,19 +444,6 @@ nsIContent::FindFirstNonNativeAnonymous() const
   }
 
   return possibleResult;
-}
-
-PRBool
-nsIContent::IsInNativeAnonymousSubtree() const
-{
-  nsIContent* content = GetBindingParent();
-  while (content) {
-    if (content->IsNativeAnonymous()) {
-      return PR_TRUE;
-    }
-    content = content->GetBindingParent();
-  }
-  return PR_FALSE;
 }
 
 //----------------------------------------------------------------------
@@ -2043,7 +2032,7 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   NS_PRECONDITION(!IsNativeAnonymous() || aBindingParent == this,
                   "Native anonymous content must have itself as its "
                   "own binding parent");
-  
+
   if (!aBindingParent && aParent) {
     aBindingParent = aParent->GetBindingParent();
   }
@@ -2066,6 +2055,15 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
       slots->mBindingParent = aBindingParent; // Weak, so no addref happens.
     }
+  }
+  NS_ASSERTION(!aBindingParent || IsNativeAnonymous() ||
+               !HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE) ||
+               aBindingParent->IsInNativeAnonymousSubtree(),
+               "Trying to re-bind content from native anonymous subtree to"
+               "non-native anonymous parent!");
+  if (IsNativeAnonymous() ||
+      aBindingParent && aBindingParent->IsInNativeAnonymousSubtree()) {
+    SetFlags(NODE_IS_IN_ANONYMOUS_SUBTREE);
   }
 
   PRBool hadForceXBL = HasFlag(NODE_FORCE_XBL_BINDINGS);
@@ -2289,13 +2287,11 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
 
   nsCOMPtr<nsIContent> parent = aContent->GetParent();
   if (isAnonForEvents) {
-    // Don't propagate mutation events which are dispatched somewhere inside
-    // native anonymous content.
-    if (aVisitor.mEvent->eventStructType == NS_MUTATION_EVENT) {
-      aVisitor.mParentTarget = nsnull;
-      return NS_OK;
-    }
-
+    // If a DOM event is explicitly dispatched using node.dispatchEvent(), then
+    // all the events are allowed even in the native anonymous content..
+    NS_ASSERTION(aVisitor.mEvent->eventStructType != NS_MUTATION_EVENT ||
+                 aVisitor.mDOMEvent,
+                 "Mutation event dispatched in native anonymous content!?!");
     aVisitor.mEventTargetAtParent = parent;
   } else if (parent) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mEvent->target));
@@ -2756,13 +2752,15 @@ nsGenericElement::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 
     if (nsContentUtils::HasMutationListeners(aKid,
           NS_EVENT_BITS_MUTATION_NODEINSERTED, container)) {
-      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEINSERTED);
-      mutation.mRelatedNode = do_QueryInterface(container);
+      mozAutoRemovableBlockerRemover blockerRemover;
+      
+      if (nsContentUtils::IsSafeToRunScript()) {
+        nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEINSERTED);
+        mutation.mRelatedNode = do_QueryInterface(container);
 
-      mozAutoDocUpdateContentUnnest updateUnnest(aDocument);
-
-      mozAutoSubtreeModified subtree(container->GetOwnerDoc(), container);
-      nsEventDispatcher::Dispatch(aKid, nsnull, &mutation);
+        mozAutoSubtreeModified subtree(container->GetOwnerDoc(), container);
+        nsEventDispatcher::Dispatch(aKid, nsnull, &mutation);
+      }
     }
   }
 
@@ -2826,13 +2824,15 @@ nsGenericElement::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
   if (aNotify &&
       nsContentUtils::HasMutationListeners(aKid,
         NS_EVENT_BITS_MUTATION_NODEREMOVED, container)) {
-    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED);
-    mutation.mRelatedNode = do_QueryInterface(container);
+    mozAutoRemovableBlockerRemover blockerRemover;
 
-    mozAutoDocUpdateContentUnnest updateUnnest(aDocument);
+    if (nsContentUtils::IsSafeToRunScript()) {
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED);
+      mutation.mRelatedNode = do_QueryInterface(container);
 
-    subtree.UpdateTarget(container->GetOwnerDoc(), container);
-    nsEventDispatcher::Dispatch(aKid, nsnull, &mutation);
+      subtree.UpdateTarget(container->GetOwnerDoc(), container);
+      nsEventDispatcher::Dispatch(aKid, nsnull, &mutation);
+    }
   }
 
   // Someone may have removed the kid or any of its siblings while that event
@@ -2964,6 +2964,15 @@ nsGenericElement::DestroyContent()
   for (i = 0; i < count; ++i) {
     // The child can remove itself from the parent in BindToTree.
     mAttrsAndChildren.ChildAt(i)->DestroyContent();
+  }
+}
+
+void
+nsGenericElement::SaveSubtreeState()
+{
+  PRUint32 i, count = mAttrsAndChildren.ChildCount();
+  for (i = 0; i < count; ++i) {
+    mAttrsAndChildren.ChildAt(i)->SaveSubtreeState();
   }
 }
 
@@ -3456,13 +3465,17 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
 
   // Unlink child content (and unbind our subtree).
   {
-    PRUint32 i;
-    PRUint32 kids = tmp->mAttrsAndChildren.ChildCount();
-    for (i = kids; i > 0; i--) {
-      // We could probably do a non-deep unbind here when IsInDoc is false
-      // for better performance.
-      tmp->mAttrsAndChildren.ChildAt(i-1)->UnbindFromTree();
-      tmp->mAttrsAndChildren.RemoveChildAt(i-1);    
+    PRUint32 childCount = tmp->mAttrsAndChildren.ChildCount();
+    if (childCount) {
+      // Don't allow script to run while we're unbinding everything.
+      nsAutoScriptBlocker scriptBlocker;
+      while (childCount-- > 0) {
+        // Once we have XPCOMGC we shouldn't need to call UnbindFromTree.
+        // We could probably do a non-deep unbind here when IsInDoc is false
+        // for better performance.
+        tmp->mAttrsAndChildren.ChildAt(childCount)->UnbindFromTree();
+        tmp->mAttrsAndChildren.RemoveChildAt(childCount);
+      }
     }
   }  
 
@@ -3789,31 +3802,33 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
   }
   
   if (aFireMutation) {
-    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
+    mozAutoRemovableBlockerRemover blockerRemover;
+    
+    if (nsContentUtils::IsSafeToRunScript()) {
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
 
-    nsAutoString attrName;
-    aName->ToString(attrName);
-    nsCOMPtr<nsIDOMAttr> attrNode;
-    nsAutoString ns;
-    nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNamespaceID, ns);
-    GetAttributeNodeNS(ns, attrName, getter_AddRefs(attrNode));
-    mutation.mRelatedNode = attrNode;
+      nsAutoString attrName;
+      aName->ToString(attrName);
+      nsCOMPtr<nsIDOMAttr> attrNode;
+      nsAutoString ns;
+      nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNamespaceID, ns);
+      GetAttributeNodeNS(ns, attrName, getter_AddRefs(attrNode));
+      mutation.mRelatedNode = attrNode;
 
-    mutation.mAttrName = aName;
-    nsAutoString newValue;
-    GetAttr(aNamespaceID, aName, newValue);
-    if (!newValue.IsEmpty()) {
-      mutation.mNewAttrValue = do_GetAtom(newValue);
+      mutation.mAttrName = aName;
+      nsAutoString newValue;
+      GetAttr(aNamespaceID, aName, newValue);
+      if (!newValue.IsEmpty()) {
+        mutation.mNewAttrValue = do_GetAtom(newValue);
+      }
+      if (!aOldValue.IsEmpty()) {
+        mutation.mPrevAttrValue = do_GetAtom(aOldValue);
+      }
+      mutation.mAttrChange = modType;
+
+      mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
+      nsEventDispatcher::Dispatch(this, nsnull, &mutation);
     }
-    if (!aOldValue.IsEmpty()) {
-      mutation.mPrevAttrValue = do_GetAtom(aOldValue);
-    }
-    mutation.mAttrChange = modType;
-
-    mozAutoDocUpdateContentUnnest updateUnnest(document);
-
-    mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
-    nsEventDispatcher::Dispatch(this, nsnull, &mutation);
   }
 
   if (aNamespaceID == kNameSpaceID_XMLEvents && 
@@ -4046,23 +4061,25 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   }
 
   if (hasMutationListeners) {
-    nsCOMPtr<nsIDOMEventTarget> node =
-      do_QueryInterface(static_cast<nsIContent *>(this));
-    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
+    mozAutoRemovableBlockerRemover blockerRemover;
 
-    mutation.mRelatedNode = attrNode;
-    mutation.mAttrName = aName;
+    if (nsContentUtils::IsSafeToRunScript()) {
+      nsCOMPtr<nsIDOMEventTarget> node =
+        do_QueryInterface(static_cast<nsIContent *>(this));
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
 
-    nsAutoString value;
-    oldValue.ToString(value);
-    if (!value.IsEmpty())
-      mutation.mPrevAttrValue = do_GetAtom(value);
-    mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
+      mutation.mRelatedNode = attrNode;
+      mutation.mAttrName = aName;
 
-    mozAutoDocUpdateContentUnnest updateUnnest(document);
+      nsAutoString value;
+      oldValue.ToString(value);
+      if (!value.IsEmpty())
+        mutation.mPrevAttrValue = do_GetAtom(value);
+      mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
 
-    mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
-    nsEventDispatcher::Dispatch(this, nsnull, &mutation);
+      mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
+      nsEventDispatcher::Dispatch(this, nsnull, &mutation);
+    }
   }
 
   return AfterSetAttr(aNameSpaceID, aName, nsnull, aNotify);

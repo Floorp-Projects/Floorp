@@ -252,18 +252,3 @@ nsPageContentFrame::IsContainingBlock() const
 {
   return PR_TRUE;
 }
-
-
-//------------------------------------------------------------------------------
-NS_IMETHODIMP
-nsPageContentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                     const nsRect&           aDirtyRect,
-                                     const nsDisplayListSet& aLists)
-{
-  nsDisplayListCollection set;
-  nsresult rv = ViewportFrame::BuildDisplayList(aBuilder, aDirtyRect, set);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return Clip(aBuilder, set, aLists,
-              nsRect(aBuilder->ToReferenceFrame(this), GetSize()));
-}
