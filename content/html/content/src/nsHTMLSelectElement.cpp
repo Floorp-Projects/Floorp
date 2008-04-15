@@ -1265,15 +1265,16 @@ nsHTMLSelectElement::SetFocus(nsPresContext* aPresContext)
 }
 
 PRBool
-nsHTMLSelectElement::IsFocusable(PRInt32 *aTabIndex)
+nsHTMLSelectElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
 {
-  if (!nsGenericHTMLElement::IsFocusable(aTabIndex)) {
-    return PR_FALSE;
+  if (nsGenericHTMLElement::IsHTMLFocusable(aIsFocusable, aTabIndex)) {
+    return PR_TRUE;
   }
   if (aTabIndex && (sTabFocusModel & eTabFocus_formElementsMask) == 0) {
     *aTabIndex = -1;
   }
-  return PR_TRUE;
+  *aIsFocusable = PR_TRUE;
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP

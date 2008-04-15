@@ -123,7 +123,7 @@ public:
 
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
 
-  PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
+  PRBool IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex);
 
   // SetAttr override.  C++ is stupid, so have to override both
   // overloaded methods.
@@ -435,7 +435,7 @@ nsHTMLImageElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 }
 
 PRBool
-nsHTMLImageElement::IsFocusable(PRInt32 *aTabIndex)
+nsHTMLImageElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
 {
   PRInt32 tabIndex;
   GetTabIndex(&tabIndex);
@@ -455,7 +455,7 @@ nsHTMLImageElement::IsFocusable(PRInt32 *aTabIndex)
       }
       // Image map is not focusable itself, but flag as tabbable
       // so that image map areas get walked into.
-      return PR_FALSE;
+      *aIsFocusable = PR_FALSE;
     }
   }
 
@@ -464,7 +464,10 @@ nsHTMLImageElement::IsFocusable(PRInt32 *aTabIndex)
     *aTabIndex = (sTabFocusModel & eTabFocus_formElementsMask)? tabIndex : -1;
   }
 
-  return tabIndex >= 0 || HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex);
+  *aIsFocusable = tabIndex >= 0 ||
+                  HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex);
+
+  return PR_FALSE;
 }
 
 nsresult
