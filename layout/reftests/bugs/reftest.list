@@ -629,6 +629,7 @@ skip-if(MOZ_WIDGET_TOOLKIT!="windows") == 391045.html 391045-ref.html # windows-
 == 398797-1d.html 398797-1-ref.html
 == 399209-1.html 399209-1-ref.html
 == 399209-2.html 399209-2-ref.html
+== 399258-1.html 399258-1-ref.html
 == 399384-1.html 399384-1-ref.html
 == 400081-1.html about:blank
 == 400171-1a.html 400171-1-ref.html
