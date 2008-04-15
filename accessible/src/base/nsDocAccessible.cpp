@@ -159,7 +159,10 @@ NS_IMETHODIMP nsDocAccessible::GetName(nsAString& aName)
     rv = nsAccessible::GetName(aName); // Allow name via aria-labelledby or title attribute
   }
   if (aName.IsEmpty()) {
-    rv = GetTitle(aName);   // Finally try title element
+    rv = GetTitle(aName);   // Try title element
+  }
+  if (aName.IsEmpty()) {   // Last resort: use URL
+    rv = GetURL(aName);
   }
 
   return rv;
