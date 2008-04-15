@@ -3445,6 +3445,8 @@
       Delete "$APPDATA\$R9\profiles.ini"
       Delete "$APPDATA\$R9\console.log"
       Delete "$APPDATA\$R9\pluginreg.dat"
+      RmDir "$APPDATA\$R9\Profiles"
+      RmDir "$APPDATA\$R9"
 
       Pop $R6
       Pop $R7
