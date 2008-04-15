@@ -45,11 +45,6 @@ treechildren::-moz-tree-image(title, container, livemark) {
   -moz-image-region: auto;
 }
 
-treechildren::-moz-tree-image(title, container, tagContainer) {
-  list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");
-  -moz-image-region: auto;
-}
-
 treechildren::-moz-tree-image(container, OrganizerQuery_AllBookmarks) {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 48px 16px 32px);
@@ -68,7 +63,22 @@ treechildren::-moz-tree-image(container, OrganizerQuery_BookmarksMenu) {
 /* query-nodes should be styled even if they're not expandable */
 treechildren::-moz-tree-image(title, query) {
   list-style-image: url("chrome://browser/skin/places/query.png");
-  -moz-image-region: auto;
+}
+
+treechildren::-moz-tree-image(title, query, tagContainer) {
+  list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");
+}
+
+treechildren::-moz-tree-image(title, query, dayContainer) {
+  list-style-image: url("moz-icon://stock/gtk-directory?size=menu");
+}
+
+treechildren::-moz-tree-image(title, query, hostContainer) {
+  list-style-image: url("moz-icon://stock/gtk-directory?size=menu");
+}
+
+treechildren::-moz-tree-image(title, query, hostContainer, open) {
+  list-style-image: url("moz-icon://stock/gtk-directory?size=menu");
 }
 
 treechildren::-moz-tree-image(title, query, OrganizerQuery_History) {
