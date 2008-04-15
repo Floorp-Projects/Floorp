@@ -1,7 +1,6 @@
 var EXPORTED_SYMBOLS = ["Microformats", "adr", "tag", "hCard", "hCalendar", "geo"];
 
 var Microformats = {
-  version: 0.8,
   /* When a microformat is added, the name is placed in this list */
   list: [],
   /* Custom iterator so that microformats can be enumerated as */
@@ -267,16 +266,14 @@ var Microformats = {
   },
   add: function add(microformat, microformatDefinition) {
     /* We always replace an existing definition with the new one */
-    if (microformatDefinition.mfVersion == Microformats.version) {
-      if (!Microformats[microformat]) {
-        Microformats.list.push(microformat);
-      }
-      Microformats[microformat] = microformatDefinition;
-      microformatDefinition.mfObject.prototype.debug =
-        function(microformatObject) {
-          return Microformats.debug(microformatObject)
-        };
+    if (!Microformats[microformat]) {
+      Microformats.list.push(microformat);
     }
+    Microformats[microformat] = microformatDefinition;
+    microformatDefinition.mfObject.prototype.debug =
+      function(microformatObject) {
+        return Microformats.debug(microformatObject)
+      };
   },
   /* All parser specific functions are contained in this object */
   parser: {
@@ -1136,7 +1133,6 @@ adr.prototype.toString = function() {
 }
 
 var adr_definition = {
-  mfVersion: 0.8,
   mfObject: adr,
   className: "adr",
   properties: {
@@ -1203,7 +1199,6 @@ hCard.prototype.toString = function() {
 }
 
 var hCard_definition = {
-  mfVersion: 0.8,
   mfObject: hCard,
   className: "vcard",
   required: ["fn"],
@@ -1414,7 +1409,6 @@ hCalendar.prototype.toString = function() {
 }
 
 var hCalendar_definition = {
-  mfVersion: 0.8,
   mfObject: hCalendar,
   className: "vevent",
   required: ["summary", "dtstart"],
@@ -1623,7 +1617,6 @@ geo.prototype.toString = function() {
 }
 
 var geo_definition = {
-  mfVersion: 0.8,
   mfObject: geo,
   className: "geo",
   required: ["latitude","longitude"],
@@ -1696,7 +1689,6 @@ tag.prototype.toString = function() {
 }
 
 var tag_definition = {
-  mfVersion: 0.8,
   mfObject: tag,
   attributeName: "rel",
   attributeValues: "tag",
