@@ -1,7 +1,7 @@
-This is sqlite 3.5.4.1
+This is sqlite 3.5.4.2
 
 
--- Shawn Wilsher <me@shawnwilsher.com> 01/2008
+-- Peter Weilbacher <mozilla@weilbacher.org>, 04/2008
 
 See http://www.sqlite.org/ for more info.
 
@@ -12,7 +12,6 @@ To move to a new version:
 
 Simply copy the sqlite3.h and sqlite3.c files from the amalgamation of sqlite.
 
-If mozstorage or nss code need changes due to API changes in sqlite3, be sure
-to update SQLITE_VERSION accordingly in $(topsrcdir)/configure.in.
+Be sure to update SQLITE_VERSION accordingly in $(topsrcdir)/configure.in.
 
 -- Shawn Wilsher <me@shawnwilsher.com> 01/2008
