@@ -11,120 +11,88 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <script type="application/javascript">
+    const nsIAccessibleRetrieval = Components.interfaces.nsIAccessibleRetrieval;
+    const nsIAccessibleTable = Components.interfaces.nsIAccessibleTable;
+
+    var gAccService = null;
+
     function doTest()
     {
-      const nsIAccessibleRetrieval =
-        Components.interfaces.nsIAccessibleRetrieval;
-      const nsIAccessibleTable = Components.interfaces.nsIAccessibleTable;
-
-      var accService = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-                       getService(nsIAccessibleRetrieval);
+      gAccService = Components.classes["@mozilla.org/accessibleRetrieval;1"].
+                    getService(nsIAccessibleRetrieval);
 
       //////////////////////////////////////////////////////////////////////////
       // table
-      var table = document.getElementById("table");
-      var tableAcc = accService.getAccessibleFor(table).
-        QueryInterface(nsIAccessibleTable);
-
-      var row, column, index;
       var tRow = new Array(0,0,0,1,1,1,2,2,3,3);
       var tCol = new Array(0,1,2,0,1,2,0,1,1,2);
 
-      for (var i = 0; i < 10; i++) {
-        row = tableAcc.getRowAtIndex(i);
-        column = tableAcc.getColumnAtIndex(i);
-        index = tableAcc.getIndexAt(tRow[i], tCol[i]);
-        is(row, tRow[i], "table: row  for index " + i +" is nor correct");
-        is(column, tCol[i], "table: column  for index " + i +"is nor correct");
-        is(index, i,
-           "table: row " + row + " /column " + column + " and index " + index + " aren't inconsistent.");
-      }
+      testTable("table", 10, tRow, tCol);
 
       //////////////////////////////////////////////////////////////////////////
       // tableinsane1
-      table = document.getElementById("tableinsane1");
-      tableAcc = accService.getAccessibleFor(table).
-        QueryInterface(nsIAccessibleTable);
-
       tRow = [0,0,0,1,1,1,2,2,3,3];
       tCol = [0,1,2,0,1,2,0,1,1,2];
 
-      for (var i = 0; i < 10; i++) {
-        row = tableAcc.getRowAtIndex(i);
-        column = tableAcc.getColumnAtIndex(i);
-        index = tableAcc.getIndexAt(tRow[i], tCol[i]);
-        is(row, tRow[i],
-           "tableinsane1: row  for index " + i +" is nor correct");
-        is(column, tCol[i],
-           "tableinsane1: column  for index " + i +"is nor correct");
-        is(index, i,
-           "tableinsane1: row " + row + " /column " + column + " and index " + index + " aren't inconsistent.");
-      }
+      testTable("tableinsane1", 10, tRow, tCol);
 
       //////////////////////////////////////////////////////////////////////////
       // tableinsane2
-      table = document.getElementById("tableinsane2");
-      tableAcc = accService.getAccessibleFor(table).
-        QueryInterface(nsIAccessibleTable);
-    
       tRow = [0,0,0,1,1,1,2,2,3,3,4,4,4];
       tCol = [0,1,2,0,1,2,0,1,1,2,1,3,4];
 
-      for (var i = 0; i < 13; i++) {
-        row = tableAcc.getRowAtIndex(i);
-        column = tableAcc.getColumnAtIndex(i);
-        index = tableAcc.getIndexAt(tRow[i], tCol[i]);
-        is(row, tRow[i],
-           "tableinsane2: row  for index " + i +" is nor correct");
-        is(column, tCol[i],
-           "tableinsane2: column  for index " + i +"is nor correct");
-        is(index, i,
-           "tableinsane2: row " + row + " /column " + column + " and index " + index + " aren't inconsistent.");
-      }
+      testTable("tableinsane2", 13, tRow, tCol);
 
       //////////////////////////////////////////////////////////////////////////
       // tableinsane4
-      table = document.getElementById("tableinsane4");
-      tableAcc = accService.getAccessibleFor(table).
-        QueryInterface(Components.interfaces.nsIAccessibleTable);
-
       tRow = [0,0,0,1,1,1,2,2,3,4];
       tCol = [0,1,2,0,1,2,0,2,0,0];
 
-      for (var i = 0; i < 10; i++) {
-        row = tableAcc.getRowAtIndex(i);
-        column = tableAcc.getColumnAtIndex(i);
-        index = tableAcc.getIndexAt(tRow[i], tCol[i]);
-        is(row, tRow[i],
-           "tableinsane4: row  for index " + i +" is nor correct");
-        is(column, tCol[i],
-           "tableinsane4: column  for index " + i +"is nor correct");
-        is(index, i,
-           "tableinsane4: row " + row + " /column " + column + " and index " + index + " aren't inconsistent.");
-      }
+      testTable("tableinsane4", 10, tRow, tCol);
 
       //////////////////////////////////////////////////////////////////////////
       // tableborder
-      var table = document.getElementById("tableborder");
-      var tableAcc = accService.getAccessibleFor(table).
-        QueryInterface(nsIAccessibleTable);
-
       tRow = [0,0,0,1,1,1,2,2,3,3];
       tCol = [0,1,2,0,1,2,0,1,1,2];
 
-      for (var i = 0; i < 10; i++) {
-        row = tableAcc.getRowAtIndex(i);
-        column = tableAcc.getColumnAtIndex(i);
-        index = tableAcc.getIndexAt(tRow[i], tCol[i]);
-        is(row, tRow[i],
-           "tableborder: row  for index " + i +" is nor correct");
-        is(column, tCol[i],
-           "tableborder: column  for index " + i +"is nor correct");
-        is(index, i,
-           "tableborder: row " + row + " /column " + column + " and index " + index + " aren't inconsistent.");
-      }
+      testTable("tableborder", 10, tRow, tCol);
 
       SimpleTest.finish();
+    }
+
+    function testTable(aId, aLen, aRowIdxes, aColIdxes)
+    {
+      var table = document.getElementById(aId);
+      var tableAcc = gAccService.getAccessibleFor(table).
+        QueryInterface(nsIAccessibleTable);
+
+      var row, column, index;
+      var cellAcc;
+
+      for (var i = 0; i < aLen; i++) {
+        row = tableAcc.getRowAtIndex(i);
+        column = tableAcc.getColumnAtIndex(i);
+        index = tableAcc.getIndexAt(aRowIdxes[i], aColIdxes[i]);
+
+        is(row, aRowIdxes[i], aId + ": row  for index " + i +" is nor correct");
+        is(column, aColIdxes[i],
+           aId + ": column  for index " + i +"is nor correct");
+        is(index, i,
+           aId + ": row " + row + " /column " + column + " and index " + index + " aren't inconsistent.");
+
+        try {
+          cellAcc = null;
+          cellAcc = tableAcc.cellRefAt(row, column);
+        } catch (e) { }
+
+        ok(cellAcc,
+           aId + ": Can't get cell accessible at row = " + row + ", column = " + column);
+
+        if (cellAcc) {
+          var attrs = cellAcc.attributes;
+          is (parseInt(attrs.getStringProperty("cell-index")), index,
+              aId + ": cell index from object attributes of cell accessible isn't corrent.");
+        }
+      }
     }
 
     SimpleTest.waitForExplicitFinish();

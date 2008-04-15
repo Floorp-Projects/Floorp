@@ -45,10 +45,15 @@
 class nsHTMLTableCellAccessible : public nsHyperTextAccessibleWrap
 {
 public:
+  nsHTMLTableCellAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+
   NS_DECL_ISUPPORTS_INHERITED
 
-  nsHTMLTableCellAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetRole(PRUint32 *aResult); 
+  // nsIAccessible
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+
+  // nsAccessible
+  virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 };
 
 class nsITableLayout;
