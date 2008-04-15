@@ -2765,15 +2765,6 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
     innerRect.height = outerRect.height;
   }
 
-  // If the dirty rect is completely inside the border area (e.g., only the
-  // content is being painted), then we can skip out now
-  // XXX this isn't exactly true for rounded borders, where the inner curves may
-  // encroach into the content area.  A safer calculation would be to
-  // shorten innerRect by the radius one each side before performing this test.
-  if (innerRect.Contains(aDirtyRect)) {
-    return;
-  }
-
   // we can assume that we're already clipped to aDirtyRect -- I think? (!?)
 
   // Get our conversion values
