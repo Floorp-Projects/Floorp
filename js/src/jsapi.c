@@ -1395,7 +1395,7 @@ static JSStdName standard_class_atoms[] = {
  */
 static JSStdName standard_class_names[] = {
     /* ECMA requires that eval be a direct property of the global object. */
-    {js_InitObjectClass,        EAGER_ATOM(eval), NULL},
+    {js_InitEval,               EAGER_ATOM(eval), NULL},
 
     /* Global properties and functions defined by the Number class. */
     {js_InitNumberClass,        LAZY_ATOM(NaN), NULL},
