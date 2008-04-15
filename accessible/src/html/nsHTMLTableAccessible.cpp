@@ -60,6 +60,8 @@
 #include "nsITableCellLayout.h"
 #include "nsLayoutErrors.h"
 
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLTableCellAccessible
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTableCellAccessible, nsHyperTextAccessible)
 
@@ -74,6 +76,66 @@ NS_IMETHODIMP nsHTMLTableCellAccessible::GetRole(PRUint32 *aResult)
   *aResult = nsIAccessibleRole::ROLE_CELL;
   return NS_OK;
 }
+
+nsresult
+nsHTMLTableCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
+{
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsresult rv = nsHyperTextAccessibleWrap::GetAttributesInternal(aAttributes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  NS_ENSURE_STATE(shell);
+  
+  nsIFrame *frame = shell->GetPrimaryFrameFor(content);
+  nsITableCellLayout *cellLayout = nsnull;
+  CallQueryInterface(frame, &cellLayout);
+  NS_ENSURE_STATE(cellLayout);
+
+  PRInt32 rowIdx = -1, cellIdx = -1;
+  rv = cellLayout->GetCellIndexes(rowIdx, cellIdx);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIAccessible> childAcc(this);
+
+  nsCOMPtr<nsIAccessible> parentAcc;
+  rv = childAcc->GetParent(getter_AddRefs(parentAcc));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  while (parentAcc) {
+    if (Role(parentAcc) == nsIAccessibleRole::ROLE_TABLE) {
+      // Table accessible must implement nsIAccessibleTable interface but if
+      // it isn't happen (for example because of ARIA usage) we shouldn't fail
+      // on getting other attributes.
+      nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryInterface(parentAcc));
+      if (!tableAcc)
+        return NS_OK;
+
+      PRInt32 idx = -1;
+      rv = tableAcc->GetIndexAt(rowIdx, cellIdx, &idx);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsAutoString stringIdx;
+      stringIdx.AppendInt(idx);
+      nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::cellIndex,
+                             stringIdx);
+      return NS_OK;
+    }
+
+    parentAcc.swap(childAcc);
+    rv = childAcc->GetParent(getter_AddRefs(parentAcc));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLTableAccessible
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLTableAccessible, nsAccessible, nsIAccessibleTable)
 
