@@ -46,9 +46,7 @@
 #include "nsBlockBandData.h"
 #include "nsLineBox.h"
 #include "nsFrameList.h"
-#include "nsContainerFrame.h"
-
-class nsBlockFrame;
+#include "nsBlockFrame.h"
 
   // block reflow state flags
 #define BRS_UNCONSTRAINEDHEIGHT   0x00000001
@@ -111,7 +109,8 @@ public:
   // Returns the first coordinate >= aY that clears the
   // floats indicated by aBreakType and has enough width between floats
   // (or no floats remaining) to accomodate aReplacedWidth.
-  nscoord ClearFloats(nscoord aY, PRUint8 aBreakType, nscoord aReplacedWidth = 0);
+  nscoord ClearFloats(nscoord aY, PRUint8 aBreakType,
+    nsBlockFrame::ReplacedElementWidthToClear *aReplacedWidth = nsnull);
 
   PRBool IsAdjacentWithTop() const {
     return mY ==
@@ -141,8 +140,18 @@ public:
   // Reconstruct the previous bottom margin that goes above |aLine|.
   void ReconstructMarginAbove(nsLineList::iterator aLine);
 
+  // Caller must have called GetAvailableSpace for the current mY
+  void ComputeReplacedBlockOffsetsForFloats(nsIFrame* aFrame,
+                                            nscoord& aLeftResult,
+                                            nscoord& aRightResult,
+                                        nsBlockFrame::ReplacedElementWidthToClear
+                                                       *aReplacedWidth = nsnull);
+
+  // Caller must have called GetAvailableSpace for the current mY
   void ComputeBlockAvailSpace(nsIFrame* aFrame,
                               const nsStyleDisplay* aDisplay,
+                              nsBlockFrame::ReplacedElementWidthToClear
+                                                               *aReplacedWidth,
                               nsRect& aResult);
 
 protected:
