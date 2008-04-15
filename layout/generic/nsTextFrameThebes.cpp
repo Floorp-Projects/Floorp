@@ -3736,7 +3736,7 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
     gfxFloat offset = fontMetrics.strikeoutOffset;
     nsCSSRendering::PaintDecorationLine(
       aCtx, decorations.mStrikeColor, pt, size, ascent, offset,
-      NS_STYLE_TEXT_DECORATION_UNDERLINE, NS_STYLE_BORDER_STYLE_SOLID);
+      NS_STYLE_TEXT_DECORATION_LINE_THROUGH, NS_STYLE_BORDER_STYLE_SOLID);
   }
 }
 
