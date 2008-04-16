@@ -1998,6 +1998,8 @@ NSEvent* gLastDragEvent = nil;
 
     mLastMouseDownEvent = nil;
     mDragService = nsnull;
+
+    mPluginTSMDoc = nil;
   }
   
   // register for things we'll take from other applications
@@ -2024,6 +2026,8 @@ NSEvent* gLastDragEvent = nil;
 
   [mPendingDirtyRects release];
   [mLastMouseDownEvent release];
+  if (mPluginTSMDoc)
+    ::DeleteTSMDocument(mPluginTSMDoc);
   
   if (sLastViewEntered == self)
     sLastViewEntered = nil;
@@ -3963,6 +3967,71 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
 }
 
 
+// Called from PluginKeyEventsHandler() (a handler for Carbon TSM events) to
+// process a Carbon key event for the currently focused plugin.  Both Unicode
+// characters and "Mac encoding characters" (in the MBCS or "multibyte
+// character system") are (or should be) available from aKeyEvent, but here we
+// use the MCBS characters.  This is how the WebKit does things, and seems to
+// be what plugins expect.
+- (void) processPluginKeyEvent:(EventRef)aKeyEvent
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  UInt32 numCharCodes;
+  OSStatus status = ::GetEventParameter(aKeyEvent, kEventParamKeyMacCharCodes,
+                                        typeChar, NULL, 0, &numCharCodes, NULL);
+  if (status != noErr)
+    return;
+
+  nsAutoTArray<unsigned char, 3> charCodes;
+  charCodes.SetLength(numCharCodes);
+  status = ::GetEventParameter(aKeyEvent, kEventParamKeyMacCharCodes,
+                              typeChar, NULL, numCharCodes, NULL, charCodes.Elements());
+  if (status != noErr)
+    return;
+
+  EventRef cloneEvent = ::CopyEvent(aKeyEvent);
+  for (unsigned int i = 0; i < numCharCodes; ++i) {
+    status = ::SetEventParameter(cloneEvent, kEventParamKeyMacCharCodes,
+                                 typeChar, 1, charCodes.Elements() + i);
+    if (status != noErr)
+      return;
+
+    EventRecord eventRec;
+    if (::ConvertEventRefToEventRecord(cloneEvent, &eventRec)) {
+      PRUint32 keyCode(GetGeckoKeyCodeFromChar((PRUnichar)charCodes.ElementAt(i)));
+      PRUint32 charCode(charCodes.ElementAt(i));
+
+      // For some reason we must send just an NS_KEY_PRESS to Gecko here:  If
+      // we send an NS_KEY_DOWN plus an NS_KEY_PRESS, or just an NS_KEY_DOWN,
+      // the plugin receives two events.
+      nsKeyEvent keyPressEvent(PR_TRUE, NS_KEY_PRESS, mGeckoChild);
+      keyPressEvent.time      = PR_IntervalNow();
+      keyPressEvent.nativeMsg = &eventRec;
+      if (IsSpecialGeckoKey(keyCode)) {
+        keyPressEvent.keyCode  = keyCode;
+      } else {
+        keyPressEvent.charCode = charCode;
+        keyPressEvent.isChar   = PR_TRUE;
+      }
+      mGeckoChild->DispatchWindowEvent(keyPressEvent);
+
+      // PluginKeyEventsHandler() never sends us keyUp events, so we need to
+      // synthesize them for Gecko.
+      nsKeyEvent keyUpEvent(PR_TRUE, NS_KEY_UP, mGeckoChild);
+      keyUpEvent.time      = PR_IntervalNow();
+      keyUpEvent.keyCode   = keyCode;
+      keyUpEvent.nativeMsg = &eventRec;
+      mGeckoChild->DispatchWindowEvent(keyUpEvent);
+    }
+  }
+
+  ::ReleaseEvent(cloneEvent);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+
 - (nsRect)sendCompositionEvent:(PRInt32) aEventType
 {
 #ifdef DEBUG_IME
@@ -4556,9 +4625,63 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
 }
 
 
+// Create a TSM document for use with plugins, so that we can support IME in
+// them.  Once it's created, if need be (re)activate it.  Some plugins (e.g.
+// the Flash plugin running in Camino) don't create their own TSM document --
+// without which IME can't work.  Others (e.g. the Flash plugin running in
+// Firefox) create a TSM document that (somehow) makes the input window behave
+// badly when it contains more than one kind of input (say Hiragana and
+// Romaji).  (We can't just use the per-NSView TSM documents that Cocoa
+// provices (those created and managed by the NSTSMInputContext class) -- for
+// some reason TSMProcessRawKeyEvent() doesn't work with them.)
+- (void)activatePluginTSMDoc
+{
+  if (!mPluginTSMDoc) {
+    // Create a TSM document that supports both non-Unicode and Unicode input.
+    // Though [ChildView processPluginKeyEvent:] only sends Mac char codes to
+    // the plugin, this makes the input window behave better when it contains
+    // more than one kind of input (say Hiragana and Romaji).  This is what
+    // the OS does when it creates a TSM document for use by an
+    // NSTSMInputContext class.
+    InterfaceTypeList supportedServices;
+    supportedServices[0] = kTextServiceDocumentInterfaceType;
+    supportedServices[1] = kUnicodeDocumentInterfaceType;
+    ::NewTSMDocument(2, supportedServices, &mPluginTSMDoc, 0);
+    // We'll need to use the "input window".
+    ::UseInputWindow(mPluginTSMDoc, YES);
+    ::ActivateTSMDocument(mPluginTSMDoc);
+  } else if (::TSMGetActiveDocument() != mPluginTSMDoc) {
+    ::ActivateTSMDocument(mPluginTSMDoc);
+  }
+}
+
+
 - (void)keyDown:(NSEvent*)theEvent
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  // If a plugin has the focus, we need to use an alternate method for
+  // handling NSKeyDown and NSKeyUp events (otherwise Carbon-based IME won't
+  // work in plugins like the Flash plugin).  The same strategy is used by the
+  // WebKit.  See PluginKeyEventsHandler() and [ChildView processPluginKeyEvent:]
+  // for more info.
+  if (mGeckoChild && mIsPluginView) {
+    [self activatePluginTSMDoc];
+    // We use the active TSM document to pass a pointer to ourselves (the
+    // currently focused ChildView) to PluginKeyEventsHandler().  Because this
+    // pointer is weak, we should retain and release ourselves around the call
+    // to TSMProcessRawKeyEvent().
+    nsAutoRetainCocoaObject kungFuDeathGrip(self);
+    ::TSMSetDocumentProperty(mPluginTSMDoc, kFocusedChildViewTSMDocPropertyTag,
+                             sizeof(ChildView *), &self);
+    ::TSMProcessRawKeyEvent([theEvent _eventRef]);
+    ::TSMRemoveDocumentProperty(mPluginTSMDoc, kFocusedChildViewTSMDocPropertyTag);
+    return;
+  }
+
   [self processKeyDownEvent:theEvent keyEquiv:NO];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -4567,6 +4690,15 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 - (void)keyUp:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (mGeckoChild && mIsPluginView) {
+    // I'm not sure the call to TSMProcessRawKeyEvent() is needed here (though
+    // WebKit makes one).  But we definitely need to short-circuit NSKeyUp
+    // handling when a plugin has the focus -- since we synthesize keyUp events
+    // in [ChildView processPluginKeyEvent:].
+    ::TSMProcessRawKeyEvent([theEvent _eventRef]);
+    return;
+  }
 
   // if we don't have any characters we can't generate a keyUp event
   if (!mGeckoChild || [[theEvent characters] length] == 0)
@@ -5326,4 +5458,73 @@ nsTSMManager::CancelIME()
   [str release];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+
+// Target for text services events sent as the result of calls made to
+// TSMProcessRawKeyEvent() in [ChildView keyDown:] (above) when a plugin has
+// the focus.  The calls to TSMProcessRawKeyEvent() short-circuit Cocoa-based
+// IME (which would otherwise interfere with our efforts) and allow Carbon-
+// based IME to work in plugins (via the NPAPI).  This strategy doesn't cause
+// trouble for plugins that (like the Java Embedding Plugin) bypass the NPAPI
+// to get their keyboard events and do their own Cocoa-based IME.
+OSStatus PluginKeyEventsHandler(EventHandlerCallRef inHandlerRef,
+                                EventRef inEvent, void *userData)
+{
+  id arp = [[NSAutoreleasePool alloc] init];
+
+  TSMDocumentID activeDoc = ::TSMGetActiveDocument();
+  if (!activeDoc) {
+    [arp release];
+    return eventNotHandledErr;
+  }
+
+  ChildView *target = nil;
+  OSStatus status = ::TSMGetDocumentProperty(activeDoc, kFocusedChildViewTSMDocPropertyTag,
+                                             sizeof(ChildView *), nil, &target);
+  if (status != noErr)
+    target = nil;
+  if (!target) {
+    [arp release];
+    return eventNotHandledErr;
+  }
+
+  EventRef keyEvent = NULL;
+  status = ::GetEventParameter(inEvent, kEventParamTextInputSendKeyboardEvent,
+                               typeEventRef, NULL, sizeof(EventRef), NULL, &keyEvent);
+  if ((status != noErr) || !keyEvent) {
+    [arp release];
+    return eventNotHandledErr;
+  }
+
+  [target processPluginKeyEvent:keyEvent];
+
+  [arp release];
+  return noErr;
+}
+
+static EventHandlerRef gPluginKeyEventsHandler = NULL;
+
+// Called from nsAppShell::Init()
+void NS_InstallPluginKeyEventsHandler()
+{
+  if (gPluginKeyEventsHandler)
+    return;
+  static const EventTypeSpec sTSMEvents[] =
+    { { kEventClassTextInput, kEventTextInputUnicodeForKeyEvent } };
+  ::InstallEventHandler(::GetEventDispatcherTarget(),
+                        ::NewEventHandlerUPP(PluginKeyEventsHandler),
+                        GetEventTypeCount(sTSMEvents),
+                        sTSMEvents,
+                        NULL,
+                        &gPluginKeyEventsHandler);
+}
+
+// Called from nsAppShell::Exit()
+void NS_RemovePluginKeyEventsHandler()
+{
+  if (!gPluginKeyEventsHandler)
+    return;
+  ::RemoveEventHandler(gPluginKeyEventsHandler);
+  gPluginKeyEventsHandler = NULL;
 }
