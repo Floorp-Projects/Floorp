@@ -2329,7 +2329,7 @@ function BrowserOnCommand(event) {
           // append the current url, and go there.
           try {
             var reportURL = gPrefService.getCharPref("browser.safebrowsing.malware.reportURL");
-            reportURL += content.location.href;
+            reportURL += errorDoc.location.href;
             content.location = reportURL;
           } catch (e) {
             Components.utils.reportError("Couldn't get malware report URL: " + e);
