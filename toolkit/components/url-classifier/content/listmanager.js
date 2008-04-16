@@ -98,6 +98,8 @@ function PROT_ListManager() {
 
   this.requestBackoff_ = new RequestBackoff(3 /* num errors */,
                                    10*60*1000 /* error time, 10min */,
+                                            4 /* num requests */,
+                                   60*60*1000 /* request time, 60 min */,
                                    60*60*1000 /* backoff interval, 60min */,
                                    6*60*60*1000 /* max backoff, 6hr */);
 
@@ -449,6 +451,8 @@ PROT_ListManager.prototype.makeUpdateRequest_ = function(tableData) {
     G_Debug(this, 'invalid url');
     return;
   }
+
+  this.requestBackoff_.noteRequest();
 
   if (!streamer.downloadUpdates(tableList,
                                 request,
