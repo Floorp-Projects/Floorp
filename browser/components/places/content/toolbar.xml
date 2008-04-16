@@ -449,7 +449,7 @@
           if (this._self._result != val) {
             this._self._containerNodesMap = [];
             this._self._result = val;
-            if (val) // this calls _rebuild through invalidateContainer
+            if (val) // this calls _rebuild through invalidateContainer
               val.root.containerOpen = true;
           }
           return val;
