@@ -27,18 +27,34 @@ var Microformats = {
    *         object array with the new objects added
    */
   get: function(name, rootElement, options, targetArray) {
-    if (!Microformats[name]) {
+    function isAncestor(haystack, needle) {
+      var parent = needle;
+      while (parent = parent.parentNode) {
+        /* We need to check parentNode because defaultView.frames[i].frameElement */
+        /* isn't a real DOM node */
+        if (parent == needle.parentNode) {
+          return true;
+        }
+      }
+      return false;
+    }
+    if (!Microformats[name] || !rootElement) {
       return;
     }
     targetArray = targetArray || [];
 
-    rootElement = rootElement || content.document;
+    /* Root element might not be the document - we need the document's default view */
+    /* to get frames and to check their ancestry */
+    var defaultView = rootElement.defaultView || rootElement.ownerDocument.defaultView;
+    var rootDocument = rootElement.ownerDocument || rootElement;
 
     /* If recurseFrames is undefined or true, look through all child frames for microformats */
     if (!options || !options.hasOwnProperty("recurseFrames") || options.recurseFrames) {
-      if (rootElement.defaultView && rootElement.defaultView.frames.length > 0) {
-        for (let i=0; i < rootElement.defaultView.frames.length; i++) {
-          Microformats.get(name, rootElement.defaultView.frames[i].document, options, targetArray);
+      if (defaultView && defaultView.frames.length > 0) {
+        for (let i=0; i < defaultView.frames.length; i++) {
+          if (isAncestor(rootDocument, defaultView.frames[i].frameElement)) {
+            Microformats.get(name, defaultView.frames[i].document, options, targetArray);
+          }
         }
       }
     }
