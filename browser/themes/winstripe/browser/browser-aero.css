@@ -17,3 +17,8 @@
   -moz-border-radius-topleft: 14px;
   -moz-border-radius-bottomleft: 14px;
 }
+
+/* Match the curvature of the #identity-box for LTR locates (no curvature on RTL)*/
+#identity-popup[chromedir="ltr"] {
+  margin-left: 6px;
+}

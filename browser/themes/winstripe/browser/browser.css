@@ -1859,29 +1859,37 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 #identity-popup-encryption-label {
   white-space: pre-wrap;
   color: black;
-  padding-left: 15px;
+  -moz-padding-start: 15px;
   margin: 2px 0 4px;
 }
 
 #identity-popup-content-box > label {
   white-space: pre-wrap;
-  padding-left: 15px;
+  -moz-padding-start: 15px;
   margin: 0;
 }
 
 #identity-popup-content-host ,
-#identity-popup-content-owner {
+#identity-popup-content-box.verifiedIdentity > #identity-popup-content-owner {
+  font-size: 1.2em;
+}
+
+#identity-popup-content-host {
+  margin-top: 3px;
+  margin-bottom: 5px;
   font-weight: bold;
   max-width: 300px;
 }
 
-#identity-popup-content-host ,
-#identity-popup-content-box.verifiedIdentity > #identity-popup-content-owner {
-  font-size: 140%;
+#identity-popup-content-owner {
+  margin-top: 4px;
+  margin-bottom: 0 !important;
+  font-weight: bold;
+  max-width: 300px;
 }
 
-#identity-popup-content-owner {
-  margin-bottom: 0 !important;
+.verifiedDomain > #identity-popup-content-owner {
+  font-weight: normal;
 }
 
 #identity-popup-content-verifier {
@@ -1891,7 +1899,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 #identity-popup-content-box.verifiedIdentity > #identity-popup-encryption ,
 #identity-popup-content-box.verifiedDomain > #identity-popup-encryption {
   margin-top: 10px;
-  margin-left: -18px;
+  margin-left: -24px;
 }
 
 #identity-popup-content-box.verifiedIdentity > #identity-popup-encryption > vbox > #identity-popup-encryption-icon ,
@@ -1899,10 +1907,33 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   list-style-image: url("chrome://browser/skin/Secure24.png");
 }
 
+#identity-popup-more-info-button {
+  margin-top: 6px;
+  -moz-margin-end: 1px;
+}
+
 /* Popup Bounding Box */
+#identity-popup {
+  border: 1px solid;
+  -moz-border-radius: 0px;
+  -moz-border-bottom-colors: ThreeDShadow;
+  -moz-border-top-colors: ThreeDShadow;
+  -moz-border-left-colors: ThreeDShadow;
+  -moz-border-right-colors: ThreeDShadow;
+  margin-top: 1px;
+  background-color: Menu;
+  color: MenuText;
+}
+
+/* Match the curvature of the #identity-box for LTR locates (no curvature on RTL)*/
+#identity-popup[chromedir="ltr"] {
+  margin-left: 4px;
+}
+
 #identity-popup-container {
   background-image: none;
-  background-color: white;
+  background-color: Menu;
+  color: MenuText;
   min-width: 280px;
   padding: 10px;
 }
