@@ -6928,6 +6928,14 @@ nsPluginHostImpl::InstantiateDummyJavaPlugin(nsIPluginInstanceOwner *aOwner)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPluginHostImpl::GetPluginName(nsIPluginInstance *aPluginInstance,
+                                char** aPluginName)
+{
+  *aPluginName = (char*)GetPluginName(aPluginInstance);
+  return NS_OK;
+}
+
 /* ----- end of nsPIPluginHost implementation ----- */
 
 nsresult
