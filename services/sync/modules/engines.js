@@ -102,6 +102,10 @@ Engine.prototype = {
   get snapshotFile() { return this.serverPrefix + "snapshot.json"; },
   get deltasFile() { return this.serverPrefix + "deltas.json"; },
 
+  get enabled() {
+    return Utils.prefs.getBoolPref("engine." + this.name);
+  },
+
   __os: null,
   get _os() {
     if (!this.__os)
@@ -143,10 +147,18 @@ Engine.prototype = {
     this.__snapshot = value;
   },
 
-  _init: function Engine__init(davCollection, pbeId) {
-    this._pbeId = pbeId;
-    this._engineId = new Identity(pbeId.realm + " - " + this.logName,
-                                  pbeId.username);
+  get _pbeId() {
+    let id = ID.get('Engine:PBE:' + this.name);
+    if (!id)
+      id = ID.get('Engine:PBE:default');
+    if (!id)
+      throw "No identity found for engine PBE!";
+    return id;
+  },
+
+  _init: function Engine__init() {
+    this._engineId = new Identity(this._pbeId.realm + " - " + this.logName,
+                                  this._pbeId.username);
     this._log = Log4Moz.Service.getLogger("Service." + this.logName);
     this._log.level =
       Log4Moz.Level[Utils.prefs.getCharPref("log.logger.service.engine")];
@@ -818,8 +830,8 @@ Engine.prototype = {
   }
 };
 
-function BookmarksEngine(davCollection, pbeId) {
-  this._init(davCollection, pbeId);
+function BookmarksEngine(pbeId) {
+  this._init(pbeId);
 }
 BookmarksEngine.prototype = {
   get name() { return "bookmarks"; },
@@ -929,8 +941,8 @@ BookmarksEngine.prototype = {
 };
 BookmarksEngine.prototype.__proto__ = new Engine();
 
-function HistoryEngine(davCollection, pbeId) {
-  this._init(davCollection, pbeId);
+function HistoryEngine(pbeId) {
+  this._init(pbeId);
 }
 HistoryEngine.prototype = {
   get name() { return "history"; },
@@ -953,8 +965,8 @@ HistoryEngine.prototype = {
 };
 HistoryEngine.prototype.__proto__ = new Engine();
 
-function CookieEngine(davCollection, pbeId) {
-  this._init(davCollection, pbeId);
+function CookieEngine(pbeId) {
+  this._init(pbeId);
 }
 CookieEngine.prototype = {
   get name() { return "cookies"; },
