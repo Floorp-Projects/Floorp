@@ -2881,9 +2881,7 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
     // event and and that case is handled in that handler.
     dragSessionGTK->TargetSetLastContext(0, 0, 0);
 
-    // send our drag exit event
-    innerMostWidget->OnDragLeave();
-    // and clear the mLastDragMotion window
+    // clear the mLastDragMotion window
     mLastDragMotionWindow = 0;
 
     // Make sure to end the drag session. If this drag started in a
