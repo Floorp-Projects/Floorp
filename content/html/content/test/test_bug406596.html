@@ -34,11 +34,11 @@ function testTabbing(click, focus, selectionOffset) {
   var rect = elem.getBoundingClientRect();
   var selection = window.getSelection();
 
-  var middleX = (rect.left + rect.right) / 2;
-  var middleY = (rect.top + rect.bottom) / 2;
-  wu.sendMouseEvent("mousedown", middleX, middleY, 0, 1, 0);
-  wu.sendMouseEvent("mousemove", middleX + selectionOffset, middleY, 0, 1, 0);
-  wu.sendMouseEvent("mouseup", middleX + selectionOffset, middleY, 0, 1, 0);
+  var x = (rect.left + rect.right) / 4;
+  var y = (rect.top + rect.bottom) / 2;
+  wu.sendMouseEvent("mousedown", x, y, 0, 1, 0);
+  wu.sendMouseEvent("mousemove", x + selectionOffset, y, 0, 1, 0);
+  wu.sendMouseEvent("mouseup", x + selectionOffset, y, 0, 1, 0);
   if (selectionOffset) {
     is(selection.rangeCount, 1, "there should be one range in the selection");
     var range = selection.getRangeAt(0);
