@@ -1507,7 +1507,7 @@ tabpanels {
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up > .toolbarbutton-icon {    
-  margin: 6px 0px 0px 0px;
+  margin: 5px 0px 0px 0px;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down,
@@ -1533,7 +1533,7 @@ tabpanels {
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down > .toolbarbutton-icon {
-  margin-top: 6px;
+  margin-top: 5px;
   -moz-margin-end: 2px;
 }
 
@@ -1543,8 +1543,7 @@ tabpanels {
 }
 
 .tabs-alltabs-button > .toolbarbutton-menu-dropmarker {
-  margin-top: 3px;
-  margin-bottom: 1px;
+  margin: 2px 1px 1px 0px;
 }
 
 .tabs-alltabs-box-animate {
