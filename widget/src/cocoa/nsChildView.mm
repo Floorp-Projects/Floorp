@@ -4024,17 +4024,14 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
     return;
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
-  id arp = [[NSAutoreleasePool alloc] init];
 
   if (![insertString isKindOfClass:[NSAttributedString class]])
     insertString = [[[NSAttributedString alloc] initWithString:insertString] autorelease];
 
   NSString *tmpStr = [insertString string];
   unsigned int len = [tmpStr length];
-  if (!nsTSMManager::IsComposing() && len == 0) {
-    [arp release];
+  if (!nsTSMManager::IsComposing() && len == 0)
     return; // nothing to do
-  }
   PRUnichar buffer[MAX_BUFFER_SIZE];
   PRUnichar *bufPtr = (len >= MAX_BUFFER_SIZE) ? new PRUnichar[len + 1] : buffer;
   [tmpStr getCharacters:bufPtr];
@@ -4114,8 +4111,6 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
 
   if (bufPtr != buffer)
     delete[] bufPtr;
-
-  [arp release];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
