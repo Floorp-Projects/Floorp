@@ -354,7 +354,7 @@ DAVCollection.prototype = {
       yield;
     }
 
-    this.LOCK("",
+    this.LOCK("lock",
               "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
               "<D:lockinfo xmlns:D=\"DAV:\">\n" +
               "  <D:locktype><D:write/></D:locktype>\n" +
@@ -398,7 +398,7 @@ DAVCollection.prototype = {
       yield;
     }
 
-    this.UNLOCK("", self.cb);
+    this.UNLOCK("lock", self.cb);
     let resp = yield;
 
     if (this._authProvider._authFailed ||

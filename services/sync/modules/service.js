@@ -493,7 +493,6 @@ WeaveSvc.prototype = {
       if (engines[i].enabled) {
         this._notify(engines[i].name + "-engine:sync",
                      this._syncEngine, engines[i]).async(this, self.cb);
-        engines[i].resetServer(self.cb);
         yield;
         if (engines[i].name == "bookmarks") { // FIXME
           Engines.get("bookmarks").syncMounts(self.cb);
