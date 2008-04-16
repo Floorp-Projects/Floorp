@@ -87,10 +87,6 @@ PlacesTreeView.prototype = {
 
     var qoInt = Ci.nsINavHistoryQueryOptions;
     var options = asQuery(this._result.root).queryOptions;
-    this._showQueryAsFolder = (options &&
-        (options.resultType == qoInt.RESULTS_AS_DATE_QUERY ||
-         options.resultType == qoInt.RESULTS_AS_SITE_QUERY ||
-         options.resultType == qoInt.RESULTS_AS_DATE_SITE_QUERY));
 
     // if there is no tree, BuildVisibleList will clear everything for us
     this._buildVisibleList();
@@ -893,18 +889,18 @@ PlacesTreeView.prototype = {
         var itemId = node.itemId;
         if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY) {
           properties.push(this._getAtomFor("query"));
-          if (this._showQueryAsFolder)
-            properties.push(this._getAtomFor("folder"));
-        } 
+          if (PlacesUtils.nodeIsTagQuery(node))
+            properties.push(this._getAtomFor("tagContainer"));
+          else if (PlacesUtils.nodeIsDay(node))
+            properties.push(this._getAtomFor("dayContainer"));
+          else if (PlacesUtils.nodeIsHost(node))
+            properties.push(this._getAtomFor("hostContainer"));
+        }
         else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER ||
                  nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT) {
-          
           if (PlacesUtils.annotations.itemHasAnnotation(itemId,
                                                         LMANNO_FEEDURI))
             properties.push(this._getAtomFor("livemark"));
-          else if (PlacesUtils.bookmarks.getFolderIdForItem(itemId) ==
-                   PlacesUtils.tagsFolderId)
-            properties.push(this._getAtomFor("tagContainer"));
         }
 
         if (itemId != -1) {

@@ -103,7 +103,7 @@ interface nsIUrlClassifierUpdateObserver : nsISupports {
  * It provides async methods for querying and updating the database.  As the
  * methods complete, they call the callback function.
  */
-[scriptable, uuid(aaf2c3b2-b7cd-4368-9d46-3fe92e5f78b1)]
+[scriptable, uuid(7aae3f3a-527d-488b-a448-45dca6db0e80)]
 interface nsIUrlClassifierDBService : nsISupports
 {
   /**
@@ -162,10 +162,12 @@ interface nsIUrlClassifierDBService : nsISupports
    * is already an update in progress.
    *
    * @param updater The update observer tied to this update.
+   * @param tables A comma-separated list of tables included in this update.
    * @param clientKey The client key for calculating an update's MAC,
    *        or empty to ignore MAC.
    */
   void beginUpdate(in nsIUrlClassifierUpdateObserver updater,
+                   in ACString tables,
                    in ACString clientKey);
 
   /**
@@ -227,7 +229,7 @@ interface nsIUrlClassifierDBService : nsISupports
  * Interface for the actual worker thread.  Implementations of this need not
  * be thread aware and just work on the database.
  */
-[scriptable, uuid(76d923e5-bbde-4292-ae35-16a67d04d524)]
+[scriptable, uuid(2af84c09-269e-4fc2-b28f-af56717db118)]
 interface nsIUrlClassifierDBServiceWorker : nsIUrlClassifierDBService
 {
   // Provide a way to forcibly close the db connection.
