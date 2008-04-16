@@ -13,10 +13,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=406596
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=406596">Mozilla Bug 406596</a>
 <div id="content">
-  <div id="edit" contenteditable="true">This text is editable, you can change its content <a href="#" id="a" tabindex="0">abcd</a> <input type="submit" value="abcd" id="b"></input> <img src="foo.png" id="c"></div>
+  <div id="edit" contenteditable="true">This text is editable, you can change its content <a href="#" id="a" tabindex="0">ABCDEFGHIJKLMNOPQRSTUV</a> <input type="submit" value="abcd" id="b"></input> <img src="foo.png" id="c"></div>
   <div tabindex="0">This text is not editable but is focusable</div>
   <div tabindex="0">This text is not editable but is focusable</div>
-  <a href="#" id="d" contenteditable="true">abcd</a>
+  <a href="#" id="d" contenteditable="true">ABCDEFGHIJKLMNOPQRSTUV</a>
   <div tabindex="0">This text is not editable but is focusable</div>
   <div tabindex="0">This text is not editable but is focusable</div>
 </div>
@@ -34,11 +34,11 @@ function testTabbing(click, focus, selectionOffset) {
   var rect = elem.getBoundingClientRect();
   var selection = window.getSelection();
 
-  wu.sendMouseEvent("mousedown", rect.left + 10, rect.top + 1, 0, 1, 0);
-  wu.sendMouseEvent("mousemove", rect.left + 10 + selectionOffset, rect.top + 1,
-                    0, 1, 0);
-  wu.sendMouseEvent("mouseup", rect.left + 10 + selectionOffset, rect.top + 1,
-                    0, 1, 0);
+  var middleX = (rect.left + rect.right) / 2;
+  var middleY = (rect.top + rect.bottom) / 2;
+  wu.sendMouseEvent("mousedown", middleX, middleY, 0, 1, 0);
+  wu.sendMouseEvent("mousemove", middleX + selectionOffset, middleY, 0, 1, 0);
+  wu.sendMouseEvent("mouseup", middleX + selectionOffset, middleY, 0, 1, 0);
   if (selectionOffset) {
     is(selection.rangeCount, 1, "there should be one range in the selection");
     var range = selection.getRangeAt(0);
