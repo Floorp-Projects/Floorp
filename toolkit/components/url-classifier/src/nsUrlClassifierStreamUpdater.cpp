@@ -167,6 +167,7 @@ nsUrlClassifierStreamUpdater::FetchUpdate(const nsACString & aUpdateUrl,
 
 NS_IMETHODIMP
 nsUrlClassifierStreamUpdater::DownloadUpdates(
+                                const nsACString &aRequestTables,
                                 const nsACString &aRequestBody,
                                 const nsACString &aClientKey,
                                 nsIUrlClassifierCallback *aSuccessCallback,
@@ -208,7 +209,7 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
     mInitialized = PR_TRUE;
   }
 
-  rv = mDBService->BeginUpdate(this, aClientKey);
+  rv = mDBService->BeginUpdate(this, aRequestTables, aClientKey);
   if (rv == NS_ERROR_NOT_AVAILABLE) {
     LOG(("already updating, skipping update"));
     *_retval = PR_FALSE;

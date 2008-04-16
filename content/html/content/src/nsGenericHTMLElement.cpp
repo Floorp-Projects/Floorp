@@ -2589,10 +2589,11 @@ nsGenericHTMLFormElement::GetDesiredIMEState()
 }
 
 PRBool
-nsGenericHTMLFrameElement::IsFocusable(PRInt32 *aTabIndex)
+nsGenericHTMLFrameElement::IsHTMLFocusable(PRBool *aIsFocusable,
+                                           PRInt32 *aTabIndex)
 {
-  if (!nsGenericHTMLElement::IsFocusable(aTabIndex)) {
-    return PR_FALSE;
+  if (nsGenericHTMLElement::IsHTMLFocusable(aIsFocusable, aTabIndex)) {
+    return PR_TRUE;
   }
 
   // If there is no subdocument, docshell or content viewer, it's not tabbable
@@ -2623,11 +2624,12 @@ nsGenericHTMLFrameElement::IsFocusable(PRInt32 *aTabIndex)
     }
   }
 
+  *aIsFocusable = isFocusable;
   if (!isFocusable && aTabIndex) {
     *aTabIndex = -1;
   }
 
-  return isFocusable;
+  return PR_FALSE;
 }
 
 nsresult
@@ -3121,7 +3123,7 @@ nsGenericHTMLElement::RemoveFocus(nsPresContext *aPresContext)
 }
 
 PRBool
-nsGenericHTMLElement::IsFocusable(PRInt32 *aTabIndex)
+nsGenericHTMLElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
 {
   nsIDocument *doc = GetCurrentDoc();
   if (!doc || doc->HasFlag(NODE_IS_EDITABLE)) {
@@ -3130,14 +3132,19 @@ nsGenericHTMLElement::IsFocusable(PRInt32 *aTabIndex)
       *aTabIndex = -1;
     }
 
-    return PR_FALSE;
+    *aIsFocusable = PR_FALSE;
+
+    return PR_TRUE;
   }
 
   PRInt32 tabIndex = 0;   // Default value for non HTML elements with -moz-user-focus
   GetTabIndex(&tabIndex);
 
-  PRBool disabled;
+  PRBool override, disabled;
   if (IsEditableRoot()) {
+    // Editable roots should always be focusable.
+    override = PR_TRUE;
+
     // Ignore the disabled attribute in editable contentEditable/designMode
     // roots.
     disabled = PR_FALSE;
@@ -3148,6 +3155,8 @@ nsGenericHTMLElement::IsFocusable(PRInt32 *aTabIndex)
     }
   }
   else {
+    override = PR_FALSE;
+
     // Just check for disabled attribute on all HTML elements
     disabled = HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
     if (disabled) {
@@ -3160,7 +3169,10 @@ nsGenericHTMLElement::IsFocusable(PRInt32 *aTabIndex)
   }
 
   // If a tabindex is specified at all, or the default tabindex is 0, we're focusable
-  return tabIndex >= 0 || (!disabled && HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex));
+  *aIsFocusable = tabIndex >= 0 ||
+                  (!disabled && HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex));
+
+  return override;
 }
 
 void

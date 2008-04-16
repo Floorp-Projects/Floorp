@@ -269,7 +269,7 @@ var gEditItemOverlay = {
     if (aIID.equals(Ci.nsIMicrosummaryObserver) ||
         aIID.equals(Ci.nsIDOMEventListener) ||
         aIID.equals(Ci.nsINavBookmarkObserver) ||
-        aIID.eqauls(Ci.nsISupports))
+        aIID.equals(Ci.nsISupports))
       return this;
 
     throw Cr.NS_ERROR_NO_INTERFACE;

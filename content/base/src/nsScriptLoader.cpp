@@ -891,9 +891,9 @@ nsScriptLoader::ShouldExecuteScript(nsIDocument* aDocument,
 
   NS_ASSERTION(channelPrincipal, "Gotta have a principal here!");
 
-  // If the document principal is a cert principal and is not the same
-  // as the channel principal, then we don't execute the script.
-  PRBool equal;
-  rv = docPrincipal->Equals(channelPrincipal, &equal);
-  return NS_SUCCEEDED(rv) && equal;
+  // If the channel principal isn't at least as powerful as the
+  // document principal, then we don't execute the script.
+  PRBool subsumes;
+  rv = channelPrincipal->Subsumes(docPrincipal, &subsumes);
+  return NS_SUCCEEDED(rv) && subsumes;
 }

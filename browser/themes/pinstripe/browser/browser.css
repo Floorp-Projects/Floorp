@@ -198,12 +198,24 @@ toolbarbutton.bookmark-item .toolbarbutton-text {
   list-style-image: url("chrome://browser/skin/page-livemarks.png");
 }
 
-.bookmark-item[tagContainer] {
+.bookmark-item[query] {
+  list-style-image: url("chrome://browser/skin/places/query.png");
+}
+
+.bookmark-item[query][tagContainer] {
   list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");
 }
 
-.bookmark-item[query] {
-  list-style-image: url("chrome://browser/skin/places/query.png");
+.bookmark-item[query][dayContainer] {
+  list-style-image: url("chrome://global/skin/tree/folder.png");
+}
+
+.bookmark-item[query][hostContainer] {
+  list-style-image: url("chrome://global/skin/tree/folder.png");
+}
+
+.bookmark-item[query][hostContainer][open] {
+  list-style-image: url("chrome://global/skin/tree/folder.png");
 }
 
 .bookmark-item[livemark] .menuitem-iconic {

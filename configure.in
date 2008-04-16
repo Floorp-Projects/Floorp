@@ -114,7 +114,7 @@ GLIB_VERSION=1.2.0
 LIBIDL_VERSION=0.6.3
 PERL_VERSION=5.006
 LIBART_VERSION=2.3.4
-CAIRO_VERSION=1.5.2
+CAIRO_VERSION=1.6.0
 GLITZ_VERSION=0.4.0
 PANGO_VERSION=1.10.0
 GTK2_VERSION=2.10.0
@@ -128,7 +128,7 @@ LIBGNOME_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
 LCMS_VERSION=1.17
-SQLITE_VERSION=3.5
+SQLITE_VERSION=3.5.4
 
 MSMANIFEST_TOOL=
 
@@ -5123,6 +5123,19 @@ if test "$ACCESSIBILITY"; then
     AC_DEFINE(ACCESSIBILITY)
 fi
 
+if test -n "$ACCESSIBILITY"; then
+case "$target" in
+*-mingw*|*-cygwin*|*-msvc*|*-mks*)
+    if test "$ac_cv_header_atlbase_h" = "no"; then
+        AC_MSG_ERROR([System header atlbase.h is not available. See http://developer.mozilla.org/en/docs/atlbase.h for details on fixing this problem.])
+    fi
+    if test "$ac_cv_header_oleacc_idl" = "no"; then
+        AC_MSG_ERROR([System header oleacc.idl is not available. See http://developer.mozilla.org/en/docs/oleacc.idl for details on fixing this problem.])
+    fi
+    ;;
+esac
+fi
+
 dnl ========================================================
 dnl xpfe/components on by default
 dnl ========================================================
@@ -5735,6 +5748,16 @@ then
     AC_MSG_ERROR([Cannot enable ActiveX scripting support when ActiveX support is disabled.])
 fi
 
+if test -n "$XPC_IDISPATCH_SUPPORT" -o -n "$MOZ_ACTIVEX_SCRIPTING_SUPPORT" -o -z "$MOZ_NO_ACTIVEX_SUPPORT"; then
+case "$target" in
+*-mingw*|*-cygwin*|*-msvc*|*-mks*)
+    if test "$ac_cv_header_atlbase_h" = "no"; then
+        AC_MSG_ERROR([System header atlbase.h is not available. See http://developer.mozilla.org/en/docs/atlbase.h for details on fixing this problem.])
+    fi
+    ;;
+esac
+fi
+
 dnl ========================================================
 dnl leaky
 dnl ========================================================
@@ -5771,6 +5794,14 @@ MOZ_ARG_DISABLE_BOOL(parental-controls,
    MOZ_DISABLE_PARENTAL_CONTROLS=)
 if test -n "$MOZ_DISABLE_PARENTAL_CONTROLS"; then
     AC_DEFINE(MOZ_DISABLE_PARENTAL_CONTROLS)
+else
+case "$target" in
+*-mingw*|*-cygwin*|*-msvc*|*-mks*)
+    if test "$ac_cv_header_wpcapi_h" = "no"; then
+        AC_MSG_ERROR([System header wpcapi.h is not available. See http://developer.mozilla.org/en/docs/wpcapi.h for details on fixing this problem.])
+    fi
+    ;;
+esac
 fi
 AC_SUBST(MOZ_DISABLE_PARENTAL_CONTROLS)
 
