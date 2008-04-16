@@ -1,3 +1,32 @@
+Release 1.6.4 (2008-04-11 Carl Worth <cworth@cworth.org>)
+=========================================================
+The cairo community is wildly embarrassed to announce the 1.6.4
+release of the cairo graphics library. This release reverts the xlib
+locking change introduced in 1.6.4, (and the application crashes that
+it caused).  The community would be glad to sack its current release
+manager and is accepting applications for someone who could do the job
+with more discipline.
+
+Revert 'add missing locking in cairo-xlib'
+------------------------------------------
+This change was introduced in cairo 1.6.2, but also introduced a bug
+which causes many cairo-xlib applications to crash, (with a
+segmentation fault inside of XSetClipMask). Instead of attempting
+another fix for the broken fix, the change in 1.6.2 has been
+reverted. The original bug which the change was addressing has been
+present since at least cairo 1.4, so it is not expected that leaving
+this bug unfixed will cause any new problems for applications moving
+from cairo 1.4 to cairo 1.6.
+
+At this point, the code of cairo 1.6.4 differs from cairo 1.6.0 only
+in the fix for the PostScript-printer crashes.
+
+Tweak build to avoid linking with g++
+-------------------------------------
+Cairo 1.6.4 avoids a quirk in automake that was causing the cairo
+library to be linked with g++ and linked against libstdc++ even when
+only C source files were compiled for the library.
+
 Release 1.6.2 (2008-04-11 Carl Worth <cworth@cworth.org>)
 =========================================================
 The cairo community is pleased (but somewhat sheepish) to announce the
