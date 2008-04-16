@@ -1306,14 +1306,17 @@ var PlacesUtils = {
       // write child nodes
       if (!aNode.livemark) {
         asContainer(aSourceNode);
-        aSourceNode.containerOpen = true;
+        var wasOpen = aSourceNode.containerOpen;
+        if (!wasOpen)
+          aSourceNode.containerOpen = true;
         var cc = aSourceNode.childCount;
         for (var i = 0; i < cc; ++i) {
           if (i != 0)
             aStream.write(",", 1);
           serializeNodeToJSONStream(aSourceNode.getChild(i), i);
         }
-        aSourceNode.containerOpen = false;
+        if (!wasOpen)
+          aSourceNode.containerOpen = false;
       }
 
       // write suffix
