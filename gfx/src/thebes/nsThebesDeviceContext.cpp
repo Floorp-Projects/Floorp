@@ -760,8 +760,6 @@ nsThebesDeviceContext::CalcPrintingSize()
     if (inPoints) {
         mWidth = NSToCoordRound(float(size.width) * AppUnitsPerInch() / 72);
         mHeight = NSToCoordRound(float(size.height) * AppUnitsPerInch() / 72);
-        printf("%f %f\n", size.width, size.height);
-        printf("%d %d\n", (PRInt32)mWidth, (PRInt32)mHeight);
     } else {
         mWidth = NSToIntRound(size.width);
         mHeight = NSToIntRound(size.height);
