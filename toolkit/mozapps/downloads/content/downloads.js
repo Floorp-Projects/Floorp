@@ -669,9 +669,14 @@ var gDownloadViewController = {
     switch (aCommand) {
       case "cmd_cancel":
         return dl.inProgress;
-      case "cmd_open":
+      case "cmd_open": {
         let file = getLocalFileFromNativePathOrUrl(dl.getAttribute("file"));
         return dl.openable && file.exists();
+      }
+      case "cmd_show": {
+        let file = getLocalFileFromNativePathOrUrl(dl.getAttribute("file"));
+        return file.exists();
+      }
       case "cmd_pause":
         download = gDownloadManager.getDownload(dl.getAttribute("dlid"));
         return dl.inProgress && !dl.paused && download.resumable;
@@ -686,7 +691,6 @@ var gDownloadViewController = {
       case "cmd_removeFromList":
       case "cmd_retry":
         return dl.removable;
-      case "cmd_show":
       case "cmd_copyLocation":
         return true;
     }
