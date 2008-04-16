@@ -610,7 +610,7 @@ pref("network.http.redirection-limit", 20);
 pref("network.http.accept-encoding" ,"gzip,deflate");
 
 pref("network.http.pipelining"      , false);
-pref("network.http.pipelining.ssl"  , true); // enable pipelining over SSL
+pref("network.http.pipelining.ssl"  , false); // disable pipelining over SSL
 pref("network.http.proxy.pipelining", false);
 
 // Max number of requests in the pipeline
