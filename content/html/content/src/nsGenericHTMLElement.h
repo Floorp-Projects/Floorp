@@ -212,7 +212,17 @@ public:
                              PRBool aNotify);
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
   virtual void RemoveFocus(nsPresContext *aPresContext);
-  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
+  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull)
+  {
+    PRBool isFocusable;
+    IsHTMLFocusable(&isFocusable, aTabIndex);
+    return isFocusable;
+  }
+  /**
+   * Returns PR_TRUE if a subclass is not allowed to override the value returned
+   * in aIsFocusable.
+   */
+  virtual PRBool IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex);
   virtual void PerformAccesskey(PRBool aKeyCausesActivation,
                                 PRBool aIsTrustedEvent);
 
@@ -909,7 +919,7 @@ public:
   NS_DECL_NSIFRAMELOADEROWNER
 
   // nsIContent
-  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
+  virtual PRBool IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex);
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers);

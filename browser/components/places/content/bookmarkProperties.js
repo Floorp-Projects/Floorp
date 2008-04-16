@@ -442,7 +442,7 @@ var BookmarkPropertiesPanel = {
 
   QueryInterface: function BPP_QueryInterface(aIID) {
     if (aIID.equals(Ci.nsIMicrosummaryObserver) ||
-        aIID.eqauls(Ci.nsISupports))
+        aIID.equals(Ci.nsISupports))
       return this;
 
     throw Cr.NS_ERROR_NO_INTERFACE;

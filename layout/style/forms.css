@@ -55,7 +55,7 @@ legend {
   border: none;
   position: static ! important;
   float: none ! important;
-  width: auto ! important;
+  width: -moz-fit-content ! important;
   min-width: 0 ! important;
   max-width: none ! important;
   height: auto ! important;

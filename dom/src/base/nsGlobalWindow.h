@@ -300,7 +300,6 @@ public:
 
   virtual NS_HIDDEN_(nsresult) SaveWindowState(nsISupports **aState);
   virtual NS_HIDDEN_(nsresult) RestoreWindowState(nsISupports *aState);
-  virtual NS_HIDDEN_(void) SuspendTimeouts();
   virtual NS_HIDDEN_(nsresult) ResumeTimeouts();
   virtual NS_HIDDEN_(nsresult) FireDelayedDOMEvents();
   virtual NS_HIDDEN_(PRBool) IsFrozen() const
@@ -603,6 +602,8 @@ protected:
 
   already_AddRefed<nsIWidget> GetMainWidget();
 
+  void SuspendTimeouts();
+
   void Freeze()
   {
     NS_ASSERTION(!IsFrozen(), "Double-freezing?");
@@ -675,8 +676,6 @@ protected:
 
   // Fast way to tell if this is a chrome window (without having to QI).
   PRPackedBool                  mIsChrome : 1;
-
-  PRPackedBool                  mTimersSuspended : 1;
 
   nsCOMPtr<nsIScriptContext>    mContext;
   nsWeakPtr                     mOpener;

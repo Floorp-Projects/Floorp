@@ -109,7 +109,7 @@ public:
 
   NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex);
   NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
-  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
+  virtual PRBool IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex);
   virtual PRUint32 GetDesiredIMEState();
 
   virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
@@ -292,7 +292,8 @@ nsHTMLSharedObjectElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom *aName,
 }
 
 PRBool
-nsHTMLSharedObjectElement::IsFocusable(PRInt32 *aTabIndex)
+nsHTMLSharedObjectElement::IsHTMLFocusable(PRBool *aIsFocusable,
+                                           PRInt32 *aTabIndex)
 {
   if (mNodeInfo->Equals(nsGkAtoms::embed) || Type() == eType_Plugin) {
     // Has plugin content: let the plugin decide what to do in terms of
@@ -304,7 +305,7 @@ nsHTMLSharedObjectElement::IsFocusable(PRInt32 *aTabIndex)
     return PR_TRUE;
   }
 
-  return nsGenericHTMLElement::IsFocusable(aTabIndex);
+  return nsGenericHTMLElement::IsHTMLFocusable(aIsFocusable, aTabIndex);
 }
 
 PRUint32

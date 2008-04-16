@@ -102,6 +102,10 @@ function buildPhishingUpdate(chunks, hashSize) {
   return buildUpdate({"test-phish-simple" : chunks}, hashSize);
 }
 
+function buildMalwareUpdate(chunks, hashSize) {
+  return buildUpdate({"test-malware-simple" : chunks}, hashSize);
+}
+
 function buildBareUpdate(chunks, hashSize) {
   return buildUpdate({"" : chunks}, hashSize);
 }
@@ -125,11 +129,37 @@ function doSimpleUpdate(updateText, success, failure, clientKey) {
     updateSuccess: function(requestedTimeout) { success(requestedTimeout); }
   };
 
-  dbservice.beginUpdate(listener, clientKey);
+  dbservice.beginUpdate(listener,
+                        "test-phish-simple,test-malware-simple",
+                        clientKey);
   dbservice.beginStream("", "");
   dbservice.updateStream(updateText);
   dbservice.finishStream();
   dbservice.finishUpdate();
+}
+
+/**
+ * Simulates a failed database update.
+ */
+function doErrorUpdate(tables, success, failure) {
+  var listener = {
+    QueryInterface: function(iid)
+    {
+      if (iid.equals(Ci.nsISupports) ||
+          iid.equals(Ci.nsIUrlClassifierUpdateObserver))
+        return this;
+      throw Cr.NS_ERROR_NO_INTERFACE;
+    },
+
+    updateUrlRequested: function(url) { },
+    streamCompleted: function() { },
+    updateError: function(errorCode) { success(errorCode); },
+    updateSuccess: function(requestedTimeout) { failure(requestedTimeout); }
+  };
+
+  dbservice.beginUpdate(listener, tables, null);
+  dbservice.beginStream("", "");
+  dbservice.cancelUpdate();
 }
 
 /**
@@ -143,7 +173,8 @@ function doStreamUpdate(updateText, success, failure, downloadFailure, clientKey
     downloadFailure = failure;
 
   streamUpdater.updateUrl = dataUpdate;
-  streamUpdater.downloadUpdates("", clientKey, success, failure, downloadFailure);
+  streamUpdater.downloadUpdates("test-phish-simple,test-malware-simple", "",
+                                clientKey, success, failure, downloadFailure);
 }
 
 var gAssertions = {

@@ -477,11 +477,6 @@ nsPrintSettingsGTK::SetPrinterName(const PRUnichar * aPrinter)
 {
   NS_ConvertUTF16toUTF8 gtkPrinter(aPrinter);
 
-  if (StringBeginsWith(gtkPrinter, NS_LITERAL_CSTRING("PostScript/"))) {
-    // Don't bother importing this name
-    gtkPrinter.AssignLiteral("");
-  }
-
   if (StringBeginsWith(gtkPrinter, NS_LITERAL_CSTRING("CUPS/"))) {
     // Strip off "CUPS/"; GTK might recognize the rest
     gtkPrinter.Cut(0, strlen("CUPS/"));

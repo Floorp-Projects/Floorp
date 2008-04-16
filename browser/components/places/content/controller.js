@@ -860,14 +860,10 @@ PlacesController.prototype = {
         removedFolders.push(node);
       else if (PlacesUtils.nodeIsTagQuery(node.parent)) {
         var queries = asQuery(node.parent).getQueries({});
-        if (queries.length == 1) {
-          var folders = queries[0].getFolders({});
-          if (folders.length == 1) {
-            var uri = PlacesUtils._uri(node.uri);
-            var tagItemId = folders[0];
-            transactions.push(PlacesUIUtils.ptm.untagURI(uri, [tagItemId]));
-          }
-        }
+        var folders = queries[0].getFolders({});
+        var uri = PlacesUtils._uri(node.uri);
+        var tagItemId = folders[0];
+        transactions.push(PlacesUIUtils.ptm.untagURI(uri, [tagItemId]));
         continue;
       }
 
@@ -1282,7 +1278,13 @@ var PlacesControllerDragHelper = {
       xferable.getAnyTransferData(flavor, data, { });
       data.value.QueryInterface(Ci.nsISupportsString);
       var dragged = PlacesUtils.unwrapNodes(data.value.data, flavor.value)[0];
-    
+
+      // Only bookmarks and urls can be dropped into tag containers
+      if (ip.isTag && dragged.type != PlacesUtils.TYPE_X_MOZ_URL &&
+                      (dragged.type != PlacesUtils.TYPE_X_MOZ_PLACE ||
+                       /^place:/.test(dragged.uri)))
+        return false;
+
       // The following loop disallows the dropping of a folder on itself or
       // on any of its descendants.
       if (dragged.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER ||
