@@ -72,7 +72,7 @@
 }
 
 .search-go-button {
-  padding: 1px;
+  padding: 2px;
   list-style-image: url("chrome://browser/skin/Search-glass.png");
   -moz-image-region: rect(0px 16px 16px 0px);
 }
