@@ -77,17 +77,21 @@ function WeaveSvc() {
   this._initLogs();
   this._log.info("Weave Sync Service Initializing");
 
+  // Create Weave identities (for logging in, and for encryption)
   ID.set('WeaveID', new Identity('Mozilla Services Password', this.username));
-  ID.setAlias('WeaveID', 'DAV:default');
-
   ID.set('WeaveCryptoID',
          new Identity('Mozilla Services Encryption Passphrase', this.username));
-  //ID.setAlias('WeaveCryptoID', '...');
 
-  Engines.register(new BookmarksEngine(DAV, ID.get('WeaveCryptoID')));
-  Engines.register(new HistoryEngine(DAV, ID.get('WeaveCryptoID')));
-  Engines.register(new CookieEngine(DAV, ID.get('WeaveCryptoID')));
+  // Set up aliases for other modules to use our IDs
+  ID.setAlias('WeaveID', 'DAV:default');
+  ID.setAlias('WeaveCryptoID', 'Engine:PBE:default');
 
+  // Register built-in engines
+  Engines.register(new BookmarksEngine());
+  Engines.register(new HistoryEngine());
+  Engines.register(new CookieEngine());
+
+  // Other misc startup
   Utils.prefs.addObserver("", this, false);
 
   if (!this.enabled) {
@@ -484,22 +488,18 @@ WeaveSvc.prototype = {
     this._keyCheck.async(this, self.cb);
     yield;
 
-    if (Utils.prefs.getBoolPref("bookmarks")) {
-      this._notify(Engines.get("bookmarks").name + "-engine:sync",
-                   this._syncEngine, Engines.get("bookmarks")).async(this, self.cb);
-      yield;
-      Engines.get("bookmarks").syncMounts(self.cb); // FIXME
-      yield;
-    }
-    if (Utils.prefs.getBoolPref("history")) {
-      this._notify(Engines.get("history").name + "-engine:sync",
-                   this._syncEngine, Engines.get("history")).async(this, self.cb);
-      yield;
-    }
-    if (Utils.prefs.getBoolPref("cookies")) {
-      this._notify(Engines.get("cookies").name + "-engine:sync",
-                   this._syncEngine, Engines.get("cookies")).async(this, self.cb);
-      yield;
+    let engines = Engines.getAll();
+    for (let i = 0; i < engines.length; i++) {
+      if (engines[i].enabled) {
+        this._notify(engines[i].name + "-engine:sync",
+                     this._syncEngine, engines[i]).async(this, self.cb);
+        engines[i].resetServer(self.cb);
+        yield;
+        if (engines[i].name == "bookmarks") { // FIXME
+          Engines.get("bookmarks").syncMounts(self.cb);
+          yield;
+        }
+      }
     }
   },
   _syncEngine: function WeaveSvc__syncEngine(engine) {
@@ -520,6 +520,8 @@ WeaveSvc.prototype = {
 
     let engines = Engines.getAll();
     for (let i = 0; i < engines.length; i++) {
+      if (!engines[i].enabled)
+        continue;
       engines[i].resetServer(self.cb);
       yield;
     }
@@ -533,6 +535,8 @@ WeaveSvc.prototype = {
     let self = yield;
     let engines = Engines.getAll();
     for (let i = 0; i < engines.length; i++) {
+      if (!engines[i].enabled)
+        continue;
       engines[i].resetClient(self.cb);
       yield;
     }
@@ -545,6 +549,8 @@ WeaveSvc.prototype = {
   },
   _shareBookmarks: function WeaveSync__shareBookmarks(username) {
     let self = yield;
+    if (Engines.get("bookmarks").enabled)
+      return;
     Engines.get("bookmarks").share(self.cb, username);
     let ret = yield;
     self.done(ret);
