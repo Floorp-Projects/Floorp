@@ -218,6 +218,12 @@ toolbox {
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbox");
   -moz-box-orient: vertical;
 }
+
+%ifdef XP_MACOSX
+toolbox[type="drag"] { 
+  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbox-drag");
+}
+%endif
   
 toolbar {
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar");
