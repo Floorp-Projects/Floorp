@@ -5125,6 +5125,19 @@ if test "$ACCESSIBILITY"; then
     AC_DEFINE(ACCESSIBILITY)
 fi
 
+if test -n "$ACCESSIBILITY"; then
+case "$target" in
+*-mingw*|*-cygwin*|*-msvc*|*-mks*)
+    if test "$ac_cv_header_atlbase_h" = "no"; then
+        AC_MSG_ERROR([System header atlbase.h is not available. See http://developer.mozilla.org/en/docs/atlbase.h for details on fixing this problem.])
+    fi
+    if test "$ac_cv_header_oleacc_idl" = "no"; then
+        AC_MSG_ERROR([System header oleacc.idl is not available. See http://developer.mozilla.org/en/docs/oleacc.idl for details on fixing this problem.])
+    fi
+    ;;
+esac
+fi
+
 dnl ========================================================
 dnl xpfe/components on by default
 dnl ========================================================
@@ -5763,6 +5776,16 @@ then
     AC_MSG_ERROR([Cannot enable ActiveX scripting support when ActiveX support is disabled.])
 fi
 
+if test -n "$XPC_IDISPATCH_SUPPORT" -o -n "$MOZ_ACTIVEX_SCRIPTING_SUPPORT" -o -z "$MOZ_NO_ACTIVEX_SUPPORT"; then
+case "$target" in
+*-mingw*|*-cygwin*|*-msvc*|*-mks*)
+    if test "$ac_cv_header_atlbase_h" = "no"; then
+        AC_MSG_ERROR([System header atlbase.h is not available. See http://developer.mozilla.org/en/docs/atlbase.h for details on fixing this problem.])
+    fi
+    ;;
+esac
+fi
+
 dnl ========================================================
 dnl leaky
 dnl ========================================================
@@ -5799,6 +5822,14 @@ MOZ_ARG_DISABLE_BOOL(parental-controls,
    MOZ_DISABLE_PARENTAL_CONTROLS=)
 if test -n "$MOZ_DISABLE_PARENTAL_CONTROLS"; then
     AC_DEFINE(MOZ_DISABLE_PARENTAL_CONTROLS)
+else
+case "$target" in
+*-mingw*|*-cygwin*|*-msvc*|*-mks*)
+    if test "$ac_cv_header_wpcapi_h" = "no"; then
+        AC_MSG_ERROR([System header wpcapi.h is not available. See http://developer.mozilla.org/en/docs/wpcapi.h for details on fixing this problem.])
+    fi
+    ;;
+esac
 fi
 AC_SUBST(MOZ_DISABLE_PARENTAL_CONTROLS)
 
