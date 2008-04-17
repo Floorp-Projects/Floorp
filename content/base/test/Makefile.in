@@ -171,7 +171,10 @@ _TEST_FILES = 	test_bug5141.html \
 		file_XHR_pass3.txt^headers^ \
 		file_XHR_fail1.txt \
 		file_XHR_fail1.txt^headers^ \
-		$(NULL)
+		test_bug428847.html \
+		file_bug428847-1.xhtml \
+		file_bug428847-2.xhtml \
+	$(NULL)
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
