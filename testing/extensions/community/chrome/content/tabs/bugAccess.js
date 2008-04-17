@@ -52,7 +52,6 @@ function bugAccess()
   var onloadBugSave;
   var onloadLogin;
 
-
   this.getBugSpecs = function(inputId,inUrl,onloadFunc)
   {
     if(onloadFunc!=undefined)
@@ -138,7 +137,7 @@ function bugAccess()
       xmlHttp.onload=this.parseBugSearch;
   }
 
-
+  
   this.parseBugList = function(e)
   {
     var bugData = parseList(e.target.responseText);
@@ -293,6 +292,23 @@ function bugAccess()
 
   bugData=new Array();
   //dump(xmlHttp);
+  // Ideally, we'd load the contents of xmlHttp into a document node and do
+  // XPATH queries to get these rather than this brute force parsing, but there
+  // isn't a very clean way to load text/HTML into a document (bug 102699).
+  // So, for now, be sure that we are beginning in the right part of the page,
+  // And not catching bugzilla maintenance bug references in the header it.
+  // So we look for the bugs table, i.e. this line: 
+  // <table class="bz_buglist sortable" ...> We set that to our end, so that
+  // the beginLoc is set properly the first time through the loop.
+  endLoc = xmlHttp.search(/<table class=\"bz_buglist sortable\"/);
+  if (endLoc <= 0) {
+    // You should never see this, but if you do, then that means the format
+    // of the bugzilla page has changed and we want to return rather than go
+    // into an infinite loop.
+    alert("ERROR: No Bugs Found.");
+    return bugData;
+  }
+
   for(var i = 0;(beginLoc = xmlHttp.indexOf('show_bug.cgi?id',endLoc)) != -1; i++)
   {
     endLoc = xmlHttp.indexOf('"',beginLoc);
