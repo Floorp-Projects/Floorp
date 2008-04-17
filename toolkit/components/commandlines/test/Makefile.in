@@ -53,6 +53,8 @@ XPCSHELL_TESTS = \
 
 include $(topsrcdir)/config/rules.mk
 
+ifneq (,$(filter-out OS2 Darwin,$(OS_ARCH)))
 # Hack to allow preprocessing of test_bug410156.js
 libs:: unit/test_bug410156.js.in
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $^ > $(TESTROOT)/unit/test_bug410156.js
+endif
