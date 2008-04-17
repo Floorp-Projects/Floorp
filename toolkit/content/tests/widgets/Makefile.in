@@ -101,6 +101,7 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_menu_hide.xul \
 		test_focus.xul \
 		test_tabindex.xul \
+		test_sorttemplate.xul \
 		$(NULL)
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
