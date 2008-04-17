@@ -27,6 +27,10 @@ nonfatal-assertions.patch: Make assertions non-fatal
 
 buggy-repeat.patch: Unconditionally turn on buggy-repeat handling to bandaid bug 413583.
 
+clip-clone.patch: _cairo_clip_init_deep_copy should pass 0,0 as the
+source coordinates to clone from since it wants an exact copy of the
+source's clipping surface
+
 ==== pixman patches ====
 
 endian.patch: include cairo-platform.h for endian macros
