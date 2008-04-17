@@ -79,7 +79,7 @@ function AddonRepository() {
 
 AddonRepository.prototype = {
   // The current set of results
-  _addons: [],
+  _addons: null,
 
   // Whether we are currently searching or not
   _searching: false,
@@ -130,6 +130,8 @@ AddonRepository.prototype = {
       this._request.abort();
       this._request = null;
     }
+    this._callback = null;
+    this._addons = null;
   },
 
   retrieveRecommendedAddons: function(aMaxResults, aCallback) {
@@ -181,6 +183,8 @@ AddonRepository.prototype = {
     this._request = null;
     this._callback.searchSucceeded(this._addons, this._addons.length,
                                    this._recommended ? -1 : aCount);
+    this._callback = null;
+    this._addons = null;
   },
 
   // Notifies the callback of a failure
@@ -188,6 +192,8 @@ AddonRepository.prototype = {
     this._searching = false;
     this._request = null;
     this._callback.searchFailed();
+    this._callback = null;
+    this._addons = null;
   },
 
   // Parses an add-on entry from an <addon> element
