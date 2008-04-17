@@ -2969,11 +2969,13 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
                                        -1, -1, PR_FALSE);
       InitChildReflowState(kidReflowState);
 
-      // If this isn't the first row group, then we can't be at the top of the page
-      // When a new page starts, a head row group may be added automatically.
-      // We also consider the row groups just after the head as the top of the page.
-      // That is to prevent the infinite loop in some circumstance. See bug 344883.
-      if (childX > (thead ? 1 : 0)) {
+      // If this isn't the first row group, and the previous row group has a
+      // nonzero YMost, then we can't be at the top of the page.
+      // We ignore the head row group in this check, because a head row group
+      // may be automatically added at the top of *every* page.  This prevents
+      // infinite loops in some circumstances - see bug 344883.
+      if (childX > (thead ? 1 : 0) &&
+          (rowGroups[childX - 1]->GetRect().YMost() > 0)) {
         kidReflowState.mFlags.mIsTopOfPage = PR_FALSE;
       }
       aReflowState.y += cellSpacingY;
