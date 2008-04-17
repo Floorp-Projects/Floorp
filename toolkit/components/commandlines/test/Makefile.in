@@ -45,16 +45,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= test_harness_commandlines
-TESTROOT	= $(shell cd $(DEPTH) && pwd)/_tests/xpcshell-simple/$(MODULE)
 
 XPCSHELL_TESTS = \
                  unit \
                  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-ifneq (,$(filter-out OS2 Darwin,$(OS_ARCH)))
-# Hack to allow preprocessing of test_bug410156.js
-libs:: unit/test_bug410156.js.in
-	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $^ > $(TESTROOT)/unit/test_bug410156.js
-endif
