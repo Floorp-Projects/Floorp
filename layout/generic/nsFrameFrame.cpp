@@ -352,7 +352,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   rv = f->BuildDisplayListForStackingContext(aBuilder, dirty, &childItems);
   if (NS_SUCCEEDED(rv)) {
     rv = aLists.Content()->AppendNewToTop(
-        new (aBuilder) nsDisplayClip(nsnull, this, &childItems,
+        new (aBuilder) nsDisplayClip(nsnull, &childItems,
               nsRect(aBuilder->ToReferenceFrame(f), f->GetSize())));
     // delete childItems in case of OOM
     childItems.DeleteAll();
