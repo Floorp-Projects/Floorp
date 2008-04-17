@@ -1630,7 +1630,8 @@ nsXULContentBuilder::CreateElement(PRInt32 aNameSpaceID,
     doc->NodeInfoManager()->GetNodeInfo(aTag, nsnull, aNameSpaceID,
                                         getter_AddRefs(nodeInfo));
 
-    rv = NS_NewElement(getter_AddRefs(result), aNameSpaceID, nodeInfo);
+    rv = NS_NewElement(getter_AddRefs(result), aNameSpaceID, nodeInfo,
+                       PR_FALSE);
     if (NS_FAILED(rv))
         return rv;
 

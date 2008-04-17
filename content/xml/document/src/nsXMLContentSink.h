@@ -147,6 +147,7 @@ protected:
   StackNode & GetCurrentStackNode();
   nsresult PushContent(nsIContent *aContent);
   void PopContent();
+  PRBool HaveNotifiedForCurrentContent() const;
 
   nsresult ProcessBASETag(nsIContent* aContent);
 

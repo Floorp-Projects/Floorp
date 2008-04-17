@@ -1049,7 +1049,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
                      getter_AddRefs(nodeInfo));
 
   // create button which drops the list down
-  NS_NewHTMLElement(getter_AddRefs(mButtonContent), nodeInfo);
+  NS_NewHTMLElement(getter_AddRefs(mButtonContent), nodeInfo, PR_FALSE);
   if (!mButtonContent)
     return NS_ERROR_OUT_OF_MEMORY;
 

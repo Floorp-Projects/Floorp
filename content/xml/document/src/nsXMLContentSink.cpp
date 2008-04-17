@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -506,7 +507,7 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
 
   nsCOMPtr<nsIContent> content;
   rv = NS_NewElement(getter_AddRefs(content), aNodeInfo->NamespaceID(),
-                     aNodeInfo);
+                     aNodeInfo, PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XHTML)
@@ -516,7 +517,9 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
     ) {
     nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(content);
     sele->SetScriptLineNumber(aLineNumber);
-    sele->WillCallDoneAddingChildren();
+    if (aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_SVG)) {
+      sele->WillCallDoneAddingChildren();
+    }
     mConstrainSize = PR_FALSE;
   }
 
@@ -592,7 +595,7 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
       || nodeInfo->NamespaceID() > kNameSpaceID_LastBuiltin
 #endif
       ) {
-    aContent->DoneAddingChildren(PR_FALSE);
+    aContent->DoneAddingChildren(HaveNotifiedForCurrentContent());
   }
   
   if (IsMonolithicContainer(nodeInfo)) {
@@ -907,6 +910,18 @@ nsXMLContentSink::PopContent()
   }
 
   mContentStack.RemoveElementAt(count - 1);
+}
+
+PRBool
+nsXMLContentSink::HaveNotifiedForCurrentContent() const
+{
+  PRUint32 stackLength = mContentStack.Length();
+  if (stackLength) {
+    const StackNode& stackNode = mContentStack[stackLength - 1];
+    nsIContent* parent = stackNode.mContent;
+    return stackNode.mNumFlushed == parent->GetChildCount();
+  }
+  return PR_TRUE;
 }
 
 void
