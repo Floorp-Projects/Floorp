@@ -1428,8 +1428,7 @@ void nsViewManager::ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget)
     // to do for the view and its descendants
     nsIWidget* widget = aView->GetWidget();
     nsIWidget* parentWidget = widget->GetParent();
-    // Toplevel widgets should not be reparented!
-    if (parentWidget && parentWidget != aNewWidget) {
+    if (parentWidget != aNewWidget) {
 #ifdef DEBUG
       nsresult rv =
 #endif
