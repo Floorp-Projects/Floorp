@@ -57,6 +57,14 @@ nsDOMKeyboardEvent::nsDOMKeyboardEvent(nsPresContext* aPresContext,
   }
 }
 
+nsDOMKeyboardEvent::~nsDOMKeyboardEvent()
+{
+  if (mEventIsInternal) {
+    delete static_cast<nsKeyEvent*>(mEvent);
+    mEvent = nsnull;
+  }
+}
+
 NS_IMPL_ADDREF_INHERITED(nsDOMKeyboardEvent, nsDOMUIEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMKeyboardEvent, nsDOMUIEvent)
 
