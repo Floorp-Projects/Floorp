@@ -4035,7 +4035,7 @@ nsContentUtils::GetAccelKeyCandidates(nsIDOMEvent* aDOMEvent,
       for (PRUint32 i = 0;
            i < nativeKeyEvent->alternativeCharCodes.Length(); ++i) {
         PRUint32 ch =
-          nativeKeyEvent->alternativeCharCodes[0].mUnshiftedCharCode;
+          nativeKeyEvent->alternativeCharCodes[i].mUnshiftedCharCode;
         if (!ch || ch == nativeKeyEvent->charCode)
           continue;
 
