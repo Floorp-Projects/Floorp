@@ -700,7 +700,7 @@ AddFontNameToArray(const nsAString& aName,
                    void *closure)
 {
     if (!aName.IsEmpty()) {
-        nsTArray<nsAutoString> *list = static_cast<nsTArray<nsAutoString> *>(closure);
+        nsTArray<nsString> *list = static_cast<nsTArray<nsString> *>(closure);
 
         if (list->IndexOf(aName) == list->NoIndex)
             list->AppendElement(aName);
@@ -712,7 +712,7 @@ AddFontNameToArray(const nsAString& aName,
 void
 gfxWindowsFontGroup::GroupFamilyListToArrayList(nsTArray<nsRefPtr<FontEntry> > *list)
 {
-    nsAutoTArray<nsAutoString, 15> fonts;
+    nsAutoTArray<nsString, 15> fonts;
     ForEachFont(AddFontNameToArray, &fonts);
 
     PRUint32 len = fonts.Length();
@@ -727,12 +727,12 @@ gfxWindowsFontGroup::FamilyListToArrayList(const nsString& aFamilies,
                                            const nsCString& aLangGroup,
                                            nsTArray<nsRefPtr<FontEntry> > *list)
 {
-    nsAutoTArray<nsAutoString, 15> fonts;
+    nsAutoTArray<nsString, 15> fonts;
     ForEachFont(aFamilies, aLangGroup, AddFontNameToArray, &fonts);
 
     PRUint32 len = fonts.Length();
     for (PRUint32 i = 0; i < len; ++i) {
-        const nsAutoString& str = fonts[i];
+        const nsString& str = fonts[i];
         nsRefPtr<FontEntry> fe = gfxWindowsPlatform::GetPlatform()->FindFontEntry(str, mStyle);
         list->AppendElement(fe);
     }
