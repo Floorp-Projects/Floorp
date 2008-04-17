@@ -5346,8 +5346,9 @@ nsTSMManager::UpdateComposing(NSString* aComposingString)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  sComposingString = aComposingString;
-  [sComposingString retain];
+  if (sComposingString)
+    [sComposingString release];
+  sComposingString = [aComposingString retain];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
