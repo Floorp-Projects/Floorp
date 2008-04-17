@@ -861,7 +861,7 @@ gfxQuartzFontCache::ReadOtherFamilyNamesForFamily(const nsAString& aFamilyName)
 void
 gfxQuartzFontCache::InitSingleFaceList()
 {
-    nsAutoTArray<nsString, 10> singleFaceFonts;
+    nsAutoTArray<nsAutoString, 10> singleFaceFonts;
     gfxFontUtils::GetPrefsFontList("font.single-face-list", singleFaceFonts);
     
     PRUint32 numFonts = singleFaceFonts.Length();
@@ -906,7 +906,7 @@ gfxQuartzFontCache::InitSingleFaceList()
 void
 gfxQuartzFontCache::PreloadNamesList()
 {
-    nsAutoTArray<nsString, 10> preloadFonts;
+    nsAutoTArray<nsAutoString, 10> preloadFonts;
     gfxFontUtils::GetPrefsFontList("font.preload-names-list", preloadFonts);
     
     PRUint32 numFonts = preloadFonts.Length();
@@ -978,7 +978,7 @@ gfxQuartzFontCache::EliminateDuplicateFaces(const nsAString& aFamilyName)
 void
 gfxQuartzFontCache::InitBadUnderlineList()
 {
-    nsAutoTArray<nsString, 10> blacklist;
+    nsAutoTArray<nsAutoString, 10> blacklist;
     gfxFontUtils::GetPrefsFontList("font.blacklist.underline_offset", blacklist);
     PRUint32 numFonts = blacklist.Length();
     for (PRUint32 i = 0; i < numFonts; i++) {
