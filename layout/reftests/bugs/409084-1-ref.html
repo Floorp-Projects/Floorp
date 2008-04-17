@@ -1,0 +1,15 @@
+<html class="reftest-print">
+<head><style>
+    td { vertical-align: top; }
+    .break { page-break-before: always; height: 1in }
+</style></head>
+<body>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr><td rowspan="2">line 1<br/>line 2<br/>line 3</td></tr>
+      <tr><td><div class="tall"></iframe></td></tr>
+    </tbody>
+  </table>
+  <div class="break"></div>
+</body>
+</html>
