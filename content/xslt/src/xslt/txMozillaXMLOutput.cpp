@@ -549,7 +549,7 @@ txMozillaXMLOutput::startElementInternal(nsIAtom* aPrefix,
                                        getter_AddRefs(ni));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    NS_NewElement(getter_AddRefs(mOpenedElement), aElemType, ni);
+    NS_NewElement(getter_AddRefs(mOpenedElement), aElemType, ni, PR_FALSE);
 
     // Set up the element and adjust state
     if (!mNoFixup) {
@@ -988,7 +988,7 @@ txMozillaXMLOutput::createHTMLElement(nsIAtom* aName,
                                                 getter_AddRefs(ni));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return NS_NewHTMLElement(aResult, ni);
+    return NS_NewHTMLElement(aResult, ni, PR_FALSE);
 }
 
 txTransformNotifier::txTransformNotifier()
