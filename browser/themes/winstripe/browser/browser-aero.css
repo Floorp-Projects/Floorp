@@ -1,5 +1,11 @@
 %include browser.css
 
+/* ::::: Main Window Styling ::::: */
+#navigator-toolbox > toolbar {
+  -moz-appearance: none;
+  border-style: none;
+}
+
 /* ::::: Identity Indicator Styling ::::: */
 
 #urlbar[chromedir="ltr"] {
