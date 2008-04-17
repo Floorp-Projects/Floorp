@@ -3030,7 +3030,8 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> content;
-  NS_NewElement(getter_AddRefs(content), nodeInfo->NamespaceID(), nodeInfo);
+  NS_NewElement(getter_AddRefs(content), nodeInfo->NamespaceID(), nodeInfo,
+                PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(content, aReturn);
@@ -5373,7 +5374,7 @@ nsDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_NewElement(aResult, elementType, nodeInfo);
+  return NS_NewElement(aResult, elementType, nodeInfo, PR_FALSE);
 }
 
 PRBool

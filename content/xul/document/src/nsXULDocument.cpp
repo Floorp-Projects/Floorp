@@ -3527,7 +3527,7 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
                                            getter_AddRefs(newNodeInfo));
         if (NS_FAILED(rv)) return rv;
         rv = NS_NewElement(getter_AddRefs(result), newNodeInfo->NamespaceID(),
-                           newNodeInfo);
+                           newNodeInfo, PR_FALSE);
         if (NS_FAILED(rv)) return rv;
 
 #ifdef MOZ_XTF
