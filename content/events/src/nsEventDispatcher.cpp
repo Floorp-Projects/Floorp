@@ -194,6 +194,10 @@ nsresult
 nsEventTargetChainItem::HandleEvent(nsEventChainPostVisitor& aVisitor,
                                     PRUint32 aFlags)
 {
+  mTarget->WillHandleEvent(aVisitor);
+  if (aVisitor.mEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) {
+    return NS_OK;
+  }
   if (!mManager) {
     mTarget->GetListenerManager(PR_FALSE, getter_AddRefs(mManager));
   }
