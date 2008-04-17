@@ -1,0 +1,157 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=428135
+-->
+<head>
+  <title>Test for Bug 428135</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=428135">Mozilla Bug 428135</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+/** Test for Bug 428135 **/
+
+var expectedCurrentTargets = new Array();
+
+function d(el, ename) {
+  var e = document.createEvent("Events");
+  e.initEvent(ename, true, true);
+  el.dispatchEvent(e);
+}
+
+function testListener(e) {
+  e.preventDefault();
+  var expected = expectedCurrentTargets.shift();
+  ok(expected == e.currentTarget,
+     "Unexpected current target [" + e.currentTarget + "], event=" + e.type +
+     ", phase=" + e.eventPhase + ", target should have been " + expected);
+}
+
+function getAndAddListeners(elname) {
+  var el = document;
+  if (elname) {
+    el = document.getElementById(elname);
+  }
+  el.addEventListener("submit", testListener, true);
+  el.addEventListener("submit", testListener, false);
+  el.addEventListener("reset", testListener, true);
+  el.addEventListener("reset", testListener, false);
+  el.addEventListener("fooEvent", testListener, true);
+  el.addEventListener("fooEvent", testListener, false);
+  return el;
+}
+
+function testSubmitResetEvents() {
+  getAndAddListeners(null);
+  var outerForm = getAndAddListeners("outerForm");
+  var outerSubmit = getAndAddListeners("outerSubmit");
+  var outerReset = getAndAddListeners("outerReset");
+  var outerSubmitDispatcher = getAndAddListeners("outerSubmitDispatcher");
+  var outerResetDispatcher = getAndAddListeners("outerResetDispatcher");
+  var outerChild = getAndAddListeners("outerChild");
+  var innerForm = getAndAddListeners("innerForm");
+  var innerSubmit = getAndAddListeners("innerSubmit");
+  var innerReset = getAndAddListeners("innerReset");
+  var innerSubmitDispatcher = getAndAddListeners("innerSubmitDispatcher");
+  var innerResetDispatcher = getAndAddListeners("innerResetDispatcher");
+
+  expectedCurrentTargets = new Array(document, outerForm, outerForm, document);
+  outerSubmit.click();
+  ok(expectedCurrentTargets.length == 0,
+     "(1) expectedCurrentTargets isn't empty!");
+
+  expectedCurrentTargets = new Array(document, outerForm, outerForm, document);
+  outerReset.click();
+  ok(expectedCurrentTargets.length == 0,
+     "(2) expectedCurrentTargets isn't empty!");
+
+  // Because of bug 428135, submit shouldn't propagate
+  // back to outerForm and document!
+  expectedCurrentTargets = 
+    new Array(document, outerForm, outerSubmitDispatcher, outerSubmitDispatcher);
+  outerSubmitDispatcher.click();
+  ok(expectedCurrentTargets.length == 0,
+     "(3) expectedCurrentTargets isn't empty!");
+
+  // Because of bug 428135, reset shouldn't propagate
+  // back to outerForm and document!
+  expectedCurrentTargets =
+    new Array(document, outerForm, outerResetDispatcher, outerResetDispatcher);
+  outerResetDispatcher.click();
+  ok(expectedCurrentTargets.length == 0,
+     "(4) expectedCurrentTargets isn't empty!");
+
+  // Because of bug 428135, submit shouldn't propagate
+  // back to outerForm and document!
+  expectedCurrentTargets = 
+    new Array(document, outerForm, outerChild, innerForm, innerForm, outerChild);
+  innerSubmit.click();
+  ok(expectedCurrentTargets.length == 0,
+     "(5) expectedCurrentTargets isn't empty!");
+
+  // Because of bug 428135, reset shouldn't propagate
+  // back to outerForm and document!
+  expectedCurrentTargets = 
+    new Array(document, outerForm, outerChild, innerForm, innerForm, outerChild);
+  innerReset.click();
+  ok(expectedCurrentTargets.length == 0,
+     "(6) expectedCurrentTargets isn't empty!");
+
+  // Because of bug 428135, submit shouldn't propagate
+  // back to inner/outerForm or document!
+  expectedCurrentTargets = 
+    new Array(document, outerForm, outerChild, innerForm, innerSubmitDispatcher,
+              innerSubmitDispatcher);
+  innerSubmitDispatcher.click();
+  ok(expectedCurrentTargets.length == 0,
+     "(7) expectedCurrentTargets isn't empty!");
+
+  // Because of bug 428135, reset shouldn't propagate
+  // back to inner/outerForm or document!
+  expectedCurrentTargets =
+    new Array(document, outerForm, outerChild, innerForm, innerResetDispatcher,
+              innerResetDispatcher);
+  innerResetDispatcher.click();
+  ok(expectedCurrentTargets.length == 0,
+     "(8) expectedCurrentTargets isn't empty!");
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(testSubmitResetEvents);
+addLoadEvent(SimpleTest.finish);
+
+
+]]>
+</script>
+</pre>
+<form id="outerForm">
+  <input type="submit" value="outer" id="outerSubmit"/>
+  <input type="reset" value="reset outer" id="outerReset"/>
+  <input type="button" value="dispatch submit" onclick="d(this, 'submit')"
+         id="outerSubmitDispatcher"/>
+  <input type="button" value="dispatch reset" onclick="d(this, 'reset')"
+         id="outerResetDispatcher"/>
+  <div id="outerChild">
+    <form id="innerForm">
+      <input type="submit" value="inner" id="innerSubmit"/>
+      <input type="reset" value="reset inner" id="innerReset"/>
+      <input type="button" value="dispatch submit" onclick="d(this, 'submit')"
+             id="innerSubmitDispatcher"/>
+      <input type="button" value="dispatch reset" onclick="d(this, 'reset')"
+             id="innerResetDispatcher"/>
+    </form>
+  </div>
+</form>
+</body>
+</html>
+
