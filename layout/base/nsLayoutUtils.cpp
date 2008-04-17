@@ -1017,25 +1017,8 @@ AddItemsToRegion(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
     nsDisplayList* sublist = item->GetList();
     if (sublist) {
       if (item->GetType() == nsDisplayItem::TYPE_CLIP) {
-        nsDisplayClip* clipItem = static_cast<nsDisplayClip*>(item);
-        nsRect clip = aClipRect;
-        // If the clipping frame is moving, then it isn't clipping any
-        // non-moving content (see ApplyAbsPosClipping), so we don't need
-        // to do anything special, but we should not restrict aClipRect.
-        if (!aBuilder->IsMovingFrame(clipItem->GetClippingFrame())) {
-          clip.IntersectRect(clip, clipItem->GetClipRect());
-
-          // Invalidate the translation of the source area that was clipped out
-          nsRegion clippedOutSource;
-          clippedOutSource.Sub(aRect, clip);
-          clippedOutSource.MoveBy(aDelta);
-          aRegion->Or(*aRegion, clippedOutSource);
-
-          // Invalidate the destination area that is clipped out
-          nsRegion clippedOutDestination;
-          clippedOutDestination.Sub(aRect + aDelta, clip);
-          aRegion->Or(*aRegion, clippedOutDestination);
-        }
+        nsRect clip;
+        clip.IntersectRect(aClipRect, static_cast<nsDisplayClip*>(item)->GetClipRect());
         AddItemsToRegion(aBuilder, sublist, aRect, clip, aDelta, aRegion);
       } else {
         // opacity, or a generic sublist
@@ -1092,7 +1075,7 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
   // to clip non-moving items --- this is enforced by the code that sets
   // up nsDisplayClip items, in particular see ApplyAbsPosClipping.
   // XXX but currently a non-moving clip item can incorrectly clip
-  // moving items! See bug 428156.
+  // moving moving items! See bug 428156.
   nsRect rect;
   rect.UnionRect(aCopyRect, aCopyRect + aDelta);
   nsDisplayListBuilder builder(aRootFrame, PR_FALSE, PR_TRUE);
