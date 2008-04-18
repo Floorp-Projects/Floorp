@@ -4513,8 +4513,7 @@ PresShell::IsSafeToFlush(PRBool& aIsSafeToFlush)
   // if any of the other flags are set.
   
   // Not safe if we are reflowing or in the middle of frame construction
-  aIsSafeToFlush = nsContentUtils::IsSafeToRunScript() &&
-                   !mIsReflowing &&
+  aIsSafeToFlush = !mIsReflowing &&
                    !mChangeNestCount;
 
   if (aIsSafeToFlush) {
@@ -5579,10 +5578,9 @@ PresShell::HandleEvent(nsIView         *aView,
     return HandleEventInternal(aEvent, aView, aEventStatus);
   }
 #endif
-  if (!nsContentUtils::IsSafeToRunScript()) {
-    NS_ERROR("How did we get here if it's not safe to run scripts?");
-    return NS_OK;
-  }
+
+  NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
+               "How did we get here if it's not safe to run scripts?");
 
   // Check for a theme change up front, since the frame type is irrelevant
   if (aEvent->message == NS_THEMECHANGED && mPresContext) {
