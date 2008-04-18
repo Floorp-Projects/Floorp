@@ -1,0 +1,248 @@
+<?xml version="1.0"?>
+<!DOCTYPE bindings PUBLIC "-//MOZILLA//DTD XBL V1.0//EN" "http://www.mozilla.org/xbl">
+
+<bindings
+    xmlns="http://www.mozilla.org/xbl"
+    xmlns:xbl="http://www.mozilla.org/xbl"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="deckpage">
+    <content>
+      <xul:stack anonid="page" class="deckpage-container" flex="1">
+        <html:canvas anonid="canvas" class="deckpage-canvas"/>
+        <xul:vbox align="start">
+          <xul:image anonid="close" class="deckpage-close"/>
+        </xul:vbox>
+      </xul:stack>
+    </content>
+
+  </binding>
+
+  <binding id="deckbrowser">
+    <content>
+      <xul:deck anonid="container" class="deckbrowser-container" flex="1">
+      </xul:deck>
+      <xul:vbox anonid="tabspace" class="deckbrowser-tabspace" collapsed="true" align="center" flex="1">
+        <xul:description anonid="title" class="deckbrowser-title" crop="end"/>
+        <xul:description anonid="uri" class="deckbrowser-uri" crop="center"/>
+        <xul:hbox anonid="tabs" class="deckbrowser-tabs" flex="1" style="overflow-x: auto">
+        </xul:hbox>
+      </xul:vbox>
+    </content>
+
+    <implementation>
+      <constructor>
+      </constructor>
+
+      <field name="_container" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "container");
+      </field>
+
+      <field name="_browsers">
+        null
+      </field>
+
+      <property name="browser" readonly="true">
+        <getter>
+          return this._container.selectedPanel;
+        </getter>
+      </property>
+
+      <property name="browsers" readonly="true">
+        <getter>
+          <![CDATA[
+            if (!this._browsers) {
+              var browsers = [];
+              for (var i = 0; i < this._container.childNodes.length; i++)
+                browsers.push(this._container.childNodes[i]);
+              this._browsers = browsers;
+            }
+            return this._browsers;
+          ]]>
+        </getter>
+      </property>
+
+      <method name="addBrowser">
+        <parameter name="aURI"/>
+        <parameter name="aReferrer"/>
+        <parameter name="aPostData"/>
+        <parameter name="aFixUp"/>
+        <body>
+          <![CDATA[
+            var b = document.createElement("browser");
+            b.setAttribute("class", "deckbrowser-browser");
+            b.setAttribute("flex", "1");
+            b.setAttribute("type", "content-targetable");
+            if (this.hasAttribute("autocompletepopup"))
+              b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
+            if (this.hasAttribute("contentcontextmenu"))
+              b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
+
+            this._container.appendChild(b);
+            this._container.selectedPanel = b;
+            this._browsers = null;
+
+            if (aURI != "about:blank") {
+              b.stop();
+              this.loadURI(aURI, aReferrer, aPostData, aFixup);
+            }
+
+            // Broadcast creation
+            var event = document.createEvent("Event");
+            event.initEvent("TabOpen", true, false);
+            b.dispatchEvent(event);
+
+            return b;
+          ]]>
+        </body>
+      </method>
+
+      <method name="removeBrowser">
+        <parameter name="aBrowser"/>
+        <body>
+          <![CDATA[
+            this._browsers = null;
+            if (!aBrowser)
+              aBrowser = this.browser;
+
+            var count = this._container.childNodes.length;
+            if (count == 1) {
+                var self = this;
+                setTimeout(function() { self.addBrowser("about:blank"); }, 0);
+            }
+
+            var currentIndex = this._container.selectedIndex;
+            var index = -1;
+            for (var i = 0; i<count; i++) {
+              if (this._container.childNodes[i] == aBrowser)
+                index = i;
+            }
+
+            // Broadcast removal
+            var event = document.createEvent("Event");
+            event.initEvent("TabClose", true, false);
+            aBrowser.dispatchEvent(event);
+
+            this._container.removeChild(aBrowser);
+
+            // Select the new tab
+            var newIndex = -1;
+            if (currentIndex > index)
+              newIndex = currentIndex - 1;
+            else if (currentIndex < index)
+              newIndex = currentIndex;
+            else {
+              newIndex = (index == count - 1) ? index - 1 : index;
+            }
+            this._container.selectedIndex = newIndex;
+          ]]>
+        </body>
+      </method>
+
+      <method name="show">
+        <parameter name="aBrowser"/>
+        <body>
+          <![CDATA[
+            if (aBrowser.constructor.name == "Number")
+              aBrowser = this.browsers[aBrowser];
+            this._container.selectedPanel = aBrowser;
+
+            var event = document.createEvent("Event");
+            event.initEvent("TabSelect", true, false);
+            aBrowser.dispatchEvent(event);
+          ]]>
+        </body>
+      </method>
+
+      <method name="loadURI">
+        <parameter name="aURI"/>
+        <parameter name="aReferrer"/>
+        <parameter name="aPostData"/>
+        <parameter name="aFixUp"/>
+        <body>
+          <![CDATA[
+            if (aPostData === undefined)
+              aPostData = null;
+            var flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+            if (aFixUp)
+              flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+
+            this.browser.loadURIWithFlags(aURI, flags, aReferrer, null, aPostData);
+          ]]>
+        </body>
+      </method>
+
+      <method name="select">
+        <body>
+          <![CDATA[
+            var tabspace = document.getAnonymousElementByAttribute(this, "anonid", "tabspace");
+            var tabs = document.getAnonymousElementByAttribute(this, "anonid", "tabs");
+            while (tabs.childNodes.length > 0)
+              tabs.removeChild(tabs.childNodes[0]);
+
+            var browsers = this.browsers;
+            for (var i=0; i<browsers.length; i++) {
+              var webContent = browsers[i].contentWindow;
+              var viewW = webContent.innerWidth;
+              var viewH = webContent.innerHeight;
+              var canvasW = this.boxObject.width / 1.5;
+              var canvasH = (viewH / viewW) * canvasW;
+
+              var deckpage = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "deckpage");
+              tabs.appendChild(deckpage);
+
+              var canvas = document.getAnonymousElementByAttribute(deckpage, "anonid", "canvas");
+              canvas.setAttribute("width", canvasW);
+              canvas.setAttribute("height", canvasH);
+              canvas.setAttribute("left", "10");
+              canvas.setAttribute("top", "10");
+
+              let self = this;
+              let target = browsers[i];
+
+              var page = document.getAnonymousElementByAttribute(deckpage, "anonid", "page");
+              function _selectTab(aEvent) {
+                self.show(target);
+                tabspace.collapsed = true;
+                self._container.collapsed = false;
+              }
+              page.addEventListener("click", _selectTab, false);
+
+              var close = document.getAnonymousElementByAttribute(deckpage, "anonid", "close");
+              function _closeTab(aEvent) {
+                self.removeBrowser(target);
+                tabspace.collapsed = true;
+                self._container.collapsed = false;
+              };
+              close.addEventListener("click", _closeTab, false);
+
+              let title = document.getAnonymousElementByAttribute(this, "anonid", "title");
+              let uri = document.getAnonymousElementByAttribute(this, "anonid", "uri");
+              function _hoverTab(aEvent) {
+                title.value = target.contentDocument.title;
+                uri.value = target.currentURI.spec;
+              };
+              page.addEventListener("mouseover", _hoverTab, false);
+
+              var ctx = canvas.getContext("2d");
+              ctx.clearRect(0, 0, canvasW, canvasH);
+              ctx.save();
+              ctx.scale(canvasW/viewW, canvasH/viewH);
+              ctx.drawWindow(webContent, 0, 0, viewW, viewH, "rgba(0,0,0,0)");
+              ctx.restore();
+            }
+
+            this._container.collapsed = true;
+            tabspace.collapsed = false;
+          ]]>
+        </body>
+      </method>
+
+    </implementation>
+
+    <handlers>
+    </handlers>
+  </binding>
+
+</bindings>

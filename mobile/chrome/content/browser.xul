@@ -1,0 +1,189 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Mobile Browser.
+   -
+   - The Initial Developer of the Original Code is
+   - Mozilla Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2008
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Brad Lassey <blassey@mozilla.com>
+   -   Mark Finkle <mfinkle@mozila.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://browser/skin/browser.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/deckbrowser.css" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://browser/locale/browser.dtd">
+
+<window id="main-window" title="&browser.title;"
+        width="800" height="480"
+        onload="Browser.startup();"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://global/content/inlineSpellCheckUI.js"/>
+  <script src="chrome://browser/content/commandUtil.js"/>
+  <script src="chrome://browser/content/browser.js"/>
+
+  <commandset id="cmdset_main">
+    <command id="cmd_back" label="&back.label;" disabled="true" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_forward" label="&forward.label;" disabled="true" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_reload" label="&reload.label;"  collapsed="true" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_stop" label="&stop.label;"  collapsed="true" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_search" label="&search.label;" collapsed="true" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_go" label="&go.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_star" label="&star.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_bookmarks" label="&bookmarks.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_newTab" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_closeTab" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_switchTab" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_menu" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_fullscreen" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_addons" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_downloads" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_scrollPageUp" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_scrollPageDown" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_cut" label="&cut.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_copy" label="&copy.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_copylink" label="&copylink.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_paste" label="&paste.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_delete" label="&delete.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_selectAll" label="&selectAll.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+  </commandset>
+
+  <keyset id="mainKeyset">
+    <key id="key_menu" keycode="VK_F4" command="cmd_menu"/>
+    <key id="key_fullscreen" keycode="VK_F6" command="cmd_fullscreen"/>
+
+    <key id="key_back" keycode="VK_LEFT" command="cmd_back" modifiers="control"/>
+    <key id="key_forward" keycode="VK_RIGHT" command="cmd_forward" modifiers="control"/>
+    <key id="key_back2" keycode="VK_BACK" command="cmd_back"/>
+    <key id="key_forward2" keycode="VK_BACK" command="cmd_forward" modifiers="shift"/>
+    <key id="key_reload" keycode="VK_F5" command="cmd_reload"/>
+
+    <key id="key_pageUp" keycode="VK_UP" command="cmd_scrollPageUp" modifiers="shift"/>
+    <key id="key_pageDown" keycode="VK_DOWN" command="cmd_scrollPageDown" modifiers="shift"/>
+
+    <key id="key_newTab" key="T" command="cmd_newTab" modifiers="control"/>
+    <key id="key_removeTab" key="W" command="cmd_removeTab" modifiers="control"/>
+    <key id="key_switchTab" key="S" command="cmd_switchTab" modifiers="control"/>
+
+    <key id="key_downloads" key="J" command="cmd_downloads" modifiers="control"/>
+  </keyset>
+
+  <popupset id="mainPopupSet">
+    <menupopup id="mainmenu">
+      <menuitem label="Hello"/>
+      <menuitem label="World"/>
+    </menupopup>
+
+    <panel type="autocomplete" id="popup_autocomplete" noautofocus="true"/>
+
+    <panel id="bookmark_edit" hidden="true">
+      <hbox flex="1" align="top">
+        <image id="bookmark_star"/>
+        <vbox flex="1">
+          <label id="bookmark_title" value="&editBookmark.title;" flex="1"/>
+          <button label="&removeBookmark.label;" oncommand="Bookmarks.remove();"/>
+        </vbox>
+      </hbox>
+      <separator/>
+      <vbox>
+        <label value="&bookmarkURL.label;" control="bookmark_url"/>
+        <textbox id="bookmark_url"/>
+        <separator class="thin"/>
+        <label value="&bookmarkName.label;" control="bookmark_name"/>
+        <textbox id="bookmark_name"/>
+      </vbox>
+      <separator/>
+      <hbox>
+        <spacer flex="1"/>
+        <button label="&saveBookmark.label;" oncommand="Bookmarks.save();"/>
+        <button label="&closeBookmark.label;" oncommand="Bookmarks.close();"/>
+      </hbox>
+    </panel>
+
+    <panel id="bookmark_picker" hidden="true">
+      <richlistbox id="bookmark_list" style="border: none !important;">
+      </richlistbox>
+    </panel>
+
+    <menupopup id="popup_content">
+      <menuitem id="menuitem_noSuggestions" disabled="true" label="&noSuggestions.label;"/>
+      <menuitem id="menuitem_addToDictionary" label="&addToDictionary.label;" oncommand="InlineSpellCheckerUI.addToDictionary();"/>
+      <menuseparator id="menusep_spellcheck"/>
+      <!--
+      <menuitem id="menuitem_cut" command="cmd_cut"/>
+      <menuitem id="menuitem_copy" command="cmd_copy"/>
+      <menuitem id="menuitem_paste" command="cmd_paste"/>
+      <menuitem id="menuitem_delete" command="cmd_delete"/>
+      <menuseparator id="menusep_edit"/>
+      <menuitem id="menuitem_selectAll" command="cmd_selectAll"/>
+      <menuseparator id="menusep_copylink"/>
+      <menuitem id="menuitem_copylink" command="cmd_copylink"/>
+      <menuseparator id="menusep_tabs"/>
+      -->
+      <menuitem label="&newTab.label;" command="cmd_newTab"/>
+      <menuitem label="&closeTab.label;" command="cmd_closeTab"/>
+      <menuitem label="&switchTab.label;" command="cmd_switchTab"/>
+      <menuseparator id="menusep_tools"/>
+      <menuitem label="&addons.label;" command="cmd_addons"/>
+    </menupopup>
+  </popupset>
+
+  <toolbox>
+    <toolbar id="toolbar_main" mode="icons">
+      <toolbarbutton id="tool_back" tooltiptext="&back.tooltip;" command="cmd_back"/>
+      <toolbarbutton id="tool_forward" tooltiptext="&forward.tooltip;" command="cmd_forward"/>
+      <toolbaritem id="urlbar-container" flex="1">
+        <stack id="urlbar-image-stack">
+          <image id="urlbar-throbber" src="throbber.png"/>
+          <image id="urlbar-favicon" src=""/>
+        </stack>
+        <textbox id="urlbar" type="autocomplete" autocompletesearch="history" enablehistory="false" maxrows="6" completeselectedindex="true" flex="1"
+                 ontextentered="LocationBar.goToURI();" ontextreverted="LocationBar.revertURI();"/>
+        <hbox id="urlbar-icons">
+          <toolbarbutton id="tool_search" tooltiptext="&search.tooltip;" command="cmd_search"/>
+          <toolbarbutton id="tool_go" tooltiptext="&go.tooltip;" command="cmd_go"/>
+          <toolbarbutton id="tool_reload" tooltiptext="&reload.tooltip;" command="cmd_reload"/>
+          <toolbarbutton id="tool_stop" tooltiptext="&stop.tooltip;" command="cmd_stop"/>
+        </hbox>
+      </toolbaritem>
+      <toolbarbutton id="tool_star" tooltiptext="&star.tooltip;" command="cmd_star"/>
+      <toolbarbutton id="tool_bookmarks" tooltiptext="&bookmarks.tooltip;" command="cmd_bookmarks"/>
+    </toolbar>
+  </toolbox>
+
+  <vbox id="browser" flex="1">
+    <deckbrowser id="content" contentcontextmenu="popup_content" autocompletepopup="popup_autocomplete" flex="1">
+    </deckbrowser>
+  </vbox>
+
+</window>
