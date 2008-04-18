@@ -50,4 +50,12 @@ XPCSHELL_TESTS = \
                  unit \
                  $(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+XPCSHELL_TESTS += unit/win
+else
+ifneq (,$(filter-out OS2 Darwin,$(OS_ARCH)))
+XPCSHELL_TESTS += unit/unix
+endif
+endif
+
 include $(topsrcdir)/config/rules.mk
