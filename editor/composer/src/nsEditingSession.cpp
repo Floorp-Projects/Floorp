@@ -573,7 +573,8 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
   rv = editorDocShell->GetEditor(getter_AddRefs(editor));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  htmlDoc->TearingDownEditor(editor);
+  if (stopEditing)
+    htmlDoc->TearingDownEditor(editor);
 
   // null out the editor on the controllers first to prevent their weak 
   // references from pointing to a destroyed editor
