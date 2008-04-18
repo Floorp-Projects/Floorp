@@ -119,6 +119,9 @@ nsMenuBarX::~nsMenuBarX()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  if (nsMenuBarX::sLastGeckoMenuBarPainted == this)
+    nsMenuBarX::sLastGeckoMenuBarPainted = nsnull;
+
   mMenusArray.Clear(); // release all menus
 
   // the quit/pref items of a random window might have been used if there was no
@@ -997,6 +1000,8 @@ static BOOL gMenuEffectsOnly = NO;
 
   int tag = [sender tag];
   nsMenuBarX* menuBar = nsMenuBarX::sLastGeckoMenuBarPainted;
+  if (!menuBar)
+    return;
 
   // We want to avoid processing app-global commands when we are asked to
   // perform native menu effects only. This avoids sending events twice,
