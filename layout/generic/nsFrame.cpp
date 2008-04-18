@@ -1788,18 +1788,19 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   isEditor = isEditor == nsISelectionDisplay::DISPLAY_ALL;
 
   nsInputEvent* keyEvent = (nsInputEvent*)aEvent;
-  if (!isEditor && !keyEvent->isAlt) {
+  if (!keyEvent->isAlt) {
     
     for (nsIContent* content = mContent; content;
          content = content->GetParent()) {
-      if ( nsContentUtils::ContentIsDraggable(content) ) {
+      if (nsContentUtils::ContentIsDraggable(content) &&
+          !content->IsEditable()) {
         // coordinate stuff is the fix for bug #55921
         if ((mRect - GetPosition()).Contains(
                nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this)))
           return NS_OK;
       }
     }
-  } // if browser, not editor
+  }
 
   // check whether style allows selection
   // if not, don't tell selection the mouse event even occurred.  
