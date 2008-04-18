@@ -307,7 +307,7 @@ static PRBool SimpleResolverCallback(const nsAString& aName, void* aClosure)
 void
 gfxWindowsPlatform::InitBadUnderlineList()
 {
-    nsAutoTArray<nsAutoString, 10> blacklist;
+    nsAutoTArray<nsString, 10> blacklist;
     gfxFontUtils::GetPrefsFontList("font.blacklist.underline_offset", blacklist);
     PRUint32 numFonts = blacklist.Length();
     for (PRUint32 i = 0; i < numFonts; i++) {
