@@ -1289,7 +1289,6 @@ statusbarpanel#statusbar-display {
 
 #navigator-throbber[busy="true"] {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
-  opacity: 0.5;
 }
 
 /* the default settings for the throbber hbox is too tall for vista menus */
@@ -1306,7 +1305,6 @@ toolbar[mode="text"] #navigator-throbber {
 toolbar[iconsize="small"] #navigator-throbber[busy="true"],
 toolbar[mode="text"] #navigator-throbber[busy="true"] {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
-  opacity: 0.5;
 }
 
 /* Tabstrip */
@@ -1361,7 +1359,6 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
 
 .tabbrowser-tab[busy] > .tab-icon-image {
   list-style-image: url("chrome://global/skin/icons/loading_16.png") !important;
-  opacity: 0.6;
 }
 
 .tab-icon-image {
@@ -1571,7 +1568,6 @@ stack[chromedir="rtl"] > hbox > .tabs-alltabs-box-animate {
 
 .alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
-  opacity: 0.6;
 }
 
 /* Tabstrip close button */
@@ -1649,7 +1645,6 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 
 #sidebar-throbber[loading="true"] {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
-  opacity: 0.5;
   -moz-margin-end: 4px;
 }
 
