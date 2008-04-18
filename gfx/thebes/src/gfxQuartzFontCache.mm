@@ -212,14 +212,14 @@ MacOSFontEntry::ReadCMAP()
             // check for mort/morx table, if haven't already
             if (!checkedForMorphTable) {
                 status = ATSFontGetTable(fontID, 'morx', 0, 0, 0, &size);
-                if ( status == noErr ) {
+                if (status == noErr) {
                     checkedForMorphTable = PR_TRUE;
                     hasMorphTable = PR_TRUE;
                 } else {
                     // check for a mort table
                     status = ATSFontGetTable(fontID, 'mort', 0, 0, 0, &size);
                     checkedForMorphTable = PR_TRUE;
-                    if ( status == noErr ) {
+                    if (status == noErr) {
                         hasMorphTable = PR_TRUE;
                     }
                 }
@@ -321,7 +321,7 @@ MacOSFamilyEntry::FindFont(const gfxFontStyle* aStyle, PRBool& aNeedsBold)
     memset(fontsWithTraits, 0, sizeof(fontsWithTraits));
     
     // match italic faces
-    if ( isItalic ) {    
+    if (isItalic) {    
         // first search for italic normal width fonts
         found = FindFontsWithTraits(fontsWithTraits, NSItalicFontMask, kTraits_NonNormalWidthMask);
         
@@ -450,7 +450,7 @@ MacOSFamilyEntry::FindFontsWithTraits(MacOSFontEntry* aFontsForWeights[], PRUint
         PRUint32 traits = fe->Traits();
         
         // aPosTraitsMask == 0 ==> match all
-        if ( (!aPosTraitsMask || (traits & aPosTraitsMask)) && !(traits & aNegTraitsMask)) {
+        if ((!aPosTraitsMask || (traits & aPosTraitsMask)) && !(traits & aNegTraitsMask)) {
             PRInt32 weight = fe->Weight();
             
             // always prefer the first font for a given weight, helps deal a bit with 
@@ -547,7 +547,7 @@ MacOSFamilyEntry::FindFontWeight(MacOSFontEntry* aFontsForWeights[], const gfxFo
 }
 
 static NSString* CreateNameFromBuffer(const UInt8 *aBuf, ByteCount aLength, 
-        FontPlatformCode aPlatformCode, FontScriptCode aScriptCode, FontLanguageCode aLangCode )
+        FontPlatformCode aPlatformCode, FontScriptCode aScriptCode, FontLanguageCode aLangCode)
 {
     CFStringRef outName = NULL;
     
@@ -567,7 +567,7 @@ static NSString* CreateNameFromBuffer(const UInt8 *aBuf, ByteCount aLength,
     } else if (aPlatformCode == kFontUnicodePlatform) {
         outName = CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)aBuf, aLength/2);    
     } else if (aPlatformCode == kFontMicrosoftPlatform) {
-        if ( aScriptCode == 0 ) {
+        if (aScriptCode == 0) {
             outName = CFStringCreateWithBytes(kCFAllocatorDefault, aBuf, 
                                                 aLength, kCFStringEncodingUTF16BE, false);
         } else {
@@ -787,7 +787,7 @@ gfxQuartzFontCache::InitFontList()
                 traits |= NSUnitalicFontMask;
             
             PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontinit) family: %s, psname: %s, face: %s, apple-weight: %d, css-weight: %d, traits: %8.8x\n", 
-                [availableFamily UTF8String], [psname UTF8String], [[face objectAtIndex:INDEX_FONT_FACE_NAME] UTF8String], weight, gfxQuartzFontCache::AppleWeightToCSSWeight(weight), traits ));
+                [availableFamily UTF8String], [psname UTF8String], [[face objectAtIndex:INDEX_FONT_FACE_NAME] UTF8String], weight, gfxQuartzFontCache::AppleWeightToCSSWeight(weight), traits));
 
             // make a nsString
             GetStringForNSString(psname, postscriptFontName);
@@ -812,10 +812,18 @@ gfxQuartzFontCache::InitFontList()
     // a font lookup miss earlier. this is a simple optimization, it's not required for correctness
     PreloadNamesList();
     
-    // under 10.4, Cocoa calls report that italic faces exist for Courier and Helvetica,
-    // even though only bold faces exist so test for this using ATSUI id's (10.5 has proper faces)
-    EliminateDuplicateFaces(NS_LITERAL_STRING("Courier"));
-    EliminateDuplicateFaces(NS_LITERAL_STRING("Helvetica"));
+    // clean up various minor 10.4 font problems for specific fonts
+    if (gfxPlatformMac::GetPlatform()->OSXVersion() < MAC_OS_X_VERSION_10_5_HEX) {
+        // Cocoa calls report that italic faces exist for Courier and Helvetica,
+        // even though only bold faces exist so test for this using ATSUI id's (10.5 has proper faces)
+        EliminateDuplicateFaces(NS_LITERAL_STRING("Courier"));
+        EliminateDuplicateFaces(NS_LITERAL_STRING("Helvetica"));
+        
+        // Cocoa reports that Courier and Monaco are not fixed-pitch fonts
+        // so explicitly tweak these settings
+        SetFixedPitch(NS_LITERAL_STRING("Courier"));
+        SetFixedPitch(NS_LITERAL_STRING("Monaco"));
+    }
     
     // initialize ranges of characters for which system-wide font search should be skipped
     mCodepointsWithNoFonts.SetRange(0,0x1f);     // C0 controls
@@ -972,6 +980,21 @@ gfxQuartzFontCache::EliminateDuplicateFaces(const nsAString& aFamilyName)
                 fontlist.RemoveElementAt(italicIndex);
             }
         }
+    }
+}
+
+void 
+gfxQuartzFontCache::SetFixedPitch(const nsAString& aFamilyName)
+{
+    MacOSFamilyEntry *family = FindFamily(aFamilyName);
+    if (!family) return;
+
+    nsTArray<nsRefPtr<MacOSFontEntry> >& fontlist = family->GetFontList();
+
+    PRUint32 i, numFonts = fontlist.Length();
+
+    for (i = 0; i < numFonts; i++) {
+        fontlist[i]->mTraits |= NSFixedPitchFontMask;
     }
 }
 
@@ -1286,7 +1309,7 @@ gfxQuartzFontCache::InitLoader()
 PRBool 
 gfxQuartzFontCache::RunLoader()
 {
-    PRUint32 i, endIndex = ( mStartIndex + mIncrement < mNumFamilies ? mStartIndex + mIncrement : mNumFamilies );
+    PRUint32 i, endIndex = (mStartIndex + mIncrement < mNumFamilies ? mStartIndex + mIncrement : mNumFamilies);
 
     // for each font family, load in various font info
     for (i = mStartIndex; i < endIndex; i++) {

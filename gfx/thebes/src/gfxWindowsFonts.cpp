@@ -549,6 +549,11 @@ gfxWindowsFont::ComputeMetrics()
     mMetrics->maxDescent = metrics.tmDescent;
     mMetrics->maxAdvance = metrics.tmMaxCharWidth;
     mMetrics->aveCharWidth = PR_MAX(1, metrics.tmAveCharWidth);
+    // The font is monospace when TMPF_FIXED_PITCH is *not* set!
+    // See http://msdn2.microsoft.com/en-us/library/ms534202(VS.85).aspx
+    if (!(metrics.tmPitchAndFamily & TMPF_FIXED_PITCH)) {
+      mMetrics->maxAdvance = mMetrics->aveCharWidth;
+    }
 
     // Cache the width of a single space.
     SIZE size;
