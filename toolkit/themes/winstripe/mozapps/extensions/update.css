@@ -3,7 +3,7 @@
 }
 
 .throbber {
-  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
   width: 16px;
   height: 16px;
   margin-top: 5px;
