@@ -1674,7 +1674,7 @@ public:
             PRUint32 nextCh = 0;
             if (i+1 < mItemLength) {
                 nextCh = mItemString[i+1];
-                if ((i+2 < mItemLength) && NS_IS_HIGH_SURROGATE(ch) && NS_IS_LOW_SURROGATE(mItemString[i+2]))
+                if ((i+2 < mItemLength) && NS_IS_HIGH_SURROGATE(nextCh) && NS_IS_LOW_SURROGATE(mItemString[i+2]))
                     nextCh = SURROGATE_TO_UCS4(nextCh, mItemString[i+2]);
             }
             nsRefPtr<FontEntry> fe = FindFontForChar(ch,
