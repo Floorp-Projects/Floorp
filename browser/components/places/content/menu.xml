@@ -147,7 +147,7 @@
             newMarginTop = scrollBoxObject.height;
 
           // set the new marginTop based on arrowscrollbox
-          newMarginTop += scrollBoxObject.y - this.boxObject.y;
+          newMarginTop += scrollBoxObject.y - this._scrollBox.boxObject.y;
           this._indicatorBar.firstChild.style.marginTop = newMarginTop + "px";
           this._indicatorBar.hidden = false;
         ]]></body>
