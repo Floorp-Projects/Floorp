@@ -1275,7 +1275,7 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
     } else {
       mState &= ~XML_HTTP_REQUEST_XSITEENABLED;
       rv = mPrincipal->CheckMayLoad(targetURI, PR_TRUE);
-      NS_ENSURE_SUCCESS(rv, NS_OK);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     if (argc > 2) {
