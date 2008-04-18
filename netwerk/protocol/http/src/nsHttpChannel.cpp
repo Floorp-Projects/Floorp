@@ -1060,7 +1060,7 @@ nsHttpChannel::DoReplaceWithProxy(nsIProxyInfo* pi)
     if (NS_FAILED(rv))
         return rv;
 
-    rv = SetupReplacementChannel(mURI, newChannel, PR_TRUE, PR_TRUE);
+    rv = SetupReplacementChannel(mURI, newChannel, PR_TRUE);
     if (NS_FAILED(rv))
         return rv;
 
@@ -2249,8 +2249,7 @@ CopyProperties(const nsAString& aKey, nsIVariant *aData, void *aClosure)
 nsresult
 nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI, 
                                        nsIChannel   *newChannel,
-                                       PRBool        preserveMethod,
-                                       PRBool        transferCacheInfo)
+                                       PRBool        preserveMethod)
 {
     PRUint32 newLoadFlags = mLoadFlags | LOAD_REPLACE;
     // if the original channel was using SSL and this channel is not using
@@ -2334,26 +2333,6 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
     nsCOMPtr<nsIWritablePropertyBag> bag(do_QueryInterface(newChannel));
     if (bag)
         mPropertyHash.EnumerateRead(CopyProperties, bag.get());
-
-    // Transfer the cache info to the new channel, if needed.
-    if (transferCacheInfo) {
-      nsCOMPtr<nsICachingChannel> cachingChannel = do_QueryInterface(newChannel);
-      if (cachingChannel) {
-        // cacheKey is just mPostID wrapped in an nsISupportsPRUint32,
-        // we don't need to transfer it if it's 0.
-        if (mPostID) {
-          nsCOMPtr<nsISupports> cacheKey;
-          GetCacheKey(getter_AddRefs(cacheKey));
-          if (cacheKey) {
-            cachingChannel->SetCacheKey(cacheKey);
-          }
-        }
-
-        // cacheClientID, cacheForOfflineUse
-        cachingChannel->SetOfflineCacheClientID(mOfflineCacheClientID);
-        cachingChannel->SetCacheForOfflineUse(mCacheForOfflineUse);
-      }
-    }
 
     return NS_OK;
 }
@@ -2440,7 +2419,7 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
     rv = ioService->NewChannelFromURI(newURI, getter_AddRefs(newChannel));
     if (NS_FAILED(rv)) return rv;
 
-    rv = SetupReplacementChannel(newURI, newChannel, preserveMethod, PR_FALSE);
+    rv = SetupReplacementChannel(newURI, newChannel, preserveMethod);
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 redirectFlags;
