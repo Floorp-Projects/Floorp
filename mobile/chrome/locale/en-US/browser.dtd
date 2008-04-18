@@ -1,0 +1,38 @@
+<!ENTITY browser.title         "Firefox">
+<!ENTITY back.label            "Back">
+<!ENTITY back.tooltip          "Back">
+<!ENTITY forward.label         "Forward">
+<!ENTITY forward.tooltip       "Forward">
+<!ENTITY reload.label          "Reload">
+<!ENTITY reload.tooltip        "Reload">
+<!ENTITY stop.label            "Stop">
+<!ENTITY stop.tooltip          "Stop">
+<!ENTITY search.label          "Search">
+<!ENTITY search.tooltip        "Search">
+<!ENTITY go.label              "Go">
+<!ENTITY go.tooltip            "Go">
+<!ENTITY star.label            "Star">
+<!ENTITY star.tooltip          "Bookmark this page">
+<!ENTITY bookmarks.label       "Bookmarks">
+<!ENTITY bookmarks.tooltip     "View bookmarks">
+
+<!ENTITY cut.label             "Cut">
+<!ENTITY copy.label            "Copy">
+<!ENTITY copylink.label        "Copy Link Location">
+<!ENTITY paste.label           "Paste">
+<!ENTITY delete.label          "Delete">
+<!ENTITY selectAll.label       "Select All">
+<!ENTITY noSuggestions.label   "(No suggestions)">
+<!ENTITY addToDictionary.label "Add to Dictionary">
+
+<!ENTITY newTab.label          "New Tab">
+<!ENTITY closeTab.label        "Close Tab">
+<!ENTITY switchTab.label       "Switch Tab...">
+<!ENTITY addons.label          "Add-ons">
+
+<!ENTITY editBookmark.title    "Edit Bookmark">
+<!ENTITY bookmarkURL.label     "Address:">
+<!ENTITY bookmarkName.label    "Name:">
+<!ENTITY removeBookmark.label  "Remove Bookmark">
+<!ENTITY saveBookmark.label    "Done">
+<!ENTITY closeBookmark.label   "Cancel">
