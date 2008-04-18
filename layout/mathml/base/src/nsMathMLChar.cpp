@@ -2379,7 +2379,7 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
   nsGlyphCode ch, chdata[4];
   nsBoundingMetrics bmdata[4];
   nscoord stride = 0, offset[3], start[3], end[3];
-  dy = aRect.y;
+  dy = aRect.y + mBoundingMetrics.ascent;
   nsGlyphCode glue = aGlyphTable->GlueOf(aPresContext, this);
   for (i = 0; i < 4; i++) {
     switch (i) {
@@ -2398,9 +2398,6 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
       if (NS_FAILED(rv)) {
         NS_WARNING("GetBoundingMetrics failed");
         return rv;
-      }
-      if (dy < aRect.y + bm.ascent) {
-        dy = aRect.y + bm.ascent;
       }
     }
     chdata[i] = ch;
