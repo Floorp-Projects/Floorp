@@ -1052,6 +1052,10 @@ prefpane > .content-box {
   overflow: hidden;
 }
 
+prefwindow[type="child"] > .paneDeckContainer {
+  overflow: -moz-hidden-unscrollable;
+}
+
 prefwindow[type="child"] > prefpane > .content-box {
   -moz-box-flex: 1;
   overflow: -moz-hidden-unscrollable;
