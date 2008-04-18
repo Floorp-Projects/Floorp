@@ -1111,14 +1111,8 @@ var BookmarkPropertiesPanel = {
     if (!selectedNode)
       return;
 
-    var folderId = selectedNode.itemId;
-    // Don't set the selected item if the static item for the folder is
-    // already selected
-    var oldSelectedItem = this._folderMenuList.selectedItem;
-    if ((oldSelectedItem.id == "toolbarFolderItem" &&
-         folderId == PlacesUtils.toolbarFolderId) ||
-        (oldSelectedItem.id == "bookmarksRootItem" &&
-         folderId == PlacesUtils.bookmarksMenuFolderId))
+    var folderId = PlacesUtils.getConcreteItemId(selectedNode);
+    if (this._getFolderIdFromMenuList() == folderId)
       return;
 
     var folderItem = this._getFolderMenuItem(folderId);
