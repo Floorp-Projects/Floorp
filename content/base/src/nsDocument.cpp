@@ -2739,24 +2739,8 @@ nsDocument::EndUpdate(nsUpdateType aUpdateType)
     BindingManager()->EndOutermostUpdate();
   }
 
-  if (mUpdateNestLevel == 0) {
-    PRUint32 length = mInitializableFrameLoaders.Length();
-    if (length > 0) {
-      nsTArray<nsRefPtr<nsFrameLoader> > loaders;
-      mInitializableFrameLoaders.SwapElements(loaders);
-      for (PRUint32 i = 0; i < length; ++i) {
-        loaders[i]->ReallyStartLoading();
-      }
-    }
-
-    length = mFinalizableFrameLoaders.Length();
-    if (length > 0) {
-      nsTArray<nsRefPtr<nsFrameLoader> > loaders;
-      mFinalizableFrameLoaders.SwapElements(loaders);
-      for (PRUint32 i = 0; i < length; ++i) {
-        loaders[i]->Finalize();
-      }
-    }
+  if (mUpdateNestLevel == 0 && !mDelayFrameLoaderInitialization) {
+    InitializeFinalizeFrameLoaders();
   }
 }
 
@@ -3875,7 +3859,7 @@ nsDocument::InitializeFrameLoader(nsFrameLoader* aLoader)
                "document is being deleted");
     return NS_ERROR_FAILURE;
   }
-  if (mUpdateNestLevel == 0) {
+  if (mUpdateNestLevel == 0 && !mDelayFrameLoaderInitialization) {
     nsRefPtr<nsFrameLoader> loader = aLoader;
     return loader->ReallyStartLoading();
   } else {
@@ -3898,6 +3882,30 @@ nsDocument::FinalizeFrameLoader(nsFrameLoader* aLoader)
     mFinalizableFrameLoaders.AppendElement(aLoader);
   }
   return NS_OK;
+}
+
+void
+nsDocument::InitializeFinalizeFrameLoaders()
+{
+  NS_ASSERTION(mUpdateNestLevel == 0 && !mDelayFrameLoaderInitialization,
+               "Wrong time to call InitializeFinalizeFrameLoaders!");
+  PRUint32 length = mInitializableFrameLoaders.Length();
+  if (length > 0) {
+    nsTArray<nsRefPtr<nsFrameLoader> > loaders;
+    mInitializableFrameLoaders.SwapElements(loaders);
+    for (PRUint32 i = 0; i < length; ++i) {
+      loaders[i]->ReallyStartLoading();
+    }
+  }
+
+  length = mFinalizableFrameLoaders.Length();
+  if (length > 0) {
+    nsTArray<nsRefPtr<nsFrameLoader> > loaders;
+    mFinalizableFrameLoaders.SwapElements(loaders);
+    for (PRUint32 i = 0; i < length; ++i) {
+      loaders[i]->Finalize();
+    }
+  }
 }
 
 struct DirTable {
