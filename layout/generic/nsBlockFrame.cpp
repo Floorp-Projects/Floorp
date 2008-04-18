@@ -2960,7 +2960,6 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     }
     
     // Reflow the block into the available space
-    nsMargin computedOffsets;
     // construct the html reflow state for the block. ReflowBlock 
     // will initialize it
     nsHTMLReflowState blockHtmlRS(aState.mPresContext, aState.mReflowState, frame, 
@@ -2977,7 +2976,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     
     nsReflowStatus frameReflowStatus = NS_FRAME_COMPLETE;
     rv = brc.ReflowBlock(availSpace, applyTopMargin, aState.mPrevBottomMargin,
-                         clearance, aState.IsAdjacentWithTop(), computedOffsets,
+                         clearance, aState.IsAdjacentWithTop(),
                          aLine.get(), blockHtmlRS, frameReflowStatus, aState);
 
     // If this was a second-pass reflow and the block's vertical position
@@ -3023,7 +3022,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       nsCollapsingMargin collapsedBottomMargin;
       nsRect combinedArea(0,0,0,0);
       *aKeepReflowGoing = brc.PlaceBlock(blockHtmlRS, forceFit, aLine.get(),
-                                         computedOffsets, collapsedBottomMargin,
+                                         collapsedBottomMargin,
                                          aLine->mBounds, combinedArea, frameReflowStatus);
       if (aLine->SetCarriedOutBottomMargin(collapsedBottomMargin)) {
         line_iterator nextLine = aLine;
@@ -5699,11 +5698,9 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
       }
     }
 
-    nsMargin offsets; // Don't bother returning this to the caller; it's stored
-                      // on a frame property anyawy
     rv = brc.ReflowBlock(availSpace, PR_TRUE, margin,
                          0, isAdjacentWithTop,
-                         offsets, nsnull, floatRS,
+                         nsnull, floatRS,
                          aReflowStatus, aState);
   } while (NS_SUCCEEDED(rv) && clearanceFrame);
 

@@ -506,7 +506,8 @@ protected:
 
   void ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
                               nscoord aContainingBlockWidth,
-                              nscoord aContainingBlockHeight);
+                              nscoord aContainingBlockHeight,
+                              nsPresContext* aPresContext);
 
   // Calculates the computed values for the 'min-Width', 'max-Width',
   // 'min-Height', and 'max-Height' properties, and stores them in the assorted

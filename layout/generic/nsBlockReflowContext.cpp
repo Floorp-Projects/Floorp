@@ -233,21 +233,12 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
   return dirtiedLine;
 }
 
-static void
-nsPointDtor(void *aFrame, nsIAtom *aPropertyName,
-            void *aPropertyValue, void *aDtorData)
-{
-  nsPoint *point = static_cast<nsPoint*>(aPropertyValue);
-  delete point;
-}
-
 nsresult
 nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
                                   PRBool              aApplyTopMargin,
                                   nsCollapsingMargin& aPrevMargin,
                                   nscoord             aClearance,
                                   PRBool              aIsAdjacentWithTop,
-                                  nsMargin&           aComputedOffsets,
                                   nsLineBox*          aLine,
                                   nsHTMLReflowState&  aFrameRS,
                                   nsReflowStatus&     aFrameReflowStatus,
@@ -256,25 +247,6 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   nsresult rv = NS_OK;
   mFrame = aFrameRS.frame;
   mSpace = aSpace;
-
-  const nsStyleDisplay* display = mFrame->GetStyleDisplay();
-
-  aComputedOffsets = aFrameRS.mComputedOffsets;
-  if (NS_STYLE_POSITION_RELATIVE == display->mPosition) {
-    nsPropertyTable *propTable = mPresContext->PropertyTable();
-
-    nsPoint *offsets = static_cast<nsPoint*>
-                                  (propTable->GetProperty(mFrame, nsGkAtoms::computedOffsetProperty));
-
-    if (offsets)
-      offsets->MoveTo(aComputedOffsets.left, aComputedOffsets.top);
-    else {
-      offsets = new nsPoint(aComputedOffsets.left, aComputedOffsets.top);
-      if (offsets)
-        propTable->SetProperty(mFrame, nsGkAtoms::computedOffsetProperty,
-                               offsets, nsPointDtor, nsnull);
-    }
-  }
 
   if (!aIsAdjacentWithTop) {
     aFrameRS.mFlags.mIsTopOfPage = PR_FALSE;  // make sure this is cleared
@@ -397,7 +369,6 @@ PRBool
 nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
                                  PRBool                   aForceFit,
                                  nsLineBox*               aLine,
-                                 const nsMargin&          aComputedOffsets,
                                  nsCollapsingMargin&      aBottomMarginResult,
                                  nsRect&                  aInFlowBounds,
                                  nsRect&                  aCombinedRect,
@@ -478,8 +449,8 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
   // Apply CSS relative positioning
   const nsStyleDisplay* styleDisp = mFrame->GetStyleDisplay();
   if (NS_STYLE_POSITION_RELATIVE == styleDisp->mPosition) {
-    x += aComputedOffsets.left;
-    y += aComputedOffsets.top;
+    x += aReflowState.mComputedOffsets.left;
+    y += aReflowState.mComputedOffsets.top;
   }
   
   // Now place the frame and complete the reflow process

@@ -2380,6 +2380,66 @@ nsLayoutUtils::GetLastLineBaseline(const nsIFrame* aFrame, nscoord* aResult)
   return PR_FALSE;
 }
 
+static nscoord
+CalculateBlockContentBottom(nsBlockFrame* aFrame)
+{
+  NS_PRECONDITION(aFrame, "null ptr");
+
+  nscoord contentBottom = 0;
+
+  for (nsBlockFrame::line_iterator line = aFrame->begin_lines(),
+                                   line_end = aFrame->end_lines();
+       line != line_end; ++line) {
+    if (line->IsBlock()) {
+      nsIFrame* child = line->mFirstChild;
+      nscoord offset = child->GetRect().y - child->GetRelativeOffset().y;
+      contentBottom = PR_MAX(contentBottom,
+                        nsLayoutUtils::CalculateContentBottom(child) + offset);
+    }
+    else {
+      contentBottom = PR_MAX(contentBottom, line->mBounds.YMost());
+    }
+  }
+  return contentBottom;
+}
+
+/* static */ nscoord
+nsLayoutUtils::CalculateContentBottom(nsIFrame* aFrame)
+{
+  NS_PRECONDITION(aFrame, "null ptr");
+
+  nscoord contentBottom = aFrame->GetRect().height;
+
+  if (aFrame->GetOverflowRect().height > contentBottom) {
+    nsBlockFrame* blockFrame = GetAsBlock(aFrame);
+    nsIAtom* childList = nsnull;
+    PRIntn nextListID = 0;
+    do {
+      if (childList == nsnull && blockFrame) {
+        contentBottom = PR_MAX(contentBottom, CalculateBlockContentBottom(blockFrame));
+      }
+      else if (childList != nsGkAtoms::overflowList &&
+               childList != nsGkAtoms::excessOverflowContainersList &&
+               childList != nsGkAtoms::overflowOutOfFlowList)
+      {
+        for (nsIFrame* child = aFrame->GetFirstChild(childList);
+            child; child = child->GetNextSibling())
+        {
+          nscoord offset = child->GetRect().y - child->GetRelativeOffset().y;
+          contentBottom = PR_MAX(contentBottom,
+                                 CalculateContentBottom(child) + offset);
+        }
+      }
+
+      childList = aFrame->GetAdditionalChildListName(nextListID);
+      nextListID++;
+    } while (childList);
+
+  }
+
+  return contentBottom;
+}
+
 /* static */ nsIFrame*
 nsLayoutUtils::GetClosestLayer(nsIFrame* aFrame)
 {

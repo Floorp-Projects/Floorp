@@ -3656,6 +3656,19 @@ static nsRect ComputeOutlineRect(const nsIFrame* aFrame, PRBool* aAnyOutline,
   return r;
 }
 
+nsPoint
+nsIFrame::GetRelativeOffset(const nsStyleDisplay* aDisplay) const
+{
+  if (!aDisplay || NS_STYLE_POSITION_RELATIVE == aDisplay->mPosition) {
+    nsPoint *offsets = static_cast<nsPoint*>
+                         (GetProperty(nsGkAtoms::computedOffsetProperty));
+    if (offsets) {
+      return *offsets;
+    }
+  }
+  return nsPoint(0,0);
+}
+
 nsRect
 nsIFrame::GetOverflowRect() const
 {
