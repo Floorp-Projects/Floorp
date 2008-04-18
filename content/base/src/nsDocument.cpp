@@ -5888,10 +5888,8 @@ nsDocument::MutationEventDispatched(nsINode* aTarget)
     for (PRInt32 k = 0; k < realTargetCount; ++k) {
       mozAutoRemovableBlockerRemover blockerRemover;
 
-      if (nsContentUtils::IsSafeToRunScript()) {
-        nsMutationEvent mutation(PR_TRUE, NS_MUTATION_SUBTREEMODIFIED);
-        nsEventDispatcher::Dispatch(realTargets[k], nsnull, &mutation);
-      }
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_SUBTREEMODIFIED);
+      nsEventDispatcher::Dispatch(realTargets[k], nsnull, &mutation);
     }
   }
 }
