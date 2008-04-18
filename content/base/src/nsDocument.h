@@ -672,6 +672,8 @@ protected:
 
   void DispatchContentLoadedEvents();
 
+  void InitializeFinalizeFrameLoaders();
+
   void RetrieveRelevantHeaders(nsIChannel *aChannel);
 
   static PRBool TryChannelCharset(nsIChannel *aChannel,
@@ -783,6 +785,8 @@ protected:
   PRPackedBool mHasHadScriptHandlingObject:1;
 
   PRPackedBool mHasWarnedAboutBoxObjects:1;
+
+  PRPackedBool mDelayFrameLoaderInitialization:1;
 
   PRUint8 mXMLDeclarationBits;
 

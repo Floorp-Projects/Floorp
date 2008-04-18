@@ -206,6 +206,8 @@ nsXULDocument::nsXULDocument(void)
     mCharacterSet.AssignLiteral("UTF-8");
 
     mDefaultElementType = kNameSpaceID_XUL;
+
+    mDelayFrameLoaderInitialization = PR_TRUE;
 }
 
 nsXULDocument::~nsXULDocument()
@@ -3092,6 +3094,15 @@ nsXULDocument::DoneWalking()
 
         if (mIsWritingFastLoad && IsChromeURI(mDocumentURI))
             nsXULPrototypeCache::GetInstance()->WritePrototype(mMasterPrototype);
+
+        NS_ASSERTION(mDelayFrameLoaderInitialization,
+                     "mDelayFrameLoaderInitialization should be true!");
+        mDelayFrameLoaderInitialization = PR_FALSE;
+        NS_WARN_IF_FALSE(mUpdateNestLevel == 0,
+                         "Constructing XUL document in middle of an update?");
+        if (mUpdateNestLevel == 0) {
+            InitializeFinalizeFrameLoaders();
+        }
 
         NS_DOCUMENT_NOTIFY_OBSERVERS(EndLoad, (this));
 
