@@ -1976,7 +1976,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
             if (!(sprop->flags & SPROP_HAS_SHORTID))
                 continue;
             if (sprop->id == ATOM_TO_JSID(cx->runtime->atomState.emptyAtom)) {
-                /* See comments in CheckDestructuring from jsparse.c. */
+                /* See comments before EnsureNonEmptyLet from jsparse.c. */
                 JS_ASSERT(sprop->shortid == 0);
                 continue;
             }
