@@ -704,6 +704,11 @@ public:
   void SetPosition(const nsPoint& aPt) { mRect.MoveTo(aPt); }
   void SetSize(const nsSize& aSize) { mRect.SizeTo(aSize); }
 
+  /**
+   * Return frame's computed offset due to relative positioning
+   */
+  nsPoint GetRelativeOffset(const nsStyleDisplay* aDisplay = nsnull) const;
+
   virtual nsPoint GetPositionOfChildIgnoringScrolling(nsIFrame* aChild)
   { return aChild->GetPosition(); }
   

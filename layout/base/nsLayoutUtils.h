@@ -706,6 +706,16 @@ public:
   static PRBool GetLastLineBaseline(const nsIFrame* aFrame, nscoord* aResult);
 
   /**
+   * Returns a y coordinate relative to this frame's origin that represents
+   * the logical bottom of the frame or its visible content, whichever is lower.
+   * Relative positioning is ignored and margins and glyph bounds are not
+   * considered.
+   * This value will be >= mRect.height() and <= overflowRect.YMost() unless
+   * relative positioning is applied.
+   */
+  static nscoord CalculateContentBottom(nsIFrame* aFrame);
+
+  /**
    * Gets the closest frame (the frame passed in or one of its parents) that
    * qualifies as a "layer"; used in DOM0 methods that depends upon that
    * definition. This is the nearest frame that is either positioned or scrolled
