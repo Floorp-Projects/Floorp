@@ -3041,10 +3041,8 @@ UINT nsWindow::MapFromNativeToDOM(UINT aNativeKeyCode)
 //
 //-------------------------------------------------------------------------
 PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
-                                  PRUint32 aUnshiftedCharCode,
-                                  PRUint32 aShiftedCharCode,
-                                  UINT aVirtualCharCode,
-                                  LPARAM aKeyData, PRUint32 aFlags)
+                   const nsTArray<nsAlternativeCharCode>* aAlternativeCharCodes,
+                   UINT aVirtualCharCode, LPARAM aKeyData, PRUint32 aFlags)
 {
   nsKeyEvent event(PR_TRUE, aEventType, this);
   nsPoint point(0, 0);
@@ -3053,10 +3051,8 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
 
   event.flags |= aFlags;
   event.charCode = aCharCode;
-  if (aUnshiftedCharCode || aShiftedCharCode) {
-    nsAlternativeCharCode altCharCodes(aUnshiftedCharCode, aShiftedCharCode);
-    event.alternativeCharCodes.AppendElement(altCharCodes);
-  }
+  if (aAlternativeCharCodes)
+    event.alternativeCharCodes.AppendElements(*aAlternativeCharCodes);
   event.keyCode  = aVirtualCharCode;
 
 #ifdef KE_DEBUG
@@ -3108,7 +3104,6 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
 }
 
 
-
 //-------------------------------------------------------------------------
 //
 //
@@ -3140,7 +3135,7 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
   //printf("In OnKeyDown virt: %d  scan: %d\n", DOMKeyCode, aScanCode);
 #endif
 
-  BOOL noDefault = DispatchKeyEvent(NS_KEY_DOWN, 0, 0, 0, DOMKeyCode, aKeyData);
+  BOOL noDefault = DispatchKeyEvent(NS_KEY_DOWN, 0, nsnull, DOMKeyCode, aKeyData);
 
   // If we won't be getting a WM_CHAR, WM_SYSCHAR or WM_DEADCHAR, synthesize a keypress
   // for almost all keys
@@ -3244,6 +3239,8 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
   PRUint16 uniChars[5];
   PRUint16 shiftedChars[5] = {0, 0, 0, 0, 0};
   PRUint16 unshiftedChars[5] = {0, 0, 0, 0, 0};
+  PRUint16 shiftedLatinChar = 0;
+  PRUint16 unshiftedLatinChar = 0;
   PRUint32 numOfUniChars = 0;
   PRUint32 numOfShiftedChars = 0;
   PRUint32 numOfUnshiftedChars = 0;
@@ -3282,6 +3279,18 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
         numOfShiftedChars =
           gKbdLayout.GetUniCharsWithShiftState(aVirtualKeyCode, eShift,
                        shiftedChars, NS_ARRAY_LENGTH(shiftedChars));
+        // The current keyboard cannot input alphabets or numerics,
+        // we should append them for Shortcut/Access keys.
+        // E.g., for Cyrillic keyboard layout.
+        if (((NS_VK_0 <= DOMKeyCode && DOMKeyCode <= NS_VK_9) ||
+             (NS_VK_A <= DOMKeyCode && DOMKeyCode <= NS_VK_Z)) &&
+             unshiftedChars[0] != DOMKeyCode && shiftedChars[0] != DOMKeyCode) {
+          shiftedLatinChar = unshiftedLatinChar = DOMKeyCode;
+          if (NS_VK_A <= DOMKeyCode && DOMKeyCode <= NS_VK_Z)
+            unshiftedLatinChar += 0x20;
+          else
+            shiftedLatinChar = 0;
+        }
       }
   }
 
@@ -3313,11 +3322,22 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
         shiftedChar = shiftedChars[cnt - skipShiftedChars];
       if (skipUnshiftedChars <= cnt)
         unshiftedChar = unshiftedChars[cnt - skipUnshiftedChars];
-      DispatchKeyEvent(NS_KEY_PRESS, uniChar, unshiftedChar,
-                       shiftedChar, keyCode, aKeyData, extraFlags);
+      nsAutoTArray<nsAlternativeCharCode, 5> altArray;
+
+      if (shiftedChar || unshiftedChar) {
+        nsAlternativeCharCode chars(unshiftedChar, shiftedChar);
+        altArray.AppendElement(chars);
+      }
+      if (cnt == num - 1 && (unshiftedLatinChar || shiftedLatinChar)) {
+        nsAlternativeCharCode chars(unshiftedLatinChar, shiftedLatinChar);
+        altArray.AppendElement(chars);
+      }
+
+      DispatchKeyEvent(NS_KEY_PRESS, uniChar, &altArray,
+                       keyCode, aKeyData, extraFlags);
     }
   } else
-    DispatchKeyEvent(NS_KEY_PRESS, 0, 0, 0, DOMKeyCode, aKeyData, extraFlags);
+    DispatchKeyEvent(NS_KEY_PRESS, 0, nsnull, DOMKeyCode, aKeyData, extraFlags);
 
   return noDefault;
 }
@@ -3334,7 +3354,7 @@ BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 #endif
 
   aVirtualKeyCode = sIMEIsComposing ? aVirtualKeyCode : MapFromNativeToDOM(aVirtualKeyCode);
-  BOOL result = DispatchKeyEvent(NS_KEY_UP, 0, 0, 0, aVirtualKeyCode, aKeyData);
+  BOOL result = DispatchKeyEvent(NS_KEY_UP, 0, nsnull, aVirtualKeyCode, aKeyData);
   return result;
 }
 
@@ -3411,7 +3431,7 @@ BOOL nsWindow::OnChar(UINT charCode, LPARAM keyData, PRUint32 aFlags)
     uniChar = towlower(uniChar);
   }
 
-  PRBool result = DispatchKeyEvent(NS_KEY_PRESS, uniChar, 0, 0,
+  PRBool result = DispatchKeyEvent(NS_KEY_PRESS, uniChar, nsnull,
                                    charCode, 0, aFlags);
   mIsAltDown = saveIsAltDown;
   mIsControlDown = saveIsControlDown;
@@ -6535,7 +6555,7 @@ BOOL nsWindow::OnIMEChar(BYTE aByte1, BYTE aByte2, LPARAM aKeyState)
 
   // We need to return TRUE here so that Windows doesn't
   // send two WM_CHAR msgs
-  DispatchKeyEvent(NS_KEY_PRESS, uniChar, 0, 0, 0, 0);
+  DispatchKeyEvent(NS_KEY_PRESS, uniChar, nsnull, 0, 0);
   return PR_TRUE;
 }
 
@@ -6815,7 +6835,7 @@ BOOL nsWindow::OnIMENotify(WPARAM aIMN, LPARAM aData, LRESULT *oResult)
     mIsControlDown = PR_FALSE;
     mIsAltDown = PR_TRUE;
 
-    DispatchKeyEvent(NS_KEY_PRESS, 0, 0, 0, 192, 0); // XXX hack hack hack
+    DispatchKeyEvent(NS_KEY_PRESS, 0, nsnull, 192, 0); // XXX hack hack hack
     if (aIMN == IMN_SETOPENSTATUS)
       sIMEIsStatusChanged = PR_TRUE;
   }
