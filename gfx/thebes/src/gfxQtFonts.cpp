@@ -444,6 +444,8 @@ gfxQtFont::GetMetrics()
     mMetrics.superscriptOffset = mMetrics.xHeight;
     mMetrics.subscriptOffset = mMetrics.xHeight;
 
+    SanitizeMetrics(&mMetrics, PR_FALSE);
+
 #if 0
 
     fprintf (stderr, "Font: %s\n", NS_ConvertUTF16toUTF8(mName).get());
