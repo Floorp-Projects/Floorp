@@ -58,6 +58,8 @@ public:
                 const gfxFontStyle *aFontStyle);
      virtual ~gfxQtFont ();
 
+     inline const QFont& GetQFont();
+
 protected: // from gfxFont
     virtual nsString GetUniqueName ();
     virtual PRUint32 GetSpaceGlyph ();
@@ -120,6 +122,12 @@ protected:
     static PRBool FontCallback (const nsAString & fontName, const nsACString & genericName, void *closure);
 
 };
+
+inline const QFont& gfxQtFont::GetQFont()
+{
+    return *mQFont;
+}
+
 
 #endif /* GFX_QTFONTS_H */
 
