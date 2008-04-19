@@ -1386,7 +1386,6 @@ nsWindow::InitButtonEvent(nsMouseEvent &event,
 bool
 nsWindow::OnButtonPressEvent(QMouseEvent *aEvent)
 {
-    mDrawingarea->setCursor(mQCursor);
     PRUint16      domButton;
     switch (aEvent->button()) {
     case Qt::MidButton:
