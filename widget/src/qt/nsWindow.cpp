@@ -1069,6 +1069,7 @@ nsWindow::OnExposeEvent(QPaintEvent *aEvent)
        LOGDRAW(("\t%d %d %d %d\n", r.x(), r.y(), r.width(), r.height()));
     }
 
+#ifndef QT_XLIB_SURFACE
     QPainter painter(mDrawingarea);
 
     nsRefPtr<gfxQPainterSurface> targetSurface = new gfxQPainterSurface(&painter);
@@ -1122,7 +1123,76 @@ nsWindow::OnExposeEvent(QPaintEvent *aEvent)
         gdk_window_flash(aEvent->window, 1, 100, aEvent->region);
 #endif
 #endif
+#else /* QT_XLIB_SURFACE */
+    nsCOMPtr<nsIRenderingContext> rc = getter_AddRefs(GetRenderingContext());
+    if (NS_UNLIKELY(!rc)) {
+        return FALSE;
+    }
 
+    PRBool translucent;
+    GetHasTransparentBackground(translucent);
+    nsIntRect boundsRect;
+    QPixmap* bufferPixmap = nsnull;
+    nsRefPtr<gfxXlibSurface> bufferPixmapSurface;
+
+    updateRegion->GetBoundingBox(&boundsRect.x, &boundsRect.y,
+                                 &boundsRect.width, &boundsRect.height);
+
+    // do double-buffering and clipping here
+    nsRefPtr<gfxContext> ctx = rc->ThebesContext();
+    ctx->Save();
+    ctx->NewPath();
+    if (translucent) {
+        // Collapse update area to the bounding box. This is so we only have to
+        // call UpdateTranslucentWindowAlpha once. After we have dropped
+        // support for non-Thebes graphics, UpdateTranslucentWindowAlpha will be
+        // our private interface so we can rework things to avoid this.
+        ctx->Rectangle(gfxRect(boundsRect.x, boundsRect.y,
+                               boundsRect.width, boundsRect.height));
+    } else {
+        for (int i = 0; i < rects.size(); ++i) {
+           QRect r = rects.at(i);
+           ctx->Rectangle(gfxRect(r.x(), r.y(), r.width(), r.height()));
+        }
+    }
+    ctx->Clip();
+
+    // double buffer
+    if (translucent) {
+        ctx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+    } else {
+        // Instead of just doing PushGroup we're going to do a little dance
+        // to ensure that GDK creates the pixmap, so it doesn't go all
+        // XGetGeometry on us in gdk_pixmap_foreign_new_for_display when we
+        // paint native themes
+
+        bufferPixmap = new QPixmap(boundsRect.width, boundsRect.height);
+        if (bufferPixmap) {
+            bufferPixmapSurface =
+                new gfxXlibSurface(bufferPixmap->x11Info().display(),
+                                   bufferPixmap->handle(),
+                                   static_cast<Visual*>(bufferPixmap->x11Info().visual()),
+                                   gfxIntSize(boundsRect.width, boundsRect.height));
+            if (bufferPixmapSurface) {
+                bufferPixmapSurface->SetDeviceOffset(gfxPoint(-boundsRect.x, -boundsRect.y));
+                nsCOMPtr<nsIRenderingContext> newRC;
+                nsresult rv = GetDeviceContext()->
+                    CreateRenderingContextInstance(*getter_AddRefs(newRC));
+                if (NS_FAILED(rv)) {
+                    bufferPixmapSurface = nsnull;
+                } else {
+                    rv = newRC->Init(GetDeviceContext(), bufferPixmapSurface);
+                    if (NS_FAILED(rv)) {
+                        bufferPixmapSurface = nsnull;
+                    } else {
+                        rc = newRC;
+                    }
+                }
+            }
+        }
+
+    }
+#endif
     nsPaintEvent event(PR_TRUE, NS_PAINT, this);
     QRect r = aEvent->rect();
     if (!r.isValid())
@@ -1171,8 +1241,15 @@ nsWindow::OnExposeEvent(QPaintEvent *aEvent)
                                                  img->Data(), img->Stride());
         }
     } else if (gDoubleBuffering) {
+#ifndef QT_XLIB_SURFACE
         ctx->PopGroupToSource();
         ctx->Paint();
+#else
+        if (bufferPixmapSurface) {
+            ctx->SetSource(bufferPixmapSurface);
+            ctx->Paint();
+        }
+#endif
     }
 
     ctx->Restore();
@@ -2661,7 +2738,9 @@ nsWindow::createQWidget(QWidget *parent, nsWidgetInitData *aInitData)
     // Disable the double buffer because it will make the caret crazy
     // For bug#153805 (Gtk2 double buffer makes carets misbehave)
     mDrawingarea->setAttribute(Qt::WA_NoSystemBackground);
-//    mDrawingarea->setAttribute(Qt::WA_PaintOnScreen);
+#ifdef QT_XLIB_SURFACE
+    mDrawingarea->setAttribute(Qt::WA_PaintOnScreen);
+#endif
 
     return mDrawingarea;
 }
@@ -2677,7 +2756,7 @@ nsWindow::GetThebesSurface()
     mThebesSurface = nsnull;
 
     if (!mThebesSurface) {
-#if 0
+#ifdef QT_XLIB_SURFACE
         qint32 x_offset = 0, y_offset = 0;
         qint32 width = mDrawingarea->width(), height = mDrawingarea->height();
 
