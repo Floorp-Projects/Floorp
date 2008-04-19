@@ -51,6 +51,7 @@
 #include "nsTransferable.h"
 #include "nsLookAndFeel.h"
 #include "nsAppShellSingleton.h"
+#include "nsScreenManagerQt.h"
 
 // #include "nsIComponentRegistrar.h"
 // #include "nsComponentManagerUtils.h"
@@ -83,6 +84,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerQt)
 
 /*
 static NS_DEFINE_CID(kNativeScrollCID, NS_NATIVESCROLLBAR_CID);
@@ -133,7 +135,11 @@ static const nsModuleComponentInfo components[] =
     { "Transferrable",
       NS_TRANSFERABLE_CID,
       "@mozilla.org/widget/transferable;1",
-      nsTransferableConstructor }
+      nsTransferableConstructor },
+    { "Qt Screen Manager",
+      NS_SCREENMANAGER_CID,
+      "@mozilla.org/gfx/screenmanager;1",
+      nsScreenManagerQtConstructor }
 /*
     { "Qt Native Scrollbar",
       NS_NATIVESCROLLBAR_CID,
