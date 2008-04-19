@@ -167,70 +167,68 @@ QGeckoGlobals::pushStartup()
     sWidgetCount++;
 
     // if this is the first widget, fire up xpcom
-    if (sWidgetCount == 1) {
-        nsresult rv;
-        nsCOMPtr<nsILocalFile> binDir;
+    if (sWidgetCount != 1) return;
+    nsresult rv;
+    nsCOMPtr<nsILocalFile> binDir;
 
-        if (sCompPath) {
-            rv = NS_NewNativeLocalFile(nsDependentCString(sCompPath), 1, getter_AddRefs(binDir));
-            if (NS_FAILED(rv))
-                return;
-        }
-
-        const char *grePath = sPath;
-
-        if (!grePath)
-            grePath = getenv("MOZILLA_FIVE_HOME");
-
-        if (!grePath)
-            return;
-
-        nsCOMPtr<nsILocalFile> greDir;
-        rv = NS_NewNativeLocalFile(nsDependentCString(grePath), PR_TRUE,
-                                   getter_AddRefs(greDir));
+    if (sCompPath) {
+        rv = NS_NewNativeLocalFile(nsDependentCString(sCompPath), 1, getter_AddRefs(binDir));
         if (NS_FAILED(rv))
             return;
-
-        if (sProfileDir && !sProfileLock) {
-            rv = XRE_LockProfileDirectory(sProfileDir,
-                                          &sProfileLock);
-            if (NS_FAILED(rv)) return;
-        }
-
-        rv = XRE_InitEmbedding(greDir, binDir,
-                               const_cast<QTEmbedDirectoryProvider*>
-                                             (&kDirectoryProvider),
-                               nsnull, nsnull);
-
-        if (NS_FAILED(rv))
-            return;
-
-        if (sProfileDir)
-          XRE_NotifyProfile();
-
-        rv = registerAppComponents();
-        NS_ASSERTION(NS_SUCCEEDED(rv), "Warning: Failed to register app components.\n");
     }
+
+    const char *grePath = sPath;
+
+    if (!grePath)
+        grePath = getenv("MOZILLA_FIVE_HOME");
+
+    if (!grePath)
+        return;
+
+    nsCOMPtr<nsILocalFile> greDir;
+    rv = NS_NewNativeLocalFile(nsDependentCString(grePath), PR_TRUE,
+                               getter_AddRefs(greDir));
+    if (NS_FAILED(rv))
+        return;
+
+    if (sProfileDir && !sProfileLock) {
+        rv = XRE_LockProfileDirectory(sProfileDir,
+                                      &sProfileLock);
+        if (NS_FAILED(rv)) return;
+    }
+
+    rv = XRE_InitEmbedding(greDir, binDir,
+                           const_cast<QTEmbedDirectoryProvider*>
+                           (&kDirectoryProvider),
+                           nsnull, nsnull);
+
+    if (NS_FAILED(rv))
+        return;
+
+    if (sProfileDir)
+        XRE_NotifyProfile();
+
+    rv = registerAppComponents();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Warning: Failed to register app components.\n");
 }
 
 void
 QGeckoGlobals::popStartup()
 {
     sWidgetCount--;
-    if (sWidgetCount == 0) {
+    if (sWidgetCount != 0) return;
 
-        // we no longer need a reference to the DirectoryServiceProvider
-        if (sAppFileLocProvider) {
-            NS_RELEASE(sAppFileLocProvider);
-            sAppFileLocProvider = nsnull;
-        }
-
-        // shut down XPCOM/Embedding
-        XRE_TermEmbedding();
-
-        NS_IF_RELEASE(sProfileLock);
-        NS_IF_RELEASE(sProfileDir);
+    // we no longer need a reference to the DirectoryServiceProvider
+    if (sAppFileLocProvider) {
+        NS_RELEASE(sAppFileLocProvider);
+        sAppFileLocProvider = nsnull;
     }
+
+    // shut down XPCOM/Embedding
+    XRE_TermEmbedding();
+
+    NS_IF_RELEASE(sProfileLock);
+    NS_IF_RELEASE(sProfileDir);
 }
 
 void
