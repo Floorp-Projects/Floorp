@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsIFrame.h"
+
 #include <QApplication>
 #include <QStyle>
 #include <QPalette>
@@ -51,6 +53,7 @@
 #include "nsCoord.h"
 #include "nsNativeThemeQt.h"
 #include "nsIDeviceContext.h"
+
 
 #include "nsRect.h"
 #include "nsSize.h"
@@ -67,7 +70,7 @@
 #include "gfxQPainterSurface.h"
 #include "nsIRenderingContext.h"
 
-nsNativeThemeQt::nsNativeThemeQt()
+nsNativeThemeQt::nsNativeThemeQt() : mP2A(0)
 {
     combo = new QComboBox((QWidget *)0);
     combo->resize(0, 0);
@@ -115,9 +118,7 @@ nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
     if (!qpainter)
         return NS_OK;
 
-    nsCOMPtr<nsIDeviceContext> dctx = nsnull;
-    aContext->GetDeviceContext(*getter_AddRefs(dctx));
-    PRInt32 p2a = dctx->AppUnitsPerDevPixel();
+    EnsuremP2A(aContext);
 
     QStyle* style = qApp->style();
 //    const QPalette::ColorGroup cg = qApp->palette().currentColorGroup();
@@ -125,8 +126,9 @@ nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
     nsTransform2D* curTrans;
     aContext->GetCurrentTransform(curTrans);
 
-    QRect r = qRectInPixels(aRect, curTrans, p2a);
-    QRect cr = qRectInPixels(aClipRect, curTrans, p2a);
+    QRect r = qRectInPixels(aRect, curTrans, mP2A);
+    QRect cr = qRectInPixels(aClipRect, curTrans, mP2A);
+
 //    context->UpdateGC();
     qpainter->save();
     qpainter->translate(r.x(), r.y());
@@ -338,7 +340,42 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* a
     QStyle *s = qApp->style();
 
     switch (aWidgetType) {
-    case NS_THEME_RADIO:
+    case NS_THEME_RADIO_SMALL:
+    case NS_THEME_RADIO: {
+        nsRect frameRect = aFrame->GetRect();
+
+        EnsuremP2A(aContext);
+
+        nsTransform2D* curTrans;
+        aContext->GetCurrentTransform(curTrans);
+
+        QRect qRect = qRectInPixels(frameRect, curTrans, mP2A);
+
+        QStyleOptionButton option;
+
+        ButtonStyle(aFrame, qRect, &option);
+/*
+        QStyle::State flags = IsDisabled(aFrame) ?
+                            QStyle::State_None :
+                            QStyle::State_Enabled;
+
+        flags |= IsChecked(aFrame) ? QStyle::State_On : QStyle::State_Off;
+
+        QStyleOptionButton option;
+        option.direction = QApplication::layoutDirection();
+        option.rect = qrect;
+        option.type = QStyleOption::SO_Button;
+        option.state = flags;
+        option.features = QStyleOptionButton::None;
+*/
+        QRect rect = s->subElementRect(
+            QStyle::SE_RadioButtonIndicator,
+            &option, NULL);
+
+        (*aResult).width = rect.width();
+        (*aResult).height = rect.height();
+        break;
+    }
     case NS_THEME_CHECKBOX: {
         QRect rect = s->subElementRect(aWidgetType == NS_THEME_CHECKBOX
                                ? QStyle::SE_CheckBoxIndicator
@@ -429,6 +466,7 @@ nsNativeThemeQt::ThemeSupportsWidget(nsPresContext* aPresContext,
     //case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
     //case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     case NS_THEME_RADIO:
+    case NS_THEME_RADIO_SMALL:
     case NS_THEME_CHECKBOX:
     case NS_THEME_BUTTON_BEVEL:
     case NS_THEME_BUTTON:
@@ -485,4 +523,32 @@ nsNativeThemeQt::ThemeNeedsComboboxDropmarker()
 {
 //    qDebug("%s", __PRETTY_FUNCTION__);
     return PR_FALSE;
+}
+
+void
+nsNativeThemeQt::EnsuremP2A(nsIRenderingContext* aContext)
+{
+    if (!mP2A) {
+        nsCOMPtr<nsIDeviceContext> dctx = nsnull;
+        aContext->GetDeviceContext(*getter_AddRefs(dctx));
+        mP2A = dctx->AppUnitsPerDevPixel();
+    }
+}
+
+void
+nsNativeThemeQt::ButtonStyle(nsIFrame* aFrame, QRect aRect, QStyleOptionButton* aOption)
+{
+    QStyle::State flags = IsDisabled(aFrame) ?
+        QStyle::State_None :
+        QStyle::State_Enabled;
+
+    flags |= IsChecked(aFrame) ?
+        QStyle::State_On :
+        QStyle::State_Off;
+
+    (*aOption).direction = QApplication::layoutDirection();
+    (*aOption).rect = aRect;
+    (*aOption).type = QStyleOption::SO_Button;
+    (*aOption).state = flags;
+    (*aOption).features = QStyleOptionButton::None;
 }
