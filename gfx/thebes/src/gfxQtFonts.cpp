@@ -43,6 +43,7 @@
 #include <QFont>
 #include <QFontMetrics>
 #include "cairo-ft.h"
+#include <freetype/tttables.h>
 
 /**
  * gfxQtFontGroup
@@ -401,6 +402,14 @@ gfxQtFont::~gfxQtFont()
     cairo_scaled_font_destroy(mCairoFont);
 }
 
+// rounding and truncation functions for a Freetype floating point number 
+// (FT26Dot6) stored in a 32bit integer with high 26 bits for the integer
+// part and low 6 bits for the fractional part. 
+#define MOZ_FT_ROUND(x) (((x) + 32) & ~63) // 63 = 2^6 - 1
+#define MOZ_FT_TRUNC(x) ((x) >> 6)
+#define CONVERT_DESIGN_UNITS_TO_PIXELS(v, s) \
+        MOZ_FT_TRUNC(MOZ_FT_ROUND(FT_MulFix((v) , (s))))
+
 const gfxFont::Metrics&
 gfxQtFont::GetMetrics()
 {
@@ -440,9 +449,35 @@ gfxQtFont::GetMetrics()
     mMetrics.spaceWidth = fontMetrics.width( QChar(' ') );
     mMetrics.xHeight = fontMetrics.xHeight();
 
+#if 0
+    FT_Face face = mQFont->freetypeFace();
+    if (face) {
+        mMetrics.maxAdvance = face->size->metrics.max_advance / 64.0; // 26.6
+        float val;
+        TT_OS2 *os2 = (TT_OS2 *) FT_Get_Sfnt_Table(face, ft_sfnt_os2);
+        if (os2 && os2->ySuperscriptYOffset) {
+            val = CONVERT_DESIGN_UNITS_TO_PIXELS(os2->ySuperscriptYOffset,
+                                                 face->size->metrics.y_scale);
+            mMetrics.superscriptOffset = PR_MAX(1, val);
+        } else {
+            mMetrics.superscriptOffset = mMetrics.xHeight;
+        }
 
-    mMetrics.superscriptOffset = mMetrics.xHeight;
-    mMetrics.subscriptOffset = mMetrics.xHeight;
+        if (os2 && os2->ySubscriptYOffset) {
+            val = CONVERT_DESIGN_UNITS_TO_PIXELS(os2->ySubscriptYOffset,
+                                                 face->size->metrics.y_scale);
+            // some fonts have the incorrect sign..
+            val = (val < 0) ? -val : val;
+            mMetrics.subscriptOffset = PR_MAX(1, val);
+        } else {
+            mMetrics.subscriptOffset = mMetrics.xHeight;
+        }
+    } else
+#endif
+    {
+        mMetrics.superscriptOffset = mMetrics.xHeight;
+        mMetrics.subscriptOffset = mMetrics.xHeight;
+    }
 
     SanitizeMetrics(&mMetrics, PR_FALSE);
 
