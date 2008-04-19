@@ -41,24 +41,27 @@
 
 #include "nsBaseAppShell.h"
 #include "nsCOMPtr.h"
-#include <QtNetwork>
+#include <qsocketnotifier.h>
+
 
 /**
  * Native QT Application shell wrapper
  */
 
-#define SOCK_IMPL 1
-
-class nsAppShell : public QObject, public nsBaseAppShell
+class nsAppShell : public QObject,
+                   public nsBaseAppShell
 {
   Q_OBJECT
+
 public:
-  nsAppShell() { };
+  nsAppShell() : mTag(0) {
+      mPipeFDs[0] = mPipeFDs[1] = 0;
+  };
 
   nsresult Init();
 
 private slots:
-  void EventNativeCallback(qint64 numBytes);
+  void EventNativeCallback(int fd);
 
 protected:
   virtual void ScheduleNativeEventCallback();
@@ -66,8 +69,8 @@ protected:
   virtual ~nsAppShell();
 
 private:
-  QTcpSocket mBuff;
-  QTcpServer tcpServer;
+  int           mPipeFDs[2];
+  QSocketNotifier *mTag;
 };
 
 
