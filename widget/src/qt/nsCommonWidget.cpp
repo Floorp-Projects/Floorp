@@ -89,22 +89,19 @@ nsCommonWidget::InitKeyEvent(nsKeyEvent &aEvent, QKeyEvent *aQEvent)
     // (An XEvent would be nice but the GdkEvent is good enough.)
     aEvent.nativeMsg = (void *)aQEvent;
 
-//    aEvent.time      = aGdkEvent->time;
-/*
-    if (qEvent->text().length() && qEvent->text()[0].isPrint()) {
-        nsEvent->charCode = (PRInt32)qEvent->text()[0].unicode();
+    if (aQEvent->text().length() && aQEvent->text()[0].isPrint()) {
+        aEvent.charCode = (PRInt32)aQEvent->text()[0].unicode();
     }
     else {
-        nsEvent->charCode = 0;
+        aEvent.charCode = 0;
     }
 
-    if (nsEvent->charCode) {
-        nsEvent->keyCode = 0;
+    if (aEvent.charCode) {
+        aEvent.keyCode = 0;
     }
     else {
-        nsEvent->keyCode = QtKeyCodeToDOMKeyCode(qEvent->key());
+        aEvent.keyCode = QtKeyCodeToDOMKeyCode(aQEvent->key());
     }
-*/
 }
 
 void
