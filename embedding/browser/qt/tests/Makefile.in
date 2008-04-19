@@ -40,9 +40,11 @@ LIBS		+= \
 		$(MOZ_QT_LIBS) \
 		$(NULL)
 
-#LIBS		+= \
-#		-lqgeckoembed \
-#		$(NULL)
+ifndef MOZ_ENABLE_LIBXUL
+LIBS		+= \
+		-lqgeckoembed \
+		$(NULL)
+endif
 LIBS		+= \
 		-lxul \
 		$(NULL)
