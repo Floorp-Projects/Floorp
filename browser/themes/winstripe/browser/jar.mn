@@ -17,6 +17,7 @@ classic.jar:
         skin/classic/browser/Secure.png                              (Secure.png)
         skin/classic/browser/Secure24.png                            (Secure24.png)
         skin/classic/browser/Security-broken.png                     (Security-broken.png)
+        skin/classic/browser/siteButtons.png                         (siteButtons.png)
         skin/classic/browser/Throbber.gif
         skin/classic/browser/Throbber.png
         skin/classic/browser/Throbber-small.png
@@ -28,6 +29,7 @@ classic.jar:
         skin/classic/browser/Search-glass.png                        (Search-glass.png)
         skin/classic/browser/Search-glass-rtl.png                    (Search-glass-rtl.png)
         skin/classic/browser/Search-addengines.png
+        skin/classic/browser/searchButtons.png                       (searchButtons.png)
         skin/classic/browser/setDesktopBackground.css
         skin/classic/browser/menu-back.png                           (menu-back.png)
         skin/classic/browser/menu-forward.png                        (menu-forward.png)
@@ -50,6 +52,7 @@ classic.jar:
         skin/classic/browser/places/toolbarDropMarker.png            (places/toolbarDropMarker.png)
         skin/classic/browser/places/editBookmarkOverlay.css          (places/editBookmarkOverlay.css)
         skin/classic/browser/places/libraryNavigation.png            (places/libraryNavigation.png)
+        skin/classic/browser/places/libraryToolbar.png               (places/libraryToolbar.png)
         skin/classic/browser/places/starPage.png                     (places/starPage.png)
         skin/classic/browser/places/pageStarred.png                  (places/pageStarred.png)
         skin/classic/browser/places/starred48.png                    (places/starred48.png)
@@ -59,6 +62,7 @@ classic.jar:
         skin/classic/browser/places/expand.png                       (places/expand.png)
         skin/classic/browser/places/history.png                      (places/history.png)
         skin/classic/browser/places/allBookmarks.png                 (places/allBookmarks.png)
+        skin/classic/browser/places/unsortedBookmarks.png            (places/unsortedBookmarks.png)
         skin/classic/browser/places/importAndBackup.png              (places/importAndBackup.png)
         skin/classic/browser/places/organize.png                     (places/organize.png)
         skin/classic/browser/places/view.png                         (places/view.png)
@@ -101,6 +105,7 @@ classic.jar:
         skin/classic/aero/browser/Secure.png                         (Secure-aero.png)
         skin/classic/aero/browser/Secure24.png                       (Secure24-aero.png)
         skin/classic/aero/browser/Security-broken.png                (Security-broken-aero.png)
+        skin/classic/aero/browser/siteButtons.png                    (siteButtons-aero.png)
         skin/classic/aero/browser/Throbber.gif
         skin/classic/aero/browser/Throbber.png
         skin/classic/aero/browser/Throbber-small.png
@@ -112,6 +117,7 @@ classic.jar:
         skin/classic/aero/browser/Search-glass.png                   (Search-glass-aero.png)
         skin/classic/aero/browser/Search-glass-rtl.png               (Search-glass-rtl-aero.png)
         skin/classic/aero/browser/Search-addengines.png
+        skin/classic/aero/browser/searchButtons.png                  (searchButtons-aero.png)
         skin/classic/aero/browser/setDesktopBackground.css
         skin/classic/aero/browser/menu-back.png                      (menu-back-aero.png)
         skin/classic/aero/browser/menu-forward.png                   (menu-forward-aero.png)
@@ -134,6 +140,7 @@ classic.jar:
         skin/classic/aero/browser/places/toolbarDropMarker.png       (places/toolbarDropMarker-aero.png)
         skin/classic/aero/browser/places/editBookmarkOverlay.css     (places/editBookmarkOverlay.css)
         skin/classic/aero/browser/places/libraryNavigation.png       (places/libraryNavigation-aero.png)
+        skin/classic/aero/browser/places/libraryToolbar.png          (places/libraryToolbar-aero.png)
         skin/classic/aero/browser/places/starPage.png                (places/starPage-aero.png)
         skin/classic/aero/browser/places/pageStarred.png             (places/pageStarred-aero.png)
         skin/classic/aero/browser/places/starred48.png               (places/starred48-aero.png)
@@ -143,6 +150,7 @@ classic.jar:
         skin/classic/aero/browser/places/expand.png                  (places/expand-aero.png)
         skin/classic/aero/browser/places/history.png                 (places/history-aero.png)
         skin/classic/aero/browser/places/allBookmarks.png            (places/allBookmarks-aero.png)
+        skin/classic/aero/browser/places/unsortedBookmarks.png       (places/unsortedBookmarks-aero.png)
         skin/classic/aero/browser/places/importAndBackup.png         (places/importAndBackup-aero.png)
         skin/classic/aero/browser/places/view.png                    (places/view-aero.png)
         skin/classic/aero/browser/places/searching_16.png            (places/searching_16-aero.png)
