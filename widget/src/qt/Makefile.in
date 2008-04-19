@@ -78,7 +78,7 @@ EXTRA_DSO_LDOPTS = \
 		-lthebes \
 		$(LCMS_LIBS) \
 		$(MOZ_JS_LIBS) \
-		$(MOZ_QT_LDFLAGS) \
+		$(MOZ_QT_LIBS) \
 		$(NULL)
 
 
