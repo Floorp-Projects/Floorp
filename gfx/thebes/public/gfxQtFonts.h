@@ -53,17 +53,19 @@
 class QFont;
 
 class gfxQtFont : public gfxFont {
-public:
-     gfxQtFont (const nsAString& aName,
-                const gfxFontStyle *aFontStyle);
-     virtual ~gfxQtFont ();
+public: // new functions
+    gfxQtFont (const nsAString& aName,
+            const gfxFontStyle *aFontStyle);
+    virtual ~gfxQtFont ();
 
-     inline const QFont& GetQFont();
+    inline const QFont& GetQFont();
+
+public: // from gfxFont
+    virtual PRUint32 GetSpaceGlyph ();
+    virtual const gfxFont::Metrics& GetMetrics();
 
 protected: // from gfxFont
     virtual nsString GetUniqueName ();
-    virtual PRUint32 GetSpaceGlyph ();
-    virtual const gfxFont::Metrics& GetMetrics();
     virtual PRBool SetupCairoFont(gfxContext *aContext);
 
 protected: // new functions
@@ -85,47 +87,52 @@ protected: // data
 };
 
 class THEBES_API gfxQtFontGroup : public gfxFontGroup {
-public:
+public: // new functions
     gfxQtFontGroup (const nsAString& families,
                     const gfxFontStyle *aStyle);
     virtual ~gfxQtFontGroup ();
 
+    inline gfxQtFont * GetFontAt (PRInt32 i);
+
+protected: // from gfxFontGroup
+    virtual gfxTextRun *MakeTextRun(const PRUnichar *aString, 
+                                    PRUint32 aLength,
+                                    const Parameters *aParams, 
+                                    PRUint32 aFlags);
+
+    virtual gfxTextRun *MakeTextRun(const PRUint8 *aString, 
+                                    PRUint32 aLength,
+                                    const Parameters *aParams, 
+                                    PRUint32 aFlags);
+
     virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle);
 
-    // Create and initialize a textrun using Pango
-    virtual gfxTextRun *MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
-                                    const Parameters *aParams, PRUint32 aFlags);
-    virtual gfxTextRun *MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
-                                    const Parameters *aParams, PRUint32 aFlags);
 
-    gfxQtFont * GetFontAt (PRInt32 i) {
-        return static_cast < gfxQtFont * >(static_cast < gfxFont * >(mFonts[i]));
-    }
+protected: // new functions
+    void InitTextRun(gfxTextRun *aTextRun, 
+                     const PRUint8 *aUTF8Text,
+                     PRUint32 aUTF8Length, 
+                     PRUint32 aUTF8HeaderLength);
 
-protected:
-    void InitTextRun (gfxTextRun * aTextRun, const char * aUTF8Text,
-                      PRUint32 aUTF8Length, PRUint32 aUTF8HeaderLength,
-                      PRBool aTake8BitPath);
+    void CreateGlyphRunsFT(gfxTextRun *aTextRun, 
+                           const PRUint8 *aUTF8,
+                           PRUint32 aUTF8Length);
 
-/*
-    void CreateGlyphRunsItemizing (gfxTextRun * aTextRun,
-                                   const char * aUTF8, PRUint32 aUTF8Length,
-                                   PRUint32 aUTF8HeaderLength);
-*/
-#if defined(ENABLE_FAST_PATH_8BIT) || defined(ENABLE_FAST_PATH_ALWAYS)
-    PRBool CanTakeFastPath (PRUint32 aFlags);
-    nsresult CreateGlyphRunsFast (gfxTextRun * aTextRun,
-                                  const char * aUTF8, PRUint32 aUTF8Length);
-#endif
-
-
-    static PRBool FontCallback (const nsAString & fontName, const nsACString & genericName, void *closure);
+    static PRBool FontCallback (const nsAString & fontName, 
+                                const nsACString & genericName, 
+                                void *closure);
+    PRBool mEnableKerning;
 
 };
 
 inline const QFont& gfxQtFont::GetQFont()
 {
     return *mQFont;
+}
+
+inline gfxQtFont * gfxQtFontGroup::GetFontAt (PRInt32 i) 
+{
+    return static_cast < gfxQtFont * >(static_cast < gfxFont * >(mFonts[i]));
 }
 
 

@@ -19,14 +19,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir@mozilla.com>
- *   Masayuki Nakano <masayuki@d-toybox.com>
- *   Behdad Esfahbod <behdad@gnome.org>
- *   Mats Palmgren <mats.palmgren@bredband.net>
- *   Karl Tomlinson <karlt+@karlt.net>, Mozilla Corporation
- *
- * based on nsFontMetricsPango.cpp by
- *   Christopher Blizzard <blizzard@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -131,11 +123,6 @@ gfxQtFontGroup::gfxQtFontGroup (const nsAString& families,
         }
     }
     else {
-        // XXX If there are no fonts, we should use dummy family.
-        // Pango will resolve from this.
-        // behdad: yep, looks good.
-        // printf("%s(%s)\n", NS_ConvertUTF16toUTF8(families).get(),
-        //                    aStyle->langGroup.get());
         fcFamilies.Append(NS_LITERAL_STRING("sans-serif"));
     }
 
@@ -155,255 +142,231 @@ gfxQtFontGroup::Copy(const gfxFontStyle *aStyle)
      return new gfxQtFontGroup(mFamilies, aStyle);
 }
 
-#if defined(ENABLE_FAST_PATH_8BIT)
-PRBool
-gfxQtFontGroup::CanTakeFastPath(PRUint32 aFlags)
-{
-    // Can take fast path only if OPTIMIZE_SPEED is set and IS_RTL isn't.
-    // We need to always use Pango for RTL text, in case glyph mirroring is
-    // required.
-    PRBool speed = aFlags & gfxTextRunFactory::TEXT_OPTIMIZE_SPEED;
-    PRBool isRTL = aFlags & gfxTextRunFactory::TEXT_IS_RTL;
-    return speed && !isRTL
-           //&& PANGO_IS_FC_FONT(GetFontAt(0)->GetPangoFont())
-           ;
-}
-#endif
-
-#if defined(ENABLE_FAST_PATH_8BIT) || defined(ENABLE_FAST_PATH_ALWAYS)
-#define UTF8_COMPUTE(Char, Mask, Len)					      \
-  if (Char < 128)							      \
-    {									      \
-      Len = 1;								      \
-      Mask = 0x7f;							      \
-    }									      \
-  else if ((Char & 0xe0) == 0xc0)					      \
-    {									      \
-      Len = 2;								      \
-      Mask = 0x1f;							      \
-    }									      \
-  else if ((Char & 0xf0) == 0xe0)					      \
-    {									      \
-      Len = 3;								      \
-      Mask = 0x0f;							      \
-    }									      \
-  else if ((Char & 0xf8) == 0xf0)					      \
-    {									      \
-      Len = 4;								      \
-      Mask = 0x07;							      \
-    }									      \
-  else if ((Char & 0xfc) == 0xf8)					      \
-    {									      \
-      Len = 5;								      \
-      Mask = 0x03;							      \
-    }									      \
-  else if ((Char & 0xfe) == 0xfc)					      \
-    {									      \
-      Len = 6;								      \
-      Mask = 0x01;							      \
-    }									      \
-  else									      \
-    Len = -1;
-
-#define UTF8_GET(Result, Chars, Count, Mask, Len)			      \
-  (Result) = (Chars)[0] & (Mask);					      \
-  for ((Count) = 1; (Count) < (Len); ++(Count))				      \
-    {									      \
-      if (((Chars)[(Count)] & 0xc0) != 0x80)				      \
-	{								      \
-	  (Result) = -1;						      \
-	  break;							      \
-	}								      \
-      (Result) <<= 6;							      \
-      (Result) |= ((Chars)[(Count)] & 0x3f);				      \
-    }
-
-static const char utf8_skip_data[256] = {
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-  3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,5,5,5,5,6,6,1,1
-};
-
-const char * const g_utf8_skip = utf8_skip_data;
-#define g_utf8_next_char(p) (char *)((p) + g_utf8_skip[*(const unsigned char *)(p)])
-
-int
-g_utf8_get_char (const char *p)
-{
-  int i, mask = 0, len;
-  int result;
-  unsigned char c = (unsigned char) *p;
-
-  UTF8_COMPUTE (c, mask, len);
-  if (len == -1)
-    return (int)-1;
-  UTF8_GET (result, p, i, mask, len);
-  return result;
-}
-
-nsresult
-gfxQtFontGroup::CreateGlyphRunsFast(gfxTextRun *aTextRun,
-                                    const char *aUTF8, PRUint32 aUTF8Length)
-{
-    const char *p = aUTF8;
-    gfxQtFont *font = GetFontAt(0);
-    const QFont& qFont = font->GetQFont();
-    FT_Face face = qFont.freetypeFace();
-    PRUint32 utf16Offset = 0;
-    gfxTextRun::CompressedGlyph g;
-    const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
-
-    aTextRun->AddGlyphRun(font, 0);
-
-    while (p < aUTF8 + aUTF8Length) {
-        // glib-2.12.9: "If p does not point to a valid UTF-8 encoded
-        // character, results are undefined." so it is not easy to assert that
-        // aUTF8 in fact points to UTF8 data but asserting
-        // g_unichar_validate(ch) may be mildly useful.
-        int ch = g_utf8_get_char(p);
-        p = g_utf8_next_char(p);
-
-        if (ch == 0) {
-            // treat this null byte as a missing glyph. Pango
-            // doesn't create glyphs for these, not even missing-glyphs.
-            aTextRun->SetMissingGlyph(utf16Offset, 0);
-        } else {
-            NS_ASSERTION(!IsInvalidChar(ch), "Invalid char detected");
-            int glyph = 124;
-            glyph = FT_Get_Char_Index (face, ch);
-
-            if (!glyph)                  // character not in font,
-                return NS_ERROR_FAILURE; // fallback to CreateGlyphRunsItemizing
-
-            FT_Load_Glyph(face, glyph, FT_LOAD_DEFAULT);
-            PRInt32 advance = face->glyph->advance.x;
-            advance = (advance >> 6) * appUnitsPerDevUnit;
-
-            if (advance >= 0 &&
-                gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
-                gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph)) {
-                aTextRun->SetSimpleGlyph(utf16Offset,
-                                         g.SetSimpleGlyph(advance, glyph));
-            } else {
-                gfxTextRun::DetailedGlyph details;
-                details.mGlyphID = glyph;
-                NS_ASSERTION(details.mGlyphID == glyph,
-                             "Seriously weird glyph ID detected!");
-                details.mAdvance = advance;
-                details.mXOffset = 0;
-                details.mYOffset = 0;
-                g.SetComplex(aTextRun->IsClusterStart(utf16Offset), PR_TRUE, 1);
-                aTextRun->SetGlyphs(utf16Offset, g, &details);
-            }
-
-            NS_ASSERTION(!IS_SURROGATE(ch), "Surrogates shouldn't appear in UTF8");
-            if (ch >= 0x10000) {
-                // This character is a surrogate pair in UTF16
-                ++utf16Offset;
-            }
-        }
-
-        ++utf16Offset;
-    }
-    return NS_OK;
-}
-#endif
-
-
-void
-gfxQtFontGroup::InitTextRun(gfxTextRun *aTextRun, const char *aUTF8Text,
-                             PRUint32 aUTF8Length, PRUint32 aUTF8HeaderLength,
-                             PRBool aTake8BitPath)
-{
-#if defined(ENABLE_FAST_PATH_ALWAYS)
-    CreateGlyphRunsFast(aTextRun, aUTF8Text + aUTF8HeaderLength, aUTF8Length - aUTF8HeaderLength);
-#else
-#if defined(ENABLE_FAST_PATH_8BIT)
-    if (aTake8BitPath && CanTakeFastPath(aTextRun->GetFlags())) {
-        qDebug("QTFONT NOT_IMPLEMENTED!!!! Func:%s::%d, Text:'%s'\n", __PRETTY_FUNCTION__, __LINE__, aUTF8Text);
-//        nsresult rv = CreateGlyphRunsFast(aTextRun, aUTF8Text + aUTF8HeaderLength, aUTF8Length - aUTF8HeaderLength);
-        if (NS_SUCCEEDED(rv))
-            return;
-    }
-#endif
-      qDebug("QTFONT NOT_IMPLEMENTED!!!! Func:%s::%d, Text:'%s'\n", __PRETTY_FUNCTION__, __LINE__, aUTF8Text);
-//    CreateGlyphRunsItemizing(aTextRun, aUTF8Text, aUTF8Length, aUTF8HeaderLength);
-#endif
-}
-
 /**
  * We use this to append an LTR or RTL Override character to the start of the
- * string. This forces Pango to honour our direction even if there are neutral characters
- * in the string.
+ * string. This forces Pango to honour our direction even if there are neutral
+ * characters in the string.
  */
 static PRInt32 AppendDirectionalIndicatorUTF8(PRBool aIsRTL, nsACString& aString)
 {
-    static const PRUnichar overrides[2][2] =
-      { { 0x202d, 0 }, { 0x202e, 0 }}; // LRO, RLO
+    static const PRUnichar overrides[2][2] = { { 0x202d, 0 }, { 0x202e, 0 }}; // LRO, RLO
     AppendUTF16toUTF8(overrides[aIsRTL], aString);
     return 3; // both overrides map to 3 bytes in UTF8
 }
 
-gfxTextRun *
-gfxQtFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
-                               const Parameters *aParams, PRUint32 aFlags)
+gfxTextRun *gfxQtFontGroup::MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
+                                         const Parameters* aParams, PRUint32 aFlags)
 {
-    NS_ASSERTION(aFlags & TEXT_IS_8BIT, "8bit should have been set");
-    gfxTextRun *run = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
-    if (!run)
+    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
+    if (!textRun)
         return nsnull;
 
-    PRBool isRTL = run->IsRightToLeft();
+    mEnableKerning = !(aFlags & gfxTextRunFactory::TEXT_OPTIMIZE_SPEED);
+
+    textRun->RecordSurrogates(aString);
+
+    nsCAutoString utf8;
+    PRInt32 headerLen = AppendDirectionalIndicatorUTF8(textRun->IsRightToLeft(), utf8);
+    AppendUTF16toUTF8(Substring(aString, aString + aLength), utf8);
+
+    InitTextRun(textRun, (PRUint8 *)utf8.get(), utf8.Length(), headerLen);
+
+    textRun->FetchGlyphExtents(aParams->mContext);
+
+    return textRun;
+}
+
+gfxTextRun *gfxQtFontGroup::MakeTextRun(const PRUint8* aString, PRUint32 aLength,
+                                         const Parameters* aParams, PRUint32 aFlags)
+{
+    NS_ASSERTION(aFlags & TEXT_IS_8BIT, "8bit should have been set");
+    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
+    if (!textRun)
+        return nsnull;
+
+    mEnableKerning = !(aFlags & gfxTextRunFactory::TEXT_OPTIMIZE_SPEED);
+
+    const char *chars = reinterpret_cast<const char *>(aString);
+    PRBool isRTL = textRun->IsRightToLeft();
     if ((aFlags & TEXT_IS_ASCII) && !isRTL) {
-        // We don't need to send an override character here, the characters must be all LTR
-        const char *utf8Chars = reinterpret_cast<const char*>(aString);
-        InitTextRun(run, utf8Chars, aLength, 0, PR_TRUE);
+        // We don't need to send an override character here, the characters must be all
+        // LTR
+        InitTextRun(textRun, (PRUint8 *)chars, aLength, 0);
     } else {
-        // this is really gross...
-        const char *chars = reinterpret_cast<const char*>(aString);
+        // Although chars in not necessarily ASCII (as it may point to the low
+        // bytes of any UCS-2 characters < 256), NS_ConvertASCIItoUTF16 seems
+        // to DTRT.
         NS_ConvertASCIItoUTF16 unicodeString(chars, aLength);
         nsCAutoString utf8;
         PRInt32 headerLen = AppendDirectionalIndicatorUTF8(isRTL, utf8);
         AppendUTF16toUTF8(unicodeString, utf8);
-        InitTextRun(run, utf8.get(), utf8.Length(), headerLen, PR_TRUE);
+        InitTextRun(textRun, (PRUint8 *)utf8.get(), utf8.Length(), headerLen);
     }
-    run->FetchGlyphExtents(aParams->mContext);
-    return run;
+
+    textRun->FetchGlyphExtents(aParams->mContext);
+
+    return textRun;
 }
 
-gfxTextRun *
-gfxQtFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
-                               const Parameters *aParams, PRUint32 aFlags)
+void gfxQtFontGroup::InitTextRun(gfxTextRun *aTextRun, const PRUint8 *aUTF8Text,
+                                  PRUint32 aUTF8Length,
+                                  PRUint32 aUTF8HeaderLength)
 {
-    gfxTextRun *run = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
-    if (!run)
-        return nsnull;
+    CreateGlyphRunsFT(aTextRun, aUTF8Text + aUTF8HeaderLength,
+                      aUTF8Length - aUTF8HeaderLength);
+}
 
-    run->RecordSurrogates(aString);
-
-    nsCAutoString utf8;
-    PRInt32 headerLen = AppendDirectionalIndicatorUTF8(run->IsRightToLeft(), utf8);
-    AppendUTF16toUTF8(Substring(aString, aString + aLength), utf8);
-    PRBool is8Bit = PR_FALSE;
-
-#if defined(ENABLE_FAST_PATH_8BIT)
-    if (CanTakeFastPath(aFlags)) {
-        PRUint32 allBits = 0;
-        PRUint32 i;
-        for (i = 0; i < aLength; ++i) {
-            allBits |= aString[i];
-        }
-        is8Bit = (allBits & 0xFF00) == 0;
+// Helper function to return the leading UTF-8 character in a char pointer
+// as 32bit number. Also sets the length of the current character (i.e. the
+// offset to the next one) in the second argument
+PRUint32 getUTF8CharAndNext(const PRUint8 *aString, PRUint8 *aLength)
+{
+    *aLength = 1;
+    if (aString[0] < 0x80) { // normal 7bit ASCII char
+        return aString[0];
     }
-#endif
-    InitTextRun(run, utf8.get(), utf8.Length(), headerLen, is8Bit);
-    run->FetchGlyphExtents(aParams->mContext);
-    return run;
+    if ((aString[0] >> 5) == 6) { // two leading ones -> two bytes
+        *aLength = 2;
+        return ((aString[0] & 0x1F) << 6) + (aString[1] & 0x3F);
+    }
+    if ((aString[0] >> 4) == 14) { // three leading ones -> three bytes
+        *aLength = 3;
+        return ((aString[0] & 0x0F) << 12) + ((aString[1] & 0x3F) << 6) +
+               (aString[2] & 0x3F);
+    }
+    if ((aString[0] >> 4) == 15) { // four leading ones -> four bytes
+        *aLength = 4;
+        return ((aString[0] & 0x07) << 18) + ((aString[1] & 0x3F) << 12) +
+               ((aString[2] & 0x3F) <<  6) + (aString[3] & 0x3F);
+    }
+    return aString[0];
+}
+
+void gfxQtFontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUTF8,
+                                        PRUint32 aUTF8Length)
+{
+
+    PRUint32 fontlistLast = FontListLength()-1;
+    gfxQtFont *font0 = GetFontAt(0);
+    const PRUint8 *p = aUTF8;
+    PRUint32 utf16Offset = 0;
+    gfxTextRun::CompressedGlyph g;
+    const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
+
+    aTextRun->AddGlyphRun(font0, 0);
+    // a textRun likely has the same font for most of the characters, so we can
+    // lock it before the loop for efficiency
+    FT_Face face0 =  font0->GetQFont().freetypeFace();
+    while (p < aUTF8 + aUTF8Length) {
+        PRBool glyphFound = PR_FALSE;
+        // convert UTF-8 character and step to the next one in line
+        PRUint8 chLen;
+        PRUint32 ch = getUTF8CharAndNext(p, &chLen);
+        p += chLen; // move to next char
+
+        if (ch == 0) {
+            // treat this null byte as a missing glyph, don't create a glyph for it
+            aTextRun->SetMissingGlyph(utf16Offset, 0);
+        } else {
+            // Try to get a glyph from all fonts available to us.
+            // Once we found it in one of the fonts we quit the loop early.
+            // If we don't find the glyph, we set the missing glyph symbol after
+            // trying the last font.
+            for (PRUint32 i = 0; i <= fontlistLast; i++) {
+                gfxQtFont *font = font0;
+                FT_Face face = face0;
+                if (i > 0) {
+                    font = GetFontAt(i);
+                    face = font->GetQFont().freetypeFace();
+                }
+                // select the current font into the text run
+                aTextRun->AddGlyphRun(font, utf16Offset);
+
+                NS_ASSERTION(!IsInvalidChar(ch), "Invalid char detected");
+                FT_UInt gid = FT_Get_Char_Index(face, ch); // find the glyph id
+                PRInt32 advance = 0;
+                if (gid == font->GetSpaceGlyph()) {
+                    advance = (int)(font->GetMetrics().spaceWidth * appUnitsPerDevUnit);
+                } else if (gid == 0) {
+                    advance = -1; // trigger the missing glyphs case below
+                } else {
+                    // find next character and its glyph -- in case they exist
+                    // and exist in the current font face -- to compute kerning
+                    PRUint32 chNext = 0;
+                    FT_UInt gidNext = 0;
+                    FT_Pos lsbDeltaNext = 0;
+                    if (mEnableKerning && FT_HAS_KERNING(face) && p < aUTF8 + aUTF8Length) {
+                        chNext = getUTF8CharAndNext(p, &chLen);
+                        if (chNext) {
+                            gidNext = FT_Get_Char_Index(face, chNext);
+                            if (gidNext && gidNext != font->GetSpaceGlyph()) {
+                                FT_Load_Glyph(face, gidNext, FT_LOAD_DEFAULT);
+                                lsbDeltaNext = face->glyph->lsb_delta;
+                            }
+                        }
+                    }
+
+                    // now load the current glyph
+                    FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT); // load glyph into the slot
+                    advance = face->glyph->advance.x;
+
+                    // now add kerning to the current glyph's advance
+                    if (chNext && gidNext) {
+                        FT_Vector kerning;
+                        FT_Get_Kerning(face, gid, gidNext, FT_KERNING_DEFAULT, &kerning);
+                        advance += kerning.x;
+                        if (face->glyph->rsb_delta - lsbDeltaNext >= 32) {
+                            advance -= 64;
+                        } else if (face->glyph->rsb_delta - lsbDeltaNext < -32) {
+                            advance += 64;
+                        }
+                    }
+
+                    // now apply unit conversion and scaling
+                    advance = (advance >> 6) * appUnitsPerDevUnit;
+                }
+
+                if (advance >= 0 &&
+                    gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
+                    gfxTextRun::CompressedGlyph::IsSimpleGlyphID(gid))
+                {
+                    aTextRun->SetSimpleGlyph(utf16Offset,
+                                             g.SetSimpleGlyph(advance, gid));
+                    glyphFound = PR_TRUE;
+                } else if (gid == 0) {
+                    // gid = 0 only happens when the glyph is missing from the font
+                    if (i == fontlistLast) {
+                        // set the missing glyph only when it's missing from the very
+                        // last font
+                        aTextRun->SetMissingGlyph(utf16Offset, ch);
+                    }
+                    glyphFound = PR_FALSE;
+                } else {
+                    gfxTextRun::DetailedGlyph details;
+                    details.mGlyphID = gid;
+                    NS_ASSERTION(details.mGlyphID == gid, "Seriously weird glyph ID detected!");
+                    details.mAdvance = advance;
+                    details.mXOffset = 0;
+                    details.mYOffset = 0;
+                    g.SetComplex(aTextRun->IsClusterStart(utf16Offset), PR_TRUE, 1);
+                    aTextRun->SetGlyphs(utf16Offset, g, &details);
+                    glyphFound = PR_TRUE;
+                }
+
+                if (glyphFound) {
+                    break;
+                }
+            }
+        } // for all fonts
+
+        NS_ASSERTION(!IS_SURROGATE(ch), "Surrogates shouldn't appear in UTF8");
+        if (ch >= 0x10000) {
+            // This character is a surrogate pair in UTF16
+            ++utf16Offset;
+        }
+
+        ++utf16Offset;
+    }
 }
 
 /**
@@ -421,7 +384,7 @@ gfxQtFont::gfxQtFont(const nsAString &aName,
 {
     mQFont = new QFont();
     mQFont->setFamily(QString( NS_ConvertUTF16toUTF8(mName).get() ) );
-    mQFont->setPixelSize((int) GetStyle()->size);
+    mQFont->setPixelSize(GetStyle()->size);
     int weight = GetStyle()->weight/10;
     if( weight > 99 )
     {
@@ -478,8 +441,8 @@ gfxQtFont::GetMetrics()
     mMetrics.xHeight = fontMetrics.xHeight();
 
 
-	mMetrics.superscriptOffset = mMetrics.xHeight;
-	mMetrics.subscriptOffset = mMetrics.xHeight;
+    mMetrics.superscriptOffset = mMetrics.xHeight;
+    mMetrics.subscriptOffset = mMetrics.xHeight;
 
 
   
