@@ -3891,10 +3891,10 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
     if (outGeckoEvent->isControl && outGeckoEvent->charCode <= 26)
       outGeckoEvent->charCode += (outGeckoEvent->isShift) ? ('A' - 1) : ('a' - 1);
     
-    // If Ctrl or Command is pressed, we should set shiftCharCode and
+    // If Ctrl or Command or Alt is pressed, we should set shiftCharCode and
     // unshiftCharCode for accessKeys and accelKeys.
-    if ((outGeckoEvent->isControl || outGeckoEvent->isMeta) &&
-        !outGeckoEvent->isAlt) {
+    if (outGeckoEvent->isControl || outGeckoEvent->isMeta ||
+        outGeckoEvent->isAlt) {
       SInt16 keyLayoutID =
         ::GetScriptVariable(::GetScriptManagerVariable(smKeyScript),
                             smScriptKeys);
