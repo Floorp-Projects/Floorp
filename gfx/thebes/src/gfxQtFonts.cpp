@@ -412,7 +412,7 @@ gfxQtFont::GetMetrics()
     mMetrics.maxAscent = fontMetrics.ascent();
     mMetrics.maxDescent = fontMetrics.descent();
     mMetrics.aveCharWidth = fontMetrics.averageCharWidth();
-    mMetrics.underlineOffset = fontMetrics.underlinePos();
+    mMetrics.underlineOffset = -fontMetrics.underlinePos();
     mMetrics.underlineSize = fontMetrics.lineWidth();
     mMetrics.strikeoutOffset = fontMetrics.strikeOutPos(); 
     mMetrics.strikeoutSize = fontMetrics.lineWidth();
@@ -444,8 +444,6 @@ gfxQtFont::GetMetrics()
     mMetrics.superscriptOffset = mMetrics.xHeight;
     mMetrics.subscriptOffset = mMetrics.xHeight;
 
-
-  
 #if 0
 
     fprintf (stderr, "Font: %s\n", NS_ConvertUTF16toUTF8(mName).get());
