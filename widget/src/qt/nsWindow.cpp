@@ -40,6 +40,7 @@
 
 #include "prlink.h"
 
+#include <qevent.h> //XXX switch for forward-decl
 #include <QtGui>
 #include <qcursor.h>
 
@@ -95,6 +96,17 @@
 #include "gfxGlitzSurface.h"
 #include "glitz-glx.h"
 #endif
+
+#include <qapplication.h>
+#include <qdesktopwidget.h>
+#include <qwidget.h>
+#include "qx11info_x11.h"
+#include <qcursor.h>
+#include <qobject.h>
+#include <execinfo.h>
+#include <stdlib.h>
+
+#include <execinfo.h>
 
 #include "mozqwidget.h"
 
@@ -567,62 +579,10 @@ NS_IMETHODIMP
 nsWindow::SetCursor(nsCursor aCursor)
 {
     mCursor = aCursor;
-    switch(mCursor) {
-    case eCursor_standard:
-        mQCursor = Qt::ArrowCursor;
-        break;
-    case eCursor_wait:
-        mQCursor = Qt::WaitCursor;
-        break;
-    case eCursor_select:
-        mQCursor = Qt::IBeamCursor;
-        break;
-    case eCursor_hyperlink:
-        mQCursor = Qt::PointingHandCursor;
-        break;
-    case eCursor_ew_resize:
-        mQCursor = Qt::SplitHCursor;
-        break;
-    case eCursor_ns_resize:
-        mQCursor = Qt::SplitVCursor;
-        break;
-    case eCursor_nw_resize:
-    case eCursor_se_resize:
-        mQCursor = Qt::SizeBDiagCursor;
-        break;
-    case eCursor_ne_resize:
-    case eCursor_sw_resize:
-        mQCursor = Qt::SizeFDiagCursor;
-        break;
-    case eCursor_crosshair:
-    case eCursor_move:
-        mQCursor = Qt::SizeAllCursor;
-        break;
-    case eCursor_help:
-        mQCursor = Qt::WhatsThisCursor;
-        break;
-    case eCursor_copy:
-    case eCursor_alias:
-        break;
-    case eCursor_context_menu:
-    case eCursor_cell:
-    case eCursor_grab:
-    case eCursor_grabbing:
-    case eCursor_spinning:
-    case eCursor_zoom_in:
-    case eCursor_zoom_out:
-
-    default:
-        break;
-    }
-    return NS_OK;
-    // FIXME after reimplementation of whole nsWindow SetCursor cause lot of errors
-    if (mDrawingarea)
-        mDrawingarea->setCursor(mQCursor);
-
+    MozQWidget *mozWidget = static_cast<MozQWidget*>(mDrawingarea);
+    mozWidget->SetCursor(mCursor);
     return NS_OK;
 }
-
 
 static
 PRUint8* Data32BitTo1Bit(PRUint8* aImageData,
