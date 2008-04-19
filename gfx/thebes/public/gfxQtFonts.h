@@ -46,8 +46,9 @@
 
 #include "nsDataHashtable.h"
 #include "nsClassHashtable.h"
-//#include <QFont>
 
+#define ENABLE_FAST_PATH_8BIT 1
+#define ENABLE_FAST_PATH_ALWAYS 1
 
 class gfxQtFont : public gfxFont {
 public:
@@ -69,6 +70,8 @@ public:
 
     virtual const gfxFont::Metrics& GetMetrics();
 
+    void* GetQFont() { if (!mQFont) RealizeQFont(); return mQFont; }
+
 protected:
     void *mQFont;
     cairo_scaled_font_t *mCairoFont;
@@ -79,7 +82,7 @@ protected:
     gfxFloat mAdjustedSize;
 
     virtual PRBool SetupCairoFont(gfxContext *aContext);
-
+    void RealizeQFont();
 };
 
 class THEBES_API gfxQtFontGroup : public gfxFontGroup {
@@ -101,9 +104,20 @@ public:
     }
 
 protected:
-   void InitTextRun (gfxTextRun * aTextRun, const char * aUTF8Text,
-                     PRUint32 aUTF8Length, PRUint32 aUTF8HeaderLength,
-                     PRBool aTake8BitPath);
+    void InitTextRun (gfxTextRun * aTextRun, const char * aUTF8Text,
+                      PRUint32 aUTF8Length, PRUint32 aUTF8HeaderLength,
+                      PRBool aTake8BitPath);
+
+/*
+    void CreateGlyphRunsItemizing (gfxTextRun * aTextRun,
+                                   const char * aUTF8, PRUint32 aUTF8Length,
+                                   PRUint32 aUTF8HeaderLength);
+*/
+#if defined(ENABLE_FAST_PATH_8BIT) || defined(ENABLE_FAST_PATH_ALWAYS)
+    PRBool CanTakeFastPath (PRUint32 aFlags);
+    nsresult CreateGlyphRunsFast (gfxTextRun * aTextRun,
+                                  const char * aUTF8, PRUint32 aUTF8Length);
+#endif
 
 
     static PRBool FontCallback (const nsAString & fontName, const nsACString & genericName, void *closure);
