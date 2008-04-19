@@ -71,7 +71,7 @@
 #include "gfxQPainterSurface.h"
 #include "nsIRenderingContext.h"
 
-nsNativeThemeQt::nsNativeThemeQt() : mP2A(0)
+nsNativeThemeQt::nsNativeThemeQt()
 {
     combo = new QComboBox((QWidget *)0);
     combo->resize(0, 0);
@@ -85,19 +85,13 @@ nsNativeThemeQt::~nsNativeThemeQt()
 
 NS_IMPL_ISUPPORTS1(nsNativeThemeQt, nsITheme)
 
-static QRect qRectInPixels(const nsRect &aRect,
-    const nsTransform2D *aTrans, const PRInt32 p2a)
+static inline QRect qRectInPixels(const nsRect &aRect,
+                                  const PRInt32 p2a)
 {
-    int x = aRect.x;
-    int y = aRect.y;
-    int w = aRect.width;
-    int h = aRect.height;
-    aTrans->TransformCoord(&x,&y,&w,&h);
-    return QRect(
-        NSAppUnitsToIntPixels(x, p2a),
-        NSAppUnitsToIntPixels(y, p2a),
-        NSAppUnitsToIntPixels(w, p2a),
-        NSAppUnitsToIntPixels(h, p2a));
+    return QRect(NSAppUnitsToIntPixels(aRect.x, p2a),
+                 NSAppUnitsToIntPixels(aRect.y, p2a),
+                 NSAppUnitsToIntPixels(aRect.width, p2a),
+                 NSAppUnitsToIntPixels(aRect.height, p2a));
 }
 
 NS_IMETHODIMP
@@ -111,29 +105,38 @@ nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
 
     gfxContext* context = aContext->ThebesContext();
     nsRefPtr<gfxASurface> surface = context->CurrentSurface();
-    gfxASurface* raw = surface;
-    gfxQPainterSurface* qSurface = (gfxQPainterSurface*)raw;
+
+    if (surface->GetType() != gfxASurface::SurfaceTypeQPainter)
+        return NS_ERROR_NOT_IMPLEMENTED;
+
+    gfxQPainterSurface* qSurface = (gfxQPainterSurface*) (surface.get());
     QPainter* qPainter = qSurface->GetQPainter();
 
 //     qDebug("aWidgetType = %d", aWidgetType);
     if (!qPainter)
         return NS_OK;
 
-    EnsuremP2A(aContext);
-
     QStyle* style = qApp->style();
 //    const QPalette::ColorGroup cg = qApp->palette().currentColorGroup();
 
-    nsTransform2D* curTrans;
-    aContext->GetCurrentTransform(curTrans);
-
-    QRect r = qRectInPixels(aRect, curTrans, mP2A);
-    QRect cr = qRectInPixels(aClipRect, curTrans, mP2A);
-
-//    context->UpdateGC();
     qPainter->save();
-    qPainter->translate(r.x(), r.y());
-    r.translate(-r.x(), -r.y());
+
+    gfxPoint offs = surface->GetDeviceOffset();
+    qPainter->translate(offs.x, offs.y);
+
+    gfxMatrix ctm = context->CurrentMatrix();
+    if (!ctm.HasNonTranslation()) {
+        ctm.x0 = NSToCoordRound(ctm.x0);
+        ctm.y0 = NSToCoordRound(ctm.y0);
+    }
+
+    QMatrix qctm(ctm.xx, ctm.xy, ctm.yx, ctm.yy, ctm.x0, ctm.y0);
+    qPainter->setWorldMatrix(qctm, true);
+
+    PRInt32 p2a = GetAppUnitsPerDevPixel(aContext);
+
+    QRect r = qRectInPixels(aRect, p2a);
+    QRect cr = qRectInPixels(aClipRect, p2a);
 
 //     qDebug("rect=%d %d %d %d\nr=%d %d %d %d",
 //         aRect.x, aRect.y, aRect.width, aRect.height,
@@ -363,6 +366,8 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* a
 
     QStyle *s = qApp->style();
 
+    PRInt32 p2a = GetAppUnitsPerDevPixel(aContext);
+
     switch (aWidgetType) {
     case NS_THEME_RADIO_SMALL:
     case NS_THEME_RADIO:
@@ -370,12 +375,7 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* a
     case NS_THEME_CHECKBOX: {
         nsRect frameRect = aFrame->GetRect();
 
-        EnsuremP2A(aContext);
-
-        nsTransform2D* curTrans;
-        aContext->GetCurrentTransform(curTrans);
-
-        QRect qRect = qRectInPixels(frameRect, curTrans, mP2A);
+        QRect qRect = qRectInPixels(frameRect, p2a);
 
         QStyleOptionButton option;
 
@@ -395,12 +395,7 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* a
     case NS_THEME_BUTTON: {
         nsRect frameRect = aFrame->GetRect();
 
-        EnsuremP2A(aContext);
-
-        nsTransform2D* curTrans;
-        aContext->GetCurrentTransform(curTrans);
-
-        QRect qRect = qRectInPixels(frameRect, curTrans, mP2A);
+        QRect qRect = qRectInPixels(frameRect, p2a);
 
         QStyleOptionButton option;
 
@@ -562,15 +557,7 @@ nsNativeThemeQt::ThemeNeedsComboboxDropmarker()
     return PR_FALSE;
 }
 
-void
-nsNativeThemeQt::EnsuremP2A(nsIRenderingContext* aContext)
-{
-    if (!mP2A) {
-        nsCOMPtr<nsIDeviceContext> dctx = nsnull;
-        aContext->GetDeviceContext(*getter_AddRefs(dctx));
-        mP2A = dctx->AppUnitsPerDevPixel();
-    }
-}
+
 
 void
 nsNativeThemeQt::ButtonStyle(nsIFrame* aFrame,

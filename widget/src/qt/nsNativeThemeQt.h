@@ -45,6 +45,7 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsNativeTheme.h"
+#include "nsIDeviceContext.h"
 
 class QComboBox;
 class QStyleOptionButton;
@@ -101,7 +102,11 @@ public:
 
 private:
 
-  void EnsuremP2A(nsIRenderingContext* aContext);
+  inline PRInt32 GetAppUnitsPerDevPixel(nsIRenderingContext* aContext){
+    nsCOMPtr<nsIDeviceContext> dctx = nsnull;
+    aContext->GetDeviceContext(*getter_AddRefs(dctx));
+    return dctx->AppUnitsPerDevPixel();
+  }
 
   void ButtonStyle(nsIFrame* aFrame,
                    QRect aRect,
@@ -124,6 +129,5 @@ private:
 
   PRInt32 frameWidth;
 
-  PRInt32 mP2A;
 };
 
