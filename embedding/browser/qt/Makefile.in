@@ -1,0 +1,13 @@
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= qgeckoembed
+DIRS=src tests
+
+PACKAGE_FILE = qgeckoembed.pkg
+
+include $(topsrcdir)/config/rules.mk
