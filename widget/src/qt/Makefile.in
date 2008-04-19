@@ -97,6 +97,7 @@ CPPSRCS	= \
 		nsNativeThemeQt.cpp \
 		mozqwidget.cpp \
 		nsSound.cpp \
+		nsFilePicker.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
