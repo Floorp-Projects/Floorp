@@ -39,6 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <QStyle>
+
 #include "nsITheme.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
@@ -46,6 +48,7 @@
 
 class QComboBox;
 class QStyleOptionButton;
+class QStyleOptionFrameV2;
 class QRect;
 class nsIFrame;
 
@@ -100,7 +103,20 @@ private:
 
   void EnsuremP2A(nsIRenderingContext* aContext);
 
-  void ButtonStyle(nsIFrame* aFrame, QRect aRect, QStyleOptionButton* aOption);
+  void ButtonStyle(nsIFrame* aFrame,
+                   QRect aRect,
+                   QStyleOptionButton* aOption,
+                   QStyle::State optFlags = QStyle::State_None);
+
+  void FrameStyle(nsIFrame* aFrame,
+                  QRect aRect,
+                  QStyleOptionFrameV2* aOption,
+                  QStyle::State optFlags = QStyle::State_None);
+
+  void PlainStyle(nsIFrame* aFrame,
+                  QRect aRect,
+                  QStyleOption* aOption,
+                  QStyle::State optFlags = QStyle::State_None);
 
 private:
 
