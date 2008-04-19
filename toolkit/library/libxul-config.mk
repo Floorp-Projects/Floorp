@@ -155,6 +155,14 @@ COMPONENT_LIBS += \
 endif
 endif
 
+ifdef MOZ_XUL
+ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
+COMPONENT_LIBS += \
+        unixproxy \
+        $(NULL)
+endif
+endif
+
 ifdef MOZ_PERF_METRICS
 EXTRA_DSO_LIBS  += mozutil_s
 endif
@@ -305,6 +313,9 @@ COMPONENT_LIBS += wdgtos2
 endif
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 COMPONENT_LIBS += widget_mac
+endif
+ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
+COMPONENT_LIBS += widget_qt
 endif
 
 ifdef MOZ_ENABLE_PHOTON

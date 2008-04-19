@@ -88,6 +88,13 @@ SHARED_LIBRARY_LIBS += \
   $(DEPTH)/embedding/browser/gtk/src/$(LIB_PREFIX)gtkembedmoz.$(LIB_SUFFIX)
 DEFINES += -DMOZ_ENABLE_GTK2
 endif
+ifneq (,$(MOZ_ENABLE_QT))
+ifdef MOZ_ENABLE_LIBXUL
+SHARED_LIBRARY_LIBS += \
+  $(DEPTH)/embedding/browser/qt/src/$(LIB_PREFIX)qgeckoembed.$(LIB_SUFFIX)
+DEFINES += -DMOZ_ENABLE_QT
+endif
+endif
 
 SHARED_LIBRARY_LIBS += \
 	$(DEPTH)/toolkit/xre/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
@@ -218,6 +225,11 @@ EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS) $(MOZ_XFT_LIBS) $(MOZ_GTK2_LIBS) $(XT_L
 EXTRA_DSO_LDOPTS += $(FT2_LIBS)
 endif
 
+ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
+EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS) $(MOZ_XFT_LIBS) $(XT_LIBS) $(MOZ_QT_LIBS) -lgthread-2.0
+EXTRA_DSO_LDOPTS += $(FT2_LIBS)
+endif
+
 ifdef MOZ_ENABLE_STARTUP_NOTIFICATION
 EXTRA_DSO_LDOPTS += $(MOZ_STARTUP_NOTIFICATION_LIBS)
 endif
@@ -243,6 +255,10 @@ endif
 
 ifdef MOZ_JPROF
 EXTRA_DSO_LDOPTS += -ljprof
+endif
+
+ifdef MOZ_ENABLE_QT
+EXTRA_DSO_LDOPTS += $(MOZ_QT_LDFLAGS)
 endif
 
 ifdef MOZ_JAVAXPCOM
