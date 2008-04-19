@@ -1250,7 +1250,7 @@ var PlacesControllerDragHelper = {
   /**
    * @returns The current active drag session. Returns null if there is none.
    */
-  getSession: function VO__getSession() {
+  getSession: function PCDH__getSession() {
     var dragService = Cc["@mozilla.org/widget/dragservice;1"].
                       getService(Ci.nsIDragService);
     return dragService.getCurrentSession();
