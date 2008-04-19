@@ -42,6 +42,7 @@
 #include <locale.h>
 #include <QFont>
 #include <QFontMetrics>
+#include <QFontMetricsF>
 #include "cairo-ft.h"
 #include <freetype/tttables.h>
 
@@ -417,6 +418,7 @@ gfxQtFont::GetMetrics()
         return mMetrics;
 
     QFontMetrics fontMetrics( *mQFont );
+    // QFontMetricsF fontMetrics( *mQFont );  // Float FontMetrics (probably slower)
 
     mMetrics.maxAscent = fontMetrics.ascent();
     mMetrics.maxDescent = fontMetrics.descent();
