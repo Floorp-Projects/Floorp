@@ -39,6 +39,8 @@
 #define nsToolkit_h__
 
 #include "nsIToolkit.h"
+#include "nsString.h"
+#include <QPixmap>
 
 /**
  * Wrapper around the thread running the message pump.
@@ -50,9 +52,32 @@ class nsToolkit : public nsIToolkit
 public:
     nsToolkit();
     virtual ~nsToolkit();
-  
+
+    void          CreateSharedGC(void);
+    Qt::HANDLE    GetSharedGC(void);
+
+    /**
+     * Get/set our value of DESKTOP_STARTUP_ID. When non-empty, this is applied
+     * to the next toplevel window to be shown or focused (and then immediately
+     * cleared).
+     */ 
+    void SetDesktopStartupID(const nsACString& aID) { mDesktopStartupID = aID; }
+    void GetDesktopStartupID(nsACString* aID) { *aID = mDesktopStartupID; }
+
+    /**
+     * Get/set the timestamp value to be used, if non-zero, to focus the
+     * next top-level window to be shown or focused (upon which it is cleared).
+     */
+    void SetFocusTimestamp(PRUint32 aTimestamp) { mFocusTimestamp = aTimestamp; }
+    PRUint32 GetFocusTimestamp() { return mFocusTimestamp; }
+
     NS_DECL_ISUPPORTS
     NS_IMETHOD Init(PRThread *aThread);
+
+private:
+    nsCString      mDesktopStartupID;
+    PRUint32       mFocusTimestamp;
+    QPixmap        *mSharedGC;
 };
 
 #endif  // nsToolkit_h__

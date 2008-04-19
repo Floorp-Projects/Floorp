@@ -1,6 +1,7 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -15,14 +16,11 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- *  Zack Rusin <zack@kde.org>.
- * Portions created by the Initial Developer are Copyright (C) 2004
- * the Initial Developer. All Rights Reserved.
+ * The Initial Developer of the Original Code is Christopher Blizzard
+ * <blizzard@mozilla.org>.  Portions created by the Initial Developer
+ * are Copyright (C) 2001 the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Lars Knoll <knoll@kde.org>
- *   Zack Rusin <zack@kde.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,655 +35,76 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include "nsCommonWidget.h"
-
-#include "nsGUIEvent.h"
-//#include "nsQtEventDispatcher.h"
-#include "nsIRenderingContext.h"
-#include "nsIServiceManager.h"
-#include "nsGfxCIID.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
-
-#include "mozqwidget.h"
-
-#include <qapplication.h>
-#include <qdesktopwidget.h>
-#include <qwidget.h>
-#include "qx11info_x11.h"
-#include <qcursor.h>
-#include <qevent.h>
-#include <qobject.h>
-#include <execinfo.h>
-#include <stdlib.h>
-
-#include <execinfo.h>
-#include <stdlib.h>
 #include "nsQtKeyUtils.h"
 
-static const int WHEEL_DELTA = 120;
-static const int kWindowPositionSlop = 20;
-
-static void backTrace()
-{
-    int levels = -1;
-    QString s;
-    void* trace[256];
-    int n = backtrace(trace, 256);
-    if (!n)
-    return;
-    char** strings = backtrace_symbols (trace, n);
-
-    if ( levels != -1 )
-        n = qMin( n, levels );
-    s = "[\n";
-
-    for (int i = 0; i < n; ++i)
-        s += QString::number(i) +
-             QString::fromLatin1(": ") +
-             QString::fromLatin1(strings[i]) + QString::fromLatin1("\n");
-    s += "]\n";
-    if (strings)
-        free (strings);
-//    qDebug("stacktrace:\n%s", s.latin1());
-}
-
-static PRBool
-isContextMenuKey(const nsKeyEvent &aKeyEvent)
-{
-    return ((aKeyEvent.keyCode == NS_VK_F10 && aKeyEvent.isShift &&
-             !aKeyEvent.isControl && !aKeyEvent.isMeta && !aKeyEvent.isAlt) ||
-            (aKeyEvent.keyCode == NS_VK_CONTEXT_MENU && !aKeyEvent.isShift &&
-             !aKeyEvent.isControl && !aKeyEvent.isMeta && !aKeyEvent.isAlt));
-}
-
-static void
-keyEventToContextMenuEvent(const nsKeyEvent* aKeyEvent,
-                           nsMouseEvent* aCMEvent)
-{
-    memcpy(aCMEvent, aKeyEvent, sizeof(nsInputEvent));
-//    aCMEvent->message = NS_CONTEXTMENU_KEY;
-    aCMEvent->isShift = aCMEvent->isControl = PR_FALSE;
-    aCMEvent->isControl = PR_FALSE;
-    aCMEvent->isAlt = aCMEvent->isMeta = PR_FALSE;
-    aCMEvent->isMeta = PR_FALSE;
-    aCMEvent->clickCount = 0;
-    aCMEvent->acceptActivation = PR_FALSE;
-}
-
 nsCommonWidget::nsCommonWidget()
-    : mContainer(0),
-      mWidget(0),
-      mListenForResizes(PR_FALSE),
-      mNeedsResize(PR_FALSE),
-      mNeedsShow(PR_FALSE),
-      mIsShown(PR_FALSE)
 {
+    mIsTopLevel       = PR_FALSE;
+    mIsDestroyed      = PR_FALSE;
+    mNeedsResize      = PR_FALSE;
+    mNeedsMove        = PR_FALSE;
+    mListenForResizes = PR_FALSE;
+    mIsShown          = PR_FALSE;
+    mNeedsShow        = PR_FALSE;
+    mEnabled          = PR_TRUE;
+    mCreated          = PR_FALSE;
+    mPlaced           = PR_FALSE;
+
+    mPreferredWidth   = 0;
+    mPreferredHeight  = 0;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsCommonWidget,nsBaseWidget)
 nsCommonWidget::~nsCommonWidget()
 {
-    MozQWidget *mozWidget = static_cast<MozQWidget*>(mWidget);
-    if (mozWidget)
-        mozWidget->dropReciever();
-    mWidget->deleteLater();
-    mWidget = 0;
+}
+
+nsIWidget *
+nsCommonWidget::GetParent(void)
+{
+    return mParent;
 }
 
 void
-nsCommonWidget::Initialize(QWidget *widget)
+nsCommonWidget::CommonCreate(nsIWidget *aParent, PRBool aListenForResizes)
 {
-    Q_ASSERT(widget);
-
-    mWidget = widget;
-    mWidget->setMouseTracking(PR_TRUE);
-    mWidget->setFocusPolicy(Qt::WheelFocus);
+    mParent = aParent;
+    mListenForResizes = aListenForResizes;
+    mCreated = PR_TRUE;
 }
 
-NS_IMETHODIMP
-nsCommonWidget::Show(PRBool aState)
+void
+nsCommonWidget::InitKeyEvent(nsKeyEvent &aEvent, QKeyEvent *aQEvent)
 {
-    mIsShown = aState;
+    aEvent.isShift   = aQEvent->modifiers() & Qt::ShiftModifier;
+    aEvent.isControl = aQEvent->modifiers() & Qt::ControlModifier;
+    aEvent.isAlt     = aQEvent->modifiers() & Qt::AltModifier;
+    aEvent.isMeta    = aQEvent->modifiers() & Qt::MetaModifier;
+    aEvent.time      = 0;
 
-    // Ok, someone called show on a window that isn't sized to a sane
-    // value.  Mark this window as needing to have Show() called on it
-    // and return.
-    if ((aState && !AreBoundsSane()) || !mWidget) {
-#ifdef DEBUG_WIDGETS
-        qWarning("XX Bounds are insane or window hasn't been created yet");
-#endif
-        mNeedsShow = PR_TRUE;
-        return NS_OK;
-    }
+    // The transformations above and in gdk for the keyval are not invertible
+    // so link to the GdkEvent (which will vanish soon after return from the
+    // event callback) to give plugins access to hardware_keycode and state.
+    // (An XEvent would be nice but the GdkEvent is good enough.)
+    aEvent.nativeMsg = (void *)aQEvent;
 
-    // If someone is hiding this widget, clear any needing show flag.
-    if (!aState)
-        mNeedsShow = PR_FALSE;
-
-    // If someone is showing this window and it needs a resize then
-    // resize the widget.
-    if (aState && mNeedsResize) {
-#ifdef DEBUG_WIDGETS
-        qDebug("\tresizing [%d, %d, %d, %d]", mBounds.x, mBounds.y,
-               mBounds.width, mBounds.height);
-#endif
-        NativeResize(mBounds.x, mBounds.y, mBounds.width, mBounds.height,
-                     PR_FALSE);
-    }
-
-    NativeShow(aState);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::IsVisible(PRBool &visible)
-{
-    if (mWidget)
-        visible = mWidget->isVisible();
-    else
-        visible = PR_FALSE;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
-{
-    if (mContainer) {
-        PRInt32 screenWidth  = QApplication::desktop()->width();
-        PRInt32 screenHeight = QApplication::desktop()->height();
-        if (aAllowSlop) {
-            if (*aX < (kWindowPositionSlop - mBounds.width))
-                *aX = kWindowPositionSlop - mBounds.width;
-            if (*aX > (screenWidth - kWindowPositionSlop))
-                *aX = screenWidth - kWindowPositionSlop;
-            if (*aY < (kWindowPositionSlop - mBounds.height))
-                *aY = kWindowPositionSlop - mBounds.height;
-            if (*aY > (screenHeight - kWindowPositionSlop))
-                *aY = screenHeight - kWindowPositionSlop;
-        } else {
-            if (*aX < 0)
-                *aX = 0;
-            if (*aX > (screenWidth - mBounds.width))
-                *aX = screenWidth - mBounds.width;
-            if (*aY < 0)
-                *aY = 0;
-            if (*aY > (screenHeight - mBounds.height))
-                *aY = screenHeight - mBounds.height;
-        }
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::Move(PRInt32 x, PRInt32 y)
-{
-    bool popup = mWidget ? mWidget->windowType() == Qt::Popup : false;
-
-    if (!mWidget || (x == mBounds.x && y == mBounds.y &&
-                     !popup))
-        return NS_OK;
-
-#ifdef DEBUG_WIDGETS
-    qDebug("Move [%d,%d] (%s)", x, y, popup?"popup":"widget");
-#endif
-
-    if (!mWidget)
-        return NS_OK;
-
-    QPoint pos(x, y);
-    if (mContainer) {
-        if (mParent && mWidget->windowType() == Qt::Popup) {
-            nsRect oldrect, newrect;
-            oldrect.x = x;
-            oldrect.y = y;
-
-            mParent->WidgetToScreen(oldrect, newrect);
-
-            pos = QPoint(newrect.x, newrect.y);
-#ifdef DEBUG_WIDGETS
-            qDebug("pos is [%d,%d]", pos.x(), pos.y());
-#endif
-        } else {
-            qDebug("Widget within another? (%p)", (void*)mWidget);
-        }
-    }
-
-    mBounds.x = pos.x();
-    mBounds.y = pos.y();
-
-    mWidget->move(pos);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::Resize(PRInt32 aWidth,
-                       PRInt32 aHeight,
-                       PRBool  aRepaint)
-{
-    mBounds.width = aWidth;
-    mBounds.height = aHeight;
-
-    if (!mWidget || (mWidget->width() == aWidth &&
-                     mWidget->height() == aHeight))
-        return NS_OK;
-
-    // There are several cases here that we need to handle, based on a
-    // matrix of the visibility of the widget, the sanity of this resize
-    // and whether or not the widget was previously sane.
-
-    // Has this widget been set to visible?
-    if (mIsShown) {
-        // Are the bounds sane?
-        if (AreBoundsSane()) {
-            // Yep?  Resize the window
-            //Maybe, the toplevel has moved
-            if (mContainer || mNeedsShow)
-                NativeResize(mBounds.x, mBounds.y,
-                             mBounds.width, mBounds.height, aRepaint);
-            else
-                NativeResize(mBounds.width, mBounds.height, aRepaint);
-
-            // Does it need to be shown because it was previously insane?
-            if (mNeedsShow)
-                NativeShow(PR_TRUE);
-        }
-        else {
-            // If someone has set this so that the needs show flag is false
-            // and it needs to be hidden, update the flag and hide the
-            // window.  This flag will be cleared the next time someone
-            // hides the window or shows it.  It also prevents us from
-            // calling NativeShow(PR_FALSE) excessively on the window which
-            // causes unneeded X traffic.
-            if (!mNeedsShow) {
-                mNeedsShow = PR_TRUE;
-                NativeShow(PR_FALSE);
-            }
-        }
-    }
-    // If the widget hasn't been shown, mark the widget as needing to be
-    // resized before it is shown.
-    else {
-        if (AreBoundsSane() && mListenForResizes) {
-            // For widgets that we listen for resizes for (widgets created
-            // with native parents) we apparently _always_ have to resize.  I
-            // dunno why, but apparently we're lame like that.
-            NativeResize(aWidth, aHeight, aRepaint);
-        }
-        else {
-            mNeedsResize = PR_TRUE;
-        }
-    }
-
-    // synthesize a resize event if this isn't a toplevel
-    if (mContainer || mListenForResizes) {
-        nsRect rect(mBounds.x, mBounds.y, aWidth, aHeight);
-        nsEventStatus status;
-        DispatchResizeEvent(rect, status);
-    }
-
-    return NS_OK;
-}
-
+//    aEvent.time      = aGdkEvent->time;
 /*
- * XXXX: This sucks because it basically hardcore duplicates the
- *       code from the above function.
- */
-NS_IMETHODIMP
-nsCommonWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
-                       PRBool aRepaint)
-{
-#ifdef DEBUG_WIDGETS
-    qDebug("Resize : [%d,%d,%d,%d]", aX, aY, aWidth, aHeight);
-#endif
-    if (!mWidget || (mWidget->x() == aX &&
-                     mWidget->y() == aY &&
-                     mWidget->height() == aHeight &&
-                     mWidget->width() == aWidth))
-        return NS_OK;
-
-    mBounds.x = aX;
-    mBounds.y = aY;
-    mBounds.width = aWidth;
-    mBounds.height = aHeight;
-
-    // There are several cases here that we need to handle, based on a
-    // matrix of the visibility of the widget, the sanity of this resize
-    // and whether or not the widget was previously sane.
-
-    // Has this widget been set to visible?
-    if (mIsShown) {
-        // Are the bounds sane?
-        if (AreBoundsSane()) {
-            // Yep?  Resize the window
-            NativeResize(aX, aY, aWidth, aHeight, aRepaint);
-
-            // Does it need to be shown because it was previously insane?
-            if (mNeedsShow)
-                NativeShow(PR_TRUE);
-        }
-        else {
-            // If someone has set this so that the needs show flag is false
-            // and it needs to be hidden, update the flag and hide the
-            // window.  This flag will be cleared the next time someone
-            // hides the window or shows it.  It also prevents us from
-            // calling NativeShow(PR_FALSE) excessively on the window which
-            // causes unneeded X traffic.
-            if (!mNeedsShow) {
-                mNeedsShow = PR_TRUE;
-                NativeShow(PR_FALSE);
-            }
-        }
+    if (qEvent->text().length() && qEvent->text()[0].isPrint()) {
+        nsEvent->charCode = (PRInt32)qEvent->text()[0].unicode();
     }
-    // If the widget hasn't been shown, mark the widget as needing to be
-    // resized before it is shown
     else {
-        if (AreBoundsSane() && mListenForResizes){
-            // For widgets that we listen for resizes for (widgets created
-            // with native parents) we apparently _always_ have to resize.  I
-            // dunno why, but apparently we're lame like that.
-            NativeResize(aX, aY, aWidth, aHeight, aRepaint);
-        }
-        else {
-            mNeedsResize = PR_TRUE;
-        }
+        nsEvent->charCode = 0;
     }
 
-    // synthesize a resize event if this isn't a toplevel
-    if (mContainer || mListenForResizes) {
-        nsRect rect(mBounds.x, mBounds.y, mBounds.width, mBounds.height);
-        nsEventStatus status;
-        DispatchResizeEvent(rect, status);
+    if (nsEvent->charCode) {
+        nsEvent->keyCode = 0;
     }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::Enable(PRBool aState)
-{
-    if (mWidget)
-        mWidget->setEnabled(aState);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::IsEnabled(PRBool *aState)
-{
-    if (mWidget)
-        *aState = mWidget->isEnabled();
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::SetFocus(PRBool aRaise)
-{
-#ifdef DEBUG_WIDGETS
-    qDebug("SetFocus mWidget=%p, mContainer=%p, focuswidget=%p (%d)",
-           (void*)mWidget, (void*)mContainer, (void*)mWidget->focusWidget());
-#endif
-    if (mWidget) {
-        if (aRaise)
-            mWidget->raise();
-        mWidget->setFocus();
-
-        DispatchGotFocusEvent();
+    else {
+        nsEvent->keyCode = QtKeyCodeToDOMKeyCode(qEvent->key());
     }
-
-    return NS_OK;
-}
-
-nsIFontMetrics*
-nsCommonWidget::GetFont()
-{
-#ifdef DEBUG_WIDGETS
-    qWarning("nsCommonWidget.cpp: GetFont not implemented");
-#endif
-    return nsnull;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::SetFont(const nsFont&)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::Invalidate(PRBool aIsSynchronous)
-{
-#ifdef DEBUG_WIDGETS
-    qDebug("nsCommonWidget::Invalidate1 container=%p widget=%p", (void*)mContainer, (void*)mWidget);
-#endif
-    if (!mWidget)
-        return NS_OK;
-
-    if (aIsSynchronous)
-        mWidget->repaint();
-    else
-        mWidget->update();
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
-{
-#ifdef DEBUG_WIDGETS
-    qDebug("nsCommonWidget::Invalidate2 container=%p widget=%p", (void*)mContainer, (void*)mWidget);
-#endif
-    if (!mWidget)
-        return NS_OK;
-
-    if (aIsSynchronous)
-        mWidget->repaint(aRect.x, aRect.y, aRect.width, aRect.height);
-    else
-        mWidget->update(aRect.x, aRect.y, aRect.width, aRect.height);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::Update()
-{
-#ifdef DEBUG_WIDGETS
-    qDebug("nsCommonWidget::Update container=%p widget=%p", (void*)mContainer, (void*)mWidget);
-#endif
-    if (!mWidget)
-        return NS_OK;
-    mWidget->update();
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::SetColorMap(nsColorMap*)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::Scroll(int aDx, int aDy, nsRect *aClipRect)
-{
-    if (mWidget)
-        mWidget->scroll(aDx, aDy);
-
-    // Update bounds on our child windows
-    for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-        nsRect bounds;
-        kid->GetBounds(bounds);
-        bounds.x += aDx;
-        bounds.y += aDy;
-        static_cast<nsBaseWidget*>(kid)->SetBounds(bounds);
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::ScrollWidgets(PRInt32 aDx,
-                              PRInt32 aDy)
-{
-    if (mWidget)
-        mWidget->scroll(aDx, aDy);
-
-    return NS_OK;
-}
-
-void*
-nsCommonWidget::GetNativeData(PRUint32 aDataType)
-{
-    switch(aDataType) {
-    case NS_NATIVE_WINDOW:
-        return mWidget;
-        break;
-
-    case NS_NATIVE_DISPLAY:
-        if (mWidget)
-            return mWidget->x11Info().display();
-        break;
-
-    case NS_NATIVE_WIDGET:
-        return mWidget;
-        break;
-
-    case NS_NATIVE_PLUGIN_PORT:
-        if (mWidget)
-            return (void*)mWidget->winId();
-        break;
-
-    default:
-        break;
-    }
-
-    return nsnull;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::SetTitle(const nsAString &str)
-{
-    nsAString::const_iterator it;
-    QString qStr((QChar*)str.BeginReading(it).get(), -1);
-
-    if (mContainer)
-        mContainer->setWindowTitle(qStr);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::SetMenuBar(nsIMenuBar*)
-{
-    qWarning("XXXXX SetMenuBar");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::ShowMenuBar(int)
-{
-
-    qWarning("XXXXX ShowMenuBar");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect)
-{
-    aNewRect.width = aOldRect.width;
-    aNewRect.height = aOldRect.height;
-
-    if (mWidget) {
-        PRInt32 x,y;
-
-        QPoint offset(0,0);
-        offset = mWidget->mapToGlobal(offset);
-        x = offset.x();
-        y = offset.y();
-
-        aNewRect.x = aOldRect.x + x;
-        aNewRect.y = aOldRect.y + y;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::ScreenToWidget(const nsRect &aOldRect, nsRect &aNewRect)
-{
-    if (mWidget) {
-        PRInt32 X,Y;
-
-        QPoint offset(0,0);
-        offset = mWidget->mapFromGlobal(offset);
-        X = offset.x();
-        Y = offset.y();
-
-        aNewRect.x = aOldRect.x + X;
-        aNewRect.y = aOldRect.y + Y;
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::BeginResizingChildren()
-{
-    qWarning("XXXXXX BeginResizingChildren");
-    return  NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::EndResizingChildren()
-{
-    qWarning("XXXXXXX EndResizingChildren");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::GetPreferredSize(PRInt32 &aWidth, PRInt32 &aHeight)
-{
-    if (!mWidget)
-        return NS_ERROR_FAILURE;
-
-    QSize sh = mWidget->sizeHint();
-    aWidth = qMax(0, sh.width());
-    aHeight = qMax(0, sh.height());
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::SetPreferredSize(int w, int h)
-{
-    qWarning("XXX SetPreferredSize %d %d", w, h);
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus)
-{
-    aStatus = nsEventStatus_eIgnore;
-
-    // hold a widget reference while we dispatch this event
-    nsIWidget* widget = aEvent->widget;
-    NS_ADDREF(widget);
-
-    if (mEventCallback)
-        aStatus = (*mEventCallback)(aEvent);
-
-    // dispatch to event listener if event was not consumed
-    if ((aStatus != nsEventStatus_eIgnore) && mEventListener)
-        aStatus = mEventListener->ProcessEvent(*aEvent);
-
-    NS_IF_RELEASE(widget);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::CaptureRollupEvents(nsIRollupListener*, PRBool, PRBool)
-{
-    return NS_OK;
+*/
 }
 
 void
@@ -731,729 +150,267 @@ nsCommonWidget::DispatchResizeEvent(nsRect &aRect, nsEventStatus &aStatus)
     event.mWinWidth = aRect.width;
     event.mWinHeight = aRect.height;
 
-    DispatchEvent(&event, aStatus);
+    nsEventStatus status;
+    DispatchEvent(&event, status); 
 }
 
-bool
-nsCommonWidget::mousePressEvent(QMouseEvent *e)
+NS_IMETHODIMP
+nsCommonWidget::DispatchEvent(nsGUIEvent *aEvent,
+                              nsEventStatus &aStatus)
 {
-    //qDebug("mousePressEvent mWidget=%p", (void*)mWidget);
-//     backTrace();
-    PRUint32      eventType;
+#ifdef DEBUG
+    debug_DumpEvent(stdout, aEvent->widget, aEvent,
+                    nsCAutoString("something"), 0);
+#endif
 
-    switch (e->button()) {
-    case Qt::MidButton:
-        eventType = nsMouseEvent::eMiddleButton;
-        break;
-    case Qt::RightButton:
-        eventType = nsMouseEvent::eRightButton;
-        break;
-    default:
-        eventType = nsMouseEvent::eLeftButton;
-        break;
+    aStatus = nsEventStatus_eIgnore;
+
+    // send it to the standard callback
+    if (mEventCallback)
+        aStatus = (* mEventCallback)(aEvent);
+
+    // dispatch to event listener if event was not consumed
+    if ((aStatus != nsEventStatus_eIgnore) && mEventListener)
+        aStatus = mEventListener->ProcessEvent(*aEvent);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCommonWidget::Show(PRBool aState)
+{
+    mIsShown = aState;
+
+    LOG(("nsCommonWidget::Show [%p] state %d\n", (void *)this, aState));
+
+    // Ok, someone called show on a window that isn't sized to a sane
+    // value.  Mark this window as needing to have Show() called on it
+    // and return.
+    if ((aState && !AreBoundsSane()) || !mCreated) {
+        LOG(("\tbounds are insane or window hasn't been created yet\n"));
+        mNeedsShow = PR_TRUE;
+        return NS_OK;
     }
 
-    nsMouseEvent event(PR_TRUE, NS_MOUSE_BUTTON_DOWN, this, nsMouseEvent::eReal);
-    event.button = eventType;
+    // If someone is hiding this widget, clear any needing show flag.
+    if (!aState)
+        mNeedsShow = PR_FALSE;
 
-    InitMouseEvent(&event, e, 1);
-
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-
-    // right menu click on linux should also pop up a context menu
-    if (eventType == nsMouseEvent::eRightButton) {
-        nsMouseEvent contextMenuEvent(PR_TRUE, NS_CONTEXTMENU, this,
-                                      nsMouseEvent::eReal);
-        InitMouseEvent(&contextMenuEvent, e, 1);
-        DispatchEvent(&contextMenuEvent, status);
-    }
-
-    return ignoreEvent(status);
-}
-
-bool
-nsCommonWidget::mouseReleaseEvent(QMouseEvent *e)
-{
-    //qDebug("mouseReleaseEvent mWidget=%p", (void*)mWidget);
-    PRUint32      eventType;
-
-    switch (e->button()) {
-    case Qt::MidButton:
-        eventType = nsMouseEvent::eMiddleButton;
-        break;
-    case Qt::RightButton:
-        eventType = nsMouseEvent::eRightButton;
-        break;
-    default:
-        eventType = nsMouseEvent::eLeftButton;
-        break;
-    }
-
-    nsMouseEvent event(PR_TRUE, NS_MOUSE_BUTTON_UP, this, nsMouseEvent::eReal);
-    event.button = eventType;
-
-    InitMouseEvent(&event, e, 1);
-
-    //not pressed
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-    return ignoreEvent(status);
-}
-
-bool
-nsCommonWidget::mouseDoubleClickEvent(QMouseEvent *e)
-{
-    PRUint32      eventType;
-
-    switch (e->button()) {
-    case Qt::MidButton:
-        eventType = nsMouseEvent::eMiddleButton;
-        break;
-    case Qt::RightButton:
-        eventType = nsMouseEvent::eRightButton;
-        break;
-    default:
-        eventType = nsMouseEvent::eLeftButton;
-        break;
-    }
-
-    nsMouseEvent event(PR_TRUE, NS_MOUSE_DOUBLECLICK, this, nsMouseEvent::eReal);
-    event.button = eventType;
-
-    InitMouseEvent(&event, e, 2);
-    //pressed
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-    return ignoreEvent(status);
-}
-
-bool
-nsCommonWidget::mouseMoveEvent(QMouseEvent *e)
-{
-    nsMouseEvent event(PR_TRUE, NS_MOUSE_MOVE, this, nsMouseEvent::eReal);
-
-    InitMouseEvent(&event, e, 0);
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-    return ignoreEvent(status);
-}
-
-bool
-nsCommonWidget::wheelEvent(QWheelEvent *e)
-{
-    nsMouseScrollEvent nsEvent(PR_TRUE, NS_MOUSE_SCROLL, this);
-
-    InitMouseWheelEvent(&nsEvent, e);
-
-    nsEventStatus status;
-    DispatchEvent(&nsEvent, status);
-    return ignoreEvent(status);
-}
-
-bool
-nsCommonWidget::keyPressEvent(QKeyEvent *e)
-{
-    //qDebug("keyPressEvent");
-
-    nsEventStatus status;
-
-    // If the key repeat flag isn't set then set it so we don't send
-    // another key down event on the next key press -- DOM events are
-    // key down, key press and key up.  X only has key press and key
-    // release.  gtk2 already filters the extra key release events for
-    // us.
-
-    nsKeyEvent pressEvent(PR_TRUE, NS_KEY_PRESS, this);
-    InitKeyEvent(&pressEvent, e);
-    pressEvent.charCode = (PRInt32)e->text()[0].unicode();
-
-    if (!e->isAutoRepeat()) {
-
-        // send the key down event
-        nsKeyEvent downEvent(PR_TRUE, NS_KEY_DOWN, this);
-        InitKeyEvent(&downEvent, e);
-        DispatchEvent(&downEvent, status);
-        if (ignoreEvent(status)) { // If prevent default on keydown, do same for keypress
-          pressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+    // If someone is showing this window and it needs a resize then
+    // resize the widget.
+    if (aState) {
+        if (mNeedsMove) {
+            LOG(("\tresizing\n"));
+            NativeResize(mBounds.x, mBounds.y, mBounds.width, mBounds.height,
+                         PR_FALSE);
+        } else if (mNeedsResize) {
+            NativeResize(mBounds.width, mBounds.height, PR_FALSE);
         }
     }
 
-    // before we dispatch a key, check if it's the context menu key.
-    // If so, send a context menu key event instead.
-    if (isContextMenuKey(pressEvent)) {
-        nsMouseEvent contextMenuEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
-        keyEventToContextMenuEvent(&pressEvent, &contextMenuEvent);
-        DispatchEvent(&contextMenuEvent, status);
+    NativeShow(aState);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCommonWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
+{
+    mBounds.width = aWidth;
+    mBounds.height = aHeight;
+
+    if (!mCreated)
+        return NS_OK;
+
+    // There are several cases here that we need to handle, based on a
+    // matrix of the visibility of the widget, the sanity of this resize
+    // and whether or not the widget was previously sane.
+
+    // Has this widget been set to visible?
+    if (mIsShown) {
+        // Are the bounds sane?
+        if (AreBoundsSane()) {
+            // Yep?  Resize the window
+            //Maybe, the toplevel has moved
+
+            // Note that if the widget needs to be shown because it
+            // was previously insane in Resize(x,y,w,h), then we need
+            // to set the x and y here too, because the widget wasn't
+            // moved back then
+            if (mIsTopLevel || mNeedsShow)
+                NativeResize(mBounds.x, mBounds.y,
+                             mBounds.width, mBounds.height, aRepaint);
+            else
+                NativeResize(mBounds.width, mBounds.height, aRepaint);
+
+            // Does it need to be shown because it was previously insane?
+            if (mNeedsShow)
+                NativeShow(PR_TRUE);
+        }
+        else {
+            // If someone has set this so that the needs show flag is false
+            // and it needs to be hidden, update the flag and hide the
+            // window.  This flag will be cleared the next time someone
+            // hides the window or shows it.  It also prevents us from
+            // calling NativeShow(PR_FALSE) excessively on the window which
+            // causes unneeded X traffic.
+            if (!mNeedsShow) {
+                mNeedsShow = PR_TRUE;
+                NativeShow(PR_FALSE);
+            }
+        }
     }
+    // If the widget hasn't been shown, mark the widget as needing to be
+    // resized before it is shown.
     else {
-        // send the key press event
-        DispatchEvent(&pressEvent, status);
+        if (AreBoundsSane() && mListenForResizes) {
+            // For widgets that we listen for resizes for (widgets created
+            // with native parents) we apparently _always_ have to resize.  I
+            // dunno why, but apparently we're lame like that.
+            NativeResize(aWidth, aHeight, aRepaint);
+        }
+        else {
+            mNeedsResize = PR_TRUE;
+        }
     }
 
-    return ignoreEvent(status);
-}
-
-bool
-nsCommonWidget::keyReleaseEvent(QKeyEvent *e)
-{
-    nsKeyEvent event(PR_TRUE, NS_KEY_UP, this);
-
-    InitKeyEvent(&event, e);
-
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-    return ignoreEvent(status);
-}
-
-bool
-nsCommonWidget::focusInEvent(QFocusEvent *)
-{
-    if (!mWidget)
-        return FALSE;
-
-#ifdef DEBUG_WIDGETS
-    qDebug("focusInEvent mWidget=%p, mContainer=%p", (void*)mWidget, (void*)mContainer);
-#endif
-
-    DispatchGotFocusEvent();
-
-    DispatchActivateEvent();
-
-    return FALSE;
-}
-
-bool
-nsCommonWidget::focusOutEvent(QFocusEvent *)
-{
-#ifdef DEBUG_WIDGETS
-    qDebug("focusOutEvent mWidget=%p,mContainer = %p", (void*)mWidget, (void*)mContainer);
-#endif
-
-    DispatchLostFocusEvent();
-    if (mContainer)
-        DispatchDeactivateEvent();
-
-    return FALSE;
-}
-
-bool
-nsCommonWidget::enterEvent(QEvent *)
-{
-    nsMouseEvent event(PR_TRUE, NS_MOUSE_ENTER, this, nsMouseEvent::eReal);
-
-    QPoint pt = QCursor::pos();
-
-    event.refPoint.x = nscoord(pt.x());
-    event.refPoint.y = nscoord(pt.y());
-
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-    return FALSE;
-}
-
-bool
-nsCommonWidget::leaveEvent(QEvent *aEvent)
-{
-    nsMouseEvent event(PR_TRUE, NS_MOUSE_EXIT, this, nsMouseEvent::eReal);
-
-    QPoint pt = QCursor::pos();
-
-    event.refPoint.x = nscoord(pt.x());
-    event.refPoint.y = nscoord(pt.y());
-
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-    return FALSE;
-}
-
-bool
-nsCommonWidget::paintEvent(QPaintEvent *e)
-{
-    //qDebug("paintEvent: mWidget=%p x = %d, y = %d, width =  %d, height = %d", (void*)mWidget,
-    //e->rect().x(), e->rect().y(), e->rect().width(), e->rect().height());
-//     qDebug("paintEvent: Widgetrect %d %d %d %d", mWidget->x(), mWidget->y(),
-//            mWidget->width(), mWidget->height());
-
-    QRect r = e->rect();
-    if (!r.isValid())
-        r = mWidget->rect();
-    nsRect rect(r.x(), r.y(), r.width(), r.height());
-
-    nsCOMPtr<nsIRenderingContext> rc = getter_AddRefs(GetRenderingContext());
-
-    // Generate XPFE paint event
-    nsPaintEvent event(PR_TRUE, NS_PAINT, this);
-    event.refPoint.x = 0;
-    event.refPoint.y = 0;
-    event.rect = &rect;
-    // XXX fix this!
-    event.region = nsnull;
-    // XXX fix this!
-    event.renderingContext = rc;
-
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-    return ignoreEvent(status);
-}
-
-bool
-nsCommonWidget::moveEvent(QMoveEvent *e)
-{
-    // can we shortcut?
-    if (!mWidget || (mBounds.x == e->pos().x() &&
-                     mBounds.y == e->pos().y()))
-        return FALSE;
-
-#ifdef DEBUG_WIDGETS
-    bool shown = mWidget ? !mWidget->isHidden() : false;
-    bool popup = mWidget ? mWidget->windowType() == Qt::Popup : false;
-
-    qDebug("moveEvent mWidget=%p %d %d (%s, %s)", (void*)mWidget, e->pos().x(), e->pos().y(),
-           shown? "shown": "hidden", popup ? "popup": "widget");
-#endif
-
-    // Toplevel windows need to have their bounds set so that we can
-    // keep track of our location.  It's not often that the x,y is set
-    // by the layout engine.  Width and height are set elsewhere.
-    QPoint pos = e->pos();
-
-    if (mContainer) {
-        // Need to translate this into the right coordinates
-        nsRect oldrect, newrect;
-        WidgetToScreen(oldrect, newrect);
-        mBounds.x = newrect.x;
-        mBounds.y = newrect.y;
-#ifdef DEBUG_WIDGETS
-        qDebug("BOUNDS are [%d, %d]", mBounds.x, mBounds.y);
-#endif
+    // synthesize a resize event if this isn't a toplevel
+    if (mIsTopLevel || mListenForResizes) {
+        nsRect rect(mBounds.x, mBounds.y, aWidth, aHeight);
+        nsEventStatus status;
+        DispatchResizeEvent(rect, status);
     }
 
-    nsGUIEvent event(PR_TRUE, NS_MOVE, this);
-    event.refPoint.x = pos.x();
-    event.refPoint.y = pos.y();
-
-    // XXX mozilla will invalidate the entire window after this move
-    // complete.  wtf?
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-    return ignoreEvent(status);
+    return NS_OK;
 }
 
-bool
-nsCommonWidget::resizeEvent(QResizeEvent *e)
+NS_IMETHODIMP
+nsCommonWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
+                       PRBool aRepaint)
 {
-    nsRect rect;
+    mBounds.x = aX;
+    mBounds.y = aY;
+    mBounds.width = aWidth;
+    mBounds.height = aHeight;
 
-    // Generate XPFE resize event
-    GetBounds(rect);
-    rect.width = e->size().width();
-    rect.height = e->size().height();
+    mPlaced = PR_TRUE;
 
-    mBounds.width = rect.width;
-    mBounds.height = rect.height;
+    if (!mCreated)
+        return NS_OK;
 
-#ifdef DEBUG_WIDGETS
-    qDebug("resizeEvent: mWidget=%p, aWidth=%d, aHeight=%d, aX = %d, aY = %d", (void*)mWidget,
-           rect.width, rect.height, rect.x, rect.y);
-#endif
+    // There are several cases here that we need to handle, based on a
+    // matrix of the visibility of the widget, the sanity of this resize
+    // and whether or not the widget was previously sane.
 
-    nsEventStatus status;
-    DispatchResizeEvent(rect, status);
-    return ignoreEvent(status);
-}
-
-bool
-nsCommonWidget::closeEvent(QCloseEvent *)
-{
-    nsGUIEvent event(PR_TRUE, NS_XUL_CLOSE, this);
-
-    event.refPoint.x = 0;
-    event.refPoint.y = 0;
-
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-
-    return ignoreEvent(status);
-}
-
-bool
-nsCommonWidget::contextMenuEvent(QContextMenuEvent *)
-{
-    //qDebug("context menu");
-    return false;
-}
-
-bool
-nsCommonWidget::imStartEvent(QEvent *)
-{
-    qWarning("XXX imStartEvent");
-    return false;
-}
-
-bool
-nsCommonWidget::imComposeEvent(QEvent *)
-{
-    qWarning("XXX imComposeEvent");
-    return false;
-}
-
-bool
-nsCommonWidget::imEndEvent(QEvent * )
-{
-    qWarning("XXX imComposeEvent");
-    return false;
-}
-
-bool
-nsCommonWidget::dragEnterEvent(QDragEnterEvent *)
-{
-    qDebug("XXX dragEnterEvent");
-    return false;
-}
-
-bool
-nsCommonWidget::dragMoveEvent(QDragMoveEvent *)
-{
-    qDebug("XXX dragMoveEvent");
-    return false;
-}
-
-bool
-nsCommonWidget::dragLeaveEvent(QDragLeaveEvent *)
-{
-    qDebug("XXX dragLeaveEvent");
-    return false;
-}
-
-bool
-nsCommonWidget::dropEvent(QDropEvent *)
-{
-    qDebug("XXX dropEvent");
-    return false;
-}
-
-bool
-nsCommonWidget::showEvent(QShowEvent *)
-{
-#ifdef DEBUG_WIDGETS
-    qDebug("showEvent mWidget=%p", (void*)mWidget);
-#endif
-
-    QRect r = mWidget->rect();
-    nsRect rect(r.x(), r.y(), r.width(), r.height());
-
-    nsCOMPtr<nsIRenderingContext> rc = getter_AddRefs(GetRenderingContext());
-       // Generate XPFE paint event
-    nsPaintEvent event(PR_TRUE, NS_PAINT, this);
-    event.refPoint.x = 0;
-    event.refPoint.y = 0;
-    event.rect = &rect;
-    // XXX fix this!
-    event.region = nsnull;
-    // XXX fix this!
-    event.renderingContext = rc;
-
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-
-    return false;
-}
-
-bool
-nsCommonWidget::hideEvent(QHideEvent *)
-{
-#ifdef DEBUG_WIDGETS
-    qDebug("hideEvent mWidget=%p", (void*)mWidget);
-#endif
-    return false;
-}
-
-void
-nsCommonWidget::InitKeyEvent(nsKeyEvent *nsEvent, QKeyEvent *qEvent)
-{
-    nsEvent->isShift   = qEvent->modifiers() & Qt::ShiftModifier;
-    nsEvent->isControl = qEvent->modifiers() & Qt::ControlModifier;
-    nsEvent->isAlt     = qEvent->modifiers() & Qt::AltModifier;
-    nsEvent->isMeta    = qEvent->modifiers() & Qt::MetaModifier;
-    nsEvent->time      = 0;
-
-    if (qEvent->text().length() && qEvent->text()[0].isPrint()) {
-        nsEvent->charCode = (PRInt32)qEvent->text()[0].unicode();
+    // Has this widget been set to visible?
+    if (mIsShown) {
+        // Are the bounds sane?
+        if (AreBoundsSane()) {
+            // Yep?  Resize the window
+            NativeResize(aX, aY, aWidth, aHeight, aRepaint);
+            // Does it need to be shown because it was previously insane?
+            if (mNeedsShow)
+                NativeShow(PR_TRUE);
+        }
+        else {
+            // If someone has set this so that the needs show flag is false
+            // and it needs to be hidden, update the flag and hide the
+            // window.  This flag will be cleared the next time someone
+            // hides the window or shows it.  It also prevents us from
+            // calling NativeShow(PR_FALSE) excessively on the window which
+            // causes unneeded X traffic.
+            if (!mNeedsShow) {
+                mNeedsShow = PR_TRUE;
+                NativeShow(PR_FALSE);
+            }
+        }
     }
+    // If the widget hasn't been shown, mark the widget as needing to be
+    // resized before it is shown
     else {
-        nsEvent->charCode = 0;
+        if (AreBoundsSane() && mListenForResizes){
+            // For widgets that we listen for resizes for (widgets created
+            // with native parents) we apparently _always_ have to resize.  I
+            // dunno why, but apparently we're lame like that.
+            NativeResize(aX, aY, aWidth, aHeight, aRepaint);
+        }
+        else {
+            mNeedsResize = PR_TRUE;
+            mNeedsMove = PR_TRUE;
+        }
     }
 
-    if (nsEvent->charCode) {
-        nsEvent->keyCode = 0;
+    if (mIsTopLevel || mListenForResizes) {
+        // synthesize a resize event
+        nsRect rect(aX, aY, aWidth, aHeight);
+        nsEventStatus status;
+        DispatchResizeEvent(rect, status);
     }
-    else {
-        nsEvent->keyCode = QtKeyCodeToDOMKeyCode(qEvent->key());
-    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCommonWidget::GetPreferredSize(PRInt32 &aWidth,
+                                 PRInt32 &aHeight)
+{
+    aWidth  = mPreferredWidth;
+    aHeight = mPreferredHeight;
+    return (mPreferredWidth != 0 && mPreferredHeight != 0) ? 
+        NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsCommonWidget::SetPreferredSize(PRInt32 aWidth,
+                                 PRInt32 aHeight)
+{
+    mPreferredWidth  = aWidth;
+    mPreferredHeight = aHeight;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCommonWidget::Enable(PRBool aState)
+{
+    mEnabled = aState;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCommonWidget::IsEnabled(PRBool *aState)
+{
+    *aState = mEnabled;
+
+    return NS_OK;
 }
 
 void
-nsCommonWidget::InitMouseEvent(nsMouseEvent *nsEvent, QMouseEvent *qEvent, int aClickCount)
+nsCommonWidget::OnDestroy(void)
 {
-    nsEvent->refPoint.x = nscoord(qEvent->x());
-    nsEvent->refPoint.y = nscoord(qEvent->y());
+    if (mOnDestroyCalled)
+        return;
 
-    nsEvent->isShift         = qEvent->modifiers() & Qt::ShiftModifier;
-    nsEvent->isControl       = qEvent->modifiers() & Qt::ControlModifier;
-    nsEvent->isAlt           = qEvent->modifiers() & Qt::AltModifier;
-    nsEvent->isMeta          = qEvent->modifiers() & Qt::MetaModifier;
-    nsEvent->clickCount      = aClickCount;
-}
+    mOnDestroyCalled = PR_TRUE;
 
-void
-nsCommonWidget::InitMouseWheelEvent(nsMouseScrollEvent *aEvent,
-                                    QWheelEvent *qEvent)
-{
-    switch (qEvent->orientation()) {
-    case Qt::Vertical:
-        aEvent->scrollFlags = nsMouseScrollEvent::kIsVertical;
-        break;
-    case Qt::Horizontal:
-        aEvent->scrollFlags = nsMouseScrollEvent::kIsHorizontal;
-        break;
-    default:
-        Q_ASSERT(0);
-        break;
-    }
-    aEvent->delta = (int)((qEvent->delta() / WHEEL_DELTA) * -3);
+    // release references to children, device context, toolkit + app shell
+    nsBaseWidget::OnDestroy();
 
-    aEvent->refPoint.x = nscoord(qEvent->x());
-    aEvent->refPoint.y = nscoord(qEvent->y());
+    // let go of our parent
+    mParent = nsnull;
 
-    aEvent->isShift         = qEvent->modifiers() & Qt::ShiftModifier;
-    aEvent->isControl       = qEvent->modifiers() & Qt::ControlModifier;
-    aEvent->isAlt           = qEvent->modifiers() & Qt::AltModifier;
-    aEvent->isMeta          = qEvent->modifiers() & Qt::MetaModifier;
-    aEvent->time            = 0;
-}
+    nsCOMPtr<nsIWidget> kungFuDeathGrip = this;
 
-void
-nsCommonWidget::CommonCreate(nsIWidget *aParent, PRBool aListenForResizes)
-{
-    mParent = aParent;
-    mListenForResizes = aListenForResizes;
+    nsGUIEvent event(PR_TRUE, NS_DESTROY, this);
+    nsEventStatus status;
+    DispatchEvent(&event, status);
 }
 
 PRBool
-nsCommonWidget::AreBoundsSane() const
+nsCommonWidget::AreBoundsSane(void)
 {
     if (mBounds.width > 0 && mBounds.height > 0)
         return PR_TRUE;
 
     return PR_FALSE;
-}
-
-NS_IMETHODIMP
-nsCommonWidget::Create(nsIWidget *aParent, const nsRect &aRect, EVENT_CALLBACK aHandleEventFunction,
-                       nsIDeviceContext *aContext, nsIAppShell *aAppShell, nsIToolkit *aToolkit,
-                       nsWidgetInitData *aInitData)
-{
-    return NativeCreate(aParent, nsnull, aRect, aHandleEventFunction, aContext, aAppShell,
-                        aToolkit, aInitData);
-}
-
-NS_IMETHODIMP
-nsCommonWidget::Create(nsNativeWidget aParent, const nsRect &aRect, EVENT_CALLBACK aHandleEventFunction,
-                       nsIDeviceContext *aContext, nsIAppShell *aAppShell, nsIToolkit *aToolkit,
-                       nsWidgetInitData *aInitData)
-{
-    return NativeCreate(nsnull, (QWidget*)aParent, aRect, aHandleEventFunction, aContext, aAppShell,
-                        aToolkit, aInitData);
-}
-
-nsresult
-nsCommonWidget::NativeCreate(nsIWidget        *aParent,
-                             QWidget          *aNativeParent,
-                             const nsRect     &aRect,
-                             EVENT_CALLBACK    aHandleEventFunction,
-                             nsIDeviceContext *aContext,
-                             nsIAppShell      *aAppShell,
-                             nsIToolkit       *aToolkit,
-                             nsWidgetInitData *aInitData)
-{
-    // only set the base parent if we're going to be a dialog or a
-    // toplevel
-    nsIWidget *baseParent = aInitData &&
-                            (aInitData->mWindowType == eWindowType_dialog ||
-                             aInitData->mWindowType == eWindowType_toplevel ||
-                             aInitData->mWindowType == eWindowType_invisible) ?
-                            nsnull : aParent;
-
-    // initialize all the common bits of this class
-    BaseCreate(baseParent, aRect, aHandleEventFunction, aContext,
-               aAppShell, aToolkit, aInitData);
-
-    // Do we need to listen for resizes?
-    PRBool listenForResizes = PR_FALSE;;
-    if (aNativeParent || (aInitData && aInitData->mListenForResizes))
-        listenForResizes = PR_TRUE;
-
-    // and do our common creation
-    CommonCreate(aParent, listenForResizes);
-
-    // save our bounds
-    mBounds = aRect;
-
-    QWidget *parent = 0;
-    if (aParent != nsnull)
-        parent = (QWidget*)aParent->GetNativeData(NS_NATIVE_WIDGET);
-    else
-        parent = aNativeParent;
-
-    mWidget = createQWidget(parent, aInitData);
-
-    Initialize(mWidget);
-
-    Resize(mBounds.width, mBounds.height, PR_FALSE);
-
-    return NS_OK;
-}
-
-nsCursor nsCommonWidget::GetCursor()
-{
-    return mCursor;
-}
-
-NS_METHOD nsCommonWidget::SetCursor(nsCursor aCursor)
-{
-    mCursor = aCursor;
-    Qt::CursorShape cursor = Qt::ArrowCursor;
-    switch(mCursor) {
-    case eCursor_standard:
-	cursor = Qt::ArrowCursor;
-        break;
-    case eCursor_wait:
-        cursor = Qt::WaitCursor;
-        break;
-    case eCursor_select:
-        cursor = Qt::IBeamCursor;
-        break;
-    case eCursor_hyperlink:
-        cursor = Qt::PointingHandCursor;
-        break;
-    case eCursor_ew_resize:
-        cursor = Qt::SplitHCursor;
-        break;
-    case eCursor_ns_resize:
-        cursor = Qt::SplitVCursor;
-        break;
-    case eCursor_nw_resize:
-    case eCursor_se_resize:
-	cursor = Qt::SizeBDiagCursor;
-        break;
-    case eCursor_ne_resize:
-    case eCursor_sw_resize:
-	cursor = Qt::SizeFDiagCursor;
-        break;
-    case eCursor_crosshair:
-    case eCursor_move:
-	cursor = Qt::SizeAllCursor;
-        break;
-    case eCursor_help:
-	cursor = Qt::WhatsThisCursor;
-        break;
-    case eCursor_copy:
-    case eCursor_alias:
-        break;
-    case eCursor_context_menu:
-    case eCursor_cell:
-    case eCursor_grab:
-    case eCursor_grabbing:
-    case eCursor_spinning:
-    case eCursor_zoom_in:
-    case eCursor_zoom_out:
-
-    default:
-        break;
-    }
-    mWidget->setCursor(cursor);
-    return NS_OK;
-}
-
-NS_METHOD nsCommonWidget::SetModal(PRBool aModal)
-{
-#ifdef DEBUG_WIDGETS
-    qDebug("------------> SetModal mWidget=%p",(void*) mWidget);
-#endif
-
-    MozQWidget *mozWidget = static_cast<MozQWidget*>(mWidget);
-    if (mozWidget)
-        mozWidget->setModal(aModal);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsCommonWidget::GetScreenBounds(nsRect &aRect)
-{
-	nsRect origin(0,0,mBounds.width,mBounds.height);
-	WidgetToScreen(origin, aRect);
-	return NS_OK;
-}
-
-void
-nsCommonWidget::NativeShow(PRBool aState)
-{
-    mNeedsShow = PR_FALSE;
-
-    if (!mWidget) {
-         //XXX: apperently can be null during the printing, check whether
-         //     that's true
-         qDebug("nsCommon::Show : widget empty");
-         return;
-    }
-    mWidget->setShown(aState);
-}
-
-void
-nsCommonWidget::NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
-{
-    mNeedsResize = PR_FALSE;
-
-    mWidget->resize( aWidth, aHeight);
-
-    if (aRepaint) {
-        if (mWidget->isVisible())
-            mWidget->repaint();
-    }
-}
-
-void
-nsCommonWidget::NativeResize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
-                             PRBool aRepaint)
-{
-    mNeedsResize = PR_FALSE;
-
-    QPoint pos(aX, aY);
-    if (mContainer)
-    {
-        if (mParent && mWidget->windowType() == Qt::Popup) {
-            nsRect oldrect, newrect;
-            oldrect.x = aX;
-            oldrect.y = aY;
-
-            mParent->WidgetToScreen(oldrect, newrect);
-
-            pos = QPoint(newrect.x, newrect.y);
-#ifdef DEBUG_WIDGETS
-            qDebug("pos is [%d,%d]", pos.x(), pos.y());
-#endif
-        } else {
-#ifdef DEBUG_WIDGETS
-            qDebug("Widget with original position? (%p)", mWidget);
-#endif
-        }
-    }
-
-    mWidget->setGeometry(pos.x(), pos.y(), aWidth, aHeight);
-
-    if (aRepaint) {
-        if (mWidget->isVisible())
-            mWidget->repaint();
-    }
 }
