@@ -291,6 +291,7 @@ nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
         qDebug("NS_THEME_DROPDOWN_TEXT");
         break;
     case NS_THEME_TEXTFIELD:
+    case NS_THEME_TEXTFIELD_MULTILINE:
     case NS_THEME_LISTBOX: {
         qDebug("NS_THEME_TEXTFIELD");
         
@@ -447,6 +448,7 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* a
     case NS_THEME_DROPDOWN_TEXT:
     case NS_THEME_DROPDOWN_TEXTFIELD:
     case NS_THEME_TEXTFIELD:
+    case NS_THEME_TEXTFIELD_MULTILINE:
         break;
     }
     return NS_OK;
@@ -502,8 +504,9 @@ nsNativeThemeQt::ThemeSupportsWidget(nsPresContext* aPresContext,
     //case NS_THEME_DROPDOWN:
     //case NS_THEME_DROPDOWN_BUTTON:
     //case NS_THEME_DROPDOWN_TEXT:
-    //case NS_THEME_DROPDOWN_TEXTFIELD:
+    case NS_THEME_DROPDOWN_TEXTFIELD:
     case NS_THEME_TEXTFIELD:
+    case NS_THEME_TEXTFIELD_MULTILINE:
     //case NS_THEME_LISTBOX:
 //         qDebug("%s : return PR_TRUE", __PRETTY_FUNCTION__);
         return PR_TRUE;
