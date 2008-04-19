@@ -47,7 +47,6 @@
 #define QCOLOR_TO_NS_RGB(c) \
     ((nscolor)NS_RGB(c.red(),c.green(),c.blue()))
 
-
 nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 {
 }
@@ -58,215 +57,214 @@ nsLookAndFeel::~nsLookAndFeel()
 
 nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID,nscolor &aColor)
 {
-    nsresult res = NS_OK;
+  nsresult res = NS_OK;
 
-    if (!qApp)
-        return NS_ERROR_FAILURE;
+  if (!qApp)
+    return NS_ERROR_FAILURE;
 
-    QPalette palette = qApp->palette();
+  QPalette palette = qApp->palette();
 
-    switch (aID) {
-        case eColor_WindowBackground:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
-            break;
-    
-        case eColor_WindowForeground:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Foreground));
-            break;
-    
-        case eColor_WidgetBackground:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
-            break;
-    
-        case eColor_WidgetForeground:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Foreground));
-            break;
-    
-        case eColor_WidgetSelectBackground:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Active, QPalette::Background));
-            break;
-    
-        case eColor_WidgetSelectForeground:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Active, QPalette::Foreground));
-            break;
-    
-        case eColor_Widget3DHighlight:
-            aColor = NS_RGB(0xa0,0xa0,0xa0);
-            break;
-    
-        case eColor_Widget3DShadow:
-            aColor = NS_RGB(0x40,0x40,0x40);
-            break;
-    
-        case eColor_TextBackground:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
-            break;
-    
-        case eColor_TextForeground:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Text));
-            break;
-    
-        case eColor_TextSelectBackground:
-        case eColor_IMESelectedRawTextBackground:
-        case eColor_IMESelectedConvertedTextBackground:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Active, QPalette::Highlight));
-            break;
-    
-        case eColor_TextSelectForeground:
-        case eColor_IMESelectedRawTextForeground:
-        case eColor_IMESelectedConvertedTextForeground:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Active, QPalette::HighlightedText));
-            break;
-    
-        case eColor_IMERawInputBackground:
-        case eColor_IMEConvertedTextBackground:
-            aColor = NS_TRANSPARENT;
-            break;
-    
-        case eColor_IMERawInputForeground:
-        case eColor_IMEConvertedTextForeground:
-            aColor = NS_SAME_AS_FOREGROUND_COLOR;
-            break;
-    
-        case eColor_IMERawInputUnderline:
-        case eColor_IMEConvertedTextUnderline:
-            aColor = NS_SAME_AS_FOREGROUND_COLOR;
-            break;
-    
-        case eColor_IMESelectedRawTextUnderline:
-        case eColor_IMESelectedConvertedTextUnderline:
-            aColor = NS_TRANSPARENT;
-            break;
-    
-        case eColor_activeborder:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
-            break;
-    
-        case eColor_activecaption:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
-            break;
-    
-        case eColor_appworkspace:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
-            break;
-    
-        case eColor_background:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
-            break;
-    
-        case eColor_captiontext:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Text));
-            break;
-    
-        case eColor_graytext:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Disabled, QPalette::Text));
-            break;
-    
-        case eColor_highlight:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Active, QPalette::Highlight));
-            break;
-    
-        case eColor_highlighttext:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Active, QPalette::HighlightedText));
-            break;
-    
-        case eColor_inactiveborder:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
-            break;
-    
-        case eColor_inactivecaption:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Disabled, QPalette::Background));
-            break;
-    
-        case eColor_inactivecaptiontext:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Disabled, QPalette::Text));
-            break;
-    
-        case eColor_infobackground:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
-            break;
-    
-        case eColor_infotext:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Text));
-            break;
-    
-        case eColor_menu:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
-            break;
-    
-        case eColor_menutext:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Text));
-            break;
-    
-        case eColor_scrollbar:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Active, QPalette::Background));
-            break;
-    
-        case eColor_threedface:
-        case eColor_buttonface:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
-            break;
-    
-        case eColor_buttonhighlight:
-        case eColor_threedhighlight:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Light));
-            break;
-    
-        case eColor_buttontext:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Text));
-            break;
-    
-        case eColor_buttonshadow:
-        case eColor_threedshadow:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Shadow));
-            break;
-    
-        case eColor_threeddarkshadow:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Dark));
-            break;
-    
-        case eColor_threedlightshadow:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Light));
-            break;
-    
-        case eColor_window:
-        case eColor_windowframe:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
-            break;
-    
-        case eColor_windowtext:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Text));
-            break;
-    
-        // from the CSS3 working draft (not yet finalized)
-        // http://www.w3.org/tr/2000/wd-css3-userint-20000216.html#color
-        case eColor__moz_field:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Base));
-            break;
-    
-        case eColor__moz_fieldtext:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Text));
-            break;
-    
-        case eColor__moz_dialog:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
-            break;
-    
-        case eColor__moz_dialogtext:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Text));
-            break;
-    
-        case eColor__moz_dragtargetzone:
-            aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Active, QPalette::Background));
-            break;
-    
-        default:
-            aColor = 0;
-            res = NS_ERROR_FAILURE;
-            break;
-    }
+  switch (aID) {
+    case eColor_WindowBackground:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
+      break;
 
-    return res;
+    case eColor_WindowForeground:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Foreground));
+      break;
+
+    case eColor_WidgetBackground:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
+      break;
+
+    case eColor_WidgetForeground:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Foreground));
+      break;
+
+    case eColor_WidgetSelectBackground:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Active, QPalette::Background));
+      break;
+
+    case eColor_WidgetSelectForeground:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Active, QPalette::Foreground));
+      break;
+
+    case eColor_Widget3DHighlight:
+      aColor = NS_RGB(0xa0,0xa0,0xa0);
+      break;
+
+    case eColor_Widget3DShadow:
+      aColor = NS_RGB(0x40,0x40,0x40);
+      break;
+
+    case eColor_TextBackground:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
+      break;
+
+    case eColor_TextForeground:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Text));
+      break;
+
+    case eColor_TextSelectBackground:
+    case eColor_IMESelectedRawTextBackground:
+    case eColor_IMESelectedConvertedTextBackground:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Active, QPalette::Highlight));
+      break;
+
+    case eColor_TextSelectForeground:
+    case eColor_IMESelectedRawTextForeground:
+    case eColor_IMESelectedConvertedTextForeground:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Active, QPalette::HighlightedText));
+      break;
+
+    case eColor_IMERawInputBackground:
+    case eColor_IMEConvertedTextBackground:
+      aColor = NS_TRANSPARENT;
+      break;
+
+    case eColor_IMERawInputForeground:
+    case eColor_IMEConvertedTextForeground:
+      aColor = NS_SAME_AS_FOREGROUND_COLOR;
+      break;
+
+    case eColor_IMERawInputUnderline:
+    case eColor_IMEConvertedTextUnderline:
+      aColor = NS_SAME_AS_FOREGROUND_COLOR;
+      break;
+
+    case eColor_IMESelectedRawTextUnderline:
+    case eColor_IMESelectedConvertedTextUnderline:
+      aColor = NS_TRANSPARENT;
+      break;
+
+    case eColor_activeborder:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
+      break;
+
+    case eColor_activecaption:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
+      break;
+
+    case eColor_appworkspace:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
+      break;
+
+    case eColor_background:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
+      break;
+
+    case eColor_captiontext:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Text));
+      break;
+
+    case eColor_graytext:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Disabled, QPalette::Text));
+      break;
+
+    case eColor_highlight:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Active, QPalette::Highlight));
+      break;
+
+    case eColor_highlighttext:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Active, QPalette::HighlightedText));
+      break;
+
+    case eColor_inactiveborder:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
+      break;
+
+    case eColor_inactivecaption:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Disabled, QPalette::Background));
+      break;
+
+    case eColor_inactivecaptiontext:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Disabled, QPalette::Text));
+      break;
+
+    case eColor_infobackground:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
+      break;
+
+    case eColor_infotext:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Text));
+      break;
+
+    case eColor_menu:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
+      break;
+
+    case eColor_menutext:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Text));
+      break;
+
+    case eColor_scrollbar:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Active, QPalette::Background));
+      break;
+
+    case eColor_threedface:
+    case eColor_buttonface:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
+      break;
+
+    case eColor_buttonhighlight:
+    case eColor_threedhighlight:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Light));
+      break;
+
+    case eColor_buttontext:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Text));
+      break;
+
+    case eColor_buttonshadow:
+    case eColor_threedshadow:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Shadow));
+      break;
+
+    case eColor_threeddarkshadow:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Dark));
+      break;
+
+    case eColor_threedlightshadow:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Light));
+      break;
+
+    case eColor_window:
+    case eColor_windowframe:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
+      break;
+
+    case eColor_windowtext:
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Text));
+      break;
+
+     // from the CSS3 working draft (not yet finalized)
+     // http://www.w3.org/tr/2000/wd-css3-userint-20000216.html#color
+     case eColor__moz_field:
+       aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Base));
+       break;
+
+     case eColor__moz_fieldtext:
+       aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Text));
+       break;
+
+     case eColor__moz_dialog:
+       aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Background));
+       break;
+
+     case eColor__moz_dialogtext:
+       aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Inactive, QPalette::Text));
+       break;
+
+     case eColor__moz_dragtargetzone:
+       aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Active, QPalette::Background));
+       break;
+
+    default:
+      aColor = 0;
+      res    = NS_ERROR_FAILURE;
+      break;
+  }
+  return res;
 }
 
 static const char *metricToString[] = {
@@ -317,183 +315,183 @@ static const char *metricToString[] = {
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID,PRInt32 &aMetric)
 {
 //     qDebug("nsLookAndFeel::GetMetric aID = %s", metricToString[aID]);
-    nsresult res = nsXPLookAndFeel::GetMetric(aID, aMetric);
-    if (NS_SUCCEEDED(res))
-        return res;
+  nsresult res = nsXPLookAndFeel::GetMetric(aID, aMetric);
+  if (NS_SUCCEEDED(res))
+      return res;
 //   qDebug("    checking ourselves");
-    res = NS_OK;
+  res = NS_OK;
 
-    QStyle* qStyle = qApp->style();
+  QStyle* qStyle = qApp->style();
 
-    switch (aID) {
-        case eMetric_WindowTitleHeight:
-            aMetric = qStyle->pixelMetric(QStyle::PM_TitleBarHeight);
-//             qDebug("eMetric_WindowTitleHeight %d", aMetric);
-            break;
+  switch (aID) {
+    case eMetric_WindowTitleHeight:
+      aMetric = qStyle->pixelMetric(QStyle::PM_TitleBarHeight);
+      qDebug("eMetric_WindowTitleHeight %d", aMetric);
+      break;
 
-        case eMetric_WindowBorderWidth:
-            // There was once code in nsDeviceContextQt::GetSystemAttribute to
-            // use the border width obtained from a widget in its Init method.
-            break;
-    
-        case eMetric_WindowBorderHeight:
-            // There was once code in nsDeviceContextQt::GetSystemAttribute to
-            // use the border width obtained from a widget in its Init method.
-            break;
-    
-        case eMetric_Widget3DBorder:
-            aMetric = 4;
-            break;
-    
-        case eMetric_TextFieldHeight:
-            aMetric = 15;
-            break;
-    
-        case eMetric_TextFieldBorder:
-            aMetric = 2;
-            break;
-    
-        case eMetric_TextVerticalInsidePadding:
-            aMetric = 0;
-            break;
-    
-        case eMetric_TextShouldUseVerticalInsidePadding:
-            aMetric = 0;
-            break;
-    
-        case eMetric_TextHorizontalInsideMinimumPadding:
-            aMetric = 15;
-            break;
-    
-        case eMetric_TextShouldUseHorizontalInsideMinimumPadding:
-            aMetric = 1;
-            break;
-    
-        case eMetric_ButtonHorizontalInsidePaddingNavQuirks:
-            aMetric = 10;
-            break;
-    
-        case eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks:
-            aMetric = 8;
-            break;
-    
-        case eMetric_CheckboxSize:
-        case eMetric_RadioboxSize:
-            aMetric = qStyle->pixelMetric(QStyle::PM_CheckListButtonSize);
-            break;
-    
-        case eMetric_ListShouldUseHorizontalInsideMinimumPadding:
-            aMetric = 15;
-            break;
-    
-        case eMetric_ListHorizontalInsideMinimumPadding:
-            aMetric = 15;
-            break;
-    
-        case eMetric_ListShouldUseVerticalInsidePadding:
-            aMetric = 1;
-            break;
-    
-        case eMetric_ListVerticalInsidePadding:
-            aMetric = 1;
-            break;
-    
-        case eMetric_CaretBlinkTime:
-            aMetric = 500;
-            break;
-    
-        case eMetric_CaretWidth:
-            aMetric = 1;
-            break;
-    
-        case eMetric_ShowCaretDuringSelection:
-            aMetric = 0;
-            break;
-        
-        case eMetric_SelectTextfieldsOnKeyFocus:
-            // Select textfield content when focused by kbd
-            // used by nsEventStateManager::sTextfieldSelectModel
-            aMetric = 1;
-            break;
-    
-        case eMetric_SubmenuDelay:
-            aMetric = 200;
-            break;
-    
-        case eMetric_MenusCanOverlapOSBar:
-            // we want XUL popups to be able to overlap the task bar.
-            aMetric = 1;
-            break;
-    
-        case eMetric_DragFullWindow:
-            aMetric = 1;
-            break;
-    
-        case eMetric_ScrollArrowStyle:
-            aMetric = eMetric_ScrollArrowStyleSingle;
-            break;
-    
-        case eMetric_ScrollSliderStyle:
-            aMetric = eMetric_ScrollThumbStyleProportional;
-            break;
-    
-        default:
-            aMetric = -1;
-            res = NS_ERROR_FAILURE;
-    }
+    case eMetric_WindowBorderWidth:
+      // There was once code in nsDeviceContextQt::GetSystemAttribute to
+      // use the border width obtained from a widget in its Init method.
+      break;
 
-    return res;
+    case eMetric_WindowBorderHeight:
+      // There was once code in nsDeviceContextQt::GetSystemAttribute to
+      // use the border width obtained from a widget in its Init method.
+      break;
+
+    case eMetric_Widget3DBorder:
+      aMetric = 4;
+      break;
+
+    case eMetric_TextFieldHeight:
+      aMetric = 15;
+      break;
+
+    case eMetric_TextFieldBorder:
+      aMetric = 2;
+      break;
+
+    case eMetric_TextVerticalInsidePadding:
+      aMetric = 0;
+      break;
+
+    case eMetric_TextShouldUseVerticalInsidePadding:
+      aMetric = 0;
+      break;
+
+    case eMetric_TextHorizontalInsideMinimumPadding:
+      aMetric = 15;
+      break;
+
+    case eMetric_TextShouldUseHorizontalInsideMinimumPadding:
+      aMetric = 1;
+      break;
+
+    case eMetric_ButtonHorizontalInsidePaddingNavQuirks:
+      aMetric = 10;
+      break;
+
+    case eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks:
+      aMetric = 8;
+      break;
+
+    case eMetric_CheckboxSize:
+    case eMetric_RadioboxSize:
+      aMetric = 15;
+      aMetric = qStyle->pixelMetric(QStyle::PM_CheckListButtonSize);
+      qDebug("eMetric_CheckboxSize %d", aMetric);
+      break;
+
+    case eMetric_ListShouldUseHorizontalInsideMinimumPadding:
+      aMetric = 15;
+      break;
+
+    case eMetric_ListHorizontalInsideMinimumPadding:
+      aMetric = 15;
+      break;
+
+    case eMetric_ListShouldUseVerticalInsidePadding:
+      aMetric = 1;
+      break;
+
+    case eMetric_ListVerticalInsidePadding:
+      aMetric = 1;
+      break;
+
+    case eMetric_CaretBlinkTime:
+      aMetric = 500;
+      break;
+
+    case eMetric_CaretWidth:
+      aMetric = 1;
+      break;
+
+    case eMetric_ShowCaretDuringSelection:
+      aMetric = 0;
+      break;
+
+    case eMetric_SelectTextfieldsOnKeyFocus:
+      // Select textfield content when focused by kbd
+      // used by nsEventStateManager::sTextfieldSelectModel
+      aMetric = 1;
+      break;
+
+    case eMetric_SubmenuDelay:
+      aMetric = 200;
+      break;
+
+    case eMetric_MenusCanOverlapOSBar:
+      // we want XUL popups to be able to overlap the task bar.
+      aMetric = 1;
+      break;
+
+    case eMetric_DragFullWindow:
+      aMetric = 1;
+      break;
+
+    case eMetric_ScrollArrowStyle:
+      aMetric = eMetric_ScrollArrowStyleSingle;
+      break;
+
+    case eMetric_ScrollSliderStyle:
+      aMetric = eMetric_ScrollThumbStyleProportional;
+      break;
+
+    default:
+      aMetric = 0;
+      res = NS_ERROR_FAILURE;
+  }
+  return res;
 }
 
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID,
                                        float &aMetric)
 {
-    nsresult res = nsXPLookAndFeel::GetMetric(aID, aMetric);
-    if (NS_SUCCEEDED(res))
-        return res;
-    res = NS_OK;
-    
-    switch (aID) {
-        case eMetricFloat_TextFieldVerticalInsidePadding:
-            aMetric = 0.25f;
-            break;
-    
-        case eMetricFloat_TextFieldHorizontalInsidePadding:
-            aMetric = 0.95f; // large number on purpose so minimum padding is used
-            break;
-    
-        case eMetricFloat_TextAreaVerticalInsidePadding:
-            aMetric = 0.40f;
-            break;
-    
-        case eMetricFloat_TextAreaHorizontalInsidePadding:
-            aMetric = 0.40f; // large number on purpose so minimum padding is used
-            break;
-        
-        case eMetricFloat_ListVerticalInsidePadding:
-            aMetric = 0.10f;
-            break;
-    
-        case eMetricFloat_ListHorizontalInsidePadding:
-            aMetric = 0.40f;
-            break;
-    
-        case eMetricFloat_ButtonVerticalInsidePadding:
-            aMetric = 0.25f;
-            break;
-    
-        case eMetricFloat_ButtonHorizontalInsidePadding:
-            aMetric = 0.25f;
-            break;
-    
-        case eMetricFloat_IMEUnderlineRelativeSize:
-            aMetric = 1.0f;
-            break;
-    
-        default:
-            aMetric = -1.0;
-            res = NS_ERROR_FAILURE;
-    }
+  nsresult res = nsXPLookAndFeel::GetMetric(aID, aMetric);
+  if (NS_SUCCEEDED(res))
+      return res;
+  res = NS_OK;
 
-    return res;
+  switch (aID) {
+    case eMetricFloat_TextFieldVerticalInsidePadding:
+      aMetric = 0.25f;
+      break;
+
+    case eMetricFloat_TextFieldHorizontalInsidePadding:
+      aMetric = 0.95f; // large number on purpose so minimum padding is used
+      break;
+
+    case eMetricFloat_TextAreaVerticalInsidePadding:
+      aMetric = 0.40f;
+      break;
+
+    case eMetricFloat_TextAreaHorizontalInsidePadding:
+      aMetric = 0.40f; // large number on purpose so minimum padding is used
+      break;
+
+    case eMetricFloat_ListVerticalInsidePadding:
+      aMetric = 0.10f;
+      break;
+
+    case eMetricFloat_ListHorizontalInsidePadding:
+      aMetric = 0.40f;
+      break;
+
+    case eMetricFloat_ButtonVerticalInsidePadding:
+      aMetric = 0.25f;
+      break;
+
+    case eMetricFloat_ButtonHorizontalInsidePadding:
+      aMetric = 0.25f;
+      break;
+
+    case eMetricFloat_IMEUnderlineRelativeSize:
+      aMetric = 1.0f;
+      break;
+
+    default:
+      aMetric = -1.0;
+      res = NS_ERROR_FAILURE;
+  }
+  return res;
 }
