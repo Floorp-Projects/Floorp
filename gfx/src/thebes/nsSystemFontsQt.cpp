@@ -40,7 +40,7 @@
 #include "nsIRenderingContext.h"
 
 #include "nsSystemFontsQt.h"
-#include "gfxPlatformQt.h"
+#include "gfxQtPlatform.h"
 #include <QApplication>
 #include <QFont>
 
@@ -77,7 +77,7 @@ nsSystemFontsQt::GetSystemFontInfo(const char *aClassName, nsString *aFontName,
     nsString family((PRUnichar*)qFont.family().data());
     *aFontName = quote + family + quote;
     aFontStyle->weight = qFont.weight();
-    aFontStyle->size = qFont.pointSizeF() * float(gfxPlatformQt::DPI()) / 72.0f;
+    aFontStyle->size = qFont.pointSizeF() * float(gfxQtPlatform::DPI()) / 72.0f;
     return NS_OK;
 }
 
