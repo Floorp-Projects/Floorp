@@ -68,6 +68,7 @@ REQUIRES	= xpcom \
 
 MOCSRCS><-->= \
 		moc_mozqwidget.cpp \
+		nsAppShell.cpp \
 		$(NULL)
 
 #GARBAGE                 += moc_mozqwidget.cpp
@@ -75,6 +76,7 @@ MOCSRCS><-->= \
 CPPSRCS	= \
 		$(MOCSRCS) \
 		moc_mozqwidget.cpp \
+		moc_nsAppShell.cpp \
 		nsAppShell.cpp \
 		nsWidgetFactory.cpp \
 		nsCommonWidget.cpp \
