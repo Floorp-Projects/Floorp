@@ -157,6 +157,9 @@ static const nsModuleComponentInfo defaultAppComps[] = {
 static const nsModuleComponentInfo defaultAppComps[] = {};
 #endif
 
+const nsModuleComponentInfo *QGeckoGlobals::sAppComps = defaultAppComps;
+int   QGeckoGlobals::sNumAppComps = sizeof(defaultAppComps) / sizeof(nsModuleComponentInfo);
+
 void
 QGeckoGlobals::pushStartup()
 {
@@ -254,9 +257,11 @@ QGeckoGlobals::setCompPath(const char *aPath)
 }
 
 void
-QGeckoGlobals::setAppComponents(const nsModuleComponentInfo *,
-                             int)
+QGeckoGlobals::setAppComponents(const nsModuleComponentInfo *aComps,
+                                int aNumComponents)
 {
+  sAppComps = aComps;
+  sNumAppComps = aNumComponents;
 }
 
 void
@@ -317,26 +322,36 @@ QGeckoGlobals::setDirectoryServiceProvider(nsIDirectoryServiceProvider
 int
 QGeckoGlobals::registerAppComponents()
 {
-  nsCOMPtr<nsIComponentRegistrar> cr;
-  nsresult rv = NS_GetComponentRegistrar(getter_AddRefs(cr));
-  NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIComponentRegistrar> cr;
+    nsresult rv = NS_GetComponentRegistrar(getter_AddRefs(cr));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  int numAppComps = sizeof(defaultAppComps) / sizeof(nsModuleComponentInfo);
-  for (int i = 0; i < numAppComps; ++i) {
-    nsCOMPtr<nsIGenericFactory> componentFactory;
-    rv = NS_NewGenericFactory(getter_AddRefs(componentFactory),
-                              &(defaultAppComps[i]));
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Unable to create factory for component");
-      continue;  // don't abort registering other components
+    nsCOMPtr<nsIComponentManager> cm;
+    rv = NS_GetComponentManager (getter_AddRefs (cm));
+    NS_ENSURE_SUCCESS (rv, rv);
+
+    for (int i = 0; i < sNumAppComps; ++i) {
+        nsCOMPtr<nsIGenericFactory> componentFactory;
+        rv = NS_NewGenericFactory(getter_AddRefs(componentFactory),
+                                  &(sAppComps[i]));
+        if (NS_FAILED(rv)) {
+            NS_WARNING("Unable to create factory for component");
+            continue;  // don't abort registering other components
+        }
+
+        rv = cr->RegisterFactory(sAppComps[i].mCID, sAppComps[i].mDescription,
+                                 sAppComps[i].mContractID, componentFactory);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to register factory for component");
+
+        // Call the registration hook of the component, if any
+        if (sAppComps[i].mRegisterSelfProc) {
+            rv = sAppComps[i].mRegisterSelfProc(cm, nsnull, nsnull, nsnull,
+                                                &(sAppComps[i]));
+            NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to self-register component");
+        }
     }
 
-    rv = cr->RegisterFactory(defaultAppComps[i].mCID, defaultAppComps[i].mDescription,
-                             defaultAppComps[i].mContractID, componentFactory);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to register factory for component");
-  }
-
-  return rv;
+    return rv;
 }
 
 void QGeckoGlobals::initializeGlobalObjects()
