@@ -143,6 +143,8 @@ nsWindow::GetThebesSurface()
 
         if (!gfxPlatform::UseGlitz()) {
             qDebug("QT_WIDGET NOT SURE: Func:%s::%d, [%ix%i]\n", __PRETTY_FUNCTION__, __LINE__, width, height);
+            // it works for example from http://www.figuiere.net/hub/blog/?2006/07/29/430-cairo-and-qt3
+            // but only with Qt3, with Qt4 we have same (nothing) result. :(
             mThebesSurface = new gfxXlibSurface
             (mWidget->x11Info().display(),
             (Drawable)mWidget->handle(),
