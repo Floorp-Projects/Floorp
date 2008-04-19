@@ -1532,175 +1532,20 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
 {
     LOGFOCUS(("OnKeyPressEvent [%p]\n", (void *)this));
 
-#ifdef USE_XIM
-    // if we are in the middle of composing text, XIM gets to see it
-    // before mozilla does.
-   LOGIM(("key press [%p]: composing %d val %d\n",
-           (void *)this, IMEComposingWindow() != nsnull, aEvent->key()));
-   if (IMEFilterEvent(aEvent))
-       return TRUE;
-   LOGIM(("sending as regular key press event\n"));
-#endif
-
     nsEventStatus status;
 
-    nsCOMPtr<nsIWidget> kungFuDeathGrip = this;
+    nsKeyEvent event(PR_TRUE, NS_KEY_PRESS, this);
+    InitKeyEvent(event, aEvent);
+    event.charCode = (PRInt32)aEvent->text()[0].unicode();
+    // qDebug("FIXME:>>>>>>Func:%s::%d, %i\n", __PRETTY_FUNCTION__, __LINE__, event.charCode);
 
-    // If the key down flag isn't set then set it so we don't send
-    // another key down event on the next key press -- DOM events are
-    // key down, key press and key up.  X only has key press and key
-    // release.  gtk2 already filters the extra key release events for
-    // us.
-
-    PRBool isKeyDownCancelled = PR_FALSE;
-    PRUint32 domVirtualKeyCode = QtKeyCodeToDOMKeyCode(aEvent->key());
-
-    if (!IsKeyDown(domVirtualKeyCode)) {
-        SetKeyDownFlag(domVirtualKeyCode);
-
+    if (!aEvent->isAutoRepeat()) {
         // send the key down event
         nsKeyEvent downEvent(PR_TRUE, NS_KEY_DOWN, this);
         InitKeyEvent(downEvent, aEvent);
         DispatchEvent(&downEvent, status);
-        if (NS_UNLIKELY(mIsDestroyed))
-            return PR_TRUE;
-        isKeyDownCancelled = (status == nsEventStatus_eConsumeNoDefault);
-    }
-
-    // Don't pass modifiers as NS_KEY_PRESS events.
-    // TODO: Instead of selectively excluding some keys from NS_KEY_PRESS events,
-    //       we should instead selectively include (as per MSDN spec; no official
-    //       spec covers KeyPress events).
-    /*
-    if (aEvent->key() == Qt::Key_Shift_L
-        || aEvent->key() == Qt::Key_Shift_R
-        || aEvent->key() == Qt::Key_Control_L
-        || aEvent->key() == Qt::Key_Control_R
-        || aEvent->key() == Qt::Key_Alt_L
-        || aEvent->key() == Qt::Key_Alt_R
-        || aEvent->key() == Qt::Key_Meta_L
-        || aEvent->key() == Qt::Key_Meta_R) {
-        return TRUE;
-    }
-    */
-
-    // Look for specialized app-command keys
-    switch (aEvent->key()) {
-        case XF86XK_Back:
-            return DispatchCommandEvent(nsWidgetAtoms::Back);
-        case XF86XK_Forward:
-            return DispatchCommandEvent(nsWidgetAtoms::Forward);
-        case XF86XK_Refresh:
-            return DispatchCommandEvent(nsWidgetAtoms::Reload);
-        case XF86XK_Stop:
-            return DispatchCommandEvent(nsWidgetAtoms::Stop);
-        case XF86XK_Search:
-            return DispatchCommandEvent(nsWidgetAtoms::Search);
-        case XF86XK_Favorites:
-            return DispatchCommandEvent(nsWidgetAtoms::Bookmarks);
-        case XF86XK_HomePage:
-            return DispatchCommandEvent(nsWidgetAtoms::Home);
-    }
-
-    nsKeyEvent event(PR_TRUE, NS_KEY_PRESS, this);
-    InitKeyEvent(event, aEvent);
-    if (isKeyDownCancelled) {
-      // If prevent default set for onkeydown, do the same for onkeypress
-      event.flags |= NS_EVENT_FLAG_NO_DEFAULT;
-    }
-    event.charCode = nsConvertCharCodeToUnicode(aEvent);
-    if (event.charCode) {
-        event.keyCode = 0;
-        // if the control, meta, or alt key is down, then we should leave
-        // the isShift flag alone (probably not a printable character)
-        // if none of the other modifier keys are pressed then we need to
-        // clear isShift so the character can be inserted in the editor
-
-        if (event.isControl || event.isAlt || event.isMeta) {
-            QKeyEvent tmpEvent = *aEvent;
-
-            // Fix for bug 69230:
-            // if modifier key is pressed and key pressed is not latin character,
-            // we should try other keyboard layouts to find out correct latin
-            // character corresponding to pressed key;
-            // that way shortcuts like Ctrl+C will work no matter what
-            // keyboard layout is selected
-            // We don't try to fix up punctuation accelerators here,
-            // because their location differs between latin layouts
-            /*
-            if (!is_latin_shortcut_key(event.charCode)) {
-                // We have a non-latin char, try other keyboard groups
-                GdkKeymapKey *keys;
-                quint32 *keyvals;
-                qint32 n_entries;
-                PRUint32 latinCharCode;
-                qint32 level;
-
-                if (gdk_keymap_translate_keyboard_state(NULL,
-                                                        tmpEvent.hardware_keycode,
-                                                        (GdkModifierType)tmpEvent.state,
-                                                        tmpEvent.group,
-                                                        NULL, NULL, &level, NULL)
-                    && gdk_keymap_get_entries_for_keycode(NULL,
-                                                          tmpEvent.hardware_keycode,
-                                                          &keys, &keyvals,
-                                                          &n_entries)) {
-                    qint32 n;
-                    for (n=0; n<n_entries; n++) {
-                        if (keys[n].group == tmpEvent.group) {
-                            // Skip keys from the same group
-                            continue;
-                        }
-                        if (keys[n].level != level) {
-                            // Allow only same level keys
-                            continue;
-                        }
-                        if (is_latin_shortcut_key(keyvals[n])) {
-                            // Latin character found
-                            if (event.isShift)
-                                tmpEvent.keyval = gdk_keyval_to_upper(keyvals[n]);
-                            else
-                                tmpEvent.keyval = gdk_keyval_to_lower(keyvals[n]);
-                            tmpEvent.group = keys[n].group;
-                            latinCharCode = nsConvertCharCodeToUnicode(&tmpEvent);
-                            if (latinCharCode) {
-                                event.charCode = latinCharCode;
-                                break;
-                            }
-                        }
-                    }
-                    g_free(keys);
-                    g_free(keyvals);
-                }
-            }
-            */
-
-           // make Ctrl+uppercase functional as same as Ctrl+lowercase
-           // when Ctrl+uppercase(eg.Ctrl+C) is pressed,convert the charCode
-           // from uppercase to lowercase(eg.Ctrl+c),so do Alt and Meta Key
-           // It is hack code for bug 61355, there is same code snip for
-           // Windows platform in widget/src/windows/nsWindow.cpp: See bug 16486
-           // Note: if Shift is pressed at the same time, do not to_lower()
-           // Because Ctrl+Shift has different function with Ctrl
-/*
-           if (!event.isShift &&
-               event.charCode >= Qt::Key_A &&
-               event.charCode <= Qt::Key_Z)
-            event.charCode = gdk_keyval_to_lower(event.charCode);
-*/
-
-           // Keep the characters unshifted for shortcuts and accesskeys and
-           // make sure that numbers are always passed as such (among others:
-           // bugs 50255 and 351310)
-/*
-           if (!event.isControl && event.isShift &&
-               (event.charCode < Qt::Key_0 || event.charCode > Qt::Key_9)) {
-               GdkKeymapKey k = { tmpEvent.hardware_keycode, tmpEvent.group, 0 };
-               tmpEvent.keyval = gdk_keymap_lookup_key(gdk_keymap_get_default(), &k);
-               PRUint32 unshiftedCharCode = nsConvertCharCodeToUnicode(&tmpEvent);
-               if (unshiftedCharCode)
-                   event.charCode = unshiftedCharCode;
-           } */
+        if (ignoreEvent(status)) { // If prevent default on keydown, do same for keypress
+            event.flags |= NS_EVENT_FLAG_NO_DEFAULT;
         }
     }
 
@@ -1733,11 +1578,6 @@ bool
 nsWindow::OnKeyReleaseEvent(QKeyEvent *aEvent)
 {
     LOGFOCUS(("OnKeyReleaseEvent [%p]\n", (void *)this));
-
-#ifdef USE_XIM
-    if (IMEFilterEvent(aEvent))
-        return TRUE;
-#endif
 
     // send the key event as a key up event
     nsKeyEvent event(PR_TRUE, NS_KEY_UP, this);
