@@ -45,6 +45,9 @@
 #include "nsNativeTheme.h"
 
 class QComboBox;
+class QStyleOptionButton;
+class QRect;
+class nsIFrame;
 
 class nsNativeThemeQt : private nsNativeTheme,
                         public nsITheme
@@ -94,7 +97,17 @@ public:
   virtual ~nsNativeThemeQt();
 
 private:
+
+  void EnsuremP2A(nsIRenderingContext* aContext);
+
+  void ButtonStyle(nsIFrame* aFrame, QRect aRect, QStyleOptionButton* aOption);
+
+private:
+
   QComboBox *combo;
-  int frameWidth;
+
+  PRInt32 frameWidth;
+
+  PRInt32 mP2A;
 };
 
