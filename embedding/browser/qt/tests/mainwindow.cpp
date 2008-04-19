@@ -22,6 +22,8 @@ MyMainWindow::MyMainWindow()
 
     QToolBar *toolbar = new QToolBar(this);
     toolbar->setWindowTitle("Location:");
+    addToolBar(toolbar);
+    setToolButtonStyle(Qt::ToolButtonTextOnly);
 
     QAction *action = new QAction(QIcon(rsrcPath + "/back.png"), tr( "Go Back"), toolbar);
     action->setShortcut(Qt::ControlModifier + Qt::Key_B);
