@@ -97,7 +97,8 @@ function test()
       is(downloadView.itemCount, sites.length, "All downloads displayed");
 
       // Select all downloads
-      EventUtils.synthesizeKey("a", { metaKey: true}, win);
+      let isMac = navigator.platform.search("Mac") == 0;
+      EventUtils.synthesizeKey("a", { metaKey: isMac, ctrlKey: !isMac }, win);
       is(downloadView.selectedCount, sites.length, "All downloads selected");
 
       // Delete all downloads
