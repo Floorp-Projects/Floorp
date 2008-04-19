@@ -296,9 +296,9 @@ _cairo_path_to_qpainterpath_close_path (void *closure)
 
 static cairo_status_t
 _cairo_quartz_cairo_path_to_qpainterpath (cairo_path_fixed_t *path,
-        QPainterPath *qpath,
-        cairo_fill_rule_t fill_rule,
-        cairo_matrix_t *ctm_inverse = NULL)
+                                          QPainterPath *qpath,
+                                          cairo_fill_rule_t fill_rule,
+                                          cairo_matrix_t *ctm_inverse = NULL)
 {
     qpainter_path_data pdata = { qpath, ctm_inverse };
 
@@ -378,8 +378,8 @@ _cairo_qpainter_surface_finish (void *abstract_surface)
 
 static cairo_status_t
 _cairo_qpainter_surface_acquire_source_image (void *abstract_surface,
-        cairo_image_surface_t **image_out,
-        void **image_extra)
+                                              cairo_image_surface_t **image_out,
+                                              void **image_extra)
 {
     cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t *) abstract_surface;
 
@@ -412,8 +412,8 @@ _cairo_qpainter_surface_acquire_source_image (void *abstract_surface,
 
 static void
 _cairo_qpainter_surface_release_source_image (void *abstract_surface,
-        cairo_image_surface_t *image,
-        void *image_extra)
+                                              cairo_image_surface_t *image,
+                                              void *image_extra)
 {
     //cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t *) abstract_surface;
 
@@ -429,10 +429,10 @@ _cairo_qpainter_surface_release_source_image (void *abstract_surface,
 
 static cairo_status_t
 _cairo_qpainter_surface_acquire_dest_image (void *abstract_surface,
-        cairo_rectangle_int_t *interest_rect,
-        cairo_image_surface_t **image_out,
-        cairo_rectangle_int_t *image_rect,
-        void **image_extra)
+                                            cairo_rectangle_int_t *interest_rect,
+                                            cairo_image_surface_t **image_out,
+                                            cairo_rectangle_int_t *image_rect,
+                                            void **image_extra)
 {
     cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t *) abstract_surface;
     QImage *qimg = NULL;
@@ -1083,8 +1083,8 @@ cairo_qpainter_surface_create (QPainter *painter)
 
 cairo_surface_t *
 cairo_qpainter_surface_create_with_qimage (cairo_format_t format,
-        int width,
-        int height)
+                                           int width,
+                                           int height)
 {
     cairo_qpainter_surface_t *qs;
 
@@ -1122,7 +1122,7 @@ cairo_qpainter_surface_create_with_qimage (cairo_format_t format,
 
 cairo_surface_t *
 cairo_qpainter_surface_create_with_qpixmap (int width,
-        int height)
+                                            int height)
 {
     cairo_qpainter_surface_t *qs;
 
