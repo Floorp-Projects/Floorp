@@ -102,14 +102,22 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeQt)
 */
 static const nsModuleComponentInfo components[] =
 {
-    { "Qt AppShell",
-      NS_APPSHELL_CID,
-      "@mozilla.org/widget/appshell/qt;1",
-      nsAppShellConstructor },
+    { "Qt nsWindow",
+      NS_WINDOW_CID,
+      "@mozilla.org/widgets/window/qt;1",
+      nsWindowConstructor },
     { "Qt Child nsWindow",
       NS_CHILD_CID,
       "@mozilla.org/widgets/child_window/qt;1",
       ChildWindowConstructor },
+    { "Qt AppShell",
+      NS_APPSHELL_CID,
+      "@mozilla.org/widget/appshell/qt;1",
+      nsAppShellConstructor },
+    { "Qt Look And Feel",
+      NS_LOOKANDFEEL_CID,
+      "@mozilla.org/widget/lookandfeel/qt;1",
+      nsLookAndFeelConstructor },
     { "Qt Popup nsWindow",
       NS_POPUP_CID,
       "@mozilla.org/widgets/popup_window/qt;1",
@@ -125,11 +133,7 @@ static const nsModuleComponentInfo components[] =
     { "Transferrable",
       NS_TRANSFERABLE_CID,
       "@mozilla.org/widget/transferable;1",
-      nsTransferableConstructor },
-    { "Qt Look And Feel",
-      NS_LOOKANDFEEL_CID,
-      "@mozilla.org/widget/lookandfeel/qt;1",
-      nsLookAndFeelConstructor },
+      nsTransferableConstructor }
 /*
     { "Qt Native Scrollbar",
       NS_NATIVESCROLLBAR_CID,
@@ -164,10 +168,6 @@ static const nsModuleComponentInfo components[] =
       "@mozilla.org/chrome/chrome-native-theme;1",
       nsNativeThemeQtConstructor }
 */
-    { "Qt nsWindow",
-      NS_WINDOW_CID,
-      "@mozilla.org/widgets/window/qt;1",
-      nsWindowConstructor }
 };
 
 NS_IMPL_NSGETMODULE(nsWidgetQtModule,components)
