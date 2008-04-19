@@ -50,8 +50,7 @@ NS_IMPL_QUERY_INTERFACE2(nsDragService, nsIDragService, nsIDragSession )
 nsDragService::nsDragService() : mDrag(NULL)
 {
     /* member initializers and constructor code */
-    qDebug("nsDragService::nsDragService");
-
+        
     // TODO: Any other better source? (the main window?)
     //mHiddenWidget = new QWidget(0,QWidget::tr("DragDrop"),0);
     mHiddenWidget = new QWidget();
@@ -60,8 +59,6 @@ nsDragService::nsDragService() : mDrag(NULL)
 nsDragService::~nsDragService()
 {
     /* destructor code */
-    qDebug("nsDragService::~nsDragService");
-
     delete mHiddenWidget;
     delete mDrag;
 }
@@ -137,7 +134,6 @@ nsDragService::SetupDragSession(
                     PRUint32 dataLen = 0;
                     nsXPIDLCString flavorStr;
                     currentFlavor->ToString(getter_Copies(flavorStr));
-//                    qDebug("Flavor: %s", flavorStr.get());
 
                     // Is it some flavor we think we could support?
                     if (!strcmp(kURLMime, flavorStr.get())
@@ -167,8 +163,6 @@ nsDragService::SetupDragSession(
         }
     }
 
-    qDebug("Creating a new QDrag object");
-
     mDrag = new QDrag( mHiddenWidget ); // TODO: Better drag source here?
     mDrag->setMimeData(mimeData);
 
@@ -185,8 +179,6 @@ nsDragService::InvokeDragSession(
                                 nsIScriptableRegion *aRegion,
                                 PRUint32 aActionType)
 {
-    qDebug("nsDragService::InvokeDragSession");
-
     nsBaseDragService::InvokeDragSession( 
                                         aDOMNode,
                                         aTransferables,
@@ -201,10 +193,7 @@ nsDragService::InvokeDragSession(
 NS_IMETHODIMP
 nsDragService::ExecuteDrag()
 {
-    qDebug("Drag->exec()");
     Qt::DropAction dropAction = mDrag->exec( mDropAction );
-
-    qDebug("Returned from drag->exec(), dropAction = %d", dropAction);
 
     return NS_OK;
 }
@@ -221,8 +210,6 @@ nsDragService::InvokeDragSessionWithImage(
                         PRInt32 aImageY,
                         nsIDOMMouseEvent* aDragEvent)
 {
-    qDebug("nsDragService::InvokeDragSessionWithImage");
-
     nsBaseDragService::InvokeDragSessionWithImage(
                                         aDOMNode, aTransferables,
                                         aRegion, aActionType,
@@ -255,8 +242,6 @@ nsDragService::InvokeDragSessionWithImage(
 NS_IMETHODIMP
 nsDragService::InvokeDragSessionWithSelection(nsISelection* aSelection, nsISupportsArray* aTransferables, PRUint32 aActionType, nsIDOMMouseEvent* aDragEvent)
 {
-    qDebug("nsDragService::InvokeDragSessionWithSelection");
-
     nsBaseDragService::InvokeDragSessionWithSelection(
                                         aSelection,
                                         aTransferables,
@@ -275,8 +260,6 @@ nsDragService::InvokeDragSessionWithSelection(nsISelection* aSelection, nsISuppo
 NS_IMETHODIMP
 nsDragService::GetCurrentSession(nsIDragSession **_retval)
 {
-    qDebug("nsDragService::GetCurrentSession");
-
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -284,50 +267,34 @@ nsDragService::GetCurrentSession(nsIDragSession **_retval)
 NS_IMETHODIMP
 nsDragService::StartDragSession()
 {
-    qDebug("nsDragService::StartDragSession");
-
     return nsBaseDragService::StartDragSession();
-//    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* void endDragSession (in PRBool aDoneDrag); */
 NS_IMETHODIMP
 nsDragService::EndDragSession(PRBool aDoneDrag)
 {
-    qDebug("nsDragService::EndDragSession");
-
     return nsBaseDragService::EndDragSession(aDoneDrag);
-//    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* void fireDragEventAtSource (in unsigned long aMsg); */
 NS_IMETHODIMP
 nsDragService::FireDragEventAtSource(PRUint32 aMsg)
 {
-    qDebug("nsDragService::FireDragEventAtSource");
-
-    
     return nsBaseDragService::FireDragEventAtSource(aMsg);
-//    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* TODO: What is this? */
 NS_IMETHODIMP
 nsDragService::Suppress()
 {
-    qDebug("nsDragService::Suppress");
-
     return nsBaseDragService::Suppress();
-//    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* TODO: What is this? */
 NS_IMETHODIMP
 nsDragService::Unsuppress()
 {
-    qDebug("nsDragService::Unsuppress");
-
     return nsBaseDragService::Unsuppress();
-//    return NS_ERROR_NOT_IMPLEMENTED;
 }
 

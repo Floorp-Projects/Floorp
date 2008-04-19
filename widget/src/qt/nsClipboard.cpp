@@ -62,7 +62,7 @@ nsClipboard::nsClipboard() : nsIClipboard(),
                              mSelectionTransferable(nsnull),
                              mGlobalTransferable(nsnull)
 {
-    qDebug("nsClipboard constructor");
+    // No implementation needed
 }
 
 //-------------------------------------------------------------------------
@@ -81,8 +81,6 @@ NS_IMETHODIMP
 nsClipboard::SetNativeClipboardData( nsITransferable *aTransferable,
                                      QClipboard::Mode clipboardMode )
 {
-    qDebug("SetNativeClipboardData");
-
     if (nsnull == aTransferable)
     {
         qDebug("nsClipboard::SetNativeClipboardData(): no transferable!");
@@ -160,8 +158,6 @@ NS_IMETHODIMP
 nsClipboard::GetNativeClipboardData(nsITransferable *aTransferable,
                                     QClipboard::Mode clipboardMode)
 {
-    qDebug("GetNativeClipboardData");
-    
     if (nsnull == aTransferable)
     {
         qDebug("  GetNativeClipboardData: Transferable is null!");
@@ -216,8 +212,6 @@ nsClipboard::GetNativeClipboardData(nsITransferable *aTransferable,
                     // Is there a more correct way to get the size in UTF16?
                     PRUint32 len = (PRUint32) 2*text.size();
 
-                    qDebug("Size of byte array for pasted data: %d", len);
-
                     // And then to genericDataWrapper
                     nsCOMPtr<nsISupports> genericDataWrapper;
                     nsPrimitiveHelpers::CreatePrimitiveForData(
@@ -252,7 +246,6 @@ NS_IMETHODIMP
 nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
                                     PRInt32 aWhichClipboard, PRBool *_retval)
 {
-    qDebug("HasDataMatchingFlavors");
     *_retval = PR_FALSE;
     if (aWhichClipboard != kGlobalClipboard)
         return NS_OK;
@@ -294,8 +287,6 @@ nsClipboard::SetData(nsITransferable *aTransferable,
                      nsIClipboardOwner *aOwner,
                      PRInt32 aWhichClipboard)
 {
-    qDebug("SetData");
-
     // See if we can short cut
     if (
         (aWhichClipboard == kGlobalClipboard
@@ -339,7 +330,6 @@ nsClipboard::SetData(nsITransferable *aTransferable,
 NS_IMETHODIMP
 nsClipboard::GetData(nsITransferable *aTransferable, PRInt32 aWhichClipboard)
 {
-    qDebug("GetData");
     if (nsnull != aTransferable)
     {
         QClipboard::Mode mode;
@@ -363,8 +353,6 @@ nsClipboard::GetData(nsITransferable *aTransferable, PRInt32 aWhichClipboard)
 NS_IMETHODIMP
 nsClipboard::EmptyClipboard(PRInt32 aWhichClipboard)
 {
-    qDebug("EmptyClipoard");
-
     if (aWhichClipboard == kSelectionClipboard)
     {
         if (mSelectionOwner)
@@ -390,7 +378,6 @@ nsClipboard::EmptyClipboard(PRInt32 aWhichClipboard)
 NS_IMETHODIMP
 nsClipboard::SupportsSelectionClipboard(PRBool *_retval)
 {
-    qDebug("SuppotsSelectionClipboard");
     NS_ENSURE_ARG_POINTER(_retval);
 
     QClipboard *cb = QApplication::clipboard();
