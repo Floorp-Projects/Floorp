@@ -79,6 +79,7 @@ CPPSRCS	= \
 		nsWidgetFactory.cpp \
 		nsCommonWidget.cpp \
 		nsWindow.cpp \
+		nsLookAndFeel.cpp \
 		nsToolkit.cpp \
 		mozqwidget.cpp \
 		$(NULL)
