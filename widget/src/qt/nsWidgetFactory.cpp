@@ -41,14 +41,17 @@
 
 #include "nsIGenericFactory.h"
 #include "nsIModule.h"
-// #include "nsCOMPtr.h"
-// #include "nsWidgetsCID.h"
+
+#include "nsCOMPtr.h"
+#include "nsWidgetsCID.h"
+#include "nsAppShell.h"
+
 // #include "nsIComponentRegistrar.h"
 // #include "nsComponentManagerUtils.h"
 // #include "nsAutoPtr.h"
 // 
 // #include "nsWindow.h"
-// #include "nsAppShell.h"
+
 // #include "nsToolkit.h"
 // #include "nsLookAndFeel.h"
 // #include "nsTransferable.h"
@@ -70,13 +73,16 @@
 // 
 // #include "nsBidiKeyboard.h"
 // #include "nsNativeThemeQt.h"
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
+
 /*
 static NS_DEFINE_CID(kNativeScrollCID, NS_NATIVESCROLLBAR_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(PopupWindow)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
@@ -92,6 +98,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeQt)
 */
 static const nsModuleComponentInfo components[] =
 {
+    { "Qt AppShell",
+      NS_APPSHELL_CID,
+      "@mozilla.org/widget/appshell/qt;1",
+      nsAppShellConstructor }
 /*
     { "Qt nsWindow",
       NS_WINDOW_CID,
@@ -109,10 +119,6 @@ static const nsModuleComponentInfo components[] =
       NS_NATIVESCROLLBAR_CID,
       "@mozilla.org/widget/nativescrollbar/qt;1",
       nsNativeScrollbarConstructor},
-    { "Qt AppShell",
-      NS_APPSHELL_CID,
-      "@mozilla.org/widget/appshell/qt;1",
-      nsAppShellConstructor },
     { "Qt Toolkit",
       NS_TOOLKIT_CID,
       "@mozilla.org/widget/toolkit/qt;1",
