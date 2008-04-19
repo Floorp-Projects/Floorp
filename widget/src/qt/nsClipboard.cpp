@@ -210,10 +210,11 @@ nsClipboard::GetNativeClipboardData(nsITransferable *aTransferable,
                     // handle the data as text
                     foundFlavor = nsCAutoString(flavorStr);
 
-                    // Copy the text data from clipboard to byte array
+                    // Get the text data from clipboard
                     QString text = mimeData->text();
-                    QByteArray ba = text.toUtf8();
-                    PRUint32 len = (PRUint32) ba.size();
+                    const QChar *unicode = text.unicode();
+                    // Is there a more correct way to get the size in UTF16?
+                    PRUint32 len = (PRUint32) 2*text.size();
 
                     qDebug("Size of byte array for pasted data: %d", len);
 
@@ -221,7 +222,8 @@ nsClipboard::GetNativeClipboardData(nsITransferable *aTransferable,
                     nsCOMPtr<nsISupports> genericDataWrapper;
                     nsPrimitiveHelpers::CreatePrimitiveForData(
                         foundFlavor.get(),
-                        (void*)ba.data(),len,
+                        (void*)unicode,
+                        len,
                         getter_AddRefs(genericDataWrapper));
 
                     // Data is good, set it to the transferable
