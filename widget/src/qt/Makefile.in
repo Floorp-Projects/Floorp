@@ -95,6 +95,7 @@ CPPSRCS	= \
 		nsQtKeyUtils.cpp \
 		nsClipboard.cpp \
 		nsBidiKeyboard.cpp \
+		nsDragService.cpp \
 		mozqwidget.cpp \
 		$(NULL)
 
