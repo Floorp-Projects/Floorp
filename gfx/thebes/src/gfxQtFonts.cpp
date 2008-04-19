@@ -386,6 +386,7 @@ gfxQtFont::gfxQtFont(const nsAString &aName,
         : gfxFont(aName, aFontStyle),
         mQFont(nsnull),
         mCairoFont(nsnull),
+        mFontFace(nsnull),
         mHasSpaceGlyph(PR_FALSE),
         mSpaceGlyph(0),
         mHasMetrics(PR_FALSE),
@@ -588,28 +589,126 @@ PRUint32 gfxQtFont::GetSpaceGlyph ()
     return mSpaceGlyph;
 }
 
+static const PRInt8 nFcWeight = 2; // 10; // length of weight list
+static const int fcWeight[] = {
+    //FC_WEIGHT_THIN,
+    //FC_WEIGHT_EXTRALIGHT, // == FC_WEIGHT_ULTRALIGHT
+    //FC_WEIGHT_LIGHT,
+    //FC_WEIGHT_BOOK,
+    FC_WEIGHT_REGULAR, // == FC_WEIGHT_NORMAL
+    //FC_WEIGHT_MEDIUM,
+    //FC_WEIGHT_DEMIBOLD, // == FC_WEIGHT_SEMIBOLD
+    FC_WEIGHT_BOLD,
+    //FC_WEIGHT_EXTRABOLD, // == FC_WEIGHT_ULTRABOLD
+    //FC_WEIGHT_BLACK // == FC_WEIGHT_HEAVY
+};
+
+
+cairo_font_face_t *gfxQtFont::CairoFontFace(QFont *aFont)
+{
+#ifdef DEBUG_thebes_2
+    printf("gfxOS2Font[%#x]::CairoFontFace()\n", (unsigned)this);
+#endif
+    if (!mFontFace) {
+#ifdef DEBUG_thebes
+        printf("gfxOS2Font[%#x]::CairoFontFace(): create it for %s, %f\n",
+               (unsigned)this, NS_LossyConvertUTF16toASCII(mName).get(), GetStyle()->size);
+#endif
+        if (aFont) {
+            FT_Face ftFace = aFont->freetypeFace();
+            mFontFace = cairo_ft_font_face_create_for_ft_face( ftFace, 0 );
+            if (mFontFace)
+                return mFontFace;
+        }
+
+        FcPattern *fcPattern = FcPatternCreate();
+
+        // add (family) name to pattern
+        // (the conversion should work, font names don't contain high bit chars)
+        FcPatternAddString(fcPattern, FC_FAMILY,
+                           (FcChar8 *)NS_LossyConvertUTF16toASCII(mName).get());
+
+
+        // adjust font weight using the offset
+        // The requirements outlined in gfxFont.h are difficult to meet without
+        // having a table of available font weights, so we map the gfxFont
+        // weight to possible FontConfig weights.
+        PRInt8 weight, offset;
+        GetStyle()->ComputeWeightAndOffset(&weight, &offset);
+        // gfxFont weight   FC weight
+        //    400              80
+        //    700             200
+        PRInt16 fcW = 40 * weight - 80; // match gfxFont weight to base FC weight
+        // find the correct weight in the list
+        PRInt8 i = 0;
+        while (i < nFcWeight && fcWeight[i] < fcW) {
+            i++;
+        }
+        // add the offset, but observe the available number of weights
+        i += offset;
+        if (i < 0) {
+            i = 0;
+        } else if (i >= nFcWeight) {
+            i = nFcWeight - 1;
+        }
+        fcW = fcWeight[i];
+
+        // add weight to pattern
+        FcPatternAddInteger(fcPattern, FC_WEIGHT, fcW);
+
+        PRUint8 fcProperty;
+        // add style to pattern
+        switch (GetStyle()->style) {
+        case FONT_STYLE_ITALIC:
+            fcProperty = FC_SLANT_ITALIC;
+            break;
+        case FONT_STYLE_OBLIQUE:
+            fcProperty = FC_SLANT_OBLIQUE;
+            break;
+        case FONT_STYLE_NORMAL:
+        default:
+            fcProperty = FC_SLANT_ROMAN;
+        }
+        FcPatternAddInteger(fcPattern, FC_SLANT, fcProperty);
+
+        // add the size we want
+        FcPatternAddDouble(fcPattern, FC_PIXEL_SIZE,
+                           mAdjustedSize ? mAdjustedSize : GetStyle()->size);
+
+        // finally find a matching font
+        FcResult fcRes;
+        FcPattern *fcMatch = FcFontMatch(NULL, fcPattern, &fcRes);
+        FcPatternDestroy(fcPattern);
+        if (mName == NS_LITERAL_STRING("Workplace Sans") && fcW >= FC_WEIGHT_DEMIBOLD) {
+            // if we are dealing with Workplace Sans and want a bold font, we
+            // need to artificially embolden it (no bold counterpart yet)
+            FcPatternAddBool(fcMatch, FC_EMBOLDEN, FcTrue);
+        }
+        // and ask cairo to return a font face for this
+        mFontFace = cairo_ft_font_face_create_for_pattern(fcMatch);
+        FcPatternDestroy(fcMatch);
+    }
+
+    NS_ASSERTION(mFontFace, "Failed to make font face");
+    return mFontFace;
+}
 
 cairo_scaled_font_t*
 gfxQtFont::CreateScaledFont(cairo_t *aCR, cairo_matrix_t *aCTM, QFont &aQFont)
 {
-    FT_Face ftFace = aQFont.freetypeFace();
-
     double size = mAdjustedSize ? mAdjustedSize : GetStyle()->size;
     cairo_matrix_t fontMatrix;
     cairo_matrix_init_scale(&fontMatrix, size, size);
     cairo_font_options_t *fontOptions = cairo_font_options_create();
 
-    cairo_font_face_t *cairoFontFace = 
-                cairo_ft_font_face_create_for_ft_face( ftFace, 0 );
-
     cairo_scaled_font_t* scaledFont = 
-                cairo_scaled_font_create( cairoFontFace, 
+                cairo_scaled_font_create( CairoFontFace(&aQFont),
+//                cairo_scaled_font_create( CairoFontFace(), // This makes fonts working almost perfect
                                           &fontMatrix,
                                           aCTM,
                                           fontOptions);
 
     cairo_font_options_destroy(fontOptions);
-    cairo_font_face_destroy(cairoFontFace);
 
     return scaledFont;
 }

@@ -63,6 +63,7 @@ public: // new functions
 public: // from gfxFont
     virtual PRUint32 GetSpaceGlyph ();
     virtual const gfxFont::Metrics& GetMetrics();
+    cairo_font_face_t *CairoFontFace(QFont *aFont = nsnull);
 
 protected: // from gfxFont
     virtual nsString GetUniqueName ();
@@ -77,6 +78,7 @@ protected: // data
 
     QFont* mQFont;
     cairo_scaled_font_t *mCairoFont;
+    cairo_font_face_t *mFontFace;
 
     PRBool mHasSpaceGlyph;
     PRUint32 mSpaceGlyph;
