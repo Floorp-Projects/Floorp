@@ -83,6 +83,8 @@ CPPSRCS	= \
 		nsWindow.cpp \
 		nsLookAndFeel.cpp \
 		nsToolkit.cpp \
+		nsScreenQt.cpp \
+		nsScreenManagerQt.cpp \
 		mozqwidget.cpp \
 		$(NULL)
 
