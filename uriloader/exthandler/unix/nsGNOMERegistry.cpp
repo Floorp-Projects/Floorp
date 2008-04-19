@@ -47,8 +47,10 @@
 #include "nsIGConfService.h"
 #include "nsIGnomeVFSService.h"
 
+#ifdef MOZ_WIDGET_GTK2
 #include <glib.h>
 #include <glib-object.h>
+#endif
 
 /* static */ PRBool
 nsGNOMERegistry::HandlerExists(const char *aProtocolScheme)
