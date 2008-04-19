@@ -55,6 +55,10 @@
 #include "gfxQuartzImageSurface.h"
 #endif
 
+#ifdef CAIRO_HAS_QPAINTER_SURFACE
+#include "gfxQPainterSurface.h"
+#endif
+
 #include <stdio.h>
 #include <limits.h>
 
@@ -161,6 +165,11 @@ gfxASurface::Wrap (cairo_surface_t *csurf)
     }
     else if (stype == CAIRO_SURFACE_TYPE_QUARTZ_IMAGE) {
         result = new gfxQuartzImageSurface(csurf);
+    }
+#endif
+#ifdef CAIRO_HAS_QPAINTER_SURFACE
+    else if (stype == CAIRO_SURFACE_TYPE_QPAINTER) {
+        result = new gfxQPainterSurface(csurf);
     }
 #endif
     else {

@@ -500,7 +500,7 @@ typedef enum {
 
 /* YUV formats */
     PIXMAN_yuy2 =	PIXMAN_FORMAT(16,PIXMAN_TYPE_YUY2,0,0,0,0),
-    PIXMAN_yv12 =	PIXMAN_FORMAT(12,PIXMAN_TYPE_YV12,0,0,0,0),
+    PIXMAN_yv12 =	PIXMAN_FORMAT(12,PIXMAN_TYPE_YV12,0,0,0,0)
 } pixman_format_code_t;
 
 /* Querying supported format values. */
