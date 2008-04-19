@@ -99,7 +99,7 @@ nsSystemFontsQt::GetSystemFontInfo(const QFont &aFont, nsString *aFontName,
     nsString family((PRUnichar*)aFont.family().data());
     *aFontName = quote + family + quote;
     aFontStyle->weight = aFont.weight();
-    aFontStyle->size = aFont.pointSizeF();
+    aFontStyle->size = aFont.pointSizeF() * float(gfxPlatformQt::DPI()) / 72.0f;
     return NS_OK;
 }
 
