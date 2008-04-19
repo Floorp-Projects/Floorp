@@ -1,8 +1,8 @@
 #include "mozqwidget.h"
-#include "nsCommonWidget.h"
+#include "nsWindow.h"
 #include <qevent.h>
 
-MozQWidget::MozQWidget(nsCommonWidget *receiver, QWidget *parent,
+MozQWidget::MozQWidget(nsWindow *receiver, QWidget *parent,
                        const char *name, int f)
     : QWidget(parent, (Qt::WindowFlags)f),
       mReceiver(receiver)
@@ -24,13 +24,13 @@ bool MozQWidget::event(QEvent *e)
     case QEvent::MouseButtonPress:
     {
         QMouseEvent *ms = (QMouseEvent*)(e);
-        ignore = mReceiver->mousePressEvent(ms);
+        ignore = mReceiver->OnButtonPressEvent(ms);
     }
     break;
     case QEvent::MouseButtonRelease:
     {
         QMouseEvent *ms = (QMouseEvent*)(e);
-        ignore = mReceiver->mouseReleaseEvent(ms);
+        ignore = mReceiver->OnButtonReleaseEvent(ms);
     }
     break;
     case QEvent::MouseButtonDblClick:
@@ -42,19 +42,19 @@ bool MozQWidget::event(QEvent *e)
     case QEvent::MouseMove:
     {
         QMouseEvent *ms = (QMouseEvent*)(e);
-        ignore = mReceiver->mouseMoveEvent(ms);
+        ignore = mReceiver->OnMotionNotifyEvent(ms);
     }
     break;
     case QEvent::KeyPress:
     {
         QKeyEvent *kev = (QKeyEvent*)(e);
-        ignore = mReceiver->keyPressEvent(kev);
+        ignore = mReceiver->OnKeyPressEvent(kev);
     }
     break;
     case QEvent::KeyRelease:
     {
         QKeyEvent *kev = (QKeyEvent*)(e);
-        ignore = mReceiver->keyReleaseEvent(kev);
+        ignore = mReceiver->OnKeyReleaseEvent(kev);
     }
     break;
 /*
@@ -80,43 +80,43 @@ bool MozQWidget::event(QEvent *e)
     case QEvent::FocusIn:
     {
         QFocusEvent *fev = (QFocusEvent*)(e);
-        mReceiver->focusInEvent(fev);
+        mReceiver->OnContainerFocusInEvent(fev);
         return TRUE;
     }
     break;
     case QEvent::FocusOut:
     {
         QFocusEvent *fev = (QFocusEvent*)(e);
-        mReceiver->focusOutEvent(fev);
+        mReceiver->OnContainerFocusOutEvent(fev);
         return TRUE;
     }
     break;
     case QEvent::Enter:
     {
-        ignore = mReceiver->enterEvent(e);
+        ignore = mReceiver->OnEnterNotifyEvent(e);
     }
     break;
     case QEvent::Leave:
     {
-        ignore = mReceiver->enterEvent(e);
+        ignore = mReceiver->OnLeaveNotifyEvent(e);
     }
     break;
     case QEvent::Paint:
     {
         QPaintEvent *ev = (QPaintEvent*)(e);
-        mReceiver->paintEvent(ev);
+        mReceiver->OnExposeEvent(ev);
     }
     break;
     case QEvent::Move:
     {
         QMoveEvent *mev = (QMoveEvent*)(e);
-        ignore = mReceiver->moveEvent(mev);
+        ignore = mReceiver->OnConfigureEvent(mev);
     }
     break;
     case QEvent::Resize:
     {
         QResizeEvent *rev = (QResizeEvent*)(e);
-        ignore = mReceiver->resizeEvent(rev);
+        ignore = mReceiver->OnSizeAllocate(rev);
     }
         break;
     case QEvent::Show:
@@ -134,13 +134,13 @@ bool MozQWidget::event(QEvent *e)
     case QEvent::Close:
     {
         QCloseEvent *cev = (QCloseEvent*)(e);
-        ignore = mReceiver->closeEvent(cev);
+        ignore = mReceiver->OnDeleteEvent(cev);
     }
     break;
     case QEvent::Wheel:
     {
         QWheelEvent *wev = (QWheelEvent*)(e);
-        ignore = mReceiver->wheelEvent(wev);
+        ignore = mReceiver->OnScrollEvent(wev);
     }
     break;
     case QEvent::ContextMenu:
@@ -152,25 +152,25 @@ bool MozQWidget::event(QEvent *e)
     case QEvent::DragEnter:
     {
         QDragEnterEvent *dev = (QDragEnterEvent*)(e);
-        ignore = mReceiver->dragEnterEvent(dev);
+        ignore = mReceiver->OnDragEnter(dev);
     }
         break;
     case QEvent::DragMove:
     {
         QDragMoveEvent *dev = (QDragMoveEvent*)(e);
-        ignore = mReceiver->dragMoveEvent(dev);
+        ignore = mReceiver->OnDragMotionEvent(dev);
     }
     break;
     case QEvent::DragLeave:
     {
         QDragLeaveEvent *dev = (QDragLeaveEvent*)(e);
-        ignore = mReceiver->dragLeaveEvent(dev);
+        ignore = mReceiver->OnDragLeaveEvent(dev);
     }
     break;
     case QEvent::Drop:
     {
         QDropEvent *dev = (QDropEvent*)(e);
-        ignore = mReceiver->dropEvent(dev);
+        ignore = mReceiver->OnDragDropEvent(dev);
     }
     break;
     default:

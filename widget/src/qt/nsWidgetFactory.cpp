@@ -78,8 +78,8 @@
 // #include "nsNativeThemeQt.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
-NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
-NS_GENERIC_FACTORY_CONSTRUCTOR(PopupWindow)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildWindow)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPopupWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
@@ -111,7 +111,7 @@ static const nsModuleComponentInfo components[] =
     { "Qt Child nsWindow",
       NS_CHILD_CID,
       "@mozilla.org/widgets/child_window/qt;1",
-      ChildWindowConstructor },
+      nsChildWindowConstructor },
     { "Qt AppShell",
       NS_APPSHELL_CID,
       "@mozilla.org/widget/appshell/qt;1",
@@ -123,7 +123,7 @@ static const nsModuleComponentInfo components[] =
     { "Qt Popup nsWindow",
       NS_POPUP_CID,
       "@mozilla.org/widgets/popup_window/qt;1",
-      PopupWindowConstructor },
+      nsPopupWindowConstructor },
     { "HTML Format Converter",
       NS_HTMLFORMATCONVERTER_CID,
       "@mozilla.org/widget/htmlformatconverter/qt;1",
