@@ -56,36 +56,30 @@ class gfxQtFont : public gfxFont {
 public:
      gfxQtFont (const nsAString& aName,
                 const gfxFontStyle *aFontStyle);
-     gfxQtFont(QFont *aQFont, const nsAString &aName,
-               const gfxFontStyle *aFontStyle);
      virtual ~gfxQtFont ();
 
-     virtual nsString GetUniqueName ();
-
-     virtual PRUint32 GetSpaceGlyph ()
-     {
-
-        NS_ASSERTION (GetStyle ()->size != 0,
-        "forgot to short-circuit a text run with zero-sized font?");
-        GetMetrics ();
-       return mSpaceGlyph;
-     }
-
+protected: // from gfxFont
+    virtual nsString GetUniqueName ();
+    virtual PRUint32 GetSpaceGlyph ();
     virtual const gfxFont::Metrics& GetMetrics();
+    virtual PRBool SetupCairoFont(gfxContext *aContext);
 
-    void* GetQFont() { if (!mQFont) RealizeQFont(); return mQFont; }
+protected: // new functions
+    cairo_scaled_font_t* CreateScaledFont(cairo_t *aCR, 
+                                          cairo_matrix_t *aCTM, 
+                                          QFont &aQFont);
 
-protected:
-    void *mQFont;
+protected: // data
+
+    QFont* mQFont;
     cairo_scaled_font_t *mCairoFont;
 
-    PRBool mHasMetrics;
+    PRBool mHasSpaceGlyph;
     PRUint32 mSpaceGlyph;
+    PRBool mHasMetrics;
     Metrics mMetrics;
     gfxFloat mAdjustedSize;
 
-    virtual PRBool SetupCairoFont(gfxContext *aContext);
-	void RealizeQFont();
 };
 
 class THEBES_API gfxQtFontGroup : public gfxFontGroup {
