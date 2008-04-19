@@ -37,6 +37,7 @@
 #include "gfxPlatformQt.h"
 #include "gfxTypes.h"
 #include "gfxQtFonts.h"
+#include "qdebug.h"
 #include "qrect.h"
 #include <locale.h>
 #include <QFont>
