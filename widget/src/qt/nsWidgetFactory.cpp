@@ -50,6 +50,7 @@
 #include "nsHTMLFormatConverter.h"
 #include "nsTransferable.h"
 #include "nsLookAndFeel.h"
+#include "nsAppShellSingleton.h"
 
 // #include "nsIComponentRegistrar.h"
 // #include "nsComponentManagerUtils.h"
@@ -75,7 +76,6 @@
 // #include "nsBidiKeyboard.h"
 // #include "nsNativeThemeQt.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(PopupWindow)
@@ -170,4 +170,17 @@ static const nsModuleComponentInfo components[] =
 */
 };
 
-NS_IMPL_NSGETMODULE(nsWidgetQtModule,components)
+PR_STATIC_CALLBACK(void)
+nsWidgetQtModuleDtor(nsIModule *aSelf)
+{
+//    nsFilePicker::Shutdown();
+//    nsSound::Shutdown();
+//    nsWindow::ReleaseGlobals();
+    nsAppShellShutdown(aSelf);
+}
+
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsWidgetQtModule,
+                                   components,
+                                   nsAppShellInit,
+                                   nsWidgetQtModuleDtor)
+
