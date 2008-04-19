@@ -95,7 +95,7 @@ CPPSRCS +=	gfxQtFonts.cpp
 CPPSRCS +=	gfxFontconfigUtils.cpp
 CPPSRCS +=	nsUnicodeRange.cpp
 CSRCS = cairo-xlib-utils.c
-EXTRA_DSO_LDOPTS += $(ZLIB_LIBS) $(MOZ_XFT_LIBS) $(XLDFLAGS) $(XLIBS)
+EXTRA_DSO_LDOPTS += $(ZLIB_LIBS) $(MOZ_XFT_LIBS) $(XLDFLAGS) $(XLIBS) $(CAIRO_FT_LIBS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
@@ -169,3 +169,8 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CXXFLAGS += $(CAIRO_FT_CFLAGS)
 endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+CXXFLAGS += $(CAIRO_FT_CFLAGS)
+endif
+
