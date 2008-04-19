@@ -45,14 +45,13 @@
 #include "nsCOMPtr.h"
 #include "nsWidgetsCID.h"
 #include "nsAppShell.h"
+#include "nsWindow.h"
+#include "nsToolkit.h"
 
 // #include "nsIComponentRegistrar.h"
 // #include "nsComponentManagerUtils.h"
 // #include "nsAutoPtr.h"
 // 
-// #include "nsWindow.h"
-
-// #include "nsToolkit.h"
 // #include "nsLookAndFeel.h"
 // #include "nsTransferable.h"
 // #include "nsClipboard.h"
@@ -75,15 +74,15 @@
 // #include "nsNativeThemeQt.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
+NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
+NS_GENERIC_FACTORY_CONSTRUCTOR(PopupWindow)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 
 /*
 static NS_DEFINE_CID(kNativeScrollCID, NS_NATIVESCROLLBAR_CID);
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
-NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
-NS_GENERIC_FACTORY_CONSTRUCTOR(PopupWindow)
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
@@ -101,12 +100,7 @@ static const nsModuleComponentInfo components[] =
     { "Qt AppShell",
       NS_APPSHELL_CID,
       "@mozilla.org/widget/appshell/qt;1",
-      nsAppShellConstructor }
-/*
-    { "Qt nsWindow",
-      NS_WINDOW_CID,
-      "@mozilla.org/widgets/window/qt;1",
-      nsWindowConstructor },
+      nsAppShellConstructor },
     { "Qt Child nsWindow",
       NS_CHILD_CID,
       "@mozilla.org/widgets/child_window/qt;1",
@@ -115,6 +109,7 @@ static const nsModuleComponentInfo components[] =
       NS_POPUP_CID,
       "@mozilla.org/widgets/popup_window/qt;1",
       PopupWindowConstructor },
+/*
     { "Qt Native Scrollbar",
       NS_NATIVESCROLLBAR_CID,
       "@mozilla.org/widget/nativescrollbar/qt;1",
@@ -164,6 +159,10 @@ static const nsModuleComponentInfo components[] =
       "@mozilla.org/chrome/chrome-native-theme;1",
       nsNativeThemeQtConstructor }
 */
+    { "Qt nsWindow",
+      NS_WINDOW_CID,
+      "@mozilla.org/widgets/window/qt;1",
+      nsWindowConstructor }
 };
 
 NS_IMPL_NSGETMODULE(nsWidgetQtModule,components)
