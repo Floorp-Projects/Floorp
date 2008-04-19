@@ -178,6 +178,12 @@ CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS) $(PS_CSRCS)
 EXPORTS += $(PDF_EXPORTS) $(PS_EXPORTS)
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+CPPSRCS += cairo-qpainter-surface.cpp
+EXPORTS += cairo-qpainter.h
+OS_INCLUDES += $(MOZ_QT_CFLAGS)
+endif
+
 ifdef BUILD_CAIRO_SVG
 CSRCS	+= cairo-svg-surface.c
 EXPORTS += cairo-svg.h
