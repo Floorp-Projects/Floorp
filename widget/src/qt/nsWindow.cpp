@@ -88,7 +88,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsAutoPtr.h"
 
-#include "gfxPlatformQt.h"
+#include "gfxQtPlatform.h"
 #include "gfxXlibSurface.h"
 #include "gfxQPainterSurface.h"
 #include "gfxContext.h"
