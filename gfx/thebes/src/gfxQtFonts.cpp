@@ -75,13 +75,13 @@ FTFontDestroyFunc(void *data)
 {
     FT_Face face = (FT_Face)data;
     FT_Done_Face(face);
-    printf("deleting face\n");
 }
 
 cairo_font_face_t *
 FontEntry::CairoFontFace()
 {
     static cairo_user_data_key_t key;
+
     if (!mFontFace) {
         FT_Face face;
         FT_New_Face(gfxQtPlatform::GetPlatform()->GetFTLibrary(), mFilename.get(), mFTFontIndex, &face);
@@ -886,6 +886,9 @@ gfxQtFont::GetSpaceGlyph()
 cairo_font_face_t *
 gfxQtFont::CairoFontFace()
 {
+    // XXX we need to handle fake bold here (or by having a sepaerate font entry)
+    if (mStyle.weight >= 600 && mFontEntry->mWeight < 600)
+        printf("** We want fake weight\n");
     return mFontEntry->CairoFontFace();
 }
 
@@ -899,6 +902,23 @@ gfxQtFont::CairoScaledFont()
         // XXX deal with adjusted size
         cairo_matrix_init_scale(&sizeMatrix, mStyle.size, mStyle.size);
         cairo_matrix_init_identity(&identityMatrix);
+
+        // synthetic oblique by skewing via the font matrix
+        PRBool needsOblique = (!mFontEntry->mItalic && (mStyle.style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)));
+
+        if (needsOblique) {
+            const double kSkewFactor = 0.25;
+
+            cairo_matrix_t style;
+            cairo_matrix_init(&style,
+                              1,                //xx
+                              0,                //yx
+                              -1 * kSkewFactor,  //xy
+                              1,                //yy
+                              0,                //x0
+                              0);               //y0
+            cairo_matrix_multiply(&sizeMatrix, &sizeMatrix, &style);
+        }
 
         cairo_font_options_t *fontOptions = cairo_font_options_create();
         mScaledFont = cairo_scaled_font_create(CairoFontFace(), &sizeMatrix,
@@ -923,8 +943,6 @@ gfxQtFont::SetupCairoFont(gfxContext *aContext)
         // the cairo_t, precluding any further drawing.
         return PR_FALSE;
     }
-    //    cairo_ft_scaled_font_lock_face(scaledFont);
-    //    cairo_ft_scaled_font_unlock_face(scaledFont);
     cairo_set_scaled_font(aContext->GetCairo(), scaledFont);
     return PR_TRUE;
 }
