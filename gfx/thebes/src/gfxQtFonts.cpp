@@ -430,8 +430,18 @@ gfxQtFont::gfxQtFont(const nsAString &aName,
 
 gfxQtFont::~gfxQtFont()
 {
-    delete mQFont;
-    cairo_scaled_font_destroy(mCairoFont);
+    if (mQFont) {
+        delete mQFont;
+    }
+    if (mCairoFont) {
+        cairo_scaled_font_destroy(mCairoFont);
+    }
+    if (mFontFace) {
+        cairo_font_face_destroy(mFontFace);
+    }
+    mQFont = nsnull;
+    mCairoFont = nsnull;
+    mFontFace = nsnull;
 }
 
 // rounding and truncation functions for a Freetype floating point number 
@@ -696,8 +706,8 @@ gfxQtFont::CreateScaledFont(cairo_t *aCR, cairo_matrix_t *aCTM, QFont &aQFont)
     cairo_font_options_t *fontOptions = cairo_font_options_create();
 
     cairo_scaled_font_t* scaledFont = 
-                cairo_scaled_font_create( CairoFontFace(&aQFont),
-//                cairo_scaled_font_create( CairoFontFace(), // This makes fonts working almost perfect
+//                cairo_scaled_font_create( CairoFontFace(&aQFont),
+                cairo_scaled_font_create( CairoFontFace(), // This makes fonts working almost perfect
                                           &fontMatrix,
                                           aCTM,
                                           fontOptions);
