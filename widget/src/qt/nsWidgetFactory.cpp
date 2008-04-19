@@ -142,12 +142,6 @@ static const nsModuleComponentInfo components[] =
       NS_SCREENMANAGER_CID,
       "@mozilla.org/gfx/screenmanager;1",
       nsScreenManagerQtConstructor },
-/*
-    { "Qt Native Scrollbar",
-      NS_NATIVESCROLLBAR_CID,
-      "@mozilla.org/widget/nativescrollbar/qt;1",
-      nsNativeScrollbarConstructor},
-*/
     { "Qt Clipboard",
       NS_CLIPBOARD_CID,
       "@mozilla.org/widget/clipboard;1",
@@ -177,11 +171,13 @@ static const nsModuleComponentInfo components[] =
       NS_FILEPICKER_CID,
       "@mozilla.org/filepicker;1",
       nsFilePickerConstructor },
+*/
+#if 0
     { "Native Theme Renderer",
       NS_THEMERENDERER_CID,
       "@mozilla.org/chrome/chrome-native-theme;1",
       nsNativeThemeQtConstructor }
-*/
+#endif
 };
 
 PR_STATIC_CALLBACK(void)

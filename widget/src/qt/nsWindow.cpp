@@ -90,13 +90,9 @@
 
 #include "gfxPlatformQt.h"
 #include "gfxXlibSurface.h"
+#include "gfxQPainterSurface.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
-
-#ifdef MOZ_ENABLE_GLITZ
-#include "gfxGlitzSurface.h"
-#include "glitz-glx.h"
-#endif
 
 #include <qapplication.h>
 #include <qdesktopwidget.h>
@@ -1032,9 +1028,18 @@ nsWindow::LoseFocus(void)
     LOGFOCUS(("  widget lost focus [%p]\n", (void *)this));
 }
 
+static int gDoubleBuffering = -1;
+
 bool
 nsWindow::OnExposeEvent(QPaintEvent *aEvent)
 {
+    if (gDoubleBuffering == -1) {
+        if (getenv("MOZ_NO_DOUBLEBUFFER"))
+            gDoubleBuffering = 0;
+        else
+            gDoubleBuffering = 1;
+    }
+
     if (mIsDestroyed) {
         LOG(("Expose event on destroyed window [%p] window %p\n",
              (void *)this, mDrawingarea));
@@ -1063,22 +1068,26 @@ nsWindow::OnExposeEvent(QPaintEvent *aEvent)
        LOGDRAW(("\t%d %d %d %d\n", r.x(), r.y(), r.width(), r.height()));
     }
 
-    nsCOMPtr<nsIRenderingContext> rc = getter_AddRefs(GetRenderingContext());
-    if (NS_UNLIKELY(!rc)) {
+    QPainter painter(mDrawingarea);
+
+    nsRefPtr<gfxQPainterSurface> targetSurface = new gfxQPainterSurface(&painter);
+    nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
+
+    nsCOMPtr<nsIRenderingContext> rc;
+    GetDeviceContext()->CreateRenderingContextInstance(*getter_AddRefs(rc));
+    if (NS_UNLIKELY(!rc))
         return FALSE;
-    }
+
+    rc->Init(GetDeviceContext(), ctx);
 
     PRBool translucent;
     GetHasTransparentBackground(translucent);
     nsIntRect boundsRect;
-    QPixmap* bufferPixmap = nsnull;
-    nsRefPtr<gfxXlibSurface> bufferPixmapSurface;
 
     updateRegion->GetBoundingBox(&boundsRect.x, &boundsRect.y,
                                  &boundsRect.width, &boundsRect.height);
 
     // do double-buffering and clipping here
-    nsRefPtr<gfxContext> ctx = rc->ThebesContext();
     ctx->Save();
     ctx->NewPath();
     if (translucent) {
@@ -1099,41 +1108,8 @@ nsWindow::OnExposeEvent(QPaintEvent *aEvent)
     // double buffer
     if (translucent) {
         ctx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
-    } else {
-#ifdef MOZ_ENABLE_GLITZ
+    } else if (gDoubleBuffering) {
         ctx->PushGroup(gfxASurface::CONTENT_COLOR);
-#else // MOZ_ENABLE_GLITZ
-        // Instead of just doing PushGroup we're going to do a little dance
-        // to ensure that GDK creates the pixmap, so it doesn't go all
-        // XGetGeometry on us in gdk_pixmap_foreign_new_for_display when we
-        // paint native themes
-
-        bufferPixmap = new QPixmap(boundsRect.width, boundsRect.height);
-        if (bufferPixmap) {
-            bufferPixmapSurface =
-                new gfxXlibSurface(bufferPixmap->x11Info().display(),
-                                   bufferPixmap->handle(),
-                                   static_cast<Visual*>(bufferPixmap->x11Info().visual()),
-                                   gfxIntSize(boundsRect.width, boundsRect.height));
-            if (bufferPixmapSurface) {
-                bufferPixmapSurface->SetDeviceOffset(gfxPoint(-boundsRect.x, -boundsRect.y));
-                nsCOMPtr<nsIRenderingContext> newRC;
-                nsresult rv = GetDeviceContext()->
-                    CreateRenderingContextInstance(*getter_AddRefs(newRC));
-                if (NS_FAILED(rv)) {
-                    bufferPixmapSurface = nsnull;
-                } else {
-                    rv = newRC->Init(GetDeviceContext(), bufferPixmapSurface);
-                    if (NS_FAILED(rv)) {
-                        bufferPixmapSurface = nsnull;
-                    } else {
-                        rc = newRC;
-                    }
-                }
-            }
-        }
-
-#endif // MOZ_ENABLE_GLITZ
     }
 
 #if 0
@@ -1162,59 +1138,43 @@ nsWindow::OnExposeEvent(QPaintEvent *aEvent)
 
     // DispatchEvent can Destroy us (bug 378273), avoid doing any paint
     // operations below if that happened - it will lead to XError and exit().
-    if (NS_LIKELY(!mIsDestroyed)) {
-        if (status != nsEventStatus_eIgnore) {
-            if (translucent) {
-                nsRefPtr<gfxPattern> pattern = ctx->PopGroup();
-                ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-                ctx->SetPattern(pattern);
-                ctx->Paint();
+    if (NS_UNLIKELY(mIsDestroyed))
+        return ignoreEvent(status);
 
-                nsRefPtr<gfxImageSurface> img =
-                    new gfxImageSurface(gfxIntSize(boundsRect.width, boundsRect.height),
-                                        gfxImageSurface::ImageFormatA8);
-                if (img && !img->CairoStatus()) {
-                    img->SetDeviceOffset(gfxPoint(-boundsRect.x, -boundsRect.y));
-
-                    nsRefPtr<gfxContext> imgCtx = new gfxContext(img);
-                    if (imgCtx) {
-                        imgCtx->SetPattern(pattern);
-                        imgCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
-                        imgCtx->Paint();
-                    }
-
-                    UpdateTranslucentWindowAlphaInternal(nsRect(boundsRect.x, boundsRect.y,
-                                                                boundsRect.width, boundsRect.height),
-                                                         img->Data(), img->Stride());
-                }
-            } else {
-#ifdef MOZ_ENABLE_GLITZ
-                ctx->PopGroupToSource();
-                ctx->Paint();
-#else // MOZ_ENABLE_GLITZ
-                if (bufferPixmapSurface) {
-                    ctx->SetSource(bufferPixmapSurface);
-                    ctx->Paint();
-                }
-#endif // MOZ_ENABLE_GLITZ
-            }
-        } else {
-            // ignore
-            if (translucent) {
-                ctx->PopGroup();
-            } else {
-#ifdef MOZ_ENABLE_GLITZ
-                ctx->PopGroup();
-#endif // MOZ_ENABLE_GLITZ
-            }
-        }
-
-        if (bufferPixmap) {
-            delete bufferPixmap;
-        }
-
+    if (status == nsEventStatus_eIgnore) {
         ctx->Restore();
+        return ignoreEvent(status);
     }
+
+    if (translucent) {
+        nsRefPtr<gfxPattern> pattern = ctx->PopGroup();
+        ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+        ctx->SetPattern(pattern);
+        ctx->Paint();
+
+        nsRefPtr<gfxImageSurface> img =
+            new gfxImageSurface(gfxIntSize(boundsRect.width, boundsRect.height),
+                                gfxImageSurface::ImageFormatA8);
+        if (img && !img->CairoStatus()) {
+            img->SetDeviceOffset(gfxPoint(-boundsRect.x, -boundsRect.y));
+
+            nsRefPtr<gfxContext> imgCtx = new gfxContext(img);
+            if (imgCtx) {
+                imgCtx->SetPattern(pattern);
+                imgCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
+                imgCtx->Paint();
+            }
+
+            UpdateTranslucentWindowAlphaInternal(nsRect(boundsRect.x, boundsRect.y,
+                                                        boundsRect.width, boundsRect.height),
+                                                 img->Data(), img->Stride());
+        }
+    } else if (gDoubleBuffering) {
+        ctx->PopGroupToSource();
+        ctx->Paint();
+    }
+
+    ctx->Restore();
 
     // check the return value!
     return ignoreEvent(status);
@@ -1798,31 +1758,6 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
         parent = (QWidget*)aParent->GetNativeData(NS_NATIVE_WIDGET);
     else
         parent = (QWidget*)aNativeParent;
-
-#ifdef MOZ_ENABLE_GLITZ
-    GdkVisual* visual = nsnull;
-    if (gfxPlatform::UseGlitz()) {
-        nsCOMPtr<nsIDeviceContext> dc = aContext;
-        if (!dc) {
-            nsCOMPtr<nsIDeviceContext> dc = do_CreateInstance(kDeviceContextCID);
-            // no parent widget to initialize with
-            dc->Init(nsnull);
-        }
-
-        Display* dpy = ;
-        int defaultScreen = gdk_x11_get_default_screen();
-        glitz_drawable_format_t* format = glitz_glx_find_window_format (dpy, defaultScreen,
-                                                                        0, NULL, 0);
-        if (format) {
-            XVisualInfo* vinfo = glitz_glx_get_visual_info_from_format(dpy, defaultScreen, format);
-            GdkScreen* screen = gdk_display_get_screen(gdk_x11_lookup_xdisplay(dpy), defaultScreen);
-            visual = gdk_x11_screen_lookup_visual(screen, vinfo->visualid);
-        } else {
-            // couldn't find a GLX visual; force Glitz off
-            gfxPlatform::SetUseGlitz(PR_FALSE);
-        }
-    }
-#endif
 
     // ok, create our windows
     mDrawingarea = createQWidget(parent, aInitData);
@@ -2714,6 +2649,7 @@ nsWindow::GetThebesSurface()
     mThebesSurface = nsnull;
 
     if (!mThebesSurface) {
+#if 0
         qint32 x_offset = 0, y_offset = 0;
         qint32 width = mDrawingarea->width(), height = mDrawingarea->height();
 
@@ -2721,57 +2657,22 @@ nsWindow::GetThebesSurface()
         width = PR_MIN(32767, width);
         height = PR_MIN(32767, height);
 
-        if (!gfxPlatform::UseGlitz()) {
-            mThebesSurface = new gfxXlibSurface
-                (mDrawingarea->x11Info().display(),
-                 (Drawable)mDrawingarea->handle(),
-                 static_cast<Visual*>(mDrawingarea->x11Info().visual()),
-                 gfxIntSize(width, height));
-            // if the surface creation is reporting an error, then
-            // we don't have a surface to give back
-            if (mThebesSurface && mThebesSurface->CairoStatus() != 0)
-                mThebesSurface = nsnull;
-        } else {
-#ifdef MOZ_ENABLE_GLITZ
-            glitz_surface_t *gsurf;
-            glitz_drawable_t *gdraw;
-
-            glitz_drawable_format_t *gdformat = glitz_glx_find_window_format (Qt::Key_DISPLAY(),
-                                                                              gdk_x11_get_default_screen(),
-                                                                              0, NULL, 0);
-            if (!gdformat)
-                NS_ERROR("Failed to find glitz drawable format");
-
-            Display* dpy = Qt::Key_WINDOW_XDISPLAY(d);
-            Window wnd = Qt::Key_WINDOW_XWINDOW(d);
-
-            gdraw =
-                glitz_glx_create_drawable_for_window (dpy,
-                                                      DefaultScreen(dpy),
-                                                      gdformat,
-                                                      wnd,
-                                                      width,
-                                                      height);
-            glitz_format_t *gformat =
-                glitz_find_standard_format (gdraw, GLITZ_STANDARD_RGB24);
-            gsurf =
-                glitz_surface_create (gdraw,
-                                      gformat,
-                                      width,
-                                      height,
-                                      0,
-                                      NULL);
-            glitz_surface_attach (gsurf, gdraw, GLITZ_DRAWABLE_BUFFER_FRONT_COLOR);
-
-
-            //fprintf (stderr, "## nsThebesDrawingSurface::Init Glitz DRAWABLE %p (DC: %p)\n", aWidget, aDC);
-            mThebesSurface = new gfxGlitzSurface (gdraw, gsurf, PR_TRUE);
-#endif
-        }
+        mThebesSurface = new gfxXlibSurface
+            (mDrawingarea->x11Info().display(),
+             (Drawable)mDrawingarea->handle(),
+             static_cast<Visual*>(mDrawingarea->x11Info().visual()),
+             gfxIntSize(width, height));
+        // if the surface creation is reporting an error, then
+        // we don't have a surface to give back
+        if (mThebesSurface && mThebesSurface->CairoStatus() != 0)
+            mThebesSurface = nsnull;
 
         if (mThebesSurface) {
             mThebesSurface->SetDeviceOffset(gfxPoint(-x_offset, -y_offset));
         }
+#else
+        mThebesSurface = new gfxQPainterSurface(gfxIntSize(5,5));
+#endif
     }
 
     return mThebesSurface;
