@@ -64,7 +64,7 @@ var quotesTest = {
   },
 
   clean: function () {
-    PlacesUtils.bookmarks.removeFolder(this._folderId);
+    PlacesUtils.bookmarks.removeItem(this._folderId);
   },
 
   validate: function () {
