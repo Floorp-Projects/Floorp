@@ -2633,7 +2633,7 @@ nsWindow::createQWidget(QWidget *parent, nsWidgetInitData *aInitData)
     // Disable the double buffer because it will make the caret crazy
     // For bug#153805 (Gtk2 double buffer makes carets misbehave)
     mDrawingarea->setAttribute(Qt::WA_NoSystemBackground);
-    mDrawingarea->setAttribute(Qt::WA_PaintOnScreen);
+//    mDrawingarea->setAttribute(Qt::WA_PaintOnScreen);
 
     return mDrawingarea;
 }
