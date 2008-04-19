@@ -37,6 +37,16 @@
 /* Get INT16_MIN etc. as per C99 */
 #define __STDC_LIMIT_MACROS
 
+#include <QtGui/QPainter>
+#include <QtGui/QPaintEngine>
+#include <QtGui/QPaintDevice>
+#include <QtGui/QImage>
+#include <QtGui/QPixmap>
+#include <QtGui/QBrush>
+#include <QtGui/QPen>
+#include <QtGui/QWidget>
+#include <QtGui/QX11Info>
+
 #include "cairoint.h"
 
 #include "cairo-qpainter.h"
@@ -48,16 +58,6 @@
 #undef Status
 #undef CursorShape
 #endif
-
-#include <QtGui/QPainter>
-#include <QtGui/QPaintEngine>
-#include <QtGui/QPaintDevice>
-#include <QtGui/QImage>
-#include <QtGui/QPixmap>
-#include <QtGui/QBrush>
-#include <QtGui/QPen>
-#include <QtGui/QWidget>
-#include <QtGui/QX11Info>
 
 #if 0
 #define D(x)  x
