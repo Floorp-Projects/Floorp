@@ -181,19 +181,7 @@ nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
         qDebug("NS_THEME_CHECKBOX");
 
         ce = QStyle::CE_CheckBox;
-/*
-        flags |= (IsChecked(aFrame) ? QStyle::State_On : QStyle::State_Off);
-        pe = QStyle::PE_IndicatorCheckBox;
 
-        QStyleOptionButton option;
-        option.direction = QApplication::layoutDirection();
-        option.rect = r;
-        option.type = QStyleOption::SO_Button;
-        option.state = flags;
-        option.features = QStyleOptionButton::None;
-
-        style->drawPrimitive(pe, &option, qPainter, NULL);
-*/
         QStyleOptionButton option;
 
         ButtonStyle(aFrame, r, &option, eventFlags);
@@ -201,17 +189,27 @@ nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
         style->drawControl(ce, &option, qPainter, NULL);
         break;
     }
-    case NS_THEME_SCROLLBAR:
-    case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
-    case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
-        qDebug("NS_THEME_SCROLLBAR 1");
+    case NS_THEME_SCROLLBAR: {
+        qDebug("NS_THEME_SCROLLBAR");
         qPainter->fillRect(r, qApp->palette().brush(QPalette::Active, QPalette::Background));
         break;
+    }
+    case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL: {
+        qDebug("NS_THEME_SCROLLBAR_TRACK_HORIZONTAL");
+        qPainter->fillRect(r, qApp->palette().brush(QPalette::Active, QPalette::Background));
+        break;
+    }
+    case NS_THEME_SCROLLBAR_TRACK_VERTICAL: {
+        qDebug("NS_THEME_SCROLLBAR_TRACK_VERTICAL");
+        qPainter->fillRect(r, qApp->palette().brush(QPalette::Active, QPalette::Background));
+        break;
+    }
     case NS_THEME_SCROLLBAR_BUTTON_LEFT:
 //         flags |= QStyle::State_Horizontal;
         // fall through
         break;
-    case NS_THEME_SCROLLBAR_BUTTON_UP: {
+    case NS_THEME_SCROLLBAR_BUTTON_UP:
+    /*case NS_THEME_SCROLLBAR_BUTTON_DOWN:*/{
         qDebug("NS_THEME_SCROLLBAR_BUTTON_UP");
         
         ce = QStyle::CE_ScrollBarSubLine;
@@ -223,11 +221,21 @@ nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
         style->drawControl(ce, &option, qPainter, NULL);
         break;
     }
+    case NS_THEME_SCROLLBAR_BUTTON_DOWN:{
+        qDebug("NS_THEME_SCROLLBAR_BUTTON_DOWN");
+        
+        ce = QStyle::CE_ScrollBarAddLine;
+        
+        QStyleOption option;
+
+        PlainStyle(aFrame, r, &option, eventFlags);
+
+        style->drawControl(ce, &option, qPainter, NULL);
+        break;
+    }
     case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
 //         flags |= QStyle::State_Horizontal;
         // fall through
-    case NS_THEME_SCROLLBAR_BUTTON_DOWN:
-//         ce = QStyle::CE_ScrollBarAddLine;
         qDebug("NS_THEME_SCROLLBAR_BUTTON 2");
         break;
     case NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL:
@@ -281,15 +289,7 @@ nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
         QStyleOptionFrameV2 option;
 
         FrameStyle(aFrame, r, &option, eventFlags);
-/*
-        option.direction = QApplication::layoutDirection();
-        option.rect = r;
-        option.type = QStyleOption::SO_Frame;
-        option.state = flags;
-        option.lineWidth = 1;
-        option.midLineWidth = 1;
-        option.features = QStyleOptionFrameV2::Flat;
-*/
+
         style->drawPrimitive(pe, &option, qPainter, NULL);
         break;
     }
@@ -407,21 +407,25 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* a
     case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
         (*aResult).width = s->pixelMetric(QStyle::PM_ScrollBarExtent);
         (*aResult).height = (*aResult).width;
-        *aIsOverridable = PR_FALSE;
+        //*aIsOverridable = PR_FALSE;
         break;
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
         (*aResult).width = s->pixelMetric(QStyle::PM_ScrollBarExtent);
         (*aResult).height = s->pixelMetric(QStyle::PM_ScrollBarSliderMin);
-        *aIsOverridable = PR_FALSE;
+        //*aIsOverridable = PR_FALSE;
         break;
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
         (*aResult).width = s->pixelMetric(QStyle::PM_ScrollBarSliderMin);
         (*aResult).height = s->pixelMetric(QStyle::PM_ScrollBarExtent);
-        *aIsOverridable = PR_FALSE;
+        //*aIsOverridable = PR_FALSE;
         break;
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
+        (*aResult).width = s->pixelMetric(QStyle::PM_ScrollBarExtent);
+        (*aResult).height = s->pixelMetric(QStyle::PM_SliderLength);
         break;
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+        (*aResult).width = s->pixelMetric(QStyle::PM_SliderLength);
+        (*aResult).height = s->pixelMetric(QStyle::PM_ScrollBarExtent);
         break;
     case NS_THEME_DROPDOWN_BUTTON: {
 //        QRect r = s->subControlRect(QStyle::CC_ComboBox, combo, QStyle::SC_ComboBoxArrow);
@@ -469,17 +473,17 @@ nsNativeThemeQt::ThemeSupportsWidget(nsPresContext* aPresContext,
 //     return FALSE;
 
     switch (aWidgetType) {
-    //case NS_THEME_SCROLLBAR:
+    case NS_THEME_SCROLLBAR:
     case NS_THEME_SCROLLBAR_BUTTON_UP:
-    //case NS_THEME_SCROLLBAR_BUTTON_DOWN:
+    case NS_THEME_SCROLLBAR_BUTTON_DOWN:
     //case NS_THEME_SCROLLBAR_BUTTON_LEFT:
     //case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
     //case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
     //case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
     //case NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL:
     //case NS_THEME_SCROLLBAR_GRIPPER_VERTICAL:
-    //case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
-    //case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
+    case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+    case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     case NS_THEME_RADIO:
     case NS_THEME_RADIO_SMALL:
     case NS_THEME_CHECKBOX:
@@ -582,7 +586,7 @@ nsNativeThemeQt::FrameStyle(nsIFrame* aFrame,
     QStyle::State flags = IsDisabled(aFrame) ?
         QStyle::State_None :
         QStyle::State_Enabled;
-    
+
     flags |= optFlags;
 
     (*aOption).direction = QApplication::layoutDirection();
