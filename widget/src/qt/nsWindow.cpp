@@ -943,6 +943,7 @@ nsWindow::EndResizingChildren(void)
 NS_IMETHODIMP
 nsWindow::EnableDragDrop(PRBool aEnable)
 {
+    mDrawingarea->setAcceptDrops(aEnable);
     return NS_OK;
 }
 
@@ -1669,8 +1670,14 @@ nsWindow::OnDragLeaveEvent(QDragLeaveEvent *e)
 }
 
 bool
-nsWindow::OnDragDropEvent(QDropEvent *e)
+nsWindow::OnDragDropEvent(QDropEvent *aDropEvent)
 {
+    if (aDropEvent->proposedAction() == Qt::CopyAction)
+    {
+        printf("text version of the data: %s\n", aDropEvent->mimeData()->text().toAscii().data());
+        aDropEvent->acceptProposedAction();
+    }
+
     LOG(("nsWindow::OnDragDropSignal\n"));
     nsMouseEvent event(PR_TRUE, NS_DRAGDROP_OVER, 0,
                        nsMouseEvent::eReal);
@@ -1678,8 +1685,29 @@ nsWindow::OnDragDropEvent(QDropEvent *e)
 }
 
 bool
-nsWindow::OnDragEnter(QDragEnterEvent *)
+nsWindow::OnDragEnter(QDragEnterEvent *aDragEvent)
 {
+#if 0
+    // TODO: Remove debugging prints
+    QStringList strings = aDragEvent->mimeData()->formats();
+    for (int i=0; i<strings.size(); ++i)
+    {
+        printf("%i: %s\n", i, strings.at(i).toLocal8Bit().constData());
+    }
+#endif
+
+    // Is it some format we think we can support?
+    if ( aDragEvent->mimeData()->hasFormat(kURLMime)
+      || aDragEvent->mimeData()->hasFormat(kURLDataMime)
+      || aDragEvent->mimeData()->hasFormat(kURLDescriptionMime)
+      || aDragEvent->mimeData()->hasFormat(kHTMLMime)
+      || aDragEvent->mimeData()->hasFormat(kUnicodeMime)
+      || aDragEvent->mimeData()->hasFormat(kTextMime)
+       )
+    {
+        aDragEvent->acceptProposedAction();
+    }
+
     // XXX Do we want to pass this on only if the event's subwindow is null?
 
     LOG(("nsWindow::OnDragEnter(%p)\n", this));
