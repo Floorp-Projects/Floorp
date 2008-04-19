@@ -63,10 +63,26 @@ extern PRLogModuleInfo *gWidgetDrawLog;
 
 #else
 
+#ifdef DEBUG_WIDGETS
+
+#define PR_LOG2(_args)         \
+    PR_BEGIN_MACRO             \
+      qDebug _args;            \
+    PR_END_MACRO
+
+#define LOG(args) PR_LOG2(args)
+#define LOGFOCUS(args) PR_LOG2(args)
+#define LOGIM(args) PR_LOG2(args)
+#define LOGDRAW(args) PR_LOG2(args)
+
+#else
+
 #define LOG(args)
 #define LOGFOCUS(args)
 #define LOGIM(args)
 #define LOGDRAW(args)
+
+#endif
 
 #endif /* MOZ_LOGGING */
 

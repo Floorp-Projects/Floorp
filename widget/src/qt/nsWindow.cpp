@@ -114,9 +114,10 @@
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 
 /* utility functions */
+/*
 static PRBool     is_mouse_in_window(QWidget* aWindow,
                                      double aMouseX, double aMouseY);
-
+*/
 // initialization static functions 
 static nsresult    initialize_prefs        (void);
 
@@ -129,7 +130,7 @@ static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 // QT
 static const int WHEEL_DELTA = 120;
 static PRBool gGlobalsInitialized = PR_FALSE;
-static nsWindow * get_window_for_qt_widget(QWidget *widget);
+//static nsWindow * get_window_for_qt_widget(QWidget *widget);
 static bool ignoreEvent(nsEventStatus aStatus)
 {
     return aStatus == nsEventStatus_eConsumeNoDefault;
@@ -493,6 +494,7 @@ typedef void (* SetUserTimeFunc)(QWidget* aWindow, quint32 aTimestamp);
 
 // This will become obsolete when new GTK APIs are widely supported,
 // as described here: http://bugzilla.gnome.org/show_bug.cgi?id=347375
+/*
 static void
 SetUserTimeAndStartupIDForActivatedWindow(QWidget* aWindow)
 {
@@ -521,6 +523,7 @@ SetUserTimeAndStartupIDForActivatedWindow(QWidget* aWindow)
 
     QTToolkit->SetDesktopStartupID(EmptyCString());
 }
+*/
 
 NS_IMETHODIMP
 nsWindow::SetFocus(PRBool aRaise)
@@ -584,6 +587,7 @@ nsWindow::SetCursor(nsCursor aCursor)
     return NS_OK;
 }
 
+/*
 static
 PRUint8* Data32BitTo1Bit(PRUint8* aImageData,
                          PRUint32 aImageBytesPerRow,
@@ -608,7 +612,7 @@ PRUint8* Data32BitTo1Bit(PRUint8* aImageData,
           PRUint8 r = *imageRow++,
                   g = *imageRow++,
                   b = *imageRow++;
-               /* a = * */imageRow++;
+                  imageRow++;
 
           if ((r + b + g) < 3 * 128)
               imagePixels |= (1 << offset);
@@ -630,7 +634,7 @@ PRUint8* Data32BitTo1Bit(PRUint8* aImageData,
 
   return outData;
 }
-
+*/
 
 
 NS_IMETHODIMP
@@ -2610,6 +2614,7 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
 }
 
 /* static */
+/*
 PRBool
 is_mouse_in_window (QWidget* aWindow, double aMouseX, double aMouseY)
 {
@@ -2647,14 +2652,17 @@ is_mouse_in_window (QWidget* aWindow, double aMouseX, double aMouseY)
 
     return PR_FALSE;
 }
+*/
 
 /* static */
+/*
 nsWindow *
 get_window_for_qt_widget(QWidget *widget)
 {
     MozQWidget *mozWidget = static_cast<MozQWidget*>(widget);
     return mozWidget->getReciever();
 }
+*/
 
 //////////////////////////////////////////////////////////////////////
 // These are all of our drag and drop operations
@@ -2717,6 +2725,7 @@ key_event_to_context_menu_event(nsMouseEvent &aEvent,
     aEvent.clickCount = 1;
 }
 
+/*
 static PRBool
 gdk_keyboard_get_modmap_masks(Display*  aDisplay,
                               PRUint32* aCapsLockMask,
@@ -2745,12 +2754,10 @@ gdk_keyboard_get_modmap_masks(Display*  aDisplay,
         return PR_FALSE;
     }
 
-    /*
-      The modifiermap member of the XModifierKeymap structure contains 8 sets
-      of max_keypermod KeyCodes, one for each modifier in the order Shift,
-      Lock, Control, Mod1, Mod2, Mod3, Mod4, and Mod5.
-      Only nonzero KeyCodes have meaning in each set, and zero KeyCodes are ignored.
-    */
+//      The modifiermap member of the XModifierKeymap structure contains 8 sets
+//      of max_keypermod KeyCodes, one for each modifier in the order Shift,
+//      Lock, Control, Mod1, Mod2, Mod3, Mod4, and Mod5.
+//      Only nonzero KeyCodes have meaning in each set, and zero KeyCodes are ignored.
     const unsigned int map_size = 8 * xmodmap->max_keypermod;
     for (unsigned int i = 0; i < map_size; i++) {
         KeyCode keycode = xmodmap->modifiermap[i];
@@ -2772,6 +2779,7 @@ gdk_keyboard_get_modmap_masks(Display*  aDisplay,
     XFree(xkeymap);
     return PR_TRUE;
 }
+*/
 
 // nsChildWindow class
 
