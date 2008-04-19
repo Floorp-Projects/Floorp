@@ -60,13 +60,12 @@ public:
 
      virtual PRUint32 GetSpaceGlyph ()
      {
+
         NS_ASSERTION (GetStyle ()->size != 0,
         "forgot to short-circuit a text run with zero-sized font?");
         GetMetrics ();
        return mSpaceGlyph;
      }
-
-    static void Shutdown();
 
     virtual const gfxFont::Metrics& GetMetrics();
 
@@ -82,7 +81,7 @@ protected:
     gfxFloat mAdjustedSize;
 
     virtual PRBool SetupCairoFont(gfxContext *aContext);
-    void RealizeQFont();
+	void RealizeQFont();
 };
 
 class THEBES_API gfxQtFontGroup : public gfxFontGroup {
