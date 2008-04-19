@@ -66,6 +66,5 @@ NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(PRBool *aIsRTL)
 
 NS_IMETHODIMP nsBidiKeyboard::SetLangFromBidiLevel(PRUint8 aLevel)
 {
-    // XXX Insert platform specific code to set keyboard language
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
