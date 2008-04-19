@@ -182,6 +182,65 @@ bool MozQWidget::event(QEvent *e)
     return !ignore;
 }
 
+bool
+MozQWidget::SetCursor(nsCursor aCursor)
+{
+    Qt::CursorShape cursor = Qt::ArrowCursor;
+    switch(aCursor) {
+    case eCursor_standard:
+        cursor = Qt::ArrowCursor;
+        break;
+    case eCursor_wait:
+        cursor = Qt::WaitCursor;
+        break;
+    case eCursor_select:
+        cursor = Qt::IBeamCursor;
+        break;
+    case eCursor_hyperlink:
+        cursor = Qt::PointingHandCursor;
+        break;
+    case eCursor_ew_resize:
+        cursor = Qt::SplitHCursor;
+        break;
+    case eCursor_ns_resize:
+        cursor = Qt::SplitVCursor;
+        break;
+    case eCursor_nw_resize:
+    case eCursor_se_resize:
+        cursor = Qt::SizeBDiagCursor;
+        break;
+    case eCursor_ne_resize:
+    case eCursor_sw_resize:
+        cursor = Qt::SizeFDiagCursor;
+        break;
+    case eCursor_crosshair:
+    case eCursor_move:
+        cursor = Qt::SizeAllCursor;
+        break;
+    case eCursor_help:
+        cursor = Qt::WhatsThisCursor;
+        break;
+    case eCursor_copy:
+    case eCursor_alias:
+        break;
+    case eCursor_context_menu:
+    case eCursor_cell:
+    case eCursor_grab:
+    case eCursor_grabbing:
+    case eCursor_spinning:
+    case eCursor_zoom_in:
+    case eCursor_zoom_out:
+
+    default:
+        break;
+    }
+
+    // FIXME after reimplementation of whole nsWindow SetCursor cause lot of errors
+    setCursor(cursor);
+
+    return NS_OK;
+}
+
 void MozQWidget::setModal(bool modal)
 {
     if (modal)
