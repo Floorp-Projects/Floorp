@@ -41,6 +41,8 @@
 
 #include <gfxFont.h>
 
+class QFont;
+
 class nsSystemFontsQt
 {
 public:
@@ -51,6 +53,9 @@ public:
                            gfxFontStyle *aFontStyle) const;
 
 private:
+
+    nsresult GetSystemFontInfo(const QFont &aFont, nsString *aFontName,
+                               gfxFontStyle *aFontStyle) const;
 
     /*
      * The following system font constants exist:

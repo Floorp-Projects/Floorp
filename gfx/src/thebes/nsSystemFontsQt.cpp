@@ -46,6 +46,11 @@
 #include <fontconfig/fontconfig.h>
 #include "nsSystemFontsQt.h"
 #include "gfxPlatformQt.h"
+#include <QLabel>
+#include <QLineEdit>
+#include <QMenu>
+#include <QAction>
+#include <QPushButton>
 
 nsSystemFontsQt::nsSystemFontsQt()
   : mDefaultFontName(NS_LITERAL_STRING("sans-serif"))
@@ -53,13 +58,50 @@ nsSystemFontsQt::nsSystemFontsQt()
   , mFieldFontName(NS_LITERAL_STRING("sans-serif"))
   , mMenuFontName(NS_LITERAL_STRING("sans-serif"))
 {
+   QLabel *label = new QLabel();
+   if (label) {
+       GetSystemFontInfo(label->font(), &mDefaultFontName, &mDefaultFontStyle);
+       delete label;
+   }
 
+   QLineEdit *entry = new QLineEdit();
+   if (entry) {
+      GetSystemFontInfo(entry->font(), &mFieldFontName, &mFieldFontStyle);
+      delete entry;
+   }
+
+   QMenu *menu = new QMenu();
+   QAction *action = new QAction(menu);
+   if (action) {
+      GetSystemFontInfo(action->font(), &mMenuFontName, &mMenuFontStyle);
+      delete action;
+   }
+
+   QPushButton *button = new QPushButton();
+   if (button) {
+      GetSystemFontInfo(button->font(), &mButtonFontName, &mButtonFontStyle);
+      delete button;
+   }
 }
 
 nsSystemFontsQt::~nsSystemFontsQt()
 {
-
 }
+
+nsresult
+nsSystemFontsQt::GetSystemFontInfo(const QFont &aFont, nsString *aFontName,
+                                     gfxFontStyle *aFontStyle) const
+{
+    aFontStyle->style       = FONT_STYLE_NORMAL;
+    aFontStyle->systemFont  = PR_TRUE;
+    NS_NAMED_LITERAL_STRING(quote, "\"");
+    nsString family((PRUnichar*)aFont.family().data());
+    *aFontName = quote + family + quote;
+    aFontStyle->weight = aFont.weight();
+    aFontStyle->size = aFont.pointSizeF();
+    return NS_OK;
+}
+
 
 nsresult
 nsSystemFontsQt::GetSystemFont(nsSystemFontID anID, nsString *aFontName,
