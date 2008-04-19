@@ -77,7 +77,6 @@ nsNativeThemeQt::nsNativeThemeQt()
     combo = new QComboBox((QWidget *)0);
     combo->resize(0, 0);
     mNoBackgroundPalette.setColor(QPalette::Window, Qt::transparent);
-    mSolidPalette.setColor(QPalette::Window, Qt::white);
     ThemeChanged();
 }
 
