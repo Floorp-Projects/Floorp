@@ -807,7 +807,8 @@ nsCommonWidget::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus)
     aStatus = nsEventStatus_eIgnore;
 
     // hold a widget reference while we dispatch this event
-    NS_ADDREF(aEvent->widget);
+    nsIWidget* widget = aEvent->widget;
+    NS_ADDREF(widget);
 
     if (mEventCallback)
         aStatus = (*mEventCallback)(aEvent);
@@ -816,7 +817,7 @@ nsCommonWidget::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus)
     if ((aStatus != nsEventStatus_eIgnore) && mEventListener)
         aStatus = mEventListener->ProcessEvent(*aEvent);
 
-    NS_IF_RELEASE(aEvent->widget);
+    NS_IF_RELEASE(widget);
 
     return NS_OK;
 }
