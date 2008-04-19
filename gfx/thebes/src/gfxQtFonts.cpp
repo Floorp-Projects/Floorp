@@ -215,7 +215,9 @@ gfxQtFontGroup::gfxQtFontGroup(const nsAString& families,
     ForEachFont(FontCallback, &familyArray);
 
     if (familyArray.Count() == 0) {
-        familyArray.AppendString(NS_LITERAL_STRING("DejaVu Sans"));
+        QFont defaultFont;
+        QFontInfo fi (defaultFont);
+        familyArray.AppendString(nsDependentString(static_cast<const PRUnichar *>(fi.family().utf16())));
     }
 
     for (int i = 0; i < familyArray.Count(); i++) {
