@@ -7,6 +7,7 @@
 #include <qfiledialog.h>
 #include <qstatusbar.h>
 #include <qlayout.h>
+#include <qapplication.h>
 
 #include "qgeckoembed.h"
 
@@ -76,6 +77,13 @@ MyMainWindow::MyMainWindow()
 
     connect( location, SIGNAL(returnPressed()), SLOT(changeLocation()));
 
+    connect( qApp, SIGNAL(lastWindowClosed()), SLOT(mainQuit()));
+}
+
+void MyMainWindow::mainQuit()
+{
+    delete qecko;
+    qecko = NULL;
 }
 
 void MyMainWindow::fileOpen()

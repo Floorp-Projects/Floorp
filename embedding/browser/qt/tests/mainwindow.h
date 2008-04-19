@@ -19,6 +19,7 @@ public slots:
     void goBack();
     void goForward();
     void stop();
+    void mainQuit();
 
 public:
     QGeckoEmbed *qecko;
