@@ -28,16 +28,23 @@ MOCSRCS		= \
 		moc_mainwindow.cpp \
 		$(NULL)
 
-IMAGES = fileopen.png reload.png back.png forward.png stop.png
+#IMAGES = fileopen.png reload.png back.png forward.png stop.png
 
 CXXFLAGS	+= $(MOZ_QT_CFLAGS)
 PROGRAM = TestQGeckoEmbed$(BIN_SUFFIX)
 
 ifdef MOZ_ENABLE_QT
 LIBS		+= \
-		-lqgeckoembed \
 		$(XLDFLAGS) \
 		$(XLIBS) \
+		$(MOZ_QT_LIBS) \
+		$(NULL)
+
+#LIBS		+= \
+#		-lqgeckoembed \
+#		$(NULL)
+LIBS		+= \
+		-lxul \
 		$(NULL)
 endif
 
@@ -68,10 +75,14 @@ EXTRA_LIBS	+= $(MOZ_COMPONENT_LIBS)
 include $(topsrcdir)/config/rules.mk
 include $(srcdir)/../src/config/qtrules.mk
 
+LIBS += $(XPCOM_STANDALONE_GLUE_LDOPTS)
+DEFINES += -DXPCOM_GLUE
+
 CXXFLAGS	+= $(MOZ_QT_CFLAGS)
 
 EXTRA_LIBS	+= \
 		$(TK_LIBS) \
+		$(MOZ_QT_LIBS) \
 		$(NULL)
 
 ifeq ($(OS_ARCH), SunOS)

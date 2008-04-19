@@ -6,48 +6,53 @@
 #include <qtoolbar.h>
 #include <qfiledialog.h>
 #include <qstatusbar.h>
-#include <qvbox.h>
 #include <qlayout.h>
 
 #include "qgeckoembed.h"
 
+const QString rsrcPath = ":/images/lin";
 
 MyMainWindow::MyMainWindow()
 {
-    QVBox *box = new QVBox(this);
+    QFrame *box = new QFrame(this);
     qecko = new QGeckoEmbed(box, "qgecko");
     box->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     setCentralWidget( box );
 
     QToolBar *toolbar = new QToolBar(this);
-    toolbar->setLabel("Location:");
+    toolbar->setWindowTitle("Location:");
 
-    QAction *action = new QAction(QPixmap::fromMimeSource( "back.png" ), tr( "Go Back"), CTRL + Key_B,
-                         toolbar, "goback");
+    QAction *action = new QAction(QIcon(rsrcPath + "/back.png"), tr( "Go Back"), toolbar);
+    action->setShortcut(Qt::ControlModifier + Qt::Key_B);
+//                         toolbar, "goback");
     connect(action, SIGNAL(activated()), this, SLOT(goBack()));
-    action->addTo(toolbar);
+    toolbar->addAction(action);
 
-    action = new QAction(QPixmap::fromMimeSource( "forward.png" ), tr( "Go Forward"), CTRL + Key_F,
-                         toolbar, "goforward");
+    action = new QAction(QIcon(rsrcPath + "/forward.png" ), tr( "Go Forward"), toolbar);
+    action->setShortcut(Qt::ControlModifier + Qt::Key_F);
+//                         toolbar, "goforward");
     connect(action, SIGNAL(activated()), this, SLOT(goForward()));
-    action->addTo(toolbar);
+    toolbar->addAction(action);
 
-    action = new QAction(QPixmap::fromMimeSource( "stop.png" ), tr("Stop"), CTRL + Key_S,
-                         toolbar, "stop");
+    action = new QAction(QIcon(rsrcPath + "/stop.png" ), tr("Stop"), toolbar);
+    action->setShortcut(Qt::ControlModifier + Qt::Key_S);
+//                         toolbar, "stop");
     connect(action, SIGNAL(activated()), this, SLOT(stop()));
-    action->addTo(toolbar);
+    toolbar->addAction(action);
 
     location = new QLineEdit(toolbar);
-    toolbar->setStretchableWidget(location);
+    qDebug("Func:%s::%d: QT4 PORT: toolbar->setStretchableWidget(location);\n", __PRETTY_FUNCTION__, __LINE__);
+    //toolbar->setStretchableWidget(location);
 
-    QPopupMenu *menu = new QPopupMenu(this);
-    menuBar()->insertItem( tr( "&File" ), menu );
+    QMenu *menu = new QMenu(tr( "&File" ), this);
+    menuBar()->addMenu( menu );
 
-    QAction *a = new QAction( QPixmap::fromMimeSource( "fileopen.png" ), tr( "&Open..." ), CTRL + Key_O,
-                              toolbar, "fileOpen" );
+    QAction *a = new QAction( QIcon(rsrcPath + "/fileopen.png" ), tr( "&Open..." ), toolbar);
+    a->setShortcut( Qt::ControlModifier + Qt::Key_O );
+//                              toolbar, "fileOpen" );
     connect( a, SIGNAL( activated() ), this, SLOT( fileOpen() ) );
     //a->addTo( toolbar );
-    a->addTo( menu );
+    menu->addAction(a);
 
 
     connect( qecko, SIGNAL(linkMessage(const QString &)),
@@ -72,9 +77,9 @@ MyMainWindow::MyMainWindow()
 
 void MyMainWindow::fileOpen()
 {
-    QString fn = QFileDialog::getOpenFileName( QString::null, tr( "HTML-Files (*.htm *.html);;All Files (*)" ), this );
+    QString fn = QFileDialog::getOpenFileName( this, tr( "HTML-Files (*.htm *.html);;All Files (*)" ), QDir::currentPath());
     if ( !fn.isEmpty() )
-	qecko->loadURL( fn );
+        qecko->loadURL( fn );
 }
 
 void MyMainWindow::startURIOpen(const QString &, bool &)
@@ -104,7 +109,7 @@ void MyMainWindow::stop()
 
 void MyMainWindow::slotProgress(const QString &url, int current, int max)
 {
-    qDebug("progress %d / %d (%s)",  current, max, url.latin1());
+    qDebug("progress %d / %d (%s)",  current, max, url.toUtf8().data());
 }
 
 void MyMainWindow::slotProgress(int current, int max)

@@ -46,33 +46,39 @@ class nsIDirectoryServiceProvider;
 class nsModuleComponentInfo;
 class nsIAppShell;
 class nsVoidArray;
-class nsProfileDirServiceProvider;
 class nsIDirectoryServiceProvider;
 class nsIWebBrowserChrome;
+class QGeckoEmbed;
+class nsILocalFile;
+class nsISupports;
+class QTEmbedDirectoryProvider;
 
 class QGeckoGlobals
 {
     friend class QGeckoEmbed;
+    friend class QTEmbedDirectoryProvider;
 public:
     static void initializeGlobalObjects();
     static void pushStartup();
     static void popStartup();
+    static void setPath(const char *aPath);
     static void setCompPath(const char *aPath);
     static void setAppComponents(const nsModuleComponentInfo *aComps,
                                  int aNumComponents);
     static void setProfilePath(const char *aDir, const char *aName);
     static void setDirectoryServiceProvider(nsIDirectoryServiceProvider
                                             *appFileLocProvider);
-    static int  startupProfile(void);
-    static void shutdownProfile(void);
-
     static int registerAppComponents();
 
     static void addEngine(QGeckoEmbed *embed);
     static void removeEngine(QGeckoEmbed *embed);
     static QGeckoEmbed *findPrivateForBrowser(nsIWebBrowserChrome *aBrowser);
+    static nsIDirectoryServiceProvider *sAppFileLocProvider;
+
 private:
     static PRUint32                sWidgetCount;
+    // the path to the GRE
+    static char                   *sPath;
     // the path to components
     static char                   *sCompPath;
     // the list of application-specific components to register
@@ -81,11 +87,9 @@ private:
     // the appshell we have created
     static nsIAppShell            *sAppShell;
     // what is our profile path?
-    static char                   *sProfileDir;
-    static char                   *sProfileName;
-    // for profiles
-    static nsProfileDirServiceProvider *sProfileDirServiceProvider;
-    static nsIDirectoryServiceProvider *sAppFileLocProvider;
+    static nsILocalFile           *sProfileDir;
+    static nsISupports            *sProfileLock;
+
 
     // the list of all open windows
     static nsVoidArray            *sWindowList;

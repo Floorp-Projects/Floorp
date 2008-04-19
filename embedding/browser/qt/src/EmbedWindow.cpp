@@ -55,7 +55,6 @@
 
 #include <qapplication.h>
 #include <qeventloop.h>
-#include <q3vbox.h>
 #include <qwidget.h>
 #include <qtooltip.h>
 #include <qcursor.h>
@@ -66,17 +65,15 @@ class MozTipLabel : public QLabel
 {
 public:
     MozTipLabel( QWidget* parent)
-        : QLabel( parent, "toolTipTip",
-                  Qt::WStyle_StaysOnTop | Qt::WStyle_Customize | Qt::WStyle_NoBorder
-                  | Qt::WStyle_Tool | Qt::WX11BypassWM )
+        : QLabel( "toolTipTip", parent,  Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint | Qt::Tool | Qt::X11BypassWindowManagerHint)
     {
         setMargin(1);
         //setAutoMask( FALSE );
         setFrameStyle( QFrame::Plain | QFrame::Box );
         setLineWidth( 1 );
-        setAlignment( Qt::AlignAuto | Qt::AlignTop );
+        setAlignment( Qt::AlignLeft | Qt::AlignTop );
         setIndent(0);
-        polish();
+//        polish();
         adjustSize();
         setFont(QToolTip::font());
         setPalette(QToolTip::palette());
@@ -112,7 +109,7 @@ EmbedWindow::Init(QGeckoEmbed *aOwner)
         return;
     }
 
-    mWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome *, this));
+    mWebBrowser->SetContainerWindow(static_cast<nsIWebBrowserChrome *>(this));
 
     nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(mWebBrowser);
     item->SetItemType(nsIDocShellTreeItem::typeContentWrapper);
@@ -175,7 +172,7 @@ EmbedWindow::SetStatus(PRUint32 aStatusType, const PRUnichar *aStatus)
     switch (aStatusType) {
     case STATUS_SCRIPT:
     {
-        mOwner->emitScriptStatus(QString::fromUcs2(aStatus));
+        mOwner->emitScriptStatus(QString::fromUtf16(aStatus));
     }
     break;
     case STATUS_SCRIPT_DEFAULT:
@@ -184,7 +181,7 @@ EmbedWindow::SetStatus(PRUint32 aStatusType, const PRUnichar *aStatus)
     case STATUS_LINK:
     {
         mLinkMessage = aStatus;
-        mOwner->emitLinkStatus(QString::fromUcs2(aStatus));
+        mOwner->emitLinkStatus(QString::fromUtf16(aStatus));
     }
     break;
     }
@@ -336,14 +333,14 @@ NS_IMETHODIMP
 EmbedWindow::SetTitle(const PRUnichar *aTitle)
 {
     mTitle = aTitle;
-    emit mOwner->windowTitleChanged(QString::fromUcs2(aTitle));
+    emit mOwner->windowTitleChanged(QString::fromUtf16(aTitle));
     return NS_OK;
 }
 
 NS_IMETHODIMP
 EmbedWindow::GetSiteWindow(void **aSiteWindow)
 {
-    *aSiteWindow = NS_STATIC_CAST(void *, mOwner);
+    *aSiteWindow = static_cast<void *>(mOwner);
     return NS_OK;
 }
 
@@ -376,13 +373,13 @@ EmbedWindow::SetVisibility(PRBool aVisibility)
 NS_IMETHODIMP
 EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText)
 {
-    QString tipText = QString::fromUcs2(aTipText);
+    QString tipText = QString::fromUtf16(aTipText);
 
     // get the root origin for this content window
     nsCOMPtr<nsIWidget> mainWidget;
     mBaseWindow->GetMainWidget(getter_AddRefs(mainWidget));
     QWidget *window;
-    window = NS_STATIC_CAST(QWidget*, mainWidget->GetNativeData(NS_NATIVE_WINDOW));
+    window = static_cast<QWidget*>(mainWidget->GetNativeData(NS_NATIVE_WINDOW));
 
     if (!window) {
         NS_ERROR("no qt window in hierarchy!\n");
@@ -437,13 +434,13 @@ EmbedWindow::OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsID
             nsString attr;
             attr.Assign(NS_LITERAL_STRING("href"));
             element->GetAttribute(attr, href);
-            url = mOwner->resolvedUrl(QString::fromUcs2(href.get()));
+            url = mOwner->resolvedUrl(QString::fromUtf16(href.get()));
         } else if (!strcasecmp(ctagname.get(), "img")) {
             nsString href;
             nsString attr;
             attr.Assign(NS_LITERAL_STRING("src"));
             element->GetAttribute(attr, href);
-            url = mOwner->resolvedUrl(QString::fromUcs2(href.get()));
+            url = mOwner->resolvedUrl(QString::fromUtf16(href.get()));
         }
     }
 

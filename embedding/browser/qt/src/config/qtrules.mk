@@ -1,11 +1,11 @@
 ui_%.h: %.ui Makefile Makefile.in
-	$(UIC) $< -o $@
+	$(UICEX) $< -o $@
 
 ui_%.cpp: %.ui ui_%.h Makefile Makefile.in
-	$(UIC) $< -i $(<:%.ui=ui_%.h) -o $@
+	$(UICEX) $< -i $(<:%.ui=ui_%.h) -o $@
 
 uiimg_%.cpp: $(IMAGES) Makefile Makefile.in
-	$(UIC) -embed $(PROGRAM) $(IMAGES) -o $@
+	$(UICEX) -embed $(PROGRAM) $(IMAGES) -o $@
 
 libs::
 ifdef IS_QTDESIGNERPLUGIN

@@ -59,19 +59,22 @@
 #include <nsIWindowWatcher.h>
 #include <nsILocalFile.h>
 #include <nsEmbedAPI.h>
+#include <nsXULAppAPI.h>
 #include <nsWidgetsCID.h>
 #include <nsIDOMUIEvent.h>
 #include <nsIInterfaceRequestor.h>
 #include <nsIComponentManager.h>
 #include <nsIFocusController.h>
 #include <nsProfileDirServiceProvider.h>
+#include "nsIDirectoryService.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include <nsIGenericFactory.h>
 #include <nsIComponentRegistrar.h>
 #include <nsVoidArray.h>
 #include <nsIDOMDocument.h>
 #include <nsIDOMBarProp.h>
 #include <nsIDOMWindow.h>
-#include <nsIDOMEventReceiver.h>
+#include "nsPIDOMEventTarget.h"
 #include <nsCOMPtr.h>
 #include <nsPIDOMWindow.h>
 
@@ -107,7 +110,7 @@ public:
     nsCOMPtr<nsISHistory>          sessionHistory;
 
     // our event receiver
-    nsCOMPtr<nsIDOMEventReceiver>  eventReceiver;
+    nsCOMPtr<nsPIDOMEventTarget>   eventReceiver;
 
     // chrome mask
     PRUint32                       chromeMask;
@@ -130,8 +133,6 @@ QGeckoEmbedPrivate::QGeckoEmbedPrivate(QGeckoEmbed *qq)
       chromeLoaded(FALSE),
       listenersAttached(FALSE)
 {
-    initGUI();
-    init();
 }
 
 QGeckoEmbedPrivate::~QGeckoEmbedPrivate()
@@ -151,28 +152,28 @@ QGeckoEmbedPrivate::init()
     // initialize it.  It is assumed that this window will be destroyed
     // when we go out of scope.
     window = new EmbedWindow();
-    windowGuard = NS_STATIC_CAST(nsIWebBrowserChrome *, window);
+    windowGuard = static_cast<nsIWebBrowserChrome *>(window);
     window->Init(q);
     // Create our progress listener object, make an owning reference,
     // and initialize it.  It is assumed that this progress listener
     // will be destroyed when we go out of scope.
     progress = new EmbedProgress(q);
-    progressGuard = NS_STATIC_CAST(nsIWebProgressListener *,
-                                   progress);
+    progressGuard = static_cast<nsIWebProgressListener *>
+                                   (progress);
 
     // Create our content listener object, initialize it and attach it.
     // It is assumed that this will be destroyed when we go out of
     // scope.
     contentListener = new EmbedContentListener(q);
-    contentListenerGuard = NS_STATIC_CAST(nsISupports*,
-                                          NS_STATIC_CAST(nsIURIContentListener*, contentListener));
+    contentListenerGuard = static_cast<nsISupports*>
+                                          (static_cast<nsIURIContentListener*>(contentListener));
 
     // Create our key listener object and initialize it.  It is assumed
     // that this will be destroyed before we go out of scope.
     eventListener = new EmbedEventListener(q);
     eventListenerGuard =
-        NS_STATIC_CAST(nsISupports *, NS_STATIC_CAST(nsIDOMKeyListener *,
-                                                     eventListener));
+        static_cast<nsISupports *>(static_cast<nsIDOMKeyListener *>
+                                                     (eventListener));
 
     // has the window creator service been set up?
     static int initialized = PR_FALSE;
@@ -219,7 +220,7 @@ QGeckoEmbedPrivate::init()
     nsCOMPtr<nsIWidget> qtWidget;
     window->mBaseWindow->GetMainWidget(getter_AddRefs(qtWidget));
     // get the native drawing area
-    mMainWidget = NS_STATIC_CAST(QWidget*, qtWidget->GetNativeData(NS_NATIVE_WINDOW));
+    mMainWidget = static_cast<QWidget*>(qtWidget->GetNativeData(NS_NATIVE_WINDOW));
 
     // Apply the current chrome mask
     ApplyChromeMask();
@@ -229,7 +230,8 @@ void
 QGeckoEmbedPrivate::initGUI()
 {
     QBoxLayout *l = new QHBoxLayout(q);
-    l->setAutoAdd(TRUE);
+    qDebug("FIXME: %s:%i: Q3-4: setAutoAdd(TRUE)", __PRETTY_FUNCTION__, __LINE__);
+//    l->setAutoAdd(TRUE);
 }
 
 void
@@ -258,9 +260,13 @@ QGeckoEmbedPrivate::ApplyChromeMask()
 
 
 QGeckoEmbed::QGeckoEmbed(QWidget *parent, const char *name)
-    : QWidget(parent, name)
+    : QWidget(parent)
 {
+    setObjectName(QString::fromAscii(name));
     d = new QGeckoEmbedPrivate(this);
+    if (!d) return;
+    d->initGUI();
+    d->init();
 }
 
 QGeckoEmbed::~QGeckoEmbed()
@@ -291,7 +297,7 @@ void
 QGeckoEmbed::loadURL(const QString &url)
 {
     if (!url.isEmpty()) {
-        d->navigation->LoadURI((const PRUnichar*)url.ucs2(),
+        d->navigation->LoadURI((const PRUnichar*)url.utf16 (),
                                nsIWebNavigation::LOAD_FLAGS_NONE, // Load flags
                                nsnull,                            // Referring URI
                                nsnull,                            // Post data
@@ -321,7 +327,7 @@ QGeckoEmbed::goBack()
 }
 
 void
-QGeckoEmbed::renderData(const Q3CString &data, const QString &baseURI,
+QGeckoEmbed::renderData(const QByteArray &data, const QString &baseURI,
                             const QString &mimeType)
 {
     openStream(baseURI, mimeType);
@@ -343,12 +349,12 @@ QGeckoEmbed::openStream(const QString &baseURI, const QString &mimeType)
             return rv;
     }
 
-    rv = d->stream->OpenStream(baseURI, mimeType);
+    rv = d->stream->OpenStream(baseURI.toUtf8().data(), mimeType.toUtf8().data());
     return rv;
 }
 
 int
-QGeckoEmbed::appendData(const Q3CString &data)
+QGeckoEmbed::appendData(const QByteArray &data)
 {
     if (!d->stream)
         return NS_ERROR_FAILURE;
@@ -618,8 +624,8 @@ QGeckoEmbed::attachListeners()
         return;
 
     nsIDOMEventListener *eventListener =
-        NS_STATIC_CAST(nsIDOMEventListener *,
-                       NS_STATIC_CAST(nsIDOMKeyListener *, d->eventListener));
+        static_cast<nsIDOMEventListener *>
+                       (static_cast<nsIDOMKeyListener *>(d->eventListener));
 
     // add the key listener
     nsresult rv;
@@ -712,15 +718,16 @@ QString QGeckoEmbed::resolvedUrl(const QString &relativepath) const
     nsCOMPtr<nsIURI> uri;
     d->navigation->GetCurrentURI(getter_AddRefs(uri));
     nsCAutoString rel;
-    rel.Assign(relativepath.utf8().data());
+    rel.Assign(relativepath.toUtf8().data());
     nsCAutoString resolved;
     uri->Resolve(rel, resolved);
 
     return QString::fromUtf8(resolved.get());
 }
 
-void QGeckoEmbed::initialize(const char *aDir, const char *aName)
+void QGeckoEmbed::initialize(const char *aDir, const char *aName, const char *xpcomPath)
 {
+    QGeckoGlobals::setPath(xpcomPath);
     QGeckoGlobals::setProfilePath(aDir, aName);
 }
 

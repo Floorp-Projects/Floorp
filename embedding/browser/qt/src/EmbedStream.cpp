@@ -210,7 +210,7 @@ EmbedStream::AppendToStream(const char *aData, PRInt32 aLen)
     nsCOMPtr<nsIRequest> request = do_QueryInterface(mChannel);
     rv = mStreamListener->OnDataAvailable(request,
                                           NULL,
-                                          NS_STATIC_CAST(nsIInputStream *, this),
+                                          static_cast<nsIInputStream *>(this),
                                           mOffset, /* offset */
                                           aLen); /* len */
     // move our counter

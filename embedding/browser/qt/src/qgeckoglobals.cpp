@@ -55,6 +55,7 @@
 #include <nsIWindowWatcher.h>
 #include <nsILocalFile.h>
 #include <nsEmbedAPI.h>
+#include <nsXULAppAPI.h>
 #include <nsWidgetsCID.h>
 #include <nsIDOMUIEvent.h>
 
@@ -62,24 +63,83 @@
 #include <nsIComponentManager.h>
 #include <nsIFocusController.h>
 #include <nsProfileDirServiceProvider.h>
+#include "nsIDirectoryService.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include <nsIGenericFactory.h>
 #include <nsIComponentRegistrar.h>
 #include <nsVoidArray.h>
 #include <nsIDOMBarProp.h>
 #include <nsIDOMWindow.h>
-#include <nsIDOMEventReceiver.h>
+#include <nsIDOMEvent.h>
+#include <nsPIDOMEventTarget.h>
 
-static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-
+char        *QGeckoGlobals::sPath        = nsnull;
 PRUint32     QGeckoGlobals::sWidgetCount = 0;
 char        *QGeckoGlobals::sCompPath    = nsnull;
-nsIAppShell *QGeckoGlobals::sAppShell    = nsnull;
-char        *QGeckoGlobals::sProfileDir  = nsnull;
-char        *QGeckoGlobals::sProfileName = nsnull;
+nsILocalFile *QGeckoGlobals::sProfileDir  = nsnull;
+nsISupports  *QGeckoGlobals::sProfileLock = nsnull;
 nsVoidArray *QGeckoGlobals::sWindowList  = nsnull;
 nsIDirectoryServiceProvider *QGeckoGlobals::sAppFileLocProvider = nsnull;
-nsProfileDirServiceProvider *QGeckoGlobals::sProfileDirServiceProvider = nsnull;
 
+class QTEmbedDirectoryProvider : public nsIDirectoryServiceProvider2
+{
+public:
+    NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_NSIDIRECTORYSERVICEPROVIDER
+    NS_DECL_NSIDIRECTORYSERVICEPROVIDER2
+};
+
+static const QTEmbedDirectoryProvider kDirectoryProvider;
+
+NS_IMPL_QUERY_INTERFACE2(QTEmbedDirectoryProvider,
+                         nsIDirectoryServiceProvider,
+                         nsIDirectoryServiceProvider2)
+
+NS_IMETHODIMP_(nsrefcnt)
+QTEmbedDirectoryProvider::AddRef()
+{
+    return 1;
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+QTEmbedDirectoryProvider::Release()
+{
+    return 1;
+}
+
+NS_IMETHODIMP
+QTEmbedDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
+                                   nsIFile* *aResult)
+{
+    if (QGeckoGlobals::sAppFileLocProvider) {
+        nsresult rv = QGeckoGlobals::sAppFileLocProvider->GetFile(aKey, aPersist,
+                      aResult);
+        if (NS_SUCCEEDED(rv))
+            return rv;
+    }
+
+    if (QGeckoGlobals::sProfileDir && !strcmp(aKey, NS_APP_USER_PROFILE_50_DIR)) {
+        *aPersist = PR_TRUE;
+        return QGeckoGlobals::sProfileDir->Clone(aResult);
+    }
+
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+QTEmbedDirectoryProvider::GetFiles(const char *aKey,
+                                    nsISimpleEnumerator* *aResult)
+{
+    nsCOMPtr<nsIDirectoryServiceProvider2>
+    dp2(do_QueryInterface(QGeckoGlobals::sAppFileLocProvider));
+
+    if (!dp2)
+        return NS_ERROR_FAILURE;
+
+    return dp2->GetFiles(aKey, aResult);
+}
+
+#ifndef _NO_PROMPT_UI
 #define NS_PROMPTSERVICE_CID \
  {0x95611356, 0xf583, 0x46f5, {0x81, 0xff, 0x4b, 0x3e, 0x01, 0x62, 0xc6, 0x19}}
 
@@ -93,6 +153,9 @@ static const nsModuleComponentInfo defaultAppComps[] = {
     QtPromptServiceConstructor
   }
 };
+#else
+static const nsModuleComponentInfo defaultAppComps[] = {};
+#endif
 
 void
 QGeckoGlobals::pushStartup()
@@ -111,7 +174,25 @@ QGeckoGlobals::pushStartup()
                 return;
         }
 
-        rv = NS_InitEmbedding(binDir, sAppFileLocProvider);
+        const char *grePath = sPath;
+
+        if (!grePath)
+            grePath = getenv("MOZILLA_FIVE_HOME");
+
+        if (!grePath)
+            return;
+
+        nsCOMPtr<nsILocalFile> greDir;
+        rv = NS_NewNativeLocalFile(nsDependentCString(grePath), PR_TRUE,
+                                   getter_AddRefs(greDir));
+        if (NS_FAILED(rv))
+            return;
+
+        rv = XRE_InitEmbedding(greDir, binDir,
+                               const_cast<QTEmbedDirectoryProvider*>
+                                             (&kDirectoryProvider),
+                               nsnull, nsnull);
+
         if (NS_FAILED(rv))
             return;
 
@@ -121,24 +202,11 @@ QGeckoGlobals::pushStartup()
             sAppFileLocProvider = nsnull;
         }
 
-        rv = startupProfile();
-        NS_ASSERTION(NS_SUCCEEDED(rv), "Warning: Failed to start up profiles.\n");
+        if (sProfileDir)
+          XRE_NotifyProfile();
 
         rv = registerAppComponents();
         NS_ASSERTION(NS_SUCCEEDED(rv), "Warning: Failed to register app components.\n");
-
-        // XXX startup appshell service?
-
-        nsCOMPtr<nsIAppShell> appShell;
-        appShell = do_CreateInstance(kAppShellCID);
-        if (!appShell) {
-            NS_WARNING("Failed to create appshell in QGeckoGlobals::pushStartup!\n");
-            return;
-        }
-        sAppShell = appShell.get();
-        NS_ADDREF(sAppShell);
-        sAppShell->Create(0, nsnull);
-        sAppShell->Spinup();
     }
 }
 
@@ -147,20 +215,22 @@ QGeckoGlobals::popStartup()
 {
     sWidgetCount--;
     if (sWidgetCount == 0) {
-        // shut down the profiles
-        shutdownProfile();
-
-        if (sAppShell) {
-            // Shutdown the appshell service.
-            sAppShell->Spindown();
-            NS_RELEASE(sAppShell);
-            sAppShell = 0;
-        }
-
         // shut down XPCOM/Embedding
-        NS_TermEmbedding();
+        XRE_TermEmbedding();
     }
 }
+
+void
+QGeckoGlobals::setPath(const char *aPath)
+{
+    if (sPath)
+        free(sPath);
+    if (aPath)
+        sPath = strdup(aPath);
+    else
+        sPath = nsnull;
+}
+
 
 void
 QGeckoGlobals::setCompPath(const char *aPath)
@@ -183,20 +253,30 @@ void
 QGeckoGlobals::setProfilePath(const char *aDir, const char *aName)
 {
     if (sProfileDir) {
-        nsMemory::Free(sProfileDir);
-        sProfileDir = nsnull;
+        if (sWidgetCount) {
+            NS_ERROR("Cannot change profile directory during run.");
+            return;
+        }
+
+        NS_RELEASE(sProfileDir);
+        NS_RELEASE(sProfileLock);
     }
 
-    if (sProfileName) {
-        nsMemory::Free(sProfileName);
-        sProfileName = nsnull;
+    nsresult rv =
+        NS_NewNativeLocalFile(nsDependentCString(aDir), PR_TRUE, &sProfileDir);
+    if (NS_SUCCEEDED(rv)) {
+        rv = XRE_LockProfileDirectory(sProfileDir, &sProfileLock);
+        if (NS_SUCCEEDED(rv)) {
+            if (sWidgetCount)
+                XRE_NotifyProfile();
+            return;
+        }
     }
 
-    if (aDir)
-        sProfileDir = (char *)nsMemory::Clone(aDir, strlen(aDir) + 1);
-
-    if (aName)
-        sProfileName = (char *)nsMemory::Clone(aName, strlen(aName) + 1);
+    NS_WARNING("Failed to lock profile.");
+    // Failed
+    NS_IF_RELEASE(sProfileDir);
+    NS_IF_RELEASE(sProfileLock);
 }
 
 void
@@ -209,50 +289,6 @@ QGeckoGlobals::setDirectoryServiceProvider(nsIDirectoryServiceProvider
     if (appFileLocProvider) {
         sAppFileLocProvider = appFileLocProvider;
         NS_ADDREF(sAppFileLocProvider);
-    }
-}
-
-
-/* static */
-int
-QGeckoGlobals::startupProfile(void)
-{
-    // initialize profiles
-    if (sProfileDir && sProfileName) {
-        nsresult rv;
-        nsCOMPtr<nsILocalFile> profileDir;
-        NS_NewNativeLocalFile(nsDependentCString(sProfileDir), PR_TRUE,
-                              getter_AddRefs(profileDir));
-        if (!profileDir)
-            return NS_ERROR_FAILURE;
-        rv = profileDir->AppendNative(nsDependentCString(sProfileName));
-        if (NS_FAILED(rv))
-            return NS_ERROR_FAILURE;
-
-        nsCOMPtr<nsProfileDirServiceProvider> locProvider;
-        NS_NewProfileDirServiceProvider(PR_TRUE, getter_AddRefs(locProvider));
-        if (!locProvider)
-            return NS_ERROR_FAILURE;
-        rv = locProvider->Register();
-        if (NS_FAILED(rv))
-            return rv;
-        rv = locProvider->SetProfileDir(profileDir);
-        if (NS_FAILED(rv))
-            return rv;
-        // Keep a ref so we can shut it down.
-        NS_ADDREF(sProfileDirServiceProvider = locProvider);
-    }
-    return NS_OK;
-}
-
-/* static */
-void
-QGeckoGlobals::shutdownProfile(void)
-{
-    if (sProfileDirServiceProvider) {
-        sProfileDirServiceProvider->Shutdown();
-        NS_RELEASE(sProfileDirServiceProvider);
-        sProfileDirServiceProvider = 0;
     }
 }
 
@@ -310,11 +346,11 @@ QGeckoEmbed *QGeckoGlobals::findPrivateForBrowser(nsIWebBrowserChrome *aBrowser)
     // creating a new window ) so it's OK to walk the list of open
     // windows.
     for (int i = 0; i < count; i++) {
-        QGeckoEmbed *tmpPrivate = NS_STATIC_CAST(QGeckoEmbed *,
-                                                sWindowList->ElementAt(i));
+        QGeckoEmbed *tmpPrivate = static_cast<QGeckoEmbed *>
+                                                (sWindowList->ElementAt(i));
         // get the browser object for that window
-        nsIWebBrowserChrome *chrome = NS_STATIC_CAST(nsIWebBrowserChrome *,
-                                                     tmpPrivate->window());
+        nsIWebBrowserChrome *chrome = static_cast<nsIWebBrowserChrome *>
+                                                     (tmpPrivate->window());
         if (chrome == aBrowser)
             return tmpPrivate;
     }
