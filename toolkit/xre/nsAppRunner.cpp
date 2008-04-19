@@ -51,6 +51,11 @@
 #include "nsAppRunner.h"
 #include "nsUpdateDriver.h"
 
+#if defined(MOZ_WIDGET_QT)
+#include <qwidget.h>
+#include <qapplication.h>
+#endif
+
 #ifdef XP_MACOSX
 #include "MacLaunchHelper.h"
 #include "MacApplicationDelegate.h"
@@ -2774,6 +2779,9 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     }
 #endif
 
+#if defined(MOZ_WIDGET_QT)
+    QApplication app(gArgc, gArgv);
+#endif
 #if defined(MOZ_WIDGET_GTK2)
     g_thread_init(NULL);
     // setup for private colormap.  Ideally we'd like to do this
