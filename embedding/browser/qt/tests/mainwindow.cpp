@@ -14,7 +14,9 @@
 const QString rsrcPath = ":/images/lin";
 
 MyMainWindow::MyMainWindow()
+    : zoomFactor( 1.0f )
 {
+
     QFrame *box = new QFrame(this);
     qecko = new QGeckoEmbed(box, "qgecko");
     box->setFrameStyle(QFrame::Panel | QFrame::Sunken);
@@ -29,21 +31,29 @@ MyMainWindow::MyMainWindow()
 
     QAction *action = new QAction(QIcon(rsrcPath + "/back.png"), tr( "Go Back"), toolbar);
     action->setShortcut(Qt::ControlModifier + Qt::Key_B);
-//                         toolbar, "goback");
-    connect(action, SIGNAL(activated()), this, SLOT(goBack()));
+    connect(action, SIGNAL(triggered()), this, SLOT(goBack()));
     toolbar->addAction(action);
 
     action = new QAction(QIcon(rsrcPath + "/forward.png" ), tr( "Go Forward"), toolbar);
     action->setShortcut(Qt::ControlModifier + Qt::Key_F);
-//                         toolbar, "goforward");
-    connect(action, SIGNAL(activated()), this, SLOT(goForward()));
+    connect(action, SIGNAL(triggered()), this, SLOT(goForward()));
     toolbar->addAction(action);
 
     action = new QAction(QIcon(rsrcPath + "/stop.png" ), tr("Stop"), toolbar);
     action->setShortcut(Qt::ControlModifier + Qt::Key_S);
-//                         toolbar, "stop");
-    connect(action, SIGNAL(activated()), this, SLOT(stop()));
+    connect(action, SIGNAL(triggered()), this, SLOT(stop()));
     toolbar->addAction(action);
+
+    action = new QAction(QIcon(rsrcPath + "/stop.png" ), tr("Zoom In"), toolbar);
+    action->setShortcut(Qt::ControlModifier + Qt::Key_Plus);
+    connect(action, SIGNAL(triggered()), this, SLOT(zoomIn()));
+    toolbar->addAction(action);
+
+    action = new QAction(QIcon(rsrcPath + "/stop.png" ), tr("Zoom Out"), toolbar);
+    action->setShortcut(Qt::ControlModifier + Qt::Key_Minus);
+    connect(action, SIGNAL(triggered()), this, SLOT(zoomOut()));
+    toolbar->addAction(action);
+
 
     location = new QLineEdit(toolbar);
     toolbar->addWidget(location);
@@ -53,9 +63,7 @@ MyMainWindow::MyMainWindow()
 
     QAction *a = new QAction( QIcon(rsrcPath + "/fileopen.png" ), tr( "&Open..." ), toolbar);
     a->setShortcut( Qt::ControlModifier + Qt::Key_O );
-//                              toolbar, "fileOpen" );
-    connect( a, SIGNAL( activated() ), this, SLOT( fileOpen() ) );
-    //a->addTo( toolbar );
+    connect( a, SIGNAL( triggered() ), this, SLOT( fileOpen() ) );
     menu->addAction(a);
 
 
@@ -116,6 +124,18 @@ void MyMainWindow::goForward()
 void MyMainWindow::stop()
 {
     qecko->stopLoad();
+}
+
+void MyMainWindow::zoomIn()
+{
+    zoomFactor += 0.2f;
+    qecko->zoom( zoomFactor ); 
+}
+
+void MyMainWindow::zoomOut()
+{
+    zoomFactor -= 0.2f; 
+    qecko->zoom( zoomFactor ); 
 }
 
 void MyMainWindow::slotProgress(const QString &url, int current, int max)

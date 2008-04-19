@@ -20,6 +20,8 @@ public slots:
     void goForward();
     void stop();
     void mainQuit();
+    void zoomIn();
+    void zoomOut();
 
 public:
     QGeckoEmbed *qecko;
@@ -30,6 +32,7 @@ private slots:
 
 private:
     QLineEdit *location;
+    float zoomFactor;
 };
 
 #endif
