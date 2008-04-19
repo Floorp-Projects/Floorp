@@ -49,12 +49,13 @@
 #include "nsToolkit.h"
 #include "nsHTMLFormatConverter.h"
 #include "nsTransferable.h"
+#include "nsLookAndFeel.h"
 
 // #include "nsIComponentRegistrar.h"
 // #include "nsComponentManagerUtils.h"
 // #include "nsAutoPtr.h"
 // 
-// #include "nsLookAndFeel.h"
+
 
 // #include "nsClipboard.h"
 // #include "nsClipboardHelper.h"
@@ -81,12 +82,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(PopupWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 
 /*
 static NS_DEFINE_CID(kNativeScrollCID, NS_NATIVESCROLLBAR_CID);
 
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
+
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
@@ -124,15 +126,15 @@ static const nsModuleComponentInfo components[] =
       NS_TRANSFERABLE_CID,
       "@mozilla.org/widget/transferable;1",
       nsTransferableConstructor },
+    { "Qt Look And Feel",
+      NS_LOOKANDFEEL_CID,
+      "@mozilla.org/widget/lookandfeel/qt;1",
+      nsLookAndFeelConstructor },
 /*
     { "Qt Native Scrollbar",
       NS_NATIVESCROLLBAR_CID,
       "@mozilla.org/widget/nativescrollbar/qt;1",
       nsNativeScrollbarConstructor},
-    { "Qt Look And Feel",
-      NS_LOOKANDFEEL_CID,
-      "@mozilla.org/widget/lookandfeel/qt;1",
-      nsLookAndFeelConstructor },
     { "Qt Clipboard",
       NS_CLIPBOARD_CID,
       "@mozilla.org/widget/clipboard;1",
