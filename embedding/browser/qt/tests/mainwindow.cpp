@@ -16,8 +16,9 @@ MyMainWindow::MyMainWindow()
 {
     QFrame *box = new QFrame(this);
     qecko = new QGeckoEmbed(box, "qgecko");
-    qecko->resize(500, 700); // FIXME
     box->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    QHBoxLayout *hboxLayout = new QHBoxLayout(box);
+    hboxLayout->addWidget(qecko);
     setCentralWidget( box );
 
     QToolBar *toolbar = new QToolBar(this);
