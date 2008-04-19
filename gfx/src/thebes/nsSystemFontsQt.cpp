@@ -36,21 +36,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// for strtod()
-#include <stdlib.h>
-
 #include "nsIDeviceContext.h"
 #include "nsIRenderingContext.h"
-#include "prlink.h"
 
-#include <fontconfig/fontconfig.h>
 #include "nsSystemFontsQt.h"
 #include "gfxPlatformQt.h"
-#include <QLabel>
-#include <QLineEdit>
-#include <QMenu>
-#include <QAction>
-#include <QPushButton>
+#include <QApplication>
+#include <QFont>
 
 nsSystemFontsQt::nsSystemFontsQt()
   : mDefaultFontName(NS_LITERAL_STRING("sans-serif"))
@@ -59,47 +51,33 @@ nsSystemFontsQt::nsSystemFontsQt()
   , mMenuFontName(NS_LITERAL_STRING("sans-serif"))
 {
    // What about using QFontInfo? is it faster or what?
-   QLabel *label = new QLabel();
-   if (label) {
-       GetSystemFontInfo(label->font(), &mDefaultFontName, &mDefaultFontStyle);
-       delete label;
-   }
+   GetSystemFontInfo("Qlabel", &mDefaultFontName, &mDefaultFontStyle);
 
-   QLineEdit *entry = new QLineEdit();
-   if (entry) {
-      GetSystemFontInfo(entry->font(), &mFieldFontName, &mFieldFontStyle);
-      delete entry;
-   }
+   GetSystemFontInfo("QlineEdit", &mFieldFontName, &mFieldFontStyle);
 
-   QMenu *menu = new QMenu();
-   QAction *action = new QAction(menu);
-   if (action) {
-      GetSystemFontInfo(action->font(), &mMenuFontName, &mMenuFontStyle);
-      delete action;
-   }
-
-   QPushButton *button = new QPushButton();
-   if (button) {
-      GetSystemFontInfo(button->font(), &mButtonFontName, &mButtonFontStyle);
-      delete button;
-   }
+   GetSystemFontInfo("QAction", &mMenuFontName, &mMenuFontStyle);
+  
+   GetSystemFontInfo("QPushButton", &mButtonFontName, &mButtonFontStyle);
 }
 
 nsSystemFontsQt::~nsSystemFontsQt()
 {
+    // No implementation needed
 }
 
 nsresult
-nsSystemFontsQt::GetSystemFontInfo(const QFont &aFont, nsString *aFontName,
-                                     gfxFontStyle *aFontStyle) const
+nsSystemFontsQt::GetSystemFontInfo(const char *aClassName, nsString *aFontName,
+                                   gfxFontStyle *aFontStyle) const
 {
-    aFontStyle->style       = FONT_STYLE_NORMAL;
-    aFontStyle->systemFont  = PR_TRUE;
+    QFont qFont = QApplication::font(aClassName);
+
+    aFontStyle->style = FONT_STYLE_NORMAL;
+    aFontStyle->systemFont = PR_TRUE;
     NS_NAMED_LITERAL_STRING(quote, "\"");
-    nsString family((PRUnichar*)aFont.family().data());
+    nsString family((PRUnichar*)qFont.family().data());
     *aFontName = quote + family + quote;
-    aFontStyle->weight = aFont.weight();
-    aFontStyle->size = aFont.pointSizeF() * float(gfxPlatformQt::DPI()) / 72.0f;
+    aFontStyle->weight = qFont.weight();
+    aFontStyle->size = qFont.pointSizeF() * float(gfxPlatformQt::DPI()) / 72.0f;
     return NS_OK;
 }
 
