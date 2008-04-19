@@ -449,7 +449,7 @@ gfxQtFont::GetMetrics()
     mMetrics.spaceWidth = fontMetrics.width( QChar(' ') );
     mMetrics.xHeight = fontMetrics.xHeight();
 
-#if 0
+#if 1
     FT_Face face = mQFont->freetypeFace();
     if (face) {
         mMetrics.maxAdvance = face->size->metrics.max_advance / 64.0; // 26.6
