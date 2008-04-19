@@ -73,6 +73,10 @@ REQUIRES	= xpcom \
 
 #GARBAGE                 += moc_mozqwidget.cpp
 
+CSRCS = \
+		keysym2ucs.c \
+$(NULL)
+
 CPPSRCS	= \
 		$(MOCSRCS) \
 		moc_mozqwidget.cpp \
@@ -85,6 +89,7 @@ CPPSRCS	= \
 		nsToolkit.cpp \
 		nsScreenQt.cpp \
 		nsScreenManagerQt.cpp \
+		nsQtKeyUtils.cpp \
 		mozqwidget.cpp \
 		$(NULL)
 
