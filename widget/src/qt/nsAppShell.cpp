@@ -44,6 +44,13 @@
 
 #define NOTIFY_TOKEN 0xFA
 
+#ifdef PR_LOGGING
+PRLogModuleInfo *gWidgetLog = nsnull;
+PRLogModuleInfo *gWidgetFocusLog = nsnull;
+PRLogModuleInfo *gWidgetIMLog = nsnull;
+PRLogModuleInfo *gWidgetDrawLog = nsnull;
+#endif
+
 void nsAppShell::EventNativeCallback(int fd)
 {
     unsigned char c;
@@ -67,6 +74,17 @@ nsAppShell::~nsAppShell()
 nsresult
 nsAppShell::Init()
 {
+#ifdef PR_LOGGING
+    if (!gWidgetLog)
+        gWidgetLog = PR_NewLogModule("Widget");
+    if (!gWidgetFocusLog)
+        gWidgetFocusLog = PR_NewLogModule("WidgetFocus");
+    if (!gWidgetIMLog)
+        gWidgetIMLog = PR_NewLogModule("WidgetIM");
+    if (!gWidgetDrawLog)
+        gWidgetDrawLog = PR_NewLogModule("WidgetDraw");
+#endif
+
     int err = pipe(mPipeFDs);
     if (err)
         return NS_ERROR_OUT_OF_MEMORY;
