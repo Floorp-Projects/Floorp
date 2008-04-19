@@ -40,6 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <QStyle>
+#include <QPalette>
 
 #include "nsITheme.h"
 #include "nsCOMPtr.h"
@@ -108,20 +109,16 @@ private:
     return dctx->AppUnitsPerDevPixel();
   }
 
-  void ButtonStyle(nsIFrame* aFrame,
-                   QRect aRect,
-                   QStyleOptionButton* aOption,
-                   QStyle::State optFlags = QStyle::State_None);
+  void InitButtonStyle(PRUint8 widgetType,
+                       nsIFrame* aFrame,
+                       QRect rect,
+                       QStyleOptionButton &opt);
 
-  void FrameStyle(nsIFrame* aFrame,
-                  QRect aRect,
-                  QStyleOptionFrameV2* aOption,
-                  QStyle::State optFlags = QStyle::State_None);
-
-  void PlainStyle(nsIFrame* aFrame,
-                  QRect aRect,
-                  QStyleOption* aOption,
-                  QStyle::State optFlags = QStyle::State_None);
+  void InitPlainStyle(PRUint8 aWidgetType,
+                      nsIFrame* aFrame,
+                      QRect rect,
+                      QStyleOption &opt,
+                      QStyle::State extraFlags = QStyle::State_None);
 
 private:
 
@@ -129,5 +126,6 @@ private:
 
   PRInt32 frameWidth;
 
+  QPalette mNoBackgroundPalette;
 };
 
