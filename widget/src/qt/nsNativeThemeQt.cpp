@@ -62,6 +62,7 @@
 #include "nsILookAndFeel.h"
 #include "nsIServiceManager.h"
 #include "nsIEventStateManager.h"
+#include "nsIDOMHTMLInputElement.h"
 #include <malloc.h>
 
 
@@ -177,7 +178,8 @@ nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
         style->drawControl(ce, &option, qPainter, NULL);
         break;
     }
-    case NS_THEME_CHECKBOX: {
+    case NS_THEME_CHECKBOX:
+    case NS_THEME_CHECKBOX_SMALL: {
         qDebug("NS_THEME_CHECKBOX");
 
         ce = QStyle::CE_CheckBox;
@@ -206,7 +208,7 @@ nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
     }
     case NS_THEME_SCROLLBAR_BUTTON_LEFT: {
         qDebug("NS_THEME_SCROLLBAR_BUTTON_LEFT");
-        eventFlags = QStyle::State_Horizontal;
+        eventFlags |= QStyle::State_Horizontal;
     }
     // Fall through 
     case NS_THEME_SCROLLBAR_BUTTON_UP: {
@@ -223,7 +225,7 @@ nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
     }
     case NS_THEME_SCROLLBAR_BUTTON_RIGHT: {
         qDebug("NS_THEME_SCROLLBAR_BUTTON_RIGHT");
-        eventFlags = QStyle::State_Horizontal;
+        eventFlags |= QStyle::State_Horizontal;
     }
     // Fall through 
     case NS_THEME_SCROLLBAR_BUTTON_DOWN: {
@@ -242,7 +244,7 @@ nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
     //case NS_THEME_SCROLLBAR_GRIPPER_VERTICAL:
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL: {
         qDebug("NS_THEME_SCROLLBAR_THUMB_HORIZONTAL");
-        eventFlags = QStyle::State_Horizontal;
+        eventFlags |= QStyle::State_Horizontal;
     }
     // Fall through
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL: {
@@ -364,6 +366,7 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* a
     switch (aWidgetType) {
     case NS_THEME_RADIO_SMALL:
     case NS_THEME_RADIO:
+    case NS_THEME_CHECKBOX_SMALL:
     case NS_THEME_CHECKBOX: {
         nsRect frameRect = aFrame->GetRect();
 
@@ -379,7 +382,7 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* a
         ButtonStyle(aFrame, qRect, &option);
 
         QRect rect = s->subElementRect(
-            aWidgetType == NS_THEME_CHECKBOX ?
+            (aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_CHECKBOX_SMALL ) ?
                 QStyle::SE_CheckBoxIndicator :
                 QStyle::SE_RadioButtonIndicator,
             &option,
@@ -499,6 +502,7 @@ nsNativeThemeQt::ThemeSupportsWidget(nsPresContext* aPresContext,
     case NS_THEME_RADIO:
     case NS_THEME_RADIO_SMALL:
     case NS_THEME_CHECKBOX:
+    case NS_THEME_CHECKBOX_SMALL:
     case NS_THEME_BUTTON_BEVEL:
     case NS_THEME_BUTTON:
     //case NS_THEME_DROPDOWN:
