@@ -74,21 +74,19 @@ REQUIRES	= xpcom \
 #GARBAGE                 += moc_mozqwidget.cpp
 
 CPPSRCS	= \
+		$(MOCSRCS) \
+		moc_mozqwidget.cpp \
+		moc_nsAppShell.cpp \
+		nsAppShell.cpp \
 		nsWidgetFactory.cpp \
+		nsCommonWidget.cpp \
+		nsWindow.cpp \
+		nsLookAndFeel.cpp \
 		nsToolkit.cpp \
+		nsScreenQt.cpp \
+		nsScreenManagerQt.cpp \
+		mozqwidget.cpp \
 		$(NULL)
-# 		$(MOCSRCS) \
-# 		moc_mozqwidget.cpp \
-# 		moc_nsAppShell.cpp \
-# 		nsAppShell.cpp \
-# 		nsWidgetFactory.cpp \
-# 		nsCommonWidget.cpp \
-# 		nsWindow.cpp \
-# 		nsLookAndFeel.cpp \
-# 		nsToolkit.cpp \
-# 		nsScreenQt.cpp \
-# 		nsScreenManagerQt.cpp \
-# 		mozqwidget.cpp \
 
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
