@@ -48,8 +48,9 @@
 #include "qdebug.h"
 #include "qrect.h"
 #include <locale.h>
-
 #include <cairo.h>
+#include <QFontMetrics>
+
 
 /**
  * gfxQtFontGroup
@@ -111,7 +112,11 @@ gfxQtFont::RealizeQFont()
     // already realized?
     if (mQFont)
         return;
-    qDebug("QTFONT NOT_IMPLEMENTED!!!! Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
+
+//	mQFont = new QFont( "times" );
+	printf( " gfxQtFont::RealizeQFont mQFont %p \n", mQFont );
+
+//    qDebug("QTFONT NOT_IMPLEMENTED!!!! Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
 
 /*
     PangoFontDescription *pangoFontDesc =
@@ -474,14 +479,54 @@ gfxQtFont::~gfxQtFont()
 const gfxFont::Metrics&
 gfxQtFont::GetMetrics()
 {
-    if (mHasMetrics)
+     if (mHasMetrics)
         return mMetrics;
 
-    qDebug("QTFONT NOT_IMPLEMENTED!!!! Func:%s::%d, font name: %s %f %f\n", __PRETTY_FUNCTION__, __LINE__, NS_ConvertUTF16toUTF8(mName).get(), GetStyle()->size, mAdjustedSize);
+    QFont font( QString( NS_ConvertUTF16toUTF8(mName).get() ), 
+                (int) GetStyle()->size, 
+                (int) GetStyle()->weight,
+                bool( GetStyle()->style == FONT_STYLE_ITALIC ) );
 
+    QFontMetrics fontMetrics( font );
+
+    mMetrics.maxAscent = fontMetrics.ascent();
+    mMetrics.maxDescent = fontMetrics.descent();
+    mMetrics.aveCharWidth = fontMetrics.averageCharWidth();
+    mMetrics.underlineOffset = fontMetrics.underlinePos();
+    mMetrics.underlineSize = fontMetrics.lineWidth();
+    mMetrics.strikeoutOffset = fontMetrics.strikeOutPos(); 
+    mMetrics.strikeoutSize = fontMetrics.lineWidth();
+    mMetrics.maxAdvance = fontMetrics.maxWidth();
+
+    mMetrics.emHeight = mAdjustedSize ? mAdjustedSize : GetStyle()->size;
+
+    gfxFloat lineHeight = mMetrics.maxAscent + mMetrics.maxDescent;
+    if (lineHeight > mMetrics.emHeight)
+    {
+        mMetrics.externalLeading = lineHeight - mMetrics.emHeight;
+    }
+    else
+    {
+        mMetrics.externalLeading = 0;
+    }
+    mMetrics.internalLeading = 0;
+
+    mMetrics.maxHeight = lineHeight;
+
+    mMetrics.emAscent = lineHeight > 0.0 ?
+        mMetrics.maxAscent * mMetrics.emHeight / lineHeight : 0.0;
+    mMetrics.emDescent = mMetrics.emHeight - mMetrics.emAscent;
+
+    mMetrics.spaceWidth = fontMetrics.width( QChar(' ') );
+    mMetrics.xHeight = fontMetrics.xHeight();
+
+
+	mMetrics.superscriptOffset = mMetrics.xHeight;
+	mMetrics.subscriptOffset = mMetrics.xHeight;
+
+
+  
 #if 0
-    //    printf("font name: %s %f %f\n", NS_ConvertUTF16toUTF8(mName).get(), GetStyle()->size, mAdjustedSize);
-    //    printf ("pango font %s\n", pango_font_description_to_string (pango_font_describe (font)));
 
     fprintf (stderr, "Font: %s\n", NS_ConvertUTF16toUTF8(mName).get());
     fprintf (stderr, "    emHeight: %f emAscent: %f emDescent: %f\n", mMetrics.emHeight, mMetrics.emAscent, mMetrics.emDescent);
@@ -513,15 +558,17 @@ gfxQtFont::GetUniqueName()
     return result;
 }
 
-/* static */ void
-gfxQtFont::Shutdown()
+/* static  void
+/*gfxQtFont::Shutdown()
 {
     qDebug("QTFONT NOT_IMPLEMENTED!!!! Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
 }
-
+*/
 static cairo_scaled_font_t*
 CreateScaledFont(cairo_t *aCR, cairo_matrix_t *aCTM, void *aQFont)
 {
+printf( "CreateScaledFont\n" );
+
     // XXX is this safe really? We should probably check the font type or something.
     // XXX does this really create the same font that Pango used for measurement?
     // We probably need to work harder here. We should pay particular attention
@@ -555,6 +602,8 @@ CreateScaledFont(cairo_t *aCR, cairo_matrix_t *aCTM, void *aQFont)
 PRBool
 gfxQtFont::SetupCairoFont(gfxContext *aContext)
 {
+printf("gfxQtFont::SetupCairoFont\n");
+
     cairo_t *cr = aContext->GetCairo();
     cairo_matrix_t currentCTM;
     cairo_get_matrix(cr, &currentCTM);
@@ -571,7 +620,7 @@ gfxQtFont::SetupCairoFont(gfxContext *aContext)
         }
     }
     if (!mCairoFont) {
-        qDebug("QTFONT NOT_IMPLEMENTED!!!! Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
+//        qDebug("QTFONT NOT_IMPLEMENTED!!!! Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
         mCairoFont = CreateScaledFont(cr, &currentCTM, GetQFont());
         return PR_FALSE;
     }
