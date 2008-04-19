@@ -38,7 +38,7 @@ int main(int argc, char **argv)
     MyMainWindow *mainWindow = new MyMainWindow();
     //app.setMainWidget(mainWindow);
 
-    mainWindow->resize(700, 500);
+    mainWindow->resize(400, 600);
     mainWindow->show();
 
     QString url;
