@@ -477,7 +477,7 @@ gfxQtFont::GetMetrics()
     if (mHasMetrics)
         return mMetrics;
 
-    qDebug("QTFONT NOT_IMPLEMENTED!!!! Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
+    qDebug("QTFONT NOT_IMPLEMENTED!!!! Func:%s::%d, font name: %s %f %f\n", __PRETTY_FUNCTION__, __LINE__, NS_ConvertUTF16toUTF8(mName).get(), GetStyle()->size, mAdjustedSize);
 
 #if 0
     //    printf("font name: %s %f %f\n", NS_ConvertUTF16toUTF8(mName).get(), GetStyle()->size, mAdjustedSize);
