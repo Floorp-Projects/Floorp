@@ -74,6 +74,28 @@ SOFTOKEN3_LIB = $(DLL_PREFIX)softokn3$(DLL_SUFFIX)
 SOFTOKEN3_CHK = $(DLL_PREFIX)softokn3.chk
 NSSDBM3_LIB = $(DLL_PREFIX)nssdbm3$(DLL_SUFFIX)
 
+ifndef MOZ_NATIVE_NSS
+ifneq (,$(filter OS2 WINCE WINNT,$(OS_ARCH)))
+SDK_LIBS = \
+  $(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \
+  $(DIST)/lib/$(LIB_PREFIX)smime3.$(IMPORT_LIB_SUFFIX) \
+  $(DIST)/lib/$(LIB_PREFIX)ssl3.$(IMPORT_LIB_SUFFIX) \
+  $(DIST)/lib/$(LIB_PREFIX)nss3.$(IMPORT_LIB_SUFFIX) \
+  $(DIST)/lib/$(LIB_PREFIX)nssutil3.$(IMPORT_LIB_SUFFIX) \
+  $(DIST)/lib/$(LIB_PREFIX)softokn3.$(IMPORT_LIB_SUFFIX) \
+  $(NULL)
+else
+SDK_LIBS = \
+  $(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \
+  $(DIST)/lib/$(LIB_PREFIX)smime.$(LIB_SUFFIX) \
+  $(DIST)/lib/$(LIB_PREFIX)ssl.$(LIB_SUFFIX) \
+  $(DIST)/lib/$(LIB_PREFIX)nss.$(LIB_SUFFIX) \
+  $(DIST)/lib/$(LIB_PREFIX)nssutil.$(LIB_SUFFIX) \
+  $(DIST)/lib/$(LIB_PREFIX)softokn.$(LIB_SUFFIX) \
+  $(NULL)
+endif
+endif
+
 # Default
 HAVE_FREEBL_LIBS = 1
 
@@ -273,6 +295,7 @@ endif
 	$(INSTALL) -m 755 $(DIST)/lib/$(NSSUTIL3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(SMIME3_LIB) $(DIST)/bin
+	$(INSTALL) -m 755 $(SDK_LIBS) $(DIST)/sdk/lib
 ifdef HAVE_FREEBL_LIBS
 ifndef SKIP_CHK
 	$(INSTALL) -m 644 $(DIST)/lib/$(FREEBL_CHK) $(DIST)/bin
