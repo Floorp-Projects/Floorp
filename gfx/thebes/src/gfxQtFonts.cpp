@@ -45,6 +45,7 @@
 #include <QFontMetricsF>
 #include "cairo-ft.h"
 #include <freetype/tttables.h>
+#include "nsStyleConsts.h"
 
 /**
  * gfxQtFontGroup
@@ -382,25 +383,46 @@ void gfxQtFontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUTF
  */
 gfxQtFont::gfxQtFont(const nsAString &aName,
                      const gfxFontStyle *aFontStyle)
-    : gfxFont(aName, aFontStyle),
-      mQFont(nsnull),
-      mCairoFont(nsnull),
-      mHasSpaceGlyph(PR_FALSE),
-      mSpaceGlyph(0),
-      mHasMetrics(PR_FALSE), 
-      mAdjustedSize(0)
+        : gfxFont(aName, aFontStyle),
+        mQFont(nsnull),
+        mCairoFont(nsnull),
+        mHasSpaceGlyph(PR_FALSE),
+        mSpaceGlyph(0),
+        mHasMetrics(PR_FALSE),
+        mAdjustedSize(0)
 {
-    mQFont = new QFont();
-    mQFont->setFamily(QString( NS_ConvertUTF16toUTF8(mName).get() ) );
-    mQFont->setPixelSize(GetStyle()->size);
-    int weight = GetStyle()->weight/10;
-    if( weight > 99 )
-    {
-        // Max Weight for QFont is 99
-        weight = 99;
+    QFont::Style style = QFont::StyleNormal;
+    // add style to pattern
+    switch (GetStyle()->style) {
+    case FONT_STYLE_ITALIC:
+        style = QFont::StyleItalic;
+        break;
+    case FONT_STYLE_OBLIQUE:
+        style = QFont::StyleOblique;
+        break;
+    case FONT_STYLE_NORMAL:
+    default:
+        style = QFont::StyleNormal;
     }
+
+    PRInt16 weight = QFont::Normal;
+    switch (GetStyle()->weight) {
+    case NS_STYLE_FONT_WEIGHT_NORMAL:
+        weight = QFont::Normal;
+    case NS_STYLE_FONT_WEIGHT_BOLD:
+        weight = QFont::Bold;
+    case NS_STYLE_FONT_WEIGHT_BOLDER:
+        weight = QFont::Black;
+    case NS_STYLE_FONT_WEIGHT_LIGHTER:
+        weight = QFont::Light;
+    default:
+        weight = QFont::Normal;
+    }
+    mQFont = new QFont();
+    mQFont->setFamily(QString(NS_ConvertUTF16toUTF8(mName).get()));
     mQFont->setWeight(weight);
-    mQFont->setItalic(bool( GetStyle()->style == FONT_STYLE_ITALIC ));
+    mQFont->setStyle(style);
+    mQFont->setPixelSize (mAdjustedSize ? mAdjustedSize : GetStyle()->size);
 }
 
 gfxQtFont::~gfxQtFont()
