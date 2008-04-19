@@ -187,7 +187,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID,nscolor &aColor)
       break;
 
     case eColor_infobackground:
-#if (QT_VERSION >= 440)
+#if (QT_VERSION >= QT_VERSION_CHECK(4, 4, 0))
       aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::ToolTipBase));
 #else
       aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::Base));
@@ -195,7 +195,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID,nscolor &aColor)
       break;
 
     case eColor_infotext:
-#if (QT_VERSION >= 440)
+#if (QT_VERSION >= QT_VERSION_CHECK(4, 4, 0))
       aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::ToolTipText));
 #else
       aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::Text));
