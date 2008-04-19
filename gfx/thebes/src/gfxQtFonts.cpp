@@ -73,8 +73,6 @@ gfxQtFontGroup::FontCallback (const nsAString& fontName,
                                  const nsACString& genericName,
                                  void *closure)
 {
-    qDebug("gfxQtFontGroup Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
-
     nsStringArray *sa = static_cast<nsStringArray*>(closure);
 
     // We ignore prefs that have three hypens since they are X style prefs.
@@ -252,8 +250,6 @@ nsresult
 gfxQtFontGroup::CreateGlyphRunsFast(gfxTextRun *aTextRun,
                                     const char *aUTF8, PRUint32 aUTF8Length)
 {
-    qDebug("gfxQtFontGroup Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
-
     const char *p = aUTF8;
     gfxQtFont *font = GetFontAt(0);
     const QFont& qFont = font->GetQFont();
@@ -284,10 +280,10 @@ gfxQtFontGroup::CreateGlyphRunsFast(gfxTextRun *aTextRun,
             if (!glyph)                  // character not in font,
                 return NS_ERROR_FAILURE; // fallback to CreateGlyphRunsItemizing
 
-            QRect rect;
-//            pango_font_get_glyph_extents (pangofont, glyph, NULL, &rect);
-            PRInt32 advance = 0;
-            //advance = PANGO_PIXELS (rect.width * appUnitsPerDevUnit);
+            FT_Load_Glyph(face, glyph, FT_LOAD_DEFAULT);
+            PRInt32 advance = face->glyph->advance.x;
+            advance = (advance >> 6) * appUnitsPerDevUnit;
+
             if (advance >= 0 &&
                 gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
                 gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph)) {
