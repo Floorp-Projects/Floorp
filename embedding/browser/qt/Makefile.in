@@ -6,7 +6,11 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= qgeckoembed
-DIRS=src tests
+DIRS=src
+
+ifdef ENABLE_TESTS
+TOOL_DIRS  += tests
+endif
 
 PACKAGE_FILE = qgeckoembed.pkg
 
