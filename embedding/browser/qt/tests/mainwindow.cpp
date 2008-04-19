@@ -42,8 +42,7 @@ MyMainWindow::MyMainWindow()
     toolbar->addAction(action);
 
     location = new QLineEdit(toolbar);
-    qDebug("Func:%s::%d: QT4 PORT: toolbar->setStretchableWidget(location);\n", __PRETTY_FUNCTION__, __LINE__);
-    //toolbar->setStretchableWidget(location);
+    toolbar->addWidget(location);
 
     QMenu *menu = new QMenu(tr( "&File" ), this);
     menuBar()->addMenu( menu );
