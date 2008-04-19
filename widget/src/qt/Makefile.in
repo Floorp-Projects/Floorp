@@ -94,6 +94,7 @@ CPPSRCS	= \
 		nsBidiKeyboard.cpp \
 		nsIdleServiceQt.cpp \
 		nsDragService.cpp \
+		nsNativeThemeQt.cpp \
 		mozqwidget.cpp \
 		nsSound.cpp \
 		$(NULL)

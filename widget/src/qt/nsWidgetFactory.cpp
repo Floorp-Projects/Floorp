@@ -64,6 +64,8 @@
 #include "nsIdleServiceQt.h"
 #include "nsDragService.h"
 #include "nsSound.h"
+#include "nsBidiKeyboard.h"
+#include "nsNativeThemeQt.h"
 // #include "nsScrollbar.h"
 // #include "nsFilePicker.h"
 // 
@@ -75,8 +77,6 @@
 // #include "nsIPrefBranch.h"
 // #include "nsIPrefService.h"
 // 
-#include "nsBidiKeyboard.h"
-// #include "nsNativeThemeQt.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildWindow)
@@ -99,9 +99,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceQt)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeQt)
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeScrollbar)
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
-//NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeQt)
 
 
 static const nsModuleComponentInfo components[] =
@@ -165,18 +165,18 @@ static const nsModuleComponentInfo components[] =
     { "Qt Sound",
       NS_SOUND_CID,
       "@mozilla.org/sound;1",
-      nsSoundConstructor }
-/*    { "Qt File Picker",
-      NS_FILEPICKER_CID,
-      "@mozilla.org/filepicker;1",
-      nsFilePickerConstructor },
-*/
-#if 0
+      nsSoundConstructor }/*,
     { "Native Theme Renderer",
       NS_THEMERENDERER_CID,
       "@mozilla.org/chrome/chrome-native-theme;1",
       nsNativeThemeQtConstructor }
-#endif
+*/
+/*    
+    { "Qt File Picker",
+      NS_FILEPICKER_CID,
+      "@mozilla.org/filepicker;1",
+      nsFilePickerConstructor },
+*/
 };
 
 PR_STATIC_CALLBACK(void)
