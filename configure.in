@@ -4629,13 +4629,15 @@ MOZ_ARG_HEADER(Toolkit Options)
                             OS/2 - cairo-os2
                             Win32 - cairo-windows
                             WinCE - windows
-                            * - cairo-gtk2],
+                            * - cairo-gtk2
+                            * - cairo-qt],
     [ _DEFAULT_TOOLKIT=$enableval ],
     [ _DEFAULT_TOOLKIT=$_PLATFORM_DEFAULT_TOOLKIT])
 
     if test "$_DEFAULT_TOOLKIT" = "photon" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-windows" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2" \
+        -o "$_DEFAULT_TOOLKIT" = "cairo-qt" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-beos" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-os2" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-mac" \
@@ -4646,7 +4648,7 @@ MOZ_ARG_HEADER(Toolkit Options)
         MOZ_WIDGET_TOOLKIT=`echo "$_DEFAULT_TOOLKIT" | sed -e "s/,.*$//"`
     else
         if test "$no_x" != "yes"; then
-            AC_MSG_ERROR([Toolkit must be cairo-gtk2.])
+            AC_MSG_ERROR([Toolkit must be cairo-gtk2 or cairo-qt.])
         else
             AC_MSG_ERROR([Toolkit must be $_PLATFORM_DEFAULT_TOOLKIT (if supported).])
         fi
@@ -4677,6 +4679,15 @@ cairo-gtk2)
     TK_CFLAGS='$(MOZ_GTK2_CFLAGS)'
     TK_LIBS='$(MOZ_GTK2_LIBS)'
     AC_DEFINE(MOZ_WIDGET_GTK2)
+    ;;
+cairo-qt)
+    MOZ_WIDGET_TOOLKIT=qt
+    MOZ_GFX_TOOLKIT=cairo
+    MOZ_ENABLE_QT=1
+    MOZ_ENABLE_XREMOTE=1
+    TK_CFLAGS='$(MOZ_QT_CFLAGS)'
+    TK_LIBS='$(MOZ_QT_LIBS)'
+    AC_DEFINE(MOZ_WIDGET_QT)
     ;;
 cairo-beos)
     MOZ_WIDGET_TOOLKIT=beos
@@ -4760,6 +4771,45 @@ AC_SUBST(MOZ_ENABLE_STARTUP_NOTIFICATION)
 AC_SUBST(MOZ_STARTUP_NOTIFICATION_CFLAGS)
 AC_SUBST(MOZ_STARTUP_NOTIFICATION_LIBS)
 
+dnl ========================================================
+dnl = QT support
+dnl ========================================================
+if test "$MOZ_ENABLE_QT"
+then
+    PKG_CHECK_MODULES(MOZ_QT, QtGui QtNetwork QtScript QtTest QtAssistantClient QtXml QtUiTools QtCore QtSvg)
+    AC_SUBST(MOZ_QT_CFLAGS)
+    AC_SUBST(MOZ_QT_LIBS)
+
+    MOZ_ARG_WITH_STRING(qtdir,
+    [  --with-qtdir=\$dir       Specify Qt directory ],
+    [ QTDIR=$withval])
+
+    if test -z "$QTDIR"; then
+      QTDIR="/usr"
+    fi
+    QTINCDIR="/include/qt"
+    if test ! -d "$QTDIR$QTINCDIR"; then
+       QTINCDIR="/include/X11/qt"
+    fi
+    if test ! -d "$QTDIR$QTINCDIR"; then
+       QTINCDIR="/include"
+    fi
+
+    if test -x "$QTDIR/bin/moc-qt4"; then
+      HOST_MOC="$QTDIR/bin/moc-qt4"
+    else
+      if test -x "$QTDIR/bin/moc"; then
+        HOST_MOC="$QTDIR/bin/moc"
+      else
+        AC_CHECK_PROGS(HOST_MOC, moc, "")
+      fi
+    fi
+    if test -z "$HOST_MOC"; then
+      AC_MSG_ERROR([no acceptable moc preprocessor found])
+    fi
+    MOC=$HOST_MOC
+fi
+
 AC_SUBST(GTK_CONFIG)
 AC_SUBST(TK_CFLAGS)
 AC_SUBST(TK_LIBS)
@@ -4768,13 +4818,17 @@ AC_SUBST(MOZ_ENABLE_GTK2)
 AC_SUBST(MOZ_ENABLE_PHOTON)
 AC_SUBST(MOZ_ENABLE_COCOA)
 AC_SUBST(MOZ_ENABLE_GLITZ)
+AC_SUBST(MOZ_ENABLE_QT)
 AC_SUBST(MOZ_ENABLE_XREMOTE)
 AC_SUBST(MOZ_GTK2_CFLAGS)
 AC_SUBST(MOZ_GTK2_LIBS)
+AC_SUBST(MOZ_QT_CFLAGS)
+AC_SUBST(MOZ_QT_LIBS)
 
 AC_SUBST(MOC)
 
-if test "$MOZ_ENABLE_GTK2"
+if test "$MOZ_ENABLE_GTK2" \
+|| test "$MOZ_ENABLE_QT"
 then
     AC_DEFINE(MOZ_X11)
     MOZ_X11=1
