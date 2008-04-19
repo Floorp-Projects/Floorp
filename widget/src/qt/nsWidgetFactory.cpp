@@ -59,8 +59,8 @@
 // 
 
 
-// #include "nsClipboard.h"
-// #include "nsClipboardHelper.h"
+#include "nsClipboard.h"
+#include "nsClipboardHelper.h"
 // #include "nsDragService.h"
 // #include "nsScrollbar.h"
 // #include "nsFilePicker.h"
@@ -88,13 +88,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerQt)
 
 /*
 static NS_DEFINE_CID(kNativeScrollCID, NS_NATIVESCROLLBAR_CID);
-
+*/
 
 
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
-
+/*
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeScrollbar)
@@ -139,12 +139,13 @@ static const nsModuleComponentInfo components[] =
     { "Qt Screen Manager",
       NS_SCREENMANAGER_CID,
       "@mozilla.org/gfx/screenmanager;1",
-      nsScreenManagerQtConstructor }
+      nsScreenManagerQtConstructor },
 /*
     { "Qt Native Scrollbar",
       NS_NATIVESCROLLBAR_CID,
       "@mozilla.org/widget/nativescrollbar/qt;1",
       nsNativeScrollbarConstructor},
+*/
     { "Qt Clipboard",
       NS_CLIPBOARD_CID,
       "@mozilla.org/widget/clipboard;1",
@@ -152,7 +153,8 @@ static const nsModuleComponentInfo components[] =
     { "Clipboard Helper",
       NS_CLIPBOARDHELPER_CID,
       "@mozilla.org/widget/clipboardhelper;1",
-      nsClipboardHelperConstructor },
+      nsClipboardHelperConstructor }
+/*
     { "Qt Drag Service",
       NS_DRAGSERVICE_CID,
       "@mozilla.org/widget/dragservice;1",
