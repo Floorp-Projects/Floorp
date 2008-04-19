@@ -61,7 +61,7 @@
 
 #include "nsClipboard.h"
 #include "nsClipboardHelper.h"
-// #include "nsDragService.h"
+#include "nsDragService.h"
 // #include "nsScrollbar.h"
 // #include "nsFilePicker.h"
 // #include "nsSound.h"
@@ -94,7 +94,7 @@ static NS_DEFINE_CID(kNativeScrollCID, NS_NATIVESCROLLBAR_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
-//NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeScrollbar)
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
@@ -153,12 +153,10 @@ static const nsModuleComponentInfo components[] =
       NS_CLIPBOARDHELPER_CID,
       "@mozilla.org/widget/clipboardhelper;1",
       nsClipboardHelperConstructor },
-/*
     { "Qt Drag Service",
       NS_DRAGSERVICE_CID,
       "@mozilla.org/widget/dragservice;1",
       nsDragServiceConstructor },
-*/
     { "Qt Bidi Keyboard",
       NS_BIDIKEYBOARD_CID,
       "@mozilla.org/widget/bidikeyboard;1",
