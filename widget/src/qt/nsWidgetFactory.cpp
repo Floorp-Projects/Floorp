@@ -74,7 +74,7 @@
 // #include "nsIPrefBranch.h"
 // #include "nsIPrefService.h"
 // 
-// #include "nsBidiKeyboard.h"
+#include "nsBidiKeyboard.h"
 // #include "nsNativeThemeQt.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
@@ -94,14 +94,13 @@ static NS_DEFINE_CID(kNativeScrollCID, NS_NATIVESCROLLBAR_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
-/*
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeScrollbar)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeQt)
-*/
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeScrollbar)
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeQt)
+
 static const nsModuleComponentInfo components[] =
 {
     { "Qt nsWindow",
@@ -153,16 +152,18 @@ static const nsModuleComponentInfo components[] =
     { "Clipboard Helper",
       NS_CLIPBOARDHELPER_CID,
       "@mozilla.org/widget/clipboardhelper;1",
-      nsClipboardHelperConstructor }
+      nsClipboardHelperConstructor },
 /*
     { "Qt Drag Service",
       NS_DRAGSERVICE_CID,
       "@mozilla.org/widget/dragservice;1",
       nsDragServiceConstructor },
+*/
     { "Qt Bidi Keyboard",
       NS_BIDIKEYBOARD_CID,
       "@mozilla.org/widget/bidikeyboard;1",
-      nsBidiKeyboardConstructor },
+      nsBidiKeyboardConstructor }
+/*
     { "Qt Sound",
       NS_SOUND_CID,
       "@mozilla.org/sound;1",
