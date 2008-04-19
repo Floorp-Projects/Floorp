@@ -165,12 +165,11 @@ static const nsModuleComponentInfo components[] =
     { "Qt Sound",
       NS_SOUND_CID,
       "@mozilla.org/sound;1",
-      nsSoundConstructor }/*,
+      nsSoundConstructor },
     { "Native Theme Renderer",
       NS_THEMERENDERER_CID,
       "@mozilla.org/chrome/chrome-native-theme;1",
       nsNativeThemeQtConstructor }
-*/
 /*    
     { "Qt File Picker",
       NS_FILEPICKER_CID,
