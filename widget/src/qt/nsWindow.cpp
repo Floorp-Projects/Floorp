@@ -1106,18 +1106,13 @@ nsWindow::OnExposeEvent(QPaintEvent *aEvent)
         // to ensure that GDK creates the pixmap, so it doesn't go all
         // XGetGeometry on us in gdk_pixmap_foreign_new_for_display when we
         // paint native themes
-        // GdkDrawable* d = Qt::Key_DRAWABLE(mDrawingarea->inner_window);
-        // qint32 depth = gdk_drawable_get_depth(d);
-        // bufferPixmap = new QPixmap(d, boundsRect.width, boundsRect.height);
 
+        bufferPixmap = new QPixmap(boundsRect.width, boundsRect.height);
         if (bufferPixmap) {
-#if 0
-            GdkVisual* visual = gdk_drawable_get_visual(Qt::Key_DRAWABLE(bufferPixmap));
-            Visual* XVisual = gdk_x11_visual_get_xvisual(visual);
-            Display* display = gdk_x11_drawable_get_xdisplay(Qt::Key_DRAWABLE(bufferPixmap));
-            Drawable drawable = gdk_x11_drawable_get_xid(Qt::Key_DRAWABLE(bufferPixmap));
             bufferPixmapSurface =
-                new gfxXlibSurface(display, drawable, XVisual,
+                new gfxXlibSurface(bufferPixmap->x11Info().display(),
+                                   bufferPixmap->handle(),
+                                   static_cast<Visual*>(bufferPixmap->x11Info().visual()),
                                    gfxIntSize(boundsRect.width, boundsRect.height));
             if (bufferPixmapSurface) {
                 bufferPixmapSurface->SetDeviceOffset(gfxPoint(-boundsRect.x, -boundsRect.y));
@@ -1135,8 +1130,8 @@ nsWindow::OnExposeEvent(QPaintEvent *aEvent)
                     }
                 }
             }
-#endif
         }
+
 #endif // MOZ_ENABLE_GLITZ
     }
 
