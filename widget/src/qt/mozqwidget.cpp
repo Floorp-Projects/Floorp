@@ -235,6 +235,7 @@ MozQWidget::SetCursor(nsCursor aCursor)
         break;
     }
 
+    qDebug("FIXME:>>>>>>Func:%s::%d, cursor:%i, aCursor:%i\n", __PRETTY_FUNCTION__, __LINE__, cursor, aCursor);
     // FIXME after reimplementation of whole nsWindow SetCursor cause lot of errors
     setCursor(cursor);
 
