@@ -47,11 +47,10 @@
 #include "gfxQtFonts.h"
 #include "qdebug.h"
 #include "qrect.h"
-#include <QFont>
 #include <locale.h>
-#include <cairo.h>
+#include <QFont>
 #include <QFontMetrics>
-
+#include "cairo-ft.h"
 
 /**
  * gfxQtFontGroup
@@ -107,60 +106,6 @@ GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle)
     return static_cast<gfxQtFont *>(f);
 }
 
-void
-gfxQtFont::RealizeQFont()
-{
-    // already realized?
-    if (mQFont)
-        return;
-
-//	mQFont = new QFont( "times" );
-	printf( " gfxQtFont::RealizeQFont mQFont %p \n", mQFont );
-
-//    qDebug("QTFONT NOT_IMPLEMENTED!!!! Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
-
-/*
-    PangoFontDescription *pangoFontDesc =
-        NewPangoFontDescription(mName, GetStyle());
-
-    PangoContext *pangoCtx = gdk_pango_context_get();
-
-    if (!GetStyle()->langGroup.IsEmpty()) {
-        PangoLanguage *lang = GetPangoLanguage(GetStyle()->langGroup);
-        if (lang)
-            pango_context_set_language(pangoCtx, lang);
-    }
-
-    mQFont = LoadPangoFont(pangoCtx, pangoFontDesc);
-
-    gfxFloat size = GetStyle()->size;
-    // Checking mQFont to avoid infinite recursion through GetCharSize
-    if (size != 0.0 && GetStyle()->sizeAdjust != 0.0 && mQFont) {
-        // Could try xHeight from TrueType/OpenType fonts.
-        gfxSize isz, lsz;
-        GetCharSize('x', isz, lsz);
-        if (isz.height != 0.0) {
-            gfxFloat aspect = isz.height / size;
-            size = GetStyle()->GetAdjustedSize(aspect);
-
-            pango_font_description_set_absolute_size(pangoFontDesc,
-                                                     size * PANGO_SCALE);
-            g_object_unref(mQFont);
-            mQFont = LoadPangoFont(pangoCtx, pangoFontDesc);
-        }
-    }
-
-    NS_ASSERTION(mHasMetrics == PR_FALSE, "metrics will be invalid...");
-    mAdjustedSize = size;
-    if (!g_object_get_qdata(G_OBJECT(mQFont), GetFontQuark()))
-        g_object_set_qdata(G_OBJECT(mQFont), GetFontQuark(), this);
-
-    if (pangoFontDesc)
-        pango_font_description_free(pangoFontDesc);
-    if (pangoCtx)
-        g_object_unref(pangoCtx);
-*/
-}
 
 gfxQtFontGroup::gfxQtFontGroup (const nsAString& families,
                                 const gfxFontStyle *aStyle)
@@ -468,23 +413,26 @@ gfxQtFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
 gfxQtFont::gfxQtFont(const nsAString &aName,
                      const gfxFontStyle *aFontStyle)
     : gfxFont(aName, aFontStyle),
-      mQFont(nsnull), mCairoFont(nsnull),
+      mCairoFont(nsnull),
       mHasMetrics(PR_FALSE), mAdjustedSize(0)
 {
-}
-
-gfxQtFont::gfxQtFont(QFont *aQFont, const nsAString &aName,
-                     const gfxFontStyle *aFontStyle)
-        : gfxFont(aName, aFontStyle),
-        mQFont(aQFont), mCairoFont(nsnull),
-        mHasMetrics(PR_FALSE), mAdjustedSize(aFontStyle->size)
-{
-//    g_object_ref(mPangoFont);
-//    g_object_set_qdata(G_OBJECT(mPangoFont), GetFontQuark(), this);
+    mQFont = new QFont();
+    mQFont->setFamily(QString( NS_ConvertUTF16toUTF8(mName).get() ) );
+    mQFont->setPixelSize((int) GetStyle()->size);
+    int weight = GetStyle()->weight/10;
+    if( weight > 99 )
+    {
+        // Max Weight for QFont is 99
+        weight = 99;
+    }
+    mQFont->setWeight(weight);
+    mQFont->setItalic(bool( GetStyle()->style == FONT_STYLE_ITALIC ));
 }
 
 gfxQtFont::~gfxQtFont()
 {
+    delete mQFont;
+    cairo_scaled_font_destroy(mCairoFont);
 }
 
 const gfxFont::Metrics&
@@ -493,12 +441,7 @@ gfxQtFont::GetMetrics()
      if (mHasMetrics)
         return mMetrics;
 
-    QFont font( QString( NS_ConvertUTF16toUTF8(mName).get() ), 
-                (int) GetStyle()->size, 
-                (int) GetStyle()->weight,
-                bool( GetStyle()->style == FONT_STYLE_ITALIC ) );
-
-    QFontMetrics fontMetrics( font );
+    QFontMetrics fontMetrics( *mQFont );
 
     mMetrics.maxAscent = fontMetrics.ascent();
     mMetrics.maxDescent = fontMetrics.descent();
@@ -555,65 +498,54 @@ gfxQtFont::GetMetrics()
 nsString
 gfxQtFont::GetUniqueName()
 {
-    qDebug("QTFONT NOT_IMPLEMENTED!!!! Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
-    nsString result;
-/*
-    PangoFont *font = GetPangoFont();
-    PangoFontDescription *desc = pango_font_describe(font);
-    pango_font_description_unset_fields (desc, PANGO_FONT_MASK_SIZE);
-    char *str = pango_font_description_to_string(desc);
-    pango_font_description_free (desc);
-
-    CopyUTF8toUTF16(str, result);
-    g_free(str);*/
-    return result;
+    return mName;
 }
 
-/* static  void
-/*gfxQtFont::Shutdown()
+PRUint32 gfxQtFont::GetSpaceGlyph ()
 {
-    qDebug("QTFONT NOT_IMPLEMENTED!!!! Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
-}
-*/
-static cairo_scaled_font_t*
-CreateScaledFont(cairo_t *aCR, cairo_matrix_t *aCTM, void *aQFont)
-{
-printf( "CreateScaledFont\n" );
+    NS_ASSERTION (GetStyle ()->size != 0,
+    "forgot to short-circuit a text run with zero-sized font?");
 
-    // XXX is this safe really? We should probably check the font type or something.
-    // XXX does this really create the same font that Pango used for measurement?
-    // We probably need to work harder here. We should pay particular attention
-    // to the font options.
-/*
-    PangoFcFont *fcfont = PANGO_FC_FONT(aPangoFont);
-    cairo_font_face_t *face = cairo_ft_font_face_create_for_pattern(fcfont->font_pattern);
-    double size;
-    if (FcPatternGetDouble(fcfont->font_pattern, FC_PIXEL_SIZE, 0, &size) != FcResultMatch)
-        size = 12.0;
+    if(!mHasSpaceGlyph)
+    {
+        FT_UInt gid = 0; // glyph ID
+        FT_Face face = mQFont->freetypeFace();
+        gid = FT_Get_Char_Index(face, ' ');
+        mSpaceGlyph = gid;
+        mHasSpaceGlyph = PR_TRUE;
+    }
+    return mSpaceGlyph;
+}
+
+
+cairo_scaled_font_t*
+gfxQtFont::CreateScaledFont(cairo_t *aCR, cairo_matrix_t *aCTM, QFont &aQFont)
+{
+    FT_Face ftFace = aQFont.freetypeFace();
+
+    double size = mAdjustedSize ? mAdjustedSize : GetStyle()->size;
     cairo_matrix_t fontMatrix;
-    FcMatrix *fcMatrix;
-    if (FcPatternGetMatrix(fcfont->font_pattern, FC_MATRIX, 0, &fcMatrix) == FcResultMatch)
-        cairo_matrix_init(&fontMatrix, fcMatrix->xx, -fcMatrix->yx, -fcMatrix->xy, fcMatrix->yy, 0, 0);
-    else
-        cairo_matrix_init_identity(&fontMatrix);
-    cairo_matrix_scale(&fontMatrix, size, size);
+    cairo_matrix_init_scale(&fontMatrix, size, size);
     cairo_font_options_t *fontOptions = cairo_font_options_create();
-    cairo_get_font_options(aCR, fontOptions);
-    cairo_scaled_font_t *scaledFont =
-        cairo_scaled_font_create(face, &fontMatrix, aCTM, fontOptions);
+
+    cairo_font_face_t *cairoFontFace = 
+                cairo_ft_font_face_create_for_ft_face( ftFace, 0 );
+
+    cairo_scaled_font_t* scaledFont = 
+                cairo_scaled_font_create( cairoFontFace, 
+                                          &fontMatrix,
+                                          aCTM,
+                                          fontOptions);
+
     cairo_font_options_destroy(fontOptions);
-    cairo_font_face_destroy(face);
-    NS_ASSERTION(cairo_scaled_font_status(scaledFont) == CAIRO_STATUS_SUCCESS,
-                 "Failed to create scaled font");
+    cairo_font_face_destroy(cairoFontFace);
+
     return scaledFont;
-*/
-    return nsnull;
 }
 
 PRBool
 gfxQtFont::SetupCairoFont(gfxContext *aContext)
 {
-printf("gfxQtFont::SetupCairoFont\n");
 
     cairo_t *cr = aContext->GetCairo();
     cairo_matrix_t currentCTM;
@@ -631,8 +563,7 @@ printf("gfxQtFont::SetupCairoFont\n");
         }
     }
     if (!mCairoFont) {
-//        qDebug("QTFONT NOT_IMPLEMENTED!!!! Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
-        mCairoFont = CreateScaledFont(cr, &currentCTM, GetQFont());
+        mCairoFont = CreateScaledFont(cr, &currentCTM, *mQFont);
         return PR_FALSE;
     }
     if (cairo_scaled_font_status(mCairoFont) != CAIRO_STATUS_SUCCESS) {
