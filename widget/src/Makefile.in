@@ -47,6 +47,8 @@ MODULE  = widget
 PACKAGE_FILE = widget.pkg
 PACKAGE_VARS += \
 	MOZ_ENABLE_GTK2 \
+	MOZ_ENABLE_QT \
+	MOZ_ENABLE_XLIB \
 	MOZ_ENABLE_PHOTON \
 	MOZ_ENABLE_XREMOTE \
 	$(NULL)
@@ -71,6 +73,10 @@ endif
 ifdef MOZ_ENABLE_GTK2
 DIRS		+= gtk2
 DIRS		+= gtkxtbin
+endif
+
+ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
+DIRS		+= qt
 endif
 
 ifdef MOZ_ENABLE_PHOTON
