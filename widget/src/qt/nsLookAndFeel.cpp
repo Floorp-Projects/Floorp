@@ -42,6 +42,7 @@
 #include <QPalette>
 #include <QApplication>
 #include <QStyle>
+#include <qglobal.h>
 
 #undef NS_LOOKANDFEEL_DEBUG
 #ifdef NS_LOOKANDFEEL_DEBUG
@@ -186,11 +187,19 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID,nscolor &aColor)
       break;
 
     case eColor_infobackground:
+#if (QT_VERSION >= 440)
       aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::ToolTipBase));
+#else
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::Base));
+#endif
       break;
 
     case eColor_infotext:
+#if (QT_VERSION >= 440)
       aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::ToolTipText));
+#else
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::Text));
+#endif
       break;
 
     case eColor_menu:
@@ -256,7 +265,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID,nscolor &aColor)
        break;
 
      case eColor__moz_dialogtext:
-       aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::Text));
+       aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::WindowText));
        break;
 
      case eColor__moz_dragtargetzone:
@@ -266,6 +275,12 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID,nscolor &aColor)
      case eColor__moz_buttonhovertext:
        aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::ButtonText));
        break;
+
+    case eColor__moz_menuhovertext:
+    case eColor__moz_menubarhovertext:
+       aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::Text));
+       break;
+
 
      default:
        aColor = 0;
