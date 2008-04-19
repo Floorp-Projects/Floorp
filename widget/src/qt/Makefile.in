@@ -65,6 +65,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS	= \
+		nsAppShell.cpp \
 		nsWidgetFactory.cpp \
 		nsToolkit.cpp \
 		$(NULL)
@@ -77,6 +78,7 @@ EXTRA_DSO_LDOPTS = \
 		-lthebes \
 		$(LCMS_LIBS) \
 		$(MOZ_JS_LIBS) \
+		$(MOZ_QT_LDFLAGS) \
 		$(NULL)
 
 
@@ -107,9 +109,9 @@ ifndef GNU_CC
 DEFINES         += -D_TIME_H=1
 endif
 endif
- 
-LOCAL_INCLUDES	= \
-		   -I$(srcdir)/../xpwidgets \
+
+LOCAL_INCLUDES	+= \
+		   -I$(topsrcdir)/widget/src/xpwidgets \
 		   -I$(srcdir) \
 		   $(NULL)
 
