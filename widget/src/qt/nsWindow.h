@@ -50,9 +50,12 @@
 #include "nsITimer.h"
 #include "nsWidgetAtoms.h"
 
+
 #ifdef Q_WS_X11
 #include <QX11Info>
 #endif
+
+class QEvent;
 
 class nsWindow : public nsCommonWidget, public nsSupportsWeakReference
 {

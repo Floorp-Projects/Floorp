@@ -2,6 +2,7 @@
 #define MOZQWIDGET_H
 
 #include <qwidget.h>
+#include "nsIWidget.h"
 
 class QEvent;
 class nsWindow;
@@ -17,6 +18,7 @@ public:
      * Mozilla helper.
      */
     void setModal(bool);
+    bool SetCursor(nsCursor aCursor);
     void dropReciever() { mReceiver = 0x0; };
     nsWindow* getReciever() { return mReceiver; };
 
