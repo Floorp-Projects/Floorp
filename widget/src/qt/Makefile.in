@@ -64,10 +64,20 @@ REQUIRES	= xpcom \
 		  view \
 		  $(NULL)
 
+MOCSRCS><-->= \
+		moc_mozqwidget.cpp \
+		$(NULL)
+
+#GARBAGE                 += moc_mozqwidget.cpp
+
 CPPSRCS	= \
+		$(MOCSRCS) \
+		moc_mozqwidget.cpp \
 		nsAppShell.cpp \
 		nsWidgetFactory.cpp \
+		nsCommonWidget.cpp \
 		nsToolkit.cpp \
+		mozqwidget.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
