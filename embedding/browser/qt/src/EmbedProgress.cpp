@@ -152,7 +152,7 @@ EmbedProgress::OnStatusChange(nsIWebProgress  *aWebProgress,
                               nsresult         aStatus,
                               const PRUnichar *aMessage)
 {
-    QString message = QString::fromUcs2(aMessage);
+    QString message = QString::fromUtf16(aMessage);
     emit mOwner->linkMessage(message);
 
     return NS_OK;

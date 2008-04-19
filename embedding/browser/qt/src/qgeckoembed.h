@@ -41,7 +41,17 @@
 #define QECKOEMBED_H
 
 #include <qwidget.h>
-#include <q3cstring.h>
+#include <qstring.h>
+
+#define DISABLE_SLOTS 1
+
+#ifdef DISABLE_SLOTS
+#define NS_SLOTS
+#define NS_VISIBILITY_DEFAULT __attribute__ ((visibility ("default")))
+#else
+#define NS_SLOTS slots
+#define NS_VISIBILITY_DEFAULT
+#endif
 
 class nsIDOMKeyEvent;
 class nsIDOMMouseEvent;
@@ -71,7 +81,7 @@ class QGeckoEmbed : public QWidget
 {
     Q_OBJECT
 public:
-    static void initialize(const char *aDir, const char *aName);
+    NS_VISIBILITY_DEFAULT static void initialize(const char *aDir, const char *aName, const char *xpcomPath);
 public:
     enum ReloadFlags
     {
@@ -82,35 +92,35 @@ public:
         CharsetChange
     };
 public:
-    QGeckoEmbed(QWidget *parent, const char *name);
-    ~QGeckoEmbed();
+    NS_VISIBILITY_DEFAULT QGeckoEmbed(QWidget *parent, const char *name);
+    NS_VISIBILITY_DEFAULT ~QGeckoEmbed();
 
-    bool canGoBack() const;
-    bool canGoForward() const;
+    NS_VISIBILITY_DEFAULT bool canGoBack() const;
+    NS_VISIBILITY_DEFAULT bool canGoForward() const;
 
-    void setIsChrome(bool);
-    int chromeMask() const;
+    NS_VISIBILITY_DEFAULT void setIsChrome(bool);
+    NS_VISIBILITY_DEFAULT int chromeMask() const;
 
-    nsIDOMDocument *document() const;
-    QString url() const;
-    QString resolvedUrl(const QString &relativepath) const;
+    NS_VISIBILITY_DEFAULT nsIDOMDocument *document() const;
+    NS_VISIBILITY_DEFAULT QString url() const;
+    NS_VISIBILITY_DEFAULT QString resolvedUrl(const QString &relativepath) const;
 
-public slots:
-    void loadURL(const QString &url);
-    void stopLoad();
-    void goForward();
-    void goBack();
+public NS_SLOTS:
+    NS_VISIBILITY_DEFAULT void loadURL(const QString &url);
+    NS_VISIBILITY_DEFAULT void stopLoad();
+    NS_VISIBILITY_DEFAULT void goForward();
+    NS_VISIBILITY_DEFAULT void goBack();
 
-    void renderData(const Q3CString &data, const QString &baseURI,
+    NS_VISIBILITY_DEFAULT void renderData(const QByteArray &data, const QString &baseURI,
                     const QString &mimeType);
 
-    int  openStream(const QString &baseURI, const QString &mimeType);
-    int  appendData(const Q3CString &data);
-    int  closeStream();
+    NS_VISIBILITY_DEFAULT int  openStream(const QString &baseURI, const QString &mimeType);
+    NS_VISIBILITY_DEFAULT int  appendData(const QByteArray &data);
+    NS_VISIBILITY_DEFAULT int  closeStream();
 
-    void reload(ReloadFlags flags = Normal);
+    NS_VISIBILITY_DEFAULT void reload(ReloadFlags flags = Normal);
 
-    void setChromeMask(int);
+    NS_VISIBILITY_DEFAULT void setChromeMask(int);
 
 signals:
     void linkMessage(const QString &message);
