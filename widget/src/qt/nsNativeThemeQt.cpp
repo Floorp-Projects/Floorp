@@ -77,6 +77,7 @@ nsNativeThemeQt::nsNativeThemeQt()
     combo = new QComboBox((QWidget *)0);
     combo->resize(0, 0);
     mNoBackgroundPalette.setColor(QPalette::Window, Qt::transparent);
+    mSolidPalette.setColor(QPalette::Window, Qt::white);
     ThemeChanged();
 }
 
@@ -232,21 +233,24 @@ nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
     case NS_THEME_LISTBOX: {
-        QStyleOption panelOpt;
         QStyleOptionFrameV2 frameOpt;
-
-        if (!IsDisabled(aFrame)) {
-            panelOpt.state |= QStyle::State_Enabled;
+        
+        if (!IsDisabled(aFrame))
             frameOpt.state |= QStyle::State_Enabled;
-        }
-    
-        panelOpt.rect = r;
 
         frameOpt.rect = r;
         frameOpt.features = QStyleOptionFrameV2::Flat;
-        frameOpt.palette = mNoBackgroundPalette;
 
-        style->drawPrimitive(QStyle::PE_PanelLineEdit, &panelOpt, qPainter, NULL);
+        if (aWidgetType == NS_THEME_TEXTFIELD || aWidgetType == NS_THEME_TEXTFIELD_MULTILINE) {
+            QRect contentRect = style->subElementRect(QStyle::SE_LineEditContents, &frameOpt);
+
+            PRInt32 frameWidth = style->pixelMetric(QStyle::PM_DefaultFrameWidth);
+
+            contentRect.adjust(frameWidth, frameWidth, -frameWidth, -frameWidth);
+            qPainter->fillRect(contentRect, QBrush(Qt::white));
+        }
+        
+        frameOpt.palette = mNoBackgroundPalette;
         style->drawPrimitive(QStyle::PE_FrameLineEdit, &frameOpt, qPainter, NULL);
         break;
     }
@@ -283,13 +287,9 @@ nsNativeThemeQt::GetWidgetPadding(nsIDeviceContext* ,
                                   nsIFrame*, PRUint8 aWidgetType,
                                   nsMargin* aResult)
 {
-//    qDebug("%s", __PRETTY_FUNCTION__);
-
-    //XXX: is this really correct?
-//     if (aWidgetType == NS_THEME_BUTTON_FOCUS ||
-//         aWidgetType == NS_THEME_TOOLBAR_BUTTON ||
-//         aWidgetType == NS_THEME_TOOLBAR_DUAL_BUTTON) {
-//         aResult->SizeTo(0, 0, 0, 0);
+    // XXX: Where to get padding values, framewidth?
+//     if (aWidgetType == NS_THEME_TEXTFIELD || aWidgetType == NS_THEME_TEXTFIELD_MULTILINE) {
+//         aResult->SizeTo(2, 2, 2, 2);
 //         return PR_TRUE;
 //     }
     return PR_FALSE;
