@@ -105,6 +105,8 @@ public:
     NS_VISIBILITY_DEFAULT QString url() const;
     NS_VISIBILITY_DEFAULT QString resolvedUrl(const QString &relativepath) const;
 
+    NS_VISIBILITY_DEFAULT bool zoom( const float &zoomFactor );
+
 public NS_SLOTS:
     NS_VISIBILITY_DEFAULT void loadURL(const QString &url);
     NS_VISIBILITY_DEFAULT void stopLoad();

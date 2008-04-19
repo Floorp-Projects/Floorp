@@ -77,6 +77,8 @@
 #include "nsPIDOMEventTarget.h"
 #include <nsCOMPtr.h>
 #include <nsPIDOMWindow.h>
+#include <nsIMarkupDocumentViewer.h>
+#include <nsIContentViewer.h>
 
 #include "prenv.h"
 
@@ -730,4 +732,55 @@ void QGeckoEmbed::initialize(const char *aDir, const char *aName, const char *xp
     QGeckoGlobals::setPath(xpcomPath);
     QGeckoGlobals::setProfilePath(aDir, aName);
 }
+
+static nsresult
+GetMarkupViewerByWindow(nsIDOMWindow *aDOMWindow,
+                        nsIMarkupDocumentViewer * *aMarkupDocViewver)
+{
+  nsresult rv;
+  NS_ENSURE_ARG_POINTER(aMarkupDocViewver);
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aDOMWindow, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsIDocShell *docShell = nsnull;
+  if (window)
+    docShell = window->GetDocShell();
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(contentViewer, &rv));
+  NS_ENSURE_TRUE(markupViewer, NS_ERROR_FAILURE);
+  *aMarkupDocViewver = markupViewer;
+  NS_IF_ADDREF(*aMarkupDocViewver);
+  return rv;
+}
+
+bool QGeckoEmbed::zoom( const float &zoomFactor )
+{
+    // get the web browser
+    nsCOMPtr<nsIWebBrowser> webBrowser = NULL;
+    d->window->GetWebBrowser(getter_AddRefs(webBrowser));
+
+    if( !webBrowser ){
+        return FALSE;
+    }
+
+    // get the content DOM window for that web browser
+    nsCOMPtr<nsIDOMWindow> domWindow = NULL;
+    webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+    if (!domWindow){
+        return FALSE;
+    }
+
+    nsCOMPtr<nsIMarkupDocumentViewer> markupViewer = NULL;
+    nsresult rv = NS_OK;
+    rv = GetMarkupViewerByWindow(domWindow, getter_AddRefs(markupViewer));
+    if (!markupViewer || !NS_SUCCEEDED(rv) ){
+        return FALSE;
+    }
+    rv = markupViewer->SetFullZoom(zoomFactor);
+
+    return NS_SUCCEEDED(rv);
+}
+
 
