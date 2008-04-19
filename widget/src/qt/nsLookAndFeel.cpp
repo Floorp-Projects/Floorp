@@ -186,11 +186,11 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID,nscolor &aColor)
       break;
 
     case eColor_infobackground:
-      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::ToolTipBase/*QPalette::Window*/));
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::ToolTipBase));
       break;
 
     case eColor_infotext:
-      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::ToolTipText/*QPalette::Text*/));
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::ToolTipText));
       break;
 
     case eColor_menu:
@@ -202,7 +202,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID,nscolor &aColor)
       break;
 
     case eColor_scrollbar:
-      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::Mid/*QPalette::Window*/));
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::Mid));
       break;
 
     case eColor_threedface:
@@ -212,7 +212,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID,nscolor &aColor)
 
     case eColor_buttonhighlight:
     case eColor_threedhighlight:
-      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, /*QPalette::ButtonText*/QPalette::Dark));
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::Dark));
       break;
 
     case eColor_buttontext:
@@ -221,11 +221,11 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID,nscolor &aColor)
 
     case eColor_buttonshadow:
     case eColor_threedshadow:
-      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::Shadow));
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::Dark));
       break;
 
     case eColor_threeddarkshadow:
-      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::Shadow/*QPalette::Dark*/));
+      aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::Shadow));
       break;
 
     case eColor_threedlightshadow:
