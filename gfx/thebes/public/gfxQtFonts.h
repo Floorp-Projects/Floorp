@@ -50,10 +50,14 @@
 #define ENABLE_FAST_PATH_8BIT 1
 #define ENABLE_FAST_PATH_ALWAYS 1
 
+class QFont;
+
 class gfxQtFont : public gfxFont {
 public:
      gfxQtFont (const nsAString& aName,
                 const gfxFontStyle *aFontStyle);
+     gfxQtFont(QFont *aQFont, const nsAString &aName,
+               const gfxFontStyle *aFontStyle);
      virtual ~gfxQtFont ();
 
      virtual nsString GetUniqueName ();

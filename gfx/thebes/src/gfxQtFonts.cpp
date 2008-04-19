@@ -47,6 +47,7 @@
 #include "gfxQtFonts.h"
 #include "qdebug.h"
 #include "qrect.h"
+#include <QFont>
 #include <locale.h>
 #include <cairo.h>
 #include <QFontMetrics>
@@ -470,6 +471,16 @@ gfxQtFont::gfxQtFont(const nsAString &aName,
       mQFont(nsnull), mCairoFont(nsnull),
       mHasMetrics(PR_FALSE), mAdjustedSize(0)
 {
+}
+
+gfxQtFont::gfxQtFont(QFont *aQFont, const nsAString &aName,
+                     const gfxFontStyle *aFontStyle)
+        : gfxFont(aName, aFontStyle),
+        mQFont(aQFont), mCairoFont(nsnull),
+        mHasMetrics(PR_FALSE), mAdjustedSize(aFontStyle->size)
+{
+//    g_object_ref(mPangoFont);
+//    g_object_set_qdata(G_OBJECT(mPangoFont), GetFontQuark(), this);
 }
 
 gfxQtFont::~gfxQtFont()
