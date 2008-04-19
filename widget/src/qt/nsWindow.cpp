@@ -1411,7 +1411,7 @@ nsWindow::OnButtonPressEvent(QMouseEvent *aEvent)
         NS_LIKELY(!mIsDestroyed)) {
         nsMouseEvent contextMenuEvent(PR_TRUE, NS_CONTEXTMENU, this,
                                       nsMouseEvent::eReal);
-        InitButtonEvent(contextMenuEvent, aEvent);
+        InitButtonEvent(contextMenuEvent, aEvent, 1);
         DispatchEvent(&contextMenuEvent, status);
     }
 
@@ -1438,7 +1438,7 @@ nsWindow::OnButtonReleaseEvent(QMouseEvent *aEvent)
 
     nsMouseEvent event(PR_TRUE, NS_MOUSE_BUTTON_UP, this, nsMouseEvent::eReal);
     event.button = domButton;
-    InitButtonEvent(event, aEvent);
+    InitButtonEvent(event, aEvent, 1);
 
     nsEventStatus status;
     DispatchEvent(&event, status);
@@ -1480,8 +1480,8 @@ nsWindow::OnContainerFocusInEvent(QFocusEvent *aEvent)
     // happen if someone has called gtk_widget_grab_focus() from
     // nsWindow::SetFocus() and will prevent recursion.
 
-    if (mIsTopLevel)
-        mActivatePending = PR_TRUE;
+    if (!mDrawingarea)
+        return FALSE;
 
     // Unset the urgency hint, if possible
 //    SetUrgencyHint(top_window, PR_FALSE);
@@ -1492,10 +1492,7 @@ nsWindow::OnContainerFocusInEvent(QFocusEvent *aEvent)
     // send the activate event if it wasn't already sent via any
     // SetFocus() calls that were the result of the GOTFOCUS event
     // above.
-    if (mActivatePending) {
-        mActivatePending = PR_FALSE;
-        DispatchActivateEvent();
-    }
+    DispatchActivateEvent();
 
     LOGFOCUS(("Events sent from focus in event [%p]\n", (void *)this));
     return FALSE;
@@ -1509,8 +1506,6 @@ nsWindow::OnContainerFocusOutEvent(QFocusEvent *aEvent)
     DispatchLostFocusEvent();
     if (mDrawingarea)
         DispatchDeactivateEvent();
-
-    mActivatePending = PR_FALSE;
 
     LOGFOCUS(("Done with container focus out [%p]\n", (void *)this));
     return FALSE;
