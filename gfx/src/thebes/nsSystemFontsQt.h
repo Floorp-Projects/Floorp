@@ -54,7 +54,7 @@ public:
 
 private:
 
-    nsresult GetSystemFontInfo(const QFont &aFont, nsString *aFontName,
+    nsresult GetSystemFontInfo(const char *aClassName, nsString *aFontName,
                                gfxFontStyle *aFontStyle) const;
 
     /*
