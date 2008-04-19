@@ -142,7 +142,6 @@ nsWindow::GetThebesSurface()
         height = PR_MIN(32767, width);
 
         if (!gfxPlatform::UseGlitz()) {
-            qDebug("QT_WIDGET NOT SURE: Func:%s::%d, [%ix%i]\n", __PRETTY_FUNCTION__, __LINE__, width, height);
             mThebesSurface = new gfxXlibSurface
             (mWidget->x11Info().display(),
             (Drawable)mWidget->handle(),
