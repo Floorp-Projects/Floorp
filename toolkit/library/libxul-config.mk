@@ -228,7 +228,7 @@ COMPONENT_LIBS += \
 endif
 endif
 
-ifeq (,$(filter beos os2 mac photon cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (,$(filter qt beos os2 mac photon cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
 ifdef MOZ_XUL
 ifdef MOZ_XPFE_COMPONENTS
 COMPONENT_LIBS += fileview
