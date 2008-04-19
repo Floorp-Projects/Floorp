@@ -86,6 +86,9 @@ static nsSystemFontsBeOS *gSystemFonts = nsnull;
 #include "gfxQuartzSurface.h"
 #include "gfxImageSurface.h"
 static nsSystemFontsMac *gSystemFonts = nsnull;
+#elif defined(MOZ_WIDGET_QT)
+#include "nsSystemFontsQt.h"
+static nsSystemFontsQt *gSystemFonts = nsnull;
 #else
 #error Need to declare gSystemFonts!
 #endif
@@ -221,7 +224,9 @@ nsThebesDeviceContext::SetDPI()
 
         // we probably want to actually get a real DPI here?
         dpi = 96;
-
+#elif defined(MOZ_WIDGET_QT)
+		// TODO: get real DPI here with Qt methods
+        dpi = 96;
 #else
 #error undefined platform dpi
 #endif
@@ -384,6 +389,8 @@ nsThebesDeviceContext::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
         gSystemFonts = new nsSystemFontsBeOS();
 #elif XP_MACOSX
         gSystemFonts = new nsSystemFontsMac();
+#elif defined(MOZ_WIDGET_QT)
+        gSystemFonts = new nsSystemFontsQt();
 #else
 #error Need to know how to create gSystemFonts, fix me!
 #endif

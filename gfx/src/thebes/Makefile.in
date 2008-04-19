@@ -77,6 +77,13 @@ CPPSRCS		= \
 
 EXTRA_DSO_LIBS	= gkgfx thebes
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+CPPSRCS += nsSystemFontsQt.cpp
+ifdef MOZ_ENABLE_GLITZ
+REQUIRES += glitzglx
+endif
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CPPSRCS		+= nsSystemFontsGTK2.cpp
 

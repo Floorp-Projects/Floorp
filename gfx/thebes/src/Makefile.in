@@ -89,6 +89,15 @@ CSRCS = cairo-xlib-utils.c
 EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS) $(MOZ_XFT_LIBS) $(XLDFLAGS) $(XLIBS)
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+CPPSRCS +=  gfxXlibSurface.cpp gfxQtPlatform.cpp gfxXlibNativeRenderer.cpp
+CPPSRCS +=	gfxQtFonts.cpp 
+CPPSRCS +=	gfxFontconfigUtils.cpp
+CPPSRCS +=	nsUnicodeRange.cpp
+CSRCS = cairo-xlib-utils.c
+EXTRA_DSO_LDOPTS += $(ZLIB_LIBS) $(MOZ_XFT_LIBS) $(XLDFLAGS) $(XLIBS)
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 CPPSRCS	+= 	gfxBeOSSurface.cpp gfxBeOSPlatform.cpp
 CPPSRCS +=	gfxPangoFonts.cpp 
