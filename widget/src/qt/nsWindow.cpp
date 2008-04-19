@@ -823,14 +823,10 @@ nsWindow::SetBorderStyle(nsBorderStyle aBorderStyle)
 NS_IMETHODIMP
 nsWindow::SetTitle(const nsAString& aTitle)
 {
-    if (!mDrawingarea)
-        return NS_OK;
-
-    nsAString::const_iterator it;
-    QString qStr((QChar*)aTitle.BeginReading(it).get(), -1);
-
-    if (mDrawingarea)
+    if (mDrawingarea) {
+        QString qStr(NS_ConvertUTF16toUTF8(aTitle).get());
         mDrawingarea->setWindowTitle(qStr);
+    }
 
     return NS_OK;
 }

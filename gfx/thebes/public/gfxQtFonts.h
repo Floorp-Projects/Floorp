@@ -43,42 +43,85 @@
 #include "gfxTypes.h"
 #include "gfxFont.h"
 #include "gfxContext.h"
+#include "gfxFontUtils.h"
 
-#include "nsDataHashtable.h"
-#include "nsClassHashtable.h"
+typedef struct FT_FaceRec_* FT_Face;
 
-#define ENABLE_FAST_PATH_8BIT 1
-#define ENABLE_FAST_PATH_ALWAYS 1
+/**
+ * FontFamily is a class that describes one of the fonts on the users system.  It holds
+ * each FontEntry (maps more directly to a font face) which holds font type, charset info
+ * and character map info.
+ */
+class FontEntry;
+class FontFamily
+{
+public:
+    THEBES_INLINE_DECL_REFCOUNTING(FontFamily)
 
-class QFont;
+    FontFamily(const nsAString& aName) :
+        mName(aName) { }
+
+    FontEntry *FindFontEntry(const gfxFontStyle& aFontStyle);
+
+public:
+    nsTArray<nsRefPtr<FontEntry> > mFaces;
+    nsString mName;
+};
+
+class FontEntry
+{
+public:
+    THEBES_INLINE_DECL_REFCOUNTING(FontEntry)
+
+    FontEntry(const nsString& aFaceName) : 
+        mFontFace(nsnull), mFaceName(aFaceName), mFTFontIndex(0), mUnicodeFont(PR_FALSE), mSymbolFont(PR_FALSE)
+    { }
+
+    FontEntry(const FontEntry& aFontEntry);
+    ~FontEntry();
+
+    const nsString& GetName() const {
+        return mFaceName;
+    }
+
+    cairo_font_face_t *CairoFontFace();
+
+    cairo_font_face_t *mFontFace;
+
+    nsString mFaceName;
+    nsCString mFilename;
+    PRUint8 mFTFontIndex;
+
+    PRPackedBool mUnicodeFont : 1;
+    PRPackedBool mSymbolFont  : 1;
+    PRPackedBool mTrueType    : 1;
+    PRPackedBool mIsType1     : 1;
+    PRPackedBool mItalic      : 1;
+    PRUint16 mWeight;
+
+    gfxSparseBitSet mCharacterMap;
+};
+
+
 
 class gfxQtFont : public gfxFont {
 public: // new functions
-    gfxQtFont (const nsAString& aName,
-            const gfxFontStyle *aFontStyle);
+    gfxQtFont(FontEntry *aFontEntry,
+               const gfxFontStyle *aFontStyle);
     virtual ~gfxQtFont ();
 
-    inline const QFont& GetQFont();
-
-public: // from gfxFont
-    virtual PRUint32 GetSpaceGlyph ();
     virtual const gfxFont::Metrics& GetMetrics();
-    cairo_font_face_t *CairoFontFace(QFont *aFont = nsnull);
 
-protected: // from gfxFont
-    virtual nsString GetUniqueName ();
+    cairo_font_face_t *CairoFontFace();
+    cairo_scaled_font_t *CairoScaledFont();
+
     virtual PRBool SetupCairoFont(gfxContext *aContext);
+    virtual nsString GetUniqueName();
+    virtual PRUint32 GetSpaceGlyph();
 
-protected: // new functions
-    cairo_scaled_font_t* CreateScaledFont(cairo_t *aCR, 
-                                          cairo_matrix_t *aCTM, 
-                                          QFont &aQFont);
-
-protected: // data
-
-    QFont* mQFont;
-    cairo_scaled_font_t *mCairoFont;
-    cairo_font_face_t *mFontFace;
+    FontEntry *GetFontEntry() { return mFontEntry; }
+private:
+    cairo_scaled_font_t *mScaledFont;
 
     PRBool mHasSpaceGlyph;
     PRUint32 mSpaceGlyph;
@@ -86,6 +129,7 @@ protected: // data
     Metrics mMetrics;
     gfxFloat mAdjustedSize;
 
+    nsRefPtr<FontEntry> mFontEntry;
 };
 
 class THEBES_API gfxQtFontGroup : public gfxFontGroup {
@@ -94,7 +138,9 @@ public: // new functions
                     const gfxFontStyle *aStyle);
     virtual ~gfxQtFontGroup ();
 
-    inline gfxQtFont * GetFontAt (PRInt32 i);
+    inline gfxQtFont *GetFontAt (PRInt32 i) {
+        return static_cast <gfxQtFont *>(static_cast <gfxFont *>(mFonts[i]));
+    }
 
 protected: // from gfxFontGroup
     virtual gfxTextRun *MakeTextRun(const PRUnichar *aString, 
@@ -111,32 +157,29 @@ protected: // from gfxFontGroup
 
 
 protected: // new functions
-    void InitTextRun(gfxTextRun *aTextRun, 
-                     const PRUint8 *aUTF8Text,
-                     PRUint32 aUTF8Length, 
-                     PRUint32 aUTF8HeaderLength);
+    void InitTextRun(gfxTextRun *aTextRun);
 
-    void CreateGlyphRunsFT(gfxTextRun *aTextRun, 
-                           const PRUint8 *aUTF8,
-                           PRUint32 aUTF8Length);
+    void CreateGlyphRunsFT(gfxTextRun *aTextRun);
+    void AddRange(gfxTextRun *aTextRun, gfxQtFont *font, const PRUnichar *str, PRUint32 len);
 
     static PRBool FontCallback (const nsAString & fontName, 
                                 const nsACString & genericName, 
                                 void *closure);
     PRBool mEnableKerning;
 
+    gfxQtFont *FindFontForChar(PRUint32 ch, PRUint32 prevCh, PRUint32 nextCh, gfxQtFont *aFont);
+    PRUint32 ComputeRanges();
+
+    struct TextRange {
+        TextRange(PRUint32 aStart,  PRUint32 aEnd) : start(aStart), end(aEnd) { }
+        PRUint32 Length() const { return end - start; }
+        nsRefPtr<gfxQtFont> font;
+        PRUint32 start, end;
+    };
+
+    nsTArray<TextRange> mRanges;
+    nsString mString;
 };
-
-inline const QFont& gfxQtFont::GetQFont()
-{
-    return *mQFont;
-}
-
-inline gfxQtFont * gfxQtFontGroup::GetFontAt (PRInt32 i) 
-{
-    return static_cast < gfxQtFont * >(static_cast < gfxFont * >(mFonts[i]));
-}
-
 
 #endif /* GFX_QTFONTS_H */
 
