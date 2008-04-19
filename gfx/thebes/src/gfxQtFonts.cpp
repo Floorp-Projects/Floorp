@@ -44,6 +44,7 @@
 
 #include "gfxPlatformQt.h"
 #include "gfxQtFonts.h"
+#include "qdebug.h"
 
 /**
  * gfxQtFontGroup
@@ -53,7 +54,7 @@ gfxQtFontGroup::gfxQtFontGroup (const nsAString& families,
                                 const gfxFontStyle *aStyle)
     : gfxFontGroup(families, aStyle)
 {
-
+    qDebug("Func:%s::%d, fam:%s\n\tNeed to create font metrics, otherwise - CRASH\n\n", __PRETTY_FUNCTION__, __LINE__, NS_ConvertUTF16toUTF8(families).get());
 }
 
 gfxQtFontGroup::~gfxQtFontGroup()
