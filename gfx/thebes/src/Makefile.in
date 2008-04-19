@@ -90,8 +90,9 @@ EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS) $(MOZ_XFT_LIBS) $(XLDFLAGS) $
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-CPPSRCS +=  gfxXlibSurface.cpp gfxQtPlatform.cpp gfxXlibNativeRenderer.cpp
-CPPSRCS +=	gfxQtFonts.cpp 
+CPPSRCS += gfxQtPlatform.cpp gfxQPainterSurface.cpp
+CPPSRCS += gfxXlibSurface.cpp gfxXlibNativeRenderer.cpp
+CPPSRCS += gfxQtFonts.cpp
 CPPSRCS +=	gfxFontconfigUtils.cpp
 CPPSRCS +=	nsUnicodeRange.cpp
 CSRCS = cairo-xlib-utils.c
