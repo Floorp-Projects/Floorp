@@ -103,34 +103,40 @@ GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle)
 
 gfxQtFontGroup::gfxQtFontGroup (const nsAString& families,
                                 const gfxFontStyle *aStyle)
-    : gfxFontGroup(families, aStyle)
+        : gfxFontGroup(families, aStyle)
 {
+    // check for WarpSans and as we cannot display that (yet), replace
+    // it with Workplace Sans
+    int pos = 0;
+    if ((pos = mFamilies.Find("WarpSans", PR_FALSE, 0, -1)) > -1) {
+        mFamilies.Replace(pos, 8, NS_LITERAL_STRING("Workplace Sans"));
+    }
+
     nsStringArray familyArray;
+    ForEachFont(FontCallback, &familyArray);
 
-    // Leave non-existing fonts in the list so that fontconfig can get the
-    // best match.
-    ForEachFontInternal(families, aStyle->langGroup, PR_TRUE, PR_FALSE,
-                        FontCallback, &familyArray);
+    // To be able to easily search for glyphs in other fonts, append a few good
+    // replacement candidates to the list. The best ones are the Unicode fonts that
+    // are set up, and if the user was so clever to set up the User Defined fonts,
+    // then these are probable candidates, too.
+    nsString fontString;
+    gfxPlatform::GetPlatform()->GetPrefFonts("x-unicode", fontString, PR_FALSE);
+    ForEachFont(fontString, NS_LITERAL_CSTRING("x-unicode"), FontCallback, &familyArray);
+    gfxPlatform::GetPlatform()->GetPrefFonts("x-user-def", fontString, PR_FALSE);
+    ForEachFont(fontString, NS_LITERAL_CSTRING("x-user-def"), FontCallback, &familyArray);
 
-    // Construct a string suitable for fontconfig
-    nsAutoString fcFamilies;
-    if (familyArray.Count()) {
-        int i = 0;
-        while (1) {
-            fcFamilies.Append(*familyArray[i]);
-            ++i;
-            if (i >= familyArray.Count())
-                break;
-            fcFamilies.Append(NS_LITERAL_STRING(","));
+    // Should append some default font if there are no available fonts.
+    // Let's use Helv which should be available on any OS/2 system; if
+    // it's not there, Fontconfig replaces it with something else...
+    if (familyArray.Count() == 0) {
+        familyArray.AppendString(NS_LITERAL_STRING("Helv"));
+    }
+
+    for (int i = 0; i < familyArray.Count(); i++) {
+        nsRefPtr<gfxQtFont> font = GetOrMakeFont(*familyArray[i], &mStyle);
+        if (font) {
+            mFonts.AppendElement(font);
         }
-    }
-    else {
-        fcFamilies.Append(NS_LITERAL_STRING("sans-serif"));
-    }
-
-    nsRefPtr<gfxQtFont> font = GetOrMakeFont(fcFamilies, &mStyle);
-    if (font) {
-        mFonts.AppendElement(font);
     }
 }
 
@@ -414,45 +420,47 @@ gfxQtFont::~gfxQtFont()
 const gfxFont::Metrics&
 gfxQtFont::GetMetrics()
 {
-     if (mHasMetrics)
+    if (mHasMetrics)
         return mMetrics;
 
+
+    mMetrics.emHeight = GetStyle()->size;
+
+    FT_UInt gid; // glyph ID
     QFontMetrics fontMetrics( *mQFont );
-    // QFontMetricsF fontMetrics( *mQFont );  // Float FontMetrics (probably slower)
-
-    mMetrics.maxAscent = fontMetrics.ascent();
-    mMetrics.maxDescent = fontMetrics.descent();
-    mMetrics.aveCharWidth = fontMetrics.averageCharWidth();
-    mMetrics.underlineOffset = -fontMetrics.underlinePos();
-    mMetrics.underlineSize = fontMetrics.lineWidth();
-    mMetrics.strikeoutOffset = fontMetrics.strikeOutPos(); 
-    mMetrics.strikeoutSize = fontMetrics.lineWidth();
-    mMetrics.maxAdvance = fontMetrics.maxWidth();
-
-    mMetrics.emHeight = mAdjustedSize ? mAdjustedSize : GetStyle()->size;
-
-    gfxFloat lineHeight = mMetrics.maxAscent + mMetrics.maxDescent;
-    if (lineHeight > mMetrics.emHeight)
-    {
-        mMetrics.externalLeading = lineHeight - mMetrics.emHeight;
-    }
-    else
-    {
-        mMetrics.externalLeading = 0;
-    }
-    mMetrics.internalLeading = 0;
-
-    mMetrics.maxHeight = lineHeight;
-
-    mMetrics.emAscent = lineHeight > 0.0 ?
-        mMetrics.maxAscent * mMetrics.emHeight / lineHeight : 0.0;
-    mMetrics.emDescent = mMetrics.emHeight - mMetrics.emAscent;
-
-    mMetrics.spaceWidth = fontMetrics.width( QChar(' ') );
-    mMetrics.xHeight = fontMetrics.xHeight();
-
-#if 1
     FT_Face face = mQFont->freetypeFace();
+
+    if (!face) {
+        // Abort here already, otherwise we crash in the following
+        // this can happen if the font-size requested is zero.
+        // The metrics will be incomplete, but then we don't care.
+        return mMetrics;
+    }
+
+    double emUnit = 1.0 * face->units_per_EM;
+    double yScale = face->size->metrics.y_ppem / emUnit;
+
+    // properties of space
+    gid = FT_Get_Char_Index(face, ' ');
+    // Load glyph into glyph slot. Use load_default here to get results in
+    // 26.6 fractional pixel format which is what is used for all other
+    // characters in gfxOS2FontGroup::CreateGlyphRunsFT.
+    FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT);
+    // face->glyph->metrics.width doesn't work for spaces, use advance.x instead
+    mMetrics.spaceWidth = fontMetrics.width( QChar(' ') );
+    // save the space glyph
+    mSpaceGlyph = gid;
+
+    mMetrics.xHeight = fontMetrics.xHeight();
+    mMetrics.aveCharWidth = fontMetrics.averageCharWidth();
+
+    // compute an adjusted size if we need to
+    if (mAdjustedSize == 0 && GetStyle()->sizeAdjust != 0) {
+        gfxFloat aspect = mMetrics.xHeight / GetStyle()->size;
+        mAdjustedSize = GetStyle()->GetAdjustedSize(aspect);
+        mMetrics.emHeight = mAdjustedSize;
+    }
+
     if (face) {
         mMetrics.maxAdvance = face->size->metrics.max_advance / 64.0; // 26.6
         float val;
@@ -475,22 +483,60 @@ gfxQtFont::GetMetrics()
             mMetrics.subscriptOffset = mMetrics.xHeight;
         }
     } else
-#endif
     {
         mMetrics.superscriptOffset = mMetrics.xHeight;
         mMetrics.subscriptOffset = mMetrics.xHeight;
     }
 
+    mMetrics.strikeoutOffset = fontMetrics.strikeOutPos();
+    mMetrics.strikeoutSize = fontMetrics.lineWidth();
+    mMetrics.aveCharWidth = fontMetrics.averageCharWidth();
+
+    // seems that underlineOffset really has to be negative
+    mMetrics.underlineOffset = -fontMetrics.underlinePos();
+    mMetrics.underlineSize = fontMetrics.lineWidth();
+
+    // descents are negative in FT but Thebes wants them positive
+    mMetrics.emAscent        = face->ascender * yScale;
+    mMetrics.emDescent       = -face->descender * yScale;
+    mMetrics.maxHeight       = face->height * yScale;
+    mMetrics.maxAscent       = fontMetrics.ascent();
+    mMetrics.maxDescent = fontMetrics.descent();
+    mMetrics.maxAdvance = fontMetrics.maxWidth();
+    // leading are not available directly (only for WinFNTs)
+    double lineHeight = mMetrics.maxAscent + mMetrics.maxDescent;
+    if (lineHeight > mMetrics.emHeight) {
+        mMetrics.internalLeading = lineHeight - mMetrics.emHeight;
+    } else {
+        mMetrics.internalLeading = 0;
+    }
+    mMetrics.externalLeading = 0; // normal value for OS/2 fonts, too
+
     SanitizeMetrics(&mMetrics, PR_FALSE);
 
-#if 0
-
-    fprintf (stderr, "Font: %s\n", NS_ConvertUTF16toUTF8(mName).get());
-    fprintf (stderr, "    emHeight: %f emAscent: %f emDescent: %f\n", mMetrics.emHeight, mMetrics.emAscent, mMetrics.emDescent);
-    fprintf (stderr, "    maxAscent: %f maxDescent: %f\n", mMetrics.maxAscent, mMetrics.maxDescent);
-    fprintf (stderr, "    internalLeading: %f externalLeading: %f\n", mMetrics.externalLeading, mMetrics.internalLeading);
-    fprintf (stderr, "    spaceWidth: %f aveCharWidth: %f xHeight: %f\n", mMetrics.spaceWidth, mMetrics.aveCharWidth, mMetrics.xHeight);
-    fprintf (stderr, "    uOff: %f uSize: %f stOff: %f stSize: %f suOff: %f suSize: %f\n", mMetrics.underlineOffset, mMetrics.underlineSize, mMetrics.strikeoutOffset, mMetrics.strikeoutSize, mMetrics.superscriptOffset, mMetrics.subscriptOffset);
+#ifdef DEBUG_thebes_1
+    printf("gfxOS2Font[%#x]::GetMetrics():\n"
+           "  %s (%s)\n"
+           "  emHeight=%f == %f=gfxFont::style.size == %f=adjSz\n"
+           "  maxHeight=%f  xHeight=%f\n"
+           "  aveCharWidth=%f==xWidth  spaceWidth=%f\n"
+           "  supOff=%f SubOff=%f   strOff=%f strSz=%f\n"
+           "  undOff=%f undSz=%f    intLead=%f extLead=%f\n"
+           "  emAsc=%f emDesc=%f maxH=%f\n"
+           "  maxAsc=%f maxDes=%f maxAdv=%f\n",
+           (unsigned)this,
+           NS_LossyConvertUTF16toASCII(mName).get(),
+           os2 && os2->version != 0xFFFF ? "has OS/2 table" : "no OS/2 table!",
+           mMetrics.emHeight, GetStyle()->size, mAdjustedSize,
+           mMetrics.maxHeight, mMetrics.xHeight,
+           mMetrics.aveCharWidth, mMetrics.spaceWidth,
+           mMetrics.superscriptOffset, mMetrics.subscriptOffset,
+           mMetrics.strikeoutOffset, mMetrics.strikeoutSize,
+           mMetrics.underlineOffset, mMetrics.underlineSize,
+           mMetrics.internalLeading, mMetrics.externalLeading,
+           mMetrics.emAscent, mMetrics.emDescent, mMetrics.maxHeight,
+           mMetrics.maxAscent, mMetrics.maxDescent, mMetrics.maxAdvance
+          );
 #endif
 
     mHasMetrics = PR_TRUE;
