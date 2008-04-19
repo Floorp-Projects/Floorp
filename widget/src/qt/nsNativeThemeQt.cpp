@@ -417,17 +417,17 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* a
     case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
         (*aResult).width = s->pixelMetric(QStyle::PM_ScrollBarExtent);
         (*aResult).height = (*aResult).width;
-        *aIsOverridable = PR_FALSE;
+        //*aIsOverridable = PR_FALSE;
         break;
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
         (*aResult).width = s->pixelMetric(QStyle::PM_ScrollBarExtent);
         (*aResult).height = s->pixelMetric(QStyle::PM_ScrollBarSliderMin);
-        *aIsOverridable = PR_FALSE;
+        //*aIsOverridable = PR_FALSE;
         break;
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
         (*aResult).width = s->pixelMetric(QStyle::PM_ScrollBarSliderMin);
         (*aResult).height = s->pixelMetric(QStyle::PM_ScrollBarExtent);
-        *aIsOverridable = PR_FALSE;
+        //*aIsOverridable = PR_FALSE;
         break;
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
         (*aResult).width = s->pixelMetric(QStyle::PM_ScrollBarExtent);
