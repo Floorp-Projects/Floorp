@@ -1,6 +1,7 @@
 #include <qapplication.h>
 #include "mainwindow.h"
 #include "qgeckoembed.h"
+#include "nsXPCOMGlue.h"
 
 #include <qdir.h>
 
@@ -8,11 +9,34 @@ int main(int argc, char **argv)
 {
     QApplication app(argc, argv);
 
-    QGeckoEmbed::initialize(QDir::homeDirPath().latin1(),
-                            ".TestQGeckoEmbed");
+    static const GREVersionRange greVersion = {
+        "1.9a", PR_TRUE,
+        "2", PR_TRUE
+    };
+
+    char xpcomPath[PATH_MAX];
+
+    nsresult rv = GRE_GetGREPathWithProperties(&greVersion, 1, nsnull, 0,
+                  xpcomPath, sizeof(xpcomPath));
+    if (NS_FAILED(rv)) {
+        fprintf(stderr, "Couldn't find a compatible GRE.\n");
+        return 1;
+    }
+
+    rv = XPCOMGlueStartup(xpcomPath);
+    if (NS_FAILED(rv)) {
+        fprintf(stderr, "Couldn't start XPCOM.\n");
+        return 1;
+    }
+    char *lastSlash = strrchr(xpcomPath, '/');
+    if (lastSlash)
+       *lastSlash = '\0';
+
+    QGeckoEmbed::initialize(QDir::homePath().toUtf8(),
+                            ".TestQGeckoEmbed", xpcomPath);
 
     MyMainWindow *mainWindow = new MyMainWindow();
-    app.setMainWidget(mainWindow);
+    //app.setMainWidget(mainWindow);
 
     mainWindow->resize(700, 500);
     mainWindow->show();
