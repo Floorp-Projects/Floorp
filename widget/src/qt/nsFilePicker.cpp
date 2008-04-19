@@ -49,7 +49,6 @@
 
 #include <qfile.h>
 #include <qstringlist.h>
-#include <Qt3Support/q3cstring.h>
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
@@ -240,9 +239,9 @@ nsFilePicker::Show(PRInt16 *aReturn)
             selected = files[0];
         }
 
-        Q3CString path = QFile::encodeName(selected);
+        QString path = QFile::encodeName(selected);
         qDebug("path is '%s'", path.data());
-        mFile.Assign(path.data());
+        mFile.Assign(path.toUtf8().data());
         *aReturn = nsIFilePicker::returnOK;
         if (mMode == modeSave) {
             nsCOMPtr<nsILocalFile> file;
