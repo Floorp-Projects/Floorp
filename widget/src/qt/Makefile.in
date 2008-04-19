@@ -69,12 +69,11 @@ REQUIRES	= xpcom \
 		  cairo \
 		  $(NULL)
 
-# MOCSRCS><-->= \
-# 		moc_mozqwidget.cpp \
-# 		nsAppShell.cpp \
-# 		$(NULL)
+MOCSRCS = \
+		moc_mozqwidget.cpp \
+		moc_nsAppShell.cpp \
+		$(NULL)
 
-#GARBAGE                 += moc_mozqwidget.cpp
 
 CSRCS = \
 		keysym2ucs.c \
@@ -82,8 +81,6 @@ $(NULL)
 
 CPPSRCS	= \
 		$(MOCSRCS) \
-		moc_mozqwidget.cpp \
-		moc_nsAppShell.cpp \
 		nsAppShell.cpp \
 		nsWidgetFactory.cpp \
 		nsCommonWidget.cpp \
@@ -98,6 +95,7 @@ CPPSRCS	= \
 		nsIdleServiceQt.cpp \
 		nsDragService.cpp \
 		mozqwidget.cpp \
+		nsSound.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a

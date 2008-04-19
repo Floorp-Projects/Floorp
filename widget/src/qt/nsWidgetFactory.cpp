@@ -63,9 +63,9 @@
 #include "nsClipboardHelper.h"
 #include "nsIdleServiceQt.h"
 #include "nsDragService.h"
+#include "nsSound.h"
 // #include "nsScrollbar.h"
 // #include "nsFilePicker.h"
-// #include "nsSound.h"
 // 
 // #include "nsGUIEvent.h"
 // #include "nsQtEventDispatcher.h"
@@ -98,8 +98,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceQt)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeScrollbar)
-//NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeQt)
 
@@ -161,13 +161,12 @@ static const nsModuleComponentInfo components[] =
     { "Qt Idle Service",
        NS_IDLE_SERVICE_CID,
        "@mozilla.org/widget/idleservice;1",
-       nsIdleServiceQtConstructor }
-/*
+       nsIdleServiceQtConstructor },
     { "Qt Sound",
       NS_SOUND_CID,
       "@mozilla.org/sound;1",
-      nsSoundConstructor },
-    { "Qt File Picker",
+      nsSoundConstructor }
+/*    { "Qt File Picker",
       NS_FILEPICKER_CID,
       "@mozilla.org/filepicker;1",
       nsFilePickerConstructor },
@@ -184,7 +183,7 @@ PR_STATIC_CALLBACK(void)
 nsWidgetQtModuleDtor(nsIModule *aSelf)
 {
 //    nsFilePicker::Shutdown();
-//    nsSound::Shutdown();
+    nsSound::Shutdown();
 //    nsWindow::ReleaseGlobals();
     nsAppShellShutdown(aSelf);
 }
