@@ -58,6 +58,7 @@ nsSystemFontsQt::nsSystemFontsQt()
   , mFieldFontName(NS_LITERAL_STRING("sans-serif"))
   , mMenuFontName(NS_LITERAL_STRING("sans-serif"))
 {
+   // What about using QFontInfo? is it faster or what?
    QLabel *label = new QLabel();
    if (label) {
        GetSystemFontInfo(label->font(), &mDefaultFontName, &mDefaultFontStyle);
