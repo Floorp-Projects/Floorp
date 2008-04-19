@@ -93,6 +93,8 @@
 #  define WIDGET_MODULES MODULE(nsWidgetGtk2Module)
 #elif defined(MOZ_WIDGET_PHOTON)
 #  define WIDGET_MODULES MODULE(nsWidgetPhModule)
+#elif defined(MOZ_WIDGET_QT)
+#  define WIDGET_MODULES MODULE(nsWidgetQtModule)
 #else
 #  error Unknown widget module.
 #endif
@@ -248,6 +250,9 @@
 
 #ifdef MOZ_XUL
 #ifdef MOZ_ENABLE_GTK2
+#define UNIXPROXY_MODULE MODULE(nsUnixProxyModule)
+#endif
+#if defined(MOZ_WIDGET_QT)
 #define UNIXPROXY_MODULE MODULE(nsUnixProxyModule)
 #endif
 #endif

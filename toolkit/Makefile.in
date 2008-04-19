@@ -55,6 +55,10 @@ ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 DIRS += system/unixproxy
 endif
 
+ifneq (,$(filter qt,$(MOZ_WIDGET_TOOLKIT)))
+DIRS += system/unixproxy
+endif
+
 ifdef MOZ_CRASHREPORTER
 DIRS += crashreporter
 endif
