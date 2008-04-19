@@ -113,6 +113,11 @@ OSHELPER	+= nsGNOMERegistry.cpp
 OSHELPER  += nsMIMEInfoUnix.cpp
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+OSHELPER += nsGNOMERegistry.cpp
+OSHELPER += nsMIMEInfoUnix.cpp
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 OSHELPER  += nsMIMEInfoBeOS.cpp
 endif
