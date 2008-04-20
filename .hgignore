@@ -21,7 +21,7 @@
 
 # Build directories
 ^obj-
-^objdir-
+^objdir
 
 # Build directories for js shell
 _DBG\.OBJ/
