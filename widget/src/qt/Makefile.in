@@ -67,6 +67,7 @@ REQUIRES	= xpcom \
 		  locale \
 		  thebes \
 		  cairo \
+		  unicharutil \
 		  $(NULL)
 
 MOCSRCS = \
