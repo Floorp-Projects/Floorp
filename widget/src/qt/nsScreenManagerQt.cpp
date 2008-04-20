@@ -98,6 +98,7 @@ nsScreenManagerQt::ScreenForRect(PRInt32 inLeft, PRInt32 inTop,
             area = a;
         }
     }
+
     NS_IF_ADDREF(*outScreen = screens[best]);
     return NS_OK;
 }

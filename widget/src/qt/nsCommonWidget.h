@@ -43,8 +43,7 @@
 #include "nsGUIEvent.h"
 #include <QKeyEvent>
 
-//#ifdef MOZ_LOGGING
-#if 0
+#ifdef MOZ_LOGGING
 
 // make sure that logging is enabled before including prlog.h
 #define FORCE_PR_LOG
@@ -96,7 +95,6 @@ public:
     void CommonCreate(nsIWidget *aParent, PRBool aListenForResizes);
 
     // event handling code
-    void InitKeyEvent(nsKeyEvent &aEvent, QKeyEvent *aGdkEvent);
 
     void DispatchGotFocusEvent(void);
     void DispatchLostFocusEvent(void);
@@ -105,6 +103,12 @@ public:
     void DispatchResizeEvent(nsRect &aRect, nsEventStatus &aStatus);
 
     NS_IMETHOD DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
+
+    nsEventStatus DispatchEvent(nsGUIEvent *aEvent) {
+        nsEventStatus status;
+        DispatchEvent(aEvent, status);
+        return status;
+    }
 
     // virtual interfaces for some nsIWidget methods
     virtual void NativeResize(PRInt32 aWidth,

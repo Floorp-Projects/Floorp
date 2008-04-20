@@ -7,12 +7,16 @@ MozQWidget::MozQWidget(nsWindow *receiver, QWidget *parent,
     : QWidget(parent, (Qt::WindowFlags)f),
       mReceiver(receiver)
 {
+    setAttribute(Qt::WA_QuitOnClose, false);
 }
 
 bool MozQWidget::event(QEvent *e)
 {
-    bool ignore = false;
-    if (!mReceiver) return !ignore;
+    nsEventStatus status = nsEventStatus_eIgnore;
+
+    if (!mReceiver)
+        return false;
+
     switch(e->type()) {
 /*
     case QEvent::Accessibility:
@@ -24,56 +28,56 @@ bool MozQWidget::event(QEvent *e)
     case QEvent::MouseButtonPress:
     {
         QMouseEvent *ms = (QMouseEvent*)(e);
-        ignore = mReceiver->OnButtonPressEvent(ms);
+        status = mReceiver->OnButtonPressEvent(ms);
     }
     break;
     case QEvent::MouseButtonRelease:
     {
         QMouseEvent *ms = (QMouseEvent*)(e);
-        ignore = mReceiver->OnButtonReleaseEvent(ms);
+        status = mReceiver->OnButtonReleaseEvent(ms);
     }
     break;
     case QEvent::MouseButtonDblClick:
     {
         QMouseEvent *ms = (QMouseEvent*)(e);
-        ignore = mReceiver->mouseDoubleClickEvent(ms);
+        status = mReceiver->mouseDoubleClickEvent(ms);
     }
     break;
     case QEvent::MouseMove:
     {
         QMouseEvent *ms = (QMouseEvent*)(e);
-        ignore = mReceiver->OnMotionNotifyEvent(ms);
+        status = mReceiver->OnMotionNotifyEvent(ms);
     }
     break;
     case QEvent::KeyPress:
     {
         QKeyEvent *kev = (QKeyEvent*)(e);
-        ignore = mReceiver->OnKeyPressEvent(kev);
+        status = mReceiver->OnKeyPressEvent(kev);
     }
     break;
     case QEvent::KeyRelease:
     {
         QKeyEvent *kev = (QKeyEvent*)(e);
-        ignore = mReceiver->OnKeyReleaseEvent(kev);
+        status = mReceiver->OnKeyReleaseEvent(kev);
     }
     break;
 /*
     case QEvent::IMStart:
     {
         QIMEvent *iev = (QIMEvent*)(e);
-        ignore = mReceiver->imStartEvent(iev);
+        status = mReceiver->imStartEvent(iev);
     }
     break;
     case QEvent::IMCompose:
     {
         QIMEvent *iev = (QIMEvent*)(e);
-        ignore = mReceiver->imComposeEvent(iev);
+        status = mReceiver->imComposeEvent(iev);
     }
     break;
     case QEvent::IMEnd:
     {
         QIMEvent *iev = (QIMEvent*)(e);
-        ignore = mReceiver->imEndEvent(iev);
+        status = mReceiver->imEndEvent(iev);
     }
     break;
 */
@@ -93,30 +97,30 @@ bool MozQWidget::event(QEvent *e)
     break;
     case QEvent::Enter:
     {
-        ignore = mReceiver->OnEnterNotifyEvent(e);
+        status = mReceiver->OnEnterNotifyEvent(e);
     }
     break;
     case QEvent::Leave:
     {
-        ignore = mReceiver->OnLeaveNotifyEvent(e);
+        status = mReceiver->OnLeaveNotifyEvent(e);
     }
     break;
     case QEvent::Paint:
     {
         QPaintEvent *ev = (QPaintEvent*)(e);
-        mReceiver->OnExposeEvent(ev);
+        status = mReceiver->OnExposeEvent(ev);
     }
     break;
     case QEvent::Move:
     {
         QMoveEvent *mev = (QMoveEvent*)(e);
-        ignore = mReceiver->OnConfigureEvent(mev);
+        status = mReceiver->OnConfigureEvent(mev);
     }
     break;
     case QEvent::Resize:
     {
         QResizeEvent *rev = (QResizeEvent*)(e);
-        ignore = mReceiver->OnSizeAllocate(rev);
+        status = mReceiver->OnSizeAllocate(rev);
     }
         break;
     case QEvent::Show:
@@ -128,58 +132,66 @@ bool MozQWidget::event(QEvent *e)
     case QEvent::Hide:
     {
         QHideEvent *hev = (QHideEvent*)(e);
-        ignore = mReceiver->hideEvent(hev);
+        status = mReceiver->hideEvent(hev);
     }
         break;
     case QEvent::Close:
     {
         QCloseEvent *cev = (QCloseEvent*)(e);
-        ignore = mReceiver->OnDeleteEvent(cev);
+        status = mReceiver->OnDeleteEvent(cev);
     }
     break;
     case QEvent::Wheel:
     {
         QWheelEvent *wev = (QWheelEvent*)(e);
-        ignore = mReceiver->OnScrollEvent(wev);
+        status = mReceiver->OnScrollEvent(wev);
     }
     break;
     case QEvent::ContextMenu:
     {
         QContextMenuEvent *cev = (QContextMenuEvent*)(e);
-        ignore = mReceiver->contextMenuEvent(cev);
+        status = mReceiver->contextMenuEvent(cev);
     }
     break;
     case QEvent::DragEnter:
     {
         QDragEnterEvent *dev = (QDragEnterEvent*)(e);
-        ignore = mReceiver->OnDragEnter(dev);
+        status = mReceiver->OnDragEnter(dev);
     }
         break;
     case QEvent::DragMove:
     {
         QDragMoveEvent *dev = (QDragMoveEvent*)(e);
-        ignore = mReceiver->OnDragMotionEvent(dev);
+        status = mReceiver->OnDragMotionEvent(dev);
     }
     break;
     case QEvent::DragLeave:
     {
         QDragLeaveEvent *dev = (QDragLeaveEvent*)(e);
-        ignore = mReceiver->OnDragLeaveEvent(dev);
+        status = mReceiver->OnDragLeaveEvent(dev);
     }
     break;
     case QEvent::Drop:
     {
         QDropEvent *dev = (QDropEvent*)(e);
-        ignore = mReceiver->OnDragDropEvent(dev);
+        status = mReceiver->OnDragDropEvent(dev);
     }
     break;
     default:
         break;
     }
 
-    QWidget::event(e);
+    // If we were going to ignore this event, pass it up to the parent
+    // and return its value
+    if (status == nsEventStatus_eIgnore)
+        return QWidget::event(e);
 
-    return !ignore;
+    // Otherwise, we know we already consumed it -- we just need to know
+    // whether we want default handling or not
+    if (status == nsEventStatus_eConsumeDoDefault)
+        QWidget::event(e);
+
+    return true;
 }
 
 bool
@@ -249,3 +261,4 @@ void MozQWidget::setModal(bool modal)
     else
         setWindowModality(Qt::NonModal);
 }
+

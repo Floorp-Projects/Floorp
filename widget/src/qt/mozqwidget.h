@@ -19,8 +19,8 @@ public:
      */
     void setModal(bool);
     bool SetCursor(nsCursor aCursor);
-    void dropReciever() { mReceiver = 0x0; };
-    nsWindow* getReciever() { return mReceiver; };
+    void dropReceiver() { mReceiver = 0x0; };
+    nsWindow* getReceiver() { return mReceiver; };
 
 protected:
     virtual bool event(QEvent *ev);

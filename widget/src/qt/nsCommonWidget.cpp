@@ -75,36 +75,6 @@ nsCommonWidget::CommonCreate(nsIWidget *aParent, PRBool aListenForResizes)
 }
 
 void
-nsCommonWidget::InitKeyEvent(nsKeyEvent &aEvent, QKeyEvent *aQEvent)
-{
-    aEvent.isShift   = aQEvent->modifiers() & Qt::ShiftModifier;
-    aEvent.isControl = aQEvent->modifiers() & Qt::ControlModifier;
-    aEvent.isAlt     = aQEvent->modifiers() & Qt::AltModifier;
-    aEvent.isMeta    = aQEvent->modifiers() & Qt::MetaModifier;
-    aEvent.time      = 0;
-
-    // The transformations above and in gdk for the keyval are not invertible
-    // so link to the GdkEvent (which will vanish soon after return from the
-    // event callback) to give plugins access to hardware_keycode and state.
-    // (An XEvent would be nice but the GdkEvent is good enough.)
-    aEvent.nativeMsg = (void *)aQEvent;
-
-    if (aQEvent->text().length() && aQEvent->text()[0].isPrint()) {
-        aEvent.charCode = (PRInt32)aQEvent->text()[0].unicode();
-    }
-    else {
-        aEvent.charCode = 0;
-    }
-
-    if (aEvent.charCode) {
-        aEvent.keyCode = 0;
-    }
-    else {
-        aEvent.keyCode = QtKeyCodeToDOMKeyCode(aQEvent->key());
-    }
-}
-
-void
 nsCommonWidget::DispatchGotFocusEvent(void)
 {
     nsGUIEvent event(PR_TRUE, NS_GOTFOCUS, this);

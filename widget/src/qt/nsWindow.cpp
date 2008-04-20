@@ -128,18 +128,33 @@ static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 static const int WHEEL_DELTA = 120;
 static PRBool gGlobalsInitialized = PR_FALSE;
 //static nsWindow * get_window_for_qt_widget(QWidget *widget);
-static bool ignoreEvent(nsEventStatus aStatus)
-{
-    return aStatus == nsEventStatus_eConsumeNoDefault;
-}
 
 static PRBool
-isContextMenuKey(const nsKeyEvent &aKeyEvent)
+isContextMenuKeyEvent(const QKeyEvent *qe)
 {
-    return ((aKeyEvent.keyCode == NS_VK_F10 && aKeyEvent.isShift &&
-             !aKeyEvent.isControl && !aKeyEvent.isMeta && !aKeyEvent.isAlt) ||
-            (aKeyEvent.keyCode == NS_VK_CONTEXT_MENU && !aKeyEvent.isShift &&
-             !aKeyEvent.isControl && !aKeyEvent.isMeta && !aKeyEvent.isAlt));
+    PRUint32 kc = QtKeyCodeToDOMKeyCode(qe->key());
+    if (qe->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))
+        return PR_FALSE;
+
+    PRBool isShift = qe->modifiers() & Qt::ShiftModifier;
+    return (kc == NS_VK_F10 && isShift) ||
+        (kc == NS_VK_CONTEXT_MENU && !isShift);
+}
+
+static void
+InitKeyEvent(nsKeyEvent &aEvent, QKeyEvent *aQEvent)
+{
+    aEvent.isShift   = aQEvent->modifiers() & Qt::ShiftModifier;
+    aEvent.isControl = aQEvent->modifiers() & Qt::ControlModifier;
+    aEvent.isAlt     = aQEvent->modifiers() & Qt::AltModifier;
+    aEvent.isMeta    = aQEvent->modifiers() & Qt::MetaModifier;
+    aEvent.time      = 0;
+
+    // The transformations above and in gdk for the keyval are not invertible
+    // so link to the GdkEvent (which will vanish soon after return from the
+    // event callback) to give plugins access to hardware_keycode and state.
+    // (An XEvent would be nice but the GdkEvent is good enough.)
+    aEvent.nativeMsg = (void *)aQEvent;
 }
 
 static void
@@ -195,6 +210,10 @@ nsWindow::~nsWindow()
     Destroy();
 }
 
+/* XXX - this gets called right after CreateQWidget, which also
+ * sets mDrawingArea.  We probably want to always pass a MozQWidget
+ * here; things won't really work at all with any generic widget.
+ */
 void
 nsWindow::Initialize(QWidget *widget)
 {
@@ -266,10 +285,16 @@ nsWindow::Destroy(void)
     // the surface after its X Window.
     mThebesSurface = nsnull;
 
-    if (mDrawingarea) {
-        delete mDrawingarea;
-        mDrawingarea = nsnull;
+    if (mMozQWidget) {
+        mMozQWidget->dropReceiver();
+
+        // Call deleteLater instead of delete; Qt still needs the object
+        // to be valid even after sending it a Close event.  We could
+        // also set WA_DeleteOnClose, but this gives us more control.
+        mMozQWidget->deleteLater();
     }
+
+    mDrawingarea = nsnull;
 
     OnDestroy();
 
@@ -579,8 +604,8 @@ NS_IMETHODIMP
 nsWindow::SetCursor(nsCursor aCursor)
 {
     mCursor = aCursor;
-    MozQWidget *mozWidget = static_cast<MozQWidget*>(mDrawingarea);
-    mozWidget->SetCursor(mCursor);
+    if (mMozQWidget)
+        mMozQWidget->SetCursor(mCursor);
     return NS_OK;
 }
 
@@ -677,16 +702,19 @@ NS_IMETHODIMP
 nsWindow::Invalidate(const nsRect &aRect,
                      PRBool        aIsSynchronous)
 {
-    LOGDRAW(("Invalidate (rect) [%p]: %d %d %d %d (sync: %d)\n", (void *)this,
-             aRect.x, aRect.y, aRect.width, aRect.height, aIsSynchronous));
+    LOGDRAW(("Invalidate (rect) [%p,%p]: %d %d %d %d (sync: %d)\n", (void *)this,
+             (void*)mDrawingarea,aRect.x, aRect.y, aRect.width, aRect.height, aIsSynchronous));
 
     if (!mDrawingarea)
         return NS_OK;
 
     if (aIsSynchronous)
         mDrawingarea->repaint(aRect.x, aRect.y, aRect.width, aRect.height);
-    else
+    else {
+        if (!mDrawingarea->isVisible()) fprintf (stderr, "not visible!!\n");
+        if (!mDrawingarea->updatesEnabled()) fprintf (stderr, "updates not enabled!!\n");
         mDrawingarea->update(aRect.x, aRect.y, aRect.width, aRect.height);
+    }
 
     return NS_OK;
 }
@@ -887,18 +915,15 @@ nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
     NS_ENSURE_TRUE(mDrawingarea, NS_OK);
 
-    PRInt32 X,Y;
+    QPoint origin(aOldRect.x, aOldRect.y);
+    origin = mDrawingarea->mapToGlobal(origin);
 
-    QPoint offset(0,0);
-    offset = mDrawingarea->mapFromGlobal(offset);
-    X = offset.x();
-    Y = offset.y();
-    LOG(("WidgetToScreen (container) %d %d\n", X, Y));
-
-    aNewRect.x = aOldRect.x + X;
-    aNewRect.y = aOldRect.y + Y;
+    aNewRect.x = origin.x();
+    aNewRect.y = origin.y();
     aNewRect.width = aOldRect.width;
     aNewRect.height = aOldRect.height;
+
+    LOG(("WidgetToScreen %d %d -> %d %d\n", aOldRect.x, aOldRect.y, aNewRect.x, aNewRect.y));
 
     return NS_OK;
 }
@@ -908,18 +933,15 @@ nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 {
     NS_ENSURE_TRUE(mDrawingarea, NS_OK);
 
-    PRInt32 X,Y;
+    QPoint origin(aOldRect.x, aOldRect.y);
+    origin = mDrawingarea->mapFromGlobal(origin);
 
-    QPoint offset(0,0);
-    offset = mDrawingarea->mapFromGlobal(offset);
-    X = offset.x();
-    Y = offset.y();
-    LOG(("WidgetToScreen (container) %d %d\n", X, Y));
-
-    aNewRect.x = aOldRect.x - X;
-    aNewRect.y = aOldRect.y - Y;
+    aNewRect.x = origin.x();
+    aNewRect.y = origin.y();
     aNewRect.width = aOldRect.width;
     aNewRect.height = aOldRect.height;
+
+    LOG(("ScreenToWidget %d %d -> %d %d\n", aOldRect.x, aOldRect.y, aNewRect.x, aNewRect.y));
 
     return NS_OK;
 }
@@ -1027,7 +1049,7 @@ nsWindow::LoseFocus(void)
 
 static int gDoubleBuffering = -1;
 
-bool
+nsEventStatus
 nsWindow::OnExposeEvent(QPaintEvent *aEvent)
 {
     if (gDoubleBuffering == -1) {
@@ -1040,17 +1062,17 @@ nsWindow::OnExposeEvent(QPaintEvent *aEvent)
     if (mIsDestroyed) {
         LOG(("Expose event on destroyed window [%p] window %p\n",
              (void *)this, mDrawingarea));
-        return FALSE;
+        return nsEventStatus_eIgnore;
     }
 
     if (!mDrawingarea)
-        return FALSE;
+        return nsEventStatus_eIgnore;
 
     static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
     nsCOMPtr<nsIRegion> updateRegion = do_CreateInstance(kRegionCID);
     if (!updateRegion)
-        return FALSE;
+        return nsEventStatus_eIgnore;
 
     updateRegion->Init();
 
@@ -1074,7 +1096,7 @@ nsWindow::OnExposeEvent(QPaintEvent *aEvent)
     nsCOMPtr<nsIRenderingContext> rc;
     GetDeviceContext()->CreateRenderingContextInstance(*getter_AddRefs(rc));
     if (NS_UNLIKELY(!rc))
-        return FALSE;
+        return nsEventStatus_eIgnore;
 
     rc->Init(GetDeviceContext(), ctx);
 
@@ -1200,17 +1222,16 @@ nsWindow::OnExposeEvent(QPaintEvent *aEvent)
     event.region = updateRegion;
     event.renderingContext = rc;
 
-    nsEventStatus status;
-    DispatchEvent(&event, status);
+    nsEventStatus status = DispatchEvent(&event);
 
     // DispatchEvent can Destroy us (bug 378273), avoid doing any paint
     // operations below if that happened - it will lead to XError and exit().
     if (NS_UNLIKELY(mIsDestroyed))
-        return ignoreEvent(status);
+        return status;
 
     if (status == nsEventStatus_eIgnore) {
         ctx->Restore();
-        return ignoreEvent(status);
+        return status;
     }
 
     if (translucent) {
@@ -1251,10 +1272,10 @@ nsWindow::OnExposeEvent(QPaintEvent *aEvent)
     ctx->Restore();
 
     // check the return value!
-    return ignoreEvent(status);
+    return status;
 }
 
-bool
+nsEventStatus
 nsWindow::OnConfigureEvent(QMoveEvent *aEvent)
 {
     LOG(("configure event [%p] %d %d\n", (void *)this,
@@ -1264,7 +1285,9 @@ nsWindow::OnConfigureEvent(QMoveEvent *aEvent)
     if (!mDrawingarea
         || (mBounds.x == aEvent->pos().x()
         && mBounds.y == aEvent->pos().y()))
-    return FALSE;
+    {
+        return nsEventStatus_eIgnore;
+    }
 
     // Toplevel windows need to have their bounds set so that we can
     // keep track of our location.  It's not often that the x,y is set
@@ -1286,13 +1309,10 @@ nsWindow::OnConfigureEvent(QMoveEvent *aEvent)
 
     // XXX mozilla will invalidate the entire window after this move
     // complete.  wtf?
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-
-    return ignoreEvent(status);
+    return DispatchEvent(&event);
 }
 
-bool
+nsEventStatus
 nsWindow::OnSizeAllocate(QResizeEvent *e)
 {
     nsRect rect;
@@ -1325,10 +1345,10 @@ nsWindow::OnSizeAllocate(QResizeEvent *e)
 
     nsEventStatus status;
     DispatchResizeEvent(rect, status);
-    return ignoreEvent(status);
+    return status;
 }
 
-bool
+nsEventStatus
 nsWindow::OnDeleteEvent(QCloseEvent *aEvent)
 {
     nsGUIEvent event(PR_TRUE, NS_XUL_CLOSE, this);
@@ -1336,12 +1356,10 @@ nsWindow::OnDeleteEvent(QCloseEvent *aEvent)
     event.refPoint.x = 0;
     event.refPoint.y = 0;
 
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-    return ignoreEvent(status);
+    return DispatchEvent(&event);
 }
 
-bool
+nsEventStatus
 nsWindow::OnEnterNotifyEvent(QEvent *aEvent)
 {
     nsMouseEvent event(PR_TRUE, NS_MOUSE_ENTER, this, nsMouseEvent::eReal);
@@ -1353,12 +1371,10 @@ nsWindow::OnEnterNotifyEvent(QEvent *aEvent)
 
     LOG(("OnEnterNotify: %p\n", (void *)this));
 
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-    return FALSE;
+    return DispatchEvent(&event);
 }
 
-bool
+nsEventStatus
 nsWindow::OnLeaveNotifyEvent(QEvent *aEvent)
 {
     nsMouseEvent event(PR_TRUE, NS_MOUSE_EXIT, this, nsMouseEvent::eReal);
@@ -1370,12 +1386,10 @@ nsWindow::OnLeaveNotifyEvent(QEvent *aEvent)
 
     LOG(("OnLeaveNotify: %p\n", (void *)this));
 
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-    return FALSE;
+    return DispatchEvent(&event);
 }
 
-bool
+nsEventStatus
 nsWindow::OnMotionNotifyEvent(QMouseEvent *aEvent)
 {
     // when we receive this, it must be that the gtk dragging is over,
@@ -1394,9 +1408,7 @@ nsWindow::OnMotionNotifyEvent(QMouseEvent *aEvent)
     event.isMeta          = aEvent->modifiers() & Qt::MetaModifier;
     event.clickCount      = 0;
 
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-    return ignoreEvent(status);
+    return DispatchEvent(&event);
 }
 
 void
@@ -1413,7 +1425,7 @@ nsWindow::InitButtonEvent(nsMouseEvent &event,
     event.clickCount      = aClickCount;
 }
 
-bool
+nsEventStatus
 nsWindow::OnButtonPressEvent(QMouseEvent *aEvent)
 {
     PRUint16      domButton;
@@ -1433,8 +1445,7 @@ nsWindow::OnButtonPressEvent(QMouseEvent *aEvent)
     event.button = domButton;
     InitButtonEvent(event, aEvent, 1);
 
-    nsEventStatus status;
-    DispatchEvent(&event, status);
+    nsEventStatus status = DispatchEvent(&event);
 
     // right menu click on linux should also pop up a context menu
     if (domButton == nsMouseEvent::eRightButton &&
@@ -1445,10 +1456,10 @@ nsWindow::OnButtonPressEvent(QMouseEvent *aEvent)
         DispatchEvent(&contextMenuEvent, status);
     }
 
-    return ignoreEvent(status);
+    return status;
 }
 
-bool
+nsEventStatus
 nsWindow::OnButtonReleaseEvent(QMouseEvent *aEvent)
 {
     PRUint16 domButton;
@@ -1470,12 +1481,10 @@ nsWindow::OnButtonReleaseEvent(QMouseEvent *aEvent)
     event.button = domButton;
     InitButtonEvent(event, aEvent, 1);
 
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-    return ignoreEvent(status);
+    return DispatchEvent(&event);
 }
 
-bool
+nsEventStatus
 nsWindow::mouseDoubleClickEvent(QMouseEvent *e)
 {
     PRUint32      eventType;
@@ -1497,12 +1506,10 @@ nsWindow::mouseDoubleClickEvent(QMouseEvent *e)
 
     InitButtonEvent(event, e, 2);
     //pressed
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-    return ignoreEvent(status);
+    return DispatchEvent(&event);
 }
 
-bool
+nsEventStatus
 nsWindow::OnContainerFocusInEvent(QFocusEvent *aEvent)
 {
     LOGFOCUS(("OnContainerFocusInEvent [%p]\n", (void *)this));
@@ -1511,7 +1518,7 @@ nsWindow::OnContainerFocusInEvent(QFocusEvent *aEvent)
     // nsWindow::SetFocus() and will prevent recursion.
 
     if (!mDrawingarea)
-        return FALSE;
+        return nsEventStatus_eIgnore;
 
     // Unset the urgency hint, if possible
 //    SetUrgencyHint(top_window, PR_FALSE);
@@ -1525,10 +1532,10 @@ nsWindow::OnContainerFocusInEvent(QFocusEvent *aEvent)
     DispatchActivateEvent();
 
     LOGFOCUS(("Events sent from focus in event [%p]\n", (void *)this));
-    return FALSE;
+    return nsEventStatus_eIgnore;
 }
 
-bool
+nsEventStatus
 nsWindow::OnContainerFocusOutEvent(QFocusEvent *aEvent)
 {
     LOGFOCUS(("OnContainerFocusOutEvent [%p]\n", (void *)this));
@@ -1538,7 +1545,7 @@ nsWindow::OnContainerFocusOutEvent(QFocusEvent *aEvent)
         DispatchDeactivateEvent();
 
     LOGFOCUS(("Done with container focus out [%p]\n", (void *)this));
-    return FALSE;
+    return nsEventStatus_eIgnore;
 }
 
 inline PRBool
@@ -1551,84 +1558,98 @@ is_latin_shortcut_key(quint32 aKeyval)
 PRBool
 nsWindow::DispatchCommandEvent(nsIAtom* aCommand)
 {
-    nsEventStatus status;
     nsCommandEvent event(PR_TRUE, nsWidgetAtoms::onAppCommand, aCommand, this);
-    DispatchEvent(&event, status);
+
+    DispatchEvent(&event);
+
     return TRUE;
 }
 
-bool
+nsEventStatus
 nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
 {
     LOGFOCUS(("OnKeyPressEvent [%p]\n", (void *)this));
 
-    nsEventStatus status;
-
-    nsKeyEvent event(PR_TRUE, NS_KEY_PRESS, this);
-    InitKeyEvent(event, aEvent);
-    event.charCode = (PRInt32)aEvent->text()[0].unicode();
-    // qDebug("FIXME:>>>>>>Func:%s::%d, %i\n", __PRETTY_FUNCTION__, __LINE__, event.charCode);
-
-    if (!aEvent->isAutoRepeat()) {
-        // send the key down event
-        nsKeyEvent downEvent(PR_TRUE, NS_KEY_DOWN, this);
-        InitKeyEvent(downEvent, aEvent);
-        DispatchEvent(&downEvent, status);
-        if (ignoreEvent(status)) { // If prevent default on keydown, do same for keypress
-            event.flags |= NS_EVENT_FLAG_NO_DEFAULT;
-        }
-    }
+    PRBool setNoDefault = PR_FALSE;
 
     // before we dispatch a key, check if it's the context menu key.
     // If so, send a context menu key event instead.
-    if (isContextMenuKey(event)) {
+    if (isContextMenuKeyEvent(aEvent)) {
         nsMouseEvent contextMenuEvent(PR_TRUE, NS_CONTEXTMENU, this,
                                       nsMouseEvent::eReal,
                                       nsMouseEvent::eContextMenuKey);
-        keyEventToContextMenuEvent(&event, &contextMenuEvent);
-        DispatchEvent(&contextMenuEvent, status);
-    }
-    else {
-        // send the key press event
-        DispatchEvent(&event, status);
+        //keyEventToContextMenuEvent(&event, &contextMenuEvent);
+        return DispatchEvent(&contextMenuEvent);
     }
 
+    PRUint32 domCharCode = 0;
+    PRUint32 domKeyCode = QtKeyCodeToDOMKeyCode(aEvent->key());
 
-    // If the event was consumed, return.
-    LOGIM(("status %d\n", status));
-    if (status == nsEventStatus_eConsumeNoDefault) {
-        LOGIM(("key press consumed\n"));
-        return TRUE;
+    if (aEvent->text().length() && aEvent->text()[0].isPrint())
+        domCharCode = (PRInt32) aEvent->text()[0].unicode();
+
+    // If the key isn't autorepeat, we need to send the initial down event
+    if (!aEvent->isAutoRepeat() && !IsKeyDown(domKeyCode)) {
+        // send the key down event
+
+        SetKeyDownFlag(domKeyCode);
+
+        nsKeyEvent downEvent(PR_TRUE, NS_KEY_DOWN, this);
+        InitKeyEvent(downEvent, aEvent);
+
+        downEvent.charCode = domCharCode;
+        downEvent.keyCode = domCharCode ? 0 : domKeyCode;
+
+        nsEventStatus status = DispatchEvent(&downEvent);
+
+        // If prevent default on keydown, do same for keypress
+        if (status == nsEventStatus_eConsumeNoDefault)
+            setNoDefault = PR_TRUE;
     }
 
-    return FALSE;
+    nsKeyEvent event(PR_TRUE, NS_KEY_PRESS, this);
+    InitKeyEvent(event, aEvent);
+
+    event.charCode = domCharCode;
+    event.keyCode = domCharCode ? 0 : domKeyCode;
+
+    if (setNoDefault)
+        event.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+
+    // send the key press event
+    return DispatchEvent(&event);
 }
 
-bool
+nsEventStatus
 nsWindow::OnKeyReleaseEvent(QKeyEvent *aEvent)
 {
     LOGFOCUS(("OnKeyReleaseEvent [%p]\n", (void *)this));
+
+    if (isContextMenuKeyEvent(aEvent)) {
+        // er, what do we do here? DoDefault or NoDefault?
+        return nsEventStatus_eConsumeDoDefault;
+    }
+
+    PRUint32 domCharCode = 0;
+    PRUint32 domKeyCode = QtKeyCodeToDOMKeyCode(aEvent->key());
+
+    if (aEvent->text().length() && aEvent->text()[0].isPrint())
+        domCharCode = (PRInt32) aEvent->text()[0].unicode();
 
     // send the key event as a key up event
     nsKeyEvent event(PR_TRUE, NS_KEY_UP, this);
     InitKeyEvent(event, aEvent);
 
+    event.charCode = domCharCode;
+    event.keyCode = domCharCode ? 0 : domKeyCode;
+
     // unset the key down flag
     ClearKeyDownFlag(event.keyCode);
 
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-
-    // If the event was consumed, return.
-    if (status == nsEventStatus_eConsumeNoDefault) {
-        LOGIM(("key release consumed\n"));
-        return TRUE;
-    }
-
-    return FALSE;
+    return DispatchEvent(&event);
 }
 
-bool
+nsEventStatus
 nsWindow::OnScrollEvent(QWheelEvent *aEvent)
 {
     // check to see if we should rollup
@@ -1645,7 +1666,11 @@ nsWindow::OnScrollEvent(QWheelEvent *aEvent)
         Q_ASSERT(0);
         break;
     }
-    event.delta = (int)((aEvent->delta() / WHEEL_DELTA) * -3);
+
+    // negative values for aEvent->delta indicate downward scrolling;
+    // this is opposite Gecko usage.
+
+    event.delta = (int)(aEvent->delta() / WHEEL_DELTA) * -3;
 
     event.refPoint.x = nscoord(aEvent->x());
     event.refPoint.y = nscoord(aEvent->y());
@@ -1656,13 +1681,11 @@ nsWindow::OnScrollEvent(QWheelEvent *aEvent)
     event.isMeta          = aEvent->modifiers() & Qt::MetaModifier;
     event.time            = 0;
 
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-    return ignoreEvent(status);
+    return DispatchEvent(&event);
 }
 
 
-bool
+nsEventStatus
 nsWindow::showEvent(QShowEvent *)
 {
     LOG(("%s [%p]\n", __PRETTY_FUNCTION__,(void *)this));
@@ -1682,37 +1705,34 @@ nsWindow::showEvent(QShowEvent *)
     // XXX fix this!
     event.renderingContext = rc;
 
-    nsEventStatus status;
-    DispatchEvent(&event, status);
+    return DispatchEvent(&event);
 */
     mIsVisible = PR_TRUE;
-    return false;
+    return nsEventStatus_eConsumeDoDefault;
 }
 
-bool
+nsEventStatus
 nsWindow::hideEvent(QHideEvent *)
 {
     LOG(("%s [%p]\n", __PRETTY_FUNCTION__,(void *)this));
     mIsVisible = PR_FALSE;
-    return false;
+    return nsEventStatus_eConsumeDoDefault;
 }
 
-bool
+nsEventStatus
 nsWindow::OnWindowStateEvent(QEvent *aEvent)
 {
     qDebug("FIXME:>>>>>>Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
     nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-    return ignoreEvent(status);
+    return DispatchEvent(&event);
 }
 
 void
 nsWindow::ThemeChanged()
 {
     nsGUIEvent event(PR_TRUE, NS_THEMECHANGED, this);
-    nsEventStatus status = nsEventStatus_eIgnore;
-    DispatchEvent(&event, status);
+
+    DispatchEvent(&event);
 
     if (!mDrawingarea || NS_UNLIKELY(mIsDestroyed))
         return;
@@ -1720,29 +1740,27 @@ nsWindow::ThemeChanged()
     return;
 }
 
-bool
+nsEventStatus
 nsWindow::OnDragMotionEvent(QDragMoveEvent *e)
 {
     LOG(("nsWindow::OnDragMotionSignal\n"));
 
     nsMouseEvent event(PR_TRUE, NS_DRAGDROP_OVER, 0,
                        nsMouseEvent::eReal);
-    return TRUE;
+    return nsEventStatus_eIgnore;
 }
 
-bool
+nsEventStatus
 nsWindow::OnDragLeaveEvent(QDragLeaveEvent *e)
 {
     // XXX Do we want to pass this on only if the event's subwindow is null?
     LOG(("nsWindow::OnDragLeaveSignal(%p)\n", this));
     nsMouseEvent event(PR_TRUE, NS_DRAGDROP_EXIT, this, nsMouseEvent::eReal);
 
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-    return ignoreEvent(status);
+    return DispatchEvent(&event);
 }
 
-bool
+nsEventStatus
 nsWindow::OnDragDropEvent(QDropEvent *aDropEvent)
 {
     if (aDropEvent->proposedAction() == Qt::CopyAction)
@@ -1754,10 +1772,10 @@ nsWindow::OnDragDropEvent(QDropEvent *aDropEvent)
     LOG(("nsWindow::OnDragDropSignal\n"));
     nsMouseEvent event(PR_TRUE, NS_DRAGDROP_OVER, 0,
                        nsMouseEvent::eReal);
-    return TRUE;
+    return nsEventStatus_eIgnore;
 }
 
-bool
+nsEventStatus
 nsWindow::OnDragEnter(QDragEnterEvent *aDragEvent)
 {
 #if 0
@@ -1786,9 +1804,7 @@ nsWindow::OnDragEnter(QDragEnterEvent *aDragEvent)
     LOG(("nsWindow::OnDragEnter(%p)\n", this));
 
     nsMouseEvent event(PR_TRUE, NS_DRAGDROP_ENTER, this, nsMouseEvent::eReal);
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-    return ignoreEvent(status);
+    return DispatchEvent(&event);
 }
 
 static void
@@ -2031,6 +2047,8 @@ nsWindow::EnsureGrabs(void)
 NS_IMETHODIMP
 nsWindow::SetHasTransparentBackground(PRBool aTransparent)
 {
+    return NS_ERROR_NOT_IMPLEMENTED;
+
 //    if (!mDrawingarea) {
         // Pass the request to the toplevel window
 //        return topWindow->SetHasTransparentBackground(aTransparent);
@@ -2526,7 +2544,7 @@ nsWindow *
 get_window_for_qt_widget(QWidget *widget)
 {
     MozQWidget *mozWidget = static_cast<MozQWidget*>(widget);
-    return mozWidget->getReciever();
+    return mozWidget->getReceiver();
 }
 */
 
@@ -2670,6 +2688,8 @@ QWidget*
 nsWindow::createQWidget(QWidget *parent, nsWidgetInitData *aInitData)
 {
     Qt::WFlags flags = Qt::Widget;
+    const char *windowName = NULL;
+
 #ifdef DEBUG_WIDGETS
     qDebug("NEW WIDGET\n\tparent is %p (%s)", (void*)parent,
            parent ? qPrintable(parent->objectName()) : "null");
@@ -2677,67 +2697,49 @@ nsWindow::createQWidget(QWidget *parent, nsWidgetInitData *aInitData)
     // ok, create our windows
     switch (mWindowType) {
     case eWindowType_dialog:
+        flags |= Qt::Dialog;
+        windowName = "topLevelDialog";
+        break;
     case eWindowType_popup:
+        flags |= Qt::Popup;
+        windowName = "topLevelPopup";
+        break;
     case eWindowType_toplevel:
-    case eWindowType_invisible: {
-        mIsTopLevel = PR_TRUE;
-
-        nsXPIDLString brandName;
-        GetBrandName(brandName);
-        NS_ConvertUTF16toUTF8 cBrand(brandName);
-        if (mWindowType == eWindowType_dialog) {
-            //gtk_window_set_wmclass(GTK_WINDOW(mDrawingarea), "Dialog", cBrand.get());
-            //gtk_window_set_type_hint(GTK_WINDOW(mDrawingarea),
-            //                         Qt::Key_WINDOW_TYPE_HINT_DIALOG);
-            flags |= Qt::Dialog;
-            mDrawingarea = new MozQWidget(this, parent, "topLevelDialog", flags);
-            qDebug("\t\t#### dialog (%p)", (void*)mDrawingarea);
-            //SetDefaultIcon();
-        }
-        else if (mWindowType == eWindowType_popup) {
-            flags |= Qt::Popup;
-            // gtk_window_set_wmclass(GTK_WINDOW(mDrawingarea), "Toplevel", cBrand.get());
-            //gtk_window_set_decorated(GTK_WINDOW(mDrawingarea), FALSE);
-            mDrawingarea = new MozQWidget(this, parent, "topLevelPopup", flags);
-            qDebug("\t\t#### popup (%p)", (void*)mDrawingarea);
-            mDrawingarea->setFocusPolicy(Qt::WheelFocus);
-        }
-        else { // must be eWindowType_toplevel
-            flags |= Qt::Window;
-            mDrawingarea = new MozQWidget(this, parent, "topLevelWindow", flags);
-            qDebug("\t\t#### toplevel (%p)", (void*)mDrawingarea);
-            //SetDefaultIcon();
-        }
-        if (mWindowType == eWindowType_popup) {
-            // gdk does not automatically set the cursor for "temporary"
-            // windows, which are what gtk uses for popups.
-            mCursor = eCursor_wait; // force SetCursor to actually set the
-                                    // cursor, even though our internal state
-                                    // indicates that we already have the
-                                    // standard cursor.
-            SetCursor(eCursor_standard);
-        }
-    }
+        flags |= Qt::Window;
+        windowName = "topLevelWindow";
         break;
-    case eWindowType_child: {
-        mDrawingarea = new MozQWidget(this, parent, "paintArea", 0);
-        qDebug("\t\t#### child (%p)", (void*)mDrawingarea);
-    }
+    case eWindowType_invisible:
+        flags |= Qt::Window;
+        windowName = "topLevelInvisible";
         break;
-    default:
+    case eWindowType_child:
+    default: // plugin, java, sheet
+        windowName = "paintArea";
         break;
     }
 
-    mDrawingarea->setAttribute(Qt::WA_StaticContents);
-    mDrawingarea->setAttribute(Qt::WA_OpaquePaintEvent); // Transparent Widget Background
-
+    mMozQWidget = new MozQWidget(this, parent, windowName, flags);
+    mDrawingarea = mMozQWidget;
+ 
+    if (mWindowType == eWindowType_popup) {
+        mMozQWidget->setFocusPolicy(Qt::WheelFocus);
+ 
+        // XXX is this needed for Qt?
+        // gdk does not automatically set the cursor for "temporary"
+        // windows, which are what gtk uses for popups.
+        SetCursor(eCursor_standard);
+    } else if (mIsTopLevel) {
+        SetDefaultIcon();
+    }
+ 
+    mMozQWidget->setAttribute(Qt::WA_StaticContents);
+    mMozQWidget->setAttribute(Qt::WA_OpaquePaintEvent); // Transparent Widget Background
+  
     // Disable the double buffer because it will make the caret crazy
     // For bug#153805 (Gtk2 double buffer makes carets misbehave)
-    mDrawingarea->setAttribute(Qt::WA_NoSystemBackground);
-#ifdef QT_XLIB_SURFACE
-    mDrawingarea->setAttribute(Qt::WA_PaintOnScreen);
-#endif
-
+    mMozQWidget->setAttribute(Qt::WA_NoSystemBackground);
+    mMozQWidget->setAttribute(Qt::WA_PaintOnScreen);
+  
     return mDrawingarea;
 }
 
@@ -2804,30 +2806,30 @@ nsWindow::BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVert
     return NS_OK;
 }
 
-bool
+nsEventStatus
 nsWindow::contextMenuEvent(QContextMenuEvent *)
 {
     //qDebug("context menu");
-    return false;
+    return nsEventStatus_eIgnore;
 }
 
-bool
+nsEventStatus
 nsWindow::imStartEvent(QEvent *)
 {
     qWarning("XXX imStartEvent");
-    return false;
+    return nsEventStatus_eIgnore;
 }
 
-bool
+nsEventStatus
 nsWindow::imComposeEvent(QEvent *)
 {
     qWarning("XXX imComposeEvent");
-    return false;
+    return nsEventStatus_eIgnore;
 }
 
-bool
+nsEventStatus
 nsWindow::imEndEvent(QEvent * )
 {
     qWarning("XXX imComposeEvent");
-    return false;
+    return nsEventStatus_eIgnore;
 }

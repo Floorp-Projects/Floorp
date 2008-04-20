@@ -57,6 +57,8 @@
 
 class QEvent;
 
+class MozQWidget;
+
 class nsWindow : public nsCommonWidget, public nsSupportsWeakReference
 {
 public:
@@ -159,34 +161,34 @@ protected:
     friend class InterceptContainer;
     friend class MozQWidget;
 
-    virtual bool OnExposeEvent(QPaintEvent *);
-    virtual bool OnConfigureEvent(QMoveEvent *);
-    virtual bool OnSizeAllocate(QResizeEvent *);
-    virtual bool OnDeleteEvent(QCloseEvent *);
-    virtual bool OnEnterNotifyEvent(QEvent *);
-    virtual bool OnLeaveNotifyEvent(QEvent *);
-    virtual bool OnMotionNotifyEvent(QMouseEvent *);
-    virtual bool OnButtonPressEvent(QMouseEvent *);
-    virtual bool OnButtonReleaseEvent(QMouseEvent *);
-    virtual bool mouseDoubleClickEvent(QMouseEvent *);
-    virtual bool OnContainerFocusInEvent(QFocusEvent *);
-    virtual bool OnContainerFocusOutEvent(QFocusEvent *);
-    virtual bool OnKeyPressEvent(QKeyEvent *);
-    virtual bool OnKeyReleaseEvent(QKeyEvent *);
-    virtual bool OnScrollEvent(QWheelEvent *);
+    virtual nsEventStatus OnExposeEvent(QPaintEvent *);
+    virtual nsEventStatus OnConfigureEvent(QMoveEvent *);
+    virtual nsEventStatus OnSizeAllocate(QResizeEvent *);
+    virtual nsEventStatus OnDeleteEvent(QCloseEvent *);
+    virtual nsEventStatus OnEnterNotifyEvent(QEvent *);
+    virtual nsEventStatus OnLeaveNotifyEvent(QEvent *);
+    virtual nsEventStatus OnMotionNotifyEvent(QMouseEvent *);
+    virtual nsEventStatus OnButtonPressEvent(QMouseEvent *);
+    virtual nsEventStatus OnButtonReleaseEvent(QMouseEvent *);
+    virtual nsEventStatus mouseDoubleClickEvent(QMouseEvent *);
+    virtual nsEventStatus OnContainerFocusInEvent(QFocusEvent *);
+    virtual nsEventStatus OnContainerFocusOutEvent(QFocusEvent *);
+    virtual nsEventStatus OnKeyPressEvent(QKeyEvent *);
+    virtual nsEventStatus OnKeyReleaseEvent(QKeyEvent *);
+    virtual nsEventStatus OnScrollEvent(QWheelEvent *);
 
-    virtual bool contextMenuEvent(QContextMenuEvent *);
-    virtual bool imStartEvent(QEvent *);
-    virtual bool imComposeEvent(QEvent *);
-    virtual bool imEndEvent(QEvent *);
-    virtual bool OnDragEnter (QDragEnterEvent *);
-    virtual bool OnDragMotionEvent(QDragMoveEvent *);
-    virtual bool OnDragLeaveEvent(QDragLeaveEvent *);
-    virtual bool OnDragDropEvent (QDropEvent *);
-    virtual bool showEvent(QShowEvent *);
-    virtual bool hideEvent(QHideEvent *);
+    virtual nsEventStatus contextMenuEvent(QContextMenuEvent *);
+    virtual nsEventStatus imStartEvent(QEvent *);
+    virtual nsEventStatus imComposeEvent(QEvent *);
+    virtual nsEventStatus imEndEvent(QEvent *);
+    virtual nsEventStatus OnDragEnter (QDragEnterEvent *);
+    virtual nsEventStatus OnDragMotionEvent(QDragMoveEvent *);
+    virtual nsEventStatus OnDragLeaveEvent(QDragLeaveEvent *);
+    virtual nsEventStatus OnDragDropEvent (QDropEvent *);
+    virtual nsEventStatus showEvent(QShowEvent *);
+    virtual nsEventStatus hideEvent(QHideEvent *);
 
-    bool               OnWindowStateEvent(QEvent *aEvent);
+    nsEventStatus         OnWindowStateEvent(QEvent *aEvent);
 
     nsresult           NativeCreate(nsIWidget        *aParent,
                                     nsNativeWidget    aNativeParent,
@@ -248,6 +250,7 @@ private:
     QWidget           *createQWidget(QWidget *parent, nsWidgetInitData *aInitData);
 
     QWidget            *mDrawingarea;
+    MozQWidget *mMozQWidget;
 
     PRUint32            mIsVisible : 1,
                         mRetryPointerGrab : 1,

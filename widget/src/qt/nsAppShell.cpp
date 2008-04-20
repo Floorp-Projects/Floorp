@@ -44,6 +44,11 @@
 
 #define NOTIFY_TOKEN 0xFA
 
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG
+#include "prlog.h"
+#endif
+
 #ifdef PR_LOGGING
 PRLogModuleInfo *gWidgetLog = nsnull;
 PRLogModuleInfo *gWidgetFocusLog = nsnull;
@@ -118,13 +123,18 @@ failed:
 void
 nsAppShell::ScheduleNativeEventCallback()
 {
-  char buf [] = { NOTIFY_TOKEN };
+  unsigned char buf [] = { NOTIFY_TOKEN };
   write (mPipeFDs[1], buf, 1);
 }
 
 PRBool
 nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
 {
-  qApp->processEvents();
+  QEventLoop::ProcessEventsFlags flags = QEventLoop::AllEvents;
+
+  if (mayWait)
+    flags |= QEventLoop::WaitForMoreEvents;
+
+  qApp->processEvents(flags);
   return PR_TRUE;
 }
