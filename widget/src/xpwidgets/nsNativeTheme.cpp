@@ -166,9 +166,7 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
           aWidgetType == NS_THEME_LISTBOX ||
           aWidgetType == NS_THEME_DROPDOWN) &&
          aFrame->GetContent()->IsNodeOfType(nsINode::eHTML) &&
-         aPresContext->HasAuthorSpecifiedRules(aFrame,
-                                               NS_AUTHOR_SPECIFIED_BORDER |
-                                               NS_AUTHOR_SPECIFIED_BACKGROUND);
+         aPresContext->HasAuthorSpecifiedBorderOrBackground(aFrame);
 }
 
 // scrollbar button:

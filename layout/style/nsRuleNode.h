@@ -722,7 +722,7 @@ public:
   NS_HIDDEN_(PRBool) Sweep();
 
   static PRBool
-    HasAuthorSpecifiedRules(nsStyleContext* aStyleContext, PRUint32 ruleTypeMask);
+    HasAuthorSpecifiedBorderOrBackground(nsStyleContext* aStyleContext);
 };
 
 #endif
