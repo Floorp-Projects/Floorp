@@ -55,7 +55,7 @@ public:
   NS_DECL_NSISCREEN
 
 private:
-  int screen;
+  int mScreen;
 };
 
 #endif  // nsScreenQt_h___
