@@ -153,12 +153,16 @@ static const nsModuleComponentInfo defaultAppComps[] = {
     QtPromptServiceConstructor
   }
 };
-#else
-static const nsModuleComponentInfo defaultAppComps[] = {};
-#endif
 
 const nsModuleComponentInfo *QGeckoGlobals::sAppComps = defaultAppComps;
 int   QGeckoGlobals::sNumAppComps = sizeof(defaultAppComps) / sizeof(nsModuleComponentInfo);
+
+#else
+static const nsModuleComponentInfo defaultAppComps[] = { { NULL } };
+const nsModuleComponentInfo *QGeckoGlobals::sAppComps = defaultAppComps;
+int   QGeckoGlobals::sNumAppComps = 0;
+#endif
+
 
 void
 QGeckoGlobals::pushStartup()
