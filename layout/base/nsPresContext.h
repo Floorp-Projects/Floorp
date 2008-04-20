@@ -137,6 +137,11 @@ enum nsLayoutPhase {
 };
 #endif
 
+/* Used by nsPresContext::HasAuthorSpecifiedRules */
+#define NS_AUTHOR_SPECIFIED_BACKGROUND      (1 << 0)
+#define NS_AUTHOR_SPECIFIED_BORDER          (1 << 1)
+#define NS_AUTHOR_SPECIFIED_PADDING         (1 << 2)
+
 // An interface for presentation contexts. Presentation contexts are
 // objects that provide an outer context for a presentation shell.
 
@@ -741,7 +746,7 @@ public:
   PRBool IsChrome() const;
 
   // Public API for native theme code to get style internals.
-  virtual PRBool HasAuthorSpecifiedBorderOrBackground(nsIFrame *aFrame) const;
+  virtual PRBool HasAuthorSpecifiedRules(nsIFrame *aFrame, PRUint32 ruleTypeMask) const;
 
   // Is it OK to let the page specify colors and backgrounds?
   PRBool UseDocumentColors() const {
