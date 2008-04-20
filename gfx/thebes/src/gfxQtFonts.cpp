@@ -175,7 +175,9 @@ gfxQtFontGroup::FontCallback(const nsAString& fontName,
 
     if (!fontName.IsEmpty() && sa->IndexOf(fontName) < 0) {
         sa->AppendString(fontName);
+#ifdef DEBUG_pavlov
         printf(" - %s\n", NS_ConvertUTF16toUTF8(fontName).get());
+#endif
     }
 
     return PR_TRUE;
@@ -212,7 +214,9 @@ gfxQtFontGroup::gfxQtFontGroup(const nsAString& families,
                                const gfxFontStyle *aStyle)
     : gfxFontGroup(families, aStyle)
 {
+#ifdef DEBUG_pavlov
     printf("Looking for %s\n", NS_ConvertUTF16toUTF8(families).get());
+#endif
     nsStringArray familyArray;
     ForEachFont(FontCallback, &familyArray);
 
@@ -719,8 +723,6 @@ gfxQtFont::~gfxQtFont()
         cairo_scaled_font_destroy(mScaledFont);
         mScaledFont = nsnull;
     }
-
-    printf("deleting gfxQtFont\n");
 }
 
 // rounding and truncation functions for a Freetype floating point number 
