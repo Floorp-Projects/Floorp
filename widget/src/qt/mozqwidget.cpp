@@ -177,12 +177,6 @@ bool MozQWidget::event(QEvent *e)
         QDropEvent *dev = (QDropEvent*)(e);
         status = mReceiver->OnDragDropEvent(dev);
     }
-    case QEvent::GrabMouse:
-        fprintf (stderr, "[%p] %p GrabMouse\n", this, mReceiver);
-        break;
-    case QEvent::UngrabMouse:
-        fprintf (stderr, "[%p] %p GrabMouse\n", this, mReceiver);
-        break;
     break;
     default:
         handled = false;
