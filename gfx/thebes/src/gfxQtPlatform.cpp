@@ -74,6 +74,7 @@ static void do_qt_pixmap_unref (void *data)
 
 typedef nsDataHashtable<nsStringHashKey, nsRefPtr<FontFamily> > FontTable;
 static FontTable *gPlatformFonts = NULL;
+static FontTable *gPlatformFontAliases = NULL;
 static FT_Library gPlatformFTLibrary = NULL;
 
 
@@ -87,6 +88,8 @@ gfxQtPlatform::gfxQtPlatform()
 
     gPlatformFonts = new FontTable();
     gPlatformFonts->Init(100);
+    gPlatformFontAliases = new FontTable();
+    gPlatformFontAliases->Init(100);
     UpdateFontList();
 
     InitDPI();
@@ -99,6 +102,8 @@ gfxQtPlatform::~gfxQtPlatform()
 
     delete gPlatformFonts;
     gPlatformFonts = NULL;
+    delete gPlatformFontAliases;
+    gPlatformFontAliases = NULL;
 
     cairo_debug_reset_static_data();
 
@@ -276,8 +281,82 @@ gfxQtPlatform::ResolveFontName(const nsAString& aFontName,
                                 void *aClosure,
                                 PRBool& aAborted)
 {
-    return sFontconfigUtils->ResolveFontName(aFontName, aCallback,
-                                             aClosure, aAborted);
+
+    nsAutoString name(aFontName);
+    ToLowerCase(name);
+
+    nsRefPtr<FontFamily> ff;
+    if (gPlatformFonts->Get(name, &ff) ||
+        gPlatformFontAliases->Get(name, &ff)) {
+        aAborted = !(*aCallback)(ff->mName, aClosure);
+        return NS_OK;
+    }
+
+    printf("failed to resolve name: %s\n", NS_ConvertUTF16toUTF8(name).get());
+
+    nsCAutoString utf8Name = NS_ConvertUTF16toUTF8(aFontName);
+
+    FcPattern *npat = FcPatternCreate();
+    FcPatternAddString(npat, FC_FAMILY, (FcChar8*)utf8Name.get());
+    FcObjectSet *nos = FcObjectSetBuild(FC_FAMILY, NULL);
+    FcFontSet *nfs = FcFontList(NULL, npat, nos);
+
+    for (int k = 0; k < nfs->nfont; k++) {
+        FcChar8 *str;
+        if (FcPatternGetString(nfs->fonts[k], FC_FAMILY, 0, (FcChar8 **) &str) != FcResultMatch)
+            continue;
+        nsAutoString altName = NS_ConvertUTF8toUTF16(nsDependentCString(reinterpret_cast<char*>(str)));
+        ToLowerCase(altName);
+        if (gPlatformFonts->Get(altName, &ff)) {
+            printf("Adding alias: %s -> %s\n", utf8Name.get(), str);
+            gPlatformFontAliases->Put(name, ff);
+            aAborted = !(*aCallback)(NS_ConvertUTF8toUTF16(nsDependentCString(reinterpret_cast<char*>(str))), aClosure);
+            goto DONE;
+        }
+    }
+
+    FcPatternDestroy(npat);
+    FcObjectSetDestroy(nos);
+    FcFontSetDestroy(nfs);
+
+    {
+    printf("Using FcFontSort.  Sad.\n");
+    npat = FcPatternCreate();
+    FcPatternAddString(npat, FC_FAMILY, (FcChar8*)utf8Name.get());
+    FcPatternDel(npat, FC_LANG);
+    FcConfigSubstitute(NULL, npat, FcMatchPattern);
+    FcDefaultSubstitute(npat);
+
+    nos = FcObjectSetBuild(FC_FAMILY, NULL);
+    nfs = FcFontList(NULL, npat, nos);
+
+    FcResult fresult;
+
+    FcPattern *match = FcFontMatch(NULL, npat, &fresult);
+    printf("%d\n", (int)fresult);
+    if (match)
+        FcFontSetAdd(nfs, match);
+
+    for (int k = 0; k < nfs->nfont; k++) {
+        FcChar8 *str;
+        if (FcPatternGetString(nfs->fonts[k], FC_FAMILY, 0, (FcChar8 **) &str) != FcResultMatch)
+            continue;
+        nsAutoString altName = NS_ConvertUTF8toUTF16(nsDependentCString(reinterpret_cast<char*>(str)));
+        ToLowerCase(altName);
+        if (gPlatformFonts->Get(altName, &ff)) {
+            printf("Adding alias: %s -> %s\n", utf8Name.get(), str);
+            gPlatformFontAliases->Put(name, ff);
+            aAborted = !(*aCallback)(NS_ConvertUTF8toUTF16(nsDependentCString(reinterpret_cast<char*>(str))), aClosure);
+            goto DONE;
+        }
+    }
+    }
+ DONE:
+    FcPatternDestroy(npat);
+    FcObjectSetDestroy(nos);
+    FcFontSetDestroy(nfs);
+
+    return NS_OK;
 }
 
 nsresult
