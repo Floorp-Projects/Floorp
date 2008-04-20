@@ -1168,10 +1168,9 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolSch
                                           szParamsFromINI, sizeof(szParamsFromINI));
   if (NS_SUCCEEDED(rv)) {
     *aHandlerExists = PR_TRUE;
-    return NS_OK;
   }
 
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 already_AddRefed<nsMIMEInfoOS2>
@@ -1780,7 +1779,11 @@ nsresult GetApplicationAndParametersFromINI(const nsACString& aProtocol,
                           paramLength);
   }
   else {
-    NS_WARNING("GetApplicationAndParametersFromINI(): unsupported protocol scheme");
+#ifdef DEBUG
+    // output by hand instead of NS_WARNING() to easily add the protocol
+    fprintf(stderr, "GetApplicationAndParametersFromINI(): unsupported protocol"
+            " scheme \"%s\"\n", nsPromiseFlatCString(aProtocol).get());
+#endif
     return NS_ERROR_FAILURE;
   }
 
