@@ -292,8 +292,6 @@ gfxQtPlatform::ResolveFontName(const nsAString& aFontName,
         return NS_OK;
     }
 
-    printf("failed to resolve name: %s\n", NS_ConvertUTF16toUTF8(name).get());
-
     nsCAutoString utf8Name = NS_ConvertUTF16toUTF8(aFontName);
 
     FcPattern *npat = FcPatternCreate();
@@ -320,7 +318,6 @@ gfxQtPlatform::ResolveFontName(const nsAString& aFontName,
     FcFontSetDestroy(nfs);
 
     {
-    printf("Using FcFontSort.  Sad.\n");
     npat = FcPatternCreate();
     FcPatternAddString(npat, FC_FAMILY, (FcChar8*)utf8Name.get());
     FcPatternDel(npat, FC_LANG);
@@ -333,7 +330,6 @@ gfxQtPlatform::ResolveFontName(const nsAString& aFontName,
     FcResult fresult;
 
     FcPattern *match = FcFontMatch(NULL, npat, &fresult);
-    printf("%d\n", (int)fresult);
     if (match)
         FcFontSetAdd(nfs, match);
 
