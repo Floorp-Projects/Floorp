@@ -311,6 +311,7 @@ gfxFontconfigUtils::UpdateFontListInternal(PRBool aForce)
     for (PRInt32 i = 0; i < mAliasForMultiFonts.Count(); i++) {
         nsRefPtr<gfxFontNameList> fonts = new gfxFontNameList;
         nsCAutoString fontname(*mAliasForMultiFonts.CStringAt(i));
+        printf("Alias %s\n", fontname.get());
         rv = GetResolvedFonts(fontname, fonts);
         if (NS_FAILED(rv))
             return rv;

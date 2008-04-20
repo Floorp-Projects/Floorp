@@ -874,8 +874,10 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
                 genericFamily.SetIsVoid(PR_TRUE);
             }
         }
-        
-        if (!family.IsEmpty()) {
+
+        if (generic) {
+            ForEachFontInternal(family, lang, PR_FALSE, aResolveFontName, fc, closure);
+        } else if (!family.IsEmpty()) {
             NS_LossyConvertUTF16toASCII gf(genericFamily);
             if (aResolveFontName) {
                 ResolveData data(fc, gf, closure);

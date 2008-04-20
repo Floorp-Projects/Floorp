@@ -173,8 +173,9 @@ gfxQtFontGroup::FontCallback(const nsAString& fontName,
 {
     nsStringArray *sa = static_cast<nsStringArray*>(closure);
 
-    if (sa->IndexOf(fontName) < 0) {
+    if (!fontName.IsEmpty() && sa->IndexOf(fontName) < 0) {
         sa->AppendString(fontName);
+        printf(" - %s\n", NS_ConvertUTF16toUTF8(fontName).get());
     }
 
     return PR_TRUE;
@@ -211,10 +212,20 @@ gfxQtFontGroup::gfxQtFontGroup(const nsAString& families,
                                const gfxFontStyle *aStyle)
     : gfxFontGroup(families, aStyle)
 {
+    printf("Looking for %s\n", NS_ConvertUTF16toUTF8(families).get());
     nsStringArray familyArray;
     ForEachFont(FontCallback, &familyArray);
 
     if (familyArray.Count() == 0) {
+        nsAutoString prefFamilies;
+        gfxQtPlatform::GetPlatform()->GetPrefFonts(aStyle->langGroup.get(), prefFamilies, nsnull);
+        if (!prefFamilies.IsEmpty()) {
+            ForEachFont(prefFamilies, aStyle->langGroup, FontCallback, &familyArray);
+        }
+    }
+    if (familyArray.Count() == 0) {
+        printf("failde to find a font. sadface\n");
+        // We want to get rid of this entirely at some point, but first we need real lists of fonts.
         QFont defaultFont;
         QFontInfo fi (defaultFont);
         familyArray.AppendString(nsDependentString(static_cast<const PRUnichar *>(fi.family().utf16())));
@@ -618,12 +629,10 @@ gfxQtFontGroup::AddRange(gfxTextRun *aTextRun, gfxQtFont *font, const PRUnichar 
         NS_ASSERTION(!IsInvalidChar(ch), "Invalid char detected");
         FT_UInt gid = FT_Get_Char_Index(face, ch); // find the glyph id
         PRInt32 advance = 0;
-#if 0
+
         if (gid == font->GetSpaceGlyph()) {
             advance = (int)(font->GetMetrics().spaceWidth * appUnitsPerDevUnit);
-        } else 
-#endif
-        if (gid == 0) {
+        } else if (gid == 0) {
             advance = -1; // trigger the missing glyphs case below
         } else {
             // find next character and its glyph -- in case they exist
@@ -669,16 +678,12 @@ gfxQtFontGroup::AddRange(gfxTextRun *aTextRun, gfxQtFont *font, const PRUnichar 
 
         if (advance >= 0 &&
             gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
-            gfxTextRun::CompressedGlyph::IsSimpleGlyphID(gid))
-        {
-            //printf("simple glyph  ");
+            gfxTextRun::CompressedGlyph::IsSimpleGlyphID(gid)) {
             aTextRun->SetSimpleGlyph(i, g.SetSimpleGlyph(advance, gid));
         } else if (gid == 0) {
-            //printf("missing glyph ");
             // gid = 0 only happens when the glyph is missing from the font
             aTextRun->SetMissingGlyph(i, ch);
         } else {
-            //printf("complex glyph ");
             gfxTextRun::DetailedGlyph details;
             details.mGlyphID = gid;
             NS_ASSERTION(details.mGlyphID == gid, "Seriously weird glyph ID detected!");
@@ -688,8 +693,6 @@ gfxQtFontGroup::AddRange(gfxTextRun *aTextRun, gfxQtFont *font, const PRUnichar 
             g.SetComplex(aTextRun->IsClusterStart(i), PR_TRUE, 1);
             aTextRun->SetGlyphs(i, g, &details);
         }
-
-
     }
 
     cairo_ft_scaled_font_unlock_face(font->CairoScaledFont());
