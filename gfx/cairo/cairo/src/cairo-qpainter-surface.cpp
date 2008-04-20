@@ -255,13 +255,13 @@ _qimage_format_from_cairo_format (cairo_format_t fmt)
 static inline QMatrix
 _qmatrix_from_cairo_matrix (const cairo_matrix_t& m)
 {
-    return QMatrix(m.xx, m.xy, m.yx, m.yy, m.x0, m.y0);
+    return QMatrix(m.xx, m.yx, m.xy, m.yy, m.x0, m.y0);
 }
 
 static inline void
 _qmatrix_from_cairo_matrix (const cairo_matrix_t& m, QMatrix& qm)
 {
-    qm.setMatrix(m.xx, m.xy, m.yx, m.yy, m.x0, m.y0);
+    qm.setMatrix(m.xx, m.yx, m.xy, m.yy, m.x0, m.y0);
 }
 
 /** Path conversion **/
