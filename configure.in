@@ -7220,11 +7220,7 @@ fi
 
 if test -z "$SKIP_PATH_CHECKS"; then
 if test -z "${GLIB_CFLAGS}" || test -z "${GLIB_LIBS}" ; then
-    if test "$MOZ_ENABLE_GTK2"; then
-        PKG_CHECK_MODULES(GLIB, glib-2.0 >= 1.3.7 gobject-2.0)
-    else
-        AM_PATH_GLIB(${GLIB_VERSION})
-    fi
+    PKG_CHECK_MODULES(GLIB, glib-2.0 >= 1.3.7 gobject-2.0)
 fi
 fi
 
