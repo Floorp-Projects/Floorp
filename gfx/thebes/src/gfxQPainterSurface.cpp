@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "gfxQPainterSurface.h"
+#include "gfxImageSurface.h"
 
 #include "cairo-qpainter.h"
 
@@ -76,4 +77,30 @@ gfxQPainterSurface::gfxQPainterSurface(cairo_surface_t *csurf)
 
 gfxQPainterSurface::~gfxQPainterSurface()
 {
+}
+
+QImage *
+gfxQPainterSurface::GetQImage()
+{
+    if (!mSurfaceValid)
+        return nsnull;
+
+    return cairo_qpainter_surface_get_qimage(CairoSurface());
+}
+
+already_AddRefed<gfxImageSurface>
+gfxQPainterSurface::GetImageSurface()
+{
+    if (!mSurfaceValid)
+        return nsnull;
+
+    cairo_surface_t *isurf = cairo_qpainter_surface_get_image(CairoSurface());
+    if (!isurf)
+        return nsnull;
+
+    if (cairo_surface_get_type(isurf) == CAIRO_SURFACE_TYPE_IMAGE)
+        return nsnull;
+
+    nsRefPtr<gfxImageSurface> asurf = new gfxImageSurface(isurf);
+    return asurf.forget();
 }

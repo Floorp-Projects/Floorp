@@ -42,6 +42,7 @@
 #include "gfxImageSurface.h"
 
 class QPainter;
+class QImage;
 
 class THEBES_API gfxQPainterSurface : public gfxASurface {
 public:
@@ -54,6 +55,9 @@ public:
     virtual ~gfxQPainterSurface();
 
     QPainter *GetQPainter() { return mPainter; }
+
+    QImage *GetQImage();
+    already_AddRefed<gfxImageSurface> GetImageSurface();
 
 protected:
     QPainter *mPainter;
