@@ -790,125 +790,293 @@ _cairo_qpainter_surface_intersect_clip_path (void *abstract_surface,
  ** Brush conversion
  **/
 
-QBrush *
-_qbrush_from_pattern (cairo_pattern_t *pattern)
-{
-    QBrush *brush = NULL;
-
-    if (pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
-        cairo_solid_pattern_t *solid = (cairo_solid_pattern_t*) pattern;
-        QColor color;
-        color.setRgbF(solid->color.red,
-                      solid->color.green,
-                      solid->color.blue,
-                      solid->color.alpha);
-
-        brush = new QBrush(color);
-    } else if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
-        cairo_surface_pattern_t *spattern = (cairo_surface_pattern_t*) pattern;
-        cairo_surface_t *surface = spattern->surface;
-
-        if (surface->type == CAIRO_SURFACE_TYPE_QPAINTER) {
-            cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t*) surface;
-
-            if (qs->image) {
-                brush = new QBrush(*qs->image);
-            } else if (qs->pixmap) {
-                brush = new QBrush(*qs->pixmap);
-            } else {
-                // do something smart
-                brush = new QBrush(0xff0000ff);
-            }
-        } else if (surface->type == CAIRO_SURFACE_TYPE_IMAGE) {
-            cairo_image_surface_t *isurf = (cairo_image_surface_t*) surface;
-            brush = new QBrush (QImage ((const uchar *) isurf->data,
-                                        isurf->width,
-                                        isurf->height,
-                                        isurf->stride,
-                                        _qimage_format_from_cairo_format (isurf->format)));
-        } else {
-            brush = new QBrush(0x0000ffff);
-        }
-
-    } else if (pattern->type == CAIRO_PATTERN_TYPE_LINEAR ||
-               pattern->type == CAIRO_PATTERN_TYPE_RADIAL)
+struct PatternToBrushConverter {
+    PatternToBrushConverter (cairo_pattern_t *pattern)
+      : mBrush(0),
+	mAcquiredImageParent(0)
     {
-        brush = new QBrush(0x00ff00ff);
-    }
+	if (pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
+	    cairo_solid_pattern_t *solid = (cairo_solid_pattern_t*) pattern;
+	    QColor color;
+	    color.setRgbF(solid->color.red,
+			  solid->color.green,
+			  solid->color.blue,
+			  solid->color.alpha);
 
-    if (brush &&
+	    mBrush = new QBrush(color);
+	} else if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	    cairo_surface_pattern_t *spattern = (cairo_surface_pattern_t*) pattern;
+	    cairo_surface_t *surface = spattern->surface;
+
+	    if (surface->type == CAIRO_SURFACE_TYPE_QPAINTER) {
+		cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t*) surface;
+
+		if (qs->image) {
+		    mBrush = new QBrush(*qs->image);
+		} else if (qs->pixmap) {
+		    mBrush = new QBrush(*qs->pixmap);
+		} else {
+		    // do something smart
+		    mBrush = new QBrush(0xff0000ff);
+		}
+	    } else {
+		cairo_image_surface_t *isurf = NULL;
+
+		if (surface->type == CAIRO_SURFACE_TYPE_IMAGE) {
+		    isurf = (cairo_image_surface_t*) surface;
+		} else {
+		    void *image_extra;
+
+		    if (_cairo_surface_acquire_source_image (surface, &isurf, &image_extra) == CAIRO_STATUS_SUCCESS) {
+			mAcquiredImageParent = surface;
+			mAcquiredImage = isurf;
+			mAcquiredImageExtra = image_extra;
+		    } else {
+			isurf = NULL;
+		    }
+		}
+
+		if (isurf) {
+		    mBrush = new QBrush (QImage ((const uchar *) isurf->data,
+						 isurf->width,
+						 isurf->height,
+						 isurf->stride,
+						 _qimage_format_from_cairo_format (isurf->format)));
+		} else {
+		    mBrush = new QBrush(0x0000ffff);
+		}
+	    }
+	} else if (pattern->type == CAIRO_PATTERN_TYPE_LINEAR ||
+		   pattern->type == CAIRO_PATTERN_TYPE_RADIAL)
+	{
+	    QGradient *grad;
+	    cairo_bool_t reverse_stops = FALSE;
+	    cairo_bool_t emulate_reflect = FALSE;
+	    double offset = 0.0;
+
+	    cairo_extend_t extend = pattern->extend;
+
+	    cairo_gradient_pattern_t *gpat = (cairo_gradient_pattern_t *) pattern;
+
+	    if (pattern->type == CAIRO_PATTERN_TYPE_LINEAR) {
+		cairo_linear_pattern_t *lpat = (cairo_linear_pattern_t *) pattern;
+		grad = new QLinearGradient (_cairo_fixed_to_double (lpat->p1.x),
+					    _cairo_fixed_to_double (lpat->p1.y),
+					    _cairo_fixed_to_double (lpat->p2.x),
+					    _cairo_fixed_to_double (lpat->p2.y));
+	    } else if (pattern->type == CAIRO_PATTERN_TYPE_RADIAL) {
+		cairo_radial_pattern_t *rpat = (cairo_radial_pattern_t *) pattern;
+
+		/* Based on the SVG surface code */
+
+		cairo_point_t *c0, *c1;
+		cairo_fixed_t radius0, radius1;
+
+		if (rpat->r1 < rpat->r2) {
+		    c0 = &rpat->c1;
+		    c1 = &rpat->c2;
+		    radius0 = rpat->r1;
+		    radius1 = rpat->r2;
+		    reverse_stops = FALSE;
+		} else {
+		    c0 = &rpat->c2;
+		    c1 = &rpat->c1;
+		    radius0 = rpat->r2;
+		    radius1 = rpat->r1;
+		    reverse_stops = TRUE;
+		}
+
+		double x0 = _cairo_fixed_to_double (c0->x);
+		double y0 = _cairo_fixed_to_double (c0->y);
+		double r0 = _cairo_fixed_to_double (radius0);
+		double x1 = _cairo_fixed_to_double (c1->x);
+		double y1 = _cairo_fixed_to_double (c1->y);
+		double r1 = _cairo_fixed_to_double (radius1);
+
+		if (rpat->r1 == rpat->r2) {
+		    grad = new QRadialGradient (x1, y1, r1, x1, y1);
+		} else {
+		    double fx = (r1 * x0 - r0 * x1) / (r1 - r0);
+		    double fy = (r1 * y0 - r0 * y1) / (r1 - r0);
+
+		    /* QPainter doesn't support the inner circle and use instead a gradient focal.
+		     * That means we need to emulate the cairo behaviour by processing the
+		     * cairo gradient stops.
+		     * The CAIRO_EXTENT_NONE and CAIRO_EXTENT_PAD modes are quite easy to handle,
+		     * it's just a matter of stop position translation and calculation of
+		     * the corresponding SVG radial gradient focal.
+		     * The CAIRO_EXTENT_REFLECT and CAIRO_EXTEND_REPEAT modes require to compute a new
+		     * radial gradient, with an new outer circle, equal to r1 - r0 in the CAIRO_EXTEND_REPEAT
+		     * case, and 2 * (r1 - r0) in the CAIRO_EXTENT_REFLECT case, and a new gradient stop
+		     * list that maps to the original cairo stop list.
+		     */
+		    if ((extend == CAIRO_EXTEND_REFLECT || extend == CAIRO_EXTEND_REPEAT) && r0 > 0.0) {
+			double r_org = r1;
+			double r, x, y;
+
+			if (extend == CAIRO_EXTEND_REFLECT) {
+			    r1 = 2 * r1 - r0;
+			    emulate_reflect = TRUE;
+			}
+
+			offset = fmod (r1, r1 - r0) / (r1 - r0) - 1.0;
+			r = r1 - r0;
+
+			/* New position of outer circle. */
+			x = r * (x1 - fx) / r_org + fx;
+			y = r * (y1 - fy) / r_org + fy;
+
+			x1 = x;
+			y1 = y;
+			r1 = r;
+			r0 = 0.0;
+		    } else {
+			offset = r0 / r1;
+		    }
+
+		    grad = new QRadialGradient (x1, y1, r1, fx, fy);
+
+		    if (extend == CAIRO_EXTEND_NONE && r0 != 0.0)
+			grad->setColorAt (r0 / r1, Qt::transparent);
+		}
+	    }
+
+	    switch (extend) {
+		case CAIRO_EXTEND_NONE:
+		case CAIRO_EXTEND_PAD:
+		    grad->setSpread(QGradient::PadSpread);
+
+		    grad->setColorAt (0.0, Qt::transparent);
+		    grad->setColorAt (1.0, Qt::transparent);
+		    break;
+
+		case CAIRO_EXTEND_REFLECT:
+		    grad->setSpread(QGradient::ReflectSpread);
+		    break;
+
+		case CAIRO_EXTEND_REPEAT:
+		    grad->setSpread(QGradient::RepeatSpread);
+		    break;
+	    }
+
+	    for (int i = 0; i < gpat->n_stops; i++) {
+		int index = i;
+		if (reverse_stops)
+		    index = gpat->n_stops - i - 1;
+
+		double offset = gpat->stops[i].offset;
+		QColor color;
+		color.setRgbF(gpat->stops[i].color.red,
+			      gpat->stops[i].color.green,
+			      gpat->stops[i].color.blue,
+			      gpat->stops[i].color.alpha);
+
+		if (emulate_reflect) {
+		    offset = offset / 2.0;
+		    grad->setColorAt (1.0 - offset, color);
+		}
+
+		grad->setColorAt (offset, color);
+	    }
+
+	    mBrush = new QBrush(*grad);
+
+	    delete grad;
+ 	}
+
+	if (mBrush &&
             pattern->type != CAIRO_PATTERN_TYPE_SOLID &&
             !_cairo_matrix_is_identity(&pattern->matrix))
+	{
+	    cairo_matrix_t pm = pattern->matrix;
+	    if (cairo_matrix_invert (&pm) == CAIRO_STATUS_SUCCESS)
+		mBrush->setMatrix(_qmatrix_from_cairo_matrix (pm));
+	}
+    }
+
+    ~PatternToBrushConverter () {
+	delete mBrush;
+
+	if (mAcquiredImageParent)
+	    _cairo_surface_release_source_image (mAcquiredImageParent, mAcquiredImage, mAcquiredImageExtra);
+    }
+
+    operator QBrush& () {
+	return *mBrush;
+    }
+
+    QBrush *mBrush;
+
+    cairo_surface_t *mAcquiredImageParent;
+    cairo_image_surface_t *mAcquiredImage;
+    void *mAcquiredImageExtra;
+};
+
+struct PatternToPenConverter {
+    PatternToPenConverter (cairo_pattern_t *source,
+			   cairo_stroke_style_t *style)
+      : mBrushConverter(source)
     {
-        cairo_matrix_t pm = pattern->matrix;
-        if (cairo_matrix_invert (&pm) == CAIRO_STATUS_SUCCESS)
-            brush->setMatrix(_qmatrix_from_cairo_matrix (pm));
-    }
+	Qt::PenJoinStyle join = Qt::MiterJoin;
+	Qt::PenCapStyle cap = Qt::SquareCap;
 
-    return brush;
-}
-
-QPen *
-_qpen_from_pattern_and_style (cairo_pattern_t *source,
-                              cairo_stroke_style_t *style)
-{
-    QPen *pen;
-    QBrush *brush;
-
-    brush = _qbrush_from_pattern (source);
-
-    Qt::PenJoinStyle join = Qt::MiterJoin;
-    Qt::PenCapStyle cap = Qt::SquareCap;
-
-    switch (style->line_cap) {
-    case CAIRO_LINE_CAP_BUTT:
-        cap = Qt::FlatCap;
-        break;
-    case CAIRO_LINE_CAP_ROUND:
-        cap = Qt::RoundCap;
-        break;
-    case CAIRO_LINE_CAP_SQUARE:
-        cap = Qt::SquareCap;
-        break;
-    }
-
-    switch (style->line_join) {
-    case CAIRO_LINE_JOIN_MITER:
-        join = Qt::MiterJoin;
-        break;
-    case CAIRO_LINE_JOIN_ROUND:
-        join = Qt::RoundJoin;
-        break;
-    case CAIRO_LINE_JOIN_BEVEL:
-        join = Qt::BevelJoin;
-        break;
-    }
-
-    pen = new QPen (*brush, style->line_width, Qt::SolidLine, cap, join);
-    pen->setMiterLimit (style->miter_limit);
-
-    if (style->dash && style->num_dashes) {
-	unsigned int odd_dash = style->num_dashes % 2;
-
-	QVector<qreal> dashes (odd_dash ? style->num_dashes * 2 : style->num_dashes);
-	for (unsigned int i = 0; i < odd_dash+1; i++) {
-	    for (unsigned int j = 0; j < style->num_dashes; j++) {
-		// In Qt, the dash lengths are given in units of line width, whereas
-		// in cairo, they are in user-space units.  We'll always apply the CTM,
-		// so all we have to do here is divide cairo's dash lengths by the line
-		// width.
-		dashes.append (style->dash[j] / style->line_width);
-	    }
+	switch (style->line_cap) {
+	    case CAIRO_LINE_CAP_BUTT:
+		cap = Qt::FlatCap;
+		break;
+	    case CAIRO_LINE_CAP_ROUND:
+		cap = Qt::RoundCap;
+		break;
+	    case CAIRO_LINE_CAP_SQUARE:
+		cap = Qt::SquareCap;
+		break;
 	}
 
-	pen->setDashPattern (dashes);
-	pen->setDashOffset (style->dash_offset / style->line_width);
+	switch (style->line_join) {
+	    case CAIRO_LINE_JOIN_MITER:
+		join = Qt::MiterJoin;
+		break;
+	    case CAIRO_LINE_JOIN_ROUND:
+		join = Qt::RoundJoin;
+		break;
+	    case CAIRO_LINE_JOIN_BEVEL:
+		join = Qt::BevelJoin;
+		break;
+	}
+
+	mPen = new QPen (mBrushConverter, style->line_width, Qt::SolidLine, cap, join);
+	mPen->setMiterLimit (style->miter_limit);
+
+	if (style->dash && style->num_dashes) {
+	    unsigned int odd_dash = style->num_dashes % 2;
+
+	    QVector<qreal> dashes (odd_dash ? style->num_dashes * 2 : style->num_dashes);
+	    for (unsigned int i = 0; i < odd_dash+1; i++) {
+		for (unsigned int j = 0; j < style->num_dashes; j++) {
+		    // In Qt, the dash lengths are given in units of line width, whereas
+		    // in cairo, they are in user-space units.  We'll always apply the CTM,
+		    // so all we have to do here is divide cairo's dash lengths by the line
+		    // width.
+		    dashes.append (style->dash[j] / style->line_width);
+		}
+	    }
+
+	    mPen->setDashPattern (dashes);
+	    mPen->setDashOffset (style->dash_offset / style->line_width);
+	}
     }
 
-    delete brush;
+    ~PatternToPenConverter() {
+	delete mPen;
+    }
 
-    return pen;
-}
+    operator QPen& () {
+	return *mPen;
+    }
+
+    QPen *mPen;
+    PatternToBrushConverter mBrushConverter;
+};
 
 /**
  ** Core drawing operations
@@ -948,11 +1116,9 @@ _cairo_qpainter_surface_paint (void *abstract_surface,
 
         qs->p->setWorldMatrix (savedMatrix, false);
     } else {
-        QBrush *brush = _qbrush_from_pattern (source);
+	PatternToBrushConverter brush(source);
 
-        qs->p->fillRect (qs->window, *brush);
-
-        delete brush;
+        qs->p->fillRect (qs->window, brush);
     }
 
     if (qs->supports_porter_duff)
@@ -991,11 +1157,9 @@ _cairo_qpainter_surface_fill (void *abstract_surface,
     //qs->p->setRenderHint (QPainter::Antialiasing, antialias == CAIRO_ANTIALIAS_NONE ? false : true);
     qs->p->setRenderHint (QPainter::SmoothPixmapTransform, source->filter != CAIRO_FILTER_FAST);
 
-    QBrush *brush = _qbrush_from_pattern (source);
+    PatternToBrushConverter brush(source);
 
-    qs->p->fillPath (qpath, *brush);
-
-    delete brush;
+    qs->p->fillPath (qpath, brush);
 
     if (qs->supports_porter_duff)
         qs->p->setCompositionMode (QPainter::CompositionMode_SourceOver);
@@ -1038,13 +1202,11 @@ _cairo_qpainter_surface_stroke (void *abstract_surface,
     //qs->p->setRenderHint (QPainter::Antialiasing, antialias == CAIRO_ANTIALIAS_NONE ? false : true);
     qs->p->setRenderHint (QPainter::SmoothPixmapTransform, source->filter != CAIRO_FILTER_FAST);
 
-    QPen *pen = _qpen_from_pattern_and_style (source, style);
+    PatternToPenConverter pen(source, style);
 
-    qs->p->setPen(*pen);
-    qs->p->drawPath (qpath);
+    qs->p->setPen(pen);
+    qs->p->drawPath(qpath);
     qs->p->setPen(Qt::black);
-
-    delete pen;
 
     qs->p->setWorldMatrix (savedMatrix, false);
 
