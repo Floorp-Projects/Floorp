@@ -42,6 +42,7 @@
 #if CAIRO_HAS_QPAINTER_SURFACE
 
 class QPainter;
+class QImage;
 
 CAIRO_BEGIN_DECLS
 
@@ -59,6 +60,12 @@ cairo_qpainter_surface_create_with_qpixmap (int width,
 
 cairo_public QPainter *
 cairo_qpainter_surface_get_qpainter (cairo_surface_t *surface);
+
+cairo_public cairo_surface_t *
+cairo_qpainter_surface_get_image (cairo_surface_t *surface);
+
+cairo_public QImage *
+cairo_qpainter_surface_get_qimage (cairo_surface_t *surface);
 
 CAIRO_END_DECLS
 
