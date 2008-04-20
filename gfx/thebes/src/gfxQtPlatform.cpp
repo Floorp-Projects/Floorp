@@ -126,6 +126,31 @@ gfxQtPlatform::CreateOffscreenSurface(const gfxIntSize& size,
     return newSurface.forget();
 }
 
+already_AddRefed<gfxASurface>
+gfxQtPlatform::OptimizeImage(gfxImageSurface *aSurface,
+                             gfxASurface::gfxImageFormat format)
+{
+    NS_ADDREF(aSurface);
+    return aSurface;
+
+#if 0
+    const gfxIntSize& surfaceSize = aSurface->GetSize();
+
+    nsRefPtr<gfxASurface> optSurface = CreateOffscreenSurface(surfaceSize, format);
+    if (!optSurface || optSurface->CairoStatus() != 0)
+        return nsnull;
+
+    gfxContext tmpCtx(optSurface);
+    tmpCtx.SetOperator(gfxContext::OPERATOR_SOURCE);
+    tmpCtx.SetSource(aSurface);
+    tmpCtx.Paint();
+
+    gfxASurface *ret = optSurface;
+    NS_ADDREF(ret);
+    return ret;
+#endif
+}
+
 nsresult
 gfxQtPlatform::GetFontList(const nsACString& aLangGroup,
                             const nsACString& aGenericFamily,

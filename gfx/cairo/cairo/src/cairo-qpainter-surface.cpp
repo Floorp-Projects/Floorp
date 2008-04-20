@@ -1451,6 +1451,28 @@ cairo_qpainter_surface_get_qpainter (cairo_surface_t *surface)
     return qs->p;
 }
 
+QImage *
+cairo_qpainter_surface_get_qimage (cairo_surface_t *surface)
+{
+    cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t*) surface;
+
+    if (surface->type != CAIRO_SURFACE_TYPE_QPAINTER)
+        return NULL;
+
+    return qs->image;
+}
+
+cairo_surface_t *
+cairo_qpainter_surface_get_image (cairo_surface_t *surface)
+{
+    cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t*) surface;
+
+    if (surface->type != CAIRO_SURFACE_TYPE_QPAINTER)
+        return NULL;
+
+    return (cairo_surface_t*) qs->image_equiv;
+}
+
 /*
  * TODO:
  *
