@@ -2,6 +2,9 @@
 #include "mainwindow.h"
 #include "qgeckoembed.h"
 #include "nsXPCOMGlue.h"
+#ifdef MOZ_JPROF
+#include "jprof/jprof.h"
+#endif
 
 #include <qdir.h>
 
@@ -13,6 +16,10 @@ int main(int argc, char **argv)
         "1.9a", PR_TRUE,
         "2", PR_TRUE
     };
+
+#ifdef MOZ_JPROF
+    setupProfilingStuff();
+#endif
 
     char xpcomPath[PATH_MAX];
 
