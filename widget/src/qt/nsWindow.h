@@ -211,11 +211,6 @@ protected:
 
     void               NativeShow  (PRBool  aAction);
 
-    void               EnsureGrabs  (void);
-    void               GrabKeyboard (void);
-    void               ReleaseGrabs (void);
-    void               GrabPointer(void);
-
     enum PluginType {
         PluginType_NONE = 0,   /* do not have any plugin */
         PluginType_XEMBED,     /* the plugin support xembed */
@@ -253,9 +248,7 @@ private:
     MozQWidget *mMozQWidget;
 
     PRUint32            mIsVisible : 1,
-                        mRetryPointerGrab : 1,
-                        mActivatePending : 1,
-                        mRetryKeyboardGrab : 1;
+                        mActivatePending : 1;
     PRInt32             mSizeState;
     PluginType          mPluginType;
 

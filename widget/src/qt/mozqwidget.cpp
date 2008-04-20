@@ -13,6 +13,7 @@ MozQWidget::MozQWidget(nsWindow *receiver, QWidget *parent,
 bool MozQWidget::event(QEvent *e)
 {
     nsEventStatus status = nsEventStatus_eIgnore;
+    bool handled = true;
 
     if (!mReceiver)
         return false;
@@ -176,11 +177,24 @@ bool MozQWidget::event(QEvent *e)
         QDropEvent *dev = (QDropEvent*)(e);
         status = mReceiver->OnDragDropEvent(dev);
     }
+    case QEvent::GrabMouse:
+        fprintf (stderr, "[%p] %p GrabMouse\n", this, mReceiver);
+        break;
+    case QEvent::UngrabMouse:
+        fprintf (stderr, "[%p] %p GrabMouse\n", this, mReceiver);
+        break;
     break;
     default:
+        handled = false;
         break;
     }
 
+    if (handled)
+        return true;
+
+    return QWidget::event(e);
+
+#if 0
     // If we were going to ignore this event, pass it up to the parent
     // and return its value
     if (status == nsEventStatus_eIgnore)
@@ -192,6 +206,7 @@ bool MozQWidget::event(QEvent *e)
         QWidget::event(e);
 
     return true;
+#endif
 }
 
 bool
