@@ -516,6 +516,8 @@ _cairo_qpainter_surface_acquire_dest_image (void *abstract_surface,
         return CAIRO_STATUS_SUCCESS;
     }
 
+    QPoint offset;
+
     if (qs->pixmap) {
         qimg = new QImage(qs->pixmap->toImage());
     } else {
@@ -524,6 +526,10 @@ _cairo_qpainter_surface_acquire_dest_image (void *abstract_surface,
         QPaintDevice *pd = qs->p->device();
 	if (!pd)
 	    return CAIRO_STATUS_NO_MEMORY;
+
+	QPaintDevice *rpd = QPainter::redirected(pd, &offset);
+	if (rpd)
+	    pd = rpd;
 
         if (pd->devType() == QInternal::Image) {
             qimg = new QImage(((QImage*) pd)->copy());
@@ -544,10 +550,10 @@ _cairo_qpainter_surface_acquire_dest_image (void *abstract_surface,
                                                       qimg->bytesPerLine());
     *image_extra = qimg;
 
-    image_rect->x = qs->window.x();
-    image_rect->y = qs->window.y();
-    image_rect->width = qs->window.width();
-    image_rect->height = qs->window.height();
+    image_rect->x = qs->window.x() + offset.x();
+    image_rect->y = qs->window.y() + offset.y();
+    image_rect->width = qs->window.width() - offset.x();
+    image_rect->height = qs->window.height() - offset.y();
 
     return CAIRO_STATUS_SUCCESS;
 }
