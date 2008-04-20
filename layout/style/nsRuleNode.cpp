@@ -5159,35 +5159,20 @@ nsRuleNode::Sweep()
 }
 
 /* static */ PRBool
-nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
-                                    PRUint32 ruleTypeMask)
+nsRuleNode::HasAuthorSpecifiedBorderOrBackground(nsStyleContext* aStyleContext)
 {
   nsRuleDataColor colorData;
   nsRuleDataMargin marginData;
-  PRUint32 nValues = 0;
-
-  PRUint32 inheritBits = 0;
-  if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND)
-    inheritBits |= NS_STYLE_INHERIT_BIT(Background);
-
-  if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BORDER)
-    inheritBits |= NS_STYLE_INHERIT_BIT(Border);
-
-  if (ruleTypeMask & NS_AUTHOR_SPECIFIED_PADDING)
-    inheritBits |= NS_STYLE_INHERIT_BIT(Padding);
-
   /* We're relying on the use of |aStyleContext| not mutating it! */
-  nsRuleData ruleData(inheritBits,
+  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Background) |
+                        NS_STYLE_INHERIT_BIT(Border),
                       aStyleContext->PresContext(), aStyleContext);
   ruleData.mColorData = &colorData;
   ruleData.mMarginData = &marginData;
 
-  nsCSSValue* backgroundValues[] = {
+  nsCSSValue* values[] = {
     &colorData.mBackColor,
-    &colorData.mBackImage
-  };
-
-  nsCSSValue* borderValues[] = {
+    &colorData.mBackImage,
     &marginData.mBorderColor.mTop,
     &marginData.mBorderStyle.mTop,
     &marginData.mBorderWidth.mTop,
@@ -5200,36 +5185,7 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
     &marginData.mBorderColor.mLeft,
     &marginData.mBorderStyle.mLeft,
     &marginData.mBorderWidth.mLeft
-    // XXX add &marginData.mBorder{Start,End}{Width,Color,Style}
   };
-
-  nsCSSValue* paddingValues[] = {
-    &marginData.mPadding.mTop,
-    &marginData.mPadding.mRight,
-    &marginData.mPadding.mBottom,
-    &marginData.mPadding.mLeft,
-    &marginData.mPaddingStart,
-    &marginData.mPaddingEnd
-  };
-
-  nsCSSValue* values[NS_ARRAY_LENGTH(backgroundValues) +
-                     NS_ARRAY_LENGTH(borderValues) +
-                     NS_ARRAY_LENGTH(paddingValues)];
-
-  if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND) {
-    memcpy(&values[nValues], backgroundValues, NS_ARRAY_LENGTH(backgroundValues) * sizeof(nsCSSValue*));
-    nValues += NS_ARRAY_LENGTH(backgroundValues);
-  }
-
-  if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BORDER) {
-    memcpy(&values[nValues], borderValues, NS_ARRAY_LENGTH(borderValues) * sizeof(nsCSSValue*));
-    nValues += NS_ARRAY_LENGTH(borderValues);
-  }
-
-  if (ruleTypeMask & NS_AUTHOR_SPECIFIED_PADDING) {
-    memcpy(&values[nValues], paddingValues, NS_ARRAY_LENGTH(paddingValues) * sizeof(nsCSSValue*));
-    nValues += NS_ARRAY_LENGTH(paddingValues);
-  }
 
   // We need to be careful not to count styles covered up by
   // user-important or UA-important declarations.
@@ -5245,13 +5201,13 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
         // This is a rule whose effect we want to ignore, so if any of
         // the properties we care about were set, set them to the dummy
         // value that they'll never otherwise get.
-        for (PRUint32 i = 0; i < nValues; ++i)
+        for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(values); ++i)
           if (values[i]->GetUnit() != eCSSUnit_Null)
             values[i]->SetDummyValue();
       } else {
         // If any of the values we care about was set by the above rule,
         // we have author style.
-        for (PRUint32 i = 0; i < nValues; ++i)
+        for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(values); ++i)
           if (values[i]->GetUnit() != eCSSUnit_Null &&
               values[i]->GetUnit() != eCSSUnit_Dummy) // see above
             return PR_TRUE;
