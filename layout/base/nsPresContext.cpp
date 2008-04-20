@@ -1499,8 +1499,8 @@ nsPresContext::IsChrome() const
 }
 
 /* virtual */ PRBool
-nsPresContext::HasAuthorSpecifiedBorderOrBackground(nsIFrame *aFrame) const
+nsPresContext::HasAuthorSpecifiedRules(nsIFrame *aFrame, PRUint32 ruleTypeMask) const
 {
   return nsRuleNode::
-           HasAuthorSpecifiedBorderOrBackground(aFrame->GetStyleContext());
+    HasAuthorSpecifiedRules(aFrame->GetStyleContext(), ruleTypeMask);
 }

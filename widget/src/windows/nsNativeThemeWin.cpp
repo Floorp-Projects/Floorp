@@ -461,6 +461,15 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
   if (!mThemeDLL)
     return NULL;
 
+  if (!mIsVistaOrLater) {
+    // On XP or earlier, render dropdowns as textfields;
+    // doing it the right way works fine with the MS themes,
+    // but breaks on a lot of custom themes (presumably because MS
+    // apps do the textfield border business as well).
+    if (aWidgetType == NS_THEME_DROPDOWN)
+      aWidgetType = NS_THEME_TEXTFIELD;
+  }
+
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
     case NS_THEME_RADIO:
@@ -632,6 +641,12 @@ nsresult
 nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType, 
                                        PRInt32& aPart, PRInt32& aState)
 {
+  if (!mIsVistaOrLater) {
+    // See GetTheme
+    if (aWidgetType == NS_THEME_DROPDOWN)
+      aWidgetType = NS_THEME_TEXTFIELD;
+  }
+
   switch (aWidgetType) {
     case NS_THEME_BUTTON: {
       aPart = BP_BUTTON;
@@ -1527,6 +1542,15 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
   }
 
   if (mIsVistaOrLater) {
+    if (aWidgetType == NS_THEME_TEXTFIELD ||
+        aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
+        aWidgetType == NS_THEME_DROPDOWN)
+    {
+      /* If we have author-specified padding for these elements, don't do the fixups below */
+      if (aFrame->PresContext()->HasAuthorSpecifiedRules(aFrame, NS_AUTHOR_SPECIFIED_PADDING))
+        return PR_FALSE;
+    }
+
     /* textfields need an extra pixel on all sides, otherwise they
      * wrap their content too tightly.  The actual border is drawn 1px
      * inside the specified rectangle, so Gecko will end up making the
@@ -1537,13 +1561,7 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
       aResult->top = aResult->bottom = 1;
       aResult->left = aResult->right = 1;
       return PR_TRUE;
-    }
-  }
-
-  // Some things only apply to widgets in HTML content, since
-  // they're drawn differently
-  if (IsHTMLContent(aFrame)) {
-    if (aWidgetType == NS_THEME_DROPDOWN) {
+    } else if (IsHTMLContent(aFrame) && aWidgetType == NS_THEME_DROPDOWN) {
       /* For content menulist controls, we need an extra pixel so
        * that we have room to draw our focus rectangle stuff.
        * Otherwise, the focus rect might overlap the control's
