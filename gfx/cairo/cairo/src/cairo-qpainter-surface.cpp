@@ -88,13 +88,19 @@ typedef struct {
     QImage *image;
 
     QRect window;
-    QRegion *clip_region;
+
+    bool has_clipping;
+    QRect clip_bounds;
 
     cairo_image_surface_t *image_equiv;
 
 #if defined(Q_WS_X11) && defined(CAIRO_HAS_XLIB_XRENDER_SURFACE)
     /* temporary, so that we can share the xlib surface's glyphs code */
     cairo_surface_t *xlib_equiv;
+    bool xlib_has_clipping;
+    QRect xlib_clip_bounds;
+    int xlib_clip_serial;
+    QPoint redir_offset;
 #endif
 
     cairo_bool_t supports_porter_duff;
@@ -111,7 +117,7 @@ _cairo_qpainter_surface_paint (void *abstract_surface,
                                cairo_pattern_t *source);
 
 /* some debug timing stuff */
-static int g_dump_path = 0;
+static int g_dump_path = 1;
 static struct timeval timer_start_val;
 #if 0
 static void tstart() {
@@ -666,6 +672,9 @@ _cairo_qpainter_surface_intersect_clip_path (void *abstract_surface,
             qs->p->save ();
         }
 
+	qs->clip_bounds.setRect(0, 0, 0, 0);
+	qs->has_clipping = false;
+
         return CAIRO_INT_STATUS_SUCCESS;
     }
 
@@ -679,6 +688,8 @@ _cairo_qpainter_surface_intersect_clip_path (void *abstract_surface,
     // down to Qt for clipping.
 
     tstart();
+
+    QRect clip_bounds;
 
     // First check if it's an integer-aligned single rectangle
     cairo_box_t box;
@@ -695,9 +706,11 @@ _cairo_qpainter_surface_intersect_clip_path (void *abstract_surface,
 
 	r = r.normalized();
 
-	//fprintf (stderr, "clip rect: %d %d %d %d\n", r.x(), r.y(), r.width(), r.height());
-	qs->p->setClipRect (r, Qt::IntersectClip);
+	DP(fprintf (stderr, "clip rect: %d %d %d %d\n", r.x(), r.y(), r.width(), r.height()));
 
+	clip_bounds = r;
+
+	qs->p->setClipRect (r, Qt::IntersectClip);
     } else {
 	// Then if it's not an integer-aligned rectangle, check
 	// if we can extract a region (a set of rectangles) out.
@@ -718,7 +731,7 @@ _cairo_qpainter_surface_intersect_clip_path (void *abstract_surface,
 	status = _cairo_traps_extract_region (&traps, &region);
 	_cairo_traps_fini (&traps);
 
-	if (status == CAIRO_STATUS_SUCCESS) {
+	if (status == CAIRO_INT_STATUS_SUCCESS) {
 	    cairo_box_int_t *boxes;
 	    int n_boxes;
 
@@ -727,10 +740,17 @@ _cairo_qpainter_surface_intersect_clip_path (void *abstract_surface,
 	    _cairo_region_get_boxes (&region, &n_boxes, &boxes);
 
 	    for (int i = 0; i < n_boxes; i++) {
-		qr = qr.unite(QRect(boxes[i].p1.x,
-				    boxes[i].p1.y,
-				    boxes[i].p2.x - boxes[i].p1.x,
-				    boxes[i].p2.y - boxes[i].p1.y));
+		QRect r(boxes[i].p1.x,
+			boxes[i].p1.y,
+			boxes[i].p2.x - boxes[i].p1.x,
+			boxes[i].p2.y - boxes[i].p1.y);
+
+		if (i == 0)
+		    clip_bounds = r;
+		else
+		    clip_bounds = clip_bounds.united(r);
+
+		qr = qr.unite(r);
 	    }
 
 	    _cairo_region_boxes_fini (&region, boxes);
@@ -745,9 +765,20 @@ _cairo_qpainter_surface_intersect_clip_path (void *abstract_surface,
 	    if (_cairo_quartz_cairo_path_to_qpainterpath (path, &qpath, fill_rule) != CAIRO_STATUS_SUCCESS)
 		return CAIRO_INT_STATUS_UNSUPPORTED;
 
+	    clip_bounds = qpath.boundingRect().toAlignedRect();
+
 	    // XXX Antialiasing is ignored
 	    qs->p->setClipPath (qpath, Qt::IntersectClip);
 	}
+    }
+
+    clip_bounds = qs->p->worldTransform().mapRect(clip_bounds);
+
+    if (qs->has_clipping) {
+	qs->clip_bounds = qs->clip_bounds.intersect(clip_bounds);
+    } else {
+	qs->clip_bounds = clip_bounds;
+	qs->has_clipping = true;
     }
 
     tend("clip");
@@ -1038,6 +1069,39 @@ _cairo_qpainter_surface_show_glyphs (void *abstract_surface,
      * until we figure out how to do this natively with Qt.
      */
     if (qs->xlib_equiv) {
+
+	D(fprintf(stderr, "q[%p] show_glyphs (x11 equiv) op:%s nglyphs: %d\n", abstract_surface, _opstr(op), num_glyphs));
+
+	for (int i = 0; i < num_glyphs; i++) {
+	    glyphs[i].x -= qs->redir_offset.x();
+	    glyphs[i].y -= qs->redir_offset.y();
+	}
+
+	if (qs->has_clipping != qs->xlib_has_clipping ||
+	    qs->clip_bounds != qs->xlib_clip_bounds)
+	{
+	    _cairo_surface_reset_clip (qs->xlib_equiv);
+
+	    if (qs->has_clipping) {
+		cairo_region_t region;
+		cairo_rectangle_int_t rect = {
+		    qs->clip_bounds.x() - qs->redir_offset.x(),
+		    qs->clip_bounds.y() - qs->redir_offset.y(),
+		    qs->clip_bounds.width(),
+		    qs->clip_bounds.height()
+		};
+
+		_cairo_region_init_rect (&region, &rect);
+
+		_cairo_surface_set_clip_region (qs->xlib_equiv, &region, ++qs->xlib_clip_serial);
+
+		_cairo_region_fini (&region);
+	    }
+
+	    qs->xlib_has_clipping = qs->has_clipping;
+	    qs->xlib_clip_bounds = qs->clip_bounds;
+	}
+
         return (cairo_int_status_t)
                _cairo_surface_show_glyphs (qs->xlib_equiv, op, source, glyphs, num_glyphs, scaled_font);
     }
@@ -1100,7 +1164,7 @@ _cairo_qpainter_surface_composite (cairo_operator_t op,
         return CAIRO_INT_STATUS_UNSUPPORTED;
 
     D(fprintf(stderr, "q[%p] composite op:%s src:%p [%d %d] dst [%d %d] dim [%d %d]\n",
-              abstract_surface, _opstr(op), pattern,
+              abstract_surface, _opstr(op), (void*)pattern,
               src_x, src_y, dst_x, dst_y, width, height));
 
     if (pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
@@ -1217,6 +1281,53 @@ static const struct _cairo_surface_backend cairo_qpainter_surface_backend = {
     NULL  /* fill_stroke */
 };
 
+#if defined(Q_WS_X11) && defined(CAIRO_HAS_XLIB_XRENDER_SURFACE)
+void
+_cairo_qpainter_create_xlib_surface (cairo_qpainter_surface_t *qs)
+{
+    Drawable d = None;
+    QX11Info xinfo;
+    int width, height;
+
+    QPaintDevice *pd = qs->p->device();
+    if (!pd)
+	return;
+
+    QPoint offs;
+    QPaintDevice *rpd = QPainter::redirected(pd, &offs);
+    if (rpd) {
+	pd = rpd;
+	qs->redir_offset = offs;
+    }
+
+    if (pd->devType() == QInternal::Widget) {
+	QWidget *w = (QWidget*) pd;
+	d = (Drawable) w->handle();
+	xinfo = w->x11Info();
+	width = w->width();
+	height = w->height();
+    } else if (pd->devType() == QInternal::Pixmap) {
+	QPixmap *pixmap = (QPixmap*) pd;
+	d = (Drawable) pixmap->handle();
+	xinfo = pixmap->x11Info();
+	width = pixmap->width();
+	height = pixmap->height();
+    } else {
+	return;
+    }
+
+    if (d != None) {
+	qs->xlib_equiv = cairo_xlib_surface_create_with_xrender_format
+	    (xinfo.display(),
+	     d,
+	     ScreenOfDisplay(xinfo.display(), xinfo.screen()),
+	     XRenderFindVisualFormat (xinfo.display(), (Visual*) xinfo.visual()),
+	     width,
+	     height);
+    }
+}
+#endif
+
 cairo_surface_t *
 cairo_qpainter_surface_create (QPainter *painter)
 {
@@ -1240,6 +1351,10 @@ cairo_qpainter_surface_create (QPainter *painter)
     qs->p->save();
 
     qs->window = painter->window();
+
+#if defined(Q_WS_X11) && defined(CAIRO_HAS_XLIB_XRENDER_SURFACE)
+    _cairo_qpainter_create_xlib_surface (qs);
+#endif
 
     D(fprintf(stderr, "qpainter_surface_create: window: [%d %d %d %d] pd:%d\n",
               qs->window.x(), qs->window.y(), qs->window.width(), qs->window.height(),
@@ -1314,26 +1429,13 @@ cairo_qpainter_surface_create_with_qpixmap (int width,
 
     qs->window = QRect(0, 0, width, height);
 
+#if defined(Q_WS_X11) && defined(CAIRO_HAS_XLIB_XRENDER_SURFACE)
+    _cairo_qpainter_create_xlib_surface (qs);
+#endif
+
     D(fprintf(stderr, "qpainter_surface_create: qpixmap: [%d %d %d %d] pd:%d\n",
               qs->window.x(), qs->window.y(), qs->window.width(), qs->window.height(),
               qs->supports_porter_duff));
-
-#if defined(Q_WS_X11) && defined(CAIRO_HAS_XLIB_XRENDER_SURFACE)
-    // create an xlib surface pointing at the same thing; this is temporary,
-    // until we figure out how to implement show_glyphs using Qt calls only.
-    pixmap->detach();
-    Drawable d = (Drawable) pixmap->handle();
-    if (d != None) {
-        const QX11Info &xinfo = pixmap->x11Info();
-        qs->xlib_equiv = cairo_xlib_surface_create_with_xrender_format
-                         (xinfo.display(),
-                          d,
-                          ScreenOfDisplay(xinfo.display(), xinfo.screen()),
-                          XRenderFindVisualFormat (xinfo.display(), (Visual*) xinfo.visual()),
-                          pixmap->width(),
-                          pixmap->height());
-    }
-#endif
 
     return &qs->base;
 }
