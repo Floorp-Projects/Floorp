@@ -59,7 +59,9 @@
 
 #include "nsQtKeyUtils.h"
 
+#ifdef Q_WS_X11
 #include <X11/XF86keysym.h>
+#endif
 
 #include "nsWidgetAtoms.h"
 
@@ -97,11 +99,14 @@
 #include <qapplication.h>
 #include <qdesktopwidget.h>
 #include <qwidget.h>
-#include "qx11info_x11.h"
 #include <qcursor.h>
 #include <qobject.h>
 #include <execinfo.h>
 #include <stdlib.h>
+
+#ifdef Q_WS_X11
+#include "qx11info_x11.h"
+#endif
 
 #include <execinfo.h>
 
@@ -821,9 +826,11 @@ nsWindow::GetNativeData(PRUint32 aDataType)
         return SetupPluginPort();
         break;
 
+#ifdef Q_WS_X11
     case NS_NATIVE_DISPLAY:
         return mDrawingarea->x11Info().display();
         break;
+#endif
 
     case NS_NATIVE_GRAPHIC: {
         NS_ASSERTION(nsnull != mToolkit, "NULL toolkit, unable to get a GC");
@@ -1042,12 +1049,7 @@ static int gDoubleBuffering = -1;
 nsEventStatus
 nsWindow::OnExposeEvent(QPaintEvent *aEvent)
 {
-    if (gDoubleBuffering == -1) {
-        if (getenv("MOZ_NO_DOUBLEBUFFER"))
-            gDoubleBuffering = 0;
-        else
-            gDoubleBuffering = 1;
-    }
+    //fprintf (stderr, "===== Expose start\n");
 
     if (mIsDestroyed) {
         LOG(("Expose event on destroyed window [%p] window %p\n",
@@ -1228,6 +1230,8 @@ nsWindow::OnExposeEvent(QPaintEvent *aEvent)
 
     ctx = nsnull;
     targetSurface = nsnull;
+
+    //fprintf (stderr, "===== Expose end\n");
 
     // check the return value!
     return status;
@@ -1874,6 +1878,7 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
   nsXPIDLString brandName;
   GetBrandName(brandName);
 
+#ifdef Q_WS_X11
   XClassHint *class_hint = XAllocClassHint();
   if (!class_hint)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1915,6 +1920,8 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
   nsMemory::Free(class_hint->res_class);
   nsMemory::Free(class_hint->res_name);
   XFree(class_hint);
+#endif
+
   return NS_OK;
 }
 
@@ -2391,7 +2398,9 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
     // and flush the queue here so that we don't end up with a BadWindow
     // error later when this happens (when the persistence timer fires
     // and GetWindowPos is called)
+#ifdef Q_WS_X11
     XSync(mDrawingarea->x11Info().display(), False);
+#endif
 
     return NS_OK;
 }
@@ -2588,6 +2597,13 @@ nsWindow::createQWidget(QWidget *parent, nsWidgetInitData *aInitData)
 {
     Qt::WFlags flags = Qt::Widget;
     const char *windowName = NULL;
+
+    if (gDoubleBuffering == -1) {
+        if (getenv("MOZ_NO_DOUBLEBUFFER"))
+            gDoubleBuffering = 0;
+        else
+            gDoubleBuffering = 1;
+    }
 
 #ifdef DEBUG_WIDGETS
     qDebug("NEW WIDGET\n\tparent is %p (%s)", (void*)parent,
