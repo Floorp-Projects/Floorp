@@ -60,6 +60,7 @@ const LMANNO_FEEDURI = "livemark/feedURI";
 const LMANNO_SITEURI = "livemark/siteURI";
 const ORGANIZER_FOLDER_ANNO = "PlacesOrganizer/OrganizerFolder";
 const ORGANIZER_QUERY_ANNO = "PlacesOrganizer/OrganizerQuery";
+const ORGANIZER_LEFTPANE_VERSION = 2;
 
 #ifdef XP_MACOSX
 // On Mac OSX, the transferable system converts "\r\n" to "\n\n", where we
@@ -1129,14 +1130,26 @@ var PlacesUIUtils = {
   get leftPaneFolderId() {
     var leftPaneRoot = -1;
     var allBookmarksId;
-    var items = PlacesUtils.annotations.getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO, {});
-    if (items.length != 0 && items[0] != -1)
+    var items = PlacesUtils.annotations
+                           .getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO, {});
+    if (items.length != 0 && items[0] != -1) {
       leftPaneRoot = items[0];
+      // check organizer left pane version
+      var version = PlacesUtils.annotations
+                               .getItemAnnotation(leftPaneRoot, ORGANIZER_FOLDER_ANNO);
+      if (version != ORGANIZER_LEFTPANE_VERSION) {
+        // If version is not valid we must rebuild the left pane.
+        PlacesUtils.bookmarks.removeFolder(leftPaneRoot);
+        leftPaneRoot = -1;
+      }
+    }
+
     if (leftPaneRoot != -1) {
       // Build the leftPaneQueries Map
       delete this.leftPaneQueries;
       this.leftPaneQueries = {};
-      var items = PlacesUtils.annotations.getItemsWithAnnotation(ORGANIZER_QUERY_ANNO, { });
+      var items = PlacesUtils.annotations
+                             .getItemsWithAnnotation(ORGANIZER_QUERY_ANNO, {});
       for (var i=0; i < items.length; i++) {
         var queryName = PlacesUtils.annotations
                                    .getItemAnnotation(items[i], ORGANIZER_QUERY_ANNO);
@@ -1212,8 +1225,10 @@ var PlacesUIUtils = {
       }
     };
     PlacesUtils.bookmarks.runInBatchMode(callback, null);
-    PlacesUtils.annotations.setItemAnnotation(leftPaneRoot, ORGANIZER_FOLDER_ANNO,
-                                              true, 0, EXPIRE_NEVER);
+    PlacesUtils.annotations.setItemAnnotation(leftPaneRoot,
+                                              ORGANIZER_FOLDER_ANNO,
+                                              ORGANIZER_LEFTPANE_VERSION,
+                                              0, EXPIRE_NEVER);
     delete this.leftPaneFolderId;
     return this.leftPaneFolderId = leftPaneRoot;
   },
