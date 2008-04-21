@@ -2104,12 +2104,21 @@ case "$target" in
         ;;
     esac 
 
-    AC_CHECK_HEADERS(mmintrin.h oleacc.idl)
 
-    AC_LANG_SAVE
-    AC_LANG_CPLUSPLUS
-    AC_CHECK_HEADERS(atlbase.h wpcapi.h)
-    AC_LANG_RESTORE
+    case "$host_os" in
+    cygwin*)
+        AC_MSG_WARN([Using a cygwin build environment is unsupported. Configure cannot check for the presence of neceesary headers. Please upgrade to MozillaBuild; see http://developer.mozilla.org/en/docs/Windows_Build_Prerequisites])
+        ;;
+
+    *)
+        AC_CHECK_HEADERS(mmintrin.h oleacc.idl)
+
+        AC_LANG_SAVE
+        AC_LANG_CPLUSPLUS
+        AC_CHECK_HEADERS(atlbase.h wpcapi.h)
+        AC_LANG_RESTORE
+        ;;
+    esac
 
     case "$target" in
     i*86-*)
