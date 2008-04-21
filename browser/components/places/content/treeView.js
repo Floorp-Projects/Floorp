@@ -140,6 +140,10 @@ PlacesTreeView.prototype = {
    * when a tree is detached to clear the list.
    */
   _buildVisibleList: function PTV__buildVisibleList() {
+    var selection = this.selection;
+    if (selection)
+      selection.selectEventsSuppressed = true;
+
     if (this._result) {
       // Any current visible elements need to be marked as invisible.
       for (var i = 0; i < this._visibleElements.length; i++) {
@@ -163,11 +167,12 @@ PlacesTreeView.prototype = {
         // this triggers containerOpened which then builds the visible
         // section
         rootNode.containerOpen = true;
-        return;
       }
-
-      this.invalidateContainer(rootNode);
+      else
+        this.invalidateContainer(rootNode);
     }
+    if (selection)
+      selection.selectEventsSuppressed = false;
   },
 
   /**
