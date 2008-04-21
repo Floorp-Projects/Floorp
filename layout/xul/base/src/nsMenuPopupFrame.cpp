@@ -312,7 +312,8 @@ nsMenuPopupFrame::SetPreferredBounds(nsBoxLayoutState& aState,
 void
 nsMenuPopupFrame::AdjustView()
 {
-  if (mPopupState == ePopupOpen || mPopupState == ePopupOpenAndVisible) {
+  if ((mPopupState == ePopupOpen || mPopupState == ePopupOpenAndVisible) &&
+      mGeneratedChildren) {
     // if the popup has just opened, make sure the scrolled window is at 0,0
     if (mIsOpenChanged) {
       nsIBox* child = GetChildBox();
