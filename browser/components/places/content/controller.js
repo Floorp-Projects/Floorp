@@ -383,7 +383,7 @@ PlacesController.prototype = {
    *    "link"              node is a URI
    *    "bookmark"          node is a bookamrk
    *    "livemarkChild"     node is a child of a livemark
-   *    "tagChild"     node is a child of a tag
+   *    "tagChild"          node is a child of a tag
    *    "folder"            node is a folder
    *    "query"             node is a query
    *    "dynamiccontainer"  node is a dynamic container
@@ -575,7 +575,7 @@ PlacesController.prototype = {
     for (var i = 0; i < aPopup.childNodes.length; ++i) {
       var item = aPopup.childNodes[i];
       if (item.localName != "menuseparator") {
-        item.hidden = item.getAttribute("hideifnoinsetionpoint") == "true" ||
+        item.hidden = (item.getAttribute("hideifnoinsetionpoint") == "true" && noIp) ||
                       !this._shouldShowMenuItem(item, metadata);
 
         if (!item.hidden) {
