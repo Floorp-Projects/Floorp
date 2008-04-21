@@ -241,6 +241,7 @@ NO_PKG_FILES += \
 	res/samples \
 	res/throbber \
 	shlibsign* \
+	ssltunnel* \
 	winEmbed.exe \
 	os2Embed.exe \
 	chrome/chrome.rdf \
