@@ -37,6 +37,9 @@
 /**
  * Test bug 393678 to make sure matches against the url, title, tags are only
  * made on word boundaries instead of in the middle of words.
+ *
+ * Make sure we don't try matching one after a CamelCase because the upper-case
+ * isn't really a word boundary. (bug 429498)
  */
 
 let katakana = ["\u30a8", "\u30c9"]; // E, Do
@@ -114,4 +117,6 @@ let gTests = [
 
   ["12: Extra negative assert that we don't match in the middle",
    "ch", []],
+  ["13: Don't match one character after a camel-case word boundary (bug 429498)",
+   "atch", []],
 ];
