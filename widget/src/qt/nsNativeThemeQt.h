@@ -51,6 +51,7 @@
 class QComboBox;
 class QStyleOptionButton;
 class QStyleOptionFrameV2;
+class QStyleOptionComboBox;
 class QRect;
 class nsIFrame;
 
@@ -120,11 +121,15 @@ private:
                       QStyleOption &opt,
                       QStyle::State extraFlags = QStyle::State_None);
 
+  void InitComboStyle(PRUint8 aWidgetType,
+                      nsIFrame* aFrame,
+                      QRect rect,
+                      QStyleOptionComboBox &opt,
+                      QStyle::State extraFlags = QStyle::State_None);
+
 private:
 
-  QComboBox *combo;
-
-  PRInt32 frameWidth;
+  PRInt32 mFrameWidth;
 
   QPalette mNoBackgroundPalette;
 };
