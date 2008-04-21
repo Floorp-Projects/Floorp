@@ -68,20 +68,6 @@ function HistorySidebarInit()
 }
 
 function initContextMenu() {
-  // Force-hide items in the context menu which never apply to this view
-  var alwaysHideElements = ["placesContext_new:bookmark",
-                            "placesContext_new:folder",
-                            "placesContext_new:separator",
-                            "placesContext_cut",
-                            "placesContext_paste",
-                            "placesContext_sortBy:name"];
-  for (var i=0; i < alwaysHideElements.length; i++) {
-    var elt = document.getElementById(alwaysHideElements[i]);
-    elt.removeAttribute("selection");
-    elt.removeAttribute("forcehideselection");
-    elt.hidden = true;
-  }
-
   // Insert "Bookmark This Link" right before the copy item
   document.getElementById("placesContext")
           .insertBefore(document.getElementById("addBookmarkContextItem"),
