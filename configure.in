@@ -2107,7 +2107,7 @@ case "$target" in
 
     case "$host_os" in
     cygwin*)
-        AC_MSG_WARN([Using a cygwin build environment is unsupported. Configure cannot check for the presence of neceesary headers. Please upgrade to MozillaBuild; see http://developer.mozilla.org/en/docs/Windows_Build_Prerequisites])
+        AC_MSG_WARN([Using a cygwin build environment is unsupported. Configure cannot check for the presence of necessary headers. Please upgrade to MozillaBuild; see http://developer.mozilla.org/en/docs/Windows_Build_Prerequisites])
         ;;
 
     *)
