@@ -43,7 +43,6 @@
 # Branched 11/01/99
 
 use strict;
-use Getopt::Mixed "nextOption";
 use File::Temp qw/ tempfile tempdir /;
 use POSIX qw(sys_wait_h);
 
@@ -78,14 +77,6 @@ my $opt_enable_narcissus = 0;
 my $opt_narcissus_path = "";
 my $opt_no_quit = 0;
 my $opt_report_summarized_results = 0;
-
-# command line option definition
-my $options = "b=s bugurl>b c=s classpath>c e=s engine>e f=s file>f " .
-  "h help>h i j=s javapath>j k confail>k K linefail>K R report>R l=s list>l " .
-  "L=s neglist>L o=s opt>o p=s testpath>p s=s shellpath>s t trace>t " .
-  "T=s timeout>T u=s lxrurl>u " .
-  "x noexitmunge>x n:s narcissus>n " .
-  "Q noquitinthandler>Q";
 
 if ($os_type eq "MAC") {
     $opt_suite_path = `directory`;
@@ -503,75 +494,31 @@ sub write_results {
 }
 
 sub parse_args {
-    my ($option, $value, $lastopt);
-
     &dd ("checking command line options.");
 
-    Getopt::Mixed::init ($options);
-    $Getopt::Mixed::order = $Getopt::Mixed::RETURN_IN_ORDER;
-
-    while (($option, $value) = nextOption()) {
-
-        if ($option eq "b") {
-            &dd ("opt: setting bugurl to '$value'.");
-            $opt_bug_url = $value;
-
-        } elsif ($option eq "c") {
-            &dd ("opt: setting classpath to '$value'.");
-            $opt_classpath = $value;
-
-        } elsif (($option eq "e") || (($option eq "") && ($lastopt eq "e"))) {
-            &dd ("opt: adding engine $value.");
-            push (@opt_engine_list, $value);
-
-        } elsif ($option eq "f") {
-            if (!$value) {
-                die ("Output file cannot be null.\n");
-            }
-            &dd ("opt: setting output file to '$value'.");
+    use Getopt::Long;
+    Getopt::Long::Configure(qw(no_getopt_compat no_ignore_case));
+    Getopt::Long::GetOptions (
+        "bugurl|b=s" => \$opt_bug_url,
+        "classpath|c=s" => \$opt_classpath,
+        "engine|e=s{1,}" => \@opt_engine_list,
+        "file|f=s" => sub {
             $opt_user_output_file = 1;
-            $opt_output_file = $value;
-
-        } elsif ($option eq "h") {
-            &usage;
-
-        } elsif ($option eq "j") {
-            if (!($value =~ /[\/\\]$/)) {
-                $value .= "/";
-            }
-            &dd ("opt: setting java path to '$value'.");
-            $opt_java_path = $value;
-
-        } elsif ($option eq "k") {
-            &dd ("opt: displaying failures on console.");
-            $opt_console_failures=1;
-
-        } elsif ($option eq "K") {
-            &dd ("opt: displaying failures on console as single line.");
-            $opt_console_failures=1;
-            $opt_console_failures_line=1;
-
-        } elsif ($option eq "R") {
-            &dd ("opt: Report summarized test results.");
-            $opt_report_summarized_results=1;
-
-        } elsif ($option eq "l" || (($option eq "") && ($lastopt eq "l"))) {
-            $option = "l";
-            &dd ("opt: adding test list '$value'.");
-            push (@opt_test_list_files, $value);
-
-        } elsif ($option eq "L" || (($option eq "") && ($lastopt eq "L"))) {
-            $option = "L";
-            &dd ("opt: adding negative list '$value'.");
-            push (@opt_neg_list_files, $value);
-
-        } elsif ($option eq "o") {
-            $opt_engine_params = $value;
-            &dd ("opt: setting engine params to '$opt_engine_params'.");
-
-        } elsif ($option eq "p") {
-            $opt_suite_path = $value;
-
+            $opt_output_file = $_[1];
+        },
+        "help|h" => \&usage,
+        "javapath|j=s" => sub {
+            $opt_java_path = $_[1];
+            $opt_java_path .= "/" if (!($_[1] =~ /[\/\\]$/));
+        },
+        "confail|k" => \$opt_console_failures,
+        "linefail|K" => \$opt_console_failures_line,
+        "report|R!" => \$opt_report_summarized_results,
+        "list|l=s{1,}" => \@opt_test_list_files,
+        "neglist|L=s{1,}" => \@opt_neg_list_files,
+        "opt|o=s" => \$opt_engine_params,
+        "testpath|p=s" => sub {
+            $opt_suite_path = $_[1];
             if ($os_type eq "MAC") {
                 if (!($opt_suite_path =~ /\:$/)) {
                     $opt_suite_path .= ":";
@@ -581,56 +528,23 @@ sub parse_args {
                     $opt_suite_path .= "/";
                 }
             }
-
-            &dd ("opt: setting suite path to '$opt_suite_path'.");
-
-        } elsif ($option eq "s") {
-            $opt_shell_path = $value;
-            &dd ("opt: setting shell path to '$opt_shell_path'.");
-
-        } elsif ($option eq "t") {
-            &dd ("opt: tracing output.  (console failures at no extra charge.)");
-            $opt_console_failures = 1;
-            $opt_trace = 1;
-
-        } elsif ($option eq "u") {
-            &dd ("opt: setting lxr url to '$value'.");
-            $opt_lxr_url = $value;
-
-        } elsif ($option eq "x") {
-            &dd ("opt: turning off exit munging.");
-            $opt_exit_munge = 0;
-
-        } elsif ($option eq "T") {
-            $opt_timeout = $value;
-            &dd ("opt: setting timeout to $opt_timeout.");
-
-        } elsif ($option eq "n") {
-            &dd ("opt: enabling narcissus.");
+        },
+        "shellpath|s=s" => \$opt_shell_path,
+        "trace|t" => \$opt_trace,
+        "lxrurl|u=s" => \$opt_lxr_url,
+        "timeout|T=s" => \$opt_timeout,
+        "noexitmunge|x" => sub { $opt_exit_munge = 0; },
+        "narcissus|n:s" => sub {
             $opt_enable_narcissus = 1;
-            if ($value) {
-                $opt_narcissus_path = $value;
-            }
-
-        } elsif ($option eq "Q") {
-            &dd ("opt: disabling interrupt handler.");
-            $opt_no_quit = 1;
-
-        } else {
-            &dd ("opt: unknown option $option '$value'.");
-            &usage;
-        }
-
-        $lastopt = $option;
-
-    }
-
-    Getopt::Mixed::cleanup();
-
-    if ($#opt_engine_list == -1) {
-        die "You must select a shell to test in.\n";
-    }
-
+            $opt_narcissus_path = $_[1] if ($_[1] ne "");
+        },
+        "noquitinthandler|Q" => $opt_no_quit);
+    
+    $opt_console_failures = 1 if ($opt_console_failures_line != 0 ||
+                                  $opt_trace != 0);
+                
+    die "You must select a shell to test in.\n" if (@opt_engine_list == 0);
+    die "Unsupported standalone argument.\n" if (@ARGV != 0);
 }
 
 #
