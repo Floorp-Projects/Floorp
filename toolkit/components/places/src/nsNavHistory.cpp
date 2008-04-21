@@ -2503,8 +2503,7 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
     // the history UI (sidebar, history menu, url bar autocomplete, etc)
     hidden = oldHiddenState;
     if (hidden && (!aIsRedirect || aTransitionType == TRANSITION_TYPED) &&
-        aTransitionType != TRANSITION_EMBED &&
-        aTransitionType != TRANSITION_DOWNLOAD)
+        aTransitionType != TRANSITION_EMBED)
       hidden = PR_FALSE; // unhide
 
     typed = oldTypedState || (aTransitionType == TRANSITION_TYPED);
@@ -2534,10 +2533,9 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
     mDBGetPageVisitStats->Reset();
     scoper.Abandon();
 
-    // Hide only embedded links, redirects, and downloads
+    // Hide only embedded links and redirects
     // See the hidden computation code above for a little more explanation.
-    hidden = (aTransitionType == TRANSITION_EMBED || aIsRedirect ||
-              aTransitionType == TRANSITION_DOWNLOAD);
+    hidden = (aTransitionType == TRANSITION_EMBED || aIsRedirect);
 
     typed = (aTransitionType == TRANSITION_TYPED);
 

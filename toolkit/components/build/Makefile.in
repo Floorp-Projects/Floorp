@@ -82,6 +82,7 @@ REQUIRES = 	\
 		feeds \
 		storage \
 		pipnss \
+		places \
 		$(NULL)
 
 ifdef ALERTS_SERVICE

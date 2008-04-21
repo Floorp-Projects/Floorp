@@ -61,6 +61,7 @@
 #include "nsIPromptService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
+#include "nsTArray.h"
 #include "nsVoidArray.h"
 #include "nsEnumeratorUtils.h"
 #include "nsIFileURL.h"
@@ -109,7 +110,12 @@ static const PRInt64 gUpdateInterval = 400 * PR_USEC_PER_MSEC;
 ////////////////////////////////////////////////////////////////////////////////
 //// nsDownloadManager
 
-NS_IMPL_ISUPPORTS2(nsDownloadManager, nsIDownloadManager, nsIObserver)
+NS_IMPL_ISUPPORTS3(
+  nsDownloadManager
+, nsIDownloadManager
+, nsINavHistoryObserver
+, nsIObserver
+)
 
 nsDownloadManager *nsDownloadManager::gDownloadManagerService = nsnull;
 
@@ -229,6 +235,37 @@ nsDownloadManager::RemoveAllDownloads()
   }
 
   return rv;
+}
+
+nsresult
+nsDownloadManager::RemoveDownloadsForURI(nsIURI *aURI)
+{
+  mozStorageStatementScoper scope(mGetIdsForURIStatement);
+  
+  nsCAutoString source;
+  nsresult rv = aURI->GetSpec(source);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mGetIdsForURIStatement->BindUTF8StringParameter(0, source);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasMore = PR_FALSE;
+  nsAutoTArray<PRInt64, 4> downloads;
+  // Get all the downloads that match the provided URI
+  while (NS_SUCCEEDED(mGetIdsForURIStatement->ExecuteStep(&hasMore)) &&
+         hasMore) {
+    PRInt64 downloadId;
+    rv = mGetIdsForURIStatement->GetInt64(0, &downloadId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    downloads.AppendElement(downloadId);
+  }
+
+  // Remove each download ignoring any failure so we reach other downloads
+  for (PRInt32 i = downloads.Length(); --i >= 0; )
+    (void)RemoveDownload(downloads[i]);
+
+  return NS_OK;
 }
 
 void // static
@@ -891,6 +928,12 @@ nsDownloadManager::Init()
     "WHERE id = ?10"), getter_AddRefs(mUpdateDownloadStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT id "
+    "FROM moz_downloads "
+    "WHERE source = ?1"), getter_AddRefs(mGetIdsForURIStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Do things *after* initializing various download manager properties such as
   // restoring downloads to a consistent state
   rv = RestoreDatabaseState();
@@ -898,6 +941,10 @@ nsDownloadManager::Init()
 
   rv = RestoreActiveDownloads();
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to restore all active downloads");
+
+  nsCOMPtr<nsINavHistoryService> history =
+    do_GetService(NS_NAVHISTORYSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // The following three AddObserver calls must be the last lines in this function,
   // because otherwise, this function may fail (and thus, this object would be not
@@ -913,6 +960,8 @@ nsDownloadManager::Init()
   mObserverService->AddObserver(this, "offline-requested", PR_FALSE);
   mObserverService->AddObserver(this, "sleep_notification", PR_FALSE);
   mObserverService->AddObserver(this, "wake_notification", PR_FALSE);
+
+  (void)history->AddObserver(this, PR_FALSE);
 
   return NS_OK;
 }
@@ -1732,6 +1781,78 @@ nsDownloadManager::NotifyListenersOnStateChange(nsIWebProgress *aProgress,
   for (PRInt32 i = mListeners.Count() - 1; i >= 0; --i)
     mListeners[i]->OnStateChange(aProgress, aRequest, aStateFlags, aStatus,
                                  aDownload);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// nsINavHistoryObserver
+
+NS_IMETHODIMP
+nsDownloadManager::OnBeginUpdateBatch()
+{
+  // We already have a transaction, so don't make another
+  if (mHistoryTransaction)
+    return NS_OK;
+
+  // Start a transaction that commits when deleted
+  mHistoryTransaction = new mozStorageTransaction(mDBConn, PR_TRUE);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownloadManager::OnEndUpdateBatch()
+{
+  if (mHistoryTransaction) {
+    // Delete the transaction and cause it to commit
+    delete mHistoryTransaction;
+    mHistoryTransaction = nsnull;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownloadManager::OnVisit(nsIURI *aURI, PRInt64 aVisitID, PRTime aTime,
+                           PRInt64 aSessionID, PRInt64 aReferringID,
+                           PRUint32 aTransitionType, PRUint32 *aAdded)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownloadManager::OnTitleChanged(nsIURI *aURI, const nsAString &aPageTitle)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownloadManager::OnDeleteURI(nsIURI *aURI)
+{
+  return RemoveDownloadsForURI(aURI);
+}
+
+NS_IMETHODIMP
+nsDownloadManager::OnClearHistory()
+{
+  return CleanUp();
+}
+
+NS_IMETHODIMP
+nsDownloadManager::OnPageChanged(nsIURI *aURI, PRUint32 aWhat,
+                                 const nsAString &aValue)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownloadManager::OnPageExpired(nsIURI *aURI, PRTime aVisitTime,
+                                 PRBool aWholeEntry)
+{
+  // Don't bother removing downloads if there are still recent visits
+  if (!aWholeEntry)
+    return NS_OK;
+
+  return RemoveDownloadsForURI(aURI);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
