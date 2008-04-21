@@ -43,18 +43,18 @@
 #include <QApplication>
 #include <QStyle>
 #include <QPalette>
-#include <QComboBox>
 #include <QRect>
 #include <QPainter>
 #include <QStyleOption>
 #include <QStyleOptionFrameV2>
 #include <QStyleOptionButton>
 #include <QFlags>
+#include <QStyleOptionComboBox>
 
 #include "nsCoord.h"
 #include "nsNativeThemeQt.h"
 #include "nsIDeviceContext.h"
-
+#include "nsPresContext.h"
 
 #include "nsRect.h"
 #include "nsSize.h"
@@ -74,15 +74,12 @@
 
 nsNativeThemeQt::nsNativeThemeQt()
 {
-    combo = new QComboBox((QWidget *)0);
-    combo->resize(0, 0);
     mNoBackgroundPalette.setColor(QPalette::Window, Qt::transparent);
     ThemeChanged();
 }
 
 nsNativeThemeQt::~nsNativeThemeQt()
 {
-    delete combo;
 }
 
 NS_IMPL_ISUPPORTS1(nsNativeThemeQt, nsITheme)
@@ -217,17 +214,26 @@ nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
         InitPlainStyle(aWidgetType, aFrame, r, option, extraFlags);
 
         style->drawControl(QStyle::CE_ScrollBarSlider, &option, qPainter, NULL);
-    }
-    case NS_THEME_DROPDOWN:
-//        style.drawComplexControl(QStyle::CC_ComboBox, qPainter, combo, r, cg, flags, QStyle::SC_ComboBoxFrame);
         break;
+    }
+    case NS_THEME_DROPDOWN: {
+        qDebug("NS_THEME_DROPDOWN r (%3d,%3d,%3d,%3d) cr (%3d,%3d,%3d,%3d)",
+            r.x(), r.y(), r.width(), r.height(),
+            cr.x(), cr.y(), cr.width(), cr.height());
+
+        QStyleOptionComboBox comboOpt;
+        
+        InitComboStyle(aWidgetType, aFrame, r, comboOpt);
+
+        style->drawComplexControl(QStyle::CC_ComboBox, &comboOpt, qPainter);
+        break;
+    }
     case NS_THEME_DROPDOWN_BUTTON:
-//         r.translate(frameWidth, -frameWidth);
-//         r.setHeight(r.height() + 2*frameWidth);
-//        style.drawComplexControl(QStyle::CC_ComboBox, qPainter, combo, r, cg, flags, QStyle::SC_ComboBoxArrow);
+        qDebug("NS_THEME_DROPDOWN_BUTTON");
         break;
     case NS_THEME_DROPDOWN_TEXT:
     case NS_THEME_DROPDOWN_TEXTFIELD:
+        qDebug("NS_THEME_DROPDOWN_TEXT");
         break;
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
@@ -242,10 +248,7 @@ nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
 
         if (aWidgetType == NS_THEME_TEXTFIELD || aWidgetType == NS_THEME_TEXTFIELD_MULTILINE) {
             QRect contentRect = style->subElementRect(QStyle::SE_LineEditContents, &frameOpt);
-
-            PRInt32 frameWidth = style->pixelMetric(QStyle::PM_DefaultFrameWidth);
-
-            contentRect.adjust(frameWidth, frameWidth, -frameWidth, -frameWidth);
+            contentRect.adjust(mFrameWidth, mFrameWidth, -mFrameWidth, -mFrameWidth);
             qPainter->fillRect(contentRect, QBrush(Qt::white));
         }
         
@@ -267,8 +270,6 @@ nsNativeThemeQt::GetWidgetBorder(nsIDeviceContext* aContext,
                                  PRUint8 aWidgetType,
                                  nsMargin* aResult)
 {
-//    qDebug("%s : %d", __PRETTY_FUNCTION__, frameWidth);
-
     (*aResult).top = (*aResult).bottom = (*aResult).left = (*aResult).right = 0;
 
 //     switch(aWidgetType) {
@@ -287,10 +288,12 @@ nsNativeThemeQt::GetWidgetPadding(nsIDeviceContext* ,
                                   nsMargin* aResult)
 {
     // XXX: Where to get padding values, framewidth?
-//     if (aWidgetType == NS_THEME_TEXTFIELD || aWidgetType == NS_THEME_TEXTFIELD_MULTILINE) {
-//         aResult->SizeTo(2, 2, 2, 2);
-//         return PR_TRUE;
-//     }
+    if (aWidgetType == NS_THEME_TEXTFIELD ||
+        aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
+        aWidgetType == NS_THEME_DROPDOWN) {
+        aResult->SizeTo(2, 2, 2, 2);
+        return PR_TRUE;
+    }
     return PR_FALSE;
 }
 
@@ -299,8 +302,6 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* a
                                       PRUint8 aWidgetType,
                                       nsSize* aResult, PRBool* aIsOverridable)
 {
-//    qDebug("%s", __PRETTY_FUNCTION__);
-
     (*aResult).width = (*aResult).height = 0;
     *aIsOverridable = PR_TRUE;
 
@@ -353,38 +354,113 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* a
     case NS_THEME_SCROLLBAR_BUTTON_UP:
     case NS_THEME_SCROLLBAR_BUTTON_DOWN:
     case NS_THEME_SCROLLBAR_BUTTON_LEFT:
-    case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
+    case NS_THEME_SCROLLBAR_BUTTON_RIGHT: {
         (*aResult).width = s->pixelMetric(QStyle::PM_ScrollBarExtent);
         (*aResult).height = (*aResult).width;
         //*aIsOverridable = PR_FALSE;
         break;
-    case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
+        }
+    case NS_THEME_SCROLLBAR_THUMB_VERTICAL: {
         (*aResult).width = s->pixelMetric(QStyle::PM_ScrollBarExtent);
         (*aResult).height = s->pixelMetric(QStyle::PM_ScrollBarSliderMin);
         //*aIsOverridable = PR_FALSE;
         break;
-    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
+        }
+    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL: {
         (*aResult).width = s->pixelMetric(QStyle::PM_ScrollBarSliderMin);
         (*aResult).height = s->pixelMetric(QStyle::PM_ScrollBarExtent);
         //*aIsOverridable = PR_FALSE;
         break;
-    case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
+        }
+    case NS_THEME_SCROLLBAR_TRACK_VERTICAL: {
         (*aResult).width = s->pixelMetric(QStyle::PM_ScrollBarExtent);
         (*aResult).height = s->pixelMetric(QStyle::PM_SliderLength);
         break;
-    case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+        }
+    case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL: {
         (*aResult).width = s->pixelMetric(QStyle::PM_SliderLength);
         (*aResult).height = s->pixelMetric(QStyle::PM_ScrollBarExtent);
         break;
+        }
     case NS_THEME_DROPDOWN_BUTTON: {
-//        QRect r = s->subControlRect(QStyle::CC_ComboBox, combo, QStyle::SC_ComboBoxArrow);
-//        (*aResult).width = r.width() - 2*frameWidth;
-//        (*aResult).height = r.height() - 2*frameWidth;
+        qDebug("---");
+        QStyleOptionComboBox comboOpt;
+        
+        nsRect frameRect = aFrame->GetRect();
+        QRect qRect = qRectInPixels(frameRect, p2a);
+        comboOpt.rect = qRect;
+//         qDebug("qRect (%3d,%3d,%3d,%3d)",
+//             qRect.x(), qRect.y(), qRect.width(), qRect.height());
+
+        InitComboStyle(aWidgetType, aFrame, qRect, comboOpt);
+
+        QRect subRect = s->subControlRect(QStyle::CC_ComboBox, &comboOpt, QStyle::SC_ComboBoxArrow, NULL);
+  
+        (*aResult).width = subRect.width();
+        (*aResult).height = subRect.height();
+        qDebug("Min size for NS_THEME_DROPDOWN_BUTTON (%3d,%3d)", (*aResult).width, (*aResult).height);
+        //*aIsOverridable = PR_FALSE;
         break;
     }
-    case NS_THEME_DROPDOWN:
-    case NS_THEME_DROPDOWN_TEXT:
-    case NS_THEME_DROPDOWN_TEXTFIELD:
+    case NS_THEME_DROPDOWN: {
+        QStyleOptionComboBox comboOpt;
+
+        nsRect frameRect = aFrame->GetContentRect();
+        QRect qRect = qRectInPixels(frameRect, p2a);
+        comboOpt.rect = qRect;
+
+        InitComboStyle(aWidgetType, aFrame, qRect, comboOpt);
+
+        QRect subRect = s->subControlRect(QStyle::CC_ComboBox, 
+                                          &comboOpt, 
+                                          QStyle::SC_ComboBoxFrame, 
+                                          NULL);
+
+        (*aResult).width = subRect.width();
+        (*aResult).height = subRect.height();
+        //qDebug("Min size for NS_THEME_DROPDOWN (%3d,%3d)", (*aResult).width, (*aResult).height);
+        //*aIsOverridable = PR_FALSE;
+        break;
+    }
+    case NS_THEME_DROPDOWN_TEXT: {
+        qDebug("---");
+        QStyleOptionComboBox comboOpt;
+        
+        nsRect frameRect = aFrame->GetRect();
+
+        QRect qRect = qRectInPixels(frameRect, p2a);
+        
+//         qDebug("qRect (%3d,%3d,%3d,%3d)",
+//             qRect.x(), qRect.y(), qRect.width(), qRect.height());
+
+        comboOpt.rect = qRect;
+
+        QRect subRect = s->subControlRect(QStyle::CC_ComboBox, &comboOpt, QStyle::SC_ComboBoxEditField, NULL);
+       
+        (*aResult).width = subRect.width();
+        (*aResult).height = subRect.height();
+//         qDebug("Min size for NS_THEME_DROPDOWN_TEXT (%3d,%3d)", (*aResult).width, (*aResult).height);
+        //*aIsOverridable = PR_FALSE;
+        break;
+    }
+    case NS_THEME_DROPDOWN_TEXTFIELD: {
+        QStyleOptionComboBox comboOpt;
+        
+        nsRect frameRect = aFrame->GetRect();
+
+        QRect qRect = qRectInPixels(frameRect, p2a);
+
+        comboOpt.rect = qRect;
+
+        QRect subRect = s->subControlRect(QStyle::CC_ComboBox, &comboOpt, QStyle::SC_ComboBoxArrow, NULL);
+        QRect subRect2 = s->subControlRect(QStyle::CC_ComboBox, &comboOpt, QStyle::SC_ComboBoxFrame, NULL);
+
+        (*aResult).width = subRect.width() + subRect2.width();
+        (*aResult).height = std::max(subRect.height(), subRect2.height());
+//         qDebug("Min size for NS_THEME_DROPDOWN_TEXTFIELD (%3d,%3d)", (*aResult).width, (*aResult).height);
+        //*aIsOverridable = PR_FALSE;
+        break;
+    }
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
         break;
@@ -396,8 +472,6 @@ NS_IMETHODIMP
 nsNativeThemeQt::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
                                     nsIAtom* aAttribute, PRBool* aShouldRepaint)
 {
-//    qDebug("%s", __PRETTY_FUNCTION__);
-
     *aShouldRepaint = TRUE;
     return NS_OK;
 }
@@ -406,11 +480,9 @@ nsNativeThemeQt::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
 NS_IMETHODIMP
 nsNativeThemeQt::ThemeChanged()
 {
-//     qDebug("%s", __PRETTY_FUNCTION__);
-
     QStyle *s = qApp->style();
     if (s)
-      frameWidth = s->pixelMetric(QStyle::PM_DefaultFrameWidth);
+      mFrameWidth = s->pixelMetric(QStyle::PM_DefaultFrameWidth);
     return NS_OK;
 }
 
@@ -419,9 +491,6 @@ nsNativeThemeQt::ThemeSupportsWidget(nsPresContext* aPresContext,
                                      nsIFrame* aFrame,
                                      PRUint8 aWidgetType)
 {
-//     qDebug("%s", __PRETTY_FUNCTION__);
-//     return FALSE;
-
     switch (aWidgetType) {
     case NS_THEME_SCROLLBAR:
     case NS_THEME_SCROLLBAR_BUTTON_UP:
@@ -440,61 +509,48 @@ nsNativeThemeQt::ThemeSupportsWidget(nsPresContext* aPresContext,
     case NS_THEME_CHECKBOX_SMALL:
     case NS_THEME_BUTTON_BEVEL:
     case NS_THEME_BUTTON:
-    //case NS_THEME_DROPDOWN:
-    //case NS_THEME_DROPDOWN_BUTTON:
-    //case NS_THEME_DROPDOWN_TEXT:
+    case NS_THEME_DROPDOWN:
+    case NS_THEME_DROPDOWN_BUTTON:
+    case NS_THEME_DROPDOWN_TEXT:
     case NS_THEME_DROPDOWN_TEXTFIELD:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
-    //case NS_THEME_LISTBOX:
-//         qDebug("%s : return PR_TRUE", __PRETTY_FUNCTION__);
+    case NS_THEME_LISTBOX:
         return PR_TRUE;
     default:
-//        qDebug("%s : Widget type %d not implemented", __PRETTY_FUNCTION__, aWidgetType);
         break;
     }
-//     qDebug("%s : return PR_FALSE", __PRETTY_FUNCTION__);
     return PR_FALSE;
 }
 
 PRBool
 nsNativeThemeQt::WidgetIsContainer(PRUint8 aWidgetType)
 {
-//    qDebug("%s", __PRETTY_FUNCTION__);
-    // XXXdwh At some point flesh all of this out.
-/*
-    if (aWidgetType == NS_THEME_DROPDOWN_BUTTON ||
-        aWidgetType == NS_THEME_RADIO ||
-        aWidgetType == NS_THEME_CHECKBOX) {
-//         qDebug("%s : return PR_FALSE", __PRETTY_FUNCTION__);
-        return PR_FALSE;
-    }
-//     qDebug("%s : return PR_TRUE", __PRETTY_FUNCTION__);
-*/
-    return PR_TRUE;
+//     if (aWidgetType == NS_THEME_DROPDOWN_BUTTON ||
+//         aWidgetType == NS_THEME_RADIO ||
+//         aWidgetType == NS_THEME_CHECKBOX) {
+//         return PR_FALSE;
+//     }
+
+   return PR_TRUE;
 }
 
 PRBool
 nsNativeThemeQt::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType)
 {
-//    qDebug("%s", __PRETTY_FUNCTION__);
-/*
     if (aWidgetType == NS_THEME_DROPDOWN ||
         aWidgetType == NS_THEME_BUTTON || 
         aWidgetType == NS_THEME_TREEVIEW_HEADER_CELL) { 
-//         qDebug("%s : return PR_TRUE", __PRETTY_FUNCTION__);
         return PR_TRUE;
     }
-//     qDebug("%s : return PR_FALSE", __PRETTY_FUNCTION__);
-*/
+
     return PR_FALSE;
 }
 
 PRBool
 nsNativeThemeQt::ThemeNeedsComboboxDropmarker()
 {
-//    qDebug("%s", __PRETTY_FUNCTION__);
-    return PR_FALSE;
+    return PR_TRUE;
 }
 
 void
@@ -555,6 +611,35 @@ nsNativeThemeQt::InitPlainStyle(PRUint8 aWidgetType,
         opt.state |= QStyle::State_MouseOver;
     if (eventState & NS_EVENT_STATE_FOCUS)
         opt.state |= QStyle::State_HasFocus;
+
+    opt.state |= extraFlags;
+}
+
+void
+nsNativeThemeQt::InitComboStyle(PRUint8 aWidgetType,
+                                nsIFrame* aFrame,
+                                QRect rect,
+                                QStyleOptionComboBox &opt,
+                                QStyle::State extraFlags /*= QStyle::State_None*/)
+{
+    PRInt32 eventState = GetContentState(aFrame, aWidgetType);
+
+    PRBool disabled = IsDisabled(aFrame);
+
+    if (!disabled)
+        opt.state |= QStyle::State_Enabled;
+    if (eventState & NS_EVENT_STATE_HOVER)
+        opt.state |= QStyle::State_MouseOver;
+    if (eventState & NS_EVENT_STATE_FOCUS)
+        opt.state |= QStyle::State_HasFocus;
+    if (!(eventState & NS_EVENT_STATE_ACTIVE))
+        opt.state |= QStyle::State_Raised;
+    if (!disabled && eventState & NS_EVENT_STATE_ACTIVE)
+        // Don't allow sunken when disabled
+        opt.state |= QStyle::State_On;
+
+    opt.rect = rect;
+    opt.palette = mNoBackgroundPalette;
 
     opt.state |= extraFlags;
 }
