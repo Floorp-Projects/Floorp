@@ -203,7 +203,7 @@ FindOnBoundary(const nsAString &aToken, const nsAString &aTarget)
     // we're not currently on a word boundary, eat up as many non-word boundary
     // characters as possible -- don't kill characters if we're currently on a
     // word boundary so that we can match tokens that start on a word boundary.
-    if (!IsWordBoundary(*targetStart++))
+    if (!IsWordBoundary(ToLowerCase(*targetStart++)))
       while (targetStart != targetEnd && !IsWordBoundary(*targetStart))
         targetStart++;
 
