@@ -68,7 +68,6 @@ REQUIRES  = xpcom \
             exthandler \
             docshell \
             toolkitcomps \
-            places \
             $(NULL)
 
 CPPSRCS   = \
