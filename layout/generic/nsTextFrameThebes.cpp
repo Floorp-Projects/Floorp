@@ -3270,6 +3270,9 @@ nsContinuingTextFrame::GetFirstContinuation() const
   nsIFrame *firstContinuation,
   *previous = const_cast<nsIFrame*>
                         (static_cast<const nsIFrame*>(mPrevContinuation));
+
+  NS_ASSERTION(previous, "How can an nsContinuingTextFrame be the first continuation?");
+
   do {
     firstContinuation = previous;
     previous = firstContinuation->GetPrevContinuation();
