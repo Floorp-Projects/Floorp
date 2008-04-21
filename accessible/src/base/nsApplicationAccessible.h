@@ -69,7 +69,6 @@ public:
 
   // nsIAccessible
   NS_IMETHOD GetName(nsAString & aName);
-  NS_IMETHOD GetDescription(nsAString & aDescription);
   NS_IMETHOD GetRole(PRUint32 *aRole);
   NS_IMETHOD GetFinalRole(PRUint32 *aFinalRole);
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
