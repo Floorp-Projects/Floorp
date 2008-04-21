@@ -383,13 +383,13 @@ PlacesController.prototype = {
    *    "link"              node is a URI
    *    "bookmark"          node is a bookamrk
    *    "livemarkChild"     node is a child of a livemark
+   *    "tagChild"     node is a child of a tag
    *    "folder"            node is a folder
    *    "query"             node is a query
    *    "dynamiccontainer"  node is a dynamic container
    *    "separator"         node is a separator line
    *    "host"              node is a host
-   *    "mutable"           node can have items inserted or reordered
-   *    
+   *
    * @returns an array of objects corresponding the selected nodes. Each
    *          object has each of the properties above set if its corresponding
    *          node matches the rule. In addition, the annotations names for each 
@@ -446,24 +446,21 @@ PlacesController.prototype = {
           uri = PlacesUtils._uri(node.uri);
           if (PlacesUtils.nodeIsBookmark(node)) {
             nodeData["bookmark"] = true;
+            PlacesUtils.nodeIsTagQuery(node.parent)
             var mss = PlacesUIUtils.microsummaries;
             if (mss.hasMicrosummary(node.itemId))
               nodeData["microsummary"] = true;
-            else if (node.parent &&
-                     PlacesUtils.nodeIsLivemarkContainer(node.parent))
-              nodeData["livemarkChild"] = true;
+
+            var parentNode = node.parent;
+            if (parentNode) {
+              if (PlacesUtils.nodeIsTagQuery(parentNode))
+                nodeData["tagChild"] = true;
+              else if (PlacesUtils.nodeIsLivemarkContainer(parentNode))
+                nodeData["livemarkChild"] = true;
+            }
           }
           break;
       }
-
-      // Mutability is whether or not a container can have selected items
-      // inserted or reordered. It does _not_ dictate whether or not the 
-      // container can have items removed from it, since some containers that
-      // aren't  reorderable can have items removed from them, e.g. a history
-      // list. 
-      if (!PlacesUtils.nodeIsReadOnly(node) &&
-          !PlacesUtils.isReadonlyFolder(node.parent || root))
-        nodeData["mutable"] = true;
 
       // annotations
       if (uri) {
@@ -509,8 +506,12 @@ PlacesController.prototype = {
       }
     }
 
-    if (aMenuItem.hasAttribute("selection")) {
-      var showRules = aMenuItem.getAttribute("selection").split("|");
+    var selectionAttr = aMenuItem.getAttribute("selection");
+    if (selectionAttr) {
+      if (selectionAttr == "any")
+        return true;
+
+      var showRules = selectionAttr.split("|");
       var anyMatched = false;
       function metaDataNodeMatches(metaDataNode, rules) {
         for (var i=0; i < rules.length; i++) {
@@ -553,9 +554,11 @@ PlacesController.prototype = {
    *     selection attribute. A menu-item would be hidden if at least one of the
    *     given rules apply to one of the selected nodes. The rules should be
    *     separated with the | character.
-   *  5) The visibility state of a menu-item is unchanged if none of these
+   *  5) The "hideifnoinsetionpoint" attribute may be set on a menu-item to
+   *     true if it should be hidden when there's no insertion point
+   *  6) The visibility state of a menu-item is unchanged if none of these
    *     attribute are set.
-   *  6) These attributes should not be set on separators for which the
+   *  7) These attributes should not be set on separators for which the
    *     visibility state is "auto-detected."
    * @param   aPopup
    *          The menupopup to build children into.
@@ -563,6 +566,8 @@ PlacesController.prototype = {
    */
   buildContextMenu: function PC_buildContextMenu(aPopup) {
     var metadata = this._buildSelectionMetadata();
+    var ip = this._view.insertionPoint;
+    var noIp = !ip || ip.isTag;
 
     var separator = null;
     var visibleItemsBeforeSep = false;
@@ -570,7 +575,9 @@ PlacesController.prototype = {
     for (var i = 0; i < aPopup.childNodes.length; ++i) {
       var item = aPopup.childNodes[i];
       if (item.localName != "menuseparator") {
-        item.hidden = !this._shouldShowMenuItem(item, metadata);
+        item.hidden = item.getAttribute("hideifnoinsetionpoint") == "true" ||
+                      !this._shouldShowMenuItem(item, metadata);
+
         if (!item.hidden) {
           visibleItemsBeforeSep = true;
           anyVisible = true;
