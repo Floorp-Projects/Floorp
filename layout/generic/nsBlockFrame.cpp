@@ -6130,7 +6130,7 @@ NS_IMETHODIMP nsBlockFrame::GetAccessible(nsIAccessible** aAccessible)
 
   nsPresContext *aPresContext = PresContext();
   if (!mBullet || !aPresContext) {
-    if (!mContent || !mContent->GetParent()) {
+    if (!mContent->GetParent()) {
       // Don't create accessible objects for the root content node, they are redundant with
       // the nsDocAccessible object created with the document node
       return NS_ERROR_FAILURE;
