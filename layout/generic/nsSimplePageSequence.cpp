@@ -235,6 +235,12 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   nsSize pageSize = aPresContext->GetPageSize();
 
   mPageData->mReflowSize = pageSize;
+  // If we're printing a selection, we need to reflow with
+  // unconstrained height, to make sure we'll get to the selection
+  // even if it's beyond the first page of content.
+  if (nsIPrintSettings::kRangeSelection == mPrintRangeType) {
+    mPageData->mReflowSize.height = NS_UNCONSTRAINEDSIZE;
+  }
   mPageData->mReflowMargin = mMargin;
 
   // Compute the size of each page and the x coordinate that each page will
