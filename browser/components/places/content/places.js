@@ -572,9 +572,10 @@ var PlacesOrganizer = {
      */
     var infoBox = document.getElementById("infoBox");
     var infoBoxExpander = document.getElementById("infoBoxExpander");
-    if ((PlacesUtils.nodeIsFolder(aNode) &&
-         !PlacesUtils.nodeIsLivemarkContainer(aNode)) ||
-        PlacesUtils.nodeIsLivemarkItem(aNode)) {
+    if (aNode.itemId != -1 &&
+        ((PlacesUtils.nodeIsFolder(aNode) &&
+          !PlacesUtils.nodeIsLivemarkContainer(aNode)) ||
+         PlacesUtils.nodeIsLivemarkItem(aNode))) {
       if (infoBox.getAttribute("minimal") == "true")
         infoBox.setAttribute("wasminimal", "true");
       infoBox.removeAttribute("minimal");
@@ -610,36 +611,28 @@ var PlacesOrganizer = {
     }
 
     var infoBox = document.getElementById("infoBox");
-    var detailsDeck = document.getElementById("detailsDeck");
-    detailsDeck.selectedIndex = 1;
+    var detailsDeck = document.getElementById("detailsDeck");    
     var selectedNode = this._content.selectedNode;
-    if (selectedNode) {
+    if (selectedNode && !PlacesUtils.nodeIsSeparator(selectedNode)) {
+      detailsDeck.selectedIndex = 1;
       infoBox.hidden = false;
-      if (selectedNode.itemId != -1 &&
-          !PlacesUtils.nodeIsSeparator(selectedNode)) {
-        if (this._paneDisabled) {
-          this._setDetailsFieldsDisabledState(false);
-          this._paneDisabled = false;
-        }
-
-        // Using the concrete itemId is arguably wrong. The bookmarks API
-        // does allow setting properties for folder shortcuts as well, but since
-        // the UI does not distinct between the couple, we better just show
-        // the concrete item properties.
-        if (selectedNode.type ==
-            Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT) {
-          gEditItemOverlay.initPanel(asQuery(selectedNode).folderItemId,
-                                     { hiddenRows: ["folderPicker"],
-                                       forceReadOnly: true });
-        }
-        else {
-          gEditItemOverlay.initPanel(selectedNode.itemId,
-                                     { hiddenRows: ["folderPicker"] });
-        }
-
-        this._detectAndSetDetailsPaneMinimalState(selectedNode);
-        return;
+      // Using the concrete itemId is arguably wrong. The bookmarks API
+      // does allow setting properties for folder shortcuts as well, but since
+      // the UI does not distinct between the couple, we better just show
+      // the concrete item properties.
+      if (selectedNode.type ==
+          Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT) {
+        gEditItemOverlay.initPanel(asQuery(selectedNode).folderItemId,
+                                  { hiddenRows: ["folderPicker"],
+                                    forceReadOnly: true });
       }
+      else {
+        var itemId = selectedNode.itemId;
+        gEditItemOverlay.initPanel(itemId != -1 ? itemId :
+                                   PlacesUtils._uri(selectedNode.uri),
+                                   { hiddenRows: ["folderPicker"] });
+      }
+      this._detectAndSetDetailsPaneMinimalState(selectedNode);
     }
     else {
       detailsDeck.selectedIndex = 0;
@@ -663,13 +656,6 @@ var PlacesOrganizer = {
                                              [rowCount]);
         }
       }
-    }
-
-    // Nothing to do if the pane was already disabled
-    if (!this._paneDisabled) {
-      gEditItemOverlay.uninitPanel();
-      this._setDetailsFieldsDisabledState(true);
-      this._paneDisabled = true;
     }
   },
 
