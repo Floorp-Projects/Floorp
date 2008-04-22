@@ -112,7 +112,7 @@ EXTRA_DSO_LDOPTS = \
 		$(NULL)
 
 
-EXTRA_DSO_LDOPTS += -L$(DIST)/lib $(MOZ_XLIB_LDFLAGS)
+EXTRA_DSO_LDOPTS += -L$(DIST)/lib $(MOZ_XLIB_LDFLAGS) $(XLIBS)
 
 # If not primary toolkit, install in secondary path
 ifneq (qt,$(MOZ_WIDGET_TOOLKIT))
