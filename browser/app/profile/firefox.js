@@ -632,7 +632,7 @@ pref("urlclassifier.gethashtables", "goog-phish-shavar,goog-malware-shavar");
 pref("urlclassifier.confirm-age", 2700);
 
 // URL for checking the reason for a malware warning.
-pref("browser.safebrowsing.malware.reportURL", "http://www.stopbadware.org/reports/container?source=@APP_UA_NAME@&version=@APP_VERSION@&reportname=");
+pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/diagnostic?client=%NAME%&hl=%LOCALE%&site=");
 
 #endif
 
