@@ -451,7 +451,7 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* a
     case NS_THEME_DROPDOWN: {
         QStyleOptionComboBox comboOpt;
 
-        nsRect frameRect = aFrame->GetContentRect();
+        nsRect frameRect = aFrame->GetRect();
         QRect qRect = qRectInPixels(frameRect, p2a);
         comboOpt.rect = qRect;
 

@@ -84,7 +84,6 @@ CPPSRCS	= \
 		$(MOCSRCS) \
 		nsAppShell.cpp \
 		nsWidgetFactory.cpp \
-		nsCommonWidget.cpp \
 		nsWindow.cpp \
 		nsLookAndFeel.cpp \
 		nsToolkit.cpp \

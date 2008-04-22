@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Masayuki Nakano <masayuki@d-toybox.com>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,7 +43,9 @@
 
 #include "nsAutoPtr.h"
 
-#include "nsCommonWidget.h"
+#include "nsBaseWidget.h"
+#include "nsGUIEvent.h"
+#include <QKeyEvent>
 
 #include "nsWeakReference.h"
 
@@ -55,11 +58,54 @@
 #include <QX11Info>
 #endif
 
+#ifdef MOZ_LOGGING
+
+// make sure that logging is enabled before including prlog.h
+#define FORCE_PR_LOG
+
+#include "prlog.h"
+
+extern PRLogModuleInfo *gWidgetLog;
+extern PRLogModuleInfo *gWidgetFocusLog;
+extern PRLogModuleInfo *gWidgetIMLog;
+extern PRLogModuleInfo *gWidgetDrawLog;
+
+#define LOG(args) PR_LOG(gWidgetLog, 4, args)
+#define LOGFOCUS(args) PR_LOG(gWidgetFocusLog, 4, args)
+#define LOGIM(args) PR_LOG(gWidgetIMLog, 4, args)
+#define LOGDRAW(args) PR_LOG(gWidgetDrawLog, 4, args)
+
+#else
+
+#ifdef DEBUG_WIDGETS
+
+#define PR_LOG2(_args)         \
+    PR_BEGIN_MACRO             \
+      qDebug _args;            \
+    PR_END_MACRO
+
+#define LOG(args) PR_LOG2(args)
+#define LOGFOCUS(args) PR_LOG2(args)
+#define LOGIM(args) PR_LOG2(args)
+#define LOGDRAW(args) PR_LOG2(args)
+
+#else
+
+#define LOG(args)
+#define LOGFOCUS(args)
+#define LOGIM(args)
+#define LOGDRAW(args)
+
+#endif
+
+#endif /* MOZ_LOGGING */
+
 class QEvent;
 
 class MozQWidget;
 
-class nsWindow : public nsCommonWidget, public nsSupportsWeakReference
+class nsWindow : public nsBaseWidget,
+                 public nsSupportsWeakReference
 {
 public:
     nsWindow();
@@ -69,7 +115,10 @@ public:
 
     NS_DECL_ISUPPORTS_INHERITED
 
+    //
     // nsIWidget
+    //
+
     NS_IMETHOD         Create(nsIWidget        *aParent,
                               const nsRect     &aRect,
                               EVENT_CALLBACK   aHandleEventFunction,
@@ -86,6 +135,8 @@ public:
                               nsWidgetInitData *aInitData);
     NS_IMETHOD         Destroy(void);
     NS_IMETHOD         SetParent(nsIWidget* aNewParent);
+    virtual nsIWidget *GetParent(void);
+    NS_IMETHOD         Show(PRBool aState);
     NS_IMETHOD         SetModal(PRBool aModal);
     NS_IMETHOD         IsVisible(PRBool & aState);
     NS_IMETHOD         ConstrainPosition(PRBool aAllowSlop,
@@ -93,10 +144,18 @@ public:
                                          PRInt32 *aY);
     NS_IMETHOD         Move(PRInt32 aX,
                             PRInt32 aY);
+    NS_IMETHOD         Resize(PRInt32 aWidth,
+                              PRInt32 aHeight,
+                              PRBool  aRepaint);
+    NS_IMETHOD         Resize(PRInt32 aX,
+                              PRInt32 aY,
+                              PRInt32 aWidth,
+                              PRInt32 aHeight,
+                              PRBool   aRepaint);
+    NS_IMETHOD         SetZIndex(PRInt32 aZIndex);
     NS_IMETHOD         PlaceBehind(nsTopLevelWidgetZPlacement  aPlacement,
                                    nsIWidget                  *aWidget,
                                    PRBool                      aActivate);
-    NS_IMETHOD         SetZIndex(PRInt32 aZIndex);
     NS_IMETHOD         SetSizeMode(PRInt32 aMode);
     NS_IMETHOD         Enable(PRBool aState);
     NS_IMETHOD         SetFocus(PRBool aRaise = PR_FALSE);
@@ -106,6 +165,10 @@ public:
     NS_IMETHOD         SetCursor(nsCursor aCursor);
     NS_IMETHOD         SetCursor(imgIContainer* aCursor,
                                  PRUint32 aHotspotX, PRUint32 aHotspotY);
+    NS_IMETHOD         SetHasTransparentBackground(PRBool aTransparent);
+    NS_IMETHOD         GetHasTransparentBackground(PRBool& aTransparent);
+    NS_IMETHOD         HideWindowChrome(PRBool aShouldHide);
+    NS_IMETHOD         MakeFullScreen(PRBool aFullScreen);
     NS_IMETHOD         Validate();
     NS_IMETHOD         Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD         Invalidate(const nsRect &aRect,
@@ -122,11 +185,14 @@ public:
     NS_IMETHOD         ScrollRect(nsRect  &aSrcRect,
                                   PRInt32  aDx,
                                   PRInt32  aDy);
+
+
+    NS_IMETHOD         PreCreateWidget(nsWidgetInitData *aWidgetInitData);
+
     virtual void*      GetNativeData(PRUint32 aDataType);
     NS_IMETHOD         SetBorderStyle(nsBorderStyle aBorderStyle);
     NS_IMETHOD         SetTitle(const nsAString& aTitle);
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec);
-    NS_IMETHOD         SetWindowClass(const nsAString& xulWinType);
     NS_IMETHOD         SetMenuBar(nsIMenuBar * aMenuBar);
     NS_IMETHOD         ShowMenuBar(PRBool aShow);
     NS_IMETHOD         WidgetToScreen(const nsRect& aOldRect,
@@ -135,23 +201,77 @@ public:
                                       nsRect& aNewRect);
     NS_IMETHOD         BeginResizingChildren(void);
     NS_IMETHOD         EndResizingChildren(void);
+    NS_IMETHOD         GetPreferredSize (PRInt32 &aWidth,
+                                         PRInt32 &aHeight);
+    NS_IMETHOD         SetPreferredSize (PRInt32 aWidth,
+                                         PRInt32 aHeight);
+    NS_IMETHOD         DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
+
     NS_IMETHOD         EnableDragDrop(PRBool aEnable);
     virtual void       ConvertToDeviceCoordinates(nscoord &aX,
                                                   nscoord &aY);
-    NS_IMETHOD         PreCreateWidget(nsWidgetInitData *aWidgetInitData);
     NS_IMETHOD         CaptureMouse(PRBool aCapture);
     NS_IMETHOD         CaptureRollupEvents(nsIRollupListener *aListener,
                                            PRBool aDoCapture,
                                            PRBool aConsumeRollupEvent);
-    NS_IMETHOD         GetAttention(PRInt32 aCycleCount);
-    NS_IMETHOD         MakeFullScreen(PRBool aFullScreen);
-    NS_IMETHOD         HideWindowChrome(PRBool aShouldHide);
 
+    NS_IMETHOD         SetWindowClass(const nsAString& xulWinType);
+
+    NS_IMETHOD         GetAttention(PRInt32 aCycleCount);
+    NS_IMETHOD         BeginResizeDrag   (nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical);
+
+    //
     // utility methods
+    //
+
     void               LoseFocus();
     qint32             ConvertBorderStyles(nsBorderStyle aStyle);
 
+
+    /***** from CommonWidget *****/
+
+    // event handling code
+
+    void DispatchGotFocusEvent(void);
+    void DispatchLostFocusEvent(void);
+    void DispatchActivateEvent(void);
+    void DispatchDeactivateEvent(void);
+    void DispatchResizeEvent(nsRect &aRect, nsEventStatus &aStatus);
+
+    nsEventStatus DispatchEvent(nsGUIEvent *aEvent) {
+        nsEventStatus status;
+        DispatchEvent(aEvent, status);
+        return status;
+    }
+
+    // Some of the nsIWidget methods
+    NS_IMETHOD         IsEnabled        (PRBool *aState);
+
+    // called when we are destroyed
+    void OnDestroy(void);
+
+    // called to check and see if a widget's dimensions are sane
+    PRBool AreBoundsSane(void);
+
 protected:
+    nsCOMPtr<nsIWidget> mParent;
+    // Is this a toplevel window?
+    PRPackedBool        mIsTopLevel;
+    // Has this widget been destroyed yet?
+    PRPackedBool        mIsDestroyed;
+
+    // This flag tracks if we're hidden or shown.
+    PRPackedBool        mIsShown;
+    // is this widget enabled?
+    PRBool              mEnabled;
+    // Has anyone set an x/y location for this widget yet? Toplevels
+    // shouldn't be automatically set to 0,0 for first show.
+    PRBool              mPlaced;
+
+    // Preferred sizes
+    PRUint32            mPreferredWidth;
+    PRUint32            mPreferredHeight;
+
     /**
      * Event handlers (proxied from the actual qwidget).
      * They follow normal Qt widget semantics.
@@ -161,18 +281,18 @@ protected:
     friend class InterceptContainer;
     friend class MozQWidget;
 
-    virtual nsEventStatus OnExposeEvent(QPaintEvent *);
-    virtual nsEventStatus OnConfigureEvent(QMoveEvent *);
-    virtual nsEventStatus OnSizeAllocate(QResizeEvent *);
-    virtual nsEventStatus OnDeleteEvent(QCloseEvent *);
+    virtual nsEventStatus OnPaintEvent(QPaintEvent *);
+    virtual nsEventStatus OnMoveEvent(QMoveEvent *);
+    virtual nsEventStatus OnResizeEvent(QResizeEvent *);
+    virtual nsEventStatus OnCloseEvent(QCloseEvent *);
     virtual nsEventStatus OnEnterNotifyEvent(QEvent *);
     virtual nsEventStatus OnLeaveNotifyEvent(QEvent *);
     virtual nsEventStatus OnMotionNotifyEvent(QMouseEvent *);
     virtual nsEventStatus OnButtonPressEvent(QMouseEvent *);
     virtual nsEventStatus OnButtonReleaseEvent(QMouseEvent *);
     virtual nsEventStatus mouseDoubleClickEvent(QMouseEvent *);
-    virtual nsEventStatus OnContainerFocusInEvent(QFocusEvent *);
-    virtual nsEventStatus OnContainerFocusOutEvent(QFocusEvent *);
+    virtual nsEventStatus OnFocusInEvent(QFocusEvent *);
+    virtual nsEventStatus OnFocusOutEvent(QFocusEvent *);
     virtual nsEventStatus OnKeyPressEvent(QKeyEvent *);
     virtual nsEventStatus OnKeyReleaseEvent(QKeyEvent *);
     virtual nsEventStatus OnScrollEvent(QWheelEvent *);
@@ -223,15 +343,6 @@ protected:
 
     void               ThemeChanged(void);
 
-    NS_IMETHOD         BeginResizeDrag   (nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical);
-
-   void                ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight);
-   void                ApplyTransparencyBitmap();
-   NS_IMETHOD          SetHasTransparentBackground(PRBool aTransparent);
-   NS_IMETHOD          GetHasTransparentBackground(PRBool& aTransparent);
-   nsresult            UpdateTranslucentWindowAlphaInternal(const nsRect& aRect,
-                                                            PRUint8* aAlphas, PRInt32 aStride);
-
    gfxASurface        *GetThebesSurface();
 
 private:
@@ -244,7 +355,7 @@ private:
     PRBool             DispatchCommandEvent(nsIAtom* aCommand);
     QWidget           *createQWidget(QWidget *parent, nsWidgetInitData *aInitData);
 
-    QWidget            *mDrawingarea;
+    QWidget            *mDrawingArea;
     MozQWidget *mMozQWidget;
 
     PRUint32            mIsVisible : 1,
@@ -252,17 +363,9 @@ private:
     PRInt32             mSizeState;
     PluginType          mPluginType;
 
-    PRInt32             mTransparencyBitmapWidth;
-    PRInt32             mTransparencyBitmapHeight;
-
     nsRefPtr<gfxASurface> mThebesSurface;
 
-    // Transparency
     PRBool       mIsTransparent;
-    // This bitmap tracks which pixels are transparent. We don't support
-    // full translucency at this time; each pixel is either fully opaque
-    // or fully transparent.
-    char*       mTransparencyBitmap;
  
     // all of our DND stuff
     // this is the last window that had a drag event happen on it.
