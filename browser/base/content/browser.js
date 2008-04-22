@@ -6563,7 +6563,9 @@ IdentityHandler.prototype = {
       // for certs that are trusted because of a security exception.
       var tooltip = this._stringBundle.getFormattedString("identity.identified.verifier",
                                                           [iData.caOrg]);
-      if (this._overrideService.hasMatchingOverride(lookupHost, iData.cert, {}, {}))
+      if (this._overrideService.hasMatchingOverride(this._lastLocation.hostname, 
+                                                    this._lastLocation.port, 
+                                                    iData.cert, {}, {}))
         tooltip = this._stringBundle.getString("identity.identified.verified_by_you");
     }
     else if (newMode == this.IDENTITY_MODE_IDENTIFIED) {
