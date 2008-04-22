@@ -367,7 +367,7 @@ private:
     PRBool             DispatchCommandEvent(nsIAtom* aCommand);
     QWidget           *createQWidget(QWidget *parent, nsWidgetInitData *aInitData);
 
-    QWidget            *mDrawingarea;
+    QWidget            *mDrawingArea;
     MozQWidget *mMozQWidget;
 
     PRUint32            mIsVisible : 1,
