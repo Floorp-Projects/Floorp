@@ -7,7 +7,7 @@
 
 /* back & forward buttons */
 #back-button, #forward-button {
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
+  list-style-image: url(libraryNavigation.png);
   -moz-appearance: none;
   padding: 0;
   border: none;
@@ -25,16 +25,16 @@
   -moz-image-region: rect(0px, 24px, 24px, 0px);
 }
 #back-button:not([disabled="true"]):hover,
-#forward-button:not([disabled="true"]):hover[chromedir="rtl"]{
- -moz-image-region: rect(24px, 24px, 48px, 0px);
+#forward-button:not([disabled="true"]):hover[chromedir="rtl"] {
+  -moz-image-region: rect(24px, 24px, 48px, 0px);
 }
 #back-button[disabled="true"],
 #forward-button[chromedir="rtl"][disabled="true"] {
- -moz-image-region: rect(48px, 24px, 72px, 0px) !important;
+  -moz-image-region: rect(48px, 24px, 72px, 0px) !important;
 }
 #back-button:not([disabled="true"]):hover:active,
-#forward-button:not([disabled="true"]):hover:active[chromedir="rtl"]{
- -moz-image-region: rect(96px, 24px, 120px, 0px);
+#forward-button:not([disabled="true"]):hover:active[chromedir="rtl"] {
+  -moz-image-region: rect(72px, 24px, 96px, 0px);
 }
 
 #forward-button,
@@ -43,16 +43,16 @@
   -moz-image-region: rect(0px, 48px, 24px, 24px);
 }
 #forward-button:not([disabled="true"]):hover,
-#back-button:not([disabled="true"]):hover[chromedir="rtl"]{
+#back-button:not([disabled="true"]):hover[chromedir="rtl"] {
   -moz-image-region: rect(24px, 48px, 48px, 24px);
 }
 #forward-button[disabled="true"],
 #back-button[chromedir="rtl"][disabled="true"] {
- -moz-image-region: rect(48px, 48px, 72px, 24px) !important;
+  -moz-image-region: rect(48px, 48px, 72px, 24px) !important;
 }
 #forward-button:not([disabled="true"]):hover:active,
-#back-button:not([disabled="true"]):hover:active[chromedir="rtl"]{
-  -moz-image-region: rect(96px, 48px, 120px, 24px);
+#back-button:not([disabled="true"]):hover:active[chromedir="rtl"] {
+  -moz-image-region: rect(72px, 48px, 96px, 24px);
 }
 
 /* Menu */
