@@ -78,7 +78,6 @@ classic.jar:
   skin/classic/browser/places/infoPaneGrippy.png            (places/infoPaneGrippy.png)
   skin/classic/browser/places/folderDropHoverArrow.png      (places/folderDropHoverArrow.png)
   skin/classic/browser/places/livemarkFolder.png            (places/livemarkFolder.png)
-  skin/classic/browser/places/livemarkFolderHover.png       (places/livemarkFolderHover.png)
   skin/classic/browser/places/back-forward.png              (places/back-forward.png)
   skin/classic/browser/places/bookmarkProperties.css        (places/bookmarkProperties.css)
   skin/classic/browser/places/contentSplitter-bg.gif        (places/contentSplitter-bg.gif)
