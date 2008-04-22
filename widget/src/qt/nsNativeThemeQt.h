@@ -124,8 +124,7 @@ private:
   void InitComboStyle(PRUint8 aWidgetType,
                       nsIFrame* aFrame,
                       QRect rect,
-                      QStyleOptionComboBox &opt,
-                      QStyle::State extraFlags = QStyle::State_None);
+                      QStyleOptionComboBox &opt);
 
 private:
 
