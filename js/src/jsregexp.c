@@ -1055,26 +1055,16 @@ lexHex:
             localMax = *src++;
             break;
         }
-        if (state->flags & JSREG_FOLD) {
-            jschar uc = upcase(localMax);
-            jschar dc = downcase(localMax);
 
-            c = JS_MAX(uc, dc);
-            if (c > localMax)
-                localMax = c;
-        } else {
+        if (inRange) {
             /* Throw a SyntaxError here, per ECMA-262, 15.10.2.15. */
-            if (inRange && rangeStart > localMax) {
+            if (rangeStart > localMax) {
                 JS_ReportErrorNumber(state->context,
                                      js_GetErrorMessage, NULL,
                                      JSMSG_BAD_CLASS_RANGE);
                 return JS_FALSE;
             }
-        }
-
-        if (inRange) {
             inRange = JS_FALSE;
-            localMax = JS_MAX(localMax, rangeStart);
         } else {
             if (canStartRange && src < end - 1) {
                 if (*src == '-') {
@@ -1084,7 +1074,24 @@ lexHex:
                     continue;
                 }
             }
+            if (state->flags & JSREG_FOLD)
+                rangeStart = localMax;   /* one run of the uc/dc loop below */
         }
+
+        if (state->flags & JSREG_FOLD) {
+            jschar maxch = localMax;
+
+            for (i = rangeStart; i <= localMax; i++) {
+                jschar uch, dch;
+            
+                uch = upcase(i);
+                dch = downcase(i);
+                maxch = JS_MAX(maxch, uch);
+                maxch = JS_MAX(maxch, dch);
+            }
+            localMax = maxch;
+        }
+
         if (localMax > max)
             max = localMax;
     }
@@ -2241,19 +2248,12 @@ AddCharacterToCharSet(RECharSet *cs, jschar c)
 static void
 AddCharacterRangeToCharSet(RECharSet *cs, uintN c1, uintN c2)
 {
-    uintN tmp, i;
+    uintN i;
 
     uintN byteIndex1 = c1 >> 3;
     uintN byteIndex2 = c2 >> 3;
 
-    JS_ASSERT(c2 <= cs->length);
-
-    /* Swap, if c1 > c2. */
-    if (c1 > c2) {
-        tmp = c1;
-        c1 = c2;
-        c2 = tmp;
-    }
+    JS_ASSERT(c2 <= cs->length && c1 <= c2);
 
     c1 &= 0x7;
     c2 &= 0x7;
@@ -2444,13 +2444,19 @@ ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
         }
         if (inRange) {
             if (gData->regexp->flags & JSREG_FOLD) {
-                if (upcase(rangeStart) < upcase(thisCh)) {
-                    AddCharacterRangeToCharSet(charSet, upcase(rangeStart),
-                                                        upcase(thisCh));
-                }
-                if (downcase(rangeStart) < downcase(thisCh)) {
-                    AddCharacterRangeToCharSet(charSet, downcase(rangeStart),
-                                                        downcase(thisCh));
+                int i;
+
+                JS_ASSERT(rangeStart <= thisCh);
+                for (i = rangeStart; i <= thisCh; i++) {
+                    jschar uch, dch;
+
+                    AddCharacterToCharSet(charSet, i);
+                    uch = upcase(i);
+                    dch = downcase(i);
+                    if (i != uch)
+                        AddCharacterToCharSet(charSet, uch);
+                    if (i != dch)
+                        AddCharacterToCharSet(charSet, dch);
                 }
             } else {
                 AddCharacterRangeToCharSet(charSet, rangeStart, thisCh);
