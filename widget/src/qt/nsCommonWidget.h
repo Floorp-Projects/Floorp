@@ -39,142 +39,15 @@
 #ifndef __nsCommonWidget_h__
 #define __nsCommonWidget_h__
 
-#include "nsBaseWidget.h"
-#include "nsGUIEvent.h"
-#include <QKeyEvent>
 
-#ifdef MOZ_LOGGING
-
-// make sure that logging is enabled before including prlog.h
-#define FORCE_PR_LOG
-
-#include "prlog.h"
-
-extern PRLogModuleInfo *gWidgetLog;
-extern PRLogModuleInfo *gWidgetFocusLog;
-extern PRLogModuleInfo *gWidgetIMLog;
-extern PRLogModuleInfo *gWidgetDrawLog;
-
-#define LOG(args) PR_LOG(gWidgetLog, 4, args)
-#define LOGFOCUS(args) PR_LOG(gWidgetFocusLog, 4, args)
-#define LOGIM(args) PR_LOG(gWidgetIMLog, 4, args)
-#define LOGDRAW(args) PR_LOG(gWidgetDrawLog, 4, args)
-
-#else
-
-#ifdef DEBUG_WIDGETS
-
-#define PR_LOG2(_args)         \
-    PR_BEGIN_MACRO             \
-      qDebug _args;            \
-    PR_END_MACRO
-
-#define LOG(args) PR_LOG2(args)
-#define LOGFOCUS(args) PR_LOG2(args)
-#define LOGIM(args) PR_LOG2(args)
-#define LOGDRAW(args) PR_LOG2(args)
-
-#else
-
-#define LOG(args)
-#define LOGFOCUS(args)
-#define LOGIM(args)
-#define LOGDRAW(args)
-
-#endif
-
-#endif /* MOZ_LOGGING */
 
 class nsCommonWidget : public nsBaseWidget {
 public:
     nsCommonWidget();
     virtual ~nsCommonWidget();
 
-    virtual nsIWidget *GetParent(void);
-
-    void CommonCreate(nsIWidget *aParent, PRBool aListenForResizes);
-
-    // event handling code
-
-    void DispatchGotFocusEvent(void);
-    void DispatchLostFocusEvent(void);
-    void DispatchActivateEvent(void);
-    void DispatchDeactivateEvent(void);
-    void DispatchResizeEvent(nsRect &aRect, nsEventStatus &aStatus);
-
-    NS_IMETHOD DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
-
-    nsEventStatus DispatchEvent(nsGUIEvent *aEvent) {
-        nsEventStatus status;
-        DispatchEvent(aEvent, status);
-        return status;
-    }
-
-    // virtual interfaces for some nsIWidget methods
-    virtual void NativeResize(PRInt32 aWidth,
-                              PRInt32 aHeight,
-                              PRBool  aRepaint) = 0;
-
-    virtual void NativeResize(PRInt32 aX,
-                              PRInt32 aY,
-                              PRInt32 aWidth,
-                              PRInt32 aHeight,
-                              PRBool  aRepaint) = 0;
-
-    virtual void NativeShow  (PRBool  aAction) = 0;
-
-    // Some of the nsIWidget methods
-    NS_IMETHOD         Show             (PRBool aState);
-    NS_IMETHOD         Resize           (PRInt32 aWidth,
-                                         PRInt32 aHeight,
-                                         PRBool  aRepaint);
-    NS_IMETHOD         Resize           (PRInt32 aX,
-                                         PRInt32 aY,
-                                         PRInt32 aWidth,
-                                         PRInt32 aHeight,
-                                         PRBool   aRepaint);
-    NS_IMETHOD         GetPreferredSize (PRInt32 &aWidth,
-                                         PRInt32 &aHeight);
-    NS_IMETHOD         SetPreferredSize (PRInt32 aWidth,
-                                         PRInt32 aHeight);
-    NS_IMETHOD         Enable           (PRBool  aState);
-    NS_IMETHOD         IsEnabled        (PRBool *aState);
-
-    // called when we are destroyed
-    void OnDestroy(void);
-
-    // called to check and see if a widget's dimensions are sane
-    PRBool AreBoundsSane(void);
 
 protected:
-    nsCOMPtr<nsIWidget> mParent;
-    // Is this a toplevel window?
-    PRPackedBool        mIsTopLevel;
-    // Has this widget been destroyed yet?
-    PRPackedBool        mIsDestroyed;
-
-    // This is a flag that tracks if we need to resize a widget or
-    // window when we show it.
-    PRPackedBool        mNeedsResize;
-    // This is a flag that tracks if we need to move a widget or
-    // window when we show it.
-    PRPackedBool        mNeedsMove;
-    // Should we send resize events on all resizes?
-    PRPackedBool        mListenForResizes;
-    // This flag tracks if we're hidden or shown.
-    PRPackedBool        mIsShown;
-    PRPackedBool        mNeedsShow;
-    // is this widget enabled?
-    PRBool              mEnabled;
-    // has the native window for this been created yet?
-    PRBool              mCreated;
-    // Has anyone set an x/y location for this widget yet? Toplevels
-    // shouldn't be automatically set to 0,0 for first show.
-    PRBool              mPlaced;
-
-    // Preferred sizes
-    PRUint32            mPreferredWidth;
-    PRUint32            mPreferredHeight;
 };
 
 #endif /* __nsCommonWidget_h__ */
