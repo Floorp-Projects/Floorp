@@ -210,19 +210,13 @@ nsWindow::nsWindow()
     memset(mKeyDownFlags, 0, sizeof(mKeyDownFlags));
 
     mIsTransparent = PR_FALSE;
-    mTransparencyBitmap = nsnull;
 
-    mTransparencyBitmapWidth  = 0;
-    mTransparencyBitmapHeight = 0;
     mCursor = eCursor_standard;
 }
 
 nsWindow::~nsWindow()
 {
     LOG(("nsWindow::~nsWindow() [%p]\n", (void *)this));
-
-    delete[] mTransparencyBitmap;
-    mTransparencyBitmap = nsnull;
 
     Destroy();
 }
@@ -1295,8 +1289,6 @@ nsWindow::OnSizeAllocate(QResizeEvent *e)
     LOG(("size_allocate [%p] %d %d\n",
          (void *)this, rect.width, rect.height));
 
-    ResizeTransparencyBitmap(rect.width, rect.height);
-
     mBounds.width = rect.width;
     mBounds.height = rect.height;
 
@@ -1304,10 +1296,6 @@ nsWindow::OnSizeAllocate(QResizeEvent *e)
     qDebug("resizeEvent: mDrawingarea=%p, aWidth=%d, aHeight=%d, aX = %d, aY = %d", (void*)mDrawingarea,
            rect.width, rect.height, rect.x, rect.y);
 #endif
-
-    if (mTransparencyBitmap) {
-      ApplyTransparencyBitmap();
-    }
 
     if (mDrawingarea)
         mDrawingarea->resize(rect.width, rect.height);
@@ -1938,8 +1926,6 @@ nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool  aRepaint)
     LOG(("nsWindow::NativeResize [%p] %d %d\n", (void *)this,
          aWidth, aHeight));
 
-    ResizeTransparencyBitmap(aWidth, aHeight);
-
     // clear our resize flag
     mNeedsResize = PR_FALSE;
 
@@ -1959,8 +1945,6 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
 
     LOG(("nsWindow::NativeResize [%p] %d %d %d %d\n", (void *)this,
          aX, aY, aWidth, aHeight));
-
-    ResizeTransparencyBitmap(aWidth, aHeight);
 
     QPoint pos(aX, aY);
     if (mDrawingarea)
@@ -1993,18 +1977,6 @@ void
 nsWindow::NativeShow (PRBool  aAction)
 {
     if (aAction) {
-        // GTK wants us to set the window mask before we show the window
-        // for the first time, or setting the mask later won't work.
-        // GTK also wants us to NOT set the window mask if we're not really
-        // going to need it, because GTK won't let us unset the mask properly
-        // later.
-        // So, we delay setting the mask until the last moment: when the window
-        // is shown.
-        // XXX that may or may not be true for GTK+ 2.x
-        if (mTransparencyBitmap) {
-            ApplyTransparencyBitmap();
-        }
-
         // unset our flag now that our window has been shown
         mNeedsShow = PR_FALSE;
     }
@@ -2021,201 +1993,12 @@ NS_IMETHODIMP
 nsWindow::SetHasTransparentBackground(PRBool aTransparent)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
-
-//    if (!mDrawingarea) {
-        // Pass the request to the toplevel window
-//        return topWindow->SetHasTransparentBackground(aTransparent);
-//    }
-
-    if (mIsTransparent == aTransparent)
-        return NS_OK;
-
-    if (!aTransparent) {
-        if (mTransparencyBitmap) {
-            delete[] mTransparencyBitmap;
-            mTransparencyBitmap = nsnull;
-            mTransparencyBitmapWidth = 0;
-            mTransparencyBitmapHeight = 0;
-            // gtk_widget_reset_shapes(mDrawingarea);
-        }
-    } // else the new default alpha values are "all 1", so we don't
-    // need to change anything yet
-
-    mIsTransparent = aTransparent;
-    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWindow::GetHasTransparentBackground(PRBool& aTransparent)
 {
-    if (!mDrawingarea) {
-        // Pass the request to the toplevel window
-//        QWidget *topWidget = nsnull;
-//        GetToplevelWidget(&topWidget);
-//        if (!topWidget) {
-//            aTransparent = PR_FALSE;
-//            return NS_ERROR_FAILURE;
-//        }
-
-//        if (!topWindow) {
-//            aTransparent = PR_FALSE;
-//            return NS_ERROR_FAILURE;
-//        }
-
-//        return topWindow->GetHasTransparentBackground(aTransparent);
-    }
-
     aTransparent = mIsTransparent;
-    return NS_OK;
-}
-
-void
-nsWindow::ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight)
-{
-    if (!mTransparencyBitmap)
-        return;
-
-    if (aNewWidth == mTransparencyBitmapWidth &&
-        aNewHeight == mTransparencyBitmapHeight)
-        return;
-
-    PRInt32 newSize = ((aNewWidth+7)/8)*aNewHeight;
-    char* newBits = new char[newSize];
-    if (!newBits) {
-        delete[] mTransparencyBitmap;
-        mTransparencyBitmap = nsnull;
-        mTransparencyBitmapWidth = 0;
-        mTransparencyBitmapHeight = 0;
-        return;
-    }
-    // fill new mask with "opaque", first
-    memset(newBits, 255, newSize);
-
-    // Now copy the intersection of the old and new areas into the new mask
-    PRInt32 copyWidth = PR_MIN(aNewWidth, mTransparencyBitmapWidth);
-    PRInt32 copyHeight = PR_MIN(aNewHeight, mTransparencyBitmapHeight);
-    PRInt32 oldRowBytes = (mTransparencyBitmapWidth+7)/8;
-    PRInt32 newRowBytes = (aNewWidth+7)/8;
-    PRInt32 copyBytes = (copyWidth+7)/8;
-
-    PRInt32 i;
-    char* fromPtr = mTransparencyBitmap;
-    char* toPtr = newBits;
-    for (i = 0; i < copyHeight; i++) {
-        memcpy(toPtr, fromPtr, copyBytes);
-        fromPtr += oldRowBytes;
-        toPtr += newRowBytes;
-    }
-
-    delete[] mTransparencyBitmap;
-    mTransparencyBitmap = newBits;
-    mTransparencyBitmapWidth = aNewWidth;
-    mTransparencyBitmapHeight = aNewHeight;
-}
-
-static PRBool
-ChangedMaskBits(char* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHeight,
-        const nsRect& aRect, PRUint8* aAlphas, PRInt32 aStride)
-{
-    PRInt32 x, y, xMax = aRect.XMost(), yMax = aRect.YMost();
-    PRInt32 maskBytesPerRow = (aMaskWidth + 7)/8;
-    for (y = aRect.y; y < yMax; y++) {
-        char* maskBytes = aMaskBits + y*maskBytesPerRow;
-        PRUint8* alphas = aAlphas;
-        for (x = aRect.x; x < xMax; x++) {
-            PRBool newBit = *alphas > 0;
-            alphas++;
-
-            char maskByte = maskBytes[x >> 3];
-            PRBool maskBit = (maskByte & (1 << (x & 7))) != 0;
-
-            if (maskBit != newBit) {
-                return PR_TRUE;
-            }
-        }
-        aAlphas += aStride;
-    }
-
-    return PR_FALSE;
-}
-
-static
-void UpdateMaskBits(char* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHeight,
-        const nsRect& aRect, PRUint8* aAlphas, PRInt32 aStride)
-{
-    PRInt32 x, y, xMax = aRect.XMost(), yMax = aRect.YMost();
-    PRInt32 maskBytesPerRow = (aMaskWidth + 7)/8;
-    for (y = aRect.y; y < yMax; y++) {
-        char* maskBytes = aMaskBits + y*maskBytesPerRow;
-        PRUint8* alphas = aAlphas;
-        for (x = aRect.x; x < xMax; x++) {
-            PRBool newBit = *alphas > 0;
-            alphas++;
-
-            char mask = 1 << (x & 7);
-            char maskByte = maskBytes[x >> 3];
-            // Note: '-newBit' turns 0 into 00...00 and 1 into 11...11
-            maskBytes[x >> 3] = (maskByte & ~mask) | (-newBit & mask);
-        }
-        aAlphas += aStride;
-    }
-}
-
-void
-nsWindow::ApplyTransparencyBitmap()
-{
-    qDebug("FIXME:>>>>>>Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
-/*
-    gtk_widget_reset_shapes(mDrawingarea);
-    GdkBitmap* maskBitmap = gdk_bitmap_create_from_data(mDrawingarea->window,
-            mTransparencyBitmap,
-            mTransparencyBitmapWidth, mTransparencyBitmapHeight);
-    if (!maskBitmap)
-        return;
-
-    gtk_widget_shape_combine_mask(mDrawingarea, maskBitmap, 0, 0);
-    gdk_bitmap_unref(maskBitmap);
-*/
-}
-
-nsresult
-nsWindow::UpdateTranslucentWindowAlphaInternal(const nsRect& aRect,
-                                               PRUint8* aAlphas, PRInt32 aStride)
-{
-    if (!mDrawingarea) {
-        // Pass the request to the toplevel window
-//        return topWindow->UpdateTranslucentWindowAlphaInternal(aRect, aAlphas, aStride);
-        return NS_ERROR_FAILURE;
-    }
-
-    NS_ASSERTION(mIsTransparent, "Window is not transparent");
-
-    if (mTransparencyBitmap == nsnull) {
-        PRInt32 size = ((mBounds.width+7)/8)*mBounds.height;
-        mTransparencyBitmap = new char[size];
-        if (mTransparencyBitmap == nsnull)
-            return NS_ERROR_FAILURE;
-        memset(mTransparencyBitmap, 255, size);
-        mTransparencyBitmapWidth = mBounds.width;
-        mTransparencyBitmapHeight = mBounds.height;
-    }
-
-    NS_ASSERTION(aRect.x >= 0 && aRect.y >= 0
-            && aRect.XMost() <= mBounds.width && aRect.YMost() <= mBounds.height,
-            "Rect is out of window bounds");
-
-    if (!ChangedMaskBits(mTransparencyBitmap, mBounds.width, mBounds.height,
-                         aRect, aAlphas, aStride))
-        // skip the expensive stuff if the mask bits haven't changed; hopefully
-        // this is the common case
-        return NS_OK;
-
-    UpdateMaskBits(mTransparencyBitmap, mBounds.width, mBounds.height,
-                   aRect, aAlphas, aStride);
-
-    if (!mNeedsShow) {
-        ApplyTransparencyBitmap();
-    }
     return NS_OK;
 }
 
