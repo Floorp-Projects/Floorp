@@ -4217,7 +4217,6 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
 #endif
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
-  id arp = [[NSAutoreleasePool alloc] init];
 
   if (![aString isKindOfClass:[NSAttributedString class]])
     aString = [[[NSAttributedString alloc] initWithString:aString] autorelease];
@@ -4241,7 +4240,7 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
 
   mMarkedRange.length = len;
 
-  if (!nsTSMManager::IsComposing()) {
+  if (!nsTSMManager::IsComposing() && len > 0) {
     nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, mGeckoChild);
     mGeckoChild->DispatchWindowEvent(selection);
     mMarkedRange.location = selection.mSucceeded ? selection.mReply.mOffset : 0;
@@ -4251,23 +4250,24 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
     // Note: mGeckoChild might have become null here. Don't count on it from here on.
   }
 
-  nsTSMManager::UpdateComposing(tmpStr);
+  if (nsTSMManager::IsComposing()) {
+    nsTSMManager::UpdateComposing(tmpStr);
 
-  [self sendTextEvent:bufPtr attributedString:aString
-                             selectedRange:selRange
-                             markedRange:mMarkedRange
-                             doCommit:NO];
-  // Note: mGeckoChild might have become null here. Don't count on it from here on.
-
-  if (nsTSMManager::IsComposing() && len == 0) {
-    nsTSMManager::CommitIME();    
+    BOOL commit = len == 0;
+    [self sendTextEvent:bufPtr attributedString:aString
+                                  selectedRange:selRange
+                                    markedRange:mMarkedRange
+                                       doCommit:commit];
     // Note: mGeckoChild might have become null here. Don't count on it from here on.
+
+    if (commit) {
+      [self sendCompositionEvent:NS_COMPOSITION_END];
+      nsTSMManager::EndComposing();
+    }
   }
-  
+
   if (bufPtr != buffer)
     delete[] bufPtr;
-
-  [arp release];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
