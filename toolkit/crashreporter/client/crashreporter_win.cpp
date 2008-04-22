@@ -712,7 +712,7 @@ static LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 
 // Resize a control to fit this text
 static int ResizeControl(HWND hwndButton, RECT& rect, wstring text,
-                         bool shiftLeft, int extraPadding)
+                         bool shiftLeft, int userDefinedPadding)
 {
   HDC hdc = GetDC(hwndButton);
   HFONT hfont = (HFONT)SendMessage(hwndButton, WM_GETFONT, 0, 0);
@@ -727,12 +727,23 @@ static int ResizeControl(HWND hwndButton, RECT& rect, wstring text,
   if (GetTextExtentPoint32(hdc, text.c_str(), text.length(), &size)
       // default text on the button
       && GetTextExtentPoint32(hdc, oldText, wcslen(oldText), &oldSize)) {
-    // We want the change in the text size, minus the existing empty 
-    // space on the control.
-    sizeDiff = (size.cx - oldSize.cx) -
-      ((rect.right - rect.left) - extraPadding - oldSize.cx);
-    if (sizeDiff <= 0)
+    /*
+     Expand control widths to accomidate wider text strings. For most
+     controls (including buttons) the text padding is defined by the
+     dialog's rc file. Some controls (such as checkboxes) have padding
+     that extends to the end of the dialog, in which case we ignore the
+     rc padding and rely on a user defined value passed in through
+     userDefinedPadding.
+    */
+    int textIncrease = size.cx - oldSize.cx;
+    if (textIncrease < 0)
       return 0;
+    int existingTextPadding;
+    if (userDefinedPadding == 0) 
+      existingTextPadding = (rect.right - rect.left) - oldSize.cx;
+    else 
+      existingTextPadding = userDefinedPadding;
+    sizeDiff = textIncrease + existingTextPadding;
 
     if (shiftLeft) {
       // shift left by the amount the button should grow
