@@ -226,6 +226,8 @@ QGeckoEmbedPrivate::init()
 
     // Apply the current chrome mask
     ApplyChromeMask();
+    
+    window->SetVisibility(PR_TRUE);
 }
 
 void
@@ -538,7 +540,6 @@ QGeckoEmbed::resizeEvent(QResizeEvent *e)
 {
     d->window->SetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER,
                               0, 0, e->size().width(), e->size().height());
-    d->window->SetVisibility(PR_TRUE);
 }
 
 nsIDOMDocument*
@@ -595,13 +596,6 @@ QGeckoEmbed::contentFinishedLoading()
 
         // resize the content
         domWindow->SizeToContent();
-
-        // and since we're done loading show the window, assuming that the
-        // visibility flag has been set.
-        PRBool visibility;
-        d->window->GetVisibility(&visibility);
-        if (visibility)
-            d->window->SetVisibility(PR_TRUE);
     }
 }
 
