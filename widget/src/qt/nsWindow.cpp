@@ -116,11 +116,6 @@
 /* For PrepareNativeWidget */
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 
-/* utility functions */
-/*
-static PRBool     is_mouse_in_window(QWidget* aWindow,
-                                     double aMouseX, double aMouseY);
-*/
 // initialization static functions 
 static nsresult    initialize_prefs        (void);
 
@@ -185,8 +180,6 @@ nsWindow::nsWindow()
     mIsDestroyed      = PR_FALSE;
     mIsShown          = PR_FALSE;
     mEnabled          = PR_TRUE;
-    mCreated          = PR_FALSE;
-    mPlaced           = PR_FALSE;
 
     mPreferredWidth   = 0;
     mPreferredHeight  = 0;
@@ -278,12 +271,11 @@ nsWindow::Create(nsNativeWidget aParent,
 NS_IMETHODIMP
 nsWindow::Destroy(void)
 {
-    if (mIsDestroyed || !mCreated)
+    if (mIsDestroyed || !mDrawingArea)
         return NS_OK;
 
     LOG(("nsWindow::Destroy [%p]\n", (void *)this));
     mIsDestroyed = PR_TRUE;
-    mCreated = PR_FALSE;
 
     Show(PR_FALSE);
 
@@ -389,8 +381,6 @@ nsWindow::Move(PRInt32 aX, PRInt32 aY)
     LOG(("nsWindow::Move [%p] %d %d\n", (void *)this,
          aX, aY));
 
-    mPlaced = PR_TRUE;
-
     // Since a popup window's x/y coordinates are in relation to to
     // the parent, the parent might have moved so we always move a
     // popup window.
@@ -426,15 +416,7 @@ nsWindow::Move(PRInt32 aX, PRInt32 aY)
     mBounds.x = pos.x();
     mBounds.y = pos.y();
 
-    if (!mCreated)
-        return NS_OK;
-
-    if (mIsTopLevel) {
-        mDrawingArea->move(pos);
-    }
-    else if (mDrawingArea) {
-        mDrawingArea->move(pos);
-    }
+    mDrawingArea->move(pos);
 
     return NS_OK;
 }
@@ -1053,7 +1035,7 @@ nsWindow::LoseFocus(void)
 static int gDoubleBuffering = -1;
 
 nsEventStatus
-nsWindow::OnExposeEvent(QPaintEvent *aEvent)
+nsWindow::OnPaintEvent(QPaintEvent *aEvent)
 {
     //fprintf (stderr, "===== Expose start\n");
 
@@ -1244,15 +1226,17 @@ nsWindow::OnExposeEvent(QPaintEvent *aEvent)
 }
 
 nsEventStatus
-nsWindow::OnConfigureEvent(QMoveEvent *aEvent)
+nsWindow::OnMoveEvent(QMoveEvent *aEvent)
 {
     LOG(("configure event [%p] %d %d\n", (void *)this,
         aEvent->pos().x(),  aEvent->pos().y()));
 
     // can we shortcut?
-    if (!mDrawingArea
-        || (mBounds.x == aEvent->pos().x()
-        && mBounds.y == aEvent->pos().y()))
+    if (!mDrawingArea)
+        return nsEventStatus_eIgnore;
+
+    if ((mBounds.x == aEvent->pos().x() &&
+         mBounds.y == aEvent->pos().y()))
     {
         return nsEventStatus_eIgnore;
     }
@@ -1262,7 +1246,6 @@ nsWindow::OnConfigureEvent(QMoveEvent *aEvent)
     // by the layout engine.  Width and height are set elsewhere.
     QPoint pos = aEvent->pos();
     if (mIsTopLevel) {
-        mPlaced = PR_TRUE;
         // Need to translate this into the right coordinates
         nsRect oldrect, newrect;
         WidgetToScreen(oldrect, newrect);
@@ -1281,7 +1264,7 @@ nsWindow::OnConfigureEvent(QMoveEvent *aEvent)
 }
 
 nsEventStatus
-nsWindow::OnSizeAllocate(QResizeEvent *e)
+nsWindow::OnResizeEvent(QResizeEvent *e)
 {
     nsRect rect;
 
@@ -1311,7 +1294,7 @@ nsWindow::OnSizeAllocate(QResizeEvent *e)
 }
 
 nsEventStatus
-nsWindow::OnDeleteEvent(QCloseEvent *aEvent)
+nsWindow::OnCloseEvent(QCloseEvent *aEvent)
 {
     nsGUIEvent event(PR_TRUE, NS_XUL_CLOSE, this);
 
@@ -1486,9 +1469,9 @@ nsWindow::mouseDoubleClickEvent(QMouseEvent *e)
 }
 
 nsEventStatus
-nsWindow::OnContainerFocusInEvent(QFocusEvent *aEvent)
+nsWindow::OnFocusInEvent(QFocusEvent *aEvent)
 {
-    LOGFOCUS(("OnContainerFocusInEvent [%p]\n", (void *)this));
+    LOGFOCUS(("OnFocusInEvent [%p]\n", (void *)this));
     // Return if someone has blocked events for this widget.  This will
     // happen if someone has called gtk_widget_grab_focus() from
     // nsWindow::SetFocus() and will prevent recursion.
@@ -1512,9 +1495,9 @@ nsWindow::OnContainerFocusInEvent(QFocusEvent *aEvent)
 }
 
 nsEventStatus
-nsWindow::OnContainerFocusOutEvent(QFocusEvent *aEvent)
+nsWindow::OnFocusOutEvent(QFocusEvent *aEvent)
 {
-    LOGFOCUS(("OnContainerFocusOutEvent [%p]\n", (void *)this));
+    LOGFOCUS(("OnFocusOutEvent [%p]\n", (void *)this));
 
     DispatchLostFocusEvent();
     if (mDrawingArea)
@@ -1829,7 +1812,6 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 
     // and do our common creation
     mParent = aParent;
-    mCreated = PR_TRUE;
 
     // save our bounds
     mBounds = aRect;
@@ -2162,47 +2144,6 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
 
     return NS_OK;
 }
-
-/* static */
-/*
-PRBool
-is_mouse_in_window (QWidget* aWindow, double aMouseX, double aMouseY)
-{
-    qint32 x = 0;
-    qint32 y = 0;
-    qint32 w, h;
-
-    qint32 offsetX = 0;
-    qint32 offsetY = 0;
-
-    QWidget *window;
-
-    window = aWindow;
-
-    while (window) {
-        qint32 tmpX = window->pos().x();
-        qint32 tmpY = window->pos().y();
-
-        // if this is a window, compute x and y given its origin and our
-        // offset
-        x = tmpX + offsetX;
-        y = tmpY + offsetY;
-        break;
-
-        offsetX += tmpX;
-        offsetY += tmpY;
-    }
-
-    w = window->size().width();
-    h = window->size().height();
-
-    if (aMouseX > x && aMouseX < x + w &&
-        aMouseY > y && aMouseY < y + h)
-        return PR_TRUE;
-
-    return PR_FALSE;
-}
-*/
 
 /* static */
 /*
@@ -2650,6 +2591,9 @@ nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
 #endif
 
     mDrawingArea->setGeometry(pos.x(), pos.y(), aWidth, aHeight);
+
+    if (aRepaint)
+        mDrawingArea->update();
 
     return NS_OK;
 }

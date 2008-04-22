@@ -264,8 +264,6 @@ protected:
     PRPackedBool        mIsShown;
     // is this widget enabled?
     PRBool              mEnabled;
-    // has the native window for this been created yet?
-    PRBool              mCreated;
     // Has anyone set an x/y location for this widget yet? Toplevels
     // shouldn't be automatically set to 0,0 for first show.
     PRBool              mPlaced;
@@ -283,18 +281,18 @@ protected:
     friend class InterceptContainer;
     friend class MozQWidget;
 
-    virtual nsEventStatus OnExposeEvent(QPaintEvent *);
-    virtual nsEventStatus OnConfigureEvent(QMoveEvent *);
-    virtual nsEventStatus OnSizeAllocate(QResizeEvent *);
-    virtual nsEventStatus OnDeleteEvent(QCloseEvent *);
+    virtual nsEventStatus OnPaintEvent(QPaintEvent *);
+    virtual nsEventStatus OnMoveEvent(QMoveEvent *);
+    virtual nsEventStatus OnResizeEvent(QResizeEvent *);
+    virtual nsEventStatus OnCloseEvent(QCloseEvent *);
     virtual nsEventStatus OnEnterNotifyEvent(QEvent *);
     virtual nsEventStatus OnLeaveNotifyEvent(QEvent *);
     virtual nsEventStatus OnMotionNotifyEvent(QMouseEvent *);
     virtual nsEventStatus OnButtonPressEvent(QMouseEvent *);
     virtual nsEventStatus OnButtonReleaseEvent(QMouseEvent *);
     virtual nsEventStatus mouseDoubleClickEvent(QMouseEvent *);
-    virtual nsEventStatus OnContainerFocusInEvent(QFocusEvent *);
-    virtual nsEventStatus OnContainerFocusOutEvent(QFocusEvent *);
+    virtual nsEventStatus OnFocusInEvent(QFocusEvent *);
+    virtual nsEventStatus OnFocusOutEvent(QFocusEvent *);
     virtual nsEventStatus OnKeyPressEvent(QKeyEvent *);
     virtual nsEventStatus OnKeyReleaseEvent(QKeyEvent *);
     virtual nsEventStatus OnScrollEvent(QWheelEvent *);
