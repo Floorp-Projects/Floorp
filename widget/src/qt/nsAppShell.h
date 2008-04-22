@@ -54,23 +54,20 @@ class nsAppShell : public QObject,
   Q_OBJECT
 
 public:
-  nsAppShell() : mTag(0) {
-      mPipeFDs[0] = mPipeFDs[1] = 0;
-  };
+  nsAppShell() { };
 
   nsresult Init();
 
+signals:
+  void activated();
+
 private slots:
-  void EventNativeCallback(int fd);
+  void EventNativeCallback();
 
 protected:
   virtual void ScheduleNativeEventCallback();
   virtual PRBool ProcessNextNativeEvent(PRBool mayWait);
   virtual ~nsAppShell();
-
-private:
-  int           mPipeFDs[2];
-  QSocketNotifier *mTag;
 };
 
 
