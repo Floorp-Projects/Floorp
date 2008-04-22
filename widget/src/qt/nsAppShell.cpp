@@ -42,7 +42,10 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#define NOTIFY_TOKEN 0xFA
+#include <glib.h>
+#include <glib/gmain.h>
+
+#include "prenv.h"
 
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG
@@ -88,16 +91,21 @@ nsAppShell::ScheduleNativeEventCallback()
                                 new QEvent((QEvent::Type) sPokeEvent));
 }
 
+
 PRBool
 nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
 {
-  QEventLoop::ProcessEventsFlags flags = QEventLoop::AllEvents;
+    if (PR_GetEnv("QT_NO_GLIB")) {
+        QEventLoop::ProcessEventsFlags flags = QEventLoop::AllEvents;
 
-  if (mayWait)
-    flags |= QEventLoop::WaitForMoreEvents;
+        if (mayWait)
+            flags |= QEventLoop::WaitForMoreEvents;
 
-  qApp->processEvents(flags);
-  return PR_TRUE;
+        qApp->processEvents(flags);
+        return PR_TRUE;
+    }
+
+    return g_main_context_iteration(g_main_context_default(), mayWait);
 }
 
 bool
