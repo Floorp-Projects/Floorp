@@ -1534,15 +1534,15 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
   }
 
   if (mIsVistaOrLater) {
-    /* textfields need an extra pixel on all sides, otherwise they
+    /* textfields need extra pixels on all sides, otherwise they
      * wrap their content too tightly.  The actual border is drawn 1px
      * inside the specified rectangle, so Gecko will end up making the
-     * contents look too small.  Instead, we add 1px padding for the
-     * contents and fix this.
+     * contents look too small.  Instead, we add 2px padding for the
+     * contents and fix this. (Used to be 1px added, see bug 430212)
      */
     if (aWidgetType == NS_THEME_TEXTFIELD || aWidgetType == NS_THEME_TEXTFIELD_MULTILINE) {
-      aResult->top = aResult->bottom = 1;
-      aResult->left = aResult->right = 1;
+      aResult->top = aResult->bottom = 2;
+      aResult->left = aResult->right = 2;
       return PR_TRUE;
     }
   }
