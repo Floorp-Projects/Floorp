@@ -653,8 +653,7 @@ void
 nsNativeThemeQt::InitComboStyle(PRUint8 aWidgetType,
                                 nsIFrame* aFrame,
                                 QRect rect,
-                                QStyleOptionComboBox &opt,
-                                QStyle::State extraFlags /*= QStyle::State_None*/)
+                                QStyleOptionComboBox &opt)
 {
     PRInt32 eventState = GetContentState(aFrame, aWidgetType);
 
@@ -670,10 +669,8 @@ nsNativeThemeQt::InitComboStyle(PRUint8 aWidgetType,
         opt.state |= QStyle::State_Raised;
     if (!disabled && eventState & NS_EVENT_STATE_ACTIVE)
         // Don't allow sunken when disabled
-        opt.state |= QStyle::State_On;
+        opt.state |= QStyle::State_Sunken;
 
     opt.rect = rect;
     opt.palette = mNoBackgroundPalette;
-
-    opt.state |= extraFlags;
 }
