@@ -56,11 +56,7 @@ PRLogModuleInfo *gWidgetIMLog = nsnull;
 PRLogModuleInfo *gWidgetDrawLog = nsnull;
 #endif
 
-void nsAppShell::EventNativeCallback()
-{
-    NativeEventCallback();
-    return;
-}
+static int sPokeEvent;
 
 nsAppShell::~nsAppShell()
 {
@@ -80,14 +76,16 @@ nsAppShell::Init()
         gWidgetDrawLog = PR_NewLogModule("WidgetDraw");
 #endif
 
-    connect (this, SIGNAL(activated()), SLOT(EventNativeCallback()));
+    sPokeEvent = QEvent::registerEventType();
+
     return nsBaseAppShell::Init();
 }
 
 void
 nsAppShell::ScheduleNativeEventCallback()
 {
-  emit activated();
+    QCoreApplication::postEvent(this,
+                                new QEvent((QEvent::Type) sPokeEvent));
 }
 
 PRBool
@@ -100,4 +98,15 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
 
   qApp->processEvents(flags);
   return PR_TRUE;
+}
+
+bool
+nsAppShell::event (QEvent *e)
+{
+    if (e->type() == sPokeEvent) {
+        NativeEventCallback();
+        return true;
+    }
+
+    return false;
 }
