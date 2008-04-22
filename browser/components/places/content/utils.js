@@ -255,10 +255,11 @@ var PlacesUIUtils = {
         var txn = null;
         var node = aChildren[i];
 
-        // adjusted to make sure that items are given the correct index -
-        // transactions insert differently if index == -1
-        if (aIndex > -1)
-          index = aIndex + i;
+        // Make sure that items are given the correct index, this will be
+        // passed by the transaction manager to the backend for the insertion.
+        // Insertion behaves differently if index == DEFAULT_INDEX (append)
+        if (aIndex != PlacesUtils.bookmarks.DEFAULT_INDEX)
+          index = i;
 
         if (node.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER) {
           if (node.livemark && node.annos) // node is a livemark
