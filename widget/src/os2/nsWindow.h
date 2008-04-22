@@ -171,8 +171,6 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD              GetLastInputEventTime(PRUint32& aTime);
 
    // Widget appearance
-   virtual nsIFontMetrics *GetFont();
-   NS_IMETHOD              SetFont( const nsFont &aFont);
    NS_IMETHOD              SetColorMap( nsColorMap *aColorMap);
    NS_IMETHOD              SetCursor( nsCursor aCursor);
    NS_IMETHOD              SetCursor(imgIContainer* aCursor,
@@ -283,7 +281,6 @@ protected:
    PRInt32        mPreferredHeight;
    PRInt32        mPreferredWidth;
    nsToolkit     *mOS2Toolkit;
-   nsFont        *mFont;
    nsIMenuBar    *mMenuBar;
    PRInt32        mWindowState;
    nsRefPtr<gfxOS2Surface> mThebesSurface;
