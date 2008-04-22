@@ -190,10 +190,6 @@ toolbarbutton.bookmark-item .toolbarbutton-text {
   padding: 4px 4px 3px 2px;
 }
 
-.bookmark-item[livemark]:hover > .toolbarbutton-menu-dropmarker, .bookmark-item[livemark][open] > .toolbarbutton-menu-dropmarker {
-  list-style-image: url("chrome://browser/skin/places/livemarkFolderHover.png");
-}
-
 .bookmark-item[livemark] {
   list-style-image: url("chrome://browser/skin/page-livemarks.png");
 }
