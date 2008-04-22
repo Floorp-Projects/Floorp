@@ -76,7 +76,8 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsPrintSettingsGTK,
 nsPrintSettingsGTK::nsPrintSettingsGTK() :
   mPageSetup(NULL),
   mPrintSettings(NULL),
-  mGTKPrinter(NULL)
+  mGTKPrinter(NULL),
+  mPrintSelectionOnly(PR_FALSE)
 {
   // The aim here is to set up the objects enough that silent printing works well.
   // These will be replaced anyway if the print dialog is used.
