@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Masayuki Nakano <masayuki@d-toybox.com>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -229,8 +230,6 @@ public:
 
     /***** from CommonWidget *****/
 
-    void CommonCreate(nsIWidget *aParent, PRBool aListenForResizes);
-
     // event handling code
 
     void DispatchGotFocusEvent(void);
@@ -261,17 +260,8 @@ protected:
     // Has this widget been destroyed yet?
     PRPackedBool        mIsDestroyed;
 
-    // This is a flag that tracks if we need to resize a widget or
-    // window when we show it.
-    PRPackedBool        mNeedsResize;
-    // This is a flag that tracks if we need to move a widget or
-    // window when we show it.
-    PRPackedBool        mNeedsMove;
-    // Should we send resize events on all resizes?
-    PRPackedBool        mListenForResizes;
     // This flag tracks if we're hidden or shown.
     PRPackedBool        mIsShown;
-    PRPackedBool        mNeedsShow;
     // is this widget enabled?
     PRBool              mEnabled;
     // has the native window for this been created yet?
