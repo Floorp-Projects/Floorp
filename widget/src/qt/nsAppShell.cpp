@@ -75,9 +75,9 @@ nsAppShell::Init()
     if (!gWidgetDrawLog)
         gWidgetDrawLog = PR_NewLogModule("WidgetDraw");
 #endif
-
+#if (QT_VERSION >= QT_VERSION_CHECK(4, 4, 0))
     sPokeEvent = QEvent::registerEventType();
-
+#endif
     return nsBaseAppShell::Init();
 }
 
