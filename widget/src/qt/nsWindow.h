@@ -114,7 +114,10 @@ public:
 
     NS_DECL_ISUPPORTS_INHERITED
 
+    //
     // nsIWidget
+    //
+
     NS_IMETHOD         Create(nsIWidget        *aParent,
                               const nsRect     &aRect,
                               EVENT_CALLBACK   aHandleEventFunction,
@@ -148,11 +151,10 @@ public:
                               PRInt32 aWidth,
                               PRInt32 aHeight,
                               PRBool   aRepaint);
-
+    NS_IMETHOD         SetZIndex(PRInt32 aZIndex);
     NS_IMETHOD         PlaceBehind(nsTopLevelWidgetZPlacement  aPlacement,
                                    nsIWidget                  *aWidget,
                                    PRBool                      aActivate);
-    NS_IMETHOD         SetZIndex(PRInt32 aZIndex);
     NS_IMETHOD         SetSizeMode(PRInt32 aMode);
     NS_IMETHOD         Enable(PRBool aState);
     NS_IMETHOD         SetFocus(PRBool aRaise = PR_FALSE);
@@ -162,6 +164,10 @@ public:
     NS_IMETHOD         SetCursor(nsCursor aCursor);
     NS_IMETHOD         SetCursor(imgIContainer* aCursor,
                                  PRUint32 aHotspotX, PRUint32 aHotspotY);
+    NS_IMETHOD         SetHasTransparentBackground(PRBool aTransparent);
+    NS_IMETHOD         GetHasTransparentBackground(PRBool& aTransparent);
+    NS_IMETHOD         HideWindowChrome(PRBool aShouldHide);
+    NS_IMETHOD         MakeFullScreen(PRBool aFullScreen);
     NS_IMETHOD         Validate();
     NS_IMETHOD         Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD         Invalidate(const nsRect &aRect,
@@ -178,11 +184,14 @@ public:
     NS_IMETHOD         ScrollRect(nsRect  &aSrcRect,
                                   PRInt32  aDx,
                                   PRInt32  aDy);
+
+
+    NS_IMETHOD         PreCreateWidget(nsWidgetInitData *aWidgetInitData);
+
     virtual void*      GetNativeData(PRUint32 aDataType);
     NS_IMETHOD         SetBorderStyle(nsBorderStyle aBorderStyle);
     NS_IMETHOD         SetTitle(const nsAString& aTitle);
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec);
-    NS_IMETHOD         SetWindowClass(const nsAString& xulWinType);
     NS_IMETHOD         SetMenuBar(nsIMenuBar * aMenuBar);
     NS_IMETHOD         ShowMenuBar(PRBool aShow);
     NS_IMETHOD         WidgetToScreen(const nsRect& aOldRect,
@@ -191,19 +200,29 @@ public:
                                       nsRect& aNewRect);
     NS_IMETHOD         BeginResizingChildren(void);
     NS_IMETHOD         EndResizingChildren(void);
+    NS_IMETHOD         GetPreferredSize (PRInt32 &aWidth,
+                                         PRInt32 &aHeight);
+    NS_IMETHOD         SetPreferredSize (PRInt32 aWidth,
+                                         PRInt32 aHeight);
+    NS_IMETHOD         DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
+
     NS_IMETHOD         EnableDragDrop(PRBool aEnable);
     virtual void       ConvertToDeviceCoordinates(nscoord &aX,
                                                   nscoord &aY);
-    NS_IMETHOD         PreCreateWidget(nsWidgetInitData *aWidgetInitData);
     NS_IMETHOD         CaptureMouse(PRBool aCapture);
     NS_IMETHOD         CaptureRollupEvents(nsIRollupListener *aListener,
                                            PRBool aDoCapture,
                                            PRBool aConsumeRollupEvent);
-    NS_IMETHOD         GetAttention(PRInt32 aCycleCount);
-    NS_IMETHOD         MakeFullScreen(PRBool aFullScreen);
-    NS_IMETHOD         HideWindowChrome(PRBool aShouldHide);
 
+    NS_IMETHOD         SetWindowClass(const nsAString& xulWinType);
+
+    NS_IMETHOD         GetAttention(PRInt32 aCycleCount);
+    NS_IMETHOD         BeginResizeDrag   (nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical);
+
+    //
     // utility methods
+    //
+
     void               LoseFocus();
     qint32             ConvertBorderStyles(nsBorderStyle aStyle);
 
@@ -220,8 +239,6 @@ public:
     void DispatchDeactivateEvent(void);
     void DispatchResizeEvent(nsRect &aRect, nsEventStatus &aStatus);
 
-    NS_IMETHOD DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
-
     nsEventStatus DispatchEvent(nsGUIEvent *aEvent) {
         nsEventStatus status;
         DispatchEvent(aEvent, status);
@@ -229,10 +246,6 @@ public:
     }
 
     // Some of the nsIWidget methods
-    NS_IMETHOD         GetPreferredSize (PRInt32 &aWidth,
-                                         PRInt32 &aHeight);
-    NS_IMETHOD         SetPreferredSize (PRInt32 aWidth,
-                                         PRInt32 aHeight);
     NS_IMETHOD         IsEnabled        (PRBool *aState);
 
     // called when we are destroyed
@@ -342,15 +355,6 @@ protected:
 
     void               ThemeChanged(void);
 
-    NS_IMETHOD         BeginResizeDrag   (nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical);
-
-   void                ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight);
-   void                ApplyTransparencyBitmap();
-   NS_IMETHOD          SetHasTransparentBackground(PRBool aTransparent);
-   NS_IMETHOD          GetHasTransparentBackground(PRBool& aTransparent);
-   nsresult            UpdateTranslucentWindowAlphaInternal(const nsRect& aRect,
-                                                            PRUint8* aAlphas, PRInt32 aStride);
-
    gfxASurface        *GetThebesSurface();
 
 private:
@@ -371,17 +375,9 @@ private:
     PRInt32             mSizeState;
     PluginType          mPluginType;
 
-    PRInt32             mTransparencyBitmapWidth;
-    PRInt32             mTransparencyBitmapHeight;
-
     nsRefPtr<gfxASurface> mThebesSurface;
 
-    // Transparency
     PRBool       mIsTransparent;
-    // This bitmap tracks which pixels are transparent. We don't support
-    // full translucency at this time; each pixel is either fully opaque
-    // or fully transparent.
-    char*       mTransparencyBitmap;
  
     // all of our DND stuff
     // this is the last window that had a drag event happen on it.
