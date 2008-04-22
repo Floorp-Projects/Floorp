@@ -1897,6 +1897,20 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   PR_PL(("In DV::ReflowPrintObject PO: %p (%9s) Setting w,h to %d,%d\n", aPO,
          gFrameTypesStr[aPO->mFrameType], adjSize.width, adjSize.height));
 
+  // XXX - Hack Alert
+  // OK, so there is a selection, we will print the entire selection
+  // on one page and then crop the page.
+  // This means you can never print any selection that is longer than
+  // one page, but it keeps it from page breaking in the middle of your
+  // print of the selection (see also nsSimplePageSequence.cpp)
+  PRInt16 printRangeType = nsIPrintSettings::kRangeAllPages;
+  mPrt->mPrintSettings->GetPrintRange(&printRangeType);
+
+  if (printRangeType == nsIPrintSettings::kRangeSelection &&
+      IsThereARangeSelection(mPrt->mCurrentFocusWin)) {
+    adjSize.height = NS_UNCONSTRAINEDSIZE;
+  }
+
   // Here we decide whether we need scrollbars and
   // what the parent will be of the widget
   // How this logic presently works: Print Preview is always as-is (as far
