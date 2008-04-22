@@ -2324,11 +2324,14 @@ function BrowserOnCommand(event) {
         // This is the "Why is this site blocked" button.  For malware,
         // we can fetch a site-specific report, for phishing, we redirect
         // to the generic page describing phishing protection.
+        var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
+                       .getService(Components.interfaces.nsIURLFormatter);
+        
         if (/e=malwareBlocked/.test(errorDoc.documentURI)) {
           // Get the stop badware "why is this blocked" report url,
           // append the current url, and go there.
           try {
-            var reportURL = gPrefService.getCharPref("browser.safebrowsing.malware.reportURL");
+            var reportURL = formatter.formatURLPref("browser.safebrowsing.malware.reportURL");
             reportURL += errorDoc.location.href;
             content.location = reportURL;
           } catch (e) {
@@ -2337,9 +2340,7 @@ function BrowserOnCommand(event) {
         }
         else if (/e=phishingBlocked/.test(errorDoc.documentURI)) {
           try {
-            content.location = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
-                              .getService(Components.interfaces.nsIURLFormatter)
-                              .formatURLPref("browser.safebrowsing.warning.infoURL");
+            content.location = formatter.formatURLPref("browser.safebrowsing.warning.infoURL");
           } catch (e) {
             Components.utils.reportError("Couldn't get phishing info URL: " + e);
           }
