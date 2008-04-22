@@ -24,6 +24,7 @@
  *   Mats Palmgren <mats.palmgren@bredband.net>
  *   Masayuki Nakano <masayuki@d-toybox.com>
  *   Romashin Oleg <romaxa@gmail.com>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -178,13 +179,11 @@ keyEventToContextMenuEvent(const nsKeyEvent* aKeyEvent,
 
 nsWindow::nsWindow()
 {
+    LOG(("%s [%p]\n", __PRETTY_FUNCTION__, (void *)this));
+    
     mIsTopLevel       = PR_FALSE;
     mIsDestroyed      = PR_FALSE;
-    mNeedsResize      = PR_FALSE;
-    mNeedsMove        = PR_FALSE;
-    mListenForResizes = PR_FALSE;
     mIsShown          = PR_FALSE;
-    mNeedsShow        = PR_FALSE;
     mEnabled          = PR_TRUE;
     mCreated          = PR_FALSE;
     mPlaced           = PR_FALSE;
@@ -216,8 +215,8 @@ nsWindow::nsWindow()
 
 nsWindow::~nsWindow()
 {
-    LOG(("nsWindow::~nsWindow() [%p]\n", (void *)this));
-
+    LOG(("%s [%p]\n", __PRETTY_FUNCTION__, (void *)this));
+    
     Destroy();
 }
 
@@ -228,6 +227,8 @@ nsWindow::~nsWindow()
 void
 nsWindow::Initialize(QWidget *widget)
 {
+    LOG(("%s [%p]\n", __PRETTY_FUNCTION__, (void *)this));
+
     Q_ASSERT(widget);
 
     mDrawingArea = widget;
@@ -240,7 +241,7 @@ nsWindow::ReleaseGlobals()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsWindow, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS_INHERITED1(nsWindow, nsBaseWidget, nsISupportsWeakReference)
 
 NS_IMETHODIMP
 nsWindow::Create(nsIWidget        *aParent,
@@ -251,6 +252,8 @@ nsWindow::Create(nsIWidget        *aParent,
                  nsIToolkit       *aToolkit,
                  nsWidgetInitData *aInitData)
 {
+    LOG(("%s [%p]\n", __PRETTY_FUNCTION__, (void *)this));
+
     nsresult rv = NativeCreate(aParent, nsnull, aRect, aHandleEventFunction,
                                aContext, aAppShell, aToolkit, aInitData);
     return rv;
@@ -265,6 +268,8 @@ nsWindow::Create(nsNativeWidget aParent,
                  nsIToolkit       *aToolkit,
                  nsWidgetInitData *aInitData)
 {
+    LOG(("%s [%p]\n", __PRETTY_FUNCTION__, (void *)this));
+
     nsresult rv = NativeCreate(nsnull, aParent, aRect, aHandleEventFunction,
                                aContext, aAppShell, aToolkit, aInitData);
     return rv;
@@ -280,7 +285,7 @@ nsWindow::Destroy(void)
     mIsDestroyed = PR_TRUE;
     mCreated = PR_FALSE;
 
-    NativeShow(PR_FALSE);
+    Show(PR_FALSE);
 
     // walk the list of children and call destroy on them.  Have to be
     // careful, though -- calling destroy on a kid may actually remove
@@ -1822,23 +1827,12 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
     BaseCreate(baseParent, aRect, aHandleEventFunction, aContext,
                aAppShell, aToolkit, aInitData);
 
-    // Do we need to listen for resizes?
-    PRBool listenForResizes = PR_FALSE;;
-    if (aNativeParent || (aInitData && aInitData->mListenForResizes))
-        listenForResizes = PR_TRUE;
-
     // and do our common creation
-    CommonCreate(aParent, listenForResizes);
+    mParent = aParent;
+    mCreated = PR_TRUE;
 
     // save our bounds
     mBounds = aRect;
-    if (mWindowType != eWindowType_child) {
-        // The window manager might place us. Indicate that if we're
-        // shown, we want to go through
-        // nsWindow::NativeResize(x,y,w,h) to maybe set our own
-        // position.
-        mNeedsMove = PR_TRUE;
-    }
 
     // figure out our parent window
     QWidget      *parent = nsnull;
@@ -1852,14 +1846,10 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 
     Initialize(mDrawingArea);
 
-    LOG(("nsWindow [%p]\n", (void *)this));
-    if (mDrawingArea) {
-        LOG(("\tmDrawingArea %p %p %p %lx %lx\n", (void *)mDrawingArea));
-    }
+    LOG(("Create: nsWindow [%p] [%p]\n", (void *)this, (void *)mDrawingArea));
 
     // resize so that everything is set to the right dimensions
-    if (!mIsTopLevel)
-        Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, PR_FALSE);
+    Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, PR_FALSE);
 
     return NS_OK;
 }
@@ -1926,9 +1916,6 @@ nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool  aRepaint)
     LOG(("nsWindow::NativeResize [%p] %d %d\n", (void *)this,
          aWidth, aHeight));
 
-    // clear our resize flag
-    mNeedsResize = PR_FALSE;
-
     mDrawingArea->resize( aWidth, aHeight);
 
     if (aRepaint)
@@ -1940,9 +1927,6 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
                        PRInt32 aWidth, PRInt32 aHeight,
                        PRBool  aRepaint)
 {
-    mNeedsResize = PR_FALSE;
-    mNeedsMove = PR_FALSE;
-
     LOG(("nsWindow::NativeResize [%p] %d %d %d %d\n", (void *)this,
          aX, aY, aWidth, aHeight));
 
@@ -1971,22 +1955,6 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
 
     if (aRepaint)
         mDrawingArea->update();
-}
-
-void
-nsWindow::NativeShow (PRBool  aAction)
-{
-    if (aAction) {
-        // unset our flag now that our window has been shown
-        mNeedsShow = PR_FALSE;
-    }
-    if (!mDrawingArea) {
-        //XXX: apperently can be null during the printing, check whether
-        //     that's true
-        qDebug("nsCommon::Show : widget empty");
-        return;
-    }
-    mDrawingArea->setShown(aAction);
 }
 
 NS_IMETHODIMP
@@ -2545,14 +2513,6 @@ nsWindow::GetParent(void)
 }
 
 void
-nsWindow::CommonCreate(nsIWidget *aParent, PRBool aListenForResizes)
-{
-    mParent = aParent;
-    mListenForResizes = aListenForResizes;
-    mCreated = PR_TRUE;
-}
-
-void
 nsWindow::DispatchGotFocusEvent(void)
 {
     nsGUIEvent event(PR_TRUE, NS_GOTFOCUS, this);
@@ -2624,36 +2584,14 @@ nsWindow::DispatchEvent(nsGUIEvent *aEvent,
 NS_IMETHODIMP
 nsWindow::Show(PRBool aState)
 {
-    mIsShown = aState;
-
     LOG(("nsWindow::Show [%p] state %d\n", (void *)this, aState));
 
-    // Ok, someone called show on a window that isn't sized to a sane
-    // value.  Mark this window as needing to have Show() called on it
-    // and return.
-    if ((aState && !AreBoundsSane()) || !mCreated) {
-        LOG(("\tbounds are insane or window hasn't been created yet\n"));
-        mNeedsShow = PR_TRUE;
+    mIsShown = aState;
+
+    if (!mDrawingArea)
         return NS_OK;
-    }
 
-    // If someone is hiding this widget, clear any needing show flag.
-    if (!aState)
-        mNeedsShow = PR_FALSE;
-
-    // If someone is showing this window and it needs a resize then
-    // resize the widget.
-    if (aState) {
-        if (mNeedsMove) {
-            LOG(("\tresizing\n"));
-            NativeResize(mBounds.x, mBounds.y, mBounds.width, mBounds.height,
-                         PR_FALSE);
-        } else if (mNeedsResize) {
-            NativeResize(mBounds.width, mBounds.height, PR_FALSE);
-        }
-    }
-
-    NativeShow(aState);
+    mDrawingArea->setShown(aState);
 
     return NS_OK;
 }
@@ -2664,74 +2602,20 @@ nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     mBounds.width = aWidth;
     mBounds.height = aHeight;
 
-    if (!mCreated)
+    if (!mDrawingArea)
         return NS_OK;
 
-    // There are several cases here that we need to handle, based on a
-    // matrix of the visibility of the widget, the sanity of this resize
-    // and whether or not the widget was previously sane.
+    mDrawingArea->resize(aWidth, aHeight);
 
-    // Has this widget been set to visible?
-    if (mIsShown) {
-        // Are the bounds sane?
-        if (AreBoundsSane()) {
-            // Yep?  Resize the window
-            //Maybe, the toplevel has moved
-
-            // Note that if the widget needs to be shown because it
-            // was previously insane in Resize(x,y,w,h), then we need
-            // to set the x and y here too, because the widget wasn't
-            // moved back then
-            if (mIsTopLevel || mNeedsShow)
-                NativeResize(mBounds.x, mBounds.y,
-                             mBounds.width, mBounds.height, aRepaint);
-            else
-                NativeResize(mBounds.width, mBounds.height, aRepaint);
-
-            // Does it need to be shown because it was previously insane?
-            if (mNeedsShow)
-                NativeShow(PR_TRUE);
-        }
-        else {
-            // If someone has set this so that the needs show flag is false
-            // and it needs to be hidden, update the flag and hide the
-            // window.  This flag will be cleared the next time someone
-            // hides the window or shows it.  It also prevents us from
-            // calling NativeShow(PR_FALSE) excessively on the window which
-            // causes unneeded X traffic.
-            if (!mNeedsShow) {
-                mNeedsShow = PR_TRUE;
-                NativeShow(PR_FALSE);
-            }
-        }
-    }
-    // If the widget hasn't been shown, mark the widget as needing to be
-    // resized before it is shown.
-    else {
-        if (AreBoundsSane() && mListenForResizes) {
-            // For widgets that we listen for resizes for (widgets created
-            // with native parents) we apparently _always_ have to resize.  I
-            // dunno why, but apparently we're lame like that.
-            NativeResize(aWidth, aHeight, aRepaint);
-        }
-        else {
-            mNeedsResize = PR_TRUE;
-        }
-    }
-
-    // synthesize a resize event if this isn't a toplevel
-    if (mIsTopLevel || mListenForResizes) {
-        nsRect rect(mBounds.x, mBounds.y, aWidth, aHeight);
-        nsEventStatus status;
-        DispatchResizeEvent(rect, status);
-    }
+    if (aRepaint)
+        mDrawingArea->update();
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
-                       PRBool aRepaint)
+                 PRBool aRepaint)
 {
     mBounds.x = aX;
     mBounds.y = aY;
@@ -2740,57 +2624,32 @@ nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
 
     mPlaced = PR_TRUE;
 
-    if (!mCreated)
+    if (!mDrawingArea)
         return NS_OK;
 
-    // There are several cases here that we need to handle, based on a
-    // matrix of the visibility of the widget, the sanity of this resize
-    // and whether or not the widget was previously sane.
+    QPoint pos(aX, aY);
 
-    // Has this widget been set to visible?
-    if (mIsShown) {
-        // Are the bounds sane?
-        if (AreBoundsSane()) {
-            // Yep?  Resize the window
-            NativeResize(aX, aY, aWidth, aHeight, aRepaint);
-            // Does it need to be shown because it was previously insane?
-            if (mNeedsShow)
-                NativeShow(PR_TRUE);
-        }
-        else {
-            // If someone has set this so that the needs show flag is false
-            // and it needs to be hidden, update the flag and hide the
-            // window.  This flag will be cleared the next time someone
-            // hides the window or shows it.  It also prevents us from
-            // calling NativeShow(PR_FALSE) excessively on the window which
-            // causes unneeded X traffic.
-            if (!mNeedsShow) {
-                mNeedsShow = PR_TRUE;
-                NativeShow(PR_FALSE);
-            }
-        }
-    }
-    // If the widget hasn't been shown, mark the widget as needing to be
-    // resized before it is shown
-    else {
-        if (AreBoundsSane() && mListenForResizes){
-            // For widgets that we listen for resizes for (widgets created
-            // with native parents) we apparently _always_ have to resize.  I
-            // dunno why, but apparently we're lame like that.
-            NativeResize(aX, aY, aWidth, aHeight, aRepaint);
-        }
-        else {
-            mNeedsResize = PR_TRUE;
-            mNeedsMove = PR_TRUE;
-        }
-    }
+    // XXXvlad what?
+#if 0
+    if (mParent && mDrawingArea->windowType() == Qt::Popup) {
+        nsRect oldrect, newrect;
+        oldrect.x = aX;
+        oldrect.y = aY;
 
-    if (mIsTopLevel || mListenForResizes) {
-        // synthesize a resize event
-        nsRect rect(aX, aY, aWidth, aHeight);
-        nsEventStatus status;
-        DispatchResizeEvent(rect, status);
+        mParent->WidgetToScreen(oldrect, newrect);
+
+        pos = QPoint(newrect.x, newrect.y);
+#ifdef DEBUG_WIDGETS
+        qDebug("pos is [%d,%d]", pos.x(), pos.y());
+#endif
+    } else {
+#ifdef DEBUG_WIDGETS
+        qDebug("Widget with original position? (%p)", mDrawingArea);
+#endif
     }
+#endif
+
+    mDrawingArea->setGeometry(pos.x(), pos.y(), aWidth, aHeight);
 
     return NS_OK;
 }
