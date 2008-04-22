@@ -172,55 +172,101 @@ nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
         break;
     }
     case NS_THEME_SCROLLBAR: {
-        qPainter->fillRect(r, qApp->palette().brush(QPalette::Active, QPalette::Background));
+        qPainter->fillRect(r, qApp->palette().brush(QPalette::Normal, QPalette::Window));
         break;
     }
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL: {
-        qPainter->fillRect(r, qApp->palette().brush(QPalette::Active, QPalette::Background));
+        qPainter->fillRect(r, qApp->palette().brush(QPalette::Active, QPalette::Window));
         break;
     }
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL: {
-        qPainter->fillRect(r, qApp->palette().brush(QPalette::Active, QPalette::Background));
+        qPainter->fillRect(r, qApp->palette().brush(QPalette::Active, QPalette::Window));
         break;
     }
-    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
-        extraFlags |= QStyle::State_Horizontal;
-        // fall through 
+    case NS_THEME_SCROLLBAR_BUTTON_LEFT: {
+        QStyle::PrimitiveElement arrow = QStyle::PE_IndicatorArrowLeft;
+
+        QStyleOptionButton opt;
+        r.adjust(0, 0, mFrameWidth, 0);
+        InitButtonStyle(aWidgetType, aFrame, r, opt);
+        qPainter->setClipRect(cr, Qt::IntersectClip);
+        style->drawPrimitive(QStyle::PE_PanelButtonCommand, &opt, qPainter);
+
+        r.adjust(0, 0, -mFrameWidth, 0);
+        opt.rect = r;
+        style->drawPrimitive(arrow, &opt, qPainter);
+
+        qPainter->setPen(QPen(qApp->palette().mid(), 1.0));
+        qPainter->drawLine(r.x() + r.width() - 1, r.y(), r.x() + r.width() - 1, r.y() + r.height());
+        break;
+        }
     case NS_THEME_SCROLLBAR_BUTTON_UP: {
-        QStyleOption option;
-        InitPlainStyle(aWidgetType, aFrame, r, option, extraFlags);
+        QStyle::PrimitiveElement arrow = QStyle::PE_IndicatorArrowUp;
 
-        style->drawControl(QStyle::CE_ScrollBarSubLine, &option, qPainter, NULL);
+        QStyleOptionButton opt;
+        r.adjust(0, 0, 0, mFrameWidth);
+        InitButtonStyle(aWidgetType, aFrame, r, opt);
+        qPainter->setClipRect(cr, Qt::IntersectClip);
+        style->drawPrimitive(QStyle::PE_PanelButtonCommand, &opt, qPainter);
+
+        r.adjust(0, 0, 0, -mFrameWidth);
+        opt.rect = r;
+        style->drawPrimitive(arrow, &opt, qPainter);
+
+        qPainter->setPen(QPen(qApp->palette().mid(), 1.0));
+        qPainter->drawLine(r.x(), r.y() + r.height() - 1, r.x() + r.width(), r.y() + r.height() - 1);
         break;
     }
-    case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
-        extraFlags |= QStyle::State_Horizontal;
-        // fall through
+    case NS_THEME_SCROLLBAR_BUTTON_RIGHT: {
+        QStyle::PrimitiveElement arrow = QStyle::PE_IndicatorArrowRight; 
+
+        QStyleOptionButton opt;
+        r.adjust(-mFrameWidth, 0, 0, 0);
+        InitButtonStyle(aWidgetType, aFrame, r, opt);
+        qPainter->setClipRect(cr, Qt::IntersectClip);
+        style->drawPrimitive(QStyle::PE_PanelButtonCommand, &opt, qPainter);
+
+        r.adjust(mFrameWidth, 0, 0, 0);
+        opt.rect = r;
+        style->drawPrimitive(arrow, &opt, qPainter);
+
+        qPainter->setPen(QPen(qApp->palette().mid(), 1.0));
+        qPainter->drawLine(r.x(), r.y(), r.x(), r.y() + r.height());
+        break;
+        }
     case NS_THEME_SCROLLBAR_BUTTON_DOWN: {
-        QStyleOption option;
-        InitPlainStyle(aWidgetType, aFrame, r, option, extraFlags);
-
-        style->drawControl(QStyle::CE_ScrollBarAddLine, &option, qPainter, NULL);
-
+        QStyle::PrimitiveElement arrow = QStyle::PE_IndicatorArrowDown; 
+        
+        QStyleOptionButton opt;
+        r.adjust(0, -mFrameWidth, 0, 0);
+        InitButtonStyle(aWidgetType, aFrame, r, opt);
+        qPainter->setClipRect(cr, Qt::IntersectClip); 
+        style->drawPrimitive(QStyle::PE_PanelButtonCommand, &opt, qPainter);
+        
+        r.adjust(0, mFrameWidth, 0, 0);
+        opt.rect = r;
+        style->drawPrimitive(arrow, &opt, qPainter);
+        
+        qPainter->setPen(QPen(qApp->palette().mid(), 1.0));
+        qPainter->drawLine(r.x(), r.y(), r.x() + r.width(), r.y());
         break;
     }
-    //case NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL:
-    //case NS_THEME_SCROLLBAR_GRIPPER_VERTICAL:
-    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
+    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL: {
         extraFlags |= QStyle::State_Horizontal;
-        // fall through
+        QStyleOptionSlider option;
+        InitPlainStyle(aWidgetType, aFrame, r, (QStyleOption&)option, extraFlags);
+        option.orientation = Qt::Horizontal;
+        style->drawControl(QStyle::CE_ScrollBarSlider, &option, qPainter, NULL);
+        break;
+        }
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL: {
-        QStyleOption option;
-        InitPlainStyle(aWidgetType, aFrame, r, option, extraFlags);
-
+        QStyleOptionSlider option;
+        InitPlainStyle(aWidgetType, aFrame, r, (QStyleOption&)option, extraFlags);
+        option.orientation = Qt::Vertical;
         style->drawControl(QStyle::CE_ScrollBarSlider, &option, qPainter, NULL);
         break;
     }
     case NS_THEME_DROPDOWN: {
-        qDebug("NS_THEME_DROPDOWN r (%3d,%3d,%3d,%3d) cr (%3d,%3d,%3d,%3d)",
-            r.x(), r.y(), r.width(), r.height(),
-            cr.x(), cr.y(), cr.width(), cr.height());
-
         QStyleOptionComboBox comboOpt;
         
         InitComboStyle(aWidgetType, aFrame, r, comboOpt);
@@ -229,11 +275,9 @@ nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
         break;
     }
     case NS_THEME_DROPDOWN_BUTTON:
-        qDebug("NS_THEME_DROPDOWN_BUTTON");
         break;
     case NS_THEME_DROPDOWN_TEXT:
     case NS_THEME_DROPDOWN_TEXTFIELD:
-        qDebug("NS_THEME_DROPDOWN_TEXT");
         break;
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
@@ -294,6 +338,7 @@ nsNativeThemeQt::GetWidgetPadding(nsIDeviceContext* ,
         aResult->SizeTo(2, 2, 2, 2);
         return PR_TRUE;
     }
+
     return PR_FALSE;
 }
 
@@ -352,11 +397,16 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* a
         break;
     }
     case NS_THEME_SCROLLBAR_BUTTON_UP:
-    case NS_THEME_SCROLLBAR_BUTTON_DOWN:
-    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
-    case NS_THEME_SCROLLBAR_BUTTON_RIGHT: {
+    case NS_THEME_SCROLLBAR_BUTTON_DOWN: {
         (*aResult).width = s->pixelMetric(QStyle::PM_ScrollBarExtent);
         (*aResult).height = (*aResult).width;
+        //*aIsOverridable = PR_FALSE;
+        break;
+    }
+    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
+    case NS_THEME_SCROLLBAR_BUTTON_RIGHT: {
+        (*aResult).height = s->pixelMetric(QStyle::PM_ScrollBarExtent);
+        (*aResult).width = (*aResult).height;
         //*aIsOverridable = PR_FALSE;
         break;
         }
@@ -383,14 +433,11 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* a
         break;
         }
     case NS_THEME_DROPDOWN_BUTTON: {
-        qDebug("---");
         QStyleOptionComboBox comboOpt;
         
         nsRect frameRect = aFrame->GetRect();
         QRect qRect = qRectInPixels(frameRect, p2a);
         comboOpt.rect = qRect;
-//         qDebug("qRect (%3d,%3d,%3d,%3d)",
-//             qRect.x(), qRect.y(), qRect.width(), qRect.height());
 
         InitComboStyle(aWidgetType, aFrame, qRect, comboOpt);
 
@@ -398,7 +445,6 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* a
   
         (*aResult).width = subRect.width();
         (*aResult).height = subRect.height();
-        qDebug("Min size for NS_THEME_DROPDOWN_BUTTON (%3d,%3d)", (*aResult).width, (*aResult).height);
         //*aIsOverridable = PR_FALSE;
         break;
     }
@@ -418,28 +464,22 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* a
 
         (*aResult).width = subRect.width();
         (*aResult).height = subRect.height();
-        //qDebug("Min size for NS_THEME_DROPDOWN (%3d,%3d)", (*aResult).width, (*aResult).height);
         //*aIsOverridable = PR_FALSE;
         break;
     }
     case NS_THEME_DROPDOWN_TEXT: {
-        qDebug("---");
         QStyleOptionComboBox comboOpt;
         
         nsRect frameRect = aFrame->GetRect();
 
         QRect qRect = qRectInPixels(frameRect, p2a);
         
-//         qDebug("qRect (%3d,%3d,%3d,%3d)",
-//             qRect.x(), qRect.y(), qRect.width(), qRect.height());
-
         comboOpt.rect = qRect;
 
         QRect subRect = s->subControlRect(QStyle::CC_ComboBox, &comboOpt, QStyle::SC_ComboBoxEditField, NULL);
        
         (*aResult).width = subRect.width();
         (*aResult).height = subRect.height();
-//         qDebug("Min size for NS_THEME_DROPDOWN_TEXT (%3d,%3d)", (*aResult).width, (*aResult).height);
         //*aIsOverridable = PR_FALSE;
         break;
     }
@@ -457,7 +497,6 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* a
 
         (*aResult).width = subRect.width() + subRect2.width();
         (*aResult).height = std::max(subRect.height(), subRect2.height());
-//         qDebug("Min size for NS_THEME_DROPDOWN_TEXTFIELD (%3d,%3d)", (*aResult).width, (*aResult).height);
         //*aIsOverridable = PR_FALSE;
         break;
     }
@@ -619,8 +658,7 @@ void
 nsNativeThemeQt::InitComboStyle(PRUint8 aWidgetType,
                                 nsIFrame* aFrame,
                                 QRect rect,
-                                QStyleOptionComboBox &opt,
-                                QStyle::State extraFlags /*= QStyle::State_None*/)
+                                QStyleOptionComboBox &opt)
 {
     PRInt32 eventState = GetContentState(aFrame, aWidgetType);
 
@@ -636,10 +674,8 @@ nsNativeThemeQt::InitComboStyle(PRUint8 aWidgetType,
         opt.state |= QStyle::State_Raised;
     if (!disabled && eventState & NS_EVENT_STATE_ACTIVE)
         // Don't allow sunken when disabled
-        opt.state |= QStyle::State_On;
+        opt.state |= QStyle::State_Sunken;
 
     opt.rect = rect;
     opt.palette = mNoBackgroundPalette;
-
-    opt.state |= extraFlags;
 }
