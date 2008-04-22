@@ -296,7 +296,7 @@ function bugAccess()
   // XPATH queries to get these rather than this brute force parsing, but there
   // isn't a very clean way to load text/HTML into a document (bug 102699).
   // So, for now, be sure that we are beginning in the right part of the page,
-  // And not catching bugzilla maintenance bug references in the header it.
+  // And not catching bugzilla maintenance bug references in the header.
   // So we look for the bugs table, i.e. this line: 
   // <table class="bz_buglist sortable" ...> We set that to our end, so that
   // the beginLoc is set properly the first time through the loop.
