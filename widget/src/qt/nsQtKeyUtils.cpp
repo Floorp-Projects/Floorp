@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsCommonWidget.h"
+#include "nsWindow.h"
 #include "nsQtKeyUtils.h"
 #include "keysym2ucs.h"
 
