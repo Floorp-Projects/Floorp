@@ -27,7 +27,6 @@
  *   Masayuki Nakano <masayuki@d-toybox.com>
  *   Ginn Chen <ginn.chen@sun.com>
  *   Simon Bünzli <zeniko@gmail.com>
- *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1462,17 +1461,6 @@ IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame, nsAString& aKey)
   nsCOMPtr<nsIDOMXULControlElement> control(do_QueryInterface(aContent));
   if (control)
     return PR_TRUE;
-
-  if (aContent->IsNodeOfType(nsINode::eHTML)) {
-    nsIAtom* tag = aContent->Tag();
-
-    // HTML area, label and legend elements are never focusable, so
-    // we need to check for them explicitly before giving up.
-    if (tag == nsGkAtoms::area ||
-        tag == nsGkAtoms::label ||
-        tag == nsGkAtoms::legend)
-      return PR_TRUE;
-  }
 
   return PR_FALSE;
 }
