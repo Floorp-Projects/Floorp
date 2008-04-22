@@ -58,11 +58,7 @@ public:
 
   nsresult Init();
 
-signals:
-  void activated();
-
-private slots:
-  void EventNativeCallback();
+  virtual bool event (QEvent *e);
 
 protected:
   virtual void ScheduleNativeEventCallback();
