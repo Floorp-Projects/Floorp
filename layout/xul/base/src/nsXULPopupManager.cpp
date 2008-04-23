@@ -469,7 +469,7 @@ nsXULPopupManager::ShowPopupAtScreen(nsIContent* aPopup,
 
   SetTriggerEvent(aTriggerEvent, aPopup);
 
-  popupFrame->InitializePopupAtScreen(aXPos, aYPos);
+  popupFrame->InitializePopupAtScreen(aXPos, aYPos, aIsContextMenu);
 
   FirePopupShowingEvent(aPopup, nsnull, popupFrame->PresContext(),
                         popupFrame->PopupType(), aIsContextMenu, PR_FALSE);
