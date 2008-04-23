@@ -60,7 +60,7 @@ const LMANNO_FEEDURI = "livemark/feedURI";
 const LMANNO_SITEURI = "livemark/siteURI";
 const ORGANIZER_FOLDER_ANNO = "PlacesOrganizer/OrganizerFolder";
 const ORGANIZER_QUERY_ANNO = "PlacesOrganizer/OrganizerQuery";
-const ORGANIZER_LEFTPANE_VERSION = 2;
+const ORGANIZER_LEFTPANE_VERSION = 3;
 
 #ifdef XP_MACOSX
 // On Mac OSX, the transferable system converts "\r\n" to "\n\n", where we
@@ -1198,6 +1198,9 @@ var PlacesUIUtils = {
         PlacesUtils.annotations.setItemAnnotation(itemId, ORGANIZER_QUERY_ANNO,
                                                   "AllBookmarks", 0, EXPIRE_NEVER);
         self.leftPaneQueries["AllBookmarks"] = itemId;
+
+        // disallow manipulating this folder within the organizer UI
+        PlacesUtils.bookmarks.setFolderReadonly(allBookmarksId, true);
 
         // All Bookmarks->Bookmarks Toolbar Query
         uri = PlacesUtils._uri("place:folder=TOOLBAR");
