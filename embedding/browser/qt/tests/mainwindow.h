@@ -29,6 +29,7 @@ public:
 private slots:
     void slotProgress(int, int);
     void slotProgress(const QString &, int, int);
+    void slotNewWindow(QGeckoEmbed**, int);
 
 private:
     QLineEdit *location;
