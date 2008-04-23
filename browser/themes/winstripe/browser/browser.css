@@ -234,31 +234,31 @@ toolbar[mode="icons"] #back-button {
 }
 
 toolbar[iconsize="large"][mode="icons"] #back-button {
-  -moz-image-region: rect(0px 398px 34px 360px);
+  -moz-image-region: rect(0px 396px 34px 360px);
 }
 toolbar[iconsize="large"][mode="icons"] #back-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(34px 398px 68px 360px);
+  -moz-image-region: rect(34px 396px 68px 360px);
 }
 toolbar[iconsize="large"][mode="icons"] #back-button[disabled="true"] {
-  -moz-image-region: rect(68px 398px 102px 360px);
+  -moz-image-region: rect(68px 396px 102px 360px);
 }
 toolbar[iconsize="large"][mode="icons"] #back-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(102px 398px 136px 360px);
+  -moz-image-region: rect(102px 396px 136px 360px);
 }
 
 /* unified back button with keyhole icons, RTL version */
 
 toolbar[iconsize="large"][mode="icons"] #back-button[chromedir="rtl"] {
-  -moz-image-region: rect(0px 516px 34px 478px);
+  -moz-image-region: rect(0px 516px 34px 480px);
 }
 toolbar[iconsize="large"][mode="icons"] #back-button[chromedir="rtl"]:not([disabled="true"]):hover {
-  -moz-image-region: rect(34px 516px 68px 478px);
+  -moz-image-region: rect(34px 516px 68px 480px);
 }
 toolbar[iconsize="large"][mode="icons"] #back-button[chromedir="rtl"][disabled="true"] {
-  -moz-image-region: rect(68px 516px 102px 478px);
+  -moz-image-region: rect(68px 516px 102px 480px);
 }
 toolbar[iconsize="large"][mode="icons"] #back-button[chromedir="rtl"]:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(102px 516px 136px 478px);
+  -moz-image-region: rect(102px 516px 136px 480px);
 }
 
 /* unified forward button with keyhole icons */
@@ -270,31 +270,31 @@ toolbar[mode="icons"] #forward-button {
 }
 
 toolbar[iconsize="large"][mode="icons"] #forward-button {
-  -moz-image-region: rect(3px 424px 31px 398px);
+  -moz-image-region: rect(3px 422px 31px 396px);
 }
 toolbar[iconsize="large"][mode="icons"] #forward-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(37px 424px 65px 398px);
+  -moz-image-region: rect(37px 422px 65px 396px);
 }
 toolbar[iconsize="large"][mode="icons"] #forward-button[disabled="true"] {
-  -moz-image-region: rect(71px 424px 99px 398px);
+  -moz-image-region: rect(71px 422px 99px 396px);
 }
 toolbar[iconsize="large"][mode="icons"] #forward-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(105px 424px 133px 398px);
+  -moz-image-region: rect(105px 422px 133px 396px);
 }
 
 /* unified forward button with keyhole icons, RTL version */
 
 toolbar[iconsize="large"][mode="icons"] #forward-button[chromedir="rtl"] {
-  -moz-image-region: rect(3px 478px 31px 452px);
+  -moz-image-region: rect(3px 480px 31px 454px);
 }
 toolbar[iconsize="large"][mode="icons"] #forward-button[chromedir="rtl"]:not([disabled="true"]):hover {
-  -moz-image-region: rect(37px 478px 65px 452px);
+  -moz-image-region: rect(37px 480px 65px 454px);
 }
 toolbar[iconsize="large"][mode="icons"] #forward-button[chromedir="rtl"][disabled="true"] {
-  -moz-image-region: rect(71px 478px 99px 452px);
+  -moz-image-region: rect(71px 480px 99px 454px);
 }
 toolbar[iconsize="large"][mode="icons"] #forward-button[chromedir="rtl"]:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(105px 478px 133px 452px);
+  -moz-image-region: rect(105px 480px 133px 454px);
 }
 
 /* dropmarker for unified back and forward buttons with keyhole icons */
@@ -317,31 +317,31 @@ toolbar[mode="icons"] #back-forward-dropmarker > dropmarker {
 
 toolbar[iconsize="large"][mode="icons"] #back-forward-dropmarker {
   list-style-image: url("chrome://browser/skin/Toolbar.png");
-  -moz-image-region: rect(3px 438px 31px 424px);
+  -moz-image-region: rect(3px 438px 31px 422px);
 }
 toolbar[iconsize="large"][mode="icons"] #back-forward-dropmarker:not([disabled="true"]):hover {
-  -moz-image-region: rect(37px 438px 65px 424px);
+  -moz-image-region: rect(37px 438px 65px 422px);
 }
 toolbar[iconsize="large"][mode="icons"] #back-forward-dropmarker[disabled="true"] {
-  -moz-image-region: rect(71px 438px 99px 424px);
+  -moz-image-region: rect(71px 438px 99px 422px);
 }
 toolbar[iconsize="large"][mode="icons"] #back-forward-dropmarker:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(105px 438px 133px 424px);
+  -moz-image-region: rect(105px 438px 133px 422px);
 }
 
 /* unified dropmarker with keyhole icons, RTL version */
 
 toolbar[iconsize="large"][mode="icons"] #back-forward-dropmarker[chromedir="rtl"] {
-  -moz-image-region: rect(3px 452px 31px 438px);
+  -moz-image-region: rect(3px 454px 31px 438px);
 }
 toolbar[iconsize="large"][mode="icons"] #back-forward-dropmarker[chromedir="rtl"]:not([disabled="true"]):hover {
-  -moz-image-region: rect(37px 452px 65px 438px);
+  -moz-image-region: rect(37px 454px 65px 438px);
 }
 toolbar[iconsize="large"][mode="icons"] #back-forward-dropmarker[chromedir="rtl"][disabled="true"] {
-  -moz-image-region: rect(71px 452px 99px 438px);
+  -moz-image-region: rect(71px 454px 99px 438px);
 }
 toolbar[iconsize="large"][mode="icons"] #back-forward-dropmarker[chromedir="rtl"]:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(105px 452px 133px 438px);
+  -moz-image-region: rect(105px 454px 133px 438px);
 }
 
 /* ::::: unified back and forward buttons, small icons mode ::::: */
