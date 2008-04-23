@@ -82,7 +82,7 @@ menulist[disabled="true"] {
 }
 
 menulist[disabled="true"] > .menulist-dropmarker {
-  padding-left: 7px !important;
+  -moz-padding-start: 7px !important;
 }
 
 /* ::::: editable menulists ::::: */
@@ -101,7 +101,9 @@ menulist[editable="true"][open="true"] > .menulist-dropmarker {
 }
 
 .menulist-editable-box {
-  margin: -1px -1px 1px 0px;
+  margin: -1px 0px 1px;
+  -moz-margin-start: 0px;
+  -moz-margin-end: -1px;
   padding: 0 2px;
   border: 1px solid #CCCCCC;
   background-color: -moz-Field;
@@ -145,7 +147,7 @@ html|*.menulist-editable-input {
 }  
 
 .menulist-compact > .menulist-dropmarker {
-  margin-left: 2px;
+  -moz-margin-start: 2px;
   border: none;
   padding: 0 !important;
   background: transparent;

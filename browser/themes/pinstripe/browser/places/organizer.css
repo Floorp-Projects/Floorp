@@ -75,17 +75,20 @@
 }
 
 #placesView > splitter {
-  border-left: none !important;
-  border-right: 1px solid #404040;
+  -moz-border-start: none !important;
+  -moz-border-end: 1px solid #404040;
   min-width: 1px;
   width: 1px;
   background-image: none !important;       
-} 
+}
+
+.toolbarbutton-1 {
+  list-style-image: url("chrome://browser/skin/places/back-forward.png");
+}
 
 /* back button */
 
 #back-button {
-  list-style-image: url("chrome://browser/skin/places/back-forward.png");
   -moz-image-region: rect(0px, 34px, 23px, 0px);
   -moz-margin-end: 0;
   -moz-padding-end: 0;
@@ -93,14 +96,28 @@
   border-right: none;
 }
 
+#back-button[chromedir="rtl"] {
+  -moz-image-region: rect(0px, 67px, 23px, 34px);
+}
+
 #back-button[disabled="true"] {
  -moz-image-region: rect(23px, 34px, 46px, 0px) !important;
+}
+
+#back-button[disabled="true"][chromedir="rtl"] {
+ -moz-image-region: rect(23px, 67px, 46px, 34px) !important;
 }
 
 #back-button:hover:active,
 #back-button[buttondown="true"],
 #back-button[open="true"] {
   -moz-image-region: rect(46px, 34px, 69px, 0px);
+}
+
+#back-button:hover:active[chromedir="rtl"],
+#back-button[buttondown="true"][chromedir="rtl"],
+#back-button[open="true"][chromedir="rtl"] {
+  -moz-image-region: rect(46px, 67px, 69px, 34px);
 }
 
 #back-button > .toolbarbutton-text,
@@ -111,7 +128,6 @@
 /* forward button */
 
 #forward-button {
-  list-style-image: url("chrome://browser/skin/places/back-forward.png");
   -moz-image-region: rect(0px, 67px, 23px, 34px);
   -moz-margin-start: 0;
   -moz-margin-end: 8px;
@@ -120,8 +136,16 @@
   border-right: none;
 }
 
+#forward-button[chromedir="rtl"] {
+  -moz-image-region: rect(0px, 34px, 23px, 0px);
+}
+
 #forward-button[disabled="true"] {
- -moz-image-region: rect(23px, 67px, 46px, 34px) !important;
+  -moz-image-region: rect(23px, 67px, 46px, 34px) !important;
+}
+
+#forward-button[disabled="true"][chromedir="rtl"] {
+  -moz-image-region: rect(23px, 34px, 46px, 0px) !important;
 }
 
 #forward-button:hover:active,
@@ -130,13 +154,26 @@
   -moz-image-region: rect(46px, 67px, 69px, 34px);
 }
 
+#forward-button:hover:active[chromedir="rtl"],
+#forward-button[buttondown="true"][chromedir="rtl"],
+#forward-button[open="true"][chromedir="rtl"] {
+  -moz-image-region: rect(46px, 34px, 69px, 0px);
+}
+
 #placesToolbar > toolbarbutton[type="menu"] {
   -moz-margin-start: 5px;
   -moz-padding-end: 10px;
-  background: url("chrome://browser/skin/places/menubutton-end.png") center right no-repeat;
+  background: url("chrome://browser/skin/places/menubutton-end.png") right center no-repeat;
 }
 #placesToolbar > toolbarbutton[type="menu"][open="true"] {
-  background: url("chrome://browser/skin/places/menubutton-end-pressed.png") center right no-repeat;
+  background: url("chrome://browser/skin/places/menubutton-end-pressed.png") right center no-repeat;
+}
+
+#placesToolbar[chromedir="rtl"] > toolbarbutton[type="menu"] {
+  background: url("chrome://browser/skin/places/menubutton-end-rtl.png") left center no-repeat;
+}
+#placesToolbar[chromedir="rtl"] > toolbarbutton[type="menu"][open="true"] {
+  background: url("chrome://browser/skin/places/menubutton-end-pressed-rtl.png") left center no-repeat;
 }
 
 #placesToolbar > toolbarbutton[type="menu"] > menupopup {
@@ -145,12 +182,21 @@
 }
 
 #placesToolbar > toolbarbutton[type="menu"] > .toolbarbutton-icon {
-  background: url("chrome://browser/skin/places/menubutton-start.png") center left no-repeat;
-  padding: 3px 4px 4px 10px;
+  background: url("chrome://browser/skin/places/menubutton-start.png") left center no-repeat;
+  padding: 3px 0px 4px 0px;
+  -moz-padding-start: 10px;
+  -moz-padding-end: 4px;
   height: 23px;
 }
 #placesToolbar > toolbarbutton[type="menu"][open="true"] > .toolbarbutton-icon {
-  background: url("chrome://browser/skin/places/menubutton-start-pressed.png") center left no-repeat;
+  background: url("chrome://browser/skin/places/menubutton-start-pressed.png") left center no-repeat;
+}
+
+#placesToolbar[chromedir="rtl"] > toolbarbutton[type="menu"] > .toolbarbutton-icon {
+  background: url("chrome://browser/skin/places/menubutton-start-rtl.png") right center no-repeat;
+}
+#placesToolbar[chromedir="rtl"] > toolbarbutton[type="menu"][open="true"] > .toolbarbutton-icon {
+  background: url("chrome://browser/skin/places/menubutton-start-pressed-rtl.png") right center no-repeat;
 }
 
 #placesToolbar > toolbarbutton[type="menu"] > .toolbarbutton-text {
@@ -244,7 +290,9 @@
 
 /* Search Bar */
 #searchbar {
-  margin: 6px -4px 0px 2px;
+  margin-top: 6px;
+  -moz-margin-start: 2px;
+  -moz-margin-end: -4px;
 }
 
 .textbox-input-closebutton {

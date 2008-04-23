@@ -46,18 +46,36 @@
   padding: 0;
 }
 
+.searchbar-engine-button[chromedir="rtl"] {
+  background-image: url("chrome://browser/skin/urlbar/startcap-rtl.png");
+}
+
 .searchbar-textbox[focused="true"] > .searchbar-engine-button {
   background-image: url("chrome://browser/skin/urlbar/startcap-focused.png");
 }
 
-.searchbar-engine-button:active,
+.searchbar-textbox[focused="true"] > .searchbar-engine-button[chromedir="rtl"] {
+  background-image: url("chrome://browser/skin/urlbar/startcap-focused-rtl.png");
+}
+
+.searchbar-engine-button:hover:active,
 .searchbar-engine-button[open="true"] {
   background-image: url("chrome://browser/skin/urlbar/startcap-active.png") !important;
+}
+
+.searchbar-engine-button:hover:active[chromedir="rtl"],
+.searchbar-engine-button[open="true"][chromedir="rtl"] {
+  background-image: url("chrome://browser/skin/urlbar/startcap-active-rtl.png") !important;
 }
 
 .searchbar-textbox[focused="true"] > .searchbar-engine-button:active,
 .searchbar-textbox[focused="true"] > .searchbar-engine-button[open="true"] {
   background-image: url("chrome://browser/skin/urlbar/startcap-active-focused.png") !important;
+}
+
+.searchbar-textbox[focused="true"] > .searchbar-engine-button[chromedir="rtl"]:active,
+.searchbar-textbox[focused="true"] > .searchbar-engine-button[open="true"][chromedir="rtl"] {
+  background-image: url("chrome://browser/skin/urlbar/startcap-active-focused-rtl.png") !important;
 }
 
 .searchbar-engine-button > .button-box {
@@ -80,13 +98,20 @@
 .search-go-container {
   -moz-box-align: center;
   background: url("chrome://browser/skin/urlbar/endcap.png") no-repeat right top;
-  padding-right: 4px;
+  -moz-padding-end: 4px;
+}
+
+.search-go-container[chromedir="rtl"] {
+  background-image: url("chrome://browser/skin/urlbar/endcap-rtl.png");
 }
 
 .searchbar-textbox[focused="true"] > .search-go-container {
   background-image: url("chrome://browser/skin/urlbar/endcap-focused.png");
 }
 
+.searchbar-textbox[focused="true"] > .search-go-container[chromedir="rtl"] {
+  background: url("chrome://browser/skin/urlbar/endcap-focused-rtl.png") no-repeat left top;
+}
 
 #searchbar[empty="true"] .search-go-button {
   visibility: hidden;
