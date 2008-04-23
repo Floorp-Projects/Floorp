@@ -2750,7 +2750,7 @@ dnl Note that we assume that mac & win32 have short wchar (see nscore.h)
 
     AC_CACHE_CHECK(for compiler -fshort-wchar option, 
         ac_cv_have_usable_wchar_option_v2,
-        [AC_TRY_COMPILE([#include <stddef.h>
+        [AC_TRY_LINK([#include <stddef.h>
                          $configure_static_assert_macros],
                         [CONFIGURE_STATIC_ASSERT(sizeof(wchar_t) == 2);
                          CONFIGURE_STATIC_ASSERT((wchar_t)-1 > (wchar_t) 0)],
