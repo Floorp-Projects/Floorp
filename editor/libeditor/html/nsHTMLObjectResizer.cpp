@@ -623,7 +623,7 @@ nsHTMLEditor::StartResizing(nsIDOMElement *aHandle)
 
 NS_IMETHODIMP 
 nsHTMLEditor::MouseDown(PRInt32 aClientX, PRInt32 aClientY,
-                        nsIDOMElement *aTarget)
+                        nsIDOMElement *aTarget, nsIDOMEvent* aEvent)
 {
   PRBool anonElement = PR_FALSE;
   if (aTarget && NS_SUCCEEDED(aTarget->HasAttribute(NS_LITERAL_STRING("_moz_anonclass"), &anonElement)))
@@ -634,6 +634,8 @@ nsHTMLEditor::MouseDown(PRInt32 aClientX, PRInt32 aClientY,
       if (NS_FAILED(res)) return res;
       if (anonclass.EqualsLiteral("mozResizer")) {
         // and that element is a resizer, let's start resizing!
+        aEvent->PreventDefault();
+
         mOriginalX = aClientX;
         mOriginalY = aClientY;
         return StartResizing(aTarget);
