@@ -212,8 +212,10 @@ var PlacesOrganizer = {
     options.excludeItems = false;
     var placeURI = PlacesUtils.history.queriesToQueryString(queries, queries.length, options);
 
-    // update the right-pane contents
-    if (this._content.place != placeURI)
+    // Update the right-pane contents.
+    // We must update also if the user clears the search box, in that case
+    // we are called with resetSearchBox == false.
+    if (this._content.place != placeURI || !resetSearchBox)
       this._content.place = placeURI;
 
     // This just updates the back/forward buttons, it doesn't call us back
