@@ -248,6 +248,9 @@ nsEditingSession::DisableJSAndPlugins(nsIDOMWindow *aWindow)
 NS_IMETHODIMP
 nsEditingSession::RestoreJSAndPlugins(nsIDOMWindow *aWindow)
 {
+  if (!mDisabledJSAndPlugins)
+    return NS_OK;
+
   mDisabledJSAndPlugins = PR_FALSE;
 
   nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
@@ -410,26 +413,17 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   }
 
   // make the UI state maintainer
-  nsComposerCommandsUpdater *stateMaintainer;
-  NS_NEWXPCOM(stateMaintainer, nsComposerCommandsUpdater);
-  mStateMaintainer = static_cast<nsISelectionListener*>(stateMaintainer);
-
-  if (!mStateMaintainer) return NS_ERROR_OUT_OF_MEMORY;
+  mStateMaintainer = new nsComposerCommandsUpdater();
 
   // now init the state maintainer
   // This allows notification of error state
   //  even if we don't create an editor
-  rv = stateMaintainer->Init(aWindow);
+  rv = mStateMaintainer->Init(aWindow);
   if (NS_FAILED(rv)) return rv;
 
   if (mEditorStatus != eEditorCreationInProgress)
   {
-    // We had an earlier error -- force notification of document creation
-    nsCOMPtr<nsIDocumentStateListener> docListener =
-                                          do_QueryInterface(mStateMaintainer);
-    if (docListener)
-      docListener->NotifyDocumentCreated();
-
+    mStateMaintainer->NotifyDocumentCreated();
     return NS_ERROR_FAILURE;
   }
 
@@ -484,8 +478,7 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
 
   // Set up as a doc state listener
   // Important! We must have this to broadcast the "obs_documentCreated" message
-  rv = editor->AddDocumentStateListener(
-      static_cast<nsIDocumentStateListener*>(stateMaintainer));
+  rv = editor->AddDocumentStateListener(mStateMaintainer);
   if (NS_FAILED(rv)) return rv;
 
   // XXXbz we really shouldn't need a presShell here!
@@ -504,15 +497,14 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   nsCOMPtr<nsISelectionPrivate> selPriv = do_QueryInterface(selection);
   if (!selPriv) return NS_ERROR_FAILURE;
 
-  rv = selPriv->AddSelectionListener(stateMaintainer);
+  rv = selPriv->AddSelectionListener(mStateMaintainer);
   if (NS_FAILED(rv)) return rv;
 
   // and as a transaction listener
   nsCOMPtr<nsITransactionManager> txnMgr;
   editor->GetTransactionManager(getter_AddRefs(txnMgr));
   if (txnMgr)
-    txnMgr->AddListener(static_cast<nsITransactionListener*>
-                                   (stateMaintainer));
+    txnMgr->AddListener(mStateMaintainer);
 
   // Set context on all controllers to be the editor
   rv = SetEditorOnControllers(aWindow, editor);
@@ -521,9 +513,35 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   // Everything went fine!
   mEditorStatus = eEditorOK;
 
-
   // This will trigger documentCreation notification
   return editor->PostCreate();
+}
+
+// Removes all listeners and controllers from aWindow and aEditor.
+void
+nsEditingSession::RemoveListenersAndControllers(nsIDOMWindow *aWindow,
+                                                nsIEditor *aEditor)
+{
+  if (!mStateMaintainer || !aEditor)
+    return;
+
+  // Remove all the listeners
+  nsCOMPtr<nsISelection> selection;
+  aEditor->GetSelection(getter_AddRefs(selection));
+  nsCOMPtr<nsISelectionPrivate> selPriv = do_QueryInterface(selection);
+  if (selPriv)
+    selPriv->RemoveSelectionListener(mStateMaintainer);
+
+  aEditor->RemoveDocumentStateListener(mStateMaintainer);
+
+  nsCOMPtr<nsITransactionManager> txnMgr;
+  aEditor->GetTransactionManager(getter_AddRefs(txnMgr));
+  if (txnMgr)
+    txnMgr->RemoveListener(mStateMaintainer);
+
+  // Remove editor controllers from the window now that we're not
+  // editing in that window any more.
+  RemoveEditorControllers(aWindow);
 }
 
 /*---------------------------------------------------------------------------
@@ -538,6 +556,9 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
   if (!mDoneSetup)
     return NS_OK;
 
+  if (!aWindow)
+    return NS_ERROR_NULL_POINTER;
+
   nsresult rv;
   
   // Kill any existing reload timer
@@ -547,8 +568,6 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
     mLoadBlankDocTimer = nsnull;
   }
 
-  nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
-
   mDoneSetup = PR_FALSE;
 
   // Check if we're turning off editing (from contentEditable or designMode).
@@ -556,14 +575,8 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
   aWindow->GetDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(domDoc);
   PRBool stopEditing = htmlDoc && htmlDoc->IsEditingOn();
-  if (stopEditing) {
-    nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
-    if (webProgress) {
-      webProgress->RemoveProgressListener(this);
-
-      mProgressListenerRegistered = PR_FALSE;
-    }
-  }
+  if (stopEditing)
+    RemoveWebProgressListener(aWindow);
 
   nsCOMPtr<nsIEditorDocShell> editorDocShell;
   rv = GetEditorDocShellFromWindow(aWindow, getter_AddRefs(editorDocShell));
@@ -576,107 +589,27 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
   if (stopEditing)
     htmlDoc->TearingDownEditor(editor);
 
-  // null out the editor on the controllers first to prevent their weak 
-  // references from pointing to a destroyed editor
   if (mStateMaintainer && editor)
   {
-    // null out the editor on the controllers
+    // Null out the editor on the controllers first to prevent their weak 
+    // references from pointing to a destroyed editor.
     SetEditorOnControllers(aWindow, nsnull);
   }
 
-  // null out the editor on the docShell to trigger PreDestroy which
-  // needs to happen before document state listeners are removed below
+  // Null out the editor on the docShell to trigger PreDestroy which
+  // needs to happen before document state listeners are removed below.
   editorDocShell->SetEditor(nsnull);
 
-  if (mStateMaintainer)
+  RemoveListenersAndControllers(aWindow, editor);
+
+  if (stopEditing)
   {
-    if (editor)
+    // Make things the way they were before we started editing.
+    RestoreJSAndPlugins(aWindow);
+    RestoreAnimationMode(aWindow);
+
+    if (mMakeWholeDocumentEditable)
     {
-      // If we had an editor -- we are loading a new URL into existing window
-
-      // Remove all the listeners
-      nsCOMPtr<nsISelection> selection;
-      editor->GetSelection(getter_AddRefs(selection));
-      nsCOMPtr<nsISelectionPrivate> selPriv = do_QueryInterface(selection);
-      if (selPriv)
-      {
-        nsCOMPtr<nsISelectionListener> listener = 
-          do_QueryInterface(mStateMaintainer);
-        selPriv->RemoveSelectionListener(listener);
-      }
-
-      nsCOMPtr<nsIDocumentStateListener> docListener =
-        do_QueryInterface(mStateMaintainer);
-      editor->RemoveDocumentStateListener(docListener);
-
-      nsCOMPtr<nsITransactionManager> txnMgr;
-      editor->GetTransactionManager(getter_AddRefs(txnMgr));
-      if (txnMgr)
-      {
-        nsCOMPtr<nsITransactionListener> transactionListener =
-          do_QueryInterface(mStateMaintainer);
-        txnMgr->RemoveListener(transactionListener);
-      }
-    }
-
-    // Remove editor controllers from the window now that we're not
-    // editing in that window any more.
-
-    nsCOMPtr<nsIDOMWindowInternal> domWindowInt(do_QueryInterface(aWindow));
-  
-    nsCOMPtr<nsIControllers> controllers;      
-    domWindowInt->GetControllers(getter_AddRefs(controllers));
-
-    if (controllers) {
-      nsCOMPtr<nsIController> controller;
-
-      if (mBaseCommandControllerId) {
-        controllers->GetControllerById(mBaseCommandControllerId,
-                                       getter_AddRefs(controller));
-
-        if (controller) {
-          controllers->RemoveController(controller);
-        }
-      }
-
-      if (mDocStateControllerId) {
-        controllers->GetControllerById(mDocStateControllerId,
-                                       getter_AddRefs(controller));
-
-        if (controller) {
-          controllers->RemoveController(controller);
-        }
-      }
-
-      if (mHTMLCommandControllerId) {
-        controllers->GetControllerById(mHTMLCommandControllerId,
-                                       getter_AddRefs(controller));
-
-        if (controller) {
-          controllers->RemoveController(controller);
-        }
-      }
-    }
-
-    //   Clear IDs to trigger creation of new controllers
-    mBaseCommandControllerId = 0;
-    mDocStateControllerId = 0;
-    mHTMLCommandControllerId = 0;
-  }
-
-  if (stopEditing) {
-    if (mDisabledJSAndPlugins) {
-      // Make things the way they were before we started editing.
-      RestoreJSAndPlugins(aWindow);
-    }
-
-    if (!mInteractive) {
-      nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(aWindow));
-      if (utils)
-        utils->SetImageAnimationMode(mImageAnimationMode);
-    }
-
-    if (mMakeWholeDocumentEditable) {
       nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1020,7 +953,9 @@ nsEditingSession::StartDocumentLoad(nsIWebProgress *aWebProgress,
   aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
   if (domWindow)
   {
-    TearDownEditorOnWindow(domWindow);
+    nsIDocShell *docShell = GetDocShellFromWindow(domWindow);
+    if (!docShell) return NS_ERROR_FAILURE;
+    docShell->DetachEditorFromWindow();
   }
     
   if (aIsToBeMadeEditable)
@@ -1386,4 +1321,180 @@ nsEditingSession::SetContextOnControllerById(nsIControllers* aControllers,
   if (!editorController) return NS_ERROR_FAILURE;
 
   return editorController->SetCommandContext(aContext);
+}
+
+void
+nsEditingSession::RemoveEditorControllers(nsIDOMWindow *aWindow)
+{
+  // Remove editor controllers from the aWindow, call when we're 
+  // tearing down/detaching editor.
+  nsCOMPtr<nsIDOMWindowInternal> domWindowInt(do_QueryInterface(aWindow));
+
+  nsCOMPtr<nsIControllers> controllers;
+  if (domWindowInt)
+    domWindowInt->GetControllers(getter_AddRefs(controllers));
+
+  if (controllers)
+  {
+    nsCOMPtr<nsIController> controller;
+    if (mBaseCommandControllerId)
+    {
+      controllers->GetControllerById(mBaseCommandControllerId,
+                                     getter_AddRefs(controller));
+      if (controller)
+        controllers->RemoveController(controller);
+    }
+
+    if (mDocStateControllerId)
+    {
+      controllers->GetControllerById(mDocStateControllerId,
+                                     getter_AddRefs(controller));
+      if (controller)
+        controllers->RemoveController(controller);
+    }
+
+    if (mHTMLCommandControllerId)
+    {
+      controllers->GetControllerById(mHTMLCommandControllerId,
+                                     getter_AddRefs(controller));
+      if (controller)
+        controllers->RemoveController(controller);
+    }
+  }
+
+  // Clear IDs to trigger creation of new controllers.
+  mBaseCommandControllerId = 0;
+  mDocStateControllerId = 0;
+  mHTMLCommandControllerId = 0;
+}
+
+void
+nsEditingSession::RemoveWebProgressListener(nsIDOMWindow *aWindow)
+{
+  nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
+  nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
+  if (webProgress)
+  {
+    webProgress->RemoveProgressListener(this);
+    mProgressListenerRegistered = PR_FALSE;
+  }
+}
+
+void
+nsEditingSession::RestoreAnimationMode(nsIDOMWindow *aWindow)
+{
+  if (!mInteractive)
+  {
+    nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(aWindow));
+    if (utils)
+      utils->SetImageAnimationMode(mImageAnimationMode);
+  }
+}
+
+nsresult
+nsEditingSession::DetachFromWindow(nsIDOMWindow* aWindow)
+{
+  NS_ASSERTION(mEditorFlags != 0, "mEditorFlags should not be 0");
+  NS_ASSERTION(mStateMaintainer, "mStateMaintainer should exist.");
+
+  // Kill any existing reload timer
+  if (mLoadBlankDocTimer)
+  {
+    mLoadBlankDocTimer->Cancel();
+    mLoadBlankDocTimer = nsnull;
+  }
+
+  // Remove controllers, webprogress listener, and otherwise
+  // make things the way they were before we started editing.
+  RemoveEditorControllers(aWindow);
+  RemoveWebProgressListener(aWindow);
+  RestoreJSAndPlugins(aWindow);
+  RestoreAnimationMode(aWindow);
+
+  // Kill our weak reference to our original window, in case
+  // it changes on restore, or otherwise dies.
+  mWindowToBeEdited = nsnull;
+
+  return NS_OK;
+}
+
+nsresult
+nsEditingSession::ReattachToWindow(nsIDOMWindow* aWindow)
+{
+  NS_ASSERTION(mEditorFlags != 0, "mEditorFlags should still be valid...");
+  NS_ASSERTION(mStateMaintainer, "mStateMaintainer should exist.");
+
+  // Imitate nsEditorDocShell::MakeEditable() to reattach the
+  // old editor ot the window.
+  nsresult rv;
+
+  mWindowToBeEdited = do_GetWeakReference(aWindow);
+
+  // Disable plugins.
+  if (!mInteractive)
+  {
+    rv = DisableJSAndPlugins(aWindow);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Tells embedder that startup is in progress.
+  mEditorStatus = eEditorCreationInProgress;
+
+  // Adds back web progress listener.
+  rv = PrepareForEditing(aWindow);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Setup the command controllers again.
+  rv = SetupEditorCommandController("@mozilla.org/editor/editorcontroller;1",
+                                    aWindow,
+                                    static_cast<nsIEditingSession*>(this),
+                                    &mBaseCommandControllerId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = SetupEditorCommandController("@mozilla.org/editor/editordocstatecontroller;1",
+                                    aWindow,
+                                    static_cast<nsIEditingSession*>(this),
+                                    &mDocStateControllerId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mStateMaintainer)
+    mStateMaintainer->Init(aWindow);
+
+  // Get editor
+  nsCOMPtr<nsIEditor> editor;
+  rv = GetEditorForWindow(aWindow, getter_AddRefs(editor));
+  if (!editor)
+    return NS_ERROR_FAILURE;
+
+  if (!mInteractive)
+  {
+    // Disable animation of images in this document:
+    nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(aWindow));
+    if (!utils) return NS_ERROR_FAILURE;
+
+    rv = utils->GetImageAnimationMode(&mImageAnimationMode);
+    NS_ENSURE_SUCCESS(rv, rv);
+    utils->SetImageAnimationMode(imgIContainer::kDontAnimMode);
+  }
+
+  // The third controller takes an nsIEditor as the context
+  rv = SetupEditorCommandController("@mozilla.org/editor/htmleditorcontroller;1",
+                                    aWindow, editor,
+                                    &mHTMLCommandControllerId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set context on all controllers to be the editor
+  rv = SetEditorOnControllers(aWindow, editor);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef DEBUG
+  {
+    PRBool isEditable;
+    rv = WindowIsEditable(aWindow, &isEditable);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ASSERTION(isEditable, "Window is not editable after reattaching editor.");
+  }
+#endif // DEBUG
+
+  return NS_OK;
 }

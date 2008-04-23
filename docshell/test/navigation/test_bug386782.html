@@ -1,0 +1,136 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=386782
+-->
+<head>
+  <title>Test for Bug 386782</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  
+  <script>
+
+    // This tests if we can load a document whose root is in designMode,
+    // edit it, navigate to a new page, navigate back, still edit, and still
+    // undo/redo. Note that this is different from the case where the
+    // designMode document is in a frame inside the window, as this means
+    // the editable region is not in the root docshell (a less complicated case).  
+
+  
+    //var test.window = null;
+    var testInterval = 2000;
+
+    var gTests = [
+      {
+        // <html><body onload="document.designMode='on'"><p>designModeDocument</p></body></html>
+        url: 'data:text/html;charset=utf-8;base64,PGh0bWw%2BPGJvZHkgb25sb2FkPSJkb2N1bWVudC5kZXNpZ25Nb2RlPSdvbiciPjxwPmRlc2lnbk1vZGVEb2N1bWVudDwvcD48L2JvZHk%2BPC9odG1sPg0K',
+        name: 'designModeNavigate',
+        expectedBodyBeforeEdit: '<p>designModeDocument</p>',
+        expectedBodyAfterEdit:  '<p>EDITED designModeDocument</p>',
+        expectedBodyAfterSecondEdit: '<p>EDITED TWICE designModeDocument</p>',
+      },
+      {
+        // <html><body contentEditable="true"><p>contentEditable</p></body></html>
+        url: 'data:text/html;charset=utf-8;base64,PGh0bWw%2BPGJvZHkgY29udGVudEVkaXRhYmxlPSJ0cnVlIj48cD5jb250ZW50RWRpdGFibGU8L3A%2BPC9ib2R5PjwvaHRtbD4NCg0KDQo%3D',
+        name: 'contentEditableNavigate',
+        expectedBodyBeforeEdit: '<br><p>contentEditable</p>',
+        expectedBodyAfterEdit:  'EDITED <br><p>contentEditable</p>',
+        expectedBodyAfterSecondEdit: 'EDITED TWICE <br><p>contentEditable</p>',
+      }
+    ];
+    
+    var gTestNum = -1;
+    var gTest = null;
+    
+    window.onload = goNext();
+ 
+    function goNext() {
+      gTestNum++;
+      if (gTestNum >= gTests.length) {
+        SimpleTest.finish();
+        return;
+      }
+      gTest = gTests[gTestNum];
+      gTest.window = window.open(gTest.url, gTest.name);
+      setTimeout(beginTest, testInterval);
+    }
+
+    function beginTest() {
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      gTest.window.document.body.focus();
+
+      // WARNING: If the following test fails, give the setTimeout() in the onload()
+      // a bit longer; the doc hasn't had enough time to setup its editor.
+      is(gTest.window.document.body.innerHTML, gTest.expectedBodyBeforeEdit, "Is doc setup yet");
+      
+      sendChar('E', gTest.window.document.body);
+      sendChar('D', gTest.window.document.body);
+      sendChar('I', gTest.window.document.body);
+      sendChar('T', gTest.window.document.body);
+      sendChar('E', gTest.window.document.body);
+      sendChar('D', gTest.window.document.body);
+      sendChar(' ', gTest.window.document.body);
+      is(gTest.window.document.body.innerHTML, gTest.expectedBodyAfterEdit, "Editing failed.");
+
+      gTest.window.location = 'data:text/html;charset=utf-8,SomeOtherDocument';
+      setTimeout(goBack, testInterval);
+      
+    }
+    
+    function goBack() {
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      gTest.window.history.back();
+      setTimeout(checkStillEditable, testInterval);
+    }
+
+    function checkStillEditable() {
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+      // Check that the contents are correct.
+      is(gTest.window.document.body.innerHTML, gTest.expectedBodyAfterEdit, "Edited contents still correct?");
+      
+      // Check that we can undo/redo and the contents are correct.
+      gTest.window.document.execCommand("undo", false, null);
+      is(gTest.window.document.body.innerHTML, gTest.expectedBodyBeforeEdit, "Can we undo?");
+
+      gTest.window.document.execCommand("redo", false, null);
+      is(gTest.window.document.body.innerHTML, gTest.expectedBodyAfterEdit, "Can we redo?");
+            
+      // Check that we can still edit the page.
+      gTest.window.document.body.focus();
+      sendChar('T', gTest.window.document.body);
+      sendChar('W', gTest.window.document.body);
+      sendChar('I', gTest.window.document.body);
+      sendChar('C', gTest.window.document.body);
+      sendChar('E', gTest.window.document.body);
+      sendChar(' ', gTest.window.document.body);
+      is(gTest.window.document.body.innerHTML, gTest.expectedBodyAfterSecondEdit, "Can we still edit?");
+      
+      gTest.window.close();
+      goNext();
+      
+    }
+    
+  </script>
+  
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=386782">Mozilla Bug 386782</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 386782 **/
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
+

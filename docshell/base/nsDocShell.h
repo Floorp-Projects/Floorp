@@ -525,6 +525,9 @@ protected:
     // we are it's still OK to load this URI.
     PRBool IsOKToLoadURI(nsIURI* aURI);
     
+    void ReattachEditorToWindow(nsIDOMWindow *aWindow, nsISHEntry *aSHEntry);
+    void DetachEditorFromWindow(nsISHEntry *aSHEntry);
+
 protected:
     // Override the parent setter from nsDocLoader
     virtual nsresult SetDocLoaderParent(nsDocLoader * aLoader);
@@ -642,8 +645,8 @@ protected:
     PRInt32                    mPreviousTransIndex;
     PRInt32                    mLoadedTransIndex;
 
-    // Editor stuff
-    nsDocShellEditorData*      mEditorData;          // editor data, if any
+    // Editor data, if this document is designMode or contentEditable.
+    nsAutoPtr<nsDocShellEditorData> mEditorData;
 
     // Transferable hooks/callbacks
     nsCOMPtr<nsIClipboardDragDropHookList>  mTransferableHookData;
@@ -674,6 +677,9 @@ protected:
 
     static nsIURIFixup *sURIFixup;
 
+    // Returns true when the currently open document has a detached editor
+    // waiting to be reattached.
+    PRBool HasDetachedEditor();
 
 public:
     class InterfaceRequestorProxy : public nsIInterfaceRequestor {
