@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=361111
+-->
+<window title="Mozilla Bug 361111"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="/MochiKit/packed.js" />
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=361111"
+     target="_blank">Mozilla Bug 361111</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+    /** Test for Bug 361111 **/
+    window.onerror = null;
+    SimpleTest.waitForExplicitFinish();
+    document.documentElement.setAttribute("onclick", "%");
+    is(1, 1, "Good, setting a bogus onclick did not throw.");
+    SimpleTest.finish();
+
+  ]]></script>
+</window>
