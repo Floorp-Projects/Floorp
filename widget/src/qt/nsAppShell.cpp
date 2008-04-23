@@ -42,8 +42,7 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include <glib.h>
-#include <glib/gmain.h>
+#include <qabstracteventdispatcher.h>
 
 #include "prenv.h"
 
@@ -80,6 +79,8 @@ nsAppShell::Init()
 #endif
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 4, 0))
     sPokeEvent = QEvent::registerEventType();
+#else
+    sPokeEvent = QEvent::User+5000;
 #endif
     return nsBaseAppShell::Init();
 }
@@ -95,17 +96,18 @@ nsAppShell::ScheduleNativeEventCallback()
 PRBool
 nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
 {
-    if (PR_GetEnv("QT_NO_GLIB")) {
-        QEventLoop::ProcessEventsFlags flags = QEventLoop::AllEvents;
+   QEventLoop::ProcessEventsFlags flags = QEventLoop::AllEvents;
+     
+     if (mayWait)
+         flags |= QEventLoop::WaitForMoreEvents;
+     
+     
+     QAbstractEventDispatcher *dispatcher =  QAbstractEventDispatcher::instance(qApp->thread());
+     if (!dispatcher)
+         return PR_FALSE ;
+     
+     return dispatcher->processEvents(flags)?PR_TRUE:PR_FALSE;
 
-        if (mayWait)
-            flags |= QEventLoop::WaitForMoreEvents;
-
-        qApp->processEvents(flags);
-        return PR_TRUE;
-    }
-
-    return g_main_context_iteration(g_main_context_default(), mayWait);
 }
 
 bool
