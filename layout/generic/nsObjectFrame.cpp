@@ -3857,8 +3857,13 @@ nsPluginInstanceOwner::Destroy()
     target->RemoveEventListener(NS_LITERAL_STRING("draggesture"), listener, PR_TRUE);
   }
 
-  if (mDestroyWidget && mWidget) {
-    mWidget->Destroy();
+  if (mWidget) {
+    nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
+    if (pluginWidget)
+      pluginWidget->SetPluginInstanceOwner(nsnull);
+
+    if (mDestroyWidget)
+      mWidget->Destroy();
   }
 
   return NS_OK;
@@ -4346,7 +4351,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
                           PR_FALSE);
 
           // mPluginWindow->type is used in |GetPluginPort| so it must
-          // be initilized first
+          // be initialized first
           mPluginWindow->type = nsPluginWindowType_Window;
           mPluginWindow->window = GetPluginPort();
 
@@ -4355,6 +4360,11 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 
           // tell the plugin window about the widget
           mPluginWindow->SetPluginWidget(mWidget);
+
+          // tell the widget about the current plugin instance owner.
+          nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
+          if (pluginWidget)
+            pluginWidget->SetPluginInstanceOwner(this);
         }
       }
     }

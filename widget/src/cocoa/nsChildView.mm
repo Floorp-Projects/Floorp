@@ -749,6 +749,49 @@ NS_IMETHODIMP nsChildView::IsVisible(PRBool& outState)
 }
 
 
+void nsChildView::HidePlugin()
+{
+  NS_ASSERTION(mIsPluginView, "HidePlugin called on non-plugin view");
+
+  if (mPluginInstanceOwner && !mPluginIsCG) {
+    nsPluginWindow* window;
+    mPluginInstanceOwner->GetWindow(window);
+    nsCOMPtr<nsIPluginInstance> instance;
+    mPluginInstanceOwner->GetInstance(*getter_AddRefs(instance));
+    if (window && instance) {
+       window->clipRect.top = 0;
+       window->clipRect.left = 0;
+       window->clipRect.bottom = 0;
+       window->clipRect.right = 0;
+       instance->SetWindow(window);
+    }
+  }
+}
+
+
+static void HideChildPluginViews(NSView* aView)
+{
+  NSArray* subviews = [aView subviews];
+
+  for (unsigned int i = 0; i < [subviews count]; ++i) {
+    NSView* view = [subviews objectAtIndex: i];
+
+    if (![view isKindOfClass:[ChildView class]])
+      continue;
+
+    ChildView* childview = static_cast<ChildView*>(view);
+    if ([childview isPluginView]) {
+      nsChildView* widget = static_cast<nsChildView*>([childview widget]);
+      if (widget) {
+        widget->HidePlugin();
+      }
+    } else {
+      HideChildPluginViews(view);
+    }
+  }
+}
+
+
 // Hide or show this component
 NS_IMETHODIMP nsChildView::Show(PRBool aState)
 {
@@ -757,6 +800,8 @@ NS_IMETHODIMP nsChildView::Show(PRBool aState)
   if (aState != mVisible) {
     [mView setHidden:!aState];
     mVisible = aState;
+    if (!mVisible)
+      HideChildPluginViews(mView);
   }
   return NS_OK;
 
@@ -1179,6 +1224,14 @@ NS_IMETHODIMP nsChildView::EndDrawPlugin()
   if (!mIsPluginView) return NS_ERROR_FAILURE;
 
   mPluginDrawing = PR_FALSE;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsChildView::SetPluginInstanceOwner(nsIPluginInstanceOwner* aInstanceOwner)
+{
+  mPluginInstanceOwner = aInstanceOwner;
+
   return NS_OK;
 }
 
