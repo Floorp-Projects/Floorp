@@ -48,6 +48,8 @@ function run_test() {
   var ulUrlRef = "http://" + locale + ".Mozilla.foo/?name=Url Formatter Test&id=urlformattertest@test.mozilla.org&version=1&platversion=2.0&abid=2007122405&pbid=2007122406&app=urlformatter test&os=XPCShell&abi=noarch-spidermonkey";
   var multiUrl = "http://%VENDOR%.%VENDOR%.%NAME%.%VENDOR%.%NAME%";
   var multiUrlRef = "http://Mozilla.Mozilla.Url Formatter Test.Mozilla.Url Formatter Test";
+  var encodedUrl = "https://%LOCALE%.%VENDOR%.foo/?q=%E3%82%BF%E3%83%96&app=%name%&ver=%PLATFORMVERSION%";
+  var encodedUrlRef = "https://" + locale + ".Mozilla.foo/?q=%E3%82%BF%E3%83%96&app=Url Formatter Test&ver=2.0";
 
   var pref = "xpcshell.urlformatter.test";
   var str = Cc["@mozilla.org/supports-string;1"].
@@ -60,4 +62,6 @@ function run_test() {
   // Keys must be uppercase
   do_check_neq(formatter.formatURL(lowerUrlRaw), ulUrlRef);
   do_check_eq(formatter.formatURL(multiUrl), multiUrlRef);
+  // Encoded strings must be kept as is (Bug 427304)
+  do_check_eq(formatter.formatURL(encodedUrl), encodedUrlRef);
 }
