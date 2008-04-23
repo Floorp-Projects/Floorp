@@ -5740,7 +5740,15 @@ static PRBool IsTopLevelMouseExit(HWND aWnd)
   POINT mp;
   mp.x = GET_X_LPARAM(pos);
   mp.y = GET_Y_LPARAM(pos);
-  HWND mouseTopLevel = nsWindow::GetTopLevelHWND(::WindowFromPoint(mp));
+  HWND mouseWnd = ::WindowFromPoint(mp);
+
+  // GetTopLevelHWND will return a HWND for the window frame (which includes
+  // the non-client area).  If the mouse has moved into the non-client area,
+  // we should treat it as a top-level exit.
+  HWND mouseTopLevel = nsWindow::GetTopLevelHWND(mouseWnd, false);
+  if (mouseWnd == mouseTopLevel)
+    return PR_TRUE;
+
   return nsWindow::GetTopLevelHWND(aWnd) != mouseTopLevel;
 }
 
