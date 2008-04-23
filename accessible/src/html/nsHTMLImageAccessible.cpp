@@ -325,6 +325,25 @@ nsHTMLImageAccessible::Shutdown()
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLImageAccessible
 
+nsresult
+nsHTMLImageAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
+{
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+  
+  nsresult rv = nsLinkableAccessible::GetAttributesInternal(aAttributes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+
+  nsAutoString src;
+  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::src, src);
+  if (!src.IsEmpty())
+    nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::src, src);
+
+  return NS_OK;
+}
+
 already_AddRefed<nsIDOMHTMLCollection>
 nsHTMLImageAccessible::GetAreaCollection()
 {

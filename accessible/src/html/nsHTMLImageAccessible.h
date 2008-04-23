@@ -77,6 +77,9 @@ public:
   // nsIAccessibleImage
   NS_DECL_NSIACCESSIBLEIMAGE
 
+  // nsAccessible
+  virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
+
 protected:
   // nsAccessible
   virtual void CacheChildren();
