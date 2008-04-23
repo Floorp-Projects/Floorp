@@ -1,7 +1,7 @@
 %include browser.css
 
 /* ::::: Main Window Styling ::::: */
-#navigator-toolbox > toolbar {
+#navigator-toolbox:-moz-system-metric(windows-default-theme) > toolbar {
   -moz-appearance: none;
   border-style: none;
 }
