@@ -82,6 +82,7 @@
   <commandset id="generalCommands">
     <command id="cmd_findDownload" oncommand="setSearchboxFocus();"/>
     <command id="cmd_selectAllDownloads" oncommand="gDownloadsView.selectAll();"/>
+    <command id="cmd_clearList" oncommand="clearDownloadList();"/>
   </commandset>
 
   <keyset id="downloadKeys">
@@ -167,12 +168,6 @@
               label="&selectAllCmd.label;"
               accesskey="&selectAllCmd.accesskey;"
               command="cmd_selectAllDownloads"/>
-              
-    <menuitem id="menuitem_clearList"
-              label="&cmd.clearList.label;"
-              accesskey="&cmd.clearList.accesskey;"
-              oncommand="performCommand('cmd_clearList');"
-              cmd="cmd_clearList"/>
   </vbox>
   
   <menupopup id="downloadContextMenu" onpopupshowing="return buildContextMenu(event);"/>
@@ -184,7 +179,12 @@
                ondragdrop="nsDragAndDrop.drop(event, gDownloadDNDObserver);">
   </richlistbox>
 
-  <hbox id="search">
+  <hbox id="search" align="center">
+    <button id="clearListButton" command="cmd_clearList"
+            label="&cmd.clearList.label;"
+            accesskey="&cmd.clearList.accesskey;"
+            tooltiptext="&cmd.clearList.tooltip;"/>
+    <spacer flex="1"/>
     <textbox type="timed" timeout="500" id="searchbox"
              oncommand="buildDownloadList();" emptytext="&searchBox.label;"/>
   </hbox>

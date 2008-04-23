@@ -109,6 +109,20 @@ richlistitem[type="download"] button {
   background-repeat: repeat-x;
 }
 
+#clearListButton {
+  -moz-appearance: none;
+  border: 1px solid #5F5F5F;
+  -moz-border-radius: 4px;
+  background: url(chrome://global/skin/icons/white-gray-gradient.gif) #A09E9D repeat-x top center;
+  min-height: 0;
+  min-width: 0;
+  padding: 2px;
+}
+
+#clearListButton:hover:active {
+  background: url(chrome://global/skin/icons/white-gray-gradient-active.gif);
+}
+
 #searchbox {
   -moz-appearance: none;
   border: 3px solid;
