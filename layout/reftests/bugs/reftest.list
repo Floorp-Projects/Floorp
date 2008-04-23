@@ -621,6 +621,7 @@ skip-if(MOZ_WIDGET_TOOLKIT!="windows") == 391045.html 391045-ref.html # windows-
 == 396286-1.html about:blank  # crash test
 == 397428-1.html 397428-1-ref.html
 == 397844-1.xhtml 397844-1-ref.xhtml
+== 398092-1.html 398092-1-ref.html
 == 398101-1.html 398101-1-ref.html
 == 398144-1.html 398144-1-ref.html
 == 398797-1a.html 398797-1-ref.html
@@ -734,6 +735,8 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 fails == 411585-3.html 411585-3-ref.html # bug 426909
 == 411792-1.html 411792-1-ref.html
 == 412093-1.html 412093-1-ref.html
+== 412352-1.html 412352-1-ref.html
+== 412352-2.html 412352-2-ref.html
 == 412607-1a.html 412607-1-ref.html
 == 412607-1b.html 412607-1-ref.html
 == 412679-1.html 412679-1-ref.html
