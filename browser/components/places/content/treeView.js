@@ -999,9 +999,6 @@ PlacesTreeView.prototype = {
       if (elt.localName == "tree" && elt.view == this &&
           this.selection.isSelected(aRow))
         return false;
-      if (node.parent && PlacesUtils.nodeIsReadOnly(node.parent) &&
-          !PlacesUtils.nodeIsTagQuery(node))
-        return false;
     }
   
     var ip = this._getInsertionPoint(aRow, aOrientation);
