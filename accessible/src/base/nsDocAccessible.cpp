@@ -1562,9 +1562,12 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
       // wait to fire this here, instead of in InvalidateCacheSubtree(), where we wouldn't be able to calculate
       // the offset, length and text for the text change.
       if (domNode && domNode != mDOMNode) {
-        if (!containerAccessible)
+        if (!containerAccessible) {
           GetAccessibleInParentChain(domNode, PR_TRUE,
                                      getter_AddRefs(containerAccessible));
+          if (!containerAccessible)
+            containerAccessible = this;
+        }
 
         nsCOMPtr<nsIAccessibleTextChangeEvent> textChangeEvent =
           CreateTextChangeEventForNode(containerAccessible, domNode, accessible, PR_TRUE, PR_TRUE);
