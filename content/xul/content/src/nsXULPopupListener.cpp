@@ -470,13 +470,6 @@ nsXULPopupListener::LaunchPopup(nsIDOMEvent* aEvent, nsIContent* aTargetContent)
     mouseEvent->GetScreenX(&xPos);
     mouseEvent->GetScreenY(&yPos);
 
-    if (mIsContext) {
-      // position the menu two pixels down and to the right from the current
-      // mouse position. This makes it easier to dismiss the menu by just clicking
-      xPos += 2;
-      yPos += 2;
-    }
-
     pm->ShowPopupAtScreen(mPopupContent, xPos, yPos, mIsContext, aEvent);
   }
 
