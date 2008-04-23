@@ -1082,10 +1082,11 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         return NS_OK;
       }
 
-      if (mIsVistaOrLater && isHTML) {
-        nsIComboboxControlFrame* ccf = nsnull;
-        CallQueryInterface(aFrame, &ccf);
-        if (ccf && ccf->IsDroppedDown()) {
+      if (mIsVistaOrLater) {
+        if (isHTML) {
+          nsIComboboxControlFrame* ccf = nsnull;
+          CallQueryInterface(aFrame, &ccf);
+          if (ccf && ccf->IsDroppedDown()) {
           /* Hover is propagated, but we need to know whether we're
            * hovering just the combobox frame, not the dropdown frame.
            * But, we can't get that information, since hover is on the
@@ -1093,11 +1094,20 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
            * instead, we cheat -- if the dropdown is open, we always
            * show the hover state.  This looks fine in practice.
            */
-          aState = TS_HOVER;
-          return NS_OK;
+            aState = TS_HOVER;
+            return NS_OK;
+          }
+        } else {
+          /* On Vista, the dropdown indicator on a menulist button in  
+           * chrome is not given a hover effect. When the frame isn't
+           * isn't HTML content, we cheat and force the dropdown state
+           * to be normal. (Bug 430434)
+           */
+            aState = TS_NORMAL;
+            return NS_OK;
         }
       }
-
+  
       aState = StandardGetState(aFrame, aWidgetType, PR_FALSE);
 
       return NS_OK;
