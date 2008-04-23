@@ -110,6 +110,7 @@ nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell, nsStyleContext* aContex
   mPopupState(ePopupClosed),
   mIsOpenChanged(PR_FALSE),
   mIsContextMenu(PR_FALSE),
+  mAdjustOffsetForContextMenu(PR_FALSE),
   mGeneratedChildren(PR_FALSE),
   mMenuCanOverlapOSBar(PR_FALSE),
   mShouldAutoPosition(PR_TRUE),
@@ -381,6 +382,7 @@ nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
   mAnchorContent = aAnchorContent;
   mXPos = aXPos;
   mYPos = aYPos;
+  mAdjustOffsetForContextMenu = PR_FALSE;
 
   // if aAttributesOverride is true, then the popupanchor, popupalign and
   // position attributes on the <popup> override those values passed in.
@@ -476,7 +478,8 @@ nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
 }
 
 void
-nsMenuPopupFrame::InitializePopupAtScreen(PRInt32 aXPos, PRInt32 aYPos)
+nsMenuPopupFrame::InitializePopupAtScreen(PRInt32 aXPos, PRInt32 aYPos,
+                                          PRBool aIsContextMenu)
 {
   EnsureWidget();
 
@@ -486,6 +489,8 @@ nsMenuPopupFrame::InitializePopupAtScreen(PRInt32 aXPos, PRInt32 aYPos)
   mScreenYPos = aYPos;
   mPopupAnchor = POPUPALIGNMENT_NONE;
   mPopupAlignment = POPUPALIGNMENT_NONE;
+  mIsContextMenu = aIsContextMenu;
+  mAdjustOffsetForContextMenu = aIsContextMenu;
 }
 
 void
@@ -497,6 +502,7 @@ nsMenuPopupFrame::InitializePopupWithAnchorAlign(nsIContent* aAnchorContent,
   EnsureWidget();
 
   mPopupState = ePopupShowing;
+  mAdjustOffsetForContextMenu = PR_FALSE;
 
   // this popup opening function is provided for backwards compatibility
   // only. It accepts either coordinates or an anchor and alignment value
@@ -947,6 +953,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
   nsRect rootScreenRect = rootFrame->GetScreenRect();
 
   nsIDeviceContext* devContext = PresContext()->DeviceContext();
+  nscoord offsetForContextMenu = 0;
   if (mScreenXPos == -1 && mScreenYPos == -1) {
     // if we are anchored to our parent, there are certain things we don't want to do
     // when repositioning the view to fit on the screen, such as end up positioned over
@@ -986,11 +993,19 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
     screenViewLocX = nsPresContext::CSSPixelsToAppUnits(mScreenXPos) / factor;
     screenViewLocY = nsPresContext::CSSPixelsToAppUnits(mScreenYPos) / factor;
 
+    if (mAdjustOffsetForContextMenu) {
+      PRInt32 offsetForContextMenuDev =
+        nsPresContext::CSSPixelsToAppUnits(2) / factor;
+      offsetForContextMenu = presContext->DevPixelsToAppUnits(offsetForContextMenuDev);
+    }
+
     // next, convert back into app units accounting for the scaling,
     // and add the margins on the popup
     GetStyleMargin()->GetMargin(margin);
-    screenViewLocX = presContext->DevPixelsToAppUnits(screenViewLocX) + margin.left;
-    screenViewLocY = presContext->DevPixelsToAppUnits(screenViewLocY) + margin.top;
+    screenViewLocX = presContext->DevPixelsToAppUnits(screenViewLocX) +
+        margin.left + offsetForContextMenu;
+    screenViewLocY = presContext->DevPixelsToAppUnits(screenViewLocY) +
+        margin.top + offsetForContextMenu;
 
     // determine the x and y position by subtracting the desired screen
     // position from the screen position of the root frame.
@@ -1213,6 +1228,9 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
       } else {
         // More space above our desired point.  Flip and resize to fit in this
         // space.
+        // First move screenViewLocY and ypos up because the offset needs to flip
+        screenViewLocY -= 2*offsetForContextMenu;
+        ypos -= 2*offsetForContextMenu;
         if (mRect.height > screenViewLocY - screenTopTwips) {
           // We wouldn't fit.  Shorten before flipping.
           mRect.height = screenViewLocY - screenTopTwips;
