@@ -59,6 +59,7 @@ classic.jar:
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png
   skin/classic/browser/wrench.png
+  skin/classic/browser/places/allBookmarks.png              (places/allBookmarks.png)
   skin/classic/browser/places/places.css                    (places/places.css)
 * skin/classic/browser/places/organizer.css                 (places/organizer.css)
   skin/classic/browser/places/query.png                     (places/query.png)
@@ -90,6 +91,7 @@ classic.jar:
   skin/classic/browser/places/searching_16.png              (places/searching_16.png)
   skin/classic/browser/places/starred48.png                 (places/starred48.png)
   skin/classic/browser/places/unstarred48.png               (places/unstarred48.png)
+  skin/classic/browser/places/unfiledBookmarks.png          (places/unfiledBookmarks.png)
   skin/classic/browser/places/twisty-open.gif               (places/twisty-open.gif)
   skin/classic/browser/places/twisty-closed.gif             (places/twisty-closed.gif)
   skin/classic/browser/places/tag.png                       (places/tag.png)
@@ -99,9 +101,11 @@ classic.jar:
   skin/classic/browser/places/expander-closed.png           (places/expander-closed.png)
   skin/classic/browser/places/expander-open-active.png      (places/expander-open-active.png)
   skin/classic/browser/places/expander-open.png             (places/expander-open.png)
+  skin/classic/browser/preferences/alwaysAsk.png            (preferences/alwaysAsk.png)
   skin/classic/browser/preferences/application.png          (preferences/application.png)
   skin/classic/browser/preferences/Options.png              (preferences/Options.png)
   skin/classic/browser/preferences/plugin.png               (preferences/plugin.png)
+  skin/classic/browser/preferences/saveFile.png             (preferences/saveFile.png)
   skin/classic/browser/preferences/preferences.css          (preferences/preferences.css)
   skin/classic/browser/preferences/applications.css         (preferences/applications.css)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd.png                  (tabbrowser/alltabs-box-bkgnd.png)
@@ -147,6 +151,7 @@ classic.jar:
   skin/classic/browser/urlbar/startcap-verified-end-focused.png          (urlbar/startcap-verified-end-focused.png)
   skin/classic/browser/urlbar/startcap-secure.png                        (urlbar/startcap-secure.png)
   skin/classic/browser/urlbar/startcap-active.png                        (urlbar/startcap-active.png)
+  skin/classic/browser/urlbar/startcap-active-focused.png                (urlbar/startcap-active-focused.png)
   skin/classic/browser/urlbar/startcap-secure-active.png                 (urlbar/startcap-secure-active.png)
   skin/classic/browser/urlbar/textfield-mid.png                          (urlbar/textfield-mid.png)
   skin/classic/browser/urlbar/textfield-mid-focused.png                  (urlbar/textfield-mid-focused.png)
