@@ -26,12 +26,17 @@ findbar {
   background-color: transparent !important;
 }
 
+.findbar-closebutton:hover {
+  list-style-image: url("chrome://global/skin/icons/closetab-hover.png") !important;
+}
+
 .findbar-closebutton:hover:active {
   list-style-image: url("chrome://global/skin/icons/closetab-active.png") !important;
 }
 
-.findbar-container > toolbarbutton,
-.findbar-container > hbox > toolbarbutton {
+.findbar-find-next,
+.findbar-find-previous,
+.findbar-highlight {
   -moz-appearance: none;
   border: 1px solid #5F5F5F;
   -moz-border-radius: 10px;
@@ -57,7 +62,7 @@ findbar {
 }
 
 
-.findbar-container > .findbar-closebutton > .toolbarbutton-text {
+.findbar-closebutton > .toolbarbutton-text {
   display: none;  
 }
 
@@ -66,6 +71,7 @@ findbar {
    -moz-image-region: rect(0px 16px 16px 0px);
    -moz-appearance: none;
    -moz-margin-start: 7px;
+   padding-top: 2px;
 }
 
 .findbar-container > checkbox:hover:active {
@@ -86,6 +92,17 @@ findbar {
 
 .findbar-container > checkbox > .checkbox-label-box > .checkbox-label {
   margin: 1px 0 !important;
+}
+
+.findbar-container > checkbox > .checkbox-label-box > .checkbox-icon {
+  -moz-padding-start: 1px;
+  padding-bottom: 1px;
+}
+
+.findbar-container > checkbox:focus > .checkbox-label-box > .checkbox-icon {
+  outline: 2px solid #4F8EC9;
+  outline-offset: -2px;
+  -moz-outline-radius: 4px;
 }
 
 .findbar-textbox {

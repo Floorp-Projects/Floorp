@@ -55,6 +55,11 @@
   background-image: url("chrome://browser/skin/urlbar/startcap-active.png") !important;
 }
 
+.searchbar-textbox[focused="true"] > .searchbar-engine-button:active,
+.searchbar-textbox[focused="true"] > .searchbar-engine-button[open="true"] {
+  background-image: url("chrome://browser/skin/urlbar/startcap-active-focused.png") !important;
+}
+
 .searchbar-engine-button > .button-box {
   -moz-appearance: none;
   margin-bottom: 1px;

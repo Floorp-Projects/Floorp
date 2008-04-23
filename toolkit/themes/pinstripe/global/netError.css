@@ -124,7 +124,7 @@ body[dir="rtl"] #brand {
 }
 
 :root.blacklist #errorPageContainer {
-  background-image: url("chrome://global/skin/icons/blacklist_large.png");
+  background-image: url("chrome://global/skin/icons/blacklist_64.png");
   background-color: #722;
 }
 

@@ -17,6 +17,20 @@
   border-color: transparent;
 }
 
+#placesList treechildren::-moz-tree-row(selected) {  
+  background-color: #6f81a9;
+  background-image: url("chrome://browser/skin/places/selected-gradient.png");
+  background-repeat: repeat-x;
+  background-position: bottom left;
+  border-top: 1px solid #979797;
+}
+
+#placesList treechildren::-moz-tree-row(selected,focus) {  
+  background-image: url("chrome://browser/skin/places/selected-focused-gradient.png");
+  background-color: #8a8a8a !important;
+  border-top: 1px solid #91a0c0;
+}
+
 #placesList treechildren::-moz-tree-row(History),
 #placesList treechildren::-moz-tree-row(history)  {
   background-color: blue;
@@ -34,6 +48,16 @@
 
 #placesList treechildren::-moz-tree-cell(separator) {
   cursor: default;
+}
+
+#placesList treechildren::-moz-tree-separator {
+  border-top: 1px solid #505d6d;
+  margin: 0 10px;
+}
+
+#placesList treechildren::-moz-tree-cell-text(selected) {  
+  font-weight: bold !important;
+  color: #ffffff !important;
 }
 
 #placesToolbar {
