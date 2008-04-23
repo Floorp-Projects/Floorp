@@ -85,14 +85,14 @@ tree.sidebar-placesTree treechildren::-moz-tree-cell-text(selected) {
 }
 
 page > hbox {
- margin: 0 4px 6px 4px;
+  margin: 0 4px 6px 4px;
 }
 
 /* Trees */
 
 treechildren::-moz-tree-image(title) {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
-  padding-right: 2px;
+  -moz-padding-end: 2px;
   margin: 0px 2px;
   width: 16px;
   height: 16px;
