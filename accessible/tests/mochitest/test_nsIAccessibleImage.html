@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=429659
+-->
+<head>
+  <title>nsIAccessibleImage chrome tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript">
+    const nsIAccessibleImage = Components.interfaces.nsIAccessibleImage;
+    const nsIAccessibleCoordinateType = 
+          Components.interfaces.nsIAccessibleCoordinateType;
+
+    var gAccRetrieval;
+
+    function testCords(aID, aImageAcc, aCordType, aXCoordinate, aYCoordinate,
+                       aCoordTypeString)
+    {
+      var x = {}, y = {};
+      aImageAcc.getImagePosition(aCordType, x, y);
+      is(x.value, aXCoordinate,
+         "Wrong " + aCoordTypeString + " x offset for " + aID + "!");
+      is(y.value, aYCoordinate,
+         "Wrong " + aCoordTypeString + " y offset for " + aID + "!");
+    }
+
+    function testCoordinates(aID, aAcc, aXCoordinates, aYCoordinates, aWidth,
+                             aHeight)
+    {
+      var imageAcc;
+      try {
+        imageAcc = aAcc.QueryInterface(nsIAccessibleImage);
+      } catch(e) {}
+      ok(imageAcc, "no image interface for " + aID + "!");
+
+      testCords(aID, imageAcc,
+                nsIAccessibleCoordinateType.COORDTYPE_SCREEN_RELATIVE,
+                aXCoordinates[0], aYCoordinates[0], "screen");
+      testCords(aID, imageAcc,
+                nsIAccessibleCoordinateType.COORDTYPE_WINDOW_RELATIVE,
+                aXCoordinates[1], aYCoordinates[1], "window");
+      testCords(aID, imageAcc,
+                nsIAccessibleCoordinateType.COORDTYPE_PARENT_RELATIVE,
+                aXCoordinates[2], aYCoordinates[2], "parent");
+
+      var width = {}, height = {};
+      imageAcc.getImageSize(width, height);
+      is(width.value, aWidth, "Wrong width for " + aID + "!");
+      is(height.value, aHeight, "wrong height for " + aID + "!");
+    }
+
+    function testThis(aID, aName, aSRC, aXCoordinates, aYCoordinates, aWidth,
+                      aHeight)
+    {
+      var elem = document.getElementById(aID);
+      var acc;
+      try {
+        acc = gAccRetrieval.getAccessibleFor(elem);
+      } catch(e) {}
+      ok(acc, "No accessible for " + aID + "!");
+      is(acc.name, aName, "wrong name for " + aID + "!");
+
+      // test coordinates and size
+      testCoordinates(aID, acc, aXCoordinates, aYCoordinates, aWidth, aHeight);
+
+      // bug 429659: Make sure the SRC attribute is set for any image
+      var attributes;
+      try {
+        attributes = acc.attributes;
+      } catch(e) {}
+      ok(attributes, "no attributes on " + aID + "!");
+      is(attributes.getStringProperty("src"), aSRC,
+         "no correct src attribute for " + aID + "!");
+    }
+
+    function doTest()
+    {
+      gAccRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
+                       getService(Components.interfaces.nsIAccessibleRetrieval);
+
+      // Test non-linked image
+      var xCords = [16, 12, 8];
+      var yCords = [227, 223, 113];
+      testThis("nonLinkedImage", null, "moz.png", xCords, yCords, 89, 38);
+
+      // Test linked image
+      xCords = [16, 12, 0];
+      yCords = [289, 285, -27];
+      testThis("linkedImage", null, "moz.png", xCords, yCords, 93, 42);
+
+      // Test non-linked image with alt attribute
+      xCords = [16, 12, 8];
+      yCords = [356, 352, 242];
+      testThis("nonLinkedImageWithAlt", "MoFo", "moz.png", xCords, yCords, 89, 38);
+
+      // Test linked image with alt attribute
+      xCords = [16, 12, 0];
+      yCords = [418, 414, -27];
+      testThis("linkedImageWithAlt", "MoFo link", "moz.png", xCords, yCords, 93, 42);
+
+      // Test non-linked image with title attribute
+      xCords = [16, 12, 8];
+      yCords = [485, 481, 371];
+      testThis("nonLinkedImageWithTitle", "MoFo logo", "moz.png", xCords, yCords, 89, 38);
+
+      // Test linked image with title attribute
+      xCords = [16, 12, 0];
+      yCords = [547, 543, -27];
+      testThis("linkedImageWithTitle", "Link to MoFo", "moz.png", xCords, yCords, 93, 42);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=429659">Mozilla Bug 429659</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <br>Simple image:<br>
+  <img id="nonLinkedImage" src="moz.png"/>
+  <br>Linked image:<br>
+  <a href="http://www.mozilla.org"><img id="linkedImage" src="moz.png"></a>
+  <br>Simple image with alt:<br>
+  <img id="nonLinkedImageWithAlt" src="moz.png" alt="MoFo"/>
+  <br>Linked image with alt:<br>
+  <a href="http://www.mozilla.org"><img id="linkedImageWithAlt" src="moz.png" alt="MoFo link"/></a>
+  <br>Simple image with title:<br>
+  <img id="nonLinkedImageWithTitle" src="moz.png" title="MoFo logo"/>
+  <br>Linked image with title:<br>
+  <a href="http://www.mozilla.org"><img id="linkedImageWithTitle" src="moz.png" title="Link to MoFo"/></a>
+</body>
+</html>
