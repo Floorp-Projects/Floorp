@@ -242,17 +242,21 @@ _FP2TV(void *fp)
 
 #endif /* XP_MACOSX && __POWERPC__ */
 
-//This function sends a notification using the observer service to any object registered to listen to the "experimental-notify-plugin-call" subject.
-//Each "experimental-notify-plugin-call" notification carries with it the run time value in milliseconds that the call took to execute.
+// This function sends a notification using the observer service to any object
+// registered to listen to the "experimental-notify-plugin-call" subject.
+// Each "experimental-notify-plugin-call" notification carries with it the run
+// time value in milliseconds that the call took to execute.
 void NS_NotifyPluginCall(PRIntervalTime startTime) 
 {
   PRIntervalTime endTime = PR_IntervalNow() - startTime;
-  nsCOMPtr<nsIObserverService> notifyUIService = do_GetService("@mozilla.org/observer-service;1");
+  nsCOMPtr<nsIObserverService> notifyUIService =
+    do_GetService("@mozilla.org/observer-service;1");
   float runTimeInSeconds = float(endTime) / PR_TicksPerSecond();
   nsAutoString runTimeString;
   runTimeString.AppendFloat(runTimeInSeconds);
   const PRUnichar* runTime = runTimeString.get();
-  notifyUIService->NotifyObservers(nsnull, "experimental-notify-plugin-call", runTime);
+  notifyUIService->NotifyObservers(nsnull, "experimental-notify-plugin-call",
+                                   runTime);
 }
 
 ////////////////////////////////////////////////////////////////////////
