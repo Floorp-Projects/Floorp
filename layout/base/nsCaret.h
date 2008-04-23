@@ -146,7 +146,7 @@ protected:
       nscoord mBidiIndicatorSize; // width and height of bidi indicator
       nscoord mCaretWidth;        // full caret width including bidi indicator
     };
-    Metrics ComputeMetrics(nsPresContext *aPresContext);
+    Metrics ComputeMetrics(nsIFrame* aFrame, PRInt32 aOffset);
 
     // Returns true if the caret should be drawn. When |mDrawn| is true,
     // this returns true, so that we erase the drawn caret. If |aIgnoreDrawnState|
