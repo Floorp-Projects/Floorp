@@ -96,12 +96,16 @@ function PROT_ListManager() {
                                           BindToObject(this.cookieChanged_, this),
                                           false);
 
-  this.requestBackoff_ = new RequestBackoff(3 /* num errors */,
-                                   10*60*1000 /* error time, 10min */,
+  /* Backoff interval should be between 30 and 60 minutes. */
+  var backoffInterval = 30 * 60 * 1000;
+  backoffInterval += Math.floor(Math.random() * (30 * 60 * 1000));
+
+  this.requestBackoff_ = new RequestBackoff(2 /* max errors */,
+                                      60*1000 /* retry interval, 1 min */,
                                             4 /* num requests */,
                                    60*60*1000 /* request time, 60 min */,
-                                   60*60*1000 /* backoff interval, 60min */,
-                                   6*60*60*1000 /* max backoff, 6hr */);
+                              backoffInterval /* backoff interval, 60 min */,
+                                 8*60*60*1000 /* max backoff, 8hr */);
 
   this.dbService_ = Cc["@mozilla.org/url-classifier/dbservice;1"]
                    .getService(Ci.nsIUrlClassifierDBService);
@@ -507,9 +511,10 @@ PROT_ListManager.prototype.downloadError_ = function(status) {
   this.requestBackoff_.noteServerResponse(status);
 
   if (this.requestBackoff_.isErrorStatus(status)) {
-    // Try again in a minute
+    // Schedule an update for when our backoff is complete
     this.currentUpdateChecker_ =
-      new G_Alarm(BindToObject(this.checkForUpdates, this), 60000);
+      new G_Alarm(BindToObject(this.checkForUpdates, this),
+                  this.requestBackoff_.nextRequestDelay());
   }
 }
 

@@ -150,13 +150,17 @@ PROT_DataProvider.prototype.getUrlPref_ = function(prefName) {
   var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
                           .getService(Components.interfaces.nsIXULAppInfo);
 
-  var mozClientStr = MOZ_OFFICIAL_BUILD ? 'navclient-auto-ffox' : appInfo.name;
+  var mozClientStr = this.prefs_.getPref("browser.safebrowsing.clientid",
+                                         MOZ_OFFICIAL_BUILD ? 'navclient-auto-ffox' : appInfo.name);
+
+  var versionStr = this.prefs_.getPref("browser.safebrowsing.clientver",
+                                       appInfo.version);
 
   // Parameter substitution
   url = url.replace(MOZ_PARAM_LOCALE, this.getLocale_());
   url = url.replace(MOZ_PARAM_CLIENT, mozClientStr);
   url = url.replace(MOZ_PARAM_BUILDID, appInfo.appBuildID);
-  url = url.replace(MOZ_PARAM_VERSION, appInfo.version);
+  url = url.replace(MOZ_PARAM_VERSION, versionStr);
   return url;
 }
 
