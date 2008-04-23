@@ -63,8 +63,24 @@
 
 #placesMenu > menu {
   -moz-padding-start: 4px;
+  -moz-padding-end: 1px;
+  padding-top: 2px;
+  padding-bottom: 2px;
   -moz-appearance: toolbarbutton;
   color: -moz-DialogText;
+  border: 1px solid transparent;
+}
+
+#placesMenu > menu:hover {
+  border-color: ThreeDHighlight ThreeDShadow ThreeDShadow ThreeDHighlight;
+}
+
+#placesMenu > menu[open="true"] {
+  border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
+  -moz-padding-start: 5px;
+  -moz-padding-end: 0px;
+  padding-top: 3px;
+  padding-bottom: 1px;
 }
 
 #placesMenu > menu > label {
