@@ -68,3 +68,9 @@ richlistitem[type="download"] .dateTime {
   min-height: 32px;
   min-width: 32px;
 }
+
+#clearListButton {
+  min-height: 0;
+  min-width: 0;
+  height: 1em;
+}

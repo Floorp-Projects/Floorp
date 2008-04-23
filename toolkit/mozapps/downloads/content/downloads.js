@@ -352,6 +352,28 @@ function copySourceLocation(aDownload)
   }
 }
 
+/**
+ * Remove the currently shown downloads from the download list.
+ */
+function clearDownloadList() {
+  // Clear the whole list if there's no search
+  if (gSearchTerms == "") {
+    gDownloadManager.cleanUp();
+    return;
+  }
+
+  // Remove each download starting from the end until we hit a download
+  // that is in progress
+  let item;
+  while ((item = gDownloadsView.lastChild) && !item.inProgress)
+    removeDownload(item);
+
+  // Clear the input as if the user did it and move focus to the list
+  gSearchBox.value = "";
+  gSearchBox.doCommand();
+  gDownloadsView.focus();
+}
+
 // This is called by the progress listener.
 var gLastComputedMean = -1;
 var gLastActiveDownloads = 0;
@@ -499,8 +521,6 @@ var gContextMenus = [
     , "menuitem_copyLocation"
     , "menuseparator"
     , "menuitem_selectAll"
-    , "menuseparator"
-    , "menuitem_clearList"
   ],
   // DOWNLOAD_FINISHED
   [
@@ -513,7 +533,6 @@ var gContextMenus = [
     , "menuitem_selectAll"
     , "menuseparator"
     , "menuitem_removeFromList"
-    , "menuitem_clearList"
   ],
   // DOWNLOAD_FAILED
   [
@@ -525,7 +544,6 @@ var gContextMenus = [
     , "menuitem_selectAll"
     , "menuseparator"
     , "menuitem_removeFromList"
-    , "menuitem_clearList"
   ],
   // DOWNLOAD_CANCELED
   [
@@ -537,7 +555,6 @@ var gContextMenus = [
     , "menuitem_selectAll"
     , "menuseparator"
     , "menuitem_removeFromList"
-    , "menuitem_clearList"
   ],
   // DOWNLOAD_PAUSED
   [
@@ -550,8 +567,6 @@ var gContextMenus = [
     , "menuitem_copyLocation"
     , "menuseparator"
     , "menuitem_selectAll"
-    , "menuseparator"
-    , "menuitem_clearList"
   ],
   // DOWNLOAD_QUEUED
   [
@@ -563,8 +578,6 @@ var gContextMenus = [
     , "menuitem_copyLocation"
     , "menuseparator"
     , "menuitem_selectAll"
-    , "menuseparator"
-    , "menuitem_clearList"
   ],
   // DOWNLOAD_BLOCKED_PARENTAL
   [
@@ -574,7 +587,6 @@ var gContextMenus = [
     , "menuitem_selectAll"
     , "menuseparator"
     , "menuitem_removeFromList"
-    , "menuitem_clearList"
   ],
   // DOWNLOAD_SCANNING
   [
@@ -584,8 +596,6 @@ var gContextMenus = [
     , "menuitem_copyLocation"
     , "menuseparator"
     , "menuitem_selectAll"
-    , "menuseparator"
-    , "menuitem_clearList"
   ],
   // DOWNLOAD_DIRTY
   [
@@ -595,7 +605,6 @@ var gContextMenus = [
     , "menuitem_selectAll"
     , "menuseparator"
     , "menuitem_removeFromList"
-    , "menuitem_clearList"
   ],
   // DOWNLOAD_BLOCKED_POLICY
   [
@@ -605,7 +614,6 @@ var gContextMenus = [
     , "menuitem_selectAll"
     , "menuseparator"
     , "menuitem_removeFromList"
-    , "menuitem_clearList"
   ]
 ];
 
@@ -677,12 +685,6 @@ var gDownloadDNDObserver =
 var gDownloadViewController = {
   isCommandEnabled: function(aCommand, aItem)
   {
-    // This switch statement is for commands that do not need a download object
-    switch (aCommand) {
-      case "cmd_clearList":
-        return gDownloadManager.canCleanUp;
-    }
-
     let dl = aItem;
     let download = null; // used for getting an nsIDownload object
 
@@ -757,30 +759,6 @@ var gDownloadViewController = {
     cmd_copyLocation: function(aSelectedItem) {
       copySourceLocation(aSelectedItem);
     },
-    cmd_clearList: function() {
-      // If we're performing all, we can save some work by only doing it once
-      if (gPerformAllCallback === null)
-        gPerformAllCallback = function() {};
-      else if (gPerformAllCallback)
-        return;
-
-      // Clear the whole list if there's no search
-      if (gSearchTerms == "") {
-        gDownloadManager.cleanUp();
-      }
-      else {
-        // Remove each download starting from the end until we hit a download
-        // that is in progress
-        let item;
-        while ((item = gDownloadsView.lastChild) && !item.inProgress)
-          removeDownload(item);
-
-        // Clear the input as if the user did it and move focus to the list
-        gSearchBox.value = "";
-        gSearchBox.doCommand();
-        gDownloadsView.focus();
-      }
-    }
   }
 };
 
