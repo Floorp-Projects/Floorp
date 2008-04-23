@@ -187,7 +187,7 @@
   </popupset>
 
   <toolbox id="placesToolbox">
-    <toolbar class="chromeclass-toolbar" id="placesToolbar" align="center">
+    <toolbar class="chromeclass-toolbar" id="placesToolbar" align="center" chromedir="&locale.dir;">
       <toolbarbutton id="back-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      command="OrganizerCommand:Back"
                      tooltiptext="&backButton.tooltip;"

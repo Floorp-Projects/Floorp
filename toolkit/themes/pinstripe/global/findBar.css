@@ -146,8 +146,12 @@ findbar[flash="true"] > .findbar-container > .find-field-container > .findbar-te
 /* find-next button */
 
 .findbar-find-next {
-  border-right: none;
+  -moz-border-end: none;
   -moz-margin-end: 0 !important;
+}
+
+.findbar-find-next[chromedir="ltr"],
+.findbar-find-previous[chromedir="rtl"] {
   -moz-border-radius-topright: 0px;
   -moz-border-radius-bottomright: 0px;
 }
@@ -155,11 +159,15 @@ findbar[flash="true"] > .findbar-container > .find-field-container > .findbar-te
 /* find-previous button */
 
 .findbar-find-previous {
+  -moz-margin-start: 0 !important;
+}
+
+.findbar-find-previous[chromedir="ltr"],
+.findbar-find-next[chromedir="rtl"] {
   -moz-border-radius-topleft: 0px;
   -moz-border-radius-bottomleft: 0px;
-  -moz-margin-start: 0 !important;
-  border-left-color: #868686;
 }
+
 /* highlight button */
 
 .findbar-highlight {

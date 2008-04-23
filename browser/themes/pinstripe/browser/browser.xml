@@ -23,7 +23,7 @@
   </binding>
    <binding id="toolbarbutton-menu-shadow" display="xul:menu" 
            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
-    <content>
+    <content chromedir="&locale.dir;">
       <children includes="observes|template|menupopup|tooltip"/>
       <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,toolbarmode,buttonstyle"/>
       <xul:stack class="toolbarbutton-text-stack" crop="right" flex="1">
@@ -32,11 +32,11 @@
          <xul:label class="toolbarbutton-text" crop="right" flex="1"
                  xbl:inherits="value=label,accesskey,crop,dragover-top,toolbarmode,buttonstyle"/>
       </xul:stack>
-      <xul:dropmarker type="menu" class="toolbarbutton-menu-dropmarker" xbl:inherits="disabled,label"/>
+      <xul:dropmarker type="menu" class="toolbarbutton-menu-dropmarker" xbl:inherits="disabled,label,chromedir"/>
     </content>
   </binding>
   <binding id="toolbarbutton-shadow" extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
-   <content>
+   <content chromedir="&locale.dir;">
       <children includes="observes|template|menupopup|tooltip"/>
       <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,toolbarmode,buttonstyle"/>
       <xul:stack class="toolbarbutton-text-stack" crop="right" flex="1">
