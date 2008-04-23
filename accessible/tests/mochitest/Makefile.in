@@ -46,6 +46,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =\
+		test_aria_activedescendant.html \
 		test_bug368835.xul \
 		test_bug420863.html \
 		test_groupattrs.xul \
