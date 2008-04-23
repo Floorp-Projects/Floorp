@@ -226,7 +226,7 @@ QGeckoEmbedPrivate::init()
 
     // Apply the current chrome mask
     ApplyChromeMask();
-    
+
     window->SetVisibility(PR_TRUE);
 }
 

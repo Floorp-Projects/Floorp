@@ -81,7 +81,8 @@ MyMainWindow::MyMainWindow()
             SLOT(slotProgress(int, int)));
     connect(qecko, SIGNAL(progressAll(const QString&, int, int)),
             SLOT(slotProgress(const QString&, int, int)));
-
+    connect(qecko, SIGNAL(newWindow(QGeckoEmbed**, int)),
+            SLOT(slotNewWindow(QGeckoEmbed**, int)));
 
     connect( location, SIGNAL(returnPressed()), SLOT(changeLocation()));
 
@@ -146,4 +147,14 @@ void MyMainWindow::slotProgress(const QString &url, int current, int max)
 void MyMainWindow::slotProgress(int current, int max)
 {
     qDebug("progress %d / %d ", current, max);
+}
+
+void MyMainWindow::slotNewWindow(QGeckoEmbed **newWindow, int chromeMask)
+{
+    MyMainWindow *mainWindow = new MyMainWindow();
+    if(!mainWindow) return;
+    mainWindow->resize(400, 600);
+    mainWindow->show();
+
+    *newWindow = mainWindow->qecko;
 }
