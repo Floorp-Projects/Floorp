@@ -139,7 +139,7 @@ signals:
     void netStart();
     void netStop();
 
-    void newWindow(QGeckoEmbed *newWindow, int chromeMask);
+    void newWindow(QGeckoEmbed **newWindow, int chromeMask);
     void visibilityChanged(bool visible);
     void destroyBrowser();
     void openURI(const QString &url);
