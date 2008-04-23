@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<style type="text/css">
+
+    .container {
+      position: relative;
+    }
+    #colset {
+      -moz-column-count: 3;
+      -moz-column-gap: 0;
+      border: silver 2pt;
+      border-style: none solid;
+    }
+    .b1 {
+      position: absolute;
+      height: 336pt;
+      margin-left: 20pt;
+    }
+    .b2 {
+      position: absolute;
+      height: 192pt;
+      width: 25pt;
+      margin-left: 50pt;
+    }
+
+</style>
+
+<script type="text/javascript">
+
+function boom()
+{
+  newDiv = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  newDiv.setAttribute("class", "b1");
+  document.getElementById("f").appendChild(newDiv);
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+
+<div id="colset"><div class="container"><div class="b2"></div><div id="f"></div></div></div>
+
+</body>
+</html>
