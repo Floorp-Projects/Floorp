@@ -708,13 +708,12 @@ var PlacesOrganizer = {
   saveSearch: function PO_saveSearch() {
     // Get the place: uri for the query.
     // If the advanced query builder is showing, use that.
-    var queries = PlacesQueryBuilder.queries;
     var options = this.getCurrentOptions();
 
-#ifndef PLACES_QUERY_BUILDER
-    var query = PlacesUtils.history.getNewQuery();
-    query.searchTerms = PlacesSearchBox.value;
-    queries.push(query);
+#ifdef PLACES_QUERY_BUILDER
+    var queries = PlacesQueryBuilder.queries;
+#else
+    var queries = this.getCurrentQueries();
 #endif
 
     var placeSpec = PlacesUtils.history.queriesToQueryString(queries,
