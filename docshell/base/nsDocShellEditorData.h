@@ -52,53 +52,54 @@
 #endif
 
 
+#include "nsIHTMLDocument.h"
 #include "nsIEditor.h"
 
-
-// a non-XPCOM class that is used to store per-docshell editor-related
-// data.
+class nsIDOMWindow;
 
 class nsDocShellEditorData
 {
 public:
 
-              nsDocShellEditorData(nsIDocShell* inOwningDocShell);
-              ~nsDocShellEditorData();
-              
+  nsDocShellEditorData(nsIDocShell* inOwningDocShell);
+  ~nsDocShellEditorData();
 
-  // set a flag to say this frame should be editable when the next url loads
-  nsresult    MakeEditable(PRBool inWaitForUriLoad);
-  
-  PRBool      GetEditable();
-  
-              // actually create the editor for this docShell
-  nsresult    CreateEditor();
-  
-              // get the editing session. The editing session always lives on the content
-              // root docShell; this call may crawl up the frame tree to find it.
-  nsresult    GetEditingSession(nsIEditingSession **outEditingSession);
-  
-              // get the editor for this docShell. May return null but NS_OK
-  nsresult    GetEditor(nsIEditor **outEditor);
-  
-              // set the editor on this docShell
-  nsresult    SetEditor(nsIEditor *inEditor);
-
-  // Tear down the editor on this docshell, if any.
-  void        TearDownEditor();
-
-protected:              
-
-  nsresult    EnsureEditingSession();
+  nsresult MakeEditable(PRBool inWaitForUriLoad);
+  PRBool GetEditable();
+  nsresult CreateEditor();
+  nsresult GetEditingSession(nsIEditingSession **outEditingSession);
+  nsresult GetEditor(nsIEditor **outEditor);
+  nsresult SetEditor(nsIEditor *inEditor);
+  void TearDownEditor();
+  nsresult DetachFromWindow();
+  nsresult ReattachToWindow(nsIDOMWindow *aWindow);
 
 protected:
 
-  nsIDocShell*                mDocShell;        // the doc shell that owns us. Weak ref, since it always outlives us.  
-  
-  nsCOMPtr<nsIEditingSession> mEditingSession;  // only present for the content root docShell. Session is owned here
+  nsresult EnsureEditingSession();
 
-  PRBool                      mMakeEditable;    // indicates whether to make an editor after a url load
-  nsCOMPtr<nsIEditor>         mEditor;          // if this frame is editable, store editor here. Editor is owned here.
+  // The doc shell that owns us. Weak ref, since it always outlives us.  
+  nsIDocShell* mDocShell;
+
+  // Only present for the content root docShell. Session is owned here.
+  nsCOMPtr<nsIEditingSession> mEditingSession;
+
+  // Indicates whether to make an editor after a url load.
+  PRBool mMakeEditable;
+  
+  // If this frame is editable, store editor here. Editor is owned here.
+  nsCOMPtr<nsIEditor> mEditor;
+
+  // Denotes if the editor is detached from its window. The editor is detached
+  // while it's stored in the session history bfcache.
+  PRBool mIsDetached;
+
+  // Backup for mMakeEditable while the editor is detached.
+  PRBool mDetachedMakeEditable;
+
+  // Backup for the corresponding nsIHTMLDocument's  editing state while
+  // the editor is detached.
+  nsIHTMLDocument::EditingState mDetachedEditingState;
 
 };
 
