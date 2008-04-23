@@ -30,7 +30,15 @@
   -moz-border-radius-bottomleft: 14px;
 }
 
-/* Match the curvature of the #identity-box for LTR locates (no curvature on RTL)*/
+/* Bug 413060, comment 14: Match #identity-box's -moz-margin-start, less 1px */
 #identity-popup[chromedir="ltr"] {
-  margin-left: 6px;
+  -moz-margin-start: 5px;
+}
+
+/* Bug 413060, comment 16: Vista Aero is a special case where we use a
+   tooltip appearance for the address bar popup panels */
+#identity-popup:-moz-system-metric(windows-default-theme),
+#editBookmarkPanel:-moz-system-metric(windows-default-theme) {
+  -moz-appearance: tooltip;
+  color: InfoText;
 }
