@@ -552,7 +552,7 @@ var Microformats = {
             /* We can swallow this exception. If the creation of the */
             /* mf object fails, then the node isn't a microformat */
           }
-          if (result) {
+          if (result != undefined) {
             if (prop.microformat_property) {
               result = result[prop.microformat_property];
             }
@@ -564,12 +564,12 @@ var Microformats = {
       }
       /* This handles the case where one property implies another property */
       /* For instance, org by itself is actually org.organization-name */
-      if ((prop.implied) && (result)) {
+      if (prop.implied && (result != undefined)) {
         var temp = result;
         result = {};
         result[prop.implied] = temp;
       }
-      if (result && prop.values) {
+      if (prop.values && (result != undefined)) {
         var validType = false;
         for (let value in prop.values) {
           if (result.toLowerCase() == prop.values[value]) {
@@ -643,7 +643,7 @@ var Microformats = {
             subresult = Microformats.parser.getPropertyInternal(subpropnodes[i], propnode,
                                                                 subpropobj,
                                                                 subpropname, mfnode);
-            if (subresult) {
+            if (subresult != undefined) {
               resultArray.push(subresult);
               /* If we're not a plural property, don't bother getting more */
               if (!subpropobj.plural) {
@@ -655,7 +655,7 @@ var Microformats = {
             subresult = Microformats.parser.getPropertyInternal(propnode, null,
                                                                 subpropobj,
                                                                 subpropname, mfnode);
-            if (subresult) {
+            if (subresult != undefined) {
               resultArray.push(subresult);
             }
           }
@@ -761,7 +761,7 @@ var Microformats = {
                                                                   mfnode,
                                                                   propobj,
                                                                   propname);
-          if (subresult) {
+          if (subresult != undefined) {
             resultArray.push(subresult);
             /* If we're not a plural property, don't bother getting more */
             if (!propobj.plural) {
