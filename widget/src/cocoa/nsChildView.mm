@@ -4810,6 +4810,14 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   if ((modifierFlags & NSFunctionKeyMask) || (modifierFlags & NSNumericPadKeyMask))
     return NO;
 
+  // Control and option modifiers are used when changing input sources in the
+  // input menu. We need to send such key events via "keyDown:", which will
+  // happen if we return NO here. This only applies to Mac OS X 10.5 and higher,
+  // previous OS versions just call "keyDown:" and not "performKeyEquivalent:"
+  // for such events.
+  if ((modifierFlags & NSControlKeyMask) || (modifierFlags & NSAlternateKeyMask))
+    return NO;
+
   if ([theEvent type] == NSKeyDown) {
     // We trust the Gecko handled status for cmd key events. See bug 417466 for more info.
     if (modifierFlags & NSCommandKeyMask)
