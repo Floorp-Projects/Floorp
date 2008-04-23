@@ -8938,7 +8938,7 @@ nsHTMLPluginObjElementSH::SetupProtoChain(nsIXPConnectWrappedNative *wrapper,
   if (pi_proto && JS_GET_CLASS(cx, pi_proto) != sObjectClass) {
     // The plugin wrapper has a proto that's not Object.prototype, set
     // 'pi.__proto__.__proto__' to the original 'this.__proto__'
-    if (!::JS_SetPrototype(cx, pi_proto, my_proto)) {
+    if (pi_proto != my_proto && !::JS_SetPrototype(cx, pi_proto, my_proto)) {
       return NS_ERROR_UNEXPECTED;
     }
   } else {
