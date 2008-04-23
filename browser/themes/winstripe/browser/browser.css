@@ -1159,11 +1159,11 @@ statusbarpanel#statusbar-display {
 }
 
 .ac-url-text {
-  color: GrayText;
+  color: MenuText;
 }
 
 .ac-url-text:-moz-system-metric(windows-default-theme) {
-  color: #336633;
+  color: #006600;
 }
 
 .autocomplete-treebody::-moz-tree-cell-text(treecolAutoCompleteComment) {
