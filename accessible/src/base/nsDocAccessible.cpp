@@ -2066,10 +2066,10 @@ nsDocAccessible::FireShowHideEvents(nsIDOMNode *aDOMNode, PRBool aAvoidOnThisNod
 
   // Could not find accessible to show hide yet, so fire on any
   // accessible descendants in this subtree
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aDOMNode));
-  PRUint32 count = content->GetChildCount();
+  nsCOMPtr<nsINode> node(do_QueryInterface(aDOMNode));
+  PRUint32 count = node->GetChildCount();
   for (PRUint32 index = 0; index < count; index++) {
-    nsCOMPtr<nsIDOMNode> childNode = do_QueryInterface(content->GetChildAt(index));
+    nsCOMPtr<nsIDOMNode> childNode = do_QueryInterface(node->GetChildAt(index));
     nsresult rv = FireShowHideEvents(childNode, PR_FALSE, aEventType,
                                      aDelay, aForceIsFromUserInput);
     NS_ENSURE_SUCCESS(rv, rv);
