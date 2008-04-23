@@ -92,6 +92,9 @@ nsHTMLTableCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAttri
   NS_ENSURE_STATE(shell);
   
   nsIFrame *frame = shell->GetPrimaryFrameFor(content);
+  NS_ASSERTION(frame, "The frame cannot be obtaied for HTML table cell.");
+  NS_ENSURE_STATE(frame);
+
   nsITableCellLayout *cellLayout = nsnull;
   CallQueryInterface(frame, &cellLayout);
   NS_ENSURE_STATE(cellLayout);
