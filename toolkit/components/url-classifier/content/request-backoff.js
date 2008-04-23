@@ -49,9 +49,8 @@ const HTTP_SEE_OTHER             = 303;
 const HTTP_TEMPORARY_REDIRECT    = 307;
 
 /**
- * @param maxErrors Number the number of errors needed to trigger backoff
- * @param errorPeriod Number time (ms) in which maxErros have to occur to
- *     trigger the backoff behavior
+ * @param maxErrors Number of times to request before backing off.
+ * @param retryIncrement Time (ms) for each retry before backing off.
  * @param maxRequests Number the number of requests needed to trigger backoff
  * @param requestPeriod Number time (ms) in which maxRequests have to occur to
  *     trigger the backoff behavior
@@ -59,11 +58,11 @@ const HTTP_TEMPORARY_REDIRECT    = 307;
  *     we double this time for consecutive errors
  * @param maxTimeout Number time (ms) maximum timeout period
  */
-function RequestBackoff(maxErrors, errorPeriod,
+function RequestBackoff(maxErrors, retryIncrement,
                         maxRequests, requestPeriod,
                         timeoutIncrement, maxTimeout) {
   this.MAX_ERRORS_ = maxErrors;
-  this.ERROR_PERIOD_ = errorPeriod;
+  this.RETRY_INCREMENT_ = retryIncrement;
   this.MAX_REQUESTS_ = maxRequests;
   this.REQUEST_PERIOD_ = requestPeriod;
   this.TIMEOUT_INCREMENT_ = timeoutIncrement;
@@ -72,21 +71,18 @@ function RequestBackoff(maxErrors, errorPeriod,
   // Queue of ints keeping the time of all requests
   this.requestTimes_ = [];
 
-  // Queue of ints keeping the time of errors.
-  this.errorTimes_ = [];
+  this.numErrors_ = 0;
   this.errorTimeout_ = 0;
   this.nextRequestTime_ = 0;
-  this.backoffTriggered_ = false;
 }
 
 /**
  * Reset the object for reuse.
  */
 RequestBackoff.prototype.reset = function() {
-  this.errorTimes_ = [];
+  this.numErrors_ = 0;
   this.errorTimeout_ = 0;
   this.nextRequestTime_ = 0;
-  this.backoffTriggered_ = false;
 }
 
 /**
@@ -94,7 +90,7 @@ RequestBackoff.prototype.reset = function() {
  */
 RequestBackoff.prototype.canMakeRequest = function() {
   var now = Date.now();
-  if (now <= this.nextRequestTime_) {
+  if (now < this.nextRequestTime_) {
     return false;
   }
 
@@ -111,36 +107,29 @@ RequestBackoff.prototype.noteRequest = function() {
     this.requestTimes_.shift();
 }
 
+RequestBackoff.prototype.nextRequestDelay = function() {
+  return Math.max(0, this.nextRequestTime_ - Date.now());
+}
+
 /**
  * Notify this object of the last server response.  If it's an error,
  */
 RequestBackoff.prototype.noteServerResponse = function(status) {
   if (this.isErrorStatus(status)) {
-    var now = Date.now();
-    this.errorTimes_.push(now);
+    this.numErrors_++;
 
-    // We only care about keeping track of MAX_ERRORS
-    if (this.errorTimes_.length > this.MAX_ERRORS_)
-      this.errorTimes_.shift();
+    if (this.numErrors_ < this.MAX_ERRORS_)
+      this.errorTimeout_ = this.RETRY_INCREMENT_;
+    else if (this.numErrors_ == this.MAX_ERRORS_)
+      this.errorTimeout_ = this.TIMEOUT_INCREMENT_;
+    else
+      this.errorTimeout_ *= 2;
 
-    // See if we hit the backoff case
-    // This either means we hit MAX_ERRORS in ERROR_PERIOD
-    // *or* we were already in a backoff state, in which case we
-    // increase our timeout.
-    if ((this.errorTimes_.length == this.MAX_ERRORS_ &&
-         now - this.errorTimes_[0] < this.ERROR_PERIOD_)
-        || this.backoffTriggered_) {
-      this.errorTimeout_ = (this.errorTimeout_ * 2)  + this.TIMEOUT_INCREMENT_;
-      this.errorTimeout_ = Math.min(this.errorTimeout_, this.MAX_TIMEOUT_);
-      this.nextRequestTime_ = now + this.errorTimeout_;
-      this.backoffTriggered_ = true;
-    }
+    this.errorTimeout_ = Math.min(this.errorTimeout_, this.MAX_TIMEOUT_);
+    this.nextRequestTime_ = Date.now() + this.errorTimeout_;
   } else {
-    // Reset error timeout, allow requests to go through, and switch out
-    // of backoff state.
-    this.errorTimeout_ = 0;
-    this.nextRequestTime_ = 0;
-    this.backoffTriggered_ = false;
+    // Reset error timeout, allow requests to go through.
+    this.reset();
   }
 }
 
