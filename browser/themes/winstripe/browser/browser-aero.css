@@ -6,6 +6,12 @@
   border-style: none;
 }
 
+/* ::::: Location Bar AutoComplete Styling ::::: */
+
+.ac-url-text:-moz-system-metric(windows-default-theme) {
+  color: #0066cc;
+}
+
 /* ::::: Identity Indicator Styling ::::: */
 
 #urlbar[chromedir="ltr"] {
