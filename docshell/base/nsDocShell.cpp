@@ -120,6 +120,7 @@
 #include "nsCDefaultURIFixup.h"
 #include "nsDocShellEnumerator.h"
 #include "nsSHistory.h"
+#include "nsDocShellEditorData.h"
 
 // Helper Classes
 #include "nsDOMError.h"
@@ -306,7 +307,6 @@ nsDocShell::nsDocShell():
     mDefaultScrollbarPref(Scrollbar_Auto, Scrollbar_Auto),
     mPreviousTransIndex(-1),
     mLoadedTransIndex(-1),
-    mEditorData(nsnull),
     mTreeOwner(nsnull),
     mChromeEventHandler(nsnull)
 #ifdef DEBUG
@@ -1013,10 +1013,10 @@ nsDocShell::FirePageHideNotification(PRBool aIsUnload)
         }
     }
 
-    // Now make sure our editor, if any, is torn down before we go
+    // Now make sure our editor, if any, is detached before we go
     // any farther.
     if (mEditorData && aIsUnload) {
-        mEditorData->TearDownEditor();
+      DetachEditorFromWindow();
     }
 
     return NS_OK;
@@ -3352,6 +3352,12 @@ nsDocShell::Reload(PRUint32 aReloadFlags)
                           nsnull);        // No nsIRequest
     }
     
+
+    // Need to purge detached editor here, else when we reload a page,
+    // the detached editor state causes SetDesignMode() to fail.
+    if (mOSHE)
+      mOSHE->SetEditorData(nsnull);
+
     return rv;
 }
 
@@ -3663,8 +3669,7 @@ nsDocShell::Destroy()
     // Stop any URLs that are currently being loaded...
     Stop(nsIWebNavigation::STOP_ALL);
 
-    delete mEditorData;
-    mEditorData = 0;
+    mEditorData = nsnull;
 
     mTransferableHookData = nsnull;
 
@@ -5303,6 +5308,67 @@ nsDocShell::CanSavePresentation(PRUint32 aLoadType,
     return PR_TRUE;
 }
 
+PRBool
+nsDocShell::HasDetachedEditor()
+{
+  return (mOSHE && mOSHE->HasDetachedEditor()) ||
+         (mLSHE && mLSHE->HasDetachedEditor());
+}
+
+void
+nsDocShell::ReattachEditorToWindow(nsIDOMWindow *aWindow, nsISHEntry *aSHEntry)
+{
+    NS_ASSERTION(!mEditorData,
+                 "Why reattach an editor when we already have one?");
+    NS_ASSERTION(aWindow,
+                 "Need a window to reattach to.");
+    NS_ASSERTION(HasDetachedEditor(),
+                 "Reattaching when there's not a detached editor.");
+
+    if (mEditorData || !aWindow || !aSHEntry)
+      return;
+
+    mEditorData = aSHEntry->ForgetEditorData();
+    if (mEditorData) {
+        nsresult res = mEditorData->ReattachToWindow(aWindow);
+        NS_ASSERTION(NS_SUCCEEDED(res), "Failed to reattach editing session");
+    }
+}
+
+void
+nsDocShell::DetachEditorFromWindow(nsISHEntry *aSHEntry)
+{
+    if (!aSHEntry || !mEditorData)
+        return;
+
+    NS_ASSERTION(!aSHEntry->HasDetachedEditor(),
+                 "Why detach an editor twice?");
+
+    nsresult res = mEditorData->DetachFromWindow();
+    NS_ASSERTION(NS_SUCCEEDED(res), "Failed to detach editor");
+
+    if (NS_SUCCEEDED(res)) {
+      // Make aSHEntry hold the owning ref to the editor data.
+      aSHEntry->SetEditorData(mEditorData.forget());
+    }
+
+#ifdef DEBUG
+    {
+        PRBool isEditable;
+        GetEditable(&isEditable);
+        NS_ASSERTION(!isEditable,
+                     "Window is still editable after detaching editor.");
+    }
+#endif // DEBUG
+
+}
+
+void
+nsDocShell::DetachEditorFromWindow()
+{
+    DetachEditorFromWindow(mOSHE);
+}
+
 nsresult
 nsDocShell::CaptureState()
 {
@@ -5918,6 +5984,11 @@ nsDocShell::RestoreFromHistory()
             widget->Resize(newBounds.x, newBounds.y, newBounds.width,
                            newBounds.height, PR_FALSE);
         }
+    }
+
+    if (HasDetachedEditor()) {
+      nsCOMPtr<nsIDOMWindow> domWin = do_QueryInterface(privWin);
+      ReattachEditorToWindow(domWin, mLSHE);
     }
 
     // Simulate the completion of the load.
@@ -7045,7 +7116,11 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     }
 
     mLoadType = aLoadType;
-    
+
+    // Detach the current editor so that it can be restored from the
+    // bfcache later.
+    DetachEditorFromWindow();
+
     // mLSHE should be assigned to aSHEntry, only after Stop() has
     // been called. But when loading an error page, do not clear the
     // mLSHE for the real page.
@@ -7110,6 +7185,22 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         DisplayLoadError(rv, aURI, nsnull, chan);
     }
     
+    if (aSHEntry) {
+        if (aLoadType & LOAD_CMD_HISTORY) {
+            // We've just loaded a page from session history. Reattach
+            // its editing session if it has one.
+            nsCOMPtr<nsIDOMWindow> domWin;
+            CallGetInterface(this, static_cast<nsIDOMWindow**>(getter_AddRefs(domWin)));
+            ReattachEditorToWindow(domWin, aSHEntry);
+        } else {
+            // This is a non-history load from a session history entry. Purge any
+            // previous editing sessions, so that the the editing session will
+            // be recreated. This can happen when we reload something that's
+            // in the bfcache.
+            aSHEntry->SetEditorData(nsnull);
+        }
+    }
+
     return rv;
 }
 
@@ -8916,10 +9007,10 @@ nsDocShell::EnsureScriptEnvironment()
 NS_IMETHODIMP
 nsDocShell::EnsureEditorData()
 {
-    if (!mEditorData && !mIsBeingDestroyed)
-    {
+    NS_ASSERTION(!HasDetachedEditor(), "EnsureEditorData() called when detached.\n");
+
+    if (!mEditorData && !mIsBeingDestroyed && !HasDetachedEditor()) {
         mEditorData = new nsDocShellEditorData(this);
-        if (!mEditorData) return NS_ERROR_OUT_OF_MEMORY;
     }
 
     return mEditorData ? NS_OK : NS_ERROR_NOT_AVAILABLE;
