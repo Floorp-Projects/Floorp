@@ -2192,13 +2192,15 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
             mPrt->mPrintSettings->SetStartPageRange(startPageNum);
             mPrt->mPrintSettings->SetEndPageRange(endPageNum);
             nsMargin marginTwips(0,0,0,0);
+            nsMargin unwrtMarginTwips(0,0,0,0);
             mPrt->mPrintSettings->GetMarginInTwips(marginTwips);
-            nsMargin margin = poPresContext->TwipsToAppUnits(marginTwips);
-
+            mPrt->mPrintSettings->GetUnwriteableMarginInTwips(unwrtMarginTwips);
+            nsMargin totalMargin = poPresContext->TwipsToAppUnits(marginTwips + 
+                                                              unwrtMarginTwips);
             if (startPageNum == endPageNum) {
               {
-                startRect.y -= margin.top;
-                endRect.y   -= margin.top;
+                startRect.y -= totalMargin.top;
+                endRect.y   -= totalMargin.top;
                 nscoord selectionHgt = endRect.y + endRect.height - startRect.y;
                 // XXX This is temporary fix for printing more than one page of a selection
                 pageSequence->SetSelectionHeight(startRect.y * aPO->mZoomRatio,
@@ -2208,7 +2210,7 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
                 // and then dividing it by how page content frames will fit.
                 nscoord pageWidth, pageHeight;
                 mPrt->mPrintDC->GetDeviceSurfaceDimensions(pageWidth, pageHeight);
-                pageHeight -= margin.top + margin.bottom;
+                pageHeight -= totalMargin.top + totalMargin.bottom;
                 // XXXdholbert does this num-pages calculation need to take
                 // aPO->mZoomRatio into consideration?
                 PRInt32 totalPages = NSToIntCeil(float(selectionHgt) / float(pageHeight));
