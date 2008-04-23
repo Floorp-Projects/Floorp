@@ -39,15 +39,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <QApplication>
+#include <QMimeData>
+#include <QString>
+#include <QStringList>
+
 #include "nsClipboard.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"
-
-#include <qapplication.h>
-#include <qmime.h>
-#include <qstring.h>
-#include <qstringlist.h>
 
 NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard)
 
@@ -255,11 +255,13 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
     const QMimeData *mimeData = cb->mimeData();
     const char *flavor=NULL;
     QStringList formats = mimeData->formats();
-
+    // Temp QString for comparison
+    QString utf8text("text/plain;charset=utf-8");
     // And is there matching flavor?
     for (PRUint32 i = 0; i < aLength; ++i)
     {
-        if ((flavor == aFlavorList[i]))
+        flavor = aFlavorList[i];
+        if (flavor)
         {
             QString qflavor(flavor);
 
@@ -268,9 +270,12 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
                 NS_WARNING("DO NOT USE THE text/plain DATA FLAVOR ANY MORE. USE text/unicode INSTEAD");
             }
 
-            if (formats.contains(qflavor))
+            // QClipboard says it has text/plain;charset=utf-8 data, mozilla wants to
+            // know if the data is text/unicode -> interpret text/plain;charset=utf-8 to text/unicode
+            if (formats.contains(qflavor) ||
+                ((strcmp(flavor, kUnicodeMime) == 0) && formats.contains(utf8text)))
             {
-                // A match has been found, return
+                // A match has been found, return'
                 *_retval = PR_TRUE;
                 break;
             }
