@@ -3055,6 +3055,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
      * update the attributes and property ops.  A getter or setter is really
      * only half of a property.
      */
+    sprop = NULL;
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
         JSObject *pobj;
         JSProperty *prop;
@@ -3085,13 +3086,11 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
             /* NB: obj == pobj, so we can share unlock code at the bottom. */
             if (!sprop)
                 goto bad;
-            goto out;
-        }
-
-        if (prop) {
+        } else if (prop) {
             /* NB: call OBJ_DROP_PROPERTY, as pobj might not be native. */
             OBJ_DROP_PROPERTY(cx, pobj, prop);
             prop = NULL;
+            sprop = NULL;
         }
     }
 #endif /* JS_HAS_GETTER_SETTER */
@@ -3117,13 +3116,16 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     if (!scope)
         goto bad;
 
-    /* Add the property to scope, or replace an existing one of the same id. */
-    if (clasp->flags & JSCLASS_SHARE_ALL_PROPERTIES)
-        attrs |= JSPROP_SHARED;
-    sprop = js_AddScopeProperty(cx, scope, id, getter, setter,
-                                SPROP_INVALID_SLOT, attrs, flags, shortid);
-    if (!sprop)
-        goto bad;
+    if (!sprop) {
+        /* Add or replace an existing property of the same id. */
+        if (clasp->flags & JSCLASS_SHARE_ALL_PROPERTIES)
+            attrs |= JSPROP_SHARED;
+            sprop = js_AddScopeProperty(cx, scope, id, getter, setter,
+                                        SPROP_INVALID_SLOT, attrs, flags,
+                                        shortid);
+        if (!sprop)
+            goto bad;
+    }
 
     /* Store value before calling addProperty, in case the latter GC's. */
     if (SPROP_HAS_VALID_SLOT(sprop, scope))
@@ -3134,9 +3136,6 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                         js_RemoveScopeProperty(cx, scope, id);
                         goto bad);
 
-#if JS_HAS_GETTER_SETTER
-out:
-#endif
     if (propp)
         *propp = (JSProperty *) sprop;
     else
