@@ -380,7 +380,7 @@ vbox[typeName="status"][type="header-recommended"] {
 #viewGroup radio {
   -moz-appearance: none;
   margin: 0px 1px 0px 1px;
-  padding: 1px 3px 1px 3px;
+  padding: 5px 3px 1px;
   min-width: 4.5em;
   list-style-image: url("chrome://mozapps/skin/extensions/viewButtons.png");
 }
