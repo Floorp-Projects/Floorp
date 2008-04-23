@@ -1213,6 +1213,8 @@ statusbarpanel#statusbar-display {
 
 /* bookmarking panel */
 #editBookmarkPanel {
+  -moz-appearance: menupopup;
+  color: MenuText;
   padding: 4px;
 }
 
@@ -1852,7 +1854,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 #identity-popup-content-box > description,
 #identity-popup-encryption-label {
   white-space: pre-wrap;
-  color: black;
   -moz-padding-start: 15px;
   margin: 2px 0 4px;
 }
@@ -1908,26 +1909,18 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 /* Popup Bounding Box */
 #identity-popup {
-  border: 1px solid;
-  -moz-border-radius: 0px;
-  -moz-border-bottom-colors: ThreeDShadow;
-  -moz-border-top-colors: ThreeDShadow;
-  -moz-border-left-colors: ThreeDShadow;
-  -moz-border-right-colors: ThreeDShadow;
   margin-top: 1px;
-  background-color: Menu;
+  -moz-appearance: menupopup;
   color: MenuText;
 }
 
-/* Match the curvature of the #identity-box for LTR locates (no curvature on RTL)*/
+/* Bug 413060, comment 14: Match #identity-box's -moz-margin-start, less 1px */
 #identity-popup[chromedir="ltr"] {
-  margin-left: 4px;
+  -moz-margin-start: 3px;
 }
 
 #identity-popup-container {
   background-image: none;
-  background-color: Menu;
-  color: MenuText;
   min-width: 280px;
   padding: 10px;
 }
