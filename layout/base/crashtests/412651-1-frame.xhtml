@@ -1,0 +1,29 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<head>
+
+<style type="text/css" id="s"></style>
+
+<script type="text/javascript">
+
+function lo()
+{
+  window.onerror = oe; 
+  setTimeout(function(){ location.reload(); }, 200);
+}
+
+function oe(a,b,c)
+{
+  document.getElementById("s").textContent = ".nosuch { color: red }";
+}
+
+</script>
+
+</head>
+
+<body onload="lo();">
+  <xul:preference/>
+  <xul:tabs/>
+</body>
+
+</html>
