@@ -106,7 +106,9 @@ richlistitem[type="download"] button {
   -moz-box-pack: end;
   -moz-padding-end: 4px;
   background-image: url("chrome://global/skin/toolbar/toolbar-background.gif");
+  background-color: #9f9f9f;
   background-repeat: repeat-x;
+  background-position: top left;
 }
 
 #clearListButton {
