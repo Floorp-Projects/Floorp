@@ -130,24 +130,34 @@ nsHTMLImageAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 /* wstring getName (); */
 NS_IMETHODIMP nsHTMLImageAccessible::GetName(nsAString& aName)
 {
+  aName.Truncate();
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+  
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content) {
-    return NS_ERROR_FAILURE;  // Node has been shut down
-  }
-
-  if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::alt,
-                        aName)) {
-    if (mRoleMapEntry) {
+  NS_ASSERTION(content, "Image node always supports nsIContent");
+    
+  // No alt attribute means AT can repair if there is no accessible name
+  // alt="" with no title or aria-labelledby means image is presentational and 
+  // AT should leave accessible name empty
+  PRBool hasAltAttrib =
+    content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::alt, aName);
+  if (aName.IsEmpty()) {
+    if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_labelledby)) {
       // Use HTML label or DHTML accessibility's labelledby attribute for name
       // GetHTMLName will also try title attribute as a last resort
-      return GetHTMLName(aName, PR_FALSE);
+      GetHTMLName(aName, PR_FALSE);
     }
-    if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title,
-                          aName)) {
-      aName.SetIsVoid(PR_TRUE); // No alt or title
+    if (aName.IsEmpty()) { // No name from alt or aria-labelledby
+      content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, aName);
+      if (!hasAltAttrib && aName.IsEmpty()) { 
+        // Still no accessible name and no alt attribute is present.
+        // SetIsVoid() is different from empty string -- this means a name was not 
+        // provided by author and AT repair of the name is allowed.
+        aName.SetIsVoid(PR_TRUE);
+      }
     }
   }
-
   return NS_OK;
 }
 
