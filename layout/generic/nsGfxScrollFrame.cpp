@@ -382,13 +382,14 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
                                                                                 
   if (!aForce) {
     nsRect scrolledRect = mInner.GetScrolledRect(scrollPortSize);
+    nscoord oneDevPixel = aState->mBoxState.PresContext()->DevPixelsToAppUnits(1);
 
     // If the style is HIDDEN then we already know that aAssumeHScroll is PR_FALSE
     if (aState->mStyles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN) {
       PRBool wantHScrollbar =
         aState->mStyles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL ||
-        scrolledRect.XMost() > scrollPortSize.width ||
-        scrolledRect.x < 0;
+        scrolledRect.XMost() >= scrollPortSize.width + oneDevPixel ||
+        scrolledRect.x <= -oneDevPixel;
       if (aState->mInsideBorderSize.height < hScrollbarMinSize.height ||
           scrollPortSize.width < hScrollbarMinSize.width)
         wantHScrollbar = PR_FALSE;
@@ -400,8 +401,8 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
     if (aState->mStyles.mVertical != NS_STYLE_OVERFLOW_HIDDEN) {
       PRBool wantVScrollbar =
         aState->mStyles.mVertical == NS_STYLE_OVERFLOW_SCROLL ||
-        scrolledRect.YMost() > scrollPortSize.height ||
-        scrolledRect.y < 0;
+        scrolledRect.YMost() >= scrollPortSize.height + oneDevPixel ||
+        scrolledRect.y <= -oneDevPixel;
       if (aState->mInsideBorderSize.width < vScrollbarMinSize.width ||
           scrollPortSize.height < vScrollbarMinSize.height)
         wantVScrollbar = PR_FALSE;
