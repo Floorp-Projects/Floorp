@@ -1606,18 +1606,8 @@ InitSprintStack(JSContext *cx, SprintStack *ss, JSPrinter *jp, uintN depth)
     return JS_TRUE;
 }
 
-/*
- * If nb is non-negative, decompile nb bytecodes starting at pc.  Otherwise
- * the decompiler starts at pc and continues until it reaches an opcode for
- * which decompiling would result in the stack depth equaling -(nb + 1).
- *
- * The nextop parameter is either JSOP_NOP or the "next" opcode in order of
- * abstract interpretation (not necessarily physically next in a bytecode
- * vector). So nextop is JSOP_POP for the last operand in a comma expression,
- * or JSOP_AND for the right operand of &&.
- */
-static jsbytecode *
-Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
+static JS_INLINE jsbytecode *
+DecompileBytecode(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 {
     JSContext *cx;
     JSPrinter *jp, *jp2;
@@ -1724,7 +1714,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
     JS_END_MACRO
 
     cx = ss->sprinter.context;
-    JS_CHECK_RECURSION(cx, return NULL);
 
     jp = ss->printer;
     startpc = pc;
@@ -4549,6 +4538,46 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 #undef GET_ATOM_QUOTE_AND_FMT
 
     return pc;
+}
+
+/*
+ * If nb is non-negative, decompile nb bytecodes starting at pc.  Otherwise
+ * the decompiler starts at pc and continues until it reaches an opcode for
+ * which decompiling would result in the stack depth equaling -(nb + 1).
+ *
+ * The nextop parameter is either JSOP_NOP or the "next" opcode in order of
+ * abstract interpretation (not necessarily physically next in a bytecode
+ * vector). So nextop is JSOP_POP for the last operand in a comma expression,
+ * or JSOP_AND for the right operand of &&.
+ */
+static jsbytecode *
+Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
+{
+    JSContext *cx;
+    JSPrinter *jp;
+    jsbytecode *oldcode, *oldmain, *code;
+
+    cx = ss->sprinter.context;
+    JS_CHECK_RECURSION(cx, return NULL);
+
+    jp = ss->printer;
+    oldcode = jp->script->code;
+    oldmain = jp->script->main;
+    code = js_UntrapScriptCode(cx, jp->script);
+    if (code != oldcode) {
+        jp->script->code = code;
+        jp->script->main = code + (oldmain - jp->script->code);
+        pc = code + (pc - oldcode);
+    }
+
+    pc = DecompileBytecode(ss, pc, nb, nextop);
+
+    if (code != oldcode) {
+        JS_free(cx, jp->script->code);
+        jp->script->code = oldcode;
+        jp->script->main = oldmain;
+    }
+    return (pc ? pc - code + oldcode : NULL);
 }
 
 static JSBool

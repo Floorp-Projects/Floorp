@@ -107,12 +107,19 @@ js_UntrapScriptCode(JSContext *cx, JSScript *script)
          trap = (JSTrap *)trap->links.next) {
         if (trap->script == script) {
             if (code == script->code) {
-                code = (jsbytecode *)
-                       JS_malloc(cx, script->length * sizeof(jsbytecode));
+                jssrcnote *sn, *notes;
+                size_t nbytes;
+
+                nbytes = script->length * sizeof(jsbytecode);
+                notes = SCRIPT_NOTES(script);
+                for (sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn))
+                    continue;
+                nbytes += (sn - notes + 1) * sizeof *sn;
+
+                code = (jsbytecode *) JS_malloc(cx, nbytes);
                 if (!code)
                     break;
-                memcpy(code, script->code,
-                       script->length * sizeof(jsbytecode));
+                memcpy(code, script->code, nbytes);
             }
             code[trap->pc - script->code] = trap->op;
         }
