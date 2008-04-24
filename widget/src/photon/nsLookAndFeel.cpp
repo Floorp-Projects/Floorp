@@ -214,9 +214,8 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
 		aColor = PH_TO_NS_RGB(Pg_BLACK);
 		break;
 
-	  // from the CSS3 working draft (not yet finalized)
-	  // http://www.w3.org/tr/2000/wd-css3-userint-20000216.html#color
-
+	  case eColor__moz_eventreerow:
+	  case eColor__moz_oddtreerow:
 	  case eColor__moz_field:
 		aColor = PH_TO_NS_RGB(Pg_WHITE);
 		break;
