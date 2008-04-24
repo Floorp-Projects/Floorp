@@ -360,12 +360,22 @@ nsNavHistory::PerformAutoComplete()
 
   // If we ran out of pages to search, set offset to -1, so we can tell the
   // difference between completing and stopping because we have enough results
-  if (!moreChunksToSearch)
-    mCurrentChunkOffset = -1;
+  PRBool notEnoughResults = !AutoCompleteHasEnoughResults();
+  if (!moreChunksToSearch) {
+    // But check first to see if we don't have enough results, and we're
+    // matching word boundaries, so try again without the match restriction
+    if (notEnoughResults && mCurrentMatchType == MATCH_BOUNDARY_ANYWHERE) {
+      mCurrentMatchType = MATCH_ANYWHERE;
+      mCurrentChunkOffset = -mAutoCompleteSearchChunkSize;
+      moreChunksToSearch = PR_TRUE;
+    } else {
+      mCurrentChunkOffset = -1;
+    }
+  } else {
+    // We know that we do have more chunks, so make sure we want more results
+    moreChunksToSearch = notEnoughResults;
+  }
 
-  // Only search more chunks if there are more and we need more results
-  moreChunksToSearch &= !AutoCompleteHasEnoughResults();
- 
   // Determine the result of the search
   PRUint32 count;
   mCurrentResult->GetMatchCount(&count); 
@@ -402,6 +412,7 @@ nsNavHistory::PerformAutoComplete()
 void
 nsNavHistory::DoneSearching(PRBool aFinished)
 {
+  mPreviousMatchType = mCurrentMatchType;
   mPreviousChunkOffset = mCurrentChunkOffset;
   mAutoCompleteFinishedSearch = aFinished;
   mCurrentResult = nsnull;
@@ -500,10 +511,15 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
         rv = mDBPreviousQuery->BindStringParameter(i + 1, *urls[i]);
         NS_ENSURE_SUCCESS(rv, rv);
       }
+
+      // Use the same match behavior as the previous search
+      mCurrentMatchType = mPreviousMatchType;
     }
   } else {
     // Clear out any previous result queries
     mDBPreviousQuery = nsnull;
+    // Default to matching based on the user's preference
+    mCurrentMatchType = mAutoCompleteMatchBehavior;
   }
 
   mAutoCompleteFinishedSearch = PR_FALSE;
@@ -670,7 +686,7 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
 
   // Determine what type of search to try matching tokens against targets
   PRBool (*tokenMatchesTarget)(const nsAString &, const nsAString &) =
-    mAutoCompleteOnWordBoundary ? FindOnBoundary : FindAnywhere;
+    mCurrentMatchType != MATCH_ANYWHERE ? FindOnBoundary : FindAnywhere;
 
   PRBool hasMore = PR_FALSE;
   // Determine the result of the search
