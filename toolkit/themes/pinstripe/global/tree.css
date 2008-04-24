@@ -75,7 +75,7 @@ treechildren::-moz-tree-row {
 }
 
 tree:not([hidecolumnpicker="true"]) treechildren::-moz-tree-row(odd) {
- background-color: -moz-oddrowbackground;
+ background-color: -moz-oddtreerow;
 }
 
 treechildren::-moz-tree-row(selected),
@@ -368,7 +368,7 @@ treechildren::-moz-tree-cell-text(Name, separator, selected, focus) {
 /* ::::: alternating background ::::: */
 
 treechildren[alternatingbackground="true"]::-moz-tree-row(odd) {
-  background-color: -moz-oddrowbackground;
+  background-color: -moz-oddtreerow;
 }
 
 treechildren[alternatingbackground="true"]::-moz-tree-row(odd, selected) {
