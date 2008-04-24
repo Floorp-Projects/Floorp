@@ -74,6 +74,7 @@ public:
   NS_HIDDEN_(nsresult) CheckForRecursiveLoad(nsIURI* aURI);
   nsresult ReallyStartLoading();
   void Finalize();
+  nsIDocShell* GetExistingDocShell() { return mDocShell; }
 private:
 
   NS_HIDDEN_(nsresult) EnsureDocShell();
