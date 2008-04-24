@@ -214,8 +214,17 @@ const char nsXPLookAndFeel::sColorPrefs[][38] =
   "ui.-moz-dialog",
   "ui.-moz-dialogtext",
   "ui.-moz-dragtargetzone",
+  "ui.-moz-cellhighlight",
+  "ui.-moz_cellhighlighttext",
   "ui.-moz-html-cellhighlight",
   "ui.-moz-html-cellhighlighttext",
+  "ui.-moz-buttonhoverface",
+  "ui.-moz_buttonhovertext",
+  "ui.-moz_menuhover",
+  "ui.-moz_menuhovertext",
+  "ui.-moz_menubarhovertext",
+  "ui.-moz_eventreerow",
+  "ui.-moz_oddtreerow",
   "ui.-moz-mac-focusring",
   "ui.-moz-mac-menuselect",
   "ui.-moz-mac-menushadow",
@@ -227,7 +236,9 @@ const char nsXPLookAndFeel::sColorPrefs[][38] =
   "ui.-moz-mac-accentlightshadow",
   "ui.-moz-mac-accentregularshadow",
   "ui.-moz-mac-accentdarkshadow",
-  "ui.-moz-mac-accentdarkestshadow"
+  "ui.-moz-mac-accentdarkestshadow",
+  "ui.-moz-mac-alternateprimaryhighlight",
+  "ui.-moz-mac-secondaryhighlight"
 };
 
 PRInt32 nsXPLookAndFeel::sCachedColors[nsILookAndFeel::eColor_LAST_COLOR] = {0};

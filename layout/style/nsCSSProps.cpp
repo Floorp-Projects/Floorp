@@ -437,6 +437,7 @@ const PRInt32 nsCSSProps::kColorKTable[] = {
   eCSSKeyword__moz_buttonhovertext, nsILookAndFeel::eColor__moz_buttonhovertext,
   eCSSKeyword__moz_cellhighlight, nsILookAndFeel::eColor__moz_cellhighlight,
   eCSSKeyword__moz_cellhighlighttext, nsILookAndFeel::eColor__moz_cellhighlighttext,
+  eCSSKeyword__moz_eventreerow, nsILookAndFeel::eColor__moz_eventreerow,
   eCSSKeyword__moz_field, nsILookAndFeel::eColor__moz_field,
   eCSSKeyword__moz_fieldtext, nsILookAndFeel::eColor__moz_fieldtext,
   eCSSKeyword__moz_dialog, nsILookAndFeel::eColor__moz_dialog,
@@ -462,7 +463,7 @@ const PRInt32 nsCSSProps::kColorKTable[] = {
   eCSSKeyword__moz_menuhover, nsILookAndFeel::eColor__moz_menuhover,
   eCSSKeyword__moz_menuhovertext, nsILookAndFeel::eColor__moz_menuhovertext,
   eCSSKeyword__moz_menubarhovertext, nsILookAndFeel::eColor__moz_menubarhovertext,
-  eCSSKeyword__moz_oddrowbackground, nsILookAndFeel::eColor__moz_oddrowbackground,
+  eCSSKeyword__moz_oddtreerow, nsILookAndFeel::eColor__moz_oddtreerow,
   eCSSKeyword__moz_visitedhyperlinktext, NS_COLOR_MOZ_VISITEDHYPERLINKTEXT,
   eCSSKeyword_currentcolor, NS_COLOR_CURRENTCOLOR,
   eCSSKeyword_UNKNOWN,-1
