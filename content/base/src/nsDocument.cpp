@@ -3892,21 +3892,34 @@ nsDocument::InitializeFinalizeFrameLoaders()
 {
   NS_ASSERTION(mUpdateNestLevel == 0 && !mDelayFrameLoaderInitialization,
                "Wrong time to call InitializeFinalizeFrameLoaders!");
-  PRUint32 length = mInitializableFrameLoaders.Length();
-  if (length > 0) {
-    nsTArray<nsRefPtr<nsFrameLoader> > loaders;
-    mInitializableFrameLoaders.SwapElements(loaders);
-    for (PRUint32 i = 0; i < length; ++i) {
-      loaders[i]->ReallyStartLoading();
-    }
+  // Don't use a temporary array for mInitializableFrameLoaders, because
+  // loading a frame may cause some other frameloader to be removed from the
+  // array. But be careful to keep the loader alive when starting the load!
+  while (mInitializableFrameLoaders.Length()) {
+    nsRefPtr<nsFrameLoader> loader = mInitializableFrameLoaders[0];
+    mInitializableFrameLoaders.RemoveElementAt(0);
+    NS_ASSERTION(loader, "null frameloader in the array?");
+    loader->ReallyStartLoading();
   }
 
-  length = mFinalizableFrameLoaders.Length();
+  PRUint32 length = mFinalizableFrameLoaders.Length();
   if (length > 0) {
     nsTArray<nsRefPtr<nsFrameLoader> > loaders;
     mFinalizableFrameLoaders.SwapElements(loaders);
     for (PRUint32 i = 0; i < length; ++i) {
       loaders[i]->Finalize();
+    }
+  }
+}
+
+void
+nsDocument::TryCancelFrameLoaderInitialization(nsIDocShell* aShell)
+{
+  PRUint32 length = mInitializableFrameLoaders.Length();
+  for (PRUint32 i = 0; i < length; ++i) {
+    if (mInitializableFrameLoaders[i]->GetExistingDocShell() == aShell) {
+      mInitializableFrameLoaders.RemoveElementAt(i);
+      return;
     }
   }
 }
