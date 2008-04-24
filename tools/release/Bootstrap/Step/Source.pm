@@ -43,7 +43,7 @@ sub Execute {
     $this->Shell(
       cmd => 'make',
       cmdArgs => ['-f', 'client.mk', 'checkout',
-                  'MOZ_CO_PROJECT=' . $appName],
+                  'MOZ_CO_PROJECT=' . $appName . ',xulrunner'],
       dir => catfile($versionedSourceDir, 'mozilla'),
       logFile => catfile($logDir, 'source.log'),
     );
