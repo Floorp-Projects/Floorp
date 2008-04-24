@@ -89,6 +89,8 @@ static NS_DEFINE_CID(kMenuItemCID, NS_MENUITEM_CID);
 
 NS_IMPL_ISUPPORTS1(nsMenuX, nsIMenu)
 
+PRInt32 nsMenuX::sIndexingMenuLevel = nsnull;
+
 
 nsMenuX::nsMenuX()
 : mVisibleItemsCount(0), mParent(nsnull), mMenuBar(nsnull), mMacMenuID(0), 
@@ -103,6 +105,9 @@ nsMenuX::nsMenuX()
                               @selector(nsMenuX_NSMenu_addItem:toTable:), PR_TRUE);
     nsToolkit::SwizzleMethods([NSMenu class], @selector(_removeItem:fromTable:),
                               @selector(nsMenuX_NSMenu_removeItem:fromTable:), PR_TRUE);
+    Class SCTGRLIndexClass = ::NSClassFromString(@"SCTGRLIndex");
+    nsToolkit::SwizzleMethods(SCTGRLIndexClass, @selector(indexMenuBarDynamically),
+                              @selector(nsMenuX_SCTGRLIndex_indexMenuBarDynamically));
     gMenuMethodsSwizzled = PR_TRUE;
   }
 
@@ -1133,6 +1138,16 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
+  // Don't do anything while the OS is (re)indexing our menus (on Leopard and
+  // higher).  This stops the Help menu from being able to search in our
+  // menus, but it also resolves many other problems -- including crashes and
+  // long delays while opening the Help menu.  Once we know better which
+  // operations are safe during (re)indexing, we can start allowing some
+  // operations here while it's happening.  This change resolves bmo bugs
+  // 426499 and 414699.
+  if (nsMenuX::sIndexingMenuLevel > 0)
+    return noErr;
+
   UInt32 kind = ::GetEventKind(event);
   if (kind == kEventMenuTargetItem) {
     // get the position of the menu item we want
@@ -1426,6 +1441,37 @@ static NSMutableDictionary *gShadowKeyEquivDB = nil;
         [gShadowKeyEquivDB removeObjectForKey:itemNumber];
     }
   }
+}
+
+@end
+
+// This class is needed to keep track of when the OS is (re)indexing all of
+// our menus.  This appears to only happen on Leopard and higher, and can
+// be triggered by opening the Help menu.  Some operations are unsafe while
+// this is happening -- notably the calls to [[NSImage alloc]
+// initWithSize:imageRect.size] and [newImage lockFocus] in nsMenuItemIconX::
+// OnStopFrame().  But we don't yet have a complete list, and Apple doesn't
+// yet have any documentation on this subject.  (Apple also doesn't yet have
+// any documented way to find the information we seek here.)  The "original"
+// of this class (the one whose indexMenuBarDynamically method we hook) is
+// defined in the Shortcut framework in /System/Library/PrivateFrameworks.
+@interface NSObject (SCTGRLIndexMethodSwizzling)
+- (void)nsMenuX_SCTGRLIndex_indexMenuBarDynamically;
+@end
+
+@implementation NSObject (SCTGRLIndexMethodSwizzling)
+
+- (void)nsMenuX_SCTGRLIndex_indexMenuBarDynamically
+{
+  // This method appears to be called (once) whenever the OS (re)indexes our
+  // menus.  sIndexingMenuLevel is a PRInt32 just in case it might be
+  // reentered.  As it's running, it spawns calls to two undocumented
+  // HIToolbox methods (_SimulateMenuOpening() and _SimulateMenuClosed()),
+  // which "simulate" the opening and closing of our menus without actually
+  // displaying them.
+  ++nsMenuX::sIndexingMenuLevel;
+  [self nsMenuX_SCTGRLIndex_indexMenuBarDynamically];
+  --nsMenuX::sIndexingMenuLevel;
 }
 
 @end
