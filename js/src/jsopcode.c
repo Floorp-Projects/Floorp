@@ -1819,9 +1819,9 @@ DecompileBytecode(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                                      : JSOP_GETELEM);
                     } else {
                         /*
-                         * Zero mode means precisely that op is uncategorized
-                         * for our purposes, so we must write per-op special
-                         * case code here.
+                         * Unknown mode (including mode 0) means that op is
+                         * uncategorized for our purposes, so we must write
+                         * per-op special case code here.
                          */
                         switch (op) {
                           case JSOP_ENUMELEM:
@@ -1843,6 +1843,12 @@ DecompileBytecode(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                             op = JSOP_GETLOCAL;
                             break;
                           default:
+                            /*
+                             * NB: JSOP_GETTHISPROP can't happen here, as
+                             * there is no way (yet, watch out for proposed
+                             * ES4/JS2 strict mode) for this to be null or
+                             * undefined at runtime.
+                             */
                             LOCAL_ASSERT(0);
                         }
                     }
