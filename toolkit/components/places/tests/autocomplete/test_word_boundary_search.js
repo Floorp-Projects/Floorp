@@ -40,6 +40,10 @@
  *
  * Make sure we don't try matching one after a CamelCase because the upper-case
  * isn't really a word boundary. (bug 429498)
+ *
+ * Bug 429531 provides switching between "must match on word boundary" and "can
+ * match," so leverage "must match" pref for checking word boundary logic and
+ * make sure "can match" matches anywhere.
  */
 
 let katakana = ["\u30a8", "\u30c9"]; // E, Do
@@ -88,8 +92,10 @@ addPageBook(9, 0);
 // Provide for each test: description; search terms; array of gPages indices of
 // pages that should match; optional function to be run before the test
 let gTests = [
+  // Tests after this one will match only on word boundaries
   ["0: Match 'match' at the beginning or after / or on a CamelCase",
-   "match", [0,2,4,9]],
+   "match", [0,2,4,9],
+   function() setBehavior(2)],
   ["1: Match 'dont' at the beginning or after /",
    "dont", [1,3,5]],
   ["2: Match '2' after the slash and after a word (in tags too)",
@@ -119,4 +125,13 @@ let gTests = [
    "ch", []],
   ["13: Don't match one character after a camel-case word boundary (bug 429498)",
    "atch", []],
+
+  // Tests after this one will match against word boundaries and anywhere
+  ["14: Match on word boundaries as well as anywhere (bug 429531)",
+   "tch", [0,1,2,3,4,5,9],
+   function() setBehavior(1)],
 ];
+
+function setBehavior(aType) {
+  prefs.setIntPref("browser.urlbar.matchBehavior", aType);
+}
