@@ -6884,6 +6884,18 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         return rv;
     }
 
+    // If this docshell is owned by a frameloader, make sure to cancel
+    // possible frameloader initialization before loading a new page.
+    nsCOMPtr<nsIDocShellTreeItem> parent;
+    GetParent(getter_AddRefs(parent));
+    if (parent) {
+      nsCOMPtr<nsIDOMDocument> domDoc = do_GetInterface(parent);
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+      if (doc) {
+        doc->TryCancelFrameLoaderInitialization(this);
+      }
+    }
+
     if (mFiredUnloadEvent) {
         if (IsOKToLoadURI(aURI)) {
             NS_PRECONDITION(!aWindowTarget || !*aWindowTarget,

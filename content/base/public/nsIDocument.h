@@ -56,7 +56,7 @@
 class nsIContent;
 class nsPresContext;
 class nsIPresShell;
-
+class nsIDocShell;
 class nsIStreamListener;
 class nsIStreamObserver;
 class nsStyleSet;
@@ -97,8 +97,8 @@ class nsFrameLoader;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x680f5dac, 0x8863, 0x4c80, \
-  { 0xbb, 0xe4, 0x21, 0x35, 0xbd, 0x8f, 0x83, 0x9a } }
+{ 0xdd40333d, 0x913c, 0x4909, \
+  { 0xb9, 0xe8, 0xf5, 0x45, 0x56, 0x5c, 0xe5, 0x4e } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -964,6 +964,8 @@ public:
   // In case of failure, the caller must handle the error, for example by
   // finalizing frame loader asynchronously.
   virtual nsresult FinalizeFrameLoader(nsFrameLoader* aLoader) = 0;
+
+  virtual void TryCancelFrameLoaderInitialization(nsIDocShell* aShell) = 0;
 protected:
   ~nsIDocument()
   {
