@@ -1,0 +1,11 @@
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="test">
+    <content>
+      <children includes="span"/>
+      <html:div xmlns:html="http://www.w3.org/1999/xhtml" style="color: red">
+        <children/>
+      </html:div>
+    </content>
+  </binding>
+
+</bindings>
