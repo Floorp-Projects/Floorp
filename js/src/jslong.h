@@ -51,31 +51,6 @@
 
 JS_BEGIN_EXTERN_C
 
-/***********************************************************************
-** DEFINES:     JSLL_MaxInt
-**              JSLL_MinInt
-**              JSLL_Zero
-** DESCRIPTION:
-**      Various interesting constants and static variable
-**      initializer
-***********************************************************************/
-#ifdef HAVE_WATCOM_BUG_2
-JSInt64 __pascal __loadds __export
-    JSLL_MaxInt(void);
-JSInt64 __pascal __loadds __export
-    JSLL_MinInt(void);
-JSInt64 __pascal __loadds __export
-    JSLL_Zero(void);
-#else
-extern JS_PUBLIC_API(JSInt64) JSLL_MaxInt(void);
-extern JS_PUBLIC_API(JSInt64) JSLL_MinInt(void);
-extern JS_PUBLIC_API(JSInt64) JSLL_Zero(void);
-#endif
-
-#define JSLL_MAXINT   JSLL_MaxInt()
-#define JSLL_MININT   JSLL_MinInt()
-#define JSLL_ZERO     JSLL_Zero()
-
 #ifdef JS_HAVE_LONG_LONG
 
 #if JS_BYTES_PER_LONG == 8

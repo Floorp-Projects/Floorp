@@ -176,10 +176,10 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
                             /* We're the new current function, and no return
                              * has happened yet. */
                             jsdc->callingFunctionPData = pdata;
-                            jsdc->lastReturnTime = JSLL_ZERO;
+                            jsdc->lastReturnTime = 0;
                             /* This function has no running time (just been
                              * called!), and we'll need the call start time. */
-                            pdata->runningTime = JSLL_ZERO;
+                            pdata->runningTime = 0;
                             pdata->lastCallStart = now;
                         } else {
                             if (++pdata->recurseDepth > pdata->maxRecurseDepth)
@@ -238,7 +238,7 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
                         /* Mark the time we returned, and indicate this
                          * function is no longer running. */
                         jsdc->lastReturnTime = now;
-                        pdata->lastCallStart = JSLL_ZERO;
+                        pdata->lastCallStart = 0;
                         ++pdata->callCount;
                     } else if (pdata->recurseDepth) {
                         --pdata->recurseDepth;
