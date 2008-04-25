@@ -60,10 +60,6 @@
 
 #define LOG(args) PR_LOG(mLog, PR_LOG_DEBUG, args)
 
-// Vista application association interface
-static const CLSID CLSID_AppAssoc = {0x591209C7,0x767B,0x42B2,{0x9F,0xBA,0x44,0xEE,0x46,0x15,0xF2,0xC7}};
-static const IID   IID_IAppAssoc  = {0x4e530b0a,0xe611,0x4c77,{0xa3,0xac,0x90,0x31,0xd0,0x22,0x28,0x1b}};
-
 // helper methods: forward declarations...
 static nsresult GetExtensionFrom4xRegistryInfo(const nsACString& aMimeType, 
                                                nsString& aFileExtension);
@@ -71,20 +67,26 @@ static nsresult GetExtensionFromWindowsMimeDatabase(const nsACString& aMimeType,
                                                     nsString& aFileExtension);
 
 nsOSHelperAppService::nsOSHelperAppService() : 
-  nsExternalHelperAppService(),
-  mAppAssoc(nsnull)
+  nsExternalHelperAppService()
+#if !defined(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
+  , mAppAssoc(nsnull)
+#endif
 {
+#if !defined(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
   CoInitialize(NULL);
-  CoCreateInstance(CLSID_AppAssoc, NULL, CLSCTX_INPROC,
-                   IID_IAppAssoc, (void**)&mAppAssoc);
+  CoCreateInstance(CLSID_ApplicationAssociationRegistration, NULL, CLSCTX_INPROC,
+                   IID_IApplicationAssociationRegistration, (void**)&mAppAssoc);
+#endif
 }
 
 nsOSHelperAppService::~nsOSHelperAppService()
 {
+#if !defined(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
   if (mAppAssoc)
     mAppAssoc->Release();
   mAppAssoc = nsnull;
   CoUninitialize();
+#endif
 }
 
 // The windows registry provides a mime database key which lists a set of mime types and corresponding "Extension" values. 
@@ -157,6 +159,7 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolSch
   *aHandlerExists = PR_FALSE;
   if (aProtocolScheme && *aProtocolScheme)
   {
+#if !defined(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
     // Vista: use new application association interface
     if (mAppAssoc) {
       PRUnichar * pResult = nsnull;
@@ -171,6 +174,7 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolSch
       }
       return NS_OK;
     }
+#endif
 
     HKEY hKey;
     LONG err = ::RegOpenKeyEx(HKEY_CLASSES_ROOT, aProtocolScheme, 0,
@@ -196,6 +200,7 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& 
 
   NS_ConvertASCIItoUTF16 buf(aScheme);
 
+#if !defined(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
   // Vista: use new application association interface
   if (mAppAssoc) {
     PRUnichar * pResult = nsnull;
@@ -212,6 +217,7 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& 
     }
     return NS_ERROR_NOT_AVAILABLE;
   }
+#endif
 
   nsCOMPtr<nsIFile> app;
   GetDefaultAppInfo(buf, _retval, getter_AddRefs(app));
@@ -546,6 +552,7 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFl
   nsAutoString appInfo;
   PRBool found;
 
+#if !defined(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
   // Retrieve the default application for this extension
   if (mAppAssoc) {
     // Vista: use the new application association COM interfaces
@@ -564,7 +571,9 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFl
       found = PR_FALSE;
     }
   } 
-  else {
+  else
+#endif
+  {
     found = NS_SUCCEEDED(regKey->ReadStringValue(EmptyString(), 
                                                  appInfo));
   }

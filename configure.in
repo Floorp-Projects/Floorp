@@ -5839,16 +5839,34 @@ MOZ_ARG_DISABLE_BOOL(parental-controls,
    MOZ_DISABLE_PARENTAL_CONTROLS=)
 if test -n "$MOZ_DISABLE_PARENTAL_CONTROLS"; then
     AC_DEFINE(MOZ_DISABLE_PARENTAL_CONTROLS)
+fi
+
+dnl ========================================================
+dnl Vista SDK specific api
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(vista-sdk-requirements,
+[  --disable-vista-sdk-requirements
+                           Do not build Vista SDK specific code],
+   MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=1,
+   MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=)
+if test -n "$MOZ_DISABLE_VISTA_SDK_REQUIREMENTS"; then
+    AC_MSG_WARN([Resulting builds will not be compatible with Windows Vista. (bug 428970)])
+    AC_DEFINE(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
+    if test -z "$MOZ_DISABLE_PARENTAL_CONTROLS"; then
+        AC_DEFINE(MOZ_DISABLE_PARENTAL_CONTROLS)
+    fi
+    MOZ_DISABLE_PARENTAL_CONTROLS=1
 else
 case "$target" in
 *-mingw*|*-cygwin*|*-msvc*|*-mks*)
     if test "$ac_cv_header_wpcapi_h" = "no"; then
-        AC_MSG_ERROR([System header wpcapi.h is not available. See http://developer.mozilla.org/en/docs/wpcapi.h for details on fixing this problem.])
+        AC_MSG_ERROR([System header wpcapi.h is not available. See updated http://developer.mozilla.org/en/docs/wpcapi.h for details on fixing this problem.])
     fi
     ;;
 esac
 fi
 AC_SUBST(MOZ_DISABLE_PARENTAL_CONTROLS)
+AC_SUBST(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
 
 dnl ========================================================
 dnl =
