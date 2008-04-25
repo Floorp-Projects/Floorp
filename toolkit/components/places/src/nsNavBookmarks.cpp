@@ -814,8 +814,6 @@ nsNavBookmarks::AdjustIndices(PRInt64 aFolder,
     buffer.AppendInt(aEndIndex);
   }
 
-  nsBookmarksUpdateBatcher batch;
-  
   nsresult rv = DBConn()->ExecuteSimpleSQL(buffer);
   NS_ENSURE_SUCCESS(rv, rv);
  
