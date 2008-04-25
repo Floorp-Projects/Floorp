@@ -14,6 +14,7 @@
 richlistitem[type="download"] {
   padding: 4px 8px 4px 4px;
   min-height: 46px;
+  border-bottom: 1px solid ThreeDLightShadow;
 }
 
 richlistitem[type="download"][selected="true"] {
@@ -30,7 +31,7 @@ richlistitem[type="download"] .dateTime {
 
 richlistitem[type="download"]:not([selected="true"]) .dateTime,
 richlistitem[type="download"]:not([selected="true"]) .status {
-  color: GrayText;
+  color: MenuText;
 }
 
 .mini-button {
