@@ -50,6 +50,7 @@ var Cc = Components.classes;
 var Cr = Components.results;
 
 const POST_DATA_ANNO = "bookmarkProperties/POSTData";
+const READ_ONLY_ANNO = "placesInternal/READ_ONLY";
 const LMANNO_FEEDURI = "livemark/feedURI";
 const LMANNO_SITEURI = "livemark/siteURI";
 
@@ -439,9 +440,11 @@ var PlacesUtils = {
    *          Used instead of the node's URI if provided.
    *          This is useful for wrapping a container as TYPE_X_MOZ_URL,
    *          TYPE_HTML or TYPE_UNICODE.
+   * @param   aForceCopy
+   *          Does a full copy, resolving folder shortcuts.
    * @returns A string serialization of the node
    */
-  wrapNode: function PU_wrapNode(aNode, aType, aOverrideURI) {
+  wrapNode: function PU_wrapNode(aNode, aType, aOverrideURI, aForceCopy) {
     var self = this;
 
     // when wrapping a node, we want all the items, even if the original
@@ -449,8 +452,10 @@ var PlacesUtils = {
     // this can happen when copying from the left hand pane of the bookmarks
     // organizer
     function convertNode(cNode) {
-      if (self.nodeIsFolder(cNode) && asQuery(cNode).queryOptions.excludeItems)
-        return self.getFolderContents(cNode.itemId, false, true).root;
+      if (self.nodeIsFolder(cNode) && asQuery(cNode).queryOptions.excludeItems) {
+        var concreteId = self.getConcreteItemId(cNode);
+        return self.getFolderContents(concreteId, false, true).root;
+      }
       return cNode;
     }
 
@@ -464,7 +469,7 @@ var PlacesUtils = {
             this.value += aStr;
           }
         };
-        self.serializeNodeAsJSONToOutputStream(convertNode(aNode), writer, true);
+        self.serializeNodeAsJSONToOutputStream(convertNode(aNode), writer, true, aForceCopy);
         return writer.value;
       case this.TYPE_X_MOZ_URL:
         function gatherDataUrl(bNode) {
@@ -490,7 +495,7 @@ var PlacesUtils = {
             return s;
           }
           // escape out potential HTML in the title
-          var escapedTitle = htmlEscape(bNode.title);
+          var escapedTitle = bNode.title ? htmlEscape(bNode.title) : "";
           if (self.nodeIsLivemarkContainer(bNode)) {
             var siteURI = self.livemarks.getSiteURI(bNode.itemId).spec;
             return "<A HREF=\"" + siteURI + "\">" + escapedTitle + "</A>" + NEWLINE;
@@ -1190,9 +1195,11 @@ var PlacesUtils = {
    * @param   aIsUICommand
    *          Boolean - If true, modifies serialization so that each node self-contained.
    *          For Example, tags are serialized inline with each bookmark.
+   * @param   aResolveShortcuts
+   *          Converts folder shortcuts into actual folders. 
    */
   serializeNodeAsJSONToOutputStream:
-  function PU_serializeNodeAsJSONToOutputStream(aNode, aStream, aIsUICommand) {
+  function PU_serializeNodeAsJSONToOutputStream(aNode, aStream, aIsUICommand, aResolveShortcuts) {
     var self = this;
     
     function addGenericProperties(aPlacesNode, aJSNode) {
@@ -1219,8 +1226,12 @@ var PlacesUtils = {
             // backup/restore of non-whitelisted annos
             // XXX causes JSON encoding errors, so utf-8 encode
             //anno.value = unescape(encodeURIComponent(anno.value));
-            if (anno.name == "livemark/feedURI")
+            if (anno.name == LMANNO_FEEDURI)
               aJSNode.livemark = 1;
+            if (anno.name == READ_ONLY_ANNO && aResolveShortcuts) {
+              // When copying a read-only node, remove the read-only annotation.
+              return false;
+            }
             return anno.name != "placesInternal/GUID";
           });
         } catch(ex) {
@@ -1259,14 +1270,17 @@ var PlacesUtils = {
 
     function addContainerProperties(aPlacesNode, aJSNode) {
       // saved queries
-      if (aJSNode.id != -1 &&
-          self.bookmarks.getItemType(aJSNode.id) == self.bookmarks.TYPE_BOOKMARK) {
+      var concreteId = PlacesUtils.getConcreteItemId(aPlacesNode);
+      if (aJSNode.id != -1 && (PlacesUtils.nodeIsQuery(aPlacesNode) ||
+          (concreteId != aPlacesNode.itemId && !aResolveShortcuts))) {
         aJSNode.type = self.TYPE_X_MOZ_PLACE;
         aJSNode.uri = aPlacesNode.uri;
-        aJSNode.concreteId = PlacesUtils.getConcreteItemId(aPlacesNode);
+        aJSNode.concreteId = concreteId;
         return;
       }
       else if (aJSNode.id != -1) { // bookmark folder
+        if (concreteId != aPlacesNode.itemId)
+        aJSNode.type = self.TYPE_X_MOZ_PLACE;
         aJSNode.type = self.TYPE_X_MOZ_PLACE_CONTAINER;
         // mark special folders
         if (aJSNode.id == self.bookmarks.placesRoot)

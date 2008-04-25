@@ -60,7 +60,7 @@ const LMANNO_FEEDURI = "livemark/feedURI";
 const LMANNO_SITEURI = "livemark/siteURI";
 const ORGANIZER_FOLDER_ANNO = "PlacesOrganizer/OrganizerFolder";
 const ORGANIZER_QUERY_ANNO = "PlacesOrganizer/OrganizerQuery";
-const ORGANIZER_LEFTPANE_VERSION = 3;
+const ORGANIZER_LEFTPANE_VERSION = 4;
 
 #ifdef XP_MACOSX
 // On Mac OSX, the transferable system converts "\r\n" to "\n\n", where we
@@ -1169,6 +1169,8 @@ var PlacesUIUtils = {
 
         // Left Pane Root Folder
         leftPaneRoot = PlacesUtils.bookmarks.createFolder(PlacesUtils.placesRootId, "", -1);
+        // ensure immediate children can't be removed
+        PlacesUtils.bookmarks.setFolderReadonly(leftPaneRoot, true);
 
         // History Query
         let uri = PlacesUtils._uri("place:sort=4&");
