@@ -230,6 +230,7 @@ var PlacesOrganizer = {
     }
 
     this._setSearchScopeForNode(node);
+    this._fillDetailsPane(node);
   },
 
   /**
@@ -309,6 +310,18 @@ var PlacesOrganizer = {
         PlacesUIUtils.openContainerNodeInTabs(selectedNode);
       }
     }
+  },
+
+  /**
+   * Handle focus changes on the trees.
+   * When moving focus between panes we should update the details pane contents.
+   * @param   aEvent
+   *          The mouse event.
+   */
+  onTreeFocus: function PO_onTreeFocus(aEvent) {
+    var currentView = aEvent.currentTarget;
+    var selectedNode = currentView.selectedNode;
+    this._fillDetailsPane(selectedNode);
   },
 
   openFlatContainer: function PO_openFlatContainerFlatContainer(aContainer) {
@@ -606,6 +619,13 @@ var PlacesOrganizer = {
   },
 
   onContentTreeSelect: function PO_onContentTreeSelect() {
+    this._fillDetailsPane(this._content.selectedNode);
+  },
+
+  _fillDetailsPane: function PO__fillDetailsPane(aSelectedNode) {
+    var infoBox = document.getElementById("infoBox");
+    var detailsDeck = document.getElementById("detailsDeck");
+
     // If a textbox within a panel is focused, force-blur it so its contents
     // are saved
     if (gEditItemOverlay.itemId != -1) {
@@ -614,31 +634,33 @@ var PlacesOrganizer = {
            focusedElement instanceof HTMLTextAreaElement) &&
           /^editBMPanel.*/.test(focusedElement.parentNode.parentNode.id))
         focusedElement.blur();
-    }
 
-    var infoBox = document.getElementById("infoBox");
-    var detailsDeck = document.getElementById("detailsDeck");    
-    var selectedNode = this._content.selectedNode;
-    if (selectedNode && !PlacesUtils.nodeIsSeparator(selectedNode)) {
+      // don't update the panel if we are already editing this node
+      if (aSelectedNode && gEditItemOverlay.itemId == aSelectedNode.itemId &&
+          detailsDeck.selectedIndex == 1)
+        return;
+    }
+ 
+    if (aSelectedNode && !PlacesUtils.nodeIsSeparator(aSelectedNode)) {
       detailsDeck.selectedIndex = 1;
       infoBox.hidden = false;
       // Using the concrete itemId is arguably wrong. The bookmarks API
       // does allow setting properties for folder shortcuts as well, but since
       // the UI does not distinct between the couple, we better just show
       // the concrete item properties.
-      if (selectedNode.type ==
+      if (aSelectedNode.type ==
           Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT) {
-        gEditItemOverlay.initPanel(asQuery(selectedNode).folderItemId,
+        gEditItemOverlay.initPanel(asQuery(aSelectedNode).folderItemId,
                                   { hiddenRows: ["folderPicker"],
                                     forceReadOnly: true });
       }
       else {
-        var itemId = selectedNode.itemId;
+        var itemId = aSelectedNode.itemId;
         gEditItemOverlay.initPanel(itemId != -1 ? itemId :
-                                   PlacesUtils._uri(selectedNode.uri),
+                                   PlacesUtils._uri(aSelectedNode.uri),
                                    { hiddenRows: ["folderPicker"] });
       }
-      this._detectAndSetDetailsPaneMinimalState(selectedNode);
+      this._detectAndSetDetailsPaneMinimalState(aSelectedNode);
     }
     else {
       detailsDeck.selectedIndex = 0;
