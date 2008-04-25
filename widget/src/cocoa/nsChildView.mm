@@ -4868,7 +4868,11 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   // happen if we return NO here. This only applies to Mac OS X 10.5 and higher,
   // previous OS versions just call "keyDown:" and not "performKeyEquivalent:"
   // for such events.
-  if ((modifierFlags & NSControlKeyMask) || (modifierFlags & NSAlternateKeyMask))
+  // However, if Cmd key is pressed, this event should not be for changing the
+  // input sources. Then, "keyDown:" will be never called by platform. So, we
+  // must call "processKeyDownEvent:" ourselves.
+  if (!(modifierFlags & NSCommandKeyMask) &&
+       (modifierFlags & (NSControlKeyMask | NSAlternateKeyMask)))
     return NO;
 
   if ([theEvent type] == NSKeyDown) {
