@@ -19,6 +19,9 @@ VC6 is not supported.  Please upgrade to VC8.
 
 Some specific things:
 
+cairo git commit ea6dbfd36f2182fda16cb82bca92007e0f7b8d77 - 
+  [cairo-meta-surface] Save and restore the original clip.
+
 max-font-size.patch: Clamp freetype font size to 1000 to avoid overflow issues
 
 win32-logical-font-scale.patch: set CAIRO_WIN32_LOGICAL_FONT_SCALE to 1
