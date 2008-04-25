@@ -847,23 +847,19 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
                             nsGkAtoms::_true, eCaseMatters))
     return NS_OK;
 
-  PRBool isHorizontal = IsHorizontal();
-
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aMouseEvent));
-
-  PRBool scrollToClick = PR_FALSE;
-#ifdef XP_MACOSX
-  // On Mac the option key inverts the scroll-to-here preference.
-  PRBool invertScrollToClick = PR_FALSE;
-  mouseEvent->GetAltKey(&invertScrollToClick);
-  scrollToClick = (invertScrollToClick != GetScrollToClick());
-#else
-  mouseEvent->GetShiftKey(&scrollToClick);
   PRUint16 button = 0;
   mouseEvent->GetButton(&button);
+  if (!(button == 0 || (button == 1 && gMiddlePref)))
+    return NS_OK;
+
+  PRBool isHorizontal = IsHorizontal();
+
+  PRBool scrollToClick = PR_FALSE;
+#ifndef XP_MACOSX
+  // On Mac there's no scroll-to-here when clicking the thumb
+  mouseEvent->GetShiftKey(&scrollToClick);
   if (button != 0) {
-    if (button != 1 || !gMiddlePref)
-      return NS_OK;
     scrollToClick = PR_TRUE;
   }
 
@@ -898,15 +894,20 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 
   DragThumb(PR_TRUE);
 
+  if (scrollToClick) {
+    // should aMaySnap be PR_TRUE here?
+    SetCurrentThumbPosition(scrollbar, newpos, PR_FALSE, PR_FALSE, PR_FALSE);
+  }
+
   nsIFrame* thumbFrame = mFrames.FirstChild();
   if (!thumbFrame) {
     return NS_OK;
   }
 
   if (isHorizontal)
-     mThumbStart = thumbFrame->GetPosition().x;
+    mThumbStart = thumbFrame->GetPosition().x;
   else
-     mThumbStart = thumbFrame->GetPosition().y;
+    mThumbStart = thumbFrame->GetPosition().y;
 
   mDragStart = pos - mThumbStart;
 
@@ -914,10 +915,6 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   printf("Pressed mDragStart=%d\n",mDragStart);
 #endif
 
-  if (scrollToClick) {
-    // should aMaySnap be PR_TRUE here?
-    SetCurrentThumbPosition(scrollbar, newpos, PR_FALSE, PR_FALSE, PR_FALSE);
-  }
   return NS_OK;
 }
 
