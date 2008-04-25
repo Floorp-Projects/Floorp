@@ -418,15 +418,20 @@ nsPrintSettingsGTK::GetToFileName(PRUnichar * *aToFileName)
 
   // Convert to an nsIFile
   nsCOMPtr<nsIFile> file;
-  NS_GetFileFromURLSpec(nsDependentCString(gtk_output_uri), getter_AddRefs(file));
+  nsresult rv = NS_GetFileFromURLSpec(nsDependentCString(gtk_output_uri),
+                                      getter_AddRefs(file));
+  if (NS_FAILED(rv))
+    return rv;
 
   // Extract the path
   nsAutoString path;
-  file->GetPath(path);
+  rv = file->GetPath(path);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   *aToFileName = ToNewUnicode(path);
   return NS_OK;
 }
+
 NS_IMETHODIMP
 nsPrintSettingsGTK::SetToFileName(const PRUnichar * aToFileName)
 {
@@ -443,11 +448,14 @@ nsPrintSettingsGTK::SetToFileName(const PRUnichar * aToFileName)
   }
 
   nsCOMPtr<nsILocalFile> file;
-  NS_NewLocalFile(nsDependentString(aToFileName), PR_TRUE, getter_AddRefs(file));
+  nsresult rv = NS_NewLocalFile(nsDependentString(aToFileName), PR_TRUE,
+                                getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Convert the nsIFile to a URL
   nsCAutoString url;
-  NS_GetURLSpecFromFile(file, url);
+  rv = NS_GetURLSpecFromFile(file, url);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   gtk_print_settings_set(mPrintSettings, GTK_PRINT_SETTINGS_OUTPUT_URI, url.get());
   mToFileName = aToFileName;
