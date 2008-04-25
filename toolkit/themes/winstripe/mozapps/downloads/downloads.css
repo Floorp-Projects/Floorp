@@ -77,5 +77,5 @@ richlistitem[type="download"]:not([selected="true"]) .status {
 #clearListButton {
   min-height: 0;
   min-width: 0;
-  height: 1em;
+  margin-top: 3px;
 }

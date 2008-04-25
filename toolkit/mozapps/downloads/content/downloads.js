@@ -134,6 +134,9 @@ function getDownload(aID)
 
 function downloadCompleted(aDownload)
 {
+  // The download is changing state, so update the clear list button
+  updateClearListButton();
+
   // Wrap this in try...catch since this can be called while shutting down...
   // it doesn't really matter if it fails then since well.. we're shutting down
   // and there's no UI to update!
@@ -1081,6 +1084,9 @@ function removeFromView(aDownload)
 
   // Color everything after from the newly selected item
   stripeifyList(gDownloadsView.selectedItem);
+
+  // We might have removed the last item, so update the clear list button
+  updateClearListButton();
 }
 
 function getReferrerOrSource(aDownload)
@@ -1140,6 +1146,9 @@ function buildDownloadList(aForceBuild)
     // Start building the list and select the first item
     stepListBuilder(1);
     gDownloadsView.selectedIndex = 0;
+
+    // We just tried to add a single item, so we probably need to enable
+    updateClearListButton();
   }, 0);
 }
 
@@ -1155,10 +1164,10 @@ function stepListBuilder(aNumItems) {
   try {
     // If we're done adding all items, we can quit
     if (!gStmt.executeStep()) {
-      // Send a notification that we finished
-      Cc["@mozilla.org/observer-service;1"].
-      getService(Ci.nsIObserverService).
-      notifyObservers(window, "download-manager-ui-done", null);
+      // Send a notification that we finished, but wait for clear list to update
+      setTimeout(function() Cc["@mozilla.org/observer-service;1"].
+        getService(Ci.nsIObserverService).
+        notifyObservers(window, "download-manager-ui-done", null), 0);
 
       return;
     }
@@ -1250,6 +1259,9 @@ function prependList(aDownload)
     // Because of the joys of XBL, we can't update the buttons until the
     // download object is in the document.
     updateButtons(item);
+
+    // We might have added an item to an empty list, so update button
+    updateClearListButton();
   }
 }
 
@@ -1322,4 +1334,15 @@ function getLocalFileFromNativePathOrUrl(aPathOrUrl)
 
     return f;
   }
+}
+
+/**
+ * Update the disabled state of the clear list button based on whether or not
+ * there are items in the list that can potentially be removed.
+ */
+function updateClearListButton()
+{
+  let button = document.getElementById("clearListButton");
+  // The button is enabled if we have items in the list and we can clean up
+  button.disabled = !(gDownloadsView.itemCount && gDownloadManager.canCleanUp);
 }
