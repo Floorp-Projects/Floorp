@@ -264,9 +264,9 @@ PlacesController.prototype = {
    * is a policy decision that a removable item not be placed inside a non-
    * removable item.
    * @param aIsMoveCommand
-   *        True if thecommand for which this method is called only moves the
+   *        True if the command for which this method is called only moves the
    *        selected items to another container, false otherwise.
-   * @returns true if the there's a selection which has no nodes that cannot be removed,
+   * @returns true if all nodes in the selection can be removed,
    *          false otherwise.
    */
   _hasRemovableSelection: function PC__hasRemovableSelection(aIsMoveCommand) {
@@ -278,17 +278,8 @@ PlacesController.prototype = {
       if (nodes[i] == root)
         return false;
 
-      // Disallow removing shortcuts from the left pane
-      var nodeItemId = nodes[i].itemId;
-      if (PlacesUtils.annotations
-                     .itemHasAnnotation(nodeItemId, ORGANIZER_QUERY_ANNO))
-        return false;
-
-      // Disallow removing the toolbar, menu and unfiled-bookmarks folders
-      if (!aIsMoveCommand &&
-           (nodeItemId == PlacesUtils.toolbarFolderId ||
-            nodeItemId == PlacesUtils.unfiledBookmarksFolderId ||
-            nodeItemId == PlacesUtils.bookmarksMenuFolderId))
+      if (PlacesUtils.nodeIsFolder(nodes[i]) &&
+          !PlacesControllerDragHelper.canMoveContainerNode(nodes[i]))
         return false;
 
       // We don't call nodeIsReadOnly here, because nodeIsReadOnly means that
@@ -1006,6 +997,7 @@ PlacesController.prototype = {
    *          elsewhere.
    */
   getTransferData: function PC_getTransferData(dragAction) {
+    var copy = dragAction == Ci.nsIDragService.DRAGDROP_ACTION_COPY;
     var result = this._view.getResult();
     var oldViewer = result.viewer;
     try {
@@ -1025,7 +1017,7 @@ PlacesController.prototype = {
         var data = new TransferData();
         function addData(type, overrideURI) {
           data.addDataForFlavour(type, PlacesUIUtils._wrapString(
-                                 PlacesUtils.wrapNode(node, type, overrideURI)));
+                                 PlacesUtils.wrapNode(node, type, overrideURI, copy)));
         }
 
         function addURIData(overrideURI) {
@@ -1093,7 +1085,8 @@ PlacesController.prototype = {
                                                  uri) + suffix);
 
           var placeSuffix = i < (nodes.length - 1) ? "," : "";
-          return PlacesUtils.wrapNode(node, type, overrideURI) + placeSuffix;
+          var resolveShortcuts = !PlacesControllerDragHelper.canMoveContainerNode(node);
+          return PlacesUtils.wrapNode(node, type, overrideURI, resolveShortcuts) + placeSuffix;
         }
 
         // all items wrapped as TYPE_X_MOZ_PLACE
@@ -1317,6 +1310,71 @@ var PlacesControllerDragHelper = {
     return true;
   },
 
+  /**
+   * Determines if a container node can be moved.
+   * 
+   * @param   aNode
+   *          A bookmark folder node.
+   * @param   [optional] aInsertionPoint
+   *          The insertion point of the drop target.
+   * @returns True if the container can be moved.
+   */
+  canMoveContainerNode:
+  function PCDH_canMoveContainerNode(aNode, aInsertionPoint) {
+    // can't move query root
+    if (!aNode.parent)
+      return false;
+
+    var targetId = aInsertionPoint ? aInsertionPoint.itemId : -1;
+    var parentId = PlacesUtils.getConcreteItemId(aNode.parent);
+    var concreteId = PlacesUtils.getConcreteItemId(aNode);
+
+    // can't move tag containers 
+    if (PlacesUtils.nodeIsTagQuery(aNode))
+      return false;
+
+    // check is child of a read-only container 
+    if (PlacesUtils.nodeIsReadOnly(aNode.parent))
+      return false;
+
+    // check for special folders, etc
+    if (!this.canMoveContainer(aNode.itemId, parentId))
+      return false;
+
+    return true;
+  },
+
+  /**
+   * Determines if a container node can be moved.
+   * 
+   * @param   aId
+   *          A bookmark folder id.
+   * @param   [optional] aParentId
+   *          The parent id of the folder.
+   * @returns True if the container can be moved to the target.
+   */
+  canMoveContainer:
+  function PCDH_canMoveContainer(aId, aParentId) {
+    if (aId == -1)
+      return false;
+
+    // Disallow moving of roots and special folders
+    const ROOTS = [PlacesUtils.placesRootId, PlacesUtils.bookmarksMenuFolderId,
+                   PlacesUtils.tagsFolderId, PlacesUtils.unfiledBookmarksFolderId,
+                   PlacesUtils.toolbarFolderId];
+    if (ROOTS.indexOf(aId) != -1)
+      return false;
+
+    // Get parent id if necessary
+    if (aParentId == null || aParentId == -1)
+      aParentId = PlacesUtils.bookmarks.getFolderIdForItem(aId);
+
+    if(PlacesUtils.bookmarks.getFolderReadonly(aParentId))
+      return false;
+
+    return true;
+  },
+
   /** 
    * Creates a Transferable object that can be filled with data of types
    * supported by a view. 
@@ -1343,6 +1401,8 @@ var PlacesControllerDragHelper = {
    */
   onDrop: function PCDH_onDrop(insertionPoint) {
     var session = this.getSession();
+    // XXX dragAction is not valid, so we also set copy below by checking
+    // whether the dropped item is moveable, before creating the transaction
     var copy = session.dragAction & Ci.nsIDragService.DRAGDROP_ACTION_COPY;
     var transactions = [];
     var xferable = this._initTransferable(session);
@@ -1360,13 +1420,13 @@ var PlacesControllerDragHelper = {
       // There's only ever one in the D&D case. 
       var unwrapped = PlacesUtils.unwrapNodes(data.value.data, 
                                               flavor.value)[0];
+
       var index = insertionPoint.index;
 
       // Adjust insertion index to prevent reversal of dragged items. When you
       // drag multiple elts upward: need to increment index or each successive
       // elt will be inserted at the same index, each above the previous.
-      if ((index != -1) && ((index < unwrapped.index) ||
-                           (unwrapped.folder && (index < unwrapped.folder.index)))) {
+      if (index != -1 && index < unwrapped.index) {
         index = index + movedCount;
         movedCount++;
       }
@@ -1378,6 +1438,12 @@ var PlacesControllerDragHelper = {
         transactions.push(PlacesUIUtils.ptm.tagURI(uri,[tagItemId]));
       }
       else {
+        if (!this.canMoveContainer(unwrapped.id, null))
+          copy = true;
+        else if (unwrapped.concreteId &&
+                 !this.canMoveContainer(unwrapped.concreteId, null))
+          copy = true;
+
         transactions.push(PlacesUIUtils.makeTransaction(unwrapped,
                           flavor.value, insertionPoint.itemId,
                           index, copy));

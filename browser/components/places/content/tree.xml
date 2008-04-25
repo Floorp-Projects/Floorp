@@ -673,8 +673,9 @@
             // If this node is part of a readonly container (e.g. a livemark) it 
             // cannot be moved, only copied, so we must change the action used
             // by the drag session.
-            if (PlacesUtils.nodeIsReadOnly(parent) ||
-                PlacesUtils.nodeIsTagQuery(parent)) {
+            if (PlacesUtils.nodeIsTagQuery(parent) ||
+                !PlacesControllerDragHelper.canMoveContainerNode(node)) {
+              // XXX DOES NOTHING! dragAction doesn't persist
               dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
               break;
             }
