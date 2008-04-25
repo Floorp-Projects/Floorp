@@ -401,6 +401,7 @@
           hidecolumnpicker="true" context="placesContext"
           onselect="PlacesOrganizer.onPlaceSelected(true);"
           onclick="PlacesOrganizer.onTreeClick(event);"
+          onfocus="PlacesOrganizer.onTreeFocus(event);"          
           seltype="single"
           persist="width"
           width="200"
@@ -460,6 +461,7 @@
                   ondblclick="PlacesOrganizer.openSelectedNode(event);"
                   onopenflatcontainer="PlacesOrganizer.openFlatContainer(aContainer);"
                   onselect="PlacesOrganizer.onContentTreeSelect();"
+                  onfocus="PlacesOrganizer.onTreeFocus(event);"
                   onclick="PlacesOrganizer.onTreeClick(event);">
               <treecols id="placeContentColumns" context="placesColumnsContext">
                 <treecol label="&col.name.label;" id="placesContentTitle" anonid="title" flex="5" primary="true" ordinal="1" 
