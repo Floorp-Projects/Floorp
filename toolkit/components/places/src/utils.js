@@ -1047,8 +1047,12 @@ var PlacesUtils = {
     });
 
     var batch = {
+      _utils: this,
       nodes: nodes[0].children,
       runBatched: function restore_runBatched() {
+        var searchIds = [];
+        var folderIdMap = [];
+
         this.nodes.forEach(function(node) {
           var root = node.root;
           // FIXME support folders other than known roots
@@ -1079,23 +1083,34 @@ var PlacesUtils = {
             if (container != this.tagsFolderId)
               this.bookmarks.removeFolderChildren(container);
             else {
-                // remove tags via the tagging service
-                var tags = this.tagging.allTags;
-                var uris = [];
-                tags.forEach(function(aTag) {
-                  var tagURIs = this.tagging.getURIsForTag(aTag);
-                  for (let i in tagURIs)
-                    this.tagging.untagURI(tagURIs[i], [aTag]);
-                }, this);
+              // remove tags via the tagging service
+              var tags = this.tagging.allTags;
+              var uris = [];
+              tags.forEach(function(aTag) {
+                var tagURIs = this.tagging.getURIsForTag(aTag);
+                for (let i in tagURIs)
+                  this.tagging.untagURI(tagURIs[i], [aTag]);
+              }, this);
             }
           }
 
           // insert the data into the db
           node.children.forEach(function(child) {
             var index = child.index;
-            this.importJSONNode(child, container, index);
+            var [folders, searches] = this.importJSONNode(child, container, index);
+            folderIdMap = folderIdMap.concat(folders);
+            searchIds = searchIds.concat(searches);
           }, this);
-        }, PlacesUtils);
+        }, this._utils);
+
+        // fixup imported place: uris that contain folders
+        searchIds.forEach(function(aId) {
+          var oldURI = this.bookmarks.getBookmarkURI(aId);
+          var uri = this._fixupQuery(this.bookmarks.getBookmarkURI(aId),
+                                     folderIdMap);
+          if (!uri.equals(oldURI))
+            this.bookmarks.changeBookmarkURI(aId, uri);
+        }, this._utils);
       }
     };
     
@@ -1111,9 +1126,13 @@ var PlacesUtils = {
    *          The container the data was dropped or pasted into
    * @param   aIndex
    *          The index within the container the item was dropped or pasted at
+   * @returns an array containing of maps of old folder ids to new folder ids,
+   *          and an array of saved search ids that need to be fixed up.
+   *          eg: [[[oldFolder1, newFolder1]], [search1]]
    */
   importJSONNode: function PU_importJSONNode(aData, aContainer, aIndex) {
-    // create item
+    var folderIdMap = [];
+    var searchIds = [];
     var id = -1;
     switch (aData.type) {
       case this.TYPE_X_MOZ_PLACE_CONTAINER:
@@ -1122,7 +1141,7 @@ var PlacesUtils = {
             aData.children.forEach(function(aChild) {
               this.tagging.tagURI(this._uri(aChild.uri), [aData.title]);
             }, this);
-            return;
+            return [folderIdMap, searchIds];
           }
         }
         else if (aData.livemark && aData.annos) {
@@ -1146,10 +1165,13 @@ var PlacesUtils = {
         }
         else {
           id = this.bookmarks.createFolder(aContainer, aData.title, aIndex);
+          folderIdMap.push([aData.id, id]);
           // process children
           if (aData.children) {
             aData.children.every(function(aChild, aIndex) {
-              this.importJSONNode(aChild, id, aIndex);
+              var [folderIds, searches] = this.importJSONNode(aChild, id, aIndex);
+              folderIdMap = folderIdMap.concat(folderIds);
+              searchIds = searchIds.concat(searches);
               return true;
             }, this);
           }
@@ -1166,6 +1188,8 @@ var PlacesUtils = {
         }
         if (aData.charset)
           this.history.setCharsetForURI(this._uri(aData.uri), aData.charset);
+        if (aData.uri.match(/^place:/))
+          searchIds.push(id);
         break;
       case this.TYPE_X_MOZ_PLACE_SEPARATOR:
         id = this.bookmarks.insertSeparator(aContainer, aIndex);
@@ -1180,6 +1204,45 @@ var PlacesUtils = {
       if (aData.annos)
         this.setAnnotationsForItem(id, aData.annos);
     }
+
+    return [folderIdMap, searchIds];
+  },
+
+  /**
+   * Replaces imported folder ids with their local counterparts in a place: URI.
+   *
+   * @param   aURI
+   *          A place: URI with folder ids.
+   * @param   aFolderIdMap
+   *          An array mapping old folder id to new folder ids.
+   * @returns the fixed up URI if all matched. If some matched, it returns
+   *          the URI with only the matching folders included. If none matched it
+   *          returns the input URI unchanged.
+   */
+  _fixupQuery: function PU__fixupQuery(aQueryURI, aFolderIdMap) {
+    var queries = {};
+    var options = {};
+    this.history.queryStringToQueries(aQueryURI.spec, queries, {}, options);
+
+    var fixedQueries = [];
+    queries.value.forEach(function(aQuery) {
+      var folders = aQuery.getFolders({});
+
+      var newFolders = [];
+      aFolderIdMap.forEach(function(aMapping) {
+        if (folders.indexOf(aMapping[0]) != -1)
+          newFolders.push(aMapping[1]);
+      });
+
+      if (newFolders.length)
+        aQuery.setFolders(newFolders, newFolders.length);
+      fixedQueries.push(aQuery);
+    });
+
+    var stringURI = this.history.queriesToQueryString(fixedQueries,
+                                                      fixedQueries.length,
+                                                      options.value);
+    return this._uri(stringURI);
   },
 
   /**
@@ -1275,7 +1338,9 @@ var PlacesUtils = {
           (concreteId != aPlacesNode.itemId && !aResolveShortcuts))) {
         aJSNode.type = self.TYPE_X_MOZ_PLACE;
         aJSNode.uri = aPlacesNode.uri;
-        aJSNode.concreteId = concreteId;
+        // folder shortcut
+        if (aIsUICommand)
+          aJSNode.concreteId = concreteId;
         return;
       }
       else if (aJSNode.id != -1) { // bookmark folder
