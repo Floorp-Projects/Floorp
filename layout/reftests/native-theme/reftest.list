@@ -26,3 +26,7 @@
 != checkbox-native.html checkbox-nonnative.html
 == checkbox-still-native-when-styled.html checkbox-still-native-when-styled-ref.html
 == native-theme-disabled-cascade-levels.html native-theme-disabled-cascade-levels-ref.html
+
+# mac ignores padding on most native widgets and has done so for a while
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") != 427122-1.html 427122-1-ref.html
+
