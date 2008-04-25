@@ -112,6 +112,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
       yCords = [547, 543, -27];
       testThis("linkedImageWithTitle", "Link to MoFo", "moz.png", xCords, yCords, 93, 42);
 
+      // Test simple image with empty alt attribute
+      xCords = [16, 12, 8];
+      yCords = [614, 610, 500];
+      testThis("nonLinkedImageEmptyAlt", "", "moz.png", xCords, yCords, 89, 38);
+
+      // Test linked image with empty alt attribute
+      xCords = [16, 12, 0];
+      yCords = [676, 672, -27];
+      testThis("linkedImageEmptyAlt", "", "moz.png", xCords, yCords, 93, 42);
+
+      // Test simple image with empty alt attribute and title
+      xCords = [16, 12, 8];
+      yCords = [743, 739, 629];
+      testThis("nonLinkedImageEmptyAltAndTitle", "MozillaFoundation", "moz.png", xCords, yCords, 89, 38);
+
+      // Test linked image with empty alt attribute and title
+      xCords = [16, 12, 0];
+      yCords = [805, 801, -27];
+      testThis("linkedImageEmptyAltAndTitle", "Link to Mozilla Foundation", "moz.png", xCords, yCords, 93, 42);
+
       SimpleTest.finish();
     }
 
@@ -138,5 +158,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
   <img id="nonLinkedImageWithTitle" src="moz.png" title="MoFo logo"/>
   <br>Linked image with title:<br>
   <a href="http://www.mozilla.org"><img id="linkedImageWithTitle" src="moz.png" title="Link to MoFo"/></a>
+  <br>Simple image with empty alt:<br>
+  <img id="nonLinkedImageEmptyAlt" src="moz.png" alt=""/>
+  <br>Linked image with empty alt:<br>
+  <a href="http://www.mozilla.org"><img id="linkedImageEmptyAlt" src="moz.png" alt=""/></a>
+  <br>Simple image with empty alt and title:<br>
+  <img id="nonLinkedImageEmptyAltAndTitle" src="moz.png" alt="" title="MozillaFoundation"/>
+  <br>Linked image with empty alt and title:<br>
+  <a href="http://www.mozilla.org"><img id="linkedImageEmptyAltAndTitle" src="moz.png" alt=""
+     title="Link to Mozilla Foundation"/></a>
 </body>
 </html>
