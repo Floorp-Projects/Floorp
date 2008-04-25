@@ -130,7 +130,7 @@ classic.jar:
         skin/classic/aero/browser/feeds/audioFeedIcon16.png          (feeds/audioFeedIcon16-aero.png)
         skin/classic/aero/browser/feeds/subscribe.css                (feeds/subscribe.css)
         skin/classic/aero/browser/places/places.css                  (places/places.css)
-        skin/classic/aero/browser/places/organizer.css               (places/organizer.css)
+*       skin/classic/aero/browser/places/organizer.css               (places/organizer-aero.css)
         skin/classic/aero/browser/places/query.png                   (places/query-aero.png)
         skin/classic/aero/browser/places/bookmarksMenu.png           (places/bookmarksMenu-aero.png)
         skin/classic/aero/browser/places/bookmarksToolbar.png        (places/bookmarksToolbar-aero.png)
