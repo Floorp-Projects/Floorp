@@ -33,16 +33,20 @@
   height: 1.23em;
   min-height: 20px;
   -moz-box-align: center;
-  background: ButtonFace url(chrome://browser/skin/tabbrowser/tab-active-bkgnd.png) repeat-x;
+  background: -moz-dialog url(navbar-textbox-buttons.png) repeat-x;
   border: 0 solid;
   border-right-width: 1px;
-  -moz-border-right-colors: ButtonShadow;
+  -moz-border-right-colors: ThreeDShadow;
+}
+
+.searchbar-engine-button:hover {
+  background-position: 0 -60px;
 }
 
 .searchbar-engine-button[chromedir="rtl"] {
   border-right-width: 0;
   border-left-width: 1px;
-  -moz-border-left-colors: ButtonShadow;
+  -moz-border-left-colors: ThreeDShadow;
 }
 
 .searchbar-engine-button > .button-box {
