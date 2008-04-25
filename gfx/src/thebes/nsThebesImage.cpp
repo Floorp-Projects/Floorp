@@ -771,8 +771,12 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
         }
 
         gfxMatrix patMat;
+        gfxPoint p0;
+
+        p0.x = - floor(tmpOffset.x + 0.5);
+        p0.y = - floor(tmpOffset.y + 0.5);
         patMat.Scale(scale, scale);
-        patMat.Translate(-tmpOffset);
+        patMat.Translate(p0);
 
         gfxPattern pat(surface);
         pat.SetExtend(gfxPattern::EXTEND_REPEAT);
