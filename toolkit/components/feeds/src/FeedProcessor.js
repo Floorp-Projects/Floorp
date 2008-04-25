@@ -521,7 +521,9 @@ Entry.prototype = {
   __enclosure_map: null,
 
   _addToEnclosures: function Entry_addToEnclosures(new_enc) {
-    if (!bagHasKey(new_enc, "url"))
+    // items we add to the enclosures array get displayed in the FeedWriter and
+    // they must have non-empty urls.
+    if (!bagHasKey(new_enc, "url") || new_enc.getPropertyAsAString("url") == "")
       return;
 
     if (this.__enclosure_map == null)
