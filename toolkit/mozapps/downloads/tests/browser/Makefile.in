@@ -56,6 +56,7 @@ _BROWSER_FILES = \
   browser_bug_413093.js \
   browser_bug_413985.js \
   browser_bug_416303.js \
+  browser_cleanup_search.js \
   browser_multi_select.js \
   browser_select_all.js \
   $(NULL)
@@ -68,7 +69,6 @@ endif
 
 ifneq ($(OS_ARCH), WINNT)
 _BROWSER_FILES += \
-  browser_cleanup_search.js \
   browser_multiword_search.js \
   $(NULL)
 endif

@@ -95,10 +95,6 @@ menuitem:not([type]) {
   list-style-image: url("moz-icon://stock/gtk-copy?size=menu");
 }
 
-#menuitem_clearList {
-  list-style-image: url("moz-icon://stock/gtk-clear?size=menu");
-}
-
 .blockedIcon {
   list-style-image: url("moz-icon://stock/gtk-dialog-error?size=dialog");
   width: 32px;
@@ -113,5 +109,9 @@ menuitem:not([type]) {
 
 #clearListButton {
   list-style-image: url(moz-icon://stock/gtk-clear?size=button);
-  margin-top: 4px;
+  margin-top: 3px;
+}
+
+#clearListButton[disabled="true"] {
+  list-style-image: url(moz-icon://stock/gtk-clear?size=button&state=disabled);
 }

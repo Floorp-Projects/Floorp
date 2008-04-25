@@ -119,9 +119,10 @@ richlistitem[type="download"] button {
   min-height: 0;
   min-width: 0;
   padding: 2px;
+  margin: 0 6px;
 }
 
-#clearListButton:hover:active {
+#clearListButton:hover:active:not([disabled="true"]) {
   background: url(chrome://global/skin/icons/white-gray-gradient-active.gif);
 }
 
