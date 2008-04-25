@@ -18,16 +18,31 @@
   -moz-margin-start: 6px;
 }
 
-#urlbar[chromedir="ltr"] > #identity-box {
+#identity-box[chromedir="ltr"] {
   -moz-margin-start: -6px;
 }
 
-#urlbar[chromedir="ltr"] > #identity-box > hbox {
+#identity-box[chromedir="ltr"] > hbox {
   margin: -4px 0;
   padding: 3px 2px 3px 4px;
   background-position: 0 3px;
   -moz-border-radius-topleft: 14px;
   -moz-border-radius-bottomleft: 14px;
+}
+#identity-box:hover[chromedir="ltr"] > hbox {
+  background-position: 0 -57px;
+}
+#identity-box.verifiedDomain[chromedir="ltr"] > hbox {
+  background-position: 0 -117px;
+}
+#identity-box.verifiedDomain:hover[chromedir="ltr"] > hbox {
+  background-position: 0 -177px;
+}
+#identity-box.verifiedIdentity[chromedir="ltr"] > hbox {
+  background-position: 0 -237px;
+}
+#identity-box.verifiedIdentity:hover[chromedir="ltr"] > hbox {
+  background-position: 0 -297px;
 }
 
 /* Bug 413060, comment 14: Match #identity-box's -moz-margin-start, less 1px */

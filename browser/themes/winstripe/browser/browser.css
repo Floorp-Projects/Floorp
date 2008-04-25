@@ -1651,15 +1651,6 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
   -moz-margin-end: 4px;
 }
 
-/* Secure site coloring */
-#urlbar[level="high"][pageproxystate="valid"] > .autocomplete-textbox-container ,
-#urlbar[level="high"][pageproxystate="valid"] > .autocomplete-history-dropmarker ,
-#urlbar[level="low"][pageproxystate="valid"] > .autocomplete-textbox-container ,
-#urlbar[level="low"][pageproxystate="valid"] > .autocomplete-history-dropmarker {
-  background-color: #F5F6BE;
-  color: #000000;
-}
-
 /* Location bar dropmarker */
 #urlbar > .autocomplete-history-dropmarker {
   -moz-appearance: none;
@@ -1671,7 +1662,7 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 
 #urlbar > .autocomplete-history-dropmarker:hover ,
 #urlbar > .autocomplete-history-dropmarker[open="true"] {
-  background: ButtonFace url(chrome://browser/skin/tabbrowser/tab-active-bkgnd.png) repeat-x !important;
+  background: -moz-dialog url(navbar-textbox-buttons.png) repeat-x 0 -60px !important;
 }
 
 #urlbar > .autocomplete-history-dropmarker > .dropmarker-icon {
@@ -1784,45 +1775,85 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   overflow: -moz-hidden-unscrollable;
 }
 
-#urlbar[chromedir="ltr"] > #identity-box {
+#identity-box[chromedir="ltr"] {
   -moz-margin-start: -4px;
+  border-right: 1px solid ThreeDShadow;
+}
+
+#identity-box.verifiedDomain[chromedir="ltr"] ,
+#identity-box.verifiedIdentity[chromedir="ltr"] {
+  border-right: 1px solid ThreeDDarkShadow;
 }
 
 #identity-box > hbox {
-  background: ButtonFace url(chrome://browser/skin/tabbrowser/tab-active-bkgnd.png) repeat-x;
-  color: -moz-dialogtext;
-}
-
-#urlbar[chromedir="rtl"] > #identity-box > hbox {
-  border-right: 1px solid ButtonShadow;
-  border-left: 1px solid ButtonShadow;
+  background: -moz-dialog url(navbar-textbox-buttons.png) repeat-x;
+  color: -moz-dialogText;
+  border-left: 2px solid;
+  border-right: 2px solid;
+  -moz-border-left-colors: ThreeDShadow rgba(255, 255, 255, 0.2);
+  -moz-border-right-colors: ThreeDShadow rgba(255, 255, 255, 0.2);
   padding: 0 3px;
 }
-
-#urlbar[chromedir="ltr"] > #identity-box > hbox {
-  border: 1px solid ButtonShadow;
-  border-right-style: none;
+#identity-box[chromedir="ltr"] > hbox {
   margin: -11px -10px -11px 0;
   padding: 10px 12px 10px 4px;
-  background-position: 0 10px;
+  border-top: 1px solid ThreeDDarkShadow;
+  border-bottom: 1px solid ThreeDDarkShadow;
+  border-right-style: none;
   -moz-border-radius-topleft: 21px;
   -moz-border-radius-bottomleft: 21px;
+  -moz-border-left-colors: ThreeDDarkShadow rgba(255, 255, 255, 0.4);
+  background-position: 0 10px;
 }
 
-#urlbar[chromedir="ltr"] > .autocomplete-textbox-container > .textbox-input-box {
-  border-left: 1px solid ButtonShadow;
-  margin-left: 0;
-  padding-left: 3px;
+#identity-box:hover > hbox {
+  background-position: 0 -60px;
+  -moz-border-left-colors: ThreeDShadow rgba(255, 255, 255, 0.4);
+  -moz-border-right-colors: ThreeDShadow rgba(255, 255, 255, 0.4);
+}
+#identity-box:hover[chromedir="ltr"] > hbox {
+  background-position: 0 -50px;
+  -moz-border-left-colors: ThreeDDarkShadow rgba(255, 255, 255, 0.6);
+}
+
+#identity-box.verifiedDomain > hbox {
+  background-position: 0 -120px;
+  color: white;
+}
+#identity-box.verifiedDomain[chromedir="ltr"] > hbox {
+  background-position: 0 -110px;
+}
+
+#identity-box.verifiedDomain:hover > hbox {
+  background-position: 0 -180px;
+}
+#identity-box.verifiedDomain:hover[chromedir="ltr"] > hbox {
+  background-position: 0 -170px;
 }
 
 #identity-box.verifiedIdentity > hbox {
-  background-color: #7c8;
-  color: #000;
+  background-position: 0 -240px;
+  color: white;
+}
+#identity-box.verifiedIdentity[chromedir="ltr"] > hbox {
+  background-position: 0 -230px;
+}
+
+#identity-box.verifiedIdentity:hover > hbox {
+  background-position: 0 -300px;
+}
+#identity-box.verifiedIdentity:hover[chromedir="ltr"] > hbox {
+  background-position: 0 -290px;
 }
 
 #identity-box:focus {
   outline: 1px dotted -moz-DialogText;
   outline-offset: -3px;
+}
+
+#identity-box.verifiedDomain:focus ,
+#identity-box.verifiedIdentity:focus {
+  outline: 1px dotted white;
 }
 
 #identity-icon-label {
