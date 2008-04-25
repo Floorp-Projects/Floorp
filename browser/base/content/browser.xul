@@ -337,6 +337,7 @@
                We only add the identity-box button to the tab order when the location bar
                has focus, otherwise pressing F6 focuses it instead of the location bar -->
           <box id="identity-box" role="button"
+               chromedir="&locale.dir;"
                onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
                onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
             <hbox align="center">
