@@ -967,7 +967,6 @@ struct BindData {
     Binder                  binder;             /* binder, discriminates u */
     union {
         struct {
-            jsuint          index;
             uintN           overflow;
         } let;
     } u;
@@ -1619,6 +1618,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     JSObject *blockObj;
     JSScopeProperty *sprop;
     JSAtomListElement *ale;
+    uintN n;
 
     blockObj = tc->blockChain;
     sprop = SCOPE_GET_PROPERTY(OBJ_SCOPE(blockObj), ATOM_TO_JSID(atom));
@@ -1628,7 +1628,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
 
         if (sprop) {
             JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
-            JS_ASSERT((uint16)sprop->shortid < data->u.let.index);
+            JS_ASSERT((uint16)sprop->shortid < OBJ_BLOCK_COUNT(cx, blockObj));
         }
 
         name = js_AtomToPrintableString(cx, atom);
@@ -1643,7 +1643,8 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
         return JS_FALSE;
     }
 
-    if (data->u.let.index == JS_BIT(16)) {
+    n = OBJ_BLOCK_COUNT(cx, blockObj);
+    if (n == JS_BIT(16)) {
         js_ReportCompileErrorNumber(cx, TS(tc->parseContext), data->pn,
                                     JSREPORT_ERROR, data->u.let.overflow);
         return JS_FALSE;
@@ -1653,41 +1654,8 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     return js_DefineNativeProperty(cx, blockObj, ATOM_TO_JSID(atom),
                                    JSVAL_VOID, NULL, NULL,
                                    JSPROP_ENUMERATE | JSPROP_PERMANENT,
-                                   SPROP_HAS_SHORTID,
-                                   (intN)data->u.let.index++,
-                                   NULL);
+                                   SPROP_HAS_SHORTID, (int16) n, NULL);
 }
-
-#if JS_HAS_DESTRUCTURING
-/*
- * The catch/finally handler implementation in the interpreter assumes that
- * any operation that introduces a new scope (like a "let" or "with" block)
- * increases the stack depth. This way, it is possible to restore the scope
- * chain based on stack depth of the handler alone. A let block with an empty
- * destructuring pattern like in
- *
- *   let [] = 1;
- *
- * would violate this assumption as the there would be no let locals to store
- * on the stack. To satisfy it we add an empty property to such blocks so
- * OBJ_BLOCK_COUNT(cx, blockObj), that gives the number of slots, would be
- * always positive.
- */
-static JSBool
-EnsureNonEmptyLet(JSContext *cx, JSTreeContext *tc)
-{
-    jsid id;
-
-    if (OBJ_BLOCK_COUNT(cx, tc->blockChain) != 0)
-        return JS_TRUE;
-
-    id = ATOM_TO_JSID(cx->runtime->atomState.emptyAtom);
-    return js_DefineNativeProperty(cx, tc->blockChain, id,
-                                   JSVAL_VOID, NULL, NULL,
-                                   JSPROP_PERMANENT | JSPROP_READONLY,
-                                   SPROP_HAS_SHORTID, 0, NULL);
-}
-#endif
 
 static JSBool
 BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
@@ -2058,7 +2026,6 @@ CheckDestructuring(JSContext *cx, BindData *data,
         return JS_FALSE;
     }
 
-    ok = JS_TRUE;
     fpvd.table.ops = NULL;
     lhs = left->pn_head;
     if (lhs && lhs->pn_type == TOK_DEFSHARP) {
@@ -2145,12 +2112,45 @@ CheckDestructuring(JSContext *cx, BindData *data,
         }
     }
 
-out:
+    /*
+     * The catch/finally handler implementation in the interpreter assumes
+     * that any operation that introduces a new scope (like a "let" or "with"
+     * block) increases the stack depth. This way, it is possible to restore
+     * the scope chain based on stack depth of the handler alone. "let" with
+     * an empty destructuring pattern like in
+     *
+     *   let [] = 1;
+     *
+     * would violate this assumption as the there would be no let locals to
+     * store on the stack. To satisfy it we add an empty property to such
+     * blocks so that OBJ_BLOCK_COUNT(cx, blockObj), which gives the number of
+     * slots, would be always positive.
+     *
+     * Note that we add such a property even if the block has locals due to
+     * later let declarations in it. We optimize for code simplicity here,
+     * not the fastest runtime performance with empty [] or {}.
+     */
+    if (data &&
+        data->binder == BindLet &&
+        OBJ_BLOCK_COUNT(cx, tc->blockChain) == 0) {
+        ok = js_DefineNativeProperty(cx, tc->blockChain,
+                                     ATOM_TO_JSID(cx->runtime->
+                                                  atomState.emptyAtom),
+                                     JSVAL_VOID, NULL, NULL,
+                                     JSPROP_ENUMERATE | JSPROP_PERMANENT,
+                                     SPROP_HAS_SHORTID, 0, NULL);
+        if (!ok)
+            goto out;
+    }
+
+    ok = JS_TRUE;
+
+  out:
     if (fpvd.table.ops)
         JS_DHashTableFinish(&fpvd.table);
     return ok;
 
-no_var_name:
+  no_var_name:
     js_ReportCompileErrorNumber(cx, TS(tc->parseContext), pn, JSREPORT_ERROR,
                                 JSMSG_NO_VARIABLE_NAME);
     ok = JS_FALSE;
@@ -2993,7 +2993,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 data.pn = NULL;
                 data.op = JSOP_NOP;
                 data.binder = BindLet;
-                data.u.let.index = 0;
                 data.u.let.overflow = JSMSG_TOO_MANY_CATCH_VARS;
 
                 tt = js_GetToken(cx, ts);
@@ -3002,7 +3001,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                   case TOK_LB:
                   case TOK_LC:
                     pn3 = DestructuringExpr(cx, &data, tc, tt);
-                    if (!pn3 || !EnsureNonEmptyLet(cx, tc))
+                    if (!pn3)
                         return NULL;
                     break;
 #endif
@@ -3546,7 +3545,6 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     if (let) {
         JS_ASSERT(tc->blockChain == scopeStmt->u.blockObj);
         data.binder = BindLet;
-        data.u.let.index = OBJ_BLOCK_COUNT(cx, tc->blockChain);
         data.u.let.overflow = JSMSG_TOO_MANY_FUN_VARS;
     } else {
         data.binder = BindVarOrConst;
@@ -3619,10 +3617,6 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 tc->flags |= TCF_FUN_HEAVYWEIGHT;
         }
     } while (js_MatchToken(cx, ts, TOK_COMMA));
-#if JS_HAS_DESTRUCTURING
-    if (let && !EnsureNonEmptyLet(cx, tc))
-        return NULL;
-#endif
 
     pn->pn_pos.end = PN_LAST(pn)->pn_pos.end;
     return pn;
@@ -4157,7 +4151,6 @@ ComprehensionTail(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     data.pn = NULL;
     data.op = JSOP_NOP;
     data.binder = BindLet;
-    data.u.let.index = 0;
     data.u.let.overflow = JSMSG_ARRAY_INIT_TOO_BIG;
 
     rt = cx->runtime;

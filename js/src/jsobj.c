@@ -1975,11 +1975,6 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
                 continue;
             if (!(sprop->flags & SPROP_HAS_SHORTID))
                 continue;
-            if (sprop->id == ATOM_TO_JSID(cx->runtime->atomState.emptyAtom)) {
-                /* See comments before EnsureNonEmptyLet from jsparse.c. */
-                JS_ASSERT(sprop->shortid == 0);
-                continue;
-            }
             slot = depth + (uintN) sprop->shortid;
             JS_ASSERT(slot < (size_t) (fp->regs->sp - fp->spbase));
             if (!js_DefineNativeProperty(cx, obj, sprop->id,
