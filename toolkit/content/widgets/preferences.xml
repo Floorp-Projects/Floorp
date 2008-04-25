@@ -237,7 +237,8 @@
       
       <method name="reset">
         <body>
-          this.preferences.rootBranch.clearUserPref(this.name);
+          // defer reset until preference update
+          this.value = undefined;
         </body>
       </method>
 
@@ -314,9 +315,16 @@
         </getter>
         <setter>
         <![CDATA[
+          // Exit early if nothing to do.
           if (this.readonly || this.valueFromPreferences == val)
             return val;
-            
+
+          // The special value undefined means 'reset preference to default'.
+          if (val === undefined) {
+            this.preferences.rootBranch.clearUserPref(this.name);
+            return val;
+          }
+
           // Force a resync of preferences with value.
           switch (this.type) {
           case "int":
@@ -374,7 +382,7 @@
 
           if (!this.isElementEditable(aElement))
             return;
-          
+
           var rv = undefined;
           if (aElement.hasAttribute("onsyncfrompreference")) {
             // Value changed, synthesize an event
@@ -390,7 +398,10 @@
             }
           }
           var val = rv !== undefined ? rv : (this.instantApply ? this.valueFromPreferences : this.value);
-          
+          // if the preference is marked for reset, show default value in UI
+          if (val === undefined)
+            val = this.defaultValue;
+
           /**
            * Initialize a UI element property with a value. Handles the case 
            * where an element has not yet had a XBL binding attached for it and
