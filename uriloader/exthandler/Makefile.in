@@ -131,10 +131,6 @@ EXPORTS = \
 		$(OSDIR)/nsOSHelperAppService.h \
 			$(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-EXPORTS += $(OSDIR)/IApplicationAssociationRegistration.h
-endif
-
 XPIDLSRCS = \
 	nsCExternalHandlerService.idl	\
 	nsIExternalProtocolService.idl \
