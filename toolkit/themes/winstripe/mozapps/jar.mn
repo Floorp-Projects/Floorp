@@ -73,7 +73,7 @@ classic.jar:
         skin/classic/aero/mozapps/plugins/missingPlugin.css                (plugins/missingPlugin.css)
         skin/classic/aero/mozapps/plugins/pluginGeneric.png                (plugins/pluginGeneric-aero.png)
         skin/classic/aero/mozapps/plugins/pluginInstallerWizard.css        (plugins/pluginInstallerWizard.css)
-        skin/classic/aero/mozapps/profile/profileicon.png                  (profile/profileicon.png)
+        skin/classic/aero/mozapps/profile/profileicon.png                  (profile/profileicon-aero.png)
         skin/classic/aero/mozapps/profile/profileSelection.css             (profile/profileSelection.css)
         skin/classic/aero/mozapps/shared/itemFader.png                     (shared/itemFader.png)
         skin/classic/aero/mozapps/shared/itemSelected.png                  (shared/itemSelected.png)
