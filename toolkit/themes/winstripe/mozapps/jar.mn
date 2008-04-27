@@ -4,6 +4,7 @@ classic.jar:
 # NOTE: If you add a new file here, you'll need to add it to the aero
 # section at the bottom of this file
         skin/classic/mozapps/downloads/buttons.png                 (downloads/buttons.png)
+        skin/classic/mozapps/downloads/downloadButtons.png         (downloads/downloadButtons.png)
         skin/classic/mozapps/downloads/downloadIcon.png            (downloads/downloadIcon.png)
         skin/classic/mozapps/downloads/downloads.css               (downloads/downloads.css)
         skin/classic/mozapps/downloads/unknownContentType.css      (downloads/unknownContentType.css)
@@ -48,6 +49,7 @@ classic.jar:
 classic.jar:
 % skin mozapps classic/1.0 %skin/classic/aero/mozapps/ os=WINNT osversion>=6
         skin/classic/aero/mozapps/downloads/buttons.png                    (downloads/buttons-aero.png)
+        skin/classic/aero/mozapps/downloads/downloadButtons.png            (downloads/downloadButtons-aero.png)
         skin/classic/aero/mozapps/downloads/downloadIcon.png               (downloads/downloadIcon-aero.png)
         skin/classic/aero/mozapps/downloads/downloads.css                  (downloads/downloads.css)
         skin/classic/aero/mozapps/downloads/unknownContentType.css         (downloads/unknownContentType.css)
