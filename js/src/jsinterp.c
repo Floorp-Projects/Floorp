@@ -4350,6 +4350,7 @@ interrupt:
                             JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
                             sprop = PCVAL_TO_SPROP(entry->vword);
                             JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
+                            JS_ASSERT(!(sprop->attrs & JSPROP_SHARED));
                             JS_ASSERT(!SCOPE_IS_SEALED(OBJ_SCOPE(obj)));
 
                             if (scope->object == obj) {
