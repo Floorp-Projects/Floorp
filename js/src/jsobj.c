@@ -3484,11 +3484,6 @@ js_FindIdentifierBase(JSContext *cx, jsid id, JSPropCacheEntry *entry)
         return NULL;
     if (prop) {
         OBJ_DROP_PROPERTY(cx, pobj, prop);
-
-        JS_ASSERT_IF(entry,
-                     entry->kpc == ((PCVCAP_TAG(entry->vcap) > 1)
-                                    ? (jsbytecode *) JSID_TO_ATOM(id)
-                                    : cx->fp->regs->pc));
         return obj;
     }
 
@@ -3809,21 +3804,25 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                 SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
             JS_UNLOCK_SCOPE(cx, scope);
 
-            /* Don't clone a shared prototype property. */
+            /*
+             * Don't clone a shared prototype property. Don't fill it in the
+             * property cache either, since the JSOP_SETPROP/JSOP_SETNAME code
+             * in js_Interpret does not handle shared or prototype properties.
+             * Shared prototype properties require more hit qualification than
+             * the fast-path code for those ops, which is targeted on direct,
+             * slot-based properties.
+             */
             if (attrs & JSPROP_SHARED) {
+                if (entryp) {
+                    PCMETER(JS_PROPERTY_CACHE(cx).nofills++);
+                    *entryp = NULL;
+                }
+
                 if (SPROP_HAS_STUB_SETTER(sprop) &&
                     !(sprop->attrs & JSPROP_GETTER)) {
-                    if (entryp) {
-                        PCMETER(JS_PROPERTY_CACHE(cx).nofills++);
-                        *entryp = NULL;
-                    }
                     return JS_TRUE;
                 }
 
-                if (entryp) {
-                    js_FillPropertyCache(cx, obj, type, 0, protoIndex,
-                                         pobj, sprop, entryp);
-                }
                 return SPROP_SET(cx, sprop, obj, pobj, vp);
             }
 
@@ -3902,8 +3901,12 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
     if (!js_NativeSet(cx, obj, sprop, vp))
         return JS_FALSE;
 
-    if (entryp)
-        js_FillPropertyCache(cx, obj, type, 0, 0, obj, sprop, entryp);
+    if (entryp) {
+        if (!(attrs & JSPROP_SHARED))
+            js_FillPropertyCache(cx, obj, type, 0, 0, obj, sprop, entryp);
+        else
+            PCMETER(JS_PROPERTY_CACHE(cx).nofills++);
+    }
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_TRUE;
 
