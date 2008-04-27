@@ -67,7 +67,10 @@
   padding-top: 2px;
   padding-bottom: 2px;
   -moz-appearance: toolbarbutton;
+%ifdef XP_WIN
+% use standard menu colors on OS/2
   color: -moz-DialogText;
+%endif
   border: 1px solid transparent;
 }
 
