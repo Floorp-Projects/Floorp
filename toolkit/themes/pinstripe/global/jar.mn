@@ -160,6 +160,7 @@ classic.jar:
 +  skin/classic/global/icons/round-button-leftcap.png                 (icons/round-button-leftcap.png)
 +  skin/classic/global/icons/round-button-middle.png                  (icons/round-button-middle.png)
 +  skin/classic/global/icons/round-button-right.png                   (icons/round-button-right.png)
++  skin/classic/global/icons/sslWarning.png                           (icons/sslWarning.png)
 +  skin/classic/global/icons/white-checkbox-active.png                (icons/white-checkbox-active.png)
 +  skin/classic/global/icons/white-checkbox-checked.png               (icons/white-checkbox-checked.png)
 +  skin/classic/global/icons/white-checkbox.png                       (icons/white-checkbox.png)

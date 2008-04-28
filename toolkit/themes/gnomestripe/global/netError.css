@@ -50,6 +50,10 @@ ul {
   -moz-background-origin: content;
 }
 
+#errorPageContainer.certerror {
+  background-image: url("chrome://global/skin/icons/sslWarning.png");
+}
+
 body[dir="rtl"] #errorPageContainer {
   background-position: right 0;
 }
