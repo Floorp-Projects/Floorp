@@ -1614,6 +1614,7 @@ stack[chromedir="rtl"] > hbox > .tabs-alltabs-box-animate {
 }
 
 #sidebar-box .tabs-closebutton {
+  list-style-image: url("chrome://global/skin/icons/closeSidebar.png");
   margin-bottom: 0px !important;
   padding: 0px 2px 0px 2px !important;
 }
