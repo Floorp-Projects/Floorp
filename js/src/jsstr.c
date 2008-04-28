@@ -1462,7 +1462,7 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
         *sp++ = INT_TO_JSVAL((jsint)cx->regExpStatics.leftContext.length);
         *sp++ = STRING_TO_JSVAL(rdata->base.str);
 
-        ok = js_Invoke(cx, argc, invokevp, JSINVOKE_INTERNAL);
+        ok = js_Invoke(cx, argc, invokevp, 0);
         if (ok) {
             /*
              * NB: we count on the newborn string root to hold any string
