@@ -39,6 +39,7 @@
    -   Henrik Skupin <mozilla@hskupin.info>
    -   Jeff Walden <jwalden+code@mit.edu>
    -   Johnathan Nightingale <johnath@mozilla.com>
+   -   Ehsan Akhgari <ehsan.akhgari@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -131,6 +132,7 @@
           // Remove the "Try again" button for security exceptions, since it's
           // almost certainly useless.
           document.getElementById("errorTryAgain").style.display = "none";
+          document.getElementById("errorPageContainer").setAttribute("class", "certerror");
         }
         else {
           // Remove the override block for non-certificate errors.  CSS-hiding
