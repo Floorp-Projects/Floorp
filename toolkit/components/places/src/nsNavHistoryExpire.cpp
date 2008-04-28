@@ -245,6 +245,8 @@ nsNavHistoryExpire::ClearHistory()
   mozIStorageConnection* connection = mHistory->GetStorageConnection();
   NS_ENSURE_TRUE(connection, NS_ERROR_OUT_OF_MEMORY);
 
+  mozStorageTransaction transaction(connection, PR_FALSE);
+
   // reset frecency for all items that will _not_ be deleted
   // Note, we set frecency to -visit_count since we use that value in our
   // idle query to figure out which places to recalcuate frecency first.
@@ -289,6 +291,9 @@ nsNavHistoryExpire::ClearHistory()
   rv = mHistory->FixInvalidFrecenciesForExcludedPlaces();
   if (NS_FAILED(rv))
     NS_WARNING("failed to fix invalid frecencies");
+
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // XXX todo
   // forcibly call the "on idle" timer here to do a little work
