@@ -15,7 +15,7 @@
 /* ::::: Identity Indicator Styling ::::: */
 
 #urlbar[chromedir="ltr"] {
-  -moz-margin-start: 6px;
+  -moz-margin-start: 8px;
 }
 
 #identity-box[chromedir="ltr"] {
