@@ -604,6 +604,7 @@ nsSimplePageSequenceFrame::PrintNextPage()
     nsIFrame* conFrame = mCurrentPageFrame->GetFirstChild(nsnull);
     if (mSelectionHeight >= 0) {
       conFrame->SetPosition(conFrame->GetPosition() + nsPoint(0, -mYSelOffset));
+      nsContainerFrame::PositionChildViews(conFrame);
     }
 
     // cast the frame to be a page frame
