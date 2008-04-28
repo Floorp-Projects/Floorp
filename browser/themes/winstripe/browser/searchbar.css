@@ -89,12 +89,8 @@
   -moz-image-region: rect(0px 32px 16px 16px);
 }
 
-.search-go-button[disabled="true"] {
-  -moz-image-region: rect(0px, 48px, 16px, 32px);
-}
-
 .search-go-button:hover:active {
-  -moz-image-region: rect(0px, 64px, 16px, 48px);
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
 
 .searchbar-engine-menuitem[selected="true"] > .menu-iconic-text {
