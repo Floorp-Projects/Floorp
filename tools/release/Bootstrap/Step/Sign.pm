@@ -12,12 +12,12 @@ sub Execute {
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
     my $version = $config->Get(var => 'version');
-    my $rc = $config->Get(var => 'rc');
+    my $build = $config->Get(var => 'build');
     my $stagingServer = $config->Get(var => 'stagingServer');
 
-    my $logFile = 'win32_signing_rc' . $rc . '.log';
+    my $logFile = 'win32_signing_build' . $build . '.log';
     my $url = 'http://' . $stagingServer . '/pub/mozilla.org/' . $product . 
-     '/nightly/' .  $version . '-candidates/' . 'rc' . $rc . '/' . $logFile;
+     '/nightly/' .  $version . '-candidates/' . 'build' . $build . '/' . $logFile;
 
     $this->Log(msg => 'Looking for url ' . $url);
 

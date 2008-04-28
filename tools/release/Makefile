@@ -1,10 +1,10 @@
 PRODUCT = $(shell grep "^product[ \t]" bootstrap.cfg | sed -e 's/[^=]*= *//')
 VERSION = $(shell grep "^version[ \t]" bootstrap.cfg | sed -e 's/[^=]*= *//')
 OLD_VERSION = $(shell grep "^oldVersion[ \t]" bootstrap.cfg | sed -e 's/[^=]*= *//')
-OLD_RC = $(shell grep "^oldRc[ \t]" bootstrap.cfg | sed -e 's/[^=]*= *//')
+OLD_BUILD = $(shell grep "^oldBuild[ \t]" bootstrap.cfg | sed -e 's/[^=]*= *//')
 PRODUCT_TAG = $(shell grep "^productTag[ \t]" bootstrap.cfg | sed -e 's/[^=]*= *//')
-# extract the numeric rc value from the config file
-PRODUCT_RC = $(shell grep "^rc[ \t]" bootstrap.cfg | sed -e 's/[^0-9]*\([0-9]*\).*/\1/')
+# extract the numeric build value from the config file
+PRODUCT_BUILD = $(shell grep "^build[ \t]" bootstrap.cfg | sed -e 's/[^0-9]*\([0-9]*\).*/\1/')
 
 test:
 	for f in release t/test.pl `find . -name "*.pm"`; do \
@@ -33,9 +33,9 @@ stage:
 	# staging environment
 	mkdir -p /data/cltbld/${PRODUCT}-${VERSION}/batch1/stage
 	# download old builds, for l10n verify
-	cd /data && wget -nv --cut-dirs=3 -np -r ftp://ftp.mozilla.org/pub/mozilla.org/${PRODUCT}/nightly/${OLD_VERSION}-candidates/rc${OLD_RC}/* && mv ftp.mozilla.org/nightly/* /home/ftp/pub/${PRODUCT}/nightly/ && rm -rfv ftp.mozilla.org
+	cd /data && wget -nv --cut-dirs=3 -np -r ftp://ftp.mozilla.org/pub/mozilla.org/${PRODUCT}/nightly/${OLD_VERSION}-candidates/build${OLD_BUILD}/* && mv ftp.mozilla.org/nightly/* /home/ftp/pub/${PRODUCT}/nightly/ && rm -rfv ftp.mozilla.org
 	# download old release, for update verify
-	cd /data && wget -nv --cut-dirs=3 -np -r -e robots=off http://releases.mozilla.org/pub/mozilla.org/${PRODUCT}/releases/${OLD_VERSION}/ && mv releases.mozilla.org/releases/* /home/ftp/pub/${PRODUCT}/releases/ && rm -rfv releases.mozilla.org
+	cd /data && wget -nv --cut-dirs=3 -np -r -e robots=off http://stage.mozilla.org/pub/mozilla.org/${PRODUCT}/releases/${OLD_VERSION}/ && mv stage.mozilla.org/releases/* /home/ftp/pub/${PRODUCT}/releases/ && rm -rfv stage.mozilla.org
 
 
 cvsmirror: cvsmirror_mofo cvsmirror_main
@@ -48,10 +48,10 @@ cvsmirror_main:
 	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d ${PRODUCT_TAG}_RELEASE mozilla
 	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d ${PRODUCT_TAG}_RELEASE_l10n mozilla/tools/tinderbox-configs/
 	cvs -d /builds/cvsmirror.clean/l10n rtag -d ${PRODUCT_TAG}_RELEASE l10n
-	for ((rc=1; rc <= ${PRODUCT_RC}; rc++)); do \
-		cvs -d /builds/cvsmirror.clean/cvsroot rtag -d ${PRODUCT_TAG}_RC$$rc mozilla;\
-		cvs -d /builds/cvsmirror.clean/cvsroot rtag -d ${PRODUCT_TAG}_RC$$rc_l10n mozilla/tools/tinderbox-configs/;\
-		cvs -d /builds/cvsmirror.clean/l10n rtag -d ${PRODUCT_TAG}_RC$$rc l10n;\
+	for ((build=1; build <= ${PRODUCT_BUILD}; build++)); do \
+		cvs -d /builds/cvsmirror.clean/cvsroot rtag -d ${PRODUCT_TAG}_BUILD$$build mozilla;\
+		cvs -d /builds/cvsmirror.clean/cvsroot rtag -d ${PRODUCT_TAG}_BUILD$$build_l10n mozilla/tools/tinderbox-configs/;\
+		cvs -d /builds/cvsmirror.clean/l10n rtag -d ${PRODUCT_TAG}_BUILD$$build l10n;\
 	done
 
 cvsmirror_mofo:

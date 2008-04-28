@@ -152,9 +152,9 @@ sub GetFtpCandidateDir {
     my $bitsUnsigned = $args{'bitsUnsigned'};
 
     my $version = $this->Get(var => 'version');
-    my $rc = $this->Get(var => 'rc');
+    my $build = $this->Get(var => 'build');
 
-    my $candidateDir = CvsCatfile(GetFtpNightlyDir(), $version . '-candidates', 'rc' . $rc ) . '/';
+    my $candidateDir = CvsCatfile(GetFtpNightlyDir(), $version . '-candidates', 'build' . $build ) . '/';
 
     my $osFileMatch = $this->SystemInfo(var => 'osname');
 
@@ -187,10 +187,22 @@ sub GetVersion {
 
     my $version = $this->Get(var => 'version');
     my $longVersion = $version;
-    $longVersion =~ s/a([0-9]+)/ Alpha $1/;
-    $longVersion =~ s/b([0-9]+)/ Beta $1/;
+    $longVersion =~ s/a([0-9]+)$/ Alpha $1/;
+    $longVersion =~ s/b([0-9]+)$/ Beta $1/;
+    $longVersion =~ s/rc([0-9]+)$/ RC $1/;
 
     return ($longName) ? $longVersion : $version;
+}
+
+# Sometimes we need the application version to be different from what we "call"
+# the build, eg public release candidates for a major release (3.0 RC1). The var
+# appVersion is an optional definition used for $appName/config/version.txt, and
+# hence in the filenames coming off the tinderbox.
+sub GetAppVersion {
+    my $this = shift;
+
+    return ($this->Exists(var => 'appVersion')) ? 
+      $this->Get(var => 'appVersion') : $this->GetVersion(longName => 0);
 }
 
 sub GetOldVersion {
@@ -208,6 +220,15 @@ sub GetOldVersion {
     $oldLongVersion =~ s/b([0-9]+)/ Beta $1/;
 
     return ($longName) ? $oldLongVersion : $oldVersion;
+}
+
+# Like GetAppVersion(), but for the previous release 
+# eg we're doing 3.0RC2 and need to refer to 3.0RC1
+sub GetOldAppVersion {
+    my $this = shift;
+
+    return ($this->Exists(var => 'oldAppVersion')) ?
+      $this->Get(var => 'oldAppVersion') : $this->GetOldVersion(longName => 0);
 }
 
 ##
