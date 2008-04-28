@@ -949,8 +949,10 @@ NSMenuItem* MenuHelpersX::GetStandardEditMenuItem()
 // is nil, it is not on the stack. The non-nil value is the object that put it
 // on the stack first.
 static GeckoNSMenu* gPerformKeyEquivOnStack = nil;
-// When this variable is set to YES, don't do special command processing.
-static BOOL gMenuEffectsOnly = NO;
+// If this is YES, act on key equivs.
+static BOOL gActOnKeyEquiv = NO;
+// When this variable is set to NO, don't do special command processing.
+static BOOL gActOnSpecialCommands = YES;
 
 @implementation GeckoNSMenu
 
@@ -976,11 +978,19 @@ static BOOL gMenuEffectsOnly = NO;
 }
 
 
+-(void)actOnKeyEquivalent:(NSEvent *)theEvent
+{
+  gActOnKeyEquiv = YES;
+  [self performKeyEquivalent:theEvent];
+  gActOnKeyEquiv = NO;
+}
+
+
 - (void)performMenuUserInterfaceEffectsForEvent:(NSEvent*)theEvent
 {
-  gMenuEffectsOnly = YES;
+  gActOnSpecialCommands = NO;
   [self performKeyEquivalent:theEvent];
-  gMenuEffectsOnly = NO;
+  gActOnSpecialCommands = YES;
 }
 
 @end
@@ -1006,7 +1016,7 @@ static BOOL gMenuEffectsOnly = NO;
   // We want to avoid processing app-global commands when we are asked to
   // perform native menu effects only. This avoids sending events twice,
   // which can lead to major problems.
-  if (!gMenuEffectsOnly) {
+  if (gActOnSpecialCommands) {
     // Do special processing if this is for an app-global command.
     if (tag == eCommand_ID_About) {
       nsIContent* mostSpecificContent = sAboutItemContent;
@@ -1042,7 +1052,7 @@ static BOOL gMenuEffectsOnly = NO;
   // is no main window then the hidden window menu bar is up, even
   // if that isn't true for some reason we better play it safe if
   // there is no main window.
-  if (gPerformKeyEquivOnStack && [NSApp mainWindow])
+  if (gPerformKeyEquivOnStack && !gActOnKeyEquiv && [NSApp mainWindow])
     return;
 
   // given the commandID, look it up in our hashtable and dispatch to
