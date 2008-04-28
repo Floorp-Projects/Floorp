@@ -3979,7 +3979,7 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
                                kbType, 0, &deadKeyState, 1, &len, chars);
         if (noErr == err && len > 0)
           shiftedCmdChar = chars[0];
-      } else if (handle = (char**)::GetScriptManagerVariable(smKCHRCache)) {
+      } else if ((handle = (char**)::GetScriptManagerVariable(smKCHRCache))) {
         UInt32 state = 0;
         UInt32 keyCode = [aKeyEvent keyCode];
         unshiftedChar = ::KeyTranslate(handle, keyCode, &state) & charCodeMask;
@@ -4851,10 +4851,22 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
   // Perform native menu UI feedback even if we stop the event from propagating to it normally.
   // Recall that the menu system won't actually execute any commands for keyboard command invocations.
-  // By checking the class for the main menu we ensure that we don't do any of this for embedders.
+  //
+  // If this is a plugin, we do actually perform the action on keyboard commands. See bug 428047.
+  // If the action on plugins here changes the first responder, don't continue.
   NSMenu* mainMenu = [NSApp mainMenu];
-  if ([mainMenu isKindOfClass:[GeckoNSMenu class]])
-    [(GeckoNSMenu*)mainMenu performMenuUserInterfaceEffectsForEvent:theEvent];
+  if (mIsPluginView) {
+    if ([mainMenu isKindOfClass:[GeckoNSMenu class]])
+      [(GeckoNSMenu*)mainMenu actOnKeyEquivalent:theEvent];
+    else
+      [mainMenu performKeyEquivalent:theEvent];
+    if ([[self window] firstResponder] != self)
+      return YES;
+  }
+  else {
+    if ([mainMenu isKindOfClass:[GeckoNSMenu class]])
+      [(GeckoNSMenu*)mainMenu performMenuUserInterfaceEffectsForEvent:theEvent];
+  }
 
   // don't handle this if certain modifiers are down - those should
   // be sent as normal key up/down events and cocoa will do so automatically
