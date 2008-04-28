@@ -427,7 +427,8 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
 
 // Static member variable initialization
 PRUint32 nsXBLService::gRefCnt = 0;
- 
+PRBool nsXBLService::gAllowDataURIs = PR_FALSE;
+
 nsHashtable* nsXBLService::gClassTable = nsnull;
 
 JSCList  nsXBLService::gClassLRUList = JS_INIT_STATIC_CLIST(&nsXBLService::gClassLRUList);
@@ -446,6 +447,9 @@ nsXBLService::nsXBLService(void)
   if (gRefCnt == 1) {
     gClassTable = new nsHashtable();
   }
+  
+  nsContentUtils::AddBoolPrefVarCache("layout.debug.enable_data_xbl",
+                                      &gAllowDataURIs);
 }
 
 nsXBLService::~nsXBLService(void)
@@ -958,7 +962,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
     rv = nsContentUtils::
       CheckSecurityBeforeLoad(aBindingURI, aOriginPrincipal,
                               nsIScriptSecurityManager::ALLOW_CHROME,
-                              PR_TRUE,
+                              gAllowDataURIs,
                               nsIContentPolicy::TYPE_XBL,
                               aBoundDocument);
     NS_ENSURE_SUCCESS(rv, rv);
