@@ -314,16 +314,24 @@ public:
      **/
 
     /**
-     * Uses a solid color for drawing.
+     * Set a solid color to use for drawing.  This color is in the device color space
+     * and is not transformed.
      */
-    void SetColor(const gfxRGBA& c);
+    void SetDeviceColor(const gfxRGBA& c);
 
     /**
-     * Gets the current color.
+     * Gets the current color.  It's returned in the device color space.
      * returns PR_FALSE if there is something other than a color
      *         set as the current source (pattern, surface, etc)
      */
-    PRBool GetColor(gfxRGBA& c);
+    PRBool GetDeviceColor(gfxRGBA& c);
+
+    /**
+     * Set a solid color in the sRGB color space to use for drawing.
+     * If CMS is not enabled, the color is treated as a device-space color
+     * and this call is identical to SetDeviceColor().
+     */
+    void SetColor(const gfxRGBA& c);
 
     /**
      * Uses a surface for drawing. This is a shorthand for creating a

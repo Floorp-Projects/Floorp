@@ -645,8 +645,14 @@ gfxContext::SetColor(const gfxRGBA& c)
     cairo_set_source_rgba(mCairo, c.r, c.g, c.b, c.a);
 }
 
+void
+gfxContext::SetDeviceColor(const gfxRGBA& c)
+{
+    cairo_set_source_rgba(mCairo, c.r, c.g, c.b, c.a);
+}
+
 PRBool
-gfxContext::GetColor(gfxRGBA& c)
+gfxContext::GetDeviceColor(gfxRGBA& c)
 {
     return cairo_pattern_get_rgba(cairo_get_source(mCairo),
                                   &c.r,
