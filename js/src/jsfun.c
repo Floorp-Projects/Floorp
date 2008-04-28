@@ -1586,7 +1586,7 @@ fun_call(JSContext *cx, uintN argc, jsval *vp)
     invokevp[1] = OBJECT_TO_JSVAL(obj);
     memcpy(invokevp + 2, argv, argc * sizeof *argv);
 
-    ok = js_Invoke(cx, argc, invokevp, JSINVOKE_INTERNAL);
+    ok = js_Invoke(cx, argc, invokevp, 0);
     *vp = *invokevp;
     js_FreeStack(cx, mark);
     return ok;
@@ -1675,7 +1675,7 @@ fun_apply(JSContext *cx, uintN argc, jsval *vp)
         sp++;
     }
 
-    ok = js_Invoke(cx, argc, invokevp, JSINVOKE_INTERNAL);
+    ok = js_Invoke(cx, argc, invokevp, 0);
     *vp = *invokevp;
 out:
     js_FreeStack(cx, mark);

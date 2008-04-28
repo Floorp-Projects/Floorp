@@ -970,8 +970,7 @@ NoSuchMethod(JSContext *cx, uintN argc, jsval *vp, uint32 flags)
     if (!argsobj)
         return JS_FALSE;
     args[1] = OBJECT_TO_JSVAL(argsobj);
-    return js_InternalInvoke(cx, thisp, fval, flags | JSINVOKE_INTERNAL,
-                             2, args, &vp[0]);
+    return js_InternalInvoke(cx, thisp, fval, flags, 2, args, &vp[0]);
 }
 
 #endif /* JS_HAS_NO_SUCH_METHOD */
@@ -1352,7 +1351,7 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
     invokevp[1] = OBJECT_TO_JSVAL(obj);
     memcpy(invokevp + 2, argv, argc * sizeof *argv);
 
-    ok = js_Invoke(cx, argc, invokevp, flags | JSINVOKE_INTERNAL);
+    ok = js_Invoke(cx, argc, invokevp, flags);
     if (ok) {
         /*
          * Store *rval in the a scoped local root if a scope is open, else in
