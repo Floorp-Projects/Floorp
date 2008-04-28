@@ -205,7 +205,7 @@
               command="placesCmd_show:info"
               label="&cmd.properties.label;" 
               accesskey="&cmd.properties.accesskey;"
-              selection="bookmark|folder"
+              selection="bookmark|folder|query"
               forcehideselection="livemarkChild"/>
   </popup>
 

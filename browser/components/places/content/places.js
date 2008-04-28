@@ -655,7 +655,7 @@ var PlacesOrganizer = {
                                     forceReadOnly: true });
       }
       else {
-        var itemId = aSelectedNode.itemId;
+        var itemId = PlacesUtils.getConcreteItemId(aSelectedNode);
         gEditItemOverlay.initPanel(itemId != -1 ? itemId :
                                    PlacesUtils._uri(aSelectedNode.uri),
                                    { hiddenRows: ["folderPicker"] });
@@ -1437,14 +1437,6 @@ var PlacesQueryBuilder = {
     // update collection type and get folders
     var folders = [];
     switch (id) {
-      case "scopeBarToolbar":
-        PlacesSearchBox.filterCollection = "collection";
-        folders.push(PlacesUtils.toolbarFolderId);
-        break;
-      case "scopeBarMenu":
-        PlacesSearchBox.filterCollection = "collection";
-        folders.push(PlacesUtils.bookmarksMenuFolderId);
-        break;
       case "scopeBarHistory":
         PlacesSearchBox.filterCollection = "history";
         folders = [];
