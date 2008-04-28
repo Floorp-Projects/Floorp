@@ -1192,7 +1192,6 @@ tabpanels {
 
 .tabbrowser-tab[selected="true"] {
   margin-bottom: 0px;
-  font-weight: bold;
 }
 
 .tab-icon-image {
