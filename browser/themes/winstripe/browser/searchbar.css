@@ -2,6 +2,9 @@
   min-height: 22px;
   width: 6em;
   min-width: 6em;
+}
+
+.searchbar-textbox:-moz-system-metric(windows-default-theme) {
   -moz-appearance: none;
   border-width: 1px;
   -moz-border-top-colors: ThreeDShadow;
