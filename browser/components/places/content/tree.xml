@@ -440,7 +440,7 @@
               return this._cachedInsertionPoint = null;
           }
 
-          var orientation = Ci.nsITreeView.DROP_AFTER;
+          var orientation = Ci.nsITreeView.DROP_BEFORE;
           // If there is no selection, insert at the end of the container. 
           if (!this.hasSelection) {
             var index = this.view.rowCount - 1;
@@ -451,9 +451,9 @@
 
           // This is a two-part process. The first part is determining the drop
           // orientation.
-          // * The default orientation is to drop _after_ the selected item. 
-          // * If the selected item is an open container, the default 
-          //   orientation is to drop _into_ that container.
+          // * The default orientation is to drop _before_ the selected item.
+          // * If the selected item is a container, the default orientation
+          //   is to drop _into_ that container.
           //
           // Warning: It may be tempting to use tree indexes in this code, but
           //          you must not, since the tree is nested and as your tree 
@@ -468,18 +468,18 @@
           var min = { }, max = { };
           selection.getRangeAt(rc - 1, min, max);
           
-          // If the sole selection is an open container, insert into it rather 
-          // than adjacent to it. Note that this only applies to _single_ 
-          // selections - if the last element within a multi-selection is an
-          // open folder, insert _adjacent_ to the selection.
+          // If the sole selection is a container, and we are not in
+          // a flatlist, insert into it.
+          // Note that this only applies to _single_ selections,
+          // if the last element within a multi-selection is a
+          // container, insert _adjacent_ to the selection.
           //
           // If the sole selection is the bookmarks toolbar folder, we insert
           // into it even if it is not opened
           var itemId =
             PlacesUtils.getConcreteItemId(resultView.nodeForTreeIndex(max.value));
           if (selection.count == 1 && resultView.isContainer(max.value) &&
-              (resultView.isContainerOpen(max.value) ||
-               itemId == PlacesUtils.bookmarksMenuFolderId))
+              !this.flatList)
             orientation = Ci.nsITreeView.DROP_ON;
 
           this._cachedInsertionPoint =
