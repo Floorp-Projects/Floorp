@@ -187,20 +187,23 @@ ifneq (1_,$(if $(CROSS_COMPILE),1,0)_$(UNIVERSAL_BINARY))
 ifdef MOZ_PSM
 SIGN_NSS		= @echo signing nss libraries;
 
+NSS_DLL_SUFFIX	= $(DLL_SUFFIX)
 ifdef UNIVERSAL_BINARY
 NATIVE_ARCH	= $(shell uname -p | sed -e s/powerpc/ppc/)
 NATIVE_DIST	= $(DIST)/../../$(NATIVE_ARCH)/dist
 SIGN_CMD	= $(NATIVE_DIST)/bin/run-mozilla.sh $(NATIVE_DIST)/bin/shlibsign -v -i
 else
 ifeq ($(OS_ARCH),OS2)
+# uppercase extension to get the correct output file from shlibsign
+NSS_DLL_SUFFIX	= .DLL
 SIGN_CMD	= $(topsrcdir)/toolkit/mozapps/installer/os2/sign.cmd $(DIST)
 else
 SIGN_CMD	= $(RUN_TEST_PROGRAM) $(DIST)/bin/shlibsign -v -i
 endif
 endif
 
-SOFTOKN		= $(DIST)/$(STAGEPATH)$(MOZ_PKG_APPNAME)$(_BINPATH)/$(DLL_PREFIX)softokn3$(DLL_SUFFIX)
-FREEBL		= $(DIST)/$(STAGEPATH)$(MOZ_PKG_APPNAME)$(_BINPATH)/$(DLL_PREFIX)freebl3$(DLL_SUFFIX)
+SOFTOKN		= $(DIST)/$(STAGEPATH)$(MOZ_PKG_APPNAME)$(_BINPATH)/$(DLL_PREFIX)softokn3$(NSS_DLL_SUFFIX)
+FREEBL		= $(DIST)/$(STAGEPATH)$(MOZ_PKG_APPNAME)$(_BINPATH)/$(DLL_PREFIX)freebl3$(NSS_DLL_SUFFIX)
 FREEBL_32FPU	= $(DIST)/$(STAGEPATH)$(MOZ_PKG_APPNAME)$(_BINPATH)/$(DLL_PREFIX)freebl_32fpu_3$(DLL_SUFFIX)
 FREEBL_32INT	= $(DIST)/$(STAGEPATH)$(MOZ_PKG_APPNAME)$(_BINPATH)/$(DLL_PREFIX)freebl_32int_3$(DLL_SUFFIX)
 FREEBL_32INT64	= $(DIST)/$(STAGEPATH)$(MOZ_PKG_APPNAME)$(_BINPATH)/$(DLL_PREFIX)freebl_32int64_3$(DLL_SUFFIX)
