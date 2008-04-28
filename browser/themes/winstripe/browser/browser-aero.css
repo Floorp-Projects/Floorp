@@ -14,39 +14,39 @@
 
 /* ::::: Identity Indicator Styling ::::: */
 
-#urlbar[chromedir="ltr"] {
+#urlbar[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
   -moz-margin-start: 8px;
 }
 
-#identity-box[chromedir="ltr"] {
+#identity-box[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
   -moz-margin-start: -6px;
 }
 
-#identity-box[chromedir="ltr"] > hbox {
+#identity-box[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
   margin: -4px 0;
   padding: 3px 2px 3px 4px;
   background-position: 0 3px;
   -moz-border-radius-topleft: 14px;
   -moz-border-radius-bottomleft: 14px;
 }
-#identity-box:hover[chromedir="ltr"] > hbox {
+#identity-box:hover[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
   background-position: 0 -57px;
 }
-#identity-box.verifiedDomain[chromedir="ltr"] > hbox {
+#identity-box.verifiedDomain[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
   background-position: 0 -117px;
 }
-#identity-box.verifiedDomain:hover[chromedir="ltr"] > hbox {
+#identity-box.verifiedDomain:hover[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
   background-position: 0 -177px;
 }
-#identity-box.verifiedIdentity[chromedir="ltr"] > hbox {
+#identity-box.verifiedIdentity[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
   background-position: 0 -237px;
 }
-#identity-box.verifiedIdentity:hover[chromedir="ltr"] > hbox {
+#identity-box.verifiedIdentity:hover[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
   background-position: 0 -297px;
 }
 
 /* Bug 413060, comment 14: Match #identity-box's -moz-margin-start, less 1px */
-#identity-popup[chromedir="ltr"] {
+#identity-popup[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
   -moz-margin-start: 5px;
 }
 

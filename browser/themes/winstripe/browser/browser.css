@@ -1045,6 +1045,9 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
 #urlbar {
   width: 7em;
   min-width: 7em;
+}
+
+#urlbar:-moz-system-metric(windows-default-theme) {
   -moz-appearance: none;
   border-width: 1px;
   -moz-border-top-colors: ThreeDShadow;
@@ -1778,7 +1781,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 /* ::::: Identity Indicator Styling ::::: */
 /* Location bar visuals*/
 
-#urlbar[chromedir="ltr"] {
+#urlbar[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
   -moz-margin-start: 6px;
 }
 
@@ -1790,13 +1793,13 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   overflow: -moz-hidden-unscrollable;
 }
 
-#identity-box[chromedir="ltr"] {
+#identity-box[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
   -moz-margin-start: -4px;
   border-right: 1px solid ThreeDShadow;
 }
 
-#identity-box.verifiedDomain[chromedir="ltr"] ,
-#identity-box.verifiedIdentity[chromedir="ltr"] {
+#identity-box.verifiedDomain[chromedir="ltr"]:-moz-system-metric(windows-default-theme) ,
+#identity-box.verifiedIdentity[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
   border-right: 1px solid ThreeDDarkShadow;
 }
 
@@ -1807,9 +1810,13 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   border-right: 2px solid;
   -moz-border-left-colors: ThreeDShadow rgba(255, 255, 255, 0.2);
   -moz-border-right-colors: ThreeDShadow rgba(255, 255, 255, 0.2);
-  padding: 0 3px;
+  padding: 0 2px;
 }
-#identity-box[chromedir="ltr"] > hbox {
+#identity-box[chromedir="ltr"]:not(:-moz-system-metric(windows-default-theme)) > hbox {
+  border-left: 1px solid;
+  -moz-border-left-colors: rgba(255, 255, 255, 0.2);
+}
+#identity-box[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
   margin: -11px -10px -11px 0;
   padding: 10px 12px 10px 4px;
   border-top: 1px solid ThreeDDarkShadow;
@@ -1827,6 +1834,9 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   -moz-border-right-colors: ThreeDShadow rgba(255, 255, 255, 0.4);
 }
 #identity-box:hover[chromedir="ltr"] > hbox {
+  -moz-border-left-colors: rgba(255, 255, 255, 0.4);
+}
+#identity-box:hover[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
   background-position: 0 -50px;
   -moz-border-left-colors: ThreeDDarkShadow rgba(255, 255, 255, 0.6);
 }
@@ -1835,14 +1845,14 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   background-position: 0 -120px;
   color: white;
 }
-#identity-box.verifiedDomain[chromedir="ltr"] > hbox {
+#identity-box.verifiedDomain[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
   background-position: 0 -110px;
 }
 
 #identity-box.verifiedDomain:hover > hbox {
   background-position: 0 -180px;
 }
-#identity-box.verifiedDomain:hover[chromedir="ltr"] > hbox {
+#identity-box.verifiedDomain:hover[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
   background-position: 0 -170px;
 }
 
@@ -1850,14 +1860,14 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   background-position: 0 -240px;
   color: white;
 }
-#identity-box.verifiedIdentity[chromedir="ltr"] > hbox {
+#identity-box.verifiedIdentity[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
   background-position: 0 -230px;
 }
 
 #identity-box.verifiedIdentity:hover > hbox {
   background-position: 0 -300px;
 }
-#identity-box.verifiedIdentity:hover[chromedir="ltr"] > hbox {
+#identity-box.verifiedIdentity:hover[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
   background-position: 0 -290px;
 }
 
@@ -1962,7 +1972,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 /* Bug 413060, comment 14: Match #identity-box's -moz-margin-start, less 1px */
-#identity-popup[chromedir="ltr"] {
+#identity-popup[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
   -moz-margin-start: 3px;
 }
 
