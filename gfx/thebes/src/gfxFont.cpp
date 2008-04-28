@@ -1400,7 +1400,7 @@ HasSyntheticBold(gfxTextRun *aRun, PRUint32 aStart, PRUint32 aLength)
 static PRBool
 HasNonOpaqueColor(gfxContext *aContext, gfxRGBA& aCurrentColor)
 {
-    if (aContext->GetColor(aCurrentColor)) {
+    if (aContext->GetDeviceColor(aCurrentColor)) {
         if (aCurrentColor.a < 1.0 && aCurrentColor.a > 0.0) {
             return PR_TRUE;
         }
