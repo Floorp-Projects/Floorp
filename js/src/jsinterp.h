@@ -103,7 +103,7 @@ typedef struct JSInlineFrame {
 
 /* JS stack frame flags. */
 #define JSFRAME_CONSTRUCTING   0x01 /* frame is for a constructor invocation */
-#define JSFRAME_INTERNAL       0x02 /* internal call, not invoked by a script */
+#define JSFRAME_COMPUTED_THIS  0x02 /* frame.thisp was computed already */
 #define JSFRAME_ASSIGNING      0x04 /* a complex (not simplex JOF_ASSIGNING) op
                                        is currently assigning to a property */
 #define JSFRAME_DEBUGGER       0x08 /* frame for JS_EvaluateInStackFrame */
@@ -114,7 +114,6 @@ typedef struct JSInlineFrame {
 #define JSFRAME_POP_BLOCKS    0x100 /* scope chain contains blocks to pop */
 #define JSFRAME_GENERATOR     0x200 /* frame belongs to generator-iterator */
 #define JSFRAME_ROOTED_ARGV   0x400 /* frame.argv is rooted by the caller */
-#define JSFRAME_COMPUTED_THIS 0x800 /* frame.thisp was computed already */
 
 #define JSFRAME_OVERRIDE_SHIFT 24   /* override bit-set params; see jsfun.c */
 #define JSFRAME_OVERRIDE_BITS  8
@@ -426,7 +425,6 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags);
  * See jsfun.h for the latter four and flag renaming macros.
  */
 #define JSINVOKE_CONSTRUCT      JSFRAME_CONSTRUCTING
-#define JSINVOKE_INTERNAL       JSFRAME_INTERNAL
 #define JSINVOKE_ITERATOR       JSFRAME_ITERATOR
 
 /*
