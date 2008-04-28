@@ -343,6 +343,8 @@ _cairo_quartz_font_create_toy(cairo_toy_font_face_t *toy_face,
     }
 
     face = cairo_quartz_font_face_create_for_cgfont (cgFont);
+    CGFontRelease (cgFont);
+
     if (face->status)
 	return face->status;
 
@@ -780,8 +782,13 @@ cairo_quartz_font_face_create_for_atsu_font_id (ATSUFontID font_id)
 {
     ATSFontRef atsFont = FMGetATSFontRefFromFont (font_id);
     CGFontRef cgFont = CGFontCreateWithPlatformFont (&atsFont);
+    cairo_font_face_t *ff;
 
-    return cairo_quartz_font_face_create_for_cgfont (cgFont);
+    ff = cairo_quartz_font_face_create_for_cgfont (cgFont);
+
+    CGFontRelease (cgFont);
+
+    return ff;
 }
 
 /* This is the old name for the above function, exported for compat purposes */
