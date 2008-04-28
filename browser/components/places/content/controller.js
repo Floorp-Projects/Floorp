@@ -164,6 +164,8 @@ PlacesController.prototype = {
       var selectedNode = this._view.selectedNode;
       if (selectedNode) {
         if (PlacesUtils.nodeIsFolder(selectedNode) ||
+            (PlacesUtils.nodeIsQuery(selectedNode) &&
+             selectedNode.itemId != -1) ||
             (PlacesUtils.nodeIsBookmark(selectedNode) &&
             !PlacesUtils.nodeIsLivemarkItem(selectedNode)))
           return true;
@@ -646,9 +648,10 @@ PlacesController.prototype = {
       return;
 
     if (PlacesUtils.nodeIsFolder(node))
-      PlacesUIUtils.showFolderProperties(node.itemId);
-    else if (PlacesUtils.nodeIsBookmark(node))
-      PlacesUIUtils.showBookmarkProperties(node.itemId);
+      PlacesUIUtils.showItemProperties(node.itemId, "folder");
+    else if (PlacesUtils.nodeIsBookmark(node) ||
+             PlacesUtils.nodeIsQuery(node))
+      PlacesUIUtils.showItemProperties(node.itemId, "bookmark");
   },
 
   /**

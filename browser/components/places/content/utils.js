@@ -425,7 +425,7 @@ var PlacesUIUtils = {
    * @return true if any transaction has been performed.
    *
    * Notes:
-   *  - the location, description and "load in sidebar" fields are
+   *  - the location, description and "loadInSidebar" fields are
    *    visible only if there is no initial URI (aURI is null).
    *  - When aDefaultInsertionPoint is not set, the dialog defaults to the
    *    bookmarks root folder.
@@ -493,7 +493,7 @@ var PlacesUIUtils = {
     var info = {
       action: "add",
       type: "bookmark",
-      hiddenRows: ["location", "description", "load in sidebar"]
+      hiddenRows: ["location", "description", "loadInSidebar"]
     };
     if (aURI)
       info.uri = aURI;
@@ -640,33 +640,19 @@ var PlacesUIUtils = {
   },
 
   /**
-   * Opens the bookmark properties panel for a given bookmark identifier.
+   * Opens the properties dialog for a given item identifier.
    *
-   * @param aId
-   *        bookmark identifier for which the properties are to be shown
+   * @param aItemId
+   *        item identifier for which the properties are to be shown
+   * @param aType
+   *        item type, either "bookmark" or "folder"
    * @return true if any transaction has been performed.
    */
-  showBookmarkProperties: function PU_showBookmarkProperties(aId) {
+  showItemProperties: function PU_showItemProperties(aItemId, aType) {
     var info = {
       action: "edit",
-      type: "bookmark",
-      bookmarkId: aId
-    };
-    return this._showBookmarkDialog(info);
-  },
-
-  /**
-   * Opens the folder properties panel for a given folder ID.
-   *
-   * @param aId
-   *        an integer representing the ID of the folder to edit
-   * @return true if any transaction has been performed.
-   */
-  showFolderProperties: function PU_showFolderProperties(aId) {
-    var info = {
-      action: "edit",
-      type: "folder",
-      folderId: aId
+      type: aType,
+      itemId: aItemId
     };
     return this._showBookmarkDialog(info);
   },
