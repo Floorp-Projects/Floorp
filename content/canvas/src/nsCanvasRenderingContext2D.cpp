@@ -2200,9 +2200,6 @@ nsCanvasRenderingContext2D::CairoSurfaceFromElement(nsIDOMElement *imgElt,
         nsCOMPtr<nsICanvasElement> canvas = do_QueryInterface(imgElt);
         nsCOMPtr<nsINode> node = do_QueryInterface(imgElt);
         if (canvas && node) {
-            if (canvas->CountContexts() == 0)
-                return NS_ERROR_NOT_AVAILABLE;
-
             PRUint32 w, h;
             rv = canvas->GetSize(&w, &h);
             NS_ENSURE_SUCCESS(rv, rv);
