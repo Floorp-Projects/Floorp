@@ -265,11 +265,7 @@ public:
         return mSpaceGlyph;
     };
 
-    PRBool IsValid() { GetMetrics(); return mIsValid; }
     FontEntry *GetFontEntry() { return mFontEntry; }
-
-    static already_AddRefed<gfxWindowsFont>
-    GetOrMakeFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle);
 
 protected:
     HFONT MakeHFONT();
@@ -292,7 +288,6 @@ private:
     LOGFONTW mLogFont;
 
     nsRefPtr<FontEntry> mFontEntry;
-    PRPackedBool mIsValid;
     
     virtual PRBool SetupCairoFont(gfxContext *aContext);
 };

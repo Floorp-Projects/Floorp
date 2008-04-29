@@ -84,7 +84,7 @@ public:
      * code points they support as well as looking at things like the font
      * family, style, weight, etc.
      */
-    already_AddRefed<gfxWindowsFont> FindFontForChar(PRUint32 aCh, gfxWindowsFont *aFont);
+    FontEntry *FindFontForChar(PRUint32 aCh, gfxWindowsFont *aFont);
 
     /* Find a FontFamily/FontEntry object that represents a font on your system given a name */
     FontFamily *FindFontFamily(const nsAString& aName);
