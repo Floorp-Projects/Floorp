@@ -1990,7 +1990,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 /* Popup Bounding Box */
 #identity-popup {
-  margin-top: 1px;
   -moz-appearance: menupopup;
   color: MenuText;
 }
