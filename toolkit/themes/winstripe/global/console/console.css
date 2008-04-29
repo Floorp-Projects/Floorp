@@ -49,7 +49,7 @@
 /* ::::: console rows ::::: */
 
 .console-row {
-  border-bottom: 1px dotted threedshadow;
+  border-bottom: 1px solid ThreeDLightShadow;
   padding: 4px 0px;
 }
 
