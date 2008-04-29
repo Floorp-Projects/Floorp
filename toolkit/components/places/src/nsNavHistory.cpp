@@ -928,9 +928,48 @@ nsNavHistory::CreateTriggers()
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = createTriggersTransaction.Commit();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  // we are creating 1 trigger on moz_bookmarks to remove unused keywords
+  nsCOMPtr<mozIStorageStatement> detectRemoveKeywordsTrigger;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT name FROM sqlite_master WHERE type = 'trigger' AND "
+      "name = 'moz_bookmarks_beforedelete_v1_trigger'"),
+    getter_AddRefs(detectRemoveKeywordsTrigger));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  hasTrigger = PR_FALSE;
+  rv = detectRemoveKeywordsTrigger->ExecuteStep(&hasTrigger);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = detectRemoveKeywordsTrigger->Reset();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!hasTrigger) {
+    // Remove dangling keywords.
+    // We must remove old keywords that have not been deleted with bookmarks.
+    // See bug 421180 for details.
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "DELETE FROM moz_keywords WHERE id IN ("
+          "SELECT k.id FROM moz_keywords k "
+          "LEFT OUTER JOIN moz_bookmarks b ON b.keyword_id = k.id "
+          "WHERE b.id IS NULL)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // moz_bookmarks_beforedelete_v1_trigger
+    // Remove keywords if there are no more bookmarks using them.
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "CREATE TRIGGER IF NOT EXISTS moz_bookmarks_beforedelete_v1_trigger "
+      "BEFORE DELETE ON moz_bookmarks FOR EACH ROW "
+      "WHEN OLD.keyword_id NOT NULL "
+      "BEGIN "
+        "DELETE FROM moz_keywords WHERE id = OLD.keyword_id AND "
+        " NOT EXISTS (SELECT id FROM moz_bookmarks "
+          "WHERE keyword_id = OLD.keyword_id AND id <> OLD.id LIMIT 1); "
+      "END"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   return NS_OK;
 }
 
