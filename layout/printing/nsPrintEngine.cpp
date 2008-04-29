@@ -2201,6 +2201,27 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
               {
                 startRect.y -= totalMargin.top;
                 endRect.y   -= totalMargin.top;
+
+                // Clip out selection regions above the top of the first page
+                if (startRect.y < 0) {
+                  // Reduce height to be the height of the positive-territory
+                  // region of original rect
+                  startRect.height = PR_MAX(0, startRect.YMost());
+                  startRect.y = 0;
+                }
+                if (endRect.y < 0) {
+                  // Reduce height to be the height of the positive-territory
+                  // region of original rect
+                  endRect.height = PR_MAX(0, endRect.YMost());
+                  endRect.y = 0;
+                }
+                NS_ASSERTION(endRect.y >= startRect.y,
+                             "Selection end point should be after start point");
+                NS_ASSERTION(startRect.height >= 0,
+                             "rect should have non-negative height.");
+                NS_ASSERTION(endRect.height >= 0,
+                             "rect should have non-negative height.");
+
                 nscoord selectionHgt = endRect.y + endRect.height - startRect.y;
                 // XXX This is temporary fix for printing more than one page of a selection
                 pageSequence->SetSelectionHeight(startRect.y * aPO->mZoomRatio,
