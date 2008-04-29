@@ -4999,14 +4999,19 @@ nsDOMConstructor::Create(const PRUnichar* aName,
                          nsDOMConstructor** aResult)
 {
   *aResult = nsnull;
-  if (!aOwner->IsOuterWindow()) {
-    *aResult = new nsDOMConstructor(aName, aNameStruct, aOwner);
-  } else if (!nsContentUtils::CanCallerAccess(aOwner)) {
+  // Prevent creating a constructor if
+  // - aOwner is inner window which doesn't have outer window or
+  // - outer window doesn't have inner window or
+  // - caller can't access outer window's inner window.
+  nsPIDOMWindow* outerWindow = aOwner->GetOuterWindow();
+  nsPIDOMWindow* currentInner =
+    outerWindow ? outerWindow->GetCurrentInnerWindow() : nsnull;
+  if (!currentInner ||
+      (aOwner != currentInner &&
+       !nsContentUtils::CanCallerAccess(currentInner))) {
     return NS_ERROR_DOM_SECURITY_ERR;
-  } else {
-    *aResult =
-      new nsDOMConstructor(aName, aNameStruct, aOwner->GetCurrentInnerWindow());
   }
+  *aResult = new nsDOMConstructor(aName, aNameStruct, currentInner);
   NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*aResult);
   return NS_OK;
@@ -8938,7 +8943,7 @@ nsHTMLPluginObjElementSH::SetupProtoChain(nsIXPConnectWrappedNative *wrapper,
   if (pi_proto && JS_GET_CLASS(cx, pi_proto) != sObjectClass) {
     // The plugin wrapper has a proto that's not Object.prototype, set
     // 'pi.__proto__.__proto__' to the original 'this.__proto__'
-    if (!::JS_SetPrototype(cx, pi_proto, my_proto)) {
+    if (pi_proto != my_proto && !::JS_SetPrototype(cx, pi_proto, my_proto)) {
       return NS_ERROR_UNEXPECTED;
     }
   } else {

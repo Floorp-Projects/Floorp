@@ -48,6 +48,7 @@
 #include "nsAutoPtr.h"
 #include "nsISupports.h"
 #include "nsBaseWidget.h"
+#include "nsIPluginInstanceOwner.h"
 #include "nsIPluginWidget.h"
 #include "nsIScrollableView.h"
 #include "nsWeakPtr.h"
@@ -345,6 +346,7 @@ public:
   NS_IMETHOD        GetPluginClipRect(nsRect& outClipRect, nsPoint& outOrigin, PRBool& outWidgetVisible);
   NS_IMETHOD        StartDrawPlugin();
   NS_IMETHOD        EndDrawPlugin();
+  NS_IMETHOD        SetPluginInstanceOwner(nsIPluginInstanceOwner* aInstanceOwner);
   
   NS_IMETHOD        GetHasTransparentBackground(PRBool& aTransparent);
   NS_IMETHOD        SetHasTransparentBackground(PRBool aTransparent);
@@ -365,6 +367,8 @@ public:
 
   NS_IMETHOD BeginSecureKeyboardInput();
   NS_IMETHOD EndSecureKeyboardInput();
+
+  void              HidePlugin();
 
 protected:
 
@@ -406,6 +410,7 @@ protected:
   PRPackedBool          mInSetFocus;
 
   nsPluginPort          mPluginPort;
+  nsIPluginInstanceOwner* mPluginInstanceOwner; // [WEAK]
 };
 
 void NS_InstallPluginKeyEventsHandler();

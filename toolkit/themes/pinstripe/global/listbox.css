@@ -57,7 +57,8 @@ listbox {
 
 .listcell-label {
   margin: 0px !important;
-  padding: 0px 0px 1px 4px;
+  padding-bottom: 1px;
+  -moz-padding-start: 4px;
   white-space: nowrap;
 }
 
@@ -104,11 +105,13 @@ listheader[sortable="true"]:hover:active {
   -moz-border-right-colors: ThreeDShadow;
   -moz-border-bottom-colors: ThreeDShadow;
   -moz-border-left-colors: ThreeDShadow -moz-Dialog;
-  padding: 1px 4px 0px 5px;
+  padding-top: 1px;
+  -moz-padding-start: 5px;
+  -moz-padding-end: 4px;
 }
 
 .listheader-icon {
-  margin-right: 2px;
+  -moz-margin-end: 2px;
 }
 
 .listheader-label {
@@ -134,12 +137,13 @@ listheader[sortable="true"]:hover:active {
 
 .listcell-label {
   margin: 0px !important;
-  padding: 0px 0px 1px 4px;
+  padding-bottom: 1px;
+  -moz-padding-start: 4px;
   white-space: nowrap;
 }
 
 .listcell-icon {
-  margin-right: 2px;
+  -moz-margin-end: 2px;
 }
 
 .listcell-label[disabled="true"] {

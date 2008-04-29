@@ -87,7 +87,7 @@ nsURLFormatterService.prototype = {
       if (aKey in _this._defaults) // supported defaults
         return _this._defaults[aKey]();
       Cu.reportError("formatURL: Couldn't find value for key: " + aKey);
-      return '';
+      return aMatch;
     }
     return aFormat.replace(/%([A-Z]+)%/g, replacementCallback);
   },

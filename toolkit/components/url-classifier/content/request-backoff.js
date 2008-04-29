@@ -49,41 +49,66 @@ const HTTP_SEE_OTHER             = 303;
 const HTTP_TEMPORARY_REDIRECT    = 307;
 
 /**
- * @param maxErrors Number the number of errors needed to trigger backoff
- * @param errorPeriod Number time (ms) in which maxErros have to occur to
+ * @param maxErrors Number of times to request before backing off.
+ * @param retryIncrement Time (ms) for each retry before backing off.
+ * @param maxRequests Number the number of requests needed to trigger backoff
+ * @param requestPeriod Number time (ms) in which maxRequests have to occur to
  *     trigger the backoff behavior
  * @param timeoutIncrement Number time (ms) the starting timeout period
  *     we double this time for consecutive errors
  * @param maxTimeout Number time (ms) maximum timeout period
  */
-function RequestBackoff(maxErrors, errorPeriod, timeoutIncrement, maxTimeout) {
+function RequestBackoff(maxErrors, retryIncrement,
+                        maxRequests, requestPeriod,
+                        timeoutIncrement, maxTimeout) {
   this.MAX_ERRORS_ = maxErrors;
-  this.ERROR_PERIOD_ = errorPeriod;
+  this.RETRY_INCREMENT_ = retryIncrement;
+  this.MAX_REQUESTS_ = maxRequests;
+  this.REQUEST_PERIOD_ = requestPeriod;
   this.TIMEOUT_INCREMENT_ = timeoutIncrement;
   this.MAX_TIMEOUT_ = maxTimeout;
 
-  // Queue of ints keeping the time of errors.
-  this.errorTimes_ = [];
+  // Queue of ints keeping the time of all requests
+  this.requestTimes_ = [];
+
+  this.numErrors_ = 0;
   this.errorTimeout_ = 0;
   this.nextRequestTime_ = 0;
-  this.backoffTriggered_ = false;
 }
 
 /**
  * Reset the object for reuse.
  */
 RequestBackoff.prototype.reset = function() {
-  this.errorTimes_ = [];
+  this.numErrors_ = 0;
   this.errorTimeout_ = 0;
   this.nextRequestTime_ = 0;
-  this.backoffTriggered_ = false;
 }
 
 /**
  * Check to see if we can make a request.
  */
 RequestBackoff.prototype.canMakeRequest = function() {
-  return Date.now() > this.nextRequestTime_;
+  var now = Date.now();
+  if (now < this.nextRequestTime_) {
+    return false;
+  }
+
+  return (this.requestTimes_.length < this.MAX_REQUESTS_ ||
+          (now - this.requestTimes_[0]) > this.REQUEST_PERIOD_);
+}
+
+RequestBackoff.prototype.noteRequest = function() {
+  var now = Date.now();
+  this.requestTimes_.push(now);
+
+  // We only care about keeping track of MAX_REQUESTS
+  if (this.requestTimes_.length > this.MAX_REQUESTS_)
+    this.requestTimes_.shift();
+}
+
+RequestBackoff.prototype.nextRequestDelay = function() {
+  return Math.max(0, this.nextRequestTime_ - Date.now());
 }
 
 /**
@@ -91,31 +116,20 @@ RequestBackoff.prototype.canMakeRequest = function() {
  */
 RequestBackoff.prototype.noteServerResponse = function(status) {
   if (this.isErrorStatus(status)) {
-    var now = Date.now();
-    this.errorTimes_.push(now);
+    this.numErrors_++;
 
-    // We only care about keeping track of MAX_ERRORS
-    if (this.errorTimes_.length > this.MAX_ERRORS_)
-      this.errorTimes_.shift();
+    if (this.numErrors_ < this.MAX_ERRORS_)
+      this.errorTimeout_ = this.RETRY_INCREMENT_;
+    else if (this.numErrors_ == this.MAX_ERRORS_)
+      this.errorTimeout_ = this.TIMEOUT_INCREMENT_;
+    else
+      this.errorTimeout_ *= 2;
 
-    // See if we hit the backoff case
-    // This either means we hit MAX_ERRORS in ERROR_PERIOD
-    // *or* we were already in a backoff state, in which case we
-    // increase our timeout.
-    if ((this.errorTimes_.length == this.MAX_ERRORS_ &&
-         now - this.errorTimes_[0] < this.ERROR_PERIOD_)
-        || this.backoffTriggered_) {
-      this.errorTimeout_ = (this.errorTimeout_ * 2)  + this.TIMEOUT_INCREMENT_;
-      this.errorTimeout_ = Math.min(this.errorTimeout_, this.MAX_TIMEOUT_);
-      this.nextRequestTime_ = now + this.errorTimeout_;
-      this.backoffTriggered_ = true;
-    }
+    this.errorTimeout_ = Math.min(this.errorTimeout_, this.MAX_TIMEOUT_);
+    this.nextRequestTime_ = Date.now() + this.errorTimeout_;
   } else {
-    // Reset error timeout, allow requests to go through, and switch out
-    // of backoff state.
-    this.errorTimeout_ = 0;
-    this.nextRequestTime_ = 0;
-    this.backoffTriggered_ = false;
+    // Reset error timeout, allow requests to go through.
+    this.reset();
   }
 }
 
@@ -131,67 +145,3 @@ RequestBackoff.prototype.isErrorStatus = function(status) {
           HTTP_TEMPORARY_REDIRECT == status);
 }
 
-#ifdef 0
-// Some unittests (e.g., paste into JS shell)
-var jslib = Cc["@mozilla.org/url-classifier/jslib;1"].
-            getService().wrappedJSObject;
-var _Datenow = jslib.Date.now;
-function setNow(time) {
-  jslib.Date.now = function() {
-    return time;
-  }
-}
-
-// 2 errors, 5ms time period, 5ms backoff interval, 20ms max delay
-var rb = new jslib.RequestBackoff(2, 5, 5, 20);
-setNow(1);
-rb.noteServerResponse(200)
-if (!rb.canMakeRequest()) throw "expected ok";
-
-setNow(2);
-rb.noteServerResponse(500);
-if (!rb.canMakeRequest()) throw "expected ok";
-
-setNow(3);
-rb.noteServerResponse(200)
-if (!rb.canMakeRequest()) throw "expected ok";
-
-// Trigger backoff
-setNow(4);
-rb.noteServerResponse(502)
-if (rb.canMakeRequest()) throw "expected failed";
-if (rb.nextRequestTime_ != 9) throw "wrong next request time";
-
-// Trigger backoff again
-setNow(10);
-if (!rb.canMakeRequest()) throw "expected ok";
-rb.noteServerResponse(503)
-if (rb.canMakeRequest()) throw "expected failed";
-if (rb.nextRequestTime_ != 25) throw "wrong next request time";
-
-// Trigger backoff a third time and hit max timeout
-setNow(30);
-if (!rb.canMakeRequest()) throw "expected ok";
-rb.noteServerResponse(302)
-if (rb.canMakeRequest()) throw "expected failed";
-if (rb.nextRequestTime_ != 50) throw "wrong next request time";
-
-// Request goes through
-setNow(100);
-if (!rb.canMakeRequest()) throw "expected ok";
-rb.noteServerResponse(200)
-if (!rb.canMakeRequest()) throw "expected ok";
-if (rb.nextRequestTime_ != 0) throw "wrong next request time";
-
-// Another error (shouldn't trigger backoff)
-setNow(101);
-rb.noteServerResponse(500);
-if (!rb.canMakeRequest()) throw "expected ok";
-
-// Another error, but not in ERROR_PERIOD, so it should be ok
-setNow(107);
-rb.noteServerResponse(500);
-if (!rb.canMakeRequest()) throw "expected ok";
-
-jslib.Date.now = _Datenow;
-#endif

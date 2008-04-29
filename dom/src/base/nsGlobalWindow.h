@@ -734,6 +734,7 @@ protected:
 #ifdef DEBUG
   PRBool mSetOpenerWindowCalled;
   PRUint32 mSerial;
+  nsCOMPtr<nsIURI> mLastOpenedURI;
 #endif
 
   nsCOMPtr<nsIDOMOfflineResourceList> mApplicationCache;

@@ -47,14 +47,19 @@ MODULE = places
 XPIDL_MODULE = places
 
 XPIDLSRCS  = \
+  nsINavHistoryService.idl \
+  $(NULL)
+
+ifdef MOZ_PLACES
+XPIDLSRCS += \
   nsIAnnotationService.idl \
   nsIBrowserHistory.idl \
   nsIFaviconService.idl \
-  nsINavHistoryService.idl \
   nsINavBookmarksService.idl \
   nsILivemarkService.idl \
   nsIDynamicContainer.idl \
   nsITaggingService.idl  \
   $(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk

@@ -131,7 +131,8 @@
                           accesskey="&deleteCmd.accesskey;"
                           command="cmd_delete"/>
                 <menuseparator/>
-                <menuitem label="&selectAllCmd.label;"
+                <menuitem id="menu_selectAll"
+                          label="&selectAllCmd.label;"
                           key="key_selectAll"
                           accesskey="&selectAllCmd.accesskey;"
                           command="cmd_selectAll"/>

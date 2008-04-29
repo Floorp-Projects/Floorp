@@ -16,7 +16,7 @@
   -->
 
 <iframe id="frame" width="60" height="140"
-        src="data:text/html,&lt;html&gt;&lt;body&gt;&lt;input id='one'&gt;&lt;input id='two'&gt;&lt;/body&gt;&lt;/html&gt;"/>
+        src="data:text/html,&lt;html&gt;&lt;body&gt;&lt;input size='4' id='one'&gt;&lt;input size='4' id='two'&gt;&lt;/body&gt;&lt;/html&gt;"/>
 
 <menupopup id="popup" onpopupshown="shown()" onpopuphidden="nextTest()">
   <menuitem label="One"/>
@@ -72,6 +72,7 @@ function shown()
 function nextTest()
 {
   if (screenTest) {
+    setScale(window, 1);
     SimpleTest.finish();
   }
   else {

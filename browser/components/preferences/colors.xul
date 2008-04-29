@@ -116,7 +116,7 @@
     <hbox>
       <checkbox id="useDocumentColors" 
                 label="&allowPagesToUse.label;" accesskey="&allowPagesToUse.accesskey;"
-                preference="browser.display.use_document_colors"/>
+                preference="browser.display.use_document_colors" flex="1"/>
     </hbox>
   </prefpane>
 </prefwindow>

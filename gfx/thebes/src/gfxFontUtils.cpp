@@ -428,7 +428,7 @@ PRUint8 gfxFontUtils::CharRangeBit(PRUint32 ch) {
     return NO_RANGE_FOUND;
 }
 
-void gfxFontUtils::GetPrefsFontList(const char *aPrefName, nsTArray<nsAutoString>& aFontList)
+void gfxFontUtils::GetPrefsFontList(const char *aPrefName, nsTArray<nsString>& aFontList)
 {
     const PRUnichar kComma = PRUnichar(',');
     

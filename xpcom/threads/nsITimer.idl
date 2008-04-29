@@ -66,7 +66,7 @@ native nsTimerCallbackFunc(nsTimerCallbackFunc);
  */
 interface nsITimer;
 
-[scriptable, uuid(a796816d-7d47-4348-9ab8-c7aeb3216a7d)]
+[function, scriptable, uuid(a796816d-7d47-4348-9ab8-c7aeb3216a7d)]
 interface nsITimerCallback : nsISupports
 {
   /**

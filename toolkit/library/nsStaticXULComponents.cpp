@@ -135,8 +135,7 @@
 
 #ifdef MOZ_ENABLE_GTK2
 #ifdef MOZ_PREF_EXTENSIONS
-#define SYSTEMPREF_MODULES MODULE(nsSystemPrefModule) \
-    MODULE(nsAutoConfigModule)
+#define SYSTEMPREF_MODULES MODULE(nsSystemPrefModule)
 #else
 #define SYSTEMPREF_MODULES
 #endif
@@ -302,6 +301,7 @@
     JSDEBUGGER_MODULES                       \
     MODULE(BOOT)                             \
     MODULE(NSS)                              \
+    MODULE(nsAutoConfigModule)               \
     SYSTEMPREF_MODULES                       \
     SPELLCHECK_MODULE                        \
     XMLEXTRAS_MODULE                         \

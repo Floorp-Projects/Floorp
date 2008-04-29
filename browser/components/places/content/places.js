@@ -104,6 +104,10 @@ var PlacesOrganizer = {
     var historyMenuForward = document.getElementById("historyMenuForward");
     historyMenuForward.removeAttribute("key");
 #endif
+
+    // remove the "Properties" context-menu item, we've our own details pane
+    document.getElementById("placesContext")
+            .removeChild(document.getElementById("placesContext_show:info"));
   },
 
   QueryInterface: function PO_QueryInterface(aIID) {
@@ -208,8 +212,10 @@ var PlacesOrganizer = {
     options.excludeItems = false;
     var placeURI = PlacesUtils.history.queriesToQueryString(queries, queries.length, options);
 
-    // update the right-pane contents
-    if (this._content.place != placeURI)
+    // Update the right-pane contents.
+    // We must update also if the user clears the search box, in that case
+    // we are called with resetSearchBox == false.
+    if (this._content.place != placeURI || !resetSearchBox)
       this._content.place = placeURI;
 
     // This just updates the back/forward buttons, it doesn't call us back
@@ -224,6 +230,7 @@ var PlacesOrganizer = {
     }
 
     this._setSearchScopeForNode(node);
+    this._fillDetailsPane(node);
   },
 
   /**
@@ -303,6 +310,18 @@ var PlacesOrganizer = {
         PlacesUIUtils.openContainerNodeInTabs(selectedNode);
       }
     }
+  },
+
+  /**
+   * Handle focus changes on the trees.
+   * When moving focus between panes we should update the details pane contents.
+   * @param   aEvent
+   *          The mouse event.
+   */
+  onTreeFocus: function PO_onTreeFocus(aEvent) {
+    var currentView = aEvent.currentTarget;
+    var selectedNode = currentView.selectedNode;
+    this._fillDetailsPane(selectedNode);
   },
 
   openFlatContainer: function PO_openFlatContainerFlatContainer(aContainer) {
@@ -572,9 +591,10 @@ var PlacesOrganizer = {
      */
     var infoBox = document.getElementById("infoBox");
     var infoBoxExpander = document.getElementById("infoBoxExpander");
-    if ((PlacesUtils.nodeIsFolder(aNode) &&
-         !PlacesUtils.nodeIsLivemarkContainer(aNode)) ||
-        PlacesUtils.nodeIsLivemarkItem(aNode)) {
+    if (aNode.itemId != -1 &&
+        ((PlacesUtils.nodeIsFolder(aNode) &&
+          !PlacesUtils.nodeIsLivemarkContainer(aNode)) ||
+         PlacesUtils.nodeIsLivemarkItem(aNode))) {
       if (infoBox.getAttribute("minimal") == "true")
         infoBox.setAttribute("wasminimal", "true");
       infoBox.removeAttribute("minimal");
@@ -599,6 +619,13 @@ var PlacesOrganizer = {
   },
 
   onContentTreeSelect: function PO_onContentTreeSelect() {
+    this._fillDetailsPane(this._content.selectedNode);
+  },
+
+  _fillDetailsPane: function PO__fillDetailsPane(aSelectedNode) {
+    var infoBox = document.getElementById("infoBox");
+    var detailsDeck = document.getElementById("detailsDeck");
+
     // If a textbox within a panel is focused, force-blur it so its contents
     // are saved
     if (gEditItemOverlay.itemId != -1) {
@@ -607,39 +634,33 @@ var PlacesOrganizer = {
            focusedElement instanceof HTMLTextAreaElement) &&
           /^editBMPanel.*/.test(focusedElement.parentNode.parentNode.id))
         focusedElement.blur();
-    }
 
-    var infoBox = document.getElementById("infoBox");
-    var detailsDeck = document.getElementById("detailsDeck");
-    detailsDeck.selectedIndex = 1;
-    var selectedNode = this._content.selectedNode;
-    if (selectedNode) {
-      infoBox.hidden = false;
-      if (selectedNode.itemId != -1 &&
-          !PlacesUtils.nodeIsSeparator(selectedNode)) {
-        if (this._paneDisabled) {
-          this._setDetailsFieldsDisabledState(false);
-          this._paneDisabled = false;
-        }
-
-        // Using the concrete itemId is arguably wrong. The bookmarks API
-        // does allow setting properties for folder shortcuts as well, but since
-        // the UI does not distinct between the couple, we better just show
-        // the concrete item properties.
-        if (selectedNode.type ==
-            Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT) {
-          gEditItemOverlay.initPanel(asQuery(selectedNode).folderItemId,
-                                     { hiddenRows: ["folderPicker"],
-                                       forceReadOnly: true });
-        }
-        else {
-          gEditItemOverlay.initPanel(selectedNode.itemId,
-                                     { hiddenRows: ["folderPicker"] });
-        }
-
-        this._detectAndSetDetailsPaneMinimalState(selectedNode);
+      // don't update the panel if we are already editing this node
+      if (aSelectedNode && gEditItemOverlay.itemId == aSelectedNode.itemId &&
+          detailsDeck.selectedIndex == 1)
         return;
+    }
+ 
+    if (aSelectedNode && !PlacesUtils.nodeIsSeparator(aSelectedNode)) {
+      detailsDeck.selectedIndex = 1;
+      infoBox.hidden = false;
+      // Using the concrete itemId is arguably wrong. The bookmarks API
+      // does allow setting properties for folder shortcuts as well, but since
+      // the UI does not distinct between the couple, we better just show
+      // the concrete item properties.
+      if (aSelectedNode.type ==
+          Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT) {
+        gEditItemOverlay.initPanel(asQuery(aSelectedNode).folderItemId,
+                                  { hiddenRows: ["folderPicker"],
+                                    forceReadOnly: true });
       }
+      else {
+        var itemId = PlacesUtils.getConcreteItemId(aSelectedNode);
+        gEditItemOverlay.initPanel(itemId != -1 ? itemId :
+                                   PlacesUtils._uri(aSelectedNode.uri),
+                                   { hiddenRows: ["folderPicker"] });
+      }
+      this._detectAndSetDetailsPaneMinimalState(aSelectedNode);
     }
     else {
       detailsDeck.selectedIndex = 0;
@@ -663,13 +684,6 @@ var PlacesOrganizer = {
                                              [rowCount]);
         }
       }
-    }
-
-    // Nothing to do if the pane was already disabled
-    if (!this._paneDisabled) {
-      gEditItemOverlay.uninitPanel();
-      this._setDetailsFieldsDisabledState(true);
-      this._paneDisabled = true;
     }
   },
 
@@ -716,13 +730,12 @@ var PlacesOrganizer = {
   saveSearch: function PO_saveSearch() {
     // Get the place: uri for the query.
     // If the advanced query builder is showing, use that.
-    var queries = PlacesQueryBuilder.queries;
     var options = this.getCurrentOptions();
 
-#ifndef PLACES_QUERY_BUILDER
-    var query = PlacesUtils.history.getNewQuery();
-    query.searchTerms = PlacesSearchBox.value;
-    queries.push(query);
+#ifdef PLACES_QUERY_BUILDER
+    var queries = PlacesQueryBuilder.queries;
+#else
+    var queries = this.getCurrentQueries();
 #endif
 
     var placeSpec = PlacesUtils.history.queriesToQueryString(queries,
@@ -1424,14 +1437,6 @@ var PlacesQueryBuilder = {
     // update collection type and get folders
     var folders = [];
     switch (id) {
-      case "scopeBarToolbar":
-        PlacesSearchBox.filterCollection = "collection";
-        folders.push(PlacesUtils.toolbarFolderId);
-        break;
-      case "scopeBarMenu":
-        PlacesSearchBox.filterCollection = "collection";
-        folders.push(PlacesUtils.bookmarksMenuFolderId);
-        break;
       case "scopeBarHistory":
         PlacesSearchBox.filterCollection = "history";
         folders = [];

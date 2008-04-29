@@ -26,12 +26,17 @@ findbar {
   background-color: transparent !important;
 }
 
+.findbar-closebutton:hover {
+  list-style-image: url("chrome://global/skin/icons/closetab-hover.png") !important;
+}
+
 .findbar-closebutton:hover:active {
   list-style-image: url("chrome://global/skin/icons/closetab-active.png") !important;
 }
 
-.findbar-container > toolbarbutton,
-.findbar-container > hbox > toolbarbutton {
+.findbar-find-next,
+.findbar-find-previous,
+.findbar-highlight {
   -moz-appearance: none;
   border: 1px solid #5F5F5F;
   -moz-border-radius: 10px;
@@ -57,7 +62,7 @@ findbar {
 }
 
 
-.findbar-container > .findbar-closebutton > .toolbarbutton-text {
+.findbar-closebutton > .toolbarbutton-text {
   display: none;  
 }
 
@@ -66,6 +71,7 @@ findbar {
    -moz-image-region: rect(0px 16px 16px 0px);
    -moz-appearance: none;
    -moz-margin-start: 7px;
+   padding-top: 2px;
 }
 
 .findbar-container > checkbox:hover:active {
@@ -86,6 +92,17 @@ findbar {
 
 .findbar-container > checkbox > .checkbox-label-box > .checkbox-label {
   margin: 1px 0 !important;
+}
+
+.findbar-container > checkbox > .checkbox-label-box > .checkbox-icon {
+  -moz-padding-start: 1px;
+  padding-bottom: 1px;
+}
+
+.findbar-container > checkbox:focus > .checkbox-label-box > .checkbox-icon {
+  outline: 2px solid #4F8EC9;
+  outline-offset: -2px;
+  -moz-outline-radius: 4px;
 }
 
 .findbar-textbox {
@@ -129,8 +146,12 @@ findbar[flash="true"] > .findbar-container > .find-field-container > .findbar-te
 /* find-next button */
 
 .findbar-find-next {
-  border-right: none;
+  -moz-border-end: none;
   -moz-margin-end: 0 !important;
+}
+
+.findbar-find-next[chromedir="ltr"],
+.findbar-find-previous[chromedir="rtl"] {
   -moz-border-radius-topright: 0px;
   -moz-border-radius-bottomright: 0px;
 }
@@ -138,11 +159,15 @@ findbar[flash="true"] > .findbar-container > .find-field-container > .findbar-te
 /* find-previous button */
 
 .findbar-find-previous {
+  -moz-margin-start: 0 !important;
+}
+
+.findbar-find-previous[chromedir="ltr"],
+.findbar-find-next[chromedir="rtl"] {
   -moz-border-radius-topleft: 0px;
   -moz-border-radius-bottomleft: 0px;
-  -moz-margin-start: 0 !important;
-  border-left-color: #868686;
 }
+
 /* highlight button */
 
 .findbar-highlight {

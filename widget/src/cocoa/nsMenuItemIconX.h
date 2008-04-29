@@ -83,10 +83,6 @@ public:
   // icon.  The request may not complete until after LoadIcon returns.
   nsresult LoadIcon(nsIURI* aIconURI);
 
-  // ShouldLoadSync returns PR_TRUE if the LoadIcon should load the icon
-  // synchronously.
-  PRBool ShouldLoadSync(nsIURI* aURI);
-
 protected:
   nsCOMPtr<nsIContent>  mContent;
   nsCOMPtr<imgIRequest> mIconRequest;

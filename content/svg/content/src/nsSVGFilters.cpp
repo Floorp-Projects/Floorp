@@ -4951,16 +4951,16 @@ GenerateNormal(float *N, const PRUint8 *data, PRInt32 stride, nsRect rect,
       { 2.0 / 3.0, 1.0 / 2.0, 2.0 / 3.0 } };
 
   PRInt8 xflag, yflag;
-  if (x == 0) {
+  if (x == rect.x) {
     xflag = 0;
-  } else if (x == rect.width - 1) {
+  } else if (x == rect.XMost() - 1) {
     xflag = 2;
   } else {
     xflag = 1;
   }
-  if (y == 0) {
+  if (y == rect.y) {
     yflag = 0;
-  } else if (y == rect.height - 1) {
+  } else if (y == rect.YMost() - 1) {
     yflag = 2;
   } else {
     yflag = 1;

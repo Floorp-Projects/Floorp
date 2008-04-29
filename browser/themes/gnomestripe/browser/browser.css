@@ -881,8 +881,14 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   display: none;
 }
 
+#identity-box.verifiedDomain > hbox {
+  background-color: rgba(30, 80, 170, 0.7);
+  color: white;
+}
+
 #identity-box.verifiedIdentity > hbox {
-  background-color: rgba(0, 255, 0, 0.25);
+  background-color: rgba(50, 150, 50, 0.8);
+  color: white;
 }
 
 /* Identity popup icons */
@@ -953,15 +959,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   background-color: white;
   min-width: 280px;
   padding: 10px;
-}
-
-/* Secure site coloring */
-#urlbar[level="high"][pageproxystate="valid"] > .autocomplete-textbox-container,
-#urlbar[level="low"][pageproxystate="valid"] > .autocomplete-textbox-container,
-#urlbar[level="high"][pageproxystate="valid"] #autocomplete-security-wrapper,
-#urlbar[level="low"][pageproxystate="valid"] #autocomplete-security-wrapper {
-  background-color: #F5F6BE; /* #F7F898; */
-  color: #000000;
 }
 
 #urlbar > .autocomplete-textbox-container {
@@ -1165,7 +1162,6 @@ statusbarpanel#statusbar-display {
 
 #navigator-throbber[busy="true"] {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
-  opacity: 0.5;
 }
 
 #navigator-throbber > hbox {
@@ -1181,7 +1177,6 @@ toolbar[iconsize="small"] #navigator-throbber {
 toolbar[mode="text"] #navigator-throbber[busy="true"],
 toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
-  opacity: 0.5;
 }
 
 tabpanels {
@@ -1197,7 +1192,6 @@ tabpanels {
 
 .tabbrowser-tab[selected="true"] {
   margin-bottom: 0px;
-  font-weight: bold;
 }
 
 .tab-icon-image {
@@ -1211,7 +1205,6 @@ tabpanels {
 
 .tabbrowser-tab[busy] > .tab-icon-image {
   list-style-image: url("chrome://global/skin/icons/loading_16.png") !important;
-  opacity: 0.6;
 }
 
 .tabs-bottom {
@@ -1330,7 +1323,6 @@ tabpanels {
 
 .alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
-  opacity: 0.6;
 }
 
 .tabs-alltabs-button > .toolbarbutton-icon {
@@ -1345,7 +1337,6 @@ tabpanels {
 
 #sidebar-throbber[loading="true"] {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
-  opacity: 0.5;
   -moz-margin-end: 4px;
 }
 

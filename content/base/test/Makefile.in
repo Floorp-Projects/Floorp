@@ -163,6 +163,10 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug425013.html \
 		bug426308-redirect.sjs \
 		test_bug426308.html \
+		test_bug426646.html \
+		file_bug426646-1.html \
+		file_bug426646-2.html \
+		test_bug429157.html \
 		test_XHR.html \
 		file_XHR_pass1.xml \
 		file_XHR_pass2.txt \
@@ -170,7 +174,11 @@ _TEST_FILES = 	test_bug5141.html \
 		file_XHR_pass3.txt^headers^ \
 		file_XHR_fail1.txt \
 		file_XHR_fail1.txt^headers^ \
-		$(NULL)
+		test_bug428847.html \
+		file_bug428847-1.xhtml \
+		file_bug428847-2.xhtml \
+		test_bug425201.html \
+	$(NULL)
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

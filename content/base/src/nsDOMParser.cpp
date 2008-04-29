@@ -232,10 +232,6 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
                                       scriptHandlingObject,
                                       getter_AddRefs(domDocument));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
-  if (!document) return NS_ERROR_FAILURE;
-
-  document->SetPrincipal(mPrincipal);
 
   // Register as a load listener on the document
   nsCOMPtr<nsPIDOMEventTarget> target(do_QueryInterface(domDocument));
@@ -256,7 +252,8 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
                            nsDependentCString(contentType), nsnull);
   NS_ENSURE_STATE(parserChannel);
 
-  parserChannel->SetOwner(mPrincipal);
+  // More principal-faking here 
+  parserChannel->SetOwner(mOriginalPrincipal);
 
   if (charset) {
     parserChannel->SetContentCharset(nsDependentCString(charset));
@@ -271,16 +268,19 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   // our event listener.  Should that listener addition move to later
   // than this call?  Then we wouldn't need to mess around with
   // SetPrincipal, etc, probably!
+  nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
+  if (!document) return NS_ERROR_FAILURE;
+
   rv = document->StartDocumentLoad(kLoadAsData, parserChannel, 
                                    nsnull, nsnull, 
                                    getter_AddRefs(listener),
                                    PR_FALSE);
 
-  // Make sure to give this document the right principal
-  document->SetPrincipal(mPrincipal);
-
-  // And the right base URI
+  // Make sure to give this document the right base URI
   document->SetBaseURI(mBaseURI);
+
+  // And the right principal
+  document->SetPrincipal(mPrincipal);
 
   if (NS_FAILED(rv) || !listener) {
     return NS_ERROR_FAILURE;

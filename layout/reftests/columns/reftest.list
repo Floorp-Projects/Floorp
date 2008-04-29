@@ -5,3 +5,14 @@
 == min-width-1a.html min-width-1-ref.html
 == min-width-1b.html min-width-1-ref.html
 == min-width-1c.html min-width-1-ref.html
+== column-balancing-overflow-000.html column-balancing-overflow-000.ref.html
+== column-balancing-overflow-001.html column-balancing-overflow-000.ref.html
+== column-balancing-overflow-002.html column-balancing-overflow-002.ref.html
+== column-balancing-overflow-003.html column-balancing-overflow-003.ref.html
+== column-balancing-overflow-004.html column-balancing-overflow-004.ref.html
+== column-balancing-overflow-005.html column-balancing-overflow-005.ref.html
+== column-balancing-000.html column-balancing-000.ref.html
+== column-balancing-001.html column-balancing-000.ref.html
+== column-balancing-002.html column-balancing-002.ref.html
+== column-balancing-003.html column-balancing-000.ref.html
+== column-balancing-004.html column-balancing-004.ref.html

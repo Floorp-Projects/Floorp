@@ -2880,7 +2880,7 @@ nsNavHistoryQueryResultNode::OnItemVisited(PRInt64 aItemId,
   // for bookmark queries, "all bookmark" observer should get OnItemVisited
   // but it is ignored.
   if (mLiveUpdate != QUERYUPDATE_COMPLEX_WITH_BOOKMARKS)
-    NS_NOTREACHED("history observers should not get OnItemVisited, but should get OnVisit instead");
+    NS_WARNING("history observers should not get OnItemVisited, but should get OnVisit instead");
   return NS_OK;
 }
 
@@ -3309,7 +3309,7 @@ nsNavHistoryFolderResultNode::ReindexRange(PRInt32 aStartIndex,
 
 // nsNavHistoryFolderResultNode::FindChildById
 //
-//    Searches this folder for a node with the given URI. Returns null if not
+//    Searches this folder for a node with the given id. Returns null if not
 //    found. Does not addref the node!
 
 nsNavHistoryResultNode*
@@ -3317,7 +3317,9 @@ nsNavHistoryFolderResultNode::FindChildById(PRInt64 aItemId,
     PRUint32* aNodeIndex)
 {
   for (PRInt32 i = 0; i < mChildren.Count(); i ++) {
-    if (mChildren[i]->mItemId == aItemId) {
+    if (mChildren[i]->mItemId == aItemId ||
+        (mChildren[i]->IsFolder() &&
+         mChildren[i]->GetAsFolder()->mQueryItemId == aItemId)) {
       *aNodeIndex = i;
       return mChildren[i];
     }

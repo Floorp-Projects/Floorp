@@ -80,7 +80,7 @@
 #ifdef js_invoke_c__
 
 uint32
-js_GenerateShape(JSContext *cx)
+js_GenerateShape(JSContext *cx, JSBool gcLocked)
 {
     JSRuntime *rt;
     uint32 shape;
@@ -90,7 +90,7 @@ js_GenerateShape(JSContext *cx)
     JS_ASSERT(shape != 0);
     if (shape & SHAPE_OVERFLOW_BIT) {
         rt->gcPoke = JS_TRUE;
-        js_GC(cx, GC_NORMAL);
+        js_GC(cx, gcLocked ? GC_LOCK_HELD : GC_NORMAL);
         shape = JS_ATOMIC_INCREMENT(&rt->shapeGen);
         JS_ASSERT(shape != 0);
         JS_ASSERT_IF(shape & SHAPE_OVERFLOW_BIT,
@@ -977,8 +977,7 @@ NoSuchMethod(JSContext *cx, uintN argc, jsval *vp, uint32 flags)
     if (!argsobj)
         return JS_FALSE;
     args[1] = OBJECT_TO_JSVAL(argsobj);
-    return js_InternalInvoke(cx, thisp, fval, flags | JSINVOKE_INTERNAL,
-                             2, args, &vp[0]);
+    return js_InternalInvoke(cx, thisp, fval, flags, 2, args, &vp[0]);
 }
 
 #endif /* JS_HAS_NO_SUCH_METHOD */
@@ -1359,7 +1358,7 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
     invokevp[1] = OBJECT_TO_JSVAL(obj);
     memcpy(invokevp + 2, argv, argc * sizeof *argv);
 
-    ok = js_Invoke(cx, argc, invokevp, flags | JSINVOKE_INTERNAL);
+    ok = js_Invoke(cx, argc, invokevp, flags);
     if (ok) {
         /*
          * Store *rval in the a scoped local root if a scope is open, else in
@@ -4357,6 +4356,7 @@ interrupt:
                             JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
                             sprop = PCVAL_TO_SPROP(entry->vword);
                             JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
+                            JS_ASSERT(!(sprop->attrs & JSPROP_SHARED));
                             JS_ASSERT(!SCOPE_IS_SEALED(OBJ_SCOPE(obj)));
 
                             if (scope->object == obj) {
@@ -4539,6 +4539,9 @@ interrupt:
                         rval = obj->dslots[i];
                         if (rval != JSVAL_HOLE)
                             goto end_getelem;
+
+                        /* Reload rval from the stack in the rare hole case. */
+                        rval = FETCH_OPND(-1);
                     }
                 }
                 id = INT_JSVAL_TO_JSID(rval);

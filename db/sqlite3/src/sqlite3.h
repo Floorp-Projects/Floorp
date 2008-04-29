@@ -30,7 +30,7 @@
 ** the version number) and changes its name to "sqlite3.h" as
 ** part of the build process.
 **
-** @(#) $Id: sqlite3.h,v 1.19 2008/03/20 19:17:11 gavin%gavinsharp.com Exp $
+** @(#) $Id: sqlite3.h,v 1.17 2008/01/22 13:54:07 mozilla%weilbacher.org Exp $
 */
 #ifndef _SQLITE3_H_
 #define _SQLITE3_H_

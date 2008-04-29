@@ -440,7 +440,7 @@
               return this._cachedInsertionPoint = null;
           }
 
-          var orientation = Ci.nsITreeView.DROP_AFTER;
+          var orientation = Ci.nsITreeView.DROP_BEFORE;
           // If there is no selection, insert at the end of the container. 
           if (!this.hasSelection) {
             var index = this.view.rowCount - 1;
@@ -451,9 +451,9 @@
 
           // This is a two-part process. The first part is determining the drop
           // orientation.
-          // * The default orientation is to drop _after_ the selected item. 
-          // * If the selected item is an open container, the default 
-          //   orientation is to drop _into_ that container.
+          // * The default orientation is to drop _before_ the selected item.
+          // * If the selected item is a container, the default orientation
+          //   is to drop _into_ that container.
           //
           // Warning: It may be tempting to use tree indexes in this code, but
           //          you must not, since the tree is nested and as your tree 
@@ -468,18 +468,18 @@
           var min = { }, max = { };
           selection.getRangeAt(rc - 1, min, max);
           
-          // If the sole selection is an open container, insert into it rather 
-          // than adjacent to it. Note that this only applies to _single_ 
-          // selections - if the last element within a multi-selection is an
-          // open folder, insert _adajacent_ to the selection.
+          // If the sole selection is a container, and we are not in
+          // a flatlist, insert into it.
+          // Note that this only applies to _single_ selections,
+          // if the last element within a multi-selection is a
+          // container, insert _adjacent_ to the selection.
           //
           // If the sole selection is the bookmarks toolbar folder, we insert
           // into it even if it is not opened
           var itemId =
             PlacesUtils.getConcreteItemId(resultView.nodeForTreeIndex(max.value));
           if (selection.count == 1 && resultView.isContainer(max.value) &&
-              (resultView.isContainerOpen(max.value) ||
-               itemId == PlacesUtils.bookmarksMenuFolderId))
+              !this.flatList)
             orientation = Ci.nsITreeView.DROP_ON;
 
           this._cachedInsertionPoint =
@@ -507,6 +507,7 @@
           var result = this.getResult();
           var resultview = this.getResultView();
           var container = result.root;
+          var dropNearItemId = -1;
           NS_ASSERT(container, "null container");
           // When there's no selection, assume the container is the container
           // the view is populated from (i.e. the result's itemId).
@@ -520,7 +521,8 @@
             }
             else if (!this._disallowInsertion(lastSelected) &&
                      lastSelected.containerOpen &&
-                     orientation == Ci.nsITreeView.DROP_AFTER) {
+                     orientation == Ci.nsITreeView.DROP_AFTER &&
+                     lastSelected.hasChildren) {
              // If the last selected item is an open container and the user is
              // trying to drag into it as a first item, really insert into it.
              container = lastSelected;
@@ -539,12 +541,19 @@
                 return null;
 
               var queryOptions = asQuery(result.root).queryOptions;
-              if (queryOptions.excludeItems || queryOptions.excludeQueries ||
-                  queryOptions.excludeReadOnlyFolders ||
-                  queryOptions.sortingMode != Ci.nsINavHistoryQueryOptions.SORT_BY_NONE) {
-                // If we are within either a sorted view or a view in which
-                // some items may be invisible, insert at the end
-                index = -1;   
+              if (queryOptions.sortingMode !=
+                    Ci.nsINavHistoryQueryOptions.SORT_BY_NONE) {
+                // If we are within a sorted view, insert at the end
+                index = -1;
+              }
+              else if (queryOptions.excludeItems ||
+                       queryOptions.excludeQueries ||
+                       queryOptions.excludeReadOnlyFolders) {
+                // Some item may be invisible, insert near last selected one.
+                // We don't replace index here to avoid requests to the db,
+                // instead it will be calculated later by the controller.
+                index = -1;
+                dropNearItemId = lastSelected.itemId;
               }
               else {
                 var lsi = PlacesUtils.getIndexOfNode(lastSelected);
@@ -558,7 +567,8 @@
 
           return new InsertionPoint(PlacesUtils.getConcreteItemId(container),
                                     index, orientation,
-                                    PlacesUtils.nodeIsTagQuery(container));
+                                    PlacesUtils.nodeIsTagQuery(container),
+                                    dropNearItemId);
         ]]></body>
       </method>
 
@@ -673,8 +683,9 @@
             // If this node is part of a readonly container (e.g. a livemark) it 
             // cannot be moved, only copied, so we must change the action used
             // by the drag session.
-            if (PlacesUtils.nodeIsReadOnly(parent) ||
-                PlacesUtils.nodeIsTagQuery(parent)) {
+            if (PlacesUtils.nodeIsTagQuery(parent) ||
+                !PlacesControllerDragHelper.canMoveContainerNode(node)) {
+              // XXX DOES NOTHING! dragAction doesn't persist
               dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
               break;
             }
@@ -693,7 +704,10 @@
         <parameter name="event"/>
         <parameter name="session"/>
         <body><![CDATA[ 
-          return this.view.canDrop(-1, -1);
+          var row = { }, col = { }, child = { };
+          this.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, 
+                                       child);
+          return this.view.canDrop(row.value, -1);
         ]]></body>
       </method>
       
@@ -703,18 +717,11 @@
         <parameter name="flavor"/>
         <parameter name="session"/>
         <body><![CDATA[ 
-          // When the user is dragging over an empty area of the tree, make 
-          // sure canDrop is set to true to indicate dropping into the bucket.
-          var row = { }, col = { }, child = { };
-          this.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, 
-                                       child);
-          if (row.value == -1) {
-            var dragService = 
-                Cc["@mozilla.org/widget/dragservice;1"].
-                getService(Ci.nsIDragService);
-            var dragSession = dragService.getCurrentSession();
-            dragSession.canDrop = this.canDrop(-1, 1);
-          }
+          var dragService = 
+              Cc["@mozilla.org/widget/dragservice;1"].
+              getService(Ci.nsIDragService);
+          var dragSession = dragService.getCurrentSession();
+          dragSession.canDrop = this.canDrop(event, session);
         ]]></body>
       </method>
 
