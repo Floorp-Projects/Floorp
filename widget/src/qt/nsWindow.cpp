@@ -702,8 +702,6 @@ nsWindow::Invalidate(const nsRect &aRect,
     if (aIsSynchronous)
         mDrawingArea->repaint(aRect.x, aRect.y, aRect.width, aRect.height);
     else {
-        if (!mDrawingArea->isVisible()) fprintf (stderr, "not visible!!\n");
-        if (!mDrawingArea->updatesEnabled()) fprintf (stderr, "updates not enabled!!\n");
         mDrawingArea->update(aRect.x, aRect.y, aRect.width, aRect.height);
     }
 
