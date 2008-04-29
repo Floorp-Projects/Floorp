@@ -484,6 +484,17 @@ toolbar[mode="icons"] #back-forward-dropmarker > dropmarker {
   -moz-image-region: rect(66px, 519px, 99px, 504px);
 }
 
+.unified-nav-back[_moz-menuactive],
+menupopup[chromedir="rtl"] > .unified-nav-forward[_moz-menuactive] {
+  list-style-image: url("chrome://browser/skin/menu-back.png") !important;
+}
+
+.unified-nav-forward[_moz-menuactive],
+menupopup[chromedir="rtl"] > .unified-nav-back[_moz-menuactive] {
+  list-style-image: url("chrome://browser/skin/menu-forward.png") !important;
+}
+
+
 /* ----- SMALL BACK BUTTON, PAIRED----- */	
 
 toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #back-button {
