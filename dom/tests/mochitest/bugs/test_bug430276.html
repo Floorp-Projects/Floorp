@@ -25,6 +25,11 @@ function startTest() {
     .setAttribute("src", "iframe_bug430276.html");
 }
 
+function nextTest() {
+  document.getElementById("testFrame")
+    .setAttribute("src", "iframe_bug430276-2.html");
+}
+
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(startTest);
 
