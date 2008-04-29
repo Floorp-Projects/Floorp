@@ -1458,7 +1458,7 @@ var PlacesControllerDragHelper = {
         transactions.push(PlacesUIUtils.ptm.tagURI(uri,[tagItemId]));
       }
       else {
-        if (!this.canMoveContainer(unwrapped.id, null))
+        if (unwrapped.id && !this.canMoveContainer(unwrapped.id, null))
           copy = true;
         else if (unwrapped.concreteId &&
                  !this.canMoveContainer(unwrapped.concreteId, null))
