@@ -46,6 +46,15 @@ try {
   do_throw("Could not get history service\n");
 }
 
+// Get bookmark service
+try {
+  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+              getService(Ci.nsINavBookmarksService);
+}
+catch(ex) {
+  do_throw("Could not get the nav-bookmarks-service\n");
+}
+
 // Get tagging service
 try {
   var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
@@ -63,6 +72,13 @@ function run_test() {
   var uri5 = uri("http://site.tld/5");
   var uri6 = uri("http://site.tld/6");
 
+  bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri1, bmsvc.DEFAULT_INDEX, null);
+  bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri2, bmsvc.DEFAULT_INDEX, null);
+  bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri3, bmsvc.DEFAULT_INDEX, null);
+  bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri4, bmsvc.DEFAULT_INDEX, null);
+  bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri5, bmsvc.DEFAULT_INDEX, null);
+  bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri6, bmsvc.DEFAULT_INDEX, null);
+
   tagssvc.tagURI(uri1, ["foo"]);
   tagssvc.tagURI(uri2, ["bar"]);
   tagssvc.tagURI(uri3, ["cheese"]);
@@ -73,6 +89,7 @@ function run_test() {
   // exclude livemark items, search for "item", should get one result
   var options = histsvc.getNewQueryOptions();
   options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
+
   var query = histsvc.getNewQuery();
   query.searchTerms = "foo";
   var result = histsvc.executeQuery(query, options);
