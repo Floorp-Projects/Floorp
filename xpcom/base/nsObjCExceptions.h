@@ -40,8 +40,12 @@
 #ifndef nsObjCExceptions_h_
 #define nsObjCExceptions_h_
 
-#import <Foundation/NSException.h>
-#import <Foundation/NSObjCRuntime.h>
+#import <Foundation/Foundation.h>
+
+#ifdef DEBUG
+#import <ExceptionHandling/NSExceptionHandler.h>
+#endif
+
 #include <unistd.h>
 #include <signal.h>
 #include "nsError.h"
@@ -49,9 +53,80 @@
 // See Mozilla bug 163260.
 // This file can only be included in an Objective-C context.
 
-static void nsObjCExceptionLog(NSException *e)
+static void nsObjCExceptionLog(NSException* aException)
 {
-  NSLog(@"%@: %@", [e name], [e reason]);
+  NSLog(@"Mozilla has caught an Obj-C exception [%@: %@]",
+        [aException name], [aException reason]);
+
+#ifdef DEBUG
+  @try {
+    // Try to get stack information out of the exception. 10.5 returns the stack
+    // info with the callStackReturnAddresses selector.
+    NSArray *stackTrace = nil;
+    if ([aException respondsToSelector:@selector(callStackReturnAddresses)]) {
+      NSArray* addresses = (NSArray*)
+        [aException performSelector:@selector(callStackReturnAddresses)];
+      if ([addresses count])
+        stackTrace = addresses;
+    }
+
+    // 10.4 doesn't respond to callStackReturnAddresses so we'll try to pull the
+    // stack info out of the userInfo. It might not be there, sadly :(
+    if (!stackTrace)
+      stackTrace = [[aException userInfo] objectForKey:NSStackTraceKey];
+
+    if (stackTrace) {
+      // The command line should look like this:
+      //   /usr/bin/atos -p <pid> -printHeader <stack frame addresses>
+      NSMutableArray *args =
+        [NSMutableArray arrayWithCapacity:[stackTrace count] + 3];
+
+      [args addObject:@"-p"];
+      int pid = [[NSProcessInfo processInfo] processIdentifier];
+      [args addObject:[NSString stringWithFormat:@"%d", pid]];
+
+      [args addObject:@"-printHeader"];
+
+      unsigned int stackCount = [stackTrace count];
+      unsigned int stackIndex = 0;
+      for (; stackIndex < stackCount; stackIndex++)
+        [args addObject:[[stackTrace objectAtIndex:stackIndex] stringValue]];
+
+      NSPipe *outPipe = [NSPipe pipe];
+
+      NSTask *task = [[NSTask alloc] init];
+      [task setLaunchPath:@"/usr/bin/atos"];
+      [task setArguments:args];
+      [task setStandardOutput:outPipe];
+      [task setStandardError:outPipe];
+
+      NSLog(@"Generating stack trace for Obj-C exception...");
+
+      // This will throw an exception if the atos tool cannot be found, and in
+      // that case we'll just hit our @catch block below.
+      [task launch];
+
+      [task waitUntilExit];
+      [task release];
+
+      NSData *outData =
+        [[outPipe fileHandleForReading] readDataToEndOfFile];
+      NSString *outString =
+        [[NSString alloc] initWithData:outData encoding:NSUTF8StringEncoding];
+
+      NSLog(@"Stack trace:\n%@", outString);
+
+      [outString release];
+    }
+    else {
+      NSLog(@"<No stack information available for Obj-C exception>");
+    }
+  }
+  @catch (NSException *exn) {
+    NSLog(@"Failed to generate stack trace for Obj-C exception [%@: %@]",
+          [exn name], [exn reason]);
+  }
+#endif
 }
 
 static void nsObjCExceptionAbort()

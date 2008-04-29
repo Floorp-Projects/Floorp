@@ -32,7 +32,7 @@ sub Execute {
 
     my $config = new Bootstrap::Config();
     my $productTag = $config->Get(var => 'productTag');
-    my $rc = $config->Get(var => 'rc');
+    my $build = $config->Get(var => 'build');
     my $milestone = $config->Get(var => 'milestone');
     my $tagDir = $config->Get(var => 'tagDir');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
@@ -43,9 +43,9 @@ sub Execute {
      $config->Get(var => 'useTalkback') : 0;
 
     my $releaseTag = $productTag . '_RELEASE';
-    my $rcTag = $productTag . '_RC' . $rc;
+    my $buildTag = $productTag . '_BUILD' . $build;
     my $releaseTagDir = catfile($tagDir, $releaseTag);
-    my $rcTagDir = catfile($tagDir, $rcTag);
+    my $buildTagDir = catfile($tagDir, $buildTag);
 
     # If specified, tag Talkback
     if ($useTalkback) {
@@ -53,13 +53,13 @@ sub Execute {
     }
 
     # create the main tag directory
-    if (not -d $rcTagDir) {
-        MkdirWithPath(dir => $rcTagDir) 
-          or die("Cannot mkdir $rcTagDir: $!");
+    if (not -d $buildTagDir) {
+        MkdirWithPath(dir => $buildTagDir) 
+          or die("Cannot mkdir $buildTagDir: $!");
     }
 
     # Tagging area for Mozilla
-    my $cvsrootTagDir = catfile($rcTagDir, 'cvsroot');
+    my $cvsrootTagDir = catfile($buildTagDir, 'cvsroot');
     if (-e $cvsrootTagDir) {
         die "ASSERT: Tag::Execute(): $cvsrootTagDir already exists?";
     }
@@ -72,7 +72,7 @@ sub Execute {
 
     my $geckoTag = undef;
 
-    if (1 == $rc) {
+    if (1 == $build) {
         $this->CvsCo(cvsroot => $mozillaCvsroot,
                      tag => $branchTag,
                      date => $pullDate,
@@ -127,8 +127,8 @@ sub Execute {
         # datespec without forcing it to be specified. Because of this,
         # there's lots of icky CVS parsing.
 
-        my $rcOneTag = $productTag . '_RC1';
-        my $checkoutLog = "tag_rc${rc}_checkout_client_ck.log";
+        my $buildOneTag = $productTag . '_BUILD1';
+        my $checkoutLog = "tag_build${build}_checkout_client_ck.log";
 
         $this->CvsCo(cvsroot => $mozillaCvsroot,
                      tag => $branchTag,
@@ -160,7 +160,7 @@ sub Execute {
         my $cvsRev = '';
         my $cvsDateSpec = '';
         foreach my $logLine (split(/\n/, $clientMkInfo->{'output'})) {
-            if ($inSymbolic && $logLine =~ /^\s+$rcOneTag:\s([\d\.]+)$/) {
+            if ($inSymbolic && $logLine =~ /^\s+$buildOneTag:\s([\d\.]+)$/) {
                 $cvsRev = $1;            
                 $inSymbolic = 0;
                 next;
@@ -228,7 +228,7 @@ sub Verify {
 
     # This step doesn't really do anything now, because the verification it used
     # to do (which wasn't much) is now done in the Execute() method, since the
-    # biz logic for rc 1 vs. rc > 1 is different.
+    # biz logic for build 1 vs. build > 1 is different.
 }
 
 #
@@ -312,6 +312,10 @@ sub GenerateRelbranchName {
     }
     # 1.9b1 style version numbers (for alpha/betas, generally) 
     elsif ($geckoVersion =~ m/\d\.\d[ab]\d+/i) {
+        $geckoVersion =~ s/\.//g;
+    }
+    # new major version, eg 1.9 (Fx3)
+    elsif ($geckoVersion =~ m/^\d\.\d$/) {
         $geckoVersion =~ s/\.//g;
     }
     else {

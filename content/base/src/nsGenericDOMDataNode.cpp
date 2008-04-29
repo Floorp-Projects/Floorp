@@ -500,19 +500,17 @@ nsGenericDOMDataNode::SetTextInternal(PRUint32 aOffset, PRUint32 aCount,
     if (haveMutationListeners) {
       mozAutoRemovableBlockerRemover blockerRemover;
 
-      if (nsContentUtils::IsSafeToRunScript()) {
-        nsMutationEvent mutation(PR_TRUE, NS_MUTATION_CHARACTERDATAMODIFIED);
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_CHARACTERDATAMODIFIED);
 
-        mutation.mPrevAttrValue = oldValue;
-        if (aLength > 0) {
-          nsAutoString val;
-          mText.AppendTo(val);
-          mutation.mNewAttrValue = do_GetAtom(val);
-        }
-
-        mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
-        nsEventDispatcher::Dispatch(this, nsnull, &mutation);
+      mutation.mPrevAttrValue = oldValue;
+      if (aLength > 0) {
+        nsAutoString val;
+        mText.AppendTo(val);
+        mutation.mNewAttrValue = do_GetAtom(val);
       }
+
+      mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
+      nsEventDispatcher::Dispatch(this, nsnull, &mutation);
     }
   }
 

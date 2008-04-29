@@ -1440,20 +1440,54 @@ NS_IMETHODIMP nsAccessible::TakeSelection()
 }
 
 /* void takeFocus (); */
-NS_IMETHODIMP nsAccessible::TakeFocus()
-{ 
-  nsCOMPtr<nsIDOMNSHTMLElement> htmlElement(do_QueryInterface(mDOMNode));
+NS_IMETHODIMP
+nsAccessible::TakeFocus()
+{
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+
+  nsIFrame *frame = GetFrame();
+  NS_ENSURE_STATE(frame);
+
+  // If the current element can't take real DOM focus and if it has an ID and
+  // ancestor with a the aria-activedescendant attribute present, then set DOM
+  // focus to that ancestor and set aria-activedescendant on the ancestor to
+  // the ID of the desired element.
+  if (!frame->IsFocusable()) {
+    nsAutoString id;
+    if (content && nsAccUtils::GetID(content, id)) {
+
+      nsCOMPtr<nsIContent> ancestorContent = content;
+      while ((ancestorContent = ancestorContent->GetParent()) &&
+             !ancestorContent->HasAttr(kNameSpaceID_None,
+                                       nsAccessibilityAtoms::aria_activedescendant));
+
+      if (ancestorContent) {
+        nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
+        if (presShell) {
+          nsIFrame *frame = presShell->GetPrimaryFrameFor(ancestorContent);
+          if (frame && frame->IsFocusable()) {
+
+            content = ancestorContent;            
+            content->SetAttr(kNameSpaceID_None,
+                             nsAccessibilityAtoms::aria_activedescendant,
+                             id, PR_TRUE);
+          }
+        }
+      }
+    }
+  }
+
+  nsCOMPtr<nsIDOMNSHTMLElement> htmlElement(do_QueryInterface(content));
   if (htmlElement) {
     // HTML Elements also set the caret position
     // in order to affect tabbing order
     return htmlElement->Focus();
   }
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content) {
-    return NS_ERROR_FAILURE;
-  }
-  content->SetFocus(GetPresContext());
 
+  content->SetFocus(GetPresContext());
   return NS_OK;
 }
 

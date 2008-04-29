@@ -20,7 +20,7 @@ sub Execute {
     my $configBumpDir = $config->Get(var => 'configBumpDir');
     my $productTag = $config->Get(var => 'productTag');
     my $version = $config->GetVersion(longName => 0);
-    my $rc = int($config->Get(var => 'rc'));
+    my $build = int($config->Get(var => 'build'));
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $product = $config->Get(var => 'product');
     my $logDir = $config->Get(sysvar => 'logDir');
@@ -30,7 +30,7 @@ sub Execute {
     my $releaseTag = $productTag . '_RELEASE';
 
     my $productConfigBumpDir = catfile($configBumpDir, 
-                                       "$product-$version-rc$rc");
+                                       "$product-$version-build$build");
 
     if (-e $productConfigBumpDir) {
         die "ASSERT: Step::TinderConfig::Execute(): $productConfigBumpDir " .
@@ -69,7 +69,7 @@ sub Execute {
               cmdArgs => ['-d', $mozillaCvsroot, 
                           'ci', '-m', 
                           '"Automated configuration bump, release for ' 
-                           . $product  . ' ' . $version . "rc$rc" . '"', 
+                           . $product  . ' ' . $version . "build$build" . '"', 
                           $configFile],
               logFile => catfile($logDir, 
                'build_config-checkin-' . $configFile . '-' . 
@@ -84,7 +84,7 @@ sub Execute {
         }
 
         my @tagNames = ($productTag . '_RELEASE',
-                        $productTag . '_RC' . $rc);
+                        $productTag . '_BUILD' . $build);
 
         foreach my $configTagName (@tagNames) {
             # XXX - Don't like doing this this way (specifically, the logic 
@@ -92,13 +92,13 @@ sub Execute {
             #
             # Also, the force argument to CvsTag() is interesting; we only
             # want to cvs tag -F a whatever_RELEASE tag if we're not tagging
-            # the first RC; so, the logic is (rc > 1 && we're doing a _RELEASE
+            # the first build; so, the logic is (build > 1 && we're doing a _RELEASE
             # tag; also, we have to surround it in int(); otherwise, if it's
             # false, we get the empty string, which is undef which is bad.
             $configTagName .= '_l10n' if ($branch =~ /l10n/);
 
             my $rv = CvsTag(tagName => $configTagName,
-                            force => int($rc > 1 && 
+                            force => int($build > 1 && 
                                          $configTagName =~ /_RELEASE/),
                             files => \@bumpConfigFiles,
                             cvsDir => catfile($productConfigBumpDir,

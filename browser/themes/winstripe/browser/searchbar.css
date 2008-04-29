@@ -2,6 +2,9 @@
   min-height: 22px;
   width: 6em;
   min-width: 6em;
+}
+
+.searchbar-textbox:-moz-system-metric(windows-default-theme) {
   -moz-appearance: none;
   border-width: 1px;
   -moz-border-top-colors: ThreeDShadow;
@@ -33,16 +36,20 @@
   height: 1.23em;
   min-height: 20px;
   -moz-box-align: center;
-  background: ButtonFace url(chrome://browser/skin/tabbrowser/tab-active-bkgnd.png) repeat-x;
+  background: -moz-dialog url(navbar-textbox-buttons.png) repeat-x;
   border: 0 solid;
   border-right-width: 1px;
-  -moz-border-right-colors: ButtonShadow;
+  -moz-border-right-colors: ThreeDShadow;
+}
+
+.searchbar-engine-button:hover {
+  background-position: 0 -60px;
 }
 
 .searchbar-engine-button[chromedir="rtl"] {
   border-right-width: 0;
   border-left-width: 1px;
-  -moz-border-left-colors: ButtonShadow;
+  -moz-border-left-colors: ThreeDShadow;
 }
 
 .searchbar-engine-button > .button-box {
@@ -72,7 +79,7 @@
 }
 
 .search-go-button {
-  padding: 1px;
+  padding: 2px;
   list-style-image: url("chrome://browser/skin/Search-glass.png");
   -moz-image-region: rect(0px 16px 16px 0px);
 }
@@ -85,12 +92,8 @@
   -moz-image-region: rect(0px 32px 16px 16px);
 }
 
-.search-go-button[disabled="true"] {
-  -moz-image-region: rect(0px, 48px, 16px, 32px);
-}
-
 .search-go-button:hover:active {
-  -moz-image-region: rect(0px, 64px, 16px, 48px);
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
 
 .searchbar-engine-menuitem[selected="true"] > .menu-iconic-text {

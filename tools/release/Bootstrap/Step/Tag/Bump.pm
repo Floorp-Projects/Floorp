@@ -25,7 +25,8 @@ sub Execute {
     my $branchTag = $config->Get(var => 'branchTag');
     my $pullDate = $config->Get(var => 'pullDate');
     my $version = $config->GetVersion(longName => 0);
-    my $rc = int($config->Get(var => 'rc'));
+    my $appVersion = $config->GetAppVersion();
+    my $build = int($config->Get(var => 'build'));
     my $milestone = $config->Exists(var => 'milestone') ? 
      $config->Get(var => 'milestone') : undef;
     my $appName = $config->Get(var => 'appName');
@@ -35,19 +36,19 @@ sub Execute {
     my $geckoBranchTag = $config->Get(var => 'geckoBranchTag');
 
     my $releaseTag = $productTag . '_RELEASE';
-    my $rcTag = $productTag . '_RC' . $rc;
+    my $buildTag = $productTag . '_BUILD' . $build;
 
-    my $rcTagDir = catfile($tagDir, $rcTag);
-    my $cvsrootTagDir = catfile($rcTagDir, 'cvsroot');
+    my $buildTagDir = catfile($tagDir, $buildTag);
+    my $cvsrootTagDir = catfile($buildTagDir, 'cvsroot');
  
     ## TODO - we need to handle the case here where we're in security firedrill
     ## mode, and we need to bump versions on the GECKO_ branch, but they
     ## won't have "pre" in them. :-o
     #
-    # We only do the bump step for rc1
+    # We only do the bump step for build1
 
-    if ($rc > 1) {
-        $this->Log(msg => "Skipping Tag::Bump::Execute substep for RC $rc.");
+    if ($build > 1) {
+        $this->Log(msg => "Skipping Tag::Bump::Execute substep for build $build.");
         return;
     }
 
@@ -105,13 +106,13 @@ sub Execute {
              '^LDAPCSDK_CO_TAG\s+=\s+' . $branchTag . '$' =>
               'LDAPCSDK_CO_TAG      = ' . $releaseTag);
         } elsif ($fileName eq $moduleVer) {
-            $preVersion = $version . 'pre';
+            $preVersion = $appVersion . 'pre';
             %searchReplace = ('^WIN32_MODULE_PRODUCTVERSION_STRING=' . 
              $preVersion . '$' => 'WIN32_MODULE_PRODUCTVERSION_STRING=' . 
-             $version);
+             $appVersion);
         } elsif ($fileName eq $versionTxt) {
-            $preVersion = $version . 'pre';
-            %searchReplace = ('^' . $preVersion . '$' => $version);
+            $preVersion = $appVersion . 'pre';
+            %searchReplace = ('^' . $preVersion . '$' => $appVersion);
         } elsif ($fileName eq $milestoneTxt) {
             $preVersion = $milestone . 'pre';
             %searchReplace = ('^' . $preVersion . '$' => $milestone);
@@ -159,7 +160,7 @@ sub Execute {
       cmdArgs => ['commit', '-m', $bumpCiMsg, 
                   @bumpFiles,
                  ],
-      dir => catfile($rcTagDir, 'cvsroot', 'mozilla'),
+      dir => catfile($buildTagDir, 'cvsroot', 'mozilla'),
       logFile => catfile($logDir, 'tag-bump_checkin.log'),
     );
 }
@@ -172,10 +173,10 @@ sub Verify {
     my $appName = $config->Get(var => 'appName');
     my $milestone = $config->Exists(var => 'milestone') ? 
      $config->Get(var => 'milestone') : undef;
-    my $rc = $config->Get(var => 'rc');
+    my $build = $config->Get(var => 'build');
 
-    if ($rc > 1) {
-        $this->Log(msg => "Skipping Tag::Bump::Verify substep for RC $rc.");
+    if ($build > 1) {
+        $this->Log(msg => "Skipping Tag::Bump::Verify substep for build $build.");
         return;
     }
 

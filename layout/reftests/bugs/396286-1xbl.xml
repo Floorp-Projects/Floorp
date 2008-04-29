@@ -1,0 +1,20 @@
+<bindings xmlns="http://www.mozilla.org/xbl">
+
+<binding id="a">
+<implementation>
+<constructor>
+  this.style.position='fixed';
+</constructor>
+</implementation>
+<content>
+<children/>
+</content>
+</binding>
+
+<binding id="b">
+<content>
+<children/>
+</content>
+</binding>
+
+</bindings>

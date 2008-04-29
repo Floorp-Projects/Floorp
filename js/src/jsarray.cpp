@@ -1710,7 +1710,7 @@ sort_compare(void *arg, const void *a, const void *b, int *result)
     *sp++ = av;
     *sp++ = bv;
 
-    if (!js_Invoke(cx, 2, invokevp, JSINVOKE_INTERNAL))
+    if (!js_Invoke(cx, 2, invokevp, 0))
         return JS_FALSE;
 
     cmp = js_ValueToNumber(cx, invokevp);
@@ -2733,7 +2733,7 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, jsval *vp)
         *sp++ = OBJECT_TO_JSVAL(obj);
 
         /* Do the call. */
-        ok = js_Invoke(cx, argc, invokevp, JSINVOKE_INTERNAL);
+        ok = js_Invoke(cx, argc, invokevp, 0);
         if (!ok)
             break;
 

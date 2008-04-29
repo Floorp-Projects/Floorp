@@ -79,9 +79,7 @@ const SAX_CONTRACTID = "@mozilla.org/saxparser/xmlreader;1";
 const UNESCAPE_CONTRACTID = "@mozilla.org/feed-unescapehtml;1";
 
 
-var gIoService = Cc[IO_CONTRACTID].getService(Ci.nsIIOService);
-var gUnescapeHTML = Cc[UNESCAPE_CONTRACTID].
-                    getService(Ci.nsIScriptableUnescapeHTML);
+var gIoService = null;
 
 const XMLNS = "http://www.w3.org/XML/1998/namespace";
 const RSS090NS = "http://my.netscape.com/rdf/simple/0.9/";
@@ -90,6 +88,8 @@ const WAIROLE_NS = "http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#";
 /***** Some general utils *****/
 function strToURI(link, base) {
   var base = base || null;
+  if (!gIoService)
+    gIoService = Cc[IO_CONTRACTID].getService(Ci.nsIIOService);
   try {
     return gIoService.newURI(link, null, base);
   }
@@ -521,7 +521,9 @@ Entry.prototype = {
   __enclosure_map: null,
 
   _addToEnclosures: function Entry_addToEnclosures(new_enc) {
-    if (!bagHasKey(new_enc, "url"))
+    // items we add to the enclosures array get displayed in the FeedWriter and
+    // they must have non-empty urls.
+    if (!bagHasKey(new_enc, "url") || new_enc.getPropertyAsAString("url") == "")
       return;
 
     if (this.__enclosure_map == null)
@@ -657,12 +659,14 @@ function TextConstruct() {
   this.base = null;
   this.type = "text";
   this.text = null;
+  this.unescapeHTML = Cc[UNESCAPE_CONTRACTID].
+                      getService(Ci.nsIScriptableUnescapeHTML);
 }
 
 TextConstruct.prototype = {
   plainText: function TC_plainText() {
     if (this.type != "text") {
-      return gUnescapeHTML.unescape(stripTags(this.text));
+      return this.unescapeHTML.unescape(stripTags(this.text));
     }
     return this.text;
   },
@@ -683,7 +687,8 @@ TextConstruct.prototype = {
     else
       return null;
 
-    return gUnescapeHTML.parseFragment(this.text, isXML, this.base, element);
+    return this.unescapeHTML.parseFragment(this.text, isXML,
+                                           this.base, element);
   },
  
   // XPCOM stuff
@@ -1639,8 +1644,7 @@ FeedProcessor.prototype = {
     if (target == "xml-stylesheet") {
       var hrefAttribute = data.match(/href=[\"\'](.*?)[\"\']/);
       if (hrefAttribute && hrefAttribute.length == 2) 
-        this._result.stylesheet = gIoService.newURI(hrefAttribute[1], null,
-                                                    this._result.uri);
+        this._result.stylesheet = strToURI(hrefAttribute[1], this._result.uri);
     }
   },
 

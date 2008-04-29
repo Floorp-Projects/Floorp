@@ -1,0 +1,13 @@
+%include organizer.css
+
+#placesView > splitter:-moz-system-metric(windows-default-theme) {
+  border: 0;
+  -moz-border-end: 1px solid #a9b7c9;
+  min-width: 0;
+  width: 3px !important;
+  background-color: transparent;
+  -moz-margin-start: -3px;
+  position: relative;
+  z-index: 10;
+}
+

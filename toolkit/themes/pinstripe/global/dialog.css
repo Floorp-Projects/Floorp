@@ -45,11 +45,11 @@
 /* ::::: dialog ::::: */
 
 #commonDialog > image {
-	margin-right: 14px !important;
+  -moz-margin-end: 14px !important;
 }
 
 #commonDialog > .dialog-button-box {
-	margin-left: 80px;
+  -moz-margin-start: 80px;
 }
 
 dialog { 

@@ -48,7 +48,13 @@
       <ABBR title="20080311" class="dtend">Tuesday, March 11, 2008</ABBR>
       <abbr class="geo"  id="02-geo-vevent-02" title="30.2622;-97.7399">Convention Center</abbr>
     </span>
-    
+
+<h3>Legal geos</h3>
+<ul>
+<li><span class="geo" id="legal_geo1"><span class="latitude">0</span>,<span class="longitude">0</span></span></li>
+<li><span class="geo" id="legal_geo2"><span class="latitude">0.0</span>,<span class="longitude">0.0</span></span></li>
+<li><span class="geo" id="legal_geo3"><span class="latitude">0.</span>,<span class="longitude">0.</span></span></li>
+</ul>
 <h3>Illegal geos</h3>
 
 <ul>
@@ -122,6 +128,24 @@ function test_geo() {
   Geo = new geo(document.getElementById("02-geo-vevent-02"));
 
   is(Geo.toString(), "Convention Center", "02-geo-vevent-02");
+
+  Geo = new geo(document.getElementById("legal_geo1"));
+
+  is(Geo.latitude, 0, "legal_geo1 - lat");
+  is(Geo.longitude, 0, "legal_geo1 - long");
+
+  Geo = new geo(document.getElementById("legal_geo2"));
+
+  is(Geo.latitude, 0, "legal_geo2 - lat");
+  is(Geo.longitude, 0, "legal_geo2 - long");
+
+  Geo = new geo(document.getElementById("legal_geo3"));
+
+  is(Geo.latitude, 0, "legal_geo3 - lat");
+  is(Geo.longitude, 0, "legal_geo3 - long");
+
+
+
 
   try {
     Geo = new geo(document.getElementById("ill_geo1"), true);

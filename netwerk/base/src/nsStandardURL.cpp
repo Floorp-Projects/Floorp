@@ -2163,7 +2163,7 @@ nsStandardURL::SetQuery(const nsACString &input)
     if (shift) {
         mQuery.mLen = queryLen;
         mPath.mLen += shift;
-        ShiftFromRef(queryLen - mQuery.mLen);
+        ShiftFromRef(shift);
     }
     return NS_OK;
 }

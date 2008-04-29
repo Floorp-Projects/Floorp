@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=429785
+-->
+<window title="Mozilla Bug 429785"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=429785"
+     target="_blank">Mozilla Bug 429785</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+    /** Test for Bug 429785 **/
+    SimpleTest.waitForExplicitFinish();
+    var errorLogged = false;
+    const serv = Components.classes["@mozilla.org/consoleservice;1"]
+                           .getService(Components.interfaces.nsIConsoleService);
+    var listener = {
+      QueryInteface : function(iid) {
+        if (!iid.equals(Components.interfaces.nsISupports) &&
+            !iid.equals(Components.interfaces.nsIConsoleListener)) {
+	  throw Components.results.NS_NOINTERFACE;
+	}
+	return this;
+      },
+      observe : function (msg) { errorLogged = true; }
+    };
+
+    function step2() {
+      is(errorLogged, false, "Should be no errors");
+
+      serv.registerListener(listener);    
+      try {
+        serv.logStringMessage("This is a test");
+      } finally {
+        serv.unregisterListener(listener);
+      }
+
+      setTimeout(step3, 0);
+
+    }
+
+    function step3() {
+      is(errorLogged, true, "Should see errors when they happen");
+      SimpleTest.finish();
+    }
+        
+    serv.registerListener(listener);    
+    try {
+      var p = new DOMParser();
+      p.parseFromString("<root/>", "application/xml");
+
+      // nsConsoleService notifies its listeners via async proxies, so we need
+      // to wait to see whether there was an error reported.
+      setTimeout(step2, 0);
+    } finally {
+      serv.unregisterListener(listener);
+    }
+
+  ]]></script>
+</window>

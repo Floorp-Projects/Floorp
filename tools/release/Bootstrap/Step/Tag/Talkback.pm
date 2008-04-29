@@ -22,20 +22,20 @@ sub Execute {
     my $config = new Bootstrap::Config();
     my $productTag = $config->Get(var => 'productTag');
     my $branchTag = $config->Get(var => 'branchTag');
-    my $rc = int($config->Get(var => 'rc'));
+    my $build = int($config->Get(var => 'build'));
     my $pullDate = $config->Get(var => 'pullDate');
     my $logDir = $config->Get(sysvar => 'logDir');
     my $mofoCvsroot = $config->Get(var => 'mofoCvsroot');
     my $tagDir = $config->Get(var => 'tagDir');
 
     my $releaseTag = $productTag . '_RELEASE';
-    my $rcTag = $productTag . '_RC' . $rc;
-    my $releaseTagDir = catfile($tagDir, $rcTag);
+    my $buildTag = $productTag . '_BUILD' . $build;
+    my $releaseTagDir = catfile($tagDir, $buildTag);
 
     # Since talkback so seldom changes, we don't include it in our fancy
-    # respin logic; we only need to tag it for RC 1.
-    if ($rc > 1) {
-        $this->Log(msg => "Not tagging Talkback repo for RC $rc.");
+    # respin logic; we only need to tag it for build 1.
+    if ($build > 1) {
+        $this->Log(msg => "Not tagging Talkback repo for build $build.");
         return;
     }
 
@@ -71,10 +71,10 @@ sub Verify {
     my $config = new Bootstrap::Config();
     my $logDir = $config->Get(sysvar => 'logDir');
     my $productTag = $config->Get(var => 'productTag');
-    my $rc = $config->Get(var => 'rc');
+    my $build = $config->Get(var => 'build');
 
-    if ($rc > 1) {
-        $this->Log(msg => "Not verifying Talkback repo for RC $rc.");
+    if ($build > 1) {
+        $this->Log(msg => "Not verifying Talkback repo for build $build.");
         return;
     }
 

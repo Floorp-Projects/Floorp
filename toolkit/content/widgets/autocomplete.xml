@@ -460,6 +460,11 @@
               cancel = this.mController.handleEscape();
               break;
             case KeyEvent.DOM_VK_RETURN:
+#ifdef XP_MACOSX
+              // Prevent the default action, since it will beep on Mac
+              if (aEvent.metaKey)
+                aEvent.preventDefault();
+#endif
               this.mEnterEvent = aEvent;
               cancel = this.mController.handleEnter(false);
               break;

@@ -71,6 +71,7 @@
 #include "nsTextFrame.h"
 #include "nsXULPopupManager.h"
 #include "nsMenuPopupFrame.h"
+#include "nsTextFragment.h"
 
 // The bidi indicator hangs off the caret to one side, to show which
 // direction the typing is in. It needs to be at least 2x2 to avoid looking like 
@@ -163,16 +164,32 @@ NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
   return NS_OK;
 }
 
-nsCaret::Metrics nsCaret::ComputeMetrics(nsPresContext *aPresContext)
+static PRBool
+DrawCJKCaret(nsIFrame* aFrame, PRInt32 aOffset)
+{
+  nsIContent* content = aFrame->GetContent();
+  const nsTextFragment* frag = content->GetText();
+  if (!frag)
+    return PR_FALSE;
+  if (aOffset < 0 || aOffset >= frag->GetLength())
+    return PR_FALSE;
+  PRUnichar ch = frag->CharAt(aOffset);
+  return 0x2e80 <= ch && ch <= 0xd7ff;
+}
+
+nsCaret::Metrics nsCaret::ComputeMetrics(nsIFrame* aFrame, PRInt32 aOffset)
 {
   // Compute nominal sizes in appunits
   nscoord caretWidth = nsPresContext::CSSPixelsToAppUnits(mCaretWidthCSSPx);
+  if (DrawCJKCaret(aFrame, aOffset)) {
+    caretWidth += nsPresContext::CSSPixelsToAppUnits(1);
+  }
   nscoord bidiIndicatorSize = nsPresContext::CSSPixelsToAppUnits(kMinBidiIndicatorPixels);
   bidiIndicatorSize = PR_MAX(caretWidth, bidiIndicatorSize);
 
   // Round them to device pixels. Always round down, except that anything
   // between 0 and 1 goes up to 1 so we don't let the caret disappear.
-  PRUint32 tpp = aPresContext->AppUnitsPerDevPixel();
+  PRUint32 tpp = aFrame->PresContext()->AppUnitsPerDevPixel();
   Metrics result;
   result.mCaretWidth = NS_ROUND_BORDER_TO_PIXELS(caretWidth, tpp);
   result.mBidiIndicatorSize = NS_ROUND_BORDER_TO_PIXELS(bidiIndicatorSize, tpp);
@@ -350,7 +367,7 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType,
   outCoordinates->x = viewOffset.x;
   outCoordinates->y = viewOffset.y;
   outCoordinates->height = theFrame->GetSize().height;
-  outCoordinates->width = ComputeMetrics(theFrame->PresContext()).mCaretWidth;
+  outCoordinates->width = ComputeMetrics(theFrame, theFrameOffset).mCaretWidth;
   
   return NS_OK;
 }
@@ -1159,7 +1176,7 @@ nsresult nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
   }
 
   mCaretRect += framePos;
-  Metrics metrics = ComputeMetrics(presContext);
+  Metrics metrics = ComputeMetrics(aFrame, aFrameOffset);
   mCaretRect.width = metrics.mCaretWidth;
 
   // Clamp our position to be within our scroll frame. If we don't, then it

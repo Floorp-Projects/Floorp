@@ -13,7 +13,7 @@ richlistitem[type="download"] {
 }
 
 richlistitem[type="download"][alternate="true"]:not([selected="true"]) {
-  background-color: -moz-oddrowbackground;
+  background-color: -moz-oddtreerow;
 }
 
 richlistitem[type="download"] .name {
@@ -106,7 +106,24 @@ richlistitem[type="download"] button {
   -moz-box-pack: end;
   -moz-padding-end: 4px;
   background-image: url("chrome://global/skin/toolbar/toolbar-background.gif");
+  background-color: #9f9f9f;
   background-repeat: repeat-x;
+  background-position: top left;
+}
+
+#clearListButton {
+  -moz-appearance: none;
+  border: 1px solid #5F5F5F;
+  -moz-border-radius: 4px;
+  background: url(chrome://global/skin/icons/white-gray-gradient.gif) #A09E9D repeat-x top center;
+  min-height: 0;
+  min-width: 0;
+  padding: 2px;
+  margin: 0 6px;
+}
+
+#clearListButton:hover:active:not([disabled="true"]) {
+  background: url(chrome://global/skin/icons/white-gray-gradient-active.gif);
 }
 
 #searchbox {

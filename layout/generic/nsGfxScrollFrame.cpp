@@ -382,13 +382,14 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
                                                                                 
   if (!aForce) {
     nsRect scrolledRect = mInner.GetScrolledRect(scrollPortSize);
+    nscoord oneDevPixel = aState->mBoxState.PresContext()->DevPixelsToAppUnits(1);
 
     // If the style is HIDDEN then we already know that aAssumeHScroll is PR_FALSE
     if (aState->mStyles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN) {
       PRBool wantHScrollbar =
         aState->mStyles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL ||
-        scrolledRect.XMost() > scrollPortSize.width ||
-        scrolledRect.x < 0;
+        scrolledRect.XMost() >= scrollPortSize.width + oneDevPixel ||
+        scrolledRect.x <= -oneDevPixel;
       if (aState->mInsideBorderSize.height < hScrollbarMinSize.height ||
           scrollPortSize.width < hScrollbarMinSize.width)
         wantHScrollbar = PR_FALSE;
@@ -400,8 +401,8 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
     if (aState->mStyles.mVertical != NS_STYLE_OVERFLOW_HIDDEN) {
       PRBool wantVScrollbar =
         aState->mStyles.mVertical == NS_STYLE_OVERFLOW_SCROLL ||
-        scrolledRect.YMost() > scrollPortSize.height ||
-        scrolledRect.y < 0;
+        scrolledRect.YMost() >= scrollPortSize.height + oneDevPixel ||
+        scrolledRect.y <= -oneDevPixel;
       if (aState->mInsideBorderSize.width < vScrollbarMinSize.width ||
           scrollPortSize.height < vScrollbarMinSize.height)
         wantVScrollbar = PR_FALSE;
@@ -1701,7 +1702,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 
   if (canHaveHorizontal) {
     rv = NS_NewElement(getter_AddRefs(mHScrollbarContent),
-                       kNameSpaceID_XUL, nodeInfo);
+                       kNameSpaceID_XUL, nodeInfo, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
     mHScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
                                 NS_LITERAL_STRING("horizontal"), PR_FALSE);
@@ -1711,7 +1712,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 
   if (canHaveVertical) {
     rv = NS_NewElement(getter_AddRefs(mVScrollbarContent),
-                       kNameSpaceID_XUL, nodeInfo);
+                       kNameSpaceID_XUL, nodeInfo, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
     mVScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
                                 NS_LITERAL_STRING("vertical"), PR_FALSE);
@@ -1723,7 +1724,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollcorner, nsnull,
                                  kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
     rv = NS_NewElement(getter_AddRefs(mScrollCornerContent),
-                       kNameSpaceID_XUL, nodeInfo);
+                       kNameSpaceID_XUL, nodeInfo, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!aElements.AppendElement(mScrollCornerContent))
       return NS_ERROR_OUT_OF_MEMORY;

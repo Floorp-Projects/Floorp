@@ -18,7 +18,8 @@ use Bootstrap::Util qw(CvsCatfile GetBouncerPlatforms
 
 use strict;
 
-my $RELEASE_CANDIDATE_CHANNELS = ['beta', 'betatest','DisableCompleteJump'];
+# Channels that we want to add an extra annotation to
+my $RELEASE_CANDIDATE_CHANNELS = ['betatest','DisableCompleteJump'];
 
 sub Execute {
     my $this = shift;
@@ -27,7 +28,7 @@ sub Execute {
     my $logDir = $config->Get(sysvar => 'logDir');
     my $configBumpDir = $config->Get(var => 'configBumpDir');
     my $product = $config->Get(var => 'product');
-    my $rc = $config->Get(var => 'rc');
+    my $build = $config->Get(var => 'build');
     my $version = $config->GetVersion(longName => 0);
     my $oldVersion = $config->GetOldVersion(longName => 0);
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
@@ -36,7 +37,7 @@ sub Execute {
     my $bouncerServer = $config->Get(var => 'bouncerServer');
 
     my $versionedConfigBumpDir = catfile($configBumpDir, 
-                                          "$product-$version-rc$rc");
+                                          "$product-$version-build$build");
 
     # Create patcher config area in the config bump area.
     if (not -d $versionedConfigBumpDir) {
@@ -88,8 +89,9 @@ sub BumpPatcherConfig {
     my $version = $config->GetVersion(longName => 0);
     my $prettyVersion = $config->GetVersion(longName => 1);
     my $oldVersion = $config->GetOldVersion(longName => 0);
-    my $rc = $config->Get(var => 'rc');
-    my $oldRc = $config->Get(var => 'oldRc');
+    my $appVersion = $config->GetAppVersion();
+    my $oldAppVersion = $config->GetOldAppVersion();
+    my $build = $config->Get(var => 'build');
     my $localeInfo = $config->GetLocaleInfo();
     my $patcherConfig = $config->Get(var => 'patcherConfig');
     my $stagingUser = $config->Get(var => 'stagingUser');
@@ -97,9 +99,10 @@ sub BumpPatcherConfig {
     my $ftpServer = $config->Get(var => 'ftpServer');
     my $bouncerServer = $config->Get(var => 'bouncerServer');
     my $logDir = $config->Get(sysvar => 'logDir');
+    my $useBetaChannel = $config->Get(var => 'useBetaChannel');
 
     my $versionedConfigBumpDir = catfile($configBumpDir, 
-                                          "$product-$version-rc$rc");
+                                          "$product-$version-build$build");
 
     # First, parse the file.
     my $checkedOutPatcherConfig = catfile($versionedConfigBumpDir, 'patcher', 
@@ -118,7 +121,7 @@ sub BumpPatcherConfig {
     my $currentUpdateObj = $appObj->{'current-update'};
 
     # Add the release we're replacing to the past-releases array, but only if
-    # it's a new release; we used to determine this by looking at the rc 
+    # it's a new release; we used to determine this by looking at the build 
     # value, but that can be misleading because sometimes we may not get to
     # the update step before a respin; so what we really need to compare is 
     # whether our current version in bootstrap.cfg is in the to clause of the 
@@ -151,7 +154,7 @@ sub BumpPatcherConfig {
     # the partial and complete update patches
     #
     # Only bump the to/from versions if we're really a new release. We used
-    # to determine this by looking at the rc value, but now we use
+    # to determine this by looking at the build value, but now we use
     # doOnetimePatcherBump 
     
     if ($doOnetimePatcherBumps) {
@@ -160,14 +163,17 @@ sub BumpPatcherConfig {
     }
 
     $currentUpdateObj->{'details'} = 'http://%locale%.www.mozilla.com/%locale%/' .
-                                      $product . '/' . $version . '/releasenotes/';
+                                      $product . '/' . $appVersion . '/releasenotes/';
 
+    if ($useBetaChannel) {
+        push(@{$RELEASE_CANDIDATE_CHANNELS},'beta');
+    }
     $currentUpdateObj->{'rc'} = {};
     foreach my $c (@{$RELEASE_CANDIDATE_CHANNELS}) {
-        $currentUpdateObj->{'rc'}->{$c} = "$rc";
+        $currentUpdateObj->{'rc'}->{$c} = "$build";
     }
 
-    my $rcStr = 'rc' . $rc;
+    my $buildStr = 'build' . $build;
 
     my $partialUpdate = {};
     $partialUpdate->{'url'} = 'http://' . $bouncerServer . '/?product=' .
@@ -176,20 +182,21 @@ sub BumpPatcherConfig {
                              '&os=%bouncer-platform%&lang=%locale%';
 
     $partialUpdate->{'path'} = catfile($product, 'nightly', $version . 
-                               '-candidates', $rcStr, $product. '-' . 
+                               '-candidates', $buildStr, $product. '-' . 
                                $oldVersion . '-' . $version .
                                '.%locale%.%platform%.partial.mar');
 
     $partialUpdate->{'betatest-url'} =
      'http://' . $stagingServer. '/pub/mozilla.org/' . $product . 
-     '/nightly/' .  $version . '-candidates/' . $rcStr . '/' . $product . 
+     '/nightly/' .  $version . '-candidates/' . $buildStr . '/' . $product . 
      '-' . $oldVersion .  '-' . $version . '.%locale%.%platform%.partial.mar';
 
-    $partialUpdate->{'beta-url'} =
-     'http://' . $ftpServer . '/pub/mozilla.org/' . $product. '/nightly/' . 
-     $version . '-candidates/' . $rcStr . '/' . $product . '-' . $oldVersion . 
-     '-' . $version . '.%locale%.%platform%.partial.mar';
-
+    if ($useBetaChannel) {
+       $partialUpdate->{'beta-url'} =
+        'http://' . $ftpServer . '/pub/mozilla.org/' . $product. '/nightly/' . 
+         $version . '-candidates/' . $buildStr . '/' . $product . '-' . $oldVersion . 
+        '-' . $version . '.%locale%.%platform%.partial.mar';
+    }
     $currentUpdateObj->{'partial'} = $partialUpdate;
 
     # Now the same thing, only complete update
@@ -199,19 +206,20 @@ sub BumpPatcherConfig {
      '-complete&os=%bouncer-platform%&lang=%locale%';
 
     $completeUpdate->{'path'} = catfile($product, 'nightly', $version . 
-     '-candidates', $rcStr, $product . '-' . $version .
+     '-candidates', $buildStr, $product . '-' . $appVersion .
      '.%locale%.%platform%.complete.mar');
 
     $completeUpdate->{'betatest-url'} = 
      'http://' . $stagingServer . '/pub/mozilla.org/' . $product . 
-     '/nightly/' .  $version . '-candidates/' . $rcStr .  '/' . $product . 
-     '-' . $version .  '.%locale%.%platform%.complete.mar';
+     '/nightly/' .  $version . '-candidates/' . $buildStr .  '/' . $product . 
+     '-' . $appVersion .  '.%locale%.%platform%.complete.mar';
 
-    $completeUpdate->{'beta-url'} = 
-     'http://' . $ftpServer . '/pub/mozilla.org/' . $product. '/nightly/' .
-     $version . '-candidates/' . $rcStr .  '/' . $product . '-' . $version .
-     '.%locale%.%platform%.complete.mar';
-
+    if ($useBetaChannel) {
+       $completeUpdate->{'beta-url'} = 
+        'http://' . $ftpServer . '/pub/mozilla.org/' . $product. '/nightly/' .
+        $version . '-candidates/' . $buildStr .  '/' . $product . '-' . $appVersion .
+        '.%locale%.%platform%.complete.mar';
+    }
     $currentUpdateObj->{'complete'} = $completeUpdate;
 
     # Now, add the new <release> stanza for the release we're working on
@@ -220,7 +228,7 @@ sub BumpPatcherConfig {
     $appObj->{'release'}->{$version} = $releaseObj = {};
 
     $releaseObj->{'schema'} = '1';
-    $releaseObj->{'version'} = $releaseObj->{'extension-version'} = $version;
+    $releaseObj->{'version'} = $releaseObj->{'extension-version'} = $appVersion;
     $releaseObj->{'prettyVersion'} = $prettyVersion;
 
     my $linBuildId;
@@ -251,8 +259,8 @@ sub BumpPatcherConfig {
 
     $releaseObj->{'completemarurl'} = 
      'http://' . $stagingServer . '/pub/mozilla.org/' . $product. 
-     '/nightly/' .  $version . '-candidates/' . $rcStr . '/' . $product . '-'. 
-     $version . '.%locale%.%platform%.complete.mar',
+     '/nightly/' .  $version . '-candidates/' . $buildStr . '/' . $product . '-'. 
+     $appVersion . '.%locale%.%platform%.complete.mar',
 
     # Compute locale exceptions; 
     # $localeInfo is hash ref of locales -> array of platforms the locale

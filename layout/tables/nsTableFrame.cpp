@@ -1262,8 +1262,7 @@ nsDisplayTableItem::GetBounds(nsDisplayListBuilder* aBuilder) {
 }
 
 PRBool
-nsDisplayTableItem::IsVaryingRelativeToFrame(nsDisplayListBuilder* aBuilder,
-                                             nsIFrame* aAncestorFrame)
+nsDisplayTableItem::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder)
 {
   if (!mPartHasFixedBackground)
     return PR_FALSE;
@@ -1274,8 +1273,9 @@ nsDisplayTableItem::IsVaryingRelativeToFrame(nsDisplayListBuilder* aBuilder,
   // will move relative to its viewport, which means this display item will
   // change when it is moved.  If they are in different documents, we do not
   // want to return true because mFrame won't move relative to its viewport.
-  return mFrame == aAncestorFrame ||
-    nsLayoutUtils::IsProperAncestorFrame(aAncestorFrame, mFrame);
+  nsIFrame* rootMover = aBuilder->GetRootMovingFrame();
+  return mFrame == rootMover ||
+    nsLayoutUtils::IsProperAncestorFrame(rootMover, mFrame);
 }
 
 /* static */ void
@@ -2969,11 +2969,13 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
                                        -1, -1, PR_FALSE);
       InitChildReflowState(kidReflowState);
 
-      // If this isn't the first row group, then we can't be at the top of the page
-      // When a new page starts, a head row group may be added automatically.
-      // We also consider the row groups just after the head as the top of the page.
-      // That is to prevent the infinite loop in some circumstance. See bug 344883.
-      if (childX > (thead ? 1 : 0)) {
+      // If this isn't the first row group, and the previous row group has a
+      // nonzero YMost, then we can't be at the top of the page.
+      // We ignore the head row group in this check, because a head row group
+      // may be automatically added at the top of *every* page.  This prevents
+      // infinite loops in some circumstances - see bug 344883.
+      if (childX > (thead ? 1 : 0) &&
+          (rowGroups[childX - 1]->GetRect().YMost() > 0)) {
         kidReflowState.mFlags.mIsTopOfPage = PR_FALSE;
       }
       aReflowState.y += cellSpacingY;

@@ -1,0 +1,31 @@
+<html>
+<head>
+<style>
+  body {
+    /* Standize line-height, because the default varies by platform */
+    line-height: 50px;
+  }
+  div#a {
+    width: 3em;
+    -moz-column-count: 2;
+    -moz-column-gap: 0px;
+    background: lightgreen;
+  }
+  div#b {
+    height: 100px;
+    float: left;
+    background: lightblue;
+  }
+  div#c {
+    height: 100px;
+    background: orange;
+  }
+</style>
+</head>
+<body>
+  <div id="a">
+    <div id="b"><br/><br/>b</div>
+    <div id="c">c c c</div>
+  </div>
+</body>
+</html>

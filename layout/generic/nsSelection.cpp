@@ -2243,7 +2243,9 @@ nsFrameSelection::HandleClick(nsIContent *aNewFocus,
 
   if (!aContinueSelection) {
     mMaintainRange = nsnull;
-    mAncestorLimiter = nsnull;
+    if (!IsValidSelectionPoint(this, aNewFocus)) {
+      mAncestorLimiter = nsnull;
+    }
   }
 
   mHint = HINT(aHint);
