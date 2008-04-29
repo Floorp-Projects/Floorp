@@ -59,9 +59,10 @@ gfxQPainterSurface::gfxQPainterSurface(const gfxIntSize& size, gfxImageFormat fo
     Init (csurf);
 }
 
-gfxQPainterSurface::gfxQPainterSurface(const gfxIntSize& size)
+gfxQPainterSurface::gfxQPainterSurface(const gfxIntSize& size, gfxContentType content)
 {
-    cairo_surface_t *csurf = cairo_qpainter_surface_create_with_qpixmap (size.width,
+    cairo_surface_t *csurf = cairo_qpainter_surface_create_with_qpixmap ((cairo_content_t) content,
+                                                                         size.width,
                                                                          size.height);
     mPainter = cairo_qpainter_surface_get_qpainter (csurf);
 
