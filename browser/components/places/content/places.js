@@ -215,12 +215,12 @@ var PlacesOrganizer = {
     // Update the right-pane contents.
     // We must update also if the user clears the search box, in that case
     // we are called with resetSearchBox == false.
-    if (this._content.place != placeURI || !resetSearchBox)
+    if (this._content.place != placeURI || !resetSearchBox) {
       this._content.place = placeURI;
 
-    // This just updates the back/forward buttons, it doesn't call us back
-    // because node.uri is our current selection.
-    this.location = node.uri;
+      // Update the back/forward buttons.
+      this.location = node.uri;
+    }
 
     // Make sure the search UI is hidden.
     PlacesSearchBox.hideSearchUI();
