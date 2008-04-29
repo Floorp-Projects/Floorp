@@ -163,6 +163,9 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug425013.html \
 		bug426308-redirect.sjs \
 		test_bug426308.html \
+		test_bug426646.html \
+		file_bug426646-1.html \
+		file_bug426646-2.html \
 		test_bug429157.html \
 		test_XHR.html \
 		file_XHR_pass1.xml \
