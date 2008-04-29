@@ -49,7 +49,9 @@
 
 #ifdef MOZ_ENABLE_GTK2
 // for getenv
-#include <stdlib.h>
+#include <cstdlib>
+// for round
+#include <cmath>
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -170,8 +172,9 @@ nsThebesDeviceContext::SetDPI()
         }
 
 #if defined(MOZ_ENABLE_GTK2)
-        float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
-        PRInt32 OSVal = NSToCoordRound(float(::gdk_screen_width()) / screenWidthIn);
+        GdkScreen *screen = gdk_screen_get_default();
+        gtk_settings_get_for_screen(screen); // Make sure init is run so we have a resolution
+        PRInt32 OSVal = PRInt32(round(gdk_screen_get_resolution(screen)));
 
         if (prefDPI == 0) // Force the use of the OS dpi
             dpi = OSVal;

@@ -24,10 +24,13 @@ classic.jar:
 +  skin/classic/global/printPreview.css
 +  skin/classic/global/printPageSetup.css
 +  skin/classic/global/preferences.css
++  skin/classic/global/console/console.css                     (console/console.css)
 +  skin/classic/global/console/console.png                     (console/console.png)
++  skin/classic/global/console/console-toolbar.png             (console/console-toolbar.png)
 +  skin/classic/global/dirListing/remote.png                   (dirListing/remote.png)
 +  skin/classic/global/Filepicker.png                          (filepicker/Filepicker.png)
 +  skin/classic/global/icons/Authentication.png                (icons/Authentication.png)
++  skin/classic/global/icons/autoscroll.png                    (icons/autoscroll.png)
 +  skin/classic/global/icons/blacklist_favicon.png             (icons/blacklist_favicon.png)
 +  skin/classic/global/icons/blacklist_large.png               (icons/blacklist_large.png)
 +  skin/classic/global/icons/find.png                          (icons/find.png)
@@ -35,6 +38,7 @@ classic.jar:
 +  skin/classic/global/icons/loading_16.png                    (icons/loading_16.png)
 +  skin/classic/global/icons/notloading_16.png                 (icons/notloading_16.png)
 +  skin/classic/global/icons/notfound.png                      (icons/notfound.png)
++  skin/classic/global/icons/sslWarning.png                    (icons/sslWarning.png)
 +  skin/classic/global/icons/wrap.png                          (icons/wrap.png)
 +  skin/classic/global/menu/Menu-arrow.png                     (menu/Menu-arrow.png)
 +  skin/classic/global/menu/Menu-arrow-rtl.png                 (menu/Menu-arrow-rtl.png)

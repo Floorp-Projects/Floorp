@@ -18,14 +18,14 @@ sub Execute {
     my $appName = $config->Get(var => 'appName');
     my $productTag = $config->Get(var => 'productTag');
     my $version = $config->GetVersion(longName => 0);
-    my $rc = $config->Get(var => 'rc');
+    my $build = $config->Get(var => 'build');
     my $logDir = $config->Get(sysvar => 'logDir');
     my $sourceDir = $config->Get(var => 'sourceDir');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
 
     # create staging area
     my $versionedSourceDir = catfile($sourceDir, $product . '-' . $version, 
-                           'batch-source', 'rc' . $rc);
+                           'batch-source', 'build' . $build);
 
     if (not -d $versionedSourceDir) {
         MkdirWithPath(dir => $versionedSourceDir) 
@@ -43,7 +43,7 @@ sub Execute {
     $this->Shell(
       cmd => 'make',
       cmdArgs => ['-f', 'client.mk', 'checkout',
-                  'MOZ_CO_PROJECT=' . $appName],
+                  'MOZ_CO_PROJECT=' . $appName . ',xulrunner'],
       dir => catfile($versionedSourceDir, 'mozilla'),
       logFile => catfile($logDir, 'source.log'),
     );
@@ -92,7 +92,7 @@ sub Push {
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
     my $version = $config->GetVersion(longName => 0);
-    my $rc = $config->Get(var => 'rc');
+    my $build = $config->Get(var => 'build');
     my $logDir = $config->Get(sysvar => 'logDir');
     my $sourceDir = $config->Get(var => 'sourceDir');
     my $stagingUser = $config->Get(var => 'stagingUser');
@@ -106,7 +106,7 @@ sub Push {
 
     $this->Shell(
       cmd => 'rsync',
-      cmdArgs => ['-av', '-e', 'ssh', catfile('batch-source', 'rc' . $rc, 
+      cmdArgs => ['-av', '-e', 'ssh', catfile('batch-source', 'build' . $build, 
                             $product . '-' . $version . '-source.tar.bz2'),
                   $stagingUser . '@' . $stagingServer . ':' . $candidateDir],
       logFile => catfile($logDir, 'source.log'),

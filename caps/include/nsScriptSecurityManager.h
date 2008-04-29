@@ -408,7 +408,8 @@ public:
                 nsIURI* aSource, nsIURI* aTarget);
     static nsresult
     CheckSameOriginPrincipal(nsIPrincipal* aSubject,
-                             nsIPrincipal* aObject);
+                             nsIPrincipal* aObject,
+                             PRBool aIsCheckConnect);
 
     static PRBool
     GetStrictFileOriginPolicy()
@@ -445,7 +446,7 @@ private:
     CheckPropertyAccessImpl(PRUint32 aAction,
                             nsAXPCNativeCallContext* aCallContext,
                             JSContext* cx, JSObject* aJSObject,
-                            nsISupports* aObj,
+                            nsISupports* aObj, nsIURI* aTargetURI,
                             nsIClassInfo* aClassInfo,
                             const char* aClassName, jsval aProperty,
                             void** aCachedClassPolicy);
@@ -453,7 +454,8 @@ private:
     nsresult
     CheckSameOriginDOMProp(nsIPrincipal* aSubject, 
                            nsIPrincipal* aObject,
-                           PRUint32 aAction);
+                           PRUint32 aAction,
+                           PRBool aIsCheckConnect);
 
     nsresult
     LookupPolicy(nsIPrincipal* principal,

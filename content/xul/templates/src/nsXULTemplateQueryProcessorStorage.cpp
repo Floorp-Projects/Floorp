@@ -448,12 +448,16 @@ nsXULTemplateQueryProcessorStorage::CompareResults(nsIXULTemplateResult* aLeft,
                                                    PRInt32* aResult)
 {
     *aResult = 0;
+    if (!aVar)
+      return NS_OK;
 
     // We're going to see if values are integers or float, to perform
     // a suitable comparison
     nsCOMPtr<nsISupports> leftValue, rightValue;
-    aLeft->GetBindingObjectFor(aVar, getter_AddRefs(leftValue));
-    aRight->GetBindingObjectFor(aVar, getter_AddRefs(rightValue));
+    if (aLeft)
+      aLeft->GetBindingObjectFor(aVar, getter_AddRefs(leftValue));
+    if (aRight)
+      aRight->GetBindingObjectFor(aVar, getter_AddRefs(rightValue));
 
     if (leftValue && rightValue) {
         nsCOMPtr<nsIVariant> vLeftValue = do_QueryInterface(leftValue);
@@ -496,10 +500,12 @@ nsXULTemplateQueryProcessorStorage::CompareResults(nsIXULTemplateResult* aLeft,
 
     // Values are not integers or floats, so we just compare them as simple strings
     nsAutoString leftVal;
-    aLeft->GetBindingFor(aVar, leftVal);
+    if (aLeft)
+      aLeft->GetBindingFor(aVar, leftVal);
 
     nsAutoString rightVal;
-    aRight->GetBindingFor(aVar, rightVal);
+    if (aRight)
+      aRight->GetBindingFor(aVar, rightVal);
 
     *aResult = Compare(nsDependentString(leftVal),
                        nsDependentString(rightVal),

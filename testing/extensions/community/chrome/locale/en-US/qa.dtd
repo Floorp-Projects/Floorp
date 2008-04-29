@@ -215,3 +215,5 @@ target='_blank'>Bugzilla</html:a> to learn more about how we handle bugs, run ad
 ">
 
 <!ENTITY qa.notification.inprogress "Come Join! Event in Progress Now!">
+<!ENTITY qacompanionMenu.accesskey "Q">
+<!ENTITY qacompanionMenu.label "QA Companion">

@@ -101,6 +101,7 @@ function test()
 
       // Accessors for returning a value for various properties
       let getItems = function() downloadView.itemCount;
+      let getSelected = function() downloadView.selectedCount;
       let getClipboard = function() {
         let clip = Cc["@mozilla.org/widget/clipboard;1"].
                    getService(Ci.nsIClipboard);
@@ -128,6 +129,7 @@ function test()
         ["openReferrer", "openReferrer", counter, counter],
         ["copyLocation", null, null, getClipboard],
         ["removeFromList", null, null, getItems],
+        ["selectAll", null, null, getSelected],
       ];
 
       // All the expected results for both single and double selections
@@ -142,6 +144,7 @@ function test()
           openReferrer: [1, "Opened one referrer"],
           copyLocation: ["http://ed.agadak.net/file", "Copied one location"],
           removeFromList: [3, "Removed one downloads, remaining 3"],
+          selectAll: [3, "Selected all 3 remaining downloads"],
         },
         double: {
           pause: [0, "Paused neither download"],
@@ -153,12 +156,16 @@ function test()
           openReferrer: [2, "Opened both referrers"],
           copyLocation: ["http://mozilla.org/file\nhttp://mozilla.com/file", "Copied both locations"],
           removeFromList: [1, "Removed both downloads, remaining 1"],
+          selectAll: [1, "Selected the 1 remaining download"],
         },
       };
 
       // Run two tests: single selected, double selected
       for each (let whichTest in ["single", "double"]) {
         let expected = allExpected[whichTest];
+
+        // Select the first download
+        downloadView.selectedIndex = 0;
 
         // Select 2 downloads for double
         if (whichTest == "double")

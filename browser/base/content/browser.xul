@@ -191,7 +191,8 @@
     <!-- Popup for site identity information -->
     <panel id="identity-popup" position="after_start" hidden="true" noautofocus="true"
            onpopupshown="document.getElementById('identity-popup-more-info-button').focus();"
-           onpopuphidden="focusAndSelectUrlBar();" norestorefocus="true">
+           onpopuphidden="focusAndSelectUrlBar();" norestorefocus="true"
+           chromedir="&locale.dir;">
       <hbox id="identity-popup-container" align="top">
         <image id="identity-popup-icon"/>
         <vbox id="identity-popup-content-box">
@@ -237,7 +238,7 @@
     </vbox>
   </tooltip>
 
-  <toolbox id="navigator-toolbox" type="drag" class="toolbox-top" mode="icons"
+  <toolbox id="navigator-toolbox" class="toolbox-top" mode="icons"
            defaultmode="icons">
     <!-- Menu -->
     <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
@@ -321,7 +322,6 @@
                  showcommentcolumn="true"
                  showimagecolumn="true"
                  enablehistory="true"
-                 timeout="100"
                  maxrows="6"
                  newlines="stripsurroundingwhitespace"
                  oninput="URLBarOnInput(event);"
@@ -337,6 +337,7 @@
                We only add the identity-box button to the tab order when the location bar
                has focus, otherwise pressing F6 focuses it instead of the location bar -->
           <box id="identity-box" role="button"
+               chromedir="&locale.dir;"
                onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
                onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
             <hbox align="center">

@@ -99,6 +99,9 @@ CAccessibleText::get_attributes(long aOffset, long *aStartOffset,
                                 long *aEndOffset, BSTR *aTextAttributes)
 {
 __try {
+  if (!aStartOffset || !aEndOffset || !aTextAttributes)
+    return E_INVALIDARG;
+
   *aStartOffset = 0;
   *aEndOffset = 0;
   *aTextAttributes = NULL;

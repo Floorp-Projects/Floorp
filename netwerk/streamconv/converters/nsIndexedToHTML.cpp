@@ -571,7 +571,10 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
         // will prematurely close the string.  Go ahead an
         // add a base href.
         buffer.AppendLiteral("<base href=\"");
-        AppendASCIItoUTF16(baseUri, buffer);
+        NS_ConvertUTF8toUTF16 utf16BaseURI(baseUri);
+        nsString htmlEscapedUri;
+        htmlEscapedUri.Adopt(nsEscapeHTML2(utf16BaseURI.get(), utf16BaseURI.Length()));
+        buffer.Append(htmlEscapedUri);
         buffer.AppendLiteral("\">\n");
     }
     else
@@ -601,7 +604,11 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
         if (NS_FAILED(rv)) return rv;
 
         buffer.AppendLiteral("<p id=\"UI_goUp\"><a class=\"up\" href=\"");
-        AppendASCIItoUTF16(parentStr, buffer);
+
+        NS_ConvertUTF8toUTF16 utf16ParentStr(parentStr);
+        nsString htmlParentStr;
+        htmlParentStr.Adopt(nsEscapeHTML2(utf16ParentStr.get(), utf16ParentStr.Length()));
+        buffer.Append(htmlParentStr);
         buffer.AppendLiteral("\">");
         AppendNonAsciiToNCR(parentText, buffer);
         buffer.AppendLiteral("</a></p>\n");
@@ -894,8 +901,10 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         escFlags = esc_Forced | esc_OnlyASCII | esc_AlwaysCopy | esc_FileBaseName | esc_Colon | esc_Directory;
     }
     NS_EscapeURL(utf8UnEscapeSpec.get(), utf8UnEscapeSpec.Length(), escFlags, escapeBuf);
-
-    AppendUTF8toUTF16(escapeBuf, pushBuffer);
+    NS_ConvertUTF8toUTF16 utf16URI(escapeBuf);
+    nsString htmlEscapedURL;
+    htmlEscapedURL.Adopt(nsEscapeHTML2(utf16URI.get(), utf16URI.Length()));
+    pushBuffer.Append(htmlEscapedURL);
 
     pushBuffer.AppendLiteral("\">");
 

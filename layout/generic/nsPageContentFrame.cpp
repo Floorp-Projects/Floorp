@@ -218,10 +218,12 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
                   !frame->GetNextInFlow(), "bad child flow list");
   }
   // Reflow our fixed frames 
-  mFixedContainer.Reflow(this, aPresContext, aReflowState, aStatus,
+  nsReflowStatus fixedStatus = NS_FRAME_COMPLETE;
+  mFixedContainer.Reflow(this, aPresContext, aReflowState, fixedStatus,
                          aReflowState.availableWidth,
                          aReflowState.availableHeight,
                          PR_FALSE, PR_TRUE, PR_TRUE); // XXX could be optimized
+  NS_ASSERTION(NS_FRAME_IS_COMPLETE(fixedStatus), "fixed frames can be truncated, but not incomplete");
 
   // Return our desired size
   aDesiredSize.width = aReflowState.availableWidth;

@@ -549,6 +549,11 @@ gfxWindowsFont::ComputeMetrics()
     mMetrics->maxDescent = metrics.tmDescent;
     mMetrics->maxAdvance = metrics.tmMaxCharWidth;
     mMetrics->aveCharWidth = PR_MAX(1, metrics.tmAveCharWidth);
+    // The font is monospace when TMPF_FIXED_PITCH is *not* set!
+    // See http://msdn2.microsoft.com/en-us/library/ms534202(VS.85).aspx
+    if (!(metrics.tmPitchAndFamily & TMPF_FIXED_PITCH)) {
+      mMetrics->maxAdvance = mMetrics->aveCharWidth;
+    }
 
     // Cache the width of a single space.
     SIZE size;
@@ -700,7 +705,7 @@ AddFontNameToArray(const nsAString& aName,
                    void *closure)
 {
     if (!aName.IsEmpty()) {
-        nsTArray<nsAutoString> *list = static_cast<nsTArray<nsAutoString> *>(closure);
+        nsTArray<nsString> *list = static_cast<nsTArray<nsString> *>(closure);
 
         if (list->IndexOf(aName) == list->NoIndex)
             list->AppendElement(aName);
@@ -712,7 +717,7 @@ AddFontNameToArray(const nsAString& aName,
 void
 gfxWindowsFontGroup::GroupFamilyListToArrayList(nsTArray<nsRefPtr<FontEntry> > *list)
 {
-    nsAutoTArray<nsAutoString, 15> fonts;
+    nsAutoTArray<nsString, 15> fonts;
     ForEachFont(AddFontNameToArray, &fonts);
 
     PRUint32 len = fonts.Length();
@@ -727,12 +732,12 @@ gfxWindowsFontGroup::FamilyListToArrayList(const nsString& aFamilies,
                                            const nsCString& aLangGroup,
                                            nsTArray<nsRefPtr<FontEntry> > *list)
 {
-    nsAutoTArray<nsAutoString, 15> fonts;
+    nsAutoTArray<nsString, 15> fonts;
     ForEachFont(aFamilies, aLangGroup, AddFontNameToArray, &fonts);
 
     PRUint32 len = fonts.Length();
     for (PRUint32 i = 0; i < len; ++i) {
-        const nsAutoString& str = fonts[i];
+        const nsString& str = fonts[i];
         nsRefPtr<FontEntry> fe = gfxWindowsPlatform::GetPlatform()->FindFontEntry(str, mStyle);
         list->AppendElement(fe);
     }
@@ -1674,7 +1679,7 @@ public:
             PRUint32 nextCh = 0;
             if (i+1 < mItemLength) {
                 nextCh = mItemString[i+1];
-                if ((i+2 < mItemLength) && NS_IS_HIGH_SURROGATE(ch) && NS_IS_LOW_SURROGATE(mItemString[i+2]))
+                if ((i+2 < mItemLength) && NS_IS_HIGH_SURROGATE(nextCh) && NS_IS_LOW_SURROGATE(mItemString[i+2]))
                     nextCh = SURROGATE_TO_UCS4(nextCh, mItemString[i+2]);
             }
             nsRefPtr<FontEntry> fe = FindFontForChar(ch,

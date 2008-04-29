@@ -153,6 +153,7 @@ private:
   BOOL mFlatMenus;
   OSVERSIONINFO mOsVersion;
 
+  PRPackedBool mIsXPOrLater;
   PRPackedBool mIsVistaOrLater;
 };
 

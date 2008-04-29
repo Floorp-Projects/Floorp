@@ -221,6 +221,8 @@ public:
     mFragmentParser = aParser;
   }
 
+  virtual nsresult SetEditingState(EditingState aState);
+
 protected:
   nsresult GetBodySize(PRInt32* aWidth,
                        PRInt32* aHeight);

@@ -192,7 +192,7 @@ sub Execute {
     my $product = $config->Get(var => 'product');
     my $productTag = $config->Get(var => 'productTag');
     my $version = $config->GetVersion(longName => 0);
-    my $rc = $config->Get(var => 'rc');
+    my $build = $config->Get(var => 'build');
     my $logDir = $config->Get(sysvar => 'logDir');
     my $stageHome = $config->Get(var => 'stageHome');
     my $appName = $config->Get(var => 'appName');
@@ -410,7 +410,7 @@ sub Verify {
     my $product = $config->Get(var => 'product');
     my $appName = $config->Get(var => 'appName');
     my $logDir = $config->Get(sysvar => 'logDir');
-    my $rc = $config->Get(var => 'rc');
+    my $build = $config->Get(var => 'build');
     my $stageHome = $config->Get(var => 'stageHome');
     my $productTag = $config->Get(var => 'productTag');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
@@ -556,7 +556,7 @@ sub TrimCallback {
          # ZIP files are not shipped; neither are en-US lang packs
          ($dirent =~ /\.zip$/) || ($dirent =~ /en-US\.xpi$/) ||
          # nor the BuildID files, nor the 2.0.0.x signing log
-         ($dirent =~ /_info.txt$/) || ($dirent =~ /win32_signing_rc\d+\.log/) ) {
+         ($dirent =~ /_info.txt$/) || ($dirent =~ /win32_signing_build\d+\.log/) ) {
             unlink($dirent) || die "Could not unlink $dirent: $!";
             $this->Log(msg => "Unlinked $dirent");
             return;
@@ -801,6 +801,7 @@ sub GeneratePrettyName {
     my $config = new Bootstrap::Config();
     my $currentVersion = $config->GetVersion(longName => 1);
     my $currentVersionShort = $config->GetVersion(longName => 0);
+    my $oldVersionShort = $config->GetOldVersion(longName => 0);
 
     my @result;
 
@@ -819,7 +820,8 @@ sub GeneratePrettyName {
 
     } elsif ( $name =~ m/ $win_partial_update_re /x ) {
         # Windows partial update files.
-        push @result, "update/$5/$4/$1$2-$3" . ".partial.mar";
+        push @result, "update/$5/$4/$1$2-" . $oldVersionShort . '-' .
+         $currentVersionShort . ".partial.mar";
 
     # Windows installer files.
     } elsif ( $name =~ m/ $win_installer_re /x ) {
@@ -838,8 +840,9 @@ sub GeneratePrettyName {
          ".complete.mar";
 
     } elsif ( $name =~ m/ $mac_partial_update_re /x ) {
-         # Mac partial update files.
-         push @result, "update/$5/$4/$1$2-$3" . ".partial.mar";
+        # Mac partial update files.
+        push @result, "update/$5/$4/$1$2-" . $oldVersionShort . '-' . 
+         $currentVersionShort . ".partial.mar";
 
     # Linux tarballs.
     } elsif ( $name =~ m/ $linux_re /x ) {
@@ -854,7 +857,8 @@ sub GeneratePrettyName {
 
     } elsif ( $name =~ m/ $linux_partial_update_re /x ) {
         # Linux partial update files.
-        push @result, "update/$5/$4/$1$2-$3" . ".partial.mar";
+        push @result, "update/$5/$4/$1$2-" . $oldVersionShort . '-' .
+         $currentVersionShort . ".partial.mar";
 
     # Source tarballs.
     } elsif ( $name =~ m/ $source_re /x ) {

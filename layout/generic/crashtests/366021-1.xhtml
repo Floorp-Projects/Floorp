@@ -1,0 +1,24 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+
+<head>
+<script>
+
+function boom()
+{
+  document.getElementById("xulwin").appendChild(document.getElementById("sss"));
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+
+<body onload="setTimeout(boom, 10)">
+
+<span id="sss"><tr><td style="position: absolute;">td</td></tr></span>
+
+<window id="xulwin" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"></window>
+
+</body>
+
+</html>

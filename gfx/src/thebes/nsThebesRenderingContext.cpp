@@ -348,6 +348,9 @@ NS_IMETHODIMP
 nsThebesRenderingContext::SetColor(nscolor aColor)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::SetColor 0x%08x\n", this, aColor));
+    /* This sets the color assuming the sRGB color space, since that's what all
+     * CSS colors are defined to be in by the spec.
+     */
     mThebes->SetColor(gfxRGBA(aColor));
     
     mColor = aColor;

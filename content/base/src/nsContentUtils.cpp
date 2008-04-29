@@ -2500,6 +2500,22 @@ nsContentUtils::UnregisterPrefCallback(const char *aPref,
     sPref->UnregisterCallback(aPref, aCallback, aClosure);
 }
 
+static int PR_CALLBACK
+BoolVarChanged(const char *aPref, void *aClosure)
+{
+  PRBool* cache = static_cast<PRBool*>(aClosure);
+  *cache = nsContentUtils::GetBoolPref(aPref, PR_FALSE);
+  
+  return 0;
+}
+
+void
+nsContentUtils::AddBoolPrefVarCache(const char *aPref,
+                                    PRBool* aCache)
+{
+  *aCache = GetBoolPref(aPref, PR_FALSE);
+  RegisterPrefCallback(aPref, BoolVarChanged, aCache);
+}
 
 static const char *gEventNames[] = {"event"};
 static const char *gSVGEventNames[] = {"evt"};
@@ -3844,6 +3860,13 @@ nsContentUtils::CheckSecurityBeforeLoad(nsIURI* aURIToLoad,
                                         nsISupports* aExtra)
 {
   NS_PRECONDITION(aLoadingPrincipal, "Must have a loading principal here");
+
+  PRBool isSystemPrin = PR_FALSE;
+  if (NS_SUCCEEDED(sSecurityManager->IsSystemPrincipal(aLoadingPrincipal,
+                                                       &isSystemPrin)) &&
+      isSystemPrin) {
+    return NS_OK;
+  }
   
   // XXXbz do we want to fast-path skin stylesheets loading XBL here somehow?
   // CheckLoadURIWithPrincipal
@@ -4035,7 +4058,7 @@ nsContentUtils::GetAccelKeyCandidates(nsIDOMEvent* aDOMEvent,
       for (PRUint32 i = 0;
            i < nativeKeyEvent->alternativeCharCodes.Length(); ++i) {
         PRUint32 ch =
-          nativeKeyEvent->alternativeCharCodes[0].mUnshiftedCharCode;
+          nativeKeyEvent->alternativeCharCodes[i].mUnshiftedCharCode;
         if (!ch || ch == nativeKeyEvent->charCode)
           continue;
 

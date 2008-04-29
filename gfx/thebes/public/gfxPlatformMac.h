@@ -42,6 +42,9 @@
 #include "nsTArray.h"
 #include "gfxPlatform.h"
 
+#define MAC_OS_X_VERSION_10_4_HEX 0x00001040
+#define MAC_OS_X_VERSION_10_5_HEX 0x00001050
+
 class THEBES_API gfxPlatformMac : public gfxPlatform {
 public:
     gfxPlatformMac();
@@ -73,6 +76,10 @@ public:
     // in some situations, need to make decisions about ambiguous characters, may need to look at multiple pref langs
     void GetLangPrefs(eFontPrefLang aPrefLangs[], PRUint32 &aLen, eFontPrefLang aCharLang, eFontPrefLang aPageLang);
     
+    // Returns the OS X version as returned from Gestalt(gestaltSystemVersion, ...)
+    // Ex: Mac OS X 10.4.x ==> 0x104x 
+    PRInt32 OSXVersion();
+
 private:
     void gfxPlatformMac::AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], PRUint32 &aLen, 
                                             eFontPrefLang aCharLang, eFontPrefLang aPageLang);
@@ -80,6 +87,7 @@ private:
     virtual cmsHPROFILE GetPlatformCMSOutputProfile();
     
     nsTArray<PRUint32> mCJKPrefLangs;
+    PRInt32 mOSXVersion;
 };
 
 #endif /* GFX_PLATFORM_MAC_H */

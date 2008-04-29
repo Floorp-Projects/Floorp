@@ -3270,6 +3270,9 @@ nsContinuingTextFrame::GetFirstContinuation() const
   nsIFrame *firstContinuation,
   *previous = const_cast<nsIFrame*>
                         (static_cast<const nsIFrame*>(mPrevContinuation));
+
+  NS_ASSERTION(previous, "How can an nsContinuingTextFrame be the first continuation?");
+
   do {
     firstContinuation = previous;
     previous = firstContinuation->GetPrevContinuation();
@@ -3686,7 +3689,8 @@ nsTextFrame::UnionTextDecorationOverflow(nsPresContext* aPresContext,
   // When this frame is not selected, the text-decoration area must be in
   // frame bounds.
   float ratio;
-  if (!HasSelectionOverflowingDecorations(aPresContext, &ratio))
+  if (!(GetStateBits() & NS_FRAME_SELECTED_CONTENT) ||
+      !HasSelectionOverflowingDecorations(aPresContext, &ratio))
     return;
 
   nsLineLayout::CombineTextDecorations(aPresContext,

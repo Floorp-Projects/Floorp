@@ -27,18 +27,34 @@ var Microformats = {
    *         object array with the new objects added
    */
   get: function(name, rootElement, options, targetArray) {
-    if (!Microformats[name]) {
+    function isAncestor(haystack, needle) {
+      var parent = needle;
+      while (parent = parent.parentNode) {
+        /* We need to check parentNode because defaultView.frames[i].frameElement */
+        /* isn't a real DOM node */
+        if (parent == needle.parentNode) {
+          return true;
+        }
+      }
+      return false;
+    }
+    if (!Microformats[name] || !rootElement) {
       return;
     }
     targetArray = targetArray || [];
 
-    rootElement = rootElement || content.document;
+    /* Root element might not be the document - we need the document's default view */
+    /* to get frames and to check their ancestry */
+    var defaultView = rootElement.defaultView || rootElement.ownerDocument.defaultView;
+    var rootDocument = rootElement.ownerDocument || rootElement;
 
     /* If recurseFrames is undefined or true, look through all child frames for microformats */
     if (!options || !options.hasOwnProperty("recurseFrames") || options.recurseFrames) {
-      if (rootElement.defaultView && rootElement.defaultView.frames.length > 0) {
-        for (let i=0; i < rootElement.defaultView.frames.length; i++) {
-          Microformats.get(name, rootElement.defaultView.frames[i].document, options, targetArray);
+      if (defaultView && defaultView.frames.length > 0) {
+        for (let i=0; i < defaultView.frames.length; i++) {
+          if (isAncestor(rootDocument, defaultView.frames[i].frameElement)) {
+            Microformats.get(name, defaultView.frames[i].document, options, targetArray);
+          }
         }
       }
     }
@@ -536,7 +552,7 @@ var Microformats = {
             /* We can swallow this exception. If the creation of the */
             /* mf object fails, then the node isn't a microformat */
           }
-          if (result) {
+          if (result != undefined) {
             if (prop.microformat_property) {
               result = result[prop.microformat_property];
             }
@@ -548,12 +564,12 @@ var Microformats = {
       }
       /* This handles the case where one property implies another property */
       /* For instance, org by itself is actually org.organization-name */
-      if ((prop.implied) && (result)) {
+      if (prop.implied && (result != undefined)) {
         var temp = result;
         result = {};
         result[prop.implied] = temp;
       }
-      if (result && prop.values) {
+      if (prop.values && (result != undefined)) {
         var validType = false;
         for (let value in prop.values) {
           if (result.toLowerCase() == prop.values[value]) {
@@ -627,7 +643,7 @@ var Microformats = {
             subresult = Microformats.parser.getPropertyInternal(subpropnodes[i], propnode,
                                                                 subpropobj,
                                                                 subpropname, mfnode);
-            if (subresult) {
+            if (subresult != undefined) {
               resultArray.push(subresult);
               /* If we're not a plural property, don't bother getting more */
               if (!subpropobj.plural) {
@@ -639,7 +655,7 @@ var Microformats = {
             subresult = Microformats.parser.getPropertyInternal(propnode, null,
                                                                 subpropobj,
                                                                 subpropname, mfnode);
-            if (subresult) {
+            if (subresult != undefined) {
               resultArray.push(subresult);
             }
           }
@@ -745,7 +761,7 @@ var Microformats = {
                                                                   mfnode,
                                                                   propobj,
                                                                   propname);
-          if (subresult) {
+          if (subresult != undefined) {
             resultArray.push(subresult);
             /* If we're not a plural property, don't bother getting more */
             if (!propobj.plural) {

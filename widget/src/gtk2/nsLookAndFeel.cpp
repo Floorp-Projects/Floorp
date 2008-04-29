@@ -261,9 +261,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
         break;
 
-        // from the CSS3 working draft (not yet finalized)
-        // http://www.w3.org/tr/2000/wd-css3-userint-20000216.html#color
-
+    case eColor__moz_eventreerow:
     case eColor__moz_field:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_NORMAL]);
         break;
@@ -303,7 +301,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
     case eColor__moz_menuhovertext:
         aColor = sMenuHoverText;
         break;
-    case eColor__moz_oddrowbackground:
+    case eColor__moz_oddtreerow:
         aColor = sOddCellBackground;
         break;
     default:

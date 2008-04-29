@@ -64,6 +64,7 @@ gfxPlatformMac::gfxPlatformMac()
     if (UseGlitz())
         glitz_agl_init();
 #endif
+    mOSXVersion = 0;
 }
 
 already_AddRefed<gfxASurface>
@@ -209,6 +210,21 @@ gfxPlatformMac::UpdateFontList()
 {
     gfxQuartzFontCache::SharedFontCache()->UpdateFontList();
     return NS_OK;
+}
+
+PRInt32 
+gfxPlatformMac::OSXVersion()
+{
+    if (!mOSXVersion) {
+        // minor version is not accurate, use gestaltSystemVersionMajor, gestaltSystemVersionMinor, gestaltSystemVersionBugFix for these
+        OSErr err = ::Gestalt(gestaltSystemVersion, (long int*) &mOSXVersion);
+        if (err != noErr) {
+            //This should probably be changed when our minimum version changes
+            NS_ERROR("Couldn't determine OS X version, assuming 10.4");
+            mOSXVersion = MAC_OS_X_VERSION_10_4_HEX;
+        }
+    }
+    return mOSXVersion;
 }
 
 void 

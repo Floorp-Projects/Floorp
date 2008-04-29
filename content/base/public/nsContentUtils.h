@@ -546,6 +546,7 @@ public:
   static void UnregisterPrefCallback(const char *aPref,
                                      PrefChangedFunc aCallback,
                                      void * aClosure);
+  static void AddBoolPrefVarCache(const char* aPref, PRBool* aVariable);
   static nsIPrefBranch *GetPrefBranch()
   {
     return sPrefBranch;

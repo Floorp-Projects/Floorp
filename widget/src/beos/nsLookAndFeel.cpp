@@ -252,7 +252,8 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor_windowtext:
       aColor = NS_RGB(0x00, 0x00, 0x00);
       break;
-    // CSS3 candidates
+    case eColor__moz_eventreerow:
+    case eColor__moz_oddtreerow:
     case eColor__moz_field: 
       // normal widget background
       aColor = NS_RGB(0xff, 0xff, 0xff);

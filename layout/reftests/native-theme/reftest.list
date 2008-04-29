@@ -26,3 +26,6 @@
 != checkbox-native.html checkbox-nonnative.html
 == checkbox-still-native-when-styled.html checkbox-still-native-when-styled-ref.html
 == native-theme-disabled-cascade-levels.html native-theme-disabled-cascade-levels-ref.html
+
+!= 427122-1.html 427122-1-ref.html
+

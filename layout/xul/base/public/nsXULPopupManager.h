@@ -422,6 +422,10 @@ public:
    * measured in CSS pixels.
    *
    * This fires the popupshowing event synchronously.
+   * 
+   * If aIsContextMenu is true, the popup is positioned at a slight
+   * offset from aXPos/aYPos to ensure that it is not under the mouse
+   * cursor.
    */
   void ShowPopupAtScreen(nsIContent* aPopup,
                          PRInt32 aXPos, PRInt32 aYPos,

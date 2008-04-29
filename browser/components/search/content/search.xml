@@ -97,7 +97,7 @@
                           oncommand="openManager(event);"/>
           </xul:menupopup>
         </xul:button>
-        <xul:hbox class="search-go-container">
+        <xul:hbox class="search-go-container" chromedir="&locale.dir;">
           <xul:image class="search-go-button"
                      anonid="search-go-button"
                      chromedir="&locale.dir;"

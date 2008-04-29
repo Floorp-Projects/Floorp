@@ -467,12 +467,14 @@ BrowserGlue.prototype = {
           var importer = Cc["@mozilla.org/browser/places/import-export-service;1"].
                          getService(Ci.nsIPlacesImportExportService);
           importer.importHTMLFromFile(bookmarksFile, true /* overwrite existing */);
-        } finally {
-          prefBranch.setBoolPref("browser.places.importBookmarksHTML", false);
-          if (restoreDefaultBookmarks)
-            prefBranch.setBoolPref("browser.bookmarks.restore_default_bookmarks",
-                                   false);
+        } catch (err) {
+          // Report the error, but ignore it.
+          Cu.reportError(err);
         }
+        prefBranch.setBoolPref("browser.places.importBookmarksHTML", false);
+        if (restoreDefaultBookmarks)
+          prefBranch.setBoolPref("browser.bookmarks.restore_default_bookmarks",
+                                 false);
       }
     }
 

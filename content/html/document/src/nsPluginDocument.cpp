@@ -245,7 +245,7 @@ nsPluginDocument::CreateSyntheticPluginDocument()
                                      kNameSpaceID_None,
                                     getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = NS_NewHTMLElement(getter_AddRefs(mPluginContent), nodeInfo);
+  rv = NS_NewHTMLElement(getter_AddRefs(mPluginContent), nodeInfo, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // make it a named element

@@ -56,6 +56,7 @@
 #include "nsString.h"
 
 #include "nsVoidArray.h"
+#include "nsTArray.h"
 
 class nsNativeDragTarget;
 class nsIRollupListener;
@@ -64,6 +65,8 @@ class nsIMenuBar;
 class nsIFile;
 
 class imgIContainer;
+
+struct nsAlternativeCharCode;
 
 #ifdef ACCESSIBILITY
 #include "OLEACC.H"
@@ -332,11 +335,9 @@ protected:
                                              nsRect&   aResult);
 
   virtual PRBool          DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
-                                           PRUint32 aUnshiftedCharCode,
-                                           PRUint32 aShiftedCharCodes,
-                                           UINT aVirtualCharCode,
-                                           LPARAM aKeyCode,
-                                           PRUint32 aFlags = 0);
+                            const nsTArray<nsAlternativeCharCode>* aAlternativeChars,
+                            UINT aVirtualCharCode, LPARAM aKeyCode,
+                            PRUint32 aFlags = 0);
 
   virtual PRBool          DispatchFocus(PRUint32 aEventType, PRBool isMozWindowTakingFocus);
   virtual PRBool          OnScroll(UINT scrollCode, int cPos);

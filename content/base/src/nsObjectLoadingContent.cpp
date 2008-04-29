@@ -1205,8 +1205,8 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
     rv = NS_ERROR_NOT_AVAILABLE;
 
     // We should only notify the UI if there is at least a type to go on for
-    // finding a plugin to use.
-    if (!aTypeHint.IsEmpty()) {
+    // finding a plugin to use, unless it's a supported image or document type.
+    if (!aTypeHint.IsEmpty() && GetTypeOfContent(aTypeHint) == eType_Null) {
       UpdateFallbackState(thisContent, fallback, aTypeHint);
     }
 
