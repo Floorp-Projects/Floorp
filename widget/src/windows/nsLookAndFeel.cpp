@@ -158,13 +158,13 @@ nsresult nsLookAndFeel::GetColorFromTheme(const PRUnichar* aClassList,
 {
   COLORREF color;
   HRESULT hr;
-  hr = getThemeColor((HTHEME)aTheme, aPart, aState, aPropId, &color);
+  hr = getThemeColor(aTheme, aPart, aState, aPropId, &color);
   // Since we don't get theme changed messages, check if we lost the handle
   if (hr == E_HANDLE)
   {
-    closeTheme((HTHEME)aTheme);
+    closeTheme(aTheme);
     aTheme = openTheme(NULL, (LPCWSTR)aClassList);
-    hr = getThemeColor((HTHEME)aTheme, aPart, aState, aPropId, &color);
+    hr = getThemeColor(aTheme, aPart, aState, aPropId, &color);
   }
   if (hr == S_OK)
   {
