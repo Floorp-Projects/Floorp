@@ -5463,6 +5463,12 @@ nsWindow::IMEDestroyContext(void)
         mIMEData->mContext = nsnull;
     }
 
+    if (mIMEData->mSimpleContext) {
+        gtk_im_context_set_client_window(mIMEData->mSimpleContext, nsnull);
+        g_object_unref(G_OBJECT(mIMEData->mSimpleContext));
+        mIMEData->mSimpleContext = nsnull;
+    }
+
     if (mIMEData->mDummyContext) {
         // mIMEData->mContext and mIMEData->mDummyContext have the same
         // slaveType and signal_data so no need for another
@@ -5488,7 +5494,7 @@ nsWindow::IMESetFocus(void)
     gtk_im_context_focus_in(im);
     gIMEFocusWindow = this;
 
-    if (!IMEIsEnabled()) {
+    if (!IMEIsEnabledState()) {
         // We should release IME focus for uim and scim.
         // These IMs are using snooper that is released at losing focus.
         IMELoseFocus();
@@ -5634,13 +5640,26 @@ nsWindow::IMEGetContext()
 static PRBool
 IsIMEEnabledState(PRUint32 aState)
 {
-    return aState == nsIKBStateControl::IME_STATUS_ENABLED ? PR_TRUE : PR_FALSE;
+    return aState == nsIKBStateControl::IME_STATUS_ENABLED;
 }
 
 PRBool
-nsWindow::IMEIsEnabled(void)
+nsWindow::IMEIsEnabledState(void)
 {
     return mIMEData ? IsIMEEnabledState(mIMEData->mEnabled) : PR_FALSE;
+}
+
+static PRBool
+IsIMEEditableState(PRUint32 aState)
+{
+    return aState == nsIKBStateControl::IME_STATUS_ENABLED ||
+           aState == nsIKBStateControl::IME_STATUS_PASSWORD;
+}
+
+PRBool
+nsWindow::IMEIsEditableState(void)
+{
+    return mIMEData ? IsIMEEditableState(mIMEData->mEnabled) : PR_FALSE;
 }
 
 nsWindow*
@@ -5664,14 +5683,18 @@ nsWindow::IMECreateContext(void)
         return;
 
     mIMEData->mContext = gtk_im_multicontext_new();
+    mIMEData->mSimpleContext = gtk_im_context_simple_new();
     mIMEData->mDummyContext = gtk_im_multicontext_new();
-    if (!mIMEData->mContext || !mIMEData->mDummyContext) {
+    if (!mIMEData->mContext || !mIMEData->mSimpleContext ||
+        !mIMEData->mDummyContext) {
         NS_ERROR("failed to create IM context.");
         IMEDestroyContext();
         return;
     }
 
     gtk_im_context_set_client_window(mIMEData->mContext,
+                                     GTK_WIDGET(mContainer)->window);
+    gtk_im_context_set_client_window(mIMEData->mSimpleContext,
                                      GTK_WIDGET(mContainer)->window);
     gtk_im_context_set_client_window(mIMEData->mDummyContext,
                                      GTK_WIDGET(mContainer)->window);
@@ -5680,12 +5703,16 @@ nsWindow::IMECreateContext(void)
                      G_CALLBACK(IM_preedit_changed_cb), this);
     g_signal_connect(G_OBJECT(mIMEData->mContext), "commit",
                      G_CALLBACK(IM_commit_cb), this);
+    g_signal_connect(G_OBJECT(mIMEData->mSimpleContext), "preedit_changed",
+                     G_CALLBACK(IM_preedit_changed_cb), this);
+    g_signal_connect(G_OBJECT(mIMEData->mSimpleContext), "commit",
+                     G_CALLBACK(IM_commit_cb), this);
 }
 
 PRBool
 nsWindow::IMEFilterEvent(GdkEventKey *aEvent)
 {
-    if (!IMEIsEnabled())
+    if (!IMEIsEditableState())
         return FALSE;
 
     GtkIMContext *im = IMEGetContext();
@@ -5766,12 +5793,8 @@ nsWindow::SetIMEEnabled(PRUint32 aState)
     if (!mIMEData)
         return NS_OK;
 
-    PRBool newState = IsIMEEnabledState(aState);
-    PRBool oldState = IsIMEEnabledState(mIMEData->mEnabled);
-    if (newState == oldState) {
-        mIMEData->mEnabled = aState;
+    if (aState == mIMEData->mEnabled)
         return NS_OK;
-    }
 
     GtkIMContext *focusedIm = nsnull;
     // XXX Don't we need to check gFocusWindow?
@@ -5781,7 +5804,7 @@ nsWindow::SetIMEEnabled(PRUint32 aState)
 
     if (focusedIm && focusedIm == mIMEData->mContext) {
         // Release current IME focus if IME is enabled.
-        if (oldState) {
+        if (IsIMEEditableState(mIMEData->mEnabled)) {
             focusedWin->ResetInputState();
             focusedWin->IMELoseFocus();
         }
@@ -5792,7 +5815,7 @@ nsWindow::SetIMEEnabled(PRUint32 aState)
         // Because some IMs are updating the status bar of them in this time.
         focusedWin->IMESetFocus();
     } else {
-        if (oldState)
+        if (IsIMEEditableState(mIMEData->mEnabled))
             ResetInputState();
         mIMEData->mEnabled = aState;
     }
@@ -6129,7 +6152,11 @@ IM_get_input_context(nsWindow *aWindow)
     nsWindow::nsIMEData *data = aWindow->mIMEData;
     if (!data)
         return nsnull;
-    return data->mEnabled ? data->mContext : data->mDummyContext;
+    if (data->mEnabled == nsIKBStateControl::IME_STATUS_ENABLED)
+        return data->mContext;
+    if (data->mEnabled == nsIKBStateControl::IME_STATUS_PASSWORD)
+        return data->mSimpleContext;
+    return data->mDummyContext;
 }
 
 #endif
