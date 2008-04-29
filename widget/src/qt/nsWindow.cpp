@@ -2358,38 +2358,11 @@ nsWindow::createQWidget(QWidget *parent, nsWidgetInitData *aInitData)
 gfxASurface*
 nsWindow::GetThebesSurface()
 {
-    // XXXvlad always create a new thebes surface for now,
-    // because the old clip doesn't get cleared otherwise.
-    // we should fix this at some point, and just reset
-    // the clip.
-    mThebesSurface = nsnull;
-
-    if (!mThebesSurface) {
-#ifdef QT_XLIB_SURFACE
-        qint32 x_offset = 0, y_offset = 0;
-        qint32 width = mDrawingArea->width(), height = mDrawingArea->height();
-
-        // Owen Taylor says this is the right thing to do!
-        width = PR_MIN(32767, width);
-        height = PR_MIN(32767, height);
-
-        mThebesSurface = new gfxXlibSurface
-            (mDrawingArea->x11Info().display(),
-             (Drawable)mDrawingArea->handle(),
-             static_cast<Visual*>(mDrawingArea->x11Info().visual()),
-             gfxIntSize(width, height));
-        // if the surface creation is reporting an error, then
-        // we don't have a surface to give back
-        if (mThebesSurface && mThebesSurface->CairoStatus() != 0)
-            mThebesSurface = nsnull;
-
-        if (mThebesSurface) {
-            mThebesSurface->SetDeviceOffset(gfxPoint(-x_offset, -y_offset));
-        }
-#else
-        mThebesSurface = new gfxQPainterSurface(gfxIntSize(5,5), gfxASurface::CONTENT_COLOR_ALPHA);
-#endif
-    }
+    /* This is really a dummy surface; this is only used when doing reflow, because
+     * we need a RenderingContext to measure text against.
+     */
+    if (!mThebesSurface)
+        mThebesSurface = new gfxQPainterSurface(gfxIntSize(5,5), gfxASurface::CONTENT_COLOR);
 
     return mThebesSurface;
 }
