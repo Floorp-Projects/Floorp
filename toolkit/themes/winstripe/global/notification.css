@@ -21,6 +21,20 @@ notification[type="critical"] {
   margin: 0px 1px 0px 6px;
 }
 
+/* Default icons for notifications */
+
+notification[type="info"] .messageImage {
+  list-style-image: url("chrome://global/skin/icons/information-16.png");
+}
+
+notification[type="warning"] .messageImage {
+  list-style-image: url("chrome://global/skin/icons/warning-16.png");
+}
+
+notification[type="critical"] .messageImage {
+  list-style-image: url("chrome://global/skin/icons/error-16.png");
+}
+
 .messageText {
   -moz-margin-start: 5px;
 }
