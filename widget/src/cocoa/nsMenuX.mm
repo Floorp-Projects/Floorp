@@ -89,7 +89,7 @@ static NS_DEFINE_CID(kMenuItemCID, NS_MENUITEM_CID);
 
 NS_IMPL_ISUPPORTS1(nsMenuX, nsIMenu)
 
-PRInt32 nsMenuX::sIndexingMenuLevel = nsnull;
+PRInt32 nsMenuX::sIndexingMenuLevel = 0;
 
 
 nsMenuX::nsMenuX()
