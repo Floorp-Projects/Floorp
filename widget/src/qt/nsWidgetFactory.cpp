@@ -99,9 +99,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceQt)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
-#ifndef QT_XLIB_SURFACE
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeQt)
-#endif
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeScrollbar)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 
@@ -170,12 +168,10 @@ static const nsModuleComponentInfo components[] =
       NS_SOUND_CID,
       "@mozilla.org/sound;1",
       nsSoundConstructor },
-#ifndef QT_XLIB_SURFACE
     { "Native Theme Renderer",
       NS_THEMERENDERER_CID,
       "@mozilla.org/chrome/chrome-native-theme;1",
       nsNativeThemeQtConstructor },
-#endif
     { "Qt File Picker",
       NS_FILEPICKER_CID,
       "@mozilla.org/filepicker;1",

@@ -1065,7 +1065,6 @@ nsWindow::OnPaintEvent(QPaintEvent *aEvent)
        LOGDRAW(("\t%d %d %d %d\n", r.x(), r.y(), r.width(), r.height()));
     }
 
-#ifndef QT_XLIB_SURFACE
     QPainter painter;
 
     if (!painter.begin(mDrawingArea)) {
@@ -1088,76 +1087,6 @@ nsWindow::OnPaintEvent(QPaintEvent *aEvent)
     updateRegion->GetBoundingBox(&boundsRect.x, &boundsRect.y,
                                  &boundsRect.width, &boundsRect.height);
 
-#else /* QT_XLIB_SURFACE */
-    nsCOMPtr<nsIRenderingContext> rc = getter_AddRefs(GetRenderingContext());
-    if (NS_UNLIKELY(!rc)) {
-        return FALSE;
-    }
-
-    PRBool translucent;
-    GetHasTransparentBackground(translucent);
-    nsIntRect boundsRect;
-    QPixmap* bufferPixmap = nsnull;
-    nsRefPtr<gfxXlibSurface> bufferPixmapSurface;
-
-    updateRegion->GetBoundingBox(&boundsRect.x, &boundsRect.y,
-                                 &boundsRect.width, &boundsRect.height);
-
-    // do double-buffering and clipping here
-    nsRefPtr<gfxContext> ctx = rc->ThebesContext();
-
-    ctx->NewPath();
-    if (translucent) {
-        // Collapse update area to the bounding box. This is so we only have to
-        // call UpdateTranslucentWindowAlpha once. After we have dropped
-        // support for non-Thebes graphics, UpdateTranslucentWindowAlpha will be
-        // our private interface so we can rework things to avoid this.
-        ctx->Rectangle(gfxRect(boundsRect.x, boundsRect.y,
-                               boundsRect.width, boundsRect.height));
-    } else {
-        for (int i = 0; i < rects.size(); ++i) {
-           QRect r = rects.at(i);
-           ctx->Rectangle(gfxRect(r.x(), r.y(), r.width(), r.height()));
-        }
-    }
-    ctx->Clip();
-
-    // double buffer
-    if (translucent) {
-        ctx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
-    } else {
-        // Instead of just doing PushGroup we're going to do a little dance
-        // to ensure that GDK creates the pixmap, so it doesn't go all
-        // XGetGeometry on us in gdk_pixmap_foreign_new_for_display when we
-        // paint native themes
-
-        bufferPixmap = new QPixmap(boundsRect.width, boundsRect.height);
-        if (bufferPixmap) {
-            bufferPixmapSurface =
-                new gfxXlibSurface(bufferPixmap->x11Info().display(),
-                                   bufferPixmap->handle(),
-                                   static_cast<Visual*>(bufferPixmap->x11Info().visual()),
-                                   gfxIntSize(boundsRect.width, boundsRect.height));
-            if (bufferPixmapSurface) {
-                bufferPixmapSurface->SetDeviceOffset(gfxPoint(-boundsRect.x, -boundsRect.y));
-                nsCOMPtr<nsIRenderingContext> newRC;
-                nsresult rv = GetDeviceContext()->
-                    CreateRenderingContextInstance(*getter_AddRefs(newRC));
-                if (NS_FAILED(rv)) {
-                    bufferPixmapSurface = nsnull;
-                } else {
-                    rv = newRC->Init(GetDeviceContext(), bufferPixmapSurface);
-                    if (NS_FAILED(rv)) {
-                        bufferPixmapSurface = nsnull;
-                    } else {
-                        rc = newRC;
-                    }
-                }
-            }
-        }
-
-    }
-#endif
     nsPaintEvent event(PR_TRUE, NS_PAINT, this);
     QRect r = aEvent->rect();
     if (!r.isValid())
@@ -1179,38 +1108,6 @@ nsWindow::OnPaintEvent(QPaintEvent *aEvent)
 
     if (status == nsEventStatus_eIgnore)
         return status;
-
-#ifdef QT_XLIB_SURFACE
-    if (translucent) {
-        nsRefPtr<gfxPattern> pattern = ctx->PopGroup();
-        ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-        ctx->SetPattern(pattern);
-        ctx->Paint();
-
-        nsRefPtr<gfxImageSurface> img =
-            new gfxImageSurface(gfxIntSize(boundsRect.width, boundsRect.height),
-                                gfxImageSurface::ImageFormatA8);
-        if (img && !img->CairoStatus()) {
-            img->SetDeviceOffset(gfxPoint(-boundsRect.x, -boundsRect.y));
-
-            nsRefPtr<gfxContext> imgCtx = new gfxContext(img);
-            if (imgCtx) {
-                imgCtx->SetPattern(pattern);
-                imgCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
-                imgCtx->Paint();
-            }
-
-            UpdateTranslucentWindowAlphaInternal(nsRect(boundsRect.x, boundsRect.y,
-                                                        boundsRect.width, boundsRect.height),
-                                                 img->Data(), img->Stride());
-        }
-    } else if (gDoubleBuffering) {
-        if (bufferPixmapSurface) {
-            ctx->SetSource(bufferPixmapSurface);
-            ctx->Paint();
-        }
-    }
-#endif
 
     LOGDRAW(("[%p] draw done\n", this));
 
