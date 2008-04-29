@@ -354,3 +354,21 @@ gfxASurface::EndPage()
 {
     return NS_OK;
 }
+
+gfxASurface::gfxContentType
+gfxASurface::ContentFromFormat(gfxImageFormat format)
+{
+    switch (format) {
+        case ImageFormatARGB32:
+            return CONTENT_COLOR_ALPHA;
+        case ImageFormatRGB24:
+            return CONTENT_COLOR;
+        case ImageFormatA8:
+        case ImageFormatA1:
+            return CONTENT_ALPHA;
+
+        case ImageFormatUnknown:
+        default:
+            return CONTENT_COLOR;
+    }
+}

@@ -55,7 +55,8 @@ cairo_qpainter_surface_create_with_qimage (cairo_format_t format,
                                            int height);
 
 cairo_public cairo_surface_t *
-cairo_qpainter_surface_create_with_qpixmap (int width,
+cairo_qpainter_surface_create_with_qpixmap (cairo_content_t content,
+					    int width,
                                             int height);
 
 cairo_public QPainter *

@@ -2389,7 +2389,7 @@ nsWindow::GetThebesSurface()
             mThebesSurface->SetDeviceOffset(gfxPoint(-x_offset, -y_offset));
         }
 #else
-        mThebesSurface = new gfxQPainterSurface(gfxIntSize(5,5));
+        mThebesSurface = new gfxQPainterSurface(gfxIntSize(5,5), gfxASurface::CONTENT_COLOR_ALPHA);
 #endif
     }
 

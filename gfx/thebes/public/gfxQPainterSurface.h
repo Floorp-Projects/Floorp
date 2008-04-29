@@ -48,7 +48,7 @@ class THEBES_API gfxQPainterSurface : public gfxASurface {
 public:
     gfxQPainterSurface(QPainter *painter);
     gfxQPainterSurface(const gfxIntSize& size, gfxImageFormat format);
-    gfxQPainterSurface(const gfxIntSize& size);
+    gfxQPainterSurface(const gfxIntSize& size, gfxContentType content);
 
     gfxQPainterSurface(cairo_surface_t *csurf);
 

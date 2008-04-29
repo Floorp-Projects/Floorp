@@ -392,14 +392,13 @@ _cairo_qpainter_surface_create_similar (void *abstract_surface,
 
     if (!do_image && (!_qpixmaps_have_no_alpha || content == CAIRO_CONTENT_COLOR)) {
 	cairo_surface_t *result =
-	    cairo_qpainter_surface_create_with_qpixmap (width, height);
+	    cairo_qpainter_surface_create_with_qpixmap (content, width, height);
 
 	if (cairo_surface_get_content (result) == content) {
-	    D(fprintf(stderr, "qpixmap\n"));
+	    D(fprintf(stderr, "qpixmap content: %d\n", content));
 	    return result;
 	}
 
-	fprintf (stderr, " pixmaps have no alpha!\n");
 	_qpixmaps_have_no_alpha = TRUE;
 	cairo_surface_destroy (result);
     }
@@ -602,7 +601,7 @@ _cairo_qpainter_surface_clone_similar (void *abstract_surface,
     if (qs->image == NULL && (!_qpixmaps_have_no_alpha || src->content == CAIRO_CONTENT_COLOR))
     {
         new_surf = cairo_qpainter_surface_create_with_qpixmap
-                   (width, height);
+	    (src->content, width, height);
 	if (cairo_surface_get_content (new_surf) != src->content) {
 	    cairo_surface_destroy (new_surf);
 	    _qpixmaps_have_no_alpha = TRUE;
@@ -1571,10 +1570,15 @@ cairo_qpainter_surface_create_with_qimage (cairo_format_t format,
 }
 
 cairo_surface_t *
-cairo_qpainter_surface_create_with_qpixmap (int width,
+cairo_qpainter_surface_create_with_qpixmap (cairo_content_t content,
+					    int width,
                                             int height)
 {
     cairo_qpainter_surface_t *qs;
+
+    if (content != CAIRO_CONTENT_COLOR &&
+	content != CAIRO_CONTENT_COLOR_ALPHA)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     qs = (cairo_qpainter_surface_t *) malloc (sizeof(cairo_qpainter_surface_t));
     if (qs == NULL)
@@ -1584,9 +1588,14 @@ cairo_qpainter_surface_create_with_qpixmap (int width,
 
     QPixmap *pixmap = new QPixmap (width, height);
 
-    _cairo_surface_init (&qs->base, &cairo_qpainter_surface_backend,
-                         pixmap->hasAlphaChannel() ? CAIRO_CONTENT_COLOR_ALPHA : CAIRO_CONTENT_COLOR);
+    // By default, a QPixmap is opaque; however, if it's filled
+    // with a color with a transparency component, it is converted
+    // to a format that preserves transparency.
+    if (content == CAIRO_CONTENT_COLOR_ALPHA)
+	pixmap->fill(Qt::transparent);
 
+    _cairo_surface_init (&qs->base, &cairo_qpainter_surface_backend,
+			 content);
 
     qs->pixmap = pixmap;
 

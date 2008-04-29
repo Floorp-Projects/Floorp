@@ -63,6 +63,10 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#ifndef Q_WS_X11
+#define OPTIMIZE_TO_QPIXMAP
+#endif
+
 PRInt32 gfxQtPlatform::sDPI = -1;
 gfxFontconfigUtils *gfxQtPlatform::sFontconfigUtils = nsnull;
 static cairo_user_data_key_t cairo_qt_pixmap_key;
@@ -124,9 +128,8 @@ already_AddRefed<gfxASurface>
 gfxQtPlatform::CreateOffscreenSurface(const gfxIntSize& size,
                                       gfxASurface::gfxImageFormat imageFormat)
 {
-    // XXX we may be able to create a QPixmap here, instead of a QImage always
     nsRefPtr<gfxASurface> newSurface =
-        new gfxQPainterSurface (size, imageFormat);
+        new gfxQPainterSurface (size, gfxASurface::ContentFromFormat(imageFormat));
 
     return newSurface.forget();
 }
@@ -135,10 +138,7 @@ already_AddRefed<gfxASurface>
 gfxQtPlatform::OptimizeImage(gfxImageSurface *aSurface,
                              gfxASurface::gfxImageFormat format)
 {
-    NS_ADDREF(aSurface);
-    return aSurface;
-
-#if 0
+#ifdef OPTIMIZE_TO_QPIXMAP
     const gfxIntSize& surfaceSize = aSurface->GetSize();
 
     nsRefPtr<gfxASurface> optSurface = CreateOffscreenSurface(surfaceSize, format);
@@ -150,9 +150,9 @@ gfxQtPlatform::OptimizeImage(gfxImageSurface *aSurface,
     tmpCtx.SetSource(aSurface);
     tmpCtx.Paint();
 
-    gfxASurface *ret = optSurface;
-    NS_ADDREF(ret);
-    return ret;
+    return optSurface.forget();
+#else
+    return nsnull;
 #endif
 }
 
