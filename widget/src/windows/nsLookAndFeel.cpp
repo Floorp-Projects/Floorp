@@ -65,13 +65,18 @@ static GetCurrentThemeNamePtr getCurrentThemeName = NULL;
 static const char kThemeLibraryName[] = "uxtheme.dll";
 static HINSTANCE gThemeDLLInst = NULL;
 static HANDLE gMenuTheme = NULL;
+static HANDLE gMediaToolbarTheme = NULL;
+static HANDLE gCommunicationsToolbarTheme = NULL;
 
 #define MENU_POPUPITEM 14
+#define TP_BUTTON 1
 
 #define MPI_NORMAL 1
 #define MPI_HOT 2
 #define MPI_DISABLED 3
 #define MPI_DISABLEDHOT 4
+
+#define TS_NORMAL 1
 
 // From tmschema.h in the Vista SDK
 #define TMT_TEXTCOLOR 3803
@@ -126,6 +131,8 @@ nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
     isAppThemed = (IsAppThemedPtr)GetProcAddress(gThemeDLLInst, "IsAppThemed");
     getCurrentThemeName = (GetCurrentThemeNamePtr)GetProcAddress(gThemeDLLInst, "GetCurrentThemeName");
     gMenuTheme = openTheme(NULL, L"Menu");
+    gMediaToolbarTheme = openTheme(NULL, L"Media::ToolBar");
+    gCommunicationsToolbarTheme = openTheme(NULL, L"Communications::ToolBar");
   }
 #endif
 }
@@ -140,6 +147,31 @@ nsLookAndFeel::~nsLookAndFeel()
        gSHAppBarMessage = NULL;
    }
 #endif
+}
+
+nsresult nsLookAndFeel::GetColorFromTheme(const PRUnichar* aClassList,
+                                          void* aTheme,
+                                          PRInt32 aPart,
+                                          PRInt32 aState,
+                                          PRInt32 aPropId,
+                                          nscolor &aColor)
+{
+  COLORREF color;
+  HRESULT hr;
+  hr = getThemeColor((HTHEME)aTheme, aPart, aState, aPropId, &color);
+  // Since we don't get theme changed messages, check if we lost the handle
+  if (hr == E_HANDLE)
+  {
+    closeTheme((HTHEME)aTheme);
+    aTheme = openTheme(NULL, (LPCWSTR)aClassList);
+    hr = getThemeColor((HTHEME)aTheme, aPart, aState, aPropId, &color);
+  }
+  if (hr == S_OK)
+  {
+    aColor = COLOREF_2_NSRGB(color);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
@@ -260,25 +292,10 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
 #ifndef WINCE
       if (isAppThemed && isAppThemed() && GetWindowsVersion() >= VISTA_VERSION)
       {
-        COLORREF color;
-        HRESULT hr;
-        hr = getThemeColor(gMenuTheme, MENU_POPUPITEM, MPI_HOT, TMT_TEXTCOLOR, &color);
-        if (hr == S_OK)
-        {
-          aColor = COLOREF_2_NSRGB(color);
-          return NS_OK;
-        }
-        // Since we don't get theme changed messages, check if we lost the handle
-        else if (hr == E_HANDLE)
-        {
-          closeTheme(gMenuTheme);
-          gMenuTheme = openTheme(NULL, L"Menu");
-          // gMenuTheme shouldn't be null since it was non-null before so we
-          // are running on Vista or higher
-          getThemeColor(gMenuTheme, MENU_POPUPITEM, MPI_HOT, TMT_TEXTCOLOR, &color);
-          aColor = COLOREF_2_NSRGB(color);
-          return NS_OK;
-        }
+        res = GetColorFromTheme(L"Menu", gMenuTheme,
+                                MENU_POPUPITEM, MPI_HOT, TMT_TEXTCOLOR, aColor);
+        if (NS_SUCCEEDED(res))
+          return res;
         // fall through to highlight case
       }
 #endif
@@ -345,6 +362,31 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor__moz_dialog:
     case eColor__moz_cellhighlight:
       idx = COLOR_3DFACE;
+      break;
+    case eColor__moz_win_mediatext:
+#ifndef WINCE
+      if (isAppThemed && isAppThemed() && GetWindowsVersion() >= VISTA_VERSION) {
+        res = GetColorFromTheme(L"Media::Toolbar", gMediaToolbarTheme,
+                                TP_BUTTON, TS_NORMAL, TMT_TEXTCOLOR, aColor);
+        if (NS_SUCCEEDED(res))
+          return res;
+      }
+      // if we've gotten here just return -moz-dialogtext instead
+#endif
+      idx = COLOR_WINDOWTEXT;
+      break;
+    case eColor__moz_win_communicationstext:
+#ifndef WINCE
+      if (isAppThemed && isAppThemed() && GetWindowsVersion() >= VISTA_VERSION)
+      {
+        res = GetColorFromTheme(L"Communications::Toolbar", gCommunicationsToolbarTheme,
+                                TP_BUTTON, TS_NORMAL, TMT_TEXTCOLOR, aColor);
+        if (NS_SUCCEEDED(res))
+          return res;
+      }
+      // if we've gotten here just return -moz-dialogtext instead
+#endif
+      idx = COLOR_WINDOWTEXT;
       break;
     case eColor__moz_dialogtext:
     case eColor__moz_cellhighlighttext:
