@@ -743,7 +743,7 @@ nsWindow::Update()
     if (!mDrawingArea)
         return NS_OK;
 
-    mDrawingArea->update();
+    // mDrawingArea->update(); // FIXME  This call cause update for whole window on each scroll event
     return NS_OK;
 }
 
