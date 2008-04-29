@@ -2947,10 +2947,14 @@ PlacesSQLQueryBuilder::SelectAsURI()
       break;
 
     case nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS:
-      if (mResultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS) {
-        nsNavHistory* history = nsNavHistory::GetHistoryService();
-        NS_ENSURE_STATE(history);
+      // Don't initialize on var creation, that would give an error on compile
+      // because we are in the same scope of the switch clause and the var could
+      // not be initialized. Do an assignment rather than an initialization.
+      nsNavHistory* history;
+      history = nsNavHistory::GetHistoryService();
+      NS_ENSURE_STATE(history);
 
+      if (mResultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS) {
         // Order-by clause is hardcoded because we need to discard duplicates
         // in FilterResultSet. We will retain only the last modified item,
         // so we are ordering by place id and last modified to do a faster
@@ -2971,7 +2975,7 @@ PlacesSQLQueryBuilder::SelectAsURI()
                 "(SELECT b.fk FROM moz_bookmarks b WHERE b.type = 1 {ADDITIONAL_CONDITIONS}) "
               "AND NOT EXISTS "
                 "(SELECT id FROM moz_bookmarks WHERE id = b1.parent AND parent = ") +
-                nsPrintfCString("%d", history->GetTagsFolder()) +
+                nsPrintfCString("%lld", history->GetTagsFolder()) +
               NS_LITERAL_CSTRING(")) ORDER BY b2.fk DESC, b2.lastModified DESC");
       }
       else {
@@ -2981,8 +2985,12 @@ PlacesSQLQueryBuilder::SelectAsURI()
             SQL_STR_FRAGMENT_MAX_VISIT_DATE( "b.fk" )
             ", f.url, null, b.id, b.dateAdded, b.lastModified "
           "FROM moz_bookmarks b "
-               "JOIN moz_places h ON b.fk = h.id AND b.type = 1 "
-               "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id ");
+          "JOIN moz_places h ON b.fk = h.id AND b.type = 1 "
+          "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
+          "WHERE NOT EXISTS "
+            "(SELECT id FROM moz_bookmarks WHERE id = b.parent AND parent = ") +
+            nsPrintfCString("%lld", history->GetTagsFolder()) +
+            NS_LITERAL_CSTRING(") {ADDITIONAL_CONDITIONS}");
       }
       break;
 
