@@ -160,7 +160,11 @@ public:
     //new in 10.2
     eColor__moz_mac_alternateprimaryhighlight, //active list highlight
     eColor__moz_mac_secondaryhighlight,        //inactive light hightlight
-  
+
+    // vista rebars
+    eColor__moz_win_mediatext,                     // media rebar text
+    eColor__moz_win_communicationstext,            // communications rebar text
+
     // keep this one last, please
     eColor_LAST_COLOR
   } nsColorID;
