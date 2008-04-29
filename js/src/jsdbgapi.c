@@ -148,9 +148,11 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
         sample = rt->debuggerMutations;
         DBG_UNLOCK(rt);
         trap = (JSTrap *) JS_malloc(cx, sizeof *trap);
-        if (!trap || !js_AddRoot(cx, &trap->closure, "trap->closure")) {
-            if (trap)
-                JS_free(cx, trap);
+        if (!trap)
+            return JS_FALSE;
+        trap->closure = NULL;
+        if(!js_AddRoot(cx, &trap->closure, "trap->closure")) {
+            JS_free(cx, trap);
             return JS_FALSE;
         }
         DBG_LOCK(rt);
@@ -172,8 +174,10 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
     trap->handler = handler;
     trap->closure = closure;
     DBG_UNLOCK(rt);
-    if (junk)
+    if (junk) {
+        js_RemoveRoot(rt, &junk->closure);
         JS_free(cx, junk);
+    }
     return JS_TRUE;
 }
 
