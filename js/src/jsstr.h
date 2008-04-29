@@ -64,20 +64,18 @@ JS_BEGIN_EXTERN_C
  * purely a backstop, in case the chars pointer flows out to native code that
  * requires \u0000 termination.
  *
- * A flat string with JSSTRFLAG_MUTABLE set means the string is accessible
+ * A flat string with JSSTRFLAG_MUTABLE set means that the string is accessible
  * only from one thread and it is possible to turn it into a dependent string
- * of the same length to optimize js_ConcatStrings. It also possible to grow
- * such string but extreme care must be taken to ensure that no other code
+ * of the same length to optimize js_ConcatStrings. It is also possible to grow
+ * such a string, but extreme care must be taken to ensure that no other code
  * relies on the original length of the string.
  *
- * A flat string with JSSTRFLAG_ATOMIZED set means that the string is hashed
- * as an atom. This flag is used to avoid re-hashing of the already-atomized
- * string.
+ * A flat string with JSSTRFLAG_ATOMIZED set means that the string is hashed as
+ * an atom. This flag is used to avoid re-hashing the already-atomized string.
  *
- * When JSSTRFLAG_DEPENDENT is set, the string depends on characters of
- * another string strongly referenced by the u.base field. The base member may
- * point to another dependent string if JSSTRING_CHARS has not been called
- * yet.
+ * When JSSTRFLAG_DEPENDENT is set, the string depends on characters of another
+ * string strongly referenced by the u.base field. The base member may point to
+ * another dependent string if JSSTRING_CHARS has not been called yet.
  *
  * JSSTRFLAG_PREFIX determines the kind of the dependent string. When the flag
  * is unset, the length field encodes both starting position relative to the
@@ -85,9 +83,9 @@ JS_BEGIN_EXTERN_C
  * JSSTRDEP_START_MASK and JSSTRDEP_LENGTH_MASK macros below for details.
  *
  * When JSSTRFLAG_PREFIX is set, the dependent string is a prefix of the base
- * string. The number of characters in the prefix is encoded using all
- * non-flag bits of the length field and spans the same 0 .. SIZE_T_MAX/4
- * range as the length of the flat string.
+ * string. The number of characters in the prefix is encoded using all non-flag
+ * bits of the length field and spans the same 0 .. SIZE_T_MAX/4 range as the
+ * length of the flat string.
  *
  * NB: Always use the JSSTRING_LENGTH and JSSTRING_CHARS accessor macros.
  */
