@@ -3,8 +3,9 @@
 <head>
   <title></title>
   <script type="application/javascript">
+  new XMLHttpRequest();
   function runTest() {
-    document.write("<body>");
+    document.open();
     var succeeded = true;
     try {
       new XMLHttpRequest();
@@ -12,7 +13,8 @@
       succeeded = false;
     }
     window.parent.ok(succeeded, "Creating XMLHttpRequest failed!");
-    window.parent.nextTest();
+    window.parent.SimpleTest.finish();
+    document.close();
   }
   </script>
 </head>
