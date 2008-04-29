@@ -2366,8 +2366,26 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
     // XXX in that case docshell hierarchy and SH hierarchy won't match.
     {
         nsCOMPtr<nsIDocShell> childDocShell = do_QueryInterface(aChild);
-        if (childDocShell)
-            childDocShell->SetChildOffset(mChildList.Count() - 1);
+        if (childDocShell) {
+            // If there are frameloaders in the finalization list, reduce
+            // the offset so that the SH hierarchy is more likely to match the
+            // docshell hierarchy
+            nsCOMPtr<nsIDOMDocument> domDoc =
+              do_GetInterface(GetAsSupports(this));
+            nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+            PRUint32 offset = mChildList.Count() - 1;
+            if (doc) {
+               PRUint32 oldChildCount = offset; // Current child count - 1
+               for (PRUint32 i = 0; i < oldChildCount; ++i) {
+                 nsCOMPtr<nsIDocShell> child = do_QueryInterface(ChildAt(i));
+                 if (doc->FrameLoaderScheduledToBeFinalized(child)) {
+                   --offset;
+                 }
+               }
+            }
+
+            childDocShell->SetChildOffset(offset);
+        }
     }
 
     /* Set the child's global history if the parent has one */

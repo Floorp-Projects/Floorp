@@ -3924,6 +3924,20 @@ nsDocument::TryCancelFrameLoaderInitialization(nsIDocShell* aShell)
   }
 }
 
+PRBool
+nsDocument::FrameLoaderScheduledToBeFinalized(nsIDocShell* aShell)
+{
+  if (aShell) {
+    PRUint32 length = mFinalizableFrameLoaders.Length();
+    for (PRUint32 i = 0; i < length; ++i) {
+      if (mFinalizableFrameLoaders[i]->GetExistingDocShell() == aShell) {
+        return PR_TRUE;
+      }
+    }
+  }
+  return PR_FALSE;
+}
+
 struct DirTable {
   const char* mName;
   PRUint8     mValue;
