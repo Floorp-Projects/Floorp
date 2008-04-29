@@ -852,6 +852,9 @@ js_ComputeThis(JSContext *cx, JSBool lazy, jsval *argv)
 
 #if JS_HAS_NO_SUCH_METHOD
 
+#define JSSLOT_FOUND_FUNCTION   JSSLOT_PRIVATE
+#define JSSLOT_SAVED_ID         (JSSLOT_PRIVATE + 1)
+
 JSClass js_NoSuchMethodClass = {
     "NoSuchMethod",
     JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS |
@@ -939,8 +942,8 @@ js_OnUnknownMethod(JSContext *cx, jsval *vp)
             ok = JS_FALSE;
             goto out;
         }
-        STOBJ_SET_SLOT(obj, JSSLOT_PRIVATE, tvr.u.value);
-        STOBJ_SET_SLOT(obj, JSSLOT_PRIVATE + 1, vp[0]);
+        obj->fslots[JSSLOT_FOUND_FUNCTION] = tvr.u.value;
+        obj->fslots[JSSLOT_SAVED_ID] = vp[0];
         vp[0] = OBJECT_TO_JSVAL(obj);
     }
     ok = JS_TRUE;
@@ -953,24 +956,35 @@ js_OnUnknownMethod(JSContext *cx, jsval *vp)
 static JSBool
 NoSuchMethod(JSContext *cx, uintN argc, jsval *vp, uint32 flags)
 {
-    JSObject *obj, *thisp, *argsobj;
-    jsval fval, idval, args[2];
+    jsval *invokevp;
+    void *mark;
+    JSBool ok;
+    JSObject *obj, *argsobj;
+
+    invokevp = js_AllocStack(cx, 2 + 2, &mark);
+    if (!invokevp)
+        return JS_FALSE;
 
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[0]));
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[1]));
     obj = JSVAL_TO_OBJECT(vp[0]);
     JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_NoSuchMethodClass);
-    fval = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
-    idval = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE + 1);
 
-    JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[1]));
-    thisp = JSVAL_TO_OBJECT(vp[1]);
-
-    args[0] = idval;
+    invokevp[0] = obj->fslots[JSSLOT_FOUND_FUNCTION];
+    invokevp[1] = vp[1];
+    invokevp[2] = obj->fslots[JSSLOT_SAVED_ID];
     argsobj = js_NewArrayObject(cx, argc, vp + 2);
-    if (!argsobj)
-        return JS_FALSE;
-    args[1] = OBJECT_TO_JSVAL(argsobj);
-    return js_InternalInvoke(cx, thisp, fval, flags, 2, args, &vp[0]);
+    if (!argsobj) {
+        ok = JS_FALSE;
+    } else {
+        invokevp[3] = OBJECT_TO_JSVAL(argsobj);
+        ok = (flags & JSINVOKE_CONSTRUCT)
+             ? js_InvokeConstructor(cx, 2, invokevp)
+             : js_Invoke(cx, 2, invokevp, flags);
+        vp[0] = invokevp[0];
+    }
+    js_FreeStack(cx, mark);
+    return ok;
 }
 
 #endif /* JS_HAS_NO_SUCH_METHOD */
@@ -1795,7 +1809,7 @@ js_StrictlyEqual(JSContext *cx, jsval lval, jsval rval)
 }
 
 JSBool
-js_InvokeConstructor(JSContext *cx, jsval *vp, uintN argc)
+js_InvokeConstructor(JSContext *cx, uintN argc, jsval *vp)
 {
     JSFunction *fun, *fun2;
     JSObject *obj, *obj2, *proto, *parent;
@@ -3797,7 +3811,7 @@ interrupt:
             vp = regs.sp - (2 + argc);
             JS_ASSERT(vp >= fp->spbase);
 
-            if (!js_InvokeConstructor(cx, vp, argc))
+            if (!js_InvokeConstructor(cx, argc, vp))
                 goto error;
             regs.sp = vp + 1;
             LOAD_INTERRUPT_HANDLER(cx);
