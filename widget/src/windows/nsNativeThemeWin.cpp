@@ -1393,11 +1393,8 @@ RENDER_AGAIN:
     SIZE gutterSize(GetGutterSize(theme,hdc));
 
     RECT sepRect = widgetRect;
-    if (IsFrameRTL(aFrame))
-      sepRect.right += gutterSize.cx;
-    else
-      sepRect.left += gutterSize.cx;
-
+    sepRect.left += gutterSize.cx;
+    
     drawThemeBG(theme, hdc, MENU_POPUPSEPARATOR, /* state */ 0, &sepRect, &clipRect);
   }
   // If part is negative, the element wishes us to not render a themed
