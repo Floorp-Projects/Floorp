@@ -103,9 +103,9 @@ button[checked="true"] {
   -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow transparent;
 }
 
-button:hover:active > .button-box,
-button[open="true"] > .button-box,
-button[checked="true"] > .button-box {
+button:hover:active > .button-box:not(:-moz-system-metric(windows-default-theme)),
+button[open="true"] > .button-box:not(:-moz-system-metric(windows-default-theme)),
+button[checked="true"] > .button-box:not(:-moz-system-metric(windows-default-theme)) {
   padding-top: 2px;
   padding-bottom: 1px;
   -moz-padding-start: 4px;
