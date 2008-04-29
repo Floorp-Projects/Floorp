@@ -471,8 +471,7 @@ var BookmarkPropertiesPanel = {
     this._element("descriptionRow").hidden =
       hiddenRows.indexOf("description")!= -1
     this._element("folderRow").hidden =
-      hiddenRows.indexOf("folder picker") != -1 || isQuery ||
-      isLivemark || this._action == ACTION_EDIT;
+      hiddenRows.indexOf("folder picker") != -1 || this._action == ACTION_EDIT;
     this._element("livemarkFeedLocationRow").hidden =
       hiddenRows.indexOf("feedURI") != -1 || !isLivemark;
     this._element("livemarkSiteLocationRow").hidden =
