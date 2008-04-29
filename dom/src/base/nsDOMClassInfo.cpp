@@ -4785,10 +4785,19 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
 
   nsCOMPtr<nsIJSNativeInitializer> initializer(do_QueryInterface(native));
   if (initializer) {
+    // Initialize object using the current inner window, but only if
+    // the caller can access it.
     nsCOMPtr<nsPIDOMWindow> owner = do_QueryReferent(aWeakOwner);
-    NS_ENSURE_STATE(owner && owner->GetOuterWindow() &&
-                    owner->GetOuterWindow()->GetCurrentInnerWindow() == owner);
-    rv = initializer->Initialize(owner, cx, obj, argc, argv);
+    nsPIDOMWindow* outerWindow = owner ? owner->GetOuterWindow() : nsnull;
+    nsPIDOMWindow* currentInner =
+      outerWindow ? outerWindow->GetCurrentInnerWindow() : nsnull;
+    if (!currentInner ||
+        (owner != currentInner &&
+         !nsContentUtils::CanCallerAccess(currentInner))) {
+      return NS_ERROR_DOM_SECURITY_ERR;
+    }
+
+    rv = initializer->Initialize(currentInner, cx, obj, argc, argv);
     if (NS_FAILED(rv)) {
       return NS_ERROR_NOT_INITIALIZED;
     }
