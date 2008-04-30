@@ -284,7 +284,14 @@ public:
     void               IMEComposeEnd     (void);
     GtkIMContext*      IMEGetContext     (void);
     nsWindow*          IMEGetOwningWindow(void);
-    PRBool             IMEIsEnabled      (void);
+    // "Enabled" means the users can use all IMEs.
+    // I.e., the focus is in the normal editors.
+    PRBool             IMEIsEnabledState (void);
+    // "Editable" means the users can input characters. They may be not able to
+    // use IMEs but they can use dead keys.
+    // I.e., the forcus is in the normal editors or the password editors or
+    // the |ime-mode: disabled;| editors.
+    PRBool             IMEIsEditableState(void);
     nsWindow*          IMEComposingWindow(void);
     void               IMECreateContext  (void);
     PRBool             IMEFilterEvent    (GdkEventKey *aEvent);
@@ -299,6 +306,11 @@ public:
     struct nsIMEData {
         // Actual context. This is used for handling the user's input.
         GtkIMContext       *mContext;
+        // mSimpleContext is used for the password field and
+        // the |ime-mode: disabled;| editors. These editors disable IME.
+        // But dead keys should work. Fortunately, the simple IM context of
+        // GTK2 support only them.
+        GtkIMContext       *mSimpleContext;
         // mDummyContext is a dummy context and will be used in IMESetFocus()
         // when mEnabled is false. This mDummyContext IM state is always
         // "off", so it works to switch conversion mode to OFF on IM status
@@ -322,6 +334,7 @@ public:
         PRUint32           mEnabled;
         nsIMEData(nsWindow* aOwner) {
             mContext         = nsnull;
+            mSimpleContext   = nsnull;
             mDummyContext    = nsnull;
             mComposingWindow = nsnull;
             mOwner           = aOwner;

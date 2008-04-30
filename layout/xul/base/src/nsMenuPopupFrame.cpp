@@ -1194,7 +1194,8 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
       xpos -= (screenViewLocX + mRect.width) - screenRightTwips;
 
     // Now the Y position.  If the popup is up too high, slide it down so it's
-    // on screen.
+    // on screen. This can't make the popup overlap screenViewLocX/Y since
+    // we're moving it down away from screenViewLocY.
     if ( screenViewLocY < screenTopTwips ) {
       PRInt32 moveDistY = screenTopTwips - screenViewLocY;
       ypos += moveDistY;
@@ -1203,24 +1204,12 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
 
     // Now if the popup extends down too far, either resize it or flip it to be
     // above the anchor point and resize it to fit above, depending on where we
-    // have more room.
+    // have more room. But ensure it doesn't overlap screenViewLocX/Y.
     if ( (screenViewLocY + mRect.height) > screenBottomTwips ) {
       // XXXbz it'd be good to make use of IsMoreRoomOnOtherSideOfParent and
       // such here, but that's really focused on having a nonempty parent
       // rect...
-      if (screenViewLocY > screenBottomTwips) {
-        // if the popup is positioned off the edge, move it up. This is important
-        // when the popup is constrained to the content area so that the popup
-        // doesn't extend past the edge. This is a rare situation so include this
-        // check within the other.
-
-        // we already constrained the height to the screen size above, so this
-        // calculation should always result in a y position below the top.
-        NS_ASSERTION(mRect.height <= screenBottomTwips - screenTopTwips, "height too large");
-        ypos += screenBottomTwips - screenViewLocY - mRect.height;
-      }
-      else if (screenBottomTwips - screenViewLocY >
-               screenViewLocY - screenTopTwips) {
+      if (screenBottomTwips - screenViewLocY > screenViewLocY - screenTopTwips) {
         // More space below our desired point.  Resize to fit in this space.
         // Note that this is making mRect smaller; othewise we would not have
         // reached this code.
@@ -1228,17 +1217,21 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
       } else {
         // More space above our desired point.  Flip and resize to fit in this
         // space.
-        // First move screenViewLocY and ypos up because the offset needs to flip
-        screenViewLocY -= 2*offsetForContextMenu;
-        ypos -= 2*offsetForContextMenu;
-        if (mRect.height > screenViewLocY - screenTopTwips) {
+        // First figure out where the bottom of the popup is going to be.
+        nscoord newBottomY =
+          screenViewLocY - 2*offsetForContextMenu - margin.TopBottom();
+        // Make sure the bottom is on the screen
+        newBottomY = PR_MIN(newBottomY, screenBottomTwips);
+        newBottomY = PR_MAX(newBottomY, screenTopTwips);
+        if (mRect.height > newBottomY - screenTopTwips) {
           // We wouldn't fit.  Shorten before flipping.
-          mRect.height = screenViewLocY - screenTopTwips;
+          mRect.height = newBottomY - screenTopTwips;
         }
-        ypos -= (mRect.height + margin.top + margin.bottom);
+        // Adjust ypos to match
+        ypos += newBottomY - screenViewLocY - mRect.height;
       }
     }
-  }  
+  }
 
   presContext->GetViewManager()->MoveViewTo(GetView(), xpos, ypos); 
 

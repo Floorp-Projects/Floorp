@@ -124,7 +124,7 @@ nsHTMLTableCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAttri
 
       nsAutoString stringIdx;
       stringIdx.AppendInt(idx);
-      nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::cellIndex,
+      nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::tableCellIndex,
                              stringIdx);
       return NS_OK;
     }

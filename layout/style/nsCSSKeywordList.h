@@ -561,6 +561,8 @@ CSS_KEY(button-focus, buttonfocus)
 CSS_KEY(media-toolbox, media_toolbox)
 CSS_KEY(communications-toolbox, communications_toolbox)
 CSS_KEY(browsertabbar-toolbox, browsertabbar_toolbox)
+CSS_KEY(-moz-win-mediatext, _moz_win_mediatext)
+CSS_KEY(-moz-win-communicationstext, _moz_win_communicationstext)
 
 #ifdef MOZ_SVG
 //CSS_KEY(all, all)

@@ -243,7 +243,9 @@ typedef unsigned long long uintmax_t;
 #endif
 
 #ifndef MOZ_MEMORY_WINDOWS
+#ifndef MOZ_MEMORY_SOLARIS
 #include <sys/cdefs.h>
+#endif
 #ifndef __DECONST
 #  define __DECONST(type, var)	((type)(uintptr_t)(const void *)(var))
 #endif
@@ -266,7 +268,9 @@ __FBSDID("$FreeBSD: src/lib/libc/stdlib/malloc.c,v 1.162 2008/02/06 02:59:54 jas
 #endif
 #include <sys/time.h>
 #include <sys/types.h>
+#ifndef MOZ_MEMORY_SOLARIS
 #include <sys/sysctl.h>
+#endif
 #include "tree.h"
 #ifndef MOZ_MEMORY
 #include <sys/tree.h>
@@ -347,7 +351,7 @@ static const bool __isthreaded = true;
 #  define inline
 #endif
 
-#ifndef MOZ_MEMORY_WINDOWS
+#ifdef __GNUC__
 #define	VISIBLE __attribute__((visibility("default")))
 #else
 #define	VISIBLE
@@ -1028,6 +1032,8 @@ const char	*_malloc_options
 #elif (defined(MOZ_MEMORY_DARWIN))
 = "AP10n"
 #elif (defined(MOZ_MEMORY_LINUX))
+= "A10n2F"
+#elif (defined(MOZ_MEMORY_SOLARIS))
 = "A10n2F"
 #endif
 ;
@@ -4984,53 +4990,11 @@ malloc_ncpus(void)
 		return (n);
 }
 #elif (defined(MOZ_MEMORY_SOLARIS))
-#include <kstat.h>
 
 static inline unsigned
 malloc_ncpus(void)
 {
-	unsigned ret;
-	kstat_ctl_t *ctl;
-	kstat_t *kstat;
-	kstat_named_t *named;
-	unsigned i;
-
-	if ((ctl = kstat_open()) == NULL)
-		return (1); /* Error. */
-
-	if ((kstat = kstat_lookup(ctl, "unix", -1, "system_misc")) == NULL)
-		return (1); /* Error. */
-
-	if (kstat_read(ctl, kstat, NULL) == -1)
-		return (1); /* Error. */
-
-	named = KSTAT_NAMED_PTR(kstat);
-
-	for (i = 0; i < kstat->ks_ndata; i++) {
-		if (strcmp(named[i].name, "ncpus") == 0) {
-			/* Figure out which one of these to actually use. */
-			switch(named[i].data_type) {
-			case KSTAT_DATA_INT32:
-				ret = named[i].value.i32;
-				break;
-			case KSTAT_DATA_UINT32:
-				ret = named[i].value.ui32;
-				break;
-			case KSTAT_DATA_INT64:
-				ret = named[i].value.i64;
-				break;
-			case KSTAT_DATA_UINT64:
-				ret = named[i].value.ui64;
-				break;
-			default:
-				return (1); /* Error. */
-			}
-		}
-	}
-
-	kstat_close(ctl); /* Don't bother checking for an error. */
-
-	return (ret);
+	return sysconf(_SC_NPROCESSORS_ONLN);
 }
 #else
 static inline unsigned
@@ -5797,6 +5761,51 @@ RETURN:
 	return (ret);
 }
 
+#ifdef MOZ_MEMORY_DARWIN
+VISIBLE
+inline void *
+moz_memalign(size_t alignment, size_t size)
+#elif (defined(MOZ_MEMORY_SOLARIS))
+#  ifdef __SUNPRO_C
+void *
+memalign(size_t alignment, size_t size);
+#pragma no_inline(memalign)
+#  elif (defined(__GNU_C__)
+__attribute__((noinline))
+#  endif
+VISIBLE
+void *
+memalign(size_t alignment, size_t size)
+#else
+VISIBLE
+inline void *
+memalign(size_t alignment, size_t size)
+#endif
+{
+	void *ret;
+
+	assert(((alignment - 1) & alignment) == 0 && alignment >=
+	    sizeof(void *));
+
+	if (malloc_init()) {
+		ret = NULL;
+		goto RETURN;
+	}
+
+	ret = ipalloc(alignment, size);
+
+RETURN:
+#ifdef MALLOC_XMALLOC
+	if (opt_xmalloc && ret == NULL) {
+		_malloc_message(_getprogname(),
+		": (malloc) Error in memalign(): out of memory\n", "", "");
+		abort();
+	}
+#endif
+	UTRACE(0, size, ret);
+	return (ret);
+}
+
 VISIBLE
 #ifdef MOZ_MEMORY_DARWIN
 inline int
@@ -5806,71 +5815,31 @@ int
 posix_memalign(void **memptr, size_t alignment, size_t size)
 #endif
 {
-	int ret;
 	void *result;
 
-	if (malloc_init())
-		result = NULL;
-	else {
-		/* Make sure that alignment is a large enough power of 2. */
-		if (((alignment - 1) & alignment) != 0
-		    || alignment < sizeof(void *)) {
-#ifdef MALLOC_XMALLOC
-			if (opt_xmalloc) {
-				_malloc_message(_getprogname(),
-				    ": (malloc) Error in posix_memalign(): "
-				    "invalid alignment\n", "", "");
-				abort();
-			}
-#endif
-			result = NULL;
-			ret = EINVAL;
-			goto RETURN;
-		}
-
-		result = ipalloc(alignment, size);
-	}
-
-	if (result == NULL) {
+	/* Make sure that alignment is a large enough power of 2. */
+	if (((alignment - 1) & alignment) != 0 || alignment < sizeof(void *)) {
 #ifdef MALLOC_XMALLOC
 		if (opt_xmalloc) {
 			_malloc_message(_getprogname(),
-			": (malloc) Error in posix_memalign(): out of memory\n",
-			"", "");
+			    ": (malloc) Error in posix_memalign(): "
+			    "invalid alignment\n", "", "");
 			abort();
 		}
 #endif
-		ret = ENOMEM;
-		goto RETURN;
+		return (EINVAL);
 	}
 
+#ifdef MOZ_MEMORY_DARWIN
+	result = moz_memalign(alignment, size);
+#else
+	result = memalign(alignment, size);
+#endif
+	if (result == NULL)
+		return (ENOMEM);
+
 	*memptr = result;
-	ret = 0;
-
-RETURN:
-	UTRACE(0, size, result);
-	return (ret);
-}
-
-VISIBLE
-#ifdef MOZ_MEMORY_DARWIN
-inline void *
-moz_memalign(size_t alignment, size_t size)
-#else
-void *
-memalign(size_t alignment, size_t size)
-#endif
-{
-	void *ret;
-
-#ifdef MOZ_MEMORY_DARWIN
-	if (moz_posix_memalign(&ret, alignment, size) != 0)
-#else
-	if (posix_memalign(&ret, alignment, size) != 0)
-#endif
-		return (NULL);
-
-	return ret;
+	return (0);
 }
 
 VISIBLE

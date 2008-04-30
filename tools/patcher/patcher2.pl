@@ -713,10 +713,10 @@ sub CreateCompletePatchinfo {
                     my $prettySnippetToAppVersion = $to->{'prettyAppv'};
                     foreach my $channel (keys(%{$currentUpdateRcInfo})) {
                         if ($c eq $channel) {
-                            $snippetToAppVersion = $to->{'appv'} . 'rc' .
+                            $snippetToAppVersion = $to->{'appv'} . 'build' .
                              $currentUpdateRcInfo->{$channel};
                             $prettySnippetToAppVersion = $to->{'prettyAppv'} .
-                             'rc' . $currentUpdateRcInfo->{$channel};
+                             ' (build ' . $currentUpdateRcInfo->{$channel} . ')';
                             last;
                         }
                     }
@@ -744,7 +744,7 @@ sub CreateCompletePatchinfo {
                     # appv's.
                     my $progressVersion = $u;
                     if ($snippetToAppVersion ne $to->{'appv'}) {
-                        $progressVersion =~ s/$to->{'appv'}/$snippetToAppVersion/;
+                        $progressVersion =~ s/\-$to->{'appv'}/-$snippetToAppVersion/;
                     }
                     PrintProgress(total => $total, current => $i,
                      string => "$progressVersion/$p/$l/$c");
@@ -806,11 +806,11 @@ sub CreateCompletePatchinfo {
                             foreach my $channel 
                              (keys(%{$currentUpdateRcInfo})) {
                                 if ($testChan eq $channel) {
-                                    $snippetToAppVersion = $to->{'appv'} . 'rc' 
+                                    $snippetToAppVersion = $to->{'appv'} . 'build' 
                                     . $currentUpdateRcInfo->{$channel};
                                     $prettySnippetToAppVersion =
-                                     $to->{'prettyAppv'} . 'rc' .
-                                     $currentUpdateRcInfo->{$channel};
+                                     $to->{'prettyAppv'} . ' (build ' .
+                                     $currentUpdateRcInfo->{$channel} . ')';
                                     last;
                                 }
                             }
@@ -984,10 +984,10 @@ sub CreatePastReleasePatchinfo {
                     foreach my $rcChan (keys(%{$currentReleaseRcInfo})) {
                         if ($rcChan eq $channel) {
                             $snippetToAppVersion = $patchLocaleNode->{'appv'} .
-                             'rc' . $currentReleaseRcInfo->{$channel};
+                             'build' . $currentReleaseRcInfo->{$channel};
                             $prettySnippetToAppVersion =
-                             $patchLocaleNode->{'prettyAppv'} . 'rc' .
-                             $currentReleaseRcInfo->{$channel};
+                             $patchLocaleNode->{'prettyAppv'} . ' (build ' .
+                             $currentReleaseRcInfo->{$channel} . ')';
                             last;
                         }
                     }
@@ -1207,10 +1207,10 @@ sub CreatePartialPatchinfo {
                     my $prettySnippetToAppVersion = $to->{'prettyAppv'};
                     foreach my $channel (keys(%{$currentUpdateRcInfo})) {
                         if ($c eq $channel) {
-                            $snippetToAppVersion = $to->{'appv'} . 'rc' .
+                            $snippetToAppVersion = $to->{'appv'} . 'build' .
                              $currentUpdateRcInfo->{$channel};
                             $prettySnippetToAppVersion = $to->{'prettyAppv'} .
-                             'rc' . $currentUpdateRcInfo->{$channel};
+                             ' (build ' . $currentUpdateRcInfo->{$channel} . ')';
 
                             $serveCompleteUpdateToRcs =
                              (!$disableCompleteJumpForRcs) &&
@@ -1246,7 +1246,7 @@ sub CreatePartialPatchinfo {
                     # appv's.
                     my $progressVersion = $u;
                     if ($snippetToAppVersion ne $to->{'appv'}) {
-                        $progressVersion =~ s/$to->{'appv'}/$snippetToAppVersion/;
+                        $progressVersion =~ s/\-$to->{'appv'}/-$snippetToAppVersion/;
                     }
                     PrintProgress(total => $total, current => $i,
                      string => "$progressVersion/$p/$l/$c");
@@ -1323,11 +1323,11 @@ sub CreatePartialPatchinfo {
                             foreach my $channel 
                              (keys(%{$currentUpdateRcInfo})) {
                                 if ($testChan eq $channel) {
-                                    $snippetToAppVersion = $to->{'appv'} . 'rc'
+                                    $snippetToAppVersion = $to->{'appv'} . 'build'
                                      . $currentUpdateRcInfo->{$channel};
                                     $prettySnippetToAppVersion =
-                                     $to->{'prettyAppv'} . 'rc' .
-                                     $currentUpdateRcInfo->{$channel};
+                                     $to->{'prettyAppv'} . ' (build ' .
+                                     $currentUpdateRcInfo->{$channel} . ')';
                                     last;
                                 }
                             }
