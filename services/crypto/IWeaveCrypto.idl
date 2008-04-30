@@ -1,0 +1,93 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Weave code.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2007
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Dan Mills <thunder@mozilla.com> (original author)
+ *   Honza Bambas <honzab@allpeers.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(d3b0f750-c976-46d0-be20-96b24f4684bc)]
+interface IWeaveCrypto : nsISupports
+{
+  /**
+   * Shortcuts for some algorithm SEC OIDs.  Full list available here:
+   * http://lxr.mozilla.org/seamonkey/source/security/nss/lib/util/secoidt.h
+   */
+
+  const unsigned long DES_EDE3_CBC = 156;
+
+  // Unsupported now...
+  const unsigned long AES_128_ECB = 183;
+  const unsigned long AES_128_CBC = 184;
+  const unsigned long AES_192_ECB = 185;
+  const unsigned long AES_192_CBC = 186;
+  const unsigned long AES_256_ECB = 187;
+  const unsigned long AES_256_CBC = 188;
+
+  /**
+   * One of the above constants. Assigning differnt value
+   * will fail cause the encrypt method fail. 
+   * Default value is DES_EDE3_CBC.
+   */
+  attribute unsigned long algorithm;
+
+  /**
+   * Encrypt data using a passphrase
+   * See algorithm attribute, it determines which mechanisms will be used
+   *
+   * @param   pass
+   *          Passphrase to encrypt with
+   * @param   iter
+   *          Number of iterations for key strengthening
+   *          This parameter is currently ignored and is always 1
+   * @param   clearText
+   *          Data to be encrypted
+   * @returns Encrypted data, base64 encoded
+   */
+  ACString encrypt(in ACString pass, in ACString clearText);
+
+  /**
+   * Decrypt data using a passphrase
+   *
+   * @param   pass
+   *          Passphrase to decrypt with
+   * @param   cipherText
+   *          Base64 encoded data to be decrypted
+   * @returns Decrypted data
+   */
+  ACString decrypt(in ACString pass, in ACString cipherText);
+};
+
