@@ -4600,7 +4600,8 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
 
     // get the prev sibling of the right node, and see if it's leftTextNode
     nsCOMPtr<nsIDOMNode> prevSibOfRightNode;
-    result = GetPriorHTMLSibling(rightTextNode, address_of(prevSibOfRightNode));
+    result =
+      rightTextNode->GetPreviousSibling(getter_AddRefs(prevSibOfRightNode));
     if (NS_FAILED(result)) return result;
     if (prevSibOfRightNode && (prevSibOfRightNode == leftTextNode))
     {
