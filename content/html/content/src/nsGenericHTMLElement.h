@@ -214,7 +214,7 @@ public:
   virtual void RemoveFocus(nsPresContext *aPresContext);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull)
   {
-    PRBool isFocusable;
+    PRBool isFocusable = PR_FALSE;
     IsHTMLFocusable(&isFocusable, aTabIndex);
     return isFocusable;
   }
