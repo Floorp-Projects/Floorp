@@ -83,6 +83,12 @@ endif
 else
 
 MODULE_OPTIMIZE_FLAGS = -O2
+ifeq ($(OS_ARCH),SunOS)
+ifndef GNU_CC
+MODULE_OPTIMIZE_FLAGS = -xO5
+endif
+endif
+
 LIBRARY_NAME	= jemalloc
 
 ifeq (Darwin,$(OS_TARGET))
