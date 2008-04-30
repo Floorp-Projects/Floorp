@@ -2553,7 +2553,10 @@ nsDocument::GetScriptGlobalObject() const
    // ScriptGlobalObject.  We can, however, try to obtain it for the
    // caller through our docshell.
 
-   if (mIsGoingAway) {
+   // We actually need to start returning the docshell's script global
+   // object as soon as nsDocumentViewer::Close has called
+   // RemovedFromDocShell on us.
+   if (mRemovedFromDocShell) {
      nsCOMPtr<nsIInterfaceRequestor> requestor =
        do_QueryReferent(mDocumentContainer);
      if (requestor) {
@@ -2739,24 +2742,8 @@ nsDocument::EndUpdate(nsUpdateType aUpdateType)
     BindingManager()->EndOutermostUpdate();
   }
 
-  if (mUpdateNestLevel == 0) {
-    PRUint32 length = mInitializableFrameLoaders.Length();
-    if (length > 0) {
-      nsTArray<nsRefPtr<nsFrameLoader> > loaders;
-      mInitializableFrameLoaders.SwapElements(loaders);
-      for (PRUint32 i = 0; i < length; ++i) {
-        loaders[i]->ReallyStartLoading();
-      }
-    }
-
-    length = mFinalizableFrameLoaders.Length();
-    if (length > 0) {
-      nsTArray<nsRefPtr<nsFrameLoader> > loaders;
-      mFinalizableFrameLoaders.SwapElements(loaders);
-      for (PRUint32 i = 0; i < length; ++i) {
-        loaders[i]->Finalize();
-      }
-    }
+  if (mUpdateNestLevel == 0 && !mDelayFrameLoaderInitialization) {
+    InitializeFinalizeFrameLoaders();
   }
 }
 
@@ -3030,7 +3017,8 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> content;
-  NS_NewElement(getter_AddRefs(content), nodeInfo->NamespaceID(), nodeInfo);
+  NS_NewElement(getter_AddRefs(content), nodeInfo->NamespaceID(), nodeInfo,
+                PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(content, aReturn);
@@ -3874,7 +3862,7 @@ nsDocument::InitializeFrameLoader(nsFrameLoader* aLoader)
                "document is being deleted");
     return NS_ERROR_FAILURE;
   }
-  if (mUpdateNestLevel == 0) {
+  if (mUpdateNestLevel == 0 && !mDelayFrameLoaderInitialization) {
     nsRefPtr<nsFrameLoader> loader = aLoader;
     return loader->ReallyStartLoading();
   } else {
@@ -3897,6 +3885,57 @@ nsDocument::FinalizeFrameLoader(nsFrameLoader* aLoader)
     mFinalizableFrameLoaders.AppendElement(aLoader);
   }
   return NS_OK;
+}
+
+void
+nsDocument::InitializeFinalizeFrameLoaders()
+{
+  NS_ASSERTION(mUpdateNestLevel == 0 && !mDelayFrameLoaderInitialization,
+               "Wrong time to call InitializeFinalizeFrameLoaders!");
+  // Don't use a temporary array for mInitializableFrameLoaders, because
+  // loading a frame may cause some other frameloader to be removed from the
+  // array. But be careful to keep the loader alive when starting the load!
+  while (mInitializableFrameLoaders.Length()) {
+    nsRefPtr<nsFrameLoader> loader = mInitializableFrameLoaders[0];
+    mInitializableFrameLoaders.RemoveElementAt(0);
+    NS_ASSERTION(loader, "null frameloader in the array?");
+    loader->ReallyStartLoading();
+  }
+
+  PRUint32 length = mFinalizableFrameLoaders.Length();
+  if (length > 0) {
+    nsTArray<nsRefPtr<nsFrameLoader> > loaders;
+    mFinalizableFrameLoaders.SwapElements(loaders);
+    for (PRUint32 i = 0; i < length; ++i) {
+      loaders[i]->Finalize();
+    }
+  }
+}
+
+void
+nsDocument::TryCancelFrameLoaderInitialization(nsIDocShell* aShell)
+{
+  PRUint32 length = mInitializableFrameLoaders.Length();
+  for (PRUint32 i = 0; i < length; ++i) {
+    if (mInitializableFrameLoaders[i]->GetExistingDocShell() == aShell) {
+      mInitializableFrameLoaders.RemoveElementAt(i);
+      return;
+    }
+  }
+}
+
+PRBool
+nsDocument::FrameLoaderScheduledToBeFinalized(nsIDocShell* aShell)
+{
+  if (aShell) {
+    PRUint32 length = mFinalizableFrameLoaders.Length();
+    for (PRUint32 i = 0; i < length; ++i) {
+      if (mFinalizableFrameLoaders[i]->GetExistingDocShell() == aShell) {
+        return PR_TRUE;
+      }
+    }
+  }
+  return PR_FALSE;
 }
 
 struct DirTable {
@@ -5373,7 +5412,7 @@ nsDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_NewElement(aResult, elementType, nodeInfo);
+  return NS_NewElement(aResult, elementType, nodeInfo, PR_FALSE);
 }
 
 PRBool
@@ -5571,7 +5610,7 @@ nsDocument::Destroy()
 
   mIsGoingAway = PR_TRUE;
 
-  SaveState();
+  RemovedFromDocShell();
 
   PRUint32 i, count = mChildren.ChildCount();
   for (i = 0; i < count; ++i) {
@@ -5591,12 +5630,12 @@ nsDocument::Destroy()
 }
 
 void
-nsDocument::SaveState()
+nsDocument::RemovedFromDocShell()
 {
-  if (mSavedState)
+  if (mRemovedFromDocShell)
     return;
 
-  mSavedState = PR_TRUE;
+  mRemovedFromDocShell = PR_TRUE;
 
   PRUint32 i, count = mChildren.ChildCount();
   for (i = 0; i < count; ++i) {
@@ -5876,10 +5915,8 @@ nsDocument::MutationEventDispatched(nsINode* aTarget)
     for (PRInt32 k = 0; k < realTargetCount; ++k) {
       mozAutoRemovableBlockerRemover blockerRemover;
 
-      if (nsContentUtils::IsSafeToRunScript()) {
-        nsMutationEvent mutation(PR_TRUE, NS_MUTATION_SUBTREEMODIFIED);
-        nsEventDispatcher::Dispatch(realTargets[k], nsnull, &mutation);
-      }
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_SUBTREEMODIFIED);
+      nsEventDispatcher::Dispatch(realTargets[k], nsnull, &mutation);
     }
   }
 }

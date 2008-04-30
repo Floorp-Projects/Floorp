@@ -92,14 +92,6 @@ nsApplicationAccessible::GetName(nsAString& aName)
 }
 
 NS_IMETHODIMP
-nsApplicationAccessible::GetDescription(nsAString& aDescription)
-{
-  GetName(aDescription);
-  aDescription.AppendLiteral(" Application Accessible");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsApplicationAccessible::GetRole(PRUint32 *aRole)
 {
   *aRole = nsIAccessibleRole::ROLE_APP_ROOT;

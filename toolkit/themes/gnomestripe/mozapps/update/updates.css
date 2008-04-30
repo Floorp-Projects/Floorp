@@ -48,7 +48,7 @@ license {
   margin-top: 3px;
 }
 .licenseLoadingThrobber[state="loading"] {
-  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 .licenseLoadingThrobber[state="error"] {
   list-style-image: url("chrome://global/skin/icons/notfound.png");
@@ -105,10 +105,10 @@ wizard[currentpageid="updatesfound"] .wizard-button[dlgtype="next"] > .button-bo
 }
 #downloadThrobber {
   margin: 5px 3px 0px 5px;
-  list-style-image: url("chrome://global/skin/throbber/Throbber-small.png");
+  list-style-image: url("chrome://global/skin/icons/notloading_16.png");
 }
 #downloadThrobber[state="loading"] {
-  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 #downloadStatusLine {
   -moz-box-align: start;

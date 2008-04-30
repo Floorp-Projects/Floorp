@@ -269,6 +269,9 @@ private:
     // eliminate faces which have the same ATSUI id
     void EliminateDuplicateFaces(const nsAString& aFamilyName);
                                                              
+    // explicitly set font traits for all faces to fixed-pitch
+    void SetFixedPitch(const nsAString& aFamilyName);
+                                                             
     static PLDHashOperator PR_CALLBACK InitOtherFamilyNamesProc(nsStringHashKey::KeyType aKey,
                                                              nsRefPtr<MacOSFamilyEntry>& aFamilyEntry,
                                                              void* userArg);

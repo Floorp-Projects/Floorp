@@ -54,6 +54,8 @@
 #include "nsIWebNavigation.h"
 #include "nsISHistory.h"
 #include "nsISHistoryInternal.h"
+#include "nsDocShellEditorData.h"
+#include "nsIDocShell.h"
 
 // Hardcode this to time out unused content viewers after 30 minutes
 #define CONTENT_VIEWER_TIMEOUT_SECONDS 30*60
@@ -160,6 +162,8 @@ nsSHEntry::~nsSHEntry()
   if (viewer) {
     viewer->Destroy();
   }
+
+  mEditorData = nsnull;
 
 #ifdef DEBUG
   // This is not happening as far as I can tell from breakpad as of early November 2007
@@ -833,3 +837,25 @@ nsSHEntry::DocumentMutated()
   // Warning! The call to DropPresentationState could have dropped the last
   // reference to this nsSHEntry, so no accessing members beyond here.
 }
+
+nsDocShellEditorData*
+nsSHEntry::ForgetEditorData()
+{
+  return mEditorData.forget();
+}
+
+void
+nsSHEntry::SetEditorData(nsDocShellEditorData* aData)
+{
+  NS_ASSERTION(!(aData && mEditorData),
+               "We're going to overwrite an owning ref!");
+  if (mEditorData != aData)
+    mEditorData = aData;
+}
+
+PRBool
+nsSHEntry::HasDetachedEditor()
+{
+  return mEditorData != nsnull;
+}
+

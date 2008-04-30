@@ -2913,6 +2913,7 @@ JS_PUBLIC_API(JSBool)
 JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto)
 {
     CHECK_REQUEST(cx);
+    JS_ASSERT(obj != proto);
 #ifdef DEBUG
     /*
      * FIXME: bug 408416. The cycle-detection required for script-writeable
@@ -2956,6 +2957,7 @@ JS_PUBLIC_API(JSBool)
 JS_SetParent(JSContext *cx, JSObject *obj, JSObject *parent)
 {
     CHECK_REQUEST(cx);
+    JS_ASSERT(obj != parent);
 #ifdef DEBUG
     /* FIXME: bug 408416, see JS_SetPrototype just above. */
     if (obj->map->ops->setParent)

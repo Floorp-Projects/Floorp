@@ -227,8 +227,9 @@ sub BumpVerifyConfig {
     my $oldVersion = $config->GetOldVersion(longName => 0);
     my $oldLongVersion = $config->GetOldVersion(longName => 1);
     my $version = $config->GetVersion(longName => 0);
-    my $rc = $config->Get(var => 'rc');
-    my $oldRc = $config->Get(var => 'oldRc');
+    my $appVersion = $config->GetAppVersion();
+    my $build = $config->Get(var => 'build');
+    my $oldBuild = $config->Get(var => 'oldBuild');
     my $appName = $config->Get(var => 'appName');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $verifyDir = $config->Get(var => 'verifyDir');
@@ -245,7 +246,7 @@ sub BumpVerifyConfig {
     my $channel = 'betatest';
 
     # grab os-specific buildID file on FTP
-    my $candidateDir = CvsCatfile($config->GetFtpNightlyDir(), $oldVersion . '-candidates', 'rc' . $oldRc ) . '/';
+    my $candidateDir = CvsCatfile($config->GetFtpNightlyDir(), $oldVersion . '-candidates', 'build' . $oldBuild ) . '/';
 
     my $buildID = $this->GetBuildIDFromFTP(os => $osname, releaseDir => $candidateDir);
 
@@ -259,20 +260,20 @@ sub BumpVerifyConfig {
         $platform = 'linux';
         $ftpOsname = 'linux-i686';
         $releaseFile = $product.'-'.$oldVersion.'.tar.'.$linuxExtension;
-        $nightlyFile = $product.'-'.$version.'.%locale%.linux-i686.tar.'.
+        $nightlyFile = $product.'-'.$appVersion.'.%locale%.linux-i686.tar.'.
          $linuxExtension;
     } elsif ($osname eq 'macosx') {
         $buildTarget = 'Darwin_Universal-gcc3';
         $platform = 'osx';
         $ftpOsname = 'mac';
         $releaseFile = ucfirst($product).' '.$oldLongVersion.'.dmg';
-        $nightlyFile = $product.'-'.$version.'.%locale%.mac.dmg';
+        $nightlyFile = $product.'-'.$appVersion.'.%locale%.mac.dmg';
     } elsif ($osname eq 'win32') {
         $buildTarget = 'WINNT_x86-msvc';
         $platform = 'win32';
         $ftpOsname = 'win32';
         $releaseFile = ucfirst($product).' Setup '.$oldLongVersion.'.exe';
-        $nightlyFile = $product.'-'.$version.'.%locale%.win32.installer.exe';
+        $nightlyFile = $product.'-'.$appVersion.'.%locale%.win32.installer.exe';
     } else {
         die("ASSERT: unknown OS $osname");
     }
@@ -321,8 +322,8 @@ sub BumpVerifyConfig {
                 $oldVersion . '/' . $ftpOsname . '/%locale%/' . $releaseFile .
                 '" aus_server="' . $ausServerUrl . '" ftp_server="' .
                 $stagingServer . '/pub/mozilla.org" to="/' . 
-                $product . '/nightly/' .  $version .  '-candidates/rc' . 
-                $rc . '/' . $nightlyFile . '"' .  "\n");
+                $product . '/nightly/' .  $version .  '-candidates/build' . 
+                $build . '/' . $nightlyFile . '"' .  "\n");
 
     open(FILE, "> $configFile") or die ("Could not open file $configFile: $!");
     print FILE @data;
@@ -334,7 +335,7 @@ sub BumpVerifyConfig {
       cmdArgs => ['-d', $mozillaCvsroot,
                   'ci', '-m',
                   '"Automated configuration bump, release for '
-                  . $product  . ' ' . $version . "rc$rc" . '"',
+                  . $product  . ' ' . $version . "build$build" . '"',
                   $verifyConfig],
       logFile => catfile($logDir, 'update_verify-checkin.log'),
       dir => catfile($verifyDirVersion, 'updates')
@@ -348,7 +349,7 @@ sub Push {
     my $logDir = $config->Get(sysvar => 'logDir');
     my $product = $config->Get(var => 'product');
     my $version = $config->GetVersion(longName => 0);
-    my $rc = $config->Get(var => 'rc');
+    my $build = $config->Get(var => 'build');
     my $oldVersion = $config->GetOldVersion(longName => 0);
     my $stagingUser = $config->Get(var => 'stagingUser');
     my $stagingServer = $config->Get(var => 'stagingServer');
@@ -364,7 +365,7 @@ sub Push {
 
     # push partial mar files up to ftp server
     my $marsDir = catfile('ftp', $product, 'nightly', 
-                            $version . '-candidates', 'rc' . $rc) . '/';
+                            $version . '-candidates', 'build' . $build) . '/';
 
     chmod(0644, glob(catfile($fullUpdateDir,$marsDir,"*partial.mar")))
 	or die("Couldn't chmod a partial mar to 644: $!");

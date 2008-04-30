@@ -238,10 +238,12 @@ nsRootAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   if (privateDOMWindow) {
     nsIFocusController *focusController =
       privateDOMWindow->GetRootFocusController();
-    PRBool isActive = PR_FALSE;
-    focusController->GetActive(&isActive);
-    if (isActive) {
-      *aExtraState |= nsIAccessibleStates::EXT_STATE_ACTIVE;
+    if (focusController) {
+      PRBool isActive = PR_FALSE;
+      focusController->GetActive(&isActive);
+      if (isActive) {
+        *aExtraState |= nsIAccessibleStates::EXT_STATE_ACTIVE;
+      }
     }
   }
 #ifdef MOZ_XUL

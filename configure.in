@@ -1448,12 +1448,13 @@ AC_LANG_RESTORE
 fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
-dnl Enable high-memory support on OS/2, disabled by default
+dnl Enable high-memory support on OS/2 by default.
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(os2-high-mem,
-[  --enable-os2-high-mem Enable high-memory support on OS/2],
-    MOZ_OS2_HIGH_MEMORY=1,
-    MOZ_OS2_HIGH_MEMORY= )
+MOZ_OS2_HIGH_MEMORY=1
+MOZ_ARG_DISABLE_BOOL(os2-high-mem,
+[  --disable-os2-high-mem  Disable high-memory support on OS/2],
+    MOZ_OS2_HIGH_MEMORY=,
+    MOZ_OS2_HIGH_MEMORY=1 )
 AC_SUBST(MOZ_OS2_HIGH_MEMORY)
 
 dnl ========================================================
@@ -1660,6 +1661,10 @@ case "$target" in
     MOZ_ENABLE_POSTSCRIPT=
     TARGET_NSPR_MDCPUCFG='\"md/_darwin.cfg\"'
     LDFLAGS="$LDFLAGS -framework Cocoa"
+    # The ExceptionHandling framework is needed for Objective-C exception
+    # logging code in nsObjCExceptions.h. Currently we only use that in debug
+    # builds.
+    MOZ_DEBUG_LDFLAGS="$MOZ_DEBUG_LDFLAGS -framework ExceptionHandling"
     # set MACOSX to generate lib/mac/MoreFiles/Makefile
     MACOSX=1
 
@@ -1962,8 +1967,16 @@ case "$target" in
             dnl For profile-guided optimization
             PROFILE_GEN_CFLAGS="-GL"
             PROFILE_GEN_LDFLAGS="-LTCG:PGINSTRUMENT"
-            PROFILE_USE_CFLAGS="-GL"
-            dnl XXX: should be -LTCG:PGOPTIMIZE, but that fails on libxul
+            dnl XXX: PGO builds can fail with warnings treated as errors,
+            dnl specifically "no profile data available" appears to be
+            dnl treated as an error sometimes. This might be a consequence
+            dnl of using WARNINGS_AS_ERRORS in some modules, combined
+            dnl with the linker doing most of the work in the whole-program
+            dnl optimization/PGO case. I think it's probably a compiler bug,
+            dnl but we work around it here.
+            PROFILE_USE_CFLAGS="-GL -wd4624 -wd4952"
+            dnl XXX: should be -LTCG:PGOPTIMIZE, but that fails on libxul.
+            dnl Probably also a compiler bug, but what can you do?
             PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE"
             if test -n "$_USE_DYNAMICBASE"; then
                LDFLAGS="$LDFLAGS -DYNAMICBASE"
@@ -2104,12 +2117,21 @@ case "$target" in
         ;;
     esac 
 
-    AC_CHECK_HEADERS(mmintrin.h oleacc.idl)
 
-    AC_LANG_SAVE
-    AC_LANG_CPLUSPLUS
-    AC_CHECK_HEADERS(atlbase.h wpcapi.h)
-    AC_LANG_RESTORE
+    case "$host_os" in
+    cygwin*)
+        AC_MSG_WARN([Using a cygwin build environment is unsupported. Configure cannot check for the presence of necessary headers. Please upgrade to MozillaBuild; see http://developer.mozilla.org/en/docs/Windows_Build_Prerequisites])
+        ;;
+
+    *)
+        AC_CHECK_HEADERS(mmintrin.h oleacc.idl)
+
+        AC_LANG_SAVE
+        AC_LANG_CPLUSPLUS
+        AC_CHECK_HEADERS(atlbase.h wpcapi.h)
+        AC_LANG_RESTORE
+        ;;
+    esac
 
     case "$target" in
     i*86-*)
@@ -2381,18 +2403,19 @@ dnl the qsort routine under solaris is faulty
     # $ORIGIN/.. is for shared libraries under components/ to locate shared
     # libraries one level up (e.g. libnspr4.so)
     LDFLAGS="$LDFLAGS -z ignore -R '\$\$ORIGIN:\$\$ORIGIN/..'"
+    MOZ_MEMORY=1
     if test -z "$GNU_CC"; then
        NS_USE_NATIVE=1
        MOZ_FIX_LINK_PATHS='-R $(LIBXUL_DIST)/bin'
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
 
        if test "$CPU_ARCH" != "sparc"; then
-          CFLAGS="$CFLAGS -xstrconst -xbuiltin=%all"
-          CXXFLAGS="$CXXFLAGS -xbuiltin=%all -features=tmplife -norunpath"
+          CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%all"
+          CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife -norunpath"
        else
           # Do not use -xbuiltin on SPARC to get around a bug of compiler
-          CFLAGS="$CFLAGS -xstrconst -xbuiltin=%none"
-          CXXFLAGS="$CXXFLAGS -xbuiltin=%none -features=tmplife -norunpath"
+          CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%none"
+          CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%none -features=tmplife -norunpath"
        fi
 
        LDFLAGS="-xildoff -z lazyload -z combreloc $LDFLAGS"
@@ -5848,16 +5871,34 @@ MOZ_ARG_DISABLE_BOOL(parental-controls,
    MOZ_DISABLE_PARENTAL_CONTROLS=)
 if test -n "$MOZ_DISABLE_PARENTAL_CONTROLS"; then
     AC_DEFINE(MOZ_DISABLE_PARENTAL_CONTROLS)
+fi
+
+dnl ========================================================
+dnl Vista SDK specific api
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(vista-sdk-requirements,
+[  --disable-vista-sdk-requirements
+                           Do not build Vista SDK specific code],
+   MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=1,
+   MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=)
+if test -n "$MOZ_DISABLE_VISTA_SDK_REQUIREMENTS"; then
+    AC_MSG_WARN([Resulting builds will not be compatible with Windows Vista. (bug 428970)])
+    AC_DEFINE(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
+    if test -z "$MOZ_DISABLE_PARENTAL_CONTROLS"; then
+        AC_DEFINE(MOZ_DISABLE_PARENTAL_CONTROLS)
+    fi
+    MOZ_DISABLE_PARENTAL_CONTROLS=1
 else
 case "$target" in
 *-mingw*|*-cygwin*|*-msvc*|*-mks*)
     if test "$ac_cv_header_wpcapi_h" = "no"; then
-        AC_MSG_ERROR([System header wpcapi.h is not available. See http://developer.mozilla.org/en/docs/wpcapi.h for details on fixing this problem.])
+        AC_MSG_ERROR([System header wpcapi.h is not available. See updated http://developer.mozilla.org/en/docs/wpcapi.h for details on fixing this problem.])
     fi
     ;;
 esac
 fi
 AC_SUBST(MOZ_DISABLE_PARENTAL_CONTROLS)
+AC_SUBST(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
 
 dnl ========================================================
 dnl =

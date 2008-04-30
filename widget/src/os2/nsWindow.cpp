@@ -44,8 +44,6 @@
 
 #include "nsWindow.h"
 #include "nsIAppShell.h"
-#include "nsIFontMetrics.h"
-#include "nsFont.h"
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
@@ -220,7 +218,6 @@ nsWindow::nsWindow() : nsBaseWidget()
     mWindowState        = nsWindowState_ePrecreate;
     mWindowType         = eWindowType_child;
     mBorderStyle        = eBorderStyle_default;
-    mFont               = nsnull;
     mOS2Toolkit         = nsnull;
     mIsScrollBar         = FALSE;
     mInSetFocus         = FALSE;
@@ -1618,73 +1615,6 @@ void nsWindow::GetNonClientBounds(nsRect &aRect)
 
 //-------------------------------------------------------------------------
 //
-// Get this component font
-//
-//-------------------------------------------------------------------------
-nsIFontMetrics *nsWindow::GetFont(void)
-{
-   nsIFontMetrics *metrics = nsnull;
-
-   if( mToolkit)
-   {
-      char fontNameSize[FACESIZE+5]; // FACESIZE + decimal + up to three digits for font size + null terminator
-      char fontName[FACESIZE];
-      int  ptSize;
-   
-      WinQueryPresParam( mWnd, PP_FONTNAMESIZE, 0, 0, FACESIZE+5, fontNameSize, 0);
-   
-      // FACESIZE = 32, hence the 31 here
-      if( 2 == sscanf( fontNameSize, "%d.%31s", &ptSize, fontName))
-      {
-         nscoord appSize = NSToCoordRound(float(ptSize) * mContext->AppUnitsPerInch() / 72);
-   
-         nsFont font( fontName, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-                      NS_FONT_WEIGHT_NORMAL, 0 /*decoration*/, appSize);
-   
-         mContext->GetMetricsFor( font, metrics);
-      }
-   }
-
-   return metrics;
-}
-
-//-------------------------------------------------------------------------
-//
-// Set this component font
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::SetFont(const nsFont &aFont)
-{
-   if( mToolkit) // called from print-routine (XXX check)
-   {
-      // jump through hoops to convert the size in the font (in app units)
-      // into points. 
-      int points = aFont.size * 72 / mContext->AppUnitsPerInch();
-
-      nsAutoCharBuffer fontname;
-      PRInt32 fontnameLength;
-      WideCharToMultiByte(0, aFont.name.get(), aFont.name.Length(),
-                          fontname, fontnameLength);
-
-      char *buffer = new char[fontnameLength + 6];
-      if (buffer) {
-        sprintf(buffer, "%d.%s", points, fontname.Elements());
-        ::WinSetPresParam(mWnd, PP_FONTNAMESIZE,
-                          strlen(buffer) + 1, buffer);
-        delete [] buffer;
-      }
-   }
-
-   if( !mFont)
-      mFont = new nsFont( aFont);
-   else
-      *mFont = aFont;
-
-   return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
 // Set this component cursor
 //
 //-------------------------------------------------------------------------
@@ -3060,9 +2990,6 @@ void nsWindow::OnDestroy()
 
    // release references to context, toolkit, appshell, children
    nsBaseWidget::OnDestroy();
-
-   // kill font
-   delete mFont;
 
    // dispatching of the event may cause the reference count to drop to 0
    // and result in this object being deleted. To avoid that, add a

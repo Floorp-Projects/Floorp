@@ -109,6 +109,9 @@ public:
 
 class nsNSSHttpRequestSession
 {
+protected:
+  PRInt32 mRefCount;
+
 public:
   static SECStatus createFcn(SEC_HTTP_SERVER_SESSION session,
                              const char *http_protocol_variant,
@@ -133,6 +136,9 @@ public:
 
   SECStatus cancelFcn();
   SECStatus freeFcn();
+
+  void AddRef();
+  void Release();
 
   nsCString mURL;
   nsCString mRequestMethod;

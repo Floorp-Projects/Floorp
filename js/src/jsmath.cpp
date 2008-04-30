@@ -120,6 +120,12 @@ math_acos(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
+#if !JS_USE_FDLIBM_MATH && defined(SOLARIS) && defined(__GNUC__)
+    if (x < -1 || 1 < x) {
+        *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+        return JS_TRUE;
+    }
+#endif
     z = fd_acos(x);
     return js_NewNumberInRootedValue(cx, z, vp);
 }
@@ -132,6 +138,12 @@ math_asin(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
+#if !JS_USE_FDLIBM_MATH && defined(SOLARIS) && defined(__GNUC__)
+    if (x < -1 || 1 < x) {
+        *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+        return JS_TRUE;
+    }
+#endif
     z = fd_asin(x);
     return js_NewNumberInRootedValue(cx, z, vp);
 }
@@ -172,6 +184,19 @@ math_atan2(JSContext *cx, uintN argc, jsval *vp)
         if (y < 0)
             z *= 3;
         return js_NewDoubleInRootedValue(cx, z, vp);
+    }
+#endif
+
+#if !JS_USE_FDLIBM_MATH && defined(SOLARIS) && defined(__GNUC__)
+    if (x == 0) {
+        if (JSDOUBLE_IS_NEGZERO(y)) {
+            z = fd_copysign(M_PI, x);
+            return js_NewDoubleInRootedValue(cx, z, vp);
+        }
+        if (y == 0) {
+            z = x;
+            return js_NewDoubleInRootedValue(cx, z, vp);
+        }
     }
 #endif
     z = fd_atan2(x, y);
@@ -246,6 +271,12 @@ math_log(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
+#if !JS_USE_FDLIBM_MATH && defined(SOLARIS) && defined(__GNUC__)
+    if (x < 0) {
+        *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+        return JS_TRUE;
+    }
+#endif
     z = fd_log(x);
     return js_NewNumberInRootedValue(cx, z, vp);
 }

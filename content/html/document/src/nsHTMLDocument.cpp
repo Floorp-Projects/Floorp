@@ -3962,6 +3962,13 @@ static PRBool HasPresShell(nsPIDOMWindow *aWindow)
 }
 
 nsresult
+nsHTMLDocument::SetEditingState(EditingState aState)
+{
+  mEditingState = aState;
+  return NS_OK;
+}
+
+nsresult
 nsHTMLDocument::EditingStateChanged()
 {
   if (mEditingState == eSettingUp || mEditingState == eTearingDown) {

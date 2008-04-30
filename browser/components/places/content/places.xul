@@ -181,10 +181,13 @@
 
   <popupset id="placesPopupset">
     <popup id="placesContext"/>
+    <popup id="placesColumnsContext"
+           onpopupshowing="ViewMenu.fillWithColumns(event, null, null, 'checkbox', null);"
+           oncommand="ViewMenu.showHideColumn(event.target); event.stopPropagation();"/>
   </popupset>
 
   <toolbox id="placesToolbox">
-    <toolbar class="chromeclass-toolbar" id="placesToolbar" align="center">
+    <toolbar class="chromeclass-toolbar" id="placesToolbar" align="center" chromedir="&locale.dir;">
       <toolbarbutton id="back-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      command="OrganizerCommand:Back"
                      tooltiptext="&backButton.tooltip;"
@@ -398,6 +401,7 @@
           hidecolumnpicker="true" context="placesContext"
           onselect="PlacesOrganizer.onPlaceSelected(true);"
           onclick="PlacesOrganizer.onTreeClick(event);"
+          onfocus="PlacesOrganizer.onTreeFocus(event);"          
           seltype="single"
           persist="width"
           width="200"
@@ -448,7 +452,8 @@
 #endif
           </vbox>
           <vbox flex="1">
-            <tree id="placeContent" class="placesTree" context="placesContext" 
+            <tree id="placeContent" class="placesTree" context="placesContext"
+                  hidecolumnpicker="true"
                   flex="1" type="places"
                   flatList="true"
                   enableColumnDrag="true"
@@ -456,8 +461,9 @@
                   ondblclick="PlacesOrganizer.openSelectedNode(event);"
                   onopenflatcontainer="PlacesOrganizer.openFlatContainer(aContainer);"
                   onselect="PlacesOrganizer.onContentTreeSelect();"
+                  onfocus="PlacesOrganizer.onTreeFocus(event);"
                   onclick="PlacesOrganizer.onTreeClick(event);">
-              <treecols id="placeContentColumns">
+              <treecols id="placeContentColumns" context="placesColumnsContext">
                 <treecol label="&col.name.label;" id="placesContentTitle" anonid="title" flex="5" primary="true" ordinal="1" 
                          persist="width hidden ordinal sortActive sortDirection"/>
                 <splitter class="tree-splitter"/>

@@ -117,7 +117,7 @@ function NS_ASSERT(condition, message) {
 
   var source = null;
   if (this.window)
-    source = window;
+    source = this.window;
   var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
            getService(Components.interfaces.nsIPromptService);
   ps.alert(source, "Assertion Failed", assertionText + stackText);

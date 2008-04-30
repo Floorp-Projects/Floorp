@@ -52,9 +52,15 @@ const FILE_BLOCKLIST                  = "blocklist.xml";
 const PREF_BLOCKLIST_URL              = "extensions.blocklist.url";
 const PREF_BLOCKLIST_ENABLED          = "extensions.blocklist.enabled";
 const PREF_BLOCKLIST_INTERVAL         = "extensions.blocklist.interval";
+const PREF_GENERAL_USERAGENT_LOCALE   = "general.useragent.locale";
+const PREF_PARTNER_BRANCH             = "app.partner.";
+const PREF_APP_DISTRIBUTION           = "distribution.id";
+const PREF_APP_DISTRIBUTION_VERSION   = "distribution.version";
+const PREF_APP_UPDATE_CHANNEL         = "app.update.channel";
 const PREF_EM_LOGGING_ENABLED         = "extensions.logging.enabled";
 const XMLURI_BLOCKLIST                = "http://www.mozilla.org/2006/addons-blocklist";
 const XMLURI_PARSE_ERROR              = "http://www.mozilla.org/newlayout/xml/parsererror.xml"
+const UNKNOWN_XPCOM_ABI               = "unknownABI";
 
 const MODE_RDONLY   = 0x01;
 const MODE_WRONLY   = 0x02;
@@ -71,6 +77,8 @@ var gOS = null;
 var gConsole = null;
 var gVersionChecker = null;
 var gLoggingEnabled = null;
+var gABI = null;
+var gOSVersion = null;
 
 // shared code for suppressing bad cert dialogs
 #include ../../shared/src/badCertHandler.js
@@ -201,6 +209,77 @@ function matchesOSABI(blocklistElement) {
 }
 
 /**
+ * Gets the current value of the locale.  It's possible for this preference to
+ * be localized, so we have to do a little extra work here.  Similar code
+ * exists in nsHttpHandler.cpp when building the UA string.
+ */
+function getLocale() {
+  try {
+      // Get the default branch
+      var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+          .getService(Components.interfaces.nsIPrefService);
+      var defaultPrefs = prefs.getDefaultBranch(null);
+      return defaultPrefs.getCharPref(PREF_GENERAL_USERAGENT_LOCALE);
+  } catch (e) {}
+
+  return gPref.getCharPref(PREF_GENERAL_USERAGENT_LOCALE);
+}
+
+/**
+ * Read the update channel from defaults only.  We do this to ensure that
+ * the channel is tightly coupled with the application and does not apply
+ * to other installations of the application that may use the same profile.
+ */
+function getUpdateChannel() {
+  var channel = "default";
+  var prefName;
+  var prefValue;
+
+  var defaults =
+      gPref.QueryInterface(Components.interfaces.nsIPrefService).
+      getDefaultBranch(null);
+  try {
+    channel = defaults.getCharPref(PREF_APP_UPDATE_CHANNEL);
+  } catch (e) {
+    // use default when pref not found
+  }
+
+  try {
+    var partners = gPref.getChildList(PREF_PARTNER_BRANCH, { });
+    if (partners.length) {
+      channel += "-cck";
+      partners.sort();
+
+      for each (prefName in partners) {
+        prefValue = gPref.getCharPref(prefName);
+        channel += "-" + prefValue;
+      }
+    }
+  }
+  catch (e) {
+    Components.utils.reportError(e);
+  }
+
+  return channel;
+}
+
+/* Get the distribution pref values, from defaults only */
+function getDistributionPrefValue(aPrefName) {
+  var prefValue = "default";
+
+  var defaults =
+      gPref.QueryInterface(Components.interfaces.nsIPrefService).
+      getDefaultBranch(null);
+  try {
+    prefValue = defaults.getCharPref(aPrefName);
+  } catch (e) {
+    // use default when pref not found
+  }
+
+  return prefValue;
+}
+
+/**
  * Manages the Blocklist. The Blocklist is a representation of the contents of
  * blocklist.xml and allows us to remotely disable / re-enable blocklisted
  * items managed by the Extension Manager with an item's appDisabled property.
@@ -220,6 +299,45 @@ function Blocklist() {
   gOS = Cc["@mozilla.org/observer-service;1"].
         getService(Ci.nsIObserverService);
   gOS.addObserver(this, "xpcom-shutdown", false);
+
+  // Not all builds have a known ABI
+  try {
+    gABI = gApp.XPCOMABI;
+  }
+  catch (e) {
+    LOG("Blocklist: XPCOM ABI unknown.");
+    gABI = UNKNOWN_XPCOM_ABI;
+  }
+
+  var osVersion;
+  var sysInfo = Components.classes["@mozilla.org/system-info;1"]
+                          .getService(Components.interfaces.nsIPropertyBag2);
+  try {
+    osVersion = sysInfo.getProperty("name") + " " + sysInfo.getProperty("version");
+  }
+  catch (e) {
+    LOG("Blocklist: OS Version unknown.");
+  }
+
+  if (osVersion) {
+    try {
+      osVersion += " (" + sysInfo.getProperty("secondaryLibrary") + ")";
+    }
+    catch (e) {
+      // Not all platforms have a secondary widget library, so an error is nothing to worry about.
+    }
+    gOSVersion = encodeURIComponent(osVersion);
+  }
+
+#ifdef XP_MACOSX
+  // Mac universal build should report a different ABI than either macppc
+  // or mactel.
+  var macutils = Components.classes["@mozilla.org/xpcom/mac-utils;1"]
+                           .getService(Components.interfaces.nsIMacUtils);
+
+  if (macutils.isUniversalBinary)
+    gABI = "Universal-gcc3";
+#endif
 }
 
 Blocklist.prototype = {
@@ -329,6 +447,20 @@ Blocklist.prototype = {
 
     dsURI = dsURI.replace(/%APP_ID%/g, gApp.ID);
     dsURI = dsURI.replace(/%APP_VERSION%/g, gApp.version);
+    dsURI = dsURI.replace(/%PRODUCT%/g, gApp.name);
+    dsURI = dsURI.replace(/%VERSION%/g, gApp.version);
+    dsURI = dsURI.replace(/%BUILD_ID%/g, gApp.appBuildID);
+    dsURI = dsURI.replace(/%BUILD_TARGET%/g, gApp.OS + "_" + gABI);
+    dsURI = dsURI.replace(/%OS_VERSION%/g, gOSVersion);
+    dsURI = dsURI.replace(/%LOCALE%/g, getLocale());
+    dsURI = dsURI.replace(/%CHANNEL%/g, getUpdateChannel());
+    dsURI = dsURI.replace(/%PLATFORM_VERSION%/g, gApp.platformVersion);
+    dsURI = dsURI.replace(/%DISTRIBUTION%/g,
+                      getDistributionPrefValue(PREF_APP_DISTRIBUTION));
+    dsURI = dsURI.replace(/%DISTRIBUTION_VERSION%/g,
+                      getDistributionPrefValue(PREF_APP_DISTRIBUTION_VERSION));
+    dsURI = dsURI.replace(/\+/g, "%2B");
+
     // Verify that the URI is valid
     try {
       var uri = newURI(dsURI);

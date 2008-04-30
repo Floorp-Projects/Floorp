@@ -140,6 +140,10 @@ PlacesTreeView.prototype = {
    * when a tree is detached to clear the list.
    */
   _buildVisibleList: function PTV__buildVisibleList() {
+    var selection = this.selection;
+    if (selection)
+      selection.selectEventsSuppressed = true;
+
     if (this._result) {
       // Any current visible elements need to be marked as invisible.
       for (var i = 0; i < this._visibleElements.length; i++) {
@@ -163,11 +167,12 @@ PlacesTreeView.prototype = {
         // this triggers containerOpened which then builds the visible
         // section
         rootNode.containerOpen = true;
-        return;
       }
-
-      this.invalidateContainer(rootNode);
+      else
+        this.invalidateContainer(rootNode);
     }
+    if (selection)
+      selection.selectEventsSuppressed = false;
   },
 
   /**
@@ -994,9 +999,6 @@ PlacesTreeView.prototype = {
       if (elt.localName == "tree" && elt.view == this &&
           this.selection.isSelected(aRow))
         return false;
-      if (node.parent && PlacesUtils.nodeIsReadOnly(node.parent) &&
-          !PlacesUtils.nodeIsTagQuery(node))
-        return false;
     }
   
     var ip = this._getInsertionPoint(aRow, aOrientation);
@@ -1017,6 +1019,7 @@ PlacesTreeView.prototype = {
 
   _getInsertionPoint: function PTV__getInsertionPoint(index, orientation) {
     var container = this._result.root;
+    var dropNearItemId = -1;
     // When there's no selection, assume the container is the container
     // the view is populated from (i.e. the result's itemId).
     if (index != -1) {
@@ -1029,7 +1032,8 @@ PlacesTreeView.prototype = {
       }
       else if (!this._disallowInsertion(lastSelected) &&
                lastSelected.containerOpen &&
-               orientation == Ci.nsITreeView.DROP_AFTER) {
+               orientation == Ci.nsITreeView.DROP_AFTER &&
+               lastSelected.hasChildren) {
         // If the last selected item is an open container and the user is
         // trying to drag into it as a first item, really insert into it.
         container = lastSelected;
@@ -1047,8 +1051,24 @@ PlacesTreeView.prototype = {
         if (this._disallowInsertion(container))
           return null;
 
-        var lsi = PlacesUtils.getIndexOfNode(lastSelected);
-        index = orientation == Ci.nsITreeView.DROP_BEFORE ? lsi : lsi + 1;
+        var queryOptions = asQuery(this._result.root).queryOptions;
+        if (queryOptions.sortingMode != Ci.nsINavHistoryQueryOptions.SORT_BY_NONE) {
+          // If we are within a sorted view, insert at the end
+          index = -1;
+        }
+        else if (queryOptions.excludeItems ||
+                 queryOptions.excludeQueries ||
+                 queryOptions.excludeReadOnlyFolders) {
+          // Some item may be invisible, insert near last selected one.
+          // We don't replace index here to avoid requests to the db,
+          // instead it will be calculated later by the controller.
+          index = -1;
+          dropNearItemId = lastSelected.itemId;
+        }
+        else {
+          var lsi = PlacesUtils.getIndexOfNode(lastSelected);
+          index = orientation == Ci.nsITreeView.DROP_BEFORE ? lsi : lsi + 1;
+        }
       }
     }
 
@@ -1057,7 +1077,8 @@ PlacesTreeView.prototype = {
 
     return new InsertionPoint(PlacesUtils.getConcreteItemId(container),
                               index, orientation,
-                              PlacesUtils.nodeIsTagQuery(container));
+                              PlacesUtils.nodeIsTagQuery(container),
+                              dropNearItemId);
   },
 
   drop: function PTV_drop(aRow, aOrientation) {

@@ -291,19 +291,29 @@ __try {
   *pszName = NULL;
   nsCOMPtr<nsIAccessible> xpAccessible;
   GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
-  if (xpAccessible) {
-    nsAutoString name;
-    if (NS_FAILED(xpAccessible->GetName(name)))
-      return E_FAIL;
+  if (!xpAccessible)
+    return E_FAIL;
+  nsAutoString name;
+  nsresult rv = xpAccessible->GetName(name);
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
+    
+  if (name.IsVoid()) {
+    // Valid return value for the name:
+    // The name was not provided, e.g. no alt attribute for an image.
+    // A screen reader may choose to invent its own accessible name, e.g. from
+    // an image src attribute.
+    // See nsHTMLImageAccessible::GetName()
+    return S_OK;
+  }
 
-    *pszName = ::SysAllocStringLen(name.get(), name.Length());
-    if (!*pszName)
-      return E_OUTOFMEMORY;
+  *pszName = ::SysAllocStringLen(name.get(), name.Length());
+  if (!*pszName)
+    return E_OUTOFMEMORY;
 
 #ifdef DEBUG_A11Y
-    NS_ASSERTION(mIsInitialized, "Access node was not initialized");
+  NS_ASSERTION(mIsInitialized, "Access node was not initialized");
 #endif
-  }
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;

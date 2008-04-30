@@ -41,6 +41,7 @@
 /* Global Styles */
 #BrowserPreferences radio[pane] {
   list-style-image: url("chrome://browser/skin/preferences/Options.png"); 
+  padding: 5px 3px 1px;
 }
 
 radio[pane=paneMain] {

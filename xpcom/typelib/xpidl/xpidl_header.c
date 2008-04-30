@@ -998,6 +998,12 @@ write_param(IDL_tree param_tree, FILE *outfile)
 
     fputs(IDL_IDENT(IDL_PARAM_DCL(param_tree).simple_declarator).str, outfile);
 
+    if (IDL_PARAM_DCL(param_tree).attr == IDL_PARAM_OUT) {
+        fputs(" NS_OUTPARAM", outfile);
+    } else if (IDL_PARAM_DCL(param_tree).attr == IDL_PARAM_INOUT) {
+        fputs(" NS_INOUTPARAM", outfile);
+    }
+
     return TRUE;
 }
 

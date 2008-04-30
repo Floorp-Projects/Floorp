@@ -103,7 +103,7 @@ function test()
   try
   {
     s ='/[q-b]/i.exec("")';
-    expect = 'No Error';
+    expect = 'SyntaxError: invalid range in character class';
     print(s + ' expect ' + expect);
     eval(s);
     actual = 'No Error';

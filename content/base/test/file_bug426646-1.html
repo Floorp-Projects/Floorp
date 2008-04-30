@@ -1,0 +1,32 @@
+<html><head>
+<title>Bug 426646, Using location.replace breaks iframe history</title>
+<script type="text/javascript">
+var url1 = "data:text/html;charset=utf-8,1st%20page";
+
+function doe() {
+  document.body.innerHTML = "<iframe src='about:blank'></iframe>";
+  document.body.innerHTML += "<iframe src='about:blank'></iframe>";
+  window.frames[0].frameElement.onload = doe2;
+  window.frames[0].location.replace(url1);
+}
+
+function doe2() {
+  window.frames[0].location = 'data:text/html;charset=utf-8,2nd%20page';
+  window.frames[0].frameElement.onload = doe3;
+}
+
+function doe3() {
+  window.frames[0].frameElement.onload = doe4;
+  history.go(-1);
+}
+
+function doe4() {
+  opener.is(window.frames[0].location, url1, "History.go(-1) didn't work?");
+  opener.is(window.frames[1].location, "about:blank",
+            "History.go(-1) didn't work?");
+  close();
+}
+</script>
+</head>
+<body onload="doe();" onunload="opener.nextTest();">
+</body></html>

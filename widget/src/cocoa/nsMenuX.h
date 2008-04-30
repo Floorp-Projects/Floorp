@@ -73,6 +73,11 @@ public:
     nsMenuX();
     virtual ~nsMenuX();
 
+    // If > 0, the OS is indexing all the app's menus (triggered by opening
+    // Help menu on Leopard and higher).  There are some things that are
+    // unsafe to do while this is happening.
+    static PRInt32 sIndexingMenuLevel;
+
     NS_DECL_ISUPPORTS
     NS_DECL_CHANGEOBSERVER
 

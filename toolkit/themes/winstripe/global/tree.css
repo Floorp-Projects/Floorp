@@ -172,18 +172,10 @@ tree[seltype="text"] > treechildren::-moz-tree-cell-text(active, selected, curre
 }
 
 /* ::::: lines connecting cells ::::: */
-
-tree[seltype="cell"] > treechildren::-moz-tree-line,
-tree[seltype="text"] > treechildren::-moz-tree-line,
+/* Windows hasn't used dotted lines for this since XP */
 treechildren::-moz-tree-line {
-  border: 1px dotted ThreeDShadow;
+  visibility: hidden;
 }
-
-tree[seltype="cell"] > treechildren::-moz-tree-line(active, selected, focus),
-treechildren::-moz-tree-line(selected, focus) {
-  border: 1px dotted HighlightText;
-}
-
 
 /* ::::: tree separator ::::: */
 

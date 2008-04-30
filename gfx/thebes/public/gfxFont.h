@@ -1271,8 +1271,8 @@ public:
         // when the part is as the end of the ligature
         gfxFloat mPartWidth;
         
-        PRPackedBool mPartIsStartOfLigature;
-        PRPackedBool mPartIsEndOfLigature;
+        PRPackedBool mClipBeforePart;
+        PRPackedBool mClipAfterPart;
     };
 
 #ifdef DEBUG

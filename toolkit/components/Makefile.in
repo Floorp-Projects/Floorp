@@ -52,6 +52,7 @@ DIRS += \
         urlformatter \
         contentprefs \
         microformats \
+        places \
         $(NULL)
 
 # These component dirs are built only for XUL apps
@@ -79,10 +80,6 @@ endif
 
 ifdef MOZ_HELP_VIEWER
 DIRS += help
-endif
-
-ifdef MOZ_PLACES
-DIRS += places
 endif
 
 ifdef NS_PRINTING

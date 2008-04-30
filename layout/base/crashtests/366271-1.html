@@ -1,0 +1,21 @@
+<html class="reftest-wait">
+<head>
+<script type="text/javascript">
+
+var childLoads = 0;
+function inc()
+{
+  ++childLoads;
+  if (childLoads >= 2)
+    document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body>
+
+<iframe src="366271-1-frame.svg" onload="inc();"></iframe>
+
+</body>
+</html>

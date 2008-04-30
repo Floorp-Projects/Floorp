@@ -60,6 +60,11 @@ _BROWSER_FILES = browser_bug321000.js \
                  browser_getshortcutoruri.js \
     $(NULL)
 
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+_BROWSER_FILES += browser_customize.js \
+    $(NULL)
+endif
+
 # disable tests on linux for now..
 ifneq ($(OS_ARCH),Linux)
 _BROWSER_FILES += \
