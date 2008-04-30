@@ -78,6 +78,7 @@
 #include "nsWidgetAtoms.h"
 #include <windows.h>
 #include <process.h>
+#include "nsUnicharUtils.h"
 
 #ifdef WINCE
 #include "aygshell.h"
@@ -3103,6 +3104,16 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
   return result;
 }
 
+static PRBool
+StringCaseInsensitiveEquals(const PRUint16* aChars1, const PRUint32 aNumChars1,
+                          const PRUint16* aChars2, const PRUint32 aNumChars2) 
+{
+  if (aNumChars1 != aNumChars2)
+    return PR_FALSE;
+
+  nsCaseInsensitiveStringComparator comp;
+  return comp(aChars1, aChars2, aNumChars1) == 0;
+}
 
 //-------------------------------------------------------------------------
 //
@@ -3273,23 +3284,68 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
       }
 
       if (mIsControlDown ^ mIsAltDown) {
+        PRUint8 capsLockState = (::GetKeyState(VK_CAPITAL) & 1) ? eCapsLock : 0;
         numOfUnshiftedChars =
-          gKbdLayout.GetUniCharsWithShiftState(aVirtualKeyCode, 0,
+          gKbdLayout.GetUniCharsWithShiftState(aVirtualKeyCode, capsLockState,
                        unshiftedChars, NS_ARRAY_LENGTH(unshiftedChars));
         numOfShiftedChars =
-          gKbdLayout.GetUniCharsWithShiftState(aVirtualKeyCode, eShift,
+          gKbdLayout.GetUniCharsWithShiftState(aVirtualKeyCode,
+                       capsLockState | eShift,
                        shiftedChars, NS_ARRAY_LENGTH(shiftedChars));
+
         // The current keyboard cannot input alphabets or numerics,
         // we should append them for Shortcut/Access keys.
         // E.g., for Cyrillic keyboard layout.
-        if (((NS_VK_0 <= DOMKeyCode && DOMKeyCode <= NS_VK_9) ||
-             (NS_VK_A <= DOMKeyCode && DOMKeyCode <= NS_VK_Z)) &&
-             unshiftedChars[0] != DOMKeyCode && shiftedChars[0] != DOMKeyCode) {
+        if (NS_VK_A <= DOMKeyCode && DOMKeyCode <= NS_VK_Z) {
           shiftedLatinChar = unshiftedLatinChar = DOMKeyCode;
-          if (NS_VK_A <= DOMKeyCode && DOMKeyCode <= NS_VK_Z)
-            unshiftedLatinChar += 0x20;
+          if (capsLockState)
+            shiftedLatinChar += 0x20;
           else
-            shiftedLatinChar = 0;
+            unshiftedLatinChar += 0x20;
+          if (unshiftedLatinChar == unshiftedChars[0] &&
+              shiftedLatinChar == shiftedChars[0]) {
+              shiftedLatinChar = unshiftedLatinChar = 0;
+          }
+        } else {
+          PRUint16 ch = 0;
+          if (NS_VK_0 <= DOMKeyCode && DOMKeyCode <= NS_VK_9) {
+            ch = DOMKeyCode;
+          } else {
+            switch (aVirtualKeyCode) {
+              case VK_OEM_PLUS:   ch = '+'; break;
+              case VK_OEM_MINUS:  ch = '-'; break;
+            }
+          }
+          if (ch && unshiftedChars[0] != ch && shiftedChars[0] != ch) {
+            // Windows has assigned a virtual key code to the key even though
+            // the character can't be produced with this key.  That probably
+            // means the character can't be produced with any key in the
+            // current layout and so the assignment is based on a QWERTY
+            // layout.  Append this code so that users can access the shortcut.
+            unshiftedLatinChar = ch;
+          }
+        }
+
+        // If the charCode is not ASCII character, we should replace the
+        // charCode with ASCII character only when Ctrl is pressed.
+        // But don't replace the charCode when the charCode is not same as
+        // unmodified characters. In such case, Ctrl is sometimes used for a
+        // part of character inputting key combination like Shift.
+        if (mIsControlDown) {
+          PRUint8 currentState = eCtrl;
+          if (mIsShiftDown)
+            currentState |= eShift;
+
+          PRUint32 ch = mIsShiftDown ? shiftedLatinChar : unshiftedLatinChar;
+          if (ch &&
+              (numOfUniChars == 0 ||
+               StringCaseInsensitiveEquals(uniChars, numOfUniChars,
+                 mIsShiftDown ? shiftedChars : unshiftedChars,
+                 mIsShiftDown ? numOfShiftedChars : numOfUnshiftedChars))) {
+            numOfUniChars = numOfShiftStates = 1;
+            uniChars[0] = ch;
+            shiftStates[0] = currentState;
+          }
         }
       }
   }

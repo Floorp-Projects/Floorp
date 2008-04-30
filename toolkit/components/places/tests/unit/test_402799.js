@@ -68,63 +68,28 @@ try {
 function run_test() {
   var uri1 = uri("http://foo.bar/");
 
-  // create 2 bookmarks
+  // create 2 bookmarks on the same uri
   var bookmark1id = bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri1,
                                          bmsvc.DEFAULT_INDEX, "title 1");
   var bookmark2id = bmsvc.insertBookmark(bmsvc.toolbarFolder, uri1,
                                          bmsvc.DEFAULT_INDEX, "title 2");
-  // add a new tag
-  tagssvc.tagURI(uri1, ["foo"]);
+  // add some tags
+  tagssvc.tagURI(uri1, ["foo", "bar", "foobar", "foo bar"]);
 
-  // get tag folder id
+  // check that a generic bookmark query returns only real bookmarks
   var options = histsvc.getNewQueryOptions();
-  var query = histsvc.getNewQuery();
-  query.setFolders([bmsvc.tagsFolder], 1);
-  var result = histsvc.executeQuery(query, options);
-  var tagRoot = result.root;
-  tagRoot.containerOpen = true;
-  var tagNode = tagRoot.getChild(0)
-                       .QueryInterface(Ci.nsINavHistoryContainerResultNode);
-  var tagItemId = tagNode.itemId;
-  tagRoot.containerOpen = false;
-
-  // change bookmark 1 title
-  bmsvc.setItemTitle(bookmark1id, "new title 1");
-
-  // check that tag container contains new title
-  options = histsvc.getNewQueryOptions();
   options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
-  options.resultType = options.RESULTS_AS_TAG_CONTENTS;
 
-  query = histsvc.getNewQuery();
-  query.setFolders([tagItemId], 1);
-  result = histsvc.executeQuery(query, options);
+  var query = histsvc.getNewQuery();
+  var result = histsvc.executeQuery(query, options);
   var root = result.root;
 
   root.containerOpen = true;
   var cc = root.childCount;
-  do_check_eq(cc, 1);
-  var node = root.getChild(0);
-  do_check_eq(node.title, "new title 1");
-  root.containerOpen = false;
-
-  // change bookmark 2 title
-  bmsvc.setItemTitle(bookmark2id, "new title 2");
-
-  // check that tag container contains new title
-  options = histsvc.getNewQueryOptions();
-  options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
-  options.resultType = options.RESULTS_AS_TAG_CONTENTS;
-
-  query = histsvc.getNewQuery();
-  query.setFolders([tagItemId], 1);
-  result = histsvc.executeQuery(query, options);
-  root = result.root;
-
-  root.containerOpen = true;
-  cc = root.childCount;
-  do_check_eq(cc, 1);
-  node = root.getChild(0);
-  do_check_eq(node.title, "new title 2");
+  do_check_eq(cc, 2);
+  var node1 = root.getChild(0);
+  do_check_eq(bmsvc.getFolderIdForItem(node1.itemId), bmsvc.bookmarksMenuFolder);
+  var node2 = root.getChild(1);
+  do_check_eq(bmsvc.getFolderIdForItem(node2.itemId), bmsvc.toolbarFolder);
   root.containerOpen = false;
 }

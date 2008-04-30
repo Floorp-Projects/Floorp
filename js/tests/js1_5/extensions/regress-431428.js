@@ -12,14 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is JavaScript Engine testing utilities.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Jesse Ruderman
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,38 +35,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsLookAndFeel
-#define __nsLookAndFeel
-#include "nsXPLookAndFeel.h"
+var gTestfile = 'regress-431428.js';
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 431428;
+var summary = 'Do not crash with for..in, trap';
+var actual = 'No Crash';
+var expect = 'No Crash';
 
-#include "nsCOMPtr.h"
 
-class nsLookAndFeel: public nsXPLookAndFeel {
-public:
-  nsLookAndFeel();
-  virtual ~nsLookAndFeel();
+//-----------------------------------------------------------------------------
+test();
+//-----------------------------------------------------------------------------
 
-  nsresult NativeGetColor(const nsColorID aID, nscolor &aColor);
-  nsresult GetColorFromTheme(const PRUnichar* aClassList,
-                             void* aTheme,
-                             PRInt32 aPart,
-                             PRInt32 aState,
-                             PRInt32 aPropId,
-                             nscolor &aColor);
-  NS_IMETHOD GetMetric(const nsMetricID aID, PRInt32 & aMetric);
-  NS_IMETHOD GetMetric(const nsMetricFloatID aID, float & aMetric);
-  virtual PRUnichar GetPasswordCharacter();
+function test()
+{
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+  printStatus (summary);
+ 
+  function f() { 
+    for ( var a in [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]) { }
+  }
 
-#ifdef NS_DEBUG
-  // This method returns the actual (or nearest estimate) 
-  // of the Navigator size for a given form control for a given font
-  // and font size. This is used in NavQuirks mode to see how closely
-  // we match its size
-  NS_IMETHOD GetNavSize(const nsMetricNavWidgetID aWidgetID,
-                        const nsMetricNavFontID   aFontID, 
-                        const PRInt32             aFontSize, 
-                        nsSize &aSize);
-#endif
-};
+  if (typeof trap == 'function')
+  {
+    "" + f;
+    trap(f, 0, "");
+    "" + f;
+  }
 
-#endif
+  reportCompare(expect, actual, summary);
+
+  exitFunc ('test');
+}

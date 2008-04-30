@@ -227,6 +227,14 @@ menuitem[type="radio"] > .menu-iconic-left {
   -moz-appearance: menuradio;
 }
 
+menuitem[type="checkbox"] > .menu-iconic-left > .menu-iconic-icon,
+menuitem[checked="true"] > .menu-iconic-left > .menu-iconic-icon,
+menuitem[type="radio"] > .menu-iconic-left > .menu-iconic-icon {
+  /* prevent .menu-iconic-icon from enforcing a minimal height of 16px (see bug 411064)
+     XXXzeniko apply that .menu-iconic-icon rule only for children of .menu-iconic */
+  display: none;
+}
+
 /* ::::: menuseparator ::::: */
 
 menuseparator {

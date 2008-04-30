@@ -1448,12 +1448,13 @@ AC_LANG_RESTORE
 fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
-dnl Enable high-memory support on OS/2, disabled by default
+dnl Enable high-memory support on OS/2 by default.
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(os2-high-mem,
-[  --enable-os2-high-mem Enable high-memory support on OS/2],
-    MOZ_OS2_HIGH_MEMORY=1,
-    MOZ_OS2_HIGH_MEMORY= )
+MOZ_OS2_HIGH_MEMORY=1
+MOZ_ARG_DISABLE_BOOL(os2-high-mem,
+[  --disable-os2-high-mem  Disable high-memory support on OS/2],
+    MOZ_OS2_HIGH_MEMORY=,
+    MOZ_OS2_HIGH_MEMORY=1 )
 AC_SUBST(MOZ_OS2_HIGH_MEMORY)
 
 dnl ========================================================
@@ -2402,6 +2403,7 @@ dnl the qsort routine under solaris is faulty
     # $ORIGIN/.. is for shared libraries under components/ to locate shared
     # libraries one level up (e.g. libnspr4.so)
     LDFLAGS="$LDFLAGS -z ignore -R '\$\$ORIGIN:\$\$ORIGIN/..'"
+    MOZ_MEMORY=1
     if test -z "$GNU_CC"; then
        NS_USE_NATIVE=1
        MOZ_FIX_LINK_PATHS='-R $(LIBXUL_DIST)/bin'

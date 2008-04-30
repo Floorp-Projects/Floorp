@@ -1045,6 +1045,11 @@ static BOOL gActOnSpecialCommands = YES;
         return;
       }
     }
+    // Quit now if the "active" menu bar has changed (as the result of
+    // processing an app-global command above).  This resolves bmo bug
+    // 430506.
+    if (menuBar != nsMenuBarX::sLastGeckoMenuBarPainted)
+      return;
   }
 
   // Don't do anything unless this is not a keyboard command and
