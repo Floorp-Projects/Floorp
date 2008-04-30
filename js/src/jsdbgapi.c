@@ -120,6 +120,7 @@ js_UntrapScriptCode(JSContext *cx, JSScript *script)
                 if (!code)
                     break;
                 memcpy(code, script->code, nbytes);
+                JS_CLEAR_GSN_CACHE(cx);
             }
             code[trap->pc - script->code] = trap->op;
         }
