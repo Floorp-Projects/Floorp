@@ -1156,9 +1156,9 @@ have_fun:
     rootedArgsFlag = JSFRAME_ROOTED_ARGV;
     if (nslots != 0) {
         /*
-         * The extra slots required by the function must be continues with the
-         * arguments. Thus, when the last arena does not have room to fit
-         * nslots right after sp and AllocateAfterSP fails, we have to copy
+         * The extra slots required by the function continue with argument
+         * slots. Thus, when the last stack pool arena does not have room to
+         * fit nslots right after sp and AllocateAfterSP fails, we have to copy
          * [vp..vp+2+argc) slots and clear rootedArgsFlag to root the copy.
          */
         if (!AllocateAfterSP(cx, sp, nslots)) {
