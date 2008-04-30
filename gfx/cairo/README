@@ -22,6 +22,9 @@ Some specific things:
 cairo git commit ea6dbfd36f2182fda16cb82bca92007e0f7b8d77 - 
   [cairo-meta-surface] Save and restore the original clip.
 
+cairo git commit d96fdd58abf8d6c8692dbb08ec54cdd80accba79 -
+  win32: Fix broken printing of type1 fonts
+
 max-font-size.patch: Clamp freetype font size to 1000 to avoid overflow issues
 
 win32-logical-font-scale.patch: set CAIRO_WIN32_LOGICAL_FONT_SCALE to 1
