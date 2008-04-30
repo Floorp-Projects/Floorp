@@ -1048,7 +1048,7 @@ PRBool nsCaret::IsMenuPopupHidingCaret()
       return PR_FALSE;
     }
 
-    if (popupFrame->PopupType() == ePopupTypeMenu) {
+    if (popupFrame->PopupType() == ePopupTypeMenu && !popupFrame->IsContextMenu()) {
       // This is an open menu popup. It does not contain the caret (else we'd
       // have returned above). Even if the caret is in a subsequent popup,
       // or another document/frame, it should be hidden.
